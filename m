@@ -1,62 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:64841 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750978AbZJLMNU (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:51899 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753291AbZJMQ7s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 08:13:20 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
+	Tue, 13 Oct 2009 12:59:48 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH] rx51: add wl1251 wlan driver support
+To: linux-omap@vger.kernel.org
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 00/16] Second batch of patches for wl1271
-Date: Mon, 12 Oct 2009 15:08:41 +0300
-Message-Id: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
+Date: Tue, 13 Oct 2009 19:58:13 +0300
+Message-ID: <20091013165812.1623.66247.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Kalle Valo <kalle.valo@nokia.com>
 
-Here is the second batch of patches to be included in wireless-testing.  I got
-a few comments from Johannes about the first batch and those issues will be
-fixed after I send the 3rd and final batch.
+wl1251 is connected to the SPI bus in rx51, add support for this.
 
-Cheers,
-Luca.
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
 
-Juuso Oikarinen (10):
-  wl1271: Update memory mapping for firmware revision 6.1.0.0.241
-  wl1271: Remove RX workaround
-  wl1271: Add top-register access functions
-  wl1271: RefClk configuration
-  wl1271: Update interrupt handling by removing an extra SPI read
-  wl1271: Enable ELP
-  wl1271: Enable smart reflex
-  wl1271: Update TX path block calucation algo
-  wl1271: Remove outdated SPI functions
-  wl1271: Update boot time configuration for the new firmware
+ arch/arm/mach-omap2/board-rx51-peripherals.c |   85 ++++++++++++++++++++++++++
+ 1 files changed, 85 insertions(+), 0 deletions(-)
 
-Luciano Coelho (6):
-  wl1271: implement cmd_disconnect
-  wl1271: workaround to send a disconnect before rejoining
-  wl1271: add workaround to avoid distortion due to excessive tx power
-  wl1271: enable HW_AVAILABLE interrupt to fix ELP
-  wl1271: use acx_rx_config instead of join when updating filters
-  wl1271: remove unnecessary joins and join only when the bssid changes
-
- drivers/net/wireless/wl12xx/wl1271.h       |   14 +-
- drivers/net/wireless/wl12xx/wl1271_acx.c   |   79 +++++++++-
- drivers/net/wireless/wl12xx/wl1271_acx.h   |   28 +++-
- drivers/net/wireless/wl12xx/wl1271_boot.c  |  177 ++++++++++----------
- drivers/net/wireless/wl12xx/wl1271_boot.h  |   22 +--
- drivers/net/wireless/wl12xx/wl1271_cmd.c   |   68 +++++++--
- drivers/net/wireless/wl12xx/wl1271_cmd.h   |   27 +++
- drivers/net/wireless/wl12xx/wl1271_event.c |    8 +-
- drivers/net/wireless/wl12xx/wl1271_init.c  |    7 +-
- drivers/net/wireless/wl12xx/wl1271_main.c  |  160 ++++++++----------
- drivers/net/wireless/wl12xx/wl1271_ps.c    |   11 +-
- drivers/net/wireless/wl12xx/wl1271_reg.h   |    3 +-
- drivers/net/wireless/wl12xx/wl1271_rx.c    |   14 +-
- drivers/net/wireless/wl12xx/wl1271_spi.c   |  251 ++++++++++++----------------
- drivers/net/wireless/wl12xx/wl1271_spi.h   |   65 +++++---
- drivers/net/wireless/wl12xx/wl1271_tx.c    |   14 +-
- 16 files changed, 531 insertions(+), 417 deletions(-)
+diff --git a/arch/arm/mach-omap2/board-rx51-peripherals.c b/arch/arm/mach-omap2/board-rx51-peripherals.c
+index c1af532..ccb8656 100644
+--- a/arch/arm/mach-omap2/board-rx51-peripherals.c
++++ b/arch/arm/mach-omap2/board-rx51-peripherals.c
+@@ -13,6 +13,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/input.h>
+ #include <linux/spi/spi.h>
++#include <linux/spi/wl12xx.h>
+ #include <linux/i2c.h>
+ #include <linux/i2c/twl4030.h>
+ #include <linux/clk.h>
+@@ -36,6 +37,37 @@
+ #define SYSTEM_REV_B_USES_VAUX3	0x1699
+ #define SYSTEM_REV_S_USES_VAUX3 0x8
+ 
++#define RX51_WL1251_POWER_GPIO		87
++#define RX51_WL1251_IRQ_GPIO		42
++
++static void rx51_wl1251_set_power(bool enable);
++
++static struct wl12xx_platform_data wl1251_pdata = {
++	.set_power = rx51_wl1251_set_power,
++};
++
++static struct omap2_mcspi_device_config wl1251_mcspi_config = {
++	.turbo_mode	= 0,
++	.single_channel	= 1,
++};
++
++/* list all spi devices here */
++enum {
++	RX51_SPI_WL1251,
++};
++
++static struct spi_board_info rx51_peripherals_spi_board_info[] = {
++	[RX51_SPI_WL1251] = {
++		.modalias		= "wl1251",
++		.bus_num		= 4,
++		.chip_select		= 0,
++		.max_speed_hz   	= 48000000,
++		.mode                   = SPI_MODE_2,
++		.controller_data	= &wl1251_mcspi_config,
++		.platform_data		= &wl1251_pdata,
++	},
++};
++
+ static int board_keymap[] = {
+ 	KEY(0, 0, KEY_Q),
+ 	KEY(0, 1, KEY_O),
+@@ -257,6 +289,55 @@ static struct regulator_init_data rx51_vdac = {
+ 	},
+ };
+ 
++static void rx51_wl1251_set_power(bool enable)
++{
++	gpio_set_value(RX51_WL1251_POWER_GPIO, enable);
++}
++
++static void __init rx51_init_wl1251(void)
++{
++	int irq, ret;
++
++	ret = gpio_request(RX51_WL1251_POWER_GPIO, "wl1251 power");
++	if (ret < 0)
++		goto error;
++
++	ret = gpio_direction_output(RX51_WL1251_POWER_GPIO, 0);
++	if (ret < 0)
++		goto err_power;
++
++	ret = gpio_request(RX51_WL1251_IRQ_GPIO, "wl1251 irq");
++	if (ret < 0)
++		goto err_power;
++
++	ret = gpio_direction_input(RX51_WL1251_IRQ_GPIO);
++	if (ret < 0)
++		goto err_irq;
++
++	irq = gpio_to_irq(RX51_WL1251_IRQ_GPIO);
++	if (irq < 0)
++		goto err_irq;
++
++	rx51_peripherals_spi_board_info[RX51_SPI_WL1251].irq = irq;
++
++	return;
++
++err_irq:
++	gpio_free(RX51_WL1251_IRQ_GPIO);
++
++err_power:
++	gpio_free(RX51_WL1251_POWER_GPIO);
++
++error:
++	printk(KERN_ERR "wl1251 board initialisation failed\n");
++	wl1251_pdata.set_power = NULL;
++
++	/*
++	 * Now rx51_peripherals_spi_board_info[1].irq is zero and
++	 * set_power is null, and wl1251_probe() will fail.
++	 */
++}
++
+ static int rx51_twlgpio_setup(struct device *dev, unsigned gpio, unsigned n)
+ {
+ 	/* FIXME this gpio setup is just a placeholder for now */
+@@ -538,6 +619,10 @@ static inline void board_smc91x_init(void)
+ 
+ void __init rx51_peripherals_init(void)
+ {
++	rx51_init_wl1251();
++
++	spi_register_board_info(rx51_peripherals_spi_board_info,
++				ARRAY_SIZE(rx51_peripherals_spi_board_info));
+ 	rx51_i2c_init();
+ 	board_onenand_init();
+ 	board_smc91x_init();
 
