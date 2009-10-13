@@ -1,173 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:15110 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757475AbZJ3VgP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 17:36:15 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Ben Cahill <ben.m.cahill@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 04/15] iwlagn: invoke L0S workaround for 6000/1000 series
-Date: Fri, 30 Oct 2009 14:36:07 -0700
-Message-Id: <1256938578-9638-5-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
-References: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-fx0-f227.google.com ([209.85.220.227]:42019 "EHLO
+	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754705AbZJMMMv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Oct 2009 08:12:51 -0400
+Received: by fxm27 with SMTP id 27so10105915fxm.17
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2009 05:12:14 -0700 (PDT)
+Message-ID: <4AD46E99.4040008@gmail.com>
+Date: Tue, 13 Oct 2009 14:12:09 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com, IvDoorn@gmail.com
+Subject: Re: [PATCH] rt2800pci.c : more ids
+References: <4AD434B6.3090903@gmail.com>
+In-Reply-To: <4AD434B6.3090903@gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------010608020506050802010106"
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
+This is a multi-part message in MIME format.
+--------------010608020506050802010106
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 8bit
 
-Invoke workaround to avoid instability in L0->L0S->L1 transition on PCIe bus.
-Workaround disables L0S state so device moves directly from L0->L1.
-Workaround needed on all devices since and including 4965; add to 6000/1000.
+On 10/13/2009 10:05 AM, Xose Vazquez Perez wrote:
 
-Describe bug and workaround better in comments.
+> stolen from windows inf file(09/05/2009, 1.04.07.0000)
+> 
+> 0x1814, 0x3060
 
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-1000.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-6000.c |   20 ++++++++++----------
- drivers/net/wireless/iwlwifi/iwl-core.c |    8 ++++++--
- 3 files changed, 18 insertions(+), 14 deletions(-)
+apply this one instead, 
+got 0x1462,0x89a from linux driver(2009_0903_RT3090_Linux_STA_v2.2.0.1)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 3a645e4..1e387b9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -164,7 +164,7 @@ struct iwl_cfg iwl1000_bgn_cfg = {
- 	.valid_tx_ant = ANT_A,
- 	.valid_rx_ant = ANT_AB,
- 	.pll_cfg_val = CSR50_ANA_PLL_CFG_VAL,
--	.set_l0s = false,
-+	.set_l0s = true,
- 	.use_bsm = false,
- 	.max_ll_items = OTP_MAX_LL_ITEMS_1000,
- 	.shadow_ram_support = false,
-@@ -190,7 +190,7 @@ struct iwl_cfg iwl1000_bg_cfg = {
- 	.valid_tx_ant = ANT_A,
- 	.valid_rx_ant = ANT_AB,
- 	.pll_cfg_val = CSR50_ANA_PLL_CFG_VAL,
--	.set_l0s = false,
-+	.set_l0s = true,
- 	.use_bsm = false,
- 	.max_ll_items = OTP_MAX_LL_ITEMS_1000,
- 	.shadow_ram_support = false,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 32466d3..2f841a8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -299,7 +299,7 @@ struct iwl_cfg iwl6000h_2agn_cfg = {
- 	.valid_tx_ant = ANT_AB,
- 	.valid_rx_ant = ANT_AB,
- 	.pll_cfg_val = 0,
--	.set_l0s = false,
-+	.set_l0s = true,
- 	.use_bsm = false,
- 	.pa_type = IWL_PA_HYBRID,
- 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
-@@ -329,7 +329,7 @@ struct iwl_cfg iwl6000h_2abg_cfg = {
- 	.valid_tx_ant = ANT_AB,
- 	.valid_rx_ant = ANT_AB,
- 	.pll_cfg_val = 0,
--	.set_l0s = false,
-+	.set_l0s = true,
- 	.use_bsm = false,
- 	.pa_type = IWL_PA_HYBRID,
- 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
-@@ -358,7 +358,7 @@ struct iwl_cfg iwl6000h_2bg_cfg = {
- 	.valid_tx_ant = ANT_AB,
- 	.valid_rx_ant = ANT_AB,
- 	.pll_cfg_val = 0,
--	.set_l0s = false,
-+	.set_l0s = true,
- 	.use_bsm = false,
- 	.pa_type = IWL_PA_HYBRID,
- 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
-@@ -390,7 +390,7 @@ struct iwl_cfg iwl6000i_2agn_cfg = {
- 	.valid_tx_ant = ANT_BC,
- 	.valid_rx_ant = ANT_BC,
- 	.pll_cfg_val = 0,
--	.set_l0s = false,
-+	.set_l0s = true,
- 	.use_bsm = false,
- 	.pa_type = IWL_PA_INTERNAL,
- 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
-@@ -420,7 +420,7 @@ struct iwl_cfg iwl6000i_2abg_cfg = {
- 	.valid_tx_ant = ANT_BC,
- 	.valid_rx_ant = ANT_BC,
- 	.pll_cfg_val = 0,
--	.set_l0s = false,
-+	.set_l0s = true,
- 	.use_bsm = false,
- 	.pa_type = IWL_PA_INTERNAL,
- 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
-@@ -449,7 +449,7 @@ struct iwl_cfg iwl6000i_2bg_cfg = {
- 	.valid_tx_ant = ANT_BC,
- 	.valid_rx_ant = ANT_BC,
- 	.pll_cfg_val = 0,
--	.set_l0s = false,
-+	.set_l0s = true,
- 	.use_bsm = false,
- 	.pa_type = IWL_PA_INTERNAL,
- 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
-@@ -478,7 +478,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
- 	.valid_tx_ant = ANT_AB,
- 	.valid_rx_ant = ANT_AB,
- 	.pll_cfg_val = 0,
--	.set_l0s = false,
-+	.set_l0s = true,
- 	.use_bsm = false,
- 	.pa_type = IWL_PA_SYSTEM,
- 	.max_ll_items = OTP_MAX_LL_ITEMS_6x50,
-@@ -508,7 +508,7 @@ struct iwl_cfg iwl6050_2abg_cfg = {
- 	.valid_tx_ant = ANT_AB,
- 	.valid_rx_ant = ANT_AB,
- 	.pll_cfg_val = 0,
--	.set_l0s = false,
-+	.set_l0s = true,
- 	.use_bsm = false,
- 	.pa_type = IWL_PA_SYSTEM,
- 	.max_ll_items = OTP_MAX_LL_ITEMS_6x50,
-@@ -537,7 +537,7 @@ struct iwl_cfg iwl6000_3agn_cfg = {
- 	.valid_tx_ant = ANT_ABC,
- 	.valid_rx_ant = ANT_ABC,
- 	.pll_cfg_val = 0,
--	.set_l0s = false,
-+	.set_l0s = true,
- 	.use_bsm = false,
- 	.pa_type = IWL_PA_SYSTEM,
- 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
-@@ -567,7 +567,7 @@ struct iwl_cfg iwl6050_3agn_cfg = {
- 	.valid_tx_ant = ANT_ABC,
- 	.valid_rx_ant = ANT_ABC,
- 	.pll_cfg_val = 0,
--	.set_l0s = false,
-+	.set_l0s = true,
- 	.use_bsm = false,
- 	.pa_type = IWL_PA_SYSTEM,
- 	.max_ll_items = OTP_MAX_LL_ITEMS_6x50,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 9e71544..2952890 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1431,8 +1431,12 @@ int iwl_apm_init(struct iwl_priv *priv)
- 				    CSR_HW_IF_CONFIG_REG_BIT_HAP_WAKE_L1A);
- 
- 	/*
--	 * HW bug W/A - costs negligible power consumption ...
--	 * Check if BIOS (or OS) enabled L1-ASPM on this device
-+	 * HW bug W/A for instability in PCIe bus L0->L0S->L1 transition.
-+	 * Check if BIOS (or OS) enabled L1-ASPM on this device.
-+	 * If so (likely), disable L0S, so device moves directly L0->L1;
-+	 *    costs negligible amount of power savings.
-+	 * If not (unlikely), enable L0S, so there is at least some
-+	 *    power savings, even without L1.
- 	 */
- 	if (priv->cfg->set_l0s) {
- 		lctl = iwl_pcie_link_ctl(priv);
+-thanks-
+
 -- 
-1.5.6.3
+«Allá muevan feroz guerra, ciegos reyes por un palmo más de tierra;
+que yo aquí tengo por mío cuanto abarca el mar bravío, a quien nadie
+impuso leyes. Y no hay playa, sea cualquiera, ni bandera de esplendor,
+que no sienta mi derecho y dé pecho a mi valor.»
 
+--------------010608020506050802010106
+Content-Type: text/plain;
+ name="new_id-2800pci-v2.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="new_id-2800pci-v2.diff"
+
+--- o/drivers/net/wireless/rt2800pci.c	2009-10-13 09:57:37.523379731 +0200
++++ n/drivers/net/wireless/rt2800pci.c	2009-10-13 14:10:12.785378782 +0200
+@@ -3225,6 +3225,8 @@
+  * RT2800pci module information.
+  */
+ static struct pci_device_id rt2800pci_device_table[] = {
++	/* ??? */
++	{ PCI_DEVICE(0x1462, 0x891a), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	/* Edimax */
+ 	{ PCI_DEVICE(0x1432, 0x7708), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1432, 0x7727), PCI_DEVICE_DATA(&rt2800pci_ops) },
+@@ -3233,10 +3235,12 @@
+ 	{ PCI_DEVICE(0x1432, 0x7748), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1432, 0x7758), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1432, 0x7768), PCI_DEVICE_DATA(&rt2800pci_ops) },
++	/* Ralink */
+ 	{ PCI_DEVICE(0x1814, 0x0601), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1814, 0x0681), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1814, 0x0701), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1814, 0x0781), PCI_DEVICE_DATA(&rt2800pci_ops) },
++	{ PCI_DEVICE(0x1814, 0x3060), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1814, 0x3062), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1814, 0x3090), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1814, 0x3091), PCI_DEVICE_DATA(&rt2800pci_ops) },
+
+--------------010608020506050802010106--
