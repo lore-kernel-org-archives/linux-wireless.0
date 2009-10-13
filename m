@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:62792 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752855AbZJ2Uzq (ORCPT
+Received: from gv-out-0910.google.com ([216.239.58.186]:62043 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753100AbZJMRaR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 16:55:46 -0400
-Received: by iwn10 with SMTP id 10so1676846iwn.4
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2009 13:55:50 -0700 (PDT)
+	Tue, 13 Oct 2009 13:30:17 -0400
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: Current status of rt2800usb and staging/rt2870
+Date: Tue, 13 Oct 2009 19:27:24 +0200
+Cc: Ozan =?utf-8?q?=C3=87a=C4=9Flayan?= <ozan@pardus.org.tr>,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel" <linux-kernel@vger.kernel.org>
+References: <4AD46380.9020308@pardus.org.tr> <200910131752.52589.IvDoorn@gmail.com>
+In-Reply-To: <200910131752.52589.IvDoorn@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1256761485.4237.260.camel@johannes.local>
-References: <20091028183726.GA4952@tux> <1256761485.4237.260.camel@johannes.local>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 29 Oct 2009 13:55:30 -0700
-Message-ID: <43e72e890910291355l5fc4ec2ctb9a777b6e8b07baa@mail.gmail.com>
-Subject: Re: odd state reached when AP deauths you after assoc
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200910131927.24136.bzolnier@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 28, 2009 at 1:24 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2009-10-28 at 11:37 -0700, Luis R. Rodriguez wrote:
->> I ran into this when ath5k with wpa_supplicant with config file with
->> a wrong password against a Cisco AP. It seems the Cisco AP auths you
->> and lets you assoc but later it deauths you -- I guess after it
->> determines you are auth credentials failed. When this happens I get:
->>
->> mcgrof@tux ~ $ iw dev wlan0 link
->> Authenticated with 00:0b:85:5b:8d:6c (on wlan0)
->> Not connected.
->
-> I'm guessing that you're using -Dnl80211. You need this patch, or
-> equivalent:
-> http://johannes.sipsolutions.net/patches/hostap/all/2009-10-26-12%3a59/deauth-on-disassoc.patch
+On Tuesday 13 October 2009 17:52:52 Ivo van Doorn wrote:
 
-Indeed, it fixes my woes, thanks.
+> I am going to merge rt2800pci soon as well and after that I'll send a patch
 
-  Luis
+Great, I've been waiting for this for a long time.
+
+> to remove all Ralink drivers from the staging tree.
+
+Till new drivers obtain support for all hardware currently covered by
+the unified staging drivers the latter shouldn't be removed as they
+serve well their role as a temporary solution allowing real Linux users
+to user their real hardware and as a reference material for developers
+willing to work on adding the missing bits to new drivers.
+
+Best regards,
+Bartlomiej
