@@ -1,74 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:58465 "EHLO
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:36979 "EHLO
 	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751977AbZJRQ7Y (ORCPT
+	with ESMTP id S1754213AbZJMJMB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Oct 2009 12:59:24 -0400
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/2] rt2x00: Implement support for rt2800pci
-Date: Sun, 18 Oct 2009 18:59:21 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Alban Browaeys <prahal@yahoo.com>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	Mattias Nissler <mattias.nissler@gmx.de>,
-	Mark Asselstine <asselsm@gmail.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
-References: <200910152137.58164.IvDoorn@gmail.com> <200910152204.16407.IvDoorn@gmail.com> <200910171654.03344.bzolnier@gmail.com>
-In-Reply-To: <200910171654.03344.bzolnier@gmail.com>
+	Tue, 13 Oct 2009 05:12:01 -0400
+Received: by ewy4 with SMTP id 4so3167103ewy.37
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2009 02:11:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200910181859.22413.IvDoorn@gmail.com>
+In-Reply-To: <1255377460.30637.150.camel@rc-desk>
+References: <1255119634-3060-1-git-send-email-reinette.chatre@intel.com>
+	 <1255119634-3060-3-git-send-email-reinette.chatre@intel.com>
+	 <20091012185943.GC2794@tuxdriver.com>
+	 <1255377460.30637.150.camel@rc-desk>
+Date: Tue, 13 Oct 2009 11:11:24 +0200
+Message-ID: <8ccf2e9c0910130211j6f522d1ia4dc3a764896f974@mail.gmail.com>
+Subject: Re: [ipw3945-devel] [PATCH 02/17 v2.6.32] iwl3945: update
+	iwl3945_apm_init()
+From: Vedran Rodic <vrodic@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Cahill, Ben M" <ben.m.cahill@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I also used the opportunity to take a closer look at this driver and
-> it seems that it needlessly adds around 2 KLOC to kernel by duplicating
-> the common content of rt2800usb.h to rt2800pci.h instead of moving it
-> to the shared header (like it is done in the staging crap drivers):
-> 
-> $ wc -l drivers/net/wireless/rt2x00/rt2800usb.h drivers/net/wireless/rt2x00/rt2800pci.h
->   1951 drivers/net/wireless/rt2x00/rt2800usb.h
->   1960 drivers/net/wireless/rt2x00/rt2800pci.h
->   3911 total
-> 
-> $ diff -u drivers/net/wireless/rt2x00/rt2800usb.h drivers/net/wireless/rt2x00/rt2800pci.h|diffstat
->  rt2800pci.h |  213 +++++++++++++++++++++++++++++++-----------------------------
->   1 file changed, 111 insertions(+), 102 deletions(-)
+Thank you all very much.
 
-Creating rt2800.h with common register defines has been on the todo list for some time already,
-it will likely happen in the future, but until I get around to update my debugfs scripts the seperate
-rt2800pci.h and rt2800usb.h files make debugging and register analysis a bit easier.
+I don't have sophisticated power measurement devices to confirm these
+fixes, and I've only tried patch 2/17, reporting back it on bug
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2094 that the
+problem is still not fixed with this patch applied only.
 
-> Similarly it looks like most of the code between rt2800usb.c and rt2800pci.c
-> could also be shared (up to another 2 KLOC saved) by adding abstraction layer
-> for accessing chipset registers over different buses (again like it is done
-> in staging crap drivers):
-> 
-> $ wc -l drivers/net/wireless/rt2x00/rt2800usb.c drivers/net/wireless/rt2x00/rt2800pci.c
->   3077 drivers/net/wireless/rt2x00/rt2800usb.c
->   3323 drivers/net/wireless/rt2x00/rt2800pci.c
->   6400 total
-> 
-> $ diff -u drivers/net/wireless/rt2x00/rt2800usb.c drivers/net/wireless/rt2x00/rt2800pci.c|diffstat
->  rt2800pci.c | 2190 +++++++++++++++++++++++++++++++++---------------------------
->  1 file changed, 1218 insertions(+), 972 deletions(-)
 
-I don't agree on this, for starters the whole "abstraction layer as done in the staging driver, really
-obfuscated the code in multiple areas, so whatever abstraction layer will be needed for rt2x00 it
-should be done much cleaner without the ugly defines and crap like that. So unless there is a _clean_
-and very _readable_ solution for such abstraction layer I might consider it.
+I originally tested temperature difference near the WLAN card
+location. It's hard to compare overall laptop power usage between
+Windows XP and Linux because there are other drivers that can make a
+difference too.
 
-Secondly, you can't merge them until both drivers would correctly for all users/chipsets, because only
-then you can see what registers are initialized equaly, and where potential pitfalls are between the
-2 busses.
+Unfortunately, I don't have Windows XP anymore to compare since I've
+upgraded my hard drive, but I'll be able to test further fixes by
+watching the /sys/class/power_supply/BAT0/power_now on my X60s.
 
-> All in all, the total amount of the kernel code needed for implementing
-> rt2800pci functionality should 1-2 KLOC instead of the current 5 KLOC.
+Can you describe your testing methodoloy? Are you testing just the
+mini PCI card usage? Are you comparing to Windows XP or Vista drivers?
 
-Ivo
+On Mon, Oct 12, 2009 at 9:57 PM, reinette chatre
+<reinette.chatre@intel.com> wrote:
+> Hi John,
+>
+> On Mon, 2009-10-12 at 11:59 -0700, John W. Linville wrote:
+>> On Fri, Oct 09, 2009 at 01:20:18PM -0700, Reinette Chatre wrote:
+>> > From: Ben Cahill <ben.m.cahill@intel.com>
+>> >
+>> > Update iwl3945_apm_init() to set up device registers in sequence most recently
+>> > recommended by factory.
+>> >
+>> > Add resets for APMG interrupts and radio chip, formerly done only in
+>> > iwl3945_apm_reset(); moving them here assures that apm_init() will do
+>> > a complete job of preparing hardware not only after platform boot,
+>> > but also after apm_stop() has executed (due to rfkill, ifconfig down,
+>> > driver unload, etc.).  This is in preparation to completely remove apm_reset().
+>> >
+>> > Add some comments.
+>> >
+>> > Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+>> > Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+>>
+>> Is this actually a regression?  Can you provide a reference to the bug report?
+>
+> This is something we discovered in the lab when we connected power
+> measurement tools to the device when the interface was down. In this
+> scenario the device is using a lot of power. This is not a regression
+> from the previous kernel version, it is something that was broken for a
+> while and only recently discovered.
+>
+> Patches 2/17 and 3/17 address this issue and the above comment applies
+> to both.
+>
+> We are still looking into issues related to this discovery and you may
+> see more fixes for this problem.
+>
+> Reinette
+>
+>
+>
+>
+>
+> ------------------------------------------------------------------------------
+> Come build with us! The BlackBerry(R) Developer Conference in SF, CA
+> is the only developer event you need to attend this year. Jumpstart your
+> developing skills, take BlackBerry mobile applications to market and stay
+> ahead of the curve. Join us from November 9 - 12, 2009. Register now!
+> http://p.sf.net/sfu/devconference
+> _______________________________________________
+> Ipw3945-devel mailing list
+> Ipw3945-devel@lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
+>
