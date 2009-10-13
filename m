@@ -1,70 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43344 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751984AbZJWNf2 (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:36129 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933766AbZJMJuN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 09:35:28 -0400
-Subject: Re: [PATCH] cfg80211: sme: deauthenticate on assoc failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <20091023040623.GA8786@jm.kir.nu>
-References: <1256018933.4475.6.camel@johannes.local>
-	 <20091023040623.GA8786@jm.kir.nu>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-DPwYNhE8vRC1Fax5lW53"
-Date: Fri, 23 Oct 2009 15:35:07 +0200
-Message-Id: <1256304907.12174.21.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 13 Oct 2009 05:50:13 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 10/22] wl1271: Remove busy-word checking
+Date: Tue, 13 Oct 2009 12:47:47 +0300
+Message-Id: <1255427279-1224-11-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
+References: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
---=-DPwYNhE8vRC1Fax5lW53
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Remove busy-word checking to work around an SPI bug. To reduce the
+chance of chipset-busy scenarios, increment the number of fixed busy
+words.
 
-On Thu, 2009-10-22 at 21:07 -0700, Jouni Malinen wrote:
-> On Tue, Oct 20, 2009 at 03:08:53PM +0900, Johannes Berg wrote:
-> > When the in-kernel SME gets an association failure from
-> > the AP we don't deauthenticate, and thus get into a very
-> > confused state which will lead to warnings later on. Fix
-> > this by actually deauthenticating when the AP indicates
-> > an association failure.
->=20
-> While this may be a reasonable change to resolve an issue now, this may
-> not be the best long term solution. There are some association failure
-> cases which should really be handled by trying association again instead
-> of deauthenticating. The main example would be the association comeback
-> time use in IEEE 802.11w. In general, association failure should not
-> result in deauthentication in every case.
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271.h     |    6 ++++--
+ drivers/net/wireless/wl12xx/wl1271_spi.c |    6 +++---
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-I'm pretty sure the issue should be fixed with the other two patches
-Luis and I cooked up at KS.
-
-johannes
-
---=-DPwYNhE8vRC1Fax5lW53
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK4bEIAAoJEODzc/N7+QmaQPAQAL05NlYucD6lHZ6vTz0/U396
-njkuNDn4yF5vzMBCU54siNslxVP3Y8+wabShq58eHAT4F33mEivv52bQ4LYj/UYV
-V8QevWCXyIWiNK/qB5GJOMq4ShJL9A5x7+rfeyB7OrBhT6COBF57mTOr03PuWehB
-U9qmCH4B+f4uGAmuLLJcc4VR2w4ZqXetH83iJ2P4/kMMR/xuGybPTHeSsvUgdWOr
-8+BJKigMoOeVgh/KYh+uDhMSZrVcWgLQn03rGp/hM0H6bm/tFRDM963nbnjT4fJn
-cRMzDhGtC6uTRfgm+TSFGM1GeMdPmI7YwNR8CEpVm+BqUzZKV7F4stR2wCx+uZYO
-Ful64LxdTUx4EgLJqIxB4JzPtocb5SY4lLIke6PnJFI1de68Xqd1GWHe/7eM0UAr
-j8xHHfygmYeTbX7MH3Iqx7J8RlYUSckYMyFPqdrrLFgQ346kC4UDlsuZjHfaJHqU
-blnl0iPHLQI9WttukG2/G1L3IL6diDsOD15UJmpCN1DyGn4602FhCOrlGsDgqpXB
-Pvxc77qK4hsdfXVkct19sXydbay12IkCMa0gowzwFG55r0fT6TnWBkJUFYNPENEH
-bFXQdHl3asnFYJwCHaBtcSPQ2IdUYsmHDZ3zCcw5hykMhmvWipQ7zsvyaF+9UGcO
-IiVbRHgKvO1ARAuqmu72
-=0FDq
------END PGP SIGNATURE-----
-
---=-DPwYNhE8vRC1Fax5lW53--
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index 648223f..e0ebb1f 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -115,9 +115,11 @@ enum {
+ /*
+  * FIXME: for the wl1271, a busy word count of 1 here will result in a more
+  * optimal SPI interface. There is some SPI bug however, causing RXS time outs
+- * with this mode occasionally on boot, so lets have two for now.
++ * with this mode occasionally on boot, so lets have three for now. A value of
++ * three should make sure, that the chipset will always be ready, though this
++ * will impact throughput and latencies slightly.
+  */
+-#define WL1271_BUSY_WORD_CNT 2
++#define WL1271_BUSY_WORD_CNT 3
+ #define WL1271_BUSY_WORD_LEN (WL1271_BUSY_WORD_CNT * sizeof(u32))
+ 
+ #define WL1271_ELP_HW_STATE_ASLEEP 0
+diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
+index 4800fdf..3c5aa58 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
+@@ -294,9 +294,9 @@ void wl1271_spi_raw_read(struct wl1271 *wl, int addr, void *buf,
+ 
+ 	spi_sync(wl->spi, &m);
+ 
+-	/* Check busy words */
+-	if (!(busy_buf[WL1271_BUSY_WORD_CNT - 1] & 0x1))
+-		wl1271_spi_read_busy(wl, buf, len);
++	/* FIXME: Check busy words, removed due to SPI bug */
++	/* if (!(busy_buf[WL1271_BUSY_WORD_CNT - 1] & 0x1))
++	   wl1271_spi_read_busy(wl, buf, len); */
+ 
+ 	wl1271_dump(DEBUG_SPI, "spi_read cmd -> ", cmd, sizeof(*cmd));
+ 	wl1271_dump(DEBUG_SPI, "spi_read buf <- ", buf, len);
+-- 
+1.5.6.5
 
