@@ -1,61 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f216.google.com ([209.85.217.216]:40300 "EHLO
-	mail-gx0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754252AbZJZFjN (ORCPT
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:35991 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752468AbZJMSRg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 01:39:13 -0400
-Received: by gxk8 with SMTP id 8so13130068gxk.1
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2009 22:39:17 -0700 (PDT)
-Message-ID: <4AE53603.1040506@lwfinger.net>
-Date: Mon, 26 Oct 2009 00:39:15 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 13 Oct 2009 14:17:36 -0400
+To: linux-omap@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rx51: add wl1251 wlan driver support
+References: <20091013165812.1623.66247.stgit@tikku>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 13 Oct 2009 21:16:57 +0300
+In-Reply-To: <20091013165812.1623.66247.stgit@tikku> (Kalle Valo's message of "Tue\, 13 Oct 2009 19\:58\:13 +0300")
+Message-ID: <87ljjfnopy.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Rate-setting problem with Broadcom 4315
-References: <4AE49F0F.1060901@lwfinger.net> <4AE520F1.2070704@openwrt.org>
-In-Reply-To: <4AE520F1.2070704@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Actually, the rate-setting mechanism is working. If I looked at the
-iwconfig rate while a transmission was in progress, the rate toggled
-between 48 and 54 Mb/s. When I checked between tests, it showed 1
-Mb/s, which is what fooled me.
+Kalle Valo <kalle.valo@iki.fi> writes:
 
-The rc_stats table is:
+> From: Kalle Valo <kalle.valo@nokia.com>
+>
+> wl1251 is connected to the SPI bus in rx51, add support for this.
+>
+> Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 
-rate     throughput  ewma prob   this prob  this succ/attempt
-success    attempts
-  P  1         0.9       99.9      100.0          0(  0)        314
-      314
-     2         1.8       96.9      100.0          0(  0)         15
-       16
-     5.5       4.8       95.7      100.0          0(  0)         12
-       12
-    11         9.5       99.9      100.0          0(  0)        134
-      138
-     6         5.4       95.7      100.0          0(  0)         11
-       11
-     9         8.0       95.7      100.0          0(  0)         11
-       11
-    12        10.6       95.7      100.0          0(  0)         11
-       11
-    18        15.5       95.5      100.0          0(  0)         12
-       13
-    24        20.3       95.7      100.0          0(  0)         12
-       12
-    36        29.3       96.5       96.4          0(  0)       4118
-     4249
-T   48        37.6       96.3      100.0         23( 23)     376174
-   414958
- t  54        36.8       84.8       81.5         62( 76)     356248
-   427489
+This is intended for 2.6.33. Also to really work it needs this patch:
 
-Total packet count::    ideal 6627      lookaround 348
+wl1251: rename spi device to wl1251
+http://www.spinics.net/lists/linux-wireless/msg40740.html
 
-The automatic throughput is about 13 Mb/s.
+The patch should be in wireless-testing within next few days and
+finally it will go to 2.6.33.
 
-Larry
+(Please note that the two patches have no compile time dependency so
+they can go to mainline via separate trees.)
 
+-- 
+Kalle Valo
