@@ -1,73 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:33923 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756063AbZJAJvY (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:43296 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759233AbZJMJto (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2009 05:51:24 -0400
-Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
-	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n919ngob011355
-	for <linux-wireless@vger.kernel.org>; Thu, 1 Oct 2009 04:50:35 -0500
-Received: from [127.0.1.1] (essapo-nirac253112.europe.nokia.com [10.162.253.112])
-	by mgw-da01.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n919pLef023627
-	for <linux-wireless@vger.kernel.org>; Thu, 1 Oct 2009 12:51:22 +0300
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH] wl1251: remove wl1251_netlink.h
-To: linux-wireless@vger.kernel.org
-Date: Thu, 01 Oct 2009 12:51:20 +0300
-Message-ID: <20091001095119.14320.61001.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Tue, 13 Oct 2009 05:49:44 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 01/22] wl1271: Workaround for reference clock setting on boot.
+Date: Tue, 13 Oct 2009 12:47:38 +0300
+Message-Id: <1255427279-1224-2-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
+References: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-The file was accidentally added in commit ef2f8d4577 ("wl1251: add
-wl1251 prefix to all 1251 files"). This happened when I rebased the
-patches from a private tree.
+If the 38.4MHz reference clock is configured to the firmware, it crashes
+on boot. Configuring an experimental 38.4MHz in XTAL mode allows the
+firmware to boot, and everything appears to work.
 
-Reported-by: Robert P. J. Day <rpjday@crashcourse.ca>
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
 ---
+ drivers/net/wireless/wl12xx/wl1271_init.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
 
- drivers/net/wireless/wl12xx/wl1251_netlink.h |   30 --------------------------
- 1 files changed, 0 insertions(+), 30 deletions(-)
- delete mode 100644 drivers/net/wireless/wl12xx/wl1251_netlink.h
-
-diff --git a/drivers/net/wireless/wl12xx/wl1251_netlink.h b/drivers/net/wireless/wl12xx/wl1251_netlink.h
-deleted file mode 100644
-index ee36695..0000000
---- a/drivers/net/wireless/wl12xx/wl1251_netlink.h
-+++ /dev/null
-@@ -1,30 +0,0 @@
--/*
-- * This file is part of wl1251
-- *
-- * Copyright (C) 2009 Nokia Corporation
-- *
-- * Contact: Kalle Valo <kalle.valo@nokia.com>
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * version 2 as published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-- * 02110-1301 USA
-- *
-- */
--
--#ifndef __WL1251_NETLINK_H__
--#define __WL1251_NETLINK_H__
--
--int wl1251_nl_register(void);
--void wl1251_nl_unregister(void);
--
--#endif /* __WL1251_NETLINK_H__ */
+diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
+index e45af07..9abe062 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_init.c
++++ b/drivers/net/wireless/wl12xx/wl1271_init.c
+@@ -196,7 +196,14 @@ static int wl1271_init_general_parms(struct wl1271 *wl)
+ 
+ 	gen_parms->id = TEST_CMD_INI_FILE_GENERAL_PARAM;
+ 
+-	gen_parms->ref_clk = REF_CLK_38_4_E;
++	/*
++	 * FIXME: The firmware crashes on boot with REF_CLK_38_4_E as clock.
++	 *        according to TI engineers, ref clk 5 is an unofficial
++	 *        38.4 XTAL clock config, which seems to boot the device.
++	 *        Restore correct value once the real problem source is
++	 *        identified.
++	 */
++	gen_parms->ref_clk = 5; /* REF_CLK_38_4_E; */
+ 	/* FIXME: magic numbers */
+ 	gen_parms->settling_time = 5;
+ 	gen_parms->clk_valid_on_wakeup = 0;
+-- 
+1.5.6.5
 
