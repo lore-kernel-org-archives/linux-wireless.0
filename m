@@ -1,77 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:33100 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760819AbZJINuw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2009 09:50:52 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: pull request: wireless-2.6 2009-10-08
-Date: Fri, 9 Oct 2009 15:49:41 +0200
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20091008223454.GB2798@tuxdriver.com> <200910090108.08838.mb@bu3sch.de> <20091009132317.GA22719@tuxdriver.com>
-In-Reply-To: <20091009132317.GA22719@tuxdriver.com>
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:54998 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751373AbZJMT5C convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Oct 2009 15:57:02 -0400
+Received: by iwn10 with SMTP id 10so2960212iwn.4
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2009 12:56:26 -0700 (PDT)
 MIME-Version: 1.0
-Message-Id: <200910091549.42933.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+In-Reply-To: <1255382358-20760-8-git-send-email-hauke@hauke-m.de>
+References: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
+	<1255382358-20760-8-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 13 Oct 2009 12:56:06 -0700
+Message-ID: <43e72e890910131256n36fc0e8em6735c69128c3e593@mail.gmail.com>
+Subject: Re: [PATCH 6/9] [compat-2.6] Fix build with kernel < 2.6.27
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 09 October 2009 15:23:17 John W. Linville wrote:
-> On Fri, Oct 09, 2009 at 01:08:06AM +0200, Michael Buesch wrote:
-> > On Friday 09 October 2009 00:34:54 John W. Linville wrote:
-> > > Albert Herranz (1):
-> > >       b43: do not stack-allocate pio rx/tx header and tail buffers
-> > 
-> > Come on, this is _not_ funny anymore. I did _not_ ack this patch, because I do _not_ like it.
-> > I was planning to do a better solution, but I didn't have the time, yet.
-> > Can you _please_ either:
-> > - Wait for my ack before you apply random b43 patches
-> > or
-> > - Remove me from MAINTAINERS
-> 
-> Michael,
-> 
-> After Albert posted his first version of the patch, you said:
-> 
-> "Just embed it into struct b43_wl (surround it by #ifdef CONFIG_B43_PIO). No need
-> to kzalloc then and it saves some memory.
-> You also need to alloc 4 bytes for the tail buffer (that currently is on the stack, too)."
-> 
-> AFAICT he complied with that request when he posted the second version.
+On Mon, Oct 12, 2009 at 2:19 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> iw_handler.h have changed in kernel 2.6.27.
+> For older kernel we need some extra backport code.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  compat/compat-2.6.27.h |   20 ++++++++++++++++++++
+>  1 files changed, 20 insertions(+), 0 deletions(-)
+>
+> diff --git a/compat/compat-2.6.27.h b/compat/compat-2.6.27.h
+> index 2543482..8cc6c22 100644
+> --- a/compat/compat-2.6.27.h
+> +++ b/compat/compat-2.6.27.h
+> @@ -163,6 +163,26 @@ static inline void list_splice_tail_init(struct list_head *list,
+>  extern unsigned int mmc_align_data_size(struct mmc_card *, unsigned int);
+>  extern unsigned int sdio_align_size(struct sdio_func *func, unsigned int sz);
+>
+> +/** Include iw_handler.h before we redefine some methods **/
+> +#include <net/iw_handler.h>
+> +
+> +#define iwe_stream_add_value(info, event, value, ends, iwe, event_len) iwe_stream_add_value(event, value, ends, iwe, event_len)
+> +#define iwe_stream_add_point(info, stream, ends, iwe, extra) iwe_stream_add_point(stream, ends, iwe, extra)
+> +#define iwe_stream_add_event(info, stream, ends, iwe, event_len) iwe_stream_add_event(stream, ends, iwe, event_len)
+> +
+> +/* Flags available in struct iw_request_info */
+> +#define IW_REQUEST_FLAG_COMPAT 0x0001  /* Compat ioctl call */
+> +
+> +static inline int iwe_stream_lcp_len(struct iw_request_info *info)
+> +{
+> +#ifdef CONFIG_COMPAT
+> +       if (info->flags & IW_REQUEST_FLAG_COMPAT)
+> +               return IW_EV_COMPAT_LCP_LEN;
+> +#endif
+> +       return IW_EV_LCP_LEN;
+> +}
+> +/** source: include/net/iw_handler.h **/
+> +
+>  #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27)) */
+>
+>  #endif /* LINUX_26_27_COMPAT_H */
 
-Yeah, but I don't like the result for reasons I already said.
-I'll send another patch that moves the structure back and cleans up stuff later.
+I guess for older releases where we copied over the iw_handler.h we
+were then sending the kernel the wrong data for these callers. We
+could just try to propagate the iw_handler changes to
+compat-wireless-stable. This would probably fix a few unreported
+issues.
 
-> Since the patch seemed fine otherwise, I applied it; and since it is
-> a fix I sent it on for 2.6.32.
-
-Well, we once had a rule that not everything that remotely looks like a fix should
-go in, after the merge window closed. AFAIR this rule was made by Linus and I think
-it does make sense, in some way.
-This touched a lot of crap for fixing something that
-a) is not a bug on any officially supported device
-b) just triggers a harmless warning on devices that virtually nobody owns and/or
-  runs linux on (Nintendo Wii), if some specific debugging option is enabled.
-So I don't buy the argument that suddenly millions over millions of bugreports will
-flood the lists, if we didn't apply this.
-
-I think we should be more careful about what patches are applied. Otherwise I'm sure
-Linus will start to complain about crap pull requests with huge modifications again.
-And he'd be right.
-
-> P.S.  Please understand that while some driver maintainers want to
-> ack every patch, others see that as a burden and get annoyed with me
-> if I don't apply reasonable patches without bothering them.  It can
-> be a bit difficult these things...
-
-Yeah, however I think I _do_ respond very quickly to any patch that matters
-with either an ack or comments.
-I think it's always a good idea to wait for a final ack on a patch that
-a maintainer complained about. If nobody complained, well that's a different thing.
-I'd still prefer a review delay of at least 24hours for those, to ensure somebody
-knowing the code has a chance to look at them.
-
--- 
-Greetings, Michael.
+  Luis
