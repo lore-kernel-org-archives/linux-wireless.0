@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:38377 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933252AbZJFVfz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 17:35:55 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: b43: fix wldev use after free
-Date: Tue, 6 Oct 2009 23:35:09 +0200
-Cc: Dave Young <hidave.darkstar@gmail.com>, linville@tuxdriver.com,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-References: <20091001084924.GA4170@darkstar> <20091006142822.55d5120c.akpm@linux-foundation.org>
-In-Reply-To: <20091006142822.55d5120c.akpm@linux-foundation.org>
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:38925 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751647AbZJMUIt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Oct 2009 16:08:49 -0400
+Received: by iwn10 with SMTP id 10so2967034iwn.4
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2009 13:08:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200910062335.12069.mb@bu3sch.de>
+In-Reply-To: <43e72e890910131239x60c3f8d7j784dcf2a3cd9de51@mail.gmail.com>
+References: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
+	<1255382358-20760-2-git-send-email-hauke@hauke-m.de> <43e72e890910131239x60c3f8d7j784dcf2a3cd9de51@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 13 Oct 2009 13:07:53 -0700
+Message-ID: <43e72e890910131307n112b7e88gfca5572aabeb0de2@mail.gmail.com>
+Subject: Re: [PATCH 1/9] [compat-2.6 and compat-stable] Export
+	round_jiffies_up again.
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, larry.finger@gmail.com,
+	Greg KH <greg@kroah.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 06 October 2009 23:28:22 Andrew Morton wrote:
-> > fix it by call b43_leds_unregister before b43_one_core_detach
-> > if it is the last one in wl->devlist
-> > 
-> 
-> It appears that a different fix was added to linux-next yesterday:
+On Tue, Oct 13, 2009 at 12:39 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
 
-Yes, this one is better, because it doesn't really change the code. It just removes
-one unnecessary pointer usage.
+> because otherwise then we have here the define so existing
+> wireless-testing code maps to the backport_round_jiffies_up(), and the
+> declaration of round_jiffies_up() also gets preprocessed as
+> backport_round_jiffies_up() -- the only thing missing would be the
+> compat exported symbol but I saw that didn't change.
 
--- 
-Greetings, Michael.
+Come to think of it -- because of the define you added the
+compat-2.6.28 code *will* rename the code to add the backport_ prefix
+so that is why this compiles. I'll leave it like that. Thanks.
+
+  Luis
