@@ -1,64 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:37719 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752664AbZJQVU6 (ORCPT
+Received: from mail-bw0-f210.google.com ([209.85.218.210]:60204 "EHLO
+	mail-bw0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754488AbZJMIFx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2009 17:20:58 -0400
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 2/2] rt2x00: Implement support for rt2800pci
-Date: Sat, 17 Oct 2009 23:18:56 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Alban Browaeys <prahal@yahoo.com>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	Mattias Nissler <mattias.nissler@gmx.de>,
-	Mark Asselstine <asselsm@gmail.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
-References: <200910152137.58164.IvDoorn@gmail.com> <200910152204.16407.IvDoorn@gmail.com> <200910171654.03344.bzolnier@gmail.com>
-In-Reply-To: <200910171654.03344.bzolnier@gmail.com>
+	Tue, 13 Oct 2009 04:05:53 -0400
+Received: by bwz6 with SMTP id 6so3683348bwz.37
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2009 01:05:15 -0700 (PDT)
+Message-ID: <4AD434B6.3090903@gmail.com>
+Date: Tue, 13 Oct 2009 10:05:10 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-Message-Id: <200910172318.56929.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="utf-8"
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com, IvDoorn@gmail.com
+Subject: [PATCH] rt2800pci.c : more ids
+Content-Type: multipart/mixed;
+ boundary="------------070907000607080300050105"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 17 October 2009 16:54:03 Bartlomiej Zolnierkiewicz wrote:
-> 
-> [ I somehow missed this one by not being on cc: ]
-> 
-> On Thursday 15 October 2009 22:04:14 Ivo van Doorn wrote:
-> > Add support for the rt2860/rt3090 chipsets from Ralink.
-> > 
-> > Includes various patches from a lot of people who helped
-> > getting this driver into the current shape.
-> > 
-> > Signed-off-by: Alban Browaeys <prahal@yahoo.com>
-> > Signed-off-by: Benoit PAPILLAULT <benoit.papillault@free.fr>
-> > Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> > Signed-off-by: Luis Correia <luis.f.correia@gmail.com>
-> > Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
-> > Signed-off-by: Mark Asselstine <asselsm@gmail.com>
-> > Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> > ---
-> > http://kernel.org/pub/linux/kernel/people/ivd/patches/0003-rt2x00-Implement-support-for-rt2800pci.patch
-> 
-> First let me say that I'm very happy to see this patch finally being
-> submitted and I appreciate the effort..
-> 
-> (I'll give it a spin on Eee 901 w/ 2.6.32-rc5 sometime later..)
+This is a multi-part message in MIME format.
+--------------070907000607080300050105
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 8bit
 
-Unfortunately still no luck with it, works just like it worked when I first
-tried it half a year ago (loads OK but "iwlist wlan0 scan" doesn't bring any
-results)..
+hi,
 
-Could somebody with the genuine RT2860 revision of the chip try the driver
-and confirm that it works w/ 2.6.32-rc5 so I will know whether I should be
-looking for some generic problem or RT2880 revision specific one?
+stolen from windows inf file(09/05/2009, 1.04.07.0000)
 
-Thanks.
+0x1814, 0x3060
+
+-thanks-
+
+regards,
+-- 
+«Allá muevan feroz guerra, ciegos reyes por un palmo más de tierra;
+que yo aquí tengo por mío cuanto abarca el mar bravío, a quien nadie
+impuso leyes. Y no hay playa, sea cualquiera, ni bandera de esplendor,
+que no sienta mi derecho y dé pecho a mi valor.»
+
+--------------070907000607080300050105
+Content-Type: text/plain;
+ name="new_id-2800pci.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="new_id-2800pci.diff"
+
+diff -Nuar o/drivers/net/wireless/rt2800pci.c n/drivers/net/wireless/rt2800pci.c
+--- o/drivers/net/wireless/rt2800pci.c	2009-10-13 09:57:37.523379731 +0200
++++ n/drivers/net/wireless/rt2800pci.c	2009-10-13 09:56:53.169379162 +0200
+@@ -3237,6 +3237,7 @@
+ 	{ PCI_DEVICE(0x1814, 0x0681), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1814, 0x0701), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1814, 0x0781), PCI_DEVICE_DATA(&rt2800pci_ops) },
++	{ PCI_DEVICE(0x1814, 0x3060), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1814, 0x3062), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1814, 0x3090), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1814, 0x3091), PCI_DEVICE_DATA(&rt2800pci_ops) },
+
+--------------070907000607080300050105--
