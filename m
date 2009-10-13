@@ -1,72 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40920 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752559AbZJZNb3 (ORCPT
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:42479 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934172AbZJMTXW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 09:31:29 -0400
-Subject: Re: "Reserved instruction in kernel code" on ath9k insertion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomasz Chmielewski <mangoo@wpkg.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4AE5A3DC.1090804@wpkg.org>
-References: <4AE35A9E.8000507@wpkg.org>
-	 <43e72e890910260617n6efbd260gcafbf5d1d2c84e23@mail.gmail.com>
-	 <4AE5A3DC.1090804@wpkg.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-mYNsPsOUe3/jSlzcBvJj"
-Date: Mon, 26 Oct 2009 14:31:18 +0100
-Message-ID: <1256563878.12462.4.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 13 Oct 2009 15:23:22 -0400
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: Current status of rt2800usb and staging/rt2870
+Date: Tue, 13 Oct 2009 21:21:25 +0200
+Cc: Ozan =?utf-8?q?=C3=87a=C4=9Flayan?= <ozan@pardus.org.tr>,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel" <linux-kernel@vger.kernel.org>
+References: <4AD46380.9020308@pardus.org.tr> <200910131927.24136.bzolnier@gmail.com> <200910132017.47748.IvDoorn@gmail.com>
+In-Reply-To: <200910132017.47748.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Message-Id: <200910132121.25743.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday 13 October 2009 20:17:47 Ivo van Doorn wrote:
+> On Tuesday 13 October 2009, Bartlomiej Zolnierkiewicz wrote:
+> > On Tuesday 13 October 2009 17:52:52 Ivo van Doorn wrote:
+> > 
+> > > I am going to merge rt2800pci soon as well and after that I'll send a patch
+> > 
+> > Great, I've been waiting for this for a long time.
+> > 
+> > > to remove all Ralink drivers from the staging tree.
+> > 
+> > Till new drivers obtain support for all hardware currently covered by
+> > the unified staging drivers the latter shouldn't be removed as they
+> > serve well their role as a temporary solution allowing real Linux users
+> > to user their real hardware and as a reference material for developers
+> > willing to work on adding the missing bits to new drivers.
+> 
+> The rt2800pci and rt2800usb drivers cover support for rt2860/rt2870/rt3070 devices,
+> which are present as individual drivers in the staging tree. So far it only managed
 
---=-mYNsPsOUe3/jSlzcBvJj
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+There are no longer individual drivers.
 
-On Mon, 2009-10-26 at 14:27 +0100, Tomasz Chmielewski wrote:
+Instead there is one shared source code and two device drivers:
 
-> >> [  165.440000]     Not tainted
-> >=20
-> > This says not tainted.
->=20
-> (...)
->=20
-> >> [  165.440000] Disabling lock debugging due to kernel taint
-> >=20
-> > But this says kernel taint.
->=20
-> Yep, I saw this as well.
->=20
-> About every oops or panic on this hardware says "Disabling lock=20
-> debugging due to kernel taint", no idea why.
+- rt2860 covering RT2860 and RT3090 devices
 
-Umm, oopsing itself taints the kernel, so _after/during_ the oops lock
-debugging _gets_ disabled.
+- rt2870 covering RT2870 and RT3070 devices
 
-johannes
+In comparison rt2800usb currently lacks RT3070 support and rt2800pci's
+RT3090 support is basic at best (not to mention that it didn't work for
+RT2860 last time that I tried)..
 
---=-mYNsPsOUe3/jSlzcBvJj
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+> to confuse developers which wanted to work on Ralink support, so I haven't found
 
------BEGIN PGP SIGNATURE-----
+I bet they are truly grateful for being shown "the one and only way"..
 
-iQIcBAABAgAGBQJK5aSjAAoJEODzc/N7+QmaQYgQAMV4vqOtS374DJyt0BSVanFw
-j4itx79NkJDhliOVBYNNV0PK2Sj9mbRYB6UfnOfI4EjGjcoA8uKmft2VjbsKpIxG
-SpkF1s7Raiadpo8Xu+sIu2mRyagr7q9qN/DMey912PYUXn+IM3OPk4IFNxu0ORtJ
-yv2x8D/xkLfDnCoMJ9pFv5aXKBLdBiNyFCbTCUDBeyK4M27pC/clph70WcYozVG2
-wH7PQwEs49/CuPQa0fin1jgJJo0tUl2zn7drimeRj/2Iiy2cAwueEqYs/UabF4PD
-RkOTgnflB1OwPWVZPLHP3fEriPasCTu1KZ4Xza5mQ7BDbIzmUVB/Vtd0CniglrT3
-pOSPIR3EXoAnCZXtFguUSZ4KNS2dHh2j5pKm69GobbjZwfjYPbiRFyp9VQMCqYjR
-pP2NQ5qLTEA7yyQR+aLPGyh1inKL7K34AoYXpp6KIEHTaQyCD7GLlCJyfKmTj6JJ
-e3odFhpEandJnzlAvEn9wVb+9N8KWuhCq+wBkir5seUOH/GGWJhMSRpN3777nULD
-+v/EoMO9qTXnEi1M/xlA3wE4hOV/frP3aotFITPMyQymrmNfHLKPJS/glqpS6EXh
-emQkDFhC+UnHTfmQdPn1MKv/BZQTy28MmzjYJ4yWHZFsG6gUA9Nw4b/ZNEohhRzh
-W9a18+0qru26WpQP6MMl
-=lnqW
------END PGP SIGNATURE-----
+> a benefit for having those drivers in the staging tree yet. But I am sure there are plenty
 
---=-mYNsPsOUe3/jSlzcBvJj--
+I was able to use my Eee 901 successfully with them for a last year and I'm
+pretty sure that I'm not the only.  I understand my sin now -- I should have
+had help in fixing the proper and clean code before using my hardware.. [*]
 
+> of people who like the idea of having the original Ralink drivers inside the staging tree,
+> so they can continue debugging that, so I won't talk about the staging downsides further.
+
+Well, it would be much more productive if people concentrate on improving
+_their_ projects and looking at downsides of _their_ code instead of going
+around and looking at _obvious_ downsides of other people's projects.
+
+
+[*] [Slightly off-topic but it shows the same problem with the approach]
+
+I now also see why some distributions keep pushing some known non-working
+things on their users (Fedora maintainers -- I'm talking to you), the best
+example is PulseAudio -- it simply doesn't work reliably even on modern
+hardware and/or using all scheduler tricks (it seems that making Linux into
+full RT OS is a prerequisite for fixing latency issues observed)..
+
+So yeah desktop/laptop/mobile users, do not worry -- you will get your sound
+support back in few years time and if you're developer: don't dare to complain
+you fussy saboteur!!
