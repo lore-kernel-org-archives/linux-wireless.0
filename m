@@ -1,57 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54220 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750898AbZJ3GtD (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:36111 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933734AbZJMJt6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 02:49:03 -0400
-Subject: Re: OOPS in cfg80211_conn_work
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Parag Warudkar <parag.lkml@gmail.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <f7848160910291617q2b168089l5ce489d2f47ebe96@mail.gmail.com>
-References: <f7848160910291617q2b168089l5ce489d2f47ebe96@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ZuEdxnCa5WlQMjeiPlCa"
-Date: Fri, 30 Oct 2009 07:49:03 +0100
-Message-ID: <1256885343.3555.0.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 13 Oct 2009 05:49:58 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 08/22] wl1271: Fix IRQ enable handling on FW init failure
+Date: Tue, 13 Oct 2009 12:47:45 +0300
+Message-Id: <1255427279-1224-9-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
+References: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
---=-ZuEdxnCa5WlQMjeiPlCa
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Disable IRQ's after FW initialization failure - originally this was not
+done in all cases, and it resulted in a kernel warning if firmware
+initialization was tried again without reboot.
 
-On Thu, 2009-10-29 at 19:17 -0400, Parag Warudkar wrote:
-> Oct 29 18:59:06 parag-laptop kernel: [  143.180037] wlan0:
-> deauthenticating from 00:16:01:d6:6f:12 by local choice (reason=3D3)
-> Oct 29 18:59:06 parag-laptop kernel: [  143.181137] wlan0: direct
-> probe to AP 00:16:01:d6:6f:12 (try 1)
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_boot.c |    6 ++--
+ drivers/net/wireless/wl12xx/wl1271_init.c |    4 +-
+ drivers/net/wireless/wl12xx/wl1271_main.c |   42 ++++++++++++++++++++--------
+ 3 files changed, 35 insertions(+), 17 deletions(-)
 
-sorry, I can't read this log. please provide a non-wrapped version
-
-johannes
-
---=-ZuEdxnCa5WlQMjeiPlCa
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK6oxbAAoJEODzc/N7+QmaH00QAMf7hj6U0Jx4RBwslNqnv8+z
-swxzGj1nzHPI3h44i9O+6t1Ygzvl/6xCWmaQMJlR0vX7sVr1NE01k90tLrFJmg44
-xWHZY5XaF6U9SzWzJ8a9WGz1ngoIiSghVIvSC83+Lbr0zQAZzjM1AGtbaHsOx69l
-vj9oRZZW+9lZatVCa1fmc/5N4P8TGfa3KDbQorlo17b7SEVNQXrA5pHf2vlLoK+g
-iH59ovKDdCuX+ovDu96gl6GkX+D8qEGMsZ1wfbjlmQQWY0WRA5MovpZcrPTV/dbE
-qaY22Wf9Cp0WxRIOvoEN8kHzyttu8g/Rvyccmp+Guy3V4IhelJWfYQ8N7HJ6EVlh
-tezI4xPCV3gr76tpdIfhCPt1wf3M9481iNSqeIZSAXiHS7UvW2RMzncMMXsspQLC
-LecQWyg3z0OtUQR1t+VOuG5Gy/v7RvT2ej/h3gojwFi88r2aJmWKtLJacaXsf6xM
-DBUvv2+zo/fo/vE94fyL1Do4II3unqPoBv6PsOefi36bXVwK7daCBtplwdApCF+7
-h1u3JTUX4IY1NK0Aw/odQ81o1lIVKOOwpcYFw/mzdcDeo8sjR8QtOkf43579d3i+
-cgTA1ozkqYuhGbzAXhSTLDYMvImENAHSqVz95T7ml6XDYbyXRyfxGtGrYHJR+zcR
-r4bA+huTPHdTBwEHQwrV
-=gyan
------END PGP SIGNATURE-----
-
---=-ZuEdxnCa5WlQMjeiPlCa--
+diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
+index a27601d..b8a37a8 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_boot.c
++++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
+@@ -400,9 +400,6 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
+ 	 * ready to receive event from the command mailbox
+ 	 */
+ 
+-	/* enable gpio interrupts */
+-	wl1271_boot_enable_interrupts(wl);
+-
+ 	/* unmask required mbox events  */
+ 	wl->event_mask = BSS_LOSE_EVENT_ID |
+ 		SCAN_COMPLETE_EVENT_ID;
+@@ -540,6 +537,9 @@ int wl1271_boot(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		goto out;
+ 
++	/* Enable firmware interrupts now */
++	wl1271_boot_enable_interrupts(wl);
++
+ 	/* set the wl1271 default filters */
+ 	wl->rx_config = WL1271_DEFAULT_RX_CONFIG;
+ 	wl->rx_filter = WL1271_DEFAULT_RX_FILTER;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
+index 5c2cf1e..6f21eea 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_init.c
++++ b/drivers/net/wireless/wl12xx/wl1271_init.c
+@@ -315,8 +315,8 @@ int wl1271_hw_init(struct wl1271 *wl)
+ 
+ 	/* RX config */
+ 	ret = wl1271_init_rx_config(wl,
+-				       RX_CFG_PROMISCUOUS | RX_CFG_TSF,
+-				       RX_FILTER_OPTION_DEF);
++				    RX_CFG_PROMISCUOUS | RX_CFG_TSF,
++				    RX_FILTER_OPTION_DEF);
+ 	/* RX_CONFIG_OPTION_ANY_DST_ANY_BSS,
+ 	   RX_FILTER_OPTION_FILTER_ALL); */
+ 	if (ret < 0)
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index eba38df..7f1093c 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -625,7 +625,7 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
+ 
+ 		ret = wl1271_setup(wl);
+ 		if (ret < 0)
+-			goto out;
++			goto out_power_off;
+ 		break;
+ 	case CHIP_ID_1271_PG20:
+ 		wl1271_debug(DEBUG_BOOT, "chip id 0x%x (1271 PG20)",
+@@ -633,27 +633,32 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
+ 
+ 		ret = wl1271_setup(wl);
+ 		if (ret < 0)
+-			goto out;
++			goto out_power_off;
+ 		break;
+ 	default:
+ 		wl1271_error("unsupported chip id: 0x%x", wl->chip.id);
+ 		ret = -ENODEV;
+-		goto out;
++		goto out_power_off;
+ 	}
+ 
+ 	if (wl->fw == NULL) {
+ 		ret = wl1271_fetch_firmware(wl);
+ 		if (ret < 0)
+-			goto out;
++			goto out_power_off;
+ 	}
+ 
+ 	/* No NVS from netlink, try to get it from the filesystem */
+ 	if (wl->nvs == NULL) {
+ 		ret = wl1271_fetch_nvs(wl);
+ 		if (ret < 0)
+-			goto out;
++			goto out_power_off;
+ 	}
+ 
++	goto out;
++
++out_power_off:
++	wl1271_power_off(wl);
++
+ out:
+ 	return ret;
+ }
+@@ -749,13 +754,21 @@ int wl1271_plt_start(struct wl1271 *wl)
+ 
+ 	ret = wl1271_boot(wl);
+ 	if (ret < 0)
+-		goto out;
++		goto out_power_off;
+ 
+ 	wl1271_notice("firmware booted in PLT mode (%s)", wl->chip.fw_ver);
+ 
+ 	ret = wl1271_plt_init(wl);
+ 	if (ret < 0)
+-		goto out;
++		goto out_irq_disable;
++
++	goto out;
++
++out_irq_disable:
++	wl1271_disable_interrupts(wl);
++
++out_power_off:
++	wl1271_power_off(wl);
+ 
+ out:
+ 	mutex_unlock(&wl->mutex);
+@@ -843,20 +856,25 @@ static int wl1271_op_start(struct ieee80211_hw *hw)
+ 
+ 	ret = wl1271_boot(wl);
+ 	if (ret < 0)
+-		goto out;
++		goto out_power_off;
+ 
+ 	ret = wl1271_hw_init(wl);
+ 	if (ret < 0)
+-		goto out;
++		goto out_irq_disable;
+ 
+ 	wl->state = WL1271_STATE_ON;
+ 
+ 	wl1271_info("firmware booted (%s)", wl->chip.fw_ver);
+ 
+-out:
+-	if (ret < 0)
+-		wl1271_power_off(wl);
++	goto out;
++
++out_irq_disable:
++	wl1271_disable_interrupts(wl);
+ 
++out_power_off:
++	wl1271_power_off(wl);
++
++out:
+ 	mutex_unlock(&wl->mutex);
+ 
+ 	return ret;
+-- 
+1.5.6.5
 
