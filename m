@@ -1,47 +1,22 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:64656 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755590AbZJLMLF (ORCPT
+Received: from web55304.mail.re4.yahoo.com ([206.190.58.183]:36264 "HELO
+	web55304.mail.re4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751196AbZJMRkk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 08:11:05 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 12/16] wl1271: Update TX path block calucation algo
-Date: Mon, 12 Oct 2009 15:08:53 +0300
-Message-Id: <1255349337-9776-13-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 13 Oct 2009 13:40:40 -0400
+Message-ID: <103249.47839.qm@web55304.mail.re4.yahoo.com>
+Date: Tue, 13 Oct 2009 10:33:17 -0700 (PDT)
+From: X Xiao <austinxxh-linux@yahoo.com>
+Reply-To: austinxxh-linux@yahoo.com
+Subject: event tracing for mac80211
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <1255427279-1224-22-git-send-email-luciano.coelho@nokia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+I'm using compat-wireless 2009-10-09 with 2.6.30, is event tracing for mac80211(CONFIG_MAC80211_DRIVER_API_TRACER) working yet? I tried to use it with no success.
 
-Update the TX path block calculation algorithm based on TI reference.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_tx.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index 5d3aa4b..56a7f36 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -57,8 +57,8 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra)
- 	/* approximate the number of blocks required for this packet
- 	   in the firmware */
- 	/* FIXME: try to figure out what is done here and make it cleaner */
--	total_blocks = (total_len) >> TX_HW_BLOCK_SHIFT_DIV;
--	excluded = (total_blocks << 2) + (skb->len & 0xff) + 34;
-+	total_blocks = (total_len + 20) >> TX_HW_BLOCK_SHIFT_DIV;
-+	excluded = (total_blocks << 2) + ((total_len + 20) & 0xff) + 34;
- 	total_blocks += (excluded > 252) ? 2 : 1;
- 	total_blocks += TX_HW_BLOCK_SPARE;
- 
--- 
-1.5.6.5
-
+thanks!
+xxiao
