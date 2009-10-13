@@ -1,168 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39706 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753435AbZJ0Q7d (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:44165 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759957AbZJMRnX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2009 12:59:33 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+	Tue, 13 Oct 2009 13:43:23 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH] wl1251: rename spi device to wl1251
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 2/5] ath9k_hw: distinguish single-chip solutions on initial probe print
-Date: Tue, 27 Oct 2009 12:59:34 -0400
-Message-Id: <1256662777-20469-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1256662777-20469-1-git-send-email-lrodriguez@atheros.com>
-References: <1256662777-20469-1-git-send-email-lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 13 Oct 2009 20:41:20 +0300
+Message-ID: <20091013174119.15796.81021.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Devices with external radios have revisions which we can count on.
-On single chip solutions these EEPROM values for these radio revision
-also exist but are not meaningful as the radios are embedded onto the
-same chip. Each single-chip device evolves together as one device.
+From: Kalle Valo <kalle.valo@nokia.com>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+During rename of the driver from wl12xx to wl1251 the spi device name
+was accidentally left as wl12xx. Rename it to wl1251 which is the proper
+name of the driver.
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
- drivers/net/wireless/ath/ath9k/ahb.c |   11 ++++-------
- drivers/net/wireless/ath/ath9k/hw.c  |   31 +++++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath9k/hw.h  |    3 +--
- drivers/net/wireless/ath/ath9k/pci.c |   11 ++++-------
- 4 files changed, 36 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 41422c4..329e6bc 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -69,6 +69,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 	int irq;
- 	int ret = 0;
- 	struct ath_hw *ah;
-+	char hw_name[64];
+ drivers/net/wireless/wl12xx/wl1251_main.c |    2 +-
+ drivers/net/wireless/wl12xx/wl1251_spi.c  |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index 1103256..23ac503 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -1426,4 +1426,4 @@ EXPORT_SYMBOL_GPL(wl1251_free_hw);
+ MODULE_DESCRIPTION("TI wl1251 Wireles LAN Driver Core");
+ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Kalle Valo <kalle.valo@nokia.com>");
+-MODULE_ALIAS("spi:wl12xx");
++MODULE_ALIAS("spi:wl1251");
+diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
+index 14eff2b..2cf8a21 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
+@@ -307,7 +307,7 @@ static int __devexit wl1251_spi_remove(struct spi_device *spi)
  
- 	if (!pdev->dev.platform_data) {
- 		dev_err(&pdev->dev, "no platform data specified\n");
-@@ -133,15 +134,11 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 	}
- 
- 	ah = sc->sc_ah;
-+	ath9k_hw_name(ah, hw_name, sizeof(hw_name));
- 	printk(KERN_INFO
--	       "%s: Atheros AR%s MAC/BB Rev:%x, "
--	       "AR%s RF Rev:%x, mem=0x%lx, irq=%d\n",
-+	       "%s: %s mem=0x%lx, irq=%d\n",
- 	       wiphy_name(hw->wiphy),
--	       ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
--	       ah->hw_version.macRev,
--	       ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
--				 AR_RADIO_SREV_MAJOR)),
--	       ah->hw_version.phyRev,
-+	       hw_name,
- 	       (unsigned long)mem, irq);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index cf543e3..dedffb8 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -3959,7 +3959,7 @@ static struct {
- /*
-  * Return the MAC/BB name. "????" is returned if the MAC/BB is unknown.
-  */
--const char *ath9k_hw_mac_bb_name(u32 mac_bb_version)
-+static const char *ath9k_hw_mac_bb_name(u32 mac_bb_version)
- {
- 	int i;
- 
-@@ -3971,13 +3971,12 @@ const char *ath9k_hw_mac_bb_name(u32 mac_bb_version)
- 
- 	return "????";
- }
--EXPORT_SYMBOL(ath9k_hw_mac_bb_name);
- 
- /*
-  * Return the RF name. "????" is returned if the RF is unknown.
-  * Used for devices with external radios.
-  */
--const char *ath9k_hw_rf_name(u16 rf_version)
-+static const char *ath9k_hw_rf_name(u16 rf_version)
- {
- 	int i;
- 
-@@ -3989,4 +3988,28 @@ const char *ath9k_hw_rf_name(u16 rf_version)
- 
- 	return "????";
- }
--EXPORT_SYMBOL(ath9k_hw_rf_name);
-+
-+void ath9k_hw_name(struct ath_hw *ah, char *hw_name, size_t len)
-+{
-+	int used;
-+
-+	/* chipsets >= AR9280 are single-chip */
-+	if (AR_SREV_9280_10_OR_LATER(ah)) {
-+		used = snprintf(hw_name, len,
-+			       "Atheros AR%s Rev:%x",
-+			       ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
-+			       ah->hw_version.macRev);
-+	}
-+	else {
-+		used = snprintf(hw_name, len,
-+			       "Atheros AR%s MAC/BB Rev:%x AR%s RF Rev:%x",
-+			       ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
-+			       ah->hw_version.macRev,
-+			       ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
-+						AR_RADIO_SREV_MAJOR)),
-+			       ah->hw_version.phyRev);
-+	}
-+
-+	hw_name[used] = '\0';
-+}
-+EXPORT_SYMBOL(ath9k_hw_name);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 100fcba..c7b0c4d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -720,8 +720,7 @@ void ath_gen_timer_free(struct ath_hw *ah, struct ath_gen_timer *timer);
- void ath_gen_timer_isr(struct ath_hw *hw);
- u32 ath9k_hw_gettsf32(struct ath_hw *ah);
- 
--const char *ath9k_hw_mac_bb_name(u32 mac_bb_version);
--const char *ath9k_hw_rf_name(u16 rf_version);
-+void ath9k_hw_name(struct ath_hw *ah, char *hw_name, size_t len);
- 
- #define ATH_PCIE_CAP_LINK_CTRL	0x70
- #define ATH_PCIE_CAP_LINK_L0S	1
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 76f3890..5321f73 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -114,6 +114,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	u32 val;
- 	int ret = 0;
- 	struct ath_hw *ah;
-+	char hw_name[64];
- 
- 	if (pci_enable_device(pdev))
- 		return -EIO;
-@@ -218,15 +219,11 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	sc->irq = pdev->irq;
- 
- 	ah = sc->sc_ah;
-+	ath9k_hw_name(ah, hw_name, sizeof(hw_name));
- 	printk(KERN_INFO
--	       "%s: Atheros AR%s MAC/BB Rev:%x "
--	       "AR%s RF Rev:%x: mem=0x%lx, irq=%d\n",
-+	       "%s: %s mem=0x%lx, irq=%d\n",
- 	       wiphy_name(hw->wiphy),
--	       ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
--	       ah->hw_version.macRev,
--	       ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
--				 AR_RADIO_SREV_MAJOR)),
--	       ah->hw_version.phyRev,
-+	       hw_name,
- 	       (unsigned long)mem, pdev->irq);
- 
- 	return 0;
--- 
-1.6.0.4
+ static struct spi_driver wl1251_spi_driver = {
+ 	.driver = {
+-		.name		= "wl12xx",
++		.name		= "wl1251",
+ 		.bus		= &spi_bus_type,
+ 		.owner		= THIS_MODULE,
+ 	},
 
