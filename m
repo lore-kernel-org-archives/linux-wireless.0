@@ -1,62 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:47789 "EHLO
-	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755272AbZJZIhL (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37426 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760235AbZJMPQr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 04:37:11 -0400
-Received: by ewy4 with SMTP id 4so3375133ewy.37
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 01:37:15 -0700 (PDT)
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: ext Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Oikarinen Juuso \(Nokia-D\/Tampere\)" <juuso.oikarinen@nokia.com>
-Subject: Re: [RFC 1/3] mac80211: WIP - add operating BSSID to device configuration struct
-References: <1255696042-28413-1-git-send-email-luciano.coelho@nokia.com>
-	<1255696042-28413-2-git-send-email-luciano.coelho@nokia.com>
-	<1256201719.12174.19.camel@johannes.local>
-	<4AE291DC.3010505@nokia.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Mon, 26 Oct 2009 10:37:13 +0200
-In-Reply-To: <4AE291DC.3010505@nokia.com> (Luciano Coelho's message of "Sat\, 24 Oct 2009 08\:34\:20 +0300")
-Message-ID: <87pr8ah7pi.fsf@purkki.valot.fi>
+	Tue, 13 Oct 2009 11:16:47 -0400
+Date: Tue, 13 Oct 2009 11:05:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2009-10-13
+Message-ID: <20091013150558.GC2747@tuxdriver.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luciano Coelho <luciano.coelho@nokia.com> writes:
+Dave,
 
-> ext Johannes Berg wrote:
->> On Fri, 2009-10-16 at 15:27 +0300, Luciano Coelho wrote:
->>
->>> +	if (memcmp(sdata->local->hw.conf.oper_bssid,
->>> +		   req->bss->bssid, ETH_ALEN)) {
->>> +		config_changed |= IEEE80211_CONF_CHANGE_OPER_BSSID;
->>> +		memcpy(sdata->local->hw.conf.oper_bssid,
->>> +		       req->bss->bssid, ETH_ALEN);
->>> +	}
->>> +
->>> +	ieee80211_hw_config(sdata->local, config_changed);
->>>  
->>
->> Is this really necessary before you can auth?
->
-> As we discussed on IRC, it is really needed.  We must always provide a
-> BSSID when changing channels in preparation for an association.
+Here are a few (almost-)one-liners for 2.6.32.  Included are fixes for
+a use-after-free, a missing "!" in front of a memcmp when comparing
+BSSIDs, a race when using hardware-based scanning, the ieee80211_rx
+context problem, a related documentation change, and a minor build
+issue.
 
-I'm not sure about the must part here. Maybe we can workaround it by
-using ff:ff:ff:ff:ff bssid during authentication and association and
-send a new join command after association. But that's not a clean
-solution.
+Please let me know if there are problems!
 
-> Also, I'm not 100% sure, but IIRC Kalle has mentioned that the
-> at76c50x-usb card also needs this feature.
+Thanks,
 
-Yeah, at76c50x-usb also has a similar requirement. wl1251, wl1271 and
-at76c50x-usb have these weird join/start commands which need bssid and
-must be executed before any data transmission. I tried to workaround
-the bssid requirement in at76c50x-usb a long time ago but failed. I
-need to try it again.
+John
 
+---
+
+Individual patches are available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
+
+---
+
+The following changes since commit 10c435f18b8cb78a5870c08d52955594f5ec9c31:
+  David S. Miller (1):
+        net: Link in PHY drivers before others.
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+Alan Cox (1):
+      libertas: fix build
+
+Felix Fietkau (1):
+      mac80211: fix logic error ibss merge bssid check
+
+Johannes Berg (3):
+      mac80211: fix ibss race
+      b43: fix ieee80211_rx() context
+      mac80211: document ieee80211_rx() context requirement
+
+Wey-Yi Guy (1):
+      iwlwifi: change the order of freeing memory
+
+ drivers/net/wireless/b43/xmit.c             |    3 +++
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ drivers/net/wireless/libertas/cmdresp.c     |    1 +
+ include/net/mac80211.h                      |    2 ++
+ net/mac80211/ibss.c                         |    4 ++--
+ net/mac80211/rx.c                           |    2 ++
+ 7 files changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+index 892573b..f4e9695 100644
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -690,7 +690,10 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+ 	}
+ 
+ 	memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
++
++	local_bh_disable();
+ 	ieee80211_rx(dev->wl->hw, skb);
++	local_bh_enable();
+ 
+ #if B43_DEBUG
+ 	dev->rx_count++;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index cdc07c4..9b5ea8b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3105,8 +3105,8 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+  out_pci_disable_device:
+ 	pci_disable_device(pdev);
+  out_ieee80211_free_hw:
+-	ieee80211_free_hw(priv->hw);
+ 	iwl_free_traffic_mem(priv);
++	ieee80211_free_hw(priv->hw);
+  out:
+ 	return err;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index c390dbd..837a193 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -4096,8 +4096,8 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	pci_set_drvdata(pdev, NULL);
+ 	pci_disable_device(pdev);
+  out_ieee80211_free_hw:
+-	ieee80211_free_hw(priv->hw);
+ 	iwl_free_traffic_mem(priv);
++	ieee80211_free_hw(priv->hw);
+  out:
+ 	return err;
+ }
+diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
+index c42d3fa..23f6843 100644
+--- a/drivers/net/wireless/libertas/cmdresp.c
++++ b/drivers/net/wireless/libertas/cmdresp.c
+@@ -3,6 +3,7 @@
+   * responses as well as events generated by firmware.
+   */
+ #include <linux/delay.h>
++#include <linux/sched.h>
+ #include <linux/if_arp.h>
+ #include <linux/netdevice.h>
+ #include <asm/unaligned.h>
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 466859b..c75b960 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1669,6 +1669,8 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw);
+  * to this function and ieee80211_rx_irqsafe() may not be mixed for a
+  * single hardware.
+  *
++ * Note that right now, this function must be called with softirqs disabled.
++ *
+  * @hw: the hardware this frame came in on
+  * @skb: the buffer to receive, owned by mac80211 after this call
+  */
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 920ec87..6eaf698 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -544,7 +544,7 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+ 		       "%pM\n", bss->cbss.bssid, ifibss->bssid);
+ #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+ 
+-	if (bss && memcmp(ifibss->bssid, bss->cbss.bssid, ETH_ALEN)) {
++	if (bss && !memcmp(ifibss->bssid, bss->cbss.bssid, ETH_ALEN)) {
+ 		printk(KERN_DEBUG "%s: Selected IBSS BSSID %pM"
+ 		       " based on configured SSID\n",
+ 		       sdata->dev->name, bss->cbss.bssid);
+@@ -829,7 +829,7 @@ void ieee80211_ibss_notify_scan_completed(struct ieee80211_local *local)
+ 		if (!sdata->u.ibss.ssid_len)
+ 			continue;
+ 		sdata->u.ibss.last_scan_completed = jiffies;
+-		ieee80211_sta_find_ibss(sdata);
++		mod_timer(&sdata->u.ibss.timer, 0);
+ 	}
+ 	mutex_unlock(&local->iflist_mtx);
+ }
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 865fbc0..7170bf4 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2453,6 +2453,8 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 
++	WARN_ON_ONCE(softirq_count() == 0);
++
+ 	if (WARN_ON(status->band < 0 ||
+ 		    status->band >= IEEE80211_NUM_BANDS))
+ 		goto drop;
 -- 
-Kalle Valo
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
