@@ -1,70 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51411.mail.re2.yahoo.com ([206.190.39.152]:24720 "HELO
-	web51411.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753317AbZJ0LJG convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2009 07:09:06 -0400
-Message-ID: <474000.96217.qm@web51411.mail.re2.yahoo.com>
-References: <133e8d7e0910241155x4496b156p3c5d03450a71936a@mail.gmail.com>
-Date: Tue, 27 Oct 2009 04:09:10 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: AW: [PATCH] mac80211: fix for incorrect sequence number on hostapd  injected frames
-To: =?iso-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>,
-	linville@tuxdriver.com
+Received: from smtp.nokia.com ([192.100.122.230]:43503 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933815AbZJMJuN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Oct 2009 05:50:13 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jouni Malinen <j@w1.fi>, Will Dyson <will.dyson@gmail.com>
-In-Reply-To: <133e8d7e0910241155x4496b156p3c5d03450a71936a@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 16/22] wl1271: Fix multicast list handling
+Date: Tue, 13 Oct 2009 12:47:53 +0300
+Message-Id: <1255427279-1224-17-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
+References: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I just applied the patch. So far, everything looks fine.
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Thanks
-  Joerg
+Fixes bugs in the multicast list handling:
+ - Use atomic memory allocation in non-sleepable context
+ - Increment address pointer when iterating list of MC addresses
 
------ Ursprüngliche Mail ----
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-> Von: Björn Smedman <bjorn.smedman@venatech.se>
-> An: linville@tuxdriver.com
-> CC: linux-wireless@vger.kernel.org; Johannes Berg <johannes@sipsolutions.net>; Jouni Malinen <j@w1.fi>; Joerg Pommnitz <pommnitz@yahoo.com>; Will Dyson <will.dyson@gmail.com>
-> Gesendet: Samstag, den 24. Oktober 2009, 20:55:09 Uhr
-> Betreff: [PATCH] mac80211: fix for incorrect sequence number on hostapd  injected frames
-> 
-> When hostapd injects a frame, e.g. an authentication or association
-> response, mac80211 looks for a suitable access point virtual interface
-> to associate the frame with based on its source address. This makes it
-> possible e.g. to correctly assign sequence numbers to the frames.
-> 
-> A small typo in the ethernet address comparison statement caused a
-> failure to find a suitable ap interface. Sequence numbers on such
-> frames where therefore left unassigned causing some clients
-> (especially windows-based 11b/g clients) to reject them and fail to
-> authenticate or associate with the access point. This patch fixes the
-> typo in the address comparison statement.
-> 
-> Signed-off-by: Björn Smedman 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index ae41a70..19dbdb1 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1160,7 +1160,7 @@ static u64 wl1271_op_prepare_multicast(struct ieee80211_hw *hw, int mc_count,
+ 	 * configure_filter() instead of saving everything in the context.
+ 	 */
+ 
+-	fp = kzalloc(sizeof(*fp), GFP_KERNEL);
++	fp = kzalloc(sizeof(*fp), GFP_ATOMIC);
+ 	if (!fp) {
+ 		wl1271_error("Out of memory setting filters.");
+ 		return 0;
+@@ -1180,6 +1180,7 @@ static u64 wl1271_op_prepare_multicast(struct ieee80211_hw *hw, int mc_count,
+ 			fp->mc_list_length++;
+ 		} else
+ 			wl1271_warning("Unknown mc address length.");
++		mc_list = mc_list->next;
+ 	}
+ 
+ 	/* FIXME: We still need to set our filters properly */
+-- 
+1.5.6.5
 
-Tested-by: Joerg Pommnitz <pommnitz@yahoo.com>
-
-> ---
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index db4bda6..eaa4118 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -1445,7 +1445,7 @@ static void ieee80211_xmit(struct
-> ieee80211_sub_if_data *sdata,
->                                 if (tmp_sdata->vif.type != NL80211_IFTYPE_AP)
->                                         continue;
->                                 if (compare_ether_addr(tmp_sdata->dev->dev_addr,
-> -                                                      hdr->addr2)) {
-> +                                                      hdr->addr2) == 0) {
->                                         dev_hold(tmp_sdata->dev);
->                                         dev_put(sdata->dev);
->                                         sdata = tmp_sdata;
-
-
-
-      
