@@ -1,56 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:35352 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758443AbZJGApL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 20:45:11 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 3/7] ath5k: fix regression introduced upon the removal of AR5K_HIGH_ID()
-Date: Tue,  6 Oct 2009 20:44:30 -0400
-Message-Id: <1254876274-1145-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1254876274-1145-1-git-send-email-lrodriguez@atheros.com>
-References: <1254876274-1145-1-git-send-email-lrodriguez@atheros.com>
+Received: from tac.ki.iif.hu ([193.6.222.43]:36504 "EHLO tac.ki.iif.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754454AbZJMUpQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Oct 2009 16:45:16 -0400
+From: Ferenc Wagner <wferi@niif.hu>
+To: linux-kernel@vger.kernel.org
+Cc: ipw2100-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: Re: 2.6.32-rc4 ipw2200: oops on missing firmware
+References: <87hbu3h023.fsf@tac.ki.iif.hu>
+	<200910131855.25878.elendil@planet.nl>
+Date: Tue, 13 Oct 2009 22:22:06 +0200
+In-Reply-To: <200910131855.25878.elendil@planet.nl> (Frans Pop's message of
+	"Tue, 13 Oct 2009 18:55:24 +0200")
+Message-ID: <873a5n59jl.fsf@tac.ki.iif.hu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The trick was to add four bytes whenever this was used. There
-are two places where this was missed.
+Frans Pop <elendil@planet.nl> writes:
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath5k/pcu.c   |    2 +-
- drivers/net/wireless/ath/ath5k/reset.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+> Adding relevant CCs.
 
-diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
-index 32fd5f8..9e6e41b 100644
---- a/drivers/net/wireless/ath/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath/ath5k/pcu.c
-@@ -295,7 +295,7 @@ void ath5k_hw_set_associd(struct ath5k_hw *ah, const u8 *bssid, u16 assoc_id)
- 	 * Set BSSID which triggers the "SME Join" operation
- 	 */
- 	low_id = get_unaligned_le32(bssid);
--	high_id = get_unaligned_le16(bssid);
-+	high_id = get_unaligned_le16(bssid + 4);
- 	ath5k_hw_reg_write(ah, low_id, AR_BSSMSKL);
- 	ath5k_hw_reg_write(ah, high_id | ((assoc_id & 0x3fff) <<
- 				AR5K_BSS_ID1_AID_S), AR_BSSMSKU);
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 51aff76..39346a2 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -1178,7 +1178,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 			   get_unaligned_le32(common->macaddr),
- 			   AR5K_STA_ID0);
- 	ath5k_hw_reg_write(ah,
--			   staid1_flags | get_unaligned_le16(common->macaddr),
-+			   staid1_flags | get_unaligned_le16(common->macaddr + 4),
- 			   AR5K_STA_ID1);
- 
- 
--- 
-1.6.0.4
+Thanks.  Meanwhile I checked that the ipw2200 module can indeed be
+removed and reinserted into the running system without problems,
+here's the relevant part of dmesg:
 
+[ 5837.082811] ipw2200: Firmware error detected.  Restarting.
+[ 5840.507981] ipw2200: Firmware error detected.  Restarting.
+[ 5886.248174] ipw2200 0000:02:02.0: PCI INT A disabled
+[ 5919.283775] ipw2200: Intel(R) PRO/Wireless 2200/2915 Network Driver, 1.2.2kmprq
+[ 5919.283782] ipw2200: Copyright(c) 2003-2006 Intel Corporation
+[ 5919.283879] ipw2200 0000:02:02.0: PCI INT A -> Link[LNKF] -> GSI 11 (level, low) -> IRQ 11
+[ 5919.285697] ipw2200: Detected Intel PRO/Wireless 2200BG Network Connection
+[ 5919.285771] ipw2200 0000:02:02.0: firmware: requesting ipw2200-bss.fw
+[ 5919.466323] ipw2200: Detected geography ZZR (14 802.11bg channels, 0 802.11a channels)
+[ 5919.477923] udev: renamed network interface eth0 to wlan
+[ 5982.543067] ipw2200: Firmware error detected.  Restarting.
+[ 5985.850947] ipw2200: Firmware error detected.  Restarting.
+[ 5989.170633] ipw2200: Firmware error detected.  Restarting.
+[ 5992.479084] ipw2200: Firmware error detected.  Restarting.
+[ 5995.786495] ipw2200: Firmware error detected.  Restarting.
+[ 5999.099022] ipw2200: Firmware error detected.  Restarting.
+[ 6003.193188] QoS Error need to parse QOS_PARAMETER IE
+[ 6029.106407] ipw2200: Firmware error detected.  Restarting.
+[ 6032.415272] ipw2200: Firmware error detected.  Restarting.
+
+Yes, I continuously get firmware errors, and occasionally the QoS
+error.  I'm using firmware version 3.1, but these are probably
+irrelevant for this bug report.
+
+> Original message follows.
+> ==============
+> Hi,
+>
+> See the screenshot at http://apt.niif.hu/ipw_oops.png.  During bootup,
+> initramfs-tools tried to load the ipw2200 module, but nobody fed it
+> the necessary firmware, so request_firmware timed out and the module
+> unload cleanup oopsed in device_pm_remove:
+>
+> void device_pm_remove(struct device *dev)
+> {
+>         pr_debug("PM: Removing info for %s:%s\n",
+>                  dev->bus ? dev->bus->name : "No Bus",
+>                  kobject_name(&dev->kobj));
+>         mutex_lock(&dpm_list_mtx);
+>         list_del_init(&dev->power.entry);
+>         mutex_unlock(&dpm_list_mtx);
+>         pm_runtime_remove(dev);
+> }
+>
+> 00000a0a <device_pm_remove>:
+>  a0a:   55                      push   %ebp
+>  a0b:   89 e5                   mov    %esp,%ebp
+>  a0d:   53                      push   %ebx
+>  a0e:   89 c3                   mov    %eax,%ebx
+>  a10:   b8 08 00 00 00          mov    $0x8,%eax
+>  a15:   e8 fc ff ff ff          call   a16 <device_pm_remove+0xc>
+>  a1a:   8d 4b 5c                lea    0x5c(%ebx),%ecx
+>  a1d:   8b 53 5c                mov    0x5c(%ebx),%edx
+>  a20:   8b 43 60                mov    0x60(%ebx),%eax
+>  a23:   89 42 04                mov    %eax,0x4(%edx)
+>  a26:   89 10                   mov    %edx,(%eax)
+>  a28:   89 4b 5c                mov    %ecx,0x5c(%ebx)
+>  a2b:   89 4b 60                mov    %ecx,0x60(%ebx)
+>  a2e:   b8 08 00 00 00          mov    $0x8,%eax
+>  a33:   e8 fc ff ff ff          call   a34 <device_pm_remove+0x2a>
+>  a38:   89 d8                   mov    %ebx,%eax
+>  a3a:   e8 fc ff ff ff          call   a3b <device_pm_remove+0x31>
+>  a3f:   5b                      pop    %ebx
+>  a40:   5d                      pop    %ebp
+>  a41:   c3                      ret    
+>
+> The offending IP translates to line a23, so the problem is edx being 0
+> at that point.  I'm not sure which struct device field has offset
+> 0x5c, maybe power, but I'm lost at this point anyway.
+>
+> I don't know whether it's a new bug or not, never did such insane
+> things previously.  rmmod ipw2200 definitely worked under 2.6.31, and
+> it's possible that it works under 2.6.32-rc4 too, I forgot to check
+> that (but will do so tonight).
+>
+> --
+> Regards,
+> Feri.
