@@ -1,83 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35489 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751955AbZJZNwK (ORCPT
+Received: from mail-fx0-f227.google.com ([209.85.220.227]:63091 "EHLO
+	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753643AbZJMTnU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 09:52:10 -0400
-Subject: Re: RECAP: indication of channel noise
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <h.schurig@mn-solutions.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <200910261442.44774.h.schurig@mn-solutions.de>
-References: <200910261442.44774.h.schurig@mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-hY6M07fNmzLqxcreWsjn"
-Date: Mon, 26 Oct 2009 14:52:12 +0100
-Message-ID: <1256565132.12462.9.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 13 Oct 2009 15:43:20 -0400
+Received: by mail-fx0-f227.google.com with SMTP id 27so10623464fxm.17
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2009 12:43:09 -0700 (PDT)
+Date: Tue, 13 Oct 2009 21:37:16 +0200
+From: Richard Zidlicky <rz@linux-m68k.org>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: 2.6.31.[12] ath5k regression
+Message-ID: <20091013193716.GA13427@linux-m68k.org>
+References: <20090625083636.GA6323@linux-m68k.org> <20090705123105.GE2132@hash.localnet> <20091009143922.GA7848@linux-m68k.org> <20091010125824.GA18841@hash.localnet> <20091011122616.GA27105@linux-m68k.org> <20091011133010.GA21494@hash.localnet> <20091011220002.GA11603@linux-m68k.org> <20091011222142.M14763@bobcopeland.com> <20091012202316.GA8310@linux-m68k.org> <20091012235438.GA24539@hash.localnet>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091012235438.GA24539@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Oct 12, 2009 at 07:54:38PM -0400, Bob Copeland wrote:
+> On Mon, Oct 12, 2009 at 10:23:16PM +0200, Richard Zidlicky wrote:
+> > it works like in mainline and fails.
+> 
+> Huh, well it should be equivalent to your patch, so I'm stumped
+> as to why.
 
---=-hY6M07fNmzLqxcreWsjn
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+mee too. I am trying to verify all variants because I do remember that adding the 
+change_chan patch on top of clean 2.6.31 broke that while I do vaguely remember that
+reverting this patch form 2.6.31.[23] did not make a working wlan.
+However testing is time consuming - the machine requires allways a complete shutdown, 
+power off reboot.
 
-On Mon, 2009-10-26 at 14:42 +0100, Holger Schurig wrote:
+Strange things were happening even in 2.6.31 - for example my ad-hoc network was listed 
+twice by iwlist scan - strangely one of the entries has 0db signal strength. Similar
+listing on both ends.
 
-> [snip descriptions]
+Here is what the other end is reporting if that is of any help..
 
-sounds about right
+### ath5k end shut down here ###
+[52262.000044] wlan0: expiring inactive STA 00:22:43:2c:76:0f
+[52262.000050] phy6: Removed STA 00:22:43:2c:76:0f
+[52262.003025] phy6: Destroyed STA 00:22:43:2c:76:0f
+[52343.404540] wlan0: RX ProbeReq SA=00:60:b3:06:f4:17 DA=ff:ff:ff:ff:ff:ff BSSID=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
+[52345.711165] wlan0: RX ProbeReq SA=00:60:b3:06:f4:17 DA=ff:ff:ff:ff:ff:ff BSSID=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
+...
+...
+...
+...
+[52350.930907] wlan0: RX ProbeReq SA=00:60:b3:06:f4:17 DA=ff:ff:ff:ff:ff:ff BSSID=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
+[52881.645705] wlan0: RX ProbeReq SA=00:22:43:2c:76:0f DA=ff:ff:ff:ff:ff:ff BSSID=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
+[52881.645711] wlan0: Sending ProbeResp to 00:22:43:2c:76:0f
+[52883.886696] wlan0: RX ProbeReq SA=00:22:43:2c:76:0f DA=ff:ff:ff:ff:ff:ff BSSID=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
+[52883.886702] wlan0: Sending ProbeResp to 00:22:43:2c:76:0f
+[52915.330070] wlan0: RX ProbeReq SA=00:22:43:2c:76:0f DA=ff:ff:ff:ff:ff:ff BSSID=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
+[52947.327315] wlan0: RX ProbeReq SA=00:22:43:2c:76:0f DA=ff:ff:ff:ff:ff:ff BSSID=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
+[53011.323892] wlan0: RX ProbeReq SA=00:22:43:2c:76:0f DA=ff:ff:ff:ff:ff:ff BSSID=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
+[53106.964036] wlan0: RX ProbeReq SA=00:22:43:2c:76:0f DA=ff:ff:ff:ff:ff:ff BSSID=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
+[53138.613029] wlan0: RX ProbeReq SA=00:22:43:2c:76:0f DA=ff:ff:ff:ff:ff:ff BSSID=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
+[53266.603257] wlan0: RX ProbeReq SA=00:22:43:2c:76:0f DA=ff:ff:ff:ff:ff:ff BSSID=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
+[53298.604621] wlan0: RX ProbeReq SA=00:22:43:2c:76:0f DA=ff:ff:ff:ff:ff:ff BSSID=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
+[53330.599864] wlan0: RX ProbeReq SA=00:22:43:2c:76:0f DA=ff:ff:ff:ff:ff:ff BSSID=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
+[53362.598110] wlan0: RX ProbeReq SA=00:22:43:2c:76:0f DA=ff:ff:ff:ff:ff:ff BSSID=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
+[53382.140098] wlan0: RX ProbeReq SA=00:22:43:2c:76:0f DA=ff:ff:ff:ff:ff:ff BSSID=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
+[53382.140104] wlan0: Sending ProbeResp to 00:22:43:2c:76:0f
+[53413.898474] wlan0: RX ProbeReq SA=00:22:43:2c:76:0f DA=ff:ff:ff:ff:ff:ff BSSID=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
 
-> We did not yet come up with a clear API definition for this. My=20
-> idea for an initial "retrieve site survey" response is:
->=20
-> NL80211_CMD_NEW_SURVEY_RESULTS
->   NL80211_ATTR_GENERATION
->   NL80211_ATTR_IFINDEX
->   NL80211_BSS_FREQUENCY
->   NL80211_BSS_NOISE_MBM
->=20
-> Of course this will extend over time, but that is easy due to=20
-> nl80211.
-
-I'm not really happy with having "BSS" in there. And the ifindex is
-kinda not necessary either I think, you really want the wiphy index.
-Also it's not necessary in the response since the request will contain
-the wiphy index (or interface index).
-
-I'd introduce a new
-NL80211_CMD_GET_SURVEY_RESULT
-
-which you use together with a dumpit call, for channels, which lists
-channels one by one similar to nl80211_dump_scan()/nl80211_send_bss()
-but with nl80211_dump_survey()/nl80211_send_survey_channel().
-
-In this case I think a "last updated" value would be rather important
-too.
-
-johannes
-
---=-hY6M07fNmzLqxcreWsjn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK5amJAAoJEODzc/N7+QmabzcP/jLmM2DvxPPdzdwVCK0YHcPd
-ZcJh4Yl/yEEWqrr26M6zJaPuruBSDljMdxfrokvH3TbfwKrMP54Bdh5mrJV5aVEz
-HYB+L1UbLkbn5U2+ZzNCMYrK7K+C7dnA79tviM2YPuCaSLRIoweErYRzlJWJgJI8
-mjkzZKBbrrW4kHK7arqi5+xgqPy/41Q+2c+VmRgL6eY758P2PaHHNIT9CWSaE2ni
-80Xi9kS4EA6kxbAfqda6VVE1sEbdSkYDfrrXqcpm809JQ4Cw9t0dJh8jUAW7AKfl
-ZNmeGs7H0ZbuUHrOrPa/9TjkWoRjfYV0ep+FwAHpLnWjw8Sjp96DddSVTNIdFht/
-QaS9Eg1MyPzBQy47EZGwy0Cr8dAIqnjzmElO1xhRYLmDeys5oHxNIXS0Twdn+ddz
-6zXkLvJaH2KdQcDJJzCmgG6bacAWKiIx2/kWT3mtUrHW8N9xq4sf9lDjpYHHDT1G
-127Y/9WmD3qqkhl+wv8u2CAXbc+7A2GtWdwyaJa05I8AaKv0oDbYuf7nlEfQEXry
-+MXqUsO+apLvKWwoy6D3JRtFmjpmUohBvZt78k0ccrTSWXkrntMFg/mhYtB9l093
-s4WwY/ko9jRhPxju1kkE0f0eiuGpae0oJIjYJOcskjffFBESQVXbLfYwf6pM6uYi
-PWPSI6lZOQmodvHLh6yQ
-=uE50
------END PGP SIGNATURE-----
-
---=-hY6M07fNmzLqxcreWsjn--
-
+Richard
