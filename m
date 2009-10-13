@@ -1,95 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:48164 "EHLO mx3.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756429AbZJNShz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 14:37:55 -0400
-Date: Wed, 14 Oct 2009 20:36:57 +0200
-From: Ingo Molnar <mingo@elte.hu>
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Joe Perches <joe@perches.com>, Greg KH <gregkh@suse.de>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	James Bottomley <James.Bottomley@suse.de>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Theodore Tso <tytso@mit.edu>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jing Huang <huangj@brocade.com>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
-	2.6.32-rc3)
-Message-ID: <20091014183657.GB5133@elte.hu>
-References: <1255357148.2850.91.camel@localhost.localdomain> <20091012145453.GD4565@elte.hu> <20091012150911.GB1656@suse.de> <20091012154244.GA13323@elte.hu> <20091012232429.GA24254@suse.de> <43e72e890910131108m789110b4hc35e25601ad67bb7@mail.gmail.com> <20091014044519.GA19199@suse.de> <1255497575.1851.16.camel@Joe-Laptop.home> <20091014063308.GE784@elte.hu> <4AD60FF9.40200@s5r6.in-berlin.de>
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:43502 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753370AbZJMWWb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Oct 2009 18:22:31 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4AD60FF9.40200@s5r6.in-berlin.de>
+In-Reply-To: <200910132357.57094.bzolnier@gmail.com>
+References: <4AD46380.9020308@pardus.org.tr>
+	 <200910132121.25743.bzolnier@gmail.com>
+	 <1255464940.10798.10.camel@localhost.localdomain>
+	 <200910132357.57094.bzolnier@gmail.com>
+Date: Tue, 13 Oct 2009 23:21:53 +0100
+Message-ID: <efe7343f0910131521u608d66f5r670dd1cf00322d0b@mail.gmail.com>
+Subject: Re: Current status of rt2800usb and staging/rt2870
+From: Luis Correia <luis.f.correia@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>, Ivo van Doorn <ivdoorn@gmail.com>,
+	=?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Oct 13, 2009 at 22:57, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+> On Tuesday 13 October 2009 22:15:40 Dan Williams wrote:
+>> On Tue, 2009-10-13 at 21:21 +0200, Bartlomiej Zolnierkiewicz wrote:
+>> > On Tuesday 13 October 2009 20:17:47 Ivo van Doorn wrote:
+>> > > On Tuesday 13 October 2009, Bartlomiej Zolnierkiewicz wrote:
+>> > > > On Tuesday 13 October 2009 17:52:52 Ivo van Doorn wrote:
+>> > > >
+>> > > > > I am going to merge rt2800pci soon as well and after that I'll send a patch
+>> > > >
+>> > > > Great, I've been waiting for this for a long time.
+>> > > >
+>> > > > > to remove all Ralink drivers from the staging tree.
+>> > > >
+>> > > > Till new drivers obtain support for all hardware currently covered by
+>> > > > the unified staging drivers the latter shouldn't be removed as they
+>> > > > serve well their role as a temporary solution allowing real Linux users
+>> > > > to user their real hardware and as a reference material for developers
+>> > > > willing to work on adding the missing bits to new drivers.
+>> > >
+>> > > The rt2800pci and rt2800usb drivers cover support for rt2860/rt2870/rt3070 devices,
+>> > > which are present as individual drivers in the staging tree. So far it only managed
+>> >
+>> > There are no longer individual drivers.
+>> >
+>> > Instead there is one shared source code and two device drivers:
+>> >
+>> > - rt2860 covering RT2860 and RT3090 devices
+>> >
+>> > - rt2870 covering RT2870 and RT3070 devices
+>> >
+>> > In comparison rt2800usb currently lacks RT3070 support and rt2800pci's
+>> > RT3090 support is basic at best (not to mention that it didn't work for
+>> > RT2860 last time that I tried)..
+>> >
+>> > > to confuse developers which wanted to work on Ralink support, so I haven't found
+>> >
+>> > I bet they are truly grateful for being shown "the one and only way"..
+>>
+>> There *is* only one way: mac80211.  If the driver is softmac, but does
+>> not use mac82011, then it *is* the wrong way.  We will not have multiple
+>> 802.11 stacks in the mainstream kernel.  If a softmac driver uses
+>> mac80211, hey, that's great!  Lets add it!
+>
+> Nobody never ever suggested merging Ralink drivers as they are into
+> kernel proper.
+>
+>> If it doesn't, then that driver needs to be updated to use mac80211.
+>> Period.
+>>
+>> > > a benefit for having those drivers in the staging tree yet. But I am sure there are plenty
+>> >
+>> > I was able to use my Eee 901 successfully with them for a last year and I'm
+>> > pretty sure that I'm not the only.  I understand my sin now -- I should have
+>> > had help in fixing the proper and clean code before using my hardware.. [*]
+>>
+>> That's nice, and everyone appreciates the work that you've done.  Nobody
+>> can tell you what to work on, but it would be nice to get more people
+>> working on the *mac80211* versions of the various drivers.  Imagine how
+>> much better rt2x00 would be if all the effort that had gone into cleanup
+>> up the ralink vendor drivers had instead gone into making rt2x00 work on
+>> the new hardware.  Then you'd have cfg80211 support, background
+>> scanning, etc all for free with no effort on your part.
+>
+> No effort, right.  Debugging things is the hardest part of any project..
+>
+>> Maybe it would have taken 6 months longer to get good support for your
+>> hardware but at least the work would have a future.  But now we're stuck
+>
+> You miss one tiny and irrelevant detail.  Until the work is finished
+> I cannot use the hardware and real testers/users are using the vendor
+> driver anyway for the simple fact that it exists and works.
+>
+>> in a situation where either:
+>>
+>> 1) the vendor driver never gets converted to cfg80211/mac80211, and
+>> stays in staging forever, or finally gets booted out of staging because
+>> nobody is working on converting it to mac80211.  mac80211/cfg80211 is a
+>> hard requirement for being an accepted wireless driver.  And drivers do
+>> have a shelf-life in staging.
+>>
+>> 2) the vendor driver starts getting converted to use mac80211.  But I
+>> would argue that a better use of *anyone's* time is to make rt2x00
+>> better, instead of porting the ralink vendor drivers to mac80211.  It
+>> would probably take less time to fix up rt2x00 for new hardware than to
+>> port the ralink vendor drivers to mac80211.
+>
+> Nobody is saying anything about porting the vendor drivers to mac80211.
+>
+> 3) After the vendor driver gets cleaned up to the point that people are
+> able to make any sense out of it the missing bits will get added to rt2x00.
+> Several months later (after all current users are happy with the improved
+> drivers) the old drivers will be removed from staging..
+>
+>> > > of people who like the idea of having the original Ralink drivers inside the staging tree,
+>> > > so they can continue debugging that, so I won't talk about the staging downsides further.
+>> >
+>> > Well, it would be much more productive if people concentrate on improving
+>> > _their_ projects and looking at downsides of _their_ code instead of going
+>> > around and looking at _obvious_ downsides of other people's projects.
+>> >
+>> >
+>> > [*] [Slightly off-topic but it shows the same problem with the approach]
+>> >
+>> > I now also see why some distributions keep pushing some known non-working
+>> > things on their users (Fedora maintainers -- I'm talking to you), the best
+>> > example is PulseAudio -- it simply doesn't work reliably even on modern
+>> > hardware and/or using all scheduler tricks (it seems that making Linux into
+>> > full RT OS is a prerequisite for fixing latency issues observed)..
+>>
+>> Pulseaudio works for many, many people.  The most productive use of your
+>
+> Yeah, I trust you on both points..
+>
+>> time here is to file a bug report with the specific details of your
+>> audio chipset, let upstream diagnose whether it's a Pulseaudio-specific
+>> problem, a codec driver problem, or an ALSA problem.
+>
+> Right..
+>
+> I see no point BTW -- time make proper bug-report is much bigger than
+> throwing in few local hacks and since my experience with upstream so far
+> was that my bug-reports end up in some black-hole I deal with issues in
+> the most pragmatic and productive for everybody way..
+>
+>> You can wait until the cows come home to deploy new technology, and then
+>> of course you'll still have to fix up all the bugs because you waited
+>> too long and nobody was testing it, or you can deploy new technology
+>> that works for most people and fix those bugs much earlier.  Release
+>> early, release often.  The tricky thing is how early.
+>
+> It was new technology in F8 days..  It was included in F9 (released on
+> 13th May 2008) and the current rawhide is still broken (no chance it will
+> get fixed for F12)..  Getting stereo sound to play skip-lessly on standard
+> AC97 or HDA cards on a freshly installed system is impossible..
+>
+> Other distributions are really not that much better (to be honest with
+> Fedora it is the bleeding edge by definition) as their mode of operations
+> sometimes consists of copying features (regardless of the quality and
+> current state) from other distributions just for the sake of to not staying
+> behind eventually..
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-* Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+I will make only a small comment on all this issue, from the point of
+view of a project admin, which writes little to no code at all in
+rt2x00.
 
-> Ingo Molnar wrote:
-> > * Joe Perches <joe@perches.com> wrote:
-> > 
-> >> On Tue, 2009-10-13 at 21:45 -0700, Greg KH wrote:
-> >> > How about when it was scheduled to be removed, we put it in staging and
-> >> > I'll add it to my announcements about the staging tree every release?
-> >> > Unless you can think of a better way?
-> >> 
-> >> staging/to_be_removed_unless_fixed_by/v.x.y ?
-> > 
-> > Yes, that's a real worry. Some time ago i suggested:
-> > 
-> >   drivers/staging/good/
-> >   drivers/staging/bad/
-> >   drivers/staging/ugly/
-> 
-> How well do "git am", "quilt import" and friends cope with ever 
-> changing directories?
+Every once in a while, usually when Ralink releases new chipsets,
+there is the question of whether or not our rt2x00 project will
+support that new chipset.
 
-Once a driver is in a tree it's in Git and git mv is easy. People 
-working with Linux better familiarize themselves with Git workflow - the 
-sooner the better.
+>From being in the project since almost the beginning, and looking on
+and off into the crap code, I do know how hard it is to port crap code
+into rt2x00.
 
-If it's not in tree then it will adopt to whatever layout there is once 
-it gets into Greg's tree. I dont see the problem.
+That been said, i also know that with the complexity brought in by the
+new chipsets, it makes it even harder to port the code over.
 
-> How about using drivers/staging/this_driver/TODO and (or) its Kconfig 
-> help text to leave a note about the plans for this driver?
+But then there's the users, who bitch about everything and simply do
+not understand what it is at stake.
 
-Well, the answer is obvious i think. Tell me, at a glance, if you see a 
-patch on lkml, which one is for a staging driver to be obsoleted, and 
-which one is the one going upstream real soon? The patches say:
+And all this is becoming way too messy for us to handle.
 
- +++ a/drivers/staging/foo/x.c
+Personally all I see around me is people bitching and complaining, and
+no code being ported.
 
- +++ a/drivers/staging/bar/y.c
 
-Then tell me the same at a glance if you see patches for:
+I've said this way too many times now, all code is welcome.
 
- +++ a/drivers/staging/wip/x.c
 
- +++ a/drivers/staging/bad/y.c
+Since some days now, we have someone in the team which works for
+Ralink, I'm hopefull that he can find some time to help us make the
+driver better.
 
-> The worry that these will be ignored like 
-> Documentation/feature-removal-schedule.txt is being ignored may apply 
-> to the path name based solution too, I'm afraid.
 
-It wont be 'ignored', as it's in every patch, it's in every commit, it's 
-in every substantial communication about that driver.
 
-The problem with feature-removal-schedule.txt is that it's too much out 
-of sight and not part of the regular patch workflow. Same goes for any 
-TODO file. Experience has shown that the actual _path_ were drivers end 
-up does matter quite a bit, to general visibility and to mindset.
 
-That's one of the reasons why we have _half a thousand_ directories in 
-drivers/ to begin with. The directory namespace is very powerful, and we 
-use it to convey all sorts of information about the logical category a 
-driver is in.
+And now, i'm going back to my lovely hole, having added nothing to
+this conversation.
 
-Using it in drivers/staging/ instead of the current flat hierarchy would 
-thus be pretty natural.
-
-	Ingo
+Luis Correia,
+rt2x00 project admin
