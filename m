@@ -1,63 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:60521 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752555AbZJPFUn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 01:20:43 -0400
-From: Zhu Yi <yi.zhu@intel.com>
+Received: from smtp.nokia.com ([192.100.105.134]:43537 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752436AbZJMRe4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Oct 2009 13:34:56 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 2/2] wl1251: use ieee80211_rx_ni()
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 07/16] iwmc3200wifi: Update statistics notification structure
-Date: Fri, 16 Oct 2009 13:18:51 +0800
-Message-Id: <1255670340-22565-8-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <1255670340-22565-7-git-send-email-yi.zhu@intel.com>
-References: <1255670340-22565-1-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-2-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-3-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-4-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-5-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-6-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-7-git-send-email-yi.zhu@intel.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Date: Tue, 13 Oct 2009 20:33:21 +0300
+Message-ID: <20091013173321.13021.71988.stgit@tikku>
+In-Reply-To: <20091013173313.13021.80289.stgit@tikku>
+References: <20091013173313.13021.80289.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Samuel Ortiz <sameo@linux.intel.com>
+From: Kalle Valo <kalle.valo@nokia.com>
 
-The latest firmware adds a ht_rates and a chain_energy field. The latter is
-needed as we want to eventually support RSSI/antenna handling.
+Because of SPI and SDIO wl1251 does everything in a workqueue, including
+calling ieee80211_rx() which should be called with bottom halves disabled.
+An error message is emitted because of this:
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+NOHZ: local_softirq_pending 08
+
+Fix this by using ieee80211_rx_ni().
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
- drivers/net/wireless/iwmc3200wifi/umac.h |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/umac.h b/drivers/net/wireless/iwmc3200wifi/umac.h
-index c5a14ae..be90354 100644
---- a/drivers/net/wireless/iwmc3200wifi/umac.h
-+++ b/drivers/net/wireless/iwmc3200wifi/umac.h
-@@ -687,6 +687,9 @@ struct iwm_umac_notif_rx_ticket {
- /* Tx/Rx rates window (number of max of last update window per second) */
- #define UMAC_NTF_RATE_SAMPLE_NR	4
+ drivers/net/wireless/wl12xx/wl1251_rx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1251_rx.c b/drivers/net/wireless/wl12xx/wl1251_rx.c
+index 17c54b5..601fe0d 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_rx.c
++++ b/drivers/net/wireless/wl12xx/wl1251_rx.c
+@@ -153,7 +153,7 @@ static void wl1251_rx_body(struct wl1251 *wl,
+ 		     beacon ? "beacon" : "");
  
-+/* Max numbers of bits required to go through all antennae in bitmasks */
-+#define UMAC_PHY_NUM_CHAINS     3
-+
- #define IWM_UMAC_MGMT_TID	8
- #define IWM_UMAC_TID_NR		8
+ 	memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
+-	ieee80211_rx(wl->hw, skb);
++	ieee80211_rx_ni(wl->hw, skb);
+ }
  
-@@ -697,9 +700,11 @@ struct iwm_umac_notif_stats {
- 	__le16 tid_load[IWM_UMAC_TID_NR + 2]; /* 1 non-QoS + 1 dword align */
- 	__le16 tx_rate[UMAC_NTF_RATE_SAMPLE_NR];
- 	__le16 rx_rate[UMAC_NTF_RATE_SAMPLE_NR];
-+	__le32 chain_energy[UMAC_PHY_NUM_CHAINS];
- 	s32 rssi_dbm;
- 	s32 noise_dbm;
- 	__le32 supp_rates;
-+	__le32 supp_ht_rates;
- 	__le32 missed_beacons;
- 	__le32 rx_beacons;
- 	__le32 rx_dir_pkts;
--- 
-1.6.0.4
+ static void wl1251_rx_ack(struct wl1251 *wl)
 
