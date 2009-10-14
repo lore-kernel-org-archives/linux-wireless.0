@@ -1,60 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59194 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751933AbZJUBKq (ORCPT
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:49066 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751079AbZJNG3E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2009 21:10:46 -0400
-Subject: Re: Rate information in ad-hoc and mesh mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Charles Gordon <digigordo@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <86201b3f0910200710u36557bf8uf5bc014b32b14d33@mail.gmail.com>
-References: <86201b3f0910200710u36557bf8uf5bc014b32b14d33@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-kdVUiU0oY1LkjEFfX720"
-Date: Wed, 21 Oct 2009 10:10:33 +0900
-Message-Id: <1256087434.4475.9.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 14 Oct 2009 02:29:04 -0400
+Received: by ewy4 with SMTP id 4so4126397ewy.37
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2009 23:28:27 -0700 (PDT)
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] mac80211: add ieee80211_rx_ni()
+References: <20091013173313.13021.80289.stgit@tikku>
+	<646765f40910131533hccd7403jf3e4a66074dd7143@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 14 Oct 2009 09:28:25 +0300
+In-Reply-To: <646765f40910131533hccd7403jf3e4a66074dd7143@mail.gmail.com> (Julian Calaby's message of "Wed\, 14 Oct 2009 08\:33\:21 +1000")
+Message-ID: <87hbu2o5fa.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Julian Calaby <julian.calaby@gmail.com> writes:
 
---=-kdVUiU0oY1LkjEFfX720
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+>> - * Calls to this function and ieee80211_rx() may not be mixed for a
+>> - * single hardware.
+>> + * Calls to this function, ieee80211_rx() or ieee80211_rx_ni() may not
+>> + * be mixed for a single hardware.
+>
+> You missed out ieee80211_rx_irqsafe() here.
 
-On Tue, 2009-10-20 at 10:10 -0400, Charles Gordon wrote:
-> I notice that the ieee80211_ioctl_giwrate function in wext.c only
-> returns rate information for stations associated to an AP.  It does
-> not return rate information for stations operating in ad-hoc mode or
-> as a mesh point.  Is there a reason this function is not supported in
-> those modes?  Is this a deliberate decision or just an oversight?
+Here "this function" refer to ieee80211_rx_irqsafe(). But I can also
+write it like this:
 
-The former -- there's no single rate when you're talking to multiple
-peers. "iw wlan0 station dump" would show you the information for each
-station.
+  Calls to ieee80211_rx_irqsafe(), ieee80211_rx() or ieee80211_rx_ni()
+  may not be mixed for a single hardware.
 
-johannes
+Is that any better?
 
---=-kdVUiU0oY1LkjEFfX720
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK3l+GAAoJEODzc/N7+QmafjUQANFo4nHUuLbkm/NdhLRwxkzO
-PAdeD6OXVekTe8gQ41gPeoTrbOStSYGMJBY+Ex7agJlCkv2ia5QqzwZ17amFVyw9
-NT2bVQYoWF4bU+czW8QcjXGWRGMJoCZKjaMCCw7eyYqDi9ErdEiaOCfqiKvlSJDq
-0v69+xUXIrqy/tY6GMPf6cWiOTuXPyGuGAgSr3k3SAMIOlFHt6a9Gf1d8+TeOGJb
-86zKUGylwBeQ2UnyfQdhRYkQgIPmDwh/MVUwqX/W22T/y7ezlG5UidxMYbvjgUy+
-aQIirUOSsx53cXuaUjrka1bdgdKQ0TijC+A/UnIDFrO2B0vjYXvxNWGnLo/OWRnS
-zibtEeswi7PnmHHyy2OkC6oodRwt6/zNGul4aBu/oST1JQgKEUfq+eyyS7PcLxdW
-0yBWueqQjsIysqqmQfkvJOaYeYEtWpCZO0POnZ4tRFq0KqgJkgpRQY5D93udVGZ7
-NlMQxl1bO89iUL1JwFH64PKa5ex1AQ2CByTZRr6UY2BobTKVZ4gvbAbDPFI9lUYx
-tBoBegc5OKtBW0jXI3dftnNVuDYRmqOVSHCuoxQCm90YcOMDQuCKHWSxamCaKTUS
-mbqDT+XZIOvyJqnxTEZIdwH349Dy5YLt+UAf0fuOszqpIv6/vb/dNl6e4G79JD8E
-PHCDf1XMv8rhIeL1rTqz
-=esAu
------END PGP SIGNATURE-----
-
---=-kdVUiU0oY1LkjEFfX720--
-
+-- 
+Kalle Valo
