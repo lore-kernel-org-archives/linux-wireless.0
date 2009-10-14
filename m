@@ -1,51 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:38364 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S932308AbZJIDFX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 23:05:23 -0400
-Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
- CPU"
-From: Mike Galbraith <efault@gmx.de>
-To: Frans Pop <elendil@planet.nl>
-Cc: Arjan van de Ven <arjan@infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	Peter Zijlstra <peterz@infradead.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200910082259.35204.elendil@planet.nl>
-References: <200910051500.55875.elendil@planet.nl>
-	 <200910081655.37485.elendil@planet.nl>
-	 <1255026217.6643.12.camel@marge.simson.net>
-	 <200910082259.35204.elendil@planet.nl>
-Content-Type: text/plain
-Date: Fri, 09 Oct 2009 05:04:33 +0200
-Message-Id: <1255057473.6600.11.camel@marge.simson.net>
-Mime-Version: 1.0
+Received: from emulex.emulex.com ([138.239.112.1]:39791 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756426AbZJNOP3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Oct 2009 10:15:29 -0400
+Message-ID: <4AD5DCA7.5060704@emulex.com>
+Date: Wed, 14 Oct 2009 10:13:59 -0400
+From: James Smart <James.Smart@Emulex.Com>
+MIME-Version: 1.0
+To: Ingo Molnar <mingo@elte.hu>
+CC: Joe Perches <joe@perches.com>, Greg KH <gregkh@suse.de>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	James Bottomley <James.Bottomley@suse.de>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Theodore Tso <tytso@mit.edu>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Jing Huang <huangj@brocade.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
+ 2.6.32-rc3)
+References: <1255097287.2934.21.camel@localhost.localdomain> <20091012130652.GB25464@elte.hu> <1255357148.2850.91.camel@localhost.localdomain> <20091012145453.GD4565@elte.hu> <20091012150911.GB1656@suse.de> <20091012154244.GA13323@elte.hu> <20091012232429.GA24254@suse.de> <43e72e890910131108m789110b4hc35e25601ad67bb7@mail.gmail.com> <20091014044519.GA19199@suse.de> <1255497575.1851.16.camel@Joe-Laptop.home> <20091014063308.GE784@elte.hu>
+In-Reply-To: <20091014063308.GE784@elte.hu>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-10-08 at 22:59 +0200, Frans Pop wrote:
-> On Thursday 08 October 2009, Mike Galbraith wrote:
-> > I still see very high latencies coming out of idle (last noted was >
-> > 300ms, NO_HZ) with this patch,
-> >
-> > Like this:
-> >
-> > Cause                                           Maximum    Percentage
-> > Scheduler: waiting for cpu                   604.2 msec        49.0 %
-> 
-> I'm not seeing anything even remotely like that.
-> 
-> I've tried quieting the system down as much as possible, but that made
-> no difference. I do have NO_HZ set; will send my full config privately.
-> 
-> If you'd still like me to try your patch I will, but I'm not sure if
-> that has much value.
 
-No, if you watch for a bit with box mostly idle, and don't see > 100ms
-hits occasionally, testing patchlet is likely a waste of time.  To get
-one like the above, I have to hold my tongue just right ;-) they're not
-common.
 
-	-Mike
+Ingo Molnar wrote:
+> Yes, that's a real worry. Some time ago i suggested:
+> 
+>   drivers/staging/good/
+>   drivers/staging/bad/
+>   drivers/staging/ugly/
+> 
+>  good:  drivers that are to go upstream in the next cycle 
+>  bad:   outgoing drivers being obsoleted or abandoned
+>  ugly:  incoming messy drivers with active developers
+> 
+> The messaging of this looks nice and the names are short and obvious.
+> 
+> An added benefit is that this kind of separation makes it easy for 
+> people interested in drivers/staging to follow the 'status' of drivers. 
+> Once stuff goes into 'good' a different kind of review is needed than if 
+> a driver goes into 'ugly'.
+> 
+> The main disadvantage would be the PR angle: putting new drivers into a 
+> path named 'ugly'. Not something you want to put into a quarterly status 
+> report, right? If we put drivers/staging/ugly/ drivers into 
+> drivers/staging/ itself, we'd solve that problem. I.e. we'd keep the 
+> current scheme, but we'd also add drivers/staging/good/ and 
+> drivers/staging/bad/ as two extra stages for incoming and outgoing 
+> drivers.
 
+Change "ugly" to "wip"  (work in progress).  Should remove the negative 
+connotation and keeps things short. Does miss the spaghetti western theme
+though :)
+
+-- james s
