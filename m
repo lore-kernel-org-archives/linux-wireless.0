@@ -1,75 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41335 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753308AbZJNX3e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 19:29:34 -0400
-Subject: Re: [PATCH] mac80211: fix SME warning by removing stale BSS upon
- assoc failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ic.felix@gmail.com
-In-Reply-To: <1255481442-27130-1-git-send-email-lrodriguez@atheros.com>
-References: <1255481442-27130-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-vcRgmEkmZnNFNpd5T2Vu"
-Date: Thu, 15 Oct 2009 08:28:15 +0900
-Message-Id: <1255562895.4095.297.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mx3.mail.elte.hu ([157.181.1.138]:42343 "EHLO mx3.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751220AbZJNGd7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Oct 2009 02:33:59 -0400
+Date: Wed, 14 Oct 2009 08:33:08 +0200
+From: Ingo Molnar <mingo@elte.hu>
+To: Joe Perches <joe@perches.com>
+Cc: Greg KH <gregkh@suse.de>, "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	James Bottomley <James.Bottomley@suse.de>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Theodore Tso <tytso@mit.edu>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Jing Huang <huangj@brocade.com>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
+	2.6.32-rc3)
+Message-ID: <20091014063308.GE784@elte.hu>
+References: <1255097287.2934.21.camel@localhost.localdomain> <20091012130652.GB25464@elte.hu> <1255357148.2850.91.camel@localhost.localdomain> <20091012145453.GD4565@elte.hu> <20091012150911.GB1656@suse.de> <20091012154244.GA13323@elte.hu> <20091012232429.GA24254@suse.de> <43e72e890910131108m789110b4hc35e25601ad67bb7@mail.gmail.com> <20091014044519.GA19199@suse.de> <1255497575.1851.16.camel@Joe-Laptop.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1255497575.1851.16.camel@Joe-Laptop.home>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-vcRgmEkmZnNFNpd5T2Vu
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+* Joe Perches <joe@perches.com> wrote:
 
-On Tue, 2009-10-13 at 20:50 -0400, Luis R. Rodriguez wrote:
-> If you try to authenticate with an AP we will keep track of the
-> AP's BSS and expect to eventually either give up on the AP or complete
-> an association cycle with it. If an AP rejects our association though
-> mac80211 currently insists on telling cfg80211 a BSS authenticated
-> correctly, this is wrong as it leaves a bogus BSS lingering around.
+> On Tue, 2009-10-13 at 21:45 -0700, Greg KH wrote:
+> > How about when it was scheduled to be removed, we put it in staging and
+> > I'll add it to my announcements about the staging tree every release?
+> > Unless you can think of a better way?
+> 
+> staging/to_be_removed_unless_fixed_by/v.x.y ?
 
-But if assoc fails, it _did_ authenticate correctly.
+Yes, that's a real worry. Some time ago i suggested:
 
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -1463,11 +1463,11 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub=
-_if_data *sdata,
->  	if (status_code !=3D WLAN_STATUS_SUCCESS) {
->  		printk(KERN_DEBUG "%s: AP denied association (code=3D%d)\n",
->  		       sdata->dev->name, status_code);
->  		list_del(&wk->list);
->  		kfree(wk);
-> -		return RX_MGMT_CFG80211_ASSOC;
-> +		return RX_MGMT_CFG80211_DEAUTH;
+  drivers/staging/good/
+  drivers/staging/bad/
+  drivers/staging/ugly/
 
-I'm sure this is correct. Maybe cfg80211 doesn't react properly to
-getting an assoc frame with non-zero status?
+ good:  drivers that are to go upstream in the next cycle 
+ bad:   outgoing drivers being obsoleted or abandoned
+ ugly:  incoming messy drivers with active developers
 
-johannes
+The messaging of this looks nice and the names are short and obvious.
 
---=-vcRgmEkmZnNFNpd5T2Vu
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+An added benefit is that this kind of separation makes it easy for 
+people interested in drivers/staging to follow the 'status' of drivers. 
+Once stuff goes into 'good' a different kind of review is needed than if 
+a driver goes into 'ugly'.
 
------BEGIN PGP SIGNATURE-----
+The main disadvantage would be the PR angle: putting new drivers into a 
+path named 'ugly'. Not something you want to put into a quarterly status 
+report, right? If we put drivers/staging/ugly/ drivers into 
+drivers/staging/ itself, we'd solve that problem. I.e. we'd keep the 
+current scheme, but we'd also add drivers/staging/good/ and 
+drivers/staging/bad/ as two extra stages for incoming and outgoing 
+drivers.
 
-iQIcBAABAgAGBQJK1l6LAAoJEODzc/N7+Qma5A0QALRj/jhvevHsv+5XegglohxM
-N592CW1ZJADZATrWmui2h45aD4qYS+VQ0UOv9oiypAZlag7aLL9/CSdwtn3f7LyA
-OiV54Iq4d1EjATTMhuDui48TT8ukpw56MoZefXBZOoQAXJT1k/w0BRa3sSGt8BHO
-ErnqOqfUzXR6kU8lUJaRZJUX3egy5Xp6cKUEY2CuAXPCRMtqBqAF0P25ux8R3f0c
-/XLVbmiBwptJ8BkoNsmYagboAkn9bQSM+upC8eTq0SxKdXRURaV79HwhUlzanWEq
-Hs1NfgVtKW8SlTneJLprrn+2+pg1TaRfEMefNnrdyLr5kesZbIcR0zsookBNbHmg
-vj+6jOlOKozten0ipWCt87GJQfUPoAfjjUQT17YPTj2qR05UVjfD8UCel+K3IxmP
-5syVzO7ad4mUO+qTIpqPsDbc1mRXZeoXs3g2qXTJN3kfdyGTV4EJBbCorsy+LfqM
-2hbuC6L8rZrqvpwFPZo7qy0eA1m20oi+l7ho46GvULGmW22A77xwYn7CY/P6Bd7E
-JeLAD1elHArJGRUM6agEkWABDA2eJQAK90ioYAJPnjXBuAWyGeXDYUjPZKwqf4Va
-gchtbvtZKOoOBPs8ET3jk4hCbPYv+C1z87AE994+UB06g53xjU9xYPuOLDh84nx4
-dQptOSxGteTiRXrJt0ac
-=zgQn
------END PGP SIGNATURE-----
+A third version would be a more neutral name:
 
---=-vcRgmEkmZnNFNpd5T2Vu--
+  drivers/staging/incoming/
+  drivers/staging/outgoing/
 
+I think it has many advantages, but (of course!) it all depends on 
+whether Greg wants to have any separation like this.
+
+	Ingo
