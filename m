@@ -1,44 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:42687 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753207AbZJUORX (ORCPT
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:54276 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755895AbZJNS11 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2009 10:17:23 -0400
-Received: by fg-out-1718.google.com with SMTP id d23so2618154fga.1
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2009 07:17:26 -0700 (PDT)
-From: Kunal Gangakhedkar <kunal.gangakhedkar@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [ath9k-devel] Test for N-mode from userspace?
-Date: Wed, 21 Oct 2009 19:47:17 +0530
-Cc: austinxxh-ath9k@yahoo.com, ath9k-devel@lists.ath9k.org,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <200910202112.30660.kunal.gangakhedkar@gmail.com> <200910211107.58111.kunal.gangakhedkar@gmail.com> <43e72e890910202349g474a79fehf3fcc4d66837e70b@mail.gmail.com>
-In-Reply-To: <43e72e890910202349g474a79fehf3fcc4d66837e70b@mail.gmail.com>
+	Wed, 14 Oct 2009 14:27:27 -0400
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <200910211947.17860.kunal.gangakhedkar@gmail.com>
+In-Reply-To: <200910141933.09374.bzolnier@gmail.com>
+References: <4AD46380.9020308@pardus.org.tr>
+	 <200910141728.21491.bzolnier@gmail.com>
+	 <20091014164710.GF2890@tuxdriver.com>
+	 <200910141933.09374.bzolnier@gmail.com>
+Date: Wed, 14 Oct 2009 19:26:49 +0100
+Message-ID: <efe7343f0910141126o54ea2e31r5327e0db06a8b7ec@mail.gmail.com>
+Subject: Re: Current status of rt2800usb and staging/rt2870
+From: Luis Correia <luis.f.correia@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	=?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 21 Oct 2009 12:19:44 pm Luis R. Rodriguez wrote:
-> On Wed, Oct 21, 2009 at 2:37 PM, Kunal Gangakhedkar
+On Wed, Oct 14, 2009 at 18:33, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+> On Wednesday 14 October 2009 18:47:11 John W. Linville wrote:
+>> On Wed, Oct 14, 2009 at 05:28:21PM +0200, Bartlomiej Zolnierkiewicz wrote:
+>>
+>> > I don't have a have a problem with it personally as long as people accept
+>> > the competition..  but instead of working on _their_ projects they go around
+>> > screaming at everybody who does not want to spin inside the great process
+>> > designed by them..
+>>
+>> Please whine somewhere else.  You have the freedom to work in
+>> drivers/staging all you want.  You do not have the power to force us to
+>> like it -- especially in a case where you are diverting attention from
+>> the community-maintained drivers instead of cooperating with them.
 >
-> <kunal.gangakhedkar@gmail.com> wrote:
-> > On Wednesday 21 Oct 2009 4:50:18 am Luis R. Rodriguez wrote:
-> >> On Wed, Oct 21, 2009 at 2:28 AM, xxiao <austinxxh-ath9k@yahoo.com> wrote:
-> >> > interesting, why is MCS range just 0-7, which means no HT?
-> >>
-> >> MCS 1-7 is for single stream devices.
-> >>
-> >> http://wireless.kernel.org/en/developers/Documentation/ieee80211/802.11n
-> >
-> > So, does this mean that I can use N-mode on this device?
+> Cooperating you say.
 >
-> Yes, MCS 7 is your highest rate on your card.
+> rtl8187 -- before starting the work on rtl8187se I've pinged the maintainer
+> to coordinate the effort and hear his opinion on how to progress..
 >
+> I've never heard back.
+>
+> rt2x00 -- I know that people have datasheets for some chipsets but I've
+> never heard "How can we help you" etc. thing.
 
-Great.. that is really sweet :)
+I have all the datasheets that Ralink supplied to us.
+All of them are PRELIMINARY and most have errors, and therefore useless.
 
-Thanks,
-Kunal
+All useful information is in the crap drivers.
+
+Ralink never provide better ones, and even our 'inside guy' says the
+hardware documentation guys are always very late in providing more
+info.
+
+So, for me, it isn't lack of documentation that will ever help, believe me.
+
+>
+> All I've ever heard was _lies_ about current state of affairs or that
+> my work is in the way.
+
+AFAICS, your work was never questioned, at least by me.
+You are welcome to work on rt2x00 , that was also never a problem. All
+you would need is join in.
+
+Ralink also said they were commited to present drivers for new chipset
+to be mac80211 compliant, we're waiting on that.
+
+So, you're really welcome to join the rt2x00 team Bartlomiej, the only
+thing we ask is that all work should be done using the existing
+rt2x00lib, rt2x00pci and rt2x00usb base 'libraries'.
+
+Luis Correia,
+rt2x00 project admin
