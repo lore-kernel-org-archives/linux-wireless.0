@@ -1,37 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44436 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759921AbZJGTqr (ORCPT
+Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:35203 "EHLO
+	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753402AbZJNRzD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 15:46:47 -0400
-Date: Wed, 7 Oct 2009 15:41:48 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 7/7] ath5k: enable Power-Save Polls by setting the
-	association ID
-Message-ID: <20091007194148.GC22394@tuxdriver.com>
-References: <1254876274-1145-1-git-send-email-lrodriguez@atheros.com> <1254876274-1145-8-git-send-email-lrodriguez@atheros.com>
+	Wed, 14 Oct 2009 13:55:03 -0400
+Message-ID: <4AD60FF9.40200@s5r6.in-berlin.de>
+Date: Wed, 14 Oct 2009 19:52:57 +0200
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1254876274-1145-8-git-send-email-lrodriguez@atheros.com>
+To: Ingo Molnar <mingo@elte.hu>
+CC: Joe Perches <joe@perches.com>, Greg KH <gregkh@suse.de>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	James Bottomley <James.Bottomley@suse.de>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Theodore Tso <tytso@mit.edu>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Jing Huang <huangj@brocade.com>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
+ 2.6.32-rc3)
+References: <1255097287.2934.21.camel@localhost.localdomain> <20091012130652.GB25464@elte.hu> <1255357148.2850.91.camel@localhost.localdomain> <20091012145453.GD4565@elte.hu> <20091012150911.GB1656@suse.de> <20091012154244.GA13323@elte.hu> <20091012232429.GA24254@suse.de> <43e72e890910131108m789110b4hc35e25601ad67bb7@mail.gmail.com> <20091014044519.GA19199@suse.de> <1255497575.1851.16.camel@Joe-Laptop.home> <20091014063308.GE784@elte.hu>
+In-Reply-To: <20091014063308.GE784@elte.hu>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 06, 2009 at 08:44:34PM -0400, Luis R. Rodriguez wrote:
-> mac80211 has long provided us the association ID. This isn't useful except
-> for Power-Save polling which now gets enabled. We can now poll for our
-> pending frames on the AP during power save.
+Ingo Molnar wrote:
+> * Joe Perches <joe@perches.com> wrote:
 > 
-> You can review the details of Power-Save on the wireless wiki:
+>> On Tue, 2009-10-13 at 21:45 -0700, Greg KH wrote:
+>> > How about when it was scheduled to be removed, we put it in staging and
+>> > I'll add it to my announcements about the staging tree every release?
+>> > Unless you can think of a better way?
+>> 
+>> staging/to_be_removed_unless_fixed_by/v.x.y ?
 > 
-> http://wireless.kernel.org/en/developers/Documentation/ieee80211/power-savings
+> Yes, that's a real worry. Some time ago i suggested:
 > 
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>   drivers/staging/good/
+>   drivers/staging/bad/
+>   drivers/staging/ugly/
 
-Nice try, but how is this a fix? :-)
+How well do "git am", "quilt import" and friends cope with ever changing
+directories?
 
-John
+How about using drivers/staging/this_driver/TODO and (or) its Kconfig
+help text to leave a note about the plans for this driver?
+
+The worry that these will be ignored like
+Documentation/feature-removal-schedule.txt is being ignored may apply to
+the path name based solution too, I'm afraid.
+
+(Besides, Greg's release announcements are a good channel for this.
+These announcements are actually picked up by the specialized press.)
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Stefan Richter
+-=====-==--= =-=- -===-
+http://arcgraph.de/sr/
