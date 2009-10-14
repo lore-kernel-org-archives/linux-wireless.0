@@ -1,31 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:50012 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755114AbZJZTL0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 15:11:26 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: 2.6.32-rc5-git3: Reported regressions from 2.6.31
-Date: Mon, 26 Oct 2009 20:11:20 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Christian Casteyde <casteyde.christian@free.fr>
-References: <Sj-rRjx6TwF.A.djE.vqe5KB@chimera> <20091026185901.GH2792@tuxdriver.com>
-In-Reply-To: <20091026185901.GH2792@tuxdriver.com>
+Received: from mail.redfish-solutions.com ([66.232.79.143]:53585 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754356AbZJNVxP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Oct 2009 17:53:15 -0400
+Received: from [192.168.10.7] (builder.redfish-solutions.com [192.168.10.7])
+	(authenticated bits=0)
+	by mail.redfish-solutions.com (8.14.3/8.14.3) with ESMTP id n9ELqZTD026654
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2009 15:52:39 -0600
+Message-ID: <4AD64823.9020906@redfish-solutions.com>
+Date: Wed, 14 Oct 2009 14:52:35 -0700
+From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
 MIME-Version: 1.0
-Message-Id: <200910262011.22950.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+To: linux-wireless@vger.kernel.org
+Subject: Issues building compat-wireless-2009-10-13
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 26 October 2009 19:59:02 John W. Linville wrote:
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14277
-> > Subject		: Caught 8-bit read from freed memory in b43 driver at association
-> > Submitter	: Christian Casteyde <casteyde.christian@free.fr>
-> > Date		: 2009-09-30 18:06 (27 days old)
+Generated a snapshot at midnight, Pacific.
 
-Does this still trigger with a recent kernel (and thus recent memory debugging).
-I'm still not convinced that this is a wireless bug.
+Tried to build it against 2.6.27.29 a little while ago.  Seeing:
 
--- 
-Greetings, Michael.
+  CC [M]  /home/philipp/alix/build_i586/compat-wireless-2009-10-13/drivers/net/wireless/ipw2x00/ipw2100.o
+/home/philipp/alix/build_i586/compat-wireless-2009-10-13/drivers/net/wireless/ipw2x00/ipw2100.c: In function 'ipw2100_alloc_device':
+/home/philipp/alix/build_i586/compat-wireless-2009-10-13/drivers/net/wireless/ipw2x00/ipw2100.c:6063: error: 'struct iw_public_data' has no member named 'ieee80211'
+/home/philipp/alix/build_i586/compat-wireless-2009-10-13/drivers/net/wireless/ipw2x00/ipw2100.c: At top level:
+/home/philipp/alix/build_i586/compat-wireless-2009-10-13/drivers/net/wireless/ipw2x00/ipw2100.c:8325: error: unknown field 'num_private' specified in initializer
+/home/philipp/alix/build_i586/compat-wireless-2009-10-13/drivers/net/wireless/ipw2x00/ipw2100.c:8325: warning: initialization makes pointer from integer without a cast
+/home/philipp/alix/build_i586/compat-wireless-2009-10-13/drivers/net/wireless/ipw2x00/ipw2100.c:8326: error: unknown field 'num_private_args' specified in initializer
+/home/philipp/alix/build_i586/compat-wireless-2009-10-13/drivers/net/wireless/ipw2x00/ipw2100.c:8326: warning: excess elements in struct initializer
+/home/philipp/alix/build_i586/compat-wireless-2009-10-13/drivers/net/wireless/ipw2x00/ipw2100.c:8326: warning: (near initialization for 'ipw2100_wx_handler_def')
+/home/philipp/alix/build_i586/compat-wireless-2009-10-13/drivers/net/wireless/ipw2x00/ipw2100.c:8327: error: unknown field 'private' specified in initializer
+/home/philipp/alix/build_i586/compat-wireless-2009-10-13/drivers/net/wireless/ipw2x00/ipw2100.c:8327: warning: excess elements in struct initializer
+/home/philipp/alix/build_i586/compat-wireless-2009-10-13/drivers/net/wireless/ipw2x00/ipw2100.c:8327: warning: (near initialization for 'ipw2100_wx_handler_def')
+/home/philipp/alix/build_i586/compat-wireless-2009-10-13/drivers/net/wireless/ipw2x00/ipw2100.c:8328: error: unknown field 'private_args' specified in initializer
+/home/philipp/alix/build_i586/compat-wireless-2009-10-13/drivers/net/wireless/ipw2x00/ipw2100.c:8328: warning: excess elements in struct initializer
+/home/philipp/alix/build_i586/compat-wireless-2009-10-13/drivers/net/wireless/ipw2x00/ipw2100.c:8328: warning: (near initialization for 'ipw2100_wx_handler_def')
+make[5]: *** [/home/philipp/alix/build_i586/compat-wireless-2009-10-13/drivers/net/wireless/ipw2x00/ipw2100.o] Error 1
+make[4]: *** [/home/philipp/alix/build_i586/compat-wireless-2009-10-13/drivers/net/wireless/ipw2x00] Error 2
+make[3]: *** [/home/philipp/alix/build_i586/compat-wireless-2009-10-13/drivers/net/wireless] Error 2
+make[2]: *** [_module_/home/philipp/alix/build_i586/compat-wireless-2009-10-13] Error 2
+make[2]: Leaving directory `/home/philipp/alix/build_i586/linux-2.6.27.29-astlinux'
+make[1]: *** [modules] Error 2
+make[1]: Leaving directory `/home/philipp/alix/build_i586/compat-wireless-2009-10-13'
+make: *** [/home/philipp/alix/build_i586/compat-wireless-2009-10-13/net/wireless/lib80211.ko] Error 2
+
+
+
+Is this a known issue?
+
+Thanks,
+
+-Philip
+
+
