@@ -1,63 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37996 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751570AbZJASjh (ORCPT
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:37498 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755894AbZJNNwi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2009 14:39:37 -0400
-Subject: Re: VLAN traffic appearing on the wrong iface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Bla=C5=BE_Ba=C4=8Dnik?= <bacnik@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <57b62e7d0910010740t67a96d88h59b10161844f2836@mail.gmail.com>
-References: <57b62e7d0909291754x352ae254sa33ee7efb430d497@mail.gmail.com>
-	 <1254341787.3959.11.camel@johannes.local>
-	 <57b62e7d0910010732m38ab57k916662f9047fcc91@mail.gmail.com>
-	 <57b62e7d0910010740t67a96d88h59b10161844f2836@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-9PwvGaLUAVHmvL4OfR5R"
-Date: Thu, 01 Oct 2009 20:39:40 +0200
-Message-Id: <1254422380.3959.23.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 14 Oct 2009 09:52:38 -0400
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: Current status of rt2800usb and staging/rt2870
+Date: Wed, 14 Oct 2009 15:51:56 +0200
+Cc: Dan Williams <dcbw@redhat.com>,
+	Ozan =?utf-8?q?=C3=87a=C4=9Flayan?= <ozan@pardus.org.tr>,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel" <linux-kernel@vger.kernel.org>
+References: <4AD46380.9020308@pardus.org.tr> <1255464940.10798.10.camel@localhost.localdomain> <200910132357.57094.bzolnier@gmail.com>
+In-Reply-To: <200910132357.57094.bzolnier@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200910141551.56711.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> > 1) the vendor driver never gets converted to cfg80211/mac80211, and
+> > stays in staging forever, or finally gets booted out of staging because
+> > nobody is working on converting it to mac80211.  mac80211/cfg80211 is a
+> > hard requirement for being an accepted wireless driver.  And drivers do
+> > have a shelf-life in staging.
+> > 
+> > 2) the vendor driver starts getting converted to use mac80211.  But I
+> > would argue that a better use of *anyone's* time is to make rt2x00
+> > better, instead of porting the ralink vendor drivers to mac80211.  It
+> > would probably take less time to fix up rt2x00 for new hardware than to
+> > port the ralink vendor drivers to mac80211.
+> 
+> Nobody is saying anything about porting the vendor drivers to mac80211.
+> 
+> 3) After the vendor driver gets cleaned up to the point that people are
+> able to make any sense out of it the missing bits will get added to rt2x00.
+> Several months later (after all current users are happy with the improved
+> drivers) the old drivers will be removed from staging..
 
---=-9PwvGaLUAVHmvL4OfR5R
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Wishful thinking. the Ralink drivers for rt2460, rt2560, rt2570, rt61 and rt73
+coexisted for years with their rt2x00 counterparts before they were finally
+abandoned after many arguments from people which wanted to preserve
+those drivers for even more years.
 
-Thanks for looking into the crash -- I can't explain it.
-
-> -	if (ieee80211_vif_is_mesh(&sdata->vif)) {
-> +	if (ieee80211_vif_is_mesh(&(*sta)->sdata->vif)) {
-
-However, that doesn't make any sense, given
-
-	struct ieee80211_sub_if_data *sdata =3D (*sta)->sdata;
-
-Could the compiler be playing tricks on us?
-
-johannes
-
---=-9PwvGaLUAVHmvL4OfR5R
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKxPdoAAoJEODzc/N7+QmahOcQAMnFwKXb3y1Q8kvp5O/Z+MUg
-HEksI63OZu+dsBvVlh7HtWJ1HgB1Gd0ZJxIlCohNu5hdWWUf+Sh3Uym5RXNsPL7R
-ms5UHo31TTTuPIX/47F9BtBcQZaqnI2vBiBIfzIXLCX17mmjzB/yKvLjsgscFeZH
-5wC2fwUHA6AP45nM1Zq8N2gE0jO51E1gE9Hc3bOqoOCSiYDdslu8TpF1/y7B/rd+
-7xlW+8UCKSu8yMaPKupZaf/PDyCYsRQESdCToBBK8m/GU7HNpLm71dzIMbpWs/+e
-ww0neD5sKWIIHj9yo7MizScC/DMb+iuPOVUh8kprLevAh0IdoAXYLX4PT0Z7N7qo
-S5/xuvI46XkuQoms/Al88UecFks+SycMuZO8eMDydW4o1MdsWr3qBAnb4l4iHDrW
-62dj9ZoyDyuMRp4DOKPY+mx6wbxK5hTuaoD/1V3NyBU3beQiRsWrIKaJp58FofjM
-7O7KcBpruH/y4tfJ7aSZ/gxTRc/JIIAR+gtRTxPoJtXliap8kbX/EDIXZJjIpQql
-kQBodcyma1KfdUxf12+yFUC2fSFIjAxllcVIAPP2L8ZycsXs5H6TonhCjbrcbWKg
-6+MDY3xXSy/yNjjbV0wU/ubzhe1bJdLzDsg4t1mErGpbVv2uUsTkRdGRF5QVzwLZ
-t5uXJi/p/uJrFHryARvj
-=C4OQ
------END PGP SIGNATURE-----
-
---=-9PwvGaLUAVHmvL4OfR5R--
-
+Ivo
