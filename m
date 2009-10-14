@@ -1,45 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-72-92-88-10.phlapa.fios.verizon.net ([72.92.88.10]:48047
-	"EHLO smtp.roinet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752373AbZJGMcX (ORCPT
+Received: from einhorn.in-berlin.de ([192.109.42.8]:54704 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756429AbZJNTCX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 08:32:23 -0400
-Message-ID: <4ACC8A32.5050704@roinet.com>
-Date: Wed, 07 Oct 2009 08:31:46 -0400
-From: David Acker <dacker@roinet.com>
+	Wed, 14 Oct 2009 15:02:23 -0400
+Date: Wed, 14 Oct 2009 21:00:49 +0200 (CEST)
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
+ 2.6.32-rc3)
+To: Ingo Molnar <mingo@elte.hu>
+cc: Joe Perches <joe@perches.com>, Greg KH <gregkh@suse.de>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	James Bottomley <James.Bottomley@suse.de>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Theodore Tso <tytso@mit.edu>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Jing Huang <huangj@brocade.com>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20091014183657.GB5133@elte.hu>
+Message-ID: <tkrat.88ac5cebebbd9689@s5r6.in-berlin.de>
+References: <1255357148.2850.91.camel@localhost.localdomain>
+ <20091012145453.GD4565@elte.hu> <20091012150911.GB1656@suse.de>
+ <20091012154244.GA13323@elte.hu> <20091012232429.GA24254@suse.de>
+ <43e72e890910131108m789110b4hc35e25601ad67bb7@mail.gmail.com>
+ <20091014044519.GA19199@suse.de> <1255497575.1851.16.camel@Joe-Laptop.home>
+ <20091014063308.GE784@elte.hu> <4AD60FF9.40200@s5r6.in-berlin.de>
+ <20091014183657.GB5133@elte.hu>
 MIME-Version: 1.0
-To: Ahmed A <ahmedcali@yahoo.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Linux wifi development board
-References: <911923.95402.qm@web32505.mail.mud.yahoo.com>
-In-Reply-To: <911923.95402.qm@web32505.mail.mud.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: TEXT/PLAIN; CHARSET=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ahmed A wrote:
-> Hi David,
-> 
-> Thank you for your response.  I would like to explain what I am trying to setup, and would appreciate your feedback please.  My setup would comprise of two parts. One part would be the wifi router (base station), on which I load linux image bundled with my special app onto it.  The other part would be the wifi client (CPE), that would connect to the router.  I would also like to be able to load my own kernel image bundled with my special app.
-> 
-> I am guessing from your email, I would have to get a board from gateworks, hook up an antenna to it from ubnt, load image from OpenWRT, that would be my wifi router.  Is that right? Which product would you recommend, the Avilla platform? Which antenna from ubnt?  Would there be issues getting these to work?  How about the components on the client side, same deal?
-> 
-> I have done some work/programming on the IXP, but I do prefer a board with non-IXP CPU, like PowerPC or XScale.
-> 
-> Is there any solution out there, where the dev board and antenna come bundled, so I don't have to muck around getting them to work?
-> 
-> Any decent alternate board supplier, the prices of boards from gateworks are a bit pricey for me.
+On 14 Oct, Ingo Molnar wrote:
+> * Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+>> How well do "git am", "quilt import" and friends cope with ever 
+>> changing directories?
 
-As someone else noted, the RouterStation Pro from Ubiquiti 
-http://ubnt.com/products/rspro.php is a pretty good deal.  $80 gets you 
-quite the system.  You could add in any of Ubiquiti's atheros based 
-miniPCI radios.  They have 802.11b/g, 802.11a, and 802.11N in both 2.4 
-and 5 GHz.  They also have several other frequencies like 2.3, 2.6, 4, 
-900 MHz, and 700 MHz.  All of their radios are supported by either 
-madwifi/ath5k or ath9k.
+[Perhaps the -p option does the trick.  And git-am could be done on a
+temporary branch from before the move of the files.]
 
-For all in one less expensive systems, I would look for an off the shelf 
-wifi router that is supported by OpenWRT.  They have a nice list of 
-supported routers.
+> Once a driver is in a tree it's in Git and git mv is easy. People 
+> working with Linux better familiarize themselves with Git workflow - the 
+> sooner the better.
 
--ack
+Even if author and committer both work with git, they often use e-mail
+to transfer patches.
+
+> If it's not in tree then it will adopt to whatever layout there is once 
+> it gets into Greg's tree.
+
+Many "good" drivers will start as "ugly" or "bad" ones.
+
+>> How about using drivers/staging/this_driver/TODO and (or) its Kconfig 
+>> help text to leave a note about the plans for this driver?
+> 
+> Well, the answer is obvious i think. Tell me, at a glance, if you see a 
+> patch on lkml, which one is for a staging driver to be obsoleted, and 
+> which one is the one going upstream real soon? The patches say:
+> 
+>  +++ a/drivers/staging/foo/x.c
+> 
+>  +++ a/drivers/staging/bar/y.c
+> 
+> Then tell me the same at a glance if you see patches for:
+> 
+>  +++ a/drivers/staging/wip/x.c
+> 
+>  +++ a/drivers/staging/bad/y.c
+
+Does this information matter much?
+
+What's more interesting is whether development activity will _lead_ to a
+driver being moved from bad or ugly to good.
+-- 
+Stefan Richter
+-=====-==--= =-=- -===-
+http://arcgraph.de/sr/
+
+
