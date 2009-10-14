@@ -1,79 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59253 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752625AbZJAVQ2 (ORCPT
+Received: from mail-fx0-f227.google.com ([209.85.220.227]:36179 "EHLO
+	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757236AbZJNUmZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2009 17:16:28 -0400
-Subject: Re: 2.6.32-rc0-git: oops in wireless, iwl3945 related?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: linux-kernel@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20090929171249.GB14405@elf.ucw.cz>
-References: <20090929171249.GB14405@elf.ucw.cz>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-P07HAGU3xY43kYV86rag"
-Date: Thu, 01 Oct 2009 23:16:23 +0200
-Message-Id: <1254431783.3959.45.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 14 Oct 2009 16:42:25 -0400
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Luis Correia <luis.f.correia@gmail.com>
+Subject: Re: Current status of rt2800usb and staging/rt2870
+Date: Wed, 14 Oct 2009 22:41:00 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Ozan =?utf-8?q?=C3=87a=C4=9Flayan?= <ozan@pardus.org.tr>,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel" <linux-kernel@vger.kernel.org>
+References: <4AD46380.9020308@pardus.org.tr> <200910141933.09374.bzolnier@gmail.com> <efe7343f0910141126o54ea2e31r5327e0db06a8b7ec@mail.gmail.com>
+In-Reply-To: <efe7343f0910141126o54ea2e31r5327e0db06a8b7ec@mail.gmail.com>
+MIME-Version: 1.0
+Message-Id: <200910142241.01013.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 14 October 2009 20:26:49 Luis Correia wrote:
+> On Wed, Oct 14, 2009 at 18:33, Bartlomiej Zolnierkiewicz
+> <bzolnier@gmail.com> wrote:
+> > On Wednesday 14 October 2009 18:47:11 John W. Linville wrote:
+> >> On Wed, Oct 14, 2009 at 05:28:21PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> >>
+> >> > I don't have a have a problem with it personally as long as people accept
+> >> > the competition..  but instead of working on _their_ projects they go around
+> >> > screaming at everybody who does not want to spin inside the great process
+> >> > designed by them..
+> >>
+> >> Please whine somewhere else.  You have the freedom to work in
+> >> drivers/staging all you want.  You do not have the power to force us to
+> >> like it -- especially in a case where you are diverting attention from
+> >> the community-maintained drivers instead of cooperating with them.
+> >
+> > Cooperating you say.
+> >
+> > rtl8187 -- before starting the work on rtl8187se I've pinged the maintainer
+> > to coordinate the effort and hear his opinion on how to progress..
+> >
+> > I've never heard back.
+> >
+> > rt2x00 -- I know that people have datasheets for some chipsets but I've
+> > never heard "How can we help you" etc. thing.
+> 
+> I have all the datasheets that Ralink supplied to us.
+> All of them are PRELIMINARY and most have errors, and therefore useless.
+> 
+> All useful information is in the crap drivers.
+> 
+> Ralink never provide better ones, and even our 'inside guy' says the
+> hardware documentation guys are always very late in providing more
+> info.
+> 
+> So, for me, it isn't lack of documentation that will ever help, believe me.
+> 
+> >
+> > All I've ever heard was _lies_ about current state of affairs or that
+> > my work is in the way.
+> 
+> AFAICS, your work was never questioned, at least by me.
+> You are welcome to work on rt2x00 , that was also never a problem. All
+> you would need is join in.
+> 
+> Ralink also said they were commited to present drivers for new chipset
+> to be mac80211 compliant, we're waiting on that.
+> 
+> So, you're really welcome to join the rt2x00 team Bartlomiej, the only
+> thing we ask is that all work should be done using the existing
+> rt2x00lib, rt2x00pci and rt2x00usb base 'libraries'.
 
---=-P07HAGU3xY43kYV86rag
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Well, I will still continue to work on staging drivers:
 
-On Tue, 2009-09-29 at 19:12 +0200, Pavel Machek wrote:
->=20
-> Happened while playing with wireless.
->=20
-> Kernel is:
->=20
-> Linux version 2.6.31 (pavel@amd) (gcc version 4.3.3 (Debian 4.3.3-10)
-> ) #72 SMP Thu Sep 10 21:56:19 CEST 2009
-> KERNEL supported cpus:
->=20
-> (Could we get kernels between release and -rc1 mark themselves
-> somehow?)
+- I need to understand vendor drivers better before doing any larger rt2x00
+  modifications.  Cleaning it up is just an added value while reading it..
 
-CONFIG_LOCALVERSION_AUTO?
+- I feel quite comfortable working on de-convoluting crappy code and has years
+  of experience of doing it.
 
-> Registered led device: iwl-phy0::radio
-> Registered led device: iwl-phy0::assoc
-> Registered led device: iwl-phy0::RX
-> Registered led device: iwl-phy0::TX
-> wlan0: Selected IBSS BSSID 02:18:41:de:3f:02 based on configured SSID
-> wlan0: Trigger new scan to find an IBSS to join
-> wlan0: Trigger new scan to find an IBSS to join
-> wlan0: Creating new IBSS network, BSSID f2:d3:80:82:ed:6a
-> wlan0: Creating new IBSS network, BSSID 52:17:bf:45:d6:9d
-> skb_over_panic: text:c07b4113 len:130 put:36 head:e4c3edf0
+- I'm still using Ralink hardware personally so I need something that provides
+  the basic usability _now_.
 
-This entire log is very odd ... can you reproduce this easily? printk
-timestamps would be useful.
-
-johannes
-
---=-P07HAGU3xY43kYV86rag
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKxRwkAAoJEODzc/N7+QmazKkP/1pg60E2W8XKI0Djsyvh6GKK
-YV5gEu3R16L4l9EZkHD4akgGlQDPtfIIlrxPQ11gLSKMt0K8UzsavJTWOkEbL4d0
-Dc3DVYNk1+lGcJmJHgz/9AuwWc0mZLZ/e7aoWGRvZsv9E3+fQG1qBLisKrUB9tLO
-MW/kPbjjlR5momvE4XglR/5/6yjWywayDL4kblR/xOSpaOJDxGTET4j+P42QiVQB
-NOal2NJDipfkBEh3qmAAueQBbcfJoRqsi0tXxh7Pysf2Yy1hcVTXNORYGhUKlbCG
-OISu+kYYIEd6AdYS5xoWmAKcKWNPoiww6xDE58hF689EJAoxju2OvqNNgwsWt7MM
-SLRPzLKUhOx/xqktljgiHxQ2PbFGfqrsknZbqzui4zljAFOnc+me1hTFuPdXljSv
-bwahG86iA27k8h7q0f3x5aJgsz8bmznfLFUr8kxmluujaqiTKuhAibko4FSr6TW7
-EehHyxiHxp0+cz0UXq3iIAoAcPFfiSKVr7bhTCim6RGIP/vFnxW5kGz/UTP4W+aA
-QB+ysMhbreM9YRFHNhysmDFwXV5MRzqdiVeT6lwaAN5xOVXfqPJSrpZyanfFYHLy
-lYuu7EI0I+tBNZgGkLpjzWgHAUfcmUesaJ4wlnLW4kMscTw7CJTyN+kzgGrZuPyB
-LeMcSHoDplvTsZqP/cZp
-=yYaN
------END PGP SIGNATURE-----
-
---=-P07HAGU3xY43kYV86rag--
-
+but since I'm also going to start adding some missing bits to rt2x00 soon
+I would be happy to join rt2x00 project..
