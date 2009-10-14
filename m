@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml103.kpnxchange.com ([195.121.3.7]:61542 "EHLO
-	CPSMTPM-EML103.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756662AbZJGSfe (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:57040 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753223AbZJNAv3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 14:35:34 -0400
-From: Frans Pop <elendil@planet.nl>
-To: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for CPU"
-Date: Wed, 7 Oct 2009 20:34:55 +0200
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	Peter Zijlstra <peterz@infradead.org>,
-	linux-wireless@vger.kernel.org
-References: <200910051500.55875.elendil@planet.nl> <200910061749.02805.elendil@planet.nl> <200910071910.53907.elendil@planet.nl>
-In-Reply-To: <200910071910.53907.elendil@planet.nl>
+	Tue, 13 Oct 2009 20:51:29 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200910072034.57511.elendil@planet.nl>
+In-Reply-To: <4AD51A7C.9060207@canonical.com>
+References: <43e72e890910131542k376a87c5rc30feb6491a06867@mail.gmail.com>
+	<4AD51A7C.9060207@canonical.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 13 Oct 2009 17:50:33 -0700
+Message-ID: <43e72e890910131750s4d2cdb20o76d721087d9b3aaf@mail.gmail.com>
+Subject: Re: Stable compat-wireless 2.6.32-rc4 released
+To: tim.gardner@canonical.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg KH <greg@kroah.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 07 October 2009, Frans Pop wrote:
-> On Tuesday 06 October 2009, Frans Pop wrote:
-> > I've checked for 2.6.31.1 now and iwlagn is listed high there too when
-> > the system is idle, but with normal values of 60-100 ms. And phy0 has
-> > normal values of below 10 ms.
-> > I've now rebooted with today's mainline git; phy0 now frequently shows
-> > with values of around 100 ms too (i.e. higher than last time).
+On Tue, Oct 13, 2009 at 5:25 PM, Tim Gardner <tim.gardner@canonical.com> wrote:
+> Luis R. Rodriguez wrote:
+>>
+>> As the kernel moves along so does the automatic stable backports for
+>> the wireless subsystem [1]. We are now on 2.6.32-rc4. Besides getting
+>> the same fixes from rc1..rc4 some backport changes were made as well,
+>> most importantly that of relying on your own kernel's iw_handler.h.
+>> I've tested this release with 2.6.28.
+>>
+>> Please report any issues you see.
+>>
+>> [1] http://wireless.kernel.org/en/users/Download/stable
+>>
+>> PS. If you maintain a distribution and rely on stable compat-wireless
+>> releases please let me know so I can CC you when further updates are
+>> made.
+>>
+>>  Luis
+>>
 >
-> Mike privately sent me a script to try to capture the latencies with
-> perf, but the perf output does not show any high latencies at all. It
-> looks as if we may have found a bug in latencytop here instead.
+> Speaking as a distro, what advantage does the stable wireless backport offer
+> for the currently released kernel if we are already consumers of stable
+> updates?
 
-Not sure if it's relevant nor what it means, but I frequently see two lines 
-for iwlagn, e.g:
+Well if you are a distro stuck on the 2.6.31 kernel the stable
+compat-wireless-2.6.32 gets you 2.6.32 wireless bits on 2.6.31 and
+that means any features/drivers/large fixes/enhancements that didn't
+make it to 2.6.31.
 
-    Scheduler: waiting for cpu              102.4 msec         99.7 %
-    .                                         3.3 msec          0.3 %
-
-I get the same results with both latencytop 0.4 and 0.5.
+  Luis
