@@ -1,41 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55481 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933619AbZJONCC (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:17208 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753608AbZJNPOt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2009 09:02:02 -0400
-Date: Thu, 15 Oct 2009 08:59:33 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Frans Pop <elendil@planet.nl>, Ferenc Wagner <wferi@niif.hu>,
-	"ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [Ipw2100-devel] 2.6.32-rc4 ipw2200: oops on missing firmware
-Message-ID: <20091015125933.GA2809@tuxdriver.com>
-References: <87hbu3h023.fsf@tac.ki.iif.hu> <200910131855.25878.elendil@planet.nl> <1255589428.3719.465.camel@debian>
+	Wed, 14 Oct 2009 11:14:49 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id CF9AC14800C
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2009 17:13:42 +0200 (CEST)
+Received: from mx51.mymxserver.com ([127.0.0.1])
+	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 1pP0sStDPs7s for <linux-wireless@vger.kernel.org>;
+	Wed, 14 Oct 2009 17:13:42 +0200 (CEST)
+Received: from lin01.mn-solutions.de (pD95FA374.dip0.t-ipconnect.de [217.95.163.116])
+	by mx51.mymxserver.com (Postfix) with ESMTP id 93C3E148006
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2009 17:13:42 +0200 (CEST)
+Received: from mnz66.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 2BF201E0010
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2009 17:13:33 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [WIP, RFC] libertas: allow scanning via "iw"
+Date: Wed, 14 Oct 2009 17:13:28 +0200
+References: <200910141652.11203.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200910141652.11203.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1255589428.3719.465.camel@debian>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200910141713.28861.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 15, 2009 at 02:50:28PM +0800, Zhu Yi wrote:
-
-> OK. The rfkill device is removed without being added before! The root
-> cause is, for non-monitor interfaces, the syntax for
-> alloc_ieee80211/free_80211 is wrong. Because alloc_ieee80211 only
-> creates (wiphy_new) a wiphy, but free_80211() does wiphy_unregister()
-> also. This is only correct when the later wiphy_register() is called
-> successfully, which apparently is not the case for your fw doesn't exist
-> one. Please see if this patch fix the problem.
-> 
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-
-Thanks, Zhu!  That certainly looks better than what I had.
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Oops, didn't change the subject. Of course it can now do more 
+than just scanning ...
