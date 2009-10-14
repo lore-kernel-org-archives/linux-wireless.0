@@ -1,68 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:33510 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756024AbZJAJjm (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54978 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933097AbZJNNnN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2009 05:39:42 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: BUG: "wext: refactor" broke compilation
-Date: Thu, 1 Oct 2009 11:39:30 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200910011139.30914.hs4233@mail.mn-solutions.de>
+	Wed, 14 Oct 2009 09:43:13 -0400
+Subject: Re: cfg80211 question: impedance mismatch of .connect versus .assoc
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200910141136.03288.hs4233@mail.mn-solutions.de>
+References: <200910141136.03288.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-tvH/v6FAyDpopk8292kq"
+Date: Wed, 14 Oct 2009 22:41:58 +0900
+Message-Id: <1255527718.4095.292.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  LD      net/wireless/built-in.o
-  CC [M]  net/wireless/core.o
-net/wireless/core.c: In function 'cfg80211_netdev_notifier_call':
-net/wireless/core.c:673: error: 'struct wireless_dev' has no member named 'wext'
-net/wireless/core.c:674: error: 'struct wireless_dev' has no member named 'wext'
-net/wireless/core.c:675: error: 'struct wireless_dev' has no member named 'wext'
-net/wireless/core.c:676: error: 'struct wireless_dev' has no member named 'wext'
-net/wireless/core.c:677: error: 'struct wireless_dev' has no member named 'wext'
-net/wireless/core.c:680: error: 'struct wireless_dev' has no member named 'wext'
-net/wireless/core.c:681: error: 'struct wireless_dev' has no member named 'wext'
-net/wireless/core.c:683: error: 'struct wireless_dev' has no member named 'wext'
 
-The reason is that currently two different Kconfig
-defines are used:
+--=-tvH/v6FAyDpopk8292kq
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, 2009-10-14 at 11:36 +0200, Holger Schurig wrote:
+> While playing with .auth/.deauth/.assoc/.disassoc=20
+> versus .connect/.disconnect in libertas, I notices two things=20
+> that makes things a bit hard for me.
 
-in net/wireless/core.c:
+> This makes the "iw connect" command only work if an "iw scan" did=20
+> just take place and I provide an BSS on the command line.=20
+>=20
+> So maybe net/wireless/sme.c should be generalized ?
+>=20
+>=20
+>=20
+> BSSID for .deauth/.disassoc vs. .disconnect
+> -------------------------------------------
+> Both the .deauth and .disassoc get the cfg80211_bss entry to=20
+> deauth / disassociate against.
+>=20
+> .disconnect doesn't get this.
 
-#ifdef CONFIG_WIRELESS_EXT
-                wdev->wext.default_key = -1;
-  ...
-#endif
+This was intentional, as with ->connect() the driver is supposed to
+handle roaming/pre-connect scanning etc. Basically it's mostly for the
+case of full-mac drivers that do that in the device firmware.
 
+What you perceive as a "mismatch" is fully intentional, due to the
+separation of where roaming is handled.
 
-in include/net/cfg80211.h:
+johannes
 
-#ifdef CONFIG_CFG80211_WEXT
-        /* wext data */
-        struct {
-  ...
-        } wext;
-#endif
+--=-tvH/v6FAyDpopk8292kq
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
 
-But I configure my kernel this way:
+iQIcBAABAgAGBQJK1dUjAAoJEODzc/N7+Qmaab4QAJlb/K6Vt7fyJ3696xRj3tgv
+ovKIcm4CglqCF+Pi8IT9rL98Mz8DFg1XheM4pEoUqaWZrMq8N4h9REz7KfIevILN
+jcBEwcgxR/fZPQvbVisfheXqN//IG1X7B7TLOFHMjKcY8YM0jpu+h28Kmu4cGtr5
+2hdcom+Uxm7yPhnLmCubcPnsKZqGSnAr8sNIldZyX//ucL1gdOXATkK3LOXdmeCc
+KZM65g7lfVCYt7VbuZjTZ7xc00hUqFV6Mzookh3afA5dAPNbYZRFcLtR/vs9tKK7
+bZxQaUM/AnADZmK5BMWC8JIpwBR8P+D4Zo4rWhXSPZl/MrQ5RsJIXm0sSrLokym1
+sQp/DziO1Gn1M2nnMHImCPC26hTxT1tDNOpFMpAFZisJKSeDAFYdUIrXVv+v0fjw
+Zs1zqDqDtAdf7ub6+2JPKARJquQQ9uc+TvKb1lco+FORhedg7jaPx2LMsdMhv8Re
+7+cI6D35MMyNkDxAJORF9cpoduOdzz/FHI4xs5ZNM3yK1lNF7owXdmb4NvMRKckG
+Ir4mwbjRTt/1MBfXYHwSczZKmPvufcUUDp0r5LRbFsEQR/elmPPCuCqBZhTrVzOC
+1CG3Vqwcwlu3+60nXM52E+OMVixfSdD0Uth2NLgX/vPiKmR6LLdYt6l2MqWdAOaQ
+euxU7S9uf3zn3F213Ir3
+=Ah4j
+-----END PGP SIGNATURE-----
 
-$ grep WIRELESS .config
-CONFIG_WIRELESS=y
-CONFIG_WIRELESS_EXT=y
-...
+--=-tvH/v6FAyDpopk8292kq--
 
-$ grep WEXT .config
-CONFIG_WEXT_CORE=y
-CONFIG_WEXT_PROC=y
-CONFIG_WEXT_SPY=y
-CONFIG_WEXT_PRIV=y
-# CONFIG_CFG80211_WEXT is not set
-
--- 
-http://www.holgerschurig.de
