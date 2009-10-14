@@ -1,191 +1,388 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:49231 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755549AbZJLMN1 (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4270 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752503AbZJNSSC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 08:13:27 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
+	Wed, 14 Oct 2009 14:18:02 -0400
+From: Bob Copeland <me@bobcopeland.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 07/16] wl1271: Add top-register access functions
-Date: Mon, 12 Oct 2009 15:08:48 +0300
-Message-Id: <1255349337-9776-8-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH] ath5k: use noise calibration from madwifi hal
+Date: Wed, 14 Oct 2009 14:16:30 -0400
+Message-Id: <1255544190-30020-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+This updates ath5k to calibrate the noise floor similar to the
+way it is done in the madwifi hal and ath9k.  Of note:
 
-Add top register access function.
+- we start NF measurement at the same time as AGC calibration,
+  but do not actually read the value until the periodic (long)
+  calibration
+- we keep a history of the last few values read and write the
+  median back to the hardware for CCA
+- we do not complain if NF calibration isn't complete, instead
+  we keep the last read value.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_boot.c |   27 ++---------------
- drivers/net/wireless/wl12xx/wl1271_boot.h |   15 +---------
- drivers/net/wireless/wl12xx/wl1271_spi.c  |   46 +++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_spi.h  |   16 ++++++++++
- 4 files changed, 66 insertions(+), 38 deletions(-)
+ drivers/net/wireless/ath/ath5k/ath5k.h  |   13 ++
+ drivers/net/wireless/ath/ath5k/attach.c |    2 +
+ drivers/net/wireless/ath/ath5k/phy.c    |  185 +++++++++++++++++++++----------
+ drivers/net/wireless/ath/ath5k/reg.h    |   11 +-
+ drivers/net/wireless/ath/ath5k/reset.c  |   17 +---
+ 5 files changed, 148 insertions(+), 80 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
-index 2eb7836..1a3084c 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
-@@ -419,34 +419,13 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 6cd5efc..1c90d6b 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -204,6 +204,7 @@
+ #define AR5K_TUNE_CWMAX_11B			1023
+ #define AR5K_TUNE_CWMAX_XR			7
+ #define AR5K_TUNE_NOISE_FLOOR			-72
++#define AR5K_TUNE_CCA_MAX_GOOD_VALUE		-95
+ #define AR5K_TUNE_MAX_TXPOWER			63
+ #define AR5K_TUNE_DEFAULT_TXPOWER		25
+ #define AR5K_TUNE_TPC_TXPOWER			false
+@@ -1012,6 +1013,14 @@ struct ath5k_capabilities {
+ 	} cap_queues;
+ };
  
- static int wl1271_boot_write_irq_polarity(struct wl1271 *wl)
- {
--	u32 polarity, status, i;
-+	u32 polarity;
- 
--	wl1271_reg_write32(wl, OCP_POR_CTR, OCP_REG_POLARITY);
--	wl1271_reg_write32(wl, OCP_CMD, OCP_CMD_READ);
--
--	/* Wait until the command is complete (ie. bit 18 is set) */
--	for (i = 0; i < OCP_CMD_LOOP; i++) {
--		polarity = wl1271_reg_read32(wl, OCP_DATA_READ);
--		if (polarity & OCP_READY_MASK)
--			break;
--	}
--	if (i == OCP_CMD_LOOP) {
--		wl1271_error("OCP command timeout!");
--		return -EIO;
--	}
--
--	status = polarity & OCP_STATUS_MASK;
--	if (status != OCP_STATUS_OK) {
--		wl1271_error("OCP command failed (%d)", status);
--		return -EIO;
--	}
-+	polarity = wl1271_top_reg_read(wl, OCP_REG_POLARITY);
- 
- 	/* We use HIGH polarity, so unset the LOW bit */
- 	polarity &= ~POLARITY_LOW;
--
--	wl1271_reg_write32(wl, OCP_POR_CTR, OCP_REG_POLARITY);
--	wl1271_reg_write32(wl, OCP_DATA_WRITE, polarity);
--	wl1271_reg_write32(wl, OCP_CMD, OCP_CMD_WRITE);
-+	wl1271_top_reg_write(wl, OCP_REG_POLARITY, polarity);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.h b/drivers/net/wireless/wl12xx/wl1271_boot.h
-index b0d8fb4..4501653 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.h
-@@ -50,20 +50,7 @@ struct wl1271_static_data {
- #define WU_COUNTER_PAUSE_VAL 0x3FF
- #define WELP_ARM_COMMAND_VAL 0x4
- 
--#define OCP_CMD_LOOP  32
--
--#define OCP_CMD_WRITE 0x1
--#define OCP_CMD_READ  0x2
--
--#define OCP_READY_MASK  BIT(18)
--#define OCP_STATUS_MASK (BIT(16) | BIT(17))
--
--#define OCP_STATUS_NO_RESP    0x00000
--#define OCP_STATUS_OK         0x10000
--#define OCP_STATUS_REQ_FAILED 0x20000
--#define OCP_STATUS_RESP_ERROR 0x30000
--
--#define OCP_REG_POLARITY 0x30032
-+#define OCP_REG_POLARITY 0x0064
- 
- #define CMD_MBOX_ADDRESS 0x407B4
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
-index 367f2d3..7a7890b 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
-@@ -395,3 +395,49 @@ void wl1271_reg_write32(struct wl1271 *wl, int addr, u32 val)
- {
- 	wl1271_write32(wl, wl1271_translate_addr(wl, addr), val);
- }
-+
-+void wl1271_top_reg_write(struct wl1271 *wl, int addr, u16 val)
++/* size of noise floor history (keep it a power of two) */
++#define ATH5K_NF_CAL_HIST_MAX	8
++struct ath5k_nfcal_hist
 +{
-+	/* write address >> 1 + 0x30000 to OCP_POR_CTR */
-+	addr = (addr >> 1) + 0x30000;
-+	wl1271_reg_write32(wl, OCP_POR_CTR, addr);
++	s16 index;				/* current index into nfval */
++	s16 nfval[ATH5K_NF_CAL_HIST_MAX];	/* last few noise floors */
++};
 +
-+	/* write value to OCP_POR_WDATA */
-+	wl1271_reg_write32(wl, OCP_DATA_WRITE, val);
+ 
+ /***************************************\
+   HARDWARE ABSTRACTION LAYER STRUCTURE
+@@ -1125,6 +1134,8 @@ struct ath5k_hw {
+ 		struct ieee80211_channel r_last_channel;
+ 	} ah_radar;
+ 
++	struct ath5k_nfcal_hist ah_nfcal_hist;
 +
-+	/* write 1 to OCP_CMD */
-+	wl1271_reg_write32(wl, OCP_CMD, OCP_CMD_WRITE);
+ 	/* noise floor from last periodic calibration */
+ 	s32			ah_noise_floor;
+ 
+@@ -1288,8 +1299,10 @@ extern int ath5k_hw_rfgain_opt_init(struct ath5k_hw *ah);
+ extern bool ath5k_channel_ok(struct ath5k_hw *ah, u16 freq, unsigned int flags);
+ extern int ath5k_hw_channel(struct ath5k_hw *ah, struct ieee80211_channel *channel);
+ /* PHY calibration */
++void ath5k_hw_init_nfcal_hist(struct ath5k_hw *ah);
+ extern int ath5k_hw_phy_calibrate(struct ath5k_hw *ah, struct ieee80211_channel *channel);
+ extern int ath5k_hw_noise_floor_calibration(struct ath5k_hw *ah, short freq);
++extern s16 ath5k_hw_get_noise_floor(struct ath5k_hw *ah);
+ extern void ath5k_hw_calibration_poll(struct ath5k_hw *ah);
+ /* Spur mitigation */
+ bool ath5k_hw_chan_has_spur_noise(struct ath5k_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
+index 71a1bd2..1ec85af 100644
+--- a/drivers/net/wireless/ath/ath5k/attach.c
++++ b/drivers/net/wireless/ath/ath5k/attach.c
+@@ -342,6 +342,8 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc)
+ 
+ 	ath5k_hw_rfgain_opt_init(ah);
+ 
++	ath5k_hw_init_nfcal_hist(ah);
++
+ 	/* turn on HW LEDs */
+ 	ath5k_hw_set_ledstate(ah, AR5K_LED_INIT);
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 1a039f2..8959907 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1124,77 +1124,148 @@ ath5k_hw_calibration_poll(struct ath5k_hw *ah)
+ 		ah->ah_swi_mask = AR5K_SWI_FULL_CALIBRATION;
+ 		AR5K_REG_ENABLE_BITS(ah, AR5K_CR, AR5K_CR_SWI);
+ 	}
++}
+ 
++static int sign_extend(int val, const int nbits)
++{
++	int order = BIT(nbits-1);
++	return (val ^ order) - order;
+ }
+ 
+-/**
+- * ath5k_hw_noise_floor_calibration - perform PHY noise floor calibration
+- *
+- * @ah: struct ath5k_hw pointer we are operating on
+- * @freq: the channel frequency, just used for error logging
+- *
+- * This function performs a noise floor calibration of the PHY and waits for
+- * it to complete. Then the noise floor value is compared to some maximum
+- * noise floor we consider valid.
+- *
+- * Note that this is different from what the madwifi HAL does: it reads the
+- * noise floor and afterwards initiates the calibration. Since the noise floor
+- * calibration can take some time to finish, depending on the current channel
+- * use, that avoids the occasional timeout warnings we are seeing now.
+- *
+- * See the following link for an Atheros patent on noise floor calibration:
+- * http://patft.uspto.gov/netacgi/nph-Parser?Sect1=PTO1&Sect2=HITOFF&d=PALL \
+- * &p=1&u=%2Fnetahtml%2FPTO%2Fsrchnum.htm&r=1&f=G&l=50&s1=7245893.PN.&OS=PN/7
++static s32 ath5k_hw_read_measured_noise_floor(struct ath5k_hw *ah)
++{
++	s32 val;
++
++	val = ath5k_hw_reg_read(ah, AR5K_PHY_NF);
++	return sign_extend(AR5K_REG_MS(val, AR5K_PHY_NF_MINCCA_PWR), 9);
 +}
 +
-+u16 wl1271_top_reg_read(struct wl1271 *wl, int addr)
++void ath5k_hw_init_nfcal_hist(struct ath5k_hw *ah)
 +{
++	int i;
++
++	ah->ah_nfcal_hist.index = 0;
++	for (i = 0; i < ATH5K_NF_CAL_HIST_MAX; i++)
++		ah->ah_nfcal_hist.nfval[i] = AR5K_TUNE_CCA_MAX_GOOD_VALUE;
++}
++
++static void ath5k_hw_update_nfcal_hist(struct ath5k_hw *ah, s16 noise_floor)
++{
++	struct ath5k_nfcal_hist *hist = &ah->ah_nfcal_hist;
++	hist->index = (hist->index + 1) & (ATH5K_NF_CAL_HIST_MAX-1);
++	hist->nfval[hist->index] = noise_floor;
++}
++
++static s16 ath5k_hw_get_median_noise_floor(struct ath5k_hw *ah)
++{
++	s16 sort[ATH5K_NF_CAL_HIST_MAX];
++	s16 tmp;
++	int i, j;
++
++	memcpy(sort, ah->ah_nfcal_hist.nfval, sizeof(sort));
++	for (i = 0; i < ATH5K_NF_CAL_HIST_MAX - 1; i++) {
++		for (j = 1; j < ATH5K_NF_CAL_HIST_MAX - i; j++) {
++			if (sort[j] > sort[j-1]) {
++				tmp = sort[j];
++				sort[j] = sort[j-1];
++				sort[j-1] = tmp;
++			}
++		}
++	}
++	for (i = 0; i < ATH5K_NF_CAL_HIST_MAX; i++) {
++		ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
++			"cal %d:%d\n", i, sort[i]);
++	}
++	return sort[(ATH5K_NF_CAL_HIST_MAX-1) / 2];
++}
++
++/*
++ * When we tell the hardware to perform a noise floor calibration
++ * by setting the AR5K_PHY_AGCCTL_NF bit, it will periodically
++ * sample-and-hold the minimum noise level seen at the antennas.
++ * This value is then stored in a ring buffer of recently measured
++ * noise floor values so we have a moving window of the last few
++ * samples.
+  *
+- * XXX: Since during noise floor calibration antennas are detached according to
+- * the patent, we should stop tx queues here.
++ * The median of the values in the history is then loaded into the
++ * hardware for its own use for RSSI and CCA measurements.
+  */
+-int
+-ath5k_hw_noise_floor_calibration(struct ath5k_hw *ah, short freq)
++void ath5k_hw_update_noise_floor(struct ath5k_hw *ah)
+ {
+-	int ret;
+-	unsigned int i;
+-	s32 noise_floor;
++	struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
 +	u32 val;
-+	int timeout = OCP_CMD_LOOP;
-+
-+	/* write address >> 1 + 0x30000 to OCP_POR_CTR */
-+	addr = (addr >> 1) + 0x30000;
-+	wl1271_reg_write32(wl, OCP_POR_CTR, addr);
-+
-+	/* write 2 to OCP_CMD */
-+	wl1271_reg_write32(wl, OCP_CMD, OCP_CMD_READ);
-+
-+	/* poll for data ready */
-+	do {
-+		val = wl1271_reg_read32(wl, OCP_DATA_READ);
-+		timeout--;
-+	} while (!(val & OCP_READY_MASK) && timeout);
-+
-+	if (!timeout) {
-+		wl1271_warning("Top register access timed out.");
-+		return 0xffff;
-+	}
-+
-+	/* check data status and return if OK */
-+	if ((val & OCP_STATUS_MASK) == OCP_STATUS_OK)
-+		return val & 0xffff;
-+	else {
-+		wl1271_warning("Top register access returned error.");
-+		return 0xffff;
-+	}
-+}
-+
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.h b/drivers/net/wireless/wl12xx/wl1271_spi.h
-index c58e027..4f1608e 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.h
-@@ -71,6 +71,18 @@
- 		((WL1271_BUSY_WORD_LEN - 4) / sizeof(u32))
- #define HW_ACCESS_WSPI_INIT_CMD_MASK  0
++	s16 nf, threshold;
++	u8 ee_mode;
  
-+#define OCP_CMD_LOOP  32
-+
-+#define OCP_CMD_WRITE 0x1
-+#define OCP_CMD_READ  0x2
-+
-+#define OCP_READY_MASK  BIT(18)
-+#define OCP_STATUS_MASK (BIT(16) | BIT(17))
-+
-+#define OCP_STATUS_NO_RESP    0x00000
-+#define OCP_STATUS_OK         0x10000
-+#define OCP_STATUS_REQ_FAILED 0x20000
-+#define OCP_STATUS_RESP_ERROR 0x30000
+-	/*
+-	 * Enable noise floor calibration
+-	 */
+-	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL,
+-				AR5K_PHY_AGCCTL_NF);
++	/* keep last value if calibration hasn't completed */
++	if (ath5k_hw_reg_read(ah, AR5K_PHY_AGCCTL) & AR5K_PHY_AGCCTL_NF) {
++		ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
++			"NF did not complete in calibration window\n");
  
- /* Raw target IO, address is not translated */
- void wl1271_spi_write(struct wl1271 *wl, int addr, void *buf,
-@@ -92,6 +104,10 @@ void wl1271_spi_reg_write(struct wl1271 *wl, int addr, void *buf, size_t len,
- u32 wl1271_reg_read32(struct wl1271 *wl, int addr);
- void wl1271_reg_write32(struct wl1271 *wl, int addr, u32 val);
+-	ret = ath5k_hw_register_timeout(ah, AR5K_PHY_AGCCTL,
+-			AR5K_PHY_AGCCTL_NF, 0, false);
+-	if (ret) {
+-		ATH5K_ERR(ah->ah_sc,
+-			"noise floor calibration timeout (%uMHz)\n", freq);
+-		return -EAGAIN;
++		return;
+ 	}
  
-+/* Top Register IO */
-+void wl1271_top_reg_write(struct wl1271 *wl, int addr, u16 val);
-+u16 wl1271_top_reg_read(struct wl1271 *wl, int addr);
+-	/* Wait until the noise floor is calibrated and read the value */
+-	for (i = 20; i > 0; i--) {
+-		mdelay(1);
+-		noise_floor = ath5k_hw_reg_read(ah, AR5K_PHY_NF);
+-		noise_floor = AR5K_PHY_NF_RVAL(noise_floor);
+-		if (noise_floor & AR5K_PHY_NF_ACTIVE) {
+-			noise_floor = AR5K_PHY_NF_AVAL(noise_floor);
+-
+-			if (noise_floor <= AR5K_TUNE_NOISE_FLOOR)
+-				break;
+-		}
++	switch (ah->ah_current_channel->hw_value & CHANNEL_MODES) {
++	case CHANNEL_A:
++	case CHANNEL_T:
++	case CHANNEL_XR:
++		ee_mode = AR5K_EEPROM_MODE_11A;
++		break;
++	case CHANNEL_G:
++	case CHANNEL_TG:
++		ee_mode = AR5K_EEPROM_MODE_11G;
++		break;
++	default:
++	case CHANNEL_B:
++		ee_mode = AR5K_EEPROM_MODE_11B;
++		break;
+ 	}
+ 
+-	ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
+-		"noise floor %d\n", noise_floor);
+ 
+-	if (noise_floor > AR5K_TUNE_NOISE_FLOOR) {
+-		ATH5K_ERR(ah->ah_sc,
+-			"noise floor calibration failed (%uMHz)\n", freq);
+-		return -EAGAIN;
++	/* completed NF calibration, test threshold */
++	nf = ath5k_hw_read_measured_noise_floor(ah);
++	threshold = ee->ee_noise_floor_thr[ee_mode];
 +
- /* INIT and RESET words */
- void wl1271_spi_reset(struct wl1271 *wl);
- void wl1271_spi_init(struct wl1271 *wl);
++	if (nf > threshold) {
++		ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
++			"noise floor failure detected; "
++			"read %d, threshold %d\n",
++			nf, threshold);
++
++		nf = AR5K_TUNE_CCA_MAX_GOOD_VALUE;
+ 	}
+ 
+-	ah->ah_noise_floor = noise_floor;
++	ath5k_hw_update_nfcal_hist(ah, nf);
++	nf = ath5k_hw_get_median_noise_floor(ah);
+ 
+-	return 0;
++	/* load noise floor (in .5 dBm) so the hardware will use it */
++	val = ath5k_hw_reg_read(ah, AR5K_PHY_NF) & ~AR5K_PHY_NF_M;
++	val |= (nf * 2) & AR5K_PHY_NF_M;
++	ath5k_hw_reg_write(ah, val, AR5K_PHY_NF);
++
++	AR5K_REG_MASKED_BITS(ah, AR5K_PHY_AGCCTL, AR5K_PHY_AGCCTL_NF,
++		~(AR5K_PHY_AGCCTL_NF_EN | AR5K_PHY_AGCCTL_NF_NOUPDATE));
++
++	ath5k_hw_register_timeout(ah, AR5K_PHY_AGCCTL, AR5K_PHY_AGCCTL_NF,
++		0, false);
++
++	/*
++	 * Load a high max CCA Power value (-50 dBm in .5 dBm units)
++	 * so that we're not capped by the median we just loaded.
++	 * This will be used as the initial value for the next noise
++	 * floor calibration.
++	 */
++	val = (val & ~AR5K_PHY_NF_M) | ((-50 * 2) & AR5K_PHY_NF_M);
++	ath5k_hw_reg_write(ah, val, AR5K_PHY_NF);
++	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL,
++		AR5K_PHY_AGCCTL_NF_EN |
++		AR5K_PHY_AGCCTL_NF_NOUPDATE |
++		AR5K_PHY_AGCCTL_NF);
++
++	ah->ah_noise_floor = nf;
++
++	ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
++		"noise floor calibrated: %d\n", nf);
+ }
+ 
+ /*
+@@ -1287,7 +1358,7 @@ static int ath5k_hw_rf5110_calibrate(struct ath5k_hw *ah,
+ 		return ret;
+ 	}
+ 
+-	ath5k_hw_noise_floor_calibration(ah, channel->center_freq);
++	ath5k_hw_update_noise_floor(ah);
+ 
+ 	/*
+ 	 * Re-enable RX/TX and beacons
+@@ -1360,7 +1431,7 @@ done:
+ 	 * since noise floor calibration interrupts rx path while I/Q
+ 	 * calibration doesn't. We don't need to run noise floor calibration
+ 	 * as often as I/Q calibration.*/
+-	ath5k_hw_noise_floor_calibration(ah, channel->center_freq);
++	ath5k_hw_update_noise_floor(ah);
+ 
+ 	/* Initiate a gain_F calibration */
+ 	ath5k_hw_request_rfgain_probe(ah);
+diff --git a/drivers/net/wireless/ath/ath5k/reg.h b/drivers/net/wireless/ath/ath5k/reg.h
+index debad07..7486da6 100644
+--- a/drivers/net/wireless/ath/ath5k/reg.h
++++ b/drivers/net/wireless/ath/ath5k/reg.h
+@@ -2039,17 +2039,14 @@
+ #define	AR5K_PHY_AGCCTL_NF_NOUPDATE	0x00020000	/* Don't update nf automaticaly */
+ 
+ /*
+- * PHY noise floor status register
++ * PHY noise floor status register (CCA = Clear Channel Assessment)
+  */
+ #define AR5K_PHY_NF			0x9864			/* Register address */
+-#define AR5K_PHY_NF_M			0x000001ff	/* Noise floor mask */
+-#define AR5K_PHY_NF_ACTIVE		0x00000100	/* Noise floor calibration still active */
+-#define AR5K_PHY_NF_RVAL(_n)		(((_n) >> 19) & AR5K_PHY_NF_M)
+-#define AR5K_PHY_NF_AVAL(_n)		(-((_n) ^ AR5K_PHY_NF_M) + 1)
+-#define AR5K_PHY_NF_SVAL(_n)		(((_n) & AR5K_PHY_NF_M) | (1 << 9))
++#define AR5K_PHY_NF_M			0x000001ff	/* Noise floor, written to hardware in 1/2 dBm units */
++#define AR5K_PHY_NF_SVAL(_n)           (((_n) & AR5K_PHY_NF_M) | (1 << 9))
+ #define	AR5K_PHY_NF_THRESH62		0x0007f000	/* Thresh62 -check ANI patent- (field) */
+ #define	AR5K_PHY_NF_THRESH62_S		12
+-#define	AR5K_PHY_NF_MINCCA_PWR		0x0ff80000	/* ??? */
++#define	AR5K_PHY_NF_MINCCA_PWR		0x0ff80000	/* Minimum measured noise level, read from hardware in 1 dBm units */
+ #define	AR5K_PHY_NF_MINCCA_PWR_S	19
+ 
+ /*
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index 34e13c7..aa05cf3 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -1289,7 +1289,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 	 * out and/or noise floor calibration might timeout.
+ 	 */
+ 	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL,
+-				AR5K_PHY_AGCCTL_CAL);
++				AR5K_PHY_AGCCTL_CAL | AR5K_PHY_AGCCTL_NF);
+ 
+ 	/* At the same time start I/Q calibration for QAM constellation
+ 	 * -no need for CCK- */
+@@ -1310,21 +1310,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 			channel->center_freq);
+ 	}
+ 
+-	/*
+-	 * If we run NF calibration before AGC, it always times out.
+-	 * Binary HAL starts NF and AGC calibration at the same time
+-	 * and only waits for AGC to finish. Also if AGC or NF cal.
+-	 * times out, reset doesn't fail on binary HAL. I believe
+-	 * that's wrong because since rx path is routed to a detector,
+-	 * if cal. doesn't finish we won't have RX. Sam's HAL for AR5210/5211
+-	 * enables noise floor calibration after offset calibration and if noise
+-	 * floor calibration fails, reset fails. I believe that's
+-	 * a better approach, we just need to find a polling interval
+-	 * that suits best, even if reset continues we need to make
+-	 * sure that rx path is ready.
+-	 */
+-	ath5k_hw_noise_floor_calibration(ah, channel->center_freq);
+-
+ 	/* Restore antenna mode */
+ 	ath5k_hw_set_antenna_mode(ah, ah->ah_ant_mode);
+ 
 -- 
-1.5.6.5
+1.6.2.5
+
 
