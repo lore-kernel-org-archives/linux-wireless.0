@@ -1,103 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:59881 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755609AbZJ1VIs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2009 17:08:48 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: linville@tuxdriver.com
-Subject: [PATCH] b43: Fix DMA TX bounce buffer copying
-Date: Wed, 28 Oct 2009 22:08:13 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Christian Casteyde <casteyde.christian@free.fr>
+Received: from mx51.mymxserver.com ([85.199.173.110]:31534 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755596AbZJNHHk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Oct 2009 03:07:40 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: [PATCH] cfg80211: no  cookies in cfg80211_send_ABCD()
+Date: Wed, 14 Oct 2009 09:06:16 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Message-Id: <200910282208.15792.mb@bu3sch.de>
 Content-Type: text/plain;
   charset="us-ascii"
+Message-Id: <200910140906.16111.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-b43 allocates a bouncebuffer, if the supplied TX skb is in an invalid
-memory range for DMA.
-However, this is broken in that it fails to copy over some metadata to the
-new skb.
+Get rid of cookies in cfg80211_send_XXX() functions.
 
-This patch fixes three problems:
-* Failure to adjust the ieee80211_tx_info pointer to the new buffer.
-  This results in a kmemcheck warning.
-* Failure to copy the skb cb, which contains ieee80211_tx_info, to the new skb.
-  This results in breakage of various TX-status postprocessing (Rate control).
-* Failure to transfer the queue mapping.
-  This results in the wrong queue being stopped on saturation and can result in queue overflow.
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Tested-by: Christian Casteyde <casteyde.christian@free.fr>
-
----
-
-Thanks to Johannes for tracking down this hard to find bug and
-thanks to Christian for testing.
-
-Larry, I think I remember you reported a strange rate control failure on
-one of your cards. Does this patch fix it?
-
-b43legacy:
-Note that b43legacy has the same bug and also needs fixing.
-Is there a maintainer for b43legacy?
-
-stable:
-I'm not sure if it's necessary to send this patch to stable.
-The problem is there since the very beginning and it doesn't affect many people.
-I'll leave this decision to somebody else, if somebody cares.
-
-
-
-
----
- drivers/net/wireless/b43/dma.c |   15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
-
---- wireless-testing.orig/drivers/net/wireless/b43/dma.c
-+++ wireless-testing/drivers/net/wireless/b43/dma.c
-@@ -1157,8 +1157,9 @@ struct b43_dmaring *parse_cookie(struct 
+--- linux-wl.orig/include/net/cfg80211.h
++++ linux-wl/include/net/cfg80211.h
+@@ -1809,30 +1809,45 @@
+  * @dev: network device
+  * @buf: deauthentication frame (header + body)
+  * @len: length of the frame data
+- * @cookie: cookie from ->deauth if called within that callback,
+- *	%NULL otherwise
+  *
+  * This function is called whenever deauthentication has been processed in
+  * station mode. This includes both received deauthentication frames and
+  * locally generated ones. This function may sleep.
+  */
+-void cfg80211_send_deauth(struct net_device *dev, const u8 *buf, size_t len,
+-			  void *cookie);
++void cfg80211_send_deauth(struct net_device *dev, const u8 *buf, size_t len);
++
++/**
++ * __cfg80211_send_deauth - notification of processed deauthentication
++ * @dev: network device
++ * @buf: deauthentication frame (header + body)
++ * @len: length of the frame data
++ *
++ * Like cfg80211_send_deauth(), but doesn't take the wdev lock.
++ */
++void __cfg80211_send_deauth(struct net_device *dev, const u8 *buf, size_t len);
+ 
+ /**
+  * cfg80211_send_disassoc - notification of processed disassociation
+  * @dev: network device
+  * @buf: disassociation response frame (header + body)
+  * @len: length of the frame data
+- * @cookie: cookie from ->disassoc if called within that callback,
+- *	%NULL otherwise
+  *
+  * This function is called whenever disassociation has been processed in
+  * station mode. This includes both received disassociation frames and locally
+  * generated ones. This function may sleep.
+  */
+-void cfg80211_send_disassoc(struct net_device *dev, const u8 *buf, size_t len,
+-			    void *cookie);
++void cfg80211_send_disassoc(struct net_device *dev, const u8 *buf, size_t len);
++
++/**
++ * __cfg80211_send_disassoc - notification of processed disassociation
++ * @dev: network device
++ * @buf: disassociation response frame (header + body)
++ * @len: length of the frame data
++ *
++ * Like cfg80211_send_disassoc(), but doesn't take the wdev lock.
++ */
++void __cfg80211_send_disassoc(struct net_device *dev, const u8 *buf,
++	size_t len);
+ 
+ /**
+  * cfg80211_michael_mic_failure - notification of Michael MIC failure (TKIP)
+--- linux-wl.orig/net/wireless/mlme.c
++++ linux-wl/net/wireless/mlme.c
+@@ -121,7 +121,7 @@
+ }
+ EXPORT_SYMBOL(cfg80211_send_rx_assoc);
+ 
+-static void __cfg80211_send_deauth(struct net_device *dev,
++void __cfg80211_send_deauth(struct net_device *dev,
+ 				   const u8 *buf, size_t len)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+@@ -177,27 +177,19 @@
+ 					  false, NULL);
+ 	}
+ }
++EXPORT_SYMBOL(__cfg80211_send_deauth);
+ 
+-
+-void cfg80211_send_deauth(struct net_device *dev, const u8 *buf, size_t len,
+-			  void *cookie)
++void cfg80211_send_deauth(struct net_device *dev, const u8 *buf, size_t len)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 
+-	BUG_ON(cookie && wdev != cookie);
+-
+-	if (cookie) {
+-		/* called within callback */
+-		__cfg80211_send_deauth(dev, buf, len);
+-	} else {
+-		wdev_lock(wdev);
+-		__cfg80211_send_deauth(dev, buf, len);
+-		wdev_unlock(wdev);
+-	}
++	wdev_lock(wdev);
++	__cfg80211_send_deauth(dev, buf, len);
++	wdev_unlock(wdev);
+ }
+ EXPORT_SYMBOL(cfg80211_send_deauth);
+ 
+-static void __cfg80211_send_disassoc(struct net_device *dev,
++void __cfg80211_send_disassoc(struct net_device *dev,
+ 				     const u8 *buf, size_t len)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+@@ -238,22 +230,15 @@
+ 	from_ap = memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0;
+ 	__cfg80211_disconnected(dev, NULL, 0, reason_code, from_ap);
+ }
++EXPORT_SYMBOL(__cfg80211_send_disassoc);
+ 
+-void cfg80211_send_disassoc(struct net_device *dev, const u8 *buf, size_t len,
+-			    void *cookie)
++void cfg80211_send_disassoc(struct net_device *dev, const u8 *buf, size_t len)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 
+-	BUG_ON(cookie && wdev != cookie);
+-
+-	if (cookie) {
+-		/* called within callback */
+-		__cfg80211_send_disassoc(dev, buf, len);
+-	} else {
+-		wdev_lock(wdev);
+-		__cfg80211_send_disassoc(dev, buf, len);
+-		wdev_unlock(wdev);
+-	}
++	wdev_lock(wdev);
++	__cfg80211_send_disassoc(dev, buf, len);
++	wdev_unlock(wdev);
+ }
+ EXPORT_SYMBOL(cfg80211_send_disassoc);
+ 
+--- linux-wl.orig/net/mac80211/mlme.c
++++ linux-wl/net/mac80211/mlme.c
+@@ -458,9 +458,15 @@
+ 	mgmt->u.deauth.reason_code = cpu_to_le16(reason);
+ 
+ 	if (stype == IEEE80211_STYPE_DEAUTH)
+-		cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len, cookie);
++		if (cookie)
++			__cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len);
++		else
++			cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len);
+ 	else
+-		cfg80211_send_disassoc(sdata->dev, (u8 *)mgmt, skb->len, cookie);
++		if (cookie)
++			__cfg80211_send_disassoc(sdata->dev, (u8 *)mgmt, skb->len);
++		else
++			cfg80211_send_disassoc(sdata->dev, (u8 *)mgmt, skb->len);
+ 	ieee80211_tx_skb(sdata, skb, ifmgd->flags & IEEE80211_STA_MFP_ENABLED);
  }
  
- static int dma_tx_fragment(struct b43_dmaring *ring,
--			   struct sk_buff *skb)
-+			   struct sk_buff **in_skb)
- {
-+	struct sk_buff *skb = *in_skb;
- 	const struct b43_dma_ops *ops = ring->ops;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	u8 *header;
-@@ -1224,8 +1225,14 @@ static int dma_tx_fragment(struct b43_dm
- 		}
- 
- 		memcpy(skb_put(bounce_skb, skb->len), skb->data, skb->len);
-+		memcpy(bounce_skb->cb, skb->cb, sizeof(skb->cb));
-+		bounce_skb->dev = skb->dev;
-+		skb_set_queue_mapping(bounce_skb, skb_get_queue_mapping(skb));
-+		info = IEEE80211_SKB_CB(bounce_skb);
-+
- 		dev_kfree_skb_any(skb);
- 		skb = bounce_skb;
-+		*in_skb = bounce_skb;
- 		meta->skb = skb;
- 		meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
- 		if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
-@@ -1355,7 +1362,11 @@ int b43_dma_tx(struct b43_wldev *dev, st
- 	 * static, so we don't need to store it per frame. */
- 	ring->queue_prio = skb_get_queue_mapping(skb);
- 
--	err = dma_tx_fragment(ring, skb);
-+	/* dma_tx_fragment might reallocate the skb, so invalidate pointers pointing
-+	 * into the skb data or cb now. */
-+	hdr = NULL;
-+	info = NULL;
-+	err = dma_tx_fragment(ring, &skb);
- 	if (unlikely(err == -ENOKEY)) {
- 		/* Drop this packet, as we don't have the encryption key
- 		 * anymore and must not transmit it unencrypted. */
+@@ -1959,12 +1965,10 @@
+ 			/* no action */
+ 			break;
+ 		case RX_MGMT_CFG80211_DEAUTH:
+-			cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len,
+-					     NULL);
++			cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len);
+ 			break;
+ 		case RX_MGMT_CFG80211_DISASSOC:
+-			cfg80211_send_disassoc(sdata->dev, (u8 *)mgmt, skb->len,
+-					       NULL);
++			cfg80211_send_disassoc(sdata->dev, (u8 *)mgmt, skb->len);
+ 			break;
+ 		default:
+ 			WARN(1, "unexpected: %d", rma);
+@@ -2019,7 +2023,7 @@
+ 		cfg80211_send_rx_assoc(sdata->dev, (u8 *) mgmt, skb->len);
+ 		break;
+ 	case RX_MGMT_CFG80211_DEAUTH:
+-		cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len, NULL);
++		cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len);
+ 		break;
+ 	default:
+ 		WARN(1, "unexpected: %d", rma);
 
 -- 
-Greetings, Michael.
+http://www.holgerschurig.de
