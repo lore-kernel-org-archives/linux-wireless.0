@@ -1,54 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:59258 "EHLO
+Received: from mx51.mymxserver.com ([85.199.173.110]:35828 "EHLO
 	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754330AbZJTGgC (ORCPT
+	with ESMTP id S1756083AbZJNJhZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2009 02:36:02 -0400
+	Wed, 14 Oct 2009 05:37:25 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id AF72D4B00F
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2009 11:36:17 +0200 (CEST)
+Received: from mx51.mymxserver.com ([127.0.0.1])
+	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id QvWQBGdWjv9i for <linux-wireless@vger.kernel.org>;
+	Wed, 14 Oct 2009 11:36:17 +0200 (CEST)
+Received: from lin01.mn-solutions.de (pD95FA374.dip0.t-ipconnect.de [217.95.163.116])
+	by mx51.mymxserver.com (Postfix) with ESMTP id EFD514B00B
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2009 11:36:16 +0200 (CEST)
+Received: from mnz66.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 448DE1E0010
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2009 11:36:07 +0200 (CEST)
 From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] libertas: monster-patch to make CFG/WEXT configurable
-Date: Tue, 20 Oct 2009 08:35:35 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-References: <200910191449.18915.hs4233@mail.mn-solutions.de> <1255998802.4475.2.camel@johannes.local>
-In-Reply-To: <1255998802.4475.2.camel@johannes.local>
+To: linux-wireless@vger.kernel.org
+Subject: cfg80211 question: impedance mismatch of .connect versus .assoc
+Date: Wed, 14 Oct 2009 11:36:03 +0200
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200910200835.35747.hs4233@mail.mn-solutions.de>
+  charset="us-ascii"
+Message-Id: <200910141136.03288.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I really don't understand the point. Can't you just use the
-> cfg80211 hooks and keep both functional at the same time? Just
-> like orinoco does it uses cfg80211 only partially.
-
-I think I can't do this in a sane way.
-
-Oh, and please don't compare libertas all the time with orinoco.
-Orinoco is FULLMAC, libertas is HALFMAC.
-
-Because libertas firmware doesn't roam, it has to be done in 
-software. Libertas does this in assoc.c, partly in scan.c, cmd.c 
-and wext.c and even main.c. For example, libertas keeps its own 
-list of BSS entries, has code to select the best matching BSS 
-when it comes to associating ... things like this.
-
-cfg80211 has this code too.
-
-Having two competing implementations running in one driver is a 
-way to havoc.
+While playing with .auth/.deauth/.assoc/.disassoc 
+versus .connect/.disconnect in libertas, I notices two things 
+that makes things a bit hard for me.
 
 
-I could keep "old" stuff of the libertas in, e.g. monitor 
-mode --- but then it's not too difficult to use .change_intf() 
-to add monitor mode to cfg80211.
+BSS list driven vs. not
+-----------------------
+.auth/.assoc provides the BSSID to connect to. If cfg80211's BSS 
+list is empty, it even will do a scan before 
+calling .auth/.assoc.
 
-I can't and won't do the MESH stuff: I don't have a firmware that 
-does MESH, no knowledge and usage case for MESH. It would, 
-however, be possible to keep the current mesh code with WEXT and 
-use cfg80211 for monitor/station mode. However, I dislike this 
-more than cfg80211/wext configurability.
+However, for the .connect method this isn't true. .connect just 
+get's the SSID.
+
+My problem here is that the CMD_802_11_ASSOCIATE command for the 
+libertas' firmware wants the AP's BSSID to connect to. For now, 
+I do this:
+
+	if (sme->bssid) {
+		bss = cfg80211_get_bss(wiphy, sme->channel, sme->bssid,
+			sme->ssid, sme->ssid_len,
+			WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
+	} else {
+		ret = -ENOTSUPP;
+		goto done;
+	}
+
+This makes the "iw connect" command only work if an "iw scan" did 
+just take place and I provide an BSS on the command line. 
+
+So maybe net/wireless/sme.c should be generalized ?
+
+
+
+BSSID for .deauth/.disassoc vs. .disconnect
+-------------------------------------------
+Both the .deauth and .disassoc get the cfg80211_bss entry to 
+deauth / disassociate against.
+
+.disconnect doesn't get this.
+
+But I need the BSSID for the CMD_802_11_DISASSOCIATE command, so 
+I need to store the BSSID locally in priv->XXX. But I'm quite 
+sure that cfg80211 already knows to which bssid I'm connected 
+(see "iw xxx link"), so it's not nice that I need to store this 
+twice.
 
 -- 
 http://www.holgerschurig.de
