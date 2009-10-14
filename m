@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:50442 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751746AbZJBWZq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2009 18:25:46 -0400
-Message-ID: <4AC67DEB.80900@gmx.de>
-Date: Sat, 03 Oct 2009 00:25:47 +0200
-From: Joerg Albert <jal2@gmx.de>
+Received: from mail.tpi.com ([70.99.223.143]:4178 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756697AbZJNP1G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Oct 2009 11:27:06 -0400
+Message-ID: <4AD5EDA4.6090303@canonical.com>
+Date: Wed, 14 Oct 2009 09:26:28 -0600
+From: Tim Gardner <tim.gardner@canonical.com>
+Reply-To: tim.gardner@canonical.com
 MIME-Version: 1.0
-To: Malte Gell <malte.gell@gmx.de>
-CC: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, linville@tuxdriver.com,
-	Hin-Tak Leung <hintak.leung@gmail.com>
-Subject: Re: [PATCH] ar9170usb: LEDs are confused
-References: <200910011654.10963.chunkeey@googlemail.com> <200910020852.36427.malte.gell@gmx.de> <200910021246.34699.chunkeey@googlemail.com> <200910021345.55567.malte.gell@gmx.de>
-In-Reply-To: <200910021345.55567.malte.gell@gmx.de>
-Content-Type: text/plain; charset=us-ascii
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Kunal Gangakhedkar <kunal.gangakhedkar@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Stable compat-wireless 2.6.32-rc4 released
+References: <43e72e890910131542k376a87c5rc30feb6491a06867@mail.gmail.com> 	<4AD51A7C.9060207@canonical.com> <43e72e890910131750s4d2cdb20o76d721087d9b3aaf@mail.gmail.com> 	<200910141131.47500.kunal.gangakhedkar@gmail.com> <43e72e890910140734j196a06f2y8905d3eb1ba1abc8@mail.gmail.com>
+In-Reply-To: <43e72e890910140734j196a06f2y8905d3eb1ba1abc8@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/02/2009 01:45 PM, Malte Gell wrote:
-> Christian Lamparter <chunkeey@googlemail.com> wrote
+Luis R. Rodriguez wrote:
+> On Tue, Oct 13, 2009 at 11:01 PM, Kunal Gangakhedkar
+> <kunal.gangakhedkar@gmail.com> wrote:
+>> On Wednesday 14 Oct 2009 6:20:33 am Luis R. Rodriguez wrote:
+>>> On Tue, Oct 13, 2009 at 5:25 PM, Tim Gardner <tim.gardner@canonical.com>
+>> wrote:
+>>>> Speaking as a distro, what advantage does the stable wireless backport
+>>>> offer for the currently released kernel if we are already consumers of
+>>>> stable updates?
+>>> Well if you are a distro stuck on the 2.6.31 kernel the stable
+>>> compat-wireless-2.6.32 gets you 2.6.32 wireless bits on 2.6.31 and
+>>> that means any features/drivers/large fixes/enhancements that didn't
+>>> make it to 2.6.31.
+>>>
+>> Isn't this the whole purpose of linux-backports-modules in ubuntu as well?
 > 
->>> The Netgear (WN?) 111 even only has one blue LED as far as I know.
->> the question is if it's the only device with this deficit, or not?
+> Yes, but lbm currently relies on the bleeding edge compat-wireless
+> which is exactly that -- bleeding edge, it may or may not work. The
+> stable compat-wireless releases are based on the latest stable kernel
+> releases and latest rc kernel release so they are deemed to be stable
+> snapshots following the kernel release cycle.
 > 
-> Is it feasable to write to the well known stick makers (Netgear, AVM, 
-> Belkin,Asus...) and just ask them? 
+>   Luis
+> 
 
-After looking into staging/otus/80211core/ledmgr.c, which has functions
-zfLedCtrlType1,2,3 for:
-- "Traditional single-LED state"
-- "Netgear Dual-LED state"
-- "Netgear Single-LED state"
+I am currently in the process of adopting compat-wireless-2.6.32-rc4 in
+Karmic LBM.
 
-(althrough they are not used there, as noone initializes wd->ledStruct.LEDCtrlType correctly)
+Luis - Have I remembered to thank you for all your hard work?
 
-I guess there is a way to determine the number of LED in a device from the EEPROM.
-I really doubt that Netgear would built different drivers/firmwares (if they built any instead of getting them from Atheros)
-for both WNDA3100 and WN111v2.
-
-hal/hpmain.c, line 2322:
-#define ZM_SEEPROM_HARDWARE_TYPE_OFFSET   (0x1374)
-
-the value from the above address is retrieved in rsp[5] and processed in
- 
-hal/hprw.c, lines 601f.
-        wd->ledStruct.ledMode[0] = (u16_t)(rsp[5]&0xffff);
-        wd->ledStruct.ledMode[1] = (u16_t)(rsp[5]>>16);
-
-If the bits of ledMode[] are explained in 80211/ledmgr.c, lines 34ff., Atheros provided a generic way for vendors to
-program LED behaviour via the EEPROM and Netgear got some extra handling in the driver (if otus is close the windows driver).
-
-Regards,
-Joerg.
+rtg
+-- 
+Tim Gardner tim.gardner@canonical.com
