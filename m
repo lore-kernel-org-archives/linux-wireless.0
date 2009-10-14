@@ -1,71 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:32543 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755587AbZJ0Pgc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2009 11:36:32 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH v2 1/3] mac80211: refactor dynamic power save check
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Date: Tue, 27 Oct 2009 17:36:09 +0200
-Message-ID: <20091027153608.27827.70629.stgit@tikku>
+Received: from mail.tpi.com ([70.99.223.143]:1082 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755554AbZJNA0N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Oct 2009 20:26:13 -0400
+Message-ID: <4AD51A7C.9060207@canonical.com>
+Date: Tue, 13 Oct 2009 18:25:32 -0600
+From: Tim Gardner <tim.gardner@canonical.com>
+Reply-To: tim.gardner@canonical.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg KH <greg@kroah.com>
+Subject: Re: Stable compat-wireless 2.6.32-rc4 released
+References: <43e72e890910131542k376a87c5rc30feb6491a06867@mail.gmail.com>
+In-Reply-To: <43e72e890910131542k376a87c5rc30feb6491a06867@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+Luis R. Rodriguez wrote:
+> As the kernel moves along so does the automatic stable backports for
+> the wireless subsystem [1]. We are now on 2.6.32-rc4. Besides getting
+> the same fixes from rc1..rc4 some backport changes were made as well,
+> most importantly that of relying on your own kernel's iw_handler.h.
+> I've tested this release with 2.6.28.
+> 
+> Please report any issues you see.
+> 
+> [1] http://wireless.kernel.org/en/users/Download/stable
+> 
+> PS. If you maintain a distribution and rely on stable compat-wireless
+> releases please let me know so I can CC you when further updates are
+> made.
+> 
+>   Luis
+> 
 
-Refactor dynamic power save checks to a function of it's own for better
-readibility. No functional changes.
+Speaking as a distro, what advantage does the stable wireless backport 
+offer for the currently released kernel if we are already consumers of 
+stable updates?
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
-
- net/mac80211/tx.c |   24 +++++++++++++++++++++---
- 1 files changed, 21 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index db4bda6..c59ed84 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1387,6 +1387,26 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
- 	return 0;
- }
- 
-+static bool need_dynamic_ps(struct ieee80211_local *local)
-+{
-+	/* driver doesn't support power save */
-+	if (!(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
-+		return false;
-+
-+	/* dynamic power save disabled */
-+	if (local->hw.conf.dynamic_ps_timeout <= 0)
-+		return false;
-+
-+	/* we are scanning, don't enable power save */
-+	if (local->scanning)
-+		return false;
-+
-+	if (!local->ps_sdata)
-+		return false;
-+
-+	return true;
-+}
-+
- static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
- 			   struct sk_buff *skb)
- {
-@@ -1399,9 +1419,7 @@ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
- 
- 	dev_hold(sdata->dev);
- 
--	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
--	    local->hw.conf.dynamic_ps_timeout > 0 &&
--	    !(local->scanning) && local->ps_sdata) {
-+	if (need_dynamic_ps(local)) {
- 		if (local->hw.conf.flags & IEEE80211_CONF_PS) {
- 			ieee80211_stop_queues_by_reason(&local->hw,
- 					IEEE80211_QUEUE_STOP_REASON_PS);
-
+rtg
+-- 
+Tim Gardner tim.gardner@canonical.com
