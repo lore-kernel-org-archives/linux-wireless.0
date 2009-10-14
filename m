@@ -1,38 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:44161 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750840AbZJSIgo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2009 04:36:44 -0400
-Received: by iwn8 with SMTP id 8so2150392iwn.33
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2009 01:36:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <200910190940.52830.hs4233@mail.mn-solutions.de>
-References: <200910190940.52830.hs4233@mail.mn-solutions.de>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 19 Oct 2009 17:36:29 +0900
-Message-ID: <43e72e890910190136s21703864i3002f2a31f940111@mail.gmail.com>
-Subject: Re: [PATCH] libertas: remove unused 11d code
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.gmx.net ([213.165.64.20]:45565 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754041AbZJNBxn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Oct 2009 21:53:43 -0400
+Subject: Re: Current status of rt2800usb and staging/rt2870
+From: Mike Galbraith <efault@gmx.de>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Ozan =?UTF-8?Q?=C3=87a=C4=9Flayan?= <ozan@pardus.org.tr>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <200910132121.25743.bzolnier@gmail.com>
+References: <4AD46380.9020308@pardus.org.tr>
+	 <200910131927.24136.bzolnier@gmail.com>
+	 <200910132017.47748.IvDoorn@gmail.com>
+	 <200910132121.25743.bzolnier@gmail.com>
+Content-Type: text/plain
+Date: Wed, 14 Oct 2009 03:52:55 +0200
+Message-Id: <1255485175.7115.5.camel@marge.simson.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 19, 2009 at 4:40 PM, Holger Schurig
-<hs4233@mail.mn-solutions.de> wrote:
-> Most of the 11d code was protected with an "if (priv->enable11d)" clause.
-> But there was no code that anywhere that was able to set this
-> variable to true. So all 11d code was dead for almost a year and no one
-> complained. That's enought incentive to remove this code.
->
-> Besides removing old cruft, we gain back the 11d capability in a common way
-> when we merge the cfg80211 functionality.
->
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+On Tue, 2009-10-13 at 21:21 +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Tuesday 13 October 2009 20:17:47 Ivo van Doorn wrote:
+> > On Tuesday 13 October 2009, Bartlomiej Zolnierkiewicz wrote:
+> > > On Tuesday 13 October 2009 17:52:52 Ivo van Doorn wrote:
+> > > 
+> > > > I am going to merge rt2800pci soon as well and after that I'll send a patch
+> > > 
+> > > Great, I've been waiting for this for a long time.
+> > > 
+> > > > to remove all Ralink drivers from the staging tree.
+> > > 
+> > > Till new drivers obtain support for all hardware currently covered by
+> > > the unified staging drivers the latter shouldn't be removed as they
+> > > serve well their role as a temporary solution allowing real Linux users
+> > > to user their real hardware and as a reference material for developers
+> > > willing to work on adding the missing bits to new drivers.
+> > 
+> > The rt2800pci and rt2800usb drivers cover support for rt2860/rt2870/rt3070 devices,
+> > which are present as individual drivers in the staging tree. So far it only managed
+> 
+> There are no longer individual drivers.
+> 
+> Instead there is one shared source code and two device drivers:
+> 
+> - rt2860 covering RT2860 and RT3090 devices
+> 
+> - rt2870 covering RT2870 and RT3070 devices
+> 
+> In comparison rt2800usb currently lacks RT3070 support and rt2800pci's
+> RT3090 support is basic at best (not to mention that it didn't work for
+> RT2860 last time that I tried)..
 
-Is the countryinfo->countrycode not usable for regulatory_hint_11d() ?
+(or RT2870 here)
 
-  Luis
