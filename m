@@ -1,45 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:45754 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752941AbZJPRTX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 13:19:23 -0400
-Received: by fxm18 with SMTP id 18so2662044fxm.37
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2009 10:19:27 -0700 (PDT)
-Message-ID: <4AD8AB1C.9070109@gmail.com>
-Date: Fri, 16 Oct 2009 13:19:24 -0400
-From: Richard Farina <sidhayn@gmail.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Gabriele Gristina <matrix.use.linux@gmail.com>,
+Received: from cantor.suse.de ([195.135.220.2]:50618 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758477AbZJNTQb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Oct 2009 15:16:31 -0400
+Date: Wed, 14 Oct 2009 12:11:36 -0700
+From: Greg KH <gregkh@suse.de>
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Joe Perches <joe@perches.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	James Bottomley <James.Bottomley@suse.de>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Theodore Tso <tytso@mit.edu>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Jing Huang <huangj@brocade.com>, netdev@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: fixed injection in monitor mode
-References: <1255658961.23827.2.camel@el8pc> <1255704382.4095.340.camel@johannes.local>
-In-Reply-To: <1255704382.4095.340.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
+ 2.6.32-rc3)
+Message-ID: <20091014191136.GA4874@suse.de>
+References: <20091012130652.GB25464@elte.hu>
+ <1255357148.2850.91.camel@localhost.localdomain>
+ <20091012145453.GD4565@elte.hu>
+ <20091012150911.GB1656@suse.de>
+ <20091012154244.GA13323@elte.hu>
+ <20091012232429.GA24254@suse.de>
+ <43e72e890910131108m789110b4hc35e25601ad67bb7@mail.gmail.com>
+ <20091014044519.GA19199@suse.de>
+ <1255497575.1851.16.camel@Joe-Laptop.home>
+ <20091014063308.GE784@elte.hu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091014063308.GE784@elte.hu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Fri, 2009-10-16 at 04:09 +0200, Gabriele Gristina wrote:
->   
->> I have a problem with mac80211 injection:
->> if i setup interface in monitor mode with iwconfig and i try to send a
->> custum 802.11 frame i see twice the packet in monitor interface.
->> The first packet is right, the second is different only in the radiotap
->> header: rtap len is fixed to 13 bytes...
->> If i setup interface with airmon-ng the packet is sended once but the
->> radiotap header is fixed to 13 bytes.
->>     
->
-> This is correct. The patch is wrong.
->
->   
-I'm very stupid, could you please elaborate how seeing every single 
-packets twice with different headers is "correct"?
+On Wed, Oct 14, 2009 at 08:33:08AM +0200, Ingo Molnar wrote:
+> 
+> * Joe Perches <joe@perches.com> wrote:
+> 
+> > On Tue, 2009-10-13 at 21:45 -0700, Greg KH wrote:
+> > > How about when it was scheduled to be removed, we put it in staging and
+> > > I'll add it to my announcements about the staging tree every release?
+> > > Unless you can think of a better way?
+> > 
+> > staging/to_be_removed_unless_fixed_by/v.x.y ?
+> 
+> Yes, that's a real worry. Some time ago i suggested:
+> 
+>   drivers/staging/good/
+>   drivers/staging/bad/
+>   drivers/staging/ugly/
+> 
+>  good:  drivers that are to go upstream in the next cycle 
+>  bad:   outgoing drivers being obsoleted or abandoned
+>  ugly:  incoming messy drivers with active developers
+> 
+> The messaging of this looks nice and the names are short and obvious.
 
-Thanks,
-Rick
-> johannes
->   
+Yeah, but they make my life much harder than it needs to be.
 
+I'd prefer to stick with the directory naming scheme we have today, it
+seems to work well so far.
+
+thanks,
+
+greg k-h
