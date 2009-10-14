@@ -1,80 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:38184 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935010AbZJOLmr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2009 07:42:47 -0400
-Date: Thu, 15 Oct 2009 11:40:52 +0000
-From: Jarek Poplawski <jarkao2@gmail.com>
-To: Tilman Schmidt <tilman@imap.cc>
-Cc: David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
-	hidave.darkstar@gmail.com, linux-kernel@vger.kernel.org,
-	tglx@linutronix.de, linux-wireless@vger.kernel.org,
-	linux-ppp@vger.kernel.org, netdev@vger.kernel.org, paulus@samba.org
-Subject: Re: NOHZ: local_softirq_pending 08
-Message-ID: <20091015114052.GA9870@ff.dom.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4AD31213.6020006@imap.cc>
+Received: from c60.cesmail.net ([216.154.195.49]:2020 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760135AbZJNVPC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Oct 2009 17:15:02 -0400
+Subject: Re: Error Installing 'iw'
+From: Pavel Roskin <proski@gnu.org>
+To: Pramono Tunggul <Pramono.tunggul@infi-nity.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4AD4CC94.1030407@infi-nity.com>
+References: <4AD4CC94.1030407@infi-nity.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 14 Oct 2009 17:14:17 -0400
+Message-Id: <1255554857.3031.5.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12-10-2009 13:25, Tilman Schmidt wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
+On Wed, 2009-10-14 at 01:53 +0700, Pramono Tunggul wrote:
+> Guyz, when I try to start airmon-ng, it said that I have to install iw,
+> so I download and install iw but I have never succeed to install iw,
 > 
-> On Mon, 12 Oct 2009 03:32:46 -0700 (PDT), David Miller wrote:
->> The PPP receive paths in ppp_generic.c do a local_bh_disable()/
->> local_bh_enable() around packet receiving (via ppp_recv_lock()/
->> ppp_recv_unlock() in ppp_do_recv).
->>
->> So at least that part is perfectly fine.
->>
->> ppp_input(), as called from ppp_sync_process(), also disables BH's
->> around ppp_do_recv() calls (via read_lock_bh()/read_unlock_bh()).
->>
->> So that's fine too.
->>
->> Do you have a bug report or are you just scanning around looking
->> for trouble? :-)
+> PACKAGE_CONFIG_PATH=/usr/lib
+> export PACKAGE_CONFIG_PATH
+
+Maybe you meant to set PKG_CONFIG_PATH, as described in README?
+
+> make
 > 
-> I have encountered the message in the subject during a test of
-> the Gigaset CAPI driver, and would like to determine whether
-> it's a bug in the driver, a bug somewhere else, or no bug at
-> all. The test scenario was PPP over ISDN with pppd+capiplugin.
-> In an alternative scenario, also PPP over ISDN but with
-> smpppd+capidrv, the message did not occur.
-> 
-> Johannes' answer pointed me to the netif_rx() function.
-> The Gigaset driver itself doesn't call that function at all.
-> In the scenario where I saw the message, it was the SYNC_PPP
-> line discipline that did. But from your explanation I gather
-> that the cause cannot lie there.
-> 
-> So now I'm looking for other possible causes of that message.
+> CC iw.o
+> In file included from /usr/local/include/netlink/netlink.h:23,
+> from /usr/include/netlink/genl/genl.h:15,
+> from iw.c:17:
+> /usr/local/include/netlink/netlink-kernel.h:222: error: expected 
+> specifier-qualifier-list before ‘__u32’
 
-Anyway, I agree with Michael Buesch there is no reason to waste time
-for tracking all netif_rx vs netif_rx_ni uses, and it seems we could
-avoid it by using the "proper" version of raise_softirq_irqoff() in
-__napi_schedule(). Could anybody try if I'm not wrong?
+First of all, libnl is still found in /usr/local/lib, not in /usr/lib,
+in case it was your intention.
 
-Thanks,
-Jarek P.
----
+There is no line 222 in netlink-kernel.h from libnl 1.1.  Perhaps you
+are using an old version of libnl?  I suggest that you try version 1.1.
 
- net/core/dev.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/core/dev.c b/net/core/dev.c
-index 28b0b9e..7fc4009 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -2728,7 +2728,7 @@ void __napi_schedule(struct napi_struct *n)
- 
- 	local_irq_save(flags);
- 	list_add_tail(&n->poll_list, &__get_cpu_var(softnet_data).poll_list);
--	__raise_softirq_irqoff(NET_RX_SOFTIRQ);
-+	raise_softirq_irqoff(NET_RX_SOFTIRQ);
- 	local_irq_restore(flags);
- }
- EXPORT_SYMBOL(__napi_schedule);
+-- 
+Regards,
+Pavel Roskin
