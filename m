@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:52664 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754846AbZJLMTL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 08:19:11 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 10/16] wl1271: Enable ELP
-Date: Mon, 12 Oct 2009 15:08:51 +0300
-Message-Id: <1255349337-9776-11-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
+Received: from mail.atheros.com ([12.36.123.2]:48813 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757334AbZJNXgH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Oct 2009 19:36:07 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2009 16:36:12 -0700
+Date: Wed, 14 Oct 2009 16:35:28 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ic.felix@gmail.com" <ic.felix@gmail.com>
+Subject: Re: [PATCH] mac80211: fix SME warning by removing stale BSS upon
+	assoc failure
+Message-ID: <20091014233528.GA4172@tux>
+References: <1255481442-27130-1-git-send-email-lrodriguez@atheros.com> <1255562895.4095.297.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1255562895.4095.297.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Wed, Oct 14, 2009 at 04:28:15PM -0700, Johannes Berg wrote:
+> On Tue, 2009-10-13 at 20:50 -0400, Luis R. Rodriguez wrote:
+> > If you try to authenticate with an AP we will keep track of the
+> > AP's BSS and expect to eventually either give up on the AP or complete
+> > an association cycle with it. If an AP rejects our association though
+> > mac80211 currently insists on telling cfg80211 a BSS authenticated
+> > correctly, this is wrong as it leaves a bogus BSS lingering around.
+> 
+> But if assoc fails, it _did_ authenticate correctly.
 
-The new firmware has fixed a firmware crash problem related to ELP entry.
-Enable ELP to conserve power.
+Well sure, but why do we want to keep the authentication present if
+association failed? And as a matter of fact it lingers there forever.
+Is that desired behaviour?
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_ps.c |    7 +------
- 1 files changed, 1 insertions(+), 6 deletions(-)
+> > --- a/net/mac80211/mlme.c
+> > +++ b/net/mac80211/mlme.c
+> > @@ -1463,11 +1463,11 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+> >  	if (status_code != WLAN_STATUS_SUCCESS) {
+> >  		printk(KERN_DEBUG "%s: AP denied association (code=%d)\n",
+> >  		       sdata->dev->name, status_code);
+> >  		list_del(&wk->list);
+> >  		kfree(wk);
+> > -		return RX_MGMT_CFG80211_ASSOC;
+> > +		return RX_MGMT_CFG80211_DEAUTH;
+> 
+> I'm sure this is correct. Maybe cfg80211 doesn't react properly to
+> getting an assoc frame with non-zero status?
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_ps.c b/drivers/net/wireless/wl12xx/wl1271_ps.c
-index 5580e53..fb821c9 100644
---- a/drivers/net/wireless/wl12xx/wl1271_ps.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_ps.c
-@@ -39,12 +39,7 @@ void wl1271_elp_work(struct work_struct *work)
- 
- 	mutex_lock(&wl->mutex);
- 
--	/*
--	 * FIXME: below, by means of the "true", ELP has been disabled for now
--	 * to work around a firmware bug. To be enabled upon receiving a new
--	 * firmware version.
--	 */
--	if (true || wl->elp || !wl->psm)
-+	if (wl->elp || !wl->psm)
- 		goto out;
- 
- 	wl1271_debug(DEBUG_PSM, "chip to elp");
--- 
-1.5.6.5
+I see, will have to take a look when I get a chance then, not now though.
 
+  Luis
