@@ -1,81 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:60643 "EHLO vs166246.vserver.de"
+Received: from mail.perches.com ([173.55.12.10]:2135 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755843AbZJZMTB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 08:19:01 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: fix for incorrect sequence number on hostapd injected frames
-Date: Mon, 26 Oct 2009 13:18:50 +0100
-Cc: =?utf-8?q?Bj=C3=B6rn_Smedman?= <bjorn.smedman@venatech.se>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jouni Malinen <j@w1.fi>, Joerg Pommnitz <pommnitz@yahoo.com>,
-	Will Dyson <will.dyson@gmail.com>
-References: <133e8d7e0910241155x4496b156p3c5d03450a71936a@mail.gmail.com> <1256497156.28230.0.camel@johannes.local>
-In-Reply-To: <1256497156.28230.0.camel@johannes.local>
-MIME-Version: 1.0
-Message-Id: <200910261318.52570.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="utf-8"
+	id S1751608AbZJNFUM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Oct 2009 01:20:12 -0400
+Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
+ 2.6.32-rc3)
+From: Joe Perches <joe@perches.com>
+To: Greg KH <gregkh@suse.de>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	James Bottomley <James.Bottomley@suse.de>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Theodore Tso <tytso@mit.edu>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Jing Huang <huangj@brocade.com>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20091014044519.GA19199@suse.de>
+References: <alpine.LFD.2.01.0910081410400.3432@localhost.localdomain>
+	 <20091009091538.GA4154@elte.hu>
+	 <1255097287.2934.21.camel@localhost.localdomain>
+	 <20091012130652.GB25464@elte.hu>
+	 <1255357148.2850.91.camel@localhost.localdomain>
+	 <20091012145453.GD4565@elte.hu> <20091012150911.GB1656@suse.de>
+	 <20091012154244.GA13323@elte.hu> <20091012232429.GA24254@suse.de>
+	 <43e72e890910131108m789110b4hc35e25601ad67bb7@mail.gmail.com>
+	 <20091014044519.GA19199@suse.de>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 13 Oct 2009 22:19:35 -0700
+Message-Id: <1255497575.1851.16.camel@Joe-Laptop.home>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 25 October 2009 19:59:16 Johannes Berg wrote:
-> On Sat, 2009-10-24 at 20:55 +0200, Björn Smedman wrote:
-> > When hostapd injects a frame, e.g. an authentication or association
-> > response, mac80211 looks for a suitable access point virtual interface
-> > to associate the frame with based on its source address. This makes it
-> > possible e.g. to correctly assign sequence numbers to the frames.
-> > 
-> > A small typo in the ethernet address comparison statement caused a
-> > failure to find a suitable ap interface. Sequence numbers on such
-> > frames where therefore left unassigned causing some clients
-> > (especially windows-based 11b/g clients) to reject them and fail to
-> > authenticate or associate with the access point. This patch fixes the
-> > typo in the address comparison statement.
-> > 
-> > Signed-off-by: Björn Smedman <bjorn.smedman@venatech.se>
-> 
-> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
-> 
-> and Cc: stable@kernel.org I think
-> 
-> > ---
-> > diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> > index db4bda6..eaa4118 100644
-> > --- a/net/mac80211/tx.c
-> > +++ b/net/mac80211/tx.c
-> > @@ -1445,7 +1445,7 @@ static void ieee80211_xmit(struct
-> > ieee80211_sub_if_data *sdata,
-> >                                 if (tmp_sdata->vif.type != NL80211_IFTYPE_AP)
-> >                                         continue;
-> >                                 if (compare_ether_addr(tmp_sdata->dev->dev_addr,
-> > -                                                      hdr->addr2)) {
-> > +                                                      hdr->addr2) == 0) {
-> >                                         dev_hold(tmp_sdata->dev);
-> >                                         dev_put(sdata->dev);
-> >                                         sdata = tmp_sdata;
-> > 
-> 
-> 
+On Tue, 2009-10-13 at 21:45 -0700, Greg KH wrote:
+> How about when it was scheduled to be removed, we put it in staging and
+> I'll add it to my announcements about the staging tree every release?
+> Unless you can think of a better way?
 
-The following patch cleanly applies to 2.6.31.5-stable and is tested.
-
-Index: linux-2.6.31/net/mac80211/tx.c
-===================================================================
---- linux-2.6.31.orig/net/mac80211/tx.c	2009-10-26 09:15:20.000000000 +0100
-+++ linux-2.6.31/net/mac80211/tx.c	2009-10-26 09:16:35.000000000 +0100
-@@ -1478,7 +1478,7 @@
- 				if (sdata->vif.type != NL80211_IFTYPE_AP)
- 					continue;
- 				if (compare_ether_addr(sdata->dev->dev_addr,
--						       hdr->addr2)) {
-+						       hdr->addr2) == 0) {
- 					dev_hold(sdata->dev);
- 					dev_put(odev);
- 					osdata = sdata;
+staging/to_be_removed_unless_fixed_by/v.x.y ?
 
 
--- 
-Greetings, Michael.
