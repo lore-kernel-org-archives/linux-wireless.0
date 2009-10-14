@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:44241 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754782AbZJZHl2 (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:50786 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933097AbZJNOfa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 03:41:28 -0400
-Date: Mon, 26 Oct 2009 07:41:26 +0000
-From: Jarek Poplawski <jarkao2@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Tilman Schmidt <tilman@imap.cc>,
-	David Miller <davem@davemloft.net>, hidave.darkstar@gmail.com,
-	linux-kernel@vger.kernel.org, tglx@linutronix.de,
-	linux-wireless@vger.kernel.org, linux-ppp@vger.kernel.org,
-	netdev@vger.kernel.org, paulus@samba.org,
-	Michael Buesch <mb@bu3sch.de>,
-	Oliver Hartkopp <oliver@hartkopp.net>
-Subject: Re: [PATCH] net: Adjust softirq raising in __napi_schedule
-Message-ID: <20091026074126.GA6187@ff.dom.local>
-References: <4AD31213.6020006@imap.cc> <20091015114052.GA9870@ff.dom.local> <4AD76184.6030900@gmail.com> <4ADF5710.4030505@imap.cc> <20091021211906.GA11401@ami.dom.local> <1256160330.12174.2.camel@johannes.local> <20091021213947.GA12202@ami.dom.local> <1256200021.12174.11.camel@johannes.local> <4AE1C00B.5010008@imap.cc> <1256309191.12174.51.camel@johannes.local>
+	Wed, 14 Oct 2009 10:35:30 -0400
+Received: by iwn10 with SMTP id 10so3374499iwn.4
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2009 07:34:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1256309191.12174.51.camel@johannes.local>
+In-Reply-To: <200910141131.47500.kunal.gangakhedkar@gmail.com>
+References: <43e72e890910131542k376a87c5rc30feb6491a06867@mail.gmail.com>
+	<4AD51A7C.9060207@canonical.com> <43e72e890910131750s4d2cdb20o76d721087d9b3aaf@mail.gmail.com>
+	<200910141131.47500.kunal.gangakhedkar@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 14 Oct 2009 07:34:32 -0700
+Message-ID: <43e72e890910140734j196a06f2y8905d3eb1ba1abc8@mail.gmail.com>
+Subject: Re: Stable compat-wireless 2.6.32-rc4 released
+To: Kunal Gangakhedkar <kunal.gangakhedkar@gmail.com>
+Cc: tim.gardner@canonical.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 23, 2009 at 04:46:31PM +0200, Johannes Berg wrote:
-> On Fri, 2009-10-23 at 16:39 +0200, Tilman Schmidt wrote:
-> 
-> > Strange. Then what are the two separate functions netif_rx() and
-> > netif_rx_ni() for?
-> 
-> netif_rx_ni() disables preemption.
+On Tue, Oct 13, 2009 at 11:01 PM, Kunal Gangakhedkar
+<kunal.gangakhedkar@gmail.com> wrote:
+> On Wednesday 14 Oct 2009 6:20:33 am Luis R. Rodriguez wrote:
+>> On Tue, Oct 13, 2009 at 5:25 PM, Tim Gardner <tim.gardner@canonical.com>
+> wrote:
+>> > Speaking as a distro, what advantage does the stable wireless backport
+>> > offer for the currently released kernel if we are already consumers of
+>> > stable updates?
+>>
+>> Well if you are a distro stuck on the 2.6.31 kernel the stable
+>> compat-wireless-2.6.32 gets you 2.6.32 wireless bits on 2.6.31 and
+>> that means any features/drivers/large fixes/enhancements that didn't
+>> make it to 2.6.31.
+>>
+>
+> Isn't this the whole purpose of linux-backports-modules in ubuntu as well?
 
-You wrote earlier:
+Yes, but lbm currently relies on the bleeding edge compat-wireless
+which is exactly that -- bleeding edge, it may or may not work. The
+stable compat-wireless releases are based on the latest stable kernel
+releases and latest rc kernel release so they are deemed to be stable
+snapshots following the kernel release cycle.
 
-> [...] the networking layer needs to have
-> packets handed to it with softirqs disabled.
-
-How disabling preemption can fix something which needs softirqs
-disabled? Could you be more precise?
-
-> > > This really should be obvious. You're fixing the warning at the source
-> > > of the warning, rather than the source of the problem.
-> > 
-> > Good idea. So please do tell us where the source of the problem is.
-> 
-> You use netif_rx_ni() instead of netif_rx() at whatever place that
-> causes this problem.
-
-This isn't a very precise description either.
-
-Jarek P.
+  Luis
