@@ -1,33 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ted.prima.de ([83.97.48.3]:56109 "EHLO ted.prima.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757124AbZJLSFe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 14:05:34 -0400
-Message-ID: <4AD36F67.2090107@penny.prima.de>
-Date: Mon, 12 Oct 2009 20:03:19 +0200
-From: Riffer <riffer@penny.prima.de>
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:45861 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753717AbZJNAwm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Oct 2009 20:52:42 -0400
+Received: by iwn10 with SMTP id 10so3096770iwn.4
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2009 17:52:06 -0700 (PDT)
 MIME-Version: 1.0
-To: Florian Fainelli <florian@openwrt.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Bleeding Edge does not compile (was Re: Bleeding Edge b43 dated
- since 30 of september no  longer working & today does not even compile.)
-References: <4ACB91E7.5010405@penny.prima.de> <20091006211102.GC2911@tuxdriver.com> <4ACCDF24.7050002@penny.prima.de> <200910121309.47401.florian@openwrt.org>
-In-Reply-To: <200910121309.47401.florian@openwrt.org>
+In-Reply-To: <1255479847.6242.0.camel@shadow>
+References: <1255479847.6242.0.camel@shadow>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 13 Oct 2009 17:51:44 -0700
+Message-ID: <43e72e890910131751k11f0d05ehea98c32d6195d4be@mail.gmail.com>
+Subject: Re: compat-wireless 2.6.32-rc4 failed to compile
+To: aherrerag@uci.cu
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Florian Fainelli wrote:
+On Tue, Oct 13, 2009 at 5:24 PM, Anielkis Herrera Gonzalez
+<aherrerag@uci.cu> wrote:
+> # uname -r
+> 2.6.32-rc4
 
-> I got the same compilation failure here, the code in ath5k/base.c looks 
-> perfectly fine though.
+Remind me why you are trying to compile
+compat-wireless-stable-2.6.32-rc4 if you already are running
+2.6.32-rc4?
 
-The problem has been fixed in "compat-wireless-2009-10-09".
-This package works as good as my previous favorite for "b43" named
-"compat-wireless-2009-09-16". In addition it seems to be a little more
-stable regarding connecting on system startup.
-
-Thanks to whoever has fixed that! :-)
-
--- 
-Riffer
+  Luis
