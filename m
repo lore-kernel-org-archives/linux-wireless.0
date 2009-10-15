@@ -1,96 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:43430 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933821AbZJMJuR (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:43488 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761500AbZJOTHx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 05:50:17 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH 12/22] wl1271: Scan only enabled channels
-Date: Tue, 13 Oct 2009 12:47:49 +0300
-Message-Id: <1255427279-1224-13-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
+	Thu, 15 Oct 2009 15:07:53 -0400
+MIME-Version: 1.0
+In-Reply-To: <200910151647.49050.bzolnier@gmail.com>
+References: <4AD46380.9020308@pardus.org.tr> <200910141728.21491.bzolnier@gmail.com>
+	<43e72e890910140955n295ef8d1m185592af63bc895b@mail.gmail.com>
+	<200910151647.49050.bzolnier@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 15 Oct 2009 12:06:55 -0700
+Message-ID: <43e72e890910151206y59353608p5065f72eebd72ab@mail.gmail.com>
+Subject: Re: Current status of rt2800usb and staging/rt2870
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	=?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+On Thu, Oct 15, 2009 at 7:47 AM, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+> On Wednesday 14 October 2009 18:55:23 Luis R. Rodriguez wrote:
+>
+>> I hear fishing in Poland is great this time of year.
+>
+> It got quite cold this week so I thought that I would try to fish
+> the commit that broke Atheros AR9285 in Linus' tree (works in 2.6.31)
+> and make recent kernels finally work on my laptop..
+>
+> Seems like there are two regressions actually:
+>
+> - later one making association/authentication impossible
 
-Added checking of whether channel is enabled or disabled by mac80211
-stack to scan. Disabled channels are not scanned.
+And you reported this when and where?
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_cmd.c |   33 +++++++++++++++++++----------
- 1 files changed, 21 insertions(+), 12 deletions(-)
+> - earlier one making transfers stall
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-index f38e3e0..204e872 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-@@ -515,12 +515,16 @@ int wl1271_cmd_scan(struct wl1271 *wl, u8 *ssid, size_t len,
- 
- 	struct wl1271_cmd_trigger_scan_to *trigger = NULL;
- 	struct wl1271_cmd_scan *params = NULL;
--	int i, ret;
-+	struct ieee80211_channel *channels;
-+	int i, j, n_ch, ret;
- 	u16 scan_options = 0;
- 
- 	if (wl->scanning)
- 		return -EINVAL;
- 
-+	channels = wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ]->channels;
-+	n_ch = wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ]->n_channels;
-+
- 	params = kzalloc(sizeof(*params), GFP_KERNEL);
- 	if (!params)
- 		return -ENOMEM;
-@@ -535,24 +539,29 @@ int wl1271_cmd_scan(struct wl1271 *wl, u8 *ssid, size_t len,
- 		scan_options |= WL1271_SCAN_OPT_PRIORITY_HIGH;
- 	params->params.scan_options = scan_options;
- 
--	params->params.num_channels = num_channels;
- 	params->params.num_probe_requests = probe_requests;
- 	params->params.tx_rate = cpu_to_le32(CONF_HW_BIT_RATE_2MBPS);
- 	params->params.tid_trigger = 0;
- 	params->params.scan_tag = WL1271_SCAN_DEFAULT_TAG;
- 
--	for (i = 0; i < num_channels; i++) {
--		params->channels[i].min_duration =
--			cpu_to_le32(WL1271_SCAN_CHAN_MIN_DURATION);
--		params->channels[i].max_duration =
--			cpu_to_le32(WL1271_SCAN_CHAN_MAX_DURATION);
--		memset(&params->channels[i].bssid_lsb, 0xff, 4);
--		memset(&params->channels[i].bssid_msb, 0xff, 2);
--		params->channels[i].early_termination = 0;
--		params->channels[i].tx_power_att = WL1271_SCAN_CURRENT_TX_PWR;
--		params->channels[i].channel = i + 1;
-+	for (i = 0, j = 0; i < n_ch && i < WL1271_SCAN_MAX_CHANNELS; i++) {
-+		if (!(channels[i].flags & IEEE80211_CHAN_DISABLED)) {
-+			params->channels[j].min_duration =
-+				cpu_to_le32(WL1271_SCAN_CHAN_MIN_DURATION);
-+			params->channels[j].max_duration =
-+				cpu_to_le32(WL1271_SCAN_CHAN_MAX_DURATION);
-+			memset(&params->channels[j].bssid_lsb, 0xff, 4);
-+			memset(&params->channels[j].bssid_msb, 0xff, 2);
-+			params->channels[j].early_termination = 0;
-+			params->channels[j].tx_power_att =
-+				WL1271_SCAN_CURRENT_TX_PWR;
-+			params->channels[j].channel = channels[i].hw_value;
-+			j++;
-+		}
- 	}
- 
-+	params->params.num_channels = j;
-+
- 	if (len && ssid) {
- 		params->params.ssid_len = len;
- 		memcpy(params->params.ssid, ssid, len);
--- 
-1.5.6.5
+And you reported this when and where?
 
+Curious how the issues you mention now spreading across sound and
+wireless do not get fixed or seriously addressed. Have you considered
+your tactics are perhaps not the best?
+
+Have you tested newer kernels for ar9285? If there are regressions
+obviously they should be fixed but without proper attention to the
+issues they obviously cannot be fixed.
+
+> There is also a ton of unrelated and related (mac80211) problems in
+> between so the whole experience to trace regressions down is a real
+> hell (I went through like 40 kernels already)..
+
+I do agree there has been a hell of a lot of changes on
+mac80211/cfg80211 over the last few kernels and you can argue whether
+or not this has been a good thing -- personally I think it has had its
+negative impact on users on older kernels but I do value the new
+changes and most major changes have gone in right after the merge
+window without opposition. When there are issues I at least do believe
+we are attentive enough to help users and solve them on wireless and
+contrary to staging you will at least have a larger group of members
+working on the same wireless subsystem rather than addressing pigeon
+hole solutions.
+
+If you don't voice your own opinions and provide constructive
+criticism instead of pointless and side tracked rants you are not
+going to accomplish shit. So if you want to want to work on staging --
+go at it -- but don't moan and bitch about how wireless proper is
+being treated if you are not willing to man up and do something about
+it.
+
+> Oh, there is also an ath9k slab corruption already in 2.6.31 (I got
+> it debugged initially though)..
+
+We track reported ath9k bugs here:
+
+http://wireless.kernel.org/en/users/Drivers/ath9k/bugs
+
+When there is a bug report we follow up on it.
+
+> However today it got a bit warmer and the snow is almost gone so
+> I think that I'm going to take your advice after using the shortcut
+> solution for my wireless problems..
+>
+> I'll just plug that cheap rt3070 stick laying around and modprobe
+> that crappy rt2870sta..
+
+Good luck with that buddy.
+
+  Luis
