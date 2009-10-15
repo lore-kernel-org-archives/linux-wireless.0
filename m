@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:27685 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755643AbZJSJTD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2009 05:19:03 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH] libertas: remove unused 11d code
-Date: Mon, 19 Oct 2009 11:18:39 +0200
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>
-References: <200910190940.52830.hs4233@mail.mn-solutions.de> <43e72e890910190136s21703864i3002f2a31f940111@mail.gmail.com>
-In-Reply-To: <43e72e890910190136s21703864i3002f2a31f940111@mail.gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:56488 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1758886AbZJOPQB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2009 11:16:01 -0400
+From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
+To: Azhar <Azhar.iq@gmail.com>
+Subject: Re: TL-WN721N
+Date: Thu, 15 Oct 2009 17:15:10 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <loom.20091015T161901-805@post.gmane.org>
+In-Reply-To: <loom.20091015T161901-805@post.gmane.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200910191118.39975.hs4233@mail.mn-solutions.de>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200910151715.12179.s.L-H@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Is the countryinfo->countrycode not usable for
-> regulatory_hint_11d() ? 
+Hi
 
-I guess so, but the libertas+cfg80211 patch hasn't yet landed.
+On Thursday 15 October 2009, Azhar wrote:
+> Hi all,
+> 
+> I am looking for drivers of TL-WN721N (for linux)...i have been going through
+> pages aand pages of documentation....but every other link seems to route
+> here...i would really appreciate if you could guide me
 
-And if it lands, it will have a WAY simpler 11d coding than 
-before:
+http://wireless.kernel.org/en/users/Drivers/ath_hif_usb
+http://wireless.kernel.org/en/users/Drivers/ath9k_htc
 
-1. get the region code out of the EEPROM, convert it, call call 
-regulatory_hint_11d().
+Sorry, can't help you more, as I don't have access to ar9271 devices
+myself.
 
-2. no need to parse the scan result IE for a WLAN_EID_COUNTRY, 
-because cfg80211 does this for us
+> Thanks
+> 
+> Azhar
 
-3. no need to parse the association response either, because 
-cfg80211 does this for us
-
-4. no need to store special channel settings, because cfg80211 
-does this for us
-
-
-At least this is how I understand it based on my current 
-region-handling knowledge of cfg80211, which isn't too deep.
-
--- 
-http://www.holgerschurig.de
+Regards
+	Stefan Lippers-Hollmann
