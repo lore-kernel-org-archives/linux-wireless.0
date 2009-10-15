@@ -1,63 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:56693 "EHLO
-	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755516AbZJZUbl (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:20606 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757566AbZJOHfP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 16:31:41 -0400
-Received: by ewy4 with SMTP id 4so4010232ewy.37
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 13:31:45 -0700 (PDT)
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: [PATCH v2 2/4] ath9k_hw: distinguish single-chip solutions on initial probe print
-References: <1256575447-4591-1-git-send-email-lrodriguez@atheros.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Mon, 26 Oct 2009 22:31:44 +0200
-In-Reply-To: <1256575447-4591-1-git-send-email-lrodriguez@atheros.com> (Luis R. Rodriguez's message of "Mon\, 26 Oct 2009 12\:44\:07 -0400")
-Message-ID: <87d449hp73.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 15 Oct 2009 03:35:15 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 5/5] wl1271: added missing packed modifier in some cmd structs
+Date: Thu, 15 Oct 2009 10:33:30 +0300
+Message-Id: <1255592010-10287-6-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1255592010-10287-1-git-send-email-luciano.coelho@nokia.com>
+References: <1255592010-10287-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
+Some of the struct definitions in the wl1271_acx.h file were missing the
+__attribute__ ((packed)) modifier.
 
-> Devices with external radios have revisions which we can count on.
-> On single chip solutions these EEPROM values for these radio revision
-> also exist but are not meaningful as the radios are embedded onto the
-> same chip. Each single-chip device evolves together as one device.
->
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->
-> Changes hw_name to 60 bytes.
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_cmd.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Thanks, much better now.
-
-Another minor comment, sorry that I didn't notice it earlier:
-
-> +void ath9k_hw_name(struct ath_hw *ah, char *hw_name)
-> +{
-> +	/* chipsets >= AR9280 are single-chip */
-> +	if (AR_SREV_9280_10_OR_LATER(ah)) {
-> +		sprintf(hw_name,
-> +			"Atheros single-chip AR%s Rev:%x",
-> +			ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
-> +			ah->hw_version.macRev);
-> +	}
-> +	else {
-> +		sprintf(hw_name,
-> +			"Atheros AR%s MAC/BB Rev:%x AR%s RF Rev:%x: ",
-> +			ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
-> +			ah->hw_version.macRev,
-> +			ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
-> +					 AR_RADIO_SREV_MAJOR)),
-> +			ah->hw_version.phyRev);
-> +	}
-> +}
-
-I think you should provide the size of hw_name to this function and
-use snprintf() to avoid writing out of bounds.
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
+index 57d6905..174b820 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
+@@ -184,7 +184,7 @@ struct cmd_read_write_memory {
+ 	   of this field is the Host in WRITE command or the Wilink in READ
+ 	   command. */
+ 	u8 value[MAX_READ_SIZE];
+-};
++} __attribute__ ((packed));
+ 
+ #define CMDMBOX_HEADER_LEN 4
+ #define CMDMBOX_INFO_ELEM_HEADER_LEN 4
+@@ -399,12 +399,12 @@ struct wl1271_cmd_trigger_scan_to {
+ 	struct wl1271_cmd_header header;
+ 
+ 	__le32 timeout;
+-};
++} __attribute__ ((packed));
+ 
+ struct wl1271_cmd_test_header {
+ 	u8 id;
+ 	u8 padding[3];
+-};
++} __attribute__ ((packed));
+ 
+ enum wl1271_channel_tune_bands {
+ 	WL1271_CHANNEL_TUNE_BAND_2_4,
 -- 
-Kalle Valo
+1.5.6.5
+
