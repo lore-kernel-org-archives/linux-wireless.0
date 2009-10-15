@@ -1,81 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42592 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757052AbZJ3L4A (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56946 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762924AbZJOTQu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 07:56:00 -0400
-Subject: [PATCH] mac80211: remove sent_ps_buffered
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 30 Oct 2009 12:56:02 +0100
-Message-ID: <1256903762.3555.50.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 15 Oct 2009 15:16:50 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: replace netif_tx_{start,stop,wake}_all_queues
+Date: Thu, 15 Oct 2009 15:14:18 -0400
+Message-Id: <1255634058-6614-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This variable is set once, and tested once.
-However, the code path that can set it is
-mutually exclusive with the code path that
-tests it, so the test is always true. Thus
-we also don't need to set it either and can
-just remove the variable.
+Replace netif_tx_{start,stop,wake}_all_queues with the single-queue
+equivalents (i.e. netif_{start,stop,wake}_queue).  Since we are down to
+a single queue, these should peform slightly better.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- net/mac80211/ieee80211_i.h |    1 -
- net/mac80211/rx.c          |    8 +++-----
- 2 files changed, 3 insertions(+), 6 deletions(-)
+ net/mac80211/iface.c |    4 ++--
+ net/mac80211/mlme.c  |    4 ++--
+ net/mac80211/scan.c  |   10 +++++-----
+ 3 files changed, 9 insertions(+), 9 deletions(-)
 
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-10-30 11:58:19.000000000 +0100
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-10-30 11:58:23.000000000 +0100
-@@ -176,7 +176,6 @@ struct ieee80211_rx_data {
- 	struct ieee80211_rate *rate;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 3004492..6d54d99 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -314,7 +314,7 @@ static int ieee80211_open(struct net_device *dev)
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION)
+ 		ieee80211_queue_work(&local->hw, &sdata->u.mgd.work);
  
- 	unsigned int flags;
--	int sent_ps_buffered;
- 	int queue;
- 	u32 tkip_iv32;
- 	u16 tkip_iv16;
---- wireless-testing.orig/net/mac80211/rx.c	2009-10-30 11:58:27.000000000 +0100
-+++ wireless-testing/net/mac80211/rx.c	2009-10-30 11:59:39.000000000 +0100
-@@ -789,7 +789,7 @@ static void ap_sta_ps_start(struct sta_i
- #endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
+-	netif_tx_start_all_queues(dev);
++	netif_start_queue(dev);
+ 
+ 	return 0;
+  err_del_interface:
+@@ -343,7 +343,7 @@ static int ieee80211_stop(struct net_device *dev)
+ 	/*
+ 	 * Stop TX on this interface first.
+ 	 */
+-	netif_tx_stop_all_queues(dev);
++	netif_stop_queue(dev);
+ 
+ 	/*
+ 	 * Now delete all active aggregation sessions.
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index a884672..697a149 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -929,7 +929,7 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_recalc_ps(local, -1);
+ 	mutex_unlock(&local->iflist_mtx);
+ 
+-	netif_tx_start_all_queues(sdata->dev);
++	netif_start_queue(sdata->dev);
+ 	netif_carrier_on(sdata->dev);
  }
  
--static int ap_sta_ps_end(struct sta_info *sta)
-+static void ap_sta_ps_end(struct sta_info *sta)
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_local *local = sdata->local;
-@@ -819,8 +819,6 @@ static int ap_sta_ps_end(struct sta_info
- 	       "since STA not sleeping anymore\n", sdata->dev->name,
- 	       sta->sta.addr, sta->sta.aid, sent - buffered, buffered);
- #endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
--
--	return sent;
- }
+@@ -1061,7 +1061,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	 * time -- we don't want the scan code to enable queues.
+ 	 */
  
- static ieee80211_rx_result debug_noinline
-@@ -879,7 +877,7 @@ ieee80211_rx_h_sta_process(struct ieee80
- 			 */
- 			if (ieee80211_is_data(hdr->frame_control) &&
- 			    !ieee80211_has_pm(hdr->frame_control))
--				rx->sent_ps_buffered += ap_sta_ps_end(sta);
-+				ap_sta_ps_end(sta);
- 		} else {
- 			if (ieee80211_has_pm(hdr->frame_control))
- 				ap_sta_ps_start(sta);
-@@ -1147,7 +1145,7 @@ ieee80211_rx_h_ps_poll(struct ieee80211_
- 		if (no_pending_pkts)
- 			sta_info_clear_tim_bit(rx->sta);
- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
--	} else if (!rx->sent_ps_buffered) {
-+	} else {
- 		/*
- 		 * FIXME: This can be the result of a race condition between
- 		 *	  us expiring a frame and the station polling for it.
-
+-	netif_tx_stop_all_queues(sdata->dev);
++	netif_stop_queue(sdata->dev);
+ 	netif_carrier_off(sdata->dev);
+ 
+ 	rcu_read_lock();
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 71e10ca..7a350d2 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -306,10 +306,10 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
+ 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 			if (sdata->u.mgd.associated) {
+ 				ieee80211_scan_ps_disable(sdata);
+-				netif_tx_wake_all_queues(sdata->dev);
++				netif_wake_queue(sdata->dev);
+ 			}
+ 		} else
+-			netif_tx_wake_all_queues(sdata->dev);
++			netif_wake_queue(sdata->dev);
+ 
+ 		/* re-enable beaconing */
+ 		if (sdata->vif.type == NL80211_IFTYPE_AP ||
+@@ -364,7 +364,7 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
+ 		 * are handled in the scan state machine
+ 		 */
+ 		if (sdata->vif.type != NL80211_IFTYPE_STATION)
+-			netif_tx_stop_all_queues(sdata->dev);
++			netif_stop_queue(sdata->dev);
+ 	}
+ 	mutex_unlock(&local->iflist_mtx);
+ 
+@@ -523,7 +523,7 @@ static void ieee80211_scan_state_leave_oper_channel(struct ieee80211_local *loca
+ 			continue;
+ 
+ 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+-			netif_tx_stop_all_queues(sdata->dev);
++			netif_stop_queue(sdata->dev);
+ 			if (sdata->u.mgd.associated)
+ 				ieee80211_scan_ps_enable(sdata);
+ 		}
+@@ -558,7 +558,7 @@ static void ieee80211_scan_state_enter_oper_channel(struct ieee80211_local *loca
+ 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 			if (sdata->u.mgd.associated)
+ 				ieee80211_scan_ps_disable(sdata);
+-			netif_tx_wake_all_queues(sdata->dev);
++			netif_wake_queue(sdata->dev);
+ 		}
+ 	}
+ 	mutex_unlock(&local->iflist_mtx);
+-- 
+1.6.2.5
 
