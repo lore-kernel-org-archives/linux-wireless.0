@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:54524 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753044AbZJPCKN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2009 22:10:13 -0400
-Received: by fxm18 with SMTP id 18so1882562fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2009 19:09:36 -0700 (PDT)
-Subject: [PATCH] mac80211: fixed injection in monitor mode
-From: Gabriele Gristina <matrix.use.linux@gmail.com>
-To: linux-wireless@vger.kernel.org
+Received: from mga02.intel.com ([134.134.136.20]:30018 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753734AbZJOCT3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Oct 2009 22:19:29 -0400
+Subject: Re: [PATCH V3] iwlwifi: use paged Rx
+From: Zhu Yi <yi.zhu@intel.com>
+To: Sedat Dilek <sedat.dilek@googlemail.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <2d0a357f0910141204o9adc257w7744e47b47b1cace@mail.gmail.com>
+References: <1255079985-17282-1-git-send-email-yi.zhu@intel.com>
+	 <2d0a357f0910141204o9adc257w7744e47b47b1cace@mail.gmail.com>
 Content-Type: text/plain
-Date: Fri, 16 Oct 2009 04:09:21 +0200
-Message-Id: <1255658961.23827.2.camel@el8pc>
+Date: Thu, 15 Oct 2009 10:18:51 +0800
+Message-Id: <1255573132.3719.417.camel@debian>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a problem with mac80211 injection:
-if i setup interface in monitor mode with iwconfig and i try to send a
-custum 802.11 frame i see twice the packet in monitor interface.
-The first packet is right, the second is different only in the radiotap
-header: rtap len is fixed to 13 bytes...
-If i setup interface with airmon-ng the packet is sended once but the
-radiotap header is fixed to 13 bytes.
+On Thu, 2009-10-15 at 03:04 +0800, Sedat Dilek wrote:
+> you are using ieee80211_rx() in
+> * drivers/net/wireless/iwlwifi/iwl-3945.c
+> * drivers/net/wireless/iwlwifi/iwl-rx.c
+> files.
+> Kalle posted "mac80211: add ieee80211_rx_ni()" patch [1] and I applied
+> on top of master 2009-10-13.
+> wl1251 driver uses ieee80211_rx_ni() [2].
+> My question:
+> Is iwlagn/iwl3945 using workqueues - means shall/can it use
+> ieee80211_rx_ni() instead?
 
-Patch for 2.6.31.4
+The iwlagn context for calling ieee80211_rx{_irqsafe} is tasklet. But
+before my patch, the call site is also protected by a
+spinlock_irqsave(). This makes the actual context to be an IRQ one. Thus
+ieee80211_rx_irqsafe() is used originally. In this patch, I removed the
+spin lock protection for it (see the patch comment for why we can do it)
+so that ieee80211_rx() can be used now.
 
---- net/mac80211/main.c.orig    2009-10-16 00:50:00.000000000 +0200
-+++ net/mac80211/main.c    2009-10-15 23:06:03.000000000 +0200
-@@ -607,6 +607,9 @@
-     skb->protocol = htons(ETH_P_802_2);
-     memset(skb->cb, 0, sizeof(skb->cb));
- 
-+    if (!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS))
-+        goto out_no_echo;
-+
-     rcu_read_lock();
-     list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-         if (sdata->vif.type == NL80211_IFTYPE_MONITOR) {
-@@ -630,7 +633,8 @@
-         skb = NULL;
-     }
-     rcu_read_unlock();
--    dev_kfree_skb(skb);
-+out_no_echo:
-+    if (skb) dev_kfree_skb(skb);
- }
- EXPORT_SYMBOL(ieee80211_tx_status);
+> Out of curiosity, I substituted ieee80211_rx() by ieee80211_rx_ni()
+> and it seems to work.
 
+This is unnecessary. Tasklet has already had bh disabled.
+
+Thanks,
+-yi
 
