@@ -1,12 +1,13 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:42343 "EHLO mx3.mail.elte.hu"
+Received: from mx3.mail.elte.hu ([157.181.1.138]:36795 "EHLO mx3.mail.elte.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751220AbZJNGd7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 02:33:59 -0400
-Date: Wed, 14 Oct 2009 08:33:08 +0200
+	id S933619AbZJOGEB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2009 02:04:01 -0400
+Date: Thu, 15 Oct 2009 08:03:03 +0200
 From: Ingo Molnar <mingo@elte.hu>
-To: Joe Perches <joe@perches.com>
-Cc: Greg KH <gregkh@suse.de>, "Luis R. Rodriguez" <mcgrof@gmail.com>,
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Joe Perches <joe@perches.com>, Greg KH <gregkh@suse.de>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
 	James Bottomley <James.Bottomley@suse.de>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Theodore Tso <tytso@mit.edu>,
@@ -17,55 +18,48 @@ Cc: Greg KH <gregkh@suse.de>, "Luis R. Rodriguez" <mcgrof@gmail.com>,
 	linux-wireless@vger.kernel.org
 Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
 	2.6.32-rc3)
-Message-ID: <20091014063308.GE784@elte.hu>
-References: <1255097287.2934.21.camel@localhost.localdomain> <20091012130652.GB25464@elte.hu> <1255357148.2850.91.camel@localhost.localdomain> <20091012145453.GD4565@elte.hu> <20091012150911.GB1656@suse.de> <20091012154244.GA13323@elte.hu> <20091012232429.GA24254@suse.de> <43e72e890910131108m789110b4hc35e25601ad67bb7@mail.gmail.com> <20091014044519.GA19199@suse.de> <1255497575.1851.16.camel@Joe-Laptop.home>
+Message-ID: <20091015060303.GA32415@elte.hu>
+References: <20091012150911.GB1656@suse.de> <20091012154244.GA13323@elte.hu> <20091012232429.GA24254@suse.de> <43e72e890910131108m789110b4hc35e25601ad67bb7@mail.gmail.com> <20091014044519.GA19199@suse.de> <1255497575.1851.16.camel@Joe-Laptop.home> <20091014063308.GE784@elte.hu> <4AD60FF9.40200@s5r6.in-berlin.de> <20091014183657.GB5133@elte.hu> <tkrat.88ac5cebebbd9689@s5r6.in-berlin.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1255497575.1851.16.camel@Joe-Laptop.home>
+In-Reply-To: <tkrat.88ac5cebebbd9689@s5r6.in-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-* Joe Perches <joe@perches.com> wrote:
+* Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
 
-> On Tue, 2009-10-13 at 21:45 -0700, Greg KH wrote:
-> > How about when it was scheduled to be removed, we put it in staging and
-> > I'll add it to my announcements about the staging tree every release?
-> > Unless you can think of a better way?
+> > Well, the answer is obvious i think. Tell me, at a glance, if you 
+> > see a patch on lkml, which one is for a staging driver to be 
+> > obsoleted, and which one is the one going upstream real soon? The 
+> > patches say:
+> > 
+> >  +++ a/drivers/staging/foo/x.c
+> > 
+> >  +++ a/drivers/staging/bar/y.c
+> > 
+> > Then tell me the same at a glance if you see patches for:
+> > 
+> >  +++ a/drivers/staging/wip/x.c
+> > 
+> >  +++ a/drivers/staging/bad/y.c
 > 
-> staging/to_be_removed_unless_fixed_by/v.x.y ?
+> Does this information matter much?
 
-Yes, that's a real worry. Some time ago i suggested:
+Yes. You might not appreciate it as you are active in a relatively 
+narrow field (so all patches in your world have an 'obvious' place) - 
+but i for example take most of the context of a change from the email 
+itself and the more self-descriptive it is, the better. I would be more 
+likely to review work-in-progress patches while not bother about 
+obsolete drivers on the way out. YMMV.
 
-  drivers/staging/good/
-  drivers/staging/bad/
-  drivers/staging/ugly/
+> What's more interesting is whether development activity will _lead_ to 
+> a driver being moved from bad or ugly to good.
 
- good:  drivers that are to go upstream in the next cycle 
- bad:   outgoing drivers being obsoleted or abandoned
- ugly:  incoming messy drivers with active developers
+... a prerequisite of which is for more developers to be accutely aware 
+of in what state a driver is.
 
-The messaging of this looks nice and the names are short and obvious.
-
-An added benefit is that this kind of separation makes it easy for 
-people interested in drivers/staging to follow the 'status' of drivers. 
-Once stuff goes into 'good' a different kind of review is needed than if 
-a driver goes into 'ugly'.
-
-The main disadvantage would be the PR angle: putting new drivers into a 
-path named 'ugly'. Not something you want to put into a quarterly status 
-report, right? If we put drivers/staging/ugly/ drivers into 
-drivers/staging/ itself, we'd solve that problem. I.e. we'd keep the 
-current scheme, but we'd also add drivers/staging/good/ and 
-drivers/staging/bad/ as two extra stages for incoming and outgoing 
-drivers.
-
-A third version would be a more neutral name:
-
-  drivers/staging/incoming/
-  drivers/staging/outgoing/
-
-I think it has many advantages, but (of course!) it all depends on 
-whether Greg wants to have any separation like this.
+Anyway ... it's all up to Greg and he indicated that he wants the 
+simplest structure, which is fair enough.
 
 	Ingo
