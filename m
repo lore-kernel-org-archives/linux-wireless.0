@@ -1,78 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:51003 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754276AbZJZIrT (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:20609 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757727AbZJOHfQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 04:47:19 -0400
-Message-ID: <4AE56217.3040708@imap.cc>
-Date: Mon, 26 Oct 2009 10:47:19 +0200
-From: Tilman Schmidt <tilman@imap.cc>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Jarek Poplawski <jarkao2@gmail.com>,
-	David Miller <davem@davemloft.net>, hidave.darkstar@gmail.com,
-	linux-kernel@vger.kernel.org, tglx@linutronix.de,
-	linux-wireless@vger.kernel.org, linux-ppp@vger.kernel.org,
-	netdev@vger.kernel.org, paulus@samba.org,
-	Michael Buesch <mb@bu3sch.de>,
-	Oliver Hartkopp <oliver@hartkopp.net>
-Subject: Re: [PATCH] net: Adjust softirq raising in __napi_schedule
-References: <4AD76184.6030900@gmail.com> <4ADF5710.4030505@imap.cc>	 <20091021211906.GA11401@ami.dom.local>	 <1256160330.12174.2.camel@johannes.local>	 <20091021213947.GA12202@ami.dom.local>	 <1256200021.12174.11.camel@johannes.local> <4AE1C00B.5010008@imap.cc>	 <1256309191.12174.51.camel@johannes.local>	 <20091026074126.GA6187@ff.dom.local>	 <1256543054.28230.6.camel@johannes.local>	 <20091026075438.GB6187@ff.dom.local> <1256543932.28230.9.camel@johannes.local>
-In-Reply-To: <1256543932.28230.9.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 15 Oct 2009 03:35:16 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/5] wl1271: fix sparse warnings about undeclared functions
+Date: Thu, 15 Oct 2009 10:33:27 +0300
+Message-Id: <1255592010-10287-3-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1255592010-10287-1-git-send-email-luciano.coelho@nokia.com>
+References: <1255592010-10287-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+The following sparse warnings were fixed:
 
-Am 26.10.2009 09:58 schrieb Johannes Berg:
-> On Mon, 2009-10-26 at 07:54 +0000, Jarek Poplawski wrote:
-> 
->>> No, I wrote that I didn't know. I suppose now that I looked at it I do
->>> know, and only disabling preemption is required.
->> But netif_rx has preemption disabled most of the time (by hardirqs
->> disabling). So maybe disabling preemption isn't the main reason here
->> either?
-> 
-> Not for netpoll though, which may or may not be relevant (if I were to
-> venture a guess I'd say it isn't and it disables preemption to be able
-> to do the softirq thing)
-> 
-> However, I lost track now of why we're discussing this.
+drivers/net/wireless/wl12xx/wl1271_spi.c:199:6: warning: symbol 'wl1271_spi_read_busy' was not declared. Should it be static?
+drivers/net/wireless/wl12xx/wl1271_cmd.c:84:5: warning: symbol 'wl1271_cmd_cal_channel_tune' was not declared. Should it be static?
+drivers/net/wireless/wl12xx/wl1271_cmd.c:107:5: warning: symbol 'wl1271_cmd_cal_update_ref_point' was not declared. Should it be static?
+drivers/net/wireless/wl12xx/wl1271_cmd.c:132:5: warning: symbol 'wl1271_cmd_cal_p2g' was not declared. Should it be static?
+drivers/net/wireless/wl12xx/wl1271_cmd.c:153:5: warning: symbol 'wl1271_cmd_cal' was not declared. Should it be static?
 
-The starting point were several reports of the kernel message:
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_cmd.c |    8 ++++----
+ drivers/net/wireless/wl12xx/wl1271_spi.c |    5 ++++-
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
-NOHZ: local_softirq_pending 08
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+index 1d64aa4..195eee7 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+@@ -81,7 +81,7 @@ out:
+ 	return ret;
+ }
+ 
+-int wl1271_cmd_cal_channel_tune(struct wl1271 *wl)
++static int wl1271_cmd_cal_channel_tune(struct wl1271 *wl)
+ {
+ 	struct wl1271_cmd_cal_channel_tune *cmd;
+ 	int ret = 0;
+@@ -104,7 +104,7 @@ int wl1271_cmd_cal_channel_tune(struct wl1271 *wl)
+ 	return ret;
+ }
+ 
+-int wl1271_cmd_cal_update_ref_point(struct wl1271 *wl)
++static int wl1271_cmd_cal_update_ref_point(struct wl1271 *wl)
+ {
+ 	struct wl1271_cmd_cal_update_ref_point *cmd;
+ 	int ret = 0;
+@@ -129,7 +129,7 @@ int wl1271_cmd_cal_update_ref_point(struct wl1271 *wl)
+ 	return ret;
+ }
+ 
+-int wl1271_cmd_cal_p2g(struct wl1271 *wl)
++static int wl1271_cmd_cal_p2g(struct wl1271 *wl)
+ {
+ 	struct wl1271_cmd_cal_p2g *cmd;
+ 	int ret = 0;
+@@ -150,7 +150,7 @@ int wl1271_cmd_cal_p2g(struct wl1271 *wl)
+ 	return ret;
+ }
+ 
+-int wl1271_cmd_cal(struct wl1271 *wl)
++static int wl1271_cmd_cal(struct wl1271 *wl)
+ {
+ 	/*
+ 	 * FIXME: we must make sure that we're not sleeping when calibration
+diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
+index 3c5aa58..02978a1 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
+@@ -196,7 +196,9 @@ int wl1271_set_partition(struct wl1271 *wl,
+ 
+ #define WL1271_BUSY_WORD_TIMEOUT 1000
+ 
+-void wl1271_spi_read_busy(struct wl1271 *wl, void *buf, size_t len)
++/* FIXME: Check busy words, removed due to SPI bug */
++#if 0
++static void wl1271_spi_read_busy(struct wl1271 *wl, void *buf, size_t len)
+ {
+ 	struct spi_transfer t[1];
+ 	struct spi_message m;
+@@ -256,6 +258,7 @@ void wl1271_spi_read_busy(struct wl1271 *wl, void *buf, size_t len)
+ 	memset(buf, 0, len);
+ 	wl1271_error("SPI read busy-word timeout!\n");
+ }
++#endif
+ 
+ void wl1271_spi_raw_read(struct wl1271 *wl, int addr, void *buf,
+ 			 size_t len, bool fixed)
+-- 
+1.5.6.5
 
-Originally most if not all of them came from wireless networking,
-but I muddied the waters by adding to the mix a case involving ISDN.
-You stated that all the solutions proposed so far were wrong, so
-we're naturally turning to you for guidance on what the right
-solution might be.
-
-> Basically it boils down to using netif_rx() when in (soft)irq, and
-> netif_rx_ni() when in process context. That could just be an
-> optimisation, but it's a very valid one.
-
-Hmmm. That seems to contradict your earlier statement to me that
-simply replacing a call to netif_rx() by one to netif_rx_ni()
-when not in interrupt context isn't a valid solution either.
-What am I missing?
-
-Thanks,
-Tilman
-
-- --
-Tilman Schmidt                    E-Mail: tilman@imap.cc
-Bonn, Germany
-Diese Nachricht besteht zu 100% aus wiederverwerteten Bits.
-Ungeöffnet mindestens haltbar bis: (siehe Rückseite)
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.4 (MingW32)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFK5WIXQ3+did9BuFsRAsj1AJ0e4VJ7Nsp69ROXCiT4oM/Q6lIpSwCfZvXS
-4nV4tWTIzgk4IRlCt0CCF3Y=
-=r15I
------END PGP SIGNATURE-----
