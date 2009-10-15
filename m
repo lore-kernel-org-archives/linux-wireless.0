@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:52340 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772AbZJHFAz (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3879 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935370AbZJOTsv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 01:00:55 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath9k: use right parameter for MODULE_PARM_DESC() for debug
-Date: Thu,  8 Oct 2009 01:00:18 -0400
-Message-Id: <1254978018-20564-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 15 Oct 2009 15:48:51 -0400
+Date: Thu, 15 Oct 2009 15:45:30 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
+	lrodriguez@atheros.com
+Subject: Re: [PATCH] ath5k: use noise calibration from madwifi hal
+Message-ID: <20091015194530.GA32509@hash.localnet>
+References: <1255544190-30020-1-git-send-email-me@bobcopeland.com> <40f31dec0910142357w6e395640uf9690498d0c3854e@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0910142357w6e395640uf9690498d0c3854e@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reported-by: sujith.manoharan@atheros.com
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Thu, Oct 15, 2009 at 09:57:45AM +0300, Nick Kossifidis wrote:
+> a) Please leave some comments to let people know that when nf
+> calibration runs antennas are detached (it measures the noise produced
+> from the card itself),  that if we enable nf calibration before agc
+> calibration it always fails + the link to Atheros patent.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 36af6f3..69cf702 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -31,7 +31,7 @@ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
- 
- static unsigned int ath9k_debug = ATH_DBG_DEFAULT;
- module_param_named(debug, ath9k_debug, uint, 0);
--MODULE_PARM_DESC(ath9k_debug, "Debugging mask");
-+MODULE_PARM_DESC(debug, "Debugging mask");
- 
- /* We use the hw_value as an index into our private channel structure */
- 
+Sure, I'll add that back.  I read the patent but I'm not sure it applies
+100%, it also talks at the end about keeping the rx antennas connected
+and measuring the noise in the environment instead of just the thermal
+noise.  I guess one way to know for sure is to hit it with noise and
+look at the resulting values.
+
+> b) What about thresh62 ? Do we also need to update/rewrite this value
+> (we got it from EEPROM and write it on the register during reset) ?
+
+Yeah, I looked at that, madwifi/legacy-hal also set it
+(just the EEPROM value for the threshold bits) before doing the false
+detect backoff stuff.
+
+> Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+
+Thanks for the review!
+
 -- 
-1.6.0.4
+Bob Copeland %% www.bobcopeland.com
 
