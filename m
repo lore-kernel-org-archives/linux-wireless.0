@@ -1,93 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:46578 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752275AbZJZO5Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 10:57:16 -0400
-Received: by iwn10 with SMTP id 10so5997859iwn.4
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 07:57:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <e14196febc59d9ca25868fec63816139.squirrel@webmail.xs4all.nl>
-References: <1250640253-18434-1-git-send-email-kilroyd@googlemail.com>
-	<20090831175932.GC5631@tuxdriver.com> <b88bb1ad0909121654w43215f60lf9d7b90d4b54bf35@mail.gmail.com>
-	<4AE1FE7F.2090309@gmail.com> <e14196febc59d9ca25868fec63816139.squirrel@webmail.xs4all.nl>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 26 Oct 2009 07:57:01 -0700
-Message-ID: <43e72e890910260757t53a3f56bxddd693603bc0c444@mail.gmail.com>
-Subject: Re: Only device wlan1 but no connection Fritz!WLAN USB stick N2.4
-To: Ed Vaessen <evaessen@xs4all.nl>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:45369 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755391AbZJOGvH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2009 02:51:07 -0400
+Subject: Re: [Ipw2100-devel] 2.6.32-rc4 ipw2200: oops on missing firmware
+From: Zhu Yi <yi.zhu@intel.com>
+To: Frans Pop <elendil@planet.nl>
+Cc: Ferenc Wagner <wferi@niif.hu>,
+	"ipw2100-devel@lists.sourceforge.net"
+	<ipw2100-devel@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <200910131855.25878.elendil@planet.nl>
+References: <87hbu3h023.fsf@tac.ki.iif.hu>
+	 <200910131855.25878.elendil@planet.nl>
+Content-Type: text/plain
+Date: Thu, 15 Oct 2009 14:50:28 +0800
+Message-Id: <1255589428.3719.465.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 26, 2009 at 6:17 AM, Ed Vaessen <evaessen@xs4all.nl> wrote:
-> I have a Fritz!Box Fon WLAN 7170 as router and try to connect wireless to
-> it with the Fritz!WLAN USB N2.4 stick using the compat-wireless software.
-> Without succes so far.
+On Wed, 2009-10-14 at 00:55 +0800, Frans Pop wrote:
+> Adding relevant CCs. Original message follows.
+> 
+> ==============
+> Hi,
+> 
+> See the screenshot at http://apt.niif.hu/ipw_oops.png.  During bootup,
+> initramfs-tools tried to load the ipw2200 module, but nobody fed it
+> the necessary firmware, so request_firmware timed out and the module
+> unload cleanup oopsed in device_pm_remove:
+> 
+> void device_pm_remove(struct device *dev)
+> {
+>         pr_debug("PM: Removing info for %s:%s\n",
+>                  dev->bus ? dev->bus->name : "No Bus",
+>                  kobject_name(&dev->kobj));
+>         mutex_lock(&dpm_list_mtx);
+>         list_del_init(&dev->power.entry);
+>         mutex_unlock(&dpm_list_mtx);
+>         pm_runtime_remove(dev);
+> }
+> 
+> 00000a0a <device_pm_remove>:
+>  a0a:   55                      push   %ebp
+>  a0b:   89 e5                   mov    %esp,%ebp
+>  a0d:   53                      push   %ebx
+>  a0e:   89 c3                   mov    %eax,%ebx
+>  a10:   b8 08 00 00 00          mov    $0x8,%eax
+>  a15:   e8 fc ff ff ff          call   a16 <device_pm_remove+0xc>
+>  a1a:   8d 4b 5c                lea    0x5c(%ebx),%ecx
+>  a1d:   8b 53 5c                mov    0x5c(%ebx),%edx
+>  a20:   8b 43 60                mov    0x60(%ebx),%eax
+>  a23:   89 42 04                mov    %eax,0x4(%edx)
+>  a26:   89 10                   mov    %edx,(%eax)
+>  a28:   89 4b 5c                mov    %ecx,0x5c(%ebx)
+>  a2b:   89 4b 60                mov    %ecx,0x60(%ebx)
+>  a2e:   b8 08 00 00 00          mov    $0x8,%eax
+>  a33:   e8 fc ff ff ff          call   a34 <device_pm_remove+0x2a>
+>  a38:   89 d8                   mov    %ebx,%eax
+>  a3a:   e8 fc ff ff ff          call   a3b <device_pm_remove+0x31>
+>  a3f:   5b                      pop    %ebx
+>  a40:   5d                      pop    %ebp
+>  a41:   c3                      ret    
+> 
+> The offending IP translates to line a23, so the problem is edx being 0
+> at that point.  I'm not sure which struct device field has offset
+> 0x5c, maybe power, but I'm lost at this point anyway.
 
-> Oct 25 15:38:38 vaessen-laptop kernel: [ 399.349605] usb 1-1: USB
-> disconnect, address 5
-> Oct 25 15:38:39 vaessen-laptop kernel: [ 400.608057] usb 1-1: new high
-> speed USB device using ehci_hcd and address 6
-> Oct 25 15:38:39 vaessen-laptop kernel: [ 400.771795] usb 1-1:
-> configuration #1 chosen from 1 choice
-> Oct 25 15:38:39 vaessen-laptop kernel: [ 400.888063] usb 1-1: reset high
-> speed USB device using ehci_hcd and address 6
-> Oct 25 15:38:40 vaessen-laptop kernel: [ 402.044043] usb 1-1: firmware:
-> requesting ar9170.fw
-> Oct 25 15:38:41 vaessen-laptop kernel: [ 402.465806] Registered led
-> device: ar9170-phy1::tx
-> Oct 25 15:38:41 vaessen-laptop kernel: [ 402.465846] Registered led
-> device: ar9170-phy1::assoc
-> Oct 25 15:38:41 vaessen-laptop kernel: [ 402.465851] usb 1-1: Atheros
-> AR9170 is registered as 'phy1'
-> Oct 25 15:38:41 vaessen-laptop kernel: [ 402.471136] udev: renamed network
-> interface wlan0 to wlan1
->
-> It seems the firmware is installed.
-> Command iwconfig:
->
-> lo no wireless extensions.
->
-> eth0 no wireless extensions.
->
-> pan0 no wireless extensions.
->
-> wlan1 IEEE 802.11bg Mode:Managed Access Point: Not-Associated
-> Tx-Power=0 dBm
-> Retry long limit:7 RTS thrff Fragment thrff
-> Power Managementff
->
-> Command sudo lshw -C network gives for the wireless this information:
->
-> *-network:1 DISABLED
-> description: Wireless interface
-> physical id: 2
-> bus info: usb@1:1
-> logical name: wlan1
-> serial: 00:1f:3f:09:2d:40
-> capabilities: ethernet physical wireless
-> configuration: broadcast=yes driver=ar9170usb
-> driverversion=2.6.28-16-generic firmware=N/A link=yes multicast=yes
-> wireless=IEEE 802.11bg
->
-> This 'firmware=N/A' puzzles me.
+OK. The rfkill device is removed without being added before! The root
+cause is, for non-monitor interfaces, the syntax for
+alloc_ieee80211/free_80211 is wrong. Because alloc_ieee80211 only
+creates (wiphy_new) a wiphy, but free_80211() does wiphy_unregister()
+also. This is only correct when the later wiphy_register() is called
+successfully, which apparently is not the case for your fw doesn't exist
+one. Please see if this patch fix the problem.
 
-That's probably from ethtool, and since John added ethtool support all
-we would need to do I think is tag the firmware name on the wiphy
-struct (wiphy->fw_version). But we haven't added that yet to ar9170.
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 
-> I used System->Administration->Network Tools but cannot ping the Fritz!Box
-> router
-> The interface information says that wireless interface wlan1 is inactive.
->
-> How do I make it active?
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+index 240cff1..a741d37 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+@@ -6325,8 +6325,10 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
+ 
+       fail:
+ 	if (dev) {
+-		if (registered)
++		if (registered) {
++			unregister_ieee80211(priv->ieee);
+ 			unregister_netdev(dev);
++		}
+ 
+ 		ipw2100_hw_stop_adapter(priv);
+ 
+@@ -6383,6 +6385,7 @@ static void __devexit ipw2100_pci_remove_one(struct pci_dev *pci_dev)
+ 		/* Unregister the device first - this results in close()
+ 		 * being called if the device is open.  If we free storage
+ 		 * first, then close() will crash. */
++		unregister_ieee80211(priv->ieee);
+ 		unregister_netdev(dev);
+ 
+ 		/* ipw2100_down will ensure that there is no more pending work
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index 7f169e1..e2af22b 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -11823,6 +11823,7 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
+ 		if (err) {
+ 			IPW_ERROR("Failed to register promiscuous network "
+ 				  "device (error %d).\n", err);
++			unregister_ieee80211(priv->ieee);
+ 			unregister_netdev(priv->net_dev);
+ 			goto out_remove_sysfs;
+ 		}
+@@ -11873,6 +11874,7 @@ static void __devexit ipw_pci_remove(struct pci_dev *pdev)
+ 
+ 	mutex_unlock(&priv->mutex);
+ 
++	unregister_ieee80211(priv->ieee);
+ 	unregister_netdev(priv->net_dev);
+ 
+ 	if (priv->rxq) {
+diff --git a/drivers/net/wireless/ipw2x00/libipw.h b/drivers/net/wireless/ipw2x00/libipw.h
+index bf45391..f42ade6 100644
+--- a/drivers/net/wireless/ipw2x00/libipw.h
++++ b/drivers/net/wireless/ipw2x00/libipw.h
+@@ -1020,6 +1020,7 @@ static inline int libipw_is_cck_rate(u8 rate)
+ /* ieee80211.c */
+ extern void free_ieee80211(struct net_device *dev, int monitor);
+ extern struct net_device *alloc_ieee80211(int sizeof_priv, int monitor);
++extern void unregister_ieee80211(struct libipw_device *ieee);
+ extern int libipw_change_mtu(struct net_device *dev, int new_mtu);
+ 
+ extern void libipw_networks_age(struct libipw_device *ieee,
+diff --git a/drivers/net/wireless/ipw2x00/libipw_module.c b/drivers/net/wireless/ipw2x00/libipw_module.c
+index a0e9f6a..be5b809 100644
+--- a/drivers/net/wireless/ipw2x00/libipw_module.c
++++ b/drivers/net/wireless/ipw2x00/libipw_module.c
+@@ -235,16 +235,19 @@ void free_ieee80211(struct net_device *dev, int monitor)
+ 	libipw_networks_free(ieee);
+ 
+ 	/* free cfg80211 resources */
+-	if (!monitor) {
+-		wiphy_unregister(ieee->wdev.wiphy);
+-		kfree(ieee->a_band.channels);
+-		kfree(ieee->bg_band.channels);
++	if (!monitor)
+ 		wiphy_free(ieee->wdev.wiphy);
+-	}
+ 
+ 	free_netdev(dev);
+ }
+ 
++void unregister_ieee80211(struct libipw_device *ieee)
++{
++	wiphy_unregister(ieee->wdev.wiphy);
++	kfree(ieee->a_band.channels);
++	kfree(ieee->bg_band.channels);
++}
++
+ #ifdef CONFIG_LIBIPW_DEBUG
+ 
+ static int debug = 0;
+@@ -330,3 +333,4 @@ module_init(libipw_init);
+ 
+ EXPORT_SYMBOL(alloc_ieee80211);
+ EXPORT_SYMBOL(free_ieee80211);
++EXPORT_SYMBOL(unregister_ieee80211);
 
-Bring the interface up first:
 
-ip link set dev wlan1 up
-
-Then use iw to scan for example
-
-  Luis
