@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:44165 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759957AbZJMRnX (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:64619 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757289AbZJOHfN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 13:43:23 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH] wl1251: rename spi device to wl1251
+	Thu, 15 Oct 2009 03:35:13 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org
-Date: Tue, 13 Oct 2009 20:41:20 +0300
-Message-ID: <20091013174119.15796.81021.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Subject: [PATCH 0/5] wl1271: Endianess and power save mode fixes
+Date: Thu, 15 Oct 2009 10:33:25 +0300
+Message-Id: <1255592010-10287-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+Hi,
 
-During rename of the driver from wl12xx to wl1251 the spi device name
-was accidentally left as wl12xx. Rename it to wl1251 which is the proper
-name of the driver.
+Here are a few more patches for the wl1271 driver.  First, we have fixed a
+problem with the null data packets which was causing problems with power save
+mode on some APs.  We were not setting the FCTL_TODS bit as the specification
+requires.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
+Second, we have fixed some sparse warnings and fixed the endianess handling in
+the driver (it used to be written for little-endian archs only).
 
- drivers/net/wireless/wl12xx/wl1251_main.c |    2 +-
- drivers/net/wireless/wl12xx/wl1251_spi.c  |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Cheers,
+Luca.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index 1103256..23ac503 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -1426,4 +1426,4 @@ EXPORT_SYMBOL_GPL(wl1251_free_hw);
- MODULE_DESCRIPTION("TI wl1251 Wireles LAN Driver Core");
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("Kalle Valo <kalle.valo@nokia.com>");
--MODULE_ALIAS("spi:wl12xx");
-+MODULE_ALIAS("spi:wl1251");
-diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
-index 14eff2b..2cf8a21 100644
---- a/drivers/net/wireless/wl12xx/wl1251_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
-@@ -307,7 +307,7 @@ static int __devexit wl1251_spi_remove(struct spi_device *spi)
- 
- static struct spi_driver wl1251_spi_driver = {
- 	.driver = {
--		.name		= "wl12xx",
-+		.name		= "wl1251",
- 		.bus		= &spi_bus_type,
- 		.owner		= THIS_MODULE,
- 	},
+Juuso Oikarinen (1):
+  wl1271: Set IEEE80211_FCTL_TODS in the null data template
+
+Luciano Coelho (4):
+  wl1271: fix sparse warnings about undeclared functions
+  wl1271: added missing packed modifier in some acx structs
+  wl1271: fix endianess issues
+  wl1271: added missing packed modifier in some cmd structs
+
+ drivers/net/wireless/wl12xx/wl1271.h       |   10 +-
+ drivers/net/wireless/wl12xx/wl1271_acx.c   |   72 ++++----
+ drivers/net/wireless/wl12xx/wl1271_acx.h   |  296 ++++++++++++++--------------
+ drivers/net/wireless/wl12xx/wl1271_boot.c  |    6 +-
+ drivers/net/wireless/wl12xx/wl1271_cmd.c   |   85 ++++----
+ drivers/net/wireless/wl12xx/wl1271_cmd.h   |   74 ++++----
+ drivers/net/wireless/wl12xx/wl1271_event.c |    3 +-
+ drivers/net/wireless/wl12xx/wl1271_event.h |   28 ++--
+ drivers/net/wireless/wl12xx/wl1271_init.h  |    4 +-
+ drivers/net/wireless/wl12xx/wl1271_main.c  |   12 +-
+ drivers/net/wireless/wl12xx/wl1271_rx.c    |   11 +-
+ drivers/net/wireless/wl12xx/wl1271_rx.h    |    4 +-
+ drivers/net/wireless/wl12xx/wl1271_spi.c   |    5 +-
+ drivers/net/wireless/wl12xx/wl1271_tx.c    |   22 ++-
+ drivers/net/wireless/wl12xx/wl1271_tx.h    |   18 +-
+ drivers/net/wireless/wl12xx/wl12xx_80211.h |    4 +-
+ 16 files changed, 336 insertions(+), 318 deletions(-)
 
