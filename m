@@ -1,58 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f216.google.com ([209.85.217.216]:52092 "EHLO
-	mail-gx0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755256AbZJPLUG convert rfc822-to-8bit (ORCPT
+Received: from 139.254.232.72.static.reverse.ltdomains.com ([72.232.254.139]:53943
+	"EHLO liberdade.minaslivre.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S935066AbZJOT7S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 07:20:06 -0400
-Received: by gxk8 with SMTP id 8so2059179gxk.1
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2009 04:19:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <200910161255.54644.IvDoorn@gmail.com>
-References: <200910152137.58164.IvDoorn@gmail.com> <200910152204.16407.IvDoorn@gmail.com>
-	<200910161149.11661.sturmflut@lieberbiber.de> <200910161255.54644.IvDoorn@gmail.com>
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Date: Fri, 16 Oct 2009 13:12:32 +0200
-Message-ID: <ee588a540910160412x27ad2a37i6b80526dfd99f7ea@mail.gmail.com>
-Subject: Re: [rt2x00-users] [PATCH 2/2] rt2x00: Implement support for
-	rt2800pci
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: users@rt2x00.serialmonkey.com,
-	Simon Raffeiner <sturmflut@lieberbiber.de>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 15 Oct 2009 15:59:18 -0400
+From: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+To: trivial@kernel.org
+Cc: linville@tuxdriver.com, IvDoorn@gmail.com,
+	johannes@sipsolutions.net, users@rt2x00.serialmonkey.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+Subject: [PATCH 4/8] trivial: fix some typos and punctuation in comments
+Date: Thu, 15 Oct 2009 16:48:23 -0300
+Message-Id: <1255636103-5817-1-git-send-email-cascardo@holoscopio.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 16, 2009 at 12:55, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+---
+ drivers/net/wireless/rt2x00/rt61pci.c |   36 ++++++++++++++++----------------
+ 1 files changed, 18 insertions(+), 18 deletions(-)
 
-> Well the main PCI and DEVICE id's should be listed in the PCI_DEVICE table,
-> the SUBSYS ID should only be added in case there can be different drivers
-> based on that ID.
->
-> As far as the ID 1432:7728, that one was send by Xose who got the ID from
-> the Windows driver, I don't know if he has mistakenly grabbed the subsystem ID or not...
-> Xose, could you give an update about this?
-
-It came from ralink linux driver.
-See 2009_0918_RT2860_Linux_STA_v2.2.0.0/os/linux/pci_main_dev.c:
-
-        {PCI_DEVICE(NIC_PCI_VENDOR_ID, NIC2860_PCI_DEVICE_ID)},
- //RT28602.4G
-        {PCI_DEVICE(NIC_PCI_VENDOR_ID, NIC2860_PCIe_DEVICE_ID)},
-        {PCI_DEVICE(NIC_PCI_VENDOR_ID, NIC2760_PCI_DEVICE_ID)},
-        {PCI_DEVICE(NIC_PCI_VENDOR_ID, NIC2790_PCIe_DEVICE_ID)},
-        {PCI_DEVICE(VEN_AWT_PCI_VENDOR_ID, VEN_AWT_PCIe_DEVICE_ID)},
-        {PCI_DEVICE(EDIMAX_PCI_VENDOR_ID, 0x7708)},
-->>>>>    {PCI_DEVICE(EDIMAX_PCI_VENDOR_ID, 0x7728)},
-        {PCI_DEVICE(EDIMAX_PCI_VENDOR_ID, 0x7758)},
-        {PCI_DEVICE(EDIMAX_PCI_VENDOR_ID, 0x7727)},
-        {PCI_DEVICE(EDIMAX_PCI_VENDOR_ID, 0x7738)},
-        {PCI_DEVICE(EDIMAX_PCI_VENDOR_ID, 0x7748)},
-        {PCI_DEVICE(EDIMAX_PCI_VENDOR_ID, 0x7768)},
-
-regards,
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index b20e3ea..343e565 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -51,7 +51,7 @@ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
+  * These indirect registers work with busy bits,
+  * and we will try maximal REGISTER_BUSY_COUNT times to access
+  * the register while taking a REGISTER_BUSY_DELAY us delay
+- * between each attampt. When the busy bit is still set at that time,
++ * between each attempt. When the busy bit is still set at that time,
+  * the access attempt is considered to have failed,
+  * and we will print an error.
+  */
+@@ -386,7 +386,7 @@ static int rt61pci_config_shared_key(struct rt2x00_dev *rt2x00dev,
+ 		 * The driver does not support the IV/EIV generation
+ 		 * in hardware. However it doesn't support the IV/EIV
+ 		 * inside the ieee80211 frame either, but requires it
+-		 * to be provided seperately for the descriptor.
++		 * to be provided separately for the descriptor.
+ 		 * rt2x00lib will cut the IV/EIV data out of all frames
+ 		 * given to us by mac80211, but we must tell mac80211
+ 		 * to generate the IV/EIV data.
+@@ -397,7 +397,7 @@ static int rt61pci_config_shared_key(struct rt2x00_dev *rt2x00dev,
+ 	/*
+ 	 * SEC_CSR0 contains only single-bit fields to indicate
+ 	 * a particular key is valid. Because using the FIELD32()
+-	 * defines directly will cause a lot of overhead we use
++	 * defines directly will cause a lot of overhead, we use
+ 	 * a calculation to determine the correct bit directly.
+ 	 */
+ 	mask = 1 << key->hw_key_idx;
+@@ -425,11 +425,11 @@ static int rt61pci_config_pairwise_key(struct rt2x00_dev *rt2x00dev,
+ 		/*
+ 		 * rt2x00lib can't determine the correct free
+ 		 * key_idx for pairwise keys. We have 2 registers
+-		 * with key valid bits. The goal is simple, read
+-		 * the first register, if that is full move to
++		 * with key valid bits. The goal is simple: read
++		 * the first register. If that is full, move to
+ 		 * the next register.
+-		 * When both registers are full, we drop the key,
+-		 * otherwise we use the first invalid entry.
++		 * When both registers are full, we drop the key.
++		 * Otherwise, we use the first invalid entry.
+ 		 */
+ 		rt2x00pci_register_read(rt2x00dev, SEC_CSR2, &reg);
+ 		if (reg && reg == ~0) {
+@@ -464,8 +464,8 @@ static int rt61pci_config_pairwise_key(struct rt2x00_dev *rt2x00dev,
+ 					      &addr_entry, sizeof(addr_entry));
+ 
+ 		/*
+-		 * Enable pairwise lookup table for given BSS idx,
+-		 * without this received frames will not be decrypted
++		 * Enable pairwise lookup table for given BSS idx.
++		 * Without this, received frames will not be decrypted
+ 		 * by the hardware.
+ 		 */
+ 		rt2x00pci_register_read(rt2x00dev, SEC_CSR4, &reg);
+@@ -487,7 +487,7 @@ static int rt61pci_config_pairwise_key(struct rt2x00_dev *rt2x00dev,
+ 	/*
+ 	 * SEC_CSR2 and SEC_CSR3 contain only single-bit fields to indicate
+ 	 * a particular key is valid. Because using the FIELD32()
+-	 * defines directly will cause a lot of overhead we use
++	 * defines directly will cause a lot of overhead, we use
+ 	 * a calculation to determine the correct bit directly.
+ 	 */
+ 	if (key->hw_key_idx < 32) {
+@@ -556,7 +556,7 @@ static void rt61pci_config_intf(struct rt2x00_dev *rt2x00dev,
+ 	if (flags & CONFIG_UPDATE_TYPE) {
+ 		/*
+ 		 * Clear current synchronisation setup.
+-		 * For the Beacon base registers we only need to clear
++		 * For the Beacon base registers, we only need to clear
+ 		 * the first byte since that byte contains the VALID and OWNER
+ 		 * bits which (when set to 0) will invalidate the entire beacon.
+ 		 */
+@@ -1168,8 +1168,8 @@ static int rt61pci_check_firmware(struct rt2x00_dev *rt2x00dev,
+ 		return FW_BAD_LENGTH;
+ 
+ 	/*
+-	 * The last 2 bytes in the firmware array are the crc checksum itself,
+-	 * this means that we should never pass those 2 bytes to the crc
++	 * The last 2 bytes in the firmware array are the crc checksum itself.
++	 * This means that we should never pass those 2 bytes to the crc
+ 	 * algorithm.
+ 	 */
+ 	fw_crc = (data[len - 2] << 8 | data[len - 1]);
+@@ -1986,7 +1986,7 @@ static void rt61pci_fill_rxdone(struct queue_entry *entry,
+ 
+ 		/*
+ 		 * Hardware has stripped IV/EIV data from 802.11 frame during
+-		 * decryption. It has provided the data seperately but rt2x00lib
++		 * decryption. It has provided the data separately but rt2x00lib
+ 		 * should decide if it should be reinserted.
+ 		 */
+ 		rxdesc->flags |= RX_FLAG_IV_STRIPPED;
+@@ -2042,7 +2042,7 @@ static void rt61pci_txdone(struct rt2x00_dev *rt2x00dev)
+ 	 * During each loop we will compare the freshly read
+ 	 * STA_CSR4 register value with the value read from
+ 	 * the previous loop. If the 2 values are equal then
+-	 * we should stop processing because the chance it
++	 * we should stop processing because the chance is
+ 	 * quite big that the device has been unplugged and
+ 	 * we risk going into an endless loop.
+ 	 */
+@@ -2330,7 +2330,7 @@ static int rt61pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 		__set_bit(CONFIG_FRAME_TYPE, &rt2x00dev->flags);
+ 
+ 	/*
+-	 * Detect if this device has an hardware controlled radio.
++	 * Detect if this device has a hardware controlled radio.
+ 	 */
+ 	if (rt2x00_get_field16(eeprom, EEPROM_ANTENNA_HARDWARE_RADIO))
+ 		__set_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags);
+@@ -2355,7 +2355,7 @@ static int rt61pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 		__set_bit(CONFIG_EXTERNAL_LNA_BG, &rt2x00dev->flags);
+ 
+ 	/*
+-	 * When working with a RF2529 chip without double antenna
++	 * When working with a RF2529 chip without double antenna,
+ 	 * the antenna settings should be gathered from the NIC
+ 	 * eeprom word.
+ 	 */
+@@ -2668,7 +2668,7 @@ static int rt61pci_conf_tx(struct ieee80211_hw *hw, u16 queue_idx,
+ 
+ 	/*
+ 	 * We only need to perform additional register initialization
+-	 * for WMM queues/
++	 * for WMM queues.
+ 	 */
+ 	if (queue_idx >= 4)
+ 		return 0;
 -- 
-«Allá muevan feroz guerra, ciegos reyes por un palmo más de tierra;
-que yo aquí tengo por mío cuanto abarca el mar bravío, a quien nadie
-impuso leyes. Y no hay playa, sea cualquiera, ni bandera de esplendor,
-que no sienta mi derecho y dé pecho a mi valor.»
+1.6.3.3
+
