@@ -1,146 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:59616 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752995AbZJVSxs (ORCPT
+Received: from mail-fx0-f227.google.com ([209.85.220.227]:47804 "EHLO
+	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756841AbZJOJse (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2009 14:53:48 -0400
-Date: Thu, 22 Oct 2009 20:21:48 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 28/28] mwl8k: add support for the 88w8366
-Message-ID: <20091022182148.GD1583@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 15 Oct 2009 05:48:34 -0400
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: Current status of rt2800usb and staging/rt2870
+Date: Thu, 15 Oct 2009 11:47:29 +0200
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Ozan =?utf-8?q?=C3=87a=C4=9Flayan?= <ozan@pardus.org.tr>,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel" <linux-kernel@vger.kernel.org>
+References: <4AD46380.9020308@pardus.org.tr> <200910142210.25080.bzolnier@gmail.com> <14add3d10910142328xffa8e91re7902aa3bd04b52d@mail.gmail.com>
+In-Reply-To: <14add3d10910142328xffa8e91re7902aa3bd04b52d@mail.gmail.com>
+MIME-Version: 1.0
+Message-Id: <200910151147.29739.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for the 88w8366 firmware receive descriptor format,
-and add the 88w8366 PCI ID.
+On Thursday 15 October 2009 08:28:07 Gertjan van Wingerde wrote:
+> On Wed, Oct 14, 2009 at 10:10 PM, Bartlomiej Zolnierkiewicz
+> <bzolnier@gmail.com> wrote:
+> > On Wednesday 14 October 2009 20:56:17 Ivo van Doorn wrote:
+> >> Hi,
+> >>
+> >> > > On Wed, Oct 14, 2009 at 05:28:21PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> >> > >
+> >> > > > I don't have a have a problem with it personally as long as people accept
+> >> > > > the competition..  but instead of working on _their_ projects they go around
+> >> > > > screaming at everybody who does not want to spin inside the great process
+> >> > > > designed by them..
+> >> > >
+> >> > > Please whine somewhere else.  You have the freedom to work in
+> >> > > drivers/staging all you want.  You do not have the power to force us to
+> >> > > like it -- especially in a case where you are diverting attention from
+> >> > > the community-maintained drivers instead of cooperating with them.
+> >> >
+> >> > Cooperating you say.
+> >> >
+> >> > rtl8187 -- before starting the work on rtl8187se I've pinged the maintainer
+> >> > to coordinate the effort and hear his opinion on how to progress..
+> >> >
+> >> > I've never heard back.
+> >> >
+> >> > rt2x00 -- I know that people have datasheets for some chipsets but I've
+> >> > never heard "How can we help you" etc. thing.
+> >>
+> >> The rt2x00 members received the specsheets under the condition that we didn't
+> >> distribute them further.
+> >>
+> >> So everybody which requested the datasheets from the rt2x00 project were presented
+> >> with a choice:
+> >> 1) We provide the email address of the Ralink contact person which can device if you
+> >> can get the specsheet or not (possibly under NDA, but this isn't always the case).
+> >> 2) Specific questions about the registers can be asked and we give all the information we
+> >> know from our work on the rt2x00 project plus additional information from the specsheet.
+> >> Seeing that the specsheet doesn't always match reality, you get the better answers with
+> >> this option, but some people just hate it when they need to ask other people for stuff.
+> >>
+> >> > All I've ever heard was _lies_ about current state of affairs or that
+> >> > my work is in the way.
+> >>
+> >> I have encounterd your email address in only 2 rt2x00 related discussions
+> >> (yes I have checked my entire email archive). Both cases were regarding
+> >> staging vs rt2x00.
+> >>
+> >> So far I never said rt2800usb or rt2800pci were high quality, I never said they were in a good
+> >> shape. On the other hand, I often talked about the problems with the drivers, requesting help
+> >> to improve the drivers, etc etc.
+> >>
+> >> So are you basing this "I am hearing lies" about a random person talking on the street
+> >> about rt2x00 which is telling the lie?
+> >
+> > Maybe I've used a bit too strong wording but the fact is that vendor drivers
+> > are useful for providing users with *unsupported* and *temporary* solution
+> > until the proper drivers are in place have been questioned a lot in the past,
+> > and sorry but it is a fact (it may be hard to swallow but it shouldn't be
+> > discussed about).
+> >
+> > The staging is a new game in town and provides real benefit for end-users
+> > to use their hardware early while proper solutions are being worked on (not
+> > like most of distributions weren't shipping crap drivers anyway -- now at
+> > least we have some control over it).
+> >
+> > This is extremely important in segments where Linux is still not the leading
+> > OS.  We cannot tell users to go hike -- they are our users! Moreover they
+> > are quite smart so they will use what works best for their needs anyway,
+> > not necessarily what is the easiest for us to maintain in the long-term or
+> > work on.
+> >
+> > Staging also helps companies involved to transform their software offerings
+> > in a more smooth way.  Often such transition requires long process and much
+> > work on the company side to adapt to our model of doing things so patience
+> > is recommended.  (Lets not forget that staging provides also a stick part,
+> > drivers are removed from staging if nobody cares about them and even if
+> > there are volunteers caring about support for certain hardware the company
+> > will still get a bad publicity if it doesn't participate in the process)..
+> >
+> > So staging is here to stay and it is up to particular maintainers how they
+> > are going to it use this "tool" and integrate it into their current mode of
+> > operation..
+> >
+> > I'm sorry if my words were offending to you or other wireless developers.
+> > I kind of feel the frustration of people who had put years of effort into
+> > providing the proper wireless infrastructure + drivers and are ignored
+> > by vendors.  However we have to keep the ball rolling and cannot dismiss
+> > valid user complaints or ignore other possibilities of doing things.
+> >
+> 
+> All,
+> 
+> I don't think this discussion is leading us anywhere.
+> I believe everybody agrees with the "staging"/Ralink provided drivers to be good
+> to provide end-users a working solution until the rt2x00 driver has
+> been completed.
+> 
+> However, the problem that we have seen (from the rt2x00 project point
+> of view) is that
+> the Ralink drivers that are in staging are confusing / distraction
+> developer attention. We
+> have had quite a few occasions where new developers started to work on
+> the staging
+> drivers, as they thought these were "the way to go".
+> 
+> I think that can be easily solved by including in the Ralink staging
+> drivers a README
+> file pointing to the rt2x00 drivers, and a note stating that the
+> rt2x00 drivers are the ones
+> for long-term Linux support, and that the staging drivers are there
+> just to help users making
+> their hardware work.
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   95 +++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 94 insertions(+), 1 deletions(-)
+I think that there is already a note stating something like that.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 8e4631a..40075d4 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -755,7 +755,89 @@ static inline void mwl8k_add_dma_header(struct sk_buff *skb)
- 
- 
- /*
-- * Packet reception.
-+ * Packet reception for 88w8366.
-+ */
-+struct mwl8k_rxd_8366 {
-+	__le16 pkt_len;
-+	__u8 sq2;
-+	__u8 rate;
-+	__le32 pkt_phys_addr;
-+	__le32 next_rxd_phys_addr;
-+	__le16 qos_control;
-+	__le16 htsig2;
-+	__le32 hw_rssi_info;
-+	__le32 hw_noise_floor_info;
-+	__u8 noise_floor;
-+	__u8 pad0[3];
-+	__u8 rssi;
-+	__u8 rx_status;
-+	__u8 channel;
-+	__u8 rx_ctrl;
-+} __attribute__((packed));
-+
-+#define MWL8K_8366_RX_CTRL_OWNED_BY_HOST	0x80
-+
-+static void mwl8k_rxd_8366_init(void *_rxd, dma_addr_t next_dma_addr)
-+{
-+	struct mwl8k_rxd_8366 *rxd = _rxd;
-+
-+	rxd->next_rxd_phys_addr = cpu_to_le32(next_dma_addr);
-+	rxd->rx_ctrl = MWL8K_8366_RX_CTRL_OWNED_BY_HOST;
-+}
-+
-+static void mwl8k_rxd_8366_refill(void *_rxd, dma_addr_t addr, int len)
-+{
-+	struct mwl8k_rxd_8366 *rxd = _rxd;
-+
-+	rxd->pkt_len = cpu_to_le16(len);
-+	rxd->pkt_phys_addr = cpu_to_le32(addr);
-+	wmb();
-+	rxd->rx_ctrl = 0;
-+}
-+
-+static int
-+mwl8k_rxd_8366_process(void *_rxd, struct ieee80211_rx_status *status)
-+{
-+	struct mwl8k_rxd_8366 *rxd = _rxd;
-+
-+	if (!(rxd->rx_ctrl & MWL8K_8366_RX_CTRL_OWNED_BY_HOST))
-+		return -1;
-+	rmb();
-+
-+	memset(status, 0, sizeof(*status));
-+
-+	status->signal = -rxd->rssi;
-+	status->noise = -rxd->noise_floor;
-+
-+	if (rxd->rate & 0x80) {
-+		status->flag |= RX_FLAG_HT;
-+		status->rate_idx = rxd->rate & 0x7f;
-+	} else {
-+		int i;
-+
-+		for (i = 0; i < ARRAY_SIZE(mwl8k_rates); i++) {
-+			if (mwl8k_rates[i].hw_value == rxd->rate) {
-+				status->rate_idx = i;
-+				break;
-+			}
-+		}
-+	}
-+
-+	status->band = IEEE80211_BAND_2GHZ;
-+	status->freq = ieee80211_channel_to_frequency(rxd->channel);
-+
-+	return le16_to_cpu(rxd->pkt_len);
-+}
-+
-+static struct rxd_ops rxd_8366_ops = {
-+	.rxd_size	= sizeof(struct mwl8k_rxd_8366),
-+	.rxd_init	= mwl8k_rxd_8366_init,
-+	.rxd_refill	= mwl8k_rxd_8366_refill,
-+	.rxd_process	= mwl8k_rxd_8366_process,
-+};
-+
-+/*
-+ * Packet reception for 88w8687.
-  */
- struct mwl8k_rxd_8687 {
- 	__le16 pkt_len;
-@@ -3225,6 +3307,14 @@ static void mwl8k_finalize_join_worker(struct work_struct *work)
- 	priv->beacon_skb = NULL;
- }
- 
-+static struct mwl8k_device_info di_8366 = {
-+	.part_name	= "88w8366",
-+	.helper_image	= "mwl8k/helper_8366.fw",
-+	.fw_image	= "mwl8k/fmimage_8366.fw",
-+	.rxd_ops	= &rxd_8366_ops,
-+	.modes		= 0,
-+};
-+
- static struct mwl8k_device_info di_8687 = {
- 	.part_name	= "88w8687",
- 	.helper_image	= "mwl8k/helper_8687.fw",
-@@ -3241,6 +3331,9 @@ static DEFINE_PCI_DEVICE_TABLE(mwl8k_pci_id_table) = {
- 		PCI_VDEVICE(MARVELL, 0x2a30),
- 		.driver_data = (unsigned long)&di_8687,
- 	}, {
-+		PCI_VDEVICE(MARVELL, 0x2a40),
-+		.driver_data = (unsigned long)&di_8366,
-+	}, {
- 	},
- };
- MODULE_DEVICE_TABLE(pci, mwl8k_pci_id_table);
--- 
-1.5.6.4
+However if you think that something needs to be added or changed then
+please just send Greg a patch
