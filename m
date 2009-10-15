@@ -1,100 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:36168 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933762AbZJMJuD (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:38184 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935010AbZJOLmr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 05:50:03 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 17/22] wl1271: Fix event handling mechanism
-Date: Tue, 13 Oct 2009 12:47:54 +0300
-Message-Id: <1255427279-1224-18-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
+	Thu, 15 Oct 2009 07:42:47 -0400
+Date: Thu, 15 Oct 2009 11:40:52 +0000
+From: Jarek Poplawski <jarkao2@gmail.com>
+To: Tilman Schmidt <tilman@imap.cc>
+Cc: David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
+	hidave.darkstar@gmail.com, linux-kernel@vger.kernel.org,
+	tglx@linutronix.de, linux-wireless@vger.kernel.org,
+	linux-ppp@vger.kernel.org, netdev@vger.kernel.org, paulus@samba.org
+Subject: Re: NOHZ: local_softirq_pending 08
+Message-ID: <20091015114052.GA9870@ff.dom.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4AD31213.6020006@imap.cc>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On 12-10-2009 13:25, Tilman Schmidt wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+> 
+> On Mon, 12 Oct 2009 03:32:46 -0700 (PDT), David Miller wrote:
+>> The PPP receive paths in ppp_generic.c do a local_bh_disable()/
+>> local_bh_enable() around packet receiving (via ppp_recv_lock()/
+>> ppp_recv_unlock() in ppp_do_recv).
+>>
+>> So at least that part is perfectly fine.
+>>
+>> ppp_input(), as called from ppp_sync_process(), also disables BH's
+>> around ppp_do_recv() calls (via read_lock_bh()/read_unlock_bh()).
+>>
+>> So that's fine too.
+>>
+>> Do you have a bug report or are you just scanning around looking
+>> for trouble? :-)
+> 
+> I have encountered the message in the subject during a test of
+> the Gigaset CAPI driver, and would like to determine whether
+> it's a bug in the driver, a bug somewhere else, or no bug at
+> all. The test scenario was PPP over ISDN with pppd+capiplugin.
+> In an alternative scenario, also PPP over ISDN but with
+> smpppd+capidrv, the message did not occur.
+> 
+> Johannes' answer pointed me to the netif_rx() function.
+> The Gigaset driver itself doesn't call that function at all.
+> In the scenario where I saw the message, it was the SYNC_PPP
+> line discipline that did. But from your explanation I gather
+> that the cause cannot lie there.
+> 
+> So now I'm looking for other possible causes of that message.
 
-The event handling mechanism could miss events if multiple events would
-occur simultaneously. Fix event handling mechanism to process all
-events.
+Anyway, I agree with Michael Buesch there is no reason to waste time
+for tracking all netif_rx vs netif_rx_ni uses, and it seems we could
+avoid it by using the "proper" version of raise_softirq_irqoff() in
+__napi_schedule(). Could anybody try if I'm not wrong?
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Thanks,
+Jarek P.
 ---
- drivers/net/wireless/wl12xx/wl1271_event.c |    6 ++++--
- drivers/net/wireless/wl12xx/wl1271_event.h |    2 +-
- drivers/net/wireless/wl12xx/wl1271_main.c  |   17 +++++++++--------
- 3 files changed, 14 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_event.c b/drivers/net/wireless/wl12xx/wl1271_event.c
-index e2d7758..a4b11e4 100644
---- a/drivers/net/wireless/wl12xx/wl1271_event.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_event.c
-@@ -126,7 +126,7 @@ void wl1271_event_mbox_config(struct wl1271 *wl)
- 		     wl->mbox_ptr[0], wl->mbox_ptr[1]);
- }
- 
--int wl1271_event_handle(struct wl1271 *wl, u8 mbox_num)
-+int wl1271_event_handle(struct wl1271 *wl, u8 mbox_num, bool do_ack)
- {
- 	struct event_mailbox mbox;
- 	int ret;
-@@ -146,7 +146,9 @@ int wl1271_event_handle(struct wl1271 *wl, u8 mbox_num)
- 		return ret;
- 
- 	/* then we let the firmware know it can go on...*/
--	wl1271_spi_write32(wl, ACX_REG_INTERRUPT_TRIG, INTR_TRIG_EVENT_ACK);
-+	if (do_ack)
-+		wl1271_spi_write32(wl, ACX_REG_INTERRUPT_TRIG,
-+				   INTR_TRIG_EVENT_ACK);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/wl12xx/wl1271_event.h b/drivers/net/wireless/wl12xx/wl1271_event.h
-index 2cdce7c..adc4653 100644
---- a/drivers/net/wireless/wl12xx/wl1271_event.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_event.h
-@@ -105,6 +105,6 @@ struct event_mailbox {
- 
- int wl1271_event_unmask(struct wl1271 *wl);
- void wl1271_event_mbox_config(struct wl1271 *wl);
--int wl1271_event_handle(struct wl1271 *wl, u8 mbox);
-+int wl1271_event_handle(struct wl1271 *wl, u8 mbox, bool do_ack);
- 
- #endif
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 19dbdb1..d6d1a4c 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -437,14 +437,15 @@ static void wl1271_irq_work(struct work_struct *work)
- 
- 	intr &= WL1271_INTR_MASK;
- 
--	if (intr & (WL1271_ACX_INTR_EVENT_A |
--		    WL1271_ACX_INTR_EVENT_B)) {
--		wl1271_debug(DEBUG_IRQ,
--			     "WL1271_ACX_INTR_EVENT (0x%x)", intr);
--		if (intr & WL1271_ACX_INTR_EVENT_A)
--			wl1271_event_handle(wl, 0);
--		else
--			wl1271_event_handle(wl, 1);
-+	if (intr & WL1271_ACX_INTR_EVENT_A) {
-+		bool do_ack = (intr & WL1271_ACX_INTR_EVENT_B) ? false : true;
-+		wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_EVENT_A");
-+		wl1271_event_handle(wl, 0, do_ack);
-+	}
-+
-+	if (intr & WL1271_ACX_INTR_EVENT_B) {
-+		wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_EVENT_B");
-+		wl1271_event_handle(wl, 1, true);
- 	}
- 
- 	if (intr & WL1271_ACX_INTR_INIT_COMPLETE)
--- 
-1.5.6.5
+ net/core/dev.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 28b0b9e..7fc4009 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -2728,7 +2728,7 @@ void __napi_schedule(struct napi_struct *n)
+ 
+ 	local_irq_save(flags);
+ 	list_add_tail(&n->poll_list, &__get_cpu_var(softnet_data).poll_list);
+-	__raise_softirq_irqoff(NET_RX_SOFTIRQ);
++	raise_softirq_irqoff(NET_RX_SOFTIRQ);
+ 	local_irq_restore(flags);
+ }
+ EXPORT_SYMBOL(__napi_schedule);
