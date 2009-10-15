@@ -1,72 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:33160 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1758120AbZJHNTX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 09:19:23 -0400
-Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
- CPU"
-From: Mike Galbraith <efault@gmx.de>
-To: Frans Pop <elendil@planet.nl>
-Cc: Arjan van de Ven <arjan@infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	Peter Zijlstra <peterz@infradead.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200910081509.05394.elendil@planet.nl>
-References: <200910051500.55875.elendil@planet.nl>
-	 <200910072034.57511.elendil@planet.nl>
-	 <1255001062.7500.1.camel@marge.simson.net>
-	 <200910081509.05394.elendil@planet.nl>
-Content-Type: text/plain
-Date: Thu, 08 Oct 2009 15:18:33 +0200
-Message-Id: <1255007913.8381.23.camel@marge.simson.net>
-Mime-Version: 1.0
+Received: from qw-out-2122.google.com ([74.125.92.27]:53606 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753371AbZJOF5X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Oct 2009 01:57:23 -0400
+Received: by qw-out-2122.google.com with SMTP id 9so177429qwb.37
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2009 22:56:16 -0700 (PDT)
+From: Kunal Gangakhedkar <kunal.gangakhedkar@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: Stable compat-wireless 2.6.32-rc4 released
+Date: Thu, 15 Oct 2009 11:26:04 +0530
+Cc: tim.gardner@canonical.com,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <43e72e890910131542k376a87c5rc30feb6491a06867@mail.gmail.com> <200910141131.47500.kunal.gangakhedkar@gmail.com> <43e72e890910140734j196a06f2y8905d3eb1ba1abc8@mail.gmail.com>
+In-Reply-To: <43e72e890910140734j196a06f2y8905d3eb1ba1abc8@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200910151126.04423.kunal.gangakhedkar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-10-08 at 15:09 +0200, Frans Pop wrote:
-> On Thursday 08 October 2009, Mike Galbraith wrote:
-> > Care to try a patch?
+On Wednesday 14 Oct 2009 8:04:32 pm Luis R. Rodriguez wrote:
+> On Tue, Oct 13, 2009 at 11:01 PM, Kunal Gangakhedkar
+>
+> <kunal.gangakhedkar@gmail.com> wrote:
+> > On Wednesday 14 Oct 2009 6:20:33 am Luis R. Rodriguez wrote:
+> >> On Tue, Oct 13, 2009 at 5:25 PM, Tim Gardner <tim.gardner@canonical.com>
 > >
-> > latencytop: only account on-runqueue wait time as being scheduler
-> > latency.
+> > wrote:
+> >> > Speaking as a distro, what advantage does the stable wireless backport
+> >> > offer for the currently released kernel if we are already consumers of
+> >> > stable updates?
+> >>
+> >> Well if you are a distro stuck on the 2.6.31 kernel the stable
+> >> compat-wireless-2.6.32 gets you 2.6.32 wireless bits on 2.6.31 and
+> >> that means any features/drivers/large fixes/enhancements that didn't
+> >> make it to 2.6.31.
 > >
-> > Latencytop was accounting uninterruptible and interruptible sleep time
-> > up to 5ms, which is not the latency the user is looking for.  Account
-> > time waiting on-runqueue instead.  Also add a clock update to
-> > update_curr() for the case where there's nobody home.  When coming out
-> > of idle with NO_HZ, not updating the clock leads to bogus max latency
-> > report.
-> 
-> With this patch the high values for iwlagn and phy0 are gone. The values 
-> now match roughly with the output of your script.
-> 
-> If (un)interruptible sleep is worth displaying in latencytop then maybe it 
-> should be identified as a separate cause instead of lumped under "waiting 
-> for CPU"?
+> > Isn't this the whole purpose of linux-backports-modules in ubuntu as
+> > well?
+>
+> Yes, but lbm currently relies on the bleeding edge compat-wireless
+> which is exactly that -- bleeding edge, it may or may not work. The
+> stable compat-wireless releases are based on the latest stable kernel
+> releases and latest rc kernel release so they are deemed to be stable
+> snapshots following the kernel release cycle.
+>
+>   Luis
 
-That's what I was just thing about trying, add a cause sleep.
+Got that - thanks for the explanation :)
 
-> > TODO: Figure out where the heck empty braces come from.
-> 
-> I also see these lines with "[]" sometimes; looks to come from 'sleep'.
-> 
-> And I still see lines with only a "." as the cause; this seems specific to 
-> targets marked with the penguin (work queues?).
-> 
-> > Signed-off-by: Mike Galbraith <efault@gmx.de>
-> > Arjan van de Ven <arjan@infradead.org>
-> > Cc: Ingo Molnar <mingo@elte.hu>
-> > Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
-> > LKML-Reference: <new-submission>
-> 
-> If Arjan is happy with the patch, please add my:
-
-Probably just a diagnostic, but...
-
-> Reported-and-tested-by: Frans Pop <elendil@planet.nl>
-
-Saved.
-
-	-Mike
-
+Kunal
