@@ -1,155 +1,291 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54690 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754009AbZJSGdm (ORCPT
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:48340 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754762AbZJOUFE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2009 02:33:42 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFT 06/15] ath9k_hw: simplify rf attach and rename to ath9k_hw_rf_alloc_ext_banks()
-Date: Mon, 19 Oct 2009 02:33:37 -0400
-Message-Id: <1255934026-20686-7-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1255934026-20686-1-git-send-email-lrodriguez@atheros.com>
-References: <1255934026-20686-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 15 Oct 2009 16:05:04 -0400
+Received: by ewy4 with SMTP id 4so930151ewy.37
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2009 13:04:27 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 1/2] rt2x00: Add rt2x00soc bus module
+Date: Thu, 15 Oct 2009 21:38:19 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+Message-Id: <200910152138.19777.IvDoorn@gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k_hw_rfattach() was just calling a helper and this helper was
-doing nothing for single-chip devices, and for non single-chip devices
-it is just allocating memory for banks to program the RF registers
-at a later time. Simplify this by having the hw initialization call
-the rf bank allocation directly for external radios.
+Add new library module for SoC drivers.
+This is needed to fully support the platform
+driver part of rt2800pci.
 
-Also, propagate an -ENOMEM properly now upon failure.
+Based on original patch from Felix.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c  |   27 +++++++++------------------
- drivers/net/wireless/ath/ath9k/phy.c |   19 +++++++------------
- drivers/net/wireless/ath/ath9k/phy.h |    3 +--
- 3 files changed, 17 insertions(+), 32 deletions(-)
+ drivers/net/wireless/rt2x00/Kconfig     |    4 +
+ drivers/net/wireless/rt2x00/Makefile    |    1 +
+ drivers/net/wireless/rt2x00/rt2x00soc.c |  159 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2x00soc.h |   52 ++++++++++
+ 4 files changed, 216 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/rt2x00/rt2x00soc.c
+ create mode 100644 drivers/net/wireless/rt2x00/rt2x00soc.h
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index f67d3a4..694629b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -454,21 +454,6 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
- 	ah->power_mode = ATH9K_PM_UNDEFINED;
- }
+diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+index ed1f997..e86895a 100644
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -95,6 +95,10 @@ config RT2X00_LIB_PCI
+ 	tristate
+ 	select RT2X00_LIB
  
--static int ath9k_hw_rfattach(struct ath_hw *ah)
--{
--	bool rfStatus = false;
--	int ecode = 0;
--
--	rfStatus = ath9k_hw_init_rf(ah, &ecode);
--	if (!rfStatus) {
--		ath_print(ath9k_hw_common(ah), ATH_DBG_FATAL,
--			  "RF setup failed, status: %u\n", ecode);
--		return ecode;
--	}
--
--	return 0;
--}
--
- static int ath9k_hw_rf_claim(struct ath_hw *ah)
- {
- 	u32 val;
-@@ -585,9 +570,15 @@ static int ath9k_hw_post_init(struct ath_hw *ah)
- 		  ah->eep_ops->get_eeprom_ver(ah),
- 		  ah->eep_ops->get_eeprom_rev(ah));
++config RT2X00_LIB_SOC
++	tristate
++	select RT2X00_LIB
++
+ config RT2X00_LIB_USB
+ 	tristate
+ 	select RT2X00_LIB
+diff --git a/drivers/net/wireless/rt2x00/Makefile b/drivers/net/wireless/rt2x00/Makefile
+index 13043ea..5b1ee4f 100644
+--- a/drivers/net/wireless/rt2x00/Makefile
++++ b/drivers/net/wireless/rt2x00/Makefile
+@@ -11,6 +11,7 @@ rt2x00lib-$(CONFIG_RT2X00_LIB_HT)	+= rt2x00ht.o
  
--	ecode = ath9k_hw_rfattach(ah);
--	if (ecode != 0)
--		return ecode;
-+        if (!AR_SREV_9280_10_OR_LATER(ah)) {
-+		ecode = ath9k_hw_rf_alloc_ext_banks(ah);
-+		if (ecode) {
-+			ath_print(ath9k_hw_common(ah), ATH_DBG_FATAL,
-+				  "Failed allocating banks for "
-+				  "external radio\n");
-+			return ecode;
-+		}
-+	}
- 
- 	if (!AR_SREV_9100(ah)) {
- 		ath9k_hw_ani_setup(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/phy.c b/drivers/net/wireless/ath/ath9k/phy.c
-index bd4fb07..f3136b2 100644
---- a/drivers/net/wireless/ath/ath9k/phy.c
-+++ b/drivers/net/wireless/ath/ath9k/phy.c
-@@ -409,18 +409,16 @@ ath9k_hw_rf_free(struct ath_hw *ah)
- }
- 
- /**
-- * ath9k_hw_init_rf - initialize external radio structures
-+ * ath9k_hw_rf_alloc_ext_banks - allocates banks for external radio programming
-  * @ah: atheros hardware structure
-- * @status:
-  *
-  * Only required for older devices with external AR2133/AR5133 radios.
-  */
--bool ath9k_hw_init_rf(struct ath_hw *ah, int *status)
-+int ath9k_hw_rf_alloc_ext_banks(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
--	if (AR_SREV_9280_10_OR_LATER(ah))
--		return true;
-+	BUG_ON(AR_SREV_9280_10_OR_LATER(ah));
- 
- 	ah->analogBank0Data =
- 	    kzalloc((sizeof(u32) *
-@@ -453,8 +451,7 @@ bool ath9k_hw_init_rf(struct ath_hw *ah, int *status)
- 	    || ah->analogBank7Data == NULL) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Cannot allocate RF banks\n");
--		*status = -ENOMEM;
--		return false;
-+		return -ENOMEM;
- 	}
- 
- 	ah->addac5416_21 =
-@@ -464,8 +461,7 @@ bool ath9k_hw_init_rf(struct ath_hw *ah, int *status)
- 	if (ah->addac5416_21 == NULL) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Cannot allocate addac5416_21\n");
--		*status = -ENOMEM;
--		return false;
-+		return -ENOMEM;
- 	}
- 
- 	ah->bank6Temp =
-@@ -474,11 +470,10 @@ bool ath9k_hw_init_rf(struct ath_hw *ah, int *status)
- 	if (ah->bank6Temp == NULL) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Cannot allocate bank6Temp\n");
--		*status = -ENOMEM;
--		return false;
-+		return -ENOMEM;
- 	}
- 
--	return true;
+ obj-$(CONFIG_RT2X00_LIB)		+= rt2x00lib.o
+ obj-$(CONFIG_RT2X00_LIB_PCI)		+= rt2x00pci.o
++obj-$(CONFIG_RT2X00_LIB_SOC)		+= rt2x00soc.o
+ obj-$(CONFIG_RT2X00_LIB_USB)		+= rt2x00usb.o
+ obj-$(CONFIG_RT2400PCI)			+= rt2400pci.o
+ obj-$(CONFIG_RT2500PCI)			+= rt2500pci.o
+diff --git a/drivers/net/wireless/rt2x00/rt2x00soc.c b/drivers/net/wireless/rt2x00/rt2x00soc.c
+new file mode 100644
+index 0000000..539568c
+--- /dev/null
++++ b/drivers/net/wireless/rt2x00/rt2x00soc.c
+@@ -0,0 +1,159 @@
++/*
++	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
++	<http://rt2x00.serialmonkey.com>
++
++	This program is free software; you can redistribute it and/or modify
++	it under the terms of the GNU General Public License as published by
++	the Free Software Foundation; either version 2 of the License, or
++	(at your option) any later version.
++
++	This program is distributed in the hope that it will be useful,
++	but WITHOUT ANY WARRANTY; without even the implied warranty of
++	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++	GNU General Public License for more details.
++
++	You should have received a copy of the GNU General Public License
++	along with this program; if not, write to the
++	Free Software Foundation, Inc.,
++	59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++/*
++	Module: rt2x00soc
++	Abstract: rt2x00 generic soc device routines.
++ */
++
++#include <linux/bug.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/platform_device.h>
++
++#include "rt2x00.h"
++#include "rt2x00soc.h"
++
++static void rt2x00soc_free_reg(struct rt2x00_dev *rt2x00dev)
++{
++	kfree(rt2x00dev->rf);
++	rt2x00dev->rf = NULL;
++
++	kfree(rt2x00dev->eeprom);
++	rt2x00dev->eeprom = NULL;
++}
++
++static int rt2x00soc_alloc_reg(struct rt2x00_dev *rt2x00dev)
++{
++	struct platform_device *pdev = to_platform_device(rt2x00dev->dev);
++	struct resource *res;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!res)
++		return -ENODEV;
++
++	rt2x00dev->csr.base = (void __iomem *)KSEG1ADDR(res->start);
++	if (!rt2x00dev->csr.base)
++		goto exit;
++
++	rt2x00dev->eeprom = kzalloc(rt2x00dev->ops->eeprom_size, GFP_KERNEL);
++	if (!rt2x00dev->eeprom)
++		goto exit;
++
++	rt2x00dev->rf = kzalloc(rt2x00dev->ops->rf_size, GFP_KERNEL);
++	if (!rt2x00dev->rf)
++		goto exit;
++
 +	return 0;
- }
- 
- /**
-diff --git a/drivers/net/wireless/ath/ath9k/phy.h b/drivers/net/wireless/ath/ath9k/phy.h
-index 140fef7..fa1dce4 100644
---- a/drivers/net/wireless/ath/ath9k/phy.h
-+++ b/drivers/net/wireless/ath/ath9k/phy.h
-@@ -29,8 +29,7 @@ bool ath9k_hw_set_rf_regs(struct ath_hw *ah,
- 			  u16 modesIndex);
- void ath9k_hw_decrease_chain_power(struct ath_hw *ah,
- 				   struct ath9k_channel *chan);
--bool ath9k_hw_init_rf(struct ath_hw *ah,
--		      int *status);
-+int ath9k_hw_rf_alloc_ext_banks(struct ath_hw *ah);
- 
- #define AR_PHY_BASE     0x9800
- #define AR_PHY(_n)      (AR_PHY_BASE + ((_n)<<2))
++
++exit:
++	ERROR_PROBE("Failed to allocate registers.\n");
++	rt2x00soc_free_reg(rt2x00dev);
++
++	return -ENOMEM;
++}
++
++int rt2x00soc_probe(struct platform_device *pdev,
++		    const unsigned short chipset,
++		    const struct rt2x00_ops *ops)
++{
++	struct ieee80211_hw *hw;
++	struct rt2x00_dev *rt2x00dev;
++	int retval;
++
++	hw = ieee80211_alloc_hw(sizeof(struct rt2x00_dev), ops->hw);
++	if (!hw) {
++		ERROR_PROBE("Failed to allocate hardware.\n");
++		return -ENOMEM;
++	}
++
++	platform_set_drvdata(pdev, hw);
++
++	rt2x00dev = hw->priv;
++	rt2x00dev->dev = &pdev->dev;
++	rt2x00dev->ops = ops;
++	rt2x00dev->hw = hw;
++	rt2x00dev->irq = platform_get_irq(pdev, 0);
++	rt2x00dev->name = pdev->dev.driver->name;
++
++	rt2x00_set_chip_rt(rt2x00dev, chipset);
++
++	retval = rt2x00soc_alloc_reg(rt2x00dev);
++	if (retval)
++		goto exit_free_device;
++
++	retval = rt2x00lib_probe_dev(rt2x00dev);
++	if (retval)
++		goto exit_free_reg;
++
++	return 0;
++
++exit_free_reg:
++	rt2x00soc_free_reg(rt2x00dev);
++
++exit_free_device:
++	ieee80211_free_hw(hw);
++
++	return retval;
++}
++
++int rt2x00soc_remove(struct platform_device *pdev)
++{
++	struct ieee80211_hw *hw = platform_get_drvdata(pdev);
++	struct rt2x00_dev *rt2x00dev = hw->priv;
++
++	/*
++	 * Free all allocated data.
++	 */
++	rt2x00lib_remove_dev(rt2x00dev);
++	rt2x00soc_free_reg(rt2x00dev);
++	ieee80211_free_hw(hw);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(rt2x00soc_remove);
++
++#ifdef CONFIG_PM
++int rt2x00soc_suspend(struct platform_device *pdev, pm_message_t state)
++{
++	struct ieee80211_hw *hw = platform_get_drvdata(pdev);
++	struct rt2x00_dev *rt2x00dev = hw->priv;
++
++	return rt2x00lib_suspend(rt2x00dev, state);
++}
++EXPORT_SYMBOL_GPL(rt2x00soc_suspend);
++
++int rt2x00soc_resume(struct platform_device *pdev)
++{
++	struct ieee80211_hw *hw = platform_get_drvdata(pdev);
++	struct rt2x00_dev *rt2x00dev = hw->priv;
++
++	return rt2x00lib_resume(rt2x00dev);
++}
++EXPORT_SYMBOL_GPL(rt2x00soc_resume);
++#endif /* CONFIG_PM */
++
++/*
++ * rt2x00soc module information.
++ */
++MODULE_AUTHOR(DRV_PROJECT);
++MODULE_VERSION(DRV_VERSION);
++MODULE_DESCRIPTION("rt2x00 soc library");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/net/wireless/rt2x00/rt2x00soc.h b/drivers/net/wireless/rt2x00/rt2x00soc.h
+new file mode 100644
+index 0000000..5cf114a
+--- /dev/null
++++ b/drivers/net/wireless/rt2x00/rt2x00soc.h
+@@ -0,0 +1,52 @@
++/*
++	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
++	<http://rt2x00.serialmonkey.com>
++
++	This program is free software; you can redistribute it and/or modify
++	it under the terms of the GNU General Public License as published by
++	the Free Software Foundation; either version 2 of the License, or
++	(at your option) any later version.
++
++	This program is distributed in the hope that it will be useful,
++	but WITHOUT ANY WARRANTY; without even the implied warranty of
++	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++	GNU General Public License for more details.
++
++	You should have received a copy of the GNU General Public License
++	along with this program; if not, write to the
++	Free Software Foundation, Inc.,
++	59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++/*
++	Module: rt2x00soc
++	Abstract: Data structures for the rt2x00soc module.
++ */
++
++#ifndef RT2X00SOC_H
++#define RT2X00SOC_H
++
++#define KSEG1ADDR(__ptr) __ptr
++
++#define __rt2x00soc_probe(__chipset, __ops) \
++static int __rt2x00soc_probe(struct platform_device *pdev) \
++{ \
++	return rt2x00soc_probe(pdev, (__chipset), (__ops)); \
++}
++
++/*
++ * SoC driver handlers.
++ */
++int rt2x00soc_probe(struct platform_device *pdev,
++		    const unsigned short chipset,
++		    const struct rt2x00_ops *ops);
++int rt2x00soc_remove(struct platform_device *pdev);
++#ifdef CONFIG_PM
++int rt2x00soc_suspend(struct platform_device *pdev, pm_message_t state);
++int rt2x00soc_resume(struct platform_device *pdev);
++#else
++#define rt2x00soc_suspend	NULL
++#define rt2x00soc_resume	NULL
++#endif /* CONFIG_PM */
++
++#endif /* RT2X00SOC_H */
 -- 
-1.6.0.4
+1.6.4.1
 
