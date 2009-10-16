@@ -1,269 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15170 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752331AbZJ1RNi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2009 13:13:38 -0400
-Subject: Re: [PATCH] libertas: remove internal buffers from GSPI driver
-From: Dan Williams <dcbw@redhat.com>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	sebatian@breakpoint.cc
-In-Reply-To: <1256687501-8636-1-git-send-email-andrey@cozybit.com>
-References: <1256687501-8636-1-git-send-email-andrey@cozybit.com>
-Content-Type: text/plain
-Date: Wed, 28 Oct 2009 10:13:18 -0700
-Message-Id: <1256749998.3850.45.camel@localhost.localdomain>
+Received: from xc.sipsolutions.net ([83.246.72.84]:58350 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758574AbZJPLjC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 07:39:02 -0400
+Subject: Re: cfg80211 / libertas: an unusual race
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200910131055.31739.hs4233@mail.mn-solutions.de>
+References: <200910131055.31739.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-NFsjgung3wR1xz1M/Hb0"
+Date: Fri, 16 Oct 2009 18:57:10 +0900
+Message-Id: <1255687030.4095.327.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-10-27 at 16:51 -0700, Andrey Yurovsky wrote:
-> This patch removes the internal command and data buffers that the GSPI driver
-> maintained and instead relies on the Libertas core to synchronize access
-> to the command and data ports as with the other interface drivers.  This
-> cleanup reduces the GSPI driver's memory footprint and should improve
-> performance by removing the need to copy to these internal buffers.
-> This also simplifies the bottom half of the interrupt handler.
-> 
-> This is an incremental cleanup: after removing the redundant buffers, we
-> can further improve the driver to use a threaded IRQ handler instead of
-> maintaining its own thread.  However I would like a few folks to test
-> the buffer removal first and make sure that I'm not introducing
-> regressions.
-> 
-> Tested on Blackfin BF527 with DMA disabled due to an issue with the SPI
-> host controller driver in the current bleeding-edge Blackfin kernel.  I
-> would appreciate it if someone with working DMA could test this patch
-> and provide feedback.
-> 
-> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
 
-Looks OK to me, but I don't have any of the SPI hardware so when you get
-a Tested-by:, let me know and I'll ack.
+--=-NFsjgung3wR1xz1M/Hb0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Dan
+On Tue, 2009-10-13 at 10:55 +0200, Holger Schurig wrote:
 
-> ---
->  drivers/net/wireless/libertas/if_spi.c |  136 ++------------------------------
->  1 files changed, 6 insertions(+), 130 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
-> index 06df2e1..9e0096d 100644
-> --- a/drivers/net/wireless/libertas/if_spi.c
-> +++ b/drivers/net/wireless/libertas/if_spi.c
-> @@ -32,12 +32,6 @@
->  #include "dev.h"
->  #include "if_spi.h"
->  
-> -struct if_spi_packet {
-> -	struct list_head		list;
-> -	u16				blen;
-> -	u8				buffer[0] __attribute__((aligned(4)));
-> -};
-> -
->  struct if_spi_card {
->  	struct spi_device		*spi;
->  	struct lbs_private		*priv;
-> @@ -66,33 +60,10 @@ struct if_spi_card {
->  	struct semaphore		spi_thread_terminated;
->  
->  	u8				cmd_buffer[IF_SPI_CMD_BUF_SIZE];
-> -
-> -	/* A buffer of incoming packets from libertas core.
-> -	 * Since we can't sleep in hw_host_to_card, we have to buffer
-> -	 * them. */
-> -	struct list_head		cmd_packet_list;
-> -	struct list_head		data_packet_list;
-> -
-> -	/* Protects cmd_packet_list and data_packet_list */
-> -	spinlock_t			buffer_lock;
->  };
->  
->  static void free_if_spi_card(struct if_spi_card *card)
->  {
-> -	struct list_head *cursor, *next;
-> -	struct if_spi_packet *packet;
-> -
-> -	BUG_ON(card->run_thread);
-> -	list_for_each_safe(cursor, next, &card->cmd_packet_list) {
-> -		packet = container_of(cursor, struct if_spi_packet, list);
-> -		list_del(&packet->list);
-> -		kfree(packet);
-> -	}
-> -	list_for_each_safe(cursor, next, &card->data_packet_list) {
-> -		packet = container_of(cursor, struct if_spi_packet, list);
-> -		list_del(&packet->list);
-> -		kfree(packet);
-> -	}
->  	spi_set_drvdata(card->spi, NULL);
->  	kfree(card);
->  }
-> @@ -774,40 +745,6 @@ out:
->  	return err;
->  }
->  
-> -/* Move data or a command from the host to the card. */
-> -static void if_spi_h2c(struct if_spi_card *card,
-> -			struct if_spi_packet *packet, int type)
-> -{
-> -	int err = 0;
-> -	u16 int_type, port_reg;
-> -
-> -	switch (type) {
-> -	case MVMS_DAT:
-> -		int_type = IF_SPI_CIC_TX_DOWNLOAD_OVER;
-> -		port_reg = IF_SPI_DATA_RDWRPORT_REG;
-> -		break;
-> -	case MVMS_CMD:
-> -		int_type = IF_SPI_CIC_CMD_DOWNLOAD_OVER;
-> -		port_reg = IF_SPI_CMD_RDWRPORT_REG;
-> -		break;
-> -	default:
-> -		lbs_pr_err("can't transfer buffer of type %d\n", type);
-> -		err = -EINVAL;
-> -		goto out;
-> -	}
-> -
-> -	/* Write the data to the card */
-> -	err = spu_write(card, port_reg, packet->buffer, packet->blen);
-> -	if (err)
-> -		goto out;
-> -
-> -out:
-> -	kfree(packet);
-> -
-> -	if (err)
-> -		lbs_pr_err("%s: error %d\n", __func__, err);
-> -}
-> -
->  /* Inform the host about a card event */
->  static void if_spi_e2h(struct if_spi_card *card)
->  {
-> @@ -837,8 +774,6 @@ static int lbs_spi_thread(void *data)
->  	int err;
->  	struct if_spi_card *card = data;
->  	u16 hiStatus;
-> -	unsigned long flags;
-> -	struct if_spi_packet *packet;
->  
->  	while (1) {
->  		/* Wait to be woken up by one of two things.  First, our ISR
-> @@ -877,43 +812,9 @@ static int lbs_spi_thread(void *data)
->  		if (hiStatus & IF_SPI_HIST_CMD_DOWNLOAD_RDY ||
->  		   (card->priv->psstate != PS_STATE_FULL_POWER &&
->  		    (hiStatus & IF_SPI_HIST_TX_DOWNLOAD_RDY))) {
-> -			/* This means two things. First of all,
-> -			 * if there was a previous command sent, the card has
-> -			 * successfully received it.
-> -			 * Secondly, it is now ready to download another
-> -			 * command.
-> -			 */
->  			lbs_host_to_card_done(card->priv);
-> -
-> -			/* Do we have any command packets from the host to
-> -			 * send? */
-> -			packet = NULL;
-> -			spin_lock_irqsave(&card->buffer_lock, flags);
-> -			if (!list_empty(&card->cmd_packet_list)) {
-> -				packet = (struct if_spi_packet *)(card->
-> -						cmd_packet_list.next);
-> -				list_del(&packet->list);
-> -			}
-> -			spin_unlock_irqrestore(&card->buffer_lock, flags);
-> -
-> -			if (packet)
-> -				if_spi_h2c(card, packet, MVMS_CMD);
->  		}
-> -		if (hiStatus & IF_SPI_HIST_TX_DOWNLOAD_RDY) {
-> -			/* Do we have any data packets from the host to
-> -			 * send? */
-> -			packet = NULL;
-> -			spin_lock_irqsave(&card->buffer_lock, flags);
-> -			if (!list_empty(&card->data_packet_list)) {
-> -				packet = (struct if_spi_packet *)(card->
-> -						data_packet_list.next);
-> -				list_del(&packet->list);
-> -			}
-> -			spin_unlock_irqrestore(&card->buffer_lock, flags);
->  
-> -			if (packet)
-> -				if_spi_h2c(card, packet, MVMS_DAT);
-> -		}
->  		if (hiStatus & IF_SPI_HIST_CARD_EVENT)
->  			if_spi_e2h(card);
->  
-> @@ -942,40 +843,18 @@ static int if_spi_host_to_card(struct lbs_private *priv,
->  				u8 type, u8 *buf, u16 nb)
->  {
->  	int err = 0;
-> -	unsigned long flags;
->  	struct if_spi_card *card = priv->card;
-> -	struct if_spi_packet *packet;
-> -	u16 blen;
->  
->  	lbs_deb_enter_args(LBS_DEB_SPI, "type %d, bytes %d", type, nb);
->  
-> -	if (nb == 0) {
-> -		lbs_pr_err("%s: invalid size requested: %d\n", __func__, nb);
-> -		err = -EINVAL;
-> -		goto out;
-> -	}
-> -	blen = ALIGN(nb, 4);
-> -	packet = kzalloc(sizeof(struct if_spi_packet) + blen, GFP_ATOMIC);
-> -	if (!packet) {
-> -		err = -ENOMEM;
-> -		goto out;
-> -	}
-> -	packet->blen = blen;
-> -	memcpy(packet->buffer, buf, nb);
-> -	memset(packet->buffer + nb, 0, blen - nb);
-> +	nb = ALIGN(nb, 4);
->  
->  	switch (type) {
->  	case MVMS_CMD:
-> -		priv->dnld_sent = DNLD_CMD_SENT;
-> -		spin_lock_irqsave(&card->buffer_lock, flags);
-> -		list_add_tail(&packet->list, &card->cmd_packet_list);
-> -		spin_unlock_irqrestore(&card->buffer_lock, flags);
-> +		err = spu_write(card, IF_SPI_CMD_RDWRPORT_REG, buf, nb);
->  		break;
->  	case MVMS_DAT:
-> -		priv->dnld_sent = DNLD_DATA_SENT;
-> -		spin_lock_irqsave(&card->buffer_lock, flags);
-> -		list_add_tail(&packet->list, &card->data_packet_list);
-> -		spin_unlock_irqrestore(&card->buffer_lock, flags);
-> +		err = spu_write(card, IF_SPI_DATA_RDWRPORT_REG, buf, nb);
->  		break;
->  	default:
->  		lbs_pr_err("can't transfer buffer of type %d", type);
-> @@ -983,9 +862,6 @@ static int if_spi_host_to_card(struct lbs_private *priv,
->  		break;
->  	}
->  
-> -	/* Wake up the spi thread */
-> -	up(&card->spi_ready);
-> -out:
->  	lbs_deb_leave_args(LBS_DEB_SPI, "err=%d", err);
->  	return err;
->  }
-> @@ -1062,9 +938,6 @@ static int __devinit if_spi_probe(struct spi_device *spi)
->  
->  	sema_init(&card->spi_ready, 0);
->  	sema_init(&card->spi_thread_terminated, 0);
-> -	INIT_LIST_HEAD(&card->cmd_packet_list);
-> -	INIT_LIST_HEAD(&card->data_packet_list);
-> -	spin_lock_init(&card->buffer_lock);
->  
->  	/* Initialize the SPI Interface Unit */
->  	err = spu_init(card, pdata->use_dummy_writes);
-> @@ -1141,6 +1014,9 @@ static int __devinit if_spi_probe(struct spi_device *spi)
->  		goto terminate_thread;
->  	}
->  
-> +	/* poke the IRQ handler so that we don't miss the first interrupt */
-> +	up(&card->spi_ready);
-> +
->  	/* Start the card.
->  	 * This will call register_netdev, and we'll start
->  	 * getting interrupts... */
+> But at step "3. b)", which now happens at a later time,
+> wdev_current_bss is no longer set. This triggers a
+> WARN_ON(!done) warning in __cfg80211_send_deauth(),
+> file net/wireless/mlme.c
+>=20
+
+> Would it be O.K. to simply remove the WARN_ON(!done) ?
+> After all, wdev>current_bss was put'ted and cleared correctly.
+
+I don't see this happening that way -- how are you even getting to
+__cfg80211_disconnected() if not through _send_deauth()?
+
+johannes
+
+
+--=-NFsjgung3wR1xz1M/Hb0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK2ENyAAoJEODzc/N7+QmamW8P/iXFBTFncEB0fRDnkDp9r92c
+HFZKKAklNavEW1cIw4W2NK9PSo3cPLqi+4/e0lrjuspdhTNS9Aolrovc09z8AV/1
+e4wuYXQRdseOhAlsCMuR0egMwXa5sNYOdlWQXhRggwX3GF4ZMc83hD9LCGeI0UA2
+4PbPpqFd91j7ShBGxLVVCdTmZJcuda2Q4XiomxiE1d/Ty2j14LSUxFCmG9QahnXk
+P0S6ATiobEml73CoFc3u2XfKtVuXfrcAbkv3i4Chx5iUuoLSmeYCyHWQZ+j5Qe4j
+YU05+F00Xu2IqELQfkjjqnYuaaU1PKBqouXE2KC3bvif8/4yDCJmv5GAh2cKOnXB
+vj5v4r3rfRAsAt+OsS/vbYb6WMO0jy2DCDt5z0Q98dVg9yG/KTVb14bOfFuifUyF
+Ws01WzdEfWD7wUn7TxAtIzN0lFFsl5JSP04jN3UeHzSEjB9vQ9h0FYXHtaf2XgS2
+eeZtzpb5RFXXrahuJncQL7bGAjDCCuE7LVY+1BUFLVdNNyVwXir5Piqzi0nuwrz8
+Rm6hnTlh+gWeiSjen7438sUVZoE0JT0HFuCIoLcB92pQbjI5i22HQqJ0WYMu7ISw
+XhV51oNpLMQsPgOZXM+7lOOzhLD5wMYjasRJ0ZlpoK2FhNl0HXbB/UwTu4tC6FaR
+UxPVca4uFh7Hzl0XOkhf
+=P5lF
+-----END PGP SIGNATURE-----
+
+--=-NFsjgung3wR1xz1M/Hb0--
 
