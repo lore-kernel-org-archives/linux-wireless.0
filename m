@@ -1,29 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:47188 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757316AbZJFPip (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 11:38:45 -0400
-Received: by iwn8 with SMTP id 8so2305285iwn.33
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2009 08:38:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4ACB4BA3.9090406@gmail.com>
-References: <4ACB4BA3.9090406@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 6 Oct 2009 11:37:49 -0400
-Message-ID: <43e72e890910060837o576bc598qca4a9b4b25d81d64@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: use kfree_skb() to free struct sk_buff pointers
-To: Roel Kluin <roel.kluin@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:40823 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752186AbZJPFVJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 01:21:09 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 11/16] iwmc3200wifi: Check for cmd pointer before dereferencing it
+Date: Fri, 16 Oct 2009 13:18:55 +0800
+Message-Id: <1255670340-22565-12-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1255670340-22565-11-git-send-email-yi.zhu@intel.com>
+References: <1255670340-22565-1-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-2-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-3-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-4-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-5-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-6-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-7-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-8-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-9-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-10-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-11-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 6, 2009 at 9:52 AM, Roel Kluin <roel.kluin@gmail.com> wrote:
-> kfree_skb() should be used to free struct sk_buff pointers.
+From: Samuel Ortiz <sameo@linux.intel.com>
 
-cc'ing stable would be good for this one it seems.
+The wifi_if_wrapper notification handling code uses a cmd pointer without
+checking if it's valid or not. We're dereferencing it because we assume that
+we only get to that point if there was a pending command for us. That's not
+always true, so we'd better check.
 
-  Luis
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwmc3200wifi/rx.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
+index a6b1811..0fa3f5c 100644
+--- a/drivers/net/wireless/iwmc3200wifi/rx.c
++++ b/drivers/net/wireless/iwmc3200wifi/rx.c
+@@ -1058,8 +1058,14 @@ static int iwm_ntf_wifi_if_wrapper(struct iwm_priv *iwm, u8 *buf,
+ 				   unsigned long buf_size,
+ 				   struct iwm_wifi_cmd *cmd)
+ {
+-	struct iwm_umac_wifi_if *hdr =
+-			(struct iwm_umac_wifi_if *)cmd->buf.payload;
++	struct iwm_umac_wifi_if *hdr;
++
++	if (cmd == NULL) {
++		IWM_ERR(iwm, "Couldn't find expected wifi command\n");
++		return -EINVAL;
++	}
++
++	hdr = (struct iwm_umac_wifi_if *)cmd->buf.payload;
+ 
+ 	IWM_DBG_NTF(iwm, DBG, "WIFI_IF_WRAPPER cmd is delivered to UMAC: "
+ 		    "oid is 0x%x\n", hdr->oid);
+-- 
+1.6.0.4
+
