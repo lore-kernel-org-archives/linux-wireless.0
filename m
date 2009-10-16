@@ -1,50 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:24351 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752315AbZJWUms (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 16:42:48 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 16/18] iwlwifi: update lowest API version support for 6x00 & 6x50 series
-Date: Fri, 23 Oct 2009 13:42:34 -0700
-Message-Id: <1256330556-20997-17-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
-References: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
+Received: from mx51.mymxserver.com ([85.199.173.110]:20934 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759484AbZJPPfU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 11:35:20 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: [PATCH] libertas: make lbs_get_channel() static
+Date: Fri, 16 Oct 2009 17:33:56 +0200
+Cc: Dan Williams <dcbw@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200910161733.56111.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-For 6x00 and 6x50 series devices, APIv4 is the lowest firmware version
-driver can support. This is also the lowest API version available to the
-public so there is no need for backward compatibility support for the
-earlier API versions.
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-6000.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index f5639b4..32466d3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -52,8 +52,8 @@
- #define IWL6050_UCODE_API_MAX 4
+--- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
++++ linux-wl/drivers/net/wireless/libertas/cmd.c
+@@ -880,7 +880,7 @@
+  *
+  *  @return 	   	The channel on success, error on failure
+  */
+-int lbs_get_channel(struct lbs_private *priv)
++static int lbs_get_channel(struct lbs_private *priv)
+ {
+ 	struct cmd_ds_802_11_rf_channel cmd;
+ 	int ret = 0;
+--- linux-wl.orig/drivers/net/wireless/libertas/cmd.h
++++ linux-wl/drivers/net/wireless/libertas/cmd.h
+@@ -82,8 +82,6 @@
  
- /* Lowest firmware API version supported */
--#define IWL6000_UCODE_API_MIN 1
--#define IWL6050_UCODE_API_MIN 1
-+#define IWL6000_UCODE_API_MIN 4
-+#define IWL6050_UCODE_API_MIN 4
+ int lbs_update_hw_spec(struct lbs_private *priv);
  
- #define IWL6000_FW_PRE "iwlwifi-6000-"
- #define _IWL6000_MODULE_FIRMWARE(api) IWL6000_FW_PRE #api ".ucode"
+-int lbs_get_channel(struct lbs_private *priv);
+-
+ int lbs_set_channel(struct lbs_private *priv, u8 channel);
+ 
+ int lbs_update_channel(struct lbs_private *priv);
+
 -- 
-1.5.6.3
-
+http://www.holgerschurig.de
