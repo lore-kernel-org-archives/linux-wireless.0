@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from anchor-post-2.mail.demon.net ([195.173.77.133]:59641 "EHLO
-	anchor-post-2.mail.demon.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751070AbZJPV5k convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 17:57:40 -0400
-Date: Fri, 16 Oct 2009 22:28:27 +0100
-From: Darren Salt <linux@youmustbejoking.demon.co.uk>
-To: Fabio Comolli <fabio.comolli@gmail.com>
-Cc: Frans Pop <elendil@planet.nl>, linux-kernel@vger.kernel.org,
-	rjw@sisk.pl, linux-wireless@vger.kernel.org
-Subject: Re: [Regression] - 2.6.32-rc5 hangs using rfkill on an eeePC
-Message-ID: <50B0C1487C%linux@youmustbejoking.demon.co.uk>
-In-Reply-To: <b637ec0b0910161423o2a5fdd12u926f50c2e4139bf3@mail.gmail.com>
-References: <b637ec0b0910161253y60eb6b4fl3e49e5b9129d81ac@mail.gmail.com>
- <200910162246.45678.elendil@planet.nl>
- <b637ec0b0910161423o2a5fdd12u926f50c2e4139bf3@mail.gmail.com>
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:34156 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751382AbZJPHwx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 03:52:53 -0400
+Received: by ewy4 with SMTP id 4so1329035ewy.37
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2009 00:52:17 -0700 (PDT)
+To: "John Willis" <John.Willis@Distant-earth.com>
+Cc: <me@bobcopeland.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] WL1251: Very crude EEPROM reading support for the WL1251 driver
+References: <01c901ca4daf$6e3d7f20$4ab87d60$@Willis@Distant-earth.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 16 Oct 2009 10:52:15 +0300
+In-Reply-To: <01c901ca4daf$6e3d7f20$4ab87d60$@Willis@Distant-earth.com> (John Willis's message of "Thu\, 15 Oct 2009 16\:51\:49 +0100")
+Message-ID: <87r5t3n5cg.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I demand that Fabio Comolli may or may not have written...
+"John Willis" <John.Willis@Distant-earth.com> writes:
 
-[snip]
-> I already answered my own post in the thread: the culprit is:
+> Gents,
+>
+> Attached are some very hacky (even after a quick cleanup) patches that add
+> something like support for reading the EEPROM NVS calibration data into the
+> WL1251 driver. It seems just good enough to get the driver up and playing
+> nicely. 
 
-> eeepc-laptop: Prevent a panic when disabling RT2860 wireless when
-> associated
+Thanks a lot, this is good stuff. Now we have all hardware
+configurations (known by me) supported in wl1251: SPI, SDIO, without
+EEPROM and with EEPROM.
 
-> Funnily enough, my eeePC has an Atheros card.
+> I quickly rebased the patches on the top of wireless-testing, with any luck
+> they still work however I can't test as there is something badly borked for
+> OMAP3 in the mainline tree feeding WT at the moment. I have left out a lot
+> of my development chaff and rubbish from the patches.
 
-We (myself and Corentin Chary) tried to stop that patch once I'd noticed the
-problem – I updated the patch, tested (all was fine with the rt2860 card),
-upgraded from -rc3 to -rc4, installed an Intel 3945 card, tested, sent the
-patch, restored the rt2860 card to its proper place, happened to toggle
-wireless, got a panic due to having failed to remember to actually apply the
-patch to -rc4... at this point, I rechecked with the Intel card (this time
-with a patched kernel), saw a failure (stuck process – hmm, should rfkill be
-re-entrant?), reported it, went digging into rt2860sta and produced, tested
-and sent the replacement patch, then tried to stop the broken patch from
-going upstream.
+In cases like this I usually merge linux-omap to wireless-testing,
+it's quite simple and fast thing to do. That way I get the omap
+hardware booting with latest wireless stuff.
 
-A reversion patch has been sent by Corentin (shortly after you reported this,
-though the commit message says that he's reacted to its being in rc5) and,
-earlier today, I directly requested that it be reverted; so hopefully, one
-way or another, -rc6 will be fine for Atheros users and anybody else affected
-by this, much as -rc5 is for rt2860 users.
+> They have only been tested on OMAP3 OpenPandora boards using SDIO. I still
+> think timing needs tweaking but I have not had a chance to look into that.
 
-Oh well. So much for Linus's "no new regressions". ;-}
+I have few comments about the patch. I think it's better to configure
+EEPROM support runtime and not via Kconfig. Also I don't like
+hungarian notation :)
+
+Is it okay if I clean it up a bit and then send it to John Linville?
+Better to have the patch in the tree as early as possible, as long as it
+doesn't break existing functionality. We can always fix it later if
+there's something broken.
+
+Thanks again for your patches and please keep on sending them :)
 
 -- 
-| Darren Salt            | linux at youmustbejoking | nr. Ashington, | Doon
-| using Debian GNU/Linux | or ds    ,demon,co,uk    | Northumberland | Army
-| + Travel less. Share transport more.           PRODUCE LESS CARBON DIOXIDE.
-
-Look! Over there!... Ha. Made you look.
+Kalle Valo
