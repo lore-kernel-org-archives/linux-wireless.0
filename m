@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:34638 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752142AbZJ1PCl convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:47414 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751591AbZJPHP1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2009 11:02:41 -0400
-Received: by iwn10 with SMTP id 10so623952iwn.4
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2009 08:02:45 -0700 (PDT)
+	Fri, 16 Oct 2009 03:15:27 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+To: Greg KH <greg@kroah.com>
+Cc: Javier Martinez Canillas <martinez.javier@gmail.com>,
+	"devel\@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] staging/stlc45xx: Fix compile error
+References: <1255575825.10636.17.camel@laptop>
+	<20091015031138.GB16633@kroah.com>
+Date: Fri, 16 Oct 2009 10:13:45 +0300
+In-Reply-To: <20091015031138.GB16633@kroah.com> (ext Greg's message of "Thu,
+	15 Oct 2009 05:11:38 +0200")
+Message-ID: <87zl7rbyl2.fsf@nokia.com>
 MIME-Version: 1.0
-In-Reply-To: <1256741651.4237.112.camel@johannes.local>
-References: <86201b3f0910271340t51aa6c0bgff43e6e7211a0dee@mail.gmail.com>
-	 <1256676190.4237.27.camel@johannes.local>
-	 <86201b3f0910280747q557a6153oec929e8235459c8f@mail.gmail.com>
-	 <1256741651.4237.112.camel@johannes.local>
-Date: Wed, 28 Oct 2009 11:02:44 -0400
-Message-ID: <86201b3f0910280802r279bf0d8q3424245ddfb1f8a8@mail.gmail.com>
-Subject: Re: iwlist wlan0 scan disrupts communications
-From: Charles Gordon <digigordo@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 28, 2009 at 10:54 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2009-10-28 at 10:47 -0400, Charles Gordon wrote:
->
->> Thanks for the information.  After doing some more testing I found
->> that the association to the AP is sometimes lost and that mac80211
->> does not recover automatically.  You have to type the command "wpa_cli
->> reassociate" to trigger the stack to reassociate with the AP.  Is this
->> one of the things that is, or will be, fixed in later releases?
->
-> I don't know. Normally, wpa_supplicant should notice this and re-connect
-> by itself.
->
-> johannes
->
-I think the way wpa_supplicant would notice this is that the AP would
-send a deauthentication or dissassociation frame to the station, and
-that would trigger wpa_supplicant to reassociate.  However, if we are
-tuned to a different channel when the frame is sent, then we won't
-receive it.  The AP won't send another notification unless we try to
-send it another data frame, but if another station is trying to send
-to us, we won't be notified.
+Greg KH <greg@kroah.com> writes:
 
-I think that when the scan completes, mac80211 should either notify
-wpa_supplicant that it should reassociate, or maybe send a null-data
-frame to the AP which might cause it to send another
-deauthentication/dissassociation frame (if we lost the connect).
+> On Wed, Oct 14, 2009 at 11:03:45PM -0400, Javier Martinez Canillas wrote:
+>> I got the following compile error with today linux-next tree.
+>> 
+>> drivers/staging/stlc45xx/stlc45xx.c: In function ‘stlc45xx_reset’:
+>> drivers/staging/stlc45xx/stlc45xx.c:1061: error: ‘struct ieee80211_hw’ has no member named ‘workqueue’
+>> drivers/staging/stlc45xx/stlc45xx.c: In function ‘stlc45xx_interrupt’:
+>> drivers/staging/stlc45xx/stlc45xx.c:1492: error: ‘struct ieee80211_hw’ has no member named ‘workqueue’
+>> drivers/staging/stlc45xx/stlc45xx.c: In function ‘stlc45xx_wq_tx’:
+>> drivers/staging/stlc45xx/stlc45xx.c:1571: error: ‘struct ieee80211_hw’ has no member named ‘workqueue’
+>> drivers/staging/stlc45xx/stlc45xx.c: In function ‘stlc45xx_op_tx’:
+>> drivers/staging/stlc45xx/stlc45xx.c:2135: error: ‘struct ieee80211_hw’ has no member named ‘workqueue’
+>> drivers/staging/stlc45xx/stlc45xx.c: At top level:
+>> drivers/staging/stlc45xx/stlc45xx.c:2351: warning: initialization from incompatible pointer type
+>> 
+>> The driver was trying to access directly to mac80211 workqueue. Use the helper functions instead. 
+>> 
+>> I think this patch solves the issue. Also fix a compile warning due a change in configure_filter() handler params.
+>
+> ah, good catch, I had that driver disabled in my builds for some stupid
+> reason.  I'll queue this up in my tree.
+
+I think it's better to drop stlc45xx. As I haven't sent any patches for
+few months is obvious that I don't have time to work on it anymore. And
+p54spi should work now, at least I have seen positive reports on mailing
+lists.
+
+Greg, if you want I can send a patch removing stlc45xx.
+
+-- 
+Kalle Valo
