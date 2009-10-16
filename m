@@ -1,55 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42250
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755674AbZJKB64 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Oct 2009 21:58:56 -0400
-Date: Sat, 10 Oct 2009 18:58:52 -0700 (PDT)
-Message-Id: <20091010.185852.133969433.davem@davemloft.net>
-To: tomasw@gmail.com
-Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	yi.zhu@intel.com, inaky.perez-gonzalez@intel.com,
-	cindy.h.kao@intel.com, guy.cohen@intel.com,
-	ron.rindjunsky@intel.com, tomas.winkler@intel.com
-Subject: Re: [PATCH 1/3] iwmc3200top: Add Intel Wireless MultiCom 3200 top
- driver.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1ba2fa240910100238s709c31d3s6cb612f502b1086f@mail.gmail.com>
-References: <1253662724-16497-1-git-send-email-tomas.winkler@intel.com>
-	<1253662724-16497-2-git-send-email-tomas.winkler@intel.com>
-	<1ba2fa240910100238s709c31d3s6cb612f502b1086f@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mga01.intel.com ([192.55.52.88]:28147 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752117AbZJPVZ5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 17:25:57 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 02/10] iwlwifi: show current power save status reported by uCode
+Date: Fri, 16 Oct 2009 14:25:50 -0700
+Message-Id: <1255728358-29976-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
+References: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomasw@gmail.com>
-Date: Sat, 10 Oct 2009 11:38:50 +0200
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-> On Wed, Sep 23, 2009 at 1:38 AM, Tomas Winkler <tomas.winkler@intel.com> wrote:
->> This patch adds Intel Wireless MultiCom 3200 top driver.
->> IWMC3200 is 4Wireless Com CHIP (GPS/BT/WiFi/WiMAX).
->> Top driver is responsible for device initialization and firmware download.
->> Firmware handled by top is responsible for top itself and
->> as well as bluetooth and GPS coms. (Wifi and WiMax provide their own
->> firmware)
->> In addition top driver is used to retrieve firmware logs
->> and supports other debugging features
->>
->> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> 
-> Dave,
-> are you going to merge this one?
-> iwmc3200wifi and i200m-sdio which are already merged are usless without it
+Power save request is sent from driver to uCode, but there is no
+indication from uCode about the current device power save state.
 
-If it's not in netdev patchwork, I don't plan to add it.
+Reading GP_CNTRL register bit 25:24 to show the current power save
+status
 
-If it is in patchwork, then it's in my backlog and I'll get to it.
+00: no power save
+01: MAC power down
+10: PHY power down
+11: Error
 
-People should never really have to ask me these questions, that's one
-of the main points of:
+The uCode could switch in and out of power save mode in the order of
+once per 100-300 ms in many cases. The reading here should just be used for
+reference on the current uCode power save status. Do not confuse this
+reading with the PowerSave set by driver and mac80211.
 
-	http://patchwork.ozlabs.org/project/netdev/list/
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-csr.h     |    5 +++++
+ drivers/net/wireless/iwlwifi/iwl-debug.h   |    1 +
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |   26 ++++++++++++++++++++++++++
+ 3 files changed, 32 insertions(+), 0 deletions(-)
 
-You can always see there what's "pending".
+diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
+index 8f183e0..401e1e0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
+@@ -235,6 +235,11 @@
+ #define CSR_OTP_GP_REG_OTP_ACCESS_MODE	(0x00020000) /* 0 - absolute, 1 - relative */
+ #define CSR_OTP_GP_REG_ECC_CORR_STATUS_MSK          (0x00100000) /* bit 20 */
+ #define CSR_OTP_GP_REG_ECC_UNCORR_STATUS_MSK        (0x00200000) /* bit 21 */
++#define CSR_GP_REG_POWER_SAVE_STATUS_MSK            (0x03000000) /* bit 24/25 */
++#define CSR_GP_REG_NO_POWER_SAVE            (0x00000000)
++#define CSR_GP_REG_MAC_POWER_SAVE           (0x01000000)
++#define CSR_GP_REG_PHY_POWER_SAVE           (0x02000000)
++#define CSR_GP_REG_POWER_SAVE_ERROR         (0x03000000)
+ 
+ /* EEPROM signature */
+ #define CSR_EEPROM_GP_BAD_SIGNATURE_BOTH_EEP_AND_OTP	(0x00000000)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index b9ca475..96c92ea 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -106,6 +106,7 @@ struct iwl_debugfs {
+ 		struct dentry *file_sensitivity;
+ 		struct dentry *file_chain_noise;
+ 		struct dentry *file_tx_power;
++		struct dentry *file_power_save_status;
+ 	} dbgfs_debug_files;
+ 	u32 sram_offset;
+ 	u32 sram_len;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 2cd11ba..e78cd26 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -1802,6 +1802,29 @@ static ssize_t iwl_dbgfs_tx_power_read(struct file *file,
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ }
+ 
++static ssize_t iwl_dbgfs_power_save_status_read(struct file *file,
++						    char __user *user_buf,
++						    size_t count, loff_t *ppos)
++{
++	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
++	char buf[60];
++	int pos = 0;
++	const size_t bufsz = sizeof(buf);
++	u32 pwrsave_status;
++
++	pwrsave_status = iwl_read32(priv, CSR_GP_CNTRL) &
++			CSR_GP_REG_POWER_SAVE_STATUS_MSK;
++
++	pos += scnprintf(buf + pos, bufsz - pos, "Power Save Status: ");
++	pos += scnprintf(buf + pos, bufsz - pos, "%s\n",
++		(pwrsave_status == CSR_GP_REG_NO_POWER_SAVE) ? "none" :
++		(pwrsave_status == CSR_GP_REG_MAC_POWER_SAVE) ? "MAC" :
++		(pwrsave_status == CSR_GP_REG_PHY_POWER_SAVE) ? "PHY" :
++		"error");
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
++}
++
+ DEBUGFS_READ_WRITE_FILE_OPS(rx_statistics);
+ DEBUGFS_READ_WRITE_FILE_OPS(tx_statistics);
+ DEBUGFS_READ_WRITE_FILE_OPS(traffic_log);
+@@ -1813,6 +1836,7 @@ DEBUGFS_READ_FILE_OPS(ucode_general_stats);
+ DEBUGFS_READ_FILE_OPS(sensitivity);
+ DEBUGFS_READ_FILE_OPS(chain_noise);
+ DEBUGFS_READ_FILE_OPS(tx_power);
++DEBUGFS_READ_FILE_OPS(power_save_status);
+ 
+ /*
+  * Create the debugfs files and directories
+@@ -1860,6 +1884,7 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
+ 	DEBUGFS_ADD_FILE(rx_queue, debug);
+ 	DEBUGFS_ADD_FILE(tx_queue, debug);
+ 	DEBUGFS_ADD_FILE(tx_power, debug);
++	DEBUGFS_ADD_FILE(power_save_status, debug);
+ 	if ((priv->hw_rev & CSR_HW_REV_TYPE_MSK) != CSR_HW_REV_TYPE_3945) {
+ 		DEBUGFS_ADD_FILE(ucode_rx_stats, debug);
+ 		DEBUGFS_ADD_FILE(ucode_tx_stats, debug);
+@@ -1912,6 +1937,7 @@ void iwl_dbgfs_unregister(struct iwl_priv *priv)
+ 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_debug_files.file_rx_queue);
+ 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_debug_files.file_tx_queue);
+ 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_debug_files.file_tx_power);
++	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_debug_files.file_power_save_status);
+ 	if ((priv->hw_rev & CSR_HW_REV_TYPE_MSK) != CSR_HW_REV_TYPE_3945) {
+ 		DEBUGFS_REMOVE(priv->dbgfs->dbgfs_debug_files.
+ 			file_ucode_rx_stats);
+-- 
+1.5.6.3
+
