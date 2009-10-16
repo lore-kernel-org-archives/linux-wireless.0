@@ -1,71 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41175 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:58353 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753037AbZJaGkm (ORCPT
+	with ESMTP id S1758857AbZJPLjL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Oct 2009 02:40:42 -0400
-Subject: [PATCH] cfg80211: fix NULL ptr deref
+	Fri, 16 Oct 2009 07:39:11 -0400
+Subject: Re: BUG? I can reproduce "Association request to the driver
+ failed" at will
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Parag Warudkar <parag.lkml@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 31 Oct 2009 07:40:37 +0100
-Message-ID: <1256971237.3555.87.camel@johannes.local>
+To: Jouni Malinen <j@w1.fi>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	hostap@lists.shmoo.com
+In-Reply-To: <20091012071550.GD25578@jm.kir.nu>
+References: <200909211309.40476.hs4233@mail.mn-solutions.de>
+	 <20091012071550.GD25578@jm.kir.nu>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Us93ZnpHS/bMHeFux8o+"
+Date: Fri, 16 Oct 2009 19:07:12 +0900
+Message-Id: <1255687632.4095.331.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  commit 211a4d12abf86fe0df4cd68fc6327cbb58f56f81
-  Author: Johannes Berg <johannes@sipsolutions.net>
-  Date:   Tue Oct 20 15:08:53 2009 +0900
 
-      cfg80211: sme: deauthenticate on assoc failure
+--=-Us93ZnpHS/bMHeFux8o+
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-introduced a potential NULL pointer dereference that
-some people have been hitting for some reason -- the
-params.bssid pointer is not guaranteed to be non-NULL
-for what seems to be a race between various ways of
-reaching the same thing.
+On Mon, 2009-10-12 at 10:15 +0300, Jouni Malinen wrote:
 
-While I'm trying to analyse the problem more let's
-first fix the crash. I think the real fix may be to
-avoid doing _anything_ if it ended up being NULL, but
-right now I'm not sure yet.
+> Though, even in this case, there is actually a bug somewhere (in
+> mac80211, I would assume).. The authentication attempt with the second
+> AP times out because mac80211 ends up sending the direct probes to the
+> MAC address of the old AP (which is now turned off). When wpa_supplicant
+> tries to authenticate again, the direct probes are going to the correct
+> destination and connection can be established.
 
-I think
-http://bugzilla.kernel.org/show_bug.cgi?id=14342
-might also be this issue.
+I can't see that happen in mac80211 -- can somebody run this with some
+printks in cfg80211 that tell us what exactly is being passed down to
+mac80211's auth() call?
 
-Reported-by: Parag Warudkar <parag.lkml@gmail.com>
-Tested-by: Parag Warudkar <parag.lkml@gmail.com>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/sme.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+> I can reproduce this with the current wpa_supplicant (that has a
+> workaround for this EALREADY for authentication case, but not for
+> assoc) and the current wireless-testing. Roaming will get mac80211 into
+> very odd state..
+>=20
+> Not only is this association failing (after the authentication with the
+> same AP actually worked), but the scanning state will also get quite
+> confused.. The next scan trigger after this is never completed (iw scan
+> gets stuck). Or well, actually, once I wait long enough for the AP to
+> deauthenticate the client, it looks like mac80211 can recover. The scan
+> command returned after five minutes of waiting.. ;-)
 
---- wireless-testing.orig/net/wireless/sme.c	2009-10-31 07:29:47.000000000 +0100
-+++ wireless-testing/net/wireless/sme.c	2009-10-31 07:31:29.000000000 +0100
-@@ -165,7 +165,7 @@ void cfg80211_conn_work(struct work_stru
- 	struct cfg80211_registered_device *rdev =
- 		container_of(work, struct cfg80211_registered_device, conn_work);
- 	struct wireless_dev *wdev;
--	u8 bssid[ETH_ALEN];
-+	u8 bssid_buf[ETH_ALEN], *bssid = NULL;
- 
- 	rtnl_lock();
- 	cfg80211_lock_rdev(rdev);
-@@ -181,7 +181,10 @@ void cfg80211_conn_work(struct work_stru
- 			wdev_unlock(wdev);
- 			continue;
- 		}
--		memcpy(bssid, wdev->conn->params.bssid, ETH_ALEN);
-+		if (wdev->conn->params.bssid) {
-+			memcpy(bssid_buf, wdev->conn->params.bssid, ETH_ALEN);
-+			bssid = bssid_buf;
-+		}
- 		if (cfg80211_conn_do_work(wdev))
- 			__cfg80211_connect_result(
- 					wdev->netdev, bssid,
+Good hint. It looks like it gets stuck between assoc and auth for the
+old AP?
 
+> > The "Association request to the driver failed" will
+> > be shown even without "-d". Also note that the association
+> > seems to actually work, e.g. I can ping throught the
+> > connection.
+>=20
+> mac80211 remains associated with the old AP (I think) and somehow
+> remains in the state between authentication and association (with the
+> new AP) which will block scans.
+
+I think we need a cfg80211 event tracer :)
+
+Actually, does wpa_supplicant _deauth_ from the AP, or does it just
+disassoc? It's definitely supposed to deauth.
+
+johannes
+
+--=-Us93ZnpHS/bMHeFux8o+
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK2EXNAAoJEODzc/N7+Qmabt4P/iTukH3RrR/bMMgazOT2p+PT
+zfRii5+VIzEL6Ge4pqgiE5yVVabG7N7TmAWaIKqyAnaijqKsDaWOHw9DnVLEzK/y
+Q6bm3+BeSqx9ql3O6b0DzOkA9ooL0y1fAOaV1WhJT5gAOiTXKrDUZmAQ9VVUBY7Q
+Ll1/7E7Bhm/ssidlkoDTIdi4Ya/TktNoksxEbcwXvbhfuiUtXQq9dC3Z0WtJ1Kna
+zXJwMtKb4547q1GXeerQtEc0fIXLlvCcwBCBIbLgxN3AZctj7lCMxmjnlISzA/3/
+ncoQgFGVLgRhzXJ3NgYjudAS74ocoxWXx2+4JdJDpI9K6OeSXU2FOBIID5RjtEso
+leyT9T0eu9v2ArUphd0qtw9e1/LEp5ScMBdqUSZ+EYdJUwsFDCZ4O7iwbpKKGSzB
+aNndp3MZcQh3pRG3QnAgS+fM2RYSp7SMaDx9X9iXbIawDNwdOE9/H4KpqyELXbqq
+Kiwfq1qKjBLAuaACnsFAGqYRJXQQ6Ibc7K2eyf+vm36QmbM5xGLX8KHQXZiUFwmx
+EWaSingcc0yIm7YB0Vf3GnRsm7+v0kY5+Xeb9KCnl/vHUO8Ui048Z3hIdEvDTQ1A
+a84rVuFDQMxhnUuztV6kIh3TG434tTdVmCP36hs/25iLqmuB8RKUz1gxrYoz6g65
+N3G12Bo/bAzW/akelYpk
+=Lm9a
+-----END PGP SIGNATURE-----
+
+--=-Us93ZnpHS/bMHeFux8o+--
 
