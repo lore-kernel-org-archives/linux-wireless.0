@@ -1,65 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:34880 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751545AbZJXPcj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Oct 2009 11:32:39 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Bob Copeland <me@bobcopeland.com>
-Subject: Re: ath5k: no further txbuf available, dropping packet
-Date: Sat, 24 Oct 2009 17:32:38 +0200
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-References: <200910231608.18676.mb@bu3sch.de> <20091024131929.GB31897@hash.localnet> <200910241705.39104.mb@bu3sch.de>
-In-Reply-To: <200910241705.39104.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200910241732.40651.mb@bu3sch.de>
+Received: from xc.sipsolutions.net ([83.246.72.84]:40324 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759404AbZJPOrG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 10:47:06 -0400
+Subject: Re: [PATCH] mac80211: fixed injection in monitor mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Gabriele Gristina <matrix.use.linux@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1255658961.23827.2.camel@el8pc>
+References: <1255658961.23827.2.camel@el8pc>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-+AFxNfykLo21GInDJlgA"
+Date: Fri, 16 Oct 2009 23:46:22 +0900
+Message-Id: <1255704382.4095.340.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 24 October 2009 17:05:37 Michael Buesch wrote:
-> On Saturday 24 October 2009 15:19:29 Bob Copeland wrote:
-> > On Fri, Oct 23, 2009 at 04:08:16PM +0200, Michael Buesch wrote:
-> > > ath5k breaks in AP mode after some operation time and keeps throwing
-> > > this message:
-> > > 
-> > > [2096249.446071] ath5k phy0: no further txbuf available, dropping packet
-> > > 
-> > > Driver is yesterday's compat-wireless on 2.6.31.1
-> > 
-> > Ok looked a bit more at this.  I don't see a leak, but I think the
-> > txbufs aren't getting reaped.  Otherwise, we should reenable the queues
-> > when we get back 40 TX completion interrupts.
-> > 
-> > I'm a bit short on time to track it down, but one thing to try is
-> > commenting out the following from ath5k_beacon_send (will break buffering
-> > but you can test non-ps clients):
-> > 
-> >         skb = ieee80211_get_buffered_bc(sc->hw, sc->vif);
-> >         while (skb) {
-> >                 ath5k_tx_queue(sc->hw, skb, sc->cabq);
-> >                 skb = ieee80211_get_buffered_bc(sc->hw, sc->vif);
-> >         }
-> > 
-> 
-> I didn't try this, yet, but PS buffering seems to be broken anyway.
-> If I connect the n810 (which does PS) to the ath5k AP, I cannot ping
-> the n810 unless I also transfer (ping) _from_ the n810 simultaneously.
-> I did not monitor the traffic, yet, but to me it seems the AP is unable
-> to notify that the PS device should wake up (TIM problems?). By pinging from
-> the n810, I frequently force-wakeup the device, so traffic to the device
-> also works (more or less).
-> 
 
-Ok on the monitor log it looks like the ath5k AP simply sends data while
-the STA is in PS, instead of buffering it and updating the TIM.
-So if I ping the STA, it keeps sending packets and doesn't set the TIM,
-but don't get any repsonse of course, because the STA is power saving.
-If I simultaneously ping from the STA, the buffering and TIM handling suddenly
-seems to start working. The AP indicates traffic via TIM and the STA sends PS polls.
+--=-+AFxNfykLo21GInDJlgA
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Greetings, Michael.
+On Fri, 2009-10-16 at 04:09 +0200, Gabriele Gristina wrote:
+> I have a problem with mac80211 injection:
+> if i setup interface in monitor mode with iwconfig and i try to send a
+> custum 802.11 frame i see twice the packet in monitor interface.
+> The first packet is right, the second is different only in the radiotap
+> header: rtap len is fixed to 13 bytes...
+> If i setup interface with airmon-ng the packet is sended once but the
+> radiotap header is fixed to 13 bytes.
+
+This is correct. The patch is wrong.
+
+johannes
+
+--=-+AFxNfykLo21GInDJlgA
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK2Ic6AAoJEODzc/N7+QmaJrIP/1nYgW866jcAetu/P5SbOY/7
+cO64SBF3857HIg5GVwFGGy2NHhCm8wJY39okhrqJN+vOi23PwrPDcJ+KEfjPjx7S
+Ue7RzWNZ1n2zvsIZghxeA0kgUM0bQAm9p6j6N4hdNC/J0V7m9fSNN6GZP6xukS1U
+PurnyLEsB1wqYMkQnIrstTjW4/vHvEDwuLcJnB6VomQCpQemZO3Pd4gpAISBVorR
+yM1Wz2Wug5fJJEOFh0DAYa/f9O5OIWTb+hp/HKlhPoF3t+Ac9Cme7IosmCxk8uni
+knT68RUrn86ThEw0ZN9NBxHdD7++UCrZmhKSeDDQGELgsHUWPr9xDetNywVCtGjI
+3Kh13pQF6ftS8QFWxrk2wqXKOQaXKoWYgR2nzCwJNu1r11CKLMJ3NfyPreB3YSVV
+IwMbfsNsLRveSqVmHnH0FG8m7xQjHkjR7y5Fd4ke1rfEMWAQsuXIuwnMLJ1vXimp
+Wswg+cvWbHiA9cqd1B//79S4Pqwtq/Wzlt0sVaAXIcx7zq74FXeq8EKCMxXhYosa
+fGLBLiYggQ9/E5b5HFByQR5sn6aryP8nsNXwMsx33LN2DJ373meG6qBGZ1NUT0yX
+AX190YPSuGQSzHeEuNBgIAH9VKChv3Iat4GCC9LRMHFgG/N1gKsfFE+GHPJ7TPmX
+fYO5CZT4S2RUd0/c9ofo
+=CQLt
+-----END PGP SIGNATURE-----
+
+--=-+AFxNfykLo21GInDJlgA--
+
