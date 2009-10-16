@@ -1,63 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:31389 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752318AbZJVJ21 (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:20916 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750724AbZJPXOc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2009 05:28:27 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [RFC] libertas: monster-patch to make CFG/WEXT configurable
-Date: Thu, 22 Oct 2009 11:28:01 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <200910191449.18915.hs4233@mail.mn-solutions.de> <1256150184.5010.45.camel@localhost.localdomain>
-In-Reply-To: <1256150184.5010.45.camel@localhost.localdomain>
+	Fri, 16 Oct 2009 19:14:32 -0400
+Received: by ey-out-2122.google.com with SMTP id 9so561139eyd.19
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2009 16:14:36 -0700 (PDT)
+Message-ID: <4AD8FE53.4040500@gmail.com>
+Date: Sat, 17 Oct 2009 01:14:27 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200910221128.01851.hs4233@mail.mn-solutions.de>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com, eddy_tsai@ralinktech.com.tw
+Subject: Re: [rt2x00-users] [PATCH] rt73usb.c : more ids
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> For the mesh interface stuff, especially in tx/rx paths, would
-> you mind not ifdefing that?  Since with cfg80211,
-> priv->mesh_dev will always be NULL, those checks will be just
-> fine and you still don't have to care about mesh.
+On Tue, Oct 13, 2009 at 01:20:17PM +0100, Luis Correia wrote:
 
-Sure, I'll do that.
+> 2009/10/13 Xose Vazquez Perez <xose.vazquez@gmail.com>
 
-I just thought that there's no need for priv->mesh_dev in the 
-cfg80211 case. Wouldn't mesh be activated by "iw dev XXX set 
-type mesh"?  Then cfg80211_ops .change_intf() would be called.
+> > stolen from windows inf file(07/17/2009, 1.03.05.0000)
+> > Ovislink 0x1b75, 0x7318
+> > MSI 0x0db0, 0x4600
+> > WideTell 0x7167, 0x3840
+>>
+> Are you absolutely sure that these devices are really rt73usb?
 
-Now that could either populate priv->mesh_dev ... or it could 
-change priv->dev. Not sure about what is better. But the answer 
-to this would tell us how to handle the mesh tx/rx paths.
+No.
 
+I have copied them from windows driver file. No HW here.
 
-cmdresp.c checks for priv->mesh_autostart_enabled. Is this 
-another "sitting-forever-in-OLPC" thingy?  It's nowhere else
-used and there's no code to set it.
+> By being in the windows inf file doesn't mean they would work in Linux.
 
+I don't understand why they were added by ralink to the rt73.inf file
+*recently* .
 
-> I'm sure that the bits for SNMP_MIB_OID_BSS_TYPE could also be
-> converted to use lib80211 or cfg80211 values instead of WEXT
-> ones; I just picked WEXT at the time because we had no cfg80211
-> yet. 
-
-Good idea.
-
-However, when I'm teaching cfg80211 about the SNMP-commands, I'll 
-use new-style commands anyway. I'd need them for RTS threshold 
-etc anyway.
+Maybe Microsoft's ninjas are trying  to commit sabotage against the
+linux kernel ;-)
 
 
+some information that I have found.
+
+WideTell:
+http://www.widetell.com/Product_body.asp?id=212
+http://www.widetell.com/Product_body.asp?id=224
+http://www.google.es/search?hl=en&q=ralink++site%3Awidetell.com
+
+msi:
+http://eu.msi.com/index.php?func=downloaddetail&type=driver&maincat_no=131&prod_no=1308
+
+sorry, nothing about Ovislink. Maybe http://www.airlive.com/product/product_3.jsp?pdid=PD1217466858603
 
 
-BTW: I added the RX part of the monitor in my cfg80211
-implementation. But for my CF card, I'm still stuck with firmware
-5.0.16.p0. That doesn't support monitor mode. However, I also
-have some USB stick around (got it from you!). Do you know which
-firmware for this USB stick supports monitor?
+the only people who can know it for sure is the new rt2x00 team member:
+Eddy Tsai <eddy_tsai@ralinktech.com.tw> from Ralink Technology
+
+-thanks-
 
 -- 
-http://www.holgerschurig.de
+«Allá muevan feroz guerra, ciegos reyes por un palmo más de tierra;
+que yo aquí tengo por mío cuanto abarca el mar bravío, a quien nadie
+impuso leyes. Y no hay playa, sea cualquiera, ni bandera de esplendor,
+que no sienta mi derecho y dé pecho a mi valor.»
