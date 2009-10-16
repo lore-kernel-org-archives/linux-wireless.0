@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet12.oracle.com ([141.146.126.234]:26083 "EHLO
-	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754690AbZJGW4f (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 18:56:35 -0400
-Message-ID: <4ACD1C3D.3030506@oracle.com>
-Date: Wed, 07 Oct 2009 15:54:53 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wireless: make WEXT_SPY and WEXT_PRIV select WEXT_CORE
-References: <20091007105720.a2457e5b.randy.dunlap@oracle.com>	 <1254949672-24022-1-git-send-email-linville@tuxdriver.com>	 <4ACD0E5A.7060106@oracle.com> <1254954842.3713.7.camel@johannes.local>
-In-Reply-To: <1254954842.3713.7.camel@johannes.local>
-Content-Type: text/plain; charset=windows-1251
+Received: from mga01.intel.com ([192.55.52.88]:13630 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754680AbZJPVZ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 17:25:58 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 01/10] iwl3945: disable all tx fifos
+Date: Fri, 16 Oct 2009 14:25:49 -0700
+Message-Id: <1255728358-29976-2-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
+References: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Wed, 2009-10-07 at 14:55 -0700, Randy Dunlap wrote:
->> John W. Linville wrote:
->>> Should prevent this build error reported by Randy...
->>>
->>> net/wireless/wext-priv.c:206: error: implicit declaration of function 'call_commit_handler'
->>> make[3]: *** [net/wireless/wext-priv.o] Error 1
->>>
->>> Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
->>> Signed-off-by: John W. Linville <linville@tuxdriver.com>
->> Sorry, it did not work for me.
-> 
->> linux-next-20091007/net/wireless/wext-priv.c:206: error: implicit declaration of function 'call_commit_handler'
->> make[3]: *** [net/wireless/wext-priv.o] Error 1
->>
->> Drivers like hostap and orinoco (hermes) select WEXT_PRIV regardless
->> of the setting of WEXT_CORE.  oh, and staging/ drivers do that also.
-> 
-> But they also select WIRELESS_EXT, which should cause WEXT_CORE to be
-> turned on. Is it possible that is failing?
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-# CONFIG_WIRELESS is not set
-CONFIG_WIRELESS_EXT=y
-CONFIG_WEXT_SPY=y
-CONFIG_WEXT_PRIV=y
+Disable the all the tx fifos while stopping the tx queues.
 
-WEXT_CORE is not enabled.  I haven't found the culprit, but I suspect "select".
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-but what in WIRELESS_EXT would also cause WEXT_CORE to be enabled?
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index afe19f2..9fb964b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -1220,6 +1220,7 @@ void iwl3945_hw_txq_ctx_stop(struct iwl_priv *priv)
+ 
+ 	/* stop SCD */
+ 	iwl_write_prph(priv, ALM_SCD_MODE_REG, 0);
++	iwl_write_prph(priv, ALM_SCD_TXFACT_REG, 0);
+ 
+ 	/* reset TFD queues */
+ 	for (txq_id = 0; txq_id < priv->hw_params.max_txq_num; txq_id++) {
+-- 
+1.5.6.3
 
-~Randy
