@@ -1,71 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19440 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752588AbZJWQaW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 12:30:22 -0400
-Subject: Re: [PATCH 17/19] [RFC, v2] libertas: Kconfig entry for
- libertas+cfg80211
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:40179 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751429AbZJPK4d (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 06:56:33 -0400
+Received: by ewy4 with SMTP id 4so1447314ewy.37
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2009 03:55:56 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 2/2] rt2x00: Implement support for rt2800pci
+Date: Fri, 16 Oct 2009 12:55:54 +0200
+Cc: Simon Raffeiner <sturmflut@lieberbiber.de>,
 	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <200910231756.47472.hs4233@mail.mn-solutions.de>
-References: <20091022133043.185554096@mail.mn-solutions.de>
-	 <20091022133425.317619132@mail.mn-solutions.de>
-	 <1256307572.12174.33.camel@johannes.local>
-	 <200910231756.47472.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Fri, 23 Oct 2009 09:30:15 -0700
-Message-Id: <1256315415.2164.46.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Xose Vazquez Perez <xose.vazquez@gmail.com>
+References: <200910152137.58164.IvDoorn@gmail.com> <200910152204.16407.IvDoorn@gmail.com> <200910161149.11661.sturmflut@lieberbiber.de>
+In-Reply-To: <200910161149.11661.sturmflut@lieberbiber.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200910161255.54644.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-10-23 at 17:56 +0200, Holger Schurig wrote:
-> On Friday 23 October 2009 16:19:31 Johannes Berg wrote:
-> > On Thu, 2009-10-22 at 15:31 +0200, Holger Schurig wrote:
-> > 
-> > > +#ifdef CONFIG_LIBERTAS_WEXT
-> > >  	dev->ethtool_ops = &lbs_ethtool_ops;
-> > >  	dev->wireless_handlers = &lbs_handler_def;
-> > >  #endif
-> > 
-> > So here you make the wireless_handlers optional.
-> > 
-> > I still don't understand why you can't just replace only some 
-> of the
-> > handlers, i.e. instead of doing this, simply do
-> > 
-> > -	(iw_handler) lbs_set_freq,      /* SIOCSIWFREQ */
-> > +	(iw_handler) cfg80211_wext_siwfreq,
-> > 
-> > etc.
-> > 
-> > That's why those exist and are exported. And that way you don't
-> > need the Kconfig at all, and can remove most of the wext code.
-> 
-> The Kconfig has *NOTHING* to do with mesh.
-> 
-> MESH should be implemented via add_virtual_intf() / 
-> change_virtual_intf(). This code isn't there yet, mesh_dev is 
-> always NULL in the CONFIG_LIBERTAS_CFG80211 case, so there's no 
-> need to export anything to ethtool or WEXT.
-> 
-> And having cfg80211 + (mesh_dev != NULL) is something that
-> I cannot program, due to (sigh) missing hardware, time,
-> testing ability. Repeat rinse wash, repeat rinse wash ...
-> 
-> 
-> Okay, I now stop talking about this. Please talk with Dan about 
-> the matter. He knows cfg80211 and libertas probably better than 
-> I. Once you two have found a decision, I'm looking if I'm still 
-> interested.
+Hi,
 
-Please keep going :)  At this point, you likely understand cfg80211
-better than I do.  And as I"ve commented in a few other mails this
-morning, I don't think it'll be as complex as I thought it was earlier.
+> I was comparing rt2800pci and the INF file of the original RT2860 windows 
+> driver out curiosity. The original INF file contains 108 PCI id entries, 
+> rt2800pci.c only 20. At first I thought that an entry like 
+> 
+> PCI\VEN_1814&DEV_0601&SUBSYS_77281432
+> 
+> (Edimax card) in the INF file will be automatically matched by rt2800pci for 
+> the "1814:0601" vendor/device id, but then I found an additional entry for 
+> "1432:7728" (the susbsystem id) in the rt2800pci pci_device_id table. 
+> 
+> I am a bit confused: Should every entry from the INF file have a PCI_DEVICE() 
+> counterpart in our driver (resulting in 108 entries), or is this a special 
+> case where the Manufacturer (Edimax) produces cards that actually have 
+> "1432:7728" as vendor/device id.
+> 
+> You can probably tell that I don't have much experience developing kernel 
+> drivers, but I am willing to get it right.
 
-Dan
+Well the main PCI and DEVICE id's should be listed in the PCI_DEVICE table,
+the SUBSYS ID should only be added in case there can be different drivers
+based on that ID.
 
+As far as the ID 1432:7728, that one was send by Xose who got the ID from
+the Windows driver, I don't know if he has mistakenly grabbed the subsystem ID or not...
+Xose, could you give an update about this?
 
+Ivo
