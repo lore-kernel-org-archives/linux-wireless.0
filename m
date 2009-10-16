@@ -1,199 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:31534 "EHLO
+Received: from mx51.mymxserver.com ([85.199.173.110]:9945 "EHLO
 	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755596AbZJNHHk (ORCPT
+	with ESMTP id S1750901AbZJPMQ6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 03:07:40 -0400
+	Fri, 16 Oct 2009 08:16:58 -0400
 From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: [PATCH] cfg80211: no  cookies in cfg80211_send_ABCD()
-Date: Wed, 14 Oct 2009 09:06:16 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [WIP, RFC] libertas: allow scanning via "iw"
+Date: Fri, 16 Oct 2009 14:15:02 +0200
+Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+References: <200910141652.11203.hs4233@mail.mn-solutions.de> <1255686611.4095.323.camel@johannes.local>
+In-Reply-To: <1255686611.4095.323.camel@johannes.local>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200910140906.16111.hs4233@mail.mn-solutions.de>
+  charset="iso-8859-15"
+Message-Id: <200910161415.02899.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Get rid of cookies in cfg80211_send_XXX() functions.
+> It'd be easier to read and see what the patch does if you
+> actually removed all the stuff that is no longer necessary :)
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Sure, you can easily get a patch that removes all the cruft that 
+don't need so far.
 
---- linux-wl.orig/include/net/cfg80211.h
-+++ linux-wl/include/net/cfg80211.h
-@@ -1809,30 +1809,45 @@
-  * @dev: network device
-  * @buf: deauthentication frame (header + body)
-  * @len: length of the frame data
-- * @cookie: cookie from ->deauth if called within that callback,
-- *	%NULL otherwise
-  *
-  * This function is called whenever deauthentication has been processed in
-  * station mode. This includes both received deauthentication frames and
-  * locally generated ones. This function may sleep.
-  */
--void cfg80211_send_deauth(struct net_device *dev, const u8 *buf, size_t len,
--			  void *cookie);
-+void cfg80211_send_deauth(struct net_device *dev, const u8 *buf, size_t len);
-+
-+/**
-+ * __cfg80211_send_deauth - notification of processed deauthentication
-+ * @dev: network device
-+ * @buf: deauthentication frame (header + body)
-+ * @len: length of the frame data
-+ *
-+ * Like cfg80211_send_deauth(), but doesn't take the wdev lock.
-+ */
-+void __cfg80211_send_deauth(struct net_device *dev, const u8 *buf, size_t len);
- 
- /**
-  * cfg80211_send_disassoc - notification of processed disassociation
-  * @dev: network device
-  * @buf: disassociation response frame (header + body)
-  * @len: length of the frame data
-- * @cookie: cookie from ->disassoc if called within that callback,
-- *	%NULL otherwise
-  *
-  * This function is called whenever disassociation has been processed in
-  * station mode. This includes both received disassociation frames and locally
-  * generated ones. This function may sleep.
-  */
--void cfg80211_send_disassoc(struct net_device *dev, const u8 *buf, size_t len,
--			    void *cookie);
-+void cfg80211_send_disassoc(struct net_device *dev, const u8 *buf, size_t len);
-+
-+/**
-+ * __cfg80211_send_disassoc - notification of processed disassociation
-+ * @dev: network device
-+ * @buf: disassociation response frame (header + body)
-+ * @len: length of the frame data
-+ *
-+ * Like cfg80211_send_disassoc(), but doesn't take the wdev lock.
-+ */
-+void __cfg80211_send_disassoc(struct net_device *dev, const u8 *buf,
-+	size_t len);
- 
- /**
-  * cfg80211_michael_mic_failure - notification of Michael MIC failure (TKIP)
---- linux-wl.orig/net/wireless/mlme.c
-+++ linux-wl/net/wireless/mlme.c
-@@ -121,7 +121,7 @@
- }
- EXPORT_SYMBOL(cfg80211_send_rx_assoc);
- 
--static void __cfg80211_send_deauth(struct net_device *dev,
-+void __cfg80211_send_deauth(struct net_device *dev,
- 				   const u8 *buf, size_t len)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-@@ -177,27 +177,19 @@
- 					  false, NULL);
- 	}
- }
-+EXPORT_SYMBOL(__cfg80211_send_deauth);
- 
--
--void cfg80211_send_deauth(struct net_device *dev, const u8 *buf, size_t len,
--			  void *cookie)
-+void cfg80211_send_deauth(struct net_device *dev, const u8 *buf, size_t len)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 
--	BUG_ON(cookie && wdev != cookie);
--
--	if (cookie) {
--		/* called within callback */
--		__cfg80211_send_deauth(dev, buf, len);
--	} else {
--		wdev_lock(wdev);
--		__cfg80211_send_deauth(dev, buf, len);
--		wdev_unlock(wdev);
--	}
-+	wdev_lock(wdev);
-+	__cfg80211_send_deauth(dev, buf, len);
-+	wdev_unlock(wdev);
- }
- EXPORT_SYMBOL(cfg80211_send_deauth);
- 
--static void __cfg80211_send_disassoc(struct net_device *dev,
-+void __cfg80211_send_disassoc(struct net_device *dev,
- 				     const u8 *buf, size_t len)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-@@ -238,22 +230,15 @@
- 	from_ap = memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0;
- 	__cfg80211_disconnected(dev, NULL, 0, reason_code, from_ap);
- }
-+EXPORT_SYMBOL(__cfg80211_send_disassoc);
- 
--void cfg80211_send_disassoc(struct net_device *dev, const u8 *buf, size_t len,
--			    void *cookie)
-+void cfg80211_send_disassoc(struct net_device *dev, const u8 *buf, size_t len)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 
--	BUG_ON(cookie && wdev != cookie);
--
--	if (cookie) {
--		/* called within callback */
--		__cfg80211_send_disassoc(dev, buf, len);
--	} else {
--		wdev_lock(wdev);
--		__cfg80211_send_disassoc(dev, buf, len);
--		wdev_unlock(wdev);
--	}
-+	wdev_lock(wdev);
-+	__cfg80211_send_disassoc(dev, buf, len);
-+	wdev_unlock(wdev);
- }
- EXPORT_SYMBOL(cfg80211_send_disassoc);
- 
---- linux-wl.orig/net/mac80211/mlme.c
-+++ linux-wl/net/mac80211/mlme.c
-@@ -458,9 +458,15 @@
- 	mgmt->u.deauth.reason_code = cpu_to_le16(reason);
- 
- 	if (stype == IEEE80211_STYPE_DEAUTH)
--		cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len, cookie);
-+		if (cookie)
-+			__cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len);
-+		else
-+			cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len);
- 	else
--		cfg80211_send_disassoc(sdata->dev, (u8 *)mgmt, skb->len, cookie);
-+		if (cookie)
-+			__cfg80211_send_disassoc(sdata->dev, (u8 *)mgmt, skb->len);
-+		else
-+			cfg80211_send_disassoc(sdata->dev, (u8 *)mgmt, skb->len);
- 	ieee80211_tx_skb(sdata, skb, ifmgd->flags & IEEE80211_STA_MFP_ENABLED);
- }
- 
-@@ -1959,12 +1965,10 @@
- 			/* no action */
- 			break;
- 		case RX_MGMT_CFG80211_DEAUTH:
--			cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len,
--					     NULL);
-+			cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len);
- 			break;
- 		case RX_MGMT_CFG80211_DISASSOC:
--			cfg80211_send_disassoc(sdata->dev, (u8 *)mgmt, skb->len,
--					       NULL);
-+			cfg80211_send_disassoc(sdata->dev, (u8 *)mgmt, skb->len);
- 			break;
- 		default:
- 			WARN(1, "unexpected: %d", rma);
-@@ -2019,7 +2023,7 @@
- 		cfg80211_send_rx_assoc(sdata->dev, (u8 *) mgmt, skb->len);
- 		break;
- 	case RX_MGMT_CFG80211_DEAUTH:
--		cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len, NULL);
-+		cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len);
- 		break;
- 	default:
- 		WARN(1, "unexpected: %d", rma);
+As I managed to get a connection via WEP, WEP104, WPA, WPA2 
+NO-ENCRYPTION to an AP today (including pings via the link), 
+I'll send a new WIP/RFC anyway.
 
 -- 
 http://www.holgerschurig.de
