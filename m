@@ -1,150 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:28629 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761393AbZJIUW4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2009 16:22:56 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 13/17] iwlwifi/iwl3945: unify rts_tx_cmd_flag
-Date: Fri,  9 Oct 2009 13:20:30 -0700
-Message-Id: <1255119634-3060-15-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1255119634-3060-1-git-send-email-reinette.chatre@intel.com>
-References: <1255119634-3060-1-git-send-email-reinette.chatre@intel.com>
+Received: from smtp.nokia.com ([192.100.105.134]:26872 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759017AbZJPM26 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 08:28:58 -0400
+Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n9GCRIvI015325
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2009 07:27:31 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linux-wireless@vger.kernel.org
+Cc: kalle.valo@nokia.com, juuso.oikarinen@nokia.com
+Subject: [RFC 1/3] mac80211: WIP - add operating BSSID to device configuration struct
+Date: Fri, 16 Oct 2009 15:27:20 +0300
+Message-Id: <1255696042-28413-2-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1255696042-28413-1-git-send-email-luciano.coelho@nokia.com>
+References: <1255696042-28413-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Some chips need to know the BSSID that we are interested in before we start
+the association process.  This patch adds an operating BSSID to the device
+configuration struct ieee80211_conf so that it can be passed to the driver
+when op_config is called.
 
-3945 and 4965 share the functionality for setting RTS and CTS to
-the tx_cmd. Unify these functions and move the common
-functionality to core.
+With this solution we also solve the problem of some chips that require
+an explicit disconnect command when disassociating.
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    1 +
- drivers/net/wireless/iwlwifi/iwl-4965.c     |   14 +-------------
- drivers/net/wireless/iwlwifi/iwl-core.c     |   17 +++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.h     |    2 ++
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    9 +--------
- 5 files changed, 22 insertions(+), 21 deletions(-)
+ include/net/mac80211.h |    8 ++++++++
+ net/mac80211/mlme.c    |   27 +++++++++++++++++++++++++--
+ 2 files changed, 33 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index cee03e7..1372ce4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -2826,6 +2826,7 @@ static struct iwl_lib_ops iwl3945_lib = {
- static struct iwl_hcmd_utils_ops iwl3945_hcmd_utils = {
- 	.get_hcmd_size = iwl3945_get_hcmd_size,
- 	.build_addsta_hcmd = iwl3945_build_addsta_hcmd,
-+	.rts_tx_cmd_flag = iwlcore_rts_tx_cmd_flag,
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 466859b..654d753 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -599,6 +599,7 @@ enum ieee80211_conf_changed {
+ 	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
+ 	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(7),
+ 	IEEE80211_CONF_CHANGE_IDLE		= BIT(8),
++	IEEE80211_CONF_CHANGE_OPER_BSSID	= BIT(9),
  };
  
- static struct iwl_ops iwl3945_ops = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index c9d9016..6d77039 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -484,18 +484,6 @@ static void iwl4965_gain_computation(struct iwl_priv *priv,
- 	data->beacon_count = 0;
- }
+ /**
+@@ -629,6 +630,11 @@ enum ieee80211_conf_changed {
+  * @short_frame_max_tx_count: Maximum number of transmissions for a "short"
+  *    frame, called "dot11ShortRetryLimit" in 802.11, but actually means the
+  *    number of transmissions not the number of retries
++ *
++ * @oper_bssid: BSSID on which we are operating; some chips need to know
++ *    which BSSID we are "tuned" to in order to improve power management,
++ *    coexistence with other technologies (such as Bluetooth) and other
++ *    filtering issues.
+  */
+ struct ieee80211_conf {
+ 	u32 flags;
+@@ -641,6 +647,8 @@ struct ieee80211_conf {
  
--static void iwl4965_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
--			__le32 *tx_flags)
--{
--	if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS) {
--		*tx_flags |= TX_CMD_FLG_RTS_MSK;
--		*tx_flags &= ~TX_CMD_FLG_CTS_MSK;
--	} else if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
--		*tx_flags &= ~TX_CMD_FLG_RTS_MSK;
--		*tx_flags |= TX_CMD_FLG_CTS_MSK;
--	}
--}
--
- static void iwl4965_bg_txpower_work(struct work_struct *work)
- {
- 	struct iwl_priv *priv = container_of(work, struct iwl_priv,
-@@ -2212,7 +2200,7 @@ static struct iwl_hcmd_utils_ops iwl4965_hcmd_utils = {
- 	.build_addsta_hcmd = iwl4965_build_addsta_hcmd,
- 	.chain_noise_reset = iwl4965_chain_noise_reset,
- 	.gain_computation = iwl4965_gain_computation,
--	.rts_tx_cmd_flag = iwl4965_rts_tx_cmd_flag,
-+	.rts_tx_cmd_flag = iwlcore_rts_tx_cmd_flag,
- 	.calc_rssi = iwl4965_calc_rssi,
- };
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index c40c7e2..1e0021f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -604,6 +604,23 @@ void iwlcore_free_geos(struct iwl_priv *priv)
- }
- EXPORT_SYMBOL(iwlcore_free_geos);
- 
-+/*
-+ *  iwlcore_rts_tx_cmd_flag: Set rts/cts. 3945 and 4965 only share this
-+ *  function.
-+ */
-+void iwlcore_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
-+				__le32 *tx_flags)
-+{
-+	if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS) {
-+		*tx_flags |= TX_CMD_FLG_RTS_MSK;
-+		*tx_flags &= ~TX_CMD_FLG_CTS_MSK;
-+	} else if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
-+		*tx_flags &= ~TX_CMD_FLG_RTS_MSK;
-+		*tx_flags |= TX_CMD_FLG_CTS_MSK;
-+	}
-+}
-+EXPORT_SYMBOL(iwlcore_rts_tx_cmd_flag);
+ 	struct ieee80211_channel *channel;
+ 	enum nl80211_channel_type channel_type;
 +
- static bool is_single_rx_stream(struct iwl_priv *priv)
++	u8 oper_bssid[ETH_ALEN];
+ };
+ 
+ /**
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 8d26e9b..cac542d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1077,6 +1077,11 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	/* channel(_type) changes are handled by ieee80211_hw_config */
+ 	local->oper_channel_type = NL80211_CHAN_NO_HT;
+ 
++	if (!is_zero_ether_addr(sdata->local->hw.conf.oper_bssid)) {
++		config_changed |= IEEE80211_CONF_CHANGE_OPER_BSSID;
++		memset(sdata->local->hw.conf.oper_bssid, 0, ETH_ALEN);
++	}
++
+ 	/* on the next assoc, re-program HT parameters */
+ 	sdata->ht_opmode_valid = false;
+ 
+@@ -2356,6 +2361,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	const u8 *ssid;
+ 	struct ieee80211_mgd_work *wk;
++	u32 config_changed = 0;
+ 	u16 auth_alg;
+ 
+ 	switch (req->auth_type) {
+@@ -2405,7 +2411,15 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ 	 *	to sleep and then change channel etc.
+ 	 */
+ 	sdata->local->oper_channel = req->bss->channel;
+-	ieee80211_hw_config(sdata->local, 0);
++
++	if (memcmp(sdata->local->hw.conf.oper_bssid,
++		   req->bss->bssid, ETH_ALEN)) {
++		config_changed |= IEEE80211_CONF_CHANGE_OPER_BSSID;
++		memcpy(sdata->local->hw.conf.oper_bssid,
++		       req->bss->bssid, ETH_ALEN);
++	}
++
++	ieee80211_hw_config(sdata->local, config_changed);
+ 
+ 	mutex_lock(&ifmgd->mtx);
+ 	list_add(&wk->list, &sdata->u.mgd.work_list);
+@@ -2420,6 +2434,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
  {
- 	return !priv->current_ht_config.is_ht ||
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 3679c2c..cec673b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -329,6 +329,8 @@ int iwl_mac_get_tx_stats(struct ieee80211_hw *hw,
- void iwl_mac_reset_tsf(struct ieee80211_hw *hw);
- int iwl_alloc_txq_mem(struct iwl_priv *priv);
- void iwl_free_txq_mem(struct iwl_priv *priv);
-+void iwlcore_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
-+				__le32 *tx_flags);
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- int iwl_alloc_traffic_mem(struct iwl_priv *priv);
- void iwl_free_traffic_mem(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 66da441..f4d4353 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -408,7 +408,6 @@ static void iwl3945_build_tx_cmd_basic(struct iwl_priv *priv,
- 	struct iwl3945_tx_cmd *tx = (struct iwl3945_tx_cmd *)cmd->cmd.payload;
- 	__le32 tx_flags = tx->tx_flags;
- 	__le16 fc = hdr->frame_control;
--	u8 rc_flags = info->control.rates[0].flags;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct ieee80211_mgd_work *wk, *found = NULL;
++	u32 config_changed = 0;
+ 	int i, err;
  
- 	tx->stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
- 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
-@@ -435,13 +434,7 @@ static void iwl3945_build_tx_cmd_basic(struct iwl_priv *priv,
- 		tx_flags |= TX_CMD_FLG_SEQ_CTL_MSK;
- 	}
+ 	mutex_lock(&ifmgd->mtx);
+@@ -2457,7 +2472,15 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 			ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
  
--	if (rc_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
--		tx_flags |= TX_CMD_FLG_RTS_MSK;
--		tx_flags &= ~TX_CMD_FLG_CTS_MSK;
--	} else if (rc_flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
--		tx_flags &= ~TX_CMD_FLG_RTS_MSK;
--		tx_flags |= TX_CMD_FLG_CTS_MSK;
--	}
-+	priv->cfg->ops->utils->rts_tx_cmd_flag(info, &tx_flags);
+ 	sdata->local->oper_channel = req->bss->channel;
+-	ieee80211_hw_config(sdata->local, 0);
++
++	if (memcmp(sdata->local->hw.conf.oper_bssid,
++		   req->bss->bssid, ETH_ALEN)) {
++		config_changed |= IEEE80211_CONF_CHANGE_OPER_BSSID;
++		memcpy(sdata->local->hw.conf.oper_bssid,
++		       req->bss->bssid, ETH_ALEN);
++	}
++
++	ieee80211_hw_config(sdata->local, config_changed);
  
- 	if ((tx_flags & TX_CMD_FLG_RTS_MSK) || (tx_flags & TX_CMD_FLG_CTS_MSK))
- 		tx_flags |= TX_CMD_FLG_FULL_TXOP_PROT_MSK;
+ 	if (req->ie && req->ie_len) {
+ 		memcpy(wk->ie, req->ie, req->ie_len);
 -- 
-1.5.6.3
+1.5.6.5
 
