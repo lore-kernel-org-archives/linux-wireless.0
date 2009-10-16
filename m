@@ -1,56 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lennier.cc.vt.edu ([198.82.162.213]:59248 "EHLO
-	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751490AbZJJFXU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Oct 2009 01:23:20 -0400
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mmotm 2009-10-09-01-07 - iwl3945 fails to do firmware load request
-In-Reply-To: Your message of "Sat, 10 Oct 2009 08:42:35 +0800."
-             <1255135355.3719.22.camel@debian>
-From: Valdis.Kletnieks@vt.edu
-References: <200910090830.n998Ubvv020464@imap1.linux-foundation.org> <16108.1255133561@turing-police.cc.vt.edu>
-            <1255135355.3719.22.camel@debian>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1255152144_250202P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Date: Sat, 10 Oct 2009 01:22:24 -0400
-Message-ID: <252795.1255152144@turing-police.cc.vt.edu>
+Received: from mga01.intel.com ([192.55.52.88]:15258 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752659AbZJPFUy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 01:20:54 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 09/16] iwmc3200wifi: Tx power setting
+Date: Fri, 16 Oct 2009 13:18:53 +0800
+Message-Id: <1255670340-22565-10-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1255670340-22565-9-git-send-email-yi.zhu@intel.com>
+References: <1255670340-22565-1-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-2-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-3-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-4-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-5-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-6-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-7-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-8-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-9-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---==_Exmh_1255152144_250202P
-Content-Type: text/plain; charset=us-ascii
+From: Samuel Ortiz <sameo@linux.intel.com>
 
-On Sat, 10 Oct 2009 08:42:35 +0800, Zhu Yi said:
+We can now set the Tx power from e.g. iwconfig.
 
-> The firmware loading happens when the user space brings the interface
-> up. Can you check NM is running for the bad case?
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwmc3200wifi/cfg80211.c |   12 +++++++++++-
+ drivers/net/wireless/iwmc3200wifi/commands.c |   13 +++++++++++++
+ drivers/net/wireless/iwmc3200wifi/commands.h |    6 ++++++
+ 3 files changed, 30 insertions(+), 1 deletions(-)
 
-I'm not using NM, because I've never figured out how to get it to DTRT for
-my network config, so I run wpa_supplicant directly.  It's looking like
-a bad update to dbus was the actual root cause.
-
-(Did I mention how I loath dbus?  Or at least the fact that if it breaks,
-everything from wireless to pulseaudio immediately craps out too.  That and
-'hald' are my two favorite "only on this laptop because stuff refuses to
-work without them"....)
-
---==_Exmh_1255152144_250202P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
-
-iD8DBQFK0BoQcC3lWbTT17ARAhFMAKDJ2ReXz//1q9KFawFaDkdeJSmvbgCeOuwN
-V8K6LJF+xKnfAkVgzbkCmhU=
-=ULSW
------END PGP SIGNATURE-----
-
---==_Exmh_1255152144_250202P--
+diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+index ea0ed32..2e00a4b 100644
+--- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
++++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+@@ -671,9 +671,19 @@ static int iwm_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev,
+ static int iwm_cfg80211_set_txpower(struct wiphy *wiphy,
+ 				    enum tx_power_setting type, int dbm)
+ {
++	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
++	int ret;
++
+ 	switch (type) {
+ 	case TX_POWER_AUTOMATIC:
+ 		return 0;
++	case TX_POWER_FIXED:
++		ret = iwm_umac_set_config_fix(iwm, UMAC_PARAM_TBL_CFG_FIX,
++					      CFG_TX_PWR_LIMIT_USR, dbm * 2);
++		if (ret < 0)
++			return ret;
++
++		return iwm_tx_power_trigger(iwm);
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+@@ -685,7 +695,7 @@ static int iwm_cfg80211_get_txpower(struct wiphy *wiphy, int *dbm)
+ {
+ 	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
+ 
+-	*dbm = iwm->txpower;
++	*dbm = iwm->txpower >> 1;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/iwmc3200wifi/commands.c b/drivers/net/wireless/iwmc3200wifi/commands.c
+index 1ba839c..0641bc7 100644
+--- a/drivers/net/wireless/iwmc3200wifi/commands.c
++++ b/drivers/net/wireless/iwmc3200wifi/commands.c
+@@ -794,6 +794,19 @@ int iwm_invalidate_mlme_profile(struct iwm_priv *iwm)
+ 	return ret ? 0 : -EBUSY;
+ }
+ 
++int iwm_tx_power_trigger(struct iwm_priv *iwm)
++{
++	struct iwm_umac_pwr_trigger pwr_trigger;
++
++	pwr_trigger.hdr.oid = UMAC_WIFI_IF_CMD_TX_PWR_TRIGGER;
++	pwr_trigger.hdr.buf_size =
++		cpu_to_le16(sizeof(struct iwm_umac_pwr_trigger) -
++			    sizeof(struct iwm_umac_wifi_if));
++
++
++	return iwm_send_wifi_if_cmd(iwm, &pwr_trigger, sizeof(pwr_trigger), 1);
++}
++
+ int iwm_send_umac_stats_req(struct iwm_priv *iwm, u32 flags)
+ {
+ 	struct iwm_udma_wifi_cmd udma_cmd = UDMA_UMAC_INIT;
+diff --git a/drivers/net/wireless/iwmc3200wifi/commands.h b/drivers/net/wireless/iwmc3200wifi/commands.h
+index 511b6e3..b36be2b 100644
+--- a/drivers/net/wireless/iwmc3200wifi/commands.h
++++ b/drivers/net/wireless/iwmc3200wifi/commands.h
+@@ -441,6 +441,11 @@ struct iwm_umac_tx_key_id {
+ 	u8 reserved[3];
+ } __attribute__ ((packed));
+ 
++struct iwm_umac_pwr_trigger {
++	struct iwm_umac_wifi_if hdr;
++	__le32 reseved;
++} __attribute__ ((packed));
++
+ struct iwm_umac_cmd_stats_req {
+ 	__le32 flags;
+ } __attribute__ ((packed));
+@@ -467,6 +472,7 @@ int iwm_invalidate_mlme_profile(struct iwm_priv *iwm);
+ int iwm_send_packet(struct iwm_priv *iwm, struct sk_buff *skb, int pool_id);
+ int iwm_set_tx_key(struct iwm_priv *iwm, u8 key_idx);
+ int iwm_set_key(struct iwm_priv *iwm, bool remove, struct iwm_key *key);
++int iwm_tx_power_trigger(struct iwm_priv *iwm);
+ int iwm_send_umac_stats_req(struct iwm_priv *iwm, u32 flags);
+ int iwm_send_umac_channel_list(struct iwm_priv *iwm);
+ int iwm_scan_ssids(struct iwm_priv *iwm, struct cfg80211_ssid *ssids,
+-- 
+1.6.0.4
 
