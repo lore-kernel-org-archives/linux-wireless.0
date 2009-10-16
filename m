@@ -1,76 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:48433 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758882AbZJIQkn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2009 12:40:43 -0400
-Date: Fri, 9 Oct 2009 09:32:02 -0700
-From: Greg KH <gregkh@suse.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, devel@driverdev.osuosl.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wireless: make WEXT_SPY and WEXT_PRIV select WEXT_CORE
-Message-ID: <20091009163202.GA3342@suse.de>
-References: <4ACD0E5A.7060106@oracle.com>
- <1254954842.3713.7.camel@johannes.local>
- <4ACD1C3D.3030506@oracle.com>
- <1254957256.3713.10.camel@johannes.local>
- <20091007171235.d40f0cc2.randy.dunlap@oracle.com>
- <1254995282.3713.18.camel@johannes.local>
- <20091008080615.09c8b803.randy.dunlap@oracle.com>
- <1255026563.3713.28.camel@johannes.local>
- <20091009090601.73de5dc6.randy.dunlap@oracle.com>
- <1255104846.4095.2.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1255104846.4095.2.camel@johannes.local>
+Received: from senator.holtmann.net ([87.106.208.187]:48261 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751128AbZJPQSW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 12:18:22 -0400
+Subject: Re: [PATCH 03/16] iwmc3200wifi: WPS support
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+In-Reply-To: <1255670340-22565-4-git-send-email-yi.zhu@intel.com>
+References: <1255670340-22565-1-git-send-email-yi.zhu@intel.com>
+	 <1255670340-22565-2-git-send-email-yi.zhu@intel.com>
+	 <1255670340-22565-3-git-send-email-yi.zhu@intel.com>
+	 <1255670340-22565-4-git-send-email-yi.zhu@intel.com>
+Content-Type: text/plain
+Date: Fri, 16 Oct 2009 18:18:07 +0200
+Message-Id: <1255709887.31260.4.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 09, 2009 at 06:14:06PM +0200, Johannes Berg wrote:
-> On Fri, 2009-10-09 at 09:06 -0700, Randy Dunlap wrote:
-> 
-> > >  menuconfig WLAN
-> > >  	bool "Wireless LAN"
-> > >  	depends on !S390
-> > > +	select WIRELESS
-> > >  	default y
-> > >  	---help---
-> > >  	  This section contains all the pre 802.11 and 802.11 wireless
-> > 
-> > 
-> > I suppose that's OK, although I prefer "depends" rather than "select".
-> 
-> I tend to as well, but in this case the WIRELESS itself is just an
-> option that makes other options invisible, it's not used elsewhere, and
-> as such I think this is ok -- why hide the wireless drivers unless the
-> user first selects the wireless core options?
-> 
-> OTOH, you already need to select cfg80211/mac80211 for most drivers, so
-> I suppose "depends on WIRELESS" would be ok too.
-> 
-> > I tracked down one of the problems that I was seeing:
-> > 
-> > net/wireless/wext-priv.c:206: error: implicit declaration of function 'call_commit_handler'
-> > 
-> > with:
-> > # CONFIG_WIRELESS is not set
-> > CONFIG_WIRELESS_EXT=y
-> > CONFIG_WEXT_PRIV=y
-> > 
-> > This is being caused by several drivers in drivers/staging/ doing
-> > 	select WEXT_PRIV
-> > without using either enough dependencies or even more (ugly) selects.
-> > (or just because kconfig isn't sufficient)
-> 
-> Hah, staging/, well, that's kinda hard to solve I guess. Except by
-> fixing all the staging/ drivers to depend on WIRELESS too, like the
-> patch would do for the regular drivers.
+Hi Yi,
 
-That's fine, I'll gladly take patches to do that.
+> From: Samuel Ortiz <sameo@linux.intel.com>
+> 
+> By setting the WSC profile flag, we now support WPS as an enrollee.
+> 
+> Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+> ---
+>  drivers/net/wireless/iwmc3200wifi/cfg80211.c |    7 +++++++
+>  drivers/net/wireless/iwmc3200wifi/commands.h |    3 +++
+>  2 files changed, 10 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+> index 0d2e719..a6d2f20 100644
+> --- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+> +++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+> @@ -628,6 +628,13 @@ static int iwm_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+>  		iwm->default_key = sme->key_idx;
+>  	}
+>  
+> +	/* WPA and open AUTH type from wpa_s means WPS (a.k.a. WSC) */
+> +	if ((iwm->umac_profile->sec.flags &
+> +	     (UMAC_SEC_FLG_WPA_ON_MSK | UMAC_SEC_FLG_RSNA_ON_MSK)) &&
+> +	    iwm->umac_profile->sec.auth_type == UMAC_AUTH_TYPE_OPEN) {
+> +			iwm->umac_profile->sec.flags = UMAC_SEC_FLG_WSC_ON_MSK;
+> +	}
+> +
 
-thanks,
+I don't wanna be picky, but what coding style are you following here?
+The indentation makes no sense and doesn't improve readability.
 
-greg k-h
+Regards
+
+Marcel
+
+
