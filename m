@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:13630 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754680AbZJPVZ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 17:25:58 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 01/10] iwl3945: disable all tx fifos
-Date: Fri, 16 Oct 2009 14:25:49 -0700
-Message-Id: <1255728358-29976-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
-References: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40569 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760011AbZJPOQv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 10:16:51 -0400
+Date: Fri, 16 Oct 2009 10:05:05 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: John Willis <John.Willis@Distant-earth.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wl1251: add support for PG11 chips.
+Message-ID: <20091016140504.GD4849@tuxdriver.com>
+References: <01c201ca4d9c$c2c44500$484ccf00$@Willis@Distant-earth.com> <87vdifbyao.fsf@nokia.com> <87my3rn38e.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87my3rn38e.fsf@purkki.valot.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+On Fri, Oct 16, 2009 at 11:37:53AM +0300, Kalle Valo wrote:
+> Kalle Valo <kalle.valo@iki.fi> writes:
+> 
+> > John Willis <John.Willis@Distant-earth.com> writes:
+> >
+> >> From: David-John Willis <John.Willis@Distant-earth.com>
+> >>
+> >> This simple patch adds support for the PG11 variant of the WL1251 chip as
+> >> used on the OpenPandora OMAP3 device.
+> >>
+> >> Signed-off-by: David-John Willis <John.Willis@Distant-earth.com>
+> 
+> [...]
+> 
+> > This patch also enables PG10 support, but as that hardware revision is
+> > untested I think it's better not to enable it. I'll edit the patch a bit
+> > regarding this and then send it to John.
+> 
+> Oh, I noticed that Linville had already applied your patch. I'll send
+> a patch on top of this to fix the issue.
+> 
+> Linville, is this ok for you?
+> 
+> Too many Johns here :)
 
-Disable the all the tx fifos while stopping the tx queues.
+Either way is fine -- it hasn't gone to Dave, so I can sort it out...
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index afe19f2..9fb964b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -1220,6 +1220,7 @@ void iwl3945_hw_txq_ctx_stop(struct iwl_priv *priv)
- 
- 	/* stop SCD */
- 	iwl_write_prph(priv, ALM_SCD_MODE_REG, 0);
-+	iwl_write_prph(priv, ALM_SCD_TXFACT_REG, 0);
- 
- 	/* reset TFD queues */
- 	for (txq_id = 0; txq_id < priv->hw_params.max_txq_num; txq_id++) {
+John
 -- 
-1.5.6.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
