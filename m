@@ -1,56 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xenotime.net ([72.52.64.118]:35699 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751072AbZJTSHf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2009 14:07:35 -0400
-Received: from chimera.site ([96.253.169.185]) by xenotime.net for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 11:07:35 -0700
-Date: Tue, 20 Oct 2009 11:07:35 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: [PATCH] mac80211: trivial: fix spelling in mesh_hwmp
-Message-Id: <20091020110735.445205d1.rdunlap@xenotime.net>
-In-Reply-To: <1256061862-23368-1-git-send-email-andrey@cozybit.com>
-References: <1256061862-23368-1-git-send-email-andrey@cozybit.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:33615 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750741AbZJPRP3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 13:15:29 -0400
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: Current status of rt2800usb and staging/rt2870
+Date: Fri, 16 Oct 2009 19:13:43 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Ozan =?utf-8?q?=C3=87a=C4=9Flayan?= <ozan@pardus.org.tr>,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel" <linux-kernel@vger.kernel.org>
+References: <4AD46380.9020308@pardus.org.tr> <200910151647.49050.bzolnier@gmail.com> <43e72e890910151206y59353608p5065f72eebd72ab@mail.gmail.com>
+In-Reply-To: <43e72e890910151206y59353608p5065f72eebd72ab@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200910161913.44109.bzolnier@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 20 Oct 2009 11:04:22 -0700 Andrey Yurovsky wrote:
-
-> Fix a couple of typos in the description of hwmp_route_info_get(), no
-> functional changes.
+On Thursday 15 October 2009 21:06:55 Luis R. Rodriguez wrote:
+> On Thu, Oct 15, 2009 at 7:47 AM, Bartlomiej Zolnierkiewicz
+> <bzolnier@gmail.com> wrote:
+> > On Wednesday 14 October 2009 18:55:23 Luis R. Rodriguez wrote:
+> >
+> >> I hear fishing in Poland is great this time of year.
+> >
+> > It got quite cold this week so I thought that I would try to fish
+> > the commit that broke Atheros AR9285 in Linus' tree (works in 2.6.31)
+> > and make recent kernels finally work on my laptop..
+> >
+> > Seems like there are two regressions actually:
+> >
+> > - later one making association/authentication impossible
 > 
-> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
-> ---
->  net/mac80211/mesh_hwmp.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
+> And you reported this when and where?
 > 
-> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-> index e12a786..c300911 100644
-> --- a/net/mac80211/mesh_hwmp.c
-> +++ b/net/mac80211/mesh_hwmp.c
-> @@ -259,12 +259,12 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
->   * @hwmp_ie: hwmp information element (PREP or PREQ)
->   *
->   * This function updates the path routing information to the originator and the
-> - * transmitter of a HWMP PREQ or PREP fram.
-> + * transmitter of a HWMP PREQ or PREP frame.
->   *
->   * Returns: metric to frame originator or 0 if the frame should not be further
->   * processed
->   *
-> - * Notes: this function is the only place (besides user-provided info) where
-> + * Notes: this function is the only place (beside user-provided info) where
+> > - earlier one making transfers stall
+> 
+> And you reported this when and where?
+> 
+> Curious how the issues you mention now spreading across sound and
+> wireless do not get fixed or seriously addressed. Have you considered
+> your tactics are perhaps not the best?
 
-This one was OK as is.  "besides" means "other than" or "except".
+Please look closely at chosen examples and you'll see a lot of insight
+telling you that users' experience is not granted by having clean code
+or by having features which are not consider crucial instead of reliable
+basic functionality.
 
->   * path routing information is updated.
->   */
->  static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
-> -- 
+I'm pretty sure that if you try F12 w/ AR9285 you will be able to reproduce
+and fix at least some of above mentioned problems.  I just used the occasion
+to raise them and make people aware of bugs before they hit users in final
+2.6.32.
 
+I'm not as much interested in fixing existing problems as in seeing why
+they happened in the first place and how the process can be improved to
+prevent them / making tracking of them easy for non-developers (so more
+people can contribute to the project and developers have more time to
+add new features).  I also don't have time to care about every single
+Linux bug that I encounter (I hit quite a lot of them), bug-reporting
+is a thankless and very time consuming work.
 
----
-~Randy
+This is in no means trying to implicit that you're doing bad job.  Quite
+the contrary -- I think that your work on Atheros support is much needed.
+
+The point is that there is a lot of room for in release management process
+of wireless/networking (it has been more-or-less unchanged for a long time
+while other subsystems, i.e. x86, are constantly looking into improvements).
+
+This is not something that you can change alone so please do not hesitate
+to give feedback about this to your upstream maintainers so they are aware
+of the need for improvements.
