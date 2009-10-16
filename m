@@ -1,63 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40749 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932107AbZJLNqr (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58348 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758585AbZJPLiz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 09:46:47 -0400
-Date: Mon, 12 Oct 2009 09:38:36 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: kalle.valo@iki.fi, johannes@sipsolutions.net,
-	hidave.darkstar@gmail.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43: fix ieee80211_rx() context
-Message-ID: <20091012133835.GB27575@tuxdriver.com>
-References: <873a5pq5vc.fsf@purkki.valot.fi> <1255276971.4095.241.camel@johannes.local> <87y6nhoqud.fsf@purkki.valot.fi> <20091011.200857.141215452.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091011.200857.141215452.davem@davemloft.net>
+	Fri, 16 Oct 2009 07:38:55 -0400
+Subject: Re: [PATCH] wl1251: rename spi device to wl1251
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20091013174119.15796.81021.stgit@tikku>
+References: <20091013174119.15796.81021.stgit@tikku>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-t6xpzvf2oaTFIrpOQQA4"
+Date: Fri, 16 Oct 2009 18:51:37 +0900
+Message-Id: <1255686697.4095.324.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 11, 2009 at 08:08:57PM -0700, David Miller wrote:
-> From: Kalle Valo <kalle.valo@iki.fi>
-> Date: Sun, 11 Oct 2009 19:08:58 +0300
-> 
-> > Johannes Berg <johannes@sipsolutions.net> writes:
-> > 
-> >>> > +	local_bh_disable();
-> >>> >  	ieee80211_rx(dev->wl->hw, skb);
-> >>> > +	local_bh_enable();
-> >>> 
-> >>> This is a bit awkward from drivers' point of view, we have to add the
-> >>> same code to all mac80211 drivers using either SPI or SDIO buses.
-> >>> 
-> >>> What about adding a new inline function ieee80211_rx_ni() which would
-> >>> disable bottom halves like above and call ieee80211_rx()? IMHO that's
-> >>> easier for the driver developers to understand and also easier to
-> >>> document ("use this function when calling from process context"). If
-> >>> this is acceptable, I can create a patch.
-> >>
-> >> I really don't see the point, since it's just three lines of code, but I
-> >> wouldn't mind all that much either.
-> > 
-> > My worry are the developers who even don't know what is a bottom half
-> > and might get it all wrong. (Yes, there really are such people.)
-> 
-> And the difference between this and knowing you need to call the
-> ieee80211_rx_ni() thing is?
-> 
-> You have to know what the heck a bottom half is to even know that you
-> would need to call the ieee80211_rx_ni() thing.
-> 
-> And that's the same amount of knowledge necessary to simply wrap the
-> thing in a BH disable/enable sequence.
 
-I'm not sure I see the difference between this and the rationale for
-having netif_rx_ni vs. an open-coded version of it?  ieee80211_rx_ni
-seems like a small amount of code (could even be inline) that
-potentially avoids some stupid bugs...?
+--=-t6xpzvf2oaTFIrpOQQA4
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+On Tue, 2009-10-13 at 20:41 +0300, Kalle Valo wrote:
+
+> -MODULE_ALIAS("spi:wl12xx");
+> +MODULE_ALIAS("spi:wl1251");
+> diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wirel=
+ess/wl12xx/wl1251_spi.c
+> index 14eff2b..2cf8a21 100644
+> --- a/drivers/net/wireless/wl12xx/wl1251_spi.c
+> +++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
+> @@ -307,7 +307,7 @@ static int __devexit wl1251_spi_remove(struct spi_dev=
+ice *spi)
+> =20
+>  static struct spi_driver wl1251_spi_driver =3D {
+>  	.driver =3D {
+> -		.name		=3D "wl12xx",
+> +		.name		=3D "wl1251",
+>  		.bus		=3D &spi_bus_type,
+>  		.owner		=3D THIS_MODULE,
+
+IIRC there's a preprocessor symbol for the module name (MODULE_NAME?)
+
+johannes
+
+--=-t6xpzvf2oaTFIrpOQQA4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK2EIlAAoJEODzc/N7+QmaiZgQAMArhteSMbld2svoPpeS71A3
+3+rcbsSRDFV6G4XQYsg0NZqAQSLLA/FQqIfu/VsiEy+nI+I3czNnd27aimACP4e9
+hNOZHaaUWQcR+GB1ukeTrUwqPTaYfFFJFDuJlKQzwAEGu9wbBdm1feKLVq4ToBX7
+fcnI6isII52Up2p7w9yvpKQA85+naW/3VbbF/js/KnK4MI6JiFywz6Xw6l3c7mNC
+Qcr7Hdg68f8ZoDxQppZWSirX5MtZ1Vtu00onyKuy8w+JQF5K13jUvYne67bAP7yc
+l2vY6oTKaoo/rTq2YnTA7FDw4XSWDB4z66gJgAm9vzbXabCbcOMN0YCTdvPyla7J
+uQ3sffUIPmwKLWyvXO9M/vobi+ttMyy1TnUfEVXH+gpG1HvQyk0O5EBedOnOs5ez
+hHgmjJ07GxP/nWQ1rEmTElaRKXnUkbckN1GQ04XuQNTv4PKU6UZNsFwDyOqC24yy
+wFQfCep5UjzIEl158FSjr2Cu4rQkFMz2D0tbjeF2N3qjgpKUBSUJN4nLcTlOfk5C
+PTTetNG2Ibluw/y0fB1jpKi6H7vr1QCzsSgXStuVagtEQ4yvjDvFr7q0JSORWOVl
+How48AkYAIP2JHD5RSLA/qzFNqRUs6JvxZNDsQuvfF/xkQFVmJflf2qczN/1Enrp
+/MvqDXeAGpYhNpltYsL8
+=6OeD
+-----END PGP SIGNATURE-----
+
+--=-t6xpzvf2oaTFIrpOQQA4--
+
