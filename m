@@ -1,61 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:45984 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754474AbZJLI3g (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 04:29:36 -0400
-Message-ID: <4AD2E8C8.4060205@imap.cc>
-Date: Mon, 12 Oct 2009 10:28:56 +0200
-From: Tilman Schmidt <tilman@imap.cc>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Dave Young <hidave.darkstar@gmail.com>,
-	linux-kernel@vger.kernel.org, tglx@linutronix.de,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>, linux-ppp@vger.kernel.org,
-	netdev@vger.kernel.org, Paul Mackerras <paulus@samba.org>
-Subject: Re: NOHZ: local_softirq_pending 08
-References: <20091011095217.GA2200@darkstar>	 <1255255735.4095.53.camel@johannes.local>	 <4AD1BF06.3050103@phoenixsoftware.de> <1255261251.4095.143.camel@johannes.local>
-In-Reply-To: <1255261251.4095.143.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:15258 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752825AbZJPFVZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 01:21:25 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 15/16] iwmc3200wifi: Set wiphy firmware version
+Date: Fri, 16 Oct 2009 13:18:59 +0800
+Message-Id: <1255670340-22565-16-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1255670340-22565-15-git-send-email-yi.zhu@intel.com>
+References: <1255670340-22565-1-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-2-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-3-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-4-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-5-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-6-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-7-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-8-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-9-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-10-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-11-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-12-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-13-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-14-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-15-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+From: Samuel Ortiz <sameo@linux.intel.com>
 
-[CCing PPP people]
+Our wiphy firmware version is a combination of the UMAC and LMAC ones.
 
-Am 11.10.2009 13:40 schrieb Johannes Berg:
-> On Sun, 2009-10-11 at 13:18 +0200, Tilman Schmidt wrote:
-> 
->> Can you explain a bit more what that message is about?
->> I am encountering it in a completely different context
->> (PPP over ISDN) [...]
-> 
-> Basically, calling netif_rx() with softirqs enabled.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwmc3200wifi/fw.c   |    7 +++++++
+ drivers/net/wireless/iwmc3200wifi/iwm.h  |    2 ++
+ drivers/net/wireless/iwmc3200wifi/main.c |    4 ++++
+ 3 files changed, 13 insertions(+), 0 deletions(-)
 
-AFAICS that would have to be the netif_rx() call in
-ppp_receive_nonmp_frame() [drivers/net/ppp_generic.c#L1791],
-called (via others) from the tasklet work function
-ppp_sync_process() [drivers/net/ppp_synctty.c#L545].
-Should that be changed to the
-"if (in_interrupt()) netif_rx(skb) else netif_rx_ni(skb)"
-stanza from the linux.kernel.wireless.general thread then?
+diff --git a/drivers/net/wireless/iwmc3200wifi/fw.c b/drivers/net/wireless/iwmc3200wifi/fw.c
+index f02d571..4906709 100644
+--- a/drivers/net/wireless/iwmc3200wifi/fw.c
++++ b/drivers/net/wireless/iwmc3200wifi/fw.c
+@@ -217,6 +217,13 @@ static int iwm_load_img(struct iwm_priv *iwm, const char *img_name)
+ 		 IWM_BUILD_YEAR(build_date), IWM_BUILD_MONTH(build_date),
+ 		 IWM_BUILD_DAY(build_date));
+ 
++	if (!strcmp(img_name, iwm->bus_ops->umac_name))
++		sprintf(iwm->umac_version, "%02X.%02X",
++			ver->major, ver->minor);
++
++	if (!strcmp(img_name, iwm->bus_ops->lmac_name))
++		sprintf(iwm->lmac_version, "%02X.%02X",
++			ver->major, ver->minor);
+ 
+  err_release_fw:
+ 	release_firmware(fw);
+diff --git a/drivers/net/wireless/iwmc3200wifi/iwm.h b/drivers/net/wireless/iwmc3200wifi/iwm.h
+index c4a01f2..a9bf6bc 100644
+--- a/drivers/net/wireless/iwmc3200wifi/iwm.h
++++ b/drivers/net/wireless/iwmc3200wifi/iwm.h
+@@ -294,6 +294,8 @@ struct iwm_priv {
+ 	int resp_ie_len;
+ 
+ 	struct iwm_fw_error_hdr *last_fw_err;
++	char umac_version[8];
++	char lmac_version[8];
+ 
+ 	char private[0] __attribute__((__aligned__(NETDEV_ALIGN)));
+ };
+diff --git a/drivers/net/wireless/iwmc3200wifi/main.c b/drivers/net/wireless/iwmc3200wifi/main.c
+index 97c6f5a..75f105a 100644
+--- a/drivers/net/wireless/iwmc3200wifi/main.c
++++ b/drivers/net/wireless/iwmc3200wifi/main.c
+@@ -629,6 +629,7 @@ static int __iwm_up(struct iwm_priv *iwm)
+ {
+ 	int ret;
+ 	struct iwm_notif *notif_reboot, *notif_ack = NULL;
++	struct wiphy *wiphy = iwm_to_wiphy(iwm);
+ 
+ 	ret = iwm_bus_enable(iwm);
+ 	if (ret) {
+@@ -690,6 +691,9 @@ static int __iwm_up(struct iwm_priv *iwm)
+ 		goto err_disable;
+ 	}
+ 
++	snprintf(wiphy->fw_version, sizeof(wiphy->fw_version), "L%s_U%s",
++		 iwm->lmac_version, iwm->umac_version);
++
+ 	/* We configure the UMAC and enable the wifi module */
+ 	ret = iwm_send_umac_config(iwm,
+ 			cpu_to_le32(UMAC_RST_CTRL_FLG_WIFI_CORE_EN) |
+-- 
+1.6.0.4
 
-Thanks,
-Tilman
-
-- --
-Tilman Schmidt                    E-Mail: tilman@imap.cc
-Bonn, Germany
-Diese Nachricht besteht zu 100% aus wiederverwerteten Bits.
-Ungeöffnet mindestens haltbar bis: (siehe Rückseite)
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.4 (MingW32)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFK0ujIQ3+did9BuFsRAtGBAJ9rj2pyQZ75ZKTipLhpICqA3ZvTdQCdHQs/
-RmdeOT3TuPZykXJxcHLJCzU=
-=87DI
------END PGP SIGNATURE-----
