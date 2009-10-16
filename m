@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:50453 "EHLO ogre.sisk.pl"
+Received: from cantor.suse.de ([195.135.220.2]:37180 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752083AbZI3W0L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 18:26:11 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Frans Pop <elendil@planet.nl>
-Subject: Re: [.32-rc1/2] ath5k: has become unreliable with .32-rc1
-Date: Thu, 1 Oct 2009 00:27:37 +0200
-Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-References: <200909300952.29106.elendil@planet.nl> <20090930122451.GA17280@hash.localnet> <200909302349.05614.elendil@planet.nl>
-In-Reply-To: <200909302349.05614.elendil@planet.nl>
+	id S1759545AbZJPN0C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 09:26:02 -0400
+Date: Fri, 16 Oct 2009 15:25:24 +0200 (CEST)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 5/8] trivial: fix typo s/assocate/associate/ in comment
+In-Reply-To: <1255637738-6069-1-git-send-email-cascardo@holoscopio.com>
+Message-ID: <alpine.LSU.2.00.0910161525190.8582@wotan.suse.de>
+References: <1255637738-6069-1-git-send-email-cascardo@holoscopio.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200910010027.37892.rjw@sisk.pl>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 30 September 2009, Frans Pop wrote:
-> On Wednesday 30 September 2009, Bob Copeland wrote:
-> > On Wed, Sep 30, 2009 at 09:52:27AM +0200, Frans Pop wrote:
-> > > This is on a laptop I don't use much, but with .31 wireless has always
-> > > been (and still is) reliable (.31-rc5 is the last kernel I built for
-> > > it). On my other laptop wireless (iwlagn) works fine with .32-rc1.
-> >
-> > Although iwlagn works, I would think this kind of thing:
-> > > ath0: authenticated
-> > > ath0: associate with AP 00:14:c1:38:e5:15 (try 1)
-> > > ath0: RX ReassocResp from 00:14:c1:38:e5:15 (capab=0x411 status=0 aid=2)
-> > > ath0: associated 
-> > > ath0: deauthenticating by local choice (reason=3)
-> >
-> > ...is some kind of issue with userspace or wext rather than the driver.
-> > Ath5k only had a dozen or so patches this time around, so it should be
-> > easy to bisect if it's a problem in the driver.  One possibility is
-> > hardware CCMP support but I've been using it here for some time.
-> 
-> I doubt it's a userspace issue, but it does look like the regression was
-> not triggered by the ath5k driver itself. In the mean time I did a bisect
-> on the drivers/net/wireless/ath directory without any results.
-> 
-> > By the way, name it what you will, but the standard is wlan0 these days
-> > :)
-> 
-> Yep. A leftover from the days I used madwifi :-) I kind of like it though
-> given its similarity to eth0.
-> 
-> > > So the difference looks to be how I boot: if I do a *cold* boot
-> > > directly into .32, wireless fails; if I *reboot* from .31 into .32,
-> > > wireless comes up correctly. Reboot from .32 to .32 fails too.
-> >
-> > Is that repeatable?
-> 
-> Yes, 100%. Weird heh? That's what made me think it must be an ath5k
-> driver issue as it looks like a hardware initialization problem. Could
-> be PCI or PCMCIA though, although I don't see anything suspicious in
-> dmesg.
-> 
-> > Rafael J. Wysocki has a patch floating around to fix PCMCIA resume,
-> > linked here: http://bugzilla.kernel.org/show_bug.cgi?id=13092
+On Thu, 15 Oct 2009, Thadeu Lima de Souza Cascardo wrote:
 
-Already in the Linus' tree.
+> Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+> ---
+>  drivers/net/wireless/ath/ath5k/base.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+> index b14ba07..b73e7d3 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.h
+> +++ b/drivers/net/wireless/ath/ath5k/base.h
+> @@ -192,7 +192,7 @@ struct ath5k_softc {
+>  	struct ath5k_txq	*cabq;		/* content after beacon */
+>  
+>  	int 			power_level;	/* Requested tx power in dbm */
+> -	bool			assoc;		/* assocate state */
+> +	bool			assoc;		/* associate state */
+>  	bool			enable_beacon;	/* true if beacons are on */
+>  };
 
-Thanks,
-Rafael
+Merged together with patches 2-8 from your series and applied to trivial
+queue.
+
+-- 
+Jiri Kosina
+SUSE Labs, Novell Inc.
