@@ -1,37 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:52563 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751217AbZJPP1g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 11:27:36 -0400
-Date: Fri, 16 Oct 2009 08:23:43 -0700
-From: Greg KH <greg@kroah.com>
-To: Javier Martinez Canillas <martinez.javier@gmail.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] staging/stlc45xx: Fix compile error
-Message-ID: <20091016152343.GB24018@kroah.com>
-References: <1255575825.10636.17.camel@laptop>
- <20091015031138.GB16633@kroah.com>
- <87zl7rbyl2.fsf@nokia.com>
- <390803460910160711i5f7edcc3ue737c05a8b1495b1@mail.gmail.com>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:49890 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755546AbZJPPUJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 11:20:09 -0400
+Date: Fri, 16 Oct 2009 10:18:09 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH V2] b43: Fix Bugzilla #14181 and the bug from the previous 'fix'
+Message-ID: <4ad88eb1.FolvJT9+bpKHVONd%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <390803460910160711i5f7edcc3ue737c05a8b1495b1@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 16, 2009 at 10:11:22AM -0400, Javier Martinez Canillas wrote:
-> If you agree I could take the task to mantain stlc45xx. I have the
-> time, the motivation and I think the skills to do it.
-> 
-> At least I could make it compile when the API changes and work on bugs
-> reported until you are confident that p54spi driver is good enough and
-> there is no need anymore for stlc45xx.
+Commit 93bad2b757586fb153ef73b028953a8dcaccde77 entitled "b43: Fix PPC crash
+in rfkill polling on unload" fixed the bug reported in Bugzilla No. 14181;
+however, it introduced a new bug. Whenever the radio switch was turned off,
+it was necessary to unload and reload the driver for it to recognize the
+switch again.
 
-Great, care to send me a patch adding a TODO file for this driver so
-that we can keep the info straight?
+This patch fixes both the original bug in #14181 and the bug introduced by
+the previous patch. It must be stated, however, that if there is a BCM4306/3
+with an rfkill switch (not yet proven), then the driver will need an
+unload/reload cycle to turn the device back on.
 
-thanks,
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-greg k-h
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c
++++ wireless-testing/drivers/net/wireless/b43/main.c
+@@ -4501,7 +4501,6 @@ static void b43_op_stop(struct ieee80211
+ 
+ 	cancel_work_sync(&(wl->beacon_update_trigger));
+ 
+-	wiphy_rfkill_stop_polling(hw->wiphy);
+ 	mutex_lock(&wl->mutex);
+ 	if (b43_status(dev) >= B43_STAT_STARTED) {
+ 		dev = b43_wireless_core_stop(dev);
+Index: wireless-testing/drivers/net/wireless/b43/rfkill.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/rfkill.c
++++ wireless-testing/drivers/net/wireless/b43/rfkill.c
+@@ -33,7 +33,8 @@ bool b43_is_hw_radio_enabled(struct b43_
+ 		      & B43_MMIO_RADIO_HWENABLED_HI_MASK))
+ 			return 1;
+ 	} else {
+-		if (b43_read16(dev, B43_MMIO_RADIO_HWENABLED_LO)
++		if (b43_status(dev) >= B43_STAT_STARTED &&
++		    b43_read16(dev, B43_MMIO_RADIO_HWENABLED_LO)
+ 		    & B43_MMIO_RADIO_HWENABLED_LO_MASK)
+ 			return 1;
+ 	}
