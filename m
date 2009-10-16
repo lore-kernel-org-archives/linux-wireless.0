@@ -1,67 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f202.google.com ([209.85.211.202]:33896 "EHLO
-	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752390AbZJ2Ooj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 10:44:39 -0400
-MIME-Version: 1.0
-In-Reply-To: <200910291539.16476.mb@bu3sch.de>
-References: <200910291435.54203.bzolnier@gmail.com>
-	 <200910291514.40318.bzolnier@gmail.com>
-	 <20091029.072101.109209962.davem@davemloft.net>
-	 <200910291539.16476.mb@bu3sch.de>
-Date: Thu, 29 Oct 2009 15:44:42 +0100
-Message-ID: <14add3d10910290744n3abd1cf8w42a6311108eb2fa7@mail.gmail.com>
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: David Miller <davem@davemloft.net>, bzolnier@gmail.com,
-	penberg@cs.helsinki.fi, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:60521 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752377AbZJPFT5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 01:19:57 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 01/16] iwmc3200wifi: add BGN sdio device id
+Date: Fri, 16 Oct 2009 13:18:45 +0800
+Message-Id: <1255670340-22565-2-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1255670340-22565-1-git-send-email-yi.zhu@intel.com>
+References: <1255670340-22565-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 29, 2009 at 3:39 PM, Michael Buesch <mb@bu3sch.de> wrote:
-> On Thursday 29 October 2009 15:21:01 David Miller wrote:
->> The issue is that John disagrees with you can you can't handle
->> that.
->>
->> So instead of continuing to discuss things with him and the
->> other wireless folks, you want me to just overreach everybody
->> and revert someone else's work.
->
-> In the end this results in the driver maintainer being forced to maintain
-> code and handle bugreports for code that he disagrees with in the first place.
-> This is unacceptable and has to be resolved in some way.
-> If it's not possible to get it reverted through John (for whatever reason),
-> you're in charge to help the actual code maintainer out.
->
->> I'm not going to do that sorry, learn how to work with the
->> wireless people instead.
->
-> This is not the problem.
-> The problem is that stuff is merged without ack from the maintainer
-> and it's virtually impossible to get the stuff reverted. The only real
-> way for the maintainer to resolve this is 1) live with it or 2) fix it.
-> And that's bad, because it completely invalidates his priority queue.
->
-> Just like you must not bypass John, the driver maintainers must not be bypassed, too.
-> The quality control does _only_ work if nobody in the chain is bypassed.
-> But in this situation the quality control did already fail and it should be
-> tried hard to resolve (=revert) the situation instead of pointing at John.
->
+Add BGN SKU sdio device id.
 
-Hold on here. In this case it is the driver maintainer (i.e. Ivo for
-the rt2x00 project) that
-submitted this driver for inclusion, so the driver maintainer has not
-been bypassed in
-this case.
-
-Apparently Bart has issues with the code submitted by the maintainers
-and has been
-unsuccessful in convincing others about these issues.
-
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
-Gertjan.
+ drivers/net/wireless/iwmc3200wifi/sdio.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwmc3200wifi/sdio.c b/drivers/net/wireless/iwmc3200wifi/sdio.c
+index 8b1de84..38026b7 100644
+--- a/drivers/net/wireless/iwmc3200wifi/sdio.c
++++ b/drivers/net/wireless/iwmc3200wifi/sdio.c
+@@ -493,8 +493,10 @@ static void iwm_sdio_remove(struct sdio_func *func)
+ }
+ 
+ static const struct sdio_device_id iwm_sdio_ids[] = {
+-	{ SDIO_DEVICE(SDIO_VENDOR_ID_INTEL,
+-		      SDIO_DEVICE_ID_INTEL_IWMC3200WIFI) },
++	/* Global/AGN SKU */
++	{ SDIO_DEVICE(SDIO_VENDOR_ID_INTEL, 0x1403) },
++	/* BGN SKU */
++	{ SDIO_DEVICE(SDIO_VENDOR_ID_INTEL, 0x1408) },
+ 	{ /* end: all zeroes */	},
+ };
+ MODULE_DEVICE_TABLE(sdio, iwm_sdio_ids);
+-- 
+1.6.0.4
+
