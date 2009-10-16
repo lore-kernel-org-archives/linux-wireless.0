@@ -1,51 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:53482 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751733AbZJNO2P (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 10:28:15 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: cfg80211 question: impedance mismatch of .connect versus .assoc
-Date: Wed, 14 Oct 2009 16:26:53 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200910141136.03288.hs4233@mail.mn-solutions.de> <1255527718.4095.292.camel@johannes.local>
-In-Reply-To: <1255527718.4095.292.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200910141626.53440.hs4233@mail.mn-solutions.de>
+Received: from mga01.intel.com ([192.55.52.88]:13630 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754579AbZJPVZ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 17:25:59 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 03/10] iwlwifi: identify eeprom version for 6x50 series NIC
+Date: Fri, 16 Oct 2009 14:25:51 -0700
+Message-Id: <1255728358-29976-4-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
+References: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> This was intentional, as with ->connect() the driver is
-> supposed to handle roaming/pre-connect scanning etc. Basically
-> it's mostly for the case of full-mac drivers that do that in
-> the device firmware. 
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-The libertas firmware doesn't do roaming *)
+Adding support for 6x50 series EEPROM version check, 6x50 is wifi/wimax
+combo device which has different EEPROM map
 
-But it also doesn't allow for individual auth/deauth
-assoc/disassoc things, e.g. with the libertas firmware you cannot
-stay authenticated when and just disassociate/reassociate when
-some settings changes.  Therefore I have an impedance mismatch 
-between libertas and .auth/.deauth .assoc/.disassoc as well. The 
-most in-the-eye-springing point is that libertas doesn't have a 
-CMD_802_11_DEASSOCIATE command. And the 
-CMD_802_11_DEAUTHENTICATE command does both .deauth/.disassoc 
-one go. Another mismatch is that CMD_802_11_ASSOCIATE also does 
-both .auth/.assoc in one go.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-6000.c   |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h |    5 ++++-
+ 2 files changed, 7 insertions(+), 4 deletions(-)
 
-So, libertas is not really FULLMAC and not really SOFTMAC, it's 
-HALFMAC :-)
-
-
-
-
-
-*) however, it can send a disconnect event when the AP is out of
-reach, this will give you poor-mans roaming with the help of 
-wpa_supplicant.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index bdc1c74..e74dad3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -399,7 +399,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
+ 	.ops = &iwl6000_ops,
+ 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
+-	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
++	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+ 	.num_of_queues = IWL50_NUM_QUEUES,
+ 	.num_of_ampdu_queues = IWL50_NUM_AMPDU_QUEUES,
+@@ -425,7 +425,7 @@ struct iwl_cfg iwl6050_2abg_cfg = {
+ 	.sku = IWL_SKU_A|IWL_SKU_G,
+ 	.ops = &iwl6000_ops,
+ 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
+-	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
++	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+ 	.num_of_queues = IWL50_NUM_QUEUES,
+ 	.num_of_ampdu_queues = IWL50_NUM_AMPDU_QUEUES,
+@@ -476,7 +476,7 @@ struct iwl_cfg iwl6050_3agn_cfg = {
+ 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
+ 	.ops = &iwl6000_ops,
+ 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
+-	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
++	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+ 	.num_of_queues = IWL50_NUM_QUEUES,
+ 	.num_of_ampdu_queues = IWL50_NUM_AMPDU_QUEUES,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+index b363c96..5ba5a4e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+@@ -261,9 +261,12 @@ struct iwl_eeprom_enhanced_txpwr {
+ /* 1000 Specific */
+ #define EEPROM_1000_EEPROM_VERSION	(0x15C)
+ 
+-/* 60x0 Specific */
++/* 6x00 Specific */
+ #define EEPROM_6000_EEPROM_VERSION	(0x434)
+ 
++/* 6x50 Specific */
++#define EEPROM_6050_EEPROM_VERSION	(0x532)
++
+ /* OTP */
+ /* lower blocks contain EEPROM image and calibration data */
+ #define OTP_LOW_IMAGE_SIZE		(2 * 512 * sizeof(u16)) /* 2 KB */
 -- 
-http://www.holgerschurig.de
+1.5.6.3
+
