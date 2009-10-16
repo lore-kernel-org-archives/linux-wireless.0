@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:64439 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756922AbZJGSBv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 14:01:51 -0400
-Received: by fxm27 with SMTP id 27so4862026fxm.17
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2009 11:01:13 -0700 (PDT)
-Message-ID: <4ACCD765.7080604@lwfinger.net>
-Date: Wed, 07 Oct 2009 13:01:09 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Albert Herranz <albert_herranz@yahoo.es>
-CC: bcm43xx-dev@lists.berlios.de, mb@bu3sch.de,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] b43: do not stack-allocate pio rx/tx header and tail
- buffers
-References: <200910062252.17565.mb@bu3sch.de> <1254866864-18265-1-git-send-email-albert_herranz@yahoo.es> <4ACCC516.7050002@lwfinger.net> <4ACCC893.1010402@yahoo.es>
-In-Reply-To: <4ACCC893.1010402@yahoo.es>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:30377 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752828AbZJPQ3I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 12:29:08 -0400
+Subject: Re: [PATCH] libertas: make lbs_get_channel() static
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <200910161733.56111.hs4233@mail.mn-solutions.de>
+References: <200910161733.56111.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Fri, 16 Oct 2009 09:29:11 -0700
+Message-Id: <1255710551.14241.29.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Albert Herranz wrote:
-> Larry Finger wrote:
->> Albert Herranz wrote:
+On Fri, 2009-10-16 at 17:33 +0200, Holger Schurig wrote:
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 > 
-> b43_new_kidx_api() (defined in xmit.h) needs struct b43_wldev defined because it dereferences it.
-> With this patch, struct b43_wl (defined in b43.h) needs struct b43_rxhdr_fw4 and struct b43_txhdr (defined in xmit.h).
-> 
-> So we have b43_wldev -> b43_rxhdr_fw4, b43_txhdr -> b43_wl (at least).
-> 
-> Moving the definition of struct b43_wl after the definition of struct b43_wldev and placing the inclusion of xmit.h between them gets rid of the generated dependencies.
-> 
-> The patch hints too to other possible solution.
-> 
->> /*
->> * Include goes here to avoid a dependency problem.
->> * A better fix would be to integrate xmit.h into b43.h.
->> */
->> #include "xmit.h"
-> 
-> Do you have any other solutions in mind?
 
-No. I missed the hint. At first I thought there was a white-space
-problem that caused b43_wl to be replaced. When that was not the case,
-I posed my question.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-All seems OK.
+> --- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
+> +++ linux-wl/drivers/net/wireless/libertas/cmd.c
+> @@ -880,7 +880,7 @@
+>   *
+>   *  @return 	   	The channel on success, error on failure
+>   */
+> -int lbs_get_channel(struct lbs_private *priv)
+> +static int lbs_get_channel(struct lbs_private *priv)
+>  {
+>  	struct cmd_ds_802_11_rf_channel cmd;
+>  	int ret = 0;
+> --- linux-wl.orig/drivers/net/wireless/libertas/cmd.h
+> +++ linux-wl/drivers/net/wireless/libertas/cmd.h
+> @@ -82,8 +82,6 @@
+>  
+>  int lbs_update_hw_spec(struct lbs_private *priv);
+>  
+> -int lbs_get_channel(struct lbs_private *priv);
+> -
+>  int lbs_set_channel(struct lbs_private *priv, u8 channel);
+>  
+>  int lbs_update_channel(struct lbs_private *priv);
+> 
 
-Larry
