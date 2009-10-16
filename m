@@ -1,55 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49678 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751288AbZJLTQs (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:58696 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750765AbZJPXPp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 15:16:48 -0400
-Date: Mon, 12 Oct 2009 15:00:53 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Ben Cahill <ben.m.cahill@intel.com>
-Subject: Re: [PATCH 03/17 v2.6.32 and w-t] iwlwifi: turn off device when
-	not used.
-Message-ID: <20091012190053.GD2794@tuxdriver.com>
-References: <1255119634-3060-1-git-send-email-reinette.chatre@intel.com> <1255119634-3060-5-git-send-email-reinette.chatre@intel.com>
+	Fri, 16 Oct 2009 19:15:45 -0400
+Received: by fg-out-1718.google.com with SMTP id d23so558724fga.1
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2009 16:15:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1255119634-3060-5-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1255734357.21134.590.camel@rc-desk>
+References: <1255734357.21134.590.camel@rc-desk>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sat, 17 Oct 2009 01:15:29 +0200
+Message-ID: <69e28c910910161615r2fd30c6dqc24f1a4869ec4c88@mail.gmail.com>
+Subject: Re: iwlwifi 6000 uCode available
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 09, 2009 at 01:20:20PM -0700, Reinette Chatre wrote:
-> From: Ben Cahill <ben.m.cahill@intel.com>
-> 
-> In some cases (e.g. when mac80211 calls iwl_mac_stop() for suspend or user
-> no longer wants device active), device has not been going into low power state
-> via __iwl_down().  apm_ops.reset() does not put device into low power state;
-> instead it resets the device, then puts it into a powered-up state ready to be
-> re-loaded with uCode and re-started.  This has needlessly warmed up user's
-> laptops and drained batteries.
-> 
-> With current architecture in which mac80211 controls device up/down (including
-> resetting device after firmware errors), there is no need for apm_ops.reset()
-> any more; apm_ops.reset() is basically a combination of apm_ops.stop() and
-> apm_ops.init().
-> 
-> Instead, __iwl_down() now unconditionally places the device into a low-power
-> state via apm_ops.stop(). Device may be re-started via __iwl_up() calling
-> apm_ops.init() as soon as it may be needed (e.g. quickly for firmware errors),
-> but in the meantime, device will stop wasting energy.
-> 
-> Note that, even in this low power state, if driver re-enables interrupts,
-> the device retains the ability to sense the hardware RF-KILL switch, and
-> (except for 3945) interrupt the host when it changes.
-> 
-> Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
-> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Hi!
 
-It this a regression?  Bug reference?
+Are the actual adapters available too, or is this just the
+release-early-release-often philosophy at work?
 
-John
+On Sat, Oct 17, 2009 at 1:05 AM, reinette chatre
+<reinette.chatre@intel.com> wrote:
+> Hi,
+>
+> uCode for Intel® 6000 Series Wi-Fi Adapters is now available for
+> download from http://intellinuxwireless.org/?n=Downloads
+>
+> Reinette
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
