@@ -1,45 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:42515 "EHLO
-	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762939AbZJOTRv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2009 15:17:51 -0400
-Received: by ewy4 with SMTP id 4so882040ewy.37
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2009 12:17:14 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Fix crypto in TX frame for rt2800usb
-Date: Thu, 15 Oct 2009 21:17:09 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200910152117.10567.IvDoorn@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:33707 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750791AbZJPX1s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 19:27:48 -0400
+Subject: Re: iwlwifi 6000 uCode available
+From: reinette chatre <reinette.chatre@intel.com>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <69e28c910910161615r2fd30c6dqc24f1a4869ec4c88@mail.gmail.com>
+References: <1255734357.21134.590.camel@rc-desk>
+	 <69e28c910910161615r2fd30c6dqc24f1a4869ec4c88@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 16 Oct 2009 16:27:52 -0700
+Message-Id: <1255735672.21134.635.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+On Fri, 2009-10-16 at 16:15 -0700, Gábor Stefanik wrote:
+> Are the actual adapters available too, or is this just the
+> release-early-release-often philosophy at work?
 
-Signed-off-by: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+You cannot yet purchase a laptop with these cards, but when you can the
+driver will be ready for you.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index a084077..9fe770f 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -1994,7 +1994,7 @@ static void rt2800usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field32(&word, TXWI_W1_BW_WIN_SIZE, txdesc->ba_size);
- 	rt2x00_set_field32(&word, TXWI_W1_WIRELESS_CLI_ID,
- 			   test_bit(ENTRY_TXD_ENCRYPT, &txdesc->flags) ?
--			       (skbdesc->entry->entry_idx + 1) : 0xff);
-+			   txdesc->key_idx : 0xff);
- 	rt2x00_set_field32(&word, TXWI_W1_MPDU_TOTAL_BYTE_COUNT,
- 			   skb->len - txdesc->l2pad);
- 	rt2x00_set_field32(&word, TXWI_W1_PACKETID,
--- 
-1.6.4.1
+Reinette
+
 
