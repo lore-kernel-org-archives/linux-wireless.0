@@ -1,46 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:23058 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759611AbZJHS60 (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:38229 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757056AbZJPM1s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 14:58:26 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 02/20] wl1271: Correction to TX block allocation calculation
-Date: Thu,  8 Oct 2009 21:56:18 +0300
-Message-Id: <1255028196-6565-3-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
+	Fri, 16 Oct 2009 08:27:48 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id 8D2E94B004
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2009 14:26:41 +0200 (CEST)
+Received: from mx51.mymxserver.com ([127.0.0.1])
+	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id AubD+Aq9UjxP for <linux-wireless@vger.kernel.org>;
+	Fri, 16 Oct 2009 14:26:41 +0200 (CEST)
+Received: from lin01.mn-solutions.de (pD95FA148.dip0.t-ipconnect.de [217.95.161.72])
+	by mx51.mymxserver.com (Postfix) with ESMTP id 3BDDE4B003
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2009 14:26:38 +0200 (CEST)
+Received: from mnz66.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 86EC61E0010
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2009 14:26:29 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: libertas + cfg80211: road for kernel inclusion?
+Date: Fri, 16 Oct 2009 14:26:22 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200910161426.22206.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Hi all !
 
-Correct the TX path implementation to allocate sufficient blocks in the
-firmware for TX packets.
+Today I got a connection of libertas + cfg80211 to an AP in the 
+modes WEP40, WEP104, WPA, WPA2 and also with no encryption at 
+all.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_tx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I still have some loose odds and ends, but the initial work is 
+done and we can consider if we want this feature included in the 
+linux kernel --- or not.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index ff22125..0c19688 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -58,7 +58,7 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra)
- 	/* approximate the number of blocks required for this packet
- 	   in the firmware */
- 	/* FIXME: try to figure out what is done here and make it cleaner */
--	total_blocks = (skb->len) >> TX_HW_BLOCK_SHIFT_DIV;
-+	total_blocks = (total_len) >> TX_HW_BLOCK_SHIFT_DIV;
- 	excluded = (total_blocks << 2) + (skb->len & 0xff) + 34;
- 	total_blocks += (excluded > 252) ? 2 : 1;
- 	total_blocks += TX_HW_BLOCK_SPARE;
+
+However, an cfg80211-converted libertas has some missing 
+features, that others migth think are important: no 
+libertas-mesh, no monitor mode, no ad-hoc mode. Nothing of this 
+is per-se impossible with cfg80211, it just needs to be 
+implemented.
+
+I see several possibilities:
+
+
+1. Let it mature outside
+   ---------------------
+Keep libertas+cfg80211 out-of-tree until it supports some minimal 
+functionality.
+
+Pro: no one misses a feature
+Cons: no widespread testing of the cfg80211 features
+
+
+2. Take it as it is
+   ----------------
+Nah, not exactly at it is today, but let us stop by missing 
+monitor-mode, adhoc etc --- for now. Implement that later, once 
+libertas is in-kernel and people need it.
+
+Pro: widespread testing of the cfg80211 features
+Cons: people miss some functions when they upgrade the kernel
+
+
+3. Make things configurable
+   ------------------------
+I could create a Kconfig "choice" entry, where one can select 
+CONFIG_LIBERTAS_WEXT or CONFIG_LIBERTAS_CFG80211. I would then 
+provide a bunch of cleanup patches, e.g. to move all things in 
+struct "libertas_private" into one place that are WEXT-related.
+
+Pro: no one misses his beloved feature (because it's in 
+CONFIG_LIBERTAS_WEXT)
+Pro: some people can test the cfg80211-features (with 
+CONFIG_LIBERTAS_CFG80211)
+Cons: we have a higher amount of #ifdef in Libertas code until 
+either libertas-cfg80211 got all the features added OR until 
+WEXT get's removed from the kernel.
+
+
 -- 
-1.5.6.5
-
+http://www.holgerschurig.de
