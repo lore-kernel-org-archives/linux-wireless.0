@@ -1,65 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43455 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932394AbZJHOqp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 10:46:45 -0400
-Date: Thu, 8 Oct 2009 10:43:52 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	reinette chatre <reinette.chatre@intel.com>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: NULL pointer deref at wext ioctl (Re: [PATCH] compat-2.6:
-	adding ethtool.h to compat-2.6.31.h)
-Message-ID: <20091008144352.GA2869@tuxdriver.com>
-References: <3ace41890910071216y69b8bc9la67b8f0ce5890cd8@mail.gmail.com> <3ace41890910071228i786d4097w69dc7a3dfeb64afe@mail.gmail.com> <1254952886.3713.4.camel@johannes.local> <3ace41890910072328n1460ee34v1fe7ca9b78eb646f@mail.gmail.com> <1254995514.3713.22.camel@johannes.local> <1255002647.3713.25.camel@johannes.local> <43e72e890910080643h282c4bf1xf972f15f13eae755@mail.gmail.com> <43e72e890910080728ra63f1e7w6be3a2af65bc4766@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <43e72e890910080728ra63f1e7w6be3a2af65bc4766@mail.gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:13630 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754857AbZJPVZ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 17:25:59 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 09/10] iwlwifi: no chain noise support for 6x50 series
+Date: Fri, 16 Oct 2009 14:25:57 -0700
+Message-Id: <1255728358-29976-10-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
+References: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 08, 2009 at 10:28:33AM -0400, Luis R. Rodriguez wrote:
-> On Thu, Oct 8, 2009 at 9:43 AM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
-> > On Thu, Oct 8, 2009 at 7:50 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> >> On Thu, 2009-10-08 at 11:51 +0200, Johannes Berg wrote:
-> >>
-> >>> Ok, that's odd. Is it possible that somehow cfg80211 is picking up an
-> >>> #ifdef'ed copy of "struct iw_handler_def", and thus the struct it is
-> >>> defining is simply too small?
-> >>
-> >> That is apparently what is happening since compat-wireless ships
-> >> iw_handler.h. This is wrong, as wext functionality is built into the
-> >> kernel image so you can't use a newer header file with it.
-> >
-> > Dah, thanks for looking into this! This must've been there this way
-> > for ages and we hadn't noticed until now. This is now fixed, and a new
-> > tarball pushed out. I'll fix on the stable stuff as well, although I
-> > doubt the header has changed much except now.
-> 
-> OK so iw_handler added the libipw pointer, so libipw and friends are
-> now messed up on compat-wireless. Do we care? I'll disable them for
-> now. Can't think of a way to backport this easily.
-> 
->   CC [M]  /home/mcgrof/devel/compat-wireless-2.6/drivers/net/wireless/ipw2x00/ipw2100.o
-> /home/mcgrof/devel/compat-wireless-2.6/drivers/net/wireless/ipw2x00/ipw2100.c:
-> In function ‘ipw2100_alloc_device’:
-> /home/mcgrof/devel/compat-wireless-2.6/drivers/net/wireless/ipw2x00/ipw2100.c:6060:
-> error: ‘struct iw_public_data’ has no member named ‘libipw’
-> make[4]: *** [/home/mcgrof/devel/compat-wireless-2.6/drivers/net/wireless/ipw2x00/ipw2100.o]
-> Error 1
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
--       /* Structure managed by the in-kernel IEEE 802.11 layer */
--       struct ieee80211_device *       ieee80211;
-+       /* Legacy structure managed by the ipw2x00-specific IEEE 802.11 layer */
-+       struct libipw_device *          libipw;
+For initial bring up of 6x50 series NICs, no chain noise support in
+uCode, this feature will be added in the later stage of development.
 
-Really just a name change, FWIW...
+Two chain noise related functions are removed from 6x50 series:
+1. gain computation
+2. chain noise reset
 
-John
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   21 ++++++++++++++++++---
+ 1 files changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 887e4e3..b531813 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -232,6 +232,21 @@ static struct iwl_ops iwl6000_ops = {
+ 	.led = &iwlagn_led_ops,
+ };
+ 
++static struct iwl_hcmd_utils_ops iwl6050_hcmd_utils = {
++	.get_hcmd_size = iwl5000_get_hcmd_size,
++	.build_addsta_hcmd = iwl5000_build_addsta_hcmd,
++	.rts_tx_cmd_flag = iwl5000_rts_tx_cmd_flag,
++	.calc_rssi = iwl5000_calc_rssi,
++};
++
++static struct iwl_ops iwl6050_ops = {
++	.ucode = &iwl5000_ucode,
++	.lib = &iwl6000_lib,
++	.hcmd = &iwl5000_hcmd,
++	.utils = &iwl6050_hcmd_utils,
++	.led = &iwlagn_led_ops,
++};
++
+ 
+ /*
+  * "h": Hybrid configuration, use both internal and external Power Amplifier
+@@ -397,7 +412,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.ucode_api_max = IWL6050_UCODE_API_MAX,
+ 	.ucode_api_min = IWL6050_UCODE_API_MIN,
+ 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
+-	.ops = &iwl6000_ops,
++	.ops = &iwl6050_ops,
+ 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
+ 	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+@@ -423,7 +438,7 @@ struct iwl_cfg iwl6050_2abg_cfg = {
+ 	.ucode_api_max = IWL6050_UCODE_API_MAX,
+ 	.ucode_api_min = IWL6050_UCODE_API_MIN,
+ 	.sku = IWL_SKU_A|IWL_SKU_G,
+-	.ops = &iwl6000_ops,
++	.ops = &iwl6050_ops,
+ 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
+ 	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+@@ -474,7 +489,7 @@ struct iwl_cfg iwl6050_3agn_cfg = {
+ 	.ucode_api_max = IWL6050_UCODE_API_MAX,
+ 	.ucode_api_min = IWL6050_UCODE_API_MIN,
+ 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
+-	.ops = &iwl6000_ops,
++	.ops = &iwl6050_ops,
+ 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
+ 	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.5.6.3
+
