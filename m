@@ -1,66 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web32505.mail.mud.yahoo.com ([68.142.207.215]:21851 "HELO
-	web32505.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S933123AbZJGCHK convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 22:07:10 -0400
-Message-ID: <911923.95402.qm@web32505.mail.mud.yahoo.com>
-Date: Tue, 6 Oct 2009 19:06:28 -0700 (PDT)
-From: Ahmed A <ahmedcali@yahoo.com>
-Subject: Re: Linux wifi development board
-To: David Acker <dacker@roinet.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4ACB42CB.7010403@roinet.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from xc.sipsolutions.net ([83.246.72.84]:58336 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758650AbZJPLiG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 07:38:06 -0400
+Subject: Re: deauthentication and disassociation nl80211 commands
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20091012065507.GB25578@jm.kir.nu>
+References: <1254708707.24430.68.camel@maxim-laptop>
+	 <1255191866.4095.32.camel@johannes.local>
+	 <20091012065507.GB25578@jm.kir.nu>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-jAHqFgu22V6oFKd7ugtH"
+Date: Fri, 16 Oct 2009 18:36:42 +0900
+Message-Id: <1255685802.4095.315.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Tue, 10/6/09, David Acker <dacker@roinet.com> wrote:
 
-> From: David Acker <dacker@roinet.com>
-> Subject: Re: Linux wifi development board
-> To: "Ahmed A" <ahmedcali@yahoo.com>
-> Cc: linux-wireless@vger.kernel.org
-> Date: Tuesday, October 6, 2009, 6:14 AM
-> Ahmed A wrote:
-> > Hello,
-> > 
-> > I have been looking online for a Linux wifi
-> development board.  I have come across a few from small
-> companies (reasonably priced), but most of those companies
-> seem to be out of business.  I would appreciate
-> suggestions from anyone that may have used one recently, or
-> suggest a link where I can more info some popular ones.
-> > 
-> > I am mostly interested in doing some software
-> development, prototyping on the "application processor", not
-> on the "baseband processor" (radio part).
-> > 
-> > If there is an alternate mailing list I can post my
-> question, I would appreciate that also.
-> 
-> I have had good luck with boards from Gateworks, http://www.gateworks.com/ and radios from Ubiquiti, http://ubnt.com/
-> . All of it is supported by OpenWRT, although I believe that
-> the gw2348-4 (avila) has mainline support.
-> -ack
-> 
+--=-jAHqFgu22V6oFKd7ugtH
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi David,
+On Mon, 2009-10-12 at 09:55 +0300, Jouni Malinen wrote:
+> On Sat, Oct 10, 2009 at 06:24:26PM +0200, Johannes Berg wrote:
+> > On the other hand, I think Jouni's argument is that you should be able
+> > to authenticate (force an auth frame exchange) even while authenticated=
+.
+> > I don't really disagree with that all that much, but I'm not sure how t=
+o
+> > cleanly fit it in. mac80211 would have to reset the auth state without
+> > sending a deauth.
+>=20
+> Yes, this is exactly what I would like to see happening when using
+> mac80211. For now, I think we can work around the issue in
+> wpa_supplicant, but eventually, this change in mac80211 would allow the
+> code in wpa_supplicant to be cleaned up and the need for an extra
+> deauthentication frame could be removed.
 
-Thank you for your response.  I would like to explain what I am trying to setup, and would appreciate your feedback please.  My setup would comprise of two parts. One part would be the wifi router (base station), on which I load linux image bundled with my special app onto it.  The other part would be the wifi client (CPE), that would connect to the router.  I would also like to be able to load my own kernel image bundled with my special app.
+This would require a change in cfg80211 too, since that keeps the BSS
+list around and refuses this, mac80211 isn't necessarily involved.
 
-I am guessing from your email, I would have to get a board from gateworks, hook up an antenna to it from ubnt, load image from OpenWRT, that would be my wifi router.  Is that right? Which product would you recommend, the Avilla platform? Which antenna from ubnt?  Would there be issues getting these to work?  How about the components on the client side, same deal?
+However, we need to spec it out more clearly. For instance, we'd have to
+not add a new work item and try for another authentication, but rather
+use the old one. Right?
 
-I have done some work/programming on the IXP, but I do prefer a board with non-IXP CPU, like PowerPC or XScale.
+I'm happy to have such a change, but it needs to be clearly documented
+what is expected of drivers that get an auth() call while already
+authenticated with that AP. Especially since it's not just
+send_auth_frame(), as we expect the driver to handle the entire
+handshake for WEP SK auth.
 
-Is there any solution out there, where the dev board and antenna come bundled, so I don't have to muck around getting them to work?
+johannes
 
-Any decent alternate board supplier, the prices of boards from gateworks are a bit pricey for me.
+--=-jAHqFgu22V6oFKd7ugtH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Thank you,
-Ahmed A.
+-----BEGIN PGP SIGNATURE-----
 
+iQIcBAABAgAGBQJK2D6nAAoJEODzc/N7+Qmawx4QALgmuaC2x/GtmltL+yfKmTeS
+w8AHuFFFSS88NwELUHYey+jYr6NPxOBfic8X4UHwZj/7voAcKNOS/3RlxPVO0rx4
+F2Apef09noav8X3A5DXoqkf5slyFB9jzt/FHmM5plK+2LHvdrzq2+y0wmCCEkg4c
+JEI9mVBgfjg7bp32o7c6j6rXYK5IZ7PKcIzy9UejQhboDHSjUHkNzsKRd5igmlWq
+lZChAT9Qk9FFKbzuQwvQ0kTgbk1fCUa9eY91nGLvAC3/Gg9mpbwp8b8KzZwIBvmN
+MEEomO7x7eRSkAKeixu/a3rIeQ2jdUVGseD52XLWg1c1NtSY6B9FPqaGF/+VbEK2
+bGslv150Ls2f5qjwlAaLhi1RIRIjnXxyZxmJdQieZR21uMT3GvLA5GYT05DzFUa9
+ZRuZKC8JkMehrjASyUR6EpkibyPbfoFJ1A4iMHwR0noAvol8bcMok9xzD2Nrqqtb
+nji9K0aoATNecgNQSB30JfWmrTmoqvegqOnls0Jv3wuFFkMxKHn605b69nRNOdOo
+mtqUgHKYCfnBDrAniD/MtpqIqN5Hk/zULVcmkwsZmwCv9vLGy101BHEiyEeaLMKZ
+0HGH30PaGd41THb3UJ7v28DMS0wCpHkp3VcLBPqdKQaAUhXkApcYTuDDvvRdJBIq
+7YC49YmU5tPAcpOawqod
+=A7+B
+-----END PGP SIGNATURE-----
 
+--=-jAHqFgu22V6oFKd7ugtH--
 
-      
