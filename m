@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58013
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753846AbZJIAz6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 20:55:58 -0400
-Date: Thu, 08 Oct 2009 17:55:53 -0700 (PDT)
-Message-Id: <20091008.175553.139810708.davem@davemloft.net>
-To: mb@bu3sch.de
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2009-10-08
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200910090116.46513.mb@bu3sch.de>
-References: <20091008223454.GB2798@tuxdriver.com>
-	<200910090108.08838.mb@bu3sch.de>
-	<200910090116.46513.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mga01.intel.com ([192.55.52.88]:40823 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752125AbZJPFUi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 01:20:38 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 05/16] iwmc3200wifi: Profile flags can be WPA1 or WPA2 not both
+Date: Fri, 16 Oct 2009 13:18:49 +0800
+Message-Id: <1255670340-22565-6-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1255670340-22565-5-git-send-email-yi.zhu@intel.com>
+References: <1255670340-22565-1-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-2-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-3-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-4-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-5-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Buesch <mb@bu3sch.de>
-Date: Fri, 9 Oct 2009 01:16:44 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
 
-> And there's no reason to rush this fix into mainline.
+UMAC will ASSERT if the profile security flag is WPA1 | WPA2, so we can only
+accept one of those.
+Moreover wpa_s wext and nl80211 drivers dont try to send WPA1 | WPA2, but only
+one at a time.
 
-I think it's worthwhile because people turn the DMA API debugger on
-and it's going to spit out warnings that "don't matter" until you guys
-fix this.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwmc3200wifi/cfg80211.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-I looked at the patch you guys are so up in arms about, and frankly it
-looks perfectly fine to me.
+diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+index a6d2f20..ea0ed32 100644
+--- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
++++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+@@ -472,12 +472,12 @@ static int iwm_set_wpa_version(struct iwm_priv *iwm, u32 wpa_version)
+ 		return 0;
+ 	}
+ 
++	if (wpa_version & NL80211_WPA_VERSION_1)
++		iwm->umac_profile->sec.flags = UMAC_SEC_FLG_WPA_ON_MSK;
++
+ 	if (wpa_version & NL80211_WPA_VERSION_2)
+ 		iwm->umac_profile->sec.flags = UMAC_SEC_FLG_RSNA_ON_MSK;
+ 
+-	if (wpa_version & NL80211_WPA_VERSION_1)
+-		iwm->umac_profile->sec.flags |= UMAC_SEC_FLG_WPA_ON_MSK;
+-
+ 	return 0;
+ }
+ 
+-- 
+1.6.0.4
 
-If you want to implement the fix "perfectly", and "to your standards",
-then fine.  But do it in net-next-2.6 as a follow-on patch to this
-one.
-
-I'm not undoing John's pull request just for this. :-)
