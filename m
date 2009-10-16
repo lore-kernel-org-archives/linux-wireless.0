@@ -1,41 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:51616 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754377AbZJSKdK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2009 06:33:10 -0400
-Received: by ewy3 with SMTP id 3so3417878ewy.17
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2009 03:33:13 -0700 (PDT)
-Message-ID: <4ADC4064.3080001@gmail.com>
-Date: Mon, 19 Oct 2009 12:33:08 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-MIME-Version: 1.0
-To: users@rt2x00.serialmonkey.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [rt2x00-users] [PATCH] rt73usb.c : more ids
-Content-Type: text/plain; charset=ISO-8859-15
+Received: from mga01.intel.com ([192.55.52.88]:60521 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752397AbZJPFU2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Oct 2009 01:20:28 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 03/16] iwmc3200wifi: WPS support
+Date: Fri, 16 Oct 2009 13:18:47 +0800
+Message-Id: <1255670340-22565-4-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1255670340-22565-3-git-send-email-yi.zhu@intel.com>
+References: <1255670340-22565-1-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-2-git-send-email-yi.zhu@intel.com>
+ <1255670340-22565-3-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
+From: Samuel Ortiz <sameo@linux.intel.com>
 
-> Please also post patches in the correct format (especially including
-> the Signed-off-by):
-> 
-> 	http://linux.yyz.us/patch-format.html
+By setting the WSC profile flag, we now support WPS as an enrollee.
 
-I usually sign patches, but if they are stupidly straightforward
-and there is no "Intellectual Property" involved it's a bit pedantic
-do it.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwmc3200wifi/cfg80211.c |    7 +++++++
+ drivers/net/wireless/iwmc3200wifi/commands.h |    3 +++
+ 2 files changed, 10 insertions(+), 0 deletions(-)
 
-Anyway already I did it.
-
--thanks-
-
-regards,
+diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+index 0d2e719..a6d2f20 100644
+--- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
++++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+@@ -628,6 +628,13 @@ static int iwm_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 		iwm->default_key = sme->key_idx;
+ 	}
+ 
++	/* WPA and open AUTH type from wpa_s means WPS (a.k.a. WSC) */
++	if ((iwm->umac_profile->sec.flags &
++	     (UMAC_SEC_FLG_WPA_ON_MSK | UMAC_SEC_FLG_RSNA_ON_MSK)) &&
++	    iwm->umac_profile->sec.auth_type == UMAC_AUTH_TYPE_OPEN) {
++			iwm->umac_profile->sec.flags = UMAC_SEC_FLG_WSC_ON_MSK;
++	}
++
+ 	ret = iwm_send_mlme_profile(iwm);
+ 
+ 	if (iwm->umac_profile->sec.auth_type != UMAC_AUTH_TYPE_LEGACY_PSK ||
+diff --git a/drivers/net/wireless/iwmc3200wifi/commands.h b/drivers/net/wireless/iwmc3200wifi/commands.h
+index e24d5b6..4e183be 100644
+--- a/drivers/net/wireless/iwmc3200wifi/commands.h
++++ b/drivers/net/wireless/iwmc3200wifi/commands.h
+@@ -288,6 +288,9 @@ struct iwm_umac_cmd_scan_request {
+ /* iwm_umac_security.flag is WSC mode on -- bits [2:2] */
+ #define UMAC_SEC_FLG_WSC_ON_POS		2
+ #define UMAC_SEC_FLG_WSC_ON_SEED	1
++#define UMAC_SEC_FLG_WSC_ON_MSK         (UMAC_SEC_FLG_WSC_ON_SEED << \
++					 UMAC_SEC_FLG_WSC_ON_POS)
++
+ 
+ /* Legacy profile can use only WEP40 and WEP104 for encryption and
+  * OPEN or PSK for authentication */
 -- 
-«Allá muevan feroz guerra, ciegos reyes por un palmo más de tierra;
-que yo aquí tengo por mío cuanto abarca el mar bravío, a quien nadie
-impuso leyes. Y no hay playa, sea cualquiera, ni bandera de esplendor,
-que no sienta mi derecho y dé pecho a mi valor.»
+1.6.0.4
+
