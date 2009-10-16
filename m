@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:49169 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756034AbZJVShK (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:60316 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755970AbZJPHV7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2009 14:37:10 -0400
-Date: Thu, 22 Oct 2009 20:20:16 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 09/28] mwl8k: use cond_resched() when loading firmware blocks
-Message-ID: <20091022182016.GK1583@mail.wantstofly.org>
-Mime-Version: 1.0
+	Fri, 16 Oct 2009 03:21:59 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+To: John Willis <John.Willis@Distant-earth.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville\@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [PATCH] wl1251: add support for PG11 chips.
+References: <01c201ca4d9c$c2c44500$484ccf00$@Willis@Distant-earth.com>
+Date: Fri, 16 Oct 2009 10:19:59 +0300
+In-Reply-To: <01c201ca4d9c$c2c44500$484ccf00$@Willis@Distant-earth.com> (ext
+	John Willis's message of "Thu, 15 Oct 2009 15:38:16 +0200")
+Message-ID: <87vdifbyao.fsf@nokia.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since each firmware block takes on the order of several hundred usec
-to upload to the hardware, using msleep in the inner loop would make
-the firmware loading process take a lot more time than just doing
-busy-waiting like we do now.  But if we keep the busy-waiting, we can
-at least add a cond_resched() to the inner loop so that we give other
-tasks a chance to run while the firmware is being loaded.
+John Willis <John.Willis@Distant-earth.com> writes:
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+> From: David-John Willis <John.Willis@Distant-earth.com>
+>
+> This simple patch adds support for the PG11 variant of the WL1251 chip as
+> used on the OpenPandora OMAP3 device.
+>
+> Signed-off-by: David-John Willis <John.Willis@Distant-earth.com>
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index fcf7139..496d3c5 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -12,6 +12,7 @@
- #include <linux/init.h>
- #include <linux/module.h>
- #include <linux/kernel.h>
-+#include <linux/sched.h>
- #include <linux/spinlock.h>
- #include <linux/list.h>
- #include <linux/pci.h>
-@@ -428,6 +429,7 @@ mwl8k_send_fw_load_cmd(struct mwl8k_priv *priv, void *data, int length)
- 			break;
- 		}
- 
-+		cond_resched();
- 		udelay(1);
- 	} while (--loops);
- 
+Thanks for the patch. And excellent news that it's working on your
+device.
+
+Minor comment:
+
+> --- a/drivers/net/wireless/wl12xx/wl1251_main.c
+> +++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+> @@ -185,6 +185,9 @@ static int wl1251_chip_wakeup(struct wl1251 *wl)
+>  		break;
+>  	case CHIP_ID_1251_PG10:
+>  	case CHIP_ID_1251_PG11:
+> +		wl1251_debug(DEBUG_BOOT, "chip id 0x%x (1251 PG11)",
+> +			     wl->chip_id);
+> +		break;
+>  	default:
+>  		wl1251_error("unsupported chip id: 0x%x", wl->chip_id);
+>  		ret = -ENODEV;
+
+This patch also enables PG10 support, but as that hardware revision is
+untested I think it's better not to enable it. I'll edit the patch a bit
+regarding this and then send it to John.
+
 -- 
-1.5.6.4
+Kalle Valo
