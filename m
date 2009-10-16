@@ -1,70 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:4678 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750996AbZJTKef (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:26968 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761072AbZJPPms (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2009 06:34:35 -0400
-Received: by ey-out-2122.google.com with SMTP id 9so1146139eyd.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 03:34:38 -0700 (PDT)
+	Fri, 16 Oct 2009 11:42:48 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: andrey@cozybit.com,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: BUG: endianness issues with libertas if_spi.c
+Date: Fri, 16 Oct 2009 17:41:19 +0200
 MIME-Version: 1.0
-In-Reply-To: <717B3566C64F54459B25922289704B8E6DF4D5@susday7667.TD.teradata.com>
-References: <717B3566C64F54459B25922289704B8E6DF4D5@susday7667.TD.teradata.com>
-Date: Tue, 20 Oct 2009 12:34:38 +0200
-Message-ID: <2d0a357f0910200334g7cdacb2bh351f20f3afa3932c@mail.gmail.com>
-Subject: Re: 'linux-wireless@vger.kernel.org'
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: "Kristofik, Juraj" <Juraj.Kristofik@teradata.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200910161741.19731.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Andrey, can you fix this?  I don't have SPI hardware and wouldn't
+be able to check the functionality after the fixes. However, some
+things are obvious, e.g.
 
-there is no need to sent several times the same email to this mailing-list.
-As I suggested to you on IRC, read the document "How To Ask Questions
-The Smart Way", especially "Use meaningful, specific subject headers"
-[1].
-To be precise:
-An empty subject line or none-saying one is not helpful.
-Furthermore, a (significant) subject line is often used for
-referencing (for bug-reports or on other mailing-lists).
 
-Kind Regards,
-- Sedat -
+u16 reg_out = cpu_to_le16(reg | IF_SPI_WRITE_OPERATION_MASK);
 
-[1] <http://www.catb.org/~esr/faqs/smart-questions.html#bespecific>
+should either be
 
-On Tue, Oct 20, 2009 at 12:03 PM, Kristofik, Juraj
-<Juraj.Kristofik@teradata.com> wrote:
->
-> Hello,
->
-> I would like to ask if you would be willing to help me in the problem I
-> am experiencing.
->
-> I have notebook toshiba tecra M6 with Intel(R) PRO/Wireless 3945ABG/BG
-> wifi card, that is working normally in windows.
->
-> I installed back-track 4 pre final linux on usb drive and followed the
-> guide here (using root account):
-> http://forums.remote-exploit.-org/backtrack-4-working--hardware/27565-bt
-> 4-pre-final--driver-iwl3945-injection--solved.html#post157700
->
-> I have installed lastest firmware for my wifi
-> (iwlwifi-3945-ucode-15.32.2.9) and compat-wireless-2.6.32-rc4 drivers.
->
-> However I am experiencing problems with loading drivers and receive
-> error: iwl3945 0000:02:00.0: Failed to register hw (error -17)
->
-> Can you please provide any help with what this error means?
->
-> Please see my dmseg in attachment.
->
-> --
-> Regards,
-> Juraj Kristofik
->
->
->
->
+  reg_out = reg | IF_SPI_WRITE_OPERATION_MASK;
+
+or
+
+  __le16 reg_out = cpu_to_le16(reg | IF_SPI_WRITE_OPERATION_MASK);
+
+
+Here's a run with sparse:
+
+$ make -C /usr/src/linux-wl/ modules SUBDIRS=drivers/net/wireless/libertas C=2 CF=-D__CHECK_ENDIAN__    
+drivers/net/wireless/libertas/if_spi.c:137:16: warning: incorrect type in initializer (different base types)
+drivers/net/wireless/libertas/if_spi.c:137:16:    expected unsigned short [unsigned] [usertype] reg_out
+drivers/net/wireless/libertas/if_spi.c:137:16:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/libertas/if_spi.c:191:16: warning: incorrect type in initializer (different base types)
+drivers/net/wireless/libertas/if_spi.c:191:16:    expected unsigned short [unsigned] [usertype] reg_out
+drivers/net/wireless/libertas/if_spi.c:191:16:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/libertas/if_spi.c:256:24: warning: incorrect type in argument 1 (different base types)
+drivers/net/wireless/libertas/if_spi.c:256:24:    expected restricted __le32 const [usertype] *p
+drivers/net/wireless/libertas/if_spi.c:256:24:    got unsigned int *<noident>
+drivers/net/wireless/libertas/if_spi.c:243:24: warning: incorrect type in argument 1 (different base types)
+drivers/net/wireless/libertas/if_spi.c:243:24:    expected restricted __le16 const [usertype] *p
+drivers/net/wireless/libertas/if_spi.c:243:24:    got unsigned short *<noident>
+drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
+drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
+drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
+drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
+drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
+drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/libertas/if_spi.c:243:24: warning: incorrect type in argument 1 (different base types)
+drivers/net/wireless/libertas/if_spi.c:243:24:    expected restricted __le16 const [usertype] *p
+drivers/net/wireless/libertas/if_spi.c:243:24:    got unsigned short *<noident>
+drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
+drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
+drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
+drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
+drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
+drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
+drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/libertas/if_spi.c:243:24: warning: incorrect type in argument 1 (different base types)
+drivers/net/wireless/libertas/if_spi.c:243:24:    expected restricted __le16 const [usertype] *p
+drivers/net/wireless/libertas/if_spi.c:243:24:    got unsigned short *<noident>
+drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
+drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
+drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/libertas/if_spi.c:243:24: warning: incorrect type in argument 1 (different base types)
+drivers/net/wireless/libertas/if_spi.c:243:24:    expected restricted __le16 const [usertype] *p
+drivers/net/wireless/libertas/if_spi.c:243:24:    got unsigned short *<noident>
+drivers/net/wireless/libertas/if_spi.c:243:24: warning: incorrect type in argument 1 (different base types)
+drivers/net/wireless/libertas/if_spi.c:243:24:    expected restricted __le16 const [usertype] *p
+drivers/net/wireless/libertas/if_spi.c:243:24:    got unsigned short *<noident>
+drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
+drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
+drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/libertas/if_spi.c:243:24: warning: incorrect type in argument 1 (different base types)
+drivers/net/wireless/libertas/if_spi.c:243:24:    expected restricted __le16 const [usertype] *p
+drivers/net/wireless/libertas/if_spi.c:243:24:    got unsigned short *<noident>
+-- 
+http://www.holgerschurig.de
