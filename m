@@ -1,84 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60517 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752559AbZJAVOp (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:33622 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752447AbZJQJoh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2009 17:14:45 -0400
-Subject: Re: BUG: "wext: refactor" broke compilation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200910011139.30914.hs4233@mail.mn-solutions.de>
-References: <200910011139.30914.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-faB/l9N7T7OM3lq4GqmK"
-Date: Thu, 01 Oct 2009 23:14:47 +0200
-Message-Id: <1254431687.3959.43.camel@johannes.local>
-Mime-Version: 1.0
+	Sat, 17 Oct 2009 05:44:37 -0400
+Received: by iwn8 with SMTP id 8so1520542iwn.33
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2009 02:44:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1255739280.4095.343.camel@johannes.local>
+References: <1255481442-27130-1-git-send-email-lrodriguez@atheros.com>
+	<1255562895.4095.297.camel@johannes.local> <20091014233528.GA4172@tux>
+	<1255685492.4095.309.camel@johannes.local> <20091016182039.GC6438@tuxdriver.com>
+	<1255739280.4095.343.camel@johannes.local>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sat, 17 Oct 2009 02:44:22 -0700
+Message-ID: <43e72e890910170244l552df4f8r3d174f87f006d074@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: fix SME warning by removing stale BSS upon
+	assoc failure
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ic.felix@gmail.com" <ic.felix@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Oct 16, 2009 at 5:28 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2009-10-16 at 14:20 -0400, John W. Linville wrote:
+>> On Fri, Oct 16, 2009 at 06:31:32PM +0900, Johannes Berg wrote:
+>> > On Wed, 2009-10-14 at 16:35 -0700, Luis R. Rodriguez wrote:
+>> >
+>> > > Well sure, but why do we want to keep the authentication present if
+>> > > association failed? And as a matter of fact it lingers there forever.
+>> > > Is that desired behaviour?
+>> >
+>> > Yes, well, the SME is supposed to clean it up or try the association
+>> > again (possibly with different parameters in the IEs, e.g. different WPA
+>> > settings). The cfg80211 SME certainly does so (it deauthenticates).
+>> >
+>> > > > > +++ b/net/mac80211/mlme.c
+>> > > > > @@ -1463,11 +1463,11 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+>> > > > >       if (status_code != WLAN_STATUS_SUCCESS) {
+>> > > > >               printk(KERN_DEBUG "%s: AP denied association (code=%d)\n",
+>> > > > >                      sdata->dev->name, status_code);
+>> > > > >               list_del(&wk->list);
+>> > > > >               kfree(wk);
+>> > > > > -             return RX_MGMT_CFG80211_ASSOC;
+>> > > > > +             return RX_MGMT_CFG80211_DEAUTH;
+>> > > >
+>> > > > I'm sure this is correct. Maybe cfg80211 doesn't react properly to
+>> > > > getting an assoc frame with non-zero status?
+>> > >
+>> > > I see, will have to take a look when I get a chance then, not now though.
+>> >
+>> > > Actually can you elaborate a little on the logic here as to why
+>> > > we want to issue an association command with non-zero status to
+>> > > cfg80211 instead of just knocking off the current authentication
+>> > > and killing the BSS?
+>> >
+>> > Is the above sufficient? Btw, please don't talk about "killing the BSS",
+>> > you're not talking about a BSS struct but rather one of the mlme work
+>> > structs.
+>>
+>> So, should this patch be dropped?  It is currently in w-t...
+>
+> Yes.
 
---=-faB/l9N7T7OM3lq4GqmK
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+This issue is also present on 2.6.32 I believe, I am curious if we'll
+come up with something as small as this for a fix there.
 
-On Thu, 2009-10-01 at 11:39 +0200, Holger Schurig wrote:
-> LD      net/wireless/built-in.o
->   CC [M]  net/wireless/core.o
-> net/wireless/core.c: In function 'cfg80211_netdev_notifier_call':
-> net/wireless/core.c:673: error: 'struct wireless_dev' has no member named=
- 'wext'
-> net/wireless/core.c:674: error: 'struct wireless_dev' has no member named=
- 'wext'
-> net/wireless/core.c:675: error: 'struct wireless_dev' has no member named=
- 'wext'
-> net/wireless/core.c:676: error: 'struct wireless_dev' has no member named=
- 'wext'
-> net/wireless/core.c:677: error: 'struct wireless_dev' has no member named=
- 'wext'
-> net/wireless/core.c:680: error: 'struct wireless_dev' has no member named=
- 'wext'
-> net/wireless/core.c:681: error: 'struct wireless_dev' has no member named=
- 'wext'
-> net/wireless/core.c:683: error: 'struct wireless_dev' has no member named=
- 'wext'
->=20
-> The reason is that currently two different Kconfig
-> defines are used:
->=20
->=20
-> in net/wireless/core.c:
->=20
-> #ifdef CONFIG_WIRELESS_EXT
->                 wdev->wext.default_key =3D -1;
->   ...
-> #endif
+  Luis
 
-Did you send a patch to change that to CONFIG_CFG80211_WEXT, or do I
-need to?
-
-johannes
-
---=-faB/l9N7T7OM3lq4GqmK
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKxRvDAAoJEODzc/N7+QmaJ6AP/i6vFzmK9jW6u7kDQKdy5GUr
-x8/coQzaHRUqoWQ+AHEhpWNh5jXNkldIk73IMP0gRB4YE6Ozgh7i5trzeZUMfF0Q
-W9D5pSK0biX3ki4odpBl7qcCMKFglRFngJVqf4qjlZYlJvaQvKdfNjjzzpWS0FkN
-QEP1iVi1MnIAaEOwFLuaF6jc6O/jYVO+0x8HlmRADZkgC5qN4/WrVKS2d5IId8ua
-GAH+BBdSZYDnYbzpoMdDCmPscDidrsmqfJTBIsk6W85LYjc5t6WQ3eHgnoZ/02pe
-3NaE7JorC7uqmap0N5sofz92akTs0CTPSWwoSWWnodsv/rAyiiadvseBJ+bs/4uu
-k1puD+ivZl00JOTzCPWFTl19b/INBq+S6WzugY6/gcxw8CXFrRx6Fk9Z6+nRKUVn
-bN8MUcxK9AOfEkfeydY//H9MC8JYcuHZfDdpsoneQCTNUDTLdlA/DWX2MuxIIBd6
-yNUXCC0QJji0ORA7MQeVb4xs+3qz0lvmXkB3V2OuOYtILBY9INfwbinvq7CXW6O2
-rfPoGuc/fOFHGb3OSauz/fhb+R9BP+1J7Mg6F6yWsPL0ixWlf9yB1bIhX5UaMBMD
-v7JCVfpWlnr9FlflFW8HgwVVEebpTM1qH3dx2tIEw9X+4SpHHTTCdAi/D1XTnswd
-u8RW3gyPIY9vXYnGJln2
-=dSZJ
------END PGP SIGNATURE-----
-
---=-faB/l9N7T7OM3lq4GqmK--
-
+  Luis
