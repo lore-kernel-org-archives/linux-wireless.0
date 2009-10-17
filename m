@@ -1,34 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp149.mail.ukl.yahoo.com ([77.238.184.80]:25731 "HELO
-	smtp149.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750824AbZJWFD4 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38195 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750789AbZJQA1A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 01:03:56 -0400
-Message-ID: <4AE1393A.6060707@yahoo.es>
-Date: Fri, 23 Oct 2009 07:03:54 +0200
-From: Albert Herranz <albert_herranz@yahoo.es>
-MIME-Version: 1.0
-To: Larry.Finger@lwfinger.net, linville@tuxdriver.com
-CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	mb@bu3sch.de, mboton@gmail.com
-Subject: b43: add 'struct b43_wl' missing declaration
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 16 Oct 2009 20:27:00 -0400
+Subject: Re: [PATCH] mac80211: fixed injection in monitor mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Richard Farina <sidhayn@gmail.com>
+Cc: Gabriele Gristina <matrix.use.linux@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4AD8AB1C.9070109@gmail.com>
+References: <1255658961.23827.2.camel@el8pc>
+	 <1255704382.4095.340.camel@johannes.local>  <4AD8AB1C.9070109@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-bEBMPeihKyvAKUMUBEsj"
+Date: Sat, 17 Oct 2009 09:26:56 +0900
+Message-Id: <1255739216.4095.342.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-The patch "b43: add 'struct b43_wl' missing declaration" [1], which was already acked by Michael, is still needed to fix a bunch of the following GCC warnings when CONFIG_B43_LEDS is not selected:
+--=-bEBMPeihKyvAKUMUBEsj
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-drivers/net/wireless/b43/leds.h:79: warning: 'struct b43_wl' declared inside parameter list
-drivers/net/wireless/b43/leds.h:79: warning: its scope is only this definition or declaration, which is probably not what you want
+On Fri, 2009-10-16 at 13:19 -0400, Richard Farina wrote:
+> Johannes Berg wrote:
+> > On Fri, 2009-10-16 at 04:09 +0200, Gabriele Gristina wrote:
+> >  =20
+> >> I have a problem with mac80211 injection:
+> >> if i setup interface in monitor mode with iwconfig and i try to send a
+> >> custum 802.11 frame i see twice the packet in monitor interface.
+> >> The first packet is right, the second is different only in the radiota=
+p
+> >> header: rtap len is fixed to 13 bytes...
+> >> If i setup interface with airmon-ng the packet is sended once but the
+> >> radiotap header is fixed to 13 bytes.
+> >>    =20
+> >
+> > This is correct. The patch is wrong.
+> >
+> >  =20
+> I'm very stupid, could you please elaborate how seeing every single=20
+> packets twice with different headers is "correct"?
 
-The warnings were introduced by commit "b43: Don't use struct wldev after detach." [2].
+Look at the patch. I'ts the injection itself + tx status.
 
-Thanks,
-Albert
+johannes
 
-[1] http://marc.info/?l=linux-kernel&m=125509895406307
+--=-bEBMPeihKyvAKUMUBEsj
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-[2] http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=727c988593271599c9e5943699426afcce1a62d6;hp=a4d63a943735efa30270ce70716d43323fd40f02
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK2Q72AAoJEODzc/N7+QmaG5wQANC/58gOP+R35tFBq1hYegzd
+iR1KioVXWTC6VHc10gKfJ3GXYT24AKI/000CnzdjFx90dDgAA5OrQcN2CVpgCk3h
+c3qdg+02tmcHYTL56742sxJtJhV04EyF+UYh2tayWqRq0/Ej39tZKuUqYpwdz+lh
+3TRIQ8wCsCZS9RPtJXuftDrumqGEZ+Fk0E8XuE6Zr58FdMJ3FmK1dzIWPCQKTISb
+s+ZHViZ1nuQCCBWW9Ab5LDoccigXc2ZaFUdAL/ijkVQOixdbu9RnvVPzDwM/xDbQ
+pru46l5NE+v8IvnbLqhwpiqlDKiRYbzYJzdwLsxKQgGYDcqRDd5zdgKZFho1+b/K
+Lhk+c2FLMl6OZDPq2m6m0b3ykgLJDVsv8a86IdZT0pIakpNZOITY469UYydTaO06
+s3GTtQLsAKxjeLq33LomqtdbfH/eKZv0YG8iweF61IgxbekACtR91tJ3ze0U3apJ
+DvEAXiVsPrdSyBiX9QdWAt7QEYY0zkC0eaQ9ZmWY1OlNLHHdMS3AmlKcDjTps3zz
+NnyOIauQaFTg0vu80FQyfmPNMmO26HLYyuQVlxyCSyfD3F6hh/Y7t68JkRnRrEgs
+KWwfZQltKomXosDk7wVD9A4wYVnBt3qxzZDFz/W3yxIMORMarZjP8kuQvF73M+8V
+U8gW4qK21ybSmILPgOtr
+=gVCl
+-----END PGP SIGNATURE-----
+
+--=-bEBMPeihKyvAKUMUBEsj--
 
