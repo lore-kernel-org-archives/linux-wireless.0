@@ -1,84 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet11.oracle.com ([141.146.126.233]:25331 "EHLO
-	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757087AbZJHPLZ (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:47957 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752389AbZJQQDK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 11:11:25 -0400
-Date: Thu, 8 Oct 2009 08:06:15 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wireless: make WEXT_SPY and WEXT_PRIV select WEXT_CORE
-Message-Id: <20091008080615.09c8b803.randy.dunlap@oracle.com>
-In-Reply-To: <1254995282.3713.18.camel@johannes.local>
-References: <20091007105720.a2457e5b.randy.dunlap@oracle.com>
-	<1254949672-24022-1-git-send-email-linville@tuxdriver.com>
-	<4ACD0E5A.7060106@oracle.com>
-	<1254954842.3713.7.camel@johannes.local>
-	<4ACD1C3D.3030506@oracle.com>
-	<1254957256.3713.10.camel@johannes.local>
-	<20091007171235.d40f0cc2.randy.dunlap@oracle.com>
-	<1254995282.3713.18.camel@johannes.local>
+	Sat, 17 Oct 2009 12:03:10 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so1510030fgg.1
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2009 09:03:14 -0700 (PDT)
+Subject: Re: iwlwifi 6000 uCode available
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1255735672.21134.635.camel@rc-desk>
+References: <1255734357.21134.590.camel@rc-desk>
+	 <69e28c910910161615r2fd30c6dqc24f1a4869ec4c88@mail.gmail.com>
+	 <1255735672.21134.635.camel@rc-desk>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 17 Oct 2009 18:03:09 +0200
+Message-Id: <1255795389.14586.1.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 08 Oct 2009 11:48:02 +0200 Johannes Berg wrote:
-
-> On Wed, 2009-10-07 at 17:12 -0700, Randy Dunlap wrote:
+On Fri, 2009-10-16 at 16:27 -0700, reinette chatre wrote:
+> On Fri, 2009-10-16 at 16:15 -0700, Gábor Stefanik wrote:
+> > Are the actual adapters available too, or is this just the
+> > release-early-release-often philosophy at work?
 > 
-> > > > # CONFIG_WIRELESS is not set
-> > > > CONFIG_WIRELESS_EXT=y
-> > > > CONFIG_WEXT_SPY=y
-> > > > CONFIG_WEXT_PRIV=y
-> > > > 
-> > > > WEXT_CORE is not enabled.  I haven't found the culprit, but I suspect "select".
-> > > 
-> > > Interesting.
-> > > 
-> > > > but what in WIRELESS_EXT would also cause WEXT_CORE to be enabled?
-> > > 
-> > > Well, the way WEXT_CORE is defined as def_bool y ought to, no?
-> > 
-> > Ah, I see what you mean.
-> > 
-> > Here's what's happening:
-> > 
-> > net/wireless/Kconfig says:
-> > 
-> > config WEXT_CORE
-> > 	def_bool y
-> > 	depends on CFG80211_WEXT || WIRELESS_EXT
-> > 
-> > 
-> > and net/Kconfig says:
-> > 
-> > if WIRELESS
-> > 
-> > source "net/wireless/Kconfig"
-> > source "net/mac80211/Kconfig"
-> > 
-> > endif # WIRELESS
-> > 
-> > 
-> > so WEXT_CORE actually depends on NET && WIRELESS && (CFG80211_WEXT || WIRELESS_EXT)
-> > (that's what xconfig shows me).
-> > But WIRELESS is not enabled.  Pooh.
-> > 
-> > I was already toying with making CONFIG_WIRELESS a real/usable kconfig symbol.
-> > That may have to be done unless someone else comes up with another solution.
+> You cannot yet purchase a laptop with these cards, but when you can the
+> driver will be ready for you.
 > 
-> Ah!
-> 
-> It's kinda strange though that you can select wireless drivers without
-> selecting WIRELESS. Maybe the solution is as simple as making WLAN
-> (drivers/net/wireless/Kconfig) depend on WIRELESS?
+> Reinette
 
-Yes, I think that would be a very good start.
 
----
-~Randy
+This is the reason I prefer intel to anything.
+I even have an intel motherboard in my desktop computer.
+
+Keep up the good work!
+
+Best regards,
+	Maxim Levitsky
+
