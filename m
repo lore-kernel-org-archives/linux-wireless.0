@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:43639 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1757875AbZJFTAK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 15:00:10 -0400
-Message-ID: <4ACB9375.6050805@gmx.de>
-Date: Tue, 06 Oct 2009 20:59:01 +0200
-From: Joerg Albert <jal2@gmx.de>
+Received: from mga11.intel.com ([192.55.52.93]:6423 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752466AbZJQIYN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Oct 2009 04:24:13 -0400
+From: "Zhu, Yi" <yi.zhu@intel.com>
+To: Tomas Winkler <tomasw@gmail.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Date: Sat, 17 Oct 2009 16:18:55 +0800
+Subject: RE: [PATCH 14/16] iwmc3200wifi: Support unexpected reboot barker
+Message-ID: <AFAB8585072C7E48BC5C6F9C87F9B79703BED11C4E@pdsmsx502.ccr.corp.intel.com>
+References: <1255670340-22565-1-git-send-email-yi.zhu@intel.com>
+	 <1255670340-22565-7-git-send-email-yi.zhu@intel.com>
+	 <1255670340-22565-8-git-send-email-yi.zhu@intel.com>
+	 <1255670340-22565-9-git-send-email-yi.zhu@intel.com>
+	 <1255670340-22565-10-git-send-email-yi.zhu@intel.com>
+	 <1255670340-22565-11-git-send-email-yi.zhu@intel.com>
+	 <1255670340-22565-12-git-send-email-yi.zhu@intel.com>
+	 <1255670340-22565-13-git-send-email-yi.zhu@intel.com>
+	 <1255670340-22565-14-git-send-email-yi.zhu@intel.com>
+	 <1255670340-22565-15-git-send-email-yi.zhu@intel.com>
+ <1ba2fa240910161506n6c519398h7795656309bffd93@mail.gmail.com>
+In-Reply-To: <1ba2fa240910161506n6c519398h7795656309bffd93@mail.gmail.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-To: Ahmed A <ahmedcali@yahoo.com>
-CC: David Acker <dacker@roinet.com>, linux-wireless@vger.kernel.org
-Subject: Re: Linux wifi development board
-References: <175271.7461.qm@web32506.mail.mud.yahoo.com> <4ACB42CB.7010403@roinet.com>
-In-Reply-To: <4ACB42CB.7010403@roinet.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/06/2009 03:14 PM, David Acker wrote:
-> Ahmed A wrote:
->> Hello,
->>
->> I have been looking online for a Linux wifi development board.  I have
->> come across a few from small companies (reasonably priced), but most
->> of those companies seem to be out of business.  I would appreciate
->> suggestions from anyone that may have used one recently, or suggest a
->> link where I can more info some popular ones.
->>
->> I am mostly interested in doing some software development, prototyping
->> on the "application processor", not on the "baseband processor" (radio
->> part).
->>
->> If there is an alternate mailing list I can post my question, I would
->> appreciate that also.
-> 
-> I have had good luck with boards from Gateworks,
-> http://www.gateworks.com/ and radios from Ubiquiti, http://ubnt.com/ .
-> All of it is supported by OpenWRT, although I believe that the gw2348-4
-> (avila) has mainline support.
-
-If Avila boards are a bit to pricey, you may consider getting an Ubiquity Routerstation (Pro) instead.
-It ships with OpenWrt.
-Anyhow, just check which devices have OpenWRT mainline support (http://www.openwrt.org) and choose one of them.
-
-If you prefer x86 hardware and more standard distributions you may consider an Alix board
-(http://www.pcengines.ch/alix.htm). I've got one here running Debian Lenny on a 8 GByte CompactFlash card.
-
-Both Routerstation and Alix require additional miniPCI (or USB) WLAN cards.
-
-Regards,
-Joerg.
+SGkgVG9tYXMhDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogVG9tYXMg
+V2lua2xlciBbbWFpbHRvOnRvbWFzd0BnbWFpbC5jb21dDQo+IFNlbnQ6IDIwMDnE6jEw1MIxN8jV
+IDY6MDcNCj4gVG86IFpodSwgWWkNCj4gQ2M6IGxpbnZpbGxlQHR1eGRyaXZlci5jb207IGxpbnV4
+LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgU2FtdWVsIE9ydGl6DQo+IFN1YmplY3Q6IFJlOiBb
+UEFUQ0ggMTQvMTZdIGl3bWMzMjAwd2lmaTogU3VwcG9ydCB1bmV4cGVjdGVkIHJlYm9vdCBiYXJr
+ZXINCj4gDQo+IE9uIEZyaSwgT2N0IDE2LCAyMDA5IGF0IDc6MTggQU0sIFpodSBZaSA8eWkuemh1
+QGludGVsLmNvbT4gd3JvdGU6DQo+ID4gRnJvbTogU2FtdWVsIE9ydGl6IDxzYW1lb0BsaW51eC5p
+bnRlbC5jb20+DQo+ID4NCj4gPiBXZSBjYW4gcmVjZWl2ZSB1bmV4cGVjdGVkIHJlYm9vdCBiYXJr
+ZXIgYXQgYW55IHRpbWUsIGFuZCB3ZSdyZSBzdXBwb3NlZCB0bw0KPiA+IHJlc2V0IHRoZSB3aG9s
+ZSBkZXZpY2UgdGhlbi4NCj4gDQo+IFdoYXQgZG8geW8gbWVhbiwgYnkgd2hvbGUgZGV2aWNlID8g
+QW5kIHdobyBpcyB3ZSBpbiB0aGlzIGNvbnRleHQ/DQoNCldlIGFyZSB0YWxraW5nIGZyb20gdGhl
+IHdpZmkgZHJpdmVyJ3MgcGVyc3BlY3RpdmUuIFRoZSBjb2RlIGlzIG9yaWdpbmFsbHkgdXNlZCBv
+bmx5IGZvciBTViB0ZXN0aW5nLiBUaGVuIHdlIGZpbmQgaXQgbWlnaHQgYmUgdXNlZnVsIGluIHRo
+ZSBnZW5lcmFsIGNhc2UuIFN1cHBvc2UgdGhlIGRyaXZlciBnZXQgYSBSRUJPT1RfQkFSS0VSIGZy
+b20gdGhlIGNhcmQgKGZvciB3aGF0ZXZlciByZWFzb24pLCBpcyByZXNldHRpbmcgdGhlIGRldmlj
+ZSB0aGUgY29ycmVjdCBiZWhhdmlvcj8NCg0KVGhhbmtzLA0KLXlpDQo=
