@@ -1,42 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:57050 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752412AbZJQJkf (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:47023 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751296AbZJQWBB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2009 05:40:35 -0400
-Received: by iwn8 with SMTP id 8so1519957iwn.33
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2009 02:40:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1255685492.4095.309.camel@johannes.local>
-References: <1255481442-27130-1-git-send-email-lrodriguez@atheros.com>
-	<1255562895.4095.297.camel@johannes.local> <20091014233528.GA4172@tux>
-	<1255685492.4095.309.camel@johannes.local>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Sat, 17 Oct 2009 02:40:20 -0700
-Message-ID: <43e72e890910170240m2e2131ebl82cefc6654b5587f@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: fix SME warning by removing stale BSS upon
-	assoc failure
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ic.felix@gmail.com" <ic.felix@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 17 Oct 2009 18:01:01 -0400
+Subject: Re: 2.6.32-rc0-git: oops in wireless, iwl3945 related?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: linux-kernel@vger.kernel.org, yi.zhu@intel.com,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20091017183320.GF16532@elf.ucw.cz>
+References: <20090929171249.GB14405@elf.ucw.cz>
+	 <1254431783.3959.45.camel@johannes.local>
+	 <1254432469.3959.46.camel@johannes.local>
+	 <20091017183320.GF16532@elf.ucw.cz>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-tnRoSLjxL8TdRps0VU97"
+Date: Sun, 18 Oct 2009 07:00:57 +0900
+Message-Id: <1255816857.3434.3.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 16, 2009 at 2:31 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2009-10-14 at 16:35 -0700, Luis R. Rodriguez wrote:
->
->> Well sure, but why do we want to keep the authentication present if
->> association failed? And as a matter of fact it lingers there forever.
->> Is that desired behaviour?
->
-> Yes, well, the SME is supposed to clean it up or try the association
-> again (possibly with different parameters in the IEs, e.g. different WPA
-> settings). The cfg80211 SME certainly does so (it deauthenticates).
 
-Ok so that's what's busted then it seems.
+--=-tnRoSLjxL8TdRps0VU97
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Sat, 2009-10-17 at 20:33 +0200, Pavel Machek wrote:
+> On Thu 2009-10-01 23:27:49, Johannes Berg wrote:
+> > On Thu, 2009-10-01 at 23:16 +0200, Johannes Berg wrote:
+> >=20
+> > > > wlan0: Selected IBSS BSSID 02:18:41:de:3f:02 based on configured SS=
+ID
+> > > > wlan0: Trigger new scan to find an IBSS to join
+> > > > wlan0: Trigger new scan to find an IBSS to join
+> > > > wlan0: Creating new IBSS network, BSSID f2:d3:80:82:ed:6a
+> > > > wlan0: Creating new IBSS network, BSSID 52:17:bf:45:d6:9d
+> > > > skb_over_panic: text:c07b4113 len:130 put:36 head:e4c3edf0
+> > >=20
+> > > This entire log is very odd ... can you reproduce this easily? printk
+> > > timestamps would be useful.
+> >=20
+> > Kinda looks like a race condition, but it's rather odd. I think there's
+> > a race condition, so I'm going to submit this patch regardless after
+> > some testing, but if you want please try the patch below.
+>=20
+> Well, the problem is not exactly reproducible... it failed to happen
+> again. So... thanks and I'll keep my eyes open if it returns.=20
+
+Felix also found a bad condition (inverted) in the adhoc code, so that
+might be related too.
+
+johannes
+
+--=-tnRoSLjxL8TdRps0VU97
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK2j6TAAoJEODzc/N7+QmaFooP/A/rbGa2s7/puW5Wy6p1pY4e
+0R6IHrP1aNc/DXrJ5MpPBozD6R+qcEQveQKKlcm3MFLZ0ccZoIkhGhwlYHg+9cmB
+7XlQ/je+OmP7TnZdKNypGuraBsuFITdYGeX++cCFC6BTbq0uToGJea7dtrnq6zgU
+IrkzKETCUwvk6P/AQhex+yhi3bXiUpmtNpWFKKmLykiY+c3BpqJvqr69K/4cLKJa
+iTVe428VDcvnTqtuvNf9JIjw7yk49o79QVz1aEnYCiCWHTyVcJfVu5/7DcFXnYUH
+UmRfmSJhdfwbrlagnse+yt+XQaojPDAskKdujqR/r3PlBQOnfK9gkcGL3wKPN8we
+SpVBhVCnpS2h32PNSunETZFYRM+OH//O48e3b7PTPVv9IRBqY8hkQOCOKOdzM+lS
+vxn2UN8DRGHtLD2DCfTCZZCKFwyRgoqzjxEP8+UrZZFQrcbhMektm66czuC48blr
+zoFjPLCgFNZCf2yQghpyxFmqKtR4vQ72XbRzU2e0BeDkF9Jn1AjhVgNO0MnwFbTK
+Q+MuOiag9c8V98zWeLyOcfdr+yExujY6GdL5cCDU/8P4pIosNiZK93MMtCw9NRes
+HDdJa3qX1GbzEaBLBvGW4N4mX6BhgMj5+eOKmxLKs+GdpqwZArGm/tgk/pFMNs+h
+pO7sbZp78aUum+W9JWGI
+=+yOS
+-----END PGP SIGNATURE-----
+
+--=-tnRoSLjxL8TdRps0VU97--
+
