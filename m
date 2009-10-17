@@ -1,74 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:24341 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751936AbZJWUmf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 16:42:35 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 05/18] iwlwifi: update bt co-exit configuration parameter
-Date: Fri, 23 Oct 2009 13:42:23 -0700
-Message-Id: <1256330556-20997-6-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
-References: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:59224 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751945AbZJQPUG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Oct 2009 11:20:06 -0400
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/2] rt2x00: Implement support for rt2800pci
+Date: Sat, 17 Oct 2009 17:19:23 +0200
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Alban Browaeys <prahal@yahoo.com>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	Mark Asselstine <asselsm@gmail.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	"linux-kernel" <linux-kernel@vger.kernel.org>
+References: <200910152137.58164.IvDoorn@gmail.com> <200910171654.03344.bzolnier@gmail.com> <1255792104.3434.2.camel@johannes.local>
+In-Reply-To: <1255792104.3434.2.camel@johannes.local>
+MIME-Version: 1.0
+Message-Id: <200910171719.24093.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Saturday 17 October 2009 17:08:24 Johannes Berg wrote:
+> On Sat, 2009-10-17 at 16:54 +0200, Bartlomiej Zolnierkiewicz wrote:
+> 
+> > I also used the opportunity to take a closer look at this driver and
+> > it seems that it needlessly adds around 2 KLOC to kernel by duplicating
+> > the common content of rt2800usb.h to rt2800pci.h instead of moving it
+> > to the shared header (like it is done in the staging crap drivers):
+> 
+> Tell me you're kidding -- comparing 2k duplicated LOC with a driver that
+> ships its own wifi stack?
 
-Adding parameter ranges for bt co-exist configuration command.
+Why would I be?
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-commands.h |   13 +++++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.c     |    6 +++---
- 2 files changed, 16 insertions(+), 3 deletions(-)
+1) The patch is submitted to kernel _proper_ not kernel staging so I see
+no excuse for duplicating 2-4 KLOC and it should be fixed.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 1a7c0d0..0d660a7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -2218,6 +2218,19 @@ struct iwl_link_quality_cmd {
- 	__le32 reserved2;
- } __attribute__ ((packed));
- 
-+#define BT_COEX_DISABLE (0x0)
-+#define BT_COEX_MODE_2W (0x1)
-+#define BT_COEX_MODE_3W (0x2)
-+#define BT_COEX_MODE_4W (0x3)
-+
-+#define BT_LEAD_TIME_MIN (0x0)
-+#define BT_LEAD_TIME_DEF (0x1E)
-+#define BT_LEAD_TIME_MAX (0xFF)
-+
-+#define BT_MAX_KILL_MIN (0x1)
-+#define BT_MAX_KILL_DEF (0x5)
-+#define BT_MAX_KILL_MAX (0xFF)
-+
- /*
-  * REPLY_BT_CONFIG = 0x9b (command, has simple generic response)
-  *
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 1d7248c..77b9825 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2003,9 +2003,9 @@ EXPORT_SYMBOL(iwl_isr_legacy);
- int iwl_send_bt_config(struct iwl_priv *priv)
- {
- 	struct iwl_bt_cmd bt_cmd = {
--		.flags = 3,
--		.lead_time = 0xAA,
--		.max_kill = 1,
-+		.flags = BT_COEX_MODE_4W,
-+		.lead_time = BT_LEAD_TIME_DEF,
-+		.max_kill = BT_MAX_KILL_DEF,
- 		.kill_ack_mask = 0,
- 		.kill_cts_mask = 0,
- 	};
--- 
-1.5.6.3
-
+2) The fact that the some staging driver consists in 90% of crap doesn't
+mean that it doesn't have some good design ideas..  (i.e. abstracting chipset
+registers access in a discussed case)
