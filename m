@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xenotime.net ([72.52.64.118]:50159 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1757703AbZJFUgA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 16:36:00 -0400
-Received: from chimera.site ([96.253.169.185]) by xenotime.net for <linux-wireless@vger.kernel.org>; Tue, 6 Oct 2009 13:35:22 -0700
-Date: Tue, 6 Oct 2009 13:27:29 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-To: Stephen Rothwell <sfr@canb.auug.org.au>, linville@tuxdriver.com
-Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH -next] wireless: fix CFG80211_WEXT build problems
-Message-Id: <20091006132729.8b4f9345.rdunlap@xenotime.net>
-In-Reply-To: <20091006165220.b5cb1c44.sfr@canb.auug.org.au>
-References: <20091006165220.b5cb1c44.sfr@canb.auug.org.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:52896 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753092AbZJQT4x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Oct 2009 15:56:53 -0400
+Received: by mail-fx0-f218.google.com with SMTP id 18so3633004fxm.37
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2009 12:56:57 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] ar9170: don't filter BlockACK frames
+Date: Sat, 17 Oct 2009 21:56:55 +0200
+Cc: linville@tuxdriver.com
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200910172156.56045.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+The current A-MPDU tx_status report mechanism is too inaccurate.
+With this patch BlockACK frames show now up to the driver and
+can be processed.
 
-Fix CFG80211_WEXT build dependencies/errors:
-
-ERROR: "cfg80211_wext_siwscan" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
-ERROR: "cfg80211_wext_siwmode" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
-ERROR: "cfg80211_wext_giwrange" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
-ERROR: "cfg80211_wext_giwmode" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
-ERROR: "cfg80211_wext_giwname" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
-ERROR: "cfg80211_wext_giwscan" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
-ERROR: "cfg80211_wext_giwname" [drivers/net/wireless/ipw2x00/ipw2200.ko] undefined!
-
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- drivers/net/wireless/ipw2x00/Kconfig |    2 +-
- drivers/net/wireless/orinoco/Kconfig |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
---- linux-next-20091006.orig/drivers/net/wireless/ipw2x00/Kconfig
-+++ linux-next-20091006/drivers/net/wireless/ipw2x00/Kconfig
-@@ -65,7 +65,7 @@ config IPW2100_DEBUG
+diff --git a/drivers/net/wireless/ath/ar9170/hw.h b/drivers/net/wireless/ath/ar9170/hw.h
+index 611747d..b7d27dd 100644
+--- a/drivers/net/wireless/ath/ar9170/hw.h
++++ b/drivers/net/wireless/ath/ar9170/hw.h
+@@ -152,14 +152,14 @@ enum ar9170_cmd {
+ #define		AR9170_MAC_REG_FTF_BIT14		BIT(14)
+ #define		AR9170_MAC_REG_FTF_BIT15		BIT(15)
+ #define		AR9170_MAC_REG_FTF_BAR			BIT(24)
+-#define		AR9170_MAC_REG_FTF_BIT25		BIT(25)
++#define		AR9170_MAC_REG_FTF_BA			BIT(25)
+ #define		AR9170_MAC_REG_FTF_PSPOLL		BIT(26)
+ #define		AR9170_MAC_REG_FTF_RTS			BIT(27)
+ #define		AR9170_MAC_REG_FTF_CTS			BIT(28)
+ #define		AR9170_MAC_REG_FTF_ACK			BIT(29)
+ #define		AR9170_MAC_REG_FTF_CFE			BIT(30)
+ #define		AR9170_MAC_REG_FTF_CFE_ACK		BIT(31)
+-#define		AR9170_MAC_REG_FTF_DEFAULTS		0x0500ffff
++#define		AR9170_MAC_REG_FTF_DEFAULTS		0x0700ffff
+ #define		AR9170_MAC_REG_FTF_MONITOR		0xfd00ffff
  
- config IPW2200
- 	tristate "Intel PRO/Wireless 2200BG and 2915ABG Network Connection"
--	depends on PCI && WLAN_80211 && CFG80211
-+	depends on PCI && WLAN_80211 && CFG80211 && CFG80211_WEXT
- 	select WIRELESS_EXT
- 	select WEXT_SPY
- 	select WEXT_PRIV
---- linux-next-20091006.orig/drivers/net/wireless/orinoco/Kconfig
-+++ linux-next-20091006/drivers/net/wireless/orinoco/Kconfig
-@@ -1,7 +1,7 @@
- config HERMES
- 	tristate "Hermes chipset 802.11b support (Orinoco/Prism2/Symbol)"
- 	depends on (PPC_PMAC || PCI || PCMCIA) && WLAN_80211
--	depends on CFG80211
-+	depends on CFG80211 && CFG80211_WEXT
- 	select WIRELESS_EXT
- 	select WEXT_SPY
- 	select WEXT_PRIV
+ #define AR9170_MAC_REG_RX_TOTAL			(AR9170_MAC_REG_BASE + 0x6A0)
