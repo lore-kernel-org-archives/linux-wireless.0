@@ -1,76 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33179 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758608AbZJGBTs (ORCPT
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:44969 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751084AbZJQF7L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 21:19:48 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, vasanth@atheros.com,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/6] ath9k: move common->debug_mask setting to ath_init_softc()
-Date: Tue,  6 Oct 2009 21:19:06 -0400
-Message-Id: <1254878351-32433-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1254878351-32433-1-git-send-email-lrodriguez@atheros.com>
-References: <1254878351-32433-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 17 Oct 2009 01:59:11 -0400
+Received: by ewy4 with SMTP id 4so14815ewy.37
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2009 22:59:14 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wl1251: rename spi device to wl1251
+References: <20091013174119.15796.81021.stgit@tikku>
+	<1255686697.4095.324.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sat, 17 Oct 2009 08:59:12 +0300
+In-Reply-To: <1255686697.4095.324.camel@johannes.local> (Johannes Berg's message of "Fri\, 16 Oct 2009 18\:51\:37 +0900")
+Message-ID: <87eip2muhb.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What this means is we can enable now debug prints without
-requiring CONFIG_ATH9K_DEBUG.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/debug.c |    5 -----
- drivers/net/wireless/ath/ath9k/main.c  |    5 +++++
- 2 files changed, 5 insertions(+), 5 deletions(-)
+>>  static struct spi_driver wl1251_spi_driver = {
+>>  	.driver = {
+>> -		.name		= "wl12xx",
+>> +		.name		= "wl1251",
+>>  		.bus		= &spi_bus_type,
+>>  		.owner		= THIS_MODULE,
+>
+> IIRC there's a preprocessor symbol for the module name (MODULE_NAME?)
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 25ae88e..84f4426 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -23,9 +23,6 @@
- #define REG_READ_D(_ah, _reg) \
- 	ath9k_hw_common(_ah)->ops->read((_ah), (_reg))
- 
--static unsigned int ath9k_debug = ATH_DBG_DEFAULT;
--module_param_named(debug, ath9k_debug, uint, 0);
--
- static struct dentry *ath9k_debugfs_root;
- 
- static int ath9k_debugfs_open(struct inode *inode, struct file *file)
-@@ -565,8 +562,6 @@ int ath9k_init_debug(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_softc *sc = (struct ath_softc *) common->priv;
- 
--	common->debug_mask = ath9k_debug;
--
- 	if (!ath9k_debugfs_root)
- 		return -ENOENT;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 86374ad..7f90cb8 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -29,6 +29,10 @@ static int modparam_nohwcrypt;
- module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
- 
-+static unsigned int ath9k_debug = ATH_DBG_DEFAULT;
-+module_param_named(debug, ath9k_debug, uint, 0);
-+MODULE_PARM_DESC(ath9k_debug, "Debugging mask");
-+
- /* We use the hw_value as an index into our private channel structure */
- 
- #define CHAN2G(_freq, _idx)  { \
-@@ -1637,6 +1641,7 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	common->ah = ah;
- 	common->hw = sc->hw;
- 	common->priv = sc;
-+	common->debug_mask = ath9k_debug;
- 
- 	/*
- 	 * Cache line size is used to size and align various
+Yes, there is DRIVER_NAME macro. I'll send a new patch on top of this
+one. Thanks.
+
 -- 
-1.6.0.4
-
+Kalle Valo
