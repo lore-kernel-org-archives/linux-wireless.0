@@ -1,40 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:50750 "EHLO
-	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752139AbZJEOOK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2009 10:14:10 -0400
-From: Frans Pop <elendil@planet.nl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for CPU"
-Date: Mon, 5 Oct 2009 16:13:31 +0200
-Cc: Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>,
-	linux-wireless@vger.kernel.org
-References: <200910051500.55875.elendil@planet.nl>
-In-Reply-To: <200910051500.55875.elendil@planet.nl>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200910051613.32631.elendil@planet.nl>
+Received: from mga11.intel.com ([192.55.52.93]:13245 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753263AbZJQT0u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Oct 2009 15:26:50 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: davem@davemloft.net, linville@tuxdriver.com,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org
+Cc: yi.zhu@intel.com, inaky.perez-gonzalez@intel.com,
+	cindy.h.kao@intel.com, guy.cohen@intel.com,
+	ron.rindjunsky@intel.com, Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH net-next V2 3/3] i2400m-sdio: select IWMC3200TOP in Kconfig
+Date: Sat, 17 Oct 2009 21:09:36 +0200
+Message-Id: <1255806576-26869-3-git-send-email-tomas.winkler@intel.com>
+In-Reply-To: <1255806576-26869-2-git-send-email-tomas.winkler@intel.com>
+References: <1255806576-26869-1-git-send-email-tomas.winkler@intel.com>
+ <1255806576-26869-2-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 05 October 2009, Frans Pop wrote:
-> With .32-rc3 I'm getting occasional skips from amarok while playing
-> music from an NFS share (3 today so far), something I've not had in a
-> long time.
->
-> The reason looks to be that latencytop consistently shows 'iwlagn' as
-> the top affected process with "Scheduler: waiting for CPU".
-> Values of 100-140 ms occur frequently, but I've also seen higher values
-> (180, 207). I don't remember seeing iwlagn high in the list before, but
-> I have not checked earlier kernels yet.
->
-> Added to that 'phy0' also frequently shows high with values of 25-75 ms.
->
-> The system is otherwise essentially idle. Other processes typically show
-> a latency < 5 ms.
+i2400m-sdio requires iwmc3200top for its operation
 
-If I give the system some work to do (like compiling a kernel), the 
-latencies on iwlagn and phy0 disappear (values < 5 ms).
-Is this related to ondemand frequency scaling?
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Acked-by: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+---
+ drivers/net/wimax/i2400m/Kconfig |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wimax/i2400m/Kconfig b/drivers/net/wimax/i2400m/Kconfig
+index d623b3d..32cb214 100644
+--- a/drivers/net/wimax/i2400m/Kconfig
++++ b/drivers/net/wimax/i2400m/Kconfig
+@@ -31,6 +31,14 @@ config WIMAX_I2400M_SDIO
+ 
+ 	  If unsure, it is safe to select M (module).
+ 
++config WIMAX_IWMC3200_SDIO
++	bool "Intel Wireless Multicom WiMAX Connection 3200 over SDIO"
++	depends on WIMAX_I2400M_SDIO
++	select IWMC3200TOP
++	help
++	  Select if you have a device based on the Intel Multicom WiMAX
++          Connection 3200 over SDIO.
++ 
+ config WIMAX_I2400M_DEBUG_LEVEL
+ 	int "WiMAX i2400m debug level"
+ 	depends on WIMAX_I2400M
+-- 
+1.6.0.6
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
