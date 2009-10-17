@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:18486 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751566AbZJ1V5Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2009 17:57:16 -0400
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-Date: Wed, 28 Oct 2009 22:56:00 +0100
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20091028211031.GF2856@tuxdriver.com>
-In-Reply-To: <20091028211031.GF2856@tuxdriver.com>
-MIME-Version: 1.0
-Message-Id: <200910282256.00407.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Received: from mga11.intel.com ([192.55.52.93]:13245 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752542AbZJQT0t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Oct 2009 15:26:49 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: davem@davemloft.net, linville@tuxdriver.com,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org
+Cc: yi.zhu@intel.com, inaky.perez-gonzalez@intel.com,
+	cindy.h.kao@intel.com, guy.cohen@intel.com,
+	ron.rindjunsky@intel.com, Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH net-next V2 2/3] iwmc3200wifi: select IWMC3200TOP in Kconfig
+Date: Sat, 17 Oct 2009 21:09:35 +0200
+Message-Id: <1255806576-26869-2-git-send-email-tomas.winkler@intel.com>
+In-Reply-To: <1255806576-26869-1-git-send-email-tomas.winkler@intel.com>
+References: <1255806576-26869-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 28 October 2009 22:10:32 John W. Linville wrote:
-> Dave,
-> 
-> I let my patches pile-up!  Yikes!!
-> 
-> This request includes the usual ton of stuff for -next -- driver
-> updates, fixes for some earlier -next stuff, a few cfg80211 changes to
-> accomodate the libertas driver, etc.  Of note is the rt2800pci support
-> added to the rt2x00 family.
+iwmc3200wifi requires iwmc3200top  for its operation
 
-Unfortunately rt2800pci support is non-functioning at the moment... :(
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Acked-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwmc3200wifi/Kconfig |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> Pleaset let me know if there are problems!
-
-I find it rather disappointing that all my review comments regarding
-rt2800pci support were just completely ignored and then the initial
-patch was merged just as it was..
-
-The way rt2800usb and rt2800pci drivers are designed really results
-in making the task of adding working support for RT28x0 and RT30x0
-chipsets to rt2x00 infrastructure more difficult and time consuming
-than it should be... :(
-
+diff --git a/drivers/net/wireless/iwmc3200wifi/Kconfig b/drivers/net/wireless/iwmc3200wifi/Kconfig
+index c25a043..9606b31 100644
+--- a/drivers/net/wireless/iwmc3200wifi/Kconfig
++++ b/drivers/net/wireless/iwmc3200wifi/Kconfig
+@@ -3,6 +3,7 @@ config IWM
+ 	depends on MMC && WLAN_80211 && EXPERIMENTAL
+ 	depends on CFG80211
+ 	select FW_LOADER
++	select IWMC3200TOP
+ 	help
+ 	  The Intel Wireless Multicomm 3200 hardware is a combo
+ 	  card with GPS, Bluetooth, WiMax and 802.11 radios. It
 -- 
-Bartlomiej Zolnierkiewicz
+1.6.0.6
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
