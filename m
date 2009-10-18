@@ -1,36 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30875 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759358AbZJMLvz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 07:51:55 -0400
-Date: Tue, 13 Oct 2009 13:51:11 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V3] iwlwifi: use paged Rx
-Message-ID: <20091013115110.GA2639@dhcp-lab-161.englab.brq.redhat.com>
-References: <1255079985-17282-1-git-send-email-yi.zhu@intel.com> <20091012142002.GA2687@dhcp-lab-161.englab.brq.redhat.com> <1255421948.3719.363.camel@debian>
+Received: from gate.linuxlighthouse.com ([63.249.90.144]:40315 "EHLO
+	linuxlighthouse.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754952AbZJRSAt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Oct 2009 14:00:49 -0400
+Received: from ws.linuxlighthouse.com (ws.linuxlighthouse.com [192.168.2.20])
+	(authenticated bits=0)
+	by linuxlighthouse.com (8.14.3/8.14.3) with ESMTP id n9IHf8uJ031813
+	for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2009 10:41:08 -0700
+Message-ID: <4ADB5334.3070109@linuxlighthouse.com>
+Date: Sun, 18 Oct 2009 10:41:08 -0700
+From: jack craig <jackc@linuxlighthouse.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1255421948.3719.363.camel@debian>
+To: linux-wireless@vger.kernel.org
+Subject: moblin, rt2860, and unhappiness
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 13, 2009 at 04:19:08PM +0800, Zhu Yi wrote:
-> > > Finally, mac80211 doesn't support paged Rx yet. So we linearize the skb
-> > > for all the management frames and software decryption or defragmentation
-> > > required data frames before handed to mac80211. For all the other frames,
-> > > we __pskb_pull_tail 64 bytes in the linear area of the skb for mac80211
-> > > to handle them properly.
-> > 
-> > This seems to be big overhead, but since there is no way to avoid it ...
-> 
-> Which case? The linear one is the same as the current implementation.
+Hi linux-wireless,
 
-Considering swcrypt for example. This patch make things worse as we still
-need to do the same skb allocation as before, plus additional pages allocation,
-plus additional memcpy. No ?
+This is my first posting, so please pardon me if I break any rule.
 
-Cheers
-Stanislaw
+A bit a background, last spring in a bout of unemployment, i wanted to find a new development direction.
+
+i had been working with a company providing wireless products (Danger), and wanted to continue that
+direction using  mobile linux as a platform.
+
+I subscribed to the moblin developers list, bought an Asus EeePC 1000 with xandros installed and began
+my development project.
+
+I chose to keep the xandros os in the netbook as its wireless was the first working wireless
+i've had. i booted the various moblin pre-beta releases via the thumbdrive and wasnt too
+worried when the wireless didnt work on the moblin os; after all it was pre-beta.
+
+as the xandros wireless worked, i felt confident that the good folks at Intel would make my netbook
+wireless work by the time beta rolled around.
+
+it was my error in assuming an Intel cpu included a Intel wireless chipset, instead i found i had an rt2860.
+
+as beta came and went with still no wireless joy, i started probing deeper and found the ralink
+rt2860 support wasnt going to be covered in the moblin project work.
+
+so here i am with a netbook that cant get to the net with the os of my choice. Much unhappiness!
+
+i have learned that the driver source is available and i plan to track that down.
+
+i have also been toying with the idea of surgery; putting a Intel wireless chipset in the eeepc,
+but the only article I've found on that topic is a bit much for a software only geek.
+
+I like the eeepc and want to use it with wireless.
+
+i figure my best case is to find a way to get the ralink driver working with the moblin os,
+but at least one person has failed at that attempt to far.
+
+a fall back position is to go with a fedora os where i could get the driver working there
+(if it doesn't already).
+
+so, finally, my query to this august group; given this sob story, what is your wisdom on the topic?
+
+is my goal to get the rt2860 working on moblin a gesture in futility?
+
+does it make sense to bail and go on to FC? i use FC for my desktop and work so i prefer it over ubuntu ,...
+
+Suggestions? tia, jackc...
+
+-- 
+    jack craig
+       jackc@LinuxLightHouse.com
+          831-684-1375 (Office)
+             831-596-6924 (cell)
+                IM: jackcraigaptos (AIM)
+_________________________________
+This email has been ClamScanned !
+     www.LinuxLightHouse.com
