@@ -1,79 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:35828 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756083AbZJNJhZ (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:64680 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754133AbZJRDIj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 05:37:25 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id AF72D4B00F
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2009 11:36:17 +0200 (CEST)
-Received: from mx51.mymxserver.com ([127.0.0.1])
-	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id QvWQBGdWjv9i for <linux-wireless@vger.kernel.org>;
-	Wed, 14 Oct 2009 11:36:17 +0200 (CEST)
-Received: from lin01.mn-solutions.de (pD95FA374.dip0.t-ipconnect.de [217.95.163.116])
-	by mx51.mymxserver.com (Postfix) with ESMTP id EFD514B00B
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2009 11:36:16 +0200 (CEST)
-Received: from mnz66.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id 448DE1E0010
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Oct 2009 11:36:07 +0200 (CEST)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: cfg80211 question: impedance mismatch of .connect versus .assoc
-Date: Wed, 14 Oct 2009 11:36:03 +0200
+	Sat, 17 Oct 2009 23:08:39 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200910141136.03288.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200910171654.03344.bzolnier@gmail.com>
+References: <200910152137.58164.IvDoorn@gmail.com> <200910152204.16407.IvDoorn@gmail.com>
+	<200910171654.03344.bzolnier@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sun, 18 Oct 2009 14:08:23 +1100
+Message-ID: <646765f40910172008r1309126fla6897d4289004934@mail.gmail.com>
+Subject: Re: [PATCH 2/2] rt2x00: Implement support for rt2800pci
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Alban Browaeys <prahal@yahoo.com>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	Mark Asselstine <asselsm@gmail.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While playing with .auth/.deauth/.assoc/.disassoc 
-versus .connect/.disconnect in libertas, I notices two things 
-that makes things a bit hard for me.
+On Sun, Oct 18, 2009 at 01:54, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+> Now to the less happy part..
+>
+> I also used the opportunity to take a closer look at this driver and
+> it seems that it needlessly adds around 2 KLOC to kernel by duplicating
+> the common content of rt2800usb.h to rt2800pci.h instead of moving it
+> to the shared header (like it is done in the staging crap drivers):
+>
+> $ wc -l drivers/net/wireless/rt2x00/rt2800usb.h drivers/net/wireless/rt2x00/rt2800pci.h
+>  1951 drivers/net/wireless/rt2x00/rt2800usb.h
+>  1960 drivers/net/wireless/rt2x00/rt2800pci.h
+>  3911 total
+>
+> $ diff -u drivers/net/wireless/rt2x00/rt2800usb.h drivers/net/wireless/rt2x00/rt2800pci.h|diffstat
+>  rt2800pci.h |  213 +++++++++++++++++++++++++++++++-----------------------------
+>  1 file changed, 111 insertions(+), 102 deletions(-)
+>
+> Similarly it looks like most of the code between rt2800usb.c and rt2800pci.c
+> could also be shared (up to another 2 KLOC saved) by adding abstraction layer
+> for accessing chipset registers over different buses (again like it is done
+> in staging crap drivers):
+>
+> $ wc -l drivers/net/wireless/rt2x00/rt2800usb.c drivers/net/wireless/rt2x00/rt2800pci.c
+>  3077 drivers/net/wireless/rt2x00/rt2800usb.c
+>  3323 drivers/net/wireless/rt2x00/rt2800pci.c
+>  6400 total
+>
+> $ diff -u drivers/net/wireless/rt2x00/rt2800usb.c drivers/net/wireless/rt2x00/rt2800pci.c|diffstat
+>  rt2800pci.c | 2190 +++++++++++++++++++++++++++++++++---------------------------
+>  1 file changed, 1218 insertions(+), 972 deletions(-)
 
+Nobody else has said it, so:
 
-BSS list driven vs. not
------------------------
-.auth/.assoc provides the BSSID to connect to. If cfg80211's BSS 
-list is empty, it even will do a scan before 
-calling .auth/.assoc.
+Patches welcome!
 
-However, for the .connect method this isn't true. .connect just 
-get's the SSID.
+Your points with the vendor drivers apply here too - consolidating the
+common parts of the drivers will enhance readability, and make
+development easier, and mean that, with your help, these might get to
+a everyday usable state quicker.
 
-My problem here is that the CMD_802_11_ASSOCIATE command for the 
-libertas' firmware wants the AP's BSSID to connect to. For now, 
-I do this:
+And remember that this is a preliminary release of the code. There's
+still a long way to go.
 
-	if (sme->bssid) {
-		bss = cfg80211_get_bss(wiphy, sme->channel, sme->bssid,
-			sme->ssid, sme->ssid_len,
-			WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
-	} else {
-		ret = -ENOTSUPP;
-		goto done;
-	}
-
-This makes the "iw connect" command only work if an "iw scan" did 
-just take place and I provide an BSS on the command line. 
-
-So maybe net/wireless/sme.c should be generalized ?
-
-
-
-BSSID for .deauth/.disassoc vs. .disconnect
--------------------------------------------
-Both the .deauth and .disassoc get the cfg80211_bss entry to 
-deauth / disassociate against.
-
-.disconnect doesn't get this.
-
-But I need the BSSID for the CMD_802_11_DISASSOCIATE command, so 
-I need to store the BSSID locally in priv->XXX. But I'm quite 
-sure that cfg80211 already knows to which bssid I'm connected 
-(see "iw xxx link"), so it's not nice that I need to store this 
-twice.
+Thanks,
 
 -- 
-http://www.holgerschurig.de
+
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+.Plan: http://sites.google.com/site/juliancalaby/
