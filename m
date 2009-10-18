@@ -1,125 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:23066 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759445AbZJHS6c (ORCPT
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:58465 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751977AbZJRQ7Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 14:58:32 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 10/20] wl1271: Corrections to TX path
-Date: Thu,  8 Oct 2009 21:56:26 +0300
-Message-Id: <1255028196-6565-11-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
+	Sun, 18 Oct 2009 12:59:24 -0400
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 2/2] rt2x00: Implement support for rt2800pci
+Date: Sun, 18 Oct 2009 18:59:21 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Alban Browaeys <prahal@yahoo.com>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	Mark Asselstine <asselsm@gmail.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	"linux-kernel" <linux-kernel@vger.kernel.org>
+References: <200910152137.58164.IvDoorn@gmail.com> <200910152204.16407.IvDoorn@gmail.com> <200910171654.03344.bzolnier@gmail.com>
+In-Reply-To: <200910171654.03344.bzolnier@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200910181859.22413.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> I also used the opportunity to take a closer look at this driver and
+> it seems that it needlessly adds around 2 KLOC to kernel by duplicating
+> the common content of rt2800usb.h to rt2800pci.h instead of moving it
+> to the shared header (like it is done in the staging crap drivers):
+> 
+> $ wc -l drivers/net/wireless/rt2x00/rt2800usb.h drivers/net/wireless/rt2x00/rt2800pci.h
+>   1951 drivers/net/wireless/rt2x00/rt2800usb.h
+>   1960 drivers/net/wireless/rt2x00/rt2800pci.h
+>   3911 total
+> 
+> $ diff -u drivers/net/wireless/rt2x00/rt2800usb.h drivers/net/wireless/rt2x00/rt2800pci.h|diffstat
+>  rt2800pci.h |  213 +++++++++++++++++++++++++++++++-----------------------------
+>   1 file changed, 111 insertions(+), 102 deletions(-)
 
-Corrections to the TX path - use correct number of maximum descriptors
-(32 instead of 16) and correct checking and setting of excessive retries
-on completion.
+Creating rt2800.h with common register defines has been on the todo list for some time already,
+it will likely happen in the future, but until I get around to update my debugfs scripts the seperate
+rt2800pci.h and rt2800usb.h files make debugging and register analysis a bit easier.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271.h      |    4 +++-
- drivers/net/wireless/wl12xx/wl1271_acx.h  |    1 -
- drivers/net/wireless/wl12xx/wl1271_main.c |    4 +---
- drivers/net/wireless/wl12xx/wl1271_tx.c   |    8 +++-----
- 4 files changed, 7 insertions(+), 10 deletions(-)
+> Similarly it looks like most of the code between rt2800usb.c and rt2800pci.c
+> could also be shared (up to another 2 KLOC saved) by adding abstraction layer
+> for accessing chipset registers over different buses (again like it is done
+> in staging crap drivers):
+> 
+> $ wc -l drivers/net/wireless/rt2x00/rt2800usb.c drivers/net/wireless/rt2x00/rt2800pci.c
+>   3077 drivers/net/wireless/rt2x00/rt2800usb.c
+>   3323 drivers/net/wireless/rt2x00/rt2800pci.c
+>   6400 total
+> 
+> $ diff -u drivers/net/wireless/rt2x00/rt2800usb.c drivers/net/wireless/rt2x00/rt2800pci.c|diffstat
+>  rt2800pci.c | 2190 +++++++++++++++++++++++++++++++++---------------------------
+>  1 file changed, 1218 insertions(+), 972 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 05eb29c..0b4744d 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -123,6 +123,8 @@ enum {
- #define WL1271_DEFAULT_BEACON_INT  100
- #define WL1271_DEFAULT_DTIM_PERIOD 1
- 
-+#define ACX_TX_DESCRIPTORS    32
-+
- enum wl1271_state {
- 	WL1271_STATE_OFF,
- 	WL1271_STATE_ON,
-@@ -346,7 +348,7 @@ struct wl1271 {
- 	struct work_struct filter_work;
- 
- 	/* Pending TX frames */
--	struct sk_buff *tx_frames[16];
-+	struct sk_buff *tx_frames[ACX_TX_DESCRIPTORS];
- 
- 	/* Security sequence number counters */
- 	u8 tx_security_last_seq;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
-index 55850eb..c177345 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
-@@ -170,7 +170,6 @@ enum {
- #define  DP_RX_PACKET_RING_CHUNK_NUM 2
- #define  DP_TX_PACKET_RING_CHUNK_NUM 2
- #define  DP_TX_COMPLETE_TIME_OUT 20
--#define  FW_TX_CMPLT_BLOCK_SIZE 16
- 
- #define TX_MSDU_LIFETIME_MIN       0
- #define TX_MSDU_LIFETIME_MAX       3000
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 6e35fcf..0a0f2ea 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1293,9 +1293,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	wl->basic_rate_set = WL1271_DEFAULT_BASIC_RATE_SET;
- 	wl->band = IEEE80211_BAND_2GHZ;
- 
--	/* We use the default power on sleep time until we know which chip
--	 * we're using */
--	for (i = 0; i < FW_TX_CMPLT_BLOCK_SIZE; i++)
-+	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
- 		wl->tx_frames[i] = NULL;
- 
- 	spin_lock_init(&wl->wl_lock);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index 1ad1bc3..5d3aa4b 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -33,8 +33,7 @@
- static int wl1271_tx_id(struct wl1271 *wl, struct sk_buff *skb)
- {
- 	int i;
--
--	for (i = 0; i < FW_TX_CMPLT_BLOCK_SIZE; i++)
-+	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
- 		if (wl->tx_frames[i] == NULL) {
- 			wl->tx_frames[i] = skb;
- 			return i;
-@@ -262,14 +261,13 @@ out:
- static void wl1271_tx_complete_packet(struct wl1271 *wl,
- 				      struct wl1271_tx_hw_res_descr *result)
- {
--
- 	struct ieee80211_tx_info *info;
- 	struct sk_buff *skb;
- 	u16 seq;
- 	int id = result->id;
- 
- 	/* check for id legality */
--	if (id >= TX_HW_RESULT_QUEUE_LEN || wl->tx_frames[id] == NULL) {
-+	if (id >= ACX_TX_DESCRIPTORS || wl->tx_frames[id] == NULL) {
- 		wl1271_warning("TX result illegal id: %d", id);
- 		return;
- 	}
-@@ -382,7 +380,7 @@ void wl1271_tx_flush(struct wl1271 *wl)
- 		ieee80211_tx_status(wl->hw, skb);
- 	}
- 
--	for (i = 0; i < FW_TX_CMPLT_BLOCK_SIZE; i++)
-+	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
- 		if (wl->tx_frames[i] != NULL) {
- 			skb = wl->tx_frames[i];
- 			info = IEEE80211_SKB_CB(skb);
--- 
-1.5.6.5
+I don't agree on this, for starters the whole "abstraction layer as done in the staging driver, really
+obfuscated the code in multiple areas, so whatever abstraction layer will be needed for rt2x00 it
+should be done much cleaner without the ugly defines and crap like that. So unless there is a _clean_
+and very _readable_ solution for such abstraction layer I might consider it.
 
+Secondly, you can't merge them until both drivers would correctly for all users/chipsets, because only
+then you can see what registers are initialized equaly, and where potential pitfalls are between the
+2 busses.
+
+> All in all, the total amount of the kernel code needed for implementing
+> rt2800pci functionality should 1-2 KLOC instead of the current 5 KLOC.
+
+Ivo
