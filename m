@@ -1,71 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2836 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753246AbZJXMwt (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54678 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753726AbZJSGdm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Oct 2009 08:52:49 -0400
-Date: Sat, 24 Oct 2009 08:52:17 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Tomasz Chmielewski <mangoo@wpkg.org>
-Cc: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-net@vger.kernel.org,
-	linux-mips@vger.kernel.org
-Subject: Re: ath5k AP kernel panic when client uses SCP
-Message-ID: <20091024125217.GA31897@hash.localnet>
-References: <4AD21AB4.6010208@wpkg.org> <4AE1AC69.7010904@wpkg.org> <69e28c910910230621j2176813dpe7f77b7dff5b1b44@mail.gmail.com> <4AE1AE74.4020600@wpkg.org> <4AE2EC3E.3000503@wpkg.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4AE2EC3E.3000503@wpkg.org>
+	Mon, 19 Oct 2009 02:33:42 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [RFT 00/15] ath9k_hw ar9271 updates & AR5416 force bias
+Date: Mon, 19 Oct 2009 02:33:31 -0400
+Message-Id: <1255934026-20686-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> I'll recompile...
->
-> Is this one more useful?
+This series started off to extend support for ar9271 on ath9k_hw
+but after review of the phy related code I noticed a fix for
+AR5416 was only partially being implemented and used for all
+chipsets. This series then adds the changes I've noticed so far
+required for ar9271 but also fixes and completes the orientation
+fix for AR5416 (force bias). Since I'm touching phy.c I also extend
+documentation for it.
 
-Much!  Thanks.
+I don't have AR9285 cards with me but I do have an AR5416 cardbus
+card -- I'd appreciate it if someone can give this a test on AR9285
+but also more AR5416 cards -- this should help with TX on of AR5416
+and AR5418 on the 2.4 GHz band.
 
-> [  516.430000] ------------[ cut here ]------------
-> [  516.430000] WARNING: at net/core/dev.c:1566 skb_gso_segment+0x110/0x298()
-> [  516.440000] b44: caps=(0x0, 0x0) len=52 data_len=0 ip_summed=1
+Reports on issues or performance differences are greatly appreciated;
+the only issue I'd expect you'd see on non AR5416 hardware is a BUG_ON()
+which would be very obvious to notice and the performance enhancements
+should be seen on AR5416 for TX -- not yet sure exactly under what
+circumstances.
 
-So this looks like the ethernet driver b44 instead of ath5k, I think.
+Luis R. Rodriguez (15):
+  ath9k_hw: modify the rf control register for ar9271 revision 1.0
+  ath9k_hw: update register initialization/reset values for ar9271
+  ath9k_hw: change the way we initialize the pll for ar9271
+  ath9k_hw: start documenting 802.11n RF anlong front ends
+  ath9k_hw: bail out early on ath9k_hw_init_rf()
+  ath9k_hw: simplify rf attach and rename to
+    ath9k_hw_rf_alloc_ext_banks()
+  ath9k_hw: simplify ath9k_hw_rf_alloc_ext_banks()
+  ath9k_hw: rename ath9k_hw_rf_free() to ath9k_hw_rf_free_ext_banks()
+  ath9k_hw: make both analog channel change routines return int
+  ath9k_hw: use a callback for frequency change
+  ath9k_hw: order phy.c code and integrate spur mitigation
+  ath9k_hw: make spur mitigation a callback
+  ath9k_hw: remove unused modesIndex param from ath9k_hw_write_regs()
+  ath9k_hw: Fix and complete force bias for AR5416
+  ath9k_hw: make ath9k_phy_modify_rx_buffer() static
 
-> [  516.450000] Modules linked in: configs aes_generic tun sch_sfq cls_fw sch_htb ipt_MASQUERADE iptable_nat nf_nat xt_MARK iptable_mangle ipt_ULOG xt_recent nf_conn1
-> [  516.480000] Call Trace:
-> [  516.480000] [<80013ac4>] dump_stack+0x8/0x34
-> [  516.480000] [<8002f2a0>] warn_slowpath_common+0x70/0x98
-> [  516.490000] [<8002f308>] warn_slowpath_fmt+0x24/0x30
-> [  516.490000] [<801f0398>] skb_gso_segment+0x110/0x298
-
-...but this is higher up the stack.  skb_gso_segment is about a year old
-so it would be odd if there were a bug here.  Can you do the following?
-
-objdump -S net/core/dev.o, then find the address for skb_gso_segment, 
-it should look something like this (your numbers and disassembly will
-differ):
-
-00004190 <skb_gso_segment>:
- *
- *      It may return NULL if the skb requires no segmentation.  This is
- *      only possible when GSO is used for verifying header integrity.
- */
-struct sk_buff *skb_gso_segment(struct sk_buff *skb, int features)
-{
-    4190:       55                      push   %ebp
-    4191:       89 e5                   mov    %esp,%ebp
-    4193:       57                      push   %edi
-    4194:       56                      push   %esi
-
-Then find whatever 0x4190 (your offset here) + 0x110 is, and pick about
-10 lines before and after that and paste it -- the opcodes in the second
-column should match up with the code lines below:
-
-> [  516.650000] [  516.650000] [  516.650000] Code: 3c048007  08010d50  
-> 248436fc <8c820000> 3042c000  10400003  00803821  0801ca7f  00000000 [  
-
-Or you can send me the whole objdump -S output off-list if that's easier.
-
--- 
-Bob Copeland %% www.bobcopeland.com
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c |    4 +
+ drivers/net/wireless/ath/ath9k/hw.c        |  580 ++-------------
+ drivers/net/wireless/ath/ath9k/hw.h        |   20 +-
+ drivers/net/wireless/ath/ath9k/initvals.h  |   29 +-
+ drivers/net/wireless/ath/ath9k/phy.c       | 1100 ++++++++++++++++++++++------
+ drivers/net/wireless/ath/ath9k/phy.h       |   24 +-
+ drivers/net/wireless/ath/ath9k/reg.h       |    3 +
+ 7 files changed, 1013 insertions(+), 747 deletions(-)
 
