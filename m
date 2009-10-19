@@ -1,145 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:51899 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753291AbZJMQ7s (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54704 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754296AbZJSGdm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 12:59:48 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH] rx51: add wl1251 wlan driver support
-To: linux-omap@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 13 Oct 2009 19:58:13 +0300
-Message-ID: <20091013165812.1623.66247.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Mon, 19 Oct 2009 02:33:42 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [RFT 14/15] ath9k_hw: Fix and complete force bias for AR5416
+Date: Mon, 19 Oct 2009 02:33:45 -0400
+Message-Id: <1255934026-20686-15-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1255934026-20686-1-git-send-email-lrodriguez@atheros.com>
+References: <1255934026-20686-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+Force bias is a fix for usage of AR5416 radios on the 2.4 GHz band
+for orientation sensitivity. This was only partially implemented
+with the ath9k_hw_decrease_chain_power() but first -- this was being
+called for all chipsets which is not correct and second -- it was
+missing the actual orientation code.
 
-wl1251 is connected to the SPI bus in rx51, add support for this.
+We now ensure to only enable force bias only for AR5416 and BUG_ON()
+on other chipsets. Although ath9k_hw_decrease_chain_power() was enabled
+for newer chipsets I suspect that it never ran unless the EEPROM had
+ATH9K_ANT_FIXED_A or ATH9K_ANT_FIXED_B for antenna diversity.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
+ drivers/net/wireless/ath/ath9k/hw.c  |    4 +-
+ drivers/net/wireless/ath/ath9k/phy.c |   70 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 73 insertions(+), 1 deletions(-)
 
- arch/arm/mach-omap2/board-rx51-peripherals.c |   85 ++++++++++++++++++++++++++
- 1 files changed, 85 insertions(+), 0 deletions(-)
-
-diff --git a/arch/arm/mach-omap2/board-rx51-peripherals.c b/arch/arm/mach-omap2/board-rx51-peripherals.c
-index c1af532..ccb8656 100644
---- a/arch/arm/mach-omap2/board-rx51-peripherals.c
-+++ b/arch/arm/mach-omap2/board-rx51-peripherals.c
-@@ -13,6 +13,7 @@
- #include <linux/platform_device.h>
- #include <linux/input.h>
- #include <linux/spi/spi.h>
-+#include <linux/spi/wl12xx.h>
- #include <linux/i2c.h>
- #include <linux/i2c/twl4030.h>
- #include <linux/clk.h>
-@@ -36,6 +37,37 @@
- #define SYSTEM_REV_B_USES_VAUX3	0x1699
- #define SYSTEM_REV_S_USES_VAUX3 0x8
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index d435369..db95876 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2054,7 +2054,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
  
-+#define RX51_WL1251_POWER_GPIO		87
-+#define RX51_WL1251_IRQ_GPIO		42
+ 	ah->ath9k_hw_spur_mitigate_freq(ah, chan);
+ 	ah->eep_ops->set_board_values(ah, chan);
+-	ath9k_hw_decrease_chain_power(ah, chan);
 +
-+static void rx51_wl1251_set_power(bool enable);
-+
-+static struct wl12xx_platform_data wl1251_pdata = {
-+	.set_power = rx51_wl1251_set_power,
-+};
-+
-+static struct omap2_mcspi_device_config wl1251_mcspi_config = {
-+	.turbo_mode	= 0,
-+	.single_channel	= 1,
-+};
-+
-+/* list all spi devices here */
-+enum {
-+	RX51_SPI_WL1251,
-+};
-+
-+static struct spi_board_info rx51_peripherals_spi_board_info[] = {
-+	[RX51_SPI_WL1251] = {
-+		.modalias		= "wl1251",
-+		.bus_num		= 4,
-+		.chip_select		= 0,
-+		.max_speed_hz   	= 48000000,
-+		.mode                   = SPI_MODE_2,
-+		.controller_data	= &wl1251_mcspi_config,
-+		.platform_data		= &wl1251_pdata,
-+	},
-+};
-+
- static int board_keymap[] = {
- 	KEY(0, 0, KEY_Q),
- 	KEY(0, 1, KEY_O),
-@@ -257,6 +289,55 @@ static struct regulator_init_data rx51_vdac = {
- 	},
- };
++	if (AR_SREV_5416(ah))
++		ath9k_hw_decrease_chain_power(ah, chan);
  
-+static void rx51_wl1251_set_power(bool enable)
+ 	REG_WRITE(ah, AR_STA_ID0, get_unaligned_le32(common->macaddr));
+ 	REG_WRITE(ah, AR_STA_ID1, get_unaligned_le16(common->macaddr + 4)
+diff --git a/drivers/net/wireless/ath/ath9k/phy.c b/drivers/net/wireless/ath/ath9k/phy.c
+index a15532e..df55e28 100644
+--- a/drivers/net/wireless/ath/ath9k/phy.c
++++ b/drivers/net/wireless/ath/ath9k/phy.c
+@@ -41,6 +41,10 @@
+ 
+ #include "hw.h"
+ 
++static void ath9k_phy_modify_rx_buffer(u32 *rfBuf, u32 reg32,
++				       u32 numBits, u32 firstBit,
++				       u32 column);
++
+ /**
+  * ath9k_hw_write_regs - ??
+  *
+@@ -429,6 +433,67 @@ void ath9k_hw_9280_spur_mitigate(struct ath_hw *ah, struct ath9k_channel *chan)
+ 
+ /* All code below is for non single-chip solutions */
+ 
++/*
++ * Fix on 2.4 GHz band for orientation sensitivity issue by increasing
++ * rf_pwd_icsyndiv.
++ *
++ * Theoretical Rules:
++ *   if 2 GHz band
++ *      if forceBiasAuto
++ *         if synth_freq < 2412
++ *            bias = 0
++ *         else if 2412 <= synth_freq <= 2422
++ *            bias = 1
++ *         else // synth_freq > 2422
++ *            bias = 2
++ *      else if forceBias > 0
++ *         bias = forceBias & 7
++ *      else
++ *         no change, use value from ini file
++ *   else
++ *      no change, invalid band
++ *
++ *  1st Mod:
++ *    2422 also uses value of 2
++ *    <approved>
++ *
++ *  2nd Mod:
++ *    Less than 2412 uses value of 0, 2412 and above uses value of 2
++ */
++static void ath9k_hw_force_bias(struct ath_hw *ah, u16 synth_freq)
 +{
-+	gpio_set_value(RX51_WL1251_POWER_GPIO, enable);
++	struct ath_common *common = ath9k_hw_common(ah);
++	u32 tmp_reg;
++	int reg_writes = 0;
++	u32 new_bias = 0;
++
++	if (!AR_SREV_5416(ah) || synth_freq >= 3000) {
++		return;
++	}
++
++	BUG_ON(AR_SREV_9280_10_OR_LATER(ah));
++
++	if (synth_freq < 2412)
++		new_bias = 0;
++	else if (synth_freq < 2422)
++		new_bias = 1;
++	else
++		new_bias = 2;
++
++	/* pre-reverse this field */
++	tmp_reg = ath9k_hw_reverse_bits(new_bias, 3);
++
++	ath_print(common, ATH_DBG_CONFIG,
++		  "Force rf_pwd_icsyndiv to %1d on %4d\n",
++		  new_bias, synth_freq);
++
++	/* swizzle rf_pwd_icsyndiv */
++	ath9k_phy_modify_rx_buffer(ah->analogBank6Data, tmp_reg, 3, 181, 3);
++
++	/* write Bank 6 with new params */
++	REG_WRITE_RF_ARRAY(&ah->iniBank6, ah->analogBank6Data, reg_writes);
 +}
 +
-+static void __init rx51_init_wl1251(void)
-+{
-+	int irq, ret;
-+
-+	ret = gpio_request(RX51_WL1251_POWER_GPIO, "wl1251 power");
-+	if (ret < 0)
-+		goto error;
-+
-+	ret = gpio_direction_output(RX51_WL1251_POWER_GPIO, 0);
-+	if (ret < 0)
-+		goto err_power;
-+
-+	ret = gpio_request(RX51_WL1251_IRQ_GPIO, "wl1251 irq");
-+	if (ret < 0)
-+		goto err_power;
-+
-+	ret = gpio_direction_input(RX51_WL1251_IRQ_GPIO);
-+	if (ret < 0)
-+		goto err_irq;
-+
-+	irq = gpio_to_irq(RX51_WL1251_IRQ_GPIO);
-+	if (irq < 0)
-+		goto err_irq;
-+
-+	rx51_peripherals_spi_board_info[RX51_SPI_WL1251].irq = irq;
-+
-+	return;
-+
-+err_irq:
-+	gpio_free(RX51_WL1251_IRQ_GPIO);
-+
-+err_power:
-+	gpio_free(RX51_WL1251_POWER_GPIO);
-+
-+error:
-+	printk(KERN_ERR "wl1251 board initialisation failed\n");
-+	wl1251_pdata.set_power = NULL;
-+
-+	/*
-+	 * Now rx51_peripherals_spi_board_info[1].irq is zero and
-+	 * set_power is null, and wl1251_probe() will fail.
-+	 */
-+}
-+
- static int rx51_twlgpio_setup(struct device *dev, unsigned gpio, unsigned n)
- {
- 	/* FIXME this gpio setup is just a placeholder for now */
-@@ -538,6 +619,10 @@ static inline void board_smc91x_init(void)
+ /**
+  * ath9k_hw_set_channel - tune to a channel on the external AR2133/AR5133 radios
+  * @ah: atheros hardware stucture
+@@ -499,6 +564,9 @@ int ath9k_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+ 		return -EINVAL;
+ 	}
  
- void __init rx51_peripherals_init(void)
- {
-+	rx51_init_wl1251();
++	ath9k_hw_force_bias(ah, freq);
++	ath9k_hw_decrease_chain_power(ah, chan);
 +
-+	spi_register_board_info(rx51_peripherals_spi_board_info,
-+				ARRAY_SIZE(rx51_peripherals_spi_board_info));
- 	rx51_i2c_init();
- 	board_onenand_init();
- 	board_smc91x_init();
+ 	reg32 =
+ 	    (channelSel << 8) | (aModeRefSel << 2) | (bModeSynth << 1) |
+ 	    (1 << 5) | 0x1;
+@@ -946,6 +1014,8 @@ ath9k_hw_decrease_chain_power(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	u32 bank6SelMask;
+ 	u32 *bank6Temp = ah->bank6Temp;
+ 
++	BUG_ON(AR_SREV_9280_10_OR_LATER(ah));
++
+ 	switch (ah->config.diversity_control) {
+ 	case ATH9K_ANT_FIXED_A:
+ 		bank6SelMask =
+-- 
+1.6.0.4
 
