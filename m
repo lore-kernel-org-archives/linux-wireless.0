@@ -1,170 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:36158 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933760AbZJMJuK (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:46058 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757092AbZJSRaQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 05:50:10 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH 14/22] wl1271: Added 5 GHz support to join and rx
-Date: Tue, 13 Oct 2009 12:47:51 +0300
-Message-Id: <1255427279-1224-15-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
+	Mon, 19 Oct 2009 13:30:16 -0400
+Received: by fg-out-1718.google.com with SMTP id d23so1585768fga.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2009 10:30:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <279b980f0910191011p50064547r6d77a5ac32e22f93@mail.gmail.com>
+References: <1255861930.5093.7.camel@chriss-imac> <69e28c910910180602qe4cdb1fy5c2ec3f6dae0c146@mail.gmail.com>
+	<279b980f0910191011p50064547r6d77a5ac32e22f93@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 19 Oct 2009 19:29:59 +0200
+Message-ID: <69e28c910910191029v244b0613g664204f0d453e6a4@mail.gmail.com>
+Subject: Re: Support for Broadcom's BCM4328 chip
+To: Russell Knighton <russell@knighton.me.uk>
+Cc: Chriss Kalogeropoulos <iz.iznogood@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+2009/10/19 Russell Knighton <russell@knighton.me.uk>
+>
+> Great news that this is now truly under-way - but, at the risk of sounding cheeky, is there an estimated merge date on this (or any progress information you can share)? I have a broadcom BCM4322 and would like to get involved in any possible testing, or at the very least be able to check the progress on this.
+>
+> Thanks for all your hard work - your skill and efforts are highly appreciated by us end users!
+>
+> Russell
+>
 
-Added support to assiociate and use connection on 5 GHz band (802.11a).
+Only reverse-engineering is happening at this point - actual
+development can only start once reverse-engineering is done. (And even
+then, we will need to find someone to actually write the code for
+N-PHY, as I'm not sure that I will have enough free time to do it
+myself, and Michael seems to have practically abandoned the project.)
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_cmd.c |   13 ++++++-
- drivers/net/wireless/wl12xx/wl1271_cmd.h |    1 +
- drivers/net/wireless/wl12xx/wl1271_rx.c  |   57 ++++++++++++++++++++++++------
- 3 files changed, 58 insertions(+), 13 deletions(-)
+> 2009/10/18 Gábor Stefanik <netrolller.3d@gmail.com>
+>>
+>> On Sun, Oct 18, 2009 at 12:32 PM, Chriss Kalogeropoulos
+>> <iz.iznogood@gmail.com> wrote:
+>> > Hello,
+>> >
+>> > i have an i-mac using Broadcom's BCM4328 chip.
+>> >
+>> > lspci gives:
+>> >
+>> > 03:00.0 Network controller [0280]: Broadcom Corporation BCM4328
+>> > 802.11a/b/g/n [14e4:4328] (rev 01)
+>> >
+>> > This must have been answered before but i thought to ask in case
+>> > something has changed. Any hope on getting support on that chip with an
+>> > open source driver ?
+>> >
+>> > Please cc me since i am not a subscriber on the list.
+>> >
+>> > Thanks in advance
+>> >
+>> > --
+>> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> > the body of a message to majordomo@vger.kernel.org
+>> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> >
+>>
+>> This is an N-PHY card. Reverse-engineering of N-PHY cards is still in
+>> progress (though it is finally really "in progress", and not stalled
+>> anymore), and it needs to be finished (at least the G part) before we
+>> can work on implementing it.
+>>
+>> --
+>> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-index 6d7a40c..fe4f1e6 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-@@ -219,6 +219,7 @@ int wl1271_cmd_join(struct wl1271 *wl)
- 
- 	join->rx_config_options = wl->rx_config;
- 	join->rx_filter_options = wl->rx_filter;
-+	join->bss_type = wl->bss_type;
- 
- 	/*
- 	 * FIXME: disable temporarily all filters because after commit
-@@ -229,12 +230,20 @@ int wl1271_cmd_join(struct wl1271 *wl)
- 	join->rx_config_options = 0;
- 	join->rx_filter_options = WL1271_DEFAULT_RX_FILTER;
- 
--	join->basic_rate_set = CONF_HW_BIT_RATE_1MBPS | CONF_HW_BIT_RATE_2MBPS |
-+	if (wl->band == IEEE80211_BAND_2GHZ)
-+		join->basic_rate_set =
-+			CONF_HW_BIT_RATE_1MBPS | CONF_HW_BIT_RATE_2MBPS |
- 		CONF_HW_BIT_RATE_5_5MBPS | CONF_HW_BIT_RATE_11MBPS;
-+	else {
-+		join->bss_type |= WL1271_JOIN_CMD_BSS_TYPE_5GHZ;
-+		join->basic_rate_set =
-+			CONF_HW_BIT_RATE_6MBPS | CONF_HW_BIT_RATE_12MBPS |
-+			CONF_HW_BIT_RATE_24MBPS;
-+	}
- 
- 	join->beacon_interval = WL1271_DEFAULT_BEACON_INT;
- 	join->dtim_interval = WL1271_DEFAULT_DTIM_PERIOD;
--	join->bss_type = wl->bss_type;
-+
- 	join->channel = wl->channel;
- 	join->ssid_len = wl->ssid_len;
- 	memcpy(join->ssid, wl->ssid, wl->ssid_len);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-index 3308940..15254fa 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-@@ -198,6 +198,7 @@ enum {
- 
- #define WL1271_JOIN_CMD_CTRL_TX_FLUSH     0x80 /* Firmware flushes all Tx */
- #define WL1271_JOIN_CMD_TX_SESSION_OFFSET 1
-+#define WL1271_JOIN_CMD_BSS_TYPE_5GHZ 0x10
- 
- struct wl1271_cmd_join {
- 	struct wl1271_cmd_header header;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c b/drivers/net/wireless/wl12xx/wl1271_rx.c
-index 66b83e9..1dd8458 100644
---- a/drivers/net/wireless/wl12xx/wl1271_rx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
-@@ -70,6 +70,36 @@ static u8 wl1271_rx_rate_to_idx[] = {
- 	0                           /* WL1271_RATE_1    */
- };
- 
-+/* The values of this table must match the wl1271_rates[] array */
-+static u8 wl1271_5_ghz_rx_rate_to_idx[] = {
-+	/* MCS rates are used only with 11n */
-+	WL1271_RX_RATE_UNSUPPORTED, /* WL1271_RATE_MCS7 */
-+	WL1271_RX_RATE_UNSUPPORTED, /* WL1271_RATE_MCS6 */
-+	WL1271_RX_RATE_UNSUPPORTED, /* WL1271_RATE_MCS5 */
-+	WL1271_RX_RATE_UNSUPPORTED, /* WL1271_RATE_MCS4 */
-+	WL1271_RX_RATE_UNSUPPORTED, /* WL1271_RATE_MCS3 */
-+	WL1271_RX_RATE_UNSUPPORTED, /* WL1271_RATE_MCS2 */
-+	WL1271_RX_RATE_UNSUPPORTED, /* WL1271_RATE_MCS1 */
-+	WL1271_RX_RATE_UNSUPPORTED, /* WL1271_RATE_MCS0 */
-+
-+	7,                          /* WL1271_RATE_54   */
-+	6,                          /* WL1271_RATE_48   */
-+	5,                          /* WL1271_RATE_36   */
-+	4,                          /* WL1271_RATE_24   */
-+
-+	/* TI-specific rate */
-+	WL1271_RX_RATE_UNSUPPORTED, /* WL1271_RATE_22   */
-+
-+	3,                          /* WL1271_RATE_18   */
-+	2,                          /* WL1271_RATE_12   */
-+	WL1271_RX_RATE_UNSUPPORTED, /* WL1271_RATE_11   */
-+	1,                          /* WL1271_RATE_9    */
-+	0,                          /* WL1271_RATE_6    */
-+	WL1271_RX_RATE_UNSUPPORTED, /* WL1271_RATE_5_5  */
-+	WL1271_RX_RATE_UNSUPPORTED, /* WL1271_RATE_2    */
-+	WL1271_RX_RATE_UNSUPPORTED  /* WL1271_RATE_1    */
-+};
-+
- static void wl1271_rx_status(struct wl1271 *wl,
- 			     struct wl1271_rx_descriptor *desc,
- 			     struct ieee80211_rx_status *status,
-@@ -77,15 +107,21 @@ static void wl1271_rx_status(struct wl1271 *wl,
- {
- 	memset(status, 0, sizeof(struct ieee80211_rx_status));
- 
--	if ((desc->flags & WL1271_RX_DESC_BAND_MASK) == WL1271_RX_DESC_BAND_BG)
-+	if ((desc->flags & WL1271_RX_DESC_BAND_MASK) ==
-+	    WL1271_RX_DESC_BAND_BG) {
- 		status->band = IEEE80211_BAND_2GHZ;
--	else if ((desc->flags & WL1271_RX_DESC_BAND_MASK) ==
--		 WL1271_RX_DESC_BAND_A)
-+		status->rate_idx = wl1271_rx_rate_to_idx[desc->rate];
-+	} else if ((desc->flags & WL1271_RX_DESC_BAND_MASK) ==
-+		 WL1271_RX_DESC_BAND_A) {
- 		status->band = IEEE80211_BAND_5GHZ;
--	else
-+		status->rate_idx = wl1271_5_ghz_rx_rate_to_idx[desc->rate];
-+	} else
- 		wl1271_warning("unsupported band 0x%x",
- 			       desc->flags & WL1271_RX_DESC_BAND_MASK);
- 
-+	if (unlikely(status->rate_idx == WL1271_RX_RATE_UNSUPPORTED))
-+		wl1271_warning("unsupported rate");
-+
- 	/*
- 	 * FIXME: Add mactime handling.  For IBSS (ad-hoc) we need to get the
- 	 * timestamp from the beacon (acx_tsf_info).  In BSS mode (infra) we
-@@ -108,15 +144,14 @@ static void wl1271_rx_status(struct wl1271 *wl,
- 
- 		if (likely(!(desc->flags & WL1271_RX_DESC_DECRYPT_FAIL)))
- 			status->flag |= RX_FLAG_DECRYPTED;
--
-+		/* FIXME: Flag should be also set when using 5 GHz band.
-+		 * At the moment chip reports MIC failed on all packets,
-+		 * so flag is silently discarded.
-+		 */
- 		if (unlikely(desc->flags & WL1271_RX_DESC_MIC_FAIL))
--			status->flag |= RX_FLAG_MMIC_ERROR;
-+			if (status->band != IEEE80211_BAND_5GHZ)
-+				status->flag |= RX_FLAG_MMIC_ERROR;
- 	}
--
--	status->rate_idx = wl1271_rx_rate_to_idx[desc->rate];
--
--	if (status->rate_idx == WL1271_RX_RATE_UNSUPPORTED)
--		wl1271_warning("unsupported rate");
- }
- 
- static void wl1271_rx_handle_data(struct wl1271 *wl, u32 length)
--- 
-1.5.6.5
 
+
+--
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
