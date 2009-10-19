@@ -1,106 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:56608 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758276AbZJLVUI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 17:20:08 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/9] [compat-2.6] Move trace headers
-Date: Mon, 12 Oct 2009 23:19:12 +0200
-Message-Id: <1255382358-20760-5-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
-References: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
+Received: from mga01.intel.com ([192.55.52.88]:39112 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932297AbZJSVze (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Oct 2009 17:55:34 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH] mac80211: fix ibss joining
+Date: Mon, 19 Oct 2009 14:55:37 -0700
+Message-Id: <1255989337-25473-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move tracepoint headers into own patch file.
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Recent commit "mac80211: fix logic error ibss merge bssid check" fixed
+joining of ibss cell when static bssid is provided. In this case
+ifibss->bssid is set before the cell is joined and comparing that address
+to a bss should thus always succeed. Unfortunately this change broke the
+other case of joining a ibss cell without providing a static bssid where
+the value of ifibss->bssid is not set before the cell is joined.
+
+Since ifibss->bssid may be set before or after joining the cell we do not
+learn anything by comparing it to a known bss. Remove this check.
+
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- compat/patches/06-header-changes.patch |   19 -----------------
- compat/patches/13-trace.patch          |   35 +++++++++++++++++++++++++++++--
- 2 files changed, 32 insertions(+), 22 deletions(-)
+I tested this change with static bssid and without.
 
-diff --git a/compat/patches/06-header-changes.patch b/compat/patches/06-header-changes.patch
-index b2e8fd8..ee0be7f 100644
---- a/compat/patches/06-header-changes.patch
-+++ b/compat/patches/06-header-changes.patch
-@@ -40,25 +40,6 @@ cases.
-  #include <linux/spi/spi.h>
-  #include <linux/spi/wl12xx.h>
-  
----- a/net/mac80211/driver-trace.h	2009-08-18 16:19:34.574352433 -0700
--+++ b/net/mac80211/driver-trace.h	2009-08-18 16:19:35.694367614 -0700
--@@ -1,7 +1,9 @@
-- #if !defined(__MAC80211_DRIVER_TRACE) || defined(TRACE_HEADER_MULTI_READ)
-- #define __MAC80211_DRIVER_TRACE
-- 
--+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
-- #include <linux/tracepoint.h>
--+#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27)) */
-- #include <net/mac80211.h>
-- #include "ieee80211_i.h"
-- 
--@@ -669,4 +671,6 @@ TRACE_EVENT(drv_ampdu_action,
-- #define TRACE_INCLUDE_PATH .
-- #undef TRACE_INCLUDE_FILE
-- #define TRACE_INCLUDE_FILE driver-trace
--+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30))
-- #include <trace/define_trace.h>
--+#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)) */
- --- a/net/mac80211/key.c
- +++ b/net/mac80211/key.c
- @@ -21,6 +21,9 @@
-diff --git a/compat/patches/13-trace.patch b/compat/patches/13-trace.patch
-index c43e723..144cae5 100644
---- a/compat/patches/13-trace.patch
-+++ b/compat/patches/13-trace.patch
-@@ -4,12 +4,41 @@ in or compat headers.
+The symptom without this patch is that it is not possible to join an ad-hoc
+cell unless you provide a bssid. When you want to join an existing cell a
+new cell will be created.
+
+ net/mac80211/ibss.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 6eaf698..ca8ecce 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -538,13 +538,12 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+ 				       WLAN_CAPABILITY_PRIVACY,
+ 				       capability);
  
- [1] http://lxr.linux.no/#linux+v2.6.31/include/trace/define_trace.h
++	if (bss) {
+ #ifdef CONFIG_MAC80211_IBSS_DEBUG
+-	if (bss)
+ 		printk(KERN_DEBUG "   sta_find_ibss: selected %pM current "
+ 		       "%pM\n", bss->cbss.bssid, ifibss->bssid);
+ #endif /* CONFIG_MAC80211_IBSS_DEBUG */
  
----- a/drivers/net/wireless/iwlwifi/iwl-devtrace.h	2009-10-08 16:21:09.000000000 -0400
--+++ b/drivers/net/wireless/iwlwifi/iwl-devtrace.h	2009-10-08 16:23:34.000000000 -0400
-+--- a/drivers/net/wireless/iwlwifi/iwl-devtrace.h
-++++ b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
-+@@ -1,7 +1,9 @@
-+ #if !defined(__IWLWIFI_DEVICE_TRACE) || defined(TRACE_HEADER_MULTI_READ)
-+ #define __IWLWIFI_DEVICE_TRACE
-+ 
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
-+ #include <linux/tracepoint.h>
-++#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27)) */
-+ #include "iwl-dev.h"
-+ 
-+ #if !defined(CONFIG_IWLWIFI_DEVICE_TRACING) || defined(__CHECKER__)
- @@ -175,4 +175,6 @@
-  #define TRACE_INCLUDE_PATH .
-  #undef TRACE_INCLUDE_FILE
-  #define TRACE_INCLUDE_FILE iwl-devtrace
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31))
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30))
-  #include <trace/define_trace.h>
- +#endif
-+--- a/net/mac80211/driver-trace.h	2009-08-18 16:19:34.574352433 -0700
-++++ b/net/mac80211/driver-trace.h	2009-08-18 16:19:35.694367614 -0700
-+@@ -1,7 +1,9 @@
-+ #if !defined(__MAC80211_DRIVER_TRACE) || defined(TRACE_HEADER_MULTI_READ)
-+ #define __MAC80211_DRIVER_TRACE
-+ 
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
-+ #include <linux/tracepoint.h>
-++#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27)) */
-+ #include <net/mac80211.h>
-+ #include "ieee80211_i.h"
-+ 
-+@@ -669,4 +671,6 @@ TRACE_EVENT(drv_ampdu_action,
-+ #define TRACE_INCLUDE_PATH .
-+ #undef TRACE_INCLUDE_FILE
-+ #define TRACE_INCLUDE_FILE driver-trace
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30))
-+ #include <trace/define_trace.h>
-++#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)) */
+-	if (bss && !memcmp(ifibss->bssid, bss->cbss.bssid, ETH_ALEN)) {
+ 		printk(KERN_DEBUG "%s: Selected IBSS BSSID %pM"
+ 		       " based on configured SSID\n",
+ 		       sdata->dev->name, bss->cbss.bssid);
+@@ -552,8 +551,7 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+ 		ieee80211_sta_join_ibss(sdata, bss);
+ 		ieee80211_rx_bss_put(local, bss);
+ 		return;
+-	} else if (bss)
+-		ieee80211_rx_bss_put(local, bss);
++	}
+ 
+ #ifdef CONFIG_MAC80211_IBSS_DEBUG
+ 	printk(KERN_DEBUG "   did not try to join ibss\n");
 -- 
-1.6.2.1
+1.5.6.3
 
