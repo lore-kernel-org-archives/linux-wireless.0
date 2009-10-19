@@ -1,74 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23446 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752171AbZJWPqX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 11:46:23 -0400
-Subject: Re: [PATCH] libertas: remove some references to IW_MODE_abc
-From: Dan Williams <dcbw@redhat.com>
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:58599 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757988AbZJSXuA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Oct 2009 19:50:00 -0400
+Received: by iwn8 with SMTP id 8so2585332iwn.33
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2009 16:50:05 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <200910191118.39975.hs4233@mail.mn-solutions.de>
+References: <200910190940.52830.hs4233@mail.mn-solutions.de>
+	<43e72e890910190136s21703864i3002f2a31f940111@mail.gmail.com>
+	<200910191118.39975.hs4233@mail.mn-solutions.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 20 Oct 2009 08:49:45 +0900
+Message-ID: <43e72e890910191649m4ad89af9u4860a6d32d4ba154@mail.gmail.com>
+Subject: Re: [PATCH] libertas: remove unused 11d code
 To: Holger Schurig <hs4233@mail.mn-solutions.de>
 Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <200910221415.38459.hs4233@mail.mn-solutions.de>
-References: <200910221415.38459.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Fri, 23 Oct 2009 08:46:25 -0700
-Message-Id: <1256312785.2164.5.camel@localhost.localdomain>
-Mime-Version: 1.0
+	John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-10-22 at 14:15 +0200, Holger Schurig wrote:
-> [PATCH] libertas: remove some references to IW_MODE_abc
-> 
-> ... in pursue to quaff the wide-spread references to WEXT constants.
-> 
-> When setting SNMP_MIB_OID_BSS_TYPE, wext.c can directly calculate the value
-> the firmware wants.
-> 
-> Reading of SNMP_MIB_OID_BSS_TYPE doesn't happen anywhere, so no need to
-> convert the firmware value into WEXT values anyway.
-> 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+On Mon, Oct 19, 2009 at 6:18 PM, Holger Schurig
+<hs4233@mail.mn-solutions.de> wrote:
+>> Is the countryinfo->countrycode not usable for
+>> regulatory_hint_11d() ?
+>
+> I guess so, but the libertas+cfg80211 patch hasn't yet landed.
+>
+> And if it lands, it will have a WAY simpler 11d coding than
+> before:
+>
+> 1. get the region code out of the EEPROM, convert it, call call
+> regulatory_hint_11d().
+>
+> 2. no need to parse the scan result IE for a WLAN_EID_COUNTRY,
+> because cfg80211 does this for us
+>
+> 3. no need to parse the association response either, because
+> cfg80211 does this for us
+>
+> 4. no need to store special channel settings, because cfg80211
+> does this for us
+>
+>
+> At least this is how I understand it based on my current
+> region-handling knowledge of cfg80211, which isn't too deep.
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Sounds right.
 
-> --- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
-> +++ linux-wl/drivers/net/wireless/libertas/cmd.c
-> @@ -390,7 +390,7 @@
->  	switch (oid) {
->  	case SNMP_MIB_OID_BSS_TYPE:
->  		cmd.bufsize = cpu_to_le16(sizeof(u8));
-> -		cmd.value[0] = (val == IW_MODE_ADHOC) ? 2 : 1;
-> +		cmd.value[0] = val;
->  		break;
->  	case SNMP_MIB_OID_11D_ENABLE:
->  	case SNMP_MIB_OID_FRAG_THRESHOLD:
-> @@ -443,13 +443,7 @@
->  
->  	switch (le16_to_cpu(cmd.bufsize)) {
->  	case sizeof(u8):
-> -		if (oid == SNMP_MIB_OID_BSS_TYPE) {
-> -			if (cmd.value[0] == 2)
-> -				*out_val = IW_MODE_ADHOC;
-> -			else
-> -				*out_val = IW_MODE_INFRA;
-> -		} else
-> -			*out_val = cmd.value[0];
-> +		*out_val = cmd.value[0];
->  		break;
->  	case sizeof(u16):
->  		*out_val = le16_to_cpu(*((__le16 *)(&cmd.value)));
-> --- linux-wl.orig/drivers/net/wireless/libertas/assoc.c
-> +++ linux-wl/drivers/net/wireless/libertas/assoc.c
-> @@ -1567,7 +1567,8 @@
->  	}
->  
->  	priv->mode = assoc_req->mode;
-> -	ret = lbs_set_snmp_mib(priv, SNMP_MIB_OID_BSS_TYPE, assoc_req->mode);
-> +	ret = lbs_set_snmp_mib(priv, SNMP_MIB_OID_BSS_TYPE,
-> +		assoc_req->mode == IW_MODE_ADHOC ? 2 : 1);
->  
->  done:
->  	lbs_deb_leave_args(LBS_DEB_ASSOC, "ret %d", ret);
-> 
-
+  Luis
