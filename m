@@ -1,61 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:45864 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750870AbZJZEJY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 00:09:24 -0400
-Message-ID: <4AE520F1.2070704@openwrt.org>
-Date: Mon, 26 Oct 2009 05:09:21 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from ey-out-2122.google.com ([74.125.78.24]:26521 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752512AbZJSJvM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Oct 2009 05:51:12 -0400
+Received: by ey-out-2122.google.com with SMTP id 9so885423eyd.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2009 02:51:15 -0700 (PDT)
+Message-ID: <4ADC368F.1050709@gmail.com>
+Date: Mon, 19 Oct 2009 11:51:11 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Rate-setting problem with Broadcom 4315
-References: <4AE49F0F.1060901@lwfinger.net>
-In-Reply-To: <4AE49F0F.1060901@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com, IvDoorn@gmail.com
+Subject: [PATCH] rt73usb.c : more ids
+Content-Type: multipart/mixed;
+ boundary="------------060104040902030107060909"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> When my BCM4312 (ID 4315) runs in auto rate mode, the rate stays at
-> 1Mb/s. If I manually set the rate, I see a tcpperf throughput ~1/2 the
-> rate that I set through a rate of 12 Mb/s. At 36 Mb/s, the rate is
-> best at 15.7 Mb/s. Why does mistrel not increase the rate?
-> 
-> The output of /sys/..../rc_stats is:
-> 
-> finger@larrylap:~> cat
-> /sys/kernel/debug/ieee80211/phy0/stations/00:14:bf:85:49:fa/rc_stats
-> rate     throughput  ewma prob   this prob  this succ/attempt
-> success    attempts
->      1         0.9       99.1      100.0          0(  0)       3244
->      3282
->      2         1.8       95.7      100.0          0(  0)         12
->        12
->      5.5       4.8       95.7      100.0          0(  0)         12
->        12
->     11         9.2       96.8      100.0          0(  0)         12
->        12
->   P  6         5.6       99.9      100.0          0(  0)         58
->        58
->      9         8.0       95.7      100.0          0(  0)         11
->        11
->     12        10.6       95.7      100.0          0(  0)         12
->        12
->     18        15.7       96.6      100.0          0(  0)         14
->        15
->     24        20.3       95.7      100.0          0(  0)         11
->        11
->     36        29.0       95.4       94.5          0(  0)       1602
->      1670
-> T   48        38.7       99.2      100.0          1(  1)      32147
->     37752
->  t  54        32.9       75.9      100.0          0(  0)       8775
->     12788
-> 
-> Total packet count::    ideal 2570      lookaround 135
-Was this dump made after you played with manual rate settings? If so,
-please make a new one that only contains stats of what it tried with
-automatic rate setting enabled.
+This is a multi-part message in MIME format.
+--------------060104040902030107060909
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 8bit
 
-- Felix
+hi,
+
+stolen from windows inf file(07/17/2009, 1.03.05.0000)
+Ovislink 0x1b75, 0x7318
+MSI 0x0db0, 0x4600
+WideTell 0x7167, 0x3840
+
+
+-thanks-
+
+regards,
+
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+
+-- 
+«Allá muevan feroz guerra, ciegos reyes por un palmo más de tierra;
+que yo aquí tengo por mío cuanto abarca el mar bravío, a quien nadie
+impuso leyes. Y no hay playa, sea cualquiera, ni bandera de esplendor,
+que no sienta mi derecho y dé pecho a mi valor.»
+
+
+
+--------------060104040902030107060909
+Content-Type: text/plain;
+ name="new_id-73usb.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="new_id-73usb.diff"
+
+--- o/drivers/net/wireless/rt73usb.c	2009-10-13 12:58:32.042380351 +0200
++++ n/drivers/net/wireless/rt73usb.c	2009-10-13 13:01:01.073379225 +0200
+@@ -2389,10 +2389,13 @@
+ 	{ USB_DEVICE(0x13b1, 0x0023), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x13b1, 0x0028), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* MSI */
++	{ USB_DEVICE(0x0db0, 0x4600), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x0db0, 0x6877), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x0db0, 0x6874), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x0db0, 0xa861), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x0db0, 0xa874), USB_DEVICE_DATA(&rt73usb_ops) },
++	/* Ovislink */
++	{ USB_DEVICE(0x1b75, 0x7318), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* Ralink */
+ 	{ USB_DEVICE(0x04bb, 0x093d), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x148f, 0x2573), USB_DEVICE_DATA(&rt73usb_ops) },
+@@ -2420,6 +2423,8 @@
+ 	/* Planex */
+ 	{ USB_DEVICE(0x2019, 0xab01), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x2019, 0xab50), USB_DEVICE_DATA(&rt73usb_ops) },
++	/* WideTell */
++	{ USB_DEVICE(0x7167, 0x3840), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* Zcom */
+ 	{ USB_DEVICE(0x0cde, 0x001c), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* ZyXEL */
+
+
+--------------060104040902030107060909--
