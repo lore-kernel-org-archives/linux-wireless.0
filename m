@@ -1,61 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:52896 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755695AbZJZTiI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 15:38:08 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: 2.6.32-rc5-git3: Reported regressions from 2.6.31
-Date: Mon, 26 Oct 2009 20:37:33 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Christian Casteyde <casteyde.christian@free.fr>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <Sj-rRjx6TwF.A.djE.vqe5KB@chimera> <20091026185901.GH2792@tuxdriver.com> <200910262011.22950.mb@bu3sch.de>
-In-Reply-To: <200910262011.22950.mb@bu3sch.de>
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:51000 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751799AbZJSKAe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Oct 2009 06:00:34 -0400
+Received: by ewy3 with SMTP id 3so3392269ewy.17
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2009 03:00:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200910262037.35469.mb@bu3sch.de>
+In-Reply-To: <4ADC368F.1050709@gmail.com>
+References: <4ADC368F.1050709@gmail.com>
+Date: Mon, 19 Oct 2009 10:55:16 +0100
+Message-ID: <efe7343f0910190255o37e6f9foe5c71226fda80d26@mail.gmail.com>
+Subject: Re: [PATCH] rt73usb.c : more ids
+From: Luis Correia <luis.f.correia@gmail.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com, IvDoorn@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 26 October 2009 20:11:20 Michael Buesch wrote:
-> On Monday 26 October 2009 19:59:02 John W. Linville wrote:
-> > > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14277
-> > > Subject		: Caught 8-bit read from freed memory in b43 driver at association
-> > > Submitter	: Christian Casteyde <casteyde.christian@free.fr>
-> > > Date		: 2009-09-30 18:06 (27 days old)
-> 
-> Does this still trigger with a recent kernel (and thus recent memory debugging).
-> I'm still not convinced that this is a wireless bug.
-> 
+Hi
 
-Ok, it just turns out this actually is a driver bug.
-Thanks to Johannes Berg for tracking it down.
+2009/10/19 Xose Vazquez Perez <xose.vazquez@gmail.com>:
+> hi,
+>
+> stolen from windows inf file(07/17/2009, 1.03.05.0000)
+> Ovislink 0x1b75, 0x7318
+> MSI 0x0db0, 0x4600
+> WideTell 0x7167, 0x3840
+>
+>
+> -thanks-
+>
+> regards,
+>
+> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 
-I think it's caused by the DMA bouncebuffer stuff that does not copy the skb->cb
-and does not adjust the "tx-info" pointer.
-I wonder why this didn't blow up easlier, because this bug is there since mac80211
-switched to using the CB.
+Please provide this as a properly formatted PATCH (diffed from source)
 
-Here's a completely untested patch.
-
----
- drivers/net/wireless/b43/dma.c |    2 ++
- 1 file changed, 2 insertions(+)
-
---- wireless-testing.orig/drivers/net/wireless/b43/dma.c
-+++ wireless-testing/drivers/net/wireless/b43/dma.c
-@@ -1224,6 +1224,8 @@ static int dma_tx_fragment(struct b43_dm
- 		}
- 
- 		memcpy(skb_put(bounce_skb, skb->len), skb->data, skb->len);
-+		memcpy(bounce_skb->cb, skb->cb, sizeof(skb->cb));
-+		info = IEEE80211_SKB_CB(bounce_skb);
- 		dev_kfree_skb_any(skb);
- 		skb = bounce_skb;
- 		meta->skb = skb;
-
-
--- 
-Greetings, Michael.
+Luis Correia,
+rt2x00 project admin
