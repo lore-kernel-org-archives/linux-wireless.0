@@ -1,59 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:47739 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755577AbZJLMKx (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54695 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754102AbZJSGdm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 08:10:53 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 06/16] wl1271: Remove RX workaround
-Date: Mon, 12 Oct 2009 15:08:47 +0300
-Message-Id: <1255349337-9776-7-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
+	Mon, 19 Oct 2009 02:33:42 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [RFT 09/15] ath9k_hw: make both analog channel change routines return int
+Date: Mon, 19 Oct 2009 02:33:40 -0400
+Message-Id: <1255934026-20686-10-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1255934026-20686-1-git-send-email-lrodriguez@atheros.com>
+References: <1255934026-20686-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+This allows us to later define a callback for both.
 
-Remove RX workaround which is not needed with newer firmware revisions. This
-will reduce one SPI register transaction per RX packet.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_reg.h |    1 -
- drivers/net/wireless/wl12xx/wl1271_rx.c  |    4 ----
- 2 files changed, 0 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c  |   24 +++++++++++++-----------
+ drivers/net/wireless/ath/ath9k/phy.c |   14 +++++++-------
+ drivers/net/wireless/ath/ath9k/phy.h |    7 ++-----
+ 3 files changed, 22 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_reg.h b/drivers/net/wireless/wl12xx/wl1271_reg.h
-index f8ed4a4..bd12615 100644
---- a/drivers/net/wireless/wl12xx/wl1271_reg.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_reg.h
-@@ -213,7 +213,6 @@
- ==============================================*/
- #define ACX_REG_INTERRUPT_ACK          (REGISTERS_BASE + 0x04F0)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 5a08b97..e27be74 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1867,6 +1867,7 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ieee80211_channel *channel = chan->chan;
+ 	u32 synthDelay, qnum;
++	int r;
  
--#define RX_DRIVER_DUMMY_WRITE_ADDRESS  (REGISTERS_BASE + 0x0534)
- #define RX_DRIVER_COUNTER_ADDRESS      (REGISTERS_BASE + 0x0538)
+ 	for (qnum = 0; qnum < AR_NUM_QCU; qnum++) {
+ 		if (ath9k_hw_numtxpending(ah, qnum)) {
+@@ -1887,14 +1888,14 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
  
- /* Device Configuration registers*/
-diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c b/drivers/net/wireless/wl12xx/wl1271_rx.c
-index 5d8d401..1d98653 100644
---- a/drivers/net/wireless/wl12xx/wl1271_rx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
-@@ -187,8 +187,4 @@ void wl1271_rx(struct wl1271 *wl, struct wl1271_fw_status *status)
+ 	ath9k_hw_set_regs(ah, chan);
+ 
+-	if (AR_SREV_9280_10_OR_LATER(ah)) {
+-		ath9k_hw_ar9280_set_channel(ah, chan);
+-	} else {
+-		if (!(ath9k_hw_set_channel(ah, chan))) {
+-			ath_print(common, ATH_DBG_FATAL,
+-				  "Failed to set channel\n");
+-			return false;
+-		}
++	if (AR_SREV_9280_10_OR_LATER(ah))
++		r = ath9k_hw_ar9280_set_channel(ah, chan);
++	else
++		r = ath9k_hw_set_channel(ah, chan);
++	if (r) {
++		ath_print(common, ATH_DBG_FATAL,
++			  "Failed to set channel\n");
++		return false;
  	}
  
- 	wl1271_reg_write32(wl, RX_DRIVER_COUNTER_ADDRESS, wl->rx_counter);
--
--	/* This is a workaround for some problems in the chip */
--	wl1271_reg_write32(wl, RX_DRIVER_DUMMY_WRITE_ADDRESS, 0x1);
--
+ 	ah->eep_ops->set_txpower(ah, chan,
+@@ -2533,10 +2534,11 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	REG_WRITE(ah, AR_RSSI_THR, INIT_RSSI_THR);
+ 
+ 	if (AR_SREV_9280_10_OR_LATER(ah))
+-		ath9k_hw_ar9280_set_channel(ah, chan);
++		r = ath9k_hw_ar9280_set_channel(ah, chan);
+ 	else
+-		if (!(ath9k_hw_set_channel(ah, chan)))
+-			return -EIO;
++		r = ath9k_hw_set_channel(ah, chan);
++	if (r)
++		return r;
+ 
+ 	for (i = 0; i < AR_NUM_DCU; i++)
+ 		REG_WRITE(ah, AR_DQCUMASK(i), 1 << i);
+diff --git a/drivers/net/wireless/ath/ath9k/phy.c b/drivers/net/wireless/ath/ath9k/phy.c
+index d50b5ff..bfcb9af 100644
+--- a/drivers/net/wireless/ath/ath9k/phy.c
++++ b/drivers/net/wireless/ath/ath9k/phy.c
+@@ -68,8 +68,7 @@ ath9k_hw_write_regs(struct ath_hw *ah, u32 modesIndex, u32 freqIndex,
+  * the channel value. Assumes writes enabled to analog bus and bank6 register
+  * cache in ah->analogBank6Data.
+  */
+-bool
+-ath9k_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
++int ath9k_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	u32 channelSel = 0;
+@@ -94,7 +93,7 @@ ath9k_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+ 		} else {
+ 			ath_print(common, ATH_DBG_FATAL,
+ 				  "Invalid channel %u MHz\n", freq);
+-			return false;
++			return -EINVAL;
+ 		}
+ 
+ 		channelSel = (channelSel << 2) & 0xff;
+@@ -127,7 +126,7 @@ ath9k_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	} else {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Invalid channel %u MHz\n", freq);
+-		return false;
++		return -EINVAL;
+ 	}
+ 
+ 	reg32 =
+@@ -139,7 +138,7 @@ ath9k_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	ah->curchan = chan;
+ 	ah->curchan_rad_index = -1;
+ 
+-	return true;
++	return 0;
  }
+ 
+ /**
+@@ -163,8 +162,7 @@ ath9k_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+  * Channel Frequency = (3/2) * freq_ref * (chansel[8:0] + chanfrac[16:0]/2^10)
+  * (freq_ref = 40MHz/(24>>amodeRefSel))
+  */
+-void ath9k_hw_ar9280_set_channel(struct ath_hw *ah,
+-				 struct ath9k_channel *chan)
++int ath9k_hw_ar9280_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+ {
+ 	u16 bMode, fracMode, aModeRefSel = 0;
+ 	u32 freq, ndiv, channelSel = 0, channelFrac = 0, reg32 = 0;
+@@ -252,6 +250,8 @@ void ath9k_hw_ar9280_set_channel(struct ath_hw *ah,
+ 
+ 	ah->curchan = chan;
+ 	ah->curchan_rad_index = -1;
++
++	return 0;
+ }
+ 
+ /**
+diff --git a/drivers/net/wireless/ath/ath9k/phy.h b/drivers/net/wireless/ath/ath9k/phy.h
+index c083bbf..a0b484e 100644
+--- a/drivers/net/wireless/ath/ath9k/phy.h
++++ b/drivers/net/wireless/ath/ath9k/phy.h
+@@ -17,11 +17,8 @@
+ #ifndef PHY_H
+ #define PHY_H
+ 
+-void ath9k_hw_ar9280_set_channel(struct ath_hw *ah,
+-				 struct ath9k_channel
+-				 *chan);
+-bool ath9k_hw_set_channel(struct ath_hw *ah,
+-			  struct ath9k_channel *chan);
++int ath9k_hw_ar9280_set_channel(struct ath_hw *ah, struct ath9k_channel *chan);
++int ath9k_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan);
+ void ath9k_hw_write_regs(struct ath_hw *ah, u32 modesIndex,
+ 			 u32 freqIndex, int regWrites);
+ bool ath9k_hw_set_rf_regs(struct ath_hw *ah,
 -- 
-1.5.6.5
+1.6.0.4
 
