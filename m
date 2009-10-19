@@ -1,49 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.netcomga.sk ([217.118.103.2]:1865 "EHLO netcomga.sk"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754749AbZJBWBI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2009 18:01:08 -0400
-Message-ID: <4AC67144.5060508@netcomga.sk>
-Date: Fri, 02 Oct 2009 23:31:48 +0200
-From: Trepak Vilmos <trepo@netcomga.sk>
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:42386 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753125AbZJSCjF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Oct 2009 22:39:05 -0400
+Received: by iwn8 with SMTP id 8so2055592iwn.33
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2009 19:39:09 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Jouni Malinen <j@w1.fi>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: driver_nl80211 broken again
-References: <1251117161.22951.4.camel@maxim-laptop>	<1251122885.12007.12.camel@johannes.local>	<1251144381.9374.4.camel@maxim-laptop>	<1251147515.20161.3.camel@johannes.local>	<1252116503.2398.26.camel@maxim-laptop>	<1252423769.3806.4.camel@johannes.local>	<1252443260.16422.5.camel@maxim-laptop>	<1254273569.4499.8.camel@maxim-laptop>	<20090930221353.GB11052@jm.kir.nu> <1254386786.3959.18.camel@johannes.local>
-In-Reply-To: <1254386786.3959.18.camel@johannes.local>
+In-Reply-To: <1255813605-19366-1-git-send-email-hauke@hauke-m.de>
+References: <1255813605-19366-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 19 Oct 2009 11:38:49 +0900
+Message-ID: <43e72e890910181938y45c7ea19p737ff658f4685016@mail.gmail.com>
+Subject: Re: [PATCH] [compat-2.6 and compat-2.6-stable] rename ieee80211_rx
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Thu, 2009-10-01 at 01:13 +0300, Jouni Malinen wrote:
->> To me, this looks broken. When wpa_supplicant requests a
->> disassociastion, it is _only_ asking for disassociation, not
->> deauthentication. cfg80211/mac80211 may not currently handle that, but
->> as far as I can tell, it sounds like an issue there and not in
->> wpa_supplicant. Johannes may disagree with this, though.
+On Sun, Oct 18, 2009 at 6:06 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> Rename ieee80211_rx to avoild conflicts with the export done by older
+> libipw. libipw in kernel 2.6.32 and older also exports a symbol named
+> ieee80211_rx. If libipw from normal kernel and mac80211 from
+> compat-wireless is loaded you will get an conflict.
 >
-> cfg80211/mac80211 _do_ handle that. If you ask for disassociation, it
-> stays authenticated, and later expects you to still remember that and
-> refuses authentication since you're already authenticated.
->
->> I don't think either of those options would be acceptable for
->> wpa_supplicant and the correct fix is to make cfg80211/mac80211 be able
->> to handle authentication to a STA that is already authenticated. If
->> that is not acceptable, this hack needs to be hidden in driver_nl80211.c
->> instead of polluting core wpa_supplicant code which is supposed to be
->> driver independent. In other words, make driver_nl80211.c deauth if auth
->> fails and then try auth again. I don't really like that much, but if
->> this needs to be worked around in wpa_supplicant, that is the most
->> likely place where such a change could be considered.
->
-> I still don't see how it makes sense to authenticate while still being
-> authenticated.
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-The client might have lost state info (rebooted, etc.). Let it redo the
-auth if it wants to, deauth if it fails.
-~will~
-
+thanks applied
