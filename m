@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43685 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753392AbZJGPBn (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:2216 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750699AbZJSIeR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 11:01:43 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] net/wireless/ethtool.h: drop unnecessary include of linux/ethtool.h
-Date: Wed,  7 Oct 2009 10:52:13 -0400
-Message-Id: <1254927133-24445-1-git-send-email-linville@tuxdriver.com>
+	Mon, 19 Oct 2009 04:34:17 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: libertas + cfg80211: road for kernel inclusion?
+Date: Mon, 19 Oct 2009 10:33:59 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <200910161426.22206.hs4233@mail.mn-solutions.de> <1255709780.14241.26.camel@localhost.localdomain>
+In-Reply-To: <1255709780.14241.26.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200910191034.00045.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Everything including this header includes net/cfg80211.h, which
-includes linux/netdevice.h, which includes linux/ethtool.h already.  Why
-slow-down the build, even a little bit?
+> If you can keep working on this, I'd say lets shoot for kernel
+> inclusion in 2.6.34.  
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/wireless/ethtool.h |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+I'm not sure if I can keep working on this: this week we move our 
+office and I can at any time assigned to a new project. That 
+said: I plan to keep working on this.
 
-diff --git a/net/wireless/ethtool.h b/net/wireless/ethtool.h
-index 70cbee1..695ecad 100644
---- a/net/wireless/ethtool.h
-+++ b/net/wireless/ethtool.h
-@@ -1,8 +1,6 @@
- #ifndef __CFG80211_ETHTOOL__
- #define __CFG80211_ETHTOOL__
- 
--#include <linux/ethtool.h>
--
- extern const struct ethtool_ops cfg80211_ethtool_ops;
- 
- #endif /* __CFG80211_ETHTOOL__ */
+
+Okay, my current plan is to isolate WEXT stuff, e.g. delete what 
+is already unused, move WEXT related stuff from dev.h into 
+assoc.h/wext.h/scan.h (whereever it fits best), move WEXT 
+related stuff in the lbs_private definition next to each other. 
+Most of this won't do any functional change, but would make the 
+cfg80211 patch smaller in size.
+
+
+> But we'd need at least adhoc support before then.
+
+Seems that I need to experiment with AD-HOC after all. Never used 
+it before :-)
+
 -- 
-1.6.2.5
-
+http://www.holgerschurig.de
