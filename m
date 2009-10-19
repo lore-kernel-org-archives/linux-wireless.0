@@ -1,42 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57956 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757527AbZJ3VAE (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54686 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754080AbZJSGdm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 17:00:04 -0400
-Date: Fri, 30 Oct 2009 16:45:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: make CALL_TXH a statement
-Message-ID: <20091030204511.GE2586@tuxdriver.com>
-References: <1256802228.3865.55.camel@johannes.local> <20091030191126.GC2586@tuxdriver.com> <1256935427.3555.66.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1256935427.3555.66.camel@johannes.local>
+	Mon, 19 Oct 2009 02:33:42 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [RFT 05/15] ath9k_hw: bail out early on ath9k_hw_init_rf()
+Date: Mon, 19 Oct 2009 02:33:36 -0400
+Message-Id: <1255934026-20686-6-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1255934026-20686-1-git-send-email-lrodriguez@atheros.com>
+References: <1255934026-20686-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 30, 2009 at 09:43:47PM +0100, Johannes Berg wrote:
-> On Fri, 2009-10-30 at 15:11 -0400, John W. Linville wrote:
-> > On Thu, Oct 29, 2009 at 08:43:48AM +0100, Johannes Berg wrote:
-> > > The multi-line code in this macro wasn't wrapped
-> > > in do {} while (0) so we cannot use it in an if()
-> > > branch safely in the future -- fix that.
-> > > 
-> > > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> > 
-> > do {...} while (0) won't work for that either, right?  You need
-> > ({...}) instead if you want to return a value.  Is that what you want?
-> 
-> No, I just want to be able to do
-> 
-> if (...)
-> 	CALL_TXH(...)
+We a huge branch for old hardware and nothing for newer
+hardware. Instead of doing this just bail out early for
+newer hardware.
 
-Oh, I see -- I misunderstood you.
+This patch has no functional changes.
 
-John
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/phy.c |  109 +++++++++++++++++-----------------
+ 1 files changed, 55 insertions(+), 54 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/phy.c b/drivers/net/wireless/ath/ath9k/phy.c
+index 9e51503..bd4fb07 100644
+--- a/drivers/net/wireless/ath/ath9k/phy.c
++++ b/drivers/net/wireless/ath/ath9k/phy.c
+@@ -419,62 +419,63 @@ bool ath9k_hw_init_rf(struct ath_hw *ah, int *status)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 
+-	if (!AR_SREV_9280_10_OR_LATER(ah)) {
+-		ah->analogBank0Data =
+-		    kzalloc((sizeof(u32) *
+-			     ah->iniBank0.ia_rows), GFP_KERNEL);
+-		ah->analogBank1Data =
+-		    kzalloc((sizeof(u32) *
+-			     ah->iniBank1.ia_rows), GFP_KERNEL);
+-		ah->analogBank2Data =
+-		    kzalloc((sizeof(u32) *
+-			     ah->iniBank2.ia_rows), GFP_KERNEL);
+-		ah->analogBank3Data =
+-		    kzalloc((sizeof(u32) *
+-			     ah->iniBank3.ia_rows), GFP_KERNEL);
+-		ah->analogBank6Data =
+-		    kzalloc((sizeof(u32) *
+-			     ah->iniBank6.ia_rows), GFP_KERNEL);
+-		ah->analogBank6TPCData =
+-		    kzalloc((sizeof(u32) *
+-			     ah->iniBank6TPC.ia_rows), GFP_KERNEL);
+-		ah->analogBank7Data =
+-		    kzalloc((sizeof(u32) *
+-			     ah->iniBank7.ia_rows), GFP_KERNEL);
+-
+-		if (ah->analogBank0Data == NULL
+-		    || ah->analogBank1Data == NULL
+-		    || ah->analogBank2Data == NULL
+-		    || ah->analogBank3Data == NULL
+-		    || ah->analogBank6Data == NULL
+-		    || ah->analogBank6TPCData == NULL
+-		    || ah->analogBank7Data == NULL) {
+-			ath_print(common, ATH_DBG_FATAL,
+-				  "Cannot allocate RF banks\n");
+-			*status = -ENOMEM;
+-			return false;
+-		}
++	if (AR_SREV_9280_10_OR_LATER(ah))
++		return true;
+ 
+-		ah->addac5416_21 =
+-		    kzalloc((sizeof(u32) *
+-			     ah->iniAddac.ia_rows *
+-			     ah->iniAddac.ia_columns), GFP_KERNEL);
+-		if (ah->addac5416_21 == NULL) {
+-			ath_print(common, ATH_DBG_FATAL,
+-				  "Cannot allocate addac5416_21\n");
+-			*status = -ENOMEM;
+-			return false;
+-		}
++	ah->analogBank0Data =
++	    kzalloc((sizeof(u32) *
++		     ah->iniBank0.ia_rows), GFP_KERNEL);
++	ah->analogBank1Data =
++	    kzalloc((sizeof(u32) *
++		     ah->iniBank1.ia_rows), GFP_KERNEL);
++	ah->analogBank2Data =
++	    kzalloc((sizeof(u32) *
++		     ah->iniBank2.ia_rows), GFP_KERNEL);
++	ah->analogBank3Data =
++	    kzalloc((sizeof(u32) *
++		     ah->iniBank3.ia_rows), GFP_KERNEL);
++	ah->analogBank6Data =
++	    kzalloc((sizeof(u32) *
++		     ah->iniBank6.ia_rows), GFP_KERNEL);
++	ah->analogBank6TPCData =
++	    kzalloc((sizeof(u32) *
++		     ah->iniBank6TPC.ia_rows), GFP_KERNEL);
++	ah->analogBank7Data =
++	    kzalloc((sizeof(u32) *
++		     ah->iniBank7.ia_rows), GFP_KERNEL);
++
++	if (ah->analogBank0Data == NULL
++	    || ah->analogBank1Data == NULL
++	    || ah->analogBank2Data == NULL
++	    || ah->analogBank3Data == NULL
++	    || ah->analogBank6Data == NULL
++	    || ah->analogBank6TPCData == NULL
++	    || ah->analogBank7Data == NULL) {
++		ath_print(common, ATH_DBG_FATAL,
++			  "Cannot allocate RF banks\n");
++		*status = -ENOMEM;
++		return false;
++	}
+ 
+-		ah->bank6Temp =
+-		    kzalloc((sizeof(u32) *
+-			     ah->iniBank6.ia_rows), GFP_KERNEL);
+-		if (ah->bank6Temp == NULL) {
+-			ath_print(common, ATH_DBG_FATAL,
+-				  "Cannot allocate bank6Temp\n");
+-			*status = -ENOMEM;
+-			return false;
+-		}
++	ah->addac5416_21 =
++	    kzalloc((sizeof(u32) *
++		     ah->iniAddac.ia_rows *
++		     ah->iniAddac.ia_columns), GFP_KERNEL);
++	if (ah->addac5416_21 == NULL) {
++		ath_print(common, ATH_DBG_FATAL,
++			  "Cannot allocate addac5416_21\n");
++		*status = -ENOMEM;
++		return false;
++	}
++
++	ah->bank6Temp =
++	    kzalloc((sizeof(u32) *
++		     ah->iniBank6.ia_rows), GFP_KERNEL);
++	if (ah->bank6Temp == NULL) {
++		ath_print(common, ATH_DBG_FATAL,
++			  "Cannot allocate bank6Temp\n");
++		*status = -ENOMEM;
++		return false;
+ 	}
+ 
+ 	return true;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.0.4
+
