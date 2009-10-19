@@ -1,56 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:60905 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751083AbZJXPFi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Oct 2009 11:05:38 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Bob Copeland <me@bobcopeland.com>
-Subject: Re: ath5k: no further txbuf available, dropping packet
-Date: Sat, 24 Oct 2009 17:05:37 +0200
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-References: <200910231608.18676.mb@bu3sch.de> <20091024131929.GB31897@hash.localnet>
-In-Reply-To: <20091024131929.GB31897@hash.localnet>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200910241705.39104.mb@bu3sch.de>
+Received: from bombadil.infradead.org ([18.85.46.34]:54693 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754077AbZJSGdm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Oct 2009 02:33:42 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [RFT 07/15] ath9k_hw: simplify ath9k_hw_rf_alloc_ext_banks()
+Date: Mon, 19 Oct 2009 02:33:38 -0400
+Message-Id: <1255934026-20686-8-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1255934026-20686-1-git-send-email-lrodriguez@atheros.com>
+References: <1255934026-20686-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 24 October 2009 15:19:29 Bob Copeland wrote:
-> On Fri, Oct 23, 2009 at 04:08:16PM +0200, Michael Buesch wrote:
-> > ath5k breaks in AP mode after some operation time and keeps throwing
-> > this message:
-> > 
-> > [2096249.446071] ath5k phy0: no further txbuf available, dropping packet
-> > 
-> > Driver is yesterday's compat-wireless on 2.6.31.1
-> 
-> Ok looked a bit more at this.  I don't see a leak, but I think the
-> txbufs aren't getting reaped.  Otherwise, we should reenable the queues
-> when we get back 40 TX completion interrupts.
-> 
-> I'm a bit short on time to track it down, but one thing to try is
-> commenting out the following from ath5k_beacon_send (will break buffering
-> but you can test non-ps clients):
-> 
->         skb = ieee80211_get_buffered_bc(sc->hw, sc->vif);
->         while (skb) {
->                 ath5k_tx_queue(sc->hw, skb, sc->cabq);
->                 skb = ieee80211_get_buffered_bc(sc->hw, sc->vif);
->         }
-> 
+This is calling an allocation and checking for it, simplify
+this process in a macro.
 
-I didn't try this, yet, but PS buffering seems to be broken anyway.
-If I connect the n810 (which does PS) to the ath5k AP, I cannot ping
-the n810 unless I also transfer (ping) _from_ the n810 simultaneously.
-I did not monitor the traffic, yet, but to me it seems the AP is unable
-to notify that the PS device should wake up (TIM problems?). By pinging from
-the n810, I frequently force-wakeup the device, so traffic to the device
-also works (more or less).
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/phy.c |   72 +++++++++------------------------
+ 1 files changed, 20 insertions(+), 52 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/phy.c b/drivers/net/wireless/ath/ath9k/phy.c
+index f3136b2..923ea0b 100644
+--- a/drivers/net/wireless/ath/ath9k/phy.c
++++ b/drivers/net/wireless/ath/ath9k/phy.c
+@@ -416,64 +416,32 @@ ath9k_hw_rf_free(struct ath_hw *ah)
+  */
+ int ath9k_hw_rf_alloc_ext_banks(struct ath_hw *ah)
+ {
++#define ATH_ALLOC_BANK(bank, size) do { \
++		bank = kzalloc((sizeof(u32) * size), GFP_KERNEL); \
++		if (!bank) { \
++			ath_print(common, ATH_DBG_FATAL, \
++				  "Cannot allocate RF banks\n"); \
++			return -ENOMEM; \
++		} \
++	} while (0);
++
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 
+ 	BUG_ON(AR_SREV_9280_10_OR_LATER(ah));
+ 
+-	ah->analogBank0Data =
+-	    kzalloc((sizeof(u32) *
+-		     ah->iniBank0.ia_rows), GFP_KERNEL);
+-	ah->analogBank1Data =
+-	    kzalloc((sizeof(u32) *
+-		     ah->iniBank1.ia_rows), GFP_KERNEL);
+-	ah->analogBank2Data =
+-	    kzalloc((sizeof(u32) *
+-		     ah->iniBank2.ia_rows), GFP_KERNEL);
+-	ah->analogBank3Data =
+-	    kzalloc((sizeof(u32) *
+-		     ah->iniBank3.ia_rows), GFP_KERNEL);
+-	ah->analogBank6Data =
+-	    kzalloc((sizeof(u32) *
+-		     ah->iniBank6.ia_rows), GFP_KERNEL);
+-	ah->analogBank6TPCData =
+-	    kzalloc((sizeof(u32) *
+-		     ah->iniBank6TPC.ia_rows), GFP_KERNEL);
+-	ah->analogBank7Data =
+-	    kzalloc((sizeof(u32) *
+-		     ah->iniBank7.ia_rows), GFP_KERNEL);
+-
+-	if (ah->analogBank0Data == NULL
+-	    || ah->analogBank1Data == NULL
+-	    || ah->analogBank2Data == NULL
+-	    || ah->analogBank3Data == NULL
+-	    || ah->analogBank6Data == NULL
+-	    || ah->analogBank6TPCData == NULL
+-	    || ah->analogBank7Data == NULL) {
+-		ath_print(common, ATH_DBG_FATAL,
+-			  "Cannot allocate RF banks\n");
+-		return -ENOMEM;
+-	}
+-
+-	ah->addac5416_21 =
+-	    kzalloc((sizeof(u32) *
+-		     ah->iniAddac.ia_rows *
+-		     ah->iniAddac.ia_columns), GFP_KERNEL);
+-	if (ah->addac5416_21 == NULL) {
+-		ath_print(common, ATH_DBG_FATAL,
+-			  "Cannot allocate addac5416_21\n");
+-		return -ENOMEM;
+-	}
+-
+-	ah->bank6Temp =
+-	    kzalloc((sizeof(u32) *
+-		     ah->iniBank6.ia_rows), GFP_KERNEL);
+-	if (ah->bank6Temp == NULL) {
+-		ath_print(common, ATH_DBG_FATAL,
+-			  "Cannot allocate bank6Temp\n");
+-		return -ENOMEM;
+-	}
++	ATH_ALLOC_BANK(ah->analogBank0Data, ah->iniBank0.ia_rows);
++	ATH_ALLOC_BANK(ah->analogBank1Data, ah->iniBank1.ia_rows);
++	ATH_ALLOC_BANK(ah->analogBank2Data, ah->iniBank2.ia_rows);
++	ATH_ALLOC_BANK(ah->analogBank3Data, ah->iniBank3.ia_rows);
++	ATH_ALLOC_BANK(ah->analogBank6Data, ah->iniBank6.ia_rows);
++	ATH_ALLOC_BANK(ah->analogBank6TPCData, ah->iniBank6TPC.ia_rows);
++	ATH_ALLOC_BANK(ah->analogBank7Data, ah->iniBank7.ia_rows);
++	ATH_ALLOC_BANK(ah->addac5416_21,
++		       ah->iniAddac.ia_rows * ah->iniAddac.ia_columns);
++	ATH_ALLOC_BANK(ah->bank6Temp, ah->iniBank6.ia_rows);
+ 
+ 	return 0;
++#undef ATH_ALLOC_BANK
+ }
+ 
+ /**
 -- 
-Greetings, Michael.
+1.6.0.4
+
