@@ -1,80 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52400 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755707AbZJ0QHx (ORCPT
+Received: from mail-yx0-f188.google.com ([209.85.210.188]:62450 "EHLO
+	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756907AbZJSP5P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2009 12:07:53 -0400
-Subject: Re: [PATCH v2 1/3] mac80211: refactor dynamic power save check
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20091027153608.27827.70629.stgit@tikku>
-References: <20091027153608.27827.70629.stgit@tikku>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Oct 2009 17:07:23 +0100
-Message-ID: <1256659643.4237.20.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 19 Oct 2009 11:57:15 -0400
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 2/2] rt2x00: Implement support for rt2800pci
+Date: Mon, 19 Oct 2009 17:56:16 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Alban Browaeys <prahal@yahoo.com>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	Mark Asselstine <asselsm@gmail.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	"linux-kernel" <linux-kernel@vger.kernel.org>
+References: <200910152137.58164.IvDoorn@gmail.com> <200910171654.03344.bzolnier@gmail.com> <200910181859.22413.IvDoorn@gmail.com>
+In-Reply-To: <200910181859.22413.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Message-Id: <200910191756.16579.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-10-27 at 17:36 +0200, Kalle Valo wrote:
-> From: Kalle Valo <kalle.valo@nokia.com>
+On Sunday 18 October 2009 18:59:21 Ivo van Doorn wrote:
+> > I also used the opportunity to take a closer look at this driver and
+> > it seems that it needlessly adds around 2 KLOC to kernel by duplicating
+> > the common content of rt2800usb.h to rt2800pci.h instead of moving it
+> > to the shared header (like it is done in the staging crap drivers):
+> > 
+> > $ wc -l drivers/net/wireless/rt2x00/rt2800usb.h drivers/net/wireless/rt2x00/rt2800pci.h
+> >   1951 drivers/net/wireless/rt2x00/rt2800usb.h
+> >   1960 drivers/net/wireless/rt2x00/rt2800pci.h
+> >   3911 total
+> > 
+> > $ diff -u drivers/net/wireless/rt2x00/rt2800usb.h drivers/net/wireless/rt2x00/rt2800pci.h|diffstat
+> >  rt2800pci.h |  213 +++++++++++++++++++++++++++++++-----------------------------
+> >   1 file changed, 111 insertions(+), 102 deletions(-)
 > 
-> Refactor dynamic power save checks to a function of it's own for better
-> readibility. No functional changes.
-> 
-> Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+> Creating rt2800.h with common register defines has been on the todo list for some time already,
+> it will likely happen in the future, but until I get around to update my debugfs scripts the seperate
+> rt2800pci.h and rt2800usb.h files make debugging and register analysis a bit easier.
 
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+Knowing that this driver has been in more-or-less unchanged state in your
+tree for at least past half year I would say that there was a plenty of time
+to fix this trivial issue..
 
-> ---
-> 
->  net/mac80211/tx.c |   24 +++++++++++++++++++++---
->  1 files changed, 21 insertions(+), 3 deletions(-)
-> 
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index db4bda6..c59ed84 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -1387,6 +1387,26 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
->  	return 0;
->  }
->  
-> +static bool need_dynamic_ps(struct ieee80211_local *local)
-> +{
-> +	/* driver doesn't support power save */
-> +	if (!(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
-> +		return false;
-> +
-> +	/* dynamic power save disabled */
-> +	if (local->hw.conf.dynamic_ps_timeout <= 0)
-> +		return false;
-> +
-> +	/* we are scanning, don't enable power save */
-> +	if (local->scanning)
-> +		return false;
-> +
-> +	if (!local->ps_sdata)
-> +		return false;
-> +
-> +	return true;
-> +}
-> +
->  static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
->  			   struct sk_buff *skb)
->  {
-> @@ -1399,9 +1419,7 @@ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
->  
->  	dev_hold(sdata->dev);
->  
-> -	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
-> -	    local->hw.conf.dynamic_ps_timeout > 0 &&
-> -	    !(local->scanning) && local->ps_sdata) {
-> +	if (need_dynamic_ps(local)) {
->  		if (local->hw.conf.flags & IEEE80211_CONF_PS) {
->  			ieee80211_stop_queues_by_reason(&local->hw,
->  					IEEE80211_QUEUE_STOP_REASON_PS);
-> 
-> 
+Also are the said scripts available anywhere?
 
+> > Similarly it looks like most of the code between rt2800usb.c and rt2800pci.c
+> > could also be shared (up to another 2 KLOC saved) by adding abstraction layer
+> > for accessing chipset registers over different buses (again like it is done
+> > in staging crap drivers):
+> > 
+> > $ wc -l drivers/net/wireless/rt2x00/rt2800usb.c drivers/net/wireless/rt2x00/rt2800pci.c
+> >   3077 drivers/net/wireless/rt2x00/rt2800usb.c
+> >   3323 drivers/net/wireless/rt2x00/rt2800pci.c
+> >   6400 total
+> > 
+> > $ diff -u drivers/net/wireless/rt2x00/rt2800usb.c drivers/net/wireless/rt2x00/rt2800pci.c|diffstat
+> >  rt2800pci.c | 2190 +++++++++++++++++++++++++++++++++---------------------------
+> >  1 file changed, 1218 insertions(+), 972 deletions(-)
+> 
+> I don't agree on this, for starters the whole "abstraction layer as done in the staging driver, really
+> obfuscated the code in multiple areas, so whatever abstraction layer will be needed for rt2x00 it
+> should be done much cleaner without the ugly defines and crap like that. So unless there is a _clean_
+> and very _readable_ solution for such abstraction layer I might consider it.
 
+Nobody was talking about duplicating any obfuscations present in the staging
+driver -- adding struct rt2800_ops would be the preferred way to go.
+
+> Secondly, you can't merge them until both drivers would correctly for all users/chipsets, because only
+> then you can see what registers are initialized equaly, and where potential pitfalls are between the
+> 2 busses.
+
+Merge should be done sooner than later, or the drivers will diverge even
+more, i.e. eFUSE support is needed for rt2800usb and is currently present
+only in rt2800pci driver.
+
+You can always split them later, OTOH joining diverged code bases is much
+more difficult task (i.e. unifying rt2860, rt2870, rt3070 and rt3090 was)
+
+Moreover rt2800pci doesn't work at all currently (why it is not labeled as
+EXPERIMENTAL BTW, ditto for rt2800usb?) so there is no rush in merging it
+and you have a plenty of time to improve your code for the usual kernel
+standards (alternatively you may want consider submitting it for staging).
+
+Could you please start looking into addressing valid review comments?
+
+[ If you do not have a time for it, my offer to take over maintenance of
+  rt2800 drivers is still actual.. ]
