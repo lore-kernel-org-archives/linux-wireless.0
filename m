@@ -1,35 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40969
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752679AbZJTEyy (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:60089 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753975AbZJSRjW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2009 00:54:54 -0400
-Date: Mon, 19 Oct 2009 21:55:16 -0700 (PDT)
-Message-Id: <20091019.215516.161518045.davem@davemloft.net>
-To: tomas.winkler@intel.com
-Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	yi.zhu@intel.com, inaky.perez-gonzalez@intel.com,
-	cindy.h.kao@intel.com, guy.cohen@intel.com,
-	ron.rindjunsky@intel.com
-Subject: Re: [PATCH net-next V2 3/3] i2400m-sdio: select IWMC3200TOP in
- Kconfig
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1255806576-26869-3-git-send-email-tomas.winkler@intel.com>
-References: <1255806576-26869-1-git-send-email-tomas.winkler@intel.com>
-	<1255806576-26869-2-git-send-email-tomas.winkler@intel.com>
-	<1255806576-26869-3-git-send-email-tomas.winkler@intel.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 19 Oct 2009 13:39:22 -0400
+Received: by ewy3 with SMTP id 3so3856747ewy.17
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2009 10:39:26 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: Re: [PATCH] rt2800pci.c : more ids
+Date: Mon, 19 Oct 2009 19:31:06 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com
+References: <4AD434B6.3090903@gmail.com> <4ADC3664.8050900@gmail.com>
+In-Reply-To: <4ADC3664.8050900@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200910191931.07361.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
-Date: Sat, 17 Oct 2009 21:09:36 +0200
+Hi,
 
-> i2400m-sdio requires iwmc3200top for its operation
+I have merged your previous rt2800pci patch before sending it
+upstream. Please recheck and if required rebase your patch
+to the new version.
+
+Thanks,
+
+Ivo
+
+On Monday 19 October 2009, Xose Vazquez Perez wrote:
+> On 10/13/2009 10:05 AM, Xose Vazquez Perez wrote:
 > 
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> Acked-by: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+> > stolen from windows inf file(09/05/2009, 1.04.07.0000)
+> > 
+> > 0x1814, 0x3060
+> 
+> apply this one instead, 
+> got 0x1462,0x89a from linux driver(2009_0903_RT3090_Linux_STA_v2.2.0.1)
+> 
+> -thanks-
+> 
+> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+> 
 
-Applied to net-next-2.6, thanks!
+
