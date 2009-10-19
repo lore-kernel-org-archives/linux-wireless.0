@@ -1,171 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:26672 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758199AbZJBUtv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2009 16:49:51 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 11/13] iwlwifi: replace iwl_poll_direct_bit with iwl_poll_bit for CSR access
-Date: Fri,  2 Oct 2009 13:44:05 -0700
-Message-Id: <1254516247-4085-12-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1254516247-4085-1-git-send-email-reinette.chatre@intel.com>
-References: <1254516247-4085-1-git-send-email-reinette.chatre@intel.com>
+Received: from mx51.mymxserver.com ([85.199.173.110]:54944 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755034AbZJSLce (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Oct 2009 07:32:34 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH] libertas: remove handling for CMD_GET_TSF
+Date: Mon, 19 Oct 2009 13:32:17 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200910191332.17246.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+... which just resided as an old-style command in cmd/cmdresp, but
+was nowhere useed. If we ever need it, we can re-add it as a newstyle
+command.
 
-Replace iwl_poll_direct_bit with iwl_poll_bit when accessing CSR registers.
-There is no need to power up the mac to access CSR registers.
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Acked-by: Ben M Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c   |   10 ++++++----
- drivers/net/wireless/iwlwifi/iwl-4965.c   |    6 ++++--
- drivers/net/wireless/iwlwifi/iwl-5000.c   |    6 ++++--
- drivers/net/wireless/iwlwifi/iwl-core.c   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.c |   12 ++++++++----
- 5 files changed, 23 insertions(+), 13 deletions(-)
+--- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
++++ linux-wl/drivers/net/wireless/libertas/cmd.c
+@@ -1190,12 +1190,6 @@
+ 		ret = lbs_cmd_fwt_access(cmdptr, cmd_action, pdata_buf);
+ 		break;
+ 
+-	case CMD_GET_TSF:
+-		cmdptr->command = cpu_to_le16(CMD_GET_TSF);
+-		cmdptr->size = cpu_to_le16(sizeof(struct cmd_ds_get_tsf) +
+-					   S_DS_GEN);
+-		ret = 0;
+-		break;
+ 	case CMD_802_11_BEACON_CTRL:
+ 		ret = lbs_cmd_bcn_ctrl(priv, cmdptr, cmd_action);
+ 		break;
+--- linux-wl.orig/drivers/net/wireless/libertas/cmdresp.c
++++ linux-wl/drivers/net/wireless/libertas/cmdresp.c
+@@ -188,12 +188,6 @@
+ 		spin_unlock_irqrestore(&priv->driver_lock, flags);
+ 		break;
+ 
+-	case CMD_RET(CMD_GET_TSF):
+-		spin_lock_irqsave(&priv->driver_lock, flags);
+-		memcpy((void *)priv->cur_cmd->callback_arg,
+-		       &resp->params.gettsf.tsfvalue, sizeof(u64));
+-		spin_unlock_irqrestore(&priv->driver_lock, flags);
+-		break;
+ 	case CMD_RET(CMD_BT_ACCESS):
+ 		spin_lock_irqsave(&priv->driver_lock, flags);
+ 		if (priv->cur_cmd->callback_arg)
+--- linux-wl.orig/drivers/net/wireless/libertas/host.h
++++ linux-wl/drivers/net/wireless/libertas/host.h
+@@ -968,7 +968,6 @@
+ 
+ 		struct cmd_ds_bt_access bt;
+ 		struct cmd_ds_fwt_access fwt;
+-		struct cmd_ds_get_tsf gettsf;
+ 		struct cmd_ds_802_11_beacon_control bcn_ctrl;
+ 	} params;
+ } __attribute__ ((packed));
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index bb045a0..4115672 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -999,8 +999,9 @@ static int iwl3945_apm_init(struct iwl_priv *priv)
- 	* D0U* --> D0A* state */
- 	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
- 
--	ret = iwl_poll_direct_bit(priv, CSR_GP_CNTRL,
--			    CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
-+	ret = iwl_poll_bit(priv, CSR_GP_CNTRL,
-+			CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
-+			CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
- 	if (ret < 0) {
- 		IWL_DEBUG_INFO(priv, "Failed to init the card\n");
- 		goto out;
-@@ -1177,8 +1178,9 @@ static int iwl3945_apm_reset(struct iwl_priv *priv)
- 
- 	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
- 
--	iwl_poll_direct_bit(priv, CSR_GP_CNTRL,
--			 CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
-+	iwl_poll_bit(priv, CSR_GP_CNTRL,
-+			CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
-+			CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
- 
- 	iwl_write_prph(priv, APMG_CLK_CTRL_REG,
- 				APMG_CLK_VAL_BSM_CLK_RQT);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index dd10c42..f8eed9a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -335,7 +335,8 @@ static int iwl4965_apm_init(struct iwl_priv *priv)
- 	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
- 
- 	/* wait for clock stabilization */
--	ret = iwl_poll_direct_bit(priv, CSR_GP_CNTRL,
-+	ret = iwl_poll_bit(priv, CSR_GP_CNTRL,
-+			CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
- 			CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
- 	if (ret < 0) {
- 		IWL_DEBUG_INFO(priv, "Failed to init the card\n");
-@@ -411,7 +412,8 @@ static int iwl4965_apm_reset(struct iwl_priv *priv)
- 
- 	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
- 
--	ret = iwl_poll_direct_bit(priv, CSR_GP_CNTRL,
-+	ret = iwl_poll_bit(priv, CSR_GP_CNTRL,
-+			CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
- 			CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
- 	if (ret < 0)
- 		goto out;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index d8dadbf..98baf8a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -98,7 +98,8 @@ int iwl5000_apm_init(struct iwl_priv *priv)
- 	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
- 
- 	/* wait for clock stabilization */
--	ret = iwl_poll_direct_bit(priv, CSR_GP_CNTRL,
-+	ret = iwl_poll_bit(priv, CSR_GP_CNTRL,
-+			CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
- 			CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
- 	if (ret < 0) {
- 		IWL_DEBUG_INFO(priv, "Failed to init the card\n");
-@@ -138,7 +139,8 @@ int iwl5000_apm_reset(struct iwl_priv *priv)
- 	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
- 
- 	/* wait for clock stabilization */
--	ret = iwl_poll_direct_bit(priv, CSR_GP_CNTRL,
-+	ret = iwl_poll_bit(priv, CSR_GP_CNTRL,
-+			CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
- 			CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
- 	if (ret < 0) {
- 		IWL_DEBUG_INFO(priv, "Failed to init the card\n");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 7c0ef8e..dc7fd87 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1338,7 +1338,7 @@ int iwl_apm_stop_master(struct iwl_priv *priv)
- 	/* set stop master bit */
- 	iwl_set_bit(priv, CSR_RESET, CSR_RESET_REG_FLAG_STOP_MASTER);
- 
--	iwl_poll_direct_bit(priv, CSR_RESET,
-+	iwl_poll_bit(priv, CSR_RESET, CSR_RESET_REG_FLAG_MASTER_DISABLED,
- 			CSR_RESET_REG_FLAG_MASTER_DISABLED, 100);
- 
- 	spin_unlock_irqrestore(&priv->lock, flags);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-index e14c995..6e83312 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-@@ -283,7 +283,8 @@ int iwlcore_eeprom_acquire_semaphore(struct iwl_priv *priv)
- 			    CSR_HW_IF_CONFIG_REG_BIT_EEPROM_OWN_SEM);
- 
- 		/* See if we got it */
--		ret = iwl_poll_direct_bit(priv, CSR_HW_IF_CONFIG_REG,
-+		ret = iwl_poll_bit(priv, CSR_HW_IF_CONFIG_REG,
-+				CSR_HW_IF_CONFIG_REG_BIT_EEPROM_OWN_SEM,
- 				CSR_HW_IF_CONFIG_REG_BIT_EEPROM_OWN_SEM,
- 				EEPROM_SEM_TIMEOUT);
- 		if (ret >= 0) {
-@@ -322,7 +323,8 @@ static int iwl_init_otp_access(struct iwl_priv *priv)
- 		     CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
- 
- 	/* wait for clock to be ready */
--	ret = iwl_poll_direct_bit(priv, CSR_GP_CNTRL,
-+	ret = iwl_poll_bit(priv, CSR_GP_CNTRL,
-+				  CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
- 				  CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
- 				  25000);
- 	if (ret < 0)
-@@ -345,7 +347,8 @@ static int iwl_read_otp_word(struct iwl_priv *priv, u16 addr, u16 *eeprom_data)
- 
- 	_iwl_write32(priv, CSR_EEPROM_REG,
- 		     CSR_EEPROM_REG_MSK_ADDR & (addr << 1));
--	ret = iwl_poll_direct_bit(priv, CSR_EEPROM_REG,
-+	ret = iwl_poll_bit(priv, CSR_EEPROM_REG,
-+				  CSR_EEPROM_REG_READ_VALID_MSK,
- 				  CSR_EEPROM_REG_READ_VALID_MSK,
- 				  IWL_EEPROM_ACCESS_TIMEOUT);
- 	if (ret < 0) {
-@@ -537,7 +540,8 @@ int iwl_eeprom_init(struct iwl_priv *priv)
- 			_iwl_write32(priv, CSR_EEPROM_REG,
- 				     CSR_EEPROM_REG_MSK_ADDR & (addr << 1));
- 
--			ret = iwl_poll_direct_bit(priv, CSR_EEPROM_REG,
-+			ret = iwl_poll_bit(priv, CSR_EEPROM_REG,
-+						  CSR_EEPROM_REG_READ_VALID_MSK,
- 						  CSR_EEPROM_REG_READ_VALID_MSK,
- 						  IWL_EEPROM_ACCESS_TIMEOUT);
- 			if (ret < 0) {
 -- 
-1.5.6.3
-
+http://www.holgerschurig.de
