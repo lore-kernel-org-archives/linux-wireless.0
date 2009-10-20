@@ -1,76 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gate.linuxlighthouse.com ([63.249.90.144]:40315 "EHLO
-	linuxlighthouse.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754952AbZJRSAt (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44629 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756128AbZJTAd7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Oct 2009 14:00:49 -0400
-Received: from ws.linuxlighthouse.com (ws.linuxlighthouse.com [192.168.2.20])
-	(authenticated bits=0)
-	by linuxlighthouse.com (8.14.3/8.14.3) with ESMTP id n9IHf8uJ031813
-	for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2009 10:41:08 -0700
-Message-ID: <4ADB5334.3070109@linuxlighthouse.com>
-Date: Sun, 18 Oct 2009 10:41:08 -0700
-From: jack craig <jackc@linuxlighthouse.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: moblin, rt2860, and unhappiness
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 19 Oct 2009 20:33:59 -0400
+Subject: Re: [RFC] libertas: monster-patch to make CFG/WEXT configurable
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>
+In-Reply-To: <200910191449.18915.hs4233@mail.mn-solutions.de>
+References: <200910191449.18915.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-AIpR4wk8oJJq12o2o4sM"
+Date: Tue, 20 Oct 2009 09:33:22 +0900
+Message-Id: <1255998802.4475.2.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi linux-wireless,
 
-This is my first posting, so please pardon me if I break any rule.
+--=-AIpR4wk8oJJq12o2o4sM
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-A bit a background, last spring in a bout of unemployment, i wanted to find a new development direction.
+On Mon, 2009-10-19 at 14:49 +0200, Holger Schurig wrote:
+> This is a monster patch that makes CFG80211/WEXT operation
+> configurable. My cfg80211-RFC/WIP-Patch would come on top of it,
+> but would then be quite small, e.g. almost only changed to
+> cfg.c/cfg.h.
+>=20
+> As there's no mesh/adhoc/monitor mode implemented in cfg80211-
+> mode, I added many, many #ifdef/#endif pairs. Maybe too many.
+> Is this too ugly?   Or would this patch be applyable as-is ?
+>=20
+> If the patch is perceived to be too ugly, I could create an
+> monitor.h/monitor.c file and singleout everything related to
+> monitoring in it, where monitor.h would resolv to dummy static
+> functions in the cfg80211-case ... at least as long as we don't
+> have monitor suppport in libertas+cfg80211. The same for mesh
+> support, e.g. here I could create a mesh.h/mesh.c and do the
+> same.
 
-i had been working with a company providing wireless products (Danger), and wanted to continue that
-direction using  mobile linux as a platform.
+I really don't understand the point. Can't you just use the cfg80211
+hooks and keep both functional at the same time? Just like orinoco does
+-- it uses cfg80211 only partially.
 
-I subscribed to the moblin developers list, bought an Asus EeePC 1000 with xandros installed and began
-my development project.
+johannes
 
-I chose to keep the xandros os in the netbook as its wireless was the first working wireless
-i've had. i booted the various moblin pre-beta releases via the thumbdrive and wasnt too
-worried when the wireless didnt work on the moblin os; after all it was pre-beta.
+--=-AIpR4wk8oJJq12o2o4sM
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-as the xandros wireless worked, i felt confident that the good folks at Intel would make my netbook
-wireless work by the time beta rolled around.
+-----BEGIN PGP SIGNATURE-----
 
-it was my error in assuming an Intel cpu included a Intel wireless chipset, instead i found i had an rt2860.
+iQIcBAABAgAGBQJK3QVOAAoJEODzc/N7+QmaOigP/3jPG6+cMifLS/g1FqFcYggb
+QSs1+ZuXHp9wrRO/iEJonMS2KZUNKGgFTVB74YQF8/qyuBqcWT8WBHyCZKC2aTDi
+3PKGx0GqLs+9YnjR+iKUIAmqy0mkWewtZ4OjZnLGMu+X+zP97+d9q7brK8Bbk+2z
+IyHqW+uvGxO64ijMr64SrWVB6qvrg4k25+nFPC9Z3Ex/X+18c48wuvbZOvZkKTzP
+Z4kmUryj+B2xOrCwCu4oZB/895QRlyrexVs7XuIe4LbqEXyXtz+uAXlTcRaygfZG
+pjQiVe/CGp+Bfd1ylIoETppQyD75yefHDJWvKpVV+bsC//fD+yKvNzWRzQ6oC6o4
+bBM+bAu9tEIyUnkYNWwHH5hRMKuLK76iBFheP5otF7TWFfw5aXXcMw4+9mmPad/Z
+cTfpCYHVtvNHXcTQQn89pdAIM+hanomA2T8o+opGZiyceqAeUq1NxIH69BsD7ZfC
+ZWCwZnR/XCL3GA6Rv/UWnInB34SBAubZA6+TWWusj2hZYtQ4KWOT4D+Pfb6XwpOb
+SfWUjv9LkN8Mcw2ha97nwTh7w2+g3vmNMvBc3MpPYbOn6fOSbP2BHugNMAUIvvcE
+t9oEMswy5VWHiU/3LCNK234pAoaufauxOMHIWW4DCJC+MY+Dyfy8aYjcF27w7AXi
+apP/DF6jOFMN/vGeAxne
+=kDRA
+-----END PGP SIGNATURE-----
 
-as beta came and went with still no wireless joy, i started probing deeper and found the ralink
-rt2860 support wasnt going to be covered in the moblin project work.
+--=-AIpR4wk8oJJq12o2o4sM--
 
-so here i am with a netbook that cant get to the net with the os of my choice. Much unhappiness!
-
-i have learned that the driver source is available and i plan to track that down.
-
-i have also been toying with the idea of surgery; putting a Intel wireless chipset in the eeepc,
-but the only article I've found on that topic is a bit much for a software only geek.
-
-I like the eeepc and want to use it with wireless.
-
-i figure my best case is to find a way to get the ralink driver working with the moblin os,
-but at least one person has failed at that attempt to far.
-
-a fall back position is to go with a fedora os where i could get the driver working there
-(if it doesn't already).
-
-so, finally, my query to this august group; given this sob story, what is your wisdom on the topic?
-
-is my goal to get the rt2860 working on moblin a gesture in futility?
-
-does it make sense to bail and go on to FC? i use FC for my desktop and work so i prefer it over ubuntu ,...
-
-Suggestions? tia, jackc...
-
--- 
-    jack craig
-       jackc@LinuxLightHouse.com
-          831-684-1375 (Office)
-             831-596-6924 (cell)
-                IM: jackcraigaptos (AIM)
-_________________________________
-This email has been ClamScanned !
-     www.LinuxLightHouse.com
