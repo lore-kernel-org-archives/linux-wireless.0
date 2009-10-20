@@ -1,199 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:60748 "EHLO
+Received: from ey-out-2122.google.com ([74.125.78.27]:36191 "EHLO
 	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751070AbZJPVuU (ORCPT
+	with ESMTP id S1751028AbZJTHlr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 17:50:20 -0400
-Received: by ey-out-2122.google.com with SMTP id 9so548595eyd.19
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2009 14:50:24 -0700 (PDT)
-Message-ID: <4AD8EA95.9040200@gmail.com>
-Date: Fri, 16 Oct 2009 23:50:13 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+	Tue, 20 Oct 2009 03:41:47 -0400
+Received: by ey-out-2122.google.com with SMTP id 9so1116676eyd.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 00:41:48 -0700 (PDT)
 MIME-Version: 1.0
-To: Simon Raffeiner <sturmflut@lieberbiber.de>
-CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	IvDoorn@gmail.com
-Subject: Re: [rt2x00-users] [PATCH] rt73usb.c : more ids
-References: <4AD468DB.4050700@gmail.com> <880c1630910130520p30c06846k8692634ec277340@mail.gmail.com> <20091013145600.GB2747@tuxdriver.com> <200910161517.36838.sturmflut@lieberbiber.de>
-In-Reply-To: <200910161517.36838.sturmflut@lieberbiber.de>
-Content-Type: multipart/mixed;
- boundary="------------040202010304010007010909"
+In-Reply-To: <2d0a357f0910200033t25c6b848x6d321057b69e47e6@mail.gmail.com>
+References: <1256018933.4475.6.camel@johannes.local>
+	 <2d0a357f0910200033t25c6b848x6d321057b69e47e6@mail.gmail.com>
+Date: Tue, 20 Oct 2009 09:41:47 +0200
+Message-ID: <2d0a357f0910200041m25c03477gaec88566cc871cce@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: sme: deauthenticate on assoc failure
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: multipart/mixed; boundary=0016e6d77e329c3a8b047658fe0a
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------040202010304010007010909
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
+--0016e6d77e329c3a8b047658fe0a
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-On 10/16/2009 03:17 PM, Simon Raffeiner wrote:
+YUPP.
 
-> I may be wrong but at least for me this concept worked - I bought an 
-> RT2070L based device which is currently not supported by rt2800usb, the 
-> fact that the driver got loaded pointed me into the right direction 
-> (http://rt2x00.serialmonkey.com/phpBB/viewtopic.php?f=5&t=5245&hilit=rt2070).
-> 
-> I'll post the patch (new ids and some cleanups) if everybody's okay with it.
+- Sedat -
 
-I did it three days ago, but I did not get free time to post it, sorry!
+On Tue, Oct 20, 2009 at 9:33 AM, Sedat Dilek <sedat.dilek@googlemail.com> w=
+rote:
+> Is this patch on top of wireless-testing (master-2009-10-16)?
+>
+> It fails here:
+> ...
+> Applying patch linux-wireless/mac80211-keep-auth-state-when-assoc-fails.p=
+atch
+> patching file net/mac80211/mlme.c
+> Hunk #1 FAILED at 1457.
+> 1 out of 1 hunk FAILED -- rejects in file net/mac80211/mlme.c
+> Patch linux-wireless/mac80211-keep-auth-state-when-assoc-fails.patch
+> does not apply (enforce with -f)
+> ERROR: failed to apply patch series!
+>
+> Does it need to revert "mac80211: fix SME warning by removing stale
+> BSS upon assoc failure"?
+>
+> - Sedat -
+>
+> On Tue, Oct 20, 2009 at 8:08 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> When the in-kernel SME gets an association failure from
+>> the AP we don't deauthenticate, and thus get into a very
+>> confused state which will lead to warnings later on. Fix
+>> this by actually deauthenticating when the AP indicates
+>> an association failure.
+>>
+>> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>> ---
+>> =C2=A0net/wireless/core.h | =C2=A0 =C2=A01 +
+>> =C2=A0net/wireless/mlme.c | =C2=A0 =C2=A09 +++++++++
+>> =C2=A0net/wireless/sme.c =C2=A0| =C2=A0 21 +++++++++++++++++++--
+>> =C2=A03 files changed, 29 insertions(+), 2 deletions(-)
+>>
+>> --- wireless-testing.orig/net/wireless/core.h =C2=A0 2009-10-20 15:02:15=
+.000000000 +0900
+>> +++ wireless-testing/net/wireless/core.h =C2=A0 =C2=A0 =C2=A0 =C2=A02009=
+-10-20 15:03:20.000000000 +0900
+>> @@ -358,6 +358,7 @@ int cfg80211_mgd_wext_connect(struct cfg
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct wireless_dev *wdev);
+>>
+>> =C2=A0void cfg80211_conn_work(struct work_struct *work);
+>> +void cfg80211_sme_failed_assoc(struct wireless_dev *wdev);
+>> =C2=A0bool cfg80211_sme_failed_reassoc(struct wireless_dev *wdev);
+>>
+>> =C2=A0/* internal helpers */
+>> --- wireless-testing.orig/net/wireless/mlme.c =C2=A0 2009-10-20 15:02:15=
+.000000000 +0900
+>> +++ wireless-testing/net/wireless/mlme.c =C2=A0 =C2=A0 =C2=A0 =C2=A02009=
+-10-20 15:03:20.000000000 +0900
+>> @@ -62,6 +62,7 @@ void cfg80211_send_rx_assoc(struct net_d
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0u8 *ie =3D mgmt->u.assoc_resp.variable;
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0int i, ieoffs =3D offsetof(struct ieee80211_m=
+gmt, u.assoc_resp.variable);
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct cfg80211_internal_bss *bss =3D NULL;
+>> + =C2=A0 =C2=A0 =C2=A0 bool need_connect_result =3D true;
+>>
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0wdev_lock(wdev);
+>>
+>> @@ -94,6 +95,14 @@ void cfg80211_send_rx_assoc(struct net_d
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+>>
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0WARN_ON(!bss);
+>> + =C2=A0 =C2=A0 =C2=A0 } else if (wdev->conn) {
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 cfg80211_sme_failed_a=
+ssoc(wdev);
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 need_connect_result =
+=3D false;
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 /*
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* do not call c=
+onnect_result() now because the
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* sme will sche=
+dule work that does it later.
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0*/
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 goto out;
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+>>
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (!wdev->conn && wdev->sme_state =3D=3D CFG=
+80211_SME_IDLE) {
+>> --- wireless-testing.orig/net/wireless/sme.c =C2=A0 =C2=A02009-10-20 15:=
+02:15.000000000 +0900
+>> +++ wireless-testing/net/wireless/sme.c 2009-10-20 15:03:20.000000000 +0=
+900
+>> @@ -26,6 +26,7 @@ struct cfg80211_conn {
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0CFG80211_CONN_AUT=
+HENTICATING,
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0CFG80211_CONN_ASS=
+OCIATE_NEXT,
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0CFG80211_CONN_ASS=
+OCIATING,
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 CFG80211_CONN_DEAUTH_=
+ASSOC_FAIL,
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0} state;
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0u8 bssid[ETH_ALEN], prev_bssid[ETH_ALEN];
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0u8 *ie;
+>> @@ -148,6 +149,12 @@ static int cfg80211_conn_do_work(struct
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 NULL, 0,
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 WLAN_REASON_DEAUTH_LEAVING);
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return err;
+>> + =C2=A0 =C2=A0 =C2=A0 case CFG80211_CONN_DEAUTH_ASSOC_FAIL:
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 __cfg80211_mlme_deaut=
+h(rdev, wdev->netdev, params->bssid,
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0NULL, 0,
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0WLAN_REASON_D=
+EAUTH_LEAVING);
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 /* return an error so=
+ that we call __cfg80211_connect_result() */
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return -EINVAL;
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0default:
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return 0;
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+>> @@ -158,6 +165,7 @@ void cfg80211_conn_work(struct work_stru
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct cfg80211_registered_device *rdev =3D
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0container_of(work=
+, struct cfg80211_registered_device, conn_work);
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct wireless_dev *wdev;
+>> + =C2=A0 =C2=A0 =C2=A0 u8 bssid[ETH_ALEN];
+>>
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0rtnl_lock();
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0cfg80211_lock_rdev(rdev);
+>> @@ -173,10 +181,10 @@ void cfg80211_conn_work(struct work_stru
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0wdev_unlock(wdev);
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0continue;
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 memcpy(bssid, wdev->c=
+onn->params.bssid, ETH_ALEN);
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (cfg80211_conn=
+_do_work(wdev))
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0__cfg80211_connect_result(
+>> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 wdev->netdev=
+,
+>> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 wdev->conn->=
+params.bssid,
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 wdev->netdev=
+, bssid,
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0NULL, =
+0, NULL, 0,
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0WLAN_S=
+TATUS_UNSPECIFIED_FAILURE,
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0false,=
+ NULL);
+>> @@ -337,6 +345,15 @@ bool cfg80211_sme_failed_reassoc(struct
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0return true;
+>> =C2=A0}
+>>
+>> +void cfg80211_sme_failed_assoc(struct wireless_dev *wdev)
+>> +{
+>> + =C2=A0 =C2=A0 =C2=A0 struct wiphy *wiphy =3D wdev->wiphy;
+>> + =C2=A0 =C2=A0 =C2=A0 struct cfg80211_registered_device *rdev =3D wiphy=
+_to_dev(wiphy);
+>> +
+>> + =C2=A0 =C2=A0 =C2=A0 wdev->conn->state =3D CFG80211_CONN_DEAUTH_ASSOC_=
+FAIL;
+>> + =C2=A0 =C2=A0 =C2=A0 schedule_work(&rdev->conn_work);
+>> +}
+>> +
+>> =C2=A0void __cfg80211_connect_result(struct net_device *dev, const u8 *b=
+ssid,
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 const u8 *req_ie, size_t req_ie_len,
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 const u8 *resp_ie, size_t resp_ie_len,
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.html
+>>
+>
 
-from 09/15/2009, 1.04.07.0000 windows inf file.
-
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-
--thanks-
-
-regards,
--- 
-«Allá muevan feroz guerra, ciegos reyes por un palmo más de tierra;
-que yo aquí tengo por mío cuanto abarca el mar bravío, a quien nadie
-impuso leyes. Y no hay playa, sea cualquiera, ni bandera de esplendor,
-que no sienta mi derecho y dé pecho a mi valor.»
-
---------------040202010304010007010909
-Content-Type: text/plain;
- name="new_id-2800usb.diff"
-Content-Transfer-Encoding: 7bit
+--0016e6d77e329c3a8b047658fe0a
+Content-Type: text/x-diff; charset=US-ASCII;
+	name="0001-Revert-mac80211-fix-SME-warning-by-removing-stale-BS.patch"
 Content-Disposition: attachment;
- filename="new_id-2800usb.diff"
+	filename="0001-Revert-mac80211-fix-SME-warning-by-removing-stale-BS.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_g10cjru40
 
---- o/drivers/net/wireless/rt2800usb.c	2009-10-13 13:55:35.194380796 +0200
-+++ n/drivers/net/wireless/rt2800usb.c	2009-10-13 15:06:42.771378537 +0200
-@@ -2886,17 +2886,23 @@
- 	{ USB_DEVICE(0x0e0b, 0x9041), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Amit */
- 	{ USB_DEVICE(0x15c5, 0x0008), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	/* Askey */
-+	{ USB_DEVICE(0x1690, 0x0740), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x1690, 0x0744), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0930, 0x0a07), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* ASUS */
- 	{ USB_DEVICE(0x0b05, 0x1731), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0b05, 0x1732), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0b05, 0x1742), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0b05, 0x1760), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0b05, 0x1761), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0b05, 0x1784), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* AzureWave */
- 	{ USB_DEVICE(0x13d3, 0x3247), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x13d3, 0x3262), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x13d3, 0x3273), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x13d3, 0x3284), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x13d3, 0x3305), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Belkin */
- 	{ USB_DEVICE(0x050d, 0x8053), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x050d, 0x805c), USB_DEVICE_DATA(&rt2800usb_ops) },
-@@ -2905,6 +2911,8 @@
- 	/* Buffalo */
- 	{ USB_DEVICE(0x0411, 0x00e8), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0411, 0x012e), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	/* Cisco */
-+	{ USB_DEVICE(0x167b, 0x4001), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Conceptronic */
- 	{ USB_DEVICE(0x14b2, 0x3c06), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x14b2, 0x3c07), USB_DEVICE_DATA(&rt2800usb_ops) },
-@@ -2920,6 +2928,8 @@
- 	{ USB_DEVICE(0x07aa, 0x002f), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x07aa, 0x003c), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x07aa, 0x003f), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x07aa, 0x0041), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x07aa, 0x0042), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x18c5, 0x0008), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x18c5, 0x0012), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* D-Link */
-@@ -2931,18 +2941,24 @@
- 	{ USB_DEVICE(0x07d1, 0x3c0f), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x07d1, 0x3c11), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x07d1, 0x3c13), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x07d1, 0x3c15), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Edimax */
- 	{ USB_DEVICE(0x7392, 0x7711), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x7392, 0x7717), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x7392, 0x7718), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Encore */
- 	{ USB_DEVICE(0x203d, 0x1480), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x203d, 0x14a1), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x203d, 0x14a9), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* EnGenius */
- 	{ USB_DEVICE(0X1740, 0x9701), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1740, 0x9702), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1740, 0x9703), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1740, 0x9705), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1740, 0x9706), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x1740, 0x9707), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x1740, 0x9708), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x1740, 0x9709), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1740, 0x9801), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Gemtek */
- 	{ USB_DEVICE(0x15a9, 0x0010), USB_DEVICE_DATA(&rt2800usb_ops) },
-@@ -2956,7 +2972,10 @@
- 	{ USB_DEVICE(0x0e66, 0x0009), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0e66, 0x000b), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* I-O DATA */
-+	{ USB_DEVICE(0x04bb, 0x0944), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x04bb, 0x0945), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x04bb, 0x0947), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x04bb, 0x0948), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* LevelOne */
- 	{ USB_DEVICE(0x1740, 0x0605), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1740, 0x0615), USB_DEVICE_DATA(&rt2800usb_ops) },
-@@ -2971,8 +2990,18 @@
- 	/* Motorola */
- 	{ USB_DEVICE(0x100d, 0x9031), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x100d, 0x9032), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	/* MSI */
-+	{ USB_DEVICE(0x0db0, 0x3820), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0db0, 0x3821), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0db0, 0x3870), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0db0, 0x6899), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0db0, 0x821a), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0db0, 0x870a), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0db0, 0x899a), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Ovislink */
- 	{ USB_DEVICE(0x1b75, 0x3072), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	/* Para */
-+	{ USB_DEVICE(0x20b8, 0x8888), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Pegatron */
- 	{ USB_DEVICE(0x1d4d, 0x0002), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1d4d, 0x000c), USB_DEVICE_DATA(&rt2800usb_ops) },
-@@ -2988,8 +3017,6 @@
- 	/* Quanta */
- 	{ USB_DEVICE(0x1a32, 0x0304), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Ralink */
--	{ USB_DEVICE(0x0db0, 0x3820), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x0db0, 0x6899), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x148f, 0x2070), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x148f, 0x2770), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x148f, 0x2870), USB_DEVICE_DATA(&rt2800usb_ops) },
-@@ -3013,7 +3040,12 @@
- 	{ USB_DEVICE(0x0df6, 0x003e), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0df6, 0x003f), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0df6, 0x0040), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0df6, 0x0041), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0df6, 0x0042), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0df6, 0x0047), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0df6, 0x0048), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0df6, 0x004a), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0df6, 0x004d), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* SMC */
- 	{ USB_DEVICE(0x083a, 0x6618), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x083a, 0x7511), USB_DEVICE_DATA(&rt2800usb_ops) },
-@@ -3022,6 +3054,8 @@
- 	{ USB_DEVICE(0x083a, 0x8522), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x083a, 0xa512), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x083a, 0xa618), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x083a, 0xa701), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x083a, 0xa702), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x083a, 0xb522), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x083a, 0xc522), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Sparklan */
-@@ -3039,6 +3073,7 @@
- 	{ USB_DEVICE(0x5a57, 0x0280), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x5a57, 0x0282), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x5a57, 0x0283), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x5a57, 0x0284), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x5a57, 0x5257), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Zyxel */
- 	{ USB_DEVICE(0x0586, 0x3416), USB_DEVICE_DATA(&rt2800usb_ops) },
-
---------------040202010304010007010909--
+RnJvbSBmMTNhMTljMTg2NTM1NWNiNjJhZTczMDUzOGM5NzllY2YwNjUzYzJhIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBTZWRhdCBEaWxlayA8c2VkYXQuZGlsZWtAZ21haWwuY29tPgpE
+YXRlOiBUdWUsIDIwIE9jdCAyMDA5IDA5OjM5OjM2ICswMjAwClN1YmplY3Q6IFtQQVRDSF0gUmV2
+ZXJ0ICJtYWM4MDIxMTogZml4IFNNRSB3YXJuaW5nIGJ5IHJlbW92aW5nIHN0YWxlIEJTUyB1cG9u
+IGFzc29jIGZhaWx1cmUiCgpUaGlzIHJldmVydHMgY29tbWl0IDczOTg0ZDk2NjBhNTY5MzM2ODU0
+NjU3ZmI0YWRhZTM4YzE2NzMxNzcuCi0tLQogbmV0L21hYzgwMjExL21sbWUuYyB8ICAgIDIgKy0K
+IDEgZmlsZXMgY2hhbmdlZCwgMSBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9ucygtKQoKZGlmZiAt
+LWdpdCBhL25ldC9tYWM4MDIxMS9tbG1lLmMgYi9uZXQvbWFjODAyMTEvbWxtZS5jCmluZGV4IDY5
+N2ExNDkuLjcxMjIwYTUgMTAwNjQ0Ci0tLSBhL25ldC9tYWM4MDIxMS9tbG1lLmMKKysrIGIvbmV0
+L21hYzgwMjExL21sbWUuYwpAQCAtMTQ2NSw3ICsxNDY1LDcgQEAgaWVlZTgwMjExX3J4X21nbXRf
+YXNzb2NfcmVzcChzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YSwKIAkJICAgICAg
+IHNkYXRhLT5kZXYtPm5hbWUsIHN0YXR1c19jb2RlKTsKIAkJbGlzdF9kZWwoJndrLT5saXN0KTsK
+IAkJa2ZyZWUod2spOwotCQlyZXR1cm4gUlhfTUdNVF9DRkc4MDIxMV9ERUFVVEg7CisJCXJldHVy
+biBSWF9NR01UX0NGRzgwMjExX0FTU09DOwogCX0KIAogCWlmICgoYWlkICYgKEJJVCgxNSkgfCBC
+SVQoMTQpKSkgIT0gKEJJVCgxNSkgfCBCSVQoMTQpKSkKLS0gCjEuNi4zLjEKCg==
+--0016e6d77e329c3a8b047658fe0a--
