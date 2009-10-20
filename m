@@ -1,55 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:17633 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754902AbZJIUVM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2009 16:21:12 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/17] iwlwifi driver updates 10/9/2009
-Date: Fri,  9 Oct 2009 13:20:16 -0700
-Message-Id: <1255119634-3060-1-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:44672 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753544AbZJTGaE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Oct 2009 02:30:04 -0400
+Subject: Re: [PATCH] cfg80211: sme: deauthenticate on assoc failure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890910192324t3deab484nad855a5ecd109dd@mail.gmail.com>
+References: <1256018933.4475.6.camel@johannes.local>
+	 <43e72e890910192324t3deab484nad855a5ecd109dd@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-AoG42stK/knOlFkkqqr+"
+Date: Tue, 20 Oct 2009 15:26:27 +0900
+Message-Id: <1256019987.4475.7.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In this series we include the following fixes targeting 2.6.32:
-1/17 prevents a potential null pointer exception if a particular error
-path is hit during module probe
-2/17 and 3/17 combine to address a serious problem with powersaving. We
-have discovered that when the interface is downed the device keeps
-consuming peak power. This is because in these cases the power saving state
-is just reset based on a (wrong) assumption that the interface will be
-brought back up shortly. Patch 2/17 ensures that the power initialization
-is done correctly for 3945 to be able to accomodate initialization after a
-complete stop while patch 3/17 tells the device to stop when interface goes
-down.
 
-Patch 2/17 is provided in two versions, one that applies cleanly on
-wireless-testing and another that applies cleanly on v2.6.32.
+--=-AoG42stK/knOlFkkqqr+
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The rest of the series is mostly cleanup. We do have some additions to the
-channel switch API.
+On Tue, 2009-10-20 at 15:24 +0900, Luis R. Rodriguez wrote:
+> On Tue, Oct 20, 2009 at 3:08 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > When the in-kernel SME gets an association failure from
+> > the AP we don't deauthenticate, and thus get into a very
+> > confused state which will lead to warnings later on. Fix
+> > this by actually deauthenticating when the AP indicates
+> > an association failure.
+> >
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>=20
+> Thanks Johannes.
+>=20
+> Tested-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>=20
+> John -- this patch and the previous patch titled "mac80211: keep auth
+> state when assoc fails" fix the SME warning as well. These are also
+> 2.6.32-rc fixes.
 
-[PATCH 01/17 v2.6.32 and w-t] iwlwifi: change the order of freeing memory
-[PATCH 02/17 w-t] iwl3945: update iwl3945_apm_init()
-[PATCH 02/17 v2.6.32] iwl3945: update iwl3945_apm_init()
-[PATCH 03/17 v2.6.32 and w-t] iwlwifi: turn off device when not used.
-[PATCH 04/17] iwl3945: remove unnecessary call to apm_ops.reset()
-[PATCH 05/17] iwlagn, iwl3945: remove apm_reset() functions
-[PATCH 06/17] iwlwifi: remove duplicated/unused definition
-[PATCH 07/17] iwlwifi: additional items in sensitivity range table
-[PATCH 08/17] iwlwifi: fix userspace setting of sleep_level_override
-[PATCH 09/17] iwl3945: streamline iwl3945_rfkill_poll()
-[PATCH 10/17] iwl3945: move iwl_power_initialize()
-[PATCH 11/17] iwlwifi: dynamic allocate tx queue structure
-[PATCH 12/17] iwlwifi: showing accumulative ucode statistics counters
-[PATCH 13/17] iwlwifi/iwl3945: unify rts_tx_cmd_flag
-[PATCH 14/17] iwl3945: rename tx to tx_cmd
-[PATCH 15/17] iwlwifi/iwl3945: remove data_retry_limit
-[PATCH 16/17] iwl3945: rearrange the code.
-[PATCH 17/17] iwlwifi: update channel switch command API
+And also done during the hacking session at KS.
 
+johannes
 
-Reinette
+--=-AoG42stK/knOlFkkqqr+
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK3VgPAAoJEODzc/N7+Qmar54QALgglYdeUVaaxjlIXhh+PwxZ
+223IsCiZ2E2cP7DRR/KzH+zbA2OzAIYRqbpGeeju+Es38FByEqwAjqVdlcw+smYu
+x2i4fzPomTUfRa4OFDTaCTOGrG8PalZBDyPqwT03EMhw8rR8BD3KGJu4PqbfQAoS
+U0xN7AladF2lEOaNkMMqsYpORIVZnmc2hYS1t9XjzjfuGaZznI6RvpK5ChpgcXsn
+Sqx+h2VKbMN8NS33kAgdNvOktg9S4KO/Kq4gxV5iGJdYBkmFGWIAcitVgNf7CI2B
+9vKhWPHYyaIpOIO/flAnktIY6Va5hR+L0qpNTlZxLmRt853JS/c19Iji/QGeQu4c
+NDfciUCK2WleHgqi2FDB0k6ab6wfO8G02THfZodycJ9iJCPeJgjUUjypp8P+yx5S
+wd2l0L/BklPgpZSFRPC7W2j3g8YXAeilYNv3k15onNVmF3P4NGKtYEbvAayDYhei
+SA4bee1i5XfdIAyCWt58SGueiZkCXUL8sV8s8D1KcQGW1x5PLLwGZar5dAD062fl
+MKI4aMw+cwMTV5KQRS4rPbK4WI3AGpMttCft+tpC6dTsowmE6GuHzEjuwBeRhzUC
+H/zquzdh+XdJjJNOBuevywMd3gAEmBSmg4d86utpcT7UGqK/ZsPdwoJ2rGZOrUvt
+LwdY57M5Z/TOXchlRx3+
+=9N9V
+-----END PGP SIGNATURE-----
+
+--=-AoG42stK/knOlFkkqqr+--
+
