@@ -1,64 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:24355 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752323AbZJWUms (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 16:42:48 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 15/18] iwlwifi: remove duplicated define
-Date: Fri, 23 Oct 2009 13:42:33 -0700
-Message-Id: <1256330556-20997-16-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
-References: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
+Received: from ey-out-2122.google.com ([74.125.78.25]:4678 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750996AbZJTKef (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Oct 2009 06:34:35 -0400
+Received: by ey-out-2122.google.com with SMTP id 9so1146139eyd.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 03:34:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <717B3566C64F54459B25922289704B8E6DF4D5@susday7667.TD.teradata.com>
+References: <717B3566C64F54459B25922289704B8E6DF4D5@susday7667.TD.teradata.com>
+Date: Tue, 20 Oct 2009 12:34:38 +0200
+Message-ID: <2d0a357f0910200334g7cdacb2bh351f20f3afa3932c@mail.gmail.com>
+Subject: Re: 'linux-wireless@vger.kernel.org'
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: "Kristofik, Juraj" <Juraj.Kristofik@teradata.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Hi,
 
-Duplicated define for listen interval (IWL_CONN_MAX_LISTEN_INTERVAL and
-IWL_CONN_LISTEN_INTERVAL), remove IWL_CONN_LISTEN_INTERVAL
+there is no need to sent several times the same email to this mailing-list.
+As I suggested to you on IRC, read the document "How To Ask Questions
+The Smart Way", especially "Use meaningful, specific subject headers"
+[1].
+To be precise:
+An empty subject line or none-saying one is not helpful.
+Furthermore, a (significant) subject line is often used for
+referencing (for bug-reports or on other mailing-lists).
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Reported-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-power.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-power.h |    2 --
- 2 files changed, 2 insertions(+), 4 deletions(-)
+Kind Regards,
+- Sedat -
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
-index 432f465..9bce2c1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-power.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-power.c
-@@ -163,9 +163,9 @@ static void iwl_static_sleep_cmd(struct iwl_priv *priv,
- 		cmd->flags &= ~IWL_POWER_SLEEP_OVER_DTIM_MSK;
- 
- 	slp_itrvl = le32_to_cpu(cmd->sleep_interval[IWL_POWER_VEC_SIZE - 1]);
--	if (slp_itrvl > IWL_CONN_LISTEN_INTERVAL)
-+	if (slp_itrvl > IWL_CONN_MAX_LISTEN_INTERVAL)
- 		cmd->sleep_interval[IWL_POWER_VEC_SIZE - 1] =
--			cpu_to_le32(IWL_CONN_LISTEN_INTERVAL);
-+			cpu_to_le32(IWL_CONN_MAX_LISTEN_INTERVAL);
- 
- 	/* enforce max sleep interval */
- 	for (i = IWL_POWER_VEC_SIZE - 1; i >= 0 ; i--) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-power.h b/drivers/net/wireless/iwlwifi/iwl-power.h
-index 0755518..310c32e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-power.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-power.h
-@@ -30,8 +30,6 @@
- 
- #include "iwl-commands.h"
- 
--#define IWL_CONN_LISTEN_INTERVAL	10
--
- #define IWL_ABSOLUTE_ZERO		0
- #define IWL_ABSOLUTE_MAX		0xFFFFFFFF
- #define IWL_TT_INCREASE_MARGIN	5
--- 
-1.5.6.3
+[1] <http://www.catb.org/~esr/faqs/smart-questions.html#bespecific>
 
+On Tue, Oct 20, 2009 at 12:03 PM, Kristofik, Juraj
+<Juraj.Kristofik@teradata.com> wrote:
+>
+> Hello,
+>
+> I would like to ask if you would be willing to help me in the problem I
+> am experiencing.
+>
+> I have notebook toshiba tecra M6 with Intel(R) PRO/Wireless 3945ABG/BG
+> wifi card, that is working normally in windows.
+>
+> I installed back-track 4 pre final linux on usb drive and followed the
+> guide here (using root account):
+> http://forums.remote-exploit.-org/backtrack-4-working--hardware/27565-bt
+> 4-pre-final--driver-iwl3945-injection--solved.html#post157700
+>
+> I have installed lastest firmware for my wifi
+> (iwlwifi-3945-ucode-15.32.2.9) and compat-wireless-2.6.32-rc4 drivers.
+>
+> However I am experiencing problems with loading drivers and receive
+> error: iwl3945 0000:02:00.0: Failed to register hw (error -17)
+>
+> Can you please provide any help with what this error means?
+>
+> Please see my dmseg in attachment.
+>
+> --
+> Regards,
+> Juraj Kristofik
+>
+>
+>
+>
