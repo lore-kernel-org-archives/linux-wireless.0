@@ -1,112 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:62948 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754655AbZJPVZ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 17:25:58 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 07/10] iwlagn: store station rate scale information in mac80211 station structure
-Date: Fri, 16 Oct 2009 14:25:55 -0700
-Message-Id: <1255728358-29976-8-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
-References: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:58885 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752324AbZJTGMI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Oct 2009 02:12:08 -0400
+Subject: [PATCH] cfg80211: sme: deauthenticate on assoc failure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 20 Oct 2009 15:08:53 +0900
+Message-Id: <1256018933.4475.6.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+When the in-kernel SME gets an association failure from
+the AP we don't deauthenticate, and thus get into a very
+confused state which will lead to warnings later on. Fix
+this by actually deauthenticating when the AP indicates
+an association failure.
 
-Currently mac80211 initializes the rate scaling before notifying the driver
-of the station's existence. The driver dealt with this by not relying on
-mac80211's station notifications and instead mixing this functionality with
-the rate scaling code and other places. To clean this up the driver needs
-to do rate scaling initialization after being notified of the station, this
-can be done if the rate scaling information forms part of the station
-information passed from mac80211 to driver.
-
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    8 ++------
- drivers/net/wireless/iwlwifi/iwl-agn.c    |    1 +
- drivers/net/wireless/iwlwifi/iwl-dev.h    |   13 +++++++++++++
- 3 files changed, 16 insertions(+), 6 deletions(-)
+ net/wireless/core.h |    1 +
+ net/wireless/mlme.c |    9 +++++++++
+ net/wireless/sme.c  |   21 +++++++++++++++++++--
+ 3 files changed, 29 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 2d4ec1a..27d4ece 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -2475,19 +2475,17 @@ static void *rs_alloc_sta(void *priv_rate, struct ieee80211_sta *sta,
- 			  gfp_t gfp)
- {
- 	struct iwl_lq_sta *lq_sta;
-+	struct iwl_station_priv *sta_priv = (struct iwl_station_priv *) sta->drv_priv;
- 	struct iwl_priv *priv;
- 	int i, j;
+--- wireless-testing.orig/net/wireless/core.h	2009-10-20 15:02:15.000000000 +0900
++++ wireless-testing/net/wireless/core.h	2009-10-20 15:03:20.000000000 +0900
+@@ -358,6 +358,7 @@ int cfg80211_mgd_wext_connect(struct cfg
+ 			      struct wireless_dev *wdev);
  
- 	priv = (struct iwl_priv *)priv_rate;
- 	IWL_DEBUG_RATE(priv, "create station rate scale window\n");
+ void cfg80211_conn_work(struct work_struct *work);
++void cfg80211_sme_failed_assoc(struct wireless_dev *wdev);
+ bool cfg80211_sme_failed_reassoc(struct wireless_dev *wdev);
  
--	lq_sta = kzalloc(sizeof(struct iwl_lq_sta), gfp);
-+	lq_sta = &sta_priv->lq_sta;
+ /* internal helpers */
+--- wireless-testing.orig/net/wireless/mlme.c	2009-10-20 15:02:15.000000000 +0900
++++ wireless-testing/net/wireless/mlme.c	2009-10-20 15:03:20.000000000 +0900
+@@ -62,6 +62,7 @@ void cfg80211_send_rx_assoc(struct net_d
+ 	u8 *ie = mgmt->u.assoc_resp.variable;
+ 	int i, ieoffs = offsetof(struct ieee80211_mgmt, u.assoc_resp.variable);
+ 	struct cfg80211_internal_bss *bss = NULL;
++	bool need_connect_result = true;
  
--	if (lq_sta == NULL)
--		return NULL;
- 	lq_sta->lq.sta_id = 0xff;
+ 	wdev_lock(wdev);
  
--
- 	for (j = 0; j < LQ_SIZE; j++)
- 		for (i = 0; i < IWL_RATE_COUNT; i++)
- 			rs_rate_scale_clear_window(&lq_sta->lq_info[j].win[i]);
-@@ -2719,11 +2717,9 @@ static void rs_free(void *priv_rate)
- static void rs_free_sta(void *priv_r, struct ieee80211_sta *sta,
- 			void *priv_sta)
- {
--	struct iwl_lq_sta *lq_sta = priv_sta;
- 	struct iwl_priv *priv __maybe_unused = priv_r;
+@@ -94,6 +95,14 @@ void cfg80211_send_rx_assoc(struct net_d
+ 		}
  
- 	IWL_DEBUG_RATE(priv, "enter\n");
--	kfree(lq_sta);
- 	IWL_DEBUG_RATE(priv, "leave\n");
+ 		WARN_ON(!bss);
++	} else if (wdev->conn) {
++		cfg80211_sme_failed_assoc(wdev);
++		need_connect_result = false;
++		/*
++		 * do not call connect_result() now because the
++		 * sme will schedule work that does it later.
++		 */
++		goto out;
+ 	}
+ 
+ 	if (!wdev->conn && wdev->sme_state == CFG80211_SME_IDLE) {
+--- wireless-testing.orig/net/wireless/sme.c	2009-10-20 15:02:15.000000000 +0900
++++ wireless-testing/net/wireless/sme.c	2009-10-20 15:03:20.000000000 +0900
+@@ -26,6 +26,7 @@ struct cfg80211_conn {
+ 		CFG80211_CONN_AUTHENTICATING,
+ 		CFG80211_CONN_ASSOCIATE_NEXT,
+ 		CFG80211_CONN_ASSOCIATING,
++		CFG80211_CONN_DEAUTH_ASSOC_FAIL,
+ 	} state;
+ 	u8 bssid[ETH_ALEN], prev_bssid[ETH_ALEN];
+ 	u8 *ie;
+@@ -148,6 +149,12 @@ static int cfg80211_conn_do_work(struct 
+ 					       NULL, 0,
+ 					       WLAN_REASON_DEAUTH_LEAVING);
+ 		return err;
++	case CFG80211_CONN_DEAUTH_ASSOC_FAIL:
++		__cfg80211_mlme_deauth(rdev, wdev->netdev, params->bssid,
++				       NULL, 0,
++				       WLAN_REASON_DEAUTH_LEAVING);
++		/* return an error so that we call __cfg80211_connect_result() */
++		return -EINVAL;
+ 	default:
+ 		return 0;
+ 	}
+@@ -158,6 +165,7 @@ void cfg80211_conn_work(struct work_stru
+ 	struct cfg80211_registered_device *rdev =
+ 		container_of(work, struct cfg80211_registered_device, conn_work);
+ 	struct wireless_dev *wdev;
++	u8 bssid[ETH_ALEN];
+ 
+ 	rtnl_lock();
+ 	cfg80211_lock_rdev(rdev);
+@@ -173,10 +181,10 @@ void cfg80211_conn_work(struct work_stru
+ 			wdev_unlock(wdev);
+ 			continue;
+ 		}
++		memcpy(bssid, wdev->conn->params.bssid, ETH_ALEN);
+ 		if (cfg80211_conn_do_work(wdev))
+ 			__cfg80211_connect_result(
+-					wdev->netdev,
+-					wdev->conn->params.bssid,
++					wdev->netdev, bssid,
+ 					NULL, 0, NULL, 0,
+ 					WLAN_STATUS_UNSPECIFIED_FAILURE,
+ 					false, NULL);
+@@ -337,6 +345,15 @@ bool cfg80211_sme_failed_reassoc(struct 
+ 	return true;
  }
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index c3e7101..3664d01 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2305,6 +2305,7 @@ static int iwl_setup_mac(struct iwl_priv *priv)
- 		hw->flags |= IEEE80211_HW_SUPPORTS_PS |
- 			     IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
- 
-+	hw->sta_data_size = sizeof(struct iwl_station_priv);
- 	hw->wiphy->interface_modes =
- 		BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 35d5794..6ba082d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -576,6 +576,19 @@ struct iwl_station_entry {
- 	struct iwl_hw_key keyinfo;
- };
- 
-+/*
-+ * iwl_station_priv: Driver's private station information
-+ *
-+ * When mac80211 creates a station it reserves some space (hw->sta_data_size)
-+ * in the structure for use by driver. This structure is places in that
-+ * space.
-+ *
-+ * At the moment use it for the station's rate scaling information.
-+ */
-+struct iwl_station_priv {
-+	struct iwl_lq_sta lq_sta;
-+};
++void cfg80211_sme_failed_assoc(struct wireless_dev *wdev)
++{
++	struct wiphy *wiphy = wdev->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
 +
- /* one for each uCode image (inst/data, boot/init/runtime) */
- struct fw_desc {
- 	void *v_addr;		/* access by driver */
--- 
-1.5.6.3
++	wdev->conn->state = CFG80211_CONN_DEAUTH_ASSOC_FAIL;
++	schedule_work(&rdev->conn_work);
++}
++
+ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 			       const u8 *req_ie, size_t req_ie_len,
+ 			       const u8 *resp_ie, size_t resp_ie_len,
+
 
