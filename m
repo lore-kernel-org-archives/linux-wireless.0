@@ -1,26 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ted.prima.de ([83.97.48.3]:33867 "EHLO ted.prima.de"
+Received: from mga11.intel.com ([192.55.52.93]:60280 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761119AbZJNWfY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 18:35:24 -0400
-Message-ID: <4AD6518D.2000709@penny.prima.de>
-Date: Thu, 15 Oct 2009 00:32:45 +0200
-From: Riffer <riffer@penny.prima.de>
-MIME-Version: 1.0
-To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Issues building compat-wireless-2009-10-13
-References: <4AD64823.9020906@redfish-solutions.com>
-In-Reply-To: <4AD64823.9020906@redfish-solutions.com>
-Content-Type: text/plain; charset=UTF-8
+	id S1752634AbZJTRQH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Oct 2009 13:16:07 -0400
+Subject: Re: Wrong BSSID generation in IBSS mode with ath5k
+From: reinette chatre <reinette.chatre@intel.com>
+To: Karol =?UTF-8?Q?Pucy=C5=84ski?= <kpucynski@7bulls.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1256052469.6550.7.camel@kpucynski-laptop>
+References: <1256052469.6550.7.camel@kpucynski-laptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 20 Oct 2009 10:16:05 -0700
+Message-Id: <1256058965.21134.1409.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+On Tue, 2009-10-20 at 08:27 -0700, Karol Pucyński wrote:
+> I have IBSS network (based on ath5k cards).
+> With the same channel/essid set cards often can't "negotiate" the 
+> same BSSID. Two nodes beside each other both create new IBSS networks
+> and they are not trying to merge.
+> Workaround: forcing BSSID with iw does work.
+> 
+> Do you know what can be the reason of this problem?
+> 
+> Tested on 2.6.31 kernel. May be related to my earlier problem 'ath5k
+> IBSS fixed rate'...
 
-Give compat-wireless-2009-10-14 a try - it compiles and works against
-2.6.30-02063006-generic.
+Are you using compat-wireless? If not, then ignore this email.
 
--- 
-Riffer
-http://www.meineneue.de
+If you are using the latest wireless bits using compat-wireless then you
+may have run into this issue
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/41129
+
+Reinette
+
+
