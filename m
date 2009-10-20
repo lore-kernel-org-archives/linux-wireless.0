@@ -1,73 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout7.freenet.de ([195.4.92.97]:49997 "EHLO mout7.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751596AbZJWOAe convert rfc822-to-8bit (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:29411 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754358AbZJTG7P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 10:00:34 -0400
-From: "Adhari" <wireless_support@adhari.de>
-To: <linux-wireless@vger.kernel.org>
-Subject: D-link USB Wlan Adapter DWA 160A  crashes after a while
-Date: Fri, 23 Oct 2009 16:00:32 +0200
-Message-ID: <005001ca53e9$307bde30$91739a90$@de>
+	Tue, 20 Oct 2009 02:59:15 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 2/2] rt2x00: Implement support for rt2800pci
+Date: Tue, 20 Oct 2009 08:58:54 +0200
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Alban Browaeys <prahal@yahoo.com>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	Mattias Nissler <mattias.nissler@gmx.de>,
+	Mark Asselstine <asselsm@gmail.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	"linux-kernel" <linux-kernel@vger.kernel.org>
+References: <200910152137.58164.IvDoorn@gmail.com> <200910171654.03344.bzolnier@gmail.com> <200910181859.22413.IvDoorn@gmail.com>
+In-Reply-To: <200910181859.22413.IvDoorn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset="UTF-8"
+  charset="utf-8"
+Message-Id: <200910200858.54683.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Everybody
+> I don't agree on this, for starters the whole "abstraction
+> layer as done in the staging driver, really obfuscated the code
+> in multiple areas 
 
-I´m usind a D-link USB Wlan Adapter DWA 160A (ar9170usb) under Debian (kernel 2.6.31)
+Ivo, you could look at Orinoco or Libertas. Both WLAN drivers 
+support a multitude of different hardware (Libertas: CF/PCMCIA, 
+SDIO, SD, USB and Orinoco: CF/PCMCIA, PCI, PPC_PMAC). And both 
+have hardware abstraction layers that don't suck, obfuscate or 
+create lots of duplicate code.
 
-First when I connect this device, everything is fine. I have to do some measurements concerning Mipv6 (I´m only using Ipv6 here)
-after a while using this W-lan Adapter (30 to 60mn) the system is not be able to receive any packets.
+So AFAIK it's not the question *IF* to do hardware abstraction 
+but only a question *HOW* to do it in an intelligent way. Don't 
+luck at one bad implementation and disregard the whole 
+concept :-)
 
-
-The only solution is to plug the USB interface out and to connect it again.
-ifconfig down and up has no effect and sometimes rebooting either don´t correct this.
-
-Any idea what the problem could be?
-
-
-
-iwconfig wlan0 ==> 
-
-wlan1     IEEE 802.11abgn  ESSID:"homenet"  
-          Mode:Managed  Frequency:2.447 GHz  Access Point: Not-Associated   
-          Tx-Power=20 dBm   
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:off
-          Link Quality:0  Signal level:0  Noise level:0
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-
-Ifconfig wlan0 ==> 
-
-wlan1     Link encap:Ethernet  HWaddr 00:22:b0:71:a0:f3  
-          UP BROADCAST MULTICAST  MTU:1500  Metric:1
-          RX packets:1604 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:1886 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000 
-          RX bytes:212557 (207.5 KiB)  TX bytes:296773 (289.8 KiB)
-
-
-My message logs:
-
-[ 1017.309330] device wlan1 entered promiscuous mode
-[ 1057.151376] device wlan1 left promiscuous mode
-[ 1069.824693] device wlan1 entered promiscuous mode
-[ 1109.161762] device wlan1 left promiscuous mode
-[ 1123.640991] device wlan1 entered promiscuous mode
-[ 1130.289499] device wlan1 left promiscuous mode
-[ 1270.206139] usb 5-2: kill pending tx urbs.
-[ 1276.393756] ADDRCONF(NETDEV_UP): wlan1: link is not ready
-[ 1276.396863] r8169: eth0: link up
-
-
-
-Thx
-
-Hakim 
-
+-- 
+http://www.holgerschurig.de
