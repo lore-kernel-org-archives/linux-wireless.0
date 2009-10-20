@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:61703 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759575AbZJHS6V (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40966
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752148AbZJTEyo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 14:58:21 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 01/20] wl1271: remove unecessary qual parameter from rx status
-Date: Thu,  8 Oct 2009 21:56:17 +0300
-Message-Id: <1255028196-6565-2-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 20 Oct 2009 00:54:44 -0400
+Date: Mon, 19 Oct 2009 21:55:07 -0700 (PDT)
+Message-Id: <20091019.215507.210032972.davem@davemloft.net>
+To: tomas.winkler@intel.com
+Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	yi.zhu@intel.com, inaky.perez-gonzalez@intel.com,
+	cindy.h.kao@intel.com, guy.cohen@intel.com,
+	ron.rindjunsky@intel.com
+Subject: Re: [PATCH net-next V2 2/3] iwmc3200wifi: select IWMC3200TOP in
+ Kconfig
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1255806576-26869-2-git-send-email-tomas.winkler@intel.com>
+References: <1255806576-26869-1-git-send-email-tomas.winkler@intel.com>
+	<1255806576-26869-2-git-send-email-tomas.winkler@intel.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The qual element in ieee80211_rx_status is not used anymore, so we don't need
-to set it in the wl1271_rx_status() function.  This saves a bit of time in
-the RX path.
+From: Tomas Winkler <tomas.winkler@intel.com>
+Date: Sat, 17 Oct 2009 21:09:35 +0200
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_rx.c |    6 ------
- 1 files changed, 0 insertions(+), 6 deletions(-)
+> iwmc3200wifi requires iwmc3200top  for its operation
+> 
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> Acked-by: Zhu Yi <yi.zhu@intel.com>
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c b/drivers/net/wireless/wl12xx/wl1271_rx.c
-index ad8b690..5d8d401 100644
---- a/drivers/net/wireless/wl12xx/wl1271_rx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
-@@ -91,12 +91,6 @@ static void wl1271_rx_status(struct wl1271 *wl,
- 	 */
- 	status->signal = desc->rssi;
- 
--	/* FIXME: Should this be optimized? */
--	status->qual = (desc->rssi - WL1271_RX_MIN_RSSI) * 100 /
--		(WL1271_RX_MAX_RSSI - WL1271_RX_MIN_RSSI);
--	status->qual = min(status->qual, 100);
--	status->qual = max(status->qual, 0);
--
- 	/*
- 	 * FIXME: In wl1251, the SNR should be divided by two.  In wl1271 we
- 	 * need to divide by two for now, but TI has been discussing about
--- 
-1.5.6.5
-
+Applied to net-next-2.6
