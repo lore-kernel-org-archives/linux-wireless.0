@@ -1,44 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:26984 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760819AbZJMSS6 (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:45364 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752927AbZJTXVn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 14:18:58 -0400
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Current status of rt2800usb and staging/rt2870
-Date: Tue, 13 Oct 2009 20:17:47 +0200
-Cc: Ozan =?utf-8?q?=C3=87a=C4=9Flayan?= <ozan@pardus.org.tr>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
-References: <4AD46380.9020308@pardus.org.tr> <200910131752.52589.IvDoorn@gmail.com> <200910131927.24136.bzolnier@gmail.com>
-In-Reply-To: <200910131927.24136.bzolnier@gmail.com>
+	Tue, 20 Oct 2009 19:21:43 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200910132017.47748.IvDoorn@gmail.com>
+In-Reply-To: <e3511b0c31dd03889a221c947dec2c80.squirrel@webmail.xs4all.nl>
+References: <4ADE2773.8020507@gmail.com> <e3511b0c31dd03889a221c947dec2c80.squirrel@webmail.xs4all.nl>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 21 Oct 2009 08:21:28 +0900
+Message-ID: <43e72e890910201621t6691cf08kb62478fcba2fe097@mail.gmail.com>
+Subject: Re: No support for Fritz!WLAN USB N2.4
+To: Ed Vaessen <evaessen@xs4all.nl>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 13 October 2009, Bartlomiej Zolnierkiewicz wrote:
-> On Tuesday 13 October 2009 17:52:52 Ivo van Doorn wrote:
-> 
-> > I am going to merge rt2800pci soon as well and after that I'll send a patch
-> 
-> Great, I've been waiting for this for a long time.
-> 
-> > to remove all Ralink drivers from the staging tree.
-> 
-> Till new drivers obtain support for all hardware currently covered by
-> the unified staging drivers the latter shouldn't be removed as they
-> serve well their role as a temporary solution allowing real Linux users
-> to user their real hardware and as a reference material for developers
-> willing to work on adding the missing bits to new drivers.
+On Wed, Oct 21, 2009 at 7:10 AM, Ed Vaessen <evaessen@xs4all.nl> wrote:
+> To my surprise I found that it seems that the driver for Fritz!WLAN USB
+> N2.4 is not longer supported. At least, the last tarballs I got do not
+> compile them anymore. Their code is still there but no module with the
+> name ar9170 is built. Modules from the same group, like ath5k and ath9k
+> are built.
+> Am I missing something?
 
-The rt2800pci and rt2800usb drivers cover support for rt2860/rt2870/rt3070 devices,
-which are present as individual drivers in the staging tree. So far it only managed
-to confuse developers which wanted to work on Ralink support, so I haven't found
-a benefit for having those drivers in the staging tree yet. But I am sure there are plenty
-of people who like the idea of having the original Ralink drivers inside the staging tree,
-so they can continue debugging that, so I won't talk about the staging downsides further.
-Ivo
+What kernel are you on? ar9170 only builds on >= 2.6.29 due to some
+difficulty in backporting some USB code which ar9170 uses.
+
+  Luis
