@@ -1,78 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47023 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751296AbZJQWBB (ORCPT
+Received: from warszawa.7bulls.com ([194.181.28.234]:59614 "EHLO
+	warszawa.7bulls.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751136AbZJTP1q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2009 18:01:01 -0400
-Subject: Re: 2.6.32-rc0-git: oops in wireless, iwl3945 related?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: linux-kernel@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20091017183320.GF16532@elf.ucw.cz>
-References: <20090929171249.GB14405@elf.ucw.cz>
-	 <1254431783.3959.45.camel@johannes.local>
-	 <1254432469.3959.46.camel@johannes.local>
-	 <20091017183320.GF16532@elf.ucw.cz>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-tnRoSLjxL8TdRps0VU97"
-Date: Sun, 18 Oct 2009 07:00:57 +0900
-Message-Id: <1255816857.3434.3.camel@johannes.local>
+	Tue, 20 Oct 2009 11:27:46 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by warszawa.7bulls.com (Postfix) with ESMTP id 3B3A9E7A06
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 17:27:38 +0200 (CEST)
+Received: from warszawa.7bulls.com ([127.0.0.1])
+	by localhost (warszawa.7bulls.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id f3-1PNKab0rK for <linux-wireless@vger.kernel.org>;
+	Tue, 20 Oct 2009 17:27:38 +0200 (CEST)
+Received: from [192.168.14.242] (atp82.internetdsl.tpnet.pl [83.17.253.82])
+	by warszawa.7bulls.com (Postfix) with ESMTP id 12239E79CA
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 17:27:38 +0200 (CEST)
+Subject: Wrong BSSID generation in IBSS mode with ath5k
+From: Karol =?UTF-8?Q?Pucy=C5=84ski?= <kpucynski@7bulls.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-0cjTSRqSXuUac48r8GBI"
+Date: Tue, 20 Oct 2009 17:27:49 +0200
+Message-Id: <1256052469.6550.7.camel@kpucynski-laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-tnRoSLjxL8TdRps0VU97
+--=-0cjTSRqSXuUac48r8GBI
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2009-10-17 at 20:33 +0200, Pavel Machek wrote:
-> On Thu 2009-10-01 23:27:49, Johannes Berg wrote:
-> > On Thu, 2009-10-01 at 23:16 +0200, Johannes Berg wrote:
-> >=20
-> > > > wlan0: Selected IBSS BSSID 02:18:41:de:3f:02 based on configured SS=
-ID
-> > > > wlan0: Trigger new scan to find an IBSS to join
-> > > > wlan0: Trigger new scan to find an IBSS to join
-> > > > wlan0: Creating new IBSS network, BSSID f2:d3:80:82:ed:6a
-> > > > wlan0: Creating new IBSS network, BSSID 52:17:bf:45:d6:9d
-> > > > skb_over_panic: text:c07b4113 len:130 put:36 head:e4c3edf0
-> > >=20
-> > > This entire log is very odd ... can you reproduce this easily? printk
-> > > timestamps would be useful.
-> >=20
-> > Kinda looks like a race condition, but it's rather odd. I think there's
-> > a race condition, so I'm going to submit this patch regardless after
-> > some testing, but if you want please try the patch below.
->=20
-> Well, the problem is not exactly reproducible... it failed to happen
-> again. So... thanks and I'll keep my eyes open if it returns.=20
+Hi
 
-Felix also found a bad condition (inverted) in the adhoc code, so that
-might be related too.
+I have IBSS network (based on ath5k cards).
+With the same channel/essid set cards often can't "negotiate" the=20
+same BSSID. Two nodes beside each other both create new IBSS networks
+and they are not trying to merge.
+Workaround: forcing BSSID with iw does work.
 
-johannes
+Do you know what can be the reason of this problem?
 
---=-tnRoSLjxL8TdRps0VU97
+Tested on 2.6.31 kernel. May be related to my earlier problem 'ath5k
+IBSS fixed rate'...
+
+Best regards
+--=20
+Karol Pucy=C5=84ski
+7bulls.com Sp. z o.o.
+kpucynski@7bulls.com
+
+--=-0cjTSRqSXuUac48r8GBI
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Content-Description: To jest =?UTF-8?Q?cz=C4=99=C5=9B=C4=87?=
+ =?UTF-8?Q?_wiadomo=C5=9Bci?= podpisana cyfrowo
 
 -----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-iQIcBAABAgAGBQJK2j6TAAoJEODzc/N7+QmaFooP/A/rbGa2s7/puW5Wy6p1pY4e
-0R6IHrP1aNc/DXrJ5MpPBozD6R+qcEQveQKKlcm3MFLZ0ccZoIkhGhwlYHg+9cmB
-7XlQ/je+OmP7TnZdKNypGuraBsuFITdYGeX++cCFC6BTbq0uToGJea7dtrnq6zgU
-IrkzKETCUwvk6P/AQhex+yhi3bXiUpmtNpWFKKmLykiY+c3BpqJvqr69K/4cLKJa
-iTVe428VDcvnTqtuvNf9JIjw7yk49o79QVz1aEnYCiCWHTyVcJfVu5/7DcFXnYUH
-UmRfmSJhdfwbrlagnse+yt+XQaojPDAskKdujqR/r3PlBQOnfK9gkcGL3wKPN8we
-SpVBhVCnpS2h32PNSunETZFYRM+OH//O48e3b7PTPVv9IRBqY8hkQOCOKOdzM+lS
-vxn2UN8DRGHtLD2DCfTCZZCKFwyRgoqzjxEP8+UrZZFQrcbhMektm66czuC48blr
-zoFjPLCgFNZCf2yQghpyxFmqKtR4vQ72XbRzU2e0BeDkF9Jn1AjhVgNO0MnwFbTK
-Q+MuOiag9c8V98zWeLyOcfdr+yExujY6GdL5cCDU/8P4pIosNiZK93MMtCw9NRes
-HDdJa3qX1GbzEaBLBvGW4N4mX6BhgMj5+eOKmxLKs+GdpqwZArGm/tgk/pFMNs+h
-pO7sbZp78aUum+W9JWGI
-=+yOS
+iEYEABECAAYFAkrd1vMACgkQp8qHnH81kyUVYACcCaVzAH75zduubc06vYOz5vPU
+0rsAnjKn+9tGNxnjbMFs7NzcC/Djh5uU
+=tdUs
 -----END PGP SIGNATURE-----
 
---=-tnRoSLjxL8TdRps0VU97--
+--=-0cjTSRqSXuUac48r8GBI--
 
