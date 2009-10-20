@@ -1,38 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36226 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756715AbZJ0T4q (ORCPT
+Received: from mail-yw0-f202.google.com ([209.85.211.202]:51153 "EHLO
+	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751934AbZJTOKC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2009 15:56:46 -0400
-Subject: [PATCH] mac80211: remove outdated comment
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Oct 2009 20:56:21 +0100
-Message-ID: <1256673381.4237.23.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 20 Oct 2009 10:10:02 -0400
+Received: by ywh40 with SMTP id 40so3523399ywh.33
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 07:10:06 -0700 (PDT)
+MIME-Version: 1.0
+Date: Tue, 20 Oct 2009 10:10:06 -0400
+Message-ID: <86201b3f0910200710u36557bf8uf5bc014b32b14d33@mail.gmail.com>
+Subject: Rate information in ad-hoc and mesh mode
+From: Charles Gordon <digigordo@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This comment hasn't been a real TODO item for a long
-time now since we fixed that quite a while ago.
+I notice that the ieee80211_ioctl_giwrate function in wext.c only
+returns rate information for stations associated to an AP.  It does
+not return rate information for stations operating in ad-hoc mode or
+as a mesh point.  Is there a reason this function is not supported in
+those modes?  Is this a deliberate decision or just an oversight?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/scan.c |    2 --
- 1 file changed, 2 deletions(-)
-
---- wireless-testing.orig/net/mac80211/scan.c	2009-10-27 17:12:54.000000000 +0100
-+++ wireless-testing/net/mac80211/scan.c	2009-10-27 17:19:16.000000000 +0100
-@@ -12,8 +12,6 @@
-  * published by the Free Software Foundation.
-  */
- 
--/* TODO: figure out how to avoid that the "current BSS" expires */
--
- #include <linux/wireless.h>
- #include <linux/if_arp.h>
- #include <linux/rtnetlink.h>
-
-
+Thanks for your help.
