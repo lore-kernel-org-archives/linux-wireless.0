@@ -1,39 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:58738 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750752AbZJKWCS (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:35961 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751036AbZJTIGQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Oct 2009 18:02:18 -0400
-Received: by fxm27 with SMTP id 27so8491630fxm.17
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2009 15:01:40 -0700 (PDT)
-Date: Mon, 12 Oct 2009 00:00:02 +0200
-From: Richard Zidlicky <rz@linux-m68k.org>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: 2.6.31.[12] ath5k regression
-Message-ID: <20091011220002.GA11603@linux-m68k.org>
-References: <20090621134954.GA31505@linux-m68k.org> <20090621180447.GA29469@hash.localnet> <20090623174616.GA3914@linux-m68k.org> <20090623202541.GA3635@hash.localnet> <20090625083636.GA6323@linux-m68k.org> <20090705123105.GE2132@hash.localnet> <20091009143922.GA7848@linux-m68k.org> <20091010125824.GA18841@hash.localnet> <20091011122616.GA27105@linux-m68k.org> <20091011133010.GA21494@hash.localnet>
+	Tue, 20 Oct 2009 04:06:16 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id D1A063A00D
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 10:06:20 +0200 (CEST)
+Received: from mx51.mymxserver.com ([127.0.0.1])
+	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id FIGGYV5Ynmqq for <linux-wireless@vger.kernel.org>;
+	Tue, 20 Oct 2009 10:06:20 +0200 (CEST)
+Received: from lin01.mn-solutions.de (pD95F95A1.dip0.t-ipconnect.de [217.95.149.161])
+	by mx51.mymxserver.com (Postfix) with ESMTP id 8306A3A008
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 10:06:20 +0200 (CEST)
+Received: from mnz66.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 0AEFF1E0010
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 10:06:11 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: Question about "txrate: current unicast bitrate to this station"
+Date: Tue, 20 Oct 2009 10:05:57 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091011133010.GA21494@hash.localnet>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200910201005.57862.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 11, 2009 at 09:30:10AM -0400, Bob Copeland wrote:
-> On Sun, Oct 11, 2009 at 02:26:16PM +0200, Richard Zidlicky wrote:
-> > thanks, compiling it right now. Not quite sure - which version of this
-> > > > -       ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, true);
-> > > > +       ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, chan != NULL);
-> > 
-> > is it supposed to be tested with?
-> 
-> The "chan != NULL" case.  The patch should apply against latest
-> wireless-testing (but will probably work with linus-2.6).
+So, this is the TX rate if the WLAN card is operating in AP mode, 
+but it is really a RXRATE (despite the name) if the WLAN card is 
+working in STATION mode?
 
-so the results are same like before. The printk message came once only,
-I will try to gather more debug info tomorrow.
-
-It is striking that after running the not working driver the machine requires
-a power-off reboot to have working ath5k again.
-
-Richard
+-- 
+http://www.holgerschurig.de
