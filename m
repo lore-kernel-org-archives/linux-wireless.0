@@ -1,84 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:36164 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933759AbZJMJuC (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:47846 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750978AbZJTSDr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 05:50:02 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 19/22] wl1271: Remove unnecessary rx_descriptor memory allocation
-Date: Tue, 13 Oct 2009 12:47:56 +0300
-Message-Id: <1255427279-1224-20-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 20 Oct 2009 14:03:47 -0400
+Received: by fxm18 with SMTP id 18so6726852fxm.37
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 11:03:51 -0700 (PDT)
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Andrey Yurovsky <andrey@cozybit.com>
+Subject: [PATCH] mac80211: trivial: fix spelling in mesh_hwmp
+Date: Tue, 20 Oct 2009 11:04:22 -0700
+Message-Id: <1256061862-23368-1-git-send-email-andrey@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Fix a couple of typos in the description of hwmp_route_info_get(), no
+functional changes.
 
-Remove unnecessary RX descriptor memory allocation from the driver. The
-allocation was a remnant of the wl1251 driver.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
 ---
- drivers/net/wireless/wl12xx/wl1271.h      |    1 -
- drivers/net/wireless/wl12xx/wl1271_main.c |   13 -------------
- 2 files changed, 0 insertions(+), 14 deletions(-)
+ net/mac80211/mesh_hwmp.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 1e399a2..fca5968 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -429,7 +429,6 @@ struct wl1271 {
- 	u32 buffer_32;
- 	u32 buffer_cmd;
- 	u32 buffer_busyword[WL1271_BUSY_WORD_CNT];
--	struct wl1271_rx_descriptor *rx_descriptor;
- 
- 	struct wl1271_fw_status *fw_status;
- 	struct wl1271_tx_hw_res_if *tx_res_if;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 7d70f41..dfa08a1 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1893,13 +1893,6 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	wl->state = WL1271_STATE_OFF;
- 	mutex_init(&wl->mutex);
- 
--	wl->rx_descriptor = kmalloc(sizeof(*wl->rx_descriptor), GFP_KERNEL);
--	if (!wl->rx_descriptor) {
--		wl1271_error("could not allocate memory for rx descriptor");
--		ret = -ENOMEM;
--		goto out_free;
--	}
--
- 	/* This is the only SPI value that we need to set here, the rest
- 	 * comes from the board-peripherals file */
- 	spi->bits_per_word = 32;
-@@ -1965,9 +1958,6 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	free_irq(wl->irq, wl);
- 
-  out_free:
--	kfree(wl->rx_descriptor);
--	wl->rx_descriptor = NULL;
--
- 	ieee80211_free_hw(hw);
- 
- 	return ret;
-@@ -1988,9 +1978,6 @@ static int __devexit wl1271_remove(struct spi_device *spi)
- 	kfree(wl->nvs);
- 	wl->nvs = NULL;
- 
--	kfree(wl->rx_descriptor);
--	wl->rx_descriptor = NULL;
--
- 	kfree(wl->fw_status);
- 	kfree(wl->tx_res_if);
- 
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index e12a786..c300911 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -259,12 +259,12 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+  * @hwmp_ie: hwmp information element (PREP or PREQ)
+  *
+  * This function updates the path routing information to the originator and the
+- * transmitter of a HWMP PREQ or PREP fram.
++ * transmitter of a HWMP PREQ or PREP frame.
+  *
+  * Returns: metric to frame originator or 0 if the frame should not be further
+  * processed
+  *
+- * Notes: this function is the only place (besides user-provided info) where
++ * Notes: this function is the only place (beside user-provided info) where
+  * path routing information is updated.
+  */
+ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
 -- 
-1.5.6.5
+1.5.6.3
 
