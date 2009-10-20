@@ -1,49 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:62016 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756192AbZJ0Q4l (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40961
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751186AbZJTEyf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2009 12:56:41 -0400
-Received: by iwn8 with SMTP id 8so268723iwn.33
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2009 09:56:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20091026213222.GA3956@tux>
-References: <1256575447-4591-1-git-send-email-lrodriguez@atheros.com>
-	<87d449hp73.fsf@purkki.valot.fi> <20091026204447.GA5713@tux>
-	<878wexhn6m.fsf@purkki.valot.fi> <20091026213222.GA3956@tux>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 27 Oct 2009 09:56:26 -0700
-Message-ID: <43e72e890910270956q507c7186r33f4ae85bd9c75c6@mail.gmail.com>
-Subject: Re: [PATCH v2 2/4] ath9k_hw: distinguish single-chip solutions on
-	initial probe print
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 20 Oct 2009 00:54:35 -0400
+Date: Mon, 19 Oct 2009 21:54:57 -0700 (PDT)
+Message-Id: <20091019.215457.43252934.davem@davemloft.net>
+To: tomas.winkler@intel.com
+Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	yi.zhu@intel.com, inaky.perez-gonzalez@intel.com,
+	cindy.h.kao@intel.com, guy.cohen@intel.com,
+	ron.rindjunsky@intel.com
+Subject: Re: [PATCH net-next V2 1/3] iwmc3200top: Add Intel Wireless
+ MultiCom 3200 top driver.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1255806576-26869-1-git-send-email-tomas.winkler@intel.com>
+References: <1255806576-26869-1-git-send-email-tomas.winkler@intel.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 26, 2009 at 2:32 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Mon, Oct 26, 2009 at 02:15:13PM -0700, Kalle Valo wrote:
->> "Luis R. Rodriguez" <lrodriguez@Atheros.com> writes:
->>
->> >> I think you should provide the size of hw_name to this function and
->> >> use snprintf() to avoid writing out of bounds.
->> >
->> > I was going to do this but since I know the users of it and control
->> > it seemed to not matter. I'll respin with this added, better to be careful.
->>
->> Yeah, you never know if someone (for example a crazy Finn just after a
->> refreshing sauna) comes along, changes the function a bit "to clean it
->> up" and creates a subtle bug ;)
->
-> Ah yes, forgot about the crazy sauna fins, must fix now for sure.
+From: Tomas Winkler <tomas.winkler@intel.com>
+Date: Sat, 17 Oct 2009 21:09:34 +0200
 
-I have a couple of other fixes and since I no longer need to debug
-ath9k_hw_reset() I'm going to drop the last patch in this series. I'll
-resend this series then with the new patches.
+> This patch adds Intel Wireless MultiCom 3200 top driver.
+> IWMC3200 is 4Wireless Com CHIP (GPS/BT/WiFi/WiMAX).
+> Top driver is responsible for device initialization and firmware download.
+> Firmware handled by top is responsible for top itself and
+> as well as bluetooth and GPS coms. (Wifi and WiMax provide their own firmware)
+> In addition top driver is used to retrieve firmware logs
+> and supports other debugging features
+> 
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 
-  Luis
+Applied to net-next-2.6
