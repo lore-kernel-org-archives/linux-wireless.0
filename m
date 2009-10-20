@@ -1,539 +1,265 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:51855 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932272AbZJFXkS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 19:40:18 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH] libertas: Use lbs_is_cmd_allowed() check in command handling routines.
-Date: Tue,  6 Oct 2009 17:02:50 -0700
-Message-Id: <1254873770-31241-1-git-send-email-bzhao@marvell.com>
+Received: from web55305.mail.re4.yahoo.com ([206.190.58.184]:36864 "HELO
+	web55305.mail.re4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752370AbZJTRfH convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Oct 2009 13:35:07 -0400
+Message-ID: <411169.20125.qm@web55305.mail.re4.yahoo.com>
+Date: Tue, 20 Oct 2009 10:28:31 -0700 (PDT)
+From: xxiao <austinxxh-ath9k@yahoo.com>
+Reply-To: austinxxh-ath9k@yahoo.com
+Subject: Re: [ath9k-devel] Test for N-mode from userspace?
+To: ath9k-devel@lists.ath9k.org,
+	Kunal Gangakhedkar <kunal.gangakhedkar@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200910202112.30660.kunal.gangakhedkar@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+interesting, why is MCS range just 0-7, which means no HT?
 
-lbs_is_cmd_allowed() check is added in __lbs_cmd_async() and
-lbs_prepare_and_send_command(). The check is removed from other places.
+xxiao
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/libertas/cmd.c     |   35 ++++++++
- drivers/net/wireless/libertas/debugfs.c |   46 -----------
- drivers/net/wireless/libertas/decl.h    |    1 -
- drivers/net/wireless/libertas/scan.c    |   11 ---
- drivers/net/wireless/libertas/wext.c    |  133 -------------------------------
- 5 files changed, 35 insertions(+), 191 deletions(-)
+--- On Tue, 10/20/09, Kunal Gangakhedkar <kunal.gangakhedkar@gmail.com> wrote:
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 3a3e894..c2d9e28 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -75,6 +75,31 @@ static u8 is_command_allowed_in_ps(u16 cmd)
- }
- 
- /**
-+ *  @brief This function checks if the command is allowed.
-+ *
-+ *  @param priv         A pointer to lbs_private structure
-+ *  @return             allowed or not allowed.
-+ */
-+
-+static int lbs_is_cmd_allowed(struct lbs_private *priv)
-+{
-+	int         ret = 1;
-+
-+	lbs_deb_enter(LBS_DEB_CMD);
-+
-+	if (!priv->is_auto_deep_sleep_enabled) {
-+		if (priv->is_deep_sleep) {
-+			lbs_deb_cmd("IOCTLS called when station"
-+					" is in deep sleep\n");
-+			ret = 0;
-+		}
-+	}
-+
-+	lbs_deb_leave(LBS_DEB_CMD);
-+	return ret;
-+}
-+
-+/**
-  *  @brief Updates the hardware details like MAC address and regulatory region
-  *
-  *  @param priv    	A pointer to struct lbs_private structure
-@@ -1452,6 +1477,11 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
- 		goto done;
- 	}
- 
-+	if (!lbs_is_cmd_allowed(priv)) {
-+		ret = -EBUSY;
-+		goto done;
-+	}
-+
- 	cmdnode = lbs_get_cmd_ctrl_node(priv);
- 
- 	if (cmdnode == NULL) {
-@@ -2104,6 +2134,11 @@ static struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv,
- 		goto done;
- 	}
- 
-+	if (!lbs_is_cmd_allowed(priv)) {
-+		cmdnode = ERR_PTR(-EBUSY);
-+		goto done;
-+	}
-+
- 	cmdnode = lbs_get_cmd_ctrl_node(priv);
- 	if (cmdnode == NULL) {
- 		lbs_deb_host("PREP_CMD: cmdnode is NULL\n");
-diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
-index 8a7e931..893a55c 100644
---- a/drivers/net/wireless/libertas/debugfs.c
-+++ b/drivers/net/wireless/libertas/debugfs.c
-@@ -117,11 +117,6 @@ static ssize_t lbs_sleepparams_write(struct file *file,
- 	if (!buf)
- 		return -ENOMEM;
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		goto out_unlock;
--	}
--
- 	buf_size = min(count, len - 1);
- 	if (copy_from_user(buf, user_buf, buf_size)) {
- 		ret = -EFAULT;
-@@ -162,11 +157,6 @@ static ssize_t lbs_sleepparams_read(struct file *file, char __user *userbuf,
- 	if (!buf)
- 		return -ENOMEM;
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		goto out_unlock;
--	}
--
- 	ret = lbs_cmd_802_11_sleep_params(priv, CMD_ACT_GET, &sp);
- 	if (ret)
- 		goto out_unlock;
-@@ -233,9 +223,6 @@ static ssize_t lbs_threshold_read(uint16_t tlv_type, uint16_t event_mask,
- 	u8 freq;
- 	int events = 0;
- 
--	if (!lbs_is_cmd_allowed(priv))
--		return -EBUSY;
--
- 	buf = (char *)get_zeroed_page(GFP_KERNEL);
- 	if (!buf)
- 		return -ENOMEM;
-@@ -288,9 +275,6 @@ static ssize_t lbs_threshold_write(uint16_t tlv_type, uint16_t event_mask,
- 	char *buf;
- 	int ret;
- 
--	if (!lbs_is_cmd_allowed(priv))
--		return -EBUSY;
--
- 	buf = (char *)get_zeroed_page(GFP_KERNEL);
- 	if (!buf)
- 		return -ENOMEM;
-@@ -460,11 +444,6 @@ static ssize_t lbs_rdmac_read(struct file *file, char __user *userbuf,
- 	if (!buf)
- 		return -ENOMEM;
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		free_page(addr);
--		return -EBUSY;
--	}
--
- 	offval.offset = priv->mac_offset;
- 	offval.value = 0;
- 
-@@ -517,11 +496,6 @@ static ssize_t lbs_wrmac_write(struct file *file,
- 	if (!buf)
- 		return -ENOMEM;
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		res = -EBUSY;
--		goto out_unlock;
--	}
--
- 	buf_size = min(count, len - 1);
- 	if (copy_from_user(buf, userbuf, buf_size)) {
- 		res = -EFAULT;
-@@ -558,11 +532,6 @@ static ssize_t lbs_rdbbp_read(struct file *file, char __user *userbuf,
- 	if (!buf)
- 		return -ENOMEM;
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		free_page(addr);
--		return -EBUSY;
--	}
--
- 	offval.offset = priv->bbp_offset;
- 	offval.value = 0;
- 
-@@ -616,11 +585,6 @@ static ssize_t lbs_wrbbp_write(struct file *file,
- 	if (!buf)
- 		return -ENOMEM;
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		res = -EBUSY;
--		goto out_unlock;
--	}
--
- 	buf_size = min(count, len - 1);
- 	if (copy_from_user(buf, userbuf, buf_size)) {
- 		res = -EFAULT;
-@@ -657,11 +621,6 @@ static ssize_t lbs_rdrf_read(struct file *file, char __user *userbuf,
- 	if (!buf)
- 		return -ENOMEM;
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		free_page(addr);
--		return -EBUSY;
--	}
--
- 	offval.offset = priv->rf_offset;
- 	offval.value = 0;
- 
-@@ -715,11 +674,6 @@ static ssize_t lbs_wrrf_write(struct file *file,
- 	if (!buf)
- 		return -ENOMEM;
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		res = -EBUSY;
--		goto out_unlock;
--	}
--
- 	buf_size = min(count, len - 1);
- 	if (copy_from_user(buf, userbuf, buf_size)) {
- 		res = -EFAULT;
-diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
-index 34b475f..e47bf19 100644
---- a/drivers/net/wireless/libertas/decl.h
-+++ b/drivers/net/wireless/libertas/decl.h
-@@ -34,7 +34,6 @@ int lbs_process_event(struct lbs_private *priv, u32 event);
- void lbs_queue_event(struct lbs_private *priv, u32 event);
- void lbs_notify_command_response(struct lbs_private *priv, u8 resp_idx);
- int lbs_set_deep_sleep(struct lbs_private *priv, int deep_sleep);
--int lbs_is_cmd_allowed(struct lbs_private *priv);
- int lbs_enter_auto_deep_sleep(struct lbs_private *priv);
- int lbs_exit_auto_deep_sleep(struct lbs_private *priv);
- 
-diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
-index e468e15..6c95af3 100644
---- a/drivers/net/wireless/libertas/scan.c
-+++ b/drivers/net/wireless/libertas/scan.c
-@@ -950,11 +950,6 @@ int lbs_set_scan(struct net_device *dev, struct iw_request_info *info,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		goto out;
--	}
--
- 	if (!priv->radio_on) {
- 		ret = -EINVAL;
- 		goto out;
-@@ -1022,12 +1017,6 @@ int lbs_get_scan(struct net_device *dev, struct iw_request_info *info,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		err = -EBUSY;
--		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", err);
--		return err;
--	}
--
- 	/* iwlist should wait until the current scan is finished */
- 	if (priv->scan_channel)
- 		return -EAGAIN;
-diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-index 38a451e..69dd19b 100644
---- a/drivers/net/wireless/libertas/wext.c
-+++ b/drivers/net/wireless/libertas/wext.c
-@@ -46,32 +46,6 @@ static inline void lbs_cancel_association_work(struct lbs_private *priv)
- }
- 
- /**
-- *  @brief This function checks if the command is allowed.
-- *
-- *  @param priv         A pointer to lbs_private structure
-- *  @return             allowed or not allowed.
-- */
--
--int lbs_is_cmd_allowed(struct lbs_private *priv)
--{
--	int         ret = 1;
--
--	lbs_deb_enter(LBS_DEB_WEXT);
--
--	if (!priv->is_auto_deep_sleep_enabled) {
--		if (priv->is_deep_sleep) {
--			lbs_deb_wext("IOCTLS called when station"
--					"is in deep sleep\n");
--			ret = 0;
--		}
--	}
--
--	lbs_deb_leave(LBS_DEB_WEXT);
--	return ret;
--}
--
--
--/**
-  *  @brief Find the channel frequency power info with specific channel
-  *
-  *  @param priv 	A pointer to struct lbs_private structure
-@@ -193,11 +167,6 @@ static int lbs_get_freq(struct net_device *dev, struct iw_request_info *info,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		lbs_deb_leave(LBS_DEB_WEXT);
--		return -EBUSY;
--	}
--
- 	cfp = lbs_find_cfp_by_band_and_channel(priv, 0,
- 					   priv->curbssparams.channel);
- 
-@@ -308,12 +277,6 @@ static int lbs_set_rts(struct net_device *dev, struct iw_request_info *info,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
--		return ret;
--	}
--
- 	if (vwrq->disabled)
- 		val = MRVDRV_RTS_MAX_VALUE;
- 
-@@ -335,11 +298,6 @@ static int lbs_get_rts(struct net_device *dev, struct iw_request_info *info,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		goto out;
--	}
--
- 	ret = lbs_get_snmp_mib(priv, SNMP_MIB_OID_RTS_THRESHOLD, &val);
- 	if (ret)
- 		goto out;
-@@ -362,12 +320,6 @@ static int lbs_set_frag(struct net_device *dev, struct iw_request_info *info,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
--		return ret;
--	}
--
- 	if (vwrq->disabled)
- 		val = MRVDRV_FRAG_MAX_VALUE;
- 
-@@ -389,11 +341,6 @@ static int lbs_get_frag(struct net_device *dev, struct iw_request_info *info,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		goto out;
--	}
--
- 	ret = lbs_get_snmp_mib(priv, SNMP_MIB_OID_FRAG_THRESHOLD, &val);
- 	if (ret)
- 		goto out;
-@@ -443,11 +390,6 @@ static int lbs_get_txpow(struct net_device *dev,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		goto out;
--	}
--
- 	if (!priv->radio_on) {
- 		lbs_deb_wext("tx power off\n");
- 		vwrq->value = 0;
-@@ -481,11 +423,6 @@ static int lbs_set_retry(struct net_device *dev, struct iw_request_info *info,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		goto out;
--	}
--
-         if ((vwrq->flags & IW_RETRY_TYPE) != IW_RETRY_LIMIT)
-                 return -EOPNOTSUPP;
- 
-@@ -534,11 +471,6 @@ static int lbs_get_retry(struct net_device *dev, struct iw_request_info *info,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		goto out;
--	}
--
- 	vwrq->disabled = 0;
- 
- 	if (vwrq->flags & IW_RETRY_LONG) {
-@@ -907,9 +839,6 @@ static struct iw_statistics *lbs_get_wireless_stats(struct net_device *dev)
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv))
--		return NULL;
--
- 	priv->wstats.status = priv->mode;
- 
- 	/* If we're not associated, all quality values are meaningless */
-@@ -1010,12 +939,6 @@ static int lbs_set_freq(struct net_device *dev, struct iw_request_info *info,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
--		return ret;
--	}
--
- 	mutex_lock(&priv->lock);
- 	assoc_req = lbs_get_association_request(priv);
- 	if (!assoc_req) {
-@@ -1125,11 +1048,6 @@ static int lbs_set_rate(struct net_device *dev, struct iw_request_info *info,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		goto out;
--	}
--
- 	lbs_deb_wext("vwrq->value %d\n", vwrq->value);
- 	lbs_deb_wext("vwrq->fixed %d\n", vwrq->fixed);
- 
-@@ -1188,11 +1106,6 @@ static int lbs_get_rate(struct net_device *dev, struct iw_request_info *info,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		lbs_deb_leave(LBS_DEB_WEXT);
--		return -EBUSY;
--	}
--
- 	if (priv->connect_status == LBS_CONNECTED) {
- 		vwrq->value = priv->cur_rate * 500000;
- 
-@@ -1219,11 +1132,6 @@ static int lbs_set_mode(struct net_device *dev,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		goto out;
--	}
--
- 	if (   (*uwrq != IW_MODE_ADHOC)
- 	    && (*uwrq != IW_MODE_INFRA)
- 	    && (*uwrq != IW_MODE_AUTO)) {
-@@ -1465,12 +1373,6 @@ static int lbs_set_encode(struct net_device *dev,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
--		return ret;
--	}
--
- 	mutex_lock(&priv->lock);
- 	assoc_req = lbs_get_association_request(priv);
- 	if (!assoc_req) {
-@@ -1654,12 +1556,6 @@ static int lbs_set_encodeext(struct net_device *dev,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
--		return ret;
--	}
--
- 	mutex_lock(&priv->lock);
- 	assoc_req = lbs_get_association_request(priv);
- 	if (!assoc_req) {
-@@ -1872,12 +1768,6 @@ static int lbs_set_auth(struct net_device *dev,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
--		return ret;
--	}
--
- 	mutex_lock(&priv->lock);
- 	assoc_req = lbs_get_association_request(priv);
- 	if (!assoc_req) {
-@@ -1980,12 +1870,6 @@ static int lbs_get_auth(struct net_device *dev,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
--		return ret;
--	}
--
- 	switch (dwrq->flags & IW_AUTH_INDEX) {
- 	case IW_AUTH_KEY_MGMT:
- 		dwrq->value = priv->secinfo.key_mgmt;
-@@ -2028,11 +1912,6 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		goto out;
--	}
--
- 	if (vwrq->disabled) {
- 		lbs_set_radio(priv, RADIO_PREAMBLE_AUTO, 0);
- 		goto out;
-@@ -2152,12 +2031,6 @@ static int lbs_set_essid(struct net_device *dev, struct iw_request_info *info,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
--		return ret;
--	}
--
- 	if (!priv->radio_on) {
- 		ret = -EINVAL;
- 		goto out;
-@@ -2285,12 +2158,6 @@ static int lbs_set_wap(struct net_device *dev, struct iw_request_info *info,
- 
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
--	if (!lbs_is_cmd_allowed(priv)) {
--		ret = -EBUSY;
--		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
--		return ret;
--	}
--
- 	if (!priv->radio_on)
- 		return -EINVAL;
- 
--- 
-1.5.4.3
-
+> From: Kunal Gangakhedkar <kunal.gangakhedkar@gmail.com>
+> Subject: [ath9k-devel] Test for N-mode from userspace?
+> To: ath9k-devel@lists.ath9k.org
+> Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+> Date: Tuesday, October 20, 2009, 10:42 AM
+> Hi,
+> 
+> Is it possible to check for whether the N-mode is alive on
+> the laptop and not 
+> blocked by the OEM (HP)?
+> 
+> I don't have access to an N-mode AP to try to associate and
+> check; but I'm 
+> planning to buy a new AP/router - so, might as well go for
+> one having N-mode 
+> now that it's standardised.
+> 
+> The device I have is AR9285 - which does have N mode
+> support as per the 
+> following iwconfig output:
+> 
+> kunal@plutonium:~$ iwconfig wlan0
+> wlan0     IEEE 802.11bgn 
+> ESSID:"Kunal-home"
+>           Mode:Managed 
+> Frequency:2.432 GHz  Access Point: 00:1A:70:EE:8D:62
+>           Bit Rate=5.5
+> Mb/s   Tx-Power=20 dBm
+>           Retry  long
+> limit:7   RTS
+> thr:off   Fragment thr:off
+>           Power Management:on
+>           Link Quality=70/70 
+> Signal level=-35 dBm
+>           Rx invalid nwid:0 
+> Rx invalid crypt:0  Rx invalid frag:0
+>           Tx excessive
+> retries:0  Invalid misc:0   Missed
+> beacon:0
+> 
+> 
+> lspci -v output:
+> 08:00.0 Network controller: Atheros Communications Inc.
+> AR9285 Wireless 
+> Network Adapter (PCI-Express) (rev 01)     
+>                
+>                
+>             
+>         Subsystem: Hewlett-Packard
+> Company Device 3040
+>         Flags: bus master, fast devsel,
+> latency 0, IRQ 17
+>         Memory at d1200000 (64-bit,
+> non-prefetchable) [size=64K]
+>         Capabilities: [40] Power
+> Management version 3
+>         Capabilities: [50] Message
+> Signalled Interrupts: Mask- 64bit- 
+> Queue=0/0Enable-
+>         Capabilities: [60] Express
+> Legacy Endpoint, MSI 00
+>         Capabilities: [100] Advanced
+> Error Reporting <?>
+>         Capabilities: [140] Virtual
+> Channel <?>
+>         Capabilities: [160] Device
+> Serial Number 12-14-24-ff-ff-17-15-00
+>         Capabilities: [170] Power
+> Budgeting <?>
+>         Kernel driver in use: ath9k
+>         Kernel modules: ath9k
+> 
+> 
+> iw list output:
+> Wiphy phy0             
+>                
+>              
+>    
+>         Band 1:     
+>                
+>                
+>     
+>                 HT
+> capabilities: 0x104e         
+>         
+>                
+>         * 20/40 MHz operation 
+>           
+>                
+>         * SM PS disabled   
+>              
+>                
+>         * 40 MHz short GI   
+>             
+>                
+>         * max A-MSDU len 3839 
+>           
+>                
+>         * DSSS/CCK 40 MHz   
+>             
+>                 HT
+> A-MPDU factor: 0x0003 (65535 bytes)   
+>                 HT
+> A-MPDU density: 0x0006 (8 usec)   
+>    
+>                 HT
+> MCS set: ff 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00
+>                 HT
+> TX/RX MCS rate indexes supported:       
+>            
+>    
+>                
+>         MCS index 0     
+>                
+>                
+>   
+>                
+>         MCS index 1     
+>                
+>                
+>   
+>                
+>         MCS index 2     
+>                
+>                
+>   
+>                
+>         MCS index 3     
+>                
+>                
+>   
+>                
+>         MCS index 4     
+>                
+>                
+>   
+>                
+>         MCS index 5     
+>                
+>                
+>   
+>                
+>         MCS index 6     
+>                
+>                
+>   
+>                
+>         MCS index 7     
+>                
+>                
+>   
+>                
+> Frequencies:             
+>                
+>              
+>    
+>                
+>         * 2412 MHz [1] (20.0 dBm) 
+>                
+>         
+>                
+>         * 2417 MHz [2] (20.0 dBm)
+>                
+>         * 2422 MHz [3] (20.0 dBm)
+>                
+>         * 2427 MHz [4] (20.0 dBm)
+>                
+>         * 2432 MHz [5] (20.0 dBm)
+>                
+>         * 2437 MHz [6] (20.0 dBm)
+>                
+>         * 2442 MHz [7] (20.0 dBm)
+>                
+>         * 2447 MHz [8] (20.0 dBm)
+>                
+>         * 2452 MHz [9] (20.0 dBm)
+>                
+>         * 2457 MHz [10] (20.0 dBm)
+>                
+>         * 2462 MHz [11] (20.0 dBm)
+>                
+>         * 2467 MHz [12] (20.0 dBm)
+> (passive scanning)
+>                
+>         * 2472 MHz [13] (20.0 dBm)
+> (passive scanning)
+>                
+>         * 2484 MHz [14] (disabled)
+>                
+> Bitrates (non-HT):
+>                
+>         * 1.0 Mbps
+>                
+>         * 2.0 Mbps (short preamble
+> supported)
+>                
+>         * 5.5 Mbps (short preamble
+> supported)
+>                
+>         * 11.0 Mbps (short preamble
+> supported)
+>                
+>         * 6.0 Mbps
+>                
+>         * 9.0 Mbps
+>                
+>         * 12.0 Mbps
+>                
+>         * 18.0 Mbps
+>                
+>         * 24.0 Mbps
+>                
+>         * 36.0 Mbps
+>                
+>         * 48.0 Mbps
+>                
+>         * 54.0 Mbps
+>         max # scan SSIDs: 4
+>         Supported interface modes:
+>              
+>    * IBSS
+>              
+>    * managed
+>              
+>    * AP
+>              
+>    * AP/VLAN
+>              
+>    * monitor
+>              
+>    * mesh point
+> 
+> Thanks,
+> Kunal
+> _______________________________________________
+> ath9k-devel mailing list
+> ath9k-devel@lists.ath9k.org
+> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+> 
