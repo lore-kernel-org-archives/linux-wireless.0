@@ -1,42 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.221.174]:38403 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754268AbZJ1OrV convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:44738 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752193AbZJTNyJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2009 10:47:21 -0400
-Received: by qyk4 with SMTP id 4so509466qyk.33
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2009 07:47:25 -0700 (PDT)
+	Tue, 20 Oct 2009 09:54:09 -0400
+Message-ID: <4ADDC0F9.4010601@gmail.com>
+Date: Tue, 20 Oct 2009 09:54:01 -0400
+From: Miles Lane <miles.lane@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1256676190.4237.27.camel@johannes.local>
-References: <86201b3f0910271340t51aa6c0bgff43e6e7211a0dee@mail.gmail.com>
-	 <1256676190.4237.27.camel@johannes.local>
-Date: Wed, 28 Oct 2009 10:47:25 -0400
-Message-ID: <86201b3f0910280747q557a6153oec929e8235459c8f@mail.gmail.com>
-Subject: Re: iwlist wlan0 scan disrupts communications
-From: Charles Gordon <digigordo@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>
+Subject: 2.6.32-rc5-git1 -- INFO: possible circular locking dependency detected
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 27, 2009 at 4:43 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2009-10-27 at 16:40 -0400, Charles Gordon wrote:
->> Hi,
->>
->> I am using version 2.6.28 of the kernel and version 0.9.11-nogit of
->> iw.  Communications are disrupted and the device stops responding to
->> ping when I use the command "iwlist wlan0 scan".  Communications are
->> restored when the command completes.  Is this behavior expected?  Has
->> it been fixed in a later release?
->
-> Yes and yes, but I don't remember whether it's better in 2.6.31 or only
-> will be in 32.
->
-> johannes
->
-Thanks for the information.  After doing some more testing I found
-that the association to the AP is sometimes lost and that mac80211
-does not recover automatically.  You have to type the command "wpa_cli
-reassociate" to trigger the stack to reassociate with the AP.  Is this
-one of the things that is, or will be, fixed in later releases?
+Try one more time to get wrapping turned off.  Sorry!
+ 
+
+2.6.32-rc5-git1 #1
+ -------------------------------------------------------
+ events/0/9 is trying to acquire lock:
+  (&rfkill->sync_work){+.+.+.}, at: [<c1039083>] 
+__cancel_work_timer+0x81/0x181
+ 
+ but task is already holding lock:
+  (&ehotk->hotplug_lock){+.+.+.}, at: [<f8587708>] 
+eeepc_rfkill_hotplug+0x45/0xda [eeepc_laptop]
+ 
+ which lock already depends on the new lock.
+ 
+ 
+ the existing dependency chain (in reverse order) is:
+ 
+ -> #2 (&ehotk->hotplug_lock){+.+.+.}:
+        [<c104ac60>] __lock_acquire+0x9fb/0xb6d
+        [<c104ae2e>] lock_acquire+0x5c/0x73
+        [<c129e223>] __mutex_lock_common+0x39/0x375
+        [<c129e5ee>] mutex_lock_nested+0x2b/0x33
+        [<f8587708>] eeepc_rfkill_hotplug+0x45/0xda [eeepc_laptop]
+        [<f858787c>] eeepc_rfkill_set+0x1d/0x2d [eeepc_laptop]
+        [<f83f4a9f>] rfkill_set_block+0x6f/0xb1 [rfkill]
+        [<f83f4b78>] __rfkill_switch_all+0x2e/0x51 [rfkill]
+        [<f83f4c12>] rfkill_switch_all+0x33/0x41 [rfkill]
+        [<f83f51b0>] rfkill_op_handler+0xf0/0x11e [rfkill]
+        [<c1038965>] worker_thread+0x161/0x233
+        [<c103b883>] kthread+0x5f/0x64
+        [<c1003613>] kernel_thread_helper+0x7/0x10
+ 
+ -> #1 (rfkill_global_mutex){+.+.+.}:
+        [<c104ac60>] __lock_acquire+0x9fb/0xb6d
+        [<c104ae2e>] lock_acquire+0x5c/0x73
+        [<c129e223>] __mutex_lock_common+0x39/0x375
+        [<c129e5ee>] mutex_lock_nested+0x2b/0x33
+        [<f83f4c36>] rfkill_sync_work+0x16/0x35 [rfkill]
+        [<c1038965>] worker_thread+0x161/0x233
+        [<c103b883>] kthread+0x5f/0x64
+        [<c1003613>] kernel_thread_helper+0x7/0x10
+ 
+ -> #0 (&rfkill->sync_work){+.+.+.}:
+        [<c104ab62>] __lock_acquire+0x8fd/0xb6d
+        [<c104ae2e>] lock_acquire+0x5c/0x73
+        [<c10390ab>] __cancel_work_timer+0xa9/0x181
+        [<c103919a>] cancel_work_sync+0xa/0xc
+        [<f83f4e55>] rfkill_unregister+0x37/0x93 [rfkill]
+        [<f84d95bc>] wiphy_unregister+0x21/0x14c [cfg80211]
+        [<f885a0ed>] ieee80211_unregister_hw+0xa7/0xc5 [mac80211]
+        [<f89805d9>] ath_detach+0x73/0x11b [ath9k]
+        [<f898068c>] ath_cleanup+0xb/0x35 [ath9k]
+        [<f8987305>] ath_pci_remove+0x15/0x17 [ath9k]
+        [<c112c7a7>] pci_device_remove+0x19/0x39
+        [<c11c5076>] __device_release_driver+0x59/0x9d
+        [<c11c5157>] device_release_driver+0x18/0x23
+        [<c11c470b>] bus_remove_device+0x71/0x7e
+        [<c11c3425>] device_del+0xf0/0x131
+        [<c11c3471>] device_unregister+0xb/0x15
+        [<c1128d11>] pci_stop_bus_device+0x45/0x61
+        [<c1128d91>] pci_remove_bus_device+0xd/0x90
+        [<f8587780>] eeepc_rfkill_hotplug+0xbd/0xda [eeepc_laptop]
+        [<f858787c>] eeepc_rfkill_set+0x1d/0x2d [eeepc_laptop]
+        [<f83f4a9f>] rfkill_set_block+0x6f/0xb1 [rfkill]
+        [<f83f4b78>] __rfkill_switch_all+0x2e/0x51 [rfkill]
+        [<f83f4c12>] rfkill_switch_all+0x33/0x41 [rfkill]
+        [<f83f51b0>] rfkill_op_handler+0xf0/0x11e [rfkill]
+        [<c1038965>] worker_thread+0x161/0x233
+        [<c103b883>] kthread+0x5f/0x64
+        [<c1003613>] kernel_thread_helper+0x7/0x10
+ 
+ other info that might help us debug this:
+ 
+ 4 locks held by events/0/9:
+  #0:  (events){+.+.+.}, at: [<c1038923>] worker_thread+0x11f/0x233
+  #1:  ((rfkill_op_work).work){+.+.+.}, at: [<c1038923>] 
+worker_thread+0x11f/0x233
+  #2:  (rfkill_global_mutex){+.+.+.}, at: [<f83f4bfd>] 
+rfkill_switch_all+0x1e/0x41 [rfkill]
+  #3:  (&ehotk->hotplug_lock){+.+.+.}, at: [<f8587708>] 
+eeepc_rfkill_hotplug+0x45/0xda [eeepc_laptop]
+ 
+ stack backtrace:
+ Pid: 9, comm: events/0 Not tainted 2.6.32-rc5-git1 #1
+ Call Trace:
+  [<c129d1e0>] ? printk+0xf/0x17
+  [<c1049f29>] print_circular_bug+0x8a/0x96
+  [<c104ab62>] __lock_acquire+0x8fd/0xb6d
+  [<c104ae2e>] lock_acquire+0x5c/0x73
+  [<c1039083>] ? __cancel_work_timer+0x81/0x181
+  [<c10390ab>] __cancel_work_timer+0xa9/0x181
+  [<c1039083>] ? __cancel_work_timer+0x81/0x181
+  [<c104974c>] ? mark_lock+0x1e/0x1e2
+  [<c1049953>] ? mark_held_locks+0x43/0x5b
+  [<c108b0d1>] ? kfree+0xbf/0xcb
+  [<c103919a>] cancel_work_sync+0xa/0xc
+  [<f83f4e55>] rfkill_unregister+0x37/0x93 [rfkill]
+  [<f84d95bc>] wiphy_unregister+0x21/0x14c [cfg80211]
+  [<c1038d10>] ? destroy_workqueue+0x72/0x77
+  [<f885a0ed>] ieee80211_unregister_hw+0xa7/0xc5 [mac80211]
+  [<f89805d9>] ath_detach+0x73/0x11b [ath9k]
+  [<f898068c>] ath_cleanup+0xb/0x35 [ath9k]
+  [<f8987305>] ath_pci_remove+0x15/0x17 [ath9k]
+  [<c112c7a7>] pci_device_remove+0x19/0x39
+  [<c11c5076>] __device_release_driver+0x59/0x9d
+  [<c11c5157>] device_release_driver+0x18/0x23
+  [<c11c470b>] bus_remove_device+0x71/0x7e
+  [<c11c3425>] device_del+0xf0/0x131
+  [<c11c3471>] device_unregister+0xb/0x15
+  [<c1128d11>] pci_stop_bus_device+0x45/0x61
+  [<c1128d91>] pci_remove_bus_device+0xd/0x90
+  [<f8587780>] eeepc_rfkill_hotplug+0xbd/0xda [eeepc_laptop]
+  [<f858787c>] eeepc_rfkill_set+0x1d/0x2d [eeepc_laptop]
+  [<f83f4a9f>] rfkill_set_block+0x6f/0xb1 [rfkill]
+  [<f83f4b78>] __rfkill_switch_all+0x2e/0x51 [rfkill]
+  [<f83f4c12>] rfkill_switch_all+0x33/0x41 [rfkill]
+  [<f83f51b0>] rfkill_op_handler+0xf0/0x11e [rfkill]
+  [<c1038965>] worker_thread+0x161/0x233
+  [<c1038923>] ? worker_thread+0x11f/0x233
+  [<f83f50c0>] ? rfkill_op_handler+0x0/0x11e [rfkill]
+  [<c103ba7d>] ? autoremove_wake_function+0x0/0x2f
+  [<c1038804>] ? worker_thread+0x0/0x233
+  [<c103b883>] kthread+0x5f/0x64
+  [<c103b824>] ? kthread+0x0/0x64
+  [<c1003613>] kernel_thread_helper+0x7/0x10
