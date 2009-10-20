@@ -1,72 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:54161 "EHLO
-	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754828AbZJHBuQ (ORCPT
+Received: from mail-yw0-f202.google.com ([209.85.211.202]:53631 "EHLO
+	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752581AbZJTPlJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 21:50:16 -0400
-Message-ID: <4ACD4547.2000306@gmail.com>
-Date: Wed, 07 Oct 2009 18:49:59 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Tue, 20 Oct 2009 11:41:09 -0400
+Received: by ywh40 with SMTP id 40so3613700ywh.33
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 08:41:13 -0700 (PDT)
 MIME-Version: 1.0
-To: Tim Walberg <twalberg@comcast.net>,
-	Kristoffer Ericson <kristoffer.ericson@gmail.com>,
-	"Justin P. Mattock" <justinmattock@gmail.com>,
-	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: Disassociating atheros wlan with 2.6.31
-References: <20090924121617.c0c7222d.kristoffer.ericson@gmail.com> <4ABBB9D3.4020200@gmail.com> <200909242155.49890.s.L-H@gmx.de> <4ABBD170.6060702@gmail.com> <20091004174535.777d233c.kristoffer.ericson@gmail.com> <20091008011247.GC22458@comcast.net>
-In-Reply-To: <20091008011247.GC22458@comcast.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <200910201714.34866.hs4233@mail.mn-solutions.de>
+References: <86201b3f0910200710u36557bf8uf5bc014b32b14d33@mail.gmail.com>
+	 <200910201714.34866.hs4233@mail.mn-solutions.de>
+Date: Tue, 20 Oct 2009 11:41:09 -0400
+Message-ID: <86201b3f0910200841w7e512fa3i31012477cbf55d56@mail.gmail.com>
+Subject: Re: Rate information in ad-hoc and mesh mode
+From: Charles Gordon <digigordo@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tim Walberg wrote:
-> Another confirmed instance of this on ath9k - on 2.6.31.2 and 2.6.31.3 - didn't
-> happen on 2.6.30.6 or 2.6.30.9. A couple other interesting facts:
->
-> - it seems to be related (at least in my case) to heavy transmit load -
->    I can download a kernel tarball without it failing, but if I try to
->    copy it to another system, it fails within 2 seconds reliably...
-> - running 'rmmod ath9k ath mac80211 cfg80211' followed by 'modprobe ath9k'
->    clears it up
->
-> No indication in dmesg except:
->
-> 	wlan<n>: no probe response from AP AA:BB:DD:EE:FF:GG - disassociating
->
-> and suddenly no packets going in either direction.
->
-> I'm in the process of moving back to 2.6.30.x for now...
->
->
->
->
->
-> On 10/04/2009 17:45 +0200, Kristoffer Ericson wrote:
->    
->
->    
-I get this reliably by simple running a radio station
-through mplayer(probably around 5/10 min of running)
-when I run this commit:
-2.6.31-rc8-00039-g03c3bbc I don't have this at all.
-(I might of changed my .config without realizing it)
+I am using version 2.6.28 of the kernel.  We are using our own
+wireless driver.  However, the problem does not appear to be in the
+driver.  The iw utility uses the SIOCGIWRATE ioctl to get rate
+information.  This ioctl is handled by the ieee80211_ioctl_giwrate
+function in net/mac80211/wext.c in the 2.6.28 version of the kernel.
+This function returns immediately if sdata->vif.type !=
+NL80211_IFTYPE_STATION, which will be the case for ad-hoc mode.
 
-After running a bisect from this commit to current
-I came up with nothing, which led me to believe that I must have through
-the confusion changed something in my .config, or messed up
-with choosing good/bad with the bisect because I didn't wait long enough for
-this to fire off.
 
-In any case either/or I'm still going to give a go at the bisect again
-but this time wait longer(10/20 min) to really make sure I don't miss
-anything.
 
-BTW: when this hits for you is it pretty bad(no connection) i.g when 
-this fires off over here
-music still plays from mplayer, but did notice that mplayer player all 
-of a sudden would die out, but
-easily connected again.
-
-Justin P. Mattock
+On Tue, Oct 20, 2009 at 11:14 AM, Holger Schurig
+<hs4233@mail.mn-solutions.de> wrote:
+>> I notice that the ieee80211_ioctl_giwrate function in wext.c only
+>> returns rate information for stations associated to an AP.  It does
+>> not return rate information for stations operating in ad-hoc mode or
+>> as a mesh point.  Is there a reason this function is not supported in
+>> those modes?  Is this a deliberate decision or just an oversight?
+>
+> You need to give more context. What driver, what kernel?
+>
+>
+> A quick
+>
+>   ack-grep ieee80211_ioctl_giwrate include/net include/linux \
+>                                    net/wireless net/mac80211 \
+>                                    drivers/net/wireless
+>
+> didn't reveal the function you've mentioned, at least not in the
+> current wireless-testing kernel.
+>
+> --
+> http://www.holgerschurig.de
+>
