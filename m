@@ -1,60 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:36738 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756045AbZJ3GdJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 02:33:09 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2009 23:33:14 -0700
-Date: Fri, 30 Oct 2009 12:03:06 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Luis Rodriguez <lrodriguez@atheros.com>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [RFC] ath9k: fix listening to idle requests
-Message-ID: <20091030063306.GH4602@vasanth-laptop>
-References: <1256849546-15119-1-git-send-email-lrodriguez@atheros.com>
+Received: from mx51.mymxserver.com ([85.199.173.110]:2743 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750976AbZJTMjv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Oct 2009 08:39:51 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH, v2] libertas: move SIOCGIWAP calls to wext.c
+Date: Tue, 20 Oct 2009 14:39:31 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+References: <200910191504.36726.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200910191504.36726.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1256849546-15119-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200910201439.31384.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 30, 2009 at 02:22:26AM +0530, Luis Rodriguez wrote:
-> The way idle configuration detection was implemented as
-> busted due to the fact that it assumed the ath9k virtual wiphy,
-> the aphy, would be marked as inactive if it was not used but
-> it turns out an aphy is always active if its the only wiphy
-> present. We need to distinguish between aphy activity and
-> idleness so we now add an idle bool for the aphy and mark
-> it as such based on the passed IEEE80211_CONF_CHANGE_IDLE
-> from mac80211.
-> 
-> Previous to all_wiphys_idle would never be true when using
-> only one device so we never really were using
-> IEEE80211_CONF_CHANGE_IDLE -- we never turned the radio
-> off or on upon IEEE80211_CONF_CHANGE_IDLE changes as radio
-> changes depended on all_wiphys_idle being true either to
-> turn the radio on or off. Since it was always false for
-> one device this code was doing nothing.
-> 
-> Reported-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
-> 
-> Vasanth, what do you think?
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Still we will have issue when bringing up a sec wiphy while the
-primary wiphy is in idle state. ath9k_start() does not brought up
-the newly created wiphy interface when the state of at least one
-previously created interface is in ACTIVE state. Unless already
-brought up interfaces are put down we hit this situation whenever
-we try to bring up a new secondary wiphy interface. So with this
-patch the actual h/w will remain radio disabled state even after
-a new interface is in active state. We need to bring the h/w into
-active state if all old interfaces are in idle state in
-ath9k_start(). 
+---
+v1: Less and less files now depend on WEXT :-)
+v2: fix compilation issue
+
+--- linux-wl.orig/drivers/net/wireless/libertas/cmdresp.c
++++ linux-wl/drivers/net/wireless/libertas/cmdresp.c
+@@ -27,23 +27,18 @@
+  */
+ void lbs_mac_event_disconnected(struct lbs_private *priv)
+ {
+-	union iwreq_data wrqu;
+-
+ 	if (priv->connect_status != LBS_CONNECTED)
+ 		return;
  
-Vasanth
+ 	lbs_deb_enter(LBS_DEB_ASSOC);
+ 
+-	memset(wrqu.ap_addr.sa_data, 0x00, ETH_ALEN);
+-	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+ 
+ 	/*
+ 	 * Cisco AP sends EAP failure and de-auth in less than 0.5 ms.
+ 	 * It causes problem in the Supplicant
+ 	 */
+-
+ 	msleep_interruptible(1000);
+-	wireless_send_event(priv->dev, SIOCGIWAP, &wrqu, NULL);
++	lbs_send_disconnect_notification(priv);
+ 
+ 	/* report disconnect to upper layer */
+ 	netif_stop_queue(priv->dev);
+--- linux-wl.orig/drivers/net/wireless/libertas/main.c
++++ linux-wl/drivers/net/wireless/libertas/main.c
+@@ -1227,7 +1227,6 @@
+ void lbs_remove_card(struct lbs_private *priv)
+ {
+ 	struct net_device *dev = priv->dev;
+-	union iwreq_data wrqu;
+ 
+ 	lbs_deb_enter(LBS_DEB_MAIN);
+ 
+@@ -1252,9 +1251,7 @@
+ 		lbs_ps_wakeup(priv, CMD_OPTION_WAITFORRSP);
+ 	}
+ 
+-	memset(wrqu.ap_addr.sa_data, 0xaa, ETH_ALEN);
+-	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+-	wireless_send_event(priv->dev, SIOCGIWAP, &wrqu, NULL);
++	lbs_send_disconnect_notification(priv);
+ 
+ 	if (priv->is_deep_sleep) {
+ 		priv->is_deep_sleep = 0;
+--- linux-wl.orig/drivers/net/wireless/libertas/wext.c
++++ linux-wl/drivers/net/wireless/libertas/wext.c
+@@ -45,6 +45,15 @@
+ 	priv->pending_assoc_req = NULL;
+ }
+ 
++void lbs_send_disconnect_notification(struct lbs_private *priv)
++{
++	union iwreq_data wrqu;
++
++	memset(wrqu.ap_addr.sa_data, 0x00, ETH_ALEN);
++	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
++	wireless_send_event(priv->dev, SIOCGIWAP, &wrqu, NULL);
++}
++
+ void lbs_send_iwevcustom_event(struct lbs_private *priv, s8 *str)
+ {
+ 	union iwreq_data iwrq;
+--- linux-wl.orig/drivers/net/wireless/libertas/wext.h
++++ linux-wl/drivers/net/wireless/libertas/wext.h
+@@ -4,6 +4,7 @@
+ #ifndef	_LBS_WEXT_H_
+ #define	_LBS_WEXT_H_
+ 
++void lbs_send_disconnect_notification(struct lbs_private *priv);
+ void lbs_send_iwevcustom_event(struct lbs_private *priv, s8 *str);
+ 
+ extern struct iw_handler_def lbs_handler_def;
+
+
+-- 
+http://www.holgerschurig.de
