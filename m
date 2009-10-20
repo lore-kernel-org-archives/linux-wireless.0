@@ -1,72 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:45817 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753455AbZJPUZa (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44623 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755614AbZJTAcI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 16:25:30 -0400
-Subject: Re: [PATCH 03/16] iwmc3200wifi: WPS support
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-In-Reply-To: <20091016181930.GB6438@tuxdriver.com>
-References: <1255670340-22565-1-git-send-email-yi.zhu@intel.com>
-	 <1255670340-22565-2-git-send-email-yi.zhu@intel.com>
-	 <1255670340-22565-3-git-send-email-yi.zhu@intel.com>
-	 <1255670340-22565-4-git-send-email-yi.zhu@intel.com>
-	 <1255709887.31260.4.camel@localhost.localdomain>
-	 <20091016181930.GB6438@tuxdriver.com>
-Content-Type: text/plain
-Date: Fri, 16 Oct 2009 22:25:16 +0200
-Message-Id: <1255724716.31260.9.camel@localhost.localdomain>
+	Mon, 19 Oct 2009 20:32:08 -0400
+Subject: Re: How do you set the rate algorithm from the command line
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Charles Gordon <digigordo@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <86201b3f0910190850g3f014abbi9e2fa3f89463e7c6@mail.gmail.com>
+References: <86201b3f0910190850g3f014abbi9e2fa3f89463e7c6@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-4ex1RoasDHeDctug7hGt"
+Date: Tue, 20 Oct 2009 09:31:26 +0900
+Message-Id: <1255998686.4475.1.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
 
-> > > From: Samuel Ortiz <sameo@linux.intel.com>
-> > > 
-> > > By setting the WSC profile flag, we now support WPS as an enrollee.
-> > > 
-> > > Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
-> > > Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-> > > ---
-> > >  drivers/net/wireless/iwmc3200wifi/cfg80211.c |    7 +++++++
-> > >  drivers/net/wireless/iwmc3200wifi/commands.h |    3 +++
-> > >  2 files changed, 10 insertions(+), 0 deletions(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-> > > index 0d2e719..a6d2f20 100644
-> > > --- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-> > > +++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-> > > @@ -628,6 +628,13 @@ static int iwm_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
-> > >  		iwm->default_key = sme->key_idx;
-> > >  	}
-> > >  
-> > > +	/* WPA and open AUTH type from wpa_s means WPS (a.k.a. WSC) */
-> > > +	if ((iwm->umac_profile->sec.flags &
-> > > +	     (UMAC_SEC_FLG_WPA_ON_MSK | UMAC_SEC_FLG_RSNA_ON_MSK)) &&
-> > > +	    iwm->umac_profile->sec.auth_type == UMAC_AUTH_TYPE_OPEN) {
-> > > +			iwm->umac_profile->sec.flags = UMAC_SEC_FLG_WSC_ON_MSK;
-> > > +	}
-> > > +
-> > 
-> > I don't wanna be picky, but what coding style are you following here?
-> > The indentation makes no sense and doesn't improve readability.
-> 
-> Given the length and complication of the conditions, the indentation
-> seems fine to me.  How would you do it?
+--=-4ex1RoasDHeDctug7hGt
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-it is double indentation of iwm->umac_profile... and (UMAC... and
-iwm->uwm_profile are not even on the same vertical. If I stare long
-enough at it, I can see a certain reasoning for it, but it is an ugly
-block. Some extra macros might make this more readable. However if you
-are fine with it, then that is good enough. I just mentioned it, because
-I read the if clause wrongly when reviewing the patches.
+On Mon, 2009-10-19 at 11:50 -0400, Charles Gordon wrote:
+> Hi,
+>=20
+> I'm using mac80211 in an embedded system.  I can build the driver so
+> that more than one wifi rate algorithm is included, and one is set as
+> the default.  It is not clear to me how to set the rate algorithm at
+> run time.  Is there a command line utility that does this?
+>=20
+> Suppose I build the driver so that both the PID and Mistrel algorithms
+> are included, and the Minstrel algorithm is the default.  How can I
+> switch to the PID algorithm at run time?
 
-Regards
+You cannot (yet).
 
-Marcel
+johannes
 
+--=-4ex1RoasDHeDctug7hGt
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK3QTbAAoJEODzc/N7+QmaCKcP/RenqL6V2wUh8Z/n2buSXmcB
+Au2yRjAe8vcX7ia7Rzh+18LAgsdOwxMvsX2MnUO5Y0iqf68WBKSv+f2R9PHcXtqI
+N9IcxorudYCfxfZYwJWMCqkKFnX670mo+NftMb+4P4g3aVROkhIk2TvVYaD1Lsiv
+PvHndVHxwSrAsEwy26tZDNcrk5rVr+sT64V2vMAadpw/uCYzhje+6MDCOQVm8EnB
+3Y5K7tQ0HG3gpMeHIe9i21c/FBZ8OckF+HXLPbQBhSjlEqRSgUsmPYWcvzb5P8ql
+db18PT47veJ2uqOlaAd7BOnrBiPfo4cFSIwwBFwe7nXQcmMoaE96WNQoAAZNeWb8
+7O4RFQR8v7m5LkfGEH426U6cRc5u2ZeVueObO0FQMXLwnHYBs0I4LtkBlZ9MYusQ
+7I/1FdUvpzwcp58QWeZYMbp6rTSErhk4f97PlQQIF2nZ4jPrA7cC/7kSrn+5KNoN
+sYTw7XkQTWKT48rMxAOhSU4GopZtLbDjMx3VWhhW+xaZQ5e7w7yHTGVxKqoCfaip
+fRhoWs2KK62eCIDjEvJmTQ1xGVYxRUJqxl3UUJKLMAyo/ADizSmqMwSyqBvRMeRl
+5HtNAw6QOOO6QxjV4PB2hj2M6PpTugfCcgGhn6VSuzr9PhDK8pwURP+ygrmoJsIb
+hGUmLA3U+LNF5/zKMKGc
+=M4Da
+-----END PGP SIGNATURE-----
+
+--=-4ex1RoasDHeDctug7hGt--
 
