@@ -1,239 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:43802 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752656AbZJZPpN (ORCPT
+Received: from mail-vw0-f184.google.com ([209.85.212.184]:38553 "EHLO
+	mail-vw0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751232AbZJTOLa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 11:45:13 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	John Linville <linville@tuxdriver.com>
-Subject: [PATCH] libertas: move mesh-only ethtool operations away
-Date: Mon, 26 Oct 2009 16:44:44 +0100
+	Tue, 20 Oct 2009 10:11:30 -0400
+Received: by vws14 with SMTP id 14so1726479vws.33
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 07:11:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200910261644.44220.hs4233@mail.mn-solutions.de>
+Date: Tue, 20 Oct 2009 16:11:34 +0200
+Message-ID: <133e8d7e0910200711s7c44b899nbcd5f1037cc5ee49@mail.gmail.com>
+Subject: mac80211/ath9k/hostapd: Some clients unable to associate with AP
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Hi all,
 
---- linux-wl.orig/drivers/net/wireless/libertas/ethtool.c
-+++ linux-wl/drivers/net/wireless/libertas/ethtool.c
-@@ -8,17 +8,8 @@
- #include "dev.h"
- #include "wext.h"
- #include "cmd.h"
-+#include "mesh.h"
- 
--static const char * mesh_stat_strings[]= {
--			"drop_duplicate_bcast",
--			"drop_ttl_zero",
--			"drop_no_fwd_route",
--			"drop_no_buffers",
--			"fwded_unicast_cnt",
--			"fwded_bcast_cnt",
--			"drop_blind_table",
--			"tx_failed_cnt"
--};
- 
- static void lbs_ethtool_get_drvinfo(struct net_device *dev,
- 					 struct ethtool_drvinfo *info)
-@@ -73,73 +64,6 @@
-         return ret;
- }
- 
--static void lbs_ethtool_get_stats(struct net_device *dev,
--				  struct ethtool_stats *stats, uint64_t *data)
--{
--	struct lbs_private *priv = dev->ml_priv;
--	struct cmd_ds_mesh_access mesh_access;
--	int ret;
--
--	lbs_deb_enter(LBS_DEB_ETHTOOL);
--
--	/* Get Mesh Statistics */
--	ret = lbs_mesh_access(priv, CMD_ACT_MESH_GET_STATS, &mesh_access);
--
--	if (ret) {
--		memset(data, 0, MESH_STATS_NUM*(sizeof(uint64_t)));
--		return;
--	}
--
--	priv->mstats.fwd_drop_rbt = le32_to_cpu(mesh_access.data[0]);
--	priv->mstats.fwd_drop_ttl = le32_to_cpu(mesh_access.data[1]);
--	priv->mstats.fwd_drop_noroute = le32_to_cpu(mesh_access.data[2]);
--	priv->mstats.fwd_drop_nobuf = le32_to_cpu(mesh_access.data[3]);
--	priv->mstats.fwd_unicast_cnt = le32_to_cpu(mesh_access.data[4]);
--	priv->mstats.fwd_bcast_cnt = le32_to_cpu(mesh_access.data[5]);
--	priv->mstats.drop_blind = le32_to_cpu(mesh_access.data[6]);
--	priv->mstats.tx_failed_cnt = le32_to_cpu(mesh_access.data[7]);
--
--	data[0] = priv->mstats.fwd_drop_rbt;
--	data[1] = priv->mstats.fwd_drop_ttl;
--	data[2] = priv->mstats.fwd_drop_noroute;
--	data[3] = priv->mstats.fwd_drop_nobuf;
--	data[4] = priv->mstats.fwd_unicast_cnt;
--	data[5] = priv->mstats.fwd_bcast_cnt;
--	data[6] = priv->mstats.drop_blind;
--	data[7] = priv->mstats.tx_failed_cnt;
--
--	lbs_deb_enter(LBS_DEB_ETHTOOL);
--}
--
--static int lbs_ethtool_get_sset_count(struct net_device *dev, int sset)
--{
--	struct lbs_private *priv = dev->ml_priv;
--
--	if (sset == ETH_SS_STATS && dev == priv->mesh_dev)
--		return MESH_STATS_NUM;
--
--	return -EOPNOTSUPP;
--}
--
--static void lbs_ethtool_get_strings(struct net_device *dev,
--				    uint32_t stringset, uint8_t *s)
--{
--	int i;
--
--	lbs_deb_enter(LBS_DEB_ETHTOOL);
--
--	switch (stringset) {
--        case ETH_SS_STATS:
--		for (i=0; i < MESH_STATS_NUM; i++) {
--			memcpy(s + i * ETH_GSTRING_LEN,
--					mesh_stat_strings[i],
--					ETH_GSTRING_LEN);
--		}
--		break;
--        }
--	lbs_deb_enter(LBS_DEB_ETHTOOL);
--}
--
- static void lbs_ethtool_get_wol(struct net_device *dev,
- 				struct ethtool_wolinfo *wol)
- {
-@@ -187,9 +111,9 @@
- 	.get_drvinfo = lbs_ethtool_get_drvinfo,
- 	.get_eeprom =  lbs_ethtool_get_eeprom,
- 	.get_eeprom_len = lbs_ethtool_get_eeprom_len,
--	.get_sset_count = lbs_ethtool_get_sset_count,
--	.get_ethtool_stats = lbs_ethtool_get_stats,
--	.get_strings = lbs_ethtool_get_strings,
-+	.get_sset_count = lbs_mesh_ethtool_get_sset_count,
-+	.get_ethtool_stats = lbs_mesh_ethtool_get_stats,
-+	.get_strings = lbs_mesh_ethtool_get_strings,
- 	.get_wol = lbs_ethtool_get_wol,
- 	.set_wol = lbs_ethtool_set_wol,
- };
---- linux-wl.orig/drivers/net/wireless/libertas/mesh.h
-+++ linux-wl/drivers/net/wireless/libertas/mesh.h
-@@ -53,4 +53,15 @@
- extern struct iw_handler_def mesh_handler_def;
- 
- 
-+/* Ethtool statistics */
-+
-+struct ethtool_stats;
-+
-+void lbs_mesh_ethtool_get_stats(struct net_device *dev,
-+	struct ethtool_stats *stats, uint64_t *data);
-+int lbs_mesh_ethtool_get_sset_count(struct net_device *dev, int sset);
-+void lbs_mesh_ethtool_get_strings(struct net_device *dev,
-+	uint32_t stringset, uint8_t *s);
-+
-+
- #endif
---- linux-wl.orig/drivers/net/wireless/libertas/persistcfg.c
-+++ linux-wl/drivers/net/wireless/libertas/persistcfg.c
-@@ -880,3 +880,87 @@
- 	sysfs_remove_group(&(dev->dev.kobj), &boot_opts_group);
- 	sysfs_remove_group(&(dev->dev.kobj), &mesh_ie_group);
- }
-+
-+
-+
-+/***************************************************************************
-+ * Ethtool related
-+ */
-+
-+static const char *mesh_stat_strings[] = {
-+			"drop_duplicate_bcast",
-+			"drop_ttl_zero",
-+			"drop_no_fwd_route",
-+			"drop_no_buffers",
-+			"fwded_unicast_cnt",
-+			"fwded_bcast_cnt",
-+			"drop_blind_table",
-+			"tx_failed_cnt"
-+};
-+
-+void lbs_mesh_ethtool_get_stats(struct net_device *dev,
-+	struct ethtool_stats *stats, uint64_t *data)
-+{
-+	struct lbs_private *priv = dev->ml_priv;
-+	struct cmd_ds_mesh_access mesh_access;
-+	int ret;
-+
-+	lbs_deb_enter(LBS_DEB_ETHTOOL);
-+
-+	/* Get Mesh Statistics */
-+	ret = lbs_mesh_access(priv, CMD_ACT_MESH_GET_STATS, &mesh_access);
-+
-+	if (ret) {
-+		memset(data, 0, MESH_STATS_NUM*(sizeof(uint64_t)));
-+		return;
-+	}
-+
-+	priv->mstats.fwd_drop_rbt = le32_to_cpu(mesh_access.data[0]);
-+	priv->mstats.fwd_drop_ttl = le32_to_cpu(mesh_access.data[1]);
-+	priv->mstats.fwd_drop_noroute = le32_to_cpu(mesh_access.data[2]);
-+	priv->mstats.fwd_drop_nobuf = le32_to_cpu(mesh_access.data[3]);
-+	priv->mstats.fwd_unicast_cnt = le32_to_cpu(mesh_access.data[4]);
-+	priv->mstats.fwd_bcast_cnt = le32_to_cpu(mesh_access.data[5]);
-+	priv->mstats.drop_blind = le32_to_cpu(mesh_access.data[6]);
-+	priv->mstats.tx_failed_cnt = le32_to_cpu(mesh_access.data[7]);
-+
-+	data[0] = priv->mstats.fwd_drop_rbt;
-+	data[1] = priv->mstats.fwd_drop_ttl;
-+	data[2] = priv->mstats.fwd_drop_noroute;
-+	data[3] = priv->mstats.fwd_drop_nobuf;
-+	data[4] = priv->mstats.fwd_unicast_cnt;
-+	data[5] = priv->mstats.fwd_bcast_cnt;
-+	data[6] = priv->mstats.drop_blind;
-+	data[7] = priv->mstats.tx_failed_cnt;
-+
-+	lbs_deb_enter(LBS_DEB_ETHTOOL);
-+}
-+
-+int lbs_mesh_ethtool_get_sset_count(struct net_device *dev, int sset)
-+{
-+	struct lbs_private *priv = dev->ml_priv;
-+
-+	if (sset == ETH_SS_STATS && dev == priv->mesh_dev)
-+		return MESH_STATS_NUM;
-+
-+	return -EOPNOTSUPP;
-+}
-+
-+void lbs_mesh_ethtool_get_strings(struct net_device *dev,
-+	uint32_t stringset, uint8_t *s)
-+{
-+	int i;
-+
-+	lbs_deb_enter(LBS_DEB_ETHTOOL);
-+
-+	switch (stringset) {
-+	case ETH_SS_STATS:
-+		for (i = 0; i < MESH_STATS_NUM; i++) {
-+			memcpy(s + i * ETH_GSTRING_LEN,
-+					mesh_stat_strings[i],
-+					ETH_GSTRING_LEN);
-+		}
-+		break;
-+	}
-+	lbs_deb_enter(LBS_DEB_ETHTOOL);
-+}
+I'm trying to update from compat-wireless-2009-06-02 to
+compat-wireless-2.6.32-rc1. After the update some clients can
+no-longer associate with the access point (mac80211/ath9k/hostapd).
+Specifically, it seems windows based clients do not accept the new
+association response frame and choke or send deauth.
 
--- 
-http://www.holgerschurig.de
+A tcpdump from a separate machine shows the story. After the update
+with compat-wireless-2.6.32-rc1 the dump locks like this (notice the
+deauth frame from the XP laptop at the end):
+
+	19:59:18.973699 1573025241us tsft 1.0 Mb/s 2412 MHz (0x0080) -53dB
+signal 0dB noise antenna 0 BSSID:ff:ff:ff:ff:ff:ff
+DA:ff:ff:ff:ff:ff:ff SA:00:13:02:36:ab:37 Probe Request
+(demo.venatech.net) [1.0 2.0 5.5 11.0 6.0 9.0 12.0 18.0 Mbit]
+	19:59:18.975919 1573026699us tsft 1.0 Mb/s 2412 MHz (0x0080) -57dB
+signal 0dB noise antenna 0 BSSID:00:23:cd:de:2f:c5
+DA:00:13:02:36:ab:37 SA:00:23:cd:de:2f:c5 Probe Response
+(demo.venatech.net) [1.0* 2.0* 5.5* 11.0* 6.0 9.0 12.0 18.0 Mbit] CH:
+1
+	19:59:18.977723 1573028524us tsft 1.0 Mb/s 2412 MHz (0x0080) -43dB
+signal 0dB noise antenna 0 BSSID:00:23:cd:da:3c:05
+DA:00:13:02:36:ab:37 SA:00:23:cd:da:3c:05 Probe Response
+(demo.venatech.net) [1.0* 2.0* 5.5* 11.0* 6.0 9.0 12.0 18.0 Mbit] CH:
+1
+	19:59:18.981060 1573031853us tsft 1.0 Mb/s 2412 MHz (0x0080) -67dB
+signal 0dB noise antenna 0 BSSID:00:23:cd:c7:c3:fd
+DA:00:13:02:36:ab:37 SA:00:23:cd:c7:c3:fd Probe Response
+(demo.venatech.net) [1.0* 2.0* 5.5* 11.0* 6.0 9.0 12.0 18.0 Mbit] CH:
+1
+	19:59:19.019827 1573071924us tsft short preamble 54.0 Mb/s 2412 MHz
+(0x0080) -53dB signal 0dB noise antenna 0 BSSID:00:23:cd:da:3c:05
+DA:00:23:cd:da:3c:05 SA:00:13:02:36:ab:37 Authentication (Open
+System)-1: Succesful
+	19:59:19.022448 1573074291us tsft 1.0 Mb/s 2412 MHz (0x0080) -42dB
+signal 0dB noise antenna 0 BSSID:00:23:cd:da:3c:05
+DA:00:13:02:36:ab:37 SA:00:23:cd:da:3c:05 Authentication (Open
+System)-2:
+	19:59:19.022963 1573075062us tsft short preamble 54.0 Mb/s 2412 MHz
+(0x0080) -52dB signal 0dB noise antenna 0 BSSID:00:23:cd:da:3c:05
+DA:00:23:cd:da:3c:05 SA:00:13:02:36:ab:37 Assoc Request
+(demo.venatech.net) [1.0* 2.0* 5.5* 11.0* 6.0 9.0 12.0 18.0 Mbit]
+	19:59:19.096487 1573147524us tsft 1.0 Mb/s 2412 MHz (0x0080) -42dB
+signal 0dB noise antenna 0 BSSID:00:23:cd:da:3c:05
+DA:00:13:02:36:ab:37 SA:00:23:cd:da:3c:05 Assoc Response AID(2) ::
+Succesful
+	19:59:19.227409 1573279582us tsft short preamble 54.0 Mb/s 2412 MHz
+(0x0080) -52dB signal 0dB noise antenna 0 BSSID:00:23:cd:da:3c:05
+DA:00:23:cd:da:3c:05 SA:00:13:02:36:ab:37 DeAuthentication:
+Unspecified reason
+
+With compat-wireless-2009-06-02 the (successful) dump locks like this:
+
+	20:01:56.525502 433315165us tsft 1.0 Mb/s 2412 MHz (0x0080) -42dB
+signal 0dB noise antenna 0 BSSID:ff:ff:ff:ff:ff:ff
+DA:ff:ff:ff:ff:ff:ff SA:00:13:02:36:ab:37 Probe Request
+(demo.venatech.net) [1.0 2.0 5.5 11.0 6.0 9.0 12.0 18.0 Mbit]
+	20:01:56.527462 433316613us tsft 1.0 Mb/s 2412 MHz (0x0080) -44dB
+signal 0dB noise antenna 0 BSSID:00:25:86:d9:61:a7
+DA:00:13:02:36:ab:37 SA:00:25:86:d9:61:a7 Probe Response
+(demo.venatech.net) [1.0* 2.0* 5.5* 11.0* 6.0 9.0 12.0 18.0 Mbit] CH:
+1
+	20:01:56.541231 433330271us tsft 1.0 Mb/s 2412 MHz (0x0080) -44dB
+signal 0dB noise antenna 0 BSSID:00:25:86:d9:61:a7
+DA:00:13:02:36:ab:37 SA:00:25:86:d9:61:a7 Probe Response
+(demo.venatech.net) [1.0* 2.0* 5.5* 11.0* 6.0 9.0 12.0 18.0 Mbit] CH:
+1
+	20:01:56.542509 433331546us tsft 1.0 Mb/s 2412 MHz (0x0080) -43dB
+signal 0dB noise antenna 0 BSSID:00:25:86:d9:61:a7
+DA:00:13:02:36:ab:37 SA:00:25:86:d9:61:a7 Probe Response
+(demo.venatech.net) [1.0* 2.0* 5.5* 11.0* 6.0 9.0 12.0 18.0 Mbit] CH:
+1
+	20:01:56.543874 433332939us tsft 1.0 Mb/s 2412 MHz (0x0080) -43dB
+signal 0dB noise antenna 0 BSSID:00:25:86:d9:61:a7
+DA:00:13:02:36:ab:37 SA:00:25:86:d9:61:a7 Probe Response
+(demo.venatech.net) [1.0* 2.0* 5.5* 11.0* 6.0 9.0 12.0 18.0 Mbit] CH:
+1
+	20:01:56.545297 433334332us tsft 1.0 Mb/s 2412 MHz (0x0080) -43dB
+signal 0dB noise antenna 0 BSSID:00:25:86:d9:61:a7
+DA:00:13:02:36:ab:37 SA:00:25:86:d9:61:a7 Probe Response
+(demo.venatech.net) [1.0* 2.0* 5.5* 11.0* 6.0 9.0 12.0 18.0 Mbit] CH:
+1
+	20:01:56.556071 433346142us tsft short preamble 54.0 Mb/s 2412 MHz
+(0x0080) -41dB signal 0dB noise antenna 0 BSSID:00:25:86:d9:61:a7
+DA:00:25:86:d9:61:a7 SA:00:13:02:36:ab:37 Authentication (Open
+System)-1: Succesful
+	20:01:56.558199 433347993us tsft 1.0 Mb/s 2412 MHz (0x0080) -42dB
+signal 0dB noise antenna 0 BSSID:00:25:86:d9:61:a7
+DA:00:13:02:36:ab:37 SA:00:25:86:d9:61:a7 Authentication (Open
+System)-2:
+	20:01:56.558653 433348766us tsft short preamble 54.0 Mb/s 2412 MHz
+(0x0080) -41dB signal 0dB noise antenna 0 BSSID:00:25:86:d9:61:a7
+DA:00:25:86:d9:61:a7 SA:00:13:02:36:ab:37 Assoc Request
+(demo.venatech.net) [1.0* 2.0* 5.5* 11.0* 6.0 9.0 12.0 18.0 Mbit]
+	20:01:56.634096 433423226us tsft 1.0 Mb/s 2412 MHz (0x0080) -42dB
+signal 0dB noise antenna 0 BSSID:00:25:86:d9:61:a7
+DA:00:13:02:36:ab:37 SA:00:25:86:d9:61:a7 Assoc Response AID(2) ::
+Succesful
+
+I've also tried some other windows based clients, e.g. a laptop with
+an old 11b 3Com PCMCIA card. Most seem to choke from the auth response
+or assoc response frame. The hostapd/syslog on the AP side looks
+something like this:
+
+	MGMT
+	mgmt::auth
+	authentication: STA=00:04:75:c4:1e:a5 auth_alg=0 auth_transaction=1
+status_code=0 wep=0
+	ap0: STA 00:04:75:c4:1e:a5 IEEE 802.11: authentication OK (open system)
+	ap0: STA 00:04:75:c4:1e:a5 MLME:
+MLME-AUTHENTICATE.indication(00:04:75:c4:1e:a5, OPEN_SYSTEM)
+	ap0: STA 00:04:75:c4:1e:a5 MLME: MLME-DELETEKEYS.request(00:04:75:c4:1e:a5)
+	authentication reply: STA=00:04:75:c4:1e:a5 auth_alg=0
+auth_transaction=2 resp=0 (IE len=0)
+	MGMT (TX callback) ACK
+	mgmt::auth cb
+	ap0: STA 00:04:75:c4:1e:a5 IEEE 802.11: authenticated
+	Jan  1 03:33:12 00:23:CD:DA:3C:04 daemon.info hostapd: ap0: STA
+00:04:75:c4:1e:a5 IEEE 802.11: authenticated
+	STA 00:04:75:c4:1e:a5 sent probe request for broadcast SSID
+	STA 00:04:75:c4:1e:a5 sent probe request for our SSID
+	MGMT (TX callback) fail
+	mgmt::proberesp cb
+	MGMT (TX callback) fail
+	mgmt::proberesp cb
+	MGMT
+	mgmt::auth
+	authentication: STA=00:04:75:c4:1e:a5 auth_alg=0 auth_transaction=1
+status_code=0 wep=0
+	ap0: STA 00:04:75:c4:1e:a5 IEEE 802.11: authentication OK (open system)
+	ap0: STA 00:04:75:c4:1e:a5 MLME:
+MLME-AUTHENTICATE.indication(00:04:75:c4:1e:a5, OPEN_SYSTEM)
+	ap0: STA 00:04:75:c4:1e:a5 MLME: MLME-DELETEKEYS.request(00:04:75:c4:1e:a5)
+	authentication reply: STA=00:04:75:c4:1e:a5 auth_alg=0
+auth_transaction=2 resp=0 (IE len=0)
+	STA 00:22:fa:f8:17:c8 sent probe request for broadcast SSID
+	MGMT (TX callback) ACK
+	mgmt::auth cb
+	ap0: STA 00:04:75:c4:1e:a5 IEEE 802.11: authenticated
+
+        [And so on over and over...]
+
+I've also tried some different versions of hostapd: 0.6.9 and two
+different git snapshots from 0.7-branch (a35187e71a1dd23653fc03ed5
+and 6d6f4bb87f33278aed133875d0d561eb55d7ae59) but it doesn't seem to
+make any difference. My configuration file is really simple:
+
+	driver=nl80211
+	interface=ap0
+	ctrl_interface=/var/run/
+	hostapd-vtmd
+	hw_mode=g
+	channel=1
+	ssid=demo.venatech.net
+	ieee80211n=1
+	ht_capab=
+
+Does anybody recognize this? Any ideas on what to try next? Any help
+would be greatly appreciated.
+
+/Björn
