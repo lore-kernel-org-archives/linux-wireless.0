@@ -1,33 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:36671 "EHLO
-	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751737AbZJ0Tj1 (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:21189 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751845AbZJTMQb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2009 15:39:27 -0400
-Received: by ewy4 with SMTP id 4so58334ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2009 12:39:31 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wl1251: re-disable PG10 chips
-References: <1256671025-26126-1-git-send-email-linville@tuxdriver.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 27 Oct 2009 21:39:29 +0200
-In-Reply-To: <1256671025-26126-1-git-send-email-linville@tuxdriver.com> (John W. Linville's message of "Tue\, 27 Oct 2009 15\:17\:05 -0400")
-Message-ID: <87vdi0fwy6.fsf@purkki.valot.fi>
+	Tue, 20 Oct 2009 08:16:31 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: iw: [PATCH] display station noise
+Date: Tue, 20 Oct 2009 14:16:10 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200910201416.10574.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"John W. Linville" <linville@tuxdriver.com> writes:
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-> "wl1251: add support for PG11 chips." accidentally enabled PG10 chips as
-> well...
->
-> Reported-by: Kalle Valo <kalle.valo@iki.fi>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-Thanks, looks good.
+Index: iw/link.c
+===================================================================
+--- iw.orig/link.c	2009-10-20 12:32:55.000000000 +0200
++++ iw/link.c	2009-10-20 12:33:26.000000000 +0200
+@@ -119,6 +119,7 @@ static int print_link_sta(struct nl_msg 
+ 		[NL80211_STA_INFO_RX_PACKETS] = { .type = NLA_U32 },
+ 		[NL80211_STA_INFO_TX_PACKETS] = { .type = NLA_U32 },
+ 		[NL80211_STA_INFO_SIGNAL] = { .type = NLA_U8 },
++		[NL80211_STA_INFO_NOISE] = { .type = NLA_U8 },
+ 		[NL80211_STA_INFO_TX_BITRATE] = { .type = NLA_NESTED },
+ 		[NL80211_STA_INFO_LLID] = { .type = NLA_U16 },
+ 		[NL80211_STA_INFO_PLID] = { .type = NLA_U16 },
+@@ -157,6 +158,9 @@ static int print_link_sta(struct nl_msg 
+ 	if (sinfo[NL80211_STA_INFO_SIGNAL])
+ 		printf("\tsignal: %d dBm\n",
+ 			(int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL]));
++	if (sinfo[NL80211_STA_INFO_NOISE])
++		printf("\tnoise: %d dBm\n",
++			(int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_NOISE]));
+ 
+ 	if (sinfo[NL80211_STA_INFO_TX_BITRATE]) {
+ 		if (nla_parse_nested(rinfo, NL80211_RATE_INFO_MAX,
 
 -- 
-Kalle Valo
+http://www.holgerschurig.de
