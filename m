@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:41940 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757428AbZJ3UpC (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:41171 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755445AbZJUVqt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 16:45:02 -0400
-Date: Fri, 30 Oct 2009 21:44:27 +0100
+	Wed, 21 Oct 2009 17:46:49 -0400
+Date: Wed, 21 Oct 2009 23:39:47 +0200
 From: Jarek Poplawski <jarkao2@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-Message-ID: <20091030204427.GA2962@ami.dom.local>
-References: <1256886023.3555.5.camel@johannes.local>
- <20091030110616.GB6150@ff.dom.local>
- <20091030150223.GA2586@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Tilman Schmidt <tilman@imap.cc>,
+	David Miller <davem@davemloft.net>, hidave.darkstar@gmail.com,
+	linux-kernel@vger.kernel.org, tglx@linutronix.de,
+	linux-wireless@vger.kernel.org, linux-ppp@vger.kernel.org,
+	netdev@vger.kernel.org, paulus@samba.org,
+	Michael Buesch <mb@bu3sch.de>,
+	Oliver Hartkopp <oliver@hartkopp.net>
+Subject: Re: [PATCH] net: Adjust softirq raising in __napi_schedule
+Message-ID: <20091021213947.GA12202@ami.dom.local>
+References: <4AD31213.6020006@imap.cc>
+ <20091015114052.GA9870@ff.dom.local>
+ <4AD76184.6030900@gmail.com>
+ <4ADF5710.4030505@imap.cc>
+ <20091021211906.GA11401@ami.dom.local>
+ <1256160330.12174.2.camel@johannes.local>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091030150223.GA2586@tuxdriver.com>
+In-Reply-To: <1256160330.12174.2.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 30, 2009 at 11:02:24AM -0400, John W. Linville wrote:
-> On Fri, Oct 30, 2009 at 11:06:16AM +0000, Jarek Poplawski wrote:
+On Thu, Oct 22, 2009 at 06:25:30AM +0900, Johannes Berg wrote:
+> On Wed, 2009-10-21 at 23:19 +0200, Jarek Poplawski wrote:
+...
+> > --- a/net/core/dev.c
+> > +++ b/net/core/dev.c
+> > @@ -2728,7 +2728,7 @@ void __napi_schedule(struct napi_struct *n)
+> >  
+> >  	local_irq_save(flags);
+> >  	list_add_tail(&n->poll_list, &__get_cpu_var(softnet_data).poll_list);
+> > -	__raise_softirq_irqoff(NET_RX_SOFTIRQ);
+> > +	raise_softirq_irqoff(NET_RX_SOFTIRQ);
 > 
-> > There are various ways to disagree, and ignoring by John questions
-> > from a merited developer both in this referenced lkml and current
-> > threads looks at least strange (if not offensive) as well.
+> This still doesn't make any sense.
 > 
-> Did you read the thread for which Bartlomiej provided a link earlier?
-> There were ten responses (only three of them from him) in that thread.
-> His comments were not ignored, they were rejected.
+> There may or may not be a lot of code that assumes that everything else
+> is run with other tasklets disabled, and that it cannot be interrupted
+> by a tasklet and thus create a race.
 > 
-> Ever since Bartlomiej decided to tear himself away from
-> drivers/staging, he has been nothing but negative -- petty, whining,
-> indignat, whatever.  Just what has he done to merit any special
-> consideration here?  Why should he have any sort of veto over rt2x00?
-> 
-> And of all things on which to take a stand -- how dare the rt2x00 guys
-> use two header files instead of three?  The nerve of those people!!!
-> 
-> Ridiculous...
+> Can you prove that is not the case, across the entire networking layer?
 
-Maybe. Different tastes for sure, so simply no good solution.
-
-Anyway, my point was somewhere else: Davem could be a good example;-)
-I simply can't imagine a thread with such concerns left completely
-uncommented before merging a patch. It's not about convincing anybody.
-Usually you know at least if the concern is dismissed, or valid, but
-fixable. (Sometimes you can even read between lines, or explicit, what
-he really thinks...)
-
-This discussion is mainly around trying to omit a maintainer with
-"higher authority". Of course it's a mortal sin! ...Except, when the
-maintainer doesn't seem to respond at all.
-
-BTW, it seems Bartlomiej's main argument in the current thread has
-changed to the non-working driver, so ridiculous only if you have a
-clue.
+I'm not sure I can understand your question. This patch is mainly to
+avoid using netif_rx()/netif_rx_ni() pair as a test of proper process
+context handling; IMHO there're better tools for this (lockdep,
+WARN_ON's).
 
 Jarek P.
