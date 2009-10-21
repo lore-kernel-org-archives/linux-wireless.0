@@ -1,51 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42494 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758225AbZJFVQl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 17:16:41 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
+Received: from web51404.mail.re2.yahoo.com ([206.190.38.183]:39535 "HELO
+	web51404.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751977AbZJULBo convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Oct 2009 07:01:44 -0400
+Message-ID: <868263.12588.qm@web51404.mail.re2.yahoo.com>
+Date: Wed, 21 Oct 2009 04:01:48 -0700 (PDT)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: ath5k with two NICs runing IBSS and AP mode simultaneously causes error
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 4/4] cfg80211: fix compile error from missing ethtool.h
-Date: Tue,  6 Oct 2009 17:07:20 -0400
-Message-Id: <1254863240-14780-4-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1254863240-14780-1-git-send-email-linville@tuxdriver.com>
-References: <1254863240-14780-1-git-send-email-linville@tuxdriver.com>
+Cc: ath5k-devel@lists.ath5k.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- include/net/cfg80211.h |    1 +
- net/wireless/ethtool.h |    2 --
- 2 files changed, 1 insertions(+), 2 deletions(-)
+Hello all,
+I have a configuration with two Atheros NICs (AR5212). To evaluate whether ath5k is now good enough to replace Madwifi I run the current wireless-testing branch and did some tests:
+One interface (wlan0) is in IBSS mode joined to another host. I run iperf in both directions simultaneously over night. This worked very well (except for the known IBSS join bug).
+Additionally I built hostapd 0.6.9 and run it with a very minmal configuration (interface=wlan1, driver=nl80211, ssid=MyNetwork, hw_mode=g, channel=1) and tried to connect from a WinXP client. I had not yet setup a DHCP server, so this was not actually expected to succeed.
+I think immediately after starting hostapd the iperf run stopped and I got the following error message:
+ath5k phy0: no further txbuf available, dropping packet.
+The timing makes it very likely that the hostapd on wlan1 disturbed the iperf run on wlan0. Is this a known problem? Is there something I can do to help track this down?
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 6f4862b..14915ea 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -18,6 +18,7 @@
- #include <linux/nl80211.h>
- #include <linux/if_ether.h>
- #include <linux/ieee80211.h>
-+#include <linux/ethtool.h>
- #include <net/regulatory.h>
- 
- /* remove once we remove the wext stuff */
-diff --git a/net/wireless/ethtool.h b/net/wireless/ethtool.h
-index 70cbee1..695ecad 100644
---- a/net/wireless/ethtool.h
-+++ b/net/wireless/ethtool.h
-@@ -1,8 +1,6 @@
- #ifndef __CFG80211_ETHTOOL__
- #define __CFG80211_ETHTOOL__
- 
--#include <linux/ethtool.h>
--
- extern const struct ethtool_ops cfg80211_ethtool_ops;
- 
- #endif /* __CFG80211_ETHTOOL__ */
--- 
-1.6.2.5
+ -- 
+Regards 
+Joerg 
 
+
+      
