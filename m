@@ -1,50 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:52230 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755125AbZJ2ATC (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:57060 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752011AbZJUFiG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2009 20:19:02 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
-Subject: [PATCH] ath9k: fix misplaced semicolon on rate control
-Date: Wed, 28 Oct 2009 20:19:06 -0400
-Message-Id: <1256775546-30774-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 21 Oct 2009 01:38:06 -0400
+Received: by ewy3 with SMTP id 3so5640584ewy.17
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 22:38:09 -0700 (PDT)
+From: Kunal Gangakhedkar <kunal.gangakhedkar@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [ath9k-devel] Test for N-mode from userspace?
+Date: Wed, 21 Oct 2009 11:07:57 +0530
+Cc: austinxxh-ath9k@yahoo.com, ath9k-devel@lists.ath9k.org,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <200910202112.30660.kunal.gangakhedkar@gmail.com> <411169.20125.qm@web55305.mail.re4.yahoo.com> <43e72e890910201620l3e475630wbde71f34fca3b6df@mail.gmail.com>
+In-Reply-To: <43e72e890910201620l3e475630wbde71f34fca3b6df@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200910211107.58111.kunal.gangakhedkar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch e43419f9:
+On Wednesday 21 Oct 2009 4:50:18 am Luis R. Rodriguez wrote:
+> On Wed, Oct 21, 2009 at 2:28 AM, xxiao <austinxxh-ath9k@yahoo.com> wrote:
+> > interesting, why is MCS range just 0-7, which means no HT?
+>
+> MCS 1-7 is for single stream devices.
+>
+> http://wireless.kernel.org/en/developers/Documentation/ieee80211/802.11n
 
-	ath9k: downgrade assert in rc.c for invalid rate
+So, does this mean that I can use N-mode on this device?
+That would be really great, if possible :)
 
-downgraded an ASSERT to a WARN_ON() but also misplaced a
-semicolon at the end of the second check. What this did
-was force the rate control code to always return the rate
-even if we should have warned about it. Since this should
-not have happened anymore anyway this fix isn't critical
-as the proper rate would have been returned anyway.
-
-Cc: stable@kernel.org
-Reported-by: Jiri Slaby <jirislaby@gmail.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 0639364..bb72b46 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -679,7 +679,7 @@ static u8 ath_rc_get_highest_rix(struct ath_softc *sc,
- 		return rate;
- 
- 	if (rate_table->info[rate].valid_single_stream &&
--	    !(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG));
-+	    !(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG))
- 		return rate;
- 
- 	/* This should not happen */
--- 
-1.6.0.4
-
+Thanks,
+Kunal
