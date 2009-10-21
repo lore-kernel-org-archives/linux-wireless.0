@@ -1,88 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:52896 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752498AbZJQT4t (ORCPT
+Received: from out5.smtp.messagingengine.com ([66.111.4.29]:32914 "EHLO
+	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754172AbZJUVhi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2009 15:56:49 -0400
-Received: by mail-fx0-f218.google.com with SMTP id 18so3633004fxm.37
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2009 12:56:53 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] ar9170usb: atomic pending urbs counter
-Date: Sat, 17 Oct 2009 21:56:51 +0200
-Cc: linville@tuxdriver.com
+	Wed, 21 Oct 2009 17:37:38 -0400
+Message-ID: <4ADF7F14.7000109@imap.cc>
+Date: Wed, 21 Oct 2009 23:37:24 +0200
+From: Tilman Schmidt <tilman@imap.cc>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200910172156.52108.chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Jarek Poplawski <jarkao2@gmail.com>,
+	David Miller <davem@davemloft.net>, hidave.darkstar@gmail.com,
+	linux-kernel@vger.kernel.org, tglx@linutronix.de,
+	linux-wireless@vger.kernel.org, linux-ppp@vger.kernel.org,
+	netdev@vger.kernel.org, paulus@samba.org,
+	Michael Buesch <mb@bu3sch.de>,
+	Oliver Hartkopp <oliver@hartkopp.net>
+Subject: Re: [PATCH] net: Adjust softirq raising in __napi_schedule
+References: <4AD31213.6020006@imap.cc> <20091015114052.GA9870@ff.dom.local>	 <4AD76184.6030900@gmail.com> <4ADF5710.4030505@imap.cc>	 <20091021211906.GA11401@ami.dom.local> <1256160330.12174.2.camel@johannes.local>
+In-Reply-To: <1256160330.12174.2.camel@johannes.local>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigDAACCF859094B8E8B38A9ACE"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch follows "ar9170: atomic pending A-MPDU counter"
-idea and converts another critical counter to atomic_*.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigDAACCF859094B8E8B38A9ACE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
-index e974e58..6bdcdf6 100644
---- a/drivers/net/wireless/ath/ar9170/usb.c
-+++ b/drivers/net/wireless/ath/ar9170/usb.c
-@@ -108,15 +108,15 @@ static void ar9170_usb_submit_urb(struct ar9170_usb *aru)
- 		return ;
- 
- 	spin_lock_irqsave(&aru->tx_urb_lock, flags);
--	if (aru->tx_submitted_urbs >= AR9170_NUM_TX_URBS) {
-+	if (atomic_read(&aru->tx_submitted_urbs) >= AR9170_NUM_TX_URBS) {
- 		spin_unlock_irqrestore(&aru->tx_urb_lock, flags);
- 		return ;
- 	}
--	aru->tx_submitted_urbs++;
-+	atomic_inc(&aru->tx_submitted_urbs);
- 
- 	urb = usb_get_from_anchor(&aru->tx_pending);
- 	if (!urb) {
--		aru->tx_submitted_urbs--;
-+		atomic_dec(&aru->tx_submitted_urbs);
- 		spin_unlock_irqrestore(&aru->tx_urb_lock, flags);
- 
- 		return ;
-@@ -133,7 +133,7 @@ static void ar9170_usb_submit_urb(struct ar9170_usb *aru)
- 				err);
- 
- 		usb_unanchor_urb(urb);
--		aru->tx_submitted_urbs--;
-+		atomic_dec(&aru->tx_submitted_urbs);
- 		ar9170_tx_callback(&aru->common, urb->context);
- 	}
- 
-@@ -151,7 +151,7 @@ static void ar9170_usb_tx_urb_complete_frame(struct urb *urb)
- 		return ;
- 	}
- 
--	aru->tx_submitted_urbs--;
-+	atomic_dec(&aru->tx_submitted_urbs);
- 
- 	ar9170_tx_callback(&aru->common, skb);
- 
-@@ -794,7 +794,7 @@ static int ar9170_usb_probe(struct usb_interface *intf,
- 	spin_lock_init(&aru->tx_urb_lock);
- 
- 	aru->tx_pending_urbs = 0;
--	aru->tx_submitted_urbs = 0;
-+	atomic_set(&aru->tx_submitted_urbs, 0);
- 
- 	aru->common.stop = ar9170_usb_stop;
- 	aru->common.flush = ar9170_usb_flush;
-diff --git a/drivers/net/wireless/ath/ar9170/usb.h b/drivers/net/wireless/ath/ar9170/usb.h
-index d098f4d..a2ce3b1 100644
---- a/drivers/net/wireless/ath/ar9170/usb.h
-+++ b/drivers/net/wireless/ath/ar9170/usb.h
-@@ -67,7 +67,7 @@ struct ar9170_usb {
- 	bool req_one_stage_fw;
- 
- 	spinlock_t tx_urb_lock;
--	unsigned int tx_submitted_urbs;
-+	atomic_t tx_submitted_urbs;
- 	unsigned int tx_pending_urbs;
- 
- 	struct completion cmd_wait;
+Johannes Berg schrieb:
+
+> This still doesn't make any sense.
+>=20
+> There may or may not be a lot of code that assumes that everything else=
+
+> is run with other tasklets disabled, and that it cannot be interrupted
+> by a tasklet and thus create a race.
+>=20
+> Can you prove that is not the case, across the entire networking layer?=
+
+
+So what's the solution you propose?
+
+--=20
+Tilman Schmidt                    E-Mail: tilman@imap.cc
+Bonn, Germany
+Diese Nachricht besteht zu 100% aus wiederverwerteten Bits.
+Unge=C3=B6ffnet mindestens haltbar bis: (siehe R=C3=BCckseite)
+
+
+--------------enigDAACCF859094B8E8B38A9ACE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
+
+iD8DBQFK338hQ3+did9BuFsRAtISAJ4oNk4ReXpVPsa9anMPGvdsfNvsfwCgk2IP
+MEhjd2ockMWp9P01SjKtdOA=
+=18hp
+-----END PGP SIGNATURE-----
+
+--------------enigDAACCF859094B8E8B38A9ACE--
