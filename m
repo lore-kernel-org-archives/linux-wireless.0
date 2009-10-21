@@ -1,73 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42495 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756489AbZJ3LuW (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:50773 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752734AbZJUMoA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 07:50:22 -0400
-Subject: Re: OOPS in cfg80211_conn_work
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Parag Warudkar <parag.lkml@gmail.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <alpine.DEB.2.00.0910300652350.2223@parag-laptop>
-References: <f7848160910291617q2b168089l5ce489d2f47ebe96@mail.gmail.com>
-	 <1256885343.3555.0.camel@johannes.local>
-	 <alpine.DEB.2.00.0910300652350.2223@parag-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 30 Oct 2009 12:50:25 +0100
-Message-ID: <1256903425.3555.47.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 21 Oct 2009 08:44:00 -0400
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Greg KH <gregkh@suse.de>
+Subject: [PATCH] Staging: update TODO files
+Date: Wed, 21 Oct 2009 14:42:11 +0200
+Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <200910211442.11785.bzolnier@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-10-30 at 06:57 -0400, Parag Warudkar wrote:
-> 
-> On Fri, 30 Oct 2009, Johannes Berg wrote:
-> 
-> > On Thu, 2009-10-29 at 19:17 -0400, Parag Warudkar wrote:
-> > > Oct 29 18:59:06 parag-laptop kernel: [  143.180037] wlan0:
-> > > deauthenticating from 00:16:01:d6:6f:12 by local choice (reason=3)
-> > > Oct 29 18:59:06 parag-laptop kernel: [  143.181137] wlan0: direct
-> > > probe to AP 00:16:01:d6:6f:12 (try 1)
-> > 
-> > sorry, I can't read this log. please provide a non-wrapped version
-> > 
-> How does this look? (Sorry sent it in a rush earlier.)
-> Below also is a disassembly of cfg80211_conn_work.
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] Staging: update TODO files
 
-Thanks. I was going to ask for disassembly but you preempted me, I like
-that :)
+Remove my mail address.
 
-Since you say you can easily reproduce this, can you try the patch
-below?
-
-johannes
-
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- net/wireless/sme.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/staging/rtl8187se/TODO |    3 +--
+ drivers/staging/rtl8192su/TODO |    3 +--
+ drivers/staging/vt6655/TODO    |    5 ++---
+ drivers/staging/vt6656/TODO    |    5 ++---
+ 4 files changed, 6 insertions(+), 10 deletions(-)
 
---- wireless-testing.orig/net/wireless/sme.c	2009-10-30 12:48:09.000000000 +0100
-+++ wireless-testing/net/wireless/sme.c	2009-10-30 12:48:41.000000000 +0100
-@@ -165,7 +165,7 @@ void cfg80211_conn_work(struct work_stru
- 	struct cfg80211_registered_device *rdev =
- 		container_of(work, struct cfg80211_registered_device, conn_work);
- 	struct wireless_dev *wdev;
--	u8 bssid[ETH_ALEN];
-+	u8 bssid_buf[ETH_ALEN], *bssid = NULL;
+Index: b/drivers/staging/rtl8187se/TODO
+===================================================================
+--- a/drivers/staging/rtl8187se/TODO
++++ b/drivers/staging/rtl8187se/TODO
+@@ -11,5 +11,4 @@ TODO:
+ - sparse fixes
+ - integrate with drivers/net/wireless/rtl818x
  
- 	rtnl_lock();
- 	cfg80211_lock_rdev(rdev);
-@@ -181,7 +181,10 @@ void cfg80211_conn_work(struct work_stru
- 			wdev_unlock(wdev);
- 			continue;
- 		}
--		memcpy(bssid, wdev->conn->params.bssid, ETH_ALEN);
-+		if (wdev->conn->params.bssid) {
-+			memcpy(bssid_buf, wdev->conn->params.bssid, ETH_ALEN);
-+			bssid = bssid_buf;
-+		}
- 		if (cfg80211_conn_do_work(wdev))
- 			__cfg80211_connect_result(
- 					wdev->netdev, bssid,
-
-
+-Please send any patches to Greg Kroah-Hartman <greg@kroah.com> and
+-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>.
++Please send any patches to Greg Kroah-Hartman <greg@kroah.com>.
+Index: b/drivers/staging/rtl8192su/TODO
+===================================================================
+--- a/drivers/staging/rtl8192su/TODO
++++ b/drivers/staging/rtl8192su/TODO
+@@ -14,5 +14,4 @@ TODO:
+ - sparse fixes
+ - integrate with drivers/net/wireless/rtl818x
+ 
+-Please send any patches to Greg Kroah-Hartman <greg@kroah.com> and
+-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>.
++Please send any patches to Greg Kroah-Hartman <greg@kroah.com>.
+Index: b/drivers/staging/vt6655/TODO
+===================================================================
+--- a/drivers/staging/vt6655/TODO
++++ b/drivers/staging/vt6655/TODO
+@@ -16,6 +16,5 @@ TODO:
+ - sparse fixes
+ - integrate with drivers/net/wireless
+ 
+-Please send any patches to Greg Kroah-Hartman <greg@kroah.com>,
+-Forest Bond <forest@alittletooquiet.net> and Bartlomiej Zolnierkiewicz
+-<bzolnier@gmail.com>.
++Please send any patches to Greg Kroah-Hartman <greg@kroah.com>
++and Forest Bond <forest@alittletooquiet.net>.
+Index: b/drivers/staging/vt6656/TODO
+===================================================================
+--- a/drivers/staging/vt6656/TODO
++++ b/drivers/staging/vt6656/TODO
+@@ -15,6 +15,5 @@ TODO:
+ - sparse fixes
+ - integrate with drivers/net/wireless
+ 
+-Please send any patches to Greg Kroah-Hartman <greg@kroah.com>,
+-Forest Bond <forest@alittletooquiet.net> and Bartlomiej Zolnierkiewicz
+-<bzolnier@gmail.com>.
++Please send any patches to Greg Kroah-Hartman <greg@kroah.com>
++and Forest Bond <forest@alittletooquiet.net>.
