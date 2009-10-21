@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47789 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753613AbZJNObt (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:35097 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751949AbZJUMxJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 10:31:49 -0400
-Date: Wed, 14 Oct 2009 10:15:40 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>, Ivo van Doorn <ivdoorn@gmail.com>,
-	Ozan =?utf-8?B?w4dhxJ9sYXlhbg==?= <ozan@pardus.org.tr>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: Current status of rt2800usb and staging/rt2870
-Message-ID: <20091014141540.GC2890@tuxdriver.com>
-References: <4AD46380.9020308@pardus.org.tr> <200910132357.57094.bzolnier@gmail.com> <1255472698.11695.75.camel@localhost.localdomain> <200910140042.39800.bzolnier@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200910140042.39800.bzolnier@gmail.com>
+	Wed, 21 Oct 2009 08:53:09 -0400
+Subject: Re: [PATCH net-next V2 1/3] iwmc3200top: Add Intel Wireless
+ MultiCom  3200 top driver.
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org, yi.zhu@intel.com,
+	inaky.perez-gonzalez@intel.com, cindy.h.kao@intel.com,
+	guy.cohen@intel.com, ron.rindjunsky@intel.com
+In-Reply-To: <1ba2fa240910200453k4638dc6cm8c8911353ea85b60@mail.gmail.com>
+References: <1255806576-26869-1-git-send-email-tomas.winkler@intel.com>
+	 <20091019.215457.43252934.davem@davemloft.net>
+	 <1ba2fa240910200453k4638dc6cm8c8911353ea85b60@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 21 Oct 2009 21:52:47 +0900
+Message-Id: <1256129568.7737.1.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 14, 2009 at 12:42:39AM +0200, Bartlomiej Zolnierkiewicz wrote:
-> On Wednesday 14 October 2009 00:24:58 Dan Williams wrote:
+Hi Tomas,
 
-> > The point here is, often stuff works for some and not for others.  That
-> > doesn't mean it's "broken".  It's broken for you, and that should get
-> > fixed, but the whole system is by no means a loss and its pretty stupid
-> > to generalize things like "play skip-lessly on standard AC97/HDA cards
-> > is impossible" when it clearly isn't.
+> >> This patch adds Intel Wireless MultiCom 3200 top driver.
+> >> IWMC3200 is 4Wireless Com CHIP (GPS/BT/WiFi/WiMAX).
+> >> Top driver is responsible for device initialization and firmware download.
+> >> Firmware handled by top is responsible for top itself and
+> >> as well as bluetooth and GPS coms. (Wifi and WiMax provide their own firmware)
+> >> In addition top driver is used to retrieve firmware logs
+> >> and supports other debugging features
+> >>
+> >> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> >
+> > Applied to net-next-2.6
 > 
-> Interesting, do you mean that you are able to get skipless mp3 playback
-> under i.e. audacious (using the default pulseaudio output plugin) under
-> heavy load (i.e. kernel build) with internal speakers (or headphones)?
+> Thanks Dave
 > 
-> If so must by my luck then -- F11 on old Acer laptop (Intel 8x0 in ICH4M)
-> and fedora-rawhide on new Asus K50AB one (Intel HDA in AMD/ATI SB710)..
+> Marcel
+> I want to send out now the BT driver, would like the patch against
+> bluetooth-next-2.6.git, then I wait till you sync or can you also pick
+> it from net-next if Dave is OK with that?
 
-Much as I enjoy a good Fedora audio discussion, perhaps it is time
-to end this one or move it elsewhere?
+send it against net-next since you are working in drivers/bluetooth/, we
+will have not conflicts.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Regards
+
+Marcel
+
+
