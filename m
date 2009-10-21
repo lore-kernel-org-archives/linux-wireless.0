@@ -1,49 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:39666 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S932394AbZJGMAL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 08:00:11 -0400
-Content-Type: text/plain; charset="iso-8859-1"
-Date: Wed, 07 Oct 2009 13:59:23 +0200
-From: berndl81@gmx.at
-Message-ID: <20091007115923.256060@gmx.net>
-MIME-Version: 1.0
-Subject: Bug: AR928x not working on 2.6.31.x
-To: linux-wireless@vger.kernel.org
+Received: from mx1.redhat.com ([209.132.183.28]:49034 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753532AbZJUSMf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Oct 2009 14:12:35 -0400
+Subject: Re: [PATCH] libertas: remove unused
+ lbs_cmd_802_11_inactivity_timeout()
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <200910190854.19967.hs4233@mail.mn-solutions.de>
+References: <200910161734.22840.hs4233@mail.mn-solutions.de>
+	 <1255710571.14241.30.camel@localhost.localdomain>
+	 <200910190854.19967.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Wed, 21 Oct 2009 11:12:36 -0700
+Message-Id: <1256148756.5010.34.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am using Archlinux on my Acer Extensa 7630EZ and realize that my wireless-device which is an
- 
-Atheros Communications Inc. AR928X Wireless Network Adapter (PCI-Express) (rev 01)
+On Mon, 2009-10-19 at 08:54 +0200, Holger Schurig wrote:
+> > We were going to use this at one point, but we haven't yet, so we can
+> > add it back when we do.
+> 
+> So, what does this actually do?
 
-according to lspci works very well using arch-stock kernel 2.6.30 and is not working any longer when using the 2.6.31.1 or 2.6.31.2 kernel from Arch's testing repository.
+Pretty much like it sounds; it lets the device go to into powersave at
+user-specified interval after the last TX or RX, instead of having to
+wait one full beacon of inactivity.
 
-When using the 2.6.30 kernel (wlan is working very well), I get the following dmesg-output:
-[bernhard@wallaby ~]$ dmesg |grep ath
-ath9k 0000:05:00.0: enabling device (0000 -> 0002)
-ath9k 0000:05:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-ath9k 0000:05:00.0: setting latency timer to 64
-phy0: Selected rate control algorithm 'ath9k_rate_control'
-Registered led device: ath9k-phy0::radio
-Registered led device: ath9k-phy0::assoc
-Registered led device: ath9k-phy0::tx
-Registered led device: ath9k-phy0::rx
+Dan
 
-When upgrading to 2.6.31.x, i receive the following output:
-[bernhard@wallaby ~]$ dmesg |grep ath
-ath9k 0000:05:00.0: enabling device (0000 -> 0002)
-ath9k 0000:05:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-ath9k 0000:05:00.0: setting latency timer to 64
-ath9k 0000:05:00.0: PCI INT A disabled
 
-As I see it, the device is recognized and instantly disabled again. The device cannot be brought up too using ifconfig.
-
-I am quite clueless what do do aside from reporting the bug here as suggested in the original Arch-bugreport (http://bugs.archlinux.org/task/16413)
-
-If any further information is helpful, I will of course happily try to provide it.
-
-Bernhard
--- 
-GRATIS für alle GMX-Mitglieder: Die maxdome Movie-FLAT!
-Jetzt freischalten unter http://portal.gmx.net/de/go/maxdome01
