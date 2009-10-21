@@ -1,89 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46737 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757275AbZJHJxF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 05:53:05 -0400
-Subject: Re: NULL pointer deref at wext ioctl (Re: [PATCH] compat-2.6:
- adding  ethtool.h to compat-2.6.31.h)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <3ace41890910072328n1460ee34v1fe7ca9b78eb646f@mail.gmail.com>
-References: <3ace41890910071216y69b8bc9la67b8f0ce5890cd8@mail.gmail.com>
-	 <3ace41890910071228i786d4097w69dc7a3dfeb64afe@mail.gmail.com>
-	 <1254952886.3713.4.camel@johannes.local>
-	 <3ace41890910072328n1460ee34v1fe7ca9b78eb646f@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-xIuoaleRks4nkyK10FwA"
-Date: Thu, 08 Oct 2009 11:51:54 +0200
-Message-Id: <1254995514.3713.22.camel@johannes.local>
+Received: from mx1.redhat.com ([209.132.183.28]:41033 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753532AbZJUS2s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Oct 2009 14:28:48 -0400
+Subject: Re: [PATCH] libertas: remove handling for CMD_802_11_LED_GPIO_CTRL
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <200910191331.20476.hs4233@mail.mn-solutions.de>
+References: <200910191331.20476.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Wed, 21 Oct 2009 11:28:50 -0700
+Message-Id: <1256149730.5010.39.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2009-10-19 at 13:31 +0200, Holger Schurig wrote:
+> ... which just resided as an old-style command in cmd/cmdresp, but
+> was nowhere useed. If we ever need it, we can re-add it as a newstyle
+> command.
 
---=-xIuoaleRks4nkyK10FwA
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+It's actually used by the OLPC folks; but right now there's simply no
+mechanism to configure that ability via WEXT.  Is there some way to do
+this via the kernel LED  framework instead that libertas should be
+using?
 
-On Thu, 2009-10-08 at 07:28 +0100, Hin-Tak Leung wrote:
+Dan
 
-> It looks like it is the 2nd of thes two lines around
-> /usr/src/debug/kernel-2.6.30/linux-2.6.30.x86_64/net/wireless/wext.c:448
->  which resulted in the null pointer dereference:
->=20
-> if (index < dev->wireless_handlers->num_private)
->               return dev->wireless_handlers->private[index];
-
-Ok, that's odd. Is it possible that somehow cfg80211 is picking up an
-#ifdef'ed copy of "struct iw_handler_def", and thus the struct it is
-defining is simply too small? You can figure that out with debug info,
-presumably, but I'm not entirely sure how. Actually maybe nm would tell
-you too, if you look for cfg80211_wext_handler.
-
-What I mean is this -- cfg80211 defines cfg80211_wext_handler:
-
-const struct iw_handler_def cfg80211_wext_handler
-	.num_standard
-	.standard
-	.get_wireless_stats
-
-but the core expects
-	.num_standard
-	.standard
-	.num_private
-	.num_private_args
-	.private
-	.private_args
-	.get_wireless_stats
-
-as such .num_private ends up non-zero because it's shadowed
-by .get_wireles_stats.
-
-johannes
-
---=-xIuoaleRks4nkyK10FwA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKzbY3AAoJEODzc/N7+QmaQYsQALcqEJjH0AwXXaimrGz0Y3mR
-lejKBGG0bFHHWeOFW8iPnRmKP5zvNDUEZMormErwcG/M44vybC82D/PKXH8VQyoo
-lqkVZoRUbbwedgWfnM8uIJC2ZgT43LdW5ikbhW5bQlm50fUhGyDNJiaogLSv+Qwu
-EI6bme1RcDxt0/X5JTCQX4HVRx7yPYALN+ZMBKCCPynXQsWfxjZf6UYMw8zQfE6O
-XVMGhD6rLDFpAtJmQZ+CCyCPZ2oFPQ5ENfAwaHS0D/ns0LLSTWaK2OIYfzDNVpI7
-JzRRp/VAUIv+qyXzhTVjuHJ7nzqwHtoNgpsgDY+lc3Dr3nnNb8DErYGBBHI7uONa
-jfi2kqpyrDN/Z/q9ofXmwfc3ERSzGrH0HAzETMpodKMb/CTy9CcXQlX8O/nha3ew
-QeF1QV4OcFF9rYC0OV+H2Hw/vsFjQcwFGMeRaXxRKTGgdVdjdJPkjXsm/TzfM4lf
-NvJs5kf8nM2uorlIZtFezf/3h4NdWBW4zofL23PkEa3dQ0BI/xPVlvFdLUXM+xI3
-Ymfl1MbM8RgS+bDDcv6Sl9CAgLv3wL7ggAqHJhAR27LMHJEKubFL2tRKrqbQAaTj
-+E/zz/GmiKWWeAo44DLs9Qiz+NFNMwNlY8zHB/wNQKd5hh86erF0vJiHyyXbHXT+
-dLxbgv+PZ3yFR0/Lgz7y
-=+OHL
------END PGP SIGNATURE-----
-
---=-xIuoaleRks4nkyK10FwA--
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+> 
+> --- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
+> +++ linux-wl/drivers/net/wireless/libertas/cmd.c
+> @@ -1181,29 +1181,6 @@
+>  
+>  		ret = 0;
+>  		break;
+> -	case CMD_802_11_LED_GPIO_CTRL:
+> -		{
+> -			struct mrvl_ie_ledgpio *gpio =
+> -			    (struct mrvl_ie_ledgpio*)
+> -			    cmdptr->params.ledgpio.data;
+> -
+> -			memmove(&cmdptr->params.ledgpio,
+> -				pdata_buf,
+> -				sizeof(struct cmd_ds_802_11_led_ctrl));
+> -
+> -			cmdptr->command =
+> -			    cpu_to_le16(CMD_802_11_LED_GPIO_CTRL);
+> -
+> -#define ACTION_NUMLED_TLVTYPE_LEN_FIELDS_LEN 8
+> -			cmdptr->size =
+> -			    cpu_to_le16(le16_to_cpu(gpio->header.len)
+> -				+ S_DS_GEN
+> -				+ ACTION_NUMLED_TLVTYPE_LEN_FIELDS_LEN);
+> -			gpio->header.len = gpio->header.len;
+> -
+> -			ret = 0;
+> -			break;
+> -		}
+>  
+>  	case CMD_BT_ACCESS:
+>  		ret = lbs_cmd_bt_access(cmdptr, cmd_action, pdata_buf);
+> --- linux-wl.orig/drivers/net/wireless/libertas/cmdresp.c
+> +++ linux-wl/drivers/net/wireless/libertas/cmdresp.c
+> @@ -187,12 +187,6 @@
+>  			sizeof(struct cmd_ds_802_11_tpc_cfg));
+>  		spin_unlock_irqrestore(&priv->driver_lock, flags);
+>  		break;
+> -	case CMD_RET(CMD_802_11_LED_GPIO_CTRL):
+> -		spin_lock_irqsave(&priv->driver_lock, flags);
+> -		memmove((void *)priv->cur_cmd->callback_arg, &resp->params.ledgpio,
+> -			sizeof(struct cmd_ds_802_11_led_ctrl));
+> -		spin_unlock_irqrestore(&priv->driver_lock, flags);
+> -		break;
+>  
+>  	case CMD_RET(CMD_GET_TSF):
+>  		spin_lock_irqsave(&priv->driver_lock, flags);
+> 
 
