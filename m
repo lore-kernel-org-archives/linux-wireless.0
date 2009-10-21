@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:44587 "EHLO
-	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753711AbZJPIid (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:31415 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751823AbZJULE2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 04:38:33 -0400
-Received: by ewy4 with SMTP id 4so1356405ewy.37
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2009 01:37:55 -0700 (PDT)
-To: John Willis <John.Willis@Distant-earth.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville\@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [PATCH] wl1251: add support for PG11 chips.
-References: <01c201ca4d9c$c2c44500$484ccf00$@Willis@Distant-earth.com>
-	<87vdifbyao.fsf@nokia.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 16 Oct 2009 11:37:53 +0300
-In-Reply-To: <87vdifbyao.fsf@nokia.com> (Kalle Valo's message of "Fri\, 16 Oct 2009 10\:19\:59 +0300")
-Message-ID: <87my3rn38e.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 21 Oct 2009 07:04:28 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>
+Subject: [PATCH] wl1271: use ieee80211_rx_ni()
+Date: Wed, 21 Oct 2009 14:03:46 +0300
+Message-Id: <1256123026-19963-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kalle.valo@iki.fi> writes:
+Use the new ieee80211_rx_ni() function instead of ieee80211_rx().  Since we
+use a workqueue to handle the RX path, we need to call the new function,
+which disables bottom half handling.  This patch fixes the NOHZ:
+local_softirq_pending messages.
 
-> John Willis <John.Willis@Distant-earth.com> writes:
->
->> From: David-John Willis <John.Willis@Distant-earth.com>
->>
->> This simple patch adds support for the PG11 variant of the WL1251 chip as
->> used on the OpenPandora OMAP3 device.
->>
->> Signed-off-by: David-John Willis <John.Willis@Distant-earth.com>
+CC: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_rx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-[...]
-
-> This patch also enables PG10 support, but as that hardware revision is
-> untested I think it's better not to enable it. I'll edit the patch a bit
-> regarding this and then send it to John.
-
-Oh, I noticed that Linville had already applied your patch. I'll send
-a patch on top of this to fix the issue.
-
-Linville, is this ok for you?
-
-Too many Johns here :)
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c b/drivers/net/wireless/wl12xx/wl1271_rx.c
+index dbf07be..37d81ab 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_rx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
+@@ -184,7 +184,7 @@ static void wl1271_rx_handle_data(struct wl1271 *wl, u32 length)
+ 		     beacon ? "beacon" : "");
+ 
+ 	memcpy(IEEE80211_SKB_RXCB(skb), &rx_status, sizeof(rx_status));
+-	ieee80211_rx(wl->hw, skb);
++	ieee80211_rx_ni(wl->hw, skb);
+ }
+ 
+ void wl1271_rx(struct wl1271 *wl, struct wl1271_fw_status *status)
 -- 
-Kalle Valo
+1.5.6.5
+
