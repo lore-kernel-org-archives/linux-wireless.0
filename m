@@ -1,39 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52261
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756955AbZJKKiq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Oct 2009 06:38:46 -0400
-Date: Sun, 11 Oct 2009 03:38:42 -0700 (PDT)
-Message-Id: <20091011.033842.58792773.davem@davemloft.net>
-To: mb@bu3sch.de
-Cc: johannes@sipsolutions.net, hidave.darkstar@gmail.com,
-	linux-kernel@vger.kernel.org, tglx@linutronix.de,
-	linux-wireless@vger.kernel.org
-Subject: Re: NOHZ: local_softirq_pending 08
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200910111217.31883.mb@bu3sch.de>
-References: <20091011095217.GA2200@darkstar>
-	<1255255735.4095.53.camel@johannes.local>
-	<200910111217.31883.mb@bu3sch.de>
+Received: from c60.cesmail.net ([216.154.195.49]:49480 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753855AbZJUP3O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Oct 2009 11:29:14 -0400
+Subject: Re: Broadcom 4318 not working with bleeding edge kernels
+From: Pavel Roskin <proski@gnu.org>
+To: Celejar <celejar@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20091020214702.a76fa4aa.celejar@gmail.com>
+References: <20091020214702.a76fa4aa.celejar@gmail.com>
+Content-Type: text/plain
+Date: Wed, 21 Oct 2009 11:29:17 -0400
+Message-Id: <1256138957.26054.4.camel@mj>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Buesch <mb@bu3sch.de>
-Date: Sun, 11 Oct 2009 12:17:30 +0200
+On Tue, 2009-10-20 at 21:47 -0400, Celejar wrote:
 
-> On Sunday 11 October 2009 12:08:55 Johannes Berg wrote:
->> On Sun, 2009-10-11 at 17:52 +0800, Dave Young wrote:
->> 
->> FWIW, I believe the bug to be in b43 and wl12x1, and not as Michael
->> thinks in the stack.
-> 
-> If mac80211 requires BHs disabled, it should do this.
+> Oct 17 19:44:19 localhost wpa_supplicant[3477]: Trying to associate with 00:14:d1:3e:ff:30 (SSID='cranford' freq=2437 MHz)
+> Oct 17 19:44:19 localhost wpa_supplicant[3477]: Association request to the driver failed
 
-That's overhead, and %99 of drivers do not require it, and therefore
-for %99 of drivers it's unnecessary overhead.
+Since the message is from wpa_supplicant, it must be something between
+wpa_supplicant and mac80211.  I don't think any code in b43 is involved.
 
-In general we avoid doing things like that.  Instead, we put the
-cost only where it's actually needed.
+Perhaps you should include some information about wpa_supplicant, i.e.
+its version and the command line.  Please try the latest wpa_supplicant.
+Please try both wext and nl80211 drivers.  That would help understand
+the extent of the problem.
+
+-- 
+Regards,
+Pavel Roskin
