@@ -1,73 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:56264 "EHLO
+Received: from mx51.mymxserver.com ([85.199.173.110]:2996 "EHLO
 	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751699AbZJZNnO convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1755638AbZJVNfi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 09:43:14 -0400
-From: Holger Schurig <h.schurig@mn-solutions.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: RECAP: indication of channel noise
-Date: Mon, 26 Oct 2009 14:42:44 +0100
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200910261442.44774.h.schurig@mn-solutions.de>
+	Thu, 22 Oct 2009 09:35:38 -0400
+Message-Id: <20091022133419.553612632@mail.mn-solutions.de>
+References: <20091022133043.185554096@mail.mn-solutions.de>
+Date: Thu, 22 Oct 2009 15:30:57 +0200
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 14/19] libertas: move mic failure event to wext.c
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On IRC, Johannes, Felix and I talked about how to indicate the 
-noise level towards user-space.
+... because for cfg80211 we'll need a completely different
+implementation.
 
-Noise is not really a property of the link, althought derived 
-values like SNR are. It can be nice to debug stuff.
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-
-However, what hardware value hardware says is a noise level 
-variues. For ath5k, it's internal, thermal noise. For ath9k, 
-it's external medium noise. Some hardware can determine noise 
-only while in a connection, others can do it at any time.
-
-However, noise is only one property of a channel, a wider 
-approach would be to define a "site survey API". This could 
-include hw cycle counters, e.g. to find out the channel 
-utilization.
-
-The idea is to have one API call "do site survey", where you tell 
-the driver to scan on specified/all channels to determine those 
-values.
-
-And then there's an API call to retrieve this information. For 
-hardware where you cannot really scan (e.g. Libertas, Orinoco), 
-you can simply call the "retrieve site survey" call without the 
-prior scanning and you just get what the hardware knows anyway. 
-
-This makes the retrieve systeam call "cheap" in order to only get 
-the noise level, but the API rich in case the hardware has much 
-more versatile capabilities.
-
-
-
-We did not yet come up with a clear API definition for this. My 
-idea for an initial "retrieve site survey" response is:
-
-NL80211_CMD_NEW_SURVEY_RESULTS
-  NL80211_ATTR_GENERATION
-  NL80211_ATTR_IFINDEX
-  NL80211_BSS_FREQUENCY
-  NL80211_BSS_NOISE_MBM
-
-Of course this will extend over time, but that is easy due to 
-nl80211.
+--- linux-wl.orig/drivers/net/wireless/libertas/cmdresp.c
++++ linux-wl/drivers/net/wireless/libertas/cmdresp.c
+@@ -73,32 +73,6 @@
+ 	lbs_deb_leave(LBS_DEB_ASSOC);
+ }
+ 
+-/**
+- *  @brief This function handles MIC failure event.
+- *
+- *  @param priv    A pointer to struct lbs_private structure
+- *  @para  event   the event id
+- *  @return 	   n/a
+- */
+-static void handle_mic_failureevent(struct lbs_private *priv, u32 event)
+-{
+-	char buf[50];
+-
+-	lbs_deb_enter(LBS_DEB_CMD);
+-	memset(buf, 0, sizeof(buf));
+-
+-	sprintf(buf, "%s", "MLME-MICHAELMICFAILURE.indication ");
+-
+-	if (event == MACREG_INT_CODE_MIC_ERR_UNICAST) {
+-		strcat(buf, "unicast ");
+-	} else {
+-		strcat(buf, "multicast ");
+-	}
+-
+-	lbs_send_iwevcustom_event(priv, buf);
+-	lbs_deb_leave(LBS_DEB_CMD);
+-}
+-
+ static int lbs_ret_reg_access(struct lbs_private *priv,
+ 			       u16 type, struct cmd_ds_command *resp)
+ {
+@@ -477,12 +451,12 @@
+ 
+ 	case MACREG_INT_CODE_MIC_ERR_UNICAST:
+ 		lbs_deb_cmd("EVENT: UNICAST MIC ERROR\n");
+-		handle_mic_failureevent(priv, MACREG_INT_CODE_MIC_ERR_UNICAST);
++		lbs_send_mic_failureevent(priv, event);
+ 		break;
+ 
+ 	case MACREG_INT_CODE_MIC_ERR_MULTICAST:
+ 		lbs_deb_cmd("EVENT: MULTICAST MIC ERROR\n");
+-		handle_mic_failureevent(priv, MACREG_INT_CODE_MIC_ERR_MULTICAST);
++		lbs_send_mic_failureevent(priv, event);
+ 		break;
+ 
+ 	case MACREG_INT_CODE_MIB_CHANGED:
+--- linux-wl.orig/drivers/net/wireless/libertas/wext.c
++++ linux-wl/drivers/net/wireless/libertas/wext.c
+@@ -54,7 +54,7 @@
+ 	wireless_send_event(priv->dev, SIOCGIWAP, &wrqu, NULL);
+ }
+ 
+-void lbs_send_iwevcustom_event(struct lbs_private *priv, s8 *str)
++static void lbs_send_iwevcustom_event(struct lbs_private *priv, s8 *str)
+ {
+ 	union iwreq_data iwrq;
+ 	u8 buf[50];
+@@ -79,6 +79,31 @@
+ }
+ 
+ /**
++ *  @brief This function handles MIC failure event.
++ *
++ *  @param priv    A pointer to struct lbs_private structure
++ *  @para  event   the event id
++ *  @return 	   n/a
++ */
++void lbs_send_mic_failureevent(struct lbs_private *priv, u32 event)
++{
++	char buf[50];
++
++	lbs_deb_enter(LBS_DEB_CMD);
++	memset(buf, 0, sizeof(buf));
++
++	sprintf(buf, "%s", "MLME-MICHAELMICFAILURE.indication ");
++
++	if (event == MACREG_INT_CODE_MIC_ERR_UNICAST)
++		strcat(buf, "unicast ");
++	else
++		strcat(buf, "multicast ");
++
++	lbs_send_iwevcustom_event(priv, buf);
++	lbs_deb_leave(LBS_DEB_CMD);
++}
++
++/**
+  *  @brief Find the channel frequency power info with specific channel
+  *
+  *  @param priv 	A pointer to struct lbs_private structure
+--- linux-wl.orig/drivers/net/wireless/libertas/wext.h
++++ linux-wl/drivers/net/wireless/libertas/wext.h
+@@ -5,7 +5,7 @@
+ #define	_LBS_WEXT_H_
+ 
+ void lbs_send_disconnect_notification(struct lbs_private *priv);
+-void lbs_send_iwevcustom_event(struct lbs_private *priv, s8 *str);
++void lbs_send_mic_failureevent(struct lbs_private *priv, u32 event);
+ 
+ extern struct iw_handler_def lbs_handler_def;
+ extern struct iw_handler_def mesh_handler_def;
 
 -- 
-M&N Solutions GmbH          Ein Unternehmen der Datagroup AG
-Holger Schurig
-Raiffeisenstr. 10
-61191 Rosbach
-Tel: 06003/9141-15          Fax 06003/9141-49
-http://www.mn-solutions.de/
-
-Handelsregister Friedberg, HRB 5903
-Geschäftsführer: P.Schrittenlocher
