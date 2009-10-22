@@ -1,71 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:55016 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754164AbZJ2VUD (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43320 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751607AbZJWNe6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 17:20:03 -0400
-Received: by mail-iw0-f180.google.com with SMTP id 10so1692473iwn.4
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2009 14:20:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890910291355l5fc4ec2ctb9a777b6e8b07baa@mail.gmail.com>
-References: <20091028183726.GA4952@tux> <1256761485.4237.260.camel@johannes.local>
-	<43e72e890910291355l5fc4ec2ctb9a777b6e8b07baa@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 29 Oct 2009 14:19:48 -0700
-Message-ID: <43e72e890910291419j7feb7a3dg33cd5b02e064eeee@mail.gmail.com>
-Subject: Re: odd state reached when AP deauths you after assoc
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 23 Oct 2009 09:34:58 -0400
+Subject: Re: [PATCH] net: Adjust softirq raising in __napi_schedule
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jarek Poplawski <jarkao2@gmail.com>
+Cc: Tilman Schmidt <tilman@imap.cc>,
+	David Miller <davem@davemloft.net>, hidave.darkstar@gmail.com,
+	linux-kernel@vger.kernel.org, tglx@linutronix.de,
+	linux-wireless@vger.kernel.org, linux-ppp@vger.kernel.org,
+	netdev@vger.kernel.org, paulus@samba.org,
+	Michael Buesch <mb@bu3sch.de>,
+	Oliver Hartkopp <oliver@hartkopp.net>
+In-Reply-To: <20091021213947.GA12202@ami.dom.local>
+References: <4AD31213.6020006@imap.cc> <20091015114052.GA9870@ff.dom.local>
+	 <4AD76184.6030900@gmail.com> <4ADF5710.4030505@imap.cc>
+	 <20091021211906.GA11401@ami.dom.local>
+	 <1256160330.12174.2.camel@johannes.local>
+	 <20091021213947.GA12202@ami.dom.local>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-CucNFXYmnSnNQhEM6i4T"
+Date: Thu, 22 Oct 2009 10:27:01 +0200
+Message-Id: <1256200021.12174.11.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 29, 2009 at 1:55 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Wed, Oct 28, 2009 at 1:24 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Wed, 2009-10-28 at 11:37 -0700, Luis R. Rodriguez wrote:
->>> I ran into this when ath5k with wpa_supplicant with config file with
->>> a wrong password against a Cisco AP. It seems the Cisco AP auths you
->>> and lets you assoc but later it deauths you -- I guess after it
->>> determines you are auth credentials failed. When this happens I get:
->>>
->>> mcgrof@tux ~ $ iw dev wlan0 link
->>> Authenticated with 00:0b:85:5b:8d:6c (on wlan0)
->>> Not connected.
->>
->> I'm guessing that you're using -Dnl80211. You need this patch, or
->> equivalent:
->> http://johannes.sipsolutions.net/patches/hostap/all/2009-10-26-12%3a59/deauth-on-disassoc.patch
->
-> Indeed, it fixes my woes, thanks.
 
-Well almost, after a while of being connected it then does this:
+--=-CucNFXYmnSnNQhEM6i4T
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
-CTRL-EVENT-SCAN-RESULTS
-Trying to authenticate with 00:0b:85:5b:8d:6c (SSID='ATH-GLOBAL' freq=2462 MHz)
-Trying to associate with 00:0b:85:5b:8d:6c (SSID='ATH-GLOBAL' freq=2462 MHz)
-Associated with 00:0b:85:5b:8d:6c
-CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
-CTRL-EVENT-SCAN-RESULTS
-Trying to authenticate with 00:0b:85:5b:9a:bc (SSID='ATH-GLOBAL' freq=2412 MHz)
-Trying to associate with 00:0b:85:5b:9a:bc (SSID='ATH-GLOBAL' freq=2412 MHz)
-Associated with 00:0b:85:5b:9a:bc
-CTRL-EVENT-EAP-STARTED EAP authentication started
-CTRL-EVENT-EAP-STARTED EAP authentication started
-CTRL-EVENT-EAP-METHOD EAP vendor 0 method 25 (PEAP) selected
-OpenSSL: tls_connection_handshake - Failed to read possible
-Application Data error:00000000:lib(0):func(0):reason(0)
+On Wed, 2009-10-21 at 23:39 +0200, Jarek Poplawski wrote:
 
-And I then end up with the same:
+> > > -	__raise_softirq_irqoff(NET_RX_SOFTIRQ);
+> > > +	raise_softirq_irqoff(NET_RX_SOFTIRQ);
+> >=20
+> > This still doesn't make any sense.
+> >=20
+> > There may or may not be a lot of code that assumes that everything else
+> > is run with other tasklets disabled, and that it cannot be interrupted
+> > by a tasklet and thus create a race.
+> >=20
+> > Can you prove that is not the case, across the entire networking layer?
+>=20
+> I'm not sure I can understand your question. This patch is mainly to
+> avoid using netif_rx()/netif_rx_ni() pair as a test of proper process
+> context handling; IMHO there're better tools for this (lockdep,
+> WARN_ON's).
 
->>> mcgrof@tux ~ $ iw dev wlan0 link
->>> Authenticated with 00:0b:85:5b:8d:6c (on wlan0)
->>> Not connected.
+And how exactly does that matter to the patch at hand?!
 
-But this time if I hit ctrl-c it gets cleared and I can auth/assoc
-fine after that. But an issue is still present.
+I'm saying that it seems to me, as indicated by the API (and without
+proof otherwise that's how it is) the networking layer needs to have
+packets handed to it with softirqs disabled. Therefore, this patch is
+not needed. While it may not be _wrong_, it'll definitely introduce a
+performance regression.
 
-  Luis
+This really should be obvious. You're fixing the warning at the source
+of the warning, rather than the source of the problem.
+
+johannes
+
+--=-CucNFXYmnSnNQhEM6i4T
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK4BdSAAoJEODzc/N7+QmazNcP/1JmQK9nI+Lg9fAQRj+Anj4h
+dzuASnI6MGz+uSIueUNPQN7uv57tvD17jsftZzgR2MawI6WDJSNR6qZM2eICXKa6
+HUfxBlByQ7mQN+IuigMlop1ZGTHza7UjUVQq/YLsVU99y4LwAPZJIYddAbtiXzWq
+xrOPSSc1QUIjfgZct+FlJBrdS/G0JIxCNwyD7HyJcxaSyOuNW/lmqg7YEF6hnoCV
+NBVCszM0KUHaxQVumy97YnaIOvxC8w+fVycI4kvWDhKLhHfwowc+Vi3/Pkb5ofML
+WaWTvaoEGeml99YD2uprZb5vKWmKGm4NxHJr2s/3AC0xbDVLsXDg9hPVZdTwVE0d
+Hx4L4uYQC4hr9+TRrFBDYqymbYgbJ0ZufdrIwicygQBpOZfLDmx7M47LDGlbJ7D3
+LfE5PWu3C0+qegi9k5MI8w6DlyVlVAnG6jgWGgyNle5fOCg7cmN+IBGl57XrTVPF
+G1vRBDSFzBLDUQPRkBrwDO7rDNRoB3xiOAQiDNsKf1h0zdsDY4PlgOKlT6A6sVMC
+8UqB5D1nLM57IShUH+0bypp9GNEN7q2XGge8nyXYKDsMlPZjLOJMMUR5IdJZxnbS
+CeIWTQqoqu/inV381OWn4S20tofOQI38F4h4WOWswLUlRbWh+HDPTnfJpeim2Z7q
+u6tvV3UkEoicmPfJcqbD
+=aeCA
+-----END PGP SIGNATURE-----
+
+--=-CucNFXYmnSnNQhEM6i4T--
+
