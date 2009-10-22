@@ -1,108 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tac.ki.iif.hu ([193.6.222.43]:36504 "EHLO tac.ki.iif.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754454AbZJMUpQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 16:45:16 -0400
-From: Ferenc Wagner <wferi@niif.hu>
-To: linux-kernel@vger.kernel.org
-Cc: ipw2100-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: Re: 2.6.32-rc4 ipw2200: oops on missing firmware
-References: <87hbu3h023.fsf@tac.ki.iif.hu>
-	<200910131855.25878.elendil@planet.nl>
-Date: Tue, 13 Oct 2009 22:22:06 +0200
-In-Reply-To: <200910131855.25878.elendil@planet.nl> (Frans Pop's message of
-	"Tue, 13 Oct 2009 18:55:24 +0200")
-Message-ID: <873a5n59jl.fsf@tac.ki.iif.hu>
-MIME-Version: 1.0
+Received: from fw.wantstofly.org ([80.101.37.227]:49170 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756522AbZJVShK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Oct 2009 14:37:10 -0400
+Date: Thu, 22 Oct 2009 20:19:41 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 04/28] mwl8k: fix multicast address filter programming
+Message-ID: <20091022181941.GF1583@mail.wantstofly.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Frans Pop <elendil@planet.nl> writes:
+mwl8k's ->prepare_multicast() currently just enables reception of
+all multicast packets, which is somewhat ineffective.
 
-> Adding relevant CCs.
+Fix this by either disabling all multicast RX, enabling multicast
+RX according to the multicast address filter table, or enabling all
+multicast RX, depending on whether ->prepare_multicast() was given
+any multicast addresses and whether the hardware multicast address
+filter table is large enough to fit all requested addresses.
 
-Thanks.  Meanwhile I checked that the ipw2200 module can indeed be
-removed and reinserted into the running system without problems,
-here's the relevant part of dmesg:
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   40 +++++++++++++++++++++++++++-------------
+ 1 files changed, 27 insertions(+), 13 deletions(-)
 
-[ 5837.082811] ipw2200: Firmware error detected.  Restarting.
-[ 5840.507981] ipw2200: Firmware error detected.  Restarting.
-[ 5886.248174] ipw2200 0000:02:02.0: PCI INT A disabled
-[ 5919.283775] ipw2200: Intel(R) PRO/Wireless 2200/2915 Network Driver, 1.2.2kmprq
-[ 5919.283782] ipw2200: Copyright(c) 2003-2006 Intel Corporation
-[ 5919.283879] ipw2200 0000:02:02.0: PCI INT A -> Link[LNKF] -> GSI 11 (level, low) -> IRQ 11
-[ 5919.285697] ipw2200: Detected Intel PRO/Wireless 2200BG Network Connection
-[ 5919.285771] ipw2200 0000:02:02.0: firmware: requesting ipw2200-bss.fw
-[ 5919.466323] ipw2200: Detected geography ZZR (14 802.11bg channels, 0 802.11a channels)
-[ 5919.477923] udev: renamed network interface eth0 to wlan
-[ 5982.543067] ipw2200: Firmware error detected.  Restarting.
-[ 5985.850947] ipw2200: Firmware error detected.  Restarting.
-[ 5989.170633] ipw2200: Firmware error detected.  Restarting.
-[ 5992.479084] ipw2200: Firmware error detected.  Restarting.
-[ 5995.786495] ipw2200: Firmware error detected.  Restarting.
-[ 5999.099022] ipw2200: Firmware error detected.  Restarting.
-[ 6003.193188] QoS Error need to parse QOS_PARAMETER IE
-[ 6029.106407] ipw2200: Firmware error detected.  Restarting.
-[ 6032.415272] ipw2200: Firmware error detected.  Restarting.
-
-Yes, I continuously get firmware errors, and occasionally the QoS
-error.  I'm using firmware version 3.1, but these are probably
-irrelevant for this bug report.
-
-> Original message follows.
-> ==============
-> Hi,
->
-> See the screenshot at http://apt.niif.hu/ipw_oops.png.  During bootup,
-> initramfs-tools tried to load the ipw2200 module, but nobody fed it
-> the necessary firmware, so request_firmware timed out and the module
-> unload cleanup oopsed in device_pm_remove:
->
-> void device_pm_remove(struct device *dev)
-> {
->         pr_debug("PM: Removing info for %s:%s\n",
->                  dev->bus ? dev->bus->name : "No Bus",
->                  kobject_name(&dev->kobj));
->         mutex_lock(&dpm_list_mtx);
->         list_del_init(&dev->power.entry);
->         mutex_unlock(&dpm_list_mtx);
->         pm_runtime_remove(dev);
-> }
->
-> 00000a0a <device_pm_remove>:
->  a0a:   55                      push   %ebp
->  a0b:   89 e5                   mov    %esp,%ebp
->  a0d:   53                      push   %ebx
->  a0e:   89 c3                   mov    %eax,%ebx
->  a10:   b8 08 00 00 00          mov    $0x8,%eax
->  a15:   e8 fc ff ff ff          call   a16 <device_pm_remove+0xc>
->  a1a:   8d 4b 5c                lea    0x5c(%ebx),%ecx
->  a1d:   8b 53 5c                mov    0x5c(%ebx),%edx
->  a20:   8b 43 60                mov    0x60(%ebx),%eax
->  a23:   89 42 04                mov    %eax,0x4(%edx)
->  a26:   89 10                   mov    %edx,(%eax)
->  a28:   89 4b 5c                mov    %ecx,0x5c(%ebx)
->  a2b:   89 4b 60                mov    %ecx,0x60(%ebx)
->  a2e:   b8 08 00 00 00          mov    $0x8,%eax
->  a33:   e8 fc ff ff ff          call   a34 <device_pm_remove+0x2a>
->  a38:   89 d8                   mov    %ebx,%eax
->  a3a:   e8 fc ff ff ff          call   a3b <device_pm_remove+0x31>
->  a3f:   5b                      pop    %ebx
->  a40:   5d                      pop    %ebp
->  a41:   c3                      ret    
->
-> The offending IP translates to line a23, so the problem is edx being 0
-> at that point.  I'm not sure which struct device field has offset
-> 0x5c, maybe power, but I'm lost at this point anyway.
->
-> I don't know whether it's a new bug or not, never did such insane
-> things previously.  rmmod ipw2200 definitely worked under 2.6.31, and
-> it's possible that it works under 2.6.32-rc4 too, I forgot to check
-> that (but will do so tonight).
->
-> --
-> Regards,
-> Feri.
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index ba7b8ef..0b4fa14 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1539,7 +1539,10 @@ struct mwl8k_cmd_mac_multicast_adr {
+ 	__u8 addr[0][ETH_ALEN];
+ };
+ 
+-#define MWL8K_ENABLE_RX_MULTICAST 0x000F
++#define MWL8K_ENABLE_RX_DIRECTED	0x0001
++#define MWL8K_ENABLE_RX_MULTICAST	0x0002
++#define MWL8K_ENABLE_RX_ALL_MULTICAST	0x0004
++#define MWL8K_ENABLE_RX_BROADCAST	0x0008
+ 
+ static struct mwl8k_cmd_pkt *
+ __mwl8k_cmd_mac_multicast_adr(struct ieee80211_hw *hw,
+@@ -1547,11 +1550,14 @@ __mwl8k_cmd_mac_multicast_adr(struct ieee80211_hw *hw,
+ {
+ 	struct mwl8k_priv *priv = hw->priv;
+ 	struct mwl8k_cmd_mac_multicast_adr *cmd;
++	int allmulti;
+ 	int size;
+-	int i;
+ 
+-	if (mc_count > priv->num_mcaddrs)
+-		mc_count = priv->num_mcaddrs;
++	allmulti = 0;
++	if (mc_count > priv->num_mcaddrs) {
++		allmulti = 1;
++		mc_count = 0;
++	}
+ 
+ 	size = sizeof(*cmd) + mc_count * ETH_ALEN;
+ 
+@@ -1561,16 +1567,24 @@ __mwl8k_cmd_mac_multicast_adr(struct ieee80211_hw *hw,
+ 
+ 	cmd->header.code = cpu_to_le16(MWL8K_CMD_MAC_MULTICAST_ADR);
+ 	cmd->header.length = cpu_to_le16(size);
+-	cmd->action = cpu_to_le16(MWL8K_ENABLE_RX_MULTICAST);
+-	cmd->numaddr = cpu_to_le16(mc_count);
+-
+-	for (i = 0; i < mc_count && mclist; i++) {
+-		if (mclist->da_addrlen != ETH_ALEN) {
+-			kfree(cmd);
+-			return NULL;
++	cmd->action = cpu_to_le16(MWL8K_ENABLE_RX_DIRECTED |
++				  MWL8K_ENABLE_RX_BROADCAST);
++
++	if (allmulti) {
++		cmd->action |= cpu_to_le16(MWL8K_ENABLE_RX_ALL_MULTICAST);
++	} else if (mc_count) {
++		int i;
++
++		cmd->action |= cpu_to_le16(MWL8K_ENABLE_RX_MULTICAST);
++		cmd->numaddr = cpu_to_le16(mc_count);
++		for (i = 0; i < mc_count && mclist; i++) {
++			if (mclist->da_addrlen != ETH_ALEN) {
++				kfree(cmd);
++				return NULL;
++			}
++			memcpy(cmd->addr[i], mclist->da_addr, ETH_ALEN);
++			mclist = mclist->next;
+ 		}
+-		memcpy(cmd->addr[i], mclist->da_addr, ETH_ALEN);
+-		mclist = mclist->next;
+ 	}
+ 
+ 	return &cmd->header;
+-- 
+1.5.6.4
