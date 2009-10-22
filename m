@@ -1,164 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55679 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751708AbZJZOi5 (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:59616 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752995AbZJVSxs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 10:38:57 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 2/4] ath9k_hw: distinguish single-chip solutions on initial probe print
-Date: Mon, 26 Oct 2009 10:38:59 -0400
-Message-Id: <1256567941-26859-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1256567941-26859-1-git-send-email-lrodriguez@atheros.com>
-References: <1256567941-26859-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 22 Oct 2009 14:53:48 -0400
+Date: Thu, 22 Oct 2009 20:21:48 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 28/28] mwl8k: add support for the 88w8366
+Message-ID: <20091022182148.GD1583@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Devices with external radios have revisions which we can count on.
-On single chip solutions these EEPROM values for these radio revision
-also exist but are not meaningful as the radios are embedded onto the
-same chip. Each single-chip device evolves together as one device.
+Add support for the 88w8366 firmware receive descriptor format,
+and add the 88w8366 PCI ID.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
 ---
- drivers/net/wireless/ath/ath9k/ahb.c |   11 ++++-------
- drivers/net/wireless/ath/ath9k/hw.c  |   27 +++++++++++++++++++++++----
- drivers/net/wireless/ath/ath9k/hw.h  |    3 +--
- drivers/net/wireless/ath/ath9k/pci.c |   11 ++++-------
- 4 files changed, 32 insertions(+), 20 deletions(-)
+ drivers/net/wireless/mwl8k.c |   95 +++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 94 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 41422c4..925818c 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -69,6 +69,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 	int irq;
- 	int ret = 0;
- 	struct ath_hw *ah;
-+	char hw_name[1024];
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 8e4631a..40075d4 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -755,7 +755,89 @@ static inline void mwl8k_add_dma_header(struct sk_buff *skb)
  
- 	if (!pdev->dev.platform_data) {
- 		dev_err(&pdev->dev, "no platform data specified\n");
-@@ -133,15 +134,11 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 	}
- 
- 	ah = sc->sc_ah;
-+	ath9k_hw_name(ah, hw_name);
- 	printk(KERN_INFO
--	       "%s: Atheros AR%s MAC/BB Rev:%x, "
--	       "AR%s RF Rev:%x, mem=0x%lx, irq=%d\n",
-+	       "%s: %s mem=0x%lx, irq=%d\n",
- 	       wiphy_name(hw->wiphy),
--	       ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
--	       ah->hw_version.macRev,
--	       ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
--				 AR_RADIO_SREV_MAJOR)),
--	       ah->hw_version.phyRev,
-+	       hw_name,
- 	       (unsigned long)mem, irq);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index cf543e3..f65b591 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -3959,7 +3959,7 @@ static struct {
- /*
-  * Return the MAC/BB name. "????" is returned if the MAC/BB is unknown.
-  */
--const char *ath9k_hw_mac_bb_name(u32 mac_bb_version)
-+static const char *ath9k_hw_mac_bb_name(u32 mac_bb_version)
- {
- 	int i;
- 
-@@ -3971,13 +3971,12 @@ const char *ath9k_hw_mac_bb_name(u32 mac_bb_version)
- 
- 	return "????";
- }
--EXPORT_SYMBOL(ath9k_hw_mac_bb_name);
  
  /*
-  * Return the RF name. "????" is returned if the RF is unknown.
-  * Used for devices with external radios.
-  */
--const char *ath9k_hw_rf_name(u16 rf_version)
-+static const char *ath9k_hw_rf_name(u16 rf_version)
- {
- 	int i;
- 
-@@ -3989,4 +3988,24 @@ const char *ath9k_hw_rf_name(u16 rf_version)
- 
- 	return "????";
- }
--EXPORT_SYMBOL(ath9k_hw_rf_name);
+- * Packet reception.
++ * Packet reception for 88w8366.
++ */
++struct mwl8k_rxd_8366 {
++	__le16 pkt_len;
++	__u8 sq2;
++	__u8 rate;
++	__le32 pkt_phys_addr;
++	__le32 next_rxd_phys_addr;
++	__le16 qos_control;
++	__le16 htsig2;
++	__le32 hw_rssi_info;
++	__le32 hw_noise_floor_info;
++	__u8 noise_floor;
++	__u8 pad0[3];
++	__u8 rssi;
++	__u8 rx_status;
++	__u8 channel;
++	__u8 rx_ctrl;
++} __attribute__((packed));
 +
-+void ath9k_hw_name(struct ath_hw *ah, char *hw_name)
++#define MWL8K_8366_RX_CTRL_OWNED_BY_HOST	0x80
++
++static void mwl8k_rxd_8366_init(void *_rxd, dma_addr_t next_dma_addr)
 +{
-+	/* chipsets >= AR9280 are single-chip */
-+	if (AR_SREV_9280_10_OR_LATER(ah)) {
-+		sprintf(hw_name,
-+			"Atheros single-chip AR%s Rev:%x",
-+			ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
-+			ah->hw_version.macRev);
-+	}
-+	else {
-+		sprintf(hw_name,
-+			"Atheros AR%s MAC/BB Rev:%x AR%s RF Rev:%x: ",
-+			ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
-+			ah->hw_version.macRev,
-+			ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
-+					 AR_RADIO_SREV_MAJOR)),
-+			ah->hw_version.phyRev);
-+	}
++	struct mwl8k_rxd_8366 *rxd = _rxd;
++
++	rxd->next_rxd_phys_addr = cpu_to_le32(next_dma_addr);
++	rxd->rx_ctrl = MWL8K_8366_RX_CTRL_OWNED_BY_HOST;
 +}
-+EXPORT_SYMBOL(ath9k_hw_name);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 100fcba..3ceb4c6 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -720,8 +720,7 @@ void ath_gen_timer_free(struct ath_hw *ah, struct ath_gen_timer *timer);
- void ath_gen_timer_isr(struct ath_hw *hw);
- u32 ath9k_hw_gettsf32(struct ath_hw *ah);
++
++static void mwl8k_rxd_8366_refill(void *_rxd, dma_addr_t addr, int len)
++{
++	struct mwl8k_rxd_8366 *rxd = _rxd;
++
++	rxd->pkt_len = cpu_to_le16(len);
++	rxd->pkt_phys_addr = cpu_to_le32(addr);
++	wmb();
++	rxd->rx_ctrl = 0;
++}
++
++static int
++mwl8k_rxd_8366_process(void *_rxd, struct ieee80211_rx_status *status)
++{
++	struct mwl8k_rxd_8366 *rxd = _rxd;
++
++	if (!(rxd->rx_ctrl & MWL8K_8366_RX_CTRL_OWNED_BY_HOST))
++		return -1;
++	rmb();
++
++	memset(status, 0, sizeof(*status));
++
++	status->signal = -rxd->rssi;
++	status->noise = -rxd->noise_floor;
++
++	if (rxd->rate & 0x80) {
++		status->flag |= RX_FLAG_HT;
++		status->rate_idx = rxd->rate & 0x7f;
++	} else {
++		int i;
++
++		for (i = 0; i < ARRAY_SIZE(mwl8k_rates); i++) {
++			if (mwl8k_rates[i].hw_value == rxd->rate) {
++				status->rate_idx = i;
++				break;
++			}
++		}
++	}
++
++	status->band = IEEE80211_BAND_2GHZ;
++	status->freq = ieee80211_channel_to_frequency(rxd->channel);
++
++	return le16_to_cpu(rxd->pkt_len);
++}
++
++static struct rxd_ops rxd_8366_ops = {
++	.rxd_size	= sizeof(struct mwl8k_rxd_8366),
++	.rxd_init	= mwl8k_rxd_8366_init,
++	.rxd_refill	= mwl8k_rxd_8366_refill,
++	.rxd_process	= mwl8k_rxd_8366_process,
++};
++
++/*
++ * Packet reception for 88w8687.
+  */
+ struct mwl8k_rxd_8687 {
+ 	__le16 pkt_len;
+@@ -3225,6 +3307,14 @@ static void mwl8k_finalize_join_worker(struct work_struct *work)
+ 	priv->beacon_skb = NULL;
+ }
  
--const char *ath9k_hw_mac_bb_name(u32 mac_bb_version);
--const char *ath9k_hw_rf_name(u16 rf_version);
-+void ath9k_hw_name(struct ath_hw *ah, char *hw_name);
- 
- #define ATH_PCIE_CAP_LINK_CTRL	0x70
- #define ATH_PCIE_CAP_LINK_L0S	1
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 76f3890..963d6fe 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -114,6 +114,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	u32 val;
- 	int ret = 0;
- 	struct ath_hw *ah;
-+	char hw_name[1024];
- 
- 	if (pci_enable_device(pdev))
- 		return -EIO;
-@@ -218,15 +219,11 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	sc->irq = pdev->irq;
- 
- 	ah = sc->sc_ah;
-+	ath9k_hw_name(ah, hw_name);
- 	printk(KERN_INFO
--	       "%s: Atheros AR%s MAC/BB Rev:%x "
--	       "AR%s RF Rev:%x: mem=0x%lx, irq=%d\n",
-+	       "%s: %s mem=0x%lx, irq=%d\n",
- 	       wiphy_name(hw->wiphy),
--	       ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
--	       ah->hw_version.macRev,
--	       ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
--				 AR_RADIO_SREV_MAJOR)),
--	       ah->hw_version.phyRev,
-+	       hw_name,
- 	       (unsigned long)mem, pdev->irq);
- 
- 	return 0;
++static struct mwl8k_device_info di_8366 = {
++	.part_name	= "88w8366",
++	.helper_image	= "mwl8k/helper_8366.fw",
++	.fw_image	= "mwl8k/fmimage_8366.fw",
++	.rxd_ops	= &rxd_8366_ops,
++	.modes		= 0,
++};
++
+ static struct mwl8k_device_info di_8687 = {
+ 	.part_name	= "88w8687",
+ 	.helper_image	= "mwl8k/helper_8687.fw",
+@@ -3241,6 +3331,9 @@ static DEFINE_PCI_DEVICE_TABLE(mwl8k_pci_id_table) = {
+ 		PCI_VDEVICE(MARVELL, 0x2a30),
+ 		.driver_data = (unsigned long)&di_8687,
+ 	}, {
++		PCI_VDEVICE(MARVELL, 0x2a40),
++		.driver_data = (unsigned long)&di_8366,
++	}, {
+ 	},
+ };
+ MODULE_DEVICE_TABLE(pci, mwl8k_pci_id_table);
 -- 
-1.6.0.4
-
+1.5.6.4
