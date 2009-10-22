@@ -1,32 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:33683 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933351AbZJIPXK (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:59626 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755323AbZJVSxt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2009 11:23:10 -0400
-Received: by fxm27 with SMTP id 27so6492117fxm.17
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2009 08:22:33 -0700 (PDT)
-Message-ID: <4ACF5533.70307@lwfinger.net>
-Date: Fri, 09 Oct 2009 10:22:27 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: Re: Broadcom cards for free
-References: <200910091139.36089.mb@bu3sch.de> <69e28c910910090314j4e9885dfofbc58e901965b4ab@mail.gmail.com>
-In-Reply-To: <69e28c910910090314j4e9885dfofbc58e901965b4ab@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 22 Oct 2009 14:53:49 -0400
+Date: Thu, 22 Oct 2009 20:21:36 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 24/28] mwl8k: add AP firmware handling to ->configure_filter()
+Message-ID: <20091022182136.GZ1583@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/09/2009 05:14 AM, Gábor Stefanik wrote:
-> Sounds interesting... especially now that N-PHY is actually being
-> reverse-engineered (or is it?).
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-I'm still working on it, although a lot of my time is taken in testing
-openSUSE 11.2 pre-release code. As the release date is Nov. 12, that
-will soon be over.
-
-Larry
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 0e26a96..815f73f 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -3013,6 +3013,16 @@ static void mwl8k_configure_filter(struct ieee80211_hw *hw,
+ 	struct mwl8k_cmd_pkt *cmd = (void *)(unsigned long)multicast;
+ 
+ 	/*
++	 * AP firmware doesn't allow fine-grained control over
++	 * the receive filter.
++	 */
++	if (priv->ap_fw) {
++		*total_flags &= FIF_ALLMULTI | FIF_BCN_PRBRESP_PROMISC;
++		kfree(cmd);
++		return;
++	}
++
++	/*
+ 	 * Enable hardware sniffer mode if FIF_CONTROL or
+ 	 * FIF_OTHER_BSS is requested.
+ 	 */
+-- 
+1.5.6.4
 
