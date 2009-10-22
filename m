@@ -1,47 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53584 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754661AbZJGUW4 (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:3053 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756078AbZJVNfr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 16:22:56 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/2] ath9k_hw: run the carrier leakage calibration fix for ar9271 as well
-Date: Wed,  7 Oct 2009 16:22:18 -0400
-Message-Id: <1254946939-4943-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 22 Oct 2009 09:35:47 -0400
+Message-Id: <20091022133423.233671310@mail.mn-solutions.de>
+References: <20091022133043.185554096@mail.mn-solutions.de>
+Date: Thu, 22 Oct 2009 15:30:59 +0200
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 16/19] libertas: remove some references to IW_MODE_abc
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is required for the ar9271 hardware as well.
+... in pursue to quaff the wide-spread references to WEXT constants.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/calib.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+When setting SNMP_MIB_OID_BSS_TYPE, wext.c can directly calculate the value
+the firmware wants.
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index f46bd05..7aa3d1d 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -1070,6 +1070,7 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
- }
- EXPORT_SYMBOL(ath9k_hw_calibrate);
+Reading of SNMP_MIB_OID_BSS_TYPE doesn't happen anywhere, so no need to
+convert the firmware value into WEXT values anyway.
+
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+
+--- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
++++ linux-wl/drivers/net/wireless/libertas/cmd.c
+@@ -390,7 +390,7 @@
+ 	switch (oid) {
+ 	case SNMP_MIB_OID_BSS_TYPE:
+ 		cmd.bufsize = cpu_to_le16(sizeof(u8));
+-		cmd.value[0] = (val == IW_MODE_ADHOC) ? 2 : 1;
++		cmd.value[0] = val;
+ 		break;
+ 	case SNMP_MIB_OID_11D_ENABLE:
+ 	case SNMP_MIB_OID_FRAG_THRESHOLD:
+@@ -443,13 +443,7 @@
  
-+/* Carrier leakage Calibration fix */
- static bool ar9285_clc(struct ath_hw *ah, struct ath9k_channel *chan)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -1115,7 +1116,7 @@ bool ath9k_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
+ 	switch (le16_to_cpu(cmd.bufsize)) {
+ 	case sizeof(u8):
+-		if (oid == SNMP_MIB_OID_BSS_TYPE) {
+-			if (cmd.value[0] == 2)
+-				*out_val = IW_MODE_ADHOC;
+-			else
+-				*out_val = IW_MODE_INFRA;
+-		} else
+-			*out_val = cmd.value[0];
++		*out_val = cmd.value[0];
+ 		break;
+ 	case sizeof(u16):
+ 		*out_val = le16_to_cpu(*((__le16 *)(&cmd.value)));
+--- linux-wl.orig/drivers/net/wireless/libertas/assoc.c
++++ linux-wl/drivers/net/wireless/libertas/assoc.c
+@@ -1567,7 +1567,8 @@
+ 	}
  
--	if (AR_SREV_9285_12_OR_LATER(ah)) {
-+	if (AR_SREV_9271(ah) || AR_SREV_9285_12_OR_LATER(ah)) {
- 		if (!ar9285_clc(ah, chan))
- 			return false;
- 	} else {
+ 	priv->mode = assoc_req->mode;
+-	ret = lbs_set_snmp_mib(priv, SNMP_MIB_OID_BSS_TYPE, assoc_req->mode);
++	ret = lbs_set_snmp_mib(priv, SNMP_MIB_OID_BSS_TYPE,
++		assoc_req->mode == IW_MODE_ADHOC ? 2 : 1);
+ 
+ done:
+ 	lbs_deb_leave_args(LBS_DEB_ASSOC, "ret %d", ret);
+
 -- 
-1.6.0.4
-
