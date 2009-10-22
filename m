@@ -1,55 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41201 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755625AbZJARA5 (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:3373 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755382AbZJVNhN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2009 13:00:57 -0400
-Date: Thu, 1 Oct 2009 12:56:50 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ben Hutchings <bhutchings@solarflare.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 0/2] cfg80211: firmware and hardware version
-Message-ID: <20091001165649.GB2895@tuxdriver.com>
-References: <20090924180048.14503.9579.stgit@tikku> <43e72e890909241320j592e347die8a14f8bdd962ffb@mail.gmail.com> <20090925044258.GA2722@tuxdriver.com> <da94abde0909250947k5084db85vccafe0d3e74e2ecf@mail.gmail.com> <43e72e890909250953r1714c79bsa679b96ca6f5797@mail.gmail.com> <20091001011340.GA3123@tuxdriver.com> <87fxa3qjt2.fsf@purkki.valot.fi> <20091001151820.GA2895@tuxdriver.com> <1254411199.2735.4.camel@achroite>
+	Thu, 22 Oct 2009 09:37:13 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/19] libertas + cfg80211
+Date: Thu, 22 Oct 2009 15:36:48 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+References: <20091022133043.185554096@mail.mn-solutions.de>
+In-Reply-To: <20091022133043.185554096@mail.mn-solutions.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1254411199.2735.4.camel@achroite>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200910221536.48292.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 01, 2009 at 04:33:19PM +0100, Ben Hutchings wrote:
-> On Thu, 2009-10-01 at 11:18 -0400, John W. Linville wrote:
-> [...]
-> > > But here are the features which I doubt we will ever use:
-> > > 
-> > >         ethtool -s|--change DEVNAME     Change generic options
-> > >                 [ speed %%d ]
-> > >                 [ duplex half|full ]
-> > >                 [ port tp|aui|bnc|mii|fibre ]
-> > >                 [ autoneg on|off ]
-> > >                 [ advertise %%x ]
-> > >                 [ phyad %%d ]
-> > >                 [ xcvr internal|external ]
-> > >                 [ wol p|u|m|b|a|g|s|d... ]
-> > >                 [ sopass %%x:%%x:%%x:%%x:%%x:%%x ]
-> > >                 [ msglvl %%d ] 
-> > >         ethtool -a|--show-pause DEVNAME Show pause options
-> > >         ethtool -A|--pause DEVNAME      Set pause options
-> > >                 [ autoneg on|off ]
-> > >                 [ rx on|off ]
-> > >                 [ tx on|off ]
-> > 
-> > I agree that the above are ethernet-specific.
-> [...]
-> 
-> Message level isn't and WoL arguably isn't.  It's a shame that these
-> original ethtool settings are still bundled together...
+>       The "[PATCH] libertas spi: fix sparse errors" is completely unrelated
+>       and therefore not in this patch bomb.
 
-Oh, yes!  Missed those in the noise...
+Ahh, quilt-mail doesn't honor if one changes
+the patches/series file while in editor to give
+patch 0/0 text :-/
 
-John
+It put that patch into the patchbomb anyway ...
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+http://www.holgerschurig.de
