@@ -1,85 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33178 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758599AbZJGBTs (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:49172 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756527AbZJVShK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 21:19:48 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, vasanth@atheros.com,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 3/6] ath9k: add helper to un-init the hw properly
-Date: Tue,  6 Oct 2009 21:19:08 -0400
-Message-Id: <1254878351-32433-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1254878351-32433-1-git-send-email-lrodriguez@atheros.com>
-References: <1254878351-32433-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 22 Oct 2009 14:37:10 -0400
+Date: Thu, 22 Oct 2009 20:19:45 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 05/28] mwl8k: use the mac80211-provided workqueue instead of creating our own
+Message-ID: <20091022181945.GG1583@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is used in several places, ensure we do it right in all
-callers by using a helper.
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |   23 ++++++++++++++---------
- 1 files changed, 14 insertions(+), 9 deletions(-)
+ drivers/net/wireless/mwl8k.c |   28 ++++++----------------------
+ 1 files changed, 6 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 0fe915a..e6842dd 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1325,6 +1325,17 @@ void ath_cleanup(struct ath_softc *sc)
- 	ieee80211_free_hw(sc->hw);
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 0b4fa14..77985e9 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -195,9 +195,6 @@ struct mwl8k_priv {
+ 
+ 	/* Tasklet to reclaim TX descriptors and buffers after tx */
+ 	struct tasklet_struct tx_reclaim_task;
+-
+-	/* Work thread to serialize configuration requests */
+-	struct workqueue_struct *config_wq;
+ };
+ 
+ /* Per interface specific private data */
+@@ -881,9 +878,11 @@ mwl8k_capture_bssid(struct mwl8k_priv *priv, struct ieee80211_hdr *wh)
+ 		!compare_ether_addr(wh->addr3, priv->capture_bssid);
  }
  
-+static void ath9k_uninit_hw(struct ath_softc *sc)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	BUG_ON(!ah);
-+
-+	ath9k_exit_debug(ah);
-+	ath9k_hw_detach(ah);
-+	sc->sc_ah = NULL;
-+}
-+
- void ath_detach(struct ath_softc *sc)
+-static inline void mwl8k_save_beacon(struct mwl8k_priv *priv,
+-							struct sk_buff *skb)
++static inline void mwl8k_save_beacon(struct ieee80211_hw *hw,
++				     struct sk_buff *skb)
  {
- 	struct ieee80211_hw *hw = sc->hw;
-@@ -1365,9 +1376,7 @@ void ath_detach(struct ath_softc *sc)
- 	    ah->btcoex_hw.scheme == ATH_BTCOEX_CFG_3WIRE)
- 		ath_gen_timer_free(ah, sc->btcoex.no_stomp_timer);
++	struct mwl8k_priv *priv = hw->priv;
++
+ 	priv->capture_beacon = false;
+ 	memset(priv->capture_bssid, 0, ETH_ALEN);
  
--	ath9k_exit_debug(ah);
--	ath9k_hw_detach(ah);
--	sc->sc_ah = NULL;
-+	ath9k_uninit_hw(sc);
+@@ -894,8 +893,7 @@ static inline void mwl8k_save_beacon(struct mwl8k_priv *priv,
+ 	 */
+ 	priv->beacon_skb = skb_copy(skb, GFP_ATOMIC);
+ 	if (priv->beacon_skb != NULL)
+-		queue_work(priv->config_wq,
+-				&priv->finalize_join_worker);
++		ieee80211_queue_work(hw, &priv->finalize_join_worker);
  }
  
- static int ath9k_reg_notifier(struct wiphy *wiphy,
-@@ -1850,10 +1859,8 @@ bad2:
- 		if (ATH_TXQ_SETUP(sc, i))
- 			ath_tx_cleanupq(sc, &sc->tx.txq[i]);
+ static int rxq_process(struct ieee80211_hw *hw, int index, int limit)
+@@ -940,7 +938,7 @@ static int rxq_process(struct ieee80211_hw *hw, int index, int limit)
+ 		 * send a FINALIZE_JOIN command to the firmware.
+ 		 */
+ 		if (mwl8k_capture_bssid(priv, wh))
+-			mwl8k_save_beacon(priv, skb);
++			mwl8k_save_beacon(hw, skb);
  
--	ath9k_exit_debug(ah);
- bad_free_hw:
--	ath9k_hw_detach(ah);
--	sc->sc_ah = NULL;
-+	ath9k_uninit_hw(sc);
- 	return r;
- }
+ 		memset(&status, 0, sizeof(status));
+ 		status.mactime = 0;
+@@ -2504,9 +2502,6 @@ static void mwl8k_stop(struct ieee80211_hw *hw)
+ 	/* Stop tx reclaim tasklet */
+ 	tasklet_disable(&priv->tx_reclaim_task);
  
-@@ -1966,9 +1973,7 @@ error_attach:
- 		if (ATH_TXQ_SETUP(sc, i))
- 			ath_tx_cleanupq(sc, &sc->tx.txq[i]);
+-	/* Stop config thread */
+-	flush_workqueue(priv->config_wq);
+-
+ 	/* Return all skbs to mac80211 */
+ 	for (i = 0; i < MWL8K_TX_QUEUES; i++)
+ 		mwl8k_txq_reclaim(hw, i, 1);
+@@ -2920,11 +2915,6 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
+ 			mwl8k_tx_reclaim_handler, (unsigned long)hw);
+ 	tasklet_disable(&priv->tx_reclaim_task);
  
--	ath9k_exit_debug(ah);
--	ath9k_hw_detach(ah);
--	sc->sc_ah = NULL;
-+	ath9k_uninit_hw(sc);
+-	/* Config workthread */
+-	priv->config_wq = create_singlethread_workqueue("mwl8k_config");
+-	if (priv->config_wq == NULL)
+-		goto err_iounmap;
+-
+ 	/* Power management cookie */
+ 	priv->cookie = pci_alloc_consistent(priv->pdev, 4, &priv->cookie_dma);
+ 	if (priv->cookie == NULL)
+@@ -3047,9 +3037,6 @@ err_iounmap:
+ 	if (priv->regs != NULL)
+ 		pci_iounmap(pdev, priv->regs);
  
- 	return error;
- }
+-	if (priv->config_wq != NULL)
+-		destroy_workqueue(priv->config_wq);
+-
+ 	pci_set_drvdata(pdev, NULL);
+ 	ieee80211_free_hw(hw);
+ 
+@@ -3082,9 +3069,6 @@ static void __devexit mwl8k_remove(struct pci_dev *pdev)
+ 	/* Remove tx reclaim tasklet */
+ 	tasklet_kill(&priv->tx_reclaim_task);
+ 
+-	/* Stop config thread */
+-	destroy_workqueue(priv->config_wq);
+-
+ 	/* Stop hardware */
+ 	mwl8k_hw_reset(priv);
+ 
 -- 
-1.6.0.4
-
+1.5.6.4
