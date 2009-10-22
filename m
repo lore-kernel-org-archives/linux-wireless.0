@@ -1,60 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:60594 "EHLO
-	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755079AbZJKK4T convert rfc822-to-8bit (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:59618 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755594AbZJVSxs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Oct 2009 06:56:19 -0400
-MIME-Version: 1.0
-In-Reply-To: <1255255735.4095.53.camel@johannes.local>
-References: <20091011095217.GA2200@darkstar>
-	 <1255255735.4095.53.camel@johannes.local>
-Date: Sun, 11 Oct 2009 18:55:41 +0800
-Message-ID: <a8e1da0910110355xd47767djaabb653e46a12efc@mail.gmail.com>
-Subject: Re: NOHZ: local_softirq_pending 08
-From: Dave Young <hidave.darkstar@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-kernel@vger.kernel.org, tglx@linutronix.de,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 22 Oct 2009 14:53:48 -0400
+Date: Thu, 22 Oct 2009 20:21:43 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 27/28] mwl8k: implement AP firmware EDCA parameter configuration
+Message-ID: <20091022182143.GC1583@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 11, 2009 at 6:08 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2009-10-11 at 17:52 +0800, Dave Young wrote:
->
->> With kernel 2.6.32-rc3-00052-g0eca52a I got following KERN_ERR
->> messages just while using firefox:
->>
->> [  130.527399] NOHZ: local_softirq_pending 08
->
->> Any idea? or known issue?
->
-> Are you using b43 (or wl12x1)? If so, it's a known issue, but the driver
-> was recently left without an active maintainer in a brouhaha about a bug
-> fix.
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   49 +++++++++++++++++++++++++++++++----------
+ 1 files changed, 37 insertions(+), 12 deletions(-)
 
-Yes, I'm using b43. I will test the patch you posted in another thread.
-
->
-> Cf. http://thread.gmane.org/gmane.linux.kernel.wireless.general/39440
->
-> Absent proof that mac80211 is safe to run with BHs enabled, the correct
-> solution is disabling tasklets around the RX function, unlike all the
-> proposed patches. However, Michael thinks it's such a bad solution that
-> he has refused to implement it. So far, nobody has bothered to fix the
-> drivers.
->
-> FWIW, I believe the bug to be in b43 and wl12x1, and not as Michael
-> thinks in the stack.
->
-> johannes
->
->
-
-
-
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 4eda6f9..8e4631a 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -2271,17 +2271,34 @@ struct mwl8k_cmd_set_edca_params {
+ 	/* TX opportunity in units of 32 us */
+ 	__le16 txop;
+ 
+-	/* Log exponent of max contention period: 0...15*/
+-	__u8 log_cw_max;
++	union {
++		struct {
++			/* Log exponent of max contention period: 0...15 */
++			__le32 log_cw_max;
++
++			/* Log exponent of min contention period: 0...15 */
++			__le32 log_cw_min;
++
++			/* Adaptive interframe spacing in units of 32us */
++			__u8 aifs;
++
++			/* TX queue to configure */
++			__u8 txq;
++		} ap;
++		struct {
++			/* Log exponent of max contention period: 0...15 */
++			__u8 log_cw_max;
+ 
+-	/* Log exponent of min contention period: 0...15 */
+-	__u8 log_cw_min;
++			/* Log exponent of min contention period: 0...15 */
++			__u8 log_cw_min;
+ 
+-	/* Adaptive interframe spacing in units of 32us */
+-	__u8 aifs;
++			/* Adaptive interframe spacing in units of 32us */
++			__u8 aifs;
+ 
+-	/* TX queue to configure */
+-	__u8 txq;
++			/* TX queue to configure */
++			__u8 txq;
++		} sta;
++	};
+ } __attribute__((packed));
+ 
+ #define MWL8K_SET_EDCA_CW	0x01
+@@ -2297,6 +2314,7 @@ mwl8k_set_edca_params(struct ieee80211_hw *hw, __u8 qnum,
+ 		__u16 cw_min, __u16 cw_max,
+ 		__u8 aifs, __u16 txop)
+ {
++	struct mwl8k_priv *priv = hw->priv;
+ 	struct mwl8k_cmd_set_edca_params *cmd;
+ 	int rc;
+ 
+@@ -2314,10 +2332,17 @@ mwl8k_set_edca_params(struct ieee80211_hw *hw, __u8 qnum,
+ 	cmd->header.length = cpu_to_le16(sizeof(*cmd));
+ 	cmd->action = cpu_to_le16(MWL8K_SET_EDCA_ALL);
+ 	cmd->txop = cpu_to_le16(txop);
+-	cmd->log_cw_max = (u8)ilog2(cw_max + 1);
+-	cmd->log_cw_min = (u8)ilog2(cw_min + 1);
+-	cmd->aifs = aifs;
+-	cmd->txq = qnum;
++	if (priv->ap_fw) {
++		cmd->ap.log_cw_max = cpu_to_le32(ilog2(cw_max + 1));
++		cmd->ap.log_cw_min = cpu_to_le32(ilog2(cw_min + 1));
++		cmd->ap.aifs = aifs;
++		cmd->ap.txq = qnum;
++	} else {
++		cmd->sta.log_cw_max = (u8)ilog2(cw_max + 1);
++		cmd->sta.log_cw_min = (u8)ilog2(cw_min + 1);
++		cmd->sta.aifs = aifs;
++		cmd->sta.txq = qnum;
++	}
+ 
+ 	rc = mwl8k_post_cmd(hw, &cmd->header);
+ 	kfree(cmd);
 -- 
-Regards
-dave
+1.5.6.4
