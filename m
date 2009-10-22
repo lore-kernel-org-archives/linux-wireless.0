@@ -1,55 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:48094 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752083AbZI3WN7 (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:32181 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756040AbZJVNf2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 18:13:59 -0400
-Date: Thu, 1 Oct 2009 01:13:53 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: driver_nl80211 broken again
-Message-ID: <20090930221353.GB11052@jm.kir.nu>
-References: <1251117161.22951.4.camel@maxim-laptop> <1251122885.12007.12.camel@johannes.local> <1251144381.9374.4.camel@maxim-laptop> <1251147515.20161.3.camel@johannes.local> <1252116503.2398.26.camel@maxim-laptop> <1252423769.3806.4.camel@johannes.local> <1252443260.16422.5.camel@maxim-laptop> <1254273569.4499.8.camel@maxim-laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1254273569.4499.8.camel@maxim-laptop>
+	Thu, 22 Oct 2009 09:35:28 -0400
+Message-Id: <20091022133417.049597275@mail.mn-solutions.de>
+References: <20091022133043.185554096@mail.mn-solutions.de>
+Date: Thu, 22 Oct 2009 15:30:55 +0200
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 12/19] libertas: remove "struct cmd_ds_gen"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 30, 2009 at 03:19:28AM +0200, Maxim Levitsky wrote:
+It was only used as a source for S_DS_GEN, but the size of this struct
+is equal to the size of "struct cmd_header".
 
-> So I didn't do the testing that soon...
-> Got swamped by many bugs present in ubuntu 9.10.
-> 
-> Now I have attempted same patch on top of wpa_supplicant, and it works.
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Depends on your definition of working, I'd guess.. ;-)
-
-> @@ -1302,8 +1302,10 @@ void wpa_supplicant_disassociate(struct wpa_supplicant *wpa_s,
->                         wpa_drv_disassociate(wpa_s, wpa_s->bssid, reason_code);
-> +                       wpa_drv_deauthenticate(wpa_s, wpa_s->bssid, reason_code);
-
-To me, this looks broken. When wpa_supplicant requests a
-disassociastion, it is _only_ asking for disassociation, not
-deauthentication. cfg80211/mac80211 may not currently handle that, but
-as far as I can tell, it sounds like an issue there and not in
-wpa_supplicant. Johannes may disagree with this, though.
-
-> Would that be enough, or this is too hacky, and we need to audit each callsite of wpa_supplicant_disassociate
-> and see if we need to send deauth frame too?
-
-I don't think either of those options would be acceptable for
-wpa_supplicant and the correct fix is to make cfg80211/mac80211 be able
-to handle authentication to a STA that is already authenticated. If
-that is not acceptable, this hack needs to be hidden in driver_nl80211.c
-instead of polluting core wpa_supplicant code which is supposed to be
-driver independent. In other words, make driver_nl80211.c deauth if auth
-fails and then try auth again. I don't really like that much, but if
-this needs to be worked around in wpa_supplicant, that is the most
-likely place where such a change could be considered.
+--- linux-wl.orig/drivers/net/wireless/libertas/host.h
++++ linux-wl/drivers/net/wireless/libertas/host.h
+@@ -389,19 +389,6 @@
+ 	u32 value;
+ } __attribute__ ((packed));
+ 
+-/* Define general data structure */
+-/* cmd_DS_GEN */
+-struct cmd_ds_gen {
+-	__le16 command;
+-	__le16 size;
+-	__le16 seqnum;
+-	__le16 result;
+-	void *cmdresp[0];
+-} __attribute__ ((packed));
+-
+-#define S_DS_GEN sizeof(struct cmd_ds_gen)
+-
+-
+ /*
+  * Define data structure for CMD_GET_HW_SPEC
+  * This structure defines the response for the GET_HW_SPEC command
+--- linux-wl.orig/drivers/net/wireless/libertas/assoc.c
++++ linux-wl/drivers/net/wireless/libertas/assoc.c
+@@ -279,7 +279,7 @@
+ 	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
+ 
+ 	if (cmd_action == CMD_ACT_GET) {
+-		cmd.hdr.size = cpu_to_le16(S_DS_GEN + 2);
++		cmd.hdr.size = cpu_to_le16(sizeof(struct cmd_header) + 2);
+ 	} else {
+ 		memset(cmd.keyParamSet, 0, sizeof(cmd.keyParamSet));
+ 
+@@ -456,7 +456,8 @@
+ 
+ 	lbs_deb_enter(LBS_DEB_CMD);
+ 	cmd->command = cpu_to_le16(CMD_802_11_RSSI);
+-	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_rssi) + S_DS_GEN);
++	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_rssi) +
++		sizeof(struct cmd_header));
+ 	cmd->params.rssi.N = cpu_to_le16(DEFAULT_BCN_AVG_FACTOR);
+ 
+ 	/* reset Beacon SNR/NF/RSSI values */
+@@ -514,7 +515,7 @@
+ 	lbs_deb_enter(LBS_DEB_CMD);
+ 	cmd->size =
+ 	    cpu_to_le16(sizeof(struct cmd_ds_802_11_beacon_control)
+-			     + S_DS_GEN);
++			     + sizeof(struct cmd_header));
+ 	cmd->command = cpu_to_le16(CMD_802_11_BEACON_CTRL);
+ 
+ 	bcn_ctrl->action = cpu_to_le16(cmd_action);
+--- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
++++ linux-wl/drivers/net/wireless/libertas/cmd.c
+@@ -240,7 +240,7 @@
+ 
+ 	cmd->command = cpu_to_le16(CMD_802_11_PS_MODE);
+ 	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_ps_mode) +
+-				S_DS_GEN);
++				sizeof(struct cmd_header));
+ 	psm->action = cpu_to_le16(cmd_action);
+ 	psm->multipledtim = 0;
+ 	switch (cmd_action) {
+@@ -535,7 +535,7 @@
+ 	cmd->command = cpu_to_le16(CMD_802_11_MONITOR_MODE);
+ 	cmd->size =
+ 	    cpu_to_le16(sizeof(struct cmd_ds_802_11_monitor_mode) +
+-			     S_DS_GEN);
++			     sizeof(struct cmd_header));
+ 
+ 	monitor->action = cpu_to_le16(cmd_action);
+ 	if (cmd_action == CMD_ACT_SET) {
+@@ -644,7 +644,7 @@
+ 
+ 			cmdptr->size =
+ 			    cpu_to_le16(sizeof (struct cmd_ds_mac_reg_access)
+-					+ S_DS_GEN);
++					+ sizeof(struct cmd_header));
+ 			macreg =
+ 			    (struct cmd_ds_mac_reg_access *)&cmdptr->params.
+ 			    macreg;
+@@ -663,7 +663,7 @@
+ 			cmdptr->size =
+ 			    cpu_to_le16(sizeof
+ 					     (struct cmd_ds_bbp_reg_access)
+-					     + S_DS_GEN);
++					     + sizeof(struct cmd_header));
+ 			bbpreg =
+ 			    (struct cmd_ds_bbp_reg_access *)&cmdptr->params.
+ 			    bbpreg;
+@@ -682,7 +682,7 @@
+ 			cmdptr->size =
+ 			    cpu_to_le16(sizeof
+ 					     (struct cmd_ds_rf_reg_access) +
+-					     S_DS_GEN);
++					     sizeof(struct cmd_header));
+ 			rfreg =
+ 			    (struct cmd_ds_rf_reg_access *)&cmdptr->params.
+ 			    rfreg;
+@@ -709,7 +709,8 @@
+ 	lbs_deb_enter_args(LBS_DEB_CMD, "action %d", cmd_action);
+ 
+ 	cmd->command = cpu_to_le16(CMD_BT_ACCESS);
+-	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_bt_access) + S_DS_GEN);
++	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_bt_access) +
++		sizeof(struct cmd_header));
+ 	cmd->result = 0;
+ 	bt_access->action = cpu_to_le16(cmd_action);
+ 
+@@ -746,7 +747,8 @@
+ 	lbs_deb_enter_args(LBS_DEB_CMD, "action %d", cmd_action);
+ 
+ 	cmd->command = cpu_to_le16(CMD_FWT_ACCESS);
+-	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_fwt_access) + S_DS_GEN);
++	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_fwt_access) +
++		sizeof(struct cmd_header));
+ 	cmd->result = 0;
+ 
+ 	if (pdata_buf)
+@@ -1162,7 +1164,7 @@
+ 
+ 		cmdptr->command = cpu_to_le16(cmd_no);
+ 		cmdptr->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_afc) +
+-					   S_DS_GEN);
++					   sizeof(struct cmd_header));
+ 
+ 		memmove(&cmdptr->params.afc,
+ 			pdata_buf, sizeof(struct cmd_ds_802_11_afc));
+@@ -1174,7 +1176,7 @@
+ 		cmdptr->command = cpu_to_le16(CMD_802_11_TPC_CFG);
+ 		cmdptr->size =
+ 		    cpu_to_le16(sizeof(struct cmd_ds_802_11_tpc_cfg) +
+-				     S_DS_GEN);
++				     sizeof(struct cmd_header));
+ 
+ 		memmove(&cmdptr->params.tpccfg,
+ 			pdata_buf, sizeof(struct cmd_ds_802_11_tpc_cfg));
+@@ -1195,7 +1197,7 @@
+ 		break;
+ 	case CMD_802_11_DEEP_SLEEP:
+ 		cmdptr->command = cpu_to_le16(CMD_802_11_DEEP_SLEEP);
+-		cmdptr->size = cpu_to_le16(S_DS_GEN);
++		cmdptr->size = cpu_to_le16(sizeof(struct cmd_header));
+ 		break;
+ 	default:
+ 		lbs_pr_err("PREP_CMD: unknown command 0x%04x\n", cmd_no);
+--- linux-wl.orig/drivers/net/wireless/libertas/scan.c
++++ linux-wl/drivers/net/wireless/libertas/scan.c
+@@ -1291,11 +1291,11 @@
+ 	/* The size of the TLV buffer is equal to the entire command response
+ 	 *   size (scanrespsize) minus the fixed fields (sizeof()'s), the
+ 	 *   BSS Descriptions (bssdescriptsize as bytesLef) and the command
+-	 *   response header (S_DS_GEN)
++	 *   response header (sizeof(struct cmd_header))
+ 	 */
+ 	tlvbufsize = scanrespsize - (bytesleft + sizeof(scanresp->bssdescriptsize)
+ 				     + sizeof(scanresp->nr_sets)
+-				     + S_DS_GEN);
++				     + sizeof(struct cmd_header));
+ 
+ 	/*
+ 	 *  Process each scan response returned (scanresp->nr_sets). Save
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
