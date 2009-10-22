@@ -1,64 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:49152 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755036AbZJVShI (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43330 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751901AbZJWNfI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2009 14:37:08 -0400
-Date: Thu, 22 Oct 2009 20:19:53 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 07/28] mwl8k: enforce FIF_BCN_PRBRESP_PROMISC when no STA interfaces are active
-Message-ID: <20091022181953.GI1583@mail.wantstofly.org>
+	Fri, 23 Oct 2009 09:35:08 -0400
+Subject: Re: cfg80211 / libertas: an unusual race
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200910161403.37660.hs4233@mail.mn-solutions.de>
+References: <200910131055.31739.hs4233@mail.mn-solutions.de>
+	 <1255687030.4095.327.camel@johannes.local>
+	 <200910161403.37660.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Z+AtUlmBYPLzkVspKbCO"
+Date: Thu, 22 Oct 2009 10:47:57 +0200
+Message-Id: <1256201277.12174.17.camel@johannes.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When FIF_BCN_PRBRESP_PROMISC is not set, we enable the hardware's BSS
-filter so that we'll only see packets destined for our BSS.  But if no
-STA interfaces have been configured, we would end up passing the BSSID
-00:00:00:00:00:00 into the POST_SCAN command, which actually disables
-the hardware's BSS filter, as it's not a valid BSSID.
 
-Fix this by passing in 01:00:00:00:00:00 instead (the criterion is
-that the OUI part of the BSSID must be nonzero), and add comments to
-explain what PRE_SCAN and POST_SCAN do.
+--=-Z+AtUlmBYPLzkVspKbCO
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   17 ++++++++++++++---
- 1 files changed, 14 insertions(+), 3 deletions(-)
+On Fri, 2009-10-16 at 14:03 +0200, Holger Schurig wrote:
+> > I don't see this happening that way -- how are you even getting=20
+> to
+> > __cfg80211_disconnected() if not through _send_deauth()?
+>=20
+> See step 7a in the second table.  We got there via=20
+> _send_deauth().
+>=20
+> But later, step 3b in the second table (I kept the original=20
+> numbers, so 3b happens after 7a time-wise!) we got into=20
+> WARN_ON().
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index cc58ecb..53447f6 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -2705,12 +2705,23 @@ static void mwl8k_configure_filter(struct ieee80211_hw *hw,
- 		return;
- 
- 	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
--		if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
-+		if (*total_flags & FIF_BCN_PRBRESP_PROMISC) {
-+			/*
-+			 * Disable the BSS filter.
-+			 */
- 			mwl8k_cmd_set_pre_scan(hw);
--		else {
-+		} else {
- 			u8 *bssid;
- 
--			bssid = "\x00\x00\x00\x00\x00\x00";
-+			/*
-+			 * Enable the BSS filter.
-+			 *
-+			 * If there is an active STA interface, use that
-+			 * interface's BSSID, otherwise use a dummy one
-+			 * (where the OUI part needs to be nonzero for
-+			 * the BSSID to be accepted by POST_SCAN).
-+			 */
-+			bssid = "\x01\x00\x00\x00\x00\x00";
- 			if (priv->vif != NULL)
- 				bssid = MWL8K_VIF(priv->vif)->bssid;
- 
--- 
-1.5.6.4
+Still not making sense to me, since cfg80211_mlme_deauth() never does
+anything after calling you.
+
+johannes
+
+
+--=-Z+AtUlmBYPLzkVspKbCO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK4Bw5AAoJEODzc/N7+Qma7QYQAK7zRV6op3qqomegqwaX+Ajp
+MVGMLvkt2nBDwrlbVlyyWFxcceVfDVLq5gkn20fqiyuWQZrGe1PI+bvuEQUyPhMG
+7F0xMz/s/Yh9MjOh9SdC/DLkpRr2mteLBW4VArQxNIc+d4cZYzvQrGN98E7Y3hMx
+jdzbe3Bwxp9/433WImEcyXhS2jN/9qd/wUXy/fk+6EmW7et2o957IR3uLqGZqFw6
+3aEn+6vpUiLwp0Dwnrh+LDIP+jl/UrFLvO5mZhqDLjgGOplv/r8SxlgnaMV1a6gz
+03uA0se0J+p49bYMKCiIHTtMgbCFQLnWrKSWaFjyxPHK/j6qofq2yZXAyZm26gtf
+R059wXfIzsmsWIeLpwdoUY2870sUj6eV+vbvjBkIH+q2re2dKzdJOcC16aywxJ2Y
+p7/vO7JcpxQo1dsMyapx7QtG95ZLoeWJYB9Tvcf4M3uJSqPfVsomEsMkRyYJG40W
+XkhNiauDzSImFZrQgma3ytFMBKFfIJ8HdtpmNmfp7QATAyNnGGSWA0hcZ6JCjUt4
+ItrUVQniA9JxntlDMtliCtXhGTxuDckT9G7C3SsvjJe+fn0DV4Ir5gsBVOFRhSWx
+8l7Br4fdmuGZL0Jbb44om+1FBq2cqBP6KhEpOqFlshHvNAv5dPwdEfZpJAePeVvz
+1T5u8lBkUgXdBanJ80xz
+=pmrJ
+-----END PGP SIGNATURE-----
+
+--=-Z+AtUlmBYPLzkVspKbCO--
+
