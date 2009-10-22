@@ -1,34 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40966
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752148AbZJTEyo (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:41088 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752118AbZJVQKl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2009 00:54:44 -0400
-Date: Mon, 19 Oct 2009 21:55:07 -0700 (PDT)
-Message-Id: <20091019.215507.210032972.davem@davemloft.net>
-To: tomas.winkler@intel.com
-Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	yi.zhu@intel.com, inaky.perez-gonzalez@intel.com,
-	cindy.h.kao@intel.com, guy.cohen@intel.com,
-	ron.rindjunsky@intel.com
-Subject: Re: [PATCH net-next V2 2/3] iwmc3200wifi: select IWMC3200TOP in
- Kconfig
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1255806576-26869-2-git-send-email-tomas.winkler@intel.com>
-References: <1255806576-26869-1-git-send-email-tomas.winkler@intel.com>
-	<1255806576-26869-2-git-send-email-tomas.winkler@intel.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 22 Oct 2009 12:10:41 -0400
+Date: Thu, 22 Oct 2009 09:10:21 -0700
+From: Jouni Malinen <j@w1.fi>
+To: =?utf-8?B?QmrDtnJu?= Smedman <bjorn.smedman@venatech.se>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: mac80211/ath9k/hostapd: Some clients unable to associate with
+	AP
+Message-ID: <20091022161021.GA5532@jm.kir.nu>
+References: <133e8d7e0910200711s7c44b899nbcd5f1037cc5ee49@mail.gmail.com> <133e8d7e0910210448y39551160o7a12a8af2da43f85@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <133e8d7e0910210448y39551160o7a12a8af2da43f85@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
-Date: Sat, 17 Oct 2009 21:09:35 +0200
+On Wed, Oct 21, 2009 at 01:48:09PM +0200, Björn Smedman wrote:
 
-> iwmc3200wifi requires iwmc3200top  for its operation
-> 
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> Acked-by: Zhu Yi <yi.zhu@intel.com>
+> I've now checked the latest compat-wireless snapshot (2009-10-21) and
+> it has the same problem: Windows based clients with 11g or 11b cards
+> cannot connect to a mac80211/ath9k/hostapd based AP. It used to work
+> with compat-wireless-2009-06-02.
 
-Applied to net-next-2.6
+> Any ideas on how to track this down? I can enable some logs and hack
+> together some patches to track this down, I'm just not sure where to
+> start. Bisecting is difficult for me as I can only build
+> compat-wireless and only on OpenWrt... Thanx for any help in advance.
+
+Would you be able to send me a wireless capture log (i.e., the binary
+file with all the frames, not such a text dump of some information)
+showing the frames exchanged in the failure and success cases? I would
+be especially interested in seeing the Beacon frames which were not
+shown in your previous message. I'm currently traveling and cannot
+easily try to reproduce this before returning home.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
