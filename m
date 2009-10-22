@@ -1,51 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43159 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753661AbZJ1OVJ (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:34058 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756054AbZJVNfa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2009 10:21:09 -0400
-Subject: [PATCH resend] mac80211: fix BSS leak
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1254262165.30589.25.camel@johannes.local>
-References: <1254262165.30589.25.camel@johannes.local>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 28 Oct 2009 15:12:32 +0100
-Message-ID: <1256739152.4237.111.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 22 Oct 2009 09:35:30 -0400
+Message-Id: <20091022133418.301622356@mail.mn-solutions.de>
+References: <20091022133043.185554096@mail.mn-solutions.de>
+Date: Thu, 22 Oct 2009 15:30:56 +0200
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 13/19] libertas: move SIOCGIWAP calls to wext.c
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The IBSS code leaks a BSS struct after telling
-cfg80211 about a given BSS by passing a frame.
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- net/mac80211/ibss.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
 
---- wireless-testing.orig/net/mac80211/ibss.c	2009-10-27 09:16:01.000000000 +0100
-+++ wireless-testing/net/mac80211/ibss.c	2009-10-27 09:42:06.000000000 +0100
-@@ -73,6 +73,7 @@ static void __ieee80211_sta_join_ibss(st
- 	struct ieee80211_mgmt *mgmt;
- 	u8 *pos;
- 	struct ieee80211_supported_band *sband;
-+	struct cfg80211_bss *bss;
- 	u32 bss_change;
- 	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
+--- linux-wl.orig/drivers/net/wireless/libertas/cmdresp.c
++++ linux-wl/drivers/net/wireless/libertas/cmdresp.c
+@@ -27,23 +27,17 @@
+  */
+ void lbs_mac_event_disconnected(struct lbs_private *priv)
+ {
+-	union iwreq_data wrqu;
+-
+ 	if (priv->connect_status != LBS_CONNECTED)
+ 		return;
  
-@@ -177,8 +178,9 @@ static void __ieee80211_sta_join_ibss(st
- 	mod_timer(&ifibss->timer,
- 		  round_jiffies(jiffies + IEEE80211_IBSS_MERGE_INTERVAL));
+ 	lbs_deb_enter(LBS_DEB_ASSOC);
  
--	cfg80211_inform_bss_frame(local->hw.wiphy, local->hw.conf.channel,
--				  mgmt, skb->len, 0, GFP_KERNEL);
-+	bss = cfg80211_inform_bss_frame(local->hw.wiphy, local->hw.conf.channel,
-+					mgmt, skb->len, 0, GFP_KERNEL);
-+	cfg80211_put_bss(bss);
- 	cfg80211_ibss_joined(sdata->dev, ifibss->bssid, GFP_KERNEL);
+-	memset(wrqu.ap_addr.sa_data, 0x00, ETH_ALEN);
+-	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+-
+ 	/*
+ 	 * Cisco AP sends EAP failure and de-auth in less than 0.5 ms.
+ 	 * It causes problem in the Supplicant
+ 	 */
+-
+ 	msleep_interruptible(1000);
+-	wireless_send_event(priv->dev, SIOCGIWAP, &wrqu, NULL);
++	lbs_send_disconnect_notification(priv);
+ 
+ 	/* report disconnect to upper layer */
+ 	netif_stop_queue(priv->dev);
+--- linux-wl.orig/drivers/net/wireless/libertas/main.c
++++ linux-wl/drivers/net/wireless/libertas/main.c
+@@ -1227,7 +1227,6 @@
+ void lbs_remove_card(struct lbs_private *priv)
+ {
+ 	struct net_device *dev = priv->dev;
+-	union iwreq_data wrqu;
+ 
+ 	lbs_deb_enter(LBS_DEB_MAIN);
+ 
+@@ -1252,9 +1251,7 @@
+ 		lbs_ps_wakeup(priv, CMD_OPTION_WAITFORRSP);
+ 	}
+ 
+-	memset(wrqu.ap_addr.sa_data, 0xaa, ETH_ALEN);
+-	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+-	wireless_send_event(priv->dev, SIOCGIWAP, &wrqu, NULL);
++	lbs_send_disconnect_notification(priv);
+ 
+ 	if (priv->is_deep_sleep) {
+ 		priv->is_deep_sleep = 0;
+--- linux-wl.orig/drivers/net/wireless/libertas/wext.c
++++ linux-wl/drivers/net/wireless/libertas/wext.c
+@@ -45,6 +45,15 @@
+ 	priv->pending_assoc_req = NULL;
  }
  
++void lbs_send_disconnect_notification(struct lbs_private *priv)
++{
++	union iwreq_data wrqu;
++
++	memset(wrqu.ap_addr.sa_data, 0x00, ETH_ALEN);
++	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
++	wireless_send_event(priv->dev, SIOCGIWAP, &wrqu, NULL);
++}
++
+ void lbs_send_iwevcustom_event(struct lbs_private *priv, s8 *str)
+ {
+ 	union iwreq_data iwrq;
+--- linux-wl.orig/drivers/net/wireless/libertas/wext.h
++++ linux-wl/drivers/net/wireless/libertas/wext.h
+@@ -4,6 +4,7 @@
+ #ifndef	_LBS_WEXT_H_
+ #define	_LBS_WEXT_H_
+ 
++void lbs_send_disconnect_notification(struct lbs_private *priv);
+ void lbs_send_iwevcustom_event(struct lbs_private *priv, s8 *str);
+ 
+ extern struct iw_handler_def lbs_handler_def;
 
-
+-- 
