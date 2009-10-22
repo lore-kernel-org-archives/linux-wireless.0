@@ -1,279 +1,853 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46587 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754689AbZJUSPn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2009 14:15:43 -0400
-Subject: Re: [PATCH] libertas: change IW_ESSID_MAX_SIZE ->
- IEEE80211_MAX_SSID_LEN
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <200910191023.41565.hs4233@mail.mn-solutions.de>
-References: <200910191023.41565.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Wed, 21 Oct 2009 11:15:45 -0700
-Message-Id: <1256148945.5010.37.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mx51.mymxserver.com ([85.199.173.110]:33896 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755953AbZJVNeu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Oct 2009 09:34:50 -0400
+Message-Id: <20091022133408.205611459@mail.mn-solutions.de>
+References: <20091022133043.185554096@mail.mn-solutions.de>
+Date: Thu, 22 Oct 2009 15:30:48 +0200
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 05/19] libertas: move scan/assoc related stuff
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-10-19 at 10:23 +0200, Holger Schurig wrote:
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Another cfg80211-preparation patch: removes some code/definitions from
+main.c and dev.h and put's it into assoc.c/.h, scan.c/.h.
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+No function change.
 
-> --- linux-wl.orig/drivers/net/wireless/libertas/assoc.c
-> +++ linux-wl/drivers/net/wireless/libertas/assoc.c
-> @@ -226,7 +226,7 @@
->  	priv->connect_status = LBS_CONNECTED;
->  
->  	/* Update current SSID and BSSID */
-> -	memcpy(&priv->curbssparams.ssid, &bss->ssid, IW_ESSID_MAX_SIZE);
-> +	memcpy(&priv->curbssparams.ssid, &bss->ssid, IEEE80211_MAX_SSID_LEN);
->  	priv->curbssparams.ssid_len = bss->ssid_len;
->  	memcpy(priv->curbssparams.bssid, bss->bssid, ETH_ALEN);
->  
-> @@ -467,7 +467,7 @@
->  	memcpy(&priv->curbssparams.bssid, bss->bssid, ETH_ALEN);
->  
->  	/* Set the new SSID to current SSID */
-> -	memcpy(&priv->curbssparams.ssid, &bss->ssid, IW_ESSID_MAX_SIZE);
-> +	memcpy(&priv->curbssparams.ssid, &bss->ssid, IEEE80211_MAX_SSID_LEN);
->  	priv->curbssparams.ssid_len = bss->ssid_len;
->  
->  	netif_carrier_on(priv->dev);
-> @@ -1083,7 +1083,7 @@
->  			/* else send START command */
->  			lbs_deb_assoc("SSID not found, creating adhoc network\n");
->  			memcpy(&assoc_req->bss.ssid, &assoc_req->ssid,
-> -				IW_ESSID_MAX_SIZE);
-> +				IEEE80211_MAX_SSID_LEN);
->  			assoc_req->bss.ssid_len = assoc_req->ssid_len;
->  			lbs_adhoc_start(priv, assoc_req);
->  		}
-> @@ -1541,7 +1541,7 @@
->  
->  	found = lbs_find_best_ssid_in_list(priv, preferred_mode);
->  	if (found && (found->ssid_len > 0)) {
-> -		memcpy(out_ssid, &found->ssid, IW_ESSID_MAX_SIZE);
-> +		memcpy(out_ssid, &found->ssid, IEEE80211_MAX_SSID_LEN);
->  		*out_ssid_len = found->ssid_len;
->  		*out_mode = found->mode;
->  		ret = 0;
-> @@ -1759,7 +1759,7 @@
->  	assoc_req = priv->pending_assoc_req;
->  	if (!test_bit(ASSOC_FLAG_SSID, &assoc_req->flags)) {
->  		memcpy(&assoc_req->ssid, &priv->curbssparams.ssid,
-> -		       IW_ESSID_MAX_SIZE);
-> +		       IEEE80211_MAX_SSID_LEN);
->  		assoc_req->ssid_len = priv->curbssparams.ssid_len;
->  	}
->  
-> --- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
-> +++ linux-wl/drivers/net/wireless/libertas/cmd.c
-> @@ -1168,7 +1168,7 @@
->  		ie->val.mesh_id_len = priv->mesh_ssid_len;
->  		memcpy(ie->val.mesh_id, priv->mesh_ssid, priv->mesh_ssid_len);
->  		ie->len = sizeof(struct mrvl_meshie_val) -
-> -			IW_ESSID_MAX_SIZE + priv->mesh_ssid_len;
-> +			IEEE80211_MAX_SSID_LEN + priv->mesh_ssid_len;
->  		cmd.length = cpu_to_le16(sizeof(struct mrvl_meshie_val));
->  		break;
->  	case CMD_ACT_MESH_CONFIG_STOP:
-> --- linux-wl.orig/drivers/net/wireless/libertas/cmdresp.c
-> +++ linux-wl/drivers/net/wireless/libertas/cmdresp.c
-> @@ -68,7 +68,7 @@
->  	 * no longer valid.
->  	 */
->  	memset(&priv->curbssparams.bssid, 0, ETH_ALEN);
-> -	memset(&priv->curbssparams.ssid, 0, IW_ESSID_MAX_SIZE);
-> +	memset(&priv->curbssparams.ssid, 0, IEEE80211_MAX_SSID_LEN);
->  	priv->curbssparams.ssid_len = 0;
->  
->  	if (priv->psstate != PS_STATE_FULL_POWER) {
-> --- linux-wl.orig/drivers/net/wireless/libertas/dev.h
-> +++ linux-wl/drivers/net/wireless/libertas/dev.h
-> @@ -65,7 +65,7 @@
->  	/** bssid */
->  	u8 bssid[ETH_ALEN];
->  	/** ssid */
-> -	u8 ssid[IW_ESSID_MAX_SIZE + 1];
-> +	u8 ssid[IEEE80211_MAX_SSID_LEN + 1];
->  	u8 ssid_len;
->  
->  	/** band */
-> @@ -163,7 +163,7 @@
->  	struct work_struct sync_channel;
->  	/* remember which channel was scanned last, != 0 if currently scanning */
->  	int scan_channel;
-> -	u8 scan_ssid[IW_ESSID_MAX_SIZE + 1];
-> +	u8 scan_ssid[IEEE80211_MAX_SSID_LEN + 1];
->  	u8 scan_ssid_len;
->  
->  	/** Hardware access */
-> @@ -230,7 +230,7 @@
->  	struct current_bss_params curbssparams;
->  
->  	uint16_t mesh_tlv;
-> -	u8 mesh_ssid[IW_ESSID_MAX_SIZE + 1];
-> +	u8 mesh_ssid[IEEE80211_MAX_SSID_LEN + 1];
->  	u8 mesh_ssid_len;
->  
->  	/* IW_MODE_* */
-> @@ -340,7 +340,7 @@
->  struct bss_descriptor {
->  	u8 bssid[ETH_ALEN];
->  
-> -	u8 ssid[IW_ESSID_MAX_SIZE + 1];
-> +	u8 ssid[IEEE80211_MAX_SSID_LEN + 1];
->  	u8 ssid_len;
->  
->  	u16 capability;
-> @@ -389,7 +389,7 @@
->  #define ASSOC_FLAG_WPA_IE		11
->  	unsigned long flags;
->  
-> -	u8 ssid[IW_ESSID_MAX_SIZE + 1];
-> +	u8 ssid[IEEE80211_MAX_SSID_LEN + 1];
->  	u8 ssid_len;
->  	u8 channel;
->  	u8 band;
-> --- linux-wl.orig/drivers/net/wireless/libertas/host.h
-> +++ linux-wl/drivers/net/wireless/libertas/host.h
-> @@ -719,7 +719,7 @@
->  struct cmd_ds_802_11_ad_hoc_start {
->  	struct cmd_header hdr;
->  
-> -	u8 ssid[IW_ESSID_MAX_SIZE];
-> +	u8 ssid[IEEE80211_MAX_SSID_LEN];
->  	u8 bsstype;
->  	__le16 beaconperiod;
->  	u8 dtimperiod;   /* Reserved on v9 and later */
-> @@ -742,7 +742,7 @@
->  
->  struct adhoc_bssdesc {
->  	u8 bssid[ETH_ALEN];
-> -	u8 ssid[IW_ESSID_MAX_SIZE];
-> +	u8 ssid[IEEE80211_MAX_SSID_LEN];
->  	u8 type;
->  	__le16 beaconperiod;
->  	u8 dtimperiod;
-> --- linux-wl.orig/drivers/net/wireless/libertas/persistcfg.c
-> +++ linux-wl/drivers/net/wireless/libertas/persistcfg.c
-> @@ -187,9 +187,9 @@
->  	if (ret)
->  		return ret;
->  
-> -	if (defs.meshie.val.mesh_id_len > IW_ESSID_MAX_SIZE) {
-> +	if (defs.meshie.val.mesh_id_len > IEEE80211_MAX_SSID_LEN) {
->  		lbs_pr_err("inconsistent mesh ID length");
-> -		defs.meshie.val.mesh_id_len = IW_ESSID_MAX_SIZE;
-> +		defs.meshie.val.mesh_id_len = IEEE80211_MAX_SSID_LEN;
->  	}
->  
->  	/* SSID not null terminated: reserve room for \0 + \n */
-> @@ -214,7 +214,7 @@
->  	int len;
->  	int ret;
->  
-> -	if (count < 2 || count > IW_ESSID_MAX_SIZE + 1)
-> +	if (count < 2 || count > IEEE80211_MAX_SSID_LEN + 1)
->  		return -EINVAL;
->  
->  	memset(&cmd, 0, sizeof(struct cmd_ds_mesh_config));
-> @@ -233,7 +233,7 @@
->  	/* SSID len */
->  	ie->val.mesh_id_len = len;
->  	/* IE len */
-> -	ie->len = sizeof(struct mrvl_meshie_val) - IW_ESSID_MAX_SIZE + len;
-> +	ie->len = sizeof(struct mrvl_meshie_val) - IEEE80211_MAX_SSID_LEN + len;
->  
->  	ret = lbs_mesh_config_send(priv, &cmd, CMD_ACT_MESH_CONFIG_SET,
->  				   CMD_TYPE_MESH_SET_MESH_IE);
-> --- linux-wl.orig/drivers/net/wireless/libertas/types.h
-> +++ linux-wl/drivers/net/wireless/libertas/types.h
-> @@ -5,8 +5,8 @@
->  #define _LBS_TYPES_H_
->  
->  #include <linux/if_ether.h>
-> +#include <linux/ieee80211.h>
->  #include <asm/byteorder.h>
-> -#include <linux/wireless.h>
->  
->  struct ieee_ie_header {
->  	u8 id;
-> @@ -247,7 +247,7 @@
->  	uint8_t active_metric_id;
->  	uint8_t mesh_capability;
->  	uint8_t mesh_id_len;
-> -	uint8_t mesh_id[IW_ESSID_MAX_SIZE];
-> +	uint8_t mesh_id[IEEE80211_MAX_SSID_LEN];
->  } __attribute__ ((packed));
->  
->  struct mrvl_meshie {
-> --- linux-wl.orig/drivers/net/wireless/libertas/scan.c
-> +++ linux-wl/drivers/net/wireless/libertas/scan.c
-> @@ -19,11 +19,11 @@
->  
->  //! Approximate amount of data needed to pass a scan result back to iwlist
->  #define MAX_SCAN_CELL_SIZE  (IW_EV_ADDR_LEN             \
-> -                             + IW_ESSID_MAX_SIZE        \
-> +                             + IEEE80211_MAX_SSID_LEN   \
->                               + IW_EV_UINT_LEN           \
->                               + IW_EV_FREQ_LEN           \
->                               + IW_EV_QUAL_LEN           \
-> -                             + IW_ESSID_MAX_SIZE        \
-> +                             + IEEE80211_MAX_SSID_LEN   \
->                               + IW_EV_PARAM_LEN          \
->                               + 40)	/* 40 for WPAIE */
->  
-> @@ -775,7 +775,7 @@
->  	/* SSID */
->  	iwe.cmd = SIOCGIWESSID;
->  	iwe.u.data.flags = 1;
-> -	iwe.u.data.length = min((uint32_t) bss->ssid_len, (uint32_t) IW_ESSID_MAX_SIZE);
-> +	iwe.u.data.length = min((uint32_t) bss->ssid_len, (uint32_t) IEEE80211_MAX_SSID_LEN);
->  	start = iwe_stream_add_point(info, start, stop, &iwe, bss->ssid);
->  
->  	/* Mode */
-> --- linux-wl.orig/drivers/net/wireless/libertas/wext.c
-> +++ linux-wl/drivers/net/wireless/libertas/wext.c
-> @@ -1989,7 +1989,7 @@
->  {
->  	struct lbs_private *priv = dev->ml_priv;
->  	int ret = 0;
-> -	u8 ssid[IW_ESSID_MAX_SIZE];
-> +	u8 ssid[IEEE80211_MAX_SSID_LEN];
->  	u8 ssid_len = 0;
->  	struct assoc_request * assoc_req;
->  	int in_ssid_len = dwrq->length;
-> @@ -2003,7 +2003,7 @@
->  	}
->  
->  	/* Check the size of the string */
-> -	if (in_ssid_len > IW_ESSID_MAX_SIZE) {
-> +	if (in_ssid_len > IEEE80211_MAX_SSID_LEN) {
->  		ret = -E2BIG;
->  		goto out;
->  	}
-> @@ -2034,7 +2034,7 @@
->  			ret = -ENOMEM;
->  		} else {
->  			/* Copy the SSID to the association request */
-> -			memcpy(&assoc_req->ssid, &ssid, IW_ESSID_MAX_SIZE);
-> +			memcpy(&assoc_req->ssid, &ssid, IEEE80211_MAX_SSID_LEN);
->  			assoc_req->ssid_len = ssid_len;
->  			set_bit(ASSOC_FLAG_SSID, &assoc_req->flags);
->  			lbs_postpone_association_work(priv);
-> @@ -2085,7 +2085,7 @@
->  	}
->  
->  	/* Check the size of the string */
-> -	if (dwrq->length > IW_ESSID_MAX_SIZE) {
-> +	if (dwrq->length > IEEE80211_MAX_SSID_LEN) {
->  		ret = -E2BIG;
->  		goto out;
->  	}
-> 
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
+--- linux-wl.orig/drivers/net/wireless/libertas/dev.h
++++ linux-wl/drivers/net/wireless/libertas/dev.h
+@@ -6,75 +6,10 @@
+ #ifndef _LBS_DEV_H_
+ #define _LBS_DEV_H_
+ 
+-#include <linux/netdevice.h>
+-#include <linux/wireless.h>
+-#include <linux/ethtool.h>
+-#include <linux/debugfs.h>
++#include "scan.h"
++#include "assoc.h"
+ 
+-#include "defs.h"
+-#include "host.h"
+ 
+-extern const struct ethtool_ops lbs_ethtool_ops;
+-
+-#define	MAX_BSSID_PER_CHANNEL		16
+-
+-#define NR_TX_QUEUE			3
+-
+-/* For the extended Scan */
+-#define MAX_EXTENDED_SCAN_BSSID_LIST    MAX_BSSID_PER_CHANNEL * \
+-						MRVDRV_MAX_CHANNEL_SIZE + 1
+-
+-#define	MAX_REGION_CHANNEL_NUM	2
+-
+-/** Chan-freq-TxPower mapping table*/
+-struct chan_freq_power {
+-	/** channel Number		*/
+-	u16 channel;
+-	/** frequency of this channel	*/
+-	u32 freq;
+-	/** Max allowed Tx power level	*/
+-	u16 maxtxpower;
+-	/** TRUE:channel unsupported;  FLASE:supported*/
+-	u8 unsupported;
+-};
+-
+-/** region-band mapping table*/
+-struct region_channel {
+-	/** TRUE if this entry is valid		     */
+-	u8 valid;
+-	/** region code for US, Japan ...	     */
+-	u8 region;
+-	/** band B/G/A, used for BAND_CONFIG cmd	     */
+-	u8 band;
+-	/** Actual No. of elements in the array below */
+-	u8 nrcfp;
+-	/** chan-freq-txpower mapping table*/
+-	struct chan_freq_power *CFP;
+-};
+-
+-struct lbs_802_11_security {
+-	u8 WPAenabled;
+-	u8 WPA2enabled;
+-	u8 wep_enabled;
+-	u8 auth_mode;
+-	u32 key_mgmt;
+-};
+-
+-/** Current Basic Service Set State Structure */
+-struct current_bss_params {
+-	/** bssid */
+-	u8 bssid[ETH_ALEN];
+-	/** ssid */
+-	u8 ssid[IEEE80211_MAX_SSID_LEN + 1];
+-	u8 ssid_len;
+-
+-	/** band */
+-	u8 band;
+-	/** channel */
+-	u8 channel;
+-	/** zero-terminated array of supported data rates */
+-	u8 rates[MAX_RATES + 1];
+-};
+ 
+ /** sleep_params */
+ struct sleep_params {
+@@ -295,12 +230,6 @@
+ 	struct enc_key wpa_mcast_key;
+ 	struct enc_key wpa_unicast_key;
+ 
+-/*
+- * In theory, the IE is limited to the IE length, 255,
+- * but in practice 64 bytes are enough.
+- */
+-#define MAX_WPA_IE_LEN 64
+-
+ 	/** WPA Information Elements*/
+ 	u8 wpa_ie[MAX_WPA_IE_LEN];
+ 	u8 wpa_ie_len;
+@@ -334,84 +263,4 @@
+ 
+ extern struct cmd_confirm_sleep confirm_sleep;
+ 
+-/**
+- *  @brief Structure used to store information for each beacon/probe response
+- */
+-struct bss_descriptor {
+-	u8 bssid[ETH_ALEN];
+-
+-	u8 ssid[IEEE80211_MAX_SSID_LEN + 1];
+-	u8 ssid_len;
+-
+-	u16 capability;
+-	u32 rssi;
+-	u32 channel;
+-	u16 beaconperiod;
+-	__le16 atimwindow;
+-
+-	/* IW_MODE_AUTO, IW_MODE_ADHOC, IW_MODE_INFRA */
+-	u8 mode;
+-
+-	/* zero-terminated array of supported data rates */
+-	u8 rates[MAX_RATES + 1];
+-
+-	unsigned long last_scanned;
+-
+-	union ieee_phy_param_set phy;
+-	union ieee_ss_param_set ss;
+-
+-	u8 wpa_ie[MAX_WPA_IE_LEN];
+-	size_t wpa_ie_len;
+-	u8 rsn_ie[MAX_WPA_IE_LEN];
+-	size_t rsn_ie_len;
+-
+-	u8 mesh;
+-
+-	struct list_head list;
+-};
+-
+-/** Association request
+- *
+- * Encapsulates all the options that describe a specific assocation request
+- * or configuration of the wireless card's radio, mode, and security settings.
+- */
+-struct assoc_request {
+-#define ASSOC_FLAG_SSID			1
+-#define ASSOC_FLAG_CHANNEL		2
+-#define ASSOC_FLAG_BAND			3
+-#define ASSOC_FLAG_MODE			4
+-#define ASSOC_FLAG_BSSID		5
+-#define ASSOC_FLAG_WEP_KEYS		6
+-#define ASSOC_FLAG_WEP_TX_KEYIDX	7
+-#define ASSOC_FLAG_WPA_MCAST_KEY	8
+-#define ASSOC_FLAG_WPA_UCAST_KEY	9
+-#define ASSOC_FLAG_SECINFO		10
+-#define ASSOC_FLAG_WPA_IE		11
+-	unsigned long flags;
+-
+-	u8 ssid[IEEE80211_MAX_SSID_LEN + 1];
+-	u8 ssid_len;
+-	u8 channel;
+-	u8 band;
+-	u8 mode;
+-	u8 bssid[ETH_ALEN] __attribute__ ((aligned (2)));
+-
+-	/** WEP keys */
+-	struct enc_key wep_keys[4];
+-	u16 wep_tx_keyidx;
+-
+-	/** WPA keys */
+-	struct enc_key wpa_mcast_key;
+-	struct enc_key wpa_unicast_key;
+-
+-	struct lbs_802_11_security secinfo;
+-
+-	/** WPA Information Elements*/
+-	u8 wpa_ie[MAX_WPA_IE_LEN];
+-	u8 wpa_ie_len;
+-
+-	/* BSS to associate with for infrastructure of Ad-Hoc join */
+-	struct bss_descriptor bss;
+-};
+-
+ #endif
+--- linux-wl.orig/drivers/net/wireless/libertas/assoc.c
++++ linux-wl/drivers/net/wireless/libertas/assoc.c
+@@ -23,6 +23,13 @@
+  */
+ #define CAPINFO_MASK	(~(0xda00))
+ 
++/**
++ * 802.11b/g supported bitrates (in 500Kb/s units)
++ */
++u8 lbs_bg_rates[MAX_RATES] =
++    { 0x02, 0x04, 0x0b, 0x16, 0x0c, 0x12, 0x18, 0x24, 0x30, 0x48, 0x60, 0x6c,
++0x00, 0x00 };
++
+ 
+ /**
+  *  @brief This function finds common rates between rates and card rates.
+--- linux-wl.orig/drivers/net/wireless/libertas/assoc.h
++++ linux-wl/drivers/net/wireless/libertas/assoc.h
+@@ -3,7 +3,127 @@
+ #ifndef _LBS_ASSOC_H_
+ #define _LBS_ASSOC_H_
+ 
+-#include "dev.h"
++
++#include "defs.h"
++#include "host.h"
++
++
++struct lbs_private;
++
++/*
++ * In theory, the IE is limited to the IE length, 255,
++ * but in practice 64 bytes are enough.
++ */
++#define MAX_WPA_IE_LEN 64
++
++
++
++struct lbs_802_11_security {
++	u8 WPAenabled;
++	u8 WPA2enabled;
++	u8 wep_enabled;
++	u8 auth_mode;
++	u32 key_mgmt;
++};
++
++/** Current Basic Service Set State Structure */
++struct current_bss_params {
++	/** bssid */
++	u8 bssid[ETH_ALEN];
++	/** ssid */
++	u8 ssid[IEEE80211_MAX_SSID_LEN + 1];
++	u8 ssid_len;
++
++	/** band */
++	u8 band;
++	/** channel */
++	u8 channel;
++	/** zero-terminated array of supported data rates */
++	u8 rates[MAX_RATES + 1];
++};
++
++/**
++ *  @brief Structure used to store information for each beacon/probe response
++ */
++struct bss_descriptor {
++	u8 bssid[ETH_ALEN];
++
++	u8 ssid[IEEE80211_MAX_SSID_LEN + 1];
++	u8 ssid_len;
++
++	u16 capability;
++	u32 rssi;
++	u32 channel;
++	u16 beaconperiod;
++	__le16 atimwindow;
++
++	/* IW_MODE_AUTO, IW_MODE_ADHOC, IW_MODE_INFRA */
++	u8 mode;
++
++	/* zero-terminated array of supported data rates */
++	u8 rates[MAX_RATES + 1];
++
++	unsigned long last_scanned;
++
++	union ieee_phy_param_set phy;
++	union ieee_ss_param_set ss;
++
++	u8 wpa_ie[MAX_WPA_IE_LEN];
++	size_t wpa_ie_len;
++	u8 rsn_ie[MAX_WPA_IE_LEN];
++	size_t rsn_ie_len;
++
++	u8 mesh;
++
++	struct list_head list;
++};
++
++/** Association request
++ *
++ * Encapsulates all the options that describe a specific assocation request
++ * or configuration of the wireless card's radio, mode, and security settings.
++ */
++struct assoc_request {
++#define ASSOC_FLAG_SSID			1
++#define ASSOC_FLAG_CHANNEL		2
++#define ASSOC_FLAG_BAND			3
++#define ASSOC_FLAG_MODE			4
++#define ASSOC_FLAG_BSSID		5
++#define ASSOC_FLAG_WEP_KEYS		6
++#define ASSOC_FLAG_WEP_TX_KEYIDX	7
++#define ASSOC_FLAG_WPA_MCAST_KEY	8
++#define ASSOC_FLAG_WPA_UCAST_KEY	9
++#define ASSOC_FLAG_SECINFO		10
++#define ASSOC_FLAG_WPA_IE		11
++	unsigned long flags;
++
++	u8 ssid[IEEE80211_MAX_SSID_LEN + 1];
++	u8 ssid_len;
++	u8 channel;
++	u8 band;
++	u8 mode;
++	u8 bssid[ETH_ALEN] __attribute__ ((aligned (2)));
++
++	/** WEP keys */
++	struct enc_key wep_keys[4];
++	u16 wep_tx_keyidx;
++
++	/** WPA keys */
++	struct enc_key wpa_mcast_key;
++	struct enc_key wpa_unicast_key;
++
++	struct lbs_802_11_security secinfo;
++
++	/** WPA Information Elements*/
++	u8 wpa_ie[MAX_WPA_IE_LEN];
++	u8 wpa_ie_len;
++
++	/* BSS to associate with for infrastructure of Ad-Hoc join */
++	struct bss_descriptor bss;
++};
++
++
++extern u8 lbs_bg_rates[MAX_RATES];
+ 
+ void lbs_association_worker(struct work_struct *work);
+ struct assoc_request *lbs_get_association_request(struct lbs_private *priv);
+--- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
++++ linux-wl/drivers/net/wireless/libertas/cmd.c
+@@ -13,6 +13,7 @@
+ #include "dev.h"
+ #include "assoc.h"
+ #include "wext.h"
++#include "scan.h"
+ #include "cmd.h"
+ 
+ static struct cmd_ctrl_node *lbs_get_cmd_ctrl_node(struct lbs_private *priv);
+--- linux-wl.orig/drivers/net/wireless/libertas/decl.h
++++ linux-wl/drivers/net/wireless/libertas/decl.h
+@@ -10,6 +10,9 @@
+ 
+ #include "defs.h"
+ 
++
++extern const struct ethtool_ops lbs_ethtool_ops;
++
+ /** Function Prototype Declaration */
+ struct lbs_private;
+ struct sk_buff;
+@@ -33,7 +36,6 @@
+ /** The proc fs interface */
+ netdev_tx_t lbs_hard_start_xmit(struct sk_buff *skb,
+ 				struct net_device *dev);
+-int lbs_set_regiontable(struct lbs_private *priv, u8 region, u8 band);
+ 
+ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *);
+ 
+@@ -49,8 +51,6 @@
+ void lbs_persist_config_remove(struct net_device *net);
+ 
+ /* main.c */
+-struct chan_freq_power *lbs_get_region_cfp_table(u8 region,
+-	int *cfp_no);
+ struct lbs_private *lbs_add_card(void *card, struct device *dmdev);
+ void lbs_remove_card(struct lbs_private *priv);
+ int lbs_start_card(struct lbs_private *priv);
+--- linux-wl.orig/drivers/net/wireless/libertas/defs.h
++++ linux-wl/drivers/net/wireless/libertas/defs.h
+@@ -322,7 +322,6 @@
+ extern const char lbs_driver_version[];
+ extern u16 lbs_region_code_to_index[MRVDRV_MAX_REGION_CODE];
+ 
+-extern u8 lbs_bg_rates[MAX_RATES];
+ 
+ /** ENUM definition*/
+ /** SNRNF_TYPE */
+--- linux-wl.orig/drivers/net/wireless/libertas/main.c
++++ linux-wl/drivers/net/wireless/libertas/main.c
+@@ -45,119 +45,6 @@
+ struct cmd_confirm_sleep confirm_sleep;
+ 
+ 
+-#define LBS_TX_PWR_DEFAULT		20	/*100mW */
+-#define LBS_TX_PWR_US_DEFAULT		20	/*100mW */
+-#define LBS_TX_PWR_JP_DEFAULT		16	/*50mW */
+-#define LBS_TX_PWR_FR_DEFAULT		20	/*100mW */
+-#define LBS_TX_PWR_EMEA_DEFAULT	20	/*100mW */
+-
+-/* Format { channel, frequency (MHz), maxtxpower } */
+-/* band: 'B/G', region: USA FCC/Canada IC */
+-static struct chan_freq_power channel_freq_power_US_BG[] = {
+-	{1, 2412, LBS_TX_PWR_US_DEFAULT},
+-	{2, 2417, LBS_TX_PWR_US_DEFAULT},
+-	{3, 2422, LBS_TX_PWR_US_DEFAULT},
+-	{4, 2427, LBS_TX_PWR_US_DEFAULT},
+-	{5, 2432, LBS_TX_PWR_US_DEFAULT},
+-	{6, 2437, LBS_TX_PWR_US_DEFAULT},
+-	{7, 2442, LBS_TX_PWR_US_DEFAULT},
+-	{8, 2447, LBS_TX_PWR_US_DEFAULT},
+-	{9, 2452, LBS_TX_PWR_US_DEFAULT},
+-	{10, 2457, LBS_TX_PWR_US_DEFAULT},
+-	{11, 2462, LBS_TX_PWR_US_DEFAULT}
+-};
+-
+-/* band: 'B/G', region: Europe ETSI */
+-static struct chan_freq_power channel_freq_power_EU_BG[] = {
+-	{1, 2412, LBS_TX_PWR_EMEA_DEFAULT},
+-	{2, 2417, LBS_TX_PWR_EMEA_DEFAULT},
+-	{3, 2422, LBS_TX_PWR_EMEA_DEFAULT},
+-	{4, 2427, LBS_TX_PWR_EMEA_DEFAULT},
+-	{5, 2432, LBS_TX_PWR_EMEA_DEFAULT},
+-	{6, 2437, LBS_TX_PWR_EMEA_DEFAULT},
+-	{7, 2442, LBS_TX_PWR_EMEA_DEFAULT},
+-	{8, 2447, LBS_TX_PWR_EMEA_DEFAULT},
+-	{9, 2452, LBS_TX_PWR_EMEA_DEFAULT},
+-	{10, 2457, LBS_TX_PWR_EMEA_DEFAULT},
+-	{11, 2462, LBS_TX_PWR_EMEA_DEFAULT},
+-	{12, 2467, LBS_TX_PWR_EMEA_DEFAULT},
+-	{13, 2472, LBS_TX_PWR_EMEA_DEFAULT}
+-};
+-
+-/* band: 'B/G', region: Spain */
+-static struct chan_freq_power channel_freq_power_SPN_BG[] = {
+-	{10, 2457, LBS_TX_PWR_DEFAULT},
+-	{11, 2462, LBS_TX_PWR_DEFAULT}
+-};
+-
+-/* band: 'B/G', region: France */
+-static struct chan_freq_power channel_freq_power_FR_BG[] = {
+-	{10, 2457, LBS_TX_PWR_FR_DEFAULT},
+-	{11, 2462, LBS_TX_PWR_FR_DEFAULT},
+-	{12, 2467, LBS_TX_PWR_FR_DEFAULT},
+-	{13, 2472, LBS_TX_PWR_FR_DEFAULT}
+-};
+-
+-/* band: 'B/G', region: Japan */
+-static struct chan_freq_power channel_freq_power_JPN_BG[] = {
+-	{1, 2412, LBS_TX_PWR_JP_DEFAULT},
+-	{2, 2417, LBS_TX_PWR_JP_DEFAULT},
+-	{3, 2422, LBS_TX_PWR_JP_DEFAULT},
+-	{4, 2427, LBS_TX_PWR_JP_DEFAULT},
+-	{5, 2432, LBS_TX_PWR_JP_DEFAULT},
+-	{6, 2437, LBS_TX_PWR_JP_DEFAULT},
+-	{7, 2442, LBS_TX_PWR_JP_DEFAULT},
+-	{8, 2447, LBS_TX_PWR_JP_DEFAULT},
+-	{9, 2452, LBS_TX_PWR_JP_DEFAULT},
+-	{10, 2457, LBS_TX_PWR_JP_DEFAULT},
+-	{11, 2462, LBS_TX_PWR_JP_DEFAULT},
+-	{12, 2467, LBS_TX_PWR_JP_DEFAULT},
+-	{13, 2472, LBS_TX_PWR_JP_DEFAULT},
+-	{14, 2484, LBS_TX_PWR_JP_DEFAULT}
+-};
+-
+-/**
+- * the structure for channel, frequency and power
+- */
+-struct region_cfp_table {
+-	u8 region;
+-	struct chan_freq_power *cfp_BG;
+-	int cfp_no_BG;
+-};
+-
+-/**
+- * the structure for the mapping between region and CFP
+- */
+-static struct region_cfp_table region_cfp_table[] = {
+-	{0x10,			/*US FCC */
+-	 channel_freq_power_US_BG,
+-	 ARRAY_SIZE(channel_freq_power_US_BG),
+-	 }
+-	,
+-	{0x20,			/*CANADA IC */
+-	 channel_freq_power_US_BG,
+-	 ARRAY_SIZE(channel_freq_power_US_BG),
+-	 }
+-	,
+-	{0x30, /*EU*/ channel_freq_power_EU_BG,
+-	 ARRAY_SIZE(channel_freq_power_EU_BG),
+-	 }
+-	,
+-	{0x31, /*SPAIN*/ channel_freq_power_SPN_BG,
+-	 ARRAY_SIZE(channel_freq_power_SPN_BG),
+-	 }
+-	,
+-	{0x32, /*FRANCE*/ channel_freq_power_FR_BG,
+-	 ARRAY_SIZE(channel_freq_power_FR_BG),
+-	 }
+-	,
+-	{0x40, /*JAPAN*/ channel_freq_power_JPN_BG,
+-	 ARRAY_SIZE(channel_freq_power_JPN_BG),
+-	 }
+-	,
+-/*Add new region here */
+-};
+-
+ /**
+  * the table to keep region code
+  */
+@@ -165,13 +52,6 @@
+     { 0x10, 0x20, 0x30, 0x31, 0x32, 0x40 };
+ 
+ /**
+- * 802.11b/g supported bitrates (in 500Kb/s units)
+- */
+-u8 lbs_bg_rates[MAX_RATES] =
+-    { 0x02, 0x04, 0x0b, 0x16, 0x0c, 0x12, 0x18, 0x24, 0x30, 0x48, 0x60, 0x6c,
+-0x00, 0x00 };
+-
+-/**
+  * FW rate table.  FW refers to rates by their index in this table, not by the
+  * rate value itself.  Values of 0x00 are
+  * reserved positions.
+@@ -1617,68 +1497,6 @@
+ 	lbs_deb_leave(LBS_DEB_MESH);
+ }
+ 
+-/**
+- *  @brief This function finds the CFP in
+- *  region_cfp_table based on region and band parameter.
+- *
+- *  @param region  The region code
+- *  @param band	   The band
+- *  @param cfp_no  A pointer to CFP number
+- *  @return 	   A pointer to CFP
+- */
+-struct chan_freq_power *lbs_get_region_cfp_table(u8 region, int *cfp_no)
+-{
+-	int i, end;
+-
+-	lbs_deb_enter(LBS_DEB_MAIN);
+-
+-	end = ARRAY_SIZE(region_cfp_table);
+-
+-	for (i = 0; i < end ; i++) {
+-		lbs_deb_main("region_cfp_table[i].region=%d\n",
+-			region_cfp_table[i].region);
+-		if (region_cfp_table[i].region == region) {
+-			*cfp_no = region_cfp_table[i].cfp_no_BG;
+-			lbs_deb_leave(LBS_DEB_MAIN);
+-			return region_cfp_table[i].cfp_BG;
+-		}
+-	}
+-
+-	lbs_deb_leave_args(LBS_DEB_MAIN, "ret NULL");
+-	return NULL;
+-}
+-
+-int lbs_set_regiontable(struct lbs_private *priv, u8 region, u8 band)
+-{
+-	int ret = 0;
+-	int i = 0;
+-
+-	struct chan_freq_power *cfp;
+-	int cfp_no;
+-
+-	lbs_deb_enter(LBS_DEB_MAIN);
+-
+-	memset(priv->region_channel, 0, sizeof(priv->region_channel));
+-
+-	cfp = lbs_get_region_cfp_table(region, &cfp_no);
+-	if (cfp != NULL) {
+-		priv->region_channel[i].nrcfp = cfp_no;
+-		priv->region_channel[i].CFP = cfp;
+-	} else {
+-		lbs_deb_main("wrong region code %#x in band B/G\n",
+-		       region);
+-		ret = -1;
+-		goto out;
+-	}
+-	priv->region_channel[i].valid = 1;
+-	priv->region_channel[i].region = region;
+-	priv->region_channel[i].band = band;
+-	i++;
+-out:
+-	lbs_deb_leave_args(LBS_DEB_MAIN, "ret %d", ret);
+-	return ret;
+-}
+-
+ void lbs_queue_event(struct lbs_private *priv, u32 event)
+ {
+ 	unsigned long flags;
+--- linux-wl.orig/drivers/net/wireless/libertas/scan.c
++++ linux-wl/drivers/net/wireless/libertas/scan.c
+@@ -15,6 +15,7 @@
+ #include "decl.h"
+ #include "dev.h"
+ #include "scan.h"
++#include "assoc.h"
+ #include "cmd.h"
+ 
+ //! Approximate amount of data needed to pass a scan result back to iwlist
+@@ -121,6 +122,189 @@
+ 
+ 
+ 
++/*********************************************************************/
++/*                                                                   */
++/* Region channel support                                            */
++/*                                                                   */
++/*********************************************************************/
++
++#define LBS_TX_PWR_DEFAULT		20	/*100mW */
++#define LBS_TX_PWR_US_DEFAULT		20	/*100mW */
++#define LBS_TX_PWR_JP_DEFAULT		16	/*50mW */
++#define LBS_TX_PWR_FR_DEFAULT		20	/*100mW */
++#define LBS_TX_PWR_EMEA_DEFAULT	20	/*100mW */
++
++/* Format { channel, frequency (MHz), maxtxpower } */
++/* band: 'B/G', region: USA FCC/Canada IC */
++static struct chan_freq_power channel_freq_power_US_BG[] = {
++	{1, 2412, LBS_TX_PWR_US_DEFAULT},
++	{2, 2417, LBS_TX_PWR_US_DEFAULT},
++	{3, 2422, LBS_TX_PWR_US_DEFAULT},
++	{4, 2427, LBS_TX_PWR_US_DEFAULT},
++	{5, 2432, LBS_TX_PWR_US_DEFAULT},
++	{6, 2437, LBS_TX_PWR_US_DEFAULT},
++	{7, 2442, LBS_TX_PWR_US_DEFAULT},
++	{8, 2447, LBS_TX_PWR_US_DEFAULT},
++	{9, 2452, LBS_TX_PWR_US_DEFAULT},
++	{10, 2457, LBS_TX_PWR_US_DEFAULT},
++	{11, 2462, LBS_TX_PWR_US_DEFAULT}
++};
++
++/* band: 'B/G', region: Europe ETSI */
++static struct chan_freq_power channel_freq_power_EU_BG[] = {
++	{1, 2412, LBS_TX_PWR_EMEA_DEFAULT},
++	{2, 2417, LBS_TX_PWR_EMEA_DEFAULT},
++	{3, 2422, LBS_TX_PWR_EMEA_DEFAULT},
++	{4, 2427, LBS_TX_PWR_EMEA_DEFAULT},
++	{5, 2432, LBS_TX_PWR_EMEA_DEFAULT},
++	{6, 2437, LBS_TX_PWR_EMEA_DEFAULT},
++	{7, 2442, LBS_TX_PWR_EMEA_DEFAULT},
++	{8, 2447, LBS_TX_PWR_EMEA_DEFAULT},
++	{9, 2452, LBS_TX_PWR_EMEA_DEFAULT},
++	{10, 2457, LBS_TX_PWR_EMEA_DEFAULT},
++	{11, 2462, LBS_TX_PWR_EMEA_DEFAULT},
++	{12, 2467, LBS_TX_PWR_EMEA_DEFAULT},
++	{13, 2472, LBS_TX_PWR_EMEA_DEFAULT}
++};
++
++/* band: 'B/G', region: Spain */
++static struct chan_freq_power channel_freq_power_SPN_BG[] = {
++	{10, 2457, LBS_TX_PWR_DEFAULT},
++	{11, 2462, LBS_TX_PWR_DEFAULT}
++};
++
++/* band: 'B/G', region: France */
++static struct chan_freq_power channel_freq_power_FR_BG[] = {
++	{10, 2457, LBS_TX_PWR_FR_DEFAULT},
++	{11, 2462, LBS_TX_PWR_FR_DEFAULT},
++	{12, 2467, LBS_TX_PWR_FR_DEFAULT},
++	{13, 2472, LBS_TX_PWR_FR_DEFAULT}
++};
++
++/* band: 'B/G', region: Japan */
++static struct chan_freq_power channel_freq_power_JPN_BG[] = {
++	{1, 2412, LBS_TX_PWR_JP_DEFAULT},
++	{2, 2417, LBS_TX_PWR_JP_DEFAULT},
++	{3, 2422, LBS_TX_PWR_JP_DEFAULT},
++	{4, 2427, LBS_TX_PWR_JP_DEFAULT},
++	{5, 2432, LBS_TX_PWR_JP_DEFAULT},
++	{6, 2437, LBS_TX_PWR_JP_DEFAULT},
++	{7, 2442, LBS_TX_PWR_JP_DEFAULT},
++	{8, 2447, LBS_TX_PWR_JP_DEFAULT},
++	{9, 2452, LBS_TX_PWR_JP_DEFAULT},
++	{10, 2457, LBS_TX_PWR_JP_DEFAULT},
++	{11, 2462, LBS_TX_PWR_JP_DEFAULT},
++	{12, 2467, LBS_TX_PWR_JP_DEFAULT},
++	{13, 2472, LBS_TX_PWR_JP_DEFAULT},
++	{14, 2484, LBS_TX_PWR_JP_DEFAULT}
++};
++
++/**
++ * the structure for channel, frequency and power
++ */
++struct region_cfp_table {
++	u8 region;
++	struct chan_freq_power *cfp_BG;
++	int cfp_no_BG;
++};
++
++/**
++ * the structure for the mapping between region and CFP
++ */
++static struct region_cfp_table region_cfp_table[] = {
++	{0x10,			/*US FCC */
++	 channel_freq_power_US_BG,
++	 ARRAY_SIZE(channel_freq_power_US_BG),
++	 }
++	,
++	{0x20,			/*CANADA IC */
++	 channel_freq_power_US_BG,
++	 ARRAY_SIZE(channel_freq_power_US_BG),
++	 }
++	,
++	{0x30, /*EU*/ channel_freq_power_EU_BG,
++	 ARRAY_SIZE(channel_freq_power_EU_BG),
++	 }
++	,
++	{0x31, /*SPAIN*/ channel_freq_power_SPN_BG,
++	 ARRAY_SIZE(channel_freq_power_SPN_BG),
++	 }
++	,
++	{0x32, /*FRANCE*/ channel_freq_power_FR_BG,
++	 ARRAY_SIZE(channel_freq_power_FR_BG),
++	 }
++	,
++	{0x40, /*JAPAN*/ channel_freq_power_JPN_BG,
++	 ARRAY_SIZE(channel_freq_power_JPN_BG),
++	 }
++	,
++/*Add new region here */
++};
++
++/**
++ *  @brief This function finds the CFP in
++ *  region_cfp_table based on region and band parameter.
++ *
++ *  @param region  The region code
++ *  @param band	   The band
++ *  @param cfp_no  A pointer to CFP number
++ *  @return 	   A pointer to CFP
++ */
++static struct chan_freq_power *lbs_get_region_cfp_table(u8 region, int *cfp_no)
++{
++	int i, end;
++
++	lbs_deb_enter(LBS_DEB_MAIN);
++
++	end = ARRAY_SIZE(region_cfp_table);
++
++	for (i = 0; i < end ; i++) {
++		lbs_deb_main("region_cfp_table[i].region=%d\n",
++			region_cfp_table[i].region);
++		if (region_cfp_table[i].region == region) {
++			*cfp_no = region_cfp_table[i].cfp_no_BG;
++			lbs_deb_leave(LBS_DEB_MAIN);
++			return region_cfp_table[i].cfp_BG;
++		}
++	}
++
++	lbs_deb_leave_args(LBS_DEB_MAIN, "ret NULL");
++	return NULL;
++}
++
++int lbs_set_regiontable(struct lbs_private *priv, u8 region, u8 band)
++{
++	int ret = 0;
++	int i = 0;
++
++	struct chan_freq_power *cfp;
++	int cfp_no;
++
++	lbs_deb_enter(LBS_DEB_MAIN);
++
++	memset(priv->region_channel, 0, sizeof(priv->region_channel));
++
++	cfp = lbs_get_region_cfp_table(region, &cfp_no);
++	if (cfp != NULL) {
++		priv->region_channel[i].nrcfp = cfp_no;
++		priv->region_channel[i].CFP = cfp;
++	} else {
++		lbs_deb_main("wrong region code %#x in band B/G\n",
++		       region);
++		ret = -1;
++		goto out;
++	}
++	priv->region_channel[i].valid = 1;
++	priv->region_channel[i].region = region;
++	priv->region_channel[i].band = band;
++	i++;
++out:
++	lbs_deb_leave_args(LBS_DEB_MAIN, "ret %d", ret);
++	return ret;
++}
++
++
++
+ 
+ /*********************************************************************/
+ /*                                                                   */
+--- linux-wl.orig/drivers/net/wireless/libertas/scan.h
++++ linux-wl/drivers/net/wireless/libertas/scan.h
+@@ -9,8 +9,36 @@
+ 
+ #include <net/iw_handler.h>
+ 
++struct lbs_private;
++
+ #define MAX_NETWORK_COUNT 128
+ 
++/** Chan-freq-TxPower mapping table*/
++struct chan_freq_power {
++	/** channel Number		*/
++	u16 channel;
++	/** frequency of this channel	*/
++	u32 freq;
++	/** Max allowed Tx power level	*/
++	u16 maxtxpower;
++	/** TRUE:channel unsupported;  FLASE:supported*/
++	u8 unsupported;
++};
++
++/** region-band mapping table*/
++struct region_channel {
++	/** TRUE if this entry is valid		     */
++	u8 valid;
++	/** region code for US, Japan ...	     */
++	u8 region;
++	/** band B/G/A, used for BAND_CONFIG cmd	     */
++	u8 band;
++	/** Actual No. of elements in the array below */
++	u8 nrcfp;
++	/** chan-freq-txpower mapping table*/
++	struct chan_freq_power *CFP;
++};
++
+ /**
+  *  @brief Maximum number of channels that can be sent in a setuserscan ioctl
+  */
+@@ -18,6 +46,8 @@
+ 
+ int lbs_ssid_cmp(u8 *ssid1, u8 ssid1_len, u8 *ssid2, u8 ssid2_len);
+ 
++int lbs_set_regiontable(struct lbs_private *priv, u8 region, u8 band);
++
+ int lbs_send_specific_ssid_scan(struct lbs_private *priv, u8 *ssid,
+ 				u8 ssid_len);
+ 
+
+-- 
