@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.191]:32558 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760552AbZJMQtO convert rfc822-to-8bit (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:49173 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756535AbZJVShL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 12:49:14 -0400
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Ozan =?utf-8?q?=C3=87a=C4=9Flayan?= <ozan@pardus.org.tr>
-Subject: Re: Current status of rt2800usb and staging/rt2870
-Date: Tue, 13 Oct 2009 18:44:58 +0200
-Cc: linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
-References: <4AD46380.9020308@pardus.org.tr>
-In-Reply-To: <4AD46380.9020308@pardus.org.tr>
-MIME-Version: 1.0
-Message-Id: <200910131844.58983.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="utf-8"
+	Thu, 22 Oct 2009 14:37:11 -0400
+Date: Thu, 22 Oct 2009 20:19:23 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 01/28] mwl8k: fix GET_STAT firmware command packet layout
+Message-ID: <20091022181923.GC1583@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The GET_STAT command doesn't have an 'action' field like other
+commands do, so remove it.
 
-Hi,
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-On Tuesday 13 October 2009 13:24:48 Ozan Çağlayan wrote:
-> Hi,
-> 
-> In 2.6.31, there are USB device IDs common between both drivers. Should
-> a distribution enable both drivers? What do you suggest? Are there any
-> *known issues* stuff for one of them?
-
-My advice to distributions for such situations is to ship both but make
-one driver the default one.  This provides users with better overall
-hardware coverage and flexibility.  Additionally by providing the ability
-for direct comparison of both drivers it makes driver authors/maintainers
-try really hard at making the final solution work for everybody (instead
-of just making it work for their needs only etc.).
-
-Best regards,
-Bartlomiej
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 746532e..3249998 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1590,7 +1590,6 @@ __mwl8k_cmd_mac_multicast_adr(struct ieee80211_hw *hw,
+  */
+ struct mwl8k_cmd_802_11_get_stat {
+ 	struct mwl8k_cmd_pkt header;
+-	__le16 action;
+ 	__le32 stats[64];
+ } __attribute__((packed));
+ 
+@@ -1611,7 +1610,6 @@ static int mwl8k_cmd_802_11_get_stat(struct ieee80211_hw *hw,
+ 
+ 	cmd->header.code = cpu_to_le16(MWL8K_CMD_GET_STAT);
+ 	cmd->header.length = cpu_to_le16(sizeof(*cmd));
+-	cmd->action = cpu_to_le16(MWL8K_CMD_GET);
+ 
+ 	rc = mwl8k_post_cmd(hw, &cmd->header);
+ 	if (!rc) {
+-- 
+1.5.6.4
