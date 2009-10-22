@@ -1,136 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:26872 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759017AbZJPM26 (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:44984 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755841AbZJVNej (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 08:28:58 -0400
-Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
-	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n9GCRIvI015325
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2009 07:27:31 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Cc: kalle.valo@nokia.com, juuso.oikarinen@nokia.com
-Subject: [RFC 1/3] mac80211: WIP - add operating BSSID to device configuration struct
-Date: Fri, 16 Oct 2009 15:27:20 +0300
-Message-Id: <1255696042-28413-2-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255696042-28413-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255696042-28413-1-git-send-email-luciano.coelho@nokia.com>
+	Thu, 22 Oct 2009 09:34:39 -0400
+Message-Id: <20091022133405.685612216@mail.mn-solutions.de>
+References: <20091022133043.185554096@mail.mn-solutions.de>
+Date: Thu, 22 Oct 2009 15:30:46 +0200
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 03/19] libertas: remove unused 11d.h as well, priv->countryinfo
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some chips need to know the BSSID that we are interested in before we start
-the association process.  This patch adds an operating BSSID to the device
-configuration struct ieee80211_conf so that it can be passed to the driver
-when op_config is called.
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-With this solution we also solve the problem of some chips that require
-an explicit disconnect command when disassociating.
+--- linux-wl.orig/drivers/net/wireless/libertas/11d.h
++++ /dev/null
+@@ -1,82 +0,0 @@
+-/**
+-  * This header file contains data structures and
+-  * function declarations of 802.11d
+-  */
+-#ifndef _LBS_11D_
+-#define _LBS_11D_
+-
+-#include "types.h"
+-#include "defs.h"
+-
+-#define UNIVERSAL_REGION_CODE			0xff
+-
+-/** (Beaconsize(256)-5(IEId,len,contrystr(3))/3(FirstChan,NoOfChan,MaxPwr)
+- */
+-#define MRVDRV_MAX_SUBBAND_802_11D		83
+-
+-#define COUNTRY_CODE_LEN			3
+-#define MAX_NO_OF_CHAN 				40
+-
+-struct cmd_ds_command;
+-
+-/** Data structure for Country IE*/
+-struct ieee_subbandset {
+-	u8 firstchan;
+-	u8 nrchan;
+-	u8 maxtxpwr;
+-} __attribute__ ((packed));
+-
+-struct ieee_ie_country_info_set {
+-	struct ieee_ie_header header;
+-
+-	u8 countrycode[COUNTRY_CODE_LEN];
+-	struct ieee_subbandset subband[1];
+-};
+-
+-struct ieee_ie_country_info_full_set {
+-	struct ieee_ie_header header;
+-
+-	u8 countrycode[COUNTRY_CODE_LEN];
+-	struct ieee_subbandset subband[MRVDRV_MAX_SUBBAND_802_11D];
+-} __attribute__ ((packed));
+-
+-struct mrvl_ie_domain_param_set {
+-	struct mrvl_ie_header header;
+-
+-	u8 countrycode[COUNTRY_CODE_LEN];
+-	struct ieee_subbandset subband[1];
+-} __attribute__ ((packed));
+-
+-struct cmd_ds_802_11d_domain_info {
+-	__le16 action;
+-	struct mrvl_ie_domain_param_set domain;
+-} __attribute__ ((packed));
+-
+-/** domain regulatory information */
+-struct lbs_802_11d_domain_reg {
+-	/** country Code*/
+-	u8 countrycode[COUNTRY_CODE_LEN];
+-	/** No. of subband*/
+-	u8 nr_subband;
+-	struct ieee_subbandset subband[MRVDRV_MAX_SUBBAND_802_11D];
+-};
+-
+-struct chan_power_11d {
+-	u8 chan;
+-	u8 pwr;
+-} __attribute__ ((packed));
+-
+-struct parsed_region_chan_11d {
+-	u8 band;
+-	u8 region;
+-	s8 countrycode[COUNTRY_CODE_LEN];
+-	struct chan_power_11d chanpwr[MAX_NO_OF_CHAN];
+-	u8 nr_chan;
+-} __attribute__ ((packed));
+-
+-struct region_code_mapping {
+-	u8 region[COUNTRY_CODE_LEN];
+-	u8 code;
+-};
+-
+-#endif
+--- linux-wl.orig/drivers/net/wireless/libertas/dev.h
++++ linux-wl/drivers/net/wireless/libertas/dev.h
+@@ -360,8 +360,6 @@
+ 	union ieee_phy_param_set phy;
+ 	union ieee_ss_param_set ss;
+ 
+-	struct ieee_ie_country_info_full_set countryinfo;
+-
+ 	u8 wpa_ie[MAX_WPA_IE_LEN];
+ 	size_t wpa_ie_len;
+ 	u8 rsn_ie[MAX_WPA_IE_LEN];
+--- linux-wl.orig/drivers/net/wireless/libertas/host.h
++++ linux-wl/drivers/net/wireless/libertas/host.h
+@@ -6,7 +6,8 @@
+ #ifndef _LBS_HOST_H_
+ #define _LBS_HOST_H_
+ 
+-#include "11d.h"
++#include "types.h"
++#include "defs.h"
+ 
+ #define DEFAULT_AD_HOC_CHANNEL                  6
+ 
+@@ -961,9 +962,6 @@
+ 		struct cmd_ds_bbp_reg_access bbpreg;
+ 		struct cmd_ds_rf_reg_access rfreg;
+ 
+-		struct cmd_ds_802_11d_domain_info domaininfo;
+-		struct cmd_ds_802_11d_domain_info domaininforesp;
+-
+ 		struct cmd_ds_802_11_tpc_cfg tpccfg;
+ 		struct cmd_ds_802_11_afc afc;
+ 		struct cmd_ds_802_11_led_ctrl ledgpio;
+--- linux-wl.orig/drivers/net/wireless/libertas/scan.c
++++ linux-wl/drivers/net/wireless/libertas/scan.c
+@@ -503,7 +503,6 @@
+ 	struct ieee_ie_cf_param_set *cf;
+ 	struct ieee_ie_ibss_param_set *ibss;
+ 	DECLARE_SSID_BUF(ssid);
+-	struct ieee_ie_country_info_set *pcountryinfo;
+ 	uint8_t *pos, *end, *p;
+ 	uint8_t n_ex_rates = 0, got_basic_rates = 0, n_basic_rates = 0;
+ 	uint16_t beaconsize = 0;
+@@ -626,26 +625,6 @@
+ 			lbs_deb_scan("got IBSS IE\n");
+ 			break;
+ 
+-		case WLAN_EID_COUNTRY:
+-			pcountryinfo = (struct ieee_ie_country_info_set *) pos;
+-			lbs_deb_scan("got COUNTRY IE\n");
+-			if (pcountryinfo->header.len < sizeof(pcountryinfo->countrycode)
+-			    || pcountryinfo->header.len > 254) {
+-				lbs_deb_scan("%s: 11D- Err CountryInfo len %d, min %zd, max 254\n",
+-					     __func__,
+-					     pcountryinfo->header.len,
+-					     sizeof(pcountryinfo->countrycode));
+-				ret = -1;
+-				goto done;
+-			}
+-
+-			memcpy(&bss->countryinfo, pcountryinfo,
+-				pcountryinfo->header.len + 2);
+-			lbs_deb_hex(LBS_DEB_SCAN, "process_bss: 11d countryinfo",
+-				    (uint8_t *) pcountryinfo,
+-				    (int) (pcountryinfo->header.len + 2));
+-			break;
+-
+ 		case WLAN_EID_EXT_SUPP_RATES:
+ 			/* only process extended supported rate if data rate is
+ 			 * already found. Data rate IE should come before
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- include/net/mac80211.h |    8 ++++++++
- net/mac80211/mlme.c    |   27 +++++++++++++++++++++++++--
- 2 files changed, 33 insertions(+), 2 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 466859b..654d753 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -599,6 +599,7 @@ enum ieee80211_conf_changed {
- 	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
- 	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(7),
- 	IEEE80211_CONF_CHANGE_IDLE		= BIT(8),
-+	IEEE80211_CONF_CHANGE_OPER_BSSID	= BIT(9),
- };
- 
- /**
-@@ -629,6 +630,11 @@ enum ieee80211_conf_changed {
-  * @short_frame_max_tx_count: Maximum number of transmissions for a "short"
-  *    frame, called "dot11ShortRetryLimit" in 802.11, but actually means the
-  *    number of transmissions not the number of retries
-+ *
-+ * @oper_bssid: BSSID on which we are operating; some chips need to know
-+ *    which BSSID we are "tuned" to in order to improve power management,
-+ *    coexistence with other technologies (such as Bluetooth) and other
-+ *    filtering issues.
-  */
- struct ieee80211_conf {
- 	u32 flags;
-@@ -641,6 +647,8 @@ struct ieee80211_conf {
- 
- 	struct ieee80211_channel *channel;
- 	enum nl80211_channel_type channel_type;
-+
-+	u8 oper_bssid[ETH_ALEN];
- };
- 
- /**
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 8d26e9b..cac542d 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1077,6 +1077,11 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	/* channel(_type) changes are handled by ieee80211_hw_config */
- 	local->oper_channel_type = NL80211_CHAN_NO_HT;
- 
-+	if (!is_zero_ether_addr(sdata->local->hw.conf.oper_bssid)) {
-+		config_changed |= IEEE80211_CONF_CHANGE_OPER_BSSID;
-+		memset(sdata->local->hw.conf.oper_bssid, 0, ETH_ALEN);
-+	}
-+
- 	/* on the next assoc, re-program HT parameters */
- 	sdata->ht_opmode_valid = false;
- 
-@@ -2356,6 +2361,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	const u8 *ssid;
- 	struct ieee80211_mgd_work *wk;
-+	u32 config_changed = 0;
- 	u16 auth_alg;
- 
- 	switch (req->auth_type) {
-@@ -2405,7 +2411,15 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 	 *	to sleep and then change channel etc.
- 	 */
- 	sdata->local->oper_channel = req->bss->channel;
--	ieee80211_hw_config(sdata->local, 0);
-+
-+	if (memcmp(sdata->local->hw.conf.oper_bssid,
-+		   req->bss->bssid, ETH_ALEN)) {
-+		config_changed |= IEEE80211_CONF_CHANGE_OPER_BSSID;
-+		memcpy(sdata->local->hw.conf.oper_bssid,
-+		       req->bss->bssid, ETH_ALEN);
-+	}
-+
-+	ieee80211_hw_config(sdata->local, config_changed);
- 
- 	mutex_lock(&ifmgd->mtx);
- 	list_add(&wk->list, &sdata->u.mgd.work_list);
-@@ -2420,6 +2434,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct ieee80211_mgd_work *wk, *found = NULL;
-+	u32 config_changed = 0;
- 	int i, err;
- 
- 	mutex_lock(&ifmgd->mtx);
-@@ -2457,7 +2472,15 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 			ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
- 
- 	sdata->local->oper_channel = req->bss->channel;
--	ieee80211_hw_config(sdata->local, 0);
-+
-+	if (memcmp(sdata->local->hw.conf.oper_bssid,
-+		   req->bss->bssid, ETH_ALEN)) {
-+		config_changed |= IEEE80211_CONF_CHANGE_OPER_BSSID;
-+		memcpy(sdata->local->hw.conf.oper_bssid,
-+		       req->bss->bssid, ETH_ALEN);
-+	}
-+
-+	ieee80211_hw_config(sdata->local, config_changed);
- 
- 	if (req->ie && req->ie_len) {
- 		memcpy(wk->ie, req->ie, req->ie_len);
 -- 
-1.5.6.5
-
