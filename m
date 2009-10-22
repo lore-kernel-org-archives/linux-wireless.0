@@ -1,55 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53676 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753288AbZJaGoF (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:49153 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752180AbZJVShI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Oct 2009 02:44:05 -0400
-Subject: [PATCH] mac80211: fix scan abort sanity checks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	mcgrof <mcgrof@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 31 Oct 2009 07:44:08 +0100
-Message-ID: <1256971448.3555.89.camel@johannes.local>
+	Thu, 22 Oct 2009 14:37:08 -0400
+Date: Thu, 22 Oct 2009 20:20:32 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 12/28] mwl8k: add support for enabling hardware sniffer mode
+Message-ID: <20091022182032.GN1583@mail.wantstofly.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since sometimes mac80211 queues up a scan request
-to only act on it later, it must be allowed to
-(internally) cancel a not-yet-running scan, e.g.
-when the interface is taken down. This condition
-was missing since we always checked only the
-local->scanning variable which isn't yet set in
-that situation.
-
-Reported-by: Luis R. Rodriguez <mcgrof@gmail.com>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
 ---
- net/mac80211/scan.c |   12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mwl8k.c |   66 ++++++++++++++++++++++++++++++++++++++++--
+ 1 files changed, 63 insertions(+), 3 deletions(-)
 
---- wireless-testing.orig/net/mac80211/scan.c	2009-10-31 07:29:47.000000000 +0100
-+++ wireless-testing/net/mac80211/scan.c	2009-10-31 07:31:21.000000000 +0100
-@@ -288,10 +288,14 @@ void ieee80211_scan_completed(struct iee
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 7462fca..60b0076 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -172,6 +172,7 @@ struct mwl8k_priv {
  
- 	mutex_lock(&local->scan_mtx);
+ 	bool radio_on;
+ 	bool radio_short_preamble;
++	bool sniffer_enabled;
+ 	bool wmm_enabled;
  
--	if (WARN_ON(!local->scanning)) {
--		mutex_unlock(&local->scan_mtx);
--		return;
--	}
+ 	/* XXX need to convert this to handle multiple interfaces */
+@@ -2559,6 +2560,18 @@ static int mwl8k_add_interface(struct ieee80211_hw *hw,
+ 	if (conf->type != NL80211_IFTYPE_STATION)
+ 		return -EINVAL;
+ 
 +	/*
-+	 * It's ok to abort a not-yet-running scan (that
-+	 * we have one at all will be verified by checking
-+	 * local->scan_req next), but not to complete it
-+	 * successfully.
++	 * Reject interface creation if sniffer mode is active, as
++	 * STA operation is mutually exclusive with hardware sniffer
++	 * mode.
 +	 */
-+	if (WARN_ON(!local->scanning && !aborted))
-+		aborted = true;
++	if (priv->sniffer_enabled) {
++		printk(KERN_INFO "%s: unable to create STA "
++		       "interface due to sniffer mode being enabled\n",
++		       wiphy_name(hw->wiphy));
++		return -EINVAL;
++	}
++
+ 	/* Clean out driver private area */
+ 	mwl8k_vif = MWL8K_VIF(conf->vif);
+ 	memset(mwl8k_vif, 0, sizeof(*mwl8k_vif));
+@@ -2729,13 +2742,56 @@ static u64 mwl8k_prepare_multicast(struct ieee80211_hw *hw,
+ 	return (unsigned long)cmd;
+ }
  
- 	if (WARN_ON(!local->scan_req)) {
- 		mutex_unlock(&local->scan_mtx);
-
-
++static int
++mwl8k_configure_filter_sniffer(struct ieee80211_hw *hw,
++			       unsigned int changed_flags,
++			       unsigned int *total_flags)
++{
++	struct mwl8k_priv *priv = hw->priv;
++
++	/*
++	 * Hardware sniffer mode is mutually exclusive with STA
++	 * operation, so refuse to enable sniffer mode if a STA
++	 * interface is active.
++	 */
++	if (priv->vif != NULL) {
++		if (net_ratelimit())
++			printk(KERN_INFO "%s: not enabling sniffer "
++			       "mode because STA interface is active\n",
++			       wiphy_name(hw->wiphy));
++		return 0;
++	}
++
++	if (!priv->sniffer_enabled) {
++		if (mwl8k_enable_sniffer(hw, 1))
++			return 0;
++		priv->sniffer_enabled = true;
++	}
++
++	*total_flags &=	FIF_PROMISC_IN_BSS | FIF_ALLMULTI |
++			FIF_BCN_PRBRESP_PROMISC | FIF_CONTROL |
++			FIF_OTHER_BSS;
++
++	return 1;
++}
++
+ static void mwl8k_configure_filter(struct ieee80211_hw *hw,
+ 				   unsigned int changed_flags,
+ 				   unsigned int *total_flags,
+ 				   u64 multicast)
+ {
+ 	struct mwl8k_priv *priv = hw->priv;
+-	struct mwl8k_cmd_pkt *cmd;
++	struct mwl8k_cmd_pkt *cmd = (void *)(unsigned long)multicast;
++
++	/*
++	 * Enable hardware sniffer mode if FIF_CONTROL or
++	 * FIF_OTHER_BSS is requested.
++	 */
++	if (*total_flags & (FIF_CONTROL | FIF_OTHER_BSS) &&
++	    mwl8k_configure_filter_sniffer(hw, changed_flags, total_flags)) {
++		kfree(cmd);
++		return;
++	}
+ 
+ 	/* Clear unsupported feature flags */
+ 	*total_flags &= FIF_ALLMULTI | FIF_BCN_PRBRESP_PROMISC;
+@@ -2743,6 +2799,11 @@ static void mwl8k_configure_filter(struct ieee80211_hw *hw,
+ 	if (mwl8k_fw_lock(hw))
+ 		return;
+ 
++	if (priv->sniffer_enabled) {
++		mwl8k_enable_sniffer(hw, 0);
++		priv->sniffer_enabled = false;
++	}
++
+ 	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
+ 		if (*total_flags & FIF_BCN_PRBRESP_PROMISC) {
+ 			/*
+@@ -2768,8 +2829,6 @@ static void mwl8k_configure_filter(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
+-	cmd = (void *)(unsigned long)multicast;
+-
+ 	/*
+ 	 * If FIF_ALLMULTI is being requested, throw away the command
+ 	 * packet that ->prepare_multicast() built and replace it with
+@@ -2928,6 +2987,7 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
+ 	priv = hw->priv;
+ 	priv->hw = hw;
+ 	priv->pdev = pdev;
++	priv->sniffer_enabled = false;
+ 	priv->wmm_enabled = false;
+ 	priv->pending_tx_pkts = 0;
+ 
+-- 
+1.5.6.4
