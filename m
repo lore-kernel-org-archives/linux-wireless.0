@@ -1,105 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:33786 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933705AbZJMITq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 04:19:46 -0400
-Subject: Re: [PATCH V3] iwlwifi: use paged Rx
-From: Zhu Yi <yi.zhu@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20091012142002.GA2687@dhcp-lab-161.englab.brq.redhat.com>
-References: <1255079985-17282-1-git-send-email-yi.zhu@intel.com>
-	 <20091012142002.GA2687@dhcp-lab-161.englab.brq.redhat.com>
-Content-Type: text/plain
-Date: Tue, 13 Oct 2009 16:19:08 +0800
-Message-Id: <1255421948.3719.363.camel@debian>
-Mime-Version: 1.0
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:53599 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752541AbZJWQTf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2009 12:19:35 -0400
+Received: by bwz27 with SMTP id 27so1005491bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Oct 2009 09:19:39 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "Adhari" <wireless_support@adhari.de>
+Subject: Re: D-link USB Wlan Adapter DWA 160A  crashes after a while
+Date: Fri, 23 Oct 2009 18:19:40 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <005001ca53e9$307bde30$91739a90$@de>
+In-Reply-To: <005001ca53e9$307bde30$91739a90$@de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200910231819.40826.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-10-12 at 22:20 +0800, Stanislaw Gruszka wrote:
-> On Fri, Oct 09, 2009 at 05:19:45PM +0800, Zhu Yi wrote:
-> > This switches the iwlwifi driver to use paged skb from linear skb for Rx
-> > buffer. So that it relieves some Rx buffer allocation pressure for the
-> > memory subsystem. Currently iwlwifi (4K for 3945) requests 8K bytes for
-> > Rx buffer. Due to the trailing skb_shared_info in the skb->data,
-> > alloc_skb() will do the next order allocation, which is 16K bytes. This
-> > is suboptimal and more likely to fail when the system is under memory
-> > usage pressure. Switching to paged Rx skb lets us allocate the RXB
-> > directly by alloc_pages(), so that only order 1 allocation is required.
+On Friday 23 October 2009 16:00:32 Adhari wrote:
+> Hello Everybody
 > 
-> [snip]
+> I´m usind a D-link USB Wlan Adapter DWA 160A (ar9170usb) under Debian (kernel 2.6.31)
 > 
-> > Finally, mac80211 doesn't support paged Rx yet. So we linearize the skb
-> > for all the management frames and software decryption or defragmentation
-> > required data frames before handed to mac80211. For all the other frames,
-> > we __pskb_pull_tail 64 bytes in the linear area of the skb for mac80211
-> > to handle them properly.
+> First when I connect this device, everything is fine. I have to do some measurements concerning Mipv6 (I´m only using Ipv6 here)
+> after a while using this W-lan Adapter (30 to 60mn) the system is not be able to receive any packets.
 > 
-> This seems to be big overhead, but since there is no way to avoid it ...
-
-Which case? The linear one is the same as the current implementation.
-For __pskb_pull_tail, it is guaranteed no new buffer will be allocated.
-
-> If we know that we need to linearize we can alloc as big skb as needed,
-> otherwise skb_linearize() need to do reallocation.
-
-OK.
-
-> Can we also remove IWL_LINK_HDR_MAX and do __pskb_pull_tail based on 
-> real header(s) size ? 
-
-The wireless header is a variant depending on type. And mac80211 also
-needs to play with LLC and IP header (for qos). So I used the max
-possible frame buffer (128 or probably 64 is enough?) mac80211 is going
-to use for none software decryption and defragmentation data frames.
-
-> Or.
 > 
-> If we decide to do alloc_skb(IWL_LINK_HDR_MAX, gfp_flags) can this be 
-> done together with skb_add_rx_frag() in iwl_rx_allocate(), to offload
-> this interrupt context ?
-
-I'm not sure if it's a big gain. This is only a 128 bytes GFP_ATOMIC
-allocation anyway. Other driver like niu also does this.
-
-> > +	    le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG)
+> The only solution is to plug the USB interface out and to connect it again.
+> ifconfig down and up has no effect and sometimes rebooting either don´t correct this.
 > 
-> Minor optimization:
-> 	    hdr->seq_ctrl & cpu_to_le16(IEEE80211_SCTL_FRAG)
+> Any idea what the problem could be?
+> [ 1270.206139] usb 5-2: kill pending tx urbs.
 
-The original code returns the fragment index. The change makes it
-optimized on LE arches. But is less readable.
+Is this some sort of trick question? Because you gave
+the correct answer already in the "Subject" line?!
 
-> >  struct iwl_rx_mem_buffer {
-> > -	dma_addr_t real_dma_addr;
-> > -	dma_addr_t aligned_dma_addr;
-> > -	struct sk_buff *skb;
-> > +	dma_addr_t page_dma;
-> > +	struct page *page;
-> >  	struct list_head list;
-> >  };
-> >  
-> > +#define rxb_addr(r) page_address(r->page)
-> 
-> Since we mostly use pointer, perhaps better would be save address of page
-> in iwl_rx_mem_buffer, and use virt_to_page where struct page is needed.
+my suggestion:
 
-Both should be fine. But I'd like to access the virtual address of
-rxb->page with a micro like rxb_addr than something like "pkt =
-rxb->virt_page" directly.
+1. get & compile compat-wireless (this will give you
+	an updated ar9170usb.ko driver. http://linuxwireless.org/en/users/Download )
 
-> >  			    net_ratelimit())
-> > -				IWL_CRIT(priv, "Failed to allocate SKB buffer with %s. Only %u free buffers remaining.\n",
-> > +				IWL_CRIT(priv, "Failed to alloc_pages with %s. Only %u free buffers remaining.\n",
-> >  					 priority == GFP_ATOMIC ?  "GFP_ATOMIC" : "GFP_KERNEL",
-> 
-> priority can not be equal GFP_ATOMIC if was or'ed with __GFP_COMP or __GFP_NOWARN
+2. replace the old two-stage firmware files with one-stage ar9170.fw
+   (link: http://wireless.kernel.org/en/users/Drivers/ar9170 )
 
-Good catch. The bug also exists in the original code. Will send out a
-separated patch to fix.
-
-Thanks,
--yi
-
+Regards,
+	Chr
