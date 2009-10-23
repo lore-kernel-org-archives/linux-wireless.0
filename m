@@ -1,95 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58353 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758857AbZJPLjL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 07:39:11 -0400
-Subject: Re: BUG? I can reproduce "Association request to the driver
- failed" at will
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	hostap@lists.shmoo.com
-In-Reply-To: <20091012071550.GD25578@jm.kir.nu>
-References: <200909211309.40476.hs4233@mail.mn-solutions.de>
-	 <20091012071550.GD25578@jm.kir.nu>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Us93ZnpHS/bMHeFux8o+"
-Date: Fri, 16 Oct 2009 19:07:12 +0900
-Message-Id: <1255687632.4095.331.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:24343 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752106AbZJWUmg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2009 16:42:36 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 09/18] iwlwifi: choose thermal throttle method based on device config
+Date: Fri, 23 Oct 2009 13:42:27 -0700
+Message-Id: <1256330556-20997-10-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
+References: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
---=-Us93ZnpHS/bMHeFux8o+
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Using device configuration structure to decide the type of thermal
+throttle method for the device.
 
-On Mon, 2009-10-12 at 10:15 +0300, Jouni Malinen wrote:
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-6000.c  |   10 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h  |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-power.c |    8 ++------
+ 3 files changed, 14 insertions(+), 6 deletions(-)
 
-> Though, even in this case, there is actually a bug somewhere (in
-> mac80211, I would assume).. The authentication attempt with the second
-> AP times out because mac80211 ends up sending the direct probes to the
-> MAC address of the old AP (which is now turned off). When wpa_supplicant
-> tries to authenticate again, the direct probes are going to the correct
-> destination and connection can be established.
-
-I can't see that happen in mac80211 -- can somebody run this with some
-printks in cfg80211 that tell us what exactly is being passed down to
-mac80211's auth() call?
-
-> I can reproduce this with the current wpa_supplicant (that has a
-> workaround for this EALREADY for authentication case, but not for
-> assoc) and the current wireless-testing. Roaming will get mac80211 into
-> very odd state..
->=20
-> Not only is this association failing (after the authentication with the
-> same AP actually worked), but the scanning state will also get quite
-> confused.. The next scan trigger after this is never completed (iw scan
-> gets stuck). Or well, actually, once I wait long enough for the AP to
-> deauthenticate the client, it looks like mac80211 can recover. The scan
-> command returned after five minutes of waiting.. ;-)
-
-Good hint. It looks like it gets stuck between assoc and auth for the
-old AP?
-
-> > The "Association request to the driver failed" will
-> > be shown even without "-d". Also note that the association
-> > seems to actually work, e.g. I can ping throught the
-> > connection.
->=20
-> mac80211 remains associated with the old AP (I think) and somehow
-> remains in the state between authentication and association (with the
-> new AP) which will block scans.
-
-I think we need a cfg80211 event tracer :)
-
-Actually, does wpa_supplicant _deauth_ from the AP, or does it just
-disassoc? It's definitely supposed to deauth.
-
-johannes
-
---=-Us93ZnpHS/bMHeFux8o+
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK2EXNAAoJEODzc/N7+Qmabt4P/iTukH3RrR/bMMgazOT2p+PT
-zfRii5+VIzEL6Ge4pqgiE5yVVabG7N7TmAWaIKqyAnaijqKsDaWOHw9DnVLEzK/y
-Q6bm3+BeSqx9ql3O6b0DzOkA9ooL0y1fAOaV1WhJT5gAOiTXKrDUZmAQ9VVUBY7Q
-Ll1/7E7Bhm/ssidlkoDTIdi4Ya/TktNoksxEbcwXvbhfuiUtXQq9dC3Z0WtJ1Kna
-zXJwMtKb4547q1GXeerQtEc0fIXLlvCcwBCBIbLgxN3AZctj7lCMxmjnlISzA/3/
-ncoQgFGVLgRhzXJ3NgYjudAS74ocoxWXx2+4JdJDpI9K6OeSXU2FOBIID5RjtEso
-leyT9T0eu9v2ArUphd0qtw9e1/LEp5ScMBdqUSZ+EYdJUwsFDCZ4O7iwbpKKGSzB
-aNndp3MZcQh3pRG3QnAgS+fM2RYSp7SMaDx9X9iXbIawDNwdOE9/H4KpqyELXbqq
-Kiwfq1qKjBLAuaACnsFAGqYRJXQQ6Ibc7K2eyf+vm36QmbM5xGLX8KHQXZiUFwmx
-EWaSingcc0yIm7YB0Vf3GnRsm7+v0kY5+Xeb9KCnl/vHUO8Ui048Z3hIdEvDTQ1A
-a84rVuFDQMxhnUuztV6kIh3TG434tTdVmCP36hs/25iLqmuB8RKUz1gxrYoz6g65
-N3G12Bo/bAzW/akelYpk
-=Lm9a
------END PGP SIGNATURE-----
-
---=-Us93ZnpHS/bMHeFux8o+--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 5211872..0873322 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -277,6 +277,7 @@ struct iwl_cfg iwl6000h_2agn_cfg = {
+ 	.use_rts_for_ht = true, /* use rts/cts protection */
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
++	.adv_thermal_throttle = true,
+ };
+ 
+ struct iwl_cfg iwl6000h_2abg_cfg = {
+@@ -304,6 +305,7 @@ struct iwl_cfg iwl6000h_2abg_cfg = {
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
++	.adv_thermal_throttle = true,
+ };
+ 
+ struct iwl_cfg iwl6000h_2bg_cfg = {
+@@ -331,6 +333,7 @@ struct iwl_cfg iwl6000h_2bg_cfg = {
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
++	.adv_thermal_throttle = true,
+ };
+ 
+ /*
+@@ -362,6 +365,7 @@ struct iwl_cfg iwl6000i_2agn_cfg = {
+ 	.use_rts_for_ht = true, /* use rts/cts protection */
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
++	.adv_thermal_throttle = true,
+ };
+ 
+ struct iwl_cfg iwl6000i_2abg_cfg = {
+@@ -389,6 +393,7 @@ struct iwl_cfg iwl6000i_2abg_cfg = {
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
++	.adv_thermal_throttle = true,
+ };
+ 
+ struct iwl_cfg iwl6000i_2bg_cfg = {
+@@ -416,6 +421,7 @@ struct iwl_cfg iwl6000i_2bg_cfg = {
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
++	.adv_thermal_throttle = true,
+ };
+ 
+ struct iwl_cfg iwl6050_2agn_cfg = {
+@@ -444,6 +450,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.use_rts_for_ht = true, /* use rts/cts protection */
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
++	.adv_thermal_throttle = true,
+ };
+ 
+ struct iwl_cfg iwl6050_2abg_cfg = {
+@@ -471,6 +478,7 @@ struct iwl_cfg iwl6050_2abg_cfg = {
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
++	.adv_thermal_throttle = true,
+ };
+ 
+ struct iwl_cfg iwl6000_3agn_cfg = {
+@@ -499,6 +507,7 @@ struct iwl_cfg iwl6000_3agn_cfg = {
+ 	.use_rts_for_ht = true, /* use rts/cts protection */
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
++	.adv_thermal_throttle = true,
+ };
+ 
+ struct iwl_cfg iwl6050_3agn_cfg = {
+@@ -527,6 +536,7 @@ struct iwl_cfg iwl6050_3agn_cfg = {
+ 	.use_rts_for_ht = true, /* use rts/cts protection */
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
++	.adv_thermal_throttle = true,
+ };
+ 
+ MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index a2d526a..9dbf598 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -225,6 +225,7 @@ struct iwl_mod_params {
+  *	The detail algorithm is described in iwl-led.c
+  * @use_rts_for_ht: use rts/cts protection for HT traffic
+  * @chain_noise_num_beacons: number of beacons used to compute chain noise
++ * @adv_thermal_throttle: support advance thermal throttle
+  *
+  * We enable the driver to be backward compatible wrt API version. The
+  * driver specifies which APIs it supports (with @ucode_api_max being the
+@@ -278,6 +279,7 @@ struct iwl_cfg {
+ 	bool use_rts_for_ht;
+ 	int chain_noise_num_beacons;
+ 	const bool supports_idle;
++	bool adv_thermal_throttle;
+ };
+ 
+ /***************************
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
+index 150ff87..432f465 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.c
++++ b/drivers/net/wireless/iwlwifi/iwl-power.c
+@@ -893,9 +893,7 @@ void iwl_tt_initialize(struct iwl_priv *priv)
+ 	INIT_WORK(&priv->ct_enter, iwl_bg_ct_enter);
+ 	INIT_WORK(&priv->ct_exit, iwl_bg_ct_exit);
+ 
+-	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
+-	case CSR_HW_REV_TYPE_6x00:
+-	case CSR_HW_REV_TYPE_6x50:
++	if (priv->cfg->adv_thermal_throttle) {
+ 		IWL_DEBUG_POWER(priv, "Advanced Thermal Throttling\n");
+ 		tt->restriction = kzalloc(sizeof(struct iwl_tt_restriction) *
+ 					 IWL_TI_STATE_MAX, GFP_KERNEL);
+@@ -928,11 +926,9 @@ void iwl_tt_initialize(struct iwl_priv *priv)
+ 				&restriction_range[0], size);
+ 			priv->thermal_throttle.advanced_tt = true;
+ 		}
+-		break;
+-	default:
++	} else {
+ 		IWL_DEBUG_POWER(priv, "Legacy Thermal Throttling\n");
+ 		priv->thermal_throttle.advanced_tt = false;
+-		break;
+ 	}
+ }
+ EXPORT_SYMBOL(iwl_tt_initialize);
+-- 
+1.5.6.3
 
