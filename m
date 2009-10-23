@@ -1,131 +1,282 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:45250 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758347AbZJHNku convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 09:40:50 -0400
-Date: Thu, 8 Oct 2009 06:40:41 -0700
-From: Arjan van de Ven <arjan@infradead.org>
-To: Mike Galbraith <efault@gmx.de>
-Cc: Frans Pop <elendil@planet.nl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	Peter Zijlstra <peterz@infradead.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
- CPU"
-Message-ID: <20091008064041.67219b13@infradead.org>
-In-Reply-To: <1254974743.7797.21.camel@marge.simson.net>
-References: <200910051500.55875.elendil@planet.nl>
-	<200910061749.02805.elendil@planet.nl>
-	<200910071910.53907.elendil@planet.nl>
-	<200910072034.57511.elendil@planet.nl>
-	<1254974743.7797.21.camel@marge.simson.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga01.intel.com ([192.55.52.88]:24341 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752184AbZJWUmh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2009 16:42:37 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 11/18] iwlwifi: add channel switch support to 5000 series and up
+Date: Fri, 23 Oct 2009 13:42:29 -0700
+Message-Id: <1256330556-20997-12-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
+References: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 08 Oct 2009 06:05:43 +0200
-Mike Galbraith <efault@gmx.de> wrote:
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-> On Wed, 2009-10-07 at 20:34 +0200, Frans Pop wrote:
-> > On Wednesday 07 October 2009, Frans Pop wrote:
-> > > On Tuesday 06 October 2009, Frans Pop wrote:
-> > > > I've checked for 2.6.31.1 now and iwlagn is listed high there
-> > > > too when the system is idle, but with normal values of 60-100
-> > > > ms. And phy0 has normal values of below 10 ms.
-> > > > I've now rebooted with today's mainline git; phy0 now
-> > > > frequently shows with values of around 100 ms too (i.e. higher
-> > > > than last time).
-> > >
-> > > Mike privately sent me a script to try to capture the latencies
-> > > with perf, but the perf output does not show any high latencies
-> > > at all. It looks as if we may have found a bug in latencytop here
-> > > instead.
-> > 
-> > Not sure if it's relevant nor what it means, but I frequently see
-> > two lines for iwlagn, e.g:
-> > 
-> >     Scheduler: waiting for cpu              102.4 msec         99.7
-> > % .                                         3.3 msec          0.3 %
-> > 
-> > I get the same results with both latencytop 0.4 and 0.5.
-> 
-> OK, I see latencytop spikes here on an idle box too, to the tune of up
-> to a _second_.  Booting with nohz=off seems to have cured it.
+Support "channel switch" request by issue "channel switch" host command
+to uCode.
 
-interesting..
+There is no separated "channel switch" indication from mac80211,
+when detected "IEEE80211_CONF_CHANGE_CHANNEL" flag in iwl_mac_config(),
+if the station is in "associated" state, then assume "channel switch
+announcement" IE was received by mac80211.
 
-
-by chance, does this patch fix it ?
-
->From 33725d4939f457b12d7bc1bcbcc0dfb8b2f5bd48 Mon Sep 17 00:00:00 2001
-From: Arjan van de Ven <arjan@linux.intel.com>
-Date: Thu, 24 Sep 2009 13:24:16 +0200
-Subject: [PATCH] x86, timers: check for pending timers after (device) interrupts
-
-Now that range timers and deferred timers are common, I found a
-problem with these using the "perf timechart" tool.
-
-It turns out that on x86, these two 'opportunistic' timers only
-get checked when another "real" timer happens.
-These opportunistic timers have the objective to save power by
-hitchhiking on other wakeups, as to avoid CPU wakeups by themselves
-as much as possible.
-
-The change in this patch runs this check not only at timer interrupts,
-but at all (device) interrupts. The effect is that
-1) the deferred timers/range timers get delayed less
-2) the range timers cause less wakeups by themselves because
-   the percentage of hitchhiking on existing wakeup events goes up.
-
-I've verified the working of the patch using "perf timechart",
-the original exposed bug is gone with this patch.
-
-Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- arch/x86/kernel/irq.c |    2 ++
- arch/x86/kernel/smp.c |    1 +
- 2 files changed, 3 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-3945.c |    6 -----
+ drivers/net/wireless/iwlwifi/iwl-3945.h |    2 -
+ drivers/net/wireless/iwlwifi/iwl-4965.c |   12 ++++++----
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   32 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   32 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.c |   21 ++++++++++++++++---
+ drivers/net/wireless/iwlwifi/iwl-core.h |    1 +
+ 7 files changed, 89 insertions(+), 17 deletions(-)
 
-diff --git a/arch/x86/kernel/irq.c b/arch/x86/kernel/irq.c
-index 74656d1..3912061 100644
---- a/arch/x86/kernel/irq.c
-+++ b/arch/x86/kernel/irq.c
-@@ -244,6 +244,7 @@ unsigned int __irq_entry do_IRQ(struct pt_regs *regs)
- 				__func__, smp_processor_id(), vector, irq);
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index f5d7528..09a7bd2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -1982,12 +1982,6 @@ static int iwl3945_commit_rxon(struct iwl_priv *priv)
+ 	return 0;
+ }
  
-+	run_local_timers();
- 	irq_exit();
+-/* will add 3945 channel switch cmd handling later */
+-int iwl3945_hw_channel_switch(struct iwl_priv *priv, u16 channel)
+-{
+-	return 0;
+-}
+-
+ /**
+  * iwl3945_reg_txpower_periodic -  called when time to check our temperature.
+  *
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index f3907c1..964c019 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -280,8 +280,6 @@ extern void iwl3945_config_ap(struct iwl_priv *priv);
+  */
+ extern u8 iwl3945_hw_find_station(struct iwl_priv *priv, const u8 *bssid);
  
- 	set_irq_regs(old_regs);
-@@ -268,6 +269,7 @@ void smp_generic_interrupt(struct pt_regs *regs)
- 	if (generic_interrupt_extension)
- 		generic_interrupt_extension();
+-extern int iwl3945_hw_channel_switch(struct iwl_priv *priv, u16 channel);
+-
+ /*
+  * Forward declare iwl-3945.c functions for iwl-base.c
+  */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index bd856df..1ff465a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -1433,14 +1433,13 @@ static int iwl4965_send_rxon_assoc(struct iwl_priv *priv)
+ 	return ret;
+ }
  
-+	run_local_timers();
- 	irq_exit();
- 
- 	set_irq_regs(old_regs);
-diff --git a/arch/x86/kernel/smp.c b/arch/x86/kernel/smp.c
-index ec1de97..d915d95 100644
---- a/arch/x86/kernel/smp.c
-+++ b/arch/x86/kernel/smp.c
-@@ -198,6 +198,7 @@ void smp_reschedule_interrupt(struct pt_regs *regs)
+-#ifdef IEEE80211_CONF_CHANNEL_SWITCH
+ static int iwl4965_hw_channel_switch(struct iwl_priv *priv, u16 channel)
  {
- 	ack_APIC_irq();
- 	inc_irq_stat(irq_resched_count);
-+	run_local_timers();
- 	/*
- 	 * KVM uses this interrupt to force a cpu out of guest mode
- 	 */
+ 	int rc;
+ 	u8 band = 0;
+ 	bool is_ht40 = false;
+ 	u8 ctrl_chan_high = 0;
+-	struct iwl4965_channel_switch_cmd cmd = { 0 };
++	struct iwl4965_channel_switch_cmd cmd;
+ 	const struct iwl_channel_info *ch_info;
+ 
+ 	band = priv->band == IEEE80211_BAND_2GHZ;
+@@ -1461,8 +1460,11 @@ static int iwl4965_hw_channel_switch(struct iwl_priv *priv, u16 channel)
+ 	cmd.switch_time = cpu_to_le32(priv->ucode_beacon_time);
+ 	if (ch_info)
+ 		cmd.expect_beacon = is_channel_radar(ch_info);
+-	else
+-		cmd.expect_beacon = 1;
++	else {
++		IWL_ERR(priv, "invalid channel switch from %u to %u\n",
++			priv->active_rxon.channel, channel);
++		return -EFAULT;
++	}
+ 
+ 	rc = iwl4965_fill_txpower_tbl(priv, band, channel, is_ht40,
+ 				      ctrl_chan_high, &cmd.tx_power);
+@@ -1474,7 +1476,6 @@ static int iwl4965_hw_channel_switch(struct iwl_priv *priv, u16 channel)
+ 	rc = iwl_send_cmd_pdu(priv, REPLY_CHANNEL_SWITCH, sizeof(cmd), &cmd);
+ 	return rc;
+ }
+-#endif
+ 
+ /**
+  * iwl4965_txq_update_byte_cnt_tbl - Set up entry in Tx byte-count array
+@@ -2171,6 +2172,7 @@ static struct iwl_lib_ops iwl4965_lib = {
+ 	.load_ucode = iwl4965_load_bsm,
+ 	.dump_nic_event_log = iwl_dump_nic_event_log,
+ 	.dump_nic_error_log = iwl_dump_nic_error_log,
++	.set_channel_switch = iwl4965_hw_channel_switch,
+ 	.apm_ops = {
+ 		.init = iwl_apm_init,
+ 		.stop = iwl_apm_stop,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index a6e347b..d256fec 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -1382,6 +1382,36 @@ IWL5000_UCODE_GET(init_size);
+ IWL5000_UCODE_GET(init_data_size);
+ IWL5000_UCODE_GET(boot_size);
+ 
++static int iwl5000_hw_channel_switch(struct iwl_priv *priv, u16 channel)
++{
++	struct iwl5000_channel_switch_cmd cmd;
++	const struct iwl_channel_info *ch_info;
++	struct iwl_host_cmd hcmd = {
++		.id = REPLY_CHANNEL_SWITCH,
++		.len = sizeof(cmd),
++		.flags = CMD_SIZE_HUGE,
++		.data = &cmd,
++	};
++
++	IWL_DEBUG_11H(priv, "channel switch from %d to %d\n",
++		priv->active_rxon.channel, channel);
++	cmd.band = priv->band == IEEE80211_BAND_2GHZ;
++	cmd.channel = cpu_to_le16(channel);
++	cmd.rxon_flags = priv->active_rxon.flags;
++	cmd.rxon_filter_flags = priv->active_rxon.filter_flags;
++	cmd.switch_time = cpu_to_le32(priv->ucode_beacon_time);
++	ch_info = iwl_get_channel_info(priv, priv->band, channel);
++	if (ch_info)
++		cmd.expect_beacon = is_channel_radar(ch_info);
++	else {
++		IWL_ERR(priv, "invalid channel switch from %u to %u\n",
++			priv->active_rxon.channel, channel);
++		return -EFAULT;
++	}
++
++	return iwl_send_cmd_sync(priv, &hcmd);
++}
++
+ struct iwl_hcmd_ops iwl5000_hcmd = {
+ 	.rxon_assoc = iwl5000_send_rxon_assoc,
+ 	.commit_rxon = iwl_commit_rxon,
+@@ -1429,6 +1459,7 @@ struct iwl_lib_ops iwl5000_lib = {
+ 	.alive_notify = iwl5000_alive_notify,
+ 	.send_tx_power = iwl5000_send_tx_power,
+ 	.update_chain_flags = iwl_update_chain_flags,
++	.set_channel_switch = iwl5000_hw_channel_switch,
+ 	.apm_ops = {
+ 		.init = iwl_apm_init,
+ 		.stop = iwl_apm_stop,
+@@ -1480,6 +1511,7 @@ static struct iwl_lib_ops iwl5150_lib = {
+ 	.alive_notify = iwl5000_alive_notify,
+ 	.send_tx_power = iwl5000_send_tx_power,
+ 	.update_chain_flags = iwl_update_chain_flags,
++	.set_channel_switch = iwl5000_hw_channel_switch,
+ 	.apm_ops = {
+ 		.init = iwl_apm_init,
+ 		.stop = iwl_apm_stop,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index f585529..f5639b4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -172,6 +172,37 @@ static int iwl6000_hw_set_hw_params(struct iwl_priv *priv)
+ 	return 0;
+ }
+ 
++static int iwl6000_hw_channel_switch(struct iwl_priv *priv, u16 channel)
++{
++	struct iwl6000_channel_switch_cmd cmd;
++	const struct iwl_channel_info *ch_info;
++	struct iwl_host_cmd hcmd = {
++		.id = REPLY_CHANNEL_SWITCH,
++		.len = sizeof(cmd),
++		.flags = CMD_SIZE_HUGE,
++		.data = &cmd,
++	};
++
++	IWL_DEBUG_11H(priv, "channel switch from %d to %d\n",
++		priv->active_rxon.channel, channel);
++
++	cmd.band = priv->band == IEEE80211_BAND_2GHZ;
++	cmd.channel = cpu_to_le16(channel);
++	cmd.rxon_flags = priv->active_rxon.flags;
++	cmd.rxon_filter_flags = priv->active_rxon.filter_flags;
++	cmd.switch_time = cpu_to_le32(priv->ucode_beacon_time);
++	ch_info = iwl_get_channel_info(priv, priv->band, channel);
++	if (ch_info)
++		cmd.expect_beacon = is_channel_radar(ch_info);
++	else {
++		IWL_ERR(priv, "invalid channel switch from %u to %u\n",
++			priv->active_rxon.channel, channel);
++		return -EFAULT;
++	}
++
++	return iwl_send_cmd_sync(priv, &hcmd);
++}
++
+ static struct iwl_lib_ops iwl6000_lib = {
+ 	.set_hw_params = iwl6000_hw_set_hw_params,
+ 	.txq_update_byte_cnt_tbl = iwl5000_txq_update_byte_cnt_tbl,
+@@ -192,6 +223,7 @@ static struct iwl_lib_ops iwl6000_lib = {
+ 	.alive_notify = iwl5000_alive_notify,
+ 	.send_tx_power = iwl5000_send_tx_power,
+ 	.update_chain_flags = iwl_update_chain_flags,
++	.set_channel_switch = iwl6000_hw_channel_switch,
+ 	.apm_ops = {
+ 		.init = iwl_apm_init,
+ 		.stop = iwl_apm_stop,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index e43469c..d2b56ba 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1284,10 +1284,15 @@ void iwl_rx_csa(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_rxon_cmd *rxon = (void *)&priv->active_rxon;
+ 	struct iwl_csa_notification *csa = &(pkt->u.csa_notif);
+-	IWL_DEBUG_11H(priv, "CSA notif: channel %d, status %d\n",
+-		      le16_to_cpu(csa->channel), le32_to_cpu(csa->status));
+-	rxon->channel = csa->channel;
+-	priv->staging_rxon.channel = csa->channel;
++
++	if (!le32_to_cpu(csa->status)) {
++		rxon->channel = csa->channel;
++		priv->staging_rxon.channel = csa->channel;
++		IWL_DEBUG_11H(priv, "CSA notif: channel %d\n",
++		      le16_to_cpu(csa->channel));
++	} else
++		IWL_ERR(priv, "CSA notif (fail) : channel %d\n",
++		      le16_to_cpu(csa->channel));
+ }
+ EXPORT_SYMBOL(iwl_rx_csa);
+ 
+@@ -2714,6 +2719,14 @@ int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 			goto set_ch_out;
+ 		}
+ 
++		if (iwl_is_associated(priv) &&
++		    (le16_to_cpu(priv->active_rxon.channel) != ch) &&
++		    priv->cfg->ops->lib->set_channel_switch) {
++			ret = priv->cfg->ops->lib->set_channel_switch(priv,
++				ch);
++			goto out;
++		}
++
+ 		spin_lock_irqsave(&priv->lock, flags);
+ 
+ 		/* Configure HT40 channels */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 02bacc4..b875dcf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -169,6 +169,7 @@ struct iwl_lib_ops {
+ 	int (*load_ucode)(struct iwl_priv *priv);
+ 	void (*dump_nic_event_log)(struct iwl_priv *priv);
+ 	void (*dump_nic_error_log)(struct iwl_priv *priv);
++	int (*set_channel_switch)(struct iwl_priv *priv, u16 channel);
+ 	/* power management */
+ 	struct iwl_apm_ops apm_ops;
+ 
 -- 
-1.6.0.6
+1.5.6.3
 
-
--- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
