@@ -1,72 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:58455 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1759089AbZJHSY1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 14:24:27 -0400
-Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
- CPU"
-From: Mike Galbraith <efault@gmx.de>
-To: Frans Pop <elendil@planet.nl>
-Cc: Arjan van de Ven <arjan@infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	Peter Zijlstra <peterz@infradead.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200910081655.37485.elendil@planet.nl>
-References: <200910051500.55875.elendil@planet.nl>
-	 <1254974743.7797.21.camel@marge.simson.net>
-	 <20091008064041.67219b13@infradead.org>
-	 <200910081655.37485.elendil@planet.nl>
-Content-Type: text/plain
-Date: Thu, 08 Oct 2009 20:23:37 +0200
-Message-Id: <1255026217.6643.12.camel@marge.simson.net>
-Mime-Version: 1.0
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:38125 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752535AbZJWQdP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2009 12:33:15 -0400
+Message-ID: <4AE1DAC9.5040603@imap.cc>
+Date: Fri, 23 Oct 2009 18:33:13 +0200
+From: Tilman Schmidt <tilman@imap.cc>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Jarek Poplawski <jarkao2@gmail.com>,
+	David Miller <davem@davemloft.net>, hidave.darkstar@gmail.com,
+	linux-kernel@vger.kernel.org, tglx@linutronix.de,
+	linux-wireless@vger.kernel.org, linux-ppp@vger.kernel.org,
+	netdev@vger.kernel.org, paulus@samba.org,
+	isdn4linux <isdn4linux@listserv.isdn4linux.de>,
+	i4ldeveloper <i4ldeveloper@listserv.isdn4linux.de>,
+	Karsten Keil <isdn@linux-pingi.de>
+Subject: Re: NOHZ: local_softirq_pending 08
+References: <4AD31213.6020006@imap.cc> <20091015114052.GA9870@ff.dom.local>	 <4AD76184.6030900@gmail.com> <4ADF5710.4030505@imap.cc>	 <4AE0ECCE.2020407@imap.cc> <1256304869.12174.20.camel@johannes.local>	 <4AE1BD3D.3020007@imap.cc> <1256308311.12174.38.camel@johannes.local>
+In-Reply-To: <1256308311.12174.38.camel@johannes.local>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-10-08 at 16:55 +0200, Frans Pop wrote:
-> On Thursday 08 October 2009, Arjan van de Ven wrote:
-> > From: Arjan van de Ven <arjan@linux.intel.com>
-> > Date: Thu, 24 Sep 2009 13:24:16 +0200
-> > Subject: [PATCH] x86, timers: check for pending timers after (device)
-> > interrupts
-> >
-> > Now that range timers and deferred timers are common, I found a
-> > problem with these using the "perf timechart" tool.
-> >
-> > It turns out that on x86, these two 'opportunistic' timers only
-> > get checked when another "real" timer happens.
-> > These opportunistic timers have the objective to save power by
-> > hitchhiking on other wakeups, as to avoid CPU wakeups by themselves
-> > as much as possible.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Johannes Berg schrieb:
+> On Fri, 2009-10-23 at 16:27 +0200, Tilman Schmidt wrote:
+>> Johannes Berg schrieb:
+>>> So you've verified that the entire i4l stack can cope with being called
+>>> twice on the same CPU, from different contexts?
+>> What makes you think so?
 > 
-> This patch makes quite a difference for me. iwlagn and phy0 now 
-> consistently show at ~10 ms or lower.
-> 
-> I do still get occasional high latencies, but those are for things like
-> "[rpc_wait_bit_killable]" or "Writing a page to disk", where I guess you'd 
-> expect them. Those high latencies are mostly only listed for "Global" and 
-> don't translate to individual processes.
+> I thought I'd explained this in my other email. *sigh*
+[snip]
 
-I still see very high latencies coming out of idle (last noted was >
-300ms, NO_HZ) with this patch, and wonder if the hunk below makes any
-difference whatsoever for you.  Here, it definitely does. (shouldn't)
+Ah, I see. You misunderstood my posting. I did not propose that
+patch as a definitive and verified solution, but rather as a
+request for comments from the people who know and maintain the
+code in question. I thought that was clear from the facts that
+- - I didn't include "[PATCH]" in the subject line
+- - I didn't add a "Signed-off-by" line
+- - I wrote "fixed the messages", not "solved the problem"
+- - I explicitly wrote "Comments?" and "Adding i4l people to CC"
 
-Index: linux-2.6/kernel/sched_fair.c
-===================================================================
---- linux-2.6.orig/kernel/sched_fair.c
-+++ linux-2.6/kernel/sched_fair.c
-@@ -495,8 +495,10 @@ static void update_curr(struct cfs_rq *c
- 	u64 now = rq_of(cfs_rq)->clock;
- 	unsigned long delta_exec;
- 
--	if (unlikely(!curr))
-+	if (unlikely(!curr)) {
-+		update_rq_clock(rq_of(cfs_rq));
- 		return;
-+	}
- 
- 	/*
- 	 * Get the amount of time the current task was running
+Apparently all that was still not clear enough. Sorry about that.
+So let me try to make my concern as explicit as possible:
 
+- - The patch I posted had the effect that the test which reliably
+  triggered the local_softirq_pending message before did not do
+  so anymore.
 
+- - To me, this seems to indicate that the netif_rx(skb) call in
+  line 1177 of source file drivers/isdn/i4l/isdn_ppp.c is indeed
+  involved in the problem.
+
+- - Now I'm asking people who know more than myself about the
+  ramifications of that message (ie., you) and/or the code I
+  narrowed it down to (ie., the ISDN4Linux maintainers - which
+  is why I added them to the CC list) to have a look and determine
+  how to fix the problem properly.
+
+- - This would of course include, in finis, the verification you
+  mistakenly assumed I might have done already.
+
+I hope that's clear enough. If you have any questions, feel free
+to ask.
+
+Thanks,
+Tilman
+
+- --
+Tilman Schmidt                    E-Mail: tilman@imap.cc
+Bonn, Germany
+Diese Nachricht besteht zu 100% aus wiederverwerteten Bits.
+Ungeöffnet mindestens haltbar bis: (siehe Rückseite)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.4 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFK4drJQ3+did9BuFsRAmstAJ94UF/LupINlYpjbxzz9xoiN5w34wCfflRz
+YfR/fXt3HasrxUSP29REOnE=
+=VQ/C
+-----END PGP SIGNATURE-----
