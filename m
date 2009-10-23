@@ -1,158 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:10890 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751149AbZJTNNe (ORCPT
+Received: from mx03.syneticon.net ([78.111.66.105]:35734 "EHLO
+	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751596AbZJWNYF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2009 09:13:34 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Andrey Yurovsky <andrey@cozybit.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>,
-	John Linville <linville@tuxdriver.com>
-Subject: l
-Date: Tue, 20 Oct 2009 15:13:10 +0200
+	Fri, 23 Oct 2009 09:24:05 -0400
+Message-ID: <4AE1AE74.4020600@wpkg.org>
+Date: Fri, 23 Oct 2009 15:24:04 +0200
+From: Tomasz Chmielewski <mangoo@wpkg.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200910201513.10880.hs4233@mail.mn-solutions.de>
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: linux-wireless@vger.kernel.org, linux-net@vger.kernel.org,
+	linux-mips@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+Subject: Re: ath5k AP kernel panic when client uses SCP
+References: <4AD21AB4.6010208@wpkg.org> <4AE1AC69.7010904@wpkg.org> <69e28c910910230621j2176813dpe7f77b7dff5b1b44@mail.gmail.com>
+In-Reply-To: <69e28c910910230621j2176813dpe7f77b7dff5b1b44@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[PATCH] libertas spi: fix sparse errors
+Gábor Stefanik wrote:
+> On Fri, Oct 23, 2009 at 3:15 PM, Tomasz Chmielewski <mangoo@wpkg.org> wrote:
+>> Bob Copeland wrote:
+>>> CONFIG_DEBUG_INFO is the basic switch.  I don't know if MIPS needs
+>>> CONFIG_FRAME_POINTER but that could help too.
+>> I don't see CONFIG_FRAME_POINTER available.
+>> I compiled with CONFIG_DEBUG_INFO; let me know if I should enable some other
+>> DEBUG options as well (see below what's enabled and available).
+>>
+>> Before it oopses, I see lots of order 0 page allocation failures (there are
+>> some extra spaces at the end of each line due to the broken konsole in
+>> KDE4):
+>>
+>> http://www1.wpkg.org/oops2.txt
 
-This fixes the following sparse warnings:
+> Is CONFIG_KALLSYMS set?
 
-$ make modules SUBDIRS=drivers/net/wireless/libertas C=1 CF=-D__CHECK_ENDIAN__
-make: Entering directory `/usr/src/linux-wl'
-  CHECK   drivers/net/wireless/libertas/if_spi.c
-drivers/net/wireless/libertas/if_spi.c:137:16: warning: incorrect type in initializer (different base types)
-drivers/net/wireless/libertas/if_spi.c:137:16:    expected unsigned short [unsigned] [usertype] reg_out
-drivers/net/wireless/libertas/if_spi.c:137:16:    got restricted __le16 [usertype] <noident>
-drivers/net/wireless/libertas/if_spi.c:191:16: warning: incorrect type in initializer (different base types)
-drivers/net/wireless/libertas/if_spi.c:191:16:    expected unsigned short [unsigned] [usertype] reg_out
-drivers/net/wireless/libertas/if_spi.c:191:16:    got restricted __le16 [usertype] <noident>
-drivers/net/wireless/libertas/if_spi.c:256:24: warning: incorrect type in argument 1 (different base types)
-drivers/net/wireless/libertas/if_spi.c:256:24:    expected restricted __le32 const [usertype] *p
-drivers/net/wireless/libertas/if_spi.c:256:24:    got unsigned int *<noident>
-drivers/net/wireless/libertas/if_spi.c:243:24: warning: incorrect type in argument 1 (different base types)
-drivers/net/wireless/libertas/if_spi.c:243:24:    expected restricted __le16 const [usertype] *p
-drivers/net/wireless/libertas/if_spi.c:243:24:    got unsigned short *<noident>
-drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
-drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
-drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
-drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
-drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
-drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
-drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
-drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
-drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
-drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
-drivers/net/wireless/libertas/if_spi.c:243:24: warning: incorrect type in argument 1 (different base types)
-drivers/net/wireless/libertas/if_spi.c:243:24:    expected restricted __le16 const [usertype] *p
-drivers/net/wireless/libertas/if_spi.c:243:24:    got unsigned short *<noident>
-drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
-drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
-drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
-drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
-drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
-drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
-drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
-drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
-drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
-drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
-drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
-drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
-drivers/net/wireless/libertas/if_spi.c:243:24: warning: incorrect type in argument 1 (different base types)
-drivers/net/wireless/libertas/if_spi.c:243:24:    expected restricted __le16 const [usertype] *p
-drivers/net/wireless/libertas/if_spi.c:243:24:    got unsigned short *<noident>
-drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
-drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
-drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
-drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
-drivers/net/wireless/libertas/if_spi.c:243:24: warning: incorrect type in argument 1 (different base types)
-drivers/net/wireless/libertas/if_spi.c:243:24:    expected restricted __le16 const [usertype] *p
-drivers/net/wireless/libertas/if_spi.c:243:24:    got unsigned short *<noident>
-drivers/net/wireless/libertas/if_spi.c:243:24: warning: incorrect type in argument 1 (different base types)
-drivers/net/wireless/libertas/if_spi.c:243:24:    expected restricted __le16 const [usertype] *p
-drivers/net/wireless/libertas/if_spi.c:243:24:    got unsigned short *<noident>
-drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
-drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
-drivers/net/wireless/libertas/if_spi.c:171:7: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/libertas/if_spi.c:171:7:    expected unsigned short [unsigned] [usertype] buff
-drivers/net/wireless/libertas/if_spi.c:171:7:    got restricted __le16 [usertype] <noident>
-drivers/net/wireless/libertas/if_spi.c:243:24: warning: incorrect type in argument 1 (different base types)
-drivers/net/wireless/libertas/if_spi.c:243:24:    expected restricted __le16 const [usertype] *p
-drivers/net/wireless/libertas/if_spi.c:243:24:    got unsigned short *<noident>
+Good clue:
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+# zgrep KALL /proc/config.gz
+# CONFIG_KALLSYMS is not set
 
----
+I'll recompile...
 
-Andrey, can you test this?
-
-Dan, John: this is completely unrelated to my other libertas patches
-
---- linux-wl.orig/drivers/net/wireless/libertas/if_spi.c
-+++ linux-wl/drivers/net/wireless/libertas/if_spi.c
-@@ -134,7 +134,7 @@
- static int spu_write(struct if_spi_card *card, u16 reg, const u8 *buf, int len)
- {
- 	int err = 0;
--	u16 reg_out = cpu_to_le16(reg | IF_SPI_WRITE_OPERATION_MASK);
-+	__le16 reg_out = cpu_to_le16(reg | IF_SPI_WRITE_OPERATION_MASK);
- 	struct spi_message m;
- 	struct spi_transfer reg_trans;
- 	struct spi_transfer data_trans;
-@@ -166,7 +166,7 @@
- 
- static inline int spu_write_u16(struct if_spi_card *card, u16 reg, u16 val)
- {
--	u16 buff;
-+	__le16 buff;
- 
- 	buff = cpu_to_le16(val);
- 	return spu_write(card, reg, (u8 *)&buff, sizeof(u16));
-@@ -188,7 +188,7 @@
- {
- 	unsigned int delay;
- 	int err = 0;
--	u16 reg_out = cpu_to_le16(reg | IF_SPI_READ_OPERATION_MASK);
-+	__le16 reg_out = cpu_to_le16(reg | IF_SPI_READ_OPERATION_MASK);
- 	struct spi_message m;
- 	struct spi_transfer reg_trans;
- 	struct spi_transfer dummy_trans;
-@@ -235,7 +235,7 @@
- /* Read 16 bits from an SPI register */
- static inline int spu_read_u16(struct if_spi_card *card, u16 reg, u16 *val)
- {
--	u16 buf;
-+	__le16 buf;
- 	int ret;
- 
- 	ret = spu_read(card, reg, (u8 *)&buf, sizeof(buf));
-@@ -248,7 +248,7 @@
-  * The low 16 bits are read first. */
- static int spu_read_u32(struct if_spi_card *card, u16 reg, u32 *val)
- {
--	u32 buf;
-+	__le32 buf;
- 	int err;
- 
- 	err = spu_read(card, reg, (u8 *)&buf, sizeof(buf));
 
 -- 
-http://www.holgerschurig.de
+Tomasz Chmielewski
+http://wpkg.org
+
