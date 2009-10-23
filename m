@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58621 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759945AbZJGUBq (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:47704 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750941AbZJWAnl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 16:01:46 -0400
-Date: Wed, 7 Oct 2009 15:53:21 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/7] ath5k: few fixes for regressions
-Message-ID: <20091007195321.GD22394@tuxdriver.com>
-References: <1254876274-1145-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 22 Oct 2009 20:43:41 -0400
+Date: Thu, 22 Oct 2009 17:43:28 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Will Dyson <will.dyson@gmail.com>
+Cc: =?utf-8?B?QmrDtnJu?= Smedman <bjorn.smedman@venatech.se>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: Re: [ath9k-devel] mac80211/ath9k/hostapd: Some clients unable to
+	associate with AP
+Message-ID: <20091023004328.GA27049@jm.kir.nu>
+References: <133e8d7e0910200711s7c44b899nbcd5f1037cc5ee49@mail.gmail.com> <133e8d7e0910210448y39551160o7a12a8af2da43f85@mail.gmail.com> <20091022161021.GA5532@jm.kir.nu> <8e6f94720910221645n2b0b1edcq29358f175a41d3ad@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1254876274-1145-1-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <8e6f94720910221645n2b0b1edcq29358f175a41d3ad@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 06, 2009 at 08:44:27PM -0400, Luis R. Rodriguez wrote:
-> I wasn't able to connect to some AP and it turned out the issue
-> was a few regressions introduced in my series. It was hard to note
-> as I was able to connect at work and at home, so I guess this would
-> only have been seen with some specific APs. This series fixed my
-> connection but since I introduced them I figured I'd throw in
-> an extra patch at the end for setting the association ID.
+On Thu, Oct 22, 2009 at 07:45:29PM -0400, Will Dyson wrote:
+
+> I also have an ath9k-based OpenWrt router, and see the same issue when
+> running the latest builds.
 > 
-> Luis R. Rodriguez (7):
->   ath5k: fix regression on setting bssid mask on association
->   ath5k: use ath_hw_setbssidmask() for bssid mask setting upon assoc
->   ath5k: fix regression introduced upon the removal of AR5K_HIGH_ID()
->   ath5k: simplify passed params to ath5k_hw_set_associd()
->   ath5k: remove temporary low_id and high_id vars on
->     ath5k_hw_set_associd()
->   ath5k: fix regression which triggers an SME join upon assoc
->   ath5k: enable Power-Save Polls by setting the association ID
-> 
->  drivers/net/wireless/ath/ath5k/ath5k.h  |    2 +-
->  drivers/net/wireless/ath/ath5k/attach.c |    2 +-
->  drivers/net/wireless/ath/ath5k/base.c   |   13 ++++++++++---
->  drivers/net/wireless/ath/ath5k/pcu.c    |   30 +++++++++++++-----------------
->  drivers/net/wireless/ath/ath5k/reset.c  |    5 ++---
->  5 files changed, 27 insertions(+), 25 deletions(-)
+> I've reproduced the problem with the very latest svn (which uses
+> compat-wireless 2009-10-09 and kernel 2.6.30.8) and the tree as of
+> 2009-06-20 (which uses compat-wirless 2009-06-02 and a local patch to
+> use kernel 2.6.30). Both have hostapd 0.6.9.
 
-Actually, none of these seem to apply against 2.6.32...did you mean
-for them to go there?
+> Attached are the complete binary dumps, fail.pcap and win.pcap.
 
-I'll queue them for -next for now...
+Thanks! This seems to confirm that the issue is indeed related to the
+sequence number on the frames not being set correctly (for other than
+Beacon frames).
 
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Jouni Malinen                                            PGP id EFC895FA
