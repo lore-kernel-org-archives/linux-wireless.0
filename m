@@ -1,59 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml103.kpnxchange.com ([195.121.3.7]:57812 "EHLO
-	CPSMTPM-EML103.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750825AbZJPUqn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 16:46:43 -0400
-From: Frans Pop <elendil@planet.nl>
-To: Fabio Comolli <fabio.comolli@gmail.com>
-Subject: Re: [Regression] - 2.6.32-rc5 hangs using rfkill on an eeePC
-Date: Fri, 16 Oct 2009 22:46:43 +0200
-Cc: linux-kernel@vger.kernel.org, rjw@sisk.pl,
-	Darren Salt <linux@youmustbejoking.demon.co.uk>,
-	linux-wireless@vger.kernel.org
-References: <b637ec0b0910161253y60eb6b4fl3e49e5b9129d81ac@mail.gmail.com>
-In-reply-To: <b637ec0b0910161253y60eb6b4fl3e49e5b9129d81ac@mail.gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:53496 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751746AbZJWOIS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2009 10:08:18 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: ath5k: no further txbuf available, dropping packet
+Date: Fri, 23 Oct 2009 16:08:16 +0200
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
-Message-Id: <200910162246.45678.elendil@planet.nl>
+Message-Id: <200910231608.18676.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fabio Comolli wrote:
-> Pressing rfkill button on my eeePC 900 to disable wireless hangs the
-> system.
-> 
-> In console I can see (warning: what follows is copied by hand):
-> 
-> acpid: client 148[6:100] has disconnected
-> ACPI group/action not found: hotkey / ATKD
-> unregister netdevice: waiting for wlan0 to become free; usage count=1
-> (last line repeats forever). Hard reset is needed.
->
-> With any previous kernel version (I'm running -rc4 right now) everything
-> works:
->
-> ACPI group/action undefined: hotkey / ATKD
-> ath5k 0000:01:00.0: PCI INT A disabled
+ath5k breaks in AP mode after some operation time and keeps throwing
+this message:
 
-AFAICT there are only two commits since -rc4 that are likely candidates:
+[2096249.446071] ath5k phy0: no further txbuf available, dropping packet
 
-commit b56ab33d68638e6aafdbfc694025e8354a628f49
-Author: Darren Salt <linux@youmustbejoking.demon.co.uk>
-Date:   Tue Oct 13 00:13:33 2009 +0200
-    eeepc-laptop: Prevent a panic when disabling RT2860 wireless when
-		  associated
+Driver is yesterday's compat-wireless on 2.6.31.1
 
-commit 0af49167b1e5ba154e90d2c454bf4624ee47df80
-Author: Darren Salt <linux@youmustbejoking.demon.co.uk>
-Date:   Wed Oct 14 02:19:22 2009 +0100
-    Staging: rt2860sta: prevent a panic when disabling when associated
-
-They look related and which one is relevant for you probably depends on 
-which driver you're using.
-
-Could you try reverting them both to see if that solves the problem?
-
-Cheers,
-FJP
+-- 
+Greetings, Michael.
