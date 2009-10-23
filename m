@@ -1,90 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:36179 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757236AbZJNUmZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 16:42:25 -0400
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Luis Correia <luis.f.correia@gmail.com>
-Subject: Re: Current status of rt2800usb and staging/rt2870
-Date: Wed, 14 Oct 2009 22:41:00 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Ozan =?utf-8?q?=C3=87a=C4=9Flayan?= <ozan@pardus.org.tr>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
-References: <4AD46380.9020308@pardus.org.tr> <200910141933.09374.bzolnier@gmail.com> <efe7343f0910141126o54ea2e31r5327e0db06a8b7ec@mail.gmail.com>
-In-Reply-To: <efe7343f0910141126o54ea2e31r5327e0db06a8b7ec@mail.gmail.com>
-MIME-Version: 1.0
-Message-Id: <200910142241.01013.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Received: from mga01.intel.com ([192.55.52.88]:24343 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752034AbZJWUmf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2009 16:42:35 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 06/18] iwlwifi: specify the valid tx/rx chain in device config structure
+Date: Fri, 23 Oct 2009 13:42:24 -0700
+Message-Id: <1256330556-20997-7-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
+References: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 14 October 2009 20:26:49 Luis Correia wrote:
-> On Wed, Oct 14, 2009 at 18:33, Bartlomiej Zolnierkiewicz
-> <bzolnier@gmail.com> wrote:
-> > On Wednesday 14 October 2009 18:47:11 John W. Linville wrote:
-> >> On Wed, Oct 14, 2009 at 05:28:21PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> >>
-> >> > I don't have a have a problem with it personally as long as people accept
-> >> > the competition..  but instead of working on _their_ projects they go around
-> >> > screaming at everybody who does not want to spin inside the great process
-> >> > designed by them..
-> >>
-> >> Please whine somewhere else.  You have the freedom to work in
-> >> drivers/staging all you want.  You do not have the power to force us to
-> >> like it -- especially in a case where you are diverting attention from
-> >> the community-maintained drivers instead of cooperating with them.
-> >
-> > Cooperating you say.
-> >
-> > rtl8187 -- before starting the work on rtl8187se I've pinged the maintainer
-> > to coordinate the effort and hear his opinion on how to progress..
-> >
-> > I've never heard back.
-> >
-> > rt2x00 -- I know that people have datasheets for some chipsets but I've
-> > never heard "How can we help you" etc. thing.
-> 
-> I have all the datasheets that Ralink supplied to us.
-> All of them are PRELIMINARY and most have errors, and therefore useless.
-> 
-> All useful information is in the crap drivers.
-> 
-> Ralink never provide better ones, and even our 'inside guy' says the
-> hardware documentation guys are always very late in providing more
-> info.
-> 
-> So, for me, it isn't lack of documentation that will ever help, believe me.
-> 
-> >
-> > All I've ever heard was _lies_ about current state of affairs or that
-> > my work is in the way.
-> 
-> AFAICS, your work was never questioned, at least by me.
-> You are welcome to work on rt2x00 , that was also never a problem. All
-> you would need is join in.
-> 
-> Ralink also said they were commited to present drivers for new chipset
-> to be mac80211 compliant, we're waiting on that.
-> 
-> So, you're really welcome to join the rt2x00 team Bartlomiej, the only
-> thing we ask is that all work should be done using the existing
-> rt2x00lib, rt2x00pci and rt2x00usb base 'libraries'.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Well, I will still continue to work on staging drivers:
+Specify both Tx and Rx chain in device configuration structure instead
+of hard code in set_hw_params() for 4965
 
-- I need to understand vendor drivers better before doing any larger rt2x00
-  modifications.  Cleaning it up is just an added value while reading it..
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-- I feel quite comfortable working on de-convoluting crappy code and has years
-  of experience of doing it.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 32d5f3d..bd856df 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -653,10 +653,10 @@ static int iwl4965_hw_set_hw_params(struct iwl_priv *priv)
+ 
+ 	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
+ 
+-	priv->hw_params.tx_chains_num = 2;
+-	priv->hw_params.rx_chains_num = 2;
+-	priv->hw_params.valid_tx_ant = ANT_A | ANT_B;
+-	priv->hw_params.valid_rx_ant = ANT_A | ANT_B;
++	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
++	priv->hw_params.rx_chains_num = num_of_ant(priv->cfg->valid_rx_ant);
++	priv->hw_params.valid_tx_ant = priv->cfg->valid_tx_ant;
++	priv->hw_params.valid_rx_ant = priv->cfg->valid_rx_ant;
+ 	if (priv->cfg->ops->lib->temp_ops.set_ct_kill)
+ 		priv->cfg->ops->lib->temp_ops.set_ct_kill(priv);
+ 
+@@ -2225,6 +2225,8 @@ struct iwl_cfg iwl4965_agn_cfg = {
+ 	.num_of_queues = IWL49_NUM_QUEUES,
+ 	.num_of_ampdu_queues = IWL49_NUM_AMPDU_QUEUES,
+ 	.mod_params = &iwl4965_mod_params,
++	.valid_tx_ant = ANT_AB,
++	.valid_rx_ant = ANT_AB,
+ 	.pll_cfg_val = 0,
+ 	.set_l0s = true,
+ 	.use_bsm = true,
+-- 
+1.5.6.3
 
-- I'm still using Ralink hardware personally so I need something that provides
-  the basic usability _now_.
-
-but since I'm also going to start adding some missing bits to rt2x00 soon
-I would be happy to join rt2x00 project..
