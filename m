@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:35239 "EHLO lo.gmane.org"
+Received: from mga01.intel.com ([192.55.52.88]:24332 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753727AbZJ1OY7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2009 10:24:59 -0400
-Received: from list by lo.gmane.org with local (Exim 4.50)
-	id 1N39SS-00015K-3T
-	for linux-wireless@vger.kernel.org; Wed, 28 Oct 2009 15:25:04 +0100
-Received: from dslc-082-082-171-091.pools.arcor-ip.net ([82.82.171.91])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2009 15:25:04 +0100
-Received: from konsti by dslc-082-082-171-091.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2009 15:25:04 +0100
-To: linux-wireless@vger.kernel.org
-From: Konstantin Kletschke <konsti@ku-gbr.de>
-Subject: Re: BUG at workqueue.c:192, debian 2.6.30 AND compat-wireless-2009-10-28
-Date: Wed, 28 Oct 2009 15:12:53 +0100
-Message-ID: <87fx937gka.fsf@punzenstreichler.doom>
-References: <20091028111847.GA25553@punzenstreichler.doom>
-	<43e72e890910280651h4e91819n20e55cae48474533@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1751955AbZJWUmd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2009 16:42:33 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 02/18] iwlwifi: fix gain computation for 5000 series and up
+Date: Fri, 23 Oct 2009 13:42:20 -0700
+Message-Id: <1256330556-20997-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
+References: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <mcgrof@gmail.com>
-writes:
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-> What kernel are you on?
+In Rx gain balancing (chain noise) computation for 5000 series and up,
+the delta gain calculation should use the average noise of default
+chain, not "chain 0" which do not exist for all the devices.
 
-I am on debian vanilla 2.6.30. debian names this package
-"linux-image-2.6.30-2-686", uname -a says:
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Linux muschimaus 2.6.30-2-686 #1 SMP Sat Sep 26 01:16:22 UTC 2009 i686 GNU/Linux
-
-Regards, Konsti
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 17555c7..afa88a3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -236,7 +236,7 @@ static void iwl5000_gain_computation(struct iwl_priv *priv,
+ 			data->delta_gain_code[i] = 0;
+ 			continue;
+ 		}
+-		delta_g = (1000 * ((s32)average_noise[0] -
++		delta_g = (1000 * ((s32)average_noise[default_chain] -
+ 			(s32)average_noise[i])) / 1500;
+ 		/* bound gain by 2 bits value max, 3rd bit is sign */
+ 		data->delta_gain_code[i] =
+-- 
+1.5.6.3
 
