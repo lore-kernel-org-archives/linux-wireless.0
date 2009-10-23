@@ -1,74 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33801 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:45844 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754094AbZJAIvB (ORCPT
+	with ESMTP id S1751607AbZJWOqc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2009 04:51:01 -0400
-Subject: Re: [PATCH 1/3] wireless: implement basic ethtool support for
- cfg80211 devices
+	Fri, 23 Oct 2009 10:46:32 -0400
+Subject: Re: [PATCH] net: Adjust softirq raising in __napi_schedule
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Kalle Valo <kalle.valo@nokia.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <1254359942-3483-1-git-send-email-linville@tuxdriver.com>
-References: <20091001011340.GA3123@tuxdriver.com>
-	 <1254359942-3483-1-git-send-email-linville@tuxdriver.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-vBBkHIzINJzjx+NTiayw"
-Date: Thu, 01 Oct 2009 10:51:01 +0200
-Message-Id: <1254387061.3959.20.camel@johannes.local>
+To: Tilman Schmidt <tilman@imap.cc>
+Cc: Jarek Poplawski <jarkao2@gmail.com>,
+	David Miller <davem@davemloft.net>, hidave.darkstar@gmail.com,
+	linux-kernel@vger.kernel.org, tglx@linutronix.de,
+	linux-wireless@vger.kernel.org, linux-ppp@vger.kernel.org,
+	netdev@vger.kernel.org, paulus@samba.org,
+	Michael Buesch <mb@bu3sch.de>,
+	Oliver Hartkopp <oliver@hartkopp.net>
+In-Reply-To: <4AE1C00B.5010008@imap.cc>
+References: <4AD31213.6020006@imap.cc> <20091015114052.GA9870@ff.dom.local>
+	 <4AD76184.6030900@gmail.com> <4ADF5710.4030505@imap.cc>
+	 <20091021211906.GA11401@ami.dom.local>
+	 <1256160330.12174.2.camel@johannes.local>
+	 <20091021213947.GA12202@ami.dom.local>
+	 <1256200021.12174.11.camel@johannes.local>  <4AE1C00B.5010008@imap.cc>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-GtZNVJ+WCQlMSt3LTX9e"
+Date: Fri, 23 Oct 2009 16:46:31 +0200
+Message-Id: <1256309191.12174.51.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-vBBkHIzINJzjx+NTiayw
+--=-GtZNVJ+WCQlMSt3LTX9e
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2009-09-30 at 21:19 -0400, John W. Linville wrote:
+On Fri, 2009-10-23 at 16:39 +0200, Tilman Schmidt wrote:
 
-> +		if (!dev->ethtool_ops)
-> +			dev->ethtool_ops =3D &cfg80211_ethtool_ops;
->  		break;
+> Strange. Then what are the two separate functions netif_rx() and
+> netif_rx_ni() for?
 
-I might go so far and do it unconditionally so we get consistent
-functionality across things. OTOH, full-mac drivers might be able to
-support more.
+netif_rx_ni() disables preemption.
 
-> +const struct ethtool_ops cfg80211_ethtool_ops =3D {
-> +	.get_drvinfo =3D cfg80211_get_drvinfo,
-> +	.get_link =3D ethtool_op_get_link,
-> +};
-> +
-> +void cfg80211_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo=
- *info)
+> > This really should be obvious. You're fixing the warning at the source
+> > of the warning, rather than the source of the problem.
+>=20
+> Good idea. So please do tell us where the source of the problem is.
 
-if you change the order, you can make the latter static
+You use netif_rx_ni() instead of netif_rx() at whatever place that
+causes this problem.
 
 johannes
 
---=-vBBkHIzINJzjx+NTiayw
+--=-GtZNVJ+WCQlMSt3LTX9e
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKxG1yAAoJEODzc/N7+Qma++QQAKBADLlBUGKpLXFy9saCXG/O
-QqbExhEC2Hm+wPAfoMnL7RD0o7ENO5u7qQ6iB5JxAuIaCy0rTBJ0wCwhGEXqpEHj
-WcyI8PJxkxM0W6r58DFz/NoPxfQnMTE7G64I8NdUYz2F1lI0xL48D9a1htKJeTaF
-U+3ZhI3ujukaMWFkgoOvkqj2jOPsT91PygY8z50EKeVAINcakVUMSaDhYj6LrRbG
-H6c5Gm3a443P2bcDuTxouhKpalHK9DUHF44Slbnv5b1W+EYqfj0i0cYPY7SILD4W
-3BZhtGMrAcBXYlFRXGzZyeDcbOqAREQcaJxaBdDQukwem7OR324TfxExxbDKaY9V
-f9k0Xy6HwlBIZbw+E6Fw0aNmbb/OcCYhyJkXX/O3wrD6uXFD7Hato1VZwJn0p2Rx
-3F9xRkC8gYYDijrV2O7FA/mkl4x1UyJq7CbiSE5d/2O8ISDs8HS2wvCA4qzGABJl
-Ks1sYOWAYZEhjNBoWo9zT4qGDJ2hySvneiyEKVv5bgh+hJ3CSIH+tDsE8Bb8rfqe
-E014+w8FBdOQtnUev+KmLGvRNImqcg9GoMhCjukWI66oD+NaKM74CSypOzPGcznY
-BDvG5LeBCGOsNU1hK3veFqQMOhGxJH3mPeX6yfRTGfa1gcQ50fVfh0jjAcXAbOxo
-Aa02zMRBpTArqw+FUMmP
-=YTch
+iQIcBAABAgAGBQJK4cHEAAoJEODzc/N7+QmaStYQAK+3IL2OlaRETBYjrgvNL4zi
+rKCKbYSxUYdNmwIn9ldy/eXm37pYN/wNVY7CeoVzfNeS3nxXMhKd7D/hetFtK7n9
+JGjlf+6kY8el0k/6PCEVdarfvIujHJXADdVnG10LZoLb3YSM2wSeIPvPfoSb10XS
+Jf+8azFy0Arg2nqRJLflslV3y2YnD9fGDb9uLmcIP2/PPBbmkkz9j7Nm4saM0TNj
+06ugJpg8aJawsuLr3K1IlPCucTIiDxhU9e/d4zwZYJxHJpsikMYQkuA+tqTSTmBo
+bW8iNHzNWfb1SkMkkKBbvau0Nb9mANDciLVt9T9r+e9ccTB1hqfRY51NCB2lwNOF
+BFhpr1fRqZ40DouMp7umzbRvR8dyljl8Hvs1NGOJwY1xGVyOMsKMr63EbSN6BiWM
+bCPKpnFbXfOFjevctO2D3Dk058WhTGXgmW3choBpCxCZRwS89zrlkMO/evjxx3Yg
+D/jlHlHo8u4AIaGAQcDmDifXBCoihnx9+N2Sbt/OKnmexLmY7EvEpgXfNCgj+eKB
+KI0vd0Xl/ayjQ8nreS9bD4Oco9g528izVHxvUPI+OUyE0VqZee/TjvAkZ4psSaKg
+x1JzBsTZGxALQxPcQ4UbSBxkFYZLrWkToJ8aVegQnsPl4ijzke3q0S1VaHpfHawi
+8znqqSJ/No+Hf2EoXX/D
+=Xf17
 -----END PGP SIGNATURE-----
 
---=-vBBkHIzINJzjx+NTiayw--
+--=-GtZNVJ+WCQlMSt3LTX9e--
 
