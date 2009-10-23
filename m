@@ -1,46 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:59071 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756426AbZJLMOY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 08:14:24 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 14/16] wl1271: Update boot time configuration for the new firmware
-Date: Mon, 12 Oct 2009 15:08:55 +0300
-Message-Id: <1255349337-9776-15-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
+Received: from mx1.redhat.com ([209.132.183.28]:17443 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752535AbZJWQbk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2009 12:31:40 -0400
+Subject: Re: [PATCH 17/19] [RFC, v2] libertas: Kconfig entry for
+ libertas+cfg80211
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1256315335.2164.44.camel@localhost.localdomain>
+References: <20091022133043.185554096@mail.mn-solutions.de>
+	 <20091022133425.317619132@mail.mn-solutions.de>
+	 <1256307572.12174.33.camel@johannes.local>
+	 <1256312995.2164.7.camel@localhost.localdomain>
+	 <1256313851.12174.131.camel@johannes.local>
+	 <1256315335.2164.44.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Fri, 23 Oct 2009 09:31:36 -0700
+Message-Id: <1256315496.2164.47.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Fri, 2009-10-23 at 09:28 -0700, Dan Williams wrote:
+> On Fri, 2009-10-23 at 18:04 +0200, Johannes Berg wrote:
+> > On Fri, 2009-10-23 at 08:49 -0700, Dan Williams wrote:
+> > 
+> > > > -	(iw_handler) lbs_set_freq,      /* SIOCSIWFREQ */
+> > > > +	(iw_handler) cfg80211_wext_siwfreq,
+> > > > 
+> > > > etc.
+> > > > 
+> > > > That's why those exist and are exported. And that way you don't need the
+> > > > Kconfig at all, and can remove most of the wext code.
+> > > 
+> > > I *think* because Holger is trying to keep WEXT around for a bit,
+> > > because cfg80211 won't be mature enough yet (IMHO, I could be wrong) by
+> > > 2.6.33, and because it doesn't support the OLPC-style mesh stuff and the
+> > > libertas monitor interface code.  There's a few loose-ends that need to
+> > > be tied up before a cfg80211 conversion would completely replace the
+> > > functionality of the WEXT code.
+> > 
+> > I just don't understand why he thinks that wext and cfg80211 need to be
+> > mutually exclusive. cfg80211 has exported its handlers for exactly this
+> > purpose, so that you could have everything that cfg80211 supports via
+> > it, and everything else directly.
+> 
+> I thought about it more, and I think we can go all cfg80211 with a small
+> WEXT handler for the mesh bits (it only cares about 4 of the WEXT
+> operations and redirected the rest to the STA interface handlers).  The
+> mesh stuff is actually quite simple operationally.
 
-Update the magic values of the wl1271 boot time config according to the new
-reference driver.
+Which should allow us to use cfg80211 by default, and then have only the
+LIBERTAS_MESH Kconfig option depend on WEXT.  Maybe?
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_init.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
-index f9315f6..e45af07 100644
---- a/drivers/net/wireless/wl12xx/wl1271_init.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_init.c
-@@ -202,7 +202,7 @@ static int wl1271_init_general_parms(struct wl1271 *wl)
- 	gen_parms->clk_valid_on_wakeup = 0;
- 	gen_parms->dc2dcmode = 0;
- 	gen_parms->single_dual_band = 0;
--	gen_parms->tx_bip_fem_autodetect = 1;
-+	gen_parms->tx_bip_fem_autodetect = 0;
- 	gen_parms->tx_bip_fem_manufacturer = 1;
- 	gen_parms->settings = 1;
+Dan
  
--- 
-1.5.6.5
 
