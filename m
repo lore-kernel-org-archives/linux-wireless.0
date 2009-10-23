@@ -1,50 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:53443 "EHLO coco.kroah.org"
+Received: from mga01.intel.com ([192.55.52.88]:24341 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750764AbZJNELK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 00:11:10 -0400
-Date: Tue, 13 Oct 2009 21:10:28 -0700
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/9] [compat-2.6 and compat-stable] Remove unused code
-Message-ID: <20091014041028.GA14511@kroah.com>
-References: <1255382358-20760-1-git-send-email-hauke@hauke-m.de> <1255382358-20760-4-git-send-email-hauke@hauke-m.de> <3ace41890910121932r6f832fe8of70d9b2bdd3d2635@mail.gmail.com> <4AD4ED23.7010200@hauke-m.de> <3ace41890910131712v700ebfe4vc1cd234f24abee9@mail.gmail.com> <43e72e890910131718x68a4a80ehc66a4daf2e299c46@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890910131718x68a4a80ehc66a4daf2e299c46@mail.gmail.com>
+	id S1752039AbZJWUmg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2009 16:42:36 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 08/18] iwlwifi: increase max tfd payload size
+Date: Fri, 23 Oct 2009 13:42:26 -0700
+Message-Id: <1256330556-20997-9-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
+References: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 13, 2009 at 05:18:04PM -0700, Luis R. Rodriguez wrote:
-> On Tue, Oct 13, 2009 at 5:12 PM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
-> > On Tue, Oct 13, 2009 at 10:12 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> >
-> >> The condition #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28)) was
-> >> added recently because without it openSuse with kernel 2.6.27 will not
-> >> compile. OpenSuse backports the tracepoint part into their 2.6.27 kernel.
-> >
-> > I remember that thread now. It is probably wrong as a matter of policy
-> > to incorporate patches for distro kernels with backport bits through.
-> > - I am not saying you shouldn't be helpful and provide them - after
-> > all, more users == better testing, and no doubt the investigation
-> > itself throws more insights on the detailed mechanisms - but it is
-> > just that compat-wireless probably should not try to support arbitrary
-> > and substantial changes from a vanilla kernel. I know Suse is popular
-> > so it is important to support Suse users, but I am wondering if
-> > distro-specific changes should be separate or at least, clearly
-> > documented.
-> 
-> Not sure why opensuse added round_jiffies_up() to their 2.6.27
-> kernels, greg may know better, but since its only once change I'm
-> willing to live with what we did to resolve for it.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-We added that to the SLE 11 kernel as it was requred for a bunch of
-block layer backports to resolve a number of issues that we needed to
-do.
+Increase the size of TFD_MAX_PAYLOAD_SIZE (the size of iwl_device_cmd)
+to accommodate iwl6000_channel_switch_cmd data structure.
 
-Hope this helps explain things,
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Acked-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h |   11 ++++++++---
+ 1 files changed, 8 insertions(+), 3 deletions(-)
 
-greg k-h
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 1378654..b520e55 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -364,7 +364,7 @@ enum {
+ 	CMD_WANT_SKB = (1 << 2),
+ };
+ 
+-#define IWL_CMD_MAX_PAYLOAD 320
++#define DEF_CMD_PAYLOAD_SIZE 320
+ 
+ /*
+  * IWL_LINK_HDR_MAX should include ieee80211_hdr, radiotap header,
+@@ -388,7 +388,8 @@ struct iwl_device_cmd {
+ 		u16 val16;
+ 		u32 val32;
+ 		struct iwl_tx_cmd tx;
+-		u8 payload[IWL_CMD_MAX_PAYLOAD];
++		struct iwl6000_channel_switch_cmd chswitch;
++		u8 payload[DEF_CMD_PAYLOAD_SIZE];
+ 	} __attribute__ ((packed)) cmd;
+ } __attribute__ ((packed));
+ 
+@@ -741,7 +742,11 @@ static inline int iwl_queue_used(const struct iwl_queue *q, int i)
+ 
+ static inline u8 get_cmd_index(struct iwl_queue *q, u32 index, int is_huge)
+ {
+-	/* This is for scan command, the big buffer at end of command array */
++	/*
++	 * This is for init calibration result and scan command which
++	 * required buffer > TFD_MAX_PAYLOAD_SIZE,
++	 * the big buffer at end of command array
++	 */
+ 	if (is_huge)
+ 		return q->n_window;	/* must be power of 2 */
+ 
+-- 
+1.5.6.3
+
