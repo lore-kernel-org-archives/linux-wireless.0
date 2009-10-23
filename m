@@ -1,109 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:45526 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756710AbZJ2XRo (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:29408 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752129AbZJWPip (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 19:17:44 -0400
+	Fri, 23 Oct 2009 11:38:45 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] libertas: monster-patch to make CFG/WEXT configurable
+Date: Fri, 23 Oct 2009 17:38:18 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>
+References: <200910191449.18915.hs4233@mail.mn-solutions.de> <200910200835.35747.hs4233@mail.mn-solutions.de> <1256200291.12174.14.camel@johannes.local>
+In-Reply-To: <1256200291.12174.14.camel@johannes.local>
 MIME-Version: 1.0
-Date: Thu, 29 Oct 2009 19:17:48 -0400
-Message-ID: <f7848160910291617q2b168089l5ce489d2f47ebe96@mail.gmail.com>
-Subject: OOPS in cfg80211_conn_work
-From: Parag Warudkar <parag.lkml@gmail.com>
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200910231738.18965.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oct 29 18:59:06 parag-laptop kernel: [  143.180037] wlan0:
-deauthenticating from 00:16:01:d6:6f:12 by local choice (reason=3)
-Oct 29 18:59:06 parag-laptop kernel: [  143.181137] wlan0: direct
-probe to AP 00:16:01:d6:6f:12 (try 1)
-Oct 29 18:59:06 parag-laptop kernel: [  143.181148] wlan0:
-deauthenticating from 00:16:01:d6:6f:12 by local choice (reason=3)
-Oct 29 18:59:06 parag-laptop kernel: [  143.203375] BUG: unable to
-handle kernel NULL pointer dereference at (null)
-Oct 29 18:59:06 parag-laptop kernel: [  143.203432] IP:
-[<ffffffffa0139161>] cfg80211_conn_work+0xb1/0x140 [cfg80211]
-Oct 29 18:59:06 parag-laptop kernel: [  143.203476] PGD 138abc067 PUD
-136d87067 PMD 0
-Oct 29 18:59:06 parag-laptop kernel: [  143.203530] Oops: 0000 [#1] SMP
-Oct 29 18:59:06 parag-laptop kernel: [  143.203571] last sysfs file:
-/sys/devices/pci0000:00/0000:00:01.0/0000:01:00.1/sound/card1/controlC1/uevent
-Oct 29 18:59:06 parag-laptop kernel: [  143.203597] CPU 0
-Oct 29 18:59:06 parag-laptop kernel: [  143.203629] Modules linked in:
-aes_generic radeon ttm drm_kms_helper drm i2c_algo_bit cfbcopyarea
-cfbimgblt cfbfillrect binfmt_misc snd_hda_codec_atihdmi rfcomm
-snd_hda_codec_analog sco bnep ppdev l2cap snd_hda_intel arc4
-snd_hda_codec snd_pcm_oss snd_mixer_oss snd_hwdep snd_seq_dummy
-snd_pcm snd_seq_oss snd_seq_midi snd_rawmidi snd_seq_midi_event iwlagn
-iptable_filter ext3 snd_seq iwlcore snd_timer led_class snd_seq_device
-ip_tables jbd snd mac80211 psmouse btusb x_tables tpm_infineon
-soundcore serio_raw bluetooth snd_page_alloc cfg80211 tpm tpm_bios
-evdev lp parport ext4 mbcache jbd2 fuse ahci libata video output
-intel_agp e1000e
-Oct 29 18:59:06 parag-laptop kernel: [  143.204560] Pid: 9, comm:
-events/0 Not tainted 2.6.32-rc5 #2 HP EliteBook 8530p
-Oct 29 18:59:06 parag-laptop kernel: [  143.204588] RIP:
-0010:[<ffffffffa0139161>]  [<ffffffffa0139161>]
-cfg80211_conn_work+0xb1/0x140 [cfg80211]
-Oct 29 18:59:06 parag-laptop kernel: [  143.204634] RSP:
-0000:ffff88013f8b5dc0  EFLAGS: 00010246
-Oct 29 18:59:06 parag-laptop kernel: [  143.204656] RAX:
-0000000000000000 RBX: ffff88013e8db690 RCX: ffff88013cb80118
-Oct 29 18:59:06 parag-laptop kernel: [  143.204679] RDX:
-0000000000000000 RSI: 0000000000000282 RDI: ffff88013e8db690
-Oct 29 18:59:06 parag-laptop kernel: [  143.204702] RBP:
-ffff88013f8b5e30 R08: 0000000000000000 R09: 0000000000000001
-Oct 29 18:59:06 parag-laptop kernel: [  143.204724] R10:
-0000000000000000 R11: ffff880028295718 R12: ffff88013e8db6b8
-Oct 29 18:59:06 parag-laptop kernel: [  143.204747] R13:
-ffff88013cb800a8 R14: ffff88013cb80000 R15: ffff88013f8b5df0
-Oct 29 18:59:06 parag-laptop kernel: [  143.204770] FS:
-0000000000000000(0000) GS:ffff880028200000(0000)
-knlGS:0000000000000000
-Oct 29 18:59:06 parag-laptop kernel: [  143.204799] CS:  0010 DS: 0018
-ES: 0018 CR0: 000000008005003b
-Oct 29 18:59:06 parag-laptop kernel: [  143.204820] CR2:
-0000000000000000 CR3: 000000013dde3000 CR4: 00000000000406f0
-Oct 29 18:59:06 parag-laptop kernel: [  143.204843] DR0:
-0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-Oct 29 18:59:06 parag-laptop kernel: [  143.204866] DR3:
-0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Oct 29 18:59:06 parag-laptop kernel: [  143.204889] Process events/0
-(pid: 9, threadinfo ffff88013f8b4000, task ffff88013f885980)
-Oct 29 18:59:06 parag-laptop kernel: [  143.204917] Stack:
-Oct 29 18:59:06 parag-laptop kernel: [  143.204936]  ffff88013f8b5dc0
-ffff88013f8b5dc0 0000000000000282 ffffffff8162afb8
-Oct 29 18:59:06 parag-laptop kernel: [  143.204996] <0>
-ffff88013cb80018 ffff88013cb80088 ffff880028218040 ffff88013f8b5fd8
-Oct 29 18:59:06 parag-laptop kernel: [  143.205085] <0>
-ffff88013f8b5e10 ffff88013cb80130 ffff880028218040 ffffffffa01390b0
-Oct 29 18:59:06 parag-laptop kernel: [  143.205190] Call Trace:
-Oct 29 18:59:06 parag-laptop kernel: [  143.205215]
-[<ffffffffa01390b0>] ? cfg80211_conn_work+0x0/0x140 [cfg80211]
-Oct 29 18:59:06 parag-laptop kernel: [  143.205242]
-[<ffffffff8106c86f>] worker_thread+0x17f/0x2c0
-Oct 29 18:59:06 parag-laptop kernel: [  143.205265]
-[<ffffffff810710d0>] ? autoremove_wake_function+0x0/0x40
-Oct 29 18:59:06 parag-laptop kernel: [  143.205289]
-[<ffffffff8106c6f0>] ? worker_thread+0x0/0x2c0
-Oct 29 18:59:06 parag-laptop kernel: [  143.205311]
-[<ffffffff81070cfe>] kthread+0x8e/0xa0
-Oct 29 18:59:06 parag-laptop kernel: [  143.205334]
-[<ffffffff81012f2a>] child_rip+0xa/0x20
-Oct 29 18:59:06 parag-laptop kernel: [  143.205356]
-[<ffffffff81070c70>] ? kthread+0x0/0xa0
-Oct 29 18:59:06 parag-laptop kernel: [  143.205378]
-[<ffffffff81012f20>] ? child_rip+0x0/0x20
-Oct 29 18:59:06 parag-laptop kernel: [  143.205399] Code: 63 28 4c 89
-e7 e8 c0 02 2b e1 48 8b 43 20 f6 40 48 01 74 c6 83 bb 8c 00 00 00 01
-75 bd 48 8b 83 90 00 00 00 48 89 df 48 8b 40 08 <8b> 10 41 89 17 0f b7
-40 04 66 41 89 47 04 e8 fc ee ff ff 85 c0
-Oct 29 18:59:06 parag-laptop kernel: [  143.206242] RIP
-[<ffffffffa0139161>] cfg80211_conn_work+0xb1/0x140 [cfg80211]
-Oct 29 18:59:06 parag-laptop kernel: [  143.206286]  RSP <ffff88013f8b5dc0>
-Oct 29 18:59:06 parag-laptop kernel: [  143.206306] CR2: 0000000000000000
-Oct 29 18:59:06 parag-laptop kernel: [  143.206327] ---[ end trace
-ccb079f99bd67991 ]---
-Oct 29 18:59:58 parag-laptop kernel: Kernel logging (proc) stopped.
+Johannes, 
+
+Little forword: it might be the case that you still have my 
+RTF/WIP cfg80211 patch in your head that removes all of 
+WEXT/MESH for good. I abandoned that concept.
+
+
+> On Tue, 2009-10-20 at 08:35 +0200, Holger Schurig wrote:
+> > > I really don't understand the point. Can't you just use the
+> > > cfg80211 hooks and keep both functional at the same time?
+> > > Just like orinoco does it uses cfg80211 only partially.
+> > 
+> > I think I can't do this in a sane way.
+> 
+> I don't see why not.
+
+So, from your point of view it's ok if two different code pieces 
+to the same and copete for each other?
+
+You think it's ok that two different code paths 
+report "connection" lost, once via an 
+wireless_send_event(priv->dev, SIOCGIWAP ...) and once via 
+cfg80211_disconnected()
+
+You think it's ok to keep a list of scanned APs both in 
+cfg80211's bss list and in libertas own bss list?
+
+You think it's okay to have an association worker (which heavily 
+relies on libertas' internal bss list) in libertas and at the 
+same time a cfg80211_ops' .connect() function that might do the 
+same, but quite differently?
+
+Maybe you'll need more japanese tee :-)
+
+
+
+> > Oh, and please don't compare libertas all the time with
+> > orinoco. Orinoco is FULLMAC, libertas is HALFMAC.
+> > 
+> > Because libertas firmware doesn't roam, it has to be done in 
+> > software. Libertas does this in assoc.c, partly in scan.c,
+> > cmd.c and wext.c and even main.c. For example, libertas keeps
+> > its own list of BSS entries, has code to select the best
+> > matching BSS when it comes to associating ... things like
+> > this. 
+> 
+> None of this code is relevant to mesh.
+
+Right, but where did I say that this.
+
+
+> > cfg80211 has this code too.
+> 
+> No, it has no roaming etc.
+
+Did I write that?  Whatever you understood: with the libertas' 
+firmware, there's *NO* firmware command where you just 
+say "associate to SSID xzy" and then wait till the firmware 
+scanned and associated. You've to do this by yourself.
+
+But of course cfg80211 a code-path where you say "iw XXX connect 
+ssid BLAH" and it calls the right things behind the scenes. And 
+libertas has a similar codepath --- just not in the firmware.
+
+
+
+> > Having two competing implementations running in one driver is
+> > a way to havoc.
+> 
+> I'm not saying you should keep the old _station_ code, I'm just 
+> saying you should hook it up in a way that doesn't make it
+> exclusive with mesh. 
+
+I'm not sure that I understand what you mean. I'm not 
+making "station code" (whatever that is) "exclusive with mesh" 
+(whatever that means).
+
+Both libertas+WEXT and libertas+CFG80211 have code that allows 
+the libertas card to be a station. The code however is *VERY* 
+different, and I'm going so far to say this is a necessity. I 
+cannot use "one station code" and hook this to both WEXT and 
+CFG80211. Or maybe I can, but it would then be far from elegant.
+
+And if you insist on doing that, then you'll have to do it by 
+yourself: in that minute I'll stop working on Libertas + 
+cfg80211.
+
+
+
+> I'm not saying you should do mesh. I'm saying that instead of
+> ripping out _all_ wext code you should just redirect/rewrite
+> the wext handlers and call the cfg80211 ones, so that for
+> _managed_ mode you get the new stuff, but for _mesh_ mode you
+> keep the old code. 
+
+If I redirect WEXT handler --- why should I do this in the 
+driver, there is net/wireless/wext-compat.c, or?
+
+And if would do it: then I couldn't rip out WEXT, because stuff 
+goes via some WEXT handlers. But ripping out WEXT completely out 
+of libertas is my long-term goal.
+
+
+I don't want such a frankenstein in the code for eternity. I want 
+to use cfg80211 for everything: Station, Adhoc, Mesh, Monitor. 
+That's the end-goal. It's quite do-able, and very much cleaner 
+than any WEXT hookiness.
+
+
+> Otherwise you're not doing the driver any good at all, since
+> your patch then just means that both versions need to be
+> maintained. 
+
+There's not much maintenance in the WEXT part, isn't it?
+
+
+
+
+Currently we have this situation (with my latest RFC patch):
+
+CONFIG_LIBERTAS_WEXT defined:
+
+* basic cfg80211 handler, if someone wants to add deep-sleep,
+  or other functions where we don't want to enhance WEXT
+* station via WEXT
+* monitor mode via sysfs-file
+* mesh via WEXT
+* addhoc via WEXT
+* scanning via WEXT
+* associating via WEXT
+* disconnect notification via WEXT
+
+CONFIG_LIBERTAS_CFG80211 defined:
+
+* "full" cfg80211 handler
+* station via CFG80211
+* monitor mode partly done (no packet injection)
+* mesh not done at all, should be implemented via
+  .add_virtual_intf() by someone how has mesh-capable
+  devices
+* adhoc not done, but I'll do that once wireless-testing
+  and ath5k can do adhoc again
+* scanning via cfg80211
+* associating via cfg80211
+* disconnect notification via cfg80211_disconnected()
+
+So, functionality-wise Libertas + cfg80211 is inferior, but on 
+the same side it's future-proof. And because 
+CONFIG_LIBERTAS_WEXT exist, I'm not taking any functionality 
+away for people that need them.
+
+On the other side, the implementation for libertas + cfg80211 is 
+much cleaner and smaller than the old WEXT stuff.
+
+-- 
+http://www.holgerschurig.de
