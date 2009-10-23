@@ -1,76 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:51823 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756037AbZJFDx6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2009 23:53:58 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: vasanth@atheros.com, linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFT 1/4] ath9k: move common->debug_mask setting to ath_init_softc()
-Date: Mon,  5 Oct 2009 23:53:18 -0400
-Message-Id: <1254801201-15893-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1254801201-15893-1-git-send-email-lrodriguez@atheros.com>
-References: <1254801201-15893-1-git-send-email-lrodriguez@atheros.com>
+Received: from mga01.intel.com ([192.55.52.88]:24332 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751604AbZJWUmd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2009 16:42:33 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 00/18] iwlwifi updates 10/23/2009
+Date: Fri, 23 Oct 2009 13:42:18 -0700
+Message-Id: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What this means is we can enable now debug prints without
-requiring CONFIG_ATH9K_DEBUG.
+This series includes the cleanup patch promised after feedback on "iwlwifi:
+rework for static power save" from previous series.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/debug.c |    5 -----
- drivers/net/wireless/ath/ath9k/main.c  |    5 +++++
- 2 files changed, 5 insertions(+), 5 deletions(-)
+Ben M Cahill (2):
+  iwlwifi: consolidate apm_init() functions
+  iwlwifi: make sure device is reset when unloading driver
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 25ae88e..84f4426 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -23,9 +23,6 @@
- #define REG_READ_D(_ah, _reg) \
- 	ath9k_hw_common(_ah)->ops->read((_ah), (_reg))
- 
--static unsigned int ath9k_debug = ATH_DBG_DEFAULT;
--module_param_named(debug, ath9k_debug, uint, 0);
--
- static struct dentry *ath9k_debugfs_root;
- 
- static int ath9k_debugfs_open(struct inode *inode, struct file *file)
-@@ -565,8 +562,6 @@ int ath9k_init_debug(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_softc *sc = (struct ath_softc *) common->priv;
- 
--	common->debug_mask = ath9k_debug;
--
- 	if (!ath9k_debugfs_root)
- 		return -ENOENT;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 86374ad..7f90cb8 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -29,6 +29,10 @@ static int modparam_nohwcrypt;
- module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
- 
-+static unsigned int ath9k_debug = ATH_DBG_DEFAULT;
-+module_param_named(debug, ath9k_debug, uint, 0);
-+MODULE_PARM_DESC(ath9k_debug, "Debugging mask");
-+
- /* We use the hw_value as an index into our private channel structure */
- 
- #define CHAN2G(_freq, _idx)  { \
-@@ -1637,6 +1641,7 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	common->ah = ah;
- 	common->hw = sc->hw;
- 	common->priv = sc;
-+	common->debug_mask = ath9k_debug;
- 
- 	/*
- 	 * Cache line size is used to size and align various
--- 
-1.6.0.4
+Jay Sternberg (1):
+  iwlwifi: add missing commands to syslog messages
+
+Reinette Chatre (1):
+  iwlwifi: remove duplicate defines
+
+Wey-Yi Guy (12):
+  iwlwifi: fix gain computation for 5000 series and up
+  iwlwifi: separate led function from statistic notification
+  iwlwifi: update bt co-exit configuration parameter
+  iwlwifi: specify the valid tx/rx chain in device config structure
+  iwlwifi: increase max tfd payload size
+  iwlwifi: choose thermal throttle method based on device config
+  iwlwifi: issue ct_kill host command based on device config
+  iwlwifi: add channel switch support to 5000 series and up
+  iwlwifi: remove unused parameters
+  iwlwifi: remove duplicated define
+  iwlwifi: update lowest API version support for 6x00 & 6x50 series
+  iwlwifi: minor comments changes for wimax co-exist command
+
+Zhu Yi (2):
+  iwlwifi: fix use after free bug for paged rx
+  iwlwifi: reuse page for notification packets
+
+ drivers/net/wireless/iwlwifi/iwl-1000.c     |   12 ++-
+ drivers/net/wireless/iwlwifi/iwl-3945-hw.h  |    6 -
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |   79 +++-----------
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    8 --
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |   78 +++-----------
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |  120 ++++++++++------------
+ drivers/net/wireless/iwlwifi/iwl-6000.c     |   98 +++++++++++++++---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   49 ++++++---
+ drivers/net/wireless/iwlwifi/iwl-commands.h |   16 +++-
+ drivers/net/wireless/iwlwifi/iwl-core.c     |  150 ++++++++++++++++++++++++---
+ drivers/net/wireless/iwlwifi/iwl-core.h     |   13 ++-
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |   18 ++--
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c     |    2 +
+ drivers/net/wireless/iwlwifi/iwl-power.c    |   12 +--
+ drivers/net/wireless/iwlwifi/iwl-power.h    |    2 -
+ drivers/net/wireless/iwlwifi/iwl-rx.c       |   24 +++--
+ drivers/net/wireless/iwlwifi/iwl-tx.c       |    9 +--
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   54 +++++++---
+ 18 files changed, 446 insertions(+), 304 deletions(-)
 
