@@ -1,30 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:55463 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755138AbZJGFlj convert rfc822-to-8bit (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:11189 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752129AbZJWPqt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 01:41:39 -0400
-Received: by mail-iw0-f178.google.com with SMTP id 8so2683907iwn.33
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2009 22:41:28 -0700 (PDT)
+	Fri, 23 Oct 2009 11:46:49 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] cfg80211: allow driver to signal noise level
+Date: Fri, 23 Oct 2009 17:46:25 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <200910201413.29734.hs4233@mail.mn-solutions.de> <200910220913.19759.hs4233@mail.mn-solutions.de> <1256305214.12174.27.camel@johannes.local>
+In-Reply-To: <1256305214.12174.27.camel@johannes.local>
 MIME-Version: 1.0
-In-Reply-To: <3ace41890910062045s626777dew4b47fe18bc8d9aee@mail.gmail.com>
-References: <1254886762-17211-1-git-send-email-HinTak.Leung@gmail.com>
-	<3ace41890910062045s626777dew4b47fe18bc8d9aee@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 7 Oct 2009 01:41:08 -0400
-Message-ID: <43e72e890910062241k3c4660eaobbcee4456485be93@mail.gmail.com>
-Subject: Re: [PATCH] compat-2.6: adding ethtool.h to compat-2.6.31.h
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200910231746.25350.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 6, 2009 at 11:45 PM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+> It's really a property of the _channel_.
 
-> warning: type defaults to ‘int’ in declaration of ‘SIMPLE_DEV_PM_OPS’
+Please don't be so terse. That's not helpful. If you don't have 
+time, then don't answer at all :-)
 
-Yeah we need to backport this stuff, it seems all drivers are intended
-to be moved to use these simple dev pm ops so we might as well.
 
-  Luis
+How would like to see an interface to get the noise out of the 
+driver?
+
+
+
+-- 
+http://www.holgerschurig.de
