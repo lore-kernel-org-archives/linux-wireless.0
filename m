@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:24072 "EHLO mail.atheros.com"
+Received: from mx1.redhat.com ([209.132.183.28]:4668 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756219AbZJFFxG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 01:53:06 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2009 22:53:10 -0700
-Date: Tue, 6 Oct 2009 11:22:23 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Luis Rodriguez <lrodriguez@atheros.com>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [RFT 0/4] ath9k: fix oops during driver unload
-Message-ID: <20091006055222.GA26591@vasanth-laptop>
-References: <1254801201-15893-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1254801201-15893-1-git-send-email-lrodriguez@atheros.com>
+	id S1752156AbZJWPt6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2009 11:49:58 -0400
+Subject: Re: [PATCH 17/19] [RFC, v2] libertas: Kconfig entry for
+ libertas+cfg80211
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1256307572.12174.33.camel@johannes.local>
+References: <20091022133043.185554096@mail.mn-solutions.de>
+	 <20091022133425.317619132@mail.mn-solutions.de>
+	 <1256307572.12174.33.camel@johannes.local>
+Content-Type: text/plain
+Date: Fri, 23 Oct 2009 08:49:55 -0700
+Message-Id: <1256312995.2164.7.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 06, 2009 at 09:23:17AM +0530, Luis Rodriguez wrote:
-> This should fix an oops reported by Vasanth.
-> Vasanth my rc3 poos out, can you let me know if this
-> fixes the issue you saw?
+On Fri, 2009-10-23 at 16:19 +0200, Johannes Berg wrote:
+> On Thu, 2009-10-22 at 15:31 +0200, Holger Schurig wrote:
 > 
-> Luis R. Rodriguez (4):
->   ath9k: move common->debug_mask setting to ath_init_softc()
->   ath9k: fix oops during unload -- initialize hw prior to debugfs
->   ath9k: add helper to un-init the hw properly
->   ath9k: rename ath_beaconq_setup() to ath9k_hw_beaconq_setup()
+> > +#ifdef CONFIG_LIBERTAS_WEXT
+> >  	dev->ethtool_ops = &lbs_ethtool_ops;
+> >  	dev->wireless_handlers = &lbs_handler_def;
+> >  #endif
 > 
->  drivers/net/wireless/ath/ath.h          |    6 ++++
->  drivers/net/wireless/ath/ath9k/ath9k.h  |    1 -
->  drivers/net/wireless/ath/ath9k/beacon.c |   12 -------
->  drivers/net/wireless/ath/ath9k/debug.c  |    5 ---
->  drivers/net/wireless/ath/ath9k/hw.c     |   11 ++++++-
->  drivers/net/wireless/ath/ath9k/mac.c    |   13 ++++++++
->  drivers/net/wireless/ath/ath9k/mac.h    |    1 +
->  drivers/net/wireless/ath/ath9k/main.c   |   50 ++++++++++++++++++------------
->  8 files changed, 60 insertions(+), 39 deletions(-)
+> So here you make the wireless_handlers optional.
 > 
+> I still don't understand why you can't just replace only some of the
+> handlers, i.e. instead of doing this, simply do
+> 
+> -	(iw_handler) lbs_set_freq,      /* SIOCSIWFREQ */
+> +	(iw_handler) cfg80211_wext_siwfreq,
+> 
+> etc.
+> 
+> That's why those exist and are exported. And that way you don't need the
+> Kconfig at all, and can remove most of the wext code.
 
-The issue is not fixed completely, ah->common is used after ah is
-freed in ath_cleanup() which makes rmmod ath9k stuck in the middle.
+I *think* because Holger is trying to keep WEXT around for a bit,
+because cfg80211 won't be mature enough yet (IMHO, I could be wrong) by
+2.6.33, and because it doesn't support the OLPC-style mesh stuff and the
+libertas monitor interface code.  There's a few loose-ends that need to
+be tied up before a cfg80211 conversion would completely replace the
+functionality of the WEXT code.
 
-Vasanth
+Dan
+
+
