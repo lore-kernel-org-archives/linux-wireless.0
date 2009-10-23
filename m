@@ -1,47 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:50387 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757363AbZJaJon (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43338 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751984AbZJWNfY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Oct 2009 05:44:43 -0400
-Received: by mail-ew0-f228.google.com with SMTP id 28so3652769ewy.18
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2009 02:44:48 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: ieee80211_tx_status: headroom too small
-Date: Sat, 31 Oct 2009 10:44:45 +0100
-Cc: Nikolai ZHUBR <zhubr@mail.ru>, linux-wireless@vger.kernel.org
-References: <1094614475.20091030230028@mail.ru> <200910311030.45582.IvDoorn@gmail.com> <1256981677.3555.94.camel@johannes.local>
-In-Reply-To: <1256981677.3555.94.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200910311044.45687.IvDoorn@gmail.com>
+	Fri, 23 Oct 2009 09:35:24 -0400
+Subject: Re: NOHZ: local_softirq_pending 08
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tilman Schmidt <tilman@imap.cc>
+Cc: Jarek Poplawski <jarkao2@gmail.com>,
+	David Miller <davem@davemloft.net>, hidave.darkstar@gmail.com,
+	linux-kernel@vger.kernel.org, tglx@linutronix.de,
+	linux-wireless@vger.kernel.org, linux-ppp@vger.kernel.org,
+	netdev@vger.kernel.org, paulus@samba.org,
+	isdn4linux <isdn4linux@listserv.isdn4linux.de>,
+	i4ldeveloper <i4ldeveloper@listserv.isdn4linux.de>,
+	Karsten Keil <isdn@linux-pingi.de>
+In-Reply-To: <4AE0ECCE.2020407@imap.cc>
+References: <4AD31213.6020006@imap.cc> <20091015114052.GA9870@ff.dom.local>
+	 <4AD76184.6030900@gmail.com> <4ADF5710.4030505@imap.cc>
+	 <4AE0ECCE.2020407@imap.cc>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7NtKIoavohHzeLGIUrpI"
+Date: Fri, 23 Oct 2009 15:34:29 +0200
+Message-Id: <1256304869.12174.20.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 31 October 2009, Johannes Berg wrote:
-> On Sat, 2009-10-31 at 10:30 +0100, Ivo van Doorn wrote:
-> 
-> > > > 4 actually, wasn't there some cases where the header could have an odd
-> > > > number of bytes and would require 3 bytes for alignment?
-> > > 
-> > > Hm, is there? I thought they changed the 11s draft to no longer have
-> > > that.
-> > 
-> > Well 2 is fine in that case, (I was basing my comment on something said on this mailinglist
-> > a long time ago). :)
-> 
-> However, it really all depends on the hardware too ... Maybe we should
-> put more of the logic into drivers, and have mac80211 only export its
-> required headroom?
-> 
-> Or maybe we should just not bother with having drivers do the alignment
-> any more -- mac80211 does that now and it only does it if necessary
-> (i.e. not on powerpc/x86)
 
-I think you mean the RX alignment, while I am talking about the TX alignment.
-Beacons and some othe frames must be 4-byte alignment because the wireleless
-hardware requires it.
+--=-7NtKIoavohHzeLGIUrpI
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Ivo
+On Fri, 2009-10-23 at 01:37 +0200, Tilman Schmidt wrote:
+
+> --- a/drivers/isdn/i4l/isdn_ppp.c
+> +++ b/drivers/isdn/i4l/isdn_ppp.c
+> @@ -1174,7 +1174,10 @@ isdn_ppp_push_higher(isdn_net_dev * net_dev, isdn_=
+net_local * lp, struct sk_buff
+>  #endif /* CONFIG_IPPP_FILTER */
+>  	skb->dev =3D dev;
+>  	skb_reset_mac_header(skb);
+> -	netif_rx(skb);
+> +	if (in_interrupt())
+> +		netif_rx(skb);
+> +	else
+> +		netif_rx_ni(skb);
+
+So you've verified that the entire i4l stack can cope with being called
+twice on the same CPU, from different contexts?
+
+johannes
+
+--=-7NtKIoavohHzeLGIUrpI
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK4bDiAAoJEODzc/N7+Qmar1IQAKGLYK9REsXEg22lyNTnuO/O
+LHksLqfsQCGlCrc8mV/TBFudWTtOI8WadqlTRNtRyST2c5X+9hB7CAfaXL59liDn
+b8h5D0B9dvFoOSkPtyFC9pW9Nw8QEGNym+wv+q/FJvoA1jyAhsAhCTkR63jUhFCk
+Zf9d1xE6DtIVHyir7jYgxysVNcZdEQ25hf+s+OM31aMaafWdz83wJB0LWk7DiSjQ
+i2U/bJXsFy67cUjFapr6Pl8ZoGQt8Kjama6+ttN91PqcHxREYyC0Yov+jhYiZ3cF
+T0qDKUy7W9Jxnpnfmp5ZQ9TDsml//e0klWPKuWCl9gm3y8resgqJcxhAsjkdPcP1
+W/FZ3rUiUqdNYsvLZBT3mJcPWApncvvMsfAqd4ziFcFGkbnxkhqD+PC59jlOvJkB
+FhVp0V/m5eUawHWtVGHYyjBXEmtAA/c6AUuXvFRLMWfGdou5KOjtHgjG1bp4Umuo
+SwZiNhgzTagTGLw1C7oXhny6zm4kU6dOlcT/DFEjpIsMqG9AiWL8EOkw5TI7FQr+
+/exgN7g7myiOLL6coLO91+kX1ajPNDEay32S3SdLXdWkls6qR3qysQC6XALfGtAy
+q+yR9nLme1Q6I5Rz56USB42iG44Gyb+gqH2BqKZbiNJ3LqrN6XYIwkKmVvkx/3uh
+/jYxJWtRCmAc2HcP7gne
+=N3Jb
+-----END PGP SIGNATURE-----
+
+--=-7NtKIoavohHzeLGIUrpI--
+
