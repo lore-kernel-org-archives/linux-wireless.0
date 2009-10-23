@@ -1,75 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:17570 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756050AbZJSLbk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2009 07:31:40 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>
-Subject: [PATCH] libertas: remove handling for CMD_802_11_LED_GPIO_CTRL
-Date: Mon, 19 Oct 2009 13:31:20 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200910191331.20476.hs4233@mail.mn-solutions.de>
+Received: from mga01.intel.com ([192.55.52.88]:24351 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752368AbZJWUms (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2009 16:42:48 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Ben Cahill <ben.m.cahill@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 17/18] iwlwifi: make sure device is reset when unloading driver
+Date: Fri, 23 Oct 2009 13:42:35 -0700
+Message-Id: <1256330556-20997-18-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
+References: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-... which just resided as an old-style command in cmd/cmdresp, but
-was nowhere useed. If we ever need it, we can re-add it as a newstyle
-command.
+From: Ben Cahill <ben.m.cahill@intel.com>
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Add unconditional call to apm_ops.stop() to reset device to low power state
+when unloading driver.  Some paths have existed to unload driver *without*
+resetting device, therefore some errors have persisted through multiple
+load/unload cycles, until the whole platform gets rebooted; this is an
+attempt to remedy some of those situations.  Sorry, I can't seem to find
+a bughost.org bug that specifically has these symptoms, but I had it happen
+recently here.
 
---- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
-+++ linux-wl/drivers/net/wireless/libertas/cmd.c
-@@ -1181,29 +1181,6 @@
- 
- 		ret = 0;
- 		break;
--	case CMD_802_11_LED_GPIO_CTRL:
--		{
--			struct mrvl_ie_ledgpio *gpio =
--			    (struct mrvl_ie_ledgpio*)
--			    cmdptr->params.ledgpio.data;
--
--			memmove(&cmdptr->params.ledgpio,
--				pdata_buf,
--				sizeof(struct cmd_ds_802_11_led_ctrl));
--
--			cmdptr->command =
--			    cpu_to_le16(CMD_802_11_LED_GPIO_CTRL);
--
--#define ACTION_NUMLED_TLVTYPE_LEN_FIELDS_LEN 8
--			cmdptr->size =
--			    cpu_to_le16(le16_to_cpu(gpio->header.len)
--				+ S_DS_GEN
--				+ ACTION_NUMLED_TLVTYPE_LEN_FIELDS_LEN);
--			gpio->header.len = gpio->header.len;
--
--			ret = 0;
--			break;
--		}
- 
- 	case CMD_BT_ACCESS:
- 		ret = lbs_cmd_bt_access(cmdptr, cmd_action, pdata_buf);
---- linux-wl.orig/drivers/net/wireless/libertas/cmdresp.c
-+++ linux-wl/drivers/net/wireless/libertas/cmdresp.c
-@@ -187,12 +187,6 @@
- 			sizeof(struct cmd_ds_802_11_tpc_cfg));
- 		spin_unlock_irqrestore(&priv->driver_lock, flags);
- 		break;
--	case CMD_RET(CMD_802_11_LED_GPIO_CTRL):
--		spin_lock_irqsave(&priv->driver_lock, flags);
--		memmove((void *)priv->cur_cmd->callback_arg, &resp->params.ledgpio,
--			sizeof(struct cmd_ds_802_11_led_ctrl));
--		spin_unlock_irqrestore(&priv->driver_lock, flags);
--		break;
- 
- 	case CMD_RET(CMD_GET_TSF):
- 		spin_lock_irqsave(&priv->driver_lock, flags);
+Note that this will *not* fix situations in which the PCI express bus has
+crashed (evidenced by register reads showing "0xffffffff"), e.g. bughost.org
+1855 and 2096; device is unreachable from driver in those cases.
 
+Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    9 +++++++++
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    9 +++++++++
+ 2 files changed, 18 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index ea1b931..fa1672e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3256,6 +3256,15 @@ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
+ 		iwl_down(priv);
+ 	}
+ 
++	/*
++	 * Make sure device is reset to low power before unloading driver.
++	 * This may be redundant with iwl_down(), but there are paths to
++	 * run iwl_down() without calling apm_ops.stop(), and there are
++	 * paths to avoid running iwl_down() at all before leaving driver.
++	 * This (inexpensive) call *makes sure* device is reset.
++	 */
++	priv->cfg->ops->lib->apm_ops.stop(priv);
++
+ 	iwl_tt_exit(priv);
+ 
+ 	/* make sure we flush any pending irq or
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 9a430ee..bfd7f49 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -4135,6 +4135,15 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
+ 		iwl3945_down(priv);
+ 	}
+ 
++	/*
++	 * Make sure device is reset to low power before unloading driver.
++	 * This may be redundant with iwl_down(), but there are paths to
++	 * run iwl_down() without calling apm_ops.stop(), and there are
++	 * paths to avoid running iwl_down() at all before leaving driver.
++	 * This (inexpensive) call *makes sure* device is reset.
++	 */
++	priv->cfg->ops->lib->apm_ops.stop(priv);
++
+ 	/* make sure we flush any pending irq or
+ 	 * tasklet for the driver
+ 	 */
 -- 
-http://www.holgerschurig.de
+1.5.6.3
+
