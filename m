@@ -1,90 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:33296 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751839AbZJQOyc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2009 10:54:32 -0400
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 2/2] rt2x00: Implement support for rt2800pci
-Date: Sat, 17 Oct 2009 16:54:03 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Alban Browaeys <prahal@yahoo.com>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	Mattias Nissler <mattias.nissler@gmx.de>,
-	Mark Asselstine <asselsm@gmail.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
-References: <200910152137.58164.IvDoorn@gmail.com> <200910152204.16407.IvDoorn@gmail.com>
-In-Reply-To: <200910152204.16407.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Message-Id: <200910171654.03344.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="utf-8"
+Received: from mga01.intel.com ([192.55.52.88]:24332 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752032AbZJWUmh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2009 16:42:37 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 10/18] iwlwifi: issue ct_kill host command based on device config
+Date: Fri, 23 Oct 2009 13:42:28 -0700
+Message-Id: <1256330556-20997-11-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
+References: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-[ I somehow missed this one by not being on cc: ]
+Using device configuration structure to decide how to configure
+ct_kill host command.
 
-On Thursday 15 October 2009 22:04:14 Ivo van Doorn wrote:
-> Add support for the rt2860/rt3090 chipsets from Ralink.
-> 
-> Includes various patches from a lot of people who helped
-> getting this driver into the current shape.
-> 
-> Signed-off-by: Alban Browaeys <prahal@yahoo.com>
-> Signed-off-by: Benoit PAPILLAULT <benoit.papillault@free.fr>
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> Signed-off-by: Luis Correia <luis.f.correia@gmail.com>
-> Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
-> Signed-off-by: Mark Asselstine <asselsm@gmail.com>
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> ---
-> http://kernel.org/pub/linux/kernel/people/ivd/patches/0003-rt2x00-Implement-support-for-rt2800pci.patch
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-1000.c |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   10 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.c |    9 ++-------
+ drivers/net/wireless/iwlwifi/iwl-core.h |    2 ++
+ 4 files changed, 16 insertions(+), 7 deletions(-)
 
-First let me say that I'm very happy to see this patch finally being
-submitted and I appreciate the effort..
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 3da5913..3a645e4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -171,6 +171,7 @@ struct iwl_cfg iwl1000_bgn_cfg = {
+ 	.ht_greenfield_support = true,
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
++	.support_ct_kill_exit = true,
+ };
+ 
+ struct iwl_cfg iwl1000_bg_cfg = {
+@@ -196,6 +197,7 @@ struct iwl_cfg iwl1000_bg_cfg = {
+ 	.ht_greenfield_support = true,
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
++	.support_ct_kill_exit = true,
+ };
+ 
+ MODULE_FIRMWARE(IWL1000_MODULE_FIRMWARE(IWL1000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 0873322..f585529 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -278,6 +278,7 @@ struct iwl_cfg iwl6000h_2agn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
+ 	.adv_thermal_throttle = true,
++	.support_ct_kill_exit = true,
+ };
+ 
+ struct iwl_cfg iwl6000h_2abg_cfg = {
+@@ -306,6 +307,7 @@ struct iwl_cfg iwl6000h_2abg_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
+ 	.adv_thermal_throttle = true,
++	.support_ct_kill_exit = true,
+ };
+ 
+ struct iwl_cfg iwl6000h_2bg_cfg = {
+@@ -334,6 +336,7 @@ struct iwl_cfg iwl6000h_2bg_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
+ 	.adv_thermal_throttle = true,
++	.support_ct_kill_exit = true,
+ };
+ 
+ /*
+@@ -366,6 +369,7 @@ struct iwl_cfg iwl6000i_2agn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
+ 	.adv_thermal_throttle = true,
++	.support_ct_kill_exit = true,
+ };
+ 
+ struct iwl_cfg iwl6000i_2abg_cfg = {
+@@ -394,6 +398,7 @@ struct iwl_cfg iwl6000i_2abg_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
+ 	.adv_thermal_throttle = true,
++	.support_ct_kill_exit = true,
+ };
+ 
+ struct iwl_cfg iwl6000i_2bg_cfg = {
+@@ -422,6 +427,7 @@ struct iwl_cfg iwl6000i_2bg_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
+ 	.adv_thermal_throttle = true,
++	.support_ct_kill_exit = true,
+ };
+ 
+ struct iwl_cfg iwl6050_2agn_cfg = {
+@@ -451,6 +457,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
+ 	.adv_thermal_throttle = true,
++	.support_ct_kill_exit = true,
+ };
+ 
+ struct iwl_cfg iwl6050_2abg_cfg = {
+@@ -479,6 +486,7 @@ struct iwl_cfg iwl6050_2abg_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
+ 	.adv_thermal_throttle = true,
++	.support_ct_kill_exit = true,
+ };
+ 
+ struct iwl_cfg iwl6000_3agn_cfg = {
+@@ -508,6 +516,7 @@ struct iwl_cfg iwl6000_3agn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
+ 	.adv_thermal_throttle = true,
++	.support_ct_kill_exit = true,
+ };
+ 
+ struct iwl_cfg iwl6050_3agn_cfg = {
+@@ -537,6 +546,7 @@ struct iwl_cfg iwl6050_3agn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
+ 	.adv_thermal_throttle = true,
++	.support_ct_kill_exit = true,
+ };
+ 
+ MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 77b9825..e43469c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2165,10 +2165,7 @@ void iwl_rf_kill_ct_config(struct iwl_priv *priv)
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 	priv->thermal_throttle.ct_kill_toggle = false;
+ 
+-	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
+-	case CSR_HW_REV_TYPE_1000:
+-	case CSR_HW_REV_TYPE_6x00:
+-	case CSR_HW_REV_TYPE_6x50:
++	if (priv->cfg->support_ct_kill_exit) {
+ 		adv_cmd.critical_temperature_enter =
+ 			cpu_to_le32(priv->hw_params.ct_kill_threshold);
+ 		adv_cmd.critical_temperature_exit =
+@@ -2185,8 +2182,7 @@ void iwl_rf_kill_ct_config(struct iwl_priv *priv)
+ 					"exit is %d\n",
+ 				       priv->hw_params.ct_kill_threshold,
+ 				       priv->hw_params.ct_kill_exit_threshold);
+-		break;
+-	default:
++	} else {
+ 		cmd.critical_temperature_R =
+ 			cpu_to_le32(priv->hw_params.ct_kill_threshold);
+ 
+@@ -2199,7 +2195,6 @@ void iwl_rf_kill_ct_config(struct iwl_priv *priv)
+ 					"succeeded, "
+ 					"critical temperature is %d\n",
+ 					priv->hw_params.ct_kill_threshold);
+-		break;
+ 	}
+ }
+ EXPORT_SYMBOL(iwl_rf_kill_ct_config);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 9dbf598..02bacc4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -226,6 +226,7 @@ struct iwl_mod_params {
+  * @use_rts_for_ht: use rts/cts protection for HT traffic
+  * @chain_noise_num_beacons: number of beacons used to compute chain noise
+  * @adv_thermal_throttle: support advance thermal throttle
++ * @support_ct_kill_exit: support ct kill exit condition
+  *
+  * We enable the driver to be backward compatible wrt API version. The
+  * driver specifies which APIs it supports (with @ucode_api_max being the
+@@ -280,6 +281,7 @@ struct iwl_cfg {
+ 	int chain_noise_num_beacons;
+ 	const bool supports_idle;
+ 	bool adv_thermal_throttle;
++	bool support_ct_kill_exit;
+ };
+ 
+ /***************************
+-- 
+1.5.6.3
 
-(I'll give it a spin on Eee 901 w/ 2.6.32-rc5 sometime later..)
-
-
-Now to the less happy part..
-
-I also used the opportunity to take a closer look at this driver and
-it seems that it needlessly adds around 2 KLOC to kernel by duplicating
-the common content of rt2800usb.h to rt2800pci.h instead of moving it
-to the shared header (like it is done in the staging crap drivers):
-
-$ wc -l drivers/net/wireless/rt2x00/rt2800usb.h drivers/net/wireless/rt2x00/rt2800pci.h
-  1951 drivers/net/wireless/rt2x00/rt2800usb.h
-  1960 drivers/net/wireless/rt2x00/rt2800pci.h
-  3911 total
-
-$ diff -u drivers/net/wireless/rt2x00/rt2800usb.h drivers/net/wireless/rt2x00/rt2800pci.h|diffstat
- rt2800pci.h |  213 +++++++++++++++++++++++++++++++-----------------------------
-  1 file changed, 111 insertions(+), 102 deletions(-)
-
-Similarly it looks like most of the code between rt2800usb.c and rt2800pci.c
-could also be shared (up to another 2 KLOC saved) by adding abstraction layer
-for accessing chipset registers over different buses (again like it is done
-in staging crap drivers):
-
-$ wc -l drivers/net/wireless/rt2x00/rt2800usb.c drivers/net/wireless/rt2x00/rt2800pci.c
-  3077 drivers/net/wireless/rt2x00/rt2800usb.c
-  3323 drivers/net/wireless/rt2x00/rt2800pci.c
-  6400 total
-
-$ diff -u drivers/net/wireless/rt2x00/rt2800usb.c drivers/net/wireless/rt2x00/rt2800pci.c|diffstat
- rt2800pci.c | 2190 +++++++++++++++++++++++++++++++++---------------------------
- 1 file changed, 1218 insertions(+), 972 deletions(-)
-
-[ for better visualization of issues raised diffs themselves are available at:
-  http://kernel.org/pub/linux/kernel/people/bart/rt2800/ ]
-
-All in all, the total amount of the kernel code needed for implementing
-rt2800pci functionality should 1-2 KLOC instead of the current 5 KLOC.
