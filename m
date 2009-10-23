@@ -1,81 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:37168 "EHLO
-	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757784AbZJLSrX convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55943 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752244AbZJWQs7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 14:47:23 -0400
-Received: by ewy4 with SMTP id 4so2700881ewy.37
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2009 11:46:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1df1788c0910121117g5ad66013g95e2231fd983bb23@mail.gmail.com>
-References: <1df1788c0910110455q570ca89fy6edbda3235a7a35e@mail.gmail.com>
-	 <1df1788c0910110513j6847bf97q71059fec4ae9722b@mail.gmail.com>
-	 <1df1788c0910110518l1d120983id2bf997d2446b4a7@mail.gmail.com>
-	 <20091012134325.GC27575@tuxdriver.com>
-	 <1df1788c0910121112v13b5f16fy5b3b79dcd86e37d5@mail.gmail.com>
-	 <1df1788c0910121117g5ad66013g95e2231fd983bb23@mail.gmail.com>
-Date: Mon, 12 Oct 2009 19:46:44 +0100
-Message-ID: <efe7343f0910121146t50a08a8fucd295e29419e2394@mail.gmail.com>
-Subject: Re: RaLink 148f:3070 not working since upgrade from 2.6.30 to 2.6.31
-From: Luis Correia <luis.f.correia@gmail.com>
-To: =?ISO-8859-1?Q?Br=E1ulio_B_O_Bhavamitra?= <brauliobo@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 23 Oct 2009 12:48:59 -0400
+Subject: Re: [PATCH 17/19] [RFC, v2] libertas: Kconfig entry for
+ libertas+cfg80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1256316179.2164.53.camel@localhost.localdomain>
+References: <20091022133043.185554096@mail.mn-solutions.de>
+	 <20091022133425.317619132@mail.mn-solutions.de>
+	 <1256307572.12174.33.camel@johannes.local>
+	 <1256312995.2164.7.camel@localhost.localdomain>
+	 <1256313851.12174.131.camel@johannes.local>
+	 <1256315335.2164.44.camel@localhost.localdomain>
+	 <1256315496.2164.47.camel@localhost.localdomain>
+	 <1256315972.12174.168.camel@johannes.local>
+	 <1256316179.2164.53.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-d5VPd6MRPgLdHTzC3TAq"
+Date: Fri, 23 Oct 2009 18:48:55 +0200
+Message-Id: <1256316535.12174.186.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-2009/10/12 Bráulio B O Bhavamitra <brauliobo@gmail.com>:
-> 2009/10/12 Bráulio B O Bhavamitra <brauliobo@gmail.com>
->>
->> 2009/10/12 John W. Linville <linville@tuxdriver.com>
->>>
->>> On Sun, Oct 11, 2009 at 09:18:24AM -0300, Bráulio B O Bhavamitra wrote:
->>> > Also in Ubuntu Karmic Beta (where the firmware is present) it doesn't
->>> > work (radio not working, can't find any access point)
->>> >
->>> > 2009/10/11 Bráulio B O Bhavamitra <brauliobo@gmail.com>:
->>> > > Since the upgrade from kernel 2.6.30 to 2.6.31 on archlinux the usb
->>> > > wireless from Ralink doesn't work anymore.
->>> > > Please ask for more info if necessary.
->>>
->>> This commit is post-2.6.30 (and pre-2.6.31):
->>>
->>> commit d53d9e67b55f6a9fc3f836c5c392eb41ce5676f4
->>> Author: Ivo van Doorn <IvDoorn@gmail.com>
->>> Date:   Sun Apr 26 15:47:48 2009 +0200
->>>
->>>    rt2x00: Implement support for rt2800usb
->>>
->>>    Add support for the rt2800usb chipset.
->>>
->>>    Current problems:
->>>     * Cannot scan 11n AP's
->>>     * No TX during first minute after association
->>>     * Broken Hardware encryption
->>>
->>>    Includes various patches from Mattias, Felix, Xose and Axel.
->>>
->>>    Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
->>>    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->>>    Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
->>>    Signed-off-by: Axel Kollhofer <rain_maker@root-forum.org>
->>>    Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
->>>    Signed-off-by: John W. Linville <linville@tuxdriver.com>
->>>
->>> That is the first time 148f:3070 is supported by the rt2x00 drivers.
->>> I have no idea what you were using up to 2.6.30...
->>
->> Ow, this is really strange.
->> I was using the ArchLinux's 2.6.30.6 kernel which is an almost vanilla kernel.
->> Very strange, I remember seeing it loading the <something>2870sta module and worked perfectly.
+--=-d5VPd6MRPgLdHTzC3TAq
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-That's the driver in staging, known as crap.
+On Fri, 2009-10-23 at 09:42 -0700, Dan Williams wrote:
 
-It has nothing to do with the rt2x00 project.
+> Yeah, I think it's best to handle the mesh WEXT ioctls separately for
+> now.  There are really only 4 of them (get/set SSID, set channel, get
+> mode) that matter for mesh.  The rest of the ioctls that the mesh
+> interface supports get redirected to the cfg80211 handlers because they
+> aren't specific to mesh.
 
+So why can't we simply do
 
+set_ssid()
+{
+	if (mesh)
+		return mesh_set_ssid();
+	else
+		return cfg80211_wext_iwessid()
+}
 
-Luis Correia
-rt2x00 project admin
+johannes
+
+--=-d5VPd6MRPgLdHTzC3TAq
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK4d50AAoJEODzc/N7+Qma4fYP/RnBP+lU4j2r+pTAboasTa8X
+IHodlLw6xMHvOcsMBJm+rN5a9CTHzVqR56pFys/EFt18VZhwNubenfm2KItreGeV
+JjWQT0/3GNUBpmkrs4weASq6iZ66apU2k+KGyAQWBVvs4IY4JXytTLyIc/rxEFwU
+Dy3+K8vkaLcg1RgObYfcjoYSg42cd6tRSaKdLu1rtUHEeoWIWlmhZNNnUcRChDC+
+8EI2OPvVtU0kSv/bUeNBegIG7X9A8hiw+ryqubj5jOe9bZTH6lifkcxo6My1aU2u
+PW69BHFVkHfBE8nXIAv8cvaeDWNLxjt+V3p8PVExePHfV2GFg5giLPiNSWIYtWD9
+T7xk5SMBI8XBSftgfeRAkVA6k6PCkEOXPQ+3qaAxTHEKvTfq/NEM8qDOeSF8x0Ol
+1Bl3QELZtVGqJr0kY87SbGv+0yOhdi8GjVA+Itw9nLWBHdSNz+7rk2HOfTMkLXVa
+hXElbmbluJvm1N4UOYSaoyxC+VSIwdFE5IkZ2Na8c30wcM2HrX4SMqgtFA+clJox
+seAS85IjnrFZYzcoz1WN08zeZU1c+tRJoJWC91/TlKFCY3s4Y/f13e6CH0zhfPJz
+TmR1/ddSiNzLpfyKr/ZoAgIafkK8HZUjmhbUrRkDjXjd3fDpfYT3SmrBiydFM79N
+v9KN1jxp7QgIKA1KgQkR
+=9tEo
+-----END PGP SIGNATURE-----
+
+--=-d5VPd6MRPgLdHTzC3TAq--
+
