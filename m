@@ -1,187 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:62948 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754647AbZJPVZ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 17:25:58 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 05/10] iwlwifi: move iwl_setup_mac to iwlagn
-Date: Fri, 16 Oct 2009 14:25:53 -0700
-Message-Id: <1255728358-29976-6-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
-References: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:50622 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752444AbZJWQjf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2009 12:39:35 -0400
+Subject: Re: [PATCH 17/19] [RFC, v2] libertas: Kconfig entry for
+ libertas+cfg80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1256315496.2164.47.camel@localhost.localdomain>
+References: <20091022133043.185554096@mail.mn-solutions.de>
+	 <20091022133425.317619132@mail.mn-solutions.de>
+	 <1256307572.12174.33.camel@johannes.local>
+	 <1256312995.2164.7.camel@localhost.localdomain>
+	 <1256313851.12174.131.camel@johannes.local>
+	 <1256315335.2164.44.camel@localhost.localdomain>
+	 <1256315496.2164.47.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-3shGXhT5yV3ACvOsNHW4"
+Date: Fri, 23 Oct 2009 18:39:31 +0200
+Message-Id: <1256315972.12174.168.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
 
-This function is only used in iwlagn so there is no need to have it in
-iwlcore.
+--=-3shGXhT5yV3ACvOsNHW4
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c  |   62 +++++++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.c |   58 -----------------------------
- drivers/net/wireless/iwlwifi/iwl-core.h |    1 -
- 3 files changed, 62 insertions(+), 59 deletions(-)
+On Fri, 2009-10-23 at 09:31 -0700, Dan Williams wrote:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 401295c..c3e7101 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2285,6 +2285,68 @@ void iwl_post_associate(struct iwl_priv *priv)
- 
- #define UCODE_READY_TIMEOUT	(4 * HZ)
- 
-+/*
-+ * Not a mac80211 entry point function, but it fits in with all the
-+ * other mac80211 functions grouped here.
-+ */
-+static int iwl_setup_mac(struct iwl_priv *priv)
-+{
-+	int ret;
-+	struct ieee80211_hw *hw = priv->hw;
-+	hw->rate_control_algorithm = "iwl-agn-rs";
-+
-+	/* Tell mac80211 our characteristics */
-+	hw->flags = IEEE80211_HW_SIGNAL_DBM |
-+		    IEEE80211_HW_NOISE_DBM |
-+		    IEEE80211_HW_AMPDU_AGGREGATION |
-+		    IEEE80211_HW_SPECTRUM_MGMT;
-+
-+	if (!priv->cfg->broken_powersave)
-+		hw->flags |= IEEE80211_HW_SUPPORTS_PS |
-+			     IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
-+
-+	hw->wiphy->interface_modes =
-+		BIT(NL80211_IFTYPE_STATION) |
-+		BIT(NL80211_IFTYPE_ADHOC);
-+
-+	hw->wiphy->custom_regulatory = true;
-+
-+	/* Firmware does not support this */
-+	hw->wiphy->disable_beacon_hints = true;
-+
-+	/*
-+	 * For now, disable PS by default because it affects
-+	 * RX performance significantly.
-+	 */
-+	hw->wiphy->ps_default = false;
-+
-+	hw->wiphy->max_scan_ssids = PROBE_OPTION_MAX;
-+	/* we create the 802.11 header and a zero-length SSID element */
-+	hw->wiphy->max_scan_ie_len = IWL_MAX_PROBE_REQUEST - 24 - 2;
-+
-+	/* Default value; 4 EDCA QOS priorities */
-+	hw->queues = 4;
-+
-+	hw->max_listen_interval = IWL_CONN_MAX_LISTEN_INTERVAL;
-+
-+	if (priv->bands[IEEE80211_BAND_2GHZ].n_channels)
-+		priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
-+			&priv->bands[IEEE80211_BAND_2GHZ];
-+	if (priv->bands[IEEE80211_BAND_5GHZ].n_channels)
-+		priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
-+			&priv->bands[IEEE80211_BAND_5GHZ];
-+
-+	ret = ieee80211_register_hw(priv->hw);
-+	if (ret) {
-+		IWL_ERR(priv, "Failed to register hw (error %d)\n", ret);
-+		return ret;
-+	}
-+	priv->mac80211_registered = 1;
-+
-+	return 0;
-+}
-+
-+
- static int iwl_mac_start(struct ieee80211_hw *hw)
- {
- 	struct iwl_priv *priv = hw->priv;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index ad62673..42c0496 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1430,64 +1430,6 @@ void iwl_configure_filter(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL(iwl_configure_filter);
- 
--int iwl_setup_mac(struct iwl_priv *priv)
--{
--	int ret;
--	struct ieee80211_hw *hw = priv->hw;
--	hw->rate_control_algorithm = "iwl-agn-rs";
--
--	/* Tell mac80211 our characteristics */
--	hw->flags = IEEE80211_HW_SIGNAL_DBM |
--		    IEEE80211_HW_NOISE_DBM |
--		    IEEE80211_HW_AMPDU_AGGREGATION |
--		    IEEE80211_HW_SPECTRUM_MGMT;
--
--	if (!priv->cfg->broken_powersave)
--		hw->flags |= IEEE80211_HW_SUPPORTS_PS |
--			     IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
--
--	hw->wiphy->interface_modes =
--		BIT(NL80211_IFTYPE_STATION) |
--		BIT(NL80211_IFTYPE_ADHOC);
--
--	hw->wiphy->custom_regulatory = true;
--
--	/* Firmware does not support this */
--	hw->wiphy->disable_beacon_hints = true;
--
--	/*
--	 * For now, disable PS by default because it affects
--	 * RX performance significantly.
--	 */
--	hw->wiphy->ps_default = false;
--
--	hw->wiphy->max_scan_ssids = PROBE_OPTION_MAX;
--	/* we create the 802.11 header and a zero-length SSID element */
--	hw->wiphy->max_scan_ie_len = IWL_MAX_PROBE_REQUEST - 24 - 2;
--
--	/* Default value; 4 EDCA QOS priorities */
--	hw->queues = 4;
--
--	hw->max_listen_interval = IWL_CONN_MAX_LISTEN_INTERVAL;
--
--	if (priv->bands[IEEE80211_BAND_2GHZ].n_channels)
--		priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
--			&priv->bands[IEEE80211_BAND_2GHZ];
--	if (priv->bands[IEEE80211_BAND_5GHZ].n_channels)
--		priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
--			&priv->bands[IEEE80211_BAND_5GHZ];
--
--	ret = ieee80211_register_hw(priv->hw);
--	if (ret) {
--		IWL_ERR(priv, "Failed to register hw (error %d)\n", ret);
--		return ret;
--	}
--	priv->mac80211_registered = 1;
--
--	return 0;
--}
--EXPORT_SYMBOL(iwl_setup_mac);
--
- int iwl_set_hw_params(struct iwl_priv *priv)
- {
- 	priv->hw_params.max_rxq_size = RX_QUEUE_SIZE;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index b877f88..a2a580d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -305,7 +305,6 @@ void iwl_configure_filter(struct ieee80211_hw *hw,
- 			  unsigned int changed_flags,
- 			  unsigned int *total_flags, u64 multicast);
- int iwl_hw_nic_init(struct iwl_priv *priv);
--int iwl_setup_mac(struct iwl_priv *priv);
- int iwl_set_hw_params(struct iwl_priv *priv);
- int iwl_init_drv(struct iwl_priv *priv);
- void iwl_uninit_drv(struct iwl_priv *priv);
--- 
-1.5.6.3
+> > > I just don't understand why he thinks that wext and cfg80211 need to =
+be
+> > > mutually exclusive. cfg80211 has exported its handlers for exactly th=
+is
+> > > purpose, so that you could have everything that cfg80211 supports via
+> > > it, and everything else directly.
+> >=20
+> > I thought about it more, and I think we can go all cfg80211 with a smal=
+l
+> > WEXT handler for the mesh bits (it only cares about 4 of the WEXT
+> > operations and redirected the rest to the STA interface handlers).  The
+> > mesh stuff is actually quite simple operationally.
+>=20
+> Which should allow us to use cfg80211 by default, and then have only the
+> LIBERTAS_MESH Kconfig option depend on WEXT.  Maybe?
+
+Well if you want to push the mesh wext bits through to cfg80211
+(temporarily) you wouldn't even need to depend on WEXT. I'd prefer,
+however, to not do this, and just use the cfg80211 wext handlers in
+libertas and depend on WEXT for now.
+
+johannes
+
+--=-3shGXhT5yV3ACvOsNHW4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK4dw7AAoJEODzc/N7+QmaudEQAJ+fQkSXfFEn7Y/wgFtVWtJY
+XDmWWQfZDgc+aEmrieHVzz14t1TG1hFvyednLfhZ8081erQbPqT4CD3gUcxg/tZ3
+Sv6skCTBOzl1Vf+p/9RugJefakf9cLorTxrDTFzrlWdeu5maOuyz8H2HJvGbc2/1
+Jvkop7/ZdcAcgB/QdZ/S00OWh3fArYymadJ3PQta4sMUhmBZuMA4F8oUZYaTcLfJ
+dMzaFGB0VEQqD+/aWT6LroBAhsoq7NTdCzGmhhuz75aegYDnVB/w35uRaNmDIbmP
+CxGIQKvLxQHodwMGBIo9EH0BWf5zXBL6RUslxLxkcRvMLQo0QknacJiGPFsW+dXL
+FaFRENqiDMVtzoTrneKLO4pDpKTbtV+DxFg67TIMMo6Wud6mN82rQKrWZTcGGGE0
+OKiEECFRR8shPe3iRx4fBKKeNn83fDb8fz1TlbhY4ox2jR2FJynIBtWu4LeGJSvB
+tmhI8TeCbRJXhcywNicWWnZj8NTtfg89Us/PqKq1tNNceP1fF84g1GmrFxHyQRw5
+cw7a9M62PXMUNoyq+d+amD+2cohi+cOPod3F9obvEmGuo4wcfJfA8gd8ysfTOEXj
+jp0zci62kRRgRKKMGcx0Nz2eEEiGlt36ygHEyaZx/0JgX0dUpPjG28mpTHDV/+sB
+JR5mp3kIqDizzOvwPr6/
+=V5Xi
+-----END PGP SIGNATURE-----
+
+--=-3shGXhT5yV3ACvOsNHW4--
 
