@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from posthamster.phnxsoft.com ([195.227.45.4]:2283 "EHLO
-	posthamster.phnxsoft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757037AbZJKLvf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Oct 2009 07:51:35 -0400
-Message-ID: <4AD1BF06.3050103@phoenixsoftware.de>
-Date: Sun, 11 Oct 2009 13:18:30 +0200
-From: Tilman Schmidt <t.schmidt@phoenixsoftware.de>
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:16394 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752126AbZJWQm7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2009 12:42:59 -0400
+Subject: Re: [PATCH 17/19] [RFC, v2] libertas: Kconfig entry for
+ libertas+cfg80211
+From: Dan Williams <dcbw@redhat.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: Dave Young <hidave.darkstar@gmail.com>,
-	linux-kernel@vger.kernel.org, tglx@linutronix.de,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: NOHZ: local_softirq_pending 08
-References: <20091011095217.GA2200@darkstar> <1255255735.4095.53.camel@johannes.local>
-In-Reply-To: <1255255735.4095.53.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1256315972.12174.168.camel@johannes.local>
+References: <20091022133043.185554096@mail.mn-solutions.de>
+	 <20091022133425.317619132@mail.mn-solutions.de>
+	 <1256307572.12174.33.camel@johannes.local>
+	 <1256312995.2164.7.camel@localhost.localdomain>
+	 <1256313851.12174.131.camel@johannes.local>
+	 <1256315335.2164.44.camel@localhost.localdomain>
+	 <1256315496.2164.47.camel@localhost.localdomain>
+	 <1256315972.12174.168.camel@johannes.local>
+Content-Type: text/plain
+Date: Fri, 23 Oct 2009 09:42:59 -0700
+Message-Id: <1256316179.2164.53.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 11 Oct 2009 12:08:55 +0200, Johannes Berg wrote:
-> On Sun, 2009-10-11 at 17:52 +0800, Dave Young wrote:
+On Fri, 2009-10-23 at 18:39 +0200, Johannes Berg wrote:
+> On Fri, 2009-10-23 at 09:31 -0700, Dan Williams wrote:
 > 
->> With kernel 2.6.32-rc3-00052-g0eca52a I got following KERN_ERR
->> messages just while using firefox:
->>
->> [  130.527399] NOHZ: local_softirq_pending 08
+> > > > I just don't understand why he thinks that wext and cfg80211 need to be
+> > > > mutually exclusive. cfg80211 has exported its handlers for exactly this
+> > > > purpose, so that you could have everything that cfg80211 supports via
+> > > > it, and everything else directly.
+> > > 
+> > > I thought about it more, and I think we can go all cfg80211 with a small
+> > > WEXT handler for the mesh bits (it only cares about 4 of the WEXT
+> > > operations and redirected the rest to the STA interface handlers).  The
+> > > mesh stuff is actually quite simple operationally.
+> > 
+> > Which should allow us to use cfg80211 by default, and then have only the
+> > LIBERTAS_MESH Kconfig option depend on WEXT.  Maybe?
 > 
->> Any idea? or known issue?
-> 
-> Are you using b43 (or wl12x1)? If so, it's a known issue, but the driver
-> was recently left without an active maintainer in a brouhaha about a bug
-> fix.
-> 
-> Cf. http://thread.gmane.org/gmane.linux.kernel.wireless.general/39440
+> Well if you want to push the mesh wext bits through to cfg80211
+> (temporarily) you wouldn't even need to depend on WEXT. I'd prefer,
+> however, to not do this, and just use the cfg80211 wext handlers in
+> libertas and depend on WEXT for now.
 
-Can you explain a bit more what that message is about?
-I am encountering it in a completely different context
-(PPP over ISDN) and I would like to know where to start
-looking for the cause and developing a fix. The thread
-on linux.kernel.wireless.general only seems to address
-the specific situation in the wireless stack.
+Yeah, I think it's best to handle the mesh WEXT ioctls separately for
+now.  There are really only 4 of them (get/set SSID, set channel, get
+mode) that matter for mesh.  The rest of the ioctls that the mesh
+interface supports get redirected to the cfg80211 handlers because they
+aren't specific to mesh.
 
-Thanks,
-Tilman
+Dan
+
 
