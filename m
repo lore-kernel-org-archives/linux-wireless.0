@@ -1,105 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45154 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756869AbZJJSks (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Oct 2009 14:40:48 -0400
-Subject: Re: BUG?  I can reproduce "Association request to the driver
- failed" at will
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	hostap@lists.shmoo.com
-In-Reply-To: <200909211309.40476.hs4233@mail.mn-solutions.de>
-References: <200909211309.40476.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-h7gug7T6b4eXVh3jvSEd"
-Date: Sat, 10 Oct 2009 20:39:58 +0200
-Message-Id: <1255199998.4095.41.camel@johannes.local>
+Received: from mx1.redhat.com ([209.132.183.28]:14207 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752332AbZJWQwx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2009 12:52:53 -0400
+Subject: Re: [PATCH 17/19] [RFC, v2] libertas: Kconfig entry for
+ libertas+cfg80211
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1256316535.12174.186.camel@johannes.local>
+References: <20091022133043.185554096@mail.mn-solutions.de>
+	 <20091022133425.317619132@mail.mn-solutions.de>
+	 <1256307572.12174.33.camel@johannes.local>
+	 <1256312995.2164.7.camel@localhost.localdomain>
+	 <1256313851.12174.131.camel@johannes.local>
+	 <1256315335.2164.44.camel@localhost.localdomain>
+	 <1256315496.2164.47.camel@localhost.localdomain>
+	 <1256315972.12174.168.camel@johannes.local>
+	 <1256316179.2164.53.camel@localhost.localdomain>
+	 <1256316535.12174.186.camel@johannes.local>
+Content-Type: text/plain
+Date: Fri, 23 Oct 2009 09:52:56 -0700
+Message-Id: <1256316776.2164.54.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2009-10-23 at 18:48 +0200, Johannes Berg wrote:
+> On Fri, 2009-10-23 at 09:42 -0700, Dan Williams wrote:
+> 
+> > Yeah, I think it's best to handle the mesh WEXT ioctls separately for
+> > now.  There are really only 4 of them (get/set SSID, set channel, get
+> > mode) that matter for mesh.  The rest of the ioctls that the mesh
+> > interface supports get redirected to the cfg80211 handlers because they
+> > aren't specific to mesh.
+> 
+> So why can't we simply do
+> 
+> set_ssid()
+> {
+> 	if (mesh)
+> 		return mesh_set_ssid();
+> 	else
+> 		return cfg80211_wext_iwessid()
+> }
 
---=-h7gug7T6b4eXVh3jvSEd
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+The mesh interface is a completely separate netdev, with its own WEXT
+handler struct.  So we'd never be in that situation.
 
-Sorry to warm this up ...
+Dan
 
-> 1253527140.795498: State: COMPLETED -> AUTHENTICATING
-> 1253527140.795515: EAPOL: External notification - EAP success=3D0
-> 1253527140.795530: EAPOL: External notification - EAP fail=3D0
-> 1253527140.795542: EAPOL: External notification - portControl=3DAuto
-> 1253527140.795559: nl80211: Authenticate (ifindex=3D34)
-> 1253527140.795572:   * bssid=3D00:13:19:80:da:30
-> 1253527140.795587:   * freq=3D2412
-> 1253527140.795598:   * SSID - hexdump_ascii(len=3D5):
->      4d 4e 57 50 41                                    MNWPA
-> 1253527140.795630:   * IEs - hexdump(len=3D0): [NULL]
-> 1253527140.795643:   * Auth Type 0
-> 1253527140.795683: nl80211: Authentication request send successfully
-> 1253527140.795707: RTM_NEWLINK: operstate=3D1 ifi_flags=3D0x11043 ([UP][R=
-UNNING][LOWER_UP])
-> 1253527140.795725: RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
-> 1253527140.953161: nl80211: Event message available
-> 1253527140.953200: nl80211: MLME event 37
-> 1253527140.953216: SME: Authentication response: peer=3D00:13:19:80:da:30=
- auth_type=3D0 status_code=3D0
-> 1253527140.953243: Trying to associate with 00:13:19:80:da:30 (SSID=3D'MN=
-WPA' freq=3D2412 MHz)
-> 1253527140.953257: State: AUTHENTICATING -> ASSOCIATING
-> 1253527140.953270: wpa_driver_nl80211_set_operstate: operstate 1->0 (DORM=
-ANT)
-> 1253527140.953284: nl80211: Operstate: linkmode=3D-1, operstate=3D5
-> 1253527140.953901: nl80211: Associate (ifindex=3D34)
-> 1253527140.953919:   * bssid=3D00:13:19:80:da:30
-> 1253527140.953934:   * freq=3D2412
-> 1253527140.953945:   * SSID - hexdump_ascii(len=3D5):
->      4d 4e 57 50 41                                    MNWPA
-> 1253527140.953977:   * IEs - hexdump(len=3D24): dd 16 00 50 f2 01 01 00 0=
-0 50 f2 02 01 00 00 50 f2 02 01 00 00 50 f2 02
-> 1253527140.954064: nl80211: MLME command failed: ret=3D-114 (Operation al=
-ready in progress)
-> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^=
-^^^^^^^^^^^^^^^^
-> 1253527140.954086: Association request to the driver failed
-> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 1253527140.954113: RTM_NEWLINK: operstate=3D0 ifi_flags=3D0x11003 ([UP][L=
-OWER_UP])
-> 1253527140.954131: RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
->=20
->=20
-> The "Association request to the driver failed" will
-> be shown even without "-d". Also note that the association
-> seems to actually work, e.g. I can ping throught the
-> connection.
-
-Could this be related to the problem Maxim has been seeing? I'm not sure
-how else this could happen since you seem to auth but then assoc doesn't
-work, but I can't see how that could possibly happen.
-
-johannes
-
---=-h7gug7T6b4eXVh3jvSEd
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK0NT7AAoJEODzc/N7+Qma+6UP/2otK6Zlja3eDPTvQjg3RPFW
-vIy+SADz8Kbj6a/Vy0+tqqJ4c+PGF+z8RxJcM0keF2Tu86iLCVLIDf+teBQBbz01
-y3s+bbSUKo7llRbOgNXuVGtdtTOzSNE1oFxAV4aNyKLZmJljne3LQS5MOclHhcmU
-tKx2oKpa9lFkMfUlzhTWerGV7+eSp0T3ldURb5LGlQ+SrNwvLxqSq49349jGVyQe
-7l9n/mfF9ZAiEMc4dG+MUyYbXaF5KW8N5MR5z/31b/ggXto0TOOu0SA8hzcECvHk
-LqiRXwtnoP0XALT2OD/wx03t9MRgTpCQqHi4wPjPCjv6EfHVX7Dwnp9jNtPlk0wu
-pnfcGfPdv+/1rO0seJol69C0Qq517OmjWKeuInLjVrZYx9tNQnF2q4Gi7hNiouET
-IHN8PsIXHVJ342AHHBKldlvA/mulRkSzlivFyto4p2Pop0eGWjZ2C7Qij7S+5qu9
-6cUAPH3yS26vtjdU/zuenwgAKqnuhefuz5ZnJ/gUerHju/wl43uZHuNyjh3rJjVv
-yA1spbImcRFKv/kytN36gmP9YRHX4r3030UYXrRoB/A+Me8rDdarYBpw3J4HC3t4
-+JzO9sW8Zb5OdVlbwa8+UJwGCtXI3pj+X53g1ag5qWVEt7hLYZeq2B2jhZbHl9ed
-T975DpDjIYvhzmP/jczz
-=FN1h
------END PGP SIGNATURE-----
-
---=-h7gug7T6b4eXVh3jvSEd--
 
