@@ -1,81 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53124 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756113AbZJ3HAc (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.156]:1375 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751621AbZJWNVa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 03:00:32 -0400
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <200910292248.42229.bzolnier@gmail.com>
-References: <200910291212.41656.bzolnier@gmail.com>
-	 <200910291514.40318.bzolnier@gmail.com>
-	 <84144f020910291245l1a7a3fd6o8822ecd4ce3b5504@mail.gmail.com>
-	 <200910292248.42229.bzolnier@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-335pKOpeisFXftCMUz+K"
-Date: Fri, 30 Oct 2009 08:00:23 +0100
-Message-ID: <1256886023.3555.5.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 23 Oct 2009 09:21:30 -0400
+MIME-Version: 1.0
+In-Reply-To: <4AE1AC69.7010904@wpkg.org>
+References: <4AD21AB4.6010208@wpkg.org> <4AE1AC69.7010904@wpkg.org>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 23 Oct 2009 15:21:14 +0200
+Message-ID: <69e28c910910230621j2176813dpe7f77b7dff5b1b44@mail.gmail.com>
+Subject: Re: ath5k AP kernel panic when client uses SCP
+To: Tomasz Chmielewski <mangoo@wpkg.org>
+Cc: linux-wireless@vger.kernel.org, linux-netdev@vger.kernel.org,
+	linux-mips@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Oct 23, 2009 at 3:15 PM, Tomasz Chmielewski <mangoo@wpkg.org> wrote:
+> Bob Copeland wrote:
+>>
+>> CONFIG_DEBUG_INFO is the basic switch.  I don't know if MIPS needs
+>> CONFIG_FRAME_POINTER but that could help too.
+>
+> I don't see CONFIG_FRAME_POINTER available.
+> I compiled with CONFIG_DEBUG_INFO; let me know if I should enable some other
+> DEBUG options as well (see below what's enabled and available).
+>
+> Before it oopses, I see lots of order 0 page allocation failures (there are
+> some extra spaces at the end of each line due to the broken konsole in
+> KDE4):
+>
+> http://www1.wpkg.org/oops2.txt
+>
+>
+> Once, the device hanged without producing an oops (with lots of page
+> allocation failures before).
+>
+>
+> No clue about disassembling here, sorry.
+>
+>
+> # zgrep DEBUG /proc/config.gz
+>
+> # CONFIG_PCI_DEBUG is not set
+> # CONFIG_NETFILTER_DEBUG is not set
+> # CONFIG_NETFILTER_XT_MATCH_LAYER7_DEBUG is not set
+> CONFIG_CFG80211_REG_DEBUG=y
+> # CONFIG_CFG80211_DEBUGFS is not set
+> CONFIG_LIB80211_DEBUG=y
+> # CONFIG_MAC80211_DEBUGFS is not set
+> # CONFIG_MAC80211_DEBUG_MENU is not set
+> # CONFIG_DEBUG_DRIVER is not set
+> # CONFIG_DEBUG_DEVRES is not set
+> # CONFIG_MTD_DEBUG is not set
+> # CONFIG_SCSI_DEBUG is not set
+> # CONFIG_DM_DEBUG is not set
+> CONFIG_LIBERTAS_DEBUG=y
+> CONFIG_ATH5K_DEBUG=y
+> CONFIG_ATH9K_DEBUG=y
+> CONFIG_IPW2100_DEBUG=y
+> CONFIG_IPW2200_DEBUG=y
+> CONFIG_LIBIPW_DEBUG=y
+> CONFIG_IWLWIFI_DEBUG=y
+> CONFIG_B43_DEBUG=y
+> CONFIG_B43LEGACY_DEBUG=y
+> CONFIG_ZD1211RW_DEBUG=y
+> CONFIG_RT2X00_DEBUG=y
+> # CONFIG_HISAX_DEBUG is not set
+> # CONFIG_SSB_DEBUG is not set
+> # CONFIG_USB_DEBUG is not set
+> # CONFIG_USB_STORAGE_DEBUG is not set
+> # CONFIG_USB_SERIAL_DEBUG is not set
+> # CONFIG_JBD_DEBUG is not set
+> # CONFIG_JBD2_DEBUG is not set
+> # CONFIG_JFS_DEBUG is not set
+> # CONFIG_XFS_DEBUG is not set
+> # CONFIG_NTFS_DEBUG is not set
+> CONFIG_JFFS2_FS_DEBUG=0
+> # CONFIG_CIFS_DEBUG2 is not set
+> CONFIG_DEBUG_FS=y
+> CONFIG_DEBUG_KERNEL=y
+> CONFIG_DEBUG_SHIRQ=y
+> CONFIG_SCHED_DEBUG=y
+> # CONFIG_DEBUG_OBJECTS is not set
+> # CONFIG_DEBUG_SLAB is not set
+> # CONFIG_DEBUG_RT_MUTEXES is not set
+> # CONFIG_DEBUG_SPINLOCK is not set
+> # CONFIG_DEBUG_MUTEXES is not set
+> # CONFIG_DEBUG_LOCK_ALLOC is not set
+> # CONFIG_DEBUG_SPINLOCK_SLEEP is not set
+> # CONFIG_DEBUG_LOCKING_API_SELFTESTS is not set
+> # CONFIG_DEBUG_KOBJECT is not set
+> CONFIG_DEBUG_INFO=y
+> # CONFIG_DEBUG_VM is not set
+> # CONFIG_DEBUG_WRITECOUNT is not set
+> # CONFIG_DEBUG_MEMORY_INIT is not set
+> # CONFIG_DEBUG_LIST is not set
+> # CONFIG_DEBUG_SG is not set
+> # CONFIG_DEBUG_NOTIFIERS is not set
+> # CONFIG_DEBUG_BLOCK_EXT_DEVT is not set
+> # CONFIG_DYNAMIC_DEBUG is not set
+> # CONFIG_DEBUG_STACK_USAGE is not set
+> # CONFIG_RUNTIME_DEBUG is not set
+>
+>
+>> Another option in the absence of debug info is disassembling the
+>> Code: section of the oops and trying to find the corresponding
+>> code via objdump, but this only really works well if you have some
+>> idea which module is causing the error.
+>
+>
+>
+> --
+> Tomasz Chmielewski
+> http://wpkg.org
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
---=-335pKOpeisFXftCMUz+K
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Is CONFIG_KALLSYMS set?
 
-On Thu, 2009-10-29 at 22:48 +0100, Bartlomiej Zolnierkiewicz wrote:
-
-> I don't think that my technical arguments are pointless.
->=20
-> Quite the contrary, I'm pretty confident that addressing my review concer=
-ns
-> would result in better RT28x00 / RT30x0 support in the very near future.
-
-So you know how to make the driver better, whine that it doesn't work,
-but don't help out either. Hey, good way to collaborate!
-
-> > It should be pretty obvious by now that the best way to improve things
-> > is to work with the relevant maintainers, not against them. (Unless
-> > you wish your work to be ignored, of course.)
->=20
-> I work with a lot of other maintainers.  I would say that providing valua=
-ble
-> review feedback is also "working with" (at least I would be very happy wi=
-th
-> such feedback in my projects).
-
-Face it though, people have read your feedback, thought about it, and
-decided to disagree. You seem to have a childish problem with that,
-appealing to higher authority to get your way just makes you look more
-childish.
-
-johannes
-
---=-335pKOpeisFXftCMUz+K
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK6o8EAAoJEODzc/N7+QmaaEUP/1+5IZQZ/vYQSE+gl2XY7iMv
-wcTHFoHXMJf86vkyf+M0Zcsd3XJW+JSNUx79t4g+zCU4hSs+4+D9unL6QaqQn70H
-y1A/EOiNyIIVwNHhoCGcqisag7A0IdP/c6gRt54WXhpuDxHlYtF8mJcfo6+gJJdK
-pIuXQGYGtZyLxNi4FGtlue2lEd6qCB8YgLrw5YpgRL2xtRGOdbtY/FRjJmPo4uRe
-0oj0fSh6AUZlYaQQqXMwaDokc0G3M8EOYqY84OG6bjaAg0nph3F//k+iqoSMga/q
-9vgQ8oA7AW01jPvxJoJTVGPtP9QH35ky2aW13vkW/9DVqSwICXKuTyd7Dn4n/58h
-rdIYMVdFFKNIf1k6DrJJ5ThlonxagHwLdryep0PXfsS66Eghlqy965oLvTTgyEZf
-9lxVzdNa1dUgxM4RmthKUIVgnoFtTeodbt9W2wGtq6X42p0k+N/4sgoEf73fnOhD
-DNYbisodxRoF0le5f0S7yeI1jqJ1fxi/+RihuPeTj9r9K8K5eKFgKgYhR21/5VSQ
-w966U8uhPe6zpUyBXJ1S1wrYGvCsq17qwoB0M2fwNLpNL/5S+NFT26ObPFCbY3Fb
-XL+lmpID0F5vHssXazFgV5FFKhXMrkII82TCgrAiVqlTUBR3zs6OsjZ8CSO9rFOE
-pgwxcnPPDViFv2tuArtE
-=R5ER
------END PGP SIGNATURE-----
-
---=-335pKOpeisFXftCMUz+K--
-
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
