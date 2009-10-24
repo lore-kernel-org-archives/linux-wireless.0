@@ -1,84 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:24341 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752032AbZJWUme (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 16:42:34 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 04/18] iwlwifi: separate led function from statistic notification
-Date: Fri, 23 Oct 2009 13:42:22 -0700
-Message-Id: <1256330556-20997-5-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
-References: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-gx0-f216.google.com ([209.85.217.216]:40852 "EHLO
+	mail-gx0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751607AbZJXCgo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Oct 2009 22:36:44 -0400
+Message-ID: <4AE2683D.4020000@gmail.com>
+Date: Fri, 23 Oct 2009 22:36:45 -0400
+From: Miles Lane <miles.lane@gmail.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: 2.6.32-rc5-git3 -- EIP is at cfg80211_conn_work+0x73/0xd6 [cfg80211]
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Let me know if you need my .config
 
-Detach led background task from statistic notification routine. if led
-blinking is required; the blink rate is based on the traffic condition.
-It do not relate to statistics notification. In addition to that, there is
-not a requirement for statistics notification has to occur all the time.
+*pde = 00000000
+Modules linked in: ipv6 af_packet iptable_filter snd_hda_codec_realtek ip_tables snd_hda_intel snd_hda_codec snd_hwdep snd_pcm_oss snd_mixer_oss snd_pcm ath9k rtc_cmos uvcvideo eeepc_laptop mac80211 snd_timer rtc_core hwmon videodev ath cfg80211 v4l1_compat rtc_lib rfkill snd_page_alloc rng_core battery ac led_class pci_hotplug processor fan sg sd_mod ehci_hcd atl1e uhci_hcd thermal
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c |    2 --
- drivers/net/wireless/iwlwifi/iwl-agn.c  |    2 ++
- drivers/net/wireless/iwlwifi/iwl-rx.c   |    3 ---
- 3 files changed, 2 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 7142aa5..269b988 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -359,8 +359,6 @@ void iwl3945_hw_rx_statistics(struct iwl_priv *priv,
- 		     le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK);
- 
- 	memcpy(&priv->statistics_39, pkt->u.raw, sizeof(priv->statistics_39));
--
--	iwl_leds_background(priv);
- }
- 
- /******************************************************************************
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 64d9187..a34acb7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1019,6 +1019,7 @@ static void iwl_irq_tasklet_legacy(struct iwl_priv *priv)
- 	if (inta & (CSR_INT_BIT_FH_RX | CSR_INT_BIT_SW_RX)) {
- 		iwl_rx_handle(priv);
- 		priv->isr_stats.rx++;
-+		iwl_leds_background(priv);
- 		handled |= (CSR_INT_BIT_FH_RX | CSR_INT_BIT_SW_RX);
- 	}
- 
-@@ -1220,6 +1221,7 @@ static void iwl_irq_tasklet(struct iwl_priv *priv)
- 				    CSR_INT_PERIODIC_ENA);
- 
- 		priv->isr_stats.rx++;
-+		iwl_leds_background(priv);
- 	}
- 
- 	if (inta & CSR_INT_BIT_FH_TX) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 0a407f7..cfc31ae 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -627,9 +627,6 @@ void iwl_rx_statistics(struct iwl_priv *priv,
- 		iwl_rx_calc_noise(priv);
- 		queue_work(priv->workqueue, &priv->run_time_calib_work);
- 	}
--
--	iwl_leds_background(priv);
--
- 	if (priv->cfg->ops->lib->temp_ops.temperature && change)
- 		priv->cfg->ops->lib->temp_ops.temperature(priv);
- }
--- 
-1.5.6.3
-
+Pid: 10, comm: events/1 Not tainted (2.6.32-rc5-git3 #4) 1000HE
+EIP: 0060:[<f858ac49>] EFLAGS: 00010246 CPU: 1
+EIP is at cfg80211_conn_work+0x73/0xd6 [cfg80211]
+EAX: 00000000 EBX: f71ae5e8 ECX: 00000000 EDX: c16754e4
+ESI: ead9c0c4 EDI: ead9c000 EBP: f7136f34 ESP: f7136f20
+  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+  ead9c084 ead9c00c c2e09700 ead9c164 f7136f94 f7136fa0 c103d5f5 00000000
+<0> 00000002 00000000 c103d5b3 f7136f88 f7146c50 f7146900 f7146900 c2e09724
+<0> c2e0971c f858abd6 ead9c148 f7146900 c2e09700 00000000 f7146900 c1040721
+  [<c103d5f5>] ? worker_thread+0x161/0x233
+  [<c103d5b3>] ? worker_thread+0x11f/0x233
+  [<f858abd6>] ? cfg80211_conn_work+0x0/0xd6 [cfg80211]
+  [<c1040721>] ? autoremove_wake_function+0x0/0x2f
+  [<c103d494>] ? worker_thread+0x0/0x233
+  [<c1040527>] ? kthread+0x5f/0x64
+  [<c10404c8>] ? kthread+0x0/0x64
+  [<c1003e9f>] ? kernel_thread_helper+0x7/0x1a
+---[ end trace b24f325f9540f193 ]---
