@@ -1,36 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:57060 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752011AbZJUFiG (ORCPT
+Received: from mail-vw0-f184.google.com ([209.85.212.184]:36090 "EHLO
+	mail-vw0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751758AbZJXSzG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2009 01:38:06 -0400
-Received: by ewy3 with SMTP id 3so5640584ewy.17
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 22:38:09 -0700 (PDT)
-From: Kunal Gangakhedkar <kunal.gangakhedkar@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [ath9k-devel] Test for N-mode from userspace?
-Date: Wed, 21 Oct 2009 11:07:57 +0530
-Cc: austinxxh-ath9k@yahoo.com, ath9k-devel@lists.ath9k.org,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <200910202112.30660.kunal.gangakhedkar@gmail.com> <411169.20125.qm@web55305.mail.re4.yahoo.com> <43e72e890910201620l3e475630wbde71f34fca3b6df@mail.gmail.com>
-In-Reply-To: <43e72e890910201620l3e475630wbde71f34fca3b6df@mail.gmail.com>
+	Sat, 24 Oct 2009 14:55:06 -0400
+Received: by vws14 with SMTP id 14so651484vws.33
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2009 11:55:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <200910211107.58111.kunal.gangakhedkar@gmail.com>
+Date: Sat, 24 Oct 2009 20:55:09 +0200
+Message-ID: <133e8d7e0910241155x4496b156p3c5d03450a71936a@mail.gmail.com>
+Subject: [PATCH] mac80211: fix for incorrect sequence number on hostapd
+	injected frames
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jouni Malinen <j@w1.fi>, Joerg Pommnitz <pommnitz@yahoo.com>,
+	Will Dyson <will.dyson@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 21 Oct 2009 4:50:18 am Luis R. Rodriguez wrote:
-> On Wed, Oct 21, 2009 at 2:28 AM, xxiao <austinxxh-ath9k@yahoo.com> wrote:
-> > interesting, why is MCS range just 0-7, which means no HT?
->
-> MCS 1-7 is for single stream devices.
->
-> http://wireless.kernel.org/en/developers/Documentation/ieee80211/802.11n
+When hostapd injects a frame, e.g. an authentication or association
+response, mac80211 looks for a suitable access point virtual interface
+to associate the frame with based on its source address. This makes it
+possible e.g. to correctly assign sequence numbers to the frames.
 
-So, does this mean that I can use N-mode on this device?
-That would be really great, if possible :)
+A small typo in the ethernet address comparison statement caused a
+failure to find a suitable ap interface. Sequence numbers on such
+frames where therefore left unassigned causing some clients
+(especially windows-based 11b/g clients) to reject them and fail to
+authenticate or associate with the access point. This patch fixes the
+typo in the address comparison statement.
 
-Thanks,
-Kunal
+Signed-off-by: Björn Smedman <bjorn.smedman@venatech.se>
+---
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index db4bda6..eaa4118 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1445,7 +1445,7 @@ static void ieee80211_xmit(struct
+ieee80211_sub_if_data *sdata,
+                                if (tmp_sdata->vif.type != NL80211_IFTYPE_AP)
+                                        continue;
+                                if (compare_ether_addr(tmp_sdata->dev->dev_addr,
+-                                                      hdr->addr2)) {
++                                                      hdr->addr2) == 0) {
+                                        dev_hold(tmp_sdata->dev);
+                                        dev_put(sdata->dev);
+                                        sdata = tmp_sdata;
