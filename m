@@ -1,100 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:12657 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758177AbZJBUts (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2009 16:49:48 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Jay Sternberg <jay.e.sternberg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>, stable@kernel.org
-Subject: [PATCH 01/13 v2.6.31, v2.6.32 and w-t] iwlwifi: incorrect method used for finding valid OTP blocks
-Date: Fri,  2 Oct 2009 13:43:55 -0700
-Message-Id: <1254516247-4085-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1254516247-4085-1-git-send-email-reinette.chatre@intel.com>
-References: <1254516247-4085-1-git-send-email-reinette.chatre@intel.com>
+Received: from mx03.syneticon.net ([78.111.66.105]:40050 "EHLO
+	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751771AbZJXSK5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Oct 2009 14:10:57 -0400
+Message-ID: <4AE3431C.2000201@wpkg.org>
+Date: Sat, 24 Oct 2009 20:10:36 +0200
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-net@vger.kernel.org,
+	linux-mips@vger.kernel.org
+Subject: Re: ath5k AP kernel panic when client uses SCP
+References: <4AD21AB4.6010208@wpkg.org> <4AE1AC69.7010904@wpkg.org> <69e28c910910230621j2176813dpe7f77b7dff5b1b44@mail.gmail.com> <4AE1AE74.4020600@wpkg.org> <4AE2EC3E.3000503@wpkg.org> <20091024125217.GA31897@hash.localnet> <4AE31CFC.1080803@wpkg.org> <20091024160938.GC31897@hash.localnet>
+In-Reply-To: <20091024160938.GC31897@hash.localnet>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jay Sternberg <jay.e.sternberg@intel.com>
+Bob Copeland wrote:
+> On Sat, Oct 24, 2009 at 05:27:56PM +0200, Tomasz Chmielewski wrote:
+>> Hmm, I get:
+>>
+>> 00000000 <skb_gso_segment>
+>>
+>> So I better leave the files here:
+>>
+>> http://www1.wpkg.org/skb_gso_segment/
+> 
+> So, do you only get this WARN() once before things go downhill?
 
-The address stored in the next link address is a word address but when
-reading the OTP blocks, a byte address is used. Also if the blocks are
-full and the last link pointer is not zero, then none of the blocks are
-valid so return an error.
+Here is everything the system said after being powered on, including all 
+page allocation failures and the final oops:
 
-The algorithm is simply valid blocks have a next address and that
-address's contents is zero.
+http://www1.wpkg.org/skb_gso_segment/minicom.txt
 
-Using the wrong address for the next link address gets arbitrary data,
-obviously. In cases seen, the first block is considered valid when it is not.
-
-If the block has in fact been invalidated there may be old data or
-there may be no data, bad data, or partial data, there is no way of
-telling. Without this patch it is possible that a device with valid OTP data
-is unable to work.
-
-Signed-off-by: Jay Sternberg <jay.e.sternberg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-CC: stable@kernel.org
----
- drivers/net/wireless/iwlwifi/iwl-eeprom.c |   23 +++++++++++------------
- 1 files changed, 11 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-index 3d2b93a..e14c995 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-@@ -410,7 +410,6 @@ static int iwl_find_otp_image(struct iwl_priv *priv,
- 					u16 *validblockaddr)
- {
- 	u16 next_link_addr = 0, link_value = 0, valid_addr;
--	int ret = 0;
- 	int usedblocks = 0;
- 
- 	/* set addressing mode to absolute to traverse the link list */
-@@ -430,29 +429,29 @@ static int iwl_find_otp_image(struct iwl_priv *priv,
- 		 * check for more block on the link list
- 		 */
- 		valid_addr = next_link_addr;
--		next_link_addr = link_value;
-+		next_link_addr = link_value * sizeof(u16);
- 		IWL_DEBUG_INFO(priv, "OTP blocks %d addr 0x%x\n",
- 			       usedblocks, next_link_addr);
- 		if (iwl_read_otp_word(priv, next_link_addr, &link_value))
- 			return -EINVAL;
- 		if (!link_value) {
- 			/*
--			 * reach the end of link list,
-+			 * reach the end of link list, return success and
- 			 * set address point to the starting address
- 			 * of the image
- 			 */
--			goto done;
-+			*validblockaddr = valid_addr;
-+			/* skip first 2 bytes (link list pointer) */
-+			*validblockaddr += 2;
-+			return 0;
- 		}
- 		/* more in the link list, continue */
- 		usedblocks++;
--	} while (usedblocks < priv->cfg->max_ll_items);
--	/* OTP full, use last block */
--	IWL_DEBUG_INFO(priv, "OTP is full, use last block\n");
--done:
--	*validblockaddr = valid_addr;
--	/* skip first 2 bytes (link list pointer) */
--	*validblockaddr += 2;
--	return ret;
-+	} while (usedblocks <= priv->cfg->max_ll_items);
-+
-+	/* OTP has no valid blocks */
-+	IWL_DEBUG_INFO(priv, "OTP has no valid blocks\n");
-+	return -EINVAL;
- }
- 
- /**
+(and it looks slightly different than the last time).
 -- 
-1.5.6.3
-
+Tomasz Chmielewski
+http://wpkg.org
