@@ -1,43 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web23102.mail.ird.yahoo.com ([217.146.189.42]:20455 "HELO
-	web23102.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751739AbZJ2HIr convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 03:08:47 -0400
-Message-ID: <984452.43367.qm@web23102.mail.ird.yahoo.com>
-Date: Thu, 29 Oct 2009 07:08:50 +0000 (GMT)
-From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
-Subject: Re: LinuxUSB_AR2524-3.0.0.56_2009May_pathset
-To: daniel.schmitt@udo.edu
-Cc: zd1211-devs@lists.sourceforge.net, linux-wireless@vger.kernel.org
-In-Reply-To: <375b18c40b54ff9adc56af39431b864e.squirrel@unimail.uni-dortmund.de>
+Received: from bu3sch.de ([62.75.166.246]:34880 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751545AbZJXPcj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Oct 2009 11:32:39 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Bob Copeland <me@bobcopeland.com>
+Subject: Re: ath5k: no further txbuf available, dropping packet
+Date: Sat, 24 Oct 2009 17:32:38 +0200
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
+References: <200910231608.18676.mb@bu3sch.de> <20091024131929.GB31897@hash.localnet> <200910241705.39104.mb@bu3sch.de>
+In-Reply-To: <200910241705.39104.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200910241732.40651.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Thu, 29/10/09, Daniel Schmitt <daniel.schmitt@udo.edu> wrote:
-
-> Hello Hin-Tak,
+On Saturday 24 October 2009 17:05:37 Michael Buesch wrote:
+> On Saturday 24 October 2009 15:19:29 Bob Copeland wrote:
+> > On Fri, Oct 23, 2009 at 04:08:16PM +0200, Michael Buesch wrote:
+> > > ath5k breaks in AP mode after some operation time and keeps throwing
+> > > this message:
+> > > 
+> > > [2096249.446071] ath5k phy0: no further txbuf available, dropping packet
+> > > 
+> > > Driver is yesterday's compat-wireless on 2.6.31.1
+> > 
+> > Ok looked a bit more at this.  I don't see a leak, but I think the
+> > txbufs aren't getting reaped.  Otherwise, we should reenable the queues
+> > when we get back 40 TX completion interrupts.
+> > 
+> > I'm a bit short on time to track it down, but one thing to try is
+> > commenting out the following from ath5k_beacon_send (will break buffering
+> > but you can test non-ps clients):
+> > 
+> >         skb = ieee80211_get_buffered_bc(sc->hw, sc->vif);
+> >         while (skb) {
+> >                 ath5k_tx_queue(sc->hw, skb, sc->cabq);
+> >                 skb = ieee80211_get_buffered_bc(sc->hw, sc->vif);
+> >         }
+> > 
 > 
-> this URL does not work either:
-> http://htl10.users.sourceforge.net/LinuxUSB_AR2524-3.0.0.56_2009May_pathset/
-> 
-> Can you please mail me a .tar.bz-archive of the patches you
-> did for the
-> ZD1211 3.00 Vendor driver?
-> I want to get AP mode running and this doesn't work with
-> zd1211rw driver.
-> 
-> Thanks,
-> Daniel
-> 
+> I didn't try this, yet, but PS buffering seems to be broken anyway.
+> If I connect the n810 (which does PS) to the ath5k AP, I cannot ping
+> the n810 unless I also transfer (ping) _from_ the n810 simultaneously.
+> I did not monitor the traffic, yet, but to me it seems the AP is unable
+> to notify that the PS device should wake up (TIM problems?). By pinging from
+> the n810, I frequently force-wakeup the device, so traffic to the device
+> also works (more or less).
 > 
 
-Sorry, I moved it slightly:
-http://htl10.users.sourceforge.net/patchsets/LinuxUSB_AR2524-3.0.0.56/
+Ok on the monitor log it looks like the ath5k AP simply sends data while
+the STA is in PS, instead of buffering it and updating the TIM.
+So if I ping the STA, it keeps sending packets and doesn't set the TIM,
+but don't get any repsonse of course, because the STA is power saving.
+If I simultaneously ping from the STA, the buffering and TIM handling suddenly
+seems to start working. The AP indicates traffic via TIM and the STA sends PS polls.
 
-and withdrawn patch 04 (which I inherit from somebody), which seems to be not needed and breaks 64-bit platform; there were also two new patches which ports it forward to 2.6.30/2.6.31 since I last wrote.
-
-
-      
+-- 
+Greetings, Michael.
