@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:46814 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754091AbZJGUZ3 (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3461 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753333AbZJXNUD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 16:25:29 -0400
-Received: by mail-iw0-f178.google.com with SMTP id 8so3038179iwn.33
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2009 13:25:18 -0700 (PDT)
+	Sat, 24 Oct 2009 09:20:03 -0400
+Date: Sat, 24 Oct 2009 09:19:29 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ath5k: no further txbuf available, dropping packet
+Message-ID: <20091024131929.GB31897@hash.localnet>
+References: <200910231608.18676.mb@bu3sch.de>
 MIME-Version: 1.0
-In-Reply-To: <20091007194148.GC22394@tuxdriver.com>
-References: <1254876274-1145-1-git-send-email-lrodriguez@atheros.com>
-	<1254876274-1145-8-git-send-email-lrodriguez@atheros.com>
-	<20091007194148.GC22394@tuxdriver.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 7 Oct 2009 16:24:58 -0400
-Message-ID: <43e72e890910071324gba410cek3b8e5cb86311af38@mail.gmail.com>
-Subject: Re: [PATCH 7/7] ath5k: enable Power-Save Polls by setting the
-	association ID
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200910231608.18676.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 7, 2009 at 3:41 PM, John W. Linville <linville@tuxdriver.com> wrote:
-> On Tue, Oct 06, 2009 at 08:44:34PM -0400, Luis R. Rodriguez wrote:
->> mac80211 has long provided us the association ID. This isn't useful except
->> for Power-Save polling which now gets enabled. We can now poll for our
->> pending frames on the AP during power save.
->>
->> You can review the details of Power-Save on the wireless wiki:
->>
->> http://wireless.kernel.org/en/developers/Documentation/ieee80211/power-savings
->>
->> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->
-> Nice try, but how is this a fix? :-)
+On Fri, Oct 23, 2009 at 04:08:16PM +0200, Michael Buesch wrote:
+> ath5k breaks in AP mode after some operation time and keeps throwing
+> this message:
+> 
+> [2096249.446071] ath5k phy0: no further txbuf available, dropping packet
+> 
+> Driver is yesterday's compat-wireless on 2.6.31.1
 
-It isn't -- by no means do I want this in for 2.6.32, sorry if I was
-misleading. Its a regression as things *used* to work :) but yeah not
-a regression for 2.6.32.
+Ok looked a bit more at this.  I don't see a leak, but I think the
+txbufs aren't getting reaped.  Otherwise, we should reenable the queues
+when we get back 40 TX completion interrupts.
 
-  Luis
+I'm a bit short on time to track it down, but one thing to try is
+commenting out the following from ath5k_beacon_send (will break buffering
+but you can test non-ps clients):
+
+        skb = ieee80211_get_buffered_bc(sc->hw, sc->vif);
+        while (skb) {
+                ath5k_tx_queue(sc->hw, skb, sc->cabq);
+                skb = ieee80211_get_buffered_bc(sc->hw, sc->vif);
+        }
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
