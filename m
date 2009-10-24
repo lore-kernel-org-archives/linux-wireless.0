@@ -1,188 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isilmar.linta.de ([213.133.102.198]:59579 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753781AbZJRXOs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Oct 2009 19:14:48 -0400
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: <linux-pcmcia@lists.infradead.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	"David S. Miller" <davem@davemloft.net>,
+Received: from web53903.mail.re2.yahoo.com ([206.190.36.126]:23169 "HELO
+	web53903.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753698AbZJXNvX convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Oct 2009 09:51:23 -0400
+Message-ID: <177253.23325.qm@web53903.mail.re2.yahoo.com>
+Date: Sat, 24 Oct 2009 06:44:31 -0700 (PDT)
+From: Frederik Nosi <fredin77@yahoo.com>
+Subject: iwl3945, after a while stops working with "No space for Tx"
+To: Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 2/9] pcmcia: use pre-determined values
-Date: Mon, 19 Oct 2009 01:07:28 +0200
-Message-Id: <1255907255-28297-2-git-send-email-linux@dominikbrodowski.net>
-In-Reply-To: <1255907255-28297-1-git-send-email-linux@dominikbrodowski.net>
-References: <1255907255-28297-1-git-send-email-linux@dominikbrodowski.net>
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A few PCMCIA network drivers can make use of values provided by the pcmcia
-core, instead of tedious, independent CIS parsing.
+Hi,
+first sorry if somebody is not the right contact, got the adressess from ./scripts/get_maintainer.pl -f drivers/net/wireless/iwlwifi.
+>From some kernel versions now, after some time that im using this card it stops working and on messages i get this errors:
 
-xirc32ps_cs.c: manf_id
+Oct 24 14:38:24 kotys NetworkManager: <info>  Activation (wlan0) Stage 5 of 5 (IP Configure Commit) complete.
+[snip pulseaudio's stuppid log spam warning]
+Oct 24 14:40:07 kotys kernel: iwl3945 0000:04:00.0: Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+Oct 24 14:40:09 kotys pulseaudio[16469]: sap.c: sendmsg() failed: Invalid argument
+Oct 24 14:40:10 kotys kernel: iwl3945 0000:04:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
+Oct 24 14:40:11 kotys kernel: iwl3945 0000:04:00.0: Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+Oct 24 14:40:11 kotys kernel: iwl3945 0000:04:00.0: Error sending POWER_TABLE_CMD: time out after 500ms.
+Oct 24 14:40:14 kotys kernel: iwl3945 0000:04:00.0: set power fail, ret = -110
+Oct 24 14:40:14 kotys kernel: No probe response from AP 00:1c:df:82:63:c9 after 500ms, disconnecting.
+Oct 24 14:40:14 kotys NetworkManager: <info>  (wlan0): supplicant connection state:  completed -> disconnected
+Oct 24 14:40:14 kotys NetworkManager: <info>  (wlan0): supplicant connection state:  disconnected -> scanning
+Oct 24 14:40:14 kotys pulseaudio[16469]: sap.c: sendmsg() failed: Invalid argument
+Oct 24 14:40:14 kotys kernel: iwl3945 0000:04:00.0: Error sending REPLY_RXON: time out after 500ms.
+Oct 24 14:40:14 kotys kernel: iwl3945 0000:04:00.0: Error setting new configuration (-110).
+Oct 24 14:40:15 kotys kernel: iwl3945 0000:04:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
+Oct 24 14:40:15 kotys kernel: wlan0: direct probe to AP 00:1c:df:82:63:c9 (try 1)
+Oct 24 14:40:15 kotys NetworkManager: <info>  (wlan0): supplicant connection state:  scanning -> associating
+Oct 24 14:40:15 kotys kernel: wlan0: direct probe to AP 00:1c:df:82:63:c9 (try 2)
+Oct 24 14:40:15 kotys kernel: wlan0: direct probe to AP 00:1c:df:82:63:c9 (try 3)
+Oct 24 14:40:15 kotys kernel: iwl3945 0000:04:00.0: Error sending REPLY_RXON: time out after 500ms.
+Oct 24 14:40:15 kotys kernel: iwl3945 0000:04:00.0: Error setting new configuration (-110).
+Oct 24 14:40:15 kotys kernel: wlan0: direct probe to AP 00:1c:df:82:63:c9 timed out
+Oct 24 14:40:16 kotys kernel: iwl3945 0000:04:00.0: Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+Oct 24 14:40:16 kotys kernel: iwl3945 0000:04:00.0: Error sending REPLY_RXON: time out after 500ms.
+Oct 24 14:40:16 kotys kernel: iwl3945 0000:04:00.0: Error setting new configuration (-110).
 
-hostap_cs.c: multifunction count
 
-b43/pcmcia.c: ConfigBase address and "Present"
+When this happens i am able to use the card only after reloading the related modules, iwl3945 ecc. But the problem happens again after some minutes that im connected.
 
-smc91c92_cs.c:  By default, mhz_setup() can use VERS_1 as it is stored
-in struct pcmcia_device. Only some cards require workarounds, such as
-reading out VERS_1 twice.
+Kernel is 2.6.32-rc5 but his started happening around 2.6.31, not sure exactly what version as i update kernel often. Firmware is iwl3945-ucode-15.32.2.9.
 
-CC: David S. Miller <davem@davemloft.net>
-CC: John W. Linville <linville@tuxdriver.com>
-CC: netdev@vger.kernel.org
-CC: linux-wireless@vger.kernel.org
-Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
----
- drivers/net/pcmcia/smc91c92_cs.c        |   11 +++++++++--
- drivers/net/pcmcia/xirc2ps_cs.c         |    5 ++---
- drivers/net/wireless/b43/pcmcia.c       |   20 --------------------
- drivers/net/wireless/hostap/hostap_cs.c |   21 +--------------------
- 4 files changed, 12 insertions(+), 45 deletions(-)
+Every other info that you need just ask. I hope i dont have to bisect as this is the laptop i use for work too, but if it's needed i'll do.
 
-diff --git a/drivers/net/pcmcia/smc91c92_cs.c b/drivers/net/pcmcia/smc91c92_cs.c
-index 7bde2cd..af03759 100644
---- a/drivers/net/pcmcia/smc91c92_cs.c
-+++ b/drivers/net/pcmcia/smc91c92_cs.c
-@@ -545,6 +545,14 @@ static int mhz_setup(struct pcmcia_device *link)
-     u_char *buf, *station_addr;
-     int rc;
- 
-+    /* Read the station address from the CIS.  It is stored as the last
-+       (fourth) string in the Version 1 Version/ID tuple. */
-+    if ((link->prod_id[3]) &&
-+	(cvt_ascii_address(dev, link->prod_id[3]) == 0))
-+	    return 0;
-+
-+    /* Workarounds for broken cards start here. */
-+
-     cfg_mem = kmalloc(sizeof(struct smc_cfg_mem), GFP_KERNEL);
-     if (!cfg_mem)
- 	return -1;
-@@ -557,8 +565,7 @@ static int mhz_setup(struct pcmcia_device *link)
-     tuple->TupleData = (cisdata_t *)buf;
-     tuple->TupleDataMax = 255;
- 
--    /* Read the station address from the CIS.  It is stored as the last
--       (fourth) string in the Version 1 Version/ID tuple. */
-+    /* Ugh -- the EM1144 card has two VERS_1 tuples!?! */
-     tuple->DesiredTuple = CISTPL_VERS_1;
-     if (first_tuple(link, tuple, parse) != 0) {
- 	rc = -1;
-diff --git a/drivers/net/pcmcia/xirc2ps_cs.c b/drivers/net/pcmcia/xirc2ps_cs.c
-index cf84231..3dd6ba6 100644
---- a/drivers/net/pcmcia/xirc2ps_cs.c
-+++ b/drivers/net/pcmcia/xirc2ps_cs.c
-@@ -792,13 +792,12 @@ xirc2ps_config(struct pcmcia_device * link)
-     tuple.TupleOffset = 0;
- 
-     /* Is this a valid	card */
--    tuple.DesiredTuple = CISTPL_MANFID;
--    if ((err=first_tuple(link, &tuple, &parse))) {
-+    if (link->has_manf_id == 0) {
- 	printk(KNOT_XIRC "manfid not found in CIS\n");
- 	goto failure;
-     }
- 
--    switch(parse.manfid.manf) {
-+    switch (link->manf_id) {
-       case MANFID_XIRCOM:
- 	local->manf_str = "Xircom";
- 	break;
-diff --git a/drivers/net/wireless/b43/pcmcia.c b/drivers/net/wireless/b43/pcmcia.c
-index 6c3a749..cd14b7e 100644
---- a/drivers/net/wireless/b43/pcmcia.c
-+++ b/drivers/net/wireless/b43/pcmcia.c
-@@ -65,35 +65,15 @@ static int __devinit b43_pcmcia_probe(struct pcmcia_device *dev)
- 	struct ssb_bus *ssb;
- 	win_req_t win;
- 	memreq_t mem;
--	tuple_t tuple;
--	cisparse_t parse;
- 	int err = -ENOMEM;
- 	int res = 0;
--	unsigned char buf[64];
- 
- 	ssb = kzalloc(sizeof(*ssb), GFP_KERNEL);
- 	if (!ssb)
- 		goto out_error;
- 
- 	err = -ENODEV;
--	tuple.DesiredTuple = CISTPL_CONFIG;
--	tuple.Attributes = 0;
--	tuple.TupleData = buf;
--	tuple.TupleDataMax = sizeof(buf);
--	tuple.TupleOffset = 0;
- 
--	res = pcmcia_get_first_tuple(dev, &tuple);
--	if (res != 0)
--		goto err_kfree_ssb;
--	res = pcmcia_get_tuple_data(dev, &tuple);
--	if (res != 0)
--		goto err_kfree_ssb;
--	res = pcmcia_parse_tuple(&tuple, &parse);
--	if (res != 0)
--		goto err_kfree_ssb;
--
--	dev->conf.ConfigBase = parse.config.base;
--	dev->conf.Present = parse.config.rmask[0];
- 	dev->conf.Attributes = CONF_ENABLE_IRQ;
- 	dev->conf.IntType = INT_MEMORY_AND_IO;
- 
-diff --git a/drivers/net/wireless/hostap/hostap_cs.c b/drivers/net/wireless/hostap/hostap_cs.c
-index ad8eab4..31b60dd 100644
---- a/drivers/net/wireless/hostap/hostap_cs.c
-+++ b/drivers/net/wireless/hostap/hostap_cs.c
-@@ -274,9 +274,6 @@ static int sandisk_enable_wireless(struct net_device *dev)
- 	conf_reg_t reg;
- 	struct hostap_interface *iface = netdev_priv(dev);
- 	local_info_t *local = iface->local;
--	tuple_t tuple;
--	cisparse_t *parse = NULL;
--	u_char buf[64];
- 	struct hostap_cs_priv *hw_priv = local->hw_priv;
- 
- 	if (hw_priv->link->io.NumPorts1 < 0x42) {
-@@ -285,28 +282,13 @@ static int sandisk_enable_wireless(struct net_device *dev)
- 		goto done;
- 	}
- 
--	parse = kmalloc(sizeof(cisparse_t), GFP_KERNEL);
--	if (parse == NULL) {
--		ret = -ENOMEM;
--		goto done;
--	}
--
--	tuple.Attributes = TUPLE_RETURN_COMMON;
--	tuple.TupleData = buf;
--	tuple.TupleDataMax = sizeof(buf);
--	tuple.TupleOffset = 0;
--
- 	if (hw_priv->link->manf_id != 0xd601 || hw_priv->link->card_id != 0x0101) {
- 		/* No SanDisk manfid found */
- 		ret = -ENODEV;
- 		goto done;
- 	}
- 
--	tuple.DesiredTuple = CISTPL_LONGLINK_MFC;
--	if (pcmcia_get_first_tuple(hw_priv->link, &tuple) ||
--	    pcmcia_get_tuple_data(hw_priv->link, &tuple) ||
--	    pcmcia_parse_tuple(&tuple, parse) ||
--		parse->longlink_mfc.nfn < 2) {
-+	if (hw_priv->link->socket->functions < 2) {
- 		/* No multi-function links found */
- 		ret = -ENODEV;
- 		goto done;
-@@ -354,7 +336,6 @@ static int sandisk_enable_wireless(struct net_device *dev)
- 	udelay(10);
- 
- done:
--	kfree(parse);
- 	return ret;
- }
- 
--- 
-1.6.0.4
+I'm not subscribed on any ML, so in case please cc me.
 
+Thanks for all the work!
+
+F.
+
+
+
+      
