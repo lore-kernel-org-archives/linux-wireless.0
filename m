@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45158 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756642AbZJ0TbO (ORCPT
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:56085 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753609AbZJYSzJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2009 15:31:14 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wl1251: re-disable PG10 chips
-Date: Tue, 27 Oct 2009 15:17:05 -0400
-Message-Id: <1256671025-26126-1-git-send-email-linville@tuxdriver.com>
+	Sun, 25 Oct 2009 14:55:09 -0400
+Received: by pwj9 with SMTP id 9so964595pwj.21
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2009 11:55:14 -0700 (PDT)
+Message-ID: <4AE49F0F.1060901@lwfinger.net>
+Date: Sun, 25 Oct 2009 13:55:11 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: wireless <linux-wireless@vger.kernel.org>
+Subject: Rate-setting problem with Broadcom 4315
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"wl1251: add support for PG11 chips." accidentally enabled PG10 chips as
-well...
+When my BCM4312 (ID 4315) runs in auto rate mode, the rate stays at
+1Mb/s. If I manually set the rate, I see a tcpperf throughput ~1/2 the
+rate that I set through a rate of 12 Mb/s. At 36 Mb/s, the rate is
+best at 15.7 Mb/s. Why does mistrel not increase the rate?
 
-Reported-by: Kalle Valo <kalle.valo@iki.fi>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/wl12xx/wl1251_main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+The output of /sys/..../rc_stats is:
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index ec01e9d..48b0bfd 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -183,11 +183,11 @@ static int wl1251_chip_wakeup(struct wl1251 *wl)
- 		wl1251_debug(DEBUG_BOOT, "chip id 0x%x (1251 PG12)",
- 			     wl->chip_id);
- 		break;
--	case CHIP_ID_1251_PG10:
- 	case CHIP_ID_1251_PG11:
- 		wl1251_debug(DEBUG_BOOT, "chip id 0x%x (1251 PG11)",
- 			     wl->chip_id);
- 		break;
-+	case CHIP_ID_1251_PG10:
- 	default:
- 		wl1251_error("unsupported chip id: 0x%x", wl->chip_id);
- 		ret = -ENODEV;
--- 
-1.6.2.5
+finger@larrylap:~> cat
+/sys/kernel/debug/ieee80211/phy0/stations/00:14:bf:85:49:fa/rc_stats
+rate     throughput  ewma prob   this prob  this succ/attempt
+success    attempts
+     1         0.9       99.1      100.0          0(  0)       3244
+     3282
+     2         1.8       95.7      100.0          0(  0)         12
+       12
+     5.5       4.8       95.7      100.0          0(  0)         12
+       12
+    11         9.2       96.8      100.0          0(  0)         12
+       12
+  P  6         5.6       99.9      100.0          0(  0)         58
+       58
+     9         8.0       95.7      100.0          0(  0)         11
+       11
+    12        10.6       95.7      100.0          0(  0)         12
+       12
+    18        15.7       96.6      100.0          0(  0)         14
+       15
+    24        20.3       95.7      100.0          0(  0)         11
+       11
+    36        29.0       95.4       94.5          0(  0)       1602
+     1670
+T   48        38.7       99.2      100.0          1(  1)      32147
+    37752
+ t  54        32.9       75.9      100.0          0(  0)       8775
+    12788
 
+Total packet count::    ideal 2570      lookaround 135
