@@ -1,77 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out-068.synserver.de ([212.40.180.68]:1043 "HELO
-	smtp-out-067.synserver.de" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with SMTP id S1755814AbZJHUlp (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:46591 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751711AbZJYUTf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 16:41:45 -0400
-Date: Thu, 8 Oct 2009 22:34:26 +0200
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-To: Mike Galbraith <efault@gmx.de>
-Cc: Frans Pop <elendil@planet.nl>,
-	Arjan van de Ven <arjan@infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	Peter Zijlstra <peterz@infradead.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
- CPU"
-Message-ID: <20091008203426.GA1946@phenom2.trippelsdorf.de>
-References: <200910051500.55875.elendil@planet.nl>
- <1254974743.7797.21.camel@marge.simson.net>
- <20091008064041.67219b13@infradead.org>
- <200910081655.37485.elendil@planet.nl>
- <1255026217.6643.12.camel@marge.simson.net>
+	Sun, 25 Oct 2009 16:19:35 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1255026217.6643.12.camel@marge.simson.net>
+In-Reply-To: <4AE3431C.2000201@wpkg.org>
+References: <4AD21AB4.6010208@wpkg.org> <4AE1AC69.7010904@wpkg.org>
+	 <69e28c910910230621j2176813dpe7f77b7dff5b1b44@mail.gmail.com>
+	 <4AE1AE74.4020600@wpkg.org> <4AE2EC3E.3000503@wpkg.org>
+	 <20091024125217.GA31897@hash.localnet> <4AE31CFC.1080803@wpkg.org>
+	 <20091024160938.GC31897@hash.localnet> <4AE3431C.2000201@wpkg.org>
+Date: Sun, 25 Oct 2009 16:19:39 -0400
+Message-ID: <b6c5339f0910251319u2fc0180cjba1df3006ede92f5@mail.gmail.com>
+Subject: Re: ath5k AP kernel panic when client uses SCP
+From: Bob Copeland <me@bobcopeland.com>
+To: Tomasz Chmielewski <mangoo@wpkg.org>
+Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-net@vger.kernel.org,
+	linux-mips@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 08, 2009 at 08:23:37PM +0200, Mike Galbraith wrote:
-> On Thu, 2009-10-08 at 16:55 +0200, Frans Pop wrote:
-> > On Thursday 08 October 2009, Arjan van de Ven wrote:
-> > > From: Arjan van de Ven <arjan@linux.intel.com>
-> > > Date: Thu, 24 Sep 2009 13:24:16 +0200
-> > > Subject: [PATCH] x86, timers: check for pending timers after (device)
-> > > interrupts
-> > >
-> > > Now that range timers and deferred timers are common, I found a
-> > > problem with these using the "perf timechart" tool.
-> > >
-> > > It turns out that on x86, these two 'opportunistic' timers only
-> > > get checked when another "real" timer happens.
-> > > These opportunistic timers have the objective to save power by
-> > > hitchhiking on other wakeups, as to avoid CPU wakeups by themselves
-> > > as much as possible.
-> > 
-> > This patch makes quite a difference for me. iwlagn and phy0 now 
-> > consistently show at ~10 ms or lower.
-> > 
-> > I do still get occasional high latencies, but those are for things like
-> > "[rpc_wait_bit_killable]" or "Writing a page to disk", where I guess you'd 
-> > expect them. Those high latencies are mostly only listed for "Global" and 
-> > don't translate to individual processes.
-> 
-> I still see very high latencies coming out of idle (last noted was >
-> 300ms, NO_HZ) with this patch, and wonder if the hunk below makes any
-> difference whatsoever for you.  Here, it definitely does. (shouldn't)
+On Sat, Oct 24, 2009 at 2:10 PM, Tomasz Chmielewski <mangoo@wpkg.org> wrote:
+> Bob Copeland wrote:
 
-I'm also seeing these strange, very high latencies here. Your patch
-didn't help unfortunately.
+> Here is everything the system said after being powered on, including all
+> page allocation failures and the final oops:
+>
+> http://www1.wpkg.org/skb_gso_segment/minicom.txt
+>
+> (and it looks slightly different than the last time).
 
-This is from an otherwise idle NO_NZ system:
+In this case an order-0 allocation failed inside ieee80211_skb_resize,
+which then called dev_release_skb() on the original skb.  Off the top
+of my head, it's unclear why the subsequent put_page would cause a fault.
 
-# ./perf sched latency
-
- -----------------------------------------------------------------------------------------
-  Task                  |   Runtime ms  | Switches | Average delay ms | Maximum delay ms |
- -----------------------------------------------------------------------------------------
-  ksoftirqd/0:4         |      2.216 ms |      170 | avg:   24.235 ms | max:  808.356 ms |
-  ksoftirqd/1:6         |      2.611 ms |      205 | avg:    4.334 ms | max:  165.553 ms |
-  migration/2:7         |      0.000 ms |        1 | avg:    3.060 ms | max:    3.060 ms |
-
-With latencytop the ksoftirqd latency is over 1 sec frequently. (Could be
-ondemand CPUfreq governor related?)
+This is a little out of my area so take it with a grain of salt :) but
+in general order-0 allocation failures are bad news -- it couldn't get
+a single free page, and that happened in under 3 minutes.  Maybe poke
+around in /proc/slabinfo to see where the memory went?
 
 -- 
-Markus
+Bob Copeland %% www.bobcopeland.com
