@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3461 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753333AbZJXNUD (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:51764 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752552AbZJYQAG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Oct 2009 09:20:03 -0400
-Date: Sat, 24 Oct 2009 09:19:29 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: ath5k: no further txbuf available, dropping packet
-Message-ID: <20091024131929.GB31897@hash.localnet>
-References: <200910231608.18676.mb@bu3sch.de>
+	Sun, 25 Oct 2009 12:00:06 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Subject: Re: [PATCH] b43: LP-PHY: Begin implementing calibration & software  RFKILL support
+Date: Sun, 25 Oct 2009 17:00:05 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1256484396-31063-1-git-send-email-netrolller.3d@gmail.com> <200910251654.17050.mb@bu3sch.de> <69e28c910910250857l341cc114w46224b94cda36f3e@mail.gmail.com>
+In-Reply-To: <69e28c910910250857l341cc114w46224b94cda36f3e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200910231608.18676.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200910251700.06859.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 23, 2009 at 04:08:16PM +0200, Michael Buesch wrote:
-> ath5k breaks in AP mode after some operation time and keeps throwing
-> this message:
+On Sunday 25 October 2009 16:57:44 Gábor Stefanik wrote:
+> 2009/10/25 Michael Buesch <mb@bu3sch.de>:
+> > On Sunday 25 October 2009 16:26:36 Gábor Stefanik wrote:
+> >> Michael, could you please do the PHY reset part? I can't seem to
+> >> understand its relationship to wireless_core_reset... also, it's
+> >> heavily ssb-speak, which I am not good at.
+> >
+> > Where are the specifications?
+> >
+> > --
+> > Greetings, Michael.
+> >
 > 
-> [2096249.446071] ath5k phy0: no further txbuf available, dropping packet
-> 
-> Driver is yesterday's compat-wireless on 2.6.31.1
+> They are @ http://bcm-v4.sipsolutions.net/802.11/PHY/Reset - it shows
+> some similarity to wireless_core_reset, but it is not an exact match.
 
-Ok looked a bit more at this.  I don't see a leak, but I think the
-txbufs aren't getting reaped.  Otherwise, we should reenable the queues
-when we get back 40 TX completion interrupts.
-
-I'm a bit short on time to track it down, but one thing to try is
-commenting out the following from ath5k_beacon_send (will break buffering
-but you can test non-ps clients):
-
-        skb = ieee80211_get_buffered_bc(sc->hw, sc->vif);
-        while (skb) {
-                ath5k_tx_queue(sc->hw, skb, sc->cabq);
-                skb = ieee80211_get_buffered_bc(sc->hw, sc->vif);
-        }
+Well, I don't know. Just implement it in another function.
+I don't have the time to dig into this.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
-
+Greetings, Michael.
