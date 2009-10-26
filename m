@@ -1,96 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43317 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751533AbZJWNe5 (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:41262 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752639AbZJZSU3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 09:34:57 -0400
-Subject: Re: [RFC] libertas: monster-patch to make CFG/WEXT configurable
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-In-Reply-To: <200910200835.35747.hs4233@mail.mn-solutions.de>
-References: <200910191449.18915.hs4233@mail.mn-solutions.de>
-	 <1255998802.4475.2.camel@johannes.local>
-	 <200910200835.35747.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-pCx6jtGvi6el2W0DZX7e"
-Date: Thu, 22 Oct 2009 10:31:31 +0200
-Message-Id: <1256200291.12174.14.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 26 Oct 2009 14:20:29 -0400
+Received: by fxm18 with SMTP id 18so12319889fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 11:20:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4AE5BD6C.2050303@gmail.com>
+References: <4AE5BD6C.2050303@gmail.com>
+Date: Mon, 26 Oct 2009 18:20:33 +0000
+Message-ID: <3ace41890910261120u55263b35x7de5dd64a23c77af@mail.gmail.com>
+Subject: Re: rtl8187: kernel oops when leds enabled
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Richard Farina <sidhayn@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Oct 26, 2009 at 3:17 PM, Richard Farina <sidhayn@gmail.com> wrote:
 
---=-pCx6jtGvi6el2W0DZX7e
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> I'm honestly a little surprised that no one has bothered to reproduce this
+> in the month since I reported it but maybe it is more unique to my setup
+> than it seems.
 
-On Tue, 2009-10-20 at 08:35 +0200, Holger Schurig wrote:
-> > I really don't understand the point. Can't you just use the
-> > cfg80211 hooks and keep both functional at the same time? Just
-> > like orinoco does it uses cfg80211 only partially.
->=20
-> I think I can't do this in a sane way.
+Yes, quite possibly. Mine is built-in and hooked up directly to the
+laptop's motherboard (and cannot be unplugged!) so I am no use. Larry
+is on it, I think. We appreciate the persistence...
 
-I don't see why not.
-
-> Oh, and please don't compare libertas all the time with orinoco.
-> Orinoco is FULLMAC, libertas is HALFMAC.
->=20
-> Because libertas firmware doesn't roam, it has to be done in=20
-> software. Libertas does this in assoc.c, partly in scan.c, cmd.c=20
-> and wext.c and even main.c. For example, libertas keeps its own=20
-> list of BSS entries, has code to select the best matching BSS=20
-> when it comes to associating ... things like this.
-
-None of this code is relevant to mesh.
-
-> cfg80211 has this code too.
-
-No, it has no roaming etc.
-
-> Having two competing implementations running in one driver is a=20
-> way to havoc.
-
-I'm not saying you should keep the old _station_ code, I'm just saying
-you should hook it up in a way that doesn't make it exclusive with mesh.
-
-> I can't and won't do the MESH stuff: I don't have a firmware that=20
-> does MESH, no knowledge and usage case for MESH. It would,=20
-> however, be possible to keep the current mesh code with WEXT and=20
-> use cfg80211 for monitor/station mode. However, I dislike this=20
-> more than cfg80211/wext configurability.
-
-I'm not saying you should do mesh. I'm saying that instead of ripping
-out _all_ wext code you should just redirect/rewrite the wext handlers
-and call the cfg80211 ones, so that for _managed_ mode you get the new
-stuff, but for _mesh_ mode you keep the old code.
-
-Otherwise you're not doing the driver any good at all, since your patch
-then just means that both versions need to be maintained.
-
-johannes
-
---=-pCx6jtGvi6el2W0DZX7e
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK4BhfAAoJEODzc/N7+QmaasYP/izJqscrTxdMrvnKOvp/o7jW
-5LpjNjpoReo80LPU/6PLljNILPOXfOxIC+eBW1r5v6Wt4My44VZMdobKTJsywsQc
-8vu5EYQoEH2TQpYAC8ZcpGikKXE8VMMmEIQNB2s/AGRp1UOjp1Z9FycS3My6h1gk
-MzAxhoizKguzA2tSJ8N9njRtLbSKeVb9DlPKs4xvlFxDPq6eM8Bwlvz9Hjcev2S5
-NeswTSFlc40Qv8mQfFr5flj2czQNaJqfXcnEPjWteBJ5RBomso2wtGJZRhFDyQXb
-PcAyacv7SnB5vYhN0URbIqB6CHatNpzenA4sKFRFR8Ib4l7PpVcRimT9bWgAp/Uq
-5NdIZw3JzPUSwLPT3r3P4XNRjWejxZk86YXzuf4OjZeiQ3n3k6xuH7NfvRQEII2e
-bRG6QWK6dEekYLdFirFFHRSA8rXc0VQ4M37CPie1HjU/VilcWiAz8zqMqUTmMQgS
-ssxCSNUezYveM2jcrHwxZdwNyZwAlNxd55s7oUaJ29sbpF0FrxKU5XaLPWMNL9+I
-NavO5eix0spSnqh6xMdx/56nB1XgnJS/WS7hzPx8EXWGWHXlv5PrjPVxvoG0Ih0q
-4tyxNHD8duhdBN5AImi4SxV4mXFrQmKQjPbTq8y7WOTeFkX+FCQ8+lT9pYreiI8W
-dzfJbfvtlAcnJyMrDPSu
-=wSgD
------END PGP SIGNATURE-----
-
---=-pCx6jtGvi6el2W0DZX7e--
-
+Hin-Tak
