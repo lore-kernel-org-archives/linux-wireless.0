@@ -1,48 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:35140 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758720AbZJISGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2009 14:06:39 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Albert Herranz <albert_herranz@yahoo.es>
-Subject: Re: b43: do not stack-allocate pio rx/tx header and tail buffers (was: pull request: wireless-2.6 2009-10-08)
-Date: Fri, 9 Oct 2009 20:05:58 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <200910062252.17565.mb@bu3sch.de> <4ACCD765.7080604@lwfinger.net> <4ACF76F7.30406@yahoo.es>
-In-Reply-To: <4ACF76F7.30406@yahoo.es>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200910092005.59916.mb@bu3sch.de>
+Received: from bombadil.infradead.org ([18.85.46.34]:33706 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752059AbZJZQoD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Oct 2009 12:44:03 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 2/4] ath9k_hw: distinguish single-chip solutions on initial probe print
+Date: Mon, 26 Oct 2009 12:44:07 -0400
+Message-Id: <1256575447-4591-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 09 October 2009 19:46:31 Albert Herranz wrote:
-> I'm not arguing if the patch should have been immediately merged upstream or not without your ack (I'm probably more on your side here, as the patch was still being discussed on the ML).
-> The patch [1] may not be up to your quality standards or may not take into account other requirements (that you have not expressed nor on the ML nor on IRC) but I'm sure it's far from being "random", "move crap" or "add stupid comments". That's the unfair part.
-> 
-> The reason I posted the initial patch for review was because you kind of told me [2].
-> 
-> [20:06] <mb_> Anyway, I'm not going to fix this. If you need it fixed, please send patches
+Devices with external radios have revisions which we can count on.
+On single chip solutions these EEPROM values for these radio revision
+also exist but are not meaningful as the radios are embedded onto the
+same chip. Each single-chip device evolves together as one device.
 
-Yeah, but that doesn't mean that either hack is acceptable. It just means that my time is limited
-and I added this non-issue (which I still think it is) to the very bottom of my priority list.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
-> After ~22 hours if I'm not mistaken (yes, less than 24...) John, who had previously expressed his intentions to merge the patch [5], picked it for wireless-2.6.
-> And a day later, more or less again, John did the GIT PULL request.
+Changes hw_name to 60 bytes.
 
-My impression was, that if the maintainer rejects a patch and asks for a new version,
-the upstream maintainer must not take the patch until the maintainer acked the new version.
-It seems I was wrong, though.
+ drivers/net/wireless/ath/ath9k/ahb.c |   11 ++++-------
+ drivers/net/wireless/ath/ath9k/hw.c  |   27 +++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath9k/hw.h  |    3 +--
+ drivers/net/wireless/ath/ath9k/pci.c |   11 ++++-------
+ 4 files changed, 32 insertions(+), 20 deletions(-)
 
-> My point here is that there's no reason for such strong words concerning the quality of the patch code. It's really not that bad for such wording.
-> I'm sure that if the patch was really crap it would have been immediately NAK'ed by you or by any sane maintainer.
-
-It _was_ immediately NAK'ed by me. I did not know that I need to NAK
-every single new version of a patch explicitely.
-I thought NAK-ing a patch would put it into some special state that only an explicit ACK could
-take it out of.
-
+diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
+index 41422c4..33da2e7 100644
+--- a/drivers/net/wireless/ath/ath9k/ahb.c
++++ b/drivers/net/wireless/ath/ath9k/ahb.c
+@@ -69,6 +69,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
+ 	int irq;
+ 	int ret = 0;
+ 	struct ath_hw *ah;
++	char hw_name[60];
+ 
+ 	if (!pdev->dev.platform_data) {
+ 		dev_err(&pdev->dev, "no platform data specified\n");
+@@ -133,15 +134,11 @@ static int ath_ahb_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	ah = sc->sc_ah;
++	ath9k_hw_name(ah, hw_name);
+ 	printk(KERN_INFO
+-	       "%s: Atheros AR%s MAC/BB Rev:%x, "
+-	       "AR%s RF Rev:%x, mem=0x%lx, irq=%d\n",
++	       "%s: %s mem=0x%lx, irq=%d\n",
+ 	       wiphy_name(hw->wiphy),
+-	       ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
+-	       ah->hw_version.macRev,
+-	       ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
+-				 AR_RADIO_SREV_MAJOR)),
+-	       ah->hw_version.phyRev,
++	       hw_name,
+ 	       (unsigned long)mem, irq);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index cf543e3..f65b591 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -3959,7 +3959,7 @@ static struct {
+ /*
+  * Return the MAC/BB name. "????" is returned if the MAC/BB is unknown.
+  */
+-const char *ath9k_hw_mac_bb_name(u32 mac_bb_version)
++static const char *ath9k_hw_mac_bb_name(u32 mac_bb_version)
+ {
+ 	int i;
+ 
+@@ -3971,13 +3971,12 @@ const char *ath9k_hw_mac_bb_name(u32 mac_bb_version)
+ 
+ 	return "????";
+ }
+-EXPORT_SYMBOL(ath9k_hw_mac_bb_name);
+ 
+ /*
+  * Return the RF name. "????" is returned if the RF is unknown.
+  * Used for devices with external radios.
+  */
+-const char *ath9k_hw_rf_name(u16 rf_version)
++static const char *ath9k_hw_rf_name(u16 rf_version)
+ {
+ 	int i;
+ 
+@@ -3989,4 +3988,24 @@ const char *ath9k_hw_rf_name(u16 rf_version)
+ 
+ 	return "????";
+ }
+-EXPORT_SYMBOL(ath9k_hw_rf_name);
++
++void ath9k_hw_name(struct ath_hw *ah, char *hw_name)
++{
++	/* chipsets >= AR9280 are single-chip */
++	if (AR_SREV_9280_10_OR_LATER(ah)) {
++		sprintf(hw_name,
++			"Atheros single-chip AR%s Rev:%x",
++			ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
++			ah->hw_version.macRev);
++	}
++	else {
++		sprintf(hw_name,
++			"Atheros AR%s MAC/BB Rev:%x AR%s RF Rev:%x: ",
++			ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
++			ah->hw_version.macRev,
++			ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
++					 AR_RADIO_SREV_MAJOR)),
++			ah->hw_version.phyRev);
++	}
++}
++EXPORT_SYMBOL(ath9k_hw_name);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 100fcba..3ceb4c6 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -720,8 +720,7 @@ void ath_gen_timer_free(struct ath_hw *ah, struct ath_gen_timer *timer);
+ void ath_gen_timer_isr(struct ath_hw *hw);
+ u32 ath9k_hw_gettsf32(struct ath_hw *ah);
+ 
+-const char *ath9k_hw_mac_bb_name(u32 mac_bb_version);
+-const char *ath9k_hw_rf_name(u16 rf_version);
++void ath9k_hw_name(struct ath_hw *ah, char *hw_name);
+ 
+ #define ATH_PCIE_CAP_LINK_CTRL	0x70
+ #define ATH_PCIE_CAP_LINK_L0S	1
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 76f3890..961a18b 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -114,6 +114,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	u32 val;
+ 	int ret = 0;
+ 	struct ath_hw *ah;
++	char hw_name[60];
+ 
+ 	if (pci_enable_device(pdev))
+ 		return -EIO;
+@@ -218,15 +219,11 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	sc->irq = pdev->irq;
+ 
+ 	ah = sc->sc_ah;
++	ath9k_hw_name(ah, hw_name);
+ 	printk(KERN_INFO
+-	       "%s: Atheros AR%s MAC/BB Rev:%x "
+-	       "AR%s RF Rev:%x: mem=0x%lx, irq=%d\n",
++	       "%s: %s mem=0x%lx, irq=%d\n",
+ 	       wiphy_name(hw->wiphy),
+-	       ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
+-	       ah->hw_version.macRev,
+-	       ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
+-				 AR_RADIO_SREV_MAJOR)),
+-	       ah->hw_version.phyRev,
++	       hw_name,
+ 	       (unsigned long)mem, pdev->irq);
+ 
+ 	return 0;
 -- 
-Greetings, Michael.
+1.6.0.4
+
