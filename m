@@ -1,66 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49361 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757429AbZJ3UoS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 16:44:18 -0400
-Subject: Re: [PATCH] mac80211: make CALL_TXH a statement
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20091030191126.GC2586@tuxdriver.com>
-References: <1256802228.3865.55.camel@johannes.local>
-	 <20091030191126.GC2586@tuxdriver.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-HsFJX3Gbla1raLu4Abvl"
-Date: Fri, 30 Oct 2009 21:43:47 +0100
-Message-ID: <1256935427.3555.66.camel@johannes.local>
+Received: from mx1.redhat.com ([209.132.183.28]:54933 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753762AbZJZUQp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Oct 2009 16:16:45 -0400
+Subject: Re: [PATCH 17/19] [RFC, v2] libertas: Kconfig entry for
+ libertas+cfg80211
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <200910260904.12417.hs4233@mail.mn-solutions.de>
+References: <20091022133043.185554096@mail.mn-solutions.de>
+	 <1256315415.2164.46.camel@localhost.localdomain>
+	 <20091025033853.GA25873@infradead.org>
+	 <200910260904.12417.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Mon, 26 Oct 2009 13:16:35 -0700
+Message-Id: <1256588195.2110.32.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2009-10-26 at 09:04 +0100, Holger Schurig wrote:
+> > How much does mesh actually get used?  AFAICS it's a
+> > OLPC-specific one off.
+> 
+> A good question, I don't know no-one that uses mesh outside of 
+> OLPC.
 
---=-HsFJX3Gbla1raLu4Abvl
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Nobody uses the custom libertas mesh stuff outside OLPC.  I tend to look
+at it as just not being a dick, subject to the limitations of testing
+ability.  Obviously OLPC are the only ones who can do in-depth testing
+of mesh-related changes since those of us outside OLPC only have a few
+OLPCs/dongles to mesh together.
 
-On Fri, 2009-10-30 at 15:11 -0400, John W. Linville wrote:
-> On Thu, Oct 29, 2009 at 08:43:48AM +0100, Johannes Berg wrote:
-> > The multi-line code in this macro wasn't wrapped
-> > in do {} while (0) so we cannot use it in an if()
-> > branch safely in the future -- fix that.
-> >=20
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->=20
-> do {...} while (0) won't work for that either, right?  You need
-> ({...}) instead if you want to return a value.  Is that what you want?
+> 
+> > So unless OLPC people come up and fix it why do people even
+> > bother with it? 
+> 
+> In some way the OLPC people won't be bothered, they don't
+> follow linux-git or linux-wireless, they are stuck to some
+> old kernel (2.6.25 AFAIK). So they don't even notice :-)
 
-No, I just want to be able to do
+Actually untrue; the *shipping* products are still at 2.6.25, but there
+are fairly recent kernel trees, especially for the G1.5 machines (which
+admittedly don't have the mesh capability anyway, but they do use the
+Libertas sd8686).
 
-if (...)
-	CALL_TXH(...)
+> However, they need MESH, so if I now rip MESH out completely
+> just because I change some configuration API, that would
+> bring more burden to them.
 
-johannes
+Yeah, I don't think it's normal practice in kernel drivers to just rip
+something out that we know people are using, we at least put in a modest
+amount of effort to not break it completely.  At least basic sanity
+testing of mesh start/stop, and if possible, meshing two machines
+together with static IP and making sure they can ping each other.  More
+extensive testing needs to be done by the organization set up for that.
 
---=-HsFJX3Gbla1raLu4Abvl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Dan
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK60/+AAoJEODzc/N7+Qma+68P/1m+t7UrPCe3ZJV5eb/ogDwl
-E8k+qF31yYQpjq3YwzU7B0BpTc8sYOYrSo1+jR7ofKbSX9L5pYBWPRmJxNSHpa3+
-2d43UWeahkR5diSANgGcV1xJipfFfkVGD67CfLI5fHZ35rWwXTgNW3Qes/UD8UNz
-lwnxQHkzPaf4J0Nnx5Og2E89ShnkmW568Gc5scvUQxWyXu1fgJayjcvpheBbH23J
-pXwZyL+8xUCdcFjHgiBq5IcCDiLYouhM4u8aZyy9mWBS44UTBu0MvW5UU927P84R
-LNU2lAfS+DzFE3BXSyX+4VeB+G1PsiJPzemgYJg5E7xaxsMxKu6UFg6icPtVfzey
-p/YFEXFWqdqYu/t1z3Gj/o7DXbL8yt0d92qk56sWls4Wq21WeSTiun3UwzEUlaYH
-0mGXCgzNzKIKB3aDyarR9s8wMArmzKhSfKJtchgFsqX4v9mH3iI2X5rCfCojTX7f
-RpwGJQP1ZYkIH6m+yYNzUWjme16nI4jfc0T1R5qBNjjO0+QsQcG6ZbAx5jAf5Fld
-vlTiMsopuBAbY9dIcnni6lb4xoE+JP2Xm7sYau+k86IX15hNPMyIlQEWXNuoZkJ8
-s0daE5I33hod9YQHMALg961jOWF6XXBSFc2FeVQISrkJkaU0qwOopMn9djHa33AV
-wZ7SIq5LXL93gRpmJBLQ
-=vdzd
------END PGP SIGNATURE-----
-
---=-HsFJX3Gbla1raLu4Abvl--
 
