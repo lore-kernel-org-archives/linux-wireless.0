@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:44085 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755030AbZJGXJR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 19:09:17 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] b43: Fix locking problem when stopping rfkill polling
-Date: Thu, 8 Oct 2009 01:08:25 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <4accae5d.BgSJpcmlvg+W5PGM%Larry.Finger@lwfinger.net> <1254955015.3713.9.camel@johannes.local> <4ACD1998.5020902@lwfinger.net>
-In-Reply-To: <4ACD1998.5020902@lwfinger.net>
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:50416 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751783AbZJZORh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Oct 2009 10:17:37 -0400
+Message-ID: <4AE5B1FB.2050306@gmail.com>
+Date: Mon, 26 Oct 2009 15:28:11 +0100
+From: Roel Kluin <roel.kluin@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200910080108.27024.mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: [PATCH] airo: Reorder tests, check bounds before element
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 08 October 2009 00:43:36 Larry Finger wrote:
-> Johannes Berg wrote:
-> > This is because when stopping polling we need to cancel the work and
-> > sync on it, but when starting it's completely async so starting can be
-> > in any context.
-> 
-> Does that mean that start could be moved outside the mutex_lock so
-> that the start and stop would look symmetrical in b43?
+Test whether index is within bounds before reading the element
 
-I think it's already complicated enough what's safe in b43 to do
-outside of the locks. Let's not complicate it further. The simple rule is:
-Do it locked. The only exception really are syncing functions which sync
-for code holding the same lock.
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+ drivers/net/wireless/airo.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
--- 
-Greetings, Michael.
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 7116a1a..abf896a 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -4790,9 +4790,8 @@ static int proc_stats_rid_open( struct inode *inode,
+ static int get_dec_u16( char *buffer, int *start, int limit ) {
+ 	u16 value;
+ 	int valid = 0;
+-	for( value = 0; buffer[*start] >= '0' &&
+-		     buffer[*start] <= '9' &&
+-		     *start < limit; (*start)++ ) {
++	for (value = 0; *start < limit && buffer[*start] >= '0' &&
++			buffer[*start] <= '9'; (*start)++) {
+ 		valid = 1;
+ 		value *= 10;
+ 		value += buffer[*start] - '0';
+
