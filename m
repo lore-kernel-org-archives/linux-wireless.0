@@ -1,304 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51518 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753970AbZJZRn0 (ORCPT
+Received: from smtp-vbr6.xs4all.nl ([194.109.24.26]:3539 "EHLO
+	smtp-vbr6.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754057AbZJZNRB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 13:43:26 -0400
-Subject: [RFC] ar9170: load firmware asynchronously
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Christian Lamparter <chunkeey@web.de>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Dan Williams <dcbw@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 26 Oct 2009 18:43:25 +0100
-Message-ID: <1256579005.4237.0.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 26 Oct 2009 09:17:01 -0400
+Received: from webmail.xs4all.nl (dovemail11.xs4all.nl [194.109.26.13])
+	by smtp-vbr6.xs4all.nl (8.13.8/8.13.8) with ESMTP id n9QDH2SI028203
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 14:17:03 +0100 (CET)
+	(envelope-from evaessen@xs4all.nl)
+Message-ID: <e14196febc59d9ca25868fec63816139.squirrel@webmail.xs4all.nl>
+In-Reply-To: <4AE1FE7F.2090309@gmail.com>
+References: <1250640253-18434-1-git-send-email-kilroyd@googlemail.com>
+    <20090831175932.GC5631@tuxdriver.com>
+    <b88bb1ad0909121654w43215f60lf9d7b90d4b54bf35@mail.gmail.com>
+    <4AE1FE7F.2090309@gmail.com>
+Date: Mon, 26 Oct 2009 14:17:02 +0100
+Subject: Only device wlan1 but no connection Fritz!WLAN USB stick N2.4
+From: "Ed Vaessen" <evaessen@xs4all.nl>
+To: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This converts ar9170 to load firmware asynchronously
-out of ->probe() and only register with mac80211 when
-all firmware has been loaded successfully. If, on the
-other hand, any firmware fails to load, it will now
-unbind from the device.
+I have a Fritz!Box Fon WLAN 7170 as router and try to connect wireless to
+it with the Fritz!WLAN USB N2.4 stick using the compat-wireless software.
+Without succes so far.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-This ought to make it possible to build the driver
-into the kernel and as long as your system boots
-within 60 seconds it'll all just work.
+Software: yesterdays bleeding edge tarball: compat-wireless-2.6.tar.bz2
+Kernel: Ubuntu 9.04 2.6.28-16-generic
+PC: Athec L51A10
+Firmware: ar9170.fw put in /lib/firmware
 
-This is how we need to load firmware for drivers that
-require the firmware image to detect which features
-to register to mac80211/cfg80211, but it's also useful
-when no features depend on the firmware.
+The software compiles without problem and installs the driver after reboot:
 
-I've done ar9170 because I'm somewhat familiar with its
-implementation. b43 should probably be converted to this
-scheme since it actually has features that depend on the
-firmware, and libertas_tf has the MAC addresss depending
-on the firmware (well it needs the firmware to read it).
+sudo lsmod | grep 9170 gives:
+ar9170usb 63624 0
+led_class 12036 1 ar9170usb
+ath 17024 1 ar9170usb
+mac80211 218160 1 ar9170usb
+cfg80211 135240 3 ar9170usb,ath,mac80211
 
-The only complication with this is that now the user is
-mostly unaware they have a wireless device, they can only
-find it via lsusb/lspci etc. if firmware loading fails,
-or from kernel messages. And also manual binding in sysfs,
-device re-plugging or module re-loading is required to
-get the module to find the device after putting firmware
-in place...
+After inserting the usb stick, this is shown in /var/log/messages
 
-Still I think this is better than what we have now with
-many drivers -- if firmware is missing you get network
-interfaces etc. but cannot ever use them, and it's not
-always entirely clear that is due to missing firmware.
+Oct 25 15:37:00 vaessen-laptop kernel: [ 301.480049] usb 1-1: new high
+speed USB device using ehci_hcd and address 5
+Oct 25 15:37:00 vaessen-laptop kernel: [ 301.643507] usb 1-1:
+configuration #1 chosen from 1 choice
+Oct 25 15:37:00 vaessen-laptop kernel: [ 301.702461] Initializing USB Mass
+Storage driver...
+Oct 25 15:37:00 vaessen-laptop kernel: [ 301.702650] scsi4 : SCSI
+emulation for USB Mass Storage devices
+Oct 25 15:37:00 vaessen-laptop kernel: [ 301.702803] usbcore: registered
+new interface driver usb-storage
+Oct 25 15:37:00 vaessen-laptop kernel: [ 301.702808] USB Mass Storage
+support registered.
+Oct 25 15:37:05 vaessen-laptop kernel: [ 306.709252] scsi 4:0:0:0: CD-ROM
+FRITZ! WLAN selfinstall 1.00 PQ: 0 ANSI: 0 CCS
+Oct 25 15:37:05 vaessen-laptop kernel: [ 306.722276] sr1: scsi3-mmc drive:
+52x/52x cd/rw xa/form2 cdda tray
+Oct 25 15:37:05 vaessen-laptop kernel: [ 306.723067] sr 4:0:0:0: Attached
+scsi generic sg2 type 5
 
- drivers/net/wireless/ath/ar9170/ar9170.h |    1 
- drivers/net/wireless/ath/ar9170/main.c   |   10 +
- drivers/net/wireless/ath/ar9170/usb.c    |  170 ++++++++++++++++++-------------
- 3 files changed, 111 insertions(+), 70 deletions(-)
+Oct 25 15:38:38 vaessen-laptop kernel: [ 399.349605] usb 1-1: USB
+disconnect, address 5
+Oct 25 15:38:39 vaessen-laptop kernel: [ 400.608057] usb 1-1: new high
+speed USB device using ehci_hcd and address 6
+Oct 25 15:38:39 vaessen-laptop kernel: [ 400.771795] usb 1-1:
+configuration #1 chosen from 1 choice
+Oct 25 15:38:39 vaessen-laptop kernel: [ 400.888063] usb 1-1: reset high
+speed USB device using ehci_hcd and address 6
+Oct 25 15:38:40 vaessen-laptop kernel: [ 402.044043] usb 1-1: firmware:
+requesting ar9170.fw
+Oct 25 15:38:41 vaessen-laptop kernel: [ 402.465806] Registered led
+device: ar9170-phy1::tx
+Oct 25 15:38:41 vaessen-laptop kernel: [ 402.465846] Registered led
+device: ar9170-phy1::assoc
+Oct 25 15:38:41 vaessen-laptop kernel: [ 402.465851] usb 1-1: Atheros
+AR9170 is registered as 'phy1'
+Oct 25 15:38:41 vaessen-laptop kernel: [ 402.471136] udev: renamed network
+interface wlan0 to wlan1
 
---- wireless-testing.orig/drivers/net/wireless/ath/ar9170/usb.c	2009-10-26 16:45:12.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/ath/ar9170/usb.c	2009-10-26 18:29:17.000000000 +0100
-@@ -578,43 +578,6 @@ static int ar9170_usb_upload(struct ar91
- 	return 0;
- }
- 
--static int ar9170_usb_request_firmware(struct ar9170_usb *aru)
--{
--	int err = 0;
--
--	err = request_firmware(&aru->firmware, "ar9170.fw",
--			       &aru->udev->dev);
--	if (!err) {
--		aru->init_values = NULL;
--		return 0;
--	}
--
--	if (aru->req_one_stage_fw) {
--		dev_err(&aru->udev->dev, "ar9170.fw firmware file "
--			"not found and is required for this device\n");
--		return -EINVAL;
--	}
--
--	dev_err(&aru->udev->dev, "ar9170.fw firmware file "
--		"not found, trying old firmware...\n");
--
--	err = request_firmware(&aru->init_values, "ar9170-1.fw",
--			       &aru->udev->dev);
--	if (err) {
--		dev_err(&aru->udev->dev, "file with init values not found.\n");
--		return err;
--	}
--
--	err = request_firmware(&aru->firmware, "ar9170-2.fw", &aru->udev->dev);
--	if (err) {
--		release_firmware(aru->init_values);
--		dev_err(&aru->udev->dev, "firmware file not found.\n");
--		return err;
--	}
--
--	return err;
--}
--
- static int ar9170_usb_reset(struct ar9170_usb *aru)
- {
- 	int ret, lock = (aru->intf->condition != USB_INTERFACE_BINDING);
-@@ -753,6 +716,103 @@ err_out:
- 	return err;
- }
- 
-+static void ar9170_usb_firmware_failed(struct ar9170_usb *aru)
-+{
-+	struct device *parent = aru->udev->dev.parent;
-+
-+	/* unbind anything failed */
-+	if (parent)
-+		down(&parent->sem);
-+	device_release_driver(&aru->udev->dev);
-+	if (parent)
-+		up(&parent->sem);
-+}
-+
-+static void ar9170_usb_firmware_finish(const struct firmware *fw, void *context)
-+{
-+	struct ar9170_usb *aru = context;
-+	int err;
-+
-+	aru->firmware = fw;
-+
-+	if (!fw) {
-+		dev_err(&aru->udev->dev, "firmware file not found.\n");
-+		goto err_freefw;
-+	}
-+
-+	err = ar9170_usb_init_device(aru);
-+	if (err)
-+		goto err_freefw;
-+
-+	err = ar9170_usb_open(&aru->common);
-+	if (err)
-+		goto err_unrx;
-+
-+	err = ar9170_register(&aru->common, &aru->udev->dev);
-+
-+	ar9170_usb_stop(&aru->common);
-+	if (err)
-+		goto err_unrx;
-+
-+	return;
-+
-+ err_unrx:
-+	ar9170_usb_cancel_urbs(aru);
-+
-+ err_freefw:
-+	ar9170_usb_firmware_failed(aru);
-+}
-+
-+static void ar9170_usb_firmware_inits(const struct firmware *fw,
-+				      void *context)
-+{
-+	struct ar9170_usb *aru = context;
-+	int err;
-+
-+	if (!fw) {
-+		dev_err(&aru->udev->dev, "file with init values not found.\n");
-+		ar9170_usb_firmware_failed(aru);
-+		return;
-+	}
-+
-+	aru->init_values = fw;
-+
-+	/* ok so we have the init values -- get code for two-stage */
-+
-+	err = request_firmware_nowait(THIS_MODULE, 1, "ar9170-2.fw",
-+				      &aru->udev->dev, GFP_KERNEL, aru,
-+				      ar9170_usb_firmware_finish);
-+	if (err)
-+		ar9170_usb_firmware_failed(aru);
-+}
-+
-+static void ar9170_usb_firmware_step2(const struct firmware *fw, void *context)
-+{
-+	struct ar9170_usb *aru = context;
-+	int err;
-+
-+	if (fw) {
-+		ar9170_usb_firmware_finish(fw, context);
-+		return;
-+	}
-+
-+	if (aru->req_one_stage_fw) {
-+		dev_err(&aru->udev->dev, "ar9170.fw firmware file "
-+			"not found and is required for this device\n");
-+		ar9170_usb_firmware_failed(aru);
-+		return;
-+	}
-+
-+	dev_err(&aru->udev->dev, "ar9170.fw firmware file "
-+		"not found, trying old firmware...\n");
-+
-+	err = request_firmware_nowait(THIS_MODULE, 1, "ar9170-1.fw",
-+				      &aru->udev->dev, GFP_KERNEL, aru,
-+				      ar9170_usb_firmware_inits);
-+	if (err)
-+		ar9170_usb_firmware_failed(aru);
-+}
-+
- static bool ar9170_requires_one_stage(const struct usb_device_id *id)
- {
- 	if (!id->driver_info)
-@@ -810,33 +870,9 @@ static int ar9170_usb_probe(struct usb_i
- 	if (err)
- 		goto err_freehw;
- 
--	err = ar9170_usb_request_firmware(aru);
--	if (err)
--		goto err_freehw;
--
--	err = ar9170_usb_init_device(aru);
--	if (err)
--		goto err_freefw;
--
--	err = ar9170_usb_open(ar);
--	if (err)
--		goto err_unrx;
--
--	err = ar9170_register(ar, &udev->dev);
--
--	ar9170_usb_stop(ar);
--	if (err)
--		goto err_unrx;
--
--	return 0;
--
--err_unrx:
--	ar9170_usb_cancel_urbs(aru);
--
--err_freefw:
--	release_firmware(aru->init_values);
--	release_firmware(aru->firmware);
--
-+	return request_firmware_nowait(THIS_MODULE, 1, "ar9170.fw",
-+				       &aru->udev->dev, GFP_KERNEL, aru,
-+				       ar9170_usb_firmware_step2);
- err_freehw:
- 	usb_set_intfdata(intf, NULL);
- 	usb_put_dev(udev);
-@@ -856,12 +892,12 @@ static void ar9170_usb_disconnect(struct
- 	ar9170_unregister(&aru->common);
- 	ar9170_usb_cancel_urbs(aru);
- 
--	release_firmware(aru->init_values);
--	release_firmware(aru->firmware);
--
- 	usb_put_dev(aru->udev);
- 	usb_set_intfdata(intf, NULL);
- 	ieee80211_free_hw(aru->common.hw);
-+
-+	release_firmware(aru->init_values);
-+	release_firmware(aru->firmware);
- }
- 
- #ifdef CONFIG_PM
---- wireless-testing.orig/drivers/net/wireless/ath/ar9170/ar9170.h	2009-10-26 18:00:40.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/ath/ar9170/ar9170.h	2009-10-26 18:04:01.000000000 +0100
-@@ -160,6 +160,7 @@ struct ar9170 {
- 	struct ath_common common;
- 	struct mutex mutex;
- 	enum ar9170_device_state state;
-+	bool registered;
- 	unsigned long bad_hw_nagger;
- 
- 	int (*open)(struct ar9170 *);
---- wireless-testing.orig/drivers/net/wireless/ath/ar9170/main.c	2009-10-26 18:04:05.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/ath/ar9170/main.c	2009-10-26 18:05:59.000000000 +0100
-@@ -2722,7 +2722,8 @@ int ar9170_register(struct ar9170 *ar, s
- 	dev_info(pdev, "Atheros AR9170 is registered as '%s'\n",
- 		 wiphy_name(ar->hw->wiphy));
- 
--	return err;
-+	ar->registered = true;
-+	return 0;
- 
- err_unreg:
- 	ieee80211_unregister_hw(ar->hw);
-@@ -2733,11 +2734,14 @@ err_out:
- 
- void ar9170_unregister(struct ar9170 *ar)
- {
-+	if (ar->registered) {
- #ifdef CONFIG_AR9170_LEDS
--	ar9170_unregister_leds(ar);
-+		ar9170_unregister_leds(ar);
- #endif /* CONFIG_AR9170_LEDS */
- 
--	kfree_skb(ar->rx_failover);
- 	ieee80211_unregister_hw(ar->hw);
-+	}
-+
-+	kfree_skb(ar->rx_failover);
- 	mutex_destroy(&ar->mutex);
- }
+It seems the firmware is installed.
+Command iwconfig:
+
+lo no wireless extensions.
+
+eth0 no wireless extensions.
+
+pan0 no wireless extensions.
+
+wlan1 IEEE 802.11bg Mode:Managed Access Point: Not-Associated
+Tx-Power=0 dBm
+Retry long limit:7 RTS thrff Fragment thrff
+Power Managementff
+
+Command sudo lshw -C network gives for the wireless this information:
+
+*-network:1 DISABLED
+description: Wireless interface
+physical id: 2
+bus info: usb@1:1
+logical name: wlan1
+serial: 00:1f:3f:09:2d:40
+capabilities: ethernet physical wireless
+configuration: broadcast=yes driver=ar9170usb
+driverversion=2.6.28-16-generic firmware=N/A link=yes multicast=yes
+wireless=IEEE 802.11bg
+
+This 'firmware=N/A' puzzles me.
+
+I used System->Administration->Network Tools but cannot ping the Fritz!Box
+router
+The interface information says that wireless interface wlan1 is inactive.
+
+How do I make it active?
 
 
