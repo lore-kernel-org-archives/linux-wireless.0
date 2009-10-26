@@ -1,57 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:28496 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754293AbZJ2OP1 (ORCPT
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:54307 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753052AbZJZUwf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 10:15:27 -0400
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Pekka Enberg <penberg@cs.helsinki.fi>
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-Date: Thu, 29 Oct 2009 15:14:40 +0100
-Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linville@tuxdriver.com
-References: <200910291212.41656.bzolnier@gmail.com> <200910291435.54203.bzolnier@gmail.com> <84144f020910290652n2e75827dk698b238b6bd1cbed@mail.gmail.com>
-In-Reply-To: <84144f020910290652n2e75827dk698b238b6bd1cbed@mail.gmail.com>
+	Mon, 26 Oct 2009 16:52:35 -0400
+Received: by ewy4 with SMTP id 4so4029532ewy.37
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 13:52:39 -0700 (PDT)
 MIME-Version: 1.0
-Message-Id: <200910291514.40318.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Reply-To: dsrbecky@gmail.com
+Date: Mon, 26 Oct 2009 21:52:39 +0100
+Message-ID: <87f9e23c0910261352x60e17ef8ud859f91f36c43898@mail.gmail.com>
+Subject: ath5k phy0: no further txbuf available, dropping packet
+From: David Srbecky <dsrbecky@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I am getting this error as well.
 
-Hi,
+I am using Atheros card as AP.
 
-On Thursday 29 October 2009 14:52:50 Pekka Enberg wrote:
-> Hi Bart,
-> 
-> On Thu, Oct 29, 2009 at 3:35 PM, Bartlomiej Zolnierkiewicz
-> <bzolnier@gmail.com> wrote:
-> >> I'm saying that you should work with John to have him send a revert or
-> >> whatever to me.
-> >
-> > This is your responsibility to deal with your downstream maintainers,
-> > not mine and since you have accepted John's patch I'm asking you to
-> > revert rt2800pci patch from your tree.
-> 
-> So why don't you just send a patch to fix it up? I see you're doing
+After a while I start getting the following message in syslog:
+  ath5k phy0: no further txbuf available, dropping packet
 
-"git revert a9b3a9f"
+The message repeats every 10 seconds and the wireless network is no
+longer usabe until hostapd is restarted.
 
-done.
+The timing seems quite random, but on average it occurs about once per
+half an hour.  Transfering a lot of data over the wireless does not
+seem to make it happen any sooner.
 
-Dave, if you have problems with executing the command locally I'll be
-happy to supply you with the patch.
+I currently have compat-wireless-2009-10-25 installed.
+I am using hostap commit cca87731 (Thu Oct 22 11:17:05 2009 -0700).
 
-> lots of cleanups to the staging drivers, why not direct some of that
-> energy to the drivers/net/wireless ones?
+[root@alix ~]# uname -a
+Linux alix 2.6.30.8-64.fc11.i586 #1 SMP Fri Sep 25 04:30:19 EDT 2009
+i586 i586 i386 GNU/Linux
 
-When did we start to apply "fix it yourself" rule instead of "submitter
-should fix it" one to the _new_ code..
-
-rt2800 drivers have their maintainers and I would like to know what they
-are doing besides complaining about users and staging tree..
-
--- 
-Bartlomiej Zolnierkiewicz
+[root@alix ~]# lspci -k | grep -A2 "Atheros"
+00:0c.0 Ethernet controller: Atheros Communications Inc. AR2413
+802.11bg NIC (rev 01)
+        Subsystem: Atheros Communications Inc. Compex Wireless 802.11
+b/g  MiniPCI Adapter, Rev A1 [WLM54G]
+        Kernel driver in use: ath5k
+        Kernel modules: ath5k
