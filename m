@@ -1,66 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:64556 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932786AbZJHSRW (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35489 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751955AbZJZNwK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 14:17:22 -0400
-Date: Thu, 8 Oct 2009 20:15:34 +0200
-From: "Carlos R. Mafra" <crmafra2@gmail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	johannes@sipsolutions.net
-Subject: Re: [2.6.32-rc3] iwlagn lost connection after s2ram (with warnings)
-Message-ID: <20091008181534.GA19621@Pilar.aei.mpg.de>
-References: <20091007142031.GA7495@Pilar.aei.mpg.de> <1255023883.26521.13298.camel@rc-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1255023883.26521.13298.camel@rc-desk>
+	Mon, 26 Oct 2009 09:52:10 -0400
+Subject: Re: RECAP: indication of channel noise
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <h.schurig@mn-solutions.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <200910261442.44774.h.schurig@mn-solutions.de>
+References: <200910261442.44774.h.schurig@mn-solutions.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-hY6M07fNmzLqxcreWsjn"
+Date: Mon, 26 Oct 2009 14:52:12 +0100
+Message-ID: <1256565132.12462.9.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Reinette,
 
-On Thu  8.Oct'09 at 10:44:43 -0700, reinette chatre wrote:
-> Hi Carlos,
-> 
-> On Wed, 2009-10-07 at 07:20 -0700, Carlos R. Mafra wrote:
-> > I just got these warnings after resuming from a suspend to RAM, and
-> > the wireless connection was not resumed (now I am connected via eth0).
-> > This is the first time I had a failed wireless resume since 2.6.32-rc1.
-> > 
-> > The full dmesg is here: http://www.aei.mpg.de/~crmafra/dmesg-2.6.32-rc3-wifi.txt
-> > 
-> > [ 3427.570113] Restarting tasks ... 
-> > [ 3427.585827] wlan0: deauthenticated from 00:0b:86:26:36:f1 (Reason: 6)
-> > [ 3427.589451] done.
-> > [ 3428.503203] input: PS/2 Mouse as /devices/platform/i8042/serio4/input/input15
-> > [ 3428.521064] input: AlpsPS/2 ALPS GlidePoint as /devices/platform/i8042/serio4/input/input16
-> > [ 3434.504175] wlan0: direct probe to AP 00:0b:86:26:36:f1 (try 1)
-> > [ 3434.507058] wlan0: direct probe responded
-> > [ 3434.507062] wlan0: authenticate with AP 00:0b:86:26:36:f1 (try 1)
-> > [ 3434.509000] wlan0: authenticated
-> > [ 3434.509022] wlan0: associate with AP 00:0b:86:26:36:f1 (try 1)
-> > [ 3434.512778] wlan0: RX ReassocResp from 00:0b:86:26:36:f1 (capab=0x431 status=0 aid=2)
-> > [ 3434.512782] wlan0: associated
-> > [ 3434.563942] wlan0: deauthenticating from 00:0b:86:26:36:f1 by local choice (reason=3)
-> 
-> You mention you are trying to connect again after a resume. The message
-> above indicates that userspace (maybe wpa_supplicant ?) requested that
-> the connection be closed. Do you maybe know how this could have been
-> triggered?
+--=-hY6M07fNmzLqxcreWsjn
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-I have two processes that are always running,
+On Mon, 2009-10-26 at 14:42 +0100, Holger Schurig wrote:
 
-/usr/sbin/wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant.conf -D wext
-/sbin/ifplugd -I -b -i wlan0
+> [snip descriptions]
 
-and I guess they are the "userspace" that do automatic things to reconnect.
+sounds about right
 
-But I have no idea about what happened, or how it happened. I simply resumed from
-s2ram like I always do and got those warnings and no connection.
+> We did not yet come up with a clear API definition for this. My=20
+> idea for an initial "retrieve site survey" response is:
+>=20
+> NL80211_CMD_NEW_SURVEY_RESULTS
+>   NL80211_ATTR_GENERATION
+>   NL80211_ATTR_IFINDEX
+>   NL80211_BSS_FREQUENCY
+>   NL80211_BSS_NOISE_MBM
+>=20
+> Of course this will extend over time, but that is easy due to=20
+> nl80211.
 
-Today I did the same (with the same kernel), and the connection was resumed just 
-fine and I got no warnings in dmesg. So it is not easily reproduced :-(
+I'm not really happy with having "BSS" in there. And the ifindex is
+kinda not necessary either I think, you really want the wiphy index.
+Also it's not necessary in the response since the request will contain
+the wiphy index (or interface index).
 
-I will keep you informed if it happens again.
+I'd introduce a new
+NL80211_CMD_GET_SURVEY_RESULT
+
+which you use together with a dumpit call, for channels, which lists
+channels one by one similar to nl80211_dump_scan()/nl80211_send_bss()
+but with nl80211_dump_survey()/nl80211_send_survey_channel().
+
+In this case I think a "last updated" value would be rather important
+too.
+
+johannes
+
+--=-hY6M07fNmzLqxcreWsjn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK5amJAAoJEODzc/N7+QmabzcP/jLmM2DvxPPdzdwVCK0YHcPd
+ZcJh4Yl/yEEWqrr26M6zJaPuruBSDljMdxfrokvH3TbfwKrMP54Bdh5mrJV5aVEz
+HYB+L1UbLkbn5U2+ZzNCMYrK7K+C7dnA79tviM2YPuCaSLRIoweErYRzlJWJgJI8
+mjkzZKBbrrW4kHK7arqi5+xgqPy/41Q+2c+VmRgL6eY758P2PaHHNIT9CWSaE2ni
+80Xi9kS4EA6kxbAfqda6VVE1sEbdSkYDfrrXqcpm809JQ4Cw9t0dJh8jUAW7AKfl
+ZNmeGs7H0ZbuUHrOrPa/9TjkWoRjfYV0ep+FwAHpLnWjw8Sjp96DddSVTNIdFht/
+QaS9Eg1MyPzBQy47EZGwy0Cr8dAIqnjzmElO1xhRYLmDeys5oHxNIXS0Twdn+ddz
+6zXkLvJaH2KdQcDJJzCmgG6bacAWKiIx2/kWT3mtUrHW8N9xq4sf9lDjpYHHDT1G
+127Y/9WmD3qqkhl+wv8u2CAXbc+7A2GtWdwyaJa05I8AaKv0oDbYuf7nlEfQEXry
++MXqUsO+apLvKWwoy6D3JRtFmjpmUohBvZt78k0ccrTSWXkrntMFg/mhYtB9l093
+s4WwY/ko9jRhPxju1kkE0f0eiuGpae0oJIjYJOcskjffFBESQVXbLfYwf6pM6uYi
+PWPSI6lZOQmodvHLh6yQ
+=uE50
+-----END PGP SIGNATURE-----
+
+--=-hY6M07fNmzLqxcreWsjn--
+
