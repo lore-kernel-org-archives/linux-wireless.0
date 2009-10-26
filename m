@@ -1,167 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33188 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758613AbZJGBTs (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37630 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751992AbZJZQMl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 21:19:48 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, vasanth@atheros.com,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 2/6] ath9k: initialize hw prior to debugfs
-Date: Tue,  6 Oct 2009 21:19:07 -0400
-Message-Id: <1254878351-32433-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1254878351-32433-1-git-send-email-lrodriguez@atheros.com>
-References: <1254878351-32433-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 26 Oct 2009 12:12:41 -0400
+Subject: [RFC] firmware_class: make request_firmware_nowait more useful
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-kernel <linux-kernel@vger.kernel.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 26 Oct 2009 17:12:41 +0100
+Message-ID: <1256573561.12462.14.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-debugfs uses the hardware for several debugfs files as such the
-hardware must be initialized and available prior to its usage. The
-same applies to when we free the hw structs -- free debufs file
-entries prior to free'ing the hardware.
+Unfortunately, one cannot hold on to the struct firmware
+that request_firmware_nowait() hands off, which is needed
+in some cases. Allow this by requiring the callback to
+free it (via release_firmware).
 
-Reported-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Additionally, give it a gfp_t parameter -- all the current
+users call it from a GFP_KERNEL context so the GFP_ATOMIC
+isn't necessary. This also marks an API break which is
+useful in a sense, although that is obviously not the
+primary purpose of this change.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath/ath.h        |    6 ++++++
- drivers/net/wireless/ath/ath9k/hw.c   |   11 ++++++++++-
- drivers/net/wireless/ath/ath9k/main.c |   28 ++++++++++++++--------------
- 3 files changed, 30 insertions(+), 15 deletions(-)
+This is a prerequisite for many drivers' conversion to the firmware
+loading scheme we talked about at the wireless summit. Due to
+suspend/hibernate we need to keep a copy of the firmware loaded, but
+because we cannot request_firmware() during probe() we want to use
+_nowait() and then proceed registration (or unbind) on the callback.
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index b6cd752..5e19a73 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -23,6 +23,11 @@
- 
- static const u8 ath_bcast_mac[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
- 
-+enum ath_device_state {
-+	ATH_HW_UNAVAILABLE,
-+	ATH_HW_INITIALIZED,
-+};
-+
- struct reg_dmn_pair_mapping {
- 	u16 regDmnEnum;
- 	u16 reg_5ghz_ctl;
-@@ -59,6 +64,7 @@ struct ath_common {
- 	void *priv;
- 	struct ieee80211_hw *hw;
- 	int debug_mask;
-+	enum ath_device_state state;
- 
- 	u16 cachelsz;
- 	u16 curaid;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 692fd1d..cab17c6 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -999,6 +999,8 @@ int ath9k_hw_init(struct ath_hw *ah)
- 
- 	ath9k_init_nfcal_hist_buffer(ah);
- 
-+	common->state = ATH_HW_INITIALIZED;
-+
- 	return 0;
- }
- 
-@@ -1239,11 +1241,18 @@ const char *ath9k_hw_probe(u16 vendorid, u16 devid)
- 
- void ath9k_hw_detach(struct ath_hw *ah)
- {
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	if (common->state <= ATH_HW_INITIALIZED)
-+		goto free_hw;
-+
- 	if (!AR_SREV_9100(ah))
- 		ath9k_hw_ani_disable(ah);
- 
--	ath9k_hw_rf_free(ah);
- 	ath9k_hw_setpower(ah, ATH9K_PM_FULL_SLEEP);
-+
-+free_hw:
-+	ath9k_hw_rf_free(ah);
- 	kfree(ah);
- 	ah = NULL;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 7f90cb8..0fe915a 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1365,8 +1365,8 @@ void ath_detach(struct ath_softc *sc)
- 	    ah->btcoex_hw.scheme == ATH_BTCOEX_CFG_3WIRE)
- 		ath_gen_timer_free(ah, sc->btcoex.no_stomp_timer);
- 
--	ath9k_hw_detach(ah);
- 	ath9k_exit_debug(ah);
-+	ath9k_hw_detach(ah);
- 	sc->sc_ah = NULL;
- }
- 
-@@ -1626,10 +1626,8 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
- 		     (unsigned long)sc);
- 
- 	ah = kzalloc(sizeof(struct ath_hw), GFP_KERNEL);
--	if (!ah) {
--		r = -ENOMEM;
--		goto bad_no_ah;
+ drivers/base/firmware_class.c               |   14 ++++++--------
+ drivers/firmware/dell_rbu.c                 |    9 +++++++--
+ drivers/serial/ucc_uart.c                   |    8 +++++---
+ drivers/staging/comedi/drivers/usbdux.c     |    5 ++++-
+ drivers/staging/comedi/drivers/usbduxfast.c |    5 ++++-
+ drivers/usb/atm/ueagle-atm.c                |    7 ++++---
+ include/linux/firmware.h                    |    5 +++--
+ 7 files changed, 33 insertions(+), 20 deletions(-)
+
+--- wireless-testing.orig/drivers/base/firmware_class.c	2009-10-26 16:45:18.000000000 +0100
++++ wireless-testing/drivers/base/firmware_class.c	2009-10-26 17:08:10.000000000 +0100
+@@ -601,12 +601,9 @@ request_firmware_work_func(void *arg)
+ 	}
+ 	ret = _request_firmware(&fw, fw_work->name, fw_work->device,
+ 		fw_work->uevent);
+-	if (ret < 0)
+-		fw_work->cont(NULL, fw_work->context);
+-	else {
+-		fw_work->cont(fw, fw_work->context);
+-		release_firmware(fw);
 -	}
-+	if (!ah)
-+		return -ENOMEM;
- 
- 	ah->hw_version.devid = devid;
- 	ah->hw_version.subsysid = subsysid;
-@@ -1651,15 +1649,18 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	/* XXX assert csz is non-zero */
- 	common->cachelsz = csz << 2;	/* convert to bytes */
- 
--	if (ath9k_init_debug(ah) < 0)
--		dev_err(sc->dev, "Unable to create debugfs files\n");
--
- 	r = ath9k_hw_init(ah);
- 	if (r) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Unable to initialize hardware; "
- 			  "initialization status: %d\n", r);
--		goto bad;
-+		goto bad_free_hw;
-+	}
 +
-+	if (ath9k_init_debug(ah) < 0) {
-+		ath_print(common, ATH_DBG_FATAL,
-+			  "Unable to create debugfs files\n");
-+		goto bad_free_hw;
++	fw_work->cont(fw, fw_work->context);
++
+ 	module_put(fw_work->module);
+ 	kfree(fw_work);
+ 	return ret;
+@@ -619,6 +616,7 @@ request_firmware_work_func(void *arg)
+  *	is non-zero else the firmware copy must be done manually.
+  * @name: name of firmware file
+  * @device: device for which firmware is being loaded
++ * @gfp: allocation flags
+  * @context: will be passed over to @cont, and
+  *	@fw may be %NULL if firmware request fails.
+  * @cont: function will be called asynchronously when the firmware
+@@ -631,12 +629,12 @@ request_firmware_work_func(void *arg)
+ int
+ request_firmware_nowait(
+ 	struct module *module, int uevent,
+-	const char *name, struct device *device, void *context,
++	const char *name, struct device *device, gfp_t gfp, void *context,
+ 	void (*cont)(const struct firmware *fw, void *context))
+ {
+ 	struct task_struct *task;
+ 	struct firmware_work *fw_work = kmalloc(sizeof (struct firmware_work),
+-						GFP_ATOMIC);
++						gfp);
+ 
+ 	if (!fw_work)
+ 		return -ENOMEM;
+--- wireless-testing.orig/include/linux/firmware.h	2009-10-26 16:45:53.000000000 +0100
++++ wireless-testing/include/linux/firmware.h	2009-10-26 17:03:56.000000000 +0100
+@@ -4,6 +4,7 @@
+ #include <linux/module.h>
+ #include <linux/types.h>
+ #include <linux/compiler.h>
++#include <linux/gfp.h>
+ 
+ #define FW_ACTION_NOHOTPLUG 0
+ #define FW_ACTION_HOTPLUG 1
+@@ -38,7 +39,7 @@ int request_firmware(const struct firmwa
+ 		     struct device *device);
+ int request_firmware_nowait(
+ 	struct module *module, int uevent,
+-	const char *name, struct device *device, void *context,
++	const char *name, struct device *device, gfp_t gfp, void *context,
+ 	void (*cont)(const struct firmware *fw, void *context));
+ 
+ void release_firmware(const struct firmware *fw);
+@@ -51,7 +52,7 @@ static inline int request_firmware(const
+ }
+ static inline int request_firmware_nowait(
+ 	struct module *module, int uevent,
+-	const char *name, struct device *device, void *context,
++	const char *name, struct device *device, gfp_t gfp, void *context,
+ 	void (*cont)(const struct firmware *fw, void *context))
+ {
+ 	return -EINVAL;
+--- wireless-testing.orig/drivers/firmware/dell_rbu.c	2009-10-26 16:49:06.000000000 +0100
++++ wireless-testing/drivers/firmware/dell_rbu.c	2009-10-26 16:49:52.000000000 +0100
+@@ -544,9 +544,12 @@ static void callbackfn_rbu(const struct 
+ {
+ 	rbu_data.entry_created = 0;
+ 
+-	if (!fw || !fw->size)
++	if (!fw)
+ 		return;
+ 
++	if (!fw->size)
++		goto out;
++
+ 	spin_lock(&rbu_data.lock);
+ 	if (!strcmp(image_type, "mono")) {
+ 		if (!img_update_realloc(fw->size))
+@@ -568,6 +571,8 @@ static void callbackfn_rbu(const struct 
+ 	} else
+ 		pr_debug("invalid image type specified.\n");
+ 	spin_unlock(&rbu_data.lock);
++ out:
++	release_firmware(fw);
+ }
+ 
+ static ssize_t read_rbu_image_type(struct kobject *kobj,
+@@ -615,7 +620,7 @@ static ssize_t write_rbu_image_type(stru
+ 			spin_unlock(&rbu_data.lock);
+ 			req_firm_rc = request_firmware_nowait(THIS_MODULE,
+ 				FW_ACTION_NOHOTPLUG, "dell_rbu",
+-				&rbu_device->dev, &context,
++				&rbu_device->dev, GFP_KERNEL, &context,
+ 				callbackfn_rbu);
+ 			if (req_firm_rc) {
+ 				printk(KERN_ERR
+--- wireless-testing.orig/drivers/serial/ucc_uart.c	2009-10-26 16:50:04.000000000 +0100
++++ wireless-testing/drivers/serial/ucc_uart.c	2009-10-26 16:51:10.000000000 +0100
+@@ -1179,16 +1179,18 @@ static void uart_firmware_cont(const str
+ 
+ 	if (firmware->header.length != fw->size) {
+ 		dev_err(dev, "invalid firmware\n");
+-		return;
++		goto out;
  	}
  
- 	/* Get the hardware key cache size. */
-@@ -1848,12 +1849,11 @@ bad2:
- 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++)
- 		if (ATH_TXQ_SETUP(sc, i))
- 			ath_tx_cleanupq(sc, &sc->tx.txq[i]);
--bad:
-+
-+	ath9k_exit_debug(ah);
-+bad_free_hw:
- 	ath9k_hw_detach(ah);
--bad_no_ah:
--	ath9k_exit_debug(sc->sc_ah);
- 	sc->sc_ah = NULL;
--
- 	return r;
+ 	ret = qe_upload_firmware(firmware);
+ 	if (ret) {
+ 		dev_err(dev, "could not load firmware\n");
+-		return;
++		goto out;
+ 	}
+ 
+ 	firmware_loaded = 1;
++ out:
++	release_firmware(fw);
  }
  
-@@ -1966,8 +1966,8 @@ error_attach:
- 		if (ATH_TXQ_SETUP(sc, i))
- 			ath_tx_cleanupq(sc, &sc->tx.txq[i]);
+ static int ucc_uart_probe(struct of_device *ofdev,
+@@ -1247,7 +1249,7 @@ static int ucc_uart_probe(struct of_devi
+ 			 */
+ 			ret = request_firmware_nowait(THIS_MODULE,
+ 				FW_ACTION_HOTPLUG, filename, &ofdev->dev,
+-				&ofdev->dev, uart_firmware_cont);
++				GFP_KERNEL, &ofdev->dev, uart_firmware_cont);
+ 			if (ret) {
+ 				dev_err(&ofdev->dev,
+ 					"could not load firmware %s\n",
+--- wireless-testing.orig/drivers/staging/comedi/drivers/usbdux.c	2009-10-26 16:51:16.000000000 +0100
++++ wireless-testing/drivers/staging/comedi/drivers/usbdux.c	2009-10-26 16:51:52.000000000 +0100
+@@ -2327,9 +2327,11 @@ static void usbdux_firmware_request_comp
+ 	if (ret) {
+ 		dev_err(&usbdev->dev,
+ 			"Could not upload firmware (err=%d)\n", ret);
+-		return;
++		goto out;
+ 	}
+ 	comedi_usb_auto_config(usbdev, BOARDNAME);
++ out:
++	release_firmware(fw);
+ }
  
--	ath9k_hw_detach(ah);
- 	ath9k_exit_debug(ah);
-+	ath9k_hw_detach(ah);
- 	sc->sc_ah = NULL;
+ /* allocate memory for the urbs and initialise them */
+@@ -2580,6 +2582,7 @@ static int usbduxsub_probe(struct usb_in
+ 				      FW_ACTION_HOTPLUG,
+ 				      "usbdux_firmware.bin",
+ 				      &udev->dev,
++				      GFP_KERNEL,
+ 				      usbduxsub + index,
+ 				      usbdux_firmware_request_complete_handler);
  
- 	return error;
--- 
-1.6.0.4
+--- wireless-testing.orig/drivers/staging/comedi/drivers/usbduxfast.c	2009-10-26 17:01:20.000000000 +0100
++++ wireless-testing/drivers/staging/comedi/drivers/usbduxfast.c	2009-10-26 17:01:47.000000000 +0100
+@@ -1451,10 +1451,12 @@ static void usbduxfast_firmware_request_
+ 	if (ret) {
+ 		dev_err(&usbdev->dev,
+ 			"Could not upload firmware (err=%d)\n", ret);
+-		return;
++		goto out;
+ 	}
+ 
+ 	comedi_usb_auto_config(usbdev, BOARDNAME);
++ out:
++	release_firmware(fw);
+ }
+ 
+ /*
+@@ -1569,6 +1571,7 @@ static int usbduxfastsub_probe(struct us
+ 				      FW_ACTION_HOTPLUG,
+ 				      "usbduxfast_firmware.bin",
+ 				      &udev->dev,
++				      GFP_KERNEL,
+ 				      usbduxfastsub + index,
+ 				      usbduxfast_firmware_request_complete_handler);
+ 
+--- wireless-testing.orig/drivers/usb/atm/ueagle-atm.c	2009-10-26 17:01:48.000000000 +0100
++++ wireless-testing/drivers/usb/atm/ueagle-atm.c	2009-10-26 17:03:29.000000000 +0100
+@@ -667,12 +667,12 @@ static void uea_upload_pre_firmware(cons
+ 	else
+ 		uea_info(usb, "firmware uploaded\n");
+ 
+-	uea_leaves(usb);
+-	return;
++	goto err;
+ 
+ err_fw_corrupted:
+ 	uea_err(usb, "firmware is corrupted\n");
+ err:
++	release_firmware(fw_entry);
+ 	uea_leaves(usb);
+ }
+ 
+@@ -705,7 +705,8 @@ static int uea_load_firmware(struct usb_
+ 		break;
+ 	}
+ 
+-	ret = request_firmware_nowait(THIS_MODULE, 1, fw_name, &usb->dev, usb, uea_upload_pre_firmware);
++	ret = request_firmware_nowait(THIS_MODULE, 1, fw_name, &usb->dev,
++				      GFP_KERNEL, usb, uea_upload_pre_firmware);
+ 	if (ret)
+ 		uea_err(usb, "firmware %s is not available\n", fw_name);
+ 	else
+
 
