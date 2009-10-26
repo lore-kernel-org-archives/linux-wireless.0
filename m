@@ -1,74 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:61561 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754273AbZJHPAM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 11:00:12 -0400
-Received: by iwn10 with SMTP id 10so647944iwn.4
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2009 07:59:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20091008144352.GA2869@tuxdriver.com>
-References: <3ace41890910071216y69b8bc9la67b8f0ce5890cd8@mail.gmail.com>
-	<3ace41890910071228i786d4097w69dc7a3dfeb64afe@mail.gmail.com>
-	<1254952886.3713.4.camel@johannes.local> <3ace41890910072328n1460ee34v1fe7ca9b78eb646f@mail.gmail.com>
-	<1254995514.3713.22.camel@johannes.local> <1255002647.3713.25.camel@johannes.local>
-	<43e72e890910080643h282c4bf1xf972f15f13eae755@mail.gmail.com>
-	<43e72e890910080728ra63f1e7w6be3a2af65bc4766@mail.gmail.com>
-	<20091008144352.GA2869@tuxdriver.com>
+Received: from mail.atheros.com ([12.36.123.2]:20530 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752801AbZJZVcS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Oct 2009 17:32:18 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 14:32:24 -0700
+Date: Mon, 26 Oct 2009 14:32:22 -0700
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 8 Oct 2009 10:59:15 -0400
-Message-ID: <43e72e890910080759s17d26989mc96170a6de18226b@mail.gmail.com>
-Subject: Re: NULL pointer deref at wext ioctl (Re: [PATCH] compat-2.6: adding
-	ethtool.h to compat-2.6.31.h)
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	reinette chatre <reinette.chatre@intel.com>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Kalle Valo <kalle.valo@iki.fi>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: Re: [PATCH v2 2/4] ath9k_hw: distinguish single-chip solutions on
+	initial probe print
+Message-ID: <20091026213222.GA3956@tux>
+References: <1256575447-4591-1-git-send-email-lrodriguez@atheros.com> <87d449hp73.fsf@purkki.valot.fi> <20091026204447.GA5713@tux> <878wexhn6m.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <878wexhn6m.fsf@purkki.valot.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 8, 2009 at 10:43 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Thu, Oct 08, 2009 at 10:28:33AM -0400, Luis R. Rodriguez wrote:
->> On Thu, Oct 8, 2009 at 9:43 AM, Luis R. Rodriguez
->> <lrodriguez@atheros.com> wrote:
->> > On Thu, Oct 8, 2009 at 7:50 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> >> On Thu, 2009-10-08 at 11:51 +0200, Johannes Berg wrote:
->> >>
->> >>> Ok, that's odd. Is it possible that somehow cfg80211 is picking up an
->> >>> #ifdef'ed copy of "struct iw_handler_def", and thus the struct it is
->> >>> defining is simply too small?
->> >>
->> >> That is apparently what is happening since compat-wireless ships
->> >> iw_handler.h. This is wrong, as wext functionality is built into the
->> >> kernel image so you can't use a newer header file with it.
->> >
->> > Dah, thanks for looking into this! This must've been there this way
->> > for ages and we hadn't noticed until now. This is now fixed, and a new
->> > tarball pushed out. I'll fix on the stable stuff as well, although I
->> > doubt the header has changed much except now.
->>
->> OK so iw_handler added the libipw pointer, so libipw and friends are
->> now messed up on compat-wireless. Do we care? I'll disable them for
->> now. Can't think of a way to backport this easily.
->>
->>   CC [M]  /home/mcgrof/devel/compat-wireless-2.6/drivers/net/wireless/ipw2x00/ipw2100.o
->> /home/mcgrof/devel/compat-wireless-2.6/drivers/net/wireless/ipw2x00/ipw2100.c:
->> In function ‘ipw2100_alloc_device’:
->> /home/mcgrof/devel/compat-wireless-2.6/drivers/net/wireless/ipw2x00/ipw2100.c:6060:
->> error: ‘struct iw_public_data’ has no member named ‘libipw’
->> make[4]: *** [/home/mcgrof/devel/compat-wireless-2.6/drivers/net/wireless/ipw2x00/ipw2100.o]
->> Error 1
->
-> -       /* Structure managed by the in-kernel IEEE 802.11 layer */
-> -       struct ieee80211_device *       ieee80211;
-> +       /* Legacy structure managed by the ipw2x00-specific IEEE 802.11 layer */
-> +       struct libipw_device *          libipw;
->
-> Really just a name change, FWIW...
+On Mon, Oct 26, 2009 at 02:15:13PM -0700, Kalle Valo wrote:
+> "Luis R. Rodriguez" <lrodriguez@Atheros.com> writes:
+> 
+> >> I think you should provide the size of hw_name to this function and
+> >> use snprintf() to avoid writing out of bounds.
+> >
+> > I was going to do this but since I know the users of it and control
+> > it seemed to not matter. I'll respin with this added, better to be careful.
+> 
+> Yeah, you never know if someone (for example a crazy Finn just after a
+> refreshing sauna) comes along, changes the function a bit "to clean it
+> up" and creates a subtle bug ;)
 
-oh ok thanks, thought the struct changed too -- then is be easy to backport
+Ah yes, forgot about the crazy sauna fins, must fix now for sure.
 
   Luis
