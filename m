@@ -1,49 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet11.oracle.com ([148.87.113.123]:61960 "EHLO
-	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761645AbZJIXU3 (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:60120 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753128AbZJZPuu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2009 19:20:29 -0400
-Date: Fri, 9 Oct 2009 16:17:30 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	libertas-dev@lists.infradead.org
-Subject: [PATCH -next] libertas: depends on CFG80211
-Message-Id: <20091009161730.6ae5fe59.randy.dunlap@oracle.com>
-In-Reply-To: <20091009190654.741eeffd.sfr@canb.auug.org.au>
-References: <20091009190654.741eeffd.sfr@canb.auug.org.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 26 Oct 2009 11:50:50 -0400
+Received: by mail-fx0-f218.google.com with SMTP id 18so12181469fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 08:50:55 -0700 (PDT)
+Message-ID: <4AE5C55B.5070309@lwfinger.net>
+Date: Mon, 26 Oct 2009 10:50:51 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Richard Farina <sidhayn@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: rtl8187: kernel oops when leds enabled
+References: <4AE5BD6C.2050303@gmail.com>
+In-Reply-To: <4AE5BD6C.2050303@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+On 10/26/2009 10:17 AM, Richard Farina wrote:
 
-libertas uses CFG80211 functions so it should depend on that symbol.
+> I'm honestly a little surprised that no one has bothered to reproduce
+> this in the month since I reported it but maybe it is more unique to my
+> setup than it seems.
 
-drivers/built-in.o: In function `lbs_cfg_free':
-(.text+0x9ca93): undefined reference to `wiphy_unregister'
-drivers/built-in.o: In function `lbs_cfg_free':
-(.text+0x9ca9a): undefined reference to `wiphy_free'
-drivers/built-in.o: In function `lbs_cfg_register':
-(.text+0x9cb45): undefined reference to `wiphy_register'
-drivers/built-in.o: In function `lbs_cfg_alloc':
-(.text+0x9cc64): undefined reference to `wiphy_new'
+Your machine seems to be unique in that it happens most of the time.
+It took more than 10 tries, but I finally got my copy of the
+wireless-testing kernel to oops.
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/net/wireless/libertas/Kconfig |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I will be working on a patch.
 
---- linux-next-20091009.orig/drivers/net/wireless/libertas/Kconfig
-+++ linux-next-20091009/drivers/net/wireless/libertas/Kconfig
-@@ -1,6 +1,6 @@
- config LIBERTAS
- 	tristate "Marvell 8xxx Libertas WLAN driver support"
--	depends on WLAN_80211
-+	depends on WLAN_80211 && CFG80211
- 	select WIRELESS_EXT
- 	select WEXT_SPY
- 	select LIB80211
+Larry
