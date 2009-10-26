@@ -1,102 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:36979 "EHLO
-	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754213AbZJMJMB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 05:12:01 -0400
-Received: by ewy4 with SMTP id 4so3167103ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2009 02:11:24 -0700 (PDT)
+Received: from mail3.a8.com ([203.129.83.115]:37898 "EHLO mail3.a8.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754546AbZJZCtF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Oct 2009 22:49:05 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail3.a8.com (Postfix) with ESMTP id 25A1A1FB6D
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 10:33:32 +0800 (CST)
+Received: from mail3.a8.com ([127.0.0.1])
+	by localhost (mail2.a8.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id DR9H63d5Wt+t for <linux-wireless@vger.kernel.org>;
+	Mon, 26 Oct 2009 10:33:31 +0800 (CST)
+Received: from mail.a8.com (mail.a8.com [192.168.0.19])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail3.a8.com (Postfix) with ESMTP id C6FC71FB5E
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 10:33:31 +0800 (CST)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.a8.com (Postfix) with ESMTP id 3FB67400058
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 10:32:48 +0800 (CST)
+Received: from mail.a8.com ([127.0.0.1])
+	by localhost (mail.a8.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 68OMIrgT0uNC for <linux-wireless@vger.kernel.org>;
+	Mon, 26 Oct 2009 10:32:47 +0800 (CST)
+Received: from a8.com (mail1.a8.com [192.168.0.18])
+	by mail.a8.com (Postfix) with ESMTP id E1A3F400056
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 10:32:47 +0800 (CST)
+Message-ID: <20091026103247.2ng5wbub4ow8ok4w@webmail.yy.com>
+Date: Mon, 26 Oct 2009 10:32:47 +0800
+From: belle.shi@yy.com
+To: linux-wireless@vger.kernel.org
+Subject: about 802.11 scan and probe request
 MIME-Version: 1.0
-In-Reply-To: <1255377460.30637.150.camel@rc-desk>
-References: <1255119634-3060-1-git-send-email-reinette.chatre@intel.com>
-	 <1255119634-3060-3-git-send-email-reinette.chatre@intel.com>
-	 <20091012185943.GC2794@tuxdriver.com>
-	 <1255377460.30637.150.camel@rc-desk>
-Date: Tue, 13 Oct 2009 11:11:24 +0200
-Message-ID: <8ccf2e9c0910130211j6f522d1ia4dc3a764896f974@mail.gmail.com>
-Subject: Re: [ipw3945-devel] [PATCH 02/17 v2.6.32] iwl3945: update
-	iwl3945_apm_init()
-From: Vedran Rodic <vrodic@gmail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset=GB2312;
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you all very much.
+dear all,
+   is there anyone who read the standard "Part 11: Wireless LAN Medium
+Access Control (MAC) and Physical Layer (PHY) Specifications" ?
+   and i spend two month to read the stardard, and i read a few code of 
+wpa_suppliant and
+wpa_gui,there is one question: the scan have two mode:active or 
+passive,but when i run
+the wpa_gui, there is only scan button, in the standard the scan 
+request is like
+MLME-SCAN.request (
+                 BSSType,
+                 BSSID,
+                 SSID,
+                 ScanType,
+                 ProbeDelay,
+                 ChannelList,
+                 MinChannelTime,
+                 MaxChannelTime
+                 )
+but there are only three MAC frame formats:data frame, control frame 
+and Management
+frame, and there is no scan frame, there is only a Probe Request frame, 
+    so i am
+stumped, what's the relationship between MLME-SCAN.request and Probe 
+Request frame, is
+the MLME-SCAN.request and Probe Request frame only in different layer? 
+but the items is
+also different, the MLME-SCAN.request have:(
+BSSType, BSSID, SSID,  ScanType, ProbeDelay,  ChannelList,  
+MinChannelTime,   MaxChannelTime), but the  Probe Request frame body 
+only have two parts:  SSID
+and Supported rates.     and in my view, i think the active scan is to 
+send Probe Request
+frame, and the passive scan to receive the beacon frame, is it right?
+    thanks very much for advance!!
+belle
 
-I don't have sophisticated power measurement devices to confirm these
-fixes, and I've only tried patch 2/17, reporting back it on bug
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2094 that the
-problem is still not fixed with this patch applied only.
-
-
-I originally tested temperature difference near the WLAN card
-location. It's hard to compare overall laptop power usage between
-Windows XP and Linux because there are other drivers that can make a
-difference too.
-
-Unfortunately, I don't have Windows XP anymore to compare since I've
-upgraded my hard drive, but I'll be able to test further fixes by
-watching the /sys/class/power_supply/BAT0/power_now on my X60s.
-
-Can you describe your testing methodoloy? Are you testing just the
-mini PCI card usage? Are you comparing to Windows XP or Vista drivers?
-
-On Mon, Oct 12, 2009 at 9:57 PM, reinette chatre
-<reinette.chatre@intel.com> wrote:
-> Hi John,
->
-> On Mon, 2009-10-12 at 11:59 -0700, John W. Linville wrote:
->> On Fri, Oct 09, 2009 at 01:20:18PM -0700, Reinette Chatre wrote:
->> > From: Ben Cahill <ben.m.cahill@intel.com>
->> >
->> > Update iwl3945_apm_init() to set up device registers in sequence most recently
->> > recommended by factory.
->> >
->> > Add resets for APMG interrupts and radio chip, formerly done only in
->> > iwl3945_apm_reset(); moving them here assures that apm_init() will do
->> > a complete job of preparing hardware not only after platform boot,
->> > but also after apm_stop() has executed (due to rfkill, ifconfig down,
->> > driver unload, etc.).  This is in preparation to completely remove apm_reset().
->> >
->> > Add some comments.
->> >
->> > Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
->> > Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
->>
->> Is this actually a regression?  Can you provide a reference to the bug report?
->
-> This is something we discovered in the lab when we connected power
-> measurement tools to the device when the interface was down. In this
-> scenario the device is using a lot of power. This is not a regression
-> from the previous kernel version, it is something that was broken for a
-> while and only recently discovered.
->
-> Patches 2/17 and 3/17 address this issue and the above comment applies
-> to both.
->
-> We are still looking into issues related to this discovery and you may
-> see more fixes for this problem.
->
-> Reinette
->
->
->
->
->
-> ------------------------------------------------------------------------------
-> Come build with us! The BlackBerry(R) Developer Conference in SF, CA
-> is the only developer event you need to attend this year. Jumpstart your
-> developing skills, take BlackBerry mobile applications to market and stay
-> ahead of the curve. Join us from November 9 - 12, 2009. Register now!
-> http://p.sf.net/sfu/devconference
-> _______________________________________________
-> Ipw3945-devel mailing list
-> Ipw3945-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
->
