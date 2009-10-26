@@ -1,89 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7133 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753793AbZJZT5N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 15:57:13 -0400
-Subject: Re: Questions about cfg80211's cfg80211_connect_params->crypto
- settings
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200910260947.48365.hs4233@mail.mn-solutions.de>
-References: <200910260947.48365.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Mon, 26 Oct 2009 12:57:15 -0700
-Message-Id: <1256587035.2110.14.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:64763 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753271AbZJZQVz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Oct 2009 12:21:55 -0400
+Received: by iwn10 with SMTP id 10so6056077iwn.4
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 09:22:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87hbtmgmj6.fsf@purkki.valot.fi>
+References: <1256567941-26859-1-git-send-email-lrodriguez@atheros.com>
+	<1256567941-26859-3-git-send-email-lrodriguez@atheros.com>
+	<87hbtmgmj6.fsf@purkki.valot.fi>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 26 Oct 2009 09:21:40 -0700
+Message-ID: <43e72e890910260921h91c4cb5u5a2fc81e73377055@mail.gmail.com>
+Subject: Re: [PATCH 2/4] ath9k_hw: distinguish single-chip solutions on
+	initial probe print
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-10-26 at 09:47 +0100, Holger Schurig wrote:
-> Hi,
-> 
-> I'm a but confused about what fields in "struct 
-> cfg80211_connect_params" (now abbreviated as sme->)
-> are relevant for me.
-> 
-> 
-> sme->private
-> ------------
-> Right now, my lbs_cfg_connect() code just tests 
-> sme->crypto.cipher_group. It doesn't check or use sme->privacy.
-> 
->  and sme-> crypto.wpa_versions like they are redundant. Is this 
-> correct?
-> 
-> Empirical it migth be correct, because I can successfully connect 
-> to APs, but if "privacy" is redundant, should I prepare a patch 
-> to get rid of it?
-> 
-> What is this?  And how should my driver react to it's settings?
-> 
-> 
-> 
-> sme->crypto.wpa_versions
-> ------------------------
-> Again I seems to be ok to ignore this variable and just check 
-> sme->crypto.cipher_group. In practice this seems to work, but is 
-> it correct?
-> 
-> What is this, what is the intented use of it?  May I prepare a 
-> patch to get rid of it?
+On Mon, Oct 26, 2009 at 9:14 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> "Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
+>
+>> Devices with external radios have revisions which we can count on.
+>> On single chip solutions these EEPROM values for these radio revision
+>> also exist but are not meaningful as the radios are embedded onto the
+>> same chip. Each single-chip device evolves together as one device.
+>>
+>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/ahb.c |   11 ++++-------
+>>  drivers/net/wireless/ath/ath9k/hw.c  |   27 +++++++++++++++++++++++----
+>>  drivers/net/wireless/ath/ath9k/hw.h  |    3 +--
+>>  drivers/net/wireless/ath/ath9k/pci.c |   11 ++++-------
+>>  4 files changed, 32 insertions(+), 20 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
+>> index 41422c4..925818c 100644
+>> --- a/drivers/net/wireless/ath/ath9k/ahb.c
+>> +++ b/drivers/net/wireless/ath/ath9k/ahb.c
+>> @@ -69,6 +69,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
+>>       int irq;
+>>       int ret = 0;
+>>       struct ath_hw *ah;
+>> +     char hw_name[1024];
+>
+> This is a bit too large to allocate from stack IMHO.
+>
+>
+> [...]
+>
+>> --- a/drivers/net/wireless/ath/ath9k/pci.c
+>> +++ b/drivers/net/wireless/ath/ath9k/pci.c
+>> @@ -114,6 +114,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>>       u32 val;
+>>       int ret = 0;
+>>       struct ath_hw *ah;
+>> +     char hw_name[1024];
+>
+> Ditto.
 
-Wouldn't this be used to force WPA2/RSN?  THere are APs out there where
-you can select WPA+CCMP and WPA2+TKIP, which wouldn't be apparent from
-just cipher_group, right?  If userspace really does want you to only
-connect to a WPA2-capable AP and ignore WPA1+TKIP and WPA1+CCMP, then
-this field is the only way to indicate that.
+We use this for debugfs, so I went with that as an upper limit, given
+that we just use it a probe it seemed sane.
 
-In libertas, this would all happen during the scan-before-connect when
-we try to find the BSSID of the AP we want to associate with.  The WEXT
-stuff had a bunch of ugly checks to match up an AP in the scan list with
-the parameters of the connect request, and that's where I'd expect this
-to be used?
-
-Dan
-
-> 
-> 
-> sme->crypto.n_ciphers_pairwise, sme->crypto.ciphers_pairwise
-> ------------------------------------------------------------
-> The same for sme->crypto.n_ciphers_pairwise. It is always 0 zero 
-> for the WEP case and always 1 for the WPA/WPA2 case, so isn't it 
-> redundant either?  lbs_cfg_connect() ignores this, maybe it's 
-> not needed at .connect() time anyway?
-> 
-> But what is it really, what is the intended use?
-> 
-> 
-> 
-> sme->crypto.n_akm_suites, sme->crypto.akm_suites
-> ------------------------------------------------
-> In cfg80211.h, the kdoc help text for sme->crypo.akm_suites is 
-> just "AKM suites" or "number of AKM suites", which keeps me as 
-> confused as before.
-> 
-> What is this?  And how should my driver react to it's settings?
-> 
-> 
-
+  Luis
