@@ -1,55 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f42.google.com ([209.85.160.42]:56085 "EHLO
-	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753609AbZJYSzJ (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:55679 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751708AbZJZOi5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2009 14:55:09 -0400
-Received: by pwj9 with SMTP id 9so964595pwj.21
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2009 11:55:14 -0700 (PDT)
-Message-ID: <4AE49F0F.1060901@lwfinger.net>
-Date: Sun, 25 Oct 2009 13:55:11 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: Rate-setting problem with Broadcom 4315
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 26 Oct 2009 10:38:57 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 2/4] ath9k_hw: distinguish single-chip solutions on initial probe print
+Date: Mon, 26 Oct 2009 10:38:59 -0400
+Message-Id: <1256567941-26859-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1256567941-26859-1-git-send-email-lrodriguez@atheros.com>
+References: <1256567941-26859-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When my BCM4312 (ID 4315) runs in auto rate mode, the rate stays at
-1Mb/s. If I manually set the rate, I see a tcpperf throughput ~1/2 the
-rate that I set through a rate of 12 Mb/s. At 36 Mb/s, the rate is
-best at 15.7 Mb/s. Why does mistrel not increase the rate?
+Devices with external radios have revisions which we can count on.
+On single chip solutions these EEPROM values for these radio revision
+also exist but are not meaningful as the radios are embedded onto the
+same chip. Each single-chip device evolves together as one device.
 
-The output of /sys/..../rc_stats is:
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ahb.c |   11 ++++-------
+ drivers/net/wireless/ath/ath9k/hw.c  |   27 +++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath9k/hw.h  |    3 +--
+ drivers/net/wireless/ath/ath9k/pci.c |   11 ++++-------
+ 4 files changed, 32 insertions(+), 20 deletions(-)
 
-finger@larrylap:~> cat
-/sys/kernel/debug/ieee80211/phy0/stations/00:14:bf:85:49:fa/rc_stats
-rate     throughput  ewma prob   this prob  this succ/attempt
-success    attempts
-     1         0.9       99.1      100.0          0(  0)       3244
-     3282
-     2         1.8       95.7      100.0          0(  0)         12
-       12
-     5.5       4.8       95.7      100.0          0(  0)         12
-       12
-    11         9.2       96.8      100.0          0(  0)         12
-       12
-  P  6         5.6       99.9      100.0          0(  0)         58
-       58
-     9         8.0       95.7      100.0          0(  0)         11
-       11
-    12        10.6       95.7      100.0          0(  0)         12
-       12
-    18        15.7       96.6      100.0          0(  0)         14
-       15
-    24        20.3       95.7      100.0          0(  0)         11
-       11
-    36        29.0       95.4       94.5          0(  0)       1602
-     1670
-T   48        38.7       99.2      100.0          1(  1)      32147
-    37752
- t  54        32.9       75.9      100.0          0(  0)       8775
-    12788
+diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
+index 41422c4..925818c 100644
+--- a/drivers/net/wireless/ath/ath9k/ahb.c
++++ b/drivers/net/wireless/ath/ath9k/ahb.c
+@@ -69,6 +69,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
+ 	int irq;
+ 	int ret = 0;
+ 	struct ath_hw *ah;
++	char hw_name[1024];
+ 
+ 	if (!pdev->dev.platform_data) {
+ 		dev_err(&pdev->dev, "no platform data specified\n");
+@@ -133,15 +134,11 @@ static int ath_ahb_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	ah = sc->sc_ah;
++	ath9k_hw_name(ah, hw_name);
+ 	printk(KERN_INFO
+-	       "%s: Atheros AR%s MAC/BB Rev:%x, "
+-	       "AR%s RF Rev:%x, mem=0x%lx, irq=%d\n",
++	       "%s: %s mem=0x%lx, irq=%d\n",
+ 	       wiphy_name(hw->wiphy),
+-	       ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
+-	       ah->hw_version.macRev,
+-	       ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
+-				 AR_RADIO_SREV_MAJOR)),
+-	       ah->hw_version.phyRev,
++	       hw_name,
+ 	       (unsigned long)mem, irq);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index cf543e3..f65b591 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -3959,7 +3959,7 @@ static struct {
+ /*
+  * Return the MAC/BB name. "????" is returned if the MAC/BB is unknown.
+  */
+-const char *ath9k_hw_mac_bb_name(u32 mac_bb_version)
++static const char *ath9k_hw_mac_bb_name(u32 mac_bb_version)
+ {
+ 	int i;
+ 
+@@ -3971,13 +3971,12 @@ const char *ath9k_hw_mac_bb_name(u32 mac_bb_version)
+ 
+ 	return "????";
+ }
+-EXPORT_SYMBOL(ath9k_hw_mac_bb_name);
+ 
+ /*
+  * Return the RF name. "????" is returned if the RF is unknown.
+  * Used for devices with external radios.
+  */
+-const char *ath9k_hw_rf_name(u16 rf_version)
++static const char *ath9k_hw_rf_name(u16 rf_version)
+ {
+ 	int i;
+ 
+@@ -3989,4 +3988,24 @@ const char *ath9k_hw_rf_name(u16 rf_version)
+ 
+ 	return "????";
+ }
+-EXPORT_SYMBOL(ath9k_hw_rf_name);
++
++void ath9k_hw_name(struct ath_hw *ah, char *hw_name)
++{
++	/* chipsets >= AR9280 are single-chip */
++	if (AR_SREV_9280_10_OR_LATER(ah)) {
++		sprintf(hw_name,
++			"Atheros single-chip AR%s Rev:%x",
++			ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
++			ah->hw_version.macRev);
++	}
++	else {
++		sprintf(hw_name,
++			"Atheros AR%s MAC/BB Rev:%x AR%s RF Rev:%x: ",
++			ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
++			ah->hw_version.macRev,
++			ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
++					 AR_RADIO_SREV_MAJOR)),
++			ah->hw_version.phyRev);
++	}
++}
++EXPORT_SYMBOL(ath9k_hw_name);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 100fcba..3ceb4c6 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -720,8 +720,7 @@ void ath_gen_timer_free(struct ath_hw *ah, struct ath_gen_timer *timer);
+ void ath_gen_timer_isr(struct ath_hw *hw);
+ u32 ath9k_hw_gettsf32(struct ath_hw *ah);
+ 
+-const char *ath9k_hw_mac_bb_name(u32 mac_bb_version);
+-const char *ath9k_hw_rf_name(u16 rf_version);
++void ath9k_hw_name(struct ath_hw *ah, char *hw_name);
+ 
+ #define ATH_PCIE_CAP_LINK_CTRL	0x70
+ #define ATH_PCIE_CAP_LINK_L0S	1
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 76f3890..963d6fe 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -114,6 +114,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	u32 val;
+ 	int ret = 0;
+ 	struct ath_hw *ah;
++	char hw_name[1024];
+ 
+ 	if (pci_enable_device(pdev))
+ 		return -EIO;
+@@ -218,15 +219,11 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	sc->irq = pdev->irq;
+ 
+ 	ah = sc->sc_ah;
++	ath9k_hw_name(ah, hw_name);
+ 	printk(KERN_INFO
+-	       "%s: Atheros AR%s MAC/BB Rev:%x "
+-	       "AR%s RF Rev:%x: mem=0x%lx, irq=%d\n",
++	       "%s: %s mem=0x%lx, irq=%d\n",
+ 	       wiphy_name(hw->wiphy),
+-	       ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
+-	       ah->hw_version.macRev,
+-	       ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
+-				 AR_RADIO_SREV_MAJOR)),
+-	       ah->hw_version.phyRev,
++	       hw_name,
+ 	       (unsigned long)mem, pdev->irq);
+ 
+ 	return 0;
+-- 
+1.6.0.4
 
-Total packet count::    ideal 2570      lookaround 135
