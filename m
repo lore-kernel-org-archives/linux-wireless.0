@@ -1,81 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42495 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758253AbZJFVQm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 17:16:42 -0400
-Date: Tue, 6 Oct 2009 17:11:02 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Riffer <riffer@penny.prima.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Bleeding Edge b43 dated since 30 of september no longer
-	working & today does not even compile.
-Message-ID: <20091006211102.GC2911@tuxdriver.com>
-References: <4ACB91E7.5010405@penny.prima.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4ACB91E7.5010405@penny.prima.de>
+Received: from mx1.redhat.com ([209.132.183.28]:56899 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756003AbZJZUM7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Oct 2009 16:12:59 -0400
+Subject: Re: [PATCH 17/19] [RFC, v2] libertas: Kconfig entry for
+ libertas+cfg80211
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <200910260859.39002.hs4233@mail.mn-solutions.de>
+References: <20091022133043.185554096@mail.mn-solutions.de>
+	 <1256315972.12174.168.camel@johannes.local>
+	 <1256316179.2164.53.camel@localhost.localdomain>
+	 <200910260859.39002.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Mon, 26 Oct 2009 13:12:46 -0700
+Message-Id: <1256587966.2110.28.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 06, 2009 at 08:52:23PM +0200, Riffer wrote:
-
-> Another problem is that the archive from today can not be compiled:
+On Mon, 2009-10-26 at 08:59 +0100, Holger Schurig wrote:
+> > > Well if you want to push the mesh wext bits through to cfg80211
+> > > (temporarily) you wouldn't even need to depend on WEXT. I'd prefer,
+> > > however, to not do this, and just use the cfg80211 wext handlers in
+> > > libertas and depend on WEXT for now.
+> > 
+> > Yeah, I think it's best to handle the mesh WEXT ioctls separately for
+> > now.  There are really only 4 of them (get/set SSID, set channel, get
+> > mode) that matter for mesh.  The rest of the ioctls that the mesh
+> > interface supports get redirected to the cfg80211 handlers because they
+> > aren't specific to mesh.
 > 
-> /home/riffer/bleeding/compat-wireless-2009-10-06/drivers/net/wireless/ath/main.o
-> In file included from
-> /home/riffer/bleeding/compat-wireless-2009-10-06/include/net/mac80211.h:22,
->                  from
-> /home/riffer/bleeding/compat-wireless-2009-10-06/drivers/net/wireless/ath/ath.h:22,
->                  from
-> /home/riffer/bleeding/compat-wireless-2009-10-06/drivers/net/wireless/ath/main.c:20:
-> /home/riffer/bleeding/compat-wireless-2009-10-06/include/net/cfg80211.h:1146:
-> Fehler: »ETHTOOL_BUSINFO_LEN« ist hier nicht deklariert (nicht in einer
-> Funktion)
-> (translation:
-> Error »ETHTOOL_BUSINFO_LEN« is not declared here (not in a function))
+> We can reduce this to 3, because get/set channel could
+> simply go via cfg80211.
+> 
+> I'm unsure if we still need an GIWRANGE for mesh, but probably not.
 
-Odd that I didn't hit that, but whatever...does this fix it for you?
+Hmm, probably not.  I think everything is the same between the mesh
+interface and STA here, but not sure.
 
->From 463049630fa4c256025093ce94c66f9f4247b7c8 Mon Sep 17 00:00:00 2001
-From: John W. Linville <linville@tuxdriver.com>
-Date: Tue, 6 Oct 2009 16:55:28 -0400
-Subject: [PATCH] cfg80211: fix compile error from missing ethtool.h
+In any case, the code for the mesh channel change was different than the
+code for the STA channel change, we have to be a bit careful here.  The
+sequences were:
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- include/net/cfg80211.h |    1 +
- net/wireless/ethtool.h |    2 --
- 2 files changed, 1 insertions(+), 2 deletions(-)
+STA:
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 6f4862b..14915ea 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -18,6 +18,7 @@
- #include <linux/nl80211.h>
- #include <linux/if_ether.h>
- #include <linux/ieee80211.h>
-+#include <linux/ethtool.h>
- #include <net/regulatory.h>
- 
- /* remove once we remove the wext stuff */
-diff --git a/net/wireless/ethtool.h b/net/wireless/ethtool.h
-index 70cbee1..695ecad 100644
---- a/net/wireless/ethtool.h
-+++ b/net/wireless/ethtool.h
-@@ -1,8 +1,6 @@
- #ifndef __CFG80211_ETHTOOL__
- #define __CFG80211_ETHTOOL__
- 
--#include <linux/ethtool.h>
--
- extern const struct ethtool_ops cfg80211_ethtool_ops;
- 
- #endif /* __CFG80211_ETHTOOL__ */
--- 
-1.6.2.5
+1) get current channel #
+2) issue a MESH_STOP command with the old channel
+3) change the channel
+4) resend WEP keys to firmware if any
+5) restart adhoc if adhoc is enabled
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+mesh:
+
+1) if STA is active and in infrastructure, deauth from AP
+2) if STA is active and in adhoc, issue ADHOC_STOP
+3) issue MESH_START with new channel
+
+There are a few holes in the current implementation since desired
+behavior is somewhat undefined; for example, if you change the mesh
+channel, should an active adhoc network on the STA interface *restart*
+on the new channel, or should the adhoc network on the old channel just
+be torn down?  If you change the mesh channel and the STA interface is
+associated to an AP, should the STA interface try to re-associate to
+that SSID on the new channel, or should it just stop?
+
+In the end, we decided to keep it simple and require userspace to know a
+bit about what was going on, which is reasonable, and thus if userspace
+makes the choice to change mesh channel, userspace would also be
+responsible for figuring out what happens with the STA interface next.
+
+Dan
+
+> 
+> Dan, you once said that you converted the MESH firmware
+> calls to new style commands. Do you have those around?  Maybe
+> I can re-work them if they don't apply anymore.
+> 
+
