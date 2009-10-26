@@ -1,90 +1,304 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43145 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:51518 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751587AbZJAIqe (ORCPT
+	with ESMTP id S1753970AbZJZRn0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2009 04:46:34 -0400
-Subject: Re: driver_nl80211 broken again
+	Mon, 26 Oct 2009 13:43:26 -0400
+Subject: [RFC] ar9170: load firmware asynchronously
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090930221353.GB11052@jm.kir.nu>
-References: <1251117161.22951.4.camel@maxim-laptop>
-	 <1251122885.12007.12.camel@johannes.local>
-	 <1251144381.9374.4.camel@maxim-laptop>
-	 <1251147515.20161.3.camel@johannes.local>
-	 <1252116503.2398.26.camel@maxim-laptop>
-	 <1252423769.3806.4.camel@johannes.local>
-	 <1252443260.16422.5.camel@maxim-laptop>
-	 <1254273569.4499.8.camel@maxim-laptop>  <20090930221353.GB11052@jm.kir.nu>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-8pVDPkQx3vXYe64LsLlN"
-Date: Thu, 01 Oct 2009 10:46:26 +0200
-Message-Id: <1254386786.3959.18.camel@johannes.local>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Dan Williams <dcbw@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 26 Oct 2009 18:43:25 +0100
+Message-ID: <1256579005.4237.0.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This converts ar9170 to load firmware asynchronously
+out of ->probe() and only register with mac80211 when
+all firmware has been loaded successfully. If, on the
+other hand, any firmware fails to load, it will now
+unbind from the device.
 
---=-8pVDPkQx3vXYe64LsLlN
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+This ought to make it possible to build the driver
+into the kernel and as long as your system boots
+within 60 seconds it'll all just work.
 
-On Thu, 2009-10-01 at 01:13 +0300, Jouni Malinen wrote:
+This is how we need to load firmware for drivers that
+require the firmware image to detect which features
+to register to mac80211/cfg80211, but it's also useful
+when no features depend on the firmware.
 
-> > @@ -1302,8 +1302,10 @@ void wpa_supplicant_disassociate(struct wpa_supp=
-licant *wpa_s,
-> >                         wpa_drv_disassociate(wpa_s, wpa_s->bssid, reaso=
-n_code);
-> > +                       wpa_drv_deauthenticate(wpa_s, wpa_s->bssid, rea=
-son_code);
->=20
-> To me, this looks broken. When wpa_supplicant requests a
-> disassociastion, it is _only_ asking for disassociation, not
-> deauthentication. cfg80211/mac80211 may not currently handle that, but
-> as far as I can tell, it sounds like an issue there and not in
-> wpa_supplicant. Johannes may disagree with this, though.
+I've done ar9170 because I'm somewhat familiar with its
+implementation. b43 should probably be converted to this
+scheme since it actually has features that depend on the
+firmware, and libertas_tf has the MAC addresss depending
+on the firmware (well it needs the firmware to read it).
 
-cfg80211/mac80211 _do_ handle that. If you ask for disassociation, it
-stays authenticated, and later expects you to still remember that and
-refuses authentication since you're already authenticated.
+The only complication with this is that now the user is
+mostly unaware they have a wireless device, they can only
+find it via lsusb/lspci etc. if firmware loading fails,
+or from kernel messages. And also manual binding in sysfs,
+device re-plugging or module re-loading is required to
+get the module to find the device after putting firmware
+in place...
 
-> I don't think either of those options would be acceptable for
-> wpa_supplicant and the correct fix is to make cfg80211/mac80211 be able
-> to handle authentication to a STA that is already authenticated. If
-> that is not acceptable, this hack needs to be hidden in driver_nl80211.c
-> instead of polluting core wpa_supplicant code which is supposed to be
-> driver independent. In other words, make driver_nl80211.c deauth if auth
-> fails and then try auth again. I don't really like that much, but if
-> this needs to be worked around in wpa_supplicant, that is the most
-> likely place where such a change could be considered.
+Still I think this is better than what we have now with
+many drivers -- if firmware is missing you get network
+interfaces etc. but cannot ever use them, and it's not
+always entirely clear that is due to missing firmware.
 
-I still don't see how it makes sense to authenticate while still being
-authenticated.
+ drivers/net/wireless/ath/ar9170/ar9170.h |    1 
+ drivers/net/wireless/ath/ar9170/main.c   |   10 +
+ drivers/net/wireless/ath/ar9170/usb.c    |  170 ++++++++++++++++++-------------
+ 3 files changed, 111 insertions(+), 70 deletions(-)
 
-johannes
+--- wireless-testing.orig/drivers/net/wireless/ath/ar9170/usb.c	2009-10-26 16:45:12.000000000 +0100
++++ wireless-testing/drivers/net/wireless/ath/ar9170/usb.c	2009-10-26 18:29:17.000000000 +0100
+@@ -578,43 +578,6 @@ static int ar9170_usb_upload(struct ar91
+ 	return 0;
+ }
+ 
+-static int ar9170_usb_request_firmware(struct ar9170_usb *aru)
+-{
+-	int err = 0;
+-
+-	err = request_firmware(&aru->firmware, "ar9170.fw",
+-			       &aru->udev->dev);
+-	if (!err) {
+-		aru->init_values = NULL;
+-		return 0;
+-	}
+-
+-	if (aru->req_one_stage_fw) {
+-		dev_err(&aru->udev->dev, "ar9170.fw firmware file "
+-			"not found and is required for this device\n");
+-		return -EINVAL;
+-	}
+-
+-	dev_err(&aru->udev->dev, "ar9170.fw firmware file "
+-		"not found, trying old firmware...\n");
+-
+-	err = request_firmware(&aru->init_values, "ar9170-1.fw",
+-			       &aru->udev->dev);
+-	if (err) {
+-		dev_err(&aru->udev->dev, "file with init values not found.\n");
+-		return err;
+-	}
+-
+-	err = request_firmware(&aru->firmware, "ar9170-2.fw", &aru->udev->dev);
+-	if (err) {
+-		release_firmware(aru->init_values);
+-		dev_err(&aru->udev->dev, "firmware file not found.\n");
+-		return err;
+-	}
+-
+-	return err;
+-}
+-
+ static int ar9170_usb_reset(struct ar9170_usb *aru)
+ {
+ 	int ret, lock = (aru->intf->condition != USB_INTERFACE_BINDING);
+@@ -753,6 +716,103 @@ err_out:
+ 	return err;
+ }
+ 
++static void ar9170_usb_firmware_failed(struct ar9170_usb *aru)
++{
++	struct device *parent = aru->udev->dev.parent;
++
++	/* unbind anything failed */
++	if (parent)
++		down(&parent->sem);
++	device_release_driver(&aru->udev->dev);
++	if (parent)
++		up(&parent->sem);
++}
++
++static void ar9170_usb_firmware_finish(const struct firmware *fw, void *context)
++{
++	struct ar9170_usb *aru = context;
++	int err;
++
++	aru->firmware = fw;
++
++	if (!fw) {
++		dev_err(&aru->udev->dev, "firmware file not found.\n");
++		goto err_freefw;
++	}
++
++	err = ar9170_usb_init_device(aru);
++	if (err)
++		goto err_freefw;
++
++	err = ar9170_usb_open(&aru->common);
++	if (err)
++		goto err_unrx;
++
++	err = ar9170_register(&aru->common, &aru->udev->dev);
++
++	ar9170_usb_stop(&aru->common);
++	if (err)
++		goto err_unrx;
++
++	return;
++
++ err_unrx:
++	ar9170_usb_cancel_urbs(aru);
++
++ err_freefw:
++	ar9170_usb_firmware_failed(aru);
++}
++
++static void ar9170_usb_firmware_inits(const struct firmware *fw,
++				      void *context)
++{
++	struct ar9170_usb *aru = context;
++	int err;
++
++	if (!fw) {
++		dev_err(&aru->udev->dev, "file with init values not found.\n");
++		ar9170_usb_firmware_failed(aru);
++		return;
++	}
++
++	aru->init_values = fw;
++
++	/* ok so we have the init values -- get code for two-stage */
++
++	err = request_firmware_nowait(THIS_MODULE, 1, "ar9170-2.fw",
++				      &aru->udev->dev, GFP_KERNEL, aru,
++				      ar9170_usb_firmware_finish);
++	if (err)
++		ar9170_usb_firmware_failed(aru);
++}
++
++static void ar9170_usb_firmware_step2(const struct firmware *fw, void *context)
++{
++	struct ar9170_usb *aru = context;
++	int err;
++
++	if (fw) {
++		ar9170_usb_firmware_finish(fw, context);
++		return;
++	}
++
++	if (aru->req_one_stage_fw) {
++		dev_err(&aru->udev->dev, "ar9170.fw firmware file "
++			"not found and is required for this device\n");
++		ar9170_usb_firmware_failed(aru);
++		return;
++	}
++
++	dev_err(&aru->udev->dev, "ar9170.fw firmware file "
++		"not found, trying old firmware...\n");
++
++	err = request_firmware_nowait(THIS_MODULE, 1, "ar9170-1.fw",
++				      &aru->udev->dev, GFP_KERNEL, aru,
++				      ar9170_usb_firmware_inits);
++	if (err)
++		ar9170_usb_firmware_failed(aru);
++}
++
+ static bool ar9170_requires_one_stage(const struct usb_device_id *id)
+ {
+ 	if (!id->driver_info)
+@@ -810,33 +870,9 @@ static int ar9170_usb_probe(struct usb_i
+ 	if (err)
+ 		goto err_freehw;
+ 
+-	err = ar9170_usb_request_firmware(aru);
+-	if (err)
+-		goto err_freehw;
+-
+-	err = ar9170_usb_init_device(aru);
+-	if (err)
+-		goto err_freefw;
+-
+-	err = ar9170_usb_open(ar);
+-	if (err)
+-		goto err_unrx;
+-
+-	err = ar9170_register(ar, &udev->dev);
+-
+-	ar9170_usb_stop(ar);
+-	if (err)
+-		goto err_unrx;
+-
+-	return 0;
+-
+-err_unrx:
+-	ar9170_usb_cancel_urbs(aru);
+-
+-err_freefw:
+-	release_firmware(aru->init_values);
+-	release_firmware(aru->firmware);
+-
++	return request_firmware_nowait(THIS_MODULE, 1, "ar9170.fw",
++				       &aru->udev->dev, GFP_KERNEL, aru,
++				       ar9170_usb_firmware_step2);
+ err_freehw:
+ 	usb_set_intfdata(intf, NULL);
+ 	usb_put_dev(udev);
+@@ -856,12 +892,12 @@ static void ar9170_usb_disconnect(struct
+ 	ar9170_unregister(&aru->common);
+ 	ar9170_usb_cancel_urbs(aru);
+ 
+-	release_firmware(aru->init_values);
+-	release_firmware(aru->firmware);
+-
+ 	usb_put_dev(aru->udev);
+ 	usb_set_intfdata(intf, NULL);
+ 	ieee80211_free_hw(aru->common.hw);
++
++	release_firmware(aru->init_values);
++	release_firmware(aru->firmware);
+ }
+ 
+ #ifdef CONFIG_PM
+--- wireless-testing.orig/drivers/net/wireless/ath/ar9170/ar9170.h	2009-10-26 18:00:40.000000000 +0100
++++ wireless-testing/drivers/net/wireless/ath/ar9170/ar9170.h	2009-10-26 18:04:01.000000000 +0100
+@@ -160,6 +160,7 @@ struct ar9170 {
+ 	struct ath_common common;
+ 	struct mutex mutex;
+ 	enum ar9170_device_state state;
++	bool registered;
+ 	unsigned long bad_hw_nagger;
+ 
+ 	int (*open)(struct ar9170 *);
+--- wireless-testing.orig/drivers/net/wireless/ath/ar9170/main.c	2009-10-26 18:04:05.000000000 +0100
++++ wireless-testing/drivers/net/wireless/ath/ar9170/main.c	2009-10-26 18:05:59.000000000 +0100
+@@ -2722,7 +2722,8 @@ int ar9170_register(struct ar9170 *ar, s
+ 	dev_info(pdev, "Atheros AR9170 is registered as '%s'\n",
+ 		 wiphy_name(ar->hw->wiphy));
+ 
+-	return err;
++	ar->registered = true;
++	return 0;
+ 
+ err_unreg:
+ 	ieee80211_unregister_hw(ar->hw);
+@@ -2733,11 +2734,14 @@ err_out:
+ 
+ void ar9170_unregister(struct ar9170 *ar)
+ {
++	if (ar->registered) {
+ #ifdef CONFIG_AR9170_LEDS
+-	ar9170_unregister_leds(ar);
++		ar9170_unregister_leds(ar);
+ #endif /* CONFIG_AR9170_LEDS */
+ 
+-	kfree_skb(ar->rx_failover);
+ 	ieee80211_unregister_hw(ar->hw);
++	}
++
++	kfree_skb(ar->rx_failover);
+ 	mutex_destroy(&ar->mutex);
+ }
 
---=-8pVDPkQx3vXYe64LsLlN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKxGxdAAoJEODzc/N7+Qma21EQAMXNsvnZwDv4mzwj/6g8FLle
-QxmQ6TmuW7ekuAzER+tTnARgVIkuSp/jkjX1fyIBUyTk5ji/t3QPHcipwaw9n/LL
-ks8ho6huwlIA5A1QL82a3mKpHKSK5/3QRgeNjkd7GJ3jZbNSCBDpIXJNrXmRaD0Z
-FXIpH+yBg6dnvHbZZo/r1MqMCz5zwJ+zczLKMZNZKp3tSzDzS6zRfiBtEPYYjY2q
-mwmCJfZZcjiV/1Qak7tzEt3YYEIKXa91Q4towrD76/UvoNprfQmjZ4EdFRL/gq5q
-wDrHM+6NPjCui/T0K6hjp4kjg7T0lvkp60JsqeLqPftPfxyo0SyY0+OxaZpaUiJ5
-sepEvS44qitwvd+ZE6i1eZ6bI5v6YSOJFUZuwD0qj8swKa97qikk+5nnujgdjyzz
-lQmgKnUQS7bCGOhrZI+C1pilAvAFdrcFBYr2ymMLy+C8/BHb4uV8VKGvy18Y1zqT
-fDzhFqLnPLynxnjNnlgSCrZCujpXLrQyVySJvM3rY4bM2aZDP5jVOkAiGjeO1xmL
-9crljDj/Z6P9Tk6CgSkVQbWhghjZ4luR8nbXSNWAlKcRUP4L91aYa2iQVJ7Q01+3
-tXxNeuIW1AwwUV+GSqc50qy77sFRwBYd9lBAWm9y+BratvthUVbU94PcqmPBDgTs
-VCrNzZ5vwoGYoT4W5EXI
-=IqCQ
------END PGP SIGNATURE-----
-
---=-8pVDPkQx3vXYe64LsLlN--
 
