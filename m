@@ -1,30 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:49154 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754258AbZJVShI (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:47422 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751967AbZJZOTm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2009 14:37:08 -0400
-Date: Thu, 22 Oct 2009 20:19:16 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC,PATCH 00/28] mwl8k updates, initial AP firmware support
-Message-ID: <20091022181916.GB1583@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 26 Oct 2009 10:19:42 -0400
+Received: by iwn10 with SMTP id 10so5973978iwn.4
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 07:19:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890910212042i6a6a1bc3h1cd2a742f462353f@mail.gmail.com>
+References: <1255934026-20686-1-git-send-email-lrodriguez@atheros.com>
+	<43e72e890910212042i6a6a1bc3h1cd2a742f462353f@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 26 Oct 2009 07:19:26 -0700
+Message-ID: <43e72e890910260719j508670a8p87bb7a5cf31d843d@mail.gmail.com>
+Subject: Re: [RFT 00/15] ath9k_hw ar9271 updates & AR5416 force bias
+To: linux-wireless@vger.kernel.org,
+	Sujith <Sujith.Manoharan@atheros.com>
+Cc: ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch set includes an initial cut at adding support to mwl8k
-for AP chips and firmware images.  AP firmware images present a
-slightly different command set than STA firmware images do, and this
-patch set adds support for those AP commands necessary to initialise
-the firmware and allow packet reception.
+On Wed, Oct 21, 2009 at 8:42 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Mon, Oct 19, 2009 at 3:33 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>> This series started off to extend support for ar9271 on ath9k_hw
+>> but after review of the phy related code I noticed a fix for
+>> AR5416 was only partially being implemented and used for all
+>> chipsets. This series then adds the changes I've noticed so far
+>> required for ar9271 but also fixes and completes the orientation
+>> fix for AR5416 (force bias). Since I'm touching phy.c I also extend
+>> documentation for it.
+>>
+>> I don't have AR9285 cards with me but I do have an AR5416 cardbus
+>> card -- I'd appreciate it if someone can give this a test on AR9285
 
-Note that AP/STA interface creation on AP firmware images is not
-supported yet, this will be added in another set of patches.
+Alright well I made it back to California and tested an AR9285 and
+things are peachy so I will submit this now.
 
-(All the code to allow using mwl8k in AP mode exists and works, with
-11n/AMPDU/hw crypto support, etc., it just needs to be cleaned up a
-bit more and chopped up into logical chunks suitable for submission.)
-
-Comments appreciated!
+  Luis
