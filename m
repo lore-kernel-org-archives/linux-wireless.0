@@ -1,87 +1,419 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:38125 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752535AbZJWQdP (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:28535 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752703AbZJZPxr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 12:33:15 -0400
-Message-ID: <4AE1DAC9.5040603@imap.cc>
-Date: Fri, 23 Oct 2009 18:33:13 +0200
-From: Tilman Schmidt <tilman@imap.cc>
+	Mon, 26 Oct 2009 11:53:47 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>,
+	John Linville <linville@tuxdriver.com>
+Subject: [PATCH] libertas: move mesh command handling away
+Date: Mon, 26 Oct 2009 16:53:14 +0100
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Jarek Poplawski <jarkao2@gmail.com>,
-	David Miller <davem@davemloft.net>, hidave.darkstar@gmail.com,
-	linux-kernel@vger.kernel.org, tglx@linutronix.de,
-	linux-wireless@vger.kernel.org, linux-ppp@vger.kernel.org,
-	netdev@vger.kernel.org, paulus@samba.org,
-	isdn4linux <isdn4linux@listserv.isdn4linux.de>,
-	i4ldeveloper <i4ldeveloper@listserv.isdn4linux.de>,
-	Karsten Keil <isdn@linux-pingi.de>
-Subject: Re: NOHZ: local_softirq_pending 08
-References: <4AD31213.6020006@imap.cc> <20091015114052.GA9870@ff.dom.local>	 <4AD76184.6030900@gmail.com> <4ADF5710.4030505@imap.cc>	 <4AE0ECCE.2020407@imap.cc> <1256304869.12174.20.camel@johannes.local>	 <4AE1BD3D.3020007@imap.cc> <1256308311.12174.38.camel@johannes.local>
-In-Reply-To: <1256308311.12174.38.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200910261653.14599.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Johannes Berg schrieb:
-> On Fri, 2009-10-23 at 16:27 +0200, Tilman Schmidt wrote:
->> Johannes Berg schrieb:
->>> So you've verified that the entire i4l stack can cope with being called
->>> twice on the same CPU, from different contexts?
->> What makes you think so?
-> 
-> I thought I'd explained this in my other email. *sigh*
-[snip]
+--- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
++++ linux-wl/drivers/net/wireless/libertas/cmd.c
+@@ -3,7 +3,6 @@
+   * It prepares command and sends it to firmware when it is ready.
+   */
+ 
+-#include <net/lib80211.h>
+ #include <linux/kfifo.h>
+ #include <linux/sched.h>
+ 
+@@ -697,173 +696,6 @@
+ 	return 0;
+ }
+ 
+-static int lbs_cmd_bt_access(struct cmd_ds_command *cmd,
+-			       u16 cmd_action, void *pdata_buf)
+-{
+-	struct cmd_ds_bt_access *bt_access = &cmd->params.bt;
+-	lbs_deb_enter_args(LBS_DEB_CMD, "action %d", cmd_action);
+-
+-	cmd->command = cpu_to_le16(CMD_BT_ACCESS);
+-	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_bt_access) +
+-		sizeof(struct cmd_header));
+-	cmd->result = 0;
+-	bt_access->action = cpu_to_le16(cmd_action);
+-
+-	switch (cmd_action) {
+-	case CMD_ACT_BT_ACCESS_ADD:
+-		memcpy(bt_access->addr1, pdata_buf, 2 * ETH_ALEN);
+-		lbs_deb_hex(LBS_DEB_MESH, "BT_ADD: blinded MAC addr", bt_access->addr1, 6);
+-		break;
+-	case CMD_ACT_BT_ACCESS_DEL:
+-		memcpy(bt_access->addr1, pdata_buf, 1 * ETH_ALEN);
+-		lbs_deb_hex(LBS_DEB_MESH, "BT_DEL: blinded MAC addr", bt_access->addr1, 6);
+-		break;
+-	case CMD_ACT_BT_ACCESS_LIST:
+-		bt_access->id = cpu_to_le32(*(u32 *) pdata_buf);
+-		break;
+-	case CMD_ACT_BT_ACCESS_RESET:
+-		break;
+-	case CMD_ACT_BT_ACCESS_SET_INVERT:
+-		bt_access->id = cpu_to_le32(*(u32 *) pdata_buf);
+-		break;
+-	case CMD_ACT_BT_ACCESS_GET_INVERT:
+-		break;
+-	default:
+-		break;
+-	}
+-	lbs_deb_leave(LBS_DEB_CMD);
+-	return 0;
+-}
+-
+-static int lbs_cmd_fwt_access(struct cmd_ds_command *cmd,
+-			       u16 cmd_action, void *pdata_buf)
+-{
+-	struct cmd_ds_fwt_access *fwt_access = &cmd->params.fwt;
+-	lbs_deb_enter_args(LBS_DEB_CMD, "action %d", cmd_action);
+-
+-	cmd->command = cpu_to_le16(CMD_FWT_ACCESS);
+-	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_fwt_access) +
+-		sizeof(struct cmd_header));
+-	cmd->result = 0;
+-
+-	if (pdata_buf)
+-		memcpy(fwt_access, pdata_buf, sizeof(*fwt_access));
+-	else
+-		memset(fwt_access, 0, sizeof(*fwt_access));
+-
+-	fwt_access->action = cpu_to_le16(cmd_action);
+-
+-	lbs_deb_leave(LBS_DEB_CMD);
+-	return 0;
+-}
+-
+-int lbs_mesh_access(struct lbs_private *priv, uint16_t cmd_action,
+-		    struct cmd_ds_mesh_access *cmd)
+-{
+-	int ret;
+-
+-	lbs_deb_enter_args(LBS_DEB_CMD, "action %d", cmd_action);
+-
+-	cmd->hdr.command = cpu_to_le16(CMD_MESH_ACCESS);
+-	cmd->hdr.size = cpu_to_le16(sizeof(*cmd));
+-	cmd->hdr.result = 0;
+-
+-	cmd->action = cpu_to_le16(cmd_action);
+-
+-	ret = lbs_cmd_with_response(priv, CMD_MESH_ACCESS, cmd);
+-
+-	lbs_deb_leave(LBS_DEB_CMD);
+-	return ret;
+-}
+-
+-static int __lbs_mesh_config_send(struct lbs_private *priv,
+-				  struct cmd_ds_mesh_config *cmd,
+-				  uint16_t action, uint16_t type)
+-{
+-	int ret;
+-	u16 command = CMD_MESH_CONFIG_OLD;
+-
+-	lbs_deb_enter(LBS_DEB_CMD);
+-
+-	/*
+-	 * Command id is 0xac for v10 FW along with mesh interface
+-	 * id in bits 14-13-12.
+-	 */
+-	if (priv->mesh_fw_ver == MESH_FW_NEW)
+-		command = CMD_MESH_CONFIG |
+-			  (MESH_IFACE_ID << MESH_IFACE_BIT_OFFSET);
+-
+-	cmd->hdr.command = cpu_to_le16(command);
+-	cmd->hdr.size = cpu_to_le16(sizeof(struct cmd_ds_mesh_config));
+-	cmd->hdr.result = 0;
+-
+-	cmd->type = cpu_to_le16(type);
+-	cmd->action = cpu_to_le16(action);
+-
+-	ret = lbs_cmd_with_response(priv, command, cmd);
+-
+-	lbs_deb_leave(LBS_DEB_CMD);
+-	return ret;
+-}
+-
+-int lbs_mesh_config_send(struct lbs_private *priv,
+-			 struct cmd_ds_mesh_config *cmd,
+-			 uint16_t action, uint16_t type)
+-{
+-	int ret;
+-
+-	if (!(priv->fwcapinfo & FW_CAPINFO_PERSISTENT_CONFIG))
+-		return -EOPNOTSUPP;
+-
+-	ret = __lbs_mesh_config_send(priv, cmd, action, type);
+-	return ret;
+-}
+-
+-/* This function is the CMD_MESH_CONFIG legacy function.  It only handles the
+- * START and STOP actions.  The extended actions supported by CMD_MESH_CONFIG
+- * are all handled by preparing a struct cmd_ds_mesh_config and passing it to
+- * lbs_mesh_config_send.
+- */
+-int lbs_mesh_config(struct lbs_private *priv, uint16_t action, uint16_t chan)
+-{
+-	struct cmd_ds_mesh_config cmd;
+-	struct mrvl_meshie *ie;
+-	DECLARE_SSID_BUF(ssid);
+-
+-	memset(&cmd, 0, sizeof(cmd));
+-	cmd.channel = cpu_to_le16(chan);
+-	ie = (struct mrvl_meshie *)cmd.data;
+-
+-	switch (action) {
+-	case CMD_ACT_MESH_CONFIG_START:
+-		ie->id = WLAN_EID_GENERIC;
+-		ie->val.oui[0] = 0x00;
+-		ie->val.oui[1] = 0x50;
+-		ie->val.oui[2] = 0x43;
+-		ie->val.type = MARVELL_MESH_IE_TYPE;
+-		ie->val.subtype = MARVELL_MESH_IE_SUBTYPE;
+-		ie->val.version = MARVELL_MESH_IE_VERSION;
+-		ie->val.active_protocol_id = MARVELL_MESH_PROTO_ID_HWMP;
+-		ie->val.active_metric_id = MARVELL_MESH_METRIC_ID;
+-		ie->val.mesh_capability = MARVELL_MESH_CAPABILITY;
+-		ie->val.mesh_id_len = priv->mesh_ssid_len;
+-		memcpy(ie->val.mesh_id, priv->mesh_ssid, priv->mesh_ssid_len);
+-		ie->len = sizeof(struct mrvl_meshie_val) -
+-			IEEE80211_MAX_SSID_LEN + priv->mesh_ssid_len;
+-		cmd.length = cpu_to_le16(sizeof(struct mrvl_meshie_val));
+-		break;
+-	case CMD_ACT_MESH_CONFIG_STOP:
+-		break;
+-	default:
+-		return -1;
+-	}
+-	lbs_deb_cmd("mesh config action %d type %x channel %d SSID %s\n",
+-		    action, priv->mesh_tlv, chan,
+-		    print_ssid(ssid, priv->mesh_ssid, priv->mesh_ssid_len));
+-
+-	return __lbs_mesh_config_send(priv, &cmd, action, priv->mesh_tlv);
+-}
+-
+ static void lbs_queue_cmd(struct lbs_private *priv,
+ 			  struct cmd_ctrl_node *cmdnode)
+ {
+--- linux-wl.orig/drivers/net/wireless/libertas/mesh.h
++++ linux-wl/drivers/net/wireless/libertas/mesh.h
+@@ -6,6 +6,7 @@
+ 
+ 
+ #include <net/iw_handler.h>
++#include <net/lib80211.h>
+ 
+ 
+ /* Mesh statistics */
+@@ -42,6 +43,16 @@
+ 	struct net_device *dev, struct txpd *txpd);
+ 
+ 
++/* Command handling */
++
++struct cmd_ds_command;
++
++int lbs_cmd_bt_access(struct cmd_ds_command *cmd,
++	u16 cmd_action, void *pdata_buf);
++int lbs_cmd_fwt_access(struct cmd_ds_command *cmd,
++	u16 cmd_action, void *pdata_buf);
++
++
+ /* Persistent configuration */
+ 
+ void lbs_persist_config_init(struct net_device *net);
+--- linux-wl.orig/drivers/net/wireless/libertas/persistcfg.c
++++ linux-wl/drivers/net/wireless/libertas/persistcfg.c
+@@ -441,6 +441,181 @@
+ 
+ 
+ /***************************************************************************
++ * Mesh command handling
++ */
++
++int lbs_cmd_bt_access(struct cmd_ds_command *cmd,
++			       u16 cmd_action, void *pdata_buf)
++{
++	struct cmd_ds_bt_access *bt_access = &cmd->params.bt;
++	lbs_deb_enter_args(LBS_DEB_CMD, "action %d", cmd_action);
++
++	cmd->command = cpu_to_le16(CMD_BT_ACCESS);
++	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_bt_access) +
++		sizeof(struct cmd_header));
++	cmd->result = 0;
++	bt_access->action = cpu_to_le16(cmd_action);
++
++	switch (cmd_action) {
++	case CMD_ACT_BT_ACCESS_ADD:
++		memcpy(bt_access->addr1, pdata_buf, 2 * ETH_ALEN);
++		lbs_deb_hex(LBS_DEB_MESH, "BT_ADD: blinded MAC addr",
++			bt_access->addr1, 6);
++		break;
++	case CMD_ACT_BT_ACCESS_DEL:
++		memcpy(bt_access->addr1, pdata_buf, 1 * ETH_ALEN);
++		lbs_deb_hex(LBS_DEB_MESH, "BT_DEL: blinded MAC addr",
++			bt_access->addr1, 6);
++		break;
++	case CMD_ACT_BT_ACCESS_LIST:
++		bt_access->id = cpu_to_le32(*(u32 *) pdata_buf);
++		break;
++	case CMD_ACT_BT_ACCESS_RESET:
++		break;
++	case CMD_ACT_BT_ACCESS_SET_INVERT:
++		bt_access->id = cpu_to_le32(*(u32 *) pdata_buf);
++		break;
++	case CMD_ACT_BT_ACCESS_GET_INVERT:
++		break;
++	default:
++		break;
++	}
++	lbs_deb_leave(LBS_DEB_CMD);
++	return 0;
++}
++
++int lbs_cmd_fwt_access(struct cmd_ds_command *cmd,
++			       u16 cmd_action, void *pdata_buf)
++{
++	struct cmd_ds_fwt_access *fwt_access = &cmd->params.fwt;
++	lbs_deb_enter_args(LBS_DEB_CMD, "action %d", cmd_action);
++
++	cmd->command = cpu_to_le16(CMD_FWT_ACCESS);
++	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_fwt_access) +
++		sizeof(struct cmd_header));
++	cmd->result = 0;
++
++	if (pdata_buf)
++		memcpy(fwt_access, pdata_buf, sizeof(*fwt_access));
++	else
++		memset(fwt_access, 0, sizeof(*fwt_access));
++
++	fwt_access->action = cpu_to_le16(cmd_action);
++
++	lbs_deb_leave(LBS_DEB_CMD);
++	return 0;
++}
++
++int lbs_mesh_access(struct lbs_private *priv, uint16_t cmd_action,
++		    struct cmd_ds_mesh_access *cmd)
++{
++	int ret;
++
++	lbs_deb_enter_args(LBS_DEB_CMD, "action %d", cmd_action);
++
++	cmd->hdr.command = cpu_to_le16(CMD_MESH_ACCESS);
++	cmd->hdr.size = cpu_to_le16(sizeof(*cmd));
++	cmd->hdr.result = 0;
++
++	cmd->action = cpu_to_le16(cmd_action);
++
++	ret = lbs_cmd_with_response(priv, CMD_MESH_ACCESS, cmd);
++
++	lbs_deb_leave(LBS_DEB_CMD);
++	return ret;
++}
++
++static int __lbs_mesh_config_send(struct lbs_private *priv,
++				  struct cmd_ds_mesh_config *cmd,
++				  uint16_t action, uint16_t type)
++{
++	int ret;
++	u16 command = CMD_MESH_CONFIG_OLD;
++
++	lbs_deb_enter(LBS_DEB_CMD);
++
++	/*
++	 * Command id is 0xac for v10 FW along with mesh interface
++	 * id in bits 14-13-12.
++	 */
++	if (priv->mesh_fw_ver == MESH_FW_NEW)
++		command = CMD_MESH_CONFIG |
++			  (MESH_IFACE_ID << MESH_IFACE_BIT_OFFSET);
++
++	cmd->hdr.command = cpu_to_le16(command);
++	cmd->hdr.size = cpu_to_le16(sizeof(struct cmd_ds_mesh_config));
++	cmd->hdr.result = 0;
++
++	cmd->type = cpu_to_le16(type);
++	cmd->action = cpu_to_le16(action);
++
++	ret = lbs_cmd_with_response(priv, command, cmd);
++
++	lbs_deb_leave(LBS_DEB_CMD);
++	return ret;
++}
++
++int lbs_mesh_config_send(struct lbs_private *priv,
++			 struct cmd_ds_mesh_config *cmd,
++			 uint16_t action, uint16_t type)
++{
++	int ret;
++
++	if (!(priv->fwcapinfo & FW_CAPINFO_PERSISTENT_CONFIG))
++		return -EOPNOTSUPP;
++
++	ret = __lbs_mesh_config_send(priv, cmd, action, type);
++	return ret;
++}
++
++/* This function is the CMD_MESH_CONFIG legacy function.  It only handles the
++ * START and STOP actions.  The extended actions supported by CMD_MESH_CONFIG
++ * are all handled by preparing a struct cmd_ds_mesh_config and passing it to
++ * lbs_mesh_config_send.
++ */
++int lbs_mesh_config(struct lbs_private *priv, uint16_t action, uint16_t chan)
++{
++	struct cmd_ds_mesh_config cmd;
++	struct mrvl_meshie *ie;
++	DECLARE_SSID_BUF(ssid);
++
++	memset(&cmd, 0, sizeof(cmd));
++	cmd.channel = cpu_to_le16(chan);
++	ie = (struct mrvl_meshie *)cmd.data;
++
++	switch (action) {
++	case CMD_ACT_MESH_CONFIG_START:
++		ie->id = WLAN_EID_GENERIC;
++		ie->val.oui[0] = 0x00;
++		ie->val.oui[1] = 0x50;
++		ie->val.oui[2] = 0x43;
++		ie->val.type = MARVELL_MESH_IE_TYPE;
++		ie->val.subtype = MARVELL_MESH_IE_SUBTYPE;
++		ie->val.version = MARVELL_MESH_IE_VERSION;
++		ie->val.active_protocol_id = MARVELL_MESH_PROTO_ID_HWMP;
++		ie->val.active_metric_id = MARVELL_MESH_METRIC_ID;
++		ie->val.mesh_capability = MARVELL_MESH_CAPABILITY;
++		ie->val.mesh_id_len = priv->mesh_ssid_len;
++		memcpy(ie->val.mesh_id, priv->mesh_ssid, priv->mesh_ssid_len);
++		ie->len = sizeof(struct mrvl_meshie_val) -
++			IEEE80211_MAX_SSID_LEN + priv->mesh_ssid_len;
++		cmd.length = cpu_to_le16(sizeof(struct mrvl_meshie_val));
++		break;
++	case CMD_ACT_MESH_CONFIG_STOP:
++		break;
++	default:
++		return -1;
++	}
++	lbs_deb_cmd("mesh config action %d type %x channel %d SSID %s\n",
++		    action, priv->mesh_tlv, chan,
++		    print_ssid(ssid, priv->mesh_ssid, priv->mesh_ssid_len));
++
++	return __lbs_mesh_config_send(priv, &cmd, action, priv->mesh_tlv);
++}
++
++
++
++/***************************************************************************
+  * Persistent configuration support
+  */
+ 
 
-Ah, I see. You misunderstood my posting. I did not propose that
-patch as a definitive and verified solution, but rather as a
-request for comments from the people who know and maintain the
-code in question. I thought that was clear from the facts that
-- - I didn't include "[PATCH]" in the subject line
-- - I didn't add a "Signed-off-by" line
-- - I wrote "fixed the messages", not "solved the problem"
-- - I explicitly wrote "Comments?" and "Adding i4l people to CC"
-
-Apparently all that was still not clear enough. Sorry about that.
-So let me try to make my concern as explicit as possible:
-
-- - The patch I posted had the effect that the test which reliably
-  triggered the local_softirq_pending message before did not do
-  so anymore.
-
-- - To me, this seems to indicate that the netif_rx(skb) call in
-  line 1177 of source file drivers/isdn/i4l/isdn_ppp.c is indeed
-  involved in the problem.
-
-- - Now I'm asking people who know more than myself about the
-  ramifications of that message (ie., you) and/or the code I
-  narrowed it down to (ie., the ISDN4Linux maintainers - which
-  is why I added them to the CC list) to have a look and determine
-  how to fix the problem properly.
-
-- - This would of course include, in finis, the verification you
-  mistakenly assumed I might have done already.
-
-I hope that's clear enough. If you have any questions, feel free
-to ask.
-
-Thanks,
-Tilman
-
-- --
-Tilman Schmidt                    E-Mail: tilman@imap.cc
-Bonn, Germany
-Diese Nachricht besteht zu 100% aus wiederverwerteten Bits.
-Ungeöffnet mindestens haltbar bis: (siehe Rückseite)
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.4 (MingW32)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFK4drJQ3+did9BuFsRAmstAJ94UF/LupINlYpjbxzz9xoiN5w34wCfflRz
-YfR/fXt3HasrxUSP29REOnE=
-=VQ/C
------END PGP SIGNATURE-----
+-- 
+http://www.holgerschurig.de
