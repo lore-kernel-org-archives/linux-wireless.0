@@ -1,128 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31670 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754366AbZJMUQK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 16:16:10 -0400
-Subject: Re: Current status of rt2800usb and staging/rt2870
-From: Dan Williams <dcbw@redhat.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Ozan =?UTF-8?Q?=C3=87a=C4=9Flayan?= <ozan@pardus.org.tr>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <200910132121.25743.bzolnier@gmail.com>
-References: <4AD46380.9020308@pardus.org.tr>
-	 <200910131927.24136.bzolnier@gmail.com>
-	 <200910132017.47748.IvDoorn@gmail.com>
-	 <200910132121.25743.bzolnier@gmail.com>
-Content-Type: text/plain
-Date: Tue, 13 Oct 2009 13:15:40 -0700
-Message-Id: <1255464940.10798.10.camel@localhost.localdomain>
+Received: from xc.sipsolutions.net ([83.246.72.84]:53768 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755340AbZJZJWf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Oct 2009 05:22:35 -0400
+Subject: Re: Questions about cfg80211's cfg80211_connect_params->crypto
+ settings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200910260947.48365.hs4233@mail.mn-solutions.de>
+References: <200910260947.48365.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-0thTEhV+pFTvU7N9LeJZ"
+Date: Mon, 26 Oct 2009 10:22:29 +0100
+Message-ID: <1256548953.28230.19.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-10-13 at 21:21 +0200, Bartlomiej Zolnierkiewicz wrote:
-> On Tuesday 13 October 2009 20:17:47 Ivo van Doorn wrote:
-> > On Tuesday 13 October 2009, Bartlomiej Zolnierkiewicz wrote:
-> > > On Tuesday 13 October 2009 17:52:52 Ivo van Doorn wrote:
-> > > 
-> > > > I am going to merge rt2800pci soon as well and after that I'll send a patch
-> > > 
-> > > Great, I've been waiting for this for a long time.
-> > > 
-> > > > to remove all Ralink drivers from the staging tree.
-> > > 
-> > > Till new drivers obtain support for all hardware currently covered by
-> > > the unified staging drivers the latter shouldn't be removed as they
-> > > serve well their role as a temporary solution allowing real Linux users
-> > > to user their real hardware and as a reference material for developers
-> > > willing to work on adding the missing bits to new drivers.
-> > 
-> > The rt2800pci and rt2800usb drivers cover support for rt2860/rt2870/rt3070 devices,
-> > which are present as individual drivers in the staging tree. So far it only managed
-> 
-> There are no longer individual drivers.
-> 
-> Instead there is one shared source code and two device drivers:
-> 
-> - rt2860 covering RT2860 and RT3090 devices
-> 
-> - rt2870 covering RT2870 and RT3070 devices
-> 
-> In comparison rt2800usb currently lacks RT3070 support and rt2800pci's
-> RT3090 support is basic at best (not to mention that it didn't work for
-> RT2860 last time that I tried)..
-> 
-> > to confuse developers which wanted to work on Ralink support, so I haven't found
-> 
-> I bet they are truly grateful for being shown "the one and only way"..
 
-There *is* only one way: mac80211.  If the driver is softmac, but does
-not use mac82011, then it *is* the wrong way.  We will not have multiple
-802.11 stacks in the mainstream kernel.  If a softmac driver uses
-mac80211, hey, that's great!  Lets add it!
+--=-0thTEhV+pFTvU7N9LeJZ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-If it doesn't, then that driver needs to be updated to use mac80211.
-Period.
+On Mon, 2009-10-26 at 09:47 +0100, Holger Schurig wrote:
 
-> > a benefit for having those drivers in the staging tree yet. But I am sure there are plenty
-> 
-> I was able to use my Eee 901 successfully with them for a last year and I'm
-> pretty sure that I'm not the only.  I understand my sin now -- I should have
-> had help in fixing the proper and clean code before using my hardware.. [*]
+> I'm a but confused about what fields in "struct=20
+> cfg80211_connect_params" (now abbreviated as sme->)
+> are relevant for me.
+>=20
+>=20
+> sme->private
+> ------------
 
-That's nice, and everyone appreciates the work that you've done.  Nobody
-can tell you what to work on, but it would be nice to get more people
-working on the *mac80211* versions of the various drivers.  Imagine how
-much better rt2x00 would be if all the effort that had gone into cleanup
-up the ralink vendor drivers had instead gone into making rt2x00 work on
-the new hardware.  Then you'd have cfg80211 support, background
-scanning, etc all for free with no effort on your part.
+I think you mean "privacy". I'm not sure about it right now, would have
+to dig, but maybe the answer to the others helps you?
 
-Maybe it would have taken 6 months longer to get good support for your
-hardware but at least the work would have a future.  But now we're stuck
-in a situation where either:
+> sme->crypto.wpa_versions
 
-1) the vendor driver never gets converted to cfg80211/mac80211, and
-stays in staging forever, or finally gets booted out of staging because
-nobody is working on converting it to mac80211.  mac80211/cfg80211 is a
-hard requirement for being an accepted wireless driver.  And drivers do
-have a shelf-life in staging.
+> sme->crypto.n_ciphers_pairwise, sme->crypto.ciphers_pairwise
 
-2) the vendor driver starts getting converted to use mac80211.  But I
-would argue that a better use of *anyone's* time is to make rt2x00
-better, instead of porting the ralink vendor drivers to mac80211.  It
-would probably take less time to fix up rt2x00 for new hardware than to
-port the ralink vendor drivers to mac80211.
+> sme->crypto.n_akm_suites, sme->crypto.akm_suites
 
-> > of people who like the idea of having the original Ralink drivers inside the staging tree,
-> > so they can continue debugging that, so I won't talk about the staging downsides further.
-> 
-> Well, it would be much more productive if people concentrate on improving
-> _their_ projects and looking at downsides of _their_ code instead of going
-> around and looking at _obvious_ downsides of other people's projects.
-> 
-> 
-> [*] [Slightly off-topic but it shows the same problem with the approach]
-> 
-> I now also see why some distributions keep pushing some known non-working
-> things on their users (Fedora maintainers -- I'm talking to you), the best
-> example is PulseAudio -- it simply doesn't work reliably even on modern
-> hardware and/or using all scheduler tricks (it seems that making Linux into
-> full RT OS is a prerequisite for fixing latency issues observed)..
+All these pretty much exist for hw that doesn't want to use the IE(s)
+contained in the connect parameters. If you send an assoc request with
+those IEs, you can safely ignore the parameters here. It's just there so
+one doesn't have to parse the IEs.
 
-Pulseaudio works for many, many people.  The most productive use of your
-time here is to file a bug report with the specific details of your
-audio chipset, let upstream diagnose whether it's a Pulseaudio-specific
-problem, a codec driver problem, or an ALSA problem.
+johannes
 
-You can wait until the cows come home to deploy new technology, and then
-of course you'll still have to fix up all the bugs because you waited
-too long and nobody was testing it, or you can deploy new technology
-that works for most people and fix those bugs much earlier.  Release
-early, release often.  The tricky thing is how early.
+--=-0thTEhV+pFTvU7N9LeJZ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Dan
+-----BEGIN PGP SIGNATURE-----
 
+iQIcBAABAgAGBQJK5WpRAAoJEODzc/N7+QmaVaoQANQTgAMLrcLa61ONEfdsMyx0
+Bjd5EFslLmnovPifZNvIBIqZlxUudcU+oFDvCAen5D3/EcEupv/V6GhBk96Pn9uJ
+ksIG2uIdsUbpeFbRy0b0brgOv9JtZZFBPqDvxt2zYf98doPT2IZ8p/i1pCbQHrOi
+rsiGFhKFF2IJGVHTrYrsOUjKL48xT+EL2QjaJagU3Dy/qEIJb+Eyz353obsQUE8e
+dFqsVosFZeu99+PyA10foENTFrUEu3LPbSPt5DvX93tIKe9j7yf4zRNyTsfN8ZyJ
+UlUjd+Uwug6T6Wm2hcSqTWSZUDpmYKTUYsz3/H8+mDNJZTcS4eYc/9T8XvuzDzbn
+BVidyF1zJaKGU/wyn5Nkw/rdl5FFdtt7eMc9KVkyG5oyAWDjM5OvXEKmzSUxMWrU
+Pt7Vmx6xJwSEX5FB04K7Sgdfx0zYXyWKQsyY9xXW12RfOUDNl+ibPaHhdAOp5apu
+Qz5bsF0rAEM2GRdJSsAzKBZs2mYE/qhwMlLMHJDaWHd3EmVEn8QlwAdK3reeqQbj
+A4hcUPPA1fPkDM4YOzkCrkpOxya0qJ6FM/hiEkQu3/jfpCtGU66o1KuukUjXZxqH
+x1XaQbbmzc+tyRfXrxLSRGkvHQmEJ7qNxZTmyRLckgMnCpaCAQNdtgfm96YipW87
+RXjFIGMF4ty3leOq4H26
+=nQ5u
+-----END PGP SIGNATURE-----
+
+--=-0thTEhV+pFTvU7N9LeJZ--
 
