@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:64162 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757142AbZJ3LGP (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43141 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751482AbZJZQfK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 07:06:15 -0400
-Date: Fri, 30 Oct 2009 11:06:16 +0000
-From: Jarek Poplawski <jarkao2@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-Message-ID: <20091030110616.GB6150@ff.dom.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1256886023.3555.5.camel@johannes.local>
+	Mon, 26 Oct 2009 12:35:10 -0400
+Subject: Re: [RFC] libertas: minimal WEXT handler for MESH
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>
+In-Reply-To: <200910261729.36583.hs4233@mail.mn-solutions.de>
+References: <200910261729.36583.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-FOYZeEbok1VBMK/NNOqO"
+Date: Mon, 26 Oct 2009 17:35:08 +0100
+Message-ID: <1256574908.12462.15.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 30-10-2009 08:00, Johannes Berg wrote:
-> On Thu, 2009-10-29 at 22:48 +0100, Bartlomiej Zolnierkiewicz wrote:
-> 
->> I don't think that my technical arguments are pointless.
->>
->> Quite the contrary, I'm pretty confident that addressing my review concerns
->> would result in better RT28x00 / RT30x0 support in the very near future.
-> 
-> So you know how to make the driver better, whine that it doesn't work,
-> but don't help out either. Hey, good way to collaborate!
-> 
->>> It should be pretty obvious by now that the best way to improve things
->>> is to work with the relevant maintainers, not against them. (Unless
->>> you wish your work to be ignored, of course.)
->> I work with a lot of other maintainers.  I would say that providing valuable
->> review feedback is also "working with" (at least I would be very happy with
->> such feedback in my projects).
-> 
-> Face it though, people have read your feedback, thought about it, and
-> decided to disagree. You seem to have a childish problem with that,
-> appealing to higher authority to get your way just makes you look more
-> childish.
 
-There are various ways to disagree, and ignoring by John questions
-from a merited developer both in this referenced lkml and current
-threads looks at least strange (if not offensive) as well.
+--=-FOYZeEbok1VBMK/NNOqO
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Jarek P.
+On Mon, 2009-10-26 at 17:29 +0100, Holger Schurig wrote:
+
+> For many handlers, I simply put NULL there, but I guess
+> that I should do this:
+>=20
+> a) register mesh_dev with cfg80211 as well
+> b) use the handlers from compat-wext.c instead
+>=20
+> Is this right?  And I guess that I connot do b) without a)
+>=20
+> Or is it ok to do b) without a).
+
+No, it's not, it'll most certainly segfault.
+
+johannes
+
+--=-FOYZeEbok1VBMK/NNOqO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK5c+4AAoJEODzc/N7+QmaTxcQAIk0erk3v3sy5Kb1EtLQSCuK
+X3npxwf4Z9i93skwaZ3Bi8jB4MUFC2K8Wb49CxoGKY7YKt8J8DH4+GtlrucCH4qZ
+OW9n4hFMwZL3VpRS5z0+TXQvtycZXwb4i7irWCkvczZWbXVWPKoFdUrXdH3uMqiJ
+z43Rw88I7BpR6rQg7jmTDEk5NHeONoM/vxinR5lC98sGWWW58h1IGlcEYKQ0oP99
+XzvXnG5NbJbZa/lDHFHXLgdbGu7ehhPZUxAtlYFccUizffqHNrdgA88XFPFiADnO
+1juqaC6MdUgUryH8JAVwZ2x0fvY7aSAuuhKEQcE+HTvmCUaOznGSiXhqFeg+xUZ3
+mZ9lIfPy/TxleGgyRXr7GMb3lAOL9bimqKTGlHijKdI6dnnY7RsqEqA2g0Gk3Xb1
+akthKnzDjemqokkfJc2t2Jo4lxmJlpb3kBhna5X8AkhFzib5/SIf5W8vBF4iBWu+
+H6jZRbZj4wwF7CN0LM0H5CpKongRlCTKDbaGOWddIWAs05r02qUmU3eALIeagO7H
+CBpI+vE7j41MnyEwZLTbpLixvNcqW8jQk99o0pg34Ezj8ZGeK/i10HswF/VLyWu4
+CKN4w1e1aR44sYpUTD3jayskrmv9E6deQeIMhW8Xv3CswGdlRulGbZBtc55h/5tm
+v3UzjHS1TMfH+XZT5vgB
+=kYXy
+-----END PGP SIGNATURE-----
+
+--=-FOYZeEbok1VBMK/NNOqO--
+
