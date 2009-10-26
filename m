@@ -1,77 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:15110 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757447AbZJ3VgP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 17:36:15 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Ben Cahill <ben.m.cahill@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 06/15] iwlagn: update write pointers for all tx queues after wakeup
-Date: Fri, 30 Oct 2009 14:36:09 -0700
-Message-Id: <1256938578-9638-7-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
-References: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
+Received: from mx51.mymxserver.com ([85.199.173.110]:30262 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751510AbZJZOai convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Oct 2009 10:30:38 -0400
+From: Holger Schurig <h.schurig@mn-solutions.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: RECAP: indication of channel noise
+Date: Mon, 26 Oct 2009 15:30:03 +0100
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+References: <200910261442.44774.h.schurig@mn-solutions.de> <1256565132.12462.9.camel@johannes.local>
+In-Reply-To: <1256565132.12462.9.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200910261530.03422.h.schurig@mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
+> >   NL80211_BSS_NOISE_MBM
 
-Wakeup interrupt has been updating write pointers (indexes, actually) only
-for tx queues 0-5.  This is adequate just for 3945, but inadequate for other
-devices, all of which have more tx queues.  Now updating all tx/command queues,
-so device can be aware of all new tx and host commands enqueued while
-device was asleep.
+Hmm, this could better be NL80211_CHANNEL_NOISE_MBM, to make
+clear that this is not heat-related internal noise of the chip.
 
-This can potentially improve data traffic bandwidth and/or latency.
 
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |   17 ++++++++---------
- 1 files changed, 8 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index f36a7d1..3eeffcb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -891,6 +891,7 @@ static void iwl_irq_tasklet_legacy(struct iwl_priv *priv)
- 	u32 inta, handled = 0;
- 	u32 inta_fh;
- 	unsigned long flags;
-+	u32 i;
- #ifdef CONFIG_IWLWIFI_DEBUG
- 	u32 inta_mask;
- #endif
-@@ -1008,19 +1009,17 @@ static void iwl_irq_tasklet_legacy(struct iwl_priv *priv)
- 		handled |= CSR_INT_BIT_SW_ERR;
- 	}
- 
--	/* uCode wakes up after power-down sleep */
-+	/*
-+	 * uCode wakes up after power-down sleep.
-+	 * Tell device about any new tx or host commands enqueued,
-+	 * and about any Rx buffers made available while asleep.
-+	 */
- 	if (inta & CSR_INT_BIT_WAKEUP) {
- 		IWL_DEBUG_ISR(priv, "Wakeup interrupt\n");
- 		iwl_rx_queue_update_write_ptr(priv, &priv->rxq);
--		iwl_txq_update_write_ptr(priv, &priv->txq[0]);
--		iwl_txq_update_write_ptr(priv, &priv->txq[1]);
--		iwl_txq_update_write_ptr(priv, &priv->txq[2]);
--		iwl_txq_update_write_ptr(priv, &priv->txq[3]);
--		iwl_txq_update_write_ptr(priv, &priv->txq[4]);
--		iwl_txq_update_write_ptr(priv, &priv->txq[5]);
--
-+		for (i = 0; i < priv->hw_params.max_txq_num; i++)
-+			iwl_txq_update_write_ptr(priv, &priv->txq[i]);
- 		priv->isr_stats.wakeup++;
--
- 		handled |= CSR_INT_BIT_WAKEUP;
- 	}
- 
+For the rest of your remarks: ok
+
+
 -- 
-1.5.6.3
+M&N Solutions GmbH          Ein Unternehmen der Datagroup AG
+Holger Schurig
+Raiffeisenstr. 10
+61191 Rosbach
+Tel: 06003/9141-15          Fax 06003/9141-49
+http://www.mn-solutions.de/
 
+Handelsregister Friedberg, HRB 5903
+Geschäftsführer: P.Schrittenlocher
