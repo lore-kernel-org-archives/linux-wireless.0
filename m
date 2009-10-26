@@ -1,82 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kso.tls-tautenburg.de ([194.94.209.8]:5150 "EHLO
-	kso.tls-tautenburg.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756835AbZJHRug (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37748 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755364AbZJZI40 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 13:50:36 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by kso.tls-tautenburg.de (Postfix) with ESMTP id EB9FE5078B
-	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2009 19:38:09 +0200 (CEST)
-Received: from kso.tls-tautenburg.de ([127.0.0.1])
-	by localhost (kso.tls-tautenburg.de [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 6MfXL6N1FPnz for <linux-wireless@vger.kernel.org>;
-	Thu,  8 Oct 2009 19:38:04 +0200 (CEST)
-Received: from [192.168.178.37] (unknown [89.246.185.116])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by kso.tls-tautenburg.de (Postfix) with ESMTP
-	for <linux-wireless@vger.kernel.org>; Thu,  8 Oct 2009 19:38:04 +0200 (CEST)
-Message-ID: <4ACE237B.9020200@tls-tautenburg.de>
-Date: Thu, 08 Oct 2009 19:38:03 +0200
-From: Bringfried Stecklum <stecklum@tls-tautenburg.de>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: compat-wireless-2009-09-23 kernel trace
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 26 Oct 2009 04:56:26 -0400
+Subject: Re: [PATCH] net: Adjust softirq raising in __napi_schedule
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tilman Schmidt <tilman@imap.cc>
+Cc: Jarek Poplawski <jarkao2@gmail.com>,
+	David Miller <davem@davemloft.net>, hidave.darkstar@gmail.com,
+	linux-kernel@vger.kernel.org, tglx@linutronix.de,
+	linux-wireless@vger.kernel.org, linux-ppp@vger.kernel.org,
+	netdev@vger.kernel.org, paulus@samba.org,
+	Michael Buesch <mb@bu3sch.de>,
+	Oliver Hartkopp <oliver@hartkopp.net>
+In-Reply-To: <4AE56217.3040708@imap.cc>
+References: <4AD76184.6030900@gmail.com> <4ADF5710.4030505@imap.cc>
+	 <20091021211906.GA11401@ami.dom.local>
+	 <1256160330.12174.2.camel@johannes.local>
+	 <20091021213947.GA12202@ami.dom.local>
+	 <1256200021.12174.11.camel@johannes.local> <4AE1C00B.5010008@imap.cc>
+	 <1256309191.12174.51.camel@johannes.local>
+	 <20091026074126.GA6187@ff.dom.local>
+	 <1256543054.28230.6.camel@johannes.local>
+	 <20091026075438.GB6187@ff.dom.local>
+	 <1256543932.28230.9.camel@johannes.local>  <4AE56217.3040708@imap.cc>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/VsN2AN47iITS0fIBs+L"
+Date: Mon, 26 Oct 2009 09:56:20 +0100
+Message-ID: <1256547380.28230.17.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-below please find the first kernel trace I experienced with compat-wireless.
+--=-/VsN2AN47iITS0fIBs+L
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Regards, Bringfried
+On Mon, 2009-10-26 at 10:47 +0200, Tilman Schmidt wrote:
 
-Oct  8 19:23:02 extragalactix kernel: [ 4024.700145] ------------[ cut here 
-]------------
-Oct  8 19:23:02 extragalactix kernel: [ 4024.700152] WARNING: at 
-/home/stecklum/System/src/compat-wireless-2009-09-23/net/wireless/mlme.c:96 
-cfg80211_send_rx_assoc+0x194/0x230 [cfg80211]()
-Oct  8 19:23:02 extragalactix kernel: oundcore snd_page_alloc nvidia(P) i2c_core 
-wmi button battery ac shpchp intel_agp pci_hotplug ext3 jbd mbcache sd_mod 
-crc_t10dif ata_generic pata_acpi sg firewire_ohci firewire_core crc_itu_t tg3 
-libphy thermal processor fan fuse ahci libata scsi_mod vesafb fbcon tileblit 
-font bitblit softcursor [last unloaded: uhci_hcd]
-Oct  8 19:23:02 extragalactix kernel: [ 4024.700577] ---[ end trace 
-dee592989e451c3a ]---
-Oct  8 19:23:02 extragalactix kernel: [ 4024.701580] Dumping ftrace buffer:
-Oct  8 19:23:02 extragalactix kernel: [ 4024.701584]    (ftrace buffer empty)
-Oct  8 19:23:02 extragalactix kernel: oundcore snd_page_alloc nvidia(P) i2c_core 
-wmi button battery ac shpchp intel_agp pci_hotplug ext3 jbd mbcache sd_mod 
-crc_t10dif ata_generic pata_acpi sg firewire_ohci firewire_core crc_itu_t tg3 
-libphy thermal processor fan fuse ahci libata scsi_mod vesafb fbcon tileblit 
-font bitblit softcursor [last unloaded: uhci_hcd]
-Oct  8 19:23:02 extragalactix kernel: [ 4024.701767] Pid: 21150, comm: 
-wpa_supplicant Tainted: P        W  2.6.28-15-generic #51
-Oct  8 19:23:02 extragalactix kernel: [ 4024.701772] RIP: 
-0010:[<ffffffffa0d16ff0>]  [<ffffffffa0d16ff0>] 
-__cfg80211_mlme_deauth+0x70/0x140 [cfg80211]
-Oct  8 19:23:02 extragalactix kernel: [ 4024.701797] RSP: 0018:ffff88011a4f5c18 
-  EFLAGS: 00010286
-Oct  8 19:23:02 extragalactix kernel: [ 4024.701801] RAX: 0000000000000000 RBX: 
-ffff88011d1bd810 RCX: 0000000000000006
-Oct  8 19:23:02 extragalactix kernel: [ 4024.701806] RDX: 0000000000000000 RSI: 
-ffff88011a840448 RDI: 0000000000000000
-Oct  8 19:23:02 extragalactix kernel: [ 4024.701810] RBP: ffff88011a4f5c78 R08: 
-ffff88011a840400 R09: ffff88011a4f5c28
-Oct  8 19:23:02 extragalactix kernel: [ 4024.701815] R10: ffff88011d1bd000 R11: 
-ffff880112c90000 R12: 0000000000000000
-Oct  8 19:23:02 extragalactix kernel: [ 4024.701819] R13: 0000000000000003 R14: 
-0000000000000000 R15: 0000000000000000
-Oct  8 19:23:02 extragalactix kernel: [ 4024.701825] FS:  00007fe8313c16e0(0000) 
-GS:ffff88011fc01f00(0000) knlGS:0000000000000000
-Oct  8 19:23:02 extragalactix kernel: [ 4024.701830] CS:  0010 DS: 0000 ES: 0000 
-CR0: 0000000080050033
-Oct  8 19:23:02 extragalactix kernel: [ 4024.701834] CR2: 0000000000000000 CR3: 
-000000011a58a000 CR4: 00000000000006e0
-Oct  8 19:23:02 extragalactix kernel: [ 4024.701839] DR0: 0000000000000000 DR1: 
-0000000000000000 DR2: 0000000000000000
-Oct  8 19:23:02 extragalactix kernel: [ 4024.701844] DR3: 0000000000000000 DR6: 
-00000000ffff0ff0 DR7: 0000000000000400
-Oct  8 19:23:02 extragalactix kernel: [ 4024.702120] ---[ end trace 
-dee592989e451c3a ]---
+> > However, I lost track now of why we're discussing this.
+>=20
+> The starting point were several reports of the kernel message:
+>=20
+> NOHZ: local_softirq_pending 08
+>=20
+> Originally most if not all of them came from wireless networking,
+> but I muddied the waters by adding to the mix a case involving ISDN.
+> You stated that all the solutions proposed so far were wrong, so
+> we're naturally turning to you for guidance on what the right
+> solution might be.
+
+Right. Sorry about getting lost here.
+
+> > Basically it boils down to using netif_rx() when in (soft)irq, and
+> > netif_rx_ni() when in process context. That could just be an
+> > optimisation, but it's a very valid one.
+>=20
+> Hmmm. That seems to contradict your earlier statement to me that
+> simply replacing a call to netif_rx() by one to netif_rx_ni()
+> when not in interrupt context isn't a valid solution either.
+> What am I missing?
+
+Well, I think you misunderstood me. It would be correct to do this, if
+and only if the code that calls it doesn't need the extra guarantee.
+
+Any code (say ISDN code) that calls netif_rx() is clearly assuming to
+always be running in (soft)irq context, otherwise it couldn't call
+netif_rx() unconditionally. Agree so far?
+
+So now if you change the ISDN code to call netif_rx_ni(), you've changed
+the assumption that the ISDN code makes -- that it is running in
+(soft)irq context. Therefore, you need to verify that this is actually a
+correct change, which is what I tried to say.
+
+johannes
+
+--=-/VsN2AN47iITS0fIBs+L
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK5WQuAAoJEODzc/N7+QmaPSoP/2W5G6OYt+XcIoue2db+SlYa
+p/rw3j/+vXytXFGWslMtY6Dyg6K+YeN+BauUsFCXr/LxUprKJLH3bE1jaer2PrzP
+R2E4bLdFMVgxngmMNQ0PMUCAX8YEUNZUd9cGua6X5MyZ08smfvhvNFnoOcbQVbB7
+6f05PI1ULPACZJNZlav8cQpwHxp9cU89DQEkJiB9+hJsPBks3eRM48HIsuV5YHix
+yQ3iqMzg5/8vgKK6wCOHR6os52dcYjnaVDrjQwOHI2/5KG1B0taj+tn+sJjYTP7L
+ED2hB6yfyE3szig58estEMeNXsKp98wZRfsSA6rB61A2uf66e99RpmOVPegon6Dp
+MR+uA7wz3aHgAAcXQ3E9M2mP4MXf9WmnRxr3Q+XTsaVvHUvLk/rFvrlOHpFht4o0
+fOcRPTgg5RSpVs6aXZxLJMwAWfCFBb0+MiEhqTQYNO7T+OMtWUF3PQP65Ie1HssV
+DYQkqaAUwjTilhmZX1x80eXPN4xZeJUdi0uFIgKyvefajb/13Gs93OlTCyYmwlfM
+oXhoXgK3HwIbscbWEvOEtbaln6aGuMdaLHOoGX8kRliTIVw2MbHUtIlWIVKENb/0
+9io7gIPOsmD0ItGVLIaa4PNF8fHAJo8oEKXT6YG7pj1cJRa7YYtjOUZmK/R+Zltx
+KH35ftsf+CIV8Niafj5G
+=SbI/
+-----END PGP SIGNATURE-----
+
+--=-/VsN2AN47iITS0fIBs+L--
+
