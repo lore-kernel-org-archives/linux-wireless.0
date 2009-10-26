@@ -1,76 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:35349 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758472AbZJGApL (ORCPT
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:42675 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754794AbZJZHTA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 20:45:11 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 7/7] ath5k: enable Power-Save Polls by setting the association ID
-Date: Tue,  6 Oct 2009 20:44:34 -0400
-Message-Id: <1254876274-1145-8-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1254876274-1145-1-git-send-email-lrodriguez@atheros.com>
-References: <1254876274-1145-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 26 Oct 2009 03:19:00 -0400
+Received: by ewy4 with SMTP id 4so3338737ewy.37
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 00:19:03 -0700 (PDT)
+To: belle.shi@yy.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: about 802.11 scan and probe request
+References: <20091026103247.2ng5wbub4ow8ok4w@webmail.yy.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Mon, 26 Oct 2009 09:19:01 +0200
+In-Reply-To: <20091026103247.2ng5wbub4ow8ok4w@webmail.yy.com> (belle shi's message of "Mon\, 26 Oct 2009 10\:32\:47 +0800")
+Message-ID: <87y6myhbbu.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 has long provided us the association ID. This isn't useful except
-for Power-Save polling which now gets enabled. We can now poll for our
-pending frames on the AP during power save.
+belle.shi@yy.com writes:
 
-You can review the details of Power-Save on the wireless wiki:
+> there is one question: the scan have two mode:active or passive,but
+> when i run the wpa_gui, there is only scan button
 
-http://wireless.kernel.org/en/developers/Documentation/ieee80211/power-savings
+Passive scan is so slow that we want to use active scan always when
+possible. No need to confuse users about this, so one scan button is
+enough.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath5k/base.c  |   11 +++++++++--
- drivers/net/wireless/ath/ath5k/reset.c |    1 -
- 2 files changed, 9 insertions(+), 3 deletions(-)
+> i think the active scan is to send Probe Request frame, and the
+> passive scan to receive the beacon frame, is it right?
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 01da83d..07c1e52 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -3211,8 +3211,7 @@ static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changes & BSS_CHANGED_BSSID) {
- 		/* Cache for later use during resets */
- 		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
--		/* XXX: assoc id is set to 0 for now, mac80211 doesn't have
--		 * a clean way of letting us retrieve this yet. */
-+		common->curaid = 0;
- 		ath5k_hw_set_associd(ah);
- 		mmiowb();
- 	}
-@@ -3226,6 +3225,14 @@ static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
- 			set_beacon_filter(hw, sc->assoc);
- 		ath5k_hw_set_ledstate(sc->ah, sc->assoc ?
- 			AR5K_LED_ASSOC : AR5K_LED_INIT);
-+		if (bss_conf->assoc) {
-+			ATH5K_DBG(sc, ATH5K_DEBUG_ANY,
-+				  "Bss Info ASSOC %d, bssid: %pM\n",
-+				  bss_conf->aid, common->curbssid);
-+			common->curaid = bss_conf->aid;
-+			ath5k_hw_set_associd(ah);
-+			/* Once ANI is available you would start it here */
-+		}
- 	}
- 
- 	if (changes & BSS_CHANGED_BEACON) {
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index fb89815..3dab3d8 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -1187,7 +1187,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 	 */
- 
- 	/* Restore bssid and bssid mask */
--	/* XXX: add ah->aid once mac80211 gives this to us */
- 	ath5k_hw_set_associd(ah);
- 
- 	/* Set PCU config */
+Correct.
+
 -- 
-1.6.0.4
-
+Kalle Valo
