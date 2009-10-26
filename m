@@ -1,64 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40468 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752417AbZJaFqE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Oct 2009 01:46:04 -0400
-Subject: Re: Re[2]: ieee80211_tx_status: headroom too small
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nikolai ZHUBR <zhubr@mail.ru>
-Cc: linux-wireless@vger.kernel.org, Ivo Van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <7111590175.20091031005644@mail.ru>
-References: <1094614475.20091030230028@mail.ru>
-	 <1256936341.3555.67.camel@johannes.local>
-	 <7111590175.20091031005644@mail.ru>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-f2BhY3CAP9O4p5WZJwBC"
-Date: Sat, 31 Oct 2009 06:46:07 +0100
-Message-ID: <1256967967.3555.71.camel@johannes.local>
-Mime-Version: 1.0
+Received: from web53901.mail.re2.yahoo.com ([206.190.36.211]:36425 "HELO
+	web53901.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752469AbZJZREv convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Oct 2009 13:04:51 -0400
+Message-ID: <776769.29896.qm@web53901.mail.re2.yahoo.com>
+Date: Mon, 26 Oct 2009 10:04:55 -0700 (PDT)
+From: Fredi <fredin77@yahoo.com>
+Subject: Re: iwl3945, after a while stops working with "No space for Tx"
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: YiZhu <yi.zhu@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	TomasWinkler <tomas.winkler@intel.com>,
+	AbhijeetKolekar <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1256574352.21134.7591.camel@rc-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi
+first thanks for your reply,
+--- On Mon, 26/10/09, reinette chatre <reinette.chatre@intel.com> wrote:
 
---=-f2BhY3CAP9O4p5WZJwBC
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> From: reinette chatre <reinette.chatre@intel.com>
+> Subject: Re: iwl3945, after a while stops working with "No space for Tx"
+> To: "Frederik Nosi" <fredin77@yahoo.com>
+> Cc: "Zhu, Yi" <yi.zhu@intel.com>, "Intel Linux Wireless" <ilw@linux.intel.com>, "John W. Linville" <linville@tuxdriver.com>, "Winkler, Tomas" <tomas.winkler@intel.com>, "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>, "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+> Date: Monday, 26 October, 2009, 5:25 PM
+> On Sat, 2009-10-24 at 06:44 -0700,
+> Frederik Nosi wrote:
+> > Hi,
+> > first sorry if somebody is not the right contact, got
+> the adressess from ./scripts/get_maintainer.pl -f
+> drivers/net/wireless/iwlwifi.
+> > From some kernel versions now, after some time that im
+> using this card it stops working and on messages i get this
+> errors:
+> > 
+> > Oct 24 14:38:24 kotys NetworkManager:
+> <info>  Activation (wlan0) Stage 5 of 5 (IP
+> Configure Commit) complete.
+> > [snip pulseaudio's stuppid log spam warning]
+> > Oct 24 14:40:07 kotys kernel: iwl3945 0000:04:00.0:
+> Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+> > Oct 24 14:40:09 kotys pulseaudio[16469]: sap.c:
+> sendmsg() failed: Invalid argument
+> > Oct 24 14:40:10 kotys kernel: iwl3945 0000:04:00.0:
+> Error sending REPLY_SCAN_CMD: time out after 500ms.
+> > Oct 24 14:40:11 kotys kernel: iwl3945 0000:04:00.0:
+> Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+> > Oct 24 14:40:11 kotys kernel: iwl3945 0000:04:00.0:
+> Error sending POWER_TABLE_CMD: time out after 500ms.
+> > Oct 24 14:40:14 kotys kernel: iwl3945 0000:04:00.0:
+> set power fail, ret = -110
+> > Oct 24 14:40:14 kotys kernel: No probe response from
+> AP 00:1c:df:82:63:c9 after 500ms, disconnecting.
+> > Oct 24 14:40:14 kotys NetworkManager:
+> <info>  (wlan0): supplicant connection
+> state:  completed -> disconnected
+> > Oct 24 14:40:14 kotys NetworkManager:
+> <info>  (wlan0): supplicant connection
+> state:  disconnected -> scanning
+> > Oct 24 14:40:14 kotys pulseaudio[16469]: sap.c:
+> sendmsg() failed: Invalid argument
+> > Oct 24 14:40:14 kotys kernel: iwl3945 0000:04:00.0:
+> Error sending REPLY_RXON: time out after 500ms.
+> > Oct 24 14:40:14 kotys kernel: iwl3945 0000:04:00.0:
+> Error setting new configuration (-110).
+> > Oct 24 14:40:15 kotys kernel: iwl3945 0000:04:00.0:
+> Error sending REPLY_SCAN_CMD: time out after 500ms.
+> > Oct 24 14:40:15 kotys kernel: wlan0: direct probe to
+> AP 00:1c:df:82:63:c9 (try 1)
+> > Oct 24 14:40:15 kotys NetworkManager:
+> <info>  (wlan0): supplicant connection
+> state:  scanning -> associating
+> > Oct 24 14:40:15 kotys kernel: wlan0: direct probe to
+> AP 00:1c:df:82:63:c9 (try 2)
+> > Oct 24 14:40:15 kotys kernel: wlan0: direct probe to
+> AP 00:1c:df:82:63:c9 (try 3)
+> > Oct 24 14:40:15 kotys kernel: iwl3945 0000:04:00.0:
+> Error sending REPLY_RXON: time out after 500ms.
+> > Oct 24 14:40:15 kotys kernel: iwl3945 0000:04:00.0:
+> Error setting new configuration (-110).
+> > Oct 24 14:40:15 kotys kernel: wlan0: direct probe to
+> AP 00:1c:df:82:63:c9 timed out
+> > Oct 24 14:40:16 kotys kernel: iwl3945 0000:04:00.0:
+> Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+> > Oct 24 14:40:16 kotys kernel: iwl3945 0000:04:00.0:
+> Error sending REPLY_RXON: time out after 500ms.
+> > Oct 24 14:40:16 kotys kernel: iwl3945 0000:04:00.0:
+> Error setting new configuration (-110).
+> > 
+> > 
+> > When this happens i am able to use the card only after
+> reloading the related modules, iwl3945 ecc. But the problem
+> happens again after some minutes that im connected.
+> > 
+> > Kernel is 2.6.32-rc5 but his started happening around
+> 2.6.31, not sure exactly what version as i update kernel
+> often. Firmware is iwl3945-ucode-15.32.2.9.
+> > 
+> > Every other info that you need just ask. I hope i dont
+> have to bisect as this is the laptop i use for work too, but
+> if it's needed i'll do.
+> > 
+> > I'm not subscribed on any ML, so in case please cc
+> me.
+> > 
+> 
+> We currently have a bug open for this issue. Could you
+> please add this
+>
+> information to
+> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1944
+> ?
 
-On Sat, 2009-10-31 at 00:56 +0300, Nikolai ZHUBR wrote:
-> Friday, October 30, 2009, 11:59:01 PM, Johannes Berg wrote:
-> >>
-> >> ieee80211_tx_status: headroom too small
->=20
-> > What driver are you using?
->=20
-> Ah, sorry, forgot to mention. It is rt61pci (RaLink mini-PCI card)
+Done, noticed that there's a patch for this issue. Will try and tell the results. And noticed the link on how to report possible firmware problems, will follow that procedure and post the results of that too.
+ 
+> Thank you
 
-Ok. I looked at the problem and it's a very odd problem -- mac80211
-should always reserve enough headroom in buffers it passes to the
-driver. Does rt61pci somehow realloc frames?
+Thaks for pointing me on the right direction!
 
-johannes
+> Reinette
+> 
+> 
 
---=-f2BhY3CAP9O4p5WZJwBC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Frederik
 
------BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJK688XAAoJEODzc/N7+Qma+IMP/0+fSKSWENA5dcs6EU2pv4Wb
-aAy9F088ZFZ5zEo2aXPBPdoNiL1oTYLbleagKVyKg20Rx0e6notDK3vWMZbXb2Dx
-Owx20ZNx5dlh9/+6QXKRoN1MhQWuQaHt/XzSCUde0SKZs0BgXCEFqGqInK1WXD/V
-G+/MEZkewdkoEhumyah1af1rCLiLVcbVi23KsxfBeSc6TM4EQ20DybaqqdhiyPys
-Wht55H5dEJo66Fqytw8SnhMShP7+44yKBd72NHWQQ9AubUGdAQrlmAK9Vujrvtrm
-QIuwT/zZrUCBtJIHWNKoJGH7DVQMcXNSbH2QpShdi4yY+vL8Xhm77QVNZ/8b1s3o
-2WHvyoO6EOhmvLI5ddCx6+q43WReH8xPn/j/rw+9QC3Mpp5JHkjiSItHWGktl6m/
-DKAShHIrXrr1z3E5w7eGHp9kIHRaDsZEB4zoirL2r6KLYD0FhRsWgwY7UijeLgo2
-1BPEcDrPCvOGLIfxxqDoJK9FBl2kS7d5KANn/L6gKINDw391et4IVBQVaGipsop0
-Wshruhs3ZeYUCiyD6uRQfgfoChJVC3SMjqzHpE8is1zjGxhsmSwRKcHubzNyHNsg
-858gKIa1upzaE+N1yzG45uDLf6XpkhgLQyLyVmV1XUJPNjg/qDhtbgfxQQyY416o
-GBk3mLejwgKNxR9EJPXs
-=aKyI
------END PGP SIGNATURE-----
-
---=-f2BhY3CAP9O4p5WZJwBC--
-
+      
