@@ -1,45 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:21189 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751845AbZJTMQb (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:52981 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753470AbZJZQiM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2009 08:16:31 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: iw: [PATCH] display station noise
-Date: Tue, 20 Oct 2009 14:16:10 +0200
+	Mon, 26 Oct 2009 12:38:12 -0400
+Received: by iwn10 with SMTP id 10so6066816iwn.4
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 09:38:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200910201416.10574.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200910261729.38199.mb@bu3sch.de>
+References: <1256567941-26859-1-git-send-email-lrodriguez@atheros.com>
+	<87hbtmgmj6.fsf@purkki.valot.fi> <43e72e890910260921h91c4cb5u5a2fc81e73377055@mail.gmail.com>
+	<200910261729.38199.mb@bu3sch.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 26 Oct 2009 09:37:56 -0700
+Message-ID: <43e72e890910260937v571e7b56h2453c5735f129f1b@mail.gmail.com>
+Subject: Re: [PATCH 2/4] ath9k_hw: distinguish single-chip solutions on
+	initial probe print
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Kalle Valo <kalle.valo@iki.fi>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+On Mon, Oct 26, 2009 at 9:29 AM, Michael Buesch <mb@bu3sch.de> wrote:
+> On Monday 26 October 2009 17:21:40 Luis R. Rodriguez wrote:
+>> >> --- a/drivers/net/wireless/ath/ath9k/pci.c
+>> >> +++ b/drivers/net/wireless/ath/ath9k/pci.c
+>> >> @@ -114,6 +114,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>> >>       u32 val;
+>> >>       int ret = 0;
+>> >>       struct ath_hw *ah;
+>> >> +     char hw_name[1024];
+>> >
+>> > Ditto.
+>>
+>> We use this for debugfs, so I went with that as an upper limit, given
+>> that we just use it a probe it seemed sane.
+>
+> I think it's completely insane, because you effectively use 25% of the available stack.
+> Why is a hardware name 1024 chars (max) long anyway?
+>
+> xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+> xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+> xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+> xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+> xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+> xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+> xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+> xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+> xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+> xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+> xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+> xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+> xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+> xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+>
+> I would be pissed off after reading the first line already ;)
 
-Index: iw/link.c
-===================================================================
---- iw.orig/link.c	2009-10-20 12:32:55.000000000 +0200
-+++ iw/link.c	2009-10-20 12:33:26.000000000 +0200
-@@ -119,6 +119,7 @@ static int print_link_sta(struct nl_msg 
- 		[NL80211_STA_INFO_RX_PACKETS] = { .type = NLA_U32 },
- 		[NL80211_STA_INFO_TX_PACKETS] = { .type = NLA_U32 },
- 		[NL80211_STA_INFO_SIGNAL] = { .type = NLA_U8 },
-+		[NL80211_STA_INFO_NOISE] = { .type = NLA_U8 },
- 		[NL80211_STA_INFO_TX_BITRATE] = { .type = NLA_NESTED },
- 		[NL80211_STA_INFO_LLID] = { .type = NLA_U16 },
- 		[NL80211_STA_INFO_PLID] = { .type = NLA_U16 },
-@@ -157,6 +158,9 @@ static int print_link_sta(struct nl_msg 
- 	if (sinfo[NL80211_STA_INFO_SIGNAL])
- 		printf("\tsignal: %d dBm\n",
- 			(int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL]));
-+	if (sinfo[NL80211_STA_INFO_NOISE])
-+		printf("\tnoise: %d dBm\n",
-+			(int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_NOISE]));
- 
- 	if (sinfo[NL80211_STA_INFO_TX_BITRATE]) {
- 		if (nla_parse_nested(rinfo, NL80211_RATE_INFO_MAX,
+Heh alright, I'll go reduce this, thanks.
 
--- 
-http://www.holgerschurig.de
+  Luis
