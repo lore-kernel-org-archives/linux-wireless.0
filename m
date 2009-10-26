@@ -1,54 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:36384 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753784AbZJLVpK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 17:45:10 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Frederik Deweerdt <frederik.deweerdt@xprog.eu>
-Subject: Re: 2.6.32-rc4: Reported regressions 2.6.30 -> 2.6.31
-Date: Mon, 12 Oct 2009 23:46:11 +0200
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-References: <56acieJJ2fF.A.nEB.Hzl0KB@chimera> <20091012122201.GA31282@gambetta>
-In-Reply-To: <20091012122201.GA31282@gambetta>
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:56693 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755516AbZJZUbl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Oct 2009 16:31:41 -0400
+Received: by ewy4 with SMTP id 4so4010232ewy.37
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 13:31:45 -0700 (PDT)
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: [PATCH v2 2/4] ath9k_hw: distinguish single-chip solutions on initial probe print
+References: <1256575447-4591-1-git-send-email-lrodriguez@atheros.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Mon, 26 Oct 2009 22:31:44 +0200
+In-Reply-To: <1256575447-4591-1-git-send-email-lrodriguez@atheros.com> (Luis R. Rodriguez's message of "Mon\, 26 Oct 2009 12\:44\:07 -0400")
+Message-ID: <87d449hp73.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200910122346.11881.rjw@sisk.pl>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 12 October 2009, Frederik Deweerdt wrote:
-> Hi Rafael,
-> 
-> On Mon, Oct 12, 2009 at 12:41:30AM +0200, Rafael J. Wysocki wrote:
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14185
-> > Subject		: Oops in driversbasefirmware_class
-> > Submitter	:  <lars_ericsson@telia.com>
-> > Date		: 2009-09-17 05:09 (25 days old)
-> > First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=6e03a201bbe8137487f340d26aa662110e324b20
-> > 
-> > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14253
-> > Subject		: Oops in driversbasefirmware_class
-> > Submitter	: Lars Ericsson <Lars_Ericsson@telia.com>
-> > Date		: 2009-09-16 20:44 (26 days old)
-> > References	: http://lkml.org/lkml/2009/9/16/461
-> > Handled-By	: Frederik Deweerdt <frederik.deweerdt@xprog.eu>
-> > Patch		: http://patchwork.kernel.org/patch/49914/
-> > 
-> Those two are refering to the same bug.
+"Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
 
-Thanks, I closed #14185 as a duplicate of #14253.
+> Devices with external radios have revisions which we can count on.
+> On single chip solutions these EEPROM values for these radio revision
+> also exist but are not meaningful as the radios are embedded onto the
+> same chip. Each single-chip device evolves together as one device.
+>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>
+> Changes hw_name to 60 bytes.
 
-Best,
-Rafael
+Thanks, much better now.
+
+Another minor comment, sorry that I didn't notice it earlier:
+
+> +void ath9k_hw_name(struct ath_hw *ah, char *hw_name)
+> +{
+> +	/* chipsets >= AR9280 are single-chip */
+> +	if (AR_SREV_9280_10_OR_LATER(ah)) {
+> +		sprintf(hw_name,
+> +			"Atheros single-chip AR%s Rev:%x",
+> +			ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
+> +			ah->hw_version.macRev);
+> +	}
+> +	else {
+> +		sprintf(hw_name,
+> +			"Atheros AR%s MAC/BB Rev:%x AR%s RF Rev:%x: ",
+> +			ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
+> +			ah->hw_version.macRev,
+> +			ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
+> +					 AR_RADIO_SREV_MAJOR)),
+> +			ah->hw_version.phyRev);
+> +	}
+> +}
+
+I think you should provide the size of hw_name to this function and
+use snprintf() to avoid writing out of bounds.
+
+-- 
+Kalle Valo
