@@ -1,35 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:44616 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757133AbZJBHK6 (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:60418 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751339AbZJZQ3t convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2009 03:10:58 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Sedat Dilek <sedat.dilek@googlemail.com>
-Subject: Re: Linux-2.6.32-rc1/2] wext refactor needs wpasupplicant 0.7.0+?
-Date: Fri, 2 Oct 2009 09:10:47 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	wireless <linux-wireless@vger.kernel.org>
-References: <2d0a357f0910010247jfda1199h5a9b873233b186ca@mail.gmail.com> <1254426421.3959.29.camel@johannes.local> <2d0a357f0910011344u4306ecf6ha11410b0f5ed62e3@mail.gmail.com>
-In-Reply-To: <2d0a357f0910011344u4306ecf6ha11410b0f5ed62e3@mail.gmail.com>
+	Mon, 26 Oct 2009 12:29:49 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [PATCH 2/4] ath9k_hw: distinguish single-chip solutions on  initial probe print
+Date: Mon, 26 Oct 2009 17:29:36 +0100
+Cc: Kalle Valo <kalle.valo@iki.fi>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+References: <1256567941-26859-1-git-send-email-lrodriguez@atheros.com> <87hbtmgmj6.fsf@purkki.valot.fi> <43e72e890910260921h91c4cb5u5a2fc81e73377055@mail.gmail.com>
+In-Reply-To: <43e72e890910260921h91c4cb5u5a2fc81e73377055@mail.gmail.com>
 MIME-Version: 1.0
+Message-Id: <200910261729.38199.mb@bu3sch.de>
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200910020910.47068.hs4233@mail.mn-solutions.de>
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In both logs you have
+On Monday 26 October 2009 17:21:40 Luis R. Rodriguez wrote:
+> >> --- a/drivers/net/wireless/ath/ath9k/pci.c
+> >> +++ b/drivers/net/wireless/ath/ath9k/pci.c
+> >> @@ -114,6 +114,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+> >>       u32 val;
+> >>       int ret = 0;
+> >>       struct ath_hw *ah;
+> >> +     char hw_name[1024];
+> >
+> > Ditto.
+> 
+> We use this for debugfs, so I went with that as an upper limit, given
+> that we just use it a probe it seemed sane.
 
-1254429476.088527: ctrl_iface bind(PF_UNIX) failed: Address already in use
-1254429476.088543: ctrl_iface exists and seems to be in use - cannot override it
-1254429476.088548: Delete '/var/run/wpa_supplicant/wlan0' manually if it is not used anymore
+I think it's completely insane, because you effectively use 25% of the available stack.
+Why is a hardware name 1024 chars (max) long anyway?
 
-are you sure that no other wpa_supplicant did
-run when you made the logs?
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-If yes, then just remove the file and re-run wpa_supplicant.
-Be sure to run it as "root".
+I would be pissed off after reading the first line already ;)
 
 -- 
-http://www.holgerschurig.de
+Greetings, Michael.
