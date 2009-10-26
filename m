@@ -1,31 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:33707 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750791AbZJPX1s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 19:27:48 -0400
-Subject: Re: iwlwifi 6000 uCode available
-From: reinette chatre <reinette.chatre@intel.com>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <69e28c910910161615r2fd30c6dqc24f1a4869ec4c88@mail.gmail.com>
-References: <1255734357.21134.590.camel@rc-desk>
-	 <69e28c910910161615r2fd30c6dqc24f1a4869ec4c88@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 16 Oct 2009 16:27:52 -0700
-Message-Id: <1255735672.21134.635.camel@rc-desk>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60568 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755139AbZJZUBQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Oct 2009 16:01:16 -0400
+Date: Mon, 26 Oct 2009 15:51:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Azhar <Azhar.iq@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: TL-WN721N
+Message-ID: <20091026195158.GK2792@tuxdriver.com>
+References: <loom.20091015T161901-805@post.gmane.org> <20091015151058.GC2809@tuxdriver.com> <loom.20091018T103209-571@post.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <loom.20091018T103209-571@post.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-10-16 at 16:15 -0700, Gábor Stefanik wrote:
-> Are the actual adapters available too, or is this just the
-> release-early-release-often philosophy at work?
+On Sun, Oct 18, 2009 at 08:33:46AM +0000, Azhar wrote:
+> John W. Linville <linville@...> writes:
+> 
+> > 
+> > On Thu, Oct 15, 2009 at 02:20:52PM +0000, Azhar wrote:
+> > > Hi all,
+> > > 
+> > > I am looking for drivers of TL-WN721N (for linux)...i have been going through
+> > > pages aand pages of documentation....but every other link seems to route
+> > > here...i would really appreciate if you could guide me
+> > > 
+> > > Thanks
+> > > 
+> > > Azhar
+> > 
+> > Is it PCI?  USB?  The output of lspci or lsusb would be helpful
+> > to know.  Of course, in most cases you distribution would have the
+> > driver auto-loaded for you if it was supported at all...
+> > 
+> > John
+> 
+> ndiswrapper -l
+> 
+> WARNING: All config files need .conf: /etc/modprobe.d/ndiswrapper, it will be
+> ignored in a future release.
+> WARNING: All config files need .conf: /etc/modprobe.d/blacklist, it will be
+> ignored in a future release.
+> netathur : driver installed
+> device (0CF3:9271) present
+> 
+> 
+> lsusb
+> 
+> Bus 001 Device 003: ID 0cf3:9271 Atheros Communications, Inc.
 
-You cannot yet purchase a laptop with these cards, but when you can the
-driver will be ready for you.
+I suspect you should try a wireless-testing kernel or a bleeding-edge
+wireless-compat package.
 
-Reinette
+Hth!
 
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
