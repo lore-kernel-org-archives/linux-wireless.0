@@ -1,176 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:56613 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759659AbZJHS6d (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35420 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754995AbZJZH64 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 14:58:33 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 08/20] wl1271: Configure rate policies based on AP rates
-Date: Thu,  8 Oct 2009 21:56:24 +0300
-Message-Id: <1255028196-6565-9-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
+	Mon, 26 Oct 2009 03:58:56 -0400
+Subject: Re: [PATCH] net: Adjust softirq raising in __napi_schedule
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jarek Poplawski <jarkao2@gmail.com>
+Cc: Tilman Schmidt <tilman@imap.cc>,
+	David Miller <davem@davemloft.net>, hidave.darkstar@gmail.com,
+	linux-kernel@vger.kernel.org, tglx@linutronix.de,
+	linux-wireless@vger.kernel.org, linux-ppp@vger.kernel.org,
+	netdev@vger.kernel.org, paulus@samba.org,
+	Michael Buesch <mb@bu3sch.de>,
+	Oliver Hartkopp <oliver@hartkopp.net>
+In-Reply-To: <20091026075438.GB6187@ff.dom.local>
+References: <4AD76184.6030900@gmail.com> <4ADF5710.4030505@imap.cc>
+	 <20091021211906.GA11401@ami.dom.local>
+	 <1256160330.12174.2.camel@johannes.local>
+	 <20091021213947.GA12202@ami.dom.local>
+	 <1256200021.12174.11.camel@johannes.local> <4AE1C00B.5010008@imap.cc>
+	 <1256309191.12174.51.camel@johannes.local>
+	 <20091026074126.GA6187@ff.dom.local>
+	 <1256543054.28230.6.camel@johannes.local>
+	 <20091026075438.GB6187@ff.dom.local>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-5UamH4+2+8z4jInfScvN"
+Date: Mon, 26 Oct 2009 08:58:52 +0100
+Message-ID: <1256543932.28230.9.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Configure the rate policies to the firmware based on the rates given by
-the AP.
+--=-5UamH4+2+8z4jInfScvN
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271.h      |    3 ++
- drivers/net/wireless/wl12xx/wl1271_acx.c  |    4 +-
- drivers/net/wireless/wl12xx/wl1271_acx.h  |    2 +-
- drivers/net/wireless/wl12xx/wl1271_init.c |    2 +-
- drivers/net/wireless/wl12xx/wl1271_main.c |   31 +++++++++++++++++++++++++++++
- 5 files changed, 38 insertions(+), 4 deletions(-)
+On Mon, 2009-10-26 at 07:54 +0000, Jarek Poplawski wrote:
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 957da8c..671dc5a 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -369,6 +369,9 @@ struct wl1271 {
- 	/* Our association ID */
- 	u16 aid;
- 
-+	/* The current band */
-+	enum ieee80211_band band;
-+
- 	/* Default key (for WEP) */
- 	u32 default_key;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
-index f622a40..2ae1081 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
-@@ -703,7 +703,7 @@ int wl1271_acx_statistics(struct wl1271 *wl, struct acx_statistics *stats)
- 	return 0;
- }
- 
--int wl1271_acx_rate_policies(struct wl1271 *wl)
-+int wl1271_acx_rate_policies(struct wl1271 *wl, u32 enabled_rates)
- {
- 	struct acx_rate_policy *acx;
- 	int ret = 0;
-@@ -719,7 +719,7 @@ int wl1271_acx_rate_policies(struct wl1271 *wl)
- 
- 	/* configure one default (one-size-fits-all) rate class */
- 	acx->rate_class_cnt = 1;
--	acx->rate_class[0].enabled_rates = ACX_RATE_MASK_ALL;
-+	acx->rate_class[0].enabled_rates = enabled_rates;
- 	acx->rate_class[0].short_retry_limit = ACX_RATE_RETRY_LIMIT;
- 	acx->rate_class[0].long_retry_limit = ACX_RATE_RETRY_LIMIT;
- 	acx->rate_class[0].aflags = 0;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
-index 9068daa..55850eb 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
-@@ -1209,7 +1209,7 @@ int wl1271_acx_set_preamble(struct wl1271 *wl, enum acx_preamble_type preamble);
- int wl1271_acx_cts_protect(struct wl1271 *wl,
- 			    enum acx_ctsprotect_type ctsprotect);
- int wl1271_acx_statistics(struct wl1271 *wl, struct acx_statistics *stats);
--int wl1271_acx_rate_policies(struct wl1271 *wl);
-+int wl1271_acx_rate_policies(struct wl1271 *wl, u32 enabled_rates);
- int wl1271_acx_ac_cfg(struct wl1271 *wl);
- int wl1271_acx_tid_cfg(struct wl1271 *wl);
- int wl1271_acx_frag_threshold(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
-index 490df21..eb6b91a 100644
---- a/drivers/net/wireless/wl12xx/wl1271_init.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_init.c
-@@ -369,7 +369,7 @@ int wl1271_hw_init(struct wl1271 *wl)
- 		goto out_free_memmap;
- 
- 	/* Configure TX rate classes */
--	ret = wl1271_acx_rate_policies(wl);
-+	ret = wl1271_acx_rate_policies(wl, ACX_RATE_MASK_ALL);
- 	if (ret < 0)
- 		goto out_free_memmap;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index cc5c328..b9b1c20 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -583,6 +583,7 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
- 	wl->ssid_len = 0;
- 	wl->listen_int = 1;
- 	wl->bss_type = MAX_BSS_TYPE;
-+	wl->band = IEEE80211_BAND_2GHZ;
- 
- 	wl->rx_counter = 0;
- 	wl->elp = false;
-@@ -727,6 +728,8 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	mutex_lock(&wl->mutex);
- 
-+	wl->band = conf->channel->band;
-+
- 	ret = wl1271_ps_elp_wakeup(wl, false);
- 	if (ret < 0)
- 		goto out;
-@@ -978,6 +981,22 @@ out:
- 	return ret;
- }
- 
-+static u32 wl1271_enabled_rates_get(struct wl1271 *wl, u64 basic_rate_set)
-+{
-+	struct ieee80211_supported_band *band;
-+	u32 enabled_rates = 0;
-+	int bit;
-+
-+	band = wl->hw->wiphy->bands[wl->band];
-+	for (bit = 0; bit < band->n_bitrates; bit++) {
-+		if (basic_rate_set & 0x1)
-+			enabled_rates |= band->bitrates[bit].hw_value;
-+		basic_rate_set >>= 1;
-+	}
-+
-+	return enabled_rates;
-+}
-+
- static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 				       struct ieee80211_vif *vif,
- 				       struct ieee80211_bss_conf *bss_conf,
-@@ -1016,6 +1035,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 			}
- 		}
- 	}
-+
- 	if (changed & BSS_CHANGED_ERP_SLOT) {
- 		if (bss_conf->use_short_slot)
- 			ret = wl1271_acx_slot(wl, SLOT_TIME_SHORT);
-@@ -1045,6 +1065,16 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 		}
- 	}
- 
-+	if (changed & BSS_CHANGED_BASIC_RATES) {
-+		u32 enabled_rates = wl1271_enabled_rates_get(
-+			wl, bss_conf->basic_rates);
-+		ret = wl1271_acx_rate_policies(wl, enabled_rates);
-+		if (ret < 0) {
-+			wl1271_warning("Set rate policies failed %d", ret);
-+			goto out_sleep;
-+		}
-+	}
-+
- out_sleep:
- 	wl1271_ps_elp_sleep(wl);
- 
-@@ -1239,6 +1269,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	wl->psm_requested = false;
- 	wl->tx_queue_stopped = false;
- 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
-+	wl->band = IEEE80211_BAND_2GHZ;
- 
- 	/* We use the default power on sleep time until we know which chip
- 	 * we're using */
--- 
-1.5.6.5
+> > No, I wrote that I didn't know. I suppose now that I looked at it I do
+> > know, and only disabling preemption is required.
+>=20
+> But netif_rx has preemption disabled most of the time (by hardirqs
+> disabling). So maybe disabling preemption isn't the main reason here
+> either?
+
+Not for netpoll though, which may or may not be relevant (if I were to
+venture a guess I'd say it isn't and it disables preemption to be able
+to do the softirq thing)
+
+However, I lost track now of why we're discussing this.
+
+Basically it boils down to using netif_rx() when in (soft)irq, and
+netif_rx_ni() when in process context. That could just be an
+optimisation, but it's a very valid one.
+
+johannes
+
+--=-5UamH4+2+8z4jInfScvN
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK5Va4AAoJEODzc/N7+QmaGZ0P/3XWgEgM6SCQX98BVmafmXc5
+2Mbi7bpGvxC34SPawy9T3H7vUgRrATm8S/DGDscgRjTAY0/bZQaau2dFs+a2UBfc
+4XJvc41om+OuhG83o9LvyjlGN1w0XFt8WwPFT7UeXoRRePnXz0DPt3YPMiZ9IkwY
+tynu6L3i2yG+G2xR2/rd49Dk15YZJfKzbJs6KrMJhtOWPYMWXrDfXD2CDUApbXOZ
+3tzaZrnRF/YbBLvOlNrxoRyBhQyvR+QgiKdnQkf5dD+DqAtPVdFPrJHRdp/W9m1p
+Dgqvml35IoWNA71BeDdH+ozEGkLLESp7G8nR1nnZpU2IBR5PhuPfAzfb6t763bW3
+qS57TUtAGcokPm+HonmginKt2q34+nN3J+iRyjr0XIRlcm05idvMImxBucVYf6CF
+cbVMZ5BGwZRvjj6e2YOdNRZRbcy+5sNfCRF+AGYWuDyF9WbEiaecKnAx0qkWcRQv
+BLTDC35t5cS5M4+Qa/cyopFc9uvBxGa1gMUYpqmSqV6Ix24bdzZlM+e9FrTprsud
+3L/9XjrA8daRU1DQzaAz0uWAL07gu0xq6kJpBndFsDcTq4HIKJvEERvF4fGogURu
+ENDJ6UgqWDMsnIzmVFsOTeZv0YggzRwIc6AxUoSwdHSwSJtszlknjN9Yhzxvw2AR
+Wh1lCuj79evprgY5Fhsx
+=NWhK
+-----END PGP SIGNATURE-----
+
+--=-5UamH4+2+8z4jInfScvN--
 
