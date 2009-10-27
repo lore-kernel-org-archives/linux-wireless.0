@@ -1,83 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42587 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757173AbZJ3LzB (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:55160 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755519AbZJ0ShQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 07:55:01 -0400
-Subject: [PATCH] mac80211: also drop qos-nullfunc frames silently
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 30 Oct 2009 12:55:03 +0100
-Message-ID: <1256903703.3555.49.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 27 Oct 2009 14:37:16 -0400
+Received: by iwn8 with SMTP id 8so347075iwn.33
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2009 11:37:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4ACE131E.3080908@lwfinger.net>
+References: <167ae39b0910071400n218d3d9ey7711b1011f290a73@mail.gmail.com>
+	<4ACE131E.3080908@lwfinger.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 27 Oct 2009 11:37:01 -0700
+Message-ID: <43e72e890910271137l31082c41t7e62a82e901d3456@mail.gmail.com>
+Subject: Re: Prism54/p54pci
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: James Grossmann <cctsurf@gmail.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We drop nullfunc frames, but not qos-nullfunc frames,
-even though those could be used for PS state control
-as well.
+On Thu, Oct 8, 2009 at 9:28 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 10/07/2009 04:00 PM, James Grossmann wrote:
+>>
+>> I have the gigafast WF728-AEX, which doesn't seem to work with the
+>> p54pci drivers, I was previously using it with my Thinkpad T23 under
+>> Gentoo (gentoo kernels 2.6.29 and 2.6.30), and could only use the
+>> 1.0.4.3 firmware, now, I am using it under Ubuntu 9.04
+>> (2.6.28-15-generic kernel) on the same computer, and find that I have
+>> to load the prism54 driver to make it work.
+>> I noticed that you were considering this to be depricated, I hope that
+>> you can help me to make p54pci work!
+>
+> As it works with 2.6.29 and 2.6.30 kernels, but not with 2.6.28, it seems
+> likely that you need a later version of the driver. Does Ubuntu have a
+> package for compat-wireless? If so, install it. If not, you will need to
+> install from source.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/linux/ieee80211.h |   12 +++++++++++-
- net/mac80211/rx.c         |   15 ++++++++++-----
- 2 files changed, 21 insertions(+), 6 deletions(-)
+James, please do test with a new driver and appropriate firmware and
+let us know if it worked or not.
 
---- wireless-testing.orig/include/linux/ieee80211.h	2009-10-30 08:18:15.000000000 +0100
-+++ wireless-testing/include/linux/ieee80211.h	2009-10-30 08:19:40.000000000 +0100
-@@ -472,7 +472,7 @@ static inline int ieee80211_is_cfendack(
- }
- 
- /**
-- * ieee80211_is_nullfunc - check if FTYPE=IEEE80211_FTYPE_DATA and STYPE=IEEE80211_STYPE_NULLFUNC
-+ * ieee80211_is_nullfunc - check if frame is a regular (non-QoS) nullfunc frame
-  * @fc: frame control bytes in little-endian byteorder
-  */
- static inline int ieee80211_is_nullfunc(__le16 fc)
-@@ -481,6 +481,16 @@ static inline int ieee80211_is_nullfunc(
- 	       cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_NULLFUNC);
- }
- 
-+/**
-+ * ieee80211_is_qos_nullfunc - check if frame is a QoS nullfunc frame
-+ * @fc: frame control bytes in little-endian byteorder
-+ */
-+static inline int ieee80211_is_qos_nullfunc(__le16 fc)
-+{
-+	return (fc & cpu_to_le16(IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE)) ==
-+	       cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_QOS_NULLFUNC);
-+}
-+
- struct ieee80211s_hdr {
- 	u8 flags;
- 	u8 ttl;
---- wireless-testing.orig/net/mac80211/rx.c	2009-10-30 08:18:15.000000000 +0100
-+++ wireless-testing/net/mac80211/rx.c	2009-10-30 08:18:29.000000000 +0100
-@@ -886,12 +886,17 @@ ieee80211_rx_h_sta_process(struct ieee80
- 		}
- 	}
- 
--	/* Drop data::nullfunc frames silently, since they are used only to
--	 * control station power saving mode. */
--	if (ieee80211_is_nullfunc(hdr->frame_control)) {
-+	/*
-+	 * Drop (qos-)data::nullfunc frames silently, since they
-+	 * are used only to control station power saving mode.
-+	 */
-+	if (ieee80211_is_nullfunc(hdr->frame_control) ||
-+	    ieee80211_is_qos_nullfunc(hdr->frame_control)) {
- 		I802_DEBUG_INC(rx->local->rx_handlers_drop_nullfunc);
--		/* Update counter and free packet here to avoid counting this
--		 * as a dropped packed. */
-+		/*
-+		 * Update counter and free packet here to avoid
-+		 * counting this as a dropped packed.
-+		 */
- 		sta->rx_packets++;
- 		dev_kfree_skb(rx->skb);
- 		return RX_QUEUED;
-
-
+  Luis
