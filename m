@@ -1,36 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:35961 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751036AbZJTIGQ (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:51991 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755921AbZJ0QWX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2009 04:06:16 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id D1A063A00D
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 10:06:20 +0200 (CEST)
-Received: from mx51.mymxserver.com ([127.0.0.1])
-	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id FIGGYV5Ynmqq for <linux-wireless@vger.kernel.org>;
-	Tue, 20 Oct 2009 10:06:20 +0200 (CEST)
-Received: from lin01.mn-solutions.de (pD95F95A1.dip0.t-ipconnect.de [217.95.149.161])
-	by mx51.mymxserver.com (Postfix) with ESMTP id 8306A3A008
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 10:06:20 +0200 (CEST)
-Received: from mnz66.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id 0AEFF1E0010
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 10:06:11 +0200 (CEST)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: Question about "txrate: current unicast bitrate to this station"
-Date: Tue, 20 Oct 2009 10:05:57 +0200
+	Tue, 27 Oct 2009 12:22:23 -0400
+Received: by iwn8 with SMTP id 8so241879iwn.33
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2009 09:22:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200910201005.57862.hs4233@mail.mn-solutions.de>
+In-Reply-To: <1256660178-5863-1-git-send-email-lrodriguez@atheros.com>
+References: <1256660178-5863-1-git-send-email-lrodriguez@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 27 Oct 2009 09:22:07 -0700
+Message-ID: <43e72e890910270922g555981tfb0a9b471ccaa662@mail.gmail.com>
+Subject: Re: [PATCH v2] wireless-regdb: update US rules for 5600 MHz - 5650
+	MHz
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Michael Green <Michael.Green@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	David Quan <David.Quan@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So, this is the TX rate if the WLAN card is operating in AP mode, 
-but it is really a RXRATE (despite the name) if the WLAN card is 
-working in STATION mode?
+On Tue, Oct 27, 2009 at 9:16 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> The FCC is trying to assist airports that use Terminal Doppler
+> Weather Radar (TDWR) systems in avoiding interference with
+> some outdoor wireless systems operating in the 5.4 GHz
+> (5470 MHz - 5725 MHz) band. One of the things they have decided
+> on is to disallow operation on the 5600 MHz - 5650 MHz frequency
+> range inclusive. What this means in practice is 5 GHz 802.11
+> devices programmed to operate in the US will have these
+> channels now disabled:
+>
+>  * 5600 MHz [120] (disabled)
+>  * 5620 MHz [124] (disabled)
+>  * 5640 MHz [128] (disabled)
+>
+> This is documented on the FCC Knowledge based Publication
+> Number: 443999 [1]
+>
+> [1] https://fjallfoss.fcc.gov/oetcf/kdb/forms/FTSSearchResultPage.cfm?switch=P&id=41732
 
--- 
-http://www.holgerschurig.de
+And actually -- on second though I'm reviewing if we can just use
+NO-IBSS, PASSIVE-SCAN, DFS on this frequency range. So please hold on
+this.
+
+  Luis
