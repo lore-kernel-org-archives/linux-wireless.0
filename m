@@ -1,94 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43583 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754720AbZJGWCr (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39714 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755754AbZJ0Q7d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 18:02:47 -0400
-Subject: Re: NULL pointer deref at wext ioctl (Re: [PATCH] compat-2.6:
- adding  ethtool.h to compat-2.6.31.h)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <3ace41890910071228i786d4097w69dc7a3dfeb64afe@mail.gmail.com>
-References: <3ace41890910071216y69b8bc9la67b8f0ce5890cd8@mail.gmail.com>
-	 <3ace41890910071228i786d4097w69dc7a3dfeb64afe@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-RbihFodzEDAbzSpNzdBz"
-Date: Thu, 08 Oct 2009 00:01:26 +0200
-Message-Id: <1254952886.3713.4.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 27 Oct 2009 12:59:33 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/5] ath9k_hw: move mac name and rf name helpers to hw code
+Date: Tue, 27 Oct 2009 12:59:33 -0400
+Message-Id: <1256662777-20469-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1256662777-20469-1-git-send-email-lrodriguez@atheros.com>
+References: <1256662777-20469-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+These are shared between ath9k and the future ath9k_htc driver.
 
---=-RbihFodzEDAbzSpNzdBz
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ahb.c  |    5 ++-
+ drivers/net/wireless/ath/ath9k/hw.c   |   62 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h   |    3 ++
+ drivers/net/wireless/ath/ath9k/main.c |   58 ------------------------------
+ drivers/net/wireless/ath/ath9k/pci.c  |    5 ++-
+ 5 files changed, 71 insertions(+), 62 deletions(-)
 
-On Wed, 2009-10-07 at 20:28 +0100, Hin-Tak Leung wrote:
-> On Wed, Oct 7, 2009 at 8:16 PM, Hin-Tak Leung <hintak.leung@gmail.com> wr=
-ote:
->=20
-> > It is probably just a transient problem with recent activities - I had
-> > a NULL pointer deref from loading rtl8187 of compat-wireless
-> > v2.6.32-rc3-39563-g98c2609 -
-> >
-> > BUG: unable to handle kernel NULL pointer dereference at 00000000000000=
-3d
-> > IP: [<ffffffff8147822c>] wext_ioctl_dispatch+0xd9/0x180
-> > PGD 61c2b067 PUD 6246f067 PMD 0
-> > Oops: 0000 [#1] SMP
-> > ...
-> > Call Trace:
-> >  [<ffffffff814783f5>] wext_handle_ioctl+0x4d/0x98
-> >  [<ffffffff813e53a5>] dev_ioctl+0x625/0x662
-> >  [<ffffffff813cfa45>] sock_ioctl+0x225/0x248
-> >  [<ffffffff811237a3>] vfs_ioctl+0x31/0xaa
-> >  [<ffffffff811e1801>] ? security_d_instantiate+0x37/0x4d
-> >  [<ffffffff81123c88>] do_vfs_ioctl+0x46c/0x4c3
-> >  [<ffffffff81123d44>] sys_ioctl+0x65/0x9c
-> >  [<ffffffff81012082>] system_call_fastpath+0x16/0x1b
-> >
-> > I'm sure whatever changes made this happen will go away soon, so I'll
-> > just re-try in a few days... but if anybody knows what commit causes
-> > this (and what fixes it!), I'd like to know.
-> >
->=20
-> Hiya, It looks like I last used compat-wireless successfully was on
-> 25th (I am not saying it breaks after - I just haven't tried until
-> yesterday, possibly), and most of the recent changes are per-driver,
-> but there is a big code drop from Johannes dated 27th on 'wext:
-> refactor' . Changes from that or dependent changes?
-
-Probably -- but I don't see this problem on stock kernel and I'm not
-sure what could be causing it for compat-wireless.
-
-This will be the old copy of wext_ioctl_dispatch. It'd certainly help to
-get disassembly/the source line of the oops.
-
-johannes
-
---=-RbihFodzEDAbzSpNzdBz
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKzQ+zAAoJEODzc/N7+QmaAGoQAIhI15Zo9LI/D732RRmSe7Ye
-WofTa+snX6QhXR6ygbyLt2t+xwcmvHSYy2Ft6vT/u8hbbJ5olnGQGfcnq508M2UD
-jijc1jx63txP5Vz6KnbZj+TRoXx8HFmvJRMpqZRHSdrcw48kzz/4AAaBECYs52yJ
-9DkInlNs6HBMuLZz5ujWYwqn97xhZ1DLoFgroF7yZmZryVzuqzn5N1pFUU2eXZvu
-wQF8XVV3cj6dCn1U2iUqn7YTioiMcHcm/KWC/VNLPKYRekiPfaCFkl+j70rIFEHI
-rxU8IjMe4ql8Qn8zXgaLGkZp/E81cU6YlTfkMU5jZCa48Gn1j7GwE68toQIOruNB
-0i7dxfMXIDi2NpDE8zoVQUAsK0BoAPLOSNNjbVFKYuB3KNSNG6Mzksr2rHAoo3jw
-1sgwlmnpg9AcJghhGU10wF1oNzty2LqY9UVbSKgTqgwZPx2+w5Yuqwb4UGNE8b4v
-OwMIICpFQbGxyQ5CXXoAVCFgD/IM3gWkw8NfhAQI8CX6kzu/vgD/qsWeijbP6Nvt
-e3DsHX9fzClgVxkWugx4bGF/segypK/6sgMe2DdCqH/0UhTlbk0beqAqV9K7YtdN
-/2nF+8stmWhV1bPOC9n88P4dAOcLCq6lbGQhIkM2VfoT7VX6eEFx12810YEkmZlL
-zXgY0Hmi6EC8CFZiPNub
-=z7Pg
------END PGP SIGNATURE-----
-
---=-RbihFodzEDAbzSpNzdBz--
+diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
+index 25531f2..41422c4 100644
+--- a/drivers/net/wireless/ath/ath9k/ahb.c
++++ b/drivers/net/wireless/ath/ath9k/ahb.c
+@@ -137,9 +137,10 @@ static int ath_ahb_probe(struct platform_device *pdev)
+ 	       "%s: Atheros AR%s MAC/BB Rev:%x, "
+ 	       "AR%s RF Rev:%x, mem=0x%lx, irq=%d\n",
+ 	       wiphy_name(hw->wiphy),
+-	       ath_mac_bb_name(ah->hw_version.macVersion),
++	       ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
+ 	       ah->hw_version.macRev,
+-	       ath_rf_name((ah->hw_version.analog5GhzRev & AR_RADIO_SREV_MAJOR)),
++	       ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
++				 AR_RADIO_SREV_MAJOR)),
+ 	       ah->hw_version.phyRev,
+ 	       (unsigned long)mem, irq);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index db95876..cf543e3 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -3928,3 +3928,65 @@ void ath_gen_timer_isr(struct ath_hw *ah)
+ 	}
+ }
+ EXPORT_SYMBOL(ath_gen_timer_isr);
++
++static struct {
++	u32 version;
++	const char * name;
++} ath_mac_bb_names[] = {
++	/* Devices with external radios */
++	{ AR_SREV_VERSION_5416_PCI,	"5416" },
++	{ AR_SREV_VERSION_5416_PCIE,	"5418" },
++	{ AR_SREV_VERSION_9100,		"9100" },
++	{ AR_SREV_VERSION_9160,		"9160" },
++	/* Single-chip solutions */
++	{ AR_SREV_VERSION_9280,		"9280" },
++	{ AR_SREV_VERSION_9285,		"9285" },
++	{ AR_SREV_VERSION_9287,         "9287" }
++};
++
++/* For devices with external radios */
++static struct {
++	u16 version;
++	const char * name;
++} ath_rf_names[] = {
++	{ 0,				"5133" },
++	{ AR_RAD5133_SREV_MAJOR,	"5133" },
++	{ AR_RAD5122_SREV_MAJOR,	"5122" },
++	{ AR_RAD2133_SREV_MAJOR,	"2133" },
++	{ AR_RAD2122_SREV_MAJOR,	"2122" }
++};
++
++/*
++ * Return the MAC/BB name. "????" is returned if the MAC/BB is unknown.
++ */
++const char *ath9k_hw_mac_bb_name(u32 mac_bb_version)
++{
++	int i;
++
++	for (i=0; i<ARRAY_SIZE(ath_mac_bb_names); i++) {
++		if (ath_mac_bb_names[i].version == mac_bb_version) {
++			return ath_mac_bb_names[i].name;
++		}
++	}
++
++	return "????";
++}
++EXPORT_SYMBOL(ath9k_hw_mac_bb_name);
++
++/*
++ * Return the RF name. "????" is returned if the RF is unknown.
++ * Used for devices with external radios.
++ */
++const char *ath9k_hw_rf_name(u16 rf_version)
++{
++	int i;
++
++	for (i=0; i<ARRAY_SIZE(ath_rf_names); i++) {
++		if (ath_rf_names[i].version == rf_version) {
++			return ath_rf_names[i].name;
++		}
++	}
++
++	return "????";
++}
++EXPORT_SYMBOL(ath9k_hw_rf_name);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 936ef5b..100fcba 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -720,6 +720,9 @@ void ath_gen_timer_free(struct ath_hw *ah, struct ath_gen_timer *timer);
+ void ath_gen_timer_isr(struct ath_hw *hw);
+ u32 ath9k_hw_gettsf32(struct ath_hw *ah);
+ 
++const char *ath9k_hw_mac_bb_name(u32 mac_bb_version);
++const char *ath9k_hw_rf_name(u16 rf_version);
++
+ #define ATH_PCIE_CAP_LINK_CTRL	0x70
+ #define ATH_PCIE_CAP_LINK_L0S	1
+ #define ATH_PCIE_CAP_LINK_L1	2
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 69cf702..9fefc51 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -3191,64 +3191,6 @@ struct ieee80211_ops ath9k_ops = {
+ 	.rfkill_poll        = ath9k_rfkill_poll_state,
+ };
+ 
+-static struct {
+-	u32 version;
+-	const char * name;
+-} ath_mac_bb_names[] = {
+-	{ AR_SREV_VERSION_5416_PCI,	"5416" },
+-	{ AR_SREV_VERSION_5416_PCIE,	"5418" },
+-	{ AR_SREV_VERSION_9100,		"9100" },
+-	{ AR_SREV_VERSION_9160,		"9160" },
+-	{ AR_SREV_VERSION_9280,		"9280" },
+-	{ AR_SREV_VERSION_9285,		"9285" },
+-	{ AR_SREV_VERSION_9287,         "9287" }
+-};
+-
+-static struct {
+-	u16 version;
+-	const char * name;
+-} ath_rf_names[] = {
+-	{ 0,				"5133" },
+-	{ AR_RAD5133_SREV_MAJOR,	"5133" },
+-	{ AR_RAD5122_SREV_MAJOR,	"5122" },
+-	{ AR_RAD2133_SREV_MAJOR,	"2133" },
+-	{ AR_RAD2122_SREV_MAJOR,	"2122" }
+-};
+-
+-/*
+- * Return the MAC/BB name. "????" is returned if the MAC/BB is unknown.
+- */
+-const char *
+-ath_mac_bb_name(u32 mac_bb_version)
+-{
+-	int i;
+-
+-	for (i=0; i<ARRAY_SIZE(ath_mac_bb_names); i++) {
+-		if (ath_mac_bb_names[i].version == mac_bb_version) {
+-			return ath_mac_bb_names[i].name;
+-		}
+-	}
+-
+-	return "????";
+-}
+-
+-/*
+- * Return the RF name. "????" is returned if the RF is unknown.
+- */
+-const char *
+-ath_rf_name(u16 rf_version)
+-{
+-	int i;
+-
+-	for (i=0; i<ARRAY_SIZE(ath_rf_names); i++) {
+-		if (ath_rf_names[i].version == rf_version) {
+-			return ath_rf_names[i].name;
+-		}
+-	}
+-
+-	return "????";
+-}
+-
+ static int __init ath9k_init(void)
+ {
+ 	int error;
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 63059b6..76f3890 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -222,9 +222,10 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	       "%s: Atheros AR%s MAC/BB Rev:%x "
+ 	       "AR%s RF Rev:%x: mem=0x%lx, irq=%d\n",
+ 	       wiphy_name(hw->wiphy),
+-	       ath_mac_bb_name(ah->hw_version.macVersion),
++	       ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
+ 	       ah->hw_version.macRev,
+-	       ath_rf_name((ah->hw_version.analog5GhzRev & AR_RADIO_SREV_MAJOR)),
++	       ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
++				 AR_RADIO_SREV_MAJOR)),
+ 	       ah->hw_version.phyRev,
+ 	       (unsigned long)mem, pdev->irq);
+ 
+-- 
+1.6.0.4
 
