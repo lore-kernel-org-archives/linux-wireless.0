@@ -1,262 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:41614 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933214AbZJISeW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2009 14:34:22 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] b43: Optimize PIO scratchbuffer usage
-Date: Fri, 9 Oct 2009 20:33:32 +0200
-Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200910092033.32585.mb@bu3sch.de>
+Received: from bombadil.infradead.org ([18.85.46.34]:39706 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753435AbZJ0Q7d (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Oct 2009 12:59:33 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 2/5] ath9k_hw: distinguish single-chip solutions on initial probe print
+Date: Tue, 27 Oct 2009 12:59:34 -0400
+Message-Id: <1256662777-20469-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1256662777-20469-1-git-send-email-lrodriguez@atheros.com>
+References: <1256662777-20469-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This optimizes the PIO scratchbuffer usage.
+Devices with external radios have revisions which we can count on.
+On single chip solutions these EEPROM values for these radio revision
+also exist but are not meaningful as the radios are embedded onto the
+same chip. Each single-chip device evolves together as one device.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
+ drivers/net/wireless/ath/ath9k/ahb.c |   11 ++++-------
+ drivers/net/wireless/ath/ath9k/hw.c  |   31 +++++++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath9k/hw.h  |    3 +--
+ drivers/net/wireless/ath/ath9k/pci.c |   11 ++++-------
+ 4 files changed, 36 insertions(+), 20 deletions(-)
 
-Index: wireless-testing/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2009-10-09 19:50:15.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/b43.h	2009-10-09 20:15:41.000000000 +0200
-@@ -749,12 +749,6 @@ struct b43_wldev {
- #endif
- };
+diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
+index 41422c4..329e6bc 100644
+--- a/drivers/net/wireless/ath/ath9k/ahb.c
++++ b/drivers/net/wireless/ath/ath9k/ahb.c
+@@ -69,6 +69,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
+ 	int irq;
+ 	int ret = 0;
+ 	struct ath_hw *ah;
++	char hw_name[64];
  
--/*
-- * Include goes here to avoid a dependency problem.
-- * A better fix would be to integrate xmit.h into b43.h.
-- */
--#include "xmit.h"
--
- /* Data structure for the WLAN parts (802.11 cores) of the b43 chip. */
- struct b43_wl {
- 	/* Pointer to the active wireless device on this chip */
-@@ -830,13 +824,9 @@ struct b43_wl {
- 	struct b43_leds leds;
- 
- #ifdef CONFIG_B43_PIO
--	/*
--	 * RX/TX header/tail buffers used by the frame transmit functions.
--	 */
--	struct b43_rxhdr_fw4 rxhdr;
--	struct b43_txhdr txhdr;
--	u8 rx_tail[4];
--	u8 tx_tail[4];
-+	/* Kmalloc'ed scratch space for PIO TX/RX. Protected by wl->mutex. */
-+	u8 pio_scratchspace[110] __attribute__((__aligned__(8)));
-+	u8 pio_tailspace[4] __attribute__((__aligned__(8)));
- #endif /* CONFIG_B43_PIO */
- };
- 
-Index: wireless-testing/drivers/net/wireless/b43/pio.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/pio.c	2009-10-09 19:50:15.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/pio.c	2009-10-09 20:15:41.000000000 +0200
-@@ -341,12 +341,15 @@ static u16 tx_write_2byte_queue(struct b
- 			q->mmio_base + B43_PIO_TXDATA,
- 			sizeof(u16));
- 	if (data_len & 1) {
-+		u8 *tail = wl->pio_tailspace;
-+		BUILD_BUG_ON(sizeof(wl->pio_tailspace) < 2);
-+
- 		/* Write the last byte. */
- 		ctl &= ~B43_PIO_TXCTL_WRITEHI;
- 		b43_piotx_write16(q, B43_PIO_TXCTL, ctl);
--		wl->tx_tail[0] = data[data_len - 1];
--		wl->tx_tail[1] = 0;
--		ssb_block_write(dev->dev, wl->tx_tail, 2,
-+		tail[0] = data[data_len - 1];
-+		tail[1] = 0;
-+		ssb_block_write(dev->dev, tail, 2,
- 				q->mmio_base + B43_PIO_TXDATA,
- 				sizeof(u16));
- 	}
-@@ -392,27 +395,27 @@ static u32 tx_write_4byte_queue(struct b
- 			q->mmio_base + B43_PIO8_TXDATA,
- 			sizeof(u32));
- 	if (data_len & 3) {
--		wl->tx_tail[3] = 0;
-+		u8 *tail = wl->pio_tailspace;
-+		BUILD_BUG_ON(sizeof(wl->pio_tailspace) < 4);
-+
-+		memset(tail, 0, 4);
- 		/* Write the last few bytes. */
- 		ctl &= ~(B43_PIO8_TXCTL_8_15 | B43_PIO8_TXCTL_16_23 |
- 			 B43_PIO8_TXCTL_24_31);
- 		switch (data_len & 3) {
- 		case 3:
- 			ctl |= B43_PIO8_TXCTL_16_23 | B43_PIO8_TXCTL_8_15;
--			wl->tx_tail[0] = data[data_len - 3];
--			wl->tx_tail[1] = data[data_len - 2];
--			wl->tx_tail[2] = data[data_len - 1];
-+			tail[0] = data[data_len - 3];
-+			tail[1] = data[data_len - 2];
-+			tail[2] = data[data_len - 1];
- 			break;
- 		case 2:
- 			ctl |= B43_PIO8_TXCTL_8_15;
--			wl->tx_tail[0] = data[data_len - 2];
--			wl->tx_tail[1] = data[data_len - 1];
--			wl->tx_tail[2] = 0;
-+			tail[0] = data[data_len - 2];
-+			tail[1] = data[data_len - 1];
- 			break;
- 		case 1:
--			wl->tx_tail[0] = data[data_len - 1];
--			wl->tx_tail[1] = 0;
--			wl->tx_tail[2] = 0;
-+			tail[0] = data[data_len - 1];
- 			break;
- 		}
- 		b43_piotx_write32(q, B43_PIO8_TXCTL, ctl);
-@@ -455,6 +458,7 @@ static int pio_tx_frame(struct b43_pio_t
- 	int err;
- 	unsigned int hdrlen;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct b43_txhdr *txhdr = (struct b43_txhdr *)wl->pio_scratchspace;
- 
- 	B43_WARN_ON(list_empty(&q->packets_list));
- 	pack = list_entry(q->packets_list.next,
-@@ -462,7 +466,9 @@ static int pio_tx_frame(struct b43_pio_t
- 
- 	cookie = generate_cookie(q, pack);
- 	hdrlen = b43_txhdr_size(dev);
--	err = b43_generate_txhdr(dev, (u8 *)&wl->txhdr, skb,
-+	BUILD_BUG_ON(sizeof(wl->pio_scratchspace) < sizeof(struct b43_txhdr));
-+	B43_WARN_ON(sizeof(wl->pio_scratchspace) < hdrlen);
-+	err = b43_generate_txhdr(dev, (u8 *)txhdr, skb,
- 				 info, cookie);
- 	if (err)
- 		return err;
-@@ -476,9 +482,9 @@ static int pio_tx_frame(struct b43_pio_t
- 
- 	pack->skb = skb;
- 	if (q->rev >= 8)
--		pio_tx_frame_4byte_queue(pack, (const u8 *)&wl->txhdr, hdrlen);
-+		pio_tx_frame_4byte_queue(pack, (const u8 *)txhdr, hdrlen);
- 	else
--		pio_tx_frame_2byte_queue(pack, (const u8 *)&wl->txhdr, hdrlen);
-+		pio_tx_frame_2byte_queue(pack, (const u8 *)txhdr, hdrlen);
- 
- 	/* Remove it from the list of available packet slots.
- 	 * It will be put back when we receive the status report. */
-@@ -624,8 +630,10 @@ static bool pio_rx_frame(struct b43_pio_
- 	unsigned int i, padding;
- 	struct sk_buff *skb;
- 	const char *err_msg = NULL;
-+	struct b43_rxhdr *rxhdr = (struct b43_rxhdr *)wl->pio_scratchspace;
- 
--	memset(&wl->rxhdr, 0, sizeof(wl->rxhdr));
-+	BUILD_BUG_ON(sizeof(wl->pio_scratchspace) < sizeof(*rxhdr));
-+	memset(rxhdr, 0, sizeof(*rxhdr));
- 
- 	/* Check if we have data and wait for it to get ready. */
- 	if (q->rev >= 8) {
-@@ -663,16 +671,16 @@ data_ready:
- 
- 	/* Get the preamble (RX header) */
- 	if (q->rev >= 8) {
--		ssb_block_read(dev->dev, &wl->rxhdr, sizeof(wl->rxhdr),
-+		ssb_block_read(dev->dev, rxhdr, sizeof(*rxhdr),
- 			       q->mmio_base + B43_PIO8_RXDATA,
- 			       sizeof(u32));
- 	} else {
--		ssb_block_read(dev->dev, &wl->rxhdr, sizeof(wl->rxhdr),
-+		ssb_block_read(dev->dev, rxhdr, sizeof(*rxhdr),
- 			       q->mmio_base + B43_PIO_RXDATA,
- 			       sizeof(u16));
- 	}
- 	/* Sanity checks. */
--	len = le16_to_cpu(wl->rxhdr.frame_len);
-+	len = le16_to_cpu(rxhdr->frame_len);
- 	if (unlikely(len > 0x700)) {
- 		err_msg = "len > 0x700";
- 		goto rx_error;
-@@ -682,7 +690,7 @@ data_ready:
- 		goto rx_error;
+ 	if (!pdev->dev.platform_data) {
+ 		dev_err(&pdev->dev, "no platform data specified\n");
+@@ -133,15 +134,11 @@ static int ath_ahb_probe(struct platform_device *pdev)
  	}
  
--	macstat = le32_to_cpu(wl->rxhdr.mac_status);
-+	macstat = le32_to_cpu(rxhdr->mac_status);
- 	if (macstat & B43_RX_MAC_FCSERR) {
- 		if (!(q->dev->wl->filter_flags & FIF_FCSFAIL)) {
- 			/* Drop frames with failed FCS. */
-@@ -707,22 +715,25 @@ data_ready:
- 			       q->mmio_base + B43_PIO8_RXDATA,
- 			       sizeof(u32));
- 		if (len & 3) {
-+			u8 *tail = wl->pio_tailspace;
-+			BUILD_BUG_ON(sizeof(wl->pio_tailspace) < 4);
+ 	ah = sc->sc_ah;
++	ath9k_hw_name(ah, hw_name, sizeof(hw_name));
+ 	printk(KERN_INFO
+-	       "%s: Atheros AR%s MAC/BB Rev:%x, "
+-	       "AR%s RF Rev:%x, mem=0x%lx, irq=%d\n",
++	       "%s: %s mem=0x%lx, irq=%d\n",
+ 	       wiphy_name(hw->wiphy),
+-	       ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
+-	       ah->hw_version.macRev,
+-	       ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
+-				 AR_RADIO_SREV_MAJOR)),
+-	       ah->hw_version.phyRev,
++	       hw_name,
+ 	       (unsigned long)mem, irq);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index cf543e3..dedffb8 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -3959,7 +3959,7 @@ static struct {
+ /*
+  * Return the MAC/BB name. "????" is returned if the MAC/BB is unknown.
+  */
+-const char *ath9k_hw_mac_bb_name(u32 mac_bb_version)
++static const char *ath9k_hw_mac_bb_name(u32 mac_bb_version)
+ {
+ 	int i;
+ 
+@@ -3971,13 +3971,12 @@ const char *ath9k_hw_mac_bb_name(u32 mac_bb_version)
+ 
+ 	return "????";
+ }
+-EXPORT_SYMBOL(ath9k_hw_mac_bb_name);
+ 
+ /*
+  * Return the RF name. "????" is returned if the RF is unknown.
+  * Used for devices with external radios.
+  */
+-const char *ath9k_hw_rf_name(u16 rf_version)
++static const char *ath9k_hw_rf_name(u16 rf_version)
+ {
+ 	int i;
+ 
+@@ -3989,4 +3988,28 @@ const char *ath9k_hw_rf_name(u16 rf_version)
+ 
+ 	return "????";
+ }
+-EXPORT_SYMBOL(ath9k_hw_rf_name);
 +
- 			/* Read the last few bytes. */
--			ssb_block_read(dev->dev, wl->rx_tail, 4,
-+			ssb_block_read(dev->dev, tail, 4,
- 				       q->mmio_base + B43_PIO8_RXDATA,
- 				       sizeof(u32));
- 			switch (len & 3) {
- 			case 3:
--				skb->data[len + padding - 3] = wl->rx_tail[0];
--				skb->data[len + padding - 2] = wl->rx_tail[1];
--				skb->data[len + padding - 1] = wl->rx_tail[2];
-+				skb->data[len + padding - 3] = tail[0];
-+				skb->data[len + padding - 2] = tail[1];
-+				skb->data[len + padding - 1] = tail[2];
- 				break;
- 			case 2:
--				skb->data[len + padding - 2] = wl->rx_tail[0];
--				skb->data[len + padding - 1] = wl->rx_tail[1];
-+				skb->data[len + padding - 2] = tail[0];
-+				skb->data[len + padding - 1] = tail[1];
- 				break;
- 			case 1:
--				skb->data[len + padding - 1] = wl->rx_tail[0];
-+				skb->data[len + padding - 1] = tail[0];
- 				break;
- 			}
- 		}
-@@ -731,15 +742,18 @@ data_ready:
- 			       q->mmio_base + B43_PIO_RXDATA,
- 			       sizeof(u16));
- 		if (len & 1) {
-+			u8 *tail = wl->pio_tailspace;
-+			BUILD_BUG_ON(sizeof(wl->pio_tailspace) < 2);
++void ath9k_hw_name(struct ath_hw *ah, char *hw_name, size_t len)
++{
++	int used;
 +
- 			/* Read the last byte. */
--			ssb_block_read(dev->dev, wl->rx_tail, 2,
-+			ssb_block_read(dev->dev, tail, 2,
- 				       q->mmio_base + B43_PIO_RXDATA,
- 				       sizeof(u16));
--			skb->data[len + padding - 1] = wl->rx_tail[0];
-+			skb->data[len + padding - 1] = tail[0];
- 		}
- 	}
++	/* chipsets >= AR9280 are single-chip */
++	if (AR_SREV_9280_10_OR_LATER(ah)) {
++		used = snprintf(hw_name, len,
++			       "Atheros AR%s Rev:%x",
++			       ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
++			       ah->hw_version.macRev);
++	}
++	else {
++		used = snprintf(hw_name, len,
++			       "Atheros AR%s MAC/BB Rev:%x AR%s RF Rev:%x",
++			       ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
++			       ah->hw_version.macRev,
++			       ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
++						AR_RADIO_SREV_MAJOR)),
++			       ah->hw_version.phyRev);
++	}
++
++	hw_name[used] = '\0';
++}
++EXPORT_SYMBOL(ath9k_hw_name);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 100fcba..c7b0c4d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -720,8 +720,7 @@ void ath_gen_timer_free(struct ath_hw *ah, struct ath_gen_timer *timer);
+ void ath_gen_timer_isr(struct ath_hw *hw);
+ u32 ath9k_hw_gettsf32(struct ath_hw *ah);
  
--	b43_rx(q->dev, skb, &wl->rxhdr);
-+	b43_rx(q->dev, skb, rxhdr);
+-const char *ath9k_hw_mac_bb_name(u32 mac_bb_version);
+-const char *ath9k_hw_rf_name(u16 rf_version);
++void ath9k_hw_name(struct ath_hw *ah, char *hw_name, size_t len);
  
- 	return 1;
+ #define ATH_PCIE_CAP_LINK_CTRL	0x70
+ #define ATH_PCIE_CAP_LINK_L0S	1
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 76f3890..5321f73 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -114,6 +114,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	u32 val;
+ 	int ret = 0;
+ 	struct ath_hw *ah;
++	char hw_name[64];
  
-Index: wireless-testing/drivers/net/wireless/b43/xmit.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/xmit.c	2009-10-09 19:50:15.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/xmit.c	2009-10-09 20:15:41.000000000 +0200
-@@ -27,7 +27,7 @@
+ 	if (pci_enable_device(pdev))
+ 		return -EIO;
+@@ -218,15 +219,11 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	sc->irq = pdev->irq;
  
- */
+ 	ah = sc->sc_ah;
++	ath9k_hw_name(ah, hw_name, sizeof(hw_name));
+ 	printk(KERN_INFO
+-	       "%s: Atheros AR%s MAC/BB Rev:%x "
+-	       "AR%s RF Rev:%x: mem=0x%lx, irq=%d\n",
++	       "%s: %s mem=0x%lx, irq=%d\n",
+ 	       wiphy_name(hw->wiphy),
+-	       ath9k_hw_mac_bb_name(ah->hw_version.macVersion),
+-	       ah->hw_version.macRev,
+-	       ath9k_hw_rf_name((ah->hw_version.analog5GhzRev &
+-				 AR_RADIO_SREV_MAJOR)),
+-	       ah->hw_version.phyRev,
++	       hw_name,
+ 	       (unsigned long)mem, pdev->irq);
  
--#include "b43.h"
-+#include "xmit.h"
- #include "phy_common.h"
- #include "dma.h"
- #include "pio.h"
-
+ 	return 0;
 -- 
-Greetings, Michael.
+1.6.0.4
+
