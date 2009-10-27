@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:40267 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761121AbZJNATA (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:62016 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756192AbZJ0Q4l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 20:19:00 -0400
-Received: by iwn10 with SMTP id 10so3083248iwn.4
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2009 17:18:24 -0700 (PDT)
+	Tue, 27 Oct 2009 12:56:41 -0400
+Received: by iwn8 with SMTP id 8so268723iwn.33
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2009 09:56:46 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <3ace41890910131712v700ebfe4vc1cd234f24abee9@mail.gmail.com>
-References: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
-	<1255382358-20760-4-git-send-email-hauke@hauke-m.de> <3ace41890910121932r6f832fe8of70d9b2bdd3d2635@mail.gmail.com>
-	<4AD4ED23.7010200@hauke-m.de> <3ace41890910131712v700ebfe4vc1cd234f24abee9@mail.gmail.com>
+In-Reply-To: <20091026213222.GA3956@tux>
+References: <1256575447-4591-1-git-send-email-lrodriguez@atheros.com>
+	<87d449hp73.fsf@purkki.valot.fi> <20091026204447.GA5713@tux>
+	<878wexhn6m.fsf@purkki.valot.fi> <20091026213222.GA3956@tux>
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 13 Oct 2009 17:18:04 -0700
-Message-ID: <43e72e890910131718x68a4a80ehc66a4daf2e299c46@mail.gmail.com>
-Subject: Re: [PATCH 2/9] [compat-2.6 and compat-stable] Remove unused code
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
-	Greg KH <greg@kroah.com>
+Date: Tue, 27 Oct 2009 09:56:26 -0700
+Message-ID: <43e72e890910270956q507c7186r33f4ae85bd9c75c6@mail.gmail.com>
+Subject: Re: [PATCH v2 2/4] ath9k_hw: distinguish single-chip solutions on
+	initial probe print
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 13, 2009 at 5:12 PM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
-> On Tue, Oct 13, 2009 at 10:12 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+On Mon, Oct 26, 2009 at 2:32 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Mon, Oct 26, 2009 at 02:15:13PM -0700, Kalle Valo wrote:
+>> "Luis R. Rodriguez" <lrodriguez@Atheros.com> writes:
+>>
+>> >> I think you should provide the size of hw_name to this function and
+>> >> use snprintf() to avoid writing out of bounds.
+>> >
+>> > I was going to do this but since I know the users of it and control
+>> > it seemed to not matter. I'll respin with this added, better to be careful.
+>>
+>> Yeah, you never know if someone (for example a crazy Finn just after a
+>> refreshing sauna) comes along, changes the function a bit "to clean it
+>> up" and creates a subtle bug ;)
 >
->> The condition #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28)) was
->> added recently because without it openSuse with kernel 2.6.27 will not
->> compile. OpenSuse backports the tracepoint part into their 2.6.27 kernel.
->
-> I remember that thread now. It is probably wrong as a matter of policy
-> to incorporate patches for distro kernels with backport bits through.
-> - I am not saying you shouldn't be helpful and provide them - after
-> all, more users == better testing, and no doubt the investigation
-> itself throws more insights on the detailed mechanisms - but it is
-> just that compat-wireless probably should not try to support arbitrary
-> and substantial changes from a vanilla kernel. I know Suse is popular
-> so it is important to support Suse users, but I am wondering if
-> distro-specific changes should be separate or at least, clearly
-> documented.
+> Ah yes, forgot about the crazy sauna fins, must fix now for sure.
 
-Not sure why opensuse added round_jiffies_up() to their 2.6.27
-kernels, greg may know better, but since its only once change I'm
-willing to live with what we did to resolve for it.
+I have a couple of other fixes and since I no longer need to debug
+ath9k_hw_reset() I'm going to drop the last patch in this series. I'll
+resend this series then with the new patches.
 
   Luis
