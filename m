@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60702 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45165 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934112AbZJNPBt (ORCPT
+	with ESMTP id S1756642AbZJ0TbQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 11:01:49 -0400
-Date: Wed, 14 Oct 2009 10:56:05 -0400
+	Tue, 27 Oct 2009 15:31:16 -0400
+Date: Tue, 27 Oct 2009 15:28:32 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>, Ivo van Doorn <ivdoorn@gmail.com>,
-	Ozan =?utf-8?B?w4dhxJ9sYXlhbg==?= <ozan@pardus.org.tr>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: Current status of rt2800usb and staging/rt2870
-Message-ID: <20091014145605.GE2890@tuxdriver.com>
-References: <4AD46380.9020308@pardus.org.tr> <200910132357.57094.bzolnier@gmail.com> <20091014140923.GA2890@tuxdriver.com> <200910141652.41041.bzolnier@gmail.com>
+To: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: linux-pcmcia@lists.infradead.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Jiri Kosina <jkosina@suse.cz>, David Sterba <dsterba@suse.cz>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/9] pcmcia: use pcmcia_loop_config in misc pcmcia
+	drivers
+Message-ID: <20091027192832.GD15566@tuxdriver.com>
+References: <1255907255-28297-1-git-send-email-linux@dominikbrodowski.net> <1255907255-28297-2-git-send-email-linux@dominikbrodowski.net> <1255907255-28297-3-git-send-email-linux@dominikbrodowski.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200910141652.41041.bzolnier@gmail.com>
+In-Reply-To: <1255907255-28297-3-git-send-email-linux@dominikbrodowski.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 14, 2009 at 04:52:40PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> On Wednesday 14 October 2009 16:09:24 John W. Linville wrote:
-> > On Tue, Oct 13, 2009 at 11:57:57PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > 
-> > > Several months later (after all current users are happy with the improved
-> > > drivers) the old drivers will be removed from staging..
-> > 
-> > I _really_ hope this isn't the standard.  By that measure, nothing
-> > will ever leave staging as _someone_ will always have some use case
-> > that makes the other driver better for them.
+On Mon, Oct 19, 2009 at 01:07:29AM +0200, Dominik Brodowski wrote:
+> Use pcmcia_loop_config() in a few drivers missed during the first
+> round. On fmvj18x_cs.c it -- strangely -- only requries us to set
+> conf.ConfigIndex, which is done by the core, so include an empty
+> loop function which returns 0 unconditionally.
 > 
-> Doesn't seem to be the case with all other drivers except wireless ones
-> and the only real reason why wireless ones are so special is because of:
-> 
-> "But then there's the users, who bitch about everything and simply do
-> not understand what it is at stake.
-> 
-> And all this is becoming way too messy for us to handle.
-> 
-> Personally all I see around me is people bitching and complaining, and
-> no code being ported."
-> 
-> attitude which pretty much explains the problem..
-> 
-> Please adjust the process to fix the problem yourself or if you do not
-> want to do it just make the room for people who do.
+> CC: David S. Miller <davem@davemloft.net>
+> CC: John W. Linville <linville@tuxdriver.com>
+> CC: Jiri Kosina <jkosina@suse.cz>
+> CC: David Sterba <dsterba@suse.cz>
+> CC: netdev@vger.kernel.org
+> CC: linux-wireless@vger.kernel.org
+> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
 
-Alright Bartlomiej, you've had your say.  Perhaps you should go about
-your business now.
+Acked-by: John W. Linville <linville@tuxdriver.com>
 
-John
-
-P.S. For the record, the "But then there's the users..." quote is
-from someone else...
 -- 
 John W. Linville		Someday the world will need a hero, and you
 linville@tuxdriver.com			might be all we have.  Be ready.
