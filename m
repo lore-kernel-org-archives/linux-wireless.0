@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42244
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753110AbZJ2OUh (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:54632 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752967AbZJ0DOm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 10:20:37 -0400
-Date: Thu, 29 Oct 2009 07:21:01 -0700 (PDT)
-Message-Id: <20091029.072101.109209962.davem@davemloft.net>
-To: bzolnier@gmail.com
-Cc: penberg@cs.helsinki.fi, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linville@tuxdriver.com
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200910291514.40318.bzolnier@gmail.com>
-References: <200910291435.54203.bzolnier@gmail.com>
-	<84144f020910290652n2e75827dk698b238b6bd1cbed@mail.gmail.com>
-	<200910291514.40318.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 26 Oct 2009 23:14:42 -0400
+Received: by iwn10 with SMTP id 10so6422457iwn.4
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 20:14:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <200910270508.29029.denys@visp.net.lb>
+References: <200910270259.09787.denys@visp.net.lb> <200910270410.24274.denys@visp.net.lb>
+	<43e72e890910261959s6490b900xebb365d288c03f@mail.gmail.com>
+	<200910270508.29029.denys@visp.net.lb>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 26 Oct 2009 20:14:27 -0700
+Message-ID: <43e72e890910262014y77ef048do965a76ab423c2db6@mail.gmail.com>
+Subject: Re: ath5k, too high output power?
+To: Denys Fedoryschenko <denys@visp.net.lb>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Thu, 29 Oct 2009 15:14:40 +0100
+On Mon, Oct 26, 2009 at 8:08 PM, Denys Fedoryschenko <denys@visp.net.lb> wrote:
+> On Tuesday 27 October 2009 04:59:20 Luis R. Rodriguez wrote:
+>> You mean can you do antenna diversity and select this manually ? I am
+>> not sure, but I doubt it, should be easy to add though.
+>
+> Yes, on some laptops wireless card connected really weird way. And while on
+> Windows everything worked fine, on Linux signal was too weak, and some people
+> thinking it is driver issue.
+> I had this issue with madwifi before, and choosing antenna manually helped.
+> But it was long time ago, no idea if it's useful now in ath5k. But in custom
+> boards like Routerboard it is very useful.
 
-> Dave, if you have problems with executing the command locally I'll be
-> happy to supply you with the patch.
+ath5k and madwifi are very different.
 
-This is not the issue.
-
-The issue is that John disagrees with you can you can't handle
-that.
-
-So instead of continuing to discuss things with him and the
-other wireless folks, you want me to just overreach everybody
-and revert someone else's work.
-
-I'm not going to do that sorry, learn how to work with the
-wireless people instead.
+  Luis
