@@ -1,78 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:42019 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754705AbZJMMMv (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39715 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755752AbZJ0Q7c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 08:12:51 -0400
-Received: by fxm27 with SMTP id 27so10105915fxm.17
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2009 05:12:14 -0700 (PDT)
-Message-ID: <4AD46E99.4040008@gmail.com>
-Date: Tue, 13 Oct 2009 14:12:09 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-MIME-Version: 1.0
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com, IvDoorn@gmail.com
-Subject: Re: [PATCH] rt2800pci.c : more ids
-References: <4AD434B6.3090903@gmail.com>
-In-Reply-To: <4AD434B6.3090903@gmail.com>
-Content-Type: multipart/mixed;
- boundary="------------010608020506050802010106"
-To: unlisted-recipients:; (no To-header on input)
+	Tue, 27 Oct 2009 12:59:32 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 4/5] ath9k_hw: correct AR_PHY_SPECTRAL_SCAN register offset
+Date: Tue, 27 Oct 2009 12:59:36 -0400
+Message-Id: <1256662777-20469-5-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1256662777-20469-1-git-send-email-lrodriguez@atheros.com>
+References: <1256662777-20469-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------010608020506050802010106
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 8bit
+We had 0x9912 but AR_PHY_SPECTRAL_SCAN is 0x9910. By using the
+0x9912 we were making the hardware unresponsive. This allows us
+to move forward with hardware reset on ar9271 on the ath9k_htc
+driver.
 
-On 10/13/2009 10:05 AM, Xose Vazquez Perez wrote:
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  |    3 ++-
+ drivers/net/wireless/ath/ath9k/phy.h |   16 ++++++++++++++--
+ 2 files changed, 16 insertions(+), 3 deletions(-)
 
-> stolen from windows inf file(09/05/2009, 1.04.07.0000)
-> 
-> 0x1814, 0x3060
-
-apply this one instead, 
-got 0x1462,0x89a from linux driver(2009_0903_RT3090_Linux_STA_v2.2.0.1)
-
--thanks-
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index bb540bf..111ff04 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1309,7 +1309,8 @@ static void ath9k_hw_override_ini(struct ath_hw *ah,
+ 		 * AR9271 1.1
+ 		 */
+ 		if (AR_SREV_9271_10(ah)) {
+-			val = REG_READ(ah, AR_PHY_SPECTRAL_SCAN) | AR_PHY_SPECTRAL_SCAN_ENABLE;
++			val = REG_READ(ah, AR_PHY_SPECTRAL_SCAN) |
++			      AR_PHY_SPECTRAL_SCAN_ENABLE;
+ 			REG_WRITE(ah, AR_PHY_SPECTRAL_SCAN, val);
+ 		}
+ 		else if (AR_SREV_9271_11(ah))
+diff --git a/drivers/net/wireless/ath/ath9k/phy.h b/drivers/net/wireless/ath/ath9k/phy.h
+index a9b9a7d..dc145a1 100644
+--- a/drivers/net/wireless/ath/ath9k/phy.h
++++ b/drivers/net/wireless/ath/ath9k/phy.h
+@@ -192,8 +192,20 @@ void ath9k_hw_decrease_chain_power(struct ath_hw *ah,
+ #define AR_PHY_PLL_CTL_44_2133  0xeb
+ #define AR_PHY_PLL_CTL_40_2133  0xea
+ 
+-#define AR_PHY_SPECTRAL_SCAN		0x9912
+-#define AR_PHY_SPECTRAL_SCAN_ENABLE	0x1
++#define AR_PHY_SPECTRAL_SCAN			0x9910  /* AR9280 spectral scan configuration register */
++#define	AR_PHY_SPECTRAL_SCAN_ENABLE		0x1
++#define AR_PHY_SPECTRAL_SCAN_ENA		0x00000001  /* Enable spectral scan, reg 68, bit 0 */
++#define AR_PHY_SPECTRAL_SCAN_ENA_S		0  /* Enable spectral scan, reg 68, bit 0 */
++#define AR_PHY_SPECTRAL_SCAN_ACTIVE		0x00000002  /* Activate spectral scan reg 68, bit 1*/
++#define AR_PHY_SPECTRAL_SCAN_ACTIVE_S		1  /* Activate spectral scan reg 68, bit 1*/
++#define AR_PHY_SPECTRAL_SCAN_FFT_PERIOD		0x000000F0  /* Interval for FFT reports, reg 68, bits 4-7*/
++#define AR_PHY_SPECTRAL_SCAN_FFT_PERIOD_S	4
++#define AR_PHY_SPECTRAL_SCAN_PERIOD		0x0000FF00  /* Interval for FFT reports, reg 68, bits 8-15*/
++#define AR_PHY_SPECTRAL_SCAN_PERIOD_S		8
++#define AR_PHY_SPECTRAL_SCAN_COUNT		0x00FF0000  /* Number of reports, reg 68, bits 16-23*/
++#define AR_PHY_SPECTRAL_SCAN_COUNT_S		16
++#define AR_PHY_SPECTRAL_SCAN_SHORT_REPEAT	0x01000000  /* Short repeat, reg 68, bit 24*/
++#define AR_PHY_SPECTRAL_SCAN_SHORT_REPEAT_S	24  /* Short repeat, reg 68, bit 24*/
+ 
+ #define AR_PHY_RX_DELAY           0x9914
+ #define AR_PHY_SEARCH_START_DELAY 0x9918
 -- 
-«Allá muevan feroz guerra, ciegos reyes por un palmo más de tierra;
-que yo aquí tengo por mío cuanto abarca el mar bravío, a quien nadie
-impuso leyes. Y no hay playa, sea cualquiera, ni bandera de esplendor,
-que no sienta mi derecho y dé pecho a mi valor.»
+1.6.0.4
 
---------------010608020506050802010106
-Content-Type: text/plain;
- name="new_id-2800pci-v2.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="new_id-2800pci-v2.diff"
-
---- o/drivers/net/wireless/rt2800pci.c	2009-10-13 09:57:37.523379731 +0200
-+++ n/drivers/net/wireless/rt2800pci.c	2009-10-13 14:10:12.785378782 +0200
-@@ -3225,6 +3225,8 @@
-  * RT2800pci module information.
-  */
- static struct pci_device_id rt2800pci_device_table[] = {
-+	/* ??? */
-+	{ PCI_DEVICE(0x1462, 0x891a), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	/* Edimax */
- 	{ PCI_DEVICE(0x1432, 0x7708), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	{ PCI_DEVICE(0x1432, 0x7727), PCI_DEVICE_DATA(&rt2800pci_ops) },
-@@ -3233,10 +3235,12 @@
- 	{ PCI_DEVICE(0x1432, 0x7748), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	{ PCI_DEVICE(0x1432, 0x7758), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	{ PCI_DEVICE(0x1432, 0x7768), PCI_DEVICE_DATA(&rt2800pci_ops) },
-+	/* Ralink */
- 	{ PCI_DEVICE(0x1814, 0x0601), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	{ PCI_DEVICE(0x1814, 0x0681), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	{ PCI_DEVICE(0x1814, 0x0701), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	{ PCI_DEVICE(0x1814, 0x0781), PCI_DEVICE_DATA(&rt2800pci_ops) },
-+	{ PCI_DEVICE(0x1814, 0x3060), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	{ PCI_DEVICE(0x1814, 0x3062), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	{ PCI_DEVICE(0x1814, 0x3090), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	{ PCI_DEVICE(0x1814, 0x3091), PCI_DEVICE_DATA(&rt2800pci_ops) },
-
---------------010608020506050802010106--
