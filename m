@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:57123 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752325AbZJVHxy (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:46963 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755967AbZJ0BiR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2009 03:53:54 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] libertas: remove handling for CMD_802_11_LED_GPIO_CTRL
-Date: Thu, 22 Oct 2009 09:53:17 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-References: <200910191331.20476.hs4233@mail.mn-solutions.de> <1256149730.5010.39.camel@localhost.localdomain>
-In-Reply-To: <1256149730.5010.39.camel@localhost.localdomain>
+	Mon, 26 Oct 2009 21:38:17 -0400
+Received: by iwn10 with SMTP id 10so6376237iwn.4
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 18:38:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200910220953.17995.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200910270259.09787.denys@visp.net.lb>
+References: <200910270259.09787.denys@visp.net.lb>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 26 Oct 2009 18:38:02 -0700
+Message-ID: <43e72e890910261838k7986048dg4cc38634d828e98c@mail.gmail.com>
+Subject: Re: ath5k, too high output power?
+To: Denys Fedoryschenko <denys@visp.net.lb>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> It's actually used by the OLPC folks; but right now there's
-> simply no mechanism to configure that ability via WEXT.  Is
-> there some way to do this via the kernel LED  framework instead
-> that libertas should be using?
+On Mon, Oct 26, 2009 at 5:59 PM, Denys Fedoryschenko <denys@visp.net.lb> wrote:
+> I have laptop with ath5k card, and just tried to run it with ath5k driver.
+> I notice strange thing:
+>
+> lappi ~ # iw phy phy0 info
+> Wiphy phy0
+>        Band 1:
+>                Frequencies:
+>                        * 2412 MHz [1] (20.0 dBm)
+>                        * 2417 MHz [2] (20.0 dBm)
+>                        * 2422 MHz [3] (20.0 dBm)
+>
+> I guess it is too high. I am not sure it is actual value, but if it is right
+> and actual value, then i am exceeding local regulations.
 
-They use it?
+That value is the maximum value allowed, not your actual eirp. By
+default the EEPROM's card is read and that is used for regulatory
+purposes, users can however be good citizens and help regulatory
+compliance further by indicating their country and if the max eirp of
+the programmed EEPROM is higher than your current country it will be
+lowered.
 
-No one did bother to send a patch for the in-kernel Libertas 
-driver during the last year. Sigh.
+Please have a good read at:
 
-Also, if they use it, they need a patch on top of what is now in 
-the kernel, because the current in-kernel libertas driver has no 
-code to issue the CMD_802_11_LED_GPIO_CTRL. That's why I removed 
-it in the first place.
+http://wireless.kernel.org/en/developers/Regulatory
+http://wireless.kernel.org/en/users/Drivers/ath
 
-It's O.K. for me to keep this code in (it doesn't harm), but a 
-better approach would be
+> Another thing, is it possible to change antenna output?
 
-a) use a new-style commands, a.k.a. lbs_cmd_with_response()
+You obviously can change the antenna on a lot of devices, sometimes
+that is difficult due to the connectors used but you are likely to
+find them online somewhere.
 
-b) use the in-kernel LED support (as you said)
-
--- 
-http://www.holgerschurig.de
+  Luis
