@@ -1,48 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f212.google.com ([209.85.217.212]:38075 "EHLO
-	mail-gx0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934172AbZJNOyF (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38324 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932211AbZJ0VBO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 10:54:05 -0400
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Current status of rt2800usb and staging/rt2870
-Date: Wed, 14 Oct 2009 16:52:40 +0200
-Cc: Dan Williams <dcbw@redhat.com>, Ivo van Doorn <ivdoorn@gmail.com>,
-	Ozan =?utf-8?q?=C3=87a=C4=9Flayan?= <ozan@pardus.org.tr>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
-References: <4AD46380.9020308@pardus.org.tr> <200910132357.57094.bzolnier@gmail.com> <20091014140923.GA2890@tuxdriver.com>
-In-Reply-To: <20091014140923.GA2890@tuxdriver.com>
+	Tue, 27 Oct 2009 17:01:14 -0400
+Date: Tue, 27 Oct 2009 16:59:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Charles Gordon <digigordo@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwlist wlan0 scan disrupts communications
+Message-ID: <20091027205913.GF15566@tuxdriver.com>
+References: <86201b3f0910271340t51aa6c0bgff43e6e7211a0dee@mail.gmail.com>
 MIME-Version: 1.0
-Message-Id: <200910141652.41041.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <86201b3f0910271340t51aa6c0bgff43e6e7211a0dee@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 14 October 2009 16:09:24 John W. Linville wrote:
-> On Tue, Oct 13, 2009 at 11:57:57PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> 
-> > Several months later (after all current users are happy with the improved
-> > drivers) the old drivers will be removed from staging..
-> 
-> I _really_ hope this isn't the standard.  By that measure, nothing
-> will ever leave staging as _someone_ will always have some use case
-> that makes the other driver better for them.
+On Tue, Oct 27, 2009 at 04:40:46PM -0400, Charles Gordon wrote:
 
-Doesn't seem to be the case with all other drivers except wireless ones
-and the only real reason why wireless ones are so special is because of:
+> I am using version 2.6.28 of the kernel and version 0.9.11-nogit of
+> iw.  Communications are disrupted and the device stops responding to
+> ping when I use the command "iwlist wlan0 scan".  Communications are
+> restored when the command completes.  Is this behavior expected?  Has
+> it been fixed in a later release?
 
-"But then there's the users, who bitch about everything and simply do
-not understand what it is at stake.
+The device has to change frequencies to conduct the scan.  Kinda like
+missing part of a show while you are flipping channels... :-)
 
-And all this is becoming way too messy for us to handle.
-
-Personally all I see around me is people bitching and complaining, and
-no code being ported."
-
-attitude which pretty much explains the problem..
-
-Please adjust the process to fix the problem yourself or if you do not
-want to do it just make the room for people who do.
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
