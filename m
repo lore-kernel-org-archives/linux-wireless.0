@@ -1,45 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:39440 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752906AbZJaKRV (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:32543 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755587AbZJ0Pgc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Oct 2009 06:17:21 -0400
-Received: by ewy28 with SMTP id 28so3661806ewy.18
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2009 03:17:25 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: ieee80211_tx_status: headroom too small
-Date: Sat, 31 Oct 2009 11:17:22 +0100
-Cc: Nikolai ZHUBR <zhubr@mail.ru>, linux-wireless@vger.kernel.org
-References: <1094614475.20091030230028@mail.ru> <200910311044.45687.IvDoorn@gmail.com> <1256983432.3555.121.camel@johannes.local>
-In-Reply-To: <1256983432.3555.121.camel@johannes.local>
+	Tue, 27 Oct 2009 11:36:32 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH v2 1/3] mac80211: refactor dynamic power save check
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Date: Tue, 27 Oct 2009 17:36:09 +0200
+Message-ID: <20091027153608.27827.70629.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200910311117.22300.IvDoorn@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 31 October 2009, Johannes Berg wrote:
-> On Sat, 2009-10-31 at 10:44 +0100, Ivo van Doorn wrote:
-> 
-> > > Or maybe we should just not bother with having drivers do the alignment
-> > > any more -- mac80211 does that now and it only does it if necessary
-> > > (i.e. not on powerpc/x86)
-> > 
-> > I think you mean the RX alignment, while I am talking about the TX alignment.
-> > Beacons and some othe frames must be 4-byte alignment because the wireleless
-> > hardware requires it.
-> 
-> Oh, indeed, I got confused.
-> 
-> Hmm. TX alignment is weird ... no driver really needs that except rt2x00
-> afaik. Which frames require this?
+From: Kalle Valo <kalle.valo@nokia.com>
 
-At the least the beacons, but I am not sure about if there are other frame types
-which also have this requirement.
+Refactor dynamic power save checks to a function of it's own for better
+readibility. No functional changes.
 
-Users had reported that if they align beacon frames, rt2500pci finally starts
-beaconing correctly in master mode.
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
 
-Ivo
+ net/mac80211/tx.c |   24 +++++++++++++++++++++---
+ 1 files changed, 21 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index db4bda6..c59ed84 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1387,6 +1387,26 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
+ 	return 0;
+ }
+ 
++static bool need_dynamic_ps(struct ieee80211_local *local)
++{
++	/* driver doesn't support power save */
++	if (!(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
++		return false;
++
++	/* dynamic power save disabled */
++	if (local->hw.conf.dynamic_ps_timeout <= 0)
++		return false;
++
++	/* we are scanning, don't enable power save */
++	if (local->scanning)
++		return false;
++
++	if (!local->ps_sdata)
++		return false;
++
++	return true;
++}
++
+ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
+ 			   struct sk_buff *skb)
+ {
+@@ -1399,9 +1419,7 @@ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
+ 
+ 	dev_hold(sdata->dev);
+ 
+-	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
+-	    local->hw.conf.dynamic_ps_timeout > 0 &&
+-	    !(local->scanning) && local->ps_sdata) {
++	if (need_dynamic_ps(local)) {
+ 		if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+ 			ieee80211_stop_queues_by_reason(&local->hw,
+ 					IEEE80211_QUEUE_STOP_REASON_PS);
+
