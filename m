@@ -1,62 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33914 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752361AbZJWPp3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 11:45:29 -0400
-Subject: Re: [PATCH] libertas: remove handling for CMD_802_11_LED_GPIO_CTRL
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <200910220953.17995.hs4233@mail.mn-solutions.de>
-References: <200910191331.20476.hs4233@mail.mn-solutions.de>
-	 <1256149730.5010.39.camel@localhost.localdomain>
-	 <200910220953.17995.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Fri, 23 Oct 2009 08:45:31 -0700
-Message-Id: <1256312731.2164.4.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from hosting.visp.net.lb ([194.146.153.11]:37361 "EHLO
+	hosting.visp.net.lb" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755390AbZJ0BGx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Oct 2009 21:06:53 -0400
+From: Denys Fedoryschenko <denys@visp.net.lb>
+To: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Subject: ath5k, too high output power?
+Date: Tue, 27 Oct 2009 02:59:09 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200910270259.09787.denys@visp.net.lb>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-10-22 at 09:53 +0200, Holger Schurig wrote:
-> > It's actually used by the OLPC folks; but right now there's
-> > simply no mechanism to configure that ability via WEXT.  Is
-> > there some way to do this via the kernel LED  framework instead
-> > that libertas should be using?
-> 
-> They use it?
-> 
-> No one did bother to send a patch for the in-kernel Libertas 
-> driver during the last year. Sigh.
-> 
-> Also, if they use it, they need a patch on top of what is now in 
-> the kernel, because the current in-kernel libertas driver has no 
-> code to issue the CMD_802_11_LED_GPIO_CTRL. That's why I removed 
-> it in the first place.
+I have laptop with ath5k card, and just tried to run it with ath5k driver.
+I notice strange thing:
 
-Because it was a WEXT private ioctl and I ripped those all out and told
-them no.  They still patch that (because there wasn't a LED framework at
-the time) into the OLPC Gen 1 kernel trees.  Not sure they are ever
-going to jump to 2.6.32 or anything though.  Just letting you know.
+lappi ~ # iw phy phy0 info
+Wiphy phy0
+        Band 1:
+                Frequencies:
+                        * 2412 MHz [1] (20.0 dBm)
+                        * 2417 MHz [2] (20.0 dBm)
+                        * 2422 MHz [3] (20.0 dBm)
 
-There's quite a few commands that only the OLPC stuff uses, but because
-there was no usable userland interface for it (because we said no to
-IWPRIV, and because debugfs is for debugging only) they just stuck with
-IWPRIV and patched that in.
+I guess it is too high. I am not sure it is actual value, but if it is right 
+and actual value, then i am exceeding local regulations.
 
-> It's O.K. for me to keep this code in (it doesn't harm), but a 
-> better approach would be
-> 
-> a) use a new-style commands, a.k.a. lbs_cmd_with_response()
+I have simple spectrum analyzer (spectran), and i can try to test actual 
+output power if required.
 
-I was working on that and had converted all but 7 of the old-style
-commands before you started the cfg80211 work, and now I figure after
-you're done I'd go back and clean them up if they still exist.
+Another thing, is it possible to change antenna output?
 
-> b) use the in-kernel LED support (as you said)
 
-Yeah, that's obviously what should be done.
-
-Dan
-
+Hardware:
+01:00.0 Ethernet controller: Atheros Communications Inc. AR242x 802.11abg 
+Wireless PCI Express Adapter (rev 01)
+        Subsystem: Hewlett-Packard Company Device 137a
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 128 bytes
+        Interrupt: pin A routed to IRQ 16
+        Region 0: Memory at d1300000 (64-bit, non-prefetchable) [size=64K]
+        Capabilities: [40] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA 
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [50] Message Signalled Interrupts: Mask- 64bit- 
+Count=1/1 Enable-
+                Address: 00000000  Data: 0000
+        Capabilities: [60] Express (v1) Legacy Endpoint, MSI 00
+                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, 
+L1 <64us
+                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- 
+Unsupported-
+                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- 
+TransPend-
+                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency 
+L0 <512ns, L1 <64us
+                        ClockPM- Suprise- LLActRep- BwNot-
+                LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- Retrain- 
+CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ 
+DLActive- BWMgmt- ABWMgmt-
+        Capabilities: [90] MSI-X: Enable- Mask- TabSize=1
+                Vector table: BAR=0 offset=00000000
+                PBA: BAR=0 offset=00000000
+        Capabilities: [100] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO+ CmpltAbrt- UnxCmplt- 
+RxOF- MalfTLP- ECRC- UnsupReq- ACSVoil-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- 
+RxOF- MalfTLP- ECRC- UnsupReq- ACSVoil-
+                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- 
+RxOF+ MalfTLP+ ECRC- UnsupReq- ACSVoil-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- 
+NonFatalErr-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- 
+NonFatalErr-
+                AERCap: First Error Pointer: 0e, GenCap+ CGenEn- ChkCap+ 
+ChkEn-
+        Capabilities: [140] Virtual Channel <?>
+        Kernel driver in use: ath5k
+        Kernel modules: ath5k
