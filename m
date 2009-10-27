@@ -1,114 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:52628 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753040AbZJaRqs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Oct 2009 13:46:48 -0400
-Subject: Re: [PATCH 14/15] iwlwifi: add SM PS support for 6x50 series
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1256968411.3555.77.camel@johannes.local>
-References: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
-	 <1256938578-9638-15-git-send-email-reinette.chatre@intel.com>
-	 <1256968411.3555.77.camel@johannes.local>
-Content-Type: text/plain
-Date: Sat, 31 Oct 2009 10:44:18 -0700
-Message-Id: <1257011058.8387.14.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from bombadil.infradead.org ([18.85.46.34]:46140 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755882AbZJ0QQO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Oct 2009 12:16:14 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Michael Green <Michael.Green@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	David Quan <David.Quan@atheros.com>
+Subject: [PATCH v2] wireless-regdb: update US rules for 5600 MHz - 5650 MHz
+Date: Tue, 27 Oct 2009 12:16:18 -0400
+Message-Id: <1256660178-5863-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-10-30 at 22:53 -0700, Johannes Berg wrote:
-> Hi,
-> 
-> > @@ -3012,6 +3012,10 @@ static int iwl_init_drv(struct iwl_priv *priv)
-> >  	priv->band = IEEE80211_BAND_2GHZ;
-> >  
-> >  	priv->iw_mode = NL80211_IFTYPE_STATION;
-> > +	if (priv->cfg->support_sm_ps)
-> > +		priv->current_ht_config.sm_ps = WLAN_HT_CAP_SM_PS_DYNAMIC;
-> > +	else
-> > +		priv->current_ht_config.sm_ps = WLAN_HT_CAP_SM_PS_DISABLED;
-> 
-> Why bother with current_ht_config.sm_ps when ...
+The FCC is trying to assist airports that use Terminal Doppler
+Weather Radar (TDWR) systems in avoiding interference with
+some outdoor wireless systems operating in the 5.4 GHz
+(5470 MHz - 5725 MHz) band. One of the things they have decided
+on is to disallow operation on the 5600 MHz - 5650 MHz frequency
+range inclusive. What this means in practice is 5 GHz 802.11
+devices programmed to operate in the US will have these
+channels now disabled:
 
-This is for keep the ht configuration in single place. 
+ * 5600 MHz [120] (disabled)
+ * 5620 MHz [124] (disabled)
+ * 5640 MHz [128] (disabled)
 
-> 
-> >  	ht_info->cap |= IEEE80211_HT_CAP_SGI_20;
-> > -	ht_info->cap |= (IEEE80211_HT_CAP_SM_PS &
-> > -			     (WLAN_HT_CAP_SM_PS_DISABLED << 2));
-> > +	if (priv->cfg->support_sm_ps)
-> > +		ht_info->cap |= (IEEE80211_HT_CAP_SM_PS &
-> > +				     (WLAN_HT_CAP_SM_PS_DYNAMIC << 2));
-> > +	else
-> > +		ht_info->cap |= (IEEE80211_HT_CAP_SM_PS &
-> > +				     (WLAN_HT_CAP_SM_PS_DISABLED << 2));
-> 
-> here we always and unconditionally advertise dynamic SM-PS mode?
+This is documented on the FCC Knowledge based Publication
+Number: 443999 [1]
 
-I am confuse, it is based on "priv->cfg->support_sm_ps", so it is not
-always dynamic SM-PS mode.
-  
->  
-> > +	if (priv->cfg->support_sm_ps) {
-> > +		/* # Rx chains when idling and maybe trying to save power */
-> > +		switch (priv->current_ht_config.sm_ps) {
-> > +		case WLAN_HT_CAP_SM_PS_STATIC:
-> > +		case WLAN_HT_CAP_SM_PS_DYNAMIC:
-> > +			idle_cnt = (is_cam) ? IWL_NUM_IDLE_CHAINS_DUAL :
-> > +				IWL_NUM_IDLE_CHAINS_SINGLE;
-> > +			break;
-> > +		case WLAN_HT_CAP_SM_PS_DISABLED:
-> > +			idle_cnt = (is_cam) ? active_cnt :
-> > +				IWL_NUM_IDLE_CHAINS_SINGLE;
-> > +			break;
-> > +		case WLAN_HT_CAP_SM_PS_INVALID:
-> > +		default:
-> > +			IWL_ERR(priv, "invalid sm_ps mode %d\n",
-> > +				priv->current_ht_config.sm_ps);
-> > +			WARN_ON(1);
-> > +			break;
-> > +		}
-> > +	}
-> 
-> This _should_ always hit the dynamic case since we've always advertised
-> that, were it not for a bug below. And even when powersave is turned off
-> the AP will have to do CTS/RTS handshake so we do not gain anything by
-> turning on all chains in that case.
-> 
-We only hit the dynamic sm-ps mode if "priv->cfg->support_sm_ps == ture"
-case. correct?
+[1] https://fjallfoss.fcc.gov/oetcf/kdb/forms/FTSSearchResultPage.cfm?switch=P&id=41732
 
-> I think the whole ht_config.sm_ps should be removed, and here we should
-> always and unconditionally use _SINGLE as that matches what we've
-> advertised to the AP via the HT capabilities.
-> 
-> >  /* up to 4 chains */
-> > @@ -2258,6 +2280,12 @@ static void iwl_ht_conf(struct iwl_priv *priv,
-> >  					>> IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT;
-> >  			maxstreams += 1;
-> >  
-> > +			ht_conf->sm_ps =
-> > +				(u8)((ht_cap->cap & IEEE80211_HT_CAP_SM_PS)
-> > +				>> 2);
-> > +			IWL_DEBUG_MAC80211(priv, "sm_ps: 0x%x\n",
-> > +				ht_conf->sm_ps);
-> > +
-> 
-> This is wrong; we cannot use the peer's SM_PS setting for our own SM_PS
-> setting, we've advertised dynamic SM PS so we better stick with it. The
-> peer's setting has no value for us, it means whether the peer will turn
-> off _its_ chains or not.
+Cc: Michael Green <Michael.Green@atheros.com>
+Cc: Senthil Balasubramanian <senthilkumar@atheros.com>
+Cc: David Quan <David.Quan@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
-I agree should not modify the SM_PS setting based on AP
+I'm on 2 hours of sleep due to jet lag so I had chopped out
+channel 132 (5660 MHz) but this is not required obviously. This v2
+fixes that.
 
-I will submit another patch to remove using AP setting.
+ db.txt |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-> 
-> johannes
+diff --git a/db.txt b/db.txt
+index 84be443..c8b1ef0 100644
+--- a/db.txt
++++ b/db.txt
+@@ -562,7 +562,8 @@ country US:
+ 	(2402 - 2472 @ 40), (3, 27)
+ 	(5170 - 5250 @ 40), (3, 17)
+ 	(5250 - 5330 @ 40), (3, 20), DFS
+-	(5490 - 5710 @ 40), (3, 20), DFS
++	(5490 - 5600 @ 40), (3, 20), DFS
++	(5650 - 5710 @ 40), (3, 20), DFS
+ 	(5735 - 5835 @ 40), (3, 30)
+ 
+ country UY:
+-- 
+1.6.0.4
 
