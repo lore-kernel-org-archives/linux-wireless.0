@@ -1,53 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:2518 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754496AbZJRNCr convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35628 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753015AbZJ1TbS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Oct 2009 09:02:47 -0400
-Received: by fg-out-1718.google.com with SMTP id d23so1041497fga.1
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2009 06:02:50 -0700 (PDT)
+	Wed, 28 Oct 2009 15:31:18 -0400
+Date: Wed, 28 Oct 2009 15:20:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com, IvDoorn@gmail.com
+Subject: Re: [PATCH] rt73usb.c : more ids
+Message-ID: <20091028192045.GC2856@tuxdriver.com>
+References: <4ADC368F.1050709@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1255861930.5093.7.camel@chriss-imac>
-References: <1255861930.5093.7.camel@chriss-imac>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 18 Oct 2009 15:02:30 +0200
-Message-ID: <69e28c910910180602qe4cdb1fy5c2ec3f6dae0c146@mail.gmail.com>
-Subject: Re: Support for Broadcom's BCM4328 chip
-To: Chriss Kalogeropoulos <iz.iznogood@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4ADC368F.1050709@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 18, 2009 at 12:32 PM, Chriss Kalogeropoulos
-<iz.iznogood@gmail.com> wrote:
-> Hello,
->
-> i have an i-mac using Broadcom's BCM4328 chip.
->
-> lspci gives:
->
-> 03:00.0 Network controller [0280]: Broadcom Corporation BCM4328
-> 802.11a/b/g/n [14e4:4328] (rev 01)
->
-> This must have been answered before but i thought to ask in case
-> something has changed. Any hope on getting support on that chip with an
-> open source driver ?
->
-> Please cc me since i am not a subscriber on the list.
->
-> Thanks in advance
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+On Mon, Oct 19, 2009 at 11:51:11AM +0200, Xose Vazquez Perez wrote:
+> hi,
+> 
+> stolen from windows inf file(07/17/2009, 1.03.05.0000)
+> Ovislink 0x1b75, 0x7318
+> MSI 0x0db0, 0x4600
+> WideTell 0x7167, 0x3840
+> 
+> 
+> -thanks-
+> 
+> regards,
+> 
+> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+> 
+> -- 
+> «Allá muevan feroz guerra, ciegos reyes por un palmo más de tierra;
+> que yo aquí tengo por mío cuanto abarca el mar bravío, a quien nadie
+> impuso leyes. Y no hay playa, sea cualquiera, ni bandera de esplendor,
+> que no sienta mi derecho y dé pecho a mi valor.»
+> 
+> 
 
-This is an N-PHY card. Reverse-engineering of N-PHY cards is still in
-progress (though it is finally really "in progress", and not stalled
-anymore), and it needs to be finished (at least the G part) before we
-can work on implementing it.
+> --- o/drivers/net/wireless/rt73usb.c	2009-10-13 12:58:32.042380351 +0200
+> +++ n/drivers/net/wireless/rt73usb.c	2009-10-13 13:01:01.073379225 +0200
 
+WTF is this?  That's not where that file lives in any tree I have...
+
+I manually applied this one, but in the future please go to the
+effort of sending a patch against the sources everyone else is using.
+Not sending it as an attachment and not cluttering the changelog
+with "hi...thanks, regards..." etc would be appreciated as well.
+Maybe you could even read the link I sent you previously...
+
+John
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
