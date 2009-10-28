@@ -1,83 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56899 "EHLO mx1.redhat.com"
+Received: from smtp1-g21.free.fr ([212.27.42.1]:41168 "EHLO smtp1-g21.free.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756003AbZJZUM7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 16:12:59 -0400
-Subject: Re: [PATCH 17/19] [RFC, v2] libertas: Kconfig entry for
- libertas+cfg80211
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <200910260859.39002.hs4233@mail.mn-solutions.de>
-References: <20091022133043.185554096@mail.mn-solutions.de>
-	 <1256315972.12174.168.camel@johannes.local>
-	 <1256316179.2164.53.camel@localhost.localdomain>
-	 <200910260859.39002.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Mon, 26 Oct 2009 13:12:46 -0700
-Message-Id: <1256587966.2110.28.camel@localhost.localdomain>
-Mime-Version: 1.0
+	id S1755443AbZJ1UiH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Oct 2009 16:38:07 -0400
+From: Christian Casteyde <casteyde.christian@free.fr>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: 2.6.32-rc5-git3: Reported regressions from 2.6.31
+Date: Wed, 28 Oct 2009 21:38:37 +0100
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <Sj-rRjx6TwF.A.djE.vqe5KB@chimera> <200910262138.30396.mb@bu3sch.de> <20091028190547.GA2856@tuxdriver.com>
+In-Reply-To: <20091028190547.GA2856@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200910282138.37401.casteyde.christian@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-10-26 at 08:59 +0100, Holger Schurig wrote:
-> > > Well if you want to push the mesh wext bits through to cfg80211
-> > > (temporarily) you wouldn't even need to depend on WEXT. I'd prefer,
-> > > however, to not do this, and just use the cfg80211 wext handlers in
-> > > libertas and depend on WEXT for now.
-> > 
-> > Yeah, I think it's best to handle the mesh WEXT ioctls separately for
-> > now.  There are really only 4 of them (get/set SSID, set channel, get
-> > mode) that matter for mesh.  The rest of the ioctls that the mesh
-> > interface supports get redirected to the cfg80211 handlers because they
-> > aren't specific to mesh.
+I've just tested the patch posted in bugzilla: it works.
+That is, I do not manage to get the warning anymore in 3 boots in a row.
+
+CC
+Le mercredi 28 octobre 2009 20:05:47, John W. Linville a écrit :
+> Christian,
 > 
-> We can reduce this to 3, because get/set channel could
-> simply go via cfg80211.
+> Will you be able to test this patch for us?
 > 
-> I'm unsure if we still need an GIWRANGE for mesh, but probably not.
-
-Hmm, probably not.  I think everything is the same between the mesh
-interface and STA here, but not sure.
-
-In any case, the code for the mesh channel change was different than the
-code for the STA channel change, we have to be a bit careful here.  The
-sequences were:
-
-STA:
-
-1) get current channel #
-2) issue a MESH_STOP command with the old channel
-3) change the channel
-4) resend WEP keys to firmware if any
-5) restart adhoc if adhoc is enabled
-
-mesh:
-
-1) if STA is active and in infrastructure, deauth from AP
-2) if STA is active and in adhoc, issue ADHOC_STOP
-3) issue MESH_START with new channel
-
-There are a few holes in the current implementation since desired
-behavior is somewhat undefined; for example, if you change the mesh
-channel, should an active adhoc network on the STA interface *restart*
-on the new channel, or should the adhoc network on the old channel just
-be torn down?  If you change the mesh channel and the STA interface is
-associated to an AP, should the STA interface try to re-associate to
-that SSID on the new channel, or should it just stop?
-
-In the end, we decided to keep it simple and require userspace to know a
-bit about what was going on, which is reasonable, and thus if userspace
-makes the choice to change mesh channel, userspace would also be
-responsible for figuring out what happens with the STA interface next.
-
-Dan
-
+> Thanks,
 > 
-> Dan, you once said that you converted the MESH firmware
-> calls to new style commands. Do you have those around?  Maybe
-> I can re-work them if they don't apply anymore.
+> John
 > 
-
+> On Mon, Oct 26, 2009 at 09:38:28PM +0100, Michael Buesch wrote:
+> > On Monday 26 October 2009 20:37:33 Michael Buesch wrote:
+> > > Ok, it just turns out this actually is a driver bug.
+> > > Thanks to Johannes Berg for tracking it down.
+> > >
+> > > I think it's caused by the DMA bouncebuffer stuff that does not copy
+> > > the skb->cb and does not adjust the "tx-info" pointer.
+> > > I wonder why this didn't blow up easlier, because this bug is there
+> > > since mac80211 switched to using the CB.
+> > >
+> > > Here's a completely untested patch.
+> >
+> > Here's a new version of the patch that also fixes queue mapping bugs:
+> >
+> > ---
+> >  drivers/net/wireless/b43/dma.c |   15 +++++++++++++--
+> >  1 file changed, 13 insertions(+), 2 deletions(-)
+> >
+> > --- wireless-testing.orig/drivers/net/wireless/b43/dma.c
+> > +++ wireless-testing/drivers/net/wireless/b43/dma.c
+> > @@ -1157,8 +1157,9 @@ struct b43_dmaring *parse_cookie(struct
+> >  }
+> >
+> >  static int dma_tx_fragment(struct b43_dmaring *ring,
+> > -			   struct sk_buff *skb)
+> > +			   struct sk_buff **in_skb)
+> >  {
+> > +	struct sk_buff *skb = *in_skb;
+> >  	const struct b43_dma_ops *ops = ring->ops;
+> >  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+> >  	u8 *header;
+> > @@ -1224,8 +1225,14 @@ static int dma_tx_fragment(struct b43_dm
+> >  		}
+> >
+> >  		memcpy(skb_put(bounce_skb, skb->len), skb->data, skb->len);
+> > +		memcpy(bounce_skb->cb, skb->cb, sizeof(skb->cb));
+> > +		bounce_skb->dev = skb->dev;
+> > +		skb_set_queue_mapping(bounce_skb, skb_get_queue_mapping(skb));
+> > +		info = IEEE80211_SKB_CB(bounce_skb);
+> > +
+> >  		dev_kfree_skb_any(skb);
+> >  		skb = bounce_skb;
+> > +		*in_skb = bounce_skb;
+> >  		meta->skb = skb;
+> >  		meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
+> >  		if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
+> > @@ -1355,7 +1362,11 @@ int b43_dma_tx(struct b43_wldev *dev, st
+> >  	 * static, so we don't need to store it per frame. */
+> >  	ring->queue_prio = skb_get_queue_mapping(skb);
+> >
+> > -	err = dma_tx_fragment(ring, skb);
+> > +	/* dma_tx_fragment might reallocate the skb, so invalidate pointers
+> > pointing +	 * into the skb data or cb now. */
+> > +	hdr = NULL;
+> > +	info = NULL;
+> > +	err = dma_tx_fragment(ring, &skb);
+> >  	if (unlikely(err == -ENOKEY)) {
+> >  		/* Drop this packet, as we don't have the encryption key
+> >  		 * anymore and must not transmit it unencrypted. */
+> 
