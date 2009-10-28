@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:50093 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753325AbZJ0K3J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2009 06:29:09 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Bob Copeland <me@bobcopeland.com>
-Subject: Re: ath5k phy0: no further txbuf available, dropping packet
-Date: Tue, 27 Oct 2009 11:29:08 +0100
-Cc: dsrbecky@gmail.com, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+Received: from acsinet11.oracle.com ([141.146.126.233]:61789 "EHLO
+	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752094AbZJ1XNx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Oct 2009 19:13:53 -0400
+Date: Wed, 28 Oct 2009 16:08:32 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>,
 	linux-wireless@vger.kernel.org
-References: <87f9e23c0910261352x60e17ef8ud859f91f36c43898@mail.gmail.com> <200910262230.57957.mb@bu3sch.de> <20091027100926.GA13391@hash.localnet>
-In-Reply-To: <20091027100926.GA13391@hash.localnet>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200910271129.10535.mb@bu3sch.de>
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linville@tuxdriver.com
+Subject: [PATCH -next] wireless: airo_cs needs WEXT_SPY
+Message-Id: <20091028160832.411ff31d.randy.dunlap@oracle.com>
+In-Reply-To: <20091028190643.627f10aa.sfr@canb.auug.org.au>
+References: <20091028190643.627f10aa.sfr@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 27 October 2009 11:09:26 Bob Copeland wrote:
-> On Mon, Oct 26, 2009 at 10:30:55PM +0100, Michael Buesch wrote:
-> > 		/* No frame has been send or error */
-> > 		if (unlikely(!(tx_status->tx_status_1 & AR5K_DESC_TX_STATUS1_DONE)))
-> > 			return -EINPROGRESS;
-> > 		...
-> > 	}
-> 
-> > Notice the comment and how it says "or error".
-> 
-> Hmm, that does sound problematic.  But looking at the various bitfields:
-> 
-> #define AR5K_DESC_TX_STATUS1_DONE               0x00000001
-> #define AR5K_DESC_TX_STATUS1_SEQ_NUM            0x00001ffe
-> #define AR5K_DESC_TX_STATUS1_ACK_SIG_STRENGTH   0x001fe000
-> #define AR5K_DESC_TX_STATUS1_FINAL_TS_INDEX     0x00600000
-> #define AR5K_DESC_TX_STATUS1_COMP_SUCCESS       0x00800000
-> #define AR5K_DESC_TX_STATUS1_XMIT_ANTENNA       0x01000000
-> 
-> I would be led to believe that 'done' means 'completed or error' and
-> the comment is similarly ambiguous.  The status0 word contains things
-> like 'really did succeed, number of retries, timestamp' etc.
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Hm, I looked through the whole status processing code and this is the only
-place I can see that could trigger stalling of the buffer head queue.
+airo_cs uses spy interfaces so it needs to select WEXT_SPY.
 
-If the lowlevel status handler is able to distinguish between "done", "error" and "not done yet",
-the return codes should probably changed:
+ERROR: "iw_handler_set_thrspy" [drivers/net/wireless/airo.ko] undefined!
+ERROR: "wireless_spy_update" [drivers/net/wireless/airo.ko] undefined!
+ERROR: "iw_handler_get_spy" [drivers/net/wireless/airo.ko] undefined!
+ERROR: "iw_handler_get_thrspy" [drivers/net/wireless/airo.ko] undefined!
+ERROR: "iw_handler_set_spy" [drivers/net/wireless/airo.ko] undefined!
 
-0 => Packet was properly processed.
-     The upper status handler will free it
--INPROGRESS => Packet was not processed, yet.
-               The upper status handler should bail out and wait.
-ERROR => Packet failed.
-         The upper status handler should drop the packet
-         and go on processing the other frames.
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/net/wireless/Kconfig |    1 +
+ 1 file changed, 1 insertion(+)
 
-If that's not the case, I don't really know what's happening.
-
--- 
-Greetings, Michael.
+--- linux-next-20091028.orig/drivers/net/wireless/Kconfig
++++ linux-next-20091028/drivers/net/wireless/Kconfig
+@@ -111,6 +111,7 @@ config AIRO_CS
+ 	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
+ 	depends on PCMCIA && (BROKEN || !M32R)
+ 	select WIRELESS_EXT
++	select WEXT_SPY
+ 	select CRYPTO
+ 	select CRYPTO_AES
+ 	---help---
