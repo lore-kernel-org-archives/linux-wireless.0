@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.211.176]:33312 "EHLO
-	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761794AbZJJQMn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Oct 2009 12:12:43 -0400
-Received: by ywh6 with SMTP id 6so7027641ywh.4
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Oct 2009 09:12:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1255146340.3542.10.camel@maxim-laptop>
-References: <1254708707.24430.68.camel@maxim-laptop>
-	 <1255146340.3542.10.camel@maxim-laptop>
-Date: Sat, 10 Oct 2009 11:04:31 -0500
-Message-ID: <78a7dad00910100904p77dadc2fs3f8da68bb6dc7c4c@mail.gmail.com>
-Subject: Re: deauthentication and disassociation nl80211 commands
-From: John Klehm <xixsimplicityxix@gmail.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from lo.gmane.org ([80.91.229.12]:35239 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753727AbZJ1OY7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Oct 2009 10:24:59 -0400
+Received: from list by lo.gmane.org with local (Exim 4.50)
+	id 1N39SS-00015K-3T
+	for linux-wireless@vger.kernel.org; Wed, 28 Oct 2009 15:25:04 +0100
+Received: from dslc-082-082-171-091.pools.arcor-ip.net ([82.82.171.91])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2009 15:25:04 +0100
+Received: from konsti by dslc-082-082-171-091.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Oct 2009 15:25:04 +0100
+To: linux-wireless@vger.kernel.org
+From: Konstantin Kletschke <konsti@ku-gbr.de>
+Subject: Re: BUG at workqueue.c:192, debian 2.6.30 AND compat-wireless-2009-10-28
+Date: Wed, 28 Oct 2009 15:12:53 +0100
+Message-ID: <87fx937gka.fsf@punzenstreichler.doom>
+References: <20091028111847.GA25553@punzenstreichler.doom>
+	<43e72e890910280651h4e91819n20e55cae48474533@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 9, 2009 at 10:45 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
->
-> Nobody uses driver_nl80211 but me?
->
+"Luis R. Rodriguez" <mcgrof@gmail.com>
+writes:
 
-I do and I'm sure there are more people like me that get great use out
-of the older working version.
+> What kernel are you on?
 
-Of course Id love to have an updated version but I understand that if
-I don't have the time to write it then it makes it hard to complain :P
+I am on debian vanilla 2.6.30. debian names this package
+"linux-image-2.6.30-2-686", uname -a says:
 
-I (and others I'm sure) appreciate your efforts to document what needs
-to be fixed Maxim.  No doubt useful to the person that finally takes a
-crack at the nl80211 code.
+Linux muschimaus 2.6.30-2-686 #1 SMP Sat Sep 26 01:16:22 UTC 2009 i686 GNU/Linux
 
-Cheers,
---John Klehm
+Regards, Konsti
+
