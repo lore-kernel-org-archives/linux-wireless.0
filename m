@@ -1,186 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:32181 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756040AbZJVNf2 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58194 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755366AbZJ1UZJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2009 09:35:28 -0400
-Message-Id: <20091022133417.049597275@mail.mn-solutions.de>
-References: <20091022133043.185554096@mail.mn-solutions.de>
-Date: Thu, 22 Oct 2009 15:30:55 +0200
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>
-Subject: [PATCH 12/19] libertas: remove "struct cmd_ds_gen"
+	Wed, 28 Oct 2009 16:25:09 -0400
+Subject: Re: odd state reached when AP deauths you after assoc
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20091028183726.GA4952@tux>
+References: <20091028183726.GA4952@tux>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-JDVFNuxq4Lnfdy8SG5BN"
+Date: Wed, 28 Oct 2009 21:24:45 +0100
+Message-ID: <1256761485.4237.260.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was only used as a source for S_DS_GEN, but the size of this struct
-is equal to the size of "struct cmd_header".
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+--=-JDVFNuxq4Lnfdy8SG5BN
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
---- linux-wl.orig/drivers/net/wireless/libertas/host.h
-+++ linux-wl/drivers/net/wireless/libertas/host.h
-@@ -389,19 +389,6 @@
- 	u32 value;
- } __attribute__ ((packed));
- 
--/* Define general data structure */
--/* cmd_DS_GEN */
--struct cmd_ds_gen {
--	__le16 command;
--	__le16 size;
--	__le16 seqnum;
--	__le16 result;
--	void *cmdresp[0];
--} __attribute__ ((packed));
--
--#define S_DS_GEN sizeof(struct cmd_ds_gen)
--
--
- /*
-  * Define data structure for CMD_GET_HW_SPEC
-  * This structure defines the response for the GET_HW_SPEC command
---- linux-wl.orig/drivers/net/wireless/libertas/assoc.c
-+++ linux-wl/drivers/net/wireless/libertas/assoc.c
-@@ -279,7 +279,7 @@
- 	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
- 
- 	if (cmd_action == CMD_ACT_GET) {
--		cmd.hdr.size = cpu_to_le16(S_DS_GEN + 2);
-+		cmd.hdr.size = cpu_to_le16(sizeof(struct cmd_header) + 2);
- 	} else {
- 		memset(cmd.keyParamSet, 0, sizeof(cmd.keyParamSet));
- 
-@@ -456,7 +456,8 @@
- 
- 	lbs_deb_enter(LBS_DEB_CMD);
- 	cmd->command = cpu_to_le16(CMD_802_11_RSSI);
--	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_rssi) + S_DS_GEN);
-+	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_rssi) +
-+		sizeof(struct cmd_header));
- 	cmd->params.rssi.N = cpu_to_le16(DEFAULT_BCN_AVG_FACTOR);
- 
- 	/* reset Beacon SNR/NF/RSSI values */
-@@ -514,7 +515,7 @@
- 	lbs_deb_enter(LBS_DEB_CMD);
- 	cmd->size =
- 	    cpu_to_le16(sizeof(struct cmd_ds_802_11_beacon_control)
--			     + S_DS_GEN);
-+			     + sizeof(struct cmd_header));
- 	cmd->command = cpu_to_le16(CMD_802_11_BEACON_CTRL);
- 
- 	bcn_ctrl->action = cpu_to_le16(cmd_action);
---- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
-+++ linux-wl/drivers/net/wireless/libertas/cmd.c
-@@ -240,7 +240,7 @@
- 
- 	cmd->command = cpu_to_le16(CMD_802_11_PS_MODE);
- 	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_ps_mode) +
--				S_DS_GEN);
-+				sizeof(struct cmd_header));
- 	psm->action = cpu_to_le16(cmd_action);
- 	psm->multipledtim = 0;
- 	switch (cmd_action) {
-@@ -535,7 +535,7 @@
- 	cmd->command = cpu_to_le16(CMD_802_11_MONITOR_MODE);
- 	cmd->size =
- 	    cpu_to_le16(sizeof(struct cmd_ds_802_11_monitor_mode) +
--			     S_DS_GEN);
-+			     sizeof(struct cmd_header));
- 
- 	monitor->action = cpu_to_le16(cmd_action);
- 	if (cmd_action == CMD_ACT_SET) {
-@@ -644,7 +644,7 @@
- 
- 			cmdptr->size =
- 			    cpu_to_le16(sizeof (struct cmd_ds_mac_reg_access)
--					+ S_DS_GEN);
-+					+ sizeof(struct cmd_header));
- 			macreg =
- 			    (struct cmd_ds_mac_reg_access *)&cmdptr->params.
- 			    macreg;
-@@ -663,7 +663,7 @@
- 			cmdptr->size =
- 			    cpu_to_le16(sizeof
- 					     (struct cmd_ds_bbp_reg_access)
--					     + S_DS_GEN);
-+					     + sizeof(struct cmd_header));
- 			bbpreg =
- 			    (struct cmd_ds_bbp_reg_access *)&cmdptr->params.
- 			    bbpreg;
-@@ -682,7 +682,7 @@
- 			cmdptr->size =
- 			    cpu_to_le16(sizeof
- 					     (struct cmd_ds_rf_reg_access) +
--					     S_DS_GEN);
-+					     sizeof(struct cmd_header));
- 			rfreg =
- 			    (struct cmd_ds_rf_reg_access *)&cmdptr->params.
- 			    rfreg;
-@@ -709,7 +709,8 @@
- 	lbs_deb_enter_args(LBS_DEB_CMD, "action %d", cmd_action);
- 
- 	cmd->command = cpu_to_le16(CMD_BT_ACCESS);
--	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_bt_access) + S_DS_GEN);
-+	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_bt_access) +
-+		sizeof(struct cmd_header));
- 	cmd->result = 0;
- 	bt_access->action = cpu_to_le16(cmd_action);
- 
-@@ -746,7 +747,8 @@
- 	lbs_deb_enter_args(LBS_DEB_CMD, "action %d", cmd_action);
- 
- 	cmd->command = cpu_to_le16(CMD_FWT_ACCESS);
--	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_fwt_access) + S_DS_GEN);
-+	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_fwt_access) +
-+		sizeof(struct cmd_header));
- 	cmd->result = 0;
- 
- 	if (pdata_buf)
-@@ -1162,7 +1164,7 @@
- 
- 		cmdptr->command = cpu_to_le16(cmd_no);
- 		cmdptr->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_afc) +
--					   S_DS_GEN);
-+					   sizeof(struct cmd_header));
- 
- 		memmove(&cmdptr->params.afc,
- 			pdata_buf, sizeof(struct cmd_ds_802_11_afc));
-@@ -1174,7 +1176,7 @@
- 		cmdptr->command = cpu_to_le16(CMD_802_11_TPC_CFG);
- 		cmdptr->size =
- 		    cpu_to_le16(sizeof(struct cmd_ds_802_11_tpc_cfg) +
--				     S_DS_GEN);
-+				     sizeof(struct cmd_header));
- 
- 		memmove(&cmdptr->params.tpccfg,
- 			pdata_buf, sizeof(struct cmd_ds_802_11_tpc_cfg));
-@@ -1195,7 +1197,7 @@
- 		break;
- 	case CMD_802_11_DEEP_SLEEP:
- 		cmdptr->command = cpu_to_le16(CMD_802_11_DEEP_SLEEP);
--		cmdptr->size = cpu_to_le16(S_DS_GEN);
-+		cmdptr->size = cpu_to_le16(sizeof(struct cmd_header));
- 		break;
- 	default:
- 		lbs_pr_err("PREP_CMD: unknown command 0x%04x\n", cmd_no);
---- linux-wl.orig/drivers/net/wireless/libertas/scan.c
-+++ linux-wl/drivers/net/wireless/libertas/scan.c
-@@ -1291,11 +1291,11 @@
- 	/* The size of the TLV buffer is equal to the entire command response
- 	 *   size (scanrespsize) minus the fixed fields (sizeof()'s), the
- 	 *   BSS Descriptions (bssdescriptsize as bytesLef) and the command
--	 *   response header (S_DS_GEN)
-+	 *   response header (sizeof(struct cmd_header))
- 	 */
- 	tlvbufsize = scanrespsize - (bytesleft + sizeof(scanresp->bssdescriptsize)
- 				     + sizeof(scanresp->nr_sets)
--				     + S_DS_GEN);
-+				     + sizeof(struct cmd_header));
- 
- 	/*
- 	 *  Process each scan response returned (scanresp->nr_sets). Save
+On Wed, 2009-10-28 at 11:37 -0700, Luis R. Rodriguez wrote:
+> I ran into this when ath5k with wpa_supplicant with config file with
+> a wrong password against a Cisco AP. It seems the Cisco AP auths you
+> and lets you assoc but later it deauths you -- I guess after it
+> determines you are auth credentials failed. When this happens I get:
+>=20
+> mcgrof@tux ~ $ iw dev wlan0 link
+> Authenticated with 00:0b:85:5b:8d:6c (on wlan0)
+> Not connected.
 
--- 
+I'm guessing that you're using -Dnl80211. You need this patch, or
+equivalent:
+http://johannes.sipsolutions.net/patches/hostap/all/2009-10-26-12%3a59/deau=
+th-on-disassoc.patch
+
+johannes
+
+--=-JDVFNuxq4Lnfdy8SG5BN
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK6KiJAAoJEODzc/N7+Qma1SEP/0uG6m6TC+OzRSOqvws8hYx+
+yjveheFNA73BgUNetRnRo/T9ULVc9vh5wC51vJDri53pBROweeWZPk/MaxQOXbPk
+D8OphV+o00Rco8JhysuQXrmqWEnYPZ4+oY0wp0Vof+kEty3LF30tIcELlJZQD07v
+JUWNAhCDUUxeGVNKP3Cpt0W6Tu4uCtcnJoQXEpFlmiWibgt4lm/nO6tZU0sTVtGy
+/Xstmf15V8UkGcBoJsysZUVy6PLZqKgTPyFEE9ldzkEU4ew30nH9yrrXKVrWg4R+
++cQDimwcwXg78iV0rTj+sQzMZ1G5H8nxeHAgw0QsVtmyLcynkTbHq2hFeTbo6b3r
+hB06xsUxG/WtgV1X4+SAFHSVz/5sc9kr97P3Rg/sYXof/MHoQFmAR4L84O72p2bR
+xJRucPJdRlipLVifuXYgiPfq+ARewzaLY1xwgc3swhpAW00vPd9yLWe4UMT3/ig/
+/4zgqJJed8TUwXLjcm3W5l7PSJIwqh3nyxGS1BvCqH/mzEA9o7n7CSLbmL3RFQdt
+hMgMOxLwplf/XSzUf4fE9TFSWXQYKjyxTgMxxvqEbAdlMR8SmX0eVlISBijGk+CT
+PQuuwg4ozJiKflfj5eG/LzDbHATus/3yyWgEsIRgSOUSJwOSeT3pVOgfjBrq0B0x
+/ymuSlGCsoqgBD4VAKl0
+=fnPT
+-----END PGP SIGNATURE-----
+
+--=-JDVFNuxq4Lnfdy8SG5BN--
+
