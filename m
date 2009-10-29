@@ -1,243 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:56627 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759677AbZJHS6i (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41859 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750707AbZJ2Lgd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 14:58:38 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 09/20] wl1271: Update join usage
-Date: Thu,  8 Oct 2009 21:56:25 +0300
-Message-Id: <1255028196-6565-10-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
+	Thu, 29 Oct 2009 07:36:33 -0400
+Subject: [PATCH] firmware_class: make request_firmware_nowait more useful
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Greg KH <gregkh@suse.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Ming Lei <tom.leiming@gmail.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	David Woodhouse <David.Woodhouse@intel.com>,
+	Pavel Roskin <proski@gnu.org>,
+	Abhay Salunke <abhay_salunke@dell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 29 Oct 2009 12:36:02 +0100
+Message-ID: <1256816162.3865.110.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Unfortunately, one cannot hold on to the struct firmware
+that request_firmware_nowait() hands off, which is needed
+in some cases. Allow this by requiring the callback to
+free it (via release_firmware).
 
-Update the usage of join's, including using actual beacon interval and
-dtim from AP, and configuring a basic rate set from AP.
+Additionally, give it a gfp_t parameter -- all the current
+users call it from a GFP_KERNEL context so the GFP_ATOMIC
+isn't necessary. This also marks an API break which is
+useful in a sense, although that is obviously not the
+primary purpose of this change.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/wl12xx/wl1271.h      |   12 ++++++++
- drivers/net/wireless/wl12xx/wl1271_cmd.c  |   15 +++-------
- drivers/net/wireless/wl12xx/wl1271_cmd.h  |    3 +-
- drivers/net/wireless/wl12xx/wl1271_main.c |   42 ++++++++++++++++++++++-------
- 4 files changed, 50 insertions(+), 22 deletions(-)
+ drivers/base/firmware_class.c               |   14 ++++++--------
+ drivers/firmware/dell_rbu.c                 |    9 +++++++--
+ drivers/serial/ucc_uart.c                   |    8 +++++---
+ drivers/staging/comedi/drivers/usbdux.c     |    5 ++++-
+ drivers/staging/comedi/drivers/usbduxfast.c |    5 ++++-
+ drivers/usb/atm/ueagle-atm.c                |    7 ++++---
+ include/linux/firmware.h                    |    5 +++--
+ 7 files changed, 33 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 671dc5a..05eb29c 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -104,6 +104,8 @@ enum {
- 				  CFG_RX_CTL_EN | CFG_RX_BCN_EN |     \
- 				  CFG_RX_AUTH_EN | CFG_RX_ASSOC_EN)
- 
-+#define WL1271_DEFAULT_BASIC_RATE_SET (ACX_RATE_MASK_ALL)
+--- wireless-testing.orig/drivers/base/firmware_class.c	2009-10-26 16:45:18.000000000 +0100
++++ wireless-testing/drivers/base/firmware_class.c	2009-10-26 17:08:10.000000000 +0100
+@@ -601,12 +601,9 @@ request_firmware_work_func(void *arg)
+ 	}
+ 	ret = _request_firmware(&fw, fw_work->name, fw_work->device,
+ 		fw_work->uevent);
+-	if (ret < 0)
+-		fw_work->cont(NULL, fw_work->context);
+-	else {
+-		fw_work->cont(fw, fw_work->context);
+-		release_firmware(fw);
+-	}
 +
- #define WL1271_FW_NAME "wl1271-fw.bin"
- #define WL1271_NVS_NAME "wl1271-nvs.bin"
- 
-@@ -118,6 +120,9 @@ enum {
- #define WL1271_ELP_HW_STATE_ASLEEP 0
- #define WL1271_ELP_HW_STATE_IRQ    1
- 
-+#define WL1271_DEFAULT_BEACON_INT  100
-+#define WL1271_DEFAULT_DTIM_PERIOD 1
++	fw_work->cont(fw, fw_work->context);
 +
- enum wl1271_state {
- 	WL1271_STATE_OFF,
- 	WL1271_STATE_ON,
-@@ -369,6 +374,13 @@ struct wl1271 {
- 	/* Our association ID */
- 	u16 aid;
- 
-+	/* Beacon parameters */
-+	u16 beacon_int;
-+	u8 dtim_period;
-+
-+	/* currently configured rate set */
-+	u32 basic_rate_set;
-+
- 	/* The current band */
- 	enum ieee80211_band band;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-index bd65b38..35a6e67 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-@@ -175,11 +175,9 @@ int wl1271_cmd_cal(struct wl1271 *wl)
+ 	module_put(fw_work->module);
+ 	kfree(fw_work);
  	return ret;
+@@ -619,6 +616,7 @@ request_firmware_work_func(void *arg)
+  *	is non-zero else the firmware copy must be done manually.
+  * @name: name of firmware file
+  * @device: device for which firmware is being loaded
++ * @gfp: allocation flags
+  * @context: will be passed over to @cont, and
+  *	@fw may be %NULL if firmware request fails.
+  * @cont: function will be called asynchronously when the firmware
+@@ -631,12 +629,12 @@ request_firmware_work_func(void *arg)
+ int
+ request_firmware_nowait(
+ 	struct module *module, int uevent,
+-	const char *name, struct device *device, void *context,
++	const char *name, struct device *device, gfp_t gfp, void *context,
+ 	void (*cont)(const struct firmware *fw, void *context))
+ {
+ 	struct task_struct *task;
+ 	struct firmware_work *fw_work = kmalloc(sizeof (struct firmware_work),
+-						GFP_ATOMIC);
++						gfp);
+ 
+ 	if (!fw_work)
+ 		return -ENOMEM;
+--- wireless-testing.orig/include/linux/firmware.h	2009-10-26 16:45:53.000000000 +0100
++++ wireless-testing/include/linux/firmware.h	2009-10-26 17:03:56.000000000 +0100
+@@ -4,6 +4,7 @@
+ #include <linux/module.h>
+ #include <linux/types.h>
+ #include <linux/compiler.h>
++#include <linux/gfp.h>
+ 
+ #define FW_ACTION_NOHOTPLUG 0
+ #define FW_ACTION_HOTPLUG 1
+@@ -38,7 +39,7 @@ int request_firmware(const struct firmwa
+ 		     struct device *device);
+ int request_firmware_nowait(
+ 	struct module *module, int uevent,
+-	const char *name, struct device *device, void *context,
++	const char *name, struct device *device, gfp_t gfp, void *context,
+ 	void (*cont)(const struct firmware *fw, void *context));
+ 
+ void release_firmware(const struct firmware *fw);
+@@ -51,7 +52,7 @@ static inline int request_firmware(const
+ }
+ static inline int request_firmware_nowait(
+ 	struct module *module, int uevent,
+-	const char *name, struct device *device, void *context,
++	const char *name, struct device *device, gfp_t gfp, void *context,
+ 	void (*cont)(const struct firmware *fw, void *context))
+ {
+ 	return -EINVAL;
+--- wireless-testing.orig/drivers/firmware/dell_rbu.c	2009-10-26 16:49:06.000000000 +0100
++++ wireless-testing/drivers/firmware/dell_rbu.c	2009-10-26 16:49:52.000000000 +0100
+@@ -544,9 +544,12 @@ static void callbackfn_rbu(const struct 
+ {
+ 	rbu_data.entry_created = 0;
+ 
+-	if (!fw || !fw->size)
++	if (!fw)
+ 		return;
+ 
++	if (!fw->size)
++		goto out;
++
+ 	spin_lock(&rbu_data.lock);
+ 	if (!strcmp(image_type, "mono")) {
+ 		if (!img_update_realloc(fw->size))
+@@ -568,6 +571,8 @@ static void callbackfn_rbu(const struct 
+ 	} else
+ 		pr_debug("invalid image type specified.\n");
+ 	spin_unlock(&rbu_data.lock);
++ out:
++	release_firmware(fw);
  }
  
--int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type, u8 dtim_interval,
--		    u16 beacon_interval, u8 wait)
-+int wl1271_cmd_join(struct wl1271 *wl)
- {
- 	static bool do_cal = true;
--	unsigned long timeout;
- 	struct wl1271_cmd_join *join;
- 	int ret, i;
- 	u8 *bssid;
-@@ -213,9 +211,9 @@ int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type, u8 dtim_interval,
- 	join->basic_rate_set = RATE_MASK_1MBPS | RATE_MASK_2MBPS |
- 		RATE_MASK_5_5MBPS | RATE_MASK_11MBPS;
+ static ssize_t read_rbu_image_type(struct kobject *kobj,
+@@ -615,7 +620,7 @@ static ssize_t write_rbu_image_type(stru
+ 			spin_unlock(&rbu_data.lock);
+ 			req_firm_rc = request_firmware_nowait(THIS_MODULE,
+ 				FW_ACTION_NOHOTPLUG, "dell_rbu",
+-				&rbu_device->dev, &context,
++				&rbu_device->dev, GFP_KERNEL, &context,
+ 				callbackfn_rbu);
+ 			if (req_firm_rc) {
+ 				printk(KERN_ERR
+--- wireless-testing.orig/drivers/serial/ucc_uart.c	2009-10-26 16:50:04.000000000 +0100
++++ wireless-testing/drivers/serial/ucc_uart.c	2009-10-26 16:51:10.000000000 +0100
+@@ -1179,16 +1179,18 @@ static void uart_firmware_cont(const str
  
--	join->beacon_interval = beacon_interval;
--	join->dtim_interval = dtim_interval;
--	join->bss_type = bss_type;
-+	join->beacon_interval = wl->beacon_int;
-+	join->dtim_interval = wl->dtim_period;
-+	join->bss_type = wl->bss_type;
- 	join->channel = wl->channel;
- 	join->ssid_len = wl->ssid_len;
- 	memcpy(join->ssid, wl->ssid, wl->ssid_len);
-@@ -239,14 +237,11 @@ int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type, u8 dtim_interval,
- 		goto out_free;
+ 	if (firmware->header.length != fw->size) {
+ 		dev_err(dev, "invalid firmware\n");
+-		return;
++		goto out;
  	}
  
--	timeout = msecs_to_jiffies(JOIN_TIMEOUT);
--
- 	/*
- 	 * ugly hack: we should wait for JOIN_EVENT_COMPLETE_ID but to
- 	 * simplify locking we just sleep instead, for now
- 	 */
--	if (wait)
--		msleep(10);
-+	msleep(10);
- 
- out_free:
- 	kfree(join);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-index 7c4d3aa..63bc441 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-@@ -30,8 +30,7 @@
- struct acx_header;
- 
- int wl1271_cmd_send(struct wl1271 *wl, u16 type, void *buf, size_t buf_len);
--int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type, u8 dtim_interval,
--		    u16 beacon_interval, u8 wait);
-+int wl1271_cmd_join(struct wl1271 *wl);
- int wl1271_cmd_test(struct wl1271 *wl, void *buf, size_t buf_len, u8 answer);
- int wl1271_cmd_interrogate(struct wl1271 *wl, u16 id, void *buf, size_t len);
- int wl1271_cmd_configure(struct wl1271 *wl, u16 id, void *buf, size_t len);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index b9b1c20..6e35fcf 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -394,8 +394,7 @@ static void wl1271_filter_work(struct work_struct *work)
- 	if (ret < 0)
- 		goto out;
- 
--	/* FIXME: replace the magic numbers with proper definitions */
--	ret = wl1271_cmd_join(wl, wl->bss_type, 1, 100, 0);
-+	ret = wl1271_cmd_join(wl);
- 	if (ret < 0)
- 		goto out_sleep;
- 
-@@ -672,8 +671,7 @@ static int wl1271_op_config_interface(struct ieee80211_hw *hw,
- 		memcpy(wl->ssid, conf->ssid, wl->ssid_len);
- 
- 	if (wl->bss_type != BSS_TYPE_IBSS) {
--		/* FIXME: replace the magic numbers with proper definitions */
--		ret = wl1271_cmd_join(wl, wl->bss_type, 5, 100, 1);
-+		ret = wl1271_cmd_join(wl);
- 		if (ret < 0)
- 			goto out_sleep;
- 	}
-@@ -696,8 +694,7 @@ static int wl1271_op_config_interface(struct ieee80211_hw *hw,
- 		if (ret < 0)
- 			goto out_sleep;
- 
--		/* FIXME: replace the magic numbers with proper definitions */
--		ret = wl1271_cmd_join(wl, wl->bss_type, 1, 100, 0);
-+		ret = wl1271_cmd_join(wl);
- 
- 		if (ret < 0)
- 			goto out_sleep;
-@@ -738,8 +735,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 		u8 old_channel = wl->channel;
- 		wl->channel = channel;
- 
--		/* FIXME: use beacon interval provided by mac80211 */
--		ret = wl1271_cmd_join(wl, wl->bss_type, 1, 100, 0);
-+		ret = wl1271_cmd_join(wl);
- 		if (ret < 0) {
- 			wl->channel = old_channel;
- 			goto out_sleep;
-@@ -1016,8 +1012,17 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 
- 	if (changed & BSS_CHANGED_ASSOC) {
- 		if (bss_conf->assoc) {
-+			wl->beacon_int = bss_conf->beacon_int;
-+			wl->dtim_period = bss_conf->dtim_period;
- 			wl->aid = bss_conf->aid;
- 
-+			ret = wl1271_cmd_join(wl);
-+			if (ret < 0) {
-+				wl1271_warning("Association configuration "
-+					       "failed %d", ret);
-+				goto out_sleep;
-+			}
-+
- 			ret = wl1271_cmd_build_ps_poll(wl, wl->aid);
- 			if (ret < 0)
- 				goto out_sleep;
-@@ -1033,7 +1038,14 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 				if (ret < 0)
- 					goto out_sleep;
- 			}
-+		} else {
-+			/* use defaults when not associated */
-+			wl->beacon_int = WL1271_DEFAULT_BEACON_INT;
-+			wl->dtim_period = WL1271_DEFAULT_DTIM_PERIOD;
-+			wl->basic_rate_set = WL1271_DEFAULT_BASIC_RATE_SET;
-+			wl->aid = 0;
- 		}
-+
+ 	ret = qe_upload_firmware(firmware);
+ 	if (ret) {
+ 		dev_err(dev, "could not load firmware\n");
+-		return;
++		goto out;
  	}
  
- 	if (changed & BSS_CHANGED_ERP_SLOT) {
-@@ -1066,13 +1078,20 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	firmware_loaded = 1;
++ out:
++	release_firmware(fw);
+ }
+ 
+ static int ucc_uart_probe(struct of_device *ofdev,
+@@ -1247,7 +1249,7 @@ static int ucc_uart_probe(struct of_devi
+ 			 */
+ 			ret = request_firmware_nowait(THIS_MODULE,
+ 				FW_ACTION_HOTPLUG, filename, &ofdev->dev,
+-				&ofdev->dev, uart_firmware_cont);
++				GFP_KERNEL, &ofdev->dev, uart_firmware_cont);
+ 			if (ret) {
+ 				dev_err(&ofdev->dev,
+ 					"could not load firmware %s\n",
+--- wireless-testing.orig/drivers/staging/comedi/drivers/usbdux.c	2009-10-26 16:51:16.000000000 +0100
++++ wireless-testing/drivers/staging/comedi/drivers/usbdux.c	2009-10-26 16:51:52.000000000 +0100
+@@ -2327,9 +2327,11 @@ static void usbdux_firmware_request_comp
+ 	if (ret) {
+ 		dev_err(&usbdev->dev,
+ 			"Could not upload firmware (err=%d)\n", ret);
+-		return;
++		goto out;
+ 	}
+ 	comedi_usb_auto_config(usbdev, BOARDNAME);
++ out:
++	release_firmware(fw);
+ }
+ 
+ /* allocate memory for the urbs and initialise them */
+@@ -2580,6 +2582,7 @@ static int usbduxsub_probe(struct usb_in
+ 				      FW_ACTION_HOTPLUG,
+ 				      "usbdux_firmware.bin",
+ 				      &udev->dev,
++				      GFP_KERNEL,
+ 				      usbduxsub + index,
+ 				      usbdux_firmware_request_complete_handler);
+ 
+--- wireless-testing.orig/drivers/staging/comedi/drivers/usbduxfast.c	2009-10-26 17:01:20.000000000 +0100
++++ wireless-testing/drivers/staging/comedi/drivers/usbduxfast.c	2009-10-26 17:01:47.000000000 +0100
+@@ -1451,10 +1451,12 @@ static void usbduxfast_firmware_request_
+ 	if (ret) {
+ 		dev_err(&usbdev->dev,
+ 			"Could not upload firmware (err=%d)\n", ret);
+-		return;
++		goto out;
  	}
  
- 	if (changed & BSS_CHANGED_BASIC_RATES) {
--		u32 enabled_rates = wl1271_enabled_rates_get(
-+		wl->basic_rate_set = wl1271_enabled_rates_get(
- 			wl, bss_conf->basic_rates);
--		ret = wl1271_acx_rate_policies(wl, enabled_rates);
-+		ret = wl1271_acx_rate_policies(wl, wl->basic_rate_set);
-+
- 		if (ret < 0) {
- 			wl1271_warning("Set rate policies failed %d", ret);
- 			goto out_sleep;
- 		}
-+		ret = wl1271_cmd_join(wl);
-+		if (ret < 0) {
-+			wl1271_warning("Join with new basic rate "
-+				       "set failed %d", ret);
-+			goto out_sleep;
-+		}
+ 	comedi_usb_auto_config(usbdev, BOARDNAME);
++ out:
++	release_firmware(fw);
+ }
+ 
+ /*
+@@ -1569,6 +1571,7 @@ static int usbduxfastsub_probe(struct us
+ 				      FW_ACTION_HOTPLUG,
+ 				      "usbduxfast_firmware.bin",
+ 				      &udev->dev,
++				      GFP_KERNEL,
+ 				      usbduxfastsub + index,
+ 				      usbduxfast_firmware_request_complete_handler);
+ 
+--- wireless-testing.orig/drivers/usb/atm/ueagle-atm.c	2009-10-26 17:01:48.000000000 +0100
++++ wireless-testing/drivers/usb/atm/ueagle-atm.c	2009-10-26 17:03:29.000000000 +0100
+@@ -667,12 +667,12 @@ static void uea_upload_pre_firmware(cons
+ 	else
+ 		uea_info(usb, "firmware uploaded\n");
+ 
+-	uea_leaves(usb);
+-	return;
++	goto err;
+ 
+ err_fw_corrupted:
+ 	uea_err(usb, "firmware is corrupted\n");
+ err:
++	release_firmware(fw_entry);
+ 	uea_leaves(usb);
+ }
+ 
+@@ -705,7 +705,8 @@ static int uea_load_firmware(struct usb_
+ 		break;
  	}
  
- out_sleep:
-@@ -1269,6 +1288,9 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	wl->psm_requested = false;
- 	wl->tx_queue_stopped = false;
- 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
-+	wl->beacon_int = WL1271_DEFAULT_BEACON_INT;
-+	wl->dtim_period = WL1271_DEFAULT_DTIM_PERIOD;
-+	wl->basic_rate_set = WL1271_DEFAULT_BASIC_RATE_SET;
- 	wl->band = IEEE80211_BAND_2GHZ;
- 
- 	/* We use the default power on sleep time until we know which chip
--- 
-1.5.6.5
+-	ret = request_firmware_nowait(THIS_MODULE, 1, fw_name, &usb->dev, usb, uea_upload_pre_firmware);
++	ret = request_firmware_nowait(THIS_MODULE, 1, fw_name, &usb->dev,
++				      GFP_KERNEL, usb, uea_upload_pre_firmware);
+ 	if (ret)
+ 		uea_err(usb, "firmware %s is not available\n", fw_name);
+ 	else
+
 
