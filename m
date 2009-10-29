@@ -1,124 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:23095 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759443AbZJHS64 (ORCPT
+Received: from gv-out-0910.google.com ([216.239.58.189]:45104 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753013AbZJ2RwE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 14:58:56 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 16/20] wl1271: Use vmalloc to allocate memory for firmware
-Date: Thu,  8 Oct 2009 21:56:32 +0300
-Message-Id: <1255028196-6565-17-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
+	Thu, 29 Oct 2009 13:52:04 -0400
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: David Miller <davem@davemloft.net>
+Subject: Re: pull request: wireless-next-2.6 2009-10-28
+Date: Thu, 29 Oct 2009 18:49:23 +0100
+Cc: penberg@cs.helsinki.fi, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linville@tuxdriver.com
+References: <200910291435.54203.bzolnier@gmail.com> <200910291514.40318.bzolnier@gmail.com> <20091029.072101.109209962.davem@davemloft.net>
+In-Reply-To: <20091029.072101.109209962.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200910291849.23526.bzolnier@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Thursday 29 October 2009 15:21:01 David Miller wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Date: Thu, 29 Oct 2009 15:14:40 +0100
+> 
+> > Dave, if you have problems with executing the command locally I'll be
+> > happy to supply you with the patch.
+> 
+> This is not the issue.
+> 
+> The issue is that John disagrees with you can you can't handle
+> that.
+> 
+> So instead of continuing to discuss things with him and the
+> other wireless folks, you want me to just overreach everybody
+> and revert someone else's work.
 
-Use vmalloc to allocate memory for the firmware image, and use a smaller
-linear buffer for the actual transfer of the firmware to the chipset.
+Lets look at the technical merits of this work.
 
-This patch is an adaptation of a similar patch for wl1251 by Kalle Valo.
+It is 5 KLOC of dead code and it should be 1-2 KLOC of working code
+(we may turn the blink eye on "working" part but FFS at least fix other
+parts)..
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_boot.c |   16 ++++++++++++----
- drivers/net/wireless/wl12xx/wl1271_main.c |    5 +++--
- 2 files changed, 15 insertions(+), 6 deletions(-)
+Hey, Linus.  We have a new driver for ya.  It doesn't work, has design
+problems and is not even half-finished but most wireless folks are fine
+with it!
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
-index 8228ef4..7640313 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
-@@ -94,7 +94,7 @@ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
- 					     size_t fw_data_len, u32 dest)
- {
- 	int addr, chunk_num, partition_limit;
--	u8 *p;
-+	u8 *p, *chunk;
- 
- 	/* whal_FwCtrl_LoadFwImageSm() */
- 
-@@ -103,12 +103,17 @@ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
- 	wl1271_debug(DEBUG_BOOT, "fw_data_len %zd chunk_size %d",
- 		     fw_data_len, CHUNK_SIZE);
- 
--
- 	if ((fw_data_len % 4) != 0) {
- 		wl1271_error("firmware length not multiple of four");
- 		return -EIO;
- 	}
- 
-+	chunk = kmalloc(CHUNK_SIZE, GFP_KERNEL);
-+	if (!buf) {
-+		wl1271_error("allocation for firmware upload chunk failed");
-+		return -ENOMEM;
-+	}
-+
- 	wl1271_set_partition(wl, dest,
- 			     part_table[PART_DOWN].mem.size,
- 			     part_table[PART_DOWN].reg.start,
-@@ -137,9 +142,10 @@ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
- 		/* 10.3 upload the chunk */
- 		addr = dest + chunk_num * CHUNK_SIZE;
- 		p = buf + chunk_num * CHUNK_SIZE;
-+		memcpy(chunk, p, CHUNK_SIZE);
- 		wl1271_debug(DEBUG_BOOT, "uploading fw chunk 0x%p to 0x%x",
- 			     p, addr);
--		wl1271_spi_mem_write(wl, addr, p, CHUNK_SIZE);
-+		wl1271_spi_mem_write(wl, addr, chunk, CHUNK_SIZE);
- 
- 		chunk_num++;
- 	}
-@@ -147,10 +153,12 @@ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
- 	/* 10.4 upload the last chunk */
- 	addr = dest + chunk_num * CHUNK_SIZE;
- 	p = buf + chunk_num * CHUNK_SIZE;
-+	memcpy(chunk, p, fw_data_len % CHUNK_SIZE);
- 	wl1271_debug(DEBUG_BOOT, "uploading fw last chunk (%zd B) 0x%p to 0x%x",
- 		     fw_data_len % CHUNK_SIZE, p, addr);
--	wl1271_spi_mem_write(wl, addr, p, fw_data_len % CHUNK_SIZE);
-+	wl1271_spi_mem_write(wl, addr, chunk, fw_data_len % CHUNK_SIZE);
- 
-+	kfree(chunk);
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 09fe968..d22de23 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -30,6 +30,7 @@
- #include <linux/spi/spi.h>
- #include <linux/crc32.h>
- #include <linux/etherdevice.h>
-+#include <linux/vmalloc.h>
- #include <linux/spi/wl12xx.h>
- 
- #include "wl1271.h"
-@@ -231,7 +232,7 @@ static int wl1271_fetch_firmware(struct wl1271 *wl)
- 	}
- 
- 	wl->fw_len = fw->size;
--	wl->fw = kmalloc(wl->fw_len, GFP_KERNEL);
-+	wl->fw = vmalloc(wl->fw_len);
- 
- 	if (!wl->fw) {
- 		wl1271_error("could not allocate memory for the firmware");
-@@ -1484,7 +1485,7 @@ static int __devexit wl1271_remove(struct spi_device *spi)
- 	platform_device_unregister(&wl1271_device);
- 	free_irq(wl->irq, wl);
- 	kfree(wl->target_mem_map);
--	kfree(wl->fw);
-+	vfree(wl->fw);
- 	wl->fw = NULL;
- 	kfree(wl->nvs);
- 	wl->nvs = NULL;
--- 
-1.5.6.5
+I wonder when things went so wrong here..
 
+> I'm not going to do that sorry, learn how to work with the
+> wireless people instead.
+
+This is a waste of time since technical merit doesn't find much love there.
+
+Sorry Dave but you're making me go over your head now and go into unpleasant
+mode again..
+
+Looking on how you just reverted cmd64x change which you were so proud while
+taking IDE over shows where the real problem is -- in subsystems supervised
+by you loyalty and rank is everything while you are busy playing the pointy
+haired boss everywhere from arm to ide.
+
+--
+Bartlomiej Zolnierkiewicz
