@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:48385 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753571AbZJKKgS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Oct 2009 06:36:18 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] b43: fix ieee80211_rx() context
-Date: Sun, 11 Oct 2009 12:35:35 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	David Miller <davem@davemloft.net>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Dave Young <hidave.darkstar@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1255256361.4095.56.camel@johannes.local> <200910111226.44778.mb@bu3sch.de> <1255257066.4095.66.camel@johannes.local>
-In-Reply-To: <1255257066.4095.66.camel@johannes.local>
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:49928 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753159AbZJ2TpD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Oct 2009 15:45:03 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200910111235.36986.mb@bu3sch.de>
+In-Reply-To: <200910291514.40318.bzolnier@gmail.com>
+References: <200910291212.41656.bzolnier@gmail.com>
+	 <200910291435.54203.bzolnier@gmail.com>
+	 <84144f020910290652n2e75827dk698b238b6bd1cbed@mail.gmail.com>
+	 <200910291514.40318.bzolnier@gmail.com>
+Date: Thu, 29 Oct 2009 21:45:07 +0200
+Message-ID: <84144f020910291245l1a7a3fd6o8822ecd4ce3b5504@mail.gmail.com>
+Subject: Re: pull request: wireless-next-2.6 2009-10-28
+From: Pekka Enberg <penberg@cs.helsinki.fi>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 11 October 2009 12:31:06 Johannes Berg wrote:
-> On Sun, 2009-10-11 at 12:26 +0200, Michael Buesch wrote:
-> > On Sunday 11 October 2009 12:19:21 Johannes Berg wrote:
-> > > Due to the way it interacts with the networking
-> > > stack and other parts of mac80211, ieee80211_rx()
-> > > must be called with disabled softirqs.
-> > 
-> > Is this stated in the documentation somewhere?
-> 
-> No. However, there are many things that aren't in the documentation, I'm
-> working on a patch to add a note.
+Hi Bart,
 
-Ok, thanks a lot.
+On Thu, Oct 29, 2009 at 4:14 PM, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+>> lots of cleanups to the staging drivers, why not direct some of that
+>> energy to the drivers/net/wireless ones?
+>
+> When did we start to apply "fix it yourself" rule instead of "submitter
+> should fix it" one to the _new_ code..
 
-> I just wanted to provide a
-> rationale for me fixing this bug instead of you.
+Don't be silly, I didn't say that.
 
-Since when do we require that in commit messages?
+I was simply pointing out that your time would probably be better
+spent in improving the "proper" ralink wireless drivers but if you
+_really_ prefer to spend your time in pointless arguments, go ahead.
+It should be pretty obvious by now that the best way to improve things
+is to work with the relevant maintainers, not against them. (Unless
+you wish your work to be ignored, of course.)
 
-> If you disagree that 
-> this is an accurate representation, I invite you to summarise the thread
-> that caused this miserable situation of a known bug not being fixed for
-> a very long time despite appropriate fixes being known in your own words
-> for the commit message.
-
-If you'd care _that_ much, you could have just reverted my commit.
-Yes, I introduced the regression and I was unable to cook up a fix for it. So the logical
-reaction to that would be to revert my commit.
-
--- 
-Greetings, Michael.
+                        Pekka
