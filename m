@@ -1,72 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55946 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754697AbZJGWgM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 18:36:12 -0400
-Subject: Re: linux-next: Tree for October 7 (libertas build failure)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	libertas-dev@lists.infradead.org,
-	Holger Schurig <hs4233@mail.mn-solutions.de>
-In-Reply-To: <1254939120.16001.45.camel@localhost.localdomain>
-References: <20091007173517.abfcfa2a.sfr@canb.auug.org.au>
-	 <20091007105210.409a1991.randy.dunlap@oracle.com>
-	 <1254939120.16001.45.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-JuxiytzgcjjyFdQt2Mmq"
-Date: Thu, 08 Oct 2009 00:34:55 +0200
-Message-Id: <1254954895.3713.8.camel@johannes.local>
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:52647 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754087AbZJ2OjP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Oct 2009 10:39:15 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: David Miller <davem@davemloft.net>
+Subject: Re: pull request: wireless-next-2.6 2009-10-28
+Date: Thu, 29 Oct 2009 15:39:14 +0100
+Cc: bzolnier@gmail.com, penberg@cs.helsinki.fi,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linville@tuxdriver.com
+References: <200910291435.54203.bzolnier@gmail.com> <200910291514.40318.bzolnier@gmail.com> <20091029.072101.109209962.davem@davemloft.net>
+In-Reply-To: <20091029.072101.109209962.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200910291539.16476.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 29 October 2009 15:21:01 David Miller wrote:
+> The issue is that John disagrees with you can you can't handle
+> that.
+> 
+> So instead of continuing to discuss things with him and the
+> other wireless folks, you want me to just overreach everybody
+> and revert someone else's work.
 
---=-JuxiytzgcjjyFdQt2Mmq
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In the end this results in the driver maintainer being forced to maintain
+code and handle bugreports for code that he disagrees with in the first place.
+This is unacceptable and has to be resolved in some way.
+If it's not possible to get it reverted through John (for whatever reason),
+you're in charge to help the actual code maintainer out.
 
-On Wed, 2009-10-07 at 11:12 -0700, Dan Williams wrote:
+> I'm not going to do that sorry, learn how to work with the
+> wireless people instead.
 
-> > drivers/built-in.o: In function `lbs_cfg_free':
-> > (.text+0x3479e0): undefined reference to `wiphy_unregister'
-> > drivers/built-in.o: In function `lbs_cfg_free':
-> > (.text+0x3479e7): undefined reference to `wiphy_free'
-> > drivers/built-in.o: In function `lbs_cfg_register':
-> > (.text+0x347a52): undefined reference to `wiphy_register'
-> > drivers/built-in.o: In function `lbs_cfg_alloc':
-> > (.text+0x347acf): undefined reference to `wiphy_new'
->=20
-> Holger, perhaps we need some Kconfig updates to select cfg80211?
+This is not the problem.
+The problem is that stuff is merged without ack from the maintainer
+and it's virtually impossible to get the stuff reverted. The only real
+way for the maintainer to resolve this is 1) live with it or 2) fix it.
+And that's bad, because it completely invalidates his priority queue.
 
-Depend on, please -- cfg80211 has dependencies that would otherwise be
-messed up.
+Just like you must not bypass John, the driver maintainers must not be bypassed, too.
+The quality control does _only_ work if nobody in the chain is bypassed.
+But in this situation the quality control did already fail and it should be
+tried hard to resolve (=revert) the situation instead of pointing at John.
 
-johannes
-
---=-JuxiytzgcjjyFdQt2Mmq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKzReIAAoJEODzc/N7+QmaCgAP/1y+IhIC2lLiqthiOSO23gNf
-ecUTj1Gxs1AXltLj1azkul7WvhLcBuH0O2Y0NdgQrwBJO0tQqOiG4fySvvA71AzT
-a7Hx/NN6cV3qKCj7Iyx6FFHIj/Sm5d8xRoySm4vAmrkemj0Pk5Dz5YVFZHIGvizp
-uU/QRph4Do7R51XR22ePB8NxxfM3LDh9oNLjxkEQ9khJg4PpCRS5c99VLuwKaeOZ
-MQ6fD0yTT+5iAbHonRIGiBdlVCF/5Mbs+cDwJwWU0nJsMy4RHKaHH7x/UvHuorjH
-ygS8gHWaiYbIvJCyO+BdHwqHRRB8RTx5ys7NyjJEgb7SlfEg6wrU18q2pkIjmZ9Z
-/R1LX/zqKjX/42GFOAw9SkW1njm7NfwjLfkzOGp4CB7UnMpMZQc/ZUYBlGl6udQ8
-NULaMR5hBXOZhRF5iwTB8qmT50Xi2QaNjSc8bAcIysAy3I50cP/7K6ttBxzTRzJW
-oMtAE9RkZR1x/i0wJCviABjWeU0tmAdYaFI7YQgduw3x3vG63nDiU511rg866YIL
-DDdo4kt21AIqKsydTmeVUWUyOpl4JxY1uLuy+HTNi4oMaiZIBGeeExjf1Xxo9Kyg
-z8aMKUBcQcChhcmth/yiBDeZhGsEl2IkSClXOhJHzJHCTAF2GRfMbCld2zBTaqtD
-dJ+/KT3GwnWY0YxFFuZk
-=CkZN
------END PGP SIGNATURE-----
-
---=-JuxiytzgcjjyFdQt2Mmq--
-
+-- 
+Greetings, Michael.
