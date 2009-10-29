@@ -1,77 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet11.oracle.com ([141.146.126.233]:17248 "EHLO
-	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752809AbZJHAP6 (ORCPT
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:55066 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756513AbZJ2Rna (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 20:15:58 -0400
-Date: Wed, 7 Oct 2009 17:12:35 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wireless: make WEXT_SPY and WEXT_PRIV select WEXT_CORE
-Message-Id: <20091007171235.d40f0cc2.randy.dunlap@oracle.com>
-In-Reply-To: <1254957256.3713.10.camel@johannes.local>
-References: <20091007105720.a2457e5b.randy.dunlap@oracle.com>
-	<1254949672-24022-1-git-send-email-linville@tuxdriver.com>
-	<4ACD0E5A.7060106@oracle.com>
-	<1254954842.3713.7.camel@johannes.local>
-	<4ACD1C3D.3030506@oracle.com>
-	<1254957256.3713.10.camel@johannes.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Thu, 29 Oct 2009 13:43:30 -0400
+Received: by pwj9 with SMTP id 9so184058pwj.21
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2009 10:43:35 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <209743CECB91EB4F84169A51F300410D97BA47DBF4@MAIL02.ug.kth.se>
+References: <209743CECB91EB4F84169A51F300410D97BA47DBF4@MAIL02.ug.kth.se>
+Date: Thu, 29 Oct 2009 10:43:35 -0700
+Message-ID: <45e8e6c40910291043h68397035m4ca53eb08786051a@mail.gmail.com>
+Subject: Re: mesh support for rt73
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: Dan Rosenqvist <danro@kth.se>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 08 Oct 2009 01:14:16 +0200 Johannes Berg wrote:
+Hi Dan,
 
-> On Wed, 2009-10-07 at 15:54 -0700, Randy Dunlap wrote:
-> 
-> > > But they also select WIRELESS_EXT, which should cause WEXT_CORE to be
-> > > turned on. Is it possible that is failing?
-> > 
-> > # CONFIG_WIRELESS is not set
-> > CONFIG_WIRELESS_EXT=y
-> > CONFIG_WEXT_SPY=y
-> > CONFIG_WEXT_PRIV=y
-> > 
-> > WEXT_CORE is not enabled.  I haven't found the culprit, but I suspect "select".
-> 
-> Interesting.
-> 
-> > but what in WIRELESS_EXT would also cause WEXT_CORE to be enabled?
-> 
-> Well, the way WEXT_CORE is defined as def_bool y ought to, no?
+On Thu, Oct 29, 2009 at 6:19 AM, Dan Rosenqvist <danro@kth.se> wrote:
+> Hi,
+>
+> I'm currently trying to set up a small 802.11s mesh network. As I've come to understand there's no support for mesh networking at the moment for rt 73 based cards (using DWL-G122 C1).
+>
+> Is it possible to implement the changes mentioned in http://linuxwireless.org/en/developers/Documentation/mac80211/API to support mesh networks for rt 73 as well?
+> Is there someone out there currently working on this? Otherwise, how could I contribute to make this work?
+>
+> Regards,
+> Dan--
 
-Ah, I see what you mean.
+rt73 devices are driven by the rt2x00 driver, in my case the interface
+driver is rt73usb and the core driver is rt2x00.  That does support
+mesh although there's an issue related to beaconing:
+http://bugzilla.kernel.org/show_bug.cgi?id=13752
 
-Here's what's happening:
-
-net/wireless/Kconfig says:
-
-config WEXT_CORE
-	def_bool y
-	depends on CFG80211_WEXT || WIRELESS_EXT
-
-
-and net/Kconfig says:
-
-if WIRELESS
-
-source "net/wireless/Kconfig"
-source "net/mac80211/Kconfig"
-
-endif # WIRELESS
-
-
-so WEXT_CORE actually depends on NET && WIRELESS && (CFG80211_WEXT || WIRELESS_EXT)
-(that's what xconfig shows me).
-But WIRELESS is not enabled.  Pooh.
-
-I was already toying with making CONFIG_WIRELESS a real/usable kconfig symbol.
-That may have to be done unless someone else comes up with another solution.
-
----
-~Randy
+  -Andrey
