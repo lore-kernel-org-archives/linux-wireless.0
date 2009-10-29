@@ -1,94 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47956 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:34761 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752376AbZJCFwt (ORCPT
+	with ESMTP id S1756667AbZJ2HbE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Oct 2009 01:52:49 -0400
-Subject: Re: driver_nl80211 broken again
+	Thu, 29 Oct 2009 03:31:04 -0400
+Subject: [PATCH] mac80211: introduce ieee80211_beacon_get_tim()
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Trepak Vilmos <trepo@netcomga.sk>
-Cc: Jouni Malinen <j@w1.fi>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4AC67144.5060508@netcomga.sk>
-References: <1251117161.22951.4.camel@maxim-laptop>
-	 <1251122885.12007.12.camel@johannes.local>
-	 <1251144381.9374.4.camel@maxim-laptop>
-	 <1251147515.20161.3.camel@johannes.local>
-	 <1252116503.2398.26.camel@maxim-laptop>
-	 <1252423769.3806.4.camel@johannes.local>
-	 <1252443260.16422.5.camel@maxim-laptop>
-	 <1254273569.4499.8.camel@maxim-laptop>	<20090930221353.GB11052@jm.kir.nu>
-	 <1254386786.3959.18.camel@johannes.local>  <4AC67144.5060508@netcomga.sk>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-8/FoOyLja1T7v0ft0szv"
-Date: Sat, 03 Oct 2009 07:52:42 +0200
-Message-Id: <1254549162.3959.77.camel@johannes.local>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 29 Oct 2009 08:30:35 +0100
+Message-ID: <1256801435.3865.36.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Compared to ieee80211_beacon_get(), the new function
+ieee80211_beacon_get_tim() returns information on the
+location and length of the TIM IE, which some drivers
+need in order to generate the TIM on the device. The
+old function, ieee80211_beacon_get(), becomes a small
+static inline wrapper around the new one to not break
+all drivers.
 
---=-8/FoOyLja1T7v0ft0szv
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Will allow a cleanup of a number of drivers ... that parsing code has
+irked me for a while now. But for now I'll leave it to the driver
+maintainers to use this new function :)
 
-On Fri, 2009-10-02 at 23:31 +0200, Trepak Vilmos wrote:
-> Johannes Berg wrote:
-> > On Thu, 2009-10-01 at 01:13 +0300, Jouni Malinen wrote:
-> >> To me, this looks broken. When wpa_supplicant requests a
-> >> disassociastion, it is _only_ asking for disassociation, not
-> >> deauthentication. cfg80211/mac80211 may not currently handle that, but
-> >> as far as I can tell, it sounds like an issue there and not in
-> >> wpa_supplicant. Johannes may disagree with this, though.
-> >
-> > cfg80211/mac80211 _do_ handle that. If you ask for disassociation, it
-> > stays authenticated, and later expects you to still remember that and
-> > refuses authentication since you're already authenticated.
-> >
-> >> I don't think either of those options would be acceptable for
-> >> wpa_supplicant and the correct fix is to make cfg80211/mac80211 be abl=
-e
-> >> to handle authentication to a STA that is already authenticated. If
-> >> that is not acceptable, this hack needs to be hidden in driver_nl80211=
-.c
-> >> instead of polluting core wpa_supplicant code which is supposed to be
-> >> driver independent. In other words, make driver_nl80211.c deauth if au=
-th
-> >> fails and then try auth again. I don't really like that much, but if
-> >> this needs to be worked around in wpa_supplicant, that is the most
-> >> likely place where such a change could be considered.
-> >
-> > I still don't see how it makes sense to authenticate while still being
-> > authenticated.
->=20
-> The client might have lost state info (rebooted, etc.). Let it redo the
-> auth if it wants to, deauth if it fails.
+ include/net/mac80211.h |   42 ++++++++++++++++++++++++++++++++++--------
+ net/mac80211/tx.c      |   17 ++++++++++++++---
+ 2 files changed, 48 insertions(+), 11 deletions(-)
 
-In case you haven't noticed, we're talking about the client
-(wpa_supplicant) :)
+--- wireless-testing.orig/include/net/mac80211.h	2009-10-29 08:26:31.000000000 +0100
++++ wireless-testing/include/net/mac80211.h	2009-10-29 08:27:27.000000000 +0100
+@@ -1743,19 +1743,45 @@ void ieee80211_tx_status_irqsafe(struct 
+ 				 struct sk_buff *skb);
+ 
+ /**
+- * ieee80211_beacon_get - beacon generation function
++ * ieee80211_beacon_get_tim - beacon generation function
+  * @hw: pointer obtained from ieee80211_alloc_hw().
+  * @vif: &struct ieee80211_vif pointer from &struct ieee80211_if_init_conf.
++ * @tim_offset: pointer to variable that will receive the TIM IE offset.
++ *	Set to 0 if invalid (in non-AP modes).
++ * @tim_length: pointer to variable that will receive the TIM IE length,
++ *	(including the ID and length bytes!).
++ *	Set to 0 if invalid (in non-AP modes).
++ *
++ * If the driver implements beaconing modes, it must use this function to
++ * obtain the beacon frame/template.
+  *
+  * If the beacon frames are generated by the host system (i.e., not in
+- * hardware/firmware), the low-level driver uses this function to receive
+- * the next beacon frame from the 802.11 code. The low-level is responsible
+- * for calling this function before beacon data is needed (e.g., based on
+- * hardware interrupt). Returned skb is used only once and low-level driver
+- * is responsible for freeing it.
++ * hardware/firmware), the driver uses this function to get each beacon
++ * frame from mac80211 -- it is responsible for calling this function
++ * before the beacon is needed (e.g. based on hardware interrupt).
++ *
++ * If the beacon frames are generated by the device, then the driver
++ * must use the returned beacon as the template and change the TIM IE
++ * according to the current DTIM parameters/TIM bitmap.
++ *
++ * The driver is responsible for freeing the returned skb.
++ */
++struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
++					 struct ieee80211_vif *vif,
++					 u16 *tim_offset, u16 *tim_length);
++
++/**
++ * ieee80211_beacon_get - beacon generation function
++ * @hw: pointer obtained from ieee80211_alloc_hw().
++ * @vif: &struct ieee80211_vif pointer from &struct ieee80211_if_init_conf.
++ *
++ * See ieee80211_beacon_get_tim().
+  */
+-struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
+-				     struct ieee80211_vif *vif);
++static inline struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
++						   struct ieee80211_vif *vif)
++{
++	return ieee80211_beacon_get_tim(hw, vif, NULL, NULL);
++}
+ 
+ /**
+  * ieee80211_rts_get - RTS frame generation function
+--- wireless-testing.orig/net/mac80211/tx.c	2009-10-29 08:26:31.000000000 +0100
++++ wireless-testing/net/mac80211/tx.c	2009-10-29 08:27:27.000000000 +0100
+@@ -2012,8 +2012,9 @@ static void ieee80211_beacon_add_tim(str
+ 	}
+ }
+ 
+-struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
+-				     struct ieee80211_vif *vif)
++struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
++					 struct ieee80211_vif *vif,
++					 u16 *tim_offset, u16 *tim_length)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct sk_buff *skb = NULL;
+@@ -2030,6 +2031,11 @@ struct sk_buff *ieee80211_beacon_get(str
+ 
+ 	sdata = vif_to_sdata(vif);
+ 
++	if (tim_offset)
++		*tim_offset = 0;
++	if (tim_length)
++		*tim_length = 0;
++
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP) {
+ 		ap = &sdata->u.ap;
+ 		beacon = rcu_dereference(ap->beacon);
+@@ -2065,6 +2071,11 @@ struct sk_buff *ieee80211_beacon_get(str
+ 				spin_unlock_irqrestore(&local->sta_lock, flags);
+ 			}
+ 
++			if (tim_offset)
++				*tim_offset = beacon->head_len;
++			if (tim_length)
++				*tim_length = skb->len - beacon->head_len;
++
+ 			if (beacon->tail)
+ 				memcpy(skb_put(skb, beacon->tail_len),
+ 				       beacon->tail, beacon->tail_len);
+@@ -2141,7 +2152,7 @@ struct sk_buff *ieee80211_beacon_get(str
+ 	rcu_read_unlock();
+ 	return skb;
+ }
+-EXPORT_SYMBOL(ieee80211_beacon_get);
++EXPORT_SYMBOL(ieee80211_beacon_get_tim);
+ 
+ void ieee80211_rts_get(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		       const void *frame, size_t frame_len,
 
-johannes
-
---=-8/FoOyLja1T7v0ft0szv
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKxuamAAoJEODzc/N7+QmaU1UQAMTpUEBi1fyYRAk5Z9wdSd8t
-YyRHsh3L8DlBrhR0g72ofW2Wi2+5br+wrCjfmkqi5VRd5DzhnKqxBw/EiUTbJBFE
-RXRANRupA1slW8+6cXeLwJ6uVso+bpYNLjPBDgtHwcm2azH4Ujoel7gDMmfIRal6
-85eMA7+agAcZAuN1tKvhbF4bUKD40SvdZvGuyR3UBL7JPPOs5UALP1+xQ7wrvZWG
-rkxYCoAyFM0S+XAnmrs4c88IKy6GVAnlSFwW5hn2oohB4drEI+5M2D7lm+RZ1e6i
-S8oaPseHDJeUAGjTBpmYSyXoAef/XAF+teL/rupErq+M3NHaPN6uJuqYXaZEUekz
-gSWS/eMYEu4j/2aeTtd/Erafgig38KF4EufmE28pI+dy3iZ5hhcgYt+Gxs4areKu
-+rP55G3wCvSnPVSiU5Fn/6mJlLGS3vNeRlcQZ8bXmYVns+zttPBD8UYtqJ4SqFDb
-3B+3rOpYcqoqSpsBRb1GJ0JOKo45/kT+CSbvD2IrJmc6j4Qb8waQRR5lIwcsavR0
-AdfHAJLhMnnTObVcvrdcrZc+D1oFjBUYfm4KSJcJX7SFoAmzzgTGgoyDxCrkXqTv
-/KvLinuzu9fpEjgyFN5f70L7r7+IP1ak1pmMtQDXgumJIlpwplDsiMmGEJIyGKCq
-o3cb1AAlQ+zwB8hEEkKI
-=bKbI
------END PGP SIGNATURE-----
-
---=-8/FoOyLja1T7v0ft0szv--
 
