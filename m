@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:45508 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751653AbZJTLxa (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:56057 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755731AbZJ2Sws (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2009 07:53:30 -0400
+	Thu, 29 Oct 2009 14:52:48 -0400
+Received: by iwn10 with SMTP id 10so1589690iwn.4
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2009 11:52:52 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20091019.215457.43252934.davem@davemloft.net>
-References: <1255806576-26869-1-git-send-email-tomas.winkler@intel.com>
-	 <20091019.215457.43252934.davem@davemloft.net>
-Date: Tue, 20 Oct 2009 13:53:33 +0200
-Message-ID: <1ba2fa240910200453k4638dc6cm8c8911353ea85b60@mail.gmail.com>
-Subject: Re: [PATCH net-next V2 1/3] iwmc3200top: Add Intel Wireless MultiCom
-	3200 top driver.
-From: Tomas Winkler <tomasw@gmail.com>
-To: David Miller <davem@davemloft.net>,
-	Marcel Holtmann <marcel@holtmann.org>
-Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	yi.zhu@intel.com, inaky.perez-gonzalez@intel.com,
-	cindy.h.kao@intel.com, guy.cohen@intel.com,
-	ron.rindjunsky@intel.com
+In-Reply-To: <43e72e890910290918v1ca66bbdk4270eabcae6f5798@mail.gmail.com>
+References: <1256760832-29063-1-git-send-email-reinette.chatre@intel.com>
+	<43e72e890910290918v1ca66bbdk4270eabcae6f5798@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 29 Oct 2009 11:52:32 -0700
+Message-ID: <43e72e890910291152g5325718ah1c55912e928896e3@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: make align adjustment code support paged SKB
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 20, 2009 at 6:54 AM, David Miller <davem@davemloft.net> wrote:
-> From: Tomas Winkler <tomas.winkler@intel.com>
-> Date: Sat, 17 Oct 2009 21:09:34 +0200
->
->> This patch adds Intel Wireless MultiCom 3200 top driver.
->> IWMC3200 is 4Wireless Com CHIP (GPS/BT/WiFi/WiMAX).
->> Top driver is responsible for device initialization and firmware download.
->> Firmware handled by top is responsible for top itself and
->> as well as bluetooth and GPS coms. (Wifi and WiMax provide their own firmware)
->> In addition top driver is used to retrieve firmware logs
->> and supports other debugging features
+On Thu, Oct 29, 2009 at 9:18 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Wed, Oct 28, 2009 at 1:13 PM, Reinette Chatre
+> <reinette.chatre@intel.com> wrote:
+>> From: Zhu Yi <yi.zhu@intel.com>
 >>
->> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+>> This fixed a BUG_ON in __skb_trim() when paged rx is used in
+>> iwlwifi driver. Yes, the whole mac80211 stack doesn't support
+>> paged SKB yet. But let's start the work slowly from small
+>> code snippets.
 >
-> Applied to net-next-2.6
+> So I just noticed ar9271 segments some frames upon RX. The current
+> implementation approach is to stitch them back together through a
+> newly allocated skb after all segments are received. How does iwlwifi
+> ues paged skbs? How do you keep track of which page is for what frame?
+>
+> Can you elaborate on the planned paged skb support on mac80211 you
+> have. Do you have any queued up patches I can look at this point?
 
-Thanks Dave
+OK I see git show 924e10
 
-Marcel
-I want to send out now the BT driver, would like the patch against
-bluetooth-next-2.6.git, then I wait till you sync or can you also pick
-it from net-next if Dave is OK with that?
+Anyone taking the mac80211 paged skb support on? Any idea how long it
+may take to complete?
 
-Thanks
-Tomas
+  Luis
