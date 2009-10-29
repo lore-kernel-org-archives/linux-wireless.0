@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:36383 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755064AbZJZIAK (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50458 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752886AbZJ2JJ4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 04:00:10 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH 17/19] [RFC, v2] libertas: Kconfig entry for libertas+cfg80211
-Date: Mon, 26 Oct 2009 08:59:38 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-References: <20091022133043.185554096@mail.mn-solutions.de> <1256315972.12174.168.camel@johannes.local> <1256316179.2164.53.camel@localhost.localdomain>
-In-Reply-To: <1256316179.2164.53.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200910260859.39002.hs4233@mail.mn-solutions.de>
+	Thu, 29 Oct 2009 05:09:56 -0400
+Subject: [PATCH] mac80211: fix reason code output endianness
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 29 Oct 2009 10:09:28 +0100
+Message-ID: <1256807368.3865.92.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > Well if you want to push the mesh wext bits through to cfg80211
-> > (temporarily) you wouldn't even need to depend on WEXT. I'd prefer,
-> > however, to not do this, and just use the cfg80211 wext handlers in
-> > libertas and depend on WEXT for now.
-> 
-> Yeah, I think it's best to handle the mesh WEXT ioctls separately for
-> now.  There are really only 4 of them (get/set SSID, set channel, get
-> mode) that matter for mesh.  The rest of the ioctls that the mesh
-> interface supports get redirected to the cfg80211 handlers because they
-> aren't specific to mesh.
+When HT debugging is enabled and we receive a DelBA
+frame we print out the reason code in the wrong byte
+order. Fix that so we don't get weird values printed.
 
-We can reduce this to 3, because get/set channel could
-simply go via cfg80211.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/ht.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I'm unsure if we still need an GIWRANGE for mesh, but probably not.
+--- wireless-testing.orig/net/mac80211/ht.c	2009-10-29 10:07:41.000000000 +0100
++++ wireless-testing/net/mac80211/ht.c	2009-10-29 10:07:49.000000000 +0100
+@@ -153,7 +153,7 @@ void ieee80211_process_delba(struct ieee
+ 	if (net_ratelimit())
+ 		printk(KERN_DEBUG "delba from %pM (%s) tid %d reason code %d\n",
+ 			mgmt->sa, initiator ? "initiator" : "recipient", tid,
+-			mgmt->u.action.u.delba.reason_code);
++			le16_to_cpu(mgmt->u.action.u.delba.reason_code));
+ #endif /* CONFIG_MAC80211_HT_DEBUG */
+ 
+ 	if (initiator == WLAN_BACK_INITIATOR)
 
 
-Dan, you once said that you converted the MESH firmware
-calls to new style commands. Do you have those around?  Maybe
-I can re-work them if they don't apply anymore.
-
--- 
-http://www.holgerschurig.de
