@@ -1,56 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.187]:41130 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753110AbZJ2Ofh (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37196
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752103AbZJ2IGl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 10:35:37 -0400
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: David Miller <davem@davemloft.net>
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-Date: Thu, 29 Oct 2009 15:34:50 +0100
+	Thu, 29 Oct 2009 04:06:41 -0400
+Date: Thu, 29 Oct 2009 01:07:05 -0700 (PDT)
+Message-Id: <20091029.010705.106875451.davem@davemloft.net>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linville@tuxdriver.com
-References: <200910291435.54203.bzolnier@gmail.com> <200910291513.54326.bzolnier@gmail.com> <20091029.072001.153801635.davem@davemloft.net>
-In-Reply-To: <20091029.072001.153801635.davem@davemloft.net>
-MIME-Version: 1.0
-Message-Id: <200910291534.50108.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-10-28
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20091028205346.GE2856@tuxdriver.com>
+References: <20091028205346.GE2856@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 29 October 2009 15:20:01 David Miller wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Date: Thu, 29 Oct 2009 15:13:54 +0100
-> 
-> > John has chosen to ignore my concerns and you are sending me back to him?
-> 
-> That's exactly why I won't overreach his maintainership role,
-> because you're inability to interact with and work with the
-> wireless maintainer isn't my problem.
-> 
-> In case you're concerned, I actually agree with John and others
-> on this issue, and disagree with your position.
-> 
-> So even if I felt it legitimate to overreach John, I still wouldn't
-> make the change you are requesting in this case.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 28 Oct 2009 16:53:46 -0400
 
-Sorry but you are also wrong then and you are just in the way of progress.
-
-> Does it really eat you so hard when someone disagrees with you?
+> Here is a collection of fixes (mostly (almost-)one-liners) intended
+> for 2.6.32.  There are a couple of fixes relating to behavior when an
+> association failes, as well as spelling fixes, simply endian fixes,
+> a MAINTAINERS change...I don't think there is anything controversial
+> here...
 > 
-> That's not going to work in the long term Bart, if John disagrees with
-> you he's the maintainer of wireless and that's it.  You're going to
-> have to learn to work with people, and not just automatically go to a
-> "higher power" as soon as someone disagrees with you.
+> Please let me know if there are problems!
 
-I'm not going to waste my time on stupid or hopeless things just because you
-or John like to call themselves "maintainers".
-
-If Red Hat or some other company wants to hire me and pay me for spinning
-inside networking bureaucracy than please contact me in private but as
-long as it is my own time I'll just do what I think makes sense on technical
-merits and not on who is the "maintainer" of this or that..
-
--- 
-Bartlomiej Zolnierkiewicz
+Pulled, thanks a lot John.
