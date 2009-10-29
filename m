@@ -1,27 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54375 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752634AbZJYDiy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Oct 2009 23:38:54 -0400
-Date: Sat, 24 Oct 2009 23:38:53 -0400
-From: Christoph Hellwig <hch@infradead.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH 17/19] [RFC, v2] libertas: Kconfig entry for
-	libertas+cfg80211
-Message-ID: <20091025033853.GA25873@infradead.org>
-References: <20091022133043.185554096@mail.mn-solutions.de> <20091022133425.317619132@mail.mn-solutions.de> <1256307572.12174.33.camel@johannes.local> <200910231756.47472.hs4233@mail.mn-solutions.de> <1256315415.2164.46.camel@localhost.localdomain>
+Received: from bu3sch.de ([62.75.166.246]:41901 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752370AbZJ2NF7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Oct 2009 09:05:59 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: ath5k AP issues
+Date: Thu, 29 Oct 2009 14:06:01 +0100
+Cc: linux-wireless@vger.kernel.org, Luis Rodriguez <mcgrof@gmail.com>
+References: <200910291330.26172.mb@bu3sch.de>
+In-Reply-To: <200910291330.26172.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1256315415.2164.46.camel@localhost.localdomain>
+Message-Id: <200910291406.03422.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-How much does mesh actually get used?  AFAICS it's a OLPC-specific one
-off.  So unless OLPC people come up and fix it why do people even bother
-with it?
+On Thursday 29 October 2009 13:30:24 Michael Buesch wrote:
+> Attached is a wireshark log. Let me explain what you see in there:
+> 
+> I have an ath5k AP and the powersaving n810 device as STA.
+> What I try to do is ping the n810. You can see that at the start of the log.
+> 
+> Packet #31 is a ping to the n810. #42, too. and so on...
+> You see that the n810 does not reply. (not even with an 802.11 ack)
+> I guess the n810 is in PS at that time.
+> Also note that the TIM sent by the AP is empty.
+> 
+> What I did at #135 is _simultaneously_ ping from the n810 to the ath5k.
+> At that point suddenly both pings running on both ends start to succeed.
+> 
+> This is with a vanilla 2.6.31.5 kernel, but I can also reproduce this with
+> compat-wireless and compat-wireless-stable.
+> 
 
+This is dmesg log with verbose PS debugging enabled.
+
+[265617.902457] phy0: Allocated STA 00:1d:6e:9b:c5:a6
+[265617.903187] phy0: Inserted STA 00:1d:6e:9b:c5:a6
+[265620.539771] wlan0: STA 00:1d:6e:9b:c5:a6 aid 1 enters power save mode
+
+Here I start pinging the n810. No dmesg messages appear and pinging does not work.
+
+When I start pinging _from_ the n810, the following messages appear:
+
+[265660.078055] wlan0: STA 00:1d:6e:9b:c5:a6 aid 1 exits power save mode
+[265660.078066] wlan0: STA 00:1d:6e:9b:c5:a6 aid 1 sending 0 filtered/0 PS frames since STA not sleeping anymore
+[265660.289206] wlan0: STA 00:1d:6e:9b:c5:a6 aid 1 enters power save mode
+[265660.938988] STA 00:1d:6e:9b:c5:a6 aid 1: PS buffer (entries before 0)
+[265660.985997] STA 00:1d:6e:9b:c5:a6 aid 1: PS Poll (entries after 0)
+[265660.986016] wlan0: STA 00:1d:6e:9b:c5:a6 in PS mode, but pspoll set -> send frame
+[265661.008310] wlan0: STA 00:1d:6e:9b:c5:a6 aid 1 exits power save mode
+[265661.008321] wlan0: STA 00:1d:6e:9b:c5:a6 aid 1 sending 0 filtered/0 PS frames since STA not sleeping anymore
+[265661.226915] wlan0: STA 00:1d:6e:9b:c5:a6 aid 1 enters power save mode
+
+
+-- 
+Greetings, Michael.
