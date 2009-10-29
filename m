@@ -1,29 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51401.mail.re2.yahoo.com ([206.190.38.180]:36458 "HELO
-	web51401.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751289AbZJWJPv convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 05:15:51 -0400
-Message-ID: <389827.53102.qm@web51401.mail.re2.yahoo.com>
-References: <133e8d7e0910200711s7c44b899nbcd5f1037cc5ee49@mail.gmail.com>  <133e8d7e0910210448y39551160o7a12a8af2da43f85@mail.gmail.com>  <20091022161021.GA5532@jm.kir.nu> <8e6f94720910221645n2b0b1edcq29358f175a41d3ad@mail.gmail.com>
-Date: Fri, 23 Oct 2009 02:15:56 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: Re: [ath9k-devel] mac80211/ath9k/hostapd: Some clients unable to  associate with AP
-To: Will Dyson <will.dyson@gmail.com>, Jouni Malinen <j@w1.fi>
-Cc: =?iso-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-In-Reply-To: <8e6f94720910221645n2b0b1edcq29358f175a41d3ad@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from xc.sipsolutions.net ([83.246.72.84]:57258 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750716AbZJ2HoP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Oct 2009 03:44:15 -0400
+Subject: [PATCH] mac80211: make CALL_TXH a statement
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 29 Oct 2009 08:43:48 +0100
+Message-ID: <1256802228.3865.55.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since Jouni has confirmed my suspicion about the invalid sequence number I will refrain from spamming the list with tcpdumps. 
-Will, thanks for bringing me into the loop of this discussion!
+The multi-line code in this macro wasn't wrapped
+in do {} while (0) so we cannot use it in an if()
+branch safely in the future -- fix that.
 
- -- 
-Regards 
-Joerg 
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/tx.c |   34 ++++++++++++++++++----------------
+ 1 file changed, 18 insertions(+), 16 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/tx.c	2009-10-06 14:57:11.000000000 +0200
++++ wireless-testing/net/mac80211/tx.c	2009-10-06 14:57:39.000000000 +0200
+@@ -1201,23 +1201,25 @@ static int invoke_tx_handlers(struct iee
+ 	struct sk_buff *skb = tx->skb;
+ 	ieee80211_tx_result res = TX_DROP;
+ 
+-#define CALL_TXH(txh)		\
+-	res = txh(tx);		\
+-	if (res != TX_CONTINUE)	\
+-		goto txh_done;
+-
+-	CALL_TXH(ieee80211_tx_h_check_assoc)
+-	CALL_TXH(ieee80211_tx_h_ps_buf)
+-	CALL_TXH(ieee80211_tx_h_select_key)
+-	CALL_TXH(ieee80211_tx_h_michael_mic_add)
+-	CALL_TXH(ieee80211_tx_h_rate_ctrl)
+-	CALL_TXH(ieee80211_tx_h_misc)
+-	CALL_TXH(ieee80211_tx_h_sequence)
+-	CALL_TXH(ieee80211_tx_h_fragment)
++#define CALL_TXH(txh) \
++	do {				\
++		res = txh(tx);		\
++		if (res != TX_CONTINUE)	\
++			goto txh_done;	\
++	} while (0)
++
++	CALL_TXH(ieee80211_tx_h_check_assoc);
++	CALL_TXH(ieee80211_tx_h_ps_buf);
++	CALL_TXH(ieee80211_tx_h_select_key);
++	CALL_TXH(ieee80211_tx_h_michael_mic_add);
++	CALL_TXH(ieee80211_tx_h_rate_ctrl);
++	CALL_TXH(ieee80211_tx_h_misc);
++	CALL_TXH(ieee80211_tx_h_sequence);
++	CALL_TXH(ieee80211_tx_h_fragment);
+ 	/* handlers after fragment must be aware of tx info fragmentation! */
+-	CALL_TXH(ieee80211_tx_h_stats)
+-	CALL_TXH(ieee80211_tx_h_encrypt)
+-	CALL_TXH(ieee80211_tx_h_calculate_duration)
++	CALL_TXH(ieee80211_tx_h_stats);
++	CALL_TXH(ieee80211_tx_h_encrypt);
++	CALL_TXH(ieee80211_tx_h_calculate_duration);
+ #undef CALL_TXH
+ 
+  txh_done:
 
 
-      
