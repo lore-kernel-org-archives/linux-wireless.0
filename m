@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:21419 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753221AbZJYP6A convert rfc822-to-8bit (ORCPT
+Received: from gv-out-0910.google.com ([216.239.58.187]:41130 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753110AbZJ2Ofh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2009 11:58:00 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so4600463fgg.1
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Oct 2009 08:58:04 -0700 (PDT)
+	Thu, 29 Oct 2009 10:35:37 -0400
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: David Miller <davem@davemloft.net>
+Subject: Re: pull request: wireless-next-2.6 2009-10-28
+Date: Thu, 29 Oct 2009 15:34:50 +0100
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linville@tuxdriver.com
+References: <200910291435.54203.bzolnier@gmail.com> <200910291513.54326.bzolnier@gmail.com> <20091029.072001.153801635.davem@davemloft.net>
+In-Reply-To: <20091029.072001.153801635.davem@davemloft.net>
 MIME-Version: 1.0
-In-Reply-To: <200910251654.17050.mb@bu3sch.de>
-References: <1256484396-31063-1-git-send-email-netrolller.3d@gmail.com>
-	<200910251654.17050.mb@bu3sch.de>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 25 Oct 2009 16:57:44 +0100
-Message-ID: <69e28c910910250857l341cc114w46224b94cda36f3e@mail.gmail.com>
-Subject: Re: [PATCH] b43: LP-PHY: Begin implementing calibration & software
-	RFKILL support
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Message-Id: <200910291534.50108.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/10/25 Michael Buesch <mb@bu3sch.de>:
-> On Sunday 25 October 2009 16:26:36 Gábor Stefanik wrote:
->> Michael, could you please do the PHY reset part? I can't seem to
->> understand its relationship to wireless_core_reset... also, it's
->> heavily ssb-speak, which I am not good at.
->
-> Where are the specifications?
->
-> --
-> Greetings, Michael.
->
+On Thursday 29 October 2009 15:20:01 David Miller wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Date: Thu, 29 Oct 2009 15:13:54 +0100
+> 
+> > John has chosen to ignore my concerns and you are sending me back to him?
+> 
+> That's exactly why I won't overreach his maintainership role,
+> because you're inability to interact with and work with the
+> wireless maintainer isn't my problem.
+> 
+> In case you're concerned, I actually agree with John and others
+> on this issue, and disagree with your position.
+> 
+> So even if I felt it legitimate to overreach John, I still wouldn't
+> make the change you are requesting in this case.
 
-They are @ http://bcm-v4.sipsolutions.net/802.11/PHY/Reset - it shows
-some similarity to wireless_core_reset, but it is not an exact match.
+Sorry but you are also wrong then and you are just in the way of progress.
+
+> Does it really eat you so hard when someone disagrees with you?
+> 
+> That's not going to work in the long term Bart, if John disagrees with
+> you he's the maintainer of wireless and that's it.  You're going to
+> have to learn to work with people, and not just automatically go to a
+> "higher power" as soon as someone disagrees with you.
+
+I'm not going to waste my time on stupid or hopeless things just because you
+or John like to call themselves "maintainers".
+
+If Red Hat or some other company wants to hire me and pay me for spinning
+inside networking bureaucracy than please contact me in private but as
+long as it is my own time I'll just do what I think makes sense on technical
+merits and not on who is the "maintainer" of this or that..
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Bartlomiej Zolnierkiewicz
