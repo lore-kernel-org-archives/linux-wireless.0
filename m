@@ -1,113 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:56589 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759599AbZJHS6Y (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59084 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754729AbZJ2OYz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 14:58:24 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 04/20] wl1271: Correct TKIP header space handling in TX path
-Date: Thu,  8 Oct 2009 21:56:20 +0300
-Message-Id: <1255028196-6565-5-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
+	Thu, 29 Oct 2009 10:24:55 -0400
+Subject: Re: pull request: wireless-next-2.6 2009-10-28
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: bzolnier@gmail.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linville@tuxdriver.com
+In-Reply-To: <20091029.072001.153801635.davem@davemloft.net>
+References: <200910291435.54203.bzolnier@gmail.com>
+	 <20091029.065336.119302168.davem@davemloft.net>
+	 <200910291513.54326.bzolnier@gmail.com>
+	 <20091029.072001.153801635.davem@davemloft.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-qYugcg5jQ/tYUNjJ2YMW"
+Date: Thu, 29 Oct 2009 15:24:27 +0100
+Message-ID: <1256826267.3865.112.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Correct the position to which TKIP header space is appended for TX
-packets.
+--=-qYugcg5jQ/tYUNjJ2YMW
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Vidhya Govindan <vidhya.govindan@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |    9 +++------
- drivers/net/wireless/wl12xx/wl1271_tx.c   |   27 +++++++++++++++++----------
- 2 files changed, 20 insertions(+), 16 deletions(-)
+On Thu, 2009-10-29 at 07:20 -0700, David Miller wrote:
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index bedd19b..3d629da 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1160,12 +1160,9 @@ static int wl1271_register_hw(struct wl1271 *wl)
- 
- static int wl1271_init_ieee80211(struct wl1271 *wl)
- {
--	/*
--	 * The tx descriptor buffer and the TKIP space.
--	 *
--	 * FIXME: add correct 1271 descriptor size
--	 */
--	wl->hw->extra_tx_headroom = WL1271_TKIP_IV_SPACE;
-+	/* The tx descriptor buffer and the TKIP space. */
-+	wl->hw->extra_tx_headroom = WL1271_TKIP_IV_SPACE +
-+		sizeof(struct wl1271_tx_hw_descr);
- 
- 	/* unit us */
- 	/* FIXME: find a proper value */
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index 162f026..1ad1bc3 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -92,6 +92,14 @@ static int wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
- 
- 	desc = (struct wl1271_tx_hw_descr *) skb->data;
- 
-+	/* relocate space for security header */
-+	if (extra) {
-+		void *framestart = skb->data + sizeof(*desc);
-+		u16 fc = *(u16 *)(framestart + extra);
-+		int hdrlen = ieee80211_hdrlen(fc);
-+		memmove(framestart, framestart + extra, hdrlen);
-+	}
-+
- 	/* configure packet life time */
- 	desc->start_time = jiffies_to_usecs(jiffies) - wl->time_offset;
- 	desc->life_time = TX_HW_MGMT_PKT_LIFETIME_TU;
-@@ -257,7 +265,6 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
- 
- 	struct ieee80211_tx_info *info;
- 	struct sk_buff *skb;
--	u32 header_len;
- 	u16 seq;
- 	int id = result->id;
- 
-@@ -295,22 +302,22 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
- 		wl->tx_security_seq_32++;
- 	wl->tx_security_seq_16 = seq;
- 
--	/* get header len */
-+	/* remove private header from packet */
-+	skb_pull(skb, sizeof(struct wl1271_tx_hw_descr));
-+
-+	/* remove TKIP header space if present */
- 	if (info->control.hw_key &&
--	    info->control.hw_key->alg == ALG_TKIP)
--		header_len = WL1271_TKIP_IV_SPACE +
--			sizeof(struct wl1271_tx_hw_descr);
--	else
--		header_len = sizeof(struct wl1271_tx_hw_descr);
-+	    info->control.hw_key->alg == ALG_TKIP) {
-+		int hdrlen = ieee80211_get_hdrlen_from_skb(skb);
-+		memmove(skb->data + WL1271_TKIP_IV_SPACE, skb->data, hdrlen);
-+		skb_pull(skb, WL1271_TKIP_IV_SPACE);
-+	}
- 
- 	wl1271_debug(DEBUG_TX, "tx status id %u skb 0x%p failures %u rate 0x%x"
- 		     " status 0x%x",
- 		     result->id, skb, result->ack_failures,
- 		     result->rate_class_index, result->status);
- 
--	/* remove private header from packet */
--	skb_pull(skb, header_len);
--
- 	/* return the packet to the stack */
- 	ieee80211_tx_status(wl->hw, skb);
- 	wl->tx_frames[result->id] = NULL;
--- 
-1.5.6.5
+> In case you're concerned, I actually agree with John and others
+> on this issue, and disagree with your position.
+
+In this particular case, I think it makes more sense to duplicate the
+code _especially_ because it's not working yet. That frees people
+hacking on it of having to worry about breaking other devices.
+
+johannes
+
+--=-qYugcg5jQ/tYUNjJ2YMW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK6aWYAAoJEODzc/N7+QmaGLoQAMcqVfkkiTG2DbNvTlJmIAvX
+AIpkScm5APEDTbIamytQNBhoXe0kzCU0iW7vQU9Ztb37Mrb5sJ3c9IalxdL0rJKL
++pK0bao9cuHXJgTCqrtKae7cZQej4BdFtUJg/HiC32ScbTzMFxFBX6STVPY569XQ
+A5f39ABjgLWk60eOlq62wja7YI29yVhzf2o1KPyS3Qy8/4nWrClRVGzr5lmYfh39
+9fLgkJvqwrfJjWwi7vuB5W4ueqv8i9OBCSBgTELcN96F1T1rqeiKF1JbJsShRDLM
+qUKRxEAwHHedu9qGLDha56o/9sYOVGR+RZ+h3zBGOIc9Idc8uzwA3twYoPL2wEJW
+ua+a9aCRZKxqt4hyv9ChJ90PpdgWpblqn2Xv1Y7Ihaz44dnlklo4tN94/0kAGVYd
+l1p3+4Nkb1FXUTiGJDRXP8wJOcTTr4dRB56MMP3qvXnHTbtgg0+S0EC7WajYo9Y/
+N6QHk824T1qvpiQTp4fGE3VMLpnGjBDqwFpfQSahj2k+AX5aRdqnSJakNE/3O3gr
+vhQM0+Q4R9EbupQw+6lzuFPPvEEYE4fOq0ku2tfkTfPCq5b3qcD+8oWK6Gj0/v3W
+eqCHNzqlXLVGuz7eAwsaLuNJjjnCIdbBgburc/+gB5VxEXCpKm/6upEc34G9rU24
+6jJCPx783xc3yp5XLpin
+=uJlw
+-----END PGP SIGNATURE-----
+
+--=-qYugcg5jQ/tYUNjJ2YMW--
 
