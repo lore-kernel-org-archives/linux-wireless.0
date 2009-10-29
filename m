@@ -1,49 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from galiil.marvell.com ([199.203.130.254]:25168 "EHLO
-	galiil.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758350AbZJFVpJ convert rfc822-to-8bit (ORCPT
+Received: from mail-px0-f179.google.com ([209.85.216.179]:43531 "EHLO
+	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756516AbZJ2Rsb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 17:45:09 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-CC: "libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Tue, 6 Oct 2009 14:44:27 -0700
-Subject: RE: [PATCH v2] libertas: Add auto deep sleep support for
- SD8385/SD8686/SD8688
-Message-ID: <477F20668A386D41ADCC57781B1F704306DDD5C26C@SC-VEXCH1.marvell.com>
-References: <1254366278-15483-1-git-send-email-bzhao@marvell.com>
- <200910010942.59562.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200910010942.59562.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain; charset=US-ASCII
+	Thu, 29 Oct 2009 13:48:31 -0400
+Received: by pxi9 with SMTP id 9so1327350pxi.4
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2009 10:48:35 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1256749998.3850.45.camel@localhost.localdomain>
+References: <1256687501-8636-1-git-send-email-andrey@cozybit.com>
+	 <1256749998.3850.45.camel@localhost.localdomain>
+Date: Thu, 29 Oct 2009 10:48:35 -0700
+Message-ID: <45e8e6c40910291048g2958c086oa6b7a39dbb68258f@mail.gmail.com>
+Subject: Re: [PATCH] libertas: remove internal buffers from GSPI driver
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	sebatian@breakpoint.cc, george.shore@imgtec.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Holger,
+On Wed, Oct 28, 2009 at 10:13 AM, Dan Williams <dcbw@redhat.com> wrote:
+> Looks OK to me, but I don't have any of the SPI hardware so when you get
+> a Tested-by:, let me know and I'll ack.
 
-Sorry for the late response.
+Thanks Dan, by the way the issue with WPA2 and IEEE PS is unrelated to
+this patch (that is, I can reproduce it without the patch applied) so
+we'll need to address that separately.  So at this point we have:
 
-> -----Original Message-----
-> From: Holger Schurig [mailto:hs4233@mail.mn-solutions.de]
-> Sent: Thursday, October 01, 2009 12:43 AM
-> To: Bing Zhao
-> Cc: libertas-dev@lists.infradead.org; linux-wireless@vger.kernel.org; Amitkumar Karwar
-> Subject: Re: [PATCH v2] libertas: Add auto deep sleep support for SD8385/SD8686/SD8688
-> 
-> > Tests have been done for USB/CS cards to make sure that the patch
-> > won't break USB/CS code.
-> 
-> 
-> Side question: which firmware are you using on CS cards?
-
-firmware version for Marvell CF8385 card: 5.101.13p1
-
-Regards,
-
-Bing
-
-> 
-> --
-> http://www.holgerschurig.de
+Tested-by: George Shore <george.shore@imgtec.com>
+Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
