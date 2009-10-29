@@ -1,47 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:26351 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754724AbZJRSlf (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42240
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754613AbZJ2OTh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Oct 2009 14:41:35 -0400
-Received: by ey-out-2122.google.com with SMTP id 9so782472eyd.19
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2009 11:41:38 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: jack craig <jackc@linuxlighthouse.com>
-Subject: Re: moblin, rt2860, and unhappiness
-Date: Sun, 18 Oct 2009 20:41:36 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <4ADB5334.3070109@linuxlighthouse.com>
-In-Reply-To: <4ADB5334.3070109@linuxlighthouse.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200910182041.36795.IvDoorn@gmail.com>
+	Thu, 29 Oct 2009 10:19:37 -0400
+Date: Thu, 29 Oct 2009 07:20:01 -0700 (PDT)
+Message-Id: <20091029.072001.153801635.davem@davemloft.net>
+To: bzolnier@gmail.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: pull request: wireless-next-2.6 2009-10-28
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <200910291513.54326.bzolnier@gmail.com>
+References: <200910291435.54203.bzolnier@gmail.com>
+	<20091029.065336.119302168.davem@davemloft.net>
+	<200910291513.54326.bzolnier@gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date: Thu, 29 Oct 2009 15:13:54 +0100
 
-> i figure my best case is to find a way to get the ralink driver working with the moblin os,
-> but at least one person has failed at that attempt to far.
-> 
-> a fall back position is to go with a fedora os where i could get the driver working there
-> (if it doesn't already).
-> 
-> so, finally, my query to this august group; given this sob story, what is your wisdom on the topic?
+> John has chosen to ignore my concerns and you are sending me back to him?
 
-The rt2800pci driver has recently been merged into wireless-testing git tree, that driver isn't working
-perfectly yet, but that is the driver where all development effort should go into.
+That's exactly why I won't overreach his maintainership role,
+because you're inability to interact with and work with the
+wireless maintainer isn't my problem.
 
-You can find the rt2800pci driver in the
-drivers/net/wireless/rt2x00 folder.
+In case you're concerned, I actually agree with John and others
+on this issue, and disagree with your position.
 
-> is my goal to get the rt2860 working on moblin a gesture in futility?
+So even if I felt it legitimate to overreach John, I still wouldn't
+make the change you are requesting in this case.
 
-Absolutely not. :)
+Does it really eat you so hard when someone disagrees with you?
 
-> does it make sense to bail and go on to FC? i use FC for my desktop and work so i prefer it over ubuntu ,...
-
-This is not a distribution problem, but simply a lack of a good driver in the kernel itself.
-
-Ivo
+That's not going to work in the long term Bart, if John disagrees with
+you he's the maintainer of wireless and that's it.  You're going to
+have to learn to work with people, and not just automatically go to a
+"higher power" as soon as someone disagrees with you.
