@@ -1,117 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx03.syneticon.net ([78.111.66.105]:59020 "EHLO
-	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751494AbZJWNPZ (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:45526 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756710AbZJ2XRo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 09:15:25 -0400
-Message-ID: <4AE1AC69.7010904@wpkg.org>
-Date: Fri, 23 Oct 2009 15:15:21 +0200
-From: Tomasz Chmielewski <mangoo@wpkg.org>
+	Thu, 29 Oct 2009 19:17:44 -0400
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, linux-netdev@vger.kernel.org,
-	linux-mips@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
-Subject: Re: ath5k AP kernel panic when client uses SCP
-References: <4AD21AB4.6010208@wpkg.org>
-In-Reply-To: <4AD21AB4.6010208@wpkg.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Date: Thu, 29 Oct 2009 19:17:48 -0400
+Message-ID: <f7848160910291617q2b168089l5ce489d2f47ebe96@mail.gmail.com>
+Subject: OOPS in cfg80211_conn_work
+From: Parag Warudkar <parag.lkml@gmail.com>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland wrote:
-> 
-> CONFIG_DEBUG_INFO is the basic switch.  I don't know if MIPS needs
-> CONFIG_FRAME_POINTER but that could help too.
-
-I don't see CONFIG_FRAME_POINTER available.
-I compiled with CONFIG_DEBUG_INFO; let me know if I should enable some 
-other DEBUG options as well (see below what's enabled and available).
-
-Before it oopses, I see lots of order 0 page allocation failures (there 
-are some extra spaces at the end of each line due to the broken konsole 
-in KDE4):
-
-http://www1.wpkg.org/oops2.txt
-
-
-Once, the device hanged without producing an oops (with lots of page 
-allocation failures before).
-
-
-No clue about disassembling here, sorry.
-
-
-# zgrep DEBUG /proc/config.gz
-
-# CONFIG_PCI_DEBUG is not set
-# CONFIG_NETFILTER_DEBUG is not set
-# CONFIG_NETFILTER_XT_MATCH_LAYER7_DEBUG is not set
-CONFIG_CFG80211_REG_DEBUG=y
-# CONFIG_CFG80211_DEBUGFS is not set
-CONFIG_LIB80211_DEBUG=y
-# CONFIG_MAC80211_DEBUGFS is not set
-# CONFIG_MAC80211_DEBUG_MENU is not set
-# CONFIG_DEBUG_DRIVER is not set
-# CONFIG_DEBUG_DEVRES is not set
-# CONFIG_MTD_DEBUG is not set
-# CONFIG_SCSI_DEBUG is not set
-# CONFIG_DM_DEBUG is not set
-CONFIG_LIBERTAS_DEBUG=y
-CONFIG_ATH5K_DEBUG=y
-CONFIG_ATH9K_DEBUG=y
-CONFIG_IPW2100_DEBUG=y
-CONFIG_IPW2200_DEBUG=y
-CONFIG_LIBIPW_DEBUG=y
-CONFIG_IWLWIFI_DEBUG=y
-CONFIG_B43_DEBUG=y
-CONFIG_B43LEGACY_DEBUG=y
-CONFIG_ZD1211RW_DEBUG=y
-CONFIG_RT2X00_DEBUG=y
-# CONFIG_HISAX_DEBUG is not set
-# CONFIG_SSB_DEBUG is not set
-# CONFIG_USB_DEBUG is not set
-# CONFIG_USB_STORAGE_DEBUG is not set
-# CONFIG_USB_SERIAL_DEBUG is not set
-# CONFIG_JBD_DEBUG is not set
-# CONFIG_JBD2_DEBUG is not set
-# CONFIG_JFS_DEBUG is not set
-# CONFIG_XFS_DEBUG is not set
-# CONFIG_NTFS_DEBUG is not set
-CONFIG_JFFS2_FS_DEBUG=0
-# CONFIG_CIFS_DEBUG2 is not set
-CONFIG_DEBUG_FS=y
-CONFIG_DEBUG_KERNEL=y
-CONFIG_DEBUG_SHIRQ=y
-CONFIG_SCHED_DEBUG=y
-# CONFIG_DEBUG_OBJECTS is not set
-# CONFIG_DEBUG_SLAB is not set
-# CONFIG_DEBUG_RT_MUTEXES is not set
-# CONFIG_DEBUG_SPINLOCK is not set
-# CONFIG_DEBUG_MUTEXES is not set
-# CONFIG_DEBUG_LOCK_ALLOC is not set
-# CONFIG_DEBUG_SPINLOCK_SLEEP is not set
-# CONFIG_DEBUG_LOCKING_API_SELFTESTS is not set
-# CONFIG_DEBUG_KOBJECT is not set
-CONFIG_DEBUG_INFO=y
-# CONFIG_DEBUG_VM is not set
-# CONFIG_DEBUG_WRITECOUNT is not set
-# CONFIG_DEBUG_MEMORY_INIT is not set
-# CONFIG_DEBUG_LIST is not set
-# CONFIG_DEBUG_SG is not set
-# CONFIG_DEBUG_NOTIFIERS is not set
-# CONFIG_DEBUG_BLOCK_EXT_DEVT is not set
-# CONFIG_DYNAMIC_DEBUG is not set
-# CONFIG_DEBUG_STACK_USAGE is not set
-# CONFIG_RUNTIME_DEBUG is not set
-
-
-> Another option in the absence of debug info is disassembling the
-> Code: section of the oops and trying to find the corresponding
-> code via objdump, but this only really works well if you have some
-> idea which module is causing the error.
-
-
-
--- 
-Tomasz Chmielewski
-http://wpkg.org
-
+Oct 29 18:59:06 parag-laptop kernel: [  143.180037] wlan0:
+deauthenticating from 00:16:01:d6:6f:12 by local choice (reason=3)
+Oct 29 18:59:06 parag-laptop kernel: [  143.181137] wlan0: direct
+probe to AP 00:16:01:d6:6f:12 (try 1)
+Oct 29 18:59:06 parag-laptop kernel: [  143.181148] wlan0:
+deauthenticating from 00:16:01:d6:6f:12 by local choice (reason=3)
+Oct 29 18:59:06 parag-laptop kernel: [  143.203375] BUG: unable to
+handle kernel NULL pointer dereference at (null)
+Oct 29 18:59:06 parag-laptop kernel: [  143.203432] IP:
+[<ffffffffa0139161>] cfg80211_conn_work+0xb1/0x140 [cfg80211]
+Oct 29 18:59:06 parag-laptop kernel: [  143.203476] PGD 138abc067 PUD
+136d87067 PMD 0
+Oct 29 18:59:06 parag-laptop kernel: [  143.203530] Oops: 0000 [#1] SMP
+Oct 29 18:59:06 parag-laptop kernel: [  143.203571] last sysfs file:
+/sys/devices/pci0000:00/0000:00:01.0/0000:01:00.1/sound/card1/controlC1/uevent
+Oct 29 18:59:06 parag-laptop kernel: [  143.203597] CPU 0
+Oct 29 18:59:06 parag-laptop kernel: [  143.203629] Modules linked in:
+aes_generic radeon ttm drm_kms_helper drm i2c_algo_bit cfbcopyarea
+cfbimgblt cfbfillrect binfmt_misc snd_hda_codec_atihdmi rfcomm
+snd_hda_codec_analog sco bnep ppdev l2cap snd_hda_intel arc4
+snd_hda_codec snd_pcm_oss snd_mixer_oss snd_hwdep snd_seq_dummy
+snd_pcm snd_seq_oss snd_seq_midi snd_rawmidi snd_seq_midi_event iwlagn
+iptable_filter ext3 snd_seq iwlcore snd_timer led_class snd_seq_device
+ip_tables jbd snd mac80211 psmouse btusb x_tables tpm_infineon
+soundcore serio_raw bluetooth snd_page_alloc cfg80211 tpm tpm_bios
+evdev lp parport ext4 mbcache jbd2 fuse ahci libata video output
+intel_agp e1000e
+Oct 29 18:59:06 parag-laptop kernel: [  143.204560] Pid: 9, comm:
+events/0 Not tainted 2.6.32-rc5 #2 HP EliteBook 8530p
+Oct 29 18:59:06 parag-laptop kernel: [  143.204588] RIP:
+0010:[<ffffffffa0139161>]  [<ffffffffa0139161>]
+cfg80211_conn_work+0xb1/0x140 [cfg80211]
+Oct 29 18:59:06 parag-laptop kernel: [  143.204634] RSP:
+0000:ffff88013f8b5dc0  EFLAGS: 00010246
+Oct 29 18:59:06 parag-laptop kernel: [  143.204656] RAX:
+0000000000000000 RBX: ffff88013e8db690 RCX: ffff88013cb80118
+Oct 29 18:59:06 parag-laptop kernel: [  143.204679] RDX:
+0000000000000000 RSI: 0000000000000282 RDI: ffff88013e8db690
+Oct 29 18:59:06 parag-laptop kernel: [  143.204702] RBP:
+ffff88013f8b5e30 R08: 0000000000000000 R09: 0000000000000001
+Oct 29 18:59:06 parag-laptop kernel: [  143.204724] R10:
+0000000000000000 R11: ffff880028295718 R12: ffff88013e8db6b8
+Oct 29 18:59:06 parag-laptop kernel: [  143.204747] R13:
+ffff88013cb800a8 R14: ffff88013cb80000 R15: ffff88013f8b5df0
+Oct 29 18:59:06 parag-laptop kernel: [  143.204770] FS:
+0000000000000000(0000) GS:ffff880028200000(0000)
+knlGS:0000000000000000
+Oct 29 18:59:06 parag-laptop kernel: [  143.204799] CS:  0010 DS: 0018
+ES: 0018 CR0: 000000008005003b
+Oct 29 18:59:06 parag-laptop kernel: [  143.204820] CR2:
+0000000000000000 CR3: 000000013dde3000 CR4: 00000000000406f0
+Oct 29 18:59:06 parag-laptop kernel: [  143.204843] DR0:
+0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+Oct 29 18:59:06 parag-laptop kernel: [  143.204866] DR3:
+0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Oct 29 18:59:06 parag-laptop kernel: [  143.204889] Process events/0
+(pid: 9, threadinfo ffff88013f8b4000, task ffff88013f885980)
+Oct 29 18:59:06 parag-laptop kernel: [  143.204917] Stack:
+Oct 29 18:59:06 parag-laptop kernel: [  143.204936]  ffff88013f8b5dc0
+ffff88013f8b5dc0 0000000000000282 ffffffff8162afb8
+Oct 29 18:59:06 parag-laptop kernel: [  143.204996] <0>
+ffff88013cb80018 ffff88013cb80088 ffff880028218040 ffff88013f8b5fd8
+Oct 29 18:59:06 parag-laptop kernel: [  143.205085] <0>
+ffff88013f8b5e10 ffff88013cb80130 ffff880028218040 ffffffffa01390b0
+Oct 29 18:59:06 parag-laptop kernel: [  143.205190] Call Trace:
+Oct 29 18:59:06 parag-laptop kernel: [  143.205215]
+[<ffffffffa01390b0>] ? cfg80211_conn_work+0x0/0x140 [cfg80211]
+Oct 29 18:59:06 parag-laptop kernel: [  143.205242]
+[<ffffffff8106c86f>] worker_thread+0x17f/0x2c0
+Oct 29 18:59:06 parag-laptop kernel: [  143.205265]
+[<ffffffff810710d0>] ? autoremove_wake_function+0x0/0x40
+Oct 29 18:59:06 parag-laptop kernel: [  143.205289]
+[<ffffffff8106c6f0>] ? worker_thread+0x0/0x2c0
+Oct 29 18:59:06 parag-laptop kernel: [  143.205311]
+[<ffffffff81070cfe>] kthread+0x8e/0xa0
+Oct 29 18:59:06 parag-laptop kernel: [  143.205334]
+[<ffffffff81012f2a>] child_rip+0xa/0x20
+Oct 29 18:59:06 parag-laptop kernel: [  143.205356]
+[<ffffffff81070c70>] ? kthread+0x0/0xa0
+Oct 29 18:59:06 parag-laptop kernel: [  143.205378]
+[<ffffffff81012f20>] ? child_rip+0x0/0x20
+Oct 29 18:59:06 parag-laptop kernel: [  143.205399] Code: 63 28 4c 89
+e7 e8 c0 02 2b e1 48 8b 43 20 f6 40 48 01 74 c6 83 bb 8c 00 00 00 01
+75 bd 48 8b 83 90 00 00 00 48 89 df 48 8b 40 08 <8b> 10 41 89 17 0f b7
+40 04 66 41 89 47 04 e8 fc ee ff ff 85 c0
+Oct 29 18:59:06 parag-laptop kernel: [  143.206242] RIP
+[<ffffffffa0139161>] cfg80211_conn_work+0xb1/0x140 [cfg80211]
+Oct 29 18:59:06 parag-laptop kernel: [  143.206286]  RSP <ffff88013f8b5dc0>
+Oct 29 18:59:06 parag-laptop kernel: [  143.206306] CR2: 0000000000000000
+Oct 29 18:59:06 parag-laptop kernel: [  143.206327] ---[ end trace
+ccb079f99bd67991 ]---
+Oct 29 18:59:58 parag-laptop kernel: Kernel logging (proc) stopped.
