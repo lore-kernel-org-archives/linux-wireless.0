@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f217.google.com ([209.85.219.217]:53307 "EHLO
-	mail-ew0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752580AbZJGCww (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:46576 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752656AbZJ2MqC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 22:52:52 -0400
-Received: by ewy17 with SMTP id 17so169810ewy.39
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2009 19:52:15 -0700 (PDT)
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
-Cc: Hin-Tak Leung <HinTak.Leung@gmail.com>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>
-Subject: [PATCH] compat-2.6: adjusting 01-netdev.patch for libertas cfg80211 support
-Date: Wed,  7 Oct 2009 03:50:57 +0100
-Message-Id: <1254883857-2252-1-git-send-email-HinTak.Leung@gmail.com>
+	Thu, 29 Oct 2009 08:46:02 -0400
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: David Miller <davem@davemloft.net>
+Subject: Re: pull request: wireless-next-2.6 2009-10-28
+Date: Thu, 29 Oct 2009 13:45:05 +0100
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linville@tuxdriver.com
+References: <20091028211031.GF2856@tuxdriver.com> <200910291212.41656.bzolnier@gmail.com> <20091029.051509.119751790.davem@davemloft.net>
+In-Reply-To: <20091029.051509.119751790.davem@davemloft.net>
+MIME-Version: 1.0
+Message-Id: <200910291345.05888.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adjusting the netdev patch slightly to cope with recent change
-in libertas regarding cfg80211 support:
+On Thursday 29 October 2009 13:15:09 David Miller wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Date: Thu, 29 Oct 2009 12:12:41 +0100
+> 
+> > What is even more disappointing (especially after all that "working with"
+> > preaching) is that the patch is now in net-next-2.6..
+> 
+> John is the wireless maintainer, I take his tree in since the changes
+> in there have his blessing.
+> 
+> If you have a problem with some change in there, work it out with him
+> and he'll send the fixed up changes to me thereafterwards.
 
-    commit 6c65edc7a3e9452509a898cc9bbc210b0121617f
-    Author: Holger Schurig <hs4233@mail.mn-solutions.de>
-    Date:   Tue Oct 6 16:31:54 2009 +0200
+What do you mean by that?
 
-        libertas: first stab at cfg80211 support
+That *I* should be fixing the patch in question instead of the submitter?
 
-Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
----
- compat/patches/01-netdev.patch |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Do some different rules apply in the networking than in other parts of
+the kernel that I'm not aware of?
 
-diff --git a/compat/patches/01-netdev.patch b/compat/patches/01-netdev.patch
-index 141f80b..f6bca3e 100644
---- a/compat/patches/01-netdev.patch
-+++ b/compat/patches/01-netdev.patch
-@@ -416,9 +416,9 @@ without creating a headache on maintenance of the pathes.
-  /**
-   * @brief This function adds the card. it will probe the
- @@ -1270,7 +1272,16 @@
-- 	priv->infra_open = 0;
-+ 	wdev->netdev = dev;
-+ 	priv->dev = dev;
-  
-- 	/* Setup the OS Interface to our functions */
- +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
-   	dev->netdev_ops = &lbs_netdev_ops;
- +#else
--- 
-1.6.5.rc2
+There were valid concerns raised on the initial rt2800pci patch submission,
+yet two days later patch is in John's tree, after few more days it is in yours
+tree and happily on his way into 2.6.33.
 
+Until issues mentioned in:
+
+	http://lkml.org/lkml/2009/10/17/81
+
+are addressed rt2800pci shouldn't be queued for Linus' tree.
+
+[ Please note that this driver doesn't work at all currently so the standard
+  argument of having hardware support early upstream cannot be applied here. ]
+
+--
+Bartlomiej Zolnierkiewicz
