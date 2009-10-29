@@ -1,35 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:50467 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751190AbZJMWnt (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.27]:28496 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754293AbZJ2OP1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 18:43:49 -0400
+	Thu, 29 Oct 2009 10:15:27 -0400
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Pekka Enberg <penberg@cs.helsinki.fi>
+Subject: Re: pull request: wireless-next-2.6 2009-10-28
+Date: Thu, 29 Oct 2009 15:14:40 +0100
+Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linville@tuxdriver.com
+References: <200910291212.41656.bzolnier@gmail.com> <200910291435.54203.bzolnier@gmail.com> <84144f020910290652n2e75827dk698b238b6bd1cbed@mail.gmail.com>
+In-Reply-To: <84144f020910290652n2e75827dk698b238b6bd1cbed@mail.gmail.com>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 13 Oct 2009 15:42:53 -0700
-Message-ID: <43e72e890910131542k376a87c5rc30feb6491a06867@mail.gmail.com>
-Subject: Stable compat-wireless 2.6.32-rc4 released
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	Greg KH <greg@kroah.com>
-Content-Type: text/plain; charset=UTF-8
+Message-Id: <200910291514.40318.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As the kernel moves along so does the automatic stable backports for
-the wireless subsystem [1]. We are now on 2.6.32-rc4. Besides getting
-the same fixes from rc1..rc4 some backport changes were made as well,
-most importantly that of relying on your own kernel's iw_handler.h.
-I've tested this release with 2.6.28.
 
-Please report any issues you see.
+Hi,
 
-[1] http://wireless.kernel.org/en/users/Download/stable
+On Thursday 29 October 2009 14:52:50 Pekka Enberg wrote:
+> Hi Bart,
+> 
+> On Thu, Oct 29, 2009 at 3:35 PM, Bartlomiej Zolnierkiewicz
+> <bzolnier@gmail.com> wrote:
+> >> I'm saying that you should work with John to have him send a revert or
+> >> whatever to me.
+> >
+> > This is your responsibility to deal with your downstream maintainers,
+> > not mine and since you have accepted John's patch I'm asking you to
+> > revert rt2800pci patch from your tree.
+> 
+> So why don't you just send a patch to fix it up? I see you're doing
 
-PS. If you maintain a distribution and rely on stable compat-wireless
-releases please let me know so I can CC you when further updates are
-made.
+"git revert a9b3a9f"
 
-  Luis
+done.
+
+Dave, if you have problems with executing the command locally I'll be
+happy to supply you with the patch.
+
+> lots of cleanups to the staging drivers, why not direct some of that
+> energy to the drivers/net/wireless ones?
+
+When did we start to apply "fix it yourself" rule instead of "submitter
+should fix it" one to the _new_ code..
+
+rt2800 drivers have their maintainers and I would like to know what they
+are doing besides complaining about users and staging tree..
+
+-- 
+Bartlomiej Zolnierkiewicz
