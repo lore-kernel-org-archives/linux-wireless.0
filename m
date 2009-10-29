@@ -1,33 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f211.google.com ([209.85.219.211]:53622 "EHLO
-	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755653AbZJAHt5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2009 03:49:57 -0400
-Received: by ewy7 with SMTP id 7so7197277ewy.17
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2009 00:50:00 -0700 (PDT)
-To: "Robert P. J. Day" <rpjday@crashcourse.ca>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: unused header file drivers/net/wireless/wl12xx/wl1251_netlink.h?
-References: <alpine.LFD.2.00.0909301554001.21753@localhost>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 01 Oct 2009 10:49:56 +0300
-In-Reply-To: <alpine.LFD.2.00.0909301554001.21753@localhost> (Robert P. J. Day's message of "Wed\, 30 Sep 2009 15\:55\:26 -0400 \(EDT\)")
-Message-ID: <87k4zfr1sr.fsf@purkki.valot.fi>
+Received: from bu3sch.de ([62.75.166.246]:44514 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752139AbZJ2Nbq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Oct 2009 09:31:46 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: ath5k AP issues
+Date: Thu, 29 Oct 2009 14:31:46 +0100
+Cc: linux-wireless@vger.kernel.org, Luis Rodriguez <mcgrof@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>
+References: <200910291330.26172.mb@bu3sch.de> <200910291406.03422.mb@bu3sch.de>
+In-Reply-To: <200910291406.03422.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-Id: <200910291431.48388.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Robert P. J. Day" <rpjday@crashcourse.ca> writes:
+On Thursday 29 October 2009 14:06:01 Michael Buesch wrote:
+> On Thursday 29 October 2009 13:30:24 Michael Buesch wrote:
+> > Attached is a wireshark log. Let me explain what you see in there:
+> > 
+> > I have an ath5k AP and the powersaving n810 device as STA.
+> > What I try to do is ping the n810. You can see that at the start of the log.
+> > 
+> > Packet #31 is a ping to the n810. #42, too. and so on...
+> > You see that the n810 does not reply. (not even with an 802.11 ack)
+> > I guess the n810 is in PS at that time.
+> > Also note that the TIM sent by the AP is empty.
+> > 
+> > What I did at #135 is _simultaneously_ ping from the n810 to the ath5k.
+> > At that point suddenly both pings running on both ends start to succeed.
+> > 
+> > This is with a vanilla 2.6.31.5 kernel, but I can also reproduce this with
+> > compat-wireless and compat-wireless-stable.
+> > 
+> 
+> This is dmesg log with verbose PS debugging enabled.
+> 
+> [265617.902457] phy0: Allocated STA 00:1d:6e:9b:c5:a6
+> [265617.903187] phy0: Inserted STA 00:1d:6e:9b:c5:a6
+> [265620.539771] wlan0: STA 00:1d:6e:9b:c5:a6 aid 1 enters power save mode
+> 
+> Here I start pinging the n810. No dmesg messages appear and pinging does not work.
+> 
+> When I start pinging _from_ the n810, the following messages appear:
+> 
+> [265660.078055] wlan0: STA 00:1d:6e:9b:c5:a6 aid 1 exits power save mode
+> [265660.078066] wlan0: STA 00:1d:6e:9b:c5:a6 aid 1 sending 0 filtered/0 PS frames since STA not sleeping anymore
+> [265660.289206] wlan0: STA 00:1d:6e:9b:c5:a6 aid 1 enters power save mode
+> [265660.938988] STA 00:1d:6e:9b:c5:a6 aid 1: PS buffer (entries before 0)
+> [265660.985997] STA 00:1d:6e:9b:c5:a6 aid 1: PS Poll (entries after 0)
+> [265660.986016] wlan0: STA 00:1d:6e:9b:c5:a6 in PS mode, but pspoll set -> send frame
+> [265661.008310] wlan0: STA 00:1d:6e:9b:c5:a6 aid 1 exits power save mode
+> [265661.008321] wlan0: STA 00:1d:6e:9b:c5:a6 aid 1 sending 0 filtered/0 PS frames since STA not sleeping anymore
+> [265661.226915] wlan0: STA 00:1d:6e:9b:c5:a6 aid 1 enters power save mode
+> 
+> 
 
->   as best i can tell, that header file is entirely unreferenced by
-> anything in the tree.  just an observation.
 
-Yes, it's unused. I added it accidentally a long time ago when I
-rebased a big pile of patches. I'll send a patch to remove it.
+Ok, to sum up some discussion from IRC:
 
-Thanks for reporting this.
+The initial packets that fail are not pings, but ARPs. Which are broadcast frames.
+The access point simply fails to notify the station via DTIM for the pending
+multicast frames, so it stays in PS. Unicast and the corresponding TIM bitmap works properly,
+which also explains why it works once we got a successful ARP (and it didn't expire, yet).
+
+So there is a DTIM problem with multicast frames in ath5k.
 
 -- 
-Kalle Valo
+Greetings, Michael.
