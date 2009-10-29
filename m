@@ -1,28 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:55507 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S932223AbZJ3UAG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 16:00:06 -0400
-From: Malte Gell <malte.gell@gmx.de>
-To: linux-wireless@vger.kernel.org
-Subject: ar9170usb from compat-wireless-2009-10-28
-Date: Fri, 30 Oct 2009 21:00:08 +0100
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200910302100.08566.malte.gell@gmx.de>
+Received: from bombadil.infradead.org ([18.85.46.34]:52230 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755125AbZJ2ATC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Oct 2009 20:19:02 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
+Subject: [PATCH] ath9k: fix misplaced semicolon on rate control
+Date: Wed, 28 Oct 2009 20:19:06 -0400
+Message-Id: <1256775546-30774-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+The patch e43419f9:
 
-I use a Fritz! WLAN N stick and the ar9170usb driver, but with compat-wireless 
-from 2009-10-28 I get no USB connection LED burning...
+	ath9k: downgrade assert in rc.c for invalid rate
 
-compat-wireless 2009-09-29 was okay, it has enabled both LEDs. So I wonder, is 
-it safe to use older compat-wireless-2009-09-29?
+downgraded an ASSERT to a WARN_ON() but also misplaced a
+semicolon at the end of the second check. What this did
+was force the rate control code to always return the rate
+even if we should have warned about it. Since this should
+not have happened anymore anyway this fix isn't critical
+as the proper rate would have been returned anyway.
 
-I use Linux kernel 2.6.32-rc5-git3 on openSUSE 11.1
+Cc: stable@kernel.org
+Reported-by: Jiri Slaby <jirislaby@gmail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanx
-Malte
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 0639364..bb72b46 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -679,7 +679,7 @@ static u8 ath_rc_get_highest_rix(struct ath_softc *sc,
+ 		return rate;
+ 
+ 	if (rate_table->info[rate].valid_single_stream &&
+-	    !(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG));
++	    !(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG))
+ 		return rate;
+ 
+ 	/* This should not happen */
+-- 
+1.6.0.4
+
