@@ -1,71 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46287 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751678AbZJQPIl (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:55016 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754164AbZJ2VUD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2009 11:08:41 -0400
-Subject: Re: [PATCH 2/2] rt2x00: Implement support for rt2800pci
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Alban Browaeys <prahal@yahoo.com>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	Mattias Nissler <mattias.nissler@gmx.de>,
-	Mark Asselstine <asselsm@gmail.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <200910171654.03344.bzolnier@gmail.com>
-References: <200910152137.58164.IvDoorn@gmail.com>
-	 <200910152204.16407.IvDoorn@gmail.com>
-	 <200910171654.03344.bzolnier@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-nGMAjkV8uCWHfn4fFx2o"
-Date: Sun, 18 Oct 2009 00:08:24 +0900
-Message-Id: <1255792104.3434.2.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 29 Oct 2009 17:20:03 -0400
+Received: by mail-iw0-f180.google.com with SMTP id 10so1692473iwn.4
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2009 14:20:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890910291355l5fc4ec2ctb9a777b6e8b07baa@mail.gmail.com>
+References: <20091028183726.GA4952@tux> <1256761485.4237.260.camel@johannes.local>
+	<43e72e890910291355l5fc4ec2ctb9a777b6e8b07baa@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 29 Oct 2009 14:19:48 -0700
+Message-ID: <43e72e890910291419j7feb7a3dg33cd5b02e064eeee@mail.gmail.com>
+Subject: Re: odd state reached when AP deauths you after assoc
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Oct 29, 2009 at 1:55 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Wed, Oct 28, 2009 at 1:24 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Wed, 2009-10-28 at 11:37 -0700, Luis R. Rodriguez wrote:
+>>> I ran into this when ath5k with wpa_supplicant with config file with
+>>> a wrong password against a Cisco AP. It seems the Cisco AP auths you
+>>> and lets you assoc but later it deauths you -- I guess after it
+>>> determines you are auth credentials failed. When this happens I get:
+>>>
+>>> mcgrof@tux ~ $ iw dev wlan0 link
+>>> Authenticated with 00:0b:85:5b:8d:6c (on wlan0)
+>>> Not connected.
+>>
+>> I'm guessing that you're using -Dnl80211. You need this patch, or
+>> equivalent:
+>> http://johannes.sipsolutions.net/patches/hostap/all/2009-10-26-12%3a59/deauth-on-disassoc.patch
+>
+> Indeed, it fixes my woes, thanks.
 
---=-nGMAjkV8uCWHfn4fFx2o
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Well almost, after a while of being connected it then does this:
 
-On Sat, 2009-10-17 at 16:54 +0200, Bartlomiej Zolnierkiewicz wrote:
+CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
+CTRL-EVENT-SCAN-RESULTS
+Trying to authenticate with 00:0b:85:5b:8d:6c (SSID='ATH-GLOBAL' freq=2462 MHz)
+Trying to associate with 00:0b:85:5b:8d:6c (SSID='ATH-GLOBAL' freq=2462 MHz)
+Associated with 00:0b:85:5b:8d:6c
+CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
+CTRL-EVENT-SCAN-RESULTS
+Trying to authenticate with 00:0b:85:5b:9a:bc (SSID='ATH-GLOBAL' freq=2412 MHz)
+Trying to associate with 00:0b:85:5b:9a:bc (SSID='ATH-GLOBAL' freq=2412 MHz)
+Associated with 00:0b:85:5b:9a:bc
+CTRL-EVENT-EAP-STARTED EAP authentication started
+CTRL-EVENT-EAP-STARTED EAP authentication started
+CTRL-EVENT-EAP-METHOD EAP vendor 0 method 25 (PEAP) selected
+OpenSSL: tls_connection_handshake - Failed to read possible
+Application Data error:00000000:lib(0):func(0):reason(0)
 
-> I also used the opportunity to take a closer look at this driver and
-> it seems that it needlessly adds around 2 KLOC to kernel by duplicating
-> the common content of rt2800usb.h to rt2800pci.h instead of moving it
-> to the shared header (like it is done in the staging crap drivers):
+And I then end up with the same:
 
-Tell me you're kidding -- comparing 2k duplicated LOC with a driver that
-ships its own wifi stack?
+>>> mcgrof@tux ~ $ iw dev wlan0 link
+>>> Authenticated with 00:0b:85:5b:8d:6c (on wlan0)
+>>> Not connected.
 
-johannes
+But this time if I hit ctrl-c it gets cleared and I can auth/assoc
+fine after that. But an issue is still present.
 
---=-nGMAjkV8uCWHfn4fFx2o
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK2d3kAAoJEODzc/N7+QmawG8P/iEWM2uicvDfAQn+HVbN8ISz
-mDX9UhUx5AEPFgvqcxZR2+lI3pMj6v4fvUlXouozUznX2rrPTIKadDOASLZlrRrc
-zz5iO455SdIMIOZCmwYWg+6WRshl0eGSq6nDtzt/oOUf1kVU+YI3kg0CTx5EoRdw
-FY/CwcjDEOswrazBBZMZM8nYTegC9+kGosZUmJ4Sib0bQFj6y5GWeCRaNyF805rx
-gy4O4FxzBdv+EtfnJ+/sf5tuPe0oBP6o2DsW7jSNvJkFp2wjcBxtm0GyiJfjadIz
-nKAF7x2Bg0kAIR44nCETebDnvDjzAHwqA5Nl20CeEIJUvPY+B31WlR6YOXFRTk71
-QZig03D63KR2azfRfeZjamRBhW3V8H5mpwDDarYQfv+V63nUtSjt8ElXmIeFheib
-FYKg/5OILjp9d6Mp+6pg9LLQoeHYIftbBC/mAMxdffIr+SpZPBqenJCQFo5yfDbC
-XGjl7Siekxkwq+Y1I4sCfIK0McA54ZWYbCBtVvcZyJpnaV4HYEQhOt0vOvXnKRiN
-B+qnZGcLU3tLlM6ZX1+4qFzMxrsEN8FbFyRUduFNSnvD0pDe/mffla25PJdH6ZBN
-v2sT/Pp4dZLiIcHzdYg9IYn+k0JQvVf9k/yAcVh6N8Zilb/jCo+3S8GPbb2Mr9vK
-9J6jxwLBmJQ8NM3V/r28
-=5wb2
------END PGP SIGNATURE-----
-
---=-nGMAjkV8uCWHfn4fFx2o--
-
+  Luis
