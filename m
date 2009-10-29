@@ -1,99 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:57352 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755889AbZJIGfx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2009 02:35:53 -0400
-Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
- CPU"
-From: Mike Galbraith <efault@gmx.de>
-To: Frans Pop <elendil@planet.nl>
-Cc: Arjan van de Ven <arjan@infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	Peter Zijlstra <peterz@infradead.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200910082259.35204.elendil@planet.nl>
-References: <200910051500.55875.elendil@planet.nl>
-	 <200910081655.37485.elendil@planet.nl>
-	 <1255026217.6643.12.camel@marge.simson.net>
-	 <200910082259.35204.elendil@planet.nl>
-Content-Type: text/plain
-Date: Fri, 09 Oct 2009 08:35:03 +0200
-Message-Id: <1255070103.7639.30.camel@marge.simson.net>
-Mime-Version: 1.0
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:35431 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756475AbZJ2R3b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Oct 2009 13:29:31 -0400
+Received: by pwj9 with SMTP id 9so176055pwj.21
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2009 10:29:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <0D107966AF6D79418315B7C5549F4B5101150D82@lemail1.le.imgtec.org>
+References: <1256687501-8636-1-git-send-email-andrey@cozybit.com>
+	 <0D107966AF6D79418315B7C5549F4B5101150D82@lemail1.le.imgtec.org>
+Date: Thu, 29 Oct 2009 10:29:36 -0700
+Message-ID: <45e8e6c40910291029nac07e96o5ea7cc95b2e24917@mail.gmail.com>
+Subject: Re: [PATCH] libertas: remove internal buffers from GSPI driver
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: George Shore <George.Shore@imgtec.com>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	sebatian@breakpoint.cc, dcbw@redhat.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-10-08 at 22:59 +0200, Frans Pop wrote:
-> On Thursday 08 October 2009, Mike Galbraith wrote:
-> > I still see very high latencies coming out of idle (last noted was >
-> > 300ms, NO_HZ) with this patch,
-> >
-> > Like this:
-> >
-> > Cause                                           Maximum    Percentage
-> > Scheduler: waiting for cpu                   604.2 msec        49.0 %
-> 
-> I'm not seeing anything even remotely like that.
+Thanks George,
 
-Instrumenting, I saw (stale) clock deltas of >900ms coming out of idle,
-delta being the difference between rq->clock when we hit update_curr()
-and discover that this queue was idle, and what the clock will be an
-instant or two later when somebody winds the clock.
+On Thu, Oct 29, 2009 at 7:27 AM, George Shore <George.Shore@imgtec.com> wrote:
+> I've tested this on our in-house dev board with our in-house CPU, on the
+> 8686 in GSPI mode. Everything works as expected :)
+>
+> Tested-by: George Shore <george.shore@imgtec.com>
 
-I've been watching latencytop for a while now to make sure latency is
-really dead.  I see no twitching, so...
+Can you please tell us what you were able to test?  I'm curious about:
+1) were you able to turn IEEE PS on and off?
+2) were you able to use WPA2?
+3) were you able to use WPA2 with IEEE PS at the same time?
 
-sched: update the clock of runqueue select_task_rq() selected.
+(3) is really tricky and may need additional work.  One issue that I'm
+seeing is that the driver gets out of sync with the device, the way
+I'm reproducing this is:
 
-In try_to_wake_up(), we update the runqueue clock, but select_task_rq()
-may select a different runqueue than the one we updated, leaving the new
-runqueue's clock stale for a bit.
+1) use wpa_supplicant to associate to an AP with WPA2 security.
+2) iwconfig eth1 power on -- you should see the LED blinking to
+indicate IEEE PS (the LED is off while the device is sleeping)
+3) issue a command or two to temporarily take the device out of IEEE
+PS mode (ex: iwconfig with no arguments to look at the configuration
+and stats)
+4) the LED should be temporarily solid-on and then return to blinking
+after the driver re-enables IEEE PS mode
 
-This patch cures occasional huge latencies reported by latencytop when
-coming out of idle on a mostly idle NO_HZ box.
+Thanks again,
 
-Signed-off-by: Mike Galbraith <efault@gmx.de>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
-LKML-Reference: <new-submission>
-
----
- kernel/sched.c |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
-
-Index: linux-2.6/kernel/sched.c
-===================================================================
---- linux-2.6.orig/kernel/sched.c
-+++ linux-2.6/kernel/sched.c
-@@ -2311,7 +2311,7 @@ static int try_to_wake_up(struct task_st
- {
- 	int cpu, orig_cpu, this_cpu, success = 0;
- 	unsigned long flags;
--	struct rq *rq;
-+	struct rq *rq, *orig_rq;
- 
- 	if (!sched_feat(SYNC_WAKEUPS))
- 		wake_flags &= ~WF_SYNC;
-@@ -2319,7 +2319,7 @@ static int try_to_wake_up(struct task_st
- 	this_cpu = get_cpu();
- 
- 	smp_wmb();
--	rq = task_rq_lock(p, &flags);
-+	rq = orig_rq = task_rq_lock(p, &flags);
- 	update_rq_clock(rq);
- 	if (!(p->state & state))
- 		goto out;
-@@ -2350,6 +2350,10 @@ static int try_to_wake_up(struct task_st
- 		set_task_cpu(p, cpu);
- 
- 	rq = task_rq_lock(p, &flags);
-+
-+	if (rq != orig_rq)
-+		update_rq_clock(rq);
-+
- 	WARN_ON(p->state != TASK_WAKING);
- 	cpu = task_cpu(p);
- 
-
-
+  -Andrey
