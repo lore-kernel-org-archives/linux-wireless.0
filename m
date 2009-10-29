@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:31689 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756089AbZJSQeY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2009 12:34:24 -0400
-Subject: Re: [PATCH 10/10] iwlwifi: rework for static power save
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1ba2fa240910161615h75a74e13u8a31c3e49eae234a@mail.gmail.com>
-References: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
-	 <1255728358-29976-11-git-send-email-reinette.chatre@intel.com>
-	 <1ba2fa240910161615h75a74e13u8a31c3e49eae234a@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 19 Oct 2009 09:32:00 -0700
-Message-Id: <1255969920.10507.0.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:65523 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752832AbZJ2QSg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Oct 2009 12:18:36 -0400
+Received: by iwn10 with SMTP id 10so1466308iwn.4
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2009 09:18:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1256760832-29063-1-git-send-email-reinette.chatre@intel.com>
+References: <1256760832-29063-1-git-send-email-reinette.chatre@intel.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 29 Oct 2009 09:18:21 -0700
+Message-ID: <43e72e890910290918v1ca66bbdk4270eabcae6f5798@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: make align adjustment code support paged SKB
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tom,
+On Wed, Oct 28, 2009 at 1:13 PM, Reinette Chatre
+<reinette.chatre@intel.com> wrote:
+> From: Zhu Yi <yi.zhu@intel.com>
+>
+> This fixed a BUG_ON in __skb_trim() when paged rx is used in
+> iwlwifi driver. Yes, the whole mac80211 stack doesn't support
+> paged SKB yet. But let's start the work slowly from small
+> code snippets.
 
-Thanks for the feedback, I will submit a cleanup patch to address this
-mistake.
- 
-On Fri, 2009-10-16 at 16:15 -0700, Tomas Winkler wrote:
-> >  #include "iwl-commands.h"
-> >
-> > +#define IWL_CONN_LISTEN_INTERVAL       10
-> 
-> There is already IWL_CONN_MAX_LISTEN_INTERVAL; defined
-> 
-> Thanks
-> Tomas
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So I just noticed ar9271 segments some frames upon RX. The current
+implementation approach is to stitch them back together through a
+newly allocated skb after all segments are received. How does iwlwifi
+ues paged skbs? How do you keep track of which page is for what frame?
 
+Can you elaborate on the planned paged skb support on mac80211 you
+have. Do you have any queued up patches I can look at this point?
+
+  Luis
