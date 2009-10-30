@@ -1,85 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39359 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:42587 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757759AbZJaNgu (ORCPT
+	with ESMTP id S1757173AbZJ3LzB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Oct 2009 09:36:50 -0400
-Subject: Re: [PATCH] cfg80211: fix NULL ptr deref
+	Fri, 30 Oct 2009 07:55:01 -0400
+Subject: [PATCH] mac80211: also drop qos-nullfunc frames silently
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Parag Warudkar <parag.lkml@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890910310635q6015cf3bq639426d5c1502454@mail.gmail.com>
-References: <1256971237.3555.87.camel@johannes.local>
-	 <43e72e890910310635q6015cf3bq639426d5c1502454@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-OTxNse7KFsOsqJOJZ6+R"
-Date: Sat, 31 Oct 2009 14:36:51 +0100
-Message-ID: <1256996211.3555.131.camel@johannes.local>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 30 Oct 2009 12:55:03 +0100
+Message-ID: <1256903703.3555.49.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We drop nullfunc frames, but not qos-nullfunc frames,
+even though those could be used for PS state control
+as well.
 
---=-OTxNse7KFsOsqJOJZ6+R
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/linux/ieee80211.h |   12 +++++++++++-
+ net/mac80211/rx.c         |   15 ++++++++++-----
+ 2 files changed, 21 insertions(+), 6 deletions(-)
 
-On Sat, 2009-10-31 at 06:35 -0700, Luis R. Rodriguez wrote:
-> On Fri, Oct 30, 2009 at 11:40 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> >  commit 211a4d12abf86fe0df4cd68fc6327cbb58f56f81
-> >  Author: Johannes Berg <johannes@sipsolutions.net>
-> >  Date:   Tue Oct 20 15:08:53 2009 +0900
-> >
-> >      cfg80211: sme: deauthenticate on assoc failure
-> >
-> > introduced a potential NULL pointer dereference that
-> > some people have been hitting for some reason -- the
-> > params.bssid pointer is not guaranteed to be non-NULL
-> > for what seems to be a race between various ways of
-> > reaching the same thing.
-> >
-> > While I'm trying to analyse the problem more let's
-> > first fix the crash. I think the real fix may be to
-> > avoid doing _anything_ if it ended up being NULL, but
-> > right now I'm not sure yet.
-> >
-> > I think
-> > http://bugzilla.kernel.org/show_bug.cgi?id=3D14342
-> > might also be this issue.
-> >
-> > Reported-by: Parag Warudkar <parag.lkml@gmail.com>
-> > Tested-by: Parag Warudkar <parag.lkml@gmail.com>
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->=20
-> Do we know if this will also affect 2.6.32?
+--- wireless-testing.orig/include/linux/ieee80211.h	2009-10-30 08:18:15.000000000 +0100
++++ wireless-testing/include/linux/ieee80211.h	2009-10-30 08:19:40.000000000 +0100
+@@ -472,7 +472,7 @@ static inline int ieee80211_is_cfendack(
+ }
+ 
+ /**
+- * ieee80211_is_nullfunc - check if FTYPE=IEEE80211_FTYPE_DATA and STYPE=IEEE80211_STYPE_NULLFUNC
++ * ieee80211_is_nullfunc - check if frame is a regular (non-QoS) nullfunc frame
+  * @fc: frame control bytes in little-endian byteorder
+  */
+ static inline int ieee80211_is_nullfunc(__le16 fc)
+@@ -481,6 +481,16 @@ static inline int ieee80211_is_nullfunc(
+ 	       cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_NULLFUNC);
+ }
+ 
++/**
++ * ieee80211_is_qos_nullfunc - check if frame is a QoS nullfunc frame
++ * @fc: frame control bytes in little-endian byteorder
++ */
++static inline int ieee80211_is_qos_nullfunc(__le16 fc)
++{
++	return (fc & cpu_to_le16(IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE)) ==
++	       cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_QOS_NULLFUNC);
++}
++
+ struct ieee80211s_hdr {
+ 	u8 flags;
+ 	u8 ttl;
+--- wireless-testing.orig/net/mac80211/rx.c	2009-10-30 08:18:15.000000000 +0100
++++ wireless-testing/net/mac80211/rx.c	2009-10-30 08:18:29.000000000 +0100
+@@ -886,12 +886,17 @@ ieee80211_rx_h_sta_process(struct ieee80
+ 		}
+ 	}
+ 
+-	/* Drop data::nullfunc frames silently, since they are used only to
+-	 * control station power saving mode. */
+-	if (ieee80211_is_nullfunc(hdr->frame_control)) {
++	/*
++	 * Drop (qos-)data::nullfunc frames silently, since they
++	 * are used only to control station power saving mode.
++	 */
++	if (ieee80211_is_nullfunc(hdr->frame_control) ||
++	    ieee80211_is_qos_nullfunc(hdr->frame_control)) {
+ 		I802_DEBUG_INC(rx->local->rx_handlers_drop_nullfunc);
+-		/* Update counter and free packet here to avoid counting this
+-		 * as a dropped packed. */
++		/*
++		 * Update counter and free packet here to avoid
++		 * counting this as a dropped packed.
++		 */
+ 		sta->rx_packets++;
+ 		dev_kfree_skb(rx->skb);
+ 		return RX_QUEUED;
 
-I'm pretty sure -- have we got any changes to this code that are not
-in .32?
-
-johannes
-
---=-OTxNse7KFsOsqJOJZ6+R
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK7D1vAAoJEODzc/N7+QmaM3oQAJSUhLWr210uOweZWQy2VWJt
-saE5mem7lLZ/5uo274OdxaP8U5aRuMIb1X0D8B0icL/3V6uhvH1VFBJPXVKA4k2q
-KGQ7UzG3W7UV82TYIiFWyQa9oiVHLjY0B0ydqpCKPTmL4wwPkFLHNnzjzwIOiofT
-MX+DGDjJ0SkVMLMrmdRtCNTzWu57zRxR24jQpXNSrWcztq8+c1EehaEp79QNrodK
-3FchP03gZnqyB3qptE/HHpsVB4i90E0DDWLy6hqCv1u41p9xfA0cOIvVe/V/XVdH
-sjThl1nmzOwWeYw2zoQgMZ4+3sSmuBG2b0L8bS7Fv8Kqsh4Ts/VuPWmhVRnO9hjO
-PitoHkJ30L17n7jhvVMHgqtW6pMZsBPSUbcAuEbvzcb10I+uprs5pvrsnLQOFkzC
-+OfqF7J7AhH1bz/DX8zFe3/Z7SW9NzP/BbY/tNC6spll6AvQPcWDC1yMe3Jm/Fki
-Idk1r2VbBEz9KgwRPQvXwKkLjh5HE5LW2QBxl3Y1EQX0HMpuQe40fxugeogCxeP5
-50pyLxa6TcWmPMeCscTPbJYW2iYIHX+8Xzle6PTbeSNsvFMte9ZMExfL8o99APje
-46ev8FraQsrAUvYC0ovBw53C/3RN1uTZP9K/SHDweRgFmToX/Mm6dn1TUbFrs+Hz
-lk3n8sF2yRA4ZCRZ6T6l
-=wA5K
------END PGP SIGNATURE-----
-
---=-OTxNse7KFsOsqJOJZ6+R--
 
