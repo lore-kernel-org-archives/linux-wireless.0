@@ -1,44 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:49928 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753159AbZJ2TpD (ORCPT
+Received: from mail-ew0-f228.google.com ([209.85.219.228]:34594 "EHLO
+	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932827AbZJ3SoQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 15:45:03 -0400
+	Fri, 30 Oct 2009 14:44:16 -0400
+Received: by ewy28 with SMTP id 28so3310768ewy.18
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2009 11:44:20 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] libertas if_usb: Fix crash on 64-bit machines
+Date: Fri, 30 Oct 2009 19:44:14 +0100
+Cc: David Woodhouse <dwmw2@infradead.org>, linville@tuxdriver.com,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	dcbw@redhat.com, stern@rowland.harvard.edu, davem@davemloft.net
+References: <1256924714.4030.44.camel@macbook.infradead.org> <4AEB2F13.50102@lwfinger.net>
+In-Reply-To: <4AEB2F13.50102@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <200910291514.40318.bzolnier@gmail.com>
-References: <200910291212.41656.bzolnier@gmail.com>
-	 <200910291435.54203.bzolnier@gmail.com>
-	 <84144f020910290652n2e75827dk698b238b6bd1cbed@mail.gmail.com>
-	 <200910291514.40318.bzolnier@gmail.com>
-Date: Thu, 29 Oct 2009 21:45:07 +0200
-Message-ID: <84144f020910291245l1a7a3fd6o8822ecd4ce3b5504@mail.gmail.com>
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-From: Pekka Enberg <penberg@cs.helsinki.fi>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200910301944.14740.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bart,
+On Friday 30 October 2009 19:23:15 Larry Finger wrote:
+> David Woodhouse wrote:
+> > On a 64-bit kernel, skb->tail is an offset, not a pointer. The libertas
+> > usb driver passes it to usb_fill_bulk_urb() anyway, causing interesting
+> > crashes. Fix that by using skb->data instead.
+> > 
+> > This highlights a problem with usb_fill_bulk_urb(). It doesn't notice
+> > when dma_map_single() fails and return the error to its caller as it
+> > should. In fact it _can't_ currently return the error, since it returns
+> > void.
+> 
+> This should be fixed. If changing the code to return the error would
+> be too invasive (It is used in 30+ drivers), perhaps the routine
+> should be modified to log a warning when dma mapping fails. I will
+> submit an RFC to do that.
 
-On Thu, Oct 29, 2009 at 4:14 PM, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
->> lots of cleanups to the staging drivers, why not direct some of that
->> energy to the drivers/net/wireless ones?
->
-> When did we start to apply "fix it yourself" rule instead of "submitter
-> should fix it" one to the _new_ code..
+err, hold on a sec:
 
-Don't be silly, I didn't say that.
 
-I was simply pointing out that your time would probably be better
-spent in improving the "proper" ralink wireless drivers but if you
-_really_ prefer to spend your time in pointless arguments, go ahead.
-It should be pretty obvious by now that the best way to improve things
-is to work with the relevant maintainers, not against them. (Unless
-you wish your work to be ignored, of course.)
+ - include/linux/usb.h -
 
-                        Pekka
+static inline void usb_fill_bulk_urb(struct urb *urb,
+                                     struct usb_device *dev,
+                                     unsigned int pipe,
+                                     void *transfer_buffer,
+                                     int buffer_length,
+                                     usb_complete_t complete_fn,
+                                     void *context)
+{
+        urb->dev = dev;
+        urb->pipe = pipe;
+        urb->transfer_buffer = transfer_buffer;
+        urb->transfer_buffer_length = buffer_length;
+        urb->complete = complete_fn;
+        urb->context = context;
+}
+
+that's just a fill-in macro.
+AFAICT usb_submit_urb does the tricky dma mapping.
+
+Regards,
+	Chr
