@@ -1,96 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:38662 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751607AbZJHEfF (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43747 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757453AbZJ3U7A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 00:35:05 -0400
-Date: Thu, 8 Oct 2009 00:34:26 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	vasanth@atheros.com, Sujith.Manoharan@atheros.com
-Subject: Re: [PATCH 1/6] ath9k: move common->debug_mask setting to
-	ath_init_softc()
-Message-ID: <20091008043426.GA5760@bombadil.infradead.org>
-References: <1254878351-32433-1-git-send-email-lrodriguez@atheros.com> <1254878351-32433-2-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1254878351-32433-2-git-send-email-lrodriguez@atheros.com>
+	Fri, 30 Oct 2009 16:59:00 -0400
+Subject: Re: ieee80211_tx_status: headroom too small
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Nikolai ZHUBR <zhubr@mail.ru>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1094614475.20091030230028@mail.ru>
+References: <1094614475.20091030230028@mail.ru>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-cDQOkr5dPRctyC6Tx8cN"
+Date: Fri, 30 Oct 2009 21:59:01 +0100
+Message-ID: <1256936341.3555.67.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 06, 2009 at 09:19:06PM -0400, Luis R. Rodriguez wrote:
-> What this means is we can enable now debug prints without
-> requiring CONFIG_ATH9K_DEBUG.
-> 
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-> +MODULE_PARM_DESC(ath9k_debug, "Debugging mask");
+--=-cDQOkr5dPRctyC6Tx8cN
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-John, as sujith notes, this should be MODULE_PARM_DESC(debug ...
+On Fri, 2009-10-30 at 23:00 +0300, Nikolai ZHUBR wrote:
+> Hello people,
+>=20
+> I'm using compat-wireless-2009-09-14 with 2.6.25.20 and I have
+> recently noticed lots of these in syslog:
+>=20
+> ieee80211_tx_status: headroom too small
 
-Thanks sujith.
+What driver are you using?
 
-so here's v2:
+johannes
 
-From: Luis R. Rodriguez <lrodriguez@atheros.com>
-Subject: [PATCH v2 1/6] ath9k: move common->debug_mask setting to ath_init_softc()
+--=-cDQOkr5dPRctyC6Tx8cN
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-What this means is we can enable now debug prints without
-requiring CONFIG_ATH9K_DEBUG.
+-----BEGIN PGP SIGNATURE-----
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/debug.c |    5 -----
- drivers/net/wireless/ath/ath9k/main.c  |    5 +++++
- 2 files changed, 5 insertions(+), 5 deletions(-)
+iQIcBAABAgAGBQJK61ORAAoJEODzc/N7+QmaSekP/RPZrrYDjTbTVYPXyOylxSH8
+QPr2MkiVERNHq7+27JWkPprvOmCrs/MVq0NELLEgsmPljVP8UsZ62wRPNr9wRTyg
+0570LdiCKvqqI2eXu5fAOHs/pVJTOhRS6hyep5lBWkmirL+FT8s2rIVhjHKuY40x
+lN3qQI0tfwqK4o9PwwZAAO0+dC1EjpauQvPi4jICln5PM3VPPjgXOA1yq6qSXN1u
+x6YQXeYRx68whhrXodPG9OcfSAfX0m+zSia9F14Wj1LxlyaNNJt0jEJEJFUkJ28d
+Jk6s9ovvtZnvJwnsHktqZ7oytKEd90HeAUsaUI6HMRl0fxxd1SeciSH8JDM/1lGX
+E7HPhwmY/UZgKwZ75cVaASLOVU63hjGvnBv+F6R9qGIOnm9Xr6TMp4QlOzBq7aA+
+eVKi+5TqOVnjefY37cUJf1GfLRJr4WC0+P5duox1fviNaQBtc+dbGbYy6yEDU6UO
+aNyQxVKgV0tXu/91+d21RbmHtBNi6alpluGWoZrV5M7qiPWJbuiUXY+gr+Cgvd50
+QoopRMSVi/6oqKxqKALHrue/Uacp+utND40/6ycpy+2ZhovnJU7FX7KDH/QEgWdR
+8x2gGkHmCye2krjonXg4LjV8e7u8ZS9rEIROCkDzE68ygJzHrqv/Q1cEjP9F1ZYB
+CSVzPbzxlySTeaXSkAY/
+=KCSv
+-----END PGP SIGNATURE-----
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 25ae88e..84f4426 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -23,9 +23,6 @@
- #define REG_READ_D(_ah, _reg) \
- 	ath9k_hw_common(_ah)->ops->read((_ah), (_reg))
- 
--static unsigned int ath9k_debug = ATH_DBG_DEFAULT;
--module_param_named(debug, ath9k_debug, uint, 0);
--
- static struct dentry *ath9k_debugfs_root;
- 
- static int ath9k_debugfs_open(struct inode *inode, struct file *file)
-@@ -565,8 +562,6 @@ int ath9k_init_debug(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_softc *sc = (struct ath_softc *) common->priv;
- 
--	common->debug_mask = ath9k_debug;
--
- 	if (!ath9k_debugfs_root)
- 		return -ENOENT;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 86374ad..aeda541 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -29,6 +29,10 @@ static int modparam_nohwcrypt;
- module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
- 
-+static unsigned int ath9k_debug = ATH_DBG_DEFAULT;
-+module_param_named(debug, ath9k_debug, uint, 0);
-+MODULE_PARM_DESC(debug, "Debugging mask");
-+
- /* We use the hw_value as an index into our private channel structure */
- 
- #define CHAN2G(_freq, _idx)  { \
-@@ -1637,6 +1641,7 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	common->ah = ah;
- 	common->hw = sc->hw;
- 	common->priv = sc;
-+	common->debug_mask = ath9k_debug;
- 
- 	/*
- 	 * Cache line size is used to size and align various
--- 
-1.6.0.4
+--=-cDQOkr5dPRctyC6Tx8cN--
 
