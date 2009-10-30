@@ -1,80 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33187 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758616AbZJGBTs (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:48697 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756311AbZJ3T0q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 21:19:48 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, vasanth@atheros.com,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 4/6] ath9k: add a helper to clean the core driver upon module unload
-Date: Tue,  6 Oct 2009 21:19:09 -0400
-Message-Id: <1254878351-32433-5-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1254878351-32433-1-git-send-email-lrodriguez@atheros.com>
-References: <1254878351-32433-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 30 Oct 2009 15:26:46 -0400
+Received: by bwz27 with SMTP id 27so3949886bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2009 12:26:50 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH] libertas if_usb: Fix crash on 64-bit machines
+Date: Fri, 30 Oct 2009 20:26:46 +0100
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, linville@tuxdriver.com,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	dcbw@redhat.com, stern@rowland.harvard.edu, davem@davemloft.net
+References: <1256924714.4030.44.camel@macbook.infradead.org> <200910301944.14740.chunkeey@googlemail.com> <1256928681.4030.112.camel@macbook.infradead.org>
+In-Reply-To: <1256928681.4030.112.camel@macbook.infradead.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200910302026.47131.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The core driver needs to be stopped and then as a last step the
-hardware needs to be stopped and its structure free'd. We do this
-by moving the core driver cleanup to a new helper ath_clean_core()
-and have ath_cleanup() call it. Only as a last step does
-ath_cleanup() now free the hw.
+On Friday 30 October 2009 19:51:21 David Woodhouse wrote:
+> On Fri, 2009-10-30 at 19:44 +0100, Christian Lamparter wrote:
+> > 
+> > that's just a fill-in macro.
+> > AFAICT usb_submit_urb does the tricky dma mapping.
+> 
+> Ah, that makes sense. In that case, all we need to do is make
+> map_urb_for_dma() do the right thing.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+well, but while we're on the subject of libertas.
+
+I took a quick look around and wrote down some hopefully _helpful_ comments.
+That said, I don't have any libertas hw, so I have no idea if the attached
+code will actually do what its supposed to do... I'll leave it up to the
+professionals to test & write a real fix(es) with a proper commit message. 
+
+Notes:
+- most + IPFIELD_ALIGN_OFFSET can be replaced by a
+  single skb_reserve, right after allocation.
+
+- skb_tail_pointer(skb) should be used to get
+  the right rx_buf pointer.
+
+- setting URB_ZERO_PACKET is pointless for urbs
+  which are submitted to an IN endpoint.
 ---
- drivers/net/wireless/ath/ath9k/main.c |   13 +++++++++++--
- 1 files changed, 11 insertions(+), 2 deletions(-)
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index a8262de..f220db9 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -506,17 +506,16 @@ static int __if_usb_submit_rx_urb(struct if_usb_card *cardp,
+ 		goto rx_ret;
+ 	}
+ 
++	skb_reserve(skb, IPFIELD_ALIGN_OFFSET);
+ 	cardp->rx_skb = skb;
+ 
+ 	/* Fill the receive configuration URB and initialise the Rx call back */
+ 	usb_fill_bulk_urb(cardp->rx_urb, cardp->udev,
+ 			  usb_rcvbulkpipe(cardp->udev, cardp->ep_in),
+-			  (void *) (skb->tail + (size_t) IPFIELD_ALIGN_OFFSET),
++			  skb_tail_pointer(skb),
+ 			  MRVDRV_ETH_RX_PACKET_BUFFER_SIZE, callbackfn,
+ 			  cardp);
+ 
+-	cardp->rx_urb->transfer_flags |= URB_ZERO_PACKET;
+-
+ 	lbs_deb_usb2(&cardp->udev->dev, "Pointer for rx_urb %p\n", cardp->rx_urb);
+ 	if ((ret = usb_submit_urb(cardp->rx_urb, GFP_ATOMIC))) {
+ 		lbs_deb_usbd(&cardp->udev->dev, "Submit Rx URB failed: %d\n", ret);
+@@ -557,7 +556,7 @@ static void if_usb_receive_fwload(struct urb *urb)
+ 	}
+ 
+ 	if (cardp->fwdnldover) {
+-		__le32 *tmp = (__le32 *)(skb->data + IPFIELD_ALIGN_OFFSET);
++		__le32 *tmp = (__le32 *)skb->data;
+ 
+ 		if (tmp[0] == cpu_to_le32(CMD_TYPE_INDICATION) &&
+ 		    tmp[1] == cpu_to_le32(MACREG_INT_CODE_FIRMWARE_READY)) {
+@@ -572,8 +571,7 @@ static void if_usb_receive_fwload(struct urb *urb)
+ 		return;
+ 	}
+ 	if (cardp->bootcmdresp <= 0) {
+-		memcpy (&bootcmdresp, skb->data + IPFIELD_ALIGN_OFFSET,
+-			sizeof(bootcmdresp));
++		memcpy(&bootcmdresp, skb->data, sizeof(bootcmdresp));
+ 
+ 		if (le16_to_cpu(cardp->udev->descriptor.bcdDevice) < 0x3106) {
+ 			kfree_skb(skb);
+@@ -619,8 +617,7 @@ static void if_usb_receive_fwload(struct urb *urb)
+ 		return;
+ 	}
+ 
+-	memcpy(syncfwheader, skb->data + IPFIELD_ALIGN_OFFSET,
+-	       sizeof(struct fwsyncheader));
++	memcpy(syncfwheader, skb->data, sizeof(struct fwsyncheader));
+ 
+ 	if (!syncfwheader->cmd) {
+ 		lbs_deb_usb2(&cardp->udev->dev, "FW received Blk with correct CRC\n");
+@@ -665,7 +662,6 @@ static inline void process_cmdtypedata(int recvlength, struct sk_buff *skb,
+ 		return;
+ 	}
+ 
+-	skb_reserve(skb, IPFIELD_ALIGN_OFFSET);
+ 	skb_put(skb, recvlength);
+ 	skb_pull(skb, MESSAGE_HEADER_LEN);
+ 
+@@ -719,7 +715,7 @@ static void if_usb_receive(struct urb *urb)
+ 	int recvlength = urb->actual_length;
+ 	uint8_t *recvbuff = NULL;
+ 	uint32_t recvtype = 0;
+-	__le32 *pkt = (__le32 *)(skb->data + IPFIELD_ALIGN_OFFSET);
++	__le32 *pkt = (__le32 *)skb->data;
+ 	uint32_t event;
+ 
+ 	lbs_deb_enter(LBS_DEB_USB);
+@@ -732,7 +728,7 @@ static void if_usb_receive(struct urb *urb)
+ 			goto setup_for_next;
+ 		}
+ 
+-		recvbuff = skb->data + IPFIELD_ALIGN_OFFSET;
++		recvbuff = skb->data;
+ 		recvtype = le32_to_cpu(pkt[0]);
+ 		lbs_deb_usbd(&cardp->udev->dev,
+ 			    "Recv length = 0x%x, Recv type = 0x%X\n",
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index e6842dd..39b2780 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1313,16 +1313,21 @@ static void ath_start_rfkill_poll(struct ath_softc *sc)
- 		wiphy_rfkill_start_polling(sc->hw->wiphy);
- }
- 
-+static void ath_clean_core(struct ath_softc *sc);
-+static void ath9k_uninit_hw(struct ath_softc *sc);
-+
- void ath_cleanup(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
--	ath_detach(sc);
-+	ath_clean_core(sc);
- 	free_irq(sc->irq, sc);
- 	ath_bus_cleanup(common);
- 	kfree(sc->sec_wiphy);
- 	ieee80211_free_hw(sc->hw);
-+
-+	ath9k_uninit_hw(sc);
- }
- 
- static void ath9k_uninit_hw(struct ath_softc *sc)
-@@ -1336,7 +1341,7 @@ static void ath9k_uninit_hw(struct ath_softc *sc)
- 	sc->sc_ah = NULL;
- }
- 
--void ath_detach(struct ath_softc *sc)
-+static void ath_clean_core(struct ath_softc *sc)
- {
- 	struct ieee80211_hw *hw = sc->hw;
- 	struct ath_hw *ah = sc->sc_ah;
-@@ -1375,7 +1380,11 @@ void ath_detach(struct ath_softc *sc)
- 	if ((sc->btcoex.no_stomp_timer) &&
- 	    ah->btcoex_hw.scheme == ATH_BTCOEX_CFG_3WIRE)
- 		ath_gen_timer_free(ah, sc->btcoex.no_stomp_timer);
-+}
- 
-+void ath_detach(struct ath_softc *sc)
-+{
-+	ath_clean_core(sc);
- 	ath9k_uninit_hw(sc);
- }
- 
--- 
-1.6.0.4
+
 
