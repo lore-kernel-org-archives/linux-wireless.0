@@ -1,78 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:33615 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741AbZJPRP3 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53124 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756113AbZJ3HAc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 13:15:29 -0400
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: Current status of rt2800usb and staging/rt2870
-Date: Fri, 16 Oct 2009 19:13:43 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Ozan =?utf-8?q?=C3=87a=C4=9Flayan?= <ozan@pardus.org.tr>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
-References: <4AD46380.9020308@pardus.org.tr> <200910151647.49050.bzolnier@gmail.com> <43e72e890910151206y59353608p5065f72eebd72ab@mail.gmail.com>
-In-Reply-To: <43e72e890910151206y59353608p5065f72eebd72ab@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <200910161913.44109.bzolnier@gmail.com>
+	Fri, 30 Oct 2009 03:00:32 -0400
+Subject: Re: pull request: wireless-next-2.6 2009-10-28
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <200910292248.42229.bzolnier@gmail.com>
+References: <200910291212.41656.bzolnier@gmail.com>
+	 <200910291514.40318.bzolnier@gmail.com>
+	 <84144f020910291245l1a7a3fd6o8822ecd4ce3b5504@mail.gmail.com>
+	 <200910292248.42229.bzolnier@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-335pKOpeisFXftCMUz+K"
+Date: Fri, 30 Oct 2009 08:00:23 +0100
+Message-ID: <1256886023.3555.5.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 15 October 2009 21:06:55 Luis R. Rodriguez wrote:
-> On Thu, Oct 15, 2009 at 7:47 AM, Bartlomiej Zolnierkiewicz
-> <bzolnier@gmail.com> wrote:
-> > On Wednesday 14 October 2009 18:55:23 Luis R. Rodriguez wrote:
-> >
-> >> I hear fishing in Poland is great this time of year.
-> >
-> > It got quite cold this week so I thought that I would try to fish
-> > the commit that broke Atheros AR9285 in Linus' tree (works in 2.6.31)
-> > and make recent kernels finally work on my laptop..
-> >
-> > Seems like there are two regressions actually:
-> >
-> > - later one making association/authentication impossible
-> 
-> And you reported this when and where?
-> 
-> > - earlier one making transfers stall
-> 
-> And you reported this when and where?
-> 
-> Curious how the issues you mention now spreading across sound and
-> wireless do not get fixed or seriously addressed. Have you considered
-> your tactics are perhaps not the best?
 
-Please look closely at chosen examples and you'll see a lot of insight
-telling you that users' experience is not granted by having clean code
-or by having features which are not consider crucial instead of reliable
-basic functionality.
+--=-335pKOpeisFXftCMUz+K
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-I'm pretty sure that if you try F12 w/ AR9285 you will be able to reproduce
-and fix at least some of above mentioned problems.  I just used the occasion
-to raise them and make people aware of bugs before they hit users in final
-2.6.32.
+On Thu, 2009-10-29 at 22:48 +0100, Bartlomiej Zolnierkiewicz wrote:
 
-I'm not as much interested in fixing existing problems as in seeing why
-they happened in the first place and how the process can be improved to
-prevent them / making tracking of them easy for non-developers (so more
-people can contribute to the project and developers have more time to
-add new features).  I also don't have time to care about every single
-Linux bug that I encounter (I hit quite a lot of them), bug-reporting
-is a thankless and very time consuming work.
+> I don't think that my technical arguments are pointless.
+>=20
+> Quite the contrary, I'm pretty confident that addressing my review concer=
+ns
+> would result in better RT28x00 / RT30x0 support in the very near future.
 
-This is in no means trying to implicit that you're doing bad job.  Quite
-the contrary -- I think that your work on Atheros support is much needed.
+So you know how to make the driver better, whine that it doesn't work,
+but don't help out either. Hey, good way to collaborate!
 
-The point is that there is a lot of room for in release management process
-of wireless/networking (it has been more-or-less unchanged for a long time
-while other subsystems, i.e. x86, are constantly looking into improvements).
+> > It should be pretty obvious by now that the best way to improve things
+> > is to work with the relevant maintainers, not against them. (Unless
+> > you wish your work to be ignored, of course.)
+>=20
+> I work with a lot of other maintainers.  I would say that providing valua=
+ble
+> review feedback is also "working with" (at least I would be very happy wi=
+th
+> such feedback in my projects).
 
-This is not something that you can change alone so please do not hesitate
-to give feedback about this to your upstream maintainers so they are aware
-of the need for improvements.
+Face it though, people have read your feedback, thought about it, and
+decided to disagree. You seem to have a childish problem with that,
+appealing to higher authority to get your way just makes you look more
+childish.
+
+johannes
+
+--=-335pKOpeisFXftCMUz+K
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK6o8EAAoJEODzc/N7+QmaaEUP/1+5IZQZ/vYQSE+gl2XY7iMv
+wcTHFoHXMJf86vkyf+M0Zcsd3XJW+JSNUx79t4g+zCU4hSs+4+D9unL6QaqQn70H
+y1A/EOiNyIIVwNHhoCGcqisag7A0IdP/c6gRt54WXhpuDxHlYtF8mJcfo6+gJJdK
+pIuXQGYGtZyLxNi4FGtlue2lEd6qCB8YgLrw5YpgRL2xtRGOdbtY/FRjJmPo4uRe
+0oj0fSh6AUZlYaQQqXMwaDokc0G3M8EOYqY84OG6bjaAg0nph3F//k+iqoSMga/q
+9vgQ8oA7AW01jPvxJoJTVGPtP9QH35ky2aW13vkW/9DVqSwICXKuTyd7Dn4n/58h
+rdIYMVdFFKNIf1k6DrJJ5ThlonxagHwLdryep0PXfsS66Eghlqy965oLvTTgyEZf
+9lxVzdNa1dUgxM4RmthKUIVgnoFtTeodbt9W2wGtq6X42p0k+N/4sgoEf73fnOhD
+DNYbisodxRoF0le5f0S7yeI1jqJ1fxi/+RihuPeTj9r9K8K5eKFgKgYhR21/5VSQ
+w966U8uhPe6zpUyBXJ1S1wrYGvCsq17qwoB0M2fwNLpNL/5S+NFT26ObPFCbY3Fb
+XL+lmpID0F5vHssXazFgV5FFKhXMrkII82TCgrAiVqlTUBR3zs6OsjZ8CSO9rFOE
+pgwxcnPPDViFv2tuArtE
+=R5ER
+-----END PGP SIGNATURE-----
+
+--=-335pKOpeisFXftCMUz+K--
+
