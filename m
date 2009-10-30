@@ -1,41 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51766 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756633AbZJNRBs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 13:01:48 -0400
-Date: Wed, 14 Oct 2009 12:47:11 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>, Ivo van Doorn <ivdoorn@gmail.com>,
-	Ozan =?utf-8?B?w4dhxJ9sYXlhbg==?= <ozan@pardus.org.tr>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: Current status of rt2800usb and staging/rt2870
-Message-ID: <20091014164710.GF2890@tuxdriver.com>
-References: <4AD46380.9020308@pardus.org.tr> <200910141652.41041.bzolnier@gmail.com> <20091014145605.GE2890@tuxdriver.com> <200910141728.21491.bzolnier@gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:55507 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S932223AbZJ3UAG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Oct 2009 16:00:06 -0400
+From: Malte Gell <malte.gell@gmx.de>
+To: linux-wireless@vger.kernel.org
+Subject: ar9170usb from compat-wireless-2009-10-28
+Date: Fri, 30 Oct 2009 21:00:08 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200910141728.21491.bzolnier@gmail.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200910302100.08566.malte.gell@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 14, 2009 at 05:28:21PM +0200, Bartlomiej Zolnierkiewicz wrote:
+Hello!
 
-> I don't have a have a problem with it personally as long as people accept
-> the competition..  but instead of working on _their_ projects they go around
-> screaming at everybody who does not want to spin inside the great process
-> designed by them..
+I use a Fritz! WLAN N stick and the ar9170usb driver, but with compat-wireless 
+from 2009-10-28 I get no USB connection LED burning...
 
-Please whine somewhere else.  You have the freedom to work in
-drivers/staging all you want.  You do not have the power to force us to
-like it -- especially in a case where you are diverting attention from
-the community-maintained drivers instead of cooperating with them.
+compat-wireless 2009-09-29 was okay, it has enabled both LEDs. So I wonder, is 
+it safe to use older compat-wireless-2009-09-29?
 
-Your insults, jeers, and general bad attitude is unlikely to change
-our mind about it...
+I use Linux kernel 2.6.32-rc5-git3 on openSUSE 11.1
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Thanx
+Malte
