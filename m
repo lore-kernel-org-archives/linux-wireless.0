@@ -1,39 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:33257 "EHLO
-	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750925AbZJNGCj (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:32863 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933036AbZJ3XWX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 02:02:39 -0400
-Received: by ewy4 with SMTP id 4so4115546ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2009 23:02:02 -0700 (PDT)
-From: Kunal Gangakhedkar <kunal.gangakhedkar@gmail.com>
-To: tim.gardner@canonical.com
-Subject: Re: Stable compat-wireless 2.6.32-rc4 released
-Date: Wed, 14 Oct 2009 11:31:47 +0530
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <43e72e890910131542k376a87c5rc30feb6491a06867@mail.gmail.com> <4AD51A7C.9060207@canonical.com> <43e72e890910131750s4d2cdb20o76d721087d9b3aaf@mail.gmail.com>
-In-Reply-To: <43e72e890910131750s4d2cdb20o76d721087d9b3aaf@mail.gmail.com>
+	Fri, 30 Oct 2009 19:22:23 -0400
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <200910141131.47500.kunal.gangakhedkar@gmail.com>
+In-Reply-To: <1256903425.3555.47.camel@johannes.local>
+References: <f7848160910291617q2b168089l5ce489d2f47ebe96@mail.gmail.com>
+	 <1256885343.3555.0.camel@johannes.local>
+	 <alpine.DEB.2.00.0910300652350.2223@parag-laptop>
+	 <1256903425.3555.47.camel@johannes.local>
+Date: Fri, 30 Oct 2009 19:22:27 -0400
+Message-ID: <f7848160910301622t2cf43b5bo5ffeda03ec2cdbfe@mail.gmail.com>
+Subject: Re: OOPS in cfg80211_conn_work
+From: Parag Warudkar <parag.lkml@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 14 Oct 2009 6:20:33 am Luis R. Rodriguez wrote:
-> On Tue, Oct 13, 2009 at 5:25 PM, Tim Gardner <tim.gardner@canonical.com> 
-wrote:
-> > Speaking as a distro, what advantage does the stable wireless backport
-> > offer for the currently released kernel if we are already consumers of
-> > stable updates?
+On Friday, October 30, 2009, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2009-10-30 at 06:57 -0400, Parag Warudkar wrote:
+>>
+>> On Fri, 30 Oct 2009, Johannes Berg wrote:
+>>
+>> > On Thu, 2009-10-29 at 19:17 -0400, Parag Warudkar wrote:
+>> > > Oct 29 18:59:06 parag-laptop kernel: [  143.180037] wlan0:
+>> > > deauthenticating from 00:16:01:d6:6f:12 by local choice (reason=3)
+>> > > Oct 29 18:59:06 parag-laptop kernel: [  143.181137] wlan0: direct
+>> > > probe to AP 00:16:01:d6:6f:12 (try 1)
+>> >
+>> > sorry, I can't read this log. please provide a non-wrapped version
+>> >
+>> How does this look? (Sorry sent it in a rush earlier.)
+>> Below also is a disassembly of cfg80211_conn_work.
 >
-> Well if you are a distro stuck on the 2.6.31 kernel the stable
-> compat-wireless-2.6.32 gets you 2.6.32 wireless bits on 2.6.31 and
-> that means any features/drivers/large fixes/enhancements that didn't
-> make it to 2.6.31.
+> Thanks. I was going to ask for disassembly but you preempted me, I like
+> that :)
 >
+> Since you say you can easily reproduce this, can you try the patch
+> below?
+>
+> johannes
+>
+> ---
+>  net/wireless/sme.c |    7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+>
+> --- wireless-testing.orig/net/wireless/sme.c    2009-10-30 12:48:09.000000000 +0100
+> +++ wireless-testing/net/wireless/sme.c 2009-10-30 12:48:41.000000000 +0100
+> @@ -165,7 +165,7 @@ void cfg80211_conn_work(struct work_stru
+>         struct cfg80211_registered_device *rdev =
+>                 container_of(work, struct cfg80211_registered_device, conn_work);
+>         struct wireless_dev *wdev;
+> -       u8 bssid[ETH_ALEN];
+> +       u8 bssid_buf[ETH_ALEN], *bssid = NULL;
+>
+>         rtnl_lock();
+>         cfg80211_lock_rdev(rdev);
+> @@ -181,7 +181,10 @@ void cfg80211_conn_work(struct work_stru
+>                         wdev_unlock(wdev);
+>                         continue;
+>                 }
+> -               memcpy(bssid, wdev->conn->params.bssid, ETH_ALEN);
+> +               if (wdev->conn->params.bssid) {
+> +                       memcpy(bssid_buf, wdev->conn->params.bssid, ETH_ALEN);
+> +                       bssid = bssid_buf;
+> +               }
+>                 if (cfg80211_conn_do_work(wdev))
+>                         __cfg80211_connect_result(
+>                                         wdev->netdev, bssid,
+>
+>
+Seems to have fixed it.
 
-Isn't this the whole purpose of linux-backports-modules in ubuntu as well?
-
-Kunal
+Thanks Johannes.
