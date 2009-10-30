@@ -1,60 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:48261 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751128AbZJPQSW (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41357 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756711AbZJ3J6l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 12:18:22 -0400
-Subject: Re: [PATCH 03/16] iwmc3200wifi: WPS support
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-In-Reply-To: <1255670340-22565-4-git-send-email-yi.zhu@intel.com>
-References: <1255670340-22565-1-git-send-email-yi.zhu@intel.com>
-	 <1255670340-22565-2-git-send-email-yi.zhu@intel.com>
-	 <1255670340-22565-3-git-send-email-yi.zhu@intel.com>
-	 <1255670340-22565-4-git-send-email-yi.zhu@intel.com>
-Content-Type: text/plain
-Date: Fri, 16 Oct 2009 18:18:07 +0200
-Message-Id: <1255709887.31260.4.camel@localhost.localdomain>
+	Fri, 30 Oct 2009 05:58:41 -0400
+Subject: [RFC] mac80211: make ieee80211_find_sta per virtual interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 30 Oct 2009 10:58:42 +0100
+Message-ID: <1256896722.3555.39.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Yi,
+Since we have a TODO item to make all station
+management dependent on virtual interfaces, I
+figured I'd start with pushing such a change
+to drivers before more drivers use this kind
+of functionality...
 
-> From: Samuel Ortiz <sameo@linux.intel.com>
-> 
-> By setting the WSC profile flag, we now support WPS as an enrollee.
-> 
-> Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-> ---
->  drivers/net/wireless/iwmc3200wifi/cfg80211.c |    7 +++++++
->  drivers/net/wireless/iwmc3200wifi/commands.h |    3 +++
->  2 files changed, 10 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-> index 0d2e719..a6d2f20 100644
-> --- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-> +++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-> @@ -628,6 +628,13 @@ static int iwm_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
->  		iwm->default_key = sme->key_idx;
->  	}
->  
-> +	/* WPA and open AUTH type from wpa_s means WPS (a.k.a. WSC) */
-> +	if ((iwm->umac_profile->sec.flags &
-> +	     (UMAC_SEC_FLG_WPA_ON_MSK | UMAC_SEC_FLG_RSNA_ON_MSK)) &&
-> +	    iwm->umac_profile->sec.auth_type == UMAC_AUTH_TYPE_OPEN) {
-> +			iwm->umac_profile->sec.flags = UMAC_SEC_FLG_WSC_ON_MSK;
-> +	}
-> +
+The iwlwifi bits are easy, but I don't know
+what to do about the ath9k bits. Any ideas?
+---
+ drivers/net/wireless/ath/ath9k/recv.c      |    2 +-
+ drivers/net/wireless/ath/ath9k/xmit.c      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c |    3 ++-
+ drivers/net/wireless/iwlwifi/iwl-core.c    |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-sta.c     |    2 +-
+ include/net/mac80211.h                     |    4 ++--
+ net/mac80211/sta_info.c                    |    7 +++++--
+ 7 files changed, 13 insertions(+), 9 deletions(-)
 
-I don't wanna be picky, but what coding style are you following here?
-The indentation makes no sense and doesn't improve readability.
-
-Regards
-
-Marcel
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-3945-rs.c	2009-10-30 10:54:30.000000000 +0100
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-3945-rs.c	2009-10-30 10:54:46.000000000 +0100
+@@ -960,7 +960,8 @@ void iwl3945_rate_scale_init(struct ieee
+ 
+ 	rcu_read_lock();
+ 
+-	sta = ieee80211_find_sta(hw, priv->stations[sta_id].sta.sta.addr);
++	sta = ieee80211_find_sta(priv->vif,
++				 priv->stations[sta_id].sta.sta.addr);
+ 	if (!sta) {
+ 		rcu_read_unlock();
+ 		return;
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.c	2009-10-30 10:54:50.000000000 +0100
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.c	2009-10-30 10:54:56.000000000 +0100
+@@ -2338,7 +2338,7 @@ static void iwl_ht_conf(struct iwl_priv 
+ 	switch (priv->iw_mode) {
+ 	case NL80211_IFTYPE_STATION:
+ 		rcu_read_lock();
+-		sta = ieee80211_find_sta(priv->hw, priv->bssid);
++		sta = ieee80211_find_sta(priv->vif, priv->bssid);
+ 		if (sta) {
+ 			struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
+ 			int maxstreams;
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-sta.c	2009-10-30 10:55:00.000000000 +0100
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-sta.c	2009-10-30 10:55:03.000000000 +0100
+@@ -1012,7 +1012,7 @@ int iwl_rxon_add_station(struct iwl_priv
+ 	 */
+ 	if (priv->current_ht_config.is_ht) {
+ 		rcu_read_lock();
+-		sta = ieee80211_find_sta(priv->hw, addr);
++		sta = ieee80211_find_sta(priv->vif, addr);
+ 		if (sta) {
+ 			memcpy(&ht_config, &sta->ht_cap, sizeof(ht_config));
+ 			cur_ht_config = &ht_config;
+--- wireless-testing.orig/include/net/mac80211.h	2009-10-30 10:51:36.000000000 +0100
++++ wireless-testing/include/net/mac80211.h	2009-10-30 10:51:58.000000000 +0100
+@@ -2106,13 +2106,13 @@ void ieee80211_stop_tx_ba_cb_irqsafe(str
+ /**
+  * ieee80211_find_sta - find a station
+  *
+- * @hw: pointer as obtained from ieee80211_alloc_hw()
++ * @vif: virtual interface to look for station on
+  * @addr: station's address
+  *
+  * This function must be called under RCU lock and the
+  * resulting pointer is only valid under RCU lock as well.
+  */
+-struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_hw *hw,
++struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_vif *vif,
+ 					 const u8 *addr);
+ 
+ /**
+--- wireless-testing.orig/net/mac80211/sta_info.c	2009-10-30 10:52:13.000000000 +0100
++++ wireless-testing/net/mac80211/sta_info.c	2009-10-30 10:53:07.000000000 +0100
+@@ -801,10 +801,13 @@ void ieee80211_sta_expire(struct ieee802
+ 		sta_info_destroy(sta);
+ }
+ 
+-struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_hw *hw,
++struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_vif *vif,
+ 					 const u8 *addr)
+ {
+-	struct sta_info *sta = sta_info_get(hw_to_local(hw), addr);
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct sta_info *sta;
++
++	sta = sta_info_get(sdata->local, addr);
+ 
+ 	if (!sta)
+ 		return NULL;
+--- wireless-testing.orig/drivers/net/wireless/ath/ath9k/recv.c	2009-10-30 10:53:27.000000000 +0100
++++ wireless-testing/drivers/net/wireless/ath/ath9k/recv.c	2009-10-30 10:55:38.000000000 +0100
+@@ -202,7 +202,7 @@ static int ath_rx_prepare(struct sk_buff
+ 	}
+ 
+ 	rcu_read_lock();
+-	sta = ieee80211_find_sta(sc->hw, hdr->addr2);
++	sta = ieee80211_find_sta(/*?????*/, hdr->addr2);
+ 	if (sta) {
+ 		an = (struct ath_node *) sta->drv_priv;
+ 		if (ds->ds_rxstat.rs_rssi != ATH9K_RSSI_BAD &&
+--- wireless-testing.orig/drivers/net/wireless/ath/ath9k/xmit.c	2009-10-30 10:54:10.000000000 +0100
++++ wireless-testing/drivers/net/wireless/ath/ath9k/xmit.c	2009-10-30 10:55:48.000000000 +0100
+@@ -282,7 +282,7 @@ static void ath_tx_complete_aggr(struct 
+ 
+ 	rcu_read_lock();
+ 
+-	sta = ieee80211_find_sta(sc->hw, hdr->addr1);
++	sta = ieee80211_find_sta(/*??????*/, hdr->addr1);
+ 	if (!sta) {
+ 		rcu_read_unlock();
+ 		return;
 
 
