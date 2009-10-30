@@ -1,69 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f211.google.com ([209.85.219.211]:63521 "EHLO
-	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932456AbZJAOkG convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49361 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757429AbZJ3UoS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2009 10:40:06 -0400
-Received: by ewy7 with SMTP id 7so246219ewy.17
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2009 07:40:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <57b62e7d0910010732m38ab57k916662f9047fcc91@mail.gmail.com>
-References: <57b62e7d0909291754x352ae254sa33ee7efb430d497@mail.gmail.com>
-	 <1254341787.3959.11.camel@johannes.local>
-	 <57b62e7d0910010732m38ab57k916662f9047fcc91@mail.gmail.com>
-Date: Thu, 1 Oct 2009 16:40:09 +0200
-Message-ID: <57b62e7d0910010740t67a96d88h59b10161844f2836@mail.gmail.com>
-Subject: Re: VLAN traffic appearing on the wrong iface
-From: =?UTF-8?B?Qmxhxb4gQmHEjW5paw==?= <bacnik@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 30 Oct 2009 16:44:18 -0400
+Subject: Re: [PATCH] mac80211: make CALL_TXH a statement
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20091030191126.GC2586@tuxdriver.com>
+References: <1256802228.3865.55.camel@johannes.local>
+	 <20091030191126.GC2586@tuxdriver.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-HsFJX3Gbla1raLu4Abvl"
+Date: Fri, 30 Oct 2009 21:43:47 +0100
+Message-ID: <1256935427.3555.66.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Meh, I messed up the patch. Take two, hopefully better. Sorry.
 
-Regards, Blaz
+--=-HsFJX3Gbla1raLu4Abvl
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Fri, 2009-10-30 at 15:11 -0400, John W. Linville wrote:
+> On Thu, Oct 29, 2009 at 08:43:48AM +0100, Johannes Berg wrote:
+> > The multi-line code in this macro wasn't wrapped
+> > in do {} while (0) so we cannot use it in an if()
+> > branch safely in the future -- fix that.
+> >=20
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>=20
+> do {...} while (0) won't work for that either, right?  You need
+> ({...}) instead if you want to return a value.  Is that what you want?
 
---- a/net/mac80211/sta_info.c	2009-10-01 16:24:34.000000000 +0200
-+++ b/net/mac80211/sta_info.c	2009-10-01 16:27:31.000000000 +0200
-@@ -498,7 +498,7 @@ static void __sta_info_unlink(struct sta
- 			       &(*sta)->sta);
- 	}
+No, I just want to be able to do
 
--	if (ieee80211_vif_is_mesh(&sdata->vif)) {
-+	if (ieee80211_vif_is_mesh(&(*sta)->sdata->vif)) {
- 		mesh_accept_plinks_update(sdata);
- #ifdef CONFIG_MAC80211_MESH
- 		del_timer(&(*sta)->plink_timer);
+if (...)
+	CALL_TXH(...)
 
+johannes
 
-On Thu, Oct 1, 2009 at 4:32 PM, Blaž Bačnik <bacnik@gmail.com> wrote:
-> On Wed, Sep 30, 2009 at 10:16 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> I can't reproduce that oops, but we have a fix to the issue which I'll
->> send separately.
->
-> Thanks for patches. However, I've investigated that oops and I don't really
-> understand it. Problem seems to be in __sta_info_unlink where code checks
-> if vif is a mesh. Since this is a vlan iface, sdata used actually belongs to ap
-> iface due to previous if but that really shouldn't be a problem since ap's
-> sdata should have vif->type as well, right?
->
-> While testing I've found out that sdata_of_ap->vif points to funny addresses
-> like 248 and such. So I've changed the code and that seems to have fixed
-> oops. I think this is now the right behaviour, anyway.
->
-> --- a/net/mac80211/sta_info.c   2009-10-01 16:27:31.000000000 +0200
-> +++ b/net/mac80211/sta_info.c   2009-10-01 16:24:34.000000000 +0200
-> @@ -498,7 +498,7 @@ static void __sta_info_unlink(struct sta
->                               &(*sta)->sta);
->        }
->
-> -       if (ieee80211_vif_is_mesh(&(*sta)->sdata->vif)) {
-> +       if (ieee80211_vif_is_mesh(&sdata->vif)) {
->                mesh_accept_plinks_update(sdata);
->  #ifdef CONFIG_MAC80211_MESH
->                del_timer(&(*sta)->plink_timer);
->
+--=-HsFJX3Gbla1raLu4Abvl
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK60/+AAoJEODzc/N7+Qma+68P/1m+t7UrPCe3ZJV5eb/ogDwl
+E8k+qF31yYQpjq3YwzU7B0BpTc8sYOYrSo1+jR7ofKbSX9L5pYBWPRmJxNSHpa3+
+2d43UWeahkR5diSANgGcV1xJipfFfkVGD67CfLI5fHZ35rWwXTgNW3Qes/UD8UNz
+lwnxQHkzPaf4J0Nnx5Og2E89ShnkmW568Gc5scvUQxWyXu1fgJayjcvpheBbH23J
+pXwZyL+8xUCdcFjHgiBq5IcCDiLYouhM4u8aZyy9mWBS44UTBu0MvW5UU927P84R
+LNU2lAfS+DzFE3BXSyX+4VeB+G1PsiJPzemgYJg5E7xaxsMxKu6UFg6icPtVfzey
+p/YFEXFWqdqYu/t1z3Gj/o7DXbL8yt0d92qk56sWls4Wq21WeSTiun3UwzEUlaYH
+0mGXCgzNzKIKB3aDyarR9s8wMArmzKhSfKJtchgFsqX4v9mH3iI2X5rCfCojTX7f
+RpwGJQP1ZYkIH6m+yYNzUWjme16nI4jfc0T1R5qBNjjO0+QsQcG6ZbAx5jAf5Fld
+vlTiMsopuBAbY9dIcnni6lb4xoE+JP2Xm7sYau+k86IX15hNPMyIlQEWXNuoZkJ8
+s0daE5I33hod9YQHMALg961jOWF6XXBSFc2FeVQISrkJkaU0qwOopMn9djHa33AV
+wZ7SIq5LXL93gRpmJBLQ
+=vdzd
+-----END PGP SIGNATURE-----
+
+--=-HsFJX3Gbla1raLu4Abvl--
+
