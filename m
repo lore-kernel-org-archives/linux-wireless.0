@@ -1,30 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:60117 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756005AbZJKDm2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Oct 2009 23:42:28 -0400
-Message-ID: <4AD14F26.6030304@openwrt.org>
-Date: Sun, 11 Oct 2009 05:21:10 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43353 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932305AbZJ3PQP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Oct 2009 11:16:15 -0400
+Date: Fri, 30 Oct 2009 11:14:28 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2009-10-28
+Message-ID: <20091030151428.GB2586@tuxdriver.com>
+References: <200910291212.41656.bzolnier@gmail.com> <200910291514.40318.bzolnier@gmail.com> <84144f020910291245l1a7a3fd6o8822ecd4ce3b5504@mail.gmail.com> <200910292248.42229.bzolnier@gmail.com>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: fix logic error ibss merge bssid check
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200910292248.42229.bzolnier@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+On Thu, Oct 29, 2009 at 10:48:42PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> On Thursday 29 October 2009 20:45:07 Pekka Enberg wrote:
 
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -544,7 +544,7 @@ static void ieee80211_sta_find_ibss(stru
- 		       "%pM\n", bss->cbss.bssid, ifibss->bssid);
- #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+> > I was simply pointing out that your time would probably be better
+> > spent in improving the "proper" ralink wireless drivers but if you
+> 
+> Thanks for the concern.  However recent discussions made my realize how
+> I should really be spending my time effectively way too well.
+> 
+> > _really_ prefer to spend your time in pointless arguments, go ahead.
+> 
+> I don't think that my technical arguments are pointless.
 
--	if (bss && memcmp(ifibss->bssid, bss->cbss.bssid, ETH_ALEN)) {
-+	if (bss && !memcmp(ifibss->bssid, bss->cbss.bssid, ETH_ALEN)) {
- 		printk(KERN_DEBUG "%s: Selected IBSS BSSID %pM"
- 		       " based on configured SSID\n",
- 		       sdata->dev->name, bss->cbss.bssid);
+More like "petty"...
+
+> Quite the contrary, I'm pretty confident that addressing my review concerns
+> would result in better RT28x00 / RT30x0 support in the very near future.
+
+Yeah, maybe.  Or they could just waste someone's time mashing
+together some definitions to prematurely turn two header files into
+three instead of spending that time on resolving operational issues.
+In either case it is a judgment call, and IMHO not your call to make.
+
+> > It should be pretty obvious by now that the best way to improve things
+> > is to work with the relevant maintainers, not against them. (Unless
+> > you wish your work to be ignored, of course.)
+> 
+> I work with a lot of other maintainers.  I would say that providing valuable
+> review feedback is also "working with" (at least I would be very happy with
+> such feedback in my projects).
+
+"Valuable" feedback would be welcome.  In fact, your initial feedback
+in this case was welcome -- even moreso had it included a patch.
+
+Your arrogant follow-ups and self-righteous indignation, however,
+is quite a bit less welcome.  Please take it somewhere else.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
