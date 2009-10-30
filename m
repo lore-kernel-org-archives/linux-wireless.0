@@ -1,47 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2570 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752331AbZJ0KKA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2009 06:10:00 -0400
-Date: Tue, 27 Oct 2009 06:09:26 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: dsrbecky@gmail.com, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: ath5k phy0: no further txbuf available, dropping packet
-Message-ID: <20091027100926.GA13391@hash.localnet>
-References: <87f9e23c0910261352x60e17ef8ud859f91f36c43898@mail.gmail.com> <200910262230.57957.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200910262230.57957.mb@bu3sch.de>
+Received: from mga02.intel.com ([134.134.136.20]:9059 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757479AbZJ3VgP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Oct 2009 17:36:15 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Ben Cahill <ben.m.cahill@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 05/15] iwlagn: Clarify FH_TX interrupt
+Date: Fri, 30 Oct 2009 14:36:08 -0700
+Message-Id: <1256938578-9638-6-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
+References: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 26, 2009 at 10:30:55PM +0100, Michael Buesch wrote:
-> 		/* No frame has been send or error */
-> 		if (unlikely(!(tx_status->tx_status_1 & AR5K_DESC_TX_STATUS1_DONE)))
-> 			return -EINPROGRESS;
-> 		...
-> 	}
+From: Ben Cahill <ben.m.cahill@intel.com>
 
-> Notice the comment and how it says "or error".
+Add/clarify comments and debug messages for interrupt used only for uCode load
 
-Hmm, that does sound problematic.  But looking at the various bitfields:
+Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-#define AR5K_DESC_TX_STATUS1_DONE               0x00000001
-#define AR5K_DESC_TX_STATUS1_SEQ_NUM            0x00001ffe
-#define AR5K_DESC_TX_STATUS1_ACK_SIG_STRENGTH   0x001fe000
-#define AR5K_DESC_TX_STATUS1_FINAL_TS_INDEX     0x00600000
-#define AR5K_DESC_TX_STATUS1_COMP_SUCCESS       0x00800000
-#define AR5K_DESC_TX_STATUS1_XMIT_ANTENNA       0x01000000
-
-I would be led to believe that 'done' means 'completed or error' and
-the comment is similarly ambiguous.  The status0 word contains things
-like 'really did succeed, number of retries, timestamp' etc.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index a6dce23..f36a7d1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1034,11 +1034,12 @@ static void iwl_irq_tasklet_legacy(struct iwl_priv *priv)
+ 		handled |= (CSR_INT_BIT_FH_RX | CSR_INT_BIT_SW_RX);
+ 	}
+ 
++	/* This "Tx" DMA channel is used only for loading uCode */
+ 	if (inta & CSR_INT_BIT_FH_TX) {
+-		IWL_DEBUG_ISR(priv, "Tx interrupt\n");
++		IWL_DEBUG_ISR(priv, "uCode load interrupt\n");
+ 		priv->isr_stats.tx++;
+ 		handled |= CSR_INT_BIT_FH_TX;
+-		/* FH finished to write, send event */
++		/* Wake up uCode load routine, now that load is complete */
+ 		priv->ucode_write_complete = 1;
+ 		wake_up_interruptible(&priv->wait_command_queue);
+ 	}
+@@ -1235,12 +1236,13 @@ static void iwl_irq_tasklet(struct iwl_priv *priv)
+ 		iwl_leds_background(priv);
+ 	}
+ 
++	/* This "Tx" DMA channel is used only for loading uCode */
+ 	if (inta & CSR_INT_BIT_FH_TX) {
+ 		iwl_write32(priv, CSR_FH_INT_STATUS, CSR49_FH_INT_TX_MASK);
+-		IWL_DEBUG_ISR(priv, "Tx interrupt\n");
++		IWL_DEBUG_ISR(priv, "uCode load interrupt\n");
+ 		priv->isr_stats.tx++;
+ 		handled |= CSR_INT_BIT_FH_TX;
+-		/* FH finished to write, send event */
++		/* Wake up uCode load routine, now that load is complete */
+ 		priv->ucode_write_complete = 1;
+ 		wake_up_interruptible(&priv->wait_command_queue);
+ 	}
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.5.6.3
 
