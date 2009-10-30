@@ -1,47 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:1082 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755554AbZJNA0N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 20:26:13 -0400
-Message-ID: <4AD51A7C.9060207@canonical.com>
-Date: Tue, 13 Oct 2009 18:25:32 -0600
-From: Tim Gardner <tim.gardner@canonical.com>
-Reply-To: tim.gardner@canonical.com
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg KH <greg@kroah.com>
-Subject: Re: Stable compat-wireless 2.6.32-rc4 released
-References: <43e72e890910131542k376a87c5rc30feb6491a06867@mail.gmail.com>
-In-Reply-To: <43e72e890910131542k376a87c5rc30feb6491a06867@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from casper.infradead.org ([85.118.1.10]:39497 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756311AbZJ3Sv0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Oct 2009 14:51:26 -0400
+Subject: Re: [PATCH] libertas if_usb: Fix crash on 64-bit machines
+From: David Woodhouse <dwmw2@infradead.org>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, linville@tuxdriver.com,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	dcbw@redhat.com, stern@rowland.harvard.edu, davem@davemloft.net
+In-Reply-To: <200910301944.14740.chunkeey@googlemail.com>
+References: <1256924714.4030.44.camel@macbook.infradead.org>
+	 <4AEB2F13.50102@lwfinger.net>  <200910301944.14740.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 30 Oct 2009 18:51:21 +0000
+Message-Id: <1256928681.4030.112.camel@macbook.infradead.org>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> As the kernel moves along so does the automatic stable backports for
-> the wireless subsystem [1]. We are now on 2.6.32-rc4. Besides getting
-> the same fixes from rc1..rc4 some backport changes were made as well,
-> most importantly that of relying on your own kernel's iw_handler.h.
-> I've tested this release with 2.6.28.
+On Fri, 2009-10-30 at 19:44 +0100, Christian Lamparter wrote:
 > 
-> Please report any issues you see.
-> 
-> [1] http://wireless.kernel.org/en/users/Download/stable
-> 
-> PS. If you maintain a distribution and rely on stable compat-wireless
-> releases please let me know so I can CC you when further updates are
-> made.
-> 
->   Luis
-> 
+> that's just a fill-in macro.
+> AFAICT usb_submit_urb does the tricky dma mapping.
 
-Speaking as a distro, what advantage does the stable wireless backport 
-offer for the currently released kernel if we are already consumers of 
-stable updates?
+Ah, that makes sense. In that case, all we need to do is make
+map_urb_for_dma() do the right thing.
 
-rtg
 -- 
-Tim Gardner tim.gardner@canonical.com
+David Woodhouse                            Open Source Technology Centre
+David.Woodhouse@intel.com                              Intel Corporation
+
