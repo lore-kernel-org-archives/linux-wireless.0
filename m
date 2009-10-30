@@ -1,95 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:43488 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761500AbZJOTHx (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:16187 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932906AbZJ3WdC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2009 15:07:53 -0400
-MIME-Version: 1.0
-In-Reply-To: <200910151647.49050.bzolnier@gmail.com>
-References: <4AD46380.9020308@pardus.org.tr> <200910141728.21491.bzolnier@gmail.com>
-	<43e72e890910140955n295ef8d1m185592af63bc895b@mail.gmail.com>
-	<200910151647.49050.bzolnier@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 15 Oct 2009 12:06:55 -0700
-Message-ID: <43e72e890910151206y59353608p5065f72eebd72ab@mail.gmail.com>
-Subject: Re: Current status of rt2800usb and staging/rt2870
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	=?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 30 Oct 2009 18:33:02 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so1784061fgg.1
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2009 15:33:06 -0700 (PDT)
+Subject: Re: [PATH 0/2] Make driver_nl80211 really work
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+In-Reply-To: <1256939391.31271.11.camel@maxim-laptop>
+References: <1256939391.31271.11.camel@maxim-laptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 31 Oct 2009 00:33:02 +0200
+Message-ID: <1256941982.31208.4.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 15, 2009 at 7:47 AM, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
-> On Wednesday 14 October 2009 18:55:23 Luis R. Rodriguez wrote:
->
->> I hear fishing in Poland is great this time of year.
->
-> It got quite cold this week so I thought that I would try to fish
-> the commit that broke Atheros AR9285 in Linus' tree (works in 2.6.31)
-> and make recent kernels finally work on my laptop..
->
-> Seems like there are two regressions actually:
->
-> - later one making association/authentication impossible
+On Fri, 2009-10-30 at 23:49 +0200, Maxim Levitsky wrote: 
+> Hi,
+> 
+> I seem to find proper fixes for problem with driver_nl80211.
+> Despite workaround in wpa_supplicant that sends deauth when auth command
+> fails, this driver still doesn't work.
+> 
+> Problem is that scanning is not allowed in authenticated but not
+> associated state. I was told that this is feature, but afterwards I
+> understood that it is legal for wpa_supplicant not to use deauthenticate
+> command.
+> 
+> In the other hand mac80211 holds a work list of things todo that include
+> pings, associations, authentications, etc...
+> 
+> Following the code it seems that this list is set to hold forever
+> entries that belong to associated but not authenticated access points.
+> For example ieee80211_mgd_deauth will fail if this condition isn't true.
+> 
+> So I modified __ieee80211_start_scan to work even if work list isn't
+> empty but all entries are idle.
+> 
+> As for second problem, the lack of ability to do authentication to
+> access point twice, I modified nl80211 by 'roughly' removing the check
+> for this condition, treating new request as if ap was never
+> authenticated. This seems to work very well.
+> 
+> 
+> Best regards,
+> Maxim Levitsky
+> 
 
-And you reported this when and where?
 
-> - earlier one making transfers stall
+However, even with these patches, I found test case when it doesn't
+work.
+If I connect to different APs, then driver_nl80211 doesn't send deauth
+at all.
 
-And you reported this when and where?
+On the other hand, nl80211/cfg80211 keeps track of all auth bsses, in
+list that has 4 entries. As soon as this list is full, its not possible
+to connect to a different AP.
 
-Curious how the issues you mention now spreading across sound and
-wireless do not get fixed or seriously addressed. Have you considered
-your tactics are perhaps not the best?
+Mess isn't it?
 
-Have you tested newer kernels for ar9285? If there are regressions
-obviously they should be fixed but without proper attention to the
-issues they obviously cannot be fixed.
+Best regards,
+Maxim Levitsky
 
-> There is also a ton of unrelated and related (mac80211) problems in
-> between so the whole experience to trace regressions down is a real
-> hell (I went through like 40 kernels already)..
-
-I do agree there has been a hell of a lot of changes on
-mac80211/cfg80211 over the last few kernels and you can argue whether
-or not this has been a good thing -- personally I think it has had its
-negative impact on users on older kernels but I do value the new
-changes and most major changes have gone in right after the merge
-window without opposition. When there are issues I at least do believe
-we are attentive enough to help users and solve them on wireless and
-contrary to staging you will at least have a larger group of members
-working on the same wireless subsystem rather than addressing pigeon
-hole solutions.
-
-If you don't voice your own opinions and provide constructive
-criticism instead of pointless and side tracked rants you are not
-going to accomplish shit. So if you want to want to work on staging --
-go at it -- but don't moan and bitch about how wireless proper is
-being treated if you are not willing to man up and do something about
-it.
-
-> Oh, there is also an ath9k slab corruption already in 2.6.31 (I got
-> it debugged initially though)..
-
-We track reported ath9k bugs here:
-
-http://wireless.kernel.org/en/users/Drivers/ath9k/bugs
-
-When there is a bug report we follow up on it.
-
-> However today it got a bit warmer and the snow is almost gone so
-> I think that I'm going to take your advice after using the shortcut
-> solution for my wireless problems..
->
-> I'll just plug that cheap rt3070 stick laying around and modprobe
-> that crappy rt2870sta..
-
-Good luck with that buddy.
-
-  Luis
