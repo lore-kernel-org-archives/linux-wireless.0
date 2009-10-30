@@ -1,164 +1,293 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [78.111.66.105] ([78.111.66.105]:51449 "EHLO mx03.syneticon.net"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751886AbZJXMAU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Oct 2009 08:00:20 -0400
-Message-ID: <4AE2EC3E.3000503@wpkg.org>
-Date: Sat, 24 Oct 2009 13:59:58 +0200
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: linux-wireless@vger.kernel.org, linux-net@vger.kernel.org,
-	linux-mips@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
-Subject: Re: ath5k AP kernel panic when client uses SCP
-References: <4AD21AB4.6010208@wpkg.org> <4AE1AC69.7010904@wpkg.org> <69e28c910910230621j2176813dpe7f77b7dff5b1b44@mail.gmail.com> <4AE1AE74.4020600@wpkg.org>
-In-Reply-To: <4AE1AE74.4020600@wpkg.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:57327 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757537AbZJ3VgQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Oct 2009 17:36:16 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 08/15] iwlwifi: move iwl_[un]init_drv to iwlagn
+Date: Fri, 30 Oct 2009 14:36:11 -0700
+Message-Id: <1256938578-9638-9-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
+References: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomasz Chmielewski wrote:
-> Gábor Stefanik wrote:
->> On Fri, Oct 23, 2009 at 3:15 PM, Tomasz Chmielewski <mangoo@wpkg.org> 
->> wrote:
->>> Bob Copeland wrote:
->>>> CONFIG_DEBUG_INFO is the basic switch.  I don't know if MIPS needs
->>>> CONFIG_FRAME_POINTER but that could help too.
->>> I don't see CONFIG_FRAME_POINTER available.
->>> I compiled with CONFIG_DEBUG_INFO; let me know if I should enable 
->>> some other
->>> DEBUG options as well (see below what's enabled and available).
->>>
->>> Before it oopses, I see lots of order 0 page allocation failures 
->>> (there are
->>> some extra spaces at the end of each line due to the broken konsole in
->>> KDE4):
->>>
->>> http://www1.wpkg.org/oops2.txt
-> 
->> Is CONFIG_KALLSYMS set?
-> 
-> Good clue:
-> 
-> # zgrep KALL /proc/config.gz
-> # CONFIG_KALLSYMS is not set
-> 
-> I'll recompile...
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-Is this one more useful?
+Since iwlagn is the only user of these functions, move it to this module.
+This results in a bit more code moving than just these functions since the
+functions only used by them are also moved and we need to export the
+symbols previously available to them directly.
 
-[  516.430000] ------------[ cut here ]------------
-[  516.430000] WARNING: at net/core/dev.c:1566 skb_gso_segment+0x110/0x298()
-[  516.440000] b44: caps=(0x0, 0x0) len=52 data_len=0 ip_summed=1
-[  516.450000] Modules linked in: configs aes_generic tun sch_sfq cls_fw sch_htb ipt_MASQUERADE iptable_nat nf_nat xt_MARK iptable_mangle ipt_ULOG xt_recent nf_conn1
-[  516.480000] Call Trace:
-[  516.480000] [<80013ac4>] dump_stack+0x8/0x34
-[  516.480000] [<8002f2a0>] warn_slowpath_common+0x70/0x98
-[  516.490000] [<8002f308>] warn_slowpath_fmt+0x24/0x30
-[  516.490000] [<801f0398>] skb_gso_segment+0x110/0x298
-[  516.500000] [<801f0728>] dev_hard_start_xmit+0x208/0x364
-[  516.500000] [<80207c5c>] __qdisc_run+0x108/0x2f0
-[  516.510000] [<801f4ad8>] dev_queue_xmit+0x25c/0x3a8
-[  516.510000] [<802785c8>] br_dev_queue_push_xmit+0x98/0xac
-[  516.520000] [<8027e66c>] br_nf_post_routing+0x23c/0x25c
-[  516.520000] [<80214e78>] nf_iterate+0x70/0xf8
-[  516.530000] [<80214fc8>] nf_hook_slow+0x88/0x12c
-[  516.530000] [<80278630>] br_forward_finish+0x54/0x80
-[  516.540000] [<8027dac0>] br_nf_forward_finish+0x114/0x130
-[  516.540000] [<8027eba0>] br_nf_forward_ip+0x300/0x33c
-[  516.550000] [<80214e78>] nf_iterate+0x70/0xf8
-[  516.550000] [<80214fc8>] nf_hook_slow+0x88/0x12c
-[  516.560000] [<802786e8>] __br_forward+0x8c/0xe0
-[  516.560000] [<802796d4>] br_handle_frame_finish+0x168/0x1ac
-[  516.570000] [<8027e260>] br_nf_pre_routing_finish+0x40c/0x450
-[  516.580000] [<8027f564>] br_nf_pre_routing+0x824/0x86c
-[  516.580000] [<80214e78>] nf_iterate+0x70/0xf8
-[  516.580000] [<80214fc8>] nf_hook_slow+0x88/0x12c
-[  516.590000] [<80279938>] br_handle_frame+0x220/0x26c
-[  516.590000] [<801ef944>] netif_receive_skb+0x604/0x7b8
-[  516.600000] [<801f23f0>] process_backlog+0xc8/0x138
-[  516.600000] [<801f365c>] net_rx_action+0xe8/0x26c
-[  516.610000] [<80035a84>] __do_softirq+0xac/0x160
-[  516.610000] [<80035b94>] do_softirq+0x5c/0x94
-[  516.620000] [<80036094>] irq_exit+0x40/0x8c
-[  516.620000] [<80001844>] ret_from_irq+0x0/0x4
-[  516.630000] [<800ab12c>] core_sys_select+0x1d0/0x2d0
-[  516.630000] [<800ab870>] sys_select+0xe4/0x12c
-[  516.640000] [<800035f0>] stack_done+0x20/0x3c
-[  516.640000] 
-[  516.640000] ---[ end trace b84c10674d0cf224 ]---
-[  516.650000] Unhandled kernel unaligned access[#1]:
-[  516.650000] Cpu 0
-[  516.650000] $ 0   : 00000000 1000dc00 00000001 81f97a40
-[  516.650000] $ 4   : e0f2fdea 00000000 00000001 00000083
-[  516.650000] $ 8   : 00000000 00000083 80380000 ffffffea
-[  516.650000] $12   : 80380000 00000030 00000020 00000000
-[  516.650000] $16   : 0000000c 00000001 80dfa8e0 81c67000
-[  516.650000] $20   : 81ccda00 8029ac50 80278530 81c67000
-[  516.650000] $24   : 00000204 8023e8ec                  
-[  516.650000] $28   : 81c14000 81c15750 00000005 801e6398
-[  516.650000] Hi    : 00000000
-[  516.650000] Lo    : 00000000
-[  516.650000] epc   : 80073710 put_page+0x0/0x314
-[  516.650000]     Tainted: G        W 
-[  516.650000] ra    : 801e6398 skb_release_data+0xf4/0x160
-[  516.650000] Status: 1000dc03    KERNEL EXL IE 
-[  516.650000] Cause : 00800010
-[  516.650000] BadVA : e0f2fdea
-[  516.650000] PrId  : 00029006 (Broadcom BCM3302)
-[  516.650000] Modules linked in: configs aes_generic tun sch_sfq cls_fw sch_htb ipt_MASQUERADE iptable_nat nf_nat xt_MARK iptable_mangle ipt_ULOG xt_recent nf_conn1
-[  516.650000] Process init (pid: 1, threadinfo=81c14000, task=81c13938, tls=2aada4c0)
-[  516.650000] Stack : 80dfa8e0 801e5c98 00000000 00000000 80dfa8e0 8038b698 80dfa8e0 801e5cf8
-[  516.650000]         81ccda00 8038b698 80dfa8e0 81c67000 81ccda00 801f0858 80dfa8e0 81a40680
-[  516.650000]         81c157d0 81dc6800 81dc6800 81ccda00 81ccda00 00000001 81dc6800 80dfa8e0
-[  516.650000]         81c67000 0000548b 80207c5c 80207bf4 81dc6800 00000002 00000000 8027d934
-[  516.650000]         81dc6800 81ccda00 80dfa8e0 00000000 8038bcd0 80000000 801f4ad8 801f4a34
-[  516.650000]         ...
-[  516.650000] Call Trace:
-[  516.650000] [<80073710>] put_page+0x0/0x314
-[  516.650000] [<801e6398>] skb_release_data+0xf4/0x160
-[  516.650000] [<801e5cf8>] __kfree_skb+0x14/0x1c0
-[  516.650000] [<801f0858>] dev_hard_start_xmit+0x338/0x364
-[  516.650000] [<80207c5c>] __qdisc_run+0x108/0x2f0
-[  516.650000] [<801f4ad8>] dev_queue_xmit+0x25c/0x3a8
-[  516.650000] [<802785c8>] br_dev_queue_push_xmit+0x98/0xac
-[  516.650000] [<8027e66c>] br_nf_post_routing+0x23c/0x25c
-[  516.650000] [<80214e78>] nf_iterate+0x70/0xf8
-[  516.650000] [<80214fc8>] nf_hook_slow+0x88/0x12c
-[  516.650000] [<80278630>] br_forward_finish+0x54/0x80
-[  516.650000] [<8027dac0>] br_nf_forward_finish+0x114/0x130
-[  516.650000] [<8027eba0>] br_nf_forward_ip+0x300/0x33c
-[  516.650000] [<80214e78>] nf_iterate+0x70/0xf8
-[  516.650000] [<80214fc8>] nf_hook_slow+0x88/0x12c
-[  516.650000] [<802786e8>] __br_forward+0x8c/0xe0
-[  516.650000] [<802796d4>] br_handle_frame_finish+0x168/0x1ac
-[  516.650000] [<8027e260>] br_nf_pre_routing_finish+0x40c/0x450
-[  516.650000] [<8027f564>] br_nf_pre_routing+0x824/0x86c
-[  516.650000] [<80214e78>] nf_iterate+0x70/0xf8
-[  516.650000] [<80214fc8>] nf_hook_slow+0x88/0x12c
-[  516.650000] [<80279938>] br_handle_frame+0x220/0x26c
-[  516.650000] [<801ef944>] netif_receive_skb+0x604/0x7b8
-[  516.650000] [<801f23f0>] process_backlog+0xc8/0x138
-[  516.650000] [<801f365c>] net_rx_action+0xe8/0x26c
-[  516.650000] [<80035a84>] __do_softirq+0xac/0x160
-[  516.650000] [<80035b94>] do_softirq+0x5c/0x94
-[  516.650000] [<80036094>] irq_exit+0x40/0x8c
-[  516.650000] [<80001844>] ret_from_irq+0x0/0x4
-[  516.650000] [<800ab12c>] core_sys_select+0x1d0/0x2d0
-[  516.650000] [<800ab870>] sys_select+0xe4/0x12c
-[  516.650000] [<800035f0>] stack_done+0x20/0x3c
-[  516.650000] 
-[  516.650000] 
-[  516.650000] Code: 3c048007  08010d50  248436fc <8c820000> 3042c000  10400003  00803821  0801ca7f  00000000 
-[  516.650000] Disabling lock debugging due to kernel taint
-[  516.990000] Kernel panic - not syncing: Fatal exception in interrupt
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c   |   90 +++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-calib.c |    1 +
+ drivers/net/wireless/iwlwifi/iwl-core.c  |   93 ------------------------------
+ drivers/net/wireless/iwlwifi/iwl-core.h  |    2 -
+ drivers/net/wireless/iwlwifi/iwl-scan.c  |    1 +
+ 5 files changed, 92 insertions(+), 95 deletions(-)
 
-
-
-As this line didn't fit:
-
-Modules linked in: tun sch_sfq cls_fw sch_htb ipt_MASQUERADE iptable_nat nf_nat xt_MARK iptable_mangle ipt_ULOG xt_recent nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack xt_tcpudp iptable_filter ip_tables x_tables ath5k mac80211 ath ohci_hcd cfg80211 uhci_hcd
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 3eeffcb..76355cd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2973,6 +2973,96 @@ static void iwl_cancel_deferred_work(struct iwl_priv *priv)
+ 	del_timer_sync(&priv->statistics_periodic);
+ }
+ 
++static void iwl_init_hw_rates(struct iwl_priv *priv,
++			      struct ieee80211_rate *rates)
++{
++	int i;
++
++	for (i = 0; i < IWL_RATE_COUNT_LEGACY; i++) {
++		rates[i].bitrate = iwl_rates[i].ieee * 5;
++		rates[i].hw_value = i; /* Rate scaling will work on indexes */
++		rates[i].hw_value_short = i;
++		rates[i].flags = 0;
++		if ((i >= IWL_FIRST_CCK_RATE) && (i <= IWL_LAST_CCK_RATE)) {
++			/*
++			 * If CCK != 1M then set short preamble rate flag.
++			 */
++			rates[i].flags |=
++				(iwl_rates[i].plcp == IWL_RATE_1M_PLCP) ?
++					0 : IEEE80211_RATE_SHORT_PREAMBLE;
++		}
++	}
++}
++
++static int iwl_init_drv(struct iwl_priv *priv)
++{
++	int ret;
++
++	priv->ibss_beacon = NULL;
++
++	spin_lock_init(&priv->lock);
++	spin_lock_init(&priv->sta_lock);
++	spin_lock_init(&priv->hcmd_lock);
++
++	INIT_LIST_HEAD(&priv->free_frames);
++
++	mutex_init(&priv->mutex);
++
++	/* Clear the driver's (not device's) station table */
++	iwl_clear_stations_table(priv);
++
++	priv->ieee_channels = NULL;
++	priv->ieee_rates = NULL;
++	priv->band = IEEE80211_BAND_2GHZ;
++
++	priv->iw_mode = NL80211_IFTYPE_STATION;
++
++	/* Choose which receivers/antennas to use */
++	if (priv->cfg->ops->hcmd->set_rxon_chain)
++		priv->cfg->ops->hcmd->set_rxon_chain(priv);
++
++	iwl_init_scan_params(priv);
++
++	iwl_reset_qos(priv);
++
++	priv->qos_data.qos_active = 0;
++	priv->qos_data.qos_cap.val = 0;
++
++	priv->rates_mask = IWL_RATES_MASK;
++	/* Set the tx_power_user_lmt to the lowest power level
++	 * this value will get overwritten by channel max power avg
++	 * from eeprom */
++	priv->tx_power_user_lmt = IWL_TX_POWER_TARGET_POWER_MIN;
++
++	ret = iwl_init_channel_map(priv);
++	if (ret) {
++		IWL_ERR(priv, "initializing regulatory failed: %d\n", ret);
++		goto err;
++	}
++
++	ret = iwlcore_init_geos(priv);
++	if (ret) {
++		IWL_ERR(priv, "initializing geos failed: %d\n", ret);
++		goto err_free_channel_map;
++	}
++	iwl_init_hw_rates(priv, priv->ieee_rates);
++
++	return 0;
++
++err_free_channel_map:
++	iwl_free_channel_map(priv);
++err:
++	return ret;
++}
++
++static void iwl_uninit_drv(struct iwl_priv *priv)
++{
++	iwl_calib_free_results(priv);
++	iwlcore_free_geos(priv);
++	iwl_free_channel_map(priv);
++	kfree(priv->scan);
++}
++
+ static struct attribute *iwl_sysfs_entries[] = {
+ 	&dev_attr_flags.attr,
+ 	&dev_attr_filter_flags.attr,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-calib.c b/drivers/net/wireless/iwlwifi/iwl-calib.c
+index 1f801eb..d994de7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-calib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-calib.c
+@@ -132,6 +132,7 @@ void iwl_calib_free_results(struct iwl_priv *priv)
+ 		priv->calib_results[i].buf_len = 0;
+ 	}
+ }
++EXPORT_SYMBOL(iwl_calib_free_results);
+ 
+ /*****************************************************************************
+  * RUNTIME calibrations framework
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 2952890..96eb476 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -452,28 +452,6 @@ static void iwlcore_init_ht_hw_capab(const struct iwl_priv *priv,
+ 	}
+ }
+ 
+-static void iwlcore_init_hw_rates(struct iwl_priv *priv,
+-			      struct ieee80211_rate *rates)
+-{
+-	int i;
+-
+-	for (i = 0; i < IWL_RATE_COUNT_LEGACY; i++) {
+-		rates[i].bitrate = iwl_rates[i].ieee * 5;
+-		rates[i].hw_value = i; /* Rate scaling will work on indexes */
+-		rates[i].hw_value_short = i;
+-		rates[i].flags = 0;
+-		if ((i >= IWL_FIRST_CCK_RATE) && (i <= IWL_LAST_CCK_RATE)) {
+-			/*
+-			 * If CCK != 1M then set short preamble rate flag.
+-			 */
+-			rates[i].flags |=
+-				(iwl_rates[i].plcp == IWL_RATE_1M_PLCP) ?
+-					0 : IEEE80211_RATE_SHORT_PREAMBLE;
+-		}
+-	}
+-}
+-
+-
+ /**
+  * iwlcore_init_geos - Initialize mac80211's geo/channel info based from eeprom
+  */
+@@ -1572,68 +1550,6 @@ int iwl_set_hw_params(struct iwl_priv *priv)
+ }
+ EXPORT_SYMBOL(iwl_set_hw_params);
+ 
+-int iwl_init_drv(struct iwl_priv *priv)
+-{
+-	int ret;
+-
+-	priv->ibss_beacon = NULL;
+-
+-	spin_lock_init(&priv->lock);
+-	spin_lock_init(&priv->sta_lock);
+-	spin_lock_init(&priv->hcmd_lock);
+-
+-	INIT_LIST_HEAD(&priv->free_frames);
+-
+-	mutex_init(&priv->mutex);
+-
+-	/* Clear the driver's (not device's) station table */
+-	iwl_clear_stations_table(priv);
+-
+-	priv->ieee_channels = NULL;
+-	priv->ieee_rates = NULL;
+-	priv->band = IEEE80211_BAND_2GHZ;
+-
+-	priv->iw_mode = NL80211_IFTYPE_STATION;
+-
+-	/* Choose which receivers/antennas to use */
+-	if (priv->cfg->ops->hcmd->set_rxon_chain)
+-		priv->cfg->ops->hcmd->set_rxon_chain(priv);
+-
+-	iwl_init_scan_params(priv);
+-
+-	iwl_reset_qos(priv);
+-
+-	priv->qos_data.qos_active = 0;
+-	priv->qos_data.qos_cap.val = 0;
+-
+-	priv->rates_mask = IWL_RATES_MASK;
+-	/* Set the tx_power_user_lmt to the lowest power level
+-	 * this value will get overwritten by channel max power avg
+-	 * from eeprom */
+-	priv->tx_power_user_lmt = IWL_TX_POWER_TARGET_POWER_MIN;
+-
+-	ret = iwl_init_channel_map(priv);
+-	if (ret) {
+-		IWL_ERR(priv, "initializing regulatory failed: %d\n", ret);
+-		goto err;
+-	}
+-
+-	ret = iwlcore_init_geos(priv);
+-	if (ret) {
+-		IWL_ERR(priv, "initializing geos failed: %d\n", ret);
+-		goto err_free_channel_map;
+-	}
+-	iwlcore_init_hw_rates(priv, priv->ieee_rates);
+-
+-	return 0;
+-
+-err_free_channel_map:
+-	iwl_free_channel_map(priv);
+-err:
+-	return ret;
+-}
+-EXPORT_SYMBOL(iwl_init_drv);
+-
+ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
+ {
+ 	int ret = 0;
+@@ -1681,15 +1597,6 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
+ }
+ EXPORT_SYMBOL(iwl_set_tx_power);
+ 
+-void iwl_uninit_drv(struct iwl_priv *priv)
+-{
+-	iwl_calib_free_results(priv);
+-	iwlcore_free_geos(priv);
+-	iwl_free_channel_map(priv);
+-	kfree(priv->scan);
+-}
+-EXPORT_SYMBOL(iwl_uninit_drv);
+-
+ #define ICT_COUNT (PAGE_SIZE/sizeof(u32))
+ 
+ /* Free dram table */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index b875dcf..ddf0998 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -316,8 +316,6 @@ void iwl_configure_filter(struct ieee80211_hw *hw,
+ 			  unsigned int *total_flags, u64 multicast);
+ int iwl_hw_nic_init(struct iwl_priv *priv);
+ int iwl_set_hw_params(struct iwl_priv *priv);
+-int iwl_init_drv(struct iwl_priv *priv);
+-void iwl_uninit_drv(struct iwl_priv *priv);
+ bool iwl_is_monitor_mode(struct iwl_priv *priv);
+ void iwl_post_associate(struct iwl_priv *priv);
+ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 4fca65a..1eb0d0b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -401,6 +401,7 @@ void iwl_init_scan_params(struct iwl_priv *priv)
+ 	if (!priv->scan_tx_ant[IEEE80211_BAND_2GHZ])
+ 		priv->scan_tx_ant[IEEE80211_BAND_2GHZ] = ant_idx;
+ }
++EXPORT_SYMBOL(iwl_init_scan_params);
+ 
+ static int iwl_scan_initiate(struct iwl_priv *priv)
+ {
 -- 
-Tomasz Chmielewski
-http://wpkg.org
+1.5.6.3
+
