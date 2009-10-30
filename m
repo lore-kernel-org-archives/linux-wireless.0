@@ -1,93 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:47701 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756014AbZJLMKt (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38328 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754845AbZJ3HQD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 08:10:49 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 08/16] wl1271: RefClk configuration
-Date: Mon, 12 Oct 2009 15:08:49 +0300
-Message-Id: <1255349337-9776-9-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
+	Fri, 30 Oct 2009 03:16:03 -0400
+Subject: Re: wpa_supplicant eventual unrecoverable state
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Jouni.Malinen" <Jouni.Malinen@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890910291613u2a00125etfb31c8e95a66a5ea@mail.gmail.com>
+References: <43e72e890910291613u2a00125etfb31c8e95a66a5ea@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 30 Oct 2009 08:16:03 +0100
+Message-ID: <1256886963.3555.7.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Thu, 2009-10-29 at 16:13 -0700, Luis R. Rodriguez wrote:
+> Following up on the thread I started about some odd state
+> wpa_supplicant gets into, I now managed to get the dmesg log of this
+> happening.
 
-Updated RefClk configuration based on reference sources. Apparently this
-change will improve RF performance.
+> [10551.652480] wlan1: deauthenticating from 00:0b:85:6f:12:ac by local
+> choice (reason=3)
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Please everybody take more care to not line-wrap logs.
+
+> [10551.676034] ------------[ cut here ]------------
+> [10551.676057] WARNING: at net/mac80211/scan.c:291
+> ieee80211_scan_completed+0x26c/0x280 [mac80211]()
+> [10551.676061] Hardware name: 7660A14
+> [10551.676064] Modules linked in: ath9k ath9k_hw mac80211 ath cfg80211
+> aes_generic i915 drm_kms_helper drm i2c_algo_bit binfmt_misc bridge
+> stp bnep lp snd_hda_codec_analog snd_hda_intel snd_hda_codec
+> snd_pcm_oss snd_mixer_oss arc4 snd_pcm snd_seq_dummy snd_seq_oss
+> snd_seq_midi snd_rawmidi snd_seq_midi_event snd_seq pcmcia snd_timer
+> snd_seq_device ppdev joydev psmouse yenta_socket rsrc_nonstatic snd
+> parport_pc hid_microsoft video intel_agp thinkpad_acpi soundcore
+> parport serio_raw usbhid output pcmcia_core pcspkr agpgart nvram
+> iTCO_wdt led_class btusb snd_page_alloc iTCO_vendor_support ohci1394
+> ieee1394 [last unloaded: e1000e]
+> [10551.676149] Pid: 8068, comm: wpa_supplicant Tainted: G        W
+> 2.6.32-rc5-wl #28
+> [10551.676153] Call Trace:
+> [10551.676162]  [<c05a3a03>] ? printk+0x1d/0x22
+> [10551.676176]  [<fce0916c>] ? ieee80211_scan_completed+0x26c/0x280 [mac80211]
+> [10551.676184]  [<c0146121>] warn_slowpath_common+0x71/0xd0
+> [10551.676198]  [<fce0916c>] ? ieee80211_scan_completed+0x26c/0x280 [mac80211]
+> [10551.676204]  [<c014619a>] warn_slowpath_null+0x1a/0x20
+> [10551.676218]  [<fce0916c>] ieee80211_scan_completed+0x26c/0x280 [mac80211]
+> [10551.676231]  [<fce091c9>] ieee80211_scan_cancel+0x49/0x80 [mac80211]
+> [10551.676247]  [<fce1287a>] ieee80211_stop+0x59a/0x5b0 [mac80211]
+> [10551.676254]  [<c04e513e>] ? dev_deactivate+0x17e/0x1a0
+> [10551.676260]  [<c04d34cb>] dev_close+0x6b/0xc0
+
+This patch should help.
+
+johannes
+
 ---
- drivers/net/wireless/wl12xx/wl1271_boot.c |   20 ++++++++++++++++++--
- drivers/net/wireless/wl12xx/wl1271_boot.h |    9 ++++++++-
- 2 files changed, 26 insertions(+), 3 deletions(-)
+ net/mac80211/scan.c |   12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
-index 1a3084c..b586577 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
-@@ -435,13 +435,29 @@ int wl1271_boot(struct wl1271 *wl)
- 	int ret = 0;
- 	u32 tmp, clk, pause;
+--- wireless-testing.orig/net/mac80211/scan.c	2009-10-30 08:11:52.000000000 +0100
++++ wireless-testing/net/mac80211/scan.c	2009-10-30 08:14:42.000000000 +0100
+@@ -288,10 +288,14 @@ void ieee80211_scan_completed(struct iee
  
--	if (REF_CLOCK == 0 || REF_CLOCK == 2)
--		/* ref clk: 19.2/38.4 */
-+	if (REF_CLOCK == 0 || REF_CLOCK == 2 || REF_CLOCK == 4)
-+		/* ref clk: 19.2/38.4/38.4-XTAL */
- 		clk = 0x3;
- 	else if (REF_CLOCK == 1 || REF_CLOCK == 3)
- 		/* ref clk: 26/52 */
- 		clk = 0x5;
+ 	mutex_lock(&local->scan_mtx);
  
-+	if (REF_CLOCK != 0) {
-+		u16 val;
-+		/* Set clock type */
-+		val = wl1271_top_reg_read(wl, OCP_REG_CLK_TYPE);
-+		val &= FREF_CLK_TYPE_BITS;
-+		val |= CLK_REQ_PRCM;
-+		wl1271_top_reg_write(wl, OCP_REG_CLK_TYPE, val);
-+	} else {
-+		u16 val;
-+		/* Set clock polarity */
-+		val = wl1271_top_reg_read(wl, OCP_REG_CLK_POLARITY);
-+		val &= FREF_CLK_POLARITY_BITS;
-+		val |= CLK_REQ_OUTN_SEL;
-+		wl1271_top_reg_write(wl, OCP_REG_CLK_POLARITY, val);
-+	}
-+
- 	wl1271_reg_write32(wl, PLL_PARAMETERS, clk);
+-	if (WARN_ON(!local->scanning)) {
+-		mutex_unlock(&local->scan_mtx);
+-		return;
+-	}
++	/*
++	 * It's ok to abort a not-yet-running scan (that
++	 * we have one at all will be verified by checking
++	 * local->scan_req next), but not to complete it
++	 * successfully.
++	 */
++	if (WARN_ON(!local->scanning && !aborted))
++		aborted = true;
  
- 	pause = wl1271_reg_read32(wl, PLL_PARAMETERS);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.h b/drivers/net/wireless/wl12xx/wl1271_boot.h
-index 4501653..412443e 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.h
-@@ -50,10 +50,17 @@ struct wl1271_static_data {
- #define WU_COUNTER_PAUSE_VAL 0x3FF
- #define WELP_ARM_COMMAND_VAL 0x4
- 
--#define OCP_REG_POLARITY 0x0064
-+#define OCP_REG_POLARITY     0x0064
-+#define OCP_REG_CLK_TYPE     0x0448
-+#define OCP_REG_CLK_POLARITY 0x0cb2
- 
- #define CMD_MBOX_ADDRESS 0x407B4
- 
- #define POLARITY_LOW BIT(1)
- 
-+#define FREF_CLK_TYPE_BITS     0xfffffe7f
-+#define CLK_REQ_PRCM           0x100
-+#define FREF_CLK_POLARITY_BITS 0xfffff8ff
-+#define CLK_REQ_OUTN_SEL       0x700
-+
- #endif
--- 
-1.5.6.5
+ 	if (WARN_ON(!local->scan_req)) {
+ 		mutex_unlock(&local->scan_mtx);
+
 
