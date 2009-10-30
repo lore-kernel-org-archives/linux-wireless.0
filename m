@@ -1,57 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:60418 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751339AbZJZQ3t convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:41107 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932440AbZJ3Vtv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 12:29:49 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [PATCH 2/4] ath9k_hw: distinguish single-chip solutions on  initial probe print
-Date: Mon, 26 Oct 2009 17:29:36 +0100
-Cc: Kalle Valo <kalle.valo@iki.fi>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-References: <1256567941-26859-1-git-send-email-lrodriguez@atheros.com> <87hbtmgmj6.fsf@purkki.valot.fi> <43e72e890910260921h91c4cb5u5a2fc81e73377055@mail.gmail.com>
-In-Reply-To: <43e72e890910260921h91c4cb5u5a2fc81e73377055@mail.gmail.com>
-MIME-Version: 1.0
-Message-Id: <200910261729.38199.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="utf-8"
+	Fri, 30 Oct 2009 17:49:51 -0400
+Received: by fg-out-1718.google.com with SMTP id d23so484fga.1
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2009 14:49:55 -0700 (PDT)
+Subject: [PATH 0/2] Make driver_nl80211 really work
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 30 Oct 2009 23:49:51 +0200
+Message-ID: <1256939391.31271.11.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 26 October 2009 17:21:40 Luis R. Rodriguez wrote:
-> >> --- a/drivers/net/wireless/ath/ath9k/pci.c
-> >> +++ b/drivers/net/wireless/ath/ath9k/pci.c
-> >> @@ -114,6 +114,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-> >>       u32 val;
-> >>       int ret = 0;
-> >>       struct ath_hw *ah;
-> >> +     char hw_name[1024];
-> >
-> > Ditto.
-> 
-> We use this for debugfs, so I went with that as an upper limit, given
-> that we just use it a probe it seemed sane.
+Hi,
 
-I think it's completely insane, because you effectively use 25% of the available stack.
-Why is a hardware name 1024 chars (max) long anyway?
+I seem to find proper fixes for problem with driver_nl80211.
+Despite workaround in wpa_supplicant that sends deauth when auth command
+fails, this driver still doesn't work.
 
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Problem is that scanning is not allowed in authenticated but not
+associated state. I was told that this is feature, but afterwards I
+understood that it is legal for wpa_supplicant not to use deauthenticate
+command.
 
-I would be pissed off after reading the first line already ;)
+In the other hand mac80211 holds a work list of things todo that include
+pings, associations, authentications, etc...
 
--- 
-Greetings, Michael.
+Following the code it seems that this list is set to hold forever
+entries that belong to associated but not authenticated access points.
+For example ieee80211_mgd_deauth will fail if this condition isn't true.
+
+So I modified __ieee80211_start_scan to work even if work list isn't
+empty but all entries are idle.
+
+As for second problem, the lack of ability to do authentication to
+access point twice, I modified nl80211 by 'roughly' removing the check
+for this condition, treating new request as if ap was never
+authenticated. This seems to work very well.
+
+
+Best regards,
+Maxim Levitsky
+
