@@ -1,77 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34460 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755353AbZJGWfT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 18:35:19 -0400
-Subject: Re: [PATCH] wireless: make WEXT_SPY and WEXT_PRIV select WEXT_CORE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <4ACD0E5A.7060106@oracle.com>
-References: <20091007105720.a2457e5b.randy.dunlap@oracle.com>
-	 <1254949672-24022-1-git-send-email-linville@tuxdriver.com>
-	 <4ACD0E5A.7060106@oracle.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-e0CVf0NC0EeLBaOtXwMm"
-Date: Thu, 08 Oct 2009 00:34:02 +0200
-Message-Id: <1254954842.3713.7.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:36738 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756045AbZJ3GdJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Oct 2009 02:33:09 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2009 23:33:14 -0700
+Date: Fri, 30 Oct 2009 12:03:06 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Luis Rodriguez <lrodriguez@atheros.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [RFC] ath9k: fix listening to idle requests
+Message-ID: <20091030063306.GH4602@vasanth-laptop>
+References: <1256849546-15119-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1256849546-15119-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Oct 30, 2009 at 02:22:26AM +0530, Luis Rodriguez wrote:
+> The way idle configuration detection was implemented as
+> busted due to the fact that it assumed the ath9k virtual wiphy,
+> the aphy, would be marked as inactive if it was not used but
+> it turns out an aphy is always active if its the only wiphy
+> present. We need to distinguish between aphy activity and
+> idleness so we now add an idle bool for the aphy and mark
+> it as such based on the passed IEEE80211_CONF_CHANGE_IDLE
+> from mac80211.
+> 
+> Previous to all_wiphys_idle would never be true when using
+> only one device so we never really were using
+> IEEE80211_CONF_CHANGE_IDLE -- we never turned the radio
+> off or on upon IEEE80211_CONF_CHANGE_IDLE changes as radio
+> changes depended on all_wiphys_idle being true either to
+> turn the radio on or off. Since it was always false for
+> one device this code was doing nothing.
+> 
+> Reported-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+> 
+> Vasanth, what do you think?
 
---=-e0CVf0NC0EeLBaOtXwMm
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2009-10-07 at 14:55 -0700, Randy Dunlap wrote:
-> John W. Linville wrote:
-> > Should prevent this build error reported by Randy...
-> >=20
-> > net/wireless/wext-priv.c:206: error: implicit declaration of function '=
-call_commit_handler'
-> > make[3]: *** [net/wireless/wext-priv.o] Error 1
-> >=20
-> > Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
->=20
-> Sorry, it did not work for me.
-
-> linux-next-20091007/net/wireless/wext-priv.c:206: error: implicit declara=
-tion of function 'call_commit_handler'
-> make[3]: *** [net/wireless/wext-priv.o] Error 1
->=20
-> Drivers like hostap and orinoco (hermes) select WEXT_PRIV regardless
-> of the setting of WEXT_CORE.  oh, and staging/ drivers do that also.
-
-But they also select WIRELESS_EXT, which should cause WEXT_CORE to be
-turned on. Is it possible that is failing?
-
-johannes
-
---=-e0CVf0NC0EeLBaOtXwMm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKzRdWAAoJEODzc/N7+QmavbMQALtPSgL2BphPT3Aw3V1x6YG0
-s0GGZSz8QNt8xBU/ZIjnAWSH7B8NTox4Kl9gZZY5VG2d5MkYv1Vpz1rWiftj1ezc
-vjfSUVWNQWa9uAZDXmlTTLbV3ag6XsY46eVwTi2jwSkuSyfTSPi9FQrXaxDk+Al8
-+AkiY7Qdv5DChfkKMZGSI+1FZ3PFa/ol/YzMnXwBWq6zUH+RootUfYKG3nSlnLv2
-Tbigs2CBI0wXCkQaOqWWXkl0pM7KO2EwIq9ZB563TifLuGRcWV71k0KeY9U/ylnZ
-StfkT1w426ojxWJoljjjlstrq39T6VZgJ/zTZMNTMxRlwOogMDAiXwvbYierKcHR
-dBCadyzIExbRrGmOzDQ4xUJtUS/yO1Q3Qr/GxFn9/ZrqUAXbZECMhvTfwG7FLCwc
-RSTTnrYLjXpo8SUy3emROZSvhJAnoRyQYF8rZUAkwd6Zz9DiUbj+BYDCP0ozbI5z
-wQdfVEyxcNQTuoBi6QRySIY0N/vwN7SLDudBUawK93oNObx7LQnfTCL69nik58tb
-792auPqfTunxqBqgwqIn6CKiJ6XK6cYHUxZr2RPlguDVQUh6M7SBCejv9m4PKyy7
-2O+eG1SqNBt98ATe/TMgKZjNqgFxPtRMDopX5nFhUklncDzsC8phmM3/xUyT0NQp
-U+vyBOk//kjYIPGK4sf2
-=JxHo
------END PGP SIGNATURE-----
-
---=-e0CVf0NC0EeLBaOtXwMm--
-
+Still we will have issue when bringing up a sec wiphy while the
+primary wiphy is in idle state. ath9k_start() does not brought up
+the newly created wiphy interface when the state of at least one
+previously created interface is in ACTIVE state. Unless already
+brought up interfaces are put down we hit this situation whenever
+we try to bring up a new secondary wiphy interface. So with this
+patch the actual h/w will remain radio disabled state even after
+a new interface is in active state. We need to bring the h/w into
+active state if all old interfaces are in idle state in
+ath9k_start(). 
+ 
+Vasanth
