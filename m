@@ -1,42 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54625
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758147AbZJIBBZ (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:41940 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757428AbZJ3UpC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 21:01:25 -0400
-Date: Thu, 08 Oct 2009 18:01:19 -0700 (PDT)
-Message-Id: <20091008.180119.242402327.davem@davemloft.net>
-To: mb@bu3sch.de
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2009-10-08
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200910090108.08838.mb@bu3sch.de>
-References: <20091008223454.GB2798@tuxdriver.com>
-	<200910090108.08838.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 30 Oct 2009 16:45:02 -0400
+Date: Fri, 30 Oct 2009 21:44:27 +0100
+From: Jarek Poplawski <jarkao2@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2009-10-28
+Message-ID: <20091030204427.GA2962@ami.dom.local>
+References: <1256886023.3555.5.camel@johannes.local>
+ <20091030110616.GB6150@ff.dom.local>
+ <20091030150223.GA2586@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091030150223.GA2586@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Buesch <mb@bu3sch.de>
-Date: Fri, 9 Oct 2009 01:08:06 +0200
+On Fri, Oct 30, 2009 at 11:02:24AM -0400, John W. Linville wrote:
+> On Fri, Oct 30, 2009 at 11:06:16AM +0000, Jarek Poplawski wrote:
+> 
+> > There are various ways to disagree, and ignoring by John questions
+> > from a merited developer both in this referenced lkml and current
+> > threads looks at least strange (if not offensive) as well.
+> 
+> Did you read the thread for which Bartlomiej provided a link earlier?
+> There were ten responses (only three of them from him) in that thread.
+> His comments were not ignored, they were rejected.
+> 
+> Ever since Bartlomiej decided to tear himself away from
+> drivers/staging, he has been nothing but negative -- petty, whining,
+> indignat, whatever.  Just what has he done to merit any special
+> consideration here?  Why should he have any sort of veto over rt2x00?
+> 
+> And of all things on which to take a stand -- how dare the rt2x00 guys
+> use two header files instead of three?  The nerve of those people!!!
+> 
+> Ridiculous...
 
-> I was planning to do a better solution, but I didn't have the time, yet.
+Maybe. Different tastes for sure, so simply no good solution.
 
-The change is harmless while we're twiddling our thumbs waiting
-for you to implement the fix "properly."
+Anyway, my point was somewhere else: Davem could be a good example;-)
+I simply can't imagine a thread with such concerns left completely
+uncommented before merging a patch. It's not about convincing anybody.
+Usually you know at least if the concern is dismissed, or valid, but
+fixable. (Sometimes you can even read between lines, or explicit, what
+he really thinks...)
 
-Not having the fix in is a developer burdon because people turn
-on the DMA API debugger and are going to keep reporting it's
-complaints here and elsewhere.
+This discussion is mainly around trying to omit a maintainer with
+"higher authority". Of course it's a mortal sin! ...Except, when the
+maintainer doesn't seem to respond at all.
 
-Get over your Napoleon complex, and let reasonable working fixes
-get into the tree even if you don't find them optimal.  You can
-always improve them later, "when you get around to it."
+BTW, it seems Bartlomiej's main argument in the current thread has
+changed to the non-working driver, so ridiculous only if you have a
+clue.
 
-People put fixes in without my ACK in my areas of expertiece all
-the time.  I got over it a long time ago, it's OK, and not worth
-stressing out over.
-
-Thanks.
+Jarek P.
