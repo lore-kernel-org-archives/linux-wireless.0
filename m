@@ -1,100 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38202 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751131AbZJQA2E (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 20:28:04 -0400
-Subject: Re: [PATCH] mac80211: fix SME warning by removing stale BSS upon
- assoc failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ic.felix@gmail.com" <ic.felix@gmail.com>
-In-Reply-To: <20091016182039.GC6438@tuxdriver.com>
-References: <1255481442-27130-1-git-send-email-lrodriguez@atheros.com>
-	 <1255562895.4095.297.camel@johannes.local> <20091014233528.GA4172@tux>
-	 <1255685492.4095.309.camel@johannes.local>
-	 <20091016182039.GC6438@tuxdriver.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-DhVq75+gqotefz2/qtQU"
-Date: Sat, 17 Oct 2009 09:28:00 +0900
-Message-Id: <1255739280.4095.343.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:15110 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757475AbZJ3VgP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Oct 2009 17:36:15 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Ben Cahill <ben.m.cahill@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 04/15] iwlagn: invoke L0S workaround for 6000/1000 series
+Date: Fri, 30 Oct 2009 14:36:07 -0700
+Message-Id: <1256938578-9638-5-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
+References: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ben Cahill <ben.m.cahill@intel.com>
 
---=-DhVq75+gqotefz2/qtQU
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Invoke workaround to avoid instability in L0->L0S->L1 transition on PCIe bus.
+Workaround disables L0S state so device moves directly from L0->L1.
+Workaround needed on all devices since and including 4965; add to 6000/1000.
 
-On Fri, 2009-10-16 at 14:20 -0400, John W. Linville wrote:
-> On Fri, Oct 16, 2009 at 06:31:32PM +0900, Johannes Berg wrote:
-> > On Wed, 2009-10-14 at 16:35 -0700, Luis R. Rodriguez wrote:
-> >=20
-> > > Well sure, but why do we want to keep the authentication present if
-> > > association failed? And as a matter of fact it lingers there forever.
-> > > Is that desired behaviour?
-> >=20
-> > Yes, well, the SME is supposed to clean it up or try the association
-> > again (possibly with different parameters in the IEs, e.g. different WP=
-A
-> > settings). The cfg80211 SME certainly does so (it deauthenticates).
-> >=20
-> > > > > +++ b/net/mac80211/mlme.c
-> > > > > @@ -1463,11 +1463,11 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee8=
-0211_sub_if_data *sdata,
-> > > > >  	if (status_code !=3D WLAN_STATUS_SUCCESS) {
-> > > > >  		printk(KERN_DEBUG "%s: AP denied association (code=3D%d)\n",
-> > > > >  		       sdata->dev->name, status_code);
-> > > > >  		list_del(&wk->list);
-> > > > >  		kfree(wk);
-> > > > > -		return RX_MGMT_CFG80211_ASSOC;
-> > > > > +		return RX_MGMT_CFG80211_DEAUTH;
-> > > >=20
-> > > > I'm sure this is correct. Maybe cfg80211 doesn't react properly to
-> > > > getting an assoc frame with non-zero status?
-> > >=20
-> > > I see, will have to take a look when I get a chance then, not now tho=
-ugh.
-> >=20
-> > > Actually can you elaborate a little on the logic here as to why
-> > > we want to issue an association command with non-zero status to
-> > > cfg80211 instead of just knocking off the current authentication
-> > > and killing the BSS?
-> >=20
-> > Is the above sufficient? Btw, please don't talk about "killing the BSS"=
-,
-> > you're not talking about a BSS struct but rather one of the mlme work
-> > structs.
->=20
-> So, should this patch be dropped?  It is currently in w-t...
+Describe bug and workaround better in comments.
 
-Yes.
+Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-1000.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   20 ++++++++++----------
+ drivers/net/wireless/iwlwifi/iwl-core.c |    8 ++++++--
+ 3 files changed, 18 insertions(+), 14 deletions(-)
 
-johannes
-
---=-DhVq75+gqotefz2/qtQU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK2Q+KAAoJEODzc/N7+QmafXcQAMobVMYrCuV/m6yrLXN5Vpiw
-2VcPdchXSJ3ZhCH9b4bQRc6J5rEfk/8txbcb44b2ltQYBkYg1Q+08Tb78IaxZqao
-xDmssmbsubYfsSnexw6MXD0e06zheMo9ogn5GARseAp/qIkTVmnfPwzRkxIgdhCS
-mMhxP/GuIKcdXuTvewrDfD/qW3He+KOVc6cciDXXvkYbOP3K2vjSn0pUmennkWyN
-n8Z3drtWGGZz4QoPg0q/nf/OifiZQyDozi/EWXxxKEJ61ee3dIK+rFgVoCuk+WRb
-RiQ/cZ9hEHv6zNYrHUsQrnxi11vXOI/c5kQYJgAuAUuyQNuxyli7RxwmWmdeSwwj
-n3qsijLgXStNkN4q0gBEXUc65c48QP2qlef6K/i+0kQBsfPGBZGb14BVcF2Qa8FA
-NyP7MrA5bXO2KpVTxJ7NM51H2CgymUP8WE82N5HUjUr3oRm6M6KooUI2aQZ7FkYw
-srliUt1ktBbt5IQNXL76cjhD1okQvM6PWVf2EV5mKwLxP6hNt6ZscXXmnDj4oz4W
-uXwcAAY6uCoRyKKR2byjKL115uH7/kTVp01wm25jxfQyuTwe8NdhIyjvkFXpSxh0
-Do46qZ7Fj+TuCVh3G28O/ggiqi/V0YTxSsNHj1JBk9ipdvNjsxfALNNoH4i8E6wU
-+KFdF2tnECxycTI03Yln
-=ULAq
------END PGP SIGNATURE-----
-
---=-DhVq75+gqotefz2/qtQU--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 3a645e4..1e387b9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -164,7 +164,7 @@ struct iwl_cfg iwl1000_bgn_cfg = {
+ 	.valid_tx_ant = ANT_A,
+ 	.valid_rx_ant = ANT_AB,
+ 	.pll_cfg_val = CSR50_ANA_PLL_CFG_VAL,
+-	.set_l0s = false,
++	.set_l0s = true,
+ 	.use_bsm = false,
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_1000,
+ 	.shadow_ram_support = false,
+@@ -190,7 +190,7 @@ struct iwl_cfg iwl1000_bg_cfg = {
+ 	.valid_tx_ant = ANT_A,
+ 	.valid_rx_ant = ANT_AB,
+ 	.pll_cfg_val = CSR50_ANA_PLL_CFG_VAL,
+-	.set_l0s = false,
++	.set_l0s = true,
+ 	.use_bsm = false,
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_1000,
+ 	.shadow_ram_support = false,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 32466d3..2f841a8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -299,7 +299,7 @@ struct iwl_cfg iwl6000h_2agn_cfg = {
+ 	.valid_tx_ant = ANT_AB,
+ 	.valid_rx_ant = ANT_AB,
+ 	.pll_cfg_val = 0,
+-	.set_l0s = false,
++	.set_l0s = true,
+ 	.use_bsm = false,
+ 	.pa_type = IWL_PA_HYBRID,
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+@@ -329,7 +329,7 @@ struct iwl_cfg iwl6000h_2abg_cfg = {
+ 	.valid_tx_ant = ANT_AB,
+ 	.valid_rx_ant = ANT_AB,
+ 	.pll_cfg_val = 0,
+-	.set_l0s = false,
++	.set_l0s = true,
+ 	.use_bsm = false,
+ 	.pa_type = IWL_PA_HYBRID,
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+@@ -358,7 +358,7 @@ struct iwl_cfg iwl6000h_2bg_cfg = {
+ 	.valid_tx_ant = ANT_AB,
+ 	.valid_rx_ant = ANT_AB,
+ 	.pll_cfg_val = 0,
+-	.set_l0s = false,
++	.set_l0s = true,
+ 	.use_bsm = false,
+ 	.pa_type = IWL_PA_HYBRID,
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+@@ -390,7 +390,7 @@ struct iwl_cfg iwl6000i_2agn_cfg = {
+ 	.valid_tx_ant = ANT_BC,
+ 	.valid_rx_ant = ANT_BC,
+ 	.pll_cfg_val = 0,
+-	.set_l0s = false,
++	.set_l0s = true,
+ 	.use_bsm = false,
+ 	.pa_type = IWL_PA_INTERNAL,
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+@@ -420,7 +420,7 @@ struct iwl_cfg iwl6000i_2abg_cfg = {
+ 	.valid_tx_ant = ANT_BC,
+ 	.valid_rx_ant = ANT_BC,
+ 	.pll_cfg_val = 0,
+-	.set_l0s = false,
++	.set_l0s = true,
+ 	.use_bsm = false,
+ 	.pa_type = IWL_PA_INTERNAL,
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+@@ -449,7 +449,7 @@ struct iwl_cfg iwl6000i_2bg_cfg = {
+ 	.valid_tx_ant = ANT_BC,
+ 	.valid_rx_ant = ANT_BC,
+ 	.pll_cfg_val = 0,
+-	.set_l0s = false,
++	.set_l0s = true,
+ 	.use_bsm = false,
+ 	.pa_type = IWL_PA_INTERNAL,
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+@@ -478,7 +478,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.valid_tx_ant = ANT_AB,
+ 	.valid_rx_ant = ANT_AB,
+ 	.pll_cfg_val = 0,
+-	.set_l0s = false,
++	.set_l0s = true,
+ 	.use_bsm = false,
+ 	.pa_type = IWL_PA_SYSTEM,
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x50,
+@@ -508,7 +508,7 @@ struct iwl_cfg iwl6050_2abg_cfg = {
+ 	.valid_tx_ant = ANT_AB,
+ 	.valid_rx_ant = ANT_AB,
+ 	.pll_cfg_val = 0,
+-	.set_l0s = false,
++	.set_l0s = true,
+ 	.use_bsm = false,
+ 	.pa_type = IWL_PA_SYSTEM,
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x50,
+@@ -537,7 +537,7 @@ struct iwl_cfg iwl6000_3agn_cfg = {
+ 	.valid_tx_ant = ANT_ABC,
+ 	.valid_rx_ant = ANT_ABC,
+ 	.pll_cfg_val = 0,
+-	.set_l0s = false,
++	.set_l0s = true,
+ 	.use_bsm = false,
+ 	.pa_type = IWL_PA_SYSTEM,
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+@@ -567,7 +567,7 @@ struct iwl_cfg iwl6050_3agn_cfg = {
+ 	.valid_tx_ant = ANT_ABC,
+ 	.valid_rx_ant = ANT_ABC,
+ 	.pll_cfg_val = 0,
+-	.set_l0s = false,
++	.set_l0s = true,
+ 	.use_bsm = false,
+ 	.pa_type = IWL_PA_SYSTEM,
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x50,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 9e71544..2952890 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1431,8 +1431,12 @@ int iwl_apm_init(struct iwl_priv *priv)
+ 				    CSR_HW_IF_CONFIG_REG_BIT_HAP_WAKE_L1A);
+ 
+ 	/*
+-	 * HW bug W/A - costs negligible power consumption ...
+-	 * Check if BIOS (or OS) enabled L1-ASPM on this device
++	 * HW bug W/A for instability in PCIe bus L0->L0S->L1 transition.
++	 * Check if BIOS (or OS) enabled L1-ASPM on this device.
++	 * If so (likely), disable L0S, so device moves directly L0->L1;
++	 *    costs negligible amount of power savings.
++	 * If not (unlikely), enable L0S, so there is at least some
++	 *    power savings, even without L1.
+ 	 */
+ 	if (priv->cfg->set_l0s) {
+ 		lctl = iwl_pcie_link_ctl(priv);
+-- 
+1.5.6.3
 
