@@ -1,54 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:60316 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755970AbZJPHV7 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54220 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750898AbZJ3GtD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 03:21:59 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-To: John Willis <John.Willis@Distant-earth.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville\@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [PATCH] wl1251: add support for PG11 chips.
-References: <01c201ca4d9c$c2c44500$484ccf00$@Willis@Distant-earth.com>
-Date: Fri, 16 Oct 2009 10:19:59 +0300
-In-Reply-To: <01c201ca4d9c$c2c44500$484ccf00$@Willis@Distant-earth.com> (ext
-	John Willis's message of "Thu, 15 Oct 2009 15:38:16 +0200")
-Message-ID: <87vdifbyao.fsf@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 30 Oct 2009 02:49:03 -0400
+Subject: Re: OOPS in cfg80211_conn_work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Parag Warudkar <parag.lkml@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <f7848160910291617q2b168089l5ce489d2f47ebe96@mail.gmail.com>
+References: <f7848160910291617q2b168089l5ce489d2f47ebe96@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ZuEdxnCa5WlQMjeiPlCa"
+Date: Fri, 30 Oct 2009 07:49:03 +0100
+Message-ID: <1256885343.3555.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John Willis <John.Willis@Distant-earth.com> writes:
 
-> From: David-John Willis <John.Willis@Distant-earth.com>
->
-> This simple patch adds support for the PG11 variant of the WL1251 chip as
-> used on the OpenPandora OMAP3 device.
->
-> Signed-off-by: David-John Willis <John.Willis@Distant-earth.com>
+--=-ZuEdxnCa5WlQMjeiPlCa
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for the patch. And excellent news that it's working on your
-device.
+On Thu, 2009-10-29 at 19:17 -0400, Parag Warudkar wrote:
+> Oct 29 18:59:06 parag-laptop kernel: [  143.180037] wlan0:
+> deauthenticating from 00:16:01:d6:6f:12 by local choice (reason=3D3)
+> Oct 29 18:59:06 parag-laptop kernel: [  143.181137] wlan0: direct
+> probe to AP 00:16:01:d6:6f:12 (try 1)
 
-Minor comment:
+sorry, I can't read this log. please provide a non-wrapped version
 
-> --- a/drivers/net/wireless/wl12xx/wl1251_main.c
-> +++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-> @@ -185,6 +185,9 @@ static int wl1251_chip_wakeup(struct wl1251 *wl)
->  		break;
->  	case CHIP_ID_1251_PG10:
->  	case CHIP_ID_1251_PG11:
-> +		wl1251_debug(DEBUG_BOOT, "chip id 0x%x (1251 PG11)",
-> +			     wl->chip_id);
-> +		break;
->  	default:
->  		wl1251_error("unsupported chip id: 0x%x", wl->chip_id);
->  		ret = -ENODEV;
+johannes
 
-This patch also enables PG10 support, but as that hardware revision is
-untested I think it's better not to enable it. I'll edit the patch a bit
-regarding this and then send it to John.
+--=-ZuEdxnCa5WlQMjeiPlCa
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
--- 
-Kalle Valo
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK6oxbAAoJEODzc/N7+QmaH00QAMf7hj6U0Jx4RBwslNqnv8+z
+swxzGj1nzHPI3h44i9O+6t1Ygzvl/6xCWmaQMJlR0vX7sVr1NE01k90tLrFJmg44
+xWHZY5XaF6U9SzWzJ8a9WGz1ngoIiSghVIvSC83+Lbr0zQAZzjM1AGtbaHsOx69l
+vj9oRZZW+9lZatVCa1fmc/5N4P8TGfa3KDbQorlo17b7SEVNQXrA5pHf2vlLoK+g
+iH59ovKDdCuX+ovDu96gl6GkX+D8qEGMsZ1wfbjlmQQWY0WRA5MovpZcrPTV/dbE
+qaY22Wf9Cp0WxRIOvoEN8kHzyttu8g/Rvyccmp+Guy3V4IhelJWfYQ8N7HJ6EVlh
+tezI4xPCV3gr76tpdIfhCPt1wf3M9481iNSqeIZSAXiHS7UvW2RMzncMMXsspQLC
+LecQWyg3z0OtUQR1t+VOuG5Gy/v7RvT2ej/h3gojwFi88r2aJmWKtLJacaXsf6xM
+DBUvv2+zo/fo/vE94fyL1Do4II3unqPoBv6PsOefi36bXVwK7daCBtplwdApCF+7
+h1u3JTUX4IY1NK0Aw/odQ81o1lIVKOOwpcYFw/mzdcDeo8sjR8QtOkf43579d3i+
+cgTA1ozkqYuhGbzAXhSTLDYMvImENAHSqVz95T7ml6XDYbyXRyfxGtGrYHJR+zcR
+r4bA+huTPHdTBwEHQwrV
+=gyan
+-----END PGP SIGNATURE-----
+
+--=-ZuEdxnCa5WlQMjeiPlCa--
+
