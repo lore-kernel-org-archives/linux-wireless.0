@@ -1,66 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:34594 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932827AbZJ3SoQ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57956 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757527AbZJ3VAE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 14:44:16 -0400
-Received: by ewy28 with SMTP id 28so3310768ewy.18
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2009 11:44:20 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] libertas if_usb: Fix crash on 64-bit machines
-Date: Fri, 30 Oct 2009 19:44:14 +0100
-Cc: David Woodhouse <dwmw2@infradead.org>, linville@tuxdriver.com,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	dcbw@redhat.com, stern@rowland.harvard.edu, davem@davemloft.net
-References: <1256924714.4030.44.camel@macbook.infradead.org> <4AEB2F13.50102@lwfinger.net>
-In-Reply-To: <4AEB2F13.50102@lwfinger.net>
+	Fri, 30 Oct 2009 17:00:04 -0400
+Date: Fri, 30 Oct 2009 16:45:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: make CALL_TXH a statement
+Message-ID: <20091030204511.GE2586@tuxdriver.com>
+References: <1256802228.3865.55.camel@johannes.local> <20091030191126.GC2586@tuxdriver.com> <1256935427.3555.66.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <200910301944.14740.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1256935427.3555.66.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 30 October 2009 19:23:15 Larry Finger wrote:
-> David Woodhouse wrote:
-> > On a 64-bit kernel, skb->tail is an offset, not a pointer. The libertas
-> > usb driver passes it to usb_fill_bulk_urb() anyway, causing interesting
-> > crashes. Fix that by using skb->data instead.
+On Fri, Oct 30, 2009 at 09:43:47PM +0100, Johannes Berg wrote:
+> On Fri, 2009-10-30 at 15:11 -0400, John W. Linville wrote:
+> > On Thu, Oct 29, 2009 at 08:43:48AM +0100, Johannes Berg wrote:
+> > > The multi-line code in this macro wasn't wrapped
+> > > in do {} while (0) so we cannot use it in an if()
+> > > branch safely in the future -- fix that.
+> > > 
+> > > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 > > 
-> > This highlights a problem with usb_fill_bulk_urb(). It doesn't notice
-> > when dma_map_single() fails and return the error to its caller as it
-> > should. In fact it _can't_ currently return the error, since it returns
-> > void.
+> > do {...} while (0) won't work for that either, right?  You need
+> > ({...}) instead if you want to return a value.  Is that what you want?
 > 
-> This should be fixed. If changing the code to return the error would
-> be too invasive (It is used in 30+ drivers), perhaps the routine
-> should be modified to log a warning when dma mapping fails. I will
-> submit an RFC to do that.
+> No, I just want to be able to do
+> 
+> if (...)
+> 	CALL_TXH(...)
 
-err, hold on a sec:
+Oh, I see -- I misunderstood you.
 
-
- - include/linux/usb.h -
-
-static inline void usb_fill_bulk_urb(struct urb *urb,
-                                     struct usb_device *dev,
-                                     unsigned int pipe,
-                                     void *transfer_buffer,
-                                     int buffer_length,
-                                     usb_complete_t complete_fn,
-                                     void *context)
-{
-        urb->dev = dev;
-        urb->pipe = pipe;
-        urb->transfer_buffer = transfer_buffer;
-        urb->transfer_buffer_length = buffer_length;
-        urb->complete = complete_fn;
-        urb->context = context;
-}
-
-that's just a fill-in macro.
-AFAICT usb_submit_urb does the tricky dma mapping.
-
-Regards,
-	Chr
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
