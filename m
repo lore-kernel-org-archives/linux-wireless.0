@@ -1,262 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:28147 "EHLO mga01.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:57327 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754797AbZJPVZ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 17:25:59 -0400
+	id S932412AbZJ3VgR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Oct 2009 17:36:17 -0400
 From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
 	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
 	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 06/10] iwlwifi: move rate scaling structures to header file
-Date: Fri, 16 Oct 2009 14:25:54 -0700
-Message-Id: <1255728358-29976-7-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
-References: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
+Subject: [PATCH 14/15] iwlwifi: add SM PS support for 6x50 series
+Date: Fri, 30 Oct 2009 14:36:17 -0700
+Message-Id: <1256938578-9638-15-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
+References: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Move to header file so they can be included and used in other parts of the
-driver.
+Spatial Multiplexing Power Save was disabled to achieve better
+throughput while in power save mode by activating all the rx chains all the time.
+By doing so, the device power consumption is high.
 
+Enable static/dynamic spatial multiplexing power save if device support
+it, which can lower the power consumption without impact throughput.
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |  100 ----------------------------
- drivers/net/wireless/iwlwifi/iwl-agn-rs.h |  101 +++++++++++++++++++++++++++++
- 2 files changed, 101 insertions(+), 100 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-6000.c |    2 +
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |    4 ++
+ drivers/net/wireless/iwlwifi/iwl-core.c |   48 ++++++++++++++++++++++++------
+ drivers/net/wireless/iwlwifi/iwl-core.h |    2 +
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 +
+ drivers/net/wireless/iwlwifi/iwl-sta.c  |    5 +++
+ 6 files changed, 52 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index a07be29..2d4ec1a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -75,106 +75,6 @@ static const u8 ant_toggle_lookup[] = {
- 	/*ANT_ABC  -> */ ANT_ABC,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 2f841a8..a4a8b5e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -490,6 +490,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.supports_idle = true,
+ 	.adv_thermal_throttle = true,
+ 	.support_ct_kill_exit = true,
++	.support_sm_ps = true,
  };
  
--/**
-- * struct iwl_rate_scale_data -- tx success history for one rate
-- */
--struct iwl_rate_scale_data {
--	u64 data;		/* bitmap of successful frames */
--	s32 success_counter;	/* number of frames successful */
--	s32 success_ratio;	/* per-cent * 128  */
--	s32 counter;		/* number of frames attempted */
--	s32 average_tpt;	/* success ratio * expected throughput */
--	unsigned long stamp;
--};
--
--/**
-- * struct iwl_scale_tbl_info -- tx params and success history for all rates
-- *
-- * There are two of these in struct iwl_lq_sta,
-- * one for "active", and one for "search".
-- */
--struct iwl_scale_tbl_info {
--	enum iwl_table_type lq_type;
--	u8 ant_type;
--	u8 is_SGI;	/* 1 = short guard interval */
--	u8 is_ht40;	/* 1 = 40 MHz channel width */
--	u8 is_dup;	/* 1 = duplicated data streams */
--	u8 action;	/* change modulation; IWL_[LEGACY/SISO/MIMO]_SWITCH_* */
--	u8 max_search;	/* maximun number of tables we can search */
--	s32 *expected_tpt;	/* throughput metrics; expected_tpt_G, etc. */
--	u32 current_rate;  /* rate_n_flags, uCode API format */
--	struct iwl_rate_scale_data win[IWL_RATE_COUNT]; /* rate histories */
--};
--
--struct iwl_traffic_load {
--	unsigned long time_stamp;	/* age of the oldest statistics */
--	u32 packet_count[TID_QUEUE_MAX_SIZE];   /* packet count in this time
--						 * slice */
--	u32 total;			/* total num of packets during the
--					 * last TID_MAX_TIME_DIFF */
--	u8 queue_count;			/* number of queues that has
--					 * been used since the last cleanup */
--	u8 head;			/* start of the circular buffer */
--};
--
--/**
-- * struct iwl_lq_sta -- driver's rate scaling private structure
-- *
-- * Pointer to this gets passed back and forth between driver and mac80211.
-- */
--struct iwl_lq_sta {
--	u8 active_tbl;		/* index of active table, range 0-1 */
--	u8 enable_counter;	/* indicates HT mode */
--	u8 stay_in_tbl;		/* 1: disallow, 0: allow search for new mode */
--	u8 search_better_tbl;	/* 1: currently trying alternate mode */
--	s32 last_tpt;
--
--	/* The following determine when to search for a new mode */
--	u32 table_count_limit;
--	u32 max_failure_limit;	/* # failed frames before new search */
--	u32 max_success_limit;	/* # successful frames before new search */
--	u32 table_count;
--	u32 total_failed;	/* total failed frames, any/all rates */
--	u32 total_success;	/* total successful frames, any/all rates */
--	u64 flush_timer;	/* time staying in mode before new search */
--
--	u8 action_counter;	/* # mode-switch actions tried */
--	u8 is_green;
--	u8 is_dup;
--	enum ieee80211_band band;
--	u8 ibss_sta_added;
--
--	/* The following are bitmaps of rates; IWL_RATE_6M_MASK, etc. */
--	u32 supp_rates;
--	u16 active_legacy_rate;
--	u16 active_siso_rate;
--	u16 active_mimo2_rate;
--	u16 active_mimo3_rate;
--	u16 active_rate_basic;
--	s8 max_rate_idx;     /* Max rate set by user */
--	u8 missed_rate_counter;
--
--	struct iwl_link_quality_cmd lq;
--	struct iwl_scale_tbl_info lq_info[LQ_SIZE]; /* "active", "search" */
--	struct iwl_traffic_load load[TID_MAX_LOAD_COUNT];
--	u8 tx_agg_tid_en;
--#ifdef CONFIG_MAC80211_DEBUGFS
--	struct dentry *rs_sta_dbgfs_scale_table_file;
--	struct dentry *rs_sta_dbgfs_stats_table_file;
--	struct dentry *rs_sta_dbgfs_rate_scale_data_file;
--	struct dentry *rs_sta_dbgfs_tx_agg_tid_en_file;
--	u32 dbg_fixed_rate;
--#endif
--	struct iwl_priv *drv;
--
--	/* used to be in sta_info */
--	int last_txrate_idx;
--	/* last tx rate_n_flags */
--	u32 last_rate_n_flags;
--	/* packets destined for this STA are aggregated */
--	u8 is_agg;
--};
--
- static void rs_rate_scale_perform(struct iwl_priv *priv,
- 				   struct sk_buff *skb,
- 				   struct ieee80211_sta *sta,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-index 9fac530..affc0c5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-@@ -54,6 +54,7 @@ struct iwl3945_rate_info {
- 	u8 prev_table_rs;	/* prev in rate table cmd */
+ struct iwl_cfg iwl6050_2abg_cfg = {
+@@ -579,6 +580,7 @@ struct iwl_cfg iwl6050_3agn_cfg = {
+ 	.supports_idle = true,
+ 	.adv_thermal_throttle = true,
+ 	.support_ct_kill_exit = true,
++	.support_sm_ps = true,
  };
  
-+
+ MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index e99b753..2bbd04d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3012,6 +3012,10 @@ static int iwl_init_drv(struct iwl_priv *priv)
+ 	priv->band = IEEE80211_BAND_2GHZ;
+ 
+ 	priv->iw_mode = NL80211_IFTYPE_STATION;
++	if (priv->cfg->support_sm_ps)
++		priv->current_ht_config.sm_ps = WLAN_HT_CAP_SM_PS_DYNAMIC;
++	else
++		priv->current_ht_config.sm_ps = WLAN_HT_CAP_SM_PS_DISABLED;
+ 
+ 	/* Choose which receivers/antennas to use */
+ 	if (priv->cfg->ops->hcmd->set_rxon_chain)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 96eb476..6a9d593 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -415,8 +415,12 @@ static void iwlcore_init_ht_hw_capab(const struct iwl_priv *priv,
+ 	if (priv->cfg->ht_greenfield_support)
+ 		ht_info->cap |= IEEE80211_HT_CAP_GRN_FLD;
+ 	ht_info->cap |= IEEE80211_HT_CAP_SGI_20;
+-	ht_info->cap |= (IEEE80211_HT_CAP_SM_PS &
+-			     (WLAN_HT_CAP_SM_PS_DISABLED << 2));
++	if (priv->cfg->support_sm_ps)
++		ht_info->cap |= (IEEE80211_HT_CAP_SM_PS &
++				     (WLAN_HT_CAP_SM_PS_DYNAMIC << 2));
++	else
++		ht_info->cap |= (IEEE80211_HT_CAP_SM_PS &
++				     (WLAN_HT_CAP_SM_PS_DISABLED << 2));
+ 
+ 	max_bit_rate = MAX_BIT_RATE_20_MHZ;
+ 	if (priv->hw_params.ht40_channel & BIT(band)) {
+@@ -964,17 +968,35 @@ static int iwl_get_active_rx_chain_count(struct iwl_priv *priv)
+ }
+ 
  /*
-  * These serve as indexes into
-  * struct iwl_rate_info iwl_rates[IWL_RATE_COUNT];
-@@ -335,6 +336,106 @@ struct iwl_rate_mcs_info {
- 	char	mcs[IWL_MAX_MCS_DISPLAY_SIZE];
+- * When we are in power saving, there's no difference between
+- * using multiple chains or just a single chain, but due to the
+- * lack of SM PS we lose a lot of throughput if we use just a
+- * single chain.
+- *
+- * Therefore, use the active count here (which will use multiple
+- * chains unless connected to a legacy AP).
++ * When we are in power saving mode, unless device support spatial
++ * multiplexing power save, use the active count for rx chain count.
+  */
+ static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
+ {
+-	return active_cnt;
++	int idle_cnt = active_cnt;
++	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
++
++	if (priv->cfg->support_sm_ps) {
++		/* # Rx chains when idling and maybe trying to save power */
++		switch (priv->current_ht_config.sm_ps) {
++		case WLAN_HT_CAP_SM_PS_STATIC:
++		case WLAN_HT_CAP_SM_PS_DYNAMIC:
++			idle_cnt = (is_cam) ? IWL_NUM_IDLE_CHAINS_DUAL :
++				IWL_NUM_IDLE_CHAINS_SINGLE;
++			break;
++		case WLAN_HT_CAP_SM_PS_DISABLED:
++			idle_cnt = (is_cam) ? active_cnt :
++				IWL_NUM_IDLE_CHAINS_SINGLE;
++			break;
++		case WLAN_HT_CAP_SM_PS_INVALID:
++		default:
++			IWL_ERR(priv, "invalid sm_ps mode %d\n",
++				priv->current_ht_config.sm_ps);
++			WARN_ON(1);
++			break;
++		}
++	}
++	return idle_cnt;
+ }
+ 
+ /* up to 4 chains */
+@@ -2258,6 +2280,12 @@ static void iwl_ht_conf(struct iwl_priv *priv,
+ 					>> IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT;
+ 			maxstreams += 1;
+ 
++			ht_conf->sm_ps =
++				(u8)((ht_cap->cap & IEEE80211_HT_CAP_SM_PS)
++				>> 2);
++			IWL_DEBUG_MAC80211(priv, "sm_ps: 0x%x\n",
++				ht_conf->sm_ps);
++
+ 			if ((ht_cap->mcs.rx_mask[1] == 0) &&
+ 			    (ht_cap->mcs.rx_mask[2] == 0))
+ 				ht_conf->single_chain_sufficient = true;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index ddf0998..d2e47da 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -228,6 +228,7 @@ struct iwl_mod_params {
+  * @chain_noise_num_beacons: number of beacons used to compute chain noise
+  * @adv_thermal_throttle: support advance thermal throttle
+  * @support_ct_kill_exit: support ct kill exit condition
++ * @support_sm_ps: support spatial multiplexing power save
+  *
+  * We enable the driver to be backward compatible wrt API version. The
+  * driver specifies which APIs it supports (with @ucode_api_max being the
+@@ -283,6 +284,7 @@ struct iwl_cfg {
+ 	const bool supports_idle;
+ 	bool adv_thermal_throttle;
+ 	bool support_ct_kill_exit;
++	bool support_sm_ps;
  };
  
-+/**
-+ * struct iwl_rate_scale_data -- tx success history for one rate
-+ */
-+struct iwl_rate_scale_data {
-+	u64 data;		/* bitmap of successful frames */
-+	s32 success_counter;	/* number of frames successful */
-+	s32 success_ratio;	/* per-cent * 128  */
-+	s32 counter;		/* number of frames attempted */
-+	s32 average_tpt;	/* success ratio * expected throughput */
-+	unsigned long stamp;
-+};
-+
-+/**
-+ * struct iwl_scale_tbl_info -- tx params and success history for all rates
-+ *
-+ * There are two of these in struct iwl_lq_sta,
-+ * one for "active", and one for "search".
-+ */
-+struct iwl_scale_tbl_info {
-+	enum iwl_table_type lq_type;
-+	u8 ant_type;
-+	u8 is_SGI;	/* 1 = short guard interval */
-+	u8 is_ht40;	/* 1 = 40 MHz channel width */
-+	u8 is_dup;	/* 1 = duplicated data streams */
-+	u8 action;	/* change modulation; IWL_[LEGACY/SISO/MIMO]_SWITCH_* */
-+	u8 max_search;	/* maximun number of tables we can search */
-+	s32 *expected_tpt;	/* throughput metrics; expected_tpt_G, etc. */
-+	u32 current_rate;  /* rate_n_flags, uCode API format */
-+	struct iwl_rate_scale_data win[IWL_RATE_COUNT]; /* rate histories */
-+};
-+
-+struct iwl_traffic_load {
-+	unsigned long time_stamp;	/* age of the oldest statistics */
-+	u32 packet_count[TID_QUEUE_MAX_SIZE];   /* packet count in this time
-+						 * slice */
-+	u32 total;			/* total num of packets during the
-+					 * last TID_MAX_TIME_DIFF */
-+	u8 queue_count;			/* number of queues that has
-+					 * been used since the last cleanup */
-+	u8 head;			/* start of the circular buffer */
-+};
-+
-+/**
-+ * struct iwl_lq_sta -- driver's rate scaling private structure
-+ *
-+ * Pointer to this gets passed back and forth between driver and mac80211.
-+ */
-+struct iwl_lq_sta {
-+	u8 active_tbl;		/* index of active table, range 0-1 */
-+	u8 enable_counter;	/* indicates HT mode */
-+	u8 stay_in_tbl;		/* 1: disallow, 0: allow search for new mode */
-+	u8 search_better_tbl;	/* 1: currently trying alternate mode */
-+	s32 last_tpt;
-+
-+	/* The following determine when to search for a new mode */
-+	u32 table_count_limit;
-+	u32 max_failure_limit;	/* # failed frames before new search */
-+	u32 max_success_limit;	/* # successful frames before new search */
-+	u32 table_count;
-+	u32 total_failed;	/* total failed frames, any/all rates */
-+	u32 total_success;	/* total successful frames, any/all rates */
-+	u64 flush_timer;	/* time staying in mode before new search */
-+
-+	u8 action_counter;	/* # mode-switch actions tried */
-+	u8 is_green;
-+	u8 is_dup;
-+	enum ieee80211_band band;
-+	u8 ibss_sta_added;
-+
-+	/* The following are bitmaps of rates; IWL_RATE_6M_MASK, etc. */
-+	u32 supp_rates;
-+	u16 active_legacy_rate;
-+	u16 active_siso_rate;
-+	u16 active_mimo2_rate;
-+	u16 active_mimo3_rate;
-+	u16 active_rate_basic;
-+	s8 max_rate_idx;     /* Max rate set by user */
-+	u8 missed_rate_counter;
-+
-+	struct iwl_link_quality_cmd lq;
-+	struct iwl_scale_tbl_info lq_info[LQ_SIZE]; /* "active", "search" */
-+	struct iwl_traffic_load load[TID_MAX_LOAD_COUNT];
-+	u8 tx_agg_tid_en;
-+#ifdef CONFIG_MAC80211_DEBUGFS
-+	struct dentry *rs_sta_dbgfs_scale_table_file;
-+	struct dentry *rs_sta_dbgfs_stats_table_file;
-+	struct dentry *rs_sta_dbgfs_rate_scale_data_file;
-+	struct dentry *rs_sta_dbgfs_tx_agg_tid_en_file;
-+	u32 dbg_fixed_rate;
-+#endif
-+	struct iwl_priv *drv;
-+
-+	/* used to be in sta_info */
-+	int last_txrate_idx;
-+	/* last tx rate_n_flags */
-+	u32 last_rate_n_flags;
-+	/* packets destined for this STA are aggregated */
-+	u8 is_agg;
-+};
-+
- static inline u8 num_of_ant(u8 mask)
- {
- 	return  !!((mask) & ANT_A) +
+ /***************************
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index e7ce673..cb2642c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -517,6 +517,7 @@ struct iwl_ht_config {
+ 	bool is_ht;
+ 	bool is_40mhz;
+ 	bool single_chain_sufficient;
++	u8 sm_ps;
+ 	/* BSS related data */
+ 	u8 extension_chan_offset;
+ 	u8 ht_protection;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index ce1ceac..74cc8db 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -182,6 +182,11 @@ static void iwl_set_ht_add_station(struct iwl_priv *priv, u8 index,
+ 		goto done;
+ 
+ 	mimo_ps_mode = (sta_ht_inf->cap & IEEE80211_HT_CAP_SM_PS) >> 2;
++	IWL_DEBUG_ASSOC(priv, "spatial multiplexing power save mode: %s\n",
++			(mimo_ps_mode == WLAN_HT_CAP_SM_PS_STATIC) ?
++			"static" :
++			(mimo_ps_mode == WLAN_HT_CAP_SM_PS_DYNAMIC) ?
++			"dynamic" : "disabled");
+ 
+ 	sta_flags = priv->stations[index].sta.station_flags;
+ 
 -- 
 1.5.6.3
 
