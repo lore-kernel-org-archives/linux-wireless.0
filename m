@@ -1,32 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57386
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753977AbZJ2NxM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 09:53:12 -0400
-Date: Thu, 29 Oct 2009 06:53:36 -0700 (PDT)
-Message-Id: <20091029.065336.119302168.davem@davemloft.net>
-To: bzolnier@gmail.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200910291435.54203.bzolnier@gmail.com>
-References: <200910291345.05888.bzolnier@gmail.com>
-	<20091029.055901.24976117.davem@davemloft.net>
-	<200910291435.54203.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mga02.intel.com ([134.134.136.20]:15110 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932147AbZJ3VgR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Oct 2009 17:36:17 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 12/15] iwlwifi: print warning when sending host command fails
+Date: Fri, 30 Oct 2009 14:36:15 -0700
+Message-Id: <1256938578-9638-13-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
+References: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Thu, 29 Oct 2009 14:35:54 +0100
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-> This is your responsibility to deal with your downstream maintainers,
-> not mine and since you have accepted John's patch I'm asking you to
-> revert rt2800pci patch from your tree.
+More information than the "-EIO" return code will be useful here.
 
-That's not how it works Bart.  You should not be asking 'me' to do
-anything on wireless bits, there is absolutely no reason to bypass
-John in the workflow.
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-tx.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 1868093..b1a2de8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -980,7 +980,8 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 	       !(cmd->flags & CMD_SIZE_HUGE));
+ 
+ 	if (iwl_is_rfkill(priv) || iwl_is_ctkill(priv)) {
+-		IWL_DEBUG_INFO(priv, "Not sending command - RF/CT KILL\n");
++		IWL_WARN(priv, "Not sending command - %s KILL\n",
++			 iwl_is_rfkill(priv) ? "RF" : "CT");
+ 		return -EIO;
+ 	}
+ 
+-- 
+1.5.6.3
+
