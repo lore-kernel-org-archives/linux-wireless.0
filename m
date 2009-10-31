@@ -1,177 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37426 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760235AbZJMPQr (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:48004 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757774AbZJaNkp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 11:16:47 -0400
-Date: Tue, 13 Oct 2009 11:05:58 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-2.6 2009-10-13
-Message-ID: <20091013150558.GC2747@tuxdriver.com>
+	Sat, 31 Oct 2009 09:40:45 -0400
+Received: by iwn10 with SMTP id 10so2712853iwn.4
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2009 06:40:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1256996211.3555.131.camel@johannes.local>
+References: <1256971237.3555.87.camel@johannes.local> <43e72e890910310635q6015cf3bq639426d5c1502454@mail.gmail.com>
+	<1256996211.3555.131.camel@johannes.local>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sat, 31 Oct 2009 06:40:30 -0700
+Message-ID: <43e72e890910310640p6855a87bk37d3c07697b158d1@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: fix NULL ptr deref
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Parag Warudkar <parag.lkml@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+On Sat, Oct 31, 2009 at 6:36 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sat, 2009-10-31 at 06:35 -0700, Luis R. Rodriguez wrote:
+>> On Fri, Oct 30, 2009 at 11:40 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> >  commit 211a4d12abf86fe0df4cd68fc6327cbb58f56f81
+>> >  Author: Johannes Berg <johannes@sipsolutions.net>
+>> >  Date:   Tue Oct 20 15:08:53 2009 +0900
+>> >
+>> >      cfg80211: sme: deauthenticate on assoc failure
+>> >
+>> > introduced a potential NULL pointer dereference that
+>> > some people have been hitting for some reason -- the
+>> > params.bssid pointer is not guaranteed to be non-NULL
+>> > for what seems to be a race between various ways of
+>> > reaching the same thing.
+>> >
+>> > While I'm trying to analyse the problem more let's
+>> > first fix the crash. I think the real fix may be to
+>> > avoid doing _anything_ if it ended up being NULL, but
+>> > right now I'm not sure yet.
+>> >
+>> > I think
+>> > http://bugzilla.kernel.org/show_bug.cgi?id=14342
+>> > might also be this issue.
+>> >
+>> > Reported-by: Parag Warudkar <parag.lkml@gmail.com>
+>> > Tested-by: Parag Warudkar <parag.lkml@gmail.com>
+>> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>>
+>> Do we know if this will also affect 2.6.32?
+>
+> I'm pretty sure -- have we got any changes to this code that are not
+> in .32?
 
-Here are a few (almost-)one-liners for 2.6.32.  Included are fixes for
-a use-after-free, a missing "!" in front of a memcmp when comparing
-BSSIDs, a race when using hardware-based scanning, the ieee80211_rx
-context problem, a related documentation change, and a minor build
-issue.
+Not sure, I just wanted to make sure we fix .32 as well, that's all.
 
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
----
-
-Individual patches are available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
-
----
-
-The following changes since commit 10c435f18b8cb78a5870c08d52955594f5ec9c31:
-  David S. Miller (1):
-        net: Link in PHY drivers before others.
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
-
-Alan Cox (1):
-      libertas: fix build
-
-Felix Fietkau (1):
-      mac80211: fix logic error ibss merge bssid check
-
-Johannes Berg (3):
-      mac80211: fix ibss race
-      b43: fix ieee80211_rx() context
-      mac80211: document ieee80211_rx() context requirement
-
-Wey-Yi Guy (1):
-      iwlwifi: change the order of freeing memory
-
- drivers/net/wireless/b43/xmit.c             |    3 +++
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- drivers/net/wireless/libertas/cmdresp.c     |    1 +
- include/net/mac80211.h                      |    2 ++
- net/mac80211/ibss.c                         |    4 ++--
- net/mac80211/rx.c                           |    2 ++
- 7 files changed, 12 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
-index 892573b..f4e9695 100644
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -690,7 +690,10 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
- 	}
- 
- 	memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
-+
-+	local_bh_disable();
- 	ieee80211_rx(dev->wl->hw, skb);
-+	local_bh_enable();
- 
- #if B43_DEBUG
- 	dev->rx_count++;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index cdc07c4..9b5ea8b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3105,8 +3105,8 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
-  out_pci_disable_device:
- 	pci_disable_device(pdev);
-  out_ieee80211_free_hw:
--	ieee80211_free_hw(priv->hw);
- 	iwl_free_traffic_mem(priv);
-+	ieee80211_free_hw(priv->hw);
-  out:
- 	return err;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index c390dbd..837a193 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -4096,8 +4096,8 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	pci_set_drvdata(pdev, NULL);
- 	pci_disable_device(pdev);
-  out_ieee80211_free_hw:
--	ieee80211_free_hw(priv->hw);
- 	iwl_free_traffic_mem(priv);
-+	ieee80211_free_hw(priv->hw);
-  out:
- 	return err;
- }
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index c42d3fa..23f6843 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -3,6 +3,7 @@
-   * responses as well as events generated by firmware.
-   */
- #include <linux/delay.h>
-+#include <linux/sched.h>
- #include <linux/if_arp.h>
- #include <linux/netdevice.h>
- #include <asm/unaligned.h>
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 466859b..c75b960 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1669,6 +1669,8 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw);
-  * to this function and ieee80211_rx_irqsafe() may not be mixed for a
-  * single hardware.
-  *
-+ * Note that right now, this function must be called with softirqs disabled.
-+ *
-  * @hw: the hardware this frame came in on
-  * @skb: the buffer to receive, owned by mac80211 after this call
-  */
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 920ec87..6eaf698 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -544,7 +544,7 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
- 		       "%pM\n", bss->cbss.bssid, ifibss->bssid);
- #endif /* CONFIG_MAC80211_IBSS_DEBUG */
- 
--	if (bss && memcmp(ifibss->bssid, bss->cbss.bssid, ETH_ALEN)) {
-+	if (bss && !memcmp(ifibss->bssid, bss->cbss.bssid, ETH_ALEN)) {
- 		printk(KERN_DEBUG "%s: Selected IBSS BSSID %pM"
- 		       " based on configured SSID\n",
- 		       sdata->dev->name, bss->cbss.bssid);
-@@ -829,7 +829,7 @@ void ieee80211_ibss_notify_scan_completed(struct ieee80211_local *local)
- 		if (!sdata->u.ibss.ssid_len)
- 			continue;
- 		sdata->u.ibss.last_scan_completed = jiffies;
--		ieee80211_sta_find_ibss(sdata);
-+		mod_timer(&sdata->u.ibss.timer, 0);
- 	}
- 	mutex_unlock(&local->iflist_mtx);
- }
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 865fbc0..7170bf4 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2453,6 +2453,8 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 
-+	WARN_ON_ONCE(softirq_count() == 0);
-+
- 	if (WARN_ON(status->band < 0 ||
- 		    status->band >= IEEE80211_NUM_BANDS))
- 		goto drop;
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
