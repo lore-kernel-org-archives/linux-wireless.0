@@ -1,63 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:2984 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752377AbZJWP5M (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53696 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757172AbZJaKCp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 11:57:12 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 17/19] [RFC, v2] libertas: Kconfig entry for libertas+cfg80211
-Date: Fri, 23 Oct 2009 17:56:47 +0200
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>
-References: <20091022133043.185554096@mail.mn-solutions.de> <20091022133425.317619132@mail.mn-solutions.de> <1256307572.12174.33.camel@johannes.local>
-In-Reply-To: <1256307572.12174.33.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200910231756.47472.hs4233@mail.mn-solutions.de>
+	Sat, 31 Oct 2009 06:02:45 -0400
+Subject: Re: [PATCH 1/2] Allow scanning while in authenticated only state
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+In-Reply-To: <1256982381.3089.10.camel@maxim-laptop>
+References: <1256939391.31271.11.camel@maxim-laptop>
+	 <1256939549.31271.14.camel@maxim-laptop>
+	 <1256967782.3555.69.camel@johannes.local>
+	 <1256982381.3089.10.camel@maxim-laptop>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-EbkFh5ptUx/hxm0uEkTV"
+Date: Sat, 31 Oct 2009 11:02:46 +0100
+Message-ID: <1256983366.3555.119.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 23 October 2009 16:19:31 Johannes Berg wrote:
-> On Thu, 2009-10-22 at 15:31 +0200, Holger Schurig wrote:
-> 
-> > +#ifdef CONFIG_LIBERTAS_WEXT
-> >  	dev->ethtool_ops = &lbs_ethtool_ops;
-> >  	dev->wireless_handlers = &lbs_handler_def;
-> >  #endif
-> 
-> So here you make the wireless_handlers optional.
-> 
-> I still don't understand why you can't just replace only some 
-of the
-> handlers, i.e. instead of doing this, simply do
-> 
-> -	(iw_handler) lbs_set_freq,      /* SIOCSIWFREQ */
-> +	(iw_handler) cfg80211_wext_siwfreq,
-> 
-> etc.
-> 
-> That's why those exist and are exported. And that way you don't
-> need the Kconfig at all, and can remove most of the wext code.
 
-The Kconfig has *NOTHING* to do with mesh.
+--=-EbkFh5ptUx/hxm0uEkTV
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-MESH should be implemented via add_virtual_intf() / 
-change_virtual_intf(). This code isn't there yet, mesh_dev is 
-always NULL in the CONFIG_LIBERTAS_CFG80211 case, so there's no 
-need to export anything to ethtool or WEXT.
+On Sat, 2009-10-31 at 11:46 +0200, Maxim Levitsky wrote:
 
-And having cfg80211 + (mesh_dev != NULL) is something that
-I cannot program, due to (sigh) missing hardware, time,
-testing ability. Repeat rinse wash, repeat rinse wash ...
+> > I think you just need this wpa_supplicant patch:
+> > http://johannes.sipsolutions.net/patches/hostap/all/2009-10-26-12%3a59/=
+deauth-on-disassoc.patch
+>=20
+> Nope, this patch doesn't help.
+>=20
+> if I remove the bssid_changed, then it seems to work when connecting to
+> same AP, but still scan hangs when connecting to different.
+
+Hmm, Luis said it worked when connecting to a different AP. But he got
+assoc refused and/or disassoc from the AP
+
+> The problem is that wpa_supplicant doesn't do deauthentication
+> explicitly, and I was told that this is right thing to do. This confuses
+> all the nl80211 and mac80211...
+
+I thought Jouni committed that workaround. I'm still not convinced that
+wpa_supplicant is doing the right thing.
+
+> I also think that its best just to do both deauthentication and
+> disassociation in same time.
+
+But then why do we bother?
+
+> Yet, I think this path is ok, that is, when you disallow scanning, you
+> can be sure that wifi will be dead, and this patch catches the situation
+> when it for sure will disallowed  forever.
+
+True, in some sense, but the real problem is that the authentication is
+lingering along. If we really need to clean that up in the kernel then
+we'd have to time out authentication structs that didn't get promoted to
+association, instead of just ignoring them like your two patches
+implement [1]. However, since we put control of all this into
+wpa_supplicant, I don't know whether the kernel really should be
+required to clean up -- I was going to write "clean up after it" but
+that's not true [2], you're proposing that the kernel clean up *while*
+wpa_supplicant is in control. I don't think that's right, since it might
+actually want to hang on for an authentication while doing something
+else, for a while at least. How can we calculate an upper bound on that
+in the kernel?
+
+Now, I can kinda agree that we should allow authentication frames to go
+through while already authenticated, but that's something quite
+different although your patches here would also allow that in some
+hackish way (by accumulating more and more authentication structs that
+are then ignored).
+
+Now, especially since you say that this still runs into problems while
+connecting to a new AP, I think that wpa_supplicant should
+deauthenticate from the old AP. After all, it wants to eventually
+control FT and anything we do in the kernel will come back and interfere
+with that.
+
+johannes
+
+[1] and that'd have to be in cfg80211
+[2] Except when the interface is taken down, but that is already cleaned
+up by cfg80211.
 
 
-Okay, I now stop talking about this. Please talk with Dan about 
-the matter. He knows cfg80211 and libertas probably better than 
-I. Once you two have found a decision, I'm looking if I'm still 
-interested.
+--=-EbkFh5ptUx/hxm0uEkTV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
--- 
-http://www.holgerschurig.de
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK7AtDAAoJEODzc/N7+QmaiwsQAMhhRM9JvkTNUW+D7iZrAL2H
+zc6gBXydZQEPMCGptmP74UoyjrJgHCM1b81RSFKyo1CD5sr1mbMEryuA3efAMikr
+cIRa/VYGhJze/DMGubRjqaoLcmHOUzrPUh9fQMqcY5PVsvS3CqaG8zLFa2sw4w34
+ss2Nt1KfASe0CC3fpJu0bDyhOqcqhWoQKzhQ3pwsD+KfBYCAmvntvXKdWqIejEy/
+anwoHM1muTXVEq6I3Tg/mhjO/za2YdThj981DyK2OjC9RIi5UPlMm57fVmQRHBgw
+98hG34tS1dXPaLrZdpga/ozEMIScCa8X112li4ywkadHnjqtxSLfhP4Q36BefeB3
+4HxM2q3UPAz3+vsw1JXSqgf3OBdKSzxdaCY9geMvCLq3cWxSRqt+h2T9X1MuhL1I
+emTvWB2C+8xoLyB0zclNWE4kQWEtRTUGcajC3D8yxfI2desMH0gr/eG9ona5ys7I
+8yQMcqlHXUo7CWHc7ZAWBIECrSJFmkMtNfJNY6vxp3ima1EpPbgJwERt0DKqGWB5
+oYYc3Z5Yj5m5ZRXKgKBxbOBchHlpR62az/xUcgUg4YyYKPWEvsmvK36a1N7EpXBi
+wRBMIppKupdOY4MO+OWKrAVl2orjw2BtzGHPNC22X3pC0lX7+4yskOT6y42MQOjC
+5PkqCW5jOZBM8w/FDCr4
+=W1Ya
+-----END PGP SIGNATURE-----
+
+--=-EbkFh5ptUx/hxm0uEkTV--
+
