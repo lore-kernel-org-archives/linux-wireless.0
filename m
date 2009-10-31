@@ -1,82 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44702 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756264AbZJVPbt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2009 11:31:49 -0400
-Subject: Re: [RFC] libertas: monster-patch to make CFG/WEXT configurable
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200910221128.01851.hs4233@mail.mn-solutions.de>
-References: <200910191449.18915.hs4233@mail.mn-solutions.de>
-	 <1256150184.5010.45.camel@localhost.localdomain>
-	 <200910221128.01851.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Thu, 22 Oct 2009 08:31:53 -0700
-Message-Id: <1256225513.29650.6.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:52749 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754849AbZJaNfW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Oct 2009 09:35:22 -0400
+Received: by iwn10 with SMTP id 10so2711208iwn.4
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2009 06:35:26 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1256971237.3555.87.camel@johannes.local>
+References: <1256971237.3555.87.camel@johannes.local>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sat, 31 Oct 2009 06:35:06 -0700
+Message-ID: <43e72e890910310635q6015cf3bq639426d5c1502454@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: fix NULL ptr deref
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Parag Warudkar <parag.lkml@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-10-22 at 11:28 +0200, Holger Schurig wrote:
-> > For the mesh interface stuff, especially in tx/rx paths, would
-> > you mind not ifdefing that?  Since with cfg80211,
-> > priv->mesh_dev will always be NULL, those checks will be just
-> > fine and you still don't have to care about mesh.
-> 
-> Sure, I'll do that.
-> 
-> I just thought that there's no need for priv->mesh_dev in the 
-> cfg80211 case. Wouldn't mesh be activated by "iw dev XXX set 
-> type mesh"?  Then cfg80211_ops .change_intf() would be called.
-> 
-> Now that could either populate priv->mesh_dev ... or it could 
-> change priv->dev. Not sure about what is better. But the answer 
-> to this would tell us how to handle the mesh tx/rx paths.
+On Fri, Oct 30, 2009 at 11:40 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>  commit 211a4d12abf86fe0df4cd68fc6327cbb58f56f81
+>  Author: Johannes Berg <johannes@sipsolutions.net>
+>  Date:   Tue Oct 20 15:08:53 2009 +0900
+>
+>      cfg80211: sme: deauthenticate on assoc failure
+>
+> introduced a potential NULL pointer dereference that
+> some people have been hitting for some reason -- the
+> params.bssid pointer is not guaranteed to be non-NULL
+> for what seems to be a race between various ways of
+> reaching the same thing.
+>
+> While I'm trying to analyse the problem more let's
+> first fix the crash. I think the real fix may be to
+> avoid doing _anything_ if it ended up being NULL, but
+> right now I'm not sure yet.
+>
+> I think
+> http://bugzilla.kernel.org/show_bug.cgi?id=14342
+> might also be this issue.
+>
+> Reported-by: Parag Warudkar <parag.lkml@gmail.com>
+> Tested-by: Parag Warudkar <parag.lkml@gmail.com>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Except that we need *both* the mesh dev and the normal wifi dev running
-at the same time, like we had before.  It's not either/or.  So in
-cfg80211 land, we'd have two virtual interfaces, one would be mesh, and
-the other wifi.  They would always share the same RF channel and a few
-other PHY characteristics.
+Do we know if this will also affect 2.6.32?
 
-> cmdresp.c checks for priv->mesh_autostart_enabled. Is this 
-> another "sitting-forever-in-OLPC" thingy?  It's nowhere else
-> used and there's no code to set it.
-
-Mesh autostart is a feature where if mesh isn't explicitly enabled (by
-turning on msh0 or whatever) then after a short delay, the mesh
-functionality will be automatically enabled in firmware.  As with most
-mesh stuff, this is OLPC-specific.
-
-> > I'm sure that the bits for SNMP_MIB_OID_BSS_TYPE could also be
-> > converted to use lib80211 or cfg80211 values instead of WEXT
-> > ones; I just picked WEXT at the time because we had no cfg80211
-> > yet. 
-> 
-> Good idea.
-> 
-> However, when I'm teaching cfg80211 about the SNMP-commands, I'll 
-> use new-style commands anyway. I'd need them for RTS threshold 
-> etc anyway.
-> 
-> 
-> 
-> 
-> BTW: I added the RX part of the monitor in my cfg80211
-> implementation. But for my CF card, I'm still stuck with firmware
-> 5.0.16.p0. That doesn't support monitor mode. However, I also
-> have some USB stick around (got it from you!). Do you know which
-> firmware for this USB stick supports monitor?
-
-Any of the mesh-enabled firmwares should work, I think; just pick the
-latest of:
-
-http://dev.laptop.org/pub/firmware/libertas/
-
-I checked on Extranet and I do not have access to any CF8385 firmware
-later than 5.0.21.p3 (and thus cannot commit it to linux-firmware).
-
-Dan
-
-
+  Luis
