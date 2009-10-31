@@ -1,91 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58132 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:45063 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933247AbZJFVfF (ORCPT
+	with ESMTP id S1752842AbZJaPhJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 17:35:05 -0400
-Subject: Re: [PATCH -next] wireless: fix CFG80211_WEXT build problems
+	Sat, 31 Oct 2009 11:37:09 -0400
+Subject: Re: Re[2]: ieee80211_tx_status: headroom too small
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linville@tuxdriver.com,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20091006132729.8b4f9345.rdunlap@xenotime.net>
-References: <20091006165220.b5cb1c44.sfr@canb.auug.org.au>
-	 <20091006132729.8b4f9345.rdunlap@xenotime.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-mlIR3prWWHjimdDtAY9E"
-Date: Tue, 06 Oct 2009 23:33:49 +0200
-Message-Id: <1254864829.22426.44.camel@johannes.local>
+To: Nikolai ZHUBR <zhubr@mail.ru>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <7724371.20091031172437@mail.ru>
+References: <1094614475.20091030230028@mail.ru>
+	 <200910310959.43260.IvDoorn@gmail.com>
+	 <1256981113.3555.92.camel@johannes.local>
+	 <200910311030.45582.IvDoorn@gmail.com>
+	 <1256981677.3555.94.camel@johannes.local>  <7724371.20091031172437@mail.ru>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-QEoKHMiejIlVA7pIx8bT"
+Date: Sat, 31 Oct 2009 16:35:44 +0100
+Message-ID: <1257003344.3555.136.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-mlIR3prWWHjimdDtAY9E
+--=-QEoKHMiejIlVA7pIx8bT
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2009-10-06 at 13:27 -0700, Randy Dunlap wrote:
-> From: Randy Dunlap <randy.dunlap@oracle.com>
+On Sat, 2009-10-31 at 17:24 +0300, Nikolai ZHUBR wrote:
+> Saturday, October 31, 2009, 12:34:37 PM, Johannes Berg wrote:
+> >> > > 4 actually, wasn't there some cases where the header could have an=
+ odd
+> >> > > number of bytes and would require 3 bytes for alignment?
+> >> >=20
+> >> > Hm, is there? I thought they changed the 11s draft to no longer have
+> >> > that.
+> >>=20
+> >> Well 2 is fine in that case, (I was basing my comment on something sai=
+d on this mailinglist
+> >> a long time ago). :)
 >=20
-> Fix CFG80211_WEXT build dependencies/errors:
+> > However, it really all depends on the hardware too ... Maybe we should
+> > put more of the logic into drivers, and have mac80211 only export its
+> > required headroom?
 >=20
-> ERROR: "cfg80211_wext_siwscan" [drivers/net/wireless/orinoco/orinoco.ko] =
-undefined!
-> ERROR: "cfg80211_wext_siwmode" [drivers/net/wireless/orinoco/orinoco.ko] =
-undefined!
-> ERROR: "cfg80211_wext_giwrange" [drivers/net/wireless/orinoco/orinoco.ko]=
- undefined!
-> ERROR: "cfg80211_wext_giwmode" [drivers/net/wireless/orinoco/orinoco.ko] =
-undefined!
-> ERROR: "cfg80211_wext_giwname" [drivers/net/wireless/orinoco/orinoco.ko] =
-undefined!
-> ERROR: "cfg80211_wext_giwscan" [drivers/net/wireless/orinoco/orinoco.ko] =
-undefined!
-> ERROR: "cfg80211_wext_giwname" [drivers/net/wireless/ipw2x00/ipw2200.ko] =
-undefined!
+> > Or maybe we should just not bother with having drivers do the alignment
+> > any more -- mac80211 does that now and it only does it if necessary
+> > (i.e. not on powerpc/x86)
 >=20
-> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-> ---
->  drivers/net/wireless/ipw2x00/Kconfig |    2 +-
->  drivers/net/wireless/orinoco/Kconfig |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
+> I'm having this issue on mips platform, if it matters. I cannot test
+> it on x86 yet.
 >=20
-> --- linux-next-20091006.orig/drivers/net/wireless/ipw2x00/Kconfig
-> +++ linux-next-20091006/drivers/net/wireless/ipw2x00/Kconfig
-> @@ -65,7 +65,7 @@ config IPW2100_DEBUG
-> =20
->  config IPW2200
->  	tristate "Intel PRO/Wireless 2200BG and 2915ABG Network Connection"
-> -	depends on PCI && WLAN_80211 && CFG80211
-> +	depends on PCI && WLAN_80211 && CFG80211 && CFG80211_WEXT
+> Now, searching for "extra_tx_headroom" gives me essentially the
+> following two:
+>=20
+> net/mac80211/main.c:
+>         local->tx_headroom =3D max_t(unsigned int , local->hw.extra_tx_he=
+adroom,
+>                                    sizeof(struct ieee80211_tx_status_rtap=
+_hdr));
+>=20
+> drivers/net/wireless/rt*pci.c:
+>         rt2x00dev->hw->extra_tx_headroom =3D 0;
+>=20
+> So, as a quick-and-dirty fix, should I replace "max_t(..." by "4 + max_t(=
+..."
+> or "=3D 0" by "=3D 4" ?
 
-Interesting approach, thanks. I completely forgot about the
-half-converted drivers. The alternative would be to ifdef the code
-blobs, but I'm happy with this.
+4 + max ... should work if it's what we think it is. Let us know.
 
 johannes
 
---=-mlIR3prWWHjimdDtAY9E
+--=-QEoKHMiejIlVA7pIx8bT
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKy7e6AAoJEODzc/N7+Qmat9QP/jU4JKxcY8zrwS3TBC8hWP4/
-LoVAXBV922pZ6mywE+J4DN3DCRYpBLYiMc7+6Ip5gosNSoRTv8p9+Nik3BeBKbR6
-9qxz1Nxq+9M+eQLkj0eMRI1CVGGFhh+2VyjPdN71WWUjL1/wyskLLVITL5La/aB6
-stbLBsnwNXnlgFvsEjWlgWUaGqjstpJrG2OK0mGMH9tDSF/RqLKnuwqxwTk4VyH8
-NLqhTbLHEBr3Pkjh0B/kM8HiZ43J7s0yvLpXZqPQaVOMHMGJ9onlFGc8n4Wit905
-hjxGLR0onTqijjkhw4ARXlGsb7iwGKbO7Q1uNkb5Lbdo3jg1XJlFNnf0gUBpmL+b
-3ws0l0yeUdNPRnKPVUlGkThyBgmtwE+ycyWRPusCoGt/efPwL1ssEAt9Jf2LJod/
-rEOzjGSTs1MYm3UVOQACqfGfo6CNFju47D7X7Kalb26M8vBRc7ItquaMN+1aWfMN
-aKowUw8Dhw6HjvcFS8ySfDn72tmXqquW806fAaJgQ9sQ2O8DK00UpZdpfNHWdC7v
-tZwRtlNlTKY6BX1FZnsCS2v2pZEtHSe3BV7MEu21qyW7WszbtxGnku19L5mhLcF2
-cY7/ZG3AzCIrnmNKt04U3XFlyr3Bf5yc1KCDoEUxq1jQD1uZDS6Wu6G/ko1hJ5KY
-hXsomFmGcu7ddhWxr1SY
-=Udyl
+iQIcBAABAgAGBQJK7FlLAAoJEODzc/N7+Qma1loQAJhsL+8pcK1fpf41TT0eKYWj
+3EwuEvMTUB4D6EJJhQc04nmn31f5/bTsAH2E9cIj+GzNuY21gFyTMXs1QHH6PRnj
+zK176gHoJGnBcT6vXGIW/FP7qd4lwNvqpZZFTpNiBKwt8pYcQcYZnJI4aRAk4LkB
+TSFsN1gudvm6mzaK7aSdTVQQSjPFe39qZsLzrVImUVMvV+Cy2bMTiTxSyWO3KhVW
+R9dDLpG73XLRaW5Ud9AAgnO+z37ivTGvnjyXmXPbSKMNZ7W3GBGibn9wGUkRTYxy
+iIE5EsQVqtElLpjzoaqBzjE56EpMpNs83GuSJAq5fl0qglauMi/DigPDxqz/75Q7
+SEQBzgmG24Si+Uw+8T6PEE5N/hnYTetCvczvdEKK3QD8sl/LWIaqN/WIz+52cP39
+mXxZe5Z7YLeuDG1agrXgQRD+uqXhmhmUlgkY7b1DPZTJbn7wcJvAUbowflIun5MN
+wijMw1Fbv5vJ/wqOEb0Jdewpz/Yj4a13W0PevJd7IFXasEo9wyF8gUJOpUatHpai
+26RBhvoh2w6PrIX2f0rsXtuGT2XSMc8qGRm6dMSyzD0FCoESC1aeSgBMVesm+PfD
+NJKAJtJXK8jRbeADLvzT9RkCFPoXzftyMbjFq7hp86YLXL0ufDQWNtabKsqHc3Dv
+bLIhnEwhz176qdr9Y4tS
+=AZJ/
 -----END PGP SIGNATURE-----
 
---=-mlIR3prWWHjimdDtAY9E--
+--=-QEoKHMiejIlVA7pIx8bT--
 
