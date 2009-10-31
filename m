@@ -1,419 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:28535 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752703AbZJZPxr (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35113 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757830AbZJaNq7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 11:53:47 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>,
-	John Linville <linville@tuxdriver.com>
-Subject: [PATCH] libertas: move mesh command handling away
-Date: Mon, 26 Oct 2009 16:53:14 +0100
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200910261653.14599.hs4233@mail.mn-solutions.de>
+	Sat, 31 Oct 2009 09:46:59 -0400
+Subject: Re: OOPS in cfg80211_conn_work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Parag Warudkar <parag.lkml@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <alpine.DEB.2.00.0910310936110.5317@parag-laptop>
+References: <f7848160910291617q2b168089l5ce489d2f47ebe96@mail.gmail.com>
+	 <1256885343.3555.0.camel@johannes.local>
+	 <alpine.DEB.2.00.0910300652350.2223@parag-laptop>
+	 <1256903425.3555.47.camel@johannes.local>
+	 <f7848160910301622t2cf43b5bo5ffeda03ec2cdbfe@mail.gmail.com>
+	 <1256970899.3555.86.camel@johannes.local>
+	 <alpine.DEB.2.00.0910310936110.5317@parag-laptop>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-mNsOvD3G8MnSwhRrj0ez"
+Date: Sat, 31 Oct 2009 14:47:01 +0100
+Message-ID: <1256996821.3555.132.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
---- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
-+++ linux-wl/drivers/net/wireless/libertas/cmd.c
-@@ -3,7 +3,6 @@
-   * It prepares command and sends it to firmware when it is ready.
-   */
- 
--#include <net/lib80211.h>
- #include <linux/kfifo.h>
- #include <linux/sched.h>
- 
-@@ -697,173 +696,6 @@
- 	return 0;
- }
- 
--static int lbs_cmd_bt_access(struct cmd_ds_command *cmd,
--			       u16 cmd_action, void *pdata_buf)
--{
--	struct cmd_ds_bt_access *bt_access = &cmd->params.bt;
--	lbs_deb_enter_args(LBS_DEB_CMD, "action %d", cmd_action);
--
--	cmd->command = cpu_to_le16(CMD_BT_ACCESS);
--	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_bt_access) +
--		sizeof(struct cmd_header));
--	cmd->result = 0;
--	bt_access->action = cpu_to_le16(cmd_action);
--
--	switch (cmd_action) {
--	case CMD_ACT_BT_ACCESS_ADD:
--		memcpy(bt_access->addr1, pdata_buf, 2 * ETH_ALEN);
--		lbs_deb_hex(LBS_DEB_MESH, "BT_ADD: blinded MAC addr", bt_access->addr1, 6);
--		break;
--	case CMD_ACT_BT_ACCESS_DEL:
--		memcpy(bt_access->addr1, pdata_buf, 1 * ETH_ALEN);
--		lbs_deb_hex(LBS_DEB_MESH, "BT_DEL: blinded MAC addr", bt_access->addr1, 6);
--		break;
--	case CMD_ACT_BT_ACCESS_LIST:
--		bt_access->id = cpu_to_le32(*(u32 *) pdata_buf);
--		break;
--	case CMD_ACT_BT_ACCESS_RESET:
--		break;
--	case CMD_ACT_BT_ACCESS_SET_INVERT:
--		bt_access->id = cpu_to_le32(*(u32 *) pdata_buf);
--		break;
--	case CMD_ACT_BT_ACCESS_GET_INVERT:
--		break;
--	default:
--		break;
--	}
--	lbs_deb_leave(LBS_DEB_CMD);
--	return 0;
--}
--
--static int lbs_cmd_fwt_access(struct cmd_ds_command *cmd,
--			       u16 cmd_action, void *pdata_buf)
--{
--	struct cmd_ds_fwt_access *fwt_access = &cmd->params.fwt;
--	lbs_deb_enter_args(LBS_DEB_CMD, "action %d", cmd_action);
--
--	cmd->command = cpu_to_le16(CMD_FWT_ACCESS);
--	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_fwt_access) +
--		sizeof(struct cmd_header));
--	cmd->result = 0;
--
--	if (pdata_buf)
--		memcpy(fwt_access, pdata_buf, sizeof(*fwt_access));
--	else
--		memset(fwt_access, 0, sizeof(*fwt_access));
--
--	fwt_access->action = cpu_to_le16(cmd_action);
--
--	lbs_deb_leave(LBS_DEB_CMD);
--	return 0;
--}
--
--int lbs_mesh_access(struct lbs_private *priv, uint16_t cmd_action,
--		    struct cmd_ds_mesh_access *cmd)
--{
--	int ret;
--
--	lbs_deb_enter_args(LBS_DEB_CMD, "action %d", cmd_action);
--
--	cmd->hdr.command = cpu_to_le16(CMD_MESH_ACCESS);
--	cmd->hdr.size = cpu_to_le16(sizeof(*cmd));
--	cmd->hdr.result = 0;
--
--	cmd->action = cpu_to_le16(cmd_action);
--
--	ret = lbs_cmd_with_response(priv, CMD_MESH_ACCESS, cmd);
--
--	lbs_deb_leave(LBS_DEB_CMD);
--	return ret;
--}
--
--static int __lbs_mesh_config_send(struct lbs_private *priv,
--				  struct cmd_ds_mesh_config *cmd,
--				  uint16_t action, uint16_t type)
--{
--	int ret;
--	u16 command = CMD_MESH_CONFIG_OLD;
--
--	lbs_deb_enter(LBS_DEB_CMD);
--
--	/*
--	 * Command id is 0xac for v10 FW along with mesh interface
--	 * id in bits 14-13-12.
--	 */
--	if (priv->mesh_fw_ver == MESH_FW_NEW)
--		command = CMD_MESH_CONFIG |
--			  (MESH_IFACE_ID << MESH_IFACE_BIT_OFFSET);
--
--	cmd->hdr.command = cpu_to_le16(command);
--	cmd->hdr.size = cpu_to_le16(sizeof(struct cmd_ds_mesh_config));
--	cmd->hdr.result = 0;
--
--	cmd->type = cpu_to_le16(type);
--	cmd->action = cpu_to_le16(action);
--
--	ret = lbs_cmd_with_response(priv, command, cmd);
--
--	lbs_deb_leave(LBS_DEB_CMD);
--	return ret;
--}
--
--int lbs_mesh_config_send(struct lbs_private *priv,
--			 struct cmd_ds_mesh_config *cmd,
--			 uint16_t action, uint16_t type)
--{
--	int ret;
--
--	if (!(priv->fwcapinfo & FW_CAPINFO_PERSISTENT_CONFIG))
--		return -EOPNOTSUPP;
--
--	ret = __lbs_mesh_config_send(priv, cmd, action, type);
--	return ret;
--}
--
--/* This function is the CMD_MESH_CONFIG legacy function.  It only handles the
-- * START and STOP actions.  The extended actions supported by CMD_MESH_CONFIG
-- * are all handled by preparing a struct cmd_ds_mesh_config and passing it to
-- * lbs_mesh_config_send.
-- */
--int lbs_mesh_config(struct lbs_private *priv, uint16_t action, uint16_t chan)
--{
--	struct cmd_ds_mesh_config cmd;
--	struct mrvl_meshie *ie;
--	DECLARE_SSID_BUF(ssid);
--
--	memset(&cmd, 0, sizeof(cmd));
--	cmd.channel = cpu_to_le16(chan);
--	ie = (struct mrvl_meshie *)cmd.data;
--
--	switch (action) {
--	case CMD_ACT_MESH_CONFIG_START:
--		ie->id = WLAN_EID_GENERIC;
--		ie->val.oui[0] = 0x00;
--		ie->val.oui[1] = 0x50;
--		ie->val.oui[2] = 0x43;
--		ie->val.type = MARVELL_MESH_IE_TYPE;
--		ie->val.subtype = MARVELL_MESH_IE_SUBTYPE;
--		ie->val.version = MARVELL_MESH_IE_VERSION;
--		ie->val.active_protocol_id = MARVELL_MESH_PROTO_ID_HWMP;
--		ie->val.active_metric_id = MARVELL_MESH_METRIC_ID;
--		ie->val.mesh_capability = MARVELL_MESH_CAPABILITY;
--		ie->val.mesh_id_len = priv->mesh_ssid_len;
--		memcpy(ie->val.mesh_id, priv->mesh_ssid, priv->mesh_ssid_len);
--		ie->len = sizeof(struct mrvl_meshie_val) -
--			IEEE80211_MAX_SSID_LEN + priv->mesh_ssid_len;
--		cmd.length = cpu_to_le16(sizeof(struct mrvl_meshie_val));
--		break;
--	case CMD_ACT_MESH_CONFIG_STOP:
--		break;
--	default:
--		return -1;
--	}
--	lbs_deb_cmd("mesh config action %d type %x channel %d SSID %s\n",
--		    action, priv->mesh_tlv, chan,
--		    print_ssid(ssid, priv->mesh_ssid, priv->mesh_ssid_len));
--
--	return __lbs_mesh_config_send(priv, &cmd, action, priv->mesh_tlv);
--}
--
- static void lbs_queue_cmd(struct lbs_private *priv,
- 			  struct cmd_ctrl_node *cmdnode)
- {
---- linux-wl.orig/drivers/net/wireless/libertas/mesh.h
-+++ linux-wl/drivers/net/wireless/libertas/mesh.h
-@@ -6,6 +6,7 @@
- 
- 
- #include <net/iw_handler.h>
-+#include <net/lib80211.h>
- 
- 
- /* Mesh statistics */
-@@ -42,6 +43,16 @@
- 	struct net_device *dev, struct txpd *txpd);
- 
- 
-+/* Command handling */
-+
-+struct cmd_ds_command;
-+
-+int lbs_cmd_bt_access(struct cmd_ds_command *cmd,
-+	u16 cmd_action, void *pdata_buf);
-+int lbs_cmd_fwt_access(struct cmd_ds_command *cmd,
-+	u16 cmd_action, void *pdata_buf);
-+
-+
- /* Persistent configuration */
- 
- void lbs_persist_config_init(struct net_device *net);
---- linux-wl.orig/drivers/net/wireless/libertas/persistcfg.c
-+++ linux-wl/drivers/net/wireless/libertas/persistcfg.c
-@@ -441,6 +441,181 @@
- 
- 
- /***************************************************************************
-+ * Mesh command handling
-+ */
-+
-+int lbs_cmd_bt_access(struct cmd_ds_command *cmd,
-+			       u16 cmd_action, void *pdata_buf)
-+{
-+	struct cmd_ds_bt_access *bt_access = &cmd->params.bt;
-+	lbs_deb_enter_args(LBS_DEB_CMD, "action %d", cmd_action);
-+
-+	cmd->command = cpu_to_le16(CMD_BT_ACCESS);
-+	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_bt_access) +
-+		sizeof(struct cmd_header));
-+	cmd->result = 0;
-+	bt_access->action = cpu_to_le16(cmd_action);
-+
-+	switch (cmd_action) {
-+	case CMD_ACT_BT_ACCESS_ADD:
-+		memcpy(bt_access->addr1, pdata_buf, 2 * ETH_ALEN);
-+		lbs_deb_hex(LBS_DEB_MESH, "BT_ADD: blinded MAC addr",
-+			bt_access->addr1, 6);
-+		break;
-+	case CMD_ACT_BT_ACCESS_DEL:
-+		memcpy(bt_access->addr1, pdata_buf, 1 * ETH_ALEN);
-+		lbs_deb_hex(LBS_DEB_MESH, "BT_DEL: blinded MAC addr",
-+			bt_access->addr1, 6);
-+		break;
-+	case CMD_ACT_BT_ACCESS_LIST:
-+		bt_access->id = cpu_to_le32(*(u32 *) pdata_buf);
-+		break;
-+	case CMD_ACT_BT_ACCESS_RESET:
-+		break;
-+	case CMD_ACT_BT_ACCESS_SET_INVERT:
-+		bt_access->id = cpu_to_le32(*(u32 *) pdata_buf);
-+		break;
-+	case CMD_ACT_BT_ACCESS_GET_INVERT:
-+		break;
-+	default:
-+		break;
-+	}
-+	lbs_deb_leave(LBS_DEB_CMD);
-+	return 0;
-+}
-+
-+int lbs_cmd_fwt_access(struct cmd_ds_command *cmd,
-+			       u16 cmd_action, void *pdata_buf)
-+{
-+	struct cmd_ds_fwt_access *fwt_access = &cmd->params.fwt;
-+	lbs_deb_enter_args(LBS_DEB_CMD, "action %d", cmd_action);
-+
-+	cmd->command = cpu_to_le16(CMD_FWT_ACCESS);
-+	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_fwt_access) +
-+		sizeof(struct cmd_header));
-+	cmd->result = 0;
-+
-+	if (pdata_buf)
-+		memcpy(fwt_access, pdata_buf, sizeof(*fwt_access));
-+	else
-+		memset(fwt_access, 0, sizeof(*fwt_access));
-+
-+	fwt_access->action = cpu_to_le16(cmd_action);
-+
-+	lbs_deb_leave(LBS_DEB_CMD);
-+	return 0;
-+}
-+
-+int lbs_mesh_access(struct lbs_private *priv, uint16_t cmd_action,
-+		    struct cmd_ds_mesh_access *cmd)
-+{
-+	int ret;
-+
-+	lbs_deb_enter_args(LBS_DEB_CMD, "action %d", cmd_action);
-+
-+	cmd->hdr.command = cpu_to_le16(CMD_MESH_ACCESS);
-+	cmd->hdr.size = cpu_to_le16(sizeof(*cmd));
-+	cmd->hdr.result = 0;
-+
-+	cmd->action = cpu_to_le16(cmd_action);
-+
-+	ret = lbs_cmd_with_response(priv, CMD_MESH_ACCESS, cmd);
-+
-+	lbs_deb_leave(LBS_DEB_CMD);
-+	return ret;
-+}
-+
-+static int __lbs_mesh_config_send(struct lbs_private *priv,
-+				  struct cmd_ds_mesh_config *cmd,
-+				  uint16_t action, uint16_t type)
-+{
-+	int ret;
-+	u16 command = CMD_MESH_CONFIG_OLD;
-+
-+	lbs_deb_enter(LBS_DEB_CMD);
-+
-+	/*
-+	 * Command id is 0xac for v10 FW along with mesh interface
-+	 * id in bits 14-13-12.
-+	 */
-+	if (priv->mesh_fw_ver == MESH_FW_NEW)
-+		command = CMD_MESH_CONFIG |
-+			  (MESH_IFACE_ID << MESH_IFACE_BIT_OFFSET);
-+
-+	cmd->hdr.command = cpu_to_le16(command);
-+	cmd->hdr.size = cpu_to_le16(sizeof(struct cmd_ds_mesh_config));
-+	cmd->hdr.result = 0;
-+
-+	cmd->type = cpu_to_le16(type);
-+	cmd->action = cpu_to_le16(action);
-+
-+	ret = lbs_cmd_with_response(priv, command, cmd);
-+
-+	lbs_deb_leave(LBS_DEB_CMD);
-+	return ret;
-+}
-+
-+int lbs_mesh_config_send(struct lbs_private *priv,
-+			 struct cmd_ds_mesh_config *cmd,
-+			 uint16_t action, uint16_t type)
-+{
-+	int ret;
-+
-+	if (!(priv->fwcapinfo & FW_CAPINFO_PERSISTENT_CONFIG))
-+		return -EOPNOTSUPP;
-+
-+	ret = __lbs_mesh_config_send(priv, cmd, action, type);
-+	return ret;
-+}
-+
-+/* This function is the CMD_MESH_CONFIG legacy function.  It only handles the
-+ * START and STOP actions.  The extended actions supported by CMD_MESH_CONFIG
-+ * are all handled by preparing a struct cmd_ds_mesh_config and passing it to
-+ * lbs_mesh_config_send.
-+ */
-+int lbs_mesh_config(struct lbs_private *priv, uint16_t action, uint16_t chan)
-+{
-+	struct cmd_ds_mesh_config cmd;
-+	struct mrvl_meshie *ie;
-+	DECLARE_SSID_BUF(ssid);
-+
-+	memset(&cmd, 0, sizeof(cmd));
-+	cmd.channel = cpu_to_le16(chan);
-+	ie = (struct mrvl_meshie *)cmd.data;
-+
-+	switch (action) {
-+	case CMD_ACT_MESH_CONFIG_START:
-+		ie->id = WLAN_EID_GENERIC;
-+		ie->val.oui[0] = 0x00;
-+		ie->val.oui[1] = 0x50;
-+		ie->val.oui[2] = 0x43;
-+		ie->val.type = MARVELL_MESH_IE_TYPE;
-+		ie->val.subtype = MARVELL_MESH_IE_SUBTYPE;
-+		ie->val.version = MARVELL_MESH_IE_VERSION;
-+		ie->val.active_protocol_id = MARVELL_MESH_PROTO_ID_HWMP;
-+		ie->val.active_metric_id = MARVELL_MESH_METRIC_ID;
-+		ie->val.mesh_capability = MARVELL_MESH_CAPABILITY;
-+		ie->val.mesh_id_len = priv->mesh_ssid_len;
-+		memcpy(ie->val.mesh_id, priv->mesh_ssid, priv->mesh_ssid_len);
-+		ie->len = sizeof(struct mrvl_meshie_val) -
-+			IEEE80211_MAX_SSID_LEN + priv->mesh_ssid_len;
-+		cmd.length = cpu_to_le16(sizeof(struct mrvl_meshie_val));
-+		break;
-+	case CMD_ACT_MESH_CONFIG_STOP:
-+		break;
-+	default:
-+		return -1;
-+	}
-+	lbs_deb_cmd("mesh config action %d type %x channel %d SSID %s\n",
-+		    action, priv->mesh_tlv, chan,
-+		    print_ssid(ssid, priv->mesh_ssid, priv->mesh_ssid_len));
-+
-+	return __lbs_mesh_config_send(priv, &cmd, action, priv->mesh_tlv);
-+}
-+
-+
-+
-+/***************************************************************************
-  * Persistent configuration support
-  */
- 
+--=-mNsOvD3G8MnSwhRrj0ez
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
--- 
-http://www.holgerschurig.de
+On Sat, 2009-10-31 at 09:37 -0400, Parag Warudkar wrote:
+>=20
+> On Sat, 31 Oct 2009, Johannes Berg wrote:
+> >=20
+> > iw event -t -f > /tmp/log
+>=20
+> Here it goes - this is while trying couple times to reproduce the issue.
+
+Thanks. I'll analyse it later and if I see any issues fix them.
+
+johannes
+
+--=-mNsOvD3G8MnSwhRrj0ez
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK7D/SAAoJEODzc/N7+Qma3hYP/ReiTtMQzPZ45tdCEsLW+gvY
+CWFgUjXSUB58gvICPoClXW+8VO7BY6DlpvjkhhhczHlkAvlIdVXMo14p821VnRBK
++qQBZPyqxmZ/vETdyxhHQS1lyNkV3Aekg/pPMfnp0fTr5Kdqvi7thmgCOVeGC/Kh
+xB2g15SXvHFLdTRfZDmwUuG3Su4Nqy7eA9KRhXyAj/RlT/eAO5z+4T+82x7qu5/J
+uvAEvyv0Y/4MEuwzb55KUvMzwGRYNZVMPBnIi/L+EtglYRxFls6YR3/8MC2cNUjK
+xs1we8sWS6ywUcobYrk7F3vQfcBSlAahfLPtp3i64u1Et7JR3EAf5USCD8nDhYP/
+eRJjDopMRxI3H8pFNPSOGIJec4mMkRjHQmtJJ9wWQhab5ViW63knyWY3E9eQojol
+n2mG+MNwzmKAY3I2RfjTsGfMfz8BaSNxVHERibRI49G6qMnBzJ4Gu9LMfPLdLeN2
+purfdf4oz7SGo9qxni37D/Vt6BgKjge5U/DSSoN9C/0cj7wcY2FC7iNKlUXTkXb+
+IZcLq4mFLvZDDObZHOiWtOLWPnJH2TzlSDWqBWJngsCDxt2q7ST8a3iqT9CHJUK/
+/gprXq+4ucfwqyN3TydiZnzAPxt6Sox20TXIWMyfWMJztsxT6Th3eP8tNXzQV3Uj
+XK1GWkDcPYLDCOl4qYjB
+=3tNQ
+-----END PGP SIGNATURE-----
+
+--=-mNsOvD3G8MnSwhRrj0ez--
+
