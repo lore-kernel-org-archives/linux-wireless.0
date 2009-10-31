@@ -1,47 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3879 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935370AbZJOTsv (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45054 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757848AbZJaPfo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2009 15:48:51 -0400
-Date: Thu, 15 Oct 2009 15:45:30 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
-	lrodriguez@atheros.com
-Subject: Re: [PATCH] ath5k: use noise calibration from madwifi hal
-Message-ID: <20091015194530.GA32509@hash.localnet>
-References: <1255544190-30020-1-git-send-email-me@bobcopeland.com> <40f31dec0910142357w6e395640uf9690498d0c3854e@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0910142357w6e395640uf9690498d0c3854e@mail.gmail.com>
+	Sat, 31 Oct 2009 11:35:44 -0400
+Subject: Re: OOPS in cfg80211_conn_work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Parag Warudkar <parag.lkml@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <alpine.DEB.2.00.0910310936110.5317@parag-laptop>
+References: <f7848160910291617q2b168089l5ce489d2f47ebe96@mail.gmail.com>
+	 <1256885343.3555.0.camel@johannes.local>
+	 <alpine.DEB.2.00.0910300652350.2223@parag-laptop>
+	 <1256903425.3555.47.camel@johannes.local>
+	 <f7848160910301622t2cf43b5bo5ffeda03ec2cdbfe@mail.gmail.com>
+	 <1256970899.3555.86.camel@johannes.local>
+	 <alpine.DEB.2.00.0910310936110.5317@parag-laptop>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-hQCfJLGD+HJagSNQzC1h"
+Date: Sat, 31 Oct 2009 16:11:24 +0100
+Message-ID: <1257001884.3555.134.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 15, 2009 at 09:57:45AM +0300, Nick Kossifidis wrote:
-> a) Please leave some comments to let people know that when nf
-> calibration runs antennas are detached (it measures the noise produced
-> from the card itself),  that if we enable nf calibration before agc
-> calibration it always fails + the link to Atheros patent.
 
-Sure, I'll add that back.  I read the patent but I'm not sure it applies
-100%, it also talks at the end about keeping the rx antennas connected
-and measuring the noise in the environment instead of just the thermal
-noise.  I guess one way to know for sure is to hit it with noise and
-look at the resulting values.
+--=-hQCfJLGD+HJagSNQzC1h
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> b) What about thresh62 ? Do we also need to update/rewrite this value
-> (we got it from EEPROM and write it on the register during reset) ?
+On Sat, 2009-10-31 at 09:37 -0400, Parag Warudkar wrote:
+>=20
+> On Sat, 31 Oct 2009, Johannes Berg wrote:
+> >=20
+> > iw event -t -f > /tmp/log
+>=20
+> Here it goes - this is while trying couple times to reproduce the issue.
 
-Yeah, I looked at that, madwifi/legacy-hal also set it
-(just the EEPROM value for the threshold bits) before doing the false
-detect backoff stuff.
+Ok, I think this looks fine and we don't need to do anything else. In
+fact, I think the behaviour we have there now in the no-bssid case is
+like the behaviour we had previously.
 
-> Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+johannes
 
-Thanks for the review!
+--=-hQCfJLGD+HJagSNQzC1h
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
--- 
-Bob Copeland %% www.bobcopeland.com
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK7FOCAAoJEODzc/N7+Qma7wwP/3PXztZzuAXOQbk9fFPr8rVV
+WVcFZn6W4Ts/+NpBmBAWCxKoSSL2jc0axnc3pjgrC+LZB8ppjL15djU4pwq041TC
+SuTMhuBWRI3onGkSDfLRKUI176NSX8eWVtm4DkA439NdPU3xiYPcsq6w9YBULBCB
+5VdU2mHUGvrBZESr5P5opL7LFWF1tDBD6dyPhn2a0k2rFb4Iit4TyQPxU4irzR4E
+QiOQw4MeqHU8CSZZtlN7K3cBOLnnt6JXIh+qqh4YZfJp0R9kzNR1tY85Dehf27gl
+EjGXkIlB1BlxjyglxauELHz15VxutWdHkiSYzHLPNt5r/oBI3PYUlUuDRhZrDK6l
+rieGkbmRWYa64Rc0Bz4vObxLBbWPdtgqAPScxsc1iZU03ygHJchyD/5q3YBDPMos
+pKvm6nNPL/i3rDVOP1AVtZ7cIpVzccDFgKzpWTjhG/MXSmaAcPZAh6eDBR6LyTU9
+bxUu+JjQ9nOwjXAPtOUAclyeWDQe/HjfK0ssn3cg7loeg1ramXNOVFcPWRd3do6a
+LuePPbDd/eFi9RRm34Eql20tvmkDg/QKUnc4e5P1EERAi9VmHKhaQFQtRvAn59QS
+UczqdXem4xQ88V5krMzP/mgWIlO1V6ShtRdT1xueLBimUUgN1nqzVvmaFwkSyMpa
+0+DbkrUfiOHpMwER4JAp
+=STS/
+-----END PGP SIGNATURE-----
+
+--=-hQCfJLGD+HJagSNQzC1h--
 
