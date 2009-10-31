@@ -1,65 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46019 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:53676 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755856AbZJ0QIg (ORCPT
+	with ESMTP id S1753288AbZJaGoF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2009 12:08:36 -0400
-Subject: Re: [PATCH v2 2/3] mac80211: fix dynamic power save for devices
- with nullfunc support in hw
+	Sat, 31 Oct 2009 02:44:05 -0400
+Subject: [PATCH] mac80211: fix scan abort sanity checks
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20091027153616.27827.46490.stgit@tikku>
-References: <20091027153608.27827.70629.stgit@tikku>
-	 <20091027153616.27827.46490.stgit@tikku>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	mcgrof <mcgrof@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Oct 2009 17:08:08 +0100
-Message-ID: <1256659688.4237.21.camel@johannes.local>
+Date: Sat, 31 Oct 2009 07:44:08 +0100
+Message-ID: <1256971448.3555.89.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-10-27 at 17:36 +0200, Kalle Valo wrote:
-> From: Kalle Valo <kalle.valo@nokia.com>
-> 
-> In TX path it was assumed that dynamic power save works only if
-> IEEE80211_HW_PS_NULLFUNC_STACK is set. But is not the case, there are
-> devices which have nullfunc support in hardware but need mac80211
-> to handle dynamic power save timers, TI's wl1251 is one of them.
-> 
-> The fix is to not check for IEEE80211_HW_PS_NULLFUNC_STACK in
-> is_dynamic_ps_enabled(), instead check IEEE80211_HW_SUPPORTS_PS and
-> IEEE80211_HW_SUPPORTS_DYNAMIC_PS flags and act accordingly.
-> 
-> Tested with wl1251.
-> 
-> Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Since sometimes mac80211 queues up a scan request
+to only act on it later, it must be allowed to
+(internally) cancel a not-yet-running scan, e.g.
+when the interface is taken down. This condition
+was missing since we always checked only the
+local->scanning variable which isn't yet set in
+that situation.
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Reported-by: Luis R. Rodriguez <mcgrof@gmail.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/scan.c |   12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-> ---
-> 
->  net/mac80211/tx.c |    6 +++++-
->  1 files changed, 5 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index c59ed84..66dab40 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -1390,7 +1390,11 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
->  static bool need_dynamic_ps(struct ieee80211_local *local)
->  {
->  	/* driver doesn't support power save */
-> -	if (!(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
-> +	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS))
-> +		return false;
-> +
-> +	/* hardware does dynamic power save */
-> +	if (local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS)
->  		return false;
->  
->  	/* dynamic power save disabled */
-> 
-> 
+--- wireless-testing.orig/net/mac80211/scan.c	2009-10-31 07:29:47.000000000 +0100
++++ wireless-testing/net/mac80211/scan.c	2009-10-31 07:31:21.000000000 +0100
+@@ -288,10 +288,14 @@ void ieee80211_scan_completed(struct iee
+ 
+ 	mutex_lock(&local->scan_mtx);
+ 
+-	if (WARN_ON(!local->scanning)) {
+-		mutex_unlock(&local->scan_mtx);
+-		return;
+-	}
++	/*
++	 * It's ok to abort a not-yet-running scan (that
++	 * we have one at all will be verified by checking
++	 * local->scan_req next), but not to complete it
++	 * successfully.
++	 */
++	if (WARN_ON(!local->scanning && !aborted))
++		aborted = true;
+ 
+ 	if (WARN_ON(!local->scan_req)) {
+ 		mutex_unlock(&local->scan_mtx);
 
 
