@@ -1,121 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:15258 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752659AbZJPFUy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 01:20:54 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 09/16] iwmc3200wifi: Tx power setting
-Date: Fri, 16 Oct 2009 13:18:53 +0800
-Message-Id: <1255670340-22565-10-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <1255670340-22565-9-git-send-email-yi.zhu@intel.com>
-References: <1255670340-22565-1-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-2-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-3-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-4-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-5-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-6-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-7-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-8-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-9-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:39359 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757759AbZJaNgu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Oct 2009 09:36:50 -0400
+Subject: Re: [PATCH] cfg80211: fix NULL ptr deref
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Parag Warudkar <parag.lkml@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890910310635q6015cf3bq639426d5c1502454@mail.gmail.com>
+References: <1256971237.3555.87.camel@johannes.local>
+	 <43e72e890910310635q6015cf3bq639426d5c1502454@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-OTxNse7KFsOsqJOJZ6+R"
+Date: Sat, 31 Oct 2009 14:36:51 +0100
+Message-ID: <1256996211.3555.131.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Samuel Ortiz <sameo@linux.intel.com>
 
-We can now set the Tx power from e.g. iwconfig.
+--=-OTxNse7KFsOsqJOJZ6+R
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwmc3200wifi/cfg80211.c |   12 +++++++++++-
- drivers/net/wireless/iwmc3200wifi/commands.c |   13 +++++++++++++
- drivers/net/wireless/iwmc3200wifi/commands.h |    6 ++++++
- 3 files changed, 30 insertions(+), 1 deletions(-)
+On Sat, 2009-10-31 at 06:35 -0700, Luis R. Rodriguez wrote:
+> On Fri, Oct 30, 2009 at 11:40 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> >  commit 211a4d12abf86fe0df4cd68fc6327cbb58f56f81
+> >  Author: Johannes Berg <johannes@sipsolutions.net>
+> >  Date:   Tue Oct 20 15:08:53 2009 +0900
+> >
+> >      cfg80211: sme: deauthenticate on assoc failure
+> >
+> > introduced a potential NULL pointer dereference that
+> > some people have been hitting for some reason -- the
+> > params.bssid pointer is not guaranteed to be non-NULL
+> > for what seems to be a race between various ways of
+> > reaching the same thing.
+> >
+> > While I'm trying to analyse the problem more let's
+> > first fix the crash. I think the real fix may be to
+> > avoid doing _anything_ if it ended up being NULL, but
+> > right now I'm not sure yet.
+> >
+> > I think
+> > http://bugzilla.kernel.org/show_bug.cgi?id=3D14342
+> > might also be this issue.
+> >
+> > Reported-by: Parag Warudkar <parag.lkml@gmail.com>
+> > Tested-by: Parag Warudkar <parag.lkml@gmail.com>
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>=20
+> Do we know if this will also affect 2.6.32?
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-index ea0ed32..2e00a4b 100644
---- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-+++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-@@ -671,9 +671,19 @@ static int iwm_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev,
- static int iwm_cfg80211_set_txpower(struct wiphy *wiphy,
- 				    enum tx_power_setting type, int dbm)
- {
-+	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
-+	int ret;
-+
- 	switch (type) {
- 	case TX_POWER_AUTOMATIC:
- 		return 0;
-+	case TX_POWER_FIXED:
-+		ret = iwm_umac_set_config_fix(iwm, UMAC_PARAM_TBL_CFG_FIX,
-+					      CFG_TX_PWR_LIMIT_USR, dbm * 2);
-+		if (ret < 0)
-+			return ret;
-+
-+		return iwm_tx_power_trigger(iwm);
- 	default:
- 		return -EOPNOTSUPP;
- 	}
-@@ -685,7 +695,7 @@ static int iwm_cfg80211_get_txpower(struct wiphy *wiphy, int *dbm)
- {
- 	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
- 
--	*dbm = iwm->txpower;
-+	*dbm = iwm->txpower >> 1;
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/iwmc3200wifi/commands.c b/drivers/net/wireless/iwmc3200wifi/commands.c
-index 1ba839c..0641bc7 100644
---- a/drivers/net/wireless/iwmc3200wifi/commands.c
-+++ b/drivers/net/wireless/iwmc3200wifi/commands.c
-@@ -794,6 +794,19 @@ int iwm_invalidate_mlme_profile(struct iwm_priv *iwm)
- 	return ret ? 0 : -EBUSY;
- }
- 
-+int iwm_tx_power_trigger(struct iwm_priv *iwm)
-+{
-+	struct iwm_umac_pwr_trigger pwr_trigger;
-+
-+	pwr_trigger.hdr.oid = UMAC_WIFI_IF_CMD_TX_PWR_TRIGGER;
-+	pwr_trigger.hdr.buf_size =
-+		cpu_to_le16(sizeof(struct iwm_umac_pwr_trigger) -
-+			    sizeof(struct iwm_umac_wifi_if));
-+
-+
-+	return iwm_send_wifi_if_cmd(iwm, &pwr_trigger, sizeof(pwr_trigger), 1);
-+}
-+
- int iwm_send_umac_stats_req(struct iwm_priv *iwm, u32 flags)
- {
- 	struct iwm_udma_wifi_cmd udma_cmd = UDMA_UMAC_INIT;
-diff --git a/drivers/net/wireless/iwmc3200wifi/commands.h b/drivers/net/wireless/iwmc3200wifi/commands.h
-index 511b6e3..b36be2b 100644
---- a/drivers/net/wireless/iwmc3200wifi/commands.h
-+++ b/drivers/net/wireless/iwmc3200wifi/commands.h
-@@ -441,6 +441,11 @@ struct iwm_umac_tx_key_id {
- 	u8 reserved[3];
- } __attribute__ ((packed));
- 
-+struct iwm_umac_pwr_trigger {
-+	struct iwm_umac_wifi_if hdr;
-+	__le32 reseved;
-+} __attribute__ ((packed));
-+
- struct iwm_umac_cmd_stats_req {
- 	__le32 flags;
- } __attribute__ ((packed));
-@@ -467,6 +472,7 @@ int iwm_invalidate_mlme_profile(struct iwm_priv *iwm);
- int iwm_send_packet(struct iwm_priv *iwm, struct sk_buff *skb, int pool_id);
- int iwm_set_tx_key(struct iwm_priv *iwm, u8 key_idx);
- int iwm_set_key(struct iwm_priv *iwm, bool remove, struct iwm_key *key);
-+int iwm_tx_power_trigger(struct iwm_priv *iwm);
- int iwm_send_umac_stats_req(struct iwm_priv *iwm, u32 flags);
- int iwm_send_umac_channel_list(struct iwm_priv *iwm);
- int iwm_scan_ssids(struct iwm_priv *iwm, struct cfg80211_ssid *ssids,
--- 
-1.6.0.4
+I'm pretty sure -- have we got any changes to this code that are not
+in .32?
+
+johannes
+
+--=-OTxNse7KFsOsqJOJZ6+R
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK7D1vAAoJEODzc/N7+QmaM3oQAJSUhLWr210uOweZWQy2VWJt
+saE5mem7lLZ/5uo274OdxaP8U5aRuMIb1X0D8B0icL/3V6uhvH1VFBJPXVKA4k2q
+KGQ7UzG3W7UV82TYIiFWyQa9oiVHLjY0B0ydqpCKPTmL4wwPkFLHNnzjzwIOiofT
+MX+DGDjJ0SkVMLMrmdRtCNTzWu57zRxR24jQpXNSrWcztq8+c1EehaEp79QNrodK
+3FchP03gZnqyB3qptE/HHpsVB4i90E0DDWLy6hqCv1u41p9xfA0cOIvVe/V/XVdH
+sjThl1nmzOwWeYw2zoQgMZ4+3sSmuBG2b0L8bS7Fv8Kqsh4Ts/VuPWmhVRnO9hjO
+PitoHkJ30L17n7jhvVMHgqtW6pMZsBPSUbcAuEbvzcb10I+uprs5pvrsnLQOFkzC
++OfqF7J7AhH1bz/DX8zFe3/Z7SW9NzP/BbY/tNC6spll6AvQPcWDC1yMe3Jm/Fki
+Idk1r2VbBEz9KgwRPQvXwKkLjh5HE5LW2QBxl3Y1EQX0HMpuQe40fxugeogCxeP5
+50pyLxa6TcWmPMeCscTPbJYW2iYIHX+8Xzle6PTbeSNsvFMte9ZMExfL8o99APje
+46ev8FraQsrAUvYC0ovBw53C/3RN1uTZP9K/SHDweRgFmToX/Mm6dn1TUbFrs+Hz
+lk3n8sF2yRA4ZCRZ6T6l
+=wA5K
+-----END PGP SIGNATURE-----
+
+--=-OTxNse7KFsOsqJOJZ6+R--
 
