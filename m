@@ -1,111 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:3838 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.155]:34522 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758236AbZJOLrE (ORCPT
+	with ESMTP id S1756152AbZJaKdQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2009 07:47:04 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so436799fgg.1
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2009 04:45:16 -0700 (PDT)
-Subject: Re: deauthentication and disassociation nl80211 commands
+	Sat, 31 Oct 2009 06:33:16 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so1945241fgg.1
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2009 03:33:20 -0700 (PDT)
+Subject: Re: [PATCH 1/2] Allow scanning while in authenticated only state
 From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20091012065210.GA25578@jm.kir.nu>
-References: <1254708707.24430.68.camel@maxim-laptop>
-	 <20091012065210.GA25578@jm.kir.nu>
-Content-Type: text/plain
-Date: Thu, 15 Oct 2009 13:45:12 +0200
-Message-Id: <1255607112.8508.4.camel@localhost.localdomain>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+In-Reply-To: <1256983366.3555.119.camel@johannes.local>
+References: <1256939391.31271.11.camel@maxim-laptop>
+	 <1256939549.31271.14.camel@maxim-laptop>
+	 <1256967782.3555.69.camel@johannes.local>
+	 <1256982381.3089.10.camel@maxim-laptop>
+	 <1256983366.3555.119.camel@johannes.local>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 31 Oct 2009 12:33:16 +0200
+Message-ID: <1256985196.3089.34.camel@maxim-laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-10-12 at 09:52 +0300, Jouni Malinen wrote:
-> On Mon, Oct 05, 2009 at 04:11:47AM +0200, Maxim Levitsky wrote:
+On Sat, 2009-10-31 at 11:02 +0100, Johannes Berg wrote: 
+> On Sat, 2009-10-31 at 11:46 +0200, Maxim Levitsky wrote:
 > 
-> > Today kernel explicitly requests the driver to perform both
-> > disassociation and deauthentication in that order.
+> > > I think you just need this wpa_supplicant patch:
+> > > http://johannes.sipsolutions.net/patches/hostap/all/2009-10-26-12%3a59/deauth-on-disassoc.patch
+> > 
+> > Nope, this patch doesn't help.
+> > 
+> > if I remove the bssid_changed, then it seems to work when connecting to
+> > same AP, but still scan hangs when connecting to different.
 > 
-> I hope that deauthentication alone would be enough since that is
-> supposed to implicitly first take care of disassociation as far as the
-> IEEE 802.11 standard is concerned. It should also be noted that "kernel"
-> here is referring to mac80211; most other drivers/IEEE 802.11 stacks
-> do not have this type of restriction.
+> Hmm, Luis said it worked when connecting to a different AP. But he got
+> assoc refused and/or disassoc from the AP
 > 
-> > However, currently wpa_supplicant assumes that once it called
-> > wpa_drv_disassociate it can again start the complete connect sequence
-> > from the authentication.
+> > The problem is that wpa_supplicant doesn't do deauthentication
+> > explicitly, and I was told that this is right thing to do. This confuses
+> > all the nl80211 and mac80211...
 > 
-> Actually, wpa_supplicant assume that it can authenticate again at any
-> point, i.e., even without first calling wpa_drv_disassociate.
+> I thought Jouni committed that workaround. I'm still not convinced that
+> wpa_supplicant is doing the right thing.
 > 
-> > In fact I have carefully studied the code and found that calls to
-> > wpa_supplicant_deauthenticate (which is the only user of
-> > wpa_drv_deauthenticate) only happen at deinitialization of wireless
-> > interface and when wpa_supplicant really has to do it, that is if there
-> > is a failure (mic failure for example).
+> > I also think that its best just to do both deauthentication and
+> > disassociation in same time.
 > 
-> Yes, wpa_supplicant tries to follow the operations as defined in IEEE
-> 802.11 and does not unnecessarily deauthenticate. In addition, when
-> reassociating back to the same AP (e.g., to change some parameters),
-> there will be no deauthentication/disassociation at all.
+> But then why do we bother?
 > 
-> > My hacky patch that was rejected on the grounds that it is not right to
-> > introduce the driver dependent behavior might actually be the correct
-> > solution. It just makes the wpa_supplicant_disassociate do both
-> > disassociation and deauthentication, as was always assumed by the
-> > wpa_supplicant core.
+> > Yet, I think this path is ok, that is, when you disallow scanning, you
+> > can be sure that wifi will be dead, and this patch catches the situation
+> > when it for sure will disallowed  forever.
 > 
-> There is no such assumption and the patch is not correct.
+> True, in some sense, but the real problem is that the authentication is
+> lingering along. If we really need to clean that up in the kernel then
+> we'd have to time out authentication structs that didn't get promoted to
+> association, instead of just ignoring them like your two patches
+> implement [1]. However, since we put control of all this into
+> wpa_supplicant, I don't know whether the kernel really should be
+> required to clean up -- I was going to write "clean up after it" but
+> that's not true [2], you're proposing that the kernel clean up *while*
+> wpa_supplicant is in control. I don't think that's right, since it might
+> actually want to hang on for an authentication while doing something
+> else, for a while at least. How can we calculate an upper bound on that
+> in the kernel?
+> 
+> Now, I can kinda agree that we should allow authentication frames to go
+> through while already authenticated, but that's something quite
+> different although your patches here would also allow that in some
+> hackish way (by accumulating more and more authentication structs that
+> are then ignored).
+> 
+> Now, especially since you say that this still runs into problems while
+> connecting to a new AP, I think that wpa_supplicant should
+> deauthenticate from the old AP. After all, it wants to eventually
+> control FT and anything we do in the kernel will come back and interfere
+> with that.
+Exactly, at least for now.
 
-Thanks for explanation, then this is a kernel issue.
+How about putting this in wpa_supplicant, and end all trouble with this
+for once?
 
+This is a workaround/hack, but at least it works....
 
-> 
-> > Or kernel should became smarter and do the work for wpa_supplicant. 
-> 
-> No, it should not do that either. Rather, it should allow valid IEEE
-> 802.11 operations to be performed (authentication while authenticated is
-> allowed)..
-> 
-> > If mac80211 is already authenticated to the AP that was requested, it
-> > should just return success.
-> 
-> No. It should start new authentication in that case.
-> 
-> > If it isn't authenticated to new AP then, new authentication should be
-> > made.
-> > (and old one can be kept, but removed after a timeout)
-> 
-> That should be done regardless of the current authentication/association
-> state.
-> 
-> > When do you plan to switch officially the wpa_supplicant to
-> > driver_nl80211?
-> 
-> To whom is this "you" referring? wpa_supplicant does support both WEXT
-> and nl80211. It is up to the user (of wpa_supplicant; e.g., NM) to
-> decide which driver wrapper it wants to use.
+Best regards,
+Maxim Levitsky
 
-I mean, the general community, distributions, NM, ...
-
-> 
-> 
-> As far as working out this issue is concerned, I committed a following
-> change to wpa_supplicant:
-> http://w1.fi/gitweb/gitweb.cgi?p=hostap.git;a=commitdiff;h=6d6f4bb87f33278aed133875d0d561eb55d7ae59
-> 
-> I cannot day that I exactly like this due to the required extra code in
-> events.c, but the part in driver_nl80211.c shows how this type of
-> driver-specific cases should be handled in general. Anyway, I hope that
-> this can be eventually removed from wpa_supplicant.
-Me nether, now I am sure that this is kernel issue, and should be done
-there.
+---
 
 
-Thanks a lot,
-	Maxim Levitsky
+commit e57bfd6e760c32177ab74c462839dd20a92343b8
+Author: Maxim Levitsky <maximlevitsky@gmail.com>
+Date:   Sat Oct 31 12:05:35 2009 +0200
 
+    driver_nl80211: send deauth on disassoc
+
+diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
+index b3861f5..dfed87d 100644
+--- a/src/drivers/driver_nl80211.c
++++ b/src/drivers/driver_nl80211.c
+@@ -2046,12 +2046,18 @@ static int wpa_driver_nl80211_deauthenticate(void *priv, const u8 *addr,
+ static int wpa_driver_nl80211_disassociate(void *priv, const u8 *addr,
+                                           int reason_code)
+ {
++       int err;
+        struct wpa_driver_nl80211_data *drv = priv;
+        if (!(drv->capa.flags & WPA_DRIVER_FLAGS_SME))
+                return wpa_driver_nl80211_disconnect(drv, addr, reason_code);
+        wpa_printf(MSG_DEBUG, "%s", __func__);
+        drv->associated = 0;
+-       return wpa_driver_nl80211_mlme(drv, addr, NL80211_CMD_DISASSOCIATE,
++
++       err = wpa_driver_nl80211_mlme(drv, addr, NL80211_CMD_DISASSOCIATE,
++                                      reason_code);
++       if (err)
++               return err;
++       return wpa_driver_nl80211_mlme(drv, addr, NL80211_CMD_DEAUTHENTICATE,
+                                       reason_code);
+ }
+ 
 
 
