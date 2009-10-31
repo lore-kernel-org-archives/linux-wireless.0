@@ -1,384 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25432 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751853AbZJASXX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2009 14:23:23 -0400
-Subject: Re: [RFC] libertas: first stab at cfg80211 support
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <h.schurig@mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200909281321.21600.h.schurig@mn-solutions.de>
-References: <200909281321.21600.h.schurig@mn-solutions.de>
-Content-Type: text/plain
-Date: Thu, 01 Oct 2009 11:23:04 -0700
-Message-Id: <1254421384.9657.56.camel@localhost.localdomain>
+Received: from xc.sipsolutions.net ([83.246.72.84]:45606 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755630AbZJaJZP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Oct 2009 05:25:15 -0400
+Subject: Re: ieee80211_tx_status: headroom too small
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Nikolai ZHUBR <zhubr@mail.ru>, linux-wireless@vger.kernel.org
+In-Reply-To: <200910310959.43260.IvDoorn@gmail.com>
+References: <1094614475.20091030230028@mail.ru>
+	 <200910310951.30016.IvDoorn@gmail.com>
+	 <1256979370.3555.91.camel@johannes.local>
+	 <200910310959.43260.IvDoorn@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-+tPSlcVmobla1OWgk/47"
+Date: Sat, 31 Oct 2009 10:25:13 +0100
+Message-ID: <1256981113.3555.92.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-09-28 at 13:21 +0200, Holger Schurig wrote:
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-> 
-> ---
-> 
-> This patch currently just create a wdev, so you can do "iw list".
-> 
-> I'd like to get comments if the position where I create/destroy
-> the wdev makes sense.
 
-Yeah, that's probably more or less it.  The mesh bits are interesting,
-because they aren't really mac80211 mesh, they are "special" mesh.
-Perhaps we eventually want to port that over to cfg80211, but there are
-special semantics with the mesh stuff that might be a problem (notably,
-all encryption and rate settings are shared with the wlanX interface).
+--=-+tPSlcVmobla1OWgk/47
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Because of that, the mesh interface is really just a shadow interface of
-the normal wlanX interface, but during some calls we need to know
-whether the call was done on the mesh iface or the wlanX iface, and of
-course they each have different rx/tx queues.  Otherwise they share the
-same private struct and whatnot.  That's what the "ml_priv" bits are
-for.  I'd dearly love to find some other way of doing this though, since
-the ml_priv stuff is really fragile.
+On Sat, 2009-10-31 at 09:59 +0100, Ivo van Doorn wrote:
+> On Saturday 31 October 2009, Johannes Berg wrote:
+> > On Sat, 2009-10-31 at 09:51 +0100, Ivo van Doorn wrote:
+> >=20
+> > > > Ok. I looked at the problem and it's a very odd problem -- mac80211
+> > > > should always reserve enough headroom in buffers it passes to the
+> > > > driver. Does rt61pci somehow realloc frames?
+> > >=20
+> > > It does use skb_push. but will/should always stay within the limits
+> > > of rt2x00dev->hw->extra_tx_headroom. Although I just realize there
+> > > might be a situation where it needs to align the frame to a 4-byte bo=
+undary,
+> > > it could exceed that amount. :(
+> >=20
+> > extra_tx_headroom is set to max_t(driver, mac80211) so that there's
+> > always some headroom. This doesn't take into account alignment though.
+> > Should we simply add 2 to that value?
+>=20
+> 4 actually, wasn't there some cases where the header could have an odd
+> number of bytes and would require 3 bytes for alignment?
 
-Dan
+Hm, is there? I thought they changed the 11s draft to no longer have
+that.
 
+johannes
 
-> Index: linux-wl/drivers/net/wireless/Kconfig
-> ===================================================================
-> --- linux-wl.orig/drivers/net/wireless/Kconfig	2009-09-28 12:06:02.000000000 +0200
-> +++ linux-wl/drivers/net/wireless/Kconfig	2009-09-28 12:06:30.000000000 +0200
-> @@ -138,6 +138,7 @@ config LIBERTAS
->  	depends on WLAN_80211
->  	select WIRELESS_EXT
->  	select LIB80211
-> +	select CFG80211
->  	select FW_LOADER
->  	---help---
->  	  A library for Marvell Libertas 8xxx devices.
-> Index: linux-wl/drivers/net/wireless/libertas/Makefile
-> ===================================================================
-> --- linux-wl.orig/drivers/net/wireless/libertas/Makefile	2009-09-28 12:06:02.000000000 +0200
-> +++ linux-wl/drivers/net/wireless/libertas/Makefile	2009-09-28 12:06:30.000000000 +0200
-> @@ -1,5 +1,5 @@
->  libertas-objs := main.o wext.o rx.o tx.o cmd.o cmdresp.o scan.o 11d.o	\
-> -		 debugfs.o persistcfg.o ethtool.o assoc.o
-> +		 debugfs.o persistcfg.o ethtool.o assoc.o cfg.o
->  
->  usb8xxx-objs += if_usb.o
->  libertas_cs-objs += if_cs.o
-> Index: linux-wl/drivers/net/wireless/libertas/dev.h
-> ===================================================================
-> --- linux-wl.orig/drivers/net/wireless/libertas/dev.h	2009-09-28 12:06:02.000000000 +0200
-> +++ linux-wl/drivers/net/wireless/libertas/dev.h	2009-09-28 12:06:30.000000000 +0200
-> @@ -100,6 +100,7 @@ struct lbs_mesh_stats {
->  
->  /** Private structure for the MV device */
->  struct lbs_private {
-> +	struct wireless_dev *wdev;
->  	int mesh_open;
->  	int mesh_fw_ver;
->  	int infra_open;
-> Index: linux-wl/drivers/net/wireless/libertas/cfg.h
-> ===================================================================
-> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ linux-wl/drivers/net/wireless/libertas/cfg.h	2009-09-28 12:07:23.000000000 +0200
-> @@ -0,0 +1,9 @@
-> +#ifndef __LBS_CFG80211_H__
-> +#define __LBS_CFG80211_H__
-> +
-> +#include "dev.h"
-> +
-> +struct wireless_dev *lbs_wdev_alloc(int sizeof_priv, struct device *dev);
-> +void lbs_wdev_free(struct lbs_private *lbs);
-> +
-> +#endif
-> Index: linux-wl/drivers/net/wireless/libertas/cfg.c
-> ===================================================================
-> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ linux-wl/drivers/net/wireless/libertas/cfg.c	2009-09-28 12:09:06.000000000 +0200
-> @@ -0,0 +1,160 @@
-> +/*
-> + * Implement cfg80211 ("iw") support.
-> + *
-> + * Copyright (C) 2009 M&N Solutions GmbH, 61191 Rosbach, Germany
-> + * Holger Schurig <hs4233@mail.mn-solutions.de>
-> + *
-> + * Based on cfg80211.h:
-> + *   Copyright (C) 2009 Intel Corporation <ilw@linux.intel.com>
-> + *   Samuel Ortiz <samuel.ortiz@intel.com>
-> + *   Zhu Yi <yi.zhu@intel.com>
-> + */
-> +
-> +#include <net/cfg80211.h>
-> +
-> +#include "cfg.h"
-> +
-> +
-> +#define CHAN2G(_channel, _freq, _flags) {                       \
-> +	.band                   = IEEE80211_BAND_2GHZ,          \
-> +	.center_freq            = (_freq),                      \
-> +	.hw_value               = (_channel),                   \
-> +	.flags                  = (_flags),                     \
-> +	.max_antenna_gain       = 0,                            \
-> +	.max_power              = 30,                           \
-> +}
-> +
-> +static struct ieee80211_channel lbs_2ghz_channels[] = {
-> +	CHAN2G(1, 2412, 0),
-> +	CHAN2G(2, 2417, 0),
-> +	CHAN2G(3, 2422, 0),
-> +	CHAN2G(4, 2427, 0),
-> +	CHAN2G(5, 2432, 0),
-> +	CHAN2G(6, 2437, 0),
-> +	CHAN2G(7, 2442, 0),
-> +	CHAN2G(8, 2447, 0),
-> +	CHAN2G(9, 2452, 0),
-> +	CHAN2G(10, 2457, 0),
-> +	CHAN2G(11, 2462, 0),
-> +	CHAN2G(12, 2467, 0),
-> +	CHAN2G(13, 2472, 0),
-> +	CHAN2G(14, 2484, 0),
-> +};
-> +
-> +#define RATETAB_ENT(_rate, _rateid, _flags) \
-> +	{                                                               \
-> +		.bitrate        = (_rate),                              \
-> +		.hw_value       = (_rateid),                            \
-> +		.flags          = (_flags),                             \
-> +	}
-> +
-> +
-> +static struct ieee80211_rate lbs_rates[] = {
-> +	RATETAB_ENT(10,  0x1,   0),
-> +	RATETAB_ENT(20,  0x2,   0),
-> +	RATETAB_ENT(55,  0x4,   0),
-> +	RATETAB_ENT(110, 0x8,   0),
-> +	RATETAB_ENT(60,  0x10,  0),
-> +	RATETAB_ENT(90,  0x20,  0),
-> +	RATETAB_ENT(120, 0x40,  0),
-> +	RATETAB_ENT(180, 0x80,  0),
-> +	RATETAB_ENT(240, 0x100, 0),
-> +	RATETAB_ENT(360, 0x200, 0),
-> +	RATETAB_ENT(480, 0x400, 0),
-> +	RATETAB_ENT(540, 0x800, 0),
-> +};
-> +
-> +static struct ieee80211_supported_band lbs_band_2ghz = {
-> +	.channels = lbs_2ghz_channels,
-> +	.n_channels = ARRAY_SIZE(lbs_2ghz_channels),
-> +	.bitrates = lbs_rates,
-> +	.n_bitrates = ARRAY_SIZE(lbs_rates),
-> +};
-> +
-> +
-> +static const u32 cipher_suites[] = {
-> +	WLAN_CIPHER_SUITE_WEP40,
-> +	WLAN_CIPHER_SUITE_WEP104,
-> +	WLAN_CIPHER_SUITE_TKIP,
-> +	WLAN_CIPHER_SUITE_CCMP,
-> +};
-> +
-> +
-> +
-> +static struct cfg80211_ops lbs_cfg80211_ops = {
-> +/* TODO
-> +	.change_virtual_intf = iwm_cfg80211_change_iface,
-> +	.add_key = iwm_cfg80211_add_key,
-> +	.get_key = iwm_cfg80211_get_key,
-> +	.del_key = iwm_cfg80211_del_key,
-> +	.set_default_key = iwm_cfg80211_set_default_key,
-> +	.get_station = iwm_cfg80211_get_station,
-> +	.scan = iwm_cfg80211_scan,
-> +	.set_wiphy_params = iwm_cfg80211_set_wiphy_params,
-> +	.connect = iwm_cfg80211_connect,
-> +	.disconnect = iwm_cfg80211_disconnect,
-> +	.join_ibss = iwm_cfg80211_join_ibss,
-> +	.leave_ibss = iwm_cfg80211_leave_ibss,
-> +	.set_tx_power = iwm_cfg80211_set_txpower,
-> +	.get_tx_power = iwm_cfg80211_get_txpower,
-> +	.set_power_mgmt = iwm_cfg80211_set_power_mgmt,
-> +*/
-> +};
-> +
-> +struct wireless_dev *lbs_wdev_alloc(int sizeof_priv, struct device *dev)
-> +{
-> +	int ret = 0;
-> +	struct wireless_dev *wdev;
-> +
-> +	wdev = kzalloc(sizeof(struct wireless_dev), GFP_KERNEL);
-> +	if (!wdev) {
-> +		dev_err(dev, "Couldn't allocate wireless device\n");
-> +		return ERR_PTR(-ENOMEM);
-> +	}
-> +
-> +	wdev->wiphy = wiphy_new(&lbs_cfg80211_ops,
-> +		sizeof(struct lbs_private) + sizeof_priv);
-> +	if (!wdev->wiphy) {
-> +		dev_err(dev, "Couldn't allocate wiphy device\n");
-> +		ret = -ENOMEM;
-> +		goto out_err_new;
-> +	}
-> +
-> +	set_wiphy_dev(wdev->wiphy, dev);
-> +	wdev->wiphy->max_scan_ssids = 1; /* TODO */
-> +	wdev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
-> +		BIT(NL80211_IFTYPE_ADHOC);
-> +	wdev->wiphy->bands[IEEE80211_BAND_2GHZ] = &lbs_band_2ghz;
-> +	wdev->wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
-> +	wdev->wiphy->cipher_suites = cipher_suites;
-> +	wdev->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
-> +
-> +	ret = wiphy_register(wdev->wiphy);
-> +	if (ret < 0) {
-> +		dev_err(dev, "Couldn't register wiphy device\n");
-> +		goto out_err_register;
-> +	}
-> +
-> +	return wdev;
-> +
-> + out_err_register:
-> +	wiphy_free(wdev->wiphy);
-> +
-> + out_err_new:
-> +	kfree(wdev);
-> +
-> +	return ERR_PTR(ret);
-> +}
-> +
-> +
-> +void lbs_wdev_free(struct lbs_private *lbs)
-> +{
-> +	struct wireless_dev *wdev = lbs->wdev;
-> +
-> +	if (!wdev)
-> +		return;
-> +
-> +	wiphy_unregister(wdev->wiphy);
-> +	wiphy_free(wdev->wiphy);
-> +	kfree(wdev);
-> +}
-> Index: linux-wl/drivers/net/wireless/libertas/main.c
-> ===================================================================
-> --- linux-wl.orig/drivers/net/wireless/libertas/main.c	2009-09-28 12:06:02.000000000 +0200
-> +++ linux-wl/drivers/net/wireless/libertas/main.c	2009-09-28 12:11:22.000000000 +0200
-> @@ -14,11 +14,13 @@
->  #include <linux/stddef.h>
->  #include <linux/ieee80211.h>
->  #include <net/iw_handler.h>
-> +#include <net/cfg80211.h>
->  
->  #include "host.h"
->  #include "decl.h"
->  #include "dev.h"
->  #include "wext.h"
-> +#include "cfg.h"
->  #include "debugfs.h"
->  #include "scan.h"
->  #include "assoc.h"
-> @@ -1168,31 +1170,42 @@ static const struct net_device_ops lbs_n
->   */
->  struct lbs_private *lbs_add_card(void *card, struct device *dmdev)
->  {
-> -	struct net_device *dev = NULL;
-> +	struct net_device *dev;
-> +	struct wireless_dev *wdev;
->  	struct lbs_private *priv = NULL;
->  
->  	lbs_deb_enter(LBS_DEB_MAIN);
->  
->  	/* Allocate an Ethernet device and register it */
-> -	dev = alloc_etherdev(sizeof(struct lbs_private));
-> -	if (!dev) {
-> +	wdev = lbs_wdev_alloc(sizeof(struct lbs_private), dmdev);
-> +	if (IS_ERR(wdev)) {
->  		lbs_pr_err("init wlanX device failed\n");
->  		goto done;
->  	}
-> -	priv = netdev_priv(dev);
-> -	dev->ml_priv = priv;
-> +	/* TODO? */
-> +	wdev->iftype = NL80211_IFTYPE_STATION;
-> +	priv = wdev_priv(wdev);
-> +	priv->wdev = wdev;
->  
->  	if (lbs_init_adapter(priv)) {
->  		lbs_pr_err("failed to initialize adapter structure.\n");
-> -		goto err_init_adapter;
-> +		goto err_wdev;
-> +	}
-> +
-> +	//TODO? dev = alloc_netdev_mq(0, "wlan%d", ether_setup, IWM_TX_QUEUES);
-> +	dev = alloc_netdev(0, "wlan%d", ether_setup);
-> +	if (!dev) {
-> +		dev_err(dmdev, "no memory for network device instance\n");
-> +		goto err_adapter;
->  	}
->  
-> +	dev->netdev_ops = &lbs_netdev_ops;
-> +	dev->ieee80211_ptr = wdev;
-> +	dev->ml_priv = priv;
-> +	SET_NETDEV_DEV(dev, dmdev);
-> +	wdev->netdev = dev;
->  	priv->dev = dev;
-> -	priv->card = card;
-> -	priv->mesh_open = 0;
-> -	priv->infra_open = 0;
->  
-> -	/* Setup the OS Interface to our functions */
->   	dev->netdev_ops = &lbs_netdev_ops;
->  	dev->watchdog_timeo = 5 * HZ;
->  	dev->ethtool_ops = &lbs_ethtool_ops;
-> @@ -1201,7 +1214,14 @@ struct lbs_private *lbs_add_card(void *c
->  #endif
->  	dev->flags |= IFF_BROADCAST | IFF_MULTICAST;
->  
-> -	SET_NETDEV_DEV(dev, dmdev);
-> +
-> +	// TODO: kzalloc + iwm_init_default_profile(iwm, iwm->umac_profile); ??
-> +
-> +
-> +	priv->card = card;
-> +	priv->mesh_open = 0;
-> +	priv->infra_open = 0;
-> +
->  
->  	priv->rtap_net_dev = NULL;
->  	strcpy(dev->name, "wlan%d");
-> @@ -1211,7 +1231,7 @@ struct lbs_private *lbs_add_card(void *c
->  	priv->main_thread = kthread_run(lbs_thread, dev, "lbs_main");
->  	if (IS_ERR(priv->main_thread)) {
->  		lbs_deb_thread("Error creating main thread.\n");
-> -		goto err_init_adapter;
-> +		goto err_ndev;
->  	}
->  
->  	priv->work_thread = create_singlethread_workqueue("lbs_worker");
-> @@ -1228,9 +1248,15 @@ struct lbs_private *lbs_add_card(void *c
->  
->  	goto done;
->  
-> -err_init_adapter:
-> -	lbs_free_adapter(priv);
-> + err_ndev:
->  	free_netdev(dev);
-> +
-> + err_adapter:
-> +	lbs_free_adapter(priv);
-> +
-> + err_wdev:
-> +	lbs_wdev_free(priv);
-> +
->  	priv = NULL;
->  
->  done:
-> @@ -1277,6 +1303,7 @@ void lbs_remove_card(struct lbs_private 
->  	kthread_stop(priv->main_thread);
->  
->  	lbs_free_adapter(priv);
-> +	lbs_wdev_free(priv);
->  
->  	priv->dev = NULL;
->  	free_netdev(dev);
-> 
+--=-+tPSlcVmobla1OWgk/47
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK7AJ1AAoJEODzc/N7+Qmau2wP/i71n16fdAOqU+rq/Ymgz93y
+7HCERIE2G2dw9kyBUmz07U1gEaAmcX+LfeEiIyQu2xEqAzaqFRKQKCJbPr40Aa0P
+hS7FbyOvFb9rpFTL3E85msLgP7592wlG90sSZSBPrspSfXh/kRVCMfG6PJowwgEC
+MvfJNzsGR0pKt2PAqScQlEBdn43SRulBrUF7HWtvH65ClVryHDjO9qqeiA+veFrQ
+2mVjCllpM48tV7LsjFCkHhwS9yHTUZhYEeUoTHNDk6LJbzpOTEvADfK1DCEQEkPc
+esKbviXnt/qxI0HLp3gSpBzZRIneHlQH3VrzBI+sY/AjZGAR8UirI9A+YR0XVyl0
+IpYUNwZFLpdRFjSXe+TjTvCHMA2Nq39JTL4/9x5JUCf2un5oSqxZroVngimrWTYW
+yUa++acXMVY0MDPGBjZyOFfSk+q3C6cvcTHxNpcwYXkI3kkwg9ppNXZQat0y9w56
+zn5/q2HoSRieP9jBXAAQ0kIwNbsEpXQ+86RqO/Kqthjh2DYJfwSISy97L02xAANa
+PgifSSZugjWhGD1mGiEec6ItzVpS3rOxCSI4nR4rqt8zOKVbcAYmEEAVfmz42/1M
+EZN5dSvosBtcHjdXACDjBeBz2xP8mgGkQqbMruZWGjsXhnChAwfPeUQCuSDHNekC
+KKW3GuPc9Q60uTKdqqVQ
+=0RgP
+-----END PGP SIGNATURE-----
+
+--=-+tPSlcVmobla1OWgk/47--
 
