@@ -1,82 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58336 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:60487 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758650AbZJPLiG (ORCPT
+	with ESMTP id S1757485AbZJaKDu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 07:38:06 -0400
-Subject: Re: deauthentication and disassociation nl80211 commands
+	Sat, 31 Oct 2009 06:03:50 -0400
+Subject: Re: ieee80211_tx_status: headroom too small
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20091012065507.GB25578@jm.kir.nu>
-References: <1254708707.24430.68.camel@maxim-laptop>
-	 <1255191866.4095.32.camel@johannes.local>
-	 <20091012065507.GB25578@jm.kir.nu>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-jAHqFgu22V6oFKd7ugtH"
-Date: Fri, 16 Oct 2009 18:36:42 +0900
-Message-Id: <1255685802.4095.315.camel@johannes.local>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Nikolai ZHUBR <zhubr@mail.ru>, linux-wireless@vger.kernel.org
+In-Reply-To: <200910311044.45687.IvDoorn@gmail.com>
+References: <1094614475.20091030230028@mail.ru>
+	 <200910311030.45582.IvDoorn@gmail.com>
+	 <1256981677.3555.94.camel@johannes.local>
+	 <200910311044.45687.IvDoorn@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-1PGU5q91NAAJFBGQA5p4"
+Date: Sat, 31 Oct 2009 11:03:52 +0100
+Message-ID: <1256983432.3555.121.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-jAHqFgu22V6oFKd7ugtH
+--=-1PGU5q91NAAJFBGQA5p4
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2009-10-12 at 09:55 +0300, Jouni Malinen wrote:
-> On Sat, Oct 10, 2009 at 06:24:26PM +0200, Johannes Berg wrote:
-> > On the other hand, I think Jouni's argument is that you should be able
-> > to authenticate (force an auth frame exchange) even while authenticated=
-.
-> > I don't really disagree with that all that much, but I'm not sure how t=
-o
-> > cleanly fit it in. mac80211 would have to reset the auth state without
-> > sending a deauth.
+On Sat, 2009-10-31 at 10:44 +0100, Ivo van Doorn wrote:
+
+> > Or maybe we should just not bother with having drivers do the alignment
+> > any more -- mac80211 does that now and it only does it if necessary
+> > (i.e. not on powerpc/x86)
 >=20
-> Yes, this is exactly what I would like to see happening when using
-> mac80211. For now, I think we can work around the issue in
-> wpa_supplicant, but eventually, this change in mac80211 would allow the
-> code in wpa_supplicant to be cleaned up and the need for an extra
-> deauthentication frame could be removed.
+> I think you mean the RX alignment, while I am talking about the TX alignm=
+ent.
+> Beacons and some othe frames must be 4-byte alignment because the wirelel=
+ess
+> hardware requires it.
 
-This would require a change in cfg80211 too, since that keeps the BSS
-list around and refuses this, mac80211 isn't necessarily involved.
+Oh, indeed, I got confused.
 
-However, we need to spec it out more clearly. For instance, we'd have to
-not add a new work item and try for another authentication, but rather
-use the old one. Right?
-
-I'm happy to have such a change, but it needs to be clearly documented
-what is expected of drivers that get an auth() call while already
-authenticated with that AP. Especially since it's not just
-send_auth_frame(), as we expect the driver to handle the entire
-handshake for WEP SK auth.
+Hmm. TX alignment is weird ... no driver really needs that except rt2x00
+afaik. Which frames require this?
 
 johannes
 
---=-jAHqFgu22V6oFKd7ugtH
+--=-1PGU5q91NAAJFBGQA5p4
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJK2D6nAAoJEODzc/N7+Qmawx4QALgmuaC2x/GtmltL+yfKmTeS
-w8AHuFFFSS88NwELUHYey+jYr6NPxOBfic8X4UHwZj/7voAcKNOS/3RlxPVO0rx4
-F2Apef09noav8X3A5DXoqkf5slyFB9jzt/FHmM5plK+2LHvdrzq2+y0wmCCEkg4c
-JEI9mVBgfjg7bp32o7c6j6rXYK5IZ7PKcIzy9UejQhboDHSjUHkNzsKRd5igmlWq
-lZChAT9Qk9FFKbzuQwvQ0kTgbk1fCUa9eY91nGLvAC3/Gg9mpbwp8b8KzZwIBvmN
-MEEomO7x7eRSkAKeixu/a3rIeQ2jdUVGseD52XLWg1c1NtSY6B9FPqaGF/+VbEK2
-bGslv150Ls2f5qjwlAaLhi1RIRIjnXxyZxmJdQieZR21uMT3GvLA5GYT05DzFUa9
-ZRuZKC8JkMehrjASyUR6EpkibyPbfoFJ1A4iMHwR0noAvol8bcMok9xzD2Nrqqtb
-nji9K0aoATNecgNQSB30JfWmrTmoqvegqOnls0Jv3wuFFkMxKHn605b69nRNOdOo
-mtqUgHKYCfnBDrAniD/MtpqIqN5Hk/zULVcmkwsZmwCv9vLGy101BHEiyEeaLMKZ
-0HGH30PaGd41THb3UJ7v28DMS0wCpHkp3VcLBPqdKQaAUhXkApcYTuDDvvRdJBIq
-7YC49YmU5tPAcpOawqod
-=A7+B
+iQIcBAABAgAGBQJK7AuFAAoJEODzc/N7+QmaSW0P/1r09T9lE2dGQWE3SdfRURRr
+jLraSyOa3p0WcJVZCFzsxDHIvXhDKFOB7Xdcaoemg/PEGooGSpatiRibaxYLrGaf
+FOhs6x9IaqfiOCZiYUEhxdp/5ZlKH84ojbeuDoLlOkVVHj29S1ZbMd5sEik+zuQX
+yDF52VWuw1izqNrQ9fSbZV4Zz2+etB7BdKfRH2Hh2quV7amMlTqdSSJJG1sScMvX
+qSbUD3pI9UvmrwS1ksu+AJU/0oWmH9FxptkiztM8BBg/aT6OC/+DYNurzoayutYI
+ZQiS+Tk935oXDJt74CLU++g0Lb/jIp/jpjYKkH/eZLIRv+bRGdI+31YsR6Skmm+l
+MKQThn5ABYGc3pKX9wApEVU52jM+5q4t6miwYRycQl4gwV5KrHCOifeXZQk/bFTZ
+i/cFCnH5mBr6wKrQMN5QXSZp8uf4vvT98Keh2fUmdRca4B7EwXIHYeXfotNcYQRa
+ox8HV1wc7rwgIGAaYayLW9Toqqp1KFWVpA2bMWM1rC/liEn5REepG9svW2mT8IkE
+3zrOWf3zz+RomM9KPGNu7/JUYARxT0Rl0RzOEgIcRRjfNCyhFrUb+/gs0+uDp8m1
+cPoH4kto2kjr27aaO1ruNIG8YEG+0xJZBlU0DRaeqmjF9Vw6Mvyo1+KVKO4LBtDR
+jxap6ErQU626Fy39gXU6
+=geCg
 -----END PGP SIGNATURE-----
 
---=-jAHqFgu22V6oFKd7ugtH--
+--=-1PGU5q91NAAJFBGQA5p4--
 
