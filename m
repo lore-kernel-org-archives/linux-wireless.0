@@ -1,66 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:56640 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759684AbZJHS6l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 14:58:41 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 13/20] wl1271: use workqueue provided by mac80211 instead of the default
-Date: Thu,  8 Oct 2009 21:56:29 +0300
-Message-Id: <1255028196-6565-14-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
+Received: from mx71.mail.ru ([94.100.176.85]:51262 "EHLO mx71.mail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753040AbZJaRed (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Oct 2009 13:34:33 -0400
+Date: Sat, 31 Oct 2009 20:42:09 +0300
+From: Nikolai ZHUBR <zhubr@mail.ru>
+Message-ID: <48920002.20091031204209@mail.ru>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re[4]: ieee80211_tx_status: headroom too small
+In-reply-To: <1257003344.3555.136.camel@johannes.local>
+References: <1094614475.20091030230028@mail.ru>
+ <200910310959.43260.IvDoorn@gmail.com>
+ <1256981113.3555.92.camel@johannes.local>
+ <200910311030.45582.IvDoorn@gmail.com>
+ <1256981677.3555.94.camel@johannes.local>  <7724371.20091031172437@mail.ru>
+ <1257003344.3555.136.camel@johannes.local>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Saturday, October 31, 2009, 6:35:44 PM, Johannes Berg wrote:
+>> net/mac80211/main.c:
+>>         local->tx_headroom = max_t(unsigned int , local->hw.extra_tx_headroom,
+>>                                    sizeof(struct ieee80211_tx_status_rtap_hdr));
+>> 
+>> drivers/net/wireless/rt*pci.c:
+>>         rt2x00dev->hw->extra_tx_headroom = 0;
+>> 
+>> So, as a quick-and-dirty fix, should I replace "max_t(..." by "4 + max_t(...."
+>> or "= 0" by "= 4" ?
 
-Use the workqueue provided by the mac80211 stack instead of the system
-default queue.
+> 4 + max ... should work if it's what we think it is. Let us know.
 
-Modified to use new ieee_queue_work() as required by changes in the
-stack.
+Yes, it removed those messages.
+The actual speed is still not very high (like at 10Mbit maybe,
+though 54Mbit is shown and the distance from the AP is very small,
+so signal quality should be good I suppose) but it is ok for me.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Thank you!
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 1a0491a..d104230 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -107,7 +107,7 @@ static void wl1271_fw_status(struct wl1271 *wl, struct wl1271_fw_status *status)
- 
- 	/* if more blocks are available now, schedule some tx work */
- 	if (total && !skb_queue_empty(&wl->tx_queue))
--		schedule_work(&wl->tx_work);
-+		ieee80211_queue_work(wl->hw, &wl->tx_work);
- 
- 	/* update the host-chipset time offset */
- 	wl->time_offset = jiffies_to_usecs(jiffies) - status->fw_localtime;
-@@ -205,7 +205,7 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
- 		wl->elp_compl = NULL;
- 	}
- 
--	schedule_work(&wl->irq_work);
-+	ieee80211_queue_work(wl->hw, &wl->irq_work);
- 	spin_unlock_irqrestore(&wl->wl_lock, flags);
- 
- 	return IRQ_HANDLED;
-@@ -480,7 +480,7 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	 * before that, the tx_work will not be initialized!
- 	 */
- 
--	schedule_work(&wl->tx_work);
-+	ieee80211_queue_work(wl->hw, &wl->tx_work);
- 
- 	/*
- 	 * The workqueue is slow to process the tx_queue and we need stop
--- 
-1.5.6.5
+Nikolai ZHUBR
+
+
+> johannes
+
 
