@@ -1,73 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:33575 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753745AbZKHR70 (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:55908 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751619AbZKAJTA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 12:59:26 -0500
-Received: by ewy3 with SMTP id 3so2496005ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 09:59:31 -0800 (PST)
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 5/9] rt2800: prepare for rt2800*_probe_hw_mode() unification
-Date: Sun, 8 Nov 2009 18:48:06 +0100
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-References: <20091108133854.23584.86842.sendpatchset@localhost.localdomain> <20091108133925.23584.37879.sendpatchset@localhost.localdomain> <4AF6D727.6000100@gmail.com>
-In-Reply-To: <4AF6D727.6000100@gmail.com>
+	Sun, 1 Nov 2009 04:19:00 -0500
+Date: Sun, 1 Nov 2009 11:18:49 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] cfg80211: Fix WEXT compat siwauth wpa and group cipher
+Message-ID: <20091101091849.GA32252@jm.kir.nu>
 MIME-Version: 1.0
-Message-Id: <200911081848.06556.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 08 November 2009 15:35:19 Gertjan van Wingerde wrote:
-> On 11/08/09 14:39, Bartlomiej Zolnierkiewicz wrote:
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH] rt2800: prepare for rt2800*_probe_hw_mode() unification
-> > 
-> > Enclose interface specific code in rt2800[pci,usb]_probe_hw_mode()
-> > with rt2x00_intf_is_[pci,usb]() checks.
-> > 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Neither of these commands should clear the current configuration value
+if they return error. Furthermore, cfg80211_set_cipher_group() should
+be able to handle IW_AUTH_CIPHER_NONE without reporting error.
 
-[ please remove needles parts of mails, thanks! ]
+Signed-off-by: Jouni Malinen <j@w1.fi>
 
-> > @@ -800,17 +804,18 @@ static int rt2800usb_probe_hw_mode(struc
-> >  	spec->supported_bands = SUPPORT_BAND_2GHZ;
-> >  	spec->supported_rates = SUPPORT_RATE_CCK | SUPPORT_RATE_OFDM;
-> >  
-> > -	if (rt2x00_rf(&rt2x00dev->chip, RF2820) ||
-> > -	    rt2x00_rf(&rt2x00dev->chip, RF2720)) {
-> > +	if (rt2x00_rf(chip, RF2820) ||
-> > +	    rt2x00_rf(chip, RF2720)) {
-> >  		spec->num_channels = 14;
-> >  		spec->channels = rf_vals;
-> > -	} else if (rt2x00_rf(&rt2x00dev->chip, RF2850) ||
-> > -		   rt2x00_rf(&rt2x00dev->chip, RF2750)) {
-> > +	} else if (rt2x00_rf(chip, RF2850) ||
-> > +		   rt2x00_rf(chip, RF2750)) {
-> >  		spec->supported_bands |= SUPPORT_BAND_5GHZ;
-> >  		spec->num_channels = ARRAY_SIZE(rf_vals);
-> >  		spec->channels = rf_vals;
-> > -	} else if (rt2x00_rf(&rt2x00dev->chip, RF3020) ||
-> > -		   rt2x00_rf(&rt2x00dev->chip, RF2020)) {
-> > +	} else if (rt2x00_intf_is_usb(rt2x00dev) &&
-> > +		    (rt2x00_rf(chip, RF3020) ||
-> > +		     rt2x00_rf(chip, RF2020))) {
-> >  		spec->num_channels = ARRAY_SIZE(rf_vals_3070);
-> >  		spec->channels = rf_vals_3070;
-> >  	}
-> > 
-> 
-> Hmm, another one where we can benefit from decoupling RF chipset code from the actual interface (USB or PCI) used. I do not see the need to check for
-> USB or PCI support, we just need to unify on the RF chipset level.
-> 
-> BTW this rf_vals_3070 initialization looks weird. It doesn't resemble any other rf_channel initializations we have. I'd say we can go with the rt2800pci variant of the initialization here.
+---
+ net/wireless/wext-compat.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-IIRC from the vendor driver rf_vals_3070 is needed so by working
-in the incremental way I prefer to leave it as it is before somebody
-verifies this with the vendor driver, also it should be a separate
-patch for better bisectability anyway.
+--- uml.orig/net/wireless/wext-compat.c	2009-11-01 10:54:56.000000000 +0200
++++ uml/net/wireless/wext-compat.c	2009-11-01 10:58:45.000000000 +0200
+@@ -904,8 +904,6 @@ static int cfg80211_set_auth_alg(struct 
+ 
+ static int cfg80211_set_wpa_version(struct wireless_dev *wdev, u32 wpa_versions)
+ {
+-	wdev->wext.connect.crypto.wpa_versions = 0;
+-
+ 	if (wpa_versions & ~(IW_AUTH_WPA_VERSION_WPA |
+ 			     IW_AUTH_WPA_VERSION_WPA2|
+ 		             IW_AUTH_WPA_VERSION_DISABLED))
+@@ -933,8 +931,6 @@ static int cfg80211_set_wpa_version(stru
+ 
+ static int cfg80211_set_cipher_group(struct wireless_dev *wdev, u32 cipher)
+ {
+-	wdev->wext.connect.crypto.cipher_group = 0;
+-
+ 	if (cipher & IW_AUTH_CIPHER_WEP40)
+ 		wdev->wext.connect.crypto.cipher_group =
+ 			WLAN_CIPHER_SUITE_WEP40;
+@@ -950,6 +946,8 @@ static int cfg80211_set_cipher_group(str
+ 	else if (cipher & IW_AUTH_CIPHER_AES_CMAC)
+ 		wdev->wext.connect.crypto.cipher_group =
+ 			WLAN_CIPHER_SUITE_AES_CMAC;
++	else if (cipher & IW_AUTH_CIPHER_NONE)
++		wdev->wext.connect.crypto.cipher_group = 0;
+ 	else
+ 		return -EINVAL;
+ 
 
 -- 
-Bartlomiej Zolnierkiewicz
+Jouni Malinen                                            PGP id EFC895FA
