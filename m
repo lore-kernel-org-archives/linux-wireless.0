@@ -1,48 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:38593 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755626AbZKDMZW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 07:25:22 -0500
-Date: Mon, 2 Nov 2009 22:16:29 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Luis Correia <luis.f.correia@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-Message-ID: <20091102211629.GA1322@ucw.cz>
-References: <1256886023.3555.5.camel@johannes.local> <20091030110616.GB6150@ff.dom.local> <20091030150223.GA2586@tuxdriver.com> <20091102091038.GA9044@elte.hu> <1257153807.3555.173.camel@johannes.local> <20091102100702.GA16963@elte.hu> <20091102170114.GE14046@tuxdriver.com> <efe7343f0911020932l21a570c8u9478568329d38e2c@mail.gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:43153 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753373AbZKAUYW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Nov 2009 15:24:22 -0500
+Message-ID: <4AEDEE7C.4010406@gmx.net>
+Date: Sun, 01 Nov 2009 21:24:28 +0100
+From: Frank Schaefer <schaefer.frank@gmx.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <efe7343f0911020932l21a570c8u9478568329d38e2c@mail.gmail.com>
+To: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+CC: linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB
+ N devices in cdrom mode
+References: <200910171606.02961.oliver@neukum.org> <Pine.LNX.4.44L0.0910171130550.25594-100000@netrider.rowland.org> <20091017220313.GH24502@one-eyed-alien.net> <4ADC3657.6080906@gmx.net> <4AEDCCA0.8050709@gmx.net> <4AEDD380.40408@draisberghof.de> <20091101183553.GB24436@one-eyed-alien.net>
+In-Reply-To: <20091101183553.GB24436@one-eyed-alien.net>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Matthew Dharm schrieb:
+> On Sun, Nov 01, 2009 at 07:29:20PM +0100, Josua Dietze wrote:
+>   
+>> Frank Schaefer schrieb:
+>>
+>>     
+>>> I really think the mode-switching should be done in the kernel and not
+>>> in user-space for reasons of usability.
+>>>       
+>> What is wrong with an udev rule entry? By the way, did the "eject" 
+>> command line tool work as well?
+>>     
+>
+> And I think it should be done in userspace for issues of maintainability
+> and useability.  It is much easier for users to upgrade their udev then
+> their kernel.
+>   
+Maintainability for whom ? The kernel-devs or the distro-people and the
+users ? ;)
 
-> About Bartlomiej, there is only one more thing that I'll say:
-> 
-> I've searched on my GMail archives and the only patch Bart has
-> provided so far for the rt2x00 project is this:
-> 
-> [PATCH] MAINTAINERS: rt2x00 list is moderated
-> 
-> Which, while technically correct, adds nothing to the project.
-> 
-> So, I will personally continue to ignore Bart's comments, regards and
-> rants, until he provides patches for rt2x00 that actually make the
-> driver better.
+Please think about the users. They don't know that they have to create
+udev-rules or have to install additional packages like usb_modeswitch
+(which is nevertheless a great tool !).
+And even if they know, they don't want to do that. So it's up to the
+distros to do this automatically, which will in reality never come true
+for all devices and distros.
 
-Well, he provided review feedback... he should be thanked for that,
-not flamed for it.
-									Pavel  
+Do you know the microdia-webcam-driver which recently got into the
+kernel as sn9c20x-gspcav-sub-driver ?
+It's a great and functional driver which supports lots of webcams, but
+in fact its useless for most users (at least the ones who don't know
+LD_PRELOAD-hack)...
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Please don't understand me wrong: I agree that we should keep the kernel
+slim and do as much as possible in userspace and I can see the benefits
+of the userspace-approach.
+But we have to make compromises and I think a kernel-space-apporach
+would be the best compromise in this case. Just my two cents.
+
+>>> Another benfit is that it binds the mode-switching to the driver. If the
+>>> driver is blacklisted/not used, there will be no mode-switching.
+>>>       
+>> But how would you access the storage part of the device then?
+>>     
+>
+> And doing the switch in userspace would solve this problem also.
+>
+> Finally, if we do this in userspace, device vendors might actually get a
+> clue and start providing a small linux app or script to do the mode switch
+> on their virtual storage device, just like they do for windows.
+>
+> Matt
+>   
+As I said in reply to Josua, this depends on device-type. For
+windows-driver-storage-devices we don't need such a tool.
+
+Frank
