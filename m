@@ -1,84 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:34335 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751889AbZKOLdg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Nov 2009 06:33:36 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: stable@kernel.org
-Subject: [PATCH stable] b43: Work around mac80211 race condition
-Date: Sun, 15 Nov 2009 12:33:08 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:59896 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751018AbZKAUK2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Nov 2009 15:10:28 -0500
+Date: Sun, 1 Nov 2009 22:10:24 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] Allow scanning while in authenticated only state
+Message-ID: <20091101201024.GA29524@jm.kir.nu>
+References: <1256939391.31271.11.camel@maxim-laptop> <1256939549.31271.14.camel@maxim-laptop> <1256967782.3555.69.camel@johannes.local> <1256982381.3089.10.camel@maxim-laptop> <1256983366.3555.119.camel@johannes.local> <1256985196.3089.34.camel@maxim-laptop>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200911151233.10530.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1256985196.3089.34.camel@maxim-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 18c6951091eca7645005a71b556106cc99a6f4b1
-Author: Larry Finger <Larry.Finger@lwfinger.net>
-Date:   Wed Jul 29 10:54:06 2009 -0500
+On Sat, Oct 31, 2009 at 12:33:16PM +0200, Maxim Levitsky wrote:
 
-    b43: Work around mac80211 race condition
-    
-    As shown in http://thread.gmane.org/gmane.linux.kernel.wireless.general/36497,
-    mac80211 has a bug that allows a call to the TX routine after the queues have
-    been stopped. This situation will only occur under extreme stress. Although
-    b43 does not crash when this condition occurs, it does generate a WARN_ON and
-    also logs a queue overrun message. This patch recognizes b43 is not at fault
-    and logs a message only when the most verbose debugging mode is enabled. In
-    the unlikely event that the queue is not stopped when the DMA queue becomes
-    full, then a warning is issued.
-    
-    During testing of this patch with one output stream running repeated tcpperf
-    writes and a second running a flood ping, this routine was entered with
-    the DMA ring stopped about once per hour. The condition where the DMA queue is
-    full but the ring has not been stopped has never been seen by me.
-    
-    Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> How about putting this in wpa_supplicant, and end all trouble with this
+> for once?
+> 
+> This is a workaround/hack, but at least it works....
 
+Could you please add a comment pointing that out and explaining that the
+deauth in disassoc is there due to mac80211's inability to handle
+multiple APs in authenticated-but-not-associated state?
 
----
+> diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
+>  static int wpa_driver_nl80211_disassociate(void *priv, const u8 *addr,
+>                                            int reason_code)
 
-We forgot to CC -stable on this patch, but it fixes a bug that users are hitting
-(bug #14582)
+> -       return wpa_driver_nl80211_mlme(drv, addr, NL80211_CMD_DISASSOCIATE,
+> +
+> +       err = wpa_driver_nl80211_mlme(drv, addr, NL80211_CMD_DISASSOCIATE,
+> +                                      reason_code);
+> +       if (err)
+> +               return err;
+> +       return wpa_driver_nl80211_mlme(drv, addr, NL80211_CMD_DEAUTHENTICATE,
+>                                        reason_code);
 
+There should be no need for doing both disassoc and deauth; just send
+deauth only if that is needed. This will save one extra frame
+transmission and speeds up roaming a bit.
 
-diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
-index 7964cc3..41a0e9c 100644
---- a/drivers/net/wireless/b43/dma.c
-+++ b/drivers/net/wireless/b43/dma.c
-@@ -1334,13 +1334,22 @@ int b43_dma_tx(struct b43_wldev *dev, struct sk_buff *skb)
- 	spin_lock_irqsave(&ring->lock, flags);
- 
- 	B43_WARN_ON(!ring->tx);
--	/* Check if the queue was stopped in mac80211,
--	 * but we got called nevertheless.
--	 * That would be a mac80211 bug. */
--	B43_WARN_ON(ring->stopped);
- 
--	if (unlikely(free_slots(ring) < TX_SLOTS_PER_FRAME)) {
--		b43warn(dev->wl, "DMA queue overflow\n");
-+	if (unlikely(ring->stopped)) {
-+		/* We get here only because of a bug in mac80211.
-+		 * Because of a race, one packet may be queued after
-+		 * the queue is stopped, thus we got called when we shouldn't.
-+		 * For now, just refuse the transmit. */
-+		if (b43_debug(dev, B43_DBG_DMAVERBOSE))
-+			b43err(dev->wl, "Packet after queue stopped\n");
-+		err = -ENOSPC;
-+		goto out_unlock;
-+	}
-+
-+	if (unlikely(WARN_ON(free_slots(ring) < TX_SLOTS_PER_FRAME))) {
-+		/* If we get here, we have a real error with the queue
-+		 * full, but queues not stopped. */
-+		b43err(dev->wl, "DMA queue overflow\n");
- 		err = -ENOSPC;
- 		goto out_unlock;
- 	}
+Though, is this enough to handle the roaming cases where wpa_supplicant
+may not try to send either disassociation or deauthentication?
 
 -- 
-Greetings, Michael.
+Jouni Malinen                                            PGP id EFC895FA
