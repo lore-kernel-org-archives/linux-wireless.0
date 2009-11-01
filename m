@@ -1,62 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:59963 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751048AbZKGAJO (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59521 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753150AbZKAS1W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 19:09:14 -0500
-Received: by iwn10 with SMTP id 10so1221337iwn.4
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 16:09:19 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890911061126y12c59bc2q4620af8dfd703304@mail.gmail.com>
-References: <43e72e890911060857l6e383578nc1c7d0f2ba63529f@mail.gmail.com>
-	<b6c5339f0911060929w78d16192o6c48e432e8e8c830@mail.gmail.com>
-	<43e72e890911060945s3b00e056u1efe483bd88ebd30@mail.gmail.com>
-	<20091106183833.GC2782@tuxdriver.com> <43e72e890911061120mc3f66cbl272adc273a39cb0c@mail.gmail.com>
-	<43e72e890911061126y12c59bc2q4620af8dfd703304@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 6 Nov 2009 16:08:59 -0800
-Message-ID: <43e72e890911061608v22656457h1d8e668ac820e0fa@mail.gmail.com>
-Subject: Re: Changing the way we handle region codes on Linux (public thread)
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Vivek Natarajan <Vivek.Natarajan@atheros.com>,
-	Vivek Natarajan <vivek.natraj@gmail.com>,
-	Jeffrey Baker <jwbaker@gmail.com>,
-	David Quan <David.Quan@atheros.com>,
-	Michael Green <Michael.Green@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 1 Nov 2009 13:27:22 -0500
+Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB N
+ devices in cdrom mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Frank Schaefer <schaefer.frank@gmx.net>
+Cc: linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	chunkeey@web.de
+In-Reply-To: <4AEDCCA0.8050709@gmx.net>
+References: <200910171606.02961.oliver@neukum.org>
+	 <Pine.LNX.4.44L0.0910171130550.25594-100000@netrider.rowland.org>
+	 <20091017220313.GH24502@one-eyed-alien.net> <4ADC3657.6080906@gmx.net>
+	 <4AEDCCA0.8050709@gmx.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-mlccmCJKTMJRkiTAcRCQ"
+Date: Sun, 01 Nov 2009 19:27:25 +0100
+Message-ID: <1257100045.3555.160.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 6, 2009 at 11:26 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Fri, Nov 6, 2009 at 11:20 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Fri, Nov 6, 2009 at 10:38 AM, John W. Linville
->> <linville@tuxdriver.com> wrote:
->>>
->>> FWIW, I think Bob's suggestion makes a lot of sense.
->>
->> Patches welcomed then :)
->
-> So this could consist probably of adding one more environment variable
-> to the passed COUNTRY one that the kernel passes before calling crda,
-> a group I guess, andif the group is passed the crda can read
-> /path/grop-regulatory.bin where group could be ATHR for example.
->
-> BTW -- the region codes are already present on db.txt
 
-What I mean by that is a region code is mapped to an alpha2 and then
-the first alpha2 for the region code is used to query CRDA and CRDA
-already has these alpha2s.
+--=-mlccmCJKTMJRkiTAcRCQ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Just for the record I have reviewed possible changes internally and it
-seems that we're happy to allow the alpha2 that a user sets through
-userspace and trust it for a device if the region code also maps to
-the alpha2 the user set. But we're also happy to move more things to
-userspace if that is desired.
+On Sun, 2009-11-01 at 19:00 +0100, Frank Schaefer wrote:
 
-I'm more inclined to spend a couple of hours on the checking the
-alpah2 set by the user than the other solution so if I get some time
-I'll eventually hack that up.
+> The attached patch adds the mode-switching-procedure to the WLAN-driver
+> (ar9170usb) and disables the storage device in the usb-storage-driver.
 
- Luis
+This patch looks weird. Have you looked at zd1211rw, which also does
+this? I think it just adds something to usb-storage for the device IDs?
+
+johannes
+
+--=-mlccmCJKTMJRkiTAcRCQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK7dMKAAoJEODzc/N7+Qma/2cP/jsobJIKkVkTVJUcvexmV6Kr
+agWT73CCFkTUG6c+QOfXkxyLWVx5GAxMCpwjdw6oecq1lPEHUzwFvoHYMvd5gne8
+UhVoQizn8M/IG7zla4qA3iDWvEHZAJ6+mBu7i8Bvpy48Jyqija0aXCaJ0u792Vsa
+gKWZwfj9JUCZ+xUKV53ox6XPnwRAixnPyPWL2J9r9Wkzr2/BLwWXRzEYvHqoconb
+S3AjtyXnf19Yy1oFlDSKhjZ0HwQEYhl11MOAlLE/D+dy3dwM6X8D4xOLUXl/gWMw
+ECuaLUEmRBdkBsReBReUZyROP2rlp5w9S3qdrw5sMYYEJB394KOSDlmcEcynziwi
+pVRRZs1IIQNLTFqLk9owya7IKV532jn64+LBPYtLw8mZHLPKYKb6EHm1OAuCbl2Q
+CIIHYid603ccb9Z0jezcKIYnJpAS0nmF41mWHiUt3I13V/+9vk3eqW1ldJ3+sWMC
+ksQO8dfFqvzoxZ1deklNLGz+E+mDyQmUyKdylrmJ+gbkMDNgjaXTGsmD2vzlF0QJ
+hf0cu59uX/UpAZtJGeHESUf3c/JPwGiCuLv6fX97JWqa6QYb1aZFBAmnutoUznY6
+6YgNE9bc6/AgRB99FaJeYszFUPgHFvhnomNkXk4ooIafp5qZTfs1tGAalokHd/Zk
+PzWL6iOpuplzA00W/7LJ
+=6TvN
+-----END PGP SIGNATURE-----
+
+--=-mlccmCJKTMJRkiTAcRCQ--
+
