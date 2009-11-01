@@ -1,44 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:43486 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750902AbZKNR7H convert rfc822-to-8bit (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:49068 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751813AbZKAJar (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Nov 2009 12:59:07 -0500
-Received: by iwn8 with SMTP id 8so3380487iwn.33
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Nov 2009 09:59:13 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <032b01ca64f9$f520c400$df624c00$@kaist.ac.kr>
-References: <02a401ca6370$51fa0ff0$f5ee2fd0$@kaist.ac.kr> <43e72e890911120732m74dbe2d4m14dd146cd0fb3016@mail.gmail.com>
-	<43e72e890911131226i1a58560haeddca42c76bc1a9@mail.gmail.com>
-	<032b01ca64f9$f520c400$df624c00$@kaist.ac.kr>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sat, 14 Nov 2009 09:58:53 -0800
-Message-ID: <43e72e890911140958m138c92dat60a62607a08616b2@mail.gmail.com>
-Subject: Re: ath9k: Unknown symbol
-To: Jinsung Lee <ljs@netsys.kaist.ac.kr>
+	Sun, 1 Nov 2009 04:30:47 -0500
+Date: Sun, 1 Nov 2009 11:30:48 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH] mac80211_hwsim: Check idle state on TX
+Message-ID: <20091101093048.GA1058@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 13, 2009 at 11:13 PM, Jinsung Lee <ljs@netsys.kaist.ac.kr> wrote:
-> Dear Luis,
->
-> I've compiled successfully with compat-wireless-2009-11-13 version.
-> Also, modprobe command has been passed successfully.
-> But, when configuring with "ifconfig", it shows the following kernel message and then totally shut down, resulting in reboot.
->
-> ==========================================
-> ...
->
-> <7>[  181.995318] ath: tx chmask: 1, rx chmask: 1
-> <7>[  181.995328] ath: BSS Changed PREAMBLE 0
-> <7>[  181.995335] ath: BSS Changed CTS PROT 0
-> <1>[  181.998952] BUG: unable to handle kernel NULL pointer dereference at 00000004
+Track the idle state for hwsim radios and reject TX if mac80211 is
+trying to transmit something when the radio is supposed to be idle. In
+addition, do not deliver frames if the receiving radio is in the idle
+state.
 
-Are you on 2.6.32? If so try wireless-testing directly, it'll give you
-what you want which is 2.6.32-rcx and the latest wireless drivers.
-There may be a backport issue with 2.6.32 but I cannot tell where it
-is crashing with the trace you pasted without debugging enabled.
+Signed-off-by: Jouni Malinen <j@w1.fi>
 
-  Luis
+---
+ drivers/net/wireless/mac80211_hwsim.c |   13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+--- uml.orig/drivers/net/wireless/mac80211_hwsim.c	2009-10-01 17:06:49.000000000 +0300
++++ uml/drivers/net/wireless/mac80211_hwsim.c	2009-10-01 17:22:15.000000000 +0300
+@@ -284,7 +284,7 @@ struct mac80211_hwsim_data {
+ 	struct ieee80211_channel *channel;
+ 	unsigned long beacon_int; /* in jiffies unit */
+ 	unsigned int rx_filter;
+-	int started;
++	bool started, idle;
+ 	struct timer_list beacon_timer;
+ 	enum ps_mode {
+ 		PS_DISABLED, PS_ENABLED, PS_AUTO_POLL, PS_MANUAL_POLL
+@@ -402,6 +402,12 @@ static bool mac80211_hwsim_tx_frame(stru
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_rx_status rx_status;
+ 
++	if (data->idle) {
++		printk(KERN_DEBUG "%s: Trying to TX when idle - reject\n",
++		       wiphy_name(hw->wiphy));
++		return false;
++	}
++
+ 	memset(&rx_status, 0, sizeof(rx_status));
+ 	/* TODO: set mactime */
+ 	rx_status.freq = data->channel->center_freq;
+@@ -428,7 +434,8 @@ static bool mac80211_hwsim_tx_frame(stru
+ 		if (data == data2)
+ 			continue;
+ 
+-		if (!data2->started || !hwsim_ps_rx_ok(data2, skb) ||
++		if (data2->idle || !data2->started ||
++		    !hwsim_ps_rx_ok(data2, skb) ||
+ 		    !data->channel || !data2->channel ||
+ 		    data->channel->center_freq != data2->channel->center_freq ||
+ 		    !(data->group & data2->group))
+@@ -571,6 +578,8 @@ static int mac80211_hwsim_config(struct 
+ 	       !!(conf->flags & IEEE80211_CONF_IDLE),
+ 	       !!(conf->flags & IEEE80211_CONF_PS));
+ 
++	data->idle = !!(conf->flags & IEEE80211_CONF_IDLE);
++
+ 	data->channel = conf->channel;
+ 	if (!data->started || !data->beacon_int)
+ 		del_timer(&data->beacon_timer);
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
