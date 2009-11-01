@@ -1,63 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:41727 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753852AbZKUCMl convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:34265 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752189AbZKAMvT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 21:12:41 -0500
+	Sun, 1 Nov 2009 07:51:19 -0500
+Received: by bwz27 with SMTP id 27so5248514bwz.21
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2009 04:51:24 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <43e72e890911201338w4c403d51q651afc3638d1739c@mail.gmail.com>
-References: <43e72e890911201245r4de5b039hb2dd5011dabf2399@mail.gmail.com>
-	<43e72e890911201251t6210ee19n177eaf003a4fffc@mail.gmail.com>
-	<43e72e890911201253obc466c8k2102e04457c48c92@mail.gmail.com>
-	<20091120211837.GA22815@tuxdriver.com> <43e72e890911201338w4c403d51q651afc3638d1739c@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 20 Nov 2009 18:12:27 -0800
-Message-ID: <43e72e890911201812r6551422bk276bbcaf3179d5cc@mail.gmail.com>
-Subject: Re: A generic kernel compatibilty code
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+From: Thomas Wiecki <thomas.wiecki@googlemail.com>
+Date: Sun, 1 Nov 2009 13:51:04 +0100
+Message-ID: <4888b8cb0911010451w3e824921ob5ee6b7aae5b728b@mail.gmail.com>
+Subject: b43 with 14e4 gives DMA error
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 20, 2009 at 1:38 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Fri, Nov 20, 2009 at 1:18 PM, John W. Linville
-> <linville@tuxdriver.com> wrote:
->> On Fri, Nov 20, 2009 at 12:53:51PM -0800, Luis R. Rodriguez wrote:
->>> On Fri, Nov 20, 2009 at 12:51 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>> > On Fri, Nov 20, 2009 at 12:45 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>> >> Everyone and their mother reinvents the wheel when it comes to
->>> >> backporting kernel modules. It a painful job and it seems to me an
->>> >> alternative is possible. If we can write generic compatibilty code for
->>> >> a new routine introduced on the next kernel how about just merging it
->>> >> to the kernel under some generic compat module. This would be
->>> >> completey ignored by everyone using the stable kernel but can be
->>> >> copied by anyone doing backport work.
->>> >>
->>> >> So I'm thinking something as simple as a generic compat/comat.ko with
->>> >> compat-2.6.32.[ch] files.
->>> >
->>> > FWIW, I meant a compat-2.6.32.[ch] and compat-2.6.31.[ch] and so on.
->>> > All these would link to the compat.ko
->>>
->>> I supose this could juse be a separate tree with some generic
->>> compat.ko module. That might work better.
->>
->> This is what I would suggest for pursuing this idea.  Perhaps you
->> could split-off from compat-wireless, then make that tree depend on
->> the new tree (compat-core?)...
->
-> OK thanks, will try that for the next kernel.
+0c:00.0 Network controller [0280]: Broadcom Corporation BCM4312
+802.11b/g [14e4:4315] (rev 01)
+        Subsystem: Dell Device [1028:000c]
+        Flags: bus master, fast devsel, latency 0, IRQ 17
+        Memory at f1ffc000 (64-bit, non-prefetchable) [size=16K]
+        Capabilities: <access denied>
+        Kernel driver in use: wl
+        Kernel modules: wl, ssb
 
-I've packaged a compat.ko here:
+A variable delay after loading the most recent b43 driver I get a lot
+of (I hope last nights patches would have fixed the problems, but they
+didn't):
+[ 6895.111946] b43-phy0 ERROR: Fatal DMA error: 0x00000800,
+0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000
+[ 6895.111955] b43-phy0: Controller RESET (DMA error) ...
+[ 6895.336490] b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
+[ 6900.841372] b43-phy0: Controller restarted
 
-git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git
+After installing the driver for the first time, I have a few minutes I
+can use the wifi card, after that the DMA errors start to occur. Once
+they occured after the first loading, they appear immediatly after
+each loading.
 
-This should be up as soon as the kernel.org synchs. The missing piece
-would just be to define a common place to put the headers for
-distributions who want to use external modules which want to use this
-thing.
+Ubuntu 9.04 (most recent) with kernel 2.6.31-14-generic
 
-  Luis
+Laptop is Dell E6500.
