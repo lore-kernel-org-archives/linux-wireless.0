@@ -1,41 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:18595 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754927AbZKHTSE (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59518 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753087AbZKASZo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 14:18:04 -0500
-Received: by ey-out-2122.google.com with SMTP id 25so41091eya.19
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 11:18:09 -0800 (PST)
-To: "John Willis" <John.Willis@Distant-earth.com>
-Cc: <me@bobcopeland.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] WL1251: Very crude EEPROM reading support for the WL1251 driver
-References: <01c901ca4daf$6e3d7f20$4ab87d60$@Willis@Distant-earth.com>
-	<871vk8g7z3.fsf@purkki.valot.fi>
-	<006b01ca60a6$60aa1f80$21fe5e80$@Willis@Distant-earth.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 08 Nov 2009 21:18:07 +0200
-In-Reply-To: <006b01ca60a6$60aa1f80$21fe5e80$@Willis@Distant-earth.com> (John Willis's message of "Sun\, 8 Nov 2009 19\:05\:01 -0000")
-Message-ID: <87skcoesgg.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 1 Nov 2009 13:25:44 -0500
+Subject: [PATCH] mac80211: check interface is down before type change
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Arjan van de Ven <arjan@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 01 Nov 2009 19:25:40 +0100
+Message-ID: <1257099940.3555.159.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"John Willis" <John.Willis@Distant-earth.com> writes:
+For some strange reason the netif_running() check
+ended up after the actual type change instead of
+before, potentially causing all kinds of problems
+if the interface is up while changing the type;
+one of the problems manifests itself as a warning:
 
->> Now I noticed that the Signed-off-by line is missing, can you please
->> send that also? A reply to this email is enough.
->
-> The initial plan was for an RFC not a commit so I left off the signed off
-> but as the patch has been reworked consider.
+WARNING: at net/mac80211/iface.c:651 ieee80211_teardown_sdata+0xda/0x1a0 [mac80211]()
+Hardware name: Aspire one      
+Pid: 2596, comm: wpa_supplicant Tainted: G        W  2.6.31-10-generic #32-Ubuntu
+Call Trace:
+ [] warn_slowpath_common+0x6d/0xa0
+ [] warn_slowpath_null+0x15/0x20
+ [] ieee80211_teardown_sdata+0xda/0x1a0 [mac80211]
+ [] ieee80211_if_change_type+0x4a/0xc0 [mac80211]
+ [] ieee80211_change_iface+0x61/0xa0 [mac80211]
+ [] cfg80211_wext_siwmode+0xc7/0x120 [cfg80211]
+ [] ioctl_standard_call+0x58/0xf0
 
-Actually it's a good idea to always include the signed off line, that
-way anyone can freely work on the patch. Tagging the patch as RFC
-should be enough to make it sure that it's not applied.
+(http://www.kerneloops.org/searchweek.php?search=ieee80211_teardown_sdata)
 
-> Signed-off-by: David-John Willis <John.Willis@Distant-earth.com>
+Cc: Arjan van de Ven <arjan@infradead.org>
+Cc: stable@kernel.org
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/cfg.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Thanks!
+--- wireless-testing.orig/net/mac80211/cfg.c	2009-11-01 19:19:16.000000000 +0100
++++ wireless-testing/net/mac80211/cfg.c	2009-11-01 19:20:49.000000000 +0100
+@@ -72,6 +72,9 @@ static int ieee80211_change_iface(struct
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int ret;
+ 
++	if (netif_running(dev))
++		return -EBUSY;
++
+ 	if (!nl80211_type_check(type))
+ 		return -EINVAL;
+ 
+@@ -81,9 +84,6 @@ static int ieee80211_change_iface(struct
+ 	if (ret)
+ 		return ret;
+ 
+-	if (netif_running(sdata->dev))
+-		return -EBUSY;
+-
+ 	if (ieee80211_vif_is_mesh(&sdata->vif) && params->mesh_id_len)
+ 		ieee80211_sdata_set_mesh_id(sdata,
+ 					    params->mesh_id_len,
 
--- 
-Kalle Valo
+
