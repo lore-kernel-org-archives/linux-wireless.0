@@ -1,69 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:35520 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751123AbZKEAQg convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f228.google.com ([209.85.219.228]:40316 "EHLO
+	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753255AbZKAUuR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 19:16:36 -0500
-Received: by mail-ew0-f207.google.com with SMTP id 3so3762198ewy.37
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 16:16:41 -0800 (PST)
+	Sun, 1 Nov 2009 15:50:17 -0500
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Frank Schaefer <schaefer.frank@gmx.net>
+Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB N devices in cdrom mode
+Date: Sun, 1 Nov 2009 21:49:56 +0100
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
+References: <200910171606.02961.oliver@neukum.org> <20091101183553.GB24436@one-eyed-alien.net> <4AEDEE7C.4010406@gmx.net>
+In-Reply-To: <4AEDEE7C.4010406@gmx.net>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890911041445s4e69aa46nda01d423c1bd8f7d@mail.gmail.com>
-References: <43e72e890911041204n55b54f8iace79938b40baa32@mail.gmail.com>
-	 <43e72e890911041330j581e7bacp4e7b83a11c1de0e8@mail.gmail.com>
-	 <43e72e890911041336n7ffae0d2u135321a588f3e613@mail.gmail.com>
-	 <43e72e890911041352i334e170at71a519383d48a08@mail.gmail.com>
-	 <43e72e890911041352n3a398b41h8927387c228661c5@mail.gmail.com>
-	 <20091104220034.GI10555@parisc-linux.org>
-	 <43e72e890911041404q5f491bbbw123d8761037f9c63@mail.gmail.com>
-	 <20091104221426.GA2599@bombadil.infradead.org>
-	 <40f31dec0911041431i6f718bf1x1e52d9e12ab22060@mail.gmail.com>
-	 <43e72e890911041445s4e69aa46nda01d423c1bd8f7d@mail.gmail.com>
-Date: Thu, 5 Nov 2009 02:16:41 +0200
-Message-ID: <40f31dec0911041616o1695e246x6347b14d558cfc05@mail.gmail.com>
-Subject: Re: pci_set_mwi() and ath5k
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	Matthew Wilcox <matthew@wil.cx>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	Kyle McMartin <kyle@mcmartin.ca>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <200911012149.57966.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/11/5 Luis R. Rodriguez <mcgrof@gmail.com>:
->
-> There are two cases where we can use the PCI_CACHE_LINE_SIZE:
->
-> 1) Hardware has been designed to use it on some block to align some data somehow
-> 2) Software uses it to align skb->data for performance/hw purposes
->
-> I believe the second case can be handled by using L1_CACHE_BYTES
-> instead and I'd at least like to change our common skb allocator to
-> use that.
->
-> The first case is where it seems there may be some skepticism as to
-> whether or not hw really did not rely on it and I agree its safer to
-> keep the programming of the  PCI_CACHE_LINE_SIZE in case it has a
-> bogus value.
->
-> Does this seem reasonable?
->
->  Luis
->
+On Sunday 01 November 2009 21:24:28 Frank Schaefer wrote:
+> Matthew Dharm schrieb:
+> > On Sun, Nov 01, 2009 at 07:29:20PM +0100, Josua Dietze wrote:
+> >   
+> >> Frank Schaefer schrieb:
+> >>
+> >>     
+> >>> I really think the mode-switching should be done in the kernel and not
+> >>> in user-space for reasons of usability.
+> >>>       
+> >> What is wrong with an udev rule entry? By the way, did the "eject" 
+> >> command line tool work as well?
+> >>     
+> >
+> > And I think it should be done in userspace for issues of maintainability
+> > and useability.  It is much easier for users to upgrade their udev then
+> > their kernel.
+> >   
+> Maintainability for whom ? The kernel-devs or the distro-people and the
+> users ? ;)
+> 
+> Please think about the users. They don't know that they have to create
+> udev-rules or have to install additional packages like usb_modeswitch
+> (which is nevertheless a great tool !).
+> And even if they know, they don't want to do that. So it's up to the
+> distros to do this automatically, which will in reality never come true
+> for all devices and distros.
+yes, please think about the users!
 
-Yup, i believe 2 is the case, from what i've read the problem is that
-we get corrupted data so i guess we can just use the L1_CACHE_BYTES to
-align skb->data and not write anything to PCI_CACHE_LINE_SIZE if you
-think that will work. Just be sure to test on some ath5k cards (don't
-have time for anything right now ;-( ). I believe having cleaner code
-is better than supporting an ancient chip anyway, if this is really
-necessary for AR5210 -writing PCI_CACHE_LINE_SIZE- we can deal with it
-later.
+All not-so-trival-changes have to go through wireless-testing / wireless-next,
+net-next, linux-next until it hits finally the mainline... And then only users
+which are able to update their kernels will benefit, *everyone else* has
+to wait until their distros to pick up the new kernel... this could be easily more
+than a year before the device will work right out of the box for *everyone else*.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Therefore udev should be the way to go... and as a bonus: a userspace/udev solution 
+does work with older kernels right away!
+
+Regards,
+	Chr
