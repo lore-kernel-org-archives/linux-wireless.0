@@ -1,73 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59252 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757006AbZKWLej (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 06:34:39 -0500
-Subject: Re: [PATCH] mwl8k: split driver by chipset
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20091123112916.GT20214@mail.wantstofly.org>
-References: <1258931158.12095.33.camel@localhost.localdomain>
-	 <20091123110211.GS20214@mail.wantstofly.org>
-	 <1258974789.7094.162.camel@johannes.local>
-	 <20091123112916.GT20214@mail.wantstofly.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-D84LX6/Di1/mi0y+pwu/"
-Date: Mon, 23 Nov 2009 12:34:41 +0100
-Message-ID: <1258976081.7094.164.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:56144 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753209AbZKAUDC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Nov 2009 15:03:02 -0500
+Message-ID: <4AEDE973.1090907@gmx.net>
+Date: Sun, 01 Nov 2009 21:02:59 +0100
+From: Frank Schaefer <schaefer.frank@gmx.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	chunkeey@web.de
+Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB
+ N devices in cdrom mode
+References: <200910171606.02961.oliver@neukum.org>	 <Pine.LNX.4.44L0.0910171130550.25594-100000@netrider.rowland.org>	 <20091017220313.GH24502@one-eyed-alien.net> <4ADC3657.6080906@gmx.net>	 <4AEDCCA0.8050709@gmx.net> <1257100045.3555.160.camel@johannes.local>
+In-Reply-To: <1257100045.3555.160.camel@johannes.local>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg schrieb:
+> On Sun, 2009-11-01 at 19:00 +0100, Frank Schaefer wrote:
+>
+>   
+>> The attached patch adds the mode-switching-procedure to the WLAN-driver
+>> (ar9170usb) and disables the storage device in the usb-storage-driver.
+>>     
+>
+> This patch looks weird. Have you looked at zd1211rw, which also does
+> this? I think it just adds something to usb-storage for the device IDs?
+>
+> johannes
+>   
+Well, AFAICS, the zd1211rw does exactly what I suggest with my patch ?!
+It calls a function eject_installer(...) for these devices in the
+modules' probe-function which sends a single usb_bulk_msg.
 
---=-D84LX6/Di1/mi0y+pwu/
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2009-11-23 at 12:29 +0100, Lennert Buytenhek wrote:
-
-> This has the problem that e.g. if someone creates a STA interface first,
-> and we load the STA firmware image in response to that, and then creates
-> an additional AP interface, we'd have reload the chip while there's
-> still an active interface (the original STA one), which seems somewhat
-> involved.  Just rejecting the second add_interface() seems undesirable,
-> as then the outcome of two add_interface() calls will depend on their
-> order.
->=20
-> (AP firmware supports both AP and STA interfaces, but e.g. it doesn't
-> do STA power save and such.)
->=20
-> It'll also have some consequences if there are monitor interfaces, as
-> e.g. STA firmware allows fine-grained control over the receive filter,
-> while the AP firmware does not.
-
-Hah well in that case it won't really work because you really shouldn't
-change capabilities on the fly. I have no useful idea then, sorry.
-
-johannes
-
---=-D84LX6/Di1/mi0y+pwu/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLCnNLAAoJEODzc/N7+Qmar2EP/29Ppgup+5w9u9h30ujhclGD
-wL51uXAAOS+WpT5+5NeIgZvHEEFHh9lnDFzp/0hM6ftVPX8BL+JoJulUC3IVw+XK
-YoIf4MMneTMkBLgRcgiXjQVvP5IgWQkJbg/uPSlQr32Fy9hbZS5tsZLJXVLWVuqK
-21bSMDH1u1FGseC25oWZXo5AObtw134hTG++s74F5NPUCOp2iIuJdltK8QZRWrpd
-P5TxMFegw/sQpKRIfsCRocQHXrfa8AsfMIDtOs7gPr8orTTY2SM5h3qakfV0Vu6g
-nJ0Sj9xT6txMliEuX1JAaxblQXYY8fpKClj8TZ+V8pMmRZyu3flYWk8IMrBAEw+K
-KCadd4kvdDLbaE1n6YnrJjwwSr89Asz7JOqFugdXTk7RgkvQneYLUV2RIMUtHvsL
-zuSBVv2e23PNLBu89+2/mYuOXKxwjK0IAQ60poqZ0/rYCl/zy52Glni3BBKkchCt
-MprBtsLzO9lL8y06iN3iNpFfxsrtCoPpbvZJ4O2NZ83LQP7AIqeXkSPHzI8Sl6cn
-xM0l8ES8brUdm026ce3+jpn62ulOKbiFhE1sTf07CKHb+O1G8A5tJ3JoUcbxUssD
-CE+x8V51xow6oT/mP4hN1mhZP4w08pUjsh0sX2LEqsOyLVcFvA9j1V3WncjGmu+Q
-Gs7wNohANbTNvABtbUFc
-=X8LR
------END PGP SIGNATURE-----
-
---=-D84LX6/Di1/mi0y+pwu/--
+Frank
 
