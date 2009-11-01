@@ -1,60 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wal-mailgw1.qinetiq-na.com ([65.209.22.159]:13465 "EHLO
-	WALQNAOMAIL1T.qnao.net" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753887AbZKTQN3 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 11:13:29 -0500
+Received: from fg-out-1718.google.com ([72.14.220.155]:26155 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753247AbZKATGH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Nov 2009 14:06:07 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: pull request: wireless-next-2.6 2009-10-28
+Date: Sun, 1 Nov 2009 20:04:59 +0100
+Cc: Jarek Poplawski <jarkao2@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+References: <1256886023.3555.5.camel@johannes.local> <20091030110616.GB6150@ff.dom.local> <20091030150223.GA2586@tuxdriver.com>
+In-Reply-To: <20091030150223.GA2586@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Subject: RE: Kernel oops in ath9k
-Date: Fri, 20 Nov 2009 11:13:30 -0500
-Message-ID: <712C9C7AD151C847B09F32EDA56A94CF0115C7F3@WALQNAOMAIL1T.qnao.net>
-In-Reply-To: <43e72e890911200654g6bd78909s5b6062cd82155b6d@mail.gmail.com>
-References: <712C9C7AD151C847B09F32EDA56A94CF0115C555@WALQNAOMAIL1T.qnao.net> <1258687496.12864.35.camel@ct> <712C9C7AD151C847B09F32EDA56A94CF0115C73C@WALQNAOMAIL1T.qnao.net> <43e72e890911200654g6bd78909s5b6062cd82155b6d@mail.gmail.com>
-From: "Douglass, Woodrow" <Woodrow.Douglass@QinetiQ-NA.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "Pavel Roskin" <proski@gnu.org>, <linux-wireless@vger.kernel.org>
+Message-Id: <200911012004.59718.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ok I compiled compat-wireless-2.6.32-rc7.tar.bz2, ran the script, and now the kernel outright crashed rather then just oopsing. The terminal is all locked up, is there any way I can post the crash dump here? I'm sorry, but I'm kind of new at this.
+On Friday 30 October 2009 16:02:24 John W. Linville wrote:
 
-Thanks again,
--Woody
- 
+> Ever since Bartlomiej decided to tear himself away from
+> drivers/staging, he has been nothing but negative -- petty, whining,
 
-> -----Original Message-----
-> From: Luis R. Rodriguez [mailto:mcgrof@gmail.com] 
-> Sent: Friday, November 20, 2009 9:54 AM
-> To: Douglass, Woodrow
-> Cc: Pavel Roskin; linux-wireless@vger.kernel.org
-> Subject: Re: Kernel oops in ath9k
-> 
-> On Fri, Nov 20, 2009 at 5:56 AM, Douglass, Woodrow 
-> <Woodrow.Douglass@qinetiq-na.com> wrote:
-> > Thanks for the quick reply Pavel! I've seen this Oops with kernel 
-> > 2.6.31.6, as well as with the  latest linux-wireless that I 
-> downloaded 
-> > on the 18th of november. Also, it's interesting that the card is 
-> > identified as having a AR9280 chipset, the website for the card
-> > (http://www.ubnt.com/products/sr7112.php) says the card has 
-> an AR9220 
-> > chipset. Could this be causing the problem?
-> 
-> Nah, your card is just PCI version of the AR9280. We just 
-> need to distinguish that on the print on ath9k load. So 
-> PCI-express is AR9280 and mini-pci AR9220.
-> 
-> > I'm going to repost this to the ath9k mailing list you mentioned.
-> 
-> linux-wireless is fine too though no need to repost there. I 
-> just tested your script with AR5416 and it worked fine, can 
-> you please try the latest compat-wireless, either latest 
-> stable or bleeding edge?
-> 
-> http://wireless.kernel.org/en/users/Download/stable
-> http://wireless.kernel.org/en/users/Download
-> 
->   Luis
-> 
+I think that you should ping Greg about this since somebody impersonating
+for me is sending him patches.  Last week alone over 20 such patches were
+merged -- who knows what this person might be planning.. ;)
+
+Probably the following patch was the source of confusion:
+
+	http://patchwork.kernel.org/patch/55076/
+
+It just aligns my personal interests w/ ongoing work done by other people,
+hch is working on mac80211 via driver and Greg has announced some time ago
+that he was going to work on proper rtl819x support.
+
+-- 
+Bartlomiej Zolnierkiewicz
