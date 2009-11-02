@@ -1,147 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:15684 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759175AbZKZIIq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 03:08:46 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>
-Subject: [PATCH] libertas: use priv->mesh_tlv instead of priv->mesh_fw_ver
-Date: Thu, 26 Nov 2009 09:08:33 +0100
+Received: from mail.atheros.com ([12.36.123.2]:63369 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753063AbZKBJQM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2009 04:16:12 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2009 01:16:17 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200911260908.33728.holgerschurig@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19182.41944.492519.390013@gargle.gargle.HOWL>
+Date: Mon, 2 Nov 2009 14:48:16 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	<reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: Fix IBSS merge
+In-Reply-To: <1257151486.3555.161.camel@johannes.local>
+References: <19182.33851.980271.360757@gargle.gargle.HOWL>
+	<1257151486.3555.161.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Both variables contained the same information (no mesh, old mesh, new mesh).
-So we can get rid of one variable.
+Johannes Berg wrote:
+> On Mon, 2009-11-02 at 12:33 +0530, Sujith wrote:
+> > Currently, in IBSS mode, a single creator would go into
+> > a loop trying to merge/scan. This happens because the IBSS timer is
+> > rearmed on finishing a scan and the subsequent
+> > timer invocation requests another scan immediately.
+> > 
+> > This patch fixes this issue by checking if we have just completed
+> > a scan run trying to merge with other IBSS networks.
+> 
+> Heh, how many people do we need to fix IBSS? :)
+> 
+> Looks sane to me.
 
-Also move the mesh-version test from cmd.c into mesh.c.
+Thanks.
 
-Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
+And I encountered an oops when using iwlwifi (current wireless-testing).
+Set the interface mode to Ad-hoc, bring up the interface and issue a join
+command using iw - this causes the panic.
 
---- linux-wl.orig/drivers/net/wireless/libertas/defs.h
-+++ linux-wl/drivers/net/wireless/libertas/defs.h
-@@ -397,13 +397,6 @@ enum KEY_INFO_WPA {
- 	KEY_INFO_WPA_ENABLED = 0x04
- };
- 
--/** mesh_fw_ver */
--enum _mesh_fw_ver {
--	MESH_NONE = 0, /* MESH is not supported */
--	MESH_FW_OLD,   /* MESH is supported in FW V5 */
--	MESH_FW_NEW,   /* MESH is supported in FW V10 and newer */
--};
--
- /* Default values for fwt commands. */
- #define FWT_DEFAULT_METRIC 0
- #define FWT_DEFAULT_DIR 1
---- linux-wl.orig/drivers/net/wireless/libertas/dev.h
-+++ linux-wl/drivers/net/wireless/libertas/dev.h
-@@ -42,7 +42,6 @@ struct lbs_private {
- 	u32 mesh_connect_status;
- 	struct lbs_mesh_stats mstats;
- 	int mesh_open;
--	int mesh_fw_ver;
- 	int mesh_autostart_enabled;
- 	uint16_t mesh_tlv;
- 	u8 mesh_ssid[IEEE80211_MAX_SSID_LEN + 1];
---- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
-+++ linux-wl/drivers/net/wireless/libertas/cmd.c
-@@ -143,19 +143,6 @@ int lbs_update_hw_spec(struct lbs_privat
- 	lbs_deb_cmd("GET_HW_SPEC: hardware interface 0x%x, hardware spec 0x%04x\n",
- 		    cmd.hwifversion, cmd.version);
- 
--	/* Determine mesh_fw_ver from fwrelease and fwcapinfo */
--	/* 5.0.16p0 9.0.0.p0 is known to NOT support any mesh */
--	/* 5.110.22 have mesh command with 0xa3 command id */
--	/* 10.0.0.p0 FW brings in mesh config command with different id */
--	/* Check FW version MSB and initialize mesh_fw_ver */
--	if (MRVL_FW_MAJOR_REV(priv->fwrelease) == MRVL_FW_V5)
--		priv->mesh_fw_ver = MESH_FW_OLD;
--	else if ((MRVL_FW_MAJOR_REV(priv->fwrelease) >= MRVL_FW_V10) &&
--		(priv->fwcapinfo & MESH_CAPINFO_ENABLE_MASK))
--		priv->mesh_fw_ver = MESH_FW_NEW;
--	else
--		priv->mesh_fw_ver = MESH_NONE;
--
- 	/* Clamp region code to 8-bit since FW spec indicates that it should
- 	 * only ever be 8-bit, even though the field size is 16-bit.  Some firmware
- 	 * returns non-zero high 8 bits here.
---- linux-wl.orig/drivers/net/wireless/libertas/mesh.c
-+++ linux-wl/drivers/net/wireless/libertas/mesh.c
-@@ -196,7 +196,12 @@ int lbs_init_mesh(struct lbs_private *pr
- 
- 	lbs_deb_enter(LBS_DEB_MESH);
- 
--	if (priv->mesh_fw_ver == MESH_FW_OLD) {
-+	/* Determine mesh_fw_ver from fwrelease and fwcapinfo */
-+	/* 5.0.16p0 9.0.0.p0 is known to NOT support any mesh */
-+	/* 5.110.22 have mesh command with 0xa3 command id */
-+	/* 10.0.0.p0 FW brings in mesh config command with different id */
-+	/* Check FW version MSB and initialize mesh_fw_ver */
-+	if (MRVL_FW_MAJOR_REV(priv->fwrelease) == MRVL_FW_V5) {
- 		/* Enable mesh, if supported, and work out which TLV it uses.
- 		   0x100 + 291 is an unofficial value used in 5.110.20.pXX
- 		   0x100 + 37 is the official value used in 5.110.21.pXX
-@@ -218,7 +223,9 @@ int lbs_init_mesh(struct lbs_private *pr
- 					    priv->channel))
- 				priv->mesh_tlv = 0;
- 		}
--	} else if (priv->mesh_fw_ver == MESH_FW_NEW) {
-+	} else
-+	if ((MRVL_FW_MAJOR_REV(priv->fwrelease) >= MRVL_FW_V10) &&
-+		(priv->fwcapinfo & MESH_CAPINFO_ENABLE_MASK)) {
- 		/* 10.0.0.pXX new firmwares should succeed with TLV
- 		 * 0x100+37; Do not invoke command with old TLV.
- 		 */
-@@ -227,6 +234,8 @@ int lbs_init_mesh(struct lbs_private *pr
- 				    priv->channel))
- 			priv->mesh_tlv = 0;
- 	}
-+
-+
- 	if (priv->mesh_tlv) {
- 		lbs_add_mesh(priv);
- 
-@@ -416,10 +425,10 @@ struct net_device *lbs_mesh_set_dev(stru
- 	struct net_device *dev, struct rxpd *rxpd)
- {
- 	if (priv->mesh_dev) {
--		if (priv->mesh_fw_ver == MESH_FW_OLD) {
-+		if (priv->mesh_tlv == TLV_TYPE_OLD_MESH_ID) {
- 			if (rxpd->rx_control & RxPD_MESH_FRAME)
- 				dev = priv->mesh_dev;
--		} else if (priv->mesh_fw_ver == MESH_FW_NEW) {
-+		} else if (priv->mesh_tlv == TLV_TYPE_MESH_ID) {
- 			if (rxpd->u.bss.bss_num == MESH_IFACE_ID)
- 				dev = priv->mesh_dev;
- 		}
-@@ -432,9 +441,9 @@ void lbs_mesh_set_txpd(struct lbs_privat
- 	struct net_device *dev, struct txpd *txpd)
- {
- 	if (dev == priv->mesh_dev) {
--		if (priv->mesh_fw_ver == MESH_FW_OLD)
-+		if (priv->mesh_tlv == TLV_TYPE_OLD_MESH_ID)
- 			txpd->tx_control |= cpu_to_le32(TxPD_MESH_FRAME);
--		else if (priv->mesh_fw_ver == MESH_FW_NEW)
-+		else if (priv->mesh_tlv == TLV_TYPE_MESH_ID)
- 			txpd->u.bss.bss_num = MESH_IFACE_ID;
- 	}
- }
-@@ -538,7 +547,7 @@ static int __lbs_mesh_config_send(struct
- 	 * Command id is 0xac for v10 FW along with mesh interface
- 	 * id in bits 14-13-12.
- 	 */
--	if (priv->mesh_fw_ver == MESH_FW_NEW)
-+	if (priv->mesh_tlv == TLV_TYPE_MESH_ID)
- 		command = CMD_MESH_CONFIG |
- 			  (MESH_IFACE_ID << MESH_IFACE_BIT_OFFSET);
- 
+Trace:
 
--- 
-http://www.holgerschurig.de
+[16265.474794] BUG: unable to handle kernel NULL pointer dereference at (null)
+[16265.477752] IP: [<ffffffffa03faa96>] iwl_mac_hw_scan+0xf6/0x650 [iwlcore]
+[16265.477752] PGD 0
+[16265.477752] Oops: 0000 [#1] PREEMPT SMP
+[16265.477752] last sysfs file: /sys/class/firmware/0000:05:00.0/loading
+[16265.477752] CPU 1
+[16265.477752] Modules linked in: iwlagn iwlcore mac80211 cfg80211 arc4 ecb i915 drm_kms_helper drm i2c_algo_bit pcmcia thinkpad_acpi rfkill led_class parport_]
+[16265.477752] Pid: 3864, comm: phy0 Tainted: G        W  2.6.32-rc5-wl #60 7661GN4
+[16265.477752] RIP: 0010:[<ffffffffa03faa96>]  [<ffffffffa03faa96>] iwl_mac_hw_scan+0xf6/0x650 [iwlcore]
+[16265.477752] RSP: 0018:ffff880077f8bc20  EFLAGS: 00010002
+[16265.477752] RAX: 0000000000000001 RBX: ffff880077e61660 RCX: 0000000000000000
+[16265.477752] RDX: 0000000000000000 RSI: 0000000000000001 RDI: 00000000000013e4
+[16265.477752] RBP: ffff880077f8bc60 R08: 0000000000000001 R09: ffffffff8142f0df
+[16265.477752] R10: ffff88007b836090 R11: 0000000000000046 R12: ffff88007b8f3000
+[16265.477752] R13: ffff880077e62098 R14: ffff880077e62008 R15: 0000000000000286
+[16265.477752] FS:  0000000000000000(0000) GS:ffff880002100000(0000) knlGS:0000000000000000
+[16265.477752] CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+[16265.477752] CR2: 0000000000000000 CR3: 0000000001001000 CR4: 00000000000006e0
+[16265.477752] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[16265.477752] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[16265.477752] Process phy0 (pid: 3864, threadinfo ffff880077f8a000, task ffff88007b835a00)
+[16265.477752] Stack:
+[16265.477752]  ffff880077f8bc50 ffffffff81046497 ffff880077e60520 ffff880077e60520
+[16265.477752] <0> ffff880077e61250 ffff88007b8f3000 ffff880077e60520 0000000000000009
+[16265.477752] <0> ffff880077f8bcb0 ffffffffa0380506 2222222222222222 2222222222222222
+[16265.477752] Call Trace:
+[16265.477752]  [<ffffffff81046497>] ? warn_slowpath_common+0x87/0xb0
+[16265.477752]  [<ffffffffa0380506>] __ieee80211_start_scan+0xe6/0x3e0 [mac80211]
+[16265.477752]  [<ffffffffa03808be>] ieee80211_request_internal_scan+0xbe/0xc0 [mac80211]
+[16265.477752]  [<ffffffffa0385138>] ieee80211_ibss_work+0x708/0x800 [mac80211]
+[16265.477752]  [<ffffffffa0384a30>] ? ieee80211_ibss_work+0x0/0x800 [mac80211]
+[16265.477752]  [<ffffffff8105ef2e>] worker_thread+0x22e/0x420
+[16265.477752]  [<ffffffff8105eedd>] ? worker_thread+0x1dd/0x420
+[16265.477752]  [<ffffffff8132a3fd>] ? thread_return+0x585/0x8b8
+[16265.477752]  [<ffffffff81063fb0>] ? autoremove_wake_function+0x0/0x40
+[16265.477752]  [<ffffffff8105ed00>] ? worker_thread+0x0/0x420
+[16265.477752]  [<ffffffff81063b9e>] kthread+0x8e/0xa0
+[16265.477752]  [<ffffffff8100cf3a>] child_rip+0xa/0x20
+[16265.477752]  [<ffffffff8100c8c0>] ? restore_args+0x0/0x30
+[16265.477752]  [<ffffffff81063b10>] ? kthread+0x0/0xa0
+[16265.477752]  [<ffffffff8100cf30>] ? child_rip+0x0/0x20
+[16265.477752] Code: 09 00 00 00 00 00 00 41 8b 54 24 0c 85 d2 74 30 31 d2 31 c0 be 01 00 00 00 0f 1f 40 00 48 63 c8 49 89 f0 83 c0 01 49 8b 4c cc 38 <8b> 09 4
+[16265.477752] RIP  [<ffffffffa03faa96>] iwl_mac_hw_scan+0xf6/0x650 [iwlcore]
+[16265.477752]  RSP <ffff880077f8bc20>
+[16265.477752] CR2: 0000000000000000
+[16265.477752] ---[ end trace 1787d9867e43487e ]---
