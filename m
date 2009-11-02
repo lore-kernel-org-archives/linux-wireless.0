@@ -1,62 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gold.linx.net ([195.66.232.40]:46612 "EHLO gold.linx.net"
+Received: from mx2.mail.elte.hu ([157.181.151.9]:56918 "EHLO mx2.mail.elte.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759078AbZKZLzx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 06:55:53 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by gold.linx.net (Postfix) with ESMTP id B796E10076
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2009 11:46:47 +0000 (GMT)
-Received: from [195.66.233.111] (amalthea.dyn.pbo.linx.net [195.66.233.111])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	(Authenticated sender: tony@linx.net)
-	by gold.linx.net (Postfix) with ESMTPSA id 7A03E1005F
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2009 11:46:47 +0000 (GMT)
-Subject: Re: [ANN] wireless-regdb: master-2009-11-25
-From: Tony Vroon <tony@linx.net>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <E1NDVgL-0007fF-AT@sipsolutions.net>
-References: <E1NDVgL-0007fF-AT@sipsolutions.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ahgBxt6kUaSHxsRdGlnd"
-Date: Thu, 26 Nov 2009 11:45:09 +0000
-Message-ID: <1259235909.3693.7.camel@localhost>
-Mime-Version: 1.0
+	id S1754419AbZKBKHJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2009 05:07:09 -0500
+Date: Mon, 2 Nov 2009 11:07:02 +0100
+From: Ingo Molnar <mingo@elte.hu>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jarek Poplawski <jarkao2@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2009-10-28
+Message-ID: <20091102100702.GA16963@elte.hu>
+References: <1256886023.3555.5.camel@johannes.local> <20091030110616.GB6150@ff.dom.local> <20091030150223.GA2586@tuxdriver.com> <20091102091038.GA9044@elte.hu> <1257153807.3555.173.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1257153807.3555.173.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-ahgBxt6kUaSHxsRdGlnd
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+* Johannes Berg <johannes@sipsolutions.net> wrote:
 
-On Thu, 2009-11-26 at 05:10 +0100, wireless@sipsolutions.net wrote:
-> A new release of wireless-regdb (master-2009-11-25) is available at:
-> http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2009.11=
-.25.tar.bz2
-> SHA1 sum: c8afeffc4ad4f292d43551ce1c5c20e8aa559c34
+> On Mon, 2009-11-02 at 10:10 +0100, Ingo Molnar wrote:
+> 
+> > So i have read the thread you and Bartlomiej referenced:
+> > 
+> >     http://lkml.org/lkml/2009/10/17/81
+> > 
+> > ... and my understanding of that discussion is very different from 
+> > yours. Here is my annotated history of the beginnings of that 
+> > discussion:
+> 
+> [snip]
+> 
+> You shouldn't ignore all previous interaction between Bart and us -- 
+> which wasn't pretty: http://thread.gmane.org/gmane.linux.kernel/901892
 
-Thank you, in Gentoo now:
-+*wireless-regdb-20091125 (26 Nov 2009)
-+
-+  26 Nov 2009; <chainsaw@gentoo.org> +wireless-regdb-20091125.ebuild:
-+  Version bump, contains new country codes and regulatory updates by
-Vivek
-+  Natarajan of Atheros.
+I have seen that exchange too - here's the lkml.org link for those who 
+like the lkml.org format:
 
-Regards,
-Tony V.
+   http://lkml.org/lkml/2009/10/13/186
 
---=-ahgBxt6kUaSHxsRdGlnd
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+And i can see no supporting fact here either, for the (very serious) 
+accusation launched by John Linville, that Bartlomiej is 'petty, 
+whining, indignant'. In my reading he is the opposite of that, even in 
+this second thread you point out.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.13 (GNU/Linux)
+So, no matter how much you disagree about the code and its direction, 
+please either back up your assertion with specific links to a pattern of 
+misbehavior or apologize for the ad-hominen attacks against Bartlomiej.
 
-iEYEABECAAYFAksOakUACgkQp5vW4rUFj5qXmQCfbc9JtHNVbZHGOE7fmluAOvoV
-9xMAnA86eG7L2gGZHKTi6oUCxrFCxXyn
-=VbiC
------END PGP SIGNATURE-----
+> Of course we were biased when he came around with that petty code 
+> duplication argument, since it seemed to support only his agenda of 
+> working only with the staging drivers.
 
---=-ahgBxt6kUaSHxsRdGlnd--
+Why do you think that disagreeing in the past gives you the right to get 
+into ad-hominens? You should concentrate on the code and on the 
+technical side, not on the person making the argument.
 
+Also, why do you characterise a code duplication argument as 'petty'?
+
+Bloat and unnecessary technical forking is the #1 enemy of Linux. 
+Integrating code and infrastructure is the #1 strength of Linux.
+
+Upstream subsystems/drivers running away with their private 
+implementations has its clear costs:
+
+ - introduces bugs
+ - makes drivers shallow in practice 
+ - makes unifying drivers and infrastructure so hard down the road
+ - bloats the code, increases i$ footprint
+
+I routinely refuse patches based on 'please dont duplicate' arguments, 
+in fact i did it once today already.
+
+[ I dont know why drivers/staging/ is even an argument here - he argued
+  about the technical qualities of a new upstream driver, not about a
+  staging driver. Upstream drivers are to be held to higher standards,
+  _especially_ now that we can isolate not-clean-enough-yet drivers into
+  drivers/staging/, without hurting users. ]
+
+Thanks,
+
+	Ingo
