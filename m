@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:33467 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753108AbZKHTfP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 14:35:15 -0500
-Received: by ewy3 with SMTP id 3so2544885ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 11:35:19 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 8/9] rt2800: add eFuse EEPROM support code to rt2800lib
-Date: Sun, 8 Nov 2009 20:35:17 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <20091108133854.23584.86842.sendpatchset@localhost.localdomain> <200911081947.53754.bzolnier@gmail.com> <200911082021.32455.bzolnier@gmail.com>
-In-Reply-To: <200911082021.32455.bzolnier@gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:58753 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S932193AbZKBUKW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2009 15:10:22 -0500
+Message-ID: <4AEF3CAD.10809@gmx.net>
+Date: Mon, 02 Nov 2009 21:10:21 +0100
+From: Frank Schaefer <schaefer.frank@gmx.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911082035.18197.IvDoorn@gmail.com>
+To: Matthew Dharm <mdharm-usb@one-eyed-alien.net>,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB
+ N devices in cdrom mode
+References: <200910171606.02961.oliver@neukum.org> <Pine.LNX.4.44L0.0910171130550.25594-100000@netrider.rowland.org> <20091017220313.GH24502@one-eyed-alien.net> <4ADC3657.6080906@gmx.net> <4AEDCCA0.8050709@gmx.net> <4AEDD380.40408@draisberghof.de> <4AEDEB85.5080105@gmx.net> <20091102005144.GE24436@one-eyed-alien.net>
+In-Reply-To: <20091102005144.GE24436@one-eyed-alien.net>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > > > I think that they shouldn't have been added in the first place and I'll be
-> > > > happy to add patch removing them to rt2800 tree (since code savings seem to
-> > > > be really marginal and not worth the maintenance cost). 
-> > > 
-> > > Removing the ifdefs entirely would be fine.
-> > 
-> > Like I said before -- this would mean driver's behavior change.  Even though
-> > WISOC code is currently dead (RALINK_RT288X and RALINK_RT305X are never set)
-> > I prefer to not "overload" patches with logically different changes.
-> > 
-> > If you feel strongly about it please fix it in rt2x00 code and rt2800 tree
-> > will deal with it, or alternatively please send me an incremental patch.
-> 
-> BTW the patch's impact is _320_ bytes increase of rt2800lib (on x86-64 so
-> it is probably much less on the affected embedded architectures):
-> 
->    text	   data	    bss	    dec	    hex	filename
-> before:
->   16916	      0	      0	  16916	   4214	drivers/net/wireless/rt2x00/rt2800lib.o
-> after:
->   17281	      0	      0	  17281	   4381	drivers/net/wireless/rt2x00/rt2800lib.o
-> 
-> for the _completely_ dead code (because embedded WISOC support is never
-> enabled) that probably will be changed over anyway later during development.
+Matthew Dharm schrieb:
+> On Sun, Nov 01, 2009 at 09:11:49PM +0100, Frank Schaefer wrote:
+>   
+>> Josua Dietze schrieb:
+>>     
+>>> Frank Schaefer schrieb:
+>>>       
+>>>> I really think the mode-switching should be done in the kernel and not
+>>>> in user-space for reasons of usability.
+>>>>         
+>>> What is wrong with an udev rule entry? By the way, did the "eject"
+>>> command line tool work as well?
+>>>       
+>> It returns an error but the device is ejected.
+>> But do you really want the users to open a terminal window and call
+>> "eject" each time they plug their device in ;) ?
+>>     
+>
+> If 'eject' worked, then why not use a simple udev entry?  That way nobody
+> has to call anything by hand...
+>
+> Matt
+>   
+And who will create this udev-entry ;) ? How can you make sure that this
+is done on all systems ?
 
-As mentioned: Wisoc is not dead code, it is there for the platform devices with
-integrated rt2800 chipsets. If you look at KConfig you can see the
-RALINK_RT288X RALINK_RT305X are dependencies from configuration options...
-
-> IOW something like this is completely not worth to be worried about
-> and I would personally just skip it during review to not waste people's
-> time needlessly..
-
-Well dependencies from/on other drivers is something important...
-
-Ivo
+Frank
