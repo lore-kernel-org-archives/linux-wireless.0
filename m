@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:53613 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753288AbZKGV7L convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 16:59:11 -0500
-From: Ben Hutchings <ben@decadent.org.uk>
-To: John Linville <linville@tuxdriver.com>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 07 Nov 2009 21:59:10 +0000
-Message-ID: <1257631150.15927.458.camel@localhost>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:42958 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753625AbZKBVD4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2009 16:03:56 -0500
+Date: Mon, 2 Nov 2009 21:05:19 +0000
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Frank Schaefer <schaefer.frank@gmx.net>,
+	Matthew Dharm <mdharm-usb@one-eyed-alien.net>,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB N
+ devices in cdrom mode
+Message-ID: <20091102210519.7d309fb9@lxorguk.ukuu.org.uk>
+In-Reply-To: <1257193115.1027.24.camel@localhost.localdomain>
+References: <200910171606.02961.oliver@neukum.org>
+	<Pine.LNX.4.44L0.0910171130550.25594-100000@netrider.rowland.org>
+	<20091017220313.GH24502@one-eyed-alien.net>
+	<4ADC3657.6080906@gmx.net>
+	<4AEDCCA0.8050709@gmx.net>
+	<4AEDD380.40408@draisberghof.de>
+	<4AEDEB85.5080105@gmx.net>
+	<20091102005144.GE24436@one-eyed-alien.net>
+	<4AEF3CAD.10809@gmx.net>
+	<1257193115.1027.24.camel@localhost.localdomain>
 Mime-Version: 1.0
-Subject: [PATCH 48/75] ipw2200: declare MODULE_FIRMWARE
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
----
- drivers/net/wireless/ipw2x00/ipw2200.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+> apparently do use the driver CD thing to send Linux drivers and software
+> to a few clients.  But by and large, the driver CD is completely
+> useless.
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index e2af22b..d03ef19 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -81,6 +81,11 @@ MODULE_DESCRIPTION(DRV_DESCRIPTION);
- MODULE_VERSION(DRV_VERSION);
- MODULE_AUTHOR(DRV_COPYRIGHT);
- MODULE_LICENSE("GPL");
-+MODULE_FIRMWARE("ipw2200-ibss.fw");
-+#ifdef CONFIG_IPW2200_MONITOR
-+MODULE_FIRMWARE("ipw2200-sniffer.fw");
-+#endif
-+MODULE_FIRMWARE("ipw2200-bss.fw");
- 
- static int cmdlog = 0;
- static int debug = 0;
--- 
-1.6.5.2
+And then every so often you need to rummage around the driver CD image to
+extract the APN or other data you need to make your modem work. At which
+point you end up having to recompile the kernel to get it. Very annoying
+given it could be trivially done properly in user space.
 
-
+HAL probably needs the database of these devices *not* the kernel.
 
