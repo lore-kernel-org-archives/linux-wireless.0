@@ -1,89 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38142 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:57048 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755197AbZKNJaj (ORCPT
+	with ESMTP id S1756858AbZKBV7f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Nov 2009 04:30:39 -0500
-Subject: Re: compat-wireless and minstrel
+	Mon, 2 Nov 2009 16:59:35 -0500
+Subject: Re: pull request: wireless-2.6 2009-11-02
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Adam Wozniak <awozniak@irobot.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	linux-wireless@vger.kernel.org, nbd@openwrt.org
-In-Reply-To: <4AFDDF19.8060202@irobot.com>
-References: <4AF0D54D.4090303@irobot.com>
-	 <alpine.DEB.2.00.0911111508391.6214@kauri.acheron.indranet.co.nz>
-	 <4AFC655A.5020706@irobot.com> <200911122103.27455.chunkeey@googlemail.com>
-	 <4AFC8E4F.5090307@irobot.com>  <4AFC8F0D.5020700@irobot.com>
-	 <1258097352.3899.75.camel@johannes.local>  <4AFDDF19.8060202@irobot.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-W03l4hrplFLpG/fwjoIN"
-Date: Sat, 14 Nov 2009 10:30:39 +0100
-Message-ID: <1258191039.6167.40.camel@johannes.local>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20091102214022.GM14046@tuxdriver.com>
+References: <20091102214022.GM14046@tuxdriver.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-HLSWmaxz+GlkxFdFoju/"
+Date: Mon, 02 Nov 2009 22:59:26 +0100
+Message-ID: <1257199166.28469.2.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-W03l4hrplFLpG/fwjoIN
+--=-HLSWmaxz+GlkxFdFoju/
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2009-11-13 at 14:35 -0800, Adam Wozniak wrote:
+On Mon, 2009-11-02 at 16:40 -0500, John W. Linville wrote:
 
-> I've traced it down to this bit in rx.c in prepare_for_handlers():
->=20
->         case NL80211_IFTYPE_ADHOC:
->                 [ stuff deleted ]
->                 } else if (!rx->sta) {
->                         int rate_idx;
->                         if (rx->status->flag & RX_FLAG_HT)
->                                 rate_idx =3D 0; /* TODO: HT rates */
->                         else
->                                 rate_idx =3D rx->status->rate_idx;
->=20
->                         rx->sta =3D ieee80211_ibss_add_sta(sdata, bssid,=20
-> hdr->addr2,
->                                 BIT(rate_idx));
->                 }
->                 break;
->=20
-> I don't think this is right.  I know the issue is here, because if I=20
-> change to "BIT(rate_idx) | 0xfff" the problem corrects.  Either we need=20
-> to (a) set it properly here or (b) make sure something else happens=20
-> before or after.  I'm not sure we have enough context here to do (a).
+> There are several from Johannes -- I'm sure there was sake involved...  :=
+-)
 
-Hmm. This BIT(..) was basically here to ensure we have at least a single
-good rate absent other information. If we do not receive a probe or
-beacon frame from that peer at least once, but add it to our IBSS only
-due to a single received data frame, we add the bitrate that this frame
-was transmitted at so we have one rate that we know it can transmit (and
-presumably also receive).
+More likely there was sake involved when I did that patch adding that
+NULL-ptr deref!
 
-What should happen is that once it starts beaconing we pick up a beacon
-and extend our set of known good rates.
+Thanks :)
 
 johannes
 
---=-W03l4hrplFLpG/fwjoIN
+
+--=-HLSWmaxz+GlkxFdFoju/
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJK/ni7AAoJEODzc/N7+QmaH/UQAJtWz2T3iEMe8tYaRXiESoW1
-aDxQJsY/hiyh9SxV6mOIJS051W7A3/kixmhALrQEu0w6rsw8kY8Vll5mExMJMPt4
-MuNJ3bkl1i2pZ43LQQKjj/U3O60z5TdCfsblhXhTUhaGa43rCelGNpoYkidsYoRS
-2Up5D6pfWSY5w0chAdlkp8rbL5UqLxjDJWBKMFcCRbDwvWfpFl8qD6/WfyIZgu0T
-Mi/mRI/ogAlK4xSDxHf3+ht3liJuqZ4sj8vKAP4tr+k14CkH97NdcVhs7s1Ghx2b
-MdExNTcjC4kU3WSwbctvHeErzc8uYblxEj9d9DbKQ3aX0+HMAdK7bPx5tDD0PZi0
-yZ2GuGZghyvxddMQiR6rN9++le5CGj/7smBtuUztP49gdv2VHfGf/ya6IKR1pBOd
-2eAtNohXUA+wK9O9o1u7d4EQH++4YUwNsnQF0pAgNkuji76+rvjHlpqP0S1YD6eB
-g3clwHHE3n+f8w0AsbEAhtmNxTEtg5fSrNzFt/AYNVwWTJPIdBkfsgEkXHSQGDqU
-1dVWrU5KSVwOZq9SgoZCCbUD7CicRk3qn649rqMRCCxukKIQIsBZFuDU/bnPODeX
-yKtpJQDAduodQuTqwGsRmMO7Jx+7DMPvIUghtW7YkcodQMvgY+ba2QEVRrYE0nFq
-BIebNZB3UJXH8HINQ4Mu
-=rIV7
+iQIcBAABAgAGBQJK71Y6AAoJEODzc/N7+Qma1nQQAJh6bRilIfVOsdBpAPBIKtQj
+L6qANDIQbfJBSSr/RPSc+O0moWXccG8BZWB0CYFewnAllQyAQCwR3w2rU9viTq/q
+vrN6IjWi89vemnddmce7w855KuK29Ao8KH/0bLYsohG3WRDaNM+F0Unaq0MuK4/5
+tipQTsJr5O3yWXeLIH/A+4HucRBmtof9t6vwm0EGJO/+jQHpKFlXOozmC0ZqM+1l
+gwxMIGPRrorH2MshIW/LD0rkkG35x0IpktFd8QhJMipDl+Vlmu88QeyF7diXt1fh
+MpsEK4JEusoB5K2K3Ao7AyL/kAy6+HjMur3CczQ0Q5nPJ5iBcAifJ2C1ixcd9N/a
+r2Vo7lRcpiqvd8UYU/WU0CFmpv5HtgW7NBAfOkp+R1fgsgM++/zDL35vuvCxOLAn
+kyn/rLVLRMn4FP5FK1nmhiVr91XYhYNeK6dA9PXmo6E4fwQFWqBKdRsBrqqPIPle
+x7R1fE6P4cABX4qQr5PknnPeTfOV2w+3dg3hvOFuSCkSoLIRUNPp8A0dORrP2dkU
+9bKMLGXuaohSzC4vZQkX78fyqcBrpGZdEnNVB2o04TqKCAqkaIk8No5VXMdQFFUv
+rHitRD7dY+lAESlMP9rx5+IR/SUtPpKolhtflUpZPsxe9T6ftbUE24XQtd3sdOGi
+RL3iPHz92lz6F0F0PpMB
+=kuUR
 -----END PGP SIGNATURE-----
 
---=-W03l4hrplFLpG/fwjoIN--
+--=-HLSWmaxz+GlkxFdFoju/--
 
