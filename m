@@ -1,61 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:59264 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752262AbZKWRQO (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:51460 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756496AbZKBSWZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 12:16:14 -0500
-Received: by fxm5 with SMTP id 5so4873445fxm.28
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 09:16:20 -0800 (PST)
-Subject: iwl3945 dies on module reload
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1258973362.7094.151.camel@johannes.local>
-References: <1258968499.3271.5.camel@maxim-laptop>
-	 <1258972050.7094.140.camel@johannes.local>
-	 <1258973082.3675.0.camel@maxim-laptop>
-	 <1258973362.7094.151.camel@johannes.local>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 23 Nov 2009 19:16:15 +0200
-Message-ID: <1258996575.9727.2.camel@maxim-laptop>
-Mime-Version: 1.0
+	Mon, 2 Nov 2009 13:22:25 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 4/6] wl1271: Add retry implementation for PSM entries
+Date: Mon,  2 Nov 2009 20:22:11 +0200
+Message-Id: <1257186133-18367-5-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1257186133-18367-1-git-send-email-luciano.coelho@nokia.com>
+References: <1257186133-18367-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When reloading the iwl3945 driver I often get this:
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
+PSM entries can fail (transmitting the corresponding null-func may not
+be heard by the AP.) Previously, this scenario was not detected, and
+out-of-sync between STA and AP could occur.
 
-[  830.333386] iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for Linux, 1.2.26kds
-[  830.333407] iwl3945: Copyright(c) 2003-2009 Intel Corporation
-[  830.333536] iwl3945 0000:06:00.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
-[  830.374979] iwl3945 0000:06:00.0: Tunable channels: 13 802.11bg, 0 802.11a channels
-[  830.374995] iwl3945 0000:06:00.0: Detected Intel Wireless WiFi Link 3945BG
-[  830.375163] iwl3945 0000:06:00.0: irq 32 for MSI/MSI-X
-[  830.376859] phy0: Selected rate control algorithm 'iwl-3945-rs'
-[  830.427214] iwl3945 0000:06:00.0: firmware: requesting iwlwifi-3945-2.ucode
-[  830.526945] iwl3945 0000:06:00.0: loaded firmware version 15.32.2.9
-[  830.544236] CE: hpet increasing min_delta_ns to 15000 nsec
-[  830.575694] iwl3945 0000:06:00.0: BSM uCode verification failed at addr 0x00003800+0 (of 900), is 0xa5a5a5a2, s/b 0xf802020
-[  830.578862] iwl3945 0000:06:00.0: Hardware error detected.  Restarting.
-[  832.570133] iwl3945 0000:06:00.0: Wait for START_ALIVE timeout after 2000ms.
-[  832.622676] iwl3945 0000:06:00.0: BSM uCode verification failed at addr 0x00003800+0 (of 900), is 0xa5a5a5a2, s/b 0xf802020
-[  832.625839] iwl3945 0000:06:00.0: Hardware error detected.  Restarting.
-[  834.620132] iwl3945 0000:06:00.0: Wait for START_ALIVE timeout after 2000ms.
+Add retry implementation for the entries to recover from the situation.
 
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271.h       |    3 ++
+ drivers/net/wireless/wl12xx/wl1271_boot.c  |    3 +-
+ drivers/net/wireless/wl12xx/wl1271_conf.h  |    8 ++++
+ drivers/net/wireless/wl12xx/wl1271_event.c |   53 ++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1271_event.h |    7 ++++
+ drivers/net/wireless/wl12xx/wl1271_main.c  |    5 ++-
+ 6 files changed, 77 insertions(+), 2 deletions(-)
 
-Note that I used antenna=2 parameter to experiment with quality of reception of both antennas
-(this feature strangely works just fine....)
-
-I disabled this option, so next time I feel like rebooting my system, I see if this option was the cause.
-(unlikely)
-
-
-Best regards,
-	Maxim Levitsky
-
-
-
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index 566f152..94359b1 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -417,6 +417,9 @@ struct wl1271 {
+ 	/* PSM mode requested */
+ 	bool psm_requested;
+ 
++	/* retry counter for PSM entries */
++	u8 psm_entry_retry;
++
+ 	/* in dBm */
+ 	int power_level;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
+index 8678bea..b7c9645 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_boot.c
++++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
+@@ -407,7 +407,8 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
+ 
+ 	/* unmask required mbox events  */
+ 	wl->event_mask = BSS_LOSE_EVENT_ID |
+-		SCAN_COMPLETE_EVENT_ID;
++		SCAN_COMPLETE_EVENT_ID |
++		PS_REPORT_EVENT_ID;
+ 
+ 	ret = wl1271_event_unmask(wl);
+ 	if (ret < 0) {
+diff --git a/drivers/net/wireless/wl12xx/wl1271_conf.h b/drivers/net/wireless/wl12xx/wl1271_conf.h
+index 061d475..565373e 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_conf.h
++++ b/drivers/net/wireless/wl12xx/wl1271_conf.h
+@@ -712,6 +712,14 @@ struct conf_conn_settings {
+ 	 * Range 0 - 255
+ 	 */
+ 	u8 bet_max_consecutive;
++
++	/*
++	 * Specifies the maximum number of times to try PSM entry if it fails
++	 * (if sending the appropriate null-func message fails.)
++	 *
++	 * Range 0 - 255
++	 */
++	u8 psm_entry_retries;
+ };
+ 
+ #define CONF_SR_ERR_TBL_MAX_VALUES   14
+diff --git a/drivers/net/wireless/wl12xx/wl1271_event.c b/drivers/net/wireless/wl12xx/wl1271_event.c
+index 31d396b..e135d89 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_event.c
++++ b/drivers/net/wireless/wl12xx/wl1271_event.c
+@@ -68,6 +68,40 @@ static int wl1271_event_scan_complete(struct wl1271 *wl,
+ 	return 0;
+ }
+ 
++static int wl1271_event_ps_report(struct wl1271 *wl,
++				  struct event_mailbox *mbox,
++				  bool *beacon_loss)
++{
++	int ret = 0;
++
++	wl1271_debug(DEBUG_EVENT, "ps_status: 0x%x", mbox->ps_status);
++
++	switch (mbox->ps_status) {
++	case EVENT_ENTER_POWER_SAVE_FAIL:
++		if (wl->psm_entry_retry < wl->conf.conn.psm_entry_retries) {
++			wl->psm_entry_retry++;
++			wl1271_error("PSM entry failed, retrying %d\n",
++				     wl->psm_entry_retry);
++			ret = wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE);
++		} else {
++			wl->psm_entry_retry = 0;
++			*beacon_loss = true;
++		}
++		break;
++	case EVENT_ENTER_POWER_SAVE_SUCCESS:
++		wl->psm_entry_retry = 0;
++		break;
++	case EVENT_EXIT_POWER_SAVE_FAIL:
++		wl1271_info("PSM exit failed");
++		break;
++	case EVENT_EXIT_POWER_SAVE_SUCCESS:
++	default:
++		break;
++	}
++
++	return ret;
++}
++
+ static void wl1271_event_mbox_dump(struct event_mailbox *mbox)
+ {
+ 	wl1271_debug(DEBUG_EVENT, "MBOX DUMP:");
+@@ -79,6 +113,7 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
+ {
+ 	int ret;
+ 	u32 vector;
++	bool beacon_loss = false;
+ 
+ 	wl1271_event_mbox_dump(mbox);
+ 
+@@ -101,7 +136,25 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
+ 		wl1271_debug(DEBUG_EVENT, "BSS_LOSE_EVENT");
+ 
+ 		/* indicate to the stack, that beacons have been lost */
++		beacon_loss = true;
++	}
++
++	if (vector & PS_REPORT_EVENT_ID) {
++		wl1271_debug(DEBUG_EVENT, "PS_REPORT_EVENT");
++		ret = wl1271_event_ps_report(wl, mbox, &beacon_loss);
++		if (ret < 0)
++			return ret;
++	}
++
++	if (beacon_loss) {
++		/* Obviously, it's dangerous to release the mutex while
++		   we are holding many of the variables in the wl struct.
++		   That's why it's done last in the function, and care must
++		   be taken that nothing more is done after this function
++		   returns. */
++		mutex_unlock(&wl->mutex);
+ 		ieee80211_beacon_loss(wl->vif);
++		mutex_lock(&wl->mutex);
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_event.h b/drivers/net/wireless/wl12xx/wl1271_event.h
+index 3ab53d3..4e3f55e 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_event.h
++++ b/drivers/net/wireless/wl12xx/wl1271_event.h
+@@ -63,6 +63,13 @@ enum {
+ 	EVENT_MBOX_ALL_EVENT_ID			 = 0x7fffffff,
+ };
+ 
++enum {
++	EVENT_ENTER_POWER_SAVE_FAIL = 0,
++	EVENT_ENTER_POWER_SAVE_SUCCESS,
++	EVENT_EXIT_POWER_SAVE_FAIL,
++	EVENT_EXIT_POWER_SAVE_SUCCESS,
++};
++
+ struct event_debug_report {
+ 	u8 debug_event_id;
+ 	u8 num_params;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 0ae506a..d2149fc 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -222,7 +222,8 @@ static struct conf_drv_settings default_conf = {
+ 			.snr_pkt_avg_weight  = 10
+ 		},
+ 		.bet_enable                  = CONF_BET_MODE_ENABLE,
+-		.bet_max_consecutive         = 100
++		.bet_max_consecutive         = 100,
++		.psm_entry_retries           = 3
+ 	},
+ 	.init = {
+ 		.sr_err_tbl = {
+@@ -973,6 +974,7 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
+ 	wl->rx_counter = 0;
+ 	wl->elp = false;
+ 	wl->psm = 0;
++	wl->psm_entry_retry = 0;
+ 	wl->tx_queue_stopped = false;
+ 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
+ 	wl->tx_blocks_available = 0;
+@@ -1822,6 +1824,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 	wl->elp = false;
+ 	wl->psm = 0;
+ 	wl->psm_requested = false;
++	wl->psm_entry_retry = 0;
+ 	wl->tx_queue_stopped = false;
+ 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
+ 	wl->basic_rate_set = WL1271_DEFAULT_BASIC_RATE_SET;
+-- 
+1.5.6.5
 
