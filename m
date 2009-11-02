@@ -1,58 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:39747 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751799AbZKGMXx convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60667 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754120AbZKBJjv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 07:23:53 -0500
-Received: by bwz27 with SMTP id 27so2014177bwz.21
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2009 04:23:57 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1257548493.3752.15.camel@localhost.localdomain>
-References: <1257542956.6565.2.camel@localhost.localdomain>
-	 <20091106214803.GL2782@tuxdriver.com>
-	 <1257548493.3752.15.camel@localhost.localdomain>
-Date: Sat, 7 Nov 2009 12:18:07 +0000
-Message-ID: <3ace41890911070418v1b0fc540v4f620470a21dfebb@mail.gmail.com>
-Subject: Re: Changing from Minstrel to PID
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: =?ISO-8859-1?Q?Mart=EDn_Ernesto_Barreyro?=
-	<barreyromartin@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 2 Nov 2009 04:39:51 -0500
+Subject: Re: [PATCH] mac80211: Fix IBSS merge
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	reinette.chatre@intel.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <19182.41944.492519.390013@gargle.gargle.HOWL>
+References: <19182.33851.980271.360757@gargle.gargle.HOWL>
+	 <1257151486.3555.161.camel@johannes.local>
+	 <19182.41944.492519.390013@gargle.gargle.HOWL>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-V+ka/k1Mhwas3wMA/QWe"
+Date: Mon, 02 Nov 2009 10:39:22 +0100
+Message-ID: <1257154762.3555.174.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 6, 2009 at 11:01 PM, Martín Ernesto Barreyro
-<barreyromartin@gmail.com> wrote:
-> El vie, 06-11-2009 a las 16:48 -0500, John W. Linville escribió:
->> On Fri, Nov 06, 2009 at 06:29:16PM -0300, Martín Ernesto Barreyro wrote:
->> > Hello, I have a rtl8187 wireless card and I've allways have problems
->> > with the rate control using minstrel. So everytime my kernel updates
->> > (recently it went from 2.30 to 2.31) i have to recompile mi kernel
->> > setting pid as my default rate control algorithm.
->> >
->> > Is there a way to change that without compiling the kernel?
->>
->> No, but I wish there were...patches?  Anyone?
->>
->> John
->
-> I've been searching and it seems that it could be added something like
-> modprobe mac80211 rc='pid'
->
-> Would it be a good idea?
 
-That's a reasonable approach, and it isn't too difficult either -
-somebody motivated enough could do a patch...
+--=-V+ka/k1Mhwas3wMA/QWe
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hmm, I think I have a question and a suggestion here: what is it you
-have problem with minstrel ? I don't care which one but both works
-well enough here. Maybe you need that sorted instead.
+On Mon, 2009-11-02 at 14:48 +0530, Sujith wrote:
 
-The other thing is, you can probably patch compat-wireless to do
-something similiar or at least experiment with it, as long as your
-kernel is configured with most of them as modules. Switching
-compat-wireless is quite easy, and particularly with the
-'driver-select rtl818x' option you just rebuild about 6 kernel modules
-instead of the usual 50+, which makes it quite quick and painless.
+> And I encountered an oops when using iwlwifi (current wireless-testing).
+> Set the interface mode to Ad-hoc, bring up the interface and issue a join
+> command using iw - this causes the panic.
+
+Hmm, interesting, I'll take a look. I guess I suspect
+e1e8e5389a7b947a212c0d9db1b4e18eef16946e
+
+johannes
+
+
+--=-V+ka/k1Mhwas3wMA/QWe
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK7qjFAAoJEODzc/N7+QmaRjAP/14NMHPTvAzGS7ncxjRsEuJ0
+vLEbu3kfeFSztHU7eLyv6jkWP77V+UthJQgp2Bx3jAKaOolzLuNmdtv9itLehz70
+M2ThOv2wB9+Qd0LDCJG5v7dpb+Pyp4OyoUhSIE1vGQblPF0PySe+4NynwEUpqz8x
+mvyT0Ult4yVBS/u4LIUf4RkPgmkqTAz97hWyJDlGUtSugGm+MTx/i39OF/qxYSu+
+j4WzpIiXDBACsq6dRDjGlYXjJp7RHS4Y7YtuwdvqOoT3TftANOyMmo8bOgYlLxBl
+x8elkJa9YZVybzRtlnF3kkoWBcillNvRJxLtfRiMQUEsppFfQgznSRXSV9Fh9IEf
+VUQOGJTFMhNwI9hTD0M3Ms5Evss2dwP9bjeDQhcAIwEdZF/2mWFoSQ2Lwtn0OBlA
+hF7+KgCpvmJlU0EIBwUkSXDPCh5WxoQ7FxyO0ffg4T8l48qcuy2l2uD2D62yVPuH
+f4/0rvIUIb/xn5jISXEgcdhjQAXm0PS07iQcyaOWgkm3wphh+qRU4EMACq5F7rnV
+XDFCUi7//JWfol5OIYHfp75aGppYIdwKmv6EcWd70zhnbXavN5f2M/EIpwtq+JZx
+enDe2tAYnXCyIIB5HO6zblQPgbb173AEtKAkedgsLapn33Q/SdWEWjMk1MY17fcw
+zPtIhL3jL6ceuPFsiyVP
+=5Z9s
+-----END PGP SIGNATURE-----
+
+--=-V+ka/k1Mhwas3wMA/QWe--
+
