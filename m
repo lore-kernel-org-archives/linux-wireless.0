@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gundega.hpl.hp.com ([192.6.19.190]:54606 "EHLO
-	gundega.hpl.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933964AbZKXS7e (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:48575 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755476AbZKBQm3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 13:59:34 -0500
-Date: Tue, 24 Nov 2009 10:47:08 -0800
-From: Jean Tourrilhes <jt@hpl.hp.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] WE: Fix set events not propagated
-Message-ID: <20091124184708.GA30638@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
+	Mon, 2 Nov 2009 11:42:29 -0500
+Received: by iwn10 with SMTP id 10so3435159iwn.4
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2009 08:42:34 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1257165123.3555.185.camel@johannes.local>
+References: <1257165123.3555.185.camel@johannes.local>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 2 Nov 2009 08:42:14 -0800
+Message-ID: <43e72e890911020842v5a4c5129t6ffd3779a08328fc@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: validate scan channels
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>, Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	Hi,
+On Mon, Nov 2, 2009 at 4:32 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> Currently it is possible to request a scan on only
+> disabled channels, which could be problematic for
+> some drivers. Reject such scans, and also ignore
+> disabled channels that are given. This resuls in
+> the scan begin/end event only including channels
+> that are actually used.
+>
+> This makes the mac80211 check for disabled channels
+> superfluous. At the same time, remove the no-IBSS
+> check from mac80211 -- nothing says that we should
+> not find any networks on channels that cannot be
+> used for an IBSS, even when operating in IBSS mode.
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-	I've just noticed that some events are no longer propagated
-for some wireless drivers. Basically, SET request with a extra payload
-for driver without commit handler. The fix is pretty simple, see
-attached.
-	Actually, a few lines below this line, you will see that the
-event generation for simple SET (iwpoint-less ?) is done properly,
-and this other event generation does not need fixing.
-	Regards,
+Side note that this patch reminds me of.
 
-	Jean
+About two days ago I noticed that if my internal card enables channel
+12 as its world roaming, I connect to my AP on channel 12 (therefore
+lifting the passive scan flag), and if I then connect a USB device
+which disables channel 12 communication will still go on on channel 12
+on the old card but the channel will still have been marked as
+disabled.
 
-Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
+I figured I'd not here that we currently can trash these types of
+connections because as noted with this patch we'd disable scanning --
+but we only degrade the connection, we don't do something sensible. So
+when we get a chance we should force a disconnect if a channel we're
+using all of a sudden becomes disabled.
 
-diff -u -p linux/net/wireless/wext.j1.c linux/net/wireless/wext.c
---- linux/net/wireless/wext.j1.c	2009-11-23 17:42:24.000000000 -0800
-+++ linux/net/wireless/wext.c	2009-11-23 17:44:41.000000000 -0800
-@@ -809,7 +809,8 @@ static int ioctl_standard_iw_point(struc
- 	}
- 
- 	/* Generate an event to notify listeners of the change */
--	if ((descr->flags & IW_DESCR_FLAG_EVENT) && err == -EIWCOMMIT) {
-+	if ((descr->flags & IW_DESCR_FLAG_EVENT) &&
-+	    ((err == 0) || (err == -EIWCOMMIT))) {
- 		union iwreq_data *data = (union iwreq_data *) iwp;
- 
- 		if (descr->flags & IW_DESCR_FLAG_RESTRICT)
-
-
+  Luis
