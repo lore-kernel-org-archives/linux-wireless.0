@@ -1,41 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:50257 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755563AbZKMKGJ convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40924 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756476AbZKBRfe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 05:06:09 -0500
-MIME-Version: 1.0
-In-Reply-To: <43e72e890911121754p751060b1h1cec7eeb78da8806@mail.gmail.com>
-References: <43e72e890911121754p751060b1h1cec7eeb78da8806@mail.gmail.com>
-Date: Fri, 13 Nov 2009 04:06:13 -0600
-Message-ID: <51058d550911130206m2982d20dq51bcf943f1ec91c3@mail.gmail.com>
-Subject: Re: [ANN] Stable compat-wireless 2.6.32-rc7 released
-From: Greg Oliver <oliver.greg@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 2 Nov 2009 12:35:34 -0500
+Subject: Re: [PATCH 08/15] iwlwifi: move iwl_[un]init_drv to iwlagn
+From: Johannes Berg <johannes@sipsolutions.net>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1257182368.21134.13580.camel@rc-desk>
+References: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
+	 <1256938578-9638-9-git-send-email-reinette.chatre@intel.com>
+	 <1256968603.3555.79.camel@johannes.local>
+	 <1257182368.21134.13580.camel@rc-desk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-yasrcVLwaSZiln47IwJ7"
+Date: Mon, 02 Nov 2009 18:35:29 +0100
+Message-ID: <1257183329.16174.3.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 12, 2009 at 7:54 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> Along with the 2.6.32-rc7 comes the stable compat-wireless based [1]
-> on it [2] which allows you to get the 2.6.32-rc7 wireless subsystem
-> and new wireless drivers compilable and installed on older kernels.
-> This is like the general compat-wireless releases but are *stable* and
-> should be *stable*. Please report any issues ASAP. For details on
-> changes you can refer to the ChangeLog-2.6.32-rc7-wireless [3].
->
->  Luis
->
-> [1] http://wireless.kernel.org/en/users/Download/stable
-> [2] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.32/compat-wireless-2.6.32-rc7.tar.bz2
-> [3] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.32/ChangeLog-2.6.32-rc7-wireless
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 
-The link on kernel.org for rc7 is linked to rc6...  (rc7 does exist
-there though)...
+--=-yasrcVLwaSZiln47IwJ7
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hi Reinette,
+
+> What happened in this patch is that I moved a function from iwlcore to
+> iwlagn. This function, while in iwlcore, had access to all the symbols
+> in iwlcore. Now that I moved the function to iwlagn I needed to make
+> sure all symbols needed by it was available. This resulted in me
+> exporting iwl_calib_free_results and iwl_init_scan_params since they are
+> in iwlcore and are now called by this function in iwlagn.
+
+Right ... but maybe iwl_uninit_drv and iwl_calib_free_results should
+move to iwlagn as well? Maybe the entire iwl-calib.c file should be
+linked to the iwlagn module? Anyway, I agree with moving code, but it
+seems it could go further.
+
+johannes
+
+--=-yasrcVLwaSZiln47IwJ7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK7xheAAoJEODzc/N7+QmaIk8QAK8Sw+jCiyD1Bm3j5e17W8nF
+gXDEkrdk8WUkN7zzD4NAAS54+uwBSsG/aMqEHSiumdPdluDxooFbsPc/h474j6Dx
+/hCVCa/ga5h+JK06w84CjNJkDaS7d7khxTT6gthK3ruuwKJk+UuWsg5Z6W0i1anH
+jz943bDZ4NaQXFdH644rSPNN/BDn3DgFbcQtgKn/lXsWpC/0OoWMhBddNtWTqhjM
+EXEsr78T7mPx8iDEt6xqge5OFWFzwQy+KBSCwOgeynTGyLg5fbKW7sx7cSg4YJQF
+/HBX2+Einx7bSTAiNVBgb9fNyDiBwvkGVDc3RI086ZwIiAZIYa5wntSLkjJlGfNA
+WpFi5NePc96DbT1y17F3OUVtOatGOU+PKyEgwDU3IKkFCujQ8rZlueEYz29PxtoS
+a4sxmDtZk3sdh1Y6YJechXv9bieVYfKTMUFiH6Nqy2FlWfPGm0iZkU3lIhMhVDXB
+on8XVJjuWd02V+y5JzzDlR87iZHGaaM7pvJ/bTaLHj8QlRtEyBrP6Z3rfUd2OgA+
+0x+OvlXknhp75tZeSf//896g3LhZtV6c02LssKjWUOAYyLwA5z6Qa55VDxL5B21C
+mL6dKPuz9BmZKGLvg68+yNbQeF26eON7JtajJStMLQtrrjaUBWPMR6VUdIQ5V7bn
+taU/ydTVqU59F/g8X46O
+=DjB+
+-----END PGP SIGNATURE-----
+
+--=-yasrcVLwaSZiln47IwJ7--
+
