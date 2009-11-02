@@ -1,82 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:40103 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756827AbZKJQSG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 11:18:06 -0500
-Received: by fxm21 with SMTP id 21so183136fxm.21
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2009 08:18:11 -0800 (PST)
-Message-ID: <4AF9923E.9020603@lwfinger.net>
-Date: Tue, 10 Nov 2009 10:18:06 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Luca Niccoli <lultimouomo@gmail.com>,
-	linux-wireless@vger.kernel.org, stable@kernel.org
-Subject: Re: Please backport [PATCH] rtl8187: Fix kernel oops when device
- is removed when LEDS enabled (Bugzilla #14539)
-References: <4e9568870911100747o6088ca86lf168849e6a42b91d@mail.gmail.com> <20091110155511.GE12682@tuxdriver.com>
-In-Reply-To: <20091110155511.GE12682@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:1454 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756760AbZKBTk6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2009 14:40:58 -0500
+Subject: Re: Incorrect signal levels reported using wpa_supplicant's
+ driver_nl80211
+From: Dan Williams <dcbw@redhat.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	networkmanager-list <networkmanager-list@gnome.org>
+In-Reply-To: <1256953837.9681.13.camel@maxim-laptop>
+References: <1256953837.9681.13.camel@maxim-laptop>
+Content-Type: text/plain
+Date: Mon, 02 Nov 2009 11:40:33 -0800
+Message-Id: <1257190833.1027.4.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/10/2009 09:55 AM, John W. Linville wrote:
-> On Tue, Nov 10, 2009 at 04:47:50PM +0100, Luca Niccoli wrote:
->> I'm running 2.6.31 (from debian source) and I experienced hard freezes
->> on removing the module or disconnecting the USB card.
->> The patch at [1] seems to have fixed the problem, so it would be nice
->> if it could be included in the 2.6.31 branch.
->> Note that I was not experiencing the freezes with the distribution
->> kernel, just with a self compiled one (without source modifications
->> though, only config).
->> Cheers,
->>
->> Luca
->>
->> (For further info please Cc: me)
->>
->> [1]
->> http://marc.info/?l=linux-wireless&m=125731443329754&w=2
+On Sat, 2009-10-31 at 03:50 +0200, Maxim Levitsky wrote:
+> Sorry for cross-posting, but this issue really spans all three systems.
 > 
-> This has already been sent with the proper tagging to make the stable
-> crew aware of it...
+> I anylized why I get 100% quality on all access points except currently
+> connected, when I used driver_nl80211 of wpa_supplcant.
 > 
-> Thanks,
-> 
-> John
-> 
-> commit 37b12dd2b07b4d7dc222a5f7f88b25cec532b2aa
-> Author: Larry Finger <Larry.Finger@lwfinger.net>
-> Date:   Wed Nov 4 00:00:25 2009 -0600
-> 
->     rtl8187: Fix kernel oops when device is removed when LEDS enabled
->     
->     As reported by Rick Farina (sidhayn@gmail.com), removing the RTL8187
->     USB stick, or unloading the driver rtl8187 using rmmod will cause a
->     kernel oops.  There are at least two forms of the failure, (1) BUG:
->     Scheduling while atomic, and (2) a fatal kernel page fault. This
->     problem is reported in Bugzilla #14539.
->     
->     This problem does not occur for kernel 2.6.31, but does for 2.6.32-rc2,
->     thus it is technically a regression; however, bisection did not locate
->     any faulty patch. The fix was found by comparing the faulty code in
->     rtl8187 with p54usb.  My interpretation is that the handling of work
->     queues in mac80211 changed enough to the LEDs to be unregistered
->     before tasks on the work queues are cancelled. Previously, these
->     actions could be done in either order.
->     
->     (Herton Ronaldo Krzesinski <herton@mandriva.com.br> reports that the
->     code is the same in 2.6.31, so this may be a candidate for 2.6.31.x.
->     -- JWL)
->     
->     Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->     Reported-by: Rick Farina <sidhayn@gmail.com>
->     Tested-by: Rick Farina <sidhayn@gmail.com>
->     Cc: stable@kernel.org
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> First, when NetworkManager plans to switch to this driver?
 
-Additionally, that patch has just made it to mainline. It was not there until I
-did a git pull this morning.
+Soon.  We've got some patches for this, but we'll also need tons of
+testing.  The WEXT stuff is pretty baked while nl80211 is still under
+some flux.  But of course the only way we bake nl80211 is by switching
+to it...
 
-Larry
+> For me it gives me faster association speeds, especially when I toggle
+> wireless with rfkill button.
+> 
+> 
+> this is what happens on the kernel side:
+> --> n80211 encodes only dBm data. It does so in, nl80211_send_bss.
+> 	(or it can encode unspecified data, which has little use...)
+> 
+> --> kernel also gives maximum ranges in, cfg80211_wext_giwrange, which is used by NM:
+> 	range->max_qual.updated = IW_QUAL_NOISE_INVALID | IW_QUAL_DBM | IW_QUAL_QUAL_UPDATED | IW_QUAL_LEVEL_UPDATED ;
+> 	range->max_qual.level = -110;
+> 	range->max_qual.qual = 70;
+> Thus it reports that it can't report noise.
+> 
+> 
+> driver_nl80211 side:
+> 
+> --> sends data as is, done in bss_info_handler:
+> 	r->level = nla_get_u32(bss[NL80211_BSS_SIGNAL_MBM]);
+> 	r->level /= 100; /* mBm to dBm */
+> 	r->flags |= WPA_SCAN_LEVEL_DBM | WPA_SCAN_QUAL_INVALID;
+> 
+> Again explicitly says that has no quality data, sends only dBm or unspecified data;
+> 
+> 
+> 
+> NM side:
+> 
+> --> three strategies used (in wireless_qual_to_percent)
+> 	--> quality: (used with driver_wext), not reported by nl80211
+> 
+> 	--> dbm: used only if:
+> 		* valid and zero max_qual->level (but now set to -110....) 
+
+IIRC non-zero max_qual->level was the indication that the driver wanted
+to use RSSI, not dBm.  Since the real "max" dBm is around 0 (ie, that's
+the highest signal strength you'll ever really see), max_qual->level
+meant the driver was reporting signal strength in dBm.  max_qual->level
+== -110 is kinda wrong, because that's the _minimum_ level, not the max.
+The noise floor is almost always around -100 dBm so setting
+max_qual->level is pretty useless.
+
+This is *exactly* why 'qual' is there: so that the driver itself can
+figure out what the hell it's signal level is, and so that NM doesn't
+have to go around assuming stuff.
+
+For WEXT reporting, mac80211 should really be constructing a 'qual'
+instead of leaving it 0.  Then we don't have ambiguities with dBm, RSSI,
+unspec, etc.
+
+Dan
+
+> 		* valid level (OK)
+> 		* valid positive max_qual->noise OR valid positive current noise (noise set to invalid and not reported even by my driver...)
+> 
+> 	--> RSSI: (device reports numbers from 0 to max_qual.level):
+> 		* nonzero valid max_qual->level, and it is assumed to be positive too...
+> 		* valid level
+> 		
+> 
+> currently RSSI path is taken and results in 100% quality.
+> 
+> 
+> I think that dBm strategy should be revised, and in addtion to that.
+> 
+> Of course whole NM currently depends on WEXT, for exmple it would get signal level for current AP via WEXT, and thus use quality level
+> as reported by driver. 
+> 
+> Thus there are differences between NM dBm quality calculation and driver ones, and therefore NM will report different quality levels... sigh...
+> 
+> 
+> Best regards,
+> 	Maxim Levitsky
+> 
+> 
+> PS: I want signal quality bars back in NM....
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
