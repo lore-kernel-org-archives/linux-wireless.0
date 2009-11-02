@@ -1,81 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:55591 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751121AbZKIShE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 13:37:04 -0500
-Received: by ewy3 with SMTP id 3so3414362ewy.37
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 10:37:08 -0800 (PST)
+Received: from mail.atheros.com ([12.36.123.2]:64013 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754241AbZKBKjz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2009 05:39:55 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2009 02:40:01 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <1257791082-4126-1-git-send-email-lrodriguez@atheros.com>
-References: <1257791082-4126-1-git-send-email-lrodriguez@atheros.com>
-Date: Mon, 9 Nov 2009 13:37:08 -0500
-Message-ID: <4f6ba3b0911091037x4b18177cs3319f56feae42c8b@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: make HT bogus rate warning more verbose
-From: Bob Beers <bob.beers@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	mcgrof@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19182.46968.176623.303221@gargle.gargle.HOWL>
+Date: Mon, 2 Nov 2009 16:12:00 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: fix internal scan request
+In-Reply-To: <1257157911.3555.183.camel@johannes.local>
+References: <1257157911.3555.183.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 9, 2009 at 1:24 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> This will help debug an issue when the driver is passing up
-> a bogus HT rate value. The rate must map to a valid MCS index
-> which can be any of the values 0 - 76.
->
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Johannes Berg wrote:
+> The internal scan request mac80211 uses to
+> scan for IBSS networks was set up to contain
+> no channels at all because n_channels wasn't
+> set after setting up the channels array. Fix
+> this to properly scan for networks.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 > ---
->  net/mac80211/rx.c |   18 +++++++++++++++---
->  1 files changed, 15 insertions(+), 3 deletions(-)
->
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index 28316b2..5b26d34 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -2425,9 +2425,21 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
->                goto drop;
->
->        if (status->flag & RX_FLAG_HT) {
-> -               /* rate_idx is MCS index */
-> -               if (WARN_ON(status->rate_idx < 0 ||
-> -                           status->rate_idx >= 76))
-> +               /*
-> +                * rate_idx is MCS index, which can be 0-76 as documented on:
-> +                *
-> +                * http://wireless.kernel.org/en/developers/Documentation/ieee80211/802.11n
-> +                *
-> +                * Anything else would be some sort of driver or hardware error.
-> +                * The driver should catch hardware errors.
-> +                */
-> +               if (WARN((status->rate_idx < 0 ||
-> +                        status->rate_idx >= 76),
+> Sujith, this might fix the iwlwifi problem?
+> 
 
-If 76 is valid value as indicated in comment above: 0-76,
- shouldn't this be
+Yep, it fixes the oops.
+Thanks.
 
-+                        status->rate_idx > 76),
-
-??
-
-
-> +                        "Rate marked as an HT rate but passed "
-> +                        "status->rate_idx is not "
-> +                        "an MCS index (0-76): %d (0x%02x)\n",
-> +                        status->rate_idx,
-> +                        status->rate_idx))
->                        goto drop;
->                /* HT rates are not in the table - use the highest legacy rate
->                 * for now since other parts of mac80211 may not yet be fully
-> --
-> 1.6.5.2.143.g8cc62
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
--Bob Beers
+Sujith
