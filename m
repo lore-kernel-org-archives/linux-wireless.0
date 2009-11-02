@@ -1,60 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:61295 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756724AbZKBVgS convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57825 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932155AbZKBSaO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 16:36:18 -0500
-Received: by ewy28 with SMTP id 28so5332806ewy.18
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2009 13:36:22 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20091102194349.GA7709@hash.localnet>
-References: <200910291330.26172.mb@bu3sch.de> <200910291406.03422.mb@bu3sch.de>
-	 <200910291431.48388.mb@bu3sch.de>
-	 <20091031202156.GA29825@hash.localnet>
-	 <40f31dec0910312353w32aede90ib5e71545ca744389@mail.gmail.com>
-	 <20091101131652.GA30381@hash.localnet>
-	 <40f31dec0911010541l650513fg31ffcadd12698f0@mail.gmail.com>
-	 <20091102194349.GA7709@hash.localnet>
-Date: Mon, 2 Nov 2009 23:36:22 +0200
-Message-ID: <40f31dec0911021336l45d185fewa5ce1ffb88f7db97@mail.gmail.com>
-Subject: Re: ath5k AP issues
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
+	Mon, 2 Nov 2009 13:30:14 -0500
+Date: Mon, 2 Nov 2009 13:29:53 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Luis Correia <luis.f.correia@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Luis Rodriguez <mcgrof@gmail.com>,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=UTF-8
+	Jarek Poplawski <jarkao2@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2009-10-28
+Message-ID: <20091102182953.GH14046@tuxdriver.com>
+References: <1256886023.3555.5.camel@johannes.local> <20091030110616.GB6150@ff.dom.local> <20091030150223.GA2586@tuxdriver.com> <20091102091038.GA9044@elte.hu> <1257153807.3555.173.camel@johannes.local> <20091102100702.GA16963@elte.hu> <20091102170114.GE14046@tuxdriver.com> <efe7343f0911020932l21a570c8u9478568329d38e2c@mail.gmail.com> <4AEF1894.2010809@xenotime.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4AEF1894.2010809@xenotime.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/11/2 Bob Copeland <me@bobcopeland.com>:
-> On Sun, Nov 01, 2009 at 03:41:49PM +0200, Nick Kossifidis wrote:
->> So beacon-sent gated option doesn't work ?
->> Did you try also AR5K_DCU_MISC_ARBLOCK_IGNORE ?
->>
->> Also according to docs Beacon frames should use queue 9 and CAB should
->> use queue 8 (don't know why but docs say that these are the
->> appropriate DCUs), beacon-gated triggering might only work if we use
->> DCU 9 for beacons (now we are using queue 7 for beacons and queue 6
->> for cab).
->
-> So the results of that testing aren't so good; I still couldn't get it
-> to work.  See the following patch if you want to play with it.  Eventually
-> TXDESC interrupt should fire and you would see:
->
-> cabq: enqueued xxxxx
-> cabq: processed xxxxx
->
-> But that only happens with DBA gating, with BCN_SENT_GT I never see
-> 'processed.'  Anything else to try?
->
+On Mon, Nov 02, 2009 at 09:36:20AM -0800, Randy Dunlap wrote:
+> Luis Correia wrote:
+> > [huge snip]
+> > 
+> > This is going to be my last reply to this thread (even if I get to be insulted).
+> > 
+> > I'm not a coder, I'm a tester and administrator for the rt2x00 project.
+> > I'm not happy about the current state of the rt2x00 in-kernel drivers.
+> > I tend to agree that more could be done.
+> > 
+> > Even though I'm not a coder, I could be hipotetically responsable for
+> > the current situation. It is my job function to motivate people to
+> > work on the rt2x00 in-kernel drivers, but apparently I've failed here.
+> > It's not an atitude problem, as some have suggested, it's just life.
+> > 
+> > About Bartlomiej, there is only one more thing that I'll say:
+> > 
+> > I've searched on my GMail archives and the only patch Bart has
+> > provided so far for the rt2x00 project is this:
+> > 
+> > [PATCH] MAINTAINERS: rt2x00 list is moderated
+> > 
+> > Which, while technically correct, adds nothing to the project.
+> 
+> whatever.  That patch still needs to be applied.
 
-Well let's enable them both :P
+And, in fact, it has been...already in linux-2.6:
 
-I still think that ready-time thing is evil, we should use a more accurate way.
+	commit b5654f5e7fc414a6e69b3647db2b043257c9e62e
+	Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+	Date:   Mon Oct 26 16:49:50 2009 -0700
 
+	MAINTAINERS: rt2x00 list is moderated
+
+	Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+	Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+	Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+
+Hth...
+
+John
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
