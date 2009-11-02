@@ -1,68 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:36426 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751332AbZKCPQI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 10:16:08 -0500
-Date: Tue, 3 Nov 2009 10:16:12 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Dan Williams <dcbw@redhat.com>
-cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>,
-	Frank Schaefer <schaefer.frank@gmx.net>,
-	<linux-wireless@vger.kernel.org>, <linux-usb@vger.kernel.org>
-Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB N
- devices in cdrom mode
-In-Reply-To: <1257198124.1027.63.camel@localhost.localdomain>
-Message-ID: <Pine.LNX.4.44L0.0911031001470.10778-100000@netrider.rowland.org>
+Received: from mail.gmx.net ([213.165.64.20]:33717 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S932231AbZKBUHO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2009 15:07:14 -0500
+Message-ID: <4AEF3BF8.1080701@gmx.net>
+Date: Mon, 02 Nov 2009 21:07:20 +0100
+From: Frank Schaefer <schaefer.frank@gmx.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: Matthew Dharm <mdharm-usb@one-eyed-alien.net>,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB
+ N devices in cdrom mode
+References: <200910171606.02961.oliver@neukum.org> <Pine.LNX.4.44L0.0910171130550.25594-100000@netrider.rowland.org> <20091017220313.GH24502@one-eyed-alien.net> <4ADC3657.6080906@gmx.net> <4AEDCCA0.8050709@gmx.net> <4AEDD380.40408@draisberghof.de> <20091101183553.GB24436@one-eyed-alien.net> <4AEDEE7C.4010406@gmx.net> <20091102004756.GC24436@one-eyed-alien.net>
+In-Reply-To: <20091102004756.GC24436@one-eyed-alien.net>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2 Nov 2009, Dan Williams wrote:
+Matthew Dharm schrieb:
+> On Sun, Nov 01, 2009 at 09:24:28PM +0100, Frank Schaefer wrote:
+>   
+>> Matthew Dharm schrieb:
+>>     
+>>> On Sun, Nov 01, 2009 at 07:29:20PM +0100, Josua Dietze wrote:
+>>>       
+>>>> Frank Schaefer schrieb:        
+>>>>> I really think the mode-switching should be done in the kernel and not
+>>>>> in user-space for reasons of usability.
+>>>>>           
+>>>> What is wrong with an udev rule entry? By the way, did the "eject" 
+>>>> command line tool work as well?
+>>>>         
+>>> And I think it should be done in userspace for issues of maintainability
+>>> and useability.  It is much easier for users to upgrade their udev then
+>>> their kernel.
+>>>       
+>> Maintainability for whom ? The kernel-devs or the distro-people and the
+>> users ? ;)
+>>     
+>
+> Both.
+>   
+>> Please think about the users. They don't know that they have to create
+>> udev-rules or have to install additional packages like usb_modeswitch
+>> (which is nevertheless a great tool !).
+>> And even if they know, they don't want to do that. So it's up to the
+>> distros to do this automatically, which will in reality never come true
+>> for all devices and distros.    
+>
+> I am thinking about the users.  Do you really think someone who has
+> difficulty installing a new udev rule (probably a line or two of text
+> copied from a google search) or installing a new version of usb_modeswitch
+> (probably one or two commands to the distro package manager) will have an
+> easier time doing a custom kernel-compile and update?
+>   
+I think users should not need to do ANY of these things ! That's called
+usability.
+Which users do you think know how to create udev-rules and how to
+compile a kernel ?
+Of course you and me and likely all others on this mailing-list and
+maybe you think Linux should be for them, only.
 
-> In userspace, usb_modeswitch is the place to put all this logic.  Then
-> you tie it together with udev rules using some bubble-gum and duct-tape,
-> and maybe it works.  Of course, there's massive duplication of data
-> between usb_modeswitch and the kernel drivers, because the there's
-> simply no communication between the two.
+I think we should do as much as possible to improve Linux-usability for
+"normal" and even "less experienced" users.
+And in this case, it would be really easy.
+> Updates in userspace are universally easier; on users, on kernel deves, and
+> on distro devs.
+>
+> Matt
+>   
+Why ? Of course, the benfit for kernel-developers is that the work is
+done by others...
+But for the distros it makes life much more difficult in many respects.
+And users are in the somehow insane situation that they have to keep the
+driver (kernel) AND the "key to be able to use it" up-to-date.
+That's not only a problem because they both things from different
+sources/directions !
 
-The only reason for this "massive" duplication is that nobody has
-bothered to remove from the kernel the parts that usb_modeswitch can
-handle.  Adding yet more switching code into the kernel, thereby
-_increasing_ the amount of duplication, seems like a bad idea.
-
-> The kernel drivers know which devices are supported and how to drive
-> them.
-
-No.  The kernel drivers (usb-storage is where most if not all of the
-kernel-side mode-switching code has ended up) only know about the
-particular devices _they_ support.  They don't know about the other
-devices supported by usb_modeswitch.
-
->  But because the eject code isn't in kernelspace, all that device
-> selection logic has to be duplicated in userspace with usb_modeswitch.
-> Pretty dumb.
-
-What are you talking about?  Of course usb-storage contains 
-mode-switching code for the devices it switches.  And for the devices 
-it doesn't switch, it does not contain device-selection logic.
-
-> Maybe we can get the kernel drivers to expose the information we need
-> (maybe even an 'eject' attribute in sysfs or something) and then we just
-> have to write udev rules instead of having a whole bunch of libusb junk
-> in userspace?  Would that preserve the policy-always-in-userspace
-> requirement yet keep the code to drive the hardware in kernel space
-> where it really belongs?
-
-This sounds as if you are trying very hard to get the _worst_ of both
-worlds!  You would force users to upgrade their kernels before they can
-use new devices (because the kernel is where the mode-switch code will
-be), and you also would force them to upgrade their userspace settings
-(so that the new mode-switch code will be called).
-
-I'm with Matt Dharm and Josua Dietze on this.  Jobs that can be handled 
-in userspace _should_ be handled there.
-
-Alan Stern
-
+Frank
