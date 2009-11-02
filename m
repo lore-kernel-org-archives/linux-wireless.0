@@ -1,48 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:50174 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752690AbZKHPoO (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41254 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751022AbZKBRPI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 10:44:14 -0500
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH v2] rt2x00: Update copyright statements.
-Date: Sun, 8 Nov 2009 16:44:14 +0100
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Mon, 2 Nov 2009 12:15:08 -0500
+Date: Mon, 2 Nov 2009 12:01:15 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Jarek Poplawski <jarkao2@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-References: <1257692976-2036-1-git-send-email-gwingerde@gmail.com> <200911081622.07678.IvDoorn@gmail.com> <200911081626.28320.bzolnier@gmail.com>
-In-Reply-To: <200911081626.28320.bzolnier@gmail.com>
+Subject: Re: pull request: wireless-next-2.6 2009-10-28
+Message-ID: <20091102170114.GE14046@tuxdriver.com>
+References: <1256886023.3555.5.camel@johannes.local> <20091030110616.GB6150@ff.dom.local> <20091030150223.GA2586@tuxdriver.com> <20091102091038.GA9044@elte.hu> <1257153807.3555.173.camel@johannes.local> <20091102100702.GA16963@elte.hu>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911081644.15257.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091102100702.GA16963@elte.hu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 08 November 2009, Bartlomiej Zolnierkiewicz wrote:
-> On Sunday 08 November 2009 16:22:07 Ivo van Doorn wrote:
-> > On Sunday 08 November 2009, Gertjan van Wingerde wrote:
-> > > As mentioned on the linux-wireless mailing list, the current copyright statements in the rt2x00 are
-> > > meaningless, as the rt2x00 project is not even a formal legal entity. Therefore it is better to replace
-> > > the existing copyright statements with copyright statements for the people that actually wrote the code.
-> > > 
-> > > Note: Updated to the best of my knowledge with respect to who contributed considerable amounts of code.
-> > > 
-> > > Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> > > CC: Ivo van Doorn <IvDoorn@gmail.com>
-> > > CC: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+On Mon, Nov 02, 2009 at 11:07:02AM +0100, Ingo Molnar wrote:
+> 
+> * Johannes Berg <johannes@sipsolutions.net> wrote:
+> 
+> > On Mon, 2009-11-02 at 10:10 +0100, Ingo Molnar wrote:
 > > 
-> > Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+> > > So i have read the thread you and Bartlomiej referenced:
+> > > 
+> > >     http://lkml.org/lkml/2009/10/17/81
+> > > 
+> > > ... and my understanding of that discussion is very different from 
+> > > yours. Here is my annotated history of the beginnings of that 
+> > > discussion:
+> > 
+> > [snip]
+> > 
+> > You shouldn't ignore all previous interaction between Bart and us -- 
+> > which wasn't pretty: http://thread.gmane.org/gmane.linux.kernel/901892
 > 
-> NAK, stop trying to reverse the history.
+> I have seen that exchange too - here's the lkml.org link for those who 
+> like the lkml.org format:
 > 
-> Just replace rt2x00 claims with personal ones without moving
-> "based on" around.
+>    http://lkml.org/lkml/2009/10/13/186
+> 
+> And i can see no supporting fact here either, for the (very serious) 
+> accusation launched by John Linville, that Bartlomiej is 'petty, 
+> whining, indignant'. In my reading he is the opposite of that, even in 
+> this second thread you point out.
 
-There is no need to get upset about this, I already said I would put the decision
-in your hands. If you feel so strongly about this, then the original version should
-be used, and the developers in question can move their copyright notice themselves
-when they submit new patches.
+Again, you seem to be very generous to Bartlomiej and very critical of
+the rest of us in your readings.
 
-Ivo
+> So, no matter how much you disagree about the code and its direction, 
+> please either back up your assertion with specific links to a pattern of 
+> misbehavior or apologize for the ad-hominen attacks against Bartlomiej.
+
+His behavior is evident in the threads you cited.  How you do not
+see that is a mystery.
+
+> > Of course we were biased when he came around with that petty code 
+> > duplication argument, since it seemed to support only his agenda of 
+> > working only with the staging drivers.
+> 
+> Why do you think that disagreeing in the past gives you the right to get 
+> into ad-hominens? You should concentrate on the code and on the 
+> technical side, not on the person making the argument.
+> 
+> Also, why do you characterise a code duplication argument as 'petty'?
+
+Did you actually look at the thread?  Or did you simply here "code
+duplication" and run with it?
+ 
+> Bloat and unnecessary technical forking is the #1 enemy of Linux. 
+> Integrating code and infrastructure is the #1 strength of Linux.
+> 
+> Upstream subsystems/drivers running away with their private 
+> implementations has its clear costs:
+
+...which has nothing to do with the case at hand.  Please do not
+perpetuate this myth.  If anything, your argument applies far more
+to the drivers in staging that Bartlomiej has focused his attention
+upon until recently.
+
+<snip>
+
+> [ I dont know why drivers/staging/ is even an argument here - he argued
+>   about the technical qualities of a new upstream driver, not about a
+>   staging driver. Upstream drivers are to be held to higher standards,
+>   _especially_ now that we can isolate not-clean-enough-yet drivers into
+>   drivers/staging/, without hurting users. ]
+
+If you had been keeping-up, you would realize that Bartlomiej is upset
+about our criticisms of the Ralink drivers in staging.  That would seem
+to be the reason he has made himself such an irritant in linux-wireless
+over the past few weeks.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
