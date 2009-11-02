@@ -1,82 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li59-9.members.linode.com ([97.107.129.9]:50510 "EHLO erley.org"
+Received: from mx1.redhat.com ([209.132.183.28]:26527 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756396AbZKJPl0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 10:41:26 -0500
-MIME-Version: 1.0
-Date: Tue, 10 Nov 2009 10:41:30 -0500
-From: <pat-lkml@erley.org>
-To: Holger Schurig <holgerschurig@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Holger Schurig <holgerschurig@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] cfg80211: introduce =?UTF-8?Q?nl=38=30=32=31=31=5Fget=5Fifidx?=
- =?UTF-8?Q?=28=29?=
-In-Reply-To: <200911101615.30124.holgerschurig@gmail.com>
-References: <m3aayu1ttc.wl%holgerschurig@gmail.com> <05d7281ddd3780e3d7f4b485ce361b87@127.0.0.1> <200911101615.30124.holgerschurig@gmail.com>
-Message-ID: <8567e294da1df02e481550fd73a8ff75@127.0.0.1>
-Content-Type: text/plain; charset=UTF-8
+	id S1756769AbZKBVmV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2009 16:42:21 -0500
+Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB N
+ devices in cdrom mode
+From: Dan Williams <dcbw@redhat.com>
+To: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+Cc: Frank Schaefer <schaefer.frank@gmx.net>,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
+In-Reply-To: <20091102211123.GI24436@one-eyed-alien.net>
+References: <200910171606.02961.oliver@neukum.org>
+	 <Pine.LNX.4.44L0.0910171130550.25594-100000@netrider.rowland.org>
+	 <20091017220313.GH24502@one-eyed-alien.net> <4ADC3657.6080906@gmx.net>
+	 <4AEDCCA0.8050709@gmx.net> <4AEDD380.40408@draisberghof.de>
+	 <4AEDEB85.5080105@gmx.net> <20091102005144.GE24436@one-eyed-alien.net>
+	 <4AEF3CAD.10809@gmx.net> <1257193115.1027.24.camel@localhost.localdomain>
+	 <20091102211123.GI24436@one-eyed-alien.net>
+Content-Type: text/plain
+Date: Mon, 02 Nov 2009 13:42:04 -0800
+Message-Id: <1257198124.1027.63.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 10 Nov 2009 16:15:30 +0100, Holger Schurig
-<holgerschurig@gmail.com> wrote:
-> On Tuesday 10 November 2009 15:50:43 pat-lkml@erley.org wrote:
->> On Tue, 10 Nov 2009 12:51:43 +0100, Holger Schurig
->> <holgerschurig@googlemail.com> wrote:
->> 
->> > @@ -3182,20 +3182,11 @@
->> >  	int err;
->> >  
->> >  	if (!ifidx) {
->> > -		err = nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
->> > -				  nl80211_fam.attrbuf, nl80211_fam.maxattr,
->> > -				  nl80211_policy);
->> > -		if (err)
->> > -			return err;
->> > -
->> > -		if (!nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX])
->> > -			return -EINVAL;
->> > -
->> > -		ifidx = nla_get_u32(nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX]);
->> > -		if (!ifidx)
->> > -			return -EINVAL;
->> > +		ifidx = nl80211_get_ifidx(cb);
->> 
->> do you need an:
->> 
->>  if(ifidx < 0)
->>     return ifidx;
->> 
->> here, as you assign it to cb->args[0], which differs from the original
->> behavior.
+On Mon, 2009-11-02 at 13:11 -0800, Matthew Dharm wrote:
+> On Mon, Nov 02, 2009 at 12:18:35PM -0800, Dan Williams wrote:
+> > Devices with fake driver CDs and how they are handled currently:
+> > 
+> > Zydas WLAN   - kernel
+> > Huawei 3G    - kernel  (unusual_devs entry)
+> > Sierra 3G    - kernel  (drivers/usb/serial/sierra.c)
+> > Option 3G    - udev rules, 'rezero', or usb_modeswitch
+> > ZTE 3G       - udev rules, simple 'eject'
 > 
-> 
-> Do you mean
-> 
->     <SNIP>
-> 
-> instead?
-> 
-> 
-> 
-> I'm not familiar with this function, but maybe we
-> can get away like this:
->  <SNIP>
+> It's worth noting that for some of these which are handled in-kernel, it
+> had to be done that way because their storage-emulation was so poor that
+> the normal 'eject' WOULD NOT work properly.
 
-I'm not familiar with the code either.  I was just glancing through the
-patch 
-and noticed a change that changed the behavior of the code that was there.
+Half of them don't use eject at all, because of course on Windows the
+vendor driver owns the device and can do whatever it wants.  Huawei uses
+a custom sequence, Option uses a custom sequence, and so does Sierra.
+ZTE is the only one that I've seen that you can actually just "eject"
+and make it work.
 
+In userspace, usb_modeswitch is the place to put all this logic.  Then
+you tie it together with udev rules using some bubble-gum and duct-tape,
+and maybe it works.  Of course, there's massive duplication of data
+between usb_modeswitch and the kernel drivers, because the there's
+simply no communication between the two.
 
-before, cb->args[0] was left un-altered when ifidx = nla_get_u32(...)
-failed, 
-but now it's assigned to unconditionally, then, if ifidx is unasigned, an
-error 
-is returned.  I've not looked at the context or callers, but the commit
-message
-implied to me that there should be no functional changes, which is not the
-case.
+The kernel drivers know which devices are supported and how to drive
+them.  But because the eject code isn't in kernelspace, all that device
+selection logic has to be duplicated in userspace with usb_modeswitch.
+Pretty dumb.
 
-pat
+Maybe we can get the kernel drivers to expose the information we need
+(maybe even an 'eject' attribute in sysfs or something) and then we just
+have to write udev rules instead of having a whole bunch of libusb junk
+in userspace?  Would that preserve the policy-always-in-userspace
+requirement yet keep the code to drive the hardware in kernel space
+where it really belongs?
+
+Dan
+
 
