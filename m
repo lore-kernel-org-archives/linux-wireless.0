@@ -1,69 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:57414 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756886AbZKBWXT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 17:23:19 -0500
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB N devices in cdrom mode
-Date: Mon, 2 Nov 2009 23:23:01 +0100
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Frank Schaefer <schaefer.frank@gmx.net>,
-	Matthew Dharm <mdharm-usb@one-eyed-alien.net>,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
-References: <200910171606.02961.oliver@neukum.org> <20091102210519.7d309fb9@lxorguk.ukuu.org.uk> <1257198359.1027.67.camel@localhost.localdomain>
-In-Reply-To: <1257198359.1027.67.camel@localhost.localdomain>
+Received: from mail.atheros.com ([12.36.123.2]:62190 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752875AbZKBG41 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2009 01:56:27 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2009 22:56:32 -0800
+Date: Mon, 2 Nov 2009 12:26:19 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: Re: [RFC] ath9k: fix listening to idle requests
+Message-ID: <20091102065616.GB1989@vasanth-laptop>
+References: <1256849546-15119-1-git-send-email-lrodriguez@atheros.com> <20091030063306.GH4602@vasanth-laptop> <43e72e890910300738i29a81f54p57fd0c6fdccbcaf5@mail.gmail.com> <20091031052952.GA1989@vasanth-laptop>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <200911022323.01832.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20091031052952.GA1989@vasanth-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 02 November 2009 22:45:59 Dan Williams wrote:
-> On Mon, 2009-11-02 at 21:05 +0000, Alan Cox wrote:
-> > > apparently do use the driver CD thing to send Linux drivers and software
-> > > to a few clients.  But by and large, the driver CD is completely
-> > > useless.
-> > 
-> > And then every so often you need to rummage around the driver CD image to
-> > extract the APN or other data you need to make your modem work. At which
-> > point you end up having to recompile the kernel to get it. Very annoying
-> > given it could be trivially done properly in user space.
->
-> Maybe there's a better way as I said a bit lower in the thread; could we
-> put the logic for ejection into the driver (and not usb_modeswitch or
-> whatever) but put the decision into userspace in udev?
+On Sat, Oct 31, 2009 at 10:59:53AM +0530, Vasanth Thiagarajan wrote:
+> On Fri, Oct 30, 2009 at 08:08:22PM +0530, Luis Rodriguez wrote:
+> > On Thu, Oct 29, 2009 at 11:33 PM, Vasanthakumar Thiagarajan
+> > <vasanth@atheros.com> wrote:
+> > > On Fri, Oct 30, 2009 at 02:22:26AM +0530, Luis Rodriguez wrote:
+> > >> The way idle configuration detection was implemented as
+> > >> busted due to the fact that it assumed the ath9k virtual wiphy,
+> > >> the aphy, would be marked as inactive if it was not used but
+> > >> it turns out an aphy is always active if its the only wiphy
+> > >> present. We need to distinguish between aphy activity and
+> > >> idleness so we now add an idle bool for the aphy and mark
+> > >> it as such based on the passed IEEE80211_CONF_CHANGE_IDLE
+> > >> from mac80211.
+> > >>
+> > >> Previous to all_wiphys_idle would never be true when using
+> > >> only one device so we never really were using
+> > >> IEEE80211_CONF_CHANGE_IDLE -- we never turned the radio
+> > >> off or on upon IEEE80211_CONF_CHANGE_IDLE changes as radio
+> > >> changes depended on all_wiphys_idle being true either to
+> > >> turn the radio on or off. Since it was always false for
+> > >> one device this code was doing nothing.
+> > >>
+> > >> Reported-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> > >> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > >> ---
+> > >>
+> > >> Vasanth, what do you think?
+> > >
+> > > Still we will have issue when bringing up a sec wiphy while the
+> > > primary wiphy is in idle state. ath9k_start() does not brought up
+> > > the newly created wiphy interface when the state of at least one
+> > > previously created interface is in ACTIVE state. Unless already
+> > > brought up interfaces are put down we hit this situation whenever
+> > > we try to bring up a new secondary wiphy interface. So with this
+> > > patch the actual h/w will remain radio disabled state even after
+> > > a new interface is in active state. We need to bring the h/w into
+> > > active state if all old interfaces are in idle state in
+> > > ath9k_start().
+> >
+> > I don't see what prevents a secondary virtual wiphy from getting the
+> > radio started -- perhaps I'm missing something. When a virtual wiphy
+> > needs to become non-idle that'll come from the mac80211 non-idle
+> > config call and that will find that one device is non-idle and hence
+> > start it.
 > 
-> Right now the kernel drivers know what hardware they support, and that's
-> a great place to also put how to eject the fake driver CD.  So the
-> mechanism could live in the kernel still (instead of in usb_modeswitch
-> in userspace) while the actual decision still gets made in userspace
-> with udev rules.  The rules would say something like "if this USB
-> storage device has an 'fakecd' attribute, then touch the 'ejectmeharder'
-> attribute" instead of complex rules to run usb_modeswitch that duplicate
-> all the device IDs in userspace.  If you need to rummage around on the
-> driver CD for whatever reason, you disable the udev rule.  Maybe?
-> 
-> I simply hate the duplication of all the device IDs with one set in the
-> kernel and one set in userspace because it's pretty pointless and makes
-> twice the work when new hardware comes out.
->
-well, there's more to Alan's theory here.
+> mac80211 will issue config() for non-idle only when the respective
+> wiphy is already put into idle state.
 
-AVM provides a beta firmware [1] which allows the user to but the stick into
-the mass storage mode again and stream the data over WLAN connection. 
-(of course, you'll need a special AP which supports this)
+When testing the patch I did not see this issue. The patch works
+fine. I'll debug it further to see why the issue I was expecting
+did not show up, but now this patch looks fine.
 
-[1]: (german only, they haven't bothered to do a translation)
-http://www.avm.de/de/Service/Service-Portale/Service-Portal/Labor/7270_streaming_stick/labor_start_streaming_stick.php
-
-Of course, I haven't tested, or even seen such setup yet.
-But it appears to be working (based on google).
-
-Therefore, it might be a good idea to start a new user app,
-which does this 3-way usb-mode switching for these devices.
-
-Regards,	
-	Chr
+Vasanth
