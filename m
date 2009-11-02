@@ -1,86 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56945 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933799AbZKXSh1 (ORCPT
+Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:58944
+	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751511AbZKBVKB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 13:37:27 -0500
-Subject: Re: [PATCH 2/2] mac80211: minstrel try all rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Adam Wozniak <awozniak@irobot.com>
-Cc: Derek Smithies <derek@indranet.co.nz>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <4B0C2720.3090308@irobot.com>
-References: <4AF0D54D.4090303@irobot.com>	 <4AFC8E4F.5090307@irobot.com>
-	 <4AFC8F0D.5020700@irobot.com>	 <1258097352.3899.75.camel@johannes.local>
-	 <4AFDDF19.8060202@irobot.com>	 <1258191039.6167.40.camel@johannes.local>
-	 <4B018B26.2070008@irobot.com>	 <1258392453.32159.28.camel@johannes.local>
-	 <4B0192A6.9050808@irobot.com>
-	 <alpine.DEB.2.00.0911170938380.3829@kauri.acheron.indranet.co.nz>
-	 <4B01D4A5.7060204@irobot.com>
-	 <alpine.DEB.2.00.0911171156210.3829@kauri.acheron.indranet.co.nz>
-	 <4B01E298.3030602@irobot.com>
-	 <alpine.DEB.2.00.0911171314470.3829@kauri.acheron.indranet.co.nz>
-	 <1258443484.1375.8.camel@johannes.local> <4B02DFE3.9040602@irobot.com>
-	 <4B0AEEE3.2050808@irobot.com> <1259018866.7094.189.camel@johannes.local>
-	 <4B0B2F6E.7050907@irobot.com> <1259025067.7094.208.camel@johannes.local>
-	 <4B0C1527.60305@irobot.com> <1259084493.3491.21.camel@johannes.local>
-	 <4B0C1E0A.9020003@irobot.com> <1259085518.3491.24.camel@johannes.local>
-	 <4B0C2720.3090308@irobot.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-V8/JS8JOzfhzrWOASh8k"
-Date: Tue, 24 Nov 2009 19:36:59 +0100
-Message-ID: <1259087819.3491.30.camel@johannes.local>
+	Mon, 2 Nov 2009 16:10:01 -0500
+Date: Mon, 2 Nov 2009 13:10:01 -0800
+From: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+To: Frank Schaefer <schaefer.frank@gmx.net>
+Cc: linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB N devices in cdrom mode
+Message-ID: <20091102211001.GH24436@one-eyed-alien.net>
+References: <200910171606.02961.oliver@neukum.org> <Pine.LNX.4.44L0.0910171130550.25594-100000@netrider.rowland.org> <20091017220313.GH24502@one-eyed-alien.net> <4ADC3657.6080906@gmx.net> <4AEDCCA0.8050709@gmx.net> <4AEDD380.40408@draisberghof.de> <20091101183553.GB24436@one-eyed-alien.net> <4AEDEE7C.4010406@gmx.net> <20091102004756.GC24436@one-eyed-alien.net> <4AEF3BF8.1080701@gmx.net>
 Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="17/8oYur5Y32USnW"
+In-Reply-To: <4AEF3BF8.1080701@gmx.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-V8/JS8JOzfhzrWOASh8k
-Content-Type: text/plain; charset="UTF-8"
+--17/8oYur5Y32USnW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2009-11-24 at 10:34 -0800, Adam Wozniak wrote:
-> Johannes Berg wrote:
-> > Or you can probably call rate_exit and rate_init but I don't know how
-> > the algorithms would react if you actually ask it for a rate during tha=
-t
-> > race window?
+On Mon, Nov 02, 2009 at 09:07:20PM +0100, Frank Schaefer wrote:
+> Matthew Dharm schrieb:
+> > I am thinking about the users.  Do you really think someone who has
+> > difficulty installing a new udev rule (probably a line or two of text
+> > copied from a google search) or installing a new version of usb_modeswi=
+tch
+> > (probably one or two commands to the distro package manager) will have =
+an
+> > easier time doing a custom kernel-compile and update?
 > >  =20
-> There is no rate_exit in rate_control_ops, only init and update.  There=20
-> is an rc80211_minstrel_exit() in rc80211_minstrel.c, but that just=20
-> unregisters the module, which I don't think is what you want.
+> I think users should not need to do ANY of these things ! That's called
+> usability.
 
-Hah, indeed, I thought it was symmetric, guess it's not.
+So, new hardware should "magically" work?  When you can write software to
+support hardware that doesn't exist yet, let me know.
 
-However, that reminds me that I actually wanted to get rid of
-rate_init() since it's mostly not useful to have it separate from
-alloc_sta()... oh well.
+> Which users do you think know how to create udev-rules and how to
+> compile a kernel ?
+> Of course you and me and likely all others on this mailing-list and
+> maybe you think Linux should be for them, only.
+>=20
+> I think we should do as much as possible to improve Linux-usability for
+> "normal" and even "less experienced" users.
 
-I suppose if we document clearly that rate_init maybe called multiple
-times and audit the existing algorithms the patch could be ok.
+Okay, let's talk about "less experienced" users.  Suppose you are one of
+these users.  You get a new device, and you want to use it.  You do some
+web searching, and discover either:
 
-johannes
+(a) you need to download and recompile your kernel
+(b) you need to cut-and-paste some text from a web page into a file
 
---=-V8/JS8JOzfhzrWOASh8k
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Which do you think is easier?
+
+And, the situation above pre-supposes that the requisite changes (kernel or
+userspace) haven't already been picked up by a distro maintainer.
+
+> And in this case, it would be really easy.
+> > Updates in userspace are universally easier; on users, on kernel deves,=
+ and
+> > on distro devs.
+> >
+> Why ? Of course, the benfit for kernel-developers is that the work is
+> done by others...
+> But for the distros it makes life much more difficult in many respects.
+
+I highly doubt this.  Distros must very carefully test all the kernel
+changes they decide to pull in.  Each and every change in a kernel-layer is
+a high-risk change for them.  Changing userspace packages is much
+lower-risk, and thus consumes correspondingly fewer resources.
+
+> And users are in the somehow insane situation that they have to keep the
+> driver (kernel) AND the "key to be able to use it" up-to-date.
+> That's not only a problem because they both things from different
+> sources/directions !
+
+I think you may have missed part of an earlier discussion, wherein we
+discussed such devices which would NOT need ANY kernel changes.  The idea
+was that udev could "eject" the fake-USB device, then add the device IDs to
+the serial/cdc_amc/whatever driver dynamically, at runtime.  Thus, no need
+to make any kernel updates at all.
+
+And, that system works *today* with the existing kernel code.
+
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+Okay, this isn't funny anymore! Let me down!  I'll tell Bill on you!!
+					-- Microsoft Salesman
+User Friendly, 4/1/1998
+
+--17/8oYur5Y32USnW
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
 
-iQIcBAABAgAGBQJLDCfFAAoJEODzc/N7+Qmap1sQAIb62XKv79KqN076Szwvrmj/
-U/0xrBOK2oStrQs77O69CW0xUmGlvEM2bRhTPxKBNzwqZpZ2RCFprB6FeY8ExwvU
-YAOzktjKw+Fjue6hJ5cob6y2Y0ufiEBJMEhpgs8aFMShD7QBNwZJCe8Guib8904M
-Vn1K8apFPXJGGeX8S2BudUGpuv7T+EHcsy3qNbu/JktoSQPrRJxI4M6jNp07aDm7
-QrrhLAcik8IU6CmsWSQpP0fUCyYnEV4J82AlZx3XsRyv6qqzUemXZ/Xb9sHW+ao0
-h1More8mFMA3NuROyEN7TsYhMDdP7q4p8dJ4e3QiZ2EaAFyPv626cMpzFArinfFP
-FVuMC5/Rc7cqtyRydjebUWrUIsDN3FivMiFfN5PTMfsVI24g872WfWmXCDz8llAN
-K8Fbpiz3XQ0uM0wx+6Cm7obABCSky11stEoHpSmGFfbB9UNfHO0eiXQcr8SW4qnf
-OZ4kCDVxzXfNqjxCwfKqgQJXdgz+SuLvOHsXNWDN+W5nb7KSvGhSPoTg/QMI3lkb
-r5Ut9+jM2CoS0mxn+S9+p0M+v281OzXxjOsIolRDsIagSH/FYts7nFgtFqoRL0bt
-7+TMMSacYLRPkdXTVWq7kgcFgfpa8ZSFUDfzRrbBcOBMCeCZ98Vi8QlquGMEe9/+
-cwZjGly1wO3DX7UkzKuW
-=5UES
+iD8DBQFK70qpHL9iwnUZqnkRAt+JAJ9uukAquCusn8F1GVVzGx4H30GSigCgm1+q
+YjjRF00/tf/JKFSE7JYaVSU=
+=nx9k
 -----END PGP SIGNATURE-----
 
---=-V8/JS8JOzfhzrWOASh8k--
-
+--17/8oYur5Y32USnW--
