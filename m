@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:43449 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753288AbZKEBk7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 20:40:59 -0500
-MIME-Version: 1.0
-In-Reply-To: <4AF22A99.7050407@kernel.org>
-References: <43e72e890911041540hd1e5f87u8d282d9c95857504@mail.gmail.com>
-	<alpine.LFD.2.01.0911041551220.31845@localhost.localdomain>
-	<43e72e890911041616w547fc9e4t34915827f65c2682@mail.gmail.com>
-	<4AF22A99.7050407@kernel.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 4 Nov 2009 17:40:44 -0800
-Message-ID: <43e72e890911041740p2095f3bdqf576c0730f1a850e@mail.gmail.com>
-Subject: Re: Reverting 5d423 fixes loading of ath9k on Acer Extensa 7630EZ
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Ingo Molnar <mingo@elte.hu>, linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Yannick Roehlly <yannick.roehlly@free.fr>,
-	Jesse Barnes <jesse.barnes@intel.com>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"John W. Linville" <linville@tuxdriver.com>, berndl81@gmx.at,
-	Greg KH <greg@kroah.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:58673 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755655AbZKBViA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2009 16:38:00 -0500
+Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB N
+ devices in cdrom mode
+From: Dan Williams <dcbw@redhat.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Frank Schaefer <schaefer.frank@gmx.net>,
+	Matthew Dharm <mdharm-usb@one-eyed-alien.net>,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
+In-Reply-To: <20091102210519.7d309fb9@lxorguk.ukuu.org.uk>
+References: <200910171606.02961.oliver@neukum.org>
+	 <Pine.LNX.4.44L0.0910171130550.25594-100000@netrider.rowland.org>
+	 <20091017220313.GH24502@one-eyed-alien.net> <4ADC3657.6080906@gmx.net>
+	 <4AEDCCA0.8050709@gmx.net> <4AEDD380.40408@draisberghof.de>
+	 <4AEDEB85.5080105@gmx.net> <20091102005144.GE24436@one-eyed-alien.net>
+	 <4AEF3CAD.10809@gmx.net> <1257193115.1027.24.camel@localhost.localdomain>
+	 <20091102210519.7d309fb9@lxorguk.ukuu.org.uk>
+Content-Type: text/plain
+Date: Mon, 02 Nov 2009 13:37:38 -0800
+Message-Id: <1257197858.1027.59.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 4, 2009 at 5:30 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Luis R. Rodriguez wrote:
->> On Wed, Nov 4, 2009 at 3:57 PM, Linus Torvalds
->> <torvalds@linux-foundation.org> wrote:
->>>
->>> On Wed, 4 Nov 2009, Luis R. Rodriguez wrote:
->>>> Can you please consider reviewing this issue and help determine if
->>>> this indeed needs to be reverted for 2.6.32 and the next 2.6.31.y.
->>>>
->>>> I am curious if other devices would work by reverting this as well.
->>>> [ ... ] For details please feel free to check:
->>>>
->>>> http://bugzilla.kernel.org/show_bug.cgi?id=14402
->>> That same commit was the cause for
->>>
->>>        http://bugzilla.kernel.org/show_bug.cgi?id=13940
->>>
->>> and we just increased the rounding to make it go away (see commit
->>> 15b812f1). But that was a hack.
->>>
->>> And if that didn't help the ath9k case, then we should just revert
->>> entirely.
->>
->> Alright, will see if Bernhard is up for testing the 15b812f1 hack and
->> report back.
->
-> can you post whole boot log with debug?
+On Mon, 2009-11-02 at 21:05 +0000, Alan Cox wrote:
+> > apparently do use the driver CD thing to send Linux drivers and software
+> > to a few clients.  But by and large, the driver CD is completely
+> > useless.
+> 
+> And then every so often you need to rummage around the driver CD image to
+> extract the APN or other data you need to make your modem work. At which
+> point you end up having to recompile the kernel to get it. Very annoying
+> given it could be trivially done properly in user space.
+> 
+> HAL probably needs the database of these devices *not* the kernel.
 
-You can find the logs without 15b812f1 on the bug report. I'll poke
-Bernhard to poke logs with 15b812f1 applied.
+It's udev these days; HAL is going away since it and udev pretty much
+can do the same thing anyway.  The tool you're looking for is called
+usb_modeswitch, but it needs a bit of work to Just Work in a stock
+distro install with the user having to edit a config file.
 
-  Luis
+Dan
+
