@@ -1,174 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46341 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752400AbZKDNna (ORCPT
+Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:58954
+	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755465AbZKBVL3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 08:43:30 -0500
-Subject: [PATCH] mac80211: make ieee80211_find_sta per virtual interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 04 Nov 2009 14:42:28 +0100
-Message-ID: <1257342148.28469.92.camel@johannes.local>
+	Mon, 2 Nov 2009 16:11:29 -0500
+Date: Mon, 2 Nov 2009 13:11:23 -0800
+From: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Frank Schaefer <schaefer.frank@gmx.net>,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB N devices in cdrom mode
+Message-ID: <20091102211123.GI24436@one-eyed-alien.net>
+References: <200910171606.02961.oliver@neukum.org> <Pine.LNX.4.44L0.0910171130550.25594-100000@netrider.rowland.org> <20091017220313.GH24502@one-eyed-alien.net> <4ADC3657.6080906@gmx.net> <4AEDCCA0.8050709@gmx.net> <4AEDD380.40408@draisberghof.de> <4AEDEB85.5080105@gmx.net> <20091102005144.GE24436@one-eyed-alien.net> <4AEF3CAD.10809@gmx.net> <1257193115.1027.24.camel@localhost.localdomain>
 Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="gTY1JhLGodeuSBqf"
+In-Reply-To: <1257193115.1027.24.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since we have a TODO item to make all station
-management dependent on virtual interfaces, I
-figured I'd start with pushing such a change
-to drivers before more drivers start using the
-ieee80211_find_sta() API with a hw pointer and
-cause us grief later on.
 
-For now continue exporting the old API in form
-of ieee80211_find_sta_by_hw(), but discourage
-its use strongly.
+--gTY1JhLGodeuSBqf
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/ath/ath9k/recv.c      |    3 ++-
- drivers/net/wireless/ath/ath9k/xmit.c      |    3 ++-
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c |    3 ++-
- drivers/net/wireless/iwlwifi/iwl-core.c    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-sta.c     |    2 +-
- include/net/mac80211.h                     |   25 +++++++++++++++++++++++--
- net/mac80211/sta_info.c                    |   18 ++++++++++++++++--
- 7 files changed, 47 insertions(+), 9 deletions(-)
+On Mon, Nov 02, 2009 at 12:18:35PM -0800, Dan Williams wrote:
+> Devices with fake driver CDs and how they are handled currently:
+>=20
+> Zydas WLAN   - kernel
+> Huawei 3G    - kernel  (unusual_devs entry)
+> Sierra 3G    - kernel  (drivers/usb/serial/sierra.c)
+> Option 3G    - udev rules, 'rezero', or usb_modeswitch
+> ZTE 3G       - udev rules, simple 'eject'
 
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-3945-rs.c	2009-11-04 14:14:46.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-3945-rs.c	2009-11-04 14:15:25.000000000 +0100
-@@ -913,7 +913,8 @@ void iwl3945_rate_scale_init(struct ieee
- 
- 	rcu_read_lock();
- 
--	sta = ieee80211_find_sta(hw, priv->stations[sta_id].sta.sta.addr);
-+	sta = ieee80211_find_sta(priv->vif,
-+				 priv->stations[sta_id].sta.sta.addr);
- 	if (!sta) {
- 		rcu_read_unlock();
- 		return;
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.c	2009-11-04 14:14:49.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.c	2009-11-04 14:15:25.000000000 +0100
-@@ -2301,7 +2301,7 @@ static void iwl_ht_conf(struct iwl_priv 
- 	switch (priv->iw_mode) {
- 	case NL80211_IFTYPE_STATION:
- 		rcu_read_lock();
--		sta = ieee80211_find_sta(priv->hw, priv->bssid);
-+		sta = ieee80211_find_sta(priv->vif, priv->bssid);
- 		if (sta) {
- 			struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
- 			int maxstreams;
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-sta.c	2009-11-04 14:14:47.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-sta.c	2009-11-04 14:15:25.000000000 +0100
-@@ -1017,7 +1017,7 @@ int iwl_rxon_add_station(struct iwl_priv
- 	 */
- 	if (priv->current_ht_config.is_ht) {
- 		rcu_read_lock();
--		sta = ieee80211_find_sta(priv->hw, addr);
-+		sta = ieee80211_find_sta(priv->vif, addr);
- 		if (sta) {
- 			memcpy(&ht_config, &sta->ht_cap, sizeof(ht_config));
- 			cur_ht_config = &ht_config;
---- wireless-testing.orig/include/net/mac80211.h	2009-11-04 14:14:50.000000000 +0100
-+++ wireless-testing/include/net/mac80211.h	2009-11-04 14:15:25.000000000 +0100
-@@ -2106,16 +2106,37 @@ void ieee80211_stop_tx_ba_cb_irqsafe(str
- /**
-  * ieee80211_find_sta - find a station
-  *
-- * @hw: pointer as obtained from ieee80211_alloc_hw()
-+ * @vif: virtual interface to look for station on
-  * @addr: station's address
-  *
-  * This function must be called under RCU lock and the
-  * resulting pointer is only valid under RCU lock as well.
-  */
--struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_hw *hw,
-+struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_vif *vif,
- 					 const u8 *addr);
- 
- /**
-+ * ieee80211_find_sta_by_hw - find a station on hardware
-+ *
-+ * @hw: pointer as obtained from ieee80211_alloc_hw()
-+ * @addr: station's address
-+ *
-+ * This function must be called under RCU lock and the
-+ * resulting pointer is only valid under RCU lock as well.
-+ *
-+ * NOTE: This function should not be used! When mac80211 is converted
-+ *	 internally to properly keep track of stations on multiple
-+ *	 virtual interfaces, it will not always know which station to
-+ *	 return here since a single address might be used by multiple
-+ *	 logical stations (e.g. consider a station connecting to another
-+ *	 BSSID on the same AP hardware without disconnecting first).
-+ *
-+ * DO NOT USE THIS FUNCTION.
-+ */
-+struct ieee80211_sta *ieee80211_find_sta_by_hw(struct ieee80211_hw *hw,
-+					       const u8 *addr);
-+
-+/**
-  * ieee80211_beacon_loss - inform hardware does not receive beacons
-  *
-  * @vif: &struct ieee80211_vif pointer from &struct ieee80211_if_init_conf.
---- wireless-testing.orig/net/mac80211/sta_info.c	2009-11-04 14:14:50.000000000 +0100
-+++ wireless-testing/net/mac80211/sta_info.c	2009-11-04 14:33:56.000000000 +0100
-@@ -801,8 +801,8 @@ void ieee80211_sta_expire(struct ieee802
- 		sta_info_destroy(sta);
- }
- 
--struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_hw *hw,
--					 const u8 *addr)
-+struct ieee80211_sta *ieee80211_find_sta_by_hw(struct ieee80211_hw *hw,
-+					       const u8 *addr)
- {
- 	struct sta_info *sta = sta_info_get(hw_to_local(hw), addr);
- 
-@@ -810,4 +810,18 @@ struct ieee80211_sta *ieee80211_find_sta
- 		return NULL;
- 	return &sta->sta;
- }
-+EXPORT_SYMBOL_GPL(ieee80211_find_sta_by_hw);
-+
-+struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_vif *vif,
-+					 const u8 *addr)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	if (!vif)
-+		return NULL;
-+
-+	sdata = vif_to_sdata(vif);
-+
-+	return ieee80211_find_sta_by_hw(&sdata->local->hw, addr);
-+}
- EXPORT_SYMBOL(ieee80211_find_sta);
---- wireless-testing.orig/drivers/net/wireless/ath/ath9k/recv.c	2009-11-04 14:14:46.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/ath/ath9k/recv.c	2009-11-04 14:16:40.000000000 +0100
-@@ -202,7 +202,8 @@ static int ath_rx_prepare(struct sk_buff
- 	}
- 
- 	rcu_read_lock();
--	sta = ieee80211_find_sta(sc->hw, hdr->addr2);
-+	/* XXX: use ieee80211_find_sta! */
-+	sta = ieee80211_find_sta_by_hw(sc->hw, hdr->addr2);
- 	if (sta) {
- 		an = (struct ath_node *) sta->drv_priv;
- 		if (ds->ds_rxstat.rs_rssi != ATH9K_RSSI_BAD &&
---- wireless-testing.orig/drivers/net/wireless/ath/ath9k/xmit.c	2009-11-04 14:14:46.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/ath/ath9k/xmit.c	2009-11-04 14:16:40.000000000 +0100
-@@ -282,7 +282,8 @@ static void ath_tx_complete_aggr(struct 
- 
- 	rcu_read_lock();
- 
--	sta = ieee80211_find_sta(sc->hw, hdr->addr1);
-+	/* XXX: use ieee80211_find_sta! */
-+	sta = ieee80211_find_sta_by_hw(sc->hw, hdr->addr1);
- 	if (!sta) {
- 		rcu_read_unlock();
- 		return;
+It's worth noting that for some of these which are handled in-kernel, it
+had to be done that way because their storage-emulation was so poor that
+the normal 'eject' WOULD NOT work properly.
 
+Any device which can be handled in userspace SHOULD be handled there.
 
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+But where are the THEMES?!  How do you expect me to use an OS without=20
+themes?!
+					-- Stef
+User Friendly, 10/9/1998
+
+--gTY1JhLGodeuSBqf
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQFK70r7HL9iwnUZqnkRAkP+AJ95takg/AUNwLej/Per/JORgu9plgCePxWp
+iMujnaBqDJvRYuZ/dhwij4o=
+=F9NV
+-----END PGP SIGNATURE-----
+
+--gTY1JhLGodeuSBqf--
