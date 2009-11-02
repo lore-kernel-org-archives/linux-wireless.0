@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lunatiki.de ([85.214.70.22]:56073 "EHLO
-	h1112006.serverkompetenz.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756590AbZKURvW (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:46055 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754799AbZKBTek (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Nov 2009 12:51:22 -0500
-From: Patrick Grimm <patrick@lunatiki.de>
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Subject: Re: iwlagn + Ad-Hoc + 5Ghz
-Date: Sat, 21 Nov 2009 18:21:53 +0100
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Jeremy Moles <jeremy@emperorlinux.com>,
-	linux-wireless@vger.kernel.org
-References: <1258756647.2714.17.camel@localhost.localdomain> <43e72e890911201526y5b36328ft3a510e546508df66@mail.gmail.com> <4B07A9F8.9050306@free.fr>
-In-Reply-To: <4B07A9F8.9050306@free.fr>
+	Mon, 2 Nov 2009 14:34:40 -0500
+Received: by iwn10 with SMTP id 10so3567793iwn.4
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2009 11:34:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <200911211821.53377.patrick@lunatiki.de>
+In-Reply-To: <44491.72003.qm@web57906.mail.re3.yahoo.com>
+References: <43e72e890911020945n7590b287je116d50561095980@mail.gmail.com>
+	<44491.72003.qm@web57906.mail.re3.yahoo.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 2 Nov 2009 11:34:23 -0800
+Message-ID: <43e72e890911021134s91ae1bbw49cabfb970f82fc6@mail.gmail.com>
+Subject: Re: May I join ath9k_htc update 2009-10-28
+To: hong zhang <henryzhang62@yahoo.com>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	devel@linuxdriverproject.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Samstag, 21. November 2009 09:51:04 schrieb Benoit PAPILLAULT:
-> Hello,
-> 
-> I got the same problem with Intel 4965 and Intel 5350 since those cards
-> are using the same drivers. Like Luis mentionned, "no IBSS" should be
-> read as "no beaconing authorized by local regulation". However, I think
-> the iwlagn interpretation is a bit broad and such restrictions should be
-> done by the CRDA framework instead of the driver itself.
-> 
-> Here in France, IBSS is authorized on all channels. So I made a small
-> patch to enable the EEPROM_CHANNEL_IBSS flag everywhere (in iwl-core.c
-> and iwl-dev.h) and it just works.
-> 
-> Will try to post the patch on Monday.
-Hi
+On Mon, Nov 2, 2009 at 11:26 AM, hong zhang <henryzhang62@yahoo.com> wrote:
+> TL-WN721N is not 11n complied.
 
-I have set iw reg DE and the channel 12 and 13 have also the "no IBSS" Flag.
-Fix your Patch this too?
+Huh? TL-WN721N should be ar9271 hardware. All ar9271 devices are
+single stream devices which means the highest MCS rate is MCS 7. I
+forget but I believe 11n wifi cert accepts single stream devices now.
 
-Greetings
-                       Patrick
+> TL-WN821N complies with 11n.
 
+As per Christian it seems this is an ar9170 device, which is dual
+stream and using the older Atheros hardware. It certainly has capacity
+to TX/RX more but remember that it is more expensive too. Single
+stream devices bring 802.11n hardware price down to a competitive
+level and kill 802.11g :)
+
+  Luis
