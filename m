@@ -1,317 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:34744 "EHLO ds10.mine.nu"
+Received: from smtp1-g21.free.fr ([212.27.42.1]:33311 "EHLO smtp1-g21.free.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750805AbZKKFPB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 00:15:01 -0500
-Message-ID: <4AFA4858.5020103@openwrt.org>
-Date: Wed, 11 Nov 2009 06:15:04 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
+	id S1754762AbZKBXmu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2009 18:42:50 -0500
+From: Christian Casteyde <casteyde.christian@free.fr>
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: 2.6.32-rc5-git3: Reported regressions from 2.6.31
+Date: Tue, 3 Nov 2009 00:43:26 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
 	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v3 2/2] mac80211: implement support for 4-address frames for
- AP and client mode
-References: <4AF9A886.9090902@openwrt.org> <4AF9A8E1.6010104@openwrt.org>
-In-Reply-To: <4AF9A8E1.6010104@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+References: <Sj-rRjx6TwF.A.djE.vqe5KB@chimera> <200910282138.37401.casteyde.christian@free.fr> <200911011628.34535.mb@bu3sch.de>
+In-Reply-To: <200911011628.34535.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200911030043.26510.casteyde.christian@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some situations it might be useful to run a network with an
-Access Point and multiple clients, but with each client bridged
-to a network behind it. For this to work, both the client and the
-AP need to transmit 4-address frames, containing both source and
-destination MAC addresses.
-With this patch, you can configure a client to communicate using
-only 4-address frames for data traffic.
-On the AP side you can enable 4-address frames for individual
-clients by isolating them in separate AP VLANs which are configured
-in 4-address mode.
-Such an AP VLAN will be limited to one client only, and this client
-will be used as the destination for all traffic on its interface,
-regardless of the destination MAC address in the packet headers.
-The advantage of this mode compared to regular WDS mode is that it's
-easier to configure and does not require a static list of peer MAC
-addresses on any side.
+Nothing to mention: it seems to work, at least on my hardware.
+I got the Allocated bounce buffer log, and managed to boot without any error, 
+associate and access the web/ssh another computer (and didn't get any 
+kmemcheck error of course).
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
-v2: 
-  - minor coding style cleanups
-  - better return code when trying to add a sta to a used 4-addr vlan
-  - check interface type before setting 4-addr mode and reset the mode
-    on interface type changes
-v3:
-  - fix a bug that led to broadcast frames being reflected back from
-    the ap to the wds sta
+CC
 
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -208,6 +208,9 @@ struct ieee80211_if_wds {
- 
- struct ieee80211_if_vlan {
- 	struct list_head list;
-+
-+	/* used for all tx if the VLAN is configured to 4-addr mode */
-+	struct sta_info *sta;
- };
- 
- struct mesh_stats {
-@@ -457,6 +460,8 @@ struct ieee80211_sub_if_data {
- 	int force_unicast_rateidx; /* forced TX rateidx for unicast frames */
- 	int max_ratectrl_rateidx; /* max TX rateidx for rate control */
- 
-+	bool use_4addr; /* use 4-address frames */
-+
- 	union {
- 		struct ieee80211_if_ap ap;
- 		struct ieee80211_if_wds wds;
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -36,6 +36,24 @@ static bool nl80211_type_check(enum nl80
- 	}
- }
- 
-+static bool nl80211_params_check(enum nl80211_iftype type,
-+				 struct vif_params *params)
-+{
-+	if (!nl80211_type_check(type))
-+		return false;
-+
-+	if (params->use_4addr > 0) {
-+		switch(type) {
-+		case NL80211_IFTYPE_AP_VLAN:
-+		case NL80211_IFTYPE_STATION:
-+			break;
-+		default:
-+			return false;
-+		}
-+	}
-+	return true;
-+}
-+
- static int ieee80211_add_iface(struct wiphy *wiphy, char *name,
- 			       enum nl80211_iftype type, u32 *flags,
- 			       struct vif_params *params)
-@@ -45,7 +63,7 @@ static int ieee80211_add_iface(struct wi
- 	struct ieee80211_sub_if_data *sdata;
- 	int err;
- 
--	if (!nl80211_type_check(type))
-+	if (!nl80211_params_check(type, params))
- 		return -EINVAL;
- 
- 	err = ieee80211_if_add(local, name, &dev, type, params);
-@@ -75,7 +93,7 @@ static int ieee80211_change_iface(struct
- 	if (netif_running(dev))
- 		return -EBUSY;
- 
--	if (!nl80211_type_check(type))
-+	if (!nl80211_params_check(type, params))
- 		return -EINVAL;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-@@ -89,6 +107,9 @@ static int ieee80211_change_iface(struct
- 					    params->mesh_id_len,
- 					    params->mesh_id);
- 
-+	if (params->use_4addr >= 0)
-+		sdata->use_4addr = !!params->use_4addr;
-+
- 	if (sdata->vif.type != NL80211_IFTYPE_MONITOR || !flags)
- 		return 0;
- 
-@@ -806,6 +827,13 @@ static int ieee80211_change_station(stru
- 			return -EINVAL;
- 		}
- 
-+		if (vlansdata->use_4addr) {
-+			if (vlansdata->u.vlan.sta)
-+				return -EBUSY;
-+
-+			rcu_assign_pointer(vlansdata->u.vlan.sta, sta);
-+		}
-+
- 		sta->sdata = vlansdata;
- 		ieee80211_send_layer2_update(sta);
- 	}
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -489,6 +489,9 @@ static void __sta_info_unlink(struct sta
- 	local->num_sta--;
- 	local->sta_generation++;
- 
-+	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+		rcu_assign_pointer(sdata->u.vlan.sta, NULL);
-+
- 	if (local->ops->sta_notify) {
- 		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
- 			sdata = container_of(sdata->bss,
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1046,7 +1046,10 @@ ieee80211_tx_prepare(struct ieee80211_su
- 
- 	hdr = (struct ieee80211_hdr *) skb->data;
- 
--	tx->sta = sta_info_get(local, hdr->addr1);
-+	if ((sdata->vif.type == NL80211_IFTYPE_AP_VLAN) && sdata->use_4addr)
-+		tx->sta = rcu_dereference(sdata->u.vlan.sta);
-+	if (!tx->sta)
-+		tx->sta = sta_info_get(local, hdr->addr1);
- 
- 	if (tx->sta && ieee80211_is_data_qos(hdr->frame_control) &&
- 	    (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION)) {
-@@ -1608,7 +1611,7 @@ netdev_tx_t ieee80211_subif_start_xmit(s
- 	const u8 *encaps_data;
- 	int encaps_len, skip_header_bytes;
- 	int nh_pos, h_pos;
--	struct sta_info *sta;
-+	struct sta_info *sta = NULL;
- 	u32 sta_flags = 0;
- 
- 	if (unlikely(skb->len < ETH_HLEN)) {
-@@ -1625,8 +1628,25 @@ netdev_tx_t ieee80211_subif_start_xmit(s
- 	fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_DATA);
- 
- 	switch (sdata->vif.type) {
--	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_AP_VLAN:
-+		rcu_read_lock();
-+		if (sdata->use_4addr)
-+			sta = rcu_dereference(sdata->u.vlan.sta);
-+		if (sta) {
-+			fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
-+			/* RA TA DA SA */
-+			memcpy(hdr.addr1, sta->sta.addr, ETH_ALEN);
-+			memcpy(hdr.addr2, dev->dev_addr, ETH_ALEN);
-+			memcpy(hdr.addr3, skb->data, ETH_ALEN);
-+			memcpy(hdr.addr4, skb->data + ETH_ALEN, ETH_ALEN);
-+			hdrlen = 30;
-+			sta_flags = get_sta_flags(sta);
-+		}
-+		rcu_read_unlock();
-+		if (sta)
-+			break;
-+		/* fall through */
-+	case NL80211_IFTYPE_AP:
- 		fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS);
- 		/* DA BSSID SA */
- 		memcpy(hdr.addr1, skb->data, ETH_ALEN);
-@@ -1700,12 +1720,21 @@ netdev_tx_t ieee80211_subif_start_xmit(s
- 		break;
- #endif
- 	case NL80211_IFTYPE_STATION:
--		fc |= cpu_to_le16(IEEE80211_FCTL_TODS);
--		/* BSSID SA DA */
- 		memcpy(hdr.addr1, sdata->u.mgd.bssid, ETH_ALEN);
--		memcpy(hdr.addr2, skb->data + ETH_ALEN, ETH_ALEN);
--		memcpy(hdr.addr3, skb->data, ETH_ALEN);
--		hdrlen = 24;
-+		if (sdata->use_4addr && ethertype != ETH_P_PAE) {
-+			fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
-+			/* RA TA DA SA */
-+			memcpy(hdr.addr2, dev->dev_addr, ETH_ALEN);
-+			memcpy(hdr.addr3, skb->data, ETH_ALEN);
-+			memcpy(hdr.addr4, skb->data + ETH_ALEN, ETH_ALEN);
-+			hdrlen = 30;
-+		} else {
-+			fc |= cpu_to_le16(IEEE80211_FCTL_TODS);
-+			/* BSSID SA DA */
-+			memcpy(hdr.addr2, skb->data + ETH_ALEN, ETH_ALEN);
-+			memcpy(hdr.addr3, skb->data, ETH_ALEN);
-+			hdrlen = 24;
-+		}
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		/* DA SA BSSID */
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -772,6 +772,7 @@ int ieee80211_if_change_type(struct ieee
- 		ieee80211_mandatory_rates(sdata->local,
- 			sdata->local->hw.conf.channel->band);
- 	sdata->drop_unencrypted = 0;
-+	sdata->use_4addr = 0;
- 
- 	return 0;
- }
-@@ -853,6 +854,9 @@ int ieee80211_if_add(struct ieee80211_lo
- 					    params->mesh_id_len,
- 					    params->mesh_id);
- 
-+	if (params && params->use_4addr >= 0)
-+		sdata->use_4addr = !!params->use_4addr;
-+
- 	mutex_lock(&local->iflist_mtx);
- 	list_add_tail_rcu(&sdata->list, &local->interfaces);
- 	mutex_unlock(&local->iflist_mtx);
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1237,6 +1237,13 @@ __ieee80211_data_to_8023(struct ieee8021
- {
- 	struct net_device *dev = rx->dev;
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN && !sdata->use_4addr &&
-+	    ieee80211_has_a4(hdr->frame_control))
-+		return -1;
-+	if (sdata->use_4addr && is_multicast_ether_addr(hdr->addr1))
-+		return -1;
- 
- 	return ieee80211_data_to_8023(rx->skb, dev->dev_addr, sdata->vif.type);
- }
-@@ -1285,7 +1292,7 @@ ieee80211_deliver_skb(struct ieee80211_r
- 	if ((sdata->vif.type == NL80211_IFTYPE_AP ||
- 	     sdata->vif.type == NL80211_IFTYPE_AP_VLAN) &&
- 	    !(sdata->flags & IEEE80211_SDATA_DONT_BRIDGE_PACKETS) &&
--	    (rx->flags & IEEE80211_RX_RA_MATCH)) {
-+	    (rx->flags & IEEE80211_RX_RA_MATCH) && !rx->sdata->use_4addr) {
- 		if (is_multicast_ether_addr(ehdr->h_dest)) {
- 			/*
- 			 * send multicast frames both to higher layers in
-@@ -1590,6 +1597,7 @@ ieee80211_rx_h_data(struct ieee80211_rx_
- {
- 	struct net_device *dev = rx->dev;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	__le16 fc = hdr->frame_control;
- 	int err;
- 
-@@ -1599,6 +1607,14 @@ ieee80211_rx_h_data(struct ieee80211_rx_
- 	if (unlikely(!ieee80211_is_data_present(hdr->frame_control)))
- 		return RX_DROP_MONITOR;
- 
-+	/*
-+	 * Allow the cooked monitor interface of an AP to see 4-addr frames so
-+	 * that a 4-addr station can be detected and moved into a separate VLAN
-+	 */
-+	if (ieee80211_has_a4(hdr->frame_control) &&
-+	    sdata->vif.type == NL80211_IFTYPE_AP)
-+		return RX_DROP_MONITOR;
-+
- 	err = __ieee80211_data_to_8023(rx);
- 	if (unlikely(err))
- 		return RX_DROP_UNUSABLE;
-@@ -2039,7 +2055,7 @@ static int prepare_for_handlers(struct i
- 
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_STATION:
--		if (!bssid)
-+		if (!bssid && !sdata->use_4addr)
- 			return 0;
- 		if (!multicast &&
- 		    compare_ether_addr(sdata->dev->dev_addr, hdr->addr1) != 0) {
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -320,7 +320,9 @@ int ieee80211_data_to_8023(struct sk_buf
- 		break;
- 	case cpu_to_le16(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS):
- 		if (unlikely(iftype != NL80211_IFTYPE_WDS &&
--			     iftype != NL80211_IFTYPE_MESH_POINT))
-+			     iftype != NL80211_IFTYPE_MESH_POINT &&
-+			     iftype != NL80211_IFTYPE_AP_VLAN &&
-+			     iftype != NL80211_IFTYPE_STATION))
- 			return -1;
- 		if (iftype == NL80211_IFTYPE_MESH_POINT) {
- 			struct ieee80211s_hdr *meshdr =
+Le dimanche 01 novembre 2009 16:28:34, Michael Buesch a écrit :
+> On Wednesday 28 October 2009 21:38:37 Christian Casteyde wrote:
+> > I've just tested the patch posted in bugzilla: it works.
+> > That is, I do not manage to get the warning anymore in 3 boots in a row.
+> 
+> Can you try this patch (on top of the previous one), please?
+> It should fix the issue correctly by removing the skb copying.
+> While testing make sure the debugging message
+> "Allocated bounce buffer"
+> shows up in the kernel log.
+> 
+> 
+> 
+> Index: wireless-testing/drivers/net/wireless/b43/dma.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/b43/dma.c	2009-11-01
+>  15:10:48.000000000 +0100 +++
+>  wireless-testing/drivers/net/wireless/b43/dma.c	2009-11-01
+>  16:26:00.000000000 +0100 @@ -1157,18 +1157,17 @@ struct b43_dmaring
+>  *parse_cookie(struct
+>  }
+> 
+>  static int dma_tx_fragment(struct b43_dmaring *ring,
+> -			   struct sk_buff **in_skb)
+> +			   struct sk_buff *skb)
+>  {
+> -	struct sk_buff *skb = *in_skb;
+>  	const struct b43_dma_ops *ops = ring->ops;
+>  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+> +	struct b43_private_tx_info *priv_info = b43_get_priv_tx_info(info);
+>  	u8 *header;
+>  	int slot, old_top_slot, old_used_slots;
+>  	int err;
+>  	struct b43_dmadesc_generic *desc;
+>  	struct b43_dmadesc_meta *meta;
+>  	struct b43_dmadesc_meta *meta_hdr;
+> -	struct sk_buff *bounce_skb;
+>  	u16 cookie;
+>  	size_t hdrsize = b43_txhdr_size(ring->dev);
+> 
+> @@ -1212,34 +1211,34 @@ static int dma_tx_fragment(struct b43_dm
+> 
+>  	meta->skb = skb;
+>  	meta->is_last_fragment = 1;
+> +	priv_info->bouncebuffer = NULL;
+> 
+>  	meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
+>  	/* create a bounce buffer in zone_dma on mapping failure. */
+>  	if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
+> -		bounce_skb = __dev_alloc_skb(skb->len, GFP_ATOMIC | GFP_DMA);
+> -		if (!bounce_skb) {
+> +
+> +{
+> +static unsigned int count;
+> +if (count++ < 10)
+> +	printk(KERN_DEBUG "Allocated bounce buffer\n");
+> +}
+> +		priv_info->bouncebuffer = kmalloc(skb->len, GFP_ATOMIC | GFP_DMA);
+> +		if (!priv_info->bouncebuffer) {
+>  			ring->current_slot = old_top_slot;
+>  			ring->used_slots = old_used_slots;
+>  			err = -ENOMEM;
+>  			goto out_unmap_hdr;
+>  		}
+> +		memcpy(priv_info->bouncebuffer, skb->data, skb->len);
+> 
+> -		memcpy(skb_put(bounce_skb, skb->len), skb->data, skb->len);
+> -		memcpy(bounce_skb->cb, skb->cb, sizeof(skb->cb));
+> -		bounce_skb->dev = skb->dev;
+> -		skb_set_queue_mapping(bounce_skb, skb_get_queue_mapping(skb));
+> -		info = IEEE80211_SKB_CB(bounce_skb);
+> -
+> -		dev_kfree_skb_any(skb);
+> -		skb = bounce_skb;
+> -		*in_skb = bounce_skb;
+> -		meta->skb = skb;
+> -		meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
+> +		meta->dmaaddr = map_descbuffer(ring, priv_info->bouncebuffer, skb->len,
+>  1); if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
+> +			kfree(priv_info->bouncebuffer);
+> +			priv_info->bouncebuffer = NULL;
+>  			ring->current_slot = old_top_slot;
+>  			ring->used_slots = old_used_slots;
+>  			err = -EIO;
+> -			goto out_free_bounce;
+> +			goto out_unmap_hdr;
+>  		}
+>  	}
+> 
+> @@ -1256,8 +1255,6 @@ static int dma_tx_fragment(struct b43_dm
+>  	ops->poke_tx(ring, next_slot(ring, slot));
+>  	return 0;
+> 
+> -out_free_bounce:
+> -	dev_kfree_skb_any(skb);
+>  out_unmap_hdr:
+>  	unmap_descbuffer(ring, meta_hdr->dmaaddr,
+>  			 hdrsize, 1);
+> @@ -1362,11 +1359,7 @@ int b43_dma_tx(struct b43_wldev *dev, st
+>  	 * static, so we don't need to store it per frame. */
+>  	ring->queue_prio = skb_get_queue_mapping(skb);
+> 
+> -	/* dma_tx_fragment might reallocate the skb, so invalidate pointers
+>  pointing -	 * into the skb data or cb now. */
+> -	hdr = NULL;
+> -	info = NULL;
+> -	err = dma_tx_fragment(ring, &skb);
+> +	err = dma_tx_fragment(ring, skb);
+>  	if (unlikely(err == -ENOKEY)) {
+>  		/* Drop this packet, as we don't have the encryption key
+>  		 * anymore and must not transmit it unencrypted. */
+> @@ -1413,12 +1406,17 @@ void b43_dma_handle_txstatus(struct b43_
+>  		B43_WARN_ON(!(slot >= 0 && slot < ring->nr_slots));
+>  		desc = ops->idx2desc(ring, slot, &meta);
+> 
+> -		if (meta->skb)
+> -			unmap_descbuffer(ring, meta->dmaaddr, meta->skb->len,
+> -					 1);
+> -		else
+> +		if (meta->skb) {
+> +			struct b43_private_tx_info *priv_info =
+> +				b43_get_priv_tx_info(IEEE80211_SKB_CB(meta->skb));
+> +
+> +			unmap_descbuffer(ring, meta->dmaaddr, meta->skb->len, 1);
+> +			kfree(priv_info->bouncebuffer);
+> +			priv_info->bouncebuffer = NULL;
+> +		} else {
+>  			unmap_descbuffer(ring, meta->dmaaddr,
+>  					 b43_txhdr_size(dev), 1);
+> +		}
+> 
+>  		if (meta->is_last_fragment) {
+>  			struct ieee80211_tx_info *info;
+> Index: wireless-testing/drivers/net/wireless/b43/xmit.h
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/b43/xmit.h	2009-10-09
+>  19:50:15.000000000 +0200 +++
+>  wireless-testing/drivers/net/wireless/b43/xmit.h	2009-11-01
+>  16:05:46.000000000 +0100 @@ -2,6 +2,8 @@
+>  #define B43_XMIT_H_
+> 
+>  #include "main.h"
+> +#include <net/mac80211.h>
+> +
+> 
+>  #define _b43_declare_plcp_hdr(size) \
+>  	struct b43_plcp_hdr##size {		\
+> @@ -332,4 +334,21 @@ static inline u8 b43_kidx_to_raw(struct
+>  	return raw_kidx;
+>  }
+> 
+> +/* struct b43_private_tx_info - TX info private to b43.
+> + * The structure is placed in (struct ieee80211_tx_info
+>  *)->rate_driver_data + *
+> + * @bouncebuffer: DMA Bouncebuffer (if used)
+> + */
+> +struct b43_private_tx_info {
+> +	void *bouncebuffer;
+> +};
+> +
+> +static inline struct b43_private_tx_info *
+> +b43_get_priv_tx_info(struct ieee80211_tx_info *info)
+> +{
+> +	BUILD_BUG_ON(sizeof(struct b43_private_tx_info) >
+> +		     sizeof(info->rate_driver_data));
+> +	return (struct b43_private_tx_info *)info->rate_driver_data;
+> +}
+> +
+>  #endif /* B43_XMIT_H_ */
+> 
