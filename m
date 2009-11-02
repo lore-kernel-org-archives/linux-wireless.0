@@ -1,91 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:57630 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932347AbZKDRga (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 12:36:30 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+Received: from xenotime.net ([72.52.64.118]:53142 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1756565AbZKBRgR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2009 12:36:17 -0500
+Received: from ::ffff:96.253.169.185 ([96.253.169.185]) by xenotime.net for <linux-wireless@vger.kernel.org>; Mon, 2 Nov 2009 09:36:21 -0800
+Message-ID: <4AEF1894.2010809@xenotime.net>
+Date: Mon, 02 Nov 2009 09:36:20 -0800
+From: Randy Dunlap <rdunlap@xenotime.net>
+MIME-Version: 1.0
+To: Luis Correia <luis.f.correia@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jarek Poplawski <jarkao2@gmail.com>,
 	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 04 Nov 2009 18:36:10 +0100
-Message-Id: <20091104173610.28463.4270.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-Subject: [PATCH 34/41] rt2x00: add support for different chipset interfaces
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2009-10-28
+References: <1256886023.3555.5.camel@johannes.local>	 <20091030110616.GB6150@ff.dom.local>	 <20091030150223.GA2586@tuxdriver.com> <20091102091038.GA9044@elte.hu>	 <1257153807.3555.173.camel@johannes.local>	 <20091102100702.GA16963@elte.hu>	 <20091102170114.GE14046@tuxdriver.com> <efe7343f0911020932l21a570c8u9478568329d38e2c@mail.gmail.com>
+In-Reply-To: <efe7343f0911020932l21a570c8u9478568329d38e2c@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] rt2x00: add support for different chipset interfaces
+Luis Correia wrote:
+> [huge snip]
+> 
+> This is going to be my last reply to this thread (even if I get to be insulted).
+> 
+> I'm not a coder, I'm a tester and administrator for the rt2x00 project.
+> I'm not happy about the current state of the rt2x00 in-kernel drivers.
+> I tend to agree that more could be done.
+> 
+> Even though I'm not a coder, I could be hipotetically responsable for
+> the current situation. It is my job function to motivate people to
+> work on the rt2x00 in-kernel drivers, but apparently I've failed here.
+> It's not an atitude problem, as some have suggested, it's just life.
+> 
+> About Bartlomiej, there is only one more thing that I'll say:
+> 
+> I've searched on my GMail archives and the only patch Bart has
+> provided so far for the rt2x00 project is this:
+> 
+> [PATCH] MAINTAINERS: rt2x00 list is moderated
+> 
+> Which, while technically correct, adds nothing to the project.
 
-Enhance rt2x00 infrastructure by adding explicit information
-about used chipset interface to struct rt2x00_chip.
+whatever.  That patch still needs to be applied.
 
-The new field will be used by rt2800 drivers for rt2800 library.
+> So, I will personally continue to ignore Bart's comments, regards and
+> rants, until he provides patches for rt2x00 that actually make the
+> driver better.
+> 
+> Luis Correia
+> rt2x00 project admin,
+> (but not writing this email as an official project statement)
 
-Also add commonly used rt2x00_intf_is_pci() and rt2x00_intf_is_usb()
-helpers to make code easier to read (noticed by Ivo van Doorn).
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00.h |   29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
-
-Index: b/drivers/net/wireless/rt2x00/rt2x00.h
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -144,6 +144,11 @@ struct avg_val {
- 	int avg_weight;
- };
- 
-+enum rt2x00_chip_intf {
-+	RT2X00_CHIP_INTF_PCI,
-+	RT2X00_CHIP_INTF_USB,
-+};
-+
- /*
-  * Chipset identification
-  * The chipset on the device is composed of a RT and RF chip.
-@@ -169,6 +174,8 @@ struct rt2x00_chip {
- 
- 	u16 rf;
- 	u32 rev;
-+
-+	enum rt2x00_chip_intf intf;
- };
- 
- /*
-@@ -937,6 +944,28 @@ static inline bool rt2x00_check_rev(cons
- 	return ((chipset->rev & mask) == rev);
- }
- 
-+static inline void rt2x00_set_chip_intf(struct rt2x00_dev *rt2x00dev,
-+					enum rt2x00_chip_intf intf)
-+{
-+	rt2x00dev->chip.intf = intf;
-+}
-+
-+static inline bool rt2x00_intf(const struct rt2x00_chip *chipset,
-+			       enum rt2x00_chip_intf intf)
-+{
-+	return (chipset->intf == intf);
-+}
-+
-+static inline bool rt2x00_intf_is_pci(struct rt2x00_dev *rt2x00dev)
-+{
-+	return rt2x00_intf(&rt2x00dev->chip, RT2X00_CHIP_INTF_PCI);
-+}
-+
-+static inline bool rt2x00_intf_is_usb(struct rt2x00_dev *rt2x00dev)
-+{
-+	return rt2x00_intf(&rt2x00dev->chip, RT2X00_CHIP_INTF_USB);
-+}
-+
- /**
-  * rt2x00queue_map_txskb - Map a skb into DMA for TX purposes.
-  * @rt2x00dev: Pointer to &struct rt2x00_dev.
+-- 
+~Randy
