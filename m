@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:54212 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752989AbZKTUcO convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34787 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756759AbZKBUpN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 15:32:14 -0500
+	Mon, 2 Nov 2009 15:45:13 -0500
+Date: Mon, 2 Nov 2009 15:43:05 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Sujith <Sujith.Manoharan@atheros.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Fix IBSS merge
+Message-ID: <20091102204304.GL14046@tuxdriver.com>
+References: <19182.33851.980271.360757@gargle.gargle.HOWL> <1257151486.3555.161.camel@johannes.local> <20091102153614.GC14046@tuxdriver.com> <4AEF14E9.7060902@nbd.name> <43e72e890911020947i3a9ea736ve95fa6b1fac724a4@mail.gmail.com> <4AEF40A0.2030408@openwrt.org> <43e72e890911021236ra2a77baj6436abcc2d86cb3b@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1258746786.26965.83.camel@localhost.localdomain>
-References: <200911202027.13284.chunkeey@googlemail.com> <1258746786.26965.83.camel@localhost.localdomain>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 20 Nov 2009 12:32:00 -0800
-Message-ID: <43e72e890911201232m1e0d573cq74f40580296ca81d@mail.gmail.com>
-Subject: Re: [RFC] p54: software hot-swap eeprom image
-To: Dan Williams <dcbw@redhat.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890911021236ra2a77baj6436abcc2d86cb3b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 20, 2009 at 11:53 AM, Dan Williams <dcbw@redhat.com> wrote:
-> On Fri, 2009-11-20 at 20:27 +0100, Christian Lamparter wrote:
->> This (aggregated) patch adds a new sysfs file "eeprom_overwrite"
->> which can be used to upload an customized eeprom image to the
->> driver during normal operation.
->>
->> The old wlanX device will quickly vanish. And if the new EEPROM
->> image passes all sanity checks the device will reappear.
->>
->> Hopefully, this proves to be an adequate solution for everyone
->> with a bad/missing EEPROM data/chip.
->
-> Honestly I wonder if this would be better done with ethtool.  There's
-> already ethtool --eeprom-dump, would it be so hard to do an ethtool
-> --eeprom-load ?
->
-> I can see a number of devices doing this, so in my mind it makes sense
-> to have a generic facility for this sort of thing.  But then again it's
-> not so common an operation and its fraught with danger :)  Libertas
-> could potentially use this, but libertas has *two* EEPROM images that it
-> might need to update.  So if ethtool did grow --eeprom-load we may want
-> to account for more than one eeprom image.
->
-> What do people think?
+On Mon, Nov 02, 2009 at 12:36:31PM -0800, Luis R. Rodriguez wrote:
+> On Mon, Nov 2, 2009 at 12:27 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> > Luis R. Rodriguez wrote:
+> >> On Mon, Nov 2, 2009 at 9:20 AM, Felix Fietkau <nbd@nbd.name> wrote:
+> >>> John W. Linville wrote:
+> >>>> On Mon, Nov 02, 2009 at 09:44:46AM +0100, Johannes Berg wrote:
+> >>>>> On Mon, 2009-11-02 at 12:33 +0530, Sujith wrote:
+> >>>>> > Currently, in IBSS mode, a single creator would go into
+> >>>>> > a loop trying to merge/scan. This happens because the IBSS timer is
+> >>>>> > rearmed on finishing a scan and the subsequent
+> >>>>> > timer invocation requests another scan immediately.
+> >>>>> >
+> >>>>> > This patch fixes this issue by checking if we have just completed
+> >>>>> > a scan run trying to merge with other IBSS networks.
+> >>>>>
+> >>>>> Heh, how many people do we need to fix IBSS? :)
+> >>>>
+> >>>> Yeah, no kidding...I suspect that actual IBSS users are few, and a
+> >>>> substantial number of those are doing crazy things with it! :-)
+> >>> Yeah, we're doing crazy things like mesh networks of few hundred
+> >>> nodes... something that 11s isn't really suitable for. :-)
+> >>
+> >> Anyone know if this applies for 32?
+> > What exactly?
+> 
+> The patch.
 
-Can't request_firmware() be generalized for this sort of stuff too?
+The patch applies and seems sane.  It seems like 2.6.32 would need it as well?
 
-  Luis
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
