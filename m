@@ -1,38 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:55565 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757614AbZKDS2q (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:41026 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754057AbZKBIaz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 13:28:46 -0500
+	Mon, 2 Nov 2009 03:30:55 -0500
+Message-ID: <4AEE98AD.1080708@nokia.com>
+Date: Mon, 02 Nov 2009 10:30:37 +0200
+From: Luciano Coelho <luciano.coelho@nokia.com>
 MIME-Version: 1.0
-In-Reply-To: <20091104173217.28463.23610.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-	 <20091104173217.28463.23610.sendpatchset@localhost.localdomain>
-Date: Wed, 4 Nov 2009 19:28:51 +0100
-Message-ID: <14add3d10911041028p6ed937a2q8b08551fba61e28f@mail.gmail.com>
-Subject: Re: [PATCH 03/41] rt2800usb: fix rt2800usb_rfcsr_read()
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "ext Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] wl1271: use __dev_alloc_skb() on RX
+References: <1256927746-19352-1-git-send-email-lrodriguez@atheros.com> <4AEE9269.40006@nokia.com>
+In-Reply-To: <4AEE9269.40006@nokia.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 4, 2009 at 6:32 PM, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2800usb: fix rt2800usb_rfcsr_read()
->
-> The driver should write the read request into RF_CSR_CFG register
-> and not BBP_CSR_CFG one in rt2800usb_rfcsr_read().
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
+Coelho Luciano (Nokia-D/Helsinki) wrote:
+> Hi Luiz,
 
-For what it is worth:
+Oops! s/Luiz/Luis/
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-I believe this one should go to Linus and net-next a.s.a.p.
+-- 
+Cheers,
+Luca.
