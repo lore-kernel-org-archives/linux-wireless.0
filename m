@@ -1,48 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50883 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755917AbZKDPPT (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:62254 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753431AbZKBRQd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 10:15:19 -0500
-Date: Wed, 4 Nov 2009 10:15:06 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>
-Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project
-	tree
-Message-ID: <20091104151505.GE12965@tuxdriver.com>
-References: <200911031951.05235.bzolnier@gmail.com> <4AF09A15.3060504@gmail.com>
+	Mon, 2 Nov 2009 12:16:33 -0500
+Message-ID: <4AEF13E5.4090309@nokia.com>
+Date: Mon, 02 Nov 2009 19:16:21 +0200
+From: Luciano Coelho <luciano.coelho@nokia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4AF09A15.3060504@gmail.com>
+To: "ext Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wl1271: use __dev_alloc_skb() on RX
+References: <1257182115-31723-1-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1257182115-31723-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 03, 2009 at 10:01:09PM +0100, Gertjan van Wingerde wrote:
+ext Luis R. Rodriguez wrote:
+> RX is handled in a workqueue therefore allocating for GFP_ATOMIC
+> is overkill and not required.
+> 
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
+> ---
 
-> However, it is good to see that you have put effort in providing a patch series
-> for these issues.
+Thank you very much, Luis!
 
-Yes, indeed.  Thanks to Bart for making patches available!
-
-> Now, since I believe that it is better to work with people, rather than against
-> them, would it be possible to post this patch series somewhere as a set of 
-> separate patches, so that they can be reviewed as such?
-
-I must echo this request.
-
-Thanks!
-
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Cheers,
+Luca.
