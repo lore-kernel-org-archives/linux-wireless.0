@@ -1,85 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:58856 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753293AbZKHO6S convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 09:58:18 -0500
-Received: by ewy3 with SMTP id 3so2406902ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 06:58:22 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <200911081554.58330.IvDoorn@gmail.com>
-References: <1257689905-1611-1-git-send-email-gwingerde@gmail.com>
-	 <200911081525.58809.IvDoorn@gmail.com>
-	 <200911081548.09279.bzolnier@gmail.com>
-	 <200911081554.58330.IvDoorn@gmail.com>
-Date: Sun, 8 Nov 2009 14:58:22 +0000
-Message-ID: <880c1630911080658w81f7a05nc1f4d999d3292a70@mail.gmail.com>
-Subject: Re: [rt2x00-users] [PATCH 7/7] rt2x00: Update copyright statements.
-From: Luis Correia <buga@loide.net>
-To: rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:25531 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932178AbZKBUSx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Nov 2009 15:18:53 -0500
+Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB N
+ devices in cdrom mode
+From: Dan Williams <dcbw@redhat.com>
+To: Frank Schaefer <schaefer.frank@gmx.net>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
+In-Reply-To: <4AEF3CAD.10809@gmx.net>
+References: <200910171606.02961.oliver@neukum.org>
+	 <Pine.LNX.4.44L0.0910171130550.25594-100000@netrider.rowland.org>
+	 <20091017220313.GH24502@one-eyed-alien.net> <4ADC3657.6080906@gmx.net>
+	 <4AEDCCA0.8050709@gmx.net> <4AEDD380.40408@draisberghof.de>
+	 <4AEDEB85.5080105@gmx.net> <20091102005144.GE24436@one-eyed-alien.net>
+	 <4AEF3CAD.10809@gmx.net>
+Content-Type: text/plain
+Date: Mon, 02 Nov 2009 12:18:35 -0800
+Message-Id: <1257193115.1027.24.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 8, 2009 at 14:54, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> On Sunday 08 November 2009, Bartlomiej Zolnierkiewicz wrote:
->> On Sunday 08 November 2009 15:25:58 Ivo van Doorn wrote:
->>
->> > > diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
->> > > index 5c7d74a..3207b83 100644
->> > > --- a/drivers/net/wireless/rt2x00/rt2800lib.c
->> > > +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
->> > > @@ -3,7 +3,13 @@
->> > >
->> > >   Based on the original rt2800pci.c and rt2800usb.c:
->> > >
->> > > -   Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
->> > > +   Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>
->> > > +   Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>
->> > > +   Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
->> > > +   Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>
->> > > +   Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
->> > > +   Copyright (C) 2009 Mark Asselstine <asselsm@gmail.com>
->> > > +   Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
->> > >     <http://rt2x00.serialmonkey.com>
->> > >
->> > >   This program is free software; you can redistribute it and/or modify
->> >
->> > If Bartlomiej has no objections, we could just update the statements for rt2800lib.c/rt2800lib.h
->> > to something similar as rt2800.h:
->> >
->> > /*
->> >     Copyright (C) 2009 Bartlomiej Zolnierkiewicz
->> >     Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>
->> >     Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>
->> >     Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
->> >     Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>
->> >     Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
->> >     Copyright (C) 2009 Mark Asselstine <asselsm@gmail.com>
->> >     Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
->> >
->> >     This program is free software; you can redistribute it and/or modify
->> > ....
->> >
->> > because not sure if we need the seperate "based on" comment.. But I'll let Bartlomiej
->> > decide on this one.
->>
->> I think that the original version is correct and also documents new
->> development direction well.
->
-> Ok, then the individual developers can move their copyright notice to above the
-> "based on" statements when new patches from them arrive.
->
-> Ivo
->
-> _______________________________________________
-> users mailing list
-> users@rt2x00.serialmonkey.com
-> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
->
+On Mon, 2009-11-02 at 21:10 +0100, Frank Schaefer wrote:
+> Matthew Dharm schrieb:
+> > On Sun, Nov 01, 2009 at 09:11:49PM +0100, Frank Schaefer wrote:
+> >   
+> >> Josua Dietze schrieb:
+> >>     
+> >>> Frank Schaefer schrieb:
+> >>>       
+> >>>> I really think the mode-switching should be done in the kernel and not
+> >>>> in user-space for reasons of usability.
+> >>>>         
+> >>> What is wrong with an udev rule entry? By the way, did the "eject"
+> >>> command line tool work as well?
+> >>>       
+> >> It returns an error but the device is ejected.
+> >> But do you really want the users to open a terminal window and call
+> >> "eject" each time they plug their device in ;) ?
+> >>     
+> >
+> > If 'eject' worked, then why not use a simple udev entry?  That way nobody
+> > has to call anything by hand...
+> >
+> > Matt
+> >   
+> And who will create this udev-entry ;) ? How can you make sure that this
+> is done on all systems ?
 
-For all files where I'm referred:
+You can't.  The distros have to make sure it works.  Personally, I think
+these should all be in the kernel, but the kernel doesn't contain
+policy.  And unfortunately, for some devices (3G modems specifically)
+ejecting the driver CD thing *is* policy.  Option for example protested
+mightily when I sent a patch to auto-eject their driver CD, because they
+apparently do use the driver CD thing to send Linux drivers and software
+to a few clients.  But by and large, the driver CD is completely
+useless.
 
-Acked-by: Luis Correia <luis.f.correia@gmail.com>
+Devices with fake driver CDs and how they are handled currently:
+
+Zydas WLAN   - kernel
+Huawei 3G    - kernel  (unusual_devs entry)
+Sierra 3G    - kernel  (drivers/usb/serial/sierra.c)
+Option 3G    - udev rules, 'rezero', or usb_modeswitch
+ZTE 3G       - udev rules, simple 'eject'
+
+Dan
+
