@@ -1,108 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41027 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757267AbZKWXXY (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1035 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755199AbZKBTqN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 18:23:24 -0500
-Subject: Re: [PATCH v2 7/8] mac80211: Add define for TX headroom reserved
- by mac80211 itself.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <1259012694-14869-8-git-send-email-gwingerde@gmail.com>
-References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com>
-	 <1259012694-14869-2-git-send-email-gwingerde@gmail.com>
-	 <1259012694-14869-3-git-send-email-gwingerde@gmail.com>
-	 <1259012694-14869-4-git-send-email-gwingerde@gmail.com>
-	 <1259012694-14869-5-git-send-email-gwingerde@gmail.com>
-	 <1259012694-14869-6-git-send-email-gwingerde@gmail.com>
-	 <1259012694-14869-7-git-send-email-gwingerde@gmail.com>
-	 <1259012694-14869-8-git-send-email-gwingerde@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-rsK7hFmPz6Fv+WYTGixB"
-Date: Tue, 24 Nov 2009 00:22:36 +0100
-Message-ID: <1259018556.7094.186.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 2 Nov 2009 14:46:13 -0500
+Date: Mon, 2 Nov 2009 14:43:49 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Luis Rodriguez <mcgrof@gmail.com>,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: ath5k AP issues
+Message-ID: <20091102194349.GA7709@hash.localnet>
+References: <200910291330.26172.mb@bu3sch.de> <200910291406.03422.mb@bu3sch.de> <200910291431.48388.mb@bu3sch.de> <20091031202156.GA29825@hash.localnet> <40f31dec0910312353w32aede90ib5e71545ca744389@mail.gmail.com> <20091101131652.GA30381@hash.localnet> <40f31dec0911010541l650513fg31ffcadd12698f0@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0911010541l650513fg31ffcadd12698f0@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Nov 01, 2009 at 03:41:49PM +0200, Nick Kossifidis wrote:
+> So beacon-sent gated option doesn't work ?
+> Did you try also AR5K_DCU_MISC_ARBLOCK_IGNORE ?
+> 
+> Also according to docs Beacon frames should use queue 9 and CAB should
+> use queue 8 (don't know why but docs say that these are the
+> appropriate DCUs), beacon-gated triggering might only work if we use
+> DCU 9 for beacons (now we are using queue 7 for beacons and queue 6
+> for cab).
 
---=-rsK7hFmPz6Fv+WYTGixB
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+So the results of that testing aren't so good; I still couldn't get it
+to work.  See the following patch if you want to play with it.  Eventually
+TXDESC interrupt should fire and you would see:
 
-On Mon, 2009-11-23 at 22:44 +0100, Gertjan van Wingerde wrote:
-> Add a definition of the amount of TX headroom reserved by mac80211 itself
-> for its own purposes. Also add BUILD_BUG_ON to validate the value.
-> This define can then be used by drivers to request additional TX headroom
-> in the most efficient manner.
->=20
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> Cc: Johannes Berg <johannes@sipsolutions.net>
+cabq: enqueued xxxxx
+cabq: processed xxxxx
 
-That makes more sense to me, thanks.
+But that only happens with DBA gating, with BCN_SENT_GT I never see
+'processed.'  Anything else to try?
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 1c90d6b..fb80b53 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -504,10 +504,10 @@ enum ath5k_tx_queue_id {
+ 	AR5K_TX_QUEUE_ID_DATA_MIN	= 0, /*IEEE80211_TX_QUEUE_DATA0*/
+ 	AR5K_TX_QUEUE_ID_DATA_MAX	= 4, /*IEEE80211_TX_QUEUE_DATA4*/
+ 	AR5K_TX_QUEUE_ID_DATA_SVP	= 5, /*IEEE80211_TX_QUEUE_SVP - Spectralink Voice Protocol*/
+-	AR5K_TX_QUEUE_ID_CAB		= 6, /*IEEE80211_TX_QUEUE_AFTER_BEACON*/
+-	AR5K_TX_QUEUE_ID_BEACON		= 7, /*IEEE80211_TX_QUEUE_BEACON*/
+-	AR5K_TX_QUEUE_ID_UAPSD		= 8,
+-	AR5K_TX_QUEUE_ID_XR_DATA	= 9,
++	AR5K_TX_QUEUE_ID_UAPSD		= 6,
++	AR5K_TX_QUEUE_ID_XR_DATA	= 7,
++	AR5K_TX_QUEUE_ID_CAB		= 8, /*IEEE80211_TX_QUEUE_AFTER_BEACON*/
++	AR5K_TX_QUEUE_ID_BEACON		= 9, /*IEEE80211_TX_QUEUE_BEACON*/
+ };
+ 
+ /*
+@@ -541,7 +541,7 @@ struct ath5k_txq_info {
+ 	u32	tqi_cbr_period; /* Constant bit rate period */
+ 	u32	tqi_cbr_overflow_limit;
+ 	u32	tqi_burst_time;
+-	u32	tqi_ready_time; /* Not used */
++	u32	tqi_ready_time; /* Time queue waits after an event */
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 9c6ab53..1287ded 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1488,7 +1488,8 @@ ath5k_beaconq_config(struct ath5k_softc *sc)
+ 
+ 	ret = ath5k_hw_get_tx_queueprops(ah, sc->bhalq, &qi);
+ 	if (ret)
+-		return ret;
++		goto err;
++
+ 	if (sc->opmode == NL80211_IFTYPE_AP ||
+ 		sc->opmode == NL80211_IFTYPE_MESH_POINT) {
+ 		/*
+@@ -1515,10 +1516,28 @@ ath5k_beaconq_config(struct ath5k_softc *sc)
+ 	if (ret) {
+ 		ATH5K_ERR(sc, "%s: unable to update parameters for beacon "
+ 			"hardware queue!\n", __func__);
+-		return ret;
++		goto err;
+ 	}
++	ret = ath5k_hw_reset_tx_queue(ah, sc->bhalq); /* push to h/w */
++	if (ret)
++		goto err;
+ 
+-	return ath5k_hw_reset_tx_queue(ah, sc->bhalq); /* push to h/w */;
++	/* reconfigure cabq with ready time to 80% of beacon_interval */
++	ret = ath5k_hw_get_tx_queueprops(ah, AR5K_TX_QUEUE_ID_CAB, &qi);
++	if (ret)
++		goto err;
++
++	qi.tqi_aifs = 0;
++	qi.tqi_cw_min = 0;
++	qi.tqi_cw_max = 0;
++	qi.tqi_ready_time = (sc->bintval * 80) / 100;
++	ret = ath5k_hw_set_tx_queueprops(ah, AR5K_TX_QUEUE_ID_CAB, &qi);
++	if (ret)
++		goto err;
++
++	ret = ath5k_hw_reset_tx_queue(ah, AR5K_TX_QUEUE_ID_CAB);
++err:
++	return ret;
+ }
+ 
+ static void
+@@ -1939,6 +1958,10 @@ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
+ 		}
+ 
+ 		skb = bf->skb;
++
++		if (txq == sc->cabq)
++			printk(KERN_DEBUG "cabq processed %p\n", skb);
++
+ 		info = IEEE80211_SKB_CB(skb);
+ 		bf->skb = NULL;
+ 
+@@ -2146,6 +2169,7 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+ 
+ 	skb = ieee80211_get_buffered_bc(sc->hw, sc->vif);
+ 	while (skb) {
++		printk(KERN_DEBUG "cabq enqueued %p\n", skb);
+ 		ath5k_tx_queue(sc->hw, skb, sc->cabq);
+ 		skb = ieee80211_get_buffered_bc(sc->hw, sc->vif);
+ 	}
+diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
+index eeebb9a..592ee45 100644
+--- a/drivers/net/wireless/ath/ath5k/qcu.c
++++ b/drivers/net/wireless/ath/ath5k/qcu.c
+@@ -408,21 +408,29 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
+ 			break;
+ 
+ 		case AR5K_TX_QUEUE_CAB:
++#if 1
+ 			AR5K_REG_ENABLE_BITS(ah, AR5K_QUEUE_MISC(queue),
+ 				AR5K_QCU_MISC_FRSHED_BCN_SENT_GT |
+ 				AR5K_QCU_MISC_CBREXP_DIS |
+ 				AR5K_QCU_MISC_CBREXP_BCN_DIS);
++#else
++			AR5K_REG_ENABLE_BITS(ah, AR5K_QUEUE_MISC(queue),
++				AR5K_QCU_MISC_FRSHED_DBA_GT |
++				AR5K_QCU_MISC_CBREXP_DIS |
++				AR5K_QCU_MISC_CBREXP_BCN_DIS);
+ 
+-			ath5k_hw_reg_write(ah, ((AR5K_TUNE_BEACON_INTERVAL -
++			ath5k_hw_reg_write(ah, ((tq->tqi_ready_time -
+ 				(AR5K_TUNE_SW_BEACON_RESP -
+ 				AR5K_TUNE_DMA_BEACON_RESP) -
+ 				AR5K_TUNE_ADDITIONAL_SWBA_BACKOFF) * 1024) |
+ 				AR5K_QCU_RDYTIMECFG_ENABLE,
+ 				AR5K_QUEUE_RDYTIMECFG(queue));
++#endif
+ 
+ 			AR5K_REG_ENABLE_BITS(ah, AR5K_QUEUE_DFS_MISC(queue),
+ 				(AR5K_DCU_MISC_ARBLOCK_CTL_GLOBAL <<
+-				AR5K_DCU_MISC_ARBLOCK_CTL_S));
++				AR5K_DCU_MISC_ARBLOCK_CTL_S) |
++				AR5K_DCU_MISC_ARBLOCK_IGNORE);
+ 			break;
+ 
+ 		case AR5K_TX_QUEUE_UAPSD:
 
-> ---
->  include/net/mac80211.h |    6 ++++++
->  net/mac80211/main.c    |    2 ++
->  2 files changed, 8 insertions(+), 0 deletions(-)
->=20
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 3754ea4..a113458 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -1727,6 +1727,12 @@ static inline void ieee80211_rx_ni(struct ieee8021=
-1_hw *hw,
->  	local_bh_enable();
->  }
-> =20
-> +/*
-> + * The TX headroom reserved by mac80211 for its own tx_status functions.
-> + * This is enough for the radiotap header.
-> + */
-> +#define IEEE80211_TX_STATUS_HEADROOM	13
-> +
->  /**
->   * ieee80211_tx_status - transmit status callback
->   *
-> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> index dd8ec8d..f35d4aa 100644
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -515,6 +515,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
->  	 * and we need some headroom for passing the frame to monitor
->  	 * interfaces, but never both at the same time.
->  	 */
-> +	BUILD_BUG_ON(IEEE80211_TX_STATUS_HEADROOM !=3D
-> +			sizeof(struct ieee80211_tx_status_rtap_hdr));
->  	local->tx_headroom =3D max_t(unsigned int , local->hw.extra_tx_headroom=
-,
->  				   sizeof(struct ieee80211_tx_status_rtap_hdr));
-> =20
-
-
---=-rsK7hFmPz6Fv+WYTGixB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLCxkyAAoJEODzc/N7+Qma8W8QAJghed+Wk4SMq0jeCjOYFlfh
-3tsnuN3i9CB8kigLDMuwm9kPvCIah22R5AXDQMseqmfjNtnyGgThnkz5OihVLent
-Uk/fOv+A7Qao7JDcoehfmyG8/i3YKqeN2VOJMzQv2l/J3FIZRx0jMTA6/BruRqPW
-JM6EoY/YHi4tH720M7YCj1+lCaPbFis9wZPPAcNH3N/LKxQGZrXQWncwVTmf/9yA
-rzLhow6WJrAFRrXIzOYfjvOhQLvC3gWTK75vTtoXMasokbLylUHv+1bDfTLwIUUP
-3ORRSP+XT43Za2c5lKLGvm3Gb72zncAMSMFapTMCEzRQ2WhjSXX7tKE6BVJrDA42
-IPzuS8F4JY2gxOQCOC3P78LDb3prOYohaXfQy4zOft9Sdvy86v298EsvqJNrIgcB
-uEgqeM3K59yIXXh+NWUmPG3RXjhcEUCMb3Q/NX2WPnTcYhlMnVo+xVAf1b+0cem8
-ODkPLICNdfvkJb97ULd63vO6oLiS5qfWM43WQCcE8AVPXpopm5bl6uRrLYXZSp8c
-l1hEZthPI7IzklwT7Hbs9eYb1Lm/0GQGXOi+VsqLragRc7P4hIOezK+ceSExoBvt
-4fewhLucEjq1Se/A5Vc6K+zO6zOSXs3d8eafGgSjM/ReWN/0NfXHY0Oe+tQ9fVlS
-VsSNqUA1A99/wbRE2mcb
-=L6qF
------END PGP SIGNATURE-----
-
---=-rsK7hFmPz6Fv+WYTGixB--
+-- 
+Bob Copeland %% www.bobcopeland.com
 
