@@ -1,76 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:40119 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757110AbZKWVXJ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50095 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756408AbZKBSpI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 16:23:09 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 7/8] wl1271: remove workaround to ignore -EIO from radio and general params
-Date: Mon, 23 Nov 2009 23:22:18 +0200
-Message-Id: <1259011339-28149-8-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1259011339-28149-1-git-send-email-luciano.coelho@nokia.com>
-References: <1259011339-28149-1-git-send-email-luciano.coelho@nokia.com>
+	Mon, 2 Nov 2009 13:45:08 -0500
+Date: Mon, 2 Nov 2009 13:44:49 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: linux-next: Tree for November 2 (wireless/wl1271)
+Message-ID: <20091102184449.GJ14046@tuxdriver.com>
+References: <20091102173845.210d1c57.sfr@canb.auug.org.au> <4AEF1E7F.50306@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4AEF1E7F.50306@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were ignoring the -EIO return value from wl1271_cmd_radio_params() and
-wl1271_cmd_general_params(), because they were always returning an error and
-we didn't know why.  Now this has been fixed, so the workaround can be
-removed.
+On Mon, Nov 02, 2009 at 10:01:35AM -0800, Randy Dunlap wrote:
+> Stephen Rothwell wrote:
+> > Hi all,
+> > 
+> > Changes since 20091030:
+> 
+> 
+> wl1271 build fails when CONFIG_INET=n.
+> Should this driver depend on INET?
+> 
+> Why does this driver, unlike all other wireless drivers,
+> want to use register_inetaddr_notifier()?
+> 
+> wl1271_main.c:(.text+0x271052): undefined reference to `unregister_inetaddr_notifier'
+> wl1271_main.c:(.text+0x2714d7): undefined reference to `register_inetaddr_notifier'
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Yeah, that driver is doing some filtering based on IPv4.
+
+Luca, is that necessary?  If so, then we need a patch like the one below...?
+
+John
+
+>From ba823accfad68151d80503ff5fb04c049c9eadc2 Mon Sep 17 00:00:00 2001
+From: John W. Linville <linville@tuxdriver.com>
+Date: Mon, 2 Nov 2009 13:43:32 -0500
+Subject: [PATCH] wl1271: depend on INET
+
+wl1271_main.c:(.text+0x271052): undefined reference to `unregister_inetaddr_notifier'
+wl1271_main.c:(.text+0x2714d7): undefined reference to `register_inetaddr_notifier'
+
+Driver is doing some filtering based on IP addresses...
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_init.c |    7 ++-----
- drivers/net/wireless/wl12xx/wl1271_main.c |    7 ++-----
- 2 files changed, 4 insertions(+), 10 deletions(-)
+ drivers/net/wireless/wl12xx/Kconfig |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
-index 44896ac..11249b4 100644
---- a/drivers/net/wireless/wl12xx/wl1271_init.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_init.c
-@@ -197,15 +197,12 @@ int wl1271_hw_init(struct wl1271 *wl)
- {
- 	int ret;
- 
--	/* FIXME: the following parameter setting functions return error
--	 * codes - the reason is so far unknown. The -EIO is therefore
--	 * ignored for the time being. */
- 	ret = wl1271_cmd_general_parms(wl);
--	if (ret < 0 && ret != -EIO)
-+	if (ret < 0)
- 		return ret;
- 
- 	ret = wl1271_cmd_radio_parms(wl);
--	if (ret < 0 && ret != -EIO)
-+	if (ret < 0)
- 		return ret;
- 
- 	/* Template settings */
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index b75557e..64d0526 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -354,15 +354,12 @@ static int wl1271_plt_init(struct wl1271 *wl)
- {
- 	int ret;
- 
--	/* FIXME: the following parameter setting functions return error
--	 * codes - the reason is so far unknown. The -EIO is therefore
--	 * ignored for the time being. */
- 	ret = wl1271_cmd_general_parms(wl);
--	if (ret < 0 && ret != -EIO)
-+	if (ret < 0)
- 		return ret;
- 
- 	ret = wl1271_cmd_radio_parms(wl);
--	if (ret < 0 && ret != -EIO)
-+	if (ret < 0)
- 		return ret;
- 
- 	ret = wl1271_acx_init_mem_config(wl);
+diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
+index 33de7fa..785e024 100644
+--- a/drivers/net/wireless/wl12xx/Kconfig
++++ b/drivers/net/wireless/wl12xx/Kconfig
+@@ -42,6 +42,7 @@ config WL1251_SDIO
+ config WL1271
+ 	tristate "TI wl1271 support"
+ 	depends on WL12XX && SPI_MASTER && GENERIC_HARDIRQS
++	depends on INET
+ 	select FW_LOADER
+ 	select CRC7
+ 	---help---
 -- 
-1.6.3.3
+1.6.2.5
 
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
