@@ -1,82 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from darkstar.wilibox.com ([195.14.175.138]:59843 "EHLO
-	darkstar.wilibox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755972AbZKDNAR (ORCPT
+Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:59432
+	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753442AbZKBAwN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 08:00:17 -0500
-Message-ID: <4AF17884.5000200@gmail.com>
-Date: Wed, 04 Nov 2009 14:50:12 +0200
-From: Paulius Zaleckas <paulius.zaleckas@gmail.com>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Greg Kroah-Hartman <gregkh@suse.de>,
+	Sun, 1 Nov 2009 19:52:13 -0500
+Date: Sun, 1 Nov 2009 16:51:44 -0800
+From: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+To: Frank Schaefer <schaefer.frank@gmx.net>
+Cc: Josua Dietze <digidietze@draisberghof.de>,
 	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
-Subject: Re: [RFC] usb: Check results of dma_map_single
-References: <4af115c3.JUDAYfcydqPYCYyH%Larry.Finger@lwfinger.net>
-In-Reply-To: <4af115c3.JUDAYfcydqPYCYyH%Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB N devices in cdrom mode
+Message-ID: <20091102005144.GE24436@one-eyed-alien.net>
+References: <200910171606.02961.oliver@neukum.org> <Pine.LNX.4.44L0.0910171130550.25594-100000@netrider.rowland.org> <20091017220313.GH24502@one-eyed-alien.net> <4ADC3657.6080906@gmx.net> <4AEDCCA0.8050709@gmx.net> <4AEDD380.40408@draisberghof.de> <4AEDEB85.5080105@gmx.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="wchHw8dVAp53YPj8"
+In-Reply-To: <4AEDEB85.5080105@gmx.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/04/2009 07:48 AM, Larry Finger wrote:
-> At http://marc.info/?l=linux-wireless&m=125695331205062&w=2, a problem
-> with DMA buffer processing was corrected for the libertas driver. Because
-> routine usb_fill_bulk_urb() does not check that DMA is possible when
-> dma_map_single() is called, this condition was not detected until the buffer
-> was unmapped. By this time memory corruption had occurred.
->
-> The situation is fixed by testing the returned DMA address. If not a legal
-> address, a WARN_ON(1) is executed to provide traceback and the error is
-> returned.
->
-> Signed-off-by: Larry Finger<Larry.Finger-tQ5ms3gMjBLk1uMJSBkQmQ@public.gmane.org>
-> ---
->
-> Index: linux-2.6/drivers/usb/core/hcd.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/usb/core/hcd.c
-> +++ linux-2.6/drivers/usb/core/hcd.c
-> @@ -1281,6 +1281,13 @@ static int map_urb_for_dma(struct usb_hc
->   					urb->setup_packet,
->   					sizeof(struct usb_ctrlrequest),
->   					DMA_TO_DEVICE);
-> +			ret = dma_mapping_error(hcd->self.controller,
-> +						urb->setup_dma);
-> +			/* warn if DMA mapping failed */
-> +			if (ret) {
-> +				WARN_ON(1);
-> +				return ret;
-> +			}
 
-First of all you forgot to add { } around everything under if statement.
+--wchHw8dVAp53YPj8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I don't think WARN_ON is needed...
-dma_mapping_error under most architectures return 0 or 1 so it would be
-better to make some real error value. EAGAIN seems to be proper error,
-since documentation says that driver should try again later.
+On Sun, Nov 01, 2009 at 09:11:49PM +0100, Frank Schaefer wrote:
+> Josua Dietze schrieb:
+> > Frank Schaefer schrieb:
+> >
+> >> I really think the mode-switching should be done in the kernel and not
+> >> in user-space for reasons of usability.
+> >
+> > What is wrong with an udev rule entry? By the way, did the "eject"
+> > command line tool work as well?
+> It returns an error but the device is ejected.
+> But do you really want the users to open a terminal window and call
+> "eject" each time they plug their device in ;) ?
 
-I would write this error handler like this:
+If 'eject' worked, then why not use a simple udev entry?  That way nobody
+has to call anything by hand...
 
-if (dma_mapping_error(hcd->self.controller, urb->setup_dma))
-	ret = -EAGAIN;
+Matt
 
->   		else if (hcd->driver->flags&  HCD_LOCAL_MEM)
->   			ret = hcd_alloc_coherent(
->   					urb->dev->bus, mem_flags,
-> @@ -1299,6 +1306,13 @@ static int map_urb_for_dma(struct usb_hc
->   					urb->transfer_buffer,
->   					urb->transfer_buffer_length,
->   					dir);
-> +			ret = dma_mapping_error(hcd->self.controller,
-> +						urb->transfer_dma);
-> +			/* warn if DMA mapping failed */
-> +			if (ret) {
-> +				WARN_ON(1);
-> +				return ret;
-> +			}
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
 
-ditto
+Why am I talking to a toilet brush?
+					-- CEO
+User Friendly, 4/30/1998
 
->   		else if (hcd->driver->flags&  HCD_LOCAL_MEM) {
->   			ret = hcd_alloc_coherent(
->   					urb->dev->bus, mem_flags,
+--wchHw8dVAp53YPj8
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQFK7i0gHL9iwnUZqnkRAtEVAJ47279GFmUz0zRTGpiBQis4lW5sTQCdH7+F
+C5mOVgxe1buDU3pX6D+gxpY=
+=f2uK
+-----END PGP SIGNATURE-----
+
+--wchHw8dVAp53YPj8--
