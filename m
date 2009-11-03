@@ -1,72 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:42466 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753707AbZKWOMe (ORCPT
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:46279 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751488AbZKCIro (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 09:12:34 -0500
-Received: by fg-out-1718.google.com with SMTP id d23so2194400fga.1
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 06:12:39 -0800 (PST)
-Subject: Re: [PATCH 2.6.32] rfkill: fix miscdev ops
-From: Maxim Levitsky <maximlevitsky@gmail.com>
+	Tue, 3 Nov 2009 03:47:44 -0500
+Date: Tue, 3 Nov 2009 00:47:44 -0800
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1258973362.7094.151.camel@johannes.local>
-References: <1258968499.3271.5.camel@maxim-laptop>
-	 <1258972050.7094.140.camel@johannes.local>
-	 <1258973082.3675.0.camel@maxim-laptop>
-	 <1258973362.7094.151.camel@johannes.local>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 23 Nov 2009 16:12:35 +0200
-Message-ID: <1258985555.7236.6.camel@maxim-laptop>
-Mime-Version: 1.0
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	David Miller <davem@davemloft.net>,
+	torvalds@linux-foundation.org, linville@tuxdriver.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Please consider reverting
+	7d930bc33653d5592dc386a76a38f39c2e962344
+Message-ID: <20091103084744.GH3212@core.coreip.homeip.net>
+References: <20091103053156.GA3212@core.coreip.homeip.net> <20091102.224957.32364226.davem@davemloft.net> <20091103065238.GE3212@core.coreip.homeip.net> <1257232587.3420.55.camel@localhost.localdomain> <1257234299.28469.25.camel@johannes.local> <20091103082201.GG3212@core.coreip.homeip.net> <1257237061.28469.43.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1257237061.28469.43.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-11-23 at 11:49 +0100, Johannes Berg wrote: 
-> On Mon, 2009-11-23 at 12:44 +0200, Maxim Levitsky wrote:
-> > On Mon, 2009-11-23 at 11:27 +0100, Johannes Berg wrote: 
-> > > The /dev/rfkill ops don't refer to the module,
-> > > so it is possible to unload the module while
-> > > file descriptors are open. Fix this oversight.
+On Tue, Nov 03, 2009 at 09:31:01AM +0100, Johannes Berg wrote:
+> On Tue, 2009-11-03 at 00:22 -0800, Dmitry Torokhov wrote:
 > 
-> > Thanks for the quick patch!, works fine.
+> > I do not understand what the fuss is about. We are pretty far in release
+> > process (rc6 is about to be cut I'd expect) and we have an issue that
+> > for all practical purposes kills the box on resume. Yes, I want action
+> > to be swift in this case and (unless author or maintainer - who were
+> > CCed on the email - have otehr solutiuon) the offending commit to be
+> > reverted. If it was rc1 or rc2 or 3 I'd feel differently.
 > 
-> :)
-> I'd tested myself in kvm so didn't bother asking, but John can add
-> Tested-by I guess if you would like.
-Not important, however I had seen that iwlwifi now chokes on reload,
-sometimes with this:
+> Oh, I don't disagree that swift action is good.
+> 
+> I just think that it's a matter of courtesy that should be independent
+> from the release cycle to ask the author/maintainer by default, not as a
+> second thought ("unless [...] have other solution"). You can always CC
+> Linus and ask him to revert if you don't get a response.
+> 
+> What's wrong with that? It doesn't actually delay the action, but it
+> makes the discussion much more friendly and cooperative instead of
+> giving the author and maintainer the feeling that their opinion only
+> matters as a second thought.
+> 
 
+I think you are reading too much into who was addressed directly and who
+was "only" CCed... OK, next time (which I hope won't happen :) ) I'll
+just address everyone directly. Will that work?
 
-[  830.333386] iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for Linux, 1.2.26kds
-[  830.333407] iwl3945: Copyright(c) 2003-2009 Intel Corporation
-[  830.333536] iwl3945 0000:06:00.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
-[  830.374979] iwl3945 0000:06:00.0: Tunable channels: 13 802.11bg, 0 802.11a channels
-[  830.374995] iwl3945 0000:06:00.0: Detected Intel Wireless WiFi Link 3945BG
-[  830.375163] iwl3945 0000:06:00.0: irq 32 for MSI/MSI-X
-[  830.376859] phy0: Selected rate control algorithm 'iwl-3945-rs'
-[  830.427214] iwl3945 0000:06:00.0: firmware: requesting iwlwifi-3945-2.ucode
-[  830.526945] iwl3945 0000:06:00.0: loaded firmware version 15.32.2.9
-[  830.544236] CE: hpet increasing min_delta_ns to 15000 nsec
-[  830.575694] iwl3945 0000:06:00.0: BSM uCode verification failed at addr 0x00003800+0 (of 900), is 0xa5a5a5a2, s/b 0xf802020
-[  830.578862] iwl3945 0000:06:00.0: Hardware error detected.  Restarting.
-[  832.570133] iwl3945 0000:06:00.0: Wait for START_ALIVE timeout after 2000ms.
-[  832.622676] iwl3945 0000:06:00.0: BSM uCode verification failed at addr 0x00003800+0 (of 900), is 0xa5a5a5a2, s/b 0xf802020
-[  832.625839] iwl3945 0000:06:00.0: Hardware error detected.  Restarting.
-[  834.620132] iwl3945 0000:06:00.0: Wait for START_ALIVE timeout after 2000ms.
-
-
-Note that I used antenna=2 parameter to experiment with quality of reception of both antennas
-(this feature strangely works just fine....)
-
-I disabled this option, so next time I feel like rebooting my system, I see if this option was the cause.
-(unlikely)
-
-
-Best regards,
-	Maxim Levitsky
-
-
-
+-- 
+Dmitry
