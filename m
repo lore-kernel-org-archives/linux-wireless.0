@@ -1,77 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:47778 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772AbZKQFff (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:40938 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757616AbZKCDH5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 00:35:35 -0500
-Date: Mon, 16 Nov 2009 23:35:38 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Greg Kroah-Hartman <gregkh@suse.de>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH V2] staging: rtl8187se: Rename staging driver to avoid
- name conflict with mainline driver
-Message-ID: <4b02362a.0nr661Zozk1yE8rZ%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 2 Nov 2009 22:07:57 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
+Subject: [RFT 1/9] ath9k: fix listening to idle requests
+Date: Mon,  2 Nov 2009 22:07:53 -0500
+Message-Id: <1257217681-27180-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1257217681-27180-1-git-send-email-lrodriguez@atheros.com>
+References: <1257217681-27180-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that active development has begun on a mainline version of
-a driver for the RTL8187SE that should be called rtl8187se, there
-is a conflict with the driver in staging with the same name.
+The way idle configuration detection was implemented as
+busted due to the fact that it assumed the ath9k virtual wiphy,
+the aphy, would be marked as inactive if it was not used but
+it turns out an aphy is always active if its the only wiphy
+present. We need to distinguish between aphy activity and
+idleness so we now add an idle bool for the aphy and mark
+it as such based on the passed IEEE80211_CONF_CHANGE_IDLE
+from mac80211.
 
-To solve the conflict, rename the driver in staging to r8187se.
+Previous to all_wiphys_idle would never be true when using
+only one device so we never really were using
+IEEE80211_CONF_CHANGE_IDLE -- we never turned the radio
+off or on upon IEEE80211_CONF_CHANGE_IDLE changes as radio
+changes depended on all_wiphys_idle being true either to
+turn the radio on or off. Since it was always false for
+one device this code was doing nothing.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Jouni.Malinen <Jouni.Malinen@atheros.com>
+Reported-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |    2 +
+ drivers/net/wireless/ath/ath9k/main.c    |   33 +++++++++++++++++++++++------
+ drivers/net/wireless/ath/ath9k/virtual.c |   17 ++++++++++++--
+ 3 files changed, 42 insertions(+), 10 deletions(-)
 
-V2 - Make the name r8187se.
-
-Index: wireless-testing/drivers/staging/Makefile
-===================================================================
---- wireless-testing.orig/drivers/staging/Makefile
-+++ wireless-testing/drivers/staging/Makefile
-@@ -20,7 +20,7 @@ obj-$(CONFIG_COMEDI)		+= comedi/
- obj-$(CONFIG_ASUS_OLED)		+= asus_oled/
- obj-$(CONFIG_PANEL)		+= panel/
- obj-$(CONFIG_ALTERA_PCIE_CHDMA)	+= altpciechdma/
--obj-$(CONFIG_RTL8187SE)		+= rtl8187se/
-+obj-$(CONFIG_R8187SE)		+= rtl8187se/
- obj-$(CONFIG_RTL8192SU)		+= rtl8192su/
- obj-$(CONFIG_RTL8192E)		+= rtl8192e/
- obj-$(CONFIG_INPUT_MIMIO)	+= mimio/
-Index: wireless-testing/drivers/staging/rtl8187se/Kconfig
-===================================================================
---- wireless-testing.orig/drivers/staging/rtl8187se/Kconfig
-+++ wireless-testing/drivers/staging/rtl8187se/Kconfig
-@@ -1,7 +1,9 @@
--config RTL8187SE
-+config R8187SE
- 	tristate "RealTek RTL8187SE Wireless LAN NIC driver"
- 	depends on PCI && WLAN
- 	select WIRELESS_EXT
- 	select WEXT_PRIV
- 	default N
- 	---help---
-+	If built as a module, it will be called r8187se.ko.
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 13dd020..da53578 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -620,6 +620,7 @@ struct ath_wiphy {
+ 		ATH_WIPHY_PAUSED,
+ 		ATH_WIPHY_SCAN,
+ 	} state;
++	bool idle;
+ 	int chan_idx;
+ 	int chan_is_ht;
+ };
+@@ -691,6 +692,7 @@ void ath9k_wiphy_pause_all_forced(struct ath_softc *sc,
+ bool ath9k_wiphy_scanning(struct ath_softc *sc);
+ void ath9k_wiphy_work(struct work_struct *work);
+ bool ath9k_all_wiphys_idle(struct ath_softc *sc);
++void ath9k_set_wiphy_idle(struct ath_wiphy *aphy, bool idle);
+ 
+ int ath_tx_get_qnum(struct ath_softc *sc, int qtype, int haltype);
+ #endif /* ATH9K_H */
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 9fefc51..bdce0ab 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2688,22 +2688,37 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 	struct ath_hw *ah = sc->sc_ah;
+-	bool all_wiphys_idle = false, disable_radio = false;
++	bool disable_radio;
+ 
+ 	mutex_lock(&sc->mutex);
+ 
+-	/* Leave this as the first check */
++	/*
++	 * Leave this as the first check because we need to turn on the
++	 * radio if it was disabled before prior to processing the rest
++	 * of the changes. Likewise we must only disable the radio towards
++	 * the end.
++	 */
+ 	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
++		bool enable_radio;
++		bool all_wiphys_idle;
++		bool idle = !!(conf->flags & IEEE80211_CONF_IDLE);
+ 
+ 		spin_lock_bh(&sc->wiphy_lock);
+ 		all_wiphys_idle =  ath9k_all_wiphys_idle(sc);
++		ath9k_set_wiphy_idle(aphy, idle);
 +
-Index: wireless-testing/drivers/staging/rtl8187se/Makefile
-===================================================================
---- wireless-testing.orig/drivers/staging/rtl8187se/Makefile
-+++ wireless-testing/drivers/staging/rtl8187se/Makefile
-@@ -16,7 +16,7 @@ EXTRA_CFLAGS += -DENABLE_LPS
++		if (!idle && all_wiphys_idle)
++			enable_radio = true;
++
++		/*
++		 * After we unlock here its possible another wiphy
++		 * can be re-renabled so to account for that we will
++		 * only disable the radio toward the end of this routine
++		 * if by then all wiphys are still idle.
++		 */
+ 		spin_unlock_bh(&sc->wiphy_lock);
  
- #EXTRA_CFLAGS += -mhard-float -DCONFIG_FORCE_HARD_FLOAT=y
+-		if (conf->flags & IEEE80211_CONF_IDLE){
+-			if (all_wiphys_idle)
+-				disable_radio = true;
+-		}
+-		else if (all_wiphys_idle) {
++		if (enable_radio) {
+ 			ath_radio_enable(sc);
+ 			ath_print(common, ATH_DBG_CONFIG,
+ 				  "not-idle: enabling radio\n");
+@@ -2779,6 +2794,10 @@ skip_chan_change:
+ 	if (changed & IEEE80211_CONF_CHANGE_POWER)
+ 		sc->config.txpowlimit = 2 * conf->power_level;
  
--rtl8187se-objs :=			\
-+r8187se-objs :=			\
- 		r8180_core.o		\
- 		r8180_93cx6.o		\
- 		r8180_wx.o		\
-@@ -35,5 +35,5 @@ rtl8187se-objs :=			\
- 		ieee80211/ieee80211_crypt_ccmp.o	\
- 		ieee80211/ieee80211_crypt_wep.o
- 
--obj-$(CONFIG_RTL8187SE)	+= rtl8187se.o
-+obj-$(CONFIG_R8187SE)	+= r8187se.o
- 
++	spin_lock_bh(&sc->wiphy_lock);
++	disable_radio = ath9k_all_wiphys_idle(sc);
++	spin_unlock_bh(&sc->wiphy_lock);
++
+ 	if (disable_radio) {
+ 		ath_print(common, ATH_DBG_CONFIG, "idle: disabling radio\n");
+ 		ath_radio_disable(sc);
+diff --git a/drivers/net/wireless/ath/ath9k/virtual.c b/drivers/net/wireless/ath/ath9k/virtual.c
+index bc7d173..e6a50f3 100644
+--- a/drivers/net/wireless/ath/ath9k/virtual.c
++++ b/drivers/net/wireless/ath/ath9k/virtual.c
+@@ -668,15 +668,26 @@ void ath9k_wiphy_set_scheduler(struct ath_softc *sc, unsigned int msec_int)
+ bool ath9k_all_wiphys_idle(struct ath_softc *sc)
+ {
+ 	unsigned int i;
+-	if (sc->pri_wiphy->state != ATH_WIPHY_INACTIVE) {
++	if (!sc->pri_wiphy->idle)
+ 		return false;
+-	}
+ 	for (i = 0; i < sc->num_sec_wiphy; i++) {
+ 		struct ath_wiphy *aphy = sc->sec_wiphy[i];
+ 		if (!aphy)
+ 			continue;
+-		if (aphy->state != ATH_WIPHY_INACTIVE)
++		if (!aphy->idle)
+ 			return false;
+ 	}
+ 	return true;
+ }
++
++/* caller must hold wiphy_lock */
++void ath9k_set_wiphy_idle(struct ath_wiphy *aphy, bool idle)
++{
++	struct ath_softc *sc = aphy->sc;
++
++	aphy->idle = idle;
++	ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_CONFIG,
++		  "Marking %s as %s\n",
++		  wiphy_name(aphy->hw->wiphy),
++		  idle ? "idle" : "not-idle");
++}
+-- 
+1.6.5.2.143.g8cc62
+
