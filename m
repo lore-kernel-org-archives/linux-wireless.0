@@ -1,80 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:56614 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750830AbZKJPQD (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:40943 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757621AbZKCDH5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 10:16:03 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211: introduce nl80211_get_ifidx()
-Date: Tue, 10 Nov 2009 16:15:30 +0100
-Cc: pat-lkml@erley.org, Holger Schurig <holgerschurig@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <m3aayu1ttc.wl%holgerschurig@gmail.com> <05d7281ddd3780e3d7f4b485ce361b87@127.0.0.1>
-In-Reply-To: <05d7281ddd3780e3d7f4b485ce361b87@127.0.0.1>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200911101615.30124.holgerschurig@gmail.com>
+	Mon, 2 Nov 2009 22:07:57 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
+Subject: [RFT 7/9] ath9k: use the right hw on ath_tx_setup_buffer() for HT
+Date: Mon,  2 Nov 2009 22:07:59 -0500
+Message-Id: <1257217681-27180-8-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1257217681-27180-1-git-send-email-lrodriguez@atheros.com>
+References: <1257217681-27180-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 10 November 2009 15:50:43 pat-lkml@erley.org wrote:
-> On Tue, 10 Nov 2009 12:51:43 +0100, Holger Schurig
-> <holgerschurig@googlemail.com> wrote:
-> 
-> > @@ -3182,20 +3182,11 @@
-> >  	int err;
-> >  
-> >  	if (!ifidx) {
-> > -		err = nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
-> > -				  nl80211_fam.attrbuf, nl80211_fam.maxattr,
-> > -				  nl80211_policy);
-> > -		if (err)
-> > -			return err;
-> > -
-> > -		if (!nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX])
-> > -			return -EINVAL;
-> > -
-> > -		ifidx = nla_get_u32(nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX]);
-> > -		if (!ifidx)
-> > -			return -EINVAL;
-> > +		ifidx = nl80211_get_ifidx(cb);
-> 
-> do you need an:
-> 
->  if(ifidx < 0)
->     return ifidx;
-> 
-> here, as you assign it to cb->args[0], which differs from the original
-> behavior.
+When using virtual wiphys the base sc->hw was being used, the correct
+hw is passed along the caller already so just use that.
 
+Cc: Jouni.Malinen <Jouni.Malinen@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Do you mean
-
-        if (!ifidx) {
-               ifidx = nl80211_get_ifidx(cb);
-               if (ifidx < 0)
-                  return ifidx;
-               cb->args[0] = ifidx;
-        }
-        if (ifidx < 0)
-              return ifidx;
-
-instead?
-
-
-
-I'm not familiar with this function, but maybe we
-can get away like this:
-
-        int ifidx = cb->args[0];
-
-        if (!ifidx)
-               ifidx = nl80211_get_ifidx(cb);
-        if (ifidx < 0)
-              return ifidx;
-        cb->args[0] = ifidx;
-
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 5d0851b..427bd1d 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1575,7 +1575,7 @@ static int ath_tx_setup_buffer(struct ieee80211_hw *hw, struct ath_buf *bf,
+ 
+ 	bf->bf_frmlen = skb->len + FCS_LEN - (hdrlen & 3);
+ 
+-	if (conf_is_ht(&sc->hw->conf) && !is_pae(skb))
++	if (conf_is_ht(&hw->conf) && !is_pae(skb))
+ 		bf->bf_state.bf_type |= BUF_HT;
+ 
+ 	bf->bf_flags = setup_tx_flags(sc, skb, txctl->txq);
 -- 
-http://www.holgerschurig.de
+1.6.5.2.143.g8cc62
+
