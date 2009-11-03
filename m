@@ -1,279 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:58595 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754633AbZKUPCj convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:53263 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751864AbZKCVAF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Nov 2009 10:02:39 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 2.6.32-rc8-git1: Reported regressions from 2.6.31
-Cc: Adrian Bunk <bunk@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
+	Tue, 3 Nov 2009 16:00:05 -0500
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project tree
+Date: Tue, 3 Nov 2009 22:00:03 +0100
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jarek Poplawski <jarkao2@gmail.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Miller <davem@davemloft.net>
+References: <200911031951.05235.bzolnier@gmail.com>
+In-Reply-To: <200911031951.05235.bzolnier@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <pohDdrcORVG.A.U2B.-6_BLB@chimera>
-Date: Sat, 21 Nov 2009 15:46:43 +0100 (CET)
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200911032200.04516.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message contains a list of some regressions from 2.6.31, for which there
-are no fixes in the mainline I know of.  If any of them have been fixed already,
-please let me know.
-
-If you know of any other unresolved regressions from 2.6.31, please let me know
-either and I'll add them to the list.  Also, please let me know if any of the
-entries below are invalid.
-
-Each entry from the list will be sent additionally in an automatic reply to
-this message with CCs to the people involved in reporting and handling the
-issue.
-
-
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2009-11-21       86       29          25
-  2009-11-16       84       46          41
-  2009-10-26       66       42          37
-  2009-10-12       48       31          27
-  2009-10-02       22       15           9
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14657
-Subject		: perf subsystem breakage in 2.6.32-rc7
-Submitter	: Arjan van de Ven <arjan@infradead.org>
-Date		: 2009-11-19 19:50 (3 days old)
-References	: http://marc.info/?l=linux-kernel&m=125866013419738&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14656
-Subject		: Oops at __rmqueue+0x98 with 2.6.32-rc6
-Submitter	: Lucas C. Villa Real <lucasvr@gobolinux.org>
-Date		: 2009-11-19 3:48 (3 days old)
-References	: http://marc.info/?l=linux-kernel&m=125860255229092&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14655
-Subject		: swapper generated call trace in 2.6.32-rc7
-Submitter	: Peter Teoh <htmldeveloper@gmail.com>
-Date		: 2009-11-18 8:09 (4 days old)
-References	: http://marc.info/?l=linux-kernel&m=125853179413679&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14625
-Subject		: Commit d451564 breaks ARM
-Submitter	: Russell King <rmk+lkml@arm.linux.org.uk>
-Date		: 2009-11-13 15:11 (9 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=d4515646699b6ad7b1a98ceb871296b957f3ef47
-References	: http://marc.info/?l=linux-kernel&m=125812520315835&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14624
-Subject		: ath9k: BUG kmalloc-8192: Poison overwritten
-Submitter	: Miles Lane <miles.lane@gmail.com>
-Date		: 2009-11-12 4:58 (10 days old)
-References	: http://marc.info/?l=linux-kernel&m=125800196520396&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14621
-Subject		: specjbb2005 and aim7 regression with 2.6.32-rc kernels
-Submitter	: Zhang, Yanmin <yanmin_zhang@linux.intel.com>
-Date		: 2009-11-06 7:38 (16 days old)
-References	: http://marc.info/?l=linux-kernel&m=125749310413174&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14577
-Subject		: Data Corruption with Adaptec 52445, Firmware 5.2-0 (17380)
-Submitter	:  <lkolbe@techfak.uni-bielefeld.de>
-Date		: 2009-11-10 13:31 (12 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14538
-Subject		: Unable to associate with AP after resume since 2.6.32-rc6
-Submitter	: Christian Casteyde <casteyde.christian@free.fr>
-Date		: 2009-11-03 22:07 (19 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=d50bae33d1358b909ade05ae121d83d3a60ab63f
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14504
-Subject		: intermittent hibernation problem again
-Submitter	: Ferenc Wágner <wferi@niif.hu>
-Date		: 2009-10-28 23:49 (25 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14487
-Subject		: PANIC: early exception 08 rip 246:10 error ffffffff810251b5 cr2 0
-Submitter	: Justin P. Mattock <justinmattock@gmail.com>
-Date		: 2009-10-23 16:45 (30 days old)
-References	: http://lkml.org/lkml/2009/10/23/252
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14485
-Subject		: System lockup running "cat /sys/kernel/debug/dri/0/i915_regs"
-Submitter	: Miles Lane <miles.lane@gmail.com>
-Date		: 2009-10-26 4:00 (27 days old)
-References	: http://marc.info/?l=linux-kernel&m=125652968117713&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14483
-Subject		: Interrupts enabled after irqrouter_resume - iMac9,1
-Submitter	: Justin Mattock <justinmattock@gmail.com>
-Date		: 2009-10-25 19:58 (28 days old)
-References	: http://marc.info/?l=linux-kernel&m=125650070420168&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14482
-Subject		: kernel BUG at fs/dcache.c:670 +lvm +md +ext3
-Submitter	: Alexander Clouter <alex@digriz.org.uk>
-Date		: 2009-10-23 10:30 (30 days old)
-References	: http://lkml.org/lkml/2009/10/23/50
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14442
-Subject		: resume after hibernate: /dev/sdb drops and returns as /dev/sde
-Submitter	: Duncan <1i5t5.duncan@cox.net>
-Date		: 2009-10-20 01:52 (33 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14436
-Subject		: Computer becomes unusable without any apparent reason
-Submitter	: Pitxyoki <Pitxyoki@gmail.com>
-Date		: 2009-10-18 18:32 (35 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14426
-Subject		: CE: hpet increasing min_delta_ns flood
-Submitter	: Thibault Mondary <thibm@free.fr>
-Date		: 2009-10-17 09:29 (36 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14417
-Subject		: [Regression] Wireless driver iwlagn+iwlcore doesn't work after resume (needs reloading)
-Submitter	: Eddy Petrișor <eddy.petrisor+linbug@gmail.com>
-Date		: 2009-10-16 11:07 (37 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14415
-Subject		: Reboot on kernel load
-Submitter	: Brian Beardall <brian@rapsure.net>
-Date		: 2009-10-15 23:57 (38 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14406
-Subject		: uvcvideo stopped work on Toshiba
-Submitter	: okias <d.okias@gmail.com>
-Date		: 2009-10-14 19:08 (39 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14384
-Subject		: tbench regression with 2.6.32-rc1
-Submitter	: Zhang, Yanmin <yanmin_zhang@linux.intel.com>
-Date		: 2009-10-09 9:51 (44 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=59abf02644c45f1591e1374ee7bb45dc757fcb88
-References	: http://marc.info/?l=linux-kernel&m=125508216713138&w=4
-Handled-By	: Peter Zijlstra <a.p.zijlstra@chello.nl>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14383
-Subject		: hackbench regression with kernel 2.6.32-rc1
-Submitter	: Zhang, Yanmin <yanmin_zhang@linux.intel.com>
-Date		: 2009-10-09 9:19 (44 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=29cd8bae396583a2ee9a3340db8c5102acf9f6fd
-References	: http://marc.info/?l=linux-kernel&m=125508007510274&w=4
-Handled-By	: Peter Zijlstra <a.p.zijlstra@chello.nl>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14376
-Subject		: Kernel NULL pointer dereference/ kvm subsystem
-Submitter	: Don Dupuis <dondster@gmail.com>
-Date		: 2009-10-06 14:38 (47 days old)
-References	: http://marc.info/?l=linux-kernel&m=125484025021737&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14331
-Subject		: Radeon XPRESS 200M: System hang with radeon DRI and Fedora 10 userspace unless DRI=off
-Submitter	: Alex Villacis Lasso <avillaci@ceibo.fiec.espol.edu.ec>
-Date		: 2009-10-06 00:29 (47 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14298
-Subject		: warning at manage.c:361 (set_irq_wake), matrix-keypad related?
-Submitter	: Pavel Machek <pavel@ucw.cz>
-Date		: 2009-09-30 20:07 (53 days old)
-References	: http://marc.info/?l=linux-kernel&m=125434130703538&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14297
-Subject		: console resume broken since ba15ab0e8d
-Submitter	: Sascha Hauer <s.hauer@pengutronix.de>
-Date		: 2009-09-30 15:11 (53 days old)
-References	: http://marc.info/?l=linux-kernel&m=125432349404060&w=4
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14630
-Subject		: sched_rt_periodic_timer vs cpu hotplug
-Submitter	: Heiko Carstens <heiko.carstens@de.ibm.com>
-Date		: 2009-11-11 10:18 (11 days old)
-References	: http://marc.info/?l=linux-kernel&m=125793470309588&w=4
-Handled-By	: Peter Zijlstra <peterz@infradead.org>
-Patch		: http://patchwork.kernel.org/patch/60250/
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14597
-Subject		: thinkpad-acpi: driver fails to load on old BIOS for the A31, T23-T30, X30-X31
-Submitter	: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Date		: 2009-11-13 20:45 (9 days old)
-Handled-By	: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Patch		: http://bugzilla.kernel.org/attachment.cgi?id=23770
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14480
-Subject		: 2 locks held by cat -- running "find /sys | head -c 4" --> system hang
-Submitter	: Miles Lane <miles.lane@gmail.com>
-Date		: 2009-10-20 16:11 (33 days old)
-References	: http://marc.info/?l=linux-kernel&m=125605511728088&w=4
-Handled-By	: Chris Wilson <chris@chris-wilson.co.uk>
-Patch		: http://patchwork.kernel.org/patch/54974/
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14379
-Subject		: ACPI Warning for _SB_.BAT0._BIF: Converted Buffer to expected String
-Submitter	: Justin Mattock <justinmattock@gmail.com>
-Date		: 2009-10-08 21:46 (45 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=d9adc2e031bd22d5d9607a53a8d3b30e0b675f39
-References	: http://marc.info/?l=linux-kernel&m=125504031328941&w=4
-Handled-By	: Alexey Starikovskiy <astarikovskiy@suse.de>
-Patch		: http://bugzilla.kernel.org/attachment.cgi?id=23347
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions from 2.6.31,
-unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=14230
-
-Please let me know if there are any Bugzilla entries that should be added to
-the list in there.
-
-Thanks,
-Rafael
-
+On Tuesday 03 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> 
+> Hi,
+> 
+> The following patch series (against wireless-next) addresses issues raised
+> during code review and subsequently rejected by rt2x00/wireless/networking
+> maintainers.
+
+Really stop reading only the half of emails, try reading it entirely (or at least don't
+stop at the second word in a sentence). It really starts the bug me to repeat
+myself over and over again because you refuse to read.
+
+Your comments during code review were ACCEPTED with the only remark that
+it shouldn't be done right here and now.
+
+[snip]
+
+> The rewrite was quite conservative and there is still a room for improvement
+> but it should serve as a good starting base for all future work on rt2800
+> drivers, and there is a lot to do there (both drivers are still practically
+> non-functional).
+
+Hence the reason I can use my rt2800usb device as long as I don't connect to
+a 11n AP. But since everybody in the world has 11n devices, the rt2800usb device
+is not capable of doing anything...
+
+> Comments and patches are welcomed.
+> 
+> 
+> The following changes since commit fa867e7355a1bdcd9bf7d55ebe9296f5b9c4028a:
+>   Juuso Oikarinen (1):
+>         wl1271: Generalize command response reading
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bart/misc.git rt2800
+> 
+> Bartlomiej Zolnierkiewicz (40):
+>       rt2800usb: fix rt2800usb_rfcsr_read()
+>       rt2800pci: fix crypto in TX frame
+>       rt2800pci: fix comment about register access
+>       rt2800pci: fix comment about IV/EIV fields
+>       rt2x00: fix rt2x00usb_register_read() comment
+>       rt2800usb: use rt2x00usb_register_multiwrite() to set key entries
+[.. snip..]
+>       rt2800usb: fix comments in rt2800usb.h
+>       rt2800usb: add RXINFO_DESC_SIZE definition
+[..snip..]
+>       rt2800: fix comments in rt2800.h
+[..snip..]
+>       rt2x00: remove needless ifdefs from rt2x00leds.h
+
+These 10 patches look sane enough. Please send them as patch series
+to linux-wireless.
+
+>       rt2x00: add support for different chipset interfaces
+
+Not needed, you can determine exactly what chipset you have
+by looking at the other fields. So extending the structure to
+repeat the same information isn't needed.
+
+>       MAINTAINERS: add rt2800 entry
+
+I see you decided to take over the maintainership?
+Doesn't that need the current maintainer to move away, or was this part
+of the "going over other peoples head" plan?
+
+>       rt2800usb: add rt2800_register_[read,write]() wrappers
+>       rt2800pci: add rt2800_register_[read,write]() wrappers
+>       rt2800usb: add rt2800_register_multi[read,write]() wrappers
+>       rt2800pci: add rt2800_register_multi[read,write]() wrappers
+>       rt2800usb: add rt2800_regbusy_read() wrapper
+>       rt2800pci: add rt2800_regbusy_read() wrapper
+>       rt2800usb: add rt2800_bbp_[read,write]() wrappers
+>       rt2800pci: add rt2800_bbp_[read,write]() wrappers
+>       rt2800usb: add rt2800_rfcsr_[read,write]() wrappers
+>       rt2800pci: add rt2800_rfcsr_[read,write]() wrappers
+>       rt2800usb: add rt2800_rf_[read,write]() wrappers
+>       rt2800pci: add rt2800_rf_[read,write]() wrappers
+>       rt2800usb: add rt2800_mcu_request() wrapper
+>       rt2800pci: add rt2800_mcu_request() wrapper
+>       rt2x00: add driver private field to struct rt2x00_dev
+>       rt2800usb: convert to use struct rt2800_ops methods
+>       rt2800pci: convert to use struct rt2800_ops methods
+>       rt2x00: fix rt2x00usb_register_multiwrite() arguments
+>       rt2x00: fix rt2x00usb_regbusy_read() arguments
+>       rt2x00: fix rt2x00pci_register_multi[read,write]() arguments
+>       rt2800: add rt2800lib.h
+>       rt2800: fix duplication in header files
+>       rt2800: prepare for rt2800lib addition
+>       rt2800: add rt2800lib (part one)
+>       rt2800: add rt2800lib (part two)
+>       rt2x00: move REGISTER_BUSY_* definitions to rt2x00.h
+>       rt2800: add rt2800lib (part three)
+>       rt2800: add rt2800lib (part four)
+
+These are too much (and too big) patches for me to review at once, I'll look at
+them later.
+
+Ivo
