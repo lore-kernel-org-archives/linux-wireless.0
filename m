@@ -1,100 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:38521 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751779AbZKFHqs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 02:46:48 -0500
-Date: Fri, 6 Nov 2009 08:46:44 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>
-Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project
-	tree
-Message-ID: <20091106074643.GA5562@ucw.cz>
-References: <200911031951.05235.bzolnier@gmail.com> <200911032200.04516.IvDoorn@gmail.com> <20091104083737.GA16978@elte.hu> <200911042251.23506.IvDoorn@gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:48789 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754604AbZKCUpu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Nov 2009 15:45:50 -0500
+Message-ID: <4AF093AA.1080300@gmx.net>
+Date: Tue, 03 Nov 2009 21:33:46 +0100
+From: Frank Schaefer <schaefer.frank@gmx.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200911042251.23506.IvDoorn@gmail.com>
+To: Matthew Dharm <mdharm-usb@one-eyed-alien.net>,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB
+ N devices in cdrom mode
+References: <200910171606.02961.oliver@neukum.org> <Pine.LNX.4.44L0.0910171130550.25594-100000@netrider.rowland.org> <20091017220313.GH24502@one-eyed-alien.net> <4ADC3657.6080906@gmx.net> <4AEDCCA0.8050709@gmx.net> <4AEDD380.40408@draisberghof.de> <20091101183553.GB24436@one-eyed-alien.net> <4AEDEE7C.4010406@gmx.net> <20091102004756.GC24436@one-eyed-alien.net> <4AEF3BF8.1080701@gmx.net> <20091102211001.GH24436@one-eyed-alien.net>
+In-Reply-To: <20091102211001.GH24436@one-eyed-alien.net>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Matthew Dharm schrieb:
+> On Mon, Nov 02, 2009 at 09:07:20PM +0100, Frank Schaefer wrote:
+>   
+>> Matthew Dharm schrieb:
+>>     
+>>> I am thinking about the users.  Do you really think someone who has
+>>> difficulty installing a new udev rule (probably a line or two of text
+>>> copied from a google search) or installing a new version of usb_modeswitch
+>>> (probably one or two commands to the distro package manager) will have an
+>>> easier time doing a custom kernel-compile and update?
+>>>       
+>> I think users should not need to do ANY of these things ! That's called
+>> usability.
+>>     
+>
+> So, new hardware should "magically" work?  When you can write software to
+> support hardware that doesn't exist yet, let me know.
+>   
+I can make nothing of that.
+It really doesn't make sense to discuss about mode-switches for devices
+for which we not even have a driver.
+>> Which users do you think know how to create udev-rules and how to
+>> compile a kernel ?
+>> Of course you and me and likely all others on this mailing-list and
+>> maybe you think Linux should be for them, only.
+>>
+>> I think we should do as much as possible to improve Linux-usability for
+>> "normal" and even "less experienced" users.
+>>     
+>
+> Okay, let's talk about "less experienced" users.  Suppose you are one of
+> these users.  You get a new device, and you want to use it.  You do some
+> web searching, and discover either:
+>
+> (a) you need to download and recompile your kernel
+> (b) you need to cut-and-paste some text from a web page into a file
+>
+> Which do you think is easier?
+>   
+It's easier to let the driver/kernel do the mode-switch automatically if
+it makes sense !
+That's perfect Plug'N Play and (a) and (b) are dispensable.
 
-> > Look at the diffstat of Bart's driver:
-> > 
-> >    15 files changed, 4036 insertions(+), 7158 deletions(-)
-> > 
-> > He reduced your 5.2 KLOC non-working driver into a 1.8 KLOC _working_ 
-> > driver.
-> 
-> Bullshit, read the mails again.
+Apart from that, I think that "just cut-and-paste some text from a web
+page into a file" is an illusion.
+Starts with the right key-words you need for the search and continues
+with the quality of the documentation.
+It's not that easy to create universal and especially complete manuals
+(we all love documentation-work right !? ;) ).
+For example: what's udev ? Of course, WE know, but ...
+> And, the situation above pre-supposes that the requisite changes (kernel or
+> userspace) haven't already been picked up by a distro maintainer.
+>
+>   
+>> And in this case, it would be really easy.
+>>     
+>>> Updates in userspace are universally easier; on users, on kernel deves, and
+>>> on distro devs.
+>>>
+>>>       
+>> Why ? Of course, the benfit for kernel-developers is that the work is
+>> done by others...
+>> But for the distros it makes life much more difficult in many respects.
+>>     
+>
+> I highly doubt this.  Distros must very carefully test all the kernel
+> changes they decide to pull in.  Each and every change in a kernel-layer is
+> a high-risk change for them.  Changing userspace packages is much
+> lower-risk, and thus consumes correspondingly fewer resources.
+>
+>   
+And they don't have to test userspace-software carefully, too ???
+Especially sysconfig-software ?
+I can't see a significant difference here.
+>> And users are in the somehow insane situation that they have to keep the
+>> driver (kernel) AND the "key to be able to use it" up-to-date.
+>> That's not only a problem because they both things from different
+>> sources/directions !
+>>     
+>
+> I think you may have missed part of an earlier discussion, wherein we
+> discussed such devices which would NOT need ANY kernel changes.  The idea
+> was that udev could "eject" the fake-USB device, then add the device IDs to
+> the serial/cdc_amc/whatever driver dynamically, at runtime.  Thus, no need
+> to make any kernel updates at all.
+>
+> And, that system works *today* with the existing kernel code.
+>
+> Matt
+>   
+You didn't understand me right. No problem.
+I was talking about inconsistencies we get when driver and the
+mode-switch-part come from different sources.
+That's one of the main problems in Unix-world, maybe that's the price we
+have to pay for thinking more modular (packages) than in products like
+in M$-world.
+But we shouldn't pay that price needlessly because of splitting things
+at the wrong position.
 
-This was uncalled for, right?
+Frank
 
-...
-> Some people actually require sleep during the night, perhaps that you don't need
-> that and can hence review 41 patches which changes thousands of lines on the
-> same day the patches were submitted.
-
-If you lack time, "Really start reading my mails" sentence you used at
-the start of email is *not* user-friendly way to say that.
-
-> > And _still_ your complaint about Bart's series is that he updated the 
-> > MAINTAINERS entry and added an entry for rt2800? Heck _sure_ he should 
-> > update it, he is the one doing the hard work of trying to bring it to 
-> > users, trying to clean up a messy driver space, trying to turn crap into 
-> > gold.
-> 
-> So if I want to focus on something different in the kernel, I just send 1 patch,
-> and a second to claim the maintainership of it even though there is an active
-> maintainer available?
-
-What about listing yourself as a maintainer for a start?
-
-> > The thing is, if you dont have the time or interest to listen to and act 
-> > upon review feedback, be constructive about it and fix (obvious) 
-> > structural problems in your rt2800 code, you should just step aside and 
-> > let Bart maintain what he is apparently more capable of maintaining than 
-> > you are.
-> >
-> > What you are doing here is a thinly veiled land-grab: you did a minimal 
-> > token driver for rt2800 that doesnt work, kept it in your private tree 
-> > for _1.5 years_, and the moment someone _else_ came along and did 
-> > something better and more functional in drivers/staging/, you discovered 
-> > your sudden interest for it and moved the crappy driver upstream at 
-> > lightning's speed (it is already in net-next AFAICS, despite negative 
-> > test and review feedback) - ignoring and throwing away all the work that 
-> > Bart has done.
-> 
-> Get your facts straight, the bullshit level in your mail is staggering.
-> 
-> You have no fucking clue who wrote the rt2800 driver which is in
-> drivers/staging/,
-
-Perhaps you should not be a maintainer if you can't behave yourself?
-
-> 	Because a lot of people prefer looking from the sideline,
-> contributing _nothing_
-
-Given your behaviour, I'm not suprised people are not too eager to
-work with you.
-
-> As for "throwing away that work" I ACKED 10 of his patches, and said I would review
-> the rest later! But like I said, apparently it is a bad habit for people to sleep during
-> the night.
-
-Read your email again. It was quite far from 'acked 10, asked for
-time'. You flamed him first.
-									Pavel
-
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
