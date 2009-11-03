@@ -1,122 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:44034 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755112AbZKMDWq (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:54241 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751145AbZKCPpD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 22:22:46 -0500
-Subject: Re: [patch 0/1] Adding radio type FM
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Janakiram Sistla <janakiram.sistla@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
-References: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 13 Nov 2009 04:22:51 +0100
-Message-ID: <1258082571.7715.13.camel@violet>
-Mime-Version: 1.0
+	Tue, 3 Nov 2009 10:45:03 -0500
+Date: Tue, 3 Nov 2009 07:43:02 -0800 (PST)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Marcel Holtmann <marcel@holtmann.org>
+cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
+	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Please consider reverting
+ 7d930bc33653d5592dc386a76a38f39c2e962344
+In-Reply-To: <1257262588.3420.79.camel@localhost.localdomain>
+Message-ID: <alpine.LFD.2.01.0911030738260.31845@localhost.localdomain>
+References: <20091103053156.GA3212@core.coreip.homeip.net>  <20091102.224957.32364226.davem@davemloft.net>  <20091103065238.GE3212@core.coreip.homeip.net>  <1257232587.3420.55.camel@localhost.localdomain>  <alpine.LFD.2.01.0911030719430.31845@localhost.localdomain>
+ <1257262588.3420.79.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Janakiram,
 
-> From 1b1493392faeb6702ff364447b135e481930b397 Mon Sep 17 00:00:00 2001
-> From: Janakiram Sistla <janakiram.sistla@gmail.com>
-> Date: Fri, 13 Nov 2009 08:16:26 +0530
-> Subject: [PATCH 1/1] Adding radio type FM
+
+On Wed, 4 Nov 2009, Marcel Holtmann wrote:
 > 
-> Adding radio type FM in RFKILL_TYPE_.FM also belongs to
-> same class of with both TX/RX capability.
-> Also Added input type for the above same.
-> 
-> Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
-> ---
->  include/linux/input.h  |    1 +
->  include/linux/rfkill.h |    1 +
->  net/rfkill/core.c      |    2 ++
->  net/rfkill/input.c     |    9 +++++++++
->  4 files changed, 13 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/linux/input.h b/include/linux/input.h
-> index 0ccfc30..f03ae90 100644
-> --- a/include/linux/input.h
-> +++ b/include/linux/input.h
-> @@ -376,6 +376,7 @@ struct input_absinfo {
->  #define KEY_DISPLAY_OFF		245	/* display device to off state */
-> 
->  #define KEY_WIMAX		246
-> +#define KEY_FM			247
-> 
->  /* Range 248 - 255 is reserved for special needs of AT keyboard driver */
-> 
-> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-> index 3392c59..03f5598 100644
-> --- a/include/linux/rfkill.h
-> +++ b/include/linux/rfkill.h
-> @@ -45,6 +45,7 @@ enum rfkill_type {
->  	RFKILL_TYPE_WIMAX,
->  	RFKILL_TYPE_WWAN,
->  	RFKILL_TYPE_GPS,
-> +	RFKILL_TYPE_FM,
->  	NUM_RFKILL_TYPES,
->  };
-> 
-> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-> index ba2efb9..b8ac206 100644
-> --- a/net/rfkill/core.c
-> +++ b/net/rfkill/core.c
-> @@ -592,6 +592,8 @@ static const char *rfkill_get_type_str(enum
-> rfkill_type type)
->  		return "wwan";
->  	case RFKILL_TYPE_GPS:
->  		return "gps";
-> +	case RRFKILL_TYPE_FM:
-> +		return "fm";
->  	default:
->  		BUG();
->  	}
+> no questions that it needs fixed, I agree with you. However just blindly
+> reverting something, because it fixes it for one or two people, might
+> have side effects that causes more problems than the revert would
+> actually fix.
 
-this part is fine with me.
+Stop whining. Really.
 
-> diff --git a/net/rfkill/input.c b/net/rfkill/input.c
-> index a7295ad..f51b16d 100644
-> --- a/net/rfkill/input.c
-> +++ b/net/rfkill/input.c
-> @@ -212,6 +212,9 @@ static void rfkill_event(struct input_handle
-> *handle, unsigned int type,
->  		case KEY_WIMAX:
->  			rfkill_schedule_toggle(RFKILL_TYPE_WIMAX);
->  			break;
-> +		case KEY_FM:
-> +			rfkill_schedule_toggle(RFKILL_TYPE_FM);
-> +			break;
->  		}
->  	} else if (type == EV_SW && code == SW_RFKILL_ALL)
->  		rfkill_schedule_evsw_rfkillall(data);
-> @@ -290,6 +293,12 @@ static const struct input_device_id rfkill_ids[] = {
->  		.keybit = { [BIT_WORD(KEY_UWB)] = BIT_MASK(KEY_UWB) },
->  	},
->  	{
-> +		.flags = INPUT_DEVICE_ID_MATCH_EVBIT |
-> +				INPUT_DEVICE_ID_MATCH_KEYBIT,
-> +		.evbit = { BIT_MASK(EV_KEY) },
-> +		.keybit = { [BIT_WORD(KEY_UWB)] = BIT_MASK(KEY_UWB) },
-> +	},
-> +	{
->  		.flags = INPUT_DEVICE_ID_MATCH_EVBIT | INPUT_DEVICE_ID_MATCH_KEYBIT,
->  		.evbit = { BIT_MASK(EV_KEY) },
->  		.keybit = { [BIT_WORD(KEY_WIMAX)] = BIT_MASK(KEY_WIMAX) },
+Everybody understands that it should be fixed.  That's not the question.
 
-So besides the pointed of the copy-and-paste mistake, I don't think we
-should be doing this. Unless you point me to hardware that actually has
-a physical RFKILL button for FM. We also didn't add key define for GPS
-since there is no hardware that has this.
+But it should be fixed _quickly_. In this case, I have a bisection report 
+FROM TWO DAYS AGO. And I'm still kicking myself for not just reverting 
+that piece-of-shit commit then, because I spent the time to look at the 
+oops and the commit, and could tell that it was crap.
 
-If you think you need this for some weird handling then go one step back
-and read the re-written RFKILL subsystem design.
+Instead, I _did_ wait for the subsystem maintainer to get around to it. As 
+a result of waiting, I've now wasted time for a lot of other people.
 
-Regards
+So stop your claptrap. You're wrong. I would suggest you now thank Dmitry, 
+and ask his forgiveness for (a) wasting his time and (b) then berating him 
+for it.
 
-Marcel
-
-
+			Linus
