@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:54952 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751477AbZKYOph (ORCPT
+Received: from smtp-out003.kontent.com ([81.88.40.217]:37248 "EHLO
+	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752443AbZKCLCv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 09:45:37 -0500
-Received: by bwz27 with SMTP id 27so6959948bwz.21
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2009 06:45:42 -0800 (PST)
-Cc: Pat Erley <pat-lkml@erley.org>, linux-wireless@vger.kernel.org
-Message-Id: <D0FDC725-10F7-473E-995F-EC842DB8AC18@gmail.com>
-From: Rui Paulo <rpaulo@gmail.com>
-To: Simon Perreault <simon.perreault@viagenie.ca>
-In-Reply-To: <4B0D360A.3080801@viagenie.ca>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v936)
-Subject: Re: Hardware for 802.11s
-Date: Wed, 25 Nov 2009 14:45:38 +0000
-References: <4B0C5E6F.5040302@viagenie.ca> <4B0C6493.7010805@erley.org> <4B0D360A.3080801@viagenie.ca>
+	Tue, 3 Nov 2009 06:02:51 -0500
+From: Oliver Neukum <oliver@neukum.org>
+To: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB N devices in cdrom mode
+Date: Tue, 3 Nov 2009 11:57:22 +0100
+Cc: Dan Williams <dcbw@redhat.com>,
+	Frank Schaefer <schaefer.frank@gmx.net>,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
+References: <200910171606.02961.oliver@neukum.org> <1257193115.1027.24.camel@localhost.localdomain> <20091102211123.GI24436@one-eyed-alien.net>
+In-Reply-To: <20091102211123.GI24436@one-eyed-alien.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911031157.23165.oliver@neukum.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 Nov 2009, at 13:50, Simon Perreault wrote:
-
-> Thanks for your reply.
+Am Montag, 2. November 2009 22:11:23 schrieb Matthew Dharm:
+> It's worth noting that for some of these which are handled in-kernel, it
+> had to be done that way because their storage-emulation was so poor that
+> the normal 'eject' WOULD NOT work properly.
 >
-> Pat Erley wrote, on 2009-11-24 17:56:
->> I don't have time tonight, but I believe you can make b43 work by  
->> triggering a
->> scan after bringing the interface up.  I know I've made b43 work in  
->> the past.
->
-> What do you mean, "triggering a scan"? What command line does that  
-> translate into?
+> Any device which can be handled in userspace SHOULD be handled there.
 
-Try iwlist mesh0 scanning.
+Do these devices survive a reset and stay in the correct mode?
+Has that been tested?
 
---
-Rui Paulo
+	Regards
+		Oliver
 
