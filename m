@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:35689 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756569AbZKWKaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 05:30:23 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] b43: Rewrite DMA Tx status handling sanity checks
-Date: Mon, 23 Nov 2009 11:30:22 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <200911192224.29491.mb@bu3sch.de> <4B09E691.8020205@lwfinger.net>
-In-Reply-To: <4B09E691.8020205@lwfinger.net>
+Received: from mail.gmx.net ([213.165.64.20]:39711 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754426AbZKCVAP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Nov 2009 16:00:15 -0500
+Message-ID: <4AF095C3.5020409@gmx.net>
+Date: Tue, 03 Nov 2009 21:42:43 +0100
+From: Frank Schaefer <schaefer.frank@gmx.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200911231130.23873.mb@bu3sch.de>
+To: Alan Stern <stern@rowland.harvard.edu>
+CC: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB
+ N devices in cdrom mode
+References: <Pine.LNX.4.44L0.0911031001470.10778-100000@netrider.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.0911031001470.10778-100000@netrider.rowland.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 23 November 2009 02:34:09 Larry Finger wrote:
-> On 11/19/2009 03:24 PM, Michael Buesch wrote:
-> > This rewrites the error handling policies in the TX status handler.
-> > It tries to be error-tolerant as in "try hard to not crash the machine".
-> > It won't recover from errors (that are bugs in the firmware or driver),
-> > because that's impossible. However, it will return a more or less useful
-> > error message and bail out. It also tries hard to use rate-limited messages
-> > to not flood the syslog in case of a failure.
-> > 
-> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> > 
-> > ---
-> 
-> Tested and ACKed by Larry Finger. Not only does this improve the error handling
-> for b43, but it also appears to fix the skb == NULL error that I experienced
-> with the open-source firmware.
+Alan Stern schrieb:
+> On Mon, 2 Nov 2009, Dan Williams wrote
+>> In userspace, usb_modeswitch is the place to put all this logic.  Then
+>> you tie it together with udev rules using some bubble-gum and duct-tape,
+>> and maybe it works.  Of course, there's massive duplication of data
+>> between usb_modeswitch and the kernel drivers, because the there's
+>> simply no communication between the two.
+>>     
+> The only reason for this "massive" duplication is that nobody has
+> bothered to remove from the kernel the parts that usb_modeswitch can
+> handle.  Adding yet more switching code into the kernel, thereby
+> _increasing_ the amount of duplication, seems like a bad idea.
+>   
+Or the other way around ;) .
 
-I don't think there's any way it can fix this. The patch doesn't change the
-code behavior. It just changes the sanity checks, that under normal circumstances
-should never trigger.
+Of course, we all don't want any duplicate code. We need a kernelspace
+OR a userspace-solution.
+But we should make pragmatic and device-(group-)specific decisions.
+The hardware itself and the context in which it is used (=>
+switch-policy) are too different.
 
-> John - please push this into wireless-testing. It should also go to 2.6.32, but
-> it is likely too large for the current stage. At least Cc it to stable.
+...
+> ... Jobs that can be handled 
+> in userspace _should_ be handled there.
+>
+> Alan Stern
+>   
 
-Don't put it into stable. This is not a fix.
-I don't think it's suitable for 2.6.32 at this stage, too.
+Basically, I have no problem to agree here.
+But what's the price we pay for this solution(s) in this case (and most
+other devices with windows-driver-disc-mode) ?
+You should not ignore the problems coming-up with the discussed
+userspace-solutions.
+This is not ONLY about technical aspects. We already discussed usability
+and maintanance. Think about the whole product, not only the kernel-part.
+Then, please, make a list of ALL pros and cons a make a pragmatic decision.
 
--- 
-Greetings, Michael.
+Frank
+
