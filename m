@@ -1,53 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:28092 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756535AbZKWKok (ORCPT
+Received: from mail-yw0-f202.google.com ([209.85.211.202]:58405 "EHLO
+	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751655AbZKCXI6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 05:44:40 -0500
-Received: by fg-out-1718.google.com with SMTP id d23so2122240fga.1
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 02:44:45 -0800 (PST)
-Subject: Re: [PATCH 2.6.32] rfkill: fix miscdev ops
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1258972050.7094.140.camel@johannes.local>
-References: <1258968499.3271.5.camel@maxim-laptop>
-	 <1258972050.7094.140.camel@johannes.local>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 23 Nov 2009 12:44:42 +0200
-Message-ID: <1258973082.3675.0.camel@maxim-laptop>
-Mime-Version: 1.0
+	Tue, 3 Nov 2009 18:08:58 -0500
+MIME-Version: 1.0
+In-Reply-To: <200911032334.40547.bzolnier@gmail.com>
+References: <200911031951.05235.bzolnier@gmail.com>
+	 <200911032244.11946.bzolnier@gmail.com>
+	 <200911032301.32907.IvDoorn@gmail.com>
+	 <200911032334.40547.bzolnier@gmail.com>
+Date: Wed, 4 Nov 2009 00:09:02 +0100
+Message-ID: <14add3d10911031509l328e7674kb625b70250ff30fb@mail.gmail.com>
+Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project tree
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jarek Poplawski <jarkao2@gmail.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Miller <davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-11-23 at 11:27 +0100, Johannes Berg wrote: 
-> The /dev/rfkill ops don't refer to the module,
-> so it is possible to unload the module while
-> file descriptors are open. Fix this oversight.
-> 
-> Reported-by: Maxim Levitsky <maximlevitsky@gmail.com>
-> Cc: stable@kernel.org
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  net/rfkill/core.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> --- wireless-testing.orig/net/rfkill/core.c	2009-11-23 11:11:13.000000000 +0100
-> +++ wireless-testing/net/rfkill/core.c	2009-11-23 11:11:59.000000000 +0100
-> @@ -1191,6 +1191,7 @@ static long rfkill_fop_ioctl(struct file
->  #endif
->  
->  static const struct file_operations rfkill_fops = {
-> +	.owner		= THIS_MODULE,
->  	.open		= rfkill_fop_open,
->  	.read		= rfkill_fop_read,
->  	.write		= rfkill_fop_write,
-> 
-> 
+On Tue, Nov 3, 2009 at 11:34 PM, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+> On Tuesday 03 November 2009 23:01:32 Ivo van Doorn wrote:
+>> > > > The following patch series (against wireless-next) addresses issues raised
+>> > > > during code review and subsequently rejected by rt2x00/wireless/networking
+>> > > > maintainers.
+>> > >
+>> > > Really stop reading only the half of emails, try reading it entirely (or at least don't
+>> > > stop at the second word in a sentence). It really starts the bug me to repeat
+>> > > myself over and over again because you refuse to read.
+>> > >
+>> > > Your comments during code review were ACCEPTED with the only remark that
+>> > > it shouldn't be done right here and now.
+>> >
+>> > Please stop this bullshit.  We have some standards for the upstream code
+>> > and by being maintainer you have to live up to this standards and make sure
+>> > that they are respected instead of watering them down yourself..
+>> >
+>> > You were not interested even in fixing the headers duplication (it turned
+>> > out debugging scripts needed only 25 lines of code to be able to work with
+>> > fixed headers -- 25 LOC in bash scripts used only for debugging instead
+>> > of 1800 LOC of kernel code).
+>>
+>> Yeah I know that. But like I said, I still needed to get around to do that,
+>> and I am very happy you were interested in fixing it.
+>
+> Lets make one thing clear: YOU SHOULD BE THE ONE FIXING IT.
+>
+> I'm not in slightest interested in wasting my time on such
+> things and educating some maintainers about basics.
+>
+> [ Code duplication is bad, mmm'okay?  Just say no, mmm'okay? ]
+>
 
-Thanks for the quick patch!, works fine.
+Bart,
 
-Best regards,
-Maxim Levitsky
+Are you really interested in working with us (the rt2x00 project) in
+getting the rt2800{pci,usb}
+drivers in a better shape, or do you just want to continue your
+ramblings on how bad you
+think the rt2x00 maintainers, wireless maintainer, and networking
+maintainer are in your view?
 
+Just continuing these discussions doesn't help a bit as Ivo, John, and
+David said they disagreed
+with you on this topic.
+
+If you just want to continue with a hostile take-over of the rt2800
+maintainership, then please
+let us know that, so that we stop spending time on useless
+discussions, and let John Linville
+decide how he wants to handle this situation. It would be a shame of
+the good patches and work
+you did, but if that's the case, than that's it.
+
+Otherwise, please focus on the technical contents of the patches and
+work with us to get
+these drivers in a better shape.
+
+---
+Gertjan.
+
+
+,
