@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:39512 "EHLO
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:49557 "EHLO
 	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758465AbZKFP4E (ORCPT
+	with ESMTP id S1751820AbZKCXyh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 10:56:04 -0500
-Received: by ewy3 with SMTP id 3so1164637ewy.37
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 07:56:08 -0800 (PST)
-From: Martin Fuzzey <mfuzzey@gmail.com>
-Subject: [PATCH] SSB: fix 32 bit PCMCIA access.
-To: linux-wireless@vger.kernel.org
-Date: Fri, 06 Nov 2009 16:56:05 +0100
-Message-ID: <20091106155605.20585.15955.stgit@srv002.fuzzey.net>
+	Tue, 3 Nov 2009 18:54:37 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project tree
+Date: Wed, 4 Nov 2009 00:52:28 +0100
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jarek Poplawski <jarkao2@gmail.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Miller <davem@davemloft.net>
+References: <200911031951.05235.bzolnier@gmail.com> <200911032334.40547.bzolnier@gmail.com> <20091103234835.3042f7b5@lxorguk.ukuu.org.uk>
+In-Reply-To: <20091103234835.3042f7b5@lxorguk.ukuu.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Message-Id: <200911040052.28323.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The scan function was using 32 bit access which does not
-work on 16bit CF cards.
+On Wednesday 04 November 2009 00:48:35 Alan Cox wrote:
+> > > Yeah I know that. But like I said, I still needed to get around to do that,
+> > > and I am very happy you were interested in fixing it.
+> > 
+> > Lets make one thing clear: YOU SHOULD BE THE ONE FIXING IT.
+> 
+> Really - you have a service and support contract with Ivo.. no i thought
+> not.
 
-This patch corrects this by doing two 16 bit reads like
-ssb_pcmcia_read32 already does (unfortunately we don't
-have a struct ssb_device to use that directly).
+Just today I got PM from somebody complaining to me about non-working
+pata_pdc2026x_old (pdc202xx_old works fine for him) simply because
+I fixed some bug there some time ago....
 
-Signed-off-by: Martin Fuzzey <mfuzzey@gmail.com>
+Problems are publicly know -- do you want bz# from Debian, SuSE or Red Hat?
 
----
+Wait.. unfortunately I also don't have support contract with you..
 
- drivers/ssb/scan.c |    9 ++++++++-
- 1 files changed, 8 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/ssb/scan.c b/drivers/ssb/scan.c
-index b74212d..6721fa8 100644
---- a/drivers/ssb/scan.c
-+++ b/drivers/ssb/scan.c
-@@ -162,6 +162,9 @@ static u8 chipid_to_nrcores(u16 chipid)
- static u32 scan_read32(struct ssb_bus *bus, u8 current_coreidx,
- 		       u16 offset)
- {
-+	unsigned long flags;
-+	u32 lo, hi;
-+
- 	switch (bus->bustype) {
- 	case SSB_BUSTYPE_SSB:
- 		offset += current_coreidx * SSB_CORE_SIZE;
-@@ -174,7 +177,11 @@ static u32 scan_read32(struct ssb_bus *bus, u8 current_coreidx,
- 			offset -= 0x800;
- 		} else
- 			ssb_pcmcia_switch_segment(bus, 0);
--		break;
-+		spin_lock_irqsave(&bus->bar_lock, flags);
-+		lo = readw(bus->mmio + offset);
-+		hi = readw(bus->mmio + offset + 2);
-+		spin_unlock_irqrestore(&bus->bar_lock, flags);
-+		return lo | (hi << 16);
- 	case SSB_BUSTYPE_SDIO:
- 		offset += current_coreidx * SSB_CORE_SIZE;
- 		return ssb_sdio_scan_read32(bus, offset);
-
+-- 
+Bartlomiej Zolnierkiewicz
