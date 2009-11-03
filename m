@@ -1,53 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:14305 "EHLO
+Received: from ey-out-2122.google.com ([74.125.78.25]:49986 "EHLO
 	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751191AbZKGSMy convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1751712AbZKCXyh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 13:12:54 -0500
-MIME-Version: 1.0
-In-Reply-To: <20091107173028.GA1932@ucw.cz>
-References: <200911031951.05235.bzolnier@gmail.com>
-	 <200911042251.23506.IvDoorn@gmail.com> <20091106074643.GA5562@ucw.cz>
-	 <200911061858.56816.IvDoorn@gmail.com> <20091107173028.GA1932@ucw.cz>
-Date: Sat, 7 Nov 2009 18:12:58 +0000
-Message-ID: <efe7343f0911071012u73317883wc60f5c188bc853e8@mail.gmail.com>
+	Tue, 3 Nov 2009 18:54:37 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
 Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project tree
-From: Luis Correia <luis.f.correia@gmail.com>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, Ingo Molnar <mingo@elte.hu>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>,
+Date: Wed, 4 Nov 2009 00:46:54 +0100
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Luis Correia <luis.f.correia@gmail.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
+	Ingo Molnar <mingo@elte.hu>,
 	Johannes Berg <johannes@sipsolutions.net>,
 	Jarek Poplawski <jarkao2@gmail.com>,
 	Pekka Enberg <penberg@cs.helsinki.fi>,
 	David Miller <davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1
+References: <200911031951.05235.bzolnier@gmail.com> <200911032334.40547.bzolnier@gmail.com> <14add3d10911031509l328e7674kb625b70250ff30fb@mail.gmail.com>
+In-Reply-To: <14add3d10911031509l328e7674kb625b70250ff30fb@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200911040046.54247.bzolnier@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel,
+On Wednesday 04 November 2009 00:09:02 Gertjan van Wingerde wrote:
+> On Tue, Nov 3, 2009 at 11:34 PM, Bartlomiej Zolnierkiewicz
+> <bzolnier@gmail.com> wrote:
+> > On Tuesday 03 November 2009 23:01:32 Ivo van Doorn wrote:
+> >> > > > The following patch series (against wireless-next) addresses issues raised
+> >> > > > during code review and subsequently rejected by rt2x00/wireless/networking
+> >> > > > maintainers.
+> >> > >
+> >> > > Really stop reading only the half of emails, try reading it entirely (or at least don't
+> >> > > stop at the second word in a sentence). It really starts the bug me to repeat
+> >> > > myself over and over again because you refuse to read.
+> >> > >
+> >> > > Your comments during code review were ACCEPTED with the only remark that
+> >> > > it shouldn't be done right here and now.
+> >> >
+> >> > Please stop this bullshit.  We have some standards for the upstream code
+> >> > and by being maintainer you have to live up to this standards and make sure
+> >> > that they are respected instead of watering them down yourself..
+> >> >
+> >> > You were not interested even in fixing the headers duplication (it turned
+> >> > out debugging scripts needed only 25 lines of code to be able to work with
+> >> > fixed headers -- 25 LOC in bash scripts used only for debugging instead
+> >> > of 1800 LOC of kernel code).
+> >>
+> >> Yeah I know that. But like I said, I still needed to get around to do that,
+> >> and I am very happy you were interested in fixing it.
+> >
+> > Lets make one thing clear: YOU SHOULD BE THE ONE FIXING IT.
+> >
+> > I'm not in slightest interested in wasting my time on such
+> > things and educating some maintainers about basics.
+> >
+> > [ Code duplication is bad, mmm'okay?  Just say no, mmm'okay? ]
+> >
+> 
+> Bart,
+> 
+> Are you really interested in working with us (the rt2x00 project) in
+> getting the rt2800{pci,usb}
+> drivers in a better shape, or do you just want to continue your
+> ramblings on how bad you
+> think the rt2x00 maintainers, wireless maintainer, and networking
+> maintainer are in your view?
+> 
+> Just continuing these discussions doesn't help a bit as Ivo, John, and
+> David said they disagreed
+> with you on this topic.
 
-On Sat, Nov 7, 2009 at 17:30, Pavel Machek <pavel@ucw.cz> wrote:
-> Hi!
->
->> > > So if I want to focus on something different in the kernel, I just send 1 patch,
->> > > and a second to claim the maintainership of it even though there is an active
->> > > maintainer available?
->> >
->> > What about listing yourself as a maintainer for a start?
->>
->> The rt2x00 project is listed as maintainer for everything in the
->> drivers/net/wireless/rt2x00 folder.
->
-> Yes, but that tells very little. I don't know who the 'rt2x00 project'
-> is. Perhaps its you? Perhaps its Bart? Maybe its my cat? Please just
-> list real names of maintainers...                 Pavel
+I tried explain many times that it is not about what is in MAINTAINERS
+file or what somebody says.
 
-the answer is (and always was available) here:
+> If you just want to continue with a hostile take-over of the rt2800
+> maintainership, then please
+> let us know that, so that we stop spending time on useless
 
-http://rt2x00.serialmonkey.com/wiki/index.php/Developers
+I fail to see why you see it as a hostile takeover.
 
-Luis Correia
-rt2x00 project admin
+I just did what should have been done in the first place (+ I'm going
+to push drivers further in this direction in my tree) and I was always
+pretty clear that once staging drivers become sufficiently cleaned up
+I would start re-basing my efforts on in kernel drivers.
+
+I will be glad to cooperate with you or anyone else from rt2x00 project.
+However I will not spin in some stupid bureaucracy when I see that things
+can be done more effectively.
+
+> discussions, and let John Linville
+> decide how he wants to handle this situation. It would be a shame of
+> the good patches and work
+> you did, but if that's the case, than that's it.
+
+John can just pull my tree in right now since it is based on his tree
+and it would be an immediate improvement over what its in his tree.
+
+It is up to him, or Ivo can also pull my patches into his tree.
+
+You can also decide to throw up my patches completely or re-do them
+for some silly reasons.  I won't be making much noise about it since
+I'll be already on some next patches..
+
+> Otherwise, please focus on the technical contents of the patches and
+> work with us to get
+> these drivers in a better shape.
+
+This is what I'm focused on, if you have any technical arguments w.r.t.
+my patches I'm willing to listen and address them in sensible time
+(if they are valid).  I would also be happy to work with people with any
+patches that they are working on currently.
+
+Thanks.
+-- 
+Bartlomiej Zolnierkiewicz
