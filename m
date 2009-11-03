@@ -1,71 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38938 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752130AbZKRUa0 (ORCPT
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:41363 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752926AbZKCIWB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 15:30:26 -0500
-Date: Wed, 18 Nov 2009 15:28:02 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211 breaks suspend to disk
-Message-ID: <20091118202802.GE2911@tuxdriver.com>
-References: <1258568836.4512.13.camel@maxim-laptop>
+	Tue, 3 Nov 2009 03:22:01 -0500
+Date: Tue, 3 Nov 2009 00:22:02 -0800
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	David Miller <davem@davemloft.net>,
+	torvalds@linux-foundation.org, linville@tuxdriver.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Please consider reverting
+	7d930bc33653d5592dc386a76a38f39c2e962344
+Message-ID: <20091103082201.GG3212@core.coreip.homeip.net>
+References: <20091103053156.GA3212@core.coreip.homeip.net> <20091102.224957.32364226.davem@davemloft.net> <20091103065238.GE3212@core.coreip.homeip.net> <1257232587.3420.55.camel@localhost.localdomain> <1257234299.28469.25.camel@johannes.local>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1258568836.4512.13.camel@maxim-laptop>
+In-Reply-To: <1257234299.28469.25.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 18, 2009 at 08:27:16PM +0200, Maxim Levitsky wrote:
-> Hi,
+On Tue, Nov 03, 2009 at 08:44:59AM +0100, Johannes Berg wrote:
+> On Tue, 2009-11-03 at 16:16 +0900, Marcel Holtmann wrote:
 > 
-> I finally managed to track down a rare hang on resume from disk I see
-> for some prolonged time.
-> Symptoms are that sometimes on resume, system almost hangs.
-> This is I can switch VTs and execute SysRQ sequences.
-> This is typical when oops happens.
+> > and can we please stop jumping the gun here and going past the subsystem
+> > maintainers. I think this happens a little bit too much lately.
 > 
-> I tracked this to BUG_ON in add_timer.
-> I replaced this with WARN_ON, and here is the backtrace:
+> I'll rant a bit too -- I've been very annoyed by this many times. Note
+> this isn't really against you (Dmitry) in particular, just another
+> case ... but it does tick me off that many times when somebody manages
+> to blame a failure on a specific commit the first thing they do is ask
+> somebody way "above" (in terms of patch flow into mainline) the person
+> writing the patch (like Linus here) to revert it.
 > 
-> 
->   331.334935] WARNING: at /home/maxim/software/kernel/linux-2.6/kernel/timer.c:791 add_timer+0x36/0x40()
-> [  331.347374] Hardware name: Aspire 5720     
-> [  331.359725] Modules linked in: nvidia(P)  af_packet usb_storage usb_libusual cpufreq_powersave iwl3945 nfsd snd_hda_codec_realtek cpufreq_conservative exportfs iwlcore cpufreq_userspace uvcvideo snd_hda_intel acpi_cpufreq nfs videodev mac80211 coretemp lockd snd_hda_codec joydev v4l1_compat tg3 nfs_acl ohci1394 v4l2_compat_ioctl32 snd_hwdep uhci_hcd sbp2 cfg80211 psmouse video ehci_hcd auth_rpcgss libphy lirc_ene0100 ieee1394 output snd_pcm usbcore serio_raw rfkill evdev snd_page_alloc sunrpc fuse lzo lzo_decompress lzo_compress
-> [  331.428619] Pid: 4394, comm: pm-hibernate Tainted: P           2.6.32-rc7-wl #183
-> [  331.442747] Call Trace:
-> [  331.456760]  [<ffffffff81043a98>] warn_slowpath_common+0x78/0xb0
-> [  331.471119]  [<ffffffff81043adf>] warn_slowpath_null+0xf/0x20
-> [  331.485475]  [<ffffffff8104f996>] add_timer+0x36/0x40
-> [  331.499814]  [<ffffffffa01fb34c>] ieee80211_sta_restart+0x4c/0x50 [mac80211]
-> [  331.514314]  [<ffffffffa020c86c>] ieee80211_reconfig+0x36c/0x420 [mac80211]
-> [  331.528678]  [<ffffffffa020c65c>] ? ieee80211_reconfig+0x15c/0x420 [mac80211]
-> [  331.543094]  [<ffffffffa0202fa5>] ieee80211_resume+0x15/0x20 [mac80211]
-> [  331.557525]  [<ffffffffa01527a5>] wiphy_resume+0x75/0x90 [cfg80211]
-> [  331.572001]  [<ffffffff81273fee>] dpm_resume_end+0x47e/0x4b0
-> [  331.586325]  [<ffffffff8107d5e9>] hibernation_snapshot+0xc9/0x280
-> [  331.600377]  [<ffffffff8107d88d>] hibernate+0xed/0x1f0
-> [  331.613980]  [<ffffffff8107c00c>] state_store+0xec/0x100
-> [  331.627577]  [<ffffffff811e05f7>] kobj_attr_store+0x17/0x20
-> [  331.641242]  [<ffffffff811345a4>] sysfs_write_file+0xd4/0x150
-> [  331.655056]  [<ffffffff810d02f8>] vfs_write+0xb8/0x1a0
-> [  331.668718]  [<ffffffff810d04bc>] sys_write+0x4c/0x80
-> [  331.682153]  [<ffffffff8100beeb>] system_call_fastpath+0x16/0x1b
-> [  331.695613] ---[ end trace 85c754c80d7debe8 ]---
-> [  331.709557] PM: Image restored successfully.
-> 
-> Now, how the ifmgd->timer could still be pending I have no idea yet, it seems to be explictly
-> del_timer_sync'ed and timer routine also checks this condition, and doesn't restart itself....
-> 
-> Also note that this was seen happening both on resume, and when the suspend image is written (sort of resume too).
 
-Quick glance suggest some hole in the management of the
-TMR_RUNNING_CHANSW bit?
+I do not understand what the fuss is about. We are pretty far in release
+process (rc6 is about to be cut I'd expect) and we have an issue that
+for all practical purposes kills the box on resume. Yes, I want action
+to be swift in this case and (unless author or maintainer - who were
+CCed on the email - have otehr solutiuon) the offending commit to be
+reverted. If it was rc1 or rc2 or 3 I'd feel differently.
 
-Johannes, ideas?
+> It'd help communication and be so much more friendly if the subject was
+> "found problem with commit ..." instead of "please consider
+> reverting ..." (which was comparatively friendly already!). You can even
+> leave the body almost identical, but I think it's presumptuous to
+> effectively say "hey I know the solution for the problem already".
 
-John
+Not at all. I do know the solution since reverting this commit makes by
+laptop operable again. It may not be the best solution in the long run
+but a solution nonetheless.
+
+> I'll
+> venture a guess and say that wasn't even the intent, but it certainly
+> comes across like that if you write an email with this subject, and
+> start the body with "Hi Linus," not even addressing the patch author,
+> just adding them to CC out of courtesy.
+> 
+> Should I think this is accepted practice?
+> 
+
+Again, I do not see the problem here. We have a severe regression so
+yes, I am addressing Linus and asking him to consider reverting bad
+commit. I also CCing the author and the wireless maintainer so they
+can object if they have alternative solution. If the problem was in a
+single driver I might consider doing it differenty but I think this
+commit affects many wireless drivers.
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Dmitry
