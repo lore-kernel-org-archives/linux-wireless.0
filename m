@@ -1,80 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:19497 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759107AbZKZHvH (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:47713 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751841AbZKCQts (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 02:51:07 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: PROPOSAL: cfg80211 antenna selection
-Date: Thu, 26 Nov 2009 08:51:00 +0100
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>
-References: <200911250941.10929.holgerschurig@gmail.com> <43e72e890911250736l33afdf8ak1c806e5f5482f9da@mail.gmail.com>
-In-Reply-To: <43e72e890911250736l33afdf8ak1c806e5f5482f9da@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200911260851.00192.holgerschurig@gmail.com>
+	Tue, 3 Nov 2009 11:49:48 -0500
+Subject: Re: Please consider reverting
+ 7d930bc33653d5592dc386a76a38f39c2e962344
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
+	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20091103162955.GA4836@elte.hu>
+References: <20091103053156.GA3212@core.coreip.homeip.net>
+	 <20091102.224957.32364226.davem@davemloft.net>
+	 <20091103065238.GE3212@core.coreip.homeip.net>
+	 <1257232587.3420.55.camel@localhost.localdomain>
+	 <alpine.LFD.2.01.0911030719430.31845@localhost.localdomain>
+	 <1257262588.3420.79.camel@localhost.localdomain>
+	 <alpine.LFD.2.01.0911030738260.31845@localhost.localdomain>
+	 <1257264485.3420.87.camel@localhost.localdomain>
+	 <20091103162955.GA4836@elte.hu>
+Content-Type: text/plain
+Date: Wed, 04 Nov 2009 01:49:44 +0900
+Message-Id: <1257266984.3420.111.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> While at it might as well make this some configurable struct
-> which the drivers can add to the wiphy just as with the
-> subbands. 
+Hi Ingo,
 
-Something like this?
+> > > > no questions that it needs fixed, I agree with you. However just blindly
+> > > > reverting something, because it fixes it for one or two people, might
+> > > > have side effects that causes more problems than the revert would
+> > > > actually fix.
+> > > 
+> > > Stop whining. Really.
+> > > 
+> > > Everybody understands that it should be fixed.  That's not the question.
+> > > 
+> > > But it should be fixed _quickly_. In this case, I have a bisection report 
+> > > FROM TWO DAYS AGO. And I'm still kicking myself for not just reverting 
+> > > that piece-of-shit commit then, because I spent the time to look at the 
+> > > oops and the commit, and could tell that it was crap.
+> > > 
+> > > Instead, I _did_ wait for the subsystem maintainer to get around to it. As 
+> > > a result of waiting, I've now wasted time for a lot of other people.
+> > 
+> > I do have a patch in my inbox from Johannes from 4 days ago that fixes 
+> > this issue.
+> > 
+> > 	http://marc.info/?l=linux-wireless&m=125697124819563&w=2
+> > 
+> > So what is the take away from this now? Do you wanna have Johannes 
+> > step over John and Dave and send such a patch directly to you?
+> 
+> The problem as i see it is the kind of answer Johannes gave when the bug 
+> was bisected to by Jeff Chua two days ago:
+> 
+>   Subject: wpa2 hangs v2.6.32-rc5-402-gb6727b1. Revert
+>            7d930bc33653d5592dc386a76a38f39c2e962344 fixed it.
+> 
+>  [ <1257151742.3555.165.camel@johannes.local> ]
+>  ...
+>  |
+>  | On Sun, 2009-11-01 at 23:18 +0800, Jeff Chua wrote:
+>  | > wpa2 (wpa_supplicant) hangs v2.6.32-rc5-402-gb6727b1.
+>  |
+>  | Explain?
+>  |
+>  | > Reverting 7d930bc33653d5592dc386a76a38f39c2e962344 fixes it.
+>  |
+>  | Certainly not a good idea, will break when your AP denies association.
+>  |
+>  | johannes
+> 
+> Unhelpful, defensive, in denial.
+> 
+> Plus that you tried to berate Dmitry in this particular thread about the 
+> revert was pretty bad form too IMO.
+> 
+> _Anyone_ who went through the unnecessary, avoidable cost of having to 
+> do a bisection of a 3 days old commit merged at around -rc5 time is in 
+> his full rights to ask for a revert, straight from Linus if he thinks 
+> so. No ifs and when about it.
+> 
+> So IMO you are showing the wrong kind of attitude for a post-rc5 
+> regression, by a _wide_ margin. The right kind of attitude would be:
+> 
+>   "Oops, my bad - thanks. I've queued up a revert."
+> 
+> or:
+> 
+>   "Oops, my bad - thanks. Does the attached patch fix it?
+>    If not we'll revert it."
+> 
+> Furthermore, your 'hey, nothing happened, we fixed it after all' 
+> argument is just a forewarning that you learned nothing and such 
+> avoidable incidents could repeat in the future.
+
+who said 'hey, nothing happened, we fixed it after all'. The fix for
+this issue is 4 days old and was already on the way to Linus. And I
+remember the first response was that this got fixed already and that the
+patch is going to Linus.
+
+Regards
+
+Marcel
 
 
-struct ieee80211_antenna lbs_antennas {
-	u32 hwvalue;
-	u32 flags;
-	u32 capability;
-	int max_gain;
-}
-
-static struct ieee80211_antenna lbs_antennas[] = {
-	{
-		.hwvalue = 0,
-		.capability = IEEE80211_ANTENNA_RXTX,
-	}
-};
-
-wiphy->antennas = lbs_antennas;
-wiphy->n_anteanns = ARRAY_SIZE(lbs_antennas);
-
-Or should the antennas be added to "struct
-ieee80211_supported_band" instead of wiphy?
-
-
-Capabilities could be
-
-#define IEEE80211_ANTENNA_RX         BIT(0)
-#define IEEE80211_ANTENNA_TX         BIT(1)
-#define IEEE80211_ANTENNA_OMNI       BIT(2)
-#define IEEE80211_ANTENNA_SECTIONAL  BIT(3)
-#define IEEE80211_ANTENNA_RXTX
-   (IEEE80211_ANTENNA_RX | IEEE80211_ANTENNA_TX)
-
-An unknown gain would be set to 0.
-
-
-
-> Not sure how to get this from other cards. Anyone know how
-> about on b43, iwlwifi, rallink? 
-
-Libertas doesn't give this to you, AFAIK you can just get the
-number of antennas.
-
-
-> Not sure if allowing for ops for chainmask setting would also
-> be helpeful here, that would need some review.
-
-What is "chainmask setting", I don't even know the concept.
-
-
-
-You didn't give any comment on my mask idea for the user-space 
-API.
-
--- 
-http://www.holgerschurig.de
