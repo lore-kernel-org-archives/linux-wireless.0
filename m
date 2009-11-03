@@ -1,41 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:35905 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759613AbZKKXXK (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:49138 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752840AbZKCRzn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 18:23:10 -0500
-Received: by iwn8 with SMTP id 8so1347284iwn.33
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2009 15:23:15 -0800 (PST)
+	Tue, 3 Nov 2009 12:55:43 -0500
 MIME-Version: 1.0
-In-Reply-To: <200911120010.11943.jkrzyszt@tis.icnet.pl>
-References: <200911112219.08814.jkrzyszt@tis.icnet.pl> <200911120010.11943.jkrzyszt@tis.icnet.pl>
+In-Reply-To: <alpine.LFD.2.01.0911030930130.31845@localhost.localdomain>
+References: <20091103053156.GA3212@core.coreip.homeip.net>
+	<20091103065238.GE3212@core.coreip.homeip.net> <1257232587.3420.55.camel@localhost.localdomain>
+	<alpine.LFD.2.01.0911030719430.31845@localhost.localdomain>
+	<1257262588.3420.79.camel@localhost.localdomain> <alpine.LFD.2.01.0911030738260.31845@localhost.localdomain>
+	<1257264485.3420.87.camel@localhost.localdomain> <20091103162955.GA4836@elte.hu>
+	<43e72e890911030924n26550ee4j619a41ec016281ea@mail.gmail.com>
+	<alpine.LFD.2.01.0911030930130.31845@localhost.localdomain>
 From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 11 Nov 2009 15:22:54 -0800
-Message-ID: <43e72e890911111522t118f1d23q49d68662a05bf0dd@mail.gmail.com>
-Subject: Re: Please share info about power consumption characteristics of your
-	USB adapter
-To: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
-Cc: linux-wireless@vger.kernel.org
+Date: Tue, 3 Nov 2009 09:55:28 -0800
+Message-ID: <43e72e890911030955j63483919h9759fbb0b5e7acc3@mail.gmail.com>
+Subject: Re: Please consider reverting 7d930bc33653d5592dc386a76a38f39c2e962344
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Ingo Molnar <mingo@elte.hu>, Marcel Holtmann <marcel@holtmann.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
+	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 11, 2009 at 3:10 PM, Janusz Krzysztofik
-<jkrzyszt@tis.icnet.pl> wrote:
-> Hi,
+On Tue, Nov 3, 2009 at 9:37 AM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
 >
-> Thanks for all answers so far.
 >
-> Regarding Luis suggestion: I don't know how to edit wireless wiki, but I
-> promiss to collect all information I get from you and post it in a tabular
-> form here. Then, you can safely send more answers to my private address if
-> you don't want to overload the list too much :-).
+> On Tue, 3 Nov 2009, Luis R. Rodriguez wrote:
+>>
+>> How this sort of issue is dealt with is subjective and it is up to
+>> maintainers to deal with.
+>
+> Not when they then complain when others hit the same issue several days
+> later.
+>
+>> Having more information on the patch and better communication about
+>> the issue it solved, and the issues that reverting it would have
+>> caused would certainly have helped maintainers make a better call at a
+>> regression caused by it but knowing Johannes he'd probably cook up a
+>> followup fix ASAP and that is exactly what he did.
+>
+> He may have cooked it up, but he didn't send it to me, and he didn't even
+> bother to post it as a response to people who complained about the same
+> commit.
+>
+> The fact that people on the wireless mailing lists may have known about
+> this just makes things _worse_, I think. It shows that we really _need_ to
+> go around maintainers, when not going around them seems to result in days
+> of delays and total waste of time for everybody.
 
-Just go to:
-
-http://wireless.kernel.org/
-
-sign up for an account and edit the stuff into any page. We can help
-you organize it.
+Well I wouldn't quite say that. Me and Johannes know about it, I
+cannot say everyone else who reads linux-wireless understood the
+issue. I was trying to explain that the root cause of this whole issue
+was non-obvious and even when I found a fix that worked for me it
+turned out that wasn't the "proper" solution. So in reality the only
+one who probably really understood this issue inside out and backwards
+was Johannes.
 
   Luis
