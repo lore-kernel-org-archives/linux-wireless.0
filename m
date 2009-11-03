@@ -1,41 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:48564 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754974AbZKTUyF (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:57478 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752011AbZKCXWr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 15:54:05 -0500
+	Tue, 3 Nov 2009 18:22:47 -0500
+Received: by yxe17 with SMTP id 17so5897652yxe.33
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2009 15:22:52 -0800 (PST)
+Message-ID: <4AF0BB45.5000402@lwfinger.net>
+Date: Tue, 03 Nov 2009 17:22:45 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890911201251t6210ee19n177eaf003a4fffc@mail.gmail.com>
-References: <43e72e890911201245r4de5b039hb2dd5011dabf2399@mail.gmail.com>
-	<43e72e890911201251t6210ee19n177eaf003a4fffc@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 20 Nov 2009 12:53:51 -0800
-Message-ID: <43e72e890911201253obc466c8k2102e04457c48c92@mail.gmail.com>
-Subject: Re: A generic kernel compatibilty code
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Richard Farina <sidhayn@gmail.com>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Subject: Possible fix for rtl8187: kernel oops when leds enabled
+References: <4AE5BD6C.2050303@gmail.com> <4AE5C55B.5070309@lwfinger.net> <4AE5CDCB.8090400@gmail.com>
+In-Reply-To: <4AE5CDCB.8090400@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 20, 2009 at 12:51 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Fri, Nov 20, 2009 at 12:45 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> Everyone and their mother reinvents the wheel when it comes to
->> backporting kernel modules. It a painful job and it seems to me an
->> alternative is possible. If we can write generic compatibilty code for
->> a new routine introduced on the next kernel how about just merging it
->> to the kernel under some generic compat module. This would be
->> completey ignored by everyone using the stable kernel but can be
->> copied by anyone doing backport work.
->>
->> So I'm thinking something as simple as a generic compat/comat.ko with
->> compat-2.6.32.[ch] files.
->
-> FWIW, I meant a compat-2.6.32.[ch] and compat-2.6.31.[ch] and so on.
-> All these would link to the compat.ko
+Rick,
 
-I supose this could juse be a separate tree with some generic
-compat.ko module. That might work better.
+Does this patch fix your problem? I tried to bisect this problem as it
+looked like a regression; however, the problem was sometimes a little
+flakey. On one boot of a given kernel, it might run for 3-400 cycles
+without failing, then fail immediately after rebooting. I suspect that
+the random contents of some memory location would control that.
 
-  Luis
+This patch was inspired by the code in p54usb, which does not have the
+problem.
+
+
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_leds.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
+@@ -210,10 +210,10 @@ void rtl8187_leds_exit(struct ieee80211_
+
+ 	/* turn the LED off before exiting */
+ 	ieee80211_queue_delayed_work(dev, &priv->led_off, 0);
+-	cancel_delayed_work_sync(&priv->led_off);
+-	cancel_delayed_work_sync(&priv->led_on);
+ 	rtl8187_unregister_led(&priv->led_rx);
+ 	rtl8187_unregister_led(&priv->led_tx);
++	cancel_delayed_work_sync(&priv->led_off);
++	cancel_delayed_work_sync(&priv->led_on);
+ }
+ #endif /* def CONFIG_RTL8187_LED */
+
+Thanks for testing,
+
+Larry
+
+
+
+
+
+
