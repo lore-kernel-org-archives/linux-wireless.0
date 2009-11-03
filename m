@@ -1,128 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:63177 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751065AbZKQQtC (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:43492 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750796AbZKCPkH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 11:49:02 -0500
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 05/16] wl1251: allocate space for firmware with vmalloc()
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Nov 2009 18:48:45 +0200
-Message-ID: <20091117164844.2236.11218.stgit@tikku>
-In-Reply-To: <20091117164614.2236.8543.stgit@tikku>
-References: <20091117164614.2236.8543.stgit@tikku>
+	Tue, 3 Nov 2009 10:40:07 -0500
+Date: Tue, 3 Nov 2009 07:38:13 -0800 (PST)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Marcel Holtmann <marcel@holtmann.org>
+cc: Johannes Berg <johannes@sipsolutions.net>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	David Miller <davem@davemloft.net>, linville@tuxdriver.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Please consider reverting
+ 7d930bc33653d5592dc386a76a38f39c2e962344
+In-Reply-To: <1257262187.3420.73.camel@localhost.localdomain>
+Message-ID: <alpine.LFD.2.01.0911030732150.31845@localhost.localdomain>
+References: <20091103053156.GA3212@core.coreip.homeip.net>  <20091102.224957.32364226.davem@davemloft.net>  <20091103065238.GE3212@core.coreip.homeip.net>  <1257232587.3420.55.camel@localhost.localdomain>  <1257234299.28469.25.camel@johannes.local>
+ <20091103082201.GG3212@core.coreip.homeip.net>  <1257237061.28469.43.camel@johannes.local>  <20091103084744.GH3212@core.coreip.homeip.net>  <1257238623.28469.47.camel@johannes.local> <1257262187.3420.73.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
 
-Earlier firmware was stored to a memory area allocated with kmalloc()
-but finding a a contiguous area of memory long enough for the firmware is
-very difficult in certain cases. better to allocate the memory for firmware
-with vmalloc() instead and use a small buffer for DMA transfers.
 
-Thanks to Eero Tamminen for the idea.
+On Wed, 4 Nov 2009, Marcel Holtmann wrote:
+> 
+> I have to agree here. It happens why too often lately. And this needs to
+> stop. Otherwise why bother with subsystem maintainers? Just send
+> everything to Linus directly and have him to review every line of code.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
-Reviewed-by: Vidhya Govindan <vidhya.govindan@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
+You're full of sh*t.
 
- drivers/net/wireless/wl12xx/wl1251_boot.c |   27 ++++++++++++++++++++++-----
- drivers/net/wireless/wl12xx/wl1251_main.c |    5 +++--
- 2 files changed, 25 insertions(+), 7 deletions(-)
+Bugs are bugs. They should be reverted, and the people who introduced them 
+should be SHAMED if the thing was introduced after the merge window.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_boot.c b/drivers/net/wireless/wl12xx/wl1251_boot.c
-index 452d748..8febf27 100644
---- a/drivers/net/wireless/wl12xx/wl1251_boot.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_boot.c
-@@ -314,8 +314,8 @@ int wl1251_boot_run_firmware(struct wl1251 *wl)
- static int wl1251_boot_upload_firmware(struct wl1251 *wl)
- {
- 	int addr, chunk_num, partition_limit;
--	size_t fw_data_len;
--	u8 *p;
-+	size_t fw_data_len, len;
-+	u8 *p, *buf;
- 
- 	/* whal_FwCtrl_LoadFwImageSm() */
- 
-@@ -334,6 +334,12 @@ static int wl1251_boot_upload_firmware(struct wl1251 *wl)
- 		return -EIO;
- 	}
- 
-+	buf = kmalloc(CHUNK_SIZE, GFP_KERNEL);
-+	if (!buf) {
-+		wl1251_error("allocation for firmware upload chunk failed");
-+		return -ENOMEM;
-+	}
-+
- 	wl1251_set_partition(wl, WL1251_PART_DOWN_MEM_START,
- 			     WL1251_PART_DOWN_MEM_SIZE,
- 			     WL1251_PART_DOWN_REG_START,
-@@ -364,7 +370,11 @@ static int wl1251_boot_upload_firmware(struct wl1251 *wl)
- 		p = wl->fw + FW_HDR_SIZE + chunk_num * CHUNK_SIZE;
- 		wl1251_debug(DEBUG_BOOT, "uploading fw chunk 0x%p to 0x%x",
- 			     p, addr);
--		wl1251_mem_write(wl, addr, p, CHUNK_SIZE);
-+
-+		/* need to copy the chunk for dma */
-+		len = CHUNK_SIZE;
-+		memcpy(buf, p, len);
-+		wl1251_mem_write(wl, addr, buf, len);
- 
- 		chunk_num++;
- 	}
-@@ -372,9 +382,16 @@ static int wl1251_boot_upload_firmware(struct wl1251 *wl)
- 	/* 10.4 upload the last chunk */
- 	addr = WL1251_PART_DOWN_MEM_START + chunk_num * CHUNK_SIZE;
- 	p = wl->fw + FW_HDR_SIZE + chunk_num * CHUNK_SIZE;
-+
-+	/* need to copy the chunk for dma */
-+	len = fw_data_len % CHUNK_SIZE;
-+	memcpy(buf, p, len);
-+
- 	wl1251_debug(DEBUG_BOOT, "uploading fw last chunk (%zu B) 0x%p to 0x%x",
--		     fw_data_len % CHUNK_SIZE, p, addr);
--	wl1251_mem_write(wl, addr, p, fw_data_len % CHUNK_SIZE);
-+		     len, p, addr);
-+	wl1251_mem_write(wl, addr, buf, len);
-+
-+	kfree(buf);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index b5e3bdb..1f4c238 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -28,6 +28,7 @@
- #include <linux/irq.h>
- #include <linux/crc32.h>
- #include <linux/etherdevice.h>
-+#include <linux/vmalloc.h>
- 
- #include "wl1251.h"
- #include "wl12xx_80211.h"
-@@ -83,7 +84,7 @@ static int wl1251_fetch_firmware(struct wl1251 *wl)
- 	}
- 
- 	wl->fw_len = fw->size;
--	wl->fw = kmalloc(wl->fw_len, GFP_KERNEL);
-+	wl->fw = vmalloc(wl->fw_len);
- 
- 	if (!wl->fw) {
- 		wl1251_error("could not allocate memory for the firmware");
-@@ -1427,7 +1428,7 @@ int wl1251_free_hw(struct wl1251 *wl)
- 
- 	kfree(wl->target_mem_map);
- 	kfree(wl->data_path);
--	kfree(wl->fw);
-+	vfree(wl->fw);
- 	wl->fw = NULL;
- 	kfree(wl->nvs);
- 	wl->nvs = NULL;
+I don't need to review any line of code at all - a revert is a revert. 
+There's not a lot of review that needs, just a very obvious "that bug 
+causes more problems than it fixed".
 
+And yes, I'm upset, because in this case I saw one of the _earlier_ bisect 
+results too, and I did actually spend time debugging it and sending 
+Johannes the information, because he basically ignored the bisect result. 
+
+That makes me upset. The fact that somebody has bisected the problem means 
+that you should damn well thank them, not complain. And look at the -rc 
+number, look at the commit - and you should realize that "please revert" 
+is OBVIOUSLY the right thing to say to something that introduces problems 
+after -rc5.
+
+The fact is, maintainership does _not_ mean ownership. It means that you 
+should be _responsible_ for the code, and you get credit for it, but if 
+problems happen you do NOT "own" it. Not at all.
+
+If you don't understand that, you shouldn't be a maintainer.
+
+And if it's not obvious - I'm really upset that people are complaining 
+about "please revert" for this case. YOU were wrong. 
+
+		Linus
