@@ -1,39 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f204.google.com ([209.85.216.204]:41336 "EHLO
-	mail-px0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755459AbZKUQpa convert rfc822-to-8bit (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45230 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750972AbZKCQjB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Nov 2009 11:45:30 -0500
-Received: by pxi42 with SMTP id 42so2421059pxi.5
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Nov 2009 08:45:36 -0800 (PST)
+	Tue, 3 Nov 2009 11:39:01 -0500
+Date: Tue, 3 Nov 2009 08:37:07 -0800 (PST)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Marcel Holtmann <marcel@holtmann.org>
+cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
+	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Please consider reverting
+ 7d930bc33653d5592dc386a76a38f39c2e962344
+In-Reply-To: <alpine.LFD.2.01.0911030815180.31845@localhost.localdomain>
+Message-ID: <alpine.LFD.2.01.0911030827040.31845@localhost.localdomain>
+References: <20091103053156.GA3212@core.coreip.homeip.net>  <20091102.224957.32364226.davem@davemloft.net>  <20091103065238.GE3212@core.coreip.homeip.net>  <1257232587.3420.55.camel@localhost.localdomain>  <alpine.LFD.2.01.0911030719430.31845@localhost.localdomain>
+  <1257262588.3420.79.camel@localhost.localdomain>  <alpine.LFD.2.01.0911030738260.31845@localhost.localdomain> <1257264485.3420.87.camel@localhost.localdomain> <alpine.LFD.2.01.0911030815180.31845@localhost.localdomain>
 MIME-Version: 1.0
-Date: Sat, 21 Nov 2009 08:45:36 -0800
-Message-ID: <70f6a1ed0911210845s5dd46374ie74e6e105433dcae@mail.gmail.com>
-Subject: Using wireless-testing tree
-From: Duy Nguyen <dnlove@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi everyone, I downloaded and upgraded my kernel with wireless-testing
-tree.  I have some questions.
 
-1) I create my own git branch and modify only the mac80211 and
-ath5k/ath9k.  How do I compile only these modules and test them
-without having  to recompile and upgrade my whole kernel again.
-Because of the repetitive nature of modifying and testing drivers, I
-am trying to avoid this but is it possible?  Or compat-wireless is a
-better alternative.
 
-2) I have compat-wireless-2.6 tree in my wireless-testing tree.  I
-still don't know how to create my own compat-wireless even after going
-through the wiki online.
-cd compat-wireless-2.6
-make
-but it complains about some errors.
+On Tue, 3 Nov 2009, Linus Torvalds wrote:
+> 
+> And yes, "dealing with it" very much means by-passing maintainers if 
+> necessary. It can mean sending patches directly to me, but it _also_ means 
+> asking me to just revert a commit that turns out to be buggy and was 
+> merged late.
 
-I am just wondering if you could share your most efficient ways
-working with wireless-testing tree.   Thanks.
+By the way, the "if necessary" part obviously means that I'll be very 
+happy if it all happens through maintainers. I'm absolutely _not_ arguing 
+for sending patches directly to me if there is a better way of doing 
+things. 
 
-Duy
+But I do think that especially as a user who finds a problem, an email 
+saying "please revert" is a great thing to send to me when you've 
+identified a problem - especially late in the -rc series.
+
+Of course, you should always Cc: all the people in the patch (author _and_ 
+the sign-off-chain), to give them the opportunity to ask the reporter to 
+try another patch or to ask me to pull a fix.
+
+Especially as nobody reads email 24/7 and we're all on slightly different 
+clocks (even within the same timezone we have different schedules: I start 
+readin mail at 7:30AM, which is probably _not_ what most techies do), so 
+the optimal situation is that by the time I see the revert request, I 
+_also_ have another email in my mailbox saying "oh, apply this patch 
+instead".
+
+So the different schedules _can_ be an advantage, and it's why email is 
+such a great communication medium for being "immediate, but asynchronous". 
+We can have overlapping work, and be very efficient when things work well.
+
+The pessimal solution, on the other hand, is to have a very rigid 
+"channel" so that we end up waiting for several people in a long chain, 
+all of which are on different schedules, and so each step takes a day or 
+so to percolate.
+
+Which is what I think happened now. 
+
+			Linus
