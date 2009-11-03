@@ -1,36 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:65500 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750919AbZKZVtG convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:3337 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757285AbZKCAjz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 16:49:06 -0500
-Received: by iwn1 with SMTP id 1so643610iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2009 13:49:11 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <69e28c910911260902p5385cd33wa0d5e00199235dd1@mail.gmail.com>
-References: <d82e647a0911260557l5cf33449pe41f8902b6889891@mail.gmail.com>
-	<69e28c910911260902p5385cd33wa0d5e00199235dd1@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 26 Nov 2009 13:48:51 -0800
-Message-ID: <43e72e890911261348g32edb851obbba8e265ad22e95@mail.gmail.com>
-Subject: Re: [question] ath9k: 11n monitor mode
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: Ming Lei <tom.leiming@gmail.com>, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org, Matteo Croce <matteo@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 2 Nov 2009 19:39:55 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so245452fgg.1
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2009 16:39:58 -0800 (PST)
+Subject: iwl3945 microcode errors
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 03 Nov 2009 02:39:54 +0200
+Message-ID: <1257208794.6556.2.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/11/26 Gábor Stefanik <netrolller.3d@gmail.com>:
-> I don't know exactly, but a while ago there was a discussion about how
-> to represent HT rates in Radiotap. AFAIK mac80211 refuses to forward
-> HT packets to monitor interfaces as they don't have a valid CCK or
-> OFDM rate.
+I see that iwl3945 began to show some microcode errors like that:
 
-Matteo added a suggested field for radiotap for MCS rates:
+[   18.259947] iwl3945 0000:06:00.0: firmware: requesting iwlwifi-3945-2.ucode
+[   18.766225] iwl3945 0000:06:00.0: loaded firmware version 15.32.2.9
+[   18.817952] iwl3945 0000:06:00.0: Microcode SW error detected. Restarting 0x82000008.
+[   18.817971] iwl3945 0000:06:00.0: Error Reply type 0x00000000 cmd UNKNOWN (0x88) seq 0xDB3B ser 0x00880000
+[   18.822468] iwl3945 0000:06:00.0: Can't stop Rx DMA.
+[   20.790058] iwl3945 0000:06:00.0: Wait for START_ALIVE timeout after 2000ms.
 
-http://www.radiotap.org/suggested-fields/MCS
+Now it still works, but there were cases it didn't.
 
-If approved it could mean then parsing MCS rates.
+I post more detailed info soon.
 
-  Luis
+Best regards,
+	Maxim Levitsky
+
