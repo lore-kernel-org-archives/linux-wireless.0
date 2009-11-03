@@ -1,107 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39933 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754884AbZKTWCb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 17:02:31 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/3] [compat-2.6] Refresh config.mk
-Date: Fri, 20 Nov 2009 23:01:52 +0100
-Message-Id: <1258754513-4546-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1258754513-4546-1-git-send-email-hauke@hauke-m.de>
-References: <1258754513-4546-1-git-send-email-hauke@hauke-m.de>
+Received: from qw-out-2122.google.com ([74.125.92.24]:44398 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752051AbZKCPyj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Nov 2009 10:54:39 -0500
+MIME-Version: 1.0
+In-Reply-To: <1257262588.3420.79.camel@localhost.localdomain>
+References: <20091103053156.GA3212@core.coreip.homeip.net>
+	 <20091102.224957.32364226.davem@davemloft.net>
+	 <20091103065238.GE3212@core.coreip.homeip.net>
+	 <1257232587.3420.55.camel@localhost.localdomain>
+	 <alpine.LFD.2.01.0911030719430.31845@localhost.localdomain>
+	 <1257262588.3420.79.camel@localhost.localdomain>
+Date: Tue, 3 Nov 2009 16:54:43 +0100
+Message-ID: <c4e36d110911030754t5353f598p69c6ab7bcda97509@mail.gmail.com>
+Subject: Re: Please consider reverting 7d930bc33653d5592dc386a76a38f39c2e962344
+From: Zdenek Kabelac <zdenek.kabelac@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
+	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove some unused symbols and add some new symbols.
+2009/11/3 Marcel Holtmann <marcel@holtmann.org>:
+> Hi Linus,
+>
+>> > and can we please stop jumping the gun here and going past the subsystem
+>> > maintainers. I think this happens a little bit too much lately.
+>>
+>> NO!
+>>
+>> Quite frankly, I'm very unhappy indeed with the maintainers when it comes
+>> to this bug:
+>>
+>>  - it was introduced after -rc5
+>>
+>>  - it's been bisected by multiple people
+>>
+>>  - I've seen one of the encounters with a person who bisected it, and the
+>>    author of the buggy commit just wanted "more information" after having
+>>    been told that small commit causes lockups.
+>>
+>> In other words - the LAST thing we should do is to pat the subsystem
+>> maintainers on the back and say "good job".
+>>
+>> The fact is, when somebody reports a major bug that is fixed by a revert,
+>> then I shoudl probably revert _more_ eagerly rather than less!
+>>
+>> And subsystem maintainers should jump on it, not wait several days.
+>
+> no questions that it needs fixed, I agree with you. However just blindly
+> reverting something, because it fixes it for one or two people, might
+> have side effects that causes more problems than the revert would
+> actually fix. In this case, let at least give John or Johannes a chance
+> to comment on it.
+>
+> I do love the fact that it gets bisected down to one particular commit.
+> That is great and thanks to the people who did that, but let the
+> subsystem maintainers know and then have them either provide a fix or
+> revert it by them. Sometimes it might take more than one day. And lets
+> be honest here, Johannes is one of the most responsive persons when it
+> comes to wireless bugs.
+>
+> Regards
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- config.mk |   17 ++++++++---------
- 1 files changed, 8 insertions(+), 9 deletions(-)
+Well for me the issue has been fixed by http://lkml.org/lkml/2009/10/30/68
 
-diff --git a/config.mk b/config.mk
-index 35d6078..54cbb12 100644
---- a/config.mk
-+++ b/config.mk
-@@ -70,9 +70,7 @@ ifeq ($(CONFIG_NET_SCHED),)
-  QOS_REQS_MISSING+=CONFIG_NET_SCHED
- endif
- 
--ifeq ($(QOS_REQS_MISSING),) # if our dependencies match for MAC80211_QOS
--CONFIG_MAC80211_QOS=y
--else # Complain about our missing dependencies
-+ifneq ($(QOS_REQS_MISSING),) # Complain about our missing dependencies
- $(warning "WARNING: You are running a kernel >= 2.6.23, you should enable in it $(QOS_REQS_MISSING) for 802.11[ne] support")
- endif
- 
-@@ -92,7 +90,9 @@ CONFIG_MAC80211=m
- # CONFIG_MAC80211_IBSS_DEBUG=y
- # CONFIG_MAC80211_VERBOSE_PS_DEBUG=y
- # CONFIG_MAC80211_VERBOSE_MPL_DEBUG=y
-+# CONFIG_MAC80211_VERBOSE_MHWMP_DEBUG=y
- # CONFIG_MAC80211_DEBUG_COUNTERS=y
-+# CONFIG_MAC80211_DRIVER_API_TRACER=y
- 
- # choose between pid and minstrel as default rate control algorithm
- CONFIG_MAC80211_RC_DEFAULT=minstrel
-@@ -110,7 +110,9 @@ CONFIG_MAC80211_MESH=y
- 
- CONFIG_CFG80211=m
- CONFIG_CFG80211_DEFAULT_PS=y
--CONFIG_CFG80211_DEFAULT_PS_VALUE=1
-+# CONFIG_CFG80211_DEBUGFS=y
-+# CONFIG_NL80211_TESTMODE=y
-+# CONFIG_CFG80211_DEVELOPER_WARNINGS=y
- # CONFIG_CFG80211_REG_DEBUG=y
- # See below for wext stuff
- 
-@@ -147,7 +149,6 @@ ifneq ($(CONFIG_PCI),)
- 
- CONFIG_ATH5K=m
- # CONFIG_ATH5K_DEBUG=y
--CONFIG_ATH5K_RFKILL=y
- CONFIG_ATH9K_HW=m
- CONFIG_ATH9K=m
- # Note: once ath9k_htc is added we'll have to move
-@@ -158,11 +159,10 @@ CONFIG_ATH9K_COMMON=m
- 
- 
- CONFIG_IWLWIFI=m
--CONFIG_IWLWIFI_LEDS=y
--CONFIG_IWLWIFI_RFKILL=y
- CONFIG_IWLWIFI_SPECTRUM_MEASUREMENT=y
- # CONFIG_IWLWIFI_DEBUG=y
- # CONFIG_IWLWIFI_DEBUGFS=y
-+# CONFIG_IWLWIFI_DEVICE_TRACING=y
- CONFIG_IWLAGN=m
- CONFIG_COMPAT_IWL4965=y
- CONFIG_IWL5000=y
-@@ -179,7 +179,6 @@ CONFIG_B43_PCMCIA=y
- endif
- CONFIG_B43_PIO=y
- CONFIG_B43_LEDS=y
--CONFIG_B43_RFKILL=y
- CONFIG_B43_PHY_LP=y
- # CONFIG_B43_DEBUG=y
- # CONFIG_B43_FORCE_PIO=y
-@@ -189,7 +188,6 @@ CONFIG_B43LEGACY_HWRNG=y
- CONFIG_B43LEGACY_PCI_AUTOSELECT=y
- CONFIG_B43LEGACY_PCICORE_AUTOSELECT=y
- CONFIG_B43LEGACY_LEDS=y
--CONFIG_B43LEGACY_RFKILL=y
- # CONFIG_B43LEGACY_DEBUG=y
- CONFIG_B43LEGACY_DMA=y
- CONFIG_B43LEGACY_PIO=y
-@@ -314,6 +312,7 @@ CONFIG_USB_NET_CDCETHER=m
- 
- CONFIG_P54_USB=m
- CONFIG_RTL8187=m
-+CONFIG_RTL8187_LEDS=y
- 
- CONFIG_AT76C50X_USB=m
- 
--- 
-1.6.3.3
+But it was not easy to decrypt bug after resume in my case....
 
+However doing commit of memcpy where the src could be NULL in -rc5
+looks really  suspicious.
+
+Regards
+
+Zdenek
