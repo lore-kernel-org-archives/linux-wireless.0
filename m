@@ -1,39 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.irobot.com ([206.83.81.187]:33422 "EHLO smtp1.irobot.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752049AbZKPR54 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2009 12:57:56 -0500
-Message-ID: <4B0192A6.9050808@irobot.com>
-Date: Mon, 16 Nov 2009 09:57:58 -0800
-From: Adam Wozniak <awozniak@irobot.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57349 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756646AbZKDOpM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2009 09:45:12 -0500
+Date: Wed, 4 Nov 2009 09:38:14 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jarek Poplawski <jarkao2@gmail.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Miller <davem@davemloft.net>
+Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project
+	tree
+Message-ID: <20091104143813.GB12965@tuxdriver.com>
+References: <200911031951.05235.bzolnier@gmail.com> <200911032200.04516.IvDoorn@gmail.com> <20091104083737.GA16978@elte.hu>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Christian Lamparter <chunkeey@googlemail.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	linux-wireless@vger.kernel.org, nbd@openwrt.org
-Subject: Re: compat-wireless and minstrel
-References: <4AF0D54D.4090303@irobot.com>	 <alpine.DEB.2.00.0911111508391.6214@kauri.acheron.indranet.co.nz>	 <4AFC655A.5020706@irobot.com> <200911122103.27455.chunkeey@googlemail.com>	 <4AFC8E4F.5090307@irobot.com>  <4AFC8F0D.5020700@irobot.com>	 <1258097352.3899.75.camel@johannes.local>  <4AFDDF19.8060202@irobot.com>	 <1258191039.6167.40.camel@johannes.local>  <4B018B26.2070008@irobot.com> <1258392453.32159.28.camel@johannes.local>
-In-Reply-To: <1258392453.32159.28.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091104083737.GA16978@elte.hu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This assumption seems too stoichastic.  Reading 802.11-2007 section 
-11.1.2.2, it doesn't seem that we're guaranteed to always receive 
-beacons from all stations.  Stations will cancel their pending beacon 
-transmission if they receive a beacon before their random delay times 
-out.  In the extreme case where the number of stations is very large, it 
-seems possible that you may never hear beacons for some stations.
+On Wed, Nov 04, 2009 at 09:37:37AM +0100, Ingo Molnar wrote:
 
-Johannes Berg wrote:
-> On Mon, 2009-11-16 at 09:25 -0800, Adam Wozniak wrote:
->   
->> If we have only three stations in an ad-hoc network, where all three can 
->> hear the other two, only one of them should be beaconing, correct?  
->>     
->
-> No, if they all behave correctly beaconing will be distributed.
->
-> johannes
->   
+<snip>
 
+> Really, you should listen to contrary opinion and _you_ should work 
+> _hard_ to integrate Bart socially and open up your close circle of 
+> wireless insiders instead of fighting his 'outsider' contributions every 
+> which way. We dont care if people are rough, express displeasure and 
+> show strong opinion about crappy code - but the moment you are 
+> _excluding_ capable people and playing petty office politics (like you 
+> are very clearly doing it with Bart here) everyone loses.
+
+Ivo almost immediately ACKed 10 of Bart's patches (despite Bart's
+failure to post them to the mailing list directly per convention),
+so you criticize Ivo for saying he needed time to review the rest?
+And you accuse him of excluding Bart's contributions when they have
+only just arrived?
+
+> Guys, show some minimal amount of honesty, openness and critical 
+> thinking please ...
+
+I would ask the same of you, Ingo.  You have burst onto the scene
+only recently, full of accusations and blame for one side and
+apparently unable to recognize the faults of the other.  You fail to
+recognize that this set of patches is essentially the _first_ time
+Bart has actually made any attempt to work on the rt2x00 drivers.
+Your partisanship is clear.
+
+At least Bart has finally made some rt2x00 patches available.  That is
+how things get done.  You continuing to defend him as some sort of
+martyr is completely unhelpful.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
