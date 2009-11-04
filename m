@@ -1,95 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f202.google.com ([209.85.211.202]:58405 "EHLO
-	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751655AbZKCXI6 convert rfc822-to-8bit (ORCPT
+Received: from palinux.external.hp.com ([192.25.206.14]:42953 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932796AbZKDWAa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 18:08:58 -0500
+	Wed, 4 Nov 2009 17:00:30 -0500
+Date: Wed, 4 Nov 2009 15:00:34 -0700
+From: Matthew Wilcox <matthew@wil.cx>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel@lists.ath5k.org,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	Kyle McMartin <kyle@mcmartin.ca>
+Subject: Re: pci_set_mwi() and ath5k
+Message-ID: <20091104220034.GI10555@parisc-linux.org>
+References: <43e72e890911041204n55b54f8iace79938b40baa32@mail.gmail.com> <40f31dec0911041212p16cfc78eia1ab1817e425e767@mail.gmail.com> <43e72e890911041330j581e7bacp4e7b83a11c1de0e8@mail.gmail.com> <43e72e890911041336n7ffae0d2u135321a588f3e613@mail.gmail.com> <43e72e890911041352i334e170at71a519383d48a08@mail.gmail.com> <43e72e890911041352n3a398b41h8927387c228661c5@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <200911032334.40547.bzolnier@gmail.com>
-References: <200911031951.05235.bzolnier@gmail.com>
-	 <200911032244.11946.bzolnier@gmail.com>
-	 <200911032301.32907.IvDoorn@gmail.com>
-	 <200911032334.40547.bzolnier@gmail.com>
-Date: Wed, 4 Nov 2009 00:09:02 +0100
-Message-ID: <14add3d10911031509l328e7674kb625b70250ff30fb@mail.gmail.com>
-Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project tree
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890911041352n3a398b41h8927387c228661c5@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 3, 2009 at 11:34 PM, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
-> On Tuesday 03 November 2009 23:01:32 Ivo van Doorn wrote:
->> > > > The following patch series (against wireless-next) addresses issues raised
->> > > > during code review and subsequently rejected by rt2x00/wireless/networking
->> > > > maintainers.
->> > >
->> > > Really stop reading only the half of emails, try reading it entirely (or at least don't
->> > > stop at the second word in a sentence). It really starts the bug me to repeat
->> > > myself over and over again because you refuse to read.
->> > >
->> > > Your comments during code review were ACCEPTED with the only remark that
->> > > it shouldn't be done right here and now.
->> >
->> > Please stop this bullshit.  We have some standards for the upstream code
->> > and by being maintainer you have to live up to this standards and make sure
->> > that they are respected instead of watering them down yourself..
->> >
->> > You were not interested even in fixing the headers duplication (it turned
->> > out debugging scripts needed only 25 lines of code to be able to work with
->> > fixed headers -- 25 LOC in bash scripts used only for debugging instead
->> > of 1800 LOC of kernel code).
->>
->> Yeah I know that. But like I said, I still needed to get around to do that,
->> and I am very happy you were interested in fixing it.
->
-> Lets make one thing clear: YOU SHOULD BE THE ONE FIXING IT.
->
-> I'm not in slightest interested in wasting my time on such
-> things and educating some maintainers about basics.
->
-> [ Code duplication is bad, mmm'okay?  Just say no, mmm'okay? ]
->
+On Wed, Nov 04, 2009 at 01:52:30PM -0800, Luis R. Rodriguez wrote:
+> > Even better: I just confirmation from our systems team that our legacy
+> > devices and 11n PCI devices don't support MWR so I'll remove all that
+> > cruft crap.
+> 
+> I meant MWI of course.
 
-Bart,
+Yes, but they don't necessarily just use cacheline size for MWI ... some
+devices use cacheline size for setting up data structures.  Might be
+worth just checking explicitly that they don't use the cacheline size
+register for anything.
 
-Are you really interested in working with us (the rt2x00 project) in
-getting the rt2800{pci,usb}
-drivers in a better shape, or do you just want to continue your
-ramblings on how bad you
-think the rt2x00 maintainers, wireless maintainer, and networking
-maintainer are in your view?
-
-Just continuing these discussions doesn't help a bit as Ivo, John, and
-David said they disagreed
-with you on this topic.
-
-If you just want to continue with a hostile take-over of the rt2800
-maintainership, then please
-let us know that, so that we stop spending time on useless
-discussions, and let John Linville
-decide how he wants to handle this situation. It would be a shame of
-the good patches and work
-you did, but if that's the case, than that's it.
-
-Otherwise, please focus on the technical contents of the patches and
-work with us to get
-these drivers in a better shape.
-
----
-Gertjan.
-
-
-,
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
