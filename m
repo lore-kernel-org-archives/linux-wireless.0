@@ -1,43 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out003.kontent.com ([81.88.40.217]:56401 "EHLO
-	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750929AbZKDJbj (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:34179 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755413AbZKDTsV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 04:31:39 -0500
-From: Oliver Neukum <oliver@neukum.org>
-To: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB N devices in cdrom mode
-Date: Wed, 4 Nov 2009 10:11:38 +0100
-Cc: Dan Williams <dcbw@redhat.com>,
-	Matthew Dharm <mdharm-usb@one-eyed-alien.net>,
-	Frank Schaefer <schaefer.frank@gmx.net>,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
-References: <Pine.LNX.4.44L0.0911032255190.25039-100000@netrider.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.0911032255190.25039-100000@netrider.rowland.org>
+	Wed, 4 Nov 2009 14:48:21 -0500
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200911041011.38367.oliver@neukum.org>
+In-Reply-To: <20091104173432.28463.51210.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+	 <20091104173432.28463.51210.sendpatchset@localhost.localdomain>
+Date: Wed, 4 Nov 2009 20:48:26 +0100
+Message-ID: <14add3d10911041148i293eef1ake2488bceb9a61b25@mail.gmail.com>
+Subject: Re: [PATCH 21/41] rt2800usb: add rt2800_mcu_request() wrapper
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch, 4. November 2009 04:57:59 schrieb Alan Stern:
-> On Wed, 4 Nov 2009, Oliver Neukum wrote:
-> > > If power is turned off, there's nothing we can do about it.  Once that
-> > > happens, it doesn't make much difference whether the mode switch occurs
-> > > in usb-storage or from a userspace program.  The old device instance
-> > > will go away and a new one will appear.
-> >
-> > That is what happens and what must happen if we switch mode in user
-> > space. In kernel space, the kernel could repeat the mode switch.
+On Wed, Nov 4, 2009 at 6:34 PM, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2800usb: add rt2800_mcu_request() wrapper
 >
-> How?  Doesn't the mode switch cause a change in the configuration,
-> interface, or endpoint descriptors?  The end result would be the same
-> -- the old device instance would go away and a new one would appear.
+> Part of preparations for later code unification.
+>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
 
-But it switches to a known state which we could use to trigger a switch
-and recompare after the switch.
+For what it is worth:
 
-	Regards
-		Oliver
-
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
