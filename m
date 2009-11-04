@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56146 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752835AbZKGUTC (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:44040 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932939AbZKDVvB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 15:19:02 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	mcgrof@gmail.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 22/29] ath9k: move the max rx buffer size check to ath9k_rx_accept()
-Date: Sat,  7 Nov 2009 15:18:59 -0500
-Message-Id: <1257625146-17971-23-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
-References: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 4 Nov 2009 16:51:01 -0500
+Received: by iwn10 with SMTP id 10so5306544iwn.4
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 13:51:06 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4AF1F653.4000905@irobot.com>
+References: <4AF0D54D.4090303@irobot.com> <200911041653.33737.chunkeey@googlemail.com>
+	<alpine.DEB.2.00.0911050951000.16407@kauri.acheron.indranet.co.nz>
+	<200911042242.48991.chunkeey@googlemail.com> <4AF1F653.4000905@irobot.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 4 Nov 2009 13:50:46 -0800
+Message-ID: <43e72e890911041350i75108dc3g454ab8577d8abacd@mail.gmail.com>
+Subject: Re: compat-wireless and minstrel
+To: Adam Wozniak <awozniak@irobot.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	linux-wireless@vger.kernel.org, nbd@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While at it flip the order, seems easier to read and also
-add some better description as to why we do this check.
+On Wed, Nov 4, 2009 at 1:46 PM, Adam Wozniak <awozniak@irobot.com> wrote:
+>
+> $ ls -la /lib/firmware/ar9170*
+> -rw-r--r-- 1 root root 83968 2009-10-17 15:55 /lib/firmware/ar9170-1.fw
+> -rw-r--r-- 1 root root  3508 2009-10-17 15:55 /lib/firmware/ar9170-2.fw
+> -rw-r--r-- 1 root root 15960 2009-10-17 15:55 /lib/firmware/ar9170.fw
+>
+> It is unclear to me which are actually used.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/recv.c |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
+By default the ar9170.fw is tried first, if that fails then the others
+are tried. The 2-stage firmware will not be tried if your device
+cannot handle it but right now only the AVM Fritz devices can't handle
+the 2-stage firmware.
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 48ff772..16ed929 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -105,6 +105,13 @@ static bool ath9k_rx_accept(struct ath_common *common,
- 
- 	if (!rx_stats->rs_datalen)
- 		return false;
-+        /*
-+         * rs_status follows rs_datalen so if rs_datalen is too large
-+         * we can take a hint that hardware corrupted it, so ignore
-+         * those frames.
-+         */
-+	if (rx_stats->rs_datalen > common->rx_bufsize)
-+		return false;
- 
- 	if (rx_stats->rs_more) {
- 		/*
-@@ -801,10 +808,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 		if (flush)
- 			goto requeue;
- 
--		/* The status portion of the descriptor could get corrupted. */
--		if (common->rx_bufsize < rx_stats->rs_datalen)
--			goto requeue;
--
- 		if (!ath_rx_prepare(common, hw, skb, rx_stats,
- 				    rxs, &decrypt_error))
- 			goto requeue;
--- 
-1.6.5.2.143.g8cc62
+Christian should we just remove 2-stage fw support?
 
+  Luis
