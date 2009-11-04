@@ -1,94 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:5665 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756185AbZKDReh (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37590 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756273AbZKDNkK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 12:34:37 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+	Wed, 4 Nov 2009 08:40:10 -0500
+Received: from wireless by sipsolutions.net with local (Exim 4.69)
+	(envelope-from <wireless@sipsolutions.net>)
+	id 1N5g5b-0002Ev-9Z
+	for linux-wireless@vger.kernel.org; Wed, 04 Nov 2009 14:40:01 +0100
 To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 04 Nov 2009 18:34:18 +0100
-Message-Id: <20091104173418.28463.79825.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-Subject: [PATCH 19/41] rt2800usb: add rt2800_rf_[read,write]() wrappers
+Subject: [ANN] wireless-regdb: master-2009-11-04
+Reply-to: linux-wireless@vger.kernel.org
+Message-Id: <E1N5g5b-0002Ev-9Z@sipsolutions.net>
+From: wireless@sipsolutions.net
+Date: Wed, 04 Nov 2009 14:39:55 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] rt2800usb: add rt2800_rf_[read,write]() wrappers
 
-Part of preparations for later code unification.
+A new release of wireless-regdb (master-2009-11-04) is available at:
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |   32 +++++++++++++++++++-------------
- 1 file changed, 19 insertions(+), 13 deletions(-)
+http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2009.11.04.tar.bz2
 
-Index: b/drivers/net/wireless/rt2x00/rt2800usb.c
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -226,6 +226,12 @@ static void rt2800usb_rf_write(struct rt
- 	mutex_unlock(&rt2x00dev->csr_mutex);
- }
- 
-+static inline void rt2800_rf_write(struct rt2x00_dev *rt2x00dev,
-+				   const unsigned int word, const u32 value)
-+{
-+	rt2800usb_rf_write(rt2x00dev, word, value);
-+}
-+
- static void rt2800usb_mcu_request(struct rt2x00_dev *rt2x00dev,
- 				  const u8 command, const u8 token,
- 				  const u8 arg0, const u8 arg1)
-@@ -280,7 +286,7 @@ static const struct rt2x00debug rt2800us
- 	},
- 	.rf	= {
- 		.read		= rt2x00_rf_read,
--		.write		= rt2800usb_rf_write,
-+		.write		= rt2800_rf_write,
- 		.word_base	= RF_BASE,
- 		.word_size	= sizeof(u32),
- 		.word_count	= RF_SIZE / sizeof(u32),
-@@ -757,24 +763,24 @@ static void rt2800usb_config_channel_rt2
- 
- 	rt2x00_set_field32(&rf->rf4, RF4_HT40, conf_is_ht40(conf));
- 
--	rt2800usb_rf_write(rt2x00dev, 1, rf->rf1);
--	rt2800usb_rf_write(rt2x00dev, 2, rf->rf2);
--	rt2800usb_rf_write(rt2x00dev, 3, rf->rf3 & ~0x00000004);
--	rt2800usb_rf_write(rt2x00dev, 4, rf->rf4);
-+	rt2800_rf_write(rt2x00dev, 1, rf->rf1);
-+	rt2800_rf_write(rt2x00dev, 2, rf->rf2);
-+	rt2800_rf_write(rt2x00dev, 3, rf->rf3 & ~0x00000004);
-+	rt2800_rf_write(rt2x00dev, 4, rf->rf4);
- 
- 	udelay(200);
- 
--	rt2800usb_rf_write(rt2x00dev, 1, rf->rf1);
--	rt2800usb_rf_write(rt2x00dev, 2, rf->rf2);
--	rt2800usb_rf_write(rt2x00dev, 3, rf->rf3 | 0x00000004);
--	rt2800usb_rf_write(rt2x00dev, 4, rf->rf4);
-+	rt2800_rf_write(rt2x00dev, 1, rf->rf1);
-+	rt2800_rf_write(rt2x00dev, 2, rf->rf2);
-+	rt2800_rf_write(rt2x00dev, 3, rf->rf3 | 0x00000004);
-+	rt2800_rf_write(rt2x00dev, 4, rf->rf4);
- 
- 	udelay(200);
- 
--	rt2800usb_rf_write(rt2x00dev, 1, rf->rf1);
--	rt2800usb_rf_write(rt2x00dev, 2, rf->rf2);
--	rt2800usb_rf_write(rt2x00dev, 3, rf->rf3 & ~0x00000004);
--	rt2800usb_rf_write(rt2x00dev, 4, rf->rf4);
-+	rt2800_rf_write(rt2x00dev, 1, rf->rf1);
-+	rt2800_rf_write(rt2x00dev, 2, rf->rf2);
-+	rt2800_rf_write(rt2x00dev, 3, rf->rf3 & ~0x00000004);
-+	rt2800_rf_write(rt2x00dev, 4, rf->rf4);
- }
- 
- static void rt2800usb_config_channel_rt3x(struct rt2x00_dev *rt2x00dev,
+SHA1 sum: c490f2ae0e8262057825a613699016eb040367cd
+
+
+For your convenience the individual regulatory.bin file can be downloaded from:
+
+http://wireless.kernel.org/download/wireless-regdb/regulatory.bins/2009.11.04-regulatory.bin
+
+SHA1 sum a22829e58aae59841519a45ceb0cc3cd73679062
+
+Here is the short log of the changes included in this 
+release:
+
+John W. Linville (1):
+      wireless-regdb: _correctly_ update regulatory.bin based on preceding changes.
+
