@@ -1,115 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:42724 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758688AbZKETWA convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:52000 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756657AbZKDP6H convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2009 14:22:00 -0500
-Received: by ewy3 with SMTP id 3so331579ewy.37
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2009 11:22:05 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Don't queue ieee80211 work after USB removal
-Date: Thu, 5 Nov 2009 20:22:03 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Sean Cross <sean@chumby.com>
+	Wed, 4 Nov 2009 10:58:07 -0500
+Received: by iwn10 with SMTP id 10so5026284iwn.4
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 07:58:12 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200911052022.03491.IvDoorn@gmail.com>
+In-Reply-To: <200911041653.33737.chunkeey@googlemail.com>
+References: <4AF0D54D.4090303@irobot.com> <200911041653.33737.chunkeey@googlemail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 4 Nov 2009 07:57:52 -0800
+Message-ID: <43e72e890911040757t58ec910dk5ffe273c9b83aae6@mail.gmail.com>
+Subject: Re: compat-wireless and minstrel
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Adam Wozniak <awozniak@irobot.com>, linux-wireless@vger.kernel.org,
+	nbd@openwrt.org, derek@indranet.co.nz
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sean Cross <sean@chumby.com>
+On Wed, Nov 4, 2009 at 7:53 AM, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+> On Wednesday 04 November 2009 02:13:49 Adam Wozniak wrote:
+>> I have two systems under test, both Dell laptops (a Latitude D630 and an
+>> Inspiron 600m) both running Ubuntu 9.10 with the latest updates, and
+>> bleeding edge compat-wireless-2009-11-02.  I'm using identical AR9170
+>> based D-Link DWA-160 USB 802.11adapters.  I'm using nuttcp to measure
+>> throughput.  I'm running in ad-hoc mode.  Both machines have the same
+>> ar9170 files in /lib/firmware.  The machines are sitting about 5 feet
+>> apart in my office.
+>>
+>> I'm having occasional problems where throughput drops through the floor
+>> (0.5Mbps - 1.5Mbps).  When I cat
+>> /sys/kernel/debug/ieee80211/*/stations/*/rc_stats, one of the machines
+>> lists the full set of rates, but the other only lists 1M and 54M.  After
+>> a period of time, that machine drops 54M and lists only one rate
+>> (1Mbps), and the throughput listed by nuttcp drops accordingly.  I
+>> assume that, for whatever reason, the rates drop off the list and
+>> minstrel uses the only one left available to it.
+>>
+>> If I modify include/net/mac80211.h and force the inline function
+>> rate_supported to always return 1, this fixes the problem.  However, I
+>> think this is a band aid around some other issue.
+>>
+>> Any clues or ideas what the real issue might be here?
+> no, but there are a few knobs you can play with...
+>
+> First of: more debug data
+>
+> 1. enable some ibss-related verbose messages
+>   open config.mk (in your compat-wireless directory)
+>   and get rid of the leading "# " <-- "sharp + space"
+>   in front of # CONFIG_MAC80211_IBSS_DEBUG=y
+>   (rebuild, reload, retest & checkout dmesg for a _flood_
+>    of potential interesting data)
 
-This prevents the rt2x00 driver from queueing ieee80211 work after the  
-USB card has been removed, preventing a kernel panic.
+If you can just use wireless-testing directly for debugging I
+recommend that as we don't use mconf and friends for cofiguration
+selection so we cannot be sure the config changes you make to enable
+something are indeed agreeable by current upstream Kconfig rules. That
+is, unless you know what you are doing I'd advise against using
+debugging on compat-wireless.
 
-Signed-off-by: Sean Cross <sean@chumby.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 71761b3..73bbec5 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -815,6 +815,8 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
- 
- 	mutex_init(&rt2x00dev->csr_mutex);
- 
-+	set_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
-+
- 	/*
- 	 * Make room for rt2x00_intf inside the per-interface
- 	 * structure ieee80211_vif.
-@@ -871,8 +873,6 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
- 	rt2x00leds_register(rt2x00dev);
- 	rt2x00debug_register(rt2x00dev);
- 
--	set_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
--
- 	return 0;
- 
- exit:
-diff --git a/drivers/net/wireless/rt2x00/rt2x00link.c b/drivers/net/wireless/rt2x00/rt2x00link.c
-index c64db0b..c708d0b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00link.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00link.c
-@@ -362,8 +362,9 @@ void rt2x00link_start_tuner(struct rt2x00_dev *rt2x00dev)
- 
- 	rt2x00link_reset_tuner(rt2x00dev, false);
- 
--	ieee80211_queue_delayed_work(rt2x00dev->hw,
--				     &link->work, LINK_TUNE_INTERVAL);
-+	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
-+		ieee80211_queue_delayed_work(rt2x00dev->hw,
-+					     &link->work, LINK_TUNE_INTERVAL);
- }
- 
- void rt2x00link_stop_tuner(struct rt2x00_dev *rt2x00dev)
-@@ -469,8 +470,10 @@ static void rt2x00link_tuner(struct work_struct *work)
- 	 * Increase tuner counter, and reschedule the next link tuner run.
- 	 */
- 	link->count++;
--	ieee80211_queue_delayed_work(rt2x00dev->hw,
--				     &link->work, LINK_TUNE_INTERVAL);
-+
-+	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
-+		ieee80211_queue_delayed_work(rt2x00dev->hw,
-+					     &link->work, LINK_TUNE_INTERVAL);
- }
- 
- void rt2x00link_register(struct rt2x00_dev *rt2x00dev)
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 5015448..f02b48a 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -47,6 +47,8 @@ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
- 	    (requesttype == USB_VENDOR_REQUEST_IN) ?
- 	    usb_rcvctrlpipe(usb_dev, 0) : usb_sndctrlpipe(usb_dev, 0);
- 
-+	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
-+		return -ENODEV;
- 
- 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
- 		status = usb_control_msg(usb_dev, pipe, request, requesttype,
-@@ -60,8 +62,10 @@ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
- 		 * -ENODEV: Device has disappeared, no point continuing.
- 		 * All other errors: Try again.
- 		 */
--		else if (status == -ENODEV)
-+		else if (status == -ENODEV) {
-+			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 			break;
-+		}
- 	}
- 
- 	ERROR(rt2x00dev,
-@@ -161,6 +165,9 @@ int rt2x00usb_regbusy_read(struct rt2x00_dev *rt2x00dev,
- {
- 	unsigned int i;
- 
-+	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
-+		return -ENODEV;
-+
- 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
- 		rt2x00usb_register_read_lock(rt2x00dev, offset, reg);
- 		if (!rt2x00_get_field32(*reg, field))
+  Luis
