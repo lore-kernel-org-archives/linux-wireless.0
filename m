@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43167 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754287AbZKBKbw (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:56888 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752591AbZKDC2f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 05:31:52 -0500
-Subject: [PATCH] mac80211: fix internal scan request
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Sujith <m.sujith@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 02 Nov 2009 11:31:51 +0100
-Message-ID: <1257157911.3555.183.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 3 Nov 2009 21:28:35 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project tree
+Date: Wed, 4 Nov 2009 03:28:01 +0100
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jarek Poplawski <jarkao2@gmail.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Miller <davem@davemloft.net>
+References: <200911031951.05235.bzolnier@gmail.com> <200911040046.54247.bzolnier@gmail.com> <646765f40911031733u1641c0dr5d4eec30031e7cea@mail.gmail.com>
+In-Reply-To: <646765f40911031733u1641c0dr5d4eec30031e7cea@mail.gmail.com>
+MIME-Version: 1.0
+Message-Id: <200911040328.01997.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The internal scan request mac80211 uses to
-scan for IBSS networks was set up to contain
-no channels at all because n_channels wasn't
-set after setting up the channels array. Fix
-this to properly scan for networks.
+On Wednesday 04 November 2009 02:33:52 Julian Calaby wrote:
+> On Wed, Nov 4, 2009 at 10:46, Bartlomiej Zolnierkiewicz
+> <bzolnier@gmail.com> wrote:
+> >> If you just want to continue with a hostile take-over of the rt2800
+> >> maintainership, then please
+> >> let us know that, so that we stop spending time on useless
+> >
+> > I fail to see why you see it as a hostile takeover.
+> 
+> Updating MAINTAINERS to replace the current developers with yourself
+> can be considered to be a hostile act.
+> 
+> If you want this for your own personal tree, then keep the patch
+> private - don't include it in pull requests, patch listings etc.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Sujith, this might fix the iwlwifi problem?
+This is not pull request etc. but since the change in question has been
+stirring needless controversies and distracting people from reading patches
+it has been dropped for now.
 
- net/mac80211/main.c |    1 +
- 1 file changed, 1 insertion(+)
-
---- wireless-testing.orig/net/mac80211/main.c	2009-11-02 11:23:42.000000000 +0100
-+++ wireless-testing/net/mac80211/main.c	2009-11-02 11:23:57.000000000 +0100
-@@ -901,6 +901,7 @@ int ieee80211_register_hw(struct ieee802
- 			i++;
- 		}
- 	}
-+	local->int_scan_req->n_channels = i;
- 
- 	local->network_latency_notifier.notifier_call =
- 		ieee80211_max_network_latency;
-
-
+-- 
+Bartlomiej Zolnierkiewicz
