@@ -1,85 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:5665 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756958AbZKDRdR (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:61042 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758096AbZKDTtQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 12:33:17 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 04 Nov 2009 18:32:58 +0100
-Message-Id: <20091104173258.28463.94619.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-Subject: [PATCH 08/41] rt2800usb: use rt2x00usb_register_multiwrite() to set key entries
+	Wed, 4 Nov 2009 14:49:16 -0500
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC] usb: Check results of dma_map_single
+Date: Wed, 4 Nov 2009 20:49:02 +0100
+Cc: "Greg Kroah-Hartman" <gregkh@suse.de>,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
+References: <4af115c3.JUDAYfcydqPYCYyH%Larry.Finger@lwfinger.net>
+In-Reply-To: <4af115c3.JUDAYfcydqPYCYyH%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200911042049.02761.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] rt2800usb: use rt2x00usb_register_multiwrite() to set key entries
+On Wednesday 04 November 2009 06:48:51 Larry Finger wrote:
+> At http://marc.info/?l=linux-wireless&m=125695331205062&w=2, a problem
+> with DMA buffer processing was corrected for the libertas driver. Because
+> routine usb_fill_bulk_urb() does not check that DMA is possible when
+           ^^^
+hmm, usb_fill_bulk_urb? No, that should be usb_submit_urb :)
 
-Since struct hw_key_entry is 32-bytes large and is smaller than
-CSR cache size (which is 64-bytes large) we can use the standard
-rt2x00usb_register_multiwrite() helper to set key entries.
+http://osdir.com/ml/linux-wireless/2009-10/msg01182.html
 
-This cleanup is a part of preparations for later code unification.
+> dma_map_single() is called, this condition was not detected until the buffer
+> was unmapped. By this time memory corruption had occurred.
+> 
+> The situation is fixed by testing the returned DMA address. If not a legal
+> address, a WARN_ON(1) is executed to provide traceback and the error is
+> returned.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |   18 ++++--------------
- 1 file changed, 4 insertions(+), 14 deletions(-)
-
-Index: b/drivers/net/wireless/rt2x00/rt2800usb.c
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -392,7 +392,6 @@ static int rt2800usb_config_shared_key(s
- {
- 	struct hw_key_entry key_entry;
- 	struct rt2x00_field32 field;
--	int timeout;
- 	u32 offset;
- 	u32 reg;
- 
-@@ -407,12 +406,8 @@ static int rt2800usb_config_shared_key(s
- 		       sizeof(key_entry.rx_mic));
- 
- 		offset = SHARED_KEY_ENTRY(key->hw_key_idx);
--		timeout = REGISTER_TIMEOUT32(sizeof(key_entry));
--		rt2x00usb_vendor_request_large_buff(rt2x00dev, USB_MULTI_WRITE,
--						    USB_VENDOR_REQUEST_OUT,
--						    offset, &key_entry,
--						    sizeof(key_entry),
--						    timeout);
-+		rt2x00usb_register_multiwrite(rt2x00dev, offset,
-+					      &key_entry, sizeof(key_entry));
- 	}
- 
- 	/*
-@@ -445,7 +440,6 @@ static int rt2800usb_config_pairwise_key
- 					 struct ieee80211_key_conf *key)
- {
- 	struct hw_key_entry key_entry;
--	int timeout;
- 	u32 offset;
- 
- 	if (crypto->cmd == SET_KEY) {
-@@ -467,12 +461,8 @@ static int rt2800usb_config_pairwise_key
- 		       sizeof(key_entry.rx_mic));
- 
- 		offset = PAIRWISE_KEY_ENTRY(key->hw_key_idx);
--		timeout = REGISTER_TIMEOUT32(sizeof(key_entry));
--		rt2x00usb_vendor_request_large_buff(rt2x00dev, USB_MULTI_WRITE,
--						    USB_VENDOR_REQUEST_OUT,
--						    offset, &key_entry,
--						    sizeof(key_entry),
--						    timeout);
-+		rt2x00usb_register_multiwrite(rt2x00dev, offset,
-+					      &key_entry, sizeof(key_entry));
- 	}
- 
- 	/*
