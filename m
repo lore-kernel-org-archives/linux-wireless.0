@@ -1,72 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57437 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752579AbZKQOFR (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:5665 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932169AbZKDRfT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 09:05:17 -0500
-Subject: Re: [RFC] mac80211: disallow bridging managed/adhoc interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <20091117135817.GC27743@tuxdriver.com>
-References: <1258465585.3682.7.camel@johannes.local>
-	 <20091117135817.GC27743@tuxdriver.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-JRV/EpuRkHQhC324dy6n"
-Date: Tue, 17 Nov 2009 15:04:52 +0100
-Message-ID: <1258466692.3682.12.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 4 Nov 2009 12:35:19 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 04 Nov 2009 18:35:00 +0100
+Message-Id: <20091104173500.28463.89800.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+Subject: [PATCH 25/41] rt2800pci: convert to use struct rt2800_ops methods
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] rt2800pci: convert to use struct rt2800_ops methods
 
---=-JRV/EpuRkHQhC324dy6n
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Add chipset registers access abstraction layer and prepare for later
+code unification.
 
-On Tue, 2009-11-17 at 08:58 -0500, John W. Linville wrote:
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800pci.c |   13 +++++++++
+ drivers/net/wireless/rt2x00/rt2800pci.h |   44 +++++++++++++++++++++++++++-----
+ 2 files changed, 51 insertions(+), 6 deletions(-)
 
-> > To avoid such mistakes in the future, disallow adding a
-> > wireless interface to a bridge.
-> >=20
-> > Felix has recently added a four-address mode to the AP
-> > and client side that can be used (after negotiating that
-> > it is possible, which must happen out-of-band by setting
-> > up both sides) for bridging, so allow that case.
-> >=20
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->=20
-> ACK -- we get these complaints fairly often...
->=20
-> I don't think I've sent the 4addr stuff to Dave yet.  Should I just
-> take this through my tree?
-
-After ack from Stephen maybe?
-
-johannes
-
---=-JRV/EpuRkHQhC324dy6n
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLAq2BAAoJEODzc/N7+Qmaad4QAMJAXHaAV72jJRbUuIrIck2v
-p4CzJS4O0gOfTiKQ2P2dJxt84PZxRS0cDsmXdNT95ShAcTrnDo/g7wM0m32cp2kv
-uaLTrWkDb9agKstTFsWxmXlqZhXgm4wHjpsnmL0Hy8Qmr0Ia5zKvIuG/Oe9PvHBc
-TFfWQX78p3Q7DCpPDFXWbIcwG2S4CcMLroR+d1iO+SY0eGchAndkco39i60ZoB5D
-C9iQq9T+DmZB166BzT09pohCW7vR6BX8a3yeg6a4rwCJLLM/taRLic1XlryTk3z7
-K9WUU7PTFPDMHDdmjcUx+wTYPvywsmyYkfSmWFWYPz0U7uJY7vf0ExMqHIKfsRqr
-nSJpakHbaiTxTM3iB7IcPvnHgXarfUqILhv95QFQ7O0ehQZ0UHSyZXGXZRy+4BfR
-uR16aqT6xE0keSs7k6GUdprpUsgKRJqz7IQfKAuVL3xEN/TSqASO4EAVI4E0PZ3Z
-UpjMy6/G3RF2VkD/0ci7T0x3U6XiD0Csgu+EjgUhzuf98NYIwbFmKae1FcArN/XY
-XBEjw+3KSDTQbloJWGzBn093amx507VE+DW0riuuT2GUM0q5shYbg54O9wPGqACl
-Z3KQTZnwbcYQ6rK2aBP1puLp6ESL314MoOHWTIZO32MKzxd8PQSxTj4P3qlWH/Qh
-Cv1hU0oq5wm0LqVt4Jg7
-=m1uT
------END PGP SIGNATURE-----
-
---=-JRV/EpuRkHQhC324dy6n--
-
+Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -2988,10 +2988,23 @@ static int rt2800pci_probe_hw_mode(struc
+ 	return 0;
+ }
+ 
++static const struct rt2800_ops rt2800pci_rt2800_ops = {
++	.register_read		= rt2x00pci_register_read,
++	.register_write		= rt2x00pci_register_write,
++	.register_write_lock	= rt2x00pci_register_write, /* same for PCI */
++
++	.register_multiread	= rt2x00pci_register_multiread,
++	.register_multiwrite	= rt2x00pci_register_multiwrite,
++
++	.regbusy_read		= rt2x00pci_regbusy_read,
++};
++
+ static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int retval;
+ 
++	rt2x00dev->priv = (void *)&rt2800pci_rt2800_ops;
++
+ 	/*
+ 	 * Allocate eeprom data.
+ 	 */
+Index: b/drivers/net/wireless/rt2x00/rt2800pci.h
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2800pci.h
++++ b/drivers/net/wireless/rt2x00/rt2800pci.h
+@@ -27,32 +27,60 @@
+ #ifndef RT2800PCI_H
+ #define RT2800PCI_H
+ 
++struct rt2800_ops {
++	void (*register_read)(struct rt2x00_dev *rt2x00dev,
++			      const unsigned int offset, u32 *value);
++	void (*register_write)(struct rt2x00_dev *rt2x00dev,
++			       const unsigned int offset, u32 value);
++	void (*register_write_lock)(struct rt2x00_dev *rt2x00dev,
++				    const unsigned int offset, u32 value);
++
++	void (*register_multiread)(struct rt2x00_dev *rt2x00dev,
++				   const unsigned int offset,
++				   void *value, const u16 length);
++	void (*register_multiwrite)(struct rt2x00_dev *rt2x00dev,
++				    const unsigned int offset,
++				    const void *value, const u16 length);
++
++	int (*regbusy_read)(struct rt2x00_dev *rt2x00dev,
++			    const unsigned int offset,
++			    const struct rt2x00_field32 field, u32 *reg);
++};
++
+ static inline void rt2800_register_read(struct rt2x00_dev *rt2x00dev,
+ 					const unsigned int offset,
+ 					u32 *value)
+ {
+-	rt2x00pci_register_read(rt2x00dev, offset, value);
++	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
++
++	rt2800ops->register_read(rt2x00dev, offset, value);
+ }
+ 
+ static inline void rt2800_register_write(struct rt2x00_dev *rt2x00dev,
+ 					 const unsigned int offset,
+ 					 u32 value)
+ {
+-	rt2x00pci_register_write(rt2x00dev, offset, value);
++	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
++
++	rt2800ops->register_write(rt2x00dev, offset, value);
+ }
+ 
+ static inline void rt2800_register_write_lock(struct rt2x00_dev *rt2x00dev,
+ 					      const unsigned int offset,
+ 					      u32 value)
+ {
+-	rt2x00pci_register_write(rt2x00dev, offset, value);
++	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
++
++	rt2800ops->register_write_lock(rt2x00dev, offset, value);
+ }
+ 
+ static inline void rt2800_register_multiread(struct rt2x00_dev *rt2x00dev,
+ 					     const unsigned int offset,
+ 					     void *value, const u16 length)
+ {
+-	rt2x00pci_register_multiread(rt2x00dev, offset, value, length);
++	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
++
++	rt2800ops->register_multiread(rt2x00dev, offset, value, length);
+ }
+ 
+ static inline void rt2800_register_multiwrite(struct rt2x00_dev *rt2x00dev,
+@@ -60,7 +88,9 @@ static inline void rt2800_register_multi
+ 					      const void *value,
+ 					      const u16 length)
+ {
+-	rt2x00pci_register_multiwrite(rt2x00dev, offset, value, length);
++	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
++
++	rt2800ops->register_multiwrite(rt2x00dev, offset, value, length);
+ }
+ 
+ static inline int rt2800_regbusy_read(struct rt2x00_dev *rt2x00dev,
+@@ -68,7 +98,9 @@ static inline int rt2800_regbusy_read(st
+ 				      const struct rt2x00_field32 field,
+ 				      u32 *reg)
+ {
+-	return rt2x00pci_regbusy_read(rt2x00dev, offset, field, reg);
++	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
++
++	return rt2800ops->regbusy_read(rt2x00dev, offset, field, reg);
+ }
+ 
+ /*
