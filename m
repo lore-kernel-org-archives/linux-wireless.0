@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:53660 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753027AbZKQVfj (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53270 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751253AbZKDGfm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 16:35:39 -0500
-Received: by iwn8 with SMTP id 8so377310iwn.33
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2009 13:35:45 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <b0c954732ea30effda967bd97ef30597@127.0.0.1>
-References: <b0c954732ea30effda967bd97ef30597@127.0.0.1>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 17 Nov 2009 13:35:24 -0800
-Message-ID: <43e72e890911171335n3193b63foa6f473ceb659f3ab@mail.gmail.com>
-Subject: Re: [ath5k-devel] "iwlist scan" shows same ap twice
-To: Florian Engelhardt <flo@dotbox.org>
-Cc: ath5k-devel@lists.ath5k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 4 Nov 2009 01:35:42 -0500
+Date: Tue, 3 Nov 2009 22:34:33 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	David Miller <davem@davemloft.net>,
+	torvalds@linux-foundation.org, linville@tuxdriver.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Please consider reverting
+ 7d930bc33653d5592dc386a76a38f39c2e962344
+Message-Id: <20091103223433.23765578.akpm@linux-foundation.org>
+In-Reply-To: <1257234299.28469.25.camel@johannes.local>
+References: <20091103053156.GA3212@core.coreip.homeip.net>
+	<20091102.224957.32364226.davem@davemloft.net>
+	<20091103065238.GE3212@core.coreip.homeip.net>
+	<1257232587.3420.55.camel@localhost.localdomain>
+	<1257234299.28469.25.camel@johannes.local>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 17, 2009 at 11:29 AM, Florian Engelhardt <flo@dotbox.org> wrote:
-> Hello list,
->
-> i recently have a problem with my ath5k wireless card in my Acer Aspire One
-> Netbook. Executing iwlist scan shows some Wifi`s twice, but with different
-> address and signal quality, which leads to me not being able to connect to
-> this wlan.
-> I attached an example output of iwlist scan.
-> The WLAN "MA-WLAN" exists twice in the list, none of the Addresses is
-> correct. I had the same problem with my WLAN (FOOBAR) until i moved it from
-> channel 6 to channel 1.
->
-> Can you please help me, what is going on here?
->
-> This bug is realy annoying to me, couse every few days i have to change the
-> wlan channel for it to work. Unloading an reloading the ath5k module does
-> not help.
->
-> Kind regards
->
-> Florian
->
-> PS: Please CC me, couse i am not on the list
+On Tue, 03 Nov 2009 08:44:59 +0100 Johannes Berg <johannes@sipsolutions.net> wrote:
 
-That's wild. What kernel are you using? Have you tried:
+> On Tue, 2009-11-03 at 16:16 +0900, Marcel Holtmann wrote:
+> 
+> > and can we please stop jumping the gun here and going past the subsystem
+> > maintainers. I think this happens a little bit too much lately.
+> 
+> I'll rant a bit too -- I've been very annoyed by this many times.
 
-http://wireless.kernel.org/en/users/Download/stable
+Problem is, subsystem maintainers are very unreliable.
 
-or
+Right now I'm sitting on 17 patches which I think should be in 2.6.32,
+which I need to plead with subsystem maintainers to take a look at. 
+They've already seen the patches (usually at least twice) and they've
+just blown them off.  This is typical.
 
-http://wireless.kernel.org/en/users/Download
+And then there are the 100 to 200 non-critical patches which I'm always
+sitting on, similarly ignored.  And I'm increasingly just ignoring
+stuff nowadays because this situation is so bad.
 
-Can you provide the output of 'iw list', your dmesg, and your 'iw dev
-wlan0 scan'.
+And then there are all the bug reports which flow in one ear and out
+the other.
 
-  Luis
+Now, some subsystem maintainer are good, and some aren't.  I'm probably
+the only person who could write the detailed list for each column. 
+Unfortunately, people who have better lives than me are best off
+assuming that a subsystem maintainer is unreliable.  If the problem is
+severe enough, bypassing the maintainer is a sensible default.
+
