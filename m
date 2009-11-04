@@ -1,31 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58187
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932472AbZKRSwL (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:47521 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758134AbZKDUEk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 13:52:11 -0500
-Date: Wed, 18 Nov 2009 10:52:27 -0800 (PST)
-Message-Id: <20091118.105227.226628209.davem@davemloft.net>
-To: julia@diku.dk
-Cc: flamingice@sourmilk.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	arnd@arndb.de, joe@perches.com, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH 15/16] drivers/net/wireless/p54: remove exceptional &
- on function name
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <Pine.LNX.4.64.0911181925260.20943@ask.diku.dk>
-References: <Pine.LNX.4.64.0911181925260.20943@ask.diku.dk>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 4 Nov 2009 15:04:40 -0500
+Received: by iwn10 with SMTP id 10so5226716iwn.4
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 12:04:45 -0800 (PST)
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 4 Nov 2009 12:04:25 -0800
+Message-ID: <43e72e890911041204n55b54f8iace79938b40baa32@mail.gmail.com>
+Subject: pci_set_mwi() and ath5k
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: ath5k-devel@lists.ath5k.org, Matthew Wilcox <matthew@wil.cx>,
+	Stephen Hemminger <shemminger@vyatta.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
-Date: Wed, 18 Nov 2009 19:25:43 +0100 (CET)
+Curious if anyone recalls the issues seen with enabling MWI on ath5k.
+I could have sworn there was some discussion on this but for the life
+of me I cannot find it.
 
-> In this file, function names are otherwise used as pointers without &.
- ...
-> Signed-off-by: Julia Lawall <julia@diku.dk>
-
-Applied.
+  Luis
