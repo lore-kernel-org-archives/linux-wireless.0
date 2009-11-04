@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:41972 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751238AbZKOWH0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Nov 2009 17:07:26 -0500
-Message-ID: <4B007BA2.5020209@openwrt.org>
-Date: Sun, 15 Nov 2009 23:07:30 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:55587 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757468AbZKDWSP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2009 17:18:15 -0500
+Received: by ewy3 with SMTP id 3so3659544ewy.37
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 14:18:19 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: compat-wireless and minstrel
+Date: Wed, 4 Nov 2009 23:18:13 +0100
+Cc: Adam Wozniak <awozniak@irobot.com>, linux-wireless@vger.kernel.org
+References: <4AF0D54D.4090303@irobot.com> <4AF1F653.4000905@irobot.com> <43e72e890911041350i75108dc3g454ab8577d8abacd@mail.gmail.com>
+In-Reply-To: <43e72e890911041350i75108dc3g454ab8577d8abacd@mail.gmail.com>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2 1/2] mac80211: add the total ampdu length to tx info
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200911042318.13528.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
+On Wednesday 04 November 2009 22:50:46 Luis R. Rodriguez wrote:
+> On Wed, Nov 4, 2009 at 1:46 PM, Adam Wozniak <awozniak@irobot.com> wrote:
+> >
+> > $ ls -la /lib/firmware/ar9170*
+> > -rw-r--r-- 1 root root 83968 2009-10-17 15:55 /lib/firmware/ar9170-1.fw
+> > -rw-r--r-- 1 root root  3508 2009-10-17 15:55 /lib/firmware/ar9170-2.fw
+> > -rw-r--r-- 1 root root 15960 2009-10-17 15:55 /lib/firmware/ar9170.fw
+> >
+> > It is unclear to me which are actually used.
+> 
+> By default the ar9170.fw is tried first, if that fails then the others
+> are tried. The 2-stage firmware will not be tried if your device
+> cannot handle it but right now only the AVM Fritz devices can't handle
+> the 2-stage firmware.
+> 
+> Christian should we just remove 2-stage fw support?
 
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -390,10 +390,12 @@ struct ieee80211_tx_rate {
-  * @control: union for control data
-  * @status: union for status data
-  * @driver_data: array of driver_data pointers
-- * @ampdu_ack_len: number of aggregated frames.
-+ * @ampdu_ack_len: number of acked aggregated frames.
-  * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
-  * @ampdu_ack_map: block ack bit map for the aggregation.
-  * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
-+ * @ampdu_len: number of aggregated frames.
-+ * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
-  * @ack_signal: signal strength of the ACK frame
-  */
- struct ieee80211_tx_info {
-@@ -428,7 +430,8 @@ struct ieee80211_tx_info {
- 			u8 ampdu_ack_len;
- 			u64 ampdu_ack_map;
- 			int ack_signal;
--			/* 8 bytes free */
-+			u8 ampdu_len;
-+			/* 7 bytes free */
- 		} status;
- 		struct {
- 			struct ieee80211_tx_rate driver_rates[
+I've moved the two-stage fw into the legacy section some time ago :)
+Maybe a add printk?
+
+Regards,
+	Chr
