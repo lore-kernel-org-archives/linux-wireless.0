@@ -1,95 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:59255 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755210AbZKWSdB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 13:33:01 -0500
-Received: by ewy19 with SMTP id 19so2138486ewy.21
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 10:33:07 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 5/6] rt2x00: Properly request tx headroom for alignment operations.
-Date: Mon, 23 Nov 2009 19:33:04 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-References: <1258960565-26736-1-git-send-email-gwingerde@gmail.com> <1258960565-26736-5-git-send-email-gwingerde@gmail.com> <1258960565-26736-6-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1258960565-26736-6-git-send-email-gwingerde@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911231933.04875.IvDoorn@gmail.com>
+Received: from lo.gmane.org ([80.91.229.12]:52260 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757611AbZKDSFE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2009 13:05:04 -0500
+Received: from list by lo.gmane.org with local (Exim 4.50)
+	id 1N5kEH-0006OC-8W
+	for linux-wireless@vger.kernel.org; Wed, 04 Nov 2009 19:05:09 +0100
+Received: from 85-127-249-188.dynamic.xdsl-line.inode.at ([85.127.249.188])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 19:05:09 +0100
+Received: from tim by 85-127-249-188.dynamic.xdsl-line.inode.at with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 19:05:09 +0100
+To: linux-wireless@vger.kernel.org
+From: Tim Blechmann <tim@klingt.org>
+Subject: ralink rt2x00 maintainer list error
+Date: Wed, 04 Nov 2009 19:04:42 +0100
+Message-ID: <hcsfnq$bft$2@ger.gmane.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigF2349BE3D46823AD0D2ABF2C"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 23 November 2009, Gertjan van Wingerde wrote:
-> Current rt2x00 drivers may result in a "ieee80211_tx_status: headroom too
-> small" error message when a frame needs to be properly aligned before
-> transmitting it.
-> This is because the space needed to ensure proper alignment isn't
-> requested from mac80211.
-> Fix this by adding sufficient amount of alignment space to the amount
-> of headroom requested for TX frames.
-> 
-> Reported-by: David Ellingsworth <david@identd.dyndns.org>
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> Tested-by: David Ellingsworth <david@identd.dyndns.org>
-> ---
->  drivers/net/wireless/rt2x00/rt2400pci.c   |   30 +++++++++++++++-------------
->  drivers/net/wireless/rt2x00/rt2500pci.c   |   30 +++++++++++++++-------------
->  drivers/net/wireless/rt2x00/rt2500usb.c   |   29 ++++++++++++++-------------
->  drivers/net/wireless/rt2x00/rt2800lib.c   |    7 +----
->  drivers/net/wireless/rt2x00/rt2800pci.c   |   31 +++++++++++++++--------------
->  drivers/net/wireless/rt2x00/rt2800usb.c   |   25 ++++++++++++-----------
->  drivers/net/wireless/rt2x00/rt2x00.h      |    7 ++++++
->  drivers/net/wireless/rt2x00/rt2x00queue.c |    6 ++--
->  drivers/net/wireless/rt2x00/rt61pci.c     |   28 ++++++++++++++------------
->  drivers/net/wireless/rt2x00/rt73usb.c     |   27 +++++++++++++------------
->  10 files changed, 117 insertions(+), 103 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-> index 6e68bc7..f534d70 100644
-> --- a/drivers/net/wireless/rt2x00/rt2400pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-> @@ -1432,7 +1432,8 @@ static int rt2400pci_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
->  			       IEEE80211_HW_SIGNAL_DBM |
->  			       IEEE80211_HW_SUPPORTS_PS |
->  			       IEEE80211_HW_PS_NULLFUNC_STACK;
-> -	rt2x00dev->hw->extra_tx_headroom = 0;
-> +	rt2x00dev->hw->extra_tx_headroom = rt2x00dev->ops->extra_tx_headroom +
-> +	    					RT2X00_ALIGN_SIZE;
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigF2349BE3D46823AD0D2ABF2C
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Can't rt2x00lib initialize rt2x00dev->hw->extra_tx_headroom?
-The drivers aren't performing the aligning, so it is logical that rt2x00lib
-adds the required bytes rather than the drivers. The driver already sets
-the value in ops->extra_tx_headroom, so it can rely on rt2x00lib to do the rest.
+the MAINTAINERS file contains the entries for the ralink rt2k00:
+L:      linux-wireless@vger.kernel.org
+L:      users@rt2x00.serialmonkey.com (moderated for non-subscribers)
 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index b809c49..de358b5 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -2030,11 +2030,8 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
->  	    IEEE80211_HW_SUPPORTS_PS |
->  	    IEEE80211_HW_PS_NULLFUNC_STACK;
->  
-> -	if (rt2x00_intf_is_usb(rt2x00dev))
-> -		rt2x00dev->hw->extra_tx_headroom =
-> -			TXINFO_DESC_SIZE + TXWI_DESC_SIZE;
-> -	else if (rt2x00_intf_is_pci(rt2x00dev))
-> -		rt2x00dev->hw->extra_tx_headroom = TXWI_DESC_SIZE;
-> +	rt2x00dev->hw->extra_tx_headroom = rt2x00dev->ops->extra_tx_headroom +
-> +	    					RT2X00_L2PAD_SIZE;
+the second list doesn't exist any more, though ... would be nice, if the
+entry could be updated ...
 
-In this case we don't use RT2X00_ALIGN_SIZE, but the driver does set a flag to tell
-rt2x00lib that L2padding should be used rather then aligning. So this case would still
-hold when it is moved to rt2x00lib.
+thnx, tim
 
->  /*
-> + * Constants for extra TX headroom for alignment purposes.
-> + */
-> +#define RT2X00_ALIGN_SIZE	4
-> +#define RT2X00_L2PAD_SIZE	8
+--=20
+tim@klingt.org
+http://tim.klingt.org
 
-#define RT2X00_L2PAD_SIZE		RT2X00_ALIGN_SIZE + 4
+/"\  ASCII Ribbon Campaign
+\ /   no HTML in email & vCards
+ X     no proprietary attachments
+/ \     use open standards
 
-Would probably better indicate why you are using 8.
 
-Ivo
+--------------enigF2349BE3D46823AD0D2ABF2C
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkrxwjoACgkQdL+4qsZfVstlywCglhmoW6/6KrW6vsGLSNVJ+L8I
+gpEAnRY72LRpIfF0m7K01+Ip2RaYzmrT
+=U1Tp
+-----END PGP SIGNATURE-----
+
+--------------enigF2349BE3D46823AD0D2ABF2C--
+
