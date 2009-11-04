@@ -1,85 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:42982 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932319AbZKMXXO (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.156]:40568 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932315AbZKDRgV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 18:23:14 -0500
-Received: by bwz27 with SMTP id 27so4019742bwz.21
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2009 15:23:19 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
+	Wed, 4 Nov 2009 12:36:21 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 To: linux-wireless@vger.kernel.org
-Subject: [RFC] wireless: add BlockAck frame structure
-Date: Sat, 14 Nov 2009 00:23:07 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Jouni Malinen <jouni.malinen@atheros.com>,
-	linville@tuxdriver.com
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200911140023.08161.chunkeey@googlemail.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 04 Nov 2009 18:36:02 +0100
+Message-Id: <20091104173602.28463.31521.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+Subject: [PATCH 33/41] rt2800: fix comments in rt2800.h
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the BlockAck frame structure as described in
-802.11n specification section 7.2.1.8.
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] rt2800: fix comments in rt2800.h
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-I'm not sure if:
- - everyone will be happy about ext. ieee80211_ba_cb structure?
- - this structure should a part of ieee80211_bar?
----
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 49b1abd..cda0b23 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -747,10 +747,48 @@ struct ieee80211_bar {
- 	__le16 start_seq_num;
- } __attribute__((packed));
+ drivers/net/wireless/rt2x00/rt2800usb.h |   42 +++++++++++++++-----------------
+ 1 file changed, 20 insertions(+), 22 deletions(-)
+
+Index: b/drivers/net/wireless/rt2x00/rt2800usb.h
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -181,8 +181,8 @@
+  * WMM_AIFSN_CFG: Aifsn for each EDCA AC
+  * AIFSN0: AC_BE
+  * AIFSN1: AC_BK
+- * AIFSN1: AC_VI
+- * AIFSN1: AC_VO
++ * AIFSN2: AC_VI
++ * AIFSN3: AC_VO
+  */
+ #define WMM_AIFSN_CFG			0x0214
+ #define WMM_AIFSN_CFG_AIFSN0		FIELD32(0x0000000f)
+@@ -194,8 +194,8 @@
+  * WMM_CWMIN_CSR: CWmin for each EDCA AC
+  * CWMIN0: AC_BE
+  * CWMIN1: AC_BK
+- * CWMIN1: AC_VI
+- * CWMIN1: AC_VO
++ * CWMIN2: AC_VI
++ * CWMIN3: AC_VO
+  */
+ #define WMM_CWMIN_CFG			0x0218
+ #define WMM_CWMIN_CFG_CWMIN0		FIELD32(0x0000000f)
+@@ -207,8 +207,8 @@
+  * WMM_CWMAX_CSR: CWmax for each EDCA AC
+  * CWMAX0: AC_BE
+  * CWMAX1: AC_BK
+- * CWMAX1: AC_VI
+- * CWMAX1: AC_VO
++ * CWMAX2: AC_VI
++ * CWMAX3: AC_VO
+  */
+ #define WMM_CWMAX_CFG			0x021c
+ #define WMM_CWMAX_CFG_CWMAX0		FIELD32(0x0000000f)
+@@ -528,9 +529,6 @@
+ /*
+  * RF_CSR_CFG2: RF control register
+  * VALUE: Register value to program into RF
+- * RFGAP: Gap between BB_CONTROL_RF and RF_LE
+- *        0: 3 system clock cycle (37.5usec)
+- *        1: 5 system clock cycle (62.5usec)
+  */
+ #define RF_CSR_CFG2			0x1028
+ #define RF_CSR_CFG2_VALUE		FIELD32(0x00ffffff)
+@@ -1306,8 +1304,8 @@
+  * PAIRWISE_KEY_TABLE_BASE: 32-byte * 256 entry
+  * MAC_IVEIV_TABLE_BASE: 8-byte * 256-entry
+  * MAC_WCID_ATTRIBUTE_BASE: 4-byte * 256-entry
+- * SHARED_KEY_TABLE_BASE: 32 bytes * 32-entry
+- * SHARED_KEY_MODE_BASE: 4 bits * 32-entry
++ * SHARED_KEY_TABLE_BASE: 32-byte * 16-entry
++ * SHARED_KEY_MODE_BASE: 4-byte * 16-entry
+  */
+ #define MAC_WCID_BASE			0x1800
+ #define PAIRWISE_KEY_TABLE_BASE		0x4000
+@@ -1416,7 +1414,7 @@ struct mac_iveiv_entry {
  
--/* 802.11 BAR control masks */
-+/* 802.11 BA(R) control masks */
- #define IEEE80211_BAR_CTRL_ACK_POLICY_NORMAL     0x0000
-+#define IEEE80211_BAR_CTRL_MULTI_TID		 0x0002
- #define IEEE80211_BAR_CTRL_CBMTID_COMPRESSED_BA  0x0004
- 
-+/**
-+ * struct ieee80211_ba_cb - Compressed BlockAck variant
-+ *
-+ * This structure refers to "BA Information field" as
-+ * described in 802.11n specification section 7.2.1.8.3
-+ */
-+struct ieee80211_ba_cb {
-+	__le16 start_seq_num;
-+	__u8 bitmap[8];
-+} __attribute__((packed));
-+
-+/**
-+ * struct ieee80211_ba - BlockAck frame
-+ *
-+ * This structure refers to "BlockAck frame" as
-+ * described in 802.11n specification section 7.2.1.8.1
-+ */
-+struct ieee80211_ba {
-+	__le16 frame_control;
-+	__le16 duration;
-+	__u8 ra[6];
-+	__u8 ta[6];
-+	__le16 control;
-+	union {
-+		struct {
-+			__le16 start_seq_num;
-+			__u8 bitmap[128];
-+		} basic __attribute__((packed));
-+
-+		struct ieee80211_ba_cb cb;
-+
-+		struct {
-+			__le16 per_tid;
-+			struct ieee80211_ba_cb cb;
-+		} cbmtid[0] __attribute__((packed));
-+	} __attribute__((packed));
-+} __attribute__((packed));
- 
- #define IEEE80211_HT_MCS_MASK_LEN		10
+ /*
+  * HW_DFS_CTS_BASE:
+- * FS CTS frame base address. It's where mac stores CTS frame for DFS.
++ * DFS CTS frame base address. It's where mac stores CTS frame for DFS.
+  */
+ #define HW_DFS_CTS_BASE			0x7780
  
