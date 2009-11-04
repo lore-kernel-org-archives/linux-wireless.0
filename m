@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:34905 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758198AbZKFSRA (ORCPT
+Received: from katherina.student.utwente.nl ([130.89.168.160]:34260 "EHLO
+	katherina.student.utwente.nl" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751361AbZKDUMp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 13:17:00 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 02/41] rt2800pci: make Kconfig help entry more helpful
-Date: Fri, 6 Nov 2009 17:13:09 +0100
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173210.28463.95558.sendpatchset@localhost.localdomain> <14add3d10911041026r54a0abd1h953609dd7cb7224a@mail.gmail.com>
-In-Reply-To: <14add3d10911041026r54a0abd1h953609dd7cb7224a@mail.gmail.com>
+	Wed, 4 Nov 2009 15:12:45 -0500
+Date: Wed, 4 Nov 2009 20:27:04 +0100
+From: Matthijs Kooijman <matthijs@stdin.nl>
+To: rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Cc: Tim Blechmann <tim@klingt.org>, linux-wireless@vger.kernel.org
+Subject: Re: [rt2x00-users] rt61pci bug
+Message-ID: <20091104192704.GJ3418@katherina.student.utwente.nl>
+References: <4AE43028.30703@klingt.org>
+ <hcsfgm$bft$1@ger.gmane.org>
+ <20091104185212.GL12965@tuxdriver.com>
 MIME-Version: 1.0
-Message-Id: <200911061713.09133.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="WuedheRyq6FDfQ9j"
+In-Reply-To: <20091104185212.GL12965@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 04 November 2009 19:26:16 Gertjan van Wingerde wrote:
-> On Wed, Nov 4, 2009 at 6:32 PM, Bartlomiej Zolnierkiewicz
-> <bzolnier@gmail.com> wrote:
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH] rt2800pci: make Kconfig help entry more helpful
-> >
-> > Document known issues with the driver to aid distribution makers,
-> > users and developers in making informed decisions instead of wasting
-> > their time needlessly.
-> >
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > ---
-> > This reflects the actual state of affairs for driver in net-next tree.
-> >
-> 
-> Maybe we should consider making this one depend on BROKEN, for the
-> moment at least?
 
-Sounds fine with me, would you be willing to take care of this?
+--WuedheRyq6FDfQ9j
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks.
--- 
-Bartlomiej Zolnierkiewicz
+> [ 1656.653963] Please file bug report to http://rt2x00.serialmonkey.com
+>=20
+> Is that message correct?  The bug reports link at the wiki seems a bit un=
+clear...
+Also, I just noticed that the "mailing lists" link in the first section, as
+well as the "LISTS" link in the menu bar at the top point to the old
+sourceforge lists page, which is empty.
+
+Perhaps the frontpage should be reviewed a bit?
+
+Gr.
+
+Matthijs
+
+--WuedheRyq6FDfQ9j
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkrx1YgACgkQz0nQ5oovr7wpuwCfVBq1uzBsojHNqodgUQf5MX0a
+EDcAoLq/OZqdA4ZZiUE5SKHJZ9UJ5flg
+=4pgA
+-----END PGP SIGNATURE-----
+
+--WuedheRyq6FDfQ9j--
