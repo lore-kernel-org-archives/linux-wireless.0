@@ -1,59 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49181 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753742AbZKVITq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Nov 2009 03:19:46 -0500
-Subject: [PATCH] mac80211: Fix missing kernel-doc notation
-From: Jaswinder Singh Rajput <jaswinder@kernel.org>
-To: David Miller <davem@davemloft.net>,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain
-Date: Sun, 22 Nov 2009 13:47:58 +0530
-Message-Id: <1258877878.4495.50.camel@ht.satnam>
-Mime-Version: 1.0
+Received: from fg-out-1718.google.com ([72.14.220.158]:41096 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754295AbZKDRcg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2009 12:32:36 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 04 Nov 2009 18:32:17 +0100
+Message-Id: <20091104173217.28463.23610.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+Subject: [PATCH 03/41] rt2800usb: fix rt2800usb_rfcsr_read()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] rt2800usb: fix rt2800usb_rfcsr_read()
 
-Fix the following htmldocs warnings:
+The driver should write the read request into RF_CSR_CFG register
+and not BBP_CSR_CFG one in rt2800usb_rfcsr_read().
 
-  Warning(net/mac80211/sta_info.h:322): No description found for parameter 'drv_unblock_wk'
-  Warning(net/mac80211/sta_info.h:322): No description found for parameter 'drv_unblock_wk'
-
-Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: David Miller <davem@davemloft.net>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- net/mac80211/sta_info.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800usb.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 4c84c22..b4810f6 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -185,6 +185,7 @@ struct sta_ampdu_mlme {
-  * @lock: used for locking all fields that require locking, see comments
-  *	in the header file.
-  * @flaglock: spinlock for flags accesses
-+ * @drv_unblock_wk: used for driver PS unblocking
-  * @listen_interval: listen interval of this station, when we're acting as AP
-  * @pin_status: used internally for pinning a STA struct into memory
-  * @flags: STA flags, see &enum ieee80211_sta_info_flags
-@@ -225,7 +226,6 @@ struct sta_ampdu_mlme {
-  * @debugfs: debug filesystem info
-  * @sta: station information we share with the driver
-  * @dead: set to true when sta is unlinked
-- * @drv_unblock_wk used for driver PS unblocking
-  */
- struct sta_info {
- 	/* General information, mostly static */
--- 
-1.6.5.3
-
-
+Index: b/drivers/net/wireless/rt2x00/rt2800usb.c
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -167,7 +167,7 @@ static void rt2800usb_rfcsr_read(struct 
+ 		rt2x00_set_field32(&reg, RF_CSR_CFG_WRITE, 0);
+ 		rt2x00_set_field32(&reg, RF_CSR_CFG_BUSY, 1);
+ 
+-		rt2x00usb_register_write_lock(rt2x00dev, BBP_CSR_CFG, reg);
++		rt2x00usb_register_write_lock(rt2x00dev, RF_CSR_CFG, reg);
+ 
+ 		WAIT_FOR_RFCSR(rt2x00dev, &reg);
+ 	}
