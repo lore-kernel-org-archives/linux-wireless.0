@@ -1,37 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:58457 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754601AbZKPXne (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2009 18:43:34 -0500
-Message-ID: <4B01E39B.6090705@openwrt.org>
-Date: Tue, 17 Nov 2009 00:43:23 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Adam Wozniak <awozniak@irobot.com>
-CC: Derek Smithies <derek@indranet.co.nz>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Adhoc networking, was Re: compat-wireless and minstrel
-References: <4AF0D54D.4090303@irobot.com>  <alpine.DEB.2.00.0911111508391.6214@kauri.acheron.indranet.co.nz>  <4AFC655A.5020706@irobot.com> <200911122103.27455.chunkeey@googlemail.com>  <4AFC8E4F.5090307@irobot.com>  <4AFC8F0D.5020700@irobot.com>  <1258097352.3899.75.camel@johannes.local>  <4AFDDF19.8060202@irobot.com>  <1258191039.6167.40.camel@johannes.local>  <4B018B26.2070008@irobot.com> <1258392453.32159.28.camel@johannes.local> <4B0192A6.9050808@irobot.com> <alpine.DEB.2.00.0911170938380.3829@kauri.acheron.indranet.co.nz> <4B01D4A5.7060204@irobot.com> <alpine.DEB.2.00.0911171156210.3829@kauri.acheron.indranet.co.nz> <4B01E298.3030602@irobot.com>
-In-Reply-To: <4B01E298.3030602@irobot.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from fg-out-1718.google.com ([72.14.220.158]:41096 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932275AbZKDRe6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2009 12:34:58 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 04 Nov 2009 18:34:39 +0100
+Message-Id: <20091104173439.28463.20951.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+Subject: [PATCH 22/41] rt2800pci: add rt2800_mcu_request() wrapper
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adam Wozniak wrote:
-> It seems like the code I pointed out earlier in rx.c is certainly wrong 
-> then; bitrates used in absence of other information should not be 
-> guessed based on the received rate, but should come instead from the 
-> BSSID. Correct?
-> 
-> Although, once you start these silly examples, it seems to me like the 
-> best thing to do is just assume the receiver can handle anything and let 
-> minstrel sort out what works and what doesn't. This has obvious problems 
-> for PID and similar rate algorithms.
-In mesh networks here in Berlin and elsewhere, some people are running
-with beacons disabled ('ahdemo' mode), so it would be nice if mac80211
-could deal with this as well, by testing rates in absence of beacon
-information.
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] rt2800pci: add rt2800_mcu_request() wrapper
 
-- Felix
+Part of preparations for later code unification.
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800pci.c |   25 ++++++++++++++++---------
+ 1 file changed, 16 insertions(+), 9 deletions(-)
+
+Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -276,6 +276,13 @@ static void rt2800pci_mcu_request(struct
+ 	mutex_unlock(&rt2x00dev->csr_mutex);
+ }
+ 
++static inline void rt2800_mcu_request(struct rt2x00_dev *rt2x00dev,
++				      const u8 command, const u8 token,
++				      const u8 arg0, const u8 arg1)
++{
++	rt2800pci_mcu_request(rt2x00dev, command, token, arg0, arg1);
++}
++
+ static void rt2800pci_mcu_status(struct rt2x00_dev *rt2x00dev, const u8 token)
+ {
+ 	unsigned int i;
+@@ -467,10 +474,10 @@ static void rt2800pci_brightness_set(str
+ 				   EEPROM_FREQ_LED_MODE);
+ 
+ 	if (led->type == LED_TYPE_RADIO) {
+-		rt2800pci_mcu_request(led->rt2x00dev, MCU_LED, 0xff, ledmode,
++		rt2800_mcu_request(led->rt2x00dev, MCU_LED, 0xff, ledmode,
+ 				      enabled ? 0x20 : 0);
+ 	} else if (led->type == LED_TYPE_ASSOC) {
+-		rt2800pci_mcu_request(led->rt2x00dev, MCU_LED, 0xff, ledmode,
++		rt2800_mcu_request(led->rt2x00dev, MCU_LED, 0xff, ledmode,
+ 				      enabled ? (bg_mode ? 0x60 : 0xa0) : 0x20);
+ 	} else if (led->type == LED_TYPE_QUALITY) {
+ 		/*
+@@ -481,7 +488,7 @@ static void rt2800pci_brightness_set(str
+ 		 * work with bitshifting:
+ 		 *	(1 << level) - 1
+ 		 */
+-		rt2800pci_mcu_request(led->rt2x00dev, MCU_LED_STRENGTH, 0xff,
++		rt2800_mcu_request(led->rt2x00dev, MCU_LED_STRENGTH, 0xff,
+ 				      (1 << brightness / (LED_FULL / 6)) - 1,
+ 				      polarity);
+ 	}
+@@ -2037,7 +2044,7 @@ static int rt2800pci_enable_radio(struct
+ 	/*
+ 	 * Send signal to firmware during boot time.
+ 	 */
+-	rt2800pci_mcu_request(rt2x00dev, MCU_BOOT_SIGNAL, 0xff, 0, 0);
++	rt2800_mcu_request(rt2x00dev, MCU_BOOT_SIGNAL, 0xff, 0, 0);
+ 
+ 	/*
+ 	 * Enable RX.
+@@ -2063,15 +2070,15 @@ static int rt2800pci_enable_radio(struct
+ 	 * Initialize LED control
+ 	 */
+ 	rt2x00_eeprom_read(rt2x00dev, EEPROM_LED1, &word);
+-	rt2800pci_mcu_request(rt2x00dev, MCU_LED_1, 0xff,
++	rt2800_mcu_request(rt2x00dev, MCU_LED_1, 0xff,
+ 			      word & 0xff, (word >> 8) & 0xff);
+ 
+ 	rt2x00_eeprom_read(rt2x00dev, EEPROM_LED2, &word);
+-	rt2800pci_mcu_request(rt2x00dev, MCU_LED_2, 0xff,
++	rt2800_mcu_request(rt2x00dev, MCU_LED_2, 0xff,
+ 			      word & 0xff, (word >> 8) & 0xff);
+ 
+ 	rt2x00_eeprom_read(rt2x00dev, EEPROM_LED3, &word);
+-	rt2800pci_mcu_request(rt2x00dev, MCU_LED_3, 0xff,
++	rt2800_mcu_request(rt2x00dev, MCU_LED_3, 0xff,
+ 			      word & 0xff, (word >> 8) & 0xff);
+ 
+ 	return 0;
+@@ -2120,10 +2127,10 @@ static int rt2800pci_set_state(struct rt
+ 	 * if the device is booting and wasn't asleep it will return
+ 	 * failure when attempting to wakeup.
+ 	 */
+-	rt2800pci_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0, 2);
++	rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0, 2);
+ 
+ 	if (state == STATE_AWAKE) {
+-		rt2800pci_mcu_request(rt2x00dev, MCU_WAKEUP, TOKEN_WAKUP, 0, 0);
++		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, TOKEN_WAKUP, 0, 0);
+ 		rt2800pci_mcu_status(rt2x00dev, TOKEN_WAKUP);
+ 	}
+ 
