@@ -1,34 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:4991 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751500AbZKCTah (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:47920 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758236AbZKDWzz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 14:30:37 -0500
-Date: Tue, 3 Nov 2009 14:27:35 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Luis Rodriguez <mcgrof@gmail.com>,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: ath5k AP issues
-Message-ID: <20091103192735.GA11145@hash.localnet>
-References: <200910291330.26172.mb@bu3sch.de> <200910291406.03422.mb@bu3sch.de> <200910291431.48388.mb@bu3sch.de> <20091031202156.GA29825@hash.localnet> <40f31dec0910312353w32aede90ib5e71545ca744389@mail.gmail.com> <20091101131652.GA30381@hash.localnet> <40f31dec0911010541l650513fg31ffcadd12698f0@mail.gmail.com> <20091102194349.GA7709@hash.localnet> <40f31dec0911021336l45d185fewa5ce1ffb88f7db97@mail.gmail.com>
+	Wed, 4 Nov 2009 17:55:55 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0911021336l45d185fewa5ce1ffb88f7db97@mail.gmail.com>
+In-Reply-To: <14add3d10911041219j6ab25282re4f98d14029b1f68@mail.gmail.com>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+	<14add3d10911041219j6ab25282re4f98d14029b1f68@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 5 Nov 2009 09:55:39 +1100
+Message-ID: <646765f40911041455m7a6f55b8ka3ce95de7dd6ac6c@mail.gmail.com>
+Subject: Re: [PATCH 00/41] rewritten rt2800 drivers
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 02, 2009 at 11:36:22PM +0200, Nick Kossifidis wrote:
-> Well let's enable them both :P
-> 
-> I still think that ready-time thing is evil, we should use a more accurate
-> way.
+Bart,
 
-I don't follow, you want to try both DBA and BCN_SENT to see what happens
-(with/without ready-time)?
+FWIW, this all looks good to me, except for these comments:
+
+1. When you introduce struct rt2800_ops, it may telegraph your
+intentions more clearly if you introduce rt2800lib.h at the same time
+- this also means that we don't have (if only for a single patch)
+duplicate versions of this structure and it's associated code.
+
+2. Patches #26-28 should arguably come before the conversions to use
+the struct rt2800_ops methods.
+
+3. I don't get the reasoning behind patch #37 (remove useless ifdefs
+from rt2x00leds.h) but I'm going to assume that it's all right.
+
+4. Patch #39 should arguably come earlier in the patch set as it's a
+general cleanup.
+
+Other than that, good work!
+
+Thanks,
 
 -- 
-Bob Copeland %% www.bobcopeland.com
 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+.Plan: http://sites.google.com/site/juliancalaby/
