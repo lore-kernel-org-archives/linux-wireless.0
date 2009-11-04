@@ -1,92 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:63369 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753063AbZKBJQM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 04:16:12 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2009 01:16:17 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from gv-out-0910.google.com ([216.239.58.185]:64517 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752351AbZKDPyi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2009 10:54:38 -0500
+Received: by gv-out-0910.google.com with SMTP id r4so910447gve.37
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 07:54:42 -0800 (PST)
+Message-ID: <4AF1A3BD.1020009@lwfinger.net>
+Date: Wed, 04 Nov 2009 09:54:37 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19182.41944.492519.390013@gargle.gargle.HOWL>
-Date: Mon, 2 Nov 2009 14:48:16 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	<reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: Fix IBSS merge
-In-Reply-To: <1257151486.3555.161.camel@johannes.local>
-References: <19182.33851.980271.360757@gargle.gargle.HOWL>
-	<1257151486.3555.161.camel@johannes.local>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>, sidhayn@gmail.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8187: Fix kernel oops when device is removed when
+ LEDS enabled (Bugzilla #14539)
+References: <4af11879./IumKJ+RAbw7Zkq6%Larry.Finger@lwfinger.net> <20091104151132.GD12965@tuxdriver.com>
+In-Reply-To: <20091104151132.GD12965@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Mon, 2009-11-02 at 12:33 +0530, Sujith wrote:
-> > Currently, in IBSS mode, a single creator would go into
-> > a loop trying to merge/scan. This happens because the IBSS timer is
-> > rearmed on finishing a scan and the subsequent
-> > timer invocation requests another scan immediately.
-> > 
-> > This patch fixes this issue by checking if we have just completed
-> > a scan run trying to merge with other IBSS networks.
+On 11/04/2009 09:11 AM, John W. Linville wrote:
+> On Wed, Nov 04, 2009 at 12:00:25AM -0600, Larry Finger wrote:
+>> As reported by Rick Farina (sidhayn@gmail.com), removing the RTL8187 USB
+>> stick, or unloading the driver rtl8187 using rmmod will cause a kernel oops.
+>> There are at least two forms of the failure, (1) BUG: Scheduling while atomic,
+>> and (2) a fatal kernel page fault. This problem is reported in Bugzilla #14539.
+>>
+>> This problem does not occur for kernel 2.6.31, but does for 2.6.32-rc2, thus
+>> it is technically a regression; however, bisection did not locate any faulty
+>> patch. The fix was found by comparing the faulty code in rtl8187 with p54usb.
+>> My interpretation is that the handling of work queues in mac80211 changed
+>> enough to the LEDs to be unregistered before tasks on the work queues are
+>> cancelled. Previously, these actions could be done in either order.
+>>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> Reported-and-tested by: Rick Farina <sidhayn@gmail.com>
+>> ---
+>>
+>> John,
+>>
+>> This is 2.6.32 material. Sorry to take so long to get a patch, but it was
+>> difficult for me to locate the problem. Fortunately, I had the postings of the
+>> two flame wars to amuse me while all the kernel compilations were happening.
+>>
+>> Larry
+>> ---
+>>
+>> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
+>> ===================================================================
+>> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_leds.c
+>> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
+>> @@ -210,10 +210,10 @@ void rtl8187_leds_exit(struct ieee80211_
+>>  
+>>  	/* turn the LED off before exiting */
+>>  	ieee80211_queue_delayed_work(dev, &priv->led_off, 0);
+>> -	cancel_delayed_work_sync(&priv->led_off);
+>> -	cancel_delayed_work_sync(&priv->led_on);
+>>  	rtl8187_unregister_led(&priv->led_rx);
+>>  	rtl8187_unregister_led(&priv->led_tx);
+>> +	cancel_delayed_work_sync(&priv->led_off);
+>> +	cancel_delayed_work_sync(&priv->led_on);
+>>  }
+>>  #endif /* def CONFIG_RTL8187_LED */
+>>  
 > 
-> Heh, how many people do we need to fix IBSS? :)
+> This seems like a band-aid.  If anything, the original order would
+> seem to make more sense.
 > 
-> Looks sane to me.
+> Do you have a link to the original backtrace?  I don't see one in
+> the bugzilla entry.
 
-Thanks.
+I agree that the original order makes more sense, which is why I coded
+it that way in the first place; however, something changed during the
+post-2.6.31 merge period. I tried to bisect the regression, but gave
+up after 4 days of trying. I kept ending up where all the remaining
+commits referred to drivers I'm not even using.
 
-And I encountered an oops when using iwlwifi (current wireless-testing).
-Set the interface mode to Ad-hoc, bring up the interface and issue a join
-command using iw - this causes the panic.
+I don't have a full backtrace as I have had no success with
+netconsole. My hand notes have only limited trace info, but I did note
+that none of the rtl8187 or mac80211 routines are mentioned in any
+trace I've seen. In the one in my notes, the process that crashed was
+ifdown with a "scheduling while atomic" BUG.
 
-Trace:
+I will try once more to get netconsole working to capture the backtrace.
 
-[16265.474794] BUG: unable to handle kernel NULL pointer dereference at (null)
-[16265.477752] IP: [<ffffffffa03faa96>] iwl_mac_hw_scan+0xf6/0x650 [iwlcore]
-[16265.477752] PGD 0
-[16265.477752] Oops: 0000 [#1] PREEMPT SMP
-[16265.477752] last sysfs file: /sys/class/firmware/0000:05:00.0/loading
-[16265.477752] CPU 1
-[16265.477752] Modules linked in: iwlagn iwlcore mac80211 cfg80211 arc4 ecb i915 drm_kms_helper drm i2c_algo_bit pcmcia thinkpad_acpi rfkill led_class parport_]
-[16265.477752] Pid: 3864, comm: phy0 Tainted: G        W  2.6.32-rc5-wl #60 7661GN4
-[16265.477752] RIP: 0010:[<ffffffffa03faa96>]  [<ffffffffa03faa96>] iwl_mac_hw_scan+0xf6/0x650 [iwlcore]
-[16265.477752] RSP: 0018:ffff880077f8bc20  EFLAGS: 00010002
-[16265.477752] RAX: 0000000000000001 RBX: ffff880077e61660 RCX: 0000000000000000
-[16265.477752] RDX: 0000000000000000 RSI: 0000000000000001 RDI: 00000000000013e4
-[16265.477752] RBP: ffff880077f8bc60 R08: 0000000000000001 R09: ffffffff8142f0df
-[16265.477752] R10: ffff88007b836090 R11: 0000000000000046 R12: ffff88007b8f3000
-[16265.477752] R13: ffff880077e62098 R14: ffff880077e62008 R15: 0000000000000286
-[16265.477752] FS:  0000000000000000(0000) GS:ffff880002100000(0000) knlGS:0000000000000000
-[16265.477752] CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-[16265.477752] CR2: 0000000000000000 CR3: 0000000001001000 CR4: 00000000000006e0
-[16265.477752] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[16265.477752] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-[16265.477752] Process phy0 (pid: 3864, threadinfo ffff880077f8a000, task ffff88007b835a00)
-[16265.477752] Stack:
-[16265.477752]  ffff880077f8bc50 ffffffff81046497 ffff880077e60520 ffff880077e60520
-[16265.477752] <0> ffff880077e61250 ffff88007b8f3000 ffff880077e60520 0000000000000009
-[16265.477752] <0> ffff880077f8bcb0 ffffffffa0380506 2222222222222222 2222222222222222
-[16265.477752] Call Trace:
-[16265.477752]  [<ffffffff81046497>] ? warn_slowpath_common+0x87/0xb0
-[16265.477752]  [<ffffffffa0380506>] __ieee80211_start_scan+0xe6/0x3e0 [mac80211]
-[16265.477752]  [<ffffffffa03808be>] ieee80211_request_internal_scan+0xbe/0xc0 [mac80211]
-[16265.477752]  [<ffffffffa0385138>] ieee80211_ibss_work+0x708/0x800 [mac80211]
-[16265.477752]  [<ffffffffa0384a30>] ? ieee80211_ibss_work+0x0/0x800 [mac80211]
-[16265.477752]  [<ffffffff8105ef2e>] worker_thread+0x22e/0x420
-[16265.477752]  [<ffffffff8105eedd>] ? worker_thread+0x1dd/0x420
-[16265.477752]  [<ffffffff8132a3fd>] ? thread_return+0x585/0x8b8
-[16265.477752]  [<ffffffff81063fb0>] ? autoremove_wake_function+0x0/0x40
-[16265.477752]  [<ffffffff8105ed00>] ? worker_thread+0x0/0x420
-[16265.477752]  [<ffffffff81063b9e>] kthread+0x8e/0xa0
-[16265.477752]  [<ffffffff8100cf3a>] child_rip+0xa/0x20
-[16265.477752]  [<ffffffff8100c8c0>] ? restore_args+0x0/0x30
-[16265.477752]  [<ffffffff81063b10>] ? kthread+0x0/0xa0
-[16265.477752]  [<ffffffff8100cf30>] ? child_rip+0x0/0x20
-[16265.477752] Code: 09 00 00 00 00 00 00 41 8b 54 24 0c 85 d2 74 30 31 d2 31 c0 be 01 00 00 00 0f 1f 40 00 48 63 c8 49 89 f0 83 c0 01 49 8b 4c cc 38 <8b> 09 4
-[16265.477752] RIP  [<ffffffffa03faa96>] iwl_mac_hw_scan+0xf6/0x650 [iwlcore]
-[16265.477752]  RSP <ffff880077f8bc20>
-[16265.477752] CR2: 0000000000000000
-[16265.477752] ---[ end trace 1787d9867e43487e ]---
+Larry
