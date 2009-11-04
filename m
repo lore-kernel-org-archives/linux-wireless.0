@@ -1,72 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:36539 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753769AbZKTUFH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 15:05:07 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 06/19] iwl3945: removed unused struct and definitions
-Date: Fri, 20 Nov 2009 12:04:57 -0800
-Message-Id: <1258747510-21233-7-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
-References: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:40117 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758328AbZKDWb4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2009 17:31:56 -0500
+Received: by ewy3 with SMTP id 3so3674474ewy.37
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 14:32:01 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+Subject: Re: compat-wireless and minstrel
+Date: Wed, 4 Nov 2009 23:31:55 +0100
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Adam Wozniak <awozniak@irobot.com>,
+	linux-wireless@vger.kernel.org
+References: <4AF0D54D.4090303@irobot.com> <200911042318.13528.chunkeey@googlemail.com> <20091104222007.GB2599@bombadil.infradead.org>
+In-Reply-To: <20091104222007.GB2599@bombadil.infradead.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200911042331.56052.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+On Wednesday 04 November 2009 23:20:07 Luis R. Rodriguez wrote:
+> On Wed, Nov 04, 2009 at 11:18:13PM +0100, Christian Lamparter wrote:
+> > On Wednesday 04 November 2009 22:50:46 Luis R. Rodriguez wrote:
+> > > On Wed, Nov 4, 2009 at 1:46 PM, Adam Wozniak <awozniak@irobot.com> wrote:
+> > > >
+> > > > $ ls -la /lib/firmware/ar9170*
+> > > > -rw-r--r-- 1 root root 83968 2009-10-17 15:55 /lib/firmware/ar9170-1.fw
+> > > > -rw-r--r-- 1 root root  3508 2009-10-17 15:55 /lib/firmware/ar9170-2.fw
+> > > > -rw-r--r-- 1 root root 15960 2009-10-17 15:55 /lib/firmware/ar9170.fw
+> > > >
+> > > > It is unclear to me which are actually used.
+> > > 
+> > > By default the ar9170.fw is tried first, if that fails then the others
+> > > are tried. The 2-stage firmware will not be tried if your device
+> > > cannot handle it but right now only the AVM Fritz devices can't handle
+> > > the 2-stage firmware.
+> > > 
+> > > Christian should we just remove 2-stage fw support?
+> > 
+> > I've moved the two-stage fw into the legacy section some time ago :)
+> > Maybe a add printk?
+> 
+> Oh sorry didn't notice, I meant complete removal of its support on the
+> driver though :)
+Oh, I've no problem removing two-stage fw support.
+But then, I don't know much about usability :-D and I've enough of 
+people banging their heads against each other.
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.h |    9 ---------
- drivers/net/wireless/iwlwifi/iwl-dev.h  |    8 --------
- 2 files changed, 0 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index 2b0d65c..a41f0e0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -221,19 +221,10 @@ struct iwl3945_ibss_seq {
-  * for use by iwl-*.c
-  *
-  *****************************************************************************/
--extern int iwl3945_power_init_handle(struct iwl_priv *priv);
--extern int iwl3945_eeprom_init(struct iwl_priv *priv);
- extern int iwl3945_calc_db_from_ratio(int sig_ratio);
- extern int iwl3945_calc_sig_qual(int rssi_dbm, int noise_dbm);
--extern int iwl3945_tx_queue_init(struct iwl_priv *priv,
--			     struct iwl_tx_queue *txq, int count, u32 id);
- extern void iwl3945_rx_replenish(void *data);
- extern void iwl3945_rx_queue_reset(struct iwl_priv *priv, struct iwl_rx_queue *rxq);
--extern void iwl3945_tx_queue_free(struct iwl_priv *priv, struct iwl_tx_queue *txq);
--extern int iwl3945_send_cmd_pdu(struct iwl_priv *priv, u8 id, u16 len,
--			    const void *data);
--extern int __must_check iwl3945_send_cmd(struct iwl_priv *priv,
--					 struct iwl_host_cmd *cmd);
- extern unsigned int iwl3945_fill_beacon_frame(struct iwl_priv *priv,
- 					struct ieee80211_hdr *hdr,int left);
- extern void iwl3945_dump_nic_event_log(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 1c1ed4b..4ded190 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -544,14 +544,6 @@ struct iwl_qos_info {
- 	struct iwl_qosparam_cmd def_qos_parm;
- };
- 
--
--struct iwl3945_station_entry {
--	struct iwl3945_addsta_cmd sta;
--	struct iwl_tid_data tid[MAX_TID_COUNT];
--	u8 used;
--	struct iwl_hw_key keyinfo;
--};
--
- struct iwl_station_entry {
- 	struct iwl_addsta_cmd sta;
- 	struct iwl_tid_data tid[MAX_TID_COUNT];
--- 
-1.5.6.3
-
+Regards,
+	Chr
