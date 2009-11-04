@@ -1,46 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f42.google.com ([209.85.160.42]:54795 "EHLO
-	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752461AbZK0Bhg convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:52051 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932978AbZKDVwV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 20:37:36 -0500
-Received: by pwi3 with SMTP id 3so730234pwi.21
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2009 17:37:42 -0800 (PST)
+	Wed, 4 Nov 2009 16:52:21 -0500
+Received: by iwn10 with SMTP id 10so5307431iwn.4
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 13:52:26 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <43e72e890911261348g32edb851obbba8e265ad22e95@mail.gmail.com>
-References: <d82e647a0911260557l5cf33449pe41f8902b6889891@mail.gmail.com>
-	 <69e28c910911260902p5385cd33wa0d5e00199235dd1@mail.gmail.com>
-	 <43e72e890911261348g32edb851obbba8e265ad22e95@mail.gmail.com>
-Date: Fri, 27 Nov 2009 09:37:41 +0800
-Message-ID: <d82e647a0911261737j2bb9d07fj453e7d43a8f2e2dd@mail.gmail.com>
-Subject: Re: [question] ath9k: 11n monitor mode
-From: Ming Lei <tom.leiming@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	Matteo Croce <matteo@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <43e72e890911041336n7ffae0d2u135321a588f3e613@mail.gmail.com>
+References: <43e72e890911041204n55b54f8iace79938b40baa32@mail.gmail.com>
+	<40f31dec0911041212p16cfc78eia1ab1817e425e767@mail.gmail.com>
+	<43e72e890911041330j581e7bacp4e7b83a11c1de0e8@mail.gmail.com>
+	<43e72e890911041336n7ffae0d2u135321a588f3e613@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 4 Nov 2009 13:52:06 -0800
+Message-ID: <43e72e890911041352i334e170at71a519383d48a08@mail.gmail.com>
+Subject: Re: pci_set_mwi() and ath5k
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel@lists.ath5k.org, Matthew Wilcox <matthew@wil.cx>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	Kyle McMartin <kyle@mcmartin.ca>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/11/27 Luis R. Rodriguez <lrodriguez@atheros.com>:
-> 2009/11/26 Gábor Stefanik <netrolller.3d@gmail.com>:
->> I don't know exactly, but a while ago there was a discussion about how
->> to represent HT rates in Radiotap. AFAIK mac80211 refuses to forward
->> HT packets to monitor interfaces as they don't have a valid CCK or
->> OFDM rate.
+On Wed, Nov 4, 2009 at 1:36 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Wed, Nov 4, 2009 at 1:30 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Wed, Nov 4, 2009 at 12:12 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+>>> 2009/11/4 Luis R. Rodriguez <mcgrof@gmail.com>:
+>>>> Curious if anyone recalls the issues seen with enabling MWI on ath5k.
+>>>> I could have sworn there was some discussion on this but for the life
+>>>> of me I cannot find it.
+>>>>
+>>>> Â Luis
+>>>
+>>> Maybe this one ?
+>>> http://osdir.com/ml/linux.drivers.ath5k.devel/2008-07/msg00088.html
+>>
+>> That was it, thanks! For the record then Kyle pointed to this bug:
+>>
+>> http://marc.info/?t=121430463700001&r=1&w=2
+>>
+>> as a reference for possible issues.
 >
-> Matteo added a suggested field for radiotap for MCS rates:
+> Actually the threads above are for MSI, not MWI, which would be set
+> with pci_set_mwi() not pci_disable_msi().
 >
-> http://www.radiotap.org/suggested-fields/MCS
+> MWI is for enabling memory write invalidate.
+>
+> I guess we never had the MWI discussion then for ath5k,
+>
+> Either way I'm reluctant to enable it and was actually considering
+> simplifying the the PCI cache line size thing on ath/ath5k/ath9k. Will
+> send an RFC.
 
-Oh, I see.
+Even better: I just confirmation from our systems team that our legacy
+devices and 11n PCI devices don't support MWR so I'll remove all that
+cruft crap.
 
-Is there any patch which may let mac80211 forward HT packets to
-monitor interface now?
-If there is, where could I find it?
-
-thanks,
-
--- 
-Lei Ming
+  Luis
