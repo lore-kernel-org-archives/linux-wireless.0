@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:56648 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754619AbZKTUvk (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:46075 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756891AbZKDSeZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 15:51:40 -0500
+	Wed, 4 Nov 2009 13:34:25 -0500
 MIME-Version: 1.0
-In-Reply-To: <43e72e890911201245r4de5b039hb2dd5011dabf2399@mail.gmail.com>
-References: <43e72e890911201245r4de5b039hb2dd5011dabf2399@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 20 Nov 2009 12:51:26 -0800
-Message-ID: <43e72e890911201251t6210ee19n177eaf003a4fffc@mail.gmail.com>
-Subject: Re: A generic kernel compatibilty code
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20091104173232.28463.47998.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+	 <20091104173232.28463.47998.sendpatchset@localhost.localdomain>
+Date: Wed, 4 Nov 2009 19:34:27 +0100
+Message-ID: <14add3d10911041034s5a005775x37e15fe4cfd1b4d5@mail.gmail.com>
+Subject: Re: [PATCH 05/41] rt2800pci: fix comment about register access
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 20, 2009 at 12:45 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> Everyone and their mother reinvents the wheel when it comes to
-> backporting kernel modules. It a painful job and it seems to me an
-> alternative is possible. If we can write generic compatibilty code for
-> a new routine introduced on the next kernel how about just merging it
-> to the kernel under some generic compat module. This would be
-> completey ignored by everyone using the stable kernel but can be
-> copied by anyone doing backport work.
+On Wed, Nov 4, 2009 at 6:32 PM, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2800pci: fix comment about register access
 >
-> So I'm thinking something as simple as a generic compat/comat.ko with
-> compat-2.6.32.[ch] files.
+> Registers used for indirect BBP and RF registers access are
+> respectively BBPCSR and RFCSR, also make it clear that all CSR
+> registers access goes through rt2x00pci_register_[read,write]()
+> methods.
+>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
 
-FWIW, I meant a compat-2.6.32.[ch] and compat-2.6.31.[ch] and so on.
-All these would link to the compat.ko
+For what it is worth:
 
-  Luis
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
