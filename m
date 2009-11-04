@@ -1,47 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:40114 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756202AbZKWVXF (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:5665 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932360AbZKDRfp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 16:23:05 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 3/8] wl1271: Set PSM support flags in driver configuration
-Date: Mon, 23 Nov 2009 23:22:14 +0200
-Message-Id: <1259011339-28149-4-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1259011339-28149-1-git-send-email-luciano.coelho@nokia.com>
-References: <1259011339-28149-1-git-send-email-luciano.coelho@nokia.com>
+	Wed, 4 Nov 2009 12:35:45 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 04 Nov 2009 18:35:25 +0100
+Message-Id: <20091104173525.28463.40807.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+Subject: [PATCH 28/41] rt2x00: fix rt2x00pci_register_multi[read,write]() arguments
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] rt2x00: fix rt2x00pci_register_multi[read,write]() arguments
 
-Set the PSM support flag in the device configuration
-for the mac80211 stack. This will enable usage of powersave.
+Change type of 'length' argument from u16 to u32 (all arguments
+match rt2x00usb_register_multi[read,write]() ones now).
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800pci.h |    8 ++++----
+ drivers/net/wireless/rt2x00/rt2x00pci.h |   15 +++++++--------
+ 2 files changed, 11 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 43fdd45..90916ed 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1753,7 +1753,8 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
+Index: b/drivers/net/wireless/rt2x00/rt2800pci.h
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2800pci.h
++++ b/drivers/net/wireless/rt2x00/rt2800pci.h
+@@ -37,10 +37,10 @@ struct rt2800_ops {
  
- 	wl->hw->flags = IEEE80211_HW_SIGNAL_DBM |
- 		IEEE80211_HW_NOISE_DBM |
--		IEEE80211_HW_BEACON_FILTER;
-+		IEEE80211_HW_BEACON_FILTER |
-+		IEEE80211_HW_SUPPORTS_PS;
+ 	void (*register_multiread)(struct rt2x00_dev *rt2x00dev,
+ 				   const unsigned int offset,
+-				   void *value, const u16 length);
++				   void *value, const u32 length);
+ 	void (*register_multiwrite)(struct rt2x00_dev *rt2x00dev,
+ 				    const unsigned int offset,
+-				    const void *value, const u16 length);
++				    const void *value, const u32 length);
  
- 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
- 	wl->hw->wiphy->max_scan_ssids = 1;
--- 
-1.6.3.3
-
+ 	int (*regbusy_read)(struct rt2x00_dev *rt2x00dev,
+ 			    const unsigned int offset,
+@@ -76,7 +76,7 @@ static inline void rt2800_register_write
+ 
+ static inline void rt2800_register_multiread(struct rt2x00_dev *rt2x00dev,
+ 					     const unsigned int offset,
+-					     void *value, const u16 length)
++					     void *value, const u32 length)
+ {
+ 	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
+ 
+@@ -86,7 +86,7 @@ static inline void rt2800_register_multi
+ static inline void rt2800_register_multiwrite(struct rt2x00_dev *rt2x00dev,
+ 					      const unsigned int offset,
+ 					      const void *value,
+-					      const u16 length)
++					      const u32 length)
+ {
+ 	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
+ 
+Index: b/drivers/net/wireless/rt2x00/rt2x00pci.h
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2x00pci.h
++++ b/drivers/net/wireless/rt2x00/rt2x00pci.h
+@@ -53,10 +53,9 @@ static inline void rt2x00pci_register_re
+ 	*value = readl(rt2x00dev->csr.base + offset);
+ }
+ 
+-static inline void
+-rt2x00pci_register_multiread(struct rt2x00_dev *rt2x00dev,
+-			     const unsigned int offset,
+-			     void *value, const u16 length)
++static inline void rt2x00pci_register_multiread(struct rt2x00_dev *rt2x00dev,
++						const unsigned int offset,
++						void *value, const u32 length)
+ {
+ 	memcpy_fromio(value, rt2x00dev->csr.base + offset, length);
+ }
+@@ -68,10 +67,10 @@ static inline void rt2x00pci_register_wr
+ 	writel(value, rt2x00dev->csr.base + offset);
+ }
+ 
+-static inline void
+-rt2x00pci_register_multiwrite(struct rt2x00_dev *rt2x00dev,
+-			      const unsigned int offset,
+-			      const void *value, const u16 length)
++static inline void rt2x00pci_register_multiwrite(struct rt2x00_dev *rt2x00dev,
++						 const unsigned int offset,
++						 const void *value,
++						 const u32 length)
+ {
+ 	memcpy_toio(rt2x00dev->csr.base + offset, value, length);
+ }
