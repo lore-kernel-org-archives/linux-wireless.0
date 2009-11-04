@@ -1,74 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39254 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754176AbZK0Jd1 (ORCPT
+Received: from dmz4.indranet.co.nz ([203.97.93.68]:53422 "EHLO
+	mail.indranet.co.nz" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S932384AbZKDVM0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2009 04:33:27 -0500
-Subject: Re: [RFC 1/2] wireless: add ieee80211_asmdu_to_8023s
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1259314217.12157.3.camel@debian>
-References: <1259215413-16753-1-git-send-email-yi.zhu@intel.com>
-	 <1259229943.32372.50.camel@johannes.local>
-	 <1259290376.13126.219.camel@debian>
-	 <1259313653.5428.5.camel@johannes.local>  <1259314217.12157.3.camel@debian>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-xjCJEzVgZTLp9dcW4bbl"
-Date: Fri, 27 Nov 2009 10:33:27 +0100
-Message-ID: <1259314407.5428.8.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 4 Nov 2009 16:12:26 -0500
+Date: Thu, 5 Nov 2009 10:01:39 +1300 (NZDT)
+From: Derek Smithies <derek@indranet.co.nz>
+To: Christian Lamparter <chunkeey@googlemail.com>
+cc: Adam Wozniak <awozniak@irobot.com>, linux-wireless@vger.kernel.org,
+	nbd@openwrt.org
+Subject: Re: compat-wireless and minstrel
+In-Reply-To: <200911041653.33737.chunkeey@googlemail.com>
+Message-ID: <alpine.DEB.2.00.0911050951000.16407@kauri.acheron.indranet.co.nz>
+References: <4AF0D54D.4090303@irobot.com> <200911041653.33737.chunkeey@googlemail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
+On Wed, 4 Nov 2009, Christian Lamparter wrote:
 
---=-xjCJEzVgZTLp9dcW4bbl
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> On Wednesday 04 November 2009 02:13:49 Adam Wozniak wrote:
+>> I have two systems under test, both Dell laptops (a Latitude D630 and an
+>> Inspiron 600m) both running Ubuntu 9.10 with the latest updates, and
+>> bleeding edge compat-wireless-2009-11-02.  I'm using identical AR9170
+>> based D-Link DWA-160 USB 802.11adapters.  I'm using nuttcp to measure
+>> throughput.  I'm running in ad-hoc mode.  Both machines have the same
+>> ar9170 files in /lib/firmware.  The machines are sitting about 5 feet
+>> apart in my office.
+>>
+>> I'm having occasional problems where throughput drops through the floor
+>> (0.5Mbps - 1.5Mbps).  When I cat
+>> /sys/kernel/debug/ieee80211/*/stations/*/rc_stats, one of the machines
+>> lists the full set of rates, but the other only lists 1M and 54M.  After
+>> a period of time, that machine drops 54M and lists only one rate
+>> (1Mbps), and the throughput listed by nuttcp drops accordingly.  I
+>> assume that, for whatever reason, the rates drop off the list and
+>> minstrel uses the only one left available to it.
+>>
+>> If I modify include/net/mac80211.h and force the inline function
+>> rate_supported to always return 1, this fixes the problem.  However, I
+>> think this is a band aid around some other issue.
+>>
+>> Any clues or ideas what the real issue might be here?
 
-On Fri, 2009-11-27 at 17:30 +0800, Zhu Yi wrote:
-> On Fri, 2009-11-27 at 17:20 +0800, Johannes Berg wrote:
-> > Is it? I don't think so. Many drivers go up beyond that as far as I
-> > know. Then some do different things like putting it in a different DMA
-> > block.
-> >=20
-> > > While for those drivers really need a bigger
-> > > extra headroom and support Rx aggregation, this probably means
-> > > ieee80211_skb_resize. But the resize should always happen for every
-> > > packet from the IP stack, right?
-> >=20
-> > No, davem and I optimised that away a long time ago via using
-> > netdev->needed_headroom and netdev->needed_tailroom. It even works for
-> > bridges and their slave devices, iirc.=20
->=20
-> I missed this. Will check it. If so, I'll add another parameter to pass
-> the extra hw tx headroom to ieee80211_asmdu_to_8023s.
+My guess::
 
-The thing is that I'm not even sure if we can possibly forward a frame
-after this deaggregation. I'll poke at the code.
+When an adhoc node (call it A) merges with a second adhoc node (call it 
+B) there is a capability comparison.
+Node A looks at the rates supported by B and says,
+   "I must only transmit at rates supported by B"
 
-johannes
+Some management frames don't contain a full report of the rates supported 
+by the sender.
+My view is that node A (in this example) is incorrectly determining that B 
+only supports the 1mb/sec rate. Consequently, node A fills the 
+rate_supported  array with one rate - 1mb/sec.
 
---=-xjCJEzVgZTLp9dcW4bbl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+=====
 
------BEGIN PGP SIGNATURE-----
+There is no evidence that Minstrel is doing anything wrong.
 
-iQIcBAABAgAGBQJLD5zkAAoJEODzc/N7+QmaF94QAIODJ8eym78eUMCWjbi9/Kpw
-gs95Fms5X4SpNNU5calL4d8l5/PKyzWI0OG505q8u2TsF6aNW8bkyjNaJd23+lbp
-lqkzKuTE37Pyhdju3Psbtkbt5LfyG8YkFPolfQOqxwLWf2cdTJr9cFr4N5N/TzRe
-+ZYgKTlHAhvKa4JEy4t8/gh4fXbmbJp4XOHp8duEIrDF08k00jQ5dkHCmAZED0RN
-c+ZomM13kSa1W75Wf5wVvw2cESEiTS0HkR4mDhzAd+6SsMzfPFQ7npFVKFUaHd4g
-2mC0EgzIY1XKLrMdUlSMHtI4aAMsuMc4zg5sAPakjWx6fXIg4/83ajCYKER0C8Vf
-qQIFf8GmF40XyF5iCjsgTRcNuaXxBYXjpH5Nst+aDxN9iqmlqu4tlQoqgnR4ajA2
-MHDh8W6UNiIX4ZTj7LItMMjnC2E56669UxG/UjAUPYr+iayHYhQ9hTBrilihcHIG
-XGGSIJ/YX0mTNE3SSAgKm5+reYQi2q/winIlYGFQQAc6o9WTLxiYt/xpNjc+tqpG
-WM5oYUEFblUvm0dBLZfbR0Tm6oKogn81Vctr8mQ19PtS1FiGExw6+2wPy4PE+H9I
-F6kcCo2xRSNaz3PDm2jbd8XGigFy0baIXKQ7ysGzNjlBohuhKq6RcEQqH4hheLBt
-mbmTCkVl+sx4i2Z4zOpT
-=/z01
------END PGP SIGNATURE-----
+The original poster's report of examining
+>> /sys/kernel/debug/ieee80211/*/stations/*/rc_stats
+is very important, as it shows exactly what minstrel is doing.
 
---=-xjCJEzVgZTLp9dcW4bbl--
+When examining network problems, one should always check the rc_stats 
+file. This tells you much about what is going on in the radio medium.
 
+Derek.
+
+Derek Smithies Ph.D. 
+IndraNet Technologies Ltd. 
+ph +64 3 365 6485 
+Web: http://www.indranet-technologies.com/
+
+"The only thing IE should be used for is to download Fire Fox"
+
+"My favorite language is call STAR. It's extremely concise. It has
+  exactly one verb '*', which does exactly what I want at the moment."
+     --Larry Wall
