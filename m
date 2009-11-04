@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:59244 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752811AbZKLThj (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54564 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756922AbZKDRAO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 14:37:39 -0500
-Received: by fxm21 with SMTP id 21so2630257fxm.21
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 11:37:44 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: tim.gardner@canonical.com
-Subject: Re: Prism54/p54pci
-Date: Thu, 12 Nov 2009 20:37:38 +0100
-Cc: James Grossmann <cctsurf@gmail.com>, linux-wireless@vger.kernel.org
-References: <167ae39b0910071400n218d3d9ey7711b1011f290a73@mail.gmail.com> <200911121717.36906.chunkeey@googlemail.com> <4AFC5A5E.1050405@canonical.com>
-In-Reply-To: <4AFC5A5E.1050405@canonical.com>
+	Wed, 4 Nov 2009 12:00:14 -0500
+Date: Wed, 4 Nov 2009 11:49:38 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>, sidhayn@gmail.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8187: Fix kernel oops when device is removed when
+	LEDS enabled (Bugzilla #14539)
+Message-ID: <20091104164938.GG12965@tuxdriver.com>
+References: <4af11879./IumKJ+RAbw7Zkq6%Larry.Finger@lwfinger.net> <20091104151132.GD12965@tuxdriver.com> <200911041630.20122.chunkeey@googlemail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200911122037.39145.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200911041630.20122.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 12 November 2009 19:56:30 Tim Gardner wrote:
-> Christian Lamparter wrote:
-> > On Friday 06 November 2009 21:52:42 James Grossmann wrote:
-> >> my caps lock & scroll lock leds are not blinking, and yet the computer
-> >> is frozen.  (I'm not the best at terminology, I guess that might not
-> >> be defined as a hard lock.)  I get no odd messages in my syslog.  I am
-> >> using Ubuntu right now, so I'm guessing that they have all the
-> >> prettyness going that they can, covering the important messages, but
-> >> as it's not an actual oops, I'm not certain that's hurting us.
-> > just a update:
-> > 
-> > I can confirm the freeze with ubuntu 9.10 (2.6.31-14 & 2.6.31-15-generic)
-> > + compat-wireless + p54pci (either as backport module or compiled from git).
-> > The original modules (shipped with 2.6.31-14/15) are fine though..?!
->
-> The Ubuntu Karmic linux-backports-modules package is based on
-> compat-wireless-2.6.32-rc4. I'm wondering if its something specific to
-> the p54pci driver? I'm using iwlagn (4965) from that package with no
-> problems (so far).
+On Wed, Nov 04, 2009 at 04:30:19PM +0100, Christian Lamparter wrote:
+> On Wednesday 04 November 2009 16:11:33 John W. Linville wrote:
 
-I put a ath5k card into the same machine and tried with the same
-compat-wireless modules. Surprise, surprise: no problems...
+> > This seems like a band-aid.  If anything, the original order would
+> > seem to make more sense.
+> 
+> really?
+> 
+> take this code from led-class.c
+> 
+> void led_classdev_unregister(struct led_classdev *led_cdev)
+> {
+>         device_remove_file(led_cdev->dev, &dev_attr_max_brightness);
+>         device_remove_file(led_cdev->dev, &dev_attr_brightness);
+> #ifdef CONFIG_LEDS_TRIGGERS
+>         device_remove_file(led_cdev->dev, &dev_attr_trigger);
+>         down_write(&led_cdev->trigger_lock);
+>         if (led_cdev->trigger)
+>                 led_trigger_set(led_cdev, NULL);
+>         up_write(&led_cdev->trigger_lock);
+> #endif
+> 
+>         device_unregister(led_cdev->dev);
+> 
+>         down_write(&leds_list_lock);
+>         list_del(&led_cdev->node);
+>         up_write(&leds_list_lock);
+> }
+> 
+> as you can see the led is switched-off right before the device is unregistered.
+> but rtl8187, p54 & ar9170 led-triggers are timed & asynchronous. So
+> we really need a cancel_delayed_work_sync after the unregister routine
+> finished... else the timed trigger might fire when the device/module
+> is _faded_ from memory.
 
-The affected device works fine with the current wireless-testing(pulled today)
-and a vanilla 2.6.31.6 + compat-wireless (from today's git).
+OK, I got it...the unregister can queue-up more work.  Thanks for
+the explanation.
 
-I've no idea what voodoo is going on here, maybe there is
-something wrong in compat-wireless pci glue code (if there's any?!)
-
-> Its not clear what version of stable compat-wireless you've tried.
-> Does compat-wireless-2.6.32-rc6 exhibit the same problem?
-"compiled from git", which should be compat-wireless-2009-11-12.tar.bz2
-and therefore -rc6.
-
-Regards,
-	Chr
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
