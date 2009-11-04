@@ -1,73 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57446 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751198AbZKQOIN (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:55667 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756787AbZKDPaW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 09:08:13 -0500
-Subject: Re: [RFC] mac80211: disallow bridging managed/adhoc interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <200911171504.54170.mb@bu3sch.de>
-References: <1258465585.3682.7.camel@johannes.local>
-	 <200911171504.54170.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-3hmV4QFY8KyHA4HerZrN"
-Date: Tue, 17 Nov 2009 15:07:48 +0100
-Message-ID: <1258466868.3682.13.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 4 Nov 2009 10:30:22 -0500
+Received: by ewy3 with SMTP id 3so3208473ewy.37
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 07:30:26 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] rtl8187: Fix kernel oops when device is removed when LEDS enabled (Bugzilla #14539)
+Date: Wed, 4 Nov 2009 16:30:19 +0100
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	"Hin-Tak Leung" <htl10@users.sourceforge.net>, sidhayn@gmail.com,
+	linux-wireless@vger.kernel.org
+References: <4af11879./IumKJ+RAbw7Zkq6%Larry.Finger@lwfinger.net> <20091104151132.GD12965@tuxdriver.com>
+In-Reply-To: <20091104151132.GD12965@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200911041630.20122.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 04 November 2009 16:11:33 John W. Linville wrote:
+> On Wed, Nov 04, 2009 at 12:00:25AM -0600, Larry Finger wrote:
+> > As reported by Rick Farina (sidhayn@gmail.com), removing the RTL8187 USB
+> > stick, or unloading the driver rtl8187 using rmmod will cause a kernel oops.
+> > There are at least two forms of the failure, (1) BUG: Scheduling while atomic,
+> > and (2) a fatal kernel page fault. This problem is reported in Bugzilla #14539.
+> > 
+> > This problem does not occur for kernel 2.6.31, but does for 2.6.32-rc2, thus
+> > it is technically a regression; however, bisection did not locate any faulty
+> > patch. The fix was found by comparing the faulty code in rtl8187 with p54usb.
+> > My interpretation is that the handling of work queues in mac80211 changed
+> > enough to the LEDs to be unregistered before tasks on the work queues are
+> > cancelled. Previously, these actions could be done in either order.
+> > 
+> > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> > Reported-and-tested by: Rick Farina <sidhayn@gmail.com>
+> > ---
+> > 
+> > John,
+> > 
+> > This is 2.6.32 material. Sorry to take so long to get a patch, but it was
+> > difficult for me to locate the problem. Fortunately, I had the postings of the
+> > two flame wars to amuse me while all the kernel compilations were happening.
+> > 
+> > Larry
+> > ---
+> > 
+> > Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
+> > ===================================================================
+> > --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_leds.c
+> > +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
+> > @@ -210,10 +210,10 @@ void rtl8187_leds_exit(struct ieee80211_
+> >  
+> >  	/* turn the LED off before exiting */
+> >  	ieee80211_queue_delayed_work(dev, &priv->led_off, 0);
+> > -	cancel_delayed_work_sync(&priv->led_off);
+> > -	cancel_delayed_work_sync(&priv->led_on);
+> >  	rtl8187_unregister_led(&priv->led_rx);
+> >  	rtl8187_unregister_led(&priv->led_tx);
+> > +	cancel_delayed_work_sync(&priv->led_off);
+> > +	cancel_delayed_work_sync(&priv->led_on);
+> >  }
+> >  #endif /* def CONFIG_RTL8187_LED */
+> >  
+> 
+> This seems like a band-aid.  If anything, the original order would
+> seem to make more sense.
 
---=-3hmV4QFY8KyHA4HerZrN
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+really?
 
-On Tue, 2009-11-17 at 15:04 +0100, Michael Buesch wrote:
-> On Tuesday 17 November 2009 14:46:25 Johannes Berg wrote:
-> > --- wireless-testing.orig/net/bridge/br_if.c	2009-11-17 14:19:17.000000=
-000 +0100
-> > +++ wireless-testing/net/bridge/br_if.c	2009-11-17 14:20:03.000000000 +=
-0100
-> > @@ -390,6 +390,10 @@ int br_add_if(struct net_bridge *br, str
-> >  	if (dev->br_port !=3D NULL)
-> >  		return -EBUSY;
-> > =20
-> > +	/* No bridging devices that dislike that (e.g. wireless) */
-> > +	if (dev->priv_flags & IFF_DONT_BRIDGE)
-> > +		return -EINVAL;
->=20
-> -EOPNOTSUPP?
-> That would probably produce a better error message in userspace.
+take this code from led-class.c
 
-Good idea, will wait a bit for other comments and fix this when I send
-as [PATCH].
+void led_classdev_unregister(struct led_classdev *led_cdev)
+{
+        device_remove_file(led_cdev->dev, &dev_attr_max_brightness);
+        device_remove_file(led_cdev->dev, &dev_attr_brightness);
+#ifdef CONFIG_LEDS_TRIGGERS
+        device_remove_file(led_cdev->dev, &dev_attr_trigger);
+        down_write(&led_cdev->trigger_lock);
+        if (led_cdev->trigger)
+                led_trigger_set(led_cdev, NULL);
+        up_write(&led_cdev->trigger_lock);
+#endif
 
-johannes
+        device_unregister(led_cdev->dev);
 
---=-3hmV4QFY8KyHA4HerZrN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+        down_write(&leds_list_lock);
+        list_del(&led_cdev->node);
+        up_write(&leds_list_lock);
+}
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLAq4xAAoJEODzc/N7+QmaIKAP/ApVx7BEWNYy2bOcZn3GcU3r
-I1g5YkFjWJe5m8XIaAfx3cZ0yrnOx064iAC+16AhaZnYYzRbol+6EVqV8iGRbslW
-lv6ZM7Io74/cJCiQI07NDyFZJLIpKk0RxeTZgrOPwtO7fVxRw9C/b3I6QPd9ypaV
-Ei/RqUIiJEn6NIH+80Dv63Q5edy50Tk+KrNsfNGOOhTwg4ql4DSP3aAxDvnBODxO
-OV2cvENI3M/ji3nbYCgixUjjG0uWG9GuJrY5u2EyZd1tJlyjRHyiT7JMFAVxYnhX
-ReRBKRzjH3IP8Mh/f/Y20RC/TX9KzcMaGKkkSrUYFFLyFbButkB4hM+7ISVR/OEW
-n+rqcMSrR4TqQcMia3w8okXHzdpBnTDw9u7jOS4cU7/U9rIooXQ32ODTPbBXvwd+
-FhCavfiLuHV/z6UFyr4sGT60eSIeH2NrIVu3JTBfuxnbI+NV89szbOgIJG/RDQaB
-ssjWL3G6NX8DLULIu9SduPtzy4nZI2uYsPpI5H5GLV1XZYu/8U6Ja5WSN1vvXF6D
-vMNqtkTkbSkLzutRV7AtOCAVE+NUHcptzsJQDHgnM5Gtj3E37es/g9GyKWW3Pd/X
-6YjpmoTuOQnhHQv/th6nuZheMzIU3DDcl+hfn5s8MCO6FFqjRhiP7NQr7DXacDxY
-O00KLydlTXNwnKAfrpfn
-=6DsT
------END PGP SIGNATURE-----
-
---=-3hmV4QFY8KyHA4HerZrN--
-
+as you can see the led is switched-off right before the device is unregistered.
+but rtl8187, p54 & ar9170 led-triggers are timed & asynchronous. So
+we really need a cancel_delayed_work_sync after the unregister routine
+finished... else the timed trigger might fire when the device/module
+is _faded_ from memory.
+ 
