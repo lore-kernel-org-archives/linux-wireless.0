@@ -1,34 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:53696 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751482AbZK0N35 (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:42692 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756158AbZKDPZg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2009 08:29:57 -0500
-Received: by bwz27 with SMTP id 27so1171393bwz.21
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2009 05:30:03 -0800 (PST)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/12] wl1251 WMM support and minor fixes
-References: <20091126150141.917.35278.stgit@tikku>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 27 Nov 2009 15:30:01 +0200
-In-Reply-To: <20091126150141.917.35278.stgit@tikku> (Kalle Valo's message of "Thu\, 26 Nov 2009 17\:08\:22 +0200")
-Message-ID: <87ljhs859i.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 4 Nov 2009 10:25:36 -0500
+Date: Wed, 4 Nov 2009 07:23:15 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: David Miller <davem@davemloft.net>
+Cc: johannes@sipsolutions.net, marcel@holtmann.org,
+	dmitry.torokhov@gmail.com, torvalds@linux-foundation.org,
+	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Please consider reverting
+ 7d930bc33653d5592dc386a76a38f39c2e962344
+Message-Id: <20091104072315.18f56322.akpm@linux-foundation.org>
+In-Reply-To: <20091104.004157.86565200.davem@davemloft.net>
+References: <1257232587.3420.55.camel@localhost.localdomain>
+	<1257234299.28469.25.camel@johannes.local>
+	<20091103223433.23765578.akpm@linux-foundation.org>
+	<20091104.004157.86565200.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kalle.valo@iki.fi> writes:
+On Wed, 04 Nov 2009 00:41:57 -0800 (PST) David Miller <davem@davemloft.net> wrote:
 
-Hi John,
+> From: Andrew Morton <akpm@linux-foundation.org>
+> Date: Tue, 3 Nov 2009 22:34:33 -0800
+> 
+> > Problem is, subsystem maintainers are very unreliable.
+> 
+> This is common, but not universal Andrew.
 
-> here are few patches for wl1251. Now there is WMM support and also some
-> minor fixes. The patchset applies on top of the wl1251 power save fixes I
-> sent earlier today.
+That's what I said too.
 
-Please drop this patch set. I have to resend it again without patch 6
-(the unnecessary unaligned memmove Johannes pointed out).
+> Or, if it is, what patches from you have I been sitting on? :-)
 
--- 
-Kalle Valo
+zippo.  Although if you can help these:
+
+isdn-hisax-fix-lock-imbalance.patch
+hfc_usb-fix-read-buffer-overflow.patch
+misdn-fix-reversed-if-in-st_own_ctrl.patch
+isdn-eicon-use-offsetof.patch
+isdn-eicon-return-on-error.patch
+hisax-fix-test-in-waitforxfw.patch
+
+move forward it'd be nice!
