@@ -1,90 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:36630 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753307AbZK3ISS (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:60161 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757622AbZKDTUQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2009 03:18:18 -0500
-Subject: [PATCH v2 01/11] wl1251: add tx queue status to debugfs
-To: linville@tuxdriver.com
-From: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 30 Nov 2009 10:17:38 +0200
-Message-ID: <20091130081738.17360.1065.stgit@tikku>
-In-Reply-To: <20091130081706.17360.48084.stgit@tikku>
-References: <20091130081706.17360.48084.stgit@tikku>
+	Wed, 4 Nov 2009 14:20:16 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20091104173327.28463.25410.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+	 <20091104173327.28463.25410.sendpatchset@localhost.localdomain>
+Date: Wed, 4 Nov 2009 20:20:21 +0100
+Message-ID: <14add3d10911041120u7dfe884dsb5249eb96a14b4c6@mail.gmail.com>
+Subject: Re: [PATCH 12/41] rt2800pci: add rt2800_register_multi[read,write]()
+	wrappers
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+On Wed, Nov 4, 2009 at 6:33 PM, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2800pci: add rt2800_register_multi[read,write]() wrappers
+>
+> Part of preparations for later code unification.
+>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
 
-Sometimes when debugging the state is good info.
+For what it is worth:
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1251.h         |    1 +
- drivers/net/wireless/wl12xx/wl1251_debugfs.c |   23 +++++++++++++++++++++++
- 2 files changed, 24 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1251.h b/drivers/net/wireless/wl12xx/wl1251.h
-index 054533f..6301578 100644
---- a/drivers/net/wireless/wl12xx/wl1251.h
-+++ b/drivers/net/wireless/wl12xx/wl1251.h
-@@ -247,6 +247,7 @@ struct wl1251_debugfs {
- 	struct dentry *rxpipe_tx_xfr_host_int_trig_rx_data;
- 
- 	struct dentry *tx_queue_len;
-+	struct dentry *tx_queue_status;
- 
- 	struct dentry *retry_count;
- 	struct dentry *excessive_retries;
-diff --git a/drivers/net/wireless/wl12xx/wl1251_debugfs.c b/drivers/net/wireless/wl12xx/wl1251_debugfs.c
-index a007230..0ccba57 100644
---- a/drivers/net/wireless/wl12xx/wl1251_debugfs.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_debugfs.c
-@@ -237,6 +237,27 @@ static const struct file_operations tx_queue_len_ops = {
- 	.open = wl1251_open_file_generic,
- };
- 
-+static ssize_t tx_queue_status_read(struct file *file, char __user *userbuf,
-+				    size_t count, loff_t *ppos)
-+{
-+	struct wl1251 *wl = file->private_data;
-+	char buf[3], status;
-+	int len;
-+
-+	if (wl->tx_queue_stopped)
-+		status = 's';
-+	else
-+		status = 'r';
-+
-+	len = scnprintf(buf, sizeof(buf), "%c\n", status);
-+	return simple_read_from_buffer(userbuf, count, ppos, buf, len);
-+}
-+
-+static const struct file_operations tx_queue_status_ops = {
-+	.read = tx_queue_status_read,
-+	.open = wl1251_open_file_generic,
-+};
-+
- static void wl1251_debugfs_delete_files(struct wl1251 *wl)
- {
- 	DEBUGFS_FWSTATS_DEL(tx, internal_desc_overflow);
-@@ -331,6 +352,7 @@ static void wl1251_debugfs_delete_files(struct wl1251 *wl)
- 	DEBUGFS_FWSTATS_DEL(rxpipe, tx_xfr_host_int_trig_rx_data);
- 
- 	DEBUGFS_DEL(tx_queue_len);
-+	DEBUGFS_DEL(tx_queue_status);
- 	DEBUGFS_DEL(retry_count);
- 	DEBUGFS_DEL(excessive_retries);
- }
-@@ -431,6 +453,7 @@ static int wl1251_debugfs_add_files(struct wl1251 *wl)
- 	DEBUGFS_FWSTATS_ADD(rxpipe, tx_xfr_host_int_trig_rx_data);
- 
- 	DEBUGFS_ADD(tx_queue_len, wl->debugfs.rootdir);
-+	DEBUGFS_ADD(tx_queue_status, wl->debugfs.rootdir);
- 	DEBUGFS_ADD(retry_count, wl->debugfs.rootdir);
- 	DEBUGFS_ADD(excessive_retries, wl->debugfs.rootdir);
- 
-
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
