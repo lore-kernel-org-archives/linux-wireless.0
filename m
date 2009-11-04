@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:36687 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755113AbZKIWBT (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:42263 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758220AbZKDWE0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 17:01:19 -0500
-Received: by ewy3 with SMTP id 3so3629113ewy.37
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 14:01:24 -0800 (PST)
-Message-ID: <4AF89132.4090508@gmail.com>
-Date: Mon, 09 Nov 2009 23:01:22 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Wed, 4 Nov 2009 17:04:26 -0500
+Received: by iwn10 with SMTP id 10so5316202iwn.4
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 14:04:31 -0800 (PST)
 MIME-Version: 1.0
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Gertjan van Wingerde <gwingerde@wingerd.gvw.nl>
-Subject: Re: [PATCH 6/9] rt2x00: Fix typo in rf programming of rt2800lib.
-References: <1257803751-5265-1-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1257803751-5265-1-git-send-email-gwingerde@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20091104220034.GI10555@parisc-linux.org>
+References: <43e72e890911041204n55b54f8iace79938b40baa32@mail.gmail.com>
+	<40f31dec0911041212p16cfc78eia1ab1817e425e767@mail.gmail.com>
+	<43e72e890911041330j581e7bacp4e7b83a11c1de0e8@mail.gmail.com>
+	<43e72e890911041336n7ffae0d2u135321a588f3e613@mail.gmail.com>
+	<43e72e890911041352i334e170at71a519383d48a08@mail.gmail.com>
+	<43e72e890911041352n3a398b41h8927387c228661c5@mail.gmail.com>
+	<20091104220034.GI10555@parisc-linux.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 4 Nov 2009 14:04:11 -0800
+Message-ID: <43e72e890911041404q5f491bbbw123d8761037f9c63@mail.gmail.com>
+Subject: Re: pci_set_mwi() and ath5k
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel@lists.ath5k.org,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	Kyle McMartin <kyle@mcmartin.ca>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/09/09 22:55, Gertjan van Wingerde wrote:
-> From: Gertjan van Wingerde <gwingerde@wingerd.gvw.nl>
-> 
-> Fix a type in rt2800_config_channel_rt3x. The second write to RF register 2 should be to RF register 3.
-> This is confirmed by the legacy Ralink code.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 24b3af4..2c91c44 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -774,7 +774,7 @@ static void rt2800_config_channel_rt3x(struct rt2x00_dev *rt2x00dev,
->  	u8 rfcsr;
->  
->  	rt2800_rfcsr_write(rt2x00dev, 2, rf->rf1);
-> -	rt2800_rfcsr_write(rt2x00dev, 2, rf->rf3);
-> +	rt2800_rfcsr_write(rt2x00dev, 3, rf->rf3);
->  
->  	rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
->  	rt2x00_set_field8(&rfcsr, RFCSR6_R, rf->rf2);
+On Wed, Nov 4, 2009 at 2:00 PM, Matthew Wilcox <matthew@wil.cx> wrote:
+> On Wed, Nov 04, 2009 at 01:52:30PM -0800, Luis R. Rodriguez wrote:
+>> > Even better: I just confirmation from our systems team that our legacy
+>> > devices and 11n PCI devices don't support MWR so I'll remove all that
+>> > cruft crap.
+>>
+>> I meant MWI of course.
+>
+> Yes, but they don't necessarily just use cacheline size for MWI ... some
+> devices use cacheline size for setting up data structures.  Might be
+> worth just checking explicitly that they don't use the cacheline size
+> register for anything.
 
+Oh right -- so the typical Atheros hack for this is to check the cache
+line size, and if its 0 set it to L1_CACHE_BYTES. Then eventually read
+from PCI_CACHE_LINE_SIZE pci config to align the skb data. So what I
+was doing now is removing all this cruft and replacing it with a
+generic allocator for atheros drivers that aligns simply to the
+L1_CACHE_BYTES. Sound kosher?
 
-Please disregard this one. I goofed up the subject of the email again. Will resubmit as a single patch.
-
----
-Gertjan.
+  Luis
