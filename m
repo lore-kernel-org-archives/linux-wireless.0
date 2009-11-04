@@ -1,39 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:56144 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753209AbZKAUDC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Nov 2009 15:03:02 -0500
-Message-ID: <4AEDE973.1090907@gmx.net>
-Date: Sun, 01 Nov 2009 21:02:59 +0100
-From: Frank Schaefer <schaefer.frank@gmx.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	chunkeey@web.de
-Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB
- N devices in cdrom mode
-References: <200910171606.02961.oliver@neukum.org>	 <Pine.LNX.4.44L0.0910171130550.25594-100000@netrider.rowland.org>	 <20091017220313.GH24502@one-eyed-alien.net> <4ADC3657.6080906@gmx.net>	 <4AEDCCA0.8050709@gmx.net> <1257100045.3555.160.camel@johannes.local>
-In-Reply-To: <1257100045.3555.160.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+Received: from fg-out-1718.google.com ([72.14.220.152]:7702 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932372AbZKDRhJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2009 12:37:09 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 04 Nov 2009 18:36:50 +0100
+Message-Id: <20091104173650.28463.23162.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+Subject: [PATCH 39/41] rt2x00: move REGISTER_BUSY_* definitions to rt2x00.h
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg schrieb:
-> On Sun, 2009-11-01 at 19:00 +0100, Frank Schaefer wrote:
->
->   
->> The attached patch adds the mode-switching-procedure to the WLAN-driver
->> (ar9170usb) and disables the storage device in the usb-storage-driver.
->>     
->
-> This patch looks weird. Have you looked at zd1211rw, which also does
-> this? I think it just adds something to usb-storage for the device IDs?
->
-> johannes
->   
-Well, AFAICS, the zd1211rw does exactly what I suggest with my patch ?!
-It calls a function eject_installer(...) for these devices in the
-modules' probe-function which sends a single usb_bulk_msg.
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] rt2x00: move REGISTER_BUSY_* definitions to rt2x00.h
 
-Frank
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h    |    9 +++++++++
+ drivers/net/wireless/rt2x00/rt2x00pci.h |    9 ---------
+ drivers/net/wireless/rt2x00/rt2x00usb.h |    6 ------
+ 3 files changed, 9 insertions(+), 15 deletions(-)
 
+Index: b/drivers/net/wireless/rt2x00/rt2x00.h
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -857,6 +857,15 @@ struct rt2x00_dev {
+ };
+ 
+ /*
++ * Register defines.
++ * Some registers require multiple attempts before success,
++ * in those cases REGISTER_BUSY_COUNT attempts should be
++ * taken with a REGISTER_BUSY_DELAY interval.
++ */
++#define REGISTER_BUSY_COUNT	5
++#define REGISTER_BUSY_DELAY	100
++
++/*
+  * Generic RF access.
+  * The RF is being accessed by word index.
+  */
+Index: b/drivers/net/wireless/rt2x00/rt2x00pci.h
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2x00pci.h
++++ b/drivers/net/wireless/rt2x00/rt2x00pci.h
+@@ -35,15 +35,6 @@
+ #define PCI_DEVICE_DATA(__ops)	.driver_data = (kernel_ulong_t)(__ops)
+ 
+ /*
+- * Register defines.
+- * Some registers require multiple attempts before success,
+- * in those cases REGISTER_BUSY_COUNT attempts should be
+- * taken with a REGISTER_BUSY_DELAY interval.
+- */
+-#define REGISTER_BUSY_COUNT	5
+-#define REGISTER_BUSY_DELAY	100
+-
+-/*
+  * Register access.
+  */
+ static inline void rt2x00pci_register_read(struct rt2x00_dev *rt2x00dev,
+Index: b/drivers/net/wireless/rt2x00/rt2x00usb.h
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.h
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
+@@ -39,17 +39,11 @@
+ #define USB_DEVICE_DATA(__ops)	.driver_info = (kernel_ulong_t)(__ops)
+ 
+ /*
+- * Register defines.
+- * Some registers require multiple attempts before success,
+- * in those cases REGISTER_BUSY_COUNT attempts should be
+- * taken with a REGISTER_BUSY_DELAY interval.
+  * For USB vendor requests we need to pass a timeout
+  * time in ms, for this we use the REGISTER_TIMEOUT,
+  * however when loading firmware a higher value is
+  * required. In that case we use the REGISTER_TIMEOUT_FIRMWARE.
+  */
+-#define REGISTER_BUSY_COUNT		5
+-#define REGISTER_BUSY_DELAY		100
+ #define REGISTER_TIMEOUT		500
+ #define REGISTER_TIMEOUT_FIRMWARE	1000
+ 
