@@ -1,42 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f202.google.com ([209.85.211.202]:41168 "EHLO
-	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759904AbZKFWME (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:5665 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932360AbZKDRfh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 17:12:04 -0500
-Received: by ywh40 with SMTP id 40so1289657ywh.33
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 14:12:10 -0800 (PST)
-Subject: Re: Changing from Minstrel to PID
-From: =?ISO-8859-1?Q?Mart=EDn?= Ernesto Barreyro
-	<barreyromartin@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20091106214803.GL2782@tuxdriver.com>
-References: <1257542956.6565.2.camel@localhost.localdomain>
-	 <20091106214803.GL2782@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 06 Nov 2009 19:13:26 -0300
-Message-ID: <1257545606.3752.2.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Wed, 4 Nov 2009 12:35:37 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 04 Nov 2009 18:35:18 +0100
+Message-Id: <20091104173518.28463.61728.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+Subject: [PATCH 27/41] rt2x00: fix rt2x00usb_regbusy_read() arguments
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El vie, 06-11-2009 a las 16:48 -0500, John W. Linville escribió:
-> On Fri, Nov 06, 2009 at 06:29:16PM -0300, Martín Ernesto Barreyro wrote:
-> > Hello, I have a rtl8187 wireless card and I've allways have problems
-> > with the rate control using minstrel. So everytime my kernel updates
-> > (recently it went from 2.30 to 2.31) i have to recompile mi kernel
-> > setting pid as my default rate control algorithm.
-> > 
-> > Is there a way to change that without compiling the kernel?
-> 
-> No, but I wish there were...patches?  Anyone?
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] rt2x00: fix rt2x00usb_regbusy_read() arguments
 
-Sorry for my ignorance, but how could I send a parameter to a module or
-use a configuration file? could be with sysctl?
+Add const to 'field' argument of rt2x00usb_regbusy_read()
+(all arguments match rt2x00pci_regbusy_read() ones now).
 
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.h |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00usb.c |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00usb.h |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
--- 
-Martín Ernesto Barreyro <barreyromartin@gmail.com>
-Analista Universitario en Redes de Datos.
-
+Index: b/drivers/net/wireless/rt2x00/rt2800usb.h
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2800usb.h
++++ b/drivers/net/wireless/rt2x00/rt2800usb.h
+@@ -44,7 +44,7 @@ struct rt2800_ops {
+ 
+ 	int (*regbusy_read)(struct rt2x00_dev *rt2x00dev,
+ 			    const unsigned int offset,
+-			    struct rt2x00_field32 field, u32 *reg);
++			    const struct rt2x00_field32 field, u32 *reg);
+ };
+ 
+ static inline void rt2800_register_read(struct rt2x00_dev *rt2x00dev,
+Index: b/drivers/net/wireless/rt2x00/rt2x00usb.c
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -156,7 +156,7 @@ EXPORT_SYMBOL_GPL(rt2x00usb_vendor_reque
+ 
+ int rt2x00usb_regbusy_read(struct rt2x00_dev *rt2x00dev,
+ 			   const unsigned int offset,
+-			   struct rt2x00_field32 field,
++			   const struct rt2x00_field32 field,
+ 			   u32 *reg)
+ {
+ 	unsigned int i;
+Index: b/drivers/net/wireless/rt2x00/rt2x00usb.h
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.h
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
+@@ -365,7 +365,7 @@ static inline void rt2x00usb_register_mu
+  */
+ int rt2x00usb_regbusy_read(struct rt2x00_dev *rt2x00dev,
+ 			   const unsigned int offset,
+-			   struct rt2x00_field32 field,
++			   const struct rt2x00_field32 field,
+ 			   u32 *reg);
+ 
+ /*
