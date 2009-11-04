@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:63971 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754757AbZKFSYu (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:5665 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932305AbZKDRfF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 13:24:50 -0500
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 35/41] rt2800: prepare for rt2800lib addition
-Date: Fri, 6 Nov 2009 19:24:52 +0100
-Cc: linux-wireless@vger.kernel.org,
+	Wed, 4 Nov 2009 12:35:05 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
 	Gertjan van Wingerde <gwingerde@gmail.com>,
 	linux-kernel@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173617.28463.6733.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173617.28463.6733.sendpatchset@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911061924.52696.IvDoorn@gmail.com>
+Date: Wed, 04 Nov 2009 18:34:46 +0100
+Message-Id: <20091104173446.28463.62662.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+Subject: [PATCH 23/41] rt2x00: add driver private field to struct rt2x00_dev
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] rt2x00: add driver private field to struct rt2x00_dev
 
-> @@ -2644,6 +2658,8 @@ static int rt2800usb_probe_hw(struct rt2
->  {
->  	int retval;
->  
-> +	rt2x00_set_chip_intf(rt2x00dev, RT2X00_CHIP_INTF_USB);
-> +
->  	rt2x00dev->priv = (void *)&rt2800usb_rt2800_ops;
->  
->  	/*
-> 
+Enhance rt2x00 infrastructure by adding driver specific field to
+struct rt2x00_dev.
 
-Another afterthought, so perhaps you could make it an incremental patch.
-Could you move the rt2x00_set_chip_intf() to rt2x00pci and rt2x00usb?
-That way the field will be set automatically for all drivers early during probe.
+The new field will be used by rt2800 drivers for chipset registers
+access abstraction layer.
 
-Thanks,
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-Ivo
+Index: b/drivers/net/wireless/rt2x00/rt2x00.h
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -842,6 +842,11 @@ struct rt2x00_dev {
+ 	 * Firmware image.
+ 	 */
+ 	const struct firmware *fw;
++
++	/*
++	 * Driver specific data.
++	 */
++	void *priv;
+ };
+ 
+ /*
