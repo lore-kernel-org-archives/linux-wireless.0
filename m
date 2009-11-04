@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35014 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753059AbZKLSuQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 13:50:16 -0500
-Subject: Re: Looking for the datasheet of zd1211rw...
-From: Dan Williams <dcbw@redhat.com>
-To: Simon Raffeiner <sturmflut@lieberbiber.de>
-Cc: Andrey Yurovsky <andrey@cozybit.com>,
-	tomas zheng <tomaswlan.zheng@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1258051444.2347.124.camel@localhost.localdomain>
-References: <1d91afb90911112231n54696c5fh950ba0102740d444@mail.gmail.com>
-	 <45e8e6c40911112302s7c5c3e5cq496289512410ecba@mail.gmail.com>
-	 <200911120847.44150.sturmflut@lieberbiber.de>
-	 <1258051444.2347.124.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Thu, 12 Nov 2009 10:50:00 -0800
-Message-Id: <1258051800.2347.127.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34527 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758296AbZKDWPM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2009 17:15:12 -0500
+Date: Wed, 4 Nov 2009 17:12:07 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Ingo Molnar <mingo@elte.hu>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jarek Poplawski <jarkao2@gmail.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Miller <davem@davemloft.net>
+Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project
+	tree
+Message-ID: <20091104221207.GJ10786@tuxdriver.com>
+References: <200911031951.05235.bzolnier@gmail.com> <200911032200.04516.IvDoorn@gmail.com> <20091104083737.GA16978@elte.hu> <200911042251.23506.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200911042251.23506.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-11-12 at 10:44 -0800, Dan Williams wrote:
-> On Thu, 2009-11-12 at 08:47 +0100, Simon Raffeiner wrote:
-> > Am Donnerstag, 12. November 2009 08:02:36 schrieben Sie:
-> > 
-> > > It looks like a Marvell device (and therefore not a zd1211) from what
-> > > you posted.
-> > 
-> > It is a Marvell Libertas device, but it seems the USB ID is not claimed by the existing drivers ("libertas" and "libertas_tf").
-> 
-> It's a softmac device, likely an 8335-based card.  The 'mwl8k' driver
-> upstream is the closest match, but mwl8k doesn't yet have support for
-> the older softmac cards like the 8335 or 8361/8362 TopDog series.
+On Wed, Nov 04, 2009 at 10:51:22PM +0100, Ivo van Doorn wrote:
 
-I lie, it's a usb8338 (W833810).  There's code for this driver
-"around" (mrvl_cb82 is the name) but it's the old vendor driver based on
-net80211:
+> Get your facts straight, the bullshit level in your mail is staggering.
 
-http://git.kernel.org/?p=linux/kernel/git/linville/marvell.git;a=summary
+Please, enough!
 
-drivers/net/wireless/mrvl_cb82/driver/mwl_usb.c
-
-Dan
-
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
