@@ -1,71 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from netsys.kaist.ac.kr ([143.248.239.50]:43835 "EHLO
-	netsys.kaist.ac.kr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753324AbZKJQGa (ORCPT
+Received: from mail-yw0-f202.google.com ([209.85.211.202]:54592 "EHLO
+	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755295AbZKDTzC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 11:06:30 -0500
-From: "Jinsung Lee" <ljs@netsys.kaist.ac.kr>
-To: "'Johannes Berg'" <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] iw: setting txq parameters
-Date: Wed, 11 Nov 2009 01:06:17 +0900
-Message-ID: <01e101ca621f$bc5ead30$351c0790$@kaist.ac.kr>
+	Wed, 4 Nov 2009 14:55:02 -0500
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="ISO-8859-1"
+In-Reply-To: <20091104173446.28463.62662.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+	 <20091104173446.28463.62662.sendpatchset@localhost.localdomain>
+Date: Wed, 4 Nov 2009 20:55:06 +0100
+Message-ID: <14add3d10911041155x281027fbr58baff49d3d607ba@mail.gmail.com>
+Subject: Re: [PATCH 23/41] rt2x00: add driver private field to struct
+	rt2x00_dev
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VGhpcyBwYXRjaCBlbmFibGVzIHRvIHNldCB0eHEgcGFyYW1zIHN1Y2ggYXMgYWlmcywgY3dtaW4s
-IGN3bWF4IGFuZCB0eG9wIGZvcg0KZWFjaCBxdWV1ZSBmb3IgVk8sIFZJLCBCRSwgQksgZGlyZWN0
-bHkgdXNpbmcgk2l3lCBjb21tYW5kLg0KDQoNClNpZ25lZC1vZmYtYnk6IEppbnN1bmcgTGVlIDxs
-anNAbmV0c3lzLmthaXN0LmFjLmtyPg0KLS0tDQoNCkluZGV4OiBpdy0wLjkuMTcvcGh5LmMNCj09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT0NCg0KKioqIGEvaXctMC45LjE3L3BoeS5joKAgMjAwOS0wOC0yNiAxODo0MTo0MS4w
-MDAwMDAwMDAgKzA5MDANCi0tLSBiL2l3LTAuOS4xNy9waHkuY6CgIDIwMDktMTEtMTAgMjM6NTM6
-NDkuMDAwMDAwMDAwICswOTAwDQoqKioqKioqKioqKioqKiogc3RhdGljIGludCBoYW5kbGVfcnRz
-KHN0cnVjdCBubDgwMjExX3N0YQ0KKioqIDE0MCwxNDIgKioqKg0KLS0tIDE0MCwyMTYgLS0tLQ0K
-oCBDT01NQU5EKHNldCwgcnRzLCAiPHJ0cyB0aHJlc2hvbGR8b2ZmPiIsDQqgoKCgoKCgIE5MODAy
-MTFfQ01EX1NFVF9XSVBIWSwgMCwgQ0lCX1BIWSwgaGFuZGxlX3J0cywNCqCgoKCgoKAgIlNldCBy
-dHMgdGhyZXNob2xkLiIpOw0KKw0KKyBzdGF0aWMgaW50IGhhbmRsZV90eHFfcGFyYW1zKHN0cnVj
-dCBubDgwMjExX3N0YXRlICpzdGF0ZSwNCiugoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAgc3Ry
-dWN0IG5sX2NiICpjYiwgc3RydWN0IG5sX21zZyAqbXNnLA0KK6CgoKCgoKCgoKCgoKCgoKCgoKCg
-oKCgoKCgoCBpbnQgYXJnYywgY2hhciAqKmFyZ3YpDQorIHsNCiugoKCgoKAgX191OCBxdWV1ZSwg
-YWlmczsNCiugoKCgoKAgX191MTYgdHhvcCwgY3dtaW4sIGN3bWF4Ow0KKw0KK6CgoKCgoCBzdHJ1
-Y3QgbmxhdHRyICpubF90eHFzOw0KKw0KK6CgoKCgoCBpZiAoYXJnYyAhPSAxKQ0KK6CgoKCgoKCg
-oKCgoKCgIHJldHVybiAxOw0KKw0KK6CgoKCgoCBpZiAoc3RyY21wKCJvZmYiLCBhcmd2WzBdKSA9
-PSAwKQ0KK6CgoKCgoKCgoKCgoKCgIHJldHVybiAwOw0KKw0KKw0KK6CgoKCgoCBxdWV1ZSA9IHN0
-cnRvdWwoYXJndlswXSwgTlVMTCwgMTApOw0KKw0KK6CgoKCgoCBzd2l0Y2gocXVldWUpIHsNCiug
-oKCgoKCgIGNhc2UgMDoNCiugoKCgoKCgoKCgoKCgoCBwcmludGYoImNvbmZpZ3VyaW5nIFRYIHF1
-ZXVlIGZvciBWT1xuIik7DQoroKCgoKCgoKCgoKCgoKAgdHhvcCA9IDA7DQoroKCgoKCgoKCgoKCg
-oKAgY3dtaW4gPSA3Ow0KK6CgoKCgoKCgoKCgoKCgIGN3bWF4ID0gMTU7DQoroKCgoKCgoKCgoKCg
-oKAgYWlmcyA9IDI7DQoroKCgoKCgoKCgoKCgoKAgYnJlYWs7DQoroKCgoKCgoCBjYXNlIDE6DQor
-oKCgoKCgoKCgoKCgoKAgcHJpbnRmKCJjb25maWd1cmluZyBUWCBxdWV1ZSBmb3IgVklcbiIpOw0K
-K6CgoKCgoKCgoKCgoKCgIHR4b3AgPSAwOw0KK6CgoKCgoKCgoKCgoKCgIGN3bWluID0gMTU7DQor
-oKCgoKCgoKCgoKCgoKAgY3dtYXggPSAzMTsNCiugoKCgoKCgoKCgoKCgoCBhaWZzID0gMjsNCiug
-oKCgoKCgoKCgoKCgoCBicmVhazsNCiugoKCgoKCgIGNhc2UgMjoNCiugoKCgoKCgoKCgoKCgoCBw
-cmludGYoImNvbmZpZ3VyaW5nIFRYIHF1ZXVlIGZvciBCRVxuIik7DQoroKCgoKCgoKCgoKCgoKAg
-dHhvcCA9IDA7DQoroKCgoKCgoKCgoKCgoKAgY3dtaW4gPSAzMTsNCiugoKCgoKCgoKCgoKCgoCBj
-d21heCA9IDEwMjM7DQoroKCgoKCgoKCgoKCgoKAgYWlmcyA9IDM7DQoroKCgoKCgoKCgoKCgoKAg
-YnJlYWs7DQoroKCgoKCgoCBjYXNlIDM6DQoroKCgoKCgoKCgoKCgoKAgcHJpbnRmKCJjb25maWd1
-cmluZyBUWCBxdWV1ZSBmb3IgQktcbiIpOw0KK6CgoKCgoKCgoKCgoKCgIHR4b3AgPSAwOw0KK6Cg
-oKCgoKCgoKCgoKCgIGN3bWluID0gMzE7DQoroKCgoKCgoKCgoKCgoKAgY3dtYXggPSAxMDIzOw0K
-K6CgoKCgoKCgoKCgoKCgIGFpZnMgPSA3Ow0KK6CgoKCgoKCgoKCgoKCgIGJyZWFrOw0KK6CgoKCg
-oKAgZGVmYXVsdDoNCiugoKCgoKCgoKCgoKCgoCBwcmludGYoInN3aXRjaCgpIGVycm9yXG4iKTsN
-CiugoKCgoKCgoKCgoKCgoCByZXR1cm4gLTE7DQoroKCgoKCgIH0NCisNCiugoKCgoKAgbmxfdHhx
-cyA9IG5sYV9uZXN0X3N0YXJ0KG1zZywgTkw4MDIxMV9BVFRSX1dJUEhZX1RYUV9QQVJBTVMpOw0K
-K6CgoKCgoCBpZiAoIW5sX3R4cXMpDQoroKCgoKCgoKCgoKCgoKAgcmV0dXJuIC1FTk9CVUZTOw0K
-Kw0KK6CgoKCgoKCgoKCgoKCgIHN0cnVjdCBubGF0dHIgKm5sX3R4cSA9IG5sYV9uZXN0X3N0YXJ0
-KG1zZywgcXVldWUpOw0KK6CgoKCgoKCgoKCgoKCgIE5MQV9QVVRfVTgobXNnLCBOTDgwMjExX1RY
-UV9BVFRSX1FVRVVFLCBxdWV1ZSk7DQoroKCgoKCgoKCgoKCgoKAgTkxBX1BVVF9VMTYobXNnLCBO
-TDgwMjExX1RYUV9BVFRSX1RYT1AsIHR4b3ApOw0KK6CgoKCgoKCgoKCgoKCgIE5MQV9QVVRfVTE2
-KG1zZywgTkw4MDIxMV9UWFFfQVRUUl9DV01JTiwgY3dtaW4pOw0KK6CgoKCgoKCgoKCgoKCgIE5M
-QV9QVVRfVTE2KG1zZywgTkw4MDIxMV9UWFFfQVRUUl9DV01BWCwgY3dtYXgpOw0KK6CgoKCgoKCg
-oKCgoKCgIE5MQV9QVVRfVTgobXNnLCBOTDgwMjExX1RYUV9BVFRSX0FJRlMsIGFpZnMpOw0KK6Cg
-oKCgoKCgoKCgoKCgIG5sYV9uZXN0X2VuZChtc2csIG5sX3R4cSk7DQorDQoroKCgoKCgIG5sYV9u
-ZXN0X2VuZChtc2csIG5sX3R4cXMpOw0KKw0KK6CgoKCgoCByZXR1cm4gMDsNCiugIG5sYV9wdXRf
-ZmFpbHVyZToNCiugoKCgoKAgcmV0dXJuIC1FTk9CVUZTOw0KKyB9DQorIENPTU1BTkQoc2V0LCB0
-eHFfcGFyYW1zLCAiPHF1ZXVlIHR5cGUgaW4gWzAsMSwyLDNdfG9mZj4iLA0KK6CgoKCgoCBOTDgw
-MjExX0NNRF9TRVRfV0lQSFksIDAsIENJQl9QSFksIGhhbmRsZV90eHFfcGFyYW1zLA0KK6CgoKCg
-oCAiU2V0IHR4cSBwYXJhbWV0ZXJzLiIpOw0KDQoNCg==
+On Wed, Nov 4, 2009 at 6:34 PM, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2x00: add driver private field to struct rt2x00_dev
+>
+> Enhance rt2x00 infrastructure by adding driver specific field to
+> struct rt2x00_dev.
+>
+> The new field will be used by rt2800 drivers for chipset registers
+> access abstraction layer.
+>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
 
+For what it is worth:
+
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
