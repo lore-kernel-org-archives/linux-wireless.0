@@ -1,76 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58749 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933576AbZKXRmD (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:59973 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758244AbZKDWpp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 12:42:03 -0500
-Subject: Re: [PATCH 2/2] mac80211: minstrel try all rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Adam Wozniak <awozniak@irobot.com>
-Cc: Derek Smithies <derek@indranet.co.nz>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <4B0C1527.60305@irobot.com>
-References: <4AF0D54D.4090303@irobot.com>
-	 <alpine.DEB.2.00.0911111508391.6214@kauri.acheron.indranet.co.nz>
-	 <4AFC655A.5020706@irobot.com> <200911122103.27455.chunkeey@googlemail.com>
-	 <4AFC8E4F.5090307@irobot.com>  <4AFC8F0D.5020700@irobot.com>
-	 <1258097352.3899.75.camel@johannes.local>  <4AFDDF19.8060202@irobot.com>
-	 <1258191039.6167.40.camel@johannes.local>  <4B018B26.2070008@irobot.com>
-	 <1258392453.32159.28.camel@johannes.local> <4B0192A6.9050808@irobot.com>
-	 <alpine.DEB.2.00.0911170938380.3829@kauri.acheron.indranet.co.nz>
-	 <4B01D4A5.7060204@irobot.com>
-	 <alpine.DEB.2.00.0911171156210.3829@kauri.acheron.indranet.co.nz>
-	 <4B01E298.3030602@irobot.com>
-	 <alpine.DEB.2.00.0911171314470.3829@kauri.acheron.indranet.co.nz>
-	 <1258443484.1375.8.camel@johannes.local> <4B02DFE3.9040602@irobot.com>
-	 <4B0AEEE3.2050808@irobot.com> <1259018866.7094.189.camel@johannes.local>
-	 <4B0B2F6E.7050907@irobot.com> <1259025067.7094.208.camel@johannes.local>
-	 <4B0C1527.60305@irobot.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Lg+eStEiNOjvr4S8Gcjn"
-Date: Tue, 24 Nov 2009 18:41:33 +0100
-Message-ID: <1259084493.3491.21.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 4 Nov 2009 17:45:45 -0500
+Received: by iwn10 with SMTP id 10so5344354iwn.4
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 14:45:50 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <40f31dec0911041431i6f718bf1x1e52d9e12ab22060@mail.gmail.com>
+References: <43e72e890911041204n55b54f8iace79938b40baa32@mail.gmail.com>
+	<40f31dec0911041212p16cfc78eia1ab1817e425e767@mail.gmail.com>
+	<43e72e890911041330j581e7bacp4e7b83a11c1de0e8@mail.gmail.com>
+	<43e72e890911041336n7ffae0d2u135321a588f3e613@mail.gmail.com>
+	<43e72e890911041352i334e170at71a519383d48a08@mail.gmail.com>
+	<43e72e890911041352n3a398b41h8927387c228661c5@mail.gmail.com>
+	<20091104220034.GI10555@parisc-linux.org> <43e72e890911041404q5f491bbbw123d8761037f9c63@mail.gmail.com>
+	<20091104221426.GA2599@bombadil.infradead.org> <40f31dec0911041431i6f718bf1x1e52d9e12ab22060@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 4 Nov 2009 14:45:30 -0800
+Message-ID: <43e72e890911041445s4e69aa46nda01d423c1bd8f7d@mail.gmail.com>
+Subject: Re: pci_set_mwi() and ath5k
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	Matthew Wilcox <matthew@wil.cx>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel@lists.ath5k.org,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	Kyle McMartin <kyle@mcmartin.ca>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Nov 4, 2009 at 2:31 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> 2009/11/5 Luis R. Rodriguez <mcgrof@bombadil.infradead.org>:
+>> On Wed, Nov 04, 2009 at 02:04:11PM -0800, Luis R. Rodriguez wrote:
+>>> On Wed, Nov 4, 2009 at 2:00 PM, Matthew Wilcox <matthew@wil.cx> wrote:
+>>> > On Wed, Nov 04, 2009 at 01:52:30PM -0800, Luis R. Rodriguez wrote:
+>>> >> > Even better: I just confirmation from our systems team that our legacy
+>>> >> > devices and 11n PCI devices don't support MWR so I'll remove all that
+>>> >> > cruft crap.
+>>> >>
+>>> >> I meant MWI of course.
+>>> >
+>>> > Yes, but they don't necessarily just use cacheline size for MWI ... some
+>>> > devices use cacheline size for setting up data structures.  Might be
+>>> > worth just checking explicitly that they don't use the cacheline size
+>>> > register for anything.
+>>>
+>>> Oh right -- so the typical Atheros hack for this is to check the cache
+>>> line size, and if its 0 set it to L1_CACHE_BYTES. Then eventually read
+>>> from PCI_CACHE_LINE_SIZE pci config to align the skb data. So what I
+>>> was doing now is removing all this cruft and replacing it with a
+>>> generic allocator for atheros drivers that aligns simply to the
+>>> L1_CACHE_BYTES. Sound kosher?
+>>
+>> Something like this:
+>>
+>
+> According to comments inside MadWiFi AR5210 needs cache line align
+> else we get corruptions.
 
---=-Lg+eStEiNOjvr4S8Gcjn
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+For what though?
 
-On Tue, 2009-11-24 at 09:17 -0800, Adam Wozniak wrote:
+> I don't know if this is correct for all
+> platforms or later cards but since we (plan to) support AR5210 i guess
+> we should leave it there. We need to test this a lot on various
+> archs/cards before applying it.
 
-> I do not believe 1/2 was a hack.  It really was possible to get to the=20
-> end of that function and use that variable without it being assigned the=20
-> correct value.  Also, it is important to reinitialize the rate control=20
-> layer when the list of usable rates changes.
+There are two cases where we can use the PCI_CACHE_LINE_SIZE:
 
-Ah, indeed. But I still don't think the rate control _init() function
-should be called again.
+1) Hardware has been designed to use it on some block to align some data somehow
+2) Software uses it to align skb->data for performance/hw purposes
 
-johannes
+I believe the second case can be handled by using L1_CACHE_BYTES
+instead and I'd at least like to change our common skb allocator to
+use that.
 
---=-Lg+eStEiNOjvr4S8Gcjn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+The first case is where it seems there may be some skepticism as to
+whether or not hw really did not rely on it and I agree its safer to
+keep the programming of the  PCI_CACHE_LINE_SIZE in case it has a
+bogus value.
 
------BEGIN PGP SIGNATURE-----
+Does this seem reasonable?
 
-iQIcBAABAgAGBQJLDBrJAAoJEODzc/N7+QmatW0QAMjk9ktGHJEgHjbtIT3gJGZg
-7wu8UKJ3NWkD+e4MHpCoPP0fHgVwBa9twj3pSbRVQaCWDpMUFMWsZI77rb2LpW6Q
-O97Ugeax1vXV/CL2TbMpNfxWqBAW4xf/t3wVd+zVjY51B5TbK0uuv8tQ4BZielby
-8Uyp8PursyJOCsu+q/GHWmaQoiQBRGd7d8xzwMA8EzwpHnXOX1LmYUBWtKmc84yB
-VuaRsbx6PFn19Kvbz3YihtUkvmwbVIOAMbHdglImIdwYlwb30uSMYARh6HJqshsH
-lepd5PiapP8c3SMmW+Z04jpEQjPN48FP5p7KK13QUriJijF4pTongSzTg7INbtkF
-EtU12lvB6FQduxsZj6G8melZI3Xi2TPpMAm+uLu4BLUaLiyKtqpiGMhyAE4RHnGM
-sbaud7PaOUf6pikGvymO2YgvemjXqa/02Fz7NcRk++ZuP0SC+V1ZuOF6EFEGDxxN
-J8GSH/WfuJjB6XeFB8/upvOuKqYT4jyjlhlnE+8LcwjN9rEULpbT+E3V4JUtEXL4
-DyesRUKhzoWgC8pF/uAq0wvZInnpAuHCd9YdC2MRYemSWBPR7fQm/FUs1iDj4neI
-Ye0PXW2SrtK4JiKjquD4bZnageMf8NqTMTJ6KMDqJ7QoWVU++WWIYOdDrppsScPU
-fs4x8I3nElUWiT+kIocz
-=FbC2
------END PGP SIGNATURE-----
-
---=-Lg+eStEiNOjvr4S8Gcjn--
-
+  Luis
