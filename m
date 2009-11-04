@@ -1,126 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:34272 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759704AbZKFTzT (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.221.174]:47784 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751281AbZKDFuR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 14:55:19 -0500
-Message-ID: <4AF47F24.9060903@gmail.com>
-Date: Fri, 06 Nov 2009 20:55:16 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Wed, 4 Nov 2009 00:50:17 -0500
+Received: by qyk4 with SMTP id 4so3263650qyk.33
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2009 21:50:22 -0800 (PST)
+Message-ID: <4AF1161D.8070708@gmail.com>
+Date: Wed, 04 Nov 2009 00:50:21 -0500
+From: Richard Farina <sidhayn@gmail.com>
 MIME-Version: 1.0
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-CC: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 10/41] rt2800pci: add rt2800_register_[read,write]() wrappers
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173313.28463.67108.sendpatchset@localhost.localdomain> <14add3d10911041116q1bb293a9hbd6c5361d59fe588@mail.gmail.com> <200911061713.15898.bzolnier@gmail.com>
-In-Reply-To: <200911061713.15898.bzolnier@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: Possible fix for rtl8187: kernel oops when leds enabled
+References: <4AE5BD6C.2050303@gmail.com> <4AE5C55B.5070309@lwfinger.net> <4AE5CDCB.8090400@gmail.com> <4AF0BB45.5000402@lwfinger.net>
+In-Reply-To: <4AF0BB45.5000402@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/06/09 17:13, Bartlomiej Zolnierkiewicz wrote:
-> On Wednesday 04 November 2009 20:16:26 Gertjan van Wingerde wrote:
->> On Wed, Nov 4, 2009 at 6:33 PM, Bartlomiej Zolnierkiewicz
->> <bzolnier@gmail.com> wrote:
->>> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->>> Subject: [PATCH] rt2800pci: add rt2800_register_[read,write]() wrappers
->>>
->>> Part of preparations for later code unification.
->>>
->>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->>> ---
->>>  drivers/net/wireless/rt2x00/rt2800pci.c |  479 ++++++++++++++++----------------
->>>  drivers/net/wireless/rt2x00/rt2800pci.h |   21 +
->>>  2 files changed, 261 insertions(+), 239 deletions(-)
->>>
->>> Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
->>> ===================================================================
->>> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
->>> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
->>> @@ -57,7 +57,7 @@ MODULE_PARM_DESC(nohwcrypt, "Disable har
->>>  /*
->>>  * Register access.
->>>  * All access to the CSR registers will go through the methods
->>> - * rt2x00pci_register_read and rt2x00pci_register_write.
->>> + * rt2800_register_read and rt2800_register_write.
->>>  * BBP and RF register require indirect register access,
->>>  * and use the CSR registers BBPCSR and RFCSR to achieve this.
->>>  * These indirect registers work with busy bits,
->>> @@ -66,6 +66,7 @@ MODULE_PARM_DESC(nohwcrypt, "Disable har
->>>  * between each attampt. When the busy bit is still set at that time,
->>>  * the access attempt is considered to have failed,
->>>  * and we will print an error.
->>> + * The _lock versions must be used if you already hold the csr_mutex
->>>  */
->>>  #define WAIT_FOR_BBP(__dev, __reg) \
->>>        rt2x00pci_regbusy_read((__dev), BBP_CSR_CFG, BBP_CSR_CFG_BUSY, (__reg))
->>
->> The change to the _lock variant seems a bit odd. See below.
->>
->> <snip>
->>
->>> Index: b/drivers/net/wireless/rt2x00/rt2800pci.h
->>> ===================================================================
->>> --- a/drivers/net/wireless/rt2x00/rt2800pci.h
->>> +++ b/drivers/net/wireless/rt2x00/rt2800pci.h
->>> @@ -27,6 +27,27 @@
->>>  #ifndef RT2800PCI_H
->>>  #define RT2800PCI_H
->>>
->>> +static inline void rt2800_register_read(struct rt2x00_dev *rt2x00dev,
->>> +                                       const unsigned int offset,
->>> +                                       u32 *value)
->>> +{
->>> +       rt2x00pci_register_read(rt2x00dev, offset, value);
->>> +}
->>> +
->>> +static inline void rt2800_register_write(struct rt2x00_dev *rt2x00dev,
->>> +                                        const unsigned int offset,
->>> +                                        u32 value)
->>> +{
->>> +       rt2x00pci_register_write(rt2x00dev, offset, value);
->>> +}
->>> +
->>> +static inline void rt2800_register_write_lock(struct rt2x00_dev *rt2x00dev,
->>> +                                             const unsigned int offset,
->>> +                                             u32 value)
->>> +{
->>> +       rt2x00pci_register_write(rt2x00dev, offset, value);
->>> +}
->>> +
->>>  /*
->>>  * RF chip defines.
->>>  *
->>
->> Can we add a comment to the _lock variant explaining that this one
->> technically isn't
->> needed, but is present for alignment purposes with rt2800usb?
-> 
-> I couldn't come with the good comment for it so I just went for
-> the minimal one in patch #25 (which removed all quoted above inlines):
-> 
-> +static const struct rt2800_ops rt2800pci_rt2800_ops = {
-> +       .register_read          = rt2x00pci_register_read,
-> +       .register_write         = rt2x00pci_register_write,
-> +       .register_write_lock    = rt2x00pci_register_write, /* same for PCI */
-> +
-> +       .register_multiread     = rt2x00pci_register_multiread,
-> +       .register_multiwrite    = rt2x00pci_register_multiwrite,
-> +
-> +       .regbusy_read           = rt2x00pci_regbusy_read,
-> +};
-> 
-> but it certainly can be expanded if somebody has a better idea how
-> the comment should look like.
-> 
+Larry Finger wrote:
+> Rick,
+>
+> Does this patch fix your problem? I tried to bisect this problem as it
+> looked like a regression; however, the problem was sometimes a little
+> flakey. On one boot of a given kernel, it might run for 3-400 cycles
+> without failing, then fail immediately after rebooting. I suspect that
+> the random contents of some memory location would control that.
+>
+>   
 
-OK. Looks good enough for the moment. At least now there is some recognition
-that it is not a bug / typo that the _write and _write_lock are the same on PCI.
+Larry,
+As you mentioned, this bug was not 100% reliable to reproduce in the 
+first place for either of us, I merely had a much much higher chance of 
+panick for some unknown reason.  That said, I have plugged and unplugged 
+the device a few dozen times while bringing the interface up and down 
+and making the led blink and I'm thrilled to say it no longer kernel 
+panicks on my system.  I'm left with a usable wifi card with a cool 
+flashing led, many thanks for fixing this.
 
-With this change:
+John,
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+imho this patch should go upstream asap, next dot release if at all 
+possible.  This fixes a significant issue in that the kernel panicked on 
+my system nearly 100% of the time on unplug if the led was enabled.  
+Either way it is up to the maintainers but consider this my vote of 
+confidence.
 
----
-Gertjan.
+Acked-By: Rick Farina
+Tested-By: Rick Farina
+
+Thanks,
+Rick Farina
+
+> This patch was inspired by the code in p54usb, which does not have the
+> problem.
+>
+>
+> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_leds.c
+> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
+> @@ -210,10 +210,10 @@ void rtl8187_leds_exit(struct ieee80211_
+>
+>  	/* turn the LED off before exiting */
+>  	ieee80211_queue_delayed_work(dev, &priv->led_off, 0);
+> -	cancel_delayed_work_sync(&priv->led_off);
+> -	cancel_delayed_work_sync(&priv->led_on);
+>  	rtl8187_unregister_led(&priv->led_rx);
+>  	rtl8187_unregister_led(&priv->led_tx);
+> +	cancel_delayed_work_sync(&priv->led_off);
+> +	cancel_delayed_work_sync(&priv->led_on);
+>  }
+>  #endif /* def CONFIG_RTL8187_LED */
+>
+> Thanks for testing,
+>
+> Larry
+>
+>
+>
+>
+>
+>
+>
+>   
+
