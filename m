@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet12.oracle.com ([148.87.113.124]:40392 "EHLO
-	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754471AbZJGV4w (ORCPT
+Received: from mail-gx0-f226.google.com ([209.85.217.226]:65044 "EHLO
+	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757736AbZKDS0L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 17:56:52 -0400
-Message-ID: <4ACD0E5A.7060106@oracle.com>
-Date: Wed, 07 Oct 2009 14:55:38 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
+	Wed, 4 Nov 2009 13:26:11 -0500
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wireless: make WEXT_SPY and WEXT_PRIV select WEXT_CORE
-References: <20091007105720.a2457e5b.randy.dunlap@oracle.com> <1254949672-24022-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1254949672-24022-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset=windows-1251
+In-Reply-To: <20091104173210.28463.95558.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+	 <20091104173210.28463.95558.sendpatchset@localhost.localdomain>
+Date: Wed, 4 Nov 2009 19:26:16 +0100
+Message-ID: <14add3d10911041026r54a0abd1h953609dd7cb7224a@mail.gmail.com>
+Subject: Re: [PATCH 02/41] rt2800pci: make Kconfig help entry more helpful
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> Should prevent this build error reported by Randy...
-> 
-> net/wireless/wext-priv.c:206: error: implicit declaration of function 'call_commit_handler'
-> make[3]: *** [net/wireless/wext-priv.o] Error 1
-> 
-> Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+On Wed, Nov 4, 2009 at 6:32 PM, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2800pci: make Kconfig help entry more helpful
+>
+> Document known issues with the driver to aid distribution makers,
+> users and developers in making informed decisions instead of wasting
+> their time needlessly.
+>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+> This reflects the actual state of affairs for driver in net-next tree.
+>
 
-Sorry, it did not work for me.
+Maybe we should consider making this one depend on BROKEN, for the
+moment at least?
 
-linux-next-20091007/net/wireless/wext-priv.c:206: error: implicit declaration of function 'call_commit_handler'
-make[3]: *** [net/wireless/wext-priv.o] Error 1
+However, for what it is worth:
 
-Drivers like hostap and orinoco (hermes) select WEXT_PRIV regardless
-of the setting of WEXT_CORE.  oh, and staging/ drivers do that also.
-
-
-> @@ -12,9 +12,11 @@ config WEXT_PROC
->  
->  config WEXT_SPY
->  	bool
-> +	depends on WEXT_CORE
->  
->  config WEXT_PRIV
->  	bool
-> +	depends on WEXT_CORE
->  
->  config CFG80211
->  	tristate "cfg80211 - wireless configuration API"
-
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
