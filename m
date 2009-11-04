@@ -1,68 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:37544 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759942AbZKLEbZ (ORCPT
+Received: from gv-out-0910.google.com ([216.239.58.185]:5463 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755361AbZKDPQJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 23:31:25 -0500
-Date: Wed, 11 Nov 2009 22:31:29 -0600
+	Wed, 4 Nov 2009 10:16:09 -0500
+Message-ID: <4AF19AB8.8040507@lwfinger.net>
+Date: Wed, 04 Nov 2009 09:16:08 -0600
 From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>, bzolnier@gmail.com
-Cc: Bernhard Schiffner <bernhard@schiffner-limbach.de>,
-	linux-wireless@vger.kernel.org
-Subject: [RFC/RFT 6/6 V2] rtl8187se: Modify Kconfig and Makefile
-Message-ID: <4afb8fa1.GjW1QL4yw33TYRIK%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Michael Buesch <mb@bu3sch.de>
+CC: Paulius Zaleckas <paulius.zaleckas@gmail.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: Re: [RFC] usb: Check results of dma_map_single
+References: <4af115c3.JUDAYfcydqPYCYyH%Larry.Finger@lwfinger.net> <4AF17884.5000200@gmail.com> <4AF18A61.20909@lwfinger.net> <200911041551.52914.mb@bu3sch.de>
+In-Reply-To: <200911041551.52914.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Modify configuration and builod system for rtl8187se.
+On 11/04/2009 08:51 AM, Michael Buesch wrote:
+> On Wednesday 04 November 2009 15:06:25 Larry Finger wrote:
+>> Thank you for your review and comments. I'll wait a bit to see what
+>> other comments are offered, but I have implemented all your changes.
+> 
+> If you use a WARN_ON, please use WARN_ON_ONCE to avoid possible spamming of the logs.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Good point.
 
-Index: wireless-testing/drivers/net/wireless/Kconfig
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/Kconfig
-+++ wireless-testing/drivers/net/wireless/Kconfig
-@@ -294,6 +294,14 @@ config RTL8187_LEDS
- 	depends on RTL8187 && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = RTL8187)
- 	default y
- 
-+config RTL8187SE
-+	tristate "Realtek 8187SE PCI support"
-+	depends on MAC80211 && PCI && WIRELESS && EXPERIMENTAL
-+	select EEPROM_93CX6
-+	---help---
-+	  This is a driver for RTL8187SE PCI-based cards. If built as a
-+	  module, it will be named rtl8187se.
-+
- config ADM8211
- 	tristate "ADMtek ADM8211 support"
- 	depends on MAC80211 && PCI && EXPERIMENTAL
-Index: wireless-testing/drivers/net/wireless/Makefile
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/Makefile
-+++ wireless-testing/drivers/net/wireless/Makefile
-@@ -24,6 +24,7 @@ obj-$(CONFIG_B43LEGACY)		+= b43legacy/
- obj-$(CONFIG_ZD1211RW)		+= zd1211rw/
- obj-$(CONFIG_RTL8180)		+= rtl818x/
- obj-$(CONFIG_RTL8187)		+= rtl818x/
-+obj-$(CONFIG_RTL8187SE)		+= rtl818x/
- 
- # 16-bit wireless PCMCIA client drivers
- obj-$(CONFIG_PCMCIA_RAYCS)	+= ray_cs.o
-Index: wireless-testing/drivers/net/wireless/rtl818x/Makefile
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/Makefile
-+++ wireless-testing/drivers/net/wireless/rtl818x/Makefile
-@@ -1,7 +1,9 @@
- rtl8180-objs		:= rtl8180_dev.o rtl8180_rtl8225.o rtl8180_sa2400.o rtl8180_max2820.o rtl8180_grf5101.o
- rtl8187-objs		:= rtl8187_dev.o rtl8187_rtl8225.o rtl8187_leds.o rtl8187_rfkill.o
-+rtl8187se-objs		:= rtl8187se_dev.o rtl8187se_rtl8225.o
- 
- obj-$(CONFIG_RTL8180)	+= rtl8180.o
- obj-$(CONFIG_RTL8187)	+= rtl8187.o
-+obj-$(CONFIG_RTL8187SE)	+= rtl8187se.o
- 
- 
+Larry
