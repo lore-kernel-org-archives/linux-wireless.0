@@ -1,50 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:35626 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755554AbZKHW1c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 17:27:32 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/4] Fix two warnings
-Date: Sun,  8 Nov 2009 23:27:09 +0100
-Message-Id: <1257719231-2031-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1257719231-2031-1-git-send-email-hauke@hauke-m.de>
-References: <1257719231-2031-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:59093 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932384AbZKDVRu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2009 16:17:50 -0500
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Jiri Kosina <jkosina@suse.cz>
+Subject: Re: pull request: wireless-next-2.6 2009-10-28
+Date: Wed, 4 Nov 2009 22:17:48 +0100
+Cc: Pavel Machek <pavel@ucw.cz>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jarek Poplawski <jarkao2@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+References: <1256886023.3555.5.camel@johannes.local> <20091102211629.GA1322@ucw.cz> <alpine.LRH.2.00.0911041403480.31913@twin.jikos.cz>
+In-Reply-To: <alpine.LRH.2.00.0911041403480.31913@twin.jikos.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200911042217.49144.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes these two warnings:
-drivers/net/wireless/ath/ath5k/base.c:202: warning: ‘ath5k_pci_suspend_compat’ defined but not used
-drivers/net/wireless/ath/ath5k/base.c:216: warning: ‘ath5k_pci_resume_compat’ defined but not used
+On Wednesday 04 November 2009, Jiri Kosina wrote:
+> On Mon, 2 Nov 2009, Pavel Machek wrote:
+> 
+> > > I've searched on my GMail archives and the only patch Bart has
+> > > provided so far for the rt2x00 project is this:
+> > > 
+> > > [PATCH] MAINTAINERS: rt2x00 list is moderated
+> > > 
+> > > Which, while technically correct, adds nothing to the project.
+> > > 
+> > > So, I will personally continue to ignore Bart's comments, regards and
+> > > rants, until he provides patches for rt2x00 that actually make the
+> > > driver better.
+> > 
+> > Well, he provided review feedback... he should be thanked for that,
+> > not flamed for it.
+> 
+> He has actually written real patches (and quite non-trivial both in amount 
+> and in functionality), see
+> 
+> 	http://lkml.org/lkml/2009/11/3/372
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/patches/11-dev-pm-ops.patch |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Please look at the TIMESTAMP of the mail you refer to, and the TIMESTAMP
+of the mail from Luis. And then you can make assumptions about the text...
 
-diff --git a/compat/patches/11-dev-pm-ops.patch b/compat/patches/11-dev-pm-ops.patch
-index a1937a9..fc4de8f 100644
---- a/compat/patches/11-dev-pm-ops.patch
-+++ b/compat/patches/11-dev-pm-ops.patch
-@@ -14,7 +14,6 @@ calls on compat code with only slight modifications.
-  static int		ath5k_pci_suspend(struct device *dev);
-  static int		ath5k_pci_resume(struct device *dev);
- +#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
--+#endif
- +static int ath5k_pci_suspend_compat(struct pci_dev *pdev, pm_message_t state)
- +{
- +	int r;
-@@ -40,6 +39,7 @@ calls on compat code with only slight modifications.
- +
- +	return ath5k_pci_resume(&pdev->dev);
- +}
-++#endif
-  
-  SIMPLE_DEV_PM_OPS(ath5k_pm_ops, ath5k_pci_suspend, ath5k_pci_resume);
-  #define ATH5K_PM_OPS	(&ath5k_pm_ops)
--- 
-1.6.3.3
+> But yes, he got flamed for this for some odd reason. I got the impression 
+> that the community around rt2x00 doesn't like (or understand) the way how 
+> opensource development happens.
 
+Well you mean the open source development where non-contributors
+complain that the contributors work too slowly? Well if that is the way
+things should go, then I don't want to be part of such idiocy. Perhaps
+that is the policy in some companies which try to import it into the
+Open Source world...
+
+Ivo
