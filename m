@@ -1,51 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:38820 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753831AbZKRPe4 (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:60187 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751037AbZKDGAZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 10:34:56 -0500
-Subject: Re: [PATCH 2/2] Adding  kerneldoc entry for radio type GPS
-From: Marcel Holtmann <marcel@holtmann.org>
-To: janakiram.sistla@gmail.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1258557771-10776-1-git-send-email-janakiram.sistla@gmail.com>
-References: <1258557771-10776-1-git-send-email-janakiram.sistla@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 18 Nov 2009 16:35:00 +0100
-Message-ID: <1258558500.2003.88.camel@violet>
-Mime-Version: 1.0
+	Wed, 4 Nov 2009 01:00:25 -0500
+Date: Wed, 04 Nov 2009 00:00:25 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>, sidhayn@gmail.com,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] rtl8187: Fix kernel oops when device is removed when LEDS enabled (Bugzilla #14539)
+Message-ID: <4af11879./IumKJ+RAbw7Zkq6%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi guys,
+As reported by Rick Farina (sidhayn@gmail.com), removing the RTL8187 USB
+stick, or unloading the driver rtl8187 using rmmod will cause a kernel oops.
+There are at least two forms of the failure, (1) BUG: Scheduling while atomic,
+and (2) a fatal kernel page fault. This problem is reported in Bugzilla #14539.
 
-> From: Janakiram Sistla <janakiram.sistla@gmail.com>
-> 
-> 
-> Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
-> ---
->  include/linux/rfkill.h |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-> index d787d5f..212f555 100644
-> --- a/include/linux/rfkill.h
-> +++ b/include/linux/rfkill.h
-> @@ -36,6 +36,7 @@
->   * @RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
->   * @RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
->   * @RFKILL_TYPE_FM: switch is on a FM device.
-> + * @RFKILL_TYPE_GPS: switch is on a GPS device.
->   * @NUM_RFKILL_TYPES: number of defined rfkill types
->   */
->  enum rfkill_type {
+This problem does not occur for kernel 2.6.31, but does for 2.6.32-rc2, thus
+it is technically a regression; however, bisection did not locate any faulty
+patch. The fix was found by comparing the faulty code in rtl8187 with p54usb.
+My interpretation is that the handling of work queues in mac80211 changed
+enough to the LEDs to be unregistered before tasks on the work queues are
+cancelled. Previously, these actions could be done in either order.
 
-so this is getting stupid right now. I am sick of a really simple patch
-causes so much trouble. Even this one is wrong again. The GPS doc should
-obviously before FM.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Reported-and-tested by: Rick Farina <sidhayn@gmail.com>
+---
 
-Regards
+John,
 
-Marcel
+This is 2.6.32 material. Sorry to take so long to get a patch, but it was
+difficult for me to locate the problem. Fortunately, I had the postings of the
+two flame wars to amuse me while all the kernel compilations were happening.
 
+Larry
+---
 
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_leds.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
+@@ -210,10 +210,10 @@ void rtl8187_leds_exit(struct ieee80211_
+ 
+ 	/* turn the LED off before exiting */
+ 	ieee80211_queue_delayed_work(dev, &priv->led_off, 0);
+-	cancel_delayed_work_sync(&priv->led_off);
+-	cancel_delayed_work_sync(&priv->led_on);
+ 	rtl8187_unregister_led(&priv->led_rx);
+ 	rtl8187_unregister_led(&priv->led_tx);
++	cancel_delayed_work_sync(&priv->led_off);
++	cancel_delayed_work_sync(&priv->led_on);
+ }
+ #endif /* def CONFIG_RTL8187_LED */
+ 
