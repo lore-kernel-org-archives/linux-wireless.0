@@ -1,39 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:48740 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752235AbZKKGpR (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:5665 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756553AbZKDRdj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 01:45:17 -0500
-Message-ID: <4AFA5D4A.1070404@nokia.com>
-Date: Wed, 11 Nov 2009 08:44:26 +0200
-From: Luciano Coelho <luciano.coelho@nokia.com>
-MIME-Version: 1.0
-To: ext Kalle Valo <kalle.valo@iki.fi>
-CC: Ben Hutchings <ben@decadent.org.uk>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 55/75] wl12xx: declare MODULE_FIRMWARE
-References: <1257631335.15927.471.camel@localhost> <87vdhhd0ry.fsf@purkki.valot.fi>
-In-Reply-To: <87vdhhd0ry.fsf@purkki.valot.fi>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 4 Nov 2009 12:33:39 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 04 Nov 2009 18:33:20 +0100
+Message-Id: <20091104173320.28463.59233.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+Subject: [PATCH 11/41] rt2800usb: add rt2800_register_multi[read,write]() wrappers
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ext Kalle Valo wrote:
-> Ben Hutchings <ben@decadent.org.uk> writes:
-> 
->> Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
-> 
-> Thanks.
-> 
-> Acked-by: Kalle Valo <kalle.valo@nokia.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] rt2800usb: add rt2800_register_multi[read,write]() wrappers
 
-Thanks, Kalle, for CC'ing me.  I almost missed this one.
+Part of preparations for later code unification.
 
-Thanks Ben.  For the wl1271 part:
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |   16 ++++++++--------
+ drivers/net/wireless/rt2x00/rt2800usb.h |   14 ++++++++++++++
+ 2 files changed, 22 insertions(+), 8 deletions(-)
 
-Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
-
--- 
-Cheers,
-Luca.
+Index: b/drivers/net/wireless/rt2x00/rt2800usb.c
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -374,7 +374,7 @@ static void rt2800usb_config_wcid_attr(s
+ 	    (crypto->cipher == CIPHER_AES))
+ 		iveiv_entry.iv[3] |= 0x20;
+ 	iveiv_entry.iv[3] |= key->keyidx << 6;
+-	rt2x00usb_register_multiwrite(rt2x00dev, offset,
++	rt2800_register_multiwrite(rt2x00dev, offset,
+ 				      &iveiv_entry, sizeof(iveiv_entry));
+ 
+ 	offset = MAC_WCID_ENTRY(key->hw_key_idx);
+@@ -382,7 +382,7 @@ static void rt2800usb_config_wcid_attr(s
+ 	memset(&wcid_entry, 0, sizeof(wcid_entry));
+ 	if (crypto->cmd == SET_KEY)
+ 		memcpy(&wcid_entry, crypto->address, ETH_ALEN);
+-	rt2x00usb_register_multiwrite(rt2x00dev, offset,
++	rt2800_register_multiwrite(rt2x00dev, offset,
+ 				      &wcid_entry, sizeof(wcid_entry));
+ }
+ 
+@@ -406,7 +406,7 @@ static int rt2800usb_config_shared_key(s
+ 		       sizeof(key_entry.rx_mic));
+ 
+ 		offset = SHARED_KEY_ENTRY(key->hw_key_idx);
+-		rt2x00usb_register_multiwrite(rt2x00dev, offset,
++		rt2800_register_multiwrite(rt2x00dev, offset,
+ 					      &key_entry, sizeof(key_entry));
+ 	}
+ 
+@@ -461,7 +461,7 @@ static int rt2800usb_config_pairwise_key
+ 		       sizeof(key_entry.rx_mic));
+ 
+ 		offset = PAIRWISE_KEY_ENTRY(key->hw_key_idx);
+-		rt2x00usb_register_multiwrite(rt2x00dev, offset,
++		rt2800_register_multiwrite(rt2x00dev, offset,
+ 					      &key_entry, sizeof(key_entry));
+ 	}
+ 
+@@ -549,7 +549,7 @@ static void rt2800usb_config_intf(struct
+ 		rt2x00_set_field32(&reg, MAC_ADDR_DW1_UNICAST_TO_ME_MASK, 0xff);
+ 		conf->mac[1] = cpu_to_le32(reg);
+ 
+-		rt2x00usb_register_multiwrite(rt2x00dev, MAC_ADDR_DW0,
++		rt2800_register_multiwrite(rt2x00dev, MAC_ADDR_DW0,
+ 					      conf->mac, sizeof(conf->mac));
+ 	}
+ 
+@@ -559,7 +559,7 @@ static void rt2800usb_config_intf(struct
+ 		rt2x00_set_field32(&reg, MAC_BSSID_DW1_BSS_BCN_NUM, 0);
+ 		conf->bssid[1] = cpu_to_le32(reg);
+ 
+-		rt2x00usb_register_multiwrite(rt2x00dev, MAC_BSSID_DW0,
++		rt2800_register_multiwrite(rt2x00dev, MAC_BSSID_DW0,
+ 					      conf->bssid, sizeof(conf->bssid));
+ 	}
+ }
+@@ -1458,7 +1458,7 @@ static int rt2800usb_init_registers(stru
+ 
+ 	for (i = 0; i < 256; i++) {
+ 		u32 wcid[2] = { 0xffffffff, 0x00ffffff };
+-		rt2x00usb_register_multiwrite(rt2x00dev, MAC_WCID_ENTRY(i),
++		rt2800_register_multiwrite(rt2x00dev, MAC_WCID_ENTRY(i),
+ 					      wcid, sizeof(wcid));
+ 
+ 		rt2800_register_write(rt2x00dev, MAC_WCID_ATTR_ENTRY(i), 1);
+@@ -2646,7 +2646,7 @@ static void rt2800usb_get_tkip_seq(struc
+ 	u32 offset;
+ 
+ 	offset = MAC_IVEIV_ENTRY(hw_key_idx);
+-	rt2x00usb_register_multiread(rt2x00dev, offset,
++	rt2800_register_multiread(rt2x00dev, offset,
+ 				      &iveiv_entry, sizeof(iveiv_entry));
+ 
+ 	memcpy(&iveiv_entry.iv[0], iv16, sizeof(iv16));
+Index: b/drivers/net/wireless/rt2x00/rt2800usb.h
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2800usb.h
++++ b/drivers/net/wireless/rt2x00/rt2800usb.h
+@@ -48,6 +48,20 @@ static inline void rt2800_register_write
+ 	rt2x00usb_register_write_lock(rt2x00dev, offset, value);
+ }
+ 
++static inline void rt2800_register_multiread(struct rt2x00_dev *rt2x00dev,
++					     const unsigned int offset,
++					     void *value, const u32 length)
++{
++	rt2x00usb_register_multiread(rt2x00dev, offset, value, length);
++}
++
++static inline void rt2800_register_multiwrite(struct rt2x00_dev *rt2x00dev,
++					      const unsigned int offset,
++					      void *value, const u32 length)
++{
++	rt2x00usb_register_multiwrite(rt2x00dev, offset, value, length);
++}
++
+ /*
+  * RF chip defines.
+  *
