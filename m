@@ -1,53 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:45408 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752340AbZK3Rbq (ORCPT
+Received: from mail-yw0-f202.google.com ([209.85.211.202]:60438 "EHLO
+	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757998AbZKDUMC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2009 12:31:46 -0500
-Date: Mon, 30 Nov 2009 18:31:52 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 03/11] mwl8k: get rid of the AMSDU check in the transmit path
-Message-ID: <20091130173152.GS20214@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 4 Nov 2009 15:12:02 -0500
+MIME-Version: 1.0
+In-Reply-To: <20091104173539.28463.82770.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+	 <20091104173539.28463.82770.sendpatchset@localhost.localdomain>
+Date: Wed, 4 Nov 2009 21:12:07 +0100
+Message-ID: <14add3d10911041212y7f0126d4h5947d0074c8e0fa3@mail.gmail.com>
+Subject: Re: [PATCH 30/41] rt2800usb: fix comments in rt2800usb.h
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   11 -----------
- 1 files changed, 0 insertions(+), 11 deletions(-)
+On Wed, Nov 4, 2009 at 6:35 PM, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2800usb: fix comments in rt2800usb.h
+>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 43b2d64..9a60381 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -678,14 +678,6 @@ static inline u16 mwl8k_qos_setbit_ack(u16 qos, u8 ack_policy)
- 	return (qos & qos_mask) | ((ack_policy & val_mask) << shift);
- }
- 
--static inline u16 mwl8k_qos_setbit_amsdu(u16 qos)
--{
--	u16 val_mask = 1 << 7;
--
--	/* AMSDU present Bit 7 */
--	return qos | val_mask;
--}
--
- static inline u16 mwl8k_qos_setbit_qlen(u16 qos, u8 len)
- {
- 	u16 val_mask = 0xff;
-@@ -1475,9 +1467,6 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
- 		else
- 			qos = mwl8k_qos_setbit_ack(qos,
- 				MWL8K_TXD_ACK_POLICY_NORMAL);
--
--		if (qos & IEEE80211_QOS_CONTROL_A_MSDU_PRESENT)
--			qos = mwl8k_qos_setbit_amsdu(qos);
- 	}
- 
- 	dma = pci_map_single(priv->pdev, skb->data,
--- 
-1.5.6.4
+For what it is worth:
+
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
