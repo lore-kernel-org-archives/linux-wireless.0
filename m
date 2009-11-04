@@ -1,50 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36189 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755929AbZKIOPO (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:34014 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751110AbZKDBeH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 09:15:14 -0500
-Date: Mon, 9 Nov 2009 09:14:59 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Holger Schurig <holgerschurig@googlemail.com>,
-	Jan Kiszka <jan.kiszka@web.de>, linux-wireless@vger.kernel.org
-Subject: Re: ar9170 in AP mode
-Message-ID: <20091109141458.GA2805@tuxdriver.com>
-References: <4AF6C7CD.7060108@web.de> <878wehf85v.fsf@purkki.valot.fi> <4AF6CC02.8080204@web.de> <m3639k9kq4.wl%holgerschurig@gmail.com> <87ocncdrfz.fsf@purkki.valot.fi>
+	Tue, 3 Nov 2009 20:34:07 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87ocncdrfz.fsf@purkki.valot.fi>
+In-Reply-To: <200911040046.54247.bzolnier@gmail.com>
+References: <200911031951.05235.bzolnier@gmail.com> <200911032334.40547.bzolnier@gmail.com>
+	<14add3d10911031509l328e7674kb625b70250ff30fb@mail.gmail.com>
+	<200911040046.54247.bzolnier@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 4 Nov 2009 12:33:52 +1100
+Message-ID: <646765f40911031733u1641c0dr5d4eec30031e7cea@mail.gmail.com>
+Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project tree
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jarek Poplawski <jarkao2@gmail.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Miller <davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 09, 2009 at 10:37:36AM +0200, Kalle Valo wrote:
-> Holger Schurig <holgerschurig@googlemail.com> writes:
+On Wed, Nov 4, 2009 at 10:46, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+>> If you just want to continue with a hostile take-over of the rt2800
+>> maintainership, then please
+>> let us know that, so that we stop spending time on useless
+>
+> I fail to see why you see it as a hostile takeover.
 
-> > So, I personally prefer to have "Do an AP right" or "Don't do it at
-> > all". But please no general enablement.
-> >
-> > But, for example, having some CONFIG_AR9K_AP_MODE depending on
-> > CONFIG_EXPERIMENTAL and a bit fat warning would do for me. Hopefully
-> > this would scara away distros, so that they don't turn this on for
-> > there standard kernel :-)
-> 
-> I think EXPERIMENTAL is not enough, I would prefer that the user needs
-> to patch the driver to enable it. Or if that's not good enough, then
-> maybe depend on BROKEN.
+Updating MAINTAINERS to replace the current developers with yourself
+can be considered to be a hostile act.
 
-Here we go again... :-)
+If you want this for your own personal tree, then keep the patch
+private - don't include it in pull requests, patch listings etc.
 
-So I definitely agree that it should be off by default.  I also agree
-that it should be difficult to turn it on accidentally.  We don't
-need any extra wierd bug reports.
+And if you genuinely want the maintainership of the rt28xx drivers,
+then updating MAINTAINERS should be done as an afterthought after
+clearly proving that you are capable of maintaining the driver and
+working with the maintainers of the rt2x00 and wireless subsystems.
 
-OTOH, I think we can all acknowledge that many people have reasonable
-use cases with their fleet of equipment.  I wonder if a sysctl would
-be enough of a deterrent?  They are fairly simple to turn-on, but
-you do have to know about them to do so...
+> I will be glad to cooperate with you or anyone else from rt2x00 project.
+> However I will not spin in some stupid bureaucracy when I see that things
+> can be done more effectively.
 
-John
+It's not "stupid bureaucracy" it's *how* *it's* *done*.
+
+If I was going to submit a patch to the Marvell TOPDOG driver to add
+support for another related chipset, I'd be going out of my way to
+make sure that *everyone* involved was 100% happy so that the patch
+can get out to the people who matter: the users.
+
+Everyone has to do this, from big corporations like Intel, to you and
+me. For example, I recall the Intel IWL developers being smacked down
+a few months ago by John and David over exactly what constitutes a
+post-merge window "bugfix".
+
+The rules apply to everyone, just because you don't like them doesn't
+mean you can ignore them.
+
+Thanks,
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+.Plan: http://sites.google.com/site/juliancalaby/
