@@ -1,43 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f212.google.com ([209.85.217.212]:46358 "EHLO
-	mail-gx0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757410AbZKXCY6 (ORCPT
+Received: from web56101.mail.re3.yahoo.com ([216.252.110.195]:27111 "HELO
+	web56101.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751850AbZKDErS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 21:24:58 -0500
-Received: by gxk4 with SMTP id 4so12982314gxk.8
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 18:25:04 -0800 (PST)
-Message-ID: <4B0B43BF.9000708@gmail.com>
-Date: Mon, 23 Nov 2009 21:23:59 -0500
-From: Arnaud Lacombe <lacombar@gmail.com>
+	Tue, 3 Nov 2009 23:47:18 -0500
+Message-ID: <676274.50697.qm@web56101.mail.re3.yahoo.com>
+Date: Tue, 3 Nov 2009 20:47:23 -0800 (PST)
+From: vikram g <vikramadb@yahoo.com>
+Subject: Help regarding wireless driver programming
+To: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-To: mcgrof@bombadil.infradead.org
-CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
-Subject: [PATCH 02/13] Add typedef for `gfp_t'
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added on commit dd0fc66f by Al Viro in include/linux/types.h.
+Hi all,
+          I am a graduate student who wants to work on a
+project which uses one wireless card to connect to more than one
+network using time multiplexing at the same time. Yes, it is very
+similar to virtualwifi by microsoft. But I want to accomplish it on
+linux.
+About me :
+                  Bads :
+1) I am not very good at systems programming.
+2) The only things I have done are some kinds of socket programming and have some knowledge of packet sniffing techniques related to networks.
+3) I am not very knowledgeable about wireless device drivers or device driver layer for wireless networks.
+etc.
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- compat-2.6.14.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+          Can you please help me finding me a place to start. I have gone through the only material on linuxwireless.org (about mac80211 and cfg80211 slides), but as I said I am not very
+knowledgeable I did not understand much of it. Also I went very quickly
+skimmed through the source code for ath9k and iwlwifi slides. But it
+seems that the functionality I am looking for is not present in those
+layers. All the things I am looking for are 1) To know where the kernel
+connects to a wireless network by its SSID. 2) where it receives packets from the network layer that
+is IP protocol (by where I mean where in the source code is it
+implemented) so that I can capture them before it is passed to the 2nd
+layer of the OSI model.
 
-diff --git a/compat-2.6.14.h b/compat-2.6.14.h
-index ec12941..22e7e31 100644
---- a/compat-2.6.14.h
-+++ b/compat-2.6.14.h
-@@ -7,6 +7,8 @@
- /* Compat work for 2.6.14 */
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,14))
-
-+typedef unsigned int gfp_t;
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,14)) */
-
- #endif /* LINUX_26_14_COMPAT_H */
--- 
-1.6.3.3.385.g60647.dirty
+ 
+        I do not know actually if this project is going to be
+successfull given my less knowledge. Also it would be great if I get
+any feedback from any of you.
 
 
+I really really appreciate the
+time of all you guys. I know I am a beginner and I do not know if this
+mailing list is not for beginners. Please forgive me if this mailing
+list is not for guys like me and let me know about the same.
+
+
+Thanks,
+Vikram Gade
+Masters student in CS, University of New Mexico, Albuquerque, New Mexico
+
+PS: Please forgive me for any incorrect or bad English that may have crept in
+
+
+      
