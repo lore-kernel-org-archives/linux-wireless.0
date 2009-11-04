@@ -1,50 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:54241 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751145AbZKCPpD (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:5665 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755180AbZKDRcV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 10:45:03 -0500
-Date: Tue, 3 Nov 2009 07:43:02 -0800 (PST)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Marcel Holtmann <marcel@holtmann.org>
-cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
-	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Please consider reverting
- 7d930bc33653d5592dc386a76a38f39c2e962344
-In-Reply-To: <1257262588.3420.79.camel@localhost.localdomain>
-Message-ID: <alpine.LFD.2.01.0911030738260.31845@localhost.localdomain>
-References: <20091103053156.GA3212@core.coreip.homeip.net>  <20091102.224957.32364226.davem@davemloft.net>  <20091103065238.GE3212@core.coreip.homeip.net>  <1257232587.3420.55.camel@localhost.localdomain>  <alpine.LFD.2.01.0911030719430.31845@localhost.localdomain>
- <1257262588.3420.79.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Wed, 4 Nov 2009 12:32:21 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 04 Nov 2009 18:31:58 +0100
+Message-Id: <20091104173158.28463.66661.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+Subject: [PATCH 01/41] rt2800usb: make Kconfig help entry more helpful
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] rt2800usb: make Kconfig help entry more helpful
 
+Document known issues with the driver to aid distribution makers,
+users and developers in making informed decisions instead of wasting
+their time needlessly.
 
-On Wed, 4 Nov 2009, Marcel Holtmann wrote:
-> 
-> no questions that it needs fixed, I agree with you. However just blindly
-> reverting something, because it fixes it for one or two people, might
-> have side effects that causes more problems than the revert would
-> actually fix.
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+This reflects the actual state of affairs for driver in Linus' tree.
 
-Stop whining. Really.
+ drivers/net/wireless/rt2x00/Kconfig |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Everybody understands that it should be fixed.  That's not the question.
-
-But it should be fixed _quickly_. In this case, I have a bisection report 
-FROM TWO DAYS AGO. And I'm still kicking myself for not just reverting 
-that piece-of-shit commit then, because I spent the time to look at the 
-oops and the commit, and could tell that it was crap.
-
-Instead, I _did_ wait for the subsystem maintainer to get around to it. As 
-a result of waiting, I've now wasted time for a lot of other people.
-
-So stop your claptrap. You're wrong. I would suggest you now thank Dmitry, 
-and ask his forgiveness for (a) wasting his time and (b) then berating him 
-for it.
-
-			Linus
+Index: b/drivers/net/wireless/rt2x00/Kconfig
+===================================================================
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -104,7 +104,7 @@ config RT73USB
+ 	  When compiled as a module, this driver will be called rt73usb.
+ 
+ config RT2800USB
+-	tristate "Ralink rt2800 (USB) support"
++	tristate "Ralink rt2800 (USB) support (EXPERIMENTAL)"
+ 	depends on USB && EXPERIMENTAL
+ 	select RT2X00_LIB_USB
+ 	select RT2X00_LIB_HT
+@@ -115,6 +115,10 @@ config RT2800USB
+ 	  This adds experimental support for rt2800 wireless chipset family.
+ 	  Supported chips: RT2770, RT2870 & RT3070.
+ 
++	  Known issues:
++	  - support for RT2870 chips doesn't work with 802.11n APs yet
++	  - support for RT3070 chips is non-functional at the moment
++
+ 	  When compiled as a module, this driver will be called "rt2800usb.ko".
+ 
+ config RT2X00_LIB_PCI
