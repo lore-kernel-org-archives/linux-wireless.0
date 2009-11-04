@@ -1,43 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:56419 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753943AbZK1MGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Nov 2009 07:06:37 -0500
-Message-ID: <4B111249.7080105@openwrt.org>
-Date: Sat, 28 Nov 2009 13:06:33 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-CC: 8an@praha12.net, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] API for setting ACK timeout
-References: <200911261826.08576.8an@praha12.net> <4B103971.2020308@free.fr>
-In-Reply-To: <4B103971.2020308@free.fr>
-Content-Type: text/plain; charset=UTF-8
+Received: from fg-out-1718.google.com ([72.14.220.158]:41096 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932086AbZKDRc3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2009 12:32:29 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 04 Nov 2009 18:32:10 +0100
+Message-Id: <20091104173210.28463.95558.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+Subject: [PATCH 02/41] rt2800pci: make Kconfig help entry more helpful
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Benoit PAPILLAULT wrote:
-> Hello Lukas,
-> 
-> I think that's a good idea indeed. I think the relationship between ACK
-> timeout, CTS timeout and slottime and distance should be common (ie
-> implemented at mac80211 level) since the formula is not so trivial to me
-> (at least, I've seen several formulas flying around). Then, each driver
-> needs to convert ACK timeout since the HW registers probably takes into
-> account some specific MAC hw time.
-> 
-> Moreover, the formula is not the same for 2.4 GHz and 5 GHz.
-> 
-> madwifi had a patch for automatically finding the best ACK timeout,
-> maybe it could be ported to mac80211 as well.
-That patch is a rather ugly hack which involves doing statistics on the
-number of retransmissions while changing the distance setting. It has a
-tendency to crank up the ack timeout whenever there is some loss or
-interference on the link, thereby making the effects of the interference
-even worse. I don't think this should be added to mac80211.
-At some point, I will try to come up with an implementation for ath9k
-which doesn't involve such voodoo, but instead compares the tx timestamp
-of some data packets against the rx timestamp of ack packets. I don't
-know if this will work, but IMHO it's worth a try.
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] rt2800pci: make Kconfig help entry more helpful
 
-- Felix
+Document known issues with the driver to aid distribution makers,
+users and developers in making informed decisions instead of wasting
+their time needlessly.
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+This reflects the actual state of affairs for driver in net-next tree.
+
+ drivers/net/wireless/rt2x00/Kconfig |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+Index: b/drivers/net/wireless/rt2x00/Kconfig
+===================================================================
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -64,7 +64,7 @@ config RT2800PCI_SOC
+ 	default y
+ 
+ config RT2800PCI
+-	tristate "Ralink rt2800 (PCI/PCMCIA) support"
++	tristate "Ralink rt2800 (PCI/PCMCIA) support (VERY EXPERIMENTAL)"
+ 	depends on (RT2800PCI_PCI || RT2800PCI_SOC) && EXPERIMENTAL
+ 	select RT2X00_LIB_PCI if RT2800PCI_PCI
+ 	select RT2X00_LIB_SOC if RT2800PCI_SOC
+@@ -77,6 +77,9 @@ config RT2800PCI
+ 	  This adds support for rt2800 wireless chipset family.
+ 	  Supported chips: RT2760, RT2790, RT2860, RT2880, RT2890 & RT3052
+ 
++	  This driver is non-functional at the moment and is intended for
++	  developers.
++
+ 	  When compiled as a module, this driver will be called "rt2800pci.ko".
+ 
+ config RT2500USB
