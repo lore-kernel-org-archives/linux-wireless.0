@@ -1,36 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:22769 "EHLO mail.atheros.com"
+Received: from smtp1.irobot.com ([206.83.81.187]:6138 "EHLO smtp1.irobot.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754842AbZKTA6c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2009 19:58:32 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Nov 2009 16:58:39 -0800
-Subject: master-2009-11-19 busted? can't hold network connection for more
- than 1 second
-From: Felix Bitterli <Felix.Bitterli@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain
-Date: Thu, 19 Nov 2009 16:58:38 -0800
-Message-ID: <1258678718.5323.8.camel@darkslate>
+	id S932957AbZKDVq6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2009 16:46:58 -0500
+Message-ID: <4AF1F653.4000905@irobot.com>
+Date: Wed, 04 Nov 2009 13:46:59 -0800
+From: Adam Wozniak <awozniak@irobot.com>
 MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: Derek Smithies <derek@indranet.co.nz>,
+	linux-wireless@vger.kernel.org, nbd@openwrt.org
+Subject: Re: compat-wireless and minstrel
+References: <4AF0D54D.4090303@irobot.com> <200911041653.33737.chunkeey@googlemail.com> <alpine.DEB.2.00.0911050951000.16407@kauri.acheron.indranet.co.nz> <200911042242.48991.chunkeey@googlemail.com>
+In-Reply-To: <200911042242.48991.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-does anybody else see this?(sorry I can't bisect today, might have time
-tomorrow)
+$ ls -la /lib/firmware/ar9170*
+-rw-r--r-- 1 root root 83968 2009-10-17 15:55 /lib/firmware/ar9170-1.fw
+-rw-r--r-- 1 root root  3508 2009-10-17 15:55 /lib/firmware/ar9170-2.fw
+-rw-r--r-- 1 root root 15960 2009-10-17 15:55 /lib/firmware/ar9170.fw
 
-Wireless testing kernel master-2009-11-19 can't hold a network
-connection for more than 1 second, master-2009-11-18 is fine.
+It is unclear to me which are actually used.  I will try removing the 
+two stage firmware files and see what happens.
 
-H/W Thinkpad T43, Atheros AR9280 Rev:2 mem=0xf89e0000, irq=21
-
-Network office Wpa2/psk, tons of traffic/aps/clients.
-
-Thanks guys.
-Felix
+Christian Lamparter wrote:
+> On Wednesday 04 November 2009 22:01:39 Derek Smithies wrote:
+>   
+>> Hi,
+>> On Wed, 4 Nov 2009, Christian Lamparter wrote:
+>>
+>>     
+>>> On Wednesday 04 November 2009 02:13:49 Adam Wozniak wrote:
+>>>       
+>>>> I have two systems under test, both Dell laptops (a Latitude D630 and an
+>>>> Inspiron 600m) both running Ubuntu 9.10 with the latest updates, and
+>>>> bleeding edge compat-wireless-2009-11-02.  I'm using identical AR9170
+>>>> based D-Link DWA-160 USB 802.11adapters.  I'm using nuttcp to measure
+>>>> throughput.  I'm running in ad-hoc mode.  Both machines have the same
+>>>> ar9170 files in /lib/firmware.  The machines are sitting about 5 feet
+>>>> apart in my office.
+>>>>         
+> by the way: I forgot to ask, but which firmware do you use?
+> If you still have *two - stage*, then get rid of it.
+> Since one-stage fws contain a few fixes for most temporarily MAC/BB-hiccups.
+>
+>   
+>>>> I'm having occasional problems where throughput drops through the floor
+>>>> (0.5Mbps - 1.5Mbps).  When I cat
+>>>> /sys/kernel/debug/ieee80211/*/stations/*/rc_stats, one of the machines
+>>>> lists the full set of rates, but the other only lists 1M and 54M.  After
+>>>> a period of time, that machine drops 54M and lists only one rate
+>>>> (1Mbps), and the throughput listed by nuttcp drops accordingly.  I
+>>>> assume that, for whatever reason, the rates drop off the list and
+>>>> minstrel uses the only one left available to it.
+>>>>
+>>>> If I modify include/net/mac80211.h and force the inline function
+>>>> rate_supported to always return 1, this fixes the problem.  However, I
+>>>> think this is a band aid around some other issue.
+>>>>
+>>>> Any clues or ideas what the real issue might be here?
+>>>>         
+>> My guess::
+>>
+>> When an adhoc node (call it A) merges with a second adhoc node (call it 
+>> B) there is a capability comparison.
+>> Node A looks at the rates supported by B and says,
+>>    "I must only transmit at rates supported by B"
+>>
+>> Some management frames don't contain a full report of the rates supported 
+>> by the sender.
+>> My view is that node A (in this example) is incorrectly determining that B 
+>> only supports the 1mb/sec rate. Consequently, node A fills the 
+>> rate_supported  array with one rate - 1mb/sec.
+>>     
+> well, that's the thing... it sounds like something in cfg80211/mac80211 has
+> gone wrong. Since ibss supported/basic rates IEs should always include all
+> mandatory rates for the given band & mode. Therefore you should see the
+> 2Mbit, 11Mbit, 6MBit, 12Mbit 24Mbit rates in rc_stats array as well.
+>  
+>   
+>> =====
+>>     
+> =====
+>
+>   
+>> There is no evidence that Minstrel is doing anything wrong.
+>>     
+> ?but no one said it was minstrel fault? And it clearly isn't.
+>
+> But something OT: do you have already thoughts about
+> _extending_ minstrel to support 802.11n MCS rates?
+>
+> The current endeavor is stuck and needs a kick-start.
+> This is partly because of a hen-egg problem: 
+> no driver <-> no 11n rc. But it should be easy to get
+> 11n capable hw now (e.g. Mikrotik's R52N) and
+> ath9k should be the perfect testing platform right now.
+>
+> nbd has/had some thought about grouping rates and options
+> (e.g SGI/40MHz) together to reduce the number of rates to
+> improve the _search for best tp_ time. But dunno, maybe he
+> has already something better than the proof-of-concept I wrote earlier.
+>
+> Regards,
+> 	Chr
+>   
 
