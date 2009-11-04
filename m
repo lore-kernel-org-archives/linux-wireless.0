@@ -1,52 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:54884 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752325AbZKANlp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Nov 2009 08:41:45 -0500
-Received: by ewy28 with SMTP id 28so4112939ewy.18
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2009 05:41:49 -0800 (PST)
+Received: from mail.klingt.org ([86.59.21.178]:53287 "EHLO klingt.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751361AbZKDUIo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2009 15:08:44 -0500
+Message-ID: <4AF1DF4B.3010105@klingt.org>
+Date: Wed, 04 Nov 2009 21:08:43 +0100
+From: Tim Blechmann <tim@klingt.org>
 MIME-Version: 1.0
-In-Reply-To: <20091101131652.GA30381@hash.localnet>
-References: <200910291330.26172.mb@bu3sch.de> <200910291406.03422.mb@bu3sch.de>
-	 <200910291431.48388.mb@bu3sch.de>
-	 <20091031202156.GA29825@hash.localnet>
-	 <40f31dec0910312353w32aede90ib5e71545ca744389@mail.gmail.com>
-	 <20091101131652.GA30381@hash.localnet>
-Date: Sun, 1 Nov 2009 15:41:49 +0200
-Message-ID: <40f31dec0911010541l650513fg31ffcadd12698f0@mail.gmail.com>
-Subject: Re: ath5k AP issues
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Luis Rodriguez <mcgrof@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: Luis Correia <luis.f.correia@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: ralink rt2x00 maintainer list error
+References: <hcsfnq$bft$2@ger.gmane.org>	 <efe7343f0911041155t2cdeba04s31d7e049dc7f8317@mail.gmail.com>	 <4AF1DCC8.8020400@klingt.org> <efe7343f0911041201n6636adbahbbed24b45abd8c23@mail.gmail.com>
+In-Reply-To: <efe7343f0911041201n6636adbahbbed24b45abd8c23@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig8838FC59CFFF6A234AA542C5"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/11/1 Bob Copeland <me@bobcopeland.com>:
-> On Sun, Nov 01, 2009 at 08:53:44AM +0200, Nick Kossifidis wrote:
->> 2009/10/31 Bob Copeland <me@bobcopeland.com>:
->> notice the AR5K_QCU_RDYTIMECFG_ENABLE. So it's probable that the queue
->> starts on time and we miss sync because we wait an extra ready-time
->> period.
->
-> Yeah, I know -- I turned it off before running tests.  I don't
-> think it ever ran the queue, or if it did it was very late.
->
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig8838FC59CFFF6A234AA542C5
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-So beacon-sent gated option doesn't work ?
-Did you try also AR5K_DCU_MISC_ARBLOCK_IGNORE ?
+>>>> the MAINTAINERS file contains the entries for the ralink rt2k00:
+>>>> L:      linux-wireless@vger.kernel.org
+>>>> L:      users@rt2x00.serialmonkey.com (moderated for non-subscribers=
+)
+>>>>
+>>>> the second list doesn't exist any more, though ... would be nice, if=
+ the
+>>>> entry could be updated ...
+>>>
+>>> You can find the list information here:
+>>> http://rt2x00.serialmonkey.com/mailman/listinfo
+>>
+>> odd, that my posting was rejected, then ...
+>>
+>> btw, it would be nice, if you could mirror the list at gmane ... [1]
+>> seems to be outdated ...
+>=20
+> We've had some issues with Gmane some years ago and we've decided not
+> to mirror any of our lists there, sorry mate.
 
-Also according to docs Beacon frames should use queue 9 and CAB should
-use queue 8 (don't know why but docs say that these are the
-appropriate DCUs), beacon-gated triggering might only work if we use
-DCU 9 for beacons (now we are using queue 7 for beacons and queue 6
-for cab).
+some people (like me) prefer using mailinglists via nntp instead of
+subscribing to the developer mailinglists of dozens of projects ...
+but, well, if my bug is fixed before the 2.6.32 release, i am happy :)
+
+tim
+
+--=20
+tim@klingt.org
+http://tim.klingt.org
+
+Nothing exists until or unless it is observed. An artist is making
+something exist by observing it. And his hope for other people is that
+they will also make it exist by observing it. I call it 'creative
+observation.' Creative viewing.
+  William S. Burroughs
 
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+--------------enig8838FC59CFFF6A234AA542C5
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkrx30sACgkQdL+4qsZfVsvC0QCdEsu77lvX2eNTsJLkNhU4l4WK
+VaEAn2ZjxnZXqYWzKwxq6USpK1+0QTTq
+=LKBJ
+-----END PGP SIGNATURE-----
+
+--------------enig8838FC59CFFF6A234AA542C5--
