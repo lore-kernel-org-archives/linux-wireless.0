@@ -1,68 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:49883 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757923AbZKRREW convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:5665 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756958AbZKDRdR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 12:04:22 -0500
-Received: by bwz27 with SMTP id 27so1344918bwz.21
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 09:04:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1258560310.2003.91.camel@violet>
-References: <1258557771-10776-1-git-send-email-janakiram.sistla@gmail.com>
-	 <1258558500.2003.88.camel@violet>
-	 <4fb5db50911180755u4e01814bvcc4d0ec8d396abd@mail.gmail.com>
-	 <1258560310.2003.91.camel@violet>
-Date: Wed, 18 Nov 2009 22:34:26 +0530
-Message-ID: <4fb5db50911180904tf80bef3x37db0f93359d3e7a@mail.gmail.com>
-Subject: Re: [PATCH 2/2] Adding kerneldoc entry for radio type GPS
-From: Janakiram Sistla <janakiram.sistla@gmail.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 4 Nov 2009 12:33:17 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 04 Nov 2009 18:32:58 +0100
+Message-Id: <20091104173258.28463.94619.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
+Subject: [PATCH 08/41] rt2800usb: use rt2x00usb_register_multiwrite() to set key entries
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 18, 2009 at 9:35 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
-> Hi Janakiram,
->
->> >>
->> >> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
->> >> index d787d5f..212f555 100644
->> >> --- a/include/linux/rfkill.h
->> >> +++ b/include/linux/rfkill.h
->> >> @@ -36,6 +36,7 @@
->> >>   * @RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
->> >>   * @RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
->> >>   * @RFKILL_TYPE_FM: switch is on a FM device.
->> >> + * @RFKILL_TYPE_GPS: switch is on a GPS device.
->> >>   * @NUM_RFKILL_TYPES: number of defined rfkill types
->> >>   */
->> >>  enum rfkill_type {
->> >
->> > so this is getting stupid right now. I am sick of a really simple patch
->> > causes so much trouble. Even this one is wrong again. The GPS doc should
->> > obviously before FM.
->> Marcel I think you want me to submit GPS doc patch first.I will be
->> doing it shortly and then i will do it for FM.I am sorry for this mis
->> understanding
->
-> I don't care in which order you submit the patches, but the order of the
-> documentation should match the order in the enum. That is not a strict
-> requirement, but here it makes total sense to do so.
->
-> Also don't worry with the patches anymore. This took way too much ping
-> pong to get it right, that I just wrote them by myself and submitted
-> them for inclusion.
->
-> Regards
->
-> Marcel
->
->
->
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] rt2800usb: use rt2x00usb_register_multiwrite() to set key entries
 
-I hope in that case  i think it should be give signed off by both for
-both the patches.
+Since struct hw_key_entry is 32-bytes large and is smaller than
+CSR cache size (which is 64-bytes large) we can use the standard
+rt2x00usb_register_multiwrite() helper to set key entries.
 
-Regards,
-Ram
+This cleanup is a part of preparations for later code unification.
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |   18 ++++--------------
+ 1 file changed, 4 insertions(+), 14 deletions(-)
+
+Index: b/drivers/net/wireless/rt2x00/rt2800usb.c
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -392,7 +392,6 @@ static int rt2800usb_config_shared_key(s
+ {
+ 	struct hw_key_entry key_entry;
+ 	struct rt2x00_field32 field;
+-	int timeout;
+ 	u32 offset;
+ 	u32 reg;
+ 
+@@ -407,12 +406,8 @@ static int rt2800usb_config_shared_key(s
+ 		       sizeof(key_entry.rx_mic));
+ 
+ 		offset = SHARED_KEY_ENTRY(key->hw_key_idx);
+-		timeout = REGISTER_TIMEOUT32(sizeof(key_entry));
+-		rt2x00usb_vendor_request_large_buff(rt2x00dev, USB_MULTI_WRITE,
+-						    USB_VENDOR_REQUEST_OUT,
+-						    offset, &key_entry,
+-						    sizeof(key_entry),
+-						    timeout);
++		rt2x00usb_register_multiwrite(rt2x00dev, offset,
++					      &key_entry, sizeof(key_entry));
+ 	}
+ 
+ 	/*
+@@ -445,7 +440,6 @@ static int rt2800usb_config_pairwise_key
+ 					 struct ieee80211_key_conf *key)
+ {
+ 	struct hw_key_entry key_entry;
+-	int timeout;
+ 	u32 offset;
+ 
+ 	if (crypto->cmd == SET_KEY) {
+@@ -467,12 +461,8 @@ static int rt2800usb_config_pairwise_key
+ 		       sizeof(key_entry.rx_mic));
+ 
+ 		offset = PAIRWISE_KEY_ENTRY(key->hw_key_idx);
+-		timeout = REGISTER_TIMEOUT32(sizeof(key_entry));
+-		rt2x00usb_vendor_request_large_buff(rt2x00dev, USB_MULTI_WRITE,
+-						    USB_VENDOR_REQUEST_OUT,
+-						    offset, &key_entry,
+-						    sizeof(key_entry),
+-						    timeout);
++		rt2x00usb_register_multiwrite(rt2x00dev, offset,
++					      &key_entry, sizeof(key_entry));
+ 	}
+ 
+ 	/*
