@@ -1,76 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:36539 "EHLO mga03.intel.com"
+Received: from smtp1.irobot.com ([206.83.81.187]:18793 "EHLO smtp1.irobot.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754080AbZKTUFH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 15:05:07 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 09/19] iwlwifi: dynamically allocate buffer for sram debugfs file
-Date: Fri, 20 Nov 2009 12:05:00 -0800
-Message-Id: <1258747510-21233-10-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
-References: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
+	id S932826AbZKDVxv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2009 16:53:51 -0500
+Message-ID: <4AF1F7F2.1020806@irobot.com>
+Date: Wed, 04 Nov 2009 13:53:54 -0800
+From: Adam Wozniak <awozniak@irobot.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Christian Lamparter <chunkeey@googlemail.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	linux-wireless@vger.kernel.org, nbd@openwrt.org
+Subject: Re: compat-wireless and minstrel
+References: <4AF0D54D.4090303@irobot.com> <200911041653.33737.chunkeey@googlemail.com> 	<alpine.DEB.2.00.0911050951000.16407@kauri.acheron.indranet.co.nz> 	<200911042242.48991.chunkeey@googlemail.com> <4AF1F653.4000905@irobot.com> <43e72e890911041350i75108dc3g454ab8577d8abacd@mail.gmail.com>
+In-Reply-To: <43e72e890911041350i75108dc3g454ab8577d8abacd@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+My guess from this is that I'm using the single stage:
 
-Dynamically allocate memory for dumping SRAM based on the length of memory
-to be displayed.
+# dmesg | grep ar9170
+[  273.608189] usb 2-1: firmware: requesting ar9170.fw
+[  274.019650] Registered led device: ar9170-phy1::tx
+[  274.019698] Registered led device: ar9170-phy1::assoc
+[  274.019751] usbcore: registered new interface driver ar9170usb
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |   15 +++++++++++++--
- 1 files changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 4630094..016ff40 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -228,13 +228,21 @@ static ssize_t iwl_dbgfs_sram_read(struct file *file,
- 					size_t count, loff_t *ppos)
- {
- 	u32 val;
--	char buf[1024];
-+	char *buf;
- 	ssize_t ret;
- 	int i;
- 	int pos = 0;
- 	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
--	const size_t bufsz = sizeof(buf);
-+	size_t bufsz;
- 
-+	bufsz =  30 + priv->dbgfs->sram_len * sizeof(char) * 12;
-+	buf = kmalloc(bufsz, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+	pos += scnprintf(buf + pos, bufsz - pos, "sram_len: %d\n",
-+			priv->dbgfs->sram_len);
-+	pos += scnprintf(buf + pos, bufsz - pos, "sram_offset: %d\n",
-+			priv->dbgfs->sram_offset);
- 	for (i = priv->dbgfs->sram_len; i > 0; i -= 4) {
- 		val = iwl_read_targ_mem(priv, priv->dbgfs->sram_offset + \
- 					priv->dbgfs->sram_len - i);
-@@ -251,11 +259,14 @@ static ssize_t iwl_dbgfs_sram_read(struct file *file,
- 				break;
- 			}
- 		}
-+		if (!(i % 16))
-+			pos += scnprintf(buf + pos, bufsz - pos, "\n");
- 		pos += scnprintf(buf + pos, bufsz - pos, "0x%08x ", val);
- 	}
- 	pos += scnprintf(buf + pos, bufsz - pos, "\n");
- 
- 	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
-+	kfree(buf);
- 	return ret;
- }
- 
--- 
-1.5.6.3
+Luis R. Rodriguez wrote:
+> On Wed, Nov 4, 2009 at 1:46 PM, Adam Wozniak <awozniak@irobot.com> wrote:
+>   
+>> $ ls -la /lib/firmware/ar9170*
+>> -rw-r--r-- 1 root root 83968 2009-10-17 15:55 /lib/firmware/ar9170-1.fw
+>> -rw-r--r-- 1 root root  3508 2009-10-17 15:55 /lib/firmware/ar9170-2.fw
+>> -rw-r--r-- 1 root root 15960 2009-10-17 15:55 /lib/firmware/ar9170.fw
+>>
+>> It is unclear to me which are actually used.
+>>     
+>
+> By default the ar9170.fw is tried first, if that fails then the others
+> are tried. The 2-stage firmware will not be tried if your device
+> cannot handle it but right now only the AVM Fritz devices can't handle
+> the 2-stage firmware.
+>
+> Christian should we just remove 2-stage fw support?
+>
+>   Luis
+>   
 
