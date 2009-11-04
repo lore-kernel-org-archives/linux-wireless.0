@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5616 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751205AbZKJGdr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 01:33:47 -0500
-Subject: Re: [PATCH 1/2] Libertas: coding style cleanup in ethtool.c
-From: Dan Williams <dcbw@redhat.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Amitkumar Karwar <akarwar@marvell.com>
-In-Reply-To: <1257818653-13460-1-git-send-email-bzhao@marvell.com>
-References: <1257818653-13460-1-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain
-Date: Mon, 09 Nov 2009 22:33:24 -0800
-Message-Id: <1257834804.15493.35.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:46180 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758071AbZKDTzK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2009 14:55:10 -0500
+Received: by ewy3 with SMTP id 3so3497395ewy.37
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 11:55:15 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <hcsfnq$bft$2@ger.gmane.org>
+References: <hcsfnq$bft$2@ger.gmane.org>
+Date: Wed, 4 Nov 2009 19:55:14 +0000
+Message-ID: <efe7343f0911041155t2cdeba04s31d7e049dc7f8317@mail.gmail.com>
+Subject: Re: ralink rt2x00 maintainer list error
+From: Luis Correia <luis.f.correia@gmail.com>
+To: Tim Blechmann <tim@klingt.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-11-09 at 18:04 -0800, Bing Zhao wrote:
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Hi Tim,
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+On Wed, Nov 4, 2009 at 18:04, Tim Blechmann <tim@klingt.org> wrote:
+> the MAINTAINERS file contains the entries for the ralink rt2k00:
+> L:      linux-wireless@vger.kernel.org
+> L:      users@rt2x00.serialmonkey.com (moderated for non-subscribers)
+>
+> the second list doesn't exist any more, though ... would be nice, if the
+> entry could be updated ...
 
-> ---
->  drivers/net/wireless/libertas/ethtool.c |   12 ++++++++----
->  1 files changed, 8 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
-> index 039b555..6efa388 100644
-> --- a/drivers/net/wireless/libertas/ethtool.c
-> +++ b/drivers/net/wireless/libertas/ethtool.c
-> @@ -175,10 +175,14 @@ static int lbs_ethtool_set_wol(struct net_device *dev,
->  	if (wol->wolopts & ~(WAKE_UCAST|WAKE_MCAST|WAKE_BCAST|WAKE_PHY))
->  		return -EOPNOTSUPP;
->  
-> -	if (wol->wolopts & WAKE_UCAST) criteria |= EHS_WAKE_ON_UNICAST_DATA;
-> -	if (wol->wolopts & WAKE_MCAST) criteria |= EHS_WAKE_ON_MULTICAST_DATA;
-> -	if (wol->wolopts & WAKE_BCAST) criteria |= EHS_WAKE_ON_BROADCAST_DATA;
-> -	if (wol->wolopts & WAKE_PHY)   criteria |= EHS_WAKE_ON_MAC_EVENT;
-> +	if (wol->wolopts & WAKE_UCAST)
-> +		criteria |= EHS_WAKE_ON_UNICAST_DATA;
-> +	if (wol->wolopts & WAKE_MCAST)
-> +		criteria |= EHS_WAKE_ON_MULTICAST_DATA;
-> +	if (wol->wolopts & WAKE_BCAST)
-> +		criteria |= EHS_WAKE_ON_BROADCAST_DATA;
-> +	if (wol->wolopts & WAKE_PHY)
-> +		criteria |= EHS_WAKE_ON_MAC_EVENT;
->  
->  	return lbs_host_sleep_cfg(priv, criteria, (struct wol_config *)NULL);
->  }
+You can find the list information here:
+http://rt2x00.serialmonkey.com/mailman/listinfo
 
+>
+> thnx, tim
+>
+> --
+> tim@klingt.org
+> http://tim.klingt.org
+
+Luis Correia
+rt2x00 project admin
