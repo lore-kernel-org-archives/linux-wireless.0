@@ -1,67 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:36124 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757880AbZKRR0l convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:53580 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758380AbZKESlm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 12:26:41 -0500
-Received: by bwz27 with SMTP id 27so1369086bwz.21
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 09:26:46 -0800 (PST)
+	Thu, 5 Nov 2009 13:41:42 -0500
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 05/41] rt2800pci: fix comment about register access
+Date: Thu, 5 Nov 2009 19:41:43 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173232.28463.47998.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173232.28463.47998.sendpatchset@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <1258560310.2003.91.camel@violet>
-References: <1258557771-10776-1-git-send-email-janakiram.sistla@gmail.com>
-	 <1258558500.2003.88.camel@violet>
-	 <4fb5db50911180755u4e01814bvcc4d0ec8d396abd@mail.gmail.com>
-	 <1258560310.2003.91.camel@violet>
-Date: Wed, 18 Nov 2009 22:56:46 +0530
-Message-ID: <4fb5db50911180926v1376b67bya3e14419643c2e00@mail.gmail.com>
-Subject: Re: [PATCH 2/2] Adding kerneldoc entry for radio type GPS
-From: Janakiram Sistla <janakiram.sistla@gmail.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911051941.44268.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 18, 2009 at 9:35 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
-> Hi Janakiram,
->
->> >>
->> >> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
->> >> index d787d5f..212f555 100644
->> >> --- a/include/linux/rfkill.h
->> >> +++ b/include/linux/rfkill.h
->> >> @@ -36,6 +36,7 @@
->> >>   * @RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
->> >>   * @RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
->> >>   * @RFKILL_TYPE_FM: switch is on a FM device.
->> >> + * @RFKILL_TYPE_GPS: switch is on a GPS device.
->> >>   * @NUM_RFKILL_TYPES: number of defined rfkill types
->> >>   */
->> >>  enum rfkill_type {
->> >
->> > so this is getting stupid right now. I am sick of a really simple patch
->> > causes so much trouble. Even this one is wrong again. The GPS doc should
->> > obviously before FM.
->> Marcel I think you want me to submit GPS doc patch first.I will be
->> doing it shortly and then i will do it for FM.I am sorry for this mis
->> understanding
->
-> I don't care in which order you submit the patches, but the order of the
-> documentation should match the order in the enum. That is not a strict
-> requirement, but here it makes total sense to do so.
->
-> Also don't worry with the patches anymore. This took way too much ping
-> pong to get it right, that I just wrote them by myself and submitted
-> them for inclusion.
+On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2800pci: fix comment about register access
+> 
+> Registers used for indirect BBP and RF registers access are
+> respectively BBPCSR and RFCSR, also make it clear that all CSR
+> registers access goes through rt2x00pci_register_[read,write]()
+> methods.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-I hope in that case  i think it should be give signed off by both authors  for
-both the patches.
-> Regards
->
-> Marcel
->
->
->
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Regards,
-Ram.
+> ---
+>  drivers/net/wireless/rt2x00/rt2800pci.c |    4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
+> ===================================================================
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -56,8 +56,10 @@ MODULE_PARM_DESC(nohwcrypt, "Disable har
+>  
+>  /*
+>   * Register access.
+> + * All access to the CSR registers will go through the methods
+> + * rt2x00pci_register_read and rt2x00pci_register_write.
+>   * BBP and RF register require indirect register access,
+> - * and use the CSR registers PHY_CSR3 and PHY_CSR4 to achieve this.
+> + * and use the CSR registers BBPCSR and RFCSR to achieve this.
+>   * These indirect registers work with busy bits,
+>   * and we will try maximal REGISTER_BUSY_COUNT times to access
+>   * the register while taking a REGISTER_BUSY_DELAY us delay
+> 
+
+
