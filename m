@@ -1,107 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:49861 "EHLO
-	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758372AbZKJVmU (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:58788 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758506AbZKETVf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 16:42:20 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH v2] rt2x00: Properly detect Ralink RT3070 devices.
-Date: Tue, 10 Nov 2009 22:41:51 +0100
-Message-Id: <1257889311-354-1-git-send-email-gwingerde@gmail.com>
+	Thu, 5 Nov 2009 14:21:35 -0500
+Received: by bwz27 with SMTP id 27so342366bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2009 11:21:39 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4af26c2f.v0dYcKOlddHI9QEQ%Larry.Finger@lwfinger.net>
+References: <4af26c2f.v0dYcKOlddHI9QEQ%Larry.Finger@lwfinger.net>
+Date: Thu, 5 Nov 2009 19:21:39 +0000
+Message-ID: <3ace41890911051121u16c7de8cpb97d0be12cdd0aa6@mail.gmail.com>
+Subject: Re: [PATCH] rtl8187: Remove deprecated 'qual' from returned RX status
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow rt2800usb to properly detect RT307X based devices, and set the appropriate chipset values.
+On Thu, Nov 5, 2009 at 6:09 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> The qual member of ieee80211_rx_status is deprecated. As a result, this
+> driver no longer needs to calculate a quality value.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Gertjan van Wingede <gwingerde@gmail.com>
----
+Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
 
-Rebased to apply on top of Bart's second series of unification patches.
+a bit busy lately. I'l give this a try soonest. BTW, well-done with
+the oops on unplug.
 
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   28 +++++++++++++++-------------
- drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
- 2 files changed, 16 insertions(+), 13 deletions(-)
+Hin-Tak
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index eb6d129..c41bb4a 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1828,24 +1828,26 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
- 	rt2800_register_read(rt2x00dev, MAC_CSR0, &reg);
- 
-+	rt2x00_set_chip_rf(rt2x00dev, value, reg);
-+
- 	if (rt2x00_intf_is_usb(rt2x00dev)) {
- 		struct rt2x00_chip *chip = &rt2x00dev->chip;
- 
--		rt2x00_set_chip(rt2x00dev, RT2870, value, reg);
--
- 		/*
- 		 * The check for rt2860 is not a typo, some rt2870 hardware
- 		 * identifies itself as rt2860 in the CSR register.
- 		 */
--		if (!rt2x00_check_rev(chip, 0xfff00000, 0x28600000) &&
--		    !rt2x00_check_rev(chip, 0xfff00000, 0x28700000) &&
--		    !rt2x00_check_rev(chip, 0xfff00000, 0x28800000) &&
--		    !rt2x00_check_rev(chip, 0xffff0000, 0x30700000)) {
-+		if (rt2x00_check_rev(chip, 0xfff00000, 0x28600000) ||
-+		    rt2x00_check_rev(chip, 0xfff00000, 0x28700000) ||
-+		    rt2x00_check_rev(chip, 0xfff00000, 0x28800000)) {
-+			rt2x00_set_chip_rt(rt2x00dev, RT2870);
-+		} else if (rt2x00_check_rev(chip, 0xffff0000, 0x30700000)) {
-+			rt2x00_set_chip_rt(rt2x00dev, RT3070);
-+		} else {
- 			ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
- 			return -ENODEV;
- 		}
--	} else if (rt2x00_intf_is_pci(rt2x00dev))
--		rt2x00_set_chip_rf(rt2x00dev, value, reg);
-+	}
- 
- 	if (!rt2x00_rf(&rt2x00dev->chip, RF2820) &&
- 	    !rt2x00_rf(&rt2x00dev->chip, RF2850) &&
-@@ -1853,10 +1855,8 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	    !rt2x00_rf(&rt2x00dev->chip, RF2750) &&
- 	    !rt2x00_rf(&rt2x00dev->chip, RF3020) &&
- 	    !rt2x00_rf(&rt2x00dev->chip, RF2020) &&
--	    (rt2x00_intf_is_usb(rt2x00dev) ||
--	     (rt2x00_intf_is_pci(rt2x00dev) &&
--	      !rt2x00_rf(&rt2x00dev->chip, RF3021) &&
--	      !rt2x00_rf(&rt2x00dev->chip, RF3022)))) {
-+	    !rt2x00_rf(&rt2x00dev->chip, RF3021) &&
-+	    !rt2x00_rf(&rt2x00dev->chip, RF3022)) {
- 		ERROR(rt2x00dev, "Invalid RF chipset detected.\n");
- 		return -ENODEV;
- 	}
-@@ -2057,7 +2057,9 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 		spec->channels = rf_vals;
- 	} else if (rt2x00_intf_is_usb(rt2x00dev) &&
- 		    (rt2x00_rf(chip, RF3020) ||
--		     rt2x00_rf(chip, RF2020))) {
-+		     rt2x00_rf(chip, RF2020) ||
-+		     rt2x00_rf(chip, RF3021) ||
-+		     rt2x00_rf(chip, RF3022))) {
- 		spec->num_channels = ARRAY_SIZE(rf_vals_3070);
- 		spec->channels = rf_vals_3070;
- 	}
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 5a1b161..62da572 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -172,6 +172,7 @@ struct rt2x00_chip {
- #define RT3052		0x3052	/* WSOC */
- #define RT3090		0x3090	/* 2.4GHz PCIe */
- #define RT2870		0x1600
-+#define RT3070		0x1800
- 
- 	u16 rf;
- 	u32 rev;
--- 
-1.6.5.2
-
+> ---
+>
+> John,
+>
+> This is 2.6.33 material.
+>
+> Larry
+> ---
+>
+> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> @@ -320,7 +320,6 @@ static void rtl8187_rx_cb(struct urb *ur
+>        struct ieee80211_rx_status rx_status = { 0 };
+>        int rate, signal;
+>        u32 flags;
+> -       u32 quality;
+>        unsigned long f;
+>
+>        spin_lock_irqsave(&priv->rx_queue.lock, f);
+> @@ -338,10 +337,9 @@ static void rtl8187_rx_cb(struct urb *ur
+>                        (typeof(hdr))(skb_tail_pointer(skb) - sizeof(*hdr));
+>                flags = le32_to_cpu(hdr->flags);
+>                /* As with the RTL8187B below, the AGC is used to calculate
+> -                * signal strength and quality. In this case, the scaling
+> +                * signal strength. In this case, the scaling
+>                 * constants are derived from the output of p54usb.
+>                 */
+> -               quality = 130 - ((41 * hdr->agc) >> 6);
+>                signal = -4 - ((27 * hdr->agc) >> 6);
+>                rx_status.antenna = (hdr->signal >> 7) & 1;
+>                rx_status.mactime = le64_to_cpu(hdr->mac_time);
+> @@ -354,23 +352,18 @@ static void rtl8187_rx_cb(struct urb *ur
+>                 * In testing, none of these quantities show qualitative
+>                 * agreement with AP signal strength, except for the AGC,
+>                 * which is inversely proportional to the strength of the
+> -                * signal. In the following, the quality and signal strength
+> -                * are derived from the AGC. The arbitrary scaling constants
+> +                * signal. In the following, the signal strength
+> +                * is derived from the AGC. The arbitrary scaling constants
+>                 * are chosen to make the results close to the values obtained
+>                 * for a BCM4312 using b43 as the driver. The noise is ignored
+>                 * for now.
+>                 */
+>                flags = le32_to_cpu(hdr->flags);
+> -               quality = 170 - hdr->agc;
+>                signal = 14 - hdr->agc / 2;
+>                rx_status.antenna = (hdr->rssi >> 7) & 1;
+>                rx_status.mactime = le64_to_cpu(hdr->mac_time);
+>        }
+>
+> -       if (quality > 100)
+> -               quality = 100;
+> -       rx_status.qual = quality;
+> -       priv->quality = quality;
+>        rx_status.signal = signal;
+>        priv->signal = signal;
+>        rate = (flags >> 20) & 0xF;
+> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187.h
+> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
+> @@ -119,7 +119,6 @@ struct rtl8187_priv {
+>        } hw_rev;
+>        struct sk_buff_head rx_queue;
+>        u8 signal;
+> -       u8 quality;
+>        u8 noise;
+>        u8 slot_time;
+>        u8 aifsn[4];
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
