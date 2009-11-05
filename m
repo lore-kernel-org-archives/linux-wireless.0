@@ -1,36 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:45681 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754424AbZKGCKc (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:41835 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751004AbZKEAQf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 21:10:32 -0500
-Received: from [192.168.10.7] (builder.redfish-solutions.com [192.168.10.7])
-	(authenticated bits=0)
-	by mail.redfish-solutions.com (8.14.3/8.14.3) with ESMTP id nA72Aa3Y006607
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Fri, 6 Nov 2009 19:10:37 -0700
-Message-ID: <4AF4D71B.5000907@redfish-solutions.com>
-Date: Fri, 06 Nov 2009 18:10:35 -0800
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+	Wed, 4 Nov 2009 19:16:35 -0500
 MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: Also breakage in compat-wireless-2.6 when compiled against 2.6.27.29
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <alpine.LFD.2.01.0911041551220.31845@localhost.localdomain>
+References: <43e72e890911041540hd1e5f87u8d282d9c95857504@mail.gmail.com>
+	<alpine.LFD.2.01.0911041551220.31845@localhost.localdomain>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 4 Nov 2009 16:16:20 -0800
+Message-ID: <43e72e890911041616w547fc9e4t34915827f65c2682@mail.gmail.com>
+Subject: Re: Reverting 5d423 fixes loading of ath9k on Acer Extensa 7630EZ
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Ingo Molnar <mingo@elte.hu>, linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Yannick Roehlly <yannick.roehlly@free.fr>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jesse.barnes@intel.com>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"John W. Linville" <linville@tuxdriver.com>, berndl81@gmx.at,
+	Greg KH <greg@kroah.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also seeing breakage in the libertas driver:
+On Wed, Nov 4, 2009 at 3:57 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+>
+>
+> On Wed, 4 Nov 2009, Luis R. Rodriguez wrote:
+>>
+>> Can you please consider reviewing this issue and help determine if
+>> this indeed needs to be reverted for 2.6.32 and the next 2.6.31.y.
+>>
+>> I am curious if other devices would work by reverting this as well.
+>> [ ... ] For details please feel free to check:
+>>
+>> http://bugzilla.kernel.org/show_bug.cgi?id=14402
+>
+> That same commit was the cause for
+>
+>        http://bugzilla.kernel.org/show_bug.cgi?id=13940
+>
+> and we just increased the rounding to make it go away (see commit
+> 15b812f1). But that was a hack.
+>
+> And if that didn't help the ath9k case, then we should just revert
+> entirely.
 
-  CC [M]  /home/philipp/kernel/build_i586/compat-wireless-2009-11-01/drivers/net/wireless/libertas/assoc.o
-  CC [M]  /home/philipp/kernel/build_i586/compat-wireless-2009-11-01/drivers/net/wireless/libertas/cfg.o
-  CC [M]  /home/philipp/kernel/build_i586/compat-wireless-2009-11-01/drivers/net/wireless/ath/ath9k/eeprom_9287.o
-/home/philipp/kernel/build_i586/compat-wireless-2009-11-01/drivers/net/wireless/libertas/assoc.c: In function 'lbs_ret_802_11_rssi':
-/home/philipp/kernel/build_i586/compat-wireless-2009-11-01/drivers/net/wireless/libertas/assoc.c:483: error: implicit declaration of function 'get_unaligned_le16'
-make[5]: *** [/home/philipp/kernel/build_i586/compat-wireless-2009-11-01/drivers/net/wireless/libertas/assoc.o] Error 1
+Alright, will see if Bernhard is up for testing the 15b812f1 hack and
+report back.
 
-
-I was thinking of adding bracketing to config.mk to make it easy to turn this off as well...
-
--Philip
-
-
+  Luis
