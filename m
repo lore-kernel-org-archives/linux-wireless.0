@@ -1,102 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:33672 "EHLO mx3.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750714AbZKEHPT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2009 02:15:19 -0500
-Date: Thu, 5 Nov 2009 08:14:31 +0100
-From: Ingo Molnar <mingo@elte.hu>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:62926 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757705AbZKESt1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Nov 2009 13:49:27 -0500
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 14/41] rt2800pci: add rt2800_regbusy_read() wrapper
+Date: Thu, 5 Nov 2009 19:49:29 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
 	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Yannick Roehlly <yannick.roehlly@free.fr>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jesse.barnes@intel.com>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"John W. Linville" <linville@tuxdriver.com>, berndl81@gmx.at,
-	Greg KH <greg@kroah.com>
-Subject: Re: Reverting 5d423 fixes loading of ath9k on Acer Extensa 7630EZ
-Message-ID: <20091105071431.GA14055@elte.hu>
-References: <43e72e890911041540hd1e5f87u8d282d9c95857504@mail.gmail.com> <alpine.LFD.2.01.0911041551220.31845@localhost.localdomain>
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173341.28463.11122.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173341.28463.11122.sendpatchset@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LFD.2.01.0911041551220.31845@localhost.localdomain>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911051949.30187.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-* Linus Torvalds <torvalds@linux-foundation.org> wrote:
-
-> On Wed, 4 Nov 2009, Luis R. Rodriguez wrote:
-> > 
-> > Can you please consider reviewing this issue and help determine if 
-> > this indeed needs to be reverted for 2.6.32 and the next 2.6.31.y.
-> > 
-> > I am curious if other devices would work by reverting this as well.
-> > [ ... ] For details please feel free to check:
-> > 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=14402
+On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2800pci: add rt2800_regbusy_read() wrapper
 > 
-> That same commit was the cause for
+> Part of preparations for later code unification.
 > 
-> 	http://bugzilla.kernel.org/show_bug.cgi?id=13940
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+The macros are the same for rt2800pci and rt2800usb.
+So it might be better to move the entire define set into rt2800lib.h
+
+If you haven't done so already in a subsequent patch, please fix it,
+otherwise:
+
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+
+Ivo
+
+
+> ---
+>  drivers/net/wireless/rt2x00/rt2800pci.c |   12 ++++++------
+>  drivers/net/wireless/rt2x00/rt2800pci.h |    8 ++++++++
+>  2 files changed, 14 insertions(+), 6 deletions(-)
 > 
-> and we just increased the rounding to make it go away (see commit 
-> 15b812f1). But that was a hack.
+> Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
+> ===================================================================
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -69,14 +69,14 @@ MODULE_PARM_DESC(nohwcrypt, "Disable har
+>   * The _lock versions must be used if you already hold the csr_mutex
+>   */
+>  #define WAIT_FOR_BBP(__dev, __reg) \
+> -	rt2x00pci_regbusy_read((__dev), BBP_CSR_CFG, BBP_CSR_CFG_BUSY, (__reg))
+> +	rt2800_regbusy_read((__dev), BBP_CSR_CFG, BBP_CSR_CFG_BUSY, (__reg))
+>  #define WAIT_FOR_RFCSR(__dev, __reg) \
+> -	rt2x00pci_regbusy_read((__dev), RF_CSR_CFG, RF_CSR_CFG_BUSY, (__reg))
+> +	rt2800_regbusy_read((__dev), RF_CSR_CFG, RF_CSR_CFG_BUSY, (__reg))
+>  #define WAIT_FOR_RF(__dev, __reg) \
+> -	rt2x00pci_regbusy_read((__dev), RF_CSR_CFG0, RF_CSR_CFG0_BUSY, (__reg))
+> +	rt2800_regbusy_read((__dev), RF_CSR_CFG0, RF_CSR_CFG0_BUSY, (__reg))
+>  #define WAIT_FOR_MCU(__dev, __reg) \
+> -	rt2x00pci_regbusy_read((__dev), H2M_MAILBOX_CSR, \
+> -			       H2M_MAILBOX_CSR_OWNER, (__reg))
+> +	rt2800_regbusy_read((__dev), H2M_MAILBOX_CSR, \
+> +			    H2M_MAILBOX_CSR_OWNER, (__reg))
+>  
+>  static void rt2800pci_bbp_write(struct rt2x00_dev *rt2x00dev,
+>  				const unsigned int word, const u8 value)
+> @@ -350,7 +350,7 @@ static void rt2800pci_efuse_read(struct 
+>  	rt2800_register_write(rt2x00dev, EFUSE_CTRL, reg);
+>  
+>  	/* Wait until the EEPROM has been loaded */
+> -	rt2x00pci_regbusy_read(rt2x00dev, EFUSE_CTRL, EFUSE_CTRL_KICK, &reg);
+> +	rt2800_regbusy_read(rt2x00dev, EFUSE_CTRL, EFUSE_CTRL_KICK, &reg);
+>  
+>  	/* Apparently the data is read from end to start */
+>  	rt2800_register_read(rt2x00dev, EFUSE_DATA3,
+> Index: b/drivers/net/wireless/rt2x00/rt2800pci.h
+> ===================================================================
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.h
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.h
+> @@ -63,6 +63,14 @@ static inline void rt2800_register_multi
+>  	rt2x00pci_register_multiwrite(rt2x00dev, offset, value, length);
+>  }
+>  
+> +static inline int rt2800_regbusy_read(struct rt2x00_dev *rt2x00dev,
+> +				      const unsigned int offset,
+> +				      const struct rt2x00_field32 field,
+> +				      u32 *reg)
+> +{
+> +	return rt2x00pci_regbusy_read(rt2x00dev, offset, field, reg);
+> +}
+> +
+>  /*
+>   * RF chip defines.
+>   *
 > 
-> And if that didn't help the ath9k case, then we should just revert 
-> entirely.
 
-Agreed - below is the combo 15b812f1 + 5d423ccd revert. (Would be nice 
-to get the boot log of the latest post-15b812f1 kernel that Yinghai 
-asked for before we revert, in the hope of better understanding the 
-problem.)
 
-Thanks,
-
-	Ingo
-
-Signed-off-by: Ingo Molnar <mingo@elte.hu>
----
-diff --git a/arch/x86/kernel/e820.c b/arch/x86/kernel/e820.c
-index d17d482..b322e30 100644
---- a/arch/x86/kernel/e820.c
-+++ b/arch/x86/kernel/e820.c
-@@ -617,7 +617,7 @@ __init int e820_search_gap(unsigned long *gapstart, unsigned long *gapsize,
-  */
- __init void e820_setup_gap(void)
- {
--	unsigned long gapstart, gapsize;
-+	unsigned long gapstart, gapsize, round;
- 	int found;
- 
- 	gapstart = 0x10000000;
-@@ -634,9 +634,14 @@ __init void e820_setup_gap(void)
- #endif
- 
- 	/*
--	 * e820_reserve_resources_late protect stolen RAM already
-+	 * See how much we want to round up: start off with
-+	 * rounding to the next 1MB area.
- 	 */
--	pci_mem_start = gapstart;
-+	round = 0x100000;
-+	while ((gapsize >> 4) > round)
-+		round += round;
-+	/* Fun with two's complement */
-+	pci_mem_start = (gapstart + round) & -round;
- 
- 	printk(KERN_INFO
- 	       "Allocating PCI resources starting at %lx (gap: %lx:%lx)\n",
-@@ -1378,8 +1383,8 @@ static unsigned long ram_alignment(resource_size_t pos)
- 	if (mb < 16)
- 		return 1024*1024;
- 
--	/* To 64MB for anything above that */
--	return 64*1024*1024;
-+	/* To 32MB for anything above that */
-+	return 32*1024*1024;
- }
- 
- #define MAX_RESOURCE_SIZE ((resource_size_t)-1)
