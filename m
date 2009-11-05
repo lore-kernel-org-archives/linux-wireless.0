@@ -1,36 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f215.google.com ([209.85.219.215]:63643 "EHLO
-	mail-ew0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751416AbZK2UQX (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:32950 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758425AbZKESvo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Nov 2009 15:16:23 -0500
-Received: by ewy7 with SMTP id 7so3726297ewy.28
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Nov 2009 12:16:29 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: annotate sleeping driver ops
-References: <1259439566-26397-1-git-send-email-kalle.valo@iki.fi>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 29 Nov 2009 22:16:27 +0200
-In-Reply-To: <1259439566-26397-1-git-send-email-kalle.valo@iki.fi> (Kalle Valo's message of "Sat\, 28 Nov 2009 22\:19\:26 +0200")
-Message-ID: <87ws196q90.fsf@purkki.valot.fi>
+	Thu, 5 Nov 2009 13:51:44 -0500
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 21/41] rt2800usb: add rt2800_mcu_request() wrapper
+Date: Thu, 5 Nov 2009 19:51:47 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173432.28463.51210.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173432.28463.51210.sendpatchset@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911051951.47323.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kalle.valo@iki.fi> writes:
+On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2800usb: add rt2800_mcu_request() wrapper
+> 
+> Part of preparations for later code unification.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-> To make it easier to notice cases of calling sleeping ops in atomic context,
-> annotate driver-ops.h with appropiate might_sleep() calls. At the same time,
-> also document in mac80211.h the op functions with missing contexts.
->
-> mac80211 doesn't seem to use get_tx_stats anywhere currently. Just to be on
-> the safe side, I documented it to be atomic, but hopefully the op can be
-> removed in the future.
->
-> Compile-tested only.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-FWIW, I tested the patch with wl1251 and iwl3945 and no warnings visible.
 
--- 
-Kalle Valo
