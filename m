@@ -1,76 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.irobot.com ([206.83.81.187]:53318 "EHLO smtp1.irobot.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754727AbZKMAcH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 19:32:07 -0500
-Message-ID: <4AFCA909.7090302@irobot.com>
-Date: Thu, 12 Nov 2009 16:32:09 -0800
-From: Adam Wozniak <awozniak@irobot.com>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:44510 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751309AbZKEGJr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Nov 2009 01:09:47 -0500
+Date: Thu, 05 Nov 2009 00:09:51 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] rtl8187: Remove deprecated 'qual' from returned RX status
+Message-ID: <4af26c2f.v0dYcKOlddHI9QEQ%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Derek Smithies <derek@indranet.co.nz>,
-	linux-wireless@vger.kernel.org, nbd@openwrt.org
-Subject: Re: compat-wireless and minstrel
-References: <4AF0D54D.4090303@irobot.com> <200911122103.27455.chunkeey@googlemail.com> <4AFC8E4F.5090307@irobot.com> <200911130035.52308.chunkeey@googlemail.com>
-In-Reply-To: <200911130035.52308.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Eep, I can already tell this isn't going to work out.  The ewma 
-probability reported in rc_stats is always 0.0, and the success and 
-attempts columns are always zero, as if the minstrel layer is constantly 
-being reinitialized.  My previous patch was better.
+The qual member of ieee80211_rx_status is deprecated. As a result, this
+driver no longer needs to calculate a quality value.
 
---Adam
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Christian Lamparter wrote:
-> On Thursday 12 November 2009 23:38:07 Adam Wozniak wrote:
->   
->> I see what you're doing there.
->> That didn't quite work, but I'm fairly confident this one will.
->>     
-> yep, what about the attached version? ...it's slightly different...
->
-> BTW: Use "diff -up" or "diff -uprN" to create patches. (or git :) )
-> ---
->
-> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-> index fbffce9..7c6c170 100644
-> --- a/net/mac80211/ibss.c
-> +++ b/net/mac80211/ibss.c
-> @@ -246,9 +246,12 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
->  	if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
->  		return;
->  
-> +	/* make sure mandatory rates are always added */
-> +	supp_rates = ieee80211_mandatory_rates(local, band);
-> +
->  	if (sdata->vif.type == NL80211_IFTYPE_ADHOC && elems->supp_rates &&
->  	    memcmp(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0) {
-> -		supp_rates = ieee80211_sta_get_rates(local, elems, band);
-> +		supp_rates |= ieee80211_sta_get_rates(local, elems, band);
->  
->  		rcu_read_lock();
->  
-> @@ -257,9 +260,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
->  			u32 prev_rates;
->  
->  			prev_rates = sta->sta.supp_rates[band];
-> -			/* make sure mandatory rates are always added */
-> -			sta->sta.supp_rates[band] = supp_rates |
-> -				ieee80211_mandatory_rates(local, band);
-> +			sta->sta.supp_rates[band] = supp_rates;
->  
->  #ifdef CONFIG_MAC80211_IBSS_DEBUG
->  			if (sta->sta.supp_rates[band] != prev_rates)
-> @@ -272,6 +273,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
->  				    (unsigned long long) supp_rates,
->  				    (unsigned long long) sta->sta.supp_rates[band]);
->  #endif
-> +			rate_control_rate_init(sta);
->  		} else
->  			ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, supp_rates);
->  
->   
+John,
 
+This is 2.6.33 material.
+
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -320,7 +320,6 @@ static void rtl8187_rx_cb(struct urb *ur
+ 	struct ieee80211_rx_status rx_status = { 0 };
+ 	int rate, signal;
+ 	u32 flags;
+-	u32 quality;
+ 	unsigned long f;
+ 
+ 	spin_lock_irqsave(&priv->rx_queue.lock, f);
+@@ -338,10 +337,9 @@ static void rtl8187_rx_cb(struct urb *ur
+ 			(typeof(hdr))(skb_tail_pointer(skb) - sizeof(*hdr));
+ 		flags = le32_to_cpu(hdr->flags);
+ 		/* As with the RTL8187B below, the AGC is used to calculate
+-		 * signal strength and quality. In this case, the scaling
++		 * signal strength. In this case, the scaling
+ 		 * constants are derived from the output of p54usb.
+ 		 */
+-		quality = 130 - ((41 * hdr->agc) >> 6);
+ 		signal = -4 - ((27 * hdr->agc) >> 6);
+ 		rx_status.antenna = (hdr->signal >> 7) & 1;
+ 		rx_status.mactime = le64_to_cpu(hdr->mac_time);
+@@ -354,23 +352,18 @@ static void rtl8187_rx_cb(struct urb *ur
+ 		 * In testing, none of these quantities show qualitative
+ 		 * agreement with AP signal strength, except for the AGC,
+ 		 * which is inversely proportional to the strength of the
+-		 * signal. In the following, the quality and signal strength
+-		 * are derived from the AGC. The arbitrary scaling constants
++		 * signal. In the following, the signal strength
++		 * is derived from the AGC. The arbitrary scaling constants
+ 		 * are chosen to make the results close to the values obtained
+ 		 * for a BCM4312 using b43 as the driver. The noise is ignored
+ 		 * for now.
+ 		 */
+ 		flags = le32_to_cpu(hdr->flags);
+-		quality = 170 - hdr->agc;
+ 		signal = 14 - hdr->agc / 2;
+ 		rx_status.antenna = (hdr->rssi >> 7) & 1;
+ 		rx_status.mactime = le64_to_cpu(hdr->mac_time);
+ 	}
+ 
+-	if (quality > 100)
+-		quality = 100;
+-	rx_status.qual = quality;
+-	priv->quality = quality;
+ 	rx_status.signal = signal;
+ 	priv->signal = signal;
+ 	rate = (flags >> 20) & 0xF;
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187.h
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
+@@ -119,7 +119,6 @@ struct rtl8187_priv {
+ 	} hw_rev;
+ 	struct sk_buff_head rx_queue;
+ 	u8 signal;
+-	u8 quality;
+ 	u8 noise;
+ 	u8 slot_time;
+ 	u8 aifsn[4];
