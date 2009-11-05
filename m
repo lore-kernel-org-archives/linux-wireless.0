@@ -1,34 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54292 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753723AbZKPOYi (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:58636 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757031AbZKEUjo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2009 09:24:38 -0500
-Message-Id: <20091116142134.288122270@sipsolutions.net>
-Date: Mon, 16 Nov 2009 15:21:34 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Jouni Malinen <j@w1.fi>
-Subject: [RFC 0/3] fix the aMPDU reorder placement
-Mime-Version: 1.0
+	Thu, 5 Nov 2009 15:39:44 -0500
+Message-ID: <4AF33812.8080401@gmail.com>
+Date: Thu, 05 Nov 2009 21:39:46 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+CC: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 34/41] rt2x00: add support for different chipset interfaces
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173610.28463.4270.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173610.28463.4270.sendpatchset@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Our code has a comment about where the reordering
-should happen, and why it doesn't hurt being where
-it currently is.
+On 11/04/09 18:36, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2x00: add support for different chipset interfaces
+> 
+> Enhance rt2x00 infrastructure by adding explicit information
+> about used chipset interface to struct rt2x00_chip.
+> 
+> The new field will be used by rt2800 drivers for rt2800 library.
+> 
+> Also add commonly used rt2x00_intf_is_pci() and rt2x00_intf_is_usb()
+> helpers to make code easier to read (noticed by Ivo van Doorn).
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
 
-However, this code needs to use sta_info_get()
-without knowing which virtual interface is the one
-we're processing the frames for, which is getting
-in my way.
+For what it is worth:
 
-Rather than trying to find the virtual interface
-by the DA, I decided to put the reorder code at the
-right place instead because then the station pointer
-is already known (so we even save a lookup).
-
-Please test! Especially against APs that are prone
-to hitting the timeout.
-
-johannes
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
