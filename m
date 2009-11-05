@@ -1,191 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from multi.imgtec.com ([194.200.65.239]:6119 "EHLO
-	filter3.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754944AbZKBN7h convert rfc822-to-8bit (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:36600 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758438AbZKETUA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 08:59:37 -0500
+	Thu, 5 Nov 2009 14:20:00 -0500
+Date: Thu, 5 Nov 2009 20:19:52 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	David Miller <davem@davemloft.net>,
+	torvalds@linux-foundation.org, linville@tuxdriver.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Please consider reverting
+	7d930bc33653d5592dc386a76a38f39c2e962344
+Message-ID: <20091105191951.GC1392@ucw.cz>
+References: <20091103053156.GA3212@core.coreip.homeip.net> <20091102.224957.32364226.davem@davemloft.net> <20091103065238.GE3212@core.coreip.homeip.net> <1257232587.3420.55.camel@localhost.localdomain> <1257234299.28469.25.camel@johannes.local> <20091103082201.GG3212@core.coreip.homeip.net> <1257237061.28469.43.camel@johannes.local> <20091103084744.GH3212@core.coreip.homeip.net> <1257238623.28469.47.camel@johannes.local> <1257262187.3420.73.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Subject: RE: [PATCH] libertas: remove internal buffers from GSPI driver
-Date: Mon, 2 Nov 2009 13:59:25 -0000
-Message-ID: <0D107966AF6D79418315B7C5549F4B5101150E65@lemail1.le.imgtec.org>
-In-Reply-To: <45e8e6c40910291048g2958c086oa6b7a39dbb68258f@mail.gmail.com>
-References: <1256687501-8636-1-git-send-email-andrey@cozybit.com> <1256749998.3850.45.camel@localhost.localdomain> <45e8e6c40910291048g2958c086oa6b7a39dbb68258f@mail.gmail.com>
-From: "George Shore" <George.Shore@imgtec.com>
-To: "Andrey Yurovsky" <andrey@cozybit.com>,
-	"Dan Williams" <dcbw@redhat.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	<libertas-dev@lists.infradead.org>, <sebatian@breakpoint.cc>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1257262187.3420.73.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrey,
-
-
-
-I've been unable to fully test the WPA2 functionality - I've not got
-
-access to a WPA2 enabled access point - however, I have had a chance to
-
-try the PS mode while connected to a WEP access point (something I
-
-neglected to test first time around - my apologies :-S )
-
-
-
-After connecting to the AP, I enabled PS mode and then tried the
-
-following commands (in order):
-
-
-
-* iwconfig (no arguments)
-
-  This reurned the connection information, and indicated that power
-
-namagement had been enabled;
-
-
-
-* iwlist wlan0 scan
-
-  This gave the following in my log:
-
-[  741.343474] libertas: if_spi_c2h_cmd: error: response packet too
-
-large: 4616 bytes, but maximum is 2400
-
-[  741.370373] libertas: if_spi_c2h_cmd: err=-22
-
-[  741.396573] libertas: lbs_spi_thread: got error -22
-
-[  741.426908] libertas: if_spi_c2h_cmd: error: response packet too
-
-large: 4616 bytes, but maximum is 2400
-
-[  741.453290] libertas: if_spi_c2h_cmd: err=-22
-
-[  741.466275] libertas: lbs_spi_thread: got error -22
-
-[  743.454090] libertas: if_spi_c2h_cmd: error: response packet too
-
-large: 4616 bytes, but maximum is 2400
-
-[  743.480131] libertas: if_spi_c2h_cmd: err=-22
-
-[  743.505172] libertas: lbs_spi_thread: got error -22
-
-[  747.896416] libertas: if_spi_c2h_cmd: error: response packet too
-
-large: 4616 bytes, but maximum is 2400
-
-[  747.909623] libertas: if_spi_c2h_cmd: err=-22
-
-[  747.934910] libertas: lbs_spi_thread: got error -22
-
-
-
-  And then returned a 'Failed to read scan data : Resource temporarily
-
-unavailable' error.
-
-
-
-* iwconfig wlan0 power off
-
-  After the previous command, this hung with no output on the console or
-
-log.
-
-
-
-* iwconfig
-
-  After displaying the 'lo' entry (with no wireless extensions) this too
-
-hung with no output on the console or log.
-
-
-
-I apologise for not testing this functionality of the driver, our use
-
-case for the device doesn't include power management so I didn't test it
-
-(to be honest, I'm not sure how our usage of the device would affect any
-
-results wrt power management - I'm still pretty new at this whole
-
-testing and driver development gig!)
-
-
-
-Hope this helps, and if I can get onto a WPA2 AP I'll do some more
-
-tests,
-
-
-
-George.
-
-
-
-> -----Original Message-----
-
-> From: Andrey Yurovsky [mailto:andrey@cozybit.com]
-
-> Sent: 29 October 2009 17:49
-
-> To: Dan Williams
-
-> Cc: linux-wireless@vger.kernel.org; libertas-dev@lists.infradead.org;
-
-> sebatian@breakpoint.cc; George Shore
-
-> Subject: Re: [PATCH] libertas: remove internal buffers from GSPI
-
-driver
-
+On Wed 2009-11-04 00:29:47, Marcel Holtmann wrote:
+> Hi Johannes,
 > 
-
-> On Wed, Oct 28, 2009 at 10:13 AM, Dan Williams <dcbw@redhat.com>
-
-wrote:
-
-> > Looks OK to me, but I don't have any of the SPI hardware so when you
-
-get
-
-> > a Tested-by:, let me know and I'll ack.
-
+> > > > I just think that it's a matter of courtesy that should be independent
+> > > > from the release cycle to ask the author/maintainer by default, not as a
+> > > > second thought ("unless [...] have other solution"). You can always CC
+> > > > Linus and ask him to revert if you don't get a response.
+> > > > 
+> > > > What's wrong with that? It doesn't actually delay the action, but it
+> > > > makes the discussion much more friendly and cooperative instead of
+> > > > giving the author and maintainer the feeling that their opinion only
+> > > > matters as a second thought.
+> > > > 
+> > > 
+> > > I think you are reading too much into who was addressed directly and who
+> > > was "only" CCed... 
+> > 
+> > Maybe. But it seems to be happening pretty often recently that people
+> > first ask for a revert and then for a fix, ignoring any thought that
+> > might have gone into a particular commit...
 > 
-
-> Thanks Dan, by the way the issue with WPA2 and IEEE PS is unrelated to
-
-> this patch (that is, I can reproduce it without the patch applied) so
-
-> we'll need to address that separately.  So at this point we have:
-
+> I have to agree here. It happens why too often lately. And this needs to
+> stop. Otherwise why bother with subsystem maintainers? Just send
+> everything to Linus directly and have him to review every line of code.
 > 
+> Dmitry, this is not against you, but the proper way would have been to
+> just mail linux-wireless about it and you would have gotten the same
+> response to it than you got by including Linus and LKML. This blind CC
+> to LKML is not helpful. It starts confusion and just increases the load
 
-> Tested-by: George Shore <george.shore@imgtec.com>
+Yes, lkml cc *is* helpful, as he's probably not the only one hitting
+that problem.
+								Pavel
 
-> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
-
--
-
-This message is subject to Imagination Technologies' e-mail terms: http://www.imgtec.com/e-mail.htm
-
-
-
-Imagination Technologies Ltd is a limited company registered in England No:  1306335 
-
-Registered Office: Imagination House, Home Park Estate, Kings Langley, Hertfordshire, WD4 8LZ.  
-
-
-
-Email to and from the company may be monitored for compliance and other administrative purposes.  
-
--
-
-
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
