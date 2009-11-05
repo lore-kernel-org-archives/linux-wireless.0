@@ -1,62 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42616 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758468AbZKYQb4 (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:33853 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757936AbZKES7g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 11:31:56 -0500
-Subject: Re: RFC: mac80211: add ethtool support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Patrick McHardy <kaber@trash.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4B0D58EA.8060304@trash.net>
-References: <4B0D58EA.8060304@trash.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-DHnywhhYoqL1FTQdrevj"
-Date: Wed, 25 Nov 2009 17:31:32 +0100
-Message-ID: <1259166692.32372.13.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 5 Nov 2009 13:59:36 -0500
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 28/41] rt2x00: fix rt2x00pci_register_multi[read,write]() arguments
+Date: Thu, 5 Nov 2009 19:59:38 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173525.28463.40807.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173525.28463.40807.sendpatchset@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911051959.39212.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2x00: fix rt2x00pci_register_multi[read,write]() arguments
+> 
+> Change type of 'length' argument from u16 to u32 (all arguments
+> match rt2x00usb_register_multi[read,write]() ones now).
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
---=-DHnywhhYoqL1FTQdrevj
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-On Wed, 2009-11-25 at 17:18 +0100, Patrick McHardy wrote:
->=20
->     mac80211: add ethtool support
->    =20
->     Add ethtool support and add a drvname field to struct ieee80211_ops, =
-which is
->     used for ethtool driver information. This is useful with multiple dif=
-ferent
->     wireless cards to find out which device is using which driver.
->    =20
-
-I thought we _had_ ethtool support via cfg80211?!
-
-johannes
-
---=-DHnywhhYoqL1FTQdrevj
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLDVvgAAoJEODzc/N7+QmarDIQALG23dUb1tKuiUPuIDWAKoIT
-fV68rRUSH9NW53wH5M0nde+h3WMBqMXc8iutzPASbSr200zjIJyvIHBM/Qemx7Zz
-AuO2aBp2QBM6Z8UE34ZRjPtZCGnGUQF/XSuJN6t5QQmICTlMAqoehqoEA5H/ZmZn
-86CngFE/o/NgtFYJ97DxsJAoMu2JmGmElG+/vlWOCwoGiAayni2EJjBoa5Cr2RJ5
-CffQSooqE8jEy79bdkgrSHz1CzsbDpW/eNAqK70e0XO4IbDqxCUOo7PFWukPvN/0
-P6Bm2QTgF1FsjV9zd2/1U9fFldeURoF8bFTtQw2fUdJzytZqq2vkDN+oZVk9O787
-qI+1zb2E08w5u13DKg3UbMevCpwDho3ltZsUut16mQqrrwlv+20ggdgGR4R8WUtK
-x5UdjYGX+h90BzRqjKXl7JYN2poG58mKvpqo0TMJwT6R/pXu+gc1/7iZNdsAXY13
-GkKHDjpPihXGVcAa77ABSduLv3uyxchI7tBJ4S4niQkJho5pXDqIkhpPuY+4/qxN
-lqm5SbnKRkMOkaTz3XPvgkfWOrpI1DeNVjAJW45MZT3d5VnNRekmuRQvDI66nLMz
-v9R2j37zEJAFpLoah1masFmpRaTcHp8OX/eJu32zKe2NmjgAGee4XWZKO5sw+Fz8
-Koe8Nta2GkpvkOYZVtK9
-=7iMS
------END PGP SIGNATURE-----
-
---=-DHnywhhYoqL1FTQdrevj--
 
