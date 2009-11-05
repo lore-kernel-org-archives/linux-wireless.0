@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:58452 "EHLO
-	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756527AbZKWVpC (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:36609 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755338AbZKECeL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 16:45:02 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH v2 2/8] rt2x00: Remove unused variable frame_control from rt2x00mac_tx.
-Date: Mon, 23 Nov 2009 22:44:48 +0100
-Message-Id: <1259012694-14869-3-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1259012694-14869-2-git-send-email-gwingerde@gmail.com>
-References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-2-git-send-email-gwingerde@gmail.com>
+	Wed, 4 Nov 2009 21:34:11 -0500
+Received: by yxe17 with SMTP id 17so6938299yxe.33
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 18:34:16 -0800 (PST)
+Message-ID: <4AF239A6.5050406@lwfinger.net>
+Date: Wed, 04 Nov 2009 20:34:14 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>, sidhayn@gmail.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8187: Fix kernel oops when device is removed when
+ LEDS enabled (Bugzilla #14539)
+References: <4af11879./IumKJ+RAbw7Zkq6%Larry.Finger@lwfinger.net> <200911041630.20122.chunkeey@googlemail.com> <20091104164938.GG12965@tuxdriver.com> <200911042214.54230.herton@mandriva.com.br>
+In-Reply-To: <200911042214.54230.herton@mandriva.com.br>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As additional fallout also remove the also unused variable ieee80211hdr.
+On 11/04/2009 06:14 PM, Herton Ronaldo Krzesinski wrote:
+> 
+> Hi, I checked here and the code above in led_classdev_unregister is the same in
+> 2.6.31, so I think the patch from Larry should also be applied/sent to 2.6.31.x
+> stable, as the bug could happen there too.
 
-Reported-by: Johannes Stezenbach <js@sig21.net>
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Acked-by: Ivo van Doorn <ivdoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00mac.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+Herton,
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 9c90ceb..de549c2 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -103,10 +103,8 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
--	struct ieee80211_hdr *ieee80211hdr = (struct ieee80211_hdr *)skb->data;
- 	enum data_queue_qid qid = skb_get_queue_mapping(skb);
- 	struct data_queue *queue;
--	u16 frame_control;
- 
- 	/*
- 	 * Mac80211 might be calling this function while we are trying
-@@ -141,7 +139,6 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	 * either RTS or CTS-to-self frame and handles everything
- 	 * inside the hardware.
- 	 */
--	frame_control = le16_to_cpu(ieee80211hdr->frame_control);
- 	if ((tx_info->control.rates[0].flags & (IEEE80211_TX_RC_USE_RTS_CTS |
- 						IEEE80211_TX_RC_USE_CTS_PROTECT)) &&
- 	    !rt2x00dev->ops->hw->set_rts_threshold) {
--- 
-1.6.5.3
+Technically you are correct; however, I did extensive testing of
+2.6.31 and _NEVER_ got the failure. The sequencing is a bug waiting to
+happen, but something in the post 2.6.31 merge actually enabled the
+bug to happen. I tried bisection to determine which change actully did
+that, but was not successful.
 
+My feeling is that stable can be left alone. Of course, if bug reports
+of kernel panics on unload of rtl8187 start occurring, we will know
+how to fix it.
+
+Larry
