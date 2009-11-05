@@ -1,45 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:59355 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932266AbZKBU1Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 15:27:25 -0500
-Message-ID: <4AEF40A0.2030408@openwrt.org>
-Date: Mon, 02 Nov 2009 21:27:12 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:44630 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758284AbZKESpd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Nov 2009 13:45:33 -0500
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 10/41] rt2800pci: add rt2800_register_[read,write]() wrappers
+Date: Thu, 5 Nov 2009 19:45:29 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173313.28463.67108.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173313.28463.67108.sendpatchset@localhost.localdomain>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Fix IBSS merge
-References: <19182.33851.980271.360757@gargle.gargle.HOWL> 	<1257151486.3555.161.camel@johannes.local> <20091102153614.GC14046@tuxdriver.com> 	<4AEF14E9.7060902@nbd.name> <43e72e890911020947i3a9ea736ve95fa6b1fac724a4@mail.gmail.com>
-In-Reply-To: <43e72e890911020947i3a9ea736ve95fa6b1fac724a4@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911051945.30129.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Mon, Nov 2, 2009 at 9:20 AM, Felix Fietkau <nbd@nbd.name> wrote:
->> John W. Linville wrote:
->>> On Mon, Nov 02, 2009 at 09:44:46AM +0100, Johannes Berg wrote:
->>>> On Mon, 2009-11-02 at 12:33 +0530, Sujith wrote:
->>>> > Currently, in IBSS mode, a single creator would go into
->>>> > a loop trying to merge/scan. This happens because the IBSS timer is
->>>> > rearmed on finishing a scan and the subsequent
->>>> > timer invocation requests another scan immediately.
->>>> >
->>>> > This patch fixes this issue by checking if we have just completed
->>>> > a scan run trying to merge with other IBSS networks.
->>>>
->>>> Heh, how many people do we need to fix IBSS? :)
->>>
->>> Yeah, no kidding...I suspect that actual IBSS users are few, and a
->>> substantial number of those are doing crazy things with it! :-)
->> Yeah, we're doing crazy things like mesh networks of few hundred
->> nodes... something that 11s isn't really suitable for. :-)
+On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2800pci: add rt2800_register_[read,write]() wrappers
 > 
-> Anyone know if this applies for 32?
-What exactly?
+> Part of preparations for later code unification.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-- Felix
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
