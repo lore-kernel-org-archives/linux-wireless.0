@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:32846 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753700AbZKNC3g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 21:29:36 -0500
-Message-ID: <4AFE1612.5070805@openwrt.org>
-Date: Sat, 14 Nov 2009 03:29:38 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-yw0-f202.google.com ([209.85.211.202]:36891 "EHLO
+	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750869AbZKEFQL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Nov 2009 00:16:11 -0500
+Received: by ywh40 with SMTP id 40so6999754ywh.33
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 21:16:17 -0800 (PST)
+Message-ID: <4AF25F9E.2050808@lwfinger.net>
+Date: Wed, 04 Nov 2009 23:16:14 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: reduce the amount of unnecessary traffic on cooked
- monitor interfaces
+To: Richard Farina <sidhayn@gmail.com>
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8187: Fix kernel oops when device is removed when
+ LEDS enabled (Bugzilla #14539)
+References: <4af11879./IumKJ+RAbw7Zkq6%Larry.Finger@lwfinger.net> <200911041630.20122.chunkeey@googlemail.com> <20091104164938.GG12965@tuxdriver.com> <200911042214.54230.herton@mandriva.com.br> <4AF239A6.5050406@lwfinger.net> <4AF25AA6.60606@gmail.com>
+In-Reply-To: <4AF25AA6.60606@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to handle association and authentication in AP mode,
-hostapd needs access to the tx status info of its own frames
-through a cooked monitor interface. Without this patch the
-cooked monitor interfaces also passed on tx status information
-for packets from other virtual interfaces. This creates a
-significant performance issue on embedded system. Hostapd
-tries to work around this by installing a Linux Socket Filter
-that only captures the frames it's interested in, however
-data duplication and socket filter matching still uses up
-enough CPU cycles to be very noticeable on small systems.
-This patch ensures that tx status information of non-injected
-frames does not make it to cooked monitor interfaces.
+On 11/04/2009 10:55 PM, Richard Farina wrote:
+> Using kernel 2.6.29 and compat-wireless-stable 2.6.31* I am able to make
+> it flake.  I may be the only one lucky enough to make this explode with
+> a high degree of accuracy but I can't see why we wouldn't fix what we
+> know is a bug waiting to happen.  My vote is to add this patch to
+> 2.6.31.x as well.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
+With compat-wireless-stable 2.6.31, you essentially have the wireless
+drivers of 2.6.32, which does have the problem. I could not make the
+problem happen with vanilla 2.6.31, which is why I do not think we
+need to send the fix to 2.6.31.Y. Of course, your system is much more
+sensitive than mine. If you get the kernel panic with 2.6.31, then we
+will need to reconsider. As openSUSE 11.2 will be out in a little over
+a week using the 2.6.31 kernel, the problem may show up there.
 
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -587,6 +587,11 @@ void ieee80211_tx_status(struct ieee8021
- 			if (!netif_running(sdata->dev))
- 				continue;
- 
-+			if ((sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES) &&
-+			    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
-+			    (type == IEEE80211_FTYPE_DATA))
-+				continue;
-+
- 			if (prev_dev) {
- 				skb2 = skb_clone(skb, GFP_ATOMIC);
- 				if (skb2) {
+Larry
