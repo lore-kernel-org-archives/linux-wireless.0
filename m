@@ -1,62 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:41025 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759136AbZKFSb0 (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:49531 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758446AbZKESle (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 13:31:26 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project tree
-Date: Fri, 6 Nov 2009 19:30:13 +0100
-Cc: Pavel Machek <pavel@ucw.cz>, Ingo Molnar <mingo@elte.hu>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>
-References: <200911031951.05235.bzolnier@gmail.com> <20091106074643.GA5562@ucw.cz> <200911061858.56816.IvDoorn@gmail.com>
-In-Reply-To: <200911061858.56816.IvDoorn@gmail.com>
+	Thu, 5 Nov 2009 13:41:34 -0500
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 04/41] rt2800pci: fix crypto in TX frame
+Date: Thu, 5 Nov 2009 19:41:36 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173224.28463.49296.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173224.28463.49296.sendpatchset@localhost.localdomain>
 MIME-Version: 1.0
-Message-Id: <200911061930.13069.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911051941.36666.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 06 November 2009 18:58:56 Ivo van Doorn wrote:
+On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2800pci: fix crypto in TX frame
+> 
+> Based on rt2800usb patch from Benoit PAPILLAULT
+> (commit 17616310836ad2cc45a64576ef0e1520b0dcc81b).
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-> drivers/net/staging/rt28{6,7}0 was developed by Ralink and I acked
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-The original vendor drivers were:
-- rt2860
-- rt2870
-- rt3070
-- rt3090
+> ---
+>  drivers/net/wireless/rt2x00/rt2800pci.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
+> ===================================================================
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -2195,7 +2195,7 @@ static void rt2800pci_write_tx_desc(stru
+>  	rt2x00_set_field32(&word, TXWI_W1_BW_WIN_SIZE, txdesc->ba_size);
+>  	rt2x00_set_field32(&word, TXWI_W1_WIRELESS_CLI_ID,
+>  			   test_bit(ENTRY_TXD_ENCRYPT, &txdesc->flags) ?
+> -			       (skbdesc->entry->entry_idx + 1) : 0xff);
+> +			   txdesc->key_idx : 0xff);
+>  	rt2x00_set_field32(&word, TXWI_W1_MPDU_TOTAL_BYTE_COUNT,
+>  			   skb->len - txdesc->l2pad);
+>  	rt2x00_set_field32(&word, TXWI_W1_PACKETID,
+> 
 
-Each weighting ~100 KLOC.
 
-The current staging drivers (rt2860 w/ RT3090 support and rt2870 w/ RT3070
-support) are the result of my work on getting staging drivers under control
-(+ trying some new strategies of dealing with ugly code) and weight ~75 KLOC
-_together_ (they share the wireless stack code).
-
-> the merged for those drivers after the asurance that it was only merged
-> to please the users so developers could focus on the rt2x00 version of
-> the driver.
-
-Could somebody please explain me (in the public or in the private) what is
-the reason behind whole affair about staging drivers because all the time
-I feel like I'm missing some important detail here.  It would a lot more
-productive than all the things that I could hear about my agenda, my work
-or my intellectual abilities in the past.
-
-[ Like I said before I got only interested into them in April this year
-  while doing casual staging cleanups and I'm not affiliated with any
-  distribution vendor. ]
-
-Thanks.
--- 
-Bartlomiej Zolnierkiewicz
