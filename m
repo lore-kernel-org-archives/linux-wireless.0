@@ -1,75 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36706 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753765AbZKQSpd (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:53580 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758525AbZKESl7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 13:45:33 -0500
-Date: Tue, 17 Nov 2009 13:31:50 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Janakiram Sistla <janakiram.sistla@gmail.com>
-Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] Adding radio type FM
-Message-ID: <20091117183150.GA31701@tuxdriver.com>
-References: <> <1258480113-20841-1-git-send-email-janakiram.sistla@gmail.com>
+	Thu, 5 Nov 2009 13:41:59 -0500
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 07/41] rt2x00: fix rt2x00usb_register_read() comment
+Date: Thu, 5 Nov 2009 19:42:02 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173250.28463.45273.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173250.28463.45273.sendpatchset@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1258480113-20841-1-git-send-email-janakiram.sistla@gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911051942.03123.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 17, 2009 at 11:18:33PM +0530, Janakiram Sistla wrote:
-> From: Janakiram Sistla <janakiram.sistla@gmail.com>
+On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2x00: fix rt2x00usb_register_read() comment
 > 
-> Adding radio type FM in RFKILL_TYPE_.FM belongs to
-> same class of with both TX/RX capability.
-> 
-> Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+
 > ---
->  include/linux/rfkill.h |    1 +
->  net/rfkill/core.c      |    2 ++
->  2 files changed, 3 insertions(+), 0 deletions(-)
+>  drivers/net/wireless/rt2x00/rt2x00usb.h |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-> index 3392c59..03f5598 100644
-> --- a/include/linux/rfkill.h
-> +++ b/include/linux/rfkill.h
-> @@ -45,6 +45,7 @@ enum rfkill_type {
->  	RFKILL_TYPE_WIMAX,
->  	RFKILL_TYPE_WWAN,
->  	RFKILL_TYPE_GPS,
-> +	RFKILL_TYPE_FM,
->  	NUM_RFKILL_TYPES,
->  };
+> Index: b/drivers/net/wireless/rt2x00/rt2x00usb.h
+> ===================================================================
+> --- a/drivers/net/wireless/rt2x00/rt2x00usb.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
+> @@ -232,7 +232,7 @@ static inline int rt2x00usb_eeprom_read(
+>  }
 >  
-> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-> index ba2efb9..61b716e 100644
-> --- a/net/rfkill/core.c
-> +++ b/net/rfkill/core.c
-> @@ -590,6 +590,8 @@ static const char *rfkill_get_type_str(enum rfkill_type type)
->  		return "wimax";
->  	case RFKILL_TYPE_WWAN:
->  		return "wwan";
-> +	case RFKILL_TYPE_FM:
-> +		return "fm";
->  	case RFKILL_TYPE_GPS:
->  		return "gps";
->  	default:
+>  /**
+> - * rt2x00usb_regbusy_read - Read 32bit register word
+> + * rt2x00usb_register_read - Read 32bit register word
+>   * @rt2x00dev: Device pointer, see &struct rt2x00_dev.
+>   * @offset: Register offset
+>   * @value: Pointer to where register contents should be stored
+> 
 
-My personal taste would dictate that you add the case statement
-in the same place that you added the enum.  Depending on which
-order you choose, you may need to change the BUILD_BUG_ON on line
-601 of net/rfkill/core.c.  (Not sure how you managed to build w/
-this patch...)
 
-Also, when you add the enum you need to add the corresponding kerneldoc
-(i.e. an @RFKILL_TYPE_FM comment) just above it.
-
-Finally, please add "rfkill: " to the beginning of the subject line
-when you resubmit your patch.
-
-Thanks,
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
