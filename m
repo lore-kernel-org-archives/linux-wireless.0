@@ -1,25 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:47521 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758134AbZKDUEk (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:46277 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758139AbZKETJM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 15:04:40 -0500
-Received: by iwn10 with SMTP id 10so5226716iwn.4
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 12:04:45 -0800 (PST)
+	Thu, 5 Nov 2009 14:09:12 -0500
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 37/41] rt2x00: remove needless ifdefs from rt2x00leds.h
+Date: Thu, 5 Nov 2009 20:09:15 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173633.28463.3378.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173633.28463.3378.sendpatchset@localhost.localdomain>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 4 Nov 2009 12:04:25 -0800
-Message-ID: <43e72e890911041204n55b54f8iace79938b40baa32@mail.gmail.com>
-Subject: pci_set_mwi() and ath5k
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: ath5k-devel@lists.ath5k.org, Matthew Wilcox <matthew@wil.cx>,
-	Stephen Hemminger <shemminger@vyatta.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911052009.15647.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Curious if anyone recalls the issues seen with enabling MWI on ath5k.
-I could have sworn there was some discussion on this but for the life
-of me I cannot find it.
+On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2x00: remove needless ifdefs from rt2x00leds.h
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-  Luis
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+
