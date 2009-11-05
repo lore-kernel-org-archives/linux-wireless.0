@@ -1,56 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:48713 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757555AbZKXCZx (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:44492 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757577AbZKETK0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 21:25:53 -0500
-Received: by yxe17 with SMTP id 17so5308557yxe.33
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 18:25:59 -0800 (PST)
-Message-ID: <4B0B43EA.9080304@gmail.com>
-Date: Mon, 23 Nov 2009 21:24:42 -0500
-From: Arnaud Lacombe <lacombar@gmail.com>
+	Thu, 5 Nov 2009 14:10:26 -0500
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 39/41] rt2x00: move REGISTER_BUSY_* definitions to rt2x00.h
+Date: Thu, 5 Nov 2009 20:10:28 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173650.28463.23162.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173650.28463.23162.sendpatchset@localhost.localdomain>
 MIME-Version: 1.0
-To: mcgrof@bombadil.infradead.org
-CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
-Subject: [PATCH 06/13] Add compatibility call for kmem_cache_destroy()
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911052010.29318.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On commit 133d205a, kmem_cache_destroy() was made returning void, while
-older
-kernel could return an error value.
+On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2x00: move REGISTER_BUSY_* definitions to rt2x00.h
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- compat-2.6.19.h |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
-
-diff --git a/compat-2.6.19.h b/compat-2.6.19.h
-index 7967390..017044c 100644
---- a/compat-2.6.19.h
-+++ b/compat-2.6.19.h
-@@ -7,6 +7,19 @@
- /* Compat work for 2.6.19 */
- #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19))
-
-+#include <linux/slab.h>
-+
-+static inline int
-+compat_kmem_cache_destroy(struct kmem_cache *cachep)
-+{
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19))
-+	return kmem_cache_destroy(cachep);
-+#else
-+	kmem_cache_destroy(cachep);
-+	return 0;
-+#endif
-+}
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)) */
-
- #endif /* LINUX_26_19_COMPAT_H */
--- 
-1.6.3.3.385.g60647.dirty
-
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
