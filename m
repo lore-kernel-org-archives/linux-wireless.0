@@ -1,122 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from osmium.mv.net ([199.125.85.152]:58916 "HELO shell.mv.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751455AbZK2SqI convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:42724 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758688AbZKETWA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Nov 2009 13:46:08 -0500
-Date: Sun, 29 Nov 2009 13:31:28 -0500 (EST)
-From: RHS Linux User <xxx@nei.mv.com>
-To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-cc: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: [ath9k-devel] ath9k based AP stops responding after half a day or so
-In-Reply-To: <133e8d7e0911290451p70f07566i1f767176248c6e83@mail.gmail.com>
-Message-ID: <Pine.LNX.3.95.1091129131907.3571A-100000@nei>
+	Thu, 5 Nov 2009 14:22:00 -0500
+Received: by ewy3 with SMTP id 3so331579ewy.37
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2009 11:22:05 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: Don't queue ieee80211 work after USB removal
+Date: Thu, 5 Nov 2009 20:22:03 +0100
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Sean Cross <sean@chumby.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200911052022.03491.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Sean Cross <sean@chumby.com>
 
-Hi,
+This prevents the rt2x00 driver from queueing ieee80211 work after the Â 
+USB card has been removed, preventing a kernel panic.
 
-  I have seen several "similar" sorts of things. I assume that
-the chip(s) are not being reset successfully. That is to say, some
-particular "dance" is needed to get the chip restarted.
-
-  Being somewhat of a hardware type. "Full" powerdown may be needed for a
-significant time period and then maybe will only work sometimes. There may
-be one or more flip-flops inside whatever chip that cannot be reset (chip
-design bug), so even a "full" powerdown reset still doesn't make sure the
-chip will positively come up OK. Or some special sequence... You get the
-idea.
-
-  In this case the only strategy left is to do a "full" restart and see if
-the circuit is now working? If not (not on the web, etc.) repeat the
-process. 
-
-  Pretty sad.... IMHO. But that's what getting complex hardware
-to actually work is sometimes like.
-
-  Hope that helps.
-
-  If the manufacturer actually knew how their chip actually works,
-it would help. From what I can see often the manufacturer doesn't
-publish specs because they really don't know for sure and don't want
-to appear stupid about their "industry standard" chips!
-
-  Some big manufacturer like Microsoft may have "accidently"  stumbled
-onto how to get whatever chip to actually work and now the "correct" power
-up method/sequence becomes somewhat of a proprietary secret since the chip
-manufacturer doesn't actually know how to make their own chip work! 
-
-  Good luck!
-
-  Wiz  (pen name)
-
-
-On Sun, 29 Nov 2009, [ISO-8859-1] Björn Smedman wrote:
-
-> Hi all,
-> 
-> I'm seeing a similar problem with compat-wireless-2.6.32-rc1 and
-> hostapd 0.6.9 on a AR9100 (ath9k) mips/ahb based system. This is with
-> an open access point and without ANI so my guess is that Rob's log
-> unfortunately does not pinpoint the problem.
-> 
-> I can spend some time on this but like Rob I'm not sure where to
-> start. Any thoughts? It should be somewhere close to the hardware as a
-> restart/reload doesn't solve the problem (I haven't been able to try
-> this though). Anybody know anything related to
-> beacons/monitor/injection that may deteriorate over time and be
-> persistent across an rmmod/insmod?
-> 
-> Best regards,
-> 
-> Björn
-> 
-> On Sat, Nov 7, 2009 at 11:18 PM, Rob Browning <rlb@defaultvalue.org> wrote:
-> >
-> > Rob Browning <rlb@defaultvalue.org> writes:
-> >
-> > > I have an machine that's running a recent compat-wireless (2009-10-17),
-> > > kernel 2.6.30-2-686 (Debian), and a build of hostapd as of 2009-10-17
-> > > (08d38568).  The machine also has an AR5008 (ath9k) based PCI card.
-> > >
-> > > After the machine reboots, wireless clients can connect to the AP
-> > > normally for a half day or so.  Then, at some point, all connections
-> > > fail, and clients cannot even see the network until the machine is
-> > > rebooted.  Reloading the wireless modules, and restarting hostapd
-> > > doesn't help.
-> >
-> > Just as an update, this problem persists with hostapd as of eb999fef,
-> > and compat-wireless 2009-11-03.
-> >
-> > I'd be happy to provide further information.
-> > --
-> > Rob Browning
-> > rlb @defaultvalue.org and @debian.org; previously @cs.utexas.edu
-> > GPG as of 2002-11-03 14DD 432F AE39 534D B592 F9A0 25C8 D377 8C7E 73A4
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-> 
-> --
-> Venatech AB
-> Ideon Innovation
-> Ole Römers väg 12
-> SE-22370 LUND
-> Sweden
-> 
-> +46 (0) 46 286 86 20
-> info@venatech.se
-> http://www.venatech.se
-> _______________________________________________
-> ath9k-devel mailing list
-> ath9k-devel@lists.ath9k.org
-> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
-> 
-
+Signed-off-by: Sean Cross <sean@chumby.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 71761b3..73bbec5 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -815,6 +815,8 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 
+ 	mutex_init(&rt2x00dev->csr_mutex);
+ 
++	set_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
++
+ 	/*
+ 	 * Make room for rt2x00_intf inside the per-interface
+ 	 * structure ieee80211_vif.
+@@ -871,8 +873,6 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00leds_register(rt2x00dev);
+ 	rt2x00debug_register(rt2x00dev);
+ 
+-	set_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+-
+ 	return 0;
+ 
+ exit:
+diff --git a/drivers/net/wireless/rt2x00/rt2x00link.c b/drivers/net/wireless/rt2x00/rt2x00link.c
+index c64db0b..c708d0b 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00link.c
++++ b/drivers/net/wireless/rt2x00/rt2x00link.c
+@@ -362,8 +362,9 @@ void rt2x00link_start_tuner(struct rt2x00_dev *rt2x00dev)
+ 
+ 	rt2x00link_reset_tuner(rt2x00dev, false);
+ 
+-	ieee80211_queue_delayed_work(rt2x00dev->hw,
+-				     &link->work, LINK_TUNE_INTERVAL);
++	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
++		ieee80211_queue_delayed_work(rt2x00dev->hw,
++					     &link->work, LINK_TUNE_INTERVAL);
+ }
+ 
+ void rt2x00link_stop_tuner(struct rt2x00_dev *rt2x00dev)
+@@ -469,8 +470,10 @@ static void rt2x00link_tuner(struct work_struct *work)
+ 	 * Increase tuner counter, and reschedule the next link tuner run.
+ 	 */
+ 	link->count++;
+-	ieee80211_queue_delayed_work(rt2x00dev->hw,
+-				     &link->work, LINK_TUNE_INTERVAL);
++
++	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
++		ieee80211_queue_delayed_work(rt2x00dev->hw,
++					     &link->work, LINK_TUNE_INTERVAL);
+ }
+ 
+ void rt2x00link_register(struct rt2x00_dev *rt2x00dev)
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 5015448..f02b48a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -47,6 +47,8 @@ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
+ 	    (requesttype == USB_VENDOR_REQUEST_IN) ?
+ 	    usb_rcvctrlpipe(usb_dev, 0) : usb_sndctrlpipe(usb_dev, 0);
+ 
++	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
++		return -ENODEV;
+ 
+ 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
+ 		status = usb_control_msg(usb_dev, pipe, request, requesttype,
+@@ -60,8 +62,10 @@ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
+ 		 * -ENODEV: Device has disappeared, no point continuing.
+ 		 * All other errors: Try again.
+ 		 */
+-		else if (status == -ENODEV)
++		else if (status == -ENODEV) {
++			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+ 			break;
++		}
+ 	}
+ 
+ 	ERROR(rt2x00dev,
+@@ -161,6 +165,9 @@ int rt2x00usb_regbusy_read(struct rt2x00_dev *rt2x00dev,
+ {
+ 	unsigned int i;
+ 
++	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
++		return -ENODEV;
++
+ 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
+ 		rt2x00usb_register_read_lock(rt2x00dev, offset, reg);
+ 		if (!rt2x00_get_field32(*reg, field))
