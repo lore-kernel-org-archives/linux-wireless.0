@@ -1,35 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:48444 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756008AbZKDTah (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:46277 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751885AbZKETJD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 14:30:37 -0500
-MIME-Version: 1.0
-In-Reply-To: <20091104173350.28463.25405.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-	 <20091104173350.28463.25405.sendpatchset@localhost.localdomain>
-Date: Wed, 4 Nov 2009 20:30:42 +0100
-Message-ID: <14add3d10911041130n318604e4kb6fabb4f8ce58266@mail.gmail.com>
-Subject: Re: [PATCH 15/41] rt2800usb: add rt2800_bbp_[read,write]() wrappers
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Thu, 5 Nov 2009 14:09:03 -0500
+From: Ivo van Doorn <ivdoorn@gmail.com>
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+Subject: Re: [PATCH 36/41] rt2800: add rt2800lib (part one)
+Date: Thu, 5 Nov 2009 20:09:05 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
 	linux-kernel@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173624.28463.78147.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173624.28463.78147.sendpatchset@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911052009.06084.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 4, 2009 at 6:33 PM, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
+On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
 > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2800usb: add rt2800_bbp_[read,write]() wrappers
->
-> Part of preparations for later code unification.
->
+> Subject: [PATCH] rt2800: add rt2800lib (part one)
+> 
+> Code unification.
+> 
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
 
-For what it is worth:
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+
