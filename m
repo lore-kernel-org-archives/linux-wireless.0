@@ -1,37 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:35036 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755940AbZKTEWr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2009 23:22:47 -0500
-Date: Thu, 19 Nov 2009 20:20:50 -0800
-From: Greg KH <gregkh@suse.de>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Staging: update TODO files
-Message-ID: <20091120042050.GA10873@suse.de>
-References: <200910211442.11785.bzolnier@gmail.com>
- <200911091715.49814.bzolnier@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200911091715.49814.bzolnier@gmail.com>
+Received: from dakia2.marvell.com ([65.219.4.35]:50113 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932749AbZKDXnZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Nov 2009 18:43:25 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH] Libertas: Fix issues while configuring host sleep
+Date: Wed,  4 Nov 2009 17:06:35 -0800
+Message-Id: <1257383195-951-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 09, 2009 at 05:15:49PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> On Wednesday 21 October 2009 14:42:11 Bartlomiej Zolnierkiewicz wrote:
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH] Staging: update TODO files
-> > 
-> > Remove my mail address.
-> > 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> ping.  Could you please apply it?
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Oops, sorry about that, I missed this somehow.  I'll queue it up in the
-morning.
+Configuration of wake-on-lan for unicast, multicast, broadcast, physical
+activity was not working. Kernel panic issue was there when user tries to
+disable WOL. Fixed them.
 
-thanks,
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/libertas/ethtool.c |   16 +++++++++++-----
+ 1 files changed, 11 insertions(+), 5 deletions(-)
 
-greg k-h
+diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
+index 039b555..eeda6d7 100644
+--- a/drivers/net/wireless/libertas/ethtool.c
++++ b/drivers/net/wireless/libertas/ethtool.c
+@@ -169,16 +169,22 @@ static int lbs_ethtool_set_wol(struct net_device *dev,
+ 	struct lbs_private *priv = dev->ml_priv;
+ 	uint32_t criteria = 0;
+ 
+-	if (priv->wol_criteria == 0xffffffff && wol->wolopts)
++	if (priv->wol_criteria != 0xffffffff && wol->wolopts)
+ 		return -EOPNOTSUPP;
+ 
+ 	if (wol->wolopts & ~(WAKE_UCAST|WAKE_MCAST|WAKE_BCAST|WAKE_PHY))
+ 		return -EOPNOTSUPP;
+ 
+-	if (wol->wolopts & WAKE_UCAST) criteria |= EHS_WAKE_ON_UNICAST_DATA;
+-	if (wol->wolopts & WAKE_MCAST) criteria |= EHS_WAKE_ON_MULTICAST_DATA;
+-	if (wol->wolopts & WAKE_BCAST) criteria |= EHS_WAKE_ON_BROADCAST_DATA;
+-	if (wol->wolopts & WAKE_PHY)   criteria |= EHS_WAKE_ON_MAC_EVENT;
++	if (wol->wolopts & WAKE_UCAST)
++		criteria |= EHS_WAKE_ON_UNICAST_DATA;
++	if (wol->wolopts & WAKE_MCAST)
++		criteria |= EHS_WAKE_ON_MULTICAST_DATA;
++	if (wol->wolopts & WAKE_BCAST)
++		criteria |= EHS_WAKE_ON_BROADCAST_DATA;
++	if (wol->wolopts & WAKE_PHY)
++		criteria |= EHS_WAKE_ON_MAC_EVENT;
++	if (wol->wolopts == 0)
++		criteria |= EHS_REMOVE_WAKEUP;
+ 
+ 	return lbs_host_sleep_cfg(priv, criteria, (struct wol_config *)NULL);
+ }
+-- 
+1.5.4.3
+
