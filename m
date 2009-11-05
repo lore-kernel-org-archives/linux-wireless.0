@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42016 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756355AbZKSW0q (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:40993 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756179AbZKEUhV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2009 17:26:46 -0500
-Subject: [PATCH] mac80211: remove dead struct member
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 19 Nov 2009 22:42:16 +0100
-Message-ID: <1258666936.7094.23.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 5 Nov 2009 15:37:21 -0500
+Message-ID: <4AF33783.5000804@gmail.com>
+Date: Thu, 05 Nov 2009 21:37:23 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+CC: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 32/41] rt2800: fix duplication in header files
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173554.28463.72619.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173554.28463.72619.sendpatchset@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_local.wstats is a remnant from the
-days when we still had to worry about wireless
-extensions in mac80211 -- it can be removed.
+On 11/04/09 18:35, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2800: fix duplication in header files
+> 
+> Updated debugging scripts are located here:
+> 
+> 	http://www.kernel.org/pub/linux/kernel/people/bart/rt2800/scripts/
+> 
+> (they also work fine with older drivers)
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ieee80211_i.h |    1 -
- 1 file changed, 1 deletion(-)
+For what it is worth:
 
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-11-19 22:40:23.000000000 +0100
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-11-19 22:40:36.000000000 +0100
-@@ -582,7 +582,6 @@ struct ieee80211_local {
- 	/* number of interfaces with corresponding FIF_ flags */
- 	int fif_fcsfail, fif_plcpfail, fif_control, fif_other_bss, fif_pspoll;
- 	unsigned int filter_flags; /* FIF_* */
--	struct iw_statistics wstats;
- 
- 	/* protects the aggregated multicast list and filter calls */
- 	spinlock_t filter_lock;
-
-
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
