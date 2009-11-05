@@ -1,38 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:61840 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755455AbZKIMxE (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:20504 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755960AbZKESxp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 07:53:04 -0500
-Received: by bwz27 with SMTP id 27so3407458bwz.21
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 04:53:09 -0800 (PST)
-From: Rui Paulo <rpaulo@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Rui Paulo <rpaulo@gmail.com>
-Subject: iw [PATCH] print a header before printing the list of mesh paths
-Date: Mon,  9 Nov 2009 12:53:06 +0000
-Message-Id: <1257771187-7894-1-git-send-email-rpaulo@gmail.com>
+	Thu, 5 Nov 2009 13:53:45 -0500
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 24/41] rt2800usb: convert to use struct rt2800_ops methods
+Date: Thu, 5 Nov 2009 19:53:47 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173453.28463.94062.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173453.28463.94062.sendpatchset@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911051953.47346.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rui Paulo <rpaulo@gmail.com>
----
- mpath.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2800usb: convert to use struct rt2800_ops methods
+> 
+> Add chipset registers access abstraction layer and prepare for later
+> code unification.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-diff --git a/mpath.c b/mpath.c
-index e848481..eb5ad6a 100644
---- a/mpath.c
-+++ b/mpath.c
-@@ -184,6 +184,8 @@ static int handle_mpath_dump(struct nl80211_state *state,
- 			     struct nl_msg *msg,
- 			     int argc, char **argv)
- {
-+	printf("DEST ADDR         NEXT HOP          IFACE\tDSN\tMETRIC\tQLEN\t"
-+	       "EXPTIME\t\tDTIM\tDRET\tFLAGS\n");
- 	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, print_mpath_handler, NULL);
- 	return 0;
- }
--- 
-1.5.6.5
-
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
