@@ -1,35 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:33853 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757936AbZKES7g (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:27221 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758260AbZKETCp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2009 13:59:36 -0500
+	Thu, 5 Nov 2009 14:02:45 -0500
 From: Ivo van Doorn <ivdoorn@gmail.com>
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 28/41] rt2x00: fix rt2x00pci_register_multi[read,write]() arguments
-Date: Thu, 5 Nov 2009 19:59:38 +0100
+Subject: Re: [PATCH 31/41] rt2800usb: add RXINFO_DESC_SIZE definition
+Date: Thu, 5 Nov 2009 20:02:47 +0100
 Cc: linux-wireless@vger.kernel.org,
 	Gertjan van Wingerde <gwingerde@gmail.com>,
 	linux-kernel@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173525.28463.40807.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173525.28463.40807.sendpatchset@localhost.localdomain>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173547.28463.36376.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173547.28463.36376.sendpatchset@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-15"
-Message-Id: <200911051959.39212.IvDoorn@gmail.com>
+Message-Id: <200911052002.48198.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
 > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2x00: fix rt2x00pci_register_multi[read,write]() arguments
+> Subject: [PATCH] rt2800usb: add RXINFO_DESC_SIZE definition
 > 
-> Change type of 'length' argument from u16 to u32 (all arguments
-> match rt2x00usb_register_multi[read,write]() ones now).
+> Add RXINFO_DESC_SIZE definition and use it instead of abusing
+> RXD_DESC_SIZE one (TXD_DESC_SIZE and RXD_DESC_SIZE are specific
+> to PCI version of the chipset).
 > 
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
 Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-
-
