@@ -1,34 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:58483 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759886AbZKZJCP (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:63203 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758550AbZKESrH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 04:02:15 -0500
-Subject: [PATCH 0/3] wl1251 power save fixes for 2.6.33
-To: linville@tuxdriver.com
-From: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 26 Nov 2009 10:55:48 +0200
-Message-ID: <20091126085256.1564.77644.stgit@tikku>
+	Thu, 5 Nov 2009 13:47:07 -0500
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 12/41] rt2800pci: add rt2800_register_multi[read,write]() wrappers
+Date: Thu, 5 Nov 2009 19:47:11 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173327.28463.25410.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173327.28463.25410.sendpatchset@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911051947.11518.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2800pci: add rt2800_register_multi[read,write]() wrappers
+> 
+> Part of preparations for later code unification.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-my testing revealed serious power save problems in wl1251. If possible,
-please send the fixes to 2.6.33. The patches should be simple enough and
-they make a huge improvement.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
----
-
-Kalle Valo (3):
-      wl1251: remove false warning messages
-      wl1251: fix bssid handling
-      wl1251: don't build null data template in wl1251_op_config()
-
-
- drivers/net/wireless/wl12xx/wl1251_main.c |   36 ++++++++++++-----------------
- 1 files changed, 15 insertions(+), 21 deletions(-)
 
