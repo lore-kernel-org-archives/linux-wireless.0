@@ -1,63 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:55443 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751006AbZKCRiL (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:53580 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757958AbZKESmO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 12:38:11 -0500
-Date: Tue, 3 Nov 2009 09:37:00 -0800 (PST)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-cc: Ingo Molnar <mingo@elte.hu>, Marcel Holtmann <marcel@holtmann.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
-	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Please consider reverting
- 7d930bc33653d5592dc386a76a38f39c2e962344
-In-Reply-To: <43e72e890911030924n26550ee4j619a41ec016281ea@mail.gmail.com>
-Message-ID: <alpine.LFD.2.01.0911030930130.31845@localhost.localdomain>
-References: <20091103053156.GA3212@core.coreip.homeip.net>  <20091102.224957.32364226.davem@davemloft.net> <20091103065238.GE3212@core.coreip.homeip.net>  <1257232587.3420.55.camel@localhost.localdomain> <alpine.LFD.2.01.0911030719430.31845@localhost.localdomain>
-  <1257262588.3420.79.camel@localhost.localdomain> <alpine.LFD.2.01.0911030738260.31845@localhost.localdomain>  <1257264485.3420.87.camel@localhost.localdomain> <20091103162955.GA4836@elte.hu> <43e72e890911030924n26550ee4j619a41ec016281ea@mail.gmail.com>
+	Thu, 5 Nov 2009 13:42:14 -0500
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 08/41] rt2800usb: use rt2x00usb_register_multiwrite() to set key entries
+Date: Thu, 5 Nov 2009 19:42:17 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173258.28463.94619.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173258.28463.94619.sendpatchset@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911051942.17500.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On Tue, 3 Nov 2009, Luis R. Rodriguez wrote:
+On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2800usb: use rt2x00usb_register_multiwrite() to set key entries
 > 
-> How this sort of issue is dealt with is subjective and it is up to
-> maintainers to deal with.
+> Since struct hw_key_entry is 32-bytes large and is smaller than
+> CSR cache size (which is 64-bytes large) we can use the standard
+> rt2x00usb_register_multiwrite() helper to set key entries.
+> 
+> This cleanup is a part of preparations for later code unification.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Not when they then complain when others hit the same issue several days 
-later.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-> Having more information on the patch and better communication about
-> the issue it solved, and the issues that reverting it would have
-> caused would certainly have helped maintainers make a better call at a
-> regression caused by it but knowing Johannes he'd probably cook up a
-> followup fix ASAP and that is exactly what he did.
+> ---
+>  drivers/net/wireless/rt2x00/rt2800usb.c |   18 ++++--------------
+>  1 file changed, 4 insertions(+), 14 deletions(-)
+> 
+> Index: b/drivers/net/wireless/rt2x00/rt2800usb.c
+> ===================================================================
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -392,7 +392,6 @@ static int rt2800usb_config_shared_key(s
+>  {
+>  	struct hw_key_entry key_entry;
+>  	struct rt2x00_field32 field;
+> -	int timeout;
+>  	u32 offset;
+>  	u32 reg;
+>  
+> @@ -407,12 +406,8 @@ static int rt2800usb_config_shared_key(s
+>  		       sizeof(key_entry.rx_mic));
+>  
+>  		offset = SHARED_KEY_ENTRY(key->hw_key_idx);
+> -		timeout = REGISTER_TIMEOUT32(sizeof(key_entry));
+> -		rt2x00usb_vendor_request_large_buff(rt2x00dev, USB_MULTI_WRITE,
+> -						    USB_VENDOR_REQUEST_OUT,
+> -						    offset, &key_entry,
+> -						    sizeof(key_entry),
+> -						    timeout);
+> +		rt2x00usb_register_multiwrite(rt2x00dev, offset,
+> +					      &key_entry, sizeof(key_entry));
+>  	}
+>  
+>  	/*
+> @@ -445,7 +440,6 @@ static int rt2800usb_config_pairwise_key
+>  					 struct ieee80211_key_conf *key)
+>  {
+>  	struct hw_key_entry key_entry;
+> -	int timeout;
+>  	u32 offset;
+>  
+>  	if (crypto->cmd == SET_KEY) {
+> @@ -467,12 +461,8 @@ static int rt2800usb_config_pairwise_key
+>  		       sizeof(key_entry.rx_mic));
+>  
+>  		offset = PAIRWISE_KEY_ENTRY(key->hw_key_idx);
+> -		timeout = REGISTER_TIMEOUT32(sizeof(key_entry));
+> -		rt2x00usb_vendor_request_large_buff(rt2x00dev, USB_MULTI_WRITE,
+> -						    USB_VENDOR_REQUEST_OUT,
+> -						    offset, &key_entry,
+> -						    sizeof(key_entry),
+> -						    timeout);
+> +		rt2x00usb_register_multiwrite(rt2x00dev, offset,
+> +					      &key_entry, sizeof(key_entry));
+>  	}
+>  
+>  	/*
+> 
 
-He may have cooked it up, but he didn't send it to me, and he didn't even 
-bother to post it as a response to people who complained about the same 
-commit.
 
-The fact that people on the wireless mailing lists may have known about 
-this just makes things _worse_, I think. It shows that we really _need_ to 
-go around maintainers, when not going around them seems to result in days 
-of delays and total waste of time for everybody.
-
-Btw, the reason it's likely not getting a lot of reports is not because 
-people aren't hitting it, but that the symptom when you _do_ hit it tends 
-to be a dead machine. If you were running X, you have no idea what 
-happened. This is why "I have one NULL pointer dereference report" should 
-mean "The fix needs to go upstream _now_".
-
-(And no, as far as I can tell, it needs no suspend/resume cycle at all. I 
-don't know the code very well, but as far as I can tell it just needs a 
-wireless deauthentication, which easily happens if you're running 
-something like NetworkManager and your wireless network may be noisy or 
-weak).
-
-				Linus
