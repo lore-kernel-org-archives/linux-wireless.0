@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from netsys.kaist.ac.kr ([143.248.239.50]:44543 "EHLO
-	netsys.kaist.ac.kr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751817AbZKLIPs (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:53580 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758501AbZKESlu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 03:15:48 -0500
-Received: from JinsungLeePC (netsys30.kaist.ac.kr [143.248.239.70])
-	by netsys.kaist.ac.kr (8.13.1/8.13.1) with ESMTP id nAC8DTQw027290
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 17:13:29 +0900
-From: "Jinsung Lee" <ljs@netsys.kaist.ac.kr>
-To: <linux-wireless@vger.kernel.org>
-Subject: ath9k: Unknown symbol
-Date: Thu, 12 Nov 2009 17:15:39 +0900
-Message-ID: <02a401ca6370$51fa0ff0$f5ee2fd0$@kaist.ac.kr>
+	Thu, 5 Nov 2009 13:41:50 -0500
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 06/41] rt2800pci: fix comment about IV/EIV fields
+Date: Thu, 5 Nov 2009 19:41:53 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173239.28463.22571.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091104173239.28463.22571.sendpatchset@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+  charset="iso-8859-15"
+Message-Id: <200911051941.53838.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, all.
+On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2800pci: fix comment about IV/EIV fields
+> 
+> The bit tested by hardware is TXD_W3_WIV and its value
+> equals the negated value of ENTRY_TXD_ENCRYPT_IV bit.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-I installed compat-wireless-2009-11-12 and compiled successfully.
-But when inputting the command "modprobe ath9k", I saw the following
-message:
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-FATAL: Error inserting ath9k
-(/lib/modules/2.6.32-020632rc6-generic/updates/drivers/net/wireless/ath/ath9
-k/ath9k.ko): Unknown symbol in module, or unknown parameter (see dmesg)
-
-And dmesg shows the following:
-
-[582122.800191] ath9k: Unknown symbol ath9k_cmn_rx_skb_preprocess
-[582122.803675] ath9k: Unknown symbol ath9k_cmn_rx_skb_postprocess
-
-Actually, I haven't seen this kind of message before.
-Is there any workaround solution for this?
-
-
---
-Regards,
-Jinsung Lee
---
-
+> ---
+>  drivers/net/wireless/rt2x00/rt2800pci.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
+> ===================================================================
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -2206,8 +2206,8 @@ static void rt2800pci_write_tx_desc(stru
+>  
+>  	/*
+>  	 * Always write 0 to IV/EIV fields, hardware will insert the IV
+> -	 * from the IVEIV register when ENTRY_TXD_ENCRYPT_IV is set to 0.
+> -	 * When ENTRY_TXD_ENCRYPT_IV is set to 1 it will use the IV data
+> +	 * from the IVEIV register when TXD_W3_WIV is set to 0.
+> +	 * When TXD_W3_WIV is set to 1 it will use the IV data
+>  	 * from the descriptor. The TXWI_W1_WIRELESS_CLI_ID indicates which
+>  	 * crypto entry in the registers should be used to encrypt the frame.
+>  	 */
+> 
 
 
