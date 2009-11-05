@@ -1,60 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38145 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755205AbZKNJbc (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:45398 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753717AbZKERqU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Nov 2009 04:31:32 -0500
-Subject: Re: [RFC 1/2] mac80211: add private driver flags and ampdu length
- to tx info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <4AFDFE41.9000003@openwrt.org>
-References: <4AFDFE41.9000003@openwrt.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-X4c0aSoZxOXjCgV3u/kL"
-Date: Sat, 14 Nov 2009 10:31:35 +0100
-Message-ID: <1258191095.6167.41.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 5 Nov 2009 12:46:20 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Michael Green <Michael.Green@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	David Quan <David.Quan@atheros.com>,
+	Vivek Natarajan <Vivek.Natarajan@atheros.com>
+Subject: [PATCH] wireless-regdb: update US rules for 5600 MHz - 5650 MHz
+Date: Thu,  5 Nov 2009 12:46:25 -0500
+Message-Id: <1257443185-3614-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The FCC is trying to assist airports that use Terminal Doppler
+Weather Radar (TDWR) systems in avoiding interference with
+some outdoor wireless systems operating in the 5.4 GHz
+(5470 MHz - 5725 MHz) band. One of the things they have decided
+on is to disallow operation on the 5600 MHz - 5650 MHz frequency
+range inclusive. What this means in practice is 5 GHz 802.11
+devices programmed to operate in the US will have these
+channels now disabled:
 
---=-X4c0aSoZxOXjCgV3u/kL
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+ * 5600 MHz [120] (disabled)
+ * 5620 MHz [124] (disabled)
+ * 5640 MHz [128] (disabled)
 
-On Sat, 2009-11-14 at 01:48 +0100, Felix Fietkau wrote:
-> Some drivers may want to store a few flags of their own in the tx=20
-> info. Also it is useful for 11n rate control to know the total number
-> of aggregated frames in an AMPDU, not just the ones that were acked.
-> Use two previously unused padding bytes to store those two values
+Channel on 5660 MHz (132) will be left enabled as the channel
+bandwidth is 20 MHz for legacy 802.11 networks but note that
+HT40- will be disallowed for that channel. The HT40+ and HT40-
+allowed channel map obviously changes. This is computed
+dynamically on cfg80211 based on your allowed channel list.
+For a US based device this is what you will get now
+(excerpt from on /sys/kernel/debug/ieee80211/phy0):
 
-Can the ampdu_len not be part of status info? There's lots more space
-there.
+ .. etc ..
+5540 HT40 -+
+5560 HT40 -+
+5580 HT40 -
+5600 Disabled
+5620 Disabled
+5640 Disabled
+5660 HT40  +
+5680 HT40 -+
+ .. etc ..
 
-johannes
+The details on which this patch is based on is documented on
+the FCC Knowledge based Publication Number: 443999 [1]
 
---=-X4c0aSoZxOXjCgV3u/kL
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+[1] https://fjallfoss.fcc.gov/oetcf/kdb/forms/FTSSearchResultPage.cfm?switch=P&id=41732
 
------BEGIN PGP SIGNATURE-----
+Cc: Michael Green <Michael.Green@atheros.com>
+Cc: Senthil Balasubramanian <senthilkumar@atheros.com>
+Cc: David Quan <David.Quan@atheros.com>
+Cc: Vivek Natarajan <Vivek.Natarajan@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ db.txt |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-iQIcBAABAgAGBQJK/nj0AAoJEODzc/N7+QmaehoP/3yVPDSO8eqihdtObp81AQvL
-OrleGFxMDTFOt01Hjy/ur1GIYMcgAsQpAzE9c6WwD9N7AXnRW6RSoy9e3ir+Bkhp
-YU7MZZ5j20iphDyzsKfArzq3pSSN+9FxYKpfdo5D9fXHKg/OdmdivJvMtncrQXiJ
-DSwx76l9pebl4h7qyCGDEHLgyezFsh5XtjSaW33MsnuDnQb6soa9g6xyJKkDMld+
-LP5MZ9G4h3eU+8LrZIUM/6M+YtfIusedRoHMpXqkgJiWlNT7LCbTwwpShuazGiFR
-7DeWmcZDL2y2Bp8FYH53ZTNiYRqKy/RF/j5t5S6y2zI3Qr5FK3/o2cEDyq+18X0b
-fg4JjgC2PsJQ20tZtn+va6uHRkxCJYvCHfhlU6mRMd3R8rl6AZbUWGMzxEWDL6Kx
-BLGUbSPe85ymauaGKmJLIvGQhnEyL4lB+Pu2gl4eA/A0qm7nqocIVz7AYPxIWpKv
-4tQ/i18A8/jshgrHSZMIpMehamLpkSyVyfCj/0atFm5Z1HoI7XYWYWDfVc+eeEIo
-arFmxuT++WVRdpuhPHNapR16ZmGWTAzXxQdhMyNCkdu1oMzz7gUQh+poQM3m00UL
-BIxUndBz6Tc+YkaDYRTugvarwyxdGBoaFq/HhpvV+wGxKF9widPm8NI6sdTgRjFC
-0urfuvttXefJhL7XqpST
-=sPk2
------END PGP SIGNATURE-----
-
---=-X4c0aSoZxOXjCgV3u/kL--
+diff --git a/db.txt b/db.txt
+index 84be443..c71b35b 100644
+--- a/db.txt
++++ b/db.txt
+@@ -562,7 +562,8 @@ country US:
+ 	(2402 - 2472 @ 40), (3, 27)
+ 	(5170 - 5250 @ 40), (3, 17)
+ 	(5250 - 5330 @ 40), (3, 20), DFS
+-	(5490 - 5710 @ 40), (3, 20), DFS
++	(5490 - 5600 @ 40), (3, 20), DFS
++	(5650 - 5710 @ 40), (3, 20), DFS
+ 	(5735 - 5835 @ 40), (3, 30)
+ 
+ country UY:
+-- 
+1.6.5.2.143.g8cc62
 
