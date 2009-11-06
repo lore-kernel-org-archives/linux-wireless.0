@@ -1,39 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.irobot.com ([206.83.81.187]:38260 "EHLO smtp1.irobot.com"
+Received: from mga02.intel.com ([134.134.136.20]:47316 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932383AbZKXRF3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 12:05:29 -0500
-Subject: [PATCH v2 0/2] mac80211: IBSS rates
-From: Adam Wozniak <awozniak@irobot.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Derek Smithies <derek@indranet.co.nz>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <4B0B2F63.2040805@irobot.com>
-References: <4AF0D54D.4090303@irobot.com>
-	 <alpine.DEB.2.00.0911111508391.6214@kauri.acheron.indranet.co.nz>
-	 <4AFC655A.5020706@irobot.com> <200911122103.27455.chunkeey@googlemail.com>
-	 <4AFC8E4F.5090307@irobot.com>  <4AFC8F0D.5020700@irobot.com>
-	 <1258097352.3899.75.camel@johannes.local>  <4AFDDF19.8060202@irobot.com>
-	 <1258191039.6167.40.camel@johannes.local>  <4B018B26.2070008@irobot.com>
-	 <1258392453.32159.28.camel@johannes.local> <4B0192A6.9050808@irobot.com>
-	 <alpine.DEB.2.00.0911170938380.3829@kauri.acheron.indranet.co.nz>
-	 <4B01D4A5.7060204@irobot.com>
-	 <alpine.DEB.2.00.0911171156210.3829@kauri.acheron.indranet.co.nz>
-	 <4B01E298.3030602@irobot.com>
-	 <alpine.DEB.2.00.0911171314470.3829@kauri.acheron.indranet.co.nz>
-	 <1258443484.1375.8.camel@johannes.local> <4B02DFE3.9040602@irobot.com>
-	 <4B0AEEE3.2050808@irobot.com> <1259018866.7094.189.camel@johannes.local>
-	 <4B0B2F63.2040805@irobot.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 24 Nov 2009 09:05:22 -0800
-Message-ID: <1259082322.2573.17.camel@awozniak-laptop>
-Mime-Version: 1.0
+	id S1759947AbZKFWxE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 17:53:04 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Ben Cahill <ben.m.cahill@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 14/20] iwlwifi: Limit size of Event Log dump
+Date: Fri,  6 Nov 2009 14:52:57 -0800
+Message-Id: <1257547983-12590-15-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
+References: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches fix problems with rate selection in Ad-Hoc mode.  Hopefully not whitespace damaged this time.
+From: Ben Cahill <ben.m.cahill@intel.com>
 
-   [PATCH v2 1/2] mac80211: supp_rates initialization and rate control notification
-   [PATCH v2 2/2] mac80211: minstrel try all rates
+If device provides bad values for Event Log parameters (due to being asleep
+or SRAM corruption, etc.), the size can be very, very large (e.g. 0xa5a5a5a5),
+which can flood system log.
+
+Sanity-check capacity and next_entry values and limit to reasonable size dump.
+
+Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   15 +++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   15 +++++++++++++++
+ 2 files changed, 30 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index eff52b1..be99d19 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1703,6 +1703,9 @@ static void iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
+ 	}
+ }
+ 
++/* For sanity check only.  Actual size is determined by uCode, typ. 512 */
++#define MAX_EVENT_LOG_SIZE (512)
++
+ void iwl_dump_nic_event_log(struct iwl_priv *priv)
+ {
+ 	u32 base;       /* SRAM byte address of event log header */
+@@ -1728,6 +1731,18 @@ void iwl_dump_nic_event_log(struct iwl_priv *priv)
+ 	num_wraps = iwl_read_targ_mem(priv, base + (2 * sizeof(u32)));
+ 	next_entry = iwl_read_targ_mem(priv, base + (3 * sizeof(u32)));
+ 
++	if (capacity > MAX_EVENT_LOG_SIZE) {
++		IWL_ERR(priv, "Log capacity %d is bogus, limit to %d entries\n",
++			capacity, MAX_EVENT_LOG_SIZE);
++		capacity = MAX_EVENT_LOG_SIZE;
++	}
++
++	if (next_entry > MAX_EVENT_LOG_SIZE) {
++		IWL_ERR(priv, "Log write index %d is bogus, limit to %d\n",
++			next_entry, MAX_EVENT_LOG_SIZE);
++		next_entry = MAX_EVENT_LOG_SIZE;
++	}
++
+ 	size = num_wraps ? capacity : next_entry;
+ 
+ 	/* bail out if nothing in log */
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 84dce68..75caa5f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -1604,6 +1604,9 @@ static void iwl3945_print_event_log(struct iwl_priv *priv, u32 start_idx,
+ 	}
+ }
+ 
++/* For sanity check only.  Actual size is determined by uCode, typ. 512 */
++#define IWL3945_MAX_EVENT_LOG_SIZE (512)
++
+ void iwl3945_dump_nic_event_log(struct iwl_priv *priv)
+ {
+ 	u32 base;       /* SRAM byte address of event log header */
+@@ -1625,6 +1628,18 @@ void iwl3945_dump_nic_event_log(struct iwl_priv *priv)
+ 	num_wraps = iwl_read_targ_mem(priv, base + (2 * sizeof(u32)));
+ 	next_entry = iwl_read_targ_mem(priv, base + (3 * sizeof(u32)));
+ 
++	if (capacity > IWL3945_MAX_EVENT_LOG_SIZE) {
++		IWL_ERR(priv, "Log capacity %d is bogus, limit to %d entries\n",
++			capacity, IWL3945_MAX_EVENT_LOG_SIZE);
++		capacity = IWL3945_MAX_EVENT_LOG_SIZE;
++	}
++
++	if (next_entry > IWL3945_MAX_EVENT_LOG_SIZE) {
++		IWL_ERR(priv, "Log write index %d is bogus, limit to %d\n",
++			next_entry, IWL3945_MAX_EVENT_LOG_SIZE);
++		next_entry = IWL3945_MAX_EVENT_LOG_SIZE;
++	}
++
+ 	size = num_wraps ? capacity : next_entry;
+ 
+ 	/* bail out if nothing in log */
+-- 
+1.5.6.3
+
