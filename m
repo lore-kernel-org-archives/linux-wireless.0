@@ -1,61 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:34260 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756629AbZKQWvD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 17:51:03 -0500
-MIME-Version: 1.0
-In-Reply-To: <1258498005.30511.3.camel@johannes.local>
-References: <1258465585.3682.7.camel@johannes.local> <1258490898.21197.42.camel@johannes.local>
-	<646765f40911171442m467efbc8ped7abc9d529ed095@mail.gmail.com>
-	<1258498005.30511.3.camel@johannes.local>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 18 Nov 2009 09:50:49 +1100
-Message-ID: <646765f40911171450q421cc4bv4a9a8aec0b278486@mail.gmail.com>
-Subject: Re: [RFC v2] mac80211: disallow bridging managed/adhoc interfaces
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:58808 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753474AbZKFXRG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 18:17:06 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>, stable@kernel.org
+Subject: [PATCH 0/2 v2.6.32] iwlwifi: fix HT connection stalling
+Date: Fri,  6 Nov 2009 15:17:03 -0800
+Message-Id: <1257549425-13591-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 18, 2009 at 09:46, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2009-11-18 at 09:42 +1100, Julian Calaby wrote:
->> On Wed, Nov 18, 2009 at 07:48, Johannes Berg <johannes@sipsolutions.net> wrote:
->> > --- wireless-testing.orig/net/mac80211/iface.c  2009-11-17 14:20:19.000000000 +0100
->> > +++ wireless-testing/net/mac80211/iface.c       2009-11-17 17:56:08.000000000 +0100
->> > @@ -745,6 +745,11 @@ int ieee80211_if_change_type(struct ieee
->> >        if (type == sdata->vif.type)
->> >                return 0;
->> >
->> > +       /* if it's part of a bridge, reject changing type to station/ibss */
->> > +       if (sdata->dev->br_port && (type == NL80211_IFTYPE_ADHOC ||
->> > +                                   type == NL80211_IFTYPE_STATION))
->> > +               return -EBUSY;
->>
->> Busy doesn't seem like the right error here ... maybe use -EOPNOTSUPP
->> like the next test?
->
-> Not sure, it's a temporary error and you can fix it by removing it from
-> the bridge, so it's "busy" in the sense that it is fixed to the current
-> mode or any other bridging mode by being in the bridge ... it's not that
-> it doesn't support the mode.
+The details of the problem as encountered on 1000 series can be found in
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2103
 
-Arguably the test following this (ensuring that we don't set ad-hoc
-mode on a non-ad-hoc channel) is equally temporary - i.e. both actions
-require the user to do something before they'll work again.
+The problem is that when HT is used in a noisy environment then connections
+can stall and station be deauthenticated from the AP. The solution is to
+enforce that RTS/CTS protection be used when in HT mode.
 
-But then, the test after that - for whether the interface is running -
-returns -EBUSY - and is just as easy to remedy, so........
+These patches are also targeting stable but do not apply there in its
+current form. They will be backported and submitted there once they make it
+into linux-2.6. The cc to stable@kernel.org is just informational.
 
-Thanks,
+cc: stable@kernel.org
 
--- 
+Wey-Yi Guy (2):
+  iwlwifi: Use RTS/CTS as the preferred protection mechanism for 6000 series
+  iwlwifi: Fix issue on file transfer stalled in HT mode
 
-Julian Calaby
+ drivers/net/wireless/iwlwifi/iwl-1000.c   |    1 +
+ drivers/net/wireless/iwlwifi/iwl-6000.c   |    5 +++++
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    9 +++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |   10 +++++++---
+ drivers/net/wireless/iwlwifi/iwl-core.h   |    2 ++
+ 5 files changed, 24 insertions(+), 3 deletions(-)
 
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
