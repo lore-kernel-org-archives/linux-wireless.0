@@ -1,52 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:48077 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753824AbZKIWVb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 17:21:31 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	philipp_subx@redfish-solutions.com
-Subject: [PATCH 1/4] [compat-2.6] Fix build problem, missing get_unaligned_le16
-Date: Mon,  9 Nov 2009 23:20:57 +0100
-Message-Id: <1257805260-13265-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1257805260-13265-1-git-send-email-hauke@hauke-m.de>
-References: <1257805260-13265-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:42657 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760287AbZKFXCE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 18:02:04 -0500
+Received: by yxe17 with SMTP id 17so1319490yxe.33
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 15:02:10 -0800 (PST)
+Subject: Re: Changing from Minstrel to PID
+From: =?ISO-8859-1?Q?Mart=EDn?= Ernesto Barreyro
+	<barreyromartin@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20091106214803.GL2782@tuxdriver.com>
+References: <1257542956.6565.2.camel@localhost.localdomain>
+	 <20091106214803.GL2782@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 06 Nov 2009 20:01:33 -0300
+Message-ID: <1257548493.3752.15.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the "implicit declaration of function
-'get_unaligned_le16'" in drivers/net/wireless/libertas/assoc.c
+El vie, 06-11-2009 a las 16:48 -0500, John W. Linville escribió:
+> On Fri, Nov 06, 2009 at 06:29:16PM -0300, Martín Ernesto Barreyro wrote:
+> > Hello, I have a rtl8187 wireless card and I've allways have problems
+> > with the rate control using minstrel. So everytime my kernel updates
+> > (recently it went from 2.30 to 2.31) i have to recompile mi kernel
+> > setting pid as my default rate control algorithm.
+> > 
+> > Is there a way to change that without compiling the kernel?
+> 
+> No, but I wish there were...patches?  Anyone?
+> 
+> John
 
-CC: philipp_subx@redfish-solutions.com
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/patches/06-header-changes.patch |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+I've been searching and it seems that it could be added something like
+modprobe mac80211 rc='pid'
 
-diff --git a/compat/patches/06-header-changes.patch b/compat/patches/06-header-changes.patch
-index ee0be7f..14e544a 100644
---- a/compat/patches/06-header-changes.patch
-+++ b/compat/patches/06-header-changes.patch
-@@ -16,6 +16,18 @@ cases.
-  
-  struct b43_wldev;
-  
-+--- a/drivers/net/wireless/libertas/assoc.c
-++++ b/drivers/net/wireless/libertas/assoc.c
-+@@ -5,6 +5,9 @@
-+ #include <linux/ieee80211.h>
-+ #include <linux/if_arp.h>
-+ #include <net/lib80211.h>
-++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
-++#include <asm/unaligned.h>
-++#endif
-+ 
-+ #include "assoc.h"
-+ #include "decl.h"
- --- a/drivers/net/wireless/wl12xx/wl1251_main.c	2009-08-07 11:42:12.532495607 -0700
- +++ b/drivers/net/wireless/wl12xx/wl1251_main.c	2009-08-07 12:08:31.167548696 -0700
- @@ -26,6 +26,9 @@
+Would it be a good idea?
+
+
 -- 
-1.6.3.3
+Martín Ernesto Barreyro <barreyromartin@gmail.com>
+Analista Universitario en Redes de Datos.
 
