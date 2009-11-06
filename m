@@ -1,120 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:48789 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754604AbZKCUpu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 15:45:50 -0500
-Message-ID: <4AF093AA.1080300@gmx.net>
-Date: Tue, 03 Nov 2009 21:33:46 +0100
-From: Frank Schaefer <schaefer.frank@gmx.net>
-MIME-Version: 1.0
-To: Matthew Dharm <mdharm-usb@one-eyed-alien.net>,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
-Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB
- N devices in cdrom mode
-References: <200910171606.02961.oliver@neukum.org> <Pine.LNX.4.44L0.0910171130550.25594-100000@netrider.rowland.org> <20091017220313.GH24502@one-eyed-alien.net> <4ADC3657.6080906@gmx.net> <4AEDCCA0.8050709@gmx.net> <4AEDD380.40408@draisberghof.de> <20091101183553.GB24436@one-eyed-alien.net> <4AEDEE7C.4010406@gmx.net> <20091102004756.GC24436@one-eyed-alien.net> <4AEF3BF8.1080701@gmx.net> <20091102211001.GH24436@one-eyed-alien.net>
-In-Reply-To: <20091102211001.GH24436@one-eyed-alien.net>
-Content-Type: text/plain; charset=ISO-8859-15
+Received: from mga01.intel.com ([192.55.52.88]:4149 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758659AbZKFXRG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 18:17:06 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>, stable@kernel.org
+Subject: [PATCH 1/2 v2.6.32] iwlwifi: Use RTS/CTS as the preferred protection mechanism for 6000 series
+Date: Fri,  6 Nov 2009 15:17:04 -0800
+Message-Id: <1257549425-13591-2-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1257549425-13591-1-git-send-email-reinette.chatre@intel.com>
+References: <1257549425-13591-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matthew Dharm schrieb:
-> On Mon, Nov 02, 2009 at 09:07:20PM +0100, Frank Schaefer wrote:
->   
->> Matthew Dharm schrieb:
->>     
->>> I am thinking about the users.  Do you really think someone who has
->>> difficulty installing a new udev rule (probably a line or two of text
->>> copied from a google search) or installing a new version of usb_modeswitch
->>> (probably one or two commands to the distro package manager) will have an
->>> easier time doing a custom kernel-compile and update?
->>>       
->> I think users should not need to do ANY of these things ! That's called
->> usability.
->>     
->
-> So, new hardware should "magically" work?  When you can write software to
-> support hardware that doesn't exist yet, let me know.
->   
-I can make nothing of that.
-It really doesn't make sense to discuss about mode-switches for devices
-for which we not even have a driver.
->> Which users do you think know how to create udev-rules and how to
->> compile a kernel ?
->> Of course you and me and likely all others on this mailing-list and
->> maybe you think Linux should be for them, only.
->>
->> I think we should do as much as possible to improve Linux-usability for
->> "normal" and even "less experienced" users.
->>     
->
-> Okay, let's talk about "less experienced" users.  Suppose you are one of
-> these users.  You get a new device, and you want to use it.  You do some
-> web searching, and discover either:
->
-> (a) you need to download and recompile your kernel
-> (b) you need to cut-and-paste some text from a web page into a file
->
-> Which do you think is easier?
->   
-It's easier to let the driver/kernel do the mode-switch automatically if
-it makes sense !
-That's perfect Plug'N Play and (a) and (b) are dispensable.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Apart from that, I think that "just cut-and-paste some text from a web
-page into a file" is an illusion.
-Starts with the right key-words you need for the search and continues
-with the quality of the documentation.
-It's not that easy to create universal and especially complete manuals
-(we all love documentation-work right !? ;) ).
-For example: what's udev ? Of course, WE know, but ...
-> And, the situation above pre-supposes that the requisite changes (kernel or
-> userspace) haven't already been picked up by a distro maintainer.
->
->   
->> And in this case, it would be really easy.
->>     
->>> Updates in userspace are universally easier; on users, on kernel deves, and
->>> on distro devs.
->>>
->>>       
->> Why ? Of course, the benfit for kernel-developers is that the work is
->> done by others...
->> But for the distros it makes life much more difficult in many respects.
->>     
->
-> I highly doubt this.  Distros must very carefully test all the kernel
-> changes they decide to pull in.  Each and every change in a kernel-layer is
-> a high-risk change for them.  Changing userspace packages is much
-> lower-risk, and thus consumes correspondingly fewer resources.
->
->   
-And they don't have to test userspace-software carefully, too ???
-Especially sysconfig-software ?
-I can't see a significant difference here.
->> And users are in the somehow insane situation that they have to keep the
->> driver (kernel) AND the "key to be able to use it" up-to-date.
->> That's not only a problem because they both things from different
->> sources/directions !
->>     
->
-> I think you may have missed part of an earlier discussion, wherein we
-> discussed such devices which would NOT need ANY kernel changes.  The idea
-> was that udev could "eject" the fake-USB device, then add the device IDs to
-> the serial/cdc_amc/whatever driver dynamically, at runtime.  Thus, no need
-> to make any kernel updates at all.
->
-> And, that system works *today* with the existing kernel code.
->
-> Matt
->   
-You didn't understand me right. No problem.
-I was talking about inconsistencies we get when driver and the
-mode-switch-part come from different sources.
-That's one of the main problems in Unix-world, maybe that's the price we
-have to pay for thinking more modular (packages) than in products like
-in M$-world.
-But we shouldn't pay that price needlessly because of splitting things
-at the wrong position.
+When 802.11g was introduced, we had RTS/CTS and CTS-to-Self protection
+mechanisms. In an HT Beacon, HT stations use the "Operating Mode" field
+in the HT Information Element to determine whether or not to use
+protection.
 
-Frank
+The Operating Mode field has 4 possible settings: 0-3:
+Mode 0: If all stations in the BSS are 20/40 MHz HT capable, or if the
+BSS is 20/40 MHz capable, or if all stations in the BSS are 20 MHz HT
+stations in a 20 MHz BSS
+Mode 1: used if there are non-HT stations or APs using the primary or
+secondary channels
+Mode 2: if only HT stations are associated in the BSS and at least one
+20 MHz HT station is associated.
+Mode 3: used if one or more non-HT stations are associated in the BSS.
+
+When in operating modes 1 or 3, and the Use_Protection field is 1 in the
+Beacon's ERP IE, all HT transmissions must be protected using RTS/CTS or
+CTS-to-Self.
+
+By default, CTS-to-self is the preferred protection mechanism for less
+overhead and higher throughput; but using the full RTS/CTS will better
+protect the inner exchange from interference, especially in
+highly-congested environment.
+
+For 6000 series WIFI NIC, RTS/CTS protection mechanism is the
+recommended choice for HT traffic based on the HW design.
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+cc: stable@kernel.org
+---
+These patches are also targeting stable but do not apply there in its
+current form. They will be backported and submitted there once they make it
+into linux-2.6. The cc to stable@kernel.org is just informational.
+
+ drivers/net/wireless/iwlwifi/iwl-6000.c   |    5 +++++
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    9 +++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |   10 +++++++---
+ drivers/net/wireless/iwlwifi/iwl-core.h   |    2 ++
+ 4 files changed, 23 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index c295b8e..1473452 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -175,6 +175,7 @@ struct iwl_cfg iwl6000h_2agn_cfg = {
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+ 	.shadow_ram_support = true,
+ 	.ht_greenfield_support = true,
++	.use_rts_for_ht = true, /* use rts/cts protection */
+ };
+ 
+ /*
+@@ -198,6 +199,7 @@ struct iwl_cfg iwl6000i_2agn_cfg = {
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+ 	.shadow_ram_support = true,
+ 	.ht_greenfield_support = true,
++	.use_rts_for_ht = true, /* use rts/cts protection */
+ };
+ 
+ struct iwl_cfg iwl6050_2agn_cfg = {
+@@ -218,6 +220,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+ 	.shadow_ram_support = true,
+ 	.ht_greenfield_support = true,
++	.use_rts_for_ht = true, /* use rts/cts protection */
+ };
+ 
+ struct iwl_cfg iwl6000_3agn_cfg = {
+@@ -238,6 +241,7 @@ struct iwl_cfg iwl6000_3agn_cfg = {
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+ 	.shadow_ram_support = true,
+ 	.ht_greenfield_support = true,
++	.use_rts_for_ht = true, /* use rts/cts protection */
+ };
+ 
+ struct iwl_cfg iwl6050_3agn_cfg = {
+@@ -258,6 +262,7 @@ struct iwl_cfg iwl6050_3agn_cfg = {
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+ 	.shadow_ram_support = true,
+ 	.ht_greenfield_support = true,
++	.use_rts_for_ht = true, /* use rts/cts protection */
+ };
+ 
+ MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 346dc06..81726ee 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -418,6 +418,15 @@ static void rs_tl_turn_on_agg(struct iwl_priv *priv, u8 tid,
+ 	else if (tid == IWL_AGG_ALL_TID)
+ 		for (tid = 0; tid < TID_MAX_LOAD_COUNT; tid++)
+ 			rs_tl_turn_on_agg_for_tid(priv, lq_data, tid, sta);
++	if (priv->cfg->use_rts_for_ht) {
++		/*
++		 * switch to RTS/CTS if it is the prefer protection method
++		 * for HT traffic
++		 */
++		IWL_DEBUG_HT(priv, "use RTS/CTS protection for HT\n");
++		priv->staging_rxon.flags &= ~RXON_FLG_SELF_CTS_EN;
++		iwlcore_commit_rxon(priv);
++	}
+ }
+ 
+ static inline int get_num_of_ant_from_rate(u32 rate_n_flags)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index eaafae0..921dc4a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -116,9 +116,6 @@ int iwl_commit_rxon(struct iwl_priv *priv)
+ 
+ 	/* always get timestamp with Rx frame */
+ 	priv->staging_rxon.flags |= RXON_FLG_TSF2HOST_MSK;
+-	/* allow CTS-to-self if possible. this is relevant only for
+-	 * 5000, but will not damage 4965 */
+-	priv->staging_rxon.flags |= RXON_FLG_SELF_CTS_EN;
+ 
+ 	ret = iwl_check_rxon_cmd(priv);
+ 	if (ret) {
+@@ -218,6 +215,13 @@ int iwl_commit_rxon(struct iwl_priv *priv)
+ 					"Could not send WEP static key.\n");
+ 		}
+ 
++		/*
++		 * allow CTS-to-self if possible for new association.
++		 * this is relevant only for 5000 series and up,
++		 * but will not damage 4965
++		 */
++		priv->staging_rxon.flags |= RXON_FLG_SELF_CTS_EN;
++
+ 		/* Apply the new configuration
+ 		 * RXON assoc doesn't clear the station table in uCode,
+ 		 */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index e50103a..7754538 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -213,6 +213,7 @@ struct iwl_mod_params {
+  * @pa_type: used by 6000 series only to identify the type of Power Amplifier
+  * @max_ll_items: max number of OTP blocks
+  * @shadow_ram_support: shadow support for OTP memory
++ * @use_rts_for_ht: use rts/cts protection for HT traffic
+  *
+  * We enable the driver to be backward compatible wrt API version. The
+  * driver specifies which APIs it supports (with @ucode_api_max being the
+@@ -255,6 +256,7 @@ struct iwl_cfg {
+ 	const bool shadow_ram_support;
+ 	const bool ht_greenfield_support;
+ 	const bool broken_powersave;
++	bool use_rts_for_ht;
+ };
+ 
+ /***************************
+-- 
+1.5.6.3
 
