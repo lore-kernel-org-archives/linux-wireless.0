@@ -1,79 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48375 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751283AbZK1Njt (ORCPT
+Received: from mail-px0-f179.google.com ([209.85.216.179]:59571 "EHLO
+	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753129AbZKFIEv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Nov 2009 08:39:49 -0500
-Subject: Re: rfkill: persistent device suspend/resume
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ian Molton <ian.molton@collabora.co.uk>,
-	linux-acpi@vger.kernel.org, Corentin Chary <corentincj@iksaif.net>
-In-Reply-To: <20091128132752.GD17373@khazad-dum.debian.net>
-References: <4A37A3E1.8060606@tuffmail.co.uk>
-	 <1245161645.13461.3.camel@johannes.local> <4A37AEB7.6060405@tuffmail.co.uk>
-	 <20090618030806.GE29569@khazad-dum.debian.net>
-	 <20091128124158.GB17373@khazad-dum.debian.net>
-	 <1259413945.5428.21.camel@johannes.local>
-	 <20091128132752.GD17373@khazad-dum.debian.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-p/jXZQ+dRDEX7xjYl9Rp"
-Date: Sat, 28 Nov 2009 14:39:49 +0100
-Message-ID: <1259415589.5428.22.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 6 Nov 2009 03:04:51 -0500
+Received: by pxi9 with SMTP id 9so558120pxi.4
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 00:04:56 -0800 (PST)
+MIME-Version: 1.0
+Date: Fri, 6 Nov 2009 00:04:56 -0800
+Message-ID: <fd145f7d0911060004j55b06482tca088685d0626249@mail.gmail.com>
+Subject: Getting random regulatory domains on boot-up with ath9k
+From: Jeffrey Baker <jwbaker@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I am trying to work with a card made with Atheros 9280, but I find
+that I am getting essentially random regulatory domains.  The very
+first time I booted the system, under Linux 2.6.30, I got the country
+code AT.  Subsequently I got US.  Then I upgraded to
+compat-wireless-2009-11-06 and now I get AW (Aruba).
 
---=-p/jXZQ+dRDEX7xjYl9Rp
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+dmesg says:
 
-On Sat, 2009-11-28 at 11:27 -0200, Henrique de Moraes Holschuh wrote:
+ath: EEPROM regdomain: 0x37
+ath: EEPROM indicates we should expect a direct regpair map
+ath: Country alpha2 being used: AW
+ath: Regpair used: 0x37
+cfg80211: Calling CRDA for country: AW
 
-> > static int rfkill_resume(struct device *dev)
-> > {
-> >         struct rfkill *rfkill =3D to_rfkill(dev);
-> >         bool cur;
-> >=20
-> >         if (!rfkill->persistent) {
-> >                 cur =3D !!(rfkill->state & RFKILL_BLOCK_SW);
-> >                 rfkill_set_block(rfkill, cur);
-> >         }
->=20
-> The issue I am reporting is _only_ about persistent devices, so it is the
-> if(!rfkill->persistent) that is the problem.  It works perfectly for the
-> other devices.
+Now, my understanding is that 0x37 is world roaming.  The key sentence
+from the docs seems to be this:
 
-So then I don't understand -- if the device specifically said that it
-was persistent, what kind of help does it need, and why does it not just
-unset persistent if it needs it?
+"Regulatory pair regulatory domains are mapped to the first
+ISO-3166-alpha2 country."
 
-johannes
+Does that mean that AW is the first country code in the 0x37
+regulatory pair group?
 
+The result is this list of channels
 
---=-p/jXZQ+dRDEX7xjYl9Rp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+5180 MHz [36] (30.0 dBm) (passive scanning, no IBSS)
+5200 MHz [40] (30.0 dBm) (passive scanning, no IBSS)
+5220 MHz [44] (30.0 dBm) (passive scanning, no IBSS)
+5240 MHz [48] (30.0 dBm) (passive scanning, no IBSS)
+5260 MHz [52] (30.0 dBm) (passive scanning, no IBSS, radar detection)
+5280 MHz [56] (30.0 dBm) (passive scanning, no IBSS, radar detection)
+5300 MHz [60] (30.0 dBm) (passive scanning, no IBSS, radar detection)
+5320 MHz [64] (30.0 dBm) (passive scanning, no IBSS, radar detection)
+5500 MHz [100] (disabled)
+5520 MHz [104] (disabled)
+5540 MHz [108] (disabled)
+5560 MHz [112] (disabled)
+5580 MHz [116] (disabled)
+5600 MHz [120] (disabled)
+5620 MHz [124] (disabled)
+5640 MHz [128] (disabled)
+5660 MHz [132] (disabled)
+5680 MHz [136] (disabled)
+5700 MHz [140] (disabled)
+5745 MHz [149] (30.0 dBm) (passive scanning, no IBSS)
+5765 MHz [153] (30.0 dBm) (passive scanning, no IBSS)
+5785 MHz [157] (30.0 dBm) (passive scanning, no IBSS)
+5805 MHz [161] (30.0 dBm) (passive scanning, no IBSS)
+5825 MHz [165] (30.0 dBm) (passive scanning, no IBSS)
 
------BEGIN PGP SIGNATURE-----
+... which in summary prevents me from operating an access point in the
+5GHz band at all.  The perplexing thing is that I was able to use
+channel 36 under kernel.org 2.6.30, so from my perspective that
+software was working better than the current software does, and of
+course leads me to believe that I can use software to change this card
+to FCC regs instead of these frustrating "world" regs which prevent me
+from running an AP.
 
-iQIcBAABAgAGBQJLESgiAAoJEODzc/N7+Qma2TQQAIDyK0af5ZPF0dVRS9cJRDwB
-tq51TN0Oi6zFcDXWHO3BUTA6noRHqltZfHSn31pm/fFVbs151XjX5NM7UG/GE8gr
-ijpSBSTd9Nljwkn5USxBi/7ffHkDiBoWnXzfRU2WodTfoi3/GJTDe9c6S88Jqhkc
-Lml/LzyXBOaRDNJDPW/iK0ywl70HpzHdiGZ2ExkWmN/Cx2x/E9GoRuybphNL2AfJ
-pDRoEvkgPHxPFEPs2yi5oT1w80Ya213zXThbvj2jntWDEQdfy6fasnRJBgN6PhGM
-D6imGfkk7EaZ5XIjw2fUb5BRBTa1Gd92192G5pkKBwFOtoyab0pVUnXqANqpR47e
-Vmi0lD3S6K1XtsxXnnfTGhkfYwRBvOJh4rrrRTVPpTLTczvB4qBDnpHQ1pz+3J0H
-GTCT4s7Hi2KfRmUO2vZvWGQJ+VWaMmf01PPkKhouBBrDNOMwGCh29O5bhHPM++cV
-h9MExFG5JnPnCyzLEmTqswLvNPWkyyMgstwDHg1mub5Fbag4Td8y3PPCGUu7v3h8
-sb4gQDXmq19pYgwQG/zgoRQfwKnN6rp6DEA6/wDhYHuqpf71adajY7q/E2YpA5Tm
-35aHVmDP83SAf4OiCY4SmHsanUIVM62ZHVoLnm5WrFPAVLI6gnZCpPCheOnlWm3G
-RRZ8icCgvOu8nHjiTKmw
-=u9fF
------END PGP SIGNATURE-----
+Needless to say, I am perplexed by this behavior. The exact phy is
+"Atheros AR9280 Rev:2"
 
---=-p/jXZQ+dRDEX7xjYl9Rp--
-
+-jwb
