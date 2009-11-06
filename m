@@ -1,111 +1,262 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.irobot.com ([206.83.81.187]:6138 "EHLO smtp1.irobot.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932957AbZKDVq6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 16:46:58 -0500
-Message-ID: <4AF1F653.4000905@irobot.com>
-Date: Wed, 04 Nov 2009 13:46:59 -0800
-From: Adam Wozniak <awozniak@irobot.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52817 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756951AbZKFUpG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 15:45:06 -0500
+Date: Fri, 6 Nov 2009 15:40:34 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2009-11-06
+Message-ID: <20091106204034.GI2782@tuxdriver.com>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Derek Smithies <derek@indranet.co.nz>,
-	linux-wireless@vger.kernel.org, nbd@openwrt.org
-Subject: Re: compat-wireless and minstrel
-References: <4AF0D54D.4090303@irobot.com> <200911041653.33737.chunkeey@googlemail.com> <alpine.DEB.2.00.0911050951000.16407@kauri.acheron.indranet.co.nz> <200911042242.48991.chunkeey@googlemail.com>
-In-Reply-To: <200911042242.48991.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Dave,
 
-$ ls -la /lib/firmware/ar9170*
--rw-r--r-- 1 root root 83968 2009-10-17 15:55 /lib/firmware/ar9170-1.fw
--rw-r--r-- 1 root root  3508 2009-10-17 15:55 /lib/firmware/ar9170-2.fw
--rw-r--r-- 1 root root 15960 2009-10-17 15:55 /lib/firmware/ar9170.fw
+Three more intended for 2.6.32, two oops fixes and a revert of a patch
+that traded one bug for another.  One of the oops fixes reorders some
+cancel_delayed_work_sync calls and the other does some bit testing to
+avoid scheduling work after a device has been removed.
 
-It is unclear to me which are actually used.  I will try removing the 
-two stage firmware files and see what happens.
+Please let me know if there are problems!
 
-Christian Lamparter wrote:
-> On Wednesday 04 November 2009 22:01:39 Derek Smithies wrote:
->   
->> Hi,
->> On Wed, 4 Nov 2009, Christian Lamparter wrote:
->>
->>     
->>> On Wednesday 04 November 2009 02:13:49 Adam Wozniak wrote:
->>>       
->>>> I have two systems under test, both Dell laptops (a Latitude D630 and an
->>>> Inspiron 600m) both running Ubuntu 9.10 with the latest updates, and
->>>> bleeding edge compat-wireless-2009-11-02.  I'm using identical AR9170
->>>> based D-Link DWA-160 USB 802.11adapters.  I'm using nuttcp to measure
->>>> throughput.  I'm running in ad-hoc mode.  Both machines have the same
->>>> ar9170 files in /lib/firmware.  The machines are sitting about 5 feet
->>>> apart in my office.
->>>>         
-> by the way: I forgot to ask, but which firmware do you use?
-> If you still have *two - stage*, then get rid of it.
-> Since one-stage fws contain a few fixes for most temporarily MAC/BB-hiccups.
->
->   
->>>> I'm having occasional problems where throughput drops through the floor
->>>> (0.5Mbps - 1.5Mbps).  When I cat
->>>> /sys/kernel/debug/ieee80211/*/stations/*/rc_stats, one of the machines
->>>> lists the full set of rates, but the other only lists 1M and 54M.  After
->>>> a period of time, that machine drops 54M and lists only one rate
->>>> (1Mbps), and the throughput listed by nuttcp drops accordingly.  I
->>>> assume that, for whatever reason, the rates drop off the list and
->>>> minstrel uses the only one left available to it.
->>>>
->>>> If I modify include/net/mac80211.h and force the inline function
->>>> rate_supported to always return 1, this fixes the problem.  However, I
->>>> think this is a band aid around some other issue.
->>>>
->>>> Any clues or ideas what the real issue might be here?
->>>>         
->> My guess::
->>
->> When an adhoc node (call it A) merges with a second adhoc node (call it 
->> B) there is a capability comparison.
->> Node A looks at the rates supported by B and says,
->>    "I must only transmit at rates supported by B"
->>
->> Some management frames don't contain a full report of the rates supported 
->> by the sender.
->> My view is that node A (in this example) is incorrectly determining that B 
->> only supports the 1mb/sec rate. Consequently, node A fills the 
->> rate_supported  array with one rate - 1mb/sec.
->>     
-> well, that's the thing... it sounds like something in cfg80211/mac80211 has
-> gone wrong. Since ibss supported/basic rates IEs should always include all
-> mandatory rates for the given band & mode. Therefore you should see the
-> 2Mbit, 11Mbit, 6MBit, 12Mbit 24Mbit rates in rc_stats array as well.
->  
->   
->> =====
->>     
-> =====
->
->   
->> There is no evidence that Minstrel is doing anything wrong.
->>     
-> ?but no one said it was minstrel fault? And it clearly isn't.
->
-> But something OT: do you have already thoughts about
-> _extending_ minstrel to support 802.11n MCS rates?
->
-> The current endeavor is stuck and needs a kick-start.
-> This is partly because of a hen-egg problem: 
-> no driver <-> no 11n rc. But it should be easy to get
-> 11n capable hw now (e.g. Mikrotik's R52N) and
-> ath9k should be the perfect testing platform right now.
->
-> nbd has/had some thought about grouping rates and options
-> (e.g SGI/40MHz) together to reduce the number of rates to
-> improve the _search for best tp_ time. But dunno, maybe he
-> has already something better than the proof-of-concept I wrote earlier.
->
-> Regards,
-> 	Chr
->   
+Thanks,
 
+John
+
+---
+
+Individual patches are available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
+
+---
+
+The following changes since commit bcfe3c2046fc4f16544f2b127f1b159dd1fcad8b:
+  David S. Miller (1):
+        Merge branch 'master' of git://git.kernel.org/.../linville/wireless-2.6
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+John W. Linville (1):
+      Revert "ipw2200: fix oops on missing firmware"
+
+Larry Finger (1):
+      rtl8187: Fix kernel oops when device is removed when LEDS enabled
+
+Sean Cross (1):
+      rt2x00: Don't queue ieee80211 work after USB removal
+
+ drivers/net/wireless/ipw2x00/ipw2100.c       |    5 +----
+ drivers/net/wireless/ipw2x00/ipw2200.c       |    2 --
+ drivers/net/wireless/ipw2x00/libipw.h        |    1 -
+ drivers/net/wireless/ipw2x00/libipw_module.c |   14 +++++---------
+ drivers/net/wireless/rt2x00/rt2x00dev.c      |    4 ++--
+ drivers/net/wireless/rt2x00/rt2x00link.c     |   11 +++++++----
+ drivers/net/wireless/rt2x00/rt2x00usb.c      |    9 ++++++++-
+ drivers/net/wireless/rtl818x/rtl8187_leds.c  |    4 ++--
+ 8 files changed, 25 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+index a741d37..240cff1 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+@@ -6325,10 +6325,8 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
+ 
+       fail:
+ 	if (dev) {
+-		if (registered) {
+-			unregister_ieee80211(priv->ieee);
++		if (registered)
+ 			unregister_netdev(dev);
+-		}
+ 
+ 		ipw2100_hw_stop_adapter(priv);
+ 
+@@ -6385,7 +6383,6 @@ static void __devexit ipw2100_pci_remove_one(struct pci_dev *pci_dev)
+ 		/* Unregister the device first - this results in close()
+ 		 * being called if the device is open.  If we free storage
+ 		 * first, then close() will crash. */
+-		unregister_ieee80211(priv->ieee);
+ 		unregister_netdev(dev);
+ 
+ 		/* ipw2100_down will ensure that there is no more pending work
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index 04341a2..8d58e6e 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -11821,7 +11821,6 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
+ 		if (err) {
+ 			IPW_ERROR("Failed to register promiscuous network "
+ 				  "device (error %d).\n", err);
+-			unregister_ieee80211(priv->ieee);
+ 			unregister_netdev(priv->net_dev);
+ 			goto out_remove_sysfs;
+ 		}
+@@ -11872,7 +11871,6 @@ static void __devexit ipw_pci_remove(struct pci_dev *pdev)
+ 
+ 	mutex_unlock(&priv->mutex);
+ 
+-	unregister_ieee80211(priv->ieee);
+ 	unregister_netdev(priv->net_dev);
+ 
+ 	if (priv->rxq) {
+diff --git a/drivers/net/wireless/ipw2x00/libipw.h b/drivers/net/wireless/ipw2x00/libipw.h
+index f42ade6..bf45391 100644
+--- a/drivers/net/wireless/ipw2x00/libipw.h
++++ b/drivers/net/wireless/ipw2x00/libipw.h
+@@ -1020,7 +1020,6 @@ static inline int libipw_is_cck_rate(u8 rate)
+ /* ieee80211.c */
+ extern void free_ieee80211(struct net_device *dev, int monitor);
+ extern struct net_device *alloc_ieee80211(int sizeof_priv, int monitor);
+-extern void unregister_ieee80211(struct libipw_device *ieee);
+ extern int libipw_change_mtu(struct net_device *dev, int new_mtu);
+ 
+ extern void libipw_networks_age(struct libipw_device *ieee,
+diff --git a/drivers/net/wireless/ipw2x00/libipw_module.c b/drivers/net/wireless/ipw2x00/libipw_module.c
+index be5b809..a0e9f6a 100644
+--- a/drivers/net/wireless/ipw2x00/libipw_module.c
++++ b/drivers/net/wireless/ipw2x00/libipw_module.c
+@@ -235,19 +235,16 @@ void free_ieee80211(struct net_device *dev, int monitor)
+ 	libipw_networks_free(ieee);
+ 
+ 	/* free cfg80211 resources */
+-	if (!monitor)
++	if (!monitor) {
++		wiphy_unregister(ieee->wdev.wiphy);
++		kfree(ieee->a_band.channels);
++		kfree(ieee->bg_band.channels);
+ 		wiphy_free(ieee->wdev.wiphy);
++	}
+ 
+ 	free_netdev(dev);
+ }
+ 
+-void unregister_ieee80211(struct libipw_device *ieee)
+-{
+-	wiphy_unregister(ieee->wdev.wiphy);
+-	kfree(ieee->a_band.channels);
+-	kfree(ieee->bg_band.channels);
+-}
+-
+ #ifdef CONFIG_LIBIPW_DEBUG
+ 
+ static int debug = 0;
+@@ -333,4 +330,3 @@ module_init(libipw_init);
+ 
+ EXPORT_SYMBOL(alloc_ieee80211);
+ EXPORT_SYMBOL(free_ieee80211);
+-EXPORT_SYMBOL(unregister_ieee80211);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 71761b3..73bbec5 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -815,6 +815,8 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 
+ 	mutex_init(&rt2x00dev->csr_mutex);
+ 
++	set_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
++
+ 	/*
+ 	 * Make room for rt2x00_intf inside the per-interface
+ 	 * structure ieee80211_vif.
+@@ -871,8 +873,6 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00leds_register(rt2x00dev);
+ 	rt2x00debug_register(rt2x00dev);
+ 
+-	set_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+-
+ 	return 0;
+ 
+ exit:
+diff --git a/drivers/net/wireless/rt2x00/rt2x00link.c b/drivers/net/wireless/rt2x00/rt2x00link.c
+index c64db0b..c708d0b 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00link.c
++++ b/drivers/net/wireless/rt2x00/rt2x00link.c
+@@ -362,8 +362,9 @@ void rt2x00link_start_tuner(struct rt2x00_dev *rt2x00dev)
+ 
+ 	rt2x00link_reset_tuner(rt2x00dev, false);
+ 
+-	ieee80211_queue_delayed_work(rt2x00dev->hw,
+-				     &link->work, LINK_TUNE_INTERVAL);
++	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
++		ieee80211_queue_delayed_work(rt2x00dev->hw,
++					     &link->work, LINK_TUNE_INTERVAL);
+ }
+ 
+ void rt2x00link_stop_tuner(struct rt2x00_dev *rt2x00dev)
+@@ -469,8 +470,10 @@ static void rt2x00link_tuner(struct work_struct *work)
+ 	 * Increase tuner counter, and reschedule the next link tuner run.
+ 	 */
+ 	link->count++;
+-	ieee80211_queue_delayed_work(rt2x00dev->hw,
+-				     &link->work, LINK_TUNE_INTERVAL);
++
++	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
++		ieee80211_queue_delayed_work(rt2x00dev->hw,
++					     &link->work, LINK_TUNE_INTERVAL);
+ }
+ 
+ void rt2x00link_register(struct rt2x00_dev *rt2x00dev)
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 5015448..f02b48a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -47,6 +47,8 @@ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
+ 	    (requesttype == USB_VENDOR_REQUEST_IN) ?
+ 	    usb_rcvctrlpipe(usb_dev, 0) : usb_sndctrlpipe(usb_dev, 0);
+ 
++	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
++		return -ENODEV;
+ 
+ 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
+ 		status = usb_control_msg(usb_dev, pipe, request, requesttype,
+@@ -60,8 +62,10 @@ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
+ 		 * -ENODEV: Device has disappeared, no point continuing.
+ 		 * All other errors: Try again.
+ 		 */
+-		else if (status == -ENODEV)
++		else if (status == -ENODEV) {
++			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+ 			break;
++		}
+ 	}
+ 
+ 	ERROR(rt2x00dev,
+@@ -161,6 +165,9 @@ int rt2x00usb_regbusy_read(struct rt2x00_dev *rt2x00dev,
+ {
+ 	unsigned int i;
+ 
++	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
++		return -ENODEV;
++
+ 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
+ 		rt2x00usb_register_read_lock(rt2x00dev, offset, reg);
+ 		if (!rt2x00_get_field32(*reg, field))
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_leds.c b/drivers/net/wireless/rtl818x/rtl8187_leds.c
+index a1c670f..cf8a4a4 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_leds.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_leds.c
+@@ -210,10 +210,10 @@ void rtl8187_leds_exit(struct ieee80211_hw *dev)
+ 
+ 	/* turn the LED off before exiting */
+ 	ieee80211_queue_delayed_work(dev, &priv->led_off, 0);
+-	cancel_delayed_work_sync(&priv->led_off);
+-	cancel_delayed_work_sync(&priv->led_on);
+ 	rtl8187_unregister_led(&priv->led_rx);
+ 	rtl8187_unregister_led(&priv->led_tx);
++	cancel_delayed_work_sync(&priv->led_off);
++	cancel_delayed_work_sync(&priv->led_on);
+ }
+ #endif /* def CONFIG_RTL8187_LED */
+ 
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
