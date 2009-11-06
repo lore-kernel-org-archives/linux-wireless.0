@@ -1,69 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:64326 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750954AbZKHOsp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 09:48:45 -0500
-Received: by ewy3 with SMTP id 3so2402653ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 06:48:50 -0800 (PST)
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 7/7] rt2x00: Update copyright statements.
-Date: Sun, 8 Nov 2009 15:48:09 +0100
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-References: <1257689905-1611-1-git-send-email-gwingerde@gmail.com> <200911081525.58809.IvDoorn@gmail.com>
-In-Reply-To: <200911081525.58809.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Message-Id: <200911081548.09279.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
+Received: from mga02.intel.com ([134.134.136.20]:9497 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759945AbZKFWxB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 17:53:01 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 07/20] iwlwifi: don't double-activate queue 4
+Date: Fri,  6 Nov 2009 14:52:50 -0800
+Message-Id: <1257547983-12590-8-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
+References: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 08 November 2009 15:25:58 Ivo van Doorn wrote:
+From: Johannes Berg <johannes@sipsolutions.net>
 
-> > diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> > index 5c7d74a..3207b83 100644
-> > --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> > +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> > @@ -3,7 +3,13 @@
-> >  
-> >  	Based on the original rt2800pci.c and rt2800usb.c:
-> >  
-> > -	  Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-> > +	  Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>
-> > +	  Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>
-> > +	  Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
-> > +	  Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>
-> > +	  Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
-> > +	  Copyright (C) 2009 Mark Asselstine <asselsm@gmail.com>
-> > +	  Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
-> >  	  <http://rt2x00.serialmonkey.com>
-> >  
-> >  	This program is free software; you can redistribute it and/or modify
-> 
-> If Bartlomiej has no objections, we could just update the statements for rt2800lib.c/rt2800lib.h
-> to something similar as rt2800.h:
-> 
-> /*
-> 	Copyright (C) 2009 Bartlomiej Zolnierkiewicz
-> 	Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>
-> 	Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>
-> 	Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
-> 	Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>
-> 	Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
-> 	Copyright (C) 2009 Mark Asselstine <asselsm@gmail.com>
-> 	Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
-> 
-> 	This program is free software; you can redistribute it and/or modify
-> ....
-> 
-> because not sure if we need the seperate "based on" comment.. But I'll let Bartlomiej
-> decide on this one.
+The fourth queue (command queue) is already activated in
+the loop above that also maps it to the command FIFO and
+therefore doesn't need to be marked as activated again.
+Also change the TODO comment to be accurate -- we need
+to initialise the _queues_, not FIFOs, and map them to
+device FIFOs.
 
-I think that the original version is correct and also documents new
-development direction well.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index a97d93d..f6cbbfa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -662,9 +662,13 @@ int iwl5000_alive_notify(struct iwl_priv *priv)
+ 		iwl_txq_ctx_activate(priv, i);
+ 		iwl5000_tx_queue_set_status(priv, &priv->txq[i], ac, 0);
+ 	}
+-	/* TODO - need to initialize those FIFOs inside the loop above,
+-	 * not only mark them as active */
+-	iwl_txq_ctx_activate(priv, 4);
++
++	/*
++	 * TODO - need to initialize these queues and map them to FIFOs
++	 * in the loop above, not only mark them as active. We do this
++	 * because we want the first aggregation queue to be queue #10,
++	 * but do not use 8 or 9 otherwise yet.
++	 */
+ 	iwl_txq_ctx_activate(priv, 7);
+ 	iwl_txq_ctx_activate(priv, 8);
+ 	iwl_txq_ctx_activate(priv, 9);
 -- 
-Bartlomiej Zolnierkiewicz
+1.5.6.3
+
