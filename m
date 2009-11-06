@@ -1,71 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:60575 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756341AbZKFT1M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 14:27:12 -0500
-Received: by iwn10 with SMTP id 10so1042975iwn.4
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 11:27:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890911061120mc3f66cbl272adc273a39cb0c@mail.gmail.com>
-References: <43e72e890911060857l6e383578nc1c7d0f2ba63529f@mail.gmail.com>
-	<b6c5339f0911060929w78d16192o6c48e432e8e8c830@mail.gmail.com>
-	<43e72e890911060945s3b00e056u1efe483bd88ebd30@mail.gmail.com>
-	<20091106183833.GC2782@tuxdriver.com> <43e72e890911061120mc3f66cbl272adc273a39cb0c@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 6 Nov 2009 11:26:58 -0800
-Message-ID: <43e72e890911061126y12c59bc2q4620af8dfd703304@mail.gmail.com>
-Subject: Re: Changing the way we handle region codes on Linux (public thread)
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Vivek Natarajan <Vivek.Natarajan@atheros.com>,
-	Vivek Natarajan <vivek.natraj@gmail.com>,
-	Jeffrey Baker <jwbaker@gmail.com>,
-	David Quan <David.Quan@atheros.com>,
-	Michael Green <Michael.Green@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:9497 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760009AbZKFWxB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 17:53:01 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 08/20] iwlwifi: fix FIFO vs. queue confusion
+Date: Fri,  6 Nov 2009 14:52:51 -0800
+Message-Id: <1257547983-12590-9-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
+References: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 6, 2009 at 11:20 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Fri, Nov 6, 2009 at 10:38 AM, John W. Linville
-> <linville@tuxdriver.com> wrote:
->>
->> FWIW, I think Bob's suggestion makes a lot of sense.
->
-> Patches welcomed then :)
+From: Johannes Berg <johannes@sipsolutions.net>
 
-So this could consist probably of adding one more environment variable
-to the passed COUNTRY one that the kernel passes before calling crda,
-a group I guess, andif the group is passed the crda can read
-/path/grop-regulatory.bin where group could be ATHR for example.
+When I added that code setting the swq_id, I evidently
+did not understand the distinction between FIFO and TX
+queue yet and added code to compare a queue ID and a
+FIFO number, which is bogus.
 
-BTW -- the region codes are already present on db.txt -- so the only
-thing that group thing could do is allow us to move the 12 regulatory
-domains to userspace and I'm not sure if this is someone's time,
-specially since I managed to squeeze the 12 world regulatory domains
-to 5 structures, the slight modifications between a few are handled
-internally on ath.ko through the reg notifier, see:
+However, the code there need not be this specific, it
+can just set all queues to the identity mapping which
+will be overwritten by the aggregation queue code. As
+a bit of defensive coding, don't assign an swq_id to
+the command queue so that if we ever use it for frames
+we notice quickly.
 
-static void ath_reg_apply_world_flags(struct wiphy *wiphy,
-                                      enum nl80211_reg_initiator initiator,
-                                      struct ath_regulatory *reg)
-{
-        switch (reg->regpair->regDmnEnum) {
-        case 0x60:
-        case 0x63:
-        case 0x66:
-        case 0x67:
-                ath_reg_apply_beaconing_flags(wiphy, initiator);
-                break;
-        case 0x68:
-                ath_reg_apply_beaconing_flags(wiphy, initiator);
-                ath_reg_apply_active_scan_flags(wiphy, initiator);
-                break;
-        }
-        return;
-}
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h |    5 +++--
+ drivers/net/wireless/iwlwifi/iwl-tx.c  |    9 +++++++--
+ 2 files changed, 10 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index cb2642c..b4e8145 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -324,8 +324,9 @@ struct iwl_channel_info {
+ #define IWL_MIN_NUM_QUEUES	10
+ 
+ /*
+- * uCode queue management definitions ...
+- * Queue #4 is the command queue for 3945/4965/5x00/1000/6x00.
++ * Queue #4 is the command queue for 3945/4965/5x00/1000/6x00,
++ * the driver maps it into the appropriate device FIFO for the
++ * uCode.
+  */
+ #define IWL_CMD_QUEUE_NUM	4
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index b1a2de8..d2b606e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -365,8 +365,13 @@ int iwl_tx_queue_init(struct iwl_priv *priv, struct iwl_tx_queue *txq,
+ 
+ 	txq->need_update = 0;
+ 
+-	/* aggregation TX queues will get their ID when aggregation begins */
+-	if (txq_id <= IWL_TX_FIFO_AC3)
++	/*
++	 * Aggregation TX queues will get their ID when aggregation begins;
++	 * they overwrite the setting done here. The command FIFO doesn't
++	 * need an swq_id so don't set one to catch errors, all others can
++	 * be set up to the identity mapping.
++	 */
++	if (txq_id != IWL_CMD_QUEUE_NUM)
+ 		txq->swq_id = txq_id;
+ 
+ 	/* TFD_QUEUE_SIZE_MAX must be power-of-two size, otherwise
+-- 
+1.5.6.3
 
-  Luis
