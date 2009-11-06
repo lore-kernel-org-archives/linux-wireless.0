@@ -1,51 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:53580 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758525AbZKESl7 (ORCPT
+Received: from mail.sesame.com ([65.209.222.133]:50073 "EHLO
+	mail.extraview.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759736AbZKFVDy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2009 13:41:59 -0500
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 07/41] rt2x00: fix rt2x00usb_register_read() comment
-Date: Thu, 5 Nov 2009 19:42:02 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173250.28463.45273.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173250.28463.45273.sendpatchset@localhost.localdomain>
+	Fri, 6 Nov 2009 16:03:54 -0500
+Received: from [10.0.0.49]
+	by mail.extraview.com with esmtp (Exim 4.68)
+	(envelope-from <jcraig@extraview.com>)
+	id 1N6Vca-0006KG-5e
+	for linux-wireless@vger.kernel.org; Fri, 06 Nov 2009 12:41:29 -0800
+Message-ID: <4AF48AF2.8070905@extraview.com>
+Date: Fri, 06 Nov 2009 12:45:38 -0800
+From: jack craig <jcraig@extraview.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911051942.03123.IvDoorn@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: gui wireless tools for moblin
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2x00: fix rt2x00usb_register_read() comment
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Hi Wireless Folks,
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+I just installed the Moblin 2.1 on my EeePC with a new Intel 4965 under the 
+hood. Naturally, my wireless access is working a Lot better than it did.
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00usb.h |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> Index: b/drivers/net/wireless/rt2x00/rt2x00usb.h
-> ===================================================================
-> --- a/drivers/net/wireless/rt2x00/rt2x00usb.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
-> @@ -232,7 +232,7 @@ static inline int rt2x00usb_eeprom_read(
->  }
->  
->  /**
-> - * rt2x00usb_regbusy_read - Read 32bit register word
-> + * rt2x00usb_register_read - Read 32bit register word
->   * @rt2x00dev: Device pointer, see &struct rt2x00_dev.
->   * @offset: Register offset
->   * @value: Pointer to where register contents should be stored
-> 
+However, the wireless control panel in my moblin is underwhelming.
 
+I am wondering if someone on thei group could point me to a wireless gui app 
+that would graphically reveal local networks, signal strength and type (a/g/n)?
 
+from the current display, I cant tell if I am running on a g network or an n; 
+i'd like to know.
+
+any pointers? thx, jackc...
