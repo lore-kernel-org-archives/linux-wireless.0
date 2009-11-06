@@ -1,298 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:58506 "EHLO
-	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757238AbZKWVpJ (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:60575 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756341AbZKFT1M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 16:45:09 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH v2 5/8] rt2x00: Whitespace cleanup.
-Date: Mon, 23 Nov 2009 22:44:51 +0100
-Message-Id: <1259012694-14869-6-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1259012694-14869-5-git-send-email-gwingerde@gmail.com>
-References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-2-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-3-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-4-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-5-git-send-email-gwingerde@gmail.com>
+	Fri, 6 Nov 2009 14:27:12 -0500
+Received: by iwn10 with SMTP id 10so1042975iwn.4
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 11:27:18 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890911061120mc3f66cbl272adc273a39cb0c@mail.gmail.com>
+References: <43e72e890911060857l6e383578nc1c7d0f2ba63529f@mail.gmail.com>
+	<b6c5339f0911060929w78d16192o6c48e432e8e8c830@mail.gmail.com>
+	<43e72e890911060945s3b00e056u1efe483bd88ebd30@mail.gmail.com>
+	<20091106183833.GC2782@tuxdriver.com> <43e72e890911061120mc3f66cbl272adc273a39cb0c@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 6 Nov 2009 11:26:58 -0800
+Message-ID: <43e72e890911061126y12c59bc2q4620af8dfd703304@mail.gmail.com>
+Subject: Re: Changing the way we handle region codes on Linux (public thread)
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Vivek Natarajan <Vivek.Natarajan@atheros.com>,
+	Vivek Natarajan <vivek.natraj@gmail.com>,
+	Jeffrey Baker <jwbaker@gmail.com>,
+	David Quan <David.Quan@atheros.com>,
+	Michael Green <Michael.Green@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Clean up the use of whitespace in the initialization of the rt2x00_ops
-structures. This is preparatory for a later patch that adds members
-to that structure, which require different whitespace alignment.
+On Fri, Nov 6, 2009 at 11:20 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Fri, Nov 6, 2009 at 10:38 AM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+>>
+>> FWIW, I think Bob's suggestion makes a lot of sense.
+>
+> Patches welcomed then :)
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2400pci.c |   26 +++++++++++++-------------
- drivers/net/wireless/rt2x00/rt2500pci.c |   26 +++++++++++++-------------
- drivers/net/wireless/rt2x00/rt2500usb.c |   26 +++++++++++++-------------
- drivers/net/wireless/rt2x00/rt2800pci.c |   24 ++++++++++++------------
- drivers/net/wireless/rt2x00/rt2800usb.c |   24 ++++++++++++------------
- drivers/net/wireless/rt2x00/rt61pci.c   |   24 ++++++++++++------------
- drivers/net/wireless/rt2x00/rt73usb.c   |   24 ++++++++++++------------
- 7 files changed, 87 insertions(+), 87 deletions(-)
+So this could consist probably of adding one more environment variable
+to the passed COUNTRY one that the kernel passes before calling crda,
+a group I guess, andif the group is passed the crda can read
+/path/grop-regulatory.bin where group could be ATHR for example.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 6e68bc7..7f900be 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1623,20 +1623,20 @@ static const struct data_queue_desc rt2400pci_queue_atim = {
- };
- 
- static const struct rt2x00_ops rt2400pci_ops = {
--	.name		= KBUILD_MODNAME,
--	.max_sta_intf	= 1,
--	.max_ap_intf	= 1,
--	.eeprom_size	= EEPROM_SIZE,
--	.rf_size	= RF_SIZE,
--	.tx_queues	= NUM_TX_QUEUES,
--	.rx		= &rt2400pci_queue_rx,
--	.tx		= &rt2400pci_queue_tx,
--	.bcn		= &rt2400pci_queue_bcn,
--	.atim		= &rt2400pci_queue_atim,
--	.lib		= &rt2400pci_rt2x00_ops,
--	.hw		= &rt2400pci_mac80211_ops,
-+	.name			= KBUILD_MODNAME,
-+	.max_sta_intf		= 1,
-+	.max_ap_intf		= 1,
-+	.eeprom_size		= EEPROM_SIZE,
-+	.rf_size		= RF_SIZE,
-+	.tx_queues		= NUM_TX_QUEUES,
-+	.rx			= &rt2400pci_queue_rx,
-+	.tx			= &rt2400pci_queue_tx,
-+	.bcn			= &rt2400pci_queue_bcn,
-+	.atim			= &rt2400pci_queue_atim,
-+	.lib			= &rt2400pci_rt2x00_ops,
-+	.hw			= &rt2400pci_mac80211_ops,
- #ifdef CONFIG_RT2X00_LIB_DEBUGFS
--	.debugfs	= &rt2400pci_rt2x00debug,
-+	.debugfs		= &rt2400pci_rt2x00debug,
- #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
- };
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 9a31e5e..30960fd 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -1922,20 +1922,20 @@ static const struct data_queue_desc rt2500pci_queue_atim = {
- };
- 
- static const struct rt2x00_ops rt2500pci_ops = {
--	.name		= KBUILD_MODNAME,
--	.max_sta_intf	= 1,
--	.max_ap_intf	= 1,
--	.eeprom_size	= EEPROM_SIZE,
--	.rf_size	= RF_SIZE,
--	.tx_queues	= NUM_TX_QUEUES,
--	.rx		= &rt2500pci_queue_rx,
--	.tx		= &rt2500pci_queue_tx,
--	.bcn		= &rt2500pci_queue_bcn,
--	.atim		= &rt2500pci_queue_atim,
--	.lib		= &rt2500pci_rt2x00_ops,
--	.hw		= &rt2500pci_mac80211_ops,
-+	.name			= KBUILD_MODNAME,
-+	.max_sta_intf		= 1,
-+	.max_ap_intf		= 1,
-+	.eeprom_size		= EEPROM_SIZE,
-+	.rf_size		= RF_SIZE,
-+	.tx_queues		= NUM_TX_QUEUES,
-+	.rx			= &rt2500pci_queue_rx,
-+	.tx			= &rt2500pci_queue_tx,
-+	.bcn			= &rt2500pci_queue_bcn,
-+	.atim			= &rt2500pci_queue_atim,
-+	.lib			= &rt2500pci_rt2x00_ops,
-+	.hw			= &rt2500pci_mac80211_ops,
- #ifdef CONFIG_RT2X00_LIB_DEBUGFS
--	.debugfs	= &rt2500pci_rt2x00debug,
-+	.debugfs		= &rt2500pci_rt2x00debug,
- #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
- };
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index b2de43e..02290f6 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1823,20 +1823,20 @@ static const struct data_queue_desc rt2500usb_queue_atim = {
- };
- 
- static const struct rt2x00_ops rt2500usb_ops = {
--	.name		= KBUILD_MODNAME,
--	.max_sta_intf	= 1,
--	.max_ap_intf	= 1,
--	.eeprom_size	= EEPROM_SIZE,
--	.rf_size	= RF_SIZE,
--	.tx_queues	= NUM_TX_QUEUES,
--	.rx		= &rt2500usb_queue_rx,
--	.tx		= &rt2500usb_queue_tx,
--	.bcn		= &rt2500usb_queue_bcn,
--	.atim		= &rt2500usb_queue_atim,
--	.lib		= &rt2500usb_rt2x00_ops,
--	.hw		= &rt2500usb_mac80211_ops,
-+	.name			= KBUILD_MODNAME,
-+	.max_sta_intf		= 1,
-+	.max_ap_intf		= 1,
-+	.eeprom_size		= EEPROM_SIZE,
-+	.rf_size		= RF_SIZE,
-+	.tx_queues		= NUM_TX_QUEUES,
-+	.rx			= &rt2500usb_queue_rx,
-+	.tx			= &rt2500usb_queue_tx,
-+	.bcn			= &rt2500usb_queue_bcn,
-+	.atim			= &rt2500usb_queue_atim,
-+	.lib			= &rt2500usb_rt2x00_ops,
-+	.hw			= &rt2500usb_mac80211_ops,
- #ifdef CONFIG_RT2X00_LIB_DEBUGFS
--	.debugfs	= &rt2500usb_rt2x00debug,
-+	.debugfs		= &rt2500usb_rt2x00debug,
- #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
- };
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 87a5094..029a45f 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -1201,19 +1201,19 @@ static const struct data_queue_desc rt2800pci_queue_bcn = {
- };
- 
- static const struct rt2x00_ops rt2800pci_ops = {
--	.name		= KBUILD_MODNAME,
--	.max_sta_intf	= 1,
--	.max_ap_intf	= 8,
--	.eeprom_size	= EEPROM_SIZE,
--	.rf_size	= RF_SIZE,
--	.tx_queues	= NUM_TX_QUEUES,
--	.rx		= &rt2800pci_queue_rx,
--	.tx		= &rt2800pci_queue_tx,
--	.bcn		= &rt2800pci_queue_bcn,
--	.lib		= &rt2800pci_rt2x00_ops,
--	.hw		= &rt2800_mac80211_ops,
-+	.name			= KBUILD_MODNAME,
-+	.max_sta_intf		= 1,
-+	.max_ap_intf		= 8,
-+	.eeprom_size		= EEPROM_SIZE,
-+	.rf_size		= RF_SIZE,
-+	.tx_queues		= NUM_TX_QUEUES,
-+	.rx			= &rt2800pci_queue_rx,
-+	.tx			= &rt2800pci_queue_tx,
-+	.bcn			= &rt2800pci_queue_bcn,
-+	.lib			= &rt2800pci_rt2x00_ops,
-+	.hw			= &rt2800_mac80211_ops,
- #ifdef CONFIG_RT2X00_LIB_DEBUGFS
--	.debugfs	= &rt2800_rt2x00debug,
-+	.debugfs		= &rt2800_rt2x00debug,
- #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
- };
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 9ab15c4..208316a 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -790,19 +790,19 @@ static const struct data_queue_desc rt2800usb_queue_bcn = {
- };
- 
- static const struct rt2x00_ops rt2800usb_ops = {
--	.name		= KBUILD_MODNAME,
--	.max_sta_intf	= 1,
--	.max_ap_intf	= 8,
--	.eeprom_size	= EEPROM_SIZE,
--	.rf_size	= RF_SIZE,
--	.tx_queues	= NUM_TX_QUEUES,
--	.rx		= &rt2800usb_queue_rx,
--	.tx		= &rt2800usb_queue_tx,
--	.bcn		= &rt2800usb_queue_bcn,
--	.lib		= &rt2800usb_rt2x00_ops,
--	.hw		= &rt2800_mac80211_ops,
-+	.name			= KBUILD_MODNAME,
-+	.max_sta_intf		= 1,
-+	.max_ap_intf		= 8,
-+	.eeprom_size		= EEPROM_SIZE,
-+	.rf_size		= RF_SIZE,
-+	.tx_queues		= NUM_TX_QUEUES,
-+	.rx			= &rt2800usb_queue_rx,
-+	.tx			= &rt2800usb_queue_tx,
-+	.bcn			= &rt2800usb_queue_bcn,
-+	.lib			= &rt2800usb_rt2x00_ops,
-+	.hw			= &rt2800_mac80211_ops,
- #ifdef CONFIG_RT2X00_LIB_DEBUGFS
--	.debugfs	= &rt2800_rt2x00debug,
-+	.debugfs		= &rt2800_rt2x00debug,
- #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
- };
- 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index bf04605..4cb9afe 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2788,19 +2788,19 @@ static const struct data_queue_desc rt61pci_queue_bcn = {
- };
- 
- static const struct rt2x00_ops rt61pci_ops = {
--	.name		= KBUILD_MODNAME,
--	.max_sta_intf	= 1,
--	.max_ap_intf	= 4,
--	.eeprom_size	= EEPROM_SIZE,
--	.rf_size	= RF_SIZE,
--	.tx_queues	= NUM_TX_QUEUES,
--	.rx		= &rt61pci_queue_rx,
--	.tx		= &rt61pci_queue_tx,
--	.bcn		= &rt61pci_queue_bcn,
--	.lib		= &rt61pci_rt2x00_ops,
--	.hw		= &rt61pci_mac80211_ops,
-+	.name			= KBUILD_MODNAME,
-+	.max_sta_intf		= 1,
-+	.max_ap_intf		= 4,
-+	.eeprom_size		= EEPROM_SIZE,
-+	.rf_size		= RF_SIZE,
-+	.tx_queues		= NUM_TX_QUEUES,
-+	.rx			= &rt61pci_queue_rx,
-+	.tx			= &rt61pci_queue_tx,
-+	.bcn			= &rt61pci_queue_bcn,
-+	.lib			= &rt61pci_rt2x00_ops,
-+	.hw			= &rt61pci_mac80211_ops,
- #ifdef CONFIG_RT2X00_LIB_DEBUGFS
--	.debugfs	= &rt61pci_rt2x00debug,
-+	.debugfs		= &rt61pci_rt2x00debug,
- #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
- };
- 
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 5bbcf66..d13a051 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2306,19 +2306,19 @@ static const struct data_queue_desc rt73usb_queue_bcn = {
- };
- 
- static const struct rt2x00_ops rt73usb_ops = {
--	.name		= KBUILD_MODNAME,
--	.max_sta_intf	= 1,
--	.max_ap_intf	= 4,
--	.eeprom_size	= EEPROM_SIZE,
--	.rf_size	= RF_SIZE,
--	.tx_queues	= NUM_TX_QUEUES,
--	.rx		= &rt73usb_queue_rx,
--	.tx		= &rt73usb_queue_tx,
--	.bcn		= &rt73usb_queue_bcn,
--	.lib		= &rt73usb_rt2x00_ops,
--	.hw		= &rt73usb_mac80211_ops,
-+	.name			= KBUILD_MODNAME,
-+	.max_sta_intf		= 1,
-+	.max_ap_intf		= 4,
-+	.eeprom_size		= EEPROM_SIZE,
-+	.rf_size		= RF_SIZE,
-+	.tx_queues		= NUM_TX_QUEUES,
-+	.rx			= &rt73usb_queue_rx,
-+	.tx			= &rt73usb_queue_tx,
-+	.bcn			= &rt73usb_queue_bcn,
-+	.lib			= &rt73usb_rt2x00_ops,
-+	.hw			= &rt73usb_mac80211_ops,
- #ifdef CONFIG_RT2X00_LIB_DEBUGFS
--	.debugfs	= &rt73usb_rt2x00debug,
-+	.debugfs		= &rt73usb_rt2x00debug,
- #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
- };
- 
--- 
-1.6.5.3
+BTW -- the region codes are already present on db.txt -- so the only
+thing that group thing could do is allow us to move the 12 regulatory
+domains to userspace and I'm not sure if this is someone's time,
+specially since I managed to squeeze the 12 world regulatory domains
+to 5 structures, the slight modifications between a few are handled
+internally on ath.ko through the reg notifier, see:
 
+static void ath_reg_apply_world_flags(struct wiphy *wiphy,
+                                      enum nl80211_reg_initiator initiator,
+                                      struct ath_regulatory *reg)
+{
+        switch (reg->regpair->regDmnEnum) {
+        case 0x60:
+        case 0x63:
+        case 0x66:
+        case 0x67:
+                ath_reg_apply_beaconing_flags(wiphy, initiator);
+                break;
+        case 0x68:
+                ath_reg_apply_beaconing_flags(wiphy, initiator);
+                ath_reg_apply_active_scan_flags(wiphy, initiator);
+                break;
+        }
+        return;
+}
+
+
+  Luis
