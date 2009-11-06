@@ -1,35 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:47261 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933576AbZKXRtC (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:57525 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758610AbZKFVpx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 12:49:02 -0500
-Date: Tue, 24 Nov 2009 19:49:04 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Ali Jelveh <jelveh@web.de>
+	Fri, 6 Nov 2009 16:45:53 -0500
+Received: by bwz27 with SMTP id 27so1658326bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 13:45:57 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: James Grossmann <cctsurf@gmail.com>
+Subject: Re: Prism54/p54pci
+Date: Fri, 6 Nov 2009 22:45:51 +0100
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: ath9k and multiple ssids
-Message-ID: <20091124174904.GA17305@jm.kir.nu>
-References: <4F794DBA-82EF-4254-A874-ADFF05287CF4@web.de>
- <D16ADE3A-61E2-4F46-ADD6-D3C8824A9BE9@web.de>
+References: <167ae39b0910071400n218d3d9ey7711b1011f290a73@mail.gmail.com> <200911062133.38842.chunkeey@googlemail.com> <167ae39b0911061252x790d69fei9e798e8c6080f175@mail.gmail.com>
+In-Reply-To: <167ae39b0911061252x790d69fei9e798e8c6080f175@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <D16ADE3A-61E2-4F46-ADD6-D3C8824A9BE9@web.de>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200911062245.51445.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 23, 2009 at 09:50:34PM +0100, Ali Jelveh wrote:
+On Friday 06 November 2009 21:52:42 James Grossmann wrote:
+> my caps lock & scroll lock leds are not blinking, and yet the computer
+> is frozen.  (I'm not the best at terminology, I guess that might not
+> be defined as a hard lock.)  I get no odd messages in my syslog.  I am
+> using Ubuntu right now, so I'm guessing that they have all the
+> prettyness going that they can, covering the important messages, but
+> as it's not an actual oops, I'm not certain that's hurting us.
 
-> I'm trying to get multiple ssids to work with hostapd (2.6.31 kernel
-> and hostapd v0.6.9, driver=nl80211) thru adding a bss=wlan0_1 and
-> ssid=someothername to the config, I get an "Invalid BSSID mask"
-> error - so my question is: should this work? or isn't that feature
-> implemented in my current wireless driver?
+Ubuntu's kernel team provide some helpful texts about getting more
+informations out of the crashes: (a bit of a hassle)
+https://wiki.ubuntu.com/KernelTeam/CrashdumpRecipe
+https://help.ubuntu.com/community/DebuggingSystemCrash
 
-Please try with hostapd v0.7.0; 0.6.9 is way too old for many nl80211
-interface features. If you cannot get this working with 0.7.0, please
-send more verbose debug log from hostapd. Which MAC address does your
-card have?
+but maybe you can save you some time:
+1. if possible update your compat-wireless
+   a crash bug (affects compat-wireless, wireless-testing and even -rcX series)
+   has been fixed. This bug is known to strike on configurations with a
+   high number of auth/assoc/deauth - cycles.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+	http://thread.gmane.org/gmane.linux.kernel/908831/focus=41872
+
+2. Quintin Pitts had/has problems with the reliability of his
+   p54pci <-> pci-bus and wrote a patch:
+       http://patchwork.kernel.org/patch/53004/raw/
+
+    unfortunately for him, his pci-bridge is known to be faulty,
+    but maybe he found some real bugs after all.
+
+3. replace firmware:
+	http://daemonizer.de/prism54/prism54-fw/fw-softmac/2.13.1.0.arm
+	http://daemonizer.de/prism54/prism54-fw/fw-softmac/lmac_2.7.0.0.arm
+
+> I am using network-manager, so it does reconnect, however, I find that
+> to be less than optimal.
+yeah, normally you can see such phenomena when you have a funky AP and 
+enable wifi powersaving... but this is unlikely, as the ps is disabled
+(can be enabled with iwconfig wlanX power on) for this reason.
+
+can you please tell me more about your AP?
+e.g: Product Name, Vendor, firmware revision,
+is it 802.11 a/b/g/n, is WEP/WPA(2) enabled, or is it just an open ap?
