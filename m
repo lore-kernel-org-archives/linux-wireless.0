@@ -1,99 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:42808 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754971AbZKBN54 convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:39512 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758465AbZKFP4E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 08:57:56 -0500
-Received: by bwz27 with SMTP id 27so6332239bwz.21
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2009 05:57:59 -0800 (PST)
+	Fri, 6 Nov 2009 10:56:04 -0500
+Received: by ewy3 with SMTP id 3so1164637ewy.37
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 07:56:08 -0800 (PST)
+From: Martin Fuzzey <mfuzzey@gmail.com>
+Subject: [PATCH] SSB: fix 32 bit PCMCIA access.
+To: linux-wireless@vger.kernel.org
+Date: Fri, 06 Nov 2009 16:56:05 +0100
+Message-ID: <20091106155605.20585.15955.stgit@srv002.fuzzey.net>
 MIME-Version: 1.0
-In-Reply-To: <69e28c910911020326m67797910ub1df048d8dd3eb7e@mail.gmail.com>
-References: <4888b8cb0911010451w3e824921ob5ee6b7aae5b728b@mail.gmail.com>
-	<69e28c910911010730i2afcf1b9o79063f6c6f37c678@mail.gmail.com>
-	<4888b8cb0911011401v28699ffcx2a00211289b00b7d@mail.gmail.com>
-	<69e28c910911020326m67797910ub1df048d8dd3eb7e@mail.gmail.com>
-From: Thomas Wiecki <thomas.wiecki@googlemail.com>
-Date: Mon, 2 Nov 2009 22:57:39 +0900
-Message-ID: <4888b8cb0911020557m226d8bccx36da7949459369f@mail.gmail.com>
-Subject: Re: b43 with 14e4 gives DMA error
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Produces no output. I checked without the grep and it is only listed as Dell...
+The scan function was using 32 bit access which does not
+work on 16bit CF cards.
 
-2009/11/2 Gábor Stefanik <netrolller.3d@gmail.com>:
-> 2009/11/1 Thomas Wiecki <thomas.wiecki@googlemail.com>:
->> I did:
->>
->> service acpid stop
->> service acpi-support stop
->> (and service dell-laptop stop)
->>
->> processor was not loaded (I didn't blacklist it though).
->>
->> Still, after a minute of using the card, DMA errors occured.
->>
->> BIOS: It wouldn't tell me anything besides A11. It says to be a DELL
->> bios (do they make their own bioses or just rebrand them?).
->
-> Dell is infamous for rebranding 3rd-party BIOSes; run this to find out
-> if it's actually Phoenix:
-> dmidecode | grep -i phoenix
->
-> This should output a line on PhoenixBIOS & Phoenix AwardBIOS, but
-> nothing on other BIOSes - post the exact output here to see if it's
-> Phoenix or Award.
->
->>
->> 2009/11/1 Gábor Stefanik <netrolller.3d@gmail.com>:
->>> On Sun, Nov 1, 2009 at 1:51 PM, Thomas Wiecki
->>> <thomas.wiecki@googlemail.com> wrote:
->>>> 0c:00.0 Network controller [0280]: Broadcom Corporation BCM4312
->>>> 802.11b/g [14e4:4315] (rev 01)
->>>>        Subsystem: Dell Device [1028:000c]
->>>>        Flags: bus master, fast devsel, latency 0, IRQ 17
->>>>        Memory at f1ffc000 (64-bit, non-prefetchable) [size=16K]
->>>>        Capabilities: <access denied>
->>>>        Kernel driver in use: wl
->>>>        Kernel modules: wl, ssb
->>>>
->>>> A variable delay after loading the most recent b43 driver I get a lot
->>>> of (I hope last nights patches would have fixed the problems, but they
->>>> didn't):
->>>> [ 6895.111946] b43-phy0 ERROR: Fatal DMA error: 0x00000800,
->>>> 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000
->>>> [ 6895.111955] b43-phy0: Controller RESET (DMA error) ...
->>>> [ 6895.336490] b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
->>>> [ 6900.841372] b43-phy0: Controller restarted
->>>>
->>>> After installing the driver for the first time, I have a few minutes I
->>>> can use the wifi card, after that the DMA errors start to occur. Once
->>>> they occured after the first loading, they appear immediatly after
->>>> each loading.
->>>>
->>>> Ubuntu 9.04 (most recent) with kernel 2.6.31-14-generic
->>>>
->>>> Laptop is Dell E6500.
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>
->>>
->>> Does noacpi/noapic or blacklisting module "processor" have any effect on this?
->>>
->>> Also, is this on PhoenixBIOS?
->>>
->>> --
->>> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
->>>
->>
->
->
->
-> --
-> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
->
+This patch corrects this by doing two 16 bit reads like
+ssb_pcmcia_read32 already does (unfortunately we don't
+have a struct ssb_device to use that directly).
+
+Signed-off-by: Martin Fuzzey <mfuzzey@gmail.com>
+
+---
+
+ drivers/ssb/scan.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ssb/scan.c b/drivers/ssb/scan.c
+index b74212d..6721fa8 100644
+--- a/drivers/ssb/scan.c
++++ b/drivers/ssb/scan.c
+@@ -162,6 +162,9 @@ static u8 chipid_to_nrcores(u16 chipid)
+ static u32 scan_read32(struct ssb_bus *bus, u8 current_coreidx,
+ 		       u16 offset)
+ {
++	unsigned long flags;
++	u32 lo, hi;
++
+ 	switch (bus->bustype) {
+ 	case SSB_BUSTYPE_SSB:
+ 		offset += current_coreidx * SSB_CORE_SIZE;
+@@ -174,7 +177,11 @@ static u32 scan_read32(struct ssb_bus *bus, u8 current_coreidx,
+ 			offset -= 0x800;
+ 		} else
+ 			ssb_pcmcia_switch_segment(bus, 0);
+-		break;
++		spin_lock_irqsave(&bus->bar_lock, flags);
++		lo = readw(bus->mmio + offset);
++		hi = readw(bus->mmio + offset + 2);
++		spin_unlock_irqrestore(&bus->bar_lock, flags);
++		return lo | (hi << 16);
+ 	case SSB_BUSTYPE_SDIO:
+ 		offset += current_coreidx * SSB_CORE_SIZE;
+ 		return ssb_sdio_scan_read32(bus, offset);
+
