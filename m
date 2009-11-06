@@ -1,128 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:53263 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751864AbZKCVAF (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:57738 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752093AbZKFQoR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 16:00:05 -0500
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project tree
-Date: Tue, 3 Nov 2009 22:00:03 +0100
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>
-References: <200911031951.05235.bzolnier@gmail.com>
-In-Reply-To: <200911031951.05235.bzolnier@gmail.com>
+	Fri, 6 Nov 2009 11:44:17 -0500
+Received: by iwn10 with SMTP id 10so911148iwn.4
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 08:44:23 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200911032200.04516.IvDoorn@gmail.com>
+In-Reply-To: <43e72e890911060830k56f9cdcbi14a03b1389351197@mail.gmail.com>
+References: <fd145f7d0911060004j55b06482tca088685d0626249@mail.gmail.com>
+	<43e72e890911060821r2703c186lbb75c40b449b2c55@mail.gmail.com>
+	<43e72e890911060830k56f9cdcbi14a03b1389351197@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 6 Nov 2009 08:44:02 -0800
+Message-ID: <43e72e890911060844y44070ddek8e70469434161903@mail.gmail.com>
+Subject: Re: Getting random regulatory domains on boot-up with ath9k
+To: Jeffrey Baker <jwbaker@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 03 November 2009, Bartlomiej Zolnierkiewicz wrote:
-> 
-> Hi,
-> 
-> The following patch series (against wireless-next) addresses issues raised
-> during code review and subsequently rejected by rt2x00/wireless/networking
-> maintainers.
+On Fri, Nov 6, 2009 at 8:30 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Fri, Nov 6, 2009 at 8:21 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>
+>>  * The fix for the regression would be to either use an alpha2 which
+>> does have an entry and put that first in the array *or* (my
+>> preference) to check first the alpha2 set on cfg80211 and see if that
+>> maps to a country allowed by your region code and if so get cfg80211
+>> to request that regulatory domain to CRDA.
+>
+> I just thought of another possible solution for region code stuff --
+> just make them static world roaming regulatory domains. But to do this
+> it means we'd enable the world roaming features on cfg80211 and
+> channels which would typically be disabled would then just become
+> passive-scan/no-ibss. I'd have to get buy-in through our internal
+> regulatory guys first. This also seems like a clean solution but it
+> would mean more static tables define for each major region code we
+> have and I am not sure how many of those we have.
 
-Really stop reading only the half of emails, try reading it entirely (or at least don't
-stop at the second word in a sentence). It really starts the bug me to repeat
-myself over and over again because you refuse to read.
+Oh and the other solution is to just add AW to db.txt with the same
+mappings as any other country in the region code group.
 
-Your comments during code review were ACCEPTED with the only remark that
-it shouldn't be done right here and now.
+I'll out line this in an e-mail followup, still reviewing what option to take.
 
-[snip]
-
-> The rewrite was quite conservative and there is still a room for improvement
-> but it should serve as a good starting base for all future work on rt2800
-> drivers, and there is a lot to do there (both drivers are still practically
-> non-functional).
-
-Hence the reason I can use my rt2800usb device as long as I don't connect to
-a 11n AP. But since everybody in the world has 11n devices, the rt2800usb device
-is not capable of doing anything...
-
-> Comments and patches are welcomed.
-> 
-> 
-> The following changes since commit fa867e7355a1bdcd9bf7d55ebe9296f5b9c4028a:
->   Juuso Oikarinen (1):
->         wl1271: Generalize command response reading
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bart/misc.git rt2800
-> 
-> Bartlomiej Zolnierkiewicz (40):
->       rt2800usb: fix rt2800usb_rfcsr_read()
->       rt2800pci: fix crypto in TX frame
->       rt2800pci: fix comment about register access
->       rt2800pci: fix comment about IV/EIV fields
->       rt2x00: fix rt2x00usb_register_read() comment
->       rt2800usb: use rt2x00usb_register_multiwrite() to set key entries
-[.. snip..]
->       rt2800usb: fix comments in rt2800usb.h
->       rt2800usb: add RXINFO_DESC_SIZE definition
-[..snip..]
->       rt2800: fix comments in rt2800.h
-[..snip..]
->       rt2x00: remove needless ifdefs from rt2x00leds.h
-
-These 10 patches look sane enough. Please send them as patch series
-to linux-wireless.
-
->       rt2x00: add support for different chipset interfaces
-
-Not needed, you can determine exactly what chipset you have
-by looking at the other fields. So extending the structure to
-repeat the same information isn't needed.
-
->       MAINTAINERS: add rt2800 entry
-
-I see you decided to take over the maintainership?
-Doesn't that need the current maintainer to move away, or was this part
-of the "going over other peoples head" plan?
-
->       rt2800usb: add rt2800_register_[read,write]() wrappers
->       rt2800pci: add rt2800_register_[read,write]() wrappers
->       rt2800usb: add rt2800_register_multi[read,write]() wrappers
->       rt2800pci: add rt2800_register_multi[read,write]() wrappers
->       rt2800usb: add rt2800_regbusy_read() wrapper
->       rt2800pci: add rt2800_regbusy_read() wrapper
->       rt2800usb: add rt2800_bbp_[read,write]() wrappers
->       rt2800pci: add rt2800_bbp_[read,write]() wrappers
->       rt2800usb: add rt2800_rfcsr_[read,write]() wrappers
->       rt2800pci: add rt2800_rfcsr_[read,write]() wrappers
->       rt2800usb: add rt2800_rf_[read,write]() wrappers
->       rt2800pci: add rt2800_rf_[read,write]() wrappers
->       rt2800usb: add rt2800_mcu_request() wrapper
->       rt2800pci: add rt2800_mcu_request() wrapper
->       rt2x00: add driver private field to struct rt2x00_dev
->       rt2800usb: convert to use struct rt2800_ops methods
->       rt2800pci: convert to use struct rt2800_ops methods
->       rt2x00: fix rt2x00usb_register_multiwrite() arguments
->       rt2x00: fix rt2x00usb_regbusy_read() arguments
->       rt2x00: fix rt2x00pci_register_multi[read,write]() arguments
->       rt2800: add rt2800lib.h
->       rt2800: fix duplication in header files
->       rt2800: prepare for rt2800lib addition
->       rt2800: add rt2800lib (part one)
->       rt2800: add rt2800lib (part two)
->       rt2x00: move REGISTER_BUSY_* definitions to rt2x00.h
->       rt2800: add rt2800lib (part three)
->       rt2800: add rt2800lib (part four)
-
-These are too much (and too big) patches for me to review at once, I'll look at
-them later.
-
-Ivo
+  Luis
