@@ -1,38 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:44042 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753627AbZKLSNk convert rfc822-to-8bit (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:42980 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759315AbZKFSRE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 13:13:40 -0500
-Received: by iwn8 with SMTP id 8so1965385iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 10:13:46 -0800 (PST)
+	Fri, 6 Nov 2009 13:17:04 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 13/41] rt2800usb: add rt2800_regbusy_read() wrapper
+Date: Fri, 6 Nov 2009 17:23:10 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173334.28463.13649.sendpatchset@localhost.localdomain> <200911051949.28617.IvDoorn@gmail.com>
+In-Reply-To: <200911051949.28617.IvDoorn@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20091112181045.GA8839@sig21.net>
-References: <20091112152600.GA7562@sig21.net> <20091112181045.GA8839@sig21.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 12 Nov 2009 10:13:26 -0800
-Message-ID: <43e72e890911121013t7273c09fybff75fa2484cf07c@mail.gmail.com>
-Subject: Re: ath9k: DMA failed to stop in 10 ms
-To: Johannes Stezenbach <js@sig21.net>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <200911061723.10099.bzolnier@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 12, 2009 at 10:10 AM, Johannes Stezenbach <js@sig21.net> wrote:
-> On Thu, Nov 12, 2009 at 04:26:00PM +0100, Johannes Stezenbach wrote:
->>
->> When running kismet I get a lot of
->>
->> [ 2030.531809] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
->
-> Update: It seems that this is only happening when kismet is hopping
-> channels.  So it looks like an unclean shutdown of the receive
-> process and not a real problem -- except that the log flooding is
-> pretty annoying.
+On Thursday 05 November 2009 19:49:28 Ivo van Doorn wrote:
+> On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Subject: [PATCH] rt2800usb: add rt2800_regbusy_read() wrapper
+> > 
+> > Part of preparations for later code unification.
+> > 
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 
+> The macros are the same for rt2800pci and rt2800usb.
+> So it might be better to move the entire define set into rt2800lib.h
 
-Can you try disabling powersave before using monitor mode?
+Indeed, it wasn't possible before patches #13-14 but it is now.
 
-sudo iwconfig wlan0 power off
+Would you like to send an incremental (on top the series) fix for it?
 
-  Luis
+Thanks.
+-- 
+Bartlomiej Zolnierkiewicz
