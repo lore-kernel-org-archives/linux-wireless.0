@@ -1,43 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:31100 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753053AbZKOOS1 (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:46605 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758296AbZKFVx7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Nov 2009 09:18:27 -0500
-Received: by ey-out-2122.google.com with SMTP id 9so1624446eyd.19
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Nov 2009 06:18:32 -0800 (PST)
-Message-ID: <4B000DAB.10305@gmail.com>
-Date: Sun, 15 Nov 2009 15:18:19 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Fri, 6 Nov 2009 16:53:59 -0500
+Message-ID: <4AF49AE9.1040603@redfish-solutions.com>
+Date: Fri, 06 Nov 2009 13:53:45 -0800
+From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
 MIME-Version: 1.0
-To: sturmflut@lieberbiber.de
-CC: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] Kernel Bug using current rt2x00usb and an RT2070L
- device
-References: <200911151403.56479.sturmflut@lieberbiber.de>
-In-Reply-To: <200911151403.56479.sturmflut@lieberbiber.de>
+To: John Linville <linville@tuxdriver.com>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Pavel Roskin <proski@gnu.org>
+Subject: [PATCH] Don't build SSB modules when SSB isn't present
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/15/09 14:03, Simon Raffeiner wrote:
-> Hi lists,
-> 
-> I built the current compat-wireless on a stock Ubuntu 2.6.31-14-generic kernel (Ubuntu 9.10 Karmic Koala), plugged in my Sitecom WL-608v1 USB adapter (USB ID 0df6:003f) and hit the following kernel Bug:
-> 
-> [ 3097.169534] ------------[ cut here ]------------                                    
-> [ 3097.169538] kernel BUG at /home/sturmflut/compat-wireless-2.6/drivers/net/wireless/rt2x00/rt2x00usb.c:86!                                                                  
-> [ 3097.169541] invalid opcode: 0000 [#1] SMP                                           
-> [ 3097.169544] last sysfs file: /sys/devices/pci0000:00/0000:00:18.3/temp1_input       
-> [ 3097.169546] CPU 0                                                                   
+From: Philip A Prindeville <philipp@redfish-solutions.com>
 
-Hi,
+If you're building for a platform that has (for example) no SSB,
+then having a single knob to turn to disable this is a major
+win.  Especially if more devices get add later that are SSB-based.
 
-I sent a patch to fix this just yesterday. See:
+Tested.
 
-http://marc.info/?l=linux-wireless&m=125822646218485&w=2
-
+Signed-off-by: Philip A Prindeville <philipp@redfish-solutions.com>
 ---
-Gertjan.
+ config.mk |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
 
+diff --git a/config.mk b/config.mk
+index ce70832..49be2d0 100644
+--- a/config.mk
++++ b/config.mk
+@@ -9,6 +9,8 @@ ifeq ($(wildcard $(KLIB_BUILD)/.config),)
+  CONFIG_PCI=y
+  CONFIG_USB=y
+  CONFIG_PCMCIA=y
++ CONFIG_SSB_POSSIBLE=y
++ CONFIG_SSB=m
+ else
+ include $(KLIB_BUILD)/.config
+ endif
+@@ -218,6 +220,11 @@ CONFIG_IPW2200_QOS=y
+ #
+ # % echo 1 > /sys/bus/pci/drivers/ipw2200/*/rtap_iface
+
++ifneq ($(CONFIG_SSB),)
++# Sonics Silicon Backplane
++CONFIG_SSB_SPROM=y
++# CONFIG_SSB_DEBUG=y
++
+ CONFIG_SSB_BLOCKIO=y
+ CONFIG_SSB_PCIHOST_POSSIBLE=y
+ CONFIG_SSB_PCIHOST=y
+@@ -229,6 +236,7 @@ endif
+ # CONFIG_SSB_DEBUG=y
+ CONFIG_SSB_DRIVER_PCICORE_POSSIBLE=y
+ CONFIG_SSB_DRIVER_PCICORE=y
++endif
+
+ CONFIG_P54_PCI=m
+
+@@ -397,12 +405,6 @@ CONFIG_WL1251_SPI=m
+ CONFIG_WL1251_SDIO=m
+ CONFIG_WL1271=m
+
+-# Sonics Silicon Backplane
+-CONFIG_SSB_POSSIBLE=y
+-CONFIG_SSB=m
+-CONFIG_SSB_SPROM=y
+-# CONFIG_SSB_DEBUG=y
+-
+ ifdef CONFIG_COMPAT_WIRELESS_27
+ CONFIG_LIBERTAS=n
+ else
