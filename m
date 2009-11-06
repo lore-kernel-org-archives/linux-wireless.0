@@ -1,79 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35899 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754165AbZKQLcL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 06:32:11 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1NAMIB-00087u-Oj
-	for linux-wireless@vger.kernel.org; Tue, 17 Nov 2009 12:32:15 +0100
-Subject: ar9170 resume warning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ASeG7ijBqGaVZP3sqZ1l"
-Date: Tue, 17 Nov 2009 11:03:54 +0100
-Message-ID: <1258452235.3682.1.camel@johannes.local>
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:55765 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759460AbZKFRWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 12:22:13 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Martin Fuzzey <mfuzzey@gmail.com>
+Subject: Re: b43: firmware loading problem and sleeping BUG
+Date: Fri, 6 Nov 2009 18:22:15 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <ba4215e10911060819y1175e003g695281fe084e07ab@mail.gmail.com>
+In-Reply-To: <ba4215e10911060819y1175e003g695281fe084e07ab@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200911061822.17121.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Friday 06 November 2009 17:19:51 Martin Fuzzey wrote:
+> I posted a couple of days ago to the bcm43xx_dev list about problems
+> getting b43 to run on a
+> arm (MX21 SoC). That list appears to have died recently (at least
+> nothing added to the archives
+> since last month)
 
---=-ASeG7ijBqGaVZP3sqZ1l
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Well, it never really worked. It's hosted on berlios. That's why it's crap. ;)
 
-Every time I resume with ar9170 unplugged, after hibernating with ar9170
-plugged in, I get this trace:
+> However I now get:
+> pcmcia_socket pcmcia_socket0: pccard: PCMCIA card inserted into slot 0
+> pcmcia 0.0: pcmcia: registering new device pcmcia0.0
+> ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x0D, vendor 0x4243)
+> ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x09, vendor 0x4243)
+> ssb: Core 2 found: PCI (cc 0x804, rev 0x0C, vendor 0x4243)
+> ssb: Core 3 found: PCMCIA (cc 0x80D, rev 0x07, vendor 0x4243)
+> BUG: sleeping function called from invalid context at mm/vmalloc.c:1367
+> in_atomic(): 1, irqs_disabled(): 128, pid: 1361, name: modprobe
+> 2 locks held by modprobe/1361:
+>  #0:  (buses_mutex){+.+.+.}, at: [<bf03761c>] ssb_bus_register+0x48/0x1a4 [ssb]
+>  #1:  (&bus->bar_lock){......}, at: [<bf038e38>]
+> ssb_pcmcia_read32+0x24/0x74 [ssb]
+> irq event stamp: 105917
+> hardirqs last  enabled at (105916): [<c027cf34>]
+> __mutex_unlock_slowpath+0x120/0x150
+> hardirqs last disabled at (105917): [<c027eee0>] _spin_lock_irqsave+0x20/0x60
+> softirqs last  enabled at (105853): [<c0042f60>] irq_exit+0x50/0x64
+> softirqs last disabled at (105832): [<c0042f60>] irq_exit+0x50/0x64
+> ------------[ cut here ]------------
+> WARNING: at kernel/lockdep.c:2465 lockdep_trace_alloc+0xac/0xec()
+> Modules linked in: b43(+) ssb mac80211 mxc_pcmcia
+> ---[ end trace 7a542bbcadb0bb88 ]---
 
-[ 1617.300683] WARNING: at net/mac80211/main.c:93 ieee80211_configure_filte=
-r+0x26b/0x270 [mac80211]()
-[ 1617.308163] Hardware name: MacBook5,1
-[ 1617.315741] Modules linked in: ...
-[ 1617.363458] Pid: 8285, comm: s2disk Not tainted 2.6.32-rc7-wl-42932-gb64=
-8d86-dirty #108
-[ 1617.373892] Call Trace:
-[ 1617.395153]  [<ffffffff8104f53b>] warn_slowpath_common+0x7b/0xd0
-[ 1617.405990]  [<ffffffff8104f5a4>] warn_slowpath_null+0x14/0x20
-[ 1617.416740]  [<ffffffffa01b4acb>] ieee80211_configure_filter+0x26b/0x270=
- [mac80211]
-[ 1617.427635]  [<ffffffffa01d16ae>] ieee80211_reconfig+0x3ce/0x670 [mac802=
-11]
-[ 1617.461216]  [<ffffffffa01c707a>] ieee80211_resume+0x1a/0x30 [mac80211]
-[ 1617.472670]  [<ffffffffa016690a>] wiphy_resume+0x7a/0xa0 [cfg80211]
-[ 1617.484066]  [<ffffffff812f794f>] device_resume+0x17f/0x1a0
-[ 1617.495381]  [<ffffffff812f7d35>] dpm_resume+0xd5/0x170
-[ 1617.506774]  [<ffffffff812f81fa>] dpm_resume_end+0x2a/0x40
-[ 1617.518058]  [<ffffffff8109a643>] hibernation_snapshot+0xc3/0x130
-...
+These logs look weird. Is that the full log from "dmesg" command?
+I guess the pcmcia_access_configuration_register() is doing nonatomic vmalloc stuff.
 
+I think this is easy to fix, because we can replace the spinlock by a mutex, as
+the b43 driver (which is the only user of the code) always allows sleeping now.
+I'll send a patch for testing soon.
 
-Should ar9170 unregister the hardware as it resumes and finds it gone?
-Or is there something preventing doing that?
+> ssb: Sonics Silicon Backplane found on PCMCIA device pcmcia0.0
+> b43-phy0: Broadcom 4318 WLAN found (core revision 9)
+> b43-phy0 debug: Found PHY: Analog 3, Type 2, Revision 7
+> b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 8
+> phy0: Selected rate control algorithm 'minstrel'
+> Broadcom 43xx driver loaded [ Features: M, Firmware-ID: FW13 ]
+> 
+> And then when I do ifconfig wlan0 up:
+> 
+> b43 ssb0:0: firmware: requesting b43/ucode5.fw
+> b43 ssb0:0: firmware: requesting b43/pcm5.fw
+> b43 ssb0:0: firmware: requesting b43/b0g0initvals5.fw
+> b43 ssb0:0: firmware: requesting b43/b0g0bsinitvals5.fw
+> b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
+> b43-phy0 ERROR: Initial Values Firmware file-format error.
+> b43-phy0 ERROR: You must go to
+> http://wireless.kernel.org/en/users/Drivers/b43#devicefirmware
+> and download the correct firmware for this driver version. Please
+> carefully read all instructions on this website.
+> 
+> I am using firmware broadcom-wl-4.150.10.5 extracted with
+> b43-fwcutter-012 as described
+> http://wireless.kernel.org/en/users/Drivers/b43#devicefirmware
+> 
+> 
+> Any ideas why the versions don't match?
 
-johannes
+These are two different version numbers. One for the broadcom driver
+and one for the firmware.
 
---=-ASeG7ijBqGaVZP3sqZ1l
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+> The firmware files are arch independant right? (since I run fwcutter
+> on x86 and run the kernel on ARM)
 
------BEGIN PGP SIGNATURE-----
+Yes.
 
-iQIcBAABAgAGBQJLAnUGAAoJEODzc/N7+QmaUb8P/jsMTegOCRavD/6IIT8PtGz1
-jrkFN/iB3EMgMPa70JHgzogXxVLK0RirOnvHGLbN49tmUE7cIaJydMKDkosz9Hfu
-nMs+o50qFK80ZKr3Alwmz4WHziXQMDx69DdJeYGzCNKKi/ztRyHfI5R70p3DQ3RZ
-DVagPIa1HaDFLk7bve8oK7dC7bcFqKI5oQreToRZtcxlti1ypVKtUyssXK4rqxHG
-MbJ3h76ximMPaJQsGkCJmtnLnJh+hjs4Q6SYpsMdwICLL/HzKppbo2lq4T3mYDp9
-yvcTMp6bALbR9LvJYXOVlrYl/P2S8nBfifsJjCaderlrf96338mGXiY2Qqeg6tmX
-p/26xKqcN6QmNxoIiDYh379MnYdk2yXZXQ29MtdK2+8mCx0KOBXp093hHm/ib5fZ
-awLPMpgNDHXxCuUsCNVWKqfe6A3BzA265Dm0xVxkysWjtwN2THhQYkdeeTBTjCYJ
-+Z6YcwaV62CJvA5Blti2IqjqR6Gp9kGUdZMVFAMd/dl52JVhSn5Ri0PQTLDDR7IQ
-UnV1o0wt4cxrVlBL+MaHnsHqE8l9F74kx7X1A33SrsvuWyYx1xZGoOfh6IooUzxT
-2uXsaTki6PBJHkYIQtkVyXpT+jG8dcZnJlBFKJFr/mp+BYwFphC4nVi5xPQrlkGI
-4ccK+qt2VfEjhS+haTW0
-=bhu+
------END PGP SIGNATURE-----
+> Kernel version is 2.6.32-rc5
+> The PCMCIA controller driver is new (I recently posted it to
+> linux-pcmcia and linux-arm)
 
---=-ASeG7ijBqGaVZP3sqZ1l--
+Thanks for testing. The ssb-pcmcia code is not tested a lot, so
+I'm not surprised that there are bugs.
 
+-- 
+Greetings, Michael.
