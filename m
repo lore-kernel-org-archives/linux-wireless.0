@@ -1,75 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34694 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753823AbZKHOBJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 09:01:09 -0500
-Subject: Re: ar9170 in AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jan Kiszka <jan.kiszka@web.de>
-Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <4AF6CC02.8080204@web.de>
-References: <4AF6C7CD.7060108@web.de> <878wehf85v.fsf@purkki.valot.fi>
-	 <4AF6CC02.8080204@web.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-rHKFUue5MRPEiIuFK7Ia"
-Date: Sun, 08 Nov 2009 15:01:10 +0100
-Message-ID: <1257688870.29454.52.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:47316 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760134AbZKFWxF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 17:53:05 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Ben Cahill <ben.m.cahill@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 20/20] iwlwifi: MAC_ACCESS_REQ cleanup
+Date: Fri,  6 Nov 2009 14:53:03 -0800
+Message-Id: <1257547983-12590-21-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
+References: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ben Cahill <ben.m.cahill@intel.com>
 
---=-rHKFUue5MRPEiIuFK7Ia
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Add txq_id info to "Tx queue requesting wakeup" debug message
 
-On Sun, 2009-11-08 at 14:47 +0100, Jan Kiszka wrote:
+Add "Rx queue requesting wakeup" debug message
 
-> > IMHO AP mode should not be enabled until it's confirmed that power
-> > save mode works properly.
+Move clear of CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ to be after nearby
+iwl_write_prph(), since iwl_write_prph() sets it and clears it.  Almost
+removed it entirely, but just making sure in case someone removes the
+iwl_write_prph()!  Also remove unneeded priv->lock usage; this is now
+handled by priv->reg_lock within iwl_clear_bit().
 
-Agreed.
+Join a couple of lines that had unneeded line returns.
 
-> How common is the combination of powersaving and mcast in practice?
+Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   12 +++++-------
+ drivers/net/wireless/iwlwifi/iwl-rx.c       |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-tx.c       |    3 ++-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 ++---
+ 4 files changed, 11 insertions(+), 11 deletions(-)
 
-Uh, it's nothing to do with the combination. If you don't support proper
-mcast buffering, any powersaving client will be in big trouble due to
-ARP/NDP etc.
-
-Any device that supports powersaving is thus impacted. That ranges from
-desktops and laptops down to your cellphone.
-
-> Given that quite a few useful scenarios are blocked right now (unless
-> you know what to patch), I would at least vote for a config option or a
-> module parameter. That gives a chance to warn the user about this
-> limitation without locking out people that are no hackers.
-
-Given that we want to have everything support powersave on the client
-side, I have to disagree -- supporting something that will be
-troublesome for many clients will just make it look bad.
-
-johannes
-
---=-rHKFUue5MRPEiIuFK7Ia
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK9s8iAAoJEODzc/N7+QmaZkEQAKzv6UmLp3Oo6WsSImQq+Agu
-a4YqmoXMzlVTM2kWJwaVF4xdGNcepajAK6aXPNhR0u8Xl6S6v/u+djwOIscdVZxk
-AMFKvaW98dZYjT8odvbrHldhkRc2KnOaoHNI6nrl7pg2O6LBUuS1gO6lH7jW2gng
-lPxTLjheWQ+G46msSh3WEG4/ymNe4LRy2A8HlxfNk+6SZu3QF1TgBi5K7aScAHMq
-8hMmIHsANnWC2YbGqk4kskfZWYxCNvOUZ2y5SprSRkVR7CJM8Ys3SZbDyXxrPglU
-eDY5CVa64sJOtwL9xuTRGrIoSmy54lwvp8aDUz0/VlcBCIiBY4By38WLg4F98TKw
-Q+RuwCdIZAgIA2dt2nEoOHzxSonqDcq795ZbmZB1Y3kKopYSLZP9Af6BtI4+TlnG
-IRswzDGXiaizV/WAU+3R5rcQ2o/dLzqyHzNXCcLl5iHIJnrS82qvzaQPf2jwjp8X
-V8en3QJ+usydyCkmnfXXLUTrDAafb/tfkTS127V01gFnC9KHnZ5/7UO2n1LqEpdY
-vcqotNTSWbZa1odCru2UXA+1bdZpaqDaXcIrGwHGVsZQG6ciJrf4s1iTygzjze0C
-KRGIr0Hz0fB/zCdiiCROI+nkVaRlOwLn81tyYoAM5c6/TMW5L0+1DYddkf9ZuU+v
-I3l7Vw+qQM6Dp2FX2UuU
-=KwSV
------END PGP SIGNATURE-----
-
---=-rHKFUue5MRPEiIuFK7Ia--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 4ba4282..29f7510 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1935,19 +1935,17 @@ static void __iwl_down(struct iwl_priv *priv)
+ 
+ 	/* device going down, Stop using ICT table */
+ 	iwl_disable_ict(priv);
+-	spin_lock_irqsave(&priv->lock, flags);
+-	iwl_clear_bit(priv, CSR_GP_CNTRL,
+-			 CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+-	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+ 	iwl_txq_ctx_stop(priv);
+ 	iwl_rxq_stop(priv);
+ 
+-	iwl_write_prph(priv, APMG_CLK_DIS_REG,
+-				APMG_CLK_VAL_DMA_CLK_RQT);
+-
++	/* Power-down device's busmaster DMA clocks */
++	iwl_write_prph(priv, APMG_CLK_DIS_REG, APMG_CLK_VAL_DMA_CLK_RQT);
+ 	udelay(5);
+ 
++	/* Make sure (redundant) we've released our request to stay awake */
++	iwl_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++
+ 	/* Stop the device, and put it in low power state */
+ 	priv->cfg->ops->lib->apm_ops.stop(priv);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index d2dc7cc..61b3b0e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -140,6 +140,8 @@ int iwl_rx_queue_update_write_ptr(struct iwl_priv *priv, struct iwl_rx_queue *q)
+ 		reg = iwl_read32(priv, CSR_UCODE_DRV_GP1);
+ 
+ 		if (reg & CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP) {
++			IWL_DEBUG_INFO(priv, "Rx queue requesting wakeup, GP1 = 0x%x\n",
++				      reg);
+ 			iwl_set_bit(priv, CSR_GP_CNTRL,
+ 				    CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+ 			goto exit_unlock;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index d2b606e..6199bf6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -97,7 +97,8 @@ int iwl_txq_update_write_ptr(struct iwl_priv *priv, struct iwl_tx_queue *txq)
+ 		reg = iwl_read32(priv, CSR_UCODE_DRV_GP1);
+ 
+ 		if (reg & CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP) {
+-			IWL_DEBUG_INFO(priv, "Requesting wakeup, GP1 = 0x%x\n", reg);
++			IWL_DEBUG_INFO(priv, "Tx queue %d requesting wakeup, GP1 = 0x%x\n",
++				      txq_id, reg);
+ 			iwl_set_bit(priv, CSR_GP_CNTRL,
+ 				    CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+ 			return ret;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 6285e51..5d26330 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2601,9 +2601,8 @@ static void __iwl3945_down(struct iwl_priv *priv)
+ 	iwl3945_hw_txq_ctx_stop(priv);
+ 	iwl3945_hw_rxq_stop(priv);
+ 
+-	iwl_write_prph(priv, APMG_CLK_DIS_REG,
+-				APMG_CLK_VAL_DMA_CLK_RQT);
+-
++	/* Power-down device's busmaster DMA clocks */
++	iwl_write_prph(priv, APMG_CLK_DIS_REG, APMG_CLK_VAL_DMA_CLK_RQT);
+ 	udelay(5);
+ 
+ 	/* Stop the device, and put it in low power state */
+-- 
+1.5.6.3
 
