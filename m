@@ -1,251 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:33000 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753680AbZKJRyh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 12:54:37 -0500
-Message-ID: <4AF9A8E1.6010104@openwrt.org>
-Date: Tue, 10 Nov 2009 18:54:41 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:44269 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752201AbZKFRpo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 12:45:44 -0500
+Received: by iwn10 with SMTP id 10so962899iwn.4
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 09:45:49 -0800 (PST)
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 2/2] mac80211: implement support for 4-address frames for
- AP and client mode
-References: <4AF9A886.9090902@openwrt.org>
-In-Reply-To: <4AF9A886.9090902@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <b6c5339f0911060929w78d16192o6c48e432e8e8c830@mail.gmail.com>
+References: <43e72e890911060857l6e383578nc1c7d0f2ba63529f@mail.gmail.com>
+	<b6c5339f0911060929w78d16192o6c48e432e8e8c830@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 6 Nov 2009 09:45:29 -0800
+Message-ID: <43e72e890911060945s3b00e056u1efe483bd88ebd30@mail.gmail.com>
+Subject: Re: Changing the way we handle region codes on Linux (public thread)
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Vivek Natarajan <Vivek.Natarajan@atheros.com>,
+	Vivek Natarajan <vivek.natraj@gmail.com>,
+	Jeffrey Baker <jwbaker@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	David Quan <David.Quan@atheros.com>,
+	Michael Green <Michael.Green@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some situations it might be useful to run a network with an
-Access Point and multiple clients, but with each client bridged
-to a network behind it. For this to work, both the client and the
-AP need to transmit 4-address frames, containing both source and
-destination MAC addresses.
-With this patch, you can configure a client to communicate using
-only 4-address frames for data traffic.
-On the AP side you can enable 4-address frames for individual
-clients by isolating them in separate AP VLANs which are configured
-in 4-address mode.
-Such an AP VLAN will be limited to one client only, and this client
-will be used as the destination for all traffic on its interface,
-regardless of the destination MAC address in the packet headers.
-The advantage of this mode compared to regular WDS mode is that it's
-easier to configure and does not require a static list of peer MAC
-addresses on any side.
+On Fri, Nov 6, 2009 at 9:29 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Fri, Nov 6, 2009 at 11:57 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>
+>> I think that sums it up.
+>
+> I personally still like the idea of pushing the vendor-specific
+> codes out to user space and having psuedo-country codes for
+> those (e.g. "ATH_37").  Then the driver doesn't need all of the
+> static rules loaded all the time and it would drop a lot of
+> policy code from the driver.  CRDA could be enhanced to load
+> multiple databases, one for pure iso-3166 codes, one with
+> Atheros codes, one with Intel, etc.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
+There is obviously an added complexity added to userspace for this,
+but it seems that having that complexity in userspace is better than
+in kernel space. Only reason for not doing this I think would be
+perhaps if we can really avoid such custom region codes.
 
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -208,6 +208,9 @@ struct ieee80211_if_wds {
- 
- struct ieee80211_if_vlan {
- 	struct list_head list;
-+
-+	/* used for all tx if the VLAN is configured to 4-addr mode */
-+	struct sta_info *sta;
- };
- 
- struct mesh_stats {
-@@ -457,6 +460,8 @@ struct ieee80211_sub_if_data {
- 	int force_unicast_rateidx; /* forced TX rateidx for unicast frames */
- 	int max_ratectrl_rateidx; /* max TX rateidx for rate control */
- 
-+	bool use_4addr; /* use 4-address frames */
-+
- 	union {
- 		struct ieee80211_if_ap ap;
- 		struct ieee80211_if_wds wds;
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -89,6 +89,9 @@ static int ieee80211_change_iface(struct
- 					    params->mesh_id_len,
- 					    params->mesh_id);
- 
-+	if (params->use_4addr >= 0)
-+		sdata->use_4addr = !!params->use_4addr;
-+
- 	if (sdata->vif.type != NL80211_IFTYPE_MONITOR || !flags)
- 		return 0;
- 
-@@ -806,6 +809,13 @@ static int ieee80211_change_station(stru
- 			return -EINVAL;
- 		}
- 
-+		if (vlansdata->use_4addr) {
-+			if (vlansdata->u.vlan.sta)
-+				return -EEXIST;
-+
-+			rcu_assign_pointer(vlansdata->u.vlan.sta, sta);
-+		}
-+
- 		sta->sdata = vlansdata;
- 		ieee80211_send_layer2_update(sta);
- 	}
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -489,6 +489,11 @@ static void __sta_info_unlink(struct sta
- 	local->num_sta--;
- 	local->sta_generation++;
- 
-+	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
-+		if (sdata->u.vlan.sta)
-+			rcu_assign_pointer(sdata->u.vlan.sta, NULL);
-+	}
-+
- 	if (local->ops->sta_notify) {
- 		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
- 			sdata = container_of(sdata->bss,
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1046,7 +1046,10 @@ ieee80211_tx_prepare(struct ieee80211_su
- 
- 	hdr = (struct ieee80211_hdr *) skb->data;
- 
--	tx->sta = sta_info_get(local, hdr->addr1);
-+	if ((sdata->vif.type == NL80211_IFTYPE_AP_VLAN) && sdata->use_4addr)
-+		tx->sta = rcu_dereference(sdata->u.vlan.sta);
-+	if (!tx->sta)
-+		tx->sta = sta_info_get(local, hdr->addr1);
- 
- 	if (tx->sta && ieee80211_is_data_qos(hdr->frame_control) &&
- 	    (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION)) {
-@@ -1608,7 +1611,7 @@ netdev_tx_t ieee80211_subif_start_xmit(s
- 	const u8 *encaps_data;
- 	int encaps_len, skip_header_bytes;
- 	int nh_pos, h_pos;
--	struct sta_info *sta;
-+	struct sta_info *sta = NULL;
- 	u32 sta_flags = 0;
- 
- 	if (unlikely(skb->len < ETH_HLEN)) {
-@@ -1625,8 +1628,25 @@ netdev_tx_t ieee80211_subif_start_xmit(s
- 	fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_DATA);
- 
- 	switch (sdata->vif.type) {
--	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_AP_VLAN:
-+		rcu_read_lock();
-+		if (sdata->use_4addr)
-+			sta = rcu_dereference(sdata->u.vlan.sta);
-+		if (sta) {
-+			fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
-+			/* RA TA DA SA */
-+			memcpy(hdr.addr1, sta->sta.addr, ETH_ALEN);
-+			memcpy(hdr.addr2, dev->dev_addr, ETH_ALEN);
-+			memcpy(hdr.addr3, skb->data, ETH_ALEN);
-+			memcpy(hdr.addr4, skb->data + ETH_ALEN, ETH_ALEN);
-+			hdrlen = 30;
-+			sta_flags = get_sta_flags(sta);
-+		}
-+		rcu_read_unlock();
-+		if (sta)
-+			break;
-+		/* fall through */
-+	case NL80211_IFTYPE_AP:
- 		fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS);
- 		/* DA BSSID SA */
- 		memcpy(hdr.addr1, skb->data, ETH_ALEN);
-@@ -1700,12 +1720,21 @@ netdev_tx_t ieee80211_subif_start_xmit(s
- 		break;
- #endif
- 	case NL80211_IFTYPE_STATION:
--		fc |= cpu_to_le16(IEEE80211_FCTL_TODS);
--		/* BSSID SA DA */
- 		memcpy(hdr.addr1, sdata->u.mgd.bssid, ETH_ALEN);
--		memcpy(hdr.addr2, skb->data + ETH_ALEN, ETH_ALEN);
--		memcpy(hdr.addr3, skb->data, ETH_ALEN);
--		hdrlen = 24;
-+		if (sdata->use_4addr && ethertype != ETH_P_PAE) {
-+			fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
-+			/* RA TA DA SA */
-+			memcpy(hdr.addr2, dev->dev_addr, ETH_ALEN);
-+			memcpy(hdr.addr3, skb->data, ETH_ALEN);
-+			memcpy(hdr.addr4, skb->data + ETH_ALEN, ETH_ALEN);
-+			hdrlen = 30;
-+		} else {
-+			fc |= cpu_to_le16(IEEE80211_FCTL_TODS);
-+			/* BSSID SA DA */
-+			memcpy(hdr.addr2, skb->data + ETH_ALEN, ETH_ALEN);
-+			memcpy(hdr.addr3, skb->data, ETH_ALEN);
-+			hdrlen = 24;
-+		}
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		/* DA SA BSSID */
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -853,6 +853,9 @@ int ieee80211_if_add(struct ieee80211_lo
- 					    params->mesh_id_len,
- 					    params->mesh_id);
- 
-+	if (params && params->use_4addr >= 0)
-+		sdata->use_4addr = !!params->use_4addr;
-+
- 	mutex_lock(&local->iflist_mtx);
- 	list_add_tail_rcu(&sdata->list, &local->interfaces);
- 	mutex_unlock(&local->iflist_mtx);
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1237,6 +1237,13 @@ __ieee80211_data_to_8023(struct ieee8021
- {
- 	struct net_device *dev = rx->dev;
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN && !sdata->use_4addr &&
-+	    ieee80211_has_a4(hdr->frame_control))
-+		return -1;
-+	if (sdata->use_4addr && is_multicast_ether_addr(hdr->addr1))
-+		return -1;
- 
- 	return ieee80211_data_to_8023(rx->skb, dev->dev_addr, sdata->vif.type);
- }
-@@ -1590,6 +1597,7 @@ ieee80211_rx_h_data(struct ieee80211_rx_
- {
- 	struct net_device *dev = rx->dev;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	__le16 fc = hdr->frame_control;
- 	int err;
- 
-@@ -1599,6 +1607,13 @@ ieee80211_rx_h_data(struct ieee80211_rx_
- 	if (unlikely(!ieee80211_is_data_present(hdr->frame_control)))
- 		return RX_DROP_MONITOR;
- 
-+	/* Allow the cooked monitor interface of an AP to see 4-addr frames so
-+	 * that a 4-addr station can be detected and moved into a separate VLAN
-+	 */
-+	if (ieee80211_has_a4(hdr->frame_control) &&
-+	    sdata->vif.type == NL80211_IFTYPE_AP)
-+		return RX_DROP_MONITOR;
-+
- 	err = __ieee80211_data_to_8023(rx);
- 	if (unlikely(err))
- 		return RX_DROP_UNUSABLE;
-@@ -2039,7 +2054,7 @@ static int prepare_for_handlers(struct i
- 
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_STATION:
--		if (!bssid)
-+		if (!bssid && !sdata->use_4addr)
- 			return 0;
- 		if (!multicast &&
- 		    compare_ether_addr(sdata->dev->dev_addr, hdr->addr1) != 0) {
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -320,7 +320,9 @@ int ieee80211_data_to_8023(struct sk_buf
- 		break;
- 	case cpu_to_le16(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS):
- 		if (unlikely(iftype != NL80211_IFTYPE_WDS &&
--			     iftype != NL80211_IFTYPE_MESH_POINT))
-+			     iftype != NL80211_IFTYPE_MESH_POINT &&
-+			     iftype != NL80211_IFTYPE_AP_VLAN &&
-+			     iftype != NL80211_IFTYPE_STATION))
- 			return -1;
- 		if (iftype == NL80211_IFTYPE_MESH_POINT) {
- 			struct ieee80211s_hdr *meshdr =
+Ultimately what makes more sense to me is to see more trust on the
+user's location based on alternative inputs like geoclue but since
+this year the Google Summer of Code project failed miserly even by the
+midterm who knows when we'll be able to get proper feeds we can use in
+the kernel.
 
+But with that said -- I think the region-code scheme is overly complex
+and am not sure if aiding it is something we should focus energy and
+resources on. It would seem better to me to focus on more cleaner
+solutions and leave that old stuff as legacy solutions.
+
+  Luis
