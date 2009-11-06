@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:44320 "EHLO ds10.mine.nu"
+Received: from mga02.intel.com ([134.134.136.20]:9497 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755560AbZKRPgo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 10:36:44 -0500
-Message-ID: <4B04148E.6010202@openwrt.org>
-Date: Wed, 18 Nov 2009 16:36:46 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [PATCH v2 1/2] ath9k: properly use the mac80211 rate control
- api
-References: <4B037881.8020509@openwrt.org> <20091118152909.GC2911@tuxdriver.com>
-In-Reply-To: <20091118152909.GC2911@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+	id S1759914AbZKFWw6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 17:52:58 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 01/20] iwlwifi: change debug message to error in failure case
+Date: Fri,  6 Nov 2009 14:52:44 -0800
+Message-Id: <1257547983-12590-2-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
+References: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Wed, Nov 18, 2009 at 05:30:57AM +0100, Felix Fietkau wrote:
->> This patch changes ath9k to pass proper MCS indexes and flags
->> between the RC and the rest of the driver code.
->> sc->cur_rate_table remains, as it's used by the RC code internally,
->> but the rest of the driver code no longer uses it, so a potential
->> new RC for ath9k would not have to update it.
->> 
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->> ---
->> - replaces sc->hw usage with common->hw
->> - initializes unused tx status rates to -1 for minstrel compatibility
->> - split up for easier review
->> - tested in ap mode with minstrel against a legacy STA
->> - v2: fix bisectability
-> 
->   CC [M]  drivers/net/wireless/ath/ath9k/rc.o
-> drivers/net/wireless/ath/ath9k/rc.c: In function ‘ath_tx_status’:
-> drivers/net/wireless/ath/ath9k/rc.c:1272: warning: passing argument 2 of ‘ath_debug_stat_rc’ makes pointer from integer without a cast
-> drivers/net/wireless/ath/ath9k/debug.h:173: note: expected ‘struct sk_buff *’ but argument is of type ‘int’
-Sorry, I must have lost a patch chunk there. Will fix it later.
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-- Felix
+Since these messages indicate failure we would be interested in seeing them
+always.
+
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
+index ccf50a9..a231659 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-hcmd.c
++++ b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
+@@ -200,13 +200,13 @@ int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 	}
+ 
+ 	if (test_bit(STATUS_RF_KILL_HW, &priv->status)) {
+-		IWL_DEBUG_INFO(priv, "Command %s aborted: RF KILL Switch\n",
++		IWL_ERR(priv, "Command %s aborted: RF KILL Switch\n",
+ 			       get_cmd_string(cmd->id));
+ 		ret = -ECANCELED;
+ 		goto fail;
+ 	}
+ 	if (test_bit(STATUS_FW_ERROR, &priv->status)) {
+-		IWL_DEBUG_INFO(priv, "Command %s failed: FW Error\n",
++		IWL_ERR(priv, "Command %s failed: FW Error\n",
+ 			       get_cmd_string(cmd->id));
+ 		ret = -EIO;
+ 		goto fail;
+-- 
+1.5.6.3
+
