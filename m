@@ -1,90 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45513 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932267AbZKBTAI (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:41615 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755407AbZKFLRD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 14:00:08 -0500
-Date: Mon, 2 Nov 2009 13:48:44 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@nokia.com>
-Subject: Re: linux-next: Tree for November 2 (wireless/wl1271)
-Message-ID: <20091102184843.GK14046@tuxdriver.com>
-References: <20091102173845.210d1c57.sfr@canb.auug.org.au> <4AEF1E7F.50306@oracle.com> <20091102184449.GJ14046@tuxdriver.com>
+	Fri, 6 Nov 2009 06:17:03 -0500
+Received: by bwz27 with SMTP id 27so1025258bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 03:17:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091102184449.GJ14046@tuxdriver.com>
+In-Reply-To: <m3ws246ky4.wl%holgerschurig@gmail.com>
+References: <fd145f7d0911060004j55b06482tca088685d0626249@mail.gmail.com>
+	 <m3ws246ky4.wl%holgerschurig@gmail.com>
+Date: Fri, 6 Nov 2009 12:17:07 +0100
+Message-ID: <2da21fe50911060317v55acefdvfac01821b5f9cb0f@mail.gmail.com>
+Subject: Re: Getting random regulatory domains on boot-up with ath9k
+From: Davide Pesavento <davidepesa@gmail.com>
+To: Holger Schurig <holgerschurig@googlemail.com>
+Cc: Jeffrey Baker <jwbaker@gmail.com>, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helps if I actually Cc: Luca...
+On Fri, Nov 6, 2009 at 10:50, Holger Schurig
+<holgerschurig@googlemail.com> wrote:
+>> ath: EEPROM regdomain: 0x37
+>> ath: EEPROM indicates we should expect a direct regpair map
+>> ath: Country alpha2 being used: AW
+>> ath: Regpair used: 0x37
+>> cfg80211: Calling CRDA for country: AW
+>
+> I can confirm this bug on wireless-testing, v2.6.32-rc6-41576-g4408b3b
+> with an ath5k card:
+>
 
-On Mon, Nov 02, 2009 at 01:44:49PM -0500, John W. Linville wrote:
-> On Mon, Nov 02, 2009 at 10:01:35AM -0800, Randy Dunlap wrote:
-> > Stephen Rothwell wrote:
-> > > Hi all,
-> > > 
-> > > Changes since 20091030:
-> > 
-> > 
-> > wl1271 build fails when CONFIG_INET=n.
-> > Should this driver depend on INET?
-> > 
-> > Why does this driver, unlike all other wireless drivers,
-> > want to use register_inetaddr_notifier()?
-> > 
-> > wl1271_main.c:(.text+0x271052): undefined reference to `unregister_inetaddr_notifier'
-> > wl1271_main.c:(.text+0x2714d7): undefined reference to `register_inetaddr_notifier'
-> 
-> Yeah, that driver is doing some filtering based on IPv4.
-> 
-> Luca, is that necessary?  If so, then we need a patch like the one below...?
-> 
-> John
-> 
-> From ba823accfad68151d80503ff5fb04c049c9eadc2 Mon Sep 17 00:00:00 2001
-> From: John W. Linville <linville@tuxdriver.com>
-> Date: Mon, 2 Nov 2009 13:43:32 -0500
-> Subject: [PATCH] wl1271: depend on INET
-> 
-> wl1271_main.c:(.text+0x271052): undefined reference to `unregister_inetaddr_notifier'
-> wl1271_main.c:(.text+0x2714d7): undefined reference to `register_inetaddr_notifier'
-> 
-> Driver is doing some filtering based on IP addresses...
-> 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
->  drivers/net/wireless/wl12xx/Kconfig |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
-> index 33de7fa..785e024 100644
-> --- a/drivers/net/wireless/wl12xx/Kconfig
-> +++ b/drivers/net/wireless/wl12xx/Kconfig
-> @@ -42,6 +42,7 @@ config WL1251_SDIO
->  config WL1271
->  	tristate "TI wl1271 support"
->  	depends on WL12XX && SPI_MASTER && GENERIC_HARDIRQS
-> +	depends on INET
->  	select FW_LOADER
->  	select CRC7
->  	---help---
-> -- 
-> 1.6.2.5
-> 
-> -- 
-> John W. Linville		Someday the world will need a hero, and you
-> linville@tuxdriver.com			might be all we have.  Be ready.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+Confirmed on wireless-testing v2.6.32-rc6-wl-41575-g5e68bfb with an
+AR5418 card using ath9k. Also 'iw reg set <country code>' stopped
+working. Last known working kernel is v2.6.32-rc5-wl-40584-g9b469da.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+[   12.573257] ath: EEPROM regdomain: 0x37
+[   12.573259] ath: EEPROM indicates we should expect a direct regpair map
+[   12.573262] ath: Country alpha2 being used: AW
+[   12.573264] ath: Regpair used: 0x37
+[   12.579608] cfg80211: Calling CRDA for country: AW
+
+Regards,
+Davide
