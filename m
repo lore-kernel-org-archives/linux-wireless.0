@@ -1,68 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37420 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751893AbZK3PUZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2009 10:20:25 -0500
-Subject: Re: [PATCH v3 1/2] wireless: add ieee80211_amsdu_to_8023s
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1259555157-10866-1-git-send-email-yi.zhu@intel.com>
-References: <1259555157-10866-1-git-send-email-yi.zhu@intel.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zQo5scr/7MyT7Qevn8K0"
-Date: Mon, 30 Nov 2009 16:20:15 +0100
-Message-ID: <1259594415.32171.14.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:9497 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760132AbZKFWxF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 17:53:05 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 19/20] iwlwifi: Fix issue on file transfer stalled in HT mode
+Date: Fri,  6 Nov 2009 14:53:02 -0800
+Message-Id: <1257547983-12590-20-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
+References: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
---=-zQo5scr/7MyT7Qevn8K0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Turn on RTS/CTS for HT to prevent uCode TX fifo underrun
 
-On Mon, 2009-11-30 at 12:25 +0800, Zhu Yi wrote:
+This is fix for
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2103
 
-> +		__skb_queue_tail(list, frame);
-> +	}
-> +
-> +	return 0;
-> +
-> + purge:
-> +	__skb_queue_purge(list);
-> + out:
-> +	dev_kfree_skb(skb);
-> +	return -1;
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Tested-by: Jiajia Zheng <jiajia.zheng@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+This is a serious problem that needs to be fixed also in 2.6.32 and 2.6.31.
+This patch does depend on some other work that is not in these kernels
+though so separate backported patches will be provided.
 
-I'm not sure there's much use in the return value, since it otherwise
-leaves the list empty and you don't _really_ care all that much to
-iterate an empty list in that case, but it doesn't really matter.
+ drivers/net/wireless/iwlwifi/iwl-1000.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-johannes
-
---=-zQo5scr/7MyT7Qevn8K0
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLE+KsAAoJEODzc/N7+QmaFcUQAMigavzK/lAI8HbaF2WMk3qn
-KZvK5kmjN09TnmscLg6jG8d9mm+qOTlaJ+rrUxpNd/YdtfLYhvqCT/JhIxxbvpK2
-OFKo/mTgu0nM9SmS57Vw7ievFZ9vvLFOvdZHXu7VRhHsd/0r0/JBoF6wVc+eMYok
-czenfwTdZcXJXhnqmzOdmouipvWY/bJpcExFArNUBcbdVv3gSq7SWWjIQnmPyalx
-uHywgRKAywk2rQJIZWl5A0+JgS2GkyGMrxAa6h6w3rcfvJ8iZjOA/sc+olyBMkwT
-/bVnLQCbcapD5qDTbhYhihCA2h5X0jFG/Z9TTJNvj8jN0gpoMahuj6P5UCkqOPnm
-yZQZJFCaL171fFH7u1rDi4QIwFPZSOdXuQpHa5/sxePUq0Npwk7B/mNPpheABU9+
-J2yiQyPv96Ubt3CajET4fBsJ6vJlLRN/A0V2fpALQ506u+KxcpBntoKmfLryptMd
-5+BDUauk8D+Bt3KYgHVQnxONQ6to2gPfLsvWNMsXkHDFfGLetTwl8m8CVsSQ7Ej7
-t7veYDoCRyE40g7JV8M8EOoQLGCqUFZyp+QXqRHChUotxfg10MbRM2fmnx2eGjRh
-XshbcaAaCBr1xsEml98oxt2MHhGIIilGTeEodgRua36yMEZnHQuQQhpe2BSEUEJp
-UCR9v9dm233C5M/ChEH6
-=fhr3
------END PGP SIGNATURE-----
-
---=-zQo5scr/7MyT7Qevn8K0--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 1e387b9..8f82537 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -170,6 +170,7 @@ struct iwl_cfg iwl1000_bgn_cfg = {
+ 	.shadow_ram_support = false,
+ 	.ht_greenfield_support = true,
+ 	.led_compensation = 51,
++	.use_rts_for_ht = true, /* use rts/cts protection */
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.support_ct_kill_exit = true,
+ };
+-- 
+1.5.6.3
 
