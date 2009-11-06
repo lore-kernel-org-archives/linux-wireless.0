@@ -1,44 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:36609 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755338AbZKECeL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 21:34:11 -0500
-Received: by yxe17 with SMTP id 17so6938299yxe.33
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 18:34:16 -0800 (PST)
-Message-ID: <4AF239A6.5050406@lwfinger.net>
-Date: Wed, 04 Nov 2009 20:34:14 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from bu3sch.de ([62.75.166.246]:36903 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753328AbZKFSbN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 13:31:13 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Martin Fuzzey <mfuzzey@gmail.com>
+Subject: Re: b43: firmware loading problem and sleeping BUG
+Date: Fri, 6 Nov 2009 19:31:13 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <ba4215e10911060819y1175e003g695281fe084e07ab@mail.gmail.com> <200911061822.17121.mb@bu3sch.de> <ba4215e10911061027t413d2c34g8ad66a7982f7c43c@mail.gmail.com>
+In-Reply-To: <ba4215e10911061027t413d2c34g8ad66a7982f7c43c@mail.gmail.com>
 MIME-Version: 1.0
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>, sidhayn@gmail.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8187: Fix kernel oops when device is removed when
- LEDS enabled (Bugzilla #14539)
-References: <4af11879./IumKJ+RAbw7Zkq6%Larry.Finger@lwfinger.net> <200911041630.20122.chunkeey@googlemail.com> <20091104164938.GG12965@tuxdriver.com> <200911042214.54230.herton@mandriva.com.br>
-In-Reply-To: <200911042214.54230.herton@mandriva.com.br>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200911061931.16509.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/04/2009 06:14 PM, Herton Ronaldo Krzesinski wrote:
-> 
-> Hi, I checked here and the code above in led_classdev_unregister is the same in
-> 2.6.31, so I think the patch from Larry should also be applied/sent to 2.6.31.x
-> stable, as the bug could happen there too.
+On Friday 06 November 2009 19:27:17 Martin Fuzzey wrote:
+> [  109.690000] b43-phy0 ERROR: Firmware file "b43/pcm5.fw" format error.
 
-Herton,
+> So any suggestions on figuring out what is going on?
 
-Technically you are correct; however, I did extensive testing of
-2.6.31 and _NEVER_ got the failure. The sequencing is a bug waiting to
-happen, but something in the post 2.6.31 merge actually enabled the
-bug to happen. I tried bisection to determine which change actully did
-that, but was not successful.
+Your userspace firmware helper (I guess it's not udev on your device?)
+might be throwing crap at the kernel.
 
-My feeling is that stable can be left alone. Of course, if bug reports
-of kernel panics on unload of rtl8187 start occurring, we will know
-how to fix it.
-
-Larry
+-- 
+Greetings, Michael.
