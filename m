@@ -1,105 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.irobot.com ([206.83.81.187]:38260 "EHLO smtp1.irobot.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933481AbZKXRFb convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:22082 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758974AbZKFPX7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 12:05:31 -0500
-Subject: [PATCH v2 1/2] mac80211: supp_rates initialization and rate
- control notification
-From: Adam Wozniak <awozniak@irobot.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Derek Smithies <derek@indranet.co.nz>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <4B0B2F67.3030605@irobot.com>
-References: <4AF0D54D.4090303@irobot.com>
-	 <alpine.DEB.2.00.0911111508391.6214@kauri.acheron.indranet.co.nz>
-	 <4AFC655A.5020706@irobot.com> <200911122103.27455.chunkeey@googlemail.com>
-	 <4AFC8E4F.5090307@irobot.com>  <4AFC8F0D.5020700@irobot.com>
-	 <1258097352.3899.75.camel@johannes.local>  <4AFDDF19.8060202@irobot.com>
-	 <1258191039.6167.40.camel@johannes.local>  <4B018B26.2070008@irobot.com>
-	 <1258392453.32159.28.camel@johannes.local> <4B0192A6.9050808@irobot.com>
-	 <alpine.DEB.2.00.0911170938380.3829@kauri.acheron.indranet.co.nz>
-	 <4B01D4A5.7060204@irobot.com>
-	 <alpine.DEB.2.00.0911171156210.3829@kauri.acheron.indranet.co.nz>
-	 <4B01E298.3030602@irobot.com>
-	 <alpine.DEB.2.00.0911171314470.3829@kauri.acheron.indranet.co.nz>
-	 <1258443484.1375.8.camel@johannes.local> <4B02DFE3.9040602@irobot.com>
-	 <4B0AEEE3.2050808@irobot.com> <1259018866.7094.189.camel@johannes.local>
-	 <4B0B2F67.3030605@irobot.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 24 Nov 2009 09:05:27 -0800
-Message-ID: <1259082327.2573.18.camel@awozniak-laptop>
-Mime-Version: 1.0
+	Fri, 6 Nov 2009 10:23:59 -0500
+Received: by fg-out-1718.google.com with SMTP id e12so310178fga.1
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 07:24:04 -0800 (PST)
+Message-ID: <4AF43F8D.6090303@lwfinger.net>
+Date: Fri, 06 Nov 2009 09:23:57 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: Carlo Parata <carlo_parata@hotmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Wifi led does not work on Acer Aspire One D250 (ath5k
+ 	driver)
+References: <loom.20091106T135746-452@post.gmane.org> <b6c5339f0911060716n538268f6w1300e3400e0bd2c8@mail.gmail.com>
+In-Reply-To: <b6c5339f0911060716n538268f6w1300e3400e0bd2c8@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previously, not all code paths set supp_rates, and a rate change did not reinitialize the rate control layer.
-This patch fixes those issues.  (Hopefully not whitespace damaged this time)
+On 11/06/2009 09:16 AM, Bob Copeland wrote:
+> On Fri, Nov 6, 2009 at 8:00 AM, Carlo Parata <carlo_parata@hotmail.com> wrote:
+>> With this patch, a Acer Aspire One D250 can turn on the wifi led. The array of
+>> compatible devices in ath5k driver now includes the hardware present in this
+>> computer, as well as the led pin and polarity.
+>>
+>> --- ../led.c    2009-11-06 06:16:39.000000000 +0100
+>> +++ ./drivers/net/wireless/ath/ath5k/led.c      2009-11-06 12:37:44.000000000 +0100
+>> @@ -73,6 +73,8 @@
+>>        { ATH_SDEVICE(PCI_VENDOR_ID_HP, 0x0137b), ATH_LED(3, 1) },
+>>        /* IBM-specific AR5212 (all others) */
+>>        { PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5212_IBM), ATH_LED(0, 0) },
+>> +        /* Acer Aspire One D250 AR5007EG */
+>> +       { PCI_VDEVICE(ATHEROS, 0x001c), ATH_LED(3, 1) },
+> 
+> No, this should be based on the subdevice instead
+> (there are lots of ath:001c with different LED settings).
+> 
+> Also, please add your email to the appropriate stanza.
 
-Signed-off-by: Adam Wozniak <awozniak@irobot.com>
----
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 10d1385..474f66d 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -246,9 +246,13 @@ static void ieee80211_rx_bss_info(struct
-ieee80211_sub_if_data *sdata,
- 	if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
- 		return;
- 
-+	supp_rates = ieee80211_sta_get_rates(local, elems, band);
-+
-+	/* make sure mandatory rates are always added */
-+	supp_rates |= ieee80211_mandatory_rates(local, band);
-+
- 	if (sdata->vif.type == NL80211_IFTYPE_ADHOC && elems->supp_rates &&
- 	    memcmp(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0) {
--		supp_rates = ieee80211_sta_get_rates(local, elems, band);
- 
- 		rcu_read_lock();
- 
-@@ -257,12 +261,10 @@ static void ieee80211_rx_bss_info(struct
-ieee80211_sub_if_data *sdata,
- 			u32 prev_rates;
- 
- 			prev_rates = sta->sta.supp_rates[band];
--			/* make sure mandatory rates are always added */
--			sta->sta.supp_rates[band] = supp_rates |
--				ieee80211_mandatory_rates(local, band);
-+			sta->sta.supp_rates[band] = supp_rates;
- 
-+			if (sta->sta.supp_rates[band] != prev_rates) {
- #ifdef CONFIG_MAC80211_IBSS_DEBUG
--			if (sta->sta.supp_rates[band] != prev_rates)
- 				printk(KERN_DEBUG "%s: updated supp_rates set "
- 				    "for %pM based on beacon info (0x%llx | "
- 				    "0x%llx -> 0x%llx)\n",
-@@ -272,6 +274,8 @@ static void ieee80211_rx_bss_info(struct
-ieee80211_sub_if_data *sdata,
- 				    (unsigned long long) supp_rates,
- 				    (unsigned long long) sta->sta.supp_rates[band]);
- #endif
-+				rate_control_rate_init(sta);
-+			}
- 		} else
- 			ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, supp_rates);
- 
-@@ -415,6 +419,15 @@ struct sta_info *ieee80211_ibss_add_sta(struct
-ieee80211_sub_if_data *sdata,
- 	sta->sta.supp_rates[band] = supp_rates |
- 			ieee80211_mandatory_rates(local, band);
- 
-+#ifdef CONFIG_MAC80211_IBSS_DEBUG
-+	printk(KERN_DEBUG "%s: initialized supp_rates set "
-+		"for %pM (0x%llx) (band %d)\n",
-+		sdata->dev->name,
-+		sta->sta.addr,
-+		(unsigned long long) sta->sta.supp_rates[band],
-+		band);
-+#endif
-+
- 	rate_control_rate_init(sta);
- 
- 	if (sta_info_insert(sta))
-
+It is more than just your E-mail address. Please see
+Documents/SubmittingPatches.
