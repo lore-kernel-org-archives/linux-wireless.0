@@ -1,58 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f226.google.com ([209.85.217.226]:43676 "EHLO
-	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756050AbZKUQCG (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:40365 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759389AbZKFQbB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Nov 2009 11:02:06 -0500
-Received: by gxk26 with SMTP id 26so3737825gxk.1
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Nov 2009 08:02:12 -0800 (PST)
-Message-ID: <4B080EFA.6000300@w1an.in>
-Date: Sat, 21 Nov 2009 08:02:02 -0800
-From: Balaji Ravindran <b@w1an.in>
+	Fri, 6 Nov 2009 11:31:01 -0500
+Received: by iwn10 with SMTP id 10so900371iwn.4
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 08:31:06 -0800 (PST)
 MIME-Version: 1.0
-To: Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Kernel compilation Question
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <43e72e890911060821r2703c186lbb75c40b449b2c55@mail.gmail.com>
+References: <fd145f7d0911060004j55b06482tca088685d0626249@mail.gmail.com>
+	<43e72e890911060821r2703c186lbb75c40b449b2c55@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 6 Nov 2009 08:30:46 -0800
+Message-ID: <43e72e890911060830k56f9cdcbi14a03b1389351197@mail.gmail.com>
+Subject: Re: Getting random regulatory domains on boot-up with ath9k
+To: Jeffrey Baker <jwbaker@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Fri, Nov 6, 2009 at 8:21 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
 
-I tried compiling the wireless 2.6 kernel on my debian machine using
-make-kpkg and being lazy, i just did make defconfig, and saw that my
-compilation went fine without any issues, but i noticed that there was
-no ramdisk image that was generated when i installed the linux-image*.deb.
+>  * The fix for the regression would be to either use an alpha2 which
+> does have an entry and put that first in the array *or* (my
+> preference) to check first the alpha2 set on cfg80211 and see if that
+> maps to a country allowed by your region code and if so get cfg80211
+> to request that regulatory domain to CRDA.
 
-i did use --initrd option,
+I just thought of another possible solution for region code stuff --
+just make them static world roaming regulatory domains. But to do this
+it means we'd enable the world roaming features on cfg80211 and
+channels which would typically be disabled would then just become
+passive-scan/no-ibss. I'd have to get buy-in through our internal
+regulatory guys first. This also seems like a clean solution but it
+would mean more static tables define for each major region code we
+have and I am not sure how many of those we have.
 
-Was it because, using make defconfig compiles everything on the kernel
-itself? Aren't there any 'm' option in defaults?(dunno just asking if
-this is the case)
-
-or did i miss something out
-
-Please see if i missed some step
-
-Summary of steps performed.
-
-extracted wireless 2.6 source onto /usr/src
-
-created symbolic link
-
-make defconfig (i did not copy my existing config file to .config, i
-just wanted to try out make defconfig option)
-
-make-kpkg --initrd --append-to-version=foo --revision=bar kernel_image
-modules_image kernel_headers
-
-this created 2 files linux-image* and linux-headers*, i was missing the
-modules image also(but that was a second question)
-
-did dpkg -i linux-image*
-
-updated grub and placed files in /boot, but did not create initrd image.
-Why is that?
-
-Thanks
-
-Balaji R
+  Luis
