@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:50131 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751658AbZKFH0L (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.156]:6831 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753807AbZKFWYn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 02:26:11 -0500
-Received: from [192.168.10.9] ([192.168.10.9])
-	(authenticated bits=0)
-	by mail.redfish-solutions.com (8.14.3/8.14.3) with ESMTP id nA67QDud019469
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Fri, 6 Nov 2009 00:26:16 -0700
-Message-ID: <4AF3CFA8.7010808@redfish-solutions.com>
-Date: Thu, 05 Nov 2009 23:26:32 -0800
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+	Fri, 6 Nov 2009 17:24:43 -0500
+Received: by fg-out-1718.google.com with SMTP id d23so442719fga.1
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 14:24:48 -0800 (PST)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: ipw2100 still broken when compiled against 2.6.27.29
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1257545606.3752.2.camel@localhost.localdomain>
+References: <1257542956.6565.2.camel@localhost.localdomain>
+	 <20091106214803.GL2782@tuxdriver.com>
+	 <1257545606.3752.2.camel@localhost.localdomain>
+Date: Fri, 6 Nov 2009 17:24:47 -0500
+Message-ID: <b6c5339f0911061424l33178e81k16fb1f3889edcc3c@mail.gmail.com>
+Subject: Re: Changing from Minstrel to PID
+From: Bob Copeland <me@bobcopeland.com>
+To: =?ISO-8859-1?Q?Mart=EDn_Ernesto_Barreyro?=
+	<barreyromartin@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Anyone else noticed that ipw2100 has been broken for several days when 
-compiled against 2.6.27.29?
+On Fri, Nov 6, 2009 at 5:13 PM, Martín Ernesto Barreyro
+<barreyromartin@gmail.com> wrote:
+>> No, but I wish there were...patches?  Anyone?
+>
+> Sorry for my ignorance, but how could I send a parameter to a module or
+> use a configuration file? could be with sysctl?
 
-  CC [M]  /home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.o
-/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c: In function 'ipw2100_alloc_device':
-/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:6063: error: 'struct iw_public_data' has no member named 'ieee80211'
-/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c: At top level:
-/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8328: error: unknown field 'num_private' specified in initializer
-/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8328: warning: initialization makes pointer from integer without a cast
-/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8329: error: unknown field 'num_private_args' specified in initializer
-/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8329: warning: excess elements in struct initializer
-/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8329: warning: (near initialization for 'ipw2100_wx_handler_def')
-/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8330: error: unknown field 'private' specified in initializer
-/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8330: warning: excess elements in struct initializer
-/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8330: warning: (near initialization for 'ipw2100_wx_handler_def')
-/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8331: error: unknown field 'private_args' specified in initializer
-/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8331: warning: excess elements in struct initializer
-/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8331: warning: (near initialization for 'ipw2100_wx_handler_def')
-make[5]: *** [/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.o] Error 1
-make[4]: *** [/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00] Error 2
-make[3]: *** [/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless] Error 2
-make[2]: *** [_module_/home/philipp/alix/build_i586/compat-wireless-2009-11-04] Error 2
+You do have to compile them both, but once you do, if you
+have debugfs mounted, you can do:
 
+echo 'pid' > /debug/ieee80211/phy0/rc/name
 
+to switch to pid.
 
+-- 
+Bob Copeland %% www.bobcopeland.com
