@@ -1,64 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:56047 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757688AbZKRQW0 convert rfc822-to-8bit (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:50131 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751658AbZKFH0L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 11:22:26 -0500
-Received: by bwz27 with SMTP id 27so1299538bwz.21
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 08:22:31 -0800 (PST)
+	Fri, 6 Nov 2009 02:26:11 -0500
+Received: from [192.168.10.9] ([192.168.10.9])
+	(authenticated bits=0)
+	by mail.redfish-solutions.com (8.14.3/8.14.3) with ESMTP id nA67QDud019469
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Fri, 6 Nov 2009 00:26:16 -0700
+Message-ID: <4AF3CFA8.7010808@redfish-solutions.com>
+Date: Thu, 05 Nov 2009 23:26:32 -0800
+From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
 MIME-Version: 1.0
-In-Reply-To: <1258560310.2003.91.camel@violet>
-References: <1258557771-10776-1-git-send-email-janakiram.sistla@gmail.com>
-	 <1258558500.2003.88.camel@violet>
-	 <4fb5db50911180755u4e01814bvcc4d0ec8d396abd@mail.gmail.com>
-	 <1258560310.2003.91.camel@violet>
-Date: Wed, 18 Nov 2009 21:52:31 +0530
-Message-ID: <4fb5db50911180822l10c6e94fi56c2262e7f98fd79@mail.gmail.com>
-Subject: Re: [PATCH 2/2] Adding kerneldoc entry for radio type GPS
-From: Janakiram Sistla <janakiram.sistla@gmail.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Subject: ipw2100 still broken when compiled against 2.6.27.29
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 18, 2009 at 9:35 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
-> Hi Janakiram,
->
->> >>
->> >> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
->> >> index d787d5f..212f555 100644
->> >> --- a/include/linux/rfkill.h
->> >> +++ b/include/linux/rfkill.h
->> >> @@ -36,6 +36,7 @@
->> >>   * @RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
->> >>   * @RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
->> >>   * @RFKILL_TYPE_FM: switch is on a FM device.
->> >> + * @RFKILL_TYPE_GPS: switch is on a GPS device.
->> >>   * @NUM_RFKILL_TYPES: number of defined rfkill types
->> >>   */
->> >>  enum rfkill_type {
->> >
->> > so this is getting stupid right now. I am sick of a really simple patch
->> > causes so much trouble. Even this one is wrong again. The GPS doc should
->> > obviously before FM.
->> Marcel I think you want me to submit GPS doc patch first.I will be
->> doing it shortly and then i will do it for FM.I am sorry for this mis
->> understanding
->
-> I don't care in which order you submit the patches, but the order of the
-> documentation should match the order in the enum. That is not a strict
-> requirement, but here it makes total sense to do so.
->
-> Also don't worry with the patches anymore. This took way too much ping
-> pong to get it right, that I just wrote them by myself and submitted
-> them for inclusion.
+Anyone else noticed that ipw2100 has been broken for several days when 
+compiled against 2.6.27.29?
 
-Hope you can loop me in for the same.So that i can use that patch.
->
-> Regards
->
-> Marcel
->
->
->
+  CC [M]  /home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.o
+/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c: In function 'ipw2100_alloc_device':
+/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:6063: error: 'struct iw_public_data' has no member named 'ieee80211'
+/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c: At top level:
+/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8328: error: unknown field 'num_private' specified in initializer
+/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8328: warning: initialization makes pointer from integer without a cast
+/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8329: error: unknown field 'num_private_args' specified in initializer
+/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8329: warning: excess elements in struct initializer
+/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8329: warning: (near initialization for 'ipw2100_wx_handler_def')
+/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8330: error: unknown field 'private' specified in initializer
+/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8330: warning: excess elements in struct initializer
+/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8330: warning: (near initialization for 'ipw2100_wx_handler_def')
+/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8331: error: unknown field 'private_args' specified in initializer
+/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8331: warning: excess elements in struct initializer
+/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.c:8331: warning: (near initialization for 'ipw2100_wx_handler_def')
+make[5]: *** [/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00/ipw2100.o] Error 1
+make[4]: *** [/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless/ipw2x00] Error 2
+make[3]: *** [/home/philipp/alix/build_i586/compat-wireless-2009-11-04/drivers/net/wireless] Error 2
+make[2]: *** [_module_/home/philipp/alix/build_i586/compat-wireless-2009-11-04] Error 2
+
+
+
