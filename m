@@ -1,71 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57825 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932155AbZKBSaO (ORCPT
+Received: from mail-yw0-f202.google.com ([209.85.211.202]:41168 "EHLO
+	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759904AbZKFWME (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 13:30:14 -0500
-Date: Mon, 2 Nov 2009 13:29:53 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Luis Correia <luis.f.correia@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-Message-ID: <20091102182953.GH14046@tuxdriver.com>
-References: <1256886023.3555.5.camel@johannes.local> <20091030110616.GB6150@ff.dom.local> <20091030150223.GA2586@tuxdriver.com> <20091102091038.GA9044@elte.hu> <1257153807.3555.173.camel@johannes.local> <20091102100702.GA16963@elte.hu> <20091102170114.GE14046@tuxdriver.com> <efe7343f0911020932l21a570c8u9478568329d38e2c@mail.gmail.com> <4AEF1894.2010809@xenotime.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4AEF1894.2010809@xenotime.net>
+	Fri, 6 Nov 2009 17:12:04 -0500
+Received: by ywh40 with SMTP id 40so1289657ywh.33
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 14:12:10 -0800 (PST)
+Subject: Re: Changing from Minstrel to PID
+From: =?ISO-8859-1?Q?Mart=EDn?= Ernesto Barreyro
+	<barreyromartin@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20091106214803.GL2782@tuxdriver.com>
+References: <1257542956.6565.2.camel@localhost.localdomain>
+	 <20091106214803.GL2782@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 06 Nov 2009 19:13:26 -0300
+Message-ID: <1257545606.3752.2.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 02, 2009 at 09:36:20AM -0800, Randy Dunlap wrote:
-> Luis Correia wrote:
-> > [huge snip]
+El vie, 06-11-2009 a las 16:48 -0500, John W. Linville escribió:
+> On Fri, Nov 06, 2009 at 06:29:16PM -0300, Martín Ernesto Barreyro wrote:
+> > Hello, I have a rtl8187 wireless card and I've allways have problems
+> > with the rate control using minstrel. So everytime my kernel updates
+> > (recently it went from 2.30 to 2.31) i have to recompile mi kernel
+> > setting pid as my default rate control algorithm.
 > > 
-> > This is going to be my last reply to this thread (even if I get to be insulted).
-> > 
-> > I'm not a coder, I'm a tester and administrator for the rt2x00 project.
-> > I'm not happy about the current state of the rt2x00 in-kernel drivers.
-> > I tend to agree that more could be done.
-> > 
-> > Even though I'm not a coder, I could be hipotetically responsable for
-> > the current situation. It is my job function to motivate people to
-> > work on the rt2x00 in-kernel drivers, but apparently I've failed here.
-> > It's not an atitude problem, as some have suggested, it's just life.
-> > 
-> > About Bartlomiej, there is only one more thing that I'll say:
-> > 
-> > I've searched on my GMail archives and the only patch Bart has
-> > provided so far for the rt2x00 project is this:
-> > 
-> > [PATCH] MAINTAINERS: rt2x00 list is moderated
-> > 
-> > Which, while technically correct, adds nothing to the project.
+> > Is there a way to change that without compiling the kernel?
 > 
-> whatever.  That patch still needs to be applied.
+> No, but I wish there were...patches?  Anyone?
 
-And, in fact, it has been...already in linux-2.6:
+Sorry for my ignorance, but how could I send a parameter to a module or
+use a configuration file? could be with sysctl?
 
-	commit b5654f5e7fc414a6e69b3647db2b043257c9e62e
-	Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-	Date:   Mon Oct 26 16:49:50 2009 -0700
 
-	MAINTAINERS: rt2x00 list is moderated
-
-	Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-	Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-	Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-
-Hth...
-
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Martín Ernesto Barreyro <barreyromartin@gmail.com>
+Analista Universitario en Redes de Datos.
+
