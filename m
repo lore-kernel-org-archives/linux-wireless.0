@@ -1,66 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:42980 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759550AbZKFSRJ (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:45428 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755186AbZKFPyH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 13:17:09 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [PATCH 00/41] rewritten rt2800 drivers
-Date: Fri, 6 Nov 2009 19:15:59 +0100
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <14add3d10911041219j6ab25282re4f98d14029b1f68@mail.gmail.com> <646765f40911041455m7a6f55b8ka3ce95de7dd6ac6c@mail.gmail.com>
-In-Reply-To: <646765f40911041455m7a6f55b8ka3ce95de7dd6ac6c@mail.gmail.com>
+	Fri, 6 Nov 2009 10:54:07 -0500
+Received: by iwn10 with SMTP id 10so867814iwn.4
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 07:54:12 -0800 (PST)
 MIME-Version: 1.0
-Message-Id: <200911061915.59381.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+In-Reply-To: <m3hbt7kgdb.wl%holgerschurig@gmail.com>
+References: <fd145f7d0911060004j55b06482tca088685d0626249@mail.gmail.com>
+	<m3ws246ky4.wl%holgerschurig@gmail.com> <m3hbt7kgdb.wl%holgerschurig@gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 6 Nov 2009 07:53:52 -0800
+Message-ID: <43e72e890911060753s3c55c660x2a9cc0ab5210e231@mail.gmail.com>
+Subject: Re: Getting random regulatory domains on boot-up with ath9k
+To: Holger Schurig <holgerschurig@googlemail.com>
+Cc: Jeffrey Baker <jwbaker@gmail.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 04 November 2009 23:55:39 Julian Calaby wrote:
-> Bart,
-> 
-> FWIW, this all looks good to me, except for these comments:
-> 
-> 1. When you introduce struct rt2800_ops, it may telegraph your
-> intentions more clearly if you introduce rt2800lib.h at the same time
-> - this also means that we don't have (if only for a single patch)
-> duplicate versions of this structure and it's associated code.
+On Fri, Nov 6, 2009 at 4:05 AM, Holger Schurig
+<holgerschurig@googlemail.com> wrote:
+> Hmm, maybe it's not a bug after all.
 
-The current order is mostly the result of incremental steps leading to
-the final conclusions so indeed it can be polished a bit now.
+Right.
 
-> 2. Patches #26-28 should arguably come before the conversions to use
-> the struct rt2800_ops methods.
+> The card's eeprom just have a region, 0x37 is ETSI World. Now the
+> kernel looks for the first country with this region and uses this for
+> crda.
 
-Done, also the patch adding rt2800lib.h has been moved in front the ones
-adding rt2800_ops.
+The atheros driver does this, that is right. This is just one way in
+which the EEPROM can be programmed on Atheros cards, a way which I
+hope will disappear as this obviously can confuse users.
 
-[ I've kept all ACKs in affected patches, I hope people are fine with it. ]
+> There have been changes to drivers/net/wireless/ath/regd_common.h
+> recently, so maybe on one kernel-version "DK" is the first ETSI World,
+> on the next "AW" is the first and on some other again some different
+> country.
 
-> 3. I don't get the reasoning behind patch #37 (remove useless ifdefs
-> from rt2x00leds.h) but I'm going to assume that it's all right.
+Right, this is exactly what happens.
 
-struct rt2x00_led is referenced in rt2800lib.h so instead of adding more
-ifdefs to fix build I removed needless ones.
+So the search is for any alpha2 for 0x37 (ETSI1_WORLD) on the Atheros
+regulatory table allCountries[]. There are a few and recently the
+first alpha2 was made 'AW' as noted. Reason for searching for the
+first one is all of the alpha2s that match ETSI1_WORLD all have the
+same regulatory domain so the way to think about these is more of a
+region code and that region code maps to a certain number of alpha2s
+which all happen to have the same exact regulatory domain definitions.
+This obviously can change over time but for Windows driver this
+behavior is static as the driver remains static unless a change is
+requested by an ODM. For Linux this is different -- we get all the
+updates, and IMHO this is good but this also means this one way of
+programming the EEPROM should be avoided and eventually dropped. That
+will take time but I had already started poking internally for a
+change.
 
-> 4. Patch #39 should arguably come earlier in the patch set as it's a
-> general cleanup.
+In the meantime I've tried to document the regulatory details on the
+wiki so interested users / developers can understand what is going on.
 
-This was also needed to fix build (for patch #40 IIRC).
+So for ETSI1_WORLD we have these mappings, in this order now on
+wireless-testing (bleeding edge):
 
-I've moved #37 and #39 near the beginning of the patch series (after
-"rt2x00: fix rt2x00usb_register_read() comment" patch).
+mcgrof@tux ~/wireless-testing (git::my-stuff)$ grep ETSI1_WORLD
+drivers/net/wireless/ath/regd_common.h
+        ETSI1_WORLD = 0x37,
+        {ETSI1_WORLD, CTL_ETSI, CTL_ETSI},
+        {CTRY_ARUBA, ETSI1_WORLD, "AW"},
+        {CTRY_AUSTRIA, ETSI1_WORLD, "AT"},
+        {CTRY_BELARUS, ETSI1_WORLD, "BY"},
+        {CTRY_BELGIUM, ETSI1_WORLD, "BE"},
+        {CTRY_BOSNIA_HERZ, ETSI1_WORLD, "BA"},
+        {CTRY_CAMBODIA, ETSI1_WORLD, "KH"},
+        {CTRY_CROATIA, ETSI1_WORLD, "HR"},
+        {CTRY_CYPRUS, ETSI1_WORLD, "CY"},
+        {CTRY_DENMARK, ETSI1_WORLD, "DK"},
+        {CTRY_ESTONIA, ETSI1_WORLD, "EE"},
+        {CTRY_FINLAND, ETSI1_WORLD, "FI"},
+        {CTRY_FRANCE, ETSI1_WORLD, "FR"},
+        {CTRY_GERMANY, ETSI1_WORLD, "DE"},
+        {CTRY_GREECE, ETSI1_WORLD, "GR"},
+        {CTRY_GREENLAND, ETSI1_WORLD, "GL"},
+        {CTRY_HAITI, ETSI1_WORLD, "HT"},
+        {CTRY_HUNGARY, ETSI1_WORLD, "HU"},
+        {CTRY_ICELAND, ETSI1_WORLD, "IS"},
+        {CTRY_IRELAND, ETSI1_WORLD, "IE"},
+        {CTRY_ITALY, ETSI1_WORLD, "IT"},
+        {CTRY_LATVIA, ETSI1_WORLD, "LV"},
+        {CTRY_LIECHTENSTEIN, ETSI1_WORLD, "LI"},
+        {CTRY_LITHUANIA, ETSI1_WORLD, "LT"},
+        {CTRY_LUXEMBOURG, ETSI1_WORLD, "LU"},
+        {CTRY_MALTA, ETSI1_WORLD, "MT"},
+        {CTRY_NETHERLANDS, ETSI1_WORLD, "NL"},
+        {CTRY_NETHERLANDS_ANTILLES, ETSI1_WORLD, "AN"},
+        {CTRY_NORWAY, ETSI1_WORLD, "NO"},
+        {CTRY_POLAND, ETSI1_WORLD, "PL"},
+        {CTRY_PORTUGAL, ETSI1_WORLD, "PT"},
+        {CTRY_SERBIA_MONTENEGRO, ETSI1_WORLD, "CS"},
+        {CTRY_SLOVAKIA, ETSI1_WORLD, "SK"},
+        {CTRY_SLOVENIA, ETSI1_WORLD, "SI"},
+        {CTRY_SPAIN, ETSI1_WORLD, "ES"},
+        {CTRY_SWEDEN, ETSI1_WORLD, "SE"},
+        {CTRY_SWITZERLAND, ETSI1_WORLD, "CH"},
+        {CTRY_UNITED_KINGDOM, ETSI1_WORLD, "GB"},
 
-The rt2800 tree has been updated to reflect above changes (rt2800-v2.1
-branch is now the current one), if somebody would like to see patches
-please ping me (I think that such minor updates don't justify spamming
-mailing list w/ 41 patches but that's just me).
+The assumption of whether or not all of these alpha2s have the same
+regulatory definition on db.txt from wireless-regdb may be wrong
+already, not sure, but they all should be pretty close. The design of
+programming an Atheros card with 0x37 would end up being to use the
+same exact regulatory domain for any of these alpha2s as all of these
+alpha2s would be mapped internally in the driver to static regulatory
+domain definition. In that case the regulatory domain would never
+change, the user would not be informed of the alpha2 at all and its
+just used. For Linux the alpha2 regulatory database has been moved to
+userspace and although countries (alpah2s) can have the same exact
+regulatory domain they do not -- they are just split up.
 
-Thanks.
--- 
-Bartlomiej Zolnierkiewicz
+> So it's just misleading, e.g.
+>
+>    using first country with regdm 0x37: DK
+>
+> would probably a better dmesg output.
+
+Agreed, maybe better:
+
+ath: region code found 0x37, fist country in region: DK
+
+That or print all the alpha2s in the region. But as I also had
+suggested before we could also check the currently set alpha2 on
+cfg80211 by the user and if it happens to match an alpha2 in the
+region ask CRDA for that alpha2's regulatory domain.
+
+  Luis
