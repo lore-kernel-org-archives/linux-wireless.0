@@ -1,49 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:54593 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753214AbZKTX1H (ORCPT
+Received: from mail-ew0-f228.google.com ([209.85.219.228]:61846 "EHLO
+	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753328AbZKFS1M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 18:27:07 -0500
-Received: by iwn8 with SMTP id 8so2909412iwn.33
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Nov 2009 15:27:12 -0800 (PST)
+	Fri, 6 Nov 2009 13:27:12 -0500
+Received: by ewy28 with SMTP id 28so1433311ewy.18
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 10:27:17 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1258756647.2714.17.camel@localhost.localdomain>
-References: <1258756647.2714.17.camel@localhost.localdomain>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 20 Nov 2009 15:26:52 -0800
-Message-ID: <43e72e890911201526y5b36328ft3a510e546508df66@mail.gmail.com>
-Subject: Re: iwlagn + Ad-Hoc + 5Ghz
-To: Jeremy Moles <jeremy@emperorlinux.com>
+In-Reply-To: <200911061822.17121.mb@bu3sch.de>
+References: <ba4215e10911060819y1175e003g695281fe084e07ab@mail.gmail.com>
+	 <200911061822.17121.mb@bu3sch.de>
+Date: Fri, 6 Nov 2009 19:27:17 +0100
+Message-ID: <ba4215e10911061027t413d2c34g8ad66a7982f7c43c@mail.gmail.com>
+Subject: Re: b43: firmware loading problem and sleeping BUG
+From: Martin Fuzzey <mfuzzey@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 20, 2009 at 2:37 PM, Jeremy Moles <jeremy@emperorlinux.com> wrote:
+On Fri, Nov 6, 2009 at 6:22 PM, Michael Buesch <mb@bu3sch.de> wrote:
+> These logs look weird. Is that the full log from "dmesg" command?
+Yes - I've just stripped the timestamps
+
+> I guess the pcmcia_access_configuration_register() is doing nonatomic vmalloc stuff.
 >
-> Hello all! I have a group of machine here with an app that needs to set
-> up an ad-hoc network in 5Ghz+ range. The machines themselves are all
-> different (a Panasonic, a Dell, and a Lenovo) but they are all using
-> 5100 cards, a 2.6.31 kernel, and the 2.6.31-rc7 driver from the website.
+Indeed looks like its iounmap() that eventually gets called from there.
+
+> I think this is easy to fix, because we can replace the spinlock by a mutex, as
+> the b43 driver (which is the only user of the code) always allows sleeping now.
+> I'll send a patch for testing soon.
 >
-> Using the command "iw list" I can get a lot of helpful info, but I see
-> "no IBSS" on any channel over 11, and I'm beginning to think that this
-> just isn't supported on these cards yet.
+Great - happy to test it.
 
-No, this has nothing to do not supporting IBSS but instead you should
-read "no IBSS" more as a regulatory rule that implies you cannot use a
-mode of operation that can beacon. We should at least rename this on
-iw for now to make thins clearer.
+>> b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
+>> b43-phy0 ERROR: Initial Values Firmware file-format error.
+>> b43-phy0 ERROR: You must go to
+>>
+>> Any ideas why the versions don't match?
+>
+> These are two different version numbers. One for the broadcom driver
+> and one for the firmware.
+>
+Ok so I do have the correct firmware.
 
-What you see should be part of the default rules embedded on the
-device's EEPROM. Beaconing is allowed on channel 11 even on the most
-restrictive regulatory domain and this is why the world regulatory
-domain allows 1-11 to beacon too.
+I seem to be having very non deterministic behaviour regarding
+the firmware loading.
 
-You should enable debugging on the driver upon load to confirm whether
-this rule is coming from the EEPROM. Do you have
-CONFIG_WIRELESS_OLD_REGULATORY? I think even that (by default it used
-the US) enabled beaconing. Drivers can overrule things though if their
-EEPROM mandates this.
+Sometimes I get the behaviour above (which I trace to the first test
+in b43_write_initvals().
 
-  Luis
+And sometimes I get this behaviour:
+
+pcmcia driver load:
+[  102.850000] ssb: Sonics Silicon Backplane found on PCMCIA device pcmcia0.0
+
+[  102.880000] b43-phy0: Broadcom 4318 WLAN found (core revision 9)
+
+[  102.990000] b43-phy0 debug: Found PHY: Analog 3, Type 2, Revision 7
+
+[  103.010000] b43-phy0 debug: Found Radio: Manuf 0x17F, Version
+0x2050, Revision 8
+
+[  105.610000] phy0: Selected rate control algorithm 'minstrel'
+
+[  105.650000] Broadcom 43xx driver loaded [ Features: M, Firmware-ID: FW13 ]
+
+
+First ifconfig wlan0 up (note it's trying to use the open firmware -
+which I don't have):
+[  108.770000] b43 ssb0:0: firmware: requesting b43/ucode5.fw
+
+[  108.910000] b43 ssb0:0: firmware: requesting b43/pcm5.fw
+
+[  109.170000] b43 ssb0:0: firmware: requesting b43-open/ucode5.fw
+
+[  109.330000] b43 ssb0:0: firmware: requesting b43-open/pcm5.fw
+
+[  109.520000] b43 ssb0:0: firmware: requesting b43-open/b0g0initvals5.fw
+
+[  109.690000] b43-phy0 ERROR: Firmware file "b43/pcm5.fw" format error.
+
+[  109.760000] b43-phy0 ERROR: Firmware file
+"b43-open/b0g0initvals5.fw" not found
+
+[  109.960000] b43-phy0 ERROR: You must go to
+http://wireless.kernel.org/en/users/Drivers/b43#devicefirmware and
+download the correct firmware for this driver version. Please
+carefully read all instructions on this website.
+
+
+Second ifconfig wlan0 up (no reboot):
+[  157.730000] b43 ssb0:0: firmware: requesting b43/ucode5.fw
+
+[  157.860000] b43 ssb0:0: firmware: requesting b43/pcm5.fw
+
+[  158.040000] b43 ssb0:0: firmware: requesting b43/b0g0initvals5.fw
+
+[  158.310000] b43 ssb0:0: firmware: requesting b43/b0g0bsinitvals5.fw
+
+[  158.940000] b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
+
+[  159.010000] b43-phy0 debug: Chip initialized
+
+[  159.030000] b43-phy0 debug: PIO initialized
+
+[  159.040000] b43-phy0 debug: QoS enabled
+
+[  159.070000] b43-phy0 debug: Wireless interface started
+
+[  159.130000] b43-phy0 debug: Adding Interface type 2
+
+
+Yay - and iwlist scanning works (haven't tried associating yet)
+
+And sometimes even after mutiple ups it gives up and the microcode
+doesn't reply...
+
+So any suggestions on figuring out what is going on?
+>
+> Thanks for testing. The ssb-pcmcia code is not tested a lot, so
+> I'm not surprised that there are bugs.
+>
+You're welcome
+
+Cheers,
+
+Martin
