@@ -1,75 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:41096 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932152AbZKDRdx (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38805 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759271AbZKFUaH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 12:33:53 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 04 Nov 2009 18:33:34 +0100
-Message-Id: <20091104173334.28463.13649.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-Subject: [PATCH 13/41] rt2800usb: add rt2800_regbusy_read() wrapper
+	Fri, 6 Nov 2009 15:30:07 -0500
+Date: Fri, 6 Nov 2009 15:19:24 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: Re: [PATCH] Libertas: Fix issues while configuring host sleep
+Message-ID: <20091106201924.GH2782@tuxdriver.com>
+References: <1257383195-951-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1257383195-951-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] rt2800usb: add rt2800_regbusy_read() wrapper
+On Wed, Nov 04, 2009 at 05:06:35PM -0800, Bing Zhao wrote:
+> From: Amitkumar Karwar <akarwar@marvell.com>
+> 
+> Configuration of wake-on-lan for unicast, multicast, broadcast, physical
+> activity was not working. Kernel panic issue was there when user tries to
+> disable WOL. Fixed them.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> ---
+>  drivers/net/wireless/libertas/ethtool.c |   16 +++++++++++-----
+>  1 files changed, 11 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
+> index 039b555..eeda6d7 100644
+> --- a/drivers/net/wireless/libertas/ethtool.c
+> +++ b/drivers/net/wireless/libertas/ethtool.c
+> @@ -169,16 +169,22 @@ static int lbs_ethtool_set_wol(struct net_device *dev,
+>  	struct lbs_private *priv = dev->ml_priv;
+>  	uint32_t criteria = 0;
+>  
+> -	if (priv->wol_criteria == 0xffffffff && wol->wolopts)
+> +	if (priv->wol_criteria != 0xffffffff && wol->wolopts)
+>  		return -EOPNOTSUPP;
+  
+Are you sure about this?  This makes me think that you won't be able
+to change WoL parameters without going through a disable step first.
+Am I misreading?
 
-Part of preparations for later code unification.
+>  	if (wol->wolopts & ~(WAKE_UCAST|WAKE_MCAST|WAKE_BCAST|WAKE_PHY))
+>  		return -EOPNOTSUPP;
+>  
+> -	if (wol->wolopts & WAKE_UCAST) criteria |= EHS_WAKE_ON_UNICAST_DATA;
+> -	if (wol->wolopts & WAKE_MCAST) criteria |= EHS_WAKE_ON_MULTICAST_DATA;
+> -	if (wol->wolopts & WAKE_BCAST) criteria |= EHS_WAKE_ON_BROADCAST_DATA;
+> -	if (wol->wolopts & WAKE_PHY)   criteria |= EHS_WAKE_ON_MAC_EVENT;
+> +	if (wol->wolopts & WAKE_UCAST)
+> +		criteria |= EHS_WAKE_ON_UNICAST_DATA;
+> +	if (wol->wolopts & WAKE_MCAST)
+> +		criteria |= EHS_WAKE_ON_MULTICAST_DATA;
+> +	if (wol->wolopts & WAKE_BCAST)
+> +		criteria |= EHS_WAKE_ON_BROADCAST_DATA;
+> +	if (wol->wolopts & WAKE_PHY)
+> +		criteria |= EHS_WAKE_ON_MAC_EVENT;
+> +	if (wol->wolopts == 0)
+> +		criteria |= EHS_REMOVE_WAKEUP;
+>  
+>  	return lbs_host_sleep_cfg(priv, criteria, (struct wol_config *)NULL);
+>  }
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |   10 +++++-----
- drivers/net/wireless/rt2x00/rt2800usb.h |    8 ++++++++
- 2 files changed, 13 insertions(+), 5 deletions(-)
+The reformatting is a distraction.  It would be better to do just
+the fix part separately, especially if you are targetting 2.6.32.
 
-Index: b/drivers/net/wireless/rt2x00/rt2800usb.c
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -58,14 +58,14 @@ MODULE_PARM_DESC(nohwcrypt, "Disable har
-  * The _lock versions must be used if you already hold the csr_mutex
-  */
- #define WAIT_FOR_BBP(__dev, __reg) \
--	rt2x00usb_regbusy_read((__dev), BBP_CSR_CFG, BBP_CSR_CFG_BUSY, (__reg))
-+	rt2800_regbusy_read((__dev), BBP_CSR_CFG, BBP_CSR_CFG_BUSY, (__reg))
- #define WAIT_FOR_RFCSR(__dev, __reg) \
--	rt2x00usb_regbusy_read((__dev), RF_CSR_CFG, RF_CSR_CFG_BUSY, (__reg))
-+	rt2800_regbusy_read((__dev), RF_CSR_CFG, RF_CSR_CFG_BUSY, (__reg))
- #define WAIT_FOR_RF(__dev, __reg) \
--	rt2x00usb_regbusy_read((__dev), RF_CSR_CFG0, RF_CSR_CFG0_BUSY, (__reg))
-+	rt2800_regbusy_read((__dev), RF_CSR_CFG0, RF_CSR_CFG0_BUSY, (__reg))
- #define WAIT_FOR_MCU(__dev, __reg) \
--	rt2x00usb_regbusy_read((__dev), H2M_MAILBOX_CSR, \
--			       H2M_MAILBOX_CSR_OWNER, (__reg))
-+	rt2800_regbusy_read((__dev), H2M_MAILBOX_CSR, \
-+			    H2M_MAILBOX_CSR_OWNER, (__reg))
- 
- static void rt2800usb_bbp_write(struct rt2x00_dev *rt2x00dev,
- 				const unsigned int word, const u8 value)
-Index: b/drivers/net/wireless/rt2x00/rt2800usb.h
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800usb.h
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.h
-@@ -62,6 +62,14 @@ static inline void rt2x00_register_multi
- 	rt2x00usb_register_multiwrite(rt2x00dev, offset, value, length);
- }
- 
-+static inline int rt2800_regbusy_read(struct rt2x00_dev *rt2x00dev,
-+				      const unsigned int offset,
-+				      struct rt2x00_field32 field,
-+				      u32 *reg)
-+{
-+	return rt2x00usb_regbusy_read(rt2x00dev, offset, field, reg);
-+}
-+
- /*
-  * RF chip defines.
-  *
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
