@@ -1,76 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.klingt.org ([86.59.21.178]:53287 "EHLO klingt.org"
+Received: from mga02.intel.com ([134.134.136.20]:47316 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751361AbZKDUIo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 15:08:44 -0500
-Message-ID: <4AF1DF4B.3010105@klingt.org>
-Date: Wed, 04 Nov 2009 21:08:43 +0100
-From: Tim Blechmann <tim@klingt.org>
-MIME-Version: 1.0
-To: Luis Correia <luis.f.correia@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: ralink rt2x00 maintainer list error
-References: <hcsfnq$bft$2@ger.gmane.org>	 <efe7343f0911041155t2cdeba04s31d7e049dc7f8317@mail.gmail.com>	 <4AF1DCC8.8020400@klingt.org> <efe7343f0911041201n6636adbahbbed24b45abd8c23@mail.gmail.com>
-In-Reply-To: <efe7343f0911041201n6636adbahbbed24b45abd8c23@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig8838FC59CFFF6A234AA542C5"
+	id S1759935AbZKFWxA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 17:53:00 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Shanyu Zhao <shanyu.zhao@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 05/20] iwlwifi: use configured valid rx chain for scan
+Date: Fri,  6 Nov 2009 14:52:48 -0800
+Message-Id: <1257547983-12590-6-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
+References: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig8838FC59CFFF6A234AA542C5
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+From: Shanyu Zhao <shanyu.zhao@intel.com>
 
->>>> the MAINTAINERS file contains the entries for the ralink rt2k00:
->>>> L:      linux-wireless@vger.kernel.org
->>>> L:      users@rt2x00.serialmonkey.com (moderated for non-subscribers=
-)
->>>>
->>>> the second list doesn't exist any more, though ... would be nice, if=
- the
->>>> entry could be updated ...
->>>
->>> You can find the list information here:
->>> http://rt2x00.serialmonkey.com/mailman/listinfo
->>
->> odd, that my posting was rejected, then ...
->>
->> btw, it would be nice, if you could mirror the list at gmane ... [1]
->> seems to be outdated ...
->=20
-> We've had some issues with Gmane some years ago and we've decided not
-> to mirror any of our lists there, sorry mate.
+Use configured valid rx chains in scan command instead of ANT_ABC, correcting
+valid rx chain configuration of 4965, should be ANT_ABC instead of ANT_AB.
 
-some people (like me) prefer using mailinglists via nntp instead of
-subscribing to the developer mailinglists of dozens of projects ...
-but, well, if my bug is fixed before the 2.6.32 release, i am happy :)
+Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-tim
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 62c95eb..607c312 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2229,7 +2229,7 @@ struct iwl_cfg iwl4965_agn_cfg = {
+ 	.num_of_ampdu_queues = IWL49_NUM_AMPDU_QUEUES,
+ 	.mod_params = &iwl4965_mod_params,
+ 	.valid_tx_ant = ANT_AB,
+-	.valid_rx_ant = ANT_AB,
++	.valid_rx_ant = ANT_ABC,
+ 	.pll_cfg_val = 0,
+ 	.set_l0s = true,
+ 	.use_bsm = true,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 48bc263..a2b2b83 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -749,7 +749,7 @@ static void iwl_bg_request_scan(struct work_struct *data)
+ 		rx_ant = first_antenna(active_chains);
+ 	}
+ 	/* MIMO is not used here, but value is required */
+-	rx_chain |= ANT_ABC << RXON_RX_CHAIN_VALID_POS;
++	rx_chain |= priv->hw_params.valid_rx_ant << RXON_RX_CHAIN_VALID_POS;
+ 	rx_chain |= rx_ant << RXON_RX_CHAIN_FORCE_MIMO_SEL_POS;
+ 	rx_chain |= rx_ant << RXON_RX_CHAIN_FORCE_SEL_POS;
+ 	rx_chain |= 0x1 << RXON_RX_CHAIN_DRIVER_FORCE_POS;
+-- 
+1.5.6.3
 
---=20
-tim@klingt.org
-http://tim.klingt.org
-
-Nothing exists until or unless it is observed. An artist is making
-something exist by observing it. And his hope for other people is that
-they will also make it exist by observing it. I call it 'creative
-observation.' Creative viewing.
-  William S. Burroughs
-
-
---------------enig8838FC59CFFF6A234AA542C5
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkrx30sACgkQdL+4qsZfVsvC0QCdEsu77lvX2eNTsJLkNhU4l4WK
-VaEAn2ZjxnZXqYWzKwxq6USpK1+0QTTq
-=LKBJ
------END PGP SIGNATURE-----
-
---------------enig8838FC59CFFF6A234AA542C5--
