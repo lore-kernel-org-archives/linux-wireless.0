@@ -1,36 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63944 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755243AbZKBTzN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 14:55:13 -0500
-Subject: Re: [PATCH] libertas: remove internal buffers from GSPI driver
-From: Dan Williams <dcbw@redhat.com>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	sebatian@breakpoint.cc, george.shore@imgtec.com
-In-Reply-To: <45e8e6c40910291048g2958c086oa6b7a39dbb68258f@mail.gmail.com>
-References: <1256687501-8636-1-git-send-email-andrey@cozybit.com>
-	 <1256749998.3850.45.camel@localhost.localdomain>
-	 <45e8e6c40910291048g2958c086oa6b7a39dbb68258f@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 02 Nov 2009 11:54:35 -0800
-Message-Id: <1257191675.1027.12.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:38521 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751779AbZKFHqs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 02:46:48 -0500
+Date: Fri, 6 Nov 2009 08:46:44 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Ingo Molnar <mingo@elte.hu>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jarek Poplawski <jarkao2@gmail.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Miller <davem@davemloft.net>
+Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project
+	tree
+Message-ID: <20091106074643.GA5562@ucw.cz>
+References: <200911031951.05235.bzolnier@gmail.com> <200911032200.04516.IvDoorn@gmail.com> <20091104083737.GA16978@elte.hu> <200911042251.23506.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200911042251.23506.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-10-29 at 10:48 -0700, Andrey Yurovsky wrote:
-> On Wed, Oct 28, 2009 at 10:13 AM, Dan Williams <dcbw@redhat.com> wrote:
-> > Looks OK to me, but I don't have any of the SPI hardware so when you get
-> > a Tested-by:, let me know and I'll ack.
+
+> > Look at the diffstat of Bart's driver:
+> > 
+> >    15 files changed, 4036 insertions(+), 7158 deletions(-)
+> > 
+> > He reduced your 5.2 KLOC non-working driver into a 1.8 KLOC _working_ 
+> > driver.
 > 
-> Thanks Dan, by the way the issue with WPA2 and IEEE PS is unrelated to
-> this patch (that is, I can reproduce it without the patch applied) so
-> we'll need to address that separately.  So at this point we have:
+> Bullshit, read the mails again.
+
+This was uncalled for, right?
+
+...
+> Some people actually require sleep during the night, perhaps that you don't need
+> that and can hence review 41 patches which changes thousands of lines on the
+> same day the patches were submitted.
+
+If you lack time, "Really start reading my mails" sentence you used at
+the start of email is *not* user-friendly way to say that.
+
+> > And _still_ your complaint about Bart's series is that he updated the 
+> > MAINTAINERS entry and added an entry for rt2800? Heck _sure_ he should 
+> > update it, he is the one doing the hard work of trying to bring it to 
+> > users, trying to clean up a messy driver space, trying to turn crap into 
+> > gold.
 > 
-> Tested-by: George Shore <george.shore@imgtec.com>
-> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+> So if I want to focus on something different in the kernel, I just send 1 patch,
+> and a second to claim the maintainership of it even though there is an active
+> maintainer available?
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+What about listing yourself as a maintainer for a start?
 
+> > The thing is, if you dont have the time or interest to listen to and act 
+> > upon review feedback, be constructive about it and fix (obvious) 
+> > structural problems in your rt2800 code, you should just step aside and 
+> > let Bart maintain what he is apparently more capable of maintaining than 
+> > you are.
+> >
+> > What you are doing here is a thinly veiled land-grab: you did a minimal 
+> > token driver for rt2800 that doesnt work, kept it in your private tree 
+> > for _1.5 years_, and the moment someone _else_ came along and did 
+> > something better and more functional in drivers/staging/, you discovered 
+> > your sudden interest for it and moved the crappy driver upstream at 
+> > lightning's speed (it is already in net-next AFAICS, despite negative 
+> > test and review feedback) - ignoring and throwing away all the work that 
+> > Bart has done.
+> 
+> Get your facts straight, the bullshit level in your mail is staggering.
+> 
+> You have no fucking clue who wrote the rt2800 driver which is in
+> drivers/staging/,
 
+Perhaps you should not be a maintainer if you can't behave yourself?
+
+> 	Because a lot of people prefer looking from the sideline,
+> contributing _nothing_
+
+Given your behaviour, I'm not suprised people are not too eager to
+work with you.
+
+> As for "throwing away that work" I ACKED 10 of his patches, and said I would review
+> the rest later! But like I said, apparently it is a bad habit for people to sleep during
+> the night.
+
+Read your email again. It was quite far from 'acked 10, asked for
+time'. You flamed him first.
+									Pavel
+
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
