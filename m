@@ -1,64 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35515 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755197AbZKNJgL (ORCPT
+Received: from mail-ew0-f228.google.com ([209.85.219.228]:34905 "EHLO
+	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759197AbZKFSRC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Nov 2009 04:36:11 -0500
-Subject: Re: [PATCH] mac80211: reduce the amount of unnecessary traffic on
- cooked monitor interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Fri, 6 Nov 2009 13:17:02 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 10/41] rt2800pci: add rt2800_register_[read,write]() wrappers
+Date: Fri, 6 Nov 2009 17:13:15 +0100
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-kernel@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1258190607.6167.33.camel@johannes.local>
-References: <4AFE1612.5070805@openwrt.org>
-	 <1258190607.6167.33.camel@johannes.local>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-z6E8lpgV35nve/gr7WbJ"
-Date: Sat, 14 Nov 2009 10:36:14 +0100
-Message-ID: <1258191374.6167.42.camel@johannes.local>
-Mime-Version: 1.0
+References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173313.28463.67108.sendpatchset@localhost.localdomain> <14add3d10911041116q1bb293a9hbd6c5361d59fe588@mail.gmail.com>
+In-Reply-To: <14add3d10911041116q1bb293a9hbd6c5361d59fe588@mail.gmail.com>
+MIME-Version: 1.0
+Message-Id: <200911061713.15898.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-z6E8lpgV35nve/gr7WbJ
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Sat, 2009-11-14 at 10:23 +0100, Johannes Berg wrote:
-
-> > +			if ((sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES) &&
-> > +			    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
-> > +			    (type =3D=3D IEEE80211_FTYPE_DATA))
-> > +				continue;
+On Wednesday 04 November 2009 20:16:26 Gertjan van Wingerde wrote:
+> On Wed, Nov 4, 2009 at 6:33 PM, Bartlomiej Zolnierkiewicz
+> <bzolnier@gmail.com> wrote:
+> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Subject: [PATCH] rt2800pci: add rt2800_register_[read,write]() wrappers
+> >
+> > Part of preparations for later code unification.
+> >
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > ---
+> >  drivers/net/wireless/rt2x00/rt2800pci.c |  479 ++++++++++++++++----------------
+> >  drivers/net/wireless/rt2x00/rt2800pci.h |   21 +
+> >  2 files changed, 261 insertions(+), 239 deletions(-)
+> >
+> > Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
+> > ===================================================================
+> > --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> > +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> > @@ -57,7 +57,7 @@ MODULE_PARM_DESC(nohwcrypt, "Disable har
+> >  /*
+> >  * Register access.
+> >  * All access to the CSR registers will go through the methods
+> > - * rt2x00pci_register_read and rt2x00pci_register_write.
+> > + * rt2800_register_read and rt2800_register_write.
+> >  * BBP and RF register require indirect register access,
+> >  * and use the CSR registers BBPCSR and RFCSR to achieve this.
+> >  * These indirect registers work with busy bits,
+> > @@ -66,6 +66,7 @@ MODULE_PARM_DESC(nohwcrypt, "Disable har
+> >  * between each attampt. When the busy bit is still set at that time,
+> >  * the access attempt is considered to have failed,
+> >  * and we will print an error.
+> > + * The _lock versions must be used if you already hold the csr_mutex
+> >  */
+> >  #define WAIT_FOR_BBP(__dev, __reg) \
+> >        rt2x00pci_regbusy_read((__dev), BBP_CSR_CFG, BBP_CSR_CFG_BUSY, (__reg))
+> 
+> The change to the _lock variant seems a bit odd. See below.
+> 
+> <snip>
+> 
+> > Index: b/drivers/net/wireless/rt2x00/rt2800pci.h
+> > ===================================================================
+> > --- a/drivers/net/wireless/rt2x00/rt2800pci.h
+> > +++ b/drivers/net/wireless/rt2x00/rt2800pci.h
+> > @@ -27,6 +27,27 @@
+> >  #ifndef RT2800PCI_H
+> >  #define RT2800PCI_H
+> >
+> > +static inline void rt2800_register_read(struct rt2x00_dev *rt2x00dev,
+> > +                                       const unsigned int offset,
+> > +                                       u32 *value)
+> > +{
+> > +       rt2x00pci_register_read(rt2x00dev, offset, value);
+> > +}
 > > +
->=20
-> This patch also breaks IEEE 802.11 compliance. :)
+> > +static inline void rt2800_register_write(struct rt2x00_dev *rt2x00dev,
+> > +                                        const unsigned int offset,
+> > +                                        u32 value)
+> > +{
+> > +       rt2x00pci_register_write(rt2x00dev, offset, value);
+> > +}
+> > +
+> > +static inline void rt2800_register_write_lock(struct rt2x00_dev *rt2x00dev,
+> > +                                             const unsigned int offset,
+> > +                                             u32 value)
+> > +{
+> > +       rt2x00pci_register_write(rt2x00dev, offset, value);
+> > +}
+> > +
+> >  /*
+> >  * RF chip defines.
+> >  *
+> 
+> Can we add a comment to the _lock variant explaining that this one
+> technically isn't
+> needed, but is present for alignment purposes with rt2800usb?
 
-Oh no, it doesn't, wrong code path.
+I couldn't come with the good comment for it so I just went for
+the minimal one in patch #25 (which removed all quoted above inlines):
 
-johannes
++static const struct rt2800_ops rt2800pci_rt2800_ops = {
++       .register_read          = rt2x00pci_register_read,
++       .register_write         = rt2x00pci_register_write,
++       .register_write_lock    = rt2x00pci_register_write, /* same for PCI */
++
++       .register_multiread     = rt2x00pci_register_multiread,
++       .register_multiwrite    = rt2x00pci_register_multiwrite,
++
++       .regbusy_read           = rt2x00pci_regbusy_read,
++};
 
---=-z6E8lpgV35nve/gr7WbJ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+but it certainly can be expanded if somebody has a better idea how
+the comment should look like.
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK/noLAAoJEODzc/N7+QmarokP/3xVlUgZ9aF/4bRVqYYxp42C
-rNs+YxfH+PQKdodWKN82s/+DddEGFT0WeIsH9zQ3jDW669yjTvpxQlK1lhyyQDEv
-4mFR0XPvma7tZSsJrvyDa+kjH7Wn2KgYILXViJE+4i1EWUgHfB5TpKgMs/aimcNb
-AShK9JMXvOUiL3Ba0vxDdtim3CeeF9cDafmpjkgkxI/mzq8DVLBuX3S3F3mFtI+n
-gqLqu0Nq9eQo06/0ux9vUrCe+c/p4ooE2rR0tS+KTNe4mLWtFNY2raAklx6v+POl
-mzUiS/u/+6NbvwB2jo8G9iAaFLZ6dv4kGVbJID4amSYFpmK3BgEqAh1lT8WmyjTZ
-ip5pCS5PKAlDmCZxAsiEB0tQzJ0umt/SQTHLCp6bMZSk/eWagQLhARGz+3leqv6I
-kHGfXoyohqpHcp4X6iAeg4MYyWRq1PueEkw/QEqgfqK6fqaW+eW6jQQ8uhhg95NK
-0gOUEULSIakmQCmjHaLBxykqoDOp/h/p4Sbl8xiLLQajxFQILmph6PhzKz77qm5p
-b+klRekRQZO9KC11QmNxTrlBUAXEl6uDVAThXAVGBbfnbscpvW0cwNOKNR6Adqek
-XulqRKGohvtbaddXpdVDgR9pSUVNQLq1pUa/bwpGNl+TU3bWKUb+IkFBU5CXj65J
-QbfKpQMXtfRt3Mcz7+ts
-=Pn9r
------END PGP SIGNATURE-----
-
---=-z6E8lpgV35nve/gr7WbJ--
-
+-- 
+Bartlomiej Zolnierkiewicz
