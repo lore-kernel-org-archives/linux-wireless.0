@@ -1,41 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:44918 "EHLO
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:51014 "EHLO
 	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754454AbZKRP4j (ORCPT
+	with ESMTP id S1759562AbZKFUdi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 10:56:39 -0500
-Received: by bwz27 with SMTP id 27so1271367bwz.21
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 07:56:44 -0800 (PST)
-From: janakiram.sistla@gmail.com
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Janakiram Sistla <janakiram.sistla@gmail.com>
-Subject: [PATCH 2/2] Adding  kerneldoc entry for radio type GPS
-Date: Wed, 18 Nov 2009 21:26:39 +0530
-Message-Id: <1258559799-12649-1-git-send-email-janakiram.sistla@gmail.com>
+	Fri, 6 Nov 2009 15:33:38 -0500
+Received: by bwz27 with SMTP id 27so1592652bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 12:33:43 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: James Grossmann <cctsurf@gmail.com>
+Subject: Re: Prism54/p54pci
+Date: Fri, 6 Nov 2009 21:33:38 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <167ae39b0910071400n218d3d9ey7711b1011f290a73@mail.gmail.com> <200911062014.19363.chunkeey@googlemail.com> <167ae39b0911061137m72a1e7e9le0e2b59b64be2821@mail.gmail.com>
+In-Reply-To: <167ae39b0911061137m72a1e7e9le0e2b59b64be2821@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200911062133.38842.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Janakiram Sistla <janakiram.sistla@gmail.com>
+On Friday 06 November 2009 20:37:00 James Grossmann wrote:
+> Doing it from the console doesn't seem to give a kernel oops... it
+> just locks up the computer such that I can't even change the caps lock
+> status. It starts the connection, and then the activity light on the
+> card goes on and the computer is locked up.
+well, there are other ways to capture the oops, but I don't think
+your laptop has a serial console or a real reset button?!
 
-Adding  kerneldoc entry for radio type GPS
-Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
----
- include/linux/rfkill.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+does your caps lock & scroll lock LED blink? (they should)
 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index d787d5f..212f555 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -36,6 +36,7 @@
-  * @RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
-  * @RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
-  * @RFKILL_TYPE_FM: switch is on a FM device.
-+ * @RFKILL_TYPE_GPS: switch is on a GPS device.
-  * @NUM_RFKILL_TYPES: number of defined rfkill types
-  */
- enum rfkill_type {
--- 
-1.5.4.3
+does the kernel reboot itself (after ~10 seconds), if you add 
+panic=10
+to the kernel-parameters in grub configuration?
 
+do you have some sort of bootsplash or frame buffer console?
+(e.g. KMS/vesa/etc...) because these advanced features can make it
+really hard to get the message to the screen before it goes black.
+
+is there nothing in /var/log/syslog after a crash?
+
+> With regard to the losing connection/timing out, I'm seeing that a
+> fair amount, when I have data transferring (watching an active ssh
+> connection, or streaming audio), and especially when I'm not doing
+> anything...
+well, there could be several different things, I hope you're using
+services like Network-manager, wpa_supplicant to manage your connection.
+Because they will automatically reconnect as soon as the link dies.
+
+what could be interesting: iw dev wlanX scan / iwlist wlanX scan
+dump from your AP... especially the TSF/tsf value, 
+(it's a hexadecimal value which acts like a uptime for the AP)
+
+Regards,
+	Chr
