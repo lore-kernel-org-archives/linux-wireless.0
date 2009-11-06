@@ -1,102 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:62926 "EHLO
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:62673 "EHLO
 	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757705AbZKESt1 (ORCPT
+	with ESMTP id S1755619AbZKFA43 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2009 13:49:27 -0500
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 14/41] rt2800pci: add rt2800_regbusy_read() wrapper
-Date: Thu, 5 Nov 2009 19:49:29 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173341.28463.11122.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173341.28463.11122.sendpatchset@localhost.localdomain>
+	Thu, 5 Nov 2009 19:56:29 -0500
+Received: by ewy3 with SMTP id 3so619185ewy.37
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Nov 2009 16:56:34 -0800 (PST)
+Message-ID: <4AF3743D.3050401@lwfinger.net>
+Date: Thu, 05 Nov 2009 18:56:29 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911051949.30187.IvDoorn@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+CC: Hin-Tak Leung <hintak.leung@gmail.com>,
+	John W Linville <linville@tuxdriver.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8187: Remove deprecated 'qual' from returned RX status
+References: <4af26c2f.v0dYcKOlddHI9QEQ%Larry.Finger@lwfinger.net> <3ace41890911051121u16c7de8cpb97d0be12cdd0aa6@mail.gmail.com> <200911052024.32608.mb@bu3sch.de>
+In-Reply-To: <200911052024.32608.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2800pci: add rt2800_regbusy_read() wrapper
+On 11/05/2009 01:24 PM, Michael Buesch wrote:
+> On Thursday 05 November 2009 20:21:39 Hin-Tak Leung wrote:
+>>> +                * is derived from the AGC. The arbitrary scaling constants
+>>>                 * are chosen to make the results close to the values obtained
+>>>                 * for a BCM4312 using b43 as the driver. The noise is ignored
 > 
-> Part of preparations for later code unification.
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> It's not really a good idea to take b43 for reference, because the values/scales
+> are chosen pretty arbitrarily in that driver. So you basically end up
+> with an arbitrary^2 value.
 
-The macros are the same for rt2800pci and rt2800usb.
-So it might be better to move the entire define set into rt2800lib.h
+When I did that, b43 was the only other device that I had available.
+As Hin-Tak said, one has to start somewhere. As we all know, only
+relative values are significant, and the absolute value has little
+meaning.
 
-If you haven't done so already in a subsequent patch, please fix it,
-otherwise:
-
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-
-Ivo
-
-
-> ---
->  drivers/net/wireless/rt2x00/rt2800pci.c |   12 ++++++------
->  drivers/net/wireless/rt2x00/rt2800pci.h |    8 ++++++++
->  2 files changed, 14 insertions(+), 6 deletions(-)
-> 
-> Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
-> ===================================================================
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -69,14 +69,14 @@ MODULE_PARM_DESC(nohwcrypt, "Disable har
->   * The _lock versions must be used if you already hold the csr_mutex
->   */
->  #define WAIT_FOR_BBP(__dev, __reg) \
-> -	rt2x00pci_regbusy_read((__dev), BBP_CSR_CFG, BBP_CSR_CFG_BUSY, (__reg))
-> +	rt2800_regbusy_read((__dev), BBP_CSR_CFG, BBP_CSR_CFG_BUSY, (__reg))
->  #define WAIT_FOR_RFCSR(__dev, __reg) \
-> -	rt2x00pci_regbusy_read((__dev), RF_CSR_CFG, RF_CSR_CFG_BUSY, (__reg))
-> +	rt2800_regbusy_read((__dev), RF_CSR_CFG, RF_CSR_CFG_BUSY, (__reg))
->  #define WAIT_FOR_RF(__dev, __reg) \
-> -	rt2x00pci_regbusy_read((__dev), RF_CSR_CFG0, RF_CSR_CFG0_BUSY, (__reg))
-> +	rt2800_regbusy_read((__dev), RF_CSR_CFG0, RF_CSR_CFG0_BUSY, (__reg))
->  #define WAIT_FOR_MCU(__dev, __reg) \
-> -	rt2x00pci_regbusy_read((__dev), H2M_MAILBOX_CSR, \
-> -			       H2M_MAILBOX_CSR_OWNER, (__reg))
-> +	rt2800_regbusy_read((__dev), H2M_MAILBOX_CSR, \
-> +			    H2M_MAILBOX_CSR_OWNER, (__reg))
->  
->  static void rt2800pci_bbp_write(struct rt2x00_dev *rt2x00dev,
->  				const unsigned int word, const u8 value)
-> @@ -350,7 +350,7 @@ static void rt2800pci_efuse_read(struct 
->  	rt2800_register_write(rt2x00dev, EFUSE_CTRL, reg);
->  
->  	/* Wait until the EEPROM has been loaded */
-> -	rt2x00pci_regbusy_read(rt2x00dev, EFUSE_CTRL, EFUSE_CTRL_KICK, &reg);
-> +	rt2800_regbusy_read(rt2x00dev, EFUSE_CTRL, EFUSE_CTRL_KICK, &reg);
->  
->  	/* Apparently the data is read from end to start */
->  	rt2800_register_read(rt2x00dev, EFUSE_DATA3,
-> Index: b/drivers/net/wireless/rt2x00/rt2800pci.h
-> ===================================================================
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.h
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.h
-> @@ -63,6 +63,14 @@ static inline void rt2800_register_multi
->  	rt2x00pci_register_multiwrite(rt2x00dev, offset, value, length);
->  }
->  
-> +static inline int rt2800_regbusy_read(struct rt2x00_dev *rt2x00dev,
-> +				      const unsigned int offset,
-> +				      const struct rt2x00_field32 field,
-> +				      u32 *reg)
-> +{
-> +	return rt2x00pci_regbusy_read(rt2x00dev, offset, field, reg);
-> +}
-> +
->  /*
->   * RF chip defines.
->   *
-> 
-
-
+Larry
