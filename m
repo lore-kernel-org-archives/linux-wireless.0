@@ -1,57 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:36700 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750893AbZKGSbf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 13:31:35 -0500
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Luis Correia <luis.f.correia@gmail.com>
-Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project tree
-Date: Sat, 7 Nov 2009 19:31:36 +0100
-Cc: Pavel Machek <pavel@ucw.cz>, Ingo Molnar <mingo@elte.hu>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
+Received: from mga02.intel.com ([134.134.136.20]:15281 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760046AbZKFWxB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 17:53:01 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
 	Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>
-References: <200911031951.05235.bzolnier@gmail.com> <20091107173028.GA1932@ucw.cz> <efe7343f0911071012u73317883wc60f5c188bc853e8@mail.gmail.com>
-In-Reply-To: <efe7343f0911071012u73317883wc60f5c188bc853e8@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200911071931.37165.IvDoorn@gmail.com>
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 10/20] iwlwifi: add FIFO usage for 5000
+Date: Fri,  6 Nov 2009 14:52:53 -0800
+Message-Id: <1257547983-12590-11-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
+References: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 07 November 2009, Luis Correia wrote:
-> Pavel,
-> 
-> On Sat, Nov 7, 2009 at 17:30, Pavel Machek <pavel@ucw.cz> wrote:
-> > Hi!
-> >
-> >> > > So if I want to focus on something different in the kernel, I just send 1 patch,
-> >> > > and a second to claim the maintainership of it even though there is an active
-> >> > > maintainer available?
-> >> >
-> >> > What about listing yourself as a maintainer for a start?
-> >>
-> >> The rt2x00 project is listed as maintainer for everything in the
-> >> drivers/net/wireless/rt2x00 folder.
-> >
-> > Yes, but that tells very little. I don't know who the 'rt2x00 project'
-> > is. Perhaps its you? Perhaps its Bart? Maybe its my cat? Please just
-> > list real names of maintainers...                 Pavel
-> 
-> the answer is (and always was available) here:
-> 
-> http://rt2x00.serialmonkey.com/wiki/index.php/Developers
+From: Johannes Berg <johannes@sipsolutions.net>
 
-True, but I agree with Pavel that the MAINTAINERS file should
-be instantly clear about who the maintainer is.
+This is part of the code, but the comment doesn't have it,
+add pointers to the code and the FIFO usage for 5000 and
+up.
 
-I've already send a patch to add update the entry.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-prph.h |   19 ++++++++++++++++---
+ 1 files changed, 16 insertions(+), 3 deletions(-)
 
-Ivo
+diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
+index d393e8f..6d95832 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
+@@ -254,7 +254,8 @@
+  * device.  A queue maps to only one (selectable by driver) Tx DMA channel,
+  * but one DMA channel may take input from several queues.
+  *
+- * Tx DMA channels have dedicated purposes.  For 4965, they are used as follows:
++ * Tx DMA channels have dedicated purposes.  For 4965, they are used as follows
++ * (cf. default_queue_to_tx_fifo in iwl-4965.c):
+  *
+  * 0 -- EDCA BK (background) frames, lowest priority
+  * 1 -- EDCA BE (best effort) frames, normal priority
+@@ -265,9 +266,21 @@
+  * 6 -- HCCA long frames
+  * 7 -- not used by driver (device-internal only)
+  *
++ * For 5000 series and up, they are used slightly differently
++ * (cf. iwl5000_default_queue_to_tx_fifo in iwl-5000.c):
++ *
++ * 0 -- EDCA BK (background) frames, lowest priority
++ * 1 -- EDCA BE (best effort) frames, normal priority
++ * 2 -- EDCA VI (video) frames, higher priority
++ * 3 -- EDCA VO (voice) and management frames, highest priority
++ * 4 -- (TBD)
++ * 5 -- HCCA short frames
++ * 6 -- HCCA long frames
++ * 7 -- Commands
++ *
+  * Driver should normally map queues 0-6 to Tx DMA/FIFO channels 0-6.
+- * In addition, driver can map queues 7-15 to Tx DMA/FIFO channels 0-3 to
+- * support 11n aggregation via EDCA DMA channels.
++ * In addition, driver can map the remaining queues to Tx DMA/FIFO
++ * channels 0-3 to support 11n aggregation via EDCA DMA channels.
+  *
+  * The driver sets up each queue to work in one of two modes:
+  *
+-- 
+1.5.6.3
+
