@@ -1,94 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:56526 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754596AbZKBL05 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 06:26:57 -0500
-Received: by fg-out-1718.google.com with SMTP id 16so2727485fgg.1
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2009 03:27:02 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4888b8cb0911011401v28699ffcx2a00211289b00b7d@mail.gmail.com>
-References: <4888b8cb0911010451w3e824921ob5ee6b7aae5b728b@mail.gmail.com>
-	<69e28c910911010730i2afcf1b9o79063f6c6f37c678@mail.gmail.com>
-	<4888b8cb0911011401v28699ffcx2a00211289b00b7d@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 2 Nov 2009 12:26:42 +0100
-Message-ID: <69e28c910911020326m67797910ub1df048d8dd3eb7e@mail.gmail.com>
-Subject: Re: b43 with 14e4 gives DMA error
-To: Thomas Wiecki <thomas.wiecki@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:9497 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760070AbZKFWxC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 17:53:02 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 12/20] iwlwifi: drop non-production PCI-IDs
+Date: Fri,  6 Nov 2009 14:52:55 -0800
+Message-Id: <1257547983-12590-13-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
+References: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/11/1 Thomas Wiecki <thomas.wiecki@googlemail.com>:
-> I did:
->
-> service acpid stop
-> service acpi-support stop
-> (and service dell-laptop stop)
->
-> processor was not loaded (I didn't blacklist it though).
->
-> Still, after a minute of using the card, DMA errors occured.
->
-> BIOS: It wouldn't tell me anything besides A11. It says to be a DELL
-> bios (do they make their own bioses or just rebrand them?).
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Dell is infamous for rebranding 3rd-party BIOSes; run this to find out
-if it's actually Phoenix:
-dmidecode | grep -i phoenix
+Remove the support for all the PCI_IDs never make into production
 
-This should output a line on PhoenixBIOS & Phoenix AwardBIOS, but
-nothing on other BIOSes - post the exact output here to see if it's
-Phoenix or Award.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   98 +------------------------------
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |    8 ---
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    4 +-
+ 3 files changed, 2 insertions(+), 108 deletions(-)
 
->
-> 2009/11/1 Gábor Stefanik <netrolller.3d@gmail.com>:
->> On Sun, Nov 1, 2009 at 1:51 PM, Thomas Wiecki
->> <thomas.wiecki@googlemail.com> wrote:
->>> 0c:00.0 Network controller [0280]: Broadcom Corporation BCM4312
->>> 802.11b/g [14e4:4315] (rev 01)
->>>        Subsystem: Dell Device [1028:000c]
->>>        Flags: bus master, fast devsel, latency 0, IRQ 17
->>>        Memory at f1ffc000 (64-bit, non-prefetchable) [size=16K]
->>>        Capabilities: <access denied>
->>>        Kernel driver in use: wl
->>>        Kernel modules: wl, ssb
->>>
->>> A variable delay after loading the most recent b43 driver I get a lot
->>> of (I hope last nights patches would have fixed the problems, but they
->>> didn't):
->>> [ 6895.111946] b43-phy0 ERROR: Fatal DMA error: 0x00000800,
->>> 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000
->>> [ 6895.111955] b43-phy0: Controller RESET (DMA error) ...
->>> [ 6895.336490] b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
->>> [ 6900.841372] b43-phy0: Controller restarted
->>>
->>> After installing the driver for the first time, I have a few minutes I
->>> can use the wifi card, after that the DMA errors start to occur. Once
->>> they occured after the first loading, they appear immediatly after
->>> each loading.
->>>
->>> Ubuntu 9.04 (most recent) with kernel 2.6.31-14-generic
->>>
->>> Laptop is Dell E6500.
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
->> Does noacpi/noapic or blacklisting module "processor" have any effect on this?
->>
->> Also, is this on PhoenixBIOS?
->>
->> --
->> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
->>
->
-
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 1f769ea..f732f6d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -90,11 +90,7 @@ static void iwl6000_nic_config(struct iwl_priv *priv)
+ 		    CSR_HW_IF_CONFIG_REG_BIT_MAC_SI);
+ 
+ 	/* no locking required for register write */
+-	if (priv->cfg->pa_type == IWL_PA_HYBRID) {
+-		/* 2x2 hybrid phy type */
+-		iwl_write32(priv, CSR_GP_DRIVER_REG,
+-			     CSR_GP_DRIVER_REG_BIT_RADIO_SKU_2x2_HYB);
+-	} else if (priv->cfg->pa_type == IWL_PA_INTERNAL) {
++	if (priv->cfg->pa_type == IWL_PA_INTERNAL) {
+ 		/* 2x2 IPA phy type */
+ 		iwl_write32(priv, CSR_GP_DRIVER_REG,
+ 			     CSR_GP_DRIVER_REG_BIT_RADIO_SKU_2x2_IPA);
+@@ -279,98 +275,6 @@ static struct iwl_ops iwl6050_ops = {
+ 	.led = &iwlagn_led_ops,
+ };
+ 
+-
+-/*
+- * "h": Hybrid configuration, use both internal and external Power Amplifier
+- */
+-struct iwl_cfg iwl6000h_2agn_cfg = {
+-	.name = "6000 Series 2x2 AGN",
+-	.fw_name_pre = IWL6000_FW_PRE,
+-	.ucode_api_max = IWL6000_UCODE_API_MAX,
+-	.ucode_api_min = IWL6000_UCODE_API_MIN,
+-	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
+-	.ops = &iwl6000_ops,
+-	.eeprom_size = OTP_LOW_IMAGE_SIZE,
+-	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+-	.num_of_queues = IWL50_NUM_QUEUES,
+-	.num_of_ampdu_queues = IWL50_NUM_AMPDU_QUEUES,
+-	.mod_params = &iwl50_mod_params,
+-	.valid_tx_ant = ANT_AB,
+-	.valid_rx_ant = ANT_AB,
+-	.pll_cfg_val = 0,
+-	.set_l0s = true,
+-	.use_bsm = false,
+-	.pa_type = IWL_PA_HYBRID,
+-	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+-	.shadow_ram_support = true,
+-	.ht_greenfield_support = true,
+-	.led_compensation = 51,
+-	.use_rts_for_ht = true, /* use rts/cts protection */
+-	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+-	.supports_idle = true,
+-	.adv_thermal_throttle = true,
+-	.support_ct_kill_exit = true,
+-};
+-
+-struct iwl_cfg iwl6000h_2abg_cfg = {
+-	.name = "6000 Series 2x2 ABG",
+-	.fw_name_pre = IWL6000_FW_PRE,
+-	.ucode_api_max = IWL6000_UCODE_API_MAX,
+-	.ucode_api_min = IWL6000_UCODE_API_MIN,
+-	.sku = IWL_SKU_A|IWL_SKU_G,
+-	.ops = &iwl6000_ops,
+-	.eeprom_size = OTP_LOW_IMAGE_SIZE,
+-	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+-	.num_of_queues = IWL50_NUM_QUEUES,
+-	.num_of_ampdu_queues = IWL50_NUM_AMPDU_QUEUES,
+-	.mod_params = &iwl50_mod_params,
+-	.valid_tx_ant = ANT_AB,
+-	.valid_rx_ant = ANT_AB,
+-	.pll_cfg_val = 0,
+-	.set_l0s = true,
+-	.use_bsm = false,
+-	.pa_type = IWL_PA_HYBRID,
+-	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+-	.shadow_ram_support = true,
+-	.ht_greenfield_support = true,
+-	.led_compensation = 51,
+-	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+-	.supports_idle = true,
+-	.adv_thermal_throttle = true,
+-	.support_ct_kill_exit = true,
+-};
+-
+-struct iwl_cfg iwl6000h_2bg_cfg = {
+-	.name = "6000 Series 2x2 BG",
+-	.fw_name_pre = IWL6000_FW_PRE,
+-	.ucode_api_max = IWL6000_UCODE_API_MAX,
+-	.ucode_api_min = IWL6000_UCODE_API_MIN,
+-	.sku = IWL_SKU_G,
+-	.ops = &iwl6000_ops,
+-	.eeprom_size = OTP_LOW_IMAGE_SIZE,
+-	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+-	.num_of_queues = IWL50_NUM_QUEUES,
+-	.num_of_ampdu_queues = IWL50_NUM_AMPDU_QUEUES,
+-	.mod_params = &iwl50_mod_params,
+-	.valid_tx_ant = ANT_AB,
+-	.valid_rx_ant = ANT_AB,
+-	.pll_cfg_val = 0,
+-	.set_l0s = true,
+-	.use_bsm = false,
+-	.pa_type = IWL_PA_HYBRID,
+-	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+-	.shadow_ram_support = true,
+-	.ht_greenfield_support = true,
+-	.led_compensation = 51,
+-	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+-	.supports_idle = true,
+-	.adv_thermal_throttle = true,
+-	.support_ct_kill_exit = true,
+-};
+-
+ /*
+  * "i": Internal configuration, use internal Power Amplifier
+  */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index fd7ba51..eff52b1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3453,14 +3453,6 @@ static struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x423D, PCI_ANY_ID, iwl5150_agn_cfg)},
+ 
+ /* 6x00 Series */
+-	{IWL_PCI_DEVICE(0x008D, 0x1301, iwl6000h_2agn_cfg)},
+-	{IWL_PCI_DEVICE(0x008D, 0x1321, iwl6000h_2agn_cfg)},
+-	{IWL_PCI_DEVICE(0x008D, 0x1326, iwl6000h_2abg_cfg)},
+-	{IWL_PCI_DEVICE(0x008D, 0x1306, iwl6000h_2abg_cfg)},
+-	{IWL_PCI_DEVICE(0x008D, 0x1307, iwl6000h_2bg_cfg)},
+-	{IWL_PCI_DEVICE(0x008E, 0x1311, iwl6000h_2agn_cfg)},
+-	{IWL_PCI_DEVICE(0x008E, 0x1316, iwl6000h_2abg_cfg)},
+-
+ 	{IWL_PCI_DEVICE(0x422B, 0x1101, iwl6000_3agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x422B, 0x1121, iwl6000_3agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x422C, 0x1301, iwl6000i_2agn_cfg)},
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 9a19a3d..9dea8fa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -927,13 +927,11 @@ enum iwl_access_mode {
+ /**
+  * enum iwl_pa_type - Power Amplifier type
+  * @IWL_PA_SYSTEM:  based on uCode configuration
+- * @IWL_PA_HYBRID: use both Internal and external PA
+  * @IWL_PA_INTERNAL: use Internal only
+  */
+ enum iwl_pa_type {
+ 	IWL_PA_SYSTEM = 0,
+-	IWL_PA_HYBRID = 1,
+-	IWL_PA_INTERNAL = 2,
++	IWL_PA_INTERNAL = 1,
+ };
+ 
+ /* interrupt statistics */
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.5.6.3
+
