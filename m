@@ -1,113 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.irobot.com ([206.83.81.187]:35979 "EHLO smtp1.irobot.com"
+Received: from mga02.intel.com ([134.134.136.20]:15281 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752121AbZKPWjb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2009 17:39:31 -0500
-Message-ID: <4B01D4A5.7060204@irobot.com>
-Date: Mon, 16 Nov 2009 14:39:33 -0800
-From: Adam Wozniak <awozniak@irobot.com>
-MIME-Version: 1.0
-To: Derek Smithies <derek@indranet.co.nz>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: Re: Adhoc networking, was Re: compat-wireless and minstrel
-References: <4AF0D54D.4090303@irobot.com>  <alpine.DEB.2.00.0911111508391.6214@kauri.acheron.indranet.co.nz>  <4AFC655A.5020706@irobot.com> <200911122103.27455.chunkeey@googlemail.com>  <4AFC8E4F.5090307@irobot.com>  <4AFC8F0D.5020700@irobot.com>  <1258097352.3899.75.camel@johannes.local>  <4AFDDF19.8060202@irobot.com>  <1258191039.6167.40.camel@johannes.local>  <4B018B26.2070008@irobot.com> <1258392453.32159.28.camel@johannes.local> <4B0192A6.9050808@irobot.com> <alpine.DEB.2.00.0911170938380.3829@kauri.acheron.indranet.co.nz>
-In-Reply-To: <alpine.DEB.2.00.0911170938380.3829@kauri.acheron.indranet.co.nz>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1760095AbZKFWxF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 17:53:05 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Ben Cahill <ben.m.cahill@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 18/20] iwlagn: update write pointers in iwl_irq_tasklet()
+Date: Fri,  6 Nov 2009 14:53:01 -0800
+Message-Id: <1257547983-12590-19-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
+References: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In your example where A&C can pass data, but not hear each other's 
-beacons, how is rate information passed between them?  ProbeReq/Resp ?
+From: Ben Cahill <ben.m.cahill@intel.com>
 
-Derek Smithies wrote:
-> Hi,
->  Statistics is a wonderful thing.
-> Every node is required to send a beacon at time
-> X+r, X+x+r, X+2x+r, X+3x+r, ......
->
-> All nodes are agreed on the value of x (which is the beacon interval).
-> All nodes are agreed on the value of X
-> r is a random value, and is (from memory) 20 slots long.
->
-> given this, all nodes work (to borrow an analogy from music) in time, 
-> or beat in sync with each other.
->
-> Now, if a node hears a beacon on its BSSID inside that r period, the 
-> node will not transmit a beacon. This way, for a 20 node network in a 
-> room, you should only get 1 (or sometimes 2) beacons transmitted every 
-> beacon interval.
->
-> If we assume that every node correctly attempts to send a beacon 
-> somewhere in that period r, and that somewhere is randomly 
-> distributed, then we will hear a beacon from most nodes, which is good 
-> enough.
->
-> Consider the case of three nodes, A, B, C.
->
-> A and B are turned on, and create an Adhoc network. A and B agree on
-> a)supported rates
-> b)the value of X, the value of x
-> c)the channel
-> d)the ESSSID
-> and so start sending a beacon. Inside this beacon is  BSSID. The BSSID 
-> is a random value. The particular random value used implies acceptance 
-> of a,b,c,d. Look at the name. Basic Service Set ID. The basic service 
-> set is the collection of those values a,b,c,d.
->
-> Now, node C is turned on. A is positioned such that A&C cannot 
-> communicate. However, B can communicate with A&C.
->
-> C is turned on, detects the presence of B, likes B's beacons, and 
-> agrees on all the settings in B's beacons. In other words, C likes and 
-> agrees with a,b,c,d.
-> So C starts sending beacons with the same BSSID as B.
-> At this point, it does not matter that A cannot set C's beacons. A and 
-> C have agreed on the BSSID.
->
-> Change the story a little bit.
-> In this locality, there is often a burst of 1ms of noise every 2ms. 
-> This means that most beacons are shotdown. However, data packets at 
-> 54Mbit/sec get through.
->  A&B saw each others beacons and agreed on a BSSID. C was turned on, 
-> and agreed with the BSSID of B.
->
-> C sends out data packets, with the BSSID of B. A sees the datapackets 
-> of C. Since the datapackets of C have A's BSSID, A has to accept them.
->
-> Now, you see where this is all going. What is the meaning of a beacon 
-> containing a BSSID of all zero ?
-> Further, you see that all nodes do need to send a beacon. This makes 
-> node discovery a little easier.
-> Even though A and C cannot see each others beacons, they should still 
-> communicate as they have the same agreed on BSSID.
->
-> Derek.
->
->
-> On Mon, 16 Nov 2009, Adam Wozniak wrote:
->
->> This assumption seems too stoichastic.  Reading 802.11-2007 section 
->> 11.1.2.2, it doesn't seem that we're guaranteed to always receive 
->> beacons from all stations.  Stations will cancel their pending beacon 
->> transmission if they receive a beacon before their random delay times 
->> out.  In the extreme case where the number of stations is very large, 
->> it seems possible that you may never hear beacons for some stations.
->>
->> Johannes Berg wrote:
->>> On Mon, 2009-11-16 at 09:25 -0800, Adam Wozniak wrote:
->>>
->>>> If we have only three stations in an ad-hoc network, where all 
->>>> three can hear the other two, only one of them should be beaconing, 
->>>> correct? 
->>>
->>> No, if they all behave correctly beaconing will be distributed.
->>>
->>> johannes
->>>
->>
->>
->>
->
+Follow-up to "update write pointers for all tx queues after wakeup"; that
+patch changed iwl_irq_tasklet_legacy(), but not iwl_irq_tasklet(), so
+newer devices were not covered.
+
+Comments from original patch:
+
+Wakeup interrupt has been updating write pointers (indexes, actually) only
+for tx queues 0-5.  This is adequate just for 3945, but inadequate for other
+devices, all of which have more tx queues.  Now updating all tx/command queues,
+so device can be aware of all new tx and host commands enqueued while
+device was asleep.
+
+This can potentially improve data traffic bandwidth and/or latency.
+
+Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index a1d2cda..4ba4282 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1085,6 +1085,7 @@ static void iwl_irq_tasklet(struct iwl_priv *priv)
+ 	u32 inta = 0;
+ 	u32 handled = 0;
+ 	unsigned long flags;
++	u32 i;
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 	u32 inta_mask;
+ #endif
+@@ -1195,12 +1196,8 @@ static void iwl_irq_tasklet(struct iwl_priv *priv)
+ 	if (inta & CSR_INT_BIT_WAKEUP) {
+ 		IWL_DEBUG_ISR(priv, "Wakeup interrupt\n");
+ 		iwl_rx_queue_update_write_ptr(priv, &priv->rxq);
+-		iwl_txq_update_write_ptr(priv, &priv->txq[0]);
+-		iwl_txq_update_write_ptr(priv, &priv->txq[1]);
+-		iwl_txq_update_write_ptr(priv, &priv->txq[2]);
+-		iwl_txq_update_write_ptr(priv, &priv->txq[3]);
+-		iwl_txq_update_write_ptr(priv, &priv->txq[4]);
+-		iwl_txq_update_write_ptr(priv, &priv->txq[5]);
++		for (i = 0; i < priv->hw_params.max_txq_num; i++)
++			iwl_txq_update_write_ptr(priv, &priv->txq[i]);
+ 
+ 		priv->isr_stats.wakeup++;
+ 
+-- 
+1.5.6.3
 
