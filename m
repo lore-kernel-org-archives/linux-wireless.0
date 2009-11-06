@@ -1,51 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:56131 "EHLO
-	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751983AbZKIWAB (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52292 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759826AbZKFVAG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 17:00:01 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH] rt2x00: Fix rt2800lib RF chip programming selection.
-Date: Mon,  9 Nov 2009 22:59:58 +0100
-Message-Id: <1257803998-5412-1-git-send-email-gwingerde@gmail.com>
+	Fri, 6 Nov 2009 16:00:06 -0500
+Date: Fri, 6 Nov 2009 15:57:25 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 15/28] mwl8k: change pci id table driver data to a
+	structure pointer
+Message-ID: <20091106205724.GJ2782@tuxdriver.com>
+References: <20091022182046.GQ1583@mail.wantstofly.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091022182046.GQ1583@mail.wantstofly.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mirror the legacy Ralink driver with respect to rt2800 RF register programming. Execute
-rt2800_config_channel_rt3x for all RF2020, RF3020, RF3021 & RF3022 chipsets when operating on RT3070
-devices.
+On Thu, Oct 22, 2009 at 08:20:47PM +0200, Lennert Buytenhek wrote:
+> To prepare for adding support for more device types, introduce a
+> new structure, mwl8k_device_info, where per-device information can
+> be stored, and change the pci id table driver data from an integer
+> indicating only the part number to a pointer to a mwl8k_device_info
+> structure.
+> 
+> Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+> ---
+>  drivers/net/wireless/mwl8k.c |   47 ++++++++++++++++++++++++++---------------
+>  1 files changed, 30 insertions(+), 17 deletions(-)
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+> @@ -2940,6 +2936,22 @@ static void mwl8k_finalize_join_worker(struct work_struct *work)
+>  	priv->beacon_skb = NULL;
+>  }
+>  
+> +static struct mwl8k_device_info di_8687 = {
+> +	.part_num	= 8687,
+> +};
+> +
+> +static DEFINE_PCI_DEVICE_TABLE(mwl8k_pci_id_table) = {
+> +	{
+> +		PCI_VDEVICE(MARVELL, 0x2a2b),
+> +		.driver_data = (unsigned long)&di_8687,
+> +	}, {
+> +		PCI_VDEVICE(MARVELL, 0x2a30),
+> +		.driver_data = (unsigned long)&di_8687,
+> +	}, {
+> +	},
+> +};
+> +MODULE_DEVICE_TABLE(pci, mwl8k_pci_id_table);
+> +
+>  static int __devinit mwl8k_probe(struct pci_dev *pdev,
+>  				 const struct pci_device_id *id)
+>  {
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 2c91c44..446087e 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -806,10 +806,14 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 	unsigned int tx_pin;
- 	u8 bbp;
- 
--	if (rt2x00_rev(&rt2x00dev->chip) != RT3070_VERSION)
--		rt2800_config_channel_rt2x(rt2x00dev, conf, rf, info);
--	else
-+	if (rt2x00_rt(&rt2x00dev->chip, RT3070) &&	
-+           (rt2x00_rf(&rt2x00dev->chip, RF2020) ||
-+	     rt2x00_rf(&rt2x00dev->chip, RF3020) ||
-+	     rt2x00_rf(&rt2x00dev->chip, RF3021) ||
-+	     rt2x00_rf(&rt2x00dev->chip, RF3022)))
- 		rt2800_config_channel_rt3x(rt2x00dev, conf, rf, info);
-+	else
-+		rt2800_config_channel_rt2x(rt2x00dev, conf, rf, info);
- 
- 	/*
- 	 * Change BBP settings
+My only complaint here is that using a pointer for
+driver_data make it difficult and potentially dangerous to use
+/sys/bus/pci/drivers/.../new_id to add a PCI ID to the device.
+
+Using an integer instead makes that a bit safer and easier to use.
+drivers/net/3c59x.c provides a decent example.
+
+John
 -- 
-1.6.5.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
