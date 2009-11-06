@@ -1,35 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2447 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751852AbZKGMoQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 07:44:16 -0500
-Date: Sat, 7 Nov 2009 07:43:36 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: David Dreggors <ddreggors@jumptv.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	jirislaby@gmail.com, ddreggors@cfl.rr.com
-Subject: Re: [PATCH] This adds support for the wifi led on the Compaq
-	CQ60-206US.
-Message-ID: <20091107124336.GA20330@hash.localnet>
-References: <1257580711.23806.84.camel@mobile-tek.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1257580711.23806.84.camel@mobile-tek.home>
+Received: from mga02.intel.com ([134.134.136.20]:15281 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760129AbZKFWxE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Nov 2009 17:53:04 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Ben Cahill <ben.m.cahill@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 17/20] iwlwifi: Add comments about MAC_ACCESS_REQ
+Date: Fri,  6 Nov 2009 14:53:00 -0800
+Message-Id: <1257547983-12590-18-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
+References: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 07, 2009 at 02:58:31AM -0500, David Dreggors wrote:
->         ATH_LED(1, 1) },
->         +       /* HP Compaq CQ60-206US */
->         +       { ATH_SDEVICE(PCI_VENDOR_ID_HP, 0x137a), ATH_LED(3,
->         1) },
+From: Ben Cahill <ben.m.cahill@intel.com>
 
+Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-io.h |   20 ++++++++++++++++++++
+ 1 files changed, 20 insertions(+), 0 deletions(-)
 
-Thanks.  This patch is wrapped in a very strange way, and needs a
-contact address and signed-off-by -- but I'm submitting some patches
-today so if you like I'll just redo it and add your reported-by.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
+index 0a078b0..d0a358c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.h
++++ b/drivers/net/wireless/iwlwifi/iwl-io.h
+@@ -200,6 +200,26 @@ static inline int _iwl_grab_nic_access(struct iwl_priv *priv)
+ 
+ 	/* this bit wakes up the NIC */
+ 	_iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++
++	/*
++	 * These bits say the device is running, and should keep running for
++	 * at least a short while (at least as long as MAC_ACCESS_REQ stays 1),
++	 * but they do not indicate that embedded SRAM is restored yet;
++	 * 3945 and 4965 have volatile SRAM, and must save/restore contents
++	 * to/from host DRAM when sleeping/waking for power-saving.
++	 * Each direction takes approximately 1/4 millisecond; with this
++	 * overhead, it's a good idea to grab and hold MAC_ACCESS_REQUEST if a
++	 * series of register accesses are expected (e.g. reading Event Log),
++	 * to keep device from sleeping.
++	 *
++	 * CSR_UCODE_DRV_GP1 register bit MAC_SLEEP == 0 indicates that
++	 * SRAM is okay/restored.  We don't check that here because this call
++	 * is just for hardware register access; but GP1 MAC_SLEEP check is a
++	 * good idea before accessing 3945/4965 SRAM (e.g. reading Event Log).
++	 *
++	 * 5000 series and later (including 1000 series) have non-volatile SRAM,
++	 * and do not save/restore SRAM when power cycling.
++	 */
+ 	ret = _iwl_poll_bit(priv, CSR_GP_CNTRL,
+ 			   CSR_GP_CNTRL_REG_VAL_MAC_ACCESS_EN,
+ 			   (CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY |
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.5.6.3
 
