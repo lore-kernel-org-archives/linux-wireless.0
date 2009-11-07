@@ -1,86 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:42755 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752371AbZKIQc3 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56194 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752861AbZKGUTI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 11:32:29 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Greg KH <gregkh@suse.de>
-Subject: Re: [PATCH] Staging: update TODO files
-Date: Mon, 9 Nov 2009 17:15:49 +0100
-Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-References: <200910211442.11785.bzolnier@gmail.com>
-In-Reply-To: <200910211442.11785.bzolnier@gmail.com>
-MIME-Version: 1.0
-Message-Id: <200911091715.49814.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+	Sat, 7 Nov 2009 15:19:08 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	mcgrof@gmail.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 25/29] ath5k: use the common->keymap
+Date: Sat,  7 Nov 2009 15:19:02 -0500
+Message-Id: <1257625146-17971-26-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
+References: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 21 October 2009 14:42:11 Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] Staging: update TODO files
-> 
-> Remove my mail address.
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   10 +++++++---
+ drivers/net/wireless/ath/ath5k/base.h |    2 --
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-ping.  Could you please apply it?
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index c7fc13c..9341e2d 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1684,6 +1684,8 @@ static unsigned int
+ ath5k_rx_decrypted(struct ath5k_softc *sc, struct ath5k_desc *ds,
+ 		struct sk_buff *skb, struct ath5k_rx_status *rs)
+ {
++	struct ath5k_hw *ah = sc->ah;
++	struct ath_common *common = ath5k_hw_common(ah);
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	unsigned int keyix, hlen;
+ 
+@@ -1700,7 +1702,7 @@ ath5k_rx_decrypted(struct ath5k_softc *sc, struct ath5k_desc *ds,
+ 	    skb->len >= hlen + 4) {
+ 		keyix = skb->data[hlen + 3] >> 6;
+ 
+-		if (test_bit(keyix, sc->keymap))
++		if (test_bit(keyix, common->keymap))
+ 			return RX_FLAG_DECRYPTED;
+ 	}
+ 
+@@ -3039,6 +3041,8 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	      struct ieee80211_key_conf *key)
+ {
+ 	struct ath5k_softc *sc = hw->priv;
++	struct ath5k_hw *ah = sc->ah;
++	struct ath_common *common = ath5k_hw_common(ah);
+ 	int ret = 0;
+ 
+ 	if (modparam_nohwcrypt)
+@@ -3071,14 +3075,14 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 			ATH5K_ERR(sc, "can't set the key\n");
+ 			goto unlock;
+ 		}
+-		__set_bit(key->keyidx, sc->keymap);
++		__set_bit(key->keyidx, common->keymap);
+ 		key->hw_key_idx = key->keyidx;
+ 		key->flags |= (IEEE80211_KEY_FLAG_GENERATE_IV |
+ 			       IEEE80211_KEY_FLAG_GENERATE_MMIC);
+ 		break;
+ 	case DISABLE_KEY:
+ 		ath5k_hw_reset_key(sc->ah, key->keyidx);
+-		__clear_bit(key->keyidx, sc->keymap);
++		__clear_bit(key->keyidx, common->keymap);
+ 		break;
+ 	default:
+ 		ret = -EINVAL;
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index b14ba07..b72338c 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -153,8 +153,6 @@ struct ath5k_softc {
+ 
+ 	enum ath5k_int		imask;		/* interrupt mask copy */
+ 
+-	DECLARE_BITMAP(keymap, AR5K_KEYCACHE_SIZE); /* key use bit map */
+-
+ 	u8			bssidmask[ETH_ALEN];
+ 
+ 	unsigned int		led_pin,	/* GPIO pin for driving LED */
+-- 
+1.6.5.2.143.g8cc62
 
-> ---
->  drivers/staging/rtl8187se/TODO |    3 +--
->  drivers/staging/rtl8192su/TODO |    3 +--
->  drivers/staging/vt6655/TODO    |    5 ++---
->  drivers/staging/vt6656/TODO    |    5 ++---
->  4 files changed, 6 insertions(+), 10 deletions(-)
-> 
-> Index: b/drivers/staging/rtl8187se/TODO
-> ===================================================================
-> --- a/drivers/staging/rtl8187se/TODO
-> +++ b/drivers/staging/rtl8187se/TODO
-> @@ -11,5 +11,4 @@ TODO:
->  - sparse fixes
->  - integrate with drivers/net/wireless/rtl818x
->  
-> -Please send any patches to Greg Kroah-Hartman <greg@kroah.com> and
-> -Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>.
-> +Please send any patches to Greg Kroah-Hartman <greg@kroah.com>.
-> Index: b/drivers/staging/rtl8192su/TODO
-> ===================================================================
-> --- a/drivers/staging/rtl8192su/TODO
-> +++ b/drivers/staging/rtl8192su/TODO
-> @@ -14,5 +14,4 @@ TODO:
->  - sparse fixes
->  - integrate with drivers/net/wireless/rtl818x
->  
-> -Please send any patches to Greg Kroah-Hartman <greg@kroah.com> and
-> -Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>.
-> +Please send any patches to Greg Kroah-Hartman <greg@kroah.com>.
-> Index: b/drivers/staging/vt6655/TODO
-> ===================================================================
-> --- a/drivers/staging/vt6655/TODO
-> +++ b/drivers/staging/vt6655/TODO
-> @@ -16,6 +16,5 @@ TODO:
->  - sparse fixes
->  - integrate with drivers/net/wireless
->  
-> -Please send any patches to Greg Kroah-Hartman <greg@kroah.com>,
-> -Forest Bond <forest@alittletooquiet.net> and Bartlomiej Zolnierkiewicz
-> -<bzolnier@gmail.com>.
-> +Please send any patches to Greg Kroah-Hartman <greg@kroah.com>
-> +and Forest Bond <forest@alittletooquiet.net>.
-> Index: b/drivers/staging/vt6656/TODO
-> ===================================================================
-> --- a/drivers/staging/vt6656/TODO
-> +++ b/drivers/staging/vt6656/TODO
-> @@ -15,6 +15,5 @@ TODO:
->  - sparse fixes
->  - integrate with drivers/net/wireless
->  
-> -Please send any patches to Greg Kroah-Hartman <greg@kroah.com>,
-> -Forest Bond <forest@alittletooquiet.net> and Bartlomiej Zolnierkiewicz
-> -<bzolnier@gmail.com>.
-> +Please send any patches to Greg Kroah-Hartman <greg@kroah.com>
-> +and Forest Bond <forest@alittletooquiet.net>.
