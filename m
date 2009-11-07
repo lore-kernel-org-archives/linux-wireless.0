@@ -1,69 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:33919 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756719AbZKDWbq convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60247 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751906AbZKGOAH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 17:31:46 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so1013595eyd.19
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 14:31:51 -0800 (PST)
+	Sat, 7 Nov 2009 09:00:07 -0500
+Date: Sat, 7 Nov 2009 08:46:27 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Dreggors <ddreggors@cfl.rr.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] This adds support for the wifi led on the Compaq
+	CQ60-206US.
+Message-ID: <20091107134626.GC25893@tuxdriver.com>
+References: <1257582989.23806.85.camel@mobile-tek.home>
 MIME-Version: 1.0
-In-Reply-To: <20091104221426.GA2599@bombadil.infradead.org>
-References: <43e72e890911041204n55b54f8iace79938b40baa32@mail.gmail.com>
-	 <40f31dec0911041212p16cfc78eia1ab1817e425e767@mail.gmail.com>
-	 <43e72e890911041330j581e7bacp4e7b83a11c1de0e8@mail.gmail.com>
-	 <43e72e890911041336n7ffae0d2u135321a588f3e613@mail.gmail.com>
-	 <43e72e890911041352i334e170at71a519383d48a08@mail.gmail.com>
-	 <43e72e890911041352n3a398b41h8927387c228661c5@mail.gmail.com>
-	 <20091104220034.GI10555@parisc-linux.org>
-	 <43e72e890911041404q5f491bbbw123d8761037f9c63@mail.gmail.com>
-	 <20091104221426.GA2599@bombadil.infradead.org>
-Date: Thu, 5 Nov 2009 00:31:50 +0200
-Message-ID: <40f31dec0911041431i6f718bf1x1e52d9e12ab22060@mail.gmail.com>
-Subject: Re: pci_set_mwi() and ath5k
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Matthew Wilcox <matthew@wil.cx>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	Kyle McMartin <kyle@mcmartin.ca>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1257582989.23806.85.camel@mobile-tek.home>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/11/5 Luis R. Rodriguez <mcgrof@bombadil.infradead.org>:
-> On Wed, Nov 04, 2009 at 02:04:11PM -0800, Luis R. Rodriguez wrote:
->> On Wed, Nov 4, 2009 at 2:00 PM, Matthew Wilcox <matthew@wil.cx> wrote:
->> > On Wed, Nov 04, 2009 at 01:52:30PM -0800, Luis R. Rodriguez wrote:
->> >> > Even better: I just confirmation from our systems team that our legacy
->> >> > devices and 11n PCI devices don't support MWR so I'll remove all that
->> >> > cruft crap.
->> >>
->> >> I meant MWI of course.
->> >
->> > Yes, but they don't necessarily just use cacheline size for MWI ... some
->> > devices use cacheline size for setting up data structures.  Might be
->> > worth just checking explicitly that they don't use the cacheline size
->> > register for anything.
->>
->> Oh right -- so the typical Atheros hack for this is to check the cache
->> line size, and if its 0 set it to L1_CACHE_BYTES. Then eventually read
->> from PCI_CACHE_LINE_SIZE pci config to align the skb data. So what I
->> was doing now is removing all this cruft and replacing it with a
->> generic allocator for atheros drivers that aligns simply to the
->> L1_CACHE_BYTES. Sound kosher?
->
-> Something like this:
->
+Need a Signed-of-by...
 
-According to comments inside MadWiFi AR5210 needs cache line align
-else we get corruptions. I don't know if this is correct for all
-platforms or later cards but since we (plan to) support AR5210 i guess
-we should leave it there. We need to test this a lot on various
-archs/cards before applying it.
+On Sat, Nov 07, 2009 at 03:36:29AM -0500, David Dreggors wrote:
+> ---
+>          drivers/net/wireless/ath/ath5k/led.c |    2 ++
+>          1 files changed, 2 insertions(+), 0 deletions(-)
+>         
+>         diff --git a/drivers/net/wireless/ath/ath5k/led.c
+>         b/drivers/net/wireless/ath/ath5k/led.c
+>         index 7ce98bd..ce6ce0a 100644
+>         --- a/drivers/net/wireless/ath/ath5k/led.c
+>         +++ b/drivers/net/wireless/ath/ath5k/led.c
+>         @@ -57,6 +57,8 @@ static const struct pci_device_id
+>         ath5k_led_devices[] = {
+>                 { PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5211),
+>         ATH_LED(0, 0) },
+>                 /* HP Compaq nc6xx, nc4000, nx6000 */
+>                 { ATH_SDEVICE(PCI_VENDOR_ID_COMPAQ, PCI_ANY_ID),
+>         ATH_LED(1, 1) },
+>         +       /* HP Compaq CQ60-206US */
+>         +       { ATH_SDEVICE(PCI_VENDOR_ID_HP, 0x137a), ATH_LED(3,
+>         1) },
+>                 /* Acer Aspire One A150 (maximlevitsky@gmail.com) */
+>                 { ATH_SDEVICE(PCI_VENDOR_ID_FOXCONN, 0xe008), ATH_LED(3,
+>         0) },
+>                 /* Acer Aspire One AO531h AO751h
+>         (keng-yu.lin@canonical.com) */
+>         -- 
+>         1.6.4.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
