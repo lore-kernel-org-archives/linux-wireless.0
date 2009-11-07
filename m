@@ -1,84 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:61721 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753421AbZK0OID (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56215 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752865AbZKGUTI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2009 09:08:03 -0500
-Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
-	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id nARE85nJ025516
-	for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2009 08:08:08 -0600
-Received: from [127.0.1.1] (essapo-nirac2521.europe.nokia.com [10.162.252.1])
-	by mgw-sa02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id nARE7xJJ004528
-	for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2009 16:08:03 +0200
-Subject: [RFC PATCH v1 1/4] cfg80211: add U-APSD support
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 27 Nov 2009 16:07:56 +0200
-Message-ID: <20091127140756.2847.34880.stgit@tikku>
-In-Reply-To: <20091127140700.2847.42426.stgit@tikku>
-References: <20091127140700.2847.42426.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Sat, 7 Nov 2009 15:19:08 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	mcgrof@gmail.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 17/29] ath9k: move rssi processing into a helper
+Date: Sat,  7 Nov 2009 15:18:54 -0500
+Message-Id: <1257625146-17971-18-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
+References: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+This moves all the RX processing of RSSI into a helper,
+ath_rx_prepare(). ath_rx_prepare() should now be really
+easy to read and follow.
 
-Experimental patch to add U-APSD support to cfg80211, most probably I'll
-drop this because I don't see any use for this. If we want to control
-U-APSD through cfg80211, this needs to be discussed more.
-
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- include/linux/nl80211.h |    2 ++
- include/net/cfg80211.h  |    1 +
- net/wireless/nl80211.c  |    3 +++
- 3 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/recv.c |   44 ++++++++++++++++++++------------
+ 1 files changed, 27 insertions(+), 17 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index da8ea2e..7bb020b 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1284,6 +1284,7 @@ enum nl80211_meshconf_params {
-  * @NL80211_TXQ_ATTR_CWMAX: Maximum contention window [a value of the form
-  *	2^n-1 in the range 1..32767]
-  * @NL80211_TXQ_ATTR_AIFS: Arbitration interframe space [0..255]
-+ * @NL80211_TXQ_ATTR_UAPSD: U-APSD enabled [0..1]
-  * @__NL80211_TXQ_ATTR_AFTER_LAST: Internal
-  * @NL80211_TXQ_ATTR_MAX: Maximum TXQ attribute number
-  */
-@@ -1294,6 +1295,7 @@ enum nl80211_txq_attr {
- 	NL80211_TXQ_ATTR_CWMIN,
- 	NL80211_TXQ_ATTR_CWMAX,
- 	NL80211_TXQ_ATTR_AIFS,
-+	NL80211_TXQ_ATTR_UAPSD,
- 
- 	/* keep last */
- 	__NL80211_TXQ_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 0884b9a..7be82d7 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -556,6 +556,7 @@ struct ieee80211_txq_params {
- 	u16 cwmin;
- 	u16 cwmax;
- 	u8 aifs;
-+	bool uapsd;
- };
- 
- /* from net/wireless.h */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a602843..54c9941 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -670,6 +670,9 @@ static int parse_txq_params(struct nlattr *tb[],
- 	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
- 	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
- 
-+	if (tb[NL80211_TXQ_ATTR_UAPSD])
-+		txq_params->uapsd = nla_get_u8(tb[NL80211_TXQ_ATTR_UAPSD]);
-+
- 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index d357b9a..4c4c22f 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -230,31 +230,20 @@ static int ath9k_compute_qual(struct ieee80211_hw *hw,
+ 	return qual;
  }
  
+-/*
+- * For Decrypt or Demic errors, we only mark packet status here and always push
+- * up the frame up to let mac80211 handle the actual error case, be it no
+- * decryption key or real decryption error. This let us keep statistics there.
+- */
+-static int ath_rx_prepare(struct ath_common *common,
+-			  struct ieee80211_hw *hw,
+-			  struct sk_buff *skb, struct ath_rx_status *rx_stats,
+-			  struct ieee80211_rx_status *rx_status,
+-			  bool *decrypt_error)
++static void ath9k_process_rssi(struct ath_common *common,
++			       struct ieee80211_hw *hw,
++			       struct sk_buff *skb,
++			       struct ath_rx_status *rx_stats)
+ {
+ 	struct ath_hw *ah = common->ah;
+-	struct ieee80211_hdr *hdr;
+-	__le16 fc;
+ 	struct ieee80211_sta *sta;
++	struct ieee80211_hdr *hdr;
+ 	struct ath_node *an;
+ 	int last_rssi = ATH_RSSI_DUMMY_MARKER;
++	__le16 fc;
+ 
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 	fc = hdr->frame_control;
+-	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
+-
+-	if (!ath9k_rx_accept(common, skb, rx_status, rx_stats, decrypt_error))
+-		goto rx_next;
+-
+ 
+ 	rcu_read_lock();
+ 	/* XXX: use ieee80211_find_sta! */
+@@ -279,6 +268,27 @@ static int ath_rx_prepare(struct ath_common *common,
+ 	/* Update Beacon RSSI, this is used by ANI. */
+ 	if (ieee80211_is_beacon(fc))
+ 		ah->stats.avgbrssi = rx_stats->rs_rssi;
++}
++
++/*
++ * For Decrypt or Demic errors, we only mark packet status here and always push
++ * up the frame up to let mac80211 handle the actual error case, be it no
++ * decryption key or real decryption error. This let us keep statistics there.
++ */
++static int ath_rx_prepare(struct ath_common *common,
++			  struct ieee80211_hw *hw,
++			  struct sk_buff *skb, struct ath_rx_status *rx_stats,
++			  struct ieee80211_rx_status *rx_status,
++			  bool *decrypt_error)
++{
++	struct ath_hw *ah = common->ah;
++
++	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
++
++	if (!ath9k_rx_accept(common, skb, rx_status, rx_stats, decrypt_error))
++		goto rx_next;
++
++	ath9k_process_rssi(common, hw, skb, rx_stats);
+ 
+ 	rx_status->rate_idx = ath9k_process_rate(common, hw,
+ 						 rx_stats, rx_status, skb);
+-- 
+1.6.5.2.143.g8cc62
 
