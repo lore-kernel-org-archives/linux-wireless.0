@@ -1,57 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:42088 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754194AbZKTUFK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 15:05:10 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Jay Sternberg <jay.e.sternberg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 15/19] iwlwifi: Tell the ucode immediately when association state changes
-Date: Fri, 20 Nov 2009 12:05:06 -0800
-Message-Id: <1258747510-21233-16-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
-References: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:45656 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750871AbZKGGSd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Nov 2009 01:18:33 -0500
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 6 Nov 2009 22:18:18 -0800
+Message-ID: <43e72e890911062218o67e32d9ckdda62ff896b9d1cb@mail.gmail.com>
+Subject: Stable compat-wireless 2.6.32-rc6 released
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jay Sternberg <jay.e.sternberg@intel.com>
+Along with the 2.6.32-rc6 comes the stable compat-wireless based [1]
+on it [2] which allows you to get the 2.6.32-rc6 wireless subsystem
+and new wireless drivers compilable and installed on older kernels.
+This is like the general compat-wireless releases but are *stable* and
+should be *stable*. Please report any issues ASAP. For details on
+changes you can refer to the ChangeLog-2.6.32-rc6-wireless [3].
 
-When we get a state change of associated or not, we need to tell the
-ucode via the RX_ON command using the filter flags.  This will prevent
-the ucode from sending any packets when not associated, specifically not
-sending NULL QOS packets after a deauthentication which causes the AP to
-repeatedly send deauth's in some situations.
+  Luis
 
-Signed-off-by: Jay Sternberg <jay.e.sternberg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index b62267e..159d555 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2479,6 +2479,16 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 		} else {
- 			priv->assoc_id = 0;
- 			iwl_led_disassociate(priv);
-+
-+			/*
-+			 * inform the ucode that there is no longer an
-+			 * association and that no more packets should be
-+			 * send
-+			 */
-+			priv->staging_rxon.filter_flags &=
-+				~RXON_FILTER_ASSOC_MSK;
-+			priv->staging_rxon.assoc_id = 0;
-+			iwlcore_commit_rxon(priv);
- 		}
- 	}
- 
--- 
-1.5.6.3
-
+[1] http://wireless.kernel.org/en/users/Download/stable
+[2] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.32/compat-wireless-2.6.32-rc6.tar.bz2
+[3] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.32/ChangeLog-2.6.32-rc6-wireless
