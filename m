@@ -1,54 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:35056 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756262AbZKBUgq (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56145 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752832AbZKGUTD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 15:36:46 -0500
-Received: by iwn10 with SMTP id 10so3612690iwn.4
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Nov 2009 12:36:51 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4AEF40A0.2030408@openwrt.org>
-References: <19182.33851.980271.360757@gargle.gargle.HOWL>
-	<1257151486.3555.161.camel@johannes.local> <20091102153614.GC14046@tuxdriver.com>
-	<4AEF14E9.7060902@nbd.name> <43e72e890911020947i3a9ea736ve95fa6b1fac724a4@mail.gmail.com>
-	<4AEF40A0.2030408@openwrt.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 2 Nov 2009 12:36:31 -0800
-Message-ID: <43e72e890911021236ra2a77baj6436abcc2d86cb3b@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: Fix IBSS merge
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Sat, 7 Nov 2009 15:19:03 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	mcgrof@gmail.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
+Subject: [PATCH 01/29] ath9k: fix listening to idle requests
+Date: Sat,  7 Nov 2009 15:18:38 -0500
+Message-Id: <1257625146-17971-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
+References: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 2, 2009 at 12:27 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> Luis R. Rodriguez wrote:
->> On Mon, Nov 2, 2009 at 9:20 AM, Felix Fietkau <nbd@nbd.name> wrote:
->>> John W. Linville wrote:
->>>> On Mon, Nov 02, 2009 at 09:44:46AM +0100, Johannes Berg wrote:
->>>>> On Mon, 2009-11-02 at 12:33 +0530, Sujith wrote:
->>>>> > Currently, in IBSS mode, a single creator would go into
->>>>> > a loop trying to merge/scan. This happens because the IBSS timer is
->>>>> > rearmed on finishing a scan and the subsequent
->>>>> > timer invocation requests another scan immediately.
->>>>> >
->>>>> > This patch fixes this issue by checking if we have just completed
->>>>> > a scan run trying to merge with other IBSS networks.
->>>>>
->>>>> Heh, how many people do we need to fix IBSS? :)
->>>>
->>>> Yeah, no kidding...I suspect that actual IBSS users are few, and a
->>>> substantial number of those are doing crazy things with it! :-)
->>> Yeah, we're doing crazy things like mesh networks of few hundred
->>> nodes... something that 11s isn't really suitable for. :-)
->>
->> Anyone know if this applies for 32?
-> What exactly?
+The way idle configuration detection was implemented as
+busted due to the fact that it assumed the ath9k virtual wiphy,
+the aphy, would be marked as inactive if it was not used but
+it turns out an aphy is always active if its the only wiphy
+present. We need to distinguish between aphy activity and
+idleness so we now add an idle bool for the aphy and mark
+it as such based on the passed IEEE80211_CONF_CHANGE_IDLE
+from mac80211.
 
-The patch.
+Previous to all_wiphys_idle would never be true when using
+only one device so we never really were using
+IEEE80211_CONF_CHANGE_IDLE -- we never turned the radio
+off or on upon IEEE80211_CONF_CHANGE_IDLE changes as radio
+changes depended on all_wiphys_idle being true either to
+turn the radio on or off. Since it was always false for
+one device this code was doing nothing.
 
-  Luis
+Cc: Jouni.Malinen <Jouni.Malinen@atheros.com>
+Reported-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |    2 +
+ drivers/net/wireless/ath/ath9k/main.c    |   33 +++++++++++++++++++++++------
+ drivers/net/wireless/ath/ath9k/virtual.c |   17 ++++++++++++--
+ 3 files changed, 42 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 13dd020..da53578 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -620,6 +620,7 @@ struct ath_wiphy {
+ 		ATH_WIPHY_PAUSED,
+ 		ATH_WIPHY_SCAN,
+ 	} state;
++	bool idle;
+ 	int chan_idx;
+ 	int chan_is_ht;
+ };
+@@ -691,6 +692,7 @@ void ath9k_wiphy_pause_all_forced(struct ath_softc *sc,
+ bool ath9k_wiphy_scanning(struct ath_softc *sc);
+ void ath9k_wiphy_work(struct work_struct *work);
+ bool ath9k_all_wiphys_idle(struct ath_softc *sc);
++void ath9k_set_wiphy_idle(struct ath_wiphy *aphy, bool idle);
+ 
+ int ath_tx_get_qnum(struct ath_softc *sc, int qtype, int haltype);
+ #endif /* ATH9K_H */
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 9fefc51..bdce0ab 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2688,22 +2688,37 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 	struct ath_hw *ah = sc->sc_ah;
+-	bool all_wiphys_idle = false, disable_radio = false;
++	bool disable_radio;
+ 
+ 	mutex_lock(&sc->mutex);
+ 
+-	/* Leave this as the first check */
++	/*
++	 * Leave this as the first check because we need to turn on the
++	 * radio if it was disabled before prior to processing the rest
++	 * of the changes. Likewise we must only disable the radio towards
++	 * the end.
++	 */
+ 	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
++		bool enable_radio;
++		bool all_wiphys_idle;
++		bool idle = !!(conf->flags & IEEE80211_CONF_IDLE);
+ 
+ 		spin_lock_bh(&sc->wiphy_lock);
+ 		all_wiphys_idle =  ath9k_all_wiphys_idle(sc);
++		ath9k_set_wiphy_idle(aphy, idle);
++
++		if (!idle && all_wiphys_idle)
++			enable_radio = true;
++
++		/*
++		 * After we unlock here its possible another wiphy
++		 * can be re-renabled so to account for that we will
++		 * only disable the radio toward the end of this routine
++		 * if by then all wiphys are still idle.
++		 */
+ 		spin_unlock_bh(&sc->wiphy_lock);
+ 
+-		if (conf->flags & IEEE80211_CONF_IDLE){
+-			if (all_wiphys_idle)
+-				disable_radio = true;
+-		}
+-		else if (all_wiphys_idle) {
++		if (enable_radio) {
+ 			ath_radio_enable(sc);
+ 			ath_print(common, ATH_DBG_CONFIG,
+ 				  "not-idle: enabling radio\n");
+@@ -2779,6 +2794,10 @@ skip_chan_change:
+ 	if (changed & IEEE80211_CONF_CHANGE_POWER)
+ 		sc->config.txpowlimit = 2 * conf->power_level;
+ 
++	spin_lock_bh(&sc->wiphy_lock);
++	disable_radio = ath9k_all_wiphys_idle(sc);
++	spin_unlock_bh(&sc->wiphy_lock);
++
+ 	if (disable_radio) {
+ 		ath_print(common, ATH_DBG_CONFIG, "idle: disabling radio\n");
+ 		ath_radio_disable(sc);
+diff --git a/drivers/net/wireless/ath/ath9k/virtual.c b/drivers/net/wireless/ath/ath9k/virtual.c
+index bc7d173..e6a50f3 100644
+--- a/drivers/net/wireless/ath/ath9k/virtual.c
++++ b/drivers/net/wireless/ath/ath9k/virtual.c
+@@ -668,15 +668,26 @@ void ath9k_wiphy_set_scheduler(struct ath_softc *sc, unsigned int msec_int)
+ bool ath9k_all_wiphys_idle(struct ath_softc *sc)
+ {
+ 	unsigned int i;
+-	if (sc->pri_wiphy->state != ATH_WIPHY_INACTIVE) {
++	if (!sc->pri_wiphy->idle)
+ 		return false;
+-	}
+ 	for (i = 0; i < sc->num_sec_wiphy; i++) {
+ 		struct ath_wiphy *aphy = sc->sec_wiphy[i];
+ 		if (!aphy)
+ 			continue;
+-		if (aphy->state != ATH_WIPHY_INACTIVE)
++		if (!aphy->idle)
+ 			return false;
+ 	}
+ 	return true;
+ }
++
++/* caller must hold wiphy_lock */
++void ath9k_set_wiphy_idle(struct ath_wiphy *aphy, bool idle)
++{
++	struct ath_softc *sc = aphy->sc;
++
++	aphy->idle = idle;
++	ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_CONFIG,
++		  "Marking %s as %s\n",
++		  wiphy_name(aphy->hw->wiphy),
++		  idle ? "idle" : "not-idle");
++}
+-- 
+1.6.5.2.143.g8cc62
+
