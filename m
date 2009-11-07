@@ -1,35 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:34179 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755413AbZKDTsV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 14:48:21 -0500
-MIME-Version: 1.0
-In-Reply-To: <20091104173432.28463.51210.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-	 <20091104173432.28463.51210.sendpatchset@localhost.localdomain>
-Date: Wed, 4 Nov 2009 20:48:26 +0100
-Message-ID: <14add3d10911041148i293eef1ake2488bceb9a61b25@mail.gmail.com>
-Subject: Re: [PATCH 21/41] rt2800usb: add rt2800_mcu_request() wrapper
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:53613 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753288AbZKGV7L convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Nov 2009 16:59:11 -0500
+From: Ben Hutchings <ben@decadent.org.uk>
+To: John Linville <linville@tuxdriver.com>
+Cc: Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 07 Nov 2009 21:59:10 +0000
+Message-ID: <1257631150.15927.458.camel@localhost>
+Mime-Version: 1.0
+Subject: [PATCH 48/75] ipw2200: declare MODULE_FIRMWARE
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 4, 2009 at 6:34 PM, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2800usb: add rt2800_mcu_request() wrapper
->
-> Part of preparations for later code unification.
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+ drivers/net/wireless/ipw2x00/ipw2200.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-For what it is worth:
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index e2af22b..d03ef19 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -81,6 +81,11 @@ MODULE_DESCRIPTION(DRV_DESCRIPTION);
+ MODULE_VERSION(DRV_VERSION);
+ MODULE_AUTHOR(DRV_COPYRIGHT);
+ MODULE_LICENSE("GPL");
++MODULE_FIRMWARE("ipw2200-ibss.fw");
++#ifdef CONFIG_IPW2200_MONITOR
++MODULE_FIRMWARE("ipw2200-sniffer.fw");
++#endif
++MODULE_FIRMWARE("ipw2200-bss.fw");
+ 
+ static int cmdlog = 0;
+ static int debug = 0;
+-- 
+1.6.5.2
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+
+
