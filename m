@@ -1,97 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:42227 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932604AbZKRTSP (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56149 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752836AbZKGUTC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 14:18:15 -0500
-Received: by iwn8 with SMTP id 8so1131275iwn.33
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 11:18:21 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <a563a2d5dfdbca955cbac7a65790f443@127.0.0.1>
-References: <b0c954732ea30effda967bd97ef30597@127.0.0.1> <43e72e890911171335n3193b63foa6f473ceb659f3ab@mail.gmail.com>
-	<a563a2d5dfdbca955cbac7a65790f443@127.0.0.1>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 18 Nov 2009 11:18:01 -0800
-Message-ID: <43e72e890911181118o416145ach6b7140341cb6dfc5@mail.gmail.com>
-Subject: Re: [ath5k-devel] "iwlist scan" shows same ap twice
-To: Florian Engelhardt <flo@dotbox.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org, Bob Copeland <me@bobcopeland.com>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 7 Nov 2009 15:19:02 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	mcgrof@gmail.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 19/29] ath9k: move the rx_stats->rs_datalen check to ath9k_rx_accept()
+Date: Sat,  7 Nov 2009 15:18:56 -0500
+Message-Id: <1257625146-17971-20-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
+References: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 18, 2009 at 11:09 AM, Florian Engelhardt <flo@dotbox.org> wrote:
-> On Tue, 17 Nov 2009 13:35:24 -0800, "Luis R. Rodriguez" <mcgrof@gmail.com>
-> wrote:
->
->> That's wild. What kernel are you using?
->
-> # uname -a
-> Linux eka 2.6.31-ARCH #1 SMP PREEMPT Tue Nov 10 19:48:17 CET 2009 i686
-> Intel(R) Atom(TM) CPU N270 @ 1.60GHz GenuineIntel GNU/Linux
->
->> Have you tried:
->> http://wireless.kernel.org/en/users/Download/stable
->> or
->> http://wireless.kernel.org/en/users/Download
->
-> Tried both, no change.
->
->> Can you provide the output of 'iw list', your dmesg, and your 'iw dev
->> wlan0 scan'.
->
-> See attached files. Despite that i can add one additional information: I
-> have a second Laptop with Intel WLAN Chip, and it shows exactly the same
-> behaviour, MA-WLAN two, sometimes three times, with none of the addresses
-> being correct.
->
-> Somehow, i can not reproduce this kind of behaviour with my own wlan. It
-> shows up only one time, not multiple, but it did two days ago on the ath5k
-> chipset based netbook
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-As Bob pointed out your scan shows two beacons received on different BSSes:
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 0793614..4420a58 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -100,6 +100,9 @@ static bool ath9k_rx_accept(struct ath_common *common,
+ 	hdr = (struct ieee80211_hdr *) skb->data;
+ 	fc = hdr->frame_control;
+ 
++	if (!rx_stats->rs_datalen)
++		return false;
++
+ 	if (rx_stats->rs_more) {
+ 		/*
+ 		 * Frame spans multiple descriptors; this cannot happen yet
+@@ -793,9 +796,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 		if (flush)
+ 			goto requeue;
+ 
+-		if (!rx_stats->rs_datalen)
+-			goto requeue;
+-
+ 		/* The status portion of the descriptor could get corrupted. */
+ 		if (sc->rx.bufsize < rx_stats->rs_datalen)
+ 			goto requeue;
+-- 
+1.6.5.2.143.g8cc62
 
-00:80:48:5c:86:5d
-00:80:48:5c:86:48
-
-The TSF on the second one seems odd though. Do you have access to the
-AP? Can you change the channel to see if you see the two beacons on a
-new channel?
-
-Can you try rebooting it?
-
-BSS 00:80:48:5c:86:5d (on wlan0)
-	TSF: 276107264385 usec (3d, 04:41:47)
-	freq: 2457
-	beacon interval: 100
-	capability: ESS Privacy ShortPreamble (0x0031)
-	signal: -92.00 dBm
-	SSID: MA-WLAN
-	Supported rates: 1.0* 2.0* 5.5 11.0
-	DS Parameter set: channel 10
-	Country: NA (in/outdoor), data: 0a 02 12
-	ERP: <no flags>
-	Extended supported rates: 6.0 9.0 12.0 18.0 24.0 36.0 48.0 54.0
-	RSN:	 * Version: 1
-		 * Group cipher: TKIP
-		 * Pairwise ciphers: TKIP CCMP
-		 * Authentication suites: PSK
-		 * Capabilities: PreAuth (0x0001)
-BSS 00:80:48:5c:86:48 (on wlan0)
-	TSF: 921985 usec (0d, 00:00:00)
-	freq: 2457
-	beacon interval: 100
-	capability: ESS Privacy ShortPreamble (0x0031)
-	signal: -99.00 dBm
-	SSID: MA-WLAN
-	Supported rates: 1.0* 2.0* 5.5 11.0
-	DS Parameter set: channel 10
-	Country: NA (in/outdoor), data: 0a 02 12
-	ERP: <no flags>
-	Extended supported rates: 6.0 9.0 12.0 18.0 24.0 36.0 48.0 54.0
-	RSN:	 * Version: 1
-		 * Group cipher: TKIP
-		 * Pairwise ciphers: TKIP CCMP
-		 * Authentication suites: PSK
-		 * Capabilities: PreAuth (0x0001)
