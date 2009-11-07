@@ -1,50 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57761 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752210AbZKQOP0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 09:15:26 -0500
-Date: Tue, 17 Nov 2009 09:05:34 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Michael Renzmann <mrenzmann@madwifi-project.org>,
-	madwifi-devel@lists.sourceforge.net,
-	madwifi-users@lists.sourceforge.net, linux-kernel@vger.kernel.org,
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:37890 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753324AbZKGWAF convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Nov 2009 17:00:05 -0500
+From: Ben Hutchings <ben@decadent.org.uk>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and
-	why?
-Message-ID: <20091117140534.GD27743@tuxdriver.com>
-References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de> <43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 07 Nov 2009 22:00:03 +0000
+Message-ID: <1257631203.15927.462.camel@localhost>
+Mime-Version: 1.0
+Subject: [PATCH 50/75] libertas: declare MODULE_FIRMWARE
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 16, 2009 at 05:01:09PM -0800, Luis R. Rodriguez wrote:
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+ drivers/net/wireless/libertas/if_cs.c   |    1 +
+ drivers/net/wireless/libertas/if_sdio.c |    6 ++++++
+ drivers/net/wireless/libertas/if_spi.c  |    4 ++++
+ drivers/net/wireless/libertas/if_usb.c  |    2 ++
+ 4 files changed, 13 insertions(+), 0 deletions(-)
 
-> If a few developers still exist who are committed to helping maintain
-> madwifi until ath5k gets feature-parred the easiest solution now
-> (since the HAL is open) is to just throw it into staging and hopefully
-> that'll attract more developers to help keep it up to date with actual
-> current kernels.
+diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
+index 9127d2a..9834e3f 100644
+--- a/drivers/net/wireless/libertas/if_cs.c
++++ b/drivers/net/wireless/libertas/if_cs.c
+@@ -48,6 +48,7 @@
+ MODULE_AUTHOR("Holger Schurig <hs4233@mail.mn-solutions.de>");
+ MODULE_DESCRIPTION("Driver for Marvell 83xx compact flash WLAN cards");
+ MODULE_LICENSE("GPL");
++MODULE_FIRMWARE("libertas_cs_helper.fw");
+ 
 
-For the record, I would be generally opposed to adding madwifi to
-drivers/staging.  We already have enough trouble with duplication of
-hardware support between drivers/staging and drivers/net/wireless.
 
-If madwifi has features that people need/want and that ath5k/mac80211
-still lacks, lets talk about how to get them (or reasonabe replacements
-for them) into the mainline kernel.  I'm sure some ideas will meet
-some resistance, but if someone is motivated to continue pursuing
-maintenance of madwifi than they should be motivated enough to at
-least try to convince the rest of us why those features are worth
-having in net/wireless, net/mac80211, and/or drivers/net/wireless.
-Even if the solution is some quirky thing that "normal" people will
-ignore, it is bound to be better to have mainline support than to
-continue working out-of-tree.
-
-John
+diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+index 9716728..09fcfad 100644
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -99,6 +99,12 @@ static struct if_sdio_model if_sdio_models[] = {
+ 		.firmware = "sd8688.bin",
+ 	},
+ };
++MODULE_FIRMWARE("sd8385_helper.bin");
++MODULE_FIRMWARE("sd8385.bin");
++MODULE_FIRMWARE("sd8686_helper.bin");
++MODULE_FIRMWARE("sd8686.bin");
++MODULE_FIRMWARE("sd8688_helper.bin");
++MODULE_FIRMWARE("sd8688.bin");
+ 
+ struct if_sdio_packet {
+ 	struct if_sdio_packet	*next;
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+index d6a48dd..bf4bfba 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -902,6 +902,10 @@ static int if_spi_calculate_fw_names(u16 card_id,
+ 		 chip_id_to_device_name[i].name);
+ 	return 0;
+ }
++MODULE_FIRMWARE("libertas/gspi8385_hlp.bin");
++MODULE_FIRMWARE("libertas/gspi8385.bin");
++MODULE_FIRMWARE("libertas/gspi8686_hlp.bin");
++MODULE_FIRMWARE("libertas/gspi8686.bin");
+ 
+ static int __devinit if_spi_probe(struct spi_device *spi)
+ {
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index f12d667..65e1745 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -28,6 +28,8 @@
+ static char *lbs_fw_name = "usb8388.bin";
+ module_param_named(fw_name, lbs_fw_name, charp, 0644);
+ 
++MODULE_FIRMWARE("usb8388.bin");
++
+ static struct usb_device_id if_usb_table[] = {
+ 	/* Enter the device signature inside */
+ 	{ USB_DEVICE(0x1286, 0x2001) },
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.5.2
+
+
+
