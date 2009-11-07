@@ -1,41 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44421 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752968AbZKRDDR (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:2447 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751852AbZKGMoQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 22:03:17 -0500
-Date: Tue, 17 Nov 2009 21:59:20 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Stefan Monnier <monnier@iro.umontreal.ca>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [RFC v2] mac80211: disallow bridging managed/adhoc interfaces
-Message-ID: <20091118025920.GA4588@tuxdriver.com>
-References: <1258465585.3682.7.camel@johannes.local> <1258490898.21197.42.camel@johannes.local> <jwvy6m4bnqp.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
+	Sat, 7 Nov 2009 07:44:16 -0500
+Date: Sat, 7 Nov 2009 07:43:36 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: David Dreggors <ddreggors@jumptv.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	jirislaby@gmail.com, ddreggors@cfl.rr.com
+Subject: Re: [PATCH] This adds support for the wifi led on the Compaq
+	CQ60-206US.
+Message-ID: <20091107124336.GA20330@hash.localnet>
+References: <1257580711.23806.84.camel@mobile-tek.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <jwvy6m4bnqp.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1257580711.23806.84.camel@mobile-tek.home>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 17, 2009 at 08:59:03PM -0500, Stefan Monnier wrote:
-> > A number of people have tried to add a wireless interface
-> > (in managed mode) to a bridge and then complained that it
-> > doesn't work. It cannot work, however, because in 802.11
-> [...]
-> > To avoid such mistakes in the future, disallow adding a
-> > wireless interface to a bridge.
-> 
-> As someone who's been bitten by this, I fully support this change.
-> Still, it makes me wonder: my broadcom-based home-router using the wl.o
-> driver can be set in "client bridge" mode.  How does it work?
+On Sat, Nov 07, 2009 at 02:58:31AM -0500, David Dreggors wrote:
+>         ATH_LED(1, 1) },
+>         +       /* HP Compaq CQ60-206US */
+>         +       { ATH_SDEVICE(PCI_VENDOR_ID_HP, 0x137a), ATH_LED(3,
+>         1) },
 
-If I'm not mistaken, that has a bunch of code embedded in it that
-among other things can do a layer-2 version of NAT to rewrite the
-MAC adresses for frames on the air.
 
-YMMV...
+Thanks.  This patch is wrapped in a very strange way, and needs a
+contact address and signed-off-by -- but I'm submitting some patches
+today so if you like I'll just redo it and add your reported-by.
 
-John
 -- 
-John W. Linville                Someday the world will need a hero, and you
-linville@tuxdriver.com                  might be all we have.  Be ready.
+Bob Copeland %% www.bobcopeland.com
+
