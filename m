@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:29975 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752582AbZK0Cwv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 21:52:51 -0500
-Subject: Re: [RFC 1/2] wireless: add ieee80211_asmdu_to_8023s
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1259229943.32372.50.camel@johannes.local>
-References: <1259215413-16753-1-git-send-email-yi.zhu@intel.com>
-	 <1259229943.32372.50.camel@johannes.local>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 27 Nov 2009 10:52:56 +0800
-Message-ID: <1259290376.13126.219.camel@debian>
-Mime-Version: 1.0
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:33755 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752525AbZKGRaa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Nov 2009 12:30:30 -0500
+Date: Sat, 7 Nov 2009 18:30:28 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Ingo Molnar <mingo@elte.hu>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jarek Poplawski <jarkao2@gmail.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	David Miller <davem@davemloft.net>
+Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project
+	tree
+Message-ID: <20091107173028.GA1932@ucw.cz>
+References: <200911031951.05235.bzolnier@gmail.com> <200911042251.23506.IvDoorn@gmail.com> <20091106074643.GA5562@ucw.cz> <200911061858.56816.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200911061858.56816.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-11-26 at 18:05 +0800, Johannes Berg wrote:
-> Oh one more thing, can you make addr const?
+Hi!
 
-Sure.
+> > > So if I want to focus on something different in the kernel, I just send 1 patch,
+> > > and a second to claim the maintainership of it even though there is an active
+> > > maintainer available?
+> > 
+> > What about listing yourself as a maintainer for a start?
+> 
+> The rt2x00 project is listed as maintainer for everything in the
+> drivers/net/wireless/rt2x00 folder.
 
-> Also -- you lost the extra TX headroom which I think mac80211 as an AP
-> requires since it could forward these frames? Or does that not happen?
-> Not sure right now why that was there to start with. 
+Yes, but that tells very little. I don't know who the 'rt2x00 project'
+is. Perhaps its you? Perhaps its Bart? Maybe its my cat? Please just
+list real names of maintainers...      	     	  Pavel 
 
-Yes, I'd like to hear more feedback on this. I think it's a trade off
-between performance optimization and clean interface. As we already use
-dev_alloc_skb to reserve 32 bytes headroom, it should be enough for most
-of the current drivers. While for those drivers really need a bigger
-extra headroom and support Rx aggregation, this probably means
-ieee80211_skb_resize. But the resize should always happen for every
-packet from the IP stack, right?
-
-Thanks,
--yi
-
+-- (english)
+http://www.livejournal.com/~pavelmachek (cesky, pictures)
+http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
