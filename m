@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:32787 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752005AbZKHNvj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 08:51:39 -0500
-Received: by mail-ew0-f207.google.com with SMTP id 3so2376683ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 05:51:45 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 3/9] rt2800pci: add missing RF values to rf_vals table
-Date: Sun, 8 Nov 2009 14:51:43 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <20091108133854.23584.86842.sendpatchset@localhost.localdomain> <20091108133909.23584.32892.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091108133909.23584.32892.sendpatchset@localhost.localdomain>
+Received: from bu3sch.de ([62.75.166.246]:34465 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752597AbZKGR4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Nov 2009 12:56:20 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] b43-pio: Fix RX error path for rev>=8 devices
+Date: Sat, 7 Nov 2009 18:54:22 +0100
+Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911081451.43639.IvDoorn@gmail.com>
+  charset="us-ascii"
+Message-Id: <200911071854.22748.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 08 November 2009, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2800pci: add missing RF values to rf_vals table
-> 
-> rt2800pci's rf_vals[] copy was missing values for some channels.
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+This fixes the RX error path for rev>=8 devices.
+The wrong register size and definitions were used.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800pci.c |    4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
-> ===================================================================
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -1158,6 +1158,10 @@ static const struct rf_channel rf_vals[]
->  	{ 159, 0x18402ec4, 0x184c038e, 0x18178a55, 0x180ed1a7 },
->  	{ 161, 0x18402ec4, 0x184c0392, 0x18178a55, 0x180ed187 },
->  	{ 165, 0x18402ec4, 0x184c0392, 0x18178a55, 0x180ed197 },
-> +	{ 167, 0x18402ec4, 0x184c03d2, 0x18179855, 0x1815531f },
-> +	{ 169, 0x18402ec4, 0x184c03d2, 0x18179855, 0x18155327 },
-> +	{ 171, 0x18402ec4, 0x184c03d6, 0x18179855, 0x18155307 },
-> +	{ 173, 0x18402ec4, 0x184c03d6, 0x18179855, 0x1815530f },
->  
->  	/* 802.11 Japan */
->  	{ 184, 0x15002ccc, 0x1500491e, 0x1509be55, 0x150c0a0b },
-> 
+---
 
+Index: wireless-testing/drivers/net/wireless/b43/pio.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/pio.c	2009-11-01 13:58:48.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/pio.c	2009-11-07 18:46:11.000000000 +0100
+@@ -762,7 +762,11 @@ data_ready:
+ rx_error:
+ 	if (err_msg)
+ 		b43dbg(q->dev->wl, "PIO RX error: %s\n", err_msg);
+-	b43_piorx_write16(q, B43_PIO_RXCTL, B43_PIO_RXCTL_DATARDY);
++	if (q->rev >= 8)
++		b43_piorx_write32(q, B43_PIO8_RXCTL, B43_PIO8_RXCTL_DATARDY);
++	else
++		b43_piorx_write16(q, B43_PIO_RXCTL, B43_PIO_RXCTL_DATARDY);
++
+ 	return 1;
+ }
+ 
 
+-- 
+Greetings, Michael.
