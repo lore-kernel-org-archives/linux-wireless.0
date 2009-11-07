@@ -1,51 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adelie.canonical.com ([91.189.90.139]:33332 "EHLO
-	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751296AbZKZFqz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 00:46:55 -0500
-From: Keng-Yu Lin <keng-yu.lin@canonical.com>
-To: linux-wireless@vger.kernel.org
-Cc: Keng-Yu Lin <keng-yu.lin@canonical.com>
-Subject: [PATCH] acer-wmi: Add DMI quirk to blacklist Acer Aspire One BA01-DV/JM11-ML.
-Date: Thu, 26 Nov 2009 13:46:53 +0800
-Message-Id: <1259214413-21956-1-git-send-email-keng-yu.lin@canonical.com>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:53617 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753316AbZKGV7h convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Nov 2009 16:59:37 -0500
+From: Ben Hutchings <ben@decadent.org.uk>
+To: John Linville <linville@tuxdriver.com>
+Cc: Tomas Winkler <tomas.winkler@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 07 Nov 2009 21:59:38 +0000
+Message-ID: <1257631178.15927.459.camel@localhost>
+Mime-Version: 1.0
+Subject: [PATCH 49/75] iwmc3200wifi: declare MODULE_FIRMWARE
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The two Acer Aspire One models should be blacklisted to prevent from
-reporting rfkill is enabled since it's hardware controlled.
-
-Signed-off-by: Keng-Yu Lin <keng-yu.lin@canonical.com>
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
 ---
- drivers/platform/x86/acer-wmi.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwmc3200wifi/sdio.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/platform/x86/acer-wmi.c b/drivers/platform/x86/acer-wmi.c
-index 454970d..b39766c 100644
---- a/drivers/platform/x86/acer-wmi.c
-+++ b/drivers/platform/x86/acer-wmi.c
-@@ -241,6 +241,20 @@ static struct dmi_system_id __devinitdata acer_blacklist[] = {
- 			DMI_MATCH(DMI_PRODUCT_NAME, "AOA150"),
- 		},
- 	},
-+	{
-+		.ident = "Acer Aspire One (BA01-DV)",
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "AO531h"),
-+		},
-+	},
-+	{
-+		.ident = "Acer Aspire One (JM11-ML)",
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "AO751h"),
-+		},
-+	},
- 	{}
+diff --git a/drivers/net/wireless/iwmc3200wifi/sdio.c b/drivers/net/wireless/iwmc3200wifi/sdio.c
+index cf86294..a7ec7ea 100644
+--- a/drivers/net/wireless/iwmc3200wifi/sdio.c
++++ b/drivers/net/wireless/iwmc3200wifi/sdio.c
+@@ -399,6 +399,9 @@ static struct iwm_if_ops if_sdio_ops = {
+ 	.calib_lmac_name = "iwmc3200wifi-calib-sdio.bin",
+ 	.lmac_name = "iwmc3200wifi-lmac-sdio.bin",
  };
++MODULE_FIRMWARE("iwmc3200wifi-umac-sdio.bin");
++MODULE_FIRMWARE("iwmc3200wifi-calib-sdio.bin");
++MODULE_FIRMWARE("iwmc3200wifi-lmac-sdio.bin");
  
+ static int iwm_sdio_probe(struct sdio_func *func,
+ 			  const struct sdio_device_id *id)
 -- 
-1.6.3.3
+1.6.5.2
+
+
 
