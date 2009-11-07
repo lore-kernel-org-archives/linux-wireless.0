@@ -1,46 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-72-92-88-10.phlapa.fios.verizon.net ([72.92.88.10]:35251
-	"EHLO smtp.roinet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753743AbZKQVxJ (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56119 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752796AbZKGUTC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 16:53:09 -0500
-Message-ID: <4B031B48.1090105@roinet.com>
-Date: Tue, 17 Nov 2009 16:53:12 -0500
-From: David Acker <dacker@roinet.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Andrey Yurovsky <andrey@cozybit.com>,
-	Michael Renzmann <mrenzmann@madwifi-project.org>,
-	madwifi-devel@lists.sourceforge.net,
-	madwifi-users@lists.sourceforge.net,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and why?
-References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de> 	<43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com> 	<4B02DFF4.1060509@roinet.com> <45e8e6c40911171257m7c687380k6e6e2677fd11f851@mail.gmail.com> 	<43e72e890911171337p4b0d97fcp844266137bb51b56@mail.gmail.com> 	<4B03193E.2080304@roinet.com> <43e72e890911171345q2dc59d66g6ac2a9eec04c577c@mail.gmail.com>
-In-Reply-To: <43e72e890911171345q2dc59d66g6ac2a9eec04c577c@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sat, 7 Nov 2009 15:19:02 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	mcgrof@gmail.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 12/29] ath9k: use the ieee80211_hw to get to an sband on ath_rx_prepare()
+Date: Sat,  7 Nov 2009 15:18:49 -0500
+Message-Id: <1257625146-17971-13-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
+References: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Tue, Nov 17, 2009 at 1:44 PM, David Acker <dacker@roinet.com> wrote:
->> It is a non-802.11s protocol that predates 802.11s development by quite
->> awhile.  It runs over WDS links.  In theory it could run over anything that
->> supports dynamic creation and destruction of WDS links.
-> 
-> So its a some sort of MadWifi-only hack?
+No need to use the private driver structure to get to an sband.
+This will make it easier to share this code with ath9k_htc.
 
-Not at all.  The algorithm runs in user space and has run over other 
-radio/driver combinations and even in networks of mixed radio types.  I 
-don't see a problem with running it over ath5k.  Basic functionality 
-should work fine.
+With the sc gone we can now just pass the common structure to
+ath_rx_prepare().
 
-The problem with switching to ath5k would be the loss of performance 
-related features (compression, fast frames, turbo), and some required 
-features (half/quarter rates are required for some channels on some 
-radios).  Also, I don't know if ath5k will work on products based on 
-Atheros WiSOCs like Ubiquiti's PicoStation and Bullet.  A lesser issue 
-(more of a pain for me than an ath5k issue) is that I have some 
-platforms that use an older kernel and moving up to a newer kernel will 
-have to be done without hardware vendor support.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |   39 +++++++++++++++++----------------
+ 1 files changed, 20 insertions(+), 19 deletions(-)
 
--ack
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 403debb..fa78914 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -91,18 +91,19 @@ static void ath_setdefantenna(struct ath_softc *sc, u32 antenna)
+  * up the frame up to let mac80211 handle the actual error case, be it no
+  * decryption key or real decryption error. This let us keep statistics there.
+  */
+-static int ath_rx_prepare(struct ieee80211_hw *hw,
++static int ath_rx_prepare(struct ath_common *common,
++			  struct ieee80211_hw *hw,
+ 			  struct sk_buff *skb, struct ath_rx_status *rx_stats,
+-			  struct ieee80211_rx_status *rx_status, bool *decrypt_error,
+-			  struct ath_softc *sc)
++			  struct ieee80211_rx_status *rx_status,
++			  bool *decrypt_error)
+ {
++	struct ath_hw *ah = common->ah;
+ 	struct ieee80211_hdr *hdr;
+ 	u8 ratecode;
+ 	__le16 fc;
+ 	struct ieee80211_sta *sta;
+ 	struct ath_node *an;
+ 	int last_rssi = ATH_RSSI_DUMMY_MARKER;
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 	fc = hdr->frame_control;
+@@ -115,7 +116,7 @@ static int ath_rx_prepare(struct ieee80211_hw *hw,
+ 		 * discard the frame. Enable this if you want to see
+ 		 * error frames in Monitor mode.
+ 		 */
+-		if (sc->sc_ah->opmode != NL80211_IFTYPE_MONITOR)
++		if (ah->opmode != NL80211_IFTYPE_MONITOR)
+ 			goto rx_next;
+ 	} else if (rx_stats->rs_status != 0) {
+ 		if (rx_stats->rs_status & ATH9K_RXERR_CRC)
+@@ -141,7 +142,7 @@ static int ath_rx_prepare(struct ieee80211_hw *hw,
+ 		 * decryption and MIC failures. For monitor mode,
+ 		 * we also ignore the CRC error.
+ 		 */
+-		if (sc->sc_ah->opmode == NL80211_IFTYPE_MONITOR) {
++		if (ah->opmode == NL80211_IFTYPE_MONITOR) {
+ 			if (rx_stats->rs_status &
+ 			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC |
+ 			      ATH9K_RXERR_CRC))
+@@ -165,20 +166,20 @@ static int ath_rx_prepare(struct ieee80211_hw *hw,
+ 			rx_status->flag |= RX_FLAG_SHORT_GI;
+ 		rx_status->rate_idx = ratecode & 0x7f;
+ 	} else {
+-		int i = 0, cur_band, n_rates;
++		struct ieee80211_supported_band *sband;
++		unsigned int i = 0;
++		enum ieee80211_band band;
+ 
+-		cur_band = hw->conf.channel->band;
+-		n_rates = sc->sbands[cur_band].n_bitrates;
++		band = hw->conf.channel->band;
++		sband = hw->wiphy->bands[band];
+ 
+-		for (i = 0; i < n_rates; i++) {
+-			if (sc->sbands[cur_band].bitrates[i].hw_value ==
+-			    ratecode) {
++		for (i = 0; i < sband->n_bitrates; i++) {
++			if (sband->bitrates[i].hw_value == rx_stats->rs_rate) {
+ 				rx_status->rate_idx = i;
+ 				break;
+ 			}
+-
+-			if (sc->sbands[cur_band].bitrates[i].hw_value_short ==
+-			    ratecode) {
++			if (sband->bitrates[i].hw_value_short ==
++			    rx_stats->rs_rate) {
+ 				rx_status->rate_idx = i;
+ 				rx_status->flag |= RX_FLAG_SHORTPRE;
+ 				break;
+@@ -208,9 +209,9 @@ static int ath_rx_prepare(struct ieee80211_hw *hw,
+ 
+ 	/* Update Beacon RSSI, this is used by ANI. */
+ 	if (ieee80211_is_beacon(fc))
+-		sc->sc_ah->stats.avgbrssi = rx_stats->rs_rssi;
++		ah->stats.avgbrssi = rx_stats->rs_rssi;
+ 
+-	rx_status->mactime = ath9k_hw_extend_tsf(sc->sc_ah, rx_stats->rs_tstamp);
++	rx_status->mactime = ath9k_hw_extend_tsf(ah, rx_stats->rs_tstamp);
+ 	rx_status->band = hw->conf.channel->band;
+ 	rx_status->freq = hw->conf.channel->center_freq;
+ 	rx_status->noise = common->ani.noise_floor;
+@@ -754,8 +755,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 		if (sc->rx.bufsize < rx_stats->rs_datalen)
+ 			goto requeue;
+ 
+-		if (!ath_rx_prepare(hw, skb, rx_stats,
+-				    &rx_status, &decrypt_error, sc))
++		if (!ath_rx_prepare(common, hw, skb, rx_stats,
++				    &rx_status, &decrypt_error))
+ 			goto requeue;
+ 
+ 		/* Ensure we always have an skb to requeue once we are done
+-- 
+1.6.5.2.143.g8cc62
+
