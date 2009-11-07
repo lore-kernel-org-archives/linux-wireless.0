@@ -1,75 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:16455 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756530AbZKBSWZ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52376 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751899AbZKGNpH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 13:22:25 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 1/6] wl1271: Remove excess null-data template settings
-Date: Mon,  2 Nov 2009 20:22:08 +0200
-Message-Id: <1257186133-18367-2-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1257186133-18367-1-git-send-email-luciano.coelho@nokia.com>
-References: <1257186133-18367-1-git-send-email-luciano.coelho@nokia.com>
+	Sat, 7 Nov 2009 08:45:07 -0500
+Date: Sat, 7 Nov 2009 08:43:30 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: =?iso-8859-1?Q?Mart=EDn?= Ernesto Barreyro
+	<barreyromartin@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: Changing from Minstrel to PID
+Message-ID: <20091107134330.GB25893@tuxdriver.com>
+References: <1257542956.6565.2.camel@localhost.localdomain> <20091106214803.GL2782@tuxdriver.com> <1257545606.3752.2.camel@localhost.localdomain> <b6c5339f0911061424l33178e81k16fb1f3889edcc3c@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <b6c5339f0911061424l33178e81k16fb1f3889edcc3c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Fri, Nov 06, 2009 at 05:24:47PM -0500, Bob Copeland wrote:
+> On Fri, Nov 6, 2009 at 5:13 PM, Martín Ernesto Barreyro
+> <barreyromartin@gmail.com> wrote:
+> >> No, but I wish there were...patches?  Anyone?
+> >
+> > Sorry for my ignorance, but how could I send a parameter to a module or
+> > use a configuration file? could be with sysctl?
+> 
+> You do have to compile them both, but once you do, if you
+> have debugfs mounted, you can do:
+> 
+> echo 'pid' > /debug/ieee80211/phy0/rc/name
+> 
+> to switch to pid.
 
-The null-data template (nullfunc) is dependent on the BSSID of the
-current AP only, so it needs to be updated only when the BSSID changes.
+Does that work?  I thought that was only informational (and readonly)?
 
-Removed excess setting of the template.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |   14 +++++---------
- 1 files changed, 5 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 86132bb..0ae506a 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1067,11 +1067,11 @@ static int wl1271_op_config_interface(struct ieee80211_hw *hw,
- 		ret = wl1271_cmd_join(wl);
- 		if (ret < 0)
- 			goto out_sleep;
--	}
- 
--	ret = wl1271_cmd_build_null_data(wl);
--	if (ret < 0)
--		goto out_sleep;
-+		ret = wl1271_cmd_build_null_data(wl);
-+		if (ret < 0)
-+			goto out_sleep;
-+	}
- 
- 	wl->ssid_len = conf->ssid_len;
- 	if (wl->ssid_len)
-@@ -1137,10 +1137,6 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 		wl->channel = channel;
- 	}
- 
--	ret = wl1271_cmd_build_null_data(wl);
--	if (ret < 0)
--		goto out_sleep;
--
- 	if (conf->flags & IEEE80211_CONF_PS && !wl->psm_requested) {
- 		wl1271_info("psm enabled");
- 
-@@ -1165,7 +1161,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 	if (conf->power_level != wl->power_level) {
- 		ret = wl1271_acx_tx_power(wl, conf->power_level);
- 		if (ret < 0)
--			goto out;
-+			goto out_sleep;
- 
- 		wl->power_level = conf->power_level;
- 	}
+John
 -- 
-1.5.6.5
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
