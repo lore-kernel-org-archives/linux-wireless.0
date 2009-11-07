@@ -1,46 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:43717 "EHLO bar.sig21.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752648AbZKLTyd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 14:54:33 -0500
-Date: Thu, 12 Nov 2009 20:54:37 +0100
-From: Johannes Stezenbach <js@sig21.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: Re: ath9k: DMA failed to stop in 10 ms
-Message-ID: <20091112195437.GA11611@sig21.net>
-References: <20091112152600.GA7562@sig21.net>
- <20091112181045.GA8839@sig21.net>
- <43e72e890911121013t7273c09fybff75fa2484cf07c@mail.gmail.com>
- <43e72e890911121014r13705ac0of8db341749bca528@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <43e72e890911121014r13705ac0of8db341749bca528@mail.gmail.com>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:37894 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753352AbZKGWAg convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Nov 2009 17:00:36 -0500
+From: Ben Hutchings <ben@decadent.org.uk>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 07 Nov 2009 22:00:38 +0000
+Message-ID: <1257631238.15927.463.camel@localhost>
+Mime-Version: 1.0
+Subject: [PATCH 51/75] libertas_tf_usb: declare MODULE_FIRMWARE
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 12, 2009 at 10:14:06AM -0800, Luis R. Rodriguez wrote:
-> On Thu, Nov 12, 2009 at 10:13 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > On Thu, Nov 12, 2009 at 10:10 AM, Johannes Stezenbach <js@sig21.net> wrote:
-> >> On Thu, Nov 12, 2009 at 04:26:00PM +0100, Johannes Stezenbach wrote:
-> >>>
-> >>> When running kismet I get a lot of
-> >>>
-> >>> [ 2030.531809] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
-> >>
-> >> Update: It seems that this is only happening when kismet is hopping
-> >> channels.  So it looks like an unclean shutdown of the receive
-> >> process and not a real problem -- except that the log flooding is
-> >> pretty annoying.
-> >
-> > Can you try disabling powersave before using monitor mode?
-> >
-> > sudo iwconfig wlan0 power off
-> 
-> That is, we shoudn't be sleeping during monitor mode. Curious if
-> somehow we are getting to that state.
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+ drivers/net/wireless/libertas_tf/if_usb.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-"iwconfig wlan0 power off" doesn't make a difference.
+diff --git a/drivers/net/wireless/libertas_tf/if_usb.c b/drivers/net/wireless/libertas_tf/if_usb.c
+index 392337b..3691c30 100644
+--- a/drivers/net/wireless/libertas_tf/if_usb.c
++++ b/drivers/net/wireless/libertas_tf/if_usb.c
+@@ -23,6 +23,8 @@
+ static char *lbtf_fw_name = "lbtf_usb.bin";
+ module_param_named(fw_name, lbtf_fw_name, charp, 0644);
+ 
++MODULE_FIRMWARE("lbtf_usb.bin");
++
+ static struct usb_device_id if_usb_table[] = {
+ 	/* Enter the device signature inside */
+ 	{ USB_DEVICE(0x1286, 0x2001) },
+-- 
+1.6.5.2
 
 
-Johannes
+
