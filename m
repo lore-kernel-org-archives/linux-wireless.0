@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:48054 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755198AbZKHVXF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 16:23:05 -0500
-Received: by iwn10 with SMTP id 10so1965382iwn.4
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 13:23:10 -0800 (PST)
+Received: from d1.icnet.pl ([212.160.220.21]:33665 "EHLO d1.icnet.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751497AbZKGM1k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Nov 2009 07:27:40 -0500
+From: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
+To: linux-wireless@vger.kernel.org
+Subject: Looking for a low power wireless USB adapter
+Date: Sat, 7 Nov 2009 12:57:58 +0100
 MIME-Version: 1.0
-In-Reply-To: <43e72e890911071225n72a19a8cia2f4e75ea7687d57@mail.gmail.com>
-References: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
-	<43e72e890911071225n72a19a8cia2f4e75ea7687d57@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sun, 8 Nov 2009 13:22:49 -0800
-Message-ID: <43e72e890911081322g692c20c1wed2a6ed13dda2759@mail.gmail.com>
-Subject: Re: [PATCH 00/29] ath: virtual wiphy updates / add ath9k_common
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	mcgrof@gmail.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200911071257.59575.jkrzyszt@tis.icnet.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 7, 2009 at 12:25 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Sat, Nov 7, 2009 at 12:18 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->
->> I've tested these changes with ath5k, ath9k and ar9170
->
-> I meant ar9271 of course :)
->
->> on the ath9k_htc
->> driver. ath9k_htc now scans with this common shared code.
->
-> the ar9271 I used is revision 0:
->
-> [ 3083.123570] phy3: Atheros AR9271 Rev:0
+Hi,
 
-Here is a new all in one patch with the change on patch 06/29
+I am developing software for Amstrad E3 (Delta), an ARM OMAP based videophone. 
+The machine is not a new design and has no network adapter on board, but 
+forunately it has USB port. I have no problems connecting it to a wired 
+network using an Ethernet dongle.
 
-http://bombadil.infradead.org/~mcgrof/patches/ath/2009/11/all-pending-2009-11-08.patch
+However, trying to use a wireless USB adapter, I have hardware issues. I 
+suspect it is USB power consumption that matters (the port was designed for 
+connecting a printer).
 
-These patches apply on top of the latest wireless-testing (master-2009-11-06).
+My wireless adapter is rt73 based, lsusb -v shows MaxPower 300mA. The wired 
+adapter that works for me shows MaxPower of 144mA. Rather that using an 
+external powered USB hub, I'd like to find a wireless adapter that is 
+supposed to consume less than 300mA (while not in idle :-)). However, 
+hardware vendors seem to not publish such information at all.
 
-  Luis
+I'm sure that many of you, wireless developers, have a few different USB 
+adapters on hand. I'd be glad if you could have a look at them and give me 
+information on power consumption of your device as shown by lsusb if less 
+than 300mA.
+
+Thanks,
+Janusz
+
+PS. Sorry for abusing a developer list.
