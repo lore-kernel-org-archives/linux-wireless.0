@@ -1,77 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45651 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750732AbZKDJbf (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56217 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752866AbZKGUTI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 04:31:35 -0500
-Subject: Re: iwlwifi connection troubles, maybe aggregation related
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrew Lutomirski <luto@mit.edu>
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-In-Reply-To: <cb0375e10911031538n62fe7473x4dd41329b9264b5c@mail.gmail.com>
-References: <cb0375e10911031538n62fe7473x4dd41329b9264b5c@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-teQeZP8aKrRVnOo8Fetq"
-Date: Wed, 04 Nov 2009 10:30:17 +0100
-Message-ID: <1257327017.28469.76.camel@johannes.local>
-Mime-Version: 1.0
+	Sat, 7 Nov 2009 15:19:08 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	mcgrof@gmail.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 18/29] ath9k: avoid the copy skb->cb on every RX'd skb
+Date: Sat,  7 Nov 2009 15:18:55 -0500
+Message-Id: <1257625146-17971-19-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
+References: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The skb->cb (control buffer, 48 bytes) is available to the skb
+upon skb allocation. You can fill it up imediately after skb
+allocation. ath9k was copying onto the skb->cb the data from the
+processed skb for mac80211 from a stack struct ieee80211_rx_status
+structure. This is unnecessary, instead use the skb->cb for the
+rx status immediately after the skb becomes available and DMA
+synched.
 
---=-teQeZP8aKrRVnOo8Fetq
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Additionally, avoid the copy of the skb->cb also for virtual wiphys
+as skb_copy() will copy over the skb->cb for us as well.
 
-On Tue, 2009-11-03 at 18:38 -0500, Andrew Lutomirski wrote:
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |   38 +++++++++++++-------------------
+ 1 files changed, 16 insertions(+), 22 deletions(-)
 
-> iwlagn 0000:03:00.0: iwl_tx_agg_start on ra =3D 00:21:d8:49:4a:52 tid =3D=
- 0
-
-> Turning on or off power management and fiddling with
-> no_sleep_autoadjust makes no difference.  Setting tx_agg_tid_enable to
-> zero in debugfs while the connection was working seemed to make it a
-> little more reliable (it lasted long enough to do "git pull" but not
-> much longer).
->=20
-> After running "iw dev wlan0 disconnect" a few times, I start to get
-> errors like this:
->=20
-> [18078.209635] iwlagn 0000:03:00.0: SENSITIVITY_CMD failed
-> [18078.313461] iwlagn 0000:03:00.0: No space for Tx
-> [18078.313467] iwlagn 0000:03:00.0: Error sending SENSITIVITY_CMD:
-> enqueue_hcmd failed: -28
-> [18078.313470] iwlagn 0000:03:00.0: SENSITIVITY_CMD failed
-> [18078.522409] iwlagn 0000:03:00.0: No space for Tx
-> [18078.522414] iwlagn 0000:03:00.0: Error sending SENSITIVITY_CMD:
-> enqueue_hcmd failed: -28
-
-Sounds like the firmware messes up ...
-
-Maybe as a first workaround you could modprobe iwlagn with
-11n_disable=3D1. But I don't know at this point what the problem could be.
-
-johannes
-
---=-teQeZP8aKrRVnOo8Fetq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK8UmkAAoJEODzc/N7+Qmav88P/27mVtPrzz43wK79kQVvcVLj
-LtTwhy4QDlMCjG6RWyftrkPLSV2C5OqP2pzBmn5BoUnVkyI5v42ecKxipl+/PeM5
-VrqYkqY9IOEG/ffKxviSyzT/kStTFBYcnl1ZexrkW2DFKSJTDwIo5rh7TpSldp0E
-3xVm9cPHCJFBW+y7HqX1ZeL/1TdD13u2FANoTK7e9olh50dBQQaAJti1w3EJU7kI
-TMZ+cA5A1cxS21wLzr2aihaZnMnIKp+UdRJzfZwT0wJE33nw1cW0ALI3VmFWqbXn
-Atf4xmVFrbmfIiN3gdnQvIdewXpItpgBYlLo6tpIfeYVyw1hxF4OOn4PslI+vwnF
-qh5UUfbsBok/ajSt9U0VXSuV4NyrjClim1ZFChYcbbBYp0LbtdnLz0Pb1NcJRDyI
-urVxrToYz+TLd32hOAQhlTYatdv0JZyh0rBgyNzTRz8CYlYy/MJ7yis+ujBZf9//
-luccuUAiOjFYlTTAWpz5D+bngciuWJLhcCDL2irNnzq2o88Hdx8ClO0qC5t1l2ts
-iYhRDjDoCa1GWmF0yQNcXpP43ioorbe8N4TNY9A2KRAkeAZoiI98YzUiR/WLMkIu
-V7ftZetRnnwZY/QhbgR+DQMrzQuXAz2rP962ZIpH06AFbfS/LT/kmt9yj8WUNe5f
-l3pqlP9uGFWVUsPueHni
-=jBhg
------END PGP SIGNATURE-----
-
---=-teQeZP8aKrRVnOo8Fetq--
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 4c4c22f..0793614 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -283,8 +283,6 @@ static int ath_rx_prepare(struct ath_common *common,
+ {
+ 	struct ath_hw *ah = common->ah;
+ 
+-	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
+-
+ 	if (!ath9k_rx_accept(common, skb, rx_status, rx_stats, decrypt_error))
+ 		goto rx_next;
+ 
+@@ -654,7 +652,7 @@ static void ath_rx_ps(struct ath_softc *sc, struct sk_buff *skb)
+ 
+ static void ath_rx_send_to_mac80211(struct ieee80211_hw *hw,
+ 				    struct ath_softc *sc, struct sk_buff *skb,
+-				    struct ieee80211_rx_status *rx_status)
++				    struct ieee80211_rx_status *rxs)
+ {
+ 	struct ieee80211_hdr *hdr;
+ 
+@@ -674,19 +672,14 @@ static void ath_rx_send_to_mac80211(struct ieee80211_hw *hw,
+ 			if (aphy == NULL)
+ 				continue;
+ 			nskb = skb_copy(skb, GFP_ATOMIC);
+-			if (nskb) {
+-				memcpy(IEEE80211_SKB_RXCB(nskb), rx_status,
+-					sizeof(*rx_status));
+-				ieee80211_rx(aphy->hw, nskb);
+-			}
++			if (!nskb)
++				continue;
++			ieee80211_rx(aphy->hw, nskb);
+ 		}
+-		memcpy(IEEE80211_SKB_RXCB(skb), rx_status, sizeof(*rx_status));
+ 		ieee80211_rx(sc->hw, skb);
+-	} else {
++	} else
+ 		/* Deliver unicast frames based on receiver address */
+-		memcpy(IEEE80211_SKB_RXCB(skb), rx_status, sizeof(*rx_status));
+ 		ieee80211_rx(hw, skb);
+-	}
+ }
+ 
+ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+@@ -699,7 +692,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 	struct ath_desc *ds;
+ 	struct ath_rx_status *rx_stats;
+ 	struct sk_buff *skb = NULL, *requeue_skb;
+-	struct ieee80211_rx_status rx_status;
++	struct ieee80211_rx_status *rxs;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	/*
+@@ -788,6 +781,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 				DMA_FROM_DEVICE);
+ 
+ 		hdr = (struct ieee80211_hdr *) skb->data;
++		rxs =  IEEE80211_SKB_RXCB(skb);
++
+ 		hw = ath_get_virt_hw(sc, hdr);
+ 		rx_stats = &ds->ds_rxstat;
+ 
+@@ -806,7 +801,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 			goto requeue;
+ 
+ 		if (!ath_rx_prepare(common, hw, skb, rx_stats,
+-				    &rx_status, &decrypt_error))
++				    rxs, &decrypt_error))
+ 			goto requeue;
+ 
+ 		/* Ensure we always have an skb to requeue once we are done
+@@ -848,20 +843,19 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 		keyix = rx_stats->rs_keyix;
+ 
+ 		if (!(keyix == ATH9K_RXKEYIX_INVALID) && !decrypt_error) {
+-			rx_status.flag |= RX_FLAG_DECRYPTED;
++			rxs->flag |= RX_FLAG_DECRYPTED;
+ 		} else if (ieee80211_has_protected(fc)
+ 			   && !decrypt_error && skb->len >= hdrlen + 4) {
+ 			keyix = skb->data[hdrlen + 3] >> 6;
+ 
+ 			if (test_bit(keyix, sc->keymap))
+-				rx_status.flag |= RX_FLAG_DECRYPTED;
++				rxs->flag |= RX_FLAG_DECRYPTED;
+ 		}
+ 		if (ah->sw_mgmt_crypto &&
+-		    (rx_status.flag & RX_FLAG_DECRYPTED) &&
+-		    ieee80211_is_mgmt(fc)) {
++		    (rxs->flag & RX_FLAG_DECRYPTED) &&
++		    ieee80211_is_mgmt(fc))
+ 			/* Use software decrypt for management frames. */
+-			rx_status.flag &= ~RX_FLAG_DECRYPTED;
+-		}
++			rxs->flag &= ~RX_FLAG_DECRYPTED;
+ 
+ 		/* We will now give hardware our shiny new allocated skb */
+ 		bf->bf_mpdu = requeue_skb;
+@@ -874,7 +868,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 			bf->bf_mpdu = NULL;
+ 			ath_print(common, ATH_DBG_FATAL,
+ 				  "dma_mapping_error() on RX\n");
+-			ath_rx_send_to_mac80211(hw, sc, skb, &rx_status);
++			ath_rx_send_to_mac80211(hw, sc, skb, rxs);
+ 			break;
+ 		}
+ 		bf->bf_dmacontext = bf->bf_buf_addr;
+@@ -895,7 +889,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 					     SC_OP_WAIT_FOR_PSPOLL_DATA)))
+ 			ath_rx_ps(sc, skb);
+ 
+-		ath_rx_send_to_mac80211(hw, sc, skb, &rx_status);
++		ath_rx_send_to_mac80211(hw, sc, skb, rxs);
+ 
+ requeue:
+ 		list_move_tail(&bf->list, &sc->rx.rxbuf);
+-- 
+1.6.5.2.143.g8cc62
 
