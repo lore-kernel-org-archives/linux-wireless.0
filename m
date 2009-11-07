@@ -1,65 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40639 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752800AbZK0JSV (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56141 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752840AbZKGUTD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2009 04:18:21 -0500
-Subject: Re: [RFC 1/2] wireless: add ieee80211_asmdu_to_8023s
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1259284014.13126.111.camel@debian>
-References: <1259215413-16753-1-git-send-email-yi.zhu@intel.com>
-	 <1259228968.32372.40.camel@johannes.local>
-	 <1259284014.13126.111.camel@debian>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-NoN+2amR4Y3zkSa5KUOC"
-Date: Fri, 27 Nov 2009 10:18:20 +0100
-Message-ID: <1259313500.5428.2.camel@johannes.local>
-Mime-Version: 1.0
+	Sat, 7 Nov 2009 15:19:03 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	mcgrof@gmail.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
+Subject: [PATCH 08/29] ath9k: handle low buffer space for virtual wiphys
+Date: Sat,  7 Nov 2009 15:18:45 -0500
+Message-Id: <1257625146-17971-9-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
+References: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+ath9k virtual wiphys all share the same internal buffer space
+for TX but they do not share the mac80211 skb queues. When
+ath9k detects it is running low on buffer space to TX it tells
+mac80211 to stop sending it skbs its way but it always does
+this only for the primary wiphy. This means mac80211 won't know
+its best to avoid sending ath9k more skbs on a separate virtual
+wiphy. The same issue is present for reliving the skb queue.
 
---=-NoN+2amR4Y3zkSa5KUOC
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Since ath9k does not keep track of which virtual wiphy is hammering
+on TX silence all wiphy's TX when we're low on buffer space. When
+we're free on buffer space only bother informing the virtual wiphy
+which is active that we have free buffers.
 
-On Fri, 2009-11-27 at 09:06 +0800, Zhu Yi wrote:
+Cc: Jouni.Malinen <Jouni.Malinen@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |    3 ++
+ drivers/net/wireless/ath/ath9k/virtual.c |   52 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/xmit.c    |   10 +++---
+ 3 files changed, 60 insertions(+), 5 deletions(-)
 
-> > > +     dev->stats.rx_packets++;
-> > > +     dev->stats.rx_bytes +=3D skb->len;
-> >=20
-> > Shouldn't rx_packets be per sub-frame?=20
->=20
-> Not very sure. Maybe it's one frame from the device's perspective? The
-> original code does this so I didn't change the behavior. Should I?
-
-Ah, yes, I remember now -- had been wondering about this before. What
-does everybody else think?
-
-johannes
-
---=-NoN+2amR4Y3zkSa5KUOC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLD5lXAAoJEODzc/N7+QmaisQP/RdFNjDPnyKf0iifvb8Q7puZ
-ZysbpfJxxbdJsQaY2b0KQSHy3M7oTcbIhzoMKevMvWRh942EqRPaDlxX+rzn7I2M
-/zacVRu3DWmLbDTaGHNIcu4W93AgxYNclvfUEfFP3wGZqR4/Msc3eoy4X0qB1Fqr
-z0O42yEBDCnOC6x6VW6eb5v+GHUt2lZPWb9N86E3ON4Cmf4pig67y83NLKGeb+yK
-1CvqMLS/yfQWsvzIkG9YXLB1V9kNR2RBCYFcNGWiAAsIBOoSfBJ/Zzwn/eSdn4V3
-guidhZIRHbil2qe6/JhB1jH8V+XAe0n1KdOxx9x6gG8k5HLPVRrEyIRKis6g0qD+
-Hek7QhiAcPWPI9gZTvtuavo41iybwAE8+aC5xQV2iyJwD6fDvF8aF4SFEOzYYbzl
-y4oBwLBr/2iuDv90KMZxaj5CqcGYZhg3K+Ne3q21NfYUOsyXxT1R+w8wmBePpeC9
-Rb2VDmUIy/qGZPuwxboyutqNLnng4EEUJJGUzKC5FgH9m8Q5zlphkCbkLGcQNnQ1
-kISzZo4nSlbx+fNFWssfhKxBLp3ksv/HvYPZH7ghFfL/Wn2E5qut+lkVUQh3FdbI
-KUlTGw0GzdjLP1Gwm977hkD5IoZLv4dGONMaq3vVFTB44ZqzHa4pLA+jbifFYf0L
-gDmxnHjt/9OggX3aDbuF
-=qw2G
------END PGP SIGNATURE-----
-
---=-NoN+2amR4Y3zkSa5KUOC--
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 59ce7ec..4169d2b 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -695,5 +695,8 @@ void ath9k_wiphy_work(struct work_struct *work);
+ bool ath9k_all_wiphys_idle(struct ath_softc *sc);
+ void ath9k_set_wiphy_idle(struct ath_wiphy *aphy, bool idle);
+ 
++void ath_mac80211_stop_queue(struct ath_softc *sc, u16 skb_queue);
++void ath_mac80211_start_queue(struct ath_softc *sc, u16 skb_queue);
++
+ int ath_tx_get_qnum(struct ath_softc *sc, int qtype, int haltype);
+ #endif /* ATH9K_H */
+diff --git a/drivers/net/wireless/ath/ath9k/virtual.c b/drivers/net/wireless/ath/ath9k/virtual.c
+index 69a871b..0a36b57 100644
+--- a/drivers/net/wireless/ath/ath9k/virtual.c
++++ b/drivers/net/wireless/ath/ath9k/virtual.c
+@@ -697,3 +697,55 @@ void ath9k_set_wiphy_idle(struct ath_wiphy *aphy, bool idle)
+ 		  wiphy_name(aphy->hw->wiphy),
+ 		  idle ? "idle" : "not-idle");
+ }
++/* Only bother starting a queue on an active virtual wiphy */
++void ath_mac80211_start_queue(struct ath_softc *sc, u16 skb_queue)
++{
++	struct ieee80211_hw *hw = sc->pri_wiphy->hw;
++	unsigned int i;
++
++	spin_lock_bh(&sc->wiphy_lock);
++
++	/* Start the primary wiphy */
++	if (sc->pri_wiphy->state == ATH_WIPHY_ACTIVE) {
++		ieee80211_wake_queue(hw, skb_queue);
++		goto unlock;
++	}
++
++	/* Now start the secondary wiphy queues */
++	for (i = 0; i < sc->num_sec_wiphy; i++) {
++		struct ath_wiphy *aphy = sc->sec_wiphy[i];
++		if (!aphy)
++			continue;
++		if (aphy->state != ATH_WIPHY_ACTIVE)
++			continue;
++
++		hw = aphy->hw;
++		ieee80211_wake_queue(hw, skb_queue);
++		break;
++	}
++
++unlock:
++	spin_unlock_bh(&sc->wiphy_lock);
++}
++
++/* Go ahead and propagate information to all virtual wiphys, it won't hurt */
++void ath_mac80211_stop_queue(struct ath_softc *sc, u16 skb_queue)
++{
++	struct ieee80211_hw *hw = sc->pri_wiphy->hw;
++	unsigned int i;
++
++	spin_lock_bh(&sc->wiphy_lock);
++
++	/* Stop the primary wiphy */
++	ieee80211_stop_queue(hw, skb_queue);
++
++	/* Now stop the secondary wiphy queues */
++	for (i = 0; i < sc->num_sec_wiphy; i++) {
++		struct ath_wiphy *aphy = sc->sec_wiphy[i];
++		if (!aphy)
++			continue;
++		hw = aphy->hw;
++		ieee80211_stop_queue(hw, skb_queue);
++	}
++	spin_unlock_bh(&sc->wiphy_lock);
++}
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index f52295f..977bac5 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -915,9 +915,10 @@ int ath_tx_get_qnum(struct ath_softc *sc, int qtype, int haltype)
+ struct ath_txq *ath_test_get_txq(struct ath_softc *sc, struct sk_buff *skb)
+ {
+ 	struct ath_txq *txq = NULL;
++	u16 skb_queue = skb_get_queue_mapping(skb);
+ 	int qnum;
+ 
+-	qnum = ath_get_hal_qnum(skb_get_queue_mapping(skb), sc);
++	qnum = ath_get_hal_qnum(skb_queue, sc);
+ 	txq = &sc->tx.txq[qnum];
+ 
+ 	spin_lock_bh(&txq->axq_lock);
+@@ -926,7 +927,7 @@ struct ath_txq *ath_test_get_txq(struct ath_softc *sc, struct sk_buff *skb)
+ 		ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_XMIT,
+ 			  "TX queue: %d is full, depth: %d\n",
+ 			  qnum, txq->axq_depth);
+-		ieee80211_stop_queue(sc->hw, skb_get_queue_mapping(skb));
++		ath_mac80211_stop_queue(sc, skb_queue);
+ 		txq->stopped = 1;
+ 		spin_unlock_bh(&txq->axq_lock);
+ 		return NULL;
+@@ -1705,8 +1706,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		 * on the queue */
+ 		spin_lock_bh(&txq->axq_lock);
+ 		if (sc->tx.txq[txq->axq_qnum].axq_depth > 1) {
+-			ieee80211_stop_queue(sc->hw,
+-				skb_get_queue_mapping(skb));
++			ath_mac80211_stop_queue(sc, skb_get_queue_mapping(skb));
+ 			txq->stopped = 1;
+ 		}
+ 		spin_unlock_bh(&txq->axq_lock);
+@@ -1946,7 +1946,7 @@ static void ath_wake_mac80211_queue(struct ath_softc *sc, struct ath_txq *txq)
+ 	    sc->tx.txq[txq->axq_qnum].axq_depth <= (ATH_TXBUF - 20)) {
+ 		qnum = ath_get_mac80211_qnum(txq->axq_qnum, sc);
+ 		if (qnum != -1) {
+-			ieee80211_wake_queue(sc->hw, qnum);
++			ath_mac80211_start_queue(sc, qnum);
+ 			txq->stopped = 0;
+ 		}
+ 	}
+-- 
+1.6.5.2.143.g8cc62
 
