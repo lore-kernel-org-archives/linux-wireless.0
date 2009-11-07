@@ -1,131 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:31362 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752211AbZKHSdR (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:44020 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751968AbZKGOLn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 13:33:17 -0500
-Received: by ey-out-2122.google.com with SMTP id 25so36176eya.19
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 10:33:22 -0800 (PST)
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 8/9] rt2800: add eFuse EEPROM support code to rt2800lib
-Date: Sun, 8 Nov 2009 19:32:37 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <20091108133854.23584.86842.sendpatchset@localhost.localdomain> <200911081913.49917.bzolnier@gmail.com> <200911081927.30754.IvDoorn@gmail.com>
-In-Reply-To: <200911081927.30754.IvDoorn@gmail.com>
+	Sat, 7 Nov 2009 09:11:43 -0500
+Received: by bwz27 with SMTP id 27so2066234bwz.21
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2009 06:11:48 -0800 (PST)
 MIME-Version: 1.0
-Message-Id: <200911081932.37575.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
+In-Reply-To: <200911021522.38842.mb@bu3sch.de>
+References: <4888b8cb0911010451w3e824921ob5ee6b7aae5b728b@mail.gmail.com>
+	<69e28c910911020326m67797910ub1df048d8dd3eb7e@mail.gmail.com>
+	<4888b8cb0911020557m226d8bccx36da7949459369f@mail.gmail.com>
+	<200911021522.38842.mb@bu3sch.de>
+From: Thomas Wiecki <thomas.wiecki@googlemail.com>
+Date: Sat, 7 Nov 2009 15:11:25 +0100
+Message-ID: <4888b8cb0911070611j365f2fa7ldde193bfde37f6e3@mail.gmail.com>
+Subject: Re: b43 with 14e4 gives DMA error
+To: Michael Buesch <mb@bu3sch.de>
+Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 08 November 2009 19:27:30 Ivo van Doorn wrote:
-> On Sunday 08 November 2009, Bartlomiej Zolnierkiewicz wrote:
-> > On Sunday 08 November 2009 19:08:23 Ivo van Doorn wrote:
-> > > On Sunday 08 November 2009, Bartlomiej Zolnierkiewicz wrote:
-> > > > On Sunday 08 November 2009 14:55:59 Ivo van Doorn wrote:
-> > > > > On Sunday 08 November 2009, Bartlomiej Zolnierkiewicz wrote:
-> > > > > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > > > > Subject: [PATCH] rt2800: add eFuse EEPROM support code to rt2800lib
-> > > > > > 
-> > > > > > eFuse EEPROM is used also by USB chips (i.e. RT3070)
-> > > > > > so move the needed code from rt2800pci to rt2800lib.
-> > > > > > 
-> > > > > > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > > > > ---
-> > > > > >  drivers/net/wireless/rt2x00/rt2800.h    |   29 +++++++++++++++++++++
-> > > > > >  drivers/net/wireless/rt2x00/rt2800lib.c |   43 ++++++++++++++++++++++++++++++++
-> > > > > >  drivers/net/wireless/rt2x00/rt2800lib.h |    2 +
-> > > > > >  drivers/net/wireless/rt2x00/rt2800pci.c |   38 ++--------------------------
-> > > > > >  drivers/net/wireless/rt2x00/rt2800pci.h |   29 ---------------------
-> > > > > >  5 files changed, 77 insertions(+), 64 deletions(-)
-> > > > > 
-> > > > > 
-> > > > > > ===================================================================
-> > > > > > --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> > > > > > +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> > > > > > @@ -147,44 +147,12 @@ static void rt2800pci_read_eeprom_pci(st
-> > > > > >  
-> > > > > >  static int rt2800pci_efuse_detect(struct rt2x00_dev *rt2x00dev)
-> > > > > >  {
-> > > > > > -	u32 reg;
-> > > > > > -
-> > > > > > -	rt2800_register_read(rt2x00dev, EFUSE_CTRL, &reg);
-> > > > > > -
-> > > > > > -	return rt2x00_get_field32(reg, EFUSE_CTRL_PRESENT);
-> > > > > > +	return rt2800_efuse_detect(rt2x00dev);
-> > > > > >  }
-> > > > > 
-> > > > > It would be better to fix all calls to rt2800pci_efuse_detect to use rt2800_efuse_detect
-> > > > > rather then adding a special wrapper function for it.
-> > > > > 
-> > > > > > -static void rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
-> > > > > > +static inline void rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
-> > > > > >  {
-> > > > > > -	unsigned int i;
-> > > > > > -
-> > > > > > -	for (i = 0; i < EEPROM_SIZE / sizeof(u16); i += 8)
-> > > > > > -		rt2800pci_efuse_read(rt2x00dev, i);
-> > > > > > +	rt2800_read_eeprom_efuse(rt2x00dev);
-> > > > > >  }
-> > > > > 
-> > > > > Same here.
-> > > > 
-> > > > Could you please explain some more what do you mean by that?
-> > > > (Please note that we have an extra SOC handling in rt2800pci.c.)
-> > > 
-> > > Your changes made the following 2 functions:
-> > > 
-> > > int rt2800pci_efuse_detect(struct rt2x00_dev *rt2x00dev)
-> > > {
-> > > 	return rt2800_efuse_detect(rt2x00dev);
-> > > }
-> > > 
-> > > void rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
-> > > {
-> > > 	rt2800_read_eeprom_efuse(rt2x00dev);
-> > > }
-> > > 
-> > > So why do we need rt2800pci_* versions in this case? They simply wrap
-> > > the rt2800 library function without providing anything extra...
-> > 
-> > Please go read the original code..
-> > 
-> > #ifdef CONFIG_RT2800PCI_PCI
-> > ...
-> > [ the code quoted in your mail ]
-> > ...
-> > #else
-> > static inline void rt2800pci_read_eeprom_pci(struct rt2x00_dev *rt2x00dev)
-> > {
-> > }
-> > 
-> > static inline void rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
-> > {
-> > }
-> > #endif /* CONFIG_RT2800PCI_PCI */
-> > 
-> > [ #else is for CONFIG_RT2800PCI_WISOC ]
-> 
-> True, but rt2800pci_read_eeprom_efuse() has no WISOC counterpart,
-> the fact that it is compiled into rt2x00lib without any restriction makes
-> the ifdef statements in the rt2800pci obsolete.
+Don't know if I did it right, let me know if there is anything else
+you need. Here is kern.log (I added CONFIG_B43_DEBUG to config.mk,
+also, I am running compat-wireless-2009-11-07 -- I also tried most
+recent wireless-testing, however, with the same result):
 
-Not really.  Please note that driver's behavior WRT WISOC is preserved.
+Nov  7 15:01:30 lateralus kernel: [  101.013386] cfg80211: Calling
+CRDA to update world regulatory domain
+Nov  7 15:01:30 lateralus kernel: [  101.117855] b43-pci-bridge
+0000:0c:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+Nov  7 15:01:30 lateralus kernel: [  101.117878] b43-pci-bridge
+0000:0c:00.0: setting latency timer to 64
+Nov  7 15:01:30 lateralus kernel: [  101.184603] ssb: Sonics Silicon
+Backplane found on PCI device 0000:0c:00.0
+Nov  7 15:01:30 lateralus kernel: [  101.222674] cfg80211: World
+regulatory domain updated:
+Nov  7 15:01:30 lateralus kernel: [  101.222683]        (start_freq -
+end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+Nov  7 15:01:30 lateralus kernel: [  101.222691]        (2402000 KHz -
+2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+Nov  7 15:01:30 lateralus kernel: [  101.222697]        (2457000 KHz -
+2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+Nov  7 15:01:30 lateralus kernel: [  101.222704]        (2474000 KHz -
+2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+Nov  7 15:01:30 lateralus kernel: [  101.222710]        (5170000 KHz -
+5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+Nov  7 15:01:30 lateralus kernel: [  101.222716]        (5735000 KHz -
+5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+Nov  7 15:01:30 lateralus kernel: [  101.237106] b43-phy0: Broadcom
+4312 WLAN found (core revision 15)
+Nov  7 15:01:30 lateralus kernel: [  101.331600] phy0: Selected rate
+control algorithm 'minstrel'
+Nov  7 15:01:30 lateralus kernel: [  101.332296] Registered led
+device: b43-phy0::tx
+Nov  7 15:01:30 lateralus kernel: [  101.332309] Registered led
+device: b43-phy0::rx
+Nov  7 15:01:30 lateralus kernel: [  101.332322] Registered led
+device: b43-phy0::radio
+Nov  7 15:01:30 lateralus kernel: [  101.332368] Broadcom 43xx driver
+loaded [ Features: PML, Firmware-ID: FW13 ]
+Nov  7 15:01:30 lateralus kernel: [  101.424508] b43 ssb0:0: firmware:
+requesting b43/ucode15.fw
+Nov  7 15:01:31 lateralus kernel: [  101.657129] b43 ssb0:0: firmware:
+requesting b43/lp0initvals15.fw
+Nov  7 15:01:31 lateralus kernel: [  101.667660] b43 ssb0:0: firmware:
+requesting b43/lp0bsinitvals15.fw
+Nov  7 15:01:31 lateralus kernel: [  101.820518] b43-phy0: Loading
+firmware version 478.104 (2008-07-01 00:50:23)
+Nov  7 15:01:37 lateralus kernel: [  107.761441] b43-phy0 ERROR: Fatal
+DMA error: 0x00000400, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+0x00000000
+Nov  7 15:01:37 lateralus kernel: [  107.761457] b43-phy0: Controller
+RESET (DMA error) ...
+Nov  7 15:01:37 lateralus kernel: [  107.992539] b43-phy0: Loading
+firmware version 478.104 (2008-07-01 00:50:23)
+Nov  7 15:01:42 lateralus kernel: [  113.617348] b43-phy0: Controller restarted
 
-> The purpose of the defines was to keep the EFUSE code out of the driver
-> on embedded systems. So either rt2800lib should do the same with ifdefs
-> in the rt2800lib.c and rt2800lib.h files, or we don't need the efuse specific
-> wrappers in rt2800pci.c.
-
-Said wrappers predate all of my rt2800 patches.
-
-I think that they shouldn't have been added in the first place and I'll be
-happy to add patch removing them to rt2800 tree (since code savings seem to
-be really marginal and not worth the maintenance cost). 
-
-Thanks.
--- 
-Bartlomiej Zolnierkiewicz
+On Mon, Nov 2, 2009 at 3:22 PM, Michael Buesch <mb@bu3sch.de> wrote:
+> Can we have a full kernel log with b43 debugging enabled, please? (CONFIG_B43_DEBUG)
+>
+> --
+> Greetings, Michael.
+>
