@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from stinky.trash.net ([213.144.137.162]:32835 "EHLO
-	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751539AbZKYQmt (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56140 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752825AbZKGUTC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 11:42:49 -0500
-Message-ID: <4B0D5E8D.2070408@trash.net>
-Date: Wed, 25 Nov 2009 17:42:53 +0100
-From: Patrick McHardy <kaber@trash.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: RFC: mac80211: add ethtool support
-References: <4B0D58EA.8060304@trash.net>	 <1259166692.32372.13.camel@johannes.local>  <4B0D5C8F.3040005@trash.net> <1259167010.32372.14.camel@johannes.local>
-In-Reply-To: <1259167010.32372.14.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-15
+	Sat, 7 Nov 2009 15:19:02 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	mcgrof@gmail.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 21/29] ath5k: remove double cache alignment, ath_rxbuf_alloc() already does it
+Date: Sat,  7 Nov 2009 15:18:58 -0500
+Message-Id: <1257625146-17971-22-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
+References: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Wed, 2009-11-25 at 17:34 +0100, Patrick McHardy wrote:
->> Johannes Berg wrote:
->>> On Wed, 2009-11-25 at 17:18 +0100, Patrick McHardy wrote:
->>>>     mac80211: add ethtool support
->>>>     
->>>>     Add ethtool support and add a drvname field to struct ieee80211_ops, which is
->>>>     used for ethtool driver information. This is useful with multiple different
->>>>     wireless cards to find out which device is using which driver.
->>>>     
->>> I thought we _had_ ethtool support via cfg80211?!
->> Mhh good point :) For some reason it didn't show any information, but
->> that might have been a mistake on my part. I'll give it another shot :)
-> 
-> It probably won't show the driver name because we haven't pushed that
-> through in any way?
+ath5k is using the (csz - 1) twice as ath_rxbuf_alloc() already allocates
+and moves skb->data accordingly. Remove the extra (csz -1).
 
-Its actually showing:
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-# ethtool -i wlan0
-Cannot get driver information: Operation not supported
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 31d556a..c7fc13c 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1185,12 +1185,12 @@ struct sk_buff *ath5k_rx_skb_alloc(struct ath5k_softc *sc, dma_addr_t *skb_addr)
+ 	 * fake physical layer header at the start.
+ 	 */
+ 	skb = ath_rxbuf_alloc(common,
+-			      common->rx_bufsize + common->cachelsz - 1,
++			      common->rx_bufsize,
+ 			      GFP_ATOMIC);
+ 
+ 	if (!skb) {
+ 		ATH5K_ERR(sc, "can't alloc skbuff of size %u\n",
+-				common->rx_bufsize + common->cachelsz - 1);
++				common->rx_bufsize);
+ 		return NULL;
+ 	}
+ 
+-- 
+1.6.5.2.143.g8cc62
 
-which shouldn't happen, since the callback is defined. I'll
-have a closer look at this.
