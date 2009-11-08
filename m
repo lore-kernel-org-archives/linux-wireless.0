@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:57140 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752610AbZK3RLM (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:32787 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752005AbZKHNvj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2009 12:11:12 -0500
-Date: Mon, 30 Nov 2009 18:11:18 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 01/12] mwl8k: fix MCS bitmap size in SET_RATE command
-Message-ID: <20091130171118.GD20214@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 8 Nov 2009 08:51:39 -0500
+Received: by mail-ew0-f207.google.com with SMTP id 3so2376683ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 05:51:45 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 3/9] rt2800pci: add missing RF values to rf_vals table
+Date: Sun, 8 Nov 2009 14:51:43 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+References: <20091108133854.23584.86842.sendpatchset@localhost.localdomain> <20091108133909.23584.32892.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091108133909.23584.32892.sendpatchset@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911081451.43639.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The MCS bitmaps in the SET_RATE command structure were of the wrong
-size, due to use of the wrong define for the array length.  Just
-hardcode the lengths as 16, and do the same for the MCS bitmaps in
-other command structures.
+On Sunday 08 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2800pci: add missing RF values to rf_vals table
+> 
+> rt2800pci's rf_vals[] copy was missing values for some channels.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 9e64dd4..7b136e7 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -634,7 +634,6 @@ struct ewc_ht_info {
- #define MWL8K_PEER_TYPE_ACCESSPOINT	2
- 
- #define MWL8K_IEEE_LEGACY_DATA_RATES	13
--#define MWL8K_MCS_BITMAP_SIZE		16
- 
- struct peer_capability_info {
- 	/* Peer type - AP vs. STA.  */
-@@ -655,7 +654,7 @@ struct peer_capability_info {
- 	__u8	legacy_rates[MWL8K_IEEE_LEGACY_DATA_RATES];
- 
- 	/* HT rate table. Intersection of our rates and peer rates.  */
--	__u8	ht_rates[MWL8K_MCS_BITMAP_SIZE];
-+	__u8	ht_rates[16];
- 	__u8	pad[16];
- 
- 	/* If set, interoperability mode, no proprietary extensions.  */
-@@ -2638,8 +2637,8 @@ struct mwl8k_cmd_update_rateset {
- 	__u8	legacy_rates[MWL8K_RATE_INDEX_MAX_ARRAY];
- 
- 	/* Bitmap for supported MCS codes.  */
--	__u8	mcs_set[MWL8K_IEEE_LEGACY_DATA_RATES];
--	__u8	reserved[MWL8K_IEEE_LEGACY_DATA_RATES];
-+	__u8	mcs_set[16];
-+	__u8	reserved[16];
- } __attribute__((packed));
- 
- static int mwl8k_update_rateset(struct ieee80211_hw *hw,
--- 
-1.5.6.4
+> ---
+>  drivers/net/wireless/rt2x00/rt2800pci.c |    4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
+> ===================================================================
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -1158,6 +1158,10 @@ static const struct rf_channel rf_vals[]
+>  	{ 159, 0x18402ec4, 0x184c038e, 0x18178a55, 0x180ed1a7 },
+>  	{ 161, 0x18402ec4, 0x184c0392, 0x18178a55, 0x180ed187 },
+>  	{ 165, 0x18402ec4, 0x184c0392, 0x18178a55, 0x180ed197 },
+> +	{ 167, 0x18402ec4, 0x184c03d2, 0x18179855, 0x1815531f },
+> +	{ 169, 0x18402ec4, 0x184c03d2, 0x18179855, 0x18155327 },
+> +	{ 171, 0x18402ec4, 0x184c03d6, 0x18179855, 0x18155307 },
+> +	{ 173, 0x18402ec4, 0x184c03d6, 0x18179855, 0x1815530f },
+>  
+>  	/* 802.11 Japan */
+>  	{ 184, 0x15002ccc, 0x1500491e, 0x1509be55, 0x150c0a0b },
+> 
+
+
