@@ -1,74 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:49068 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751813AbZKAJar (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:31710 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752831AbZKHR7W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Nov 2009 04:30:47 -0500
-Date: Sun, 1 Nov 2009 11:30:48 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211_hwsim: Check idle state on TX
-Message-ID: <20091101093048.GA1058@jm.kir.nu>
+	Sun, 8 Nov 2009 12:59:22 -0500
+Received: by ey-out-2122.google.com with SMTP id 25so32270eya.19
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 09:59:27 -0800 (PST)
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: [PATCH] rt2x00: fix build of rt2800lib
+Date: Sun, 8 Nov 2009 18:31:43 +0100
+Cc: IvDoorn@gmail.com, gwingerde@gmail.com,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <1257682021-23810-1-git-send-email-hauke@hauke-m.de> <200911081325.23424.bzolnier@gmail.com> <4AF6C74A.4020208@hauke-m.de>
+In-Reply-To: <4AF6C74A.4020208@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-Id: <200911081831.43381.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Track the idle state for hwsim radios and reject TX if mac80211 is
-trying to transmit something when the radio is supposed to be idle. In
-addition, do not deliver frames if the receiving radio is in the idle
-state.
+On Sunday 08 November 2009 14:27:38 Hauke Mehrtens wrote:
+> Hi,
+> 
+> I am building recent wireless-testing. Without my patch I get the
+> following error while compiling it with CONFIG_RT2800USB=y with
+> CONFIG_RT2800USB=m it compiles fine without any modifications. Looks
+> like there is an other problem and my patch does not fix the real problem.
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
+I've reproduced it here and your patch is fine but it would be better
+if rt2x00usb.h would include <linux/usb.h> itself instead of depending on
+its users (device drivers) but I'll leave this decision up to Ivo/Gartjan.
 
----
- drivers/net/wireless/mac80211_hwsim.c |   13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+I've fixed the issue in the patch introducing the problem ("rt2800: add
+rt2800lib (part three)") to preserve bisectability of rt2800usb driver.
 
---- uml.orig/drivers/net/wireless/mac80211_hwsim.c	2009-10-01 17:06:49.000000000 +0300
-+++ uml/drivers/net/wireless/mac80211_hwsim.c	2009-10-01 17:22:15.000000000 +0300
-@@ -284,7 +284,7 @@ struct mac80211_hwsim_data {
- 	struct ieee80211_channel *channel;
- 	unsigned long beacon_int; /* in jiffies unit */
- 	unsigned int rx_filter;
--	int started;
-+	bool started, idle;
- 	struct timer_list beacon_timer;
- 	enum ps_mode {
- 		PS_DISABLED, PS_ENABLED, PS_AUTO_POLL, PS_MANUAL_POLL
-@@ -402,6 +402,12 @@ static bool mac80211_hwsim_tx_frame(stru
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_rx_status rx_status;
- 
-+	if (data->idle) {
-+		printk(KERN_DEBUG "%s: Trying to TX when idle - reject\n",
-+		       wiphy_name(hw->wiphy));
-+		return false;
-+	}
-+
- 	memset(&rx_status, 0, sizeof(rx_status));
- 	/* TODO: set mactime */
- 	rx_status.freq = data->channel->center_freq;
-@@ -428,7 +434,8 @@ static bool mac80211_hwsim_tx_frame(stru
- 		if (data == data2)
- 			continue;
- 
--		if (!data2->started || !hwsim_ps_rx_ok(data2, skb) ||
-+		if (data2->idle || !data2->started ||
-+		    !hwsim_ps_rx_ok(data2, skb) ||
- 		    !data->channel || !data2->channel ||
- 		    data->channel->center_freq != data2->channel->center_freq ||
- 		    !(data->group & data2->group))
-@@ -571,6 +578,8 @@ static int mac80211_hwsim_config(struct 
- 	       !!(conf->flags & IEEE80211_CONF_IDLE),
- 	       !!(conf->flags & IEEE80211_CONF_PS));
- 
-+	data->idle = !!(conf->flags & IEEE80211_CONF_IDLE);
-+
- 	data->channel = conf->channel;
- 	if (!data->started || !data->beacon_int)
- 		del_timer(&data->beacon_timer);
-
+Thanks.
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Bartlomiej Zolnierkiewicz
