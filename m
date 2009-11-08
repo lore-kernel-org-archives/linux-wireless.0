@@ -1,51 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:46271 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755747AbZKIXri (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:44786 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753946AbZKHOUs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 18:47:38 -0500
-Received: by mail-ew0-f207.google.com with SMTP id 3so3717715ewy.37
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 15:47:44 -0800 (PST)
-From: Rui Paulo <rpaulo@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Rui Paulo <rpaulo@gmail.com>,
-	Javier Cardona <javier@cozybit.com>
-Subject: [PATCH v2 16/20] mac80211: add the DS params to the beacon
-Date: Mon,  9 Nov 2009 23:46:54 +0000
-Message-Id: <1257810418-30075-17-git-send-email-rpaulo@gmail.com>
-In-Reply-To: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
-References: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
+	Sun, 8 Nov 2009 09:20:48 -0500
+Received: by ey-out-2122.google.com with SMTP id 25so8024eya.19
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 06:20:52 -0800 (PST)
+Message-ID: <4AF6D3C2.4020703@gmail.com>
+Date: Sun, 08 Nov 2009 15:20:50 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+CC: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 4/9] rt2800usb: reorganize code in rt2800usb_probe_hw_mode()
+References: <20091108133854.23584.86842.sendpatchset@localhost.localdomain> <20091108133916.23584.20632.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091108133916.23584.20632.sendpatchset@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rui Paulo <rpaulo@gmail.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
-Tested-by: Brian Cavagnolo <brian@cozybit.com>
----
- net/mac80211/mesh.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+On 11/08/09 14:39, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2800usb: reorganize code in rt2800usb_probe_hw_mode()
+> 
+> Move hw_mode information initialization code block before
+> HT information initialization one to match the ordering used
+> by rt2800pci's rt2800pci_probe_hw_mode().
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 63427d9..222a313 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -247,6 +247,13 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- 		}
- 	}
- 
-+	if (sband->band == IEEE80211_BAND_2GHZ) {
-+		pos = skb_put(skb, 2 + 1);
-+		*pos++ = WLAN_EID_DS_PARAMS;
-+		*pos++ = 1;
-+		*pos++ = ieee80211_frequency_to_channel(local->hw.conf.channel->center_freq);
-+	}
-+
- 	pos = skb_put(skb, 2 + sdata->u.mesh.mesh_id_len);
- 	*pos++ = WLAN_EID_MESH_ID;
- 	*pos++ = sdata->u.mesh.mesh_id_len;
--- 
-1.5.6.5
-
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
