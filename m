@@ -1,67 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48329 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772AbZKRKxT (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:39497 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753206AbZKHP1n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 05:53:19 -0500
-Subject: Re: [RFC v2] mac80211: disallow bridging managed/adhoc interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Stefan Monnier <monnier@iro.umontreal.ca>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <20091118025920.GA4588@tuxdriver.com>
-References: <1258465585.3682.7.camel@johannes.local>
-	 <1258490898.21197.42.camel@johannes.local>
-	 <jwvy6m4bnqp.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
-	 <20091118025920.GA4588@tuxdriver.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-VU7yDuZK0OV6yxIzUikD"
-Date: Wed, 18 Nov 2009 11:52:49 +0100
-Message-ID: <1258541569.30511.6.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 8 Nov 2009 10:27:43 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH v2] rt2x00: Update copyright statements.
+Date: Sun, 8 Nov 2009 16:26:28 +0100
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+References: <1257692976-2036-1-git-send-email-gwingerde@gmail.com> <200911081622.07678.IvDoorn@gmail.com>
+In-Reply-To: <200911081622.07678.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Message-Id: <200911081626.28320.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sunday 08 November 2009 16:22:07 Ivo van Doorn wrote:
+> On Sunday 08 November 2009, Gertjan van Wingerde wrote:
+> > As mentioned on the linux-wireless mailing list, the current copyright statements in the rt2x00 are
+> > meaningless, as the rt2x00 project is not even a formal legal entity. Therefore it is better to replace
+> > the existing copyright statements with copyright statements for the people that actually wrote the code.
+> > 
+> > Note: Updated to the best of my knowledge with respect to who contributed considerable amounts of code.
+> > 
+> > Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> > CC: Ivo van Doorn <IvDoorn@gmail.com>
+> > CC: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 
+> Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
---=-VU7yDuZK0OV6yxIzUikD
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+NAK, stop trying to reverse the history.
 
-On Tue, 2009-11-17 at 21:59 -0500, John W. Linville wrote:
+Just replace rt2x00 claims with personal ones without moving
+"based on" around.
 
-> > As someone who's been bitten by this, I fully support this change.
-> > Still, it makes me wonder: my broadcom-based home-router using the wl.o
-> > driver can be set in "client bridge" mode.  How does it work?
->=20
-> If I'm not mistaken, that has a bunch of code embedded in it that
-> among other things can do a layer-2 version of NAT to rewrite the
-> MAC adresses for frames on the air.
-
-Yeah, that's how it works. You can probably achieve the same effect with
-the ebtable_nat module in ebtables but I've never even attempted to try
-that.
-
-johannes
-
---=-VU7yDuZK0OV6yxIzUikD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLA9H+AAoJEODzc/N7+QmaoMEP/2fgsrNYENPFT2tobU932a3d
-OyD5uhJv8+LIQoHLyXclz1pl3jKImpKlNrBFMdh6O+c2RSbIlgGsqRN3JUp8E+gM
-FmAUDbT55ONrhgeamGAduwHYnuoYSNhbXZF2J4poRhn0JGxAlt7lcBzBhoWmtJJ4
-5r+2Vp4oTSkp+P4FAHDSOd8XddWDaQT/taaHXbCDuJmyi70mKKFYoZzx8KhcUuw3
-sW6lHNCV1HqMy4AS1GwA9WCFoba2jELOFhV/Xeqn4TLbqVr4ecG3a2bypAnbX0pt
-joEbTqNAshUy06G6e5s2lA9JgKD3qZtewv86Lt4OyTpQda+ELlWGUJMjBt4SKm8O
-DWfhM77+TsEWdcXsLaY1m/9b28DcgkzBFUm8uncl+3ajPMuW6ZNf1bTHBXosyBwR
-KckZqWKYHzp2ZiKgXuLUGSOvmlPM5VwxO5HGdqJ5PRFjdA91YM0E6kWaSd02KhkE
-9WqW5GZn7ReKZbq+QFHP56hJmkX3noY8+bpkP8Ke+ErnbeYphuoUecI9/w7ur55K
-m3DNq39J/3e9lZpi+IRif1VUOAR5wwmkWSTQ3NVbzrHzuxeJROiZOvQIq59ihQhr
-ll5KWWA7ybYEV5O5TJeYgoWbzCULigiJzgphqsOTV19CARYiHEixnNWigGEmw/mA
-yIq81C8cNV5Rfr+DPj9o
-=m0cB
------END PGP SIGNATURE-----
-
---=-VU7yDuZK0OV6yxIzUikD--
-
+> > diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> > index 5c7d74a..aed72a9 100644
+> > --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> > +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> > @@ -1,10 +1,15 @@
+> >  /*
+> > -	Copyright (C) 2009 Bartlomiej Zolnierkiewicz
+> > -
+> > -	Based on the original rt2800pci.c and rt2800usb.c:
+> > -
+> > -	  Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
+> > -	  <http://rt2x00.serialmonkey.com>
+> > +	Copyright (C) 2009 Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > +	Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>
+> > +	Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>
+> > +	Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
+> > +	Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>
+> > +	Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
+> > +	Copyright (C) 2009 Mark Asselstine <asselsm@gmail.com>
+> > +	Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
+> > +	<http://rt2x00.serialmonkey.com>
+> > +
+> > +	Based on the original rt2800pci.c and rt2800usb.c.
+> >  
+> >  	This program is free software; you can redistribute it and/or modify
+> >  	it under the terms of the GNU General Public License as published by
