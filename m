@@ -1,72 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f42.google.com ([209.85.160.42]:41363 "EHLO
-	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752926AbZKCIWB (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:51475 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752232AbZKHR7V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 03:22:01 -0500
-Date: Tue, 3 Nov 2009 00:22:02 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	David Miller <davem@davemloft.net>,
-	torvalds@linux-foundation.org, linville@tuxdriver.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Please consider reverting
-	7d930bc33653d5592dc386a76a38f39c2e962344
-Message-ID: <20091103082201.GG3212@core.coreip.homeip.net>
-References: <20091103053156.GA3212@core.coreip.homeip.net> <20091102.224957.32364226.davem@davemloft.net> <20091103065238.GE3212@core.coreip.homeip.net> <1257232587.3420.55.camel@localhost.localdomain> <1257234299.28469.25.camel@johannes.local>
+	Sun, 8 Nov 2009 12:59:21 -0500
+Received: by ey-out-2122.google.com with SMTP id 25so32267eya.19
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 09:59:26 -0800 (PST)
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH] rt2x00: Mark rt2800pci as broken.
+Date: Sun, 8 Nov 2009 18:20:18 +0100
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+References: <1257679734-25160-1-git-send-email-gwingerde@gmail.com> <200911081338.34697.bzolnier@gmail.com>
+In-Reply-To: <200911081338.34697.bzolnier@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1257234299.28469.25.camel@johannes.local>
+Message-Id: <200911081820.18251.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 03, 2009 at 08:44:59AM +0100, Johannes Berg wrote:
-> On Tue, 2009-11-03 at 16:16 +0900, Marcel Holtmann wrote:
-> 
-> > and can we please stop jumping the gun here and going past the subsystem
-> > maintainers. I think this happens a little bit too much lately.
-> 
-> I'll rant a bit too -- I've been very annoyed by this many times. Note
-> this isn't really against you (Dmitry) in particular, just another
-> case ... but it does tick me off that many times when somebody manages
-> to blame a failure on a specific commit the first thing they do is ask
-> somebody way "above" (in terms of patch flow into mainline) the person
-> writing the patch (like Linus here) to revert it.
-> 
+On Sunday 08 November 2009 13:38:34 Bartlomiej Zolnierkiewicz wrote:
 
-I do not understand what the fuss is about. We are pretty far in release
-process (rc6 is about to be cut I'd expect) and we have an issue that
-for all practical purposes kills the box on resume. Yes, I want action
-to be swift in this case and (unless author or maintainer - who were
-CCed on the email - have otehr solutiuon) the offending commit to be
-reverted. If it was rc1 or rc2 or 3 I'd feel differently.
-
-> It'd help communication and be so much more friendly if the subject was
-> "found problem with commit ..." instead of "please consider
-> reverting ..." (which was comparatively friendly already!). You can even
-> leave the body almost identical, but I think it's presumptuous to
-> effectively say "hey I know the solution for the problem already".
-
-Not at all. I do know the solution since reverting this commit makes by
-laptop operable again. It may not be the best solution in the long run
-but a solution nonetheless.
-
-> I'll
-> venture a guess and say that wasn't even the intent, but it certainly
-> comes across like that if you write an email with this subject, and
-> start the body with "Hi Linus," not even addressing the patch author,
-> just adding them to CC out of courtesy.
+> On Sunday 08 November 2009 12:28:54 Gertjan van Wingerde wrote:
+> > The rt2800pci driver is currently only marked as experimental, and only the help text explains that
+> > the driver is basically non-functional. Make the driver depend on CONFIG_BROKEN so that users cannot
+> > enable this driver without knowing that it is broken.
+> > 
+> > Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 > 
-> Should I think this is accepted practice?
+> > @@ -78,9 +78,6 @@ config RT2800PCI
+> >  	  This adds support for rt2800 wireless chipset family.
+> >  	  Supported chips: RT2760, RT2790, RT2860, RT2880, RT2890 & RT3052
+> >  
+> > -	  This driver is non-functional at the moment and is intended for
+> > -	  developers.
+> > -
+> >  	  When compiled as a module, this driver will be called "rt2800pci.ko".
+> >  
+> >  config RT2500USB
 > 
+> This help text could have stayed, anyway..
+> 
+> Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Again, I do not see the problem here. We have a severe regression so
-yes, I am addressing Linus and asking him to consider reverting bad
-commit. I also CCing the author and the wireless maintainer so they
-can object if they have alternative solution. If the problem was in a
-single driver I might consider doing it differenty but I think this
-commit affects many wireless drivers.
+It turned out that CONFIG_BROKEN is no longer an user visible option so by
+applying this change we would lose the advantage of having the upstream build
+testing and early detection of breakages related to upstream API updates.
+
+[ I've just noticed now that rt2800pci was no longer included in the build
+  and dropped the patch from rt2800 tree. ]
 
 -- 
-Dmitry
+Bartlomiej Zolnierkiewicz
