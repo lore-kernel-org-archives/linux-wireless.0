@@ -1,29 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:36903 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753328AbZKFSbN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 13:31:13 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Martin Fuzzey <mfuzzey@gmail.com>
-Subject: Re: b43: firmware loading problem and sleeping BUG
-Date: Fri, 6 Nov 2009 19:31:13 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <ba4215e10911060819y1175e003g695281fe084e07ab@mail.gmail.com> <200911061822.17121.mb@bu3sch.de> <ba4215e10911061027t413d2c34g8ad66a7982f7c43c@mail.gmail.com>
-In-Reply-To: <ba4215e10911061027t413d2c34g8ad66a7982f7c43c@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200911061931.16509.mb@bu3sch.de>
+Received: from Cpsmtpm-eml107.kpnxchange.com ([195.121.3.11]:61900 "EHLO
+	CPSMTPM-EML107.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753934AbZKHLbS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Nov 2009 06:31:18 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH] rt2x00: Update MAINTAINERS
+Date: Sun,  8 Nov 2009 12:31:20 +0100
+Message-Id: <1257679880-25306-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 06 November 2009 19:27:17 Martin Fuzzey wrote:
-> [  109.690000] b43-phy0 ERROR: Firmware file "b43/pcm5.fw" format error.
+Add myself to the list of maintainers for the rt2x00 driver.
 
-> So any suggestions on figuring out what is going on?
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+To be applied on top of Ivo's patch to add himself to the list of maintainers.
+---
+ MAINTAINERS |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Your userspace firmware helper (I guess it's not udev on your device?)
-might be throwing crap at the kernel.
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 9292913..fbbda75 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -4329,6 +4329,7 @@ F:	drivers/video/aty/aty128fb.c
+ RALINK RT2X00 WIRELESS LAN DRIVER
+ P:	rt2x00 project
+ M:	Ivo van Doorn <IvDoorn@gmail.com>
++M:	Gertjan van Wingerde <gwingerde@gmail.com>
+ L:	linux-wireless@vger.kernel.org
+ L:	users@rt2x00.serialmonkey.com (moderated for non-subscribers)
+ W:	http://rt2x00.serialmonkey.com/
 -- 
-Greetings, Michael.
+1.6.5.2
+
