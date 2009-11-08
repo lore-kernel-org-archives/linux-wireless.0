@@ -1,36 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f42.google.com ([209.85.160.42]:34037 "EHLO
-	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760140AbZKZN5Q (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:62462 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750940AbZKHMuD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 08:57:16 -0500
-Received: by pwi3 with SMTP id 3so504667pwi.21
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2009 05:57:23 -0800 (PST)
+	Sun, 8 Nov 2009 07:50:03 -0500
+Received: by ey-out-2122.google.com with SMTP id 9so35106eyd.19
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 04:50:08 -0800 (PST)
+Message-ID: <4AF6BE7D.8060301@gmail.com>
+Date: Sun, 08 Nov 2009 13:50:05 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Date: Thu, 26 Nov 2009 21:57:22 +0800
-Message-ID: <d82e647a0911260557l5cf33449pe41f8902b6889891@mail.gmail.com>
-Subject: [question] ath9k: 11n monitor mode
-From: Ming Lei <tom.leiming@gmail.com>
-To: lrodriguez@atheros.com
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: Mark rt2800pci as broken.
+References: <1257679734-25160-1-git-send-email-gwingerde@gmail.com> <200911081338.34697.bzolnier@gmail.com>
+In-Reply-To: <200911081338.34697.bzolnier@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+On 11/08/09 13:38, Bartlomiej Zolnierkiewicz wrote:
+> 
+> [ This is against rt2800 tree right?  Cause I don't see any of my patches
+>   in public rt2x00 tree yet. ]
+> 
 
-I find the wireshark can only capture 11b/g packets but any 11n packets over
-my ar9283 card, and I can confirm I have set HT40+ to make it work in 11n mode.
+Actually, it is against wireless-testing.
 
-wireshark : 1.2.2
-kernel       : 2.6.32-rc6
-
-I don't know what is wrong with it, and could ath9k work well in monitor
-mode of 11n?  or other reason?
-
-Look forward to your reply.
-
-Thanks,
-
--- 
-Lei Ming
+---
+Gertjan
