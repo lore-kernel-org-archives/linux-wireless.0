@@ -1,71 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:42755 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756083AbZKIQcc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 11:32:32 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Greg KH <gregkh@suse.de>
-Subject: [PATCH] Staging: remove rtl8187se driver because of lack of development activities
-Date: Mon, 9 Nov 2009 17:31:36 +0100
-Cc: devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Message-Id: <200911091731.36861.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:35608 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755503AbZKHW1Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Nov 2009 17:27:25 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	philipp_subx@redfish-solutions.com
+Subject: [PATCH 1/4] Fix build problem, missing get_unaligned_le16
+Date: Sun,  8 Nov 2009 23:27:08 +0100
+Message-Id: <1257719231-2031-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1257719231-2031-1-git-send-email-hauke@hauke-m.de>
+References: <1257719231-2031-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] Staging: remove rtl8187se driver because of lack of development activities
+This patch fixes the "implicit declaration of function
+'get_unaligned_le16'" in drivers/net/wireless/libertas/assoc.c
 
-This driver hasn't seen any real development activities since early July:
-
-   257bc86   Staging: rtl8187se: remove unused #include <linu
-   2035beb   param:remove-useless-writable-charp
-   305409a   tree-wide: fix some typos and punctuation in com
-   b881c6c   Staging: fix wireless drivers depends
-   a010a33   Staging: rtl8187se/rtl8192e/rtl8192su: allow mod
-   125b181   staging: Add proper selection of WIRELESS_EXT an
-   b3184e1   Staging: rtl8187se: Fix comment-out-typo
-   b6ac161   Staging: ARRAY_SIZE changes
-
-so remove it for now.
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+CC: philipp_subx@redfish-solutions.com
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
-patch is too big for a mailing list so it can be obtained from:
-http://www.kernel.org/pub/linux/kernel/people/bart/staging-remove-rtl8187se-driver-because-of-lack-of-development-activities.patch
+ compat/patches/06-header-changes.patch |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
- drivers/staging/Kconfig                                    |    2 
- drivers/staging/rtl8187se/Kconfig                          |    7 
- drivers/staging/rtl8187se/Makefile                         |   39 
- drivers/staging/rtl8187se/TODO                             |   14 
- drivers/staging/rtl8187se/ieee80211/dot11d.c               |  224 
- drivers/staging/rtl8187se/ieee80211/dot11d.h               |  100 
- drivers/staging/rtl8187se/ieee80211/ieee80211.h            | 1496 ----
- drivers/staging/rtl8187se/ieee80211/ieee80211_crypt.c      |  247 
- drivers/staging/rtl8187se/ieee80211/ieee80211_crypt.h      |   86 
- drivers/staging/rtl8187se/ieee80211/ieee80211_crypt_ccmp.c |  469 -
- drivers/staging/rtl8187se/ieee80211/ieee80211_crypt_tkip.c |  753 --
- drivers/staging/rtl8187se/ieee80211/ieee80211_crypt_wep.c  |  295 
- drivers/staging/rtl8187se/ieee80211/ieee80211_module.c     |  210 
- drivers/staging/rtl8187se/ieee80211/ieee80211_rx.c         | 1548 ----
- drivers/staging/rtl8187se/ieee80211/ieee80211_softmac.c    | 3008 --------
- drivers/staging/rtl8187se/ieee80211/ieee80211_softmac_wx.c |  572 -
- drivers/staging/rtl8187se/ieee80211/ieee80211_tx.c         |  583 -
- drivers/staging/rtl8187se/ieee80211/ieee80211_wx.c         |  749 --
- drivers/staging/rtl8187se/r8180.h                          |  739 --
- drivers/staging/rtl8187se/r8180_93cx6.c                    |  146 
- drivers/staging/rtl8187se/r8180_93cx6.h                    |   57 
- drivers/staging/rtl8187se/r8180_core.c                     | 4467 -------------
- drivers/staging/rtl8187se/r8180_dm.c                       | 1667 ----
- drivers/staging/rtl8187se/r8180_dm.h                       |   23 
- drivers/staging/rtl8187se/r8180_hw.h                       |  573 -
- drivers/staging/rtl8187se/r8180_rtl8225.h                  |   34 
- drivers/staging/rtl8187se/r8180_rtl8225z2.c                | 1089 ---
- drivers/staging/rtl8187se/r8180_wx.c                       | 1589 ----
- drivers/staging/rtl8187se/r8180_wx.h                       |   21 
- drivers/staging/rtl8187se/r8185b_init.c                    | 2681 -------
- 30 files changed, 23488 deletions(-)
+diff --git a/compat/patches/06-header-changes.patch b/compat/patches/06-header-changes.patch
+index ee0be7f..14e544a 100644
+--- a/compat/patches/06-header-changes.patch
++++ b/compat/patches/06-header-changes.patch
+@@ -16,6 +16,18 @@ cases.
+  
+  struct b43_wldev;
+  
++--- a/drivers/net/wireless/libertas/assoc.c
+++++ b/drivers/net/wireless/libertas/assoc.c
++@@ -5,6 +5,9 @@
++ #include <linux/ieee80211.h>
++ #include <linux/if_arp.h>
++ #include <net/lib80211.h>
+++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
+++#include <asm/unaligned.h>
+++#endif
++ 
++ #include "assoc.h"
++ #include "decl.h"
+ --- a/drivers/net/wireless/wl12xx/wl1251_main.c	2009-08-07 11:42:12.532495607 -0700
+ +++ b/drivers/net/wireless/wl12xx/wl1251_main.c	2009-08-07 12:08:31.167548696 -0700
+ @@ -26,6 +26,9 @@
+-- 
+1.6.3.3
+
