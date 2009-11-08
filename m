@@ -1,221 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:34076 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754577AbZKIMlH (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:60717 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754134AbZKHPTQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 07:41:07 -0500
-Received: by fxm21 with SMTP id 21so157742fxm.21
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 04:41:12 -0800 (PST)
-From: Rui Paulo <rpaulo@gmail.com>
-To: linville@tuxdriver.com
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Rui Paulo <rpaulo@gmail.com>,
-	Javier Cardona <javier@cozybit.com>
-Subject: [PATCH 13/21] mac80211: update PERR frame format
-Date: Mon,  9 Nov 2009 12:39:33 +0000
-Message-Id: <1257770381-7680-14-git-send-email-rpaulo@gmail.com>
-In-Reply-To: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
-References: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
+	Sun, 8 Nov 2009 10:19:16 -0500
+Received: by ey-out-2122.google.com with SMTP id 25so14216eya.19
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 07:19:20 -0800 (PST)
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH v2] rt2x00: Update copyright statements.
+Date: Sun, 8 Nov 2009 16:18:00 +0100
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Ivo van Doorn <IvDoorn@gmail.com>
+References: <1257692976-2036-1-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1257692976-2036-1-git-send-email-gwingerde@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <200911081618.00917.bzolnier@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update the PERR IE frame format according to latest draft (3.03).
+On Sunday 08 November 2009 16:09:36 Gertjan van Wingerde wrote:
+> As mentioned on the linux-wireless mailing list, the current copyright statements in the rt2x00 are
+> meaningless, as the rt2x00 project is not even a formal legal entity. Therefore it is better to replace
+> the existing copyright statements with copyright statements for the people that actually wrote the code.
+> 
+> Note: Updated to the best of my knowledge with respect to who contributed considerable amounts of code.
+> 
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> CC: Ivo van Doorn <IvDoorn@gmail.com>
+> CC: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Signed-off-by: Rui Paulo <rpaulo@gmail.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
-Tested-by: Brian Cavagnolo <brian@cozybit.com>
----
- net/mac80211/mesh.h         |    9 +++++-
- net/mac80211/mesh_hwmp.c    |   58 ++++++++++++++++++++++++++++++++++++------
- net/mac80211/mesh_pathtbl.c |    6 +++-
- 3 files changed, 60 insertions(+), 13 deletions(-)
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 5c7d74a..aed72a9 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -1,10 +1,15 @@
+>  /*
+> -	Copyright (C) 2009 Bartlomiej Zolnierkiewicz
+> -
+> -	Based on the original rt2800pci.c and rt2800usb.c:
+> -
+> -	  Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
+> -	  <http://rt2x00.serialmonkey.com>
+> +	Copyright (C) 2009 Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> +	Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>
+> +	Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>
+> +	Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
+> +	Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>
+> +	Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
+> +	Copyright (C) 2009 Mark Asselstine <asselsm@gmail.com>
+> +	Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
+> +	<http://rt2x00.serialmonkey.com>
+> +
+> +	Based on the original rt2800pci.c and rt2800usb.c.
 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 2fd3e20..1d534c7 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -210,6 +210,11 @@ struct mesh_rmc {
- #define MESH_PATH_SEL_CATEGORY	32
- #define MESH_PATH_SEL_ACTION	0
- 
-+/* PERR reason codes */
-+#define PEER_RCODE_UNSPECIFIED  11
-+#define PERR_RCODE_NO_ROUTE     12
-+#define PERR_RCODE_DEST_UNREACH 13
-+
- /* Public interfaces */
- /* Various */
- int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
-@@ -275,8 +280,8 @@ void mesh_mpp_table_grow(void);
- u32 mesh_table_hash(u8 *addr, struct ieee80211_sub_if_data *sdata,
- 		struct mesh_table *tbl);
- /* Mesh paths */
--int mesh_path_error_tx(u8 *dest, __le32 dest_dsn, u8 *ra,
--		struct ieee80211_sub_if_data *sdata);
-+int mesh_path_error_tx(u8 ttl, u8 *dest, __le32 dest_dsn, __le16 dest_rcode,
-+		u8 *ra, struct ieee80211_sub_if_data *sdata);
- void mesh_path_assign_nexthop(struct mesh_path *mpath, struct sta_info *sta);
- void mesh_path_flush_pending(struct mesh_path *mpath);
- void mesh_path_tx_pending(struct mesh_path *mpath);
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 4525419..1499bfd 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -27,6 +27,10 @@
- #define MP_F_DO	0x1
- /* Reply and forward */
- #define MP_F_RF	0x2
-+/* Unknown Sequence Number */
-+#define MP_F_USN    0x01
-+/* Reason code Present */
-+#define MP_F_RCODE  0x02
- 
- static void mesh_queue_preq(struct mesh_path *, u8);
- 
-@@ -37,6 +41,13 @@ static inline u32 u32_field_get(u8 *preq_elem, int offset, bool ae)
- 	return get_unaligned_le32(preq_elem + offset);
- }
- 
-+static inline u32 u16_field_get(u8 *preq_elem, int offset, bool ae)
-+{
-+	if (ae)
-+		offset += 6;
-+	return get_unaligned_le16(preq_elem + offset);
-+}
-+
- /* HWMP IE processing macros */
- #define AE_F			(1<<6)
- #define AE_F_SET(x)		(*x & AE_F)
-@@ -63,8 +74,11 @@ static inline u32 u32_field_get(u8 *preq_elem, int offset, bool ae)
- #define PREP_IE_DST_ADDR(x)	(AE_F_SET(x) ? x + 27 : x + 21)
- #define PREP_IE_DST_DSN(x)	u32_field_get(x, 27, AE_F_SET(x));
- 
--#define PERR_IE_DST_ADDR(x)	(x + 2)
--#define PERR_IE_DST_DSN(x)	u32_field_get(x, 8, 0);
-+#define PERR_IE_TTL(x)		(*(x))
-+#define PERR_IE_DST_FLAGS(x)	(*(x + 2))
-+#define PERR_IE_DST_ADDR(x)	(x + 3)
-+#define PERR_IE_DST_DSN(x)	u32_field_get(x, 9, 0);
-+#define PERR_IE_DST_RCODE(x)	u16_field_get(x, 13, 0);
- 
- #define RANN_IE_FLAGS(x)	PREP_IE_FLAGS(x)
- #define RANN_IE_HOPCOUNT(x)	PREP_IE_HOPCOUNT(x)
-@@ -188,8 +202,8 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
-  * @dst_dsn: dsn of the broken destination
-  * @ra: node this frame is addressed to
-  */
--int mesh_path_error_tx(u8 *dst, __le32 dst_dsn, u8 *ra,
--		struct ieee80211_sub_if_data *sdata)
-+int mesh_path_error_tx(u8 ttl, u8 *dst, __le32 dst_dsn, __le16 dst_rcode,
-+		u8 *ra, struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400);
-@@ -214,17 +228,29 @@ int mesh_path_error_tx(u8 *dst, __le32 dst_dsn, u8 *ra,
- 	/* BSSID is left zeroed, wildcard value */
- 	mgmt->u.action.category = MESH_PATH_SEL_CATEGORY;
- 	mgmt->u.action.u.mesh_action.action_code = MESH_PATH_SEL_ACTION;
--	ie_len = 12;
-+	ie_len = 15;
- 	pos = skb_put(skb, 2 + ie_len);
- 	*pos++ = WLAN_EID_PERR;
- 	*pos++ = ie_len;
--	/* mode flags, reserved */
--	*pos++ = 0;
-+	/* ttl */
-+	*pos++ = MESH_TTL;
- 	/* number of destinations */
- 	*pos++ = 1;
-+	/*
-+	 * flags bit, bit 1 is unset if we know the sequence number and
-+	 * bit 2 is set if we have a reason code
-+	 */
-+	*pos = 0;
-+	if (!dst_dsn)
-+		*pos |= MP_F_USN;
-+	if (dst_rcode)
-+		*pos |= MP_F_RCODE;
-+	pos++;
- 	memcpy(pos, dst, ETH_ALEN);
- 	pos += ETH_ALEN;
- 	memcpy(pos, &dst_dsn, 4);
-+	pos += 4;
-+	memcpy(pos, &dst_rcode, 2);
- 
- 	ieee80211_tx_skb(sdata, skb, 1);
- 	return 0;
-@@ -605,13 +631,26 @@ fail:
- static void hwmp_perr_frame_process(struct ieee80211_sub_if_data *sdata,
- 			     struct ieee80211_mgmt *mgmt, u8 *perr_elem)
- {
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	struct mesh_path *mpath;
-+	u8 ttl;
- 	u8 *ta, *dst_addr;
-+	u8 dst_flags;
- 	u32 dst_dsn;
-+	u16 dst_rcode;
- 
- 	ta = mgmt->sa;
-+	ttl = PERR_IE_TTL(perr_elem);
-+	if (ttl <= 1) {
-+		ifmsh->mshstats.dropped_frames_ttl++;
-+		return;
-+	}
-+	ttl--;
-+	dst_flags = PERR_IE_DST_FLAGS(perr_elem);
- 	dst_addr = PERR_IE_DST_ADDR(perr_elem);
- 	dst_dsn = PERR_IE_DST_DSN(perr_elem);
-+	dst_rcode = PERR_IE_DST_RCODE(perr_elem);
-+
- 	rcu_read_lock();
- 	mpath = mesh_path_lookup(dst_addr, sdata);
- 	if (mpath) {
-@@ -623,7 +662,8 @@ static void hwmp_perr_frame_process(struct ieee80211_sub_if_data *sdata,
- 			mpath->flags &= ~MESH_PATH_ACTIVE;
- 			mpath->dsn = dst_dsn;
- 			spin_unlock_bh(&mpath->state_lock);
--			mesh_path_error_tx(dst_addr, cpu_to_le32(dst_dsn),
-+			mesh_path_error_tx(ttl, dst_addr, cpu_to_le32(dst_dsn),
-+					   cpu_to_le16(dst_rcode),
- 					   sdata->dev->broadcast, sdata);
- 		} else
- 			spin_unlock_bh(&mpath->state_lock);
-@@ -717,7 +757,7 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
- 						last_hop_metric);
- 	}
- 	if (elems.perr) {
--		if (elems.perr_len != 12)
-+		if (elems.perr_len != 15)
- 			/* Right now we support only one destination per PERR */
- 			return;
- 		hwmp_perr_frame_process(sdata, mgmt, elems.perr);
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 751c4d0..5d54123 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -465,8 +465,9 @@ void mesh_plink_broken(struct sta_info *sta)
- 			mpath->flags &= ~MESH_PATH_ACTIVE;
- 			++mpath->dsn;
- 			spin_unlock_bh(&mpath->state_lock);
--			mesh_path_error_tx(mpath->dst,
-+			mesh_path_error_tx(MESH_TTL, mpath->dst,
- 					cpu_to_le32(mpath->dsn),
-+					PERR_RCODE_DEST_UNREACH,
- 					sdata->dev->broadcast, sdata);
- 		} else
- 		spin_unlock_bh(&mpath->state_lock);
-@@ -611,7 +612,8 @@ void mesh_path_discard_frame(struct sk_buff *skb,
- 		mpath = mesh_path_lookup(da, sdata);
- 		if (mpath)
- 			dsn = ++mpath->dsn;
--		mesh_path_error_tx(skb->data, cpu_to_le32(dsn), ra, sdata);
-+		mesh_path_error_tx(MESH_TTL, skb->data, cpu_to_le32(dsn),
-+				   PERR_RCODE_NO_ROUTE, ra, sdata);
- 	}
- 
- 	kfree_skb(skb);
--- 
-1.5.6.5
+NAK
 
+See my other mail.  You are trying to reverse the history now.
