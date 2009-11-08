@@ -1,49 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:40304 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754911AbZKZN5K (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:36539 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753565AbZKHMjQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 08:57:10 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>
-Subject: [PATCH] libertas: fixup cfg.h
-Date: Thu, 26 Nov 2009 14:57:01 +0100
+	Sun, 8 Nov 2009 07:39:16 -0500
+Received: by ewy3 with SMTP id 3so2345707ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 04:39:20 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH] rt2x00: Mark rt2800pci as broken.
+Date: Sun, 8 Nov 2009 13:37:54 +0100
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <1257679734-25160-1-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1257679734-25160-1-git-send-email-gwingerde@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200911261457.01111.holgerschurig@gmail.com>
+  charset="iso-8859-15"
+Message-Id: <200911081337.54610.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-a) no need to include "dev.h"
-b) declaration of lbs_send_specific_ssid_scan() and lbs_scan_networks()
-   came in by accident from an experimental patch
+On Sunday 08 November 2009, Gertjan van Wingerde wrote:
+> The rt2800pci driver is currently only marked as experimental, and only the help text explains that
+> the driver is basically non-functional. Make the driver depend on CONFIG_BROKEN so that users cannot
+> enable this driver without knowing that it is broken.
+> 
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+
+> ---
+>  drivers/net/wireless/rt2x00/Kconfig |    7 ++-----
+>  1 files changed, 2 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+> index bf60689..b0f4a2f 100644
+> --- a/drivers/net/wireless/rt2x00/Kconfig
+> +++ b/drivers/net/wireless/rt2x00/Kconfig
+> @@ -64,8 +64,8 @@ config RT2800PCI_SOC
+>  	default y
+>  
+>  config RT2800PCI
+> -	tristate "Ralink rt2800 (PCI/PCMCIA) support (VERY EXPERIMENTAL)"
+> -	depends on (RT2800PCI_PCI || RT2800PCI_SOC) && EXPERIMENTAL
+> +	tristate "Ralink rt2800 (PCI/PCMCIA) support (BROKEN)"
+> +	depends on (RT2800PCI_PCI || RT2800PCI_SOC) && EXPERIMENTAL && BROKEN
+>  	select RT2800_LIB
+>  	select RT2X00_LIB_PCI if RT2800PCI_PCI
+>  	select RT2X00_LIB_SOC if RT2800PCI_SOC
+> @@ -78,9 +78,6 @@ config RT2800PCI
+>  	  This adds support for rt2800 wireless chipset family.
+>  	  Supported chips: RT2760, RT2790, RT2860, RT2880, RT2890 & RT3052
+>  
+> -	  This driver is non-functional at the moment and is intended for
+> -	  developers.
+> -
+>  	  When compiled as a module, this driver will be called "rt2800pci.ko".
+>  
+>  config RT2500USB
 
 
---- linux-wl.orig/drivers/net/wireless/libertas/cfg.h
-+++ linux-wl/drivers/net/wireless/libertas/cfg.h
-@@ -1,15 +1,11 @@
- #ifndef __LBS_CFG80211_H__
- #define __LBS_CFG80211_H__
- 
--#include "dev.h"
-+struct device;
-+struct lbs_private;
- 
- struct wireless_dev *lbs_cfg_alloc(struct device *dev);
- int lbs_cfg_register(struct lbs_private *priv);
- void lbs_cfg_free(struct lbs_private *priv);
- 
--int lbs_send_specific_ssid_scan(struct lbs_private *priv, u8 *ssid,
--	u8 ssid_len);
--int lbs_scan_networks(struct lbs_private *priv, int full_scan);
--
--
- #endif
-
--- 
-http://www.holgerschurig.de
