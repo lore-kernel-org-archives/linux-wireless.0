@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50091 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756050AbZKBSpH (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:52407 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752601AbZKHTLp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 13:45:07 -0500
-Date: Mon, 2 Nov 2009 13:32:54 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Fix IBSS merge
-Message-ID: <20091102183253.GI14046@tuxdriver.com>
-References: <19182.33851.980271.360757@gargle.gargle.HOWL> <1257151486.3555.161.camel@johannes.local> <20091102153614.GC14046@tuxdriver.com> <4AEF14E9.7060902@nbd.name>
+	Sun, 8 Nov 2009 14:11:45 -0500
+Received: by iwn10 with SMTP id 10so1926104iwn.4
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 11:11:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4AEF14E9.7060902@nbd.name>
+In-Reply-To: <20091108160056.GA9508@jm.kir.nu>
+References: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
+	<1257625146-17971-7-git-send-email-lrodriguez@atheros.com>
+	<20091108160056.GA9508@jm.kir.nu>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sun, 8 Nov 2009 11:11:31 -0800
+Message-ID: <43e72e890911081111l2765118aqf2b969b84daeaf4a@mail.gmail.com>
+Subject: Re: [PATCH 06/29] ath9k: use correct hw for tx aggregation TX
+	completion
+To: Jouni Malinen <j@w1.fi>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org,
+	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 02, 2009 at 06:20:41PM +0100, Felix Fietkau wrote:
-> John W. Linville wrote:
-> > On Mon, Nov 02, 2009 at 09:44:46AM +0100, Johannes Berg wrote:
-> >> On Mon, 2009-11-02 at 12:33 +0530, Sujith wrote:
-> >> > Currently, in IBSS mode, a single creator would go into
-> >> > a loop trying to merge/scan. This happens because the IBSS timer is
-> >> > rearmed on finishing a scan and the subsequent
-> >> > timer invocation requests another scan immediately.
-> >> > 
-> >> > This patch fixes this issue by checking if we have just completed
-> >> > a scan run trying to merge with other IBSS networks.
-> >> 
-> >> Heh, how many people do we need to fix IBSS? :)
-> > 
-> > Yeah, no kidding...I suspect that actual IBSS users are few, and a
-> > substantial number of those are doing crazy things with it! :-)
-> Yeah, we're doing crazy things like mesh networks of few hundred
-> nodes... something that 11s isn't really suitable for. :-)
+On Sun, Nov 8, 2009 at 8:00 AM, Jouni Malinen <j@w1.fi> wrote:
+> On Sat, Nov 07, 2009 at 03:18:43PM -0500, Luis R. Rodriguez wrote:
+>> When ath9k virtual wiphys are used the sc->hw will not always represent
+>> the active hw, instead we need to get it from the skb->cb private
+>> driver area. This ensures the right hw is used to find a sta for
+>> the TX'd skb.
+>
+>> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+>> @@ -267,7 +267,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+>> +     struct ieee80211_hw *hw;
+>>       struct ieee80211_hdr *hdr;
+>> +     struct ieee80211_tx_info *tx_info;
+>> +     struct ath_tx_info_priv *tx_info_priv;
+>
+>> @@ -280,6 +283,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+>> +     tx_info = IEEE80211_SKB_CB(skb);
+>> +     tx_info_priv = (struct ath_tx_info_priv *) tx_info->rate_driver_data[0];
+>> +     hw = tx_info_priv->aphy->hw;
+>
+> Umm.. This adds a set of new local variables, but no users for those
+> are added here. Was this supposed to also change the following
+> ieee80211_find_sta_by_hw() call to use the local hw variable instead of
+> sc->hw?
 
-In fact, I had you in mind when I said that -- crazy doesn't mean
-useless... :-)
+Indeed, my rebase seems to have not gone through well but I do recall
+having changed the sc->hw to hw here, will go review to see which
+patches need fixing. Thanks for the review.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
