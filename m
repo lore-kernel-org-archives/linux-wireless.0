@@ -1,131 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56119 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752796AbZKGUTC (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:37365 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383AbZKHSk1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 15:19:02 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	mcgrof@gmail.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 12/29] ath9k: use the ieee80211_hw to get to an sband on ath_rx_prepare()
-Date: Sat,  7 Nov 2009 15:18:49 -0500
-Message-Id: <1257625146-17971-13-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
-References: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
+	Sun, 8 Nov 2009 13:40:27 -0500
+Received: by ewy3 with SMTP id 3so2516710ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 10:40:32 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 8/9] rt2800: add eFuse EEPROM support code to rt2800lib
+Date: Sun, 8 Nov 2009 19:40:27 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+References: <20091108133854.23584.86842.sendpatchset@localhost.localdomain> <200911081927.30754.IvDoorn@gmail.com> <200911081932.37575.bzolnier@gmail.com>
+In-Reply-To: <200911081932.37575.bzolnier@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911081940.27534.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No need to use the private driver structure to get to an sband.
-This will make it easier to share this code with ath9k_htc.
+On Sunday 08 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> On Sunday 08 November 2009 19:27:30 Ivo van Doorn wrote:
+> > On Sunday 08 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> > > On Sunday 08 November 2009 19:08:23 Ivo van Doorn wrote:
+> > > > On Sunday 08 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> > > > > On Sunday 08 November 2009 14:55:59 Ivo van Doorn wrote:
+> > > > > > On Sunday 08 November 2009, Bartlomiej Zolnierkiewicz wrote:
+> > > > > > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > > > > > > Subject: [PATCH] rt2800: add eFuse EEPROM support code to rt2800lib
+> > > > > > > 
+> > > > > > > eFuse EEPROM is used also by USB chips (i.e. RT3070)
+> > > > > > > so move the needed code from rt2800pci to rt2800lib.
+> > > > > > > 
+> > > > > > > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > > > > > > ---
+> > > > > > >  drivers/net/wireless/rt2x00/rt2800.h    |   29 +++++++++++++++++++++
+> > > > > > >  drivers/net/wireless/rt2x00/rt2800lib.c |   43 ++++++++++++++++++++++++++++++++
+> > > > > > >  drivers/net/wireless/rt2x00/rt2800lib.h |    2 +
+> > > > > > >  drivers/net/wireless/rt2x00/rt2800pci.c |   38 ++--------------------------
+> > > > > > >  drivers/net/wireless/rt2x00/rt2800pci.h |   29 ---------------------
+> > > > > > >  5 files changed, 77 insertions(+), 64 deletions(-)
+> > > > > > 
+> > > > > > 
+> > > > > > > ===================================================================
+> > > > > > > --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> > > > > > > +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> > > > > > > @@ -147,44 +147,12 @@ static void rt2800pci_read_eeprom_pci(st
+> > > > > > >  
+> > > > > > >  static int rt2800pci_efuse_detect(struct rt2x00_dev *rt2x00dev)
+> > > > > > >  {
+> > > > > > > -	u32 reg;
+> > > > > > > -
+> > > > > > > -	rt2800_register_read(rt2x00dev, EFUSE_CTRL, &reg);
+> > > > > > > -
+> > > > > > > -	return rt2x00_get_field32(reg, EFUSE_CTRL_PRESENT);
+> > > > > > > +	return rt2800_efuse_detect(rt2x00dev);
+> > > > > > >  }
+> > > > > > 
+> > > > > > It would be better to fix all calls to rt2800pci_efuse_detect to use rt2800_efuse_detect
+> > > > > > rather then adding a special wrapper function for it.
+> > > > > > 
+> > > > > > > -static void rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
+> > > > > > > +static inline void rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
+> > > > > > >  {
+> > > > > > > -	unsigned int i;
+> > > > > > > -
+> > > > > > > -	for (i = 0; i < EEPROM_SIZE / sizeof(u16); i += 8)
+> > > > > > > -		rt2800pci_efuse_read(rt2x00dev, i);
+> > > > > > > +	rt2800_read_eeprom_efuse(rt2x00dev);
+> > > > > > >  }
+> > > > > > 
+> > > > > > Same here.
+> > > > > 
+> > > > > Could you please explain some more what do you mean by that?
+> > > > > (Please note that we have an extra SOC handling in rt2800pci.c.)
+> > > > 
+> > > > Your changes made the following 2 functions:
+> > > > 
+> > > > int rt2800pci_efuse_detect(struct rt2x00_dev *rt2x00dev)
+> > > > {
+> > > > 	return rt2800_efuse_detect(rt2x00dev);
+> > > > }
+> > > > 
+> > > > void rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
+> > > > {
+> > > > 	rt2800_read_eeprom_efuse(rt2x00dev);
+> > > > }
+> > > > 
+> > > > So why do we need rt2800pci_* versions in this case? They simply wrap
+> > > > the rt2800 library function without providing anything extra...
+> > > 
+> > > Please go read the original code..
+> > > 
+> > > #ifdef CONFIG_RT2800PCI_PCI
+> > > ...
+> > > [ the code quoted in your mail ]
+> > > ...
+> > > #else
+> > > static inline void rt2800pci_read_eeprom_pci(struct rt2x00_dev *rt2x00dev)
+> > > {
+> > > }
+> > > 
+> > > static inline void rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
+> > > {
+> > > }
+> > > #endif /* CONFIG_RT2800PCI_PCI */
+> > > 
+> > > [ #else is for CONFIG_RT2800PCI_WISOC ]
+> > 
+> > True, but rt2800pci_read_eeprom_efuse() has no WISOC counterpart,
+> > the fact that it is compiled into rt2x00lib without any restriction makes
+> > the ifdef statements in the rt2800pci obsolete.
+> 
+> Not really.  Please note that driver's behavior WRT WISOC is preserved.
 
-With the sc gone we can now just pass the common structure to
-ath_rx_prepare().
+The behavior, not the amount of code compiled into the binary.
+The original code had the efuse code within the ifdef, during the move
+to rt2800lib it was moved outside the ifdef.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/recv.c |   39 +++++++++++++++++----------------
- 1 files changed, 20 insertions(+), 19 deletions(-)
+> > The purpose of the defines was to keep the EFUSE code out of the driver
+> > on embedded systems. So either rt2800lib should do the same with ifdefs
+> > in the rt2800lib.c and rt2800lib.h files, or we don't need the efuse specific
+> > wrappers in rt2800pci.c.
+> 
+> Said wrappers predate all of my rt2800 patches.
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 403debb..fa78914 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -91,18 +91,19 @@ static void ath_setdefantenna(struct ath_softc *sc, u32 antenna)
-  * up the frame up to let mac80211 handle the actual error case, be it no
-  * decryption key or real decryption error. This let us keep statistics there.
-  */
--static int ath_rx_prepare(struct ieee80211_hw *hw,
-+static int ath_rx_prepare(struct ath_common *common,
-+			  struct ieee80211_hw *hw,
- 			  struct sk_buff *skb, struct ath_rx_status *rx_stats,
--			  struct ieee80211_rx_status *rx_status, bool *decrypt_error,
--			  struct ath_softc *sc)
-+			  struct ieee80211_rx_status *rx_status,
-+			  bool *decrypt_error)
- {
-+	struct ath_hw *ah = common->ah;
- 	struct ieee80211_hdr *hdr;
- 	u8 ratecode;
- 	__le16 fc;
- 	struct ieee80211_sta *sta;
- 	struct ath_node *an;
- 	int last_rssi = ATH_RSSI_DUMMY_MARKER;
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 
- 	hdr = (struct ieee80211_hdr *)skb->data;
- 	fc = hdr->frame_control;
-@@ -115,7 +116,7 @@ static int ath_rx_prepare(struct ieee80211_hw *hw,
- 		 * discard the frame. Enable this if you want to see
- 		 * error frames in Monitor mode.
- 		 */
--		if (sc->sc_ah->opmode != NL80211_IFTYPE_MONITOR)
-+		if (ah->opmode != NL80211_IFTYPE_MONITOR)
- 			goto rx_next;
- 	} else if (rx_stats->rs_status != 0) {
- 		if (rx_stats->rs_status & ATH9K_RXERR_CRC)
-@@ -141,7 +142,7 @@ static int ath_rx_prepare(struct ieee80211_hw *hw,
- 		 * decryption and MIC failures. For monitor mode,
- 		 * we also ignore the CRC error.
- 		 */
--		if (sc->sc_ah->opmode == NL80211_IFTYPE_MONITOR) {
-+		if (ah->opmode == NL80211_IFTYPE_MONITOR) {
- 			if (rx_stats->rs_status &
- 			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC |
- 			      ATH9K_RXERR_CRC))
-@@ -165,20 +166,20 @@ static int ath_rx_prepare(struct ieee80211_hw *hw,
- 			rx_status->flag |= RX_FLAG_SHORT_GI;
- 		rx_status->rate_idx = ratecode & 0x7f;
- 	} else {
--		int i = 0, cur_band, n_rates;
-+		struct ieee80211_supported_band *sband;
-+		unsigned int i = 0;
-+		enum ieee80211_band band;
- 
--		cur_band = hw->conf.channel->band;
--		n_rates = sc->sbands[cur_band].n_bitrates;
-+		band = hw->conf.channel->band;
-+		sband = hw->wiphy->bands[band];
- 
--		for (i = 0; i < n_rates; i++) {
--			if (sc->sbands[cur_band].bitrates[i].hw_value ==
--			    ratecode) {
-+		for (i = 0; i < sband->n_bitrates; i++) {
-+			if (sband->bitrates[i].hw_value == rx_stats->rs_rate) {
- 				rx_status->rate_idx = i;
- 				break;
- 			}
--
--			if (sc->sbands[cur_band].bitrates[i].hw_value_short ==
--			    ratecode) {
-+			if (sband->bitrates[i].hw_value_short ==
-+			    rx_stats->rs_rate) {
- 				rx_status->rate_idx = i;
- 				rx_status->flag |= RX_FLAG_SHORTPRE;
- 				break;
-@@ -208,9 +209,9 @@ static int ath_rx_prepare(struct ieee80211_hw *hw,
- 
- 	/* Update Beacon RSSI, this is used by ANI. */
- 	if (ieee80211_is_beacon(fc))
--		sc->sc_ah->stats.avgbrssi = rx_stats->rs_rssi;
-+		ah->stats.avgbrssi = rx_stats->rs_rssi;
- 
--	rx_status->mactime = ath9k_hw_extend_tsf(sc->sc_ah, rx_stats->rs_tstamp);
-+	rx_status->mactime = ath9k_hw_extend_tsf(ah, rx_stats->rs_tstamp);
- 	rx_status->band = hw->conf.channel->band;
- 	rx_status->freq = hw->conf.channel->center_freq;
- 	rx_status->noise = common->ani.noise_floor;
-@@ -754,8 +755,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 		if (sc->rx.bufsize < rx_stats->rs_datalen)
- 			goto requeue;
- 
--		if (!ath_rx_prepare(hw, skb, rx_stats,
--				    &rx_status, &decrypt_error, sc))
-+		if (!ath_rx_prepare(common, hw, skb, rx_stats,
-+				    &rx_status, &decrypt_error))
- 			goto requeue;
- 
- 		/* Ensure we always have an skb to requeue once we are done
--- 
-1.6.5.2.143.g8cc62
+Actually the code inside the function was larger, since you removed multiple
+lines from the function (moved to rt2800lib). But as said above, the wrapper
+had the code inside the ifdef, while the this patch has the code outside the
+ifdef, and thus the wrapper has no need.
 
+> I think that they shouldn't have been added in the first place and I'll be
+> happy to add patch removing them to rt2800 tree (since code savings seem to
+> be really marginal and not worth the maintenance cost). 
+
+Removing the ifdefs entirely would be fine.
+
+Ivo
