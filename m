@@ -1,56 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46130 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759325AbZKKWAP (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:43535 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753366AbZKHNol (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 17:00:15 -0500
-Date: Wed, 11 Nov 2009 16:47:42 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jason Andryuk <jandryuk@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>
-Subject: Re: [PATCH] at76c50x-usb: Supply additional parameters to
-	at76_start_monitor scan request
-Message-ID: <20091111214742.GM4392@tuxdriver.com>
-References: <1257724939.21194.926.camel@rainbow>
+	Sun, 8 Nov 2009 08:44:41 -0500
+Received: by ewy3 with SMTP id 3so2373818ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 05:44:46 -0800 (PST)
+Message-ID: <4AF6CB4C.4050605@gmail.com>
+Date: Sun, 08 Nov 2009 14:44:44 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1257724939.21194.926.camel@rainbow>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	rt2x00 Core Developers List <coredev@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH] rt2x00: Remove deprecated ieee80211_rx_status->qual usage
+References: <200911081437.49121.IvDoorn@gmail.com>
+In-Reply-To: <200911081437.49121.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 08, 2009 at 07:02:19PM -0500, Jason Andryuk wrote:
-> For my Linksys WUSB11 at76c503-i3861 device, scanning fails without
-> probe_delay, min_channel_time, and max_channel_time specified for the
-> scan request.  These values were found by checking scan requests from
-> the at76_usb driver.
+On 11/08/09 14:37, Ivo van Doorn wrote:
+> ieee80211_rx_status->qual has been marked deprecated.
+> This allows us to remove several functions and fields which
+> were used to calculate a reasonable value for it.
 > 
-> Signed-off-by: Jason Andryuk <jandryuk@gmail.com>
-> --
-> Prior to this patch, the driver did not produce any scan results on my device.
-> 
-> 
-> diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x
-> index d9f2c52..4a3f4ff 100644
-> --- a/drivers/net/wireless/at76c50x-usb.c
-> +++ b/drivers/net/wireless/at76c50x-usb.c
-> @@ -1180,6 +1180,9 @@ static int at76_start_monitor(struct at76_priv *priv)
->         scan.channel = priv->channel;
->         scan.scan_type = SCAN_TYPE_PASSIVE;
->         scan.international_scan = 0;
-> +       scan.min_channel_time = cpu_to_le16(priv->scan_min_time);
-> +       scan.max_channel_time = cpu_to_le16(priv->scan_max_time);
-> +       scan.probe_delay = cpu_to_le16(0);
->  
->         ret = at76_set_card_command(priv->udev, CMD_SCAN, &scan, sizeof(scan));
->         if (ret >= 0)
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> ---
 
-This patch was whitespace-damaged.  I've manually fixed it, but please
-adjust your mailer appropriate for any future patches...
-
-Thanks,
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
