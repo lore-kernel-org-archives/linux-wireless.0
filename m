@@ -1,72 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:21701 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757298AbZKKPql convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34694 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753823AbZKHOBJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 10:46:41 -0500
-From: "Zheng, Jeff" <jeff.zheng@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"wifi-test-devel@lists.sourceforge.net"
-	<wifi-test-devel@lists.sourceforge.net>
-Date: Wed, 11 Nov 2009 23:46:42 +0800
-Subject: RE: [ANNOUNCE] wifi-test 1.0 released
-Message-ID: <154E55ADF9629D4E8D13F08BF92ABEB63FDC98336B@PDSMSX501.ccr.corp.intel.com>
-References: <154E55ADF9629D4E8D13F08BF92ABEB63FDC983366@PDSMSX501.ccr.corp.intel.com>
- <20091111152214.GG4392@tuxdriver.com>
-In-Reply-To: <20091111152214.GG4392@tuxdriver.com>
-Content-Type: text/plain; charset="iso-2022-jp"
-MIME-Version: 1.0
+	Sun, 8 Nov 2009 09:01:09 -0500
+Subject: Re: ar9170 in AP mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jan Kiszka <jan.kiszka@web.de>
+Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org
+In-Reply-To: <4AF6CC02.8080204@web.de>
+References: <4AF6C7CD.7060108@web.de> <878wehf85v.fsf@purkki.valot.fi>
+	 <4AF6CC02.8080204@web.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-rHKFUue5MRPEiIuFK7Ia"
+Date: Sun, 08 Nov 2009 15:01:10 +0100
+Message-ID: <1257688870.29454.52.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks.
 
-And also thanks Reinette and Johannes's help.
+--=-rHKFUue5MRPEiIuFK7Ia
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Bests
-Jeff
- 
+On Sun, 2009-11-08 at 14:47 +0100, Jan Kiszka wrote:
 
->-----Original Message-----
->From: John W. Linville [mailto:linville@tuxdriver.com] 
->Sent: 2009年11月11日 23:22
->To: Zheng, Jeff
->Cc: linux-wireless@vger.kernel.org; 
->ipw3945-devel@lists.sourceforge.net; 
->wifi-test-devel@lists.sourceforge.net
->Subject: Re: [ANNOUNCE] wifi-test 1.0 released
->
->On Wed, Nov 11, 2009 at 10:59:27PM +0800, Zheng, Jeff wrote:
->> All,
->> 
->> The wifi-test project is raised by Intel with a goal to 
->deliver test suites
->> to opensource community that validates linux wireless 
->drivers. wifi-test
->> 1.0 covers following wireless features:
->> + BSS: BSS association, fragmentation/RTS/CTS, BSS channels etc
->> + IBSS: IBSS association, IBSS fragmentation/RTS/CTS, IBSS channels.
->> + Security: WEP (BSS/IBSS), WPA/WPA2, 802.1X.
->> + Power management: S3/S4, RFKILL
->> + Performance: upload/download speed for different combinations.
->> + Others: Wext mode, nl80211 mode
->> + 802.11 a/b/g/n: Above features in a/b/g/n band.
->> 
->> You can download wifi-test 1.0 from:
->> http://intellinuxwireless.org/testing/Download/wifi-test-1.0.tar.gz
->> or through git tree:
->> http://www.intellinuxwireless.org/repos/wifi-test.git
->> 
->> For more information, please see
->> http://intellinuxwireless.org/testing/wifi-test.html
->
->Hey, that looks pretty cool...thanks!
->
->-- 
->John W. Linville		Someday the world will need a 
->hero, and you
->linville@tuxdriver.com			might be all we have.  Be ready.
->
+> > IMHO AP mode should not be enabled until it's confirmed that power
+> > save mode works properly.
+
+Agreed.
+
+> How common is the combination of powersaving and mcast in practice?
+
+Uh, it's nothing to do with the combination. If you don't support proper
+mcast buffering, any powersaving client will be in big trouble due to
+ARP/NDP etc.
+
+Any device that supports powersaving is thus impacted. That ranges from
+desktops and laptops down to your cellphone.
+
+> Given that quite a few useful scenarios are blocked right now (unless
+> you know what to patch), I would at least vote for a config option or a
+> module parameter. That gives a chance to warn the user about this
+> limitation without locking out people that are no hackers.
+
+Given that we want to have everything support powersave on the client
+side, I have to disagree -- supporting something that will be
+troublesome for many clients will just make it look bad.
+
+johannes
+
+--=-rHKFUue5MRPEiIuFK7Ia
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK9s8iAAoJEODzc/N7+QmaZkEQAKzv6UmLp3Oo6WsSImQq+Agu
+a4YqmoXMzlVTM2kWJwaVF4xdGNcepajAK6aXPNhR0u8Xl6S6v/u+djwOIscdVZxk
+AMFKvaW98dZYjT8odvbrHldhkRc2KnOaoHNI6nrl7pg2O6LBUuS1gO6lH7jW2gng
+lPxTLjheWQ+G46msSh3WEG4/ymNe4LRy2A8HlxfNk+6SZu3QF1TgBi5K7aScAHMq
+8hMmIHsANnWC2YbGqk4kskfZWYxCNvOUZ2y5SprSRkVR7CJM8Ys3SZbDyXxrPglU
+eDY5CVa64sJOtwL9xuTRGrIoSmy54lwvp8aDUz0/VlcBCIiBY4By38WLg4F98TKw
+Q+RuwCdIZAgIA2dt2nEoOHzxSonqDcq795ZbmZB1Y3kKopYSLZP9Af6BtI4+TlnG
+IRswzDGXiaizV/WAU+3R5rcQ2o/dLzqyHzNXCcLl5iHIJnrS82qvzaQPf2jwjp8X
+V8en3QJ+usydyCkmnfXXLUTrDAafb/tfkTS127V01gFnC9KHnZ5/7UO2n1LqEpdY
+vcqotNTSWbZa1odCru2UXA+1bdZpaqDaXcIrGwHGVsZQG6ciJrf4s1iTygzjze0C
+KRGIr0Hz0fB/zCdiiCROI+nkVaRlOwLn81tyYoAM5c6/TMW5L0+1DYddkf9ZuU+v
+I3l7Vw+qQM6Dp2FX2UuU
+=KwSV
+-----END PGP SIGNATURE-----
+
+--=-rHKFUue5MRPEiIuFK7Ia--
+
