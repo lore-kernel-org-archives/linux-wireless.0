@@ -1,99 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:47316 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759947AbZKFWw7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 17:52:59 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 03/20] iwlwifi: print rx_on config to help debug
-Date: Fri,  6 Nov 2009 14:52:46 -0800
-Message-Id: <1257547983-12590-4-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
-References: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43010 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754783AbZKHRaG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Nov 2009 12:30:06 -0500
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1N7Bad-0005RZ-SZ
+	for linux-wireless@vger.kernel.org; Sun, 08 Nov 2009 12:30:11 -0500
+Received: from linville-t400.local (linville-t400.local [127.0.0.1])
+	by linville-t400.local (8.14.3/8.14.3) with ESMTP id nA8HOLK8029463
+	for <linux-wireless@vger.kernel.org>; Sun, 8 Nov 2009 12:24:21 -0500
+Received: (from linville@localhost)
+	by linville-t400.local (8.14.3/8.14.3/Submit) id nA8HOL5T029461
+	for linux-wireless@vger.kernel.org; Sun, 8 Nov 2009 12:24:21 -0500
+Date: Sun, 8 Nov 2009 12:24:21 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: Linville is getting busy... :-)
+Message-ID: <20091108172420.GA29225@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+All,
 
-To help debug rx related issues, if IWL_DEBUG_RADIO flag is set, print
-the rxon configuration when rxon host command send to uCode.
+Just wanted to let everyone know that my "real job" schedule is
+tightening for the next several weeks.  I may be somewhat less
+responsive and/or accomodating than usual. :-(  However, I hope to
+maintain a more-or-less normal merge schedule.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c  |    2 ++
- drivers/net/wireless/iwlwifi/iwl-core.c |    3 ++-
- drivers/net/wireless/iwlwifi/iwl-core.h |    5 +++++
- 3 files changed, 9 insertions(+), 1 deletions(-)
+Please make sure that you are posting your patches in a timely
+fashion.  As usual, please make sure that all patches posted comply
+with Signed-off-by and other posting requirements and that they
+apply cleanly on top of wireless-testing (or some other _stated_
+upstream source if appropriate).  Patches that cause me merging pain
+are likely to get dropped or delayed -- sorry.  Also as usual, any
+help reviewing patches is most welcome.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 2bbd04d..46503a6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -134,6 +134,7 @@ int iwl_commit_rxon(struct iwl_priv *priv)
- 		}
- 
- 		memcpy(active_rxon, &priv->staging_rxon, sizeof(*active_rxon));
-+		iwl_print_rx_config_cmd(priv);
- 		return 0;
- 	}
- 
-@@ -229,6 +230,7 @@ int iwl_commit_rxon(struct iwl_priv *priv)
- 		}
- 		memcpy(active_rxon, &priv->staging_rxon, sizeof(*active_rxon));
- 	}
-+	iwl_print_rx_config_cmd(priv);
- 
- 	iwl_init_sensitivity(priv);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 112181b..34ffcdd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1329,7 +1329,7 @@ void iwl_rx_csa(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
- EXPORT_SYMBOL(iwl_rx_csa);
- 
- #ifdef CONFIG_IWLWIFI_DEBUG
--static void iwl_print_rx_config_cmd(struct iwl_priv *priv)
-+void iwl_print_rx_config_cmd(struct iwl_priv *priv)
- {
- 	struct iwl_rxon_cmd *rxon = &priv->staging_rxon;
- 
-@@ -1347,6 +1347,7 @@ static void iwl_print_rx_config_cmd(struct iwl_priv *priv)
- 	IWL_DEBUG_RADIO(priv, "u8[6] bssid_addr: %pM\n", rxon->bssid_addr);
- 	IWL_DEBUG_RADIO(priv, "u16 assoc_id: 0x%x\n", le16_to_cpu(rxon->assoc_id));
- }
-+EXPORT_SYMBOL(iwl_print_rx_config_cmd);
- #endif
- /**
-  * iwl_irq_handle_error - called for HW or SW error interrupt from card
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 9574d8f..3f97036 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -579,6 +579,7 @@ int iwl_pci_resume(struct pci_dev *pdev);
- #ifdef CONFIG_IWLWIFI_DEBUG
- void iwl_dump_nic_event_log(struct iwl_priv *priv);
- void iwl_dump_nic_error_log(struct iwl_priv *priv);
-+void iwl_print_rx_config_cmd(struct iwl_priv *priv);
- #else
- static inline void iwl_dump_nic_event_log(struct iwl_priv *priv)
- {
-@@ -587,6 +588,10 @@ static inline void iwl_dump_nic_event_log(struct iwl_priv *priv)
- static inline void iwl_dump_nic_error_log(struct iwl_priv *priv)
- {
- }
-+
-+static inline void iwl_print_rx_config_cmd(struct iwl_priv *priv)
-+{
-+}
- #endif
- 
- void iwl_clear_isr_stats(struct iwl_priv *priv);
+Please also note that (as usual) patches intended for 2.6.33 need to
+be posted _before_ the merge window opens (and with enough time for
+me to merge them prior to that event as well).  Also, patches intended
+for 2.6.32 need to be posted ASAP (and marked for that intent).
+
+Hopefully me sharing this information will help everyone in their patch
+preparation and planning.  Your cooperation is greatly appreciated!
+
+Thanks,
+
+JOhn
 -- 
-1.5.6.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
