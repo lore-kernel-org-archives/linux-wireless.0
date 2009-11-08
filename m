@@ -1,97 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50423 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933331AbZKXRPB (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:62471 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752734AbZKHNkR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 12:15:01 -0500
-Subject: Re: [PATCH v2 2/2] mac80211: minstrel try all rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Adam Wozniak <awozniak@irobot.com>
-Cc: Derek Smithies <derek@indranet.co.nz>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <1259082331.2573.19.camel@awozniak-laptop>
-References: <4AF0D54D.4090303@irobot.com>
-	 <alpine.DEB.2.00.0911111508391.6214@kauri.acheron.indranet.co.nz>
-	 <4AFC655A.5020706@irobot.com> <200911122103.27455.chunkeey@googlemail.com>
-	 <4AFC8E4F.5090307@irobot.com>  <4AFC8F0D.5020700@irobot.com>
-	 <1258097352.3899.75.camel@johannes.local>  <4AFDDF19.8060202@irobot.com>
-	 <1258191039.6167.40.camel@johannes.local>  <4B018B26.2070008@irobot.com>
-	 <1258392453.32159.28.camel@johannes.local> <4B0192A6.9050808@irobot.com>
-	 <alpine.DEB.2.00.0911170938380.3829@kauri.acheron.indranet.co.nz>
-	 <4B01D4A5.7060204@irobot.com>
-	 <alpine.DEB.2.00.0911171156210.3829@kauri.acheron.indranet.co.nz>
-	 <4B01E298.3030602@irobot.com>
-	 <alpine.DEB.2.00.0911171314470.3829@kauri.acheron.indranet.co.nz>
-	 <1258443484.1375.8.camel@johannes.local> <4B02DFE3.9040602@irobot.com>
-	 <4B0AEEE3.2050808@irobot.com> <1259018866.7094.189.camel@johannes.local>
-	 <4B0B2F6E.7050907@irobot.com>  <1259082331.2573.19.camel@awozniak-laptop>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-KVnHawgzG7isWMSlDARS"
-Date: Tue, 24 Nov 2009 18:14:11 +0100
-Message-ID: <1259082851.3491.18.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 8 Nov 2009 08:40:17 -0500
+Received: by mail-ew0-f207.google.com with SMTP id 3so2371374ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 05:40:22 -0800 (PST)
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Date: Sun, 08 Nov 2009 14:39:55 +0100
+Message-Id: <20091108133955.23584.79455.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091108133854.23584.86842.sendpatchset@localhost.localdomain>
+References: <20091108133854.23584.86842.sendpatchset@localhost.localdomain>
+Subject: [PATCH 9/9] rt2800usb: add eFuse EEPROM support
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] rt2800usb: add eFuse EEPROM support
 
---=-KVnHawgzG7isWMSlDARS
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+It is needed for at least RT3070 chip.
 
-On Tue, 2009-11-24 at 09:05 -0800, Adam Wozniak wrote:
-> In Ad-Hoc mode, it is possible for minstrel to be initialized without com=
-plete rate information.
-> In these cases, throughput suffers because not all rates are tried.  This=
- patch tells minstrel to try all rates. =20
-> This won't cause problems, because unsupported rates will simply fail, ca=
-using minstrel to set their probability to 0%.
-> (Hopefully not whitespace damaged this time)
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-I still stand by this being the wrong thing to do
-
-johannes
-
-> Signed-off-by: Adam Wozniak <awozniak@irobot.com>
-> ---
-> diff --git a/net/mac80211/rc80211_minstrel.c
-> b/net/mac80211/rc80211_minstrel.c
-> index 6e5d68b..3a8fe30 100644
-> --- a/net/mac80211/rc80211_minstrel.c
-> +++ b/net/mac80211/rc80211_minstrel.c
-> @@ -395,8 +395,6 @@ minstrel_rate_init(void *priv, struct
-> ieee80211_supported_band *sband,
->  		unsigned int tx_time_single;
->  		unsigned int cw =3D mp->cw_min;
-> =20
-> -		if (!rate_supported(sta, sband->band, i))
-> -			continue;
->  		n++;
->  		memset(mr, 0, sizeof(*mr));
-> =20
->=20
->=20
-
-
---=-KVnHawgzG7isWMSlDARS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLDBRgAAoJEODzc/N7+QmaZFAP/2Nu0plfJkERKPKgsLXHHA68
-eufegrs1RQxjjNVogHftwFHlA8ZgUGzHcSJ1RCyN3yGjwMqKiRncbpgvJ/1d+DkP
-TycumCU65hgVXSmvhPYnPxgf+/jhjkZ8WrRpV7Kdqx9W0LP47QjD3qEZnllYJ3qk
-szRKlyd/3gJOSwe2j93Ku+pldccAm+RECMDCCeSJpPZX5q+PpCJBCekJ/jHcnyu9
-By+4cojD57wiaH5zKWhU0weK7GOl/iFKih3DCoWiq8z6AgSmJXM+y1A6fGfFMJJ5
-fgxjKyVIBUDg3rUDUrbeqneIviPBKVzr16nrhXRP0wVOMqgFXTxWUzFwl2JdO3qh
-i6EpngUK+JnPMEfqq+rY6t76+dnBkaX2jsJcx3UZWoetwIUvn0hBWeAEsAs7KOt3
-knPQoQI7yqq2u6AEyqD77mwFXebwXxJu+n95Osp2KC1kzYrpc+IzX8WOSn79b9+i
-llIyKCQdlztTQokAEwd0Wm59K+PQ6qaYJ4edDzfnTDlZhz0KCc65j8uvQKJX/K6w
-umwnJ/q6hju9D948tc9bfDFNuJqFnXved63jtRa0Jn0PS24oKdVpwIJkv6KBpSHo
-Qzocpsz7nISfJleKRQs9IafOrtMcm5f/UWKX2jO7LWUhJkVTo0cujHnhPrf0xKJy
-a/lAbAMfVE1DnFWSHuch
-=YNlL
------END PGP SIGNATURE-----
-
---=-KVnHawgzG7isWMSlDARS--
-
+Index: b/drivers/net/wireless/rt2x00/rt2800usb.c
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -667,7 +667,11 @@ static void rt2800usb_fill_rxdone(struct
+  */
+ static int rt2800usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ {
+-	rt2x00usb_eeprom_read(rt2x00dev, rt2x00dev->eeprom, EEPROM_SIZE);
++	if (rt2800_efuse_detect(rt2x00dev))
++		rt2800_read_eeprom_efuse(rt2x00dev);
++	else
++		rt2x00usb_eeprom_read(rt2x00dev, rt2x00dev->eeprom,
++				      EEPROM_SIZE);
+ 
+ 	return rt2800_validate_eeprom(rt2x00dev);
+ }
