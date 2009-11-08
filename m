@@ -1,76 +1,213 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37072 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751392AbZKZSSK (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:62471 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752779AbZKHNjP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 13:18:10 -0500
-Subject: Re: [RFC] API for setting ACK timeout
-From: Johannes Berg <johannes@sipsolutions.net>
-To: 8an@praha12.net
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200911261826.08576.8an@praha12.net>
-References: <200911261826.08576.8an@praha12.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-cFZ9Kaw7iNgJ6OzQrTlC"
-Date: Thu, 26 Nov 2009 19:18:13 +0100
-Message-ID: <1259259493.24540.5.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 8 Nov 2009 08:39:15 -0500
+Received: by mail-ew0-f207.google.com with SMTP id 3so2371374ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 05:39:20 -0800 (PST)
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Date: Sun, 08 Nov 2009 14:38:54 +0100
+Message-Id: <20091108133854.23584.86842.sendpatchset@localhost.localdomain>
+Subject: [PATCH 1/9] rt2800: prepare for unification of EEPROM support code
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] rt2800: prepare for unification of EEPROM support code
 
---=-cFZ9Kaw7iNgJ6OzQrTlC
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+* Factor out common code from rt2800[pci,usb]_validate_eeprom()
+  to rt2800_validate_eeprom().
 
-On Thu, 2009-11-26 at 18:26 +0100, Luk=C3=A1=C5=A1 Turek wrote:
+* Fix interface specific comment in rt2800[pci,usb]_validate_eeprom().
 
-> It consists of a new nl80211 parameter:
-> [NL80211_ATTR_WIPHY_DISTANCE] =3D { .type =3D NLA_U32 },
->=20
-> The value of the parameter would be a link distance in meters, so after t=
-he=20
-> support is added to iw one could set the ACK timeout on a 3km link using:
-> # iw phy0 set distance 3000
->=20
-> Another required change would be extending cfg80211_ops by functions=20
-> set_distance and get_distance. Calculation of appropriate ACK timeout (an=
-d in=20
-> the case of ath5k, also CTS timeout and slottime) for the distance would =
-be=20
-> left to the driver (it's a trivial formula).
->=20
-> I can prepare the patches, if you think these extension would be acceptab=
-le.=20
-> Suggestions are welcome.
+* Enclose interface specific code in rt2800[pci,usb]_init_eeprom()
+  with rt2x00_intf_is_[pci,usb]() checks.
 
-I discussed this with Alina a while back (in private, she didn't want to
-discuss in English) and we came to the conclusion that set_coverage()
-should be done like 802.11-2007 17.3.8.6 specifies for 5ghz, but could
-be done for 2.4ghz as well. Thoughts? It would also allow us to actually
-advertise that to compatible clients.
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+on top of "rt2x00: Add dynamic detection of eFuse EEPROM in rt2800pci."
+patch from Gertjan
 
-johannes
+ drivers/net/wireless/rt2x00/rt2800pci.c |   51 ++++++++++++++++++--------------
+ drivers/net/wireless/rt2x00/rt2800usb.c |   40 +++++++++++++++----------
+ 2 files changed, 55 insertions(+), 36 deletions(-)
 
---=-cFZ9Kaw7iNgJ6OzQrTlC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLDsZiAAoJEODzc/N7+QmaZp0P/A1Xa0BLGcEGl4JoCeyszuLc
-1SxLl3n6bNys0/qXSZPMyvnjiUVsKCkC+w0Bgc+iFCbb9Xz+EdYt2uieji+kbo+Y
-mnt5KBOYlhYowlrhGlRslpIcabXp6bkx+JLyUK4n8iEC0Lb7ux68cTqPj8IdJ/RU
-Lcz2ojLLHhFOeyxGZzRBjU9m6uGhO2lUrD9rUKNidEgOOhyodisxJZjD+O0nj1kS
-EInMBvSMAJeDjHX40MPTPU09VYsmacY17mm7pXwcuqkc6c4Mr9W/E/qA/ZZJz1e9
-G6gnwl6SX3B6/7HAPbxP/Y81SMffhbJZygSWB4xNDoBmBF3urOVnBsZr3LSyTsv8
-fqQf43gzypSJpsXVOaskf2cMhjwgGYTpJ2A2ufqZwO9FDrEESMh6Jby46j4AE+UL
-CsAL9IuwnjeVg9kgx8xz9QXL82pALyWlodFj++gSuXu/7n1t7uFNREoswwLKfTGw
-Fv2wO4zukSsHwSJIm1cTf+wqWF+TUg2LEzcL1IcWb+vt3ohfDcQHyfYBwXyfAdwc
-e1pX1IUCeEVG1UV2x/St6y3Mg5BnZhcDWNyMDzwTS/aHpm5za4utaJQgYertUAAs
-LBYSSqqZh/2AJV7fRJTcJbwitL5uUKV51CYui0fkmuKyJDPCCXyiKKDSqbqzcZR0
-NrEjsf+UoeX6ycg02Rs2
-=5kle
------END PGP SIGNATURE-----
-
---=-cFZ9Kaw7iNgJ6OzQrTlC--
-
+Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -1091,29 +1091,13 @@ static irqreturn_t rt2800pci_interrupt(i
+ /*
+  * Device probe functions.
+  */
+-static int rt2800pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
++static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u16 word;
+ 	u8 *mac;
+ 	u8 default_lna_gain;
+ 
+ 	/*
+-	 * Read EEPROM into buffer
+-	 */
+-	switch(rt2x00dev->chip.rt) {
+-	case RT2880:
+-	case RT3052:
+-		rt2800pci_read_eeprom_soc(rt2x00dev);
+-		break;
+-	default:
+-		if (rt2800pci_efuse_detect(rt2x00dev))
+-			rt2800pci_read_eeprom_efuse(rt2x00dev);
+-		else
+-			rt2800pci_read_eeprom_pci(rt2x00dev);
+-		break;
+-	}
+-
+-	/*
+ 	 * Start validation of the data that has been read.
+ 	 */
+ 	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
+@@ -1131,7 +1115,7 @@ static int rt2800pci_validate_eeprom(str
+ 		EEPROM(rt2x00dev, "Antenna: 0x%04x\n", word);
+ 	} else if (rt2x00_rev(&rt2x00dev->chip) < RT2883_VERSION) {
+ 		/*
+-		 * There is a max of 2 RX streams for RT2860 series
++		 * There is a max of 2 RX streams for RT28x0 series
+ 		 */
+ 		if (rt2x00_get_field16(word, EEPROM_ANTENNA_RXPATH) > 2)
+ 			rt2x00_set_field16(&word, EEPROM_ANTENNA_RXPATH, 2);
+@@ -1210,6 +1194,27 @@ static int rt2800pci_validate_eeprom(str
+ 	return 0;
+ }
+ 
++static int rt2800pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
++{
++	/*
++	 * Read EEPROM into buffer
++	 */
++	switch (rt2x00dev->chip.rt) {
++	case RT2880:
++	case RT3052:
++		rt2800pci_read_eeprom_soc(rt2x00dev);
++		break;
++	default:
++		if (rt2800pci_efuse_detect(rt2x00dev))
++			rt2800pci_read_eeprom_efuse(rt2x00dev);
++		else
++			rt2800pci_read_eeprom_pci(rt2x00dev);
++		break;
++	}
++
++	return rt2800_validate_eeprom(rt2x00dev);
++}
++
+ static int rt2800pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u32 reg;
+@@ -1226,7 +1231,9 @@ static int rt2800pci_init_eeprom(struct 
+ 	 */
+ 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
+ 	rt2800_register_read(rt2x00dev, MAC_CSR0, &reg);
+-	rt2x00_set_chip_rf(rt2x00dev, value, reg);
++
++	if (rt2x00_intf_is_pci(rt2x00dev))
++		rt2x00_set_chip_rf(rt2x00dev, value, reg);
+ 
+ 	if (!rt2x00_rf(&rt2x00dev->chip, RF2820) &&
+ 	    !rt2x00_rf(&rt2x00dev->chip, RF2850) &&
+@@ -1234,8 +1241,10 @@ static int rt2800pci_init_eeprom(struct 
+ 	    !rt2x00_rf(&rt2x00dev->chip, RF2750) &&
+ 	    !rt2x00_rf(&rt2x00dev->chip, RF3020) &&
+ 	    !rt2x00_rf(&rt2x00dev->chip, RF2020) &&
+-	    !rt2x00_rf(&rt2x00dev->chip, RF3021) &&
+-	    !rt2x00_rf(&rt2x00dev->chip, RF3022)) {
++	    (rt2x00_intf_is_usb(rt2x00dev) ||
++	     (rt2x00_intf_is_pci(rt2x00dev) &&
++	      !rt2x00_rf(&rt2x00dev->chip, RF3021) &&
++	      !rt2x00_rf(&rt2x00dev->chip, RF3022)))) {
+ 		ERROR(rt2x00dev, "Invalid RF chipset detected.\n");
+ 		return -ENODEV;
+ 	}
+Index: b/drivers/net/wireless/rt2x00/rt2800usb.c
+===================================================================
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -665,14 +665,12 @@ static void rt2800usb_fill_rxdone(struct
+ /*
+  * Device probe functions.
+  */
+-static int rt2800usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
++static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u16 word;
+ 	u8 *mac;
+ 	u8 default_lna_gain;
+ 
+-	rt2x00usb_eeprom_read(rt2x00dev, rt2x00dev->eeprom, EEPROM_SIZE);
+-
+ 	/*
+ 	 * Start validation of the data that has been read.
+ 	 */
+@@ -691,7 +689,7 @@ static int rt2800usb_validate_eeprom(str
+ 		EEPROM(rt2x00dev, "Antenna: 0x%04x\n", word);
+ 	} else if (rt2x00_rev(&rt2x00dev->chip) < RT2883_VERSION) {
+ 		/*
+-		 * There is a max of 2 RX streams for RT2870 series
++		 * There is a max of 2 RX streams for RT28x0 series
+ 		 */
+ 		if (rt2x00_get_field16(word, EEPROM_ANTENNA_RXPATH) > 2)
+ 			rt2x00_set_field16(&word, EEPROM_ANTENNA_RXPATH, 2);
+@@ -770,6 +768,13 @@ static int rt2800usb_validate_eeprom(str
+ 	return 0;
+ }
+ 
++static int rt2800usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
++{
++	rt2x00usb_eeprom_read(rt2x00dev, rt2x00dev->eeprom, EEPROM_SIZE);
++
++	return rt2800_validate_eeprom(rt2x00dev);
++}
++
+ static int rt2800usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u32 reg;
+@@ -786,18 +791,23 @@ static int rt2800usb_init_eeprom(struct 
+ 	 */
+ 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
+ 	rt2800_register_read(rt2x00dev, MAC_CSR0, &reg);
+-	rt2x00_set_chip(rt2x00dev, RT2870, value, reg);
+ 
+-	/*
+-	 * The check for rt2860 is not a typo, some rt2870 hardware
+-	 * identifies itself as rt2860 in the CSR register.
+-	 */
+-	if (!rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28600000) &&
+-	    !rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28700000) &&
+-	    !rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28800000) &&
+-	    !rt2x00_check_rev(&rt2x00dev->chip, 0xffff0000, 0x30700000)) {
+-		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
+-		return -ENODEV;
++	if (rt2x00_intf_is_usb(rt2x00dev)) {
++		struct rt2x00_chip *chip = &rt2x00dev->chip;
++
++		rt2x00_set_chip(rt2x00dev, RT2870, value, reg);
++
++		/*
++		 * The check for rt2860 is not a typo, some rt2870 hardware
++		 * identifies itself as rt2860 in the CSR register.
++		 */
++		if (!rt2x00_check_rev(chip, 0xfff00000, 0x28600000) &&
++		    !rt2x00_check_rev(chip, 0xfff00000, 0x28700000) &&
++		    !rt2x00_check_rev(chip, 0xfff00000, 0x28800000) &&
++		    !rt2x00_check_rev(chip, 0xffff0000, 0x30700000)) {
++			ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
++			return -ENODEV;
++		}
+ 	}
+ 
+ 	if (!rt2x00_rf(&rt2x00dev->chip, RF2820) &&
