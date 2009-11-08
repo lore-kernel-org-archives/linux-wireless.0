@@ -1,59 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59190 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754828AbZKMSPV (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:64048 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753645AbZKHOP5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 13:15:21 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: m.sujith@gmail.com, mcgrof@gmail.com,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath9k: remove warnings related to signed/unsigned type mismatch
-Date: Fri, 13 Nov 2009 13:12:59 -0500
-Message-Id: <1258135979-6569-1-git-send-email-linville@tuxdriver.com>
+	Sun, 8 Nov 2009 09:15:57 -0500
+Received: by mail-ew0-f207.google.com with SMTP id 3so2388063ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 06:16:02 -0800 (PST)
+Message-ID: <4AF6D2A0.50204@gmail.com>
+Date: Sun, 08 Nov 2009 15:16:00 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+CC: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 1/9] rt2800: prepare for unification of EEPROM support
+ code
+References: <20091108133854.23584.86842.sendpatchset@localhost.localdomain>
+In-Reply-To: <20091108133854.23584.86842.sendpatchset@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  CC [M]  drivers/net/wireless/ath/ath9k/recv.o
-drivers/net/wireless/ath/ath9k/recv.c: In function `ath_rx_prepare':
-drivers/net/wireless/ath/ath9k/recv.c:208: warning: comparison is always true due to limited range of data type
-drivers/net/wireless/ath/ath9k/recv.c:220: warning: comparison is always false due to limited range of data type
+On 11/08/09 14:38, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] rt2800: prepare for unification of EEPROM support code
+> 
+> * Factor out common code from rt2800[pci,usb]_validate_eeprom()
+>   to rt2800_validate_eeprom().
+> 
+> * Fix interface specific comment in rt2800[pci,usb]_validate_eeprom().
+> 
+> * Enclose interface specific code in rt2800[pci,usb]_init_eeprom()
+>   with rt2x00_intf_is_[pci,usb]() checks.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+> on top of "rt2x00: Add dynamic detection of eFuse EEPROM in rt2800pci."
+> patch from Gertjan
+> 
+>  drivers/net/wireless/rt2x00/rt2800pci.c |   51 ++++++++++++++++++--------------
+>  drivers/net/wireless/rt2x00/rt2800usb.c |   40 +++++++++++++++----------
+>  2 files changed, 55 insertions(+), 36 deletions(-)
+> 
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+<snip>
+
+> @@ -1234,8 +1241,10 @@ static int rt2800pci_init_eeprom(struct 
+>  	    !rt2x00_rf(&rt2x00dev->chip, RF2750) &&
+>  	    !rt2x00_rf(&rt2x00dev->chip, RF3020) &&
+>  	    !rt2x00_rf(&rt2x00dev->chip, RF2020) &&
+> -	    !rt2x00_rf(&rt2x00dev->chip, RF3021) &&
+> -	    !rt2x00_rf(&rt2x00dev->chip, RF3022)) {
+> +	    (rt2x00_intf_is_usb(rt2x00dev) ||
+> +	     (rt2x00_intf_is_pci(rt2x00dev) &&
+> +	      !rt2x00_rf(&rt2x00dev->chip, RF3021) &&
+> +	      !rt2x00_rf(&rt2x00dev->chip, RF3022)))) {
+>  		ERROR(rt2x00dev, "Invalid RF chipset detected.\n");
+>  		return -ENODEV;
+>  	}
+
+Can we leave this as-is. There are rt2800usb devices that support these RF chipsets as well (I am now the proud owner of such a device), so there is no
+need to restrict the use of these RF chipsets to just PCI devices.
+So, if we leave this as-is then the EEPROM unification ensures rt2800usb will "support" these RF chipsets as well.
+
 ---
-The code has moved in wireless-testing, but AFAICT the issue is still
-there (even if my other compiler doesn't complain about it).
-
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
- drivers/net/wireless/ath/ath9k/recv.c  |    2 --
- 2 files changed, 1 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 1d59f10..9c07e1c 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -293,7 +293,7 @@ struct ath_tx_control {
- 
- #define ATH_RSSI_LPF_LEN 		10
- #define RSSI_LPF_THRESHOLD		-20
--#define ATH9K_RSSI_BAD			0x80
-+#define ATH9K_RSSI_BAD			-128
- #define ATH_RSSI_EP_MULTIPLIER     (1<<7)
- #define ATH_EP_MUL(x, mul)         ((x) * (mul))
- #define ATH_RSSI_IN(x)             (ATH_EP_MUL((x), ATH_RSSI_EP_MULTIPLIER))
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index ec0abf8..e2e8126 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -217,8 +217,6 @@ static int ath_rx_prepare(struct sk_buff *skb, struct ath_desc *ds,
- 					ATH_RSSI_EP_MULTIPLIER);
- 	if (ds->ds_rxstat.rs_rssi < 0)
- 		ds->ds_rxstat.rs_rssi = 0;
--	else if (ds->ds_rxstat.rs_rssi > 127)
--		ds->ds_rxstat.rs_rssi = 127;
- 
- 	/* Update Beacon RSSI, this is used by ANI. */
- 	if (ieee80211_is_beacon(fc))
--- 
-1.6.2.5
-
+Gertjan.
