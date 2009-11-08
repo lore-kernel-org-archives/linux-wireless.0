@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:56095 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755112AbZKMDRI (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:62471 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750760AbZKHNiu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 22:17:08 -0500
-Subject: Re: [PATCH] MAINTAINERS: RFKILL - Fix pattern entry missing colon
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Joe Perches <joe@perches.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1258066500.9696.7.camel@Joe-Laptop.home>
-References: <1258066500.9696.7.camel@Joe-Laptop.home>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 13 Nov 2009 04:17:15 +0100
-Message-ID: <1258082235.7715.8.camel@violet>
-Mime-Version: 1.0
+	Sun, 8 Nov 2009 08:38:50 -0500
+Received: by ewy3 with SMTP id 3so2371374ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 05:38:54 -0800 (PST)
+To: Jan Kiszka <jan.kiszka@web.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ar9170 in AP mode
+References: <4AF6C7CD.7060108@web.de>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sun, 08 Nov 2009 15:38:52 +0200
+In-Reply-To: <4AF6C7CD.7060108@web.de> (Jan Kiszka's message of "Sun\, 08 Nov 2009 14\:29\:49 +0100")
+Message-ID: <878wehf85v.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joe,
+Jan Kiszka <jan.kiszka@web.de> writes:
 
-> Signed-off-by: Joe Perches <joe@perches.com>
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 8264e6b..78c5a25 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -4417,7 +4417,7 @@ RFKILL
->  M:	Johannes Berg <johannes@sipsolutions.net>
->  L:	linux-wireless@vger.kernel.org
->  S:	Maintained
-> -F	Documentation/rfkill.txt
-> +F:	Documentation/rfkill.txt
->  F:	net/rfkill/
+> the ar9170 is not advertising its AP feature. However, hacking in the
+> bit allows me to run an AP on my D-Link DWA 160A with the sources of
+> yesterday's wireless-testing. Works mostly fine so far, just device
+> startup (firmware loading?) is sometimes a bit fragile, and rate control
+> seems to jump more than needed when the connection gets worse.
+>
+> There was some telling the multicast transmission would not work, but I
+> just tested it and cannot confirm this. Did something change or does a
+> specific multicast scenario still fail? Otherwise I would like to see AP
+> mode enabled in the ar9170 so that it works without modifying kernel
+> sources. Would post a patch then.
 
-an obvious correct patch :)
+Did you test with a client which had power save mode enabled? That's
+the tricky part. 
 
-Acked-by: Marcel Holtmann <marcel@holtmann.org>
+IMHO AP mode should not be enabled until it's confirmed that power
+save mode works properly.
 
-Regards
-
-Marcel
-
-
+-- 
+Kalle Valo
