@@ -1,57 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:44535 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933501AbZKXRM0 convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:39138 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751428AbZKHNey (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 12:12:26 -0500
-Received: by ey-out-2122.google.com with SMTP id 4so1312217eyf.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Nov 2009 09:12:31 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: David Ellingsworth <david@identd.dyndns.org>
-Subject: Re: [rt2x00-users] [PATCH v2 1/8] rt2x00: Only initialize HT on  rt2800 devices that support it.
-Date: Tue, 24 Nov 2009 18:12:29 +0100
-Cc: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless@vger.kernel.org
-References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com> <1259012694-14869-2-git-send-email-gwingerde@gmail.com> <30353c3d0911231418s4aedc5c3vc9cfead334a02c3f@mail.gmail.com>
-In-Reply-To: <30353c3d0911231418s4aedc5c3vc9cfead334a02c3f@mail.gmail.com>
+	Sun, 8 Nov 2009 08:34:54 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [git patches] rt2800 drivers updates
+Date: Sun, 8 Nov 2009 14:33:31 +0100
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-kernel@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200911241812.29532.IvDoorn@gmail.com>
+Message-Id: <200911081433.32005.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 23 November 2009, David Ellingsworth wrote:
-> On Mon, Nov 23, 2009 at 4:44 PM, Gertjan van Wingerde
-> <gwingerde@gmail.com> wrote:
-> > Some RT28xx/RT30xx devices don't support 802.11n, when they are combined with
-> > the RF2020 chipset. Ensure that HT is disabled for these devices.
-> >
-> > Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> > ---
-> >  drivers/net/wireless/rt2x00/rt2800lib.c |    6 +++++-
-> >  1 files changed, 5 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> > index e94f1e1..fcd0c88 100644
-> > --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> > +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> > @@ -2072,7 +2072,11 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
-> >        /*
-> >         * Initialize HT information.
-> >         */
-> > -       spec->ht.ht_supported = true;
-> > +       if (!rt2x00_rf(chip, RF2020))
-> > +               spec->ht.ht_supported = true;
-> > +       else
-> > +               spec->ht.ht_supported = false;
-> > +
-> 
-> Maybe I'm the only one, but I hate conditional statements with no
-> meaning. Maybe this instead?
-> 
-> spec->ht.ht_supported = !rt2x00_rf(chip, RF2020);
 
-I think this would look better as well. But either way you can add my:
+Hi,
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Another bunch of updates for rt2800 drivers, this time:
+
+- unify rt2800 drivers some more removing another 300 LOC in the process
+  (rt2800pci is down to 1.5 KLOC now)
+
+- add missing RF values to rt2800pci driver
+
+- add eFuse EEPROM support to rt2800usb
+  (needed for RT3070 and maybe some other chips)
+
+- fix RX descriptor naming in rt2800usb
+
+I've also merged recent rt2x00 patches from Gertjan to my tree to not
+waste time on eventually synchronizing rt2x00 / rt2800 trees later.
+
+Oh, there is also an unrelated bonus change to rt2500usb driver present
+(removal of dead link tuning code which kills 130 LOC).
+
+I'll post new patches to linux-wireless for review in few minutes.
+
+
+The following changes since commit 93f65fc385c7cca807826ce7f7a76c7429849331:
+  Bartlomiej Zolnierkiewicz (1):
+        rt2800: add rt2800lib (part four)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bart/misc.git rt2800
+
+Bartlomiej Zolnierkiewicz (10):
+      rt2800: prepare for unification of EEPROM support code
+      rt2800: unify EEPROM support code
+      rt2800pci: add missing RF values to rf_vals table
+      rt2800usb: reorganize code in rt2800usb_probe_hw_mode()
+      rt2800: prepare for rt2800*_probe_hw_mode() unification
+      rt2800: unify rt2800*_probe_hw_mode()
+      rt2800usb: fix RX descriptor naming
+      rt2800: add eFuse EEPROM support code to rt2800lib
+      rt2800usb: add eFuse EEPROM support
+      rt2500usb: remove dead link tuning code
+
+Gertjan van Wingerde (3):
+      rt2x00: Mark rt2800pci as broken.
+      rt2x00: Move interface type assignments to generic code.
+      rt2x00: Add dynamic detection of eFuse EEPROM in rt2800pci.
+
+ drivers/net/wireless/rt2x00/Kconfig     |    7 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c |  134 ---------
+ drivers/net/wireless/rt2x00/rt2800.h    |   29 ++
+ drivers/net/wireless/rt2x00/rt2800lib.c |  460 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2800lib.h |    6 +
+ drivers/net/wireless/rt2x00/rt2800pci.c |  406 ++--------------------------
+ drivers/net/wireless/rt2x00/rt2800pci.h |   28 --
+ drivers/net/wireless/rt2x00/rt2800usb.c |  411 +--------------------------
+ drivers/net/wireless/rt2x00/rt2800usb.h |   40 ++--
+ drivers/net/wireless/rt2x00/rt2x00pci.c |    2 +
+ drivers/net/wireless/rt2x00/rt2x00soc.c |    5 +
+ drivers/net/wireless/rt2x00/rt2x00usb.c |    2 +
+ 12 files changed, 556 insertions(+), 974 deletions(-)
