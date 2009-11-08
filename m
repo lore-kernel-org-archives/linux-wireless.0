@@ -1,61 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f180.google.com ([209.85.216.180]:60487 "EHLO
-	mail-px0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752639AbZKGTnq convert rfc822-to-8bit (ORCPT
+Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:61468 "EHLO
+	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753739AbZKHL2y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 14:43:46 -0500
-MIME-Version: 1.0
-In-Reply-To: <efe7343f0911071012u73317883wc60f5c188bc853e8@mail.gmail.com>
-References: <200911031951.05235.bzolnier@gmail.com> <200911042251.23506.IvDoorn@gmail.com>
-	<20091106074643.GA5562@ucw.cz> <200911061858.56816.IvDoorn@gmail.com>
-	<20091107173028.GA1932@ucw.cz> <efe7343f0911071012u73317883wc60f5c188bc853e8@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sat, 7 Nov 2009 11:43:32 -0800
-Message-ID: <43e72e890911071143m58eb312ck8e95edc7228ca07f@mail.gmail.com>
-Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project tree
-To: Luis Correia <luis.f.correia@gmail.com>
-Cc: Pavel Machek <pavel@ucw.cz>, Ivo van Doorn <ivdoorn@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 8 Nov 2009 06:28:54 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH] rt2x00: Mark rt2800pci as broken.
+Date: Sun,  8 Nov 2009 12:28:54 +0100
+Message-Id: <1257679734-25160-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 7, 2009 at 10:12 AM, Luis Correia <luis.f.correia@gmail.com> wrote:
-> Pavel,
->
-> On Sat, Nov 7, 2009 at 17:30, Pavel Machek <pavel@ucw.cz> wrote:
->> Hi!
->>
->>> > > So if I want to focus on something different in the kernel, I just send 1 patch,
->>> > > and a second to claim the maintainership of it even though there is an active
->>> > > maintainer available?
->>> >
->>> > What about listing yourself as a maintainer for a start?
->>>
->>> The rt2x00 project is listed as maintainer for everything in the
->>> drivers/net/wireless/rt2x00 folder.
->>
->> Yes, but that tells very little. I don't know who the 'rt2x00 project'
->> is. Perhaps its you? Perhaps its Bart? Maybe its my cat? Please just
->> list real names of maintainers...                 Pavel
->
-> the answer is (and always was available) here:
->
-> http://rt2x00.serialmonkey.com/wiki/index.php/Developers
->
-> Luis Correia
-> rt2x00 project admin
+The rt2800pci driver is currently only marked as experimental, and only the help text explains that
+the driver is basically non-functional. Make the driver depend on CONFIG_BROKEN so that users cannot
+enable this driver without knowing that it is broken.
 
-BTW is the rt2x00 project a non-profit? If not then that copyright
-notice on the files is pretty pointless as it would have no legal
-backing.
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/Kconfig |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+index bf60689..b0f4a2f 100644
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -64,8 +64,8 @@ config RT2800PCI_SOC
+ 	default y
+ 
+ config RT2800PCI
+-	tristate "Ralink rt2800 (PCI/PCMCIA) support (VERY EXPERIMENTAL)"
+-	depends on (RT2800PCI_PCI || RT2800PCI_SOC) && EXPERIMENTAL
++	tristate "Ralink rt2800 (PCI/PCMCIA) support (BROKEN)"
++	depends on (RT2800PCI_PCI || RT2800PCI_SOC) && EXPERIMENTAL && BROKEN
+ 	select RT2800_LIB
+ 	select RT2X00_LIB_PCI if RT2800PCI_PCI
+ 	select RT2X00_LIB_SOC if RT2800PCI_SOC
+@@ -78,9 +78,6 @@ config RT2800PCI
+ 	  This adds support for rt2800 wireless chipset family.
+ 	  Supported chips: RT2760, RT2790, RT2860, RT2880, RT2890 & RT3052
+ 
+-	  This driver is non-functional at the moment and is intended for
+-	  developers.
+-
+ 	  When compiled as a module, this driver will be called "rt2800pci.ko".
+ 
+ config RT2500USB
+-- 
+1.6.5.2
+
