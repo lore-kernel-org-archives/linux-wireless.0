@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:64048 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753645AbZKHOP5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 09:15:57 -0500
-Received: by mail-ew0-f207.google.com with SMTP id 3so2388063ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 06:16:02 -0800 (PST)
-Message-ID: <4AF6D2A0.50204@gmail.com>
-Date: Sun, 08 Nov 2009 15:16:00 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+Received: from mgw2.diku.dk ([130.225.96.92]:48218 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751438AbZKHIXF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Nov 2009 03:23:05 -0500
+Date: Sun, 8 Nov 2009 09:23:07 +0100 (CET)
+From: Julia Lawall <julia@diku.dk>
+To: Corey Thomas <coreythomas@charter.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] drivers/net/wireless: correct check on CCS_START_NETWORK
+Message-ID: <Pine.LNX.4.64.0911080922360.2465@ask.diku.dk>
 MIME-Version: 1.0
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-CC: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 1/9] rt2800: prepare for unification of EEPROM support
- code
-References: <20091108133854.23584.86842.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091108133854.23584.86842.sendpatchset@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/08/09 14:38, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2800: prepare for unification of EEPROM support code
-> 
-> * Factor out common code from rt2800[pci,usb]_validate_eeprom()
->   to rt2800_validate_eeprom().
-> 
-> * Fix interface specific comment in rt2800[pci,usb]_validate_eeprom().
-> 
-> * Enclose interface specific code in rt2800[pci,usb]_init_eeprom()
->   with rt2x00_intf_is_[pci,usb]() checks.
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
-> on top of "rt2x00: Add dynamic detection of eFuse EEPROM in rt2800pci."
-> patch from Gertjan
-> 
->  drivers/net/wireless/rt2x00/rt2800pci.c |   51 ++++++++++++++++++--------------
->  drivers/net/wireless/rt2x00/rt2800usb.c |   40 +++++++++++++++----------
->  2 files changed, 55 insertions(+), 36 deletions(-)
-> 
+From: Julia Lawall <julia@diku.dk>
 
-<snip>
+CCS_START_NETWORK is declared in drivers/net/wireless/rayctl.h with the
+comment Values for cmd.  status is previously compared to
+CCS_COMMAND_COMPLETE, which is declared in the same file with the comment
+Values for buffer_status.  Finally, it is possible at this point that cmd
+is CCS_START_NETWORK, because it is compared to that value in an enclosing
+switch that has CCS_START_NETWORK as one of two case labels around this code.
 
-> @@ -1234,8 +1241,10 @@ static int rt2800pci_init_eeprom(struct 
->  	    !rt2x00_rf(&rt2x00dev->chip, RF2750) &&
->  	    !rt2x00_rf(&rt2x00dev->chip, RF3020) &&
->  	    !rt2x00_rf(&rt2x00dev->chip, RF2020) &&
-> -	    !rt2x00_rf(&rt2x00dev->chip, RF3021) &&
-> -	    !rt2x00_rf(&rt2x00dev->chip, RF3022)) {
-> +	    (rt2x00_intf_is_usb(rt2x00dev) ||
-> +	     (rt2x00_intf_is_pci(rt2x00dev) &&
-> +	      !rt2x00_rf(&rt2x00dev->chip, RF3021) &&
-> +	      !rt2x00_rf(&rt2x00dev->chip, RF3022)))) {
->  		ERROR(rt2x00dev, "Invalid RF chipset detected.\n");
->  		return -ENODEV;
->  	}
-
-Can we leave this as-is. There are rt2800usb devices that support these RF chipsets as well (I am now the proud owner of such a device), so there is no
-need to restrict the use of these RF chipsets to just PCI devices.
-So, if we leave this as-is then the EEPROM unification ensures rt2800usb will "support" these RF chipsets as well.
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
 ---
-Gertjan.
+ drivers/net/wireless/ray_cs.c       |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
+index 1c88c2e..5ee9d2a 100644
+--- a/drivers/net/wireless/ray_cs.c
++++ b/drivers/net/wireless/ray_cs.c
+@@ -2074,7 +2074,7 @@ static irqreturn_t ray_interrupt(int irq, void *dev_id)
+ 				del_timer(&local->timer);
+ 				local->timer.expires = jiffies + HZ * 5;
+ 				local->timer.data = (long)local;
+-				if (status == CCS_START_NETWORK) {
++				if (cmd == CCS_START_NETWORK) {
+ 					DEBUG(0,
+ 					      "ray_cs interrupt network \"%s\" start failed\n",
+ 					      local->sparm.b4.a_current_ess_id);
