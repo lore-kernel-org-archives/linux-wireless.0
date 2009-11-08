@@ -1,75 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:37313 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759346AbZKZJoT (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:64326 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750954AbZKHOsp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 04:44:19 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>
-Subject: [PATCH 3/6] libertas: decouple mesh and rtap
-Date: Thu, 26 Nov 2009 10:44:13 +0100
+	Sun, 8 Nov 2009 09:48:45 -0500
+Received: by ewy3 with SMTP id 3so2402653ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 06:48:50 -0800 (PST)
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 7/7] rt2x00: Update copyright statements.
+Date: Sun, 8 Nov 2009 15:48:09 +0100
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+References: <1257689905-1611-1-git-send-email-gwingerde@gmail.com> <200911081525.58809.IvDoorn@gmail.com>
+In-Reply-To: <200911081525.58809.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200911261044.13371.holgerschurig@gmail.com>
+Message-Id: <200911081548.09279.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While it's might be technically true that only MESH-enabled firmwares
-are also RTAP-enabled, I like to have this decoupled. 
+On Sunday 08 November 2009 15:25:58 Ivo van Doorn wrote:
 
-Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
+> > diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> > index 5c7d74a..3207b83 100644
+> > --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> > +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> > @@ -3,7 +3,13 @@
+> >  
+> >  	Based on the original rt2800pci.c and rt2800usb.c:
+> >  
+> > -	  Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
+> > +	  Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>
+> > +	  Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>
+> > +	  Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
+> > +	  Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>
+> > +	  Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
+> > +	  Copyright (C) 2009 Mark Asselstine <asselsm@gmail.com>
+> > +	  Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
+> >  	  <http://rt2x00.serialmonkey.com>
+> >  
+> >  	This program is free software; you can redistribute it and/or modify
+> 
+> If Bartlomiej has no objections, we could just update the statements for rt2800lib.c/rt2800lib.h
+> to something similar as rt2800.h:
+> 
+> /*
+> 	Copyright (C) 2009 Bartlomiej Zolnierkiewicz
+> 	Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>
+> 	Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>
+> 	Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
+> 	Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>
+> 	Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
+> 	Copyright (C) 2009 Mark Asselstine <asselsm@gmail.com>
+> 	Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
+> 
+> 	This program is free software; you can redistribute it and/or modify
+> ....
+> 
+> because not sure if we need the seperate "based on" comment.. But I'll let Bartlomiej
+> decide on this one.
 
-
---- linux-wl.orig/drivers/net/wireless/libertas/main.c
-+++ linux-wl/drivers/net/wireless/libertas/main.c
-@@ -1075,6 +1075,17 @@ void lbs_remove_card(struct lbs_private 
- EXPORT_SYMBOL_GPL(lbs_remove_card);
- 
- 
-+static int lbs_rtap_supported(struct lbs_private *priv)
-+{
-+	if (MRVL_FW_MAJOR_REV(priv->fwrelease) == MRVL_FW_V5)
-+		return 1;
-+
-+	/* newer firmware use a capability mask */
-+	return ((MRVL_FW_MAJOR_REV(priv->fwrelease) >= MRVL_FW_V10) &&
-+		(priv->fwcapinfo & MESH_CAPINFO_ENABLE_MASK));
-+}
-+
-+
- int lbs_start_card(struct lbs_private *priv)
- {
- 	struct net_device *dev = priv->dev;
-@@ -1094,12 +1105,14 @@ int lbs_start_card(struct lbs_private *p
- 
- 	lbs_update_channel(priv);
- 
-+	lbs_init_mesh(priv);
-+
- 	/*
- 	 * While rtap isn't related to mesh, only mesh-enabled
- 	 * firmware implements the rtap functionality via
- 	 * CMD_802_11_MONITOR_MODE.
- 	 */
--	if (lbs_init_mesh(priv)) {
-+	if (lbs_rtap_supported(priv)) {
- 		if (device_create_file(&dev->dev, &dev_attr_lbs_rtap))
- 			lbs_pr_err("cannot register lbs_rtap attribute\n");
- 	}
-@@ -1133,7 +1146,9 @@ void lbs_stop_card(struct lbs_private *p
- 	netif_carrier_off(dev);
- 
- 	lbs_debugfs_remove_one(priv);
--	if (lbs_deinit_mesh(priv))
-+	lbs_deinit_mesh(priv);
-+
-+	if (lbs_rtap_supported(priv))
- 		device_remove_file(&dev->dev, &dev_attr_lbs_rtap);
- 
- 	/* Delete the timeout of the currently processing command */
+I think that the original version is correct and also documents new
+development direction well.
 
 -- 
-http://www.holgerschurig.de
+Bartlomiej Zolnierkiewicz
