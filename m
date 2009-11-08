@@ -1,91 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:60003 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751125AbZKHOmR (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:40356 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753925AbZKHTjE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 09:42:17 -0500
-Message-ID: <4AF6D845.9000600@web.de>
-Date: Sun, 08 Nov 2009 15:40:05 +0100
-From: Jan Kiszka <jan.kiszka@web.de>
+	Sun, 8 Nov 2009 14:39:04 -0500
+Received: by ewy3 with SMTP id 3so2546804ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 11:39:09 -0800 (PST)
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 8/9] rt2800: add eFuse EEPROM support code to rt2800lib
+Date: Sun, 8 Nov 2009 20:38:31 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+References: <20091108133854.23584.86842.sendpatchset@localhost.localdomain> <200911082021.32455.bzolnier@gmail.com> <200911082035.18197.IvDoorn@gmail.com>
+In-Reply-To: <200911082035.18197.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org
-Subject: Re: ar9170 in AP mode
-References: <4AF6C7CD.7060108@web.de> <878wehf85v.fsf@purkki.valot.fi>	 <4AF6CC02.8080204@web.de> <1257688870.29454.52.camel@johannes.local>
-In-Reply-To: <1257688870.29454.52.camel@johannes.local>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig9FD9F5550BAB7CE27660EC52"
+Message-Id: <200911082038.31906.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig9FD9F5550BAB7CE27660EC52
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Sunday 08 November 2009 20:35:17 Ivo van Doorn wrote:
+> > > > > I think that they shouldn't have been added in the first place and I'll be
+> > > > > happy to add patch removing them to rt2800 tree (since code savings seem to
+> > > > > be really marginal and not worth the maintenance cost). 
+> > > > 
+> > > > Removing the ifdefs entirely would be fine.
+> > > 
+> > > Like I said before -- this would mean driver's behavior change.  Even though
+> > > WISOC code is currently dead (RALINK_RT288X and RALINK_RT305X are never set)
+> > > I prefer to not "overload" patches with logically different changes.
+> > > 
+> > > If you feel strongly about it please fix it in rt2x00 code and rt2800 tree
+> > > will deal with it, or alternatively please send me an incremental patch.
+> > 
+> > BTW the patch's impact is _320_ bytes increase of rt2800lib (on x86-64 so
+> > it is probably much less on the affected embedded architectures):
+> > 
+> >    text	   data	    bss	    dec	    hex	filename
+> > before:
+> >   16916	      0	      0	  16916	   4214	drivers/net/wireless/rt2x00/rt2800lib.o
+> > after:
+> >   17281	      0	      0	  17281	   4381	drivers/net/wireless/rt2x00/rt2800lib.o
+> > 
+> > for the _completely_ dead code (because embedded WISOC support is never
+> > enabled) that probably will be changed over anyway later during development.
+> 
+> As mentioned: Wisoc is not dead code, it is there for the platform devices with
 
-Johannes Berg wrote:
-> On Sun, 2009-11-08 at 14:47 +0100, Jan Kiszka wrote:
->=20
->>> IMHO AP mode should not be enabled until it's confirmed that power
->>> save mode works properly.
->=20
-> Agreed.
->=20
->> How common is the combination of powersaving and mcast in practice?
->=20
-> Uh, it's nothing to do with the combination. If you don't support prope=
-r
-> mcast buffering, any powersaving client will be in big trouble due to
-> ARP/NDP etc.
->=20
-> Any device that supports powersaving is thus impacted. That ranges from=
+Not in upstream, not in next, not in wireless, not in rt2x00...
 
-> desktops and laptops down to your cellphone.
+=> Not our problem. ;)
 
-OK, confirmed with my cellphone: If I enable powersaving, it actually
-has troubles replying on arp requests.
-
-I kept it disabled as my previous AP setup (rt2500usb on a special
-2.6.21 kernel) used to fail with powersaving as well. So the good news
-is that one can perfectly run with such a setup for multiple years, and
-I will continue to do so with ar9170 for now - but I also see your point.=
-
-
->=20
->> Given that quite a few useful scenarios are blocked right now (unless
->> you know what to patch), I would at least vote for a config option or =
-a
->> module parameter. That gives a chance to warn the user about this
->> limitation without locking out people that are no hackers.
->=20
-> Given that we want to have everything support powersave on the client
-> side, I have to disagree -- supporting something that will be
-> troublesome for many clients will just make it look bad.
-
-OK, carrying that patch locally will not kill me. Hmm, is there a way in
-the 802.11 to tell a client to not apply powersaving in this cell - just
-in case?
-
-And what can be done to resolve this issue for real? Does the legacy
-otus driver work fine in this regard? Or are we lacking more information
-about the hardware?
-
-Jan
-
-
---------------enig9FD9F5550BAB7CE27660EC52
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
-
-iEYEARECAAYFAkr22EwACgkQitSsb3rl5xQZYwCgtA1AsCwiZlUIX11FxLKq5MjX
-2cUAnjmlRI56VbtDwYrftjHr7tulDdg1
-=A/QS
------END PGP SIGNATURE-----
-
---------------enig9FD9F5550BAB7CE27660EC52--
+-- 
+Bartlomiej Zolnierkiewicz
