@@ -1,49 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:51862 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753642AbZKIQtq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 11:49:46 -0500
-Message-ID: <4AF84828.7070807@lwfinger.net>
-Date: Mon, 09 Nov 2009 10:49:44 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from bu3sch.de ([62.75.166.246]:34506 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754638AbZKHUiy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Nov 2009 15:38:54 -0500
+Received: by vs166246.vserver.de with esmtpa (Exim 4.69)
+	id 1N7EXK-0006lG-V6
+	for linux-wireless@vger.kernel.org; Sun, 08 Nov 2009 20:38:59 +0000
+From: Michael Buesch <mb@bu3sch.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: Flaky connection on b43
+Date: Sun, 8 Nov 2009 21:37:46 +0100
 MIME-Version: 1.0
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-CC: Greg KH <gregkh@suse.de>, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Bernhard Schiffner <bernhard@schiffner-limbach.de>
-Subject: Re: [PATCH] Staging: remove rtl8187se driver because of lack of development
- activities
-References: <200911091731.36861.bzolnier@gmail.com>
-In-Reply-To: <200911091731.36861.bzolnier@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Message-Id: <200911082137.47096.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/09/2009 10:31 AM, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] Staging: remove rtl8187se driver because of lack of development activities
-> 
-> This driver hasn't seen any real development activities since early July:
-> 
->    257bc86   Staging: rtl8187se: remove unused #include <linu
->    2035beb   param:remove-useless-writable-charp
->    305409a   tree-wide: fix some typos and punctuation in com
->    b881c6c   Staging: fix wireless drivers depends
->    a010a33   Staging: rtl8187se/rtl8192e/rtl8192su: allow mod
->    125b181   staging: Add proper selection of WIRELESS_EXT an
->    b3184e1   Staging: rtl8187se: Fix comment-out-typo
->    b6ac161   Staging: ARRAY_SIZE changes
-> 
-> so remove it for now.
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+The connection is pretty flaky in b43 on wireless-testing.
+There seems to be some rekeying issue. See the log below and notice
+the dropped packets after the rekeying.
+Note that I have a short rekeying interval on my AP, so rekeying happens often.
+Any ideas? Possible bug in mac80211? Does somebody see this with other hardware?
 
-NACK. I am currently using this driver as a template for the development of a
-mainline rtl8187se driver. Removing the staging version would not matter to me,
-but it would complicate matters for my tester (Bernhard Schiffner
-<bernhard@schiffner-limbach.de>). I do not have the hardware, thus I rely on his
-help.
 
-Larry
+[76975.830202] wlan0: associated
+[76975.937851] b43-phy5 debug: Using hardware based encryption for keyidx: 0, mac: 00:1d:0f:b9:df:2d
+[76975.939981] b43-phy5 debug: Using hardware based encryption for keyidx: 1, mac: ff:ff:ff:ff:ff:ff
+[77761.827812] b43-phy5 debug: Using hardware based encryption for keyidx: 2, mac: ff:ff:ff:ff:ff:ff
+[77875.951220] b43-phy5 debug: Disabling hardware based encryption for keyidx: 0, mac: 00:1d:0f:b9:df:2d
+[77875.952590] b43-phy5 debug: Using hardware based encryption for keyidx: 0, mac: 00:1d:0f:b9:df:2d
+[77875.954108] b43-phy5 debug: Disabling hardware based encryption for keyidx: 2, mac: ff:ff:ff:ff:ff:ff
+[77875.956166] b43-phy5 debug: Using hardware based encryption for keyidx: 2, mac: ff:ff:ff:ff:ff:ff
+[77876.051452] b43-phy5 debug: RX: Packet dropped
+[77877.052824] b43-phy5 debug: RX: Packet dropped
+[77878.054659] b43-phy5 debug: RX: Packet dropped
+[77879.053856] wlan0: deauthenticated from 00:1d:0f:b9:df:2d (Reason: 2)
+[77879.056611] b43-phy5 debug: Disabling hardware based encryption for keyidx: 0, mac: 00:1d:0f:b9:df:2d
+[77879.058366] b43-phy5 debug: Disabling hardware based encryption for keyidx: 1, mac: ff:ff:ff:ff:ff:ff
+[77879.059675] b43-phy5 debug: Disabling hardware based encryption for keyidx: 2, mac: ff:ff:ff:ff:ff:ff
+[77880.245052] wlan0: direct probe to AP 00:1d:0f:b9:df:2d (try 1)
+[77880.248383] wlan0: direct probe responded
+[77880.249491] wlan0: authenticate with AP 00:1d:0f:b9:df:2d (try 1)
+[77880.252066] wlan0: authenticated
+[77880.253193] wlan0: associate with AP 00:1d:0f:b9:df:2d (try 1)
+[77880.256870] wlan0: RX ReassocResp from 00:1d:0f:b9:df:2d (capab=0x411 status=0 aid=1)
+[77880.258231] wlan0: associated
+[77880.365791] b43-phy5 debug: Using hardware based encryption for keyidx: 0, mac: 00:1d:0f:b9:df:2d
+[77880.367984] b43-phy5 debug: Using hardware based encryption for keyidx: 2, mac: ff:ff:ff:ff:ff:ff
+[78780.371370] b43-phy5 debug: Disabling hardware based encryption for keyidx: 0, mac: 00:1d:0f:b9:df:2d
+[78780.372773] b43-phy5 debug: Using hardware based encryption for keyidx: 0, mac: 00:1d:0f:b9:df:2d
+[78780.374583] b43-phy5 debug: Disabling hardware based encryption for keyidx: 2, mac: ff:ff:ff:ff:ff:ff
+[78780.375915] b43-phy5 debug: Using hardware based encryption for keyidx: 2, mac: ff:ff:ff:ff:ff:ff
+[78780.471554] b43-phy5 debug: RX: Packet dropped
+[78781.472872] b43-phy5 debug: RX: Packet dropped
+[78782.474189] b43-phy5 debug: RX: Packet dropped
+[78783.473891] wlan0: deauthenticated from 00:1d:0f:b9:df:2d (Reason: 2)
+[78783.476282] b43-phy5 debug: Disabling hardware based encryption for keyidx: 0, mac: 00:1d:0f:b9:df:2d
+[78783.477961] b43-phy5 debug: Disabling hardware based encryption for keyidx: 2, mac: ff:ff:ff:ff:ff:ff
+[78784.661586] wlan0: direct probe to AP 00:1d:0f:b9:df:2d (try 1)
+[78784.664937] wlan0: direct probe responded
+[78784.666073] wlan0: authenticate with AP 00:1d:0f:b9:df:2d (try 1)
+[78784.668733] wlan0: authenticated
+[78784.669863] wlan0: associate with AP 00:1d:0f:b9:df:2d (try 1)
+[78784.673479] wlan0: RX ReassocResp from 00:1d:0f:b9:df:2d (capab=0x411 status=0 aid=1)
+[78784.674860] wlan0: associated
+[78784.782422] b43-phy5 debug: Using hardware based encryption for keyidx: 0, mac: 00:1d:0f:b9:df:2d
+[78784.784936] b43-phy5 debug: Using hardware based encryption for keyidx: 2, mac: ff:ff:ff:ff:ff:ff
+[78961.814261] b43-phy5 debug: Using hardware based encryption for keyidx: 1, mac: ff:ff:ff:ff:ff:ff
 
+-- 
+Greetings, Michael.
