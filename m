@@ -1,319 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:41096 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932154AbZKDReQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 12:34:16 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 04 Nov 2009 18:33:57 +0100
-Message-Id: <20091104173357.28463.50170.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-Subject: [PATCH 16/41] rt2800pci: add rt2800_bbp_[read,write]() wrappers
+Received: from server19320154104.serverpool.info ([193.201.54.104]:48091 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753904AbZKIWVh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Nov 2009 17:21:37 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/4] [compat-2.6] Fix two warnings
+Date: Mon,  9 Nov 2009 23:20:58 +0100
+Message-Id: <1257805260-13265-3-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1257805260-13265-1-git-send-email-hauke@hauke-m.de>
+References: <1257805260-13265-1-git-send-email-hauke@hauke-m.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] rt2800pci: add rt2800_bbp_[read,write]() wrappers
+This fixes these two warnings:
+drivers/net/wireless/ath/ath5k/base.c:202: warning: ‘ath5k_pci_suspend_compat’ defined but not used
+drivers/net/wireless/ath/ath5k/base.c:216: warning: ‘ath5k_pci_resume_compat’ defined but not used
 
-Part of preparations for later code unification.
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/rt2x00/rt2800pci.c |  138 +++++++++++++++++---------------
- 1 file changed, 75 insertions(+), 63 deletions(-)
+ compat/patches/11-dev-pm-ops.patch |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -135,6 +135,18 @@ static void rt2800pci_bbp_read(struct rt
- 	mutex_unlock(&rt2x00dev->csr_mutex);
- }
- 
-+static inline void rt2800_bbp_write(struct rt2x00_dev *rt2x00dev,
-+				    const unsigned int word, const u8 value)
-+{
-+	rt2800pci_bbp_write(rt2x00dev, word, value);
-+}
-+
-+static inline void rt2800_bbp_read(struct rt2x00_dev *rt2x00dev,
-+				   const unsigned int word, u8 *value)
-+{
-+	rt2800pci_bbp_read(rt2x00dev, word, value);
-+}
-+
- static void rt2800pci_rfcsr_write(struct rt2x00_dev *rt2x00dev,
- 				  const unsigned int word, const u8 value)
- {
-@@ -399,8 +411,8 @@ static const struct rt2x00debug rt2800pc
- 		.word_count	= EEPROM_SIZE / sizeof(u16),
- 	},
- 	.bbp	= {
--		.read		= rt2800pci_bbp_read,
--		.write		= rt2800pci_bbp_write,
-+		.read		= rt2800_bbp_read,
-+		.write		= rt2800_bbp_write,
- 		.word_base	= BBP_BASE,
- 		.word_size	= sizeof(u8),
- 		.word_count	= BBP_SIZE / sizeof(u8),
-@@ -766,8 +778,8 @@ static void rt2800pci_config_ant(struct 
- 	u8 r1;
- 	u8 r3;
- 
--	rt2800pci_bbp_read(rt2x00dev, 1, &r1);
--	rt2800pci_bbp_read(rt2x00dev, 3, &r3);
-+	rt2800_bbp_read(rt2x00dev, 1, &r1);
-+	rt2800_bbp_read(rt2x00dev, 3, &r3);
- 
- 	/*
- 	 * Configure the TX antenna.
-@@ -800,8 +812,8 @@ static void rt2800pci_config_ant(struct 
- 		break;
- 	}
- 
--	rt2800pci_bbp_write(rt2x00dev, 3, r3);
--	rt2800pci_bbp_write(rt2x00dev, 1, r1);
-+	rt2800_bbp_write(rt2x00dev, 3, r3);
-+	rt2800_bbp_write(rt2x00dev, 1, r1);
- }
- 
- static void rt2800pci_config_lna_gain(struct rt2x00_dev *rt2x00dev,
-@@ -944,26 +956,26 @@ static void rt2800pci_config_channel(str
- 	/*
- 	 * Change BBP settings
- 	 */
--	rt2800pci_bbp_write(rt2x00dev, 62, 0x37 - rt2x00dev->lna_gain);
--	rt2800pci_bbp_write(rt2x00dev, 63, 0x37 - rt2x00dev->lna_gain);
--	rt2800pci_bbp_write(rt2x00dev, 64, 0x37 - rt2x00dev->lna_gain);
--	rt2800pci_bbp_write(rt2x00dev, 86, 0);
-+	rt2800_bbp_write(rt2x00dev, 62, 0x37 - rt2x00dev->lna_gain);
-+	rt2800_bbp_write(rt2x00dev, 63, 0x37 - rt2x00dev->lna_gain);
-+	rt2800_bbp_write(rt2x00dev, 64, 0x37 - rt2x00dev->lna_gain);
-+	rt2800_bbp_write(rt2x00dev, 86, 0);
- 
- 	if (rf->channel <= 14) {
- 		if (test_bit(CONFIG_EXTERNAL_LNA_BG, &rt2x00dev->flags)) {
--			rt2800pci_bbp_write(rt2x00dev, 82, 0x62);
--			rt2800pci_bbp_write(rt2x00dev, 75, 0x46);
-+			rt2800_bbp_write(rt2x00dev, 82, 0x62);
-+			rt2800_bbp_write(rt2x00dev, 75, 0x46);
- 		} else {
--			rt2800pci_bbp_write(rt2x00dev, 82, 0x84);
--			rt2800pci_bbp_write(rt2x00dev, 75, 0x50);
-+			rt2800_bbp_write(rt2x00dev, 82, 0x84);
-+			rt2800_bbp_write(rt2x00dev, 75, 0x50);
- 		}
- 	} else {
--		rt2800pci_bbp_write(rt2x00dev, 82, 0xf2);
-+		rt2800_bbp_write(rt2x00dev, 82, 0xf2);
- 
- 		if (test_bit(CONFIG_EXTERNAL_LNA_A, &rt2x00dev->flags))
--			rt2800pci_bbp_write(rt2x00dev, 75, 0x46);
-+			rt2800_bbp_write(rt2x00dev, 75, 0x46);
- 		else
--			rt2800pci_bbp_write(rt2x00dev, 75, 0x50);
-+			rt2800_bbp_write(rt2x00dev, 75, 0x50);
- 	}
- 
- 	rt2800_register_read(rt2x00dev, TX_BAND_CFG, &reg);
-@@ -995,23 +1007,23 @@ static void rt2800pci_config_channel(str
- 
- 	rt2800_register_write(rt2x00dev, TX_PIN_CFG, tx_pin);
- 
--	rt2800pci_bbp_read(rt2x00dev, 4, &bbp);
-+	rt2800_bbp_read(rt2x00dev, 4, &bbp);
- 	rt2x00_set_field8(&bbp, BBP4_BANDWIDTH, 2 * conf_is_ht40(conf));
--	rt2800pci_bbp_write(rt2x00dev, 4, bbp);
-+	rt2800_bbp_write(rt2x00dev, 4, bbp);
- 
--	rt2800pci_bbp_read(rt2x00dev, 3, &bbp);
-+	rt2800_bbp_read(rt2x00dev, 3, &bbp);
- 	rt2x00_set_field8(&bbp, BBP3_HT40_PLUS, conf_is_ht40_plus(conf));
--	rt2800pci_bbp_write(rt2x00dev, 3, bbp);
-+	rt2800_bbp_write(rt2x00dev, 3, bbp);
- 
- 	if (rt2x00_rev(&rt2x00dev->chip) == RT2860C_VERSION) {
- 		if (conf_is_ht40(conf)) {
--			rt2800pci_bbp_write(rt2x00dev, 69, 0x1a);
--			rt2800pci_bbp_write(rt2x00dev, 70, 0x0a);
--			rt2800pci_bbp_write(rt2x00dev, 73, 0x16);
-+			rt2800_bbp_write(rt2x00dev, 69, 0x1a);
-+			rt2800_bbp_write(rt2x00dev, 70, 0x0a);
-+			rt2800_bbp_write(rt2x00dev, 73, 0x16);
- 		} else {
--			rt2800pci_bbp_write(rt2x00dev, 69, 0x16);
--			rt2800pci_bbp_write(rt2x00dev, 70, 0x08);
--			rt2800pci_bbp_write(rt2x00dev, 73, 0x11);
-+			rt2800_bbp_write(rt2x00dev, 69, 0x16);
-+			rt2800_bbp_write(rt2x00dev, 70, 0x08);
-+			rt2800_bbp_write(rt2x00dev, 73, 0x11);
- 		}
- 	}
- 
-@@ -1025,9 +1037,9 @@ static void rt2800pci_config_txpower(str
- 	u32 value = TXPOWER_G_TO_DEV(txpower);
- 	u8 r1;
- 
--	rt2800pci_bbp_read(rt2x00dev, 1, &r1);
-+	rt2800_bbp_read(rt2x00dev, 1, &r1);
- 	rt2x00_set_field8(&reg, BBP1_TX_POWER, 0);
--	rt2800pci_bbp_write(rt2x00dev, 1, r1);
-+	rt2800_bbp_write(rt2x00dev, 1, r1);
- 
- 	rt2800_register_read(rt2x00dev, TX_PWR_CFG_0, &reg);
- 	rt2x00_set_field32(&reg, TX_PWR_CFG_0_1MBS, value);
-@@ -1176,7 +1188,7 @@ static inline void rt2800pci_set_vgc(str
- 				     struct link_qual *qual, u8 vgc_level)
- {
- 	if (qual->vgc_level != vgc_level) {
--		rt2800pci_bbp_write(rt2x00dev, 66, vgc_level);
-+		rt2800_bbp_write(rt2x00dev, 66, vgc_level);
- 		qual->vgc_level = vgc_level;
- 		qual->vgc_level_reg = vgc_level;
- 	}
-@@ -1720,7 +1732,7 @@ static int rt2800pci_wait_bbp_ready(stru
- 	msleep(1);
- 
- 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
--		rt2800pci_bbp_read(rt2x00dev, 0, &value);
-+		rt2800_bbp_read(rt2x00dev, 0, &value);
- 		if ((value != 0xff) && (value != 0x00))
- 			return 0;
- 		udelay(REGISTER_BUSY_DELAY);
-@@ -1741,33 +1753,33 @@ static int rt2800pci_init_bbp(struct rt2
- 		     rt2800pci_wait_bbp_ready(rt2x00dev)))
- 		return -EACCES;
- 
--	rt2800pci_bbp_write(rt2x00dev, 65, 0x2c);
--	rt2800pci_bbp_write(rt2x00dev, 66, 0x38);
--	rt2800pci_bbp_write(rt2x00dev, 69, 0x12);
--	rt2800pci_bbp_write(rt2x00dev, 70, 0x0a);
--	rt2800pci_bbp_write(rt2x00dev, 73, 0x10);
--	rt2800pci_bbp_write(rt2x00dev, 81, 0x37);
--	rt2800pci_bbp_write(rt2x00dev, 82, 0x62);
--	rt2800pci_bbp_write(rt2x00dev, 83, 0x6a);
--	rt2800pci_bbp_write(rt2x00dev, 84, 0x99);
--	rt2800pci_bbp_write(rt2x00dev, 86, 0x00);
--	rt2800pci_bbp_write(rt2x00dev, 91, 0x04);
--	rt2800pci_bbp_write(rt2x00dev, 92, 0x00);
--	rt2800pci_bbp_write(rt2x00dev, 103, 0x00);
--	rt2800pci_bbp_write(rt2x00dev, 105, 0x05);
-+	rt2800_bbp_write(rt2x00dev, 65, 0x2c);
-+	rt2800_bbp_write(rt2x00dev, 66, 0x38);
-+	rt2800_bbp_write(rt2x00dev, 69, 0x12);
-+	rt2800_bbp_write(rt2x00dev, 70, 0x0a);
-+	rt2800_bbp_write(rt2x00dev, 73, 0x10);
-+	rt2800_bbp_write(rt2x00dev, 81, 0x37);
-+	rt2800_bbp_write(rt2x00dev, 82, 0x62);
-+	rt2800_bbp_write(rt2x00dev, 83, 0x6a);
-+	rt2800_bbp_write(rt2x00dev, 84, 0x99);
-+	rt2800_bbp_write(rt2x00dev, 86, 0x00);
-+	rt2800_bbp_write(rt2x00dev, 91, 0x04);
-+	rt2800_bbp_write(rt2x00dev, 92, 0x00);
-+	rt2800_bbp_write(rt2x00dev, 103, 0x00);
-+	rt2800_bbp_write(rt2x00dev, 105, 0x05);
- 
- 	if (rt2x00_rev(&rt2x00dev->chip) == RT2860C_VERSION) {
--		rt2800pci_bbp_write(rt2x00dev, 69, 0x16);
--		rt2800pci_bbp_write(rt2x00dev, 73, 0x12);
-+		rt2800_bbp_write(rt2x00dev, 69, 0x16);
-+		rt2800_bbp_write(rt2x00dev, 73, 0x12);
- 	}
- 
- 	if (rt2x00_rev(&rt2x00dev->chip) > RT2860D_VERSION)
--		rt2800pci_bbp_write(rt2x00dev, 84, 0x19);
-+		rt2800_bbp_write(rt2x00dev, 84, 0x19);
- 
- 	if (rt2x00_rt(&rt2x00dev->chip, RT3052)) {
--		rt2800pci_bbp_write(rt2x00dev, 31, 0x08);
--		rt2800pci_bbp_write(rt2x00dev, 78, 0x0e);
--		rt2800pci_bbp_write(rt2x00dev, 80, 0x08);
-+		rt2800_bbp_write(rt2x00dev, 31, 0x08);
-+		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
-+		rt2800_bbp_write(rt2x00dev, 80, 0x08);
- 	}
- 
- 	for (i = 0; i < EEPROM_BBP_SIZE; i++) {
-@@ -1776,7 +1788,7 @@ static int rt2800pci_init_bbp(struct rt2
- 		if (eeprom != 0xffff && eeprom != 0x0000) {
- 			reg_id = rt2x00_get_field16(eeprom, EEPROM_BBP_REG_ID);
- 			value = rt2x00_get_field16(eeprom, EEPROM_BBP_VALUE);
--			rt2800pci_bbp_write(rt2x00dev, reg_id, value);
-+			rt2800_bbp_write(rt2x00dev, reg_id, value);
- 		}
- 	}
- 
-@@ -1795,9 +1807,9 @@ static u8 rt2800pci_init_rx_filter(struc
- 
- 	rt2800pci_rfcsr_write(rt2x00dev, 24, rfcsr24);
- 
--	rt2800pci_bbp_read(rt2x00dev, 4, &bbp);
-+	rt2800_bbp_read(rt2x00dev, 4, &bbp);
- 	rt2x00_set_field8(&bbp, BBP4_BANDWIDTH, 2 * bw40);
--	rt2800pci_bbp_write(rt2x00dev, 4, bbp);
-+	rt2800_bbp_write(rt2x00dev, 4, bbp);
- 
- 	rt2800pci_rfcsr_read(rt2x00dev, 22, &rfcsr);
- 	rt2x00_set_field8(&rfcsr, RFCSR22_BASEBAND_LOOPBACK, 1);
-@@ -1806,13 +1818,13 @@ static u8 rt2800pci_init_rx_filter(struc
- 	/*
- 	 * Set power & frequency of passband test tone
- 	 */
--	rt2800pci_bbp_write(rt2x00dev, 24, 0);
-+	rt2800_bbp_write(rt2x00dev, 24, 0);
- 
- 	for (i = 0; i < 100; i++) {
--		rt2800pci_bbp_write(rt2x00dev, 25, 0x90);
-+		rt2800_bbp_write(rt2x00dev, 25, 0x90);
- 		msleep(1);
- 
--		rt2800pci_bbp_read(rt2x00dev, 55, &passband);
-+		rt2800_bbp_read(rt2x00dev, 55, &passband);
- 		if (passband)
- 			break;
- 	}
-@@ -1820,13 +1832,13 @@ static u8 rt2800pci_init_rx_filter(struc
- 	/*
- 	 * Set power & frequency of stopband test tone
- 	 */
--	rt2800pci_bbp_write(rt2x00dev, 24, 0x06);
-+	rt2800_bbp_write(rt2x00dev, 24, 0x06);
- 
- 	for (i = 0; i < 100; i++) {
--		rt2800pci_bbp_write(rt2x00dev, 25, 0x90);
-+		rt2800_bbp_write(rt2x00dev, 25, 0x90);
- 		msleep(1);
- 
--		rt2800pci_bbp_read(rt2x00dev, 55, &stopband);
-+		rt2800_bbp_read(rt2x00dev, 55, &stopband);
- 
- 		if ((passband - stopband) <= filter_target) {
- 			rfcsr24++;
-@@ -1905,7 +1917,7 @@ static int rt2800pci_init_rfcsr(struct r
- 	/*
- 	 * Set back to initial state
- 	 */
--	rt2800pci_bbp_write(rt2x00dev, 24, 0);
-+	rt2800_bbp_write(rt2x00dev, 24, 0);
- 
- 	rt2800pci_rfcsr_read(rt2x00dev, 22, &rfcsr);
- 	rt2x00_set_field8(&rfcsr, RFCSR22_BASEBAND_LOOPBACK, 0);
-@@ -1914,9 +1926,9 @@ static int rt2800pci_init_rfcsr(struct r
- 	/*
- 	 * set BBP back to BW20
- 	 */
--	rt2800pci_bbp_read(rt2x00dev, 4, &bbp);
-+	rt2800_bbp_read(rt2x00dev, 4, &bbp);
- 	rt2x00_set_field8(&bbp, BBP4_BANDWIDTH, 0);
--	rt2800pci_bbp_write(rt2x00dev, 4, bbp);
-+	rt2800_bbp_write(rt2x00dev, 4, bbp);
- 
- 	return 0;
- }
+diff --git a/compat/patches/11-dev-pm-ops.patch b/compat/patches/11-dev-pm-ops.patch
+index a1937a9..fc4de8f 100644
+--- a/compat/patches/11-dev-pm-ops.patch
++++ b/compat/patches/11-dev-pm-ops.patch
+@@ -14,7 +14,6 @@ calls on compat code with only slight modifications.
+  static int		ath5k_pci_suspend(struct device *dev);
+  static int		ath5k_pci_resume(struct device *dev);
+ +#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
+-+#endif
+ +static int ath5k_pci_suspend_compat(struct pci_dev *pdev, pm_message_t state)
+ +{
+ +	int r;
+@@ -40,6 +39,7 @@ calls on compat code with only slight modifications.
+ +
+ +	return ath5k_pci_resume(&pdev->dev);
+ +}
+++#endif
+  
+  SIMPLE_DEV_PM_OPS(ath5k_pm_ops, ath5k_pci_suspend, ath5k_pci_resume);
+  #define ATH5K_PM_OPS	(&ath5k_pm_ops)
+-- 
+1.6.3.3
+
