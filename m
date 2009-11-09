@@ -1,92 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:57166 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753074AbZK3ROR (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:43726 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755074AbZKIWLe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2009 12:14:17 -0500
-Date: Mon, 30 Nov 2009 18:14:23 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 12/12] mwl8k: don't complain about oversized beacons in FINALIZE_JOIN
-Message-ID: <20091130171423.GO20214@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 9 Nov 2009 17:11:34 -0500
+Received: by ey-out-2122.google.com with SMTP id 4so69911eyf.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 14:11:38 -0800 (PST)
+Message-ID: <4AF89398.6060305@gmail.com>
+Date: Mon, 09 Nov 2009 23:11:36 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] rt2x00: Properly detect Ralink RT3070 devices.
+References: <1257803976-5378-1-git-send-email-gwingerde@gmail.com> <69e28c910911091404i18e4e4b8ydd9d334bc833de3b@mail.gmail.com>
+In-Reply-To: <69e28c910911091404i18e4e4b8ydd9d334bc833de3b@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The FINALIZE_JOIN firmware command only looks at the first couple of
-fields in the beacon, and therefore it's not necessary to complain if
-the beacon is longer than 128 bytes.
+On 11/09/09 23:04, Gábor Stefanik wrote:
+> On Mon, Nov 9, 2009 at 10:59 PM, Gertjan van Wingerde
+> <gwingerde@gmail.com> wrote:
+>> Allow rt2800usb to properly detect RT307X based devices, and set the appropriate chipset values.
+>>
+>> Signed-off-by: Gertjan van Wingede <gwingerde@gmail.com>
+>> ---
+>>  drivers/net/wireless/rt2x00/rt2800usb.c |   21 ++++++++++++++-------
+>>  drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
+>>  2 files changed, 15 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+>> index d22ab64..bd2f6e6 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+>> @@ -790,16 +790,19 @@ static int rt2800usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
+>>         */
+>>        value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
+>>        rt2800_register_read(rt2x00dev, MAC_CSR0, &reg);
+>> -       rt2x00_set_chip(rt2x00dev, RT2870, value, reg);
+>> +       rt2x00_set_chip_rf(rt2x00dev, value, reg);
+>>
+>>        /*
+>>         * The check for rt2860 is not a typo, some rt2870 hardware
+>>         * identifies itself as rt2860 in the CSR register.
+>>         */
+>> -       if (!rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28600000) &&
+>> -           !rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28700000) &&
+>> -           !rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28800000) &&
+>> -           !rt2x00_check_rev(&rt2x00dev->chip, 0xffff0000, 0x30700000)) {
+>> +       if (rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28600000) ||
+>> +           rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28700000) ||
+>> +           rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28800000)) {
+>> +               rt2x00_set_chip_rt(rt2x00dev, RT3070);
+> 
+> Typo?
+> 
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+Doh. You're right. And I did even test this on a RT2870 device :-(
+
+Thanks for noticing this.
+
+I'll resend the patch with this fixed.
+
+But first, I need to find a brown paper bag somewhere. ;-)
+
 ---
- drivers/net/wireless/mwl8k.c |   29 ++++++++---------------------
- 1 files changed, 8 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index f80cef9..bd56412 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -2469,8 +2469,6 @@ mwl8k_set_edca_params(struct ieee80211_hw *hw, __u8 qnum,
- /*
-  * CMD_FINALIZE_JOIN.
-  */
--
--/* FJ beacon buffer size is compiled into the firmware.  */
- #define MWL8K_FJ_BEACON_MAXLEN	128
- 
- struct mwl8k_cmd_finalize_join {
-@@ -2480,17 +2478,13 @@ struct mwl8k_cmd_finalize_join {
- } __attribute__((packed));
- 
- static int mwl8k_finalize_join(struct ieee80211_hw *hw, void *frame,
--				__u16 framelen, __u16 dtim)
-+			       int framelen, int dtim)
- {
- 	struct mwl8k_cmd_finalize_join *cmd;
- 	struct ieee80211_mgmt *payload = frame;
--	u16 hdrlen;
--	u32 payload_len;
-+	int payload_len;
- 	int rc;
- 
--	if (frame == NULL)
--		return -EINVAL;
--
- 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
- 	if (cmd == NULL)
- 		return -ENOMEM;
-@@ -2499,24 +2493,17 @@ static int mwl8k_finalize_join(struct ieee80211_hw *hw, void *frame,
- 	cmd->header.length = cpu_to_le16(sizeof(*cmd));
- 	cmd->sleep_interval = cpu_to_le32(dtim ? dtim : 1);
- 
--	hdrlen = ieee80211_hdrlen(payload->frame_control);
--
--	payload_len = framelen > hdrlen ? framelen - hdrlen : 0;
--
--	/* XXX TBD Might just have to abort and return an error */
--	if (payload_len > MWL8K_FJ_BEACON_MAXLEN)
--		printk(KERN_ERR "%s(): WARNING: Incomplete beacon "
--		       "sent to firmware. Sz=%u MAX=%u\n", __func__,
--		       payload_len, MWL8K_FJ_BEACON_MAXLEN);
--
--	if (payload_len > MWL8K_FJ_BEACON_MAXLEN)
-+	payload_len = framelen - ieee80211_hdrlen(payload->frame_control);
-+	if (payload_len < 0)
-+		payload_len = 0;
-+	else if (payload_len > MWL8K_FJ_BEACON_MAXLEN)
- 		payload_len = MWL8K_FJ_BEACON_MAXLEN;
- 
--	if (payload && payload_len)
--		memcpy(cmd->beacon_data, &payload->u.beacon, payload_len);
-+	memcpy(cmd->beacon_data, &payload->u.beacon, payload_len);
- 
- 	rc = mwl8k_post_cmd(hw, &cmd->header);
- 	kfree(cmd);
-+
- 	return rc;
- }
- 
--- 
-1.5.6.4
+Gertjan.
