@@ -1,65 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f42.google.com ([209.85.160.42]:61336 "EHLO
-	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758509AbZKYJ4X convert rfc822-to-8bit (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:19838 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755700AbZKIXr3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 04:56:23 -0500
-Received: by pwi3 with SMTP id 3so4769614pwi.21
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2009 01:56:29 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <200911251051.13940.holgerschurig@gmail.com>
-References: <6a2053110911250132p737d6d41y7388b48bb426a82e@mail.gmail.com>
-	<200911251051.13940.holgerschurig@gmail.com>
-From: kasi viswanathan <kasi.wireless@gmail.com>
-Date: Wed, 25 Nov 2009 15:26:09 +0530
-Message-ID: <6a2053110911250156t8a5f033g6ae66af5f98b53d3@mail.gmail.com>
-Subject: Re: AR5523 Support
-To: Holger Schurig <holgerschurig@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 9 Nov 2009 18:47:29 -0500
+Received: by ey-out-2122.google.com with SMTP id 4so87855eyf.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 15:47:35 -0800 (PST)
+From: Rui Paulo <rpaulo@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Rui Paulo <rpaulo@gmail.com>,
+	Javier Cardona <javier@cozybit.com>
+Subject: [PATCH v2 13/20] mac80211: properly forward the RANN IE
+Date: Mon,  9 Nov 2009 23:46:51 +0000
+Message-Id: <1257810418-30075-14-git-send-email-rpaulo@gmail.com>
+In-Reply-To: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
+References: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,
-> Did you honestly google for "linux ar5523" ?
+Increase hopcount and convert metric to LE before forwarding the RANN
+action frame.
 
-tried it.
+Signed-off-by: Rui Paulo <rpaulo@gmail.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
+Tested-by: Brian Cavagnolo <brian@cozybit.com>
+---
+ net/mac80211/mesh_hwmp.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-> I did the work for you and found
-> http://linuxwireless.org/en/users/Drivers/ar5523
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index c12cf5a..355099f 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -686,6 +686,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	orig_addr = rann->rann_addr;
+ 	orig_dsn = rann->rann_seq;
+ 	hopcount = rann->rann_hopcount;
++	hopcount++;
+ 	metric = rann->rann_metric;
+ 	mhwmp_dbg("received RANN from %pM\n", orig_addr);
+ 
+@@ -706,7 +707,8 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		mesh_path_sel_frame_tx(MPATH_RANN, flags, orig_addr,
+ 				       cpu_to_le32(orig_dsn),
+ 				       0, NULL, 0, sdata->dev->broadcast,
+-				       hopcount, ttl, 0, cpu_to_le32(metric),
++				       hopcount, ttl, 0,
++				       cpu_to_le32(metric + mpath->metric),
+ 				       0, sdata);
+ 		mpath->dsn = orig_dsn;
+ 	}
+-- 
+1.5.6.5
 
-thanks
-
-> However, I fear this might be a dead project, I haven't heard
-> anything about this in recent times.
-
-this doesn't compile cleanly and i am getting lot of compiler errors
-
-
-On Wed, Nov 25, 2009 at 3:21 PM, Holger Schurig <holgerschurig@gmail.com> wrote:
-> On Wednesday 25 November 2009 10:32:41 kasi viswanathan wrote:
->> hi,
->>    i am having an Atheros AR5523 usb wireless card.when i
->>    connect it to my machine, device is getting recognized and i
->>    am able to see the vendor and device ids using 'lsusb'.
->>
->> but when i issue 'iwconfig' i am not able to see any wireless
->> interfaces.
->>
->> any help and pointers will be useful.
->>
->> if there is no support as of now i am willing to contribute to
->> the driver development.
->
-> Did you honestly google for "linux ar5523" ?
->
-> I did the work for you and found
-> http://linuxwireless.org/en/users/Drivers/ar5523
->
->
-> However, I fear this might be a dead project, I haven't heard
-> anything about this in recent times.
->
-> --
-> http://www.holgerschurig.de
->
