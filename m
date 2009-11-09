@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:41240 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759052AbZKFTpE convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:2277 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755253AbZKIMkA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 14:45:04 -0500
-Received: by bwz27 with SMTP id 27so1544917bwz.21
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 11:45:08 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1257327017.28469.76.camel@johannes.local>
-References: <cb0375e10911031538n62fe7473x4dd41329b9264b5c@mail.gmail.com>
-	 <1257327017.28469.76.camel@johannes.local>
-Date: Fri, 6 Nov 2009 14:45:08 -0500
-Message-ID: <cb0375e10911061145ja572542hde731eee7279ea1@mail.gmail.com>
-Subject: Re: iwlwifi connection troubles, maybe aggregation related
-From: Andrew Lutomirski <luto@mit.edu>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 9 Nov 2009 07:40:00 -0500
+Received: by fg-out-1718.google.com with SMTP id d23so702887fga.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 04:40:05 -0800 (PST)
+From: Rui Paulo <rpaulo@gmail.com>
+To: linville@tuxdriver.com
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Rui Paulo <rpaulo@gmail.com>,
+	Javier Cardona <javier@cozybit.com>
+Subject: [PATCH 04/21] mac80211: fix typo in a comment
+Date: Mon,  9 Nov 2009 12:39:24 +0000
+Message-Id: <1257770381-7680-5-git-send-email-rpaulo@gmail.com>
+In-Reply-To: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
+References: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 4, 2009 at 4:30 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2009-11-03 at 18:38 -0500, Andrew Lutomirski wrote:
->
->> iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:21:d8:49:4a:52 tid = 0
->
->> Turning on or off power management and fiddling with
->> no_sleep_autoadjust makes no difference.  Setting tx_agg_tid_enable to
->> zero in debugfs while the connection was working seemed to make it a
->> little more reliable (it lasted long enough to do "git pull" but not
->> much longer).
->>
->> After running "iw dev wlan0 disconnect" a few times, I start to get
->> errors like this:
->>
->> [18078.209635] iwlagn 0000:03:00.0: SENSITIVITY_CMD failed
->> [18078.313461] iwlagn 0000:03:00.0: No space for Tx
->> [18078.313467] iwlagn 0000:03:00.0: Error sending SENSITIVITY_CMD:
->> enqueue_hcmd failed: -28
->> [18078.313470] iwlagn 0000:03:00.0: SENSITIVITY_CMD failed
->> [18078.522409] iwlagn 0000:03:00.0: No space for Tx
->> [18078.522414] iwlagn 0000:03:00.0: Error sending SENSITIVITY_CMD:
->> enqueue_hcmd failed: -28
->
-> Sounds like the firmware messes up ...
->
-> Maybe as a first workaround you could modprobe iwlagn with
-> 11n_disable=1. But I don't know at this point what the problem could be.
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Rui Paulo <rpaulo@gmail.com>
+Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
+Tested-by: Brian Cavagnolo <brian@cozybit.com>
+---
+ net/mac80211/mesh_plink.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-11n_disable50=1 seems to work.  I'll reply again if it stops working.
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index f98c8d2..4188752 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -79,7 +79,7 @@ void mesh_plink_dec_estab_count(struct ieee80211_sub_if_data *sdata)
+ /**
+  * mesh_plink_fsm_restart - restart a mesh peer link finite state machine
+  *
+- * @sta: mes peer link to restart
++ * @sta: mesh peer link to restart
+  *
+  * Locking: this function must be called holding sta->lock
+  */
+-- 
+1.5.6.5
 
-Do the Intel folks have any ideas?
-
-Thanks,
-Andy
