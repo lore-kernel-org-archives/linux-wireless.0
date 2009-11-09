@@ -1,31 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from jazz.viagenie.ca ([206.123.31.2]:56940 "EHLO jazz.viagenie.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751169AbZKZUYa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 15:24:30 -0500
-Message-ID: <4B0EE402.4040301@viagenie.ca>
-Date: Thu, 26 Nov 2009 15:24:34 -0500
-From: Simon Perreault <simon.perreault@viagenie.ca>
-MIME-Version: 1.0
-To: Andrey Yurovsky <andrey@cozybit.com>
-CC: Pat Erley <pat-lkml@erley.org>, linux-wireless@vger.kernel.org
-Subject: Re: Hardware for 802.11s
-References: <4B0C5E6F.5040302@viagenie.ca> <4B0C6493.7010805@erley.org> <45e8e6c40911250735o334e23degdf0f1e421aa590b9@mail.gmail.com>
-In-Reply-To: <45e8e6c40911250735o334e23degdf0f1e421aa590b9@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.deathmatch.net ([72.66.92.28]:3540 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753042AbZKIDAI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Nov 2009 22:00:08 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	ath9k-devel@lists.ath9k.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 3/3] ath5k: add LED definition for BenQ Joybook R55v
+Date: Sun,  8 Nov 2009 21:59:02 -0500
+Message-Id: <1257735542-29658-3-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1257735542-29658-1-git-send-email-me@bobcopeland.com>
+References: <1257735542-29658-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrey Yurovsky wrote, on 2009-11-25 10:35:
-> Can you please use a sniffer on the channel you
-> picked (it's channel 1 by default) and confirm that you see mesh
-> beacons from your devices once you "ifconfig up"?
+Setup the GPIOs for the BenQ Joybook netbook.
 
-We just tried this and did not see *anything*.
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/led.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Thanks,
-Simon
+diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
+index fca0cfa..d495890 100644
+--- a/drivers/net/wireless/ath/ath5k/led.c
++++ b/drivers/net/wireless/ath/ath5k/led.c
+@@ -65,6 +65,8 @@ static const struct pci_device_id ath5k_led_devices[] = {
+ 	{ ATH_SDEVICE(PCI_VENDOR_ID_AMBIT, 0x0422), ATH_LED(1, 1) },
+ 	/* E-machines E510 (tuliom@gmail.com) */
+ 	{ ATH_SDEVICE(PCI_VENDOR_ID_AMBIT, 0x0428), ATH_LED(3, 0) },
++	/* BenQ Joybook R55v (nowymarluk@wp.pl) */
++	{ ATH_SDEVICE(PCI_VENDOR_ID_QMI, 0x0100), ATH_LED(1, 0) },
+ 	/* Acer Extensa 5620z (nekoreeve@gmail.com) */
+ 	{ ATH_SDEVICE(PCI_VENDOR_ID_QMI, 0x0105), ATH_LED(3, 0) },
+ 	/* Fukato Datacask Jupiter 1014a (mrb74@gmx.at) */
 -- 
-DNS64 open-source   --> http://ecdysis.viagenie.ca
-STUN/TURN server    --> http://numb.viagenie.ca
-vCard 4.0           --> http://www.vcarddav.org
+1.6.2.5
+
+
