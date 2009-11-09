@@ -1,62 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:23592 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760575AbZKZPIx (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:56825 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755156AbZKIPqu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 10:08:53 -0500
-Subject: [PATCH 03/12] wl1251: fix error handling in wl1251_op_config()
-To: linville@tuxdriver.com
-From: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 26 Nov 2009 17:08:43 +0200
-Message-ID: <20091126150843.917.6633.stgit@tikku>
-In-Reply-To: <20091126150141.917.35278.stgit@tikku>
-References: <20091126150141.917.35278.stgit@tikku>
+	Mon, 9 Nov 2009 10:46:50 -0500
+Received: by ewy3 with SMTP id 3so3234403ewy.37
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 07:46:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <200911061931.16509.mb@bu3sch.de>
+References: <ba4215e10911060819y1175e003g695281fe084e07ab@mail.gmail.com>
+	 <200911061822.17121.mb@bu3sch.de>
+	 <ba4215e10911061027t413d2c34g8ad66a7982f7c43c@mail.gmail.com>
+	 <200911061931.16509.mb@bu3sch.de>
+Date: Mon, 9 Nov 2009 16:46:54 +0100
+Message-ID: <ba4215e10911090746g58fda2bdte98fca959ab0c466@mail.gmail.com>
+Subject: Re: b43: firmware loading problem and sleeping BUG
+From: Martin Fuzzey <mfuzzey@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+For the archives:
 
-Not all return values were checked and one exit from function didn't put
-firmware sleep after the error.
+On Fri, Nov 6, 2009 at 7:31 PM, Michael Buesch <mb@bu3sch.de> wrote:
+>
+> Your userspace firmware helper (I guess it's not udev on your device?)
+> might be throwing crap at the kernel.
+>
+Yes it is udev (at least for the moment - running on NFS root and
+concentrating on kernel stuff)
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1251_main.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+My problem was that I had _two_ udev rules invoking /lib/udev/firmware.sh
+this resulted in a race between them and the kernel sometimes getting the
+firmware for the previous request - hilarity ensued!
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index e9fb2ca..8ba6742 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -641,20 +641,25 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
- 		 * through the bss_info_changed() hook.
- 		 */
- 		ret = wl1251_ps_set_mode(wl, STATION_POWER_SAVE_MODE);
-+		if (ret < 0)
-+			goto out_sleep;
- 	} else if (!(conf->flags & IEEE80211_CONF_PS) &&
- 		   wl->psm_requested) {
- 		wl1251_debug(DEBUG_PSM, "psm disabled");
- 
- 		wl->psm_requested = false;
- 
--		if (wl->psm)
-+		if (wl->psm) {
- 			ret = wl1251_ps_set_mode(wl, STATION_ACTIVE_MODE);
-+			if (ret < 0)
-+				goto out_sleep;
-+		}
- 	}
- 
- 	if (conf->power_level != wl->power_level) {
- 		ret = wl1251_acx_tx_power(wl, conf->power_level);
- 		if (ret < 0)
--			goto out;
-+			goto out_sleep;
- 
- 		wl->power_level = conf->power_level;
- 	}
+One of the rules (50-udev-default.rules) was from the upstream udev source
+The other (udev.rules) was put there by openembedded.
+Have reported this to the OE list.
 
+With that sorted out it all seems to work fine - I haven't done any stress tests
+yet though.
+
+Thanks for your help
+
+Cheers,
+Martin
