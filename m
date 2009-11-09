@@ -1,32 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51404.mail.re2.yahoo.com ([206.190.38.183]:25635 "HELO
-	web51404.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750884AbZK3Ikq convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2009 03:40:46 -0500
-Message-ID: <120204.2322.qm@web51404.mail.re2.yahoo.com>
-Date: Mon, 30 Nov 2009 00:34:11 -0800 (PST)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: Configuring multicast/NO_ACK  data rate in mac80211
-To: ath5k-devel@lists.ath5k.org, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from Cpsmtpm-eml108.kpnxchange.com ([195.121.3.12]:62310 "EHLO
+	CPSMTPM-EML108.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753248AbZKIWQg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Nov 2009 17:16:36 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH v2] rt2x00: Properly detect Ralink RT3070 devices.
+Date: Mon,  9 Nov 2009 23:16:32 +0100
+Message-Id: <1257804992-7882-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
-we are currently evaluating whether ath5k/ath9k is able to replace Madwifi for
-a project we are working on. We use Madwifi (among other things) to transmit
-Video streams over multicast to a group of nodes in an IBSS network. To get 
-the required data rate we rely on the Madwifi iwpriv call mcast_rate.
-Is there an equivalent configuration option in mac80211?
+Allow rt2800usb to properly detect RT307X based devices, and set the appropriate chipset values.
 
- -- 
-Regards 
-Joerg 
+Signed-off-by: Gertjan van Wingede <gwingerde@gmail.com>
+---
 
-__________________________________________________
-Do You Yahoo!?
-Sie sind Spam leid? Yahoo! Mail verfügt über einen herausragenden Schutz gegen Massenmails. 
-http://mail.yahoo.com 
+Fix the typo found by Gábor Stefanik.
+
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |   21 ++++++++++++++-------
+ drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
+ 2 files changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index d22ab64..bd2f6e6 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -790,16 +790,19 @@ static int rt2800usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	 */
+ 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
+ 	rt2800_register_read(rt2x00dev, MAC_CSR0, &reg);
+-	rt2x00_set_chip(rt2x00dev, RT2870, value, reg);
++	rt2x00_set_chip_rf(rt2x00dev, value, reg);
+ 
+ 	/*
+ 	 * The check for rt2860 is not a typo, some rt2870 hardware
+ 	 * identifies itself as rt2860 in the CSR register.
+ 	 */
+-	if (!rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28600000) &&
+-	    !rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28700000) &&
+-	    !rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28800000) &&
+-	    !rt2x00_check_rev(&rt2x00dev->chip, 0xffff0000, 0x30700000)) {
++	if (rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28600000) ||
++	    rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28700000) ||
++	    rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28800000)) {
++		rt2x00_set_chip_rt(rt2x00dev, RT2870);
++	} else if (rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x30700000)) {
++		rt2x00_set_chip_rt(rt2x00dev, RT3070);
++	} else {
+ 		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
+ 		return -ENODEV;
+ 	}
+@@ -809,7 +812,9 @@ static int rt2800usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	    !rt2x00_rf(&rt2x00dev->chip, RF2720) &&
+ 	    !rt2x00_rf(&rt2x00dev->chip, RF2750) &&
+ 	    !rt2x00_rf(&rt2x00dev->chip, RF3020) &&
+-	    !rt2x00_rf(&rt2x00dev->chip, RF2020)) {
++	    !rt2x00_rf(&rt2x00dev->chip, RF2020) &&
++	    !rt2x00_rf(&rt2x00dev->chip, RF3021) &&
++	    !rt2x00_rf(&rt2x00dev->chip, RF3022)) {
+ 		ERROR(rt2x00dev, "Invalid RF chipset detected.\n");
+ 		return -ENODEV;
+ 	}
+@@ -1028,7 +1033,9 @@ static int rt2800usb_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 		spec->num_channels = ARRAY_SIZE(rf_vals);
+ 		spec->channels = rf_vals;
+ 	} else if (rt2x00_rf(&rt2x00dev->chip, RF3020) ||
+-		   rt2x00_rf(&rt2x00dev->chip, RF2020)) {
++		   rt2x00_rf(&rt2x00dev->chip, RF2020) ||
++		   rt2x00_rf(&rt2x00dev->chip, RF3021) ||
++		   rt2x00_rf(&rt2x00dev->chip, RF3022)) {
+ 		spec->num_channels = ARRAY_SIZE(rf_vals_3070);
+ 		spec->channels = rf_vals_3070;
+ 	}
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index fd13264..181496e 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -172,6 +172,7 @@ struct rt2x00_chip {
+ #define RT3052		0x3052	/* WSOC */
+ #define RT3090		0x3090	/* 2.4GHz PCIe */
+ #define RT2870		0x1600
++#define RT3070		0x1800
+ 
+ 	u16 rf;
+ 	u32 rev;
+-- 
+1.6.5.2
+
