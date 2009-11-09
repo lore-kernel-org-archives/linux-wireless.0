@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:62942 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752278AbZKIDFh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 22:05:37 -0500
-Received: by ewy3 with SMTP id 3so2746807ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 19:05:42 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1257735542-29658-1-git-send-email-me@bobcopeland.com>
-References: <1257735542-29658-1-git-send-email-me@bobcopeland.com>
-Date: Mon, 9 Nov 2009 05:05:42 +0200
-Message-ID: <40f31dec0911081905o6425795fxb5a6a1ba25bdc7f5@mail.gmail.com>
-Subject: Re: [PATCH 1/3] ath5k: don't reset mcast filter when configuring the
-	mode
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linville@tuxdriver.com, jirislaby@gmail.com,
-	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:48106 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754025AbZKIWVn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Nov 2009 17:21:43 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 4/4] [compat-2.6] Add symbol CONFIG_RT2800_LIB
+Date: Mon,  9 Nov 2009 23:21:00 +0100
+Message-Id: <1257805260-13265-5-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1257805260-13265-1-git-send-email-hauke@hauke-m.de>
+References: <1257805260-13265-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/11/9 Bob Copeland <me@bobcopeland.com>:
-> We should not zero out the multicast hash when configuring
-> the operating mode, since a zero value means all multicast
-> frames will get dropped.  Also, ath5k_mode_setup() gets
-> called after any reset, so the hash already set up in
-> configure_filter() is lost.
->
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
->  drivers/net/wireless/ath/ath5k/base.c |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> index 07c1e52..cb3dc89 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -1146,7 +1146,6 @@ ath5k_mode_setup(struct ath5k_softc *sc)
->        /* configure operational mode */
->        ath5k_hw_set_opmode(ah);
->
-> -       ath5k_hw_set_mcast_filter(ah, 0, 0);
->        ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "RX filter 0x%x\n", rfilt);
->  }
->
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ config.mk |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
-
-
+diff --git a/config.mk b/config.mk
+index ce70832..9a04dea 100644
+--- a/config.mk
++++ b/config.mk
+@@ -248,6 +248,7 @@ CONFIG_RT2X00_LIB_PCI=m
+ CONFIG_RT2400PCI=m
+ CONFIG_RT2500PCI=m
+ CONFIG_RT2800PCI=m
++CONFIG_RT2800PCI_PCI=y
+ NEED_RT2X00=y
+ 
+ # Two rt2x00 drivers require firmware: rt61pci and rt73usb. They depend on
+@@ -368,14 +369,13 @@ endif # end of SDIO driver list
+ 
+ # Common rt2x00 requirements
+ ifeq ($(NEED_RT2X00),y)
+-CONFIG_RT2X00=m
++CONFIG_RT2X00=y
+ CONFIG_RT2X00_LIB=m
++CONFIG_RT2800_LIB=m
+ CONFIG_RT2X00_LIB_HT=y
+ CONFIG_RT2X00_LIB_FIRMWARE=y
+ CONFIG_RT2X00_LIB_CRYPTO=y
+-CONFIG_RT2X00_LIB_RFKILL=y
+ CONFIG_RT2X00_LIB_LEDS=y
+-# CONFIG_RT2X00_LIB_DEBUGFS=y
+ # CONFIG_RT2X00_DEBUG=y
+ endif
+ 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.6.3.3
+
