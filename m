@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sour.ops.eusc.inter.net ([84.23.254.154]:56505 "EHLO
-	sour.ops.eusc.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932367AbZKXJLm (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:57219 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754753AbZKIW6m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 04:11:42 -0500
-Message-ID: <4B0B9E99.1060201@snafu.de>
-Date: Tue, 24 Nov 2009 09:51:37 +0100
-From: Oncaphillis <oncaphillis@snafu.de>
-Reply-To: oncaphillis@snafu.de
+	Mon, 9 Nov 2009 17:58:42 -0500
+Received: by iwn10 with SMTP id 10so2801414iwn.4
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 14:58:48 -0800 (PST)
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: bcm43xx-dev@lists.berlios.de,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH RFC] ssb: Generic SPROM override for devices without SPROM
-References: <200911201212.19588.mb@bu3sch.de>
-In-Reply-To: <200911201212.19588.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1257805260-13265-1-git-send-email-hauke@hauke-m.de>
+References: <1257805260-13265-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 9 Nov 2009 14:58:28 -0800
+Message-ID: <43e72e890911091458n9d1b2aew1977034c874fc68f@mail.gmail.com>
+Subject: Re: [PATCH 0/4] [compat-2.6] Some patches for compat-wireless
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/20/2009 12:12 PM, Michael Buesch wrote:
-> This patch adds a generic mechanism for overriding the SPROM mechanism
-> on devices without SPROM hardware.
+On Mon, Nov 9, 2009 at 2:20 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> Some patches for compat-wireless
+> For kernel 2.6.26 and older debugfs_remove_recursive needs to be
+> backported. The problems with rt2800lib will be fixed in
+> wireless-testing.
 >
-> There currently is a major problem with this:
-> It tries to deduce a MAC address from various hardware parameters. But
-> currently it will result in the same MAC address for machines of the same
-> type. Does somebody have an idea of some device-instance specific serial
-> number or something similar that could be hashed into the MAC?
->
-What version is this patch against ? I tries rc7,rc8 and 2.6.31.6.
-But it doesn't work for me.
+> v2: resend patches because of line-wrap.
 
-Thank you
+Applied thanks. BTW git apply still did not like these patches due to
+the tab after From:, it seems git likes no tab there but just a space.
 
-Sebastian
+  Luis
 
+[1] http://wireless.kernel.org/en/developers/Documentation/git-guide
