@@ -1,59 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:58331 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751999AbZKQWIv (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.156]:26409 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755447AbZKIMl0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 17:08:51 -0500
-Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and
- why?
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Michael Renzmann <mrenzmann@madwifi-project.org>,
-	madwifi-devel@lists.sourceforge.net,
-	madwifi-users@lists.sourceforge.net, linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20091117140534.GD27743@tuxdriver.com>
-References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de>
-	 <43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com>
-	 <20091117140534.GD27743@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 17 Nov 2009 23:08:51 +0100
-Message-ID: <1258495731.2003.44.camel@violet>
-Mime-Version: 1.0
+	Mon, 9 Nov 2009 07:41:26 -0500
+Received: by fg-out-1718.google.com with SMTP id e12so1189980fga.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 04:41:31 -0800 (PST)
+From: Rui Paulo <rpaulo@gmail.com>
+To: linville@tuxdriver.com
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Rui Paulo <rpaulo@gmail.com>,
+	Javier Cardona <javier@cozybit.com>
+Subject: [PATCH 15/21] mac80211: set the AID field correctly for mesh peer frames
+Date: Mon,  9 Nov 2009 12:39:35 +0000
+Message-Id: <1257770381-7680-16-git-send-email-rpaulo@gmail.com>
+In-Reply-To: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
+References: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+This sets the AID field correctly for mesh peer confirm frames.
 
-> > If a few developers still exist who are committed to helping maintain
-> > madwifi until ath5k gets feature-parred the easiest solution now
-> > (since the HAL is open) is to just throw it into staging and hopefully
-> > that'll attract more developers to help keep it up to date with actual
-> > current kernels.
-> 
-> For the record, I would be generally opposed to adding madwifi to
-> drivers/staging.  We already have enough trouble with duplication of
-> hardware support between drivers/staging and drivers/net/wireless.
-> 
-> If madwifi has features that people need/want and that ath5k/mac80211
-> still lacks, lets talk about how to get them (or reasonabe replacements
-> for them) into the mainline kernel.  I'm sure some ideas will meet
-> some resistance, but if someone is motivated to continue pursuing
-> maintenance of madwifi than they should be motivated enough to at
-> least try to convince the rest of us why those features are worth
-> having in net/wireless, net/mac80211, and/or drivers/net/wireless.
-> Even if the solution is some quirky thing that "normal" people will
-> ignore, it is bound to be better to have mainline support than to
-> continue working out-of-tree.
+Signed-off-by: Rui Paulo <rpaulo@gmail.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
+Tested-by: Brian Cavagnolo <brian@cozybit.com>
+---
+ net/mac80211/mesh_plink.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-I 100% agree with you. The MadWifi driver should NOT be included into
-the staging tree. We have an upstream driver for this hardware and if
-people are not happy with it, then they should start fixing or extending
-it. A second driver for the same hardware just causes confusion.
-
-Regards
-
-Marcel
-
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index cf12f61..ec68d20 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -181,7 +181,8 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 		if (action == PLINK_CONFIRM) {
+ 			pos = skb_put(skb, 4);
+ 			/* two-byte status code followed by two-byte AID */
+-			memset(pos, 0, 4);
++			memset(pos, 0, 2);
++			memcpy(pos + 2, &plid, 2);
+ 		}
+ 		mesh_mgmt_ies_add(skb, sdata);
+ 	}
+-- 
+1.5.6.5
 
