@@ -1,113 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:47713 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751841AbZKCQts (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:45892 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751688AbZKITtq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 11:49:48 -0500
-Subject: Re: Please consider reverting
- 7d930bc33653d5592dc386a76a38f39c2e962344
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
-	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20091103162955.GA4836@elte.hu>
-References: <20091103053156.GA3212@core.coreip.homeip.net>
-	 <20091102.224957.32364226.davem@davemloft.net>
-	 <20091103065238.GE3212@core.coreip.homeip.net>
-	 <1257232587.3420.55.camel@localhost.localdomain>
-	 <alpine.LFD.2.01.0911030719430.31845@localhost.localdomain>
-	 <1257262588.3420.79.camel@localhost.localdomain>
-	 <alpine.LFD.2.01.0911030738260.31845@localhost.localdomain>
-	 <1257264485.3420.87.camel@localhost.localdomain>
-	 <20091103162955.GA4836@elte.hu>
-Content-Type: text/plain
-Date: Wed, 04 Nov 2009 01:49:44 +0900
-Message-Id: <1257266984.3420.111.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Mon, 9 Nov 2009 14:49:46 -0500
+Received: by iwn10 with SMTP id 10so2653510iwn.4
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 11:49:52 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <fd145f7d0911091052m187aad9dh6c03f593a2580067@mail.gmail.com>
+References: <4AF6C7CD.7060108@web.de> <878wehf85v.fsf@purkki.valot.fi>
+	<4AF6CC02.8080204@web.de> <m3639k9kq4.wl%holgerschurig@gmail.com>
+	<87ocncdrfz.fsf@purkki.valot.fi> <fd145f7d0911091052m187aad9dh6c03f593a2580067@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 9 Nov 2009 11:49:32 -0800
+Message-ID: <43e72e890911091149nb644643uf6b87291f36914eb@mail.gmail.com>
+Subject: Re: ar9170 in AP mode
+To: Jeffrey Baker <jwbaker@gmail.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ingo,
+On Mon, Nov 9, 2009 at 10:52 AM, Jeffrey Baker <jwbaker@gmail.com> wrote:
+> On Mon, Nov 9, 2009 at 12:37 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
+>> Holger Schurig <holgerschurig@googlemail.com> writes:
+>>
+>>>> How common is the combination of powersaving and mcast in practice?
+>>>> Given that quite a few useful scenarios are blocked right now (unless
+>>>> you know what to patch), I would at least vote for a config option or a
+>>>> module parameter. That gives a chance to warn the user about this
+>>>> limitation without locking out people that are no hackers.
+>>>
+>>> In my case (hand-help devices) it's very common. Without power-save,
+>>> the battery would be drained so fast it wouldn't be usable.
+>>
+>> Yes, just to give a concrete example of n810 wlan idle case
+>> (associated, but no data transfered):
+>>
+>> ps off  7 hours
+>> ps on   7 days
+>>
+>> Huge difference.
+>>
+>>> And with power-save and an AP that can't handle this, you'd get
+>>> weird errors.
+>>
+>> Exactly. These kinds of errors are very difficult for the users to
+>> understand.
+>>
+>>> So, I personally prefer to have "Do an AP right" or "Don't do it at
+>>> all". But please no general enablement.
+>>>
+>>> But, for example, having some CONFIG_AR9K_AP_MODE depending on
+>>> CONFIG_EXPERIMENTAL and a bit fat warning would do for me. Hopefully
+>>> this would scara away distros, so that they don't turn this on for
+>>> there standard kernel :-)
+>>
+>> I think EXPERIMENTAL is not enough, I would prefer that the user needs
+>> to patch the driver to enable it. Or if that's not good enough, then
+>> maybe depend on BROKEN.
+>
+> Is this broken on all ar9k or just the 9170?
 
-> > > > no questions that it needs fixed, I agree with you. However just blindly
-> > > > reverting something, because it fixes it for one or two people, might
-> > > > have side effects that causes more problems than the revert would
-> > > > actually fix.
-> > > 
-> > > Stop whining. Really.
-> > > 
-> > > Everybody understands that it should be fixed.  That's not the question.
-> > > 
-> > > But it should be fixed _quickly_. In this case, I have a bisection report 
-> > > FROM TWO DAYS AGO. And I'm still kicking myself for not just reverting 
-> > > that piece-of-shit commit then, because I spent the time to look at the 
-> > > oops and the commit, and could tell that it was crap.
-> > > 
-> > > Instead, I _did_ wait for the subsystem maintainer to get around to it. As 
-> > > a result of waiting, I've now wasted time for a lot of other people.
-> > 
-> > I do have a patch in my inbox from Johannes from 4 days ago that fixes 
-> > this issue.
-> > 
-> > 	http://marc.info/?l=linux-wireless&m=125697124819563&w=2
-> > 
-> > So what is the take away from this now? Do you wanna have Johannes 
-> > step over John and Dave and send such a patch directly to you?
-> 
-> The problem as i see it is the kind of answer Johannes gave when the bug 
-> was bisected to by Jeff Chua two days ago:
-> 
->   Subject: wpa2 hangs v2.6.32-rc5-402-gb6727b1. Revert
->            7d930bc33653d5592dc386a76a38f39c2e962344 fixed it.
-> 
->  [ <1257151742.3555.165.camel@johannes.local> ]
->  ...
->  |
->  | On Sun, 2009-11-01 at 23:18 +0800, Jeff Chua wrote:
->  | > wpa2 (wpa_supplicant) hangs v2.6.32-rc5-402-gb6727b1.
->  |
->  | Explain?
->  |
->  | > Reverting 7d930bc33653d5592dc386a76a38f39c2e962344 fixes it.
->  |
->  | Certainly not a good idea, will break when your AP denies association.
->  |
->  | johannes
-> 
-> Unhelpful, defensive, in denial.
-> 
-> Plus that you tried to berate Dmitry in this particular thread about the 
-> revert was pretty bad form too IMO.
-> 
-> _Anyone_ who went through the unnecessary, avoidable cost of having to 
-> do a bisection of a 3 days old commit merged at around -rc5 time is in 
-> his full rights to ask for a revert, straight from Linus if he thinks 
-> so. No ifs and when about it.
-> 
-> So IMO you are showing the wrong kind of attitude for a post-rc5 
-> regression, by a _wide_ margin. The right kind of attitude would be:
-> 
->   "Oops, my bad - thanks. I've queued up a revert."
-> 
-> or:
-> 
->   "Oops, my bad - thanks. Does the attached patch fix it?
->    If not we'll revert it."
-> 
-> Furthermore, your 'hey, nothing happened, we fixed it after all' 
-> argument is just a forewarning that you learned nothing and such 
-> avoidable incidents could repeat in the future.
+Just ar9170.
 
-who said 'hey, nothing happened, we fixed it after all'. The fix for
-this issue is 4 days old and was already on the way to Linus. And I
-remember the first response was that this got fixed already and that the
-patch is going to Linus.
-
-Regards
-
-Marcel
-
-
+  Luis
