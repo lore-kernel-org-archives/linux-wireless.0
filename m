@@ -1,32 +1,1029 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li59-9.members.linode.com ([97.107.129.9]:40432 "EHLO erley.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757410AbZKYPgz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 10:36:55 -0500
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:65182 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752923AbZKIX2t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Nov 2009 18:28:49 -0500
+Date: Mon, 09 Nov 2009 17:28:53 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: bzolnier@gmail.com,
+	Bernhard Schiffner <bernhard@schiffner-limbach.de>,
+	linux-wireless@vger.kernel.org
+Subject: [RFT 2/6] rtl8187se: Create file rtl8187se_dev.c
+Message-ID: <4af8a5b5.DWtJoJdRhk8G1gBh%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Date: Wed, 25 Nov 2009 10:36:59 -0500
-From: <pat-lkml@erley.org>
-To: Simon Perreault <simon.perreault@viagenie.ca>
-Cc: Rui Paulo <rpaulo@gmail.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: Hardware for 802.11s
-In-Reply-To: <4B0D4E98.5090600@viagenie.ca>
-References: <4B0C5E6F.5040302@viagenie.ca> <4B0C6493.7010805@erley.org> <4B0D360A.3080801@viagenie.ca> <D0FDC725-10F7-473E-995F-EC842DB8AC18@gmail.com> <4B0D4E98.5090600@viagenie.ca>
-Message-ID: <66c7012a2fea8a9dd6fbdf30d0a44410@127.0.0.1>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 25 Nov 2009 10:34:48 -0500, Simon Perreault
-<simon.perreault@viagenie.ca> wrote:
-> Rui Paulo wrote, on 2009-11-25 09:45:
->> Try iwlist mesh0 scanning.
-> 
-> The output of that looks very much like that of "iw dev mesh0 scan" with
-> different formatting.
-> 
-> It doesn't help. "iw dev mesh0 station dump" is still empty.
+Create the main device file for rtl8187se.
 
-Did you do that on both ends?  What is the full procedure you're using to
-set up the mesh interfaces on the nodes?  
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Pat Erley
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187se_dev.c
+===================================================================
+--- /dev/null
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187se_dev.c
+@@ -0,0 +1,1000 @@
++
++/*
++ * Linux device driver for RTL8187SE
++ *
++ * Copyright 2009 Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ * Based on the r8180 driver, which is:
++ * Copyright 2004-2005 Andrea Merello <andreamrl@tiscali.it>, et al.
++ *
++ * Thanks to Realtek for their support!
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/init.h>
++#include <linux/pci.h>
++#include <linux/delay.h>
++#include <linux/etherdevice.h>
++#include <linux/eeprom_93cx6.h>
++#include <net/mac80211.h>
++
++#include "rtl8187se.h"
++#include "rtl8187se_rtl8225.h"
++
++MODULE_AUTHOR("Larry Finger <Larry.Finger@lwfinger.net>");
++MODULE_DESCRIPTION("RTL8187SE PCI wireless driver");
++MODULE_LICENSE("GPL");
++
++static struct pci_device_id rtl8187se_table[] __devinitdata = {
++	{ PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8189) },
++	{ }
++};
++
++MODULE_DEVICE_TABLE(pci, rtl8187se_table);
++
++static const struct ieee80211_rate rtl818x_rates[] = {
++	{ .bitrate = 10, .hw_value = 0, },
++	{ .bitrate = 20, .hw_value = 1, },
++	{ .bitrate = 55, .hw_value = 2, },
++	{ .bitrate = 110, .hw_value = 3, },
++	{ .bitrate = 60, .hw_value = 4, },
++	{ .bitrate = 90, .hw_value = 5, },
++	{ .bitrate = 120, .hw_value = 6, },
++	{ .bitrate = 180, .hw_value = 7, },
++	{ .bitrate = 240, .hw_value = 8, },
++	{ .bitrate = 360, .hw_value = 9, },
++	{ .bitrate = 480, .hw_value = 10, },
++	{ .bitrate = 540, .hw_value = 11, },
++};
++
++static const struct ieee80211_channel rtl818x_channels[] = {
++	{ .center_freq = 2412 },
++	{ .center_freq = 2417 },
++	{ .center_freq = 2422 },
++	{ .center_freq = 2427 },
++	{ .center_freq = 2432 },
++	{ .center_freq = 2437 },
++	{ .center_freq = 2442 },
++	{ .center_freq = 2447 },
++	{ .center_freq = 2452 },
++	{ .center_freq = 2457 },
++	{ .center_freq = 2462 },
++	{ .center_freq = 2467 },
++	{ .center_freq = 2472 },
++	{ .center_freq = 2484 },
++};
++
++void rtl8187se_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++	int i = 10;
++	u32 buf;
++
++	buf = (data << 8) | addr;
++
++	rtl818x_iowrite32(priv, (__le32 __iomem *)&priv->map->PHY[0],
++			  buf | 0x80);
++	while (i--) {
++		rtl818x_iowrite32(priv, (__le32 __iomem *)&priv->map->PHY[0],
++				  buf);
++		if (rtl818x_ioread8(priv, &priv->map->PHY[2]) == (data & 0xFF))
++			return;
++	}
++}
++
++static void rtl8187se_handle_rx(struct ieee80211_hw *dev)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++	unsigned int count = 32;
++
++	while (count--) {
++		struct rtl8187se_rx_desc *entry = &priv->rx_ring[priv->rx_idx];
++		struct sk_buff *skb = priv->rx_buf[priv->rx_idx];
++		u32 flags = le32_to_cpu(entry->flags);
++
++		if (flags & RTL818X_RX_DESC_FLAG_OWN)
++			return;
++
++		if (unlikely(flags & (RTL818X_RX_DESC_FLAG_DMA_FAIL |
++				      RTL818X_RX_DESC_FLAG_FOF |
++				      RTL818X_RX_DESC_FLAG_RX_ERR)))
++			goto done;
++		else {
++			u32 flags2 = le32_to_cpu(entry->flags2);
++			struct ieee80211_rx_status rx_status = {0};
++			struct sk_buff *new_skb = dev_alloc_skb(MAX_RX_SIZE);
++
++			if (unlikely(!new_skb))
++				goto done;
++
++			pci_unmap_single(priv->pdev,
++					 *((dma_addr_t *)skb->cb),
++					 MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
++			skb_put(skb, flags & 0xFFF);
++
++			rx_status.antenna = (flags2 >> 15) & 1;
++			/* TODO: improve signal/rssi reporting */
++			rx_status.signal = (flags2 >> 8) & 0x7F;
++			/* XXX: is this correct? */
++			rx_status.rate_idx = (flags >> 20) & 0xF;
++			rx_status.freq = dev->conf.channel->center_freq;
++			rx_status.band = dev->conf.channel->band;
++			rx_status.mactime = le64_to_cpu(entry->tsft);
++			rx_status.flag |= RX_FLAG_TSFT;
++			if (flags & RTL818X_RX_DESC_FLAG_CRC32_ERR)
++				rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
++
++			memcpy(IEEE80211_SKB_RXCB(skb), &rx_status,
++			       sizeof(rx_status));
++			ieee80211_rx_irqsafe(dev, skb);
++
++			skb = new_skb;
++			priv->rx_buf[priv->rx_idx] = skb;
++			*((dma_addr_t *) skb->cb) =
++				pci_map_single(priv->pdev, skb_tail_pointer(skb),
++					       MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
++		}
++done:
++		entry->rx_buf = cpu_to_le32(*((dma_addr_t *)skb->cb));
++		entry->flags = cpu_to_le32(RTL818X_RX_DESC_FLAG_OWN |
++					   MAX_RX_SIZE);
++		if (priv->rx_idx == 31)
++			entry->flags |= cpu_to_le32(RTL818X_RX_DESC_FLAG_EOR);
++		priv->rx_idx = (priv->rx_idx + 1) % 32;
++	}
++}
++
++static void rtl8187se_handle_tx(struct ieee80211_hw *dev, unsigned int prio)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++	struct rtl8187se_tx_ring *ring = &priv->tx_ring[prio];
++
++	while (skb_queue_len(&ring->queue)) {
++		struct rtl8187se_tx_desc *entry = &ring->desc[ring->idx];
++		struct sk_buff *skb;
++		struct ieee80211_tx_info *info;
++		u32 flags = le32_to_cpu(entry->flags);
++
++		if (flags & RTL818X_TX_DESC_FLAG_OWN)
++			return;
++
++		ring->idx = (ring->idx + 1) % ring->entries;
++		skb = __skb_dequeue(&ring->queue);
++		pci_unmap_single(priv->pdev, le32_to_cpu(entry->tx_buf),
++				 skb->len, PCI_DMA_TODEVICE);
++
++		info = IEEE80211_SKB_CB(skb);
++		ieee80211_tx_info_clear_status(info);
++
++		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
++		    (flags & RTL818X_TX_DESC_FLAG_TX_OK))
++			info->flags |= IEEE80211_TX_STAT_ACK;
++
++		info->status.rates[0].count = (flags & 0xFF) + 1;
++
++		ieee80211_tx_status_irqsafe(dev, skb);
++		if (ring->entries - skb_queue_len(&ring->queue) == 2)
++			ieee80211_wake_queue(dev, prio);
++	}
++}
++
++static irqreturn_t rtl8187se_interrupt(int irq, void *dev_id)
++{
++	struct ieee80211_hw *dev = dev_id;
++	struct rtl8187se_priv *priv = dev->priv;
++	u16 reg;
++
++	spin_lock(&priv->lock);
++	reg = rtl818x_ioread16(priv, &priv->map->INT_STATUS);
++	if (unlikely(reg == 0xFFFF)) {
++		spin_unlock(&priv->lock);
++		return IRQ_HANDLED;
++	}
++
++	rtl818x_iowrite16(priv, &priv->map->INT_STATUS, reg);
++
++	if (reg & (RTL818X_INT_TXB_OK | RTL818X_INT_TXB_ERR))
++		rtl8187se_handle_tx(dev, 3);
++
++	if (reg & (RTL818X_INT_TXH_OK | RTL818X_INT_TXH_ERR))
++		rtl8187se_handle_tx(dev, 2);
++
++	if (reg & (RTL818X_INT_TXN_OK | RTL818X_INT_TXN_ERR))
++		rtl8187se_handle_tx(dev, 1);
++
++	if (reg & (RTL818X_INT_TXL_OK | RTL818X_INT_TXL_ERR))
++		rtl8187se_handle_tx(dev, 0);
++
++	if (reg & (RTL818X_INT_RX_OK | RTL818X_INT_RX_ERR))
++		rtl8187se_handle_rx(dev);
++
++	spin_unlock(&priv->lock);
++
++	return IRQ_HANDLED;
++}
++
++static int rtl8187se_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct rtl8187se_priv *priv = dev->priv;
++	struct rtl8187se_tx_ring *ring;
++	struct rtl8187se_tx_desc *entry;
++	unsigned long flags;
++	unsigned int idx, prio;
++	dma_addr_t mapping;
++	u32 tx_flags;
++	u8 rc_flags;
++	u16 plcp_len = 0;
++	__le16 rts_duration = 0;
++
++	prio = skb_get_queue_mapping(skb);
++	ring = &priv->tx_ring[prio];
++
++	mapping = pci_map_single(priv->pdev, skb->data,
++				 skb->len, PCI_DMA_TODEVICE);
++
++	tx_flags = RTL818X_TX_DESC_FLAG_OWN | RTL818X_TX_DESC_FLAG_FS |
++		   RTL818X_TX_DESC_FLAG_LS |
++		   (ieee80211_get_tx_rate(dev, info)->hw_value << 24) |
++		   skb->len;
++
++	tx_flags |= RTL818X_TX_DESC_FLAG_DMA |
++		    RTL818X_TX_DESC_FLAG_NO_ENC;
++
++	rc_flags = info->control.rates[0].flags;
++	if (rc_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
++		tx_flags |= RTL818X_TX_DESC_FLAG_RTS;
++		tx_flags |= ieee80211_get_rts_cts_rate(dev,
++				 info)->hw_value << 19;
++	} else if (rc_flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
++		tx_flags |= RTL818X_TX_DESC_FLAG_CTS;
++		tx_flags |= ieee80211_get_rts_cts_rate(dev,
++				 info)->hw_value << 19;
++	}
++
++	if (rc_flags & IEEE80211_TX_RC_USE_RTS_CTS)
++		rts_duration = ieee80211_rts_duration(dev, priv->vif, skb->len,
++						      info);
++
++	spin_lock_irqsave(&priv->lock, flags);
++	idx = (ring->idx + skb_queue_len(&ring->queue)) % ring->entries;
++	entry = &ring->desc[idx];
++
++	entry->rts_duration = rts_duration;
++	entry->plcp_len = cpu_to_le16(plcp_len);
++	entry->tx_buf = cpu_to_le32(mapping);
++	entry->frame_len = cpu_to_le32(skb->len);
++	entry->flags2 = info->control.rates[1].idx >= 0 ?
++		ieee80211_get_alt_retry_rate(dev, info, 0)->bitrate << 4 : 0;
++	entry->retry_limit = info->control.rates[0].count;
++	entry->flags = cpu_to_le32(tx_flags);
++	__skb_queue_tail(&ring->queue, skb);
++	if (ring->entries - skb_queue_len(&ring->queue) < 2)
++		ieee80211_stop_queue(dev, skb_get_queue_mapping(skb));
++	spin_unlock_irqrestore(&priv->lock, flags);
++
++	rtl818x_iowrite8(priv, &priv->map->TX_DMA_POLLING, (1 << (prio + 4)));
++
++	return 0;
++}
++
++void rtl8187se_set_anaparam(struct rtl8187se_priv *priv, u32 anaparam)
++{
++	u8 reg;
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
++			 RTL818X_EEPROM_CMD_CONFIG);
++	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3,
++		 reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, anaparam);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3,
++		 reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
++			 RTL818X_EEPROM_CMD_NORMAL);
++}
++
++static int rtl8187se_init_hw(struct ieee80211_hw *dev)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++	u16 reg;
++
++	rtl818x_iowrite8(priv, &priv->map->CMD, 0);
++	rtl818x_ioread8(priv, &priv->map->CMD);
++	msleep(10);
++
++	/* reset */
++	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0);
++	rtl818x_ioread8(priv, &priv->map->CMD);
++
++	reg = rtl818x_ioread8(priv, &priv->map->CMD);
++	reg &= (1 << 1);
++	reg |= RTL818X_CMD_RESET;
++	rtl818x_iowrite8(priv, &priv->map->CMD, RTL818X_CMD_RESET);
++	rtl818x_ioread8(priv, &priv->map->CMD);
++	msleep(200);
++
++	/* check success of reset */
++	if (rtl818x_ioread8(priv, &priv->map->CMD) & RTL818X_CMD_RESET) {
++		printk(KERN_ERR "%s: reset timeout!\n", wiphy_name(dev->wiphy));
++		return -ETIMEDOUT;
++	}
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_LOAD);
++	rtl818x_ioread8(priv, &priv->map->CMD);
++	msleep(200);
++
++	if (rtl818x_ioread8(priv, &priv->map->CONFIG3) & (1 << 3)) {
++		/* For cardbus */
++		reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
++		reg |= 1 << 1;
++		rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg);
++		reg = rtl818x_ioread16(priv, &priv->map->FEMR);
++		reg |= (1 << 15) | (1 << 14) | (1 << 4);
++		rtl818x_iowrite16(priv, &priv->map->FEMR, reg);
++	}
++
++	rtl818x_iowrite8(priv, &priv->map->MSR, 0);
++
++	rtl818x_iowrite32(priv, &priv->map->RDSAR, priv->rx_ring_dma);
++	rtl818x_iowrite32(priv, &priv->map->TBDA, priv->tx_ring[3].dma);
++	rtl818x_iowrite32(priv, &priv->map->THPDA, priv->tx_ring[2].dma);
++	rtl818x_iowrite32(priv, &priv->map->TNPDA, priv->tx_ring[1].dma);
++	rtl818x_iowrite32(priv, &priv->map->TLPDA, priv->tx_ring[0].dma);
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
++			 RTL818X_EEPROM_CMD_CONFIG);
++	reg = rtl818x_ioread8(priv, &priv->map->CONFIG2);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG2, reg & ~(1 << 3));
++	reg = rtl818x_ioread8(priv, &priv->map->CONFIG2);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG2, reg | (1 << 4));
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
++			 RTL818X_EEPROM_CMD_NORMAL);
++
++	rtl818x_iowrite32(priv, &priv->map->INT_TIMEOUT, 0);
++
++	rtl818x_iowrite8(priv, &priv->map->WPA_CONF, 0);
++	rtl818x_iowrite8(priv, &priv->map->RATE_FALLBACK, 0x81);
++	rtl818x_iowrite8(priv, &priv->map->RESP_RATE, (8 << 4) | 0);
++
++	rtl818x_iowrite16(priv, &priv->map->BRSR, 0x01F3);
++
++	reg = rtl818x_ioread8(priv, &priv->map->GP_ENABLE);
++	rtl818x_iowrite8(priv, &priv->map->GP_ENABLE, reg & ~(1 << 6));
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
++			 RTL818X_EEPROM_CMD_CONFIG);
++	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | (1 << 2));
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
++			 RTL818X_EEPROM_CMD_NORMAL);
++
++	priv->rf->init(dev);
++	rtl818x_iowrite16(priv, &priv->map->BRSR, 0x01F3);
++	return 0;
++}
++
++static int rtl8187se_init_rx_ring(struct ieee80211_hw *dev)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++	struct rtl8187se_rx_desc *entry;
++	int i;
++
++	priv->rx_ring = pci_alloc_consistent(priv->pdev,
++					     sizeof(*priv->rx_ring) * 32,
++					     &priv->rx_ring_dma);
++
++	if (!priv->rx_ring || (unsigned long)priv->rx_ring & 0xFF) {
++		printk(KERN_ERR "%s: Cannot allocate RX ring\n",
++		       wiphy_name(dev->wiphy));
++		return -ENOMEM;
++	}
++
++	memset(priv->rx_ring, 0, sizeof(*priv->rx_ring) * 32);
++	priv->rx_idx = 0;
++
++	for (i = 0; i < 32; i++) {
++		struct sk_buff *skb = dev_alloc_skb(MAX_RX_SIZE);
++		dma_addr_t *mapping;
++		entry = &priv->rx_ring[i];
++		if (!skb)
++			return 0;
++
++		priv->rx_buf[i] = skb;
++		mapping = (dma_addr_t *)skb->cb;
++		*mapping = pci_map_single(priv->pdev, skb_tail_pointer(skb),
++					  MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
++		entry->rx_buf = cpu_to_le32(*mapping);
++		entry->flags = cpu_to_le32(RTL818X_RX_DESC_FLAG_OWN |
++					   MAX_RX_SIZE);
++	}
++	entry->flags |= cpu_to_le32(RTL818X_RX_DESC_FLAG_EOR);
++	return 0;
++}
++
++static void rtl8187se_free_rx_ring(struct ieee80211_hw *dev)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++	int i;
++
++	for (i = 0; i < 32; i++) {
++		struct sk_buff *skb = priv->rx_buf[i];
++		if (!skb)
++			continue;
++
++		pci_unmap_single(priv->pdev,
++				 *((dma_addr_t *)skb->cb),
++				 MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
++		kfree_skb(skb);
++	}
++
++	pci_free_consistent(priv->pdev, sizeof(*priv->rx_ring) * 32,
++			    priv->rx_ring, priv->rx_ring_dma);
++	priv->rx_ring = NULL;
++}
++
++static int rtl8187se_init_tx_ring(struct ieee80211_hw *dev,
++				unsigned int prio, unsigned int entries)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++	struct rtl8187se_tx_desc *ring;
++	dma_addr_t dma;
++	int i;
++
++	ring = pci_alloc_consistent(priv->pdev, sizeof(*ring) * entries, &dma);
++	if (!ring || (unsigned long)ring & 0xFF) {
++		printk(KERN_ERR "%s: Cannot allocate TX ring (prio = %d)\n",
++		       wiphy_name(dev->wiphy), prio);
++		return -ENOMEM;
++	}
++
++	memset(ring, 0, sizeof(*ring)*entries);
++	priv->tx_ring[prio].desc = ring;
++	priv->tx_ring[prio].dma = dma;
++	priv->tx_ring[prio].idx = 0;
++	priv->tx_ring[prio].entries = entries;
++	skb_queue_head_init(&priv->tx_ring[prio].queue);
++
++	for (i = 0; i < entries; i++)
++		ring[i].next_tx_desc =
++			cpu_to_le32((u32)dma + ((i + 1) % entries) *
++			sizeof(*ring));
++
++	return 0;
++}
++
++static void rtl8187se_free_tx_ring(struct ieee80211_hw *dev, unsigned int prio)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++	struct rtl8187se_tx_ring *ring = &priv->tx_ring[prio];
++
++	while (skb_queue_len(&ring->queue)) {
++		struct rtl8187se_tx_desc *entry = &ring->desc[ring->idx];
++		struct sk_buff *skb = __skb_dequeue(&ring->queue);
++
++		pci_unmap_single(priv->pdev, le32_to_cpu(entry->tx_buf),
++				 skb->len, PCI_DMA_TODEVICE);
++		kfree_skb(skb);
++		ring->idx = (ring->idx + 1) % ring->entries;
++	}
++
++	pci_free_consistent(priv->pdev, sizeof(*ring->desc)*ring->entries,
++			    ring->desc, ring->dma);
++	ring->desc = NULL;
++}
++
++static int rtl8187se_start(struct ieee80211_hw *dev)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++	int ret, i;
++	u32 reg;
++
++	ret = rtl8187se_init_rx_ring(dev);
++	if (ret)
++		return ret;
++
++	for (i = 0; i < dev->queues; i++) {
++		ret = rtl8187se_init_tx_ring(dev, i, 16);
++		if (ret)
++			goto err_free_rings;
++	}
++	ret = rtl8187se_init_hw(dev);
++	if (ret)
++		goto err_free_rings;
++
++	rtl818x_iowrite32(priv, &priv->map->RDSAR, priv->rx_ring_dma);
++	rtl818x_iowrite32(priv, &priv->map->TBDA, priv->tx_ring[3].dma);
++	rtl818x_iowrite32(priv, &priv->map->THPDA, priv->tx_ring[2].dma);
++	rtl818x_iowrite32(priv, &priv->map->TNPDA, priv->tx_ring[1].dma);
++	rtl818x_iowrite32(priv, &priv->map->TLPDA, priv->tx_ring[0].dma);
++
++	ret = request_irq(priv->pdev->irq, &rtl8187se_interrupt,
++			  IRQF_SHARED, KBUILD_MODNAME, dev);
++	if (ret) {
++		printk(KERN_ERR "%s: failed to register IRQ handler\n",
++		       wiphy_name(dev->wiphy));
++		goto err_free_rings;
++	}
++
++	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0xFFFF);
++
++	rtl818x_iowrite32(priv, &priv->map->MAR[0], ~0);
++	rtl818x_iowrite32(priv, &priv->map->MAR[1], ~0);
++
++	reg = RTL818X_RX_CONF_ONLYERLPKT |
++	      RTL818X_RX_CONF_RX_AUTORESETPHY |
++	      RTL818X_RX_CONF_MGMT |
++	      RTL818X_RX_CONF_DATA |
++	      RTL818x_RX_CONF_MAXDMA |
++	      RTL818X_RX_CONF_BROADCAST |
++	      RTL818X_RX_CONF_NICMAC;
++
++	reg |= RTL818X_RX_CONF_CSDM1 | RTL818X_RX_CONF_CSDM2;
++
++	priv->rx_conf = reg;
++	rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
++
++	reg = rtl818x_ioread8(priv, &priv->map->CW_CONF);
++	reg &= ~RTL818X_CW_CONF_PERPACKET_CW_SHIFT;
++	reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
++	rtl818x_iowrite8(priv, &priv->map->CW_CONF, reg);
++
++	reg = rtl818x_ioread8(priv, &priv->map->TX_AGC_CTL);
++	reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT;
++	reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
++	reg |=  RTL818X_TX_AGC_CTL_FEEDBACK_ANT;
++	rtl818x_iowrite8(priv, &priv->map->TX_AGC_CTL, reg);
++
++	/* disable early TX */
++	rtl818x_iowrite8(priv, (u8 __iomem *)priv->map + 0xec, 0x3f);
++
++	reg = rtl818x_ioread32(priv, &priv->map->TX_CONF);
++	reg |= (6 << 21 /* MAX TX DMA */) |
++	       RTL818X_TX_CONF_NO_ICV;
++
++	reg &= ~RTL818X_TX_CONF_PROBE_DTS;
++
++	/* different meaning, same value on both rtl8185 and rtl8187se */
++	reg &= ~RTL818X_TX_CONF_SAT_HWPLCP;
++
++	rtl818x_iowrite32(priv, &priv->map->TX_CONF, reg);
++
++	reg = rtl818x_ioread8(priv, &priv->map->CMD);
++	reg |= RTL818X_CMD_RX_ENABLE;
++	reg |= RTL818X_CMD_TX_ENABLE;
++	rtl818x_iowrite8(priv, &priv->map->CMD, reg);
++
++	priv->mode = NL80211_IFTYPE_MONITOR;
++	return 0;
++
++ err_free_rings:
++	rtl8187se_free_rx_ring(dev);
++	for (i = 0; i < 4; i++)
++		if (priv->tx_ring[i].desc)
++			rtl8187se_free_tx_ring(dev, i);
++
++	return ret;
++}
++
++static void rtl8187se_stop(struct ieee80211_hw *dev)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++	u8 reg;
++	int i;
++
++	priv->mode = NL80211_IFTYPE_UNSPECIFIED;
++
++	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0);
++
++	reg = rtl818x_ioread8(priv, &priv->map->CMD);
++	reg &= ~RTL818X_CMD_TX_ENABLE;
++	reg &= ~RTL818X_CMD_RX_ENABLE;
++	rtl818x_iowrite8(priv, &priv->map->CMD, reg);
++
++	priv->rf->stop(dev);
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
++			 RTL818X_EEPROM_CMD_CONFIG);
++	reg = rtl818x_ioread8(priv, &priv->map->CONFIG4);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG4, reg |
++			 RTL818X_CONFIG4_VCOOFF);
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
++			 RTL818X_EEPROM_CMD_NORMAL);
++
++
++	free_irq(priv->pdev->irq, dev);
++
++	rtl8187se_free_rx_ring(dev);
++	for (i = 0; i < 4; i++)
++		rtl8187se_free_tx_ring(dev, i);
++}
++
++static int rtl8187se_add_interface(struct ieee80211_hw *dev,
++				 struct ieee80211_if_init_conf *conf)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++
++	if (priv->mode != NL80211_IFTYPE_MONITOR)
++		return -EOPNOTSUPP;
++
++	switch (conf->type) {
++	case NL80211_IFTYPE_STATION:
++		priv->mode = conf->type;
++		break;
++	default:
++		return -EOPNOTSUPP;
++	}
++
++	priv->vif = conf->vif;
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
++			 RTL818X_EEPROM_CMD_CONFIG);
++	rtl818x_iowrite32(priv, (__le32 __iomem *)&priv->map->MAC[0],
++			  le32_to_cpu(*(__le32 *)conf->mac_addr));
++	rtl818x_iowrite16(priv, (__le16 __iomem *)&priv->map->MAC[4],
++			  le16_to_cpu(*(__le16 *)(conf->mac_addr + 4)));
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
++			 RTL818X_EEPROM_CMD_NORMAL);
++
++	return 0;
++}
++
++static void rtl8187se_remove_interface(struct ieee80211_hw *dev,
++				     struct ieee80211_if_init_conf *conf)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++	priv->mode = NL80211_IFTYPE_MONITOR;
++	priv->vif = NULL;
++}
++
++static int rtl8187se_config(struct ieee80211_hw *dev, u32 changed)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++	struct ieee80211_conf *conf = &dev->conf;
++
++	priv->rf->set_chan(dev, conf);
++
++	return 0;
++}
++
++static void rtl8187se_bss_info_changed(struct ieee80211_hw *dev,
++				     struct ieee80211_vif *vif,
++				     struct ieee80211_bss_conf *info,
++				     u32 changed)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++	int i;
++
++	if (changed & BSS_CHANGED_BSSID) {
++		for (i = 0; i < ETH_ALEN; i++)
++			rtl818x_iowrite8(priv, &priv->map->BSSID[i],
++					 info->bssid[i]);
++
++		if (is_valid_ether_addr(info->bssid))
++			rtl818x_iowrite8(priv, &priv->map->MSR,
++					 RTL818X_MSR_INFRA);
++		else
++			rtl818x_iowrite8(priv, &priv->map->MSR,
++					 RTL818X_MSR_NO_LINK);
++	}
++
++	if (changed & BSS_CHANGED_ERP_SLOT && priv->rf->conf_erp)
++		priv->rf->conf_erp(dev, info);
++}
++
++static u64 rtl8187se_prepare_multicast(struct ieee80211_hw *dev, int mc_count,
++				     struct dev_addr_list *mc_list)
++{
++	return mc_count;
++}
++
++static void rtl8187se_configure_filter(struct ieee80211_hw *dev,
++				     unsigned int changed_flags,
++				     unsigned int *total_flags,
++				     u64 multicast)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++
++	if (changed_flags & FIF_FCSFAIL)
++		priv->rx_conf ^= RTL818X_RX_CONF_FCS;
++	if (changed_flags & FIF_CONTROL)
++		priv->rx_conf ^= RTL818X_RX_CONF_CTRL;
++	if (changed_flags & FIF_OTHER_BSS)
++		priv->rx_conf ^= RTL818X_RX_CONF_MONITOR;
++	if (*total_flags & FIF_ALLMULTI || multicast > 0)
++		priv->rx_conf |= RTL818X_RX_CONF_MULTICAST;
++	else
++		priv->rx_conf &= ~RTL818X_RX_CONF_MULTICAST;
++
++	*total_flags = 0;
++
++	if (priv->rx_conf & RTL818X_RX_CONF_FCS)
++		*total_flags |= FIF_FCSFAIL;
++	if (priv->rx_conf & RTL818X_RX_CONF_CTRL)
++		*total_flags |= FIF_CONTROL;
++	if (priv->rx_conf & RTL818X_RX_CONF_MONITOR)
++		*total_flags |= FIF_OTHER_BSS;
++	if (priv->rx_conf & RTL818X_RX_CONF_MULTICAST)
++		*total_flags |= FIF_ALLMULTI;
++
++	rtl818x_iowrite32(priv, &priv->map->RX_CONF, priv->rx_conf);
++}
++
++static const struct ieee80211_ops rtl8187se_ops = {
++	.tx			= rtl8187se_tx,
++	.start			= rtl8187se_start,
++	.stop			= rtl8187se_stop,
++	.add_interface		= rtl8187se_add_interface,
++	.remove_interface	= rtl8187se_remove_interface,
++	.config			= rtl8187se_config,
++	.bss_info_changed	= rtl8187se_bss_info_changed,
++	.prepare_multicast	= rtl8187se_prepare_multicast,
++	.configure_filter	= rtl8187se_configure_filter,
++};
++
++static void rtl8187se_eeprom_register_read(struct eeprom_93cx6 *eeprom)
++{
++	struct ieee80211_hw *dev = eeprom->data;
++	struct rtl8187se_priv *priv = dev->priv;
++	u8 reg = rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++
++	eeprom->reg_data_in = reg & RTL818X_EEPROM_CMD_WRITE;
++	eeprom->reg_data_out = reg & RTL818X_EEPROM_CMD_READ;
++	eeprom->reg_data_clock = reg & RTL818X_EEPROM_CMD_CK;
++	eeprom->reg_chip_select = reg & RTL818X_EEPROM_CMD_CS;
++}
++
++static void rtl8187se_eeprom_register_write(struct eeprom_93cx6 *eeprom)
++{
++	struct ieee80211_hw *dev = eeprom->data;
++	struct rtl8187se_priv *priv = dev->priv;
++	u8 reg = 2 << 6;
++
++	if (eeprom->reg_data_in)
++		reg |= RTL818X_EEPROM_CMD_WRITE;
++	if (eeprom->reg_data_out)
++		reg |= RTL818X_EEPROM_CMD_READ;
++	if (eeprom->reg_data_clock)
++		reg |= RTL818X_EEPROM_CMD_CK;
++	if (eeprom->reg_chip_select)
++		reg |= RTL818X_EEPROM_CMD_CS;
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, reg);
++	rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++	udelay(10);
++}
++
++static int __devinit rtl8187se_probe(struct pci_dev *pdev,
++				   const struct pci_device_id *id)
++{
++	struct ieee80211_hw *dev;
++	struct rtl8187se_priv *priv;
++	unsigned long mem_addr, mem_len;
++	unsigned int io_addr, io_len;
++	int err, i;
++	struct eeprom_93cx6 eeprom;
++	const char *chip_name, *rf_name = NULL;
++	u16 eeprom_val;
++	u8 unit;
++
++	err = pci_enable_device(pdev);
++	if (err) {
++		printk(KERN_ERR "%s (rtl8187se): Cannot enable new PCI device\n",
++		       pci_name(pdev));
++		return err;
++	}
++
++	err = pci_request_regions(pdev, KBUILD_MODNAME);
++	if (err) {
++		printk(KERN_ERR "%s (rtl8187se): Cannot obtain PCI resources\n",
++		       pci_name(pdev));
++		return err;
++	}
++
++	io_addr = pci_resource_start(pdev, 0);
++	io_len = pci_resource_len(pdev, 0);
++	mem_addr = pci_resource_start(pdev, 1);
++	mem_len = pci_resource_len(pdev, 1);
++
++	if (mem_len < sizeof(struct rtl818x_csr) ||
++	    io_len < sizeof(struct rtl818x_csr)) {
++		printk(KERN_ERR "%s (rtl8187se): Too short PCI resources\n",
++		       pci_name(pdev));
++		err = -ENOMEM;
++		goto err_free_reg;
++	}
++
++	err = pci_set_dma_mask(pdev, 0xFFFFFF00ULL);
++	if (!err)
++		err = pci_set_consistent_dma_mask(pdev, 0xFFFFFF00ULL);
++	if (err) {
++		printk(KERN_ERR "%s (rtl8187se): No suitable DMA available\n",
++		       pci_name(pdev));
++		goto err_free_reg;
++	}
++
++	pci_set_master(pdev);
++
++	dev = ieee80211_alloc_hw(sizeof(*priv), &rtl8187se_ops);
++	if (!dev) {
++		printk(KERN_ERR "%s (rtl8187se): ieee80211 alloc failed\n",
++		       pci_name(pdev));
++		err = -ENOMEM;
++		goto err_free_reg;
++	}
++
++	priv = dev->priv;
++	priv->pdev = pdev;
++
++	dev->max_rates = 2;
++	SET_IEEE80211_DEV(dev, &pdev->dev);
++	pci_set_drvdata(pdev, dev);
++
++	priv->map = pci_iomap(pdev, 1, mem_len);
++	if (!priv->map)
++		priv->map = pci_iomap(pdev, 0, io_len);
++
++	if (!priv->map) {
++		printk(KERN_ERR "%s (rtl8187se): Cannot map device memory\n",
++		       pci_name(pdev));
++		goto err_free_dev;
++	}
++
++	BUILD_BUG_ON(sizeof(priv->channels) != sizeof(rtl818x_channels));
++	BUILD_BUG_ON(sizeof(priv->rates) != sizeof(rtl818x_rates));
++
++	memcpy(priv->channels, rtl818x_channels, sizeof(rtl818x_channels));
++	memcpy(priv->rates, rtl818x_rates, sizeof(rtl818x_rates));
++
++	priv->band.band = IEEE80211_BAND_2GHZ;
++	priv->band.channels = priv->channels;
++	priv->band.n_channels = ARRAY_SIZE(rtl818x_channels);
++	priv->band.bitrates = priv->rates;
++	priv->band.n_bitrates = 4;
++	dev->wiphy->bands[IEEE80211_BAND_2GHZ] = &priv->band;
++
++	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
++		     IEEE80211_HW_RX_INCLUDES_FCS |
++		     IEEE80211_HW_SIGNAL_UNSPEC;
++	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
++	dev->queues = 4;
++	dev->max_signal = 65;
++
++	pci_read_config_byte(pdev, 0x05, &unit);
++	pci_write_config_byte(pdev, 0x05, unit & (~0x04));
++	chip_name = "RTL8187SE";
++
++	eeprom.data = dev;
++	eeprom.register_read = rtl8187se_eeprom_register_read;
++	eeprom.register_write = rtl8187se_eeprom_register_write;
++	if (rtl818x_ioread32(priv, &priv->map->RX_CONF) & (1 << 6))
++		eeprom.width = PCI_EEPROM_WIDTH_93C66;
++	else
++		eeprom.width = PCI_EEPROM_WIDTH_93C46;
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
++			 RTL818X_EEPROM_CMD_PROGRAM);
++	rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++	udelay(10);
++
++	rf_name = "RTL8255";
++
++	eeprom_93cx6_read(&eeprom, 0x17, &eeprom_val);
++	priv->csthreshold = eeprom_val >> 8;
++
++	eeprom_93cx6_multiread(&eeprom, 0x7, (__le16 *)
++			       dev->wiphy->perm_addr, 3);
++	if (!is_valid_ether_addr(dev->wiphy->perm_addr)) {
++		printk(KERN_WARNING "%s (rtl8187se): Invalid hwaddr! Using"
++		       " randomly generated MAC addr\n", pci_name(pdev));
++		random_ether_addr(dev->wiphy->perm_addr);
++	}
++
++	/* CCK TX power */
++	for (i = 0; i < 14; i += 2) {
++		u16 txpwr;
++		eeprom_93cx6_read(&eeprom, 0x10 + (i >> 1), &txpwr);
++		priv->channels[i].hw_value = txpwr & 0xFF;
++		priv->channels[i + 1].hw_value = txpwr >> 8;
++	}
++
++	/* OFDM TX power */
++	for (i = 0; i < 14; i += 2) {
++		u16 txpwr;
++		eeprom_93cx6_read(&eeprom, 0x20 + (i >> 1), &txpwr);
++		priv->channels[i].hw_value |= (txpwr & 0xFF) << 8;
++		priv->channels[i + 1].hw_value |= txpwr & 0xFF00;
++	}
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
++			 RTL818X_EEPROM_CMD_NORMAL);
++
++	spin_lock_init(&priv->lock);
++
++	err = ieee80211_register_hw(dev);
++	if (err) {
++		printk(KERN_ERR "%s (rtl8187se): Cannot register device\n",
++		       pci_name(pdev));
++		goto err_iounmap;
++	}
++
++	printk(KERN_INFO "%s: hwaddr %pM, %s + %s\n",
++	       wiphy_name(dev->wiphy), dev->wiphy->perm_addr,
++	       chip_name, priv->rf->name);
++
++	return 0;
++
++ err_iounmap:
++	iounmap(priv->map);
++
++ err_free_dev:
++	pci_set_drvdata(pdev, NULL);
++	ieee80211_free_hw(dev);
++
++ err_free_reg:
++	pci_release_regions(pdev);
++	pci_disable_device(pdev);
++	return err;
++}
++
++static void __devexit rtl8187se_remove(struct pci_dev *pdev)
++{
++	struct ieee80211_hw *dev = pci_get_drvdata(pdev);
++	struct rtl8187se_priv *priv;
++
++	if (!dev)
++		return;
++
++	ieee80211_unregister_hw(dev);
++
++	priv = dev->priv;
++
++	pci_iounmap(pdev, priv->map);
++	pci_release_regions(pdev);
++	pci_disable_device(pdev);
++	ieee80211_free_hw(dev);
++}
++
++#ifdef CONFIG_PM
++static int rtl8187se_suspend(struct pci_dev *pdev, pm_message_t state)
++{
++	pci_save_state(pdev);
++	pci_set_power_state(pdev, pci_choose_state(pdev, state));
++	return 0;
++}
++
++static int rtl8187se_resume(struct pci_dev *pdev)
++{
++	pci_set_power_state(pdev, PCI_D0);
++	pci_restore_state(pdev);
++	return 0;
++}
++
++#endif /* CONFIG_PM */
++
++static struct pci_driver rtl8187se_driver = {
++	.name		= KBUILD_MODNAME,
++	.id_table	= rtl8187se_table,
++	.probe		= rtl8187se_probe,
++	.remove		= __devexit_p(rtl8187se_remove),
++#ifdef CONFIG_PM
++	.suspend	= rtl8187se_suspend,
++	.resume		= rtl8187se_resume,
++#endif /* CONFIG_PM */
++};
++
++static int __init rtl8187se_init(void)
++{
++	return pci_register_driver(&rtl8187se_driver);
++}
++
++static void __exit rtl8187se_exit(void)
++{
++	pci_unregister_driver(&rtl8187se_driver);
++}
++
++module_init(rtl8187se_init);
++module_exit(rtl8187se_exit);
++
