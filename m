@@ -1,79 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:33126 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753664AbZKHNvm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 08:51:42 -0500
-Message-ID: <4AF6CC02.8080204@web.de>
-Date: Sun, 08 Nov 2009 14:47:46 +0100
-From: Jan Kiszka <jan.kiszka@web.de>
+Received: from mx3.mail.elte.hu ([157.181.1.138]:40188 "EHLO mx3.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752449AbZKIHQg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Nov 2009 02:16:36 -0500
+Date: Mon, 9 Nov 2009 08:15:58 +0100
+From: Ingo Molnar <mingo@elte.hu>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Yannick Roehlly <yannick.roehlly@free.fr>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jesse.barnes@intel.com>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"John W. Linville" <linville@tuxdriver.com>, berndl81@gmx.at,
+	Greg KH <greg@kroah.com>
+Subject: Re: Reverting 5d423 fixes loading of ath9k on Acer Extensa 7630EZ
+Message-ID: <20091109071558.GC453@elte.hu>
+References: <43e72e890911041540hd1e5f87u8d282d9c95857504@mail.gmail.com>
+ <alpine.LFD.2.01.0911041551220.31845@localhost.localdomain>
+ <20091105071431.GA14055@elte.hu>
+ <43e72e890911081135q78416ef7ua6c5991b15fb2659@mail.gmail.com>
 MIME-Version: 1.0
-To: Kalle Valo <kalle.valo@iki.fi>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ar9170 in AP mode
-References: <4AF6C7CD.7060108@web.de> <878wehf85v.fsf@purkki.valot.fi>
-In-Reply-To: <878wehf85v.fsf@purkki.valot.fi>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig55921DDC9C740E17C3AC764D"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890911081135q78416ef7ua6c5991b15fb2659@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig55921DDC9C740E17C3AC764D
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
 
-Kalle Valo wrote:
-> Jan Kiszka <jan.kiszka@web.de> writes:
->=20
->> the ar9170 is not advertising its AP feature. However, hacking in the
->> bit allows me to run an AP on my D-Link DWA 160A with the sources of
->> yesterday's wireless-testing. Works mostly fine so far, just device
->> startup (firmware loading?) is sometimes a bit fragile, and rate contr=
-ol
->> seems to jump more than needed when the connection gets worse.
->>
->> There was some telling the multicast transmission would not work, but =
-I
->> just tested it and cannot confirm this. Did something change or does a=
+* Luis R. Rodriguez <mcgrof@gmail.com> wrote:
 
->> specific multicast scenario still fail? Otherwise I would like to see =
-AP
->> mode enabled in the ar9170 so that it works without modifying kernel
->> sources. Would post a patch then.
->=20
-> Did you test with a client which had power save mode enabled? That's
-> the tricky part.=20
+> On Wed, Nov 4, 2009 at 11:14 PM, Ingo Molnar <mingo@elte.hu> wrote:
+> >
+> > * Linus Torvalds <torvalds@linux-foundation.org> wrote:
+> >
+> >> On Wed, 4 Nov 2009, Luis R. Rodriguez wrote:
+> >> >
+> >> > Can you please consider reviewing this issue and help determine if
+> >> > this indeed needs to be reverted for 2.6.32 and the next 2.6.31.y.
+> >> >
+> >> > I am curious if other devices would work by reverting this as well.
+> >> > [ ... ] For details please feel free to check:
+> >> >
+> >> > http://bugzilla.kernel.org/show_bug.cgi?id=14402
+> >>
+> >> That same commit was the cause for
+> >>
+> >> ?? ?? ?? http://bugzilla.kernel.org/show_bug.cgi?id=13940
+> >>
+> >> and we just increased the rounding to make it go away (see commit
+> >> 15b812f1). But that was a hack.
+> >>
+> >> And if that didn't help the ath9k case, then we should just revert
+> >> entirely.
+> >
+> > Agreed - below is the combo 15b812f1 + 5d423ccd revert. (Would be nice
+> > to get the boot log of the latest post-15b812f1 kernel that Yinghai
+> > asked for before we revert, in the hope of better understanding the
+> > problem.)
+> 
+> Bernhard has confirmed the new patch fixes this issue.
 
-Probably not, ath5k on my notebook doesn't support it. Now looking for
-some station that does.
+Good - so latest kernels should be fine (on Bernhard's box) and no 
+change is needed, right?
 
->=20
-> IMHO AP mode should not be enabled until it's confirmed that power
-> save mode works properly.
-
-How common is the combination of powersaving and mcast in practice?
-Given that quite a few useful scenarios are blocked right now (unless
-you know what to patch), I would at least vote for a config option or a
-module parameter. That gives a chance to warn the user about this
-limitation without locking out people that are no hackers.
-
-Jan
-
-
---------------enig55921DDC9C740E17C3AC764D
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
-
-iEYEARECAAYFAkr2zAUACgkQitSsb3rl5xTiFgCgjGSJUZvdMA9ong7hwDT6HV1R
-ORAAnRBfSB+8T0DDUpdqZkKS30lvM3tT
-=FPoe
------END PGP SIGNATURE-----
-
---------------enig55921DDC9C740E17C3AC764D--
+	Ingo
