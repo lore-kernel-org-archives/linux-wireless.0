@@ -1,70 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:44418 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751119AbZKAG4N convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:36078 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754806AbZKIWq5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Nov 2009 01:56:13 -0500
-Received: by ewy28 with SMTP id 28so4006875ewy.18
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Oct 2009 23:56:17 -0700 (PDT)
+	Mon, 9 Nov 2009 17:46:57 -0500
+Received: by bwz27 with SMTP id 27so4022805bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 14:47:02 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <40f31dec0910312353w32aede90ib5e71545ca744389@mail.gmail.com>
-References: <200910291330.26172.mb@bu3sch.de> <200910291406.03422.mb@bu3sch.de>
-	 <200910291431.48388.mb@bu3sch.de>
-	 <20091031202156.GA29825@hash.localnet>
-	 <40f31dec0910312353w32aede90ib5e71545ca744389@mail.gmail.com>
-Date: Sun, 1 Nov 2009 08:56:16 +0200
-Message-ID: <40f31dec0910312356t6543461gd23279cf4b6ebef@mail.gmail.com>
-Subject: Re: ath5k AP issues
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Luis Rodriguez <mcgrof@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1257805265.21134.22738.camel@rc-desk>
+References: <cb0375e10911081130k5d8f8347y999cf66a98e6898a@mail.gmail.com>
+	 <1257787187.21134.22331.camel@rc-desk>
+	 <cb0375e10911091007w45fa5653y8ed4f043f37074b6@mail.gmail.com>
+	 <1257805265.21134.22738.camel@rc-desk>
+Date: Mon, 9 Nov 2009 17:47:02 -0500
+Message-ID: <cb0375e10911091447y375c276emddc5eff38b4b575e@mail.gmail.com>
+Subject: Re: [PATCH] iwlcore: Allow runtime configuration of
+	no_sleep_autoadjust
+From: Andrew Lutomirski <andy@luto.us>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/11/1 Nick Kossifidis <mickflemm@gmail.com>:
-> 2009/10/31 Bob Copeland <me@bobcopeland.com>:
->> On Thu, Oct 29, 2009 at 02:31:46PM +0100, Michael Buesch wrote:
->>> Ok, to sum up some discussion from IRC:
->>>
->>> The initial packets that fail are not pings, but ARPs. Which are broadcast
->>> frames.  The access point simply fails to notify the station via DTIM for the
->>> pending multicast frames, so it stays in PS. Unicast and the corresponding
->>> TIM bitmap works properly, which also explains why it works once we got a
->>> successful ARP (and it didn't expire, yet).
+On Mon, Nov 9, 2009 at 5:21 PM, reinette chatre
+<reinette.chatre@intel.com> wrote:
+> Hi Andrew,
+>
+> On Mon, 2009-11-09 at 10:07 -0800, Andrew Lutomirski wrote:
+>> Hmm. �It looks like sleep_level_override in debugfs can do exactly what I want.
+>
+> You have not really stated what you are trying to do here so it is hard
+> to tell. sleep_level_override lets you hardcode the power saving index.
+>
 >>
->> I don't think this fixes everything (I'm still seeing some mishandled
->> PS-poll frames) but this seemed to help pinging the PS client from the AP
->> side.
->>
->> [Although we agreed beacon-sent-gated without a ready time component
->> is the right way to go on the queue configuration, it seems badly
->> broken in practice unless I'm missing some enable bit somewhere.  So
->> this is what ath9k does.]
->>
+>> Is there any reason that no_sleep_autoadjust doesn't just make
+>> sleep_level_override default to 1?
 >
-> Well ready time is not disabled right now !
->
-> 416                         ath5k_hw_reg_write(ah, ((AR5K_TUNE_BEACON_INTERVAL -
-> 417                                 (AR5K_TUNE_SW_BEACON_RESP -
-> 418                                 AR5K_TUNE_DMA_BEACON_RESP) -
-> 419                                 AR5K_TUNE_ADDITIONAL_SWBA_BACKOFF) * 1024) |
-> 420                                 AR5K_QCU_RDYTIMECFG_ENABLE,
-> 421                                 AR5K_QUEUE_RDYTIMECFG(queue));
->
-> notice the AR5K_QCU_RDYTIMECFG_ENABLE. So it's probable that the queue
-> starts on time and we miss sync because we wait an extra ready-time
-> period.
->
+> That does seem what it is doing in iwl_power_update_mode().
 
-Also i think we must use AR5K_DCU_MISC_ARBLOCK_IGNORE as we do for
-beacon frames so that CAB queue gets on top no matter what queues are
-pending (it already has the AR5K_DCU_MISC_ARBLOCK_CTL_GLOBAL).
+I want to save power.  no_sleep_autoadjust=N and iwconfig wlan0 power
+on does a good job of that.  I assume that no_sleep_autoadjust
+defaults to Y because it's still not reliable (and I seem to have seen
+a few networks where it causes occasional problems).  So I'd like to
+be able to toggle it at runtime, file bug reports when it fails, but
+still be able to use the networks it fails on :)
 
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+--Andy
