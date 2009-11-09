@@ -1,45 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:40104 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756202AbZKWVXA (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:55826 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755123AbZKIWGP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 16:23:00 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
+	Mon, 9 Nov 2009 17:06:15 -0500
+Received: by iwn10 with SMTP id 10so2764559iwn.4
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 14:06:21 -0800 (PST)
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 9 Nov 2009 14:06:01 -0800
+Message-ID: <43e72e890911091406p4554bccbk8c9f67fb0cd0ef2f@mail.gmail.com>
+Subject: Re: [PATCH 0/4] compat-wireless patches
+To: Hauke Mehrtens <hauke@hauke-m.de>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/8] wl1271 patches of the week
-Date: Mon, 23 Nov 2009 23:22:11 +0200
-Message-Id: <1259011339-28149-1-git-send-email-luciano.coelho@nokia.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John et al,
+On Sun, Nov 8, 2009 at 2:27 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> Some patches for compat-wireless
+> For kernel 2.6.26 and older debugfs_remove_recursive needs to be
+> backported. The problems with rt2800lib will be fixed in
+> wireless-testing.
 
-Here are some patches that were still pending on our internal tree.  They are
-mostly fixes, without any new implementation.
+I got some malformed patches, mind resending, seems they were line
+wrapped. Mind resending with an agent that does not line-wrap?
 
-Cheers,
-Luca.
-
-
-Juuso Oikarinen (3):
-  wl1271: Decrease BET consecutive terminated beacons value to 10
-  wl1271: Prevent PSM-entry retry loop if PSM cancelled
-  wl1271: Set PSM support flags in driver configuration
-
-Luciano Coelho (5):
-  wl1271: fix the inetdev notifier callback return values
-  wl1271: set radio and general params also for PLT
-  wl1271: fix radio and general parameters commands
-  wl1271: remove workaround to ignore -EIO from radio and general
-    params
-  wl1271: Remove REF_CLK hack
-
- drivers/net/wireless/wl12xx/wl1271_cmd.c   |  107 +++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_cmd.h   |   72 +++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_event.c |    8 ++-
- drivers/net/wireless/wl12xx/wl1271_init.c  |  117 +---------------------------
- drivers/net/wireless/wl12xx/wl1271_init.h  |   70 -----------------
- drivers/net/wireless/wl12xx/wl1271_main.c  |   32 ++++----
- 6 files changed, 206 insertions(+), 200 deletions(-)
-
+  Luis
