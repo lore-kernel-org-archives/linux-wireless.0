@@ -1,82 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sirokuusama.dnainternet.net ([83.102.40.133]:49917 "EHLO
-	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752709AbZK3TuD (ORCPT
+Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:56131 "EHLO
+	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751983AbZKIWAB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2009 14:50:03 -0500
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 1/2] rndis_wlan: move copy of module parameters to separate
-	function
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 30 Nov 2009 21:50:07 +0200
-Message-ID: <20091130195007.13062.25776.stgit@fate.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Mon, 9 Nov 2009 17:00:01 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH] rt2x00: Fix rt2800lib RF chip programming selection.
+Date: Mon,  9 Nov 2009 22:59:58 +0100
+Message-Id: <1257803998-5412-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Mirror the legacy Ralink driver with respect to rt2800 RF register programming. Execute
+rt2800_config_channel_rt3x for all RF2020, RF3020, RF3021 & RF3022 chipsets when operating on RT3070
+devices.
+
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 ---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
- drivers/net/wireless/rndis_wlan.c |   37 ++++++++++++++++++++++---------------
- 1 files changed, 22 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 2ecbedb..8dd9224 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -2594,23 +2594,9 @@ end:
- /*
-  * driver/device initialization
-  */
--static int bcm4320a_early_init(struct usbnet *usbdev)
--{
--	/* bcm4320a doesn't handle configuration parameters well. Try
--	 * set any and you get partially zeroed mac and broken device.
--	 */
--
--	return 0;
--}
--
--static int bcm4320b_early_init(struct usbnet *usbdev)
-+static void rndis_copy_module_params(struct usbnet *usbdev)
- {
- 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
--	char buf[8];
--
--	/* Early initialization settings, setting these won't have effect
--	 * if called after generic_rndis_bind().
--	 */
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 2c91c44..446087e 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -806,10 +806,14 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 	unsigned int tx_pin;
+ 	u8 bbp;
  
- 	priv->param_country[0] = modparam_country[0];
- 	priv->param_country[1] = modparam_country[1];
-@@ -2652,6 +2638,27 @@ static int bcm4320b_early_init(struct usbnet *usbdev)
- 		priv->param_workaround_interval = 500;
- 	else
- 		priv->param_workaround_interval = modparam_workaround_interval;
-+}
-+
-+static int bcm4320a_early_init(struct usbnet *usbdev)
-+{
-+	/* bcm4320a doesn't handle configuration parameters well. Try
-+	 * set any and you get partially zeroed mac and broken device.
-+	 */
-+
-+	return 0;
-+}
-+
-+static int bcm4320b_early_init(struct usbnet *usbdev)
-+{
-+	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
-+	char buf[8];
-+
-+	rndis_copy_module_params(usbdev);
-+
-+	/* Early initialization settings, setting these won't have effect
-+	 * if called after generic_rndis_bind().
-+	 */
+-	if (rt2x00_rev(&rt2x00dev->chip) != RT3070_VERSION)
+-		rt2800_config_channel_rt2x(rt2x00dev, conf, rf, info);
+-	else
++	if (rt2x00_rt(&rt2x00dev->chip, RT3070) &&	
++           (rt2x00_rf(&rt2x00dev->chip, RF2020) ||
++	     rt2x00_rf(&rt2x00dev->chip, RF3020) ||
++	     rt2x00_rf(&rt2x00dev->chip, RF3021) ||
++	     rt2x00_rf(&rt2x00dev->chip, RF3022)))
+ 		rt2800_config_channel_rt3x(rt2x00dev, conf, rf, info);
++	else
++		rt2800_config_channel_rt2x(rt2x00dev, conf, rf, info);
  
- 	rndis_set_config_parameter_str(usbdev, "Country", priv->param_country);
- 	rndis_set_config_parameter_str(usbdev, "FrameBursting",
+ 	/*
+ 	 * Change BBP settings
+-- 
+1.6.5.2
 
