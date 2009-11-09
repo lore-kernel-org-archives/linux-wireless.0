@@ -1,68 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.102.11.253]:40676 "EHLO
-	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750919AbZKZUql (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:47640 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750819AbZKIKyI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 15:46:41 -0500
-From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
-Reply-To: 8an@praha12.net
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] API for setting ACK timeout
-Date: Thu, 26 Nov 2009 21:46:47 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200911261826.08576.8an@praha12.net> <200911262113.10847.8an@praha12.net> <1259266544.5428.0.camel@johannes.local>
-In-Reply-To: <1259266544.5428.0.camel@johannes.local>
+	Mon, 9 Nov 2009 05:54:08 -0500
+Date: Mon, 9 Nov 2009 12:54:10 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Holger Schurig <holgerschurig@googlemail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: erraneous connect with short-slot-time fails
+Message-ID: <20091109105410.GA1443@jm.kir.nu>
+References: <m3zl6wq8x7.wl%holgerschurig@gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1377993.Fc8xXOarFB";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200911262146.47311.8an@praha12.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <m3zl6wq8x7.wl%holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1377993.Fc8xXOarFB
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Mon, Nov 09, 2009 at 11:39:16AM +0100, Holger Schurig wrote:
 
-On 26.11.2009 21:15 Johannes Berg wrote:
-> It only affects lost packets anyway, no?
-Yes, it does, and 6us is still nothing compared to the transmit duration
-(at least 100us).
+> wlan0 (phy #4): assoc 00:1b:d4:44:35:90 -> 00:15:e9:84:1a:54 status: 25: Association request rejected due to requesting station not supporting the short slot time option
 
-> Would that be sufficient? It'd be kinda cool if mac80211 auto-configured
-> itself if it picked up a beacon that had this information, etc.
-We just need an API for setting ACK timeout on long distance point-to-point=
-=20
-links, so this is definitely enough. Unfortunately I can't promise I will=20
-have enough time to implement the automatic configuration, although I see i=
-t=20
-would be useful for us too.
+> First thing: the error message is confused. I turned off
+> short-slot-time on the AP, so it's the AP that does not support it.
 
-Lukas Turek
+However, that text is correct as far as the proper use of status 25 is
+concerned. Which AP is this?
 
---nextPart1377993.Fc8xXOarFB
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+> However, the real question remains: why does the station
+> (ath5k+mac80211) tries to use short-slot-time in the first place? In
+> the probe response, the AP says clearly that he doesn't support this.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
+IEEE 802.11-2007 states that the station indicates its support for short
+slot time in (re)association request. This does not depend what the BSS
+is currently using (slot time subfield inbeacon/probe
+response/(re)association response frames).
 
-iQIcBAABAgAGBQJLDuk3AAoJEEBjvk/UOfYwM+AP/0HQDaoNizg7az+kEEyOXjvp
-VMQJHfMwS7JjtUZelKM0ix9J3h/AZoFTWkkjfp/5hOIuLkWe7zEdtx17bbjKeNq2
-J5I8fRZvJDy2oEaklPV83tHenOgDf7AmeYOkj4pSIC5ye0yOsrgJDb18O3+R0HvX
-WQDnuuRHNAJ+2WZz5amw98AM84DHHFwjJQUosSsPFGtXct+IWU77QVu6XTSlAkJx
-Oiimt9divMGRNPLyTZ9KF1IbwtQsVucwJoNL38Vf3+o58E0URvZ7pPIjazj0TeM2
-XUFCMpMxqOeJ2hMsqtxOKfAq0ggUMhhRIFYdH/TQiYljZir+EPVc/we0aS6sCRps
-W37xlO4PHQLt3/1JA20otCQR1FabVtLQed68OyejbeQjdwSF1qwK4qSFpZfjBK+v
-OQR+cVNW0CrmH7pERyJNIl7gpu4oJrnjTC7nj7BcaBsqQP431pXJ+DnjSJLBQKPT
-KOp2aww77HEg9QqHtXM93KewTEn2SvUVsuBvemRm9hNp0BKgPxjiRKFgSgOycHlm
-OrQ1aEx1jE8fK0H5rTkro7KAgkftEvJVfyyjlGqm/395ifSyaGhVln+2rEy7+JTy
-IJb2dsmbuPvXlCcyGg53Mt47K0KKcFQPTcA/NEds+VgP6B2NE4l1sAiWGomjWcfU
-nnYPqQY3r6OUB6giECam
-=+SHW
------END PGP SIGNATURE-----
+> CONCLUSION: mac80211 tries to use short-slot time.
 
---nextPart1377993.Fc8xXOarFB--
+No.. It only indicates that it supports short slot time. It is up to the
+AP to decide whether short slot time is used in the BSS.
+
+> CONCLUSION: the AP doesn't like that. And the textual representation
+> from tshark for this error as also confused about the roles of AP and
+> station :-)
+
+The "AP doesn't like that" part seems correct. The textual
+representation may be confusing, but it is correct. The AP behavior is
+not.
+
+> Who's the culprit, mac80211 or wpa_supplicant?
+
+Neither, the AP is. Have you verified whether you can work around this
+by hardcoding mac80211 to send out zero as the short slot time?
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
