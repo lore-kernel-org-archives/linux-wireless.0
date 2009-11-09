@@ -1,57 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:53270 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751253AbZKDGfm (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:42755 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752371AbZKIQc3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 01:35:42 -0500
-Date: Tue, 3 Nov 2009 22:34:33 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	David Miller <davem@davemloft.net>,
-	torvalds@linux-foundation.org, linville@tuxdriver.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Please consider reverting
- 7d930bc33653d5592dc386a76a38f39c2e962344
-Message-Id: <20091103223433.23765578.akpm@linux-foundation.org>
-In-Reply-To: <1257234299.28469.25.camel@johannes.local>
-References: <20091103053156.GA3212@core.coreip.homeip.net>
-	<20091102.224957.32364226.davem@davemloft.net>
-	<20091103065238.GE3212@core.coreip.homeip.net>
-	<1257232587.3420.55.camel@localhost.localdomain>
-	<1257234299.28469.25.camel@johannes.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 9 Nov 2009 11:32:29 -0500
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Greg KH <gregkh@suse.de>
+Subject: Re: [PATCH] Staging: update TODO files
+Date: Mon, 9 Nov 2009 17:15:49 +0100
+Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+References: <200910211442.11785.bzolnier@gmail.com>
+In-Reply-To: <200910211442.11785.bzolnier@gmail.com>
+MIME-Version: 1.0
+Message-Id: <200911091715.49814.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 03 Nov 2009 08:44:59 +0100 Johannes Berg <johannes@sipsolutions.net> wrote:
-
-> On Tue, 2009-11-03 at 16:16 +0900, Marcel Holtmann wrote:
+On Wednesday 21 October 2009 14:42:11 Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] Staging: update TODO files
 > 
-> > and can we please stop jumping the gun here and going past the subsystem
-> > maintainers. I think this happens a little bit too much lately.
+> Remove my mail address.
 > 
-> I'll rant a bit too -- I've been very annoyed by this many times.
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Problem is, subsystem maintainers are very unreliable.
+ping.  Could you please apply it?
 
-Right now I'm sitting on 17 patches which I think should be in 2.6.32,
-which I need to plead with subsystem maintainers to take a look at. 
-They've already seen the patches (usually at least twice) and they've
-just blown them off.  This is typical.
-
-And then there are the 100 to 200 non-critical patches which I'm always
-sitting on, similarly ignored.  And I'm increasingly just ignoring
-stuff nowadays because this situation is so bad.
-
-And then there are all the bug reports which flow in one ear and out
-the other.
-
-Now, some subsystem maintainer are good, and some aren't.  I'm probably
-the only person who could write the detailed list for each column. 
-Unfortunately, people who have better lives than me are best off
-assuming that a subsystem maintainer is unreliable.  If the problem is
-severe enough, bypassing the maintainer is a sensible default.
-
+> ---
+>  drivers/staging/rtl8187se/TODO |    3 +--
+>  drivers/staging/rtl8192su/TODO |    3 +--
+>  drivers/staging/vt6655/TODO    |    5 ++---
+>  drivers/staging/vt6656/TODO    |    5 ++---
+>  4 files changed, 6 insertions(+), 10 deletions(-)
+> 
+> Index: b/drivers/staging/rtl8187se/TODO
+> ===================================================================
+> --- a/drivers/staging/rtl8187se/TODO
+> +++ b/drivers/staging/rtl8187se/TODO
+> @@ -11,5 +11,4 @@ TODO:
+>  - sparse fixes
+>  - integrate with drivers/net/wireless/rtl818x
+>  
+> -Please send any patches to Greg Kroah-Hartman <greg@kroah.com> and
+> -Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>.
+> +Please send any patches to Greg Kroah-Hartman <greg@kroah.com>.
+> Index: b/drivers/staging/rtl8192su/TODO
+> ===================================================================
+> --- a/drivers/staging/rtl8192su/TODO
+> +++ b/drivers/staging/rtl8192su/TODO
+> @@ -14,5 +14,4 @@ TODO:
+>  - sparse fixes
+>  - integrate with drivers/net/wireless/rtl818x
+>  
+> -Please send any patches to Greg Kroah-Hartman <greg@kroah.com> and
+> -Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>.
+> +Please send any patches to Greg Kroah-Hartman <greg@kroah.com>.
+> Index: b/drivers/staging/vt6655/TODO
+> ===================================================================
+> --- a/drivers/staging/vt6655/TODO
+> +++ b/drivers/staging/vt6655/TODO
+> @@ -16,6 +16,5 @@ TODO:
+>  - sparse fixes
+>  - integrate with drivers/net/wireless
+>  
+> -Please send any patches to Greg Kroah-Hartman <greg@kroah.com>,
+> -Forest Bond <forest@alittletooquiet.net> and Bartlomiej Zolnierkiewicz
+> -<bzolnier@gmail.com>.
+> +Please send any patches to Greg Kroah-Hartman <greg@kroah.com>
+> +and Forest Bond <forest@alittletooquiet.net>.
+> Index: b/drivers/staging/vt6656/TODO
+> ===================================================================
+> --- a/drivers/staging/vt6656/TODO
+> +++ b/drivers/staging/vt6656/TODO
+> @@ -15,6 +15,5 @@ TODO:
+>  - sparse fixes
+>  - integrate with drivers/net/wireless
+>  
+> -Please send any patches to Greg Kroah-Hartman <greg@kroah.com>,
+> -Forest Bond <forest@alittletooquiet.net> and Bartlomiej Zolnierkiewicz
+> -<bzolnier@gmail.com>.
+> +Please send any patches to Greg Kroah-Hartman <greg@kroah.com>
+> +and Forest Bond <forest@alittletooquiet.net>.
