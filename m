@@ -1,49 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:56907 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752303AbZKPPgp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2009 10:36:45 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 16 Nov 2009 07:36:51 -0800
-Date: Mon, 16 Nov 2009 07:36:46 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH 2/2] ath9k_hw: Fix AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_BB
-	and its shift value in 0x4054
-Message-ID: <20091116153646.GC4237@tux>
-References: <1258102960-22768-1-git-send-email-vasanth@atheros.com> <1258102960-22768-2-git-send-email-vasanth@atheros.com> <20091113171438.GD3865@tux> <20091116072004.GC27858@vasanth-laptop>
+Received: from web23105.mail.ird.yahoo.com ([217.146.189.45]:39361 "HELO
+	web23105.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751353AbZKJACF convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Nov 2009 19:02:05 -0500
+Message-ID: <133312.81061.qm@web23105.mail.ird.yahoo.com>
+Date: Mon, 9 Nov 2009 23:55:28 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [PATCH] rtl8187: Fix sparse warnings
+To: John W Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4af89e06.WiuJ+1TkMf6eizxN%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20091116072004.GC27858@vasanth-laptop>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 15, 2009 at 11:20:07PM -0800, Vasanth Thiagarajan wrote:
-> On Fri, Nov 13, 2009 at 10:44:38PM +0530, Luis Rodriguez wrote:
-> > On Fri, Nov 13, 2009 at 01:02:40AM -0800, Vasanth Thiagarajan wrote:
-> > > The bit value of AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_BB is wrong, it should
-> > > be 0x400 and the number of bits to be right shifted is 10. Having this
-> > > wrong value in 0x4054 sometimes affects bt quality on btcoex environment.
-> > >
-> > > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> >
-> > These both seem small enough and reasonable for stable fixes no?
-> 
-> yeah, I'll resend them CC'ing stable.
-> 
-> > Although I didn't get the impact of the first one..
-> 
-> debruijn32 (0x077CB531UL) is used to find the index of the geric timer
-> which generated the interrupt. On a 64-bit environment, 0x077CB531UL
-> will result in indexing more than 32 in gen_timer_index[] which has
-> memory allocated only for 32 u32.
+--- On Mon, 9/11/09, Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-Can this be added to the commit log?
+> Due to a missing header include,
+> sparse generates the following warnings:
+> 
+>  
+> CHECK   drivers/net/wireless/rtl818x/rtl8187_rfkill.c
+> warning: symbol 'rtl8187_rfkill_init' was not declared.
+> Should it be static?
+> warning: symbol 'rtl8187_rfkill_poll' was not declared.
+> Should it be static?
+> warning: symbol 'rtl8187_rfkill_exit' was not declared.
+> Should it be static?
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-  Luis
+Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+
+Looks straight-forward.
+
+
+> ---
+> 
+> John,
+> 
+> This is 2.6.33 material.
+> 
+> Larry
+> ---
+> 
+> Index:
+> wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
+> ===================================================================
+> ---
+> wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
+> +++
+> wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
+> @@ -18,6 +18,7 @@
+>  #include <net/mac80211.h>
+>  
+>  #include "rtl8187.h"
+> +#include "rtl8187_rfkill.h"
+>  
+>  static bool rtl8187_is_radio_enabled(struct rtl8187_priv
+> *priv)
+>  {
+> 
+
+
+      
