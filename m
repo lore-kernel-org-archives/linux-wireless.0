@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51273 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754109AbZKYQpd (ORCPT
+Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:51331 "EHLO
+	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753844AbZKIWic (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 11:45:33 -0500
-Date: Wed, 25 Nov 2009 11:43:13 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Patrick McHardy <kaber@trash.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: RFC: mac80211: add ethtool support
-Message-ID: <20091125164313.GE7800@tuxdriver.com>
-References: <4B0D58EA.8060304@trash.net> <1259166692.32372.13.camel@johannes.local> <4B0D5C8F.3040005@trash.net> <1259167010.32372.14.camel@johannes.local> <4B0D5E8D.2070408@trash.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4B0D5E8D.2070408@trash.net>
+	Mon, 9 Nov 2009 17:38:32 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 10/10] rt2x00: Fix building of rt2800lib when rt2x00 driver is built-in.
+Date: Mon,  9 Nov 2009 23:38:35 +0100
+Message-Id: <1257806315-11089-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 25, 2009 at 05:42:53PM +0100, Patrick McHardy wrote:
-> Johannes Berg wrote:
-> > On Wed, 2009-11-25 at 17:34 +0100, Patrick McHardy wrote:
-> >> Johannes Berg wrote:
-> >>> On Wed, 2009-11-25 at 17:18 +0100, Patrick McHardy wrote:
-> >>>>     mac80211: add ethtool support
-> >>>>     
-> >>>>     Add ethtool support and add a drvname field to struct ieee80211_ops, which is
-> >>>>     used for ethtool driver information. This is useful with multiple different
-> >>>>     wireless cards to find out which device is using which driver.
-> >>>>     
-> >>> I thought we _had_ ethtool support via cfg80211?!
-> >> Mhh good point :) For some reason it didn't show any information, but
-> >> that might have been a mistake on my part. I'll give it another shot :)
-> > 
-> > It probably won't show the driver name because we haven't pushed that
-> > through in any way?
-> 
-> Its actually showing:
-> 
-> # ethtool -i wlan0
-> Cannot get driver information: Operation not supported
-> 
-> which shouldn't happen, since the callback is defined. I'll
-> have a closer look at this.
+When enabling rt2800usb as a built-in driver (as opposed to a as a module) the build fails. See
+http://marc.info/?l=linux-wireless&m=125768687711034&w=2 for details.
 
-What kernel are you using?
+Fix it by properly including <linux/usb.h> from rt2x00usb.h
 
-[linville-t400.local]:> ethtool -i wlan0
-driver: iwlagn
-version: 2.6.32-rc8-wl
-firmware-version: 8.24.2.12
-bus-info: 0000:03:00.0
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
 
+John, this is one to merge upstream quickly --> we currently have build failures in next.
+
+---
+---
+ drivers/net/wireless/rt2x00/rt2x00usb.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.h b/drivers/net/wireless/rt2x00/rt2x00usb.h
+index d63e1df..3da6841 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.h
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
+@@ -26,6 +26,8 @@
+ #ifndef RT2X00USB_H
+ #define RT2X00USB_H
+ 
++#include <linux/usb.h>
++
+ #define to_usb_device_intf(d) \
+ ({ \
+ 	struct usb_interface *intf = to_usb_interface(d); \
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.5.2
+
