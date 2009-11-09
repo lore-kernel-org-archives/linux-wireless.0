@@ -1,59 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:52283 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751126AbZKRLbc convert rfc822-to-8bit (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:10530 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755682AbZKIXrW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 06:31:32 -0500
-Received: by bwz27 with SMTP id 27so984409bwz.21
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 03:31:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1258541631.30511.7.camel@johannes.local>
-References: <1258509054-10901-1-git-send-email-janakiram.sistla@gmail.com>
-	 <1258541631.30511.7.camel@johannes.local>
-Date: Wed, 18 Nov 2009 17:01:36 +0530
-Message-ID: <4fb5db50911180331n3e7a2d0fl73ec6a056eda1664@mail.gmail.com>
-Subject: Re:
-From: Janakiram Sistla <janakiram.sistla@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 9 Nov 2009 18:47:22 -0500
+Received: by ey-out-2122.google.com with SMTP id 4so87857eyf.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 15:47:27 -0800 (PST)
+From: Rui Paulo <rpaulo@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Rui Paulo <rpaulo@gmail.com>,
+	Javier Cardona <javier@cozybit.com>
+Subject: [PATCH v2 10/20] mac80211: improve peer link management debugging
+Date: Mon,  9 Nov 2009 23:46:48 +0000
+Message-Id: <1257810418-30075-11-git-send-email-rpaulo@gmail.com>
+In-Reply-To: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
+References: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 18, 2009 at 4:23 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2009-11-18 at 07:20 +0530, Janakiram Sistla wrote:
->
->> ---
->>  include/linux/rfkill.h |    2 ++
->>  net/rfkill/core.c      |    2 ++
->>  2 files changed, 4 insertions(+), 0 deletions(-)
->>
->> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
->> index 3392c59..7ae75ef 100644
->> --- a/include/linux/rfkill.h
->> +++ b/include/linux/rfkill.h
->> @@ -35,6 +35,7 @@
->>   * @RFKILL_TYPE_UWB: switch is on a ultra wideband device.
->>   * @RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
->>   * @RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
->> + * @RFKILL_TYPE_FM: switch is on a wireless FM device.
->>   * @NUM_RFKILL_TYPES: number of defined rfkill types
->>   */
->>  enum rfkill_type {
->> @@ -44,6 +45,7 @@ enum rfkill_type {
->>       RFKILL_TYPE_UWB,
->>       RFKILL_TYPE_WIMAX,
->>       RFKILL_TYPE_WWAN,
->> +     RFKILL_TYPE_FM,
->>       RFKILL_TYPE_GPS,
->>       NUM_RFKILL_TYPES,
->>  };
->
-> Nice try, but no fly. This struct is ABI, you cannot add in the middle.
-Is it ok if i can add my change after RFKILL_TYPE_GPS.But with respect
-to the change i made i also made the necessary changes in core.c.
+Print the FSM state strings instead of just the numbers.
 
->
-> johannes
->
+Signed-off-by: Rui Paulo <rpaulo@gmail.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
+Tested-by: Brian Cavagnolo <brian@cozybit.com>
+---
+ net/mac80211/mesh_plink.c |   15 +++++++++++++--
+ 1 files changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 8a54bc8..cf12f61 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -398,6 +398,17 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 	u8 ie_len;
+ 	u8 *baseaddr;
+ 	__le16 plid, llid, reason;
++#ifdef CONFIG_MAC80211_VERBOSE_MPL_DEBUG
++	static const char *mplstates[] = {
++		[PLINK_LISTEN] = "LISTEN",
++		[PLINK_OPN_SNT] = "OPN-SNT",
++		[PLINK_OPN_RCVD] = "OPN-RCVD",
++		[PLINK_CNF_RCVD] = "CNF_RCVD",
++		[PLINK_ESTAB] = "ESTAB",
++		[PLINK_HOLDING] = "HOLDING",
++		[PLINK_BLOCKED] = "BLOCKED"
++	};
++#endif
+ 
+ 	/* need action_code, aux */
+ 	if (len < IEEE80211_MIN_ACTION_SIZE + 3)
+@@ -536,8 +547,8 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 		}
+ 	}
+ 
+-	mpl_dbg("Mesh plink (peer, state, llid, plid, event): %pM %d %d %d %d\n",
+-		mgmt->sa, sta->plink_state,
++	mpl_dbg("Mesh plink (peer, state, llid, plid, event): %pM %s %d %d %d\n",
++		mgmt->sa, mplstates[sta->plink_state],
+ 		le16_to_cpu(sta->llid), le16_to_cpu(sta->plid),
+ 		event);
+ 	reason = 0;
+-- 
+1.5.6.5
+
