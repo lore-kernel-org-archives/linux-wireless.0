@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:50909 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753765AbZKKEM7 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:47354 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752639AbZKIQ5G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 23:12:59 -0500
-Received: by fxm21 with SMTP id 21so691774fxm.21
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2009 20:13:03 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4AF99EF9.4040408@nets.rwth-aachen.de>
-References: <4AF99EF9.4040408@nets.rwth-aachen.de>
-Date: Tue, 10 Nov 2009 23:13:03 -0500
-Message-ID: <b6c5339f0911102013k20d927d3mc021d25bf6703303@mail.gmail.com>
-Subject: Re: ath5k: 2.6.32-rc6 "no further txbuf available, dropping packet"
-From: Bob Copeland <me@bobcopeland.com>
-To: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
-Cc: ath5k-devel@lists.ath5k.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 9 Nov 2009 11:57:06 -0500
+Date: Mon, 9 Nov 2009 14:56:29 -0200
+From: Mauro Carvalho Chehab <mchehab@infradead.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Greg KH <gregkh@suse.de>, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Staging: remove rtl8187se driver because of lack of
+ development activities
+Message-ID: <20091109145629.3587c9f6@pedra.chehab.org>
+In-Reply-To: <200911091731.36861.bzolnier@gmail.com>
+References: <200911091731.36861.bzolnier@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 10, 2009 at 12:12 PM, Arnd Hannemann
-<hannemann@nets.rwth-aachen.de> wrote:
-> Hi,
->
-> is there any reason the packet is dropped and "NETDEV_TX_OK" is returned,
-> in this case?
-> Seems pretty stupid to me, because now we are randomly dropping
-> packets before kernel queuing (qdisc etc) can handle them,
-> or am I missing something?
+Hi Bartolomiej,
 
-Yes, there is a good reason (there are no buffers for the hardware to
-play with).  Actually mac80211 tx is never supposed to return anything
-but TX_OK.
+Em Mon, 9 Nov 2009 17:31:36 +0100
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> escreveu:
 
-Try this patch (it needs work which is why it's not upstream yet):
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] Staging: remove rtl8187se driver because of lack of development activities
+> 
+> This driver hasn't seen any real development activities since early July:
+> 
+>    257bc86   Staging: rtl8187se: remove unused #include <linu
+>    2035beb   param:remove-useless-writable-charp
+>    305409a   tree-wide: fix some typos and punctuation in com
+>    b881c6c   Staging: fix wireless drivers depends
+>    a010a33   Staging: rtl8187se/rtl8192e/rtl8192su: allow mod
+>    125b181   staging: Add proper selection of WIRELESS_EXT an
+>    b3184e1   Staging: rtl8187se: Fix comment-out-typo
+>    b6ac161   Staging: ARRAY_SIZE changes
+> 
+> so remove it for now.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-http://patchwork.kernel.org/patch/56785/
+This driver has several points in common with rtl8192* drivers. As I'm
+currently working on cleaning up rtl8192u and see what can be done to merge the
+common code used by all those realtek drivers, I prefer to keep this driver for
+more time at the tree.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+The issue I'm currently facing is that we should rearrange the drivers/staging/rtl* 
+into a common rtl component tree, moving the common components to there. This will
+avoid duplicated efforts to cleanup the same code several times, on different
+places.
+
+I started working on it this weekend, but I haven't finish it yet.
+
+Cheers,
+Mauro
