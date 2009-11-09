@@ -1,93 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:6056 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752016AbZKHPFb (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40551 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751132AbZKIN1i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 10:05:31 -0500
-Received: by ey-out-2122.google.com with SMTP id 25so50488eya.5
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 07:05:35 -0800 (PST)
-Message-ID: <4AF6DE3D.8040905@gmail.com>
-Date: Sun, 08 Nov 2009 16:05:33 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-CC: Ivo van Doorn <ivdoorn@gmail.com>, users@rt2x00.serialmonkey.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 7/7] rt2x00: Update copyright statements.
-References: <1257689905-1611-1-git-send-email-gwingerde@gmail.com> <200911081525.58809.IvDoorn@gmail.com> <200911081548.09279.bzolnier@gmail.com>
-In-Reply-To: <200911081548.09279.bzolnier@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-15
+	Mon, 9 Nov 2009 08:27:38 -0500
+Subject: Re: [PATCH 11/21] mac80211: add WLAN_EID_RANN
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rui Paulo <rpaulo@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Javier Cardona <javier@cozybit.com>
+In-Reply-To: <B2865F30-1886-4985-AB76-2AAB769530F4@gmail.com>
+References: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
+	 <1257770381-7680-12-git-send-email-rpaulo@gmail.com>
+	 <1257771552.29454.171.camel@johannes.local>
+	 <B2865F30-1886-4985-AB76-2AAB769530F4@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ikUkolSsxaIVjmjSNHga"
+Date: Mon, 09 Nov 2009 14:27:39 +0100
+Message-ID: <1257773259.29454.175.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/08/09 15:48, Bartlomiej Zolnierkiewicz wrote:
-> On Sunday 08 November 2009 15:25:58 Ivo van Doorn wrote:
-> 
->>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
->>> index 5c7d74a..3207b83 100644
->>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
->>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
->>> @@ -3,7 +3,13 @@
->>>  
->>>  	Based on the original rt2800pci.c and rt2800usb.c:
->>>  
->>> -	  Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
->>> +	  Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>
->>> +	  Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>
->>> +	  Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
->>> +	  Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>
->>> +	  Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
->>> +	  Copyright (C) 2009 Mark Asselstine <asselsm@gmail.com>
->>> +	  Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
->>>  	  <http://rt2x00.serialmonkey.com>
->>>  
->>>  	This program is free software; you can redistribute it and/or modify
->>
->> If Bartlomiej has no objections, we could just update the statements for rt2800lib.c/rt2800lib.h
->> to something similar as rt2800.h:
->>
->> /*
->> 	Copyright (C) 2009 Bartlomiej Zolnierkiewicz
->> 	Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>
->> 	Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>
->> 	Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
->> 	Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>
->> 	Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
->> 	Copyright (C) 2009 Mark Asselstine <asselsm@gmail.com>
->> 	Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
->>
->> 	This program is free software; you can redistribute it and/or modify
->> ....
->>
->> because not sure if we need the seperate "based on" comment.. But I'll let Bartlomiej
->> decide on this one.
-> 
-> I think that the original version is correct and also documents new
-> development direction well.
-> 
 
-To be honest I believe Ivo is right here. The current "based on" way of documenting copyright does seem to suggest that this list of people does not
-have any copyright claims to the code in rt2800lib.c. This is not true, as the code is pure copies from their code that was previously in rt2800usb and
-rt2800pci. Therefore I believe it is better to have one list of copyright statements.
-Obviously we need to preserve the statement that rt2800lib is based on rt2800pci and rt2800usb.
+--=-ikUkolSsxaIVjmjSNHga
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Something like:
+Hi,
 
- /*                                                                                                      
-	Copyright (C) 2009 Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>                                
-	Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>                                             
-	Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>                                             
-	Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>                                               
-	Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>                                       
-	Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>                                      
-	Copyright (C) 2009 Mark Asselstine <asselsm@gmail.com>                                           
-	Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>                                   
-	<http://rt2x00.serialmonkey.com>                                                                 
-                                                                                                
-	Based on the original rt2800pci.c and rt2800usb.c.                                               
+> > On Mon, 2009-11-09 at 12:39 +0000, Rui Paulo wrote:
+> >> Process the RX of RANN information elements.
+> >
+> > That commit log is not really right.
+>=20
+> You're right. Is "Parse the RANN information element" a better one?
 
-	This program is free software; you can redistribute it and/or modify
-....                                                                      
+You're not really parsing them either ... Maybe "add code to find RANN
+IE" or something? Doesn't matter that much. For all I care 11 and 12
+could be collapsed into one patch.
 
----
-Gertjan.
+> > I'd definitely prefer if here you added a 17-byte long struct that
+> > explains the layout of the IE, and then used that in patch 12. Also =20
+> > it's
+> > probably useful to check the length directly in =20
+> > ieee802_11_parse_elems.
+>=20
+> I prefer structures describing the IE layout too, but I was following =20
+> the mesh code on this. If structure layouts are preferable, then there =20
+> are 4 mesh IEs that should probably be changed.
+
+Yeah, but I think at least one of them had a problem with struct
+description because it was kinda variable. Not sure if that's still the
+case though.
+
+> Regarding to the length check, I was also following the way the mesh =20
+> code does it. Again, if we want to change RANN, we should probably =20
+> also change PREQ, PREP and PERR.
+
+True too.
+
+But you were just adding a new one, so I figured I could ask you to make
+the new one nicer, but couldn't really ask you to fix the old ones :) If
+you want to, I'd welcome it.
+
+johannes
+
+--=-ikUkolSsxaIVjmjSNHga
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK+BjIAAoJEODzc/N7+QmapjEP/2k1UtWiPRhevmPiyOPOcjKa
+78wGL+GF40c111+9p3BeK3ZYRPIMR36FQt7KcpihcnsePSLsl5p868UZ1aQscSHq
+sG/jrkALJAqmalrWfEObtBmDHKiXlQgNJYe0QYQazs/QYR/Kmywr2sZC+PsiBkLG
+7DgS/mfnygD9A6pceK381xFCROaoLHNK1ygRZdhDOFTYm62grQePS93KmagSV2ux
+61xLnOqpIuiH1TsQzdXqa/NzNCCC1ZpUVhCIkDeNt2dm9sWMhZk02pbciLWGHq1B
+Fh+1i0cZPTkAN9HjtUjaagNQMVguoNIPd4Zd4wCi0ozN2yHAvYqOY9Afi1AYvpv7
+HuLy96GBDH/pIcrOcI2YvHdOxi9iL60X9OqIwcGj7TotUr2pGhArqwaBPOdhxIEJ
+S4a5RwuI6qa41u/IoMhsM7+B4cBoRBn6d1afVg5w0kAFLgS+if1m+7kiQtaPKKyf
+fENNrWNc53rm0MYDny9rPxcvKZecJ/9e3mArVP5tb06s19zB8QlkZCuRyxVOJom/
+Foj4ECZ5SXFAmmDntrmYTFOq3wgCeDYjl9AcwMZGjPrXTcOPj2g1WdDSwzaWrICn
+rkPITYQFZDVQZ4W1RmRRNIe3HfcWrN9ARuDRHsjE26BWIImtnIbatX2G5ZurvIhO
+iPKog1PSpEomkbysd2hp
+=l2Qm
+-----END PGP SIGNATURE-----
+
+--=-ikUkolSsxaIVjmjSNHga--
+
