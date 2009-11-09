@@ -1,41 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:44199 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750837AbZKQOMZ (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:35804 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755335AbZKIMk1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 09:12:25 -0500
-Received: by fg-out-1718.google.com with SMTP id d23so1738783fga.1
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2009 06:12:30 -0800 (PST)
-Message-ID: <4B02AF4A.50705@lwfinger.net>
-Date: Tue, 17 Nov 2009 08:12:26 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: 2.6.32-rc7-git1: Reported regressions 2.6.30 -> 2.6.31	(wireless)
-References: <ipicVA1QUFF.A.zWB.1mdALB@chimera> <20091117135308.GB27743@tuxdriver.com>
-In-Reply-To: <20091117135308.GB27743@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 9 Nov 2009 07:40:27 -0500
+Received: by mail-bw0-f227.google.com with SMTP id 27so3395312bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 04:40:33 -0800 (PST)
+From: Rui Paulo <rpaulo@gmail.com>
+To: linville@tuxdriver.com
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Rui Paulo <rpaulo@gmail.com>,
+	Javier Cardona <javier@cozybit.com>
+Subject: [PATCH 09/21] mac80211: improve HWMP debugging
+Date: Mon,  9 Nov 2009 12:39:29 +0000
+Message-Id: <1257770381-7680-10-git-send-email-rpaulo@gmail.com>
+In-Reply-To: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
+References: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/17/2009 07:53 AM, John W. Linville wrote:
-> On Mon, Nov 16, 2009 at 11:58:32PM +0100, Rafael J. Wysocki wrote:
->> This message contains a list of some regressions introduced between 2.6.30 and
->> 2.6.31, for which there are no fixes in the mainline I know of.  If any of them
->> have been fixed already, please let me know.
-> 
->> Unresolved regressions
->> ----------------------
+Signed-off-by: Rui Paulo <rpaulo@gmail.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
+Tested-by: Brian Cavagnolo <brian@cozybit.com>
+---
+ net/mac80211/mesh_hwmp.c |   11 +++++------
+ 1 files changed, 5 insertions(+), 6 deletions(-)
 
->> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14181
->> Subject		: b43 causes panic at ifconfig down / shutdown
->> Submitter	: Jeremy Huddleston <jeremyhu@freedesktop.org>
->> Date		: 2009-09-15 18:34 (63 days old)
-
-This one is fixed by commit d50bae33d1358b909ade05ae121d83d3a60ab63f in
-mainline. The patch was also sent to stable. Rafael has marked it CLOSED.
-
-Larry
-
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index e67e812..db1a330 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -115,13 +115,13 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+ 
+ 	switch (action) {
+ 	case MPATH_PREQ:
+-		mhwmp_dbg("sending PREQ\n");
++		mhwmp_dbg("sending PREQ to %pM\n", dst);
+ 		ie_len = 37;
+ 		pos = skb_put(skb, 2 + ie_len);
+ 		*pos++ = WLAN_EID_PREQ;
+ 		break;
+ 	case MPATH_PREP:
+-		mhwmp_dbg("sending PREP\n");
++		mhwmp_dbg("sending PREP to %pM\n", dst);
+ 		ie_len = 31;
+ 		pos = skb_put(skb, 2 + ie_len);
+ 		*pos++ = WLAN_EID_PREP;
+@@ -439,7 +439,7 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	orig_dsn = PREQ_IE_ORIG_DSN(preq_elem);
+ 	dst_flags = PREQ_IE_DST_F(preq_elem);
+ 
+-	mhwmp_dbg("received PREQ\n");
++	mhwmp_dbg("received PREQ from %pM\n", orig_addr);
+ 
+ 	if (memcmp(dst_addr, sdata->dev->dev_addr, ETH_ALEN) == 0) {
+ 		mhwmp_dbg("PREQ is for us\n");
+@@ -498,7 +498,7 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 			ifmsh->mshstats.dropped_frames_ttl++;
+ 			return;
+ 		}
+-		mhwmp_dbg("forwarding the PREQ\n");
++		mhwmp_dbg("forwarding the PREQ from %pM\n", orig_addr);
+ 		--ttl;
+ 		flags = PREQ_IE_FLAGS(preq_elem);
+ 		preq_id = PREQ_IE_PREQ_ID(preq_elem);
+@@ -525,7 +525,7 @@ static void hwmp_prep_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	u8 next_hop[ETH_ALEN];
+ 	u32 dst_dsn, orig_dsn, lifetime;
+ 
+-	mhwmp_dbg("received PREP\n");
++	mhwmp_dbg("received PREP from %pM\n", PREP_IE_ORIG_ADDR(prep_elem));
+ 
+ 	/* Note that we divert from the draft nomenclature and denominate
+ 	 * destination to what the draft refers to as origininator. So in this
+@@ -628,7 +628,6 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
+ 	ieee802_11_parse_elems(mgmt->u.action.u.mesh_action.variable,
+ 			len - baselen, &elems);
+ 
+-	mhwmp_dbg("RX path selection frame\n");
+ 	if (elems.preq) {
+ 		if (elems.preq_len != 37)
+ 			/* Right now we support just 1 destination and no AE */
+-- 
+1.5.6.5
 
