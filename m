@@ -1,91 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:59570 "EHLO
-	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755348AbZKIV7n (ORCPT
+Received: from mail-ew0-f228.google.com ([209.85.219.228]:47150 "EHLO
+	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755262AbZKIXrK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 16:59:43 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH] rt2x00: Properly detect Ralink RT3070 devices.
-Date: Mon,  9 Nov 2009 22:59:36 +0100
-Message-Id: <1257803976-5378-1-git-send-email-gwingerde@gmail.com>
+	Mon, 9 Nov 2009 18:47:10 -0500
+Received: by mail-ew0-f228.google.com with SMTP id 28so3974559ewy.18
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 15:47:16 -0800 (PST)
+From: Rui Paulo <rpaulo@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Rui Paulo <rpaulo@gmail.com>,
+	Javier Cardona <javier@cozybit.com>
+Subject: [PATCH v2 05/20] mac80211: update peer link management IE and action frames
+Date: Mon,  9 Nov 2009 23:46:43 +0000
+Message-Id: <1257810418-30075-6-git-send-email-rpaulo@gmail.com>
+In-Reply-To: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
+References: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow rt2800usb to properly detect RT307X based devices, and set the appropriate chipset values.
+Update the length and format of the peer link management action frames.
 
-Signed-off-by: Gertjan van Wingede <gwingerde@gmail.com>
+Signed-off-by: Rui Paulo <rpaulo@gmail.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
+Tested-by: Brian Cavagnolo <brian@cozybit.com>
 ---
- drivers/net/wireless/rt2x00/rt2800usb.c |   21 ++++++++++++++-------
- drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
- 2 files changed, 15 insertions(+), 7 deletions(-)
+ net/mac80211/mesh.c       |    2 +-
+ net/mac80211/mesh.h       |    2 +-
+ net/mac80211/mesh_plink.c |   32 +++++++++++++++++---------------
+ net/mac80211/rx.c         |    2 +-
+ 4 files changed, 20 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index d22ab64..bd2f6e6 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -790,16 +790,19 @@ static int rt2800usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	 */
- 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
- 	rt2800_register_read(rt2x00dev, MAC_CSR0, &reg);
--	rt2x00_set_chip(rt2x00dev, RT2870, value, reg);
-+	rt2x00_set_chip_rf(rt2x00dev, value, reg);
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 7942518..63427d9 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -553,7 +553,7 @@ static void ieee80211_mesh_rx_mgmt_action(struct ieee80211_sub_if_data *sdata,
+ 					  struct ieee80211_rx_status *rx_status)
+ {
+ 	switch (mgmt->u.action.category) {
+-	case PLINK_CATEGORY:
++	case MESH_PLINK_CATEGORY:
+ 		mesh_rx_plink_frame(sdata, mgmt, len, rx_status);
+ 		break;
+ 	case MESH_PATH_SEL_CATEGORY:
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 9948107..536d5c0 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -206,7 +206,7 @@ struct mesh_rmc {
+ #define MESH_MAX_MPATHS		1024
  
- 	/*
- 	 * The check for rt2860 is not a typo, some rt2870 hardware
- 	 * identifies itself as rt2860 in the CSR register.
- 	 */
--	if (!rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28600000) &&
--	    !rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28700000) &&
--	    !rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28800000) &&
--	    !rt2x00_check_rev(&rt2x00dev->chip, 0xffff0000, 0x30700000)) {
-+	if (rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28600000) ||
-+	    rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28700000) ||
-+	    rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28800000)) {
-+		rt2x00_set_chip_rt(rt2x00dev, RT3070);
-+	} else if (rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x30700000)) {
-+		rt2x00_set_chip_rt(rt2x00dev, RT3070);
-+	} else {
- 		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
- 		return -ENODEV;
- 	}
-@@ -809,7 +812,9 @@ static int rt2800usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	    !rt2x00_rf(&rt2x00dev->chip, RF2720) &&
- 	    !rt2x00_rf(&rt2x00dev->chip, RF2750) &&
- 	    !rt2x00_rf(&rt2x00dev->chip, RF3020) &&
--	    !rt2x00_rf(&rt2x00dev->chip, RF2020)) {
-+	    !rt2x00_rf(&rt2x00dev->chip, RF2020) &&
-+	    !rt2x00_rf(&rt2x00dev->chip, RF3021) &&
-+	    !rt2x00_rf(&rt2x00dev->chip, RF3022)) {
- 		ERROR(rt2x00dev, "Invalid RF chipset detected.\n");
- 		return -ENODEV;
- 	}
-@@ -1028,7 +1033,9 @@ static int rt2800usb_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 		spec->num_channels = ARRAY_SIZE(rf_vals);
- 		spec->channels = rf_vals;
- 	} else if (rt2x00_rf(&rt2x00dev->chip, RF3020) ||
--		   rt2x00_rf(&rt2x00dev->chip, RF2020)) {
-+		   rt2x00_rf(&rt2x00dev->chip, RF2020) ||
-+		   rt2x00_rf(&rt2x00dev->chip, RF3021) ||
-+		   rt2x00_rf(&rt2x00dev->chip, RF3022)) {
- 		spec->num_channels = ARRAY_SIZE(rf_vals_3070);
- 		spec->channels = rf_vals_3070;
- 	}
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index fd13264..181496e 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -172,6 +172,7 @@ struct rt2x00_chip {
- #define RT3052		0x3052	/* WSOC */
- #define RT3090		0x3090	/* 2.4GHz PCIe */
- #define RT2870		0x1600
-+#define RT3070		0x1800
+ /* Pending ANA approval */
+-#define PLINK_CATEGORY		30
++#define MESH_PLINK_CATEGORY	30
+ #define MESH_PATH_SEL_CATEGORY	32
  
- 	u16 rf;
- 	u32 rev;
+ /* Public interfaces */
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 4188752..8a54bc8 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -18,9 +18,8 @@
+ #define mpl_dbg(fmt, args...)	do { (void)(0); } while (0)
+ #endif
+ 
+-#define PLINK_GET_FRAME_SUBTYPE(p) (p)
+-#define PLINK_GET_LLID(p) (p + 1)
+-#define PLINK_GET_PLID(p) (p + 3)
++#define PLINK_GET_LLID(p) (p + 4)
++#define PLINK_GET_PLID(p) (p + 6)
+ 
+ #define mod_plink_timer(s, t) (mod_timer(&s->plink_timer, \
+ 				jiffies + HZ * t / 1000))
+@@ -154,6 +153,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400);
+ 	struct ieee80211_mgmt *mgmt;
+ 	bool include_plid = false;
++	static const u8 meshpeeringproto[] = { 0x00, 0x0F, 0xAC, 0x2A };
+ 	u8 *pos;
+ 	int ie_len;
+ 
+@@ -171,7 +171,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 	memcpy(mgmt->da, da, ETH_ALEN);
+ 	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
+ 	/* BSSID is left zeroed, wildcard value */
+-	mgmt->u.action.category = PLINK_CATEGORY;
++	mgmt->u.action.category = MESH_PLINK_CATEGORY;
+ 	mgmt->u.action.u.plink_action.action_code = action;
+ 
+ 	if (action == PLINK_CLOSE)
+@@ -189,18 +189,18 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 	/* Add Peer Link Management element */
+ 	switch (action) {
+ 	case PLINK_OPEN:
+-		ie_len = 3;
++		ie_len = 6;
+ 		break;
+ 	case PLINK_CONFIRM:
+-		ie_len = 5;
++		ie_len = 8;
+ 		include_plid = true;
+ 		break;
+ 	case PLINK_CLOSE:
+ 	default:
+ 		if (!plid)
+-			ie_len = 5;
++			ie_len = 8;
+ 		else {
+-			ie_len = 7;
++			ie_len = 10;
+ 			include_plid = true;
+ 		}
+ 		break;
+@@ -209,7 +209,8 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 	pos = skb_put(skb, 2 + ie_len);
+ 	*pos++ = WLAN_EID_PEER_LINK;
+ 	*pos++ = ie_len;
+-	*pos++ = action;
++	memcpy(pos, meshpeeringproto, sizeof(meshpeeringproto));
++	pos += 4;
+ 	memcpy(pos, &llid, 2);
+ 	if (include_plid) {
+ 		pos += 2;
+@@ -419,12 +420,13 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 		return;
+ 	}
+ 
+-	ftype = *((u8 *)PLINK_GET_FRAME_SUBTYPE(elems.peer_link));
++	ftype = mgmt->u.action.u.plink_action.action_code;
+ 	ie_len = elems.peer_link_len;
+-	if ((ftype == PLINK_OPEN && ie_len != 3) ||
+-	    (ftype == PLINK_CONFIRM && ie_len != 5) ||
+-	    (ftype == PLINK_CLOSE && ie_len != 5 && ie_len != 7)) {
+-		mpl_dbg("Mesh plink: incorrect plink ie length\n");
++	if ((ftype == PLINK_OPEN && ie_len != 6) ||
++	    (ftype == PLINK_CONFIRM && ie_len != 8) ||
++	    (ftype == PLINK_CLOSE && ie_len != 8 && ie_len != 10)) {
++		mpl_dbg("Mesh plink: incorrect plink ie length %d %d\n",
++		    ftype, ie_len);
+ 		return;
+ 	}
+ 
+@@ -436,7 +438,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 	 * from the point of view of this host.
+ 	 */
+ 	memcpy(&plid, PLINK_GET_LLID(elems.peer_link), 2);
+-	if (ftype == PLINK_CONFIRM || (ftype == PLINK_CLOSE && ie_len == 7))
++	if (ftype == PLINK_CONFIRM || (ftype == PLINK_CLOSE && ie_len == 10))
+ 		memcpy(&llid, PLINK_GET_PLID(elems.peer_link), 2);
+ 
+ 	rcu_read_lock();
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index c06496f..2cddd02 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -507,7 +507,7 @@ ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
+ 
+ 		if (ieee80211_is_action(hdr->frame_control)) {
+ 			mgmt = (struct ieee80211_mgmt *)hdr;
+-			if (mgmt->u.action.category != PLINK_CATEGORY)
++			if (mgmt->u.action.category != MESH_PLINK_CATEGORY)
+ 				return RX_DROP_MONITOR;
+ 			return RX_CONTINUE;
+ 		}
 -- 
-1.6.5.2
+1.5.6.5
 
