@@ -1,33 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2931 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752413AbZKGR0n (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:44845 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753493AbZKIRPI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 12:26:43 -0500
-Date: Sat, 7 Nov 2009 12:26:14 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: =?iso-8859-1?Q?Mart=EDn?= Ernesto Barreyro
-	<barreyromartin@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: Changing from Minstrel to PID
-Message-ID: <20091107172614.GB20330@hash.localnet>
-References: <1257542956.6565.2.camel@localhost.localdomain> <20091106214803.GL2782@tuxdriver.com> <1257545606.3752.2.camel@localhost.localdomain> <b6c5339f0911061424l33178e81k16fb1f3889edcc3c@mail.gmail.com> <20091107134330.GB25893@tuxdriver.com>
+	Mon, 9 Nov 2009 12:15:08 -0500
+Received: by bwz27 with SMTP id 27so3685794bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 09:15:12 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091107134330.GB25893@tuxdriver.com>
+In-Reply-To: <1257785423.29454.177.camel@johannes.local>
+References: <f74418680911090807g4e83a15cr2ce21ea21a86ea23@mail.gmail.com>
+	<1257785423.29454.177.camel@johannes.local>
+From: Matteo Croce <technoboy85@gmail.com>
+Date: Mon, 9 Nov 2009 18:14:50 +0100
+Message-ID: <40101cc30911090914qa641306x9901604c088b38e2@mail.gmail.com>
+Subject: Re: [PATCH]: setting bit-rate when injecting
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 07, 2009 at 08:43:30AM -0500, John W. Linville wrote:
-> > echo 'pid' > /debug/ieee80211/phy0/rc/name
-> > 
-> > to switch to pid.
-> 
-> Does that work?  I thought that was only informational (and readonly)?
+On Mon, Nov 9, 2009 at 5:50 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>>       sband = tx->local->hw.wiphy->bands[tx->channel->band];
+>>
+>> @@ -979,6 +984,25 @@
+>>                               tx->flags |= IEEE80211_TX_FRAGMENTED;
+>>                       break;
+>>
+>> +             case IEEE80211_RADIOTAP_RATE:
+>> +                     rates = sband->bitrates;
+>> +                     for (i = 0; i < sband->n_bitrates; i++) {
+>> +                             if (rates[i].bitrate/5 == *iterator.this_arg) {
+>> +                                     info->control.rates[0].idx = i;
+>> +                                     break;
+>> +                             }
+>> +                     }
+>> +                     info->control.rates[0].flags = 0;
+>
+> This leaves the number of retries at ... 0. That makes no sense. What
+> driver are you using that this actually works with?!
 
-Oh, yes, you are right.  I was thinking of the ieee80211_default_rc_algo
-modparam for mac80211.
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+Oh no, the retries are set in the IEEE80211_RADIOTAP_DATA_RETRIES case,
+parsed from the radiotap header
