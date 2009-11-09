@@ -1,86 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li59-9.members.linode.com ([97.107.129.9]:44589 "EHLO erley.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751117AbZKLT3X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 14:29:23 -0500
-MIME-Version: 1.0
-Date: Thu, 12 Nov 2009 14:29:27 -0500
-From: <pat-lkml@erley.org>
-To: <linux-wireless@vger.kernel.org>, <mcgrof@gmail.com>
-Subject: ATH9K AP+MP Simultaneous Success
-Message-ID: <3e6a3a7fd3826c7999b03d078a497c2d@127.0.0.1>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:52823 "EHLO
+	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754692AbZKIMxN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Nov 2009 07:53:13 -0500
+Received: by fxm21 with SMTP id 21so164895fxm.21
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 04:53:18 -0800 (PST)
+From: Rui Paulo <rpaulo@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Rui Paulo <rpaulo@gmail.com>
+Subject: iw [PATCH] update to latest kernel changes (mesh)
+Date: Mon,  9 Nov 2009 12:53:07 +0000
+Message-Id: <1257771187-7894-2-git-send-email-rpaulo@gmail.com>
+In-Reply-To: <1257771187-7894-1-git-send-email-rpaulo@gmail.com>
+References: <1257771187-7894-1-git-send-email-rpaulo@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have an ath9k pci card [1] in a router/AP system that's been doing great
-as just an AP and wired router for many months now.  Today, I decided to
-see if Mesh Point was still working in Compat Wireless.  After bringing 
-down the AP (I thought, never hit enter), I did:
+This introduces a new mesh parameter mesh_hwmp_rootmode to make the
+mesh point act as a root node using mesh RANN frames.
 
-# iw phy phy0 interface add mp0 type mp mesh_id FooBarMesh
-# macchanger -e mp0
-# ifconfig mp0 10.0.2.1/24 up
+Signed-off-by: Rui Paulo <rpaulo@gmail.com>
+---
+ mesh.c    |    2 ++
+ mpath.c   |    8 ++++----
+ nl80211.h |   11 +++++++----
+ 3 files changed, 13 insertions(+), 8 deletions(-)
 
-Then in my laptop (has a mini-pci ath9k card [2]) I did:
+diff --git a/mesh.c b/mesh.c
+index 624ec37..8a03282 100644
+--- a/mesh.c
++++ b/mesh.c
+@@ -165,6 +165,8 @@ const static struct mesh_param_descr _mesh_param_descrs[] =
+ 	{"mesh_hwmp_net_diameter_traversal_time",
+ 	NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME,
+ 	_my_nla_put_u16, _parse_u16, _print_u16_in_TUs},
++	{"mesh_hwmp_rootmode", NL80211_MESHCONF_HWMP_ROOTMODE,
++	_my_nla_put_u8, _parse_u8, _print_u8},
+ };
+ 
+ static void print_all_mesh_param_descr(void)
+diff --git a/mpath.c b/mpath.c
+index eb5ad6a..8f5a334 100644
+--- a/mpath.c
++++ b/mpath.c
+@@ -38,7 +38,7 @@ static int print_mpath_handler(struct nl_msg *msg, void *arg)
+ 	char dst[20], next_hop[20], dev[20];
+ 	static struct nla_policy mpath_policy[NL80211_MPATH_INFO_MAX + 1] = {
+ 		[NL80211_MPATH_INFO_FRAME_QLEN] = { .type = NLA_U32 },
+-		[NL80211_MPATH_INFO_DSN] = { .type = NLA_U32 },
++		[NL80211_MPATH_INFO_SN] = { .type = NLA_U32 },
+ 		[NL80211_MPATH_INFO_METRIC] = { .type = NLA_U32 },
+ 		[NL80211_MPATH_INFO_EXPTIME] = { .type = NLA_U32 },
+ 		[NL80211_MPATH_INFO_DISCOVERY_TIMEOUT] = { .type = NLA_U32 },
+@@ -70,9 +70,9 @@ static int print_mpath_handler(struct nl_msg *msg, void *arg)
+ 	mac_addr_n2a(next_hop, nla_data(tb[NL80211_ATTR_MPATH_NEXT_HOP]));
+ 	if_indextoname(nla_get_u32(tb[NL80211_ATTR_IFINDEX]), dev);
+ 	printf("%s %s %s", dst, next_hop, dev);
+-	if (pinfo[NL80211_MPATH_INFO_DSN])
++	if (pinfo[NL80211_MPATH_INFO_SN])
+ 		printf("\t%u",
+-			nla_get_u32(pinfo[NL80211_MPATH_INFO_DSN]));
++			nla_get_u32(pinfo[NL80211_MPATH_INFO_SN]));
+ 	if (pinfo[NL80211_MPATH_INFO_METRIC])
+ 		printf("\t%u",
+ 			nla_get_u32(pinfo[NL80211_MPATH_INFO_METRIC]));
+@@ -184,7 +184,7 @@ static int handle_mpath_dump(struct nl80211_state *state,
+ 			     struct nl_msg *msg,
+ 			     int argc, char **argv)
+ {
+-	printf("DEST ADDR         NEXT HOP          IFACE\tDSN\tMETRIC\tQLEN\t"
++	printf("DEST ADDR         NEXT HOP          IFACE\tSN\tMETRIC\tQLEN\t"
+ 	       "EXPTIME\t\tDTIM\tDRET\tFLAGS\n");
+ 	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, print_mpath_handler, NULL);
+ 	return 0;
+diff --git a/nl80211.h b/nl80211.h
+index a8d71ed..8d58267 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -895,14 +895,14 @@ enum nl80211_sta_info {
+  *
+  * @NL80211_MPATH_FLAG_ACTIVE: the mesh path is active
+  * @NL80211_MPATH_FLAG_RESOLVING: the mesh path discovery process is running
+- * @NL80211_MPATH_FLAG_DSN_VALID: the mesh path contains a valid DSN
++ * @NL80211_MPATH_FLAG_SN_VALID: the mesh path contains a valid SN
+  * @NL80211_MPATH_FLAG_FIXED: the mesh path has been manually set
+  * @NL80211_MPATH_FLAG_RESOLVED: the mesh path discovery process succeeded
+  */
+ enum nl80211_mpath_flags {
+ 	NL80211_MPATH_FLAG_ACTIVE =	1<<0,
+ 	NL80211_MPATH_FLAG_RESOLVING =	1<<1,
+-	NL80211_MPATH_FLAG_DSN_VALID =	1<<2,
++	NL80211_MPATH_FLAG_SN_VALID =	1<<2,
+ 	NL80211_MPATH_FLAG_FIXED =	1<<3,
+ 	NL80211_MPATH_FLAG_RESOLVED =	1<<4,
+ };
+@@ -915,7 +915,7 @@ enum nl80211_mpath_flags {
+  *
+  * @__NL80211_MPATH_INFO_INVALID: attribute number 0 is reserved
+  * @NL80211_ATTR_MPATH_FRAME_QLEN: number of queued frames for this destination
+- * @NL80211_ATTR_MPATH_DSN: destination sequence number
++ * @NL80211_ATTR_MPATH_SN: destination sequence number
+  * @NL80211_ATTR_MPATH_METRIC: metric (cost) of this mesh path
+  * @NL80211_ATTR_MPATH_EXPTIME: expiration time for the path, in msec from now
+  * @NL80211_ATTR_MPATH_FLAGS: mesh path flags, enumerated in
+@@ -926,7 +926,7 @@ enum nl80211_mpath_flags {
+ enum nl80211_mpath_info {
+ 	__NL80211_MPATH_INFO_INVALID,
+ 	NL80211_MPATH_INFO_FRAME_QLEN,
+-	NL80211_MPATH_INFO_DSN,
++	NL80211_MPATH_INFO_SN,
+ 	NL80211_MPATH_INFO_METRIC,
+ 	NL80211_MPATH_INFO_EXPTIME,
+ 	NL80211_MPATH_INFO_FLAGS,
+@@ -1196,6 +1196,8 @@ enum nl80211_mntr_flags {
+  * @NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME: The interval of time (in TUs)
+  * that it takes for an HWMP information element to propagate across the mesh
+  *
++ * @NL80211_MESHCONF_ROOTMODE: whether root mode is enabled or not
++ *
+  * @NL80211_MESHCONF_ATTR_MAX: highest possible mesh configuration attribute
+  *
+  * @__NL80211_MESHCONF_ATTR_AFTER_LAST: internal use
+@@ -1215,6 +1217,7 @@ enum nl80211_meshconf_params {
+ 	NL80211_MESHCONF_HWMP_ACTIVE_PATH_TIMEOUT,
+ 	NL80211_MESHCONF_HWMP_PREQ_MIN_INTERVAL,
+ 	NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME,
++	NL80211_MESHCONF_HWMP_ROOTMODE,
+ 
+ 	/* keep last */
+ 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
+-- 
+1.5.6.5
 
-# iw phy phy0 interface add mp0 type mp mesh_id FooBarMesh
-# macchanger -e mp0
-# ifconfig mp0 10.0.2.2/24 up
-# ping -f -I mp0 10.0.2.1
-
-which took a few seconds to start getting responses, worked well, but had
-some packet loss [3] which I decided to inspect.  I went back to the
-router
-system and did an 'ifconfig' only to see I still had the access point 
-interface up (and my ps3 associated to it, and working) [4].
-
-Just wanted to report this success.  Any further multiple vif tests that 
-are of interest to people?  
-
-Pat Erley
-
-[1] Belkin PCI N1 Wireless Desktop Card 
-[Atheros AR5416 MAC/BB Rev:2 AR2133 RF Rev:81] 
-
-[2] COMPEX IWAVEPORT WLM200NX
-[Atheros AR9280 MAC/BB Rev:2 AR5133 RF Rev:d0]
-
-[3]  Ping Output
-
-# ping 10.0.2.1 -I mp0 -f
-PING 10.0.2.1 (10.0.2.1) from 10.0.2.2 mp0: 56(84) bytes of data.
-.........................<snip>......................^C
---- 10.0.2.1 ping statistics ---
-1048 packets transmitted, 822 received, 21% packet loss, time 5232ms
-rtt min/avg/max/mdev = 0.911/2.279/12.451/1.432 ms, pipe 2, ipg/ewma
-4.997/2.753 ms
-
-
-[4] abridged Ifconfig output
-
-mon.wlan0 Link encap:UNSPEC  HWaddr
-00-11-50-F6-C1-F0-00-00-00-00-00-00-00-00-00-00
-          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-          RX packets:6222 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000
-          RX bytes:859328 (839.1 KiB)  TX bytes:0 (0.0 B)
-
-mp0       Link encap:Ethernet  HWaddr 00:11:50:fc:3a:18
-          inet addr:10.0.2.1  Bcast:10.0.2.255  Mask:255.255.255.0
-          inet6 addr: fe80::211:50ff:fefc:3a18/64 Scope:Link
-          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-          RX packets:6146 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:8061 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000
-          RX bytes:575052 (561.5 KiB)  TX bytes:1005758 (982.1 KiB)
-
-wlan0     Link encap:Ethernet  HWaddr 00:11:50:f6:c1:f0
-          inet addr:10.0.1.200  Bcast:10.0.1.255  Mask:255.255.255.0
-          inet6 addr: fe80::211:50ff:fef6:c1f0/64 Scope:Link
-          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:104 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000
-          RX bytes:0 (782.3 KiB)  TX bytes:43650 (42.6 KiB)
