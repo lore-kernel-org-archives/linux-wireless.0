@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:11182 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753562AbZKIDdc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 22:33:32 -0500
-Subject: Re: [PATCH 47/75] ipw2100: declare MODULE_FIRMWARE
-From: Zhu Yi <yi.zhu@intel.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: John Linville <linville@tuxdriver.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1257631127.15927.455.camel@localhost>
-References: <1257631127.15927.455.camel@localhost>
-Content-Type: text/plain
-Date: Mon, 09 Nov 2009 11:33:35 +0800
-Message-Id: <1257737615.5538.996.camel@debian>
-Mime-Version: 1.0
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:34093 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750849AbZKIRbS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Nov 2009 12:31:18 -0500
+Message-ID: <4AF851E0.1020803@lwfinger.net>
+Date: Mon, 09 Nov 2009 11:31:12 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Mauro Carvalho Chehab <mchehab@infradead.org>
+CC: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Greg KH <gregkh@suse.de>, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Staging: remove rtl8187se driver because of lack of development
+ activities
+References: <200911091731.36861.bzolnier@gmail.com> <20091109145629.3587c9f6@pedra.chehab.org>
+In-Reply-To: <20091109145629.3587c9f6@pedra.chehab.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2009-11-08 at 05:58 +0800, Ben Hutchings wrote:
-> Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
-> ---
->  drivers/net/wireless/ipw2x00/ipw2100.c |    6 ++++++
->  1 files changed, 6 insertions(+), 0 deletions(-)
+On 11/09/2009 10:56 AM, Mauro Carvalho Chehab wrote:
+> Hi Bartolomiej,
 > 
-> diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-> index a741d37..8dfdbd3 100644
-> --- a/drivers/net/wireless/ipw2x00/ipw2100.c
-> +++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-> @@ -8465,6 +8465,12 @@ static int ipw2100_get_firmware(struct ipw2100_priv *priv,
->  	return 0;
->  }
->  
-> +MODULE_FIRMWARE(IPW2100_FW_NAME("-i"));
-> +#ifdef CONFIG_IPW2100_MONITOR
-> +MODULE_FIRMWARE(IPW2100_FW_NAME("-p"));
-> +#endif
-> +MODULE_FIRMWARE(IPW2100_FW_NAME(""));
-> +
->  static void ipw2100_release_firmware(struct ipw2100_priv *priv,
->  				     struct ipw2100_fw *fw)
->  {
+> Em Mon, 9 Nov 2009 17:31:36 +0100
+> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> escreveu:
+> 
+>> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>> Subject: [PATCH] Staging: remove rtl8187se driver because of lack of development activities
+>>
+>> This driver hasn't seen any real development activities since early July:
+>>
+>>    257bc86   Staging: rtl8187se: remove unused #include <linu
+>>    2035beb   param:remove-useless-writable-charp
+>>    305409a   tree-wide: fix some typos and punctuation in com
+>>    b881c6c   Staging: fix wireless drivers depends
+>>    a010a33   Staging: rtl8187se/rtl8192e/rtl8192su: allow mod
+>>    125b181   staging: Add proper selection of WIRELESS_EXT an
+>>    b3184e1   Staging: rtl8187se: Fix comment-out-typo
+>>    b6ac161   Staging: ARRAY_SIZE changes
+>>
+>> so remove it for now.
+>>
+>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 
+> This driver has several points in common with rtl8192* drivers. As I'm
+> currently working on cleaning up rtl8192u and see what can be done to merge the
+> common code used by all those realtek drivers, I prefer to keep this driver for
+> more time at the tree.
+> 
+> The issue I'm currently facing is that we should rearrange the drivers/staging/rtl* 
+> into a common rtl component tree, moving the common components to there. This will
+> avoid duplicated efforts to cleanup the same code several times, on different
+> places.
+> 
+> I started working on it this weekend, but I haven't finish it yet.
 
-Acked-by: Zhu Yi <yi.zhu@intel.com>
+As I just told Bart (off-list), I started my work on a mainline rtl8187se driver
+with the rtl8180 code. There should be plenty of opportunity to set up common
+code for the rtl* drivers. I will keep a close eye on your developments.
 
-Thanks,
--yi
-
+Larry
