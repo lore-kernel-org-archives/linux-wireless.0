@@ -1,69 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:10853 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756793AbZKSWJz (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:61840 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755455AbZKIMxE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2009 17:09:55 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so147699eyd.5
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Nov 2009 14:10:00 -0800 (PST)
-Message-ID: <4B05C234.3000908@gmail.com>
-Date: Thu, 19 Nov 2009 23:09:56 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
+	Mon, 9 Nov 2009 07:53:04 -0500
+Received: by bwz27 with SMTP id 27so3407458bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 04:53:09 -0800 (PST)
+From: Rui Paulo <rpaulo@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: request TX status where needed
-References: <1258589310.30511.91.camel@johannes.local>
-In-Reply-To: <1258589310.30511.91.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+Cc: linux-wireless@vger.kernel.org, Rui Paulo <rpaulo@gmail.com>
+Subject: iw [PATCH] print a header before printing the list of mesh paths
+Date: Mon,  9 Nov 2009 12:53:06 +0000
+Message-Id: <1257771187-7894-1-git-send-email-rpaulo@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/19/09 01:08, Johannes Berg wrote:
-> Right now all frames mac80211 hands to the driver
-> have the IEEE80211_TX_CTL_REQ_TX_STATUS flag set to
-> request TX status. This isn't really necessary, only
-> the injected frames need TX status (the latter for
-> hostapd) so move setting this flag.
-> 
-> The rate control algorithms also need TX status, but
-> they don't require it.
-> 
-> Also, rt2x00 uses that bit for its own purposes and
-> seems to require it being set for all frames, but
-> that can be fixed in rt2x00.
-> 
-> This doesn't really change anything for any drivers
-> but in the future drivers using hw-rate control may
-> opt to not report TX status for frames that don't
-> have the IEEE80211_TX_CTL_REQ_TX_STATUS flag set.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> Acked-by: Ivo van Doorn <IvDoorn@gmail.com> [rt2x00 bits]
-> ---
-
-> @@ -287,12 +288,12 @@ void rt2x00lib_txdone(struct queue_entry
->  	}
->  
->  	/*
-> -	 * Only send the status report to mac80211 when TX status was
-> -	 * requested by it. If this was a extra frame coming through
-> -	 * a mac80211 library call (RTS/CTS) then we should not send the
-> -	 * status report back.
-> +	 * Only send the status report to mac80211 when it's a frame
-> +	 * that originated in mac80211. If this was a extra frame coming
-> +	 * through a mac80211 library call (RTS/CTS) then we should not
-> +	 * send the status report back.
->  	 */
-> -	if (tx_info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)
-> +	if (!(skbdesc_flags & SKBDESC_NOT_MAC80211))
->  		ieee80211_tx_status_irqsafe(rt2x00dev->hw, entry->skb);
->  	else
->  		dev_kfree_skb_irq(entry->skb);
-
-I'm slightly confused here. Shouldn't both the tx_info->flags and skbdesc_flags be checked here?
-Now we run in the situation where tx_status is report even if mac80211 didn't ask for it.
-
+Signed-off-by: Rui Paulo <rpaulo@gmail.com>
 ---
-Gertjan.
+ mpath.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/mpath.c b/mpath.c
+index e848481..eb5ad6a 100644
+--- a/mpath.c
++++ b/mpath.c
+@@ -184,6 +184,8 @@ static int handle_mpath_dump(struct nl80211_state *state,
+ 			     struct nl_msg *msg,
+ 			     int argc, char **argv)
+ {
++	printf("DEST ADDR         NEXT HOP          IFACE\tDSN\tMETRIC\tQLEN\t"
++	       "EXPTIME\t\tDTIM\tDRET\tFLAGS\n");
+ 	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, print_mpath_handler, NULL);
+ 	return 0;
+ }
+-- 
+1.5.6.5
+
