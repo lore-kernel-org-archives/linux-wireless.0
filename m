@@ -1,40 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:58033 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754188AbZKTUc1 (ORCPT
+Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:56197 "EHLO
+	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753863AbZKIWAQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 15:32:27 -0500
-Received: by ewy19 with SMTP id 19so175015ewy.21
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Nov 2009 12:32:32 -0800 (PST)
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] p54: software hot-swap eeprom image
-References: <200911202027.13284.chunkeey@googlemail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 20 Nov 2009 22:24:27 +0200
-In-Reply-To: <200911202027.13284.chunkeey@googlemail.com> (Christian Lamparter's message of "Fri\, 20 Nov 2009 20\:27\:13 +0100")
-Message-ID: <87y6m1aqro.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 9 Nov 2009 17:00:16 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH] rt2x00: Initialize rf302x RF values properly in rt2800pci.
+Date: Mon,  9 Nov 2009 23:00:17 +0100
+Message-Id: <1257804017-5446-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter <chunkeey@googlemail.com> writes:
+Insert RF chipset values for the RF302x chipsets. Mirrored from the rt2800usb driver.
+Also, ensure these RF chipsets are handled properly in rt2800lib for the rt3090 chipset.
 
-> This (aggregated) patch adds a new sysfs file "eeprom_overwrite"
-> which can be used to upload an customized eeprom image to the
-> driver during normal operation.
->
-> The old wlanX device will quickly vanish. And if the new EEPROM
-> image passes all sanity checks the device will reappear.
->
-> Hopefully, this proves to be an adequate solution for everyone
-> with a bad/missing EEPROM data/chip.
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
 
-Wasn't the concensus that request_firmware() will be used for this
-kind of device specific data? stlc45xx had a similar sysfs interface
-and people didn't like it. And I tend to agree with them, adding odd
-sysfs files is not the best way to handle this.
+This one clashes with the patch series sent by Bart. However, I believe that logically this patch
+belongs before his patch series, as it makes the unification cleaner and clearer.
 
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    5 +++--
+ drivers/net/wireless/rt2x00/rt2800pci.c |   31 +++++++++++++++++++++++++++----
+ drivers/net/wireless/rt2x00/rt2800usb.c |    8 ++++----
+ 3 files changed, 34 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 446087e..d41b3ca 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -806,8 +806,9 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 	unsigned int tx_pin;
+ 	u8 bbp;
+ 
+-	if (rt2x00_rt(&rt2x00dev->chip, RT3070) &&	
+-           (rt2x00_rf(&rt2x00dev->chip, RF2020) ||
++	if ((rt2x00_rt(&rt2x00dev->chip, RT3070) ||
++	     rt2x00_rt(&rt2x00dev->chip, RT3090)) &&
++            (rt2x00_rf(&rt2x00dev->chip, RF2020) ||
+ 	     rt2x00_rf(&rt2x00dev->chip, RF3020) ||
+ 	     rt2x00_rf(&rt2x00dev->chip, RF3021) ||
+ 	     rt2x00_rf(&rt2x00dev->chip, RF3022)))
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index ac7ac57..be42558 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -1362,6 +1362,27 @@ static const struct rf_channel rf_vals[] = {
+ 	{ 216, 0x15002ccc, 0x15004982, 0x1509be55, 0x150c0a23 },
+ };
+ 
++/*
++ * RF value list for rt302x
++ * Supports: 2.4 GHz
++ */
++static const struct rf_channel rf_vals_302x[] = {
++	{1,  241, 2, 2 },
++	{2,  241, 2, 7 },
++	{3,  242, 2, 2 },
++	{4,  242, 2, 7 },
++	{5,  243, 2, 2 },
++	{6,  243, 2, 7 },
++	{7,  244, 2, 2 },
++	{8,  244, 2, 7 },
++	{9,  245, 2, 2 },
++	{10, 245, 2, 7 },
++	{11, 246, 2, 2 },
++	{12, 246, 2, 7 },
++	{13, 247, 2, 2 },
++	{14, 248, 2, 4 },
++};
++
+ static int rt2800pci_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct hw_mode_spec *spec = &rt2x00dev->spec;
+@@ -1396,10 +1417,6 @@ static int rt2800pci_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 
+ 	if (rt2x00_rf(&rt2x00dev->chip, RF2820) ||
+ 	    rt2x00_rf(&rt2x00dev->chip, RF2720) ||
+-	    rt2x00_rf(&rt2x00dev->chip, RF3020) ||
+-	    rt2x00_rf(&rt2x00dev->chip, RF3021) ||
+-	    rt2x00_rf(&rt2x00dev->chip, RF3022) ||
+-	    rt2x00_rf(&rt2x00dev->chip, RF2020) ||
+ 	    rt2x00_rf(&rt2x00dev->chip, RF3052)) {
+ 		spec->num_channels = 14;
+ 		spec->channels = rf_vals;
+@@ -1408,6 +1425,12 @@ static int rt2800pci_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 		spec->supported_bands |= SUPPORT_BAND_5GHZ;
+ 		spec->num_channels = ARRAY_SIZE(rf_vals);
+ 		spec->channels = rf_vals;
++	} else if (rt2x00_rf(&rt2x00dev->chip, RF3020) ||
++		   rt2x00_rf(&rt2x00dev->chip, RF3021) ||
++		   rt2x00_rf(&rt2x00dev->chip, RF3022) ||
++		   rt2x00_rf(&rt2x00dev->chip, RF2020)) {
++		spec->num_channels = ARRAY_SIZE(rf_vals_302x);
++		spec->channels = rf_vals_302x;
+ 	}
+ 
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index bd2f6e6..9aa2f7a 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -940,10 +940,10 @@ static const struct rf_channel rf_vals[] = {
+ };
+ 
+ /*
+- * RF value list for rt3070
++ * RF value list for rf302x
+  * Supports: 2.4 GHz
+  */
+-static const struct rf_channel rf_vals_3070[] = {
++static const struct rf_channel rf_vals_302x[] = {
+ 	{1,  241, 2, 2 },
+ 	{2,  241, 2, 7 },
+ 	{3,  242, 2, 2 },
+@@ -1036,8 +1036,8 @@ static int rt2800usb_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 		   rt2x00_rf(&rt2x00dev->chip, RF2020) ||
+ 		   rt2x00_rf(&rt2x00dev->chip, RF3021) ||
+ 		   rt2x00_rf(&rt2x00dev->chip, RF3022)) {
+-		spec->num_channels = ARRAY_SIZE(rf_vals_3070);
+-		spec->channels = rf_vals_3070;
++		spec->num_channels = ARRAY_SIZE(rf_vals_302x);
++		spec->channels = rf_vals_302x;
+ 	}
+ 
+ 	/*
 -- 
-Kalle Valo
+1.6.5.2
+
