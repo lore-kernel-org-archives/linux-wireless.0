@@ -1,77 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:52126 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752481AbZKRCZG convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:46271 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755747AbZKIXri (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 21:25:06 -0500
-Received: by bwz27 with SMTP id 27so646075bwz.21
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2009 18:25:10 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1258509054-10901-1-git-send-email-janakiram.sistla@gmail.com>
-References: <1258509054-10901-1-git-send-email-janakiram.sistla@gmail.com>
-Date: Wed, 18 Nov 2009 07:55:10 +0530
-Message-ID: <4fb5db50911171825l2b1c1a3bk1169820d59c0989@mail.gmail.com>
-Subject: Re:
-From: Janakiram Sistla <janakiram.sistla@gmail.com>
+	Mon, 9 Nov 2009 18:47:38 -0500
+Received: by mail-ew0-f207.google.com with SMTP id 3so3717715ewy.37
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 15:47:44 -0800 (PST)
+From: Rui Paulo <rpaulo@gmail.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Janakiram Sistla <janakiram.sistla@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Johannes Berg <johannes@sipsolutions.net>,
+	Rui Paulo <rpaulo@gmail.com>,
+	Javier Cardona <javier@cozybit.com>
+Subject: [PATCH v2 16/20] mac80211: add the DS params to the beacon
+Date: Mon,  9 Nov 2009 23:46:54 +0000
+Message-Id: <1257810418-30075-17-git-send-email-rpaulo@gmail.com>
+In-Reply-To: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
+References: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I will be resending this patch ...sorry subjet line missing in this
-sorry about that
+Signed-off-by: Rui Paulo <rpaulo@gmail.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
+Tested-by: Brian Cavagnolo <brian@cozybit.com>
+---
+ net/mac80211/mesh.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-Regards,
-Ram.
-On Wed, Nov 18, 2009 at 7:20 AM, Janakiram Sistla
-<janakiram.sistla@gmail.com> wrote:
-> From: Janakiram Sistla <janakiram.sistla@gmail.com>
->
-> Adding radio type FM in RFKILL_TYPE_.FM belongs to
-> same class of with both TX/RX capability
->
-> Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
-> ---
->  include/linux/rfkill.h |    2 ++
->  net/rfkill/core.c      |    2 ++
->  2 files changed, 4 insertions(+), 0 deletions(-)
->
-> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-> index 3392c59..7ae75ef 100644
-> --- a/include/linux/rfkill.h
-> +++ b/include/linux/rfkill.h
-> @@ -35,6 +35,7 @@
->  * @RFKILL_TYPE_UWB: switch is on a ultra wideband device.
->  * @RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
->  * @RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
-> + * @RFKILL_TYPE_FM: switch is on a wireless FM device.
->  * @NUM_RFKILL_TYPES: number of defined rfkill types
->  */
->  enum rfkill_type {
-> @@ -44,6 +45,7 @@ enum rfkill_type {
->        RFKILL_TYPE_UWB,
->        RFKILL_TYPE_WIMAX,
->        RFKILL_TYPE_WWAN,
-> +       RFKILL_TYPE_FM,
->        RFKILL_TYPE_GPS,
->        NUM_RFKILL_TYPES,
->  };
-> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-> index ba2efb9..61b716e 100644
-> --- a/net/rfkill/core.c
-> +++ b/net/rfkill/core.c
-> @@ -590,6 +590,8 @@ static const char *rfkill_get_type_str(enum rfkill_type type)
->                return "wimax";
->        case RFKILL_TYPE_WWAN:
->                return "wwan";
-> +       case RFKILL_TYPE_FM:
-> +               return "fm";
->        case RFKILL_TYPE_GPS:
->                return "gps";
->        default:
-> --
-> 1.5.4.3
->
->
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 63427d9..222a313 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -247,6 +247,13 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
+ 		}
+ 	}
+ 
++	if (sband->band == IEEE80211_BAND_2GHZ) {
++		pos = skb_put(skb, 2 + 1);
++		*pos++ = WLAN_EID_DS_PARAMS;
++		*pos++ = 1;
++		*pos++ = ieee80211_frequency_to_channel(local->hw.conf.channel->center_freq);
++	}
++
+ 	pos = skb_put(skb, 2 + sdata->u.mesh.mesh_id_len);
+ 	*pos++ = WLAN_EID_MESH_ID;
+ 	*pos++ = sdata->u.mesh.mesh_id_len;
+-- 
+1.5.6.5
+
