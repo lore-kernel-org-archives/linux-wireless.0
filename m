@@ -1,38 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.irobot.com ([206.83.81.187]:7923 "EHLO smtp1.irobot.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751712AbZKDB2q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 20:28:46 -0500
-Message-ID: <4AF0D54D.4090303@irobot.com>
-Date: Tue, 03 Nov 2009 17:13:49 -0800
-From: Adam Wozniak <awozniak@irobot.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: nbd@openwrt.org, derek@indranet.co.nz
-Subject: compat-wireless and minstrel
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from bombadil.infradead.org ([18.85.46.34]:40737 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753957AbZKIVDR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Nov 2009 16:03:17 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@gmail.com,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2] mac80211: fix max HT rate processing on mac80211
+Date: Mon,  9 Nov 2009 16:03:22 -0500
+Message-Id: <1257800602-8922-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have two systems under test, both Dell laptops (a Latitude D630 and an 
-Inspiron 600m) both running Ubuntu 9.10 with the latest updates, and 
-bleeding edge compat-wireless-2009-11-02.  I'm using identical AR9170 
-based D-Link DWA-160 USB 802.11adapters.  I'm using nuttcp to measure 
-throughput.  I'm running in ad-hoc mode.  Both machines have the same 
-ar9170 files in /lib/firmware.  The machines are sitting about 5 feet 
-apart in my office.
+The max MCS index is 76, fix the higher check to allow through
+frames received at MCS 76. This is a non-issue for current drivers
+as MCS 76 is only possible with a device supporting 4 spatial
+streams.
 
-I'm having occasional problems where throughput drops through the floor 
-(0.5Mbps - 1.5Mbps).  When I cat 
-/sys/kernel/debug/ieee80211/*/stations/*/rc_stats, one of the machines 
-lists the full set of rates, but the other only lists 1M and 54M.  After 
-a period of time, that machine drops 54M and lists only one rate 
-(1Mbps), and the throughput listed by nuttcp drops accordingly.  I 
-assume that, for whatever reason, the rates drop off the list and 
-minstrel uses the only one left available to it.
+While at it change the WARN_ON() on invalid HT rates to a WARN()
+to provide more useful information. This will help debug issues
+when the driver is passing up a bogus HT rate value.
 
-If I modify include/net/mac80211.h and force the inline function 
-rate_supported to always return 1, this fixes the problem.  However, I 
-think this is a band aid around some other issue.
+The rate must map to a valid MCS index which can be any of the
+values in the set [0 - 76] (inclusive).
 
-Any clues or ideas what the real issue might be here?
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/rx.c |   18 +++++++++++++++---
+ 1 files changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 28316b2..5b26d34 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2425,9 +2425,21 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		goto drop;
+ 
+ 	if (status->flag & RX_FLAG_HT) {
+-		/* rate_idx is MCS index */
+-		if (WARN_ON(status->rate_idx < 0 ||
+-			    status->rate_idx >= 76))
++		/*
++		 * rate_idx is MCS index, which can be [0-76] as documented on:
++		 *
++		 * http://wireless.kernel.org/en/developers/Documentation/ieee80211/802.11n
++		 *
++		 * Anything else would be some sort of driver or hardware error.
++		 * The driver should catch hardware errors.
++		 */
++		if (WARN((status->rate_idx < 0 ||
++			 status->rate_idx > 76),
++			 "Rate marked as an HT rate but passed "
++			 "status->rate_idx is not "
++			 "an MCS index [0-76]: %d (0x%02x)\n",
++			 status->rate_idx,
++			 status->rate_idx))
+ 			goto drop;
+ 		/* HT rates are not in the table - use the highest legacy rate
+ 		 * for now since other parts of mac80211 may not yet be fully
+-- 
+1.6.5.2.143.g8cc62
+
