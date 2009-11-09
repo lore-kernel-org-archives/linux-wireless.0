@@ -1,171 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:47150 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755262AbZKIXrK (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:43347 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756123AbZKIPuB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 18:47:10 -0500
-Received: by mail-ew0-f228.google.com with SMTP id 28so3974559ewy.18
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 15:47:16 -0800 (PST)
-From: Rui Paulo <rpaulo@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Rui Paulo <rpaulo@gmail.com>,
-	Javier Cardona <javier@cozybit.com>
-Subject: [PATCH v2 05/20] mac80211: update peer link management IE and action frames
-Date: Mon,  9 Nov 2009 23:46:43 +0000
-Message-Id: <1257810418-30075-6-git-send-email-rpaulo@gmail.com>
-In-Reply-To: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
-References: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
+	Mon, 9 Nov 2009 10:50:01 -0500
+MIME-Version: 1.0
+In-Reply-To: <20091109071558.GC453@elte.hu>
+References: <43e72e890911041540hd1e5f87u8d282d9c95857504@mail.gmail.com>
+	<alpine.LFD.2.01.0911041551220.31845@localhost.localdomain>
+	<20091105071431.GA14055@elte.hu> <43e72e890911081135q78416ef7ua6c5991b15fb2659@mail.gmail.com>
+	<20091109071558.GC453@elte.hu>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 9 Nov 2009 07:49:46 -0800
+Message-ID: <43e72e890911090749r5b35fb83s4991bb9c44a1773a@mail.gmail.com>
+Subject: Re: Reverting 5d423 fixes loading of ath9k on Acer Extensa 7630EZ
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Yannick Roehlly <yannick.roehlly@free.fr>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jesse.barnes@intel.com>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"John W. Linville" <linville@tuxdriver.com>, berndl81@gmx.at,
+	Greg KH <greg@kroah.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update the length and format of the peer link management action frames.
+On Sun, Nov 8, 2009 at 11:15 PM, Ingo Molnar <mingo@elte.hu> wrote:
+>
+> * Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>
+>> On Wed, Nov 4, 2009 at 11:14 PM, Ingo Molnar <mingo@elte.hu> wrote:
+>> >
+>> > * Linus Torvalds <torvalds@linux-foundation.org> wrote:
+>> >
+>> >> On Wed, 4 Nov 2009, Luis R. Rodriguez wrote:
+>> >> >
+>> >> > Can you please consider reviewing this issue and help determine if
+>> >> > this indeed needs to be reverted for 2.6.32 and the next 2.6.31.y.
+>> >> >
+>> >> > I am curious if other devices would work by reverting this as well.
+>> >> > [ ... ] For details please feel free to check:
+>> >> >
+>> >> > http://bugzilla.kernel.org/show_bug.cgi?id=14402
+>> >>
+>> >> That same commit was the cause for
+>> >>
+>> >> ?? ?? ?? http://bugzilla.kernel.org/show_bug.cgi?id=13940
+>> >>
+>> >> and we just increased the rounding to make it go away (see commit
+>> >> 15b812f1). But that was a hack.
+>> >>
+>> >> And if that didn't help the ath9k case, then we should just revert
+>> >> entirely.
+>> >
+>> > Agreed - below is the combo 15b812f1 + 5d423ccd revert. (Would be nice
+>> > to get the boot log of the latest post-15b812f1 kernel that Yinghai
+>> > asked for before we revert, in the hope of better understanding the
+>> > problem.)
+>>
+>> Bernhard has confirmed the new patch fixes this issue.
+>
+> Good - so latest kernels should be fine (on Bernhard's box) and no
+> change is needed, right?
 
-Signed-off-by: Rui Paulo <rpaulo@gmail.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
-Tested-by: Brian Cavagnolo <brian@cozybit.com>
----
- net/mac80211/mesh.c       |    2 +-
- net/mac80211/mesh.h       |    2 +-
- net/mac80211/mesh_plink.c |   32 +++++++++++++++++---------------
- net/mac80211/rx.c         |    2 +-
- 4 files changed, 20 insertions(+), 18 deletions(-)
+Yea, but it does mean we need a fix propagated down to older kernels.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 7942518..63427d9 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -553,7 +553,7 @@ static void ieee80211_mesh_rx_mgmt_action(struct ieee80211_sub_if_data *sdata,
- 					  struct ieee80211_rx_status *rx_status)
- {
- 	switch (mgmt->u.action.category) {
--	case PLINK_CATEGORY:
-+	case MESH_PLINK_CATEGORY:
- 		mesh_rx_plink_frame(sdata, mgmt, len, rx_status);
- 		break;
- 	case MESH_PATH_SEL_CATEGORY:
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 9948107..536d5c0 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -206,7 +206,7 @@ struct mesh_rmc {
- #define MESH_MAX_MPATHS		1024
- 
- /* Pending ANA approval */
--#define PLINK_CATEGORY		30
-+#define MESH_PLINK_CATEGORY	30
- #define MESH_PATH_SEL_CATEGORY	32
- 
- /* Public interfaces */
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 4188752..8a54bc8 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -18,9 +18,8 @@
- #define mpl_dbg(fmt, args...)	do { (void)(0); } while (0)
- #endif
- 
--#define PLINK_GET_FRAME_SUBTYPE(p) (p)
--#define PLINK_GET_LLID(p) (p + 1)
--#define PLINK_GET_PLID(p) (p + 3)
-+#define PLINK_GET_LLID(p) (p + 4)
-+#define PLINK_GET_PLID(p) (p + 6)
- 
- #define mod_plink_timer(s, t) (mod_timer(&s->plink_timer, \
- 				jiffies + HZ * t / 1000))
-@@ -154,6 +153,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400);
- 	struct ieee80211_mgmt *mgmt;
- 	bool include_plid = false;
-+	static const u8 meshpeeringproto[] = { 0x00, 0x0F, 0xAC, 0x2A };
- 	u8 *pos;
- 	int ie_len;
- 
-@@ -171,7 +171,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 	memcpy(mgmt->da, da, ETH_ALEN);
- 	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
- 	/* BSSID is left zeroed, wildcard value */
--	mgmt->u.action.category = PLINK_CATEGORY;
-+	mgmt->u.action.category = MESH_PLINK_CATEGORY;
- 	mgmt->u.action.u.plink_action.action_code = action;
- 
- 	if (action == PLINK_CLOSE)
-@@ -189,18 +189,18 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 	/* Add Peer Link Management element */
- 	switch (action) {
- 	case PLINK_OPEN:
--		ie_len = 3;
-+		ie_len = 6;
- 		break;
- 	case PLINK_CONFIRM:
--		ie_len = 5;
-+		ie_len = 8;
- 		include_plid = true;
- 		break;
- 	case PLINK_CLOSE:
- 	default:
- 		if (!plid)
--			ie_len = 5;
-+			ie_len = 8;
- 		else {
--			ie_len = 7;
-+			ie_len = 10;
- 			include_plid = true;
- 		}
- 		break;
-@@ -209,7 +209,8 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 	pos = skb_put(skb, 2 + ie_len);
- 	*pos++ = WLAN_EID_PEER_LINK;
- 	*pos++ = ie_len;
--	*pos++ = action;
-+	memcpy(pos, meshpeeringproto, sizeof(meshpeeringproto));
-+	pos += 4;
- 	memcpy(pos, &llid, 2);
- 	if (include_plid) {
- 		pos += 2;
-@@ -419,12 +420,13 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		return;
- 	}
- 
--	ftype = *((u8 *)PLINK_GET_FRAME_SUBTYPE(elems.peer_link));
-+	ftype = mgmt->u.action.u.plink_action.action_code;
- 	ie_len = elems.peer_link_len;
--	if ((ftype == PLINK_OPEN && ie_len != 3) ||
--	    (ftype == PLINK_CONFIRM && ie_len != 5) ||
--	    (ftype == PLINK_CLOSE && ie_len != 5 && ie_len != 7)) {
--		mpl_dbg("Mesh plink: incorrect plink ie length\n");
-+	if ((ftype == PLINK_OPEN && ie_len != 6) ||
-+	    (ftype == PLINK_CONFIRM && ie_len != 8) ||
-+	    (ftype == PLINK_CLOSE && ie_len != 8 && ie_len != 10)) {
-+		mpl_dbg("Mesh plink: incorrect plink ie length %d %d\n",
-+		    ftype, ie_len);
- 		return;
- 	}
- 
-@@ -436,7 +438,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 	 * from the point of view of this host.
- 	 */
- 	memcpy(&plid, PLINK_GET_LLID(elems.peer_link), 2);
--	if (ftype == PLINK_CONFIRM || (ftype == PLINK_CLOSE && ie_len == 7))
-+	if (ftype == PLINK_CONFIRM || (ftype == PLINK_CLOSE && ie_len == 10))
- 		memcpy(&llid, PLINK_GET_PLID(elems.peer_link), 2);
- 
- 	rcu_read_lock();
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index c06496f..2cddd02 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -507,7 +507,7 @@ ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
- 
- 		if (ieee80211_is_action(hdr->frame_control)) {
- 			mgmt = (struct ieee80211_mgmt *)hdr;
--			if (mgmt->u.action.category != PLINK_CATEGORY)
-+			if (mgmt->u.action.category != MESH_PLINK_CATEGORY)
- 				return RX_DROP_MONITOR;
- 			return RX_CONTINUE;
- 		}
--- 
-1.5.6.5
-
+  Luis
