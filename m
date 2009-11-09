@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48369
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758553AbZKKTUF (ORCPT
+Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:61888 "EHLO
+	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754848AbZKIV7F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 14:20:05 -0500
-Date: Wed, 11 Nov 2009 11:20:31 -0800 (PST)
-Message-Id: <20091111.112031.184370997.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2009-11-11
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20091111172255.GH4392@tuxdriver.com>
-References: <20091111172255.GH4392@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 9 Nov 2009 16:59:05 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH] rt2x00: Fix typo in rf programming of rt2800lib.
+Date: Mon,  9 Nov 2009 22:59:04 +0100
+Message-Id: <1257803944-5344-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 11 Nov 2009 12:22:55 -0500
+Fix a type in rt2800_config_channel_rt3x. The second write to RF register 2 should be to RF register 3.
+This is confirmed by the legacy Ralink code.
 
-> Here is another batch of small fixes intended for 2.6.32.  Along with a
-> number of simple fixes, there is also a MAINTAINERS update, some LED
-> handling quirks for ath5k, a libertas beautification that is a prereq
-> for a libertas fix, and an iwlwifi fix that was already sent for
-> net-next-2.6 but which is needed to support an iwlwifi regression fix.
-> 
-> My personal favorite is the ath5k mcast filtering fix.  The problem
-> only revealed itself when using IP autoconf w/ multicast DNS... :-)
-> 
-> Please let me know if there are problems!
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
 
-Pulled, but that libertas "coding style cleanup" really pushes
-the edge of what I'm willing to take into net-2.6 right now.
+Corrected the subject of the email to state that it is a single patch.
 
-And I don't want to hear anything about how it "makes the bug fix
-change simpler".  That absolutely doesn't apply when we're this deep
-in -rc territory.
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> P.S.  Due to the aformentioned iwlwifi fix, this will cause -next
-> conflicts for sfr.  You may want to pull net-2.6 into net-next-2.6 after
-> pulling this.  The iwlwifi conflicts can be resolved by taking the bigger
-> hunks...
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 24b3af4..2c91c44 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -774,7 +774,7 @@ static void rt2800_config_channel_rt3x(struct rt2x00_dev *rt2x00dev,
+ 	u8 rfcsr;
+ 
+ 	rt2800_rfcsr_write(rt2x00dev, 2, rf->rf1);
+-	rt2800_rfcsr_write(rt2x00dev, 2, rf->rf3);
++	rt2800_rfcsr_write(rt2x00dev, 3, rf->rf3);
+ 
+ 	rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
+ 	rt2x00_set_field8(&rfcsr, RFCSR6_R, rf->rf2);
+-- 
+1.6.5.2
 
-Yep, I noticed this, I'll sort it out, thanks.
