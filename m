@@ -1,39 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:38762 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760040AbZKLCzr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 21:55:47 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2009 18:55:53 -0800
-Date: Wed, 11 Nov 2009 18:55:49 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Zheng, Jeff" <jeff.zheng@intel.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"Wifi-test-devel@lists.sourceforge.net"
-	<Wifi-test-devel@lists.sourceforge.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] wifi-test: add initial simple test scripts
-Message-ID: <20091112025549.GF3976@tux>
-References: <1257989758-30756-1-git-send-email-lrodriguez@atheros.com> <154E55ADF9629D4E8D13F08BF92ABEB63FDC9833CF@PDSMSX501.ccr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <154E55ADF9629D4E8D13F08BF92ABEB63FDC9833CF@PDSMSX501.ccr.corp.intel.com>
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:47943 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755682AbZKIMme (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Nov 2009 07:42:34 -0500
+Received: by mail-bw0-f227.google.com with SMTP id 27so3397119bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 04:42:39 -0800 (PST)
+From: Rui Paulo <rpaulo@gmail.com>
+To: linville@tuxdriver.com
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Rui Paulo <rpaulo@gmail.com>,
+	Javier Cardona <javier@cozybit.com>
+Subject: [PATCH 21/21] mac80211: update copyrights to 2009
+Date: Mon,  9 Nov 2009 12:39:41 +0000
+Message-Id: <1257770381-7680-22-git-send-email-rpaulo@gmail.com>
+In-Reply-To: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
+References: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 11, 2009 at 06:31:41PM -0800, Zheng, Jeff wrote:
-> Thanks Luis, I have checked it in.
-> 
-> Do these scripts (client and AP) run on the same machine? If yes, will
-> packets be sent/received through air, or through mac80211 as bridge?
+Signed-off-by: Rui Paulo <rpaulo@gmail.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
+Tested-by: Brian Cavagnolo <brian@cozybit.com>
+---
+ net/mac80211/mesh.c         |    2 +-
+ net/mac80211/mesh.h         |    2 +-
+ net/mac80211/mesh_hwmp.c    |    2 +-
+ net/mac80211/mesh_pathtbl.c |    2 +-
+ net/mac80211/mesh_plink.c   |    2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
 
-This is intended to run on two separate machines.
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 05955dc..bbd56b0 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2008 open80211s Ltd.
++ * Copyright (c) 2008, 2009 open80211s Ltd.
+  * Authors:    Luis Carlos Cobo <luisca@cozybit.com>
+  * 	       Javier Cardona <javier@cozybit.com>
+  *
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 5ad6975..bd0e1cb 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2008 open80211s Ltd.
++ * Copyright (c) 2008, 2009 open80211s Ltd.
+  * Authors:    Luis Carlos Cobo <luisca@cozybit.com>
+  *             Javier Cardona <javier@cozybit.com>
+  *
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 1c6718d..46d9606 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2008 open80211s Ltd.
++ * Copyright (c) 2008, 2009 open80211s Ltd.
+  * Author:     Luis Carlos Cobo <luisca@cozybit.com>
+  *
+  * This program is free software; you can redistribute it and/or modify
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 2cebdf5..5399e7a 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2008 open80211s Ltd.
++ * Copyright (c) 2008, 2009 open80211s Ltd.
+  * Author:     Luis Carlos Cobo <luisca@cozybit.com>
+  *
+  * This program is free software; you can redistribute it and/or modify
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index ec68d20..f21329a 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2008 open80211s Ltd.
++ * Copyright (c) 2008, 2009 open80211s Ltd.
+  * Author:     Luis Carlos Cobo <luisca@cozybit.com>
+  *
+  * This program is free software; you can redistribute it and/or modify
+-- 
+1.5.6.5
 
-> I have a sample case with hwsim (hwsim.sh), which simulates two wlan
-> interface (one for client and one for hostapd). It can be used for
-> testing mac80211.
-
-Neat :)
-
-  Luis
