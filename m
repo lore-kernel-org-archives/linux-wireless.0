@@ -1,75 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56139 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:36680 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754900AbZKNJXY (ORCPT
+	with ESMTP id S1752191AbZKIK7O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Nov 2009 04:23:24 -0500
-Subject: Re: [PATCH] mac80211: reduce the amount of unnecessary traffic on
- cooked monitor interfaces
+	Mon, 9 Nov 2009 05:59:14 -0500
+Subject: Re: erraneous connect with short-slot-time fails
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <4AFE1612.5070805@openwrt.org>
-References: <4AFE1612.5070805@openwrt.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-VivDukhgfTkN0JG4MGrR"
-Date: Sat, 14 Nov 2009 10:23:27 +0100
-Message-ID: <1258190607.6167.33.camel@johannes.local>
+To: Jouni Malinen <j@w1.fi>
+Cc: Holger Schurig <holgerschurig@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20091109105410.GA1443@jm.kir.nu>
+References: <m3zl6wq8x7.wl%holgerschurig@gmail.com>
+	 <20091109105410.GA1443@jm.kir.nu>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-4bAClv/9I2ibOMWIzBX2"
+Date: Mon, 09 Nov 2009 11:59:16 +0100
+Message-ID: <1257764356.29454.162.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-VivDukhgfTkN0JG4MGrR
+--=-4bAClv/9I2ibOMWIzBX2
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2009-11-14 at 03:29 +0100, Felix Fietkau wrote:
-> In order to handle association and authentication in AP mode,
-> hostapd needs access to the tx status info of its own frames
-> through a cooked monitor interface. Without this patch the
-> cooked monitor interfaces also passed on tx status information
-> for packets from other virtual interfaces. This creates a
-> significant performance issue on embedded system. Hostapd
-> tries to work around this by installing a Linux Socket Filter
-> that only captures the frames it's interested in, however
-> data duplication and socket filter matching still uses up
-> enough CPU cycles to be very noticeable on small systems.
-> This patch ensures that tx status information of non-injected
-> frames does not make it to cooked monitor interfaces.
+On Mon, 2009-11-09 at 12:54 +0200, Jouni Malinen wrote:
+
+> > CONCLUSION: the AP doesn't like that. And the textual representation
+> > from tshark for this error as also confused about the roles of AP and
+> > station :-)
 >=20
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> The "AP doesn't like that" part seems correct. The textual
+> representation may be confusing, but it is correct. The AP behavior is
+> not.
 
-> +			if ((sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES) &&
-> +			    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
-> +			    (type =3D=3D IEEE80211_FTYPE_DATA))
-> +				continue;
-> +
-
-This patch also breaks IEEE 802.11 compliance. :)
+It's not really a confusing textual representation either ... if you
+consider that this code is supposed to be used only when the AP
+_requires_ short-slot from the station, and the station advertises not
+having it.
 
 johannes
 
---=-VivDukhgfTkN0JG4MGrR
+--=-4bAClv/9I2ibOMWIzBX2
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJK/ncLAAoJEODzc/N7+Qma3VgQAL6ayIrh2DaH0nd+DrvOCQg0
-mni3RY5rdMETZzNQnfZFukYMFc8kg4SjlGfybSeHtETHyVondUm07Sq+jtvBjJvy
-xJEhtFdrRRmF9lTPwOHlA2A8bZW88hJJmgOAZaCoZ9dhfV59aBt1oK6G5Dr+hCXG
-hDfVFLrYDtMWAMlNLpJfndT0DnTFJwHMOCZZl+LZ2Px7xFdkXGQ/iu7W9xklCp5E
-7L9QpSMa0Zs0ZODuwvWnb4+QxRCTazTEV/ZIQwKyLkFAMTU+gilJneAc7gdAE2JH
-AXJh+fEmp90LCFhNRprZ5eoZytS5FPFyFfGH3vXZN4AticUWJOSFSyViex+I8Tf7
-w8CUl97iuKd5inmiiJImszzKdTx1fOiyg/7z5HyDnqkbArTXkNQV73b/RfuZSKEN
-HSuW8OyQOwcVRPlqSAjyErp2ts5zFRq+qTsm7FL82MZt7v47HpGVAIy/DBgwTBB2
-IW6uvo7zCmcylXYg6D8oGxNEF/9ZnPViPb4n45a6aC08Q+NrTOVkkKa8jhC4wjdV
-RshJg5ZeVXhuN3FW77vPSqTp9JK2bjm8jJPk6bpG6dDSlmyhTLuhR+zAeAOzl07w
-10tCVNZRzhVJkVTLFY5r1hYhXJWI/YzPPmodwiDGIA35C8YTwaxL421utBlwx55b
-sgH+0mj74UIypnquLUof
-=dB7k
+iQIcBAABAgAGBQJK9/YAAAoJEODzc/N7+QmaAsYP/3yCnd5Vg4tNp0+5zmUY+qjx
+FQv6dO/mYz+yW/d4emrgjA5+Rki4oXodpl5rKSA8kZgIYs/OZtkmthg3dBgB0thK
+R8vBNaakcUw/V3M/4t1Lyutlq3IEets9P9RyC4YBK+uZEyrHerp2/EWfN927Zl9M
+X4+TJZmQTnvny728liVTncjHE7swcYsKPY97vDvmTHV+SPkrgCqSYfdEoripmJxz
+S8UPsJOfkBuaXjOIH87zirPNvbMDMfdIXWDTk/I2vQPi1KZ67gX/+kcJukvuJl22
+rJ4YGqrMII94i7qIJhNyYk7cMGi7E45x/StkA1z6xuUCACipq1MS9kGfld2FLuLL
+jnDs2+ai1lJtC2FPmRX+DQDCgi7I4/DXHOqRaTkxlbbewKG4w9aVLaXdVukwT3gr
+zn7571YCDw2y9fQ8uzkddzxnfIDeqcKZ7Vn8abXkZk2Xh1xPwDv2dJiTdUusBKTS
++JXOOxFAJhewtg2FHv3l/DzVKYi37BUzoYPZdxE3E3+nqd3tb9CroZz3yNlOVW6M
+mEk6xjUweHwBVZdmvW4C+o6rstxbd1zr70mMQlrRM93H9f34fw200yCt+5aI/8+y
+f4PtFm6f5sRyktp5uM0/4YlJxIC0EV1Qi8ki890yj1YfF8ElNRFpYLwY40E6R9aa
+qZWooStLeoD+b9ysST8J
+=6NbC
 -----END PGP SIGNATURE-----
 
---=-VivDukhgfTkN0JG4MGrR--
+--=-4bAClv/9I2ibOMWIzBX2--
 
