@@ -1,43 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54750 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753769AbZKTWCK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 17:02:10 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 0/3] [compat-2.6] Small fixes
-Date: Fri, 20 Nov 2009 23:01:50 +0100
-Message-Id: <1258754513-4546-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-gx0-f212.google.com ([209.85.217.212]:48381 "EHLO
+	mail-gx0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756457AbZKIQHQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Nov 2009 11:07:16 -0500
+Received: by gxk4 with SMTP id 4so387987gxk.8
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 08:07:21 -0800 (PST)
+MIME-Version: 1.0
+Date: Mon, 9 Nov 2009 17:07:20 +0100
+Message-ID: <f74418680911090807g4e83a15cr2ce21ea21a86ea23@mail.gmail.com>
+Subject: [PATCH]: setting bit-rate when injecting
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: technoboy85@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix build of compat-wireless and refresh some files.
+I and my Matteo Croce made a patch which adds the capability
+to set the bit-rate when injecting in monitor mode.
 
-compat-wireless does not build with kernel 2.6.26 and older, because
-debugfs_remove_recursive is missing. This is not fixed by this patch.
+The code parse the bit-rate field from the radiotap header and passes the info
+to the struct ieee80211_tx_info
 
-Hauke Mehrtens (3):
-  [compat-2.6] Add IFF_DONT_BRIDGE definition to compat
-  [compat-2.6] Refresh config.mk
-  [compat-2.6] Refresh patches
+--- a/net/mac80211/tx.c	2009-11-09 16:41:15.000000000 +0100
++++ b/net/mac80211/tx.c	2009-11-09 16:50:12.000000000 +0100
+@@ -505,6 +505,9 @@
+ 	struct ieee80211_tx_rate_control txrc;
+ 	u32 sta_flags;
 
- compat/compat-2.6.33.c                             |   16 +++++++++++++
- compat/compat-2.6.33.h                             |   15 ++++++++++++
- compat/compat.h                                    |    1 +
- compat/patches/01-netdev.patch                     |   24 ++++++++++----------
- compat/patches/02-ksize.patch                      |    2 +-
- compat/patches/03-rfkill.patch                     |   20 ++++++++--------
- compat/patches/05-usb.patch                        |    2 +-
- compat/patches/06-header-changes.patch             |    2 +-
- compat/patches/08-rename-iwl4965-config.patch      |    2 +-
- .../patches/10-add-wext-handlers-to-netdev.patch   |    2 +-
- compat/patches/13-trace.patch                      |    2 +-
- compat/patches/14-device-type.patch                |    2 +-
- compat/patches/15-symbol-export-conflicts.patch    |    2 +-
- compat/patches/98-add-compat-wireless.patch        |    3 +-
- config.mk                                          |   17 ++++++-------
- 15 files changed, 72 insertions(+), 40 deletions(-)
- create mode 100644 compat/compat-2.6.33.c
- create mode 100644 compat/compat-2.6.33.h
++	if (info->control.vif->type == NL80211_IFTYPE_MONITOR)
++		return TX_CONTINUE;
++
+ 	memset(&txrc, 0, sizeof(txrc));
 
+ 	sband = tx->local->hw.wiphy->bands[tx->channel->band];
+@@ -932,7 +935,9 @@
+ 		(struct ieee80211_radiotap_header *) skb->data;
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	int ret = ieee80211_radiotap_iterator_init(&iterator, rthdr, skb->len);
++	int i, ret = ieee80211_radiotap_iterator_init(&iterator,
++			rthdr, skb->len);
++	struct ieee80211_rate *rates;
+
+ 	sband = tx->local->hw.wiphy->bands[tx->channel->band];
+
+@@ -979,6 +984,25 @@
+ 				tx->flags |= IEEE80211_TX_FRAGMENTED;
+ 			break;
+
++		case IEEE80211_RADIOTAP_RATE:
++			rates = sband->bitrates;
++			for (i = 0; i < sband->n_bitrates; i++) {
++				if (rates[i].bitrate/5 == *iterator.this_arg) {
++					info->control.rates[0].idx = i;
++					break;
++				}
++			}
++			info->control.rates[0].flags = 0;
++			info->control.rates[1].idx = -1;
++			info->control.rates[2].idx = -1;
++			info->control.rates[3].idx = -1;
++			info->control.rates[4].idx = -1;
++			break;
++
++		case IEEE80211_RADIOTAP_DATA_RETRIES:
++			info->control.rates[0].count = *iterator.this_arg;
++			break;
++
+ 		/*
+ 		 * Please update the file
+ 		 * Documentation/networking/mac80211-injection.txt
+@@ -1518,7 +1542,6 @@
+ 					 struct net_device *dev)
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	struct ieee80211_channel *chan = local->hw.conf.channel;
+ 	struct ieee80211_radiotap_header *prthdr =
+ 		(struct ieee80211_radiotap_header *)skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+@@ -1540,9 +1563,6 @@
+ 	 * radar detection by itself. We can do that later by adding a
+ 	 * monitor flag interfaces used for AP support.
+ 	 */
+-	if ((chan->flags & (IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_RADAR |
+-	     IEEE80211_CHAN_PASSIVE_SCAN)))
+-		goto fail;
+
+ 	/* check for not even having the fixed radiotap header part */
+ 	if (unlikely(skb->len < sizeof(struct ieee80211_radiotap_header)))
