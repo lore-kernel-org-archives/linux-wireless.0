@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:35800 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754267AbZKMROf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 12:14:35 -0500
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2009 09:14:41 -0800
-Date: Fri, 13 Nov 2009 09:14:38 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH 2/2] ath9k_hw: Fix AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_BB
-	and its shift value in 0x4054
-Message-ID: <20091113171438.GD3865@tux>
-References: <1258102960-22768-1-git-send-email-vasanth@atheros.com> <1258102960-22768-2-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1258102960-22768-2-git-send-email-vasanth@atheros.com>
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:56166 "EHLO
+	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754668AbZKIMjq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Nov 2009 07:39:46 -0500
+Received: by mail-fx0-f221.google.com with SMTP id 21so156761fxm.21
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 04:39:51 -0800 (PST)
+From: Rui Paulo <rpaulo@gmail.com>
+To: linville@tuxdriver.com
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Rui Paulo <rpaulo@gmail.com>,
+	Javier Cardona <javier@cozybit.com>
+Subject: [PATCH 02/21] mac80211: set MESH_TTL to 31
+Date: Mon,  9 Nov 2009 12:39:22 +0000
+Message-Id: <1257770381-7680-3-git-send-email-rpaulo@gmail.com>
+In-Reply-To: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
+References: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 13, 2009 at 01:02:40AM -0800, Vasanth Thiagarajan wrote:
-> The bit value of AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_BB is wrong, it should
-> be 0x400 and the number of bits to be right shifted is 10. Having this
-> wrong value in 0x4054 sometimes affects bt quality on btcoex environment.
-> 
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Update the mesh time to live field to 31 according to draft 3.03.
 
-These both seem small enough and reasonable for stable fixes no?
-Although I didn't get the impact of the first one..
+Signed-off-by: Rui Paulo <rpaulo@gmail.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
+Tested-by: Brian Cavagnolo <brian@cozybit.com>
+---
+ net/mac80211/mesh.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-  Luis
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index dd1c193..9948107 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -174,7 +174,7 @@ struct mesh_rmc {
+ #define MESH_CFG_CMP_LEN 	(IEEE80211_MESH_CONFIG_LEN - 2)
+ 
+ /* Default values, timeouts in ms */
+-#define MESH_TTL 		5
++#define MESH_TTL 		31
+ #define MESH_MAX_RETR	 	3
+ #define MESH_RET_T 		100
+ #define MESH_CONF_T 		100
+-- 
+1.5.6.5
+
