@@ -1,143 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:64809 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752978AbZKPVxS (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:43113 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754820AbZKINYU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2009 16:53:18 -0500
-Received: by ey-out-2122.google.com with SMTP id 9so2074080eyd.19
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Nov 2009 13:53:23 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1257621757.29454.48.camel@johannes.local>
-References: <83a869cd0908211513k2e14ba40k251aa8a1e7393a77@mail.gmail.com>
-	 <1250927141.23605.3.camel@johannes.local>
-	 <83a869cd0911071010g32c798c6pfecd875a1bf484e0@mail.gmail.com>
-	 <1257621757.29454.48.camel@johannes.local>
-Date: Mon, 16 Nov 2009 22:53:23 +0100
-Message-ID: <83a869cd0911161353p5ea44472s8e6f146929ff6c65@mail.gmail.com>
-Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
-From: gregor kowski <gregor.kowski@gmail.com>
+	Mon, 9 Nov 2009 08:24:20 -0500
+Received: by bwz27 with SMTP id 27so3437293bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 05:24:25 -0800 (PST)
+References: <1257770381-7680-1-git-send-email-rpaulo@gmail.com> <1257770381-7680-12-git-send-email-rpaulo@gmail.com> <1257771552.29454.171.camel@johannes.local>
+In-Reply-To: <1257771552.29454.171.camel@johannes.local>
+Mime-Version: 1.0 (Apple Message framework v1076)
+Content-Type: text/plain; charset=us-ascii; format=flowed; delsp=yes
+Message-Id: <B2865F30-1886-4985-AB76-2AAB769530F4@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Javier Cardona <javier@cozybit.com>
+From: Rui Paulo <rpaulo@gmail.com>
+Subject: Re: [PATCH 11/21] mac80211: add WLAN_EID_RANN
+Date: Mon, 9 Nov 2009 13:24:21 +0000
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mac80211 tkip code won't call update_tkip_key, if rx packets
-are received without KEY_FLAG_UPLOADED_TO_HARDWARE. This can happen on
-first packet because the hardware key stuff is called asynchronously with
-todo workqueue.
+Hi Johannes,
 
-This patch workaround that by tracking if we sent the key to the driver.
+On 9 Nov 2009, at 12:59, Johannes Berg wrote:
 
-Signed-off-by: Gregor Kowski <gregor.kowski@gmail.com>
+> On Mon, 2009-11-09 at 12:39 +0000, Rui Paulo wrote:
+>> Process the RX of RANN information elements.
+>
+> That commit log is not really right.
 
-Index: linux-2.6/net/mac80211/tkip.c
-===================================================================
---- linux-2.6.orig/net/mac80211/tkip.c	2009-11-16 21:44:37.000000000 +0000
-+++ linux-2.6/net/mac80211/tkip.c	2009-11-16 21:46:28.000000000 +0000
-@@ -100,7 +100,7 @@
- 		p1k[3] += tkipS(p1k[2] ^ get_unaligned_le16(tk + 12 + j));
- 		p1k[4] += tkipS(p1k[3] ^ get_unaligned_le16(tk + 0 + j)) + i;
- 	}
--	ctx->initialized = 1;
-+	ctx->initialized = TKIP_STATE_PHASE1_DONE;
- }
+You're right. Is "Parse the RANN information element" a better one?
 
- static void tkip_mixing_phase2(const u8 *tk, struct tkip_ctx *ctx,
-@@ -183,7 +183,7 @@
- 	/* Update the p1k only when the iv16 in the packet wraps around, this
- 	 * might occur after the wrap around of iv16 in the key in case of
- 	 * fragmented packets. */
--	if (iv16 == 0 || !ctx->initialized)
-+	if (iv16 == 0 || ctx->initialized == TKIP_STATE_NOT_INIT)
- 		tkip_mixing_phase1(tk, ctx, hdr->addr2, iv32);
+>> +	WLAN_EID_RANN = 49,	/* compatible with FreeBSD */
+>> 	/* 802.11h */
+>> 	WLAN_EID_PWR_CONSTRAINT = 32,
+>> 	WLAN_EID_PWR_CAPABILITY = 33,
+>
+> I'd definitely prefer if here you added a 17-byte long struct that
+> explains the layout of the IE, and then used that in patch 12. Also  
+> it's
+> probably useful to check the length directly in  
+> ieee802_11_parse_elems.
 
- 	if (type == IEEE80211_TKIP_P1_KEY) {
-@@ -209,7 +209,7 @@
- 	const u8 *tk = &key->conf.key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
+I prefer structures describing the IE layout too, but I was following  
+the mesh code on this. If structure layouts are preferable, then there  
+are 4 mesh IEs that should probably be changed.
 
- 	/* Calculate per-packet key */
--	if (ctx->iv16 == 0 || !ctx->initialized)
-+	if (ctx->iv16 == 0 || ctx->initialized == TKIP_STATE_NOT_INIT)
- 		tkip_mixing_phase1(tk, ctx, ta, ctx->iv32);
+Regarding to the length check, I was also following the way the mesh  
+code does it. Again, if we want to change RANN, we should probably  
+also change PREQ, PREP and PERR.
 
- 	tkip_mixing_phase2(tk, ctx, ctx->iv16, rc4key);
-@@ -259,7 +259,7 @@
- 	if ((keyid >> 6) != key->conf.keyidx)
- 		return TKIP_DECRYPT_INVALID_KEYIDX;
+Thanks,
+--
+Rui Paulo
 
--	if (key->u.tkip.rx[queue].initialized &&
-+	if (key->u.tkip.rx[queue].initialized != TKIP_STATE_NOT_INIT &&
- 	    (iv32 < key->u.tkip.rx[queue].iv32 ||
- 	     (iv32 == key->u.tkip.rx[queue].iv32 &&
- 	      iv16 <= key->u.tkip.rx[queue].iv16))) {
-@@ -275,11 +275,11 @@
-
- 	if (only_iv) {
- 		res = TKIP_DECRYPT_OK;
--		key->u.tkip.rx[queue].initialized = 1;
-+		key->u.tkip.rx[queue].initialized = TKIP_STATE_PHASE1_HW_UPLOADED;
- 		goto done;
- 	}
-
--	if (!key->u.tkip.rx[queue].initialized ||
-+	if (key->u.tkip.rx[queue].initialized == TKIP_STATE_NOT_INIT ||
- 	    key->u.tkip.rx[queue].iv32 != iv32) {
- 		/* IV16 wrapped around - perform TKIP phase 1 */
- 		tkip_mixing_phase1(tk, &key->u.tkip.rx[queue], ta, iv32);
-@@ -299,18 +299,20 @@
- 			printk("\n");
- 		}
- #endif
--		if (key->local->ops->update_tkip_key &&
--			key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
--			u8 bcast[ETH_ALEN] =
--				{0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
--			u8 *sta_addr = key->sta->sta.addr;
--
--			if (is_multicast_ether_addr(ra))
--				sta_addr = bcast;
--
--			drv_update_tkip_key(key->local, &key->conf, sta_addr,
--					    iv32, key->u.tkip.rx[queue].p1k);
--		}
-+	}
-+	if (key->local->ops->update_tkip_key &&
-+	    key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
-+	    key->u.tkip.rx[queue].initialized != TKIP_STATE_PHASE1_HW_UPLOADED) {
-+		u8 bcast[ETH_ALEN] =
-+			{0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-+		u8 *sta_addr = key->sta->sta.addr;
-+
-+		if (is_multicast_ether_addr(ra))
-+			sta_addr = bcast;
-+
-+		drv_update_tkip_key(key->local, &key->conf, sta_addr,
-+					iv32, key->u.tkip.rx[queue].p1k);
-+		key->u.tkip.rx[queue].initialized = TKIP_STATE_PHASE1_HW_UPLOADED;
- 	}
-
- 	tkip_mixing_phase2(tk, &key->u.tkip.rx[queue], iv16, rc4key);
-Index: linux-2.6/net/mac80211/key.h
-===================================================================
---- linux-2.6.orig/net/mac80211/key.h	2009-11-16 21:44:37.000000000 +0000
-+++ linux-2.6/net/mac80211/key.h	2009-11-16 21:50:23.000000000 +0000
-@@ -59,11 +59,17 @@
- 	KEY_FLAG_TODO_DEFMGMTKEY	= BIT(6),
- };
-
-+enum ieee80211_internal_tkip_state {
-+	TKIP_STATE_NOT_INIT,
-+	TKIP_STATE_PHASE1_DONE,
-+	TKIP_STATE_PHASE1_HW_UPLOADED,
-+};
-+
- struct tkip_ctx {
- 	u32 iv32;
- 	u16 iv16;
- 	u16 p1k[5];
--	int initialized;
-+	enum ieee80211_internal_tkip_state initialized;
- };
-
- struct ieee80211_key {
