@@ -1,98 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:57847 "EHLO
-	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753898AbZKHLaL (ORCPT
+Received: from mail-yw0-f202.google.com ([209.85.211.202]:37429 "EHLO
+	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755348AbZKIPzX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 06:30:11 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH] rt2x00: Move interface type assignments to generic code.
-Date: Sun,  8 Nov 2009 12:30:14 +0100
-Message-Id: <1257679814-25233-1-git-send-email-gwingerde@gmail.com>
+	Mon, 9 Nov 2009 10:55:23 -0500
+Received: by ywh40 with SMTP id 40so2652818ywh.33
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 07:55:29 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <loom.20091108T191008-495@post.gmane.org>
+References: <87f9e23c0910261352x60e17ef8ud859f91f36c43898@mail.gmail.com>
+	 <200910262230.57957.mb@bu3sch.de>
+	 <20091027100926.GA13391@hash.localnet>
+	 <200910271129.10535.mb@bu3sch.de>
+	 <loom.20091108T191008-495@post.gmane.org>
+Date: Mon, 9 Nov 2009 10:55:28 -0500
+Message-ID: <b6c5339f0911090755h133d849ld5387467c7fad3c3@mail.gmail.com>
+Subject: Re: ath5k phy0: no further txbuf available, dropping packet
+From: Bob Copeland <me@bobcopeland.com>
+To: David Srbecky <dsrbecky@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make sure all drivers can benefit of the assignment of the interface type of an adapter, instead of
-keeping it for rt2800 only.
+On Sun, Nov 8, 2009 at 1:12 PM, David Srbecky <dsrbecky@gmail.com> wrote:
+> Hi,
+>
+> Is there any progress with trying to solve this problem?
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800pci.c |    2 --
- drivers/net/wireless/rt2x00/rt2800usb.c |    2 --
- drivers/net/wireless/rt2x00/rt2x00pci.c |    2 ++
- drivers/net/wireless/rt2x00/rt2x00soc.c |    5 +++++
- drivers/net/wireless/rt2x00/rt2x00usb.c |    2 ++
- 5 files changed, 9 insertions(+), 4 deletions(-)
+Yes, I believe the changes to the cab queue timing will fix it, but
+I still need to do some testing on various queue settings before I
+can send a patch.  In the meantime, we discussed the possibility of
+simply continuing in the tx processing loop instead of bailing out for
+incomplete descriptors; I don't forsee any problem with that approach.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 3c5b875..bff8707 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -1465,8 +1465,6 @@ static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
- {
- 	int retval;
- 
--	rt2x00_set_chip_intf(rt2x00dev, RT2X00_CHIP_INTF_PCI);
--
- 	rt2x00dev->priv = (void *)&rt2800pci_rt2800_ops;
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index ce2e893..3168ad4 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -1074,8 +1074,6 @@ static int rt2800usb_probe_hw(struct rt2x00_dev *rt2x00dev)
- {
- 	int retval;
- 
--	rt2x00_set_chip_intf(rt2x00dev, RT2X00_CHIP_INTF_USB);
--
- 	rt2x00dev->priv = (void *)&rt2800usb_rt2800_ops;
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
-index cdd5154..ece70d7 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-@@ -310,6 +310,8 @@ int rt2x00pci_probe(struct pci_dev *pci_dev, const struct pci_device_id *id)
- 	rt2x00dev->irq = pci_dev->irq;
- 	rt2x00dev->name = pci_name(pci_dev);
- 
-+	rt2x00_set_chip_intf(rt2x00dev, RT2X00_CHIP_INTF_PCI);
-+
- 	/*
- 	 * Determine RT chipset by reading PCI header.
- 	 */
-diff --git a/drivers/net/wireless/rt2x00/rt2x00soc.c b/drivers/net/wireless/rt2x00/rt2x00soc.c
-index 539568c..4abcfa6 100644
---- a/drivers/net/wireless/rt2x00/rt2x00soc.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00soc.c
-@@ -93,6 +93,11 @@ int rt2x00soc_probe(struct platform_device *pdev,
- 	rt2x00dev->irq = platform_get_irq(pdev, 0);
- 	rt2x00dev->name = pdev->dev.driver->name;
- 
-+	/*
-+	 * SoC devices mimic PCI behavior.
-+	 */
-+	rt2x00_set_chip_intf(rt2x00dev, RT2X00_CHIP_INTF_PCI);
-+
- 	rt2x00_set_chip_rt(rt2x00dev, chipset);
- 
- 	retval = rt2x00soc_alloc_reg(rt2x00dev);
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index c9cbdaa..aa6c31d 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -653,6 +653,8 @@ int rt2x00usb_probe(struct usb_interface *usb_intf,
- 	rt2x00dev->ops = ops;
- 	rt2x00dev->hw = hw;
- 
-+	rt2x00_set_chip_intf(rt2x00dev, RT2X00_CHIP_INTF_USB);
-+
- 	retval = rt2x00usb_alloc_reg(rt2x00dev);
- 	if (retval)
- 		goto exit_free_device;
 -- 
-1.6.5.2
-
+Bob Copeland %% www.bobcopeland.com
