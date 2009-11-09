@@ -1,43 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:35169 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757587AbZKFPQD convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:57531 "EHLO
+	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752893AbZKISHy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 10:16:03 -0500
-Received: by yxe17 with SMTP id 17so969379yxe.33
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 07:16:08 -0800 (PST)
+	Mon, 9 Nov 2009 13:07:54 -0500
+Received: by fxm21 with SMTP id 21so387039fxm.21
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 10:07:58 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <loom.20091106T135746-452@post.gmane.org>
-References: <loom.20091106T135746-452@post.gmane.org>
-Date: Fri, 6 Nov 2009 10:16:07 -0500
-Message-ID: <b6c5339f0911060716n538268f6w1300e3400e0bd2c8@mail.gmail.com>
-Subject: Re: [PATCH] Wifi led does not work on Acer Aspire One D250 (ath5k
-	driver)
-From: Bob Copeland <me@bobcopeland.com>
-To: Carlo Parata <carlo_parata@hotmail.com>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1257787187.21134.22331.camel@rc-desk>
+References: <cb0375e10911081130k5d8f8347y999cf66a98e6898a@mail.gmail.com>
+	 <1257787187.21134.22331.camel@rc-desk>
+Date: Mon, 9 Nov 2009 13:07:58 -0500
+Message-ID: <cb0375e10911091007w45fa5653y8ed4f043f37074b6@mail.gmail.com>
+Subject: Re: [PATCH] iwlcore: Allow runtime configuration of
+	no_sleep_autoadjust
+From: Andrew Lutomirski <andy@luto.us>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 6, 2009 at 8:00 AM, Carlo Parata <carlo_parata@hotmail.com> wrote:
-> With this patch, a Acer Aspire One D250 can turn on the wifi led. The array of
-> compatible devices in ath5k driver now includes the hardware present in this
-> computer, as well as the led pin and polarity.
+On Mon, Nov 9, 2009 at 12:19 PM, reinette chatre
+<reinette.chatre@intel.com> wrote:
+> On Sun, 2009-11-08 at 11:30 -0800, Andrew Lutomirski wrote:
+>> Runtime adjustment of no_sleep_autoadjust seems fine, both looking at
+>> the code and in practice.  This makes it easier to test.
+>>
+>> Signed-off-by: Andy Lutomirski <luto@mit.edu>
+>> ---
+>> I've been running this patch (and twiddling the setting) for a couple
+>> months now, and it seems to work fine.  I think it's a bit late for
+>> 2.6.32, even though it's pretty much impossible for this to cause any
+>> regressions, but it would be nice to see it go in for 2.6.33 until
+>> no_sleep_autoadjust goes away.
+>>
+>> diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c
+>> b/drivers/net/wireless/iwlwifi/iwl-power.c
+>> index 60be976..4eba1ab 100644
+>> --- a/drivers/net/wireless/iwlwifi/iwl-power.c
+>> +++ b/drivers/net/wireless/iwlwifi/iwl-power.c
+>> @@ -54,7 +54,7 @@
+>>   * adjusting ...
+>>   */
+>>  bool no_sleep_autoadjust = true;
+>> -module_param(no_sleep_autoadjust, bool, S_IRUGO);
+>> +module_param(no_sleep_autoadjust, bool, S_IRUGO | S_IWUSR);
+>>  MODULE_PARM_DESC(no_sleep_autoadjust,
+>>                "don't automatically adjust sleep level "
+>>                "according to maximum network latency");
 >
-> --- ../led.c    2009-11-06 06:16:39.000000000 +0100
-> +++ ./drivers/net/wireless/ath/ath5k/led.c      2009-11-06 12:37:44.000000000 +0100
-> @@ -73,6 +73,8 @@
->        { ATH_SDEVICE(PCI_VENDOR_ID_HP, 0x0137b), ATH_LED(3, 1) },
->        /* IBM-specific AR5212 (all others) */
->        { PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5212_IBM), ATH_LED(0, 0) },
-> +        /* Acer Aspire One D250 AR5007EG */
-> +       { PCI_VDEVICE(ATHEROS, 0x001c), ATH_LED(3, 1) },
+> I think this change is a bit deceiving since making this writable does
+> not result in what you write to it at runtime being communicated to the
+> device.
 
-No, this should be based on the subdevice instead
-(there are lots of ath:001c with different LED settings).
+Hmm.  It looks like sleep_level_override in debugfs can do exactly what I want.
 
-Also, please add your email to the appropriate stanza.
+Is there any reason that no_sleep_autoadjust doesn't just make
+sleep_level_override default to 1?
 
--- 
-Bob Copeland %% www.bobcopeland.com
+--Andy
