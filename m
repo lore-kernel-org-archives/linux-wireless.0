@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:8638 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757515AbZKJSdI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 13:33:08 -0500
-Received: by ey-out-2122.google.com with SMTP id 9so70931eyd.19
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2009 10:33:12 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH] rt2x00: Fix rt2800lib RF chip programming selection.
-Date: Tue, 10 Nov 2009 19:33:09 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-References: <1257803998-5412-1-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1257803998-5412-1-git-send-email-gwingerde@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911101933.09747.IvDoorn@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:11182 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753562AbZKIDdc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Nov 2009 22:33:32 -0500
+Subject: Re: [PATCH 47/75] ipw2100: declare MODULE_FIRMWARE
+From: Zhu Yi <yi.zhu@intel.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: John Linville <linville@tuxdriver.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1257631127.15927.455.camel@localhost>
+References: <1257631127.15927.455.camel@localhost>
+Content-Type: text/plain
+Date: Mon, 09 Nov 2009 11:33:35 +0800
+Message-Id: <1257737615.5538.996.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 09 November 2009, Gertjan van Wingerde wrote:
-> Mirror the legacy Ralink driver with respect to rt2800 RF register programming. Execute
-> rt2800_config_channel_rt3x for all RF2020, RF3020, RF3021 & RF3022 chipsets when operating on RT3070
-> devices.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-
+On Sun, 2009-11-08 at 05:58 +0800, Ben Hutchings wrote:
+> Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
 > ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |   10 +++++++---
->  1 files changed, 7 insertions(+), 3 deletions(-)
+>  drivers/net/wireless/ipw2x00/ipw2100.c |    6 ++++++
+>  1 files changed, 6 insertions(+), 0 deletions(-)
 > 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 2c91c44..446087e 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -806,10 +806,14 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
->  	unsigned int tx_pin;
->  	u8 bbp;
+> diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+> index a741d37..8dfdbd3 100644
+> --- a/drivers/net/wireless/ipw2x00/ipw2100.c
+> +++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+> @@ -8465,6 +8465,12 @@ static int ipw2100_get_firmware(struct ipw2100_priv *priv,
+>  	return 0;
+>  }
 >  
-> -	if (rt2x00_rev(&rt2x00dev->chip) != RT3070_VERSION)
-> -		rt2800_config_channel_rt2x(rt2x00dev, conf, rf, info);
-> -	else
-> +	if (rt2x00_rt(&rt2x00dev->chip, RT3070) &&	
-> +           (rt2x00_rf(&rt2x00dev->chip, RF2020) ||
-> +	     rt2x00_rf(&rt2x00dev->chip, RF3020) ||
-> +	     rt2x00_rf(&rt2x00dev->chip, RF3021) ||
-> +	     rt2x00_rf(&rt2x00dev->chip, RF3022)))
->  		rt2800_config_channel_rt3x(rt2x00dev, conf, rf, info);
-> +	else
-> +		rt2800_config_channel_rt2x(rt2x00dev, conf, rf, info);
->  
->  	/*
->  	 * Change BBP settings
+> +MODULE_FIRMWARE(IPW2100_FW_NAME("-i"));
+> +#ifdef CONFIG_IPW2100_MONITOR
+> +MODULE_FIRMWARE(IPW2100_FW_NAME("-p"));
+> +#endif
+> +MODULE_FIRMWARE(IPW2100_FW_NAME(""));
+> +
+>  static void ipw2100_release_firmware(struct ipw2100_priv *priv,
+>  				     struct ipw2100_fw *fw)
+>  {
 
+Acked-by: Zhu Yi <yi.zhu@intel.com>
+
+Thanks,
+-yi
 
