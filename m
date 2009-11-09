@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47286
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756505AbZKDQbu (ORCPT
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:56166 "EHLO
+	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751031AbZKIMjj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 11:31:50 -0500
-Date: Wed, 04 Nov 2009 08:32:15 -0800 (PST)
-Message-Id: <20091104.083215.148844966.davem@davemloft.net>
-To: akpm@linux-foundation.org
-Cc: johannes@sipsolutions.net, marcel@holtmann.org,
-	dmitry.torokhov@gmail.com, torvalds@linux-foundation.org,
-	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	Mon, 9 Nov 2009 07:39:39 -0500
+Received: by fxm21 with SMTP id 21so156761fxm.21
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 04:39:43 -0800 (PST)
+From: Rui Paulo <rpaulo@gmail.com>
+To: linville@tuxdriver.com
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org
-Subject: Re: Please consider reverting
- 7d930bc33653d5592dc386a76a38f39c2e962344
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20091104072315.18f56322.akpm@linux-foundation.org>
-References: <20091103223433.23765578.akpm@linux-foundation.org>
-	<20091104.004157.86565200.davem@davemloft.net>
-	<20091104072315.18f56322.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Subject: o11s update to latest draft
+Date: Mon,  9 Nov 2009 12:39:20 +0000
+Message-Id: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrew Morton <akpm@linux-foundation.org>
-Date: Wed, 4 Nov 2009 07:23:15 -0800
+Hi all,
 
-> Although if you can help these:
-> 
-> isdn-hisax-fix-lock-imbalance.patch
-> misdn-fix-reversed-if-in-st_own_ctrl.patch
-> isdn-eicon-use-offsetof.patch
-> hisax-fix-test-in-waitforxfw.patch
-> hfc_usb-fix-read-buffer-overflow.patch
+The following patches update the mesh code to latest draft, 3.03.
+They also include some minor cleanups and improved debugging.
 
-Applied to net-2.6
+ include/linux/ieee80211.h     |    3 
+ include/linux/nl80211.h       |   11 
+ include/net/cfg80211.h        |    9 
+ net/mac80211/Kconfig          |   13 +
+ net/mac80211/cfg.c            |   15 -
+ net/mac80211/debugfs_netdev.c |    2 
+ net/mac80211/ieee80211_i.h    |   23 +-
+ net/mac80211/mesh.c           |  143 ++++++++----
+ net/mac80211/mesh.h           |   30 +-
+ net/mac80211/mesh_hwmp.c      |  465 +++++++++++++++++++++++++++---------------
+ net/mac80211/mesh_pathtbl.c   |   20 -
+ net/mac80211/mesh_plink.c     |   56 +++--
+ net/mac80211/rx.c             |    2 
+ net/mac80211/tx.c             |    2 
+ net/mac80211/util.c           |    4 
+ net/wireless/nl80211.c        |   12 -
+ 16 files changed, 535 insertions(+), 275 deletions(-)
 
-> isdn-eicon-return-on-error.patch
-
-Also applied to net-2.6, holy crap someone run that driver through
-some auto-formatting tool! :-)
-
+Regards,
+--
+Rui Paulo
