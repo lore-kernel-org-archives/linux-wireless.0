@@ -1,194 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:63277 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753150AbZKQQtp (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:35804 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754503AbZKIMjn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 11:49:45 -0500
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 11/16] wl1251: Add IRQ looping support
+	Mon, 9 Nov 2009 07:39:43 -0500
+Received: by bwz27 with SMTP id 27so3395312bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 04:39:47 -0800 (PST)
+From: Rui Paulo <rpaulo@gmail.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Nov 2009 18:49:31 +0200
-Message-ID: <20091117164930.2236.43530.stgit@tikku>
-In-Reply-To: <20091117164614.2236.8543.stgit@tikku>
-References: <20091117164614.2236.8543.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Rui Paulo <rpaulo@gmail.com>,
+	Javier Cardona <javier@cozybit.com>
+Subject: [PATCH 01/21] mac80211: update meshconf IE
+Date: Mon,  9 Nov 2009 12:39:21 +0000
+Message-Id: <1257770381-7680-2-git-send-email-rpaulo@gmail.com>
+In-Reply-To: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
+References: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Janne Ylalehto <janne.ylalehto@nokia.com>
+This updates the Mesh Configuration IE according to the latest
+draft (3.03).
+Notable changes include the simplified protocol IDs.
 
-Add support for IRQ looping. Helps in the case that we have e.g. multiple
-packets coming from the network when we wake up from the ELP.
-
-Signed-off-by: Janne Ylalehto <janne.ylalehto@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Rui Paulo <rpaulo@gmail.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
+Tested-by: Brian Cavagnolo <brian@cozybit.com>
 ---
+ include/linux/ieee80211.h  |    2 +-
+ net/mac80211/ieee80211_i.h |   10 +++---
+ net/mac80211/mesh.c        |   69 ++++++++++++++++++-------------------------
+ 3 files changed, 35 insertions(+), 46 deletions(-)
 
- drivers/net/wireless/wl12xx/wl1251_main.c |  127 +++++++++++++++--------------
- 1 files changed, 67 insertions(+), 60 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index cc32ba6..dad010d 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -212,9 +212,10 @@ out:
- 	return ret;
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 0aa8314..50c684d 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -115,7 +115,7 @@
+ #define IEEE80211_MAX_SSID_LEN		32
+ 
+ #define IEEE80211_MAX_MESH_ID_LEN	32
+-#define IEEE80211_MESH_CONFIG_LEN	24
++#define IEEE80211_MESH_CONFIG_LEN	7
+ 
+ #define IEEE80211_QOS_CTL_LEN		2
+ #define IEEE80211_QOS_CTL_TID_MASK	0x000F
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 1ef7673..1f4f88a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -361,15 +361,15 @@ struct ieee80211_if_mesh {
+ 	u8 mesh_id[IEEE80211_MAX_MESH_ID_LEN];
+ 	size_t mesh_id_len;
+ 	/* Active Path Selection Protocol Identifier */
+-	u8 mesh_pp_id[4];
++	u8 mesh_pp_id;
+ 	/* Active Path Selection Metric Identifier */
+-	u8 mesh_pm_id[4];
++	u8 mesh_pm_id;
+ 	/* Congestion Control Mode Identifier */
+-	u8 mesh_cc_id[4];
++	u8 mesh_cc_id;
+ 	/* Synchronization Protocol Identifier */
+-	u8 mesh_sp_id[4];
++	u8 mesh_sp_id;
+ 	/* Authentication Protocol Identifier */
+-	u8 mesh_auth_id[4];
++	u8 mesh_auth_id;
+ 	/* Local mesh Destination Sequence Number */
+ 	u32 dsn;
+ 	/* Last used PREQ ID */
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 9a73389..a49a337 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -15,14 +15,14 @@
+ #define IEEE80211_MESH_PEER_INACTIVITY_LIMIT (1800 * HZ)
+ #define IEEE80211_MESH_HOUSEKEEPING_INTERVAL (60 * HZ)
+ 
+-#define PP_OFFSET 	1		/* Path Selection Protocol */
+-#define PM_OFFSET	5		/* Path Selection Metric   */
+-#define CC_OFFSET	9		/* Congestion Control Mode */
+-#define SP_OFFSET	13		/* Synchronization Protocol */
+-#define AUTH_OFFSET	17		/* Authentication Protocol */
+-#define CAPAB_OFFSET 	22
+-#define CAPAB_ACCEPT_PLINKS 0x80
+-#define CAPAB_FORWARDING    0x10
++#define MESHCONF_PP_OFFSET 	0		/* Path Selection Protocol */
++#define MESHCONF_PM_OFFSET	1		/* Path Selection Metric   */
++#define MESHCONF_CC_OFFSET	2		/* Congestion Control Mode */
++#define MESHCONF_SP_OFFSET	3		/* Synchronization Protocol */
++#define MESHCONF_AUTH_OFFSET	4		/* Authentication Protocol */
++#define MESHCONF_CAPAB_OFFSET 	6
++#define MESHCONF_CAPAB_ACCEPT_PLINKS 0x01
++#define MESHCONF_CAPAB_FORWARDING    0x08
+ 
+ #define TMR_RUNNING_HK	0
+ #define TMR_RUNNING_MP	1
+@@ -85,11 +85,12 @@ bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_dat
+ 	 */
+ 	if (ifmsh->mesh_id_len == ie->mesh_id_len &&
+ 		memcmp(ifmsh->mesh_id, ie->mesh_id, ie->mesh_id_len) == 0 &&
+-		memcmp(ifmsh->mesh_pp_id, ie->mesh_config + PP_OFFSET, 4) == 0 &&
+-		memcmp(ifmsh->mesh_pm_id, ie->mesh_config + PM_OFFSET, 4) == 0 &&
+-		memcmp(ifmsh->mesh_cc_id, ie->mesh_config + CC_OFFSET, 4) == 0 &&
+-		memcmp(ifmsh->mesh_sp_id, ie->mesh_config + SP_OFFSET, 4) == 0 &&
+-		memcmp(ifmsh->mesh_auth_id, ie->mesh_config + AUTH_OFFSET, 4) == 0)
++		(ifmsh->mesh_pp_id == *(ie->mesh_config + MESHCONF_PP_OFFSET))&&
++		(ifmsh->mesh_pm_id == *(ie->mesh_config + MESHCONF_PM_OFFSET))&&
++		(ifmsh->mesh_cc_id == *(ie->mesh_config + MESHCONF_CC_OFFSET))&&
++		(ifmsh->mesh_sp_id == *(ie->mesh_config + MESHCONF_SP_OFFSET))&&
++		(ifmsh->mesh_auth_id == *(ie->mesh_config +
++		    MESHCONF_AUTH_OFFSET)))
+ 		return true;
+ 
+ 	return false;
+@@ -102,7 +103,8 @@ bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_dat
+  */
+ bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie)
+ {
+-	return (*(ie->mesh_config + CAPAB_OFFSET) & CAPAB_ACCEPT_PLINKS) != 0;
++	return (*(ie->mesh_config + MESHCONF_CAPAB_OFFSET) &
++	    MESHCONF_CAPAB_ACCEPT_PLINKS) != 0;
  }
  
-+#define WL1251_IRQ_LOOP_COUNT 10
- static void wl1251_irq_work(struct work_struct *work)
+ /**
+@@ -128,18 +130,11 @@ void mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata)
+ 
+ void mesh_ids_set_default(struct ieee80211_if_mesh *sta)
  {
--	u32 intr;
-+	u32 intr, ctr = WL1251_IRQ_LOOP_COUNT;
- 	struct wl1251 *wl =
- 		container_of(work, struct wl1251, irq_work);
- 	int ret;
-@@ -235,78 +236,84 @@ static void wl1251_irq_work(struct work_struct *work)
- 	intr = wl1251_reg_read32(wl, ACX_REG_INTERRUPT_CLEAR);
- 	wl1251_debug(DEBUG_IRQ, "intr: 0x%x", intr);
- 
--	if (wl->data_path) {
--		wl->rx_counter =
--			wl1251_mem_read32(wl, wl->data_path->rx_control_addr);
+-	u8 oui[3] = {0x00, 0x0F, 0xAC};
 -
--		/* We handle a frmware bug here */
--		switch ((wl->rx_counter - wl->rx_handled) & 0xf) {
--		case 0:
--			wl1251_debug(DEBUG_IRQ, "RX: FW and host in sync");
--			intr &= ~WL1251_ACX_INTR_RX0_DATA;
--			intr &= ~WL1251_ACX_INTR_RX1_DATA;
--			break;
--		case 1:
--			wl1251_debug(DEBUG_IRQ, "RX: FW +1");
--			intr |= WL1251_ACX_INTR_RX0_DATA;
--			intr &= ~WL1251_ACX_INTR_RX1_DATA;
--			break;
--		case 2:
--			wl1251_debug(DEBUG_IRQ, "RX: FW +2");
--			intr |= WL1251_ACX_INTR_RX0_DATA;
--			intr |= WL1251_ACX_INTR_RX1_DATA;
--			break;
--		default:
--			wl1251_warning("RX: FW and host out of sync: %d",
--				       wl->rx_counter - wl->rx_handled);
--			break;
--		}
--
--		wl->rx_handled = wl->rx_counter;
-+	do {
-+		if (wl->data_path) {
-+			wl->rx_counter = wl1251_mem_read32(
-+				wl, wl->data_path->rx_control_addr);
-+
-+			/* We handle a frmware bug here */
-+			switch ((wl->rx_counter - wl->rx_handled) & 0xf) {
-+			case 0:
-+				wl1251_debug(DEBUG_IRQ,
-+					     "RX: FW and host in sync");
-+				intr &= ~WL1251_ACX_INTR_RX0_DATA;
-+				intr &= ~WL1251_ACX_INTR_RX1_DATA;
-+				break;
-+			case 1:
-+				wl1251_debug(DEBUG_IRQ, "RX: FW +1");
-+				intr |= WL1251_ACX_INTR_RX0_DATA;
-+				intr &= ~WL1251_ACX_INTR_RX1_DATA;
-+				break;
-+			case 2:
-+				wl1251_debug(DEBUG_IRQ, "RX: FW +2");
-+				intr |= WL1251_ACX_INTR_RX0_DATA;
-+				intr |= WL1251_ACX_INTR_RX1_DATA;
-+				break;
-+			default:
-+				wl1251_warning(
-+					"RX: FW and host out of sync: %d",
-+					wl->rx_counter - wl->rx_handled);
-+				break;
-+			}
+-	memcpy(sta->mesh_pp_id, oui, sizeof(oui));
+-	memcpy(sta->mesh_pm_id, oui, sizeof(oui));
+-	memcpy(sta->mesh_cc_id, oui, sizeof(oui));
+-	memcpy(sta->mesh_sp_id, oui, sizeof(oui));
+-	memcpy(sta->mesh_auth_id, oui, sizeof(oui));
+-	sta->mesh_pp_id[sizeof(oui)] = 0;
+-	sta->mesh_pm_id[sizeof(oui)] = 0;
+-	sta->mesh_cc_id[sizeof(oui)] = 0xff;
+-	sta->mesh_sp_id[sizeof(oui)] = 0xff;
+-	sta->mesh_auth_id[sizeof(oui)] = 0x0;
++	sta->mesh_pp_id = 0;	/* HWMP */
++	sta->mesh_pm_id = 0;	/* Airtime */
++	sta->mesh_cc_id = 0;	/* Disabled */
++	sta->mesh_sp_id = 0;	/* Neighbor Offset */
++	sta->mesh_auth_id = 0;	/* Disabled */
+ }
  
-+			wl->rx_handled = wl->rx_counter;
+ int mesh_rmc_init(struct ieee80211_sub_if_data *sdata)
+@@ -260,28 +255,21 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
+ 	pos = skb_put(skb, 2 + IEEE80211_MESH_CONFIG_LEN);
+ 	*pos++ = WLAN_EID_MESH_CONFIG;
+ 	*pos++ = IEEE80211_MESH_CONFIG_LEN;
+-	/* Version */
+-	*pos++ = 1;
  
--		wl1251_debug(DEBUG_IRQ, "RX counter: %d", wl->rx_counter);
--	}
-+			wl1251_debug(DEBUG_IRQ, "RX counter: %d",
-+				     wl->rx_counter);
-+		}
+ 	/* Active path selection protocol ID */
+-	memcpy(pos, sdata->u.mesh.mesh_pp_id, 4);
+-	pos += 4;
++	*pos++ = sdata->u.mesh.mesh_pp_id;
  
--	intr &= wl->intr_mask;
-+		intr &= wl->intr_mask;
+ 	/* Active path selection metric ID   */
+-	memcpy(pos, sdata->u.mesh.mesh_pm_id, 4);
+-	pos += 4;
++	*pos++ = sdata->u.mesh.mesh_pm_id;
  
--	if (intr == 0) {
--		wl1251_debug(DEBUG_IRQ, "INTR is 0");
--		wl1251_reg_write32(wl, ACX_REG_INTERRUPT_MASK,
--				   ~(wl->intr_mask));
-+		if (intr == 0) {
-+			wl1251_debug(DEBUG_IRQ, "INTR is 0");
-+			goto out_sleep;
-+		}
+ 	/* Congestion control mode identifier */
+-	memcpy(pos, sdata->u.mesh.mesh_cc_id, 4);
+-	pos += 4;
++	*pos++ = sdata->u.mesh.mesh_cc_id;
  
--		goto out_sleep;
--	}
-+		if (intr & WL1251_ACX_INTR_RX0_DATA) {
-+			wl1251_debug(DEBUG_IRQ, "WL1251_ACX_INTR_RX0_DATA");
-+			wl1251_rx(wl);
-+		}
+ 	/* Synchronization protocol identifier */
+-	memcpy(pos, sdata->u.mesh.mesh_sp_id, 4);
+-	pos += 4;
++	*pos++ = sdata->u.mesh.mesh_sp_id;
  
--	if (intr & WL1251_ACX_INTR_RX0_DATA) {
--		wl1251_debug(DEBUG_IRQ, "WL1251_ACX_INTR_RX0_DATA");
--		wl1251_rx(wl);
--	}
-+		if (intr & WL1251_ACX_INTR_RX1_DATA) {
-+			wl1251_debug(DEBUG_IRQ, "WL1251_ACX_INTR_RX1_DATA");
-+			wl1251_rx(wl);
-+		}
+ 	/* Authentication Protocol identifier */
+-	memcpy(pos, sdata->u.mesh.mesh_auth_id, 4);
+-	pos += 4;
++	*pos++ = sdata->u.mesh.mesh_auth_id;
  
--	if (intr & WL1251_ACX_INTR_RX1_DATA) {
--		wl1251_debug(DEBUG_IRQ, "WL1251_ACX_INTR_RX1_DATA");
--		wl1251_rx(wl);
--	}
-+		if (intr & WL1251_ACX_INTR_TX_RESULT) {
-+			wl1251_debug(DEBUG_IRQ, "WL1251_ACX_INTR_TX_RESULT");
-+			wl1251_tx_complete(wl);
-+		}
+ 	/* Mesh Formation Info */
+ 	memset(pos, 0x00, 1);
+@@ -289,8 +277,9 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
  
--	if (intr & WL1251_ACX_INTR_TX_RESULT) {
--		wl1251_debug(DEBUG_IRQ, "WL1251_ACX_INTR_TX_RESULT");
--		wl1251_tx_complete(wl);
--	}
-+		if (intr & (WL1251_ACX_INTR_EVENT_A |
-+			    WL1251_ACX_INTR_EVENT_B)) {
-+			wl1251_debug(DEBUG_IRQ, "WL1251_ACX_INTR_EVENT (0x%x)",
-+				     intr);
-+			if (intr & WL1251_ACX_INTR_EVENT_A)
-+				wl1251_event_handle(wl, 0);
-+			else
-+				wl1251_event_handle(wl, 1);
-+		}
+ 	/* Mesh capability */
+ 	sdata->u.mesh.accepting_plinks = mesh_plink_availables(sdata);
+-	*pos = CAPAB_FORWARDING;
+-	*pos++ |= sdata->u.mesh.accepting_plinks ? CAPAB_ACCEPT_PLINKS : 0x00;
++	*pos = MESHCONF_CAPAB_FORWARDING;
++	*pos++ |= sdata->u.mesh.accepting_plinks ?
++	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
+ 	*pos++ = 0x00;
  
--	if (intr & (WL1251_ACX_INTR_EVENT_A | WL1251_ACX_INTR_EVENT_B)) {
--		wl1251_debug(DEBUG_IRQ, "WL1251_ACX_INTR_EVENT (0x%x)", intr);
--		if (intr & WL1251_ACX_INTR_EVENT_A)
--			wl1251_event_handle(wl, 0);
--		else
--			wl1251_event_handle(wl, 1);
--	}
-+		if (intr & WL1251_ACX_INTR_INIT_COMPLETE)
-+			wl1251_debug(DEBUG_IRQ,
-+				     "WL1251_ACX_INTR_INIT_COMPLETE");
- 
--	if (intr & WL1251_ACX_INTR_INIT_COMPLETE)
--		wl1251_debug(DEBUG_IRQ, "WL1251_ACX_INTR_INIT_COMPLETE");
-+		intr = wl1251_reg_read32(wl, ACX_REG_INTERRUPT_CLEAR);
- 
--	wl1251_reg_write32(wl, ACX_REG_INTERRUPT_MASK, ~(wl->intr_mask));
-+	} while (intr && --ctr);
- 
- out_sleep:
-+	wl1251_reg_write32(wl, ACX_REG_INTERRUPT_MASK, ~(wl->intr_mask));
- 	wl1251_ps_elp_sleep(wl);
- 
- out:
+ 	return;
+-- 
+1.5.6.5
 
