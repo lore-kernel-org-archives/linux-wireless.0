@@ -1,235 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:62471 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753150AbZKHNkJ (ORCPT
+Received: from cpsmtpm-eml105.kpnxchange.com ([195.121.3.9]:56687 "EHLO
+	CPSMTPM-EML105.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758303AbZKJVmi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 08:40:09 -0500
-Received: by mail-ew0-f207.google.com with SMTP id 3so2371374ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 05:40:15 -0800 (PST)
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: linux-wireless@vger.kernel.org
+	Tue, 10 Nov 2009 16:42:38 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
 Cc: Ivo van Doorn <ivdoorn@gmail.com>,
 	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
 	Gertjan van Wingerde <gwingerde@gmail.com>
-Date: Sun, 08 Nov 2009 14:39:48 +0100
-Message-Id: <20091108133948.23584.12804.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091108133854.23584.86842.sendpatchset@localhost.localdomain>
-References: <20091108133854.23584.86842.sendpatchset@localhost.localdomain>
-Subject: [PATCH 8/9] rt2800: add eFuse EEPROM support code to rt2800lib
+Subject: [PATCH v2] rt2x00: Initialize rf302x RF values properly for rt2800pci.
+Date: Tue, 10 Nov 2009 22:42:40 +0100
+Message-Id: <1257889360-388-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] rt2800: add eFuse EEPROM support code to rt2800lib
+Ensure RF302x and RF2020 chipsets are handled properly in rt2800lib for the rt3090 chipset.
 
-eFuse EEPROM is used also by USB chips (i.e. RT3070)
-so move the needed code from rt2800pci to rt2800lib.
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 ---
- drivers/net/wireless/rt2x00/rt2800.h    |   29 +++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2800lib.c |   43 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2800lib.h |    2 +
- drivers/net/wireless/rt2x00/rt2800pci.c |   38 ++--------------------------
- drivers/net/wireless/rt2x00/rt2800pci.h |   29 ---------------------
- 5 files changed, 77 insertions(+), 64 deletions(-)
 
-Index: b/drivers/net/wireless/rt2x00/rt2800.h
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -362,6 +362,35 @@
- #define RF_CSR_CFG_BUSY			FIELD32(0x00020000)
- 
- /*
-+ * EFUSE_CSR: RT30x0 EEPROM
-+ */
-+#define EFUSE_CTRL			0x0580
-+#define EFUSE_CTRL_ADDRESS_IN		FIELD32(0x03fe0000)
-+#define EFUSE_CTRL_MODE			FIELD32(0x000000c0)
-+#define EFUSE_CTRL_KICK			FIELD32(0x40000000)
-+#define EFUSE_CTRL_PRESENT		FIELD32(0x80000000)
-+
-+/*
-+ * EFUSE_DATA0
-+ */
-+#define EFUSE_DATA0			0x0590
-+
-+/*
-+ * EFUSE_DATA1
-+ */
-+#define EFUSE_DATA1			0x0594
-+
-+/*
-+ * EFUSE_DATA2
-+ */
-+#define EFUSE_DATA2			0x0598
-+
-+/*
-+ * EFUSE_DATA3
-+ */
-+#define EFUSE_DATA3			0x059c
-+
-+/*
-  * MAC Control/Status Registers(CSR).
-  * Some values are set in TU, whereas 1 TU == 1024 us.
-  */
-Index: b/drivers/net/wireless/rt2x00/rt2800lib.c
-===================================================================
+Rebased to apply on top of Bart's second series of unification patches.
+
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   31 +++++++++++++------------------
+ 1 files changed, 13 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index a848cf5..75d3d00 100644
 --- a/drivers/net/wireless/rt2x00/rt2800lib.c
 +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1659,6 +1659,49 @@ int rt2800_init_rfcsr(struct rt2x00_dev 
- }
- EXPORT_SYMBOL_GPL(rt2800_init_rfcsr);
- 
-+int rt2800_efuse_detect(struct rt2x00_dev *rt2x00dev)
-+{
-+	u32 reg;
-+
-+	rt2800_register_read(rt2x00dev, EFUSE_CTRL, &reg);
-+
-+	return rt2x00_get_field32(reg, EFUSE_CTRL_PRESENT);
-+}
-+EXPORT_SYMBOL_GPL(rt2800_efuse_detect);
-+
-+static void rt2800_efuse_read(struct rt2x00_dev *rt2x00dev, unsigned int i)
-+{
-+	u32 reg;
-+
-+	rt2800_register_read(rt2x00dev, EFUSE_CTRL, &reg);
-+	rt2x00_set_field32(&reg, EFUSE_CTRL_ADDRESS_IN, i);
-+	rt2x00_set_field32(&reg, EFUSE_CTRL_MODE, 0);
-+	rt2x00_set_field32(&reg, EFUSE_CTRL_KICK, 1);
-+	rt2800_register_write(rt2x00dev, EFUSE_CTRL, reg);
-+
-+	/* Wait until the EEPROM has been loaded */
-+	rt2800_regbusy_read(rt2x00dev, EFUSE_CTRL, EFUSE_CTRL_KICK, &reg);
-+
-+	/* Apparently the data is read from end to start */
-+	rt2800_register_read(rt2x00dev, EFUSE_DATA3,
-+				(u32 *)&rt2x00dev->eeprom[i]);
-+	rt2800_register_read(rt2x00dev, EFUSE_DATA2,
-+				(u32 *)&rt2x00dev->eeprom[i + 2]);
-+	rt2800_register_read(rt2x00dev, EFUSE_DATA1,
-+				(u32 *)&rt2x00dev->eeprom[i + 4]);
-+	rt2800_register_read(rt2x00dev, EFUSE_DATA0,
-+				(u32 *)&rt2x00dev->eeprom[i + 6]);
-+}
-+
-+void rt2800_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
-+{
-+	unsigned int i;
-+
-+	for (i = 0; i < EEPROM_SIZE / sizeof(u16); i += 8)
-+		rt2800_efuse_read(rt2x00dev, i);
-+}
-+EXPORT_SYMBOL_GPL(rt2800_read_eeprom_efuse);
-+
- int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- {
- 	u16 word;
-Index: b/drivers/net/wireless/rt2x00/rt2800lib.h
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.h
-@@ -129,6 +129,8 @@ int rt2800_init_registers(struct rt2x00_
- int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev);
- int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev);
- 
-+int rt2800_efuse_detect(struct rt2x00_dev *rt2x00dev);
-+void rt2800_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev);
- int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev);
- int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev);
- int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev);
-Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -147,44 +147,12 @@ static void rt2800pci_read_eeprom_pci(st
- 
- static int rt2800pci_efuse_detect(struct rt2x00_dev *rt2x00dev)
- {
--	u32 reg;
--
--	rt2800_register_read(rt2x00dev, EFUSE_CTRL, &reg);
--
--	return rt2x00_get_field32(reg, EFUSE_CTRL_PRESENT);
-+	return rt2800_efuse_detect(rt2x00dev);
- }
- 
--static void rt2800pci_efuse_read(struct rt2x00_dev *rt2x00dev,
--				 unsigned int i)
--{
--	u32 reg;
--
--	rt2800_register_read(rt2x00dev, EFUSE_CTRL, &reg);
--	rt2x00_set_field32(&reg, EFUSE_CTRL_ADDRESS_IN, i);
--	rt2x00_set_field32(&reg, EFUSE_CTRL_MODE, 0);
--	rt2x00_set_field32(&reg, EFUSE_CTRL_KICK, 1);
--	rt2800_register_write(rt2x00dev, EFUSE_CTRL, reg);
--
--	/* Wait until the EEPROM has been loaded */
--	rt2800_regbusy_read(rt2x00dev, EFUSE_CTRL, EFUSE_CTRL_KICK, &reg);
--
--	/* Apparently the data is read from end to start */
--	rt2800_register_read(rt2x00dev, EFUSE_DATA3,
--				(u32 *)&rt2x00dev->eeprom[i]);
--	rt2800_register_read(rt2x00dev, EFUSE_DATA2,
--				(u32 *)&rt2x00dev->eeprom[i + 2]);
--	rt2800_register_read(rt2x00dev, EFUSE_DATA1,
--				(u32 *)&rt2x00dev->eeprom[i + 4]);
--	rt2800_register_read(rt2x00dev, EFUSE_DATA0,
--				(u32 *)&rt2x00dev->eeprom[i + 6]);
--}
--
--static void rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
-+static inline void rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
- {
--	unsigned int i;
--
--	for (i = 0; i < EEPROM_SIZE / sizeof(u16); i += 8)
--		rt2800pci_efuse_read(rt2x00dev, i);
-+	rt2800_read_eeprom_efuse(rt2x00dev);
- }
- #else
- static inline void rt2800pci_read_eeprom_pci(struct rt2x00_dev *rt2x00dev)
-Index: b/drivers/net/wireless/rt2x00/rt2800pci.h
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800pci.h
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.h
-@@ -56,35 +56,6 @@
- #define TX_DTX_IDX(__x)			TX_DTX_IDX0 + ((__x) * TX_QUEUE_REG_OFFSET)
- 
+@@ -1,5 +1,6 @@
  /*
-- * EFUSE_CSR: RT3090 EEPROM
-- */
--#define EFUSE_CTRL			0x0580
--#define EFUSE_CTRL_ADDRESS_IN		FIELD32(0x03fe0000)
--#define EFUSE_CTRL_MODE			FIELD32(0x000000c0)
--#define EFUSE_CTRL_KICK			FIELD32(0x40000000)
--#define EFUSE_CTRL_PRESENT		FIELD32(0x80000000)
--
--/*
-- * EFUSE_DATA0
-- */
--#define EFUSE_DATA0			0x0590
--
--/*
-- * EFUSE_DATA1
-- */
--#define EFUSE_DATA1			0x0594
--
--/*
-- * EFUSE_DATA2
-- */
--#define EFUSE_DATA2			0x0598
--
--/*
-- * EFUSE_DATA3
-- */
--#define EFUSE_DATA3			0x059c
--
--/*
-  * 8051 firmware image.
+ 	Copyright (C) 2009 Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
++	Copyright (C) 2009 Gertjan van Wingerde <gwingerde@gmail.com>
+ 
+ 	Based on the original rt2800pci.c and rt2800usb.c.
+ 	  Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>
+@@ -806,8 +807,9 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 	unsigned int tx_pin;
+ 	u8 bbp;
+ 
+-	if (rt2x00_rt(&rt2x00dev->chip, RT3070) &&	
+-           (rt2x00_rf(&rt2x00dev->chip, RF2020) ||
++	if ((rt2x00_rt(&rt2x00dev->chip, RT3070) ||
++	     rt2x00_rt(&rt2x00dev->chip, RT3090)) &&
++	    (rt2x00_rf(&rt2x00dev->chip, RF2020) ||
+ 	     rt2x00_rf(&rt2x00dev->chip, RF3020) ||
+ 	     rt2x00_rf(&rt2x00dev->chip, RF3021) ||
+ 	     rt2x00_rf(&rt2x00dev->chip, RF3022)))
+@@ -1989,7 +1991,7 @@ static const struct rf_channel rf_vals[] = {
+  * RF value list for rt3070
+  * Supports: 2.4 GHz
   */
- #define FIRMWARE_RT2860			"rt2860.bin"
+-static const struct rf_channel rf_vals_3070[] = {
++static const struct rf_channel rf_vals_302x[] = {
+ 	{1,  241, 2, 2 },
+ 	{2,  241, 2, 7 },
+ 	{3,  242, 2, 2 },
+@@ -2046,26 +2048,19 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 
+ 	if (rt2x00_rf(chip, RF2820) ||
+ 	    rt2x00_rf(chip, RF2720) ||
+-	    (rt2x00_intf_is_pci(rt2x00dev) &&
+-	     (rt2x00_rf(chip, RF3020) ||
+-	      rt2x00_rf(chip, RF3021) ||
+-	      rt2x00_rf(chip, RF3022) ||
+-	      rt2x00_rf(chip, RF2020) ||
+-	      rt2x00_rf(chip, RF3052)))) {
++	    (rt2x00_intf_is_pci(rt2x00dev) && rt2x00_rf(chip, RF3052))) {
+ 		spec->num_channels = 14;
+ 		spec->channels = rf_vals;
+-	} else if (rt2x00_rf(chip, RF2850) ||
+-		   rt2x00_rf(chip, RF2750)) {
++	} else if (rt2x00_rf(chip, RF2850) || rt2x00_rf(chip, RF2750)) {
+ 		spec->supported_bands |= SUPPORT_BAND_5GHZ;
+ 		spec->num_channels = ARRAY_SIZE(rf_vals);
+ 		spec->channels = rf_vals;
+-	} else if (rt2x00_intf_is_usb(rt2x00dev) &&
+-		    (rt2x00_rf(chip, RF3020) ||
+-		     rt2x00_rf(chip, RF2020) ||
+-		     rt2x00_rf(chip, RF3021) ||
+-		     rt2x00_rf(chip, RF3022))) {
+-		spec->num_channels = ARRAY_SIZE(rf_vals_3070);
+-		spec->channels = rf_vals_3070;
++	} else if (rt2x00_rf(chip, RF3020) ||
++		   rt2x00_rf(chip, RF2020) ||
++		   rt2x00_rf(chip, RF3021) ||
++		   rt2x00_rf(chip, RF3022)) {
++		spec->num_channels = ARRAY_SIZE(rf_vals_302x);
++		spec->channels = rf_vals_302x;
+ 	}
+ 
+ 	/*
+-- 
+1.6.5.2
+
