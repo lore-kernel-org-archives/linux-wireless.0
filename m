@@ -1,44 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:49688 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755749AbZKIMuF (ORCPT
+Received: from netsys.kaist.ac.kr ([143.248.239.50]:43835 "EHLO
+	netsys.kaist.ac.kr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753324AbZKJQGa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 07:50:05 -0500
-Date: Mon, 9 Nov 2009 13:50:16 +0100
-From: Alexander Sack <asac@ubuntu.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	networkmanager-list <networkmanager-list@gnome.org>
-Subject: Re: Incorrect signal levels reported using wpa_supplicant's
- driver_nl80211
-Message-ID: <20091109125016.GK1579@jwsdot.com>
-References: <1256953837.9681.13.camel@maxim-laptop>
- <1257190833.1027.4.camel@localhost.localdomain>
+	Tue, 10 Nov 2009 11:06:30 -0500
+From: "Jinsung Lee" <ljs@netsys.kaist.ac.kr>
+To: "'Johannes Berg'" <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] iw: setting txq parameters
+Date: Wed, 11 Nov 2009 01:06:17 +0900
+Message-ID: <01e101ca621f$bc5ead30$351c0790$@kaist.ac.kr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1257190833.1027.4.camel@localhost.localdomain>
+Content-Type: text/plain;
+	charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 02, 2009 at 11:40:33AM -0800, Dan Williams wrote:
-> On Sat, 2009-10-31 at 03:50 +0200, Maxim Levitsky wrote:
-> > Sorry for cross-posting, but this issue really spans all three systems.
-> > 
-> > I anylized why I get 100% quality on all access points except currently
-> > connected, when I used driver_nl80211 of wpa_supplcant.
-> > 
-> > First, when NetworkManager plans to switch to this driver?
-> 
-> Soon.  We've got some patches for this, but we'll also need tons of
-> testing.  The WEXT stuff is pretty baked while nl80211 is still under
-> some flux.  But of course the only way we bake nl80211 is by switching
-> to it...
-
-iirc, we currently we hardcode wext in NM code. How about adding a keyfile
-config that users could use to switch to nl80211 until we feel confident
-that it's good enough for everyone?
-
- - Alexander
+VGhpcyBwYXRjaCBlbmFibGVzIHRvIHNldCB0eHEgcGFyYW1zIHN1Y2ggYXMgYWlmcywgY3dtaW4s
+IGN3bWF4IGFuZCB0eG9wIGZvcg0KZWFjaCBxdWV1ZSBmb3IgVk8sIFZJLCBCRSwgQksgZGlyZWN0
+bHkgdXNpbmcgk2l3lCBjb21tYW5kLg0KDQoNClNpZ25lZC1vZmYtYnk6IEppbnN1bmcgTGVlIDxs
+anNAbmV0c3lzLmthaXN0LmFjLmtyPg0KLS0tDQoNCkluZGV4OiBpdy0wLjkuMTcvcGh5LmMNCj09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT0NCg0KKioqIGEvaXctMC45LjE3L3BoeS5joKAgMjAwOS0wOC0yNiAxODo0MTo0MS4w
+MDAwMDAwMDAgKzA5MDANCi0tLSBiL2l3LTAuOS4xNy9waHkuY6CgIDIwMDktMTEtMTAgMjM6NTM6
+NDkuMDAwMDAwMDAwICswOTAwDQoqKioqKioqKioqKioqKiogc3RhdGljIGludCBoYW5kbGVfcnRz
+KHN0cnVjdCBubDgwMjExX3N0YQ0KKioqIDE0MCwxNDIgKioqKg0KLS0tIDE0MCwyMTYgLS0tLQ0K
+oCBDT01NQU5EKHNldCwgcnRzLCAiPHJ0cyB0aHJlc2hvbGR8b2ZmPiIsDQqgoKCgoKCgIE5MODAy
+MTFfQ01EX1NFVF9XSVBIWSwgMCwgQ0lCX1BIWSwgaGFuZGxlX3J0cywNCqCgoKCgoKAgIlNldCBy
+dHMgdGhyZXNob2xkLiIpOw0KKw0KKyBzdGF0aWMgaW50IGhhbmRsZV90eHFfcGFyYW1zKHN0cnVj
+dCBubDgwMjExX3N0YXRlICpzdGF0ZSwNCiugoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAgc3Ry
+dWN0IG5sX2NiICpjYiwgc3RydWN0IG5sX21zZyAqbXNnLA0KK6CgoKCgoKCgoKCgoKCgoKCgoKCg
+oKCgoKCgoCBpbnQgYXJnYywgY2hhciAqKmFyZ3YpDQorIHsNCiugoKCgoKAgX191OCBxdWV1ZSwg
+YWlmczsNCiugoKCgoKAgX191MTYgdHhvcCwgY3dtaW4sIGN3bWF4Ow0KKw0KK6CgoKCgoCBzdHJ1
+Y3QgbmxhdHRyICpubF90eHFzOw0KKw0KK6CgoKCgoCBpZiAoYXJnYyAhPSAxKQ0KK6CgoKCgoKCg
+oKCgoKCgIHJldHVybiAxOw0KKw0KK6CgoKCgoCBpZiAoc3RyY21wKCJvZmYiLCBhcmd2WzBdKSA9
+PSAwKQ0KK6CgoKCgoKCgoKCgoKCgIHJldHVybiAwOw0KKw0KKw0KK6CgoKCgoCBxdWV1ZSA9IHN0
+cnRvdWwoYXJndlswXSwgTlVMTCwgMTApOw0KKw0KK6CgoKCgoCBzd2l0Y2gocXVldWUpIHsNCiug
+oKCgoKCgIGNhc2UgMDoNCiugoKCgoKCgoKCgoKCgoCBwcmludGYoImNvbmZpZ3VyaW5nIFRYIHF1
+ZXVlIGZvciBWT1xuIik7DQoroKCgoKCgoKCgoKCgoKAgdHhvcCA9IDA7DQoroKCgoKCgoKCgoKCg
+oKAgY3dtaW4gPSA3Ow0KK6CgoKCgoKCgoKCgoKCgIGN3bWF4ID0gMTU7DQoroKCgoKCgoKCgoKCg
+oKAgYWlmcyA9IDI7DQoroKCgoKCgoKCgoKCgoKAgYnJlYWs7DQoroKCgoKCgoCBjYXNlIDE6DQor
+oKCgoKCgoKCgoKCgoKAgcHJpbnRmKCJjb25maWd1cmluZyBUWCBxdWV1ZSBmb3IgVklcbiIpOw0K
+K6CgoKCgoKCgoKCgoKCgIHR4b3AgPSAwOw0KK6CgoKCgoKCgoKCgoKCgIGN3bWluID0gMTU7DQor
+oKCgoKCgoKCgoKCgoKAgY3dtYXggPSAzMTsNCiugoKCgoKCgoKCgoKCgoCBhaWZzID0gMjsNCiug
+oKCgoKCgoKCgoKCgoCBicmVhazsNCiugoKCgoKCgIGNhc2UgMjoNCiugoKCgoKCgoKCgoKCgoCBw
+cmludGYoImNvbmZpZ3VyaW5nIFRYIHF1ZXVlIGZvciBCRVxuIik7DQoroKCgoKCgoKCgoKCgoKAg
+dHhvcCA9IDA7DQoroKCgoKCgoKCgoKCgoKAgY3dtaW4gPSAzMTsNCiugoKCgoKCgoKCgoKCgoCBj
+d21heCA9IDEwMjM7DQoroKCgoKCgoKCgoKCgoKAgYWlmcyA9IDM7DQoroKCgoKCgoKCgoKCgoKAg
+YnJlYWs7DQoroKCgoKCgoCBjYXNlIDM6DQoroKCgoKCgoKCgoKCgoKAgcHJpbnRmKCJjb25maWd1
+cmluZyBUWCBxdWV1ZSBmb3IgQktcbiIpOw0KK6CgoKCgoKCgoKCgoKCgIHR4b3AgPSAwOw0KK6Cg
+oKCgoKCgoKCgoKCgIGN3bWluID0gMzE7DQoroKCgoKCgoKCgoKCgoKAgY3dtYXggPSAxMDIzOw0K
+K6CgoKCgoKCgoKCgoKCgIGFpZnMgPSA3Ow0KK6CgoKCgoKCgoKCgoKCgIGJyZWFrOw0KK6CgoKCg
+oKAgZGVmYXVsdDoNCiugoKCgoKCgoKCgoKCgoCBwcmludGYoInN3aXRjaCgpIGVycm9yXG4iKTsN
+CiugoKCgoKCgoKCgoKCgoCByZXR1cm4gLTE7DQoroKCgoKCgIH0NCisNCiugoKCgoKAgbmxfdHhx
+cyA9IG5sYV9uZXN0X3N0YXJ0KG1zZywgTkw4MDIxMV9BVFRSX1dJUEhZX1RYUV9QQVJBTVMpOw0K
+K6CgoKCgoCBpZiAoIW5sX3R4cXMpDQoroKCgoKCgoKCgoKCgoKAgcmV0dXJuIC1FTk9CVUZTOw0K
+Kw0KK6CgoKCgoKCgoKCgoKCgIHN0cnVjdCBubGF0dHIgKm5sX3R4cSA9IG5sYV9uZXN0X3N0YXJ0
+KG1zZywgcXVldWUpOw0KK6CgoKCgoKCgoKCgoKCgIE5MQV9QVVRfVTgobXNnLCBOTDgwMjExX1RY
+UV9BVFRSX1FVRVVFLCBxdWV1ZSk7DQoroKCgoKCgoKCgoKCgoKAgTkxBX1BVVF9VMTYobXNnLCBO
+TDgwMjExX1RYUV9BVFRSX1RYT1AsIHR4b3ApOw0KK6CgoKCgoKCgoKCgoKCgIE5MQV9QVVRfVTE2
+KG1zZywgTkw4MDIxMV9UWFFfQVRUUl9DV01JTiwgY3dtaW4pOw0KK6CgoKCgoKCgoKCgoKCgIE5M
+QV9QVVRfVTE2KG1zZywgTkw4MDIxMV9UWFFfQVRUUl9DV01BWCwgY3dtYXgpOw0KK6CgoKCgoKCg
+oKCgoKCgIE5MQV9QVVRfVTgobXNnLCBOTDgwMjExX1RYUV9BVFRSX0FJRlMsIGFpZnMpOw0KK6Cg
+oKCgoKCgoKCgoKCgIG5sYV9uZXN0X2VuZChtc2csIG5sX3R4cSk7DQorDQoroKCgoKCgIG5sYV9u
+ZXN0X2VuZChtc2csIG5sX3R4cXMpOw0KKw0KK6CgoKCgoCByZXR1cm4gMDsNCiugIG5sYV9wdXRf
+ZmFpbHVyZToNCiugoKCgoKAgcmV0dXJuIC1FTk9CVUZTOw0KKyB9DQorIENPTU1BTkQoc2V0LCB0
+eHFfcGFyYW1zLCAiPHF1ZXVlIHR5cGUgaW4gWzAsMSwyLDNdfG9mZj4iLA0KK6CgoKCgoCBOTDgw
+MjExX0NNRF9TRVRfV0lQSFksIDAsIENJQl9QSFksIGhhbmRsZV90eHFfcGFyYW1zLA0KK6CgoKCg
+oCAiU2V0IHR4cSBwYXJhbWV0ZXJzLiIpOw0KDQoNCg==
 
