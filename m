@@ -1,68 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f226.google.com ([209.85.217.226]:58846 "EHLO
-	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754753AbZKMB6n convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:47436 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753378AbZKJKV0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 20:58:43 -0500
-Received: by gxk26 with SMTP id 26so2663802gxk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 17:58:49 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1258051800.2347.127.camel@localhost.localdomain>
-References: <1d91afb90911112231n54696c5fh950ba0102740d444@mail.gmail.com>
-	 <45e8e6c40911112302s7c5c3e5cq496289512410ecba@mail.gmail.com>
-	 <200911120847.44150.sturmflut@lieberbiber.de>
-	 <1258051444.2347.124.camel@localhost.localdomain>
-	 <1258051800.2347.127.camel@localhost.localdomain>
-Date: Fri, 13 Nov 2009 09:58:48 +0800
-Message-ID: <1d91afb90911121758o6109145cl23894afda8bcbee2@mail.gmail.com>
-Subject: Re: Looking for the datasheet of zd1211rw...
-From: tomas zheng <tomaswlan.zheng@gmail.com>
-To: Dan Williams <dcbw@redhat.com>,
-	Simon Raffeiner <sturmflut@lieberbiber.de>,
-	Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 10 Nov 2009 05:21:26 -0500
+Subject: Re: [RFC] cfg80211: survey report capability
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <holgerschurig@googlemail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1257848249.7037.30.camel@johannes.local>
+References: <m3tyx2u2we.wl%holgerschurig@gmail.com>
+	 <1257848249.7037.30.camel@johannes.local>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-WPOtwZ4641iuVsTgDB4P"
+Date: Tue, 10 Nov 2009 11:20:59 +0100
+Message-ID: <1257848459.7037.32.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan and Guys,
 
-Thanks very much for your information.
-Very appreciated.
-I will try this today.
+--=-WPOtwZ4641iuVsTgDB4P
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-But why I can not find the detail datasheet about 88W83xxxx on
-http://www.marvell.com and some googling?
-Anyone happened has it? Or , where should I go if I want it?
+On Tue, 2009-11-10 at 11:17 +0100, Johannes Berg wrote:
 
-Thanks,
+> Right now you're retrieving a single channel but can't even control
+> which one. Maybe that's useful functionality in addition to dump when
+> you _can_ ask for information on a specific channel, but that'd have to
+> pass in the frequency from userspace.
+>=20
+> Retrieving all data like you've implemented (though I guess you forgot
+> the multiple channels case) should be a dump. Maybe that's sufficient
+> since there won't be huge amounts of data and userspace can just pick
+> out what it needs from the dump.
 
-K T
+And maybe the get_survey() driver call can actually pass in the channel
+pointer ... then the drivers/mac80211 don't need to implement both
+get_survey() and dump_survey() since cfg80211 knows the valid channel
+list anyway. But that means iterating over the channel list all the
+time, even if the driver can only return values for a single channel.
 
+johannes
 
-On Fri, Nov 13, 2009 at 2:50 AM, Dan Williams <dcbw@redhat.com> wrote:
-> On Thu, 2009-11-12 at 10:44 -0800, Dan Williams wrote:
->> On Thu, 2009-11-12 at 08:47 +0100, Simon Raffeiner wrote:
->> > Am Donnerstag, 12. November 2009 08:02:36 schrieben Sie:
->> >
->> > > It looks like a Marvell device (and therefore not a zd1211) from what
->> > > you posted.
->> >
->> > It is a Marvell Libertas device, but it seems the USB ID is not claimed by the existing drivers ("libertas" and "libertas_tf").
->>
->> It's a softmac device, likely an 8335-based card.  The 'mwl8k' driver
->> upstream is the closest match, but mwl8k doesn't yet have support for
->> the older softmac cards like the 8335 or 8361/8362 TopDog series.
->
-> I lie, it's a usb8338 (W833810).  There's code for this driver
-> "around" (mrvl_cb82 is the name) but it's the old vendor driver based on
-> net80211:
->
-> http://git.kernel.org/?p=linux/kernel/git/linville/marvell.git;a=summary
->
-> drivers/net/wireless/mrvl_cb82/driver/mwl_usb.c
->
-> Dan
->
->
->
+--=-WPOtwZ4641iuVsTgDB4P
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK+T6HAAoJEODzc/N7+QmaEiwP/RfNTwlQL+O+1xIhf4GMdCfV
+leorhH92gbxUVQOwCgOUFUhH3lzdckHw9s8fP3/yDlzoS9XQESZfW6lNvmzroJs8
+gRR8OST3DDBhxVyixa/Eh8kMGvzO9JfoTSwFI/J9sXkNaldGTsKFDU7fsBHuTxKM
+/QvPYb54iuVlUZ8eJQAvVcfmoTf0RAwshTO5fZUz8aA3jVa5UN50H3tpOgtp1lFT
+peIAXJr6l6UgYx2ZEICOw7QhFYwFxIM6PzvQs/bjQF0d+iqaW5uY9j9/nqFtk1yH
+DJs3seAhVoXwSiOf4SEkvor4AVMrfwbF/9kzHgZ3YApswl0QDYDVQG/KL0DcVUhP
+MH39wh4P5uyck2/Zbx2TEkkAo/42efWWjS9tCEUB1H+q1yFsla/R6eltp/G/+Ew1
+Yku6kLV6Jdpd0ExOCiWa7U2IjZOXE4JQacSwHs2lCn6Fktf+dd0WV34R8YEF/i3M
+xFdwGmx9W+UgGijWLeMf+h8in9kv+TtGbhpkQQof/vVFAIgpyLDSlD3qiS6XYs4C
+ppMl19jr9ejHzCvb8hD/wkWG+0Dz/Bed//9b9PmoZRPDiuucyiFAD+0D2CyDO0pH
+LQMORKe3CeTfeKs//V1ZIpK8fRdN7Wd5BuBc20y5GQNUc244TaScBQGojRP+Hgi1
+MM9UyaM+uLpUDHcjwKXS
+=P8qx
+-----END PGP SIGNATURE-----
+
+--=-WPOtwZ4641iuVsTgDB4P--
+
