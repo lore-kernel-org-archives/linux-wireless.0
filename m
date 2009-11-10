@@ -1,114 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37443 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:43395 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754009AbZKIQuu (ORCPT
+	with ESMTP id S1753212AbZKJKR4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 11:50:50 -0500
-Subject: Re: [PATCH]: setting bit-rate when injecting
+	Tue, 10 Nov 2009 05:17:56 -0500
+Subject: Re: [RFC] cfg80211: survey report capability
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: linux-wireless@vger.kernel.org, technoboy85@gmail.com
-In-Reply-To: <f74418680911090807g4e83a15cr2ce21ea21a86ea23@mail.gmail.com>
-References: <f74418680911090807g4e83a15cr2ce21ea21a86ea23@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Zke4RWCk1AIbtasJ/Axr"
-Date: Mon, 09 Nov 2009 17:50:22 +0100
-Message-ID: <1257785423.29454.177.camel@johannes.local>
+To: Holger Schurig <holgerschurig@googlemail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <m3tyx2u2we.wl%holgerschurig@gmail.com>
+References: <m3tyx2u2we.wl%holgerschurig@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-PvnOBv97Bhtfw57wBVSo"
+Date: Tue, 10 Nov 2009 11:17:29 +0100
+Message-ID: <1257848249.7037.30.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-Zke4RWCk1AIbtasJ/Axr
+--=-PvnOBv97Bhtfw57wBVSo
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2009-11-09 at 17:07 +0100, Lorenzo Bianconi wrote:
-> I and my Matteo Croce made a patch which adds the capability
-> to set the bit-rate when injecting in monitor mode.
->=20
-> The code parse the bit-rate field from the radiotap header and passes the=
- info
-> to the struct ieee80211_tx_info
->=20
-> --- a/net/mac80211/tx.c	2009-11-09 16:41:15.000000000 +0100
-> +++ b/net/mac80211/tx.c	2009-11-09 16:50:12.000000000 +0100
-> @@ -505,6 +505,9 @@
->  	struct ieee80211_tx_rate_control txrc;
->  	u32 sta_flags;
->=20
-> +	if (info->control.vif->type =3D=3D NL80211_IFTYPE_MONITOR)
-> +		return TX_CONTINUE;
+On Tue, 2009-11-10 at 10:48 +0100, Holger Schurig wrote:
 
-Sorry, can't do that, we need rate control for packets that are injected
-from hostapd.
+> +/** enum survey_info_flags - survey information flags
 
-> -	int ret =3D ieee80211_radiotap_iterator_init(&iterator, rthdr, skb->len=
-);
-> +	int i, ret =3D ieee80211_radiotap_iterator_init(&iterator,
-> +			rthdr, skb->len);
-> +	struct ieee80211_rate *rates;
+Nit: missing newline
 
-A separate "int i;" would be a lot cleaner I think.
+> + *
+> + * Used by the driver to indicate which info in &struct survey_info
+> + * it has filled in during the get_survey().
+> + */
+> +enum survey_info_flags {
+> +	SURVEY_INFO_CHANNEL =3D 1<<0,
+> +	SURVEY_INFO_NOISE =3D 1<<1,
 
->  	sband =3D tx->local->hw.wiphy->bands[tx->channel->band];
->=20
-> @@ -979,6 +984,25 @@
->  				tx->flags |=3D IEEE80211_TX_FRAGMENTED;
->  			break;
->=20
-> +		case IEEE80211_RADIOTAP_RATE:
-> +			rates =3D sband->bitrates;
-> +			for (i =3D 0; i < sband->n_bitrates; i++) {
-> +				if (rates[i].bitrate/5 =3D=3D *iterator.this_arg) {
-> +					info->control.rates[0].idx =3D i;
-> +					break;
-> +				}
-> +			}
-> +			info->control.rates[0].flags =3D 0;
+A response w/o a channel seems entirely useless, shouldn't we just
+require a channel?
 
-This leaves the number of retries at ... 0. That makes no sense. What
-driver are you using that this actually works with?!
+> + * @filled: bitflag of flags from &enum survey_info_flags
+> + * @noise: channel noise in mBm
+> + * @channel: the channel this survey record reports
+> + *
+> + * This structure can later be expanded with things like
+> + * channel duty cycles etc.
+> + */
+> +struct survey_info {
+> +	u32 filled;
+> +	struct ieee80211_channel *channel;
+> +	s8 noise;
 
-> @@ -1518,7 +1542,6 @@
->  					 struct net_device *dev)
->  {
->  	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
-> -	struct ieee80211_channel *chan =3D local->hw.conf.channel;
->  	struct ieee80211_radiotap_header *prthdr =3D
->  		(struct ieee80211_radiotap_header *)skb->data;
->  	struct ieee80211_tx_info *info =3D IEEE80211_SKB_CB(skb);
-> @@ -1540,9 +1563,6 @@
->  	 * radar detection by itself. We can do that later by adding a
->  	 * monitor flag interfaces used for AP support.
->  	 */
-> -	if ((chan->flags & (IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_RADAR |
-> -	     IEEE80211_CHAN_PASSIVE_SCAN)))
-> -		goto fail;
+For mBm, an s8 won't be enough I think? -90 dBm =3D=3D -9000 mBm?
 
-We don't want to break regulatory rules either ...
+> +static void get_survey_callback(void *c, struct survey_info *params)
+> +{
+> +	struct get_survey_cookie *cookie =3D c;
+> +
+> +	if (params->filled & SURVEY_INFO_CHANNEL)
+> +		if (nl80211_msg_put_channel(cookie->msg, params->channel))
+> +			goto nla_put_failure;
+> +
+> +	if (params->filled & SURVEY_INFO_NOISE)
+> +		NLA_PUT_U32(cookie->msg, NL80211_ATTR_NOISE,
+> +			params->noise);
+> +
+> + nla_put_failure:
+> +	cookie->error =3D 1;
+> +}
+
+You need to construct a nested attribute here and put the values into it
+so that the callback can be invoked multiple times, once for each
+channel. OTOH, when there are many many channels that will overrun the
+message size at some point and we'll pull our hair (like we're doing now
+with the channel list in phy info) ... so I'd prefer you move this to a
+dump-style model like dump_stations has.
+
+Right now you're retrieving a single channel but can't even control
+which one. Maybe that's useful functionality in addition to dump when
+you _can_ ask for information on a specific channel, but that'd have to
+pass in the frequency from userspace.
+
+Retrieving all data like you've implemented (though I guess you forgot
+the multiple channels case) should be a dump. Maybe that's sufficient
+since there won't be huge amounts of data and userspace can just pick
+out what it needs from the dump.
 
 johannes
 
---=-Zke4RWCk1AIbtasJ/Axr
+--=-PvnOBv97Bhtfw57wBVSo
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJK+EhLAAoJEODzc/N7+QmaEDYQAJS+iiksdBBqiyS/4/EB78IG
-fwyqfSuxQURVCztQgIBhawIfyS5MfS3vnuurEzMCbYBWd10OEIoeF46b+9Z4EnCA
-hiWzJ8T8g5BI6mZTD9HrOg6F9993b11Gn4KWk+MTX5jOIuL2hwaqB5Rf4RH526jg
-M0Os3yzn/1ACx9TVqJGWL1J4H58MawaS5Z+8oZSHmnxR4Iwm72Vb0fz1HmJ6s6wL
-iH+qm9G1C8eSgVhmw2rO2e3A8fnXsDaroPfag4VlKkrFuddaiuF6ZzpVdMT3/baZ
-Kmsfd2zhhHFGK5dpcNHPG3nxPc3N9vHLqK8t8YHCP3Dq7Lb8ItODmJty77CUlekI
-VquzrHGzyoBUtTxiSDPS7uSISdNsqFRI/vVPEgb/oef4m5b8dCWAQ+1nMVJAZ0op
-vD3oRa3D+g0UODdohxOAQjn8kvBQ7samcafiJ3IYa2UpAxhdzc12C2EpTQp9IlVN
-OAnZ5UYU2KgwLg1FV1xe0BbmZFY7xikSkHQG6OsdXIDhBpx4XH11QT+0E8sh3G8s
-TEF0yJkCHw0T9FXuDV0ShRo4JjeZhVQItOWUE1qTVe/+6jkItIa1NwoSG08Sv1W9
-lptNtNqrfAYK9VLKqcFD/32FfSai4WJZwKz9huNOlN2jDZM4NxIzGeTC0HuLph1m
-0a9MHEsU8C60c3e7TUJM
-=SJfE
+iQIcBAABAgAGBQJK+T20AAoJEODzc/N7+QmaX3MQAL1th7bDx+fx4VQY72bV+Bn1
+nVMpVYIrF1HXJAH/kOHydZ1mNmvzd9TKN6R4poA3jkYddwOo2nuXOGMrpptctyBr
+u0bQ1PmsqPansQwtkmElN2jTrfmH4yUjXNKmbC+ArZrmad8SYgQgJ4jpoVphp63K
+r6Q3IugnQZWL+9cySPLas+4eL60IMkCqZIj8gg2JO8Gma9BbkK2oKxv9md8eaANE
+2G5n6zBwaaUHf7QDS4+QrtYXu9i3ZKUJwx6e9S9Q3Ox1S0El2M3ZwEV+M16KUiLb
+Ny+iYZKMUvu8lHhEVVgWZ390zX7HJRsjo9MIoxpbzLBXT02HdRIsLmEL0czJEhke
+QCaTYT6dStHq/+VgO2Jot3DY046Fb6Fo9cIBwD2D7qOpIh3bDn0gHeTavssnqRHF
+RLAy9AwpIEf5BggzLbZgNcS76g3JPvnuBI8dJrP5nyiQGtr9QXU25CDKNPNQfCcg
+HsQ0EYAFXh5MMiCPHEi8sz4gEjpi43X42SVkFIpdTnAiNwlq6ybWUe+m1Z531mrr
+qnyWLMgWta17EeTqNYqP0dlTa6dp6fL1B00dOE1dRMmZD/lzP05Zp9qEpzcRkDaB
+tp0wbd9DZyZJPr3aP17eYxyoniB/o57whsc5CL+TGmBkm+dIUxKPvG3JjKgeU7tQ
+wlxOmhUDrv3NWC2HFi3B
+=M9xN
 -----END PGP SIGNATURE-----
 
---=-Zke4RWCk1AIbtasJ/Axr--
+--=-PvnOBv97Bhtfw57wBVSo--
 
