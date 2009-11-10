@@ -1,89 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:31482 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932254AbZKMT4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 14:56:44 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:39412 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752816AbZKJNsC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Nov 2009 08:48:02 -0500
+Received: by ewy3 with SMTP id 3so29148ewy.37
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2009 05:48:06 -0800 (PST)
+Date: Tue, 10 Nov 2009 13:48:02 +0000
+From: Rui Paulo <rpaulo@gmail.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 09/16] iwlwifi: align tx/rx statistics debugfs format
-Date: Fri, 13 Nov 2009 11:56:31 -0800
-Message-Id: <1258142198-3223-10-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
-References: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v3 11/20] mac80211: implement RANN processing and forwarding
+Message-ID: <20091110134802.GA55552@asus-p5b.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Process the RANN (Root Annoucement) Frame and try to find the HWMP
+root station by sending a PREQ.
 
-Align the format for tx_statistics and rx_statistics debugfs output for
-better readability
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Rui Paulo <rpaulo@gmail.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
+Tested-by: Brian Cavagnolo <brian@cozybit.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |   13 +++++++------
- 1 files changed, 7 insertions(+), 6 deletions(-)
+ include/linux/ieee80211.h  |   15 ++++++++
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mesh_hwmp.c   |   79 +++++++++++++++++++++++++++++++++++++++----
+ net/mac80211/util.c        |    4 ++
+ 4 files changed, 91 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 45a5edd..ba9c96f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -131,21 +131,22 @@ static ssize_t iwl_dbgfs_tx_statistics_read(struct file *file,
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 50c684d..e6cd039 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -554,6 +554,20 @@ struct ieee80211_tim_ie {
+ 	u8 virtual_map[1];
+ } __attribute__ ((packed));
  
- 	int cnt;
- 	ssize_t ret;
--	const size_t bufsz = 100 + sizeof(char) * 24 * (MANAGEMENT_MAX + CONTROL_MAX);
-+	const size_t bufsz = 100 +
-+		sizeof(char) * 50 * (MANAGEMENT_MAX + CONTROL_MAX);
- 	buf = kzalloc(bufsz, GFP_KERNEL);
- 	if (!buf)
- 		return -ENOMEM;
- 	pos += scnprintf(buf + pos, bufsz - pos, "Management:\n");
- 	for (cnt = 0; cnt < MANAGEMENT_MAX; cnt++) {
- 		pos += scnprintf(buf + pos, bufsz - pos,
--				 "\t%s\t\t: %u\n",
-+				 "\t%25s\t\t: %u\n",
- 				 get_mgmt_string(cnt),
- 				 priv->tx_stats.mgmt[cnt]);
++/**
++ * struct ieee80211_rann_ie
++ *
++ * This structure refers to "Root Announcement information element"
++ */
++struct ieee80211_rann_ie {
++	u8 rann_flags;
++	u8 rann_hopcount;
++	u8 rann_ttl;
++	u8 rann_addr[ETH_ALEN];
++	u32 rann_seq;
++	u32 rann_metric;
++} __attribute__ ((packed));
++
+ #define WLAN_SA_QUERY_TR_ID_LEN 2
+ 
+ struct ieee80211_mgmt {
+@@ -1070,6 +1084,7 @@ enum ieee80211_eid {
+ 	WLAN_EID_PREQ = 68,
+ 	WLAN_EID_PREP = 69,
+ 	WLAN_EID_PERR = 70,
++	WLAN_EID_RANN = 49,	/* compatible with FreeBSD */
+ 	/* 802.11h */
+ 	WLAN_EID_PWR_CONSTRAINT = 32,
+ 	WLAN_EID_PWR_CAPABILITY = 33,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 1f4f88a..f6fdea6 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -799,6 +799,7 @@ struct ieee802_11_elems {
+ 	u8 *preq;
+ 	u8 *prep;
+ 	u8 *perr;
++	struct ieee80211_rann_ie *rann;
+ 	u8 *ch_switch_elem;
+ 	u8 *country_elem;
+ 	u8 *pwr_constr_elem;
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index db1a330..7b9dd87 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -28,6 +28,8 @@
+ /* Reply and forward */
+ #define MP_F_RF	0x2
+ 
++static void mesh_queue_preq(struct mesh_path *, u8);
++
+ static inline u32 u32_field_get(u8 *preq_elem, int offset, bool ae)
+ {
+ 	if (ae)
+@@ -81,7 +83,8 @@ static inline u32 u32_field_get(u8 *preq_elem, int offset, bool ae)
+ enum mpath_frame_type {
+ 	MPATH_PREQ = 0,
+ 	MPATH_PREP,
+-	MPATH_PERR
++	MPATH_PERR,
++	MPATH_RANN
+ };
+ 
+ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+@@ -109,7 +112,8 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+ 
+ 	memcpy(mgmt->da, da, ETH_ALEN);
+ 	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
+-	/* BSSID is left zeroed, wildcard value */
++	/* BSSID == SA */
++	memcpy(mgmt->bssid, sdata->dev->dev_addr, ETH_ALEN);
+ 	mgmt->u.action.category = MESH_PATH_SEL_CATEGORY;
+ 	mgmt->u.action.u.mesh_action.action_code = MESH_PATH_SEL_ACTION;
+ 
+@@ -126,6 +130,12 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+ 		pos = skb_put(skb, 2 + ie_len);
+ 		*pos++ = WLAN_EID_PREP;
+ 		break;
++	case MPATH_RANN:
++		mhwmp_dbg("sending RANN from %pM\n", orig_addr);
++		ie_len = sizeof(struct ieee80211_rann_ie);
++		pos = skb_put(skb, 2 + ie_len);
++		*pos++ = WLAN_EID_RANN;
++		break;
+ 	default:
+ 		kfree_skb(skb);
+ 		return -ENOTSUPP;
+@@ -143,8 +153,10 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+ 	pos += ETH_ALEN;
+ 	memcpy(pos, &orig_dsn, 4);
+ 	pos += 4;
+-	memcpy(pos, &lifetime, 4);
+-	pos += 4;
++	if (action != MPATH_RANN) {
++		memcpy(pos, &lifetime, 4);
++		pos += 4;
++	}
+ 	memcpy(pos, &metric, 4);
+ 	pos += 4;
+ 	if (action == MPATH_PREQ) {
+@@ -152,9 +164,11 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+ 		*pos++ = 1;
+ 		*pos++ = dst_flags;
  	}
- 	pos += scnprintf(buf + pos, bufsz - pos, "Control\n");
- 	for (cnt = 0; cnt < CONTROL_MAX; cnt++) {
- 		pos += scnprintf(buf + pos, bufsz - pos,
--				 "\t%s\t\t: %u\n",
-+				 "\t%25s\t\t: %u\n",
- 				 get_ctrl_string(cnt),
- 				 priv->tx_stats.ctrl[cnt]);
+-	memcpy(pos, dst, ETH_ALEN);
+-	pos += ETH_ALEN;
+-	memcpy(pos, &dst_dsn, 4);
++	if (action != MPATH_RANN) {
++		memcpy(pos, dst, ETH_ALEN);
++		pos += ETH_ALEN;
++		memcpy(pos, &dst_dsn, 4);
++	}
+ 
+ 	ieee80211_tx_skb(sdata, skb, 1);
+ 	return 0;
+@@ -610,6 +624,54 @@ static void hwmp_perr_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	rcu_read_unlock();
+ }
+ 
++static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
++				struct ieee80211_mgmt *mgmt,
++				struct ieee80211_rann_ie *rann)
++{
++	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++	struct mesh_path *mpath;
++	u8 *ta;
++	u8 ttl, flags, hopcount;
++	u8 *orig_addr;
++	u32 orig_dsn, metric;
++
++	ta = mgmt->sa;
++	ttl = rann->rann_ttl;
++	if (ttl <= 1) {
++		ifmsh->mshstats.dropped_frames_ttl++;
++		return;
++	}
++	ttl--;
++	flags = rann->rann_flags;
++	orig_addr = rann->rann_addr;
++	orig_dsn = rann->rann_seq;
++	hopcount = rann->rann_hopcount;
++	metric = rann->rann_metric;
++	mhwmp_dbg("received RANN from %pM\n", orig_addr);
++
++	rcu_read_lock();
++	mpath = mesh_path_lookup(orig_addr, sdata);
++	if (!mpath) {
++		mesh_path_add(orig_addr, sdata);
++		mpath = mesh_path_lookup(orig_addr, sdata);
++		if (!mpath) {
++			rcu_read_unlock();
++			sdata->u.mesh.mshstats.dropped_frames_no_route++;
++			return;
++		}
++		mesh_queue_preq(mpath,
++				PREQ_Q_F_START | PREQ_Q_F_REFRESH);
++	}
++	if (mpath->dsn < orig_dsn) {
++		mesh_path_sel_frame_tx(MPATH_RANN, flags, orig_addr,
++				       cpu_to_le32(orig_dsn),
++				       0, NULL, 0, sdata->dev->broadcast,
++				       hopcount, ttl, 0, cpu_to_le32(metric),
++				       0, sdata);
++		mpath->dsn = orig_dsn;
++	}
++	rcu_read_unlock();
++}
+ 
+ 
+ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
+@@ -654,7 +716,8 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
+ 			return;
+ 		hwmp_perr_frame_process(sdata, mgmt, elems.perr);
  	}
-@@ -190,7 +191,7 @@ static ssize_t iwl_dbgfs_rx_statistics_read(struct file *file,
- 	int cnt;
- 	ssize_t ret;
- 	const size_t bufsz = 100 +
--		sizeof(char) * 24 * (MANAGEMENT_MAX + CONTROL_MAX);
-+		sizeof(char) * 50 * (MANAGEMENT_MAX + CONTROL_MAX);
- 	buf = kzalloc(bufsz, GFP_KERNEL);
- 	if (!buf)
- 		return -ENOMEM;
-@@ -198,14 +199,14 @@ static ssize_t iwl_dbgfs_rx_statistics_read(struct file *file,
- 	pos += scnprintf(buf + pos, bufsz - pos, "Management:\n");
- 	for (cnt = 0; cnt < MANAGEMENT_MAX; cnt++) {
- 		pos += scnprintf(buf + pos, bufsz - pos,
--				 "\t%s\t\t: %u\n",
-+				 "\t%25s\t\t: %u\n",
- 				 get_mgmt_string(cnt),
- 				 priv->rx_stats.mgmt[cnt]);
- 	}
- 	pos += scnprintf(buf + pos, bufsz - pos, "Control:\n");
- 	for (cnt = 0; cnt < CONTROL_MAX; cnt++) {
- 		pos += scnprintf(buf + pos, bufsz - pos,
--				 "\t%s\t\t: %u\n",
-+				 "\t%25s\t\t: %u\n",
- 				 get_ctrl_string(cnt),
- 				 priv->rx_stats.ctrl[cnt]);
- 	}
+-
++	if (elems.rann)
++		hwmp_rann_frame_process(sdata, mgmt, elems.rann);
+ }
+ 
+ /**
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index aedbaaa..da86e15 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -685,6 +685,10 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
+ 			elems->perr = pos;
+ 			elems->perr_len = elen;
+ 			break;
++		case WLAN_EID_RANN:
++			if (elen >= sizeof(struct ieee80211_rann_ie))
++				elems->rann = (void *)pos;
++			break;
+ 		case WLAN_EID_CHANNEL_SWITCH:
+ 			elems->ch_switch_elem = pos;
+ 			elems->ch_switch_elem_len = elen;
 -- 
-1.5.6.3
+1.5.6.5
 
