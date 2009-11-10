@@ -1,55 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:47960 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932427AbZKFWjX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 17:39:23 -0500
-Received: by yxe17 with SMTP id 17so1305594yxe.33
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 14:39:28 -0800 (PST)
-Subject: Re: Changing from Minstrel to PID
-From: =?ISO-8859-1?Q?Mart=EDn?= Ernesto Barreyro
-	<barreyromartin@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <b6c5339f0911061424l33178e81k16fb1f3889edcc3c@mail.gmail.com>
-References: <1257542956.6565.2.camel@localhost.localdomain>
-	 <20091106214803.GL2782@tuxdriver.com>
-	 <1257545606.3752.2.camel@localhost.localdomain>
-	 <b6c5339f0911061424l33178e81k16fb1f3889edcc3c@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 06 Nov 2009 19:40:49 -0300
-Message-ID: <1257547249.3752.6.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:32992 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750929AbZKJRxI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Nov 2009 12:53:08 -0500
+Message-ID: <4AF9A886.9090902@openwrt.org>
+Date: Tue, 10 Nov 2009 18:53:10 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 1/2] nl80211: add a parameter for using 4-address frames on
+ virtual interfaces
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El vie, 06-11-2009 a las 17:24 -0500, Bob Copeland escribió:
-> On Fri, Nov 6, 2009 at 5:13 PM, Martín Ernesto Barreyro
-> <barreyromartin@gmail.com> wrote:
-> >> No, but I wish there were...patches?  Anyone?
-> >
-> > Sorry for my ignorance, but how could I send a parameter to a module or
-> > use a configuration file? could be with sysctl?
-> 
-> You do have to compile them both, but once you do, if you
-> have debugfs mounted, you can do:
-> 
-> echo 'pid' > /debug/ieee80211/phy0/rc/name
-> 
-> to switch to pid.
-> 
-Humm, if thats the only way, its better to recompile and forget about
-it.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
 
-It would be nice if a could change some file in /etc and never care for
-kernel upgrades.
-I don't know much about kernel developing, i'm just wondering
-
-Something better than adding echo 'pid' > /debug/ieee80211/phy0/rc/name
-to rc.local
-
--- 
-Martín Ernesto Barreyro <barreyromartin@gmail.com>
-Analista Universitario en Redes de Datos.
-
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -584,6 +584,8 @@ enum nl80211_commands {
+  *	changed then the list changed and the dump should be repeated
+  *	completely from scratch.
+  *
++ * @NL80211_ATTR_4ADDR: Use 4-address frames on a virtual interface
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -714,6 +716,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_PID,
+ 
++	NL80211_ATTR_4ADDR,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -207,10 +207,12 @@ struct ieee80211_supported_band {
+  * struct vif_params - describes virtual interface parameters
+  * @mesh_id: mesh ID to use
+  * @mesh_id_len: length of the mesh ID
++ * @use_4addr: use 4-address frames
+  */
+ struct vif_params {
+        u8 *mesh_id;
+        int mesh_id_len;
++       int use_4addr;
+ };
+ 
+ /**
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -140,6 +140,7 @@ static struct nla_policy nl80211_policy[
+ 	[NL80211_ATTR_CIPHER_SUITE_GROUP] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_WPA_VERSIONS] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_PID] = { .type = NLA_U32 },
++	[NL80211_ATTR_4ADDR] = { .type = NLA_U8 },
+ };
+ 
+ /* policy for the attributes */
+@@ -989,6 +990,13 @@ static int nl80211_set_interface(struct 
+ 		change = true;
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_4ADDR]) {
++		params.use_4addr = !!nla_get_u8(info->attrs[NL80211_ATTR_4ADDR]);
++		change = true;
++	} else {
++		params.use_4addr = -1;
++	}
++
+ 	if (info->attrs[NL80211_ATTR_MNTR_FLAGS]) {
+ 		if (ntype != NL80211_IFTYPE_MONITOR) {
+ 			err = -EINVAL;
+@@ -1055,6 +1063,9 @@ static int nl80211_new_interface(struct 
+ 		params.mesh_id_len = nla_len(info->attrs[NL80211_ATTR_MESH_ID]);
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_4ADDR])
++		params.use_4addr = !!nla_get_u8(info->attrs[NL80211_ATTR_4ADDR]);
++
+ 	err = parse_monitor_flags(type == NL80211_IFTYPE_MONITOR ?
+ 				  info->attrs[NL80211_ATTR_MNTR_FLAGS] : NULL,
+ 				  &flags);
