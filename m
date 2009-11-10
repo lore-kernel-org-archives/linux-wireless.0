@@ -1,202 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:46271 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755747AbZKIXrm (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48637 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752361AbZKJBeA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 18:47:42 -0500
-Received: by mail-ew0-f207.google.com with SMTP id 3so3717715ewy.37
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 15:47:47 -0800 (PST)
-From: Rui Paulo <rpaulo@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Rui Paulo <rpaulo@gmail.com>,
-	Javier Cardona <javier@cozybit.com>
-Subject: [PATCH v2 18/20] mac80211: implement a timer to send RANN action frames
-Date: Mon,  9 Nov 2009 23:46:56 +0000
-Message-Id: <1257810418-30075-19-git-send-email-rpaulo@gmail.com>
-In-Reply-To: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
-References: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
+	Mon, 9 Nov 2009 20:34:00 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, reinette.chatre@intel.com,
+	"John W. Linville" <linville@linville-t41.local>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [RFC] iwlagn: reenable AP mode
+Date: Mon,  9 Nov 2009 20:30:10 -0500
+Message-Id: <1257816610-26290-1-git-send-email-linville@linville-t41.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RANN (Root Annoucement) frame TX. Send an action frame every second
-trying to build a path to all nodes on the mesh.
-
-Signed-off-by: Rui Paulo <rpaulo@gmail.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
-Tested-by: Brian Cavagnolo <brian@cozybit.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mesh.c        |   39 +++++++++++++++++++++++++++++++++++++++
- net/mac80211/mesh.h        |    3 +++
- net/mac80211/mesh_hwmp.c   |   11 +++++++++++
- 4 files changed, 54 insertions(+), 0 deletions(-)
+Really just poking around here...am I on the right track?  Or is the
+iwlagn firmware supposed to handle buffering broadcast frames?
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 4259852..bce4f38 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -352,6 +352,7 @@ struct ieee80211_if_mesh {
- 	struct work_struct work;
- 	struct timer_list housekeeping_timer;
- 	struct timer_list mesh_path_timer;
-+	struct timer_list mesh_path_root_timer;
- 	struct sk_buff_head skb_queue;
+Looking at Johannes's docs, I don't see anything that seems
+to relate to "implement sequence numbering for frames with the
+IEEE80211_TX_CTL_ASSIGN_SEQ flag (or ask the hardware to do it for
+those frames)".  Anyone know how to ask the hardware to do that?
+
+I also don't see anything for "When sending probe response frames,
+the timestamp must be adjusted by the hardware or firmware."  But,
+I didn't look too hard -- maybe I missed it?
+
+ drivers/net/wireless/iwlwifi/iwl-agn.c |   16 +++++++++++++---
+ 1 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 2bbd04d..d02874e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -558,9 +558,17 @@ static void iwl_bg_beacon_update(struct work_struct *work)
+ {
+ 	struct iwl_priv *priv =
+ 		container_of(work, struct iwl_priv, beacon_update);
+-	struct sk_buff *beacon;
++	struct sk_buff *beacon, *skb;
  
- 	unsigned long timers_running;
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 0f3e114..88dcfe3 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -14,6 +14,7 @@
- 
- #define IEEE80211_MESH_PEER_INACTIVITY_LIMIT (1800 * HZ)
- #define IEEE80211_MESH_HOUSEKEEPING_INTERVAL (60 * HZ)
-+#define IEEE80211_MESH_RANN_INTERVAL	     (1 * HZ)
- 
- #define MESHCONF_PP_OFFSET 	0		/* Path Selection Protocol */
- #define MESHCONF_PM_OFFSET	1		/* Path Selection Metric   */
-@@ -26,6 +27,7 @@
- 
- #define TMR_RUNNING_HK	0
- #define TMR_RUNNING_MP	1
-+#define TMR_RUNNING_MPR	2
- 
- int mesh_allocated;
- static struct kmem_cache *rm_cache;
-@@ -354,6 +356,23 @@ static void ieee80211_mesh_path_timer(unsigned long data)
- 	ieee80211_queue_work(&local->hw, &ifmsh->work);
- }
- 
-+static void ieee80211_mesh_path_root_timer(unsigned long data)
-+{
-+	struct ieee80211_sub_if_data *sdata =
-+		(struct ieee80211_sub_if_data *) data;
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	struct ieee80211_local *local = sdata->local;
-+
-+	set_bit(MESH_WORK_ROOT, &ifmsh->wrkq_flags);
-+
-+	if (local->quiescing) {
-+		set_bit(TMR_RUNNING_MPR, &ifmsh->timers_running);
-+		return;
+-	/* Pull updated AP beacon from mac80211. will fail if not in AP mode */
++	/* Tx buffered bcast/mcast traffic. */
++	skb = ieee80211_get_buffered_bc(priv->hw, priv->vif);
++	while (skb) {
++		if (iwl_tx_skb(priv, skb))
++			dev_kfree_skb_any(skb);
++		skb = ieee80211_get_buffered_bc(priv->hw, priv->vif);
 +	}
 +
-+	ieee80211_queue_work(&local->hw, &ifmsh->work);
-+}
-+
- /**
-  * ieee80211_fill_mesh_addresses - fill addresses of a locally originated mesh frame
-  * @hdr:    	802.11 frame header
-@@ -447,6 +466,15 @@ static void ieee80211_mesh_housekeeping(struct ieee80211_sub_if_data *sdata,
- 		  round_jiffies(jiffies + IEEE80211_MESH_HOUSEKEEPING_INTERVAL));
- }
++	/* Pull updated AP beacon from mac80211. */
+ 	beacon = ieee80211_beacon_get(priv->hw, priv->vif);
  
-+static void ieee80211_mesh_rootpath(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+
-+	mesh_path_tx_root_frame(sdata);
-+	mod_timer(&ifmsh->mesh_path_root_timer,
-+		  round_jiffies(jiffies + IEEE80211_MESH_RANN_INTERVAL));
-+}
-+
- #ifdef CONFIG_PM
- void ieee80211_mesh_quiesce(struct ieee80211_sub_if_data *sdata)
- {
-@@ -461,6 +489,8 @@ void ieee80211_mesh_quiesce(struct ieee80211_sub_if_data *sdata)
- 		set_bit(TMR_RUNNING_HK, &ifmsh->timers_running);
- 	if (del_timer_sync(&ifmsh->mesh_path_timer))
- 		set_bit(TMR_RUNNING_MP, &ifmsh->timers_running);
-+	if (del_timer_sync(&ifmsh->mesh_path_root_timer))
-+		set_bit(TMR_RUNNING_MPR, &ifmsh->timers_running);
- }
+ 	if (!beacon) {
+@@ -2316,7 +2324,8 @@ static int iwl_setup_mac(struct iwl_priv *priv)
+ 	hw->flags = IEEE80211_HW_SIGNAL_DBM |
+ 		    IEEE80211_HW_NOISE_DBM |
+ 		    IEEE80211_HW_AMPDU_AGGREGATION |
+-		    IEEE80211_HW_SPECTRUM_MGMT;
++		    IEEE80211_HW_SPECTRUM_MGMT |
++		    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING;
  
- void ieee80211_mesh_restart(struct ieee80211_sub_if_data *sdata)
-@@ -471,6 +501,8 @@ void ieee80211_mesh_restart(struct ieee80211_sub_if_data *sdata)
- 		add_timer(&ifmsh->housekeeping_timer);
- 	if (test_and_clear_bit(TMR_RUNNING_MP, &ifmsh->timers_running))
- 		add_timer(&ifmsh->mesh_path_timer);
-+	if (test_and_clear_bit(TMR_RUNNING_MPR, &ifmsh->timers_running))
-+		add_timer(&ifmsh->mesh_path_root_timer);
- }
- #endif
+ 	if (!priv->cfg->broken_powersave)
+ 		hw->flags |= IEEE80211_HW_SUPPORTS_PS |
+@@ -2324,6 +2333,7 @@ static int iwl_setup_mac(struct iwl_priv *priv)
  
-@@ -490,6 +522,7 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
- {
- 	del_timer_sync(&sdata->u.mesh.housekeeping_timer);
-+	del_timer_sync(&sdata->u.mesh.mesh_path_root_timer);
- 	/*
- 	 * If the timer fired while we waited for it, it will have
- 	 * requeued the work. Now the work will be running again
-@@ -627,6 +660,9 @@ static void ieee80211_mesh_work(struct work_struct *work)
+ 	hw->sta_data_size = sizeof(struct iwl_station_priv);
+ 	hw->wiphy->interface_modes =
++		BIT(NL80211_IFTYPE_AP) |
+ 		BIT(NL80211_IFTYPE_STATION) |
+ 		BIT(NL80211_IFTYPE_ADHOC);
  
- 	if (test_and_clear_bit(MESH_WORK_HOUSEKEEPING, &ifmsh->wrkq_flags))
- 		ieee80211_mesh_housekeeping(sdata, ifmsh);
-+
-+	if (test_and_clear_bit(MESH_WORK_ROOT, &ifmsh->wrkq_flags))
-+		ieee80211_mesh_rootpath(sdata);
- }
- 
- void ieee80211_mesh_notify_scan_completed(struct ieee80211_local *local)
-@@ -683,6 +719,9 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
- 	setup_timer(&ifmsh->mesh_path_timer,
- 		    ieee80211_mesh_path_timer,
- 		    (unsigned long) sdata);
-+	setup_timer(&ifmsh->mesh_path_root_timer,
-+		    ieee80211_mesh_path_root_timer,
-+		    (unsigned long) sdata);
- 	INIT_LIST_HEAD(&ifmsh->preq_queue.list);
- 	spin_lock_init(&ifmsh->mesh_preq_queue_lock);
- }
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index ee687ad..00ee842 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -53,11 +53,13 @@ enum mesh_path_flags {
-  * to grow.
-  * @MESH_WORK_GROW_MPP_TABLE: the mesh portals table is full and needs to
-  * grow
-+ * @MESH_WORK_ROOT: the mesh root station needs to send a frame
-  */
- enum mesh_deferred_task_flags {
- 	MESH_WORK_HOUSEKEEPING,
- 	MESH_WORK_GROW_MPATH_TABLE,
- 	MESH_WORK_GROW_MPP_TABLE,
-+	MESH_WORK_ROOT,
- };
- 
- /**
-@@ -294,6 +296,7 @@ void mesh_path_discard_frame(struct sk_buff *skb,
- 		struct ieee80211_sub_if_data *sdata);
- void mesh_path_quiesce(struct ieee80211_sub_if_data *sdata);
- void mesh_path_restart(struct ieee80211_sub_if_data *sdata);
-+void mesh_path_tx_root_frame(struct ieee80211_sub_if_data *sdata);
- 
- extern int mesh_paths_generation;
- 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 850c403..54c3f58 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -1003,3 +1003,14 @@ void mesh_path_timer(unsigned long data)
- endmpathtimer:
- 	rcu_read_unlock();
- }
-+
-+void
-+mesh_path_tx_root_frame(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+
-+	mesh_path_sel_frame_tx(MPATH_RANN, 0, sdata->dev->dev_addr,
-+			       cpu_to_le32(++ifmsh->sn),
-+			       0, NULL, 0, sdata->dev->broadcast,
-+			       0, MESH_TTL, 0, 0, 0, sdata);
-+}
 -- 
-1.5.6.5
+1.6.2.5
 
