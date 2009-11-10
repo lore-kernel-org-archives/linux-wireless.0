@@ -1,66 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:59093 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932384AbZKDVRu (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:49161 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754919AbZKJAGL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 16:17:50 -0500
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Jiri Kosina <jkosina@suse.cz>
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-Date: Wed, 4 Nov 2009 22:17:48 +0100
-Cc: Pavel Machek <pavel@ucw.cz>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-References: <1256886023.3555.5.camel@johannes.local> <20091102211629.GA1322@ucw.cz> <alpine.LRH.2.00.0911041403480.31913@twin.jikos.cz>
-In-Reply-To: <alpine.LRH.2.00.0911041403480.31913@twin.jikos.cz>
+	Mon, 9 Nov 2009 19:06:11 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>
+Date: Mon, 9 Nov 2009 16:06:14 -0800
+Subject: RE: [PATCH] Libertas: Fix issues while configuring host sleep
+Message-ID: <477F20668A386D41ADCC57781B1F704306E249DDDC@SC-VEXCH1.marvell.com>
+References: <1257383195-951-1-git-send-email-bzhao@marvell.com>
+	<20091106201924.GH2782@tuxdriver.com>
+ <477F20668A386D41ADCC57781B1F704306E01F78F3@SC-VEXCH1.marvell.com>
+In-Reply-To: <477F20668A386D41ADCC57781B1F704306E01F78F3@SC-VEXCH1.marvell.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200911042217.49144.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 04 November 2009, Jiri Kosina wrote:
-> On Mon, 2 Nov 2009, Pavel Machek wrote:
+Hi John,
+
+> -----Original Message-----
+> From: libertas-dev-bounces@lists.infradead.org [mailto:libertas-dev-bounces@lists.infradead.org] On
+> Behalf Of Bing Zhao
+> Sent: Friday, November 06, 2009 1:28 PM
+> To: John W. Linville
+> Cc: Amitkumar Karwar; linux-wireless@vger.kernel.org; libertas-dev@lists.infradead.org
+> Subject: RE: [PATCH] Libertas: Fix issues while configuring host sleep
 > 
-> > > I've searched on my GMail archives and the only patch Bart has
-> > > provided so far for the rt2x00 project is this:
-> > > 
-> > > [PATCH] MAINTAINERS: rt2x00 list is moderated
-> > > 
-> > > Which, while technically correct, adds nothing to the project.
-> > > 
-> > > So, I will personally continue to ignore Bart's comments, regards and
-> > > rants, until he provides patches for rt2x00 that actually make the
-> > > driver better.
-> > 
-> > Well, he provided review feedback... he should be thanked for that,
-> > not flamed for it.
+> Hi John,
 > 
-> He has actually written real patches (and quite non-trivial both in amount 
-> and in functionality), see
+> > -----Original Message-----
+> > From: John W. Linville [mailto:linville@tuxdriver.com]
+> > Sent: Friday, November 06, 2009 12:19 PM
+> > To: Bing Zhao
+> > Cc: libertas-dev@lists.infradead.org; linux-wireless@vger.kernel.org; Amitkumar Karwar
+> > Subject: Re: [PATCH] Libertas: Fix issues while configuring host sleep
+> >
+> > On Wed, Nov 04, 2009 at 05:06:35PM -0800, Bing Zhao wrote:
+> > > From: Amitkumar Karwar <akarwar@marvell.com>
+> > >
+> > > Configuration of wake-on-lan for unicast, multicast, broadcast, physical
+> > > activity was not working. Kernel panic issue was there when user tries to
+> > > disable WOL. Fixed them.
+> > >
+> > > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > > Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> > > ---
+> > >  drivers/net/wireless/libertas/ethtool.c |   16 +++++++++++-----
+> > >  1 files changed, 11 insertions(+), 5 deletions(-)
+> > >
+> > > diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
+> > > index 039b555..eeda6d7 100644
+> > > --- a/drivers/net/wireless/libertas/ethtool.c
+> > > +++ b/drivers/net/wireless/libertas/ethtool.c
+> > > @@ -169,16 +169,22 @@ static int lbs_ethtool_set_wol(struct net_device *dev,
+> > >  	struct lbs_private *priv = dev->ml_priv;
+> > >  	uint32_t criteria = 0;
+> > >
+> > > -	if (priv->wol_criteria == 0xffffffff && wol->wolopts)
+> > > +	if (priv->wol_criteria != 0xffffffff && wol->wolopts)
+> > >  		return -EOPNOTSUPP;
+> >
+> > Are you sure about this?  This makes me think that you won't be able
+> > to change WoL parameters without going through a disable step first.
+> > Am I misreading?
 > 
-> 	http://lkml.org/lkml/2009/11/3/372
+> I'm not sure if this is the best fix or not. But without this change, "ethtool -s wlan0 wol u" would
+> return "Cannot set new wake-on-lan settings: Operation not supported". Yes, you have to disable it
+> first in order to change the WoL parameters.
+> 
 
-Please look at the TIMESTAMP of the mail you refer to, and the TIMESTAMP
-of the mail from Luis. And then you can make assumptions about the text...
+We can probably just remove the check so that we can change the WoL settings without disabling first.
 
-> But yes, he got flamed for this for some odd reason. I got the impression 
-> that the community around rt2x00 doesn't like (or understand) the way how 
-> opensource development happens.
+-	if (priv->wol_criteria == 0xffffffff && wol->wolopts)
+-  		return -EOPNOTSUPP;
 
-Well you mean the open source development where non-contributors
-complain that the contributors work too slowly? Well if that is the way
-things should go, then I don't want to be part of such idiocy. Perhaps
-that is the policy in some companies which try to import it into the
-Open Source world...
+I will re-send the patch.
 
-Ivo
+Thanks,
+
+Bing
+
