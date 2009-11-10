@@ -1,40 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f226.google.com ([209.85.217.226]:41556 "EHLO
-	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753696AbZKTOFg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 09:05:36 -0500
-Received: by gxk26 with SMTP id 26so2970183gxk.1
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Nov 2009 06:05:42 -0800 (PST)
-Message-ID: <4B06A233.2070708@lwfinger.net>
-Date: Fri, 20 Nov 2009 08:05:39 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from li59-9.members.linode.com ([97.107.129.9]:47422 "EHLO erley.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755891AbZKJPAa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Nov 2009 10:00:30 -0500
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: bcm43xx-dev@lists.berlios.de,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Oncaphillis <oncaphillis@snafu.de>
-Subject: Re: [PATCH RFC] ssb: Generic SPROM override for devices without SPROM
-References: <200911201212.19588.mb@bu3sch.de>
-In-Reply-To: <200911201212.19588.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Tue, 10 Nov 2009 09:50:43 -0500
+From: <pat-lkml@erley.org>
+To: Holger Schurig <holgerschurig@googlemail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] cfg80211: introduce =?UTF-8?Q?nl=38=30=32=31=31=5Fget=5Fifidx?=
+ =?UTF-8?Q?=28=29?=
+In-Reply-To: <m3aayu1ttc.wl%holgerschurig@gmail.com>
+References: <m3aayu1ttc.wl%holgerschurig@gmail.com>
+Message-ID: <05d7281ddd3780e3d7f4b485ce361b87@127.0.0.1>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/20/2009 05:12 AM, Michael Buesch wrote:
-> This patch adds a generic mechanism for overriding the SPROM mechanism
-> on devices without SPROM hardware.
-> 
-> There currently is a major problem with this:
-> It tries to deduce a MAC address from various hardware parameters. But
-> currently it will result in the same MAC address for machines of the same
-> type. Does somebody have an idea of some device-instance specific serial
-> number or something similar that could be hashed into the MAC?
+On Tue, 10 Nov 2009 12:51:43 +0100, Holger Schurig
+<holgerschurig@googlemail.com> wrote:
 
-You might look at the "root=" part of /proc/cmdline. Mine says
-"root=/dev/disk/by-id/ata-TOSHIBA_MK2546GSX_18C2P0KCT-part1". That disk serial
-number would certainly be unique. Even if it just said "root=/dev/sda1", it
-would be repeatable.
+> @@ -3182,20 +3182,11 @@
+>  	int err;
+>  
+>  	if (!ifidx) {
+> -		err = nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
+> -				  nl80211_fam.attrbuf, nl80211_fam.maxattr,
+> -				  nl80211_policy);
+> -		if (err)
+> -			return err;
+> -
+> -		if (!nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX])
+> -			return -EINVAL;
+> -
+> -		ifidx = nla_get_u32(nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX]);
+> -		if (!ifidx)
+> -			return -EINVAL;
+> +		ifidx = nl80211_get_ifidx(cb);
 
-Larry
+do you need an:
+
+ if(ifidx < 0)
+    return ifidx;
+
+here, as you assign it to cb->args[0], which differs from the original
+behavior.
+
+>  		cb->args[0] = ifidx;
+>  	}
+> +	if (ifidx < 0)
+> +		return ifidx;
+>  
+>  	dev = dev_get_by_index(sock_net(skb->sk), ifidx);
+>  	if (!dev)
 
