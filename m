@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:41096 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755792AbZKDRco (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:51576 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750944AbZKJAlG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 12:32:44 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 04 Nov 2009 18:32:24 +0100
-Message-Id: <20091104173224.28463.49296.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-Subject: [PATCH 04/41] rt2800pci: fix crypto in TX frame
+	Mon, 9 Nov 2009 19:41:06 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/2] Libertas: coding style cleanup in ethtool.c
+Date: Mon,  9 Nov 2009 18:04:12 -0800
+Message-Id: <1257818653-13460-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] rt2800pci: fix crypto in TX frame
-
-Based on rt2800usb patch from Benoit PAPILLAULT
-(commit 17616310836ad2cc45a64576ef0e1520b0dcc81b).
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/rt2x00/rt2800pci.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/libertas/ethtool.c |   12 ++++++++----
+ 1 files changed, 8 insertions(+), 4 deletions(-)
 
-Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -2195,7 +2195,7 @@ static void rt2800pci_write_tx_desc(stru
- 	rt2x00_set_field32(&word, TXWI_W1_BW_WIN_SIZE, txdesc->ba_size);
- 	rt2x00_set_field32(&word, TXWI_W1_WIRELESS_CLI_ID,
- 			   test_bit(ENTRY_TXD_ENCRYPT, &txdesc->flags) ?
--			       (skbdesc->entry->entry_idx + 1) : 0xff);
-+			   txdesc->key_idx : 0xff);
- 	rt2x00_set_field32(&word, TXWI_W1_MPDU_TOTAL_BYTE_COUNT,
- 			   skb->len - txdesc->l2pad);
- 	rt2x00_set_field32(&word, TXWI_W1_PACKETID,
+diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
+index 039b555..6efa388 100644
+--- a/drivers/net/wireless/libertas/ethtool.c
++++ b/drivers/net/wireless/libertas/ethtool.c
+@@ -175,10 +175,14 @@ static int lbs_ethtool_set_wol(struct net_device *dev,
+ 	if (wol->wolopts & ~(WAKE_UCAST|WAKE_MCAST|WAKE_BCAST|WAKE_PHY))
+ 		return -EOPNOTSUPP;
+ 
+-	if (wol->wolopts & WAKE_UCAST) criteria |= EHS_WAKE_ON_UNICAST_DATA;
+-	if (wol->wolopts & WAKE_MCAST) criteria |= EHS_WAKE_ON_MULTICAST_DATA;
+-	if (wol->wolopts & WAKE_BCAST) criteria |= EHS_WAKE_ON_BROADCAST_DATA;
+-	if (wol->wolopts & WAKE_PHY)   criteria |= EHS_WAKE_ON_MAC_EVENT;
++	if (wol->wolopts & WAKE_UCAST)
++		criteria |= EHS_WAKE_ON_UNICAST_DATA;
++	if (wol->wolopts & WAKE_MCAST)
++		criteria |= EHS_WAKE_ON_MULTICAST_DATA;
++	if (wol->wolopts & WAKE_BCAST)
++		criteria |= EHS_WAKE_ON_BROADCAST_DATA;
++	if (wol->wolopts & WAKE_PHY)
++		criteria |= EHS_WAKE_ON_MAC_EVENT;
+ 
+ 	return lbs_host_sleep_cfg(priv, criteria, (struct wol_config *)NULL);
+ }
+-- 
+1.5.3.6
+
