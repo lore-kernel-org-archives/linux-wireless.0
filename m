@@ -1,82 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:65055 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759435AbZKLACY (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37524 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757876AbZKJTgh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 19:02:24 -0500
-Date: Wed, 11 Nov 2009 18:02:29 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>, chunkeey@web.de
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH V2] p54usb: Remove DMA buffer from stack
-Message-ID: <4afb5095.fKs+0FCQC9sTYyFW%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 10 Nov 2009 14:36:37 -0500
+Subject: Re: [PATCH v2 2/2] mac80211: implement support for 4-address
+ frames for AP and client mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <4AF9BA8D.6010201@openwrt.org>
+References: <4AF9A886.9090902@openwrt.org> <4AF9A8E1.6010104@openwrt.org>
+	 <4AF9BA8D.6010201@openwrt.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-6q4W0I66BB6+ydhjktee"
+Date: Tue, 10 Nov 2009 20:36:12 +0100
+Message-ID: <1257881772.7037.65.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2.6.32-rc6 from wireless-testing, the following warning is emitted:
 
-------------[ cut here ]------------ 
-WARNING: at lib/dma-debug.c:860 check_for_stack+0xaa/0xe0() 
-Hardware name: HP Pavilion dv2700 Notebook PC 
-ehci_hcd 0000:00:02.1: DMA-API: device driver maps memory fromstack
-	 [addr=ffff8800b6e2bca8] 
-Modules linked in: <Removed> 
-Pid: 16378, comm: modprobe Not tainted 2.6.32-rc6-wl #244 
-Call Trace: 
- [<ffffffff81049698>] warn_slowpath_common+0x78/0xb0 
- [<ffffffff8104972c>] warn_slowpath_fmt+0x3c/0x40 
- [<ffffffff811ae52a>] check_for_stack+0xaa/0xe0 
- [<ffffffff811afc8d>] debug_dma_map_page+0xfd/0x170 
- [<ffffffffa006297a>] usb_hcd_submit_urb+0x3da/0x9c0 [usbcore] 
- [<ffffffff81076e6f>] ? lockdep_init_map+0x5f/0x5d0 
- [<ffffffffa0063365>] usb_submit_urb+0xe5/0x260 [usbcore] 
- [<ffffffffa0064b7e>] usb_start_wait_urb+0x5e/0xf0 [usbcore] 
- [<ffffffffa0063943>] ? usb_init_urb+0x23/0x40 [usbcore] 
- [<ffffffffa0064cd4>] usb_bulk_msg+0xc4/0x150 [usbcore] 
- [<ffffffffa0441a91>] T.719+0x31/0x40 [p54usb] 
- [<ffffffffa0441acf>] p54u_upload_firmware_3887+0x2f/0x490 [p54usb] 
- [<ffffffffa049c667>] ? p54_parse_firmware+0x427/0x450 [p54common] 
- <Rest of traceback removed>
----[ end trace f77df0316ddad3de ]--- 
+--=-6q4W0I66BB6+ydhjktee
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.org>
----
+On Tue, 2009-11-10 at 20:10 +0100, Felix Fietkau wrote:
+> In some situations it might be useful to run a network with an
+> Access Point and multiple clients, but with each client bridged
+> to a network behind it. For this to work, both the client and the
+> AP need to transmit 4-address frames, containing both source and
+> destination MAC addresses.
+> With this patch, you can configure a client to communicate using
+> only 4-address frames for data traffic.
+> On the AP side you can enable 4-address frames for individual
+> clients by isolating them in separate AP VLANs which are configured
+> in 4-address mode.
+> Such an AP VLAN will be limited to one client only, and this client
+> will be used as the destination for all traffic on its interface,
+> regardless of the destination MAC address in the packet headers.
+> The advantage of this mode compared to regular WDS mode is that it's
+> easier to configure and does not require a static list of peer MAC
+> addresses on any side.
 
-John,
+Looks good, thanks.
 
-This is 2.6.32 material. Sorry to find it so late in the rc cycle. I hop
-DaveM doesn't give you too much trouble.
+johannes
 
-V2 - Fix line wraps in trace back.
+--=-6q4W0I66BB6+ydhjktee
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Larry
----
+-----BEGIN PGP SIGNATURE-----
 
-Index: wireless-testing/drivers/net/wireless/p54/p54usb.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/p54/p54usb.c
-+++ wireless-testing/drivers/net/wireless/p54/p54usb.c
-@@ -426,12 +426,16 @@ static const char p54u_romboot_3887[] =
- static int p54u_firmware_reset_3887(struct ieee80211_hw *dev)
- {
- 	struct p54u_priv *priv = dev->priv;
--	u8 buf[4];
-+	u8 *buf;
- 	int ret;
- 
--	memcpy(&buf, p54u_romboot_3887, sizeof(buf));
-+	buf = kmalloc(4, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+ 	memcpy(buf, p54u_romboot_3887, 4);
- 	ret = p54u_bulk_msg(priv, P54U_PIPE_DATA,
--			    buf, sizeof(buf));
-+			    buf, 4);
-+	kfree(buf);
- 	if (ret)
- 		dev_err(&priv->udev->dev, "(p54usb) unable to jump to "
- 			"boot ROM (%d)!\n", ret);
+iQIcBAABAgAGBQJK+cCpAAoJEODzc/N7+QmaddoP/0WJQKURM6pm+tK/C60Mb54f
+lhfZKcuJf+MTvO7+MUP88Jsd/sjs02l+2gTU26tnOlVtQ0ulse8G+zEukDZirvPo
+Vgfryfulp4UtL8XcctU/zC4UNdUfVcFLQQ6qi+PciPO3/V+UulHCle/yJ9tqEPT1
+ULgQeAABHcVzOzZ1pSqr56Pr2GmtgaHW2VIbMvh9xOG6X0jZXinQv6q9uYXdV1QG
+hLNaV18KEI7uKvXRGLBMrfwu+0drVwwrvCBJdmS6n/ZDHQggIKY1rZ7soK4mGYjz
+cYJXidrx2altabVJwMlEDPACcG9oMQWO1jl9F2bhKYlSGTML1a/0KhCQUlVyMr7b
+9tvXqJeQzzOM3AQLH8/wFaNdn0Jfc8kQZEPKOxfomf/S/K2JSjnntZBnXSnkdyM1
+oC3j3djvZs8/YQ0yoe1zATYeGBcFGhQK0BifrLEO516wphap7+llB+z69ShrMr9x
+t+/uiC7oMC2s3HFhocflUutGbUk0tHawY+1hz6yNE7GMNbMfxOTgBTUFmp4/zv6J
+H+gB6+G5shGnkOSHqxdlnRPjpsXmtXhGtor4o8MBtnqHpUoAIZ4Z9iVnEwiRwO3t
+t2WmnUWQvTsRCsKlTZRAhjqgwEuI/jdbY/CLKx/ygKcBwptM7kQ/IcsvQ+4jmwve
+sJBIASS9NG4be17V4HU9
+=e3FI
+-----END PGP SIGNATURE-----
+
+--=-6q4W0I66BB6+ydhjktee--
 
