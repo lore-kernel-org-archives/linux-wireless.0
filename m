@@ -1,71 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:54735 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754240AbZKIXbR (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60375 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756736AbZKJQAN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 18:31:17 -0500
-Date: Mon, 09 Nov 2009 17:31:22 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: bzolnier@gmail.com,
-	Bernhard Schiffner <bernhard@schiffner-limbach.de>,
-	linux-wireless@vger.kernel.org
-Subject: [RFT 6/6] rtl8187se: Modify Kconfig and Makefile
-Message-ID: <4af8a64a.OAu73X3xIXLBXo18%Larry.Finger@lwfinger.net>
+	Tue, 10 Nov 2009 11:00:13 -0500
+Date: Tue, 10 Nov 2009 10:55:11 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Luca Niccoli <lultimouomo@gmail.com>
+Cc: linux-wireless@vger.kernel.org, stable@kernel.org
+Subject: Re: Please backport [PATCH] rtl8187: Fix kernel oops when device
+	is removed when LEDS enabled (Bugzilla #14539)
+Message-ID: <20091110155511.GE12682@tuxdriver.com>
+References: <4e9568870911100747o6088ca86lf168849e6a42b91d@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4e9568870911100747o6088ca86lf168849e6a42b91d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Modify configuration and builod system for rtl8187se.
+On Tue, Nov 10, 2009 at 04:47:50PM +0100, Luca Niccoli wrote:
+> I'm running 2.6.31 (from debian source) and I experienced hard freezes
+> on removing the module or disconnecting the USB card.
+> The patch at [1] seems to have fixed the problem, so it would be nice
+> if it could be included in the 2.6.31 branch.
+> Note that I was not experiencing the freezes with the distribution
+> kernel, just with a self compiled one (without source modifications
+> though, only config).
+> Cheers,
+> 
+> Luca
+> 
+> (For further info please Cc: me)
+> 
+> [1]
+> http://marc.info/?l=linux-wireless&m=125731443329754&w=2
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+This has already been sent with the proper tagging to make the stable
+crew aware of it...
 
-Index: wireless-testing/drivers/net/wireless/Kconfig
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/Kconfig
-+++ wireless-testing/drivers/net/wireless/Kconfig
-@@ -294,6 +294,16 @@ config RTL8187_LEDS
- 	depends on RTL8187 && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = RTL8187)
- 	default y
- 
-+config RTL8187SE
-+	tristate "Realtek 8187SE PCI support"
-+	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
-+	select EEPROM_93CX6
-+	---help---
-+	  This is a driver for RTL8187SE PCI-based cards. If built as a
-+	  module, it will be named rtl8187se.
-+
-+	  Thanks to Realtek for their support!
-+
- config ADM8211
- 	tristate "ADMtek ADM8211 support"
- 	depends on MAC80211 && PCI && EXPERIMENTAL
-Index: wireless-testing/drivers/net/wireless/Makefile
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/Makefile
-+++ wireless-testing/drivers/net/wireless/Makefile
-@@ -24,6 +24,7 @@ obj-$(CONFIG_B43LEGACY)		+= b43legacy/
- obj-$(CONFIG_ZD1211RW)		+= zd1211rw/
- obj-$(CONFIG_RTL8180)		+= rtl818x/
- obj-$(CONFIG_RTL8187)		+= rtl818x/
-+obj-$(CONFIG_RTL8187SE)		+= rtl818x/
- 
- # 16-bit wireless PCMCIA client drivers
- obj-$(CONFIG_PCMCIA_RAYCS)	+= ray_cs.o
-Index: wireless-testing/drivers/net/wireless/rtl818x/Makefile
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/Makefile
-+++ wireless-testing/drivers/net/wireless/rtl818x/Makefile
-@@ -1,7 +1,9 @@
- rtl8180-objs		:= rtl8180_dev.o rtl8180_rtl8225.o rtl8180_sa2400.o rtl8180_max2820.o rtl8180_grf5101.o
- rtl8187-objs		:= rtl8187_dev.o rtl8187_rtl8225.o rtl8187_leds.o rtl8187_rfkill.o
-+rtl8187se-objs		:= rtl8187se_dev.o rtl8187se_rtl8225.o
- 
- obj-$(CONFIG_RTL8180)	+= rtl8180.o
- obj-$(CONFIG_RTL8187)	+= rtl8187.o
-+obj-$(CONFIG_RTL8187SE)	+= rtl8187se.o
- 
- 
+Thanks,
+
+John
+
+commit 37b12dd2b07b4d7dc222a5f7f88b25cec532b2aa
+Author: Larry Finger <Larry.Finger@lwfinger.net>
+Date:   Wed Nov 4 00:00:25 2009 -0600
+
+    rtl8187: Fix kernel oops when device is removed when LEDS enabled
+    
+    As reported by Rick Farina (sidhayn@gmail.com), removing the RTL8187
+    USB stick, or unloading the driver rtl8187 using rmmod will cause a
+    kernel oops.  There are at least two forms of the failure, (1) BUG:
+    Scheduling while atomic, and (2) a fatal kernel page fault. This
+    problem is reported in Bugzilla #14539.
+    
+    This problem does not occur for kernel 2.6.31, but does for 2.6.32-rc2,
+    thus it is technically a regression; however, bisection did not locate
+    any faulty patch. The fix was found by comparing the faulty code in
+    rtl8187 with p54usb.  My interpretation is that the handling of work
+    queues in mac80211 changed enough to the LEDs to be unregistered
+    before tasks on the work queues are cancelled. Previously, these
+    actions could be done in either order.
+    
+    (Herton Ronaldo Krzesinski <herton@mandriva.com.br> reports that the
+    code is the same in 2.6.31, so this may be a candidate for 2.6.31.x.
+    -- JWL)
+    
+    Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+    Reported-by: Rick Farina <sidhayn@gmail.com>
+    Tested-by: Rick Farina <sidhayn@gmail.com>
+    Cc: stable@kernel.org
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
