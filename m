@@ -1,35 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:62932 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760073AbZKLEeM (ORCPT
+Received: from mail-yw0-f202.google.com ([209.85.211.202]:40457 "EHLO
+	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752714AbZKJMMS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 23:34:12 -0500
-Date: Wed, 11 Nov 2009 22:34:17 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>, bzolnier@gmail.com
-Cc: Bernhard Schiffner <bernhard@schiffner-limbach.de>,
-	linux-wireless@vger.kernel.org
-Subject: [RFC/RFT 5/6 V2] rtl8187se: Modify rtl818x.h
-Message-ID: <4afb9049.cQMhmIsnGv7eygmA%Larry.Finger@lwfinger.net>
+	Tue, 10 Nov 2009 07:12:18 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890911090832v1c809482yde7e767502271376@mail.gmail.com>
+References: <1257537660-5301-1-git-send-email-lrodriguez@atheros.com>
+	 <200911072152.57596.trenn@suse.de> <4AF5F47C.5000402@linux.intel.com>
+	 <200911072347.05786.trenn@suse.de> <4AF5FBC7.9000105@linux.intel.com>
+	 <43e72e890911090832v1c809482yde7e767502271376@mail.gmail.com>
+Date: Tue, 10 Nov 2009 13:12:21 +0100
+Message-ID: <4e5e476b0911100412yb51d472r24be8b2068204348@mail.gmail.com>
+Subject: Re: [PATCH] cpu-freq: add troubleshooting section for FSB changes
+From: Corrado Zoccolo <czoccolo@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Arjan van de Ven <arjan@linux.intel.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Aeolus Yang <Aeolus.Yang@atheros.com>,
+	Jonathan May <Jonathan.May@atheros.com>,
+	Thomas Renninger <trenn@suse.de>, davej@redhat.com,
+	cpufreq@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Matthew Garrett <mjg@redhat.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Amod Bodas <Amod.Bodas@atheros.com>,
+	David Quan <David.Quan@atheros.com>,
+	Kishore Jotwani <Kishore.Jotwani@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Modify the general header file for new rtl8187se definition.
+Hi,
+On Mon, Nov 9, 2009 at 5:32 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>
+> And we tested this (reducing the min cpu freq to one less than the
+> highest supported P state to avoid an FSB speed change) and it seems
+> doing the steps described here did not fix the issue. But at least now
+> if anyone else wants to verify this they can with some sort of
+> documentaiton.
+>
+> So to confirm though -- we are seeing a huge performance depredation
+> mainly on RX on an Intel Pine Trail platform with SpeedStep enabled on
+> the BIOS.
+>
+> Let me get into the specifics in case anyone is able to help. The
+> issue is with ath9k on RX and the CPU on C3 state requesting DMA over
+> PCI-E. We typically would get about 110 Mbps with an AR9285 (single
+> stream) but when SpeedStep is enabled it goes down to 25 Mbps. At the
+> PCI-E level we are seeing huge latencies introduced when SpeedStep is
+> used for DMA requests to the Intel root complex on the Intel Pine
+> trail platform. Latencies are about 20-60 us.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+You mentioned speedstep and cpufreq, but the problem is with C3 state
+and cpuidle (probably the BIOS mixes the two concepts, but we should
+keep them separated).
+C3 is not related to the core or FSB frequency, it is an idle state.
+When in C3, the CPU is not ready to perform any operation, not just
+slower, and depending on the CPU hw, it may take several us to wake up
+(even 85us, on an Atom).
 
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl818x.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl818x.h
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl818x.h
-@@ -79,6 +79,7 @@ struct rtl818x_csr {
- #define RTL818X_RX_CONF_MULTICAST	(1 <<  2)
- #define RTL818X_RX_CONF_BROADCAST	(1 <<  3)
- #define RTL818X_RX_CONF_FCS		(1 <<  5)
-+#define RTL818x_RX_CONF_MAXDMA		(7 <<  8)
- #define RTL818X_RX_CONF_DATA		(1 << 18)
- #define RTL818X_RX_CONF_CTRL		(1 << 19)
- #define RTL818X_RX_CONF_MGMT		(1 << 20)
+>
+> Is there a timeout threshold change that will cause the Intel chipset
+> wait for some time after completion before going into a C3 state? Are
+> there any other explanations for seeing such huge latencies on C3
+> state?
+There is a patch from Arjan for the cpuidle menu governor, that may fix it.
+http://linux.derkeiler.com/Mailing-Lists/Kernel/2009-09/msg05276.html
+It is already present in 2.6.32.
+
+Thanks,
+Corrado
+
+>
+> Thanks for your review and help with this. Any suggestions are greatly
+> appreciated.
+>
+>  Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe cpufreq" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
+-- 
+__________________________________________________________________________
+
+dott. Corrado Zoccolo                          mailto:czoccolo@gmail.com
+PhD - Department of Computer Science - University of Pisa, Italy
+--------------------------------------------------------------------------
+The self-confidence of a warrior is not the self-confidence of the average
+man. The average man seeks certainty in the eyes of the onlooker and calls
+that self-confidence. The warrior seeks impeccability in his own eyes and
+calls that humbleness.
+                               Tales of Power - C. Castaneda
