@@ -1,71 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f223.google.com ([209.85.218.223]:58827 "EHLO
-	mail-bw0-f223.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932198AbZKXMDG (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:51577 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751016AbZKJAlG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 07:03:06 -0500
-Received: by bwz23 with SMTP id 23so6215969bwz.29
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Nov 2009 04:03:10 -0800 (PST)
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Vivek Natarajan <Vivek.Natarajan@atheros.com>
-Subject: Re: [PATCH] ath9k: fix processing of TX PS null data frames
-References: <1259049205-32596-1-git-send-email-lrodriguez@atheros.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 24 Nov 2009 14:03:08 +0200
-In-Reply-To: <1259049205-32596-1-git-send-email-lrodriguez@atheros.com> (Luis R. Rodriguez's message of "Tue\, 24 Nov 2009 02\:53\:25 -0500")
-Message-ID: <87hbskb05f.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 9 Nov 2009 19:41:06 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 2/2] Libertas: fix issues while configuring host sleep using ethtool wol
+Date: Mon,  9 Nov 2009 18:04:13 -0800
+Message-Id: <1257818653-13460-2-git-send-email-bzhao@marvell.com>
+In-Reply-To: <1257818653-13460-1-git-send-email-bzhao@marvell.com>
+References: <1257818653-13460-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
+Configuration of wake-on-lan for unicast, multicast, broadcast, physical
+activity was not working. Kernel panic issue was there when user tries to
+disable WOL. Fixed them.
 
-> When mac80211 was telling us to go into Powersave we listened
-> and immediately turned RX off. This meant hardware would not
-> see the ACKs from the AP we're associated with and hardware
-> we'd end up retransmiting the null data frame in a loop
-> helplessly.
->
-> Fix this by keeping track of the transmitted nullfunc frames
-> and only when we are sure the AP has sent back an ACK do we
-> go ahead and shut RX off.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/libertas/ethtool.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-[...]
-
-> This should illustrate some changes we need on mac80211 to help
-> with enabling and completing dynamic PS. 
-
-To be exact this is not about dynamic power save but
-HW_PS_NULLFUNC_STACK support.
-
-> The If we don't get an ACK we be able to tell mac80211 enabling
-> dynamic PS failed so it can stop assuming we've successfully enabled
-> it.
-
-Yes, currently mac80211 assumes that the hardware will wait for the
-ack before turning off radios. It might be a bit tricky to implement
-the ack delay in mac80211, for example we need to support the case
-when timeout is zero. Adding more timers to mac80211 creates more
-bugs.
-
-Also mac80211 doesn't check at all if the nullfunc frame reached the
-AP or not. I think that should be also fixed because it's a problem
-with every driver using IEEE80211_HW_PS_NULLFUNC_STACK.
-
-> Curious how this works with other hardware. When you enable
-> dynamic PS can you easily check for the ACK from the AP?
-
-On stlc45xx firmware does go to sleep before ACK is received.
-
-> What can we do on mac80211 to help with this without making it
-> too complex?
-
-What drivers need this? I guess at least ath5k and ath9k? Is it
-simpler if we just implement this in driver and not in mac80211? (Just
-asking, I don't have an opinion yet.)
-
+diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
+index 6efa388..53d56ab 100644
+--- a/drivers/net/wireless/libertas/ethtool.c
++++ b/drivers/net/wireless/libertas/ethtool.c
+@@ -169,9 +169,6 @@ static int lbs_ethtool_set_wol(struct net_device *dev,
+ 	struct lbs_private *priv = dev->ml_priv;
+ 	uint32_t criteria = 0;
+ 
+-	if (priv->wol_criteria == 0xffffffff && wol->wolopts)
+-		return -EOPNOTSUPP;
+-
+ 	if (wol->wolopts & ~(WAKE_UCAST|WAKE_MCAST|WAKE_BCAST|WAKE_PHY))
+ 		return -EOPNOTSUPP;
+ 
+@@ -183,6 +180,8 @@ static int lbs_ethtool_set_wol(struct net_device *dev,
+ 		criteria |= EHS_WAKE_ON_BROADCAST_DATA;
+ 	if (wol->wolopts & WAKE_PHY)
+ 		criteria |= EHS_WAKE_ON_MAC_EVENT;
++	if (wol->wolopts == 0)
++		criteria |= EHS_REMOVE_WAKEUP;
+ 
+ 	return lbs_host_sleep_cfg(priv, criteria, (struct wol_config *)NULL);
+ }
 -- 
-Kalle Valo
+1.5.3.6
+
