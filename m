@@ -1,65 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:61356 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752355AbZKQBJD convert rfc822-to-8bit (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:56614 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750830AbZKJPQD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2009 20:09:03 -0500
+	Tue, 10 Nov 2009 10:16:03 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: introduce nl80211_get_ifidx()
+Date: Tue, 10 Nov 2009 16:15:30 +0100
+Cc: pat-lkml@erley.org, Holger Schurig <holgerschurig@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <m3aayu1ttc.wl%holgerschurig@gmail.com> <05d7281ddd3780e3d7f4b485ce361b87@127.0.0.1>
+In-Reply-To: <05d7281ddd3780e3d7f4b485ce361b87@127.0.0.1>
 MIME-Version: 1.0
-In-Reply-To: <a44ae5cd0911161641n36d3c746pb69a9cac1eba1784@mail.gmail.com>
-References: <4ADE2F66.1070703@gmail.com> <43e72e890911161515q64ff527cyefd7d769f3c501b@mail.gmail.com>
-	<a44ae5cd0911161641n36d3c746pb69a9cac1eba1784@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 16 Nov 2009 17:08:48 -0800
-Message-ID: <43e72e890911161708o607da2a5hefe98e92fd13ee7a@mail.gmail.com>
-Subject: Re: 2.6.32-rc5-git1 -- BUG kmalloc-8192: Poison overwritten (ath9k
-	implicated)
-To: Miles Lane <miles.lane@gmail.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Bitterli <ic.felix@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200911101615.30124.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 16, 2009 at 4:41 PM, Miles Lane <miles.lane@gmail.com> wrote:
-> On Mon, Nov 16, 2009 at 6:15 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Tue, Oct 20, 2009 at 1:45 PM, Miles Lane <miles.lane@gmail.com> wrote:
->>> Let me know if you want my .config file.  I think this was triggered by
->>> suspending my laptop.
->>>
->>> BUG kmalloc-8192: Poison overwritten
->>
->> Thanks for your report Miles.
->>
->> Are you using Linus' tree? Felix wrote some patches that got rid of
->> the rate control private area which we kmalloc/kfree and at least one
->> user reported that these patches fixed a memory leak. I'm curious if
->> the same patches would resolve this issue.
->>
->> Only thing is these patches apply against wireless-testing and not
->> 2.6.32. To test them you'd have to pull wireless-testing master to
->> your tree and then apply the patches both before and after.
->>
->> Would you be up to try that?
->
-> Yes, definitely.  Thanks.  I will try to accomplish this and let you
-> know if I get stuck.
+On Tuesday 10 November 2009 15:50:43 pat-lkml@erley.org wrote:
+> On Tue, 10 Nov 2009 12:51:43 +0100, Holger Schurig
+> <holgerschurig@googlemail.com> wrote:
+> 
+> > @@ -3182,20 +3182,11 @@
+> >  	int err;
+> >  
+> >  	if (!ifidx) {
+> > -		err = nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
+> > -				  nl80211_fam.attrbuf, nl80211_fam.maxattr,
+> > -				  nl80211_policy);
+> > -		if (err)
+> > -			return err;
+> > -
+> > -		if (!nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX])
+> > -			return -EINVAL;
+> > -
+> > -		ifidx = nla_get_u32(nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX]);
+> > -		if (!ifidx)
+> > -			return -EINVAL;
+> > +		ifidx = nl80211_get_ifidx(cb);
+> 
+> do you need an:
+> 
+>  if(ifidx < 0)
+>     return ifidx;
+> 
+> here, as you assign it to cb->args[0], which differs from the original
+> behavior.
 
-OK, not sure if a merge of wireless-testing will be clean so you may
-want to just clone fresh.. Anyway after you get wireless-testing bits
-you'll want to apply these:
 
-http://patchwork.kernel.org/patch/60127/
-http://patchwork.kernel.org/patch/60128/
-http://patchwork.kernel.org/patch/60126/
+Do you mean
 
-If you want to merge wireless-testing you can try:
+        if (!ifidx) {
+               ifidx = nl80211_get_ifidx(cb);
+               if (ifidx < 0)
+                  return ifidx;
+               cb->args[0] = ifidx;
+        }
+        if (ifidx < 0)
+              return ifidx;
 
-git merge git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
-master
+instead?
 
-If that'd doesn't gos smooth just clone it and I think you should be
-able to safely --reference your current tree for objects for Linus'
-tree.
 
-  Luis
+
+I'm not familiar with this function, but maybe we
+can get away like this:
+
+        int ifidx = cb->args[0];
+
+        if (!ifidx)
+               ifidx = nl80211_get_ifidx(cb);
+        if (ifidx < 0)
+              return ifidx;
+        cb->args[0] = ifidx;
+
+-- 
+http://www.holgerschurig.de
