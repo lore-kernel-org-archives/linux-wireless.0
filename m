@@ -1,54 +1,305 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:57619 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751202AbZKOHLm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Nov 2009 02:11:42 -0500
-Received: by fg-out-1718.google.com with SMTP id e12so1987316fga.1
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Nov 2009 23:11:47 -0800 (PST)
+Received: from nbd.name ([88.198.39.176]:60149 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757819AbZKJTKG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Nov 2009 14:10:06 -0500
+Message-ID: <4AF9BA8D.6010201@openwrt.org>
+Date: Tue, 10 Nov 2009 20:10:05 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890911140958m138c92dat60a62607a08616b2@mail.gmail.com>
-References: <02a401ca6370$51fa0ff0$f5ee2fd0$@kaist.ac.kr> <43e72e890911120732m74dbe2d4m14dd146cd0fb3016@mail.gmail.com>
-	<43e72e890911131226i1a58560haeddca42c76bc1a9@mail.gmail.com>
-	<032b01ca64f9$f520c400$df624c00$@kaist.ac.kr> <43e72e890911140958m138c92dat60a62607a08616b2@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 15 Nov 2009 08:11:27 +0100
-Message-ID: <69e28c910911142311t593a21beq8312ec99c430d6d3@mail.gmail.com>
-Subject: Re: ath9k: Unknown symbol
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Jinsung Lee <ljs@netsys.kaist.ac.kr>,
-	linux-wireless@vger.kernel.org
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v2 2/2] mac80211: implement support for 4-address frames for
+ AP and client mode
+References: <4AF9A886.9090902@openwrt.org> <4AF9A8E1.6010104@openwrt.org>
+In-Reply-To: <4AF9A8E1.6010104@openwrt.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 14, 2009 at 6:58 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Fri, Nov 13, 2009 at 11:13 PM, Jinsung Lee <ljs@netsys.kaist.ac.kr> wrote:
->> Dear Luis,
->>
->> I've compiled successfully with compat-wireless-2009-11-13 version.
->> Also, modprobe command has been passed successfully.
->> But, when configuring with "ifconfig", it shows the following kernel message and then totally shut down, resulting in reboot.
->>
->> ==========================================
->> ...
->>
->> <7>[  181.995318] ath: tx chmask: 1, rx chmask: 1
->> <7>[  181.995328] ath: BSS Changed PREAMBLE 0
->> <7>[  181.995335] ath: BSS Changed CTS PROT 0
->> <1>[  181.998952] BUG: unable to handle kernel NULL pointer dereference at 00000004
->
-> Are you on 2.6.32? If so try wireless-testing directly, it'll give you
-> what you want which is 2.6.32-rcx and the latest wireless drivers.
-> There may be a backport issue with 2.6.32 but I cannot tell where it
-> is crashing with the trace you pasted without debugging enabled.
->
->  Luis
+In some situations it might be useful to run a network with an
+Access Point and multiple clients, but with each client bridged
+to a network behind it. For this to work, both the client and the
+AP need to transmit 4-address frames, containing both source and
+destination MAC addresses.
+With this patch, you can configure a client to communicate using
+only 4-address frames for data traffic.
+On the AP side you can enable 4-address frames for individual
+clients by isolating them in separate AP VLANs which are configured
+in 4-address mode.
+Such an AP VLAN will be limited to one client only, and this client
+will be used as the destination for all traffic on its interface,
+regardless of the destination MAC address in the packet headers.
+The advantage of this mode compared to regular WDS mode is that it's
+easier to configure and does not require a static list of peer MAC
+addresses on any side.
 
-> <4>[  182.001070] Pid: 2745, comm: phy1 Not tainted (2.6.30-02063009-generic #02063009) M1022E
-This says 2.6.30...
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+v2: 
+  - minor coding style cleanups
+  - better return code when trying to add a sta to a used 4-addr vlan
+  - check interface type before setting 4-addr mode and reset the mode
+    on interface type changes
 
-
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -208,6 +208,9 @@ struct ieee80211_if_wds {
+ 
+ struct ieee80211_if_vlan {
+ 	struct list_head list;
++
++	/* used for all tx if the VLAN is configured to 4-addr mode */
++	struct sta_info *sta;
+ };
+ 
+ struct mesh_stats {
+@@ -457,6 +460,8 @@ struct ieee80211_sub_if_data {
+ 	int force_unicast_rateidx; /* forced TX rateidx for unicast frames */
+ 	int max_ratectrl_rateidx; /* max TX rateidx for rate control */
+ 
++	bool use_4addr; /* use 4-address frames */
++
+ 	union {
+ 		struct ieee80211_if_ap ap;
+ 		struct ieee80211_if_wds wds;
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -36,6 +36,24 @@ static bool nl80211_type_check(enum nl80
+ 	}
+ }
+ 
++static bool nl80211_params_check(enum nl80211_iftype type,
++				 struct vif_params *params)
++{
++	if (!nl80211_type_check(type))
++		return false;
++
++	if (params->use_4addr > 0) {
++		switch(type) {
++		case NL80211_IFTYPE_AP_VLAN:
++		case NL80211_IFTYPE_STATION:
++			break;
++		default:
++			return false;
++		}
++	}
++	return true;
++}
++
+ static int ieee80211_add_iface(struct wiphy *wiphy, char *name,
+ 			       enum nl80211_iftype type, u32 *flags,
+ 			       struct vif_params *params)
+@@ -45,7 +63,7 @@ static int ieee80211_add_iface(struct wi
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int err;
+ 
+-	if (!nl80211_type_check(type))
++	if (!nl80211_params_check(type, params))
+ 		return -EINVAL;
+ 
+ 	err = ieee80211_if_add(local, name, &dev, type, params);
+@@ -75,7 +93,7 @@ static int ieee80211_change_iface(struct
+ 	if (netif_running(dev))
+ 		return -EBUSY;
+ 
+-	if (!nl80211_type_check(type))
++	if (!nl80211_params_check(type, params))
+ 		return -EINVAL;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+@@ -89,6 +107,9 @@ static int ieee80211_change_iface(struct
+ 					    params->mesh_id_len,
+ 					    params->mesh_id);
+ 
++	if (params->use_4addr >= 0)
++		sdata->use_4addr = !!params->use_4addr;
++
+ 	if (sdata->vif.type != NL80211_IFTYPE_MONITOR || !flags)
+ 		return 0;
+ 
+@@ -806,6 +827,13 @@ static int ieee80211_change_station(stru
+ 			return -EINVAL;
+ 		}
+ 
++		if (vlansdata->use_4addr) {
++			if (vlansdata->u.vlan.sta)
++				return -EBUSY;
++
++			rcu_assign_pointer(vlansdata->u.vlan.sta, sta);
++		}
++
+ 		sta->sdata = vlansdata;
+ 		ieee80211_send_layer2_update(sta);
+ 	}
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -489,6 +489,9 @@ static void __sta_info_unlink(struct sta
+ 	local->num_sta--;
+ 	local->sta_generation++;
+ 
++	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++		rcu_assign_pointer(sdata->u.vlan.sta, NULL);
++
+ 	if (local->ops->sta_notify) {
+ 		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 			sdata = container_of(sdata->bss,
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1046,7 +1046,10 @@ ieee80211_tx_prepare(struct ieee80211_su
+ 
+ 	hdr = (struct ieee80211_hdr *) skb->data;
+ 
+-	tx->sta = sta_info_get(local, hdr->addr1);
++	if ((sdata->vif.type == NL80211_IFTYPE_AP_VLAN) && sdata->use_4addr)
++		tx->sta = rcu_dereference(sdata->u.vlan.sta);
++	if (!tx->sta)
++		tx->sta = sta_info_get(local, hdr->addr1);
+ 
+ 	if (tx->sta && ieee80211_is_data_qos(hdr->frame_control) &&
+ 	    (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION)) {
+@@ -1608,7 +1611,7 @@ netdev_tx_t ieee80211_subif_start_xmit(s
+ 	const u8 *encaps_data;
+ 	int encaps_len, skip_header_bytes;
+ 	int nh_pos, h_pos;
+-	struct sta_info *sta;
++	struct sta_info *sta = NULL;
+ 	u32 sta_flags = 0;
+ 
+ 	if (unlikely(skb->len < ETH_HLEN)) {
+@@ -1625,8 +1628,25 @@ netdev_tx_t ieee80211_subif_start_xmit(s
+ 	fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_DATA);
+ 
+ 	switch (sdata->vif.type) {
+-	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_AP_VLAN:
++		rcu_read_lock();
++		if (sdata->use_4addr)
++			sta = rcu_dereference(sdata->u.vlan.sta);
++		if (sta) {
++			fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
++			/* RA TA DA SA */
++			memcpy(hdr.addr1, sta->sta.addr, ETH_ALEN);
++			memcpy(hdr.addr2, dev->dev_addr, ETH_ALEN);
++			memcpy(hdr.addr3, skb->data, ETH_ALEN);
++			memcpy(hdr.addr4, skb->data + ETH_ALEN, ETH_ALEN);
++			hdrlen = 30;
++			sta_flags = get_sta_flags(sta);
++		}
++		rcu_read_unlock();
++		if (sta)
++			break;
++		/* fall through */
++	case NL80211_IFTYPE_AP:
+ 		fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS);
+ 		/* DA BSSID SA */
+ 		memcpy(hdr.addr1, skb->data, ETH_ALEN);
+@@ -1700,12 +1720,21 @@ netdev_tx_t ieee80211_subif_start_xmit(s
+ 		break;
+ #endif
+ 	case NL80211_IFTYPE_STATION:
+-		fc |= cpu_to_le16(IEEE80211_FCTL_TODS);
+-		/* BSSID SA DA */
+ 		memcpy(hdr.addr1, sdata->u.mgd.bssid, ETH_ALEN);
+-		memcpy(hdr.addr2, skb->data + ETH_ALEN, ETH_ALEN);
+-		memcpy(hdr.addr3, skb->data, ETH_ALEN);
+-		hdrlen = 24;
++		if (sdata->use_4addr && ethertype != ETH_P_PAE) {
++			fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
++			/* RA TA DA SA */
++			memcpy(hdr.addr2, dev->dev_addr, ETH_ALEN);
++			memcpy(hdr.addr3, skb->data, ETH_ALEN);
++			memcpy(hdr.addr4, skb->data + ETH_ALEN, ETH_ALEN);
++			hdrlen = 30;
++		} else {
++			fc |= cpu_to_le16(IEEE80211_FCTL_TODS);
++			/* BSSID SA DA */
++			memcpy(hdr.addr2, skb->data + ETH_ALEN, ETH_ALEN);
++			memcpy(hdr.addr3, skb->data, ETH_ALEN);
++			hdrlen = 24;
++		}
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 		/* DA SA BSSID */
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -772,6 +772,7 @@ int ieee80211_if_change_type(struct ieee
+ 		ieee80211_mandatory_rates(sdata->local,
+ 			sdata->local->hw.conf.channel->band);
+ 	sdata->drop_unencrypted = 0;
++	sdata->use_4addr = 0;
+ 
+ 	return 0;
+ }
+@@ -853,6 +854,9 @@ int ieee80211_if_add(struct ieee80211_lo
+ 					    params->mesh_id_len,
+ 					    params->mesh_id);
+ 
++	if (params && params->use_4addr >= 0)
++		sdata->use_4addr = !!params->use_4addr;
++
+ 	mutex_lock(&local->iflist_mtx);
+ 	list_add_tail_rcu(&sdata->list, &local->interfaces);
+ 	mutex_unlock(&local->iflist_mtx);
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1237,6 +1237,13 @@ __ieee80211_data_to_8023(struct ieee8021
+ {
+ 	struct net_device *dev = rx->dev;
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN && !sdata->use_4addr &&
++	    ieee80211_has_a4(hdr->frame_control))
++		return -1;
++	if (sdata->use_4addr && is_multicast_ether_addr(hdr->addr1))
++		return -1;
+ 
+ 	return ieee80211_data_to_8023(rx->skb, dev->dev_addr, sdata->vif.type);
+ }
+@@ -1590,6 +1597,7 @@ ieee80211_rx_h_data(struct ieee80211_rx_
+ {
+ 	struct net_device *dev = rx->dev;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	__le16 fc = hdr->frame_control;
+ 	int err;
+ 
+@@ -1599,6 +1607,14 @@ ieee80211_rx_h_data(struct ieee80211_rx_
+ 	if (unlikely(!ieee80211_is_data_present(hdr->frame_control)))
+ 		return RX_DROP_MONITOR;
+ 
++	/*
++	 * Allow the cooked monitor interface of an AP to see 4-addr frames so
++	 * that a 4-addr station can be detected and moved into a separate VLAN
++	 */
++	if (ieee80211_has_a4(hdr->frame_control) &&
++	    sdata->vif.type == NL80211_IFTYPE_AP)
++		return RX_DROP_MONITOR;
++
+ 	err = __ieee80211_data_to_8023(rx);
+ 	if (unlikely(err))
+ 		return RX_DROP_UNUSABLE;
+@@ -2039,7 +2055,7 @@ static int prepare_for_handlers(struct i
+ 
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_STATION:
+-		if (!bssid)
++		if (!bssid && !sdata->use_4addr)
+ 			return 0;
+ 		if (!multicast &&
+ 		    compare_ether_addr(sdata->dev->dev_addr, hdr->addr1) != 0) {
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -320,7 +320,9 @@ int ieee80211_data_to_8023(struct sk_buf
+ 		break;
+ 	case cpu_to_le16(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS):
+ 		if (unlikely(iftype != NL80211_IFTYPE_WDS &&
+-			     iftype != NL80211_IFTYPE_MESH_POINT))
++			     iftype != NL80211_IFTYPE_MESH_POINT &&
++			     iftype != NL80211_IFTYPE_AP_VLAN &&
++			     iftype != NL80211_IFTYPE_STATION))
+ 			return -1;
+ 		if (iftype == NL80211_IFTYPE_MESH_POINT) {
+ 			struct ieee80211s_hdr *meshdr =
