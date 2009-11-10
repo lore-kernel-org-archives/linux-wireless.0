@@ -1,44 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:43788 "EHLO
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:45569 "EHLO
 	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750859AbZKGKhm (ORCPT
+	with ESMTP id S1758201AbZKJVkM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 05:37:42 -0500
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: "ext John W. Linville" <linville@tuxdriver.com>,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	"linux-next\@vger.kernel.org" <linux-next@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: linux-next: Tree for November 2 (wireless/wl1271)
-References: <20091102173845.210d1c57.sfr@canb.auug.org.au>
-	<4AEF1E7F.50306@oracle.com> <20091102184449.GJ14046@tuxdriver.com>
-	<20091102184843.GK14046@tuxdriver.com> <4AEF4ACB.5040302@nokia.com>
-	<4AEFC7CF.1020909@nokia.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sat, 07 Nov 2009 12:37:43 +0200
-In-Reply-To: <4AEFC7CF.1020909@nokia.com> (Luciano Coelho's message of "Tue\, 03 Nov 2009 08\:03\:59 +0200")
-Message-ID: <87ljiifwnc.fsf@purkki.valot.fi>
+	Tue, 10 Nov 2009 16:40:12 -0500
+Received: by ewy3 with SMTP id 3so524628ewy.37
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2009 13:40:16 -0800 (PST)
+Message-ID: <4AF9DDBE.8000200@gmail.com>
+Date: Tue, 10 Nov 2009 22:40:14 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Ivo van Doorn <IvDoorn@gmail.com>
+Subject: Re: [PATCH] rt2x00: Initialize rf302x RF values properly in rt2800pci.
+References: <1257804017-5446-1-git-send-email-gwingerde@gmail.com> <200911101941.33825.bzolnier@gmail.com>
+In-Reply-To: <200911101941.33825.bzolnier@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luciano Coelho <luciano.coelho@nokia.com> writes:
-
-> Coelho Luciano (Nokia-D/Helsinki) wrote:
->> ext John W. Linville wrote:
->>> Helps if I actually Cc: Luca...
+On 11/10/09 19:41, Bartlomiej Zolnierkiewicz wrote:
+> 
+> Hi Gertjan,
+> 
+> On Monday 09 November 2009 23:00:17 Gertjan van Wingerde wrote:
+>> Insert RF chipset values for the RF302x chipsets. Mirrored from the rt2800usb driver.
+>> Also, ensure these RF chipsets are handled properly in rt2800lib for the rt3090 chipset.
 >>
->> Yes, it does. :) I would see this at some point but CCing me speed
->> things up quite a lot.
->
->
-> BTW, I think we need this for wl1251 as well.  CC'ing Kalle too.
+>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>> ---
+>>
+>> This one clashes with the patch series sent by Bart. However, I believe that logically this patch
+>> belongs before his patch series, as it makes the unification cleaner and clearer.
+> 
+> The change itself is correct and much welcomed but please take a look
+> at the diffstat below:
+> 
+>> ---
+>>  drivers/net/wireless/rt2x00/rt2800lib.c |    5 +++--
+>>  drivers/net/wireless/rt2x00/rt2800pci.c |   31 +++++++++++++++++++++++++++----
+>>  drivers/net/wireless/rt2x00/rt2800usb.c |    8 ++++----
+>>  3 files changed, 34 insertions(+), 10 deletions(-)
+> 
+> I worry that applying this patch before unification will not make anything
+> cleaner, especially since it duplicates code that unification patch will now
+> have to also remove:
+> 
 
-Thanks, but upstream wl1251 doesn't have ARP filter. There is an
-internal patch but I haven't submitted it, yet.
+I agree that the patch in itself won't make things cleaner. However, my argument was that applying this
+patch before unification would make the unification patch cleaner and clearer (i.e. it would be more
+obvious that there is a large degree of overlap).
 
--- 
-Kalle Valo
+However, since I am such a nice guy, I will respin my 2 of my patches (the RT3070 detection for rt2800usb
+and this one) to apply on top of your patch series.
+
+---
+Gertjan.
