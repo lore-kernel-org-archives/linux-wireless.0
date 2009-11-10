@@ -1,100 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56215 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752865AbZKGUTI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 15:19:08 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	mcgrof@gmail.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 17/29] ath9k: move rssi processing into a helper
-Date: Sat,  7 Nov 2009 15:18:54 -0500
-Message-Id: <1257625146-17971-18-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
-References: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
+Received: from li59-9.members.linode.com ([97.107.129.9]:50510 "EHLO erley.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756396AbZKJPl0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Nov 2009 10:41:26 -0500
+MIME-Version: 1.0
+Date: Tue, 10 Nov 2009 10:41:30 -0500
+From: <pat-lkml@erley.org>
+To: Holger Schurig <holgerschurig@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Holger Schurig <holgerschurig@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] cfg80211: introduce =?UTF-8?Q?nl=38=30=32=31=31=5Fget=5Fifidx?=
+ =?UTF-8?Q?=28=29?=
+In-Reply-To: <200911101615.30124.holgerschurig@gmail.com>
+References: <m3aayu1ttc.wl%holgerschurig@gmail.com> <05d7281ddd3780e3d7f4b485ce361b87@127.0.0.1> <200911101615.30124.holgerschurig@gmail.com>
+Message-ID: <8567e294da1df02e481550fd73a8ff75@127.0.0.1>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This moves all the RX processing of RSSI into a helper,
-ath_rx_prepare(). ath_rx_prepare() should now be really
-easy to read and follow.
+On Tue, 10 Nov 2009 16:15:30 +0100, Holger Schurig
+<holgerschurig@gmail.com> wrote:
+> On Tuesday 10 November 2009 15:50:43 pat-lkml@erley.org wrote:
+>> On Tue, 10 Nov 2009 12:51:43 +0100, Holger Schurig
+>> <holgerschurig@googlemail.com> wrote:
+>> 
+>> > @@ -3182,20 +3182,11 @@
+>> >  	int err;
+>> >  
+>> >  	if (!ifidx) {
+>> > -		err = nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
+>> > -				  nl80211_fam.attrbuf, nl80211_fam.maxattr,
+>> > -				  nl80211_policy);
+>> > -		if (err)
+>> > -			return err;
+>> > -
+>> > -		if (!nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX])
+>> > -			return -EINVAL;
+>> > -
+>> > -		ifidx = nla_get_u32(nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX]);
+>> > -		if (!ifidx)
+>> > -			return -EINVAL;
+>> > +		ifidx = nl80211_get_ifidx(cb);
+>> 
+>> do you need an:
+>> 
+>>  if(ifidx < 0)
+>>     return ifidx;
+>> 
+>> here, as you assign it to cb->args[0], which differs from the original
+>> behavior.
+> 
+> 
+> Do you mean
+> 
+>     <SNIP>
+> 
+> instead?
+> 
+> 
+> 
+> I'm not familiar with this function, but maybe we
+> can get away like this:
+>  <SNIP>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/recv.c |   44 ++++++++++++++++++++------------
- 1 files changed, 27 insertions(+), 17 deletions(-)
+I'm not familiar with the code either.  I was just glancing through the
+patch 
+and noticed a change that changed the behavior of the code that was there.
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index d357b9a..4c4c22f 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -230,31 +230,20 @@ static int ath9k_compute_qual(struct ieee80211_hw *hw,
- 	return qual;
- }
- 
--/*
-- * For Decrypt or Demic errors, we only mark packet status here and always push
-- * up the frame up to let mac80211 handle the actual error case, be it no
-- * decryption key or real decryption error. This let us keep statistics there.
-- */
--static int ath_rx_prepare(struct ath_common *common,
--			  struct ieee80211_hw *hw,
--			  struct sk_buff *skb, struct ath_rx_status *rx_stats,
--			  struct ieee80211_rx_status *rx_status,
--			  bool *decrypt_error)
-+static void ath9k_process_rssi(struct ath_common *common,
-+			       struct ieee80211_hw *hw,
-+			       struct sk_buff *skb,
-+			       struct ath_rx_status *rx_stats)
- {
- 	struct ath_hw *ah = common->ah;
--	struct ieee80211_hdr *hdr;
--	__le16 fc;
- 	struct ieee80211_sta *sta;
-+	struct ieee80211_hdr *hdr;
- 	struct ath_node *an;
- 	int last_rssi = ATH_RSSI_DUMMY_MARKER;
-+	__le16 fc;
- 
- 	hdr = (struct ieee80211_hdr *)skb->data;
- 	fc = hdr->frame_control;
--	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
--
--	if (!ath9k_rx_accept(common, skb, rx_status, rx_stats, decrypt_error))
--		goto rx_next;
--
- 
- 	rcu_read_lock();
- 	/* XXX: use ieee80211_find_sta! */
-@@ -279,6 +268,27 @@ static int ath_rx_prepare(struct ath_common *common,
- 	/* Update Beacon RSSI, this is used by ANI. */
- 	if (ieee80211_is_beacon(fc))
- 		ah->stats.avgbrssi = rx_stats->rs_rssi;
-+}
-+
-+/*
-+ * For Decrypt or Demic errors, we only mark packet status here and always push
-+ * up the frame up to let mac80211 handle the actual error case, be it no
-+ * decryption key or real decryption error. This let us keep statistics there.
-+ */
-+static int ath_rx_prepare(struct ath_common *common,
-+			  struct ieee80211_hw *hw,
-+			  struct sk_buff *skb, struct ath_rx_status *rx_stats,
-+			  struct ieee80211_rx_status *rx_status,
-+			  bool *decrypt_error)
-+{
-+	struct ath_hw *ah = common->ah;
-+
-+	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
-+
-+	if (!ath9k_rx_accept(common, skb, rx_status, rx_stats, decrypt_error))
-+		goto rx_next;
-+
-+	ath9k_process_rssi(common, hw, skb, rx_stats);
- 
- 	rx_status->rate_idx = ath9k_process_rate(common, hw,
- 						 rx_stats, rx_status, skb);
--- 
-1.6.5.2.143.g8cc62
+
+before, cb->args[0] was left un-altered when ifidx = nla_get_u32(...)
+failed, 
+but now it's assigned to unconditionally, then, if ifidx is unasigned, an
+error 
+is returned.  I've not looked at the context or callers, but the commit
+message
+implied to me that there should be no functional changes, which is not the
+case.
+
+pat
 
