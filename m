@@ -1,61 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:36600 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758438AbZKETUA (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:34285 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753400AbZKJKJa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2009 14:20:00 -0500
-Date: Thu, 5 Nov 2009 20:19:52 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	David Miller <davem@davemloft.net>,
-	torvalds@linux-foundation.org, linville@tuxdriver.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Please consider reverting
-	7d930bc33653d5592dc386a76a38f39c2e962344
-Message-ID: <20091105191951.GC1392@ucw.cz>
-References: <20091103053156.GA3212@core.coreip.homeip.net> <20091102.224957.32364226.davem@davemloft.net> <20091103065238.GE3212@core.coreip.homeip.net> <1257232587.3420.55.camel@localhost.localdomain> <1257234299.28469.25.camel@johannes.local> <20091103082201.GG3212@core.coreip.homeip.net> <1257237061.28469.43.camel@johannes.local> <20091103084744.GH3212@core.coreip.homeip.net> <1257238623.28469.47.camel@johannes.local> <1257262187.3420.73.camel@localhost.localdomain>
-MIME-Version: 1.0
+	Tue, 10 Nov 2009 05:09:30 -0500
+Date: Tue, 10 Nov 2009 11:09:34 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 15/28] mwl8k: change pci id table driver data to a structure pointer
+Message-ID: <20091110100934.GQ18639@mail.wantstofly.org>
+References: <20091022182046.GQ1583@mail.wantstofly.org> <20091106205724.GJ2782@tuxdriver.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1257262187.3420.73.camel@localhost.localdomain>
+In-Reply-To: <20091106205724.GJ2782@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed 2009-11-04 00:29:47, Marcel Holtmann wrote:
-> Hi Johannes,
-> 
-> > > > I just think that it's a matter of courtesy that should be independent
-> > > > from the release cycle to ask the author/maintainer by default, not as a
-> > > > second thought ("unless [...] have other solution"). You can always CC
-> > > > Linus and ask him to revert if you don't get a response.
-> > > > 
-> > > > What's wrong with that? It doesn't actually delay the action, but it
-> > > > makes the discussion much more friendly and cooperative instead of
-> > > > giving the author and maintainer the feeling that their opinion only
-> > > > matters as a second thought.
-> > > > 
-> > > 
-> > > I think you are reading too much into who was addressed directly and who
-> > > was "only" CCed... 
+On Fri, Nov 06, 2009 at 03:57:25PM -0500, John W. Linville wrote:
+
+> > To prepare for adding support for more device types, introduce a
+> > new structure, mwl8k_device_info, where per-device information can
+> > be stored, and change the pci id table driver data from an integer
+> > indicating only the part number to a pointer to a mwl8k_device_info
+> > structure.
 > > 
-> > Maybe. But it seems to be happening pretty often recently that people
-> > first ask for a revert and then for a fix, ignoring any thought that
-> > might have gone into a particular commit...
+> > Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+> > ---
+> >  drivers/net/wireless/mwl8k.c |   47 ++++++++++++++++++++++++++---------------
+> >  1 files changed, 30 insertions(+), 17 deletions(-)
 > 
-> I have to agree here. It happens why too often lately. And this needs to
-> stop. Otherwise why bother with subsystem maintainers? Just send
-> everything to Linus directly and have him to review every line of code.
+> > @@ -2940,6 +2936,22 @@ static void mwl8k_finalize_join_worker(struct work_struct *work)
+> >  	priv->beacon_skb = NULL;
+> >  }
+> >  
+> > +static struct mwl8k_device_info di_8687 = {
+> > +	.part_num	= 8687,
+> > +};
+> > +
+> > +static DEFINE_PCI_DEVICE_TABLE(mwl8k_pci_id_table) = {
+> > +	{
+> > +		PCI_VDEVICE(MARVELL, 0x2a2b),
+> > +		.driver_data = (unsigned long)&di_8687,
+> > +	}, {
+> > +		PCI_VDEVICE(MARVELL, 0x2a30),
+> > +		.driver_data = (unsigned long)&di_8687,
+> > +	}, {
+> > +	},
+> > +};
+> > +MODULE_DEVICE_TABLE(pci, mwl8k_pci_id_table);
+> > +
+> >  static int __devinit mwl8k_probe(struct pci_dev *pdev,
+> >  				 const struct pci_device_id *id)
+> >  {
 > 
-> Dmitry, this is not against you, but the proper way would have been to
-> just mail linux-wireless about it and you would have gotten the same
-> response to it than you got by including Linus and LKML. This blind CC
-> to LKML is not helpful. It starts confusion and just increases the load
+> My only complaint here is that using a pointer for
+> driver_data make it difficult and potentially dangerous to use
+> /sys/bus/pci/drivers/.../new_id to add a PCI ID to the device.
 
-Yes, lkml cc *is* helpful, as he's probably not the only one hitting
-that problem.
-								Pavel
+Hmmm, yeah, it would make doing that difficult.  (I don't see how it can
+be dangerous, as the new_id handler verifies that the specified
+driver_data field is used by at least one other existing id_table
+entry).
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+
+> Using an integer instead makes that a bit safer and easier to use.
+> drivers/net/3c59x.c provides a decent example.
+
+I think it might be possible to autodetect the chip type, but this
+sounds like a good compromise for now.
+
+Thanks for the review.
+
+
+thanks,
+Lennert
