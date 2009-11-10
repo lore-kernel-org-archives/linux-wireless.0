@@ -1,93 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:62062 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751349AbZKZLl5 (ORCPT
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:62947 "EHLO
+	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756138AbZKJQdi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 06:41:57 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>
-Subject: [PATCH] libertas: remove priv->capability
-Date: Thu, 26 Nov 2009 12:41:46 +0100
+	Tue, 10 Nov 2009 11:33:38 -0500
+Received: by fxm21 with SMTP id 21so200104fxm.21
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2009 08:33:43 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200911261241.46405.holgerschurig@gmail.com>
+In-Reply-To: <4AF99161.6020308@lwfinger.net>
+References: <4e9568870911100747o6088ca86lf168849e6a42b91d@mail.gmail.com>
+	<4AF99161.6020308@lwfinger.net>
+From: Luca Niccoli <lultimouomo@gmail.com>
+Date: Tue, 10 Nov 2009 17:33:23 +0100
+Message-ID: <4e9568870911100833n1bd76c05t47c095248f483ed@mail.gmail.com>
+Subject: Re: Please backport [PATCH] rtl8187: Fix kernel oops when device is
+	removed when LEDS enabled (Bugzilla #14539)
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This variable was once set to WLAN_CAPABILITY_SHORT_PREAMBLE and
-there's no code that could change the variable to something else.
-Therefore it seems this is not necessary :-)
+2009/11/10 Larry Finger <Larry.Finger@lwfinger.net>:
 
-Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
+> I'm too lazy to look for myself, and will ask here. How does Debian generate
+> their source? Do they cherry pick patches from upstream? If so, then they pulled
 
---- linux-wl.orig/drivers/net/wireless/libertas/assoc.c
-+++ linux-wl/drivers/net/wireless/libertas/assoc.c
-@@ -807,8 +807,7 @@ static int lbs_try_associate(struct lbs_
- 	}
- 
- 	/* Use short preamble only when both the BSS and firmware support it */
--	if ((priv->capability & WLAN_CAPABILITY_SHORT_PREAMBLE) &&
--	    (assoc_req->bss.capability & WLAN_CAPABILITY_SHORT_PREAMBLE))
-+	if (assoc_req->bss.capability & WLAN_CAPABILITY_SHORT_PREAMBLE)
- 		preamble = RADIO_PREAMBLE_SHORT;
- 
- 	ret = lbs_set_radio(priv, preamble, 1);
-@@ -939,8 +938,7 @@ static int lbs_adhoc_join(struct lbs_pri
- 	}
- 
- 	/* Use short preamble only when both the BSS and firmware support it */
--	if ((priv->capability & WLAN_CAPABILITY_SHORT_PREAMBLE) &&
--	    (bss->capability & WLAN_CAPABILITY_SHORT_PREAMBLE)) {
-+	if (bss->capability & WLAN_CAPABILITY_SHORT_PREAMBLE) {
- 		lbs_deb_join("AdhocJoin: Short preamble\n");
- 		preamble = RADIO_PREAMBLE_SHORT;
- 	}
-@@ -1049,7 +1047,7 @@ static int lbs_adhoc_start(struct lbs_pr
- 	struct assoc_request *assoc_req)
- {
- 	struct cmd_ds_802_11_ad_hoc_start cmd;
--	u8 preamble = RADIO_PREAMBLE_LONG;
-+	u8 preamble = RADIO_PREAMBLE_SHORT;
- 	size_t ratesize = 0;
- 	u16 tmpcap = 0;
- 	int ret = 0;
-@@ -1057,11 +1055,6 @@ static int lbs_adhoc_start(struct lbs_pr
- 
- 	lbs_deb_enter(LBS_DEB_ASSOC);
- 
--	if (priv->capability & WLAN_CAPABILITY_SHORT_PREAMBLE) {
--		lbs_deb_join("ADHOC_START: Will use short preamble\n");
--		preamble = RADIO_PREAMBLE_SHORT;
--	}
--
- 	ret = lbs_set_radio(priv, preamble, 1);
- 	if (ret)
- 		goto out;
---- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
-+++ linux-wl/drivers/net/wireless/libertas/cmd.c
-@@ -842,9 +842,6 @@ int lbs_set_radio(struct lbs_private *pr
- 	if (priv->fwrelease < 0x09000000) {
- 		switch (preamble) {
- 		case RADIO_PREAMBLE_SHORT:
--			if (!(priv->capability & WLAN_CAPABILITY_SHORT_PREAMBLE))
--				goto out;
--			/* Fall through */
- 		case RADIO_PREAMBLE_AUTO:
- 		case RADIO_PREAMBLE_LONG:
- 			cmd.control = cpu_to_le16(preamble);
---- linux-wl.orig/drivers/net/wireless/libertas/main.c
-+++ linux-wl/drivers/net/wireless/libertas/main.c
-@@ -839,7 +839,6 @@ static int lbs_init_adapter(struct lbs_p
- 	priv->mac_control = CMD_ACT_MAC_RX_ON | CMD_ACT_MAC_TX_ON;
- 	priv->radio_on = 1;
- 	priv->enablehwauto = 1;
--	priv->capability = WLAN_CAPABILITY_SHORT_PREAMBLE;
- 	priv->psmode = LBS802_11POWERMODECAM;
- 	priv->psstate = PS_STATE_FULL_POWER;
- 	priv->is_deep_sleep = 0;
+They do, but with a very conservative approach.
+I don't see anything relevant in the changelog [1]
+OTOH, I use two out of kernel modules: fglrx and omnibook.
+Neither of them seems to be related to this tough.
+I can send my kernel config if you like.
+Thanks,
 
--- 
-http://www.holgerschurig.de
+Luca
+
+[1]
+http://packages.debian.org/changelogs/pool/main/l/linux-2.6/linux-2.6_2.6.31-1/changelog
