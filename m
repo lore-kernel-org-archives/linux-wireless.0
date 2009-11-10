@@ -1,73 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38110 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752754AbZK3Sai (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50115 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757289AbZKJRLf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2009 13:30:38 -0500
-Date: Mon, 30 Nov 2009 13:24:46 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Keng-Yu Lin <keng-yu.lin@canonical.com>
-Cc: linux-wireless@vger.kernel.org,
-	Carlos Corbacho <carlos@strangeworlds.co.uk>,
-	aceracpi@googlegroups.com
-Subject: Re: [PATCH] acer-wmi: Add DMI quirk to blacklist Acer Aspire One
-	BA01-DV/JM11-ML.
-Message-ID: <20091130182445.GC21401@tuxdriver.com>
-References: <1259214413-21956-1-git-send-email-keng-yu.lin@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1259214413-21956-1-git-send-email-keng-yu.lin@canonical.com>
+	Tue, 10 Nov 2009 12:11:35 -0500
+Subject: Re: [RFC] mac80211: sample survey implementation for mac80211_hwsim
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <holgerschurig@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200911101723.50859.holgerschurig@gmail.com>
+References: <200911101723.50859.holgerschurig@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-5GXrEW6aR/rBsJHY1mkx"
+Date: Tue, 10 Nov 2009 18:11:09 +0100
+Message-ID: <1257873069.7037.64.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I think this needs to go through someone else's tree...
 
-John
+--=-5GXrEW6aR/rBsJHY1mkx
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Nov 26, 2009 at 01:46:53PM +0800, Keng-Yu Lin wrote:
-> The two Acer Aspire One models should be blacklisted to prevent from
-> reporting rfkill is enabled since it's hardware controlled.
-> 
-> Signed-off-by: Keng-Yu Lin <keng-yu.lin@canonical.com>
-> ---
->  drivers/platform/x86/acer-wmi.c |   14 ++++++++++++++
->  1 files changed, 14 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/platform/x86/acer-wmi.c b/drivers/platform/x86/acer-wmi.c
-> index 454970d..b39766c 100644
-> --- a/drivers/platform/x86/acer-wmi.c
-> +++ b/drivers/platform/x86/acer-wmi.c
-> @@ -241,6 +241,20 @@ static struct dmi_system_id __devinitdata acer_blacklist[] = {
->  			DMI_MATCH(DMI_PRODUCT_NAME, "AOA150"),
->  		},
->  	},
-> +	{
-> +		.ident = "Acer Aspire One (BA01-DV)",
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "AO531h"),
-> +		},
-> +	},
-> +	{
-> +		.ident = "Acer Aspire One (JM11-ML)",
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "AO751h"),
-> +		},
-> +	},
->  	{}
->  };
->  
-> -- 
-> 1.6.3.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+On Tue, 2009-11-10 at 17:23 +0100, Holger Schurig wrote:
+> This adds the survey function to both mac80211 itself and to mac80211_hws=
+im.
+> For the latter driver, we simply invent some noise level.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I guess I'd prefer to keep that out for now until we have drivers that
+do it and we know whether mac80211 should aggregate the information or
+the driver needs to (like this patch requires).
+
+johannes
+
+--=-5GXrEW6aR/rBsJHY1mkx
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK+Z6qAAoJEODzc/N7+QmaAYEQAMNRg5+7osS2hjO+wDU5Gljv
+po9BoHIb9Ew7ysK6V5yxQC5ILGQS38tTaGTi/euZ8Vs2+0HGCeZQm4Y8uTrXVM8s
+6EWZlluqtyeE70rJquMTEQ41EyHq4x4qDewKrNLurthZv49QFCfNmG77NoVMtEox
+PXn4IWysEsuUENLDazNzSOC773Fr7SiqqgncAfdVX+dkNLcqnNebeI/z6oF1dBQw
+V7fQCPWi2FM3bj3jvWee9PtMYhByzbOWyp0M8N+DuFa6BzzknFqMUHG5f9/No14r
+9anh776s2VI4BAal6FaruNDVHNH8+zRjRAXvLtlr2G/kGZYN/1A4yTAM7A/FRfYb
+zOjaz6DzgMttHS7dOsu6zb0rjHL6+H59f+WenoIqS2do3u147O6rbZ+J0bcCB0vf
+GQdOWCVmWG+7ICsiL0fBGayT7aAsXbXAjXaFH/+AO3HyRIoz9Tiii6vQvzRClf5g
+EeeWwEAjDcouOo3rP6kAXKt6IVAJvhjTAbwCP1TkGtaM5DdQmgeTc3ko+3sQ5WzD
+WzqMGlIPYbARTrebOs+HkUwXr9E+S9I97Ra2PmhLBRbzdspEjGxijsTomgW1yuzP
+KLORV6rdS1qZKQY6PQoJvyE4XZu1QzaGSfXd6821AzuhIHzNm6AVofZcyirwh3Cm
+LlpxuWLvjPmu5cfAiXbq
+=2gzU
+-----END PGP SIGNATURE-----
+
+--=-5GXrEW6aR/rBsJHY1mkx--
+
