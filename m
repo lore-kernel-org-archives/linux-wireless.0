@@ -1,86 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f215.google.com ([209.85.219.215]:44684 "EHLO
-	mail-ew0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932504AbZKXRTa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 12:19:30 -0500
-Received: by ewy7 with SMTP id 7so78501ewy.28
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Nov 2009 09:19:34 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH v2 8/8] rt2x00: Properly request tx headroom for alignment operations.
-Date: Tue, 24 Nov 2009 18:19:29 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com> <1259012694-14869-8-git-send-email-gwingerde@gmail.com> <1259012694-14869-9-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1259012694-14869-9-git-send-email-gwingerde@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:20362 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756173AbZKKJx1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Nov 2009 04:53:27 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2009 01:53:33 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] wireless-regdb: Update the regulatory domain for a few countries.
+Date: Wed, 11 Nov 2009 15:23:22 +0530
+Message-ID: <1257933202-2659-2-git-send-email-vnatarajan@atheros.com>
+In-Reply-To: <1257933202-2659-1-git-send-email-vnatarajan@atheros.com>
+References: <1257933202-2659-1-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911241819.29685.IvDoorn@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 23 November 2009, Gertjan van Wingerde wrote:
-> Current rt2x00 drivers may result in a "ieee80211_tx_status: headroom too
-> small" error message when a frame needs to be properly aligned before
-> transmitting it.
-> This is because the space needed to ensure proper alignment isn't
-> requested from mac80211.
-> Fix this by adding sufficient amount of alignment space to the amount
-> of headroom requested for TX frames.
-> 
-> Reported-by: David Ellingsworth <david@identd.dyndns.org>
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> ---
->  drivers/net/wireless/rt2x00/rt2x00.h    |    6 ++++++
->  drivers/net/wireless/rt2x00/rt2x00dev.c |   12 +++++++++++-
->  2 files changed, 17 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> index 4d841c0..dcfc8c2 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> @@ -113,6 +113,12 @@
->  	(  ((unsigned long)((__skb)->data + (__header))) & 3 )
->  
->  /*
-> + * Constants for extra TX headroom for alignment purposes.
-> + */
-> +#define RT2X00_ALIGN_SIZE	4 /* Only whole frame needs alignment */
-> +#define RT2X00_L2PAD_SIZE	8 /* Both header & payload need alignment */
+Modify the regulatory domain for the following countries,
+Change Argentina(AR) to FCC3_World,
+Change Croatia(HR) to ETSI1_World,
+Change Hong Kong(HK) to FCC3_World,
+Change Indonesia(ID) to NULL1_World,
+Change Jamaica(JM) to FCC3_World,
+Change Kuwait(KW) to ETSI3_World,
+Change Oman(OM) to FCC3_World,
+Change Qatar(QA) to APL1_World,
+Change Trinidad and Tobago(TT) to FCC3_World,
+Change Uruguay(UY) to FCC3_World.
 
-Now that I think of it, why do we need 8 byte for L2 padding?
-Shouldn't we need the same size for regular alignment, L2 padding only indicates
-the padding occurs between header and payload rather then before the header only.
-So unless I am mistaken about how I coded the header & payload moving in rt2x00lib,
-you always need at most 4 bytes.
+And also enable HT40 mode in 5 GHz for AR, BA, HR, JO, OM, TT, UY
+which was disabled earlier.
 
-> +/*
->   * Standard timing and size defines.
->   * These values should follow the ieee80211 specifications.
->   */
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> index 06c43ca..265e66d 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -686,7 +686,17 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
->  	/*
->  	 * Initialize extra TX headroom required.
->  	 */
-> -	rt2x00dev->hw->extra_tx_headroom = rt2x00dev->ops->extra_tx_headroom;
-> +	rt2x00dev->hw->extra_tx_headroom =
-> +		max_t(unsigned int, IEEE80211_TX_STATUS_HEADROOM,
-> +		      rt2x00dev->ops->extra_tx_headroom);
-> +
-> +	/*
-> +	 * Take TX headroom required for alignment into account.
-> +	 */
-> +	if (test_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags))
-> +		rt2x00dev->hw->extra_tx_headroom += RT2X00_L2PAD_SIZE;
-> +	else if (test_bit(DRIVER_REQUIRE_DMA, &rt2x00dev->flags))
-> +		rt2x00dev->hw->extra_tx_headroom += RT2X00_ALIGN_SIZE;
->  
->  	/*
->  	 * Register HW.
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ db.txt |   53 +++++++++++++++++++++++++++++++++--------------------
+ 1 files changed, 33 insertions(+), 20 deletions(-)
 
+diff --git a/db.txt b/db.txt
+index a99b3b7..e63a43e 100644
+--- a/db.txt
++++ b/db.txt
+@@ -31,8 +31,10 @@ country AN:
+ 
+ country AR:
+ 	(2402 - 2482 @ 20), (N/A, 20)
+-	(5270 - 5330 @ 20), (3, 17), DFS
+-	(5735 - 5815 @ 20), (3, 30)
++	(5170 - 5250 @ 40), (3, 17)
++	(5250 - 5330 @ 40), (3, 20), DFS
++	(5490 - 5710 @ 40), (3, 20), DFS
++	(5735 - 5835 @ 40), (3, 30)
+ 
+ country AT:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -59,9 +61,9 @@ country AZ:
+ 
+ country BA:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 20), (N/A, 20)
+-	(5250 - 5330 @ 20), (N/A, 20), DFS
+-	(5490 - 5710 @ 20), (N/A, 27), DFS
++	(5170 - 5250 @ 40), (N/A, 20)
++	(5250 - 5330 @ 40), (N/A, 20), DFS
++	(5490 - 5710 @ 40), (N/A, 27), DFS
+ 
+ country BB:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -283,14 +285,16 @@ country HN:
+ 
+ country HK:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (3, 23)
+-	(5250 - 5330 @ 40), (3, 23), DFS
++	(5170 - 5250 @ 40), (3, 17)
++	(5250 - 5330 @ 40), (3, 20), DFS
++	(5490 - 5710 @ 40), (3, 20), DFS
+ 	(5735 - 5835 @ 40), (3, 30)
+ 
+ country HR:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 20), (N/A, 20)
+-	(5250 - 5330 @ 20), (N/A, 20), DFS
++	(5170 - 5250 @ 40), (N/A, 20)
++	(5250 - 5330 @ 40), (N/A, 20), DFS
++	(5490 - 5710 @ 40), (N/A, 27), DFS
+ 
+ country HT:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -306,7 +310,6 @@ country HU:
+ 
+ country ID:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5735 - 5835 @ 20), (N/A, 30)
+ 
+ country IE:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -341,9 +344,10 @@ country IT:
+ 
+ country JM:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 40), (3, 17)
++	(5250 - 5330 @ 40), (3, 20), DFS
++	(5490 - 5710 @ 40), (3, 20), DFS
++	(5735 - 5835 @ 40), (3, 30)
+ 
+ country JP:
+ 	(2402 - 2472 @ 40), (N/A, 20)
+@@ -361,7 +365,7 @@ country JP:
+ 
+ country JO:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 20), (N/A, 18)
++	(5170 - 5250 @ 40), (N/A, 18)
+ 
+ country KH:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -385,6 +389,8 @@ country KR:
+ 
+ country KW:
+ 	(2402 - 2482 @ 40), (N/A, 20)
++	(5170 - 5250 @ 40), (N/A, 20)
++	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 
+ country KZ:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -481,9 +487,10 @@ country NZ:
+ 
+ country OM:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 20), (N/A, 20)
+-	(5250 - 5330 @ 20), (N/A, 20), DFS
+-	(5735 - 5835 @ 20), (N/A, 20)
++	(5170 - 5250 @ 40), (3, 17)
++	(5250 - 5330 @ 40), (3, 20), DFS
++	(5490 - 5710 @ 40), (3, 20), DFS
++	(5735 - 5835 @ 40), (3, 30)
+ 
+ country PA:
+ 	(2402 - 2472 @ 40), (3, 27)
+@@ -528,6 +535,7 @@ country PR:
+ 
+ country QA:
+ 	(2402 - 2482 @ 40), (N/A, 20)
++	(5735 - 5835 @ 40), (N/A, 30)
+ 
+ country RO:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -585,8 +593,10 @@ country TH:
+ 
+ country TT:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 20), (N/A, 18)
+-	(5250 - 5330 @ 20), (N/A, 18), DFS
++	(5170 - 5250 @ 40), (3, 17)
++	(5250 - 5330 @ 40), (3, 20), DFS
++	(5490 - 5710 @ 40), (3, 20), DFS
++	(5735 - 5835 @ 40), (3, 30)
+ 
+ country TN:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -611,7 +621,10 @@ country US:
+ 
+ country UY:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5735 - 5815 @ 20), (N/A, 23)
++	(5170 - 5250 @ 40), (3, 17)
++	(5250 - 5330 @ 40), (3, 20), DFS
++	(5490 - 5710 @ 40), (3, 20), DFS
++	(5735 - 5835 @ 40), (3, 30)
+ 
+ country UZ:
+ 	(2402 - 2472 @ 40), (3, 27)
+-- 
+1.6.0.4
 
