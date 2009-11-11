@@ -1,41 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.185]:17100 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753743AbZKQVvQ convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:41385 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759338AbZKKVng (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 16:51:16 -0500
-Received: by gv-out-0910.google.com with SMTP id r4so156957gve.37
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2009 13:51:21 -0800 (PST)
+	Wed, 11 Nov 2009 16:43:36 -0500
+Received: by iwn8 with SMTP id 8so1279260iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2009 13:43:42 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <43e72e890911170838g26172725ga4a843dc5292c29f@mail.gmail.com>
-References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de>
-	 <43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com>
-	 <1803.194.45.26.221.1258473872.squirrel@webmail.madwifi-project.org>
-	 <43e72e890911170838g26172725ga4a843dc5292c29f@mail.gmail.com>
-Date: Tue, 17 Nov 2009 16:51:21 -0500
-Message-ID: <b6c5339f0911171351m6c7e4e13o8f4329a6f8fb6f8d@mail.gmail.com>
-Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and why?
-From: Bob Copeland <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Michael Renzmann <mrenzmann@madwifi-project.org>,
-	madwifi-devel@lists.sourceforge.net,
-	madwifi-users@lists.sourceforge.net,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <200911112219.08814.jkrzyszt@tis.icnet.pl>
+References: <200911112219.08814.jkrzyszt@tis.icnet.pl>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 11 Nov 2009 13:43:22 -0800
+Message-ID: <43e72e890911111343t194e6433we3f9ac7d6799da39@mail.gmail.com>
+Subject: Re: Please share info about power consumption characteristics of your
+	USB adapter
+To: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 17, 2009 at 11:38 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+On Wed, Nov 11, 2009 at 1:19 PM, Janusz Krzysztofik
+<jkrzyszt@tis.icnet.pl> wrote:
+> Hi,
+>
+> Please anyone owning one of adapters listed below: if the adapter is supported
+> by linux-wireless, please check for MaxPower with lsusb -v and give me the
+> result. I am looking for an adapter with MaxPower less than 300mA and would
+> rather not buy them all to learn they all do not fit :-).
+>
+> Once again, sorry for abusing a devel list for this.
+>
+> Thanks,
+> Janusz
+>
+> Asus WL-167g V2 (90-I8N2E0-0UAZ)
+> D-Link DWA-125
+> D-Link DWA-140
+> D-Link DWL-G122
+> Intellinet 503457
+> Linksys WUSB100-EU
+> Linksys WUSB54GC-EU
+> Modecom WIFI-CARD-USB-MC-0105
+> Modecom WIFI-CARD-USB-MC-0106
+> Netgear WG111TEE
+> Netgear WPN111EE
+> OvisLink WL-1600USB
+> Pentagram P 6132-08
+> TP-Link TL-WN422G
+> TP-Link TL-WN721N
+> TP-Link TL-WN821N
 
->  * DFS
->  * Multi-BSS AP functionality
->  * Roaming
->  * ANI
+May want to slap this on the wireless wiki somewhere.
 
-Also antenna selection has been requested -- this is dead simple
-if anyone wants to write appropriate hooks into the stack for it.
-The code is already in the driver, it just needs some configuration
-glue.
-
--- 
-Bob Copeland %% www.bobcopeland.com
+  Luis
