@@ -1,55 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:47836 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753833AbZKCQIr (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40047 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757419AbZKKPaP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 11:08:47 -0500
-Date: Tue, 3 Nov 2009 08:07:33 -0800 (PST)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Marcel Holtmann <marcel@holtmann.org>
-cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
-	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Please consider reverting
- 7d930bc33653d5592dc386a76a38f39c2e962344
-In-Reply-To: <alpine.LFD.2.01.0911030738260.31845@localhost.localdomain>
-Message-ID: <alpine.LFD.2.01.0911030756310.31845@localhost.localdomain>
-References: <20091103053156.GA3212@core.coreip.homeip.net>  <20091102.224957.32364226.davem@davemloft.net>  <20091103065238.GE3212@core.coreip.homeip.net>  <1257232587.3420.55.camel@localhost.localdomain>  <alpine.LFD.2.01.0911030719430.31845@localhost.localdomain>
- <1257262588.3420.79.camel@localhost.localdomain> <alpine.LFD.2.01.0911030738260.31845@localhost.localdomain>
+	Wed, 11 Nov 2009 10:30:15 -0500
+Date: Wed, 11 Nov 2009 10:22:14 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Zheng, Jeff" <jeff.zheng@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"wifi-test-devel@lists.sourceforge.net"
+	<wifi-test-devel@lists.sourceforge.net>
+Subject: Re: [ANNOUNCE] wifi-test 1.0 released
+Message-ID: <20091111152214.GG4392@tuxdriver.com>
+References: <154E55ADF9629D4E8D13F08BF92ABEB63FDC983366@PDSMSX501.ccr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <154E55ADF9629D4E8D13F08BF92ABEB63FDC983366@PDSMSX501.ccr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On Tue, 3 Nov 2009, Linus Torvalds wrote:
+On Wed, Nov 11, 2009 at 10:59:27PM +0800, Zheng, Jeff wrote:
+> All,
 > 
-> But it should be fixed _quickly_. In this case, I have a bisection report 
-> FROM TWO DAYS AGO. And I'm still kicking myself for not just reverting 
-> that piece-of-shit commit then, because I spent the time to look at the 
-> oops and the commit, and could tell that it was crap.
+> The wifi-test project is raised by Intel with a goal to deliver test suites
+> to opensource community that validates linux wireless drivers. wifi-test
+> 1.0 covers following wireless features:
+> + BSS: BSS association, fragmentation/RTS/CTS, BSS channels etc
+> + IBSS: IBSS association, IBSS fragmentation/RTS/CTS, IBSS channels.
+> + Security: WEP (BSS/IBSS), WPA/WPA2, 802.1X.
+> + Power management: S3/S4, RFKILL
+> + Performance: upload/download speed for different combinations.
+> + Others: Wext mode, nl80211 mode
+> + 802.11 a/b/g/n: Above features in a/b/g/n band.
+> 
+> You can download wifi-test 1.0 from:
+> http://intellinuxwireless.org/testing/Download/wifi-test-1.0.tar.gz
+> or through git tree:
+> http://www.intellinuxwireless.org/repos/wifi-test.git
+> 
+> For more information, please see
+> http://intellinuxwireless.org/testing/wifi-test.html
 
-Btw, "two days" may not sound like a lot, but it's over five weeks since 
-the merge window closed - we should be close to release. And the 
-particular buggy commit was merged just a few days ago (Oct 29) - and it 
-got some bisect loving within days of being merged.
+Hey, that looks pretty cool...thanks!
 
-If this had all happened during the merge window, and if the patch that 
-got bisected was some complex one, my view of what "quickly" means would 
-have been very different.
-
-But this late in the -rc game, we should encourage people to expect the 
-kernel to be stable. That means that if it's not stable, we should jump on 
-it. As soon as possible. Quite often that should mean "revert it now, so 
-that users don't have to see it, and then let the developers see if they 
-can fix it properly".
-
-Let the _maintainers_ run the buggy kernels in order to debug them, but we 
-want all the _users_ to have kernels that are useful. For the last couple 
-of days, we've done it the wrong way around.
-
-			Linus
-
-PS. The fix is pushed out now. But it could have been reverted on Sunday.
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
