@@ -1,160 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56141 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752840AbZKGUTD (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:44972 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751914AbZKKKhS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 15:19:03 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	mcgrof@gmail.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
-Subject: [PATCH 08/29] ath9k: handle low buffer space for virtual wiphys
-Date: Sat,  7 Nov 2009 15:18:45 -0500
-Message-Id: <1257625146-17971-9-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
-References: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 11 Nov 2009 05:37:18 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] iw: display noise level from survey data
+Date: Wed, 11 Nov 2009 11:36:34 +0100
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200911111136.34949.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k virtual wiphys all share the same internal buffer space
-for TX but they do not share the mac80211 skb queues. When
-ath9k detects it is running low on buffer space to TX it tells
-mac80211 to stop sending it skbs its way but it always does
-this only for the primary wiphy. This means mac80211 won't know
-its best to avoid sending ath9k more skbs on a separate virtual
-wiphy. The same issue is present for reliving the skb queue.
+Sample output:
 
-Since ath9k does not keep track of which virtual wiphy is hammering
-on TX silence all wiphy's TX when we're low on buffer space. When
-we're free on buffer space only bother informing the virtual wiphy
-which is active that we have free buffers.
+# iw dev wlan0 survey dump
+Survey data from wlan0
+        frequency:      2412 MHz
+        noise:          -92 dBm
 
-Cc: Jouni.Malinen <Jouni.Malinen@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h   |    3 ++
- drivers/net/wireless/ath/ath9k/virtual.c |   52 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/xmit.c    |   10 +++---
- 3 files changed, 60 insertions(+), 5 deletions(-)
+Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 59ce7ec..4169d2b 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -695,5 +695,8 @@ void ath9k_wiphy_work(struct work_struct *work);
- bool ath9k_all_wiphys_idle(struct ath_softc *sc);
- void ath9k_set_wiphy_idle(struct ath_wiphy *aphy, bool idle);
+--- iw.orig/Makefile
++++ iw/Makefile
+@@ -15,7 +15,7 @@
+ CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
  
-+void ath_mac80211_stop_queue(struct ath_softc *sc, u16 skb_queue);
-+void ath_mac80211_start_queue(struct ath_softc *sc, u16 skb_queue);
+ OBJS = iw.o genl.o event.o info.o phy.o \
+-	interface.o ibss.o station.o util.o \
++	interface.o ibss.o station.o survey.o util.o \
+ 	mesh.o mpath.o scan.o reg.o version.o \
+ 	reason.o status.o connect.o link.o
+ OBJS += sections.o
+--- /dev/null
++++ iw/survey.c
+@@ -0,0 +1,66 @@
++#include <net/if.h>
++#include <errno.h>
++#include <string.h>
 +
- int ath_tx_get_qnum(struct ath_softc *sc, int qtype, int haltype);
- #endif /* ATH9K_H */
-diff --git a/drivers/net/wireless/ath/ath9k/virtual.c b/drivers/net/wireless/ath/ath9k/virtual.c
-index 69a871b..0a36b57 100644
---- a/drivers/net/wireless/ath/ath9k/virtual.c
-+++ b/drivers/net/wireless/ath/ath9k/virtual.c
-@@ -697,3 +697,55 @@ void ath9k_set_wiphy_idle(struct ath_wiphy *aphy, bool idle)
- 		  wiphy_name(aphy->hw->wiphy),
- 		  idle ? "idle" : "not-idle");
- }
-+/* Only bother starting a queue on an active virtual wiphy */
-+void ath_mac80211_start_queue(struct ath_softc *sc, u16 skb_queue)
++#include <netlink/genl/genl.h>
++#include <netlink/genl/family.h>
++#include <netlink/genl/ctrl.h>
++#include <netlink/msg.h>
++#include <netlink/attr.h>
++
++#include "nl80211.h"
++#include "iw.h"
++
++SECTION(survey);
++
++static int print_survey_handler(struct nl_msg *msg, void *arg)
 +{
-+	struct ieee80211_hw *hw = sc->pri_wiphy->hw;
-+	unsigned int i;
++	struct nlattr *tb[NL80211_ATTR_MAX + 1];
++	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
++	struct nlattr *sinfo[NL80211_SURVEY_INFO_MAX + 1];
++	char dev[20];
 +
-+	spin_lock_bh(&sc->wiphy_lock);
++	static struct nla_policy survey_policy[NL80211_SURVEY_INFO_MAX + 1] = {
++		[NL80211_SURVEY_INFO_FREQUENCY] = { .type = NLA_U32 },
++		[NL80211_SURVEY_INFO_NOISE] = { .type = NLA_U8 },
++	};
 +
-+	/* Start the primary wiphy */
-+	if (sc->pri_wiphy->state == ATH_WIPHY_ACTIVE) {
-+		ieee80211_wake_queue(hw, skb_queue);
-+		goto unlock;
++	nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
++		  genlmsg_attrlen(gnlh, 0), NULL);
++
++	if_indextoname(nla_get_u32(tb[NL80211_ATTR_IFINDEX]), dev);
++	printf("Survey data from %s\n", dev);
++
++	if (!tb[NL80211_ATTR_SURVEY_INFO]) {
++		fprintf(stderr, "survey data missing!");
++		return NL_SKIP;
 +	}
 +
-+	/* Now start the secondary wiphy queues */
-+	for (i = 0; i < sc->num_sec_wiphy; i++) {
-+		struct ath_wiphy *aphy = sc->sec_wiphy[i];
-+		if (!aphy)
-+			continue;
-+		if (aphy->state != ATH_WIPHY_ACTIVE)
-+			continue;
-+
-+		hw = aphy->hw;
-+		ieee80211_wake_queue(hw, skb_queue);
-+		break;
++	if (nla_parse_nested(sinfo, NL80211_SURVEY_INFO_MAX,
++			     tb[NL80211_ATTR_SURVEY_INFO],
++			     survey_policy)) {
++		fprintf(stderr, "failed to parse nested attributes!\n");
++		return NL_SKIP;
 +	}
 +
-+unlock:
-+	spin_unlock_bh(&sc->wiphy_lock);
++	if (sinfo[NL80211_SURVEY_INFO_FREQUENCY])
++		printf("\tfrequency:\t%u MHz\n",
++			nla_get_u32(sinfo[NL80211_SURVEY_INFO_FREQUENCY]));
++	if (sinfo[NL80211_SURVEY_INFO_NOISE])
++		printf("\tnoise:\t\t%d dBm\n",
++			(int8_t)nla_get_u8(sinfo[NL80211_SURVEY_INFO_NOISE]));
++	return NL_SKIP;
 +}
 +
-+/* Go ahead and propagate information to all virtual wiphys, it won't hurt */
-+void ath_mac80211_stop_queue(struct ath_softc *sc, u16 skb_queue)
++static int handle_survey_dump(struct nl80211_state *state,
++			       struct nl_cb *cb,
++			       struct nl_msg *msg,
++			       int argc, char **argv)
 +{
-+	struct ieee80211_hw *hw = sc->pri_wiphy->hw;
-+	unsigned int i;
-+
-+	spin_lock_bh(&sc->wiphy_lock);
-+
-+	/* Stop the primary wiphy */
-+	ieee80211_stop_queue(hw, skb_queue);
-+
-+	/* Now stop the secondary wiphy queues */
-+	for (i = 0; i < sc->num_sec_wiphy; i++) {
-+		struct ath_wiphy *aphy = sc->sec_wiphy[i];
-+		if (!aphy)
-+			continue;
-+		hw = aphy->hw;
-+		ieee80211_stop_queue(hw, skb_queue);
-+	}
-+	spin_unlock_bh(&sc->wiphy_lock);
++	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, print_survey_handler, NULL);
++	return 0;
 +}
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index f52295f..977bac5 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -915,9 +915,10 @@ int ath_tx_get_qnum(struct ath_softc *sc, int qtype, int haltype)
- struct ath_txq *ath_test_get_txq(struct ath_softc *sc, struct sk_buff *skb)
- {
- 	struct ath_txq *txq = NULL;
-+	u16 skb_queue = skb_get_queue_mapping(skb);
- 	int qnum;
++COMMAND(survey, dump, NULL,
++	NL80211_CMD_GET_SURVEY, NLM_F_DUMP, CIB_NETDEV, handle_survey_dump,
++	"List all gathered channel survey data");
++
+--- iw.orig/nl80211.h
++++ iw/nl80211.h
+@@ -160,6 +160,11 @@
+  * @NL80211_CMD_SCAN_ABORTED: scan was aborted, for unspecified reasons,
+  *	partial scan results may be available
+  *
++ * @NL80211_CMD_GET_SURVEY: get survey resuls, e.g. channel occupation
++ *      or noise level
++ * @NL80211_CMD_NEW_SURVEY_RESULTS: survey data notification (as a reply to
++ *	NL80211_CMD_GET_SURVEY and on the "scan" multicast group)
++ *
+  * @NL80211_CMD_REG_CHANGE: indicates to userspace the regulatory domain
+  * 	has been changed and provides details of the request information
+  * 	that caused the change such as who initiated the regulatory request
+@@ -341,6 +346,9 @@
  
--	qnum = ath_get_hal_qnum(skb_get_queue_mapping(skb), sc);
-+	qnum = ath_get_hal_qnum(skb_queue, sc);
- 	txq = &sc->tx.txq[qnum];
+ 	NL80211_CMD_SET_WIPHY_NETNS,
  
- 	spin_lock_bh(&txq->axq_lock);
-@@ -926,7 +927,7 @@ struct ath_txq *ath_test_get_txq(struct ath_softc *sc, struct sk_buff *skb)
- 		ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_XMIT,
- 			  "TX queue: %d is full, depth: %d\n",
- 			  qnum, txq->axq_depth);
--		ieee80211_stop_queue(sc->hw, skb_get_queue_mapping(skb));
-+		ath_mac80211_stop_queue(sc, skb_queue);
- 		txq->stopped = 1;
- 		spin_unlock_bh(&txq->axq_lock);
- 		return NULL;
-@@ -1705,8 +1706,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		 * on the queue */
- 		spin_lock_bh(&txq->axq_lock);
- 		if (sc->tx.txq[txq->axq_qnum].axq_depth > 1) {
--			ieee80211_stop_queue(sc->hw,
--				skb_get_queue_mapping(skb));
-+			ath_mac80211_stop_queue(sc, skb_get_queue_mapping(skb));
- 			txq->stopped = 1;
- 		}
- 		spin_unlock_bh(&txq->axq_lock);
-@@ -1946,7 +1946,7 @@ static void ath_wake_mac80211_queue(struct ath_softc *sc, struct ath_txq *txq)
- 	    sc->tx.txq[txq->axq_qnum].axq_depth <= (ATH_TXBUF - 20)) {
- 		qnum = ath_get_mac80211_qnum(txq->axq_qnum, sc);
- 		if (qnum != -1) {
--			ieee80211_wake_queue(sc->hw, qnum);
-+			ath_mac80211_start_queue(sc, qnum);
- 			txq->stopped = 0;
- 		}
- 	}
++	NL80211_CMD_GET_SURVEY,
++	NL80211_CMD_NEW_SURVEY_RESULTS,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -584,6 +592,10 @@
+  *	changed then the list changed and the dump should be repeated
+  *	completely from scratch.
+  *
++ * @NL80211_ATTR_SURVEY_INFO: survey information about a channel, part of
++ *      the survey response for %NL80211_CMD_GET_SURVEY, nested attribute
++ *      containing info as possible, see &enum survey_info.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -714,6 +726,8 @@
+ 
+ 	NL80211_ATTR_PID,
+ 
++	NL80211_ATTR_SURVEY_INFO,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -1117,6 +1131,26 @@
+ };
+ 
+ /**
++ * enum nl80211_survey_info - survey information
++ *
++ * These attribute types are used with %NL80211_ATTR_SURVEY_INFO
++ * when getting information about a survey.
++ *
++ * @__NL80211_SURVEY_INFO_INVALID: attribute number 0 is reserved
++ * @NL80211_SURVEY_INFO_FREQUENCY: center frequency of channel
++ * @NL80211_SURVEY_INFO_NOISE: noise level of channel (u8, dBm)
++ */
++enum nl80211_survey_info {
++	__NL80211_SURVEY_INFO_INVALID,
++	NL80211_SURVEY_INFO_FREQUENCY,
++	NL80211_SURVEY_INFO_NOISE,
++
++	/* keep last */
++	__NL80211_SURVEY_INFO_AFTER_LAST,
++	NL80211_SURVEY_INFO_MAX = __NL80211_SURVEY_INFO_AFTER_LAST - 1
++};
++
++/**
+  * enum nl80211_mntr_flags - monitor configuration flags
+  *
+  * Monitor configuration flags.
+
 -- 
-1.6.5.2.143.g8cc62
-
+http://www.holgerschurig.de
