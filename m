@@ -1,41 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adelie.canonical.com ([91.189.90.139]:46786 "EHLO
-	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752065AbZKEDVw (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:49272 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751090AbZKKFPo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 22:21:52 -0500
-From: Keng-Yu Lin <keng-yu.lin@canonical.com>
-To: linux-wireless@vger.kernel.org
-Cc: Keng-Yu Lin <keng-yu.lin@canonical.com>
-Subject: [PATCH] ath5k: add LED support for Acer Aspire One AO751h/AO531h
-Date: Thu,  5 Nov 2009 11:21:37 +0800
-Message-Id: <1257391297-26808-1-git-send-email-keng-yu.lin@canonical.com>
-In-Reply-To: <b6c5339f0911041859v762f90f4u1b369a80841ea756@mail.gmail.com>
-References: <b6c5339f0911041859v762f90f4u1b369a80841ea756@mail.gmail.com>
+	Wed, 11 Nov 2009 00:15:44 -0500
+Received: by iwn8 with SMTP id 8so683182iwn.33
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2009 21:15:50 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890911102015t3b429a61s353845c8b1d63@mail.gmail.com>
+References: <43e72e890911101640r69ad67c6l2e48250596c19d44@mail.gmail.com>
+	<19194.14704.375018.158963@gargle.gargle.HOWL> <43e72e890911102015t3b429a61s353845c8b1d63@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 10 Nov 2009 21:15:30 -0800
+Message-ID: <43e72e890911102115p5c84d5f4w5e1dee4f7c523ae9@mail.gmail.com>
+Subject: Re: ath9k rate control - busted
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Aeolus Yang <Aeolus.Yang@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add LED support for a Foxconn AR242X module, found on
-the Acer Aspire One models AO751h/AO531h
+So I tested the AP with 11n-only option setting both on 20mhz and 40
+mhz channel bandwidth setting (although in reality I only see it
+setting itself to 20 mhz). The rates are not so bad, I consistant
+usage of MCS4 with throughput sometimes hitting 30mbps on the end
+iperf server.
 
-Signed-off-by: Keng-Yu Lin <keng-yu.lin@canonical.com>
----
- drivers/net/wireless/ath/ath5k/led.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Here is the rcstat
 
-diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
-index b767c3b..7ce98bd 100644
---- a/drivers/net/wireless/ath/ath5k/led.c
-+++ b/drivers/net/wireless/ath/ath5k/led.c
-@@ -59,6 +59,8 @@ static const struct pci_device_id ath5k_led_devices[] = {
- 	{ ATH_SDEVICE(PCI_VENDOR_ID_COMPAQ, PCI_ANY_ID), ATH_LED(1, 1) },
- 	/* Acer Aspire One A150 (maximlevitsky@gmail.com) */
- 	{ ATH_SDEVICE(PCI_VENDOR_ID_FOXCONN, 0xe008), ATH_LED(3, 0) },
-+	/* Acer Aspire One AO531h AO751h (keng-yu.lin@canonical.com) */
-+	{ ATH_SDEVICE(PCI_VENDOR_ID_FOXCONN, 0xe00d), ATH_LED(3, 0) },
- 	/* Acer Ferrari 5000 (russ.dill@gmail.com) */
- 	{ ATH_SDEVICE(PCI_VENDOR_ID_AMBIT, 0x0422), ATH_LED(1, 1) },
- 	/* E-machines E510 (tuliom@gmail.com) */
--- 
-1.6.3.3
+very 2.0s: cat rcstat
 
+ Tue Nov 10 21:05:37 2009
+
+ Rate         Success  Retries  XRetries PER
+
+  1.0:        0        0        0        0
+  2.0:        0        0        0        0
+  5.5:        0        0        0        0
+ 11.0:        0        0        0        0
+  6.0:        0        0        0        0
+  9.0:        0        0        0        0
+ 12.0:        0        0        0        0
+ 18.0:        0        0        0        0
+ 24.0:        0        0        0        0
+ 36.0:        0        0        0        0
+ 48.0:        0        0        0        0
+ 54.0:        0        0        0        0
+  6.5:        0        0        0        0
+ 13.0:        1        0        0        0
+ 19.5:      650       77        5        0
+ 26.0:    31906     3022      148       10
+ 39.0:    49889    13260     2853       17
+ 52.0:     3421     2318     1199       28
+ 58.5:       21       81       63       87
+ 65.0:        0        0        0        0
+
+So it seems the issues I saw are only caused on extremely noisy environments.
+
+  Luis
