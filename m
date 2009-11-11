@@ -1,69 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22583 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:20361 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758859AbZKEVhF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2009 16:37:05 -0500
-Subject: Re: [PATCH] Libertas: Fix issues while configuring host sleep
-From: Dan Williams <dcbw@redhat.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: libertas-dev@lists.infradead.org,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1257383195-951-1-git-send-email-bzhao@marvell.com>
-References: <1257383195-951-1-git-send-email-bzhao@marvell.com>
+	id S1753267AbZKKJxV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Nov 2009 04:53:21 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2009 01:53:28 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] wireless-regdb: Add new country codes.
+Date: Wed, 11 Nov 2009 15:23:21 +0530
+Message-ID: <1257933202-2659-1-git-send-email-vnatarajan@atheros.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Thu, 05 Nov 2009 13:36:51 -0800
-Message-Id: <1257457011.16377.7.camel@localhost.localdomain>
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-11-04 at 17:06 -0800, Bing Zhao wrote:
-> From: Amitkumar Karwar <akarwar@marvell.com>
-> 
-> Configuration of wake-on-lan for unicast, multicast, broadcast, physical
-> activity was not working. Kernel panic issue was there when user tries to
-> disable WOL. Fixed them.
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+A few new countries and their regulatory domains are added as follows,
+Added Barbados(BB) with FCC2_World and 5 GHz HT40 mode enabled.
+Added Cambodia(KH) with ETSI1_World and 5 GHz HT40 mode enabled.
+Added Greenlad(GL) with ETSI1_World and 5 GHz HT40 mode disabled.
+Added Greneda(GD) with FCC3_FCCA and 5 GHz HT40 mode enabled.
+Added Guam(GU) with FCC1_FCCA and 5 GHz HT40 mode disabled.
+Added Haiti(HT) with ETSI1_World and 5 GHz HT40 mode enabled.
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ db.txt |   37 +++++++++++++++++++++++++++++++++++++
+ 1 files changed, 37 insertions(+), 0 deletions(-)
 
-> ---
->  drivers/net/wireless/libertas/ethtool.c |   16 +++++++++++-----
->  1 files changed, 11 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
-> index 039b555..eeda6d7 100644
-> --- a/drivers/net/wireless/libertas/ethtool.c
-> +++ b/drivers/net/wireless/libertas/ethtool.c
-> @@ -169,16 +169,22 @@ static int lbs_ethtool_set_wol(struct net_device *dev,
->  	struct lbs_private *priv = dev->ml_priv;
->  	uint32_t criteria = 0;
->  
-> -	if (priv->wol_criteria == 0xffffffff && wol->wolopts)
-> +	if (priv->wol_criteria != 0xffffffff && wol->wolopts)
->  		return -EOPNOTSUPP;
->  
->  	if (wol->wolopts & ~(WAKE_UCAST|WAKE_MCAST|WAKE_BCAST|WAKE_PHY))
->  		return -EOPNOTSUPP;
->  
-> -	if (wol->wolopts & WAKE_UCAST) criteria |= EHS_WAKE_ON_UNICAST_DATA;
-> -	if (wol->wolopts & WAKE_MCAST) criteria |= EHS_WAKE_ON_MULTICAST_DATA;
-> -	if (wol->wolopts & WAKE_BCAST) criteria |= EHS_WAKE_ON_BROADCAST_DATA;
-> -	if (wol->wolopts & WAKE_PHY)   criteria |= EHS_WAKE_ON_MAC_EVENT;
-> +	if (wol->wolopts & WAKE_UCAST)
-> +		criteria |= EHS_WAKE_ON_UNICAST_DATA;
-> +	if (wol->wolopts & WAKE_MCAST)
-> +		criteria |= EHS_WAKE_ON_MULTICAST_DATA;
-> +	if (wol->wolopts & WAKE_BCAST)
-> +		criteria |= EHS_WAKE_ON_BROADCAST_DATA;
-> +	if (wol->wolopts & WAKE_PHY)
-> +		criteria |= EHS_WAKE_ON_MAC_EVENT;
-> +	if (wol->wolopts == 0)
-> +		criteria |= EHS_REMOVE_WAKEUP;
->  
->  	return lbs_host_sleep_cfg(priv, criteria, (struct wol_config *)NULL);
->  }
+diff --git a/db.txt b/db.txt
+index a3cd6be..a99b3b7 100644
+--- a/db.txt
++++ b/db.txt
+@@ -63,6 +63,12 @@ country BA:
+ 	(5250 - 5330 @ 20), (N/A, 20), DFS
+ 	(5490 - 5710 @ 20), (N/A, 27), DFS
+ 
++country BB:
++	(2402 - 2482 @ 40), (N/A, 20)
++	(5170 - 5250 @ 40), (3, 23)
++	(5250 - 5330 @ 40), (3, 23), DFS
++	(5735 - 5835 @ 40), (3, 30)
++
+ country BE:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 40), (N/A, 20)
+@@ -241,18 +247,37 @@ country GB:
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
+ 
++country GD:
++	(2402 - 2472 @ 40), (3, 27)
++	(5170 - 5250 @ 40), (3, 17)
++	(5250 - 5330 @ 40), (3, 20), DFS
++	(5490 - 5710 @ 40), (3, 20), DFS
++	(5735 - 5835 @ 40), (3, 30)
++
+ country GR:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
+ 
++country GL:
++	(2402 - 2482 @ 40), (N/A, 20)
++	(5170 - 5250 @ 20), (N/A, 20)
++	(5250 - 5330 @ 20), (N/A, 20), DFS
++	(5490 - 5710 @ 20), (N/A, 27), DFS
++
+ country GT:
+ 	(2402 - 2472 @ 40), (3, 27)
+ 	(5170 - 5250 @ 40), (3, 17)
+ 	(5250 - 5330 @ 40), (3, 23), DFS
+ 	(5735 - 5835 @ 40), (3, 30)
+ 
++country GU:
++	(2402 - 2472 @ 40), (3, 27)
++	(5170 - 5250 @ 20), (3, 17)
++	(5250 - 5330 @ 20), (3, 23), DFS
++	(5735 - 5835 @ 20), (3, 30)
++
+ country HN:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 
+@@ -267,6 +292,12 @@ country HR:
+ 	(5170 - 5250 @ 20), (N/A, 20)
+ 	(5250 - 5330 @ 20), (N/A, 20), DFS
+ 
++country HT:
++	(2402 - 2482 @ 40), (N/A, 20)
++	(5170 - 5250 @ 40), (N/A, 20)
++	(5250 - 5330 @ 40), (N/A, 20), DFS
++	(5490 - 5710 @ 40), (N/A, 27), DFS
++
+ country HU:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 40), (N/A, 20)
+@@ -332,6 +363,12 @@ country JO:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 20), (N/A, 18)
+ 
++country KH:
++	(2402 - 2482 @ 40), (N/A, 20)
++	(5170 - 5250 @ 40), (N/A, 20)
++	(5250 - 5330 @ 40), (N/A, 20), DFS
++	(5490 - 5710 @ 40), (N/A, 27), DFS
++
+ country KP:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5330 @ 40), (3, 20)
+-- 
+1.6.0.4
 
