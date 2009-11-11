@@ -1,64 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58957 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757100AbZKWKtY (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:46202 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757535AbZKKXyf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 05:49:24 -0500
-Subject: Re: [PATCH 2.6.32] rfkill: fix miscdev ops
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1258973082.3675.0.camel@maxim-laptop>
-References: <1258968499.3271.5.camel@maxim-laptop>
-	 <1258972050.7094.140.camel@johannes.local>
-	 <1258973082.3675.0.camel@maxim-laptop>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-mNEaiu4PjpLPo/nNM9lY"
-Date: Mon, 23 Nov 2009 11:49:22 +0100
-Message-ID: <1258973362.7094.151.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 11 Nov 2009 18:54:35 -0500
+Date: Wed, 11 Nov 2009 17:54:38 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>, chunkeey@web.de
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] p54usb: Remove DMA buffer from stack
+Message-ID: <4afb4ebe.aG/GwqejIBV6vYXK%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 2.6.32-rc6 from wireless-testing, the following warning is emitted:
 
---=-mNEaiu4PjpLPo/nNM9lY
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+------------[ cut here ]------------                                                                           
+WARNING: at lib/dma-debug.c:860 check_for_stack+0xaa/0xe0()                                                    
+Hardware name: HP Pavilion dv2700 Notebook PC                                                                  
+ehci_hcd 0000:00:02.1: DMA-API: device driver maps memory fromstack
+	 [addr=ffff8800b6e2bca8]                    
+Modules linked in: <Removed> 
+Pid: 16378, comm: modprobe Not tainted 2.6.32-rc6-wl #244                                                      
+Call Trace:                                                                                                    
+ [<ffffffff81049698>] warn_slowpath_common+0x78/0xb0                                                           
+ [<ffffffff8104972c>] warn_slowpath_fmt+0x3c/0x40                                                              
+ [<ffffffff811ae52a>] check_for_stack+0xaa/0xe0                                                                
+ [<ffffffff811afc8d>] debug_dma_map_page+0xfd/0x170                                                            
+ [<ffffffffa006297a>] usb_hcd_submit_urb+0x3da/0x9c0 [usbcore]                                                 
+ [<ffffffff81076e6f>] ? lockdep_init_map+0x5f/0x5d0                                                            
+ [<ffffffffa0063365>] usb_submit_urb+0xe5/0x260 [usbcore]                                                      
+ [<ffffffffa0064b7e>] usb_start_wait_urb+0x5e/0xf0 [usbcore]                                                   
+ [<ffffffffa0063943>] ? usb_init_urb+0x23/0x40 [usbcore]                                                       
+ [<ffffffffa0064cd4>] usb_bulk_msg+0xc4/0x150 [usbcore]                                                        
+ [<ffffffffa0441a91>] T.719+0x31/0x40 [p54usb]                                                                 
+ [<ffffffffa0441acf>] p54u_upload_firmware_3887+0x2f/0x490 [p54usb]                                            
+ [<ffffffffa049c667>] ? p54_parse_firmware+0x427/0x450 [p54common]                                             
+ <Rest of traceback removed>
+---[ end trace f77df0316ddad3de ]---                                                                           
 
-On Mon, 2009-11-23 at 12:44 +0200, Maxim Levitsky wrote:
-> On Mon, 2009-11-23 at 11:27 +0100, Johannes Berg wrote:=20
-> > The /dev/rfkill ops don't refer to the module,
-> > so it is possible to unload the module while
-> > file descriptors are open. Fix this oversight.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.org>
+---
 
-> Thanks for the quick patch!, works fine.
+John,
 
-:)
-I'd tested myself in kvm so didn't bother asking, but John can add
-Tested-by I guess if you would like.
+This is 2.6.32 material. Sorry to find it so late in the rc cycle. I hop
+DaveM doesn't give you too much trouble.
 
-johannes
+Larry
+---
 
---=-mNEaiu4PjpLPo/nNM9lY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLCmivAAoJEODzc/N7+Qma/jkQAL+didyxU7RvEosHRmGIwTAS
-x5OZ6eS3f/Tn1XsLD77Mtb06aoHvfzkBz8/puYhOWayYyYDy7UvrbIqAXN3bkW93
-BIYEYwRn5bqZFgDX0Mid9y8fVXodQQkmcxNfkyrDXVdKc4tl6/1XYEVI8RmLxYft
-AnwVeTDJVq0HAJ+7fByVP575l3oGUGUsZl23zFyHjMT9RGCSX4+GzW0sQFk/th9M
-YOmAhwvhQbyQXAsww05z9dYft/JWUY8W+VEx/Fz4kALijFApc1wDLA27Gt2UahDv
-tIlY0imKSHEpXZtgD7oGkw5yq8KS5thxrjj4Wit0N5gKXqyM0PiHiALP0WFDQVgf
-UnZcX8KYAVjaPMpiEuWA+d9V4lyvecZWH+dkdX8FVG/vr9WutsaCxzdK76bLUZfe
-beGcQy4bhgzyOKSu7MQh/r7vmQHqXGqZcLAG9ZZ9tC5VmHITtd6vnkkPuQp1KDaw
-GLVbeuHDV26HwIjlzKayvDWvJ4DBmUpfDb/bNOCSWL7NVXYzjI2RCEniPM7Eyic9
-bIuKJfpc5WxV0EYe/hvQ/K0opkalLjS+fI+6fHR3xUI+fD3+EEZjC8uNXIm9717C
-Dd+jZh5vARDBLjOwhioRFGy0jYtRWcr9fpvCIVV671pCJEivdS8Igdeo8m+6+R5j
-AphSr6DdG2RvBPVYpy3N
-=ZxTh
------END PGP SIGNATURE-----
-
---=-mNEaiu4PjpLPo/nNM9lY--
+Index: wireless-testing/drivers/net/wireless/p54/p54usb.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/p54/p54usb.c
++++ wireless-testing/drivers/net/wireless/p54/p54usb.c
+@@ -426,12 +426,16 @@ static const char p54u_romboot_3887[] =
+ static int p54u_firmware_reset_3887(struct ieee80211_hw *dev)
+ {
+ 	struct p54u_priv *priv = dev->priv;
+-	u8 buf[4];
++	u8 *buf;
+ 	int ret;
+ 
+-	memcpy(&buf, p54u_romboot_3887, sizeof(buf));
++	buf = kmalloc(4, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++ 	memcpy(buf, p54u_romboot_3887, 4);
+ 	ret = p54u_bulk_msg(priv, P54U_PIPE_DATA,
+-			    buf, sizeof(buf));
++			    buf, 4);
++	kfree(buf);
+ 	if (ret)
+ 		dev_err(&priv->udev->dev, "(p54usb) unable to jump to "
+ 			"boot ROM (%d)!\n", ret);
 
