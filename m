@@ -1,59 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:53580 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758380AbZKESlm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2009 13:41:42 -0500
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 05/41] rt2800pci: fix comment about register access
-Date: Thu, 5 Nov 2009 19:41:43 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173232.28463.47998.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173232.28463.47998.sendpatchset@localhost.localdomain>
+Received: from nbd.name ([88.198.39.176]:42168 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755263AbZKKMWT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Nov 2009 07:22:19 -0500
+Message-ID: <4AFAAC7F.8000903@openwrt.org>
+Date: Wed, 11 Nov 2009 13:22:23 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911051941.44268.IvDoorn@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] iw: add a command for moving a STA into an AP VLAN
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2800pci: fix comment about register access
-> 
-> Registers used for indirect BBP and RF registers access are
-> respectively BBPCSR and RFCSR, also make it clear that all CSR
-> registers access goes through rt2x00pci_register_[read,write]()
-> methods.
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-
-> ---
->  drivers/net/wireless/rt2x00/rt2800pci.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
-> ===================================================================
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -56,8 +56,10 @@ MODULE_PARM_DESC(nohwcrypt, "Disable har
->  
->  /*
->   * Register access.
-> + * All access to the CSR registers will go through the methods
-> + * rt2x00pci_register_read and rt2x00pci_register_write.
->   * BBP and RF register require indirect register access,
-> - * and use the CSR registers PHY_CSR3 and PHY_CSR4 to achieve this.
-> + * and use the CSR registers BBPCSR and RFCSR to achieve this.
->   * These indirect registers work with busy bits,
->   * and we will try maximal REGISTER_BUSY_COUNT times to access
->   * the register while taking a REGISTER_BUSY_DELAY us delay
-> 
-
-
+--- a/station.c
++++ b/station.c
+@@ -196,7 +196,7 @@ COMMAND(station, del, "<MAC address>",
+ 	NL80211_CMD_DEL_STATION, 0, CIB_NETDEV, handle_station_get,
+ 	"Remove the given station entry (use with caution!)");
+ 
+-static int handle_station_set(struct nl80211_state *state,
++static int handle_station_set_plink(struct nl80211_state *state,
+ 			      struct nl_cb *cb,
+ 			      struct nl_msg *msg,
+ 			      int argc, char **argv)
+@@ -241,9 +241,56 @@ static int handle_station_set(struct nl8
+ 	return -ENOBUFS;
+ }
+ COMMAND(station, set, "<MAC address> plink_action <open|block>",
+-	NL80211_CMD_SET_STATION, 0, CIB_NETDEV, handle_station_set,
++	NL80211_CMD_SET_STATION, 0, CIB_NETDEV, handle_station_set_plink,
+ 	"Set mesh peer link action for this station (peer).");
+ 
++static int handle_station_set_vlan(struct nl80211_state *state,
++			      struct nl_cb *cb,
++			      struct nl_msg *msg,
++			      int argc, char **argv)
++{
++	unsigned char mac_addr[ETH_ALEN];
++	unsigned long sta_vlan = 0;
++	char *err = NULL;
++
++	if (argc < 3)
++		return 1;
++
++	if (mac_addr_a2n(mac_addr, argv[0])) {
++		fprintf(stderr, "invalid mac address\n");
++		return 2;
++	}
++	argc--;
++	argv++;
++
++	if (strcmp("vlan", argv[0]) != 0)
++		return 1;
++	argc--;
++	argv++;
++
++	sta_vlan = strtoul(argv[0], &err, 0);
++	if (err && *err) {
++		fprintf(stderr, "invalid vlan id\n");
++		return 2;
++	}
++	argc--;
++	argv++;
++
++	if (argc)
++		return 1;
++
++	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
++	NLA_PUT_U32(msg, NL80211_ATTR_STA_VLAN, sta_vlan);
++
++	return 0;
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND(station, set, "<MAC address> vlan <ifindex>",
++	NL80211_CMD_SET_STATION, 0, CIB_NETDEV, handle_station_set_vlan,
++	"Set an AP VLAN for this station.");
++
++
+ static int handle_station_dump(struct nl80211_state *state,
+ 			       struct nl_cb *cb,
+ 			       struct nl_msg *msg,
