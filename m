@@ -1,59 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39154 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932329AbZKRS0y (ORCPT
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:38098 "EHLO
+	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759290AbZKKWFE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 13:26:54 -0500
-Subject: Re: [PATCH] mac80211: use a structure to hold the mesh config
- information element
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rui Paulo <rpaulo@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1258568579-21900-1-git-send-email-rpaulo@gmail.com>
-References: <1258568579-21900-1-git-send-email-rpaulo@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-mUP/oC+z/O5VOOy5gNLJ"
-Date: Wed, 18 Nov 2009 19:26:29 +0100
-Message-ID: <1258568789.30511.52.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 11 Nov 2009 17:05:04 -0500
+Received: by fxm21 with SMTP id 21so1549392fxm.21
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2009 14:05:08 -0800 (PST)
+Message-ID: <4AFB350F.7010207@lwfinger.net>
+Date: Wed, 11 Nov 2009 16:05:03 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Please share info about power consumption characteristics of
+ your USB adapter
+References: <200911112219.08814.jkrzyszt@tis.icnet.pl>
+In-Reply-To: <200911112219.08814.jkrzyszt@tis.icnet.pl>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 11/11/2009 03:19 PM, Janusz Krzysztofik wrote:
+> Hi,
+> 
+> Please anyone owning one of adapters listed below: if the adapter is supported 
+> by linux-wireless, please check for MaxPower with lsusb -v and give me the 
+> result. I am looking for an adapter with MaxPower less than 300mA and would 
+> rather not buy them all to learn they all do not fit :-).
+> 
+> Once again, sorry for abusing a devel list for this.
+> 
+> Thanks,
+> Janusz
+> 
+> Asus WL-167g V2 (90-I8N2E0-0UAZ)
+> D-Link DWA-125
+> D-Link DWA-140
+> D-Link DWL-G122
+> Intellinet 503457
+> Linksys WUSB100-EU
+> Linksys WUSB54GC-EU
+> Modecom WIFI-CARD-USB-MC-0105
+> Modecom WIFI-CARD-USB-MC-0106
+> Netgear WG111TEE
+> Netgear WPN111EE
+> OvisLink WL-1600USB
+> Pentagram P 6132-08
+> TP-Link TL-WN422G
+> TP-Link TL-WN721N
+> TP-Link TL-WN821N
 
---=-mUP/oC+z/O5VOOy5gNLJ
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I do not have any of the specific models you mention, but here are the 3 that I
+have:
 
-Cool, thanks.
+Netgear WG111v2    [Realtek RTL8187L] USB ID 0846:6a00 MaxPower 500mA
+Level One 0301USB  [Realtek RTL8187B] USB ID 0bda:8187 MaxPower 500mA
+Dell 1450 USB      [uses p54usb]      USB ID 413c:8104 MaxPower 500mA
 
->                 case WLAN_EID_MESH_CONFIG:
->                         elems->mesh_config =3D pos;
-> -                       elems->mesh_config_len =3D elen;
->                         break;
+There seems to be a pattern!
 
-Should there be a length check here?
-
-johannes
-
---=-mUP/oC+z/O5VOOy5gNLJ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLBDxSAAoJEODzc/N7+QmaAzAQALX3N2gcPSo8+vlHYGTGkZgh
-KF48V2+1Rxhlx+nrVOWAl4CHa8Or1ZxAHaIezgF3objNmcINLjUaymokzPOAMDva
-G3nqzQv3HkCHQ8BVdui9pS4zh1eAJPzPgsFmzVk1bWBlhsw7LH3vGQDx7JRVFu7d
-9FZklOgQa8U3hsE1474mlXK9ZjIZpeq/r3/JqCRzcfni2doxBtbNO/TvehCuG/zU
-vXbhIy8Zqzmu1jzuwKZYE5AbqUXcnAD2DE/HYwjVUlaTiJux905YEmLiW0H6+rQk
-bkrAf9ZxMSPuG/MCMLmWJmU+tkMCgzXWPN3HbMQbwSC75c+NSR3gH/QiNAvQL5SY
-JpeKug1aZb3ZWb38gw2dpOiQlzocsUZI+2OXy7lociPk/5cbJoMcKi+SOKfSPvp3
-s4b2TZ+YFb87UYh00FksAkVxEA2u1IUy6bVr3IfIfP1VpFQrxiWcFmV+C64nYsMM
-KUkWuruqBTgp9+7wvOmtTph0g1I1xi6F5/0t4yLuWcbntQkaSuJeSVas1dxFl4AW
-T3EUhmo/mVbY1/PFR2qFETks41aiIUZfwn2NkrCMczdlIOWH4w3+08hPgUAGCYSg
-9ONTESB7R6H2vxFMksfMAk4y1BNw//xv3O6bzXv3MeHqAoIRVlV39KUABPtNGhNW
-N3G3Eoplp0JL56Nj9i9E
-=kIpV
------END PGP SIGNATURE-----
-
---=-mUP/oC+z/O5VOOy5gNLJ--
-
+Larry
