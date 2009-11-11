@@ -1,63 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:34093 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750849AbZKIRbS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 12:31:18 -0500
-Message-ID: <4AF851E0.1020803@lwfinger.net>
-Date: Mon, 09 Nov 2009 11:31:12 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.36.123.2]:36520 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751914AbZKKEHK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Nov 2009 23:07:10 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2009 20:07:16 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-To: Mauro Carvalho Chehab <mchehab@infradead.org>
-CC: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Greg KH <gregkh@suse.de>, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] Staging: remove rtl8187se driver because of lack of development
- activities
-References: <200911091731.36861.bzolnier@gmail.com> <20091109145629.3587c9f6@pedra.chehab.org>
-In-Reply-To: <20091109145629.3587c9f6@pedra.chehab.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19194.14583.795686.199320@gargle.gargle.HOWL>
+Date: Wed, 11 Nov 2009 09:39:27 +0530
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Aeolus Yang <Aeolus.Yang@Atheros.com>
+Subject: Oops on ath_txq_schedule() hit a BUG_ON()
+In-Reply-To: <43e72e890911101606j46e1edfn64e331f3463d4da5@mail.gmail.com>
+References: <43e72e890911101606j46e1edfn64e331f3463d4da5@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/09/2009 10:56 AM, Mauro Carvalho Chehab wrote:
-> Hi Bartolomiej,
+Luis R. Rodriguez wrote:
+> I managed to get an oops the 2.6.32-rc wireless bits on ath9k by using
+> linux-backports-modules package on Ubuntu 9.10 which is on 2.6.31. I'm
+> pretty sure this is a real oops which can be reproduced on 2.6.32-rc6
+> but I was unable to boot the same laptop on 2.6.32-rc6 [1] due to an
+> early oops on what seems to be i915.
 > 
-> Em Mon, 9 Nov 2009 17:31:36 +0100
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> escreveu:
-> 
->> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->> Subject: [PATCH] Staging: remove rtl8187se driver because of lack of development activities
->>
->> This driver hasn't seen any real development activities since early July:
->>
->>    257bc86   Staging: rtl8187se: remove unused #include <linu
->>    2035beb   param:remove-useless-writable-charp
->>    305409a   tree-wide: fix some typos and punctuation in com
->>    b881c6c   Staging: fix wireless drivers depends
->>    a010a33   Staging: rtl8187se/rtl8192e/rtl8192su: allow mod
->>    125b181   staging: Add proper selection of WIRELESS_EXT an
->>    b3184e1   Staging: rtl8187se: Fix comment-out-typo
->>    b6ac161   Staging: ARRAY_SIZE changes
->>
->> so remove it for now.
->>
->> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> This driver has several points in common with rtl8192* drivers. As I'm
-> currently working on cleaning up rtl8192u and see what can be done to merge the
-> common code used by all those realtek drivers, I prefer to keep this driver for
-> more time at the tree.
-> 
-> The issue I'm currently facing is that we should rearrange the drivers/staging/rtl* 
-> into a common rtl component tree, moving the common components to there. This will
-> avoid duplicated efforts to cleanup the same code several times, on different
-> places.
-> 
-> I started working on it this weekend, but I haven't finish it yet.
+> The EIP is at ath_txq_schedule() but the oops happens due to a
+> BUG_ON() (used to be ASSERT()) on this piece of code:
 
-As I just told Bart (off-list), I started my work on a mainline rtl8187se driver
-with the rtl8180 code. There should be plenty of opportunity to set up common
-code for the rtl* drivers. I will keep a close eye on your developments.
+I have seen this once, and I have a backtrace.
 
-Larry
+> This happens against an 802.11n AP, the WRT610n with 802.11n enabled.
+> The AP has this option to let you enable "only 802.11n", whatever that
+> means, its on the 2.4 GHz so I doubt the "only 802.11n" option is not
+> really only enabling 802.11n.
+
+Pure 11n is not needed, it can be reproduced with any 11n AP.
+A suspend/resume cycle exposes this issue occasionally.
+
+> This was with SpeedStep enabled, the power pulled off and doing iperf
+> UDP out (TX'ing). Haven't managed to find what makes the assumption
+> incorrect yet but it obviously is. If we cannot find what it is soon
+> we need to figure out a compromise and change it to a WARN_ONCE or so.
+
+This issue is irrelevant to SpeedStep.
+The tx_buf array of pointers has to be cleaned up a bit.
+
+Sujith
