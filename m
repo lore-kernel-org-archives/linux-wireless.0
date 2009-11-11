@@ -1,80 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:31482 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932198AbZKMT4j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 14:56:39 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 03/16] iwlwifi: remove unused parameter from iwl_channel_info
-Date: Fri, 13 Nov 2009 11:56:25 -0800
-Message-Id: <1258142198-3223-4-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
-References: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:60001 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756818AbZKKCfO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Nov 2009 21:35:14 -0500
+Received: by ewy3 with SMTP id 3so740960ewy.37
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2009 18:35:18 -0800 (PST)
+Message-ID: <4AFA22DF.8060907@lwfinger.net>
+Date: Tue, 10 Nov 2009 20:35:11 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Stefan Monnier <monnier@iro.umontreal.ca>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rtl8187se locks up when switching network
+References: <jwvljidrhm3.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
+In-Reply-To: <jwvljidrhm3.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On 11/10/2009 07:25 PM, Stefan Monnier wrote:
+> I've just dine a few more tests, and switching network works just fine
+> if I "modprobe -r rtl8187se" and then "modprobe rth8187se" between the
+> disconnect and the reconnect, but otherwise the system almost always
+> hangs during the connection to the other network.  The way it hangs is
+> always the same: everything just freezes and 2 of the status
+> leds blink.  The exact moment at which the freeze takes place seems to
+> vary: sometimes it's while getting the IP address, other times its
+> earlier.
 
-Number of HT40 power parameters are not used; remove those from
-iwl_channel_info data structure
+Do you mean that the "Caps Lock" and "num lock" LEDs are blinking? If so, that
+is a kernel panic. You will be able to capture some information about that crash
+by switching to the logging console (CTRL-ALT-F10) just after you initiate the
+process that causes the crash.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h    |    3 ---
- drivers/net/wireless/iwlwifi/iwl-eeprom.c |    7 -------
- 2 files changed, 0 insertions(+), 10 deletions(-)
+> IIUC this driver is not under active development, but maybe someone
+> knows it enough to try and fix it, or maybe there's some alternative
+> driver for this card that I should try?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 9dea8fa..d0f0915 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -295,9 +295,6 @@ struct iwl_channel_info {
- 
- 	/* HT40 channel info */
- 	s8 ht40_max_power_avg;	/* (dBm) regul. eeprom, normal Tx, any rate */
--	s8 ht40_curr_txpow;	/* (dBm) regulatory/spectrum/user (not h/w) */
--	s8 ht40_min_power;	/* always 0 */
--	s8 ht40_scan_power;	/* (dBm) eeprom, direct scans, any rate */
- 	u8 ht40_flags;		/* flags copied from EEPROM */
- 	u8 ht40_extension_channel; /* HT_IE_EXT_CHANNEL_* */
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-index 143728c..e42eb64 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-@@ -751,9 +751,6 @@ static int iwl_mod_ht40_chan_info(struct iwl_priv *priv,
- 
- 	ch_info->ht40_eeprom = *eeprom_ch;
- 	ch_info->ht40_max_power_avg = eeprom_ch->max_power_avg;
--	ch_info->ht40_curr_txpow = eeprom_ch->max_power_avg;
--	ch_info->ht40_min_power = 0;
--	ch_info->ht40_scan_power = eeprom_ch->max_power_avg;
- 	ch_info->ht40_flags = eeprom_ch->flags;
- 	ch_info->ht40_extension_channel &= ~clear_ht40_extension_channel;
- 
-@@ -840,8 +837,6 @@ static s8 iwl_update_common_txpower(struct iwl_priv *priv,
- 		    (ch_info->ht40_max_power_avg < max_txpower_avg)) {
- 			/* Update regulatory-based run-time data */
- 			ch_info->ht40_max_power_avg = max_txpower_avg;
--			ch_info->ht40_curr_txpow = max_txpower_avg;
--			ch_info->ht40_scan_power = max_txpower_avg;
- 		}
- 		ch_info++;
- 	}
-@@ -881,8 +876,6 @@ static s8 iwl_update_channel_txpower(struct iwl_priv *priv,
- 			    (ch_info->ht40_max_power_avg < max_txpower_avg)) {
- 				/* Update regulatory-based run-time data */
- 				ch_info->ht40_max_power_avg = max_txpower_avg;
--				ch_info->ht40_curr_txpow = max_txpower_avg;
--				ch_info->ht40_scan_power = max_txpower_avg;
- 			}
- 			break;
- 		}
--- 
-1.5.6.3
+The vendor driver in staging is not really under active development. We are
+currently writing a mainline driver that uses mac80211 from the vendor code. Of
+course, it is not possible to predict when this driver will be ready.
 
+Larry
