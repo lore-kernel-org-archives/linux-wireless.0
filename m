@@ -1,117 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:20361 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753267AbZKKJxV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 04:53:21 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2009 01:53:28 -0800
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<ath9k-devel@lists.ath9k.org>
-Subject: [PATCH] wireless-regdb: Add new country codes.
-Date: Wed, 11 Nov 2009 15:23:21 +0530
-Message-ID: <1257933202-2659-1-git-send-email-vnatarajan@atheros.com>
+Received: from mx51.mymxserver.com ([85.199.173.110]:15025 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756374AbZKKKaq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Nov 2009 05:30:46 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: [PATCH, v2] cfg80211: introduce nl80211_get_ifidx()
+Date: Wed, 11 Nov 2009 11:30:02 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200911111130.02671.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A few new countries and their regulatory domains are added as follows,
-Added Barbados(BB) with FCC2_World and 5 GHz HT40 mode enabled.
-Added Cambodia(KH) with ETSI1_World and 5 GHz HT40 mode enabled.
-Added Greenlad(GL) with ETSI1_World and 5 GHz HT40 mode disabled.
-Added Greneda(GD) with FCC3_FCCA and 5 GHz HT40 mode enabled.
-Added Guam(GU) with FCC1_FCCA and 5 GHz HT40 mode disabled.
-Added Haiti(HT) with ETSI1_World and 5 GHz HT40 mode enabled.
+... which get's rid of three indentical cut-n-paste sections.
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
+
 ---
- db.txt |   37 +++++++++++++++++++++++++++++++++++++
- 1 files changed, 37 insertions(+), 0 deletions(-)
+v2: moved setting of cb->args[0] in nl80211_dump_scan()
+    changed to "diff -p"
 
-diff --git a/db.txt b/db.txt
-index a3cd6be..a99b3b7 100644
---- a/db.txt
-+++ b/db.txt
-@@ -63,6 +63,12 @@ country BA:
- 	(5250 - 5330 @ 20), (N/A, 20), DFS
- 	(5490 - 5710 @ 20), (N/A, 27), DFS
+--- linux-wl.orig/net/wireless/nl80211.c
++++ linux-wl/net/wireless/nl80211.c
+@@ -151,6 +151,26 @@ nl80211_key_policy[NL80211_KEY_MAX + 1] 
+ 	[NL80211_KEY_DEFAULT_MGMT] = { .type = NLA_FLAG },
+ };
  
-+country BB:
-+	(2402 - 2482 @ 40), (N/A, 20)
-+	(5170 - 5250 @ 40), (3, 23)
-+	(5250 - 5330 @ 40), (3, 23), DFS
-+	(5735 - 5835 @ 40), (3, 30)
++/* ifidx get helper */
++static int nl80211_get_ifidx(struct netlink_callback *cb)
++{
++	int res;
 +
- country BE:
- 	(2402 - 2482 @ 40), (N/A, 20)
- 	(5170 - 5250 @ 40), (N/A, 20)
-@@ -241,18 +247,37 @@ country GB:
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
- 
-+country GD:
-+	(2402 - 2472 @ 40), (3, 27)
-+	(5170 - 5250 @ 40), (3, 17)
-+	(5250 - 5330 @ 40), (3, 20), DFS
-+	(5490 - 5710 @ 40), (3, 20), DFS
-+	(5735 - 5835 @ 40), (3, 30)
++	res = nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
++			  nl80211_fam.attrbuf, nl80211_fam.maxattr,
++			  nl80211_policy);
++	if (res)
++		return res;
 +
- country GR:
- 	(2402 - 2482 @ 40), (N/A, 20)
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
- 
-+country GL:
-+	(2402 - 2482 @ 40), (N/A, 20)
-+	(5170 - 5250 @ 20), (N/A, 20)
-+	(5250 - 5330 @ 20), (N/A, 20), DFS
-+	(5490 - 5710 @ 20), (N/A, 27), DFS
++	if (!nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX])
++		return -EINVAL;
 +
- country GT:
- 	(2402 - 2472 @ 40), (3, 27)
- 	(5170 - 5250 @ 40), (3, 17)
- 	(5250 - 5330 @ 40), (3, 23), DFS
- 	(5735 - 5835 @ 40), (3, 30)
- 
-+country GU:
-+	(2402 - 2472 @ 40), (3, 27)
-+	(5170 - 5250 @ 20), (3, 17)
-+	(5250 - 5330 @ 20), (3, 23), DFS
-+	(5735 - 5835 @ 20), (3, 30)
++	res = nla_get_u32(nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX]);
++	if (!res)
++		return -EINVAL;
++	return res;
++}
 +
- country HN:
- 	(2402 - 2482 @ 40), (N/A, 20)
+ /* IE validation */
+ static bool is_valid_ie_attr(const struct nlattr *attr)
+ {
+@@ -1682,20 +1702,10 @@ static int nl80211_dump_station(struct s
+ 	int sta_idx = cb->args[1];
+ 	int err;
  
-@@ -267,6 +292,12 @@ country HR:
- 	(5170 - 5250 @ 20), (N/A, 20)
- 	(5250 - 5330 @ 20), (N/A, 20), DFS
+-	if (!ifidx) {
+-		err = nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
+-				  nl80211_fam.attrbuf, nl80211_fam.maxattr,
+-				  nl80211_policy);
+-		if (err)
+-			return err;
+-
+-		if (!nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX])
+-			return -EINVAL;
+-
+-		ifidx = nla_get_u32(nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX]);
+-		if (!ifidx)
+-			return -EINVAL;
+-	}
++	if (!ifidx)
++		ifidx = nl80211_get_ifidx(cb);
++	if (ifidx < 0)
++		return ifidx;
  
-+country HT:
-+	(2402 - 2482 @ 40), (N/A, 20)
-+	(5170 - 5250 @ 40), (N/A, 20)
-+	(5250 - 5330 @ 40), (N/A, 20), DFS
-+	(5490 - 5710 @ 40), (N/A, 27), DFS
-+
- country HU:
- 	(2402 - 2482 @ 40), (N/A, 20)
- 	(5170 - 5250 @ 40), (N/A, 20)
-@@ -332,6 +363,12 @@ country JO:
- 	(2402 - 2482 @ 40), (N/A, 20)
- 	(5170 - 5250 @ 20), (N/A, 18)
+ 	rtnl_lock();
  
-+country KH:
-+	(2402 - 2482 @ 40), (N/A, 20)
-+	(5170 - 5250 @ 40), (N/A, 20)
-+	(5250 - 5330 @ 40), (N/A, 20), DFS
-+	(5490 - 5710 @ 40), (N/A, 27), DFS
-+
- country KP:
- 	(2402 - 2482 @ 40), (N/A, 20)
- 	(5170 - 5330 @ 40), (3, 20)
+@@ -2145,20 +2155,10 @@ static int nl80211_dump_mpath(struct sk_
+ 	int path_idx = cb->args[1];
+ 	int err;
+ 
+-	if (!ifidx) {
+-		err = nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
+-				  nl80211_fam.attrbuf, nl80211_fam.maxattr,
+-				  nl80211_policy);
+-		if (err)
+-			return err;
+-
+-		if (!nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX])
+-			return -EINVAL;
+-
+-		ifidx = nla_get_u32(nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX]);
+-		if (!ifidx)
+-			return -EINVAL;
+-	}
++	if (!ifidx)
++		ifidx = nl80211_get_ifidx(cb);
++	if (ifidx < 0)
++		return ifidx;
+ 
+ 	rtnl_lock();
+ 
+@@ -3181,21 +3181,11 @@ static int nl80211_dump_scan(struct sk_b
+ 	int start = cb->args[1], idx = 0;
+ 	int err;
+ 
+-	if (!ifidx) {
+-		err = nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
+-				  nl80211_fam.attrbuf, nl80211_fam.maxattr,
+-				  nl80211_policy);
+-		if (err)
+-			return err;
+-
+-		if (!nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX])
+-			return -EINVAL;
+-
+-		ifidx = nla_get_u32(nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX]);
+-		if (!ifidx)
+-			return -EINVAL;
+-		cb->args[0] = ifidx;
+-	}
++	if (!ifidx)
++		ifidx = nl80211_get_ifidx(cb);
++	if (ifidx < 0)
++		return ifidx;
++	cb->args[0] = ifidx;
+ 
+ 	dev = dev_get_by_index(sock_net(skb->sk), ifidx);
+ 	if (!dev)
+
+
 -- 
-1.6.0.4
-
+http://www.holgerschurig.de
