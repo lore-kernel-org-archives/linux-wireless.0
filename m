@@ -1,178 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:18267 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934057AbZKXXAl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 18:00:41 -0500
-Date: Wed, 25 Nov 2009 00:02:26 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH v2 3/3] iwmc3200wifi: Implement cfg80211 PMKSA API
-Message-ID: <20091124230225.GD8290@sortiz.org>
-References: <cover.1259075573.git.sameo@linux.intel.com>
- <601a0b604e70a6a72481e02860c6a6430351cd34.1259075573.git.sameo@linux.intel.com>
+Received: from dmz4.indranet.co.nz ([203.97.93.68]:49251 "EHLO
+	mail.indranet.co.nz" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1756740AbZKKCJI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Nov 2009 21:09:08 -0500
+Date: Wed, 11 Nov 2009 15:09:38 +1300 (NZDT)
+From: Derek Smithies <derek@indranet.co.nz>
+To: Adam Wozniak <awozniak@irobot.com>
+cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org, nbd@openwrt.org
+Subject: Re: compat-wireless and minstrel
+In-Reply-To: <4AFA0E76.6060806@irobot.com>
+Message-ID: <alpine.DEB.2.00.0911111508391.6214@kauri.acheron.indranet.co.nz>
+References: <4AF0D54D.4090303@irobot.com> <200911041653.33737.chunkeey@googlemail.com> <alpine.DEB.2.00.0911050951000.16407@kauri.acheron.indranet.co.nz> <4AF9F03E.2010405@irobot.com> <alpine.DEB.2.00.0911111217580.6214@kauri.acheron.indranet.co.nz>
+ <4AFA0E76.6060806@irobot.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <601a0b604e70a6a72481e02860c6a6430351cd34.1259075573.git.sameo@linux.intel.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We need to implement the PMKSA API for proper WPA2 pre-auth and fast
-re-association. Our fullmac device generates all (re-)assoc IEs, and thus it
-needs the right PMKIDs. With this implementation we now get them from
-wpa_supplicant.
+Hi,
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
+> Is it possible this is the problem? (note supp_rates is used at the bottom of 
+> the function, outside the "if")
 
-v2: Set wiphy->max_num_pmkids
+Could be. Did it fix your problem?
 
- drivers/net/wireless/iwmc3200wifi/cfg80211.c |   31 ++++++++++++++++++++++++++
- drivers/net/wireless/iwmc3200wifi/commands.c |   22 ++++++++++++++++++
- drivers/net/wireless/iwmc3200wifi/commands.h |   13 +++++++++++
- drivers/net/wireless/iwmc3200wifi/umac.h     |    2 +
- 4 files changed, 68 insertions(+), 0 deletions(-)
+Derek.
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-index 7cfc2c0..7c4f44a 100644
---- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-+++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-@@ -725,6 +725,33 @@ static int iwm_cfg80211_set_power_mgmt(struct wiphy *wiphy,
- 				       CFG_POWER_INDEX, iwm->conf.power_index);
- }
- 
-+int iwm_cfg80211_set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
-+			   struct cfg80211_pmksa *pmksa)
-+{
-+	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
-+
-+	return iwm_send_pmkid_update(iwm, pmksa, IWM_CMD_PMKID_ADD);
-+}
-+
-+int iwm_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
-+			   struct cfg80211_pmksa *pmksa)
-+{
-+	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
-+
-+	return iwm_send_pmkid_update(iwm, pmksa, IWM_CMD_PMKID_DEL);
-+}
-+
-+int iwm_cfg80211_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
-+{
-+	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
-+	struct cfg80211_pmksa pmksa;
-+
-+	memset(&pmksa, 0, sizeof(struct cfg80211_pmksa));
-+
-+	return iwm_send_pmkid_update(iwm, &pmksa, IWM_CMD_PMKID_FLUSH);
-+}
-+
-+
- static struct cfg80211_ops iwm_cfg80211_ops = {
- 	.change_virtual_intf = iwm_cfg80211_change_iface,
- 	.add_key = iwm_cfg80211_add_key,
-@@ -741,6 +768,9 @@ static struct cfg80211_ops iwm_cfg80211_ops = {
- 	.set_tx_power = iwm_cfg80211_set_txpower,
- 	.get_tx_power = iwm_cfg80211_get_txpower,
- 	.set_power_mgmt = iwm_cfg80211_set_power_mgmt,
-+	.set_pmksa = iwm_cfg80211_set_pmksa,
-+	.del_pmksa = iwm_cfg80211_del_pmksa,
-+	.flush_pmksa = iwm_cfg80211_flush_pmksa,
- };
- 
- static const u32 cipher_suites[] = {
-@@ -786,6 +816,7 @@ struct wireless_dev *iwm_wdev_alloc(int sizeof_bus, struct device *dev)
- 
- 	set_wiphy_dev(wdev->wiphy, dev);
- 	wdev->wiphy->max_scan_ssids = UMAC_WIFI_IF_PROBE_OPTION_MAX;
-+	wdev->wiphy->max_num_pmkids = UMAC_MAX_NUM_PMKIDS;
- 	wdev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 				       BIT(NL80211_IFTYPE_ADHOC);
- 	wdev->wiphy->bands[IEEE80211_BAND_2GHZ] = &iwm_band_2ghz;
-diff --git a/drivers/net/wireless/iwmc3200wifi/commands.c b/drivers/net/wireless/iwmc3200wifi/commands.c
-index 46ca7c5..bd06307 100644
---- a/drivers/net/wireless/iwmc3200wifi/commands.c
-+++ b/drivers/net/wireless/iwmc3200wifi/commands.c
-@@ -960,3 +960,25 @@ int iwm_send_umac_stop_resume_tx(struct iwm_priv *iwm,
- 				 sizeof(struct iwm_umac_cmd_stop_resume_tx));
- 
- }
-+
-+int iwm_send_pmkid_update(struct iwm_priv *iwm,
-+			  struct cfg80211_pmksa *pmksa, u32 command)
-+{
-+	struct iwm_umac_pmkid_update update;
-+	int ret;
-+
-+	memset(&update, 0, sizeof(struct iwm_umac_pmkid_update));
-+
-+	update.command = cpu_to_le32(command);
-+	memcpy(&update.bssid, pmksa->bssid, ETH_ALEN);
-+	memcpy(&update.pmkid, pmksa->pmkid, WLAN_PMKID_LEN);
-+
-+	ret = iwm_send_wifi_if_cmd(iwm, &update,
-+				   sizeof(struct iwm_umac_pmkid_update), 0);
-+	if (ret) {
-+		IWM_ERR(iwm, "PMKID update command failed\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-diff --git a/drivers/net/wireless/iwmc3200wifi/commands.h b/drivers/net/wireless/iwmc3200wifi/commands.h
-index 95cdf94..06af055 100644
---- a/drivers/net/wireless/iwmc3200wifi/commands.h
-+++ b/drivers/net/wireless/iwmc3200wifi/commands.h
-@@ -458,6 +458,17 @@ struct iwm_umac_cmd_stop_resume_tx {
- 	u16 reserved;
- } __attribute__ ((packed));
- 
-+#define IWM_CMD_PMKID_ADD   1
-+#define IWM_CMD_PMKID_DEL   2
-+#define IWM_CMD_PMKID_FLUSH 3
-+
-+struct iwm_umac_pmkid_update {
-+	__le32 command;
-+	u8 bssid[ETH_ALEN];
-+	__le16 reserved;
-+	u8 pmkid[WLAN_PMKID_LEN];
-+} __attribute__ ((packed));
-+
- /* LMAC commands */
- int iwm_read_mac(struct iwm_priv *iwm, u8 *mac);
- int iwm_send_prio_table(struct iwm_priv *iwm);
-@@ -488,6 +499,8 @@ int iwm_scan_ssids(struct iwm_priv *iwm, struct cfg80211_ssid *ssids,
- int iwm_scan_one_ssid(struct iwm_priv *iwm, u8 *ssid, int ssid_len);
- int iwm_send_umac_stop_resume_tx(struct iwm_priv *iwm,
- 				 struct iwm_umac_notif_stop_resume_tx *ntf);
-+int iwm_send_pmkid_update(struct iwm_priv *iwm,
-+			  struct cfg80211_pmksa *pmksa, u32 command);
- 
- /* UDMA commands */
- int iwm_target_reset(struct iwm_priv *iwm);
-diff --git a/drivers/net/wireless/iwmc3200wifi/umac.h b/drivers/net/wireless/iwmc3200wifi/umac.h
-index 70094bf..7f54a14 100644
---- a/drivers/net/wireless/iwmc3200wifi/umac.h
-+++ b/drivers/net/wireless/iwmc3200wifi/umac.h
-@@ -298,6 +298,7 @@ struct iwm_udma_out_wifi_hdr {
- #define UMAC_WIFI_IF_CMD_GLOBAL_TX_KEY_ID                0x1B
- #define UMAC_WIFI_IF_CMD_SET_HOST_EXTENDED_IE            0x1C
- #define UMAC_WIFI_IF_CMD_GET_SUPPORTED_CHANNELS          0x1E
-+#define UMAC_WIFI_IF_CMD_PMKID_UPDATE                    0x1F
- #define UMAC_WIFI_IF_CMD_TX_PWR_TRIGGER                  0x20
- 
- /* UMAC WiFi interface ports */
-@@ -771,6 +772,7 @@ struct iwm_umac_notif_stop_resume_tx {
- 	__le16 stop_resume_tid_msk; /* tid bitmask */
- } __attribute__ ((packed));
- 
-+#define UMAC_MAX_NUM_PMKIDS 4
- 
- /* WiFi interface wrapper header */
- struct iwm_umac_wifi_if {
--- 
-1.6.3.3
+On Tue, 10 Nov 2009, Adam Wozniak wrote:
+
+> Is it possible this is the problem? (note supp_rates is used at the bottom of 
+> the function, outside the "if")
+>
+> *** a/net/mac80211/ibss.c    2009-11-02 09:11:36.000000000 -0800
+> --- b/net/mac80211/ibss.c    2009-11-10 16:31:46.291563951 -0800
+> ***************
+> *** 246,254 ****
+>     if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
+>         return;
+>
+>     if (sdata->vif.type == NL80211_IFTYPE_ADHOC && elems->supp_rates &&
+>         memcmp(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0) {
+> -         supp_rates = ieee80211_sta_get_rates(local, elems, band);
+>
+>         rcu_read_lock();
+>
+> --- 246,255 ----
+>     if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
+>         return;
+>
+> +     supp_rates = ieee80211_sta_get_rates(local, elems, band);
+> +
+>     if (sdata->vif.type == NL80211_IFTYPE_ADHOC && elems->supp_rates &&
+>         memcmp(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0) {
+>
+>         rcu_read_lock();
+>
+>
+>
+> Derek Smithies wrote:
+>> Hi,
+>>> Do you know which frames in the mac80211 code are missing this required 
+>>> information?  Or was that conjecture?
+>> 
+>> it was mostly conjecture. I had done some work with an earlier pull of 
+>> compat wireless in adhoc. the rates tried by minstrel were bad - it was 
+>> stuck at the slowest rate.
+>> 
+>> I too had found that the fix was to adjust the array so that all rates were 
+>> marked as supported.
+>> 
+>> Derek
+>> 
+>> On Tue, 10 Nov 2009, Adam Wozniak wrote:
+>> 
+>>> Reading through the 802.11 spec, it appears to me that "Supported rates" 
+>>> (and "Extended Supported Rates" when number of rates > 8) is REQUIRED for 
+>>> all management frames except authentication, deauthentication, and action 
+>>> frames. (IEEE 802.11-2007, 7.2.3)
+>>> 
+>>> Do you know which frames in the mac80211 code are missing this required 
+>>> information?  Or was that conjecture?
+>>> 
+>>> Looking at mac80211/tx.c ieee80211_beacon_get_tim, it is not clear to me 
+>>> how (or if) this rate information is being set for ad-hoc beacons.
+>>> 
+>>> Derek Smithies wrote:
+>>>> Some management frames don't contain a full report of the rates supported 
+>>>> by the sender.
+>>>> My view is that node A (in this example) is incorrectly determining that 
+>>>> B only supports the 1mb/sec rate. Consequently, node A fills the 
+>>>> rate_supported  array with one rate - 1mb/sec.
+>>> 
+>>> 
+>>> 
+>> 
+>
+>
+>
 
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+Derek Smithies Ph.D.
+IndraNet Technologies Ltd.
+ph +64 3 365 6485
+Web: http://www.indranet-technologies.com/
+
+"The only thing IE should be used for is to download Fire Fox"
+
+"My favorite language is call STAR. It's extremely concise. It has
+  exactly one verb '*', which does exactly what I want at the moment."
+     --Larry Wall
