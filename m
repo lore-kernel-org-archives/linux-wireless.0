@@ -1,41 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:30004 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754941AbZKMJMh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 04:12:37 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2009 01:12:43 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 1/2] ath9k_hw: Fix possible OOB array indexing in gen_timer_index[] on 64-bit
-Date: Fri, 13 Nov 2009 14:32:39 +0530
-Message-ID: <1258102960-22768-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from cavan.codon.org.uk ([93.93.128.6]:57495 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758594AbZKKThX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Nov 2009 14:37:23 -0500
+From: Matthew Garrett <mjg@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Matthew Garrett <mjg@redhat.com>
+Subject: [PATCH 2/2] ipw2200: Set core hw rfkill status when hardware changes state
+Date: Wed, 11 Nov 2009 14:36:31 -0500
+Message-Id: <1257968191-495-2-git-send-email-mjg@redhat.com>
+In-Reply-To: <1257968191-495-1-git-send-email-mjg@redhat.com>
+References: <1257968191-495-1-git-send-email-mjg@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ipw2200 is able to detect when it's been hard-killed, but doesn't update
+the core rfkill state or update userspace. Ensure that the state is updated,
+allowing the rfkill core to notify userspace.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 6d3e314..abaa2f0 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -432,7 +432,7 @@ struct ath9k_hw_version {
-  * Using de Bruijin sequence to to look up 1's index in a 32 bit number
-  * debruijn32 = 0000 0111 0111 1100 1011 0101 0011 0001
-  */
--#define debruijn32 0x077CB531UL
-+#define debruijn32 0x077CB531U
+Signed-off-by: Matthew Garrett <mjg@redhat.com>
+---
+ drivers/net/wireless/ipw2x00/ipw2200.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index 827824d..1029138 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -1753,10 +1753,13 @@ static DEVICE_ATTR(direct_dword, S_IWUSR | S_IRUGO,
  
- struct ath_gen_timer_configuration {
- 	u32 next_addr;
+ static int rf_kill_active(struct ipw_priv *priv)
+ {
+-	if (0 == (ipw_read32(priv, 0x30) & 0x10000))
++	if (0 == (ipw_read32(priv, 0x30) & 0x10000)) {
+ 		priv->status |= STATUS_RF_KILL_HW;
+-	else
++		wiphy_rfkill_set_hw_state(priv->ieee->wdev.wiphy, true);
++	} else {
+ 		priv->status &= ~STATUS_RF_KILL_HW;
++		wiphy_rfkill_set_hw_state(priv->ieee->wdev.wiphy, false);
++	}
+ 
+ 	return (priv->status & STATUS_RF_KILL_HW) ? 1 : 0;
+ }
+@@ -2039,6 +2042,7 @@ static void ipw_irq_tasklet(struct ipw_priv *priv)
+ 	if (inta & IPW_INTA_BIT_RF_KILL_DONE) {
+ 		IPW_DEBUG_RF_KILL("RF_KILL_DONE\n");
+ 		priv->status |= STATUS_RF_KILL_HW;
++		wiphy_rfkill_set_hw_state(priv->ieee->wdev.wiphy, true);
+ 		wake_up_interruptible(&priv->wait_command_queue);
+ 		priv->status &= ~(STATUS_ASSOCIATED | STATUS_ASSOCIATING);
+ 		cancel_delayed_work(&priv->request_scan);
 -- 
-1.5.5.1
+1.6.5.2
 
