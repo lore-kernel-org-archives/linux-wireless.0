@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:34538 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752129AbZKLPtP (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48369
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758553AbZKKTUF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 10:49:15 -0500
-Received: by iwn8 with SMTP id 8so1840890iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 07:49:21 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20091112154440.GD19349@tux>
-References: <f74418680911120331w1ea31a68y56440dc0fbd253bb@mail.gmail.com>
-	<40101cc30911120618m5d9acd34pf6aa9ec89c6c40b8@mail.gmail.com>
-	<20091112154440.GD19349@tux>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 12 Nov 2009 07:49:01 -0800
-Message-ID: <43e72e890911120749n72360f0btfb058ab3a521eabb@mail.gmail.com>
-Subject: Re: [ath9k-devel] Possible memory leak in ath9k monitor mode
-	injection
-To: Matteo Croce <technoboy85@gmail.com>
-Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 11 Nov 2009 14:20:05 -0500
+Date: Wed, 11 Nov 2009 11:20:31 -0800 (PST)
+Message-Id: <20091111.112031.184370997.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-11-11
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20091111172255.GH4392@tuxdriver.com>
+References: <20091111172255.GH4392@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 12, 2009 at 7:44 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Thu, Nov 12, 2009 at 06:18:46AM -0800, Matteo Croce wrote:
->> On Thu, Nov 12, 2009 at 12:31 PM, Lorenzo Bianconi
->> <lorenzo.bianconi83@gmail.com> wrote:
->> > Hi all
->> >
->> > I am playing with ath9k/mac80211 in monitor mode and I suspect there
->> > is a memory leak.
->> > The leak happens when injecting in monitor mode when the destination
->> > MAC address is unicast.
->> > In fact there is no leak sending broadcast packet.
->> > I wrote this minimal test case module which triggers the leak.
->>
->> I can reproduce it with ath5k but not with madwifi, so the leak could
->> be in mac80211
->
-> Can you please resend the thread to linux-wireless for wider review, with
-> the code snippet and all?
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 11 Nov 2009 12:22:55 -0500
 
-Sorry failed to notice you already had.
+> Here is another batch of small fixes intended for 2.6.32.  Along with a
+> number of simple fixes, there is also a MAINTAINERS update, some LED
+> handling quirks for ath5k, a libertas beautification that is a prereq
+> for a libertas fix, and an iwlwifi fix that was already sent for
+> net-next-2.6 but which is needed to support an iwlwifi regression fix.
+> 
+> My personal favorite is the ath5k mcast filtering fix.  The problem
+> only revealed itself when using IP autoconf w/ multicast DNS... :-)
+> 
+> Please let me know if there are problems!
 
- Luis
+Pulled, but that libertas "coding style cleanup" really pushes
+the edge of what I'm willing to take into net-2.6 right now.
+
+And I don't want to hear anything about how it "makes the bug fix
+change simpler".  That absolutely doesn't apply when we're this deep
+in -rc territory.
+
+> P.S.  Due to the aformentioned iwlwifi fix, this will cause -next
+> conflicts for sfr.  You may want to pull net-2.6 into net-next-2.6 after
+> pulling this.  The iwlwifi conflicts can be resolved by taking the bigger
+> hunks...
+
+Yep, I noticed this, I'll sort it out, thanks.
