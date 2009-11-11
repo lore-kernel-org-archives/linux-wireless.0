@@ -1,42 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:51458 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756369AbZKBSWX (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50296 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759227AbZKKXpQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 13:22:23 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/6] wl1271: some robustness improvements
-Date: Mon,  2 Nov 2009 20:22:07 +0200
-Message-Id: <1257186133-18367-1-git-send-email-luciano.coelho@nokia.com>
+	Wed, 11 Nov 2009 18:45:16 -0500
+Date: Wed, 11 Nov 2009 18:35:41 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] rt2x00: Fix rt2800lib RF chip programming selection.
+Message-ID: <20091111233541.GO4392@tuxdriver.com>
+References: <1257803998-5412-1-git-send-email-gwingerde@gmail.com> <20091111220755.GN4392@tuxdriver.com> <4AFB4732.8090801@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4AFB4732.8090801@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Thu, Nov 12, 2009 at 12:22:26AM +0100, Gertjan van Wingerde wrote:
+> On 11/11/09 23:07, John W. Linville wrote:
+> > On Mon, Nov 09, 2009 at 10:59:58PM +0100, Gertjan van Wingerde wrote:
+> >> Mirror the legacy Ralink driver with respect to rt2800 RF register programming. Execute
+> >> rt2800_config_channel_rt3x for all RF2020, RF3020, RF3021 & RF3022 chipsets when operating on RT3070
+> >> devices.
+> >>
+> >> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> >> ---
+> >>  drivers/net/wireless/rt2x00/rt2800lib.c |   10 +++++++---
+> >>  1 files changed, 7 insertions(+), 3 deletions(-)
+> >>
+> >> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> >> index 2c91c44..446087e 100644
+> >> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> >> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> >> @@ -806,10 +806,14 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+> >>  	unsigned int tx_pin;
+> >>  	u8 bbp;
+> >>  
+> >> -	if (rt2x00_rev(&rt2x00dev->chip) != RT3070_VERSION)
+> >> -		rt2800_config_channel_rt2x(rt2x00dev, conf, rf, info);
+> >> -	else
+> >> +	if (rt2x00_rt(&rt2x00dev->chip, RT3070) &&	
+> >> +           (rt2x00_rf(&rt2x00dev->chip, RF2020) ||
+> >> +	     rt2x00_rf(&rt2x00dev->chip, RF3020) ||
+> >> +	     rt2x00_rf(&rt2x00dev->chip, RF3021) ||
+> >> +	     rt2x00_rf(&rt2x00dev->chip, RF3022)))
+> >>  		rt2800_config_channel_rt3x(rt2x00dev, conf, rf, info);
+> >> +	else
+> >> +		rt2800_config_channel_rt2x(rt2x00dev, conf, rf, info);
+> >>  
+> >>  	/*
+> >>  	 * Change BBP settings
+> > 
+> >   CC [M]  drivers/net/wireless/rt2x00/rt2800lib.o
+> > drivers/net/wireless/rt2x00/rt2800lib.c: In function ‘rt2800_config_channel’:
+> > drivers/net/wireless/rt2x00/rt2800lib.c:809: error: ‘RF3070’ undeclared (first use in this function)
+> > drivers/net/wireless/rt2x00/rt2800lib.c:809: error: (Each undeclared identifier is reported only once
+> > drivers/net/wireless/rt2x00/rt2800lib.c:809: error: for each function it appears in.)
+> > 
+> 
+> Me very confused here. This patch doesn't even introduce the RF3070 symbol, nor can I see where it is used.
+> It does use symbol RT3070 on line 809, but that one is introduced in an earlier patch.
+> Ah, did you apply the RT3070 USB chipset detection patch before this one?
+> 
+> Still wouldn't explain the compile error on symbol RF3070 though.
 
-Here are some more patches for the wl1271 driver.  A few small issues have been fixed and some other improvements.
+RF3070 is a copy-n-paste error, sorry...the symbol is RT3070.
 
-Cheers,
-Luca.
+What patch introduces it?
 
-Juuso Oikarinen (6):
-  wl1271: Remove excess null-data template settings
-  wl1271: Increase TX power value
-  wl1271: Check result code of commands
-  wl1271: Add retry implementation for PSM entries
-  wl1271: Correct endianness-handling of command status
-  wl1271: Generalize command response reading
-
- drivers/net/wireless/wl12xx/wl1271.h       |    3 +
- drivers/net/wireless/wl12xx/wl1271_acx.c   |    2 +-
- drivers/net/wireless/wl12xx/wl1271_boot.c  |    3 +-
- drivers/net/wireless/wl12xx/wl1271_cmd.c   |   99 ++++++++++------------------
- drivers/net/wireless/wl12xx/wl1271_cmd.h   |    3 +-
- drivers/net/wireless/wl12xx/wl1271_conf.h  |    8 ++
- drivers/net/wireless/wl12xx/wl1271_event.c |   53 +++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_event.h |    7 ++
- drivers/net/wireless/wl12xx/wl1271_init.c  |    7 ++-
- drivers/net/wireless/wl12xx/wl1271_main.c  |   19 +++---
- 10 files changed, 126 insertions(+), 78 deletions(-)
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
