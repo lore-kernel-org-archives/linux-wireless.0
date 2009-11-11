@@ -1,78 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50875 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40783 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755926AbZKDPPK (ORCPT
+	with ESMTP id S1758096AbZKKSpP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 10:15:10 -0500
-Date: Wed, 4 Nov 2009 10:11:33 -0500
+	Wed, 11 Nov 2009 13:45:15 -0500
+Date: Wed, 11 Nov 2009 13:36:43 -0500
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>, sidhayn@gmail.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8187: Fix kernel oops when device is removed when
-	LEDS enabled (Bugzilla #14539)
-Message-ID: <20091104151132.GD12965@tuxdriver.com>
-References: <4af11879./IumKJ+RAbw7Zkq6%Larry.Finger@lwfinger.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Zheng, Jeff" <jeff.zheng@intel.com>,
+	wifi-test-devel@lists.sourceforge.net,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Subject: Re: [ANNOUNCE] wifi-test 1.0 released
+Message-ID: <20091111183643.GJ4392@tuxdriver.com>
+References: <154E55ADF9629D4E8D13F08BF92ABEB63FDC983366@PDSMSX501.ccr.corp.intel.com> <20091111152214.GG4392@tuxdriver.com> <154E55ADF9629D4E8D13F08BF92ABEB63FDC98336B@PDSMSX501.ccr.corp.intel.com> <43e72e890911110931l893b90dta2d5806d10189925@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4af11879./IumKJ+RAbw7Zkq6%Larry.Finger@lwfinger.net>
+In-Reply-To: <43e72e890911110931l893b90dta2d5806d10189925@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 04, 2009 at 12:00:25AM -0600, Larry Finger wrote:
-> As reported by Rick Farina (sidhayn@gmail.com), removing the RTL8187 USB
-> stick, or unloading the driver rtl8187 using rmmod will cause a kernel oops.
-> There are at least two forms of the failure, (1) BUG: Scheduling while atomic,
-> and (2) a fatal kernel page fault. This problem is reported in Bugzilla #14539.
+On Wed, Nov 11, 2009 at 09:31:48AM -0800, Luis R. Rodriguez wrote:
+> 2009/11/11 Zheng, Jeff <jeff.zheng@intel.com>:
+> > Thanks.
+> >
+> > And also thanks Reinette and Johannes's help.
 > 
-> This problem does not occur for kernel 2.6.31, but does for 2.6.32-rc2, thus
-> it is technically a regression; however, bisection did not locate any faulty
-> patch. The fix was found by comparing the faulty code in rtl8187 with p54usb.
-> My interpretation is that the handling of work queues in mac80211 changed
-> enough to the LEDs to be unregistered before tasks on the work queues are
-> cancelled. Previously, these actions could be done in either order.
+> Thank you guys so much for this, I just reviewed it and it seems you
+> do need some AP with remote login, a bit overkill for end users but I
+> hope it'll prove valuable for our own testing as well.
 > 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Reported-and-tested by: Rick Farina <sidhayn@gmail.com>
-> ---
-> 
-> John,
-> 
-> This is 2.6.32 material. Sorry to take so long to get a patch, but it was
-> difficult for me to locate the problem. Fortunately, I had the postings of the
-> two flame wars to amuse me while all the kernel compilations were happening.
-> 
-> Larry
-> ---
-> 
-> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_leds.c
-> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
-> @@ -210,10 +210,10 @@ void rtl8187_leds_exit(struct ieee80211_
->  
->  	/* turn the LED off before exiting */
->  	ieee80211_queue_delayed_work(dev, &priv->led_off, 0);
-> -	cancel_delayed_work_sync(&priv->led_off);
-> -	cancel_delayed_work_sync(&priv->led_on);
->  	rtl8187_unregister_led(&priv->led_rx);
->  	rtl8187_unregister_led(&priv->led_tx);
-> +	cancel_delayed_work_sync(&priv->led_off);
-> +	cancel_delayed_work_sync(&priv->led_on);
->  }
->  #endif /* def CONFIG_RTL8187_LED */
->  
+> Are you interested in receiving patches for simple end user tests
+> against an AP with no login?
 
-This seems like a band-aid.  If anything, the original order would
-seem to make more sense.
+Hey, good idea...maybe something for an openwrt AP... :-)
 
-Do you have a link to the original backtrace?  I don't see one in
-the bugzilla entry.
-
-Thanks,
-
-John
 -- 
 John W. Linville		Someday the world will need a hero, and you
 linville@tuxdriver.com			might be all we have.  Be ready.
