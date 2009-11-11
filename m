@@ -1,44 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:22008 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752280AbZKLQ1n (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 11:27:43 -0500
-Received: by fg-out-1718.google.com with SMTP id d23so2127282fga.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 08:27:48 -0800 (PST)
-Message-ID: <4AFC377F.6050507@lwfinger.net>
-Date: Thu, 12 Nov 2009 10:27:43 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from nbd.name ([88.198.39.176]:42160 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755345AbZKKMUg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Nov 2009 07:20:36 -0500
+Message-ID: <4AFAAC18.3090403@openwrt.org>
+Date: Wed, 11 Nov 2009 13:20:40 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V2] p54usb: Remove DMA buffer from stack
-References: <4afb5095.fKs+0FCQC9sTYyFW%Larry.Finger@lwfinger.net> <200911121051.11982.chunkeey@googlemail.com>
-In-Reply-To: <200911121051.11982.chunkeey@googlemail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] iw: add support for setting the wds/4-address flag when creating
+ an interface
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/12/2009 03:51 AM, Christian Lamparter wrote:
-> On Thursday 12 November 2009 01:02:29 Larry Finger wrote:
->> On 2.6.32-rc6 from wireless-testing, the following warning is emitted:
->>
->> ------------[ cut here ]------------ 
->> WARNING: at lib/dma-debug.c:860 check_for_stack+0xaa/0xe0() 
->> Hardware name: HP Pavilion dv2700 Notebook PC 
->> ehci_hcd 0000:00:02.1: DMA-API: device driver maps memory fromstack
->> 	 [addr=ffff8800b6e2bca8] 
--- snip --
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
 
-> 
-> Acked-by: Christian Lamparter <chunkeey@googlemail.com>
-> 
-> FYI, p54u_upload_firmware_net2280 will likely produce the same
-> same WARN, since "__le32 reg;" is held on the stack as well.
-
-I was pretty certain that the WARN is only for DMA buffers on the stack. After
-reviewing the code lib/dma-debug.c, nothing changed my mind. In
-p54u_upload_firmware_net2280, the buffer is kmalloc'ed already. It should be OK.
-
-Larry
+--- a/interface.c
++++ b/interface.c
+@@ -137,6 +137,20 @@ static int get_if_type(int *argc, char *
+ 	return 2;
+ }
+ 
++static int parse_wds_flag(const char *value, struct nl_msg *msg)
++{
++	if (strcmp(value, "on") == 0)
++		NLA_PUT_U8(msg, NL80211_ATTR_4ADDR, 1);
++	else if (strcmp(value, "off") == 0)
++		NLA_PUT_U8(msg, NL80211_ATTR_4ADDR, 0);
++	else
++		return 1;
++	return 0;
++
++nla_put_failure:
++	return 1;
++}
++
+ static int handle_interface_add(struct nl80211_state *state,
+ 				struct nl_cb *cb,
+ 				struct nl_msg *msg,
+@@ -168,6 +182,15 @@ static int handle_interface_add(struct n
+ 			mesh_id = argv[0];
+ 			argc--;
+ 			argv++;
++		} else if (strcmp(argv[0], "wds") == 0) {
++			argc--;
++			argv++;
++			if (parse_wds_flag(argv[0], msg)) {
++				fprintf(stderr, "wds error\n");
++				return 2;
++			}
++			argc--;
++			argv++;
+ 		} else if (strcmp(argv[0], "flags") == 0) {
+ 			argc--;
+ 			argv++;
+@@ -192,14 +215,14 @@ static int handle_interface_add(struct n
+  nla_put_failure:
+ 	return -ENOBUFS;
+ }
+-COMMAND(interface, add, "<name> type <type> [mesh_id <meshid>] [flags <flag>*]",
++COMMAND(interface, add, "<name> type <type> [mesh_id <meshid>] [wds on|off] [flags <flag>*]",
+ 	NL80211_CMD_NEW_INTERFACE, 0, CIB_PHY, handle_interface_add,
+ 	"Add a new virtual interface with the given configuration.\n"
+ 	IFACE_TYPES "\n\n"
+ 	"The flags are only used for monitor interfaces, valid flags are:\n"
+ 	VALID_FLAGS "\n\n"
+ 	"The mesh_id is used only for mesh mode.");
+-COMMAND(interface, add, "<name> type <type> [mesh_id <meshid>] [flags <flag>*]",
++COMMAND(interface, add, "<name> type <type> [mesh_id <meshid>] [wds on|off] [flags <flag>*]",
+ 	NL80211_CMD_NEW_INTERFACE, 0, CIB_NETDEV, handle_interface_add, NULL);
+ 
+ static int handle_interface_del(struct nl80211_state *state,
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -584,6 +584,8 @@ enum nl80211_commands {
+  *	changed then the list changed and the dump should be repeated
+  *	completely from scratch.
+  *
++ * @NL80211_ATTR_4ADDR: Use 4-address frames on a virtual interface
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -714,6 +716,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_PID,
+ 
++	NL80211_ATTR_4ADDR,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
