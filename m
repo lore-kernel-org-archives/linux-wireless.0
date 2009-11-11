@@ -1,45 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35229 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759727AbZKYUAh (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:36644 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758704AbZKKAB3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 15:00:37 -0500
-Date: Wed, 25 Nov 2009 14:47:46 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH v2 8/8] rt2x00: Properly request tx headroom for
-	alignment operations.
-Message-ID: <20091125194746.GG7800@tuxdriver.com>
-References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com> <1259012694-14869-2-git-send-email-gwingerde@gmail.com> <1259012694-14869-3-git-send-email-gwingerde@gmail.com> <1259012694-14869-4-git-send-email-gwingerde@gmail.com> <1259012694-14869-5-git-send-email-gwingerde@gmail.com> <1259012694-14869-6-git-send-email-gwingerde@gmail.com> <1259012694-14869-7-git-send-email-gwingerde@gmail.com> <1259012694-14869-8-git-send-email-gwingerde@gmail.com> <1259012694-14869-9-git-send-email-gwingerde@gmail.com>
+	Tue, 10 Nov 2009 19:01:29 -0500
+Received: by ewy3 with SMTP id 3so647176ewy.37
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2009 16:01:33 -0800 (PST)
+Date: Wed, 11 Nov 2009 00:01:31 +0000
+From: Rui Paulo <rpaulo@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v4 11/20] mac80211: implement RANN processing and forwarding
+Message-ID: <20091111000131.GA58859@asus-p5b.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1259012694-14869-9-git-send-email-gwingerde@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 23, 2009 at 10:44:54PM +0100, Gertjan van Wingerde wrote:
-> Current rt2x00 drivers may result in a "ieee80211_tx_status: headroom too
-> small" error message when a frame needs to be properly aligned before
-> transmitting it.
-> This is because the space needed to ensure proper alignment isn't
-> requested from mac80211.
-> Fix this by adding sufficient amount of alignment space to the amount
-> of headroom requested for TX frames.
-> 
-> Reported-by: David Ellingsworth <david@identd.dyndns.org>
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Process the RANN (Root Annoucement) Frame and try to find the HWMP
+root station by sending a PREQ.
 
-  CC [M]  drivers/net/wireless/rt2x00/rt2x00dev.o
-drivers/net/wireless/rt2x00/rt2x00dev.c: In function ‘rt2x00lib_probe_hw’:
-drivers/net/wireless/rt2x00/rt2x00dev.c:690: error: ‘IEEE80211_TX_STATUS_HEADROOM’ undeclared (first use in this function)
-drivers/net/wireless/rt2x00/rt2x00dev.c:690: error: (Each undeclared identifier is reported only once
-drivers/net/wireless/rt2x00/rt2x00dev.c:690: error: for each function it appears in.)
+Signed-off-by: Rui Paulo <rpaulo@gmail.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
+Tested-by: Brian Cavagnolo <brian@cozybit.com>
+---
+ include/linux/ieee80211.h  |   15 ++++++++
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mesh_hwmp.c   |   79 +++++++++++++++++++++++++++++++++++++++----
+ net/mac80211/util.c        |    4 ++
+ 4 files changed, 91 insertions(+), 8 deletions(-)
 
-Did I miss a patch?
-
-John
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 50c684d..49b1abd 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -554,6 +554,20 @@ struct ieee80211_tim_ie {
+ 	u8 virtual_map[1];
+ } __attribute__ ((packed));
+ 
++/**
++ * struct ieee80211_rann_ie
++ *
++ * This structure refers to "Root Announcement information element"
++ */
++struct ieee80211_rann_ie {
++	u8 rann_flags;
++	u8 rann_hopcount;
++	u8 rann_ttl;
++	u8 rann_addr[6];
++	u32 rann_seq;
++	u32 rann_metric;
++} __attribute__ ((packed));
++
+ #define WLAN_SA_QUERY_TR_ID_LEN 2
+ 
+ struct ieee80211_mgmt {
+@@ -1070,6 +1084,7 @@ enum ieee80211_eid {
+ 	WLAN_EID_PREQ = 68,
+ 	WLAN_EID_PREP = 69,
+ 	WLAN_EID_PERR = 70,
++	WLAN_EID_RANN = 49,	/* compatible with FreeBSD */
+ 	/* 802.11h */
+ 	WLAN_EID_PWR_CONSTRAINT = 32,
+ 	WLAN_EID_PWR_CAPABILITY = 33,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 1f4f88a..f6fdea6 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -799,6 +799,7 @@ struct ieee802_11_elems {
+ 	u8 *preq;
+ 	u8 *prep;
+ 	u8 *perr;
++	struct ieee80211_rann_ie *rann;
+ 	u8 *ch_switch_elem;
+ 	u8 *country_elem;
+ 	u8 *pwr_constr_elem;
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index db1a330..7b9dd87 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -28,6 +28,8 @@
+ /* Reply and forward */
+ #define MP_F_RF	0x2
+ 
++static void mesh_queue_preq(struct mesh_path *, u8);
++
+ static inline u32 u32_field_get(u8 *preq_elem, int offset, bool ae)
+ {
+ 	if (ae)
+@@ -81,7 +83,8 @@ static inline u32 u32_field_get(u8 *preq_elem, int offset, bool ae)
+ enum mpath_frame_type {
+ 	MPATH_PREQ = 0,
+ 	MPATH_PREP,
+-	MPATH_PERR
++	MPATH_PERR,
++	MPATH_RANN
+ };
+ 
+ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+@@ -109,7 +112,8 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+ 
+ 	memcpy(mgmt->da, da, ETH_ALEN);
+ 	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
+-	/* BSSID is left zeroed, wildcard value */
++	/* BSSID == SA */
++	memcpy(mgmt->bssid, sdata->dev->dev_addr, ETH_ALEN);
+ 	mgmt->u.action.category = MESH_PATH_SEL_CATEGORY;
+ 	mgmt->u.action.u.mesh_action.action_code = MESH_PATH_SEL_ACTION;
+ 
+@@ -126,6 +130,12 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+ 		pos = skb_put(skb, 2 + ie_len);
+ 		*pos++ = WLAN_EID_PREP;
+ 		break;
++	case MPATH_RANN:
++		mhwmp_dbg("sending RANN from %pM\n", orig_addr);
++		ie_len = sizeof(struct ieee80211_rann_ie);
++		pos = skb_put(skb, 2 + ie_len);
++		*pos++ = WLAN_EID_RANN;
++		break;
+ 	default:
+ 		kfree_skb(skb);
+ 		return -ENOTSUPP;
+@@ -143,8 +153,10 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+ 	pos += ETH_ALEN;
+ 	memcpy(pos, &orig_dsn, 4);
+ 	pos += 4;
+-	memcpy(pos, &lifetime, 4);
+-	pos += 4;
++	if (action != MPATH_RANN) {
++		memcpy(pos, &lifetime, 4);
++		pos += 4;
++	}
+ 	memcpy(pos, &metric, 4);
+ 	pos += 4;
+ 	if (action == MPATH_PREQ) {
+@@ -152,9 +164,11 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+ 		*pos++ = 1;
+ 		*pos++ = dst_flags;
+ 	}
+-	memcpy(pos, dst, ETH_ALEN);
+-	pos += ETH_ALEN;
+-	memcpy(pos, &dst_dsn, 4);
++	if (action != MPATH_RANN) {
++		memcpy(pos, dst, ETH_ALEN);
++		pos += ETH_ALEN;
++		memcpy(pos, &dst_dsn, 4);
++	}
+ 
+ 	ieee80211_tx_skb(sdata, skb, 1);
+ 	return 0;
+@@ -610,6 +624,54 @@ static void hwmp_perr_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	rcu_read_unlock();
+ }
+ 
++static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
++				struct ieee80211_mgmt *mgmt,
++				struct ieee80211_rann_ie *rann)
++{
++	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++	struct mesh_path *mpath;
++	u8 *ta;
++	u8 ttl, flags, hopcount;
++	u8 *orig_addr;
++	u32 orig_dsn, metric;
++
++	ta = mgmt->sa;
++	ttl = rann->rann_ttl;
++	if (ttl <= 1) {
++		ifmsh->mshstats.dropped_frames_ttl++;
++		return;
++	}
++	ttl--;
++	flags = rann->rann_flags;
++	orig_addr = rann->rann_addr;
++	orig_dsn = rann->rann_seq;
++	hopcount = rann->rann_hopcount;
++	metric = rann->rann_metric;
++	mhwmp_dbg("received RANN from %pM\n", orig_addr);
++
++	rcu_read_lock();
++	mpath = mesh_path_lookup(orig_addr, sdata);
++	if (!mpath) {
++		mesh_path_add(orig_addr, sdata);
++		mpath = mesh_path_lookup(orig_addr, sdata);
++		if (!mpath) {
++			rcu_read_unlock();
++			sdata->u.mesh.mshstats.dropped_frames_no_route++;
++			return;
++		}
++		mesh_queue_preq(mpath,
++				PREQ_Q_F_START | PREQ_Q_F_REFRESH);
++	}
++	if (mpath->dsn < orig_dsn) {
++		mesh_path_sel_frame_tx(MPATH_RANN, flags, orig_addr,
++				       cpu_to_le32(orig_dsn),
++				       0, NULL, 0, sdata->dev->broadcast,
++				       hopcount, ttl, 0, cpu_to_le32(metric),
++				       0, sdata);
++		mpath->dsn = orig_dsn;
++	}
++	rcu_read_unlock();
++}
+ 
+ 
+ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
+@@ -654,7 +716,8 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
+ 			return;
+ 		hwmp_perr_frame_process(sdata, mgmt, elems.perr);
+ 	}
+-
++	if (elems.rann)
++		hwmp_rann_frame_process(sdata, mgmt, elems.rann);
+ }
+ 
+ /**
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index aedbaaa..da86e15 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -685,6 +685,10 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
+ 			elems->perr = pos;
+ 			elems->perr_len = elen;
+ 			break;
++		case WLAN_EID_RANN:
++			if (elen >= sizeof(struct ieee80211_rann_ie))
++				elems->rann = (void *)pos;
++			break;
+ 		case WLAN_EID_CHANNEL_SWITCH:
+ 			elems->ch_switch_elem = pos;
+ 			elems->ch_switch_elem_len = elen;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.5.6.5
+
