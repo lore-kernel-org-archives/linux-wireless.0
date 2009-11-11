@@ -1,65 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f215.google.com ([209.85.219.215]:33312 "EHLO
-	mail-ew0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933841AbZKXTMz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 14:12:55 -0500
-Received: by ewy7 with SMTP id 7so80353ewy.28
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Nov 2009 11:12:59 -0800 (PST)
-Message-ID: <4B0C3035.7010003@gmail.com>
-Date: Tue, 24 Nov 2009 20:12:53 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+Received: from nbd.name ([88.198.39.176]:55485 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757479AbZKKMRh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Nov 2009 07:17:37 -0500
+Message-ID: <4AFAAB60.7070002@openwrt.org>
+Date: Wed, 11 Nov 2009 13:17:36 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Ivo van Doorn <ivdoorn@gmail.com>
-CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 8/8] rt2x00: Properly request tx headroom for alignment
- operations.
-References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com> <1259012694-14869-8-git-send-email-gwingerde@gmail.com> <1259012694-14869-9-git-send-email-gwingerde@gmail.com> <200911241819.29685.IvDoorn@gmail.com>
-In-Reply-To: <200911241819.29685.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-15
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: fix broadcast frame handling for 4-addr AP VLANs
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/24/09 18:19, Ivo van Doorn wrote:
-> On Monday 23 November 2009, Gertjan van Wingerde wrote:
->> Current rt2x00 drivers may result in a "ieee80211_tx_status: headroom too
->> small" error message when a frame needs to be properly aligned before
->> transmitting it.
->> This is because the space needed to ensure proper alignment isn't
->> requested from mac80211.
->> Fix this by adding sufficient amount of alignment space to the amount
->> of headroom requested for TX frames.
->>
->> Reported-by: David Ellingsworth <david@identd.dyndns.org>
->> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
->> ---
->>  drivers/net/wireless/rt2x00/rt2x00.h    |    6 ++++++
->>  drivers/net/wireless/rt2x00/rt2x00dev.c |   12 +++++++++++-
->>  2 files changed, 17 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
->> index 4d841c0..dcfc8c2 100644
->> --- a/drivers/net/wireless/rt2x00/rt2x00.h
->> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
->> @@ -113,6 +113,12 @@
->>  	(  ((unsigned long)((__skb)->data + (__header))) & 3 )
->>  
->>  /*
->> + * Constants for extra TX headroom for alignment purposes.
->> + */
->> +#define RT2X00_ALIGN_SIZE	4 /* Only whole frame needs alignment */
->> +#define RT2X00_L2PAD_SIZE	8 /* Both header & payload need alignment */
-> 
-> Now that I think of it, why do we need 8 byte for L2 padding?
-> Shouldn't we need the same size for regular alignment, L2 padding only indicates
-> the padding occurs between header and payload rather then before the header only.
-> So unless I am mistaken about how I coded the header & payload moving in rt2x00lib,
-> you always need at most 4 bytes.
-> 
+Without this patch, broadcast frames from the station behind a
+4-addr AP VLAN would be reflected back to the source.
+Fix this by checking the 4-addr flag before bridging multicast
+frames in the cell.
 
-Nope. If I read the code right then the header can be moved by more than 4 bytes, namely
-when the payload needs to be shifted more than the header. In that case the header is
-shifted an extra 4 bytes to make room for the payload. However, 8 is the obvious maximum.
-
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-Gertjan.
+I hadn't noticed that v2 of my mac80211 4-addr patch had been
+merged already, so here's the fix from v3 as a separate patch
+
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1292,7 +1292,7 @@ ieee80211_deliver_skb(struct ieee80211_r
+ 	if ((sdata->vif.type == NL80211_IFTYPE_AP ||
+ 	     sdata->vif.type == NL80211_IFTYPE_AP_VLAN) &&
+ 	    !(sdata->flags & IEEE80211_SDATA_DONT_BRIDGE_PACKETS) &&
+-	    (rx->flags & IEEE80211_RX_RA_MATCH)) {
++	    (rx->flags & IEEE80211_RX_RA_MATCH) && !rx->sdata->use_4addr) {
+ 		if (is_multicast_ether_addr(ehdr->h_dest)) {
+ 			/*
+ 			 * send multicast frames both to higher layers in
