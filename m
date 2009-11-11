@@ -1,64 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:58322 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755123AbZKMWOv (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:51093 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752076AbZKKAkw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 17:14:51 -0500
-Received: by fg-out-1718.google.com with SMTP id d23so457227fga.1
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2009 14:14:55 -0800 (PST)
-Subject: Re: [PATCH 15/16] iwlwifi: handle unicast PS buffering
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1258142198-3223-16-git-send-email-reinette.chatre@intel.com>
-References: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
-	 <1258142198-3223-16-git-send-email-reinette.chatre@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 14 Nov 2009 00:14:51 +0200
-Message-ID: <1258150491.4182.6.camel@maxim-laptop>
-Mime-Version: 1.0
+	Tue, 10 Nov 2009 19:40:52 -0500
+Received: by iwn8 with SMTP id 8so537979iwn.33
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2009 16:40:58 -0800 (PST)
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 10 Nov 2009 16:40:38 -0800
+Message-ID: <43e72e890911101640r69ad67c6l2e48250596c19d44@mail.gmail.com>
+Subject: ath9k rate control - busted
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: ath9k-devel@lists.ath9k.org, Aeolus Yang <Aeolus.Yang@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-11-13 at 11:56 -0800, Reinette Chatre wrote: 
-> From: Johannes Berg <johannes@sipsolutions.net>
-> 
-> Using the new mac80211 functionality, this makes
-> iwlwifi handle unicast PS buffering correctly.
-> The device works like this:
-> 
->  * when a station goes to sleep, the microcode notices
->    this and marks the station as asleep
->  * when the station is marked asleep, the microcode
->    refuses to transmit to the station and rejects all
->    frames queued to it with the failure status code
->    TX_STATUS_FAIL_DEST_PS (a previous patch handled
->    this correctly)
->  * when we need to send frames to the station _although_
->    it is asleep, we need to tell the ucode how many,
->    and this is asynchronous with sending so we cannot
->    just send the frames, we need to wait for all other
->    frames to be flushed, and then update the counter
->    before sending out the poll response frames. This
->    is handled partially in the driver and partially in
->    mac80211.
-> 
-> In order to do all this correctly, we need to
->  * keep track of how many frames are pending for each
->    associated client station (avoid doing it for other
->    stations to avoid the atomic ops)
->  * tell mac80211 that we driver-block the PS status
->    while there are still frames pending on the queues,
->    and once they are all rejected (due to the dest sta
->    being in PS) unblock mac80211
+After the oops I just described in the previous e-mail I disabled the
+"Wireless-N only" feature and set the AP to "Wireless-BG only" feature
+on the AP. I then observed some terrible throughput on iperf using UDP
+(TX'ing out). Here is the last "watch cat rcstat" output, the box then
+just hung with no panic or trace (even through netconsole):
 
-Does this cover iwl3945?
-If so, AP mode would be possible?
+Every 2.0s: cat rcstat
+                              Tue Nov 10 16:31:56 2009
 
-Best regards,
-Maxim Levitsky
+ Rate         Success  Retries  XRetries PER
 
+  1.0:      712     4930     1491      100
+  2.0:      103      453      159       87
+  5.5:      111      202       55       28
+ 11.0:        8       30       11       43
+  6.0:        0        0        0        0
+  9.0:        0        0        0        0
+ 12.0:        5       19        7       87
+ 18.0:        1       14        6       75
+ 24.0:        1        6        1       30
+ 36.0:        0        0        0        0
+ 48.0:        0        0        0        0
+ 54.0:        0        0        0        0
 
+Its unclear if something other than the rate control algorithm used is
+what could be busted, I cannot see from the logs.
 
+One way or another I think we should prioritize making ath9k work with
+minstrel optionally on legacy networks at least for now, and see if we
+can help Felix test/advance minstrel support for MCS rate support.
+
+The ath9k rate control code proves unmaintainable, not clearly
+understood even with things like this:
+
+/* Update PER, RSSI and whatever else that the code thinks it is doing.
+   If you can make sense of all this, you really need to go out more. */
+
+We can't possibly successfully maintain a driver with code like this.
+
+  Luis
