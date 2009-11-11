@@ -1,71 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51946 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751629AbZKQOAZ (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:57491 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758557AbZKKThO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 09:00:25 -0500
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1NAObd-0006O4-I0
-	for linux-wireless@vger.kernel.org; Tue, 17 Nov 2009 09:00:29 -0500
-Received: from linville-t400.local (linville-t400.local [127.0.0.1])
-	by linville-t400.local (8.14.3/8.14.3) with ESMTP id nAHDoAh9005352
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2009 08:50:10 -0500
-Received: (from linville@localhost)
-	by linville-t400.local (8.14.3/8.14.3/Submit) id nAHDo9Al005350
-	for linux-wireless@vger.kernel.org; Tue, 17 Nov 2009 08:50:09 -0500
-Date: Tue, 17 Nov 2009 08:50:09 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: 2.6.32-rc7-git1: Reported regressions from 2.6.31 (wireless)
-Message-ID: <20091117135008.GA27743@tuxdriver.com>
-References: <GUZt44bIwCE.A.vLF.pSdALB@chimera>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <GUZt44bIwCE.A.vLF.pSdALB@chimera>
+	Wed, 11 Nov 2009 14:37:14 -0500
+From: Matthew Garrett <mjg@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Matthew Garrett <mjg@redhat.com>
+Subject: [PATCH 1/2] ipw2100: Register the wiphy device
+Date: Wed, 11 Nov 2009 14:36:30 -0500
+Message-Id: <1257968191-495-1-git-send-email-mjg@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 16, 2009 at 11:33:23PM +0100, Rafael J. Wysocki wrote:
-> This message contains a list of some regressions from 2.6.31, for which there
-> are no fixes in the mainline I know of.  If any of them have been fixed already,
-> please let me know.
+libipw unconditionally calls wiphy_unregister, but it's up to the driver
+to register it in the first place. ipw2100 fails to do so. Add the necessary
+glue code, and also ensure that rfkill statuses get set up appropriately.
 
-> Unresolved regressions
-> ----------------------
+Signed-off-by: Matthew Garrett <mjg@redhat.com>
+---
+ drivers/net/wireless/ipw2x00/ipw2100.c |  121 ++++++++++++++++++++++++--------
+ 1 files changed, 92 insertions(+), 29 deletions(-)
 
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14624
-> Subject		: ath9k: BUG kmalloc-8192: Poison overwritten
-> Submitter	: Miles Lane <miles.lane@gmail.com>
-> Date		: 2009-11-12 4:58 (5 days old)
-> References	: http://marc.info/?l=linux-kernel&m=125800196520396&w=4
-
-
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14538
-> Subject		: Unable to associate with AP after resume since 2.6.32-rc6
-> Submitter	: Christian Casteyde <casteyde.christian@free.fr>
-> Date		: 2009-11-03 22:07 (14 days old)
-
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+index 240cff1..e28233d 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+@@ -296,6 +296,33 @@ static const char *command_types[] = {
+ };
+ #endif
  
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14372
-> Subject		: ath5k wireless not working after suspend-resume - eeepc
-> Submitter	: Fabio Comolli <fabio.comolli@gmail.com>
-> Date		: 2009-10-03 15:36 (45 days old)
-> References	: http://lkml.org/lkml/2009/10/3/91
-
-
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14352
-> Subject		: WARNING: at net/mac80211/scan.c:267
-> Submitter	: Maciej Rutecki <maciej.rutecki@gmail.com>
-> Date		: 2009-10-08 00:30 (40 days old)
-> References	: http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2089#c7
-
-
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14277
-> Subject		: Caught 8-bit read from freed memory in b43 driver at association
-> Submitter	: Christian Casteyde <casteyde.christian@free.fr>
-> Date		: 2009-09-30 18:06 (48 days old)
-
++#define WEXT_USECHANNELS 1
++
++static const long ipw2100_frequencies[] = {
++	2412, 2417, 2422, 2427,
++	2432, 2437, 2442, 2447,
++	2452, 2457, 2462, 2467,
++	2472, 2484
++};
++
++#define FREQ_COUNT	ARRAY_SIZE(ipw2100_frequencies)
++
++static const long ipw2100_rates_11b[] = {
++	1000000,
++	2000000,
++	5500000,
++	11000000
++};
++
++static struct ieee80211_rate ipw2100_bg_rates[] = {
++	{ .bitrate = 10 },
++	{ .bitrate = 20, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 55, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 110, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++};
++
++#define RATE_COUNT ARRAY_SIZE(ipw2100_rates_11b)
++
+ /* Pre-decl until we get the code solid and then we can clean it up */
+ static void ipw2100_tx_send_commands(struct ipw2100_priv *priv);
+ static void ipw2100_tx_send_data(struct ipw2100_priv *priv);
+@@ -1141,6 +1168,7 @@ static int rf_kill_active(struct ipw2100_priv *priv)
+ 	int i;
+ 
+ 	if (!(priv->hw_features & HW_FEATURE_RFKILL)) {
++		wiphy_rfkill_set_hw_state(priv->ieee->wdev.wiphy, false);
+ 		priv->status &= ~STATUS_RF_KILL_HW;
+ 		return 0;
+ 	}
+@@ -1151,10 +1179,13 @@ static int rf_kill_active(struct ipw2100_priv *priv)
+ 		value = (value << 1) | ((reg & IPW_BIT_GPIO_RF_KILL) ? 0 : 1);
+ 	}
+ 
+-	if (value == 0)
++	if (value == 0) {
++		wiphy_rfkill_set_hw_state(priv->ieee->wdev.wiphy, true);
+ 		priv->status |= STATUS_RF_KILL_HW;
+-	else
++	} else {
++		wiphy_rfkill_set_hw_state(priv->ieee->wdev.wiphy, false);
+ 		priv->status &= ~STATUS_RF_KILL_HW;
++	}
+ 
+ 	return (value == 0);
+ }
+@@ -1814,13 +1845,6 @@ static int ipw2100_up(struct ipw2100_priv *priv, int deferred)
+ 	return rc;
+ }
+ 
+-/* Called by register_netdev() */
+-static int ipw2100_net_init(struct net_device *dev)
+-{
+-	struct ipw2100_priv *priv = libipw_priv(dev);
+-	return ipw2100_up(priv, 1);
+-}
+-
+ static void ipw2100_down(struct ipw2100_priv *priv)
+ {
+ 	unsigned long flags;
+@@ -1875,6 +1899,64 @@ static void ipw2100_down(struct ipw2100_priv *priv)
+ 	netif_stop_queue(priv->net_dev);
+ }
+ 
++/* Called by register_netdev() */
++static int ipw2100_net_init(struct net_device *dev)
++{
++	struct ipw2100_priv *priv = libipw_priv(dev);
++	const struct libipw_geo *geo = libipw_get_geo(priv->ieee);
++	struct wireless_dev *wdev = &priv->ieee->wdev;
++	int ret;
++	int i;
++
++	ret = ipw2100_up(priv, 1);
++	if (ret)
++		return ret;
++
++	memcpy(wdev->wiphy->perm_addr, priv->mac_addr, ETH_ALEN);
++
++	/* fill-out priv->ieee->bg_band */
++	if (geo->bg_channels) {
++		struct ieee80211_supported_band *bg_band = &priv->ieee->bg_band;
++
++		bg_band->band = IEEE80211_BAND_2GHZ;
++		bg_band->n_channels = geo->bg_channels;
++		bg_band->channels =
++			kzalloc(geo->bg_channels *
++				sizeof(struct ieee80211_channel), GFP_KERNEL);
++		/* translate geo->bg to bg_band.channels */
++		for (i = 0; i < geo->bg_channels; i++) {
++			bg_band->channels[i].band = IEEE80211_BAND_2GHZ;
++			bg_band->channels[i].center_freq = geo->bg[i].freq;
++			bg_band->channels[i].hw_value = geo->bg[i].channel;
++			bg_band->channels[i].max_power = geo->bg[i].max_power;
++			if (geo->bg[i].flags & LIBIPW_CH_PASSIVE_ONLY)
++				bg_band->channels[i].flags |=
++					IEEE80211_CHAN_PASSIVE_SCAN;
++			if (geo->bg[i].flags & LIBIPW_CH_NO_IBSS)
++				bg_band->channels[i].flags |=
++					IEEE80211_CHAN_NO_IBSS;
++			if (geo->bg[i].flags & LIBIPW_CH_RADAR_DETECT)
++				bg_band->channels[i].flags |=
++					IEEE80211_CHAN_RADAR;
++			/* No equivalent for LIBIPW_CH_80211H_RULES,
++			   LIBIPW_CH_UNIFORM_SPREADING, or
++			   LIBIPW_CH_B_ONLY... */
++		}
++		/* point at bitrate info */
++		bg_band->bitrates = ipw2100_bg_rates;
++		bg_band->n_bitrates = RATE_COUNT;
++
++		wdev->wiphy->bands[IEEE80211_BAND_2GHZ] = bg_band;
++	}
++
++	set_wiphy_dev(wdev->wiphy, &priv->pci_dev->dev);
++	if (wiphy_register(wdev->wiphy)) {
++		ipw2100_down(priv);
++		return -EIO;
++	}
++	return 0;
++}
++
+ static void ipw2100_reset_adapter(struct work_struct *work)
+ {
+ 	struct ipw2100_priv *priv =
+@@ -2090,6 +2172,7 @@ static void isr_indicate_rf_kill(struct ipw2100_priv *priv, u32 status)
+ 		       priv->net_dev->name);
+ 
+ 	/* RF_KILL is now enabled (else we wouldn't be here) */
++	wiphy_rfkill_set_hw_state(priv->ieee->wdev.wiphy, true);
+ 	priv->status |= STATUS_RF_KILL_HW;
+ 
+ 	/* Make sure the RF Kill check timer is running */
+@@ -6601,26 +6684,6 @@ static void __exit ipw2100_exit(void)
+ module_init(ipw2100_init);
+ module_exit(ipw2100_exit);
+ 
+-#define WEXT_USECHANNELS 1
+-
+-static const long ipw2100_frequencies[] = {
+-	2412, 2417, 2422, 2427,
+-	2432, 2437, 2442, 2447,
+-	2452, 2457, 2462, 2467,
+-	2472, 2484
+-};
+-
+-#define FREQ_COUNT	ARRAY_SIZE(ipw2100_frequencies)
+-
+-static const long ipw2100_rates_11b[] = {
+-	1000000,
+-	2000000,
+-	5500000,
+-	11000000
+-};
+-
+-#define RATE_COUNT ARRAY_SIZE(ipw2100_rates_11b)
+-
+ static int ipw2100_wx_get_name(struct net_device *dev,
+ 			       struct iw_request_info *info,
+ 			       union iwreq_data *wrqu, char *extra)
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.5.2
+
