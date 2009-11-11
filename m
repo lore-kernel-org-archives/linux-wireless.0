@@ -1,39 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f202.google.com ([209.85.211.202]:64355 "EHLO
-	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759401AbZKFQEG (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:54818 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758704AbZKKAGQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 11:04:06 -0500
-Received: by ywh40 with SMTP id 40so1014339ywh.33
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 08:04:11 -0800 (PST)
+	Tue, 10 Nov 2009 19:06:16 -0500
+Received: by iwn8 with SMTP id 8so516943iwn.33
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2009 16:06:22 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <m3k4y3wsla.wl%holgerschurig@gmail.com>
-References: <loom.20091106T135746-452@post.gmane.org>
-	 <loom.20091106T165330-596@post.gmane.org>
-	 <m3k4y3wsla.wl%holgerschurig@gmail.com>
-Date: Fri, 6 Nov 2009 11:04:10 -0500
-Message-ID: <b6c5339f0911060804k565b5c7cm655374335c8b31fa@mail.gmail.com>
-Subject: Re: [PATCH] Wifi led does not work on Acer Aspire One D250 (ath5k
-	driver)
-From: Bob Copeland <me@bobcopeland.com>
-To: Holger Schurig <holgerschurig@googlemail.com>
-Cc: Carlo Parata <carlo_parata@hotmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 10 Nov 2009 16:06:02 -0800
+Message-ID: <43e72e890911101606j46e1edfn64e331f3463d4da5@mail.gmail.com>
+Subject: Oops on ath_txq_schedule() hit a BUG_ON()
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: ath9k-devel@lists.ath9k.org, Aeolus Yang <Aeolus.Yang@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 6, 2009 at 11:01 AM, Holger Schurig
-<holgerschurig@googlemail.com> wrote:
-> lspci -vvnn gives all the gory details :-)
->
+I managed to get an oops the 2.6.32-rc wireless bits on ath9k by using
+linux-backports-modules package on Ubuntu 9.10 which is on 2.6.31. I'm
+pretty sure this is a real oops which can be reproduced on 2.6.32-rc6
+but I was unable to boot the same laptop on 2.6.32-rc6 [1] due to an
+early oops on what seems to be i915.
 
-Yes, also to save you some trouble it looks like this patch
-should already handle your device:
+The EIP is at ath_txq_schedule() but the oops happens due to a
+BUG_ON() (used to be ASSERT()) on this piece of code:
 
-http://marc.info/?l=linux-wireless&m=125739131923457
+static void ath_tx_addto_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
+                             struct ath_buf *bf)
+{
+        int index, cindex;
 
-(I guess from the XP info that you have 0x105b:e00d too)
+        if (bf_isretried(bf))
+                return;
 
--- 
-Bob Copeland %% www.bobcopeland.com
+        index  = ATH_BA_INDEX(tid->seq_start, bf->bf_seqno);
+        cindex = (tid->baw_head + index) & (ATH_TID_MAX_BUFS - 1);
+
+        /* The precious new bug is here */
+        BUG_ON(tid->tx_buf[cindex] != NULL);
+        tid->tx_buf[cindex] = bf;
+
+        if (index >= ((tid->baw_tail - tid->baw_head) &
+                (ATH_TID_MAX_BUFS - 1))) {
+                tid->baw_tail = cindex;
+                INCR(tid->baw_tail, ATH_TID_MAX_BUFS);
+        }
+}
+
+This happens against an 802.11n AP, the WRT610n with 802.11n enabled.
+The AP has this option to let you enable "only 802.11n", whatever that
+means, its on the 2.4 GHz so I doubt the "only 802.11n" option is not
+really only enabling 802.11n.
+
+I managed to get a few pictures to remember this precious moment:
+
+http://bombadil.infradead.org/~mcgrof/oops-img/2009/11/ath_txq_schedule_oops/01.jpg
+http://bombadil.infradead.org/~mcgrof/oops-img/2009/11/ath_txq_schedule_oops/03.jpg
+http://bombadil.infradead.org/~mcgrof/oops-img/2009/11/ath_txq_schedule_oops/02.jpg
+
+This was with SpeedStep enabled, the power pulled off and doing iperf
+UDP out (TX'ing). Haven't managed to find what makes the assumption
+incorrect yet but it obviously is. If we cannot find what it is soon
+we need to figure out a compromise and change it to a WARN_ONCE or so.
+
+[1] http://lkml.org/lkml/2009/11/10/510
+
+  Luis
