@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:56888 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752591AbZKDC2f (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 21:28:35 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project tree
-Date: Wed, 4 Nov 2009 03:28:01 +0100
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>
-References: <200911031951.05235.bzolnier@gmail.com> <200911040046.54247.bzolnier@gmail.com> <646765f40911031733u1641c0dr5d4eec30031e7cea@mail.gmail.com>
-In-Reply-To: <646765f40911031733u1641c0dr5d4eec30031e7cea@mail.gmail.com>
+Received: from mail.tpi.com ([70.99.223.143]:3585 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753059AbZKLTyE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Nov 2009 14:54:04 -0500
+Message-ID: <4AFC67DF.4080608@canonical.com>
+Date: Thu, 12 Nov 2009 12:54:07 -0700
+From: Tim Gardner <tim.gardner@canonical.com>
+Reply-To: tim.gardner@canonical.com
 MIME-Version: 1.0
-Message-Id: <200911040328.01997.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: James Grossmann <cctsurf@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: Prism54/p54pci
+References: <167ae39b0910071400n218d3d9ey7711b1011f290a73@mail.gmail.com> <200911121717.36906.chunkeey@googlemail.com> <4AFC5A5E.1050405@canonical.com> <200911122037.39145.chunkeey@googlemail.com>
+In-Reply-To: <200911122037.39145.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 04 November 2009 02:33:52 Julian Calaby wrote:
-> On Wed, Nov 4, 2009 at 10:46, Bartlomiej Zolnierkiewicz
-> <bzolnier@gmail.com> wrote:
-> >> If you just want to continue with a hostile take-over of the rt2800
-> >> maintainership, then please
-> >> let us know that, so that we stop spending time on useless
-> >
-> > I fail to see why you see it as a hostile takeover.
+Christian Lamparter wrote:
+> On Thursday 12 November 2009 19:56:30 Tim Gardner wrote:
+>> Christian Lamparter wrote:
+>>> On Friday 06 November 2009 21:52:42 James Grossmann wrote:
+>>>> my caps lock & scroll lock leds are not blinking, and yet the computer
+>>>> is frozen.  (I'm not the best at terminology, I guess that might not
+>>>> be defined as a hard lock.)  I get no odd messages in my syslog.  I am
+>>>> using Ubuntu right now, so I'm guessing that they have all the
+>>>> prettyness going that they can, covering the important messages, but
+>>>> as it's not an actual oops, I'm not certain that's hurting us.
+>>> just a update:
+>>>
+>>> I can confirm the freeze with ubuntu 9.10 (2.6.31-14 & 2.6.31-15-generic)
+>>> + compat-wireless + p54pci (either as backport module or compiled from git).
+>>> The original modules (shipped with 2.6.31-14/15) are fine though..?!
+>> The Ubuntu Karmic linux-backports-modules package is based on
+>> compat-wireless-2.6.32-rc4. I'm wondering if its something specific to
+>> the p54pci driver? I'm using iwlagn (4965) from that package with no
+>> problems (so far).
 > 
-> Updating MAINTAINERS to replace the current developers with yourself
-> can be considered to be a hostile act.
+> I put a ath5k card into the same machine and tried with the same
+> compat-wireless modules. Surprise, surprise: no problems...
 > 
-> If you want this for your own personal tree, then keep the patch
-> private - don't include it in pull requests, patch listings etc.
+> The affected device works fine with the current wireless-testing(pulled today)
+> and a vanilla 2.6.31.6 + compat-wireless (from today's git).
+> 
+> I've no idea what voodoo is going on here, maybe there is
+> something wrong in compat-wireless pci glue code (if there's any?!)
+> 
+>> Its not clear what version of stable compat-wireless you've tried.
+>> Does compat-wireless-2.6.32-rc6 exhibit the same problem?
+> "compiled from git", which should be compat-wireless-2009-11-12.tar.bz2
+> and therefore -rc6.
+> 
 
-This is not pull request etc. but since the change in question has been
-stirring needless controversies and distracting people from reading patches
-it has been dropped for now.
+Just to be clear, the current wireless-testing is not at all the same as
+2.6.32-rc6. Its my understanding that wireless-testing is John's
+crack-of-the-day merge window test repository.
 
+Anyway, I'm updating the Ubuntu LBM package to use
+compat-wireless-2.6.32-rc6 which should be out by tomorrow. This
+combination should closely resemble vanilla 2.6.31.6 + compat-wireless.
+
+rtg
 -- 
-Bartlomiej Zolnierkiewicz
+Tim Gardner tim.gardner@canonical.com
