@@ -1,68 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:40188 "EHLO mx3.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752449AbZKIHQg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 02:16:36 -0500
-Date: Mon, 9 Nov 2009 08:15:58 +0100
-From: Ingo Molnar <mingo@elte.hu>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Yannick Roehlly <yannick.roehlly@free.fr>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jesse.barnes@intel.com>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"John W. Linville" <linville@tuxdriver.com>, berndl81@gmx.at,
-	Greg KH <greg@kroah.com>
-Subject: Re: Reverting 5d423 fixes loading of ath9k on Acer Extensa 7630EZ
-Message-ID: <20091109071558.GC453@elte.hu>
-References: <43e72e890911041540hd1e5f87u8d282d9c95857504@mail.gmail.com>
- <alpine.LFD.2.01.0911041551220.31845@localhost.localdomain>
- <20091105071431.GA14055@elte.hu>
- <43e72e890911081135q78416ef7ua6c5991b15fb2659@mail.gmail.com>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:61677 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757543AbZKLEbZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Nov 2009 23:31:25 -0500
+Date: Wed, 11 Nov 2009 22:31:29 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>, bzolnier@gmail.com
+Cc: Bernhard Schiffner <bernhard@schiffner-limbach.de>,
+	linux-wireless@vger.kernel.org
+Subject: [RFC/RFT 0/6 V2] rtl8187se: Initial introduction of driver
+Message-ID: <4afb8fa1.BSj+U96EOaXrlQvr%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890911081135q78416ef7ua6c5991b15fb2659@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Patches to introduce a driver for the RTL8187SE PCI-based device.
 
-* Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+Note: This driver is only compile-tested and will require more work
+for it to be useful. I'm posting now to let others know what I have done.
 
-> On Wed, Nov 4, 2009 at 11:14 PM, Ingo Molnar <mingo@elte.hu> wrote:
-> >
-> > * Linus Torvalds <torvalds@linux-foundation.org> wrote:
-> >
-> >> On Wed, 4 Nov 2009, Luis R. Rodriguez wrote:
-> >> >
-> >> > Can you please consider reviewing this issue and help determine if
-> >> > this indeed needs to be reverted for 2.6.32 and the next 2.6.31.y.
-> >> >
-> >> > I am curious if other devices would work by reverting this as well.
-> >> > [ ... ] For details please feel free to check:
-> >> >
-> >> > http://bugzilla.kernel.org/show_bug.cgi?id=14402
-> >>
-> >> That same commit was the cause for
-> >>
-> >> ?? ?? ?? http://bugzilla.kernel.org/show_bug.cgi?id=13940
-> >>
-> >> and we just increased the rounding to make it go away (see commit
-> >> 15b812f1). But that was a hack.
-> >>
-> >> And if that didn't help the ath9k case, then we should just revert
-> >> entirely.
-> >
-> > Agreed - below is the combo 15b812f1 + 5d423ccd revert. (Would be nice
-> > to get the boot log of the latest post-15b812f1 kernel that Yinghai
-> > asked for before we revert, in the hope of better understanding the
-> > problem.)
-> 
-> Bernhard has confirmed the new patch fixes this issue.
+I have applied for an account at kernel.org. If my request is approved, I
+plan to establish an rtl8187se git tree.
 
-Good - so latest kernels should be fine (on Bernhard's box) and no 
-change is needed, right?
+Patch 1/6: Create file rtl8187se.h
+Patch 2/6: Create file rtl8187se_dev.c
+Patch 3/6: Create file rtl8187se_rtl8225.c
+Patch 4/6: Create file rtl8187se_rtl8225.h
+Patch 5/6: Modify file rtl818x.h
+Patch 6/6: Modify Kconfig and Makefile for rtl8187se
 
-	Ingo
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+
+
