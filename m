@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:34265 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752189AbZKAMvT (ORCPT
+Received: from d1.icnet.pl ([212.160.220.21]:34467 "EHLO d1.icnet.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759518AbZKLBvR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Nov 2009 07:51:19 -0500
-Received: by bwz27 with SMTP id 27so5248514bwz.21
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Nov 2009 04:51:24 -0800 (PST)
+	Wed, 11 Nov 2009 20:51:17 -0500
+From: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: Please share info about power consumption characteristics of your  USB adapter
+Date: Thu, 12 Nov 2009 02:50:51 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <200911112219.08814.jkrzyszt@tis.icnet.pl> <200911120010.11943.jkrzyszt@tis.icnet.pl> <43e72e890911111522t118f1d23q49d68662a05bf0dd@mail.gmail.com>
+In-Reply-To: <43e72e890911111522t118f1d23q49d68662a05bf0dd@mail.gmail.com>
 MIME-Version: 1.0
-From: Thomas Wiecki <thomas.wiecki@googlemail.com>
-Date: Sun, 1 Nov 2009 13:51:04 +0100
-Message-ID: <4888b8cb0911010451w3e824921ob5ee6b7aae5b728b@mail.gmail.com>
-Subject: b43 with 14e4 gives DMA error
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Message-Id: <200911120250.52953.jkrzyszt@tis.icnet.pl>
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-0c:00.0 Network controller [0280]: Broadcom Corporation BCM4312
-802.11b/g [14e4:4315] (rev 01)
-        Subsystem: Dell Device [1028:000c]
-        Flags: bus master, fast devsel, latency 0, IRQ 17
-        Memory at f1ffc000 (64-bit, non-prefetchable) [size=16K]
-        Capabilities: <access denied>
-        Kernel driver in use: wl
-        Kernel modules: wl, ssb
+Thursday 12 November 2009 00:22:54 Luis R. Rodriguez napisał(a):
+> Just go to:
+>
+> http://wireless.kernel.org/
+>
+> sign up for an account and edit the stuff into any page. We can help
+> you organize it.
 
-A variable delay after loading the most recent b43 driver I get a lot
-of (I hope last nights patches would have fixed the problems, but they
-didn't):
-[ 6895.111946] b43-phy0 ERROR: Fatal DMA error: 0x00000800,
-0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000
-[ 6895.111955] b43-phy0: Controller RESET (DMA error) ...
-[ 6895.336490] b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
-[ 6900.841372] b43-phy0: Controller restarted
+Luis,
 
-After installing the driver for the first time, I have a few minutes I
-can use the wifi card, after that the DMA errors start to occur. Once
-they occured after the first loading, they appear immediatly after
-each loading.
+As you have been probably notified, I entered some info into several 
+http://wireless.kernel.org/en/users/Drivers/*/devices pages, introducing a new 
+column: MaxPower. I hope you accept it.
 
-Ubuntu 9.04 (most recent) with kernel 2.6.31-14-generic
+I will add more if I get more answers (not found any adapter with less then 
+300mA yet :( ).
 
-Laptop is Dell E6500.
+BTW, I'm not sure how to get the MaxPower column dispayed on 
+http://wireless.kernel.org/en/users/Devices/USB page. Shall it appear if I 
+add that column to every USB driver devices table?
+
+Thanks,
+Janusz
