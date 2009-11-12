@@ -1,144 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:47150 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754377AbZKIXrS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 18:47:18 -0500
-Received: by mail-ew0-f228.google.com with SMTP id 28so3974559ewy.18
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 15:47:23 -0800 (PST)
-From: Rui Paulo <rpaulo@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Rui Paulo <rpaulo@gmail.com>,
-	Javier Cardona <rpaulo@cozybit.com>
-Subject: [PATCH v2 08/20] mac80211: allow processing of more than one HWMP IE
-Date: Mon,  9 Nov 2009 23:46:46 +0000
-Message-Id: <1257810418-30075-9-git-send-email-rpaulo@gmail.com>
-In-Reply-To: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
-References: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
+Received: from bar.sig21.net ([80.81.252.164]:45622 "EHLO bar.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752790AbZKLPZ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Nov 2009 10:25:59 -0500
+Date: Thu, 12 Nov 2009 16:26:00 +0100
+From: Johannes Stezenbach <js@sig21.net>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: ath9k: DMA failed to stop in 10 ms
+Message-ID: <20091112152600.GA7562@sig21.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since the HWMP IEs are now all optional and the action code is fixed,
-allow the HWMP code to find and process each IE on the path
-selection action frames.
+Hi,
 
-Signed-off-by: Rui Paulo <rpaulo@gmail.com>
-Signed-off-by: Javier Cardona <rpaulo@cozybit.com>
-Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
-Tested-by: Brian Cavagnolo <brian@cozybit.com>
----
- net/mac80211/mesh_hwmp.c |   47 ++++++++++++++++++++++++---------------------
- 1 files changed, 25 insertions(+), 22 deletions(-)
+I have a Samsung N130 netbook which has
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 6dbaec5..e67e812 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -192,7 +192,7 @@ int mesh_path_error_tx(u8 *dst, __le32 dst_dsn, u8 *ra,
- 	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
- 	/* BSSID is left zeroed, wildcard value */
- 	mgmt->u.action.category = MESH_PATH_SEL_CATEGORY;
--	mgmt->u.action.u.mesh_action.action_code = MPATH_PERR;
-+	mgmt->u.action.u.mesh_action.action_code = MESH_PATH_SEL_ACTION;
- 	ie_len = 12;
- 	pos = skb_put(skb, 2 + ie_len);
- 	*pos++ = WLAN_EID_PERR;
-@@ -277,7 +277,7 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
-  */
- static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
- 			    struct ieee80211_mgmt *mgmt,
--			    u8 *hwmp_ie)
-+			    u8 *hwmp_ie, enum mpath_frame_type action)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct mesh_path *mpath;
-@@ -288,7 +288,6 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
- 	unsigned long orig_lifetime, exp_time;
- 	u32 last_hop_metric, new_metric;
- 	bool process = true;
--	u8 action = mgmt->u.action.u.mesh_action.action_code;
- 
- 	rcu_read_lock();
- 	sta = sta_info_get(local, mgmt->sa);
-@@ -443,6 +442,7 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 	mhwmp_dbg("received PREQ\n");
- 
- 	if (memcmp(dst_addr, sdata->dev->dev_addr, ETH_ALEN) == 0) {
-+		mhwmp_dbg("PREQ is for us\n");
- 		forward = false;
- 		reply = true;
- 		metric = 0;
-@@ -498,6 +498,7 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 			ifmsh->mshstats.dropped_frames_ttl++;
- 			return;
- 		}
-+		mhwmp_dbg("forwarding the PREQ\n");
- 		--ttl;
- 		flags = PREQ_IE_FLAGS(preq_elem);
- 		preq_id = PREQ_IE_PREQ_ID(preq_elem);
-@@ -524,6 +525,8 @@ static void hwmp_prep_frame_process(struct ieee80211_sub_if_data *sdata,
- 	u8 next_hop[ETH_ALEN];
- 	u32 dst_dsn, orig_dsn, lifetime;
- 
-+	mhwmp_dbg("received PREP\n");
-+
- 	/* Note that we divert from the draft nomenclature and denominate
- 	 * destination to what the draft refers to as origininator. So in this
- 	 * function destnation refers to the final destination of the PREP,
-@@ -625,32 +628,32 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
- 	ieee802_11_parse_elems(mgmt->u.action.u.mesh_action.variable,
- 			len - baselen, &elems);
- 
--	switch (mgmt->u.action.u.mesh_action.action_code) {
--	case MPATH_PREQ:
--		if (!elems.preq || elems.preq_len != 37)
-+	mhwmp_dbg("RX path selection frame\n");
-+	if (elems.preq) {
-+		if (elems.preq_len != 37)
- 			/* Right now we support just 1 destination and no AE */
- 			return;
--		last_hop_metric = hwmp_route_info_get(sdata, mgmt, elems.preq);
--		if (!last_hop_metric)
--			return;
--		hwmp_preq_frame_process(sdata, mgmt, elems.preq, last_hop_metric);
--		break;
--	case MPATH_PREP:
--		if (!elems.prep || elems.prep_len != 31)
-+		last_hop_metric = hwmp_route_info_get(sdata, mgmt, elems.preq,
-+						      MPATH_PREQ);
-+		if (last_hop_metric)
-+			hwmp_preq_frame_process(sdata, mgmt, elems.preq,
-+						last_hop_metric);
-+	}
-+	if (elems.prep) {
-+		if (elems.prep_len != 31)
- 			/* Right now we support no AE */
- 			return;
--		last_hop_metric = hwmp_route_info_get(sdata, mgmt, elems.prep);
--		if (!last_hop_metric)
--			return;
--		hwmp_prep_frame_process(sdata, mgmt, elems.prep, last_hop_metric);
--		break;
--	case MPATH_PERR:
--		if (!elems.perr || elems.perr_len != 12)
-+		last_hop_metric = hwmp_route_info_get(sdata, mgmt, elems.prep,
-+						      MPATH_PREP);
-+		if (last_hop_metric)
-+			hwmp_prep_frame_process(sdata, mgmt, elems.prep,
-+						last_hop_metric);
-+	}
-+	if (elems.perr) {
-+		if (elems.perr_len != 12)
- 			/* Right now we support only one destination per PERR */
- 			return;
- 		hwmp_perr_frame_process(sdata, mgmt, elems.perr);
--	default:
--		return;
- 	}
- 
- }
--- 
-1.5.6.5
+  phy0: Atheros AR9285 MAC/BB Rev:2 AR5133 RF Rev:e0: mem=0xf80e0000, irq=16
 
+and I run Debain unstable with a linux-2.6.32-rc6-166-g799dd75 kernel.
+
+
+When running kismet I get a lot of
+
+[ 2030.531809] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
+[ 2030.731944] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
+[ 2030.968118] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
+[ 2031.169580] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
+[ 2031.397604] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
+[ 2031.653803] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
+[ 2031.883503] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
+[ 2032.092719] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
+[ 2032.332719] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
+[ 2032.539756] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
+
+This is 100% reproducable.  However it seems kismet is still working
+(but probably missing some frames due to the issue).
+
+
+Connecting to and AP via WPA2 works (but I didn't test much yet), but
+when I terminate wpa_supplicant I also get one of the "DMA failed to stop"
+messages (same AR_CR and AR_DIAG_SW).
+
+
+Is it safe to assume that the message is caused by an invalid
+RX DMA descriptor?  Or hat else could cause DMA to fail to complete?
+
+
+Thanks
+Johannes
