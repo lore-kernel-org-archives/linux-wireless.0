@@ -1,93 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:62471 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753213AbZKHNjj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 08:39:39 -0500
-Received: by mail-ew0-f207.google.com with SMTP id 3so2371374ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 05:39:44 -0800 (PST)
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Date: Sun, 08 Nov 2009 14:39:16 +0100
-Message-Id: <20091108133916.23584.20632.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091108133854.23584.86842.sendpatchset@localhost.localdomain>
-References: <20091108133854.23584.86842.sendpatchset@localhost.localdomain>
-Subject: [PATCH 4/9] rt2800usb: reorganize code in rt2800usb_probe_hw_mode()
+Received: from mx1.redhat.com ([209.132.183.28]:35014 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753059AbZKLSuQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Nov 2009 13:50:16 -0500
+Subject: Re: Looking for the datasheet of zd1211rw...
+From: Dan Williams <dcbw@redhat.com>
+To: Simon Raffeiner <sturmflut@lieberbiber.de>
+Cc: Andrey Yurovsky <andrey@cozybit.com>,
+	tomas zheng <tomaswlan.zheng@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1258051444.2347.124.camel@localhost.localdomain>
+References: <1d91afb90911112231n54696c5fh950ba0102740d444@mail.gmail.com>
+	 <45e8e6c40911112302s7c5c3e5cq496289512410ecba@mail.gmail.com>
+	 <200911120847.44150.sturmflut@lieberbiber.de>
+	 <1258051444.2347.124.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Thu, 12 Nov 2009 10:50:00 -0800
+Message-Id: <1258051800.2347.127.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] rt2800usb: reorganize code in rt2800usb_probe_hw_mode()
+On Thu, 2009-11-12 at 10:44 -0800, Dan Williams wrote:
+> On Thu, 2009-11-12 at 08:47 +0100, Simon Raffeiner wrote:
+> > Am Donnerstag, 12. November 2009 08:02:36 schrieben Sie:
+> > 
+> > > It looks like a Marvell device (and therefore not a zd1211) from what
+> > > you posted.
+> > 
+> > It is a Marvell Libertas device, but it seems the USB ID is not claimed by the existing drivers ("libertas" and "libertas_tf").
+> 
+> It's a softmac device, likely an 8335-based card.  The 'mwl8k' driver
+> upstream is the closest match, but mwl8k doesn't yet have support for
+> the older softmac cards like the 8335 or 8361/8362 TopDog series.
 
-Move hw_mode information initialization code block before
-HT information initialization one to match the ordering used
-by rt2800pci's rt2800pci_probe_hw_mode().
+I lie, it's a usb8338 (W833810).  There's code for this driver
+"around" (mrvl_cb82 is the name) but it's the old vendor driver based on
+net80211:
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |   42 ++++++++++++++++----------------
- 1 file changed, 21 insertions(+), 21 deletions(-)
+http://git.kernel.org/?p=linux/kernel/git/linville/marvell.git;a=summary
 
-Index: b/drivers/net/wireless/rt2x00/rt2800usb.c
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -795,6 +795,27 @@ static int rt2800usb_probe_hw_mode(struc
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &eeprom);
- 
- 	/*
-+	 * Initialize hw_mode information.
-+	 */
-+	spec->supported_bands = SUPPORT_BAND_2GHZ;
-+	spec->supported_rates = SUPPORT_RATE_CCK | SUPPORT_RATE_OFDM;
-+
-+	if (rt2x00_rf(&rt2x00dev->chip, RF2820) ||
-+	    rt2x00_rf(&rt2x00dev->chip, RF2720)) {
-+		spec->num_channels = 14;
-+		spec->channels = rf_vals;
-+	} else if (rt2x00_rf(&rt2x00dev->chip, RF2850) ||
-+		   rt2x00_rf(&rt2x00dev->chip, RF2750)) {
-+		spec->supported_bands |= SUPPORT_BAND_5GHZ;
-+		spec->num_channels = ARRAY_SIZE(rf_vals);
-+		spec->channels = rf_vals;
-+	} else if (rt2x00_rf(&rt2x00dev->chip, RF3020) ||
-+		   rt2x00_rf(&rt2x00dev->chip, RF2020)) {
-+		spec->num_channels = ARRAY_SIZE(rf_vals_3070);
-+		spec->channels = rf_vals_3070;
-+	}
-+
-+	/*
- 	 * Initialize HT information.
- 	 */
- 	spec->ht.ht_supported = true;
-@@ -826,27 +847,6 @@ static int rt2800usb_probe_hw_mode(struc
- 	}
- 
- 	/*
--	 * Initialize hw_mode information.
--	 */
--	spec->supported_bands = SUPPORT_BAND_2GHZ;
--	spec->supported_rates = SUPPORT_RATE_CCK | SUPPORT_RATE_OFDM;
--
--	if (rt2x00_rf(&rt2x00dev->chip, RF2820) ||
--	    rt2x00_rf(&rt2x00dev->chip, RF2720)) {
--		spec->num_channels = 14;
--		spec->channels = rf_vals;
--	} else if (rt2x00_rf(&rt2x00dev->chip, RF2850) ||
--		   rt2x00_rf(&rt2x00dev->chip, RF2750)) {
--		spec->supported_bands |= SUPPORT_BAND_5GHZ;
--		spec->num_channels = ARRAY_SIZE(rf_vals);
--		spec->channels = rf_vals;
--	} else if (rt2x00_rf(&rt2x00dev->chip, RF3020) ||
--		   rt2x00_rf(&rt2x00dev->chip, RF2020)) {
--		spec->num_channels = ARRAY_SIZE(rf_vals_3070);
--		spec->channels = rf_vals_3070;
--	}
--
--	/*
- 	 * Create channel information array
- 	 */
- 	info = kzalloc(spec->num_channels * sizeof(*info), GFP_KERNEL);
+drivers/net/wireless/mrvl_cb82/driver/mwl_usb.c
+
+Dan
+
+
