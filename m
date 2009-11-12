@@ -1,87 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:17851 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755491AbZKRSaD (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:61683 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756514AbZKLEbZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 13:30:03 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so234939eyd.5
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 10:30:08 -0800 (PST)
-From: Rui Paulo <rpaulo@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Rui Paulo <rpaulo@gmail.com>
-Subject: [PATCH] mac80211: update cfg80211 scan result code for the updated mesh conf IE
-Date: Wed, 18 Nov 2009 18:22:59 +0000
-Message-Id: <1258568579-21900-2-git-send-email-rpaulo@gmail.com>
-In-Reply-To: <1258568579-21900-1-git-send-email-rpaulo@gmail.com>
-References: <1258568579-21900-1-git-send-email-rpaulo@gmail.com>
+	Wed, 11 Nov 2009 23:31:25 -0500
+Date: Wed, 11 Nov 2009 22:31:29 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>, bzolnier@gmail.com
+Cc: Bernhard Schiffner <bernhard@schiffner-limbach.de>,
+	linux-wireless@vger.kernel.org
+Subject: [RFC/RFT 4/6 V2] rtl8187se: Create file rtl8187se_rtl8225.h
+Message-ID: <4afb8fa1.P8Oj2mVHWe4Vhmj9%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rui Paulo <rpaulo@gmail.com>
----
- net/wireless/scan.c |   31 ++++++++++++++++++-------------
- 1 files changed, 18 insertions(+), 13 deletions(-)
+Create the radio driver header file for rtl8187se.
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index d03447d..227d57b 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -874,35 +874,40 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
- 			cfg = ie + 2;
- 			memset(&iwe, 0, sizeof(iwe));
- 			iwe.cmd = IWEVCUSTOM;
--			sprintf(buf, "Mesh network (version %d)", cfg[0]);
-+			sprintf(buf, "Mesh Network Path Selection Protocol ID: "
-+				"0x%02X", cfg[0]);
- 			iwe.u.data.length = strlen(buf);
- 			current_ev = iwe_stream_add_point(info, current_ev,
- 							  end_buf,
- 							  &iwe, buf);
--			sprintf(buf, "Path Selection Protocol ID: "
--				"0x%02X%02X%02X%02X", cfg[1], cfg[2], cfg[3],
--							cfg[4]);
-+			sprintf(buf, "Path Selection Metric ID: 0x%02X",
-+				cfg[1]);
- 			iwe.u.data.length = strlen(buf);
- 			current_ev = iwe_stream_add_point(info, current_ev,
- 							  end_buf,
- 							  &iwe, buf);
--			sprintf(buf, "Path Selection Metric ID: "
--				"0x%02X%02X%02X%02X", cfg[5], cfg[6], cfg[7],
--							cfg[8]);
-+			sprintf(buf, "Congestion Control Mode ID: 0x%02X",
-+				cfg[2]);
- 			iwe.u.data.length = strlen(buf);
- 			current_ev = iwe_stream_add_point(info, current_ev,
- 							  end_buf,
- 							  &iwe, buf);
--			sprintf(buf, "Congestion Control Mode ID: "
--				"0x%02X%02X%02X%02X", cfg[9], cfg[10],
--							cfg[11], cfg[12]);
-+			sprintf(buf, "Synchronization ID: 0x%02X", cfg[3]);
- 			iwe.u.data.length = strlen(buf);
- 			current_ev = iwe_stream_add_point(info, current_ev,
- 							  end_buf,
- 							  &iwe, buf);
--			sprintf(buf, "Channel Precedence: "
--				"0x%02X%02X%02X%02X", cfg[13], cfg[14],
--							cfg[15], cfg[16]);
-+			sprintf(buf, "Authentication ID: 0x%02X", cfg[4]);
-+			iwe.u.data.length = strlen(buf);
-+			current_ev = iwe_stream_add_point(info, current_ev,
-+							  end_buf,
-+							  &iwe, buf);
-+			sprintf(buf, "Formation Info: 0x%02X", cfg[5]);
-+			iwe.u.data.length = strlen(buf);
-+			current_ev = iwe_stream_add_point(info, current_ev,
-+							  end_buf,
-+							  &iwe, buf);
-+			sprintf(buf, "Capabilities: 0x%02X", cfg[6]);
- 			iwe.u.data.length = strlen(buf);
- 			current_ev = iwe_stream_add_point(info, current_ev,
- 							  end_buf,
--- 
-1.5.6.5
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187se_rtl8225.h
+===================================================================
+--- /dev/null
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187se_rtl8225.h
+@@ -0,0 +1,24 @@
++#ifndef RTL8187SE_RTL8225_H
++#define RTL8187SE_RTL8225_H
++
++#define RTL8225_ANAPARAM_ON	0xa0000b59
++#define RTL8225_ANAPARAM2_ON	0x860dec11
++#define RTL8225_ANAPARAM_OFF	0xa00beb59
++#define RTL8225_ANAPARAM2_OFF	0x840dec11
++
++const struct rtl818x_rf_ops * rtl8187se_detect_rf(struct ieee80211_hw *);
++
++static inline void rtl8225_write_phy_ofdm(struct ieee80211_hw *dev,
++					  u8 addr, u8 data)
++{
++	rtl8187se_write_phy(dev, addr, data);
++}
++
++static inline void rtl8225_write_phy_cck(struct ieee80211_hw *dev,
++					 u8 addr, u8 data)
++{
++	rtl8187se_write_phy(dev, addr, data | 0x10000);
++}
++
++#endif /* RTL8187SE_RTL8225_H */
++
 
