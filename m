@@ -1,83 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:63710 "EHLO mga02.intel.com"
+Received: from smtp1.irobot.com ([206.83.81.187]:61925 "EHLO smtp1.irobot.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932319AbZKMT4y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 14:56:54 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 14/16] iwlwifi: add sleep_tx_count ucode station API
-Date: Fri, 13 Nov 2009 11:56:36 -0800
-Message-Id: <1258142198-3223-15-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
-References: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
+	id S1754735AbZKLWlO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Nov 2009 17:41:14 -0500
+Message-ID: <4AFC8F0D.5020700@irobot.com>
+Date: Thu, 12 Nov 2009 14:41:17 -0800
+From: Adam Wozniak <awozniak@irobot.com>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: Derek Smithies <derek@indranet.co.nz>,
+	linux-wireless@vger.kernel.org, nbd@openwrt.org
+Subject: Re: compat-wireless and minstrel
+References: <4AF0D54D.4090303@irobot.com> <alpine.DEB.2.00.0911111508391.6214@kauri.acheron.indranet.co.nz> <4AFC655A.5020706@irobot.com> <200911122103.27455.chunkeey@googlemail.com> <4AFC8E4F.5090307@irobot.com>
+In-Reply-To: <4AFC8E4F.5090307@irobot.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+Whoops, patch was slightly incorrect.  This is better:
 
-This field was marked as reserved before since we didn't
-use it, but is present in all released firmwares afaict.
-We're going to need it soon, so add it now.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    1 +
- drivers/net/wireless/iwlwifi/iwl-commands.h |   18 ++++++++++++++++--
- 2 files changed, 17 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 39e7244..a5f7916 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -1818,6 +1818,7 @@ static u16 iwl4965_build_addsta_hcmd(const struct iwl_addsta_cmd *cmd, u8 *data)
- 	addsta->add_immediate_ba_tid = cmd->add_immediate_ba_tid;
- 	addsta->remove_immediate_ba_tid = cmd->remove_immediate_ba_tid;
- 	addsta->add_immediate_ba_ssn = cmd->add_immediate_ba_ssn;
-+	addsta->sleep_tx_count = cmd->sleep_tx_count;
- 	addsta->reserved1 = cpu_to_le16(0);
- 	addsta->reserved2 = cpu_to_le32(0);
+*** compat-wireless-2009-11-09/net/mac80211/ibss.c    2009-11-08 
+21:15:06.000000000 -0800
+--- compat-wireless-2009-11-09b/net/mac80211/ibss.c    2009-11-12 
+14:39:12.391545084 -0800
+***************
+*** 246,254 ****
+      if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
+          return;
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 87a7f28..aa4e38c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -1107,7 +1107,14 @@ struct iwl4965_addsta_cmd {
- 	 * Set modify_mask bit STA_MODIFY_ADDBA_TID_MSK to use this field. */
- 	__le16 add_immediate_ba_ssn;
+      if (sdata->vif.type == NL80211_IFTYPE_ADHOC && elems->supp_rates &&
+          memcmp(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0) {
+-         supp_rates = ieee80211_sta_get_rates(local, elems, band);
  
--	__le32 reserved2;
-+	/*
-+	 * Number of packets OK to transmit to station even though
-+	 * it is asleep -- used to synchronise PS-poll and u-APSD
-+	 * responses while ucode keeps track of STA sleep state.
-+	 */
-+	__le16 sleep_tx_count;
+          rcu_read_lock();
+ 
+--- 246,258 ----
+      if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
+          return;
+ 
++     supp_rates = ieee80211_sta_get_rates(local, elems, band);
 +
-+	__le16 reserved2;
- } __attribute__ ((packed));
- 
- /* 5000 */
-@@ -1138,7 +1145,14 @@ struct iwl_addsta_cmd {
- 	 * Set modify_mask bit STA_MODIFY_ADDBA_TID_MSK to use this field. */
- 	__le16 add_immediate_ba_ssn;
- 
--	__le32 reserved2;
-+	/*
-+	 * Number of packets OK to transmit to station even though
-+	 * it is asleep -- used to synchronise PS-poll and u-APSD
-+	 * responses while ucode keeps track of STA sleep state.
-+	 */
-+	__le16 sleep_tx_count;
++     /* make sure mandatory rates are always added */
++     supp_rates = supp_rates |= ieee80211_mandatory_rates(local, band);
 +
-+	__le16 reserved2;
- } __attribute__ ((packed));
+      if (sdata->vif.type == NL80211_IFTYPE_ADHOC && elems->supp_rates &&
+          memcmp(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0) {
  
+          rcu_read_lock();
  
--- 
-1.5.6.3
+***************
+*** 257,268 ****
+              u32 prev_rates;
+ 
+              prev_rates = sta->sta.supp_rates[band];
+!             /* make sure mandatory rates are always added */
+!             sta->sta.supp_rates[band] = supp_rates |
+!                 ieee80211_mandatory_rates(local, band);
+ 
+  #ifdef CONFIG_MAC80211_IBSS_DEBUG
+-             if (sta->sta.supp_rates[band] != prev_rates)
+                  printk(KERN_DEBUG "%s: updated supp_rates set "
+                      "for %pM based on beacon info (0x%llx | "
+                      "0x%llx -> 0x%llx)\n",
+--- 261,270 ----
+              u32 prev_rates;
+ 
+              prev_rates = sta->sta.supp_rates[band];
+!             sta->sta.supp_rates[band] = supp_rates;
+ 
++             if (sta->sta.supp_rates[band] != prev_rates) {
+  #ifdef CONFIG_MAC80211_IBSS_DEBUG
+                  printk(KERN_DEBUG "%s: updated supp_rates set "
+                      "for %pM based on beacon info (0x%llx | "
+                      "0x%llx -> 0x%llx)\n",
+***************
+*** 272,277 ****
+--- 274,285 ----
+                      (unsigned long long) supp_rates,
+                      (unsigned long long) sta->sta.supp_rates[band]);
+  #endif
++
++                 /* TODO: implement rate_update in minstrel/pid,
++                  * then change this to rate_control_rate_update.
++                  */
++                 rate_control_rate_init(sta);
++             }
+          } else
+              ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 
+supp_rates);
+ 
+
+
+
+Adam Wozniak wrote:
+> I see what you're doing there.  That didn't quite work, but I'm fairly 
+> confident this one will.  I'm running my long term test now.  Note the 
+> added call to rate_control_init() when the rate is updated.  This 
+> *should* be rate_control_rate_update, but it doesn't look to me like 
+> that method is implemented in minstrel or the PID code.
+>
+> *** compat-wireless-2009-11-09/net/mac80211/ibss.c    2009-11-08 
+> 21:15:06.000000000 -0800
+> --- compat-wireless-2009-11-09b/net/mac80211/ibss.c    2009-11-12 
+> 14:29:16.308550923 -0800
+> ***************
+> *** 246,254 ****
+>      if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
+>          return;
+>
+>      if (sdata->vif.type == NL80211_IFTYPE_ADHOC && elems->supp_rates &&
+>          memcmp(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0) {
+> -         supp_rates = ieee80211_sta_get_rates(local, elems, band);
+>
+>          rcu_read_lock();
+>
+> --- 246,258 ----
+>      if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
+>          return;
+>
+> +     supp_rates = ieee80211_sta_get_rates(local, elems, band);
+> +
+> +     /* make sure mandatory rates are always added */
+> +     supp_rates = supp_rates |= ieee80211_mandatory_rates(local, band);
+> +
+>      if (sdata->vif.type == NL80211_IFTYPE_ADHOC && elems->supp_rates &&
+>          memcmp(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0) {
+>
+>          rcu_read_lock();
+>
+> ***************
+> *** 257,268 ****
+>              u32 prev_rates;
+>
+>              prev_rates = sta->sta.supp_rates[band];
+> !             /* make sure mandatory rates are always added */
+> !             sta->sta.supp_rates[band] = supp_rates |
+> !                 ieee80211_mandatory_rates(local, band);
+>
+>  #ifdef CONFIG_MAC80211_IBSS_DEBUG
+> !             if (sta->sta.supp_rates[band] != prev_rates)
+>                  printk(KERN_DEBUG "%s: updated supp_rates set "
+>                      "for %pM based on beacon info (0x%llx | "
+>                      "0x%llx -> 0x%llx)\n",
+> --- 261,270 ----
+>              u32 prev_rates;
+>
+>              prev_rates = sta->sta.supp_rates[band];
+> !             sta->sta.supp_rates[band] = supp_rates;
+>
+>  #ifdef CONFIG_MAC80211_IBSS_DEBUG
+> !             if (sta->sta.supp_rates[band] != prev_rates) {
+>                  printk(KERN_DEBUG "%s: updated supp_rates set "
+>                      "for %pM based on beacon info (0x%llx | "
+>                      "0x%llx -> 0x%llx)\n",
+> ***************
+> *** 271,276 ****
+> --- 273,284 ----
+>                      (unsigned long long) prev_rates,
+>                      (unsigned long long) supp_rates,
+>                      (unsigned long long) sta->sta.supp_rates[band]);
+> +
+> +                 /* TODO: implement rate_update in minstrel/pid,
+> +                  * then change this to rate_control_rate_update.
+> +                  */
+> +                 rate_control_rate_init(sta);
+> +             }
+>  #endif
+>          } else
+>              ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 
+> supp_rates);
+>
+>
+>
+> Christian Lamparter wrote:
+>> On Thursday 12 November 2009 20:43:22 Adam Wozniak wrote:
+>>  
+>>> I was hoping for more of an "ah-ha!" response. =)
+>>>
+>>> It worked well initially, but when I let it run overnight it fell 
+>>> back into that same failure mode.
+>>>
+>>>     
+>>
+>> great... :\
+>>
+>> what about this patch?
+>> ---
+>> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+>> index fbffce9..bde89f7 100644
+>> --- a/net/mac80211/ibss.c
+>> +++ b/net/mac80211/ibss.c
+>> @@ -250,6 +250,9 @@ static void ieee80211_rx_bss_info(struct 
+>> ieee80211_sub_if_data *sdata,
+>>          memcmp(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0) {
+>>          supp_rates = ieee80211_sta_get_rates(local, elems, band);
+>>  
+>> +        /* make sure mandatory rates are always added */
+>> +        supp_rates |= ieee80211_mandatory_rates(local, band);
+>> +
+>>          rcu_read_lock();
+>>  
+>>          sta = sta_info_get(local, mgmt->sa);
+>> @@ -257,9 +260,7 @@ static void ieee80211_rx_bss_info(struct 
+>> ieee80211_sub_if_data *sdata,
+>>              u32 prev_rates;
+>>  
+>>              prev_rates = sta->sta.supp_rates[band];
+>> -            /* make sure mandatory rates are always added */
+>> -            sta->sta.supp_rates[band] = supp_rates |
+>> -                ieee80211_mandatory_rates(local, band);
+>> +            sta->sta.supp_rates[band] = supp_rates;
+>>  
+>>  #ifdef CONFIG_MAC80211_IBSS_DEBUG
+>>              if (sta->sta.supp_rates[band] != prev_rates)
+>>   
+>
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
