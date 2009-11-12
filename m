@@ -1,83 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:34704 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757628AbZKYPhE convert rfc822-to-8bit (ORCPT
+Received: from mga14.intel.com ([143.182.124.37]:32887 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759720AbZKLBFQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 10:37:04 -0500
-Received: by iwn1 with SMTP id 1so1306126iwn.33
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2009 07:37:10 -0800 (PST)
+	Wed, 11 Nov 2009 20:05:16 -0500
+From: "Zheng, Jeff" <jeff.zheng@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"wifi-test-devel@lists.sourceforge.net"
+	<wifi-test-devel@lists.sourceforge.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Date: Thu, 12 Nov 2009 09:04:43 +0800
+Subject: RE: [ANNOUNCE] wifi-test 1.0 released
+Message-ID: <154E55ADF9629D4E8D13F08BF92ABEB63FDC98338B@PDSMSX501.ccr.corp.intel.com>
+References: <154E55ADF9629D4E8D13F08BF92ABEB63FDC983366@PDSMSX501.ccr.corp.intel.com>
+ 	<20091111152214.GG4392@tuxdriver.com>
+ <154E55ADF9629D4E8D13F08BF92ABEB63FDC98336B@PDSMSX501.ccr.corp.intel.com>
+ <43e72e890911110931l893b90dta2d5806d10189925@mail.gmail.com>
+In-Reply-To: <43e72e890911110931l893b90dta2d5806d10189925@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <200911250941.10929.holgerschurig@gmail.com>
-References: <200911250941.10929.holgerschurig@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 25 Nov 2009 07:36:50 -0800
-Message-ID: <43e72e890911250736l33afdf8ak1c806e5f5482f9da@mail.gmail.com>
-Subject: Re: PROPOSAL: cfg80211 antenna selection
-To: Holger Schurig <holgerschurig@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 25, 2009 at 12:41 AM, Holger Schurig
-<holgerschurig@gmail.com> wrote:
-> Hi,
->
-> I just wondered how we can do the antenna and diversity
-> selection.
->
-> Assumption: 32 antennas are enought
->
->
->
-> My current idea is this:
->
->  struct cfg80211_ops {
-> +int (*set_antennas)(struct wiphy *wiphy, struct net_device *dev,
-> +                    u32 rx_antenna_mask, u32 tx_antenna_mask);
-> +int (*get_antennas)(struct wiphy *wiphy, struct net_device *dev,
-> +                    u32 *rx_antenna_mask, u32 tx_antenna_mask);
->  }
->
->  struct wiphy {
-> +u8 max_antennas;
->  }
+Hi Luis,
 
-While at it might as well make this some configurable struct which the
-drivers can add to the wiphy just as with the subbands. Also please
-add the max antenna gain in mbi and start seeing if we can collect
-this. On laptops with Atheros devices this would come from the EEPROM
-so the driver should be able to set this upon initialization (probably
-on hw init) and then cfg80211 can do more of the final computation to
-the max eirp used.
+>
+>Thank you guys so much for this, I just reviewed it and it seems you
+>do need some AP with remote login, a bit overkill for end users but I
+>hope it'll prove valuable for our own testing as well.
+Yes. There are some configurations, config.sh may help.
 
-Not sure how to get this from other cards. Anyone know how about on
-b43, iwlwifi, rallink (I guess I can read the docs now :)) ?
+>
+>Are you interested in receiving patches for simple end user tests
+>against an AP with no login?
+Sure. Patches are alwasys welcom
 
-Not sure if allowing for ops for chainmask setting would also be
-helpeful here, that would need some review.
+>
+>BTW I've created a wiki page for this here:
+>
+>http://wireless.kernel.org/en/developers/Testing/wifi-test
+>
+>Can we instead rely on a wiki instead of a static page that only a few
+>have access to?
+>
+Good idea. 
 
-There is still one missing part to do a real final max eirp
-computation on cfg80211 would be that of evaluation the CTL indexes if
-there could be a common ground found amongst devices but last I tried
-it seemed this was a pipe dream since other drivers do not expose any
-of this, people working on certain drivers may not be aware of how
-this is implemented on their devices yet or they may just use a
-relatively conservative value for all edges.
-
-Although a user should likely not be allowed to decrease the
-configured eirp we *should* be able to allow user to increase it
-through userspace as well to help with compliance to help adjust the
-max eirp as well.
-
-Finally, I theorize that if the antenna gain *was* indeed properly set
-and this information was available even at some other level (say BIOS
-and somehow we can extract that) it should technically then be
-possible to put in the right code to technically allow swapping
-wireless cards on laptops and perhaps then a solid argument can be
-made against the silly BIOS locks put in place out there. The only
-consideration which probably may not allow for this is calibration,
-unless of course legislation would be OK with users doing calibration
-themselves and if tools were available to the user.
-
-  Luis
+Bests
+Jeff
