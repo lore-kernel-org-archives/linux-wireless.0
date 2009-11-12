@@ -1,59 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:42388 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752019AbZKNQef (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:34232 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752832AbZKLQRh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Nov 2009 11:34:35 -0500
-Subject: Re: [patch 0/1] Adding radio type FM
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Janakiram Sistla <janakiram.sistla@gmail.com>
-Cc: majordomo@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <4fb5db50911140519q70bbdd00qb585153c4926df96@mail.gmail.com>
-References: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
-	 <1258082571.7715.13.camel@violet>
-	 <4fb5db50911140519q70bbdd00qb585153c4926df96@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 14 Nov 2009 17:34:34 +0100
-Message-ID: <1258216474.3299.24.camel@violet>
-Mime-Version: 1.0
+	Thu, 12 Nov 2009 11:17:37 -0500
+Received: by bwz27 with SMTP id 27so2403665bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 08:17:41 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: James Grossmann <cctsurf@gmail.com>
+Subject: Re: Prism54/p54pci
+Date: Thu, 12 Nov 2009 17:17:36 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <167ae39b0910071400n218d3d9ey7711b1011f290a73@mail.gmail.com> <200911062133.38842.chunkeey@googlemail.com> <167ae39b0911061252x790d69fei9e798e8c6080f175@mail.gmail.com>
+In-Reply-To: <167ae39b0911061252x790d69fei9e798e8c6080f175@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200911121717.36906.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Janakiram,
+On Friday 06 November 2009 21:52:42 James Grossmann wrote:
+> my caps lock & scroll lock leds are not blinking, and yet the computer
+> is frozen.  (I'm not the best at terminology, I guess that might not
+> be defined as a hard lock.)  I get no odd messages in my syslog.  I am
+> using Ubuntu right now, so I'm guessing that they have all the
+> prettyness going that they can, covering the important messages, but
+> as it's not an actual oops, I'm not certain that's hurting us.
+just a update:
 
-> Resubmitting patch  adding Marcels Comments
-> 
-> From f72e4bdef7c423259f2f8f0615d024a25294ea8f Mon Sep 17 00:00:00 2001
-> From: Janakiram Sistla <janakiram.sistla@gmail.com>
-> Date: Sat, 14 Nov 2009 18:42:35 +0530
-> Subject: [PATCH 1/1] Adding radio type FM
-> 
-> Adding radio type FM in RFKILL_TYPE_.FM also belongs to
-> same class of with both TX/RX capability.
-> 
-> Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
-> ---
->  include/linux/rfkill.h |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-> index 3392c59..03f5598 100644
-> --- a/include/linux/rfkill.h
-> +++ b/include/linux/rfkill.h
-> @@ -45,6 +45,7 @@ enum rfkill_type {
->  	RFKILL_TYPE_WIMAX,
->  	RFKILL_TYPE_WWAN,
->  	RFKILL_TYPE_GPS,
-> +	RFKILL_TYPE_FM,
->  	NUM_RFKILL_TYPES,
->  };
+I can confirm the freeze with ubuntu 9.10 (2.6.31-14 & 2.6.31-15-generic)
++ compat-wireless + p54pci (either as backport module or compiled from git).
+The original modules (shipped with 2.6.31-14/15) are fine though..?!
 
-and what about rfkill_get_type_str() changes?
-
-Regards
-
-Marcel
-
-
+Regards,
+	Chr 
