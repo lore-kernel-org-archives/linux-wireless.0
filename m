@@ -1,209 +1,246 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:57155 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752556AbZK3RM6 (ORCPT
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:54764 "EHLO
+	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754840AbZKLW6t convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2009 12:12:58 -0500
-Date: Mon, 30 Nov 2009 18:13:04 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: "John W. Linville" <linville@tuxdriver.com>,
+	Thu, 12 Nov 2009 17:58:49 -0500
+Received: by fxm21 with SMTP id 21so2835232fxm.21
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 14:58:53 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <40101cc30911121437m695bbb04n71300093c3a6721f@mail.gmail.com>
+References: <f74418680911120331w1ea31a68y56440dc0fbd253bb@mail.gmail.com>
+	 <40101cc30911120618m5d9acd34pf6aa9ec89c6c40b8@mail.gmail.com>
+	 <20091112154440.GD19349@tux>
+	 <43e72e890911120749n72360f0btfb058ab3a521eabb@mail.gmail.com>
+	 <40101cc30911121118h17db32a1y61edac1a4c0aec24@mail.gmail.com>
+	 <1258054304.3899.36.camel@johannes.local>
+	 <43e72e890911121135v150e33cbwcaa284ba998d2656@mail.gmail.com>
+	 <40101cc30911121416o333f32c1h3e26b4cc988c243f@mail.gmail.com>
+	 <20091112222831.GC17000@tux>
+	 <40101cc30911121437m695bbb04n71300093c3a6721f@mail.gmail.com>
+Date: Thu, 12 Nov 2009 23:58:53 +0100
+Message-ID: <f74418680911121458l6612ca6ds79ca4ca4fe0bae97@mail.gmail.com>
+Subject: Re: [ath9k-devel] Possible memory leak in ath9k monitor mode
+	injection
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Matteo Croce <technoboy85@gmail.com>
+Cc: Luis.Rodriguez@atheros.com, johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH 07/12] mwl8k: allow more time for transmit rings to drain
-Message-ID: <20091130171304.GJ20214@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Before issuing any firmware commands, we wait for the transmit rings
-to drain, to prevent control versus data path synchronization issues.
-In some cases, this can end up taking longer than the current hardcoded
-limit of 5 seconds, for example if the transmit rings are filled with
-packets for a host that has dropped off the air and we end up
-retransmitting every pending packet at the lowest rate a couple of
-times.
+> Debugging is enabled but i guess it's a kernel module
+>
+> root@alix:/usr/src/wireless-testing# gdb vmlinux
+> GNU gdb (GDB) 7.0-debian
+> Copyright (C) 2009 Free Software Foundation, Inc.
+> License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+> This is free software: you are free to change and redistribute it.
+> There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+> and "show warranty" for details.
+> This GDB was configured as "i486-linux-gnu".
+> For bug reporting instructions, please see:
+> <http://www.gnu.org/software/gdb/bugs/>...
+> Reading symbols from /usr/src/wireless-testing/vmlinux...done.
+> (gdb) l *0xccd48e70
+> No source file for address 0xccd48e70.
+> (gdb)
+>
 
-This patch changes mwl8k_tx_wait_empty() to only bail out on timeout
-expiry if there was no change in the number of packets pending in the
-transmit rings during the waiting period.  If at least one transmit
-ring entry was reclaimed while we were waiting, we are apparently still
-making progress, and we'll allow waiting for another timeout period.
+Running the minimal test case module on a 2.6.31.5 standard kernel I
+obtained these results:
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |  133 ++++++++++++++++++++++--------------------
- 1 files changed, 70 insertions(+), 63 deletions(-)
+Cheers.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 2d4724b..8f7546f 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -1237,99 +1237,106 @@ static inline void mwl8k_tx_start(struct mwl8k_priv *priv)
- 	ioread32(priv->regs + MWL8K_HIU_INT_CODE);
- }
- 
--struct mwl8k_txq_info {
--	u32 fw_owned;
--	u32 drv_owned;
--	u32 unused;
--	u32 len;
--	u32 head;
--	u32 tail;
--};
--
--static int mwl8k_scan_tx_ring(struct mwl8k_priv *priv,
--				struct mwl8k_txq_info *txinfo)
-+static void mwl8k_dump_tx_rings(struct ieee80211_hw *hw)
- {
--	int count, desc, status;
--	struct mwl8k_tx_queue *txq;
--	struct mwl8k_tx_desc *tx_desc;
--	int ndescs = 0;
-+	struct mwl8k_priv *priv = hw->priv;
-+	int i;
- 
--	memset(txinfo, 0, MWL8K_TX_QUEUES * sizeof(struct mwl8k_txq_info));
-+	for (i = 0; i < MWL8K_TX_QUEUES; i++) {
-+		struct mwl8k_tx_queue *txq = priv->txq + i;
-+		int fw_owned = 0;
-+		int drv_owned = 0;
-+		int unused = 0;
-+		int desc;
- 
--	for (count = 0; count < MWL8K_TX_QUEUES; count++) {
--		txq = priv->txq + count;
--		txinfo[count].len = txq->stats.len;
--		txinfo[count].head = txq->head;
--		txinfo[count].tail = txq->tail;
- 		for (desc = 0; desc < MWL8K_TX_DESCS; desc++) {
--			tx_desc = txq->txd + desc;
--			status = le32_to_cpu(tx_desc->status);
-+			struct mwl8k_tx_desc *tx_desc = txq->txd + desc;
-+			u32 status;
- 
-+			status = le32_to_cpu(tx_desc->status);
- 			if (status & MWL8K_TXD_STATUS_FW_OWNED)
--				txinfo[count].fw_owned++;
-+				fw_owned++;
- 			else
--				txinfo[count].drv_owned++;
-+				drv_owned++;
- 
- 			if (tx_desc->pkt_len == 0)
--				txinfo[count].unused++;
-+				unused++;
- 		}
--	}
- 
--	return ndescs;
-+		printk(KERN_ERR "%s: txq[%d] len=%d head=%d tail=%d "
-+		       "fw_owned=%d drv_owned=%d unused=%d\n",
-+		       wiphy_name(hw->wiphy), i,
-+		       txq->stats.len, txq->head, txq->tail,
-+		       fw_owned, drv_owned, unused);
-+	}
- }
- 
- /*
-  * Must be called with priv->fw_mutex held and tx queues stopped.
-  */
-+#define MWL8K_TX_WAIT_TIMEOUT_MS	1000
-+
- static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw)
- {
- 	struct mwl8k_priv *priv = hw->priv;
- 	DECLARE_COMPLETION_ONSTACK(tx_wait);
--	u32 count;
--	unsigned long timeout;
-+	int retry;
-+	int rc;
- 
- 	might_sleep();
- 
-+	/*
-+	 * The TX queues are stopped at this point, so this test
-+	 * doesn't need to take ->tx_lock.
-+	 */
-+	if (!priv->pending_tx_pkts)
-+		return 0;
-+
-+	retry = 0;
-+	rc = 0;
-+
- 	spin_lock_bh(&priv->tx_lock);
--	count = priv->pending_tx_pkts;
--	if (count)
--		priv->tx_wait = &tx_wait;
--	spin_unlock_bh(&priv->tx_lock);
-+	priv->tx_wait = &tx_wait;
-+	while (!rc) {
-+		int oldcount;
-+		unsigned long timeout;
- 
--	if (count) {
--		struct mwl8k_txq_info txinfo[MWL8K_TX_QUEUES];
--		int index;
--		int newcount;
-+		oldcount = priv->pending_tx_pkts;
- 
-+		spin_unlock_bh(&priv->tx_lock);
- 		timeout = wait_for_completion_timeout(&tx_wait,
--					msecs_to_jiffies(5000));
--		if (timeout)
--			return 0;
--
-+			    msecs_to_jiffies(MWL8K_TX_WAIT_TIMEOUT_MS));
- 		spin_lock_bh(&priv->tx_lock);
--		priv->tx_wait = NULL;
--		newcount = priv->pending_tx_pkts;
--		mwl8k_scan_tx_ring(priv, txinfo);
--		spin_unlock_bh(&priv->tx_lock);
- 
--		printk(KERN_ERR "%s(%u) TIMEDOUT:5000ms Pend:%u-->%u\n",
--		       __func__, __LINE__, count, newcount);
-+		if (timeout) {
-+			WARN_ON(priv->pending_tx_pkts);
-+			if (retry) {
-+				printk(KERN_NOTICE "%s: tx rings drained\n",
-+				       wiphy_name(hw->wiphy));
-+			}
-+			break;
-+		}
- 
--		for (index = 0; index < MWL8K_TX_QUEUES; index++)
--			printk(KERN_ERR "TXQ:%u L:%u H:%u T:%u FW:%u "
--			       "DRV:%u U:%u\n",
--					index,
--					txinfo[index].len,
--					txinfo[index].head,
--					txinfo[index].tail,
--					txinfo[index].fw_owned,
--					txinfo[index].drv_owned,
--					txinfo[index].unused);
-+		if (priv->pending_tx_pkts < oldcount) {
-+			printk(KERN_NOTICE "%s: timeout waiting for tx "
-+			       "rings to drain (%d -> %d pkts), retrying\n",
-+			       wiphy_name(hw->wiphy), oldcount,
-+			       priv->pending_tx_pkts);
-+			retry = 1;
-+			continue;
-+		}
-+
-+		priv->tx_wait = NULL;
-+
-+		printk(KERN_ERR "%s: tx rings stuck for %d ms\n",
-+		       wiphy_name(hw->wiphy), MWL8K_TX_WAIT_TIMEOUT_MS);
-+		mwl8k_dump_tx_rings(hw);
- 
--		return -ETIMEDOUT;
-+		rc = -ETIMEDOUT;
- 	}
-+	spin_unlock_bh(&priv->tx_lock);
- 
--	return 0;
-+	return rc;
- }
- 
- #define MWL8K_TXD_SUCCESS(status)				\
--- 
-1.5.6.4
+Lorenzo
+
+23:18:18 up 5 min,  4 users,  load average: 0.11, 0.37, 0.20
+             total       used       free     shared    buffers     cached
+Mem:       3785552     699684    3085868          0      35404     307544
+-/+ buffers/cache:     356736    3428816
+Swap:       947824          0     947824
+
+
+23:19:03 up 5 min,  4 users,  load average: 0.10, 0.33, 0.19
+             total       used       free     shared    buffers     cached
+Mem:       3785552     702244    3083308          0      35436     307548
+-/+ buffers/cache:     359260    3426292
+Swap:       947824          0     947824
+
+23:19:46 up 6 min,  4 users,  load average: 0.09, 0.30, 0.18
+             total       used       free     shared    buffers     cached
+Mem:       3785552     705708    3079844          0      35476     307548
+-/+ buffers/cache:     362684    3422868
+Swap:       947824          0     947824
+
+23:22:17 up 9 min,  4 users,  load average: 0.00, 0.17, 0.15
+             total       used       free     shared    buffers     cached
+Mem:       3785552     722036    3063516          0      35884     307560
+-/+ buffers/cache:     378592    3406960
+Swap:       947824          0     947824
+
+23:34:34 up 21 min,  4 users,  load average: 0.14, 0.09, 0.11
+             total       used       free     shared    buffers     cached
+Mem:       3785552     809180    2976372          0      39320     325364
+-/+ buffers/cache:     444496    3341056
+Swap:       947824          0     947824
+
+diff -u a b
+
+@@ -43,15 +43,15 @@
+ 132 in /sys/kernel/slab/mm_struct
+ 132 in /sys/kernel/slab/:t-0000896
+ 146 in /sys/kernel/slab/:at-0000056
++146 in /sys/kernel/slab/:at-0000112
+ 146 in /sys/kernel/slab/ext4_free_block_extents
++146 in /sys/kernel/slab/jbd2_journal_head
+ 146 in /sys/kernel/slab/skbuff_fclone_cache
+ 146 in /sys/kernel/slab/:t-0000448
+ 150 in /sys/kernel/slab/sighand_cache
+ 156 in /sys/kernel/slab/:at-0000104
+-156 in /sys/kernel/slab/:at-0000112
+ 156 in /sys/kernel/slab/ext4_prealloc_space
+ 156 in /sys/kernel/slab/fsnotify_event
+-156 in /sys/kernel/slab/jbd2_journal_head
+ 156 in /sys/kernel/slab/:t-0000104
+ 170 in /sys/kernel/slab/Acpi-Parse
+ 170 in /sys/kernel/slab/bip-16
+@@ -94,7 +94,7 @@
+ 420 in /sys/kernel/slab/idr_layer_cache
+ 420 in /sys/kernel/slab/:t-0000544
+ 549 in /sys/kernel/slab/kmalloc-8192
+-551 in /sys/kernel/slab/:t-0008192
++549 in /sys/kernel/slab/:t-0008192
+ 623 in /sys/kernel/slab/biovec-256
+ 623 in /sys/kernel/slab/kmalloc-4096
+ 623 in /sys/kernel/slab/names_cache
+@@ -104,20 +104,20 @@
+ 772 in /sys/kernel/slab/sgpool-16
+ 772 in /sys/kernel/slab/:t-0000512
+ 824 in /sys/kernel/slab/proc_inode_cache
+-899 in /sys/kernel/slab/bip-1
+-899 in /sys/kernel/slab/cred_jar
+-899 in /sys/kernel/slab/eventpoll_epi
+-899 in /sys/kernel/slab/kmalloc-128
+-899 in /sys/kernel/slab/pid
+-899 in /sys/kernel/slab/request_sock_TCP
+-899 in /sys/kernel/slab/scsi_sense_cache
+-899 in /sys/kernel/slab/:t-0000128
+-899 in /sys/kernel/slab/uid_cache
++898 in /sys/kernel/slab/bip-1
++898 in /sys/kernel/slab/cred_jar
++898 in /sys/kernel/slab/eventpoll_epi
++898 in /sys/kernel/slab/kmalloc-128
++898 in /sys/kernel/slab/pid
++898 in /sys/kernel/slab/request_sock_TCP
++898 in /sys/kernel/slab/scsi_sense_cache
++898 in /sys/kernel/slab/:t-0000128
++898 in /sys/kernel/slab/uid_cache
+ 1405 in /sys/kernel/slab/shmem_inode_cache
+-1992 in /sys/kernel/slab/kmalloc-1024
+-1994 in /sys/kernel/slab/biovec-64
+-1994 in /sys/kernel/slab/:t-0001024
+-1995 in /sys/kernel/slab/sgpool-32
++1991 in /sys/kernel/slab/sgpool-32
++1993 in /sys/kernel/slab/biovec-64
++1993 in /sys/kernel/slab/kmalloc-1024
++1993 in /sys/kernel/slab/:t-0001024
+ 2097 in /sys/kernel/slab/Acpi-Operand
+ 2097 in /sys/kernel/slab/Acpi-ParseExt
+ 2097 in /sys/kernel/slab/eventpoll_pwq
+@@ -126,15 +126,15 @@
+ 2294 in /sys/kernel/slab/biovec-1
+ 2294 in /sys/kernel/slab/kmalloc-16
+ 2294 in /sys/kernel/slab/:t-0000016
+-2565 in /sys/kernel/slab/biovec-4
+-2565 in /sys/kernel/slab/fib6_nodes
+-2565 in /sys/kernel/slab/fs_cache
+-2565 in /sys/kernel/slab/inet_peer_cache
+-2565 in /sys/kernel/slab/kmalloc-64
+-2565 in /sys/kernel/slab/secpath_cache
+-2565 in /sys/kernel/slab/:t-0000064
+-2565 in /sys/kernel/slab/xfrm6_tunnel_spi
+-2729 in /sys/kernel/slab/anon_vma
++2517 in /sys/kernel/slab/biovec-4
++2517 in /sys/kernel/slab/fib6_nodes
++2517 in /sys/kernel/slab/fs_cache
++2517 in /sys/kernel/slab/inet_peer_cache
++2517 in /sys/kernel/slab/kmalloc-64
++2517 in /sys/kernel/slab/secpath_cache
++2517 in /sys/kernel/slab/:t-0000064
++2517 in /sys/kernel/slab/xfrm6_tunnel_spi
++2776 in /sys/kernel/slab/anon_vma
+ 2936 in /sys/kernel/slab/Acpi-Namespace
+ 2936 in /sys/kernel/slab/dnotify_struct
+ 2936 in /sys/kernel/slab/inotify_event_private_data
+@@ -143,40 +143,40 @@
+ 2936 in /sys/kernel/slab/nv_pte_t
+ 2936 in /sys/kernel/slab/:t-0000032
+ 2936 in /sys/kernel/slab/tcp_bind_bucket
+-2970 in /sys/kernel/slab/scsi_cmd_cache
+-2971 in /sys/kernel/slab/kiocb
+-2971 in /sys/kernel/slab/skbuff_head_cache
+-2972 in /sys/kernel/slab/arp_cache
+-2972 in /sys/kernel/slab/kmalloc-256
+-2972 in /sys/kernel/slab/mnt_cache
+-2972 in /sys/kernel/slab/sgpool-8
+-2973 in /sys/kernel/slab/biovec-16
+-2973 in /sys/kernel/slab/ndisc_cache
+ 2973 in /sys/kernel/slab/:t-0000256
+-3086 in /sys/kernel/slab/inode_cache
++2974 in /sys/kernel/slab/kiocb
++2975 in /sys/kernel/slab/biovec-16
++2975 in /sys/kernel/slab/kmalloc-256
++2975 in /sys/kernel/slab/ndisc_cache
++2976 in /sys/kernel/slab/arp_cache
++2976 in /sys/kernel/slab/skbuff_head_cache
++2977 in /sys/kernel/slab/mnt_cache
++2977 in /sys/kernel/slab/scsi_cmd_cache
++2977 in /sys/kernel/slab/sgpool-8
++3084 in /sys/kernel/slab/inode_cache
+ 3578 in /sys/kernel/slab/kmalloc-8
+ 3578 in /sys/kernel/slab/:t-0000008
+-4808 in /sys/kernel/slab/filp
+-4812 in /sys/kernel/slab/bio-0
+-4812 in /sys/kernel/slab/bip-4
+-4814 in /sys/kernel/slab/request_sock_TCPv6
+-4816 in /sys/kernel/slab/kmalloc-192
+-4820 in /sys/kernel/slab/:t-0000192
+-5963 in /sys/kernel/slab/radix_tree_node
++4786 in /sys/kernel/slab/request_sock_TCPv6
++4793 in /sys/kernel/slab/bip-4
++4793 in /sys/kernel/slab/kmalloc-192
++4793 in /sys/kernel/slab/:t-0000192
++4795 in /sys/kernel/slab/filp
++4796 in /sys/kernel/slab/bio-0
++6040 in /sys/kernel/slab/radix_tree_node
+ 10173 in /sys/kernel/slab/Acpi-State
+ 10173 in /sys/kernel/slab/blkdev_ioc
+ 10173 in /sys/kernel/slab/scsi_tgt_cmd
+ 10173 in /sys/kernel/slab/sysfs_dir_cache
+ 10173 in /sys/kernel/slab/:t-0000080
+-10796 in /sys/kernel/slab/buffer_head
+-11532 in /sys/kernel/slab/vm_area_struct
+-11557 in /sys/kernel/slab/cfq_io_context
+-11557 in /sys/kernel/slab/cfq_queue
+-11557 in /sys/kernel/slab/:t-0000168
+-11719 in /sys/kernel/slab/ext4_inode_cache
+-27271 in /sys/kernel/slab/:at-0000192
+-27271 in /sys/kernel/slab/dentry
+-128562 in /sys/kernel/slab/flow_cache
+-128562 in /sys/kernel/slab/kmalloc-96
+-128604 in /sys/kernel/slab/:t-0000096
+-241093 in /sys/kernel/slab/kmemleak_object
++10947 in /sys/kernel/slab/buffer_head
++11315 in /sys/kernel/slab/cfq_io_context
++11315 in /sys/kernel/slab/cfq_queue
++11315 in /sys/kernel/slab/:t-0000168
++11315 in /sys/kernel/slab/vm_area_struct
++11800 in /sys/kernel/slab/ext4_inode_cache
++27442 in /sys/kernel/slab/:at-0000192
++27442 in /sys/kernel/slab/dentry
++155568 in /sys/kernel/slab/flow_cache
++155568 in /sys/kernel/slab/kmalloc-96
++155610 in /sys/kernel/slab/:t-0000096
++268261 in /sys/kernel/slab/kmemleak_object
