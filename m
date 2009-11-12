@@ -1,76 +1,708 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47984 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757252AbZKRPwH (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:34705 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759978AbZKLEbZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 10:52:07 -0500
-Subject: Re: [PATCH 1/2] rfkill: Add missing description for RFKILL_TYPE_GPS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1258559281-20935-1-git-send-email-marcel@holtmann.org>
-References: <1258559281-20935-1-git-send-email-marcel@holtmann.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-LIF6qZmi4xiiCIwhv/o8"
-Date: Wed, 18 Nov 2009 16:51:42 +0100
-Message-ID: <1258559502.30511.24.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 11 Nov 2009 23:31:25 -0500
+Date: Wed, 11 Nov 2009 22:31:29 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>, bzolnier@gmail.com
+Cc: Bernhard Schiffner <bernhard@schiffner-limbach.de>,
+	linux-wireless@vger.kernel.org
+Subject: [RFC/RFT 3/6 V2] rtl8187se: Create file rtl8187se_rtl8225.c
+Message-ID: <4afb8fa1.4gRYbE8SLm5NFrdm%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Create the radio driver file for rtl8187se.
 
---=-LIF6qZmi4xiiCIwhv/o8
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Both look good, thanks for short-circuiting the repost cycle :)
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-Not that I fully understand the need for either GPS or FM rfkill, but
-hey, whatever.
-
-johannes
-
-On Wed, 2009-11-18 at 16:48 +0100, Marcel Holtmann wrote:
-> Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
-> ---
->  include/linux/rfkill.h |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
->=20
-> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-> index 3392c59..a75e9e5 100644
-> --- a/include/linux/rfkill.h
-> +++ b/include/linux/rfkill.h
-> @@ -35,6 +35,7 @@
->   * @RFKILL_TYPE_UWB: switch is on a ultra wideband device.
->   * @RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
->   * @RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
-> + * @RFKILL_TYPE_GPS: switch is on a GPS device.
->   * @NUM_RFKILL_TYPES: number of defined rfkill types
->   */
->  enum rfkill_type {
-
-
---=-LIF6qZmi4xiiCIwhv/o8
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLBBgLAAoJEODzc/N7+QmapxQP/jB9jpRTRWyLO/DFar9ZSKZw
-y7dkefvBu/hCArlfvvCkrm4yO45J1NdytpO/rhOaSiWuzmh2rZ5M59m0kToGASAe
-iSQXw4RAWlYmwQ33nmNwU1lZSiHyIUzR+n/59A4R+9BsgQuQYM0xpeJJpVoFT4bd
-IlpKiLH86erj1Z0T2D9J2Y9sbwcUYCNlu80KasYkiLJsGIou35vhPptj0+HFVSsz
-1xRn6naHFit5L5viy31vNYGmhbcPZo6SpvaaD1U8RXis4vT22tUSJgxRY8dMd7VM
-v1ahQSyoLIyBa96Bg1rix9pVvpfOsAcrhzR4B9JWiWhQWxkkM6iTf27r/tSyF8Md
-sldxvPkexLzKksLlqCVUFISfh46X2EUyEO1OFKk46BiohoVq5KEY2YoMY6To6Wkj
-tCRPfvKTX9BfFJteetSHFRyvoYgdXsQbE3unQyzPCgW7+TZLqehBeY0OE2YaTvok
-I2MMOg7LsgbxEgSxTrORZumqtuU4XEH9MoNZYJspfFL6ziR8VppHcQ3THKGeIYGO
-4M0032zRdA+XisAC1cE7sYxTgxC4Qlc/fo0RtV0aMEAMkFcSY/a3V0Gns1w1BrSX
-yfeBPrhwtpzW98miBIF0bJFR0Ymi7CNhAZ/AZsu6NAoUsj3Slg45Te6OzPK3YrBN
-cn44STQ3vP2oU86azm2+
-=7uu+
------END PGP SIGNATURE-----
-
---=-LIF6qZmi4xiiCIwhv/o8--
-
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187se_rtl8225.c
+===================================================================
+--- /dev/null
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187se_rtl8225.c
+@@ -0,0 +1,659 @@
++
++/*
++ * Radio tuning for RTL8225 on RTL8187SE
++ *
++ * Copyright 2007 Michael Wu <flamingice@sourmilk.net>
++ * Copyright 2007 Andrea Merello <andreamrl@tiscali.it>
++ *
++ * Based on the r8180 driver, which is:
++ * Copyright 2005 Andrea Merello <andreamrl@tiscali.it>, et al.
++ *
++ * Thanks to Realtek for their support!
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/init.h>
++#include <linux/pci.h>
++#include <linux/delay.h>
++#include <net/mac80211.h>
++
++#include "rtl8187se.h"
++#include "rtl8187se_rtl8225.h"
++
++static void rtl8225_write(struct ieee80211_hw *dev, u8 addr, u16 data)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++	u16 reg80, reg84, reg82;
++	u32 bangdata;
++	int i;
++
++	bangdata = (data << 4) | (addr & 0xf);
++
++	reg80 = rtl818x_ioread16(priv, &priv->map->RFPinsOutput) & 0xfff3;
++	reg82 = rtl818x_ioread16(priv, &priv->map->RFPinsEnable);
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, reg82 | 0x7);
++
++	reg84 = rtl818x_ioread16(priv, &priv->map->RFPinsSelect);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84 | 0x7 | 0x400);
++	rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++	udelay(10);
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
++	rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++	udelay(2);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80);
++	rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++	udelay(10);
++
++	for (i = 15; i >= 0; i--) {
++		u16 reg = reg80 | !!(bangdata & (1 << i));
++
++		if (i & 1)
++			rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg);
++
++		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg |
++				  (1 << 1));
++		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg |
++				  (1 << 1));
++
++		if (!(i & 1))
++			rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg);
++	}
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
++	rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++	udelay(10);
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
++	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84 | 0x400);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x1FFF);
++}
++
++static u16 rtl8225_read(struct ieee80211_hw *dev, u8 addr)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++	u16 reg80, reg82, reg84, out;
++	int i;
++
++	reg80 = rtl818x_ioread16(priv, &priv->map->RFPinsOutput);
++	reg82 = rtl818x_ioread16(priv, &priv->map->RFPinsEnable);
++	reg84 = rtl818x_ioread16(priv, &priv->map->RFPinsSelect) | 0x400;
++
++	reg80 &= ~0xF;
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, reg82 | 0x000F);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84 | 0x000F);
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
++	rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++	udelay(4);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80);
++	rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++	udelay(5);
++
++	for (i = 4; i >= 0; i--) {
++		u16 reg = reg80 | ((addr >> i) & 1);
++
++		if (!(i & 1)) {
++			rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg);
++			rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++			udelay(1);
++		}
++
++		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++				  reg | (1 << 1));
++		rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++		udelay(2);
++		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++				  reg | (1 << 1));
++		rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++		udelay(2);
++
++		if (i & 1) {
++			rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg);
++			rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++			udelay(1);
++		}
++	}
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x000E);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, 0x040E);
++	rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++			  reg80 | (1 << 3) | (1 << 1));
++	rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++	udelay(2);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++			  reg80 | (1 << 3));
++	rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++	udelay(2);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++			  reg80 | (1 << 3));
++	rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++	udelay(2);
++
++	out = 0;
++	for (i = 11; i >= 0; i--) {
++		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++				  reg80 | (1 << 3));
++		rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++		udelay(1);
++		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++				  reg80 | (1 << 3) | (1 << 1));
++		rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++		udelay(2);
++		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++				  reg80 | (1 << 3) | (1 << 1));
++		rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++		udelay(2);
++		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++				  reg80 | (1 << 3) | (1 << 1));
++		rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++		udelay(2);
++
++		if (rtl818x_ioread16(priv, &priv->map->RFPinsInput) & (1 << 1))
++			out |= 1 << i;
++
++		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++				  reg80 | (1 << 3));
++		rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++		udelay(2);
++	}
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++			  reg80 | (1 << 3) | (1 << 2));
++	rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++	udelay(2);
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, reg82);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, 0x03A0);
++
++	return out;
++}
++
++static const u16 rtl8225bcd_rxgain[] = {
++	0x0400, 0x0401, 0x0402, 0x0403, 0x0404, 0x0405, 0x0408, 0x0409,
++	0x040a, 0x040b, 0x0502, 0x0503, 0x0504, 0x0505, 0x0540, 0x0541,
++	0x0542, 0x0543, 0x0544, 0x0545, 0x0580, 0x0581, 0x0582, 0x0583,
++	0x0584, 0x0585, 0x0588, 0x0589, 0x058a, 0x058b, 0x0643, 0x0644,
++	0x0645, 0x0680, 0x0681, 0x0682, 0x0683, 0x0684, 0x0685, 0x0688,
++	0x0689, 0x068a, 0x068b, 0x068c, 0x0742, 0x0743, 0x0744, 0x0745,
++	0x0780, 0x0781, 0x0782, 0x0783, 0x0784, 0x0785, 0x0788, 0x0789,
++	0x078a, 0x078b, 0x078c, 0x078d, 0x0790, 0x0791, 0x0792, 0x0793,
++	0x0794, 0x0795, 0x0798, 0x0799, 0x079a, 0x079b, 0x079c, 0x079d,
++	0x07a0, 0x07a1, 0x07a2, 0x07a3, 0x07a4, 0x07a5, 0x07a8, 0x07a9,
++	0x07aa, 0x07ab, 0x07ac, 0x07ad, 0x07b0, 0x07b1, 0x07b2, 0x07b3,
++	0x07b4, 0x07b5, 0x07b8, 0x07b9, 0x07ba, 0x07bb, 0x07bb
++};
++
++static const u8 rtl8225_agc[] = {
++	0x9e, 0x9e, 0x9e, 0x9e, 0x9e, 0x9e, 0x9e, 0x9e,
++	0x9d, 0x9c, 0x9b, 0x9a, 0x99, 0x98, 0x97, 0x96,
++	0x95, 0x94, 0x93, 0x92, 0x91, 0x90, 0x8f, 0x8e,
++	0x8d, 0x8c, 0x8b, 0x8a, 0x89, 0x88, 0x87, 0x86,
++	0x85, 0x84, 0x83, 0x82, 0x81, 0x80, 0x3f, 0x3e,
++	0x3d, 0x3c, 0x3b, 0x3a, 0x39, 0x38, 0x37, 0x36,
++	0x35, 0x34, 0x33, 0x32, 0x31, 0x30, 0x2f, 0x2e,
++	0x2d, 0x2c, 0x2b, 0x2a, 0x29, 0x28, 0x27, 0x26,
++	0x25, 0x24, 0x23, 0x22, 0x21, 0x20, 0x1f, 0x1e,
++	0x1d, 0x1c, 0x1b, 0x1a, 0x19, 0x18, 0x17, 0x16,
++	0x15, 0x14, 0x13, 0x12, 0x11, 0x10, 0x0f, 0x0e,
++	0x0d, 0x0c, 0x0b, 0x0a, 0x09, 0x08, 0x07, 0x06,
++	0x05, 0x04, 0x03, 0x02, 0x01, 0x01, 0x01, 0x01,
++	0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
++	0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
++	0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01
++};
++
++static const u8 rtl8225_gain[] = {
++	0x23, 0x88, 0x7c, 0xa5, /* -82dbm */
++	0x23, 0x88, 0x7c, 0xb5, /* -82dbm */
++	0x23, 0x88, 0x7c, 0xc5, /* -82dbm */
++	0x33, 0x80, 0x79, 0xc5, /* -78dbm */
++	0x43, 0x78, 0x76, 0xc5, /* -74dbm */
++	0x53, 0x60, 0x73, 0xc5, /* -70dbm */
++	0x63, 0x58, 0x70, 0xc5, /* -66dbm */
++};
++
++static const u8 rtl8225_threshold[] = {
++	0x8d, 0x8d, 0x8d, 0x8d, 0x9d, 0xad, 0xbd
++};
++
++static const u8 rtl8225_tx_gain_cck_ofdm[] = {
++	0x02, 0x06, 0x0e, 0x1e, 0x3e, 0x7e
++};
++
++static const u8 rtl8225_tx_power_cck[] = {
++	0x18, 0x17, 0x15, 0x11, 0x0c, 0x08, 0x04, 0x02,
++	0x1b, 0x1a, 0x17, 0x13, 0x0e, 0x09, 0x04, 0x02,
++	0x1f, 0x1e, 0x1a, 0x15, 0x10, 0x0a, 0x05, 0x02,
++	0x22, 0x21, 0x1d, 0x18, 0x11, 0x0b, 0x06, 0x02,
++	0x26, 0x25, 0x21, 0x1b, 0x14, 0x0d, 0x06, 0x03,
++	0x2b, 0x2a, 0x25, 0x1e, 0x16, 0x0e, 0x07, 0x03
++};
++
++static const u8 rtl8225_tx_power_cck_ch14[] = {
++	0x18, 0x17, 0x15, 0x0c, 0x00, 0x00, 0x00, 0x00,
++	0x1b, 0x1a, 0x17, 0x0e, 0x00, 0x00, 0x00, 0x00,
++	0x1f, 0x1e, 0x1a, 0x0f, 0x00, 0x00, 0x00, 0x00,
++	0x22, 0x21, 0x1d, 0x11, 0x00, 0x00, 0x00, 0x00,
++	0x26, 0x25, 0x21, 0x13, 0x00, 0x00, 0x00, 0x00,
++	0x2b, 0x2a, 0x25, 0x15, 0x00, 0x00, 0x00, 0x00
++};
++
++static const u8 rtl8225_tx_power_ofdm[] = {
++	0x80, 0x90, 0xa2, 0xb5, 0xcb, 0xe4
++};
++
++static const u32 rtl8225_chan[] = {
++	0x085c, 0x08dc, 0x095c, 0x09dc, 0x0a5c, 0x0adc, 0x0b5c,
++	0x0bdc, 0x0c5c, 0x0cdc, 0x0d5c, 0x0ddc, 0x0e5c, 0x0f72
++};
++
++static const u8 rtl8225z2_tx_power_cck_ch14[] = {
++	0x36, 0x35, 0x2e, 0x1b, 0x00, 0x00, 0x00, 0x00
++};
++
++static const u8 rtl8225z2_tx_power_cck_B[] = {
++	0x30, 0x2f, 0x29, 0x21, 0x19, 0x10, 0x08, 0x04
++};
++
++static const u8 rtl8225z2_tx_power_cck_A[] = {
++	0x33, 0x32, 0x2b, 0x23, 0x1a, 0x11, 0x08, 0x04
++};
++
++static const u8 rtl8225z2_tx_power_cck[] = {
++	0x36, 0x35, 0x2e, 0x25, 0x1c, 0x12, 0x09, 0x04
++};
++
++static void rtl8225z2_rf_set_tx_power(struct ieee80211_hw *dev, int channel)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++	u8 cck_power, ofdm_power;
++
++	cck_power = priv->channels[channel - 1].hw_value & 0xFF;
++	if (cck_power > 35)
++		cck_power = 35;
++	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_CCK, cck_power);
++	force_pci_posting(priv);
++	msleep(1);
++	ofdm_power = priv->channels[channel - 1].hw_value >> 8;
++	if (ofdm_power > 35)
++		ofdm_power = 35;
++	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_OFDM, ofdm_power);
++
++	if (ofdm_power < 12) {
++		rtl8225_write_phy_ofdm(dev, 7, 0x5C);
++		rtl8225_write_phy_ofdm(dev, 9, 0x5C);
++	}
++	if (ofdm_power < 18) {
++		rtl8225_write_phy_ofdm(dev, 7, 0x54);
++		rtl8225_write_phy_ofdm(dev, 9, 0x54);
++	} else {
++		rtl8225_write_phy_ofdm(dev, 7, 0x50);
++		rtl8225_write_phy_ofdm(dev, 9, 0x50);
++	}
++
++	force_pci_posting(priv);
++	msleep(1);
++}
++
++static const u16 rtl8225z2_rxgain[] = {
++	0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0008, 0x0009,
++	0x000a, 0x000b, 0x0102, 0x0103, 0x0104, 0x0105, 0x0140, 0x0141,
++	0x0142, 0x0143, 0x0144, 0x0145, 0x0180, 0x0181, 0x0182, 0x0183,
++	0x0184, 0x0185, 0x0188, 0x0189, 0x018a, 0x018b, 0x0243, 0x0244,
++	0x0245, 0x0280, 0x0281, 0x0282, 0x0283, 0x0284, 0x0285, 0x0288,
++	0x0289, 0x028a, 0x028b, 0x028c, 0x0342, 0x0343, 0x0344, 0x0345,
++	0x0380, 0x0381, 0x0382, 0x0383, 0x0384, 0x0385, 0x0388, 0x0389,
++	0x038a, 0x038b, 0x038c, 0x038d, 0x0390, 0x0391, 0x0392, 0x0393,
++	0x0394, 0x0395, 0x0398, 0x0399, 0x039a, 0x039b, 0x039c, 0x039d,
++	0x03a0, 0x03a1, 0x03a2, 0x03a3, 0x03a4, 0x03a5, 0x03a8, 0x03a9,
++	0x03aa, 0x03ab, 0x03ac, 0x03ad, 0x03b0, 0x03b1, 0x03b2, 0x03b3,
++	0x03b4, 0x03b5, 0x03b8, 0x03b9, 0x03ba, 0x03bb, 0x03bb
++};
++
++static void rtl8225z2_rf_init(struct ieee80211_hw *dev)
++{
++	/* checked for 8187se */
++	struct rtl8187se_priv *priv = dev->priv;
++	struct ieee80211_conf *conf = &dev->conf;
++	int i;
++	int chan = ieee80211_frequency_to_channel(conf->channel->center_freq);
++
++	rtl8187se_set_anaparam(priv, RTL8225_ANAPARAM_ON);
++
++	/* host_pci_init */
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, 0x0480);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x1FFF);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, 0x0488);
++	rtl818x_iowrite8(priv, &priv->map->GP_ENABLE, 0);
++	rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++	msleep(200);
++	rtl818x_iowrite8(priv, &priv->map->GP_ENABLE, 0xFF & ~(1 << 6));
++
++	rtl818x_iowrite32(priv, &priv->map->RF_TIMING, 0x000a8008);
++
++	rtl818x_ioread16(priv, &priv->map->BRSR);
++	rtl818x_iowrite16(priv, &priv->map->BRSR, 0xFFFF);
++	rtl818x_iowrite32(priv, &priv->map->RF_PARA, 0x00100044);
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
++			 RTL818X_EEPROM_CMD_CONFIG);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, 0x44);
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
++			 RTL818X_EEPROM_CMD_NORMAL);
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x1FFF);
++
++	rtl8225_write(dev, 0x0, 0x2BF);
++	msleep(1);
++	rtl8225_write(dev, 0x1, 0xEE0);
++	msleep(1);
++	rtl8225_write(dev, 0x2, 0x44D);
++	msleep(1);
++	rtl8225_write(dev, 0x3, 0x441);
++	msleep(1);
++	rtl8225_write(dev, 0x4, 0x8C3);
++	msleep(1);
++	rtl8225_write(dev, 0x5, 0xC72);
++	msleep(1);
++	rtl8225_write(dev, 0x6, 0x0E6);
++	msleep(1);
++	rtl8225_write(dev, 0x7, rtl8225_chan[chan]);
++	msleep(1);
++	rtl8225_write(dev, 0x8, 0x03F);
++	msleep(1);
++	rtl8225_write(dev, 0x9, 0x335);
++	msleep(1);
++	rtl8225_write(dev, 0xa, 0x9D4);
++	msleep(1);
++	rtl8225_write(dev, 0xb, 0x7BB);
++	msleep(1);
++	rtl8225_write(dev, 0xc, 0x850);
++	msleep(1);
++	rtl8225_write(dev, 0xd, 0xCDF);
++	msleep(1);
++	rtl8225_write(dev, 0xe, 0x02B);
++	msleep(1);
++	rtl8225_write(dev, 0xf, 0x114);
++	msleep(100);
++
++	rtl8225_write(dev, 0x0, 0x1B7);
++
++	for (i = 0; i < ARRAY_SIZE(rtl8225z2_rxgain); i++) {
++		rtl8225_write(dev, 0x1, i + 1);
++		rtl8225_write(dev, 0x2, rtl8225z2_rxgain[i]);
++	}
++
++	rtl8225_write(dev, 0x3, 0x080);
++	rtl8225_write(dev, 0x5, 0x004);
++
++	rtl8225_write(dev, 0x0, 0x0B7);
++	rtl8225_write(dev, 0x2, 0xC4D);
++
++	if (!(rtl8225_read(dev, 0x6) & 0x080)) {
++		rtl8225_write(dev, 0x2, 0xC4D);
++		force_pci_posting(priv);
++		msleep(200);
++		rtl8225_write(dev, 0x2, 0x44D);
++		force_pci_posting(priv);
++		msleep(100);
++		if (!(rtl8225_read(dev, 0x6) & 0x080))
++			printk(KERN_ERR "rtl8187se: RF Calibration failed\n");
++	}
++
++	rtl8225_write(dev, 0x00, 0x2BF);
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x1FFF);
++
++	for (i = 0; i < ARRAY_SIZE(rtl8225_agc); i++) {
++		rtl8225_write_phy_ofdm(dev, 0xB, rtl8225_agc[i]);
++		msleep(1);
++		rtl8225_write_phy_ofdm(dev, 0xA, 0x80 + i);
++		msleep(1);
++	}
++
++	force_pci_posting(priv);
++	msleep(1);
++
++	rtl8225_write_phy_ofdm(dev, 0x00, 0x01);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x01, 0x02);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x02, 0x62);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x03, 0x00);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x04, 0x00);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x05, 0x00);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x06, 0x40);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x07, 0x00);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x08, 0x40);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x09, 0xfe);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x0a, 0x08);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x0b, 0x80);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x0c, 0x01);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x0d, 0x43);
++	rtl8225_write_phy_ofdm(dev, 0x0e, 0xd3);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x0f, 0x38);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x10, 0x84);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x11, 0x07);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x12, 0x20);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x13, 0x20);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x14, 0x00);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x15, 0x40);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x16, 0x00);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x17, 0x40);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x18, 0xef);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x19, 0x19);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x1a, 0x20);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x1b, 0x15);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x1c, 0x04);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x1d, 0xc5);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x1e, 0x95);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x1f, 0x75);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x20, 0x1f);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x21, 0x17);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x22, 0x16);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x23, 0x80);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x24, 0x46);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x25, 0x00);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x26, 0x90);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x27, 0x88);
++	msleep(1);
++
++//	rtl8225z2_set_gain(dev, 4);
++
++	rtl8225_write_phy_cck(dev, 0x00, 0x98);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x03, 0x20);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x04, 0x7e);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x05, 0x12);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x06, 0xfc);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x07, 0x78);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x08, 0x2e);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x10, 0x93);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x11, 0x88);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x12, 0x47);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x13, 0xd0);
++	rtl8225_write_phy_cck(dev, 0x19, 0x00);
++	rtl8225_write_phy_cck(dev, 0x1a, 0xa0);
++	rtl8225_write_phy_cck(dev, 0x1b, 0x08);
++	rtl8225_write_phy_cck(dev, 0x40, 0x86);
++	rtl8225_write_phy_cck(dev, 0x41, 0x8d);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x42, 0x15);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x43, 0x18);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x44, 0x36);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x45, 0x35);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x46, 0x2e);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x47, 0x25);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x48, 0x1c);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x49, 0x12);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x4a, 0x09);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x4b, 0x04);
++	msleep(1);
++	rtl8225_write_phy_cck(dev, 0x4c, 0x05);
++	msleep(1);
++
++	rtl818x_iowrite8(priv, (u8 __iomem *)((void __iomem *)
++			 priv->map + 0x5B), 0x0D);
++	msleep(1);
++
++	rtl8225z2_rf_set_tx_power(dev, chan);
++
++	/* RX antenna default to A */
++	rtl8225_write_phy_cck(dev, 0x11, 0x9b);
++	msleep(1);
++	rtl8225_write_phy_ofdm(dev, 0x26, 0x90);
++	msleep(1);
++
++	rtl818x_iowrite8(priv, &priv->map->TX_ANTENNA, 0x03);
++	msleep(1);
++	rtl818x_iowrite32(priv, (__le32 __iomem *)((void __iomem *)
++			  priv->map + 0x94), 0x15c00002);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x1FFF);
++
++	rtl8225_write(dev, 0x7, rtl8225_chan[chan - 1]);
++	msleep(10);
++}
++
++static void rtl8225_rf_stop(struct ieee80211_hw *dev)
++{
++	/* checked for 8187se */
++	struct rtl8187se_priv *priv = dev->priv;
++	u8 reg;
++
++	rtl8225_write(dev, 0x4, 0x1f); msleep(1);
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
++			 RTL818X_EEPROM_CMD_CONFIG);
++	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg |
++			 RTL818X_CONFIG3_ANAPARAM_WRITE);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2,
++			  RTL8225_ANAPARAM2_OFF);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM,
++			  RTL8225_ANAPARAM_OFF);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3,
++			 reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
++			 RTL818X_EEPROM_CMD_NORMAL);
++}
++
++static void rtl8225_rf_set_channel(struct ieee80211_hw *dev,
++				   struct ieee80211_conf *conf)
++{
++	/* checked for 8187se */
++	int chan = ieee80211_frequency_to_channel(conf->channel->center_freq);
++	struct rtl8187se_priv *priv = dev->priv;
++
++	rtl8225z2_rf_set_tx_power(dev, chan);
++
++	rtl8225_write(dev, 0x7, rtl8225_chan[chan - 1]);
++	if ((rtl8225_read(dev, 0x7) & 0x0F80) != rtl8225_chan[chan - 1])
++		rtl8225_write(dev, 0x7, rtl8225_chan[chan - 1]);
++	msleep(1);
++	force_pci_posting(priv);
++	msleep(10);
++}
++
++static void rtl8225_rf_conf_erp(struct ieee80211_hw *dev,
++				struct ieee80211_bss_conf *info)
++{
++	/* checked for 8187se */
++	struct rtl8187se_priv *priv = dev->priv;
++
++	rtl818x_iowrite8(priv, &priv->map->SLOT, 0x9);
++	rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
++	rtl818x_iowrite8(priv, &priv->map->DIFS, 0x14);
++	rtl818x_iowrite8(priv, &priv->map->EIFS, 81);
++	rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0x73);
++}
++
++static const struct rtl818x_rf_ops rtl8225z2_ops = {
++	.name		= "rtl8225z2",
++	.init		= rtl8225z2_rf_init,
++	.stop		= rtl8225_rf_stop,
++	.set_chan	= rtl8225_rf_set_channel,
++	.conf_erp	= rtl8225_rf_conf_erp,
++};
++
++const struct rtl818x_rf_ops *rtl8187se_detect_rf(struct ieee80211_hw *dev)
++{
++	struct rtl8187se_priv *priv = dev->priv;
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, 0x0480);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, 0x0488);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x1FFF);
++	rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++	msleep(100);
++
++	rtl8225_write(dev, 0, 0x1B7);
++
++	/* the following 2 reads may not be needed */
++	rtl8225_read(dev, 8);
++	rtl8225_read(dev, 9);
++
++	rtl8225_write(dev, 0, 0x0B7);
++
++	return &rtl8225z2_ops;
++}
++
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187se_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187se_dev.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187se_dev.c
+@@ -780,6 +780,7 @@ static int __devinit rtl8187se_probe(str
+ 	u16 eeprom_val;
+ 	u8 unit;
+ 
++	printk(KERN_INFO "rtl8187se: Driver loaded\n");
+ 	err = pci_enable_device(pdev);
+ 	if (err) {
+ 		printk(KERN_ERR "%s (rtl8187se): Cannot enable new PCI device\n",
+@@ -798,6 +799,8 @@ static int __devinit rtl8187se_probe(str
+ 	io_len = pci_resource_len(pdev, 0);
+ 	mem_addr = pci_resource_start(pdev, 1);
+ 	mem_len = pci_resource_len(pdev, 1);
++	printk(KERN_INFO "rtl8187se: io_addr/len: 0x%X 0x%X, mem_addr/len: 0x%lX"
++	       " 0x%lX\n", io_addr, io_len, mem_addr, mem_len);
+ 
+ 	if (mem_len < sizeof(struct rtl818x_csr) ||
+ 	    io_len < sizeof(struct rtl818x_csr)) {
