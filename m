@@ -1,68 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:44059 "EHLO
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:34538 "EHLO
 	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753584AbZKNCIY convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1752129AbZKLPtP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 21:08:24 -0500
-Received: by iwn8 with SMTP id 8so3103969iwn.33
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2009 18:08:30 -0800 (PST)
+	Thu, 12 Nov 2009 10:49:15 -0500
+Received: by iwn8 with SMTP id 8so1840890iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 07:49:21 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <43e72e890911131806v7824165vdee666198fd30d30@mail.gmail.com>
-References: <4AFDFE41.9000003@openwrt.org> <4AFDFF08.9000101@openwrt.org>
-	<43e72e890911131806v7824165vdee666198fd30d30@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 13 Nov 2009 18:08:10 -0800
-Message-ID: <43e72e890911131808k6c333abdobd8483265ba2840a@mail.gmail.com>
-Subject: Re: [RFC 2/2] ath9k: get rid of tx_info_priv
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <20091112154440.GD19349@tux>
+References: <f74418680911120331w1ea31a68y56440dc0fbd253bb@mail.gmail.com>
+	<40101cc30911120618m5d9acd34pf6aa9ec89c6c40b8@mail.gmail.com>
+	<20091112154440.GD19349@tux>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 12 Nov 2009 07:49:01 -0800
+Message-ID: <43e72e890911120749n72360f0btfb058ab3a521eabb@mail.gmail.com>
+Subject: Re: [ath9k-devel] Possible memory leak in ath9k monitor mode
+	injection
+To: Matteo Croce <technoboy85@gmail.com>
+Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 13, 2009 at 6:06 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Fri, Nov 13, 2009 at 4:51 PM, Felix Fietkau <nbd@openwrt.org> wrote:
->> This patch removes the need for separately allocated private tx info
->> data in ath9k and brings the driver one small step closer to using the
->> mac80211 rate control API properly.
+On Thu, Nov 12, 2009 at 7:44 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Thu, Nov 12, 2009 at 06:18:46AM -0800, Matteo Croce wrote:
+>> On Thu, Nov 12, 2009 at 12:31 PM, Lorenzo Bianconi
+>> <lorenzo.bianconi83@gmail.com> wrote:
+>> > Hi all
+>> >
+>> > I am playing with ath9k/mac80211 in monitor mode and I suspect there
+>> > is a memory leak.
+>> > The leak happens when injecting in monitor mode when the destination
+>> > MAC address is unicast.
+>> > In fact there is no leak sending broadcast packet.
+>> > I wrote this minimal test case module which triggers the leak.
 >>
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>> I can reproduce it with ath5k but not with madwifi, so the leak could
+>> be in mac80211
 >
-> Thanks for doing this! Comments below.
->
->> @@ -1301,23 +1298,30 @@ static void ath_tx_status(void *priv, st
->
-> < ... >
->
->>        hdr = (struct ieee80211_hdr *)skb->data;
->>        fc = hdr->frame_control;
->> -       tx_info_priv = ATH_TX_INFO_PRIV(tx_info);
->> -       final_ts_idx = tx_info_priv->tx.ts_rateindex;
->> +       for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
->> +               struct ieee80211_tx_rate *rate = &tx_info->status.rates[i];
->> +               if (!rate->count)
->> +                       break;
->> +
->> +               final_ts_idx = i;
->> +               long_retry = rate->count - 1;
->> +       }
->>
->
-> This seems to be the only trade off, doing a loop on tx complete but I
-> think I'm willing to trade that for the kmalloc()/kfree() removal.
->
-> Reviewed-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Can you please resend the thread to linux-wireless for wider review, with
+> the code snippet and all?
 
-Oh and can you add an unlikely for this:
+Sorry failed to notice you already had.
 
--       else
-+       if (tx_info->driver_flags & ATH_TX_INFO_FRAME_TYPE_INTERNAL)
-                ath9k_tx_status(hw, skb);
-+       else
-+               ieee80211_tx_status(hw, skb);
- }
-
-Thanks!
-
-  Luis
+ Luis
