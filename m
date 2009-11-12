@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:49984 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757608AbZKES5G (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2009 13:57:06 -0500
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 24/41] rt2800usb: convert to use struct rt2800_ops methods
-Date: Thu, 5 Nov 2009 19:57:09 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173453.28463.94062.sendpatchset@localhost.localdomain> <200911051953.47346.IvDoorn@gmail.com>
-In-Reply-To: <200911051953.47346.IvDoorn@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:29512 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752426AbZKLPoh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Nov 2009 10:44:37 -0500
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 07:44:43 -0800
+Date: Thu, 12 Nov 2009 07:44:40 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Matteo Croce <technoboy85@gmail.com>
+CC: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] Possible memory leak in ath9k monitor mode
+	injection
+Message-ID: <20091112154440.GD19349@tux>
+References: <f74418680911120331w1ea31a68y56440dc0fbd253bb@mail.gmail.com> <40101cc30911120618m5d9acd34pf6aa9ec89c6c40b8@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911051957.09817.IvDoorn@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <40101cc30911120618m5d9acd34pf6aa9ec89c6c40b8@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 05 November 2009, Ivo van Doorn wrote:
-> On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH] rt2800usb: convert to use struct rt2800_ops methods
-> > 
-> > Add chipset registers access abstraction layer and prepare for later
-> > code unification.
-> > 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+On Thu, Nov 12, 2009 at 06:18:46AM -0800, Matteo Croce wrote:
+> On Thu, Nov 12, 2009 at 12:31 PM, Lorenzo Bianconi
+> <lorenzo.bianconi83@gmail.com> wrote:
+> > Hi all
+> >
+> > I am playing with ath9k/mac80211 in monitor mode and I suspect there
+> > is a memory leak.
+> > The leak happens when injecting in monitor mode when the destination
+> > MAC address is unicast.
+> > In fact there is no leak sending broadcast packet.
+> > I wrote this minimal test case module which triggers the leak.
 > 
-> Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-> 
+> I can reproduce it with ath5k but not with madwifi, so the leak could
+> be in mac80211
 
-See comment on patch [23/41]
+Can you please resend the thread to linux-wireless for wider review, with
+the code snippet and all?
+
+  Luis
