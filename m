@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:37909 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753259AbZKGWBi convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 17:01:38 -0500
-From: Ben Hutchings <ben@decadent.org.uk>
-To: John Linville <linville@tuxdriver.com>
-Cc: Pavel Roskin <proski@gnu.org>,
-	David Gibson <hermes@gibson.dropbear.id.au>,
-	linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 07 Nov 2009 22:01:29 +0000
-Message-ID: <1257631289.15927.467.camel@localhost>
-Mime-Version: 1.0
-Subject: [PATCH 53/75] orinoco: declare MODULE_FIRMWARE
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:37132 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752869AbZKLPco (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Nov 2009 10:32:44 -0500
+Received: by iwn8 with SMTP id 8so1827280iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 07:32:50 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <02a401ca6370$51fa0ff0$f5ee2fd0$@kaist.ac.kr>
+References: <02a401ca6370$51fa0ff0$f5ee2fd0$@kaist.ac.kr>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 12 Nov 2009 07:32:30 -0800
+Message-ID: <43e72e890911120732m74dbe2d4m14dd146cd0fb3016@mail.gmail.com>
+Subject: Re: ath9k: Unknown symbol
+To: Jinsung Lee <ljs@netsys.kaist.ac.kr>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
----
- drivers/net/wireless/orinoco/fw.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+On Thu, Nov 12, 2009 at 12:15 AM, Jinsung Lee <ljs@netsys.kaist.ac.kr> wrote:
+> Hi, all.
+>
+> I installed compat-wireless-2009-11-12 and compiled successfully.
+> But when inputting the command "modprobe ath9k", I saw the following
+> message:
+>
+> FATAL: Error inserting ath9k
+> (/lib/modules/2.6.32-020632rc6-generic/updates/drivers/net/wireless/ath/ath9
+> k/ath9k.ko): Unknown symbol in module, or unknown parameter (see dmesg)
+>
+> And dmesg shows the following:
+>
+> [582122.800191] ath9k: Unknown symbol ath9k_cmn_rx_skb_preprocess
+> [582122.803675] ath9k: Unknown symbol ath9k_cmn_rx_skb_postprocess
+>
+> Actually, I haven't seen this kind of message before.
+> Is there any workaround solution for this?
 
-diff --git a/drivers/net/wireless/orinoco/fw.c b/drivers/net/wireless/orinoco/fw.c
-index 1257250..cfa7296 100644
---- a/drivers/net/wireless/orinoco/fw.c
-+++ b/drivers/net/wireless/orinoco/fw.c
-@@ -28,6 +28,12 @@ static const struct fw_info orinoco_fw[] = {
- 	{ NULL, "prism_sta_fw.bin", "prism_ap_fw.bin", 0, 1024 },
- 	{ "symbol_sp24t_prim_fw", "symbol_sp24t_sec_fw", NULL, 0x00003100, 512 }
- };
-+MODULE_FIRMWARE("agere_sta_fw.bin");
-+MODULE_FIRMWARE("agere_ap_fw.bin");
-+MODULE_FIRMWARE("prism_sta_fw.bin");
-+MODULE_FIRMWARE("prism_ap_fw.bin");
-+MODULE_FIRMWARE("symbol_sp24t_prim_fw");
-+MODULE_FIRMWARE("symbol_sp24t_sec_fw");
- 
- /* Structure used to access fields in FW
-  * Make sure LE decoding macros are used
--- 
-1.6.5.2
+compat-wireless just needs to be updated, I'll take care of this.
 
-
-
+  Luis
