@@ -1,91 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:62417 "EHLO
-	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752986AbZK3VJF (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:65055 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759435AbZKLACY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2009 16:09:05 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Benoit Papillault <benoit.papillault@free.fr>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH v3 1/4] rt2x00: Further L2 padding fixes.
-Date: Mon, 30 Nov 2009 22:08:15 +0100
-Message-Id: <1259615298-2305-2-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1259615298-2305-1-git-send-email-gwingerde@gmail.com>
-References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com>
+	Wed, 11 Nov 2009 19:02:24 -0500
+Date: Wed, 11 Nov 2009 18:02:29 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>, chunkeey@web.de
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH V2] p54usb: Remove DMA buffer from stack
+Message-ID: <4afb5095.fKs+0FCQC9sTYyFW%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix a couple of more bugs in the L2 padding code:
-1. Compute the amount of L2 padding correctly (in 3 places).
-2. Trim the skb correctly when the L2 padding has been applied.
+On 2.6.32-rc6 from wireless-testing, the following warning is emitted:
 
-Also introduce a central macro the compute the L2 padding size.
+------------[ cut here ]------------ 
+WARNING: at lib/dma-debug.c:860 check_for_stack+0xaa/0xe0() 
+Hardware name: HP Pavilion dv2700 Notebook PC 
+ehci_hcd 0000:00:02.1: DMA-API: device driver maps memory fromstack
+	 [addr=ffff8800b6e2bca8] 
+Modules linked in: <Removed> 
+Pid: 16378, comm: modprobe Not tainted 2.6.32-rc6-wl #244 
+Call Trace: 
+ [<ffffffff81049698>] warn_slowpath_common+0x78/0xb0 
+ [<ffffffff8104972c>] warn_slowpath_fmt+0x3c/0x40 
+ [<ffffffff811ae52a>] check_for_stack+0xaa/0xe0 
+ [<ffffffff811afc8d>] debug_dma_map_page+0xfd/0x170 
+ [<ffffffffa006297a>] usb_hcd_submit_urb+0x3da/0x9c0 [usbcore] 
+ [<ffffffff81076e6f>] ? lockdep_init_map+0x5f/0x5d0 
+ [<ffffffffa0063365>] usb_submit_urb+0xe5/0x260 [usbcore] 
+ [<ffffffffa0064b7e>] usb_start_wait_urb+0x5e/0xf0 [usbcore] 
+ [<ffffffffa0063943>] ? usb_init_urb+0x23/0x40 [usbcore] 
+ [<ffffffffa0064cd4>] usb_bulk_msg+0xc4/0x150 [usbcore] 
+ [<ffffffffa0441a91>] T.719+0x31/0x40 [p54usb] 
+ [<ffffffffa0441acf>] p54u_upload_firmware_3887+0x2f/0x490 [p54usb] 
+ [<ffffffffa049c667>] ? p54_parse_firmware+0x427/0x450 [p54common] 
+ <Rest of traceback removed>
+---[ end trace f77df0316ddad3de ]--- 
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.org>
 ---
- drivers/net/wireless/rt2x00/rt2x00.h      |    6 ++++++
- drivers/net/wireless/rt2x00/rt2x00queue.c |    8 +++++---
- 2 files changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index dcfc8c2..6594d2f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -113,6 +113,12 @@
- 	(  ((unsigned long)((__skb)->data + (__header))) & 3 )
- 
- /*
-+ * Determine the number of L2 padding bytes required between the header and
-+ * the payload.
-+ */
-+#define L2PAD_SIZE(__hdrlen)	(-(__hdrlen) & 3)
-+
-+/*
-  * Constants for extra TX headroom for alignment purposes.
-  */
- #define RT2X00_ALIGN_SIZE	4 /* Only whole frame needs alignment */
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index b8f0954..21d5876 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -181,7 +181,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
- 	unsigned int frame_length = skb->len;
- 	unsigned int header_align = ALIGN_SIZE(skb, 0);
- 	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
--	unsigned int l2pad = 4 - (payload_align - header_align);
-+	unsigned int l2pad = L2PAD_SIZE(header_length);
- 
- 	if (header_align == payload_align) {
- 		/*
-@@ -216,6 +216,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
- 		memmove(skb->data + header_length + l2pad,
- 			skb->data + header_length + l2pad + payload_align,
- 			frame_length - header_length);
-+		skb_trim(skb, frame_length + l2pad);
- 		skbdesc->flags |= SKBDESC_L2_PADDED;
- 	}
- }
-@@ -223,7 +224,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
- void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int header_length)
+John,
+
+This is 2.6.32 material. Sorry to find it so late in the rc cycle. I hop
+DaveM doesn't give you too much trouble.
+
+V2 - Fix line wraps in trace back.
+
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/p54/p54usb.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/p54/p54usb.c
++++ wireless-testing/drivers/net/wireless/p54/p54usb.c
+@@ -426,12 +426,16 @@ static const char p54u_romboot_3887[] =
+ static int p54u_firmware_reset_3887(struct ieee80211_hw *dev)
  {
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
--	unsigned int l2pad = 4 - (header_length & 3);
-+	unsigned int l2pad = L2PAD_SIZE(header_length);
+ 	struct p54u_priv *priv = dev->priv;
+-	u8 buf[4];
++	u8 *buf;
+ 	int ret;
  
- 	if (!l2pad || (skbdesc->flags & SKBDESC_L2_PADDED))
- 		return;
-@@ -346,7 +347,8 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 	 * Header and alignment information.
- 	 */
- 	txdesc->header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
--	txdesc->l2pad = ALIGN_SIZE(entry->skb, txdesc->header_length);
-+	if (test_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags))
-+		txdesc->l2pad = L2PAD_SIZE(txdesc->header_length);
- 
- 	/*
- 	 * Check whether this frame is to be acked.
--- 
-1.6.5.3
+-	memcpy(&buf, p54u_romboot_3887, sizeof(buf));
++	buf = kmalloc(4, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++ 	memcpy(buf, p54u_romboot_3887, 4);
+ 	ret = p54u_bulk_msg(priv, P54U_PIPE_DATA,
+-			    buf, sizeof(buf));
++			    buf, 4);
++	kfree(buf);
+ 	if (ret)
+ 		dev_err(&priv->udev->dev, "(p54usb) unable to jump to "
+ 			"boot ROM (%d)!\n", ret);
 
