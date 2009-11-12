@@ -1,336 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:40568 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932396AbZKDRfw (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:64165 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757383AbZKLEbZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 12:35:52 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 04 Nov 2009 18:35:32 +0100
-Message-Id: <20091104173532.28463.33083.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-Subject: [PATCH 29/41] rt2800: add rt2800lib.h
+	Wed, 11 Nov 2009 23:31:25 -0500
+Date: Wed, 11 Nov 2009 22:31:29 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>, bzolnier@gmail.com
+Cc: Bernhard Schiffner <bernhard@schiffner-limbach.de>,
+	linux-wireless@vger.kernel.org
+Subject: [RFC/RFT 1/6 V2] rtl8187se: Create file rtl8187se.h
+Message-ID: <4afb8fa1.ONWkM4KnF18VK47M%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] rt2800: add rt2800lib.h
+Create the base header file for rtl8187se.
 
-Code unification.
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.h |   99 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2800pci.c |    1 
- drivers/net/wireless/rt2x00/rt2800pci.h |   76 ------------------------
- drivers/net/wireless/rt2x00/rt2800usb.c |    1 
- drivers/net/wireless/rt2x00/rt2800usb.h |   75 ------------------------
- 5 files changed, 101 insertions(+), 151 deletions(-)
 
-Index: b/drivers/net/wireless/rt2x00/rt2800lib.h
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187se.h
 ===================================================================
 --- /dev/null
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.h
-@@ -0,0 +1,99 @@
-+/*
-+	Copyright (C) 2009 Bartlomiej Zolnierkiewicz
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187se.h
+@@ -0,0 +1,128 @@
++#ifndef RTL8187SE_H
++#define RTL8187SE_H
 +
-+	This program is free software; you can redistribute it and/or modify
-+	it under the terms of the GNU General Public License as published by
-+	the Free Software Foundation; either version 2 of the License, or
-+	(at your option) any later version.
++#include "rtl818x.h"
 +
-+	This program is distributed in the hope that it will be useful,
-+	but WITHOUT ANY WARRANTY; without even the implied warranty of
-+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+	GNU General Public License for more details.
++#define MAX_RX_SIZE IEEE80211_MAX_RTS_THRESHOLD
 +
-+	You should have received a copy of the GNU General Public License
-+	along with this program; if not, write to the
-+	Free Software Foundation, Inc.,
-+	59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ */
++#define RF_PARAM_ANALOGPHY	(1 << 0)
++#define RF_PARAM_ANTBDEFAULT	(1 << 1)
++#define RF_PARAM_CARRIERSENSE1	(1 << 2)
++#define RF_PARAM_CARRIERSENSE2	(1 << 3)
 +
-+#ifndef RT2800LIB_H
-+#define RT2800LIB_H
++#define BB_ANTATTEN_CHAN14	0x0C
++#define BB_ANTENNA_B 		0x40
 +
-+struct rt2800_ops {
-+	void (*register_read)(struct rt2x00_dev *rt2x00dev,
-+			      const unsigned int offset, u32 *value);
-+	void (*register_write)(struct rt2x00_dev *rt2x00dev,
-+			       const unsigned int offset, u32 value);
-+	void (*register_write_lock)(struct rt2x00_dev *rt2x00dev,
-+				    const unsigned int offset, u32 value);
++#define BB_HOST_BANG 		(1 << 30)
++#define BB_HOST_BANG_EN 	(1 << 2)
++#define BB_HOST_BANG_CLK 	(1 << 1)
++#define BB_HOST_BANG_DATA	1
 +
-+	void (*register_multiread)(struct rt2x00_dev *rt2x00dev,
-+				   const unsigned int offset,
-+				   void *value, const u32 length);
-+	void (*register_multiwrite)(struct rt2x00_dev *rt2x00dev,
-+				    const unsigned int offset,
-+				    const void *value, const u32 length);
++#define ANAPARAM_TXDACOFF_SHIFT	27
++#define ANAPARAM_PWR0_SHIFT	28
++#define ANAPARAM_PWR0_MASK 	(0x07 << ANAPARAM_PWR0_SHIFT)
++#define ANAPARAM_PWR1_SHIFT	20
++#define ANAPARAM_PWR1_MASK	(0x7F << ANAPARAM_PWR1_SHIFT)
 +
-+	int (*regbusy_read)(struct rt2x00_dev *rt2x00dev,
-+			    const unsigned int offset,
-+			    const struct rt2x00_field32 field, u32 *reg);
++struct rtl8187se_tx_desc {
++	__le32 flags;
++	__le16 rts_duration;
++	__le16 plcp_len;
++	__le32 tx_buf;
++	__le32 frame_len;
++	__le32 next_tx_desc;
++	u8 cw;
++	u8 retry_limit;
++	u8 agc;
++	u8 flags2;
++	u32 reserved[2];
++} __attribute__ ((packed));
++
++struct rtl8187se_rx_desc {
++	__le32 flags;
++	__le32 flags2;
++	union {
++		__le32 rx_buf;
++		__le64 tsft;
++	};
++} __attribute__ ((packed));
++
++struct rtl8187se_tx_ring {
++	struct rtl8187se_tx_desc *desc;
++	dma_addr_t dma;
++	unsigned int idx;
++	unsigned int entries;
++	struct sk_buff_head queue;
 +};
 +
-+static inline void rt2800_register_read(struct rt2x00_dev *rt2x00dev,
-+					const unsigned int offset,
-+					u32 *value)
-+{
-+	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
++struct rtl8187se_priv {
++	/* common between rtl818x drivers */
++	struct rtl818x_csr __iomem *map;
++	const struct rtl818x_rf_ops *rf;
++	struct ieee80211_vif *vif;
++	int mode;
 +
-+	rt2800ops->register_read(rt2x00dev, offset, value);
++	/* rtl8187se driver specific */
++	spinlock_t lock;
++	struct rtl8187se_rx_desc *rx_ring;
++	dma_addr_t rx_ring_dma;
++	unsigned int rx_idx;
++	struct sk_buff *rx_buf[32];
++	struct rtl8187se_tx_ring tx_ring[4];
++	struct ieee80211_channel channels[14];
++	struct ieee80211_rate rates[12];
++	struct ieee80211_supported_band band;
++	struct pci_dev *pdev;
++	u32 rx_conf;
++
++	u32 anaparam;
++	u16 rfparam;
++	u8 csthreshold;
++};
++
++void rtl8187se_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
++void rtl8187se_set_anaparam(struct rtl8187se_priv *priv, u32 anaparam);
++
++static inline u8 rtl818x_ioread8(struct rtl8187se_priv *priv, u8 __iomem *addr)
++{
++	return ioread8(addr);
 +}
 +
-+static inline void rt2800_register_write(struct rt2x00_dev *rt2x00dev,
-+					 const unsigned int offset,
-+					 u32 value)
++static inline u16 rtl818x_ioread16(struct rtl8187se_priv *priv,
++				   __le16 __iomem *addr)
 +{
-+	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
-+
-+	rt2800ops->register_write(rt2x00dev, offset, value);
++	return ioread16(addr);
 +}
 +
-+static inline void rt2800_register_write_lock(struct rt2x00_dev *rt2x00dev,
-+					      const unsigned int offset,
-+					      u32 value)
++static inline u32 rtl818x_ioread32(struct rtl8187se_priv *priv,
++				    __le32 __iomem *addr)
 +{
-+	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
-+
-+	rt2800ops->register_write_lock(rt2x00dev, offset, value);
++	return ioread32(addr);
 +}
 +
-+static inline void rt2800_register_multiread(struct rt2x00_dev *rt2x00dev,
-+					     const unsigned int offset,
-+					     void *value, const u32 length)
++static inline void rtl818x_iowrite8(struct rtl8187se_priv *priv,
++				    u8 __iomem *addr, u8 val)
 +{
-+	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
-+
-+	rt2800ops->register_multiread(rt2x00dev, offset, value, length);
++	iowrite8(val, addr);
 +}
 +
-+static inline void rt2800_register_multiwrite(struct rt2x00_dev *rt2x00dev,
-+					      const unsigned int offset,
-+					      const void *value,
-+					      const u32 length)
++static inline void rtl818x_iowrite16(struct rtl8187se_priv *priv,
++				     __le16 __iomem *addr, u16 val)
 +{
-+	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
-+
-+	rt2800ops->register_multiwrite(rt2x00dev, offset, value, length);
++	iowrite16(val, addr);
 +}
 +
-+static inline int rt2800_regbusy_read(struct rt2x00_dev *rt2x00dev,
-+				      const unsigned int offset,
-+				      const struct rt2x00_field32 field,
-+				      u32 *reg)
++static inline void rtl818x_iowrite32(struct rtl8187se_priv *priv,
++				     __le32 __iomem *addr, u32 val)
 +{
-+	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
-+
-+	return rt2800ops->regbusy_read(rt2x00dev, offset, field, reg);
++	iowrite32(val, addr);
 +}
 +
-+#endif /* RT2800LIB_H */
-Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -37,6 +37,7 @@
- #include "rt2x00.h"
- #include "rt2x00pci.h"
- #include "rt2x00soc.h"
-+#include "rt2800lib.h"
- #include "rt2800pci.h"
- 
- #ifdef CONFIG_RT2800PCI_PCI_MODULE
-Index: b/drivers/net/wireless/rt2x00/rt2800pci.h
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800pci.h
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.h
-@@ -27,82 +27,6 @@
- #ifndef RT2800PCI_H
- #define RT2800PCI_H
- 
--struct rt2800_ops {
--	void (*register_read)(struct rt2x00_dev *rt2x00dev,
--			      const unsigned int offset, u32 *value);
--	void (*register_write)(struct rt2x00_dev *rt2x00dev,
--			       const unsigned int offset, u32 value);
--	void (*register_write_lock)(struct rt2x00_dev *rt2x00dev,
--				    const unsigned int offset, u32 value);
--
--	void (*register_multiread)(struct rt2x00_dev *rt2x00dev,
--				   const unsigned int offset,
--				   void *value, const u32 length);
--	void (*register_multiwrite)(struct rt2x00_dev *rt2x00dev,
--				    const unsigned int offset,
--				    const void *value, const u32 length);
--
--	int (*regbusy_read)(struct rt2x00_dev *rt2x00dev,
--			    const unsigned int offset,
--			    const struct rt2x00_field32 field, u32 *reg);
--};
--
--static inline void rt2800_register_read(struct rt2x00_dev *rt2x00dev,
--					const unsigned int offset,
--					u32 *value)
--{
--	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
--
--	rt2800ops->register_read(rt2x00dev, offset, value);
--}
--
--static inline void rt2800_register_write(struct rt2x00_dev *rt2x00dev,
--					 const unsigned int offset,
--					 u32 value)
--{
--	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
--
--	rt2800ops->register_write(rt2x00dev, offset, value);
--}
--
--static inline void rt2800_register_write_lock(struct rt2x00_dev *rt2x00dev,
--					      const unsigned int offset,
--					      u32 value)
--{
--	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
--
--	rt2800ops->register_write_lock(rt2x00dev, offset, value);
--}
--
--static inline void rt2800_register_multiread(struct rt2x00_dev *rt2x00dev,
--					     const unsigned int offset,
--					     void *value, const u32 length)
--{
--	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
--
--	rt2800ops->register_multiread(rt2x00dev, offset, value, length);
--}
--
--static inline void rt2800_register_multiwrite(struct rt2x00_dev *rt2x00dev,
--					      const unsigned int offset,
--					      const void *value,
--					      const u32 length)
--{
--	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
--
--	rt2800ops->register_multiwrite(rt2x00dev, offset, value, length);
--}
--
--static inline int rt2800_regbusy_read(struct rt2x00_dev *rt2x00dev,
--				      const unsigned int offset,
--				      const struct rt2x00_field32 field,
--				      u32 *reg)
--{
--	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
--
--	return rt2800ops->regbusy_read(rt2x00dev, offset, field, reg);
--}
--
- /*
-  * RF chip defines.
-  *
-Index: b/drivers/net/wireless/rt2x00/rt2800usb.c
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -34,6 +34,7 @@
- 
- #include "rt2x00.h"
- #include "rt2x00usb.h"
-+#include "rt2800lib.h"
- #include "rt2800usb.h"
- 
- /*
-Index: b/drivers/net/wireless/rt2x00/rt2800usb.h
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800usb.h
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.h
-@@ -27,81 +27,6 @@
- #ifndef RT2800USB_H
- #define RT2800USB_H
- 
--struct rt2800_ops {
--	void (*register_read)(struct rt2x00_dev *rt2x00dev,
--			      const unsigned int offset, u32 *value);
--	void (*register_write)(struct rt2x00_dev *rt2x00dev,
--			       const unsigned int offset, u32 value);
--	void (*register_write_lock)(struct rt2x00_dev *rt2x00dev,
--				    const unsigned int offset, u32 value);
--
--	void (*register_multiread)(struct rt2x00_dev *rt2x00dev,
--				   const unsigned int offset,
--				   void *value, const u32 length);
--	void (*register_multiwrite)(struct rt2x00_dev *rt2x00dev,
--				    const unsigned int offset,
--				    const void *value, const u32 length);
--
--	int (*regbusy_read)(struct rt2x00_dev *rt2x00dev,
--			    const unsigned int offset,
--			    const struct rt2x00_field32 field, u32 *reg);
--};
--
--static inline void rt2800_register_read(struct rt2x00_dev *rt2x00dev,
--					const unsigned int offset,
--					u32 *value)
--{
--	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
--
--	rt2800ops->register_read(rt2x00dev, offset, value);
--}
--
--static inline void rt2800_register_write(struct rt2x00_dev *rt2x00dev,
--					 const unsigned int offset,
--					 u32 value)
--{
--	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
--
--	rt2800ops->register_write(rt2x00dev, offset, value);
--}
--
--static inline void rt2800_register_write_lock(struct rt2x00_dev *rt2x00dev,
--					      const unsigned int offset,
--					      u32 value)
--{
--	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
--
--	rt2800ops->register_write_lock(rt2x00dev, offset, value);
--}
--
--static inline void rt2800_register_multiread(struct rt2x00_dev *rt2x00dev,
--					     const unsigned int offset,
--					     void *value, const u32 length)
--{
--	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
--
--	rt2800ops->register_multiread(rt2x00dev, offset, value, length);
--}
--
--static inline void rt2800_register_multiwrite(struct rt2x00_dev *rt2x00dev,
--					      const unsigned int offset,
--					      void *value, const u32 length)
--{
--	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
--
--	rt2800ops->register_multiwrite(rt2x00dev, offset, value, length);
--}
--
--static inline int rt2800_regbusy_read(struct rt2x00_dev *rt2x00dev,
--				      const unsigned int offset,
--				      struct rt2x00_field32 field,
--				      u32 *reg)
--{
--	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
--
--	return rt2800ops->regbusy_read(rt2x00dev, offset, field, reg);
--}
--
- /*
-  * RF chip defines.
-  *
++static inline void force_pci_posting(struct rtl8187se_priv *priv)
++{
++	rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++	mb();
++}
++
++#endif /* RTL8187SE_H */
++
