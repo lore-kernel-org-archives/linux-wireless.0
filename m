@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:36229 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752579AbZKGRhh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 12:37:37 -0500
-Message-ID: <4AF5B061.60701@openwrt.org>
-Date: Sat, 07 Nov 2009 18:37:37 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:53931 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753525AbZKLTex (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Nov 2009 14:34:53 -0500
+Received: by bwz27 with SMTP id 27so2613056bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 11:34:58 -0800 (PST)
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH] rt2x00: Fix rt2800lib RF chip programming selection.
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Ivo van Doorn <IvDoorn@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date: Thu, 12 Nov 2009 20:25:55 +0100
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: [PATCH] b43: work around a locking issue in ->set_tim()
-Content-Type: text/plain; charset=ISO-8859-1
+Message-Id: <200911122025.55944.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ops->set_tim() must be atomic, so b43 trying to acquire a mutex leads
-to a kernel crash. This patch trades an easy to trigger crash in AP
-mode for an unlikely race condition. According to Michael, the real
-fix would be to allow set_tim() to sleep, since b43 is not the only
-driver that needs to sleep in all callbacks.
+On Monday 09 November 2009 22:59:58 Gertjan van Wingerde wrote:
+> Mirror the legacy Ralink driver with respect to rt2800 RF register programming. Execute
+> rt2800_config_channel_rt3x for all RF2020, RF3020, RF3021 & RF3022 chipsets when operating on RT3070
+> devices.
+> 
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
+checkpatch.pl complains about:
 
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -4534,9 +4534,8 @@ static int b43_op_beacon_set_tim(struct
- {
- 	struct b43_wl *wl = hw_to_b43_wl(hw);
+ERROR: trailing whitespace
+#27: FILE: drivers/net/wireless/rt2x00/rt2800lib.c:809:
++^Iif (rt2x00_rt(&rt2x00dev->chip, RT3070) &&^I$
 
--	mutex_lock(&wl->mutex);
-+	/* FIXME: add locking */
- 	b43_update_templates(wl);
--	mutex_unlock(&wl->mutex);
+ERROR: code indent should use tabs where possible
+#28: FILE: drivers/net/wireless/rt2x00/rt2800lib.c:810:
++           (rt2x00_rf(&rt2x00dev->chip, RF2020) ||$
 
- 	return 0;
- }
+I fixed those while applying patch to rt2800 tree..
+
+[ This was fixed later in "[PATCH v2] rt2x00: Initialize rf302x RF values
+  properly for rt2800pci." but we want all patches to be checkpatch.pl
+  clean as otherwise it is confusing for people doing automated checking ]
