@@ -1,69 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp5.freeserve.com ([193.252.22.151]:23916 "EHLO
-	smtp6.freeserve.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S934232AbZKXVQD (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:32827 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754291AbZKLWhw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 16:16:03 -0500
-Date: Tue, 24 Nov 2009 21:15:52 +0000
-From: Chris Vine <chris@cvine.freeserve.co.uk>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: bcm43xx devel <Bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.df>,
-	William Bourque <william.bourque@polymtl.ca>
-Subject: Re: DMA errors with BCM4312 - an update
-Message-ID: <20091124211552.533a2b4e@boulder.homenet>
-In-Reply-To: <4B0C2EC3.5010408@lwfinger.net>
-References: <4B0C2EC3.5010408@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Thu, 12 Nov 2009 17:37:52 -0500
+Received: by bwz27 with SMTP id 27so2798364bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 14:37:57 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20091112222831.GC17000@tux>
+References: <f74418680911120331w1ea31a68y56440dc0fbd253bb@mail.gmail.com>
+	<40101cc30911120618m5d9acd34pf6aa9ec89c6c40b8@mail.gmail.com>
+	<20091112154440.GD19349@tux> <43e72e890911120749n72360f0btfb058ab3a521eabb@mail.gmail.com>
+	<40101cc30911121118h17db32a1y61edac1a4c0aec24@mail.gmail.com>
+	<1258054304.3899.36.camel@johannes.local> <43e72e890911121135v150e33cbwcaa284ba998d2656@mail.gmail.com>
+	<40101cc30911121416o333f32c1h3e26b4cc988c243f@mail.gmail.com>
+	<20091112222831.GC17000@tux>
+From: Matteo Croce <technoboy85@gmail.com>
+Date: Thu, 12 Nov 2009 23:37:37 +0100
+Message-ID: <40101cc30911121437m695bbb04n71300093c3a6721f@mail.gmail.com>
+Subject: Re: [ath9k-devel] Possible memory leak in ath9k monitor mode
+	injection
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 24 Nov 2009 13:06:43 -0600
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> This E-mail is to summarize what I have learned to date.
-> 
-> The pm_qos change does nothing useful. It may have helped a little,
-> but the side effects are far worse than the benefits.
-> 
-> Most systems work better with b43 when warm booted after Broadcom's
-> wl driver was loaded. The conclusion is that wl is making some change
-> in the setup that b43 is not.
-> 
-> (3) Based on the above, I have done MMIO and PCI-E configuration
-> tracing for the two drivers and found some real differences. After
-> seeing these, I did more RE work, and found some setup for the PCI-E
-> core that was missed earlier. I am still working on the changes. What
-> I have completed is found at
-> 
-> http://bcm-v4.sipsolutions.net/PCI-E#PCI-E_Setup
-> 
-> I doubt that most of these new routines will affect the problem
-> interfaces as they apply only to PCI-E core revisions 7 and 8. My
-> BCM4312 has rev 9. I do not know what versions are giving the
-> trouble. With SSB_DEBUG enabled, it will be in a log line as follows:
-> 
-> ssb: Core 3 found: PCI-E (cc 0x820, rev 0x09, vendor 0x4243)
-> 
-> If you are seeing the DMA error, please supply the above info.
-> 
-> The "PCI-E Miscellaneous Configuration" routine that is not yet
-> finished does run on my system and is the source of the tracing
-> differences. If the problem cards has a revision newer than 9, I will
-> probably need an MMIO trace for your device.
+On Thu, Nov 12, 2009 at 11:28 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Thu, Nov 12, 2009 at 02:16:09PM -0800, Matteo Croce wrote:
+>> On Thu, Nov 12, 2009 at 8:35 PM, Luis R. Rodriguez
+>> <lrodriguez@atheros.com> wrote:
+>> > On Thu, Nov 12, 2009 at 11:31 AM, Johannes Berg
+>> > <johannes@sipsolutions.net> wrote:
+>> >> On Thu, 2009-11-12 at 20:18 +0100, Matteo Croce wrote:
+>> >>
+>> >>> # echo scan >/sys/kernel/debug/kmemleak ; cat
+>> >>> /sys/kernel/debug/kmemleak
+>> >>> kmemleak: 197 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
+>> >>> unreferenced object 0xc5cfea80 (size 192):
+>> >>>   comm "softirq", pid 0, jiffies 14191
+>> >>>   backtrace:
+>> >>>     [<ffffffff>] 0xffffffff
+>> >>
+>> >> that's kinda useless, can you run
+>> >
+>> > But if you insist on using kmemleak, try clearing the list
+>> >
+>> > echo clear > kmemleak
+>> >
+>> > Then scan
+>> >
+>> > echo scan > kmemleak
+>> >
+>> > then run your frame injection tests and then re-run scan.
+>> >
+>> > echo scan > kmemleak
+>> >
+>> > Then paste the output here.
+>> >
+>> >  Luis
+>> >
+>>
+>> root@alix:/sys/kernel/debug# rmmod inject
+>> inject_exit Inject, exiting module
+>> root@alix:/sys/kernel/debug# echo clear > kmemleak
+>
+> I forgot you're on 2.6.31, clear stuff was added to kmemleak for 2.6.32.
+>
+>> root@alix:/sys/kernel/debug# echo scan >kmemleak
+>> kmemleak: 61037 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
+>> root@alix:/sys/kernel/debug# modprobe inject
+>> inject_init Inject, inserting module
+>> inject_init Inject, initializing the timer
+>> root@alix:/sys/kernel/debug# echo scan >kmemleak
+>> root@alix:/sys/kernel/debug# cat kmemleak
+>> unreferenced object 0xccd48e70 (size 64):
+>
+> What's 0xccd48e70 and friends? Can you enable debugging on your kernel?
+>
+>  Luis
+>
 
-This is mine, the same revision as yours, but which demonstrates the
-DMA errors:
+Debugging is enabled but i guess it's a kernel module
 
-ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x16, vendor 0x4243)
-ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0F, vendor 0x4243)
-ssb: Core 2 found: PCMCIA (cc 0x80D, rev 0x0A, vendor 0x4243)
-ssb: Core 3 found: PCI-E (cc 0x820, rev 0x09, vendor 0x4243)
-ssb: Found rev 1 PMU (capabilities 0x02A62F01)
-ssb: SPROM revision 8 detected.
-ssb: Sonics Silicon Backplane found on PCI device 0000:03:00.0
-
-Chris
-
-
+root@alix:/usr/src/wireless-testing# gdb vmlinux
+GNU gdb (GDB) 7.0-debian
+Copyright (C) 2009 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i486-linux-gnu".
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>...
+Reading symbols from /usr/src/wireless-testing/vmlinux...done.
+(gdb) l *0xccd48e70
+No source file for address 0xccd48e70.
+(gdb)
