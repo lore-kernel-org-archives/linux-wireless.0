@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f202.google.com ([209.85.211.202]:59205 "EHLO
-	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756058AbZKDTbo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 14:31:44 -0500
+Received: from mail.atheros.com ([12.36.123.2]:38762 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760040AbZKLCzr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Nov 2009 21:55:47 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2009 18:55:53 -0800
+Date: Wed, 11 Nov 2009 18:55:49 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Zheng, Jeff" <jeff.zheng@intel.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"Wifi-test-devel@lists.sourceforge.net"
+	<Wifi-test-devel@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wifi-test: add initial simple test scripts
+Message-ID: <20091112025549.GF3976@tux>
+References: <1257989758-30756-1-git-send-email-lrodriguez@atheros.com> <154E55ADF9629D4E8D13F08BF92ABEB63FDC9833CF@PDSMSX501.ccr.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20091104173357.28463.50170.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-	 <20091104173357.28463.50170.sendpatchset@localhost.localdomain>
-Date: Wed, 4 Nov 2009 20:31:49 +0100
-Message-ID: <14add3d10911041131l45061943h30bf8f3f320429b8@mail.gmail.com>
-Subject: Re: [PATCH 16/41] rt2800pci: add rt2800_bbp_[read,write]() wrappers
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <154E55ADF9629D4E8D13F08BF92ABEB63FDC9833CF@PDSMSX501.ccr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 4, 2009 at 6:33 PM, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2800pci: add rt2800_bbp_[read,write]() wrappers
->
-> Part of preparations for later code unification.
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
+On Wed, Nov 11, 2009 at 06:31:41PM -0800, Zheng, Jeff wrote:
+> Thanks Luis, I have checked it in.
+> 
+> Do these scripts (client and AP) run on the same machine? If yes, will
+> packets be sent/received through air, or through mac80211 as bridge?
 
-For what it is worth:
+This is intended to run on two separate machines.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> I have a sample case with hwsim (hwsim.sh), which simulates two wlan
+> interface (one for client and one for hostapd). It can be used for
+> testing mac80211.
+
+Neat :)
+
+  Luis
