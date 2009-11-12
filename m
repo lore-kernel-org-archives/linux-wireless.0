@@ -1,40 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:36616 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752322AbZKCXt2 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47437 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932107AbZKLDaP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 18:49:28 -0500
-Date: Tue, 3 Nov 2009 23:48:35 +0000
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>
-Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project
- tree
-Message-ID: <20091103234835.3042f7b5@lxorguk.ukuu.org.uk>
-In-Reply-To: <200911032334.40547.bzolnier@gmail.com>
-References: <200911031951.05235.bzolnier@gmail.com>
-	<200911032244.11946.bzolnier@gmail.com>
-	<200911032301.32907.IvDoorn@gmail.com>
-	<200911032334.40547.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 11 Nov 2009 22:30:15 -0500
+Date: Wed, 11 Nov 2009 22:20:45 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Zheng, Jeff" <jeff.zheng@intel.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"wifi-test-devel@lists.sourceforge.net"
+	<wifi-test-devel@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Subject: Re: [ANNOUNCE] wifi-test 1.0 released
+Message-ID: <20091112032045.GA1489@tuxdriver.com>
+References: <154E55ADF9629D4E8D13F08BF92ABEB63FDC983366@PDSMSX501.ccr.corp.intel.com> <20091111152214.GG4392@tuxdriver.com> <154E55ADF9629D4E8D13F08BF92ABEB63FDC98336B@PDSMSX501.ccr.corp.intel.com> <43e72e890911110931l893b90dta2d5806d10189925@mail.gmail.com> <20091111183643.GJ4392@tuxdriver.com> <154E55ADF9629D4E8D13F08BF92ABEB63FDC9833D2@PDSMSX501.ccr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <154E55ADF9629D4E8D13F08BF92ABEB63FDC9833D2@PDSMSX501.ccr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > Yeah I know that. But like I said, I still needed to get around to do that,
-> > and I am very happy you were interested in fixing it.
+On Thu, Nov 12, 2009 at 10:35:52AM +0800, Zheng, Jeff wrote:
+> >Hey, good idea...maybe something for an openwrt AP... :-)
+> >
 > 
-> Lets make one thing clear: YOU SHOULD BE THE ONE FIXING IT.
+> Hi Linville,
+> 
+> Do you mean that I configure openwrt AP without remote login?
+ 
+No, not necessarily.  I was suggesting that an openwrt API might be
+a good target for your test setup.  They are more commonly available
+than "enterprisey" stuff from Cisco. :-)
 
-Really - you have a service and support contract with Ivo.. no i thought
-not.
+> We have script to configure asus AP using nvram after remote login.
 
+Cool...
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
