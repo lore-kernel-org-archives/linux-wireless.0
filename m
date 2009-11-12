@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:47150 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755534AbZKIXrN (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:33200 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759976AbZKLCg3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 18:47:13 -0500
-Received: by mail-ew0-f228.google.com with SMTP id 28so3974559ewy.18
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 15:47:18 -0800 (PST)
-From: Rui Paulo <rpaulo@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Rui Paulo <rpaulo@gmail.com>,
-	Javier Cardona <javier@cozybit.com>
-Subject: [PATCH v2 06/20] mac80211: update the format of path selection frames
-Date: Mon,  9 Nov 2009 23:46:44 +0000
-Message-Id: <1257810418-30075-7-git-send-email-rpaulo@gmail.com>
-In-Reply-To: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
-References: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
+	Wed, 11 Nov 2009 21:36:29 -0500
+From: "Zheng, Jeff" <jeff.zheng@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "wifi-test-devel@lists.sourceforge.net"
+	<wifi-test-devel@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Date: Thu, 12 Nov 2009 10:35:52 +0800
+Subject: RE: [ANNOUNCE] wifi-test 1.0 released
+Message-ID: <154E55ADF9629D4E8D13F08BF92ABEB63FDC9833D2@PDSMSX501.ccr.corp.intel.com>
+References: <154E55ADF9629D4E8D13F08BF92ABEB63FDC983366@PDSMSX501.ccr.corp.intel.com>
+ <20091111152214.GG4392@tuxdriver.com>
+ <154E55ADF9629D4E8D13F08BF92ABEB63FDC98336B@PDSMSX501.ccr.corp.intel.com>
+ <43e72e890911110931l893b90dta2d5806d10189925@mail.gmail.com>
+ <20091111183643.GJ4392@tuxdriver.com>
+In-Reply-To: <20091111183643.GJ4392@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update the format of path selection frames according to latest
-draft (3.03).
+>Hey, good idea...maybe something for an openwrt AP... :-)
+>
 
-Signed-off-by: Rui Paulo <rpaulo@gmail.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
-Tested-by: Brian Cavagnolo <brian@cozybit.com>
----
- net/mac80211/mesh.h      |    1 +
- net/mac80211/mesh_hwmp.c |    2 +-
- 2 files changed, 2 insertions(+), 1 deletions(-)
+Hi Linville,
 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 536d5c0..2fd3e20 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -208,6 +208,7 @@ struct mesh_rmc {
- /* Pending ANA approval */
- #define MESH_PLINK_CATEGORY	30
- #define MESH_PATH_SEL_CATEGORY	32
-+#define MESH_PATH_SEL_ACTION	0
+Do you mean that I configure openwrt AP without remote login?
+
+We have script to configure asus AP using nvram after remote login.
+
+Bests
+Jeff
  
- /* Public interfaces */
- /* Various */
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 29b82e9..c291cdb 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -105,7 +105,7 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
- 	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
- 	/* BSSID is left zeroed, wildcard value */
- 	mgmt->u.action.category = MESH_PATH_SEL_CATEGORY;
--	mgmt->u.action.u.mesh_action.action_code = action;
-+	mgmt->u.action.u.mesh_action.action_code = MESH_PATH_SEL_ACTION;
- 
- 	switch (action) {
- 	case MPATH_PREQ:
--- 
-1.5.6.5
 
