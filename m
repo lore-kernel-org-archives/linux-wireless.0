@@ -1,45 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:45412 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752502AbZK3RcH (ORCPT
+Received: from hogsmeade.leitwerk.net ([217.28.96.50]:55945 "EHLO
+	hogsmeade.leitwerk.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751362AbZKLHrk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2009 12:32:07 -0500
-Date: Mon, 30 Nov 2009 18:32:13 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: "John W. Linville" <linville@tuxdriver.com>,
+	Thu, 12 Nov 2009 02:47:40 -0500
+From: Simon Raffeiner <sturmflut@lieberbiber.de>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Subject: Re: Looking for the datasheet of zd1211rw...
+Date: Thu, 12 Nov 2009 08:47:44 +0100
+Cc: tomas zheng <tomaswlan.zheng@gmail.com>,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH 05/11] mwl8k: initialize the mwl8k_info_tbl table using the MWL* enums
-Message-ID: <20091130173213.GU20214@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+References: <1d91afb90911112231n54696c5fh950ba0102740d444@mail.gmail.com> <45e8e6c40911112302s7c5c3e5cq496289512410ecba@mail.gmail.com>
+In-Reply-To: <45e8e6c40911112302s7c5c3e5cq496289512410ecba@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200911120847.44150.sturmflut@lieberbiber.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Am Donnerstag, 12. November 2009 08:02:36 schrieben Sie:
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index df26414..c1ce985 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -3268,14 +3268,14 @@ enum {
- };
- 
- static struct mwl8k_device_info mwl8k_info_tbl[] __devinitdata = {
--	{
-+	[MWL8687] = {
- 		.part_name	= "88w8687",
- 		.helper_image	= "mwl8k/helper_8687.fw",
- 		.fw_image	= "mwl8k/fmimage_8687.fw",
- 		.rxd_ops	= &rxd_8687_ops,
- 		.modes		= BIT(NL80211_IFTYPE_STATION),
- 	},
--	{
-+	[MWL8366] = {
- 		.part_name	= "88w8366",
- 		.helper_image	= "mwl8k/helper_8366.fw",
- 		.fw_image	= "mwl8k/fmimage_8366.fw",
--- 
-1.5.6.4
+> It looks like a Marvell device (and therefore not a zd1211) from what
+> you posted.
+
+It is a Marvell Libertas device, but it seems the USB ID is not claimed by the existing drivers ("libertas" and "libertas_tf").
+
+regards
+Simon Raffeiner
