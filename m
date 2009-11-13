@@ -1,83 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dmz4.indranet.co.nz ([203.97.93.68]:53422 "EHLO
-	mail.indranet.co.nz" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S932384AbZKDVM0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 16:12:26 -0500
-Date: Thu, 5 Nov 2009 10:01:39 +1300 (NZDT)
-From: Derek Smithies <derek@indranet.co.nz>
-To: Christian Lamparter <chunkeey@googlemail.com>
-cc: Adam Wozniak <awozniak@irobot.com>, linux-wireless@vger.kernel.org,
-	nbd@openwrt.org
-Subject: Re: compat-wireless and minstrel
-In-Reply-To: <200911041653.33737.chunkeey@googlemail.com>
-Message-ID: <alpine.DEB.2.00.0911050951000.16407@kauri.acheron.indranet.co.nz>
-References: <4AF0D54D.4090303@irobot.com> <200911041653.33737.chunkeey@googlemail.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:31482 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932204AbZKMT4n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Nov 2009 14:56:43 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Ben Cahill <ben.m.cahill@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 07/16] iwl3945: Reset saved POWER_TABLE_CMD in "up"
+Date: Fri, 13 Nov 2009 11:56:29 -0800
+Message-Id: <1258142198-3223-8-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
+References: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-On Wed, 4 Nov 2009, Christian Lamparter wrote:
+From: Ben Cahill <ben.m.cahill@intel.com>
 
-> On Wednesday 04 November 2009 02:13:49 Adam Wozniak wrote:
->> I have two systems under test, both Dell laptops (a Latitude D630 and an
->> Inspiron 600m) both running Ubuntu 9.10 with the latest updates, and
->> bleeding edge compat-wireless-2009-11-02.  I'm using identical AR9170
->> based D-Link DWA-160 USB 802.11adapters.  I'm using nuttcp to measure
->> throughput.  I'm running in ad-hoc mode.  Both machines have the same
->> ar9170 files in /lib/firmware.  The machines are sitting about 5 feet
->> apart in my office.
->>
->> I'm having occasional problems where throughput drops through the floor
->> (0.5Mbps - 1.5Mbps).  When I cat
->> /sys/kernel/debug/ieee80211/*/stations/*/rc_stats, one of the machines
->> lists the full set of rates, but the other only lists 1M and 54M.  After
->> a period of time, that machine drops 54M and lists only one rate
->> (1Mbps), and the throughput listed by nuttcp drops accordingly.  I
->> assume that, for whatever reason, the rates drop off the list and
->> minstrel uses the only one left available to it.
->>
->> If I modify include/net/mac80211.h and force the inline function
->> rate_supported to always return 1, this fixes the problem.  However, I
->> think this is a band aid around some other issue.
->>
->> Any clues or ideas what the real issue might be here?
+Power-saving logic will not re-issue a POWER_TABLE_CMD if a new command
+matches the prior one.  This can be bad if we re-start the device due to
+e.g. uCode error; the new POWER_TABLE_CMD (required to invoke power-saving)
+may match the prior POWER_TABLE_CMD issued before the uCode error.
 
-My guess::
+Ensure the POWER_TABLE_CMD is sent to device when uCode is up.
 
-When an adhoc node (call it A) merges with a second adhoc node (call it 
-B) there is a capability comparison.
-Node A looks at the rates supported by B and says,
-   "I must only transmit at rates supported by B"
+Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Some management frames don't contain a full report of the rates supported 
-by the sender.
-My view is that node A (in this example) is incorrectly determining that B 
-only supports the 1mb/sec rate. Consequently, node A fills the 
-rate_supported  array with one rate - 1mb/sec.
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 1e05c91..4325dbf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2494,7 +2494,7 @@ static void iwl3945_alive_start(struct iwl_priv *priv)
+ 	priv->active_rate = priv->rates_mask;
+ 	priv->active_rate_basic = priv->rates_mask & IWL_BASIC_RATES_MASK;
+ 
+-	iwl_power_update_mode(priv, false);
++	iwl_power_update_mode(priv, true);
+ 
+ 	if (iwl_is_associated(priv)) {
+ 		struct iwl3945_rxon_cmd *active_rxon =
+-- 
+1.5.6.3
 
-=====
-
-There is no evidence that Minstrel is doing anything wrong.
-
-The original poster's report of examining
->> /sys/kernel/debug/ieee80211/*/stations/*/rc_stats
-is very important, as it shows exactly what minstrel is doing.
-
-When examining network problems, one should always check the rc_stats 
-file. This tells you much about what is going on in the radio medium.
-
-Derek.
-
-Derek Smithies Ph.D. 
-IndraNet Technologies Ltd. 
-ph +64 3 365 6485 
-Web: http://www.indranet-technologies.com/
-
-"The only thing IE should be used for is to download Fire Fox"
-
-"My favorite language is call STAR. It's extremely concise. It has
-  exactly one verb '*', which does exactly what I want at the moment."
-     --Larry Wall
