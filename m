@@ -1,71 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:27846 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760659AbZKZPJw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 10:09:52 -0500
-Subject: [PATCH 10/12] wl1251: implement WMM
+Received: from mga02.intel.com ([134.134.136.20]:31482 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932223AbZKMT4d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Nov 2009 14:56:33 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
-From: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 26 Nov 2009 17:09:32 +0200
-Message-ID: <20091126150932.917.68930.stgit@tikku>
-In-Reply-To: <20091126150141.917.35278.stgit@tikku>
-References: <20091126150141.917.35278.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 00/16] iwlwifi updates 11/13/2009
+Date: Fri, 13 Nov 2009 11:56:22 -0800
+Message-Id: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
 
-Now that necessary commands for WMM are implemented, implement queue handling
-for WMM. But WMM is not enabled yet, only one queue is used.
+Ben M Cahill (2):
+  iwl3945: Reset saved POWER_TABLE_CMD in "up"
+  iwlwifi: Add comments about CSR registers
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
-Reviewed-by: Janne Ylalehto <janne.ylalehto@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1251_main.c |    2 +-
- drivers/net/wireless/wl12xx/wl1251_tx.c   |    8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+Daniel C Halperin (2):
+  iwlwifi: fix bugs in beacon configuration
+  iwlwifi: make iwlwifi send beacons
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index 253706c..e1c4dd3 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -1300,7 +1300,7 @@ static int wl1251_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 		goto out_sleep;
- 
- 	ret = wl1251_acx_tid_cfg(wl, wl1251_tx_get_queue(queue),
--				 CHANNEL_TYPE_DCF,
-+				 CHANNEL_TYPE_EDCF,
- 				 wl1251_tx_get_queue(queue),
- 				 WL1251_ACX_PS_SCHEME_LEGACY,
- 				 WL1251_ACX_ACK_POLICY_LEGACY);
-diff --git a/drivers/net/wireless/wl12xx/wl1251_tx.c b/drivers/net/wireless/wl12xx/wl1251_tx.c
-index f859706..faa23ef 100644
---- a/drivers/net/wireless/wl12xx/wl1251_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_tx.c
-@@ -167,8 +167,7 @@ static int wl1251_tx_fill_hdr(struct wl1251 *wl, struct sk_buff *skb,
- 	tx_hdr->expiry_time = cpu_to_le32(1 << 16);
- 	tx_hdr->id = id;
- 
--	/* FIXME: how to get the correct queue id? */
--	tx_hdr->xmit_queue = 0;
-+	tx_hdr->xmit_queue = wl1251_tx_get_queue(skb_get_queue_mapping(skb));
- 
- 	wl1251_tx_control(tx_hdr, control, fc);
- 	wl1251_tx_frag_block_num(tx_hdr);
-@@ -237,8 +236,9 @@ static int wl1251_tx_send_packet(struct wl1251 *wl, struct sk_buff *skb,
- 
- 	wl1251_mem_write(wl, addr, skb->data, len);
- 
--	wl1251_debug(DEBUG_TX, "tx id %u skb 0x%p payload %u rate 0x%x",
--		     tx_hdr->id, skb, tx_hdr->length, tx_hdr->rate);
-+	wl1251_debug(DEBUG_TX, "tx id %u skb 0x%p payload %u rate 0x%x "
-+		     "queue %d", tx_hdr->id, skb, tx_hdr->length,
-+		     tx_hdr->rate, tx_hdr->xmit_queue);
- 
- 	return 0;
- }
+Johannes Berg (3):
+  iwlwifi: report PS filtered status
+  iwlwifi: add sleep_tx_count ucode station API
+  iwlwifi: handle unicast PS buffering
+
+Reinette Chatre (1):
+  iwlagn: power up device before initializing EEPROM
+
+Wey-Yi Guy (8):
+  iwlwifi: validate enhanced tx power entry
+  iwlwifi: disable coex until implementation ready for 6x50
+  iwlwifi: remove unused parameter from iwl_channel_info
+  iwlwifi: drop non-production PCI-IDs for 6x50 series
+  iwlwifi: remove external reference for non-exist data structure
+  iwlwifi: update reply_statistics_cmd with 'clear' parameter
+  iwlwifi: eliminate the possible 1/2 dBm tx power loss in 6x00 & 6x50 series
+  iwlwifi: align tx/rx statistics debugfs format
+
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    7 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |   22 +++-
+ drivers/net/wireless/iwlwifi/iwl-6000.c     |   34 -----
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |  139 +++++++++++++++++----
+ drivers/net/wireless/iwlwifi/iwl-calib.c    |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h |   38 ++++++-
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   30 ++++--
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-csr.h      |  177 +++++++++++++++++++++++----
+ drivers/net/wireless/iwlwifi/iwl-debug.h    |    1 +
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c  |   54 ++++++---
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |   18 +--
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c   |   75 ++++++++----
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h   |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-power.c    |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-rx.c       |   35 +++---
+ drivers/net/wireless/iwlwifi/iwl-sta.c      |   29 ++---
+ drivers/net/wireless/iwlwifi/iwl-sta.h      |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-tx.c       |   51 ++++++++-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 +-
+ 20 files changed, 532 insertions(+), 200 deletions(-)
 
