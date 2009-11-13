@@ -1,121 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:49986 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751712AbZKCXyh (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:33012 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752121AbZKMFcC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 18:54:37 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project tree
-Date: Wed, 4 Nov 2009 00:46:54 +0100
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>
-References: <200911031951.05235.bzolnier@gmail.com> <200911032334.40547.bzolnier@gmail.com> <14add3d10911031509l328e7674kb625b70250ff30fb@mail.gmail.com>
-In-Reply-To: <14add3d10911031509l328e7674kb625b70250ff30fb@mail.gmail.com>
+	Fri, 13 Nov 2009 00:32:02 -0500
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200911040046.54247.bzolnier@gmail.com>
+In-Reply-To: <1258082571.7715.13.camel@violet>
+References: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
+	 <1258082571.7715.13.camel@violet>
+Date: Fri, 13 Nov 2009 11:02:06 +0530
+Message-ID: <4fb5db50911122132t6ad3b5ccsfc0691a63b9a34ac@mail.gmail.com>
+Subject: Re: [patch 0/1] Adding radio type FM
+From: Janakiram Sistla <janakiram.sistla@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 04 November 2009 00:09:02 Gertjan van Wingerde wrote:
-> On Tue, Nov 3, 2009 at 11:34 PM, Bartlomiej Zolnierkiewicz
-> <bzolnier@gmail.com> wrote:
-> > On Tuesday 03 November 2009 23:01:32 Ivo van Doorn wrote:
-> >> > > > The following patch series (against wireless-next) addresses issues raised
-> >> > > > during code review and subsequently rejected by rt2x00/wireless/networking
-> >> > > > maintainers.
-> >> > >
-> >> > > Really stop reading only the half of emails, try reading it entirely (or at least don't
-> >> > > stop at the second word in a sentence). It really starts the bug me to repeat
-> >> > > myself over and over again because you refuse to read.
-> >> > >
-> >> > > Your comments during code review were ACCEPTED with the only remark that
-> >> > > it shouldn't be done right here and now.
-> >> >
-> >> > Please stop this bullshit.  We have some standards for the upstream code
-> >> > and by being maintainer you have to live up to this standards and make sure
-> >> > that they are respected instead of watering them down yourself..
-> >> >
-> >> > You were not interested even in fixing the headers duplication (it turned
-> >> > out debugging scripts needed only 25 lines of code to be able to work with
-> >> > fixed headers -- 25 LOC in bash scripts used only for debugging instead
-> >> > of 1800 LOC of kernel code).
-> >>
-> >> Yeah I know that. But like I said, I still needed to get around to do that,
-> >> and I am very happy you were interested in fixing it.
+HI Marcel,
+
+Yes as pointed out i am pointing to Toshiba Satellite A305
+notebook.This has an FM key which enables FM.
+
+Regards,
+Ram.
+On 11/13/09, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi Janakiram,
+>
+> > From 1b1493392faeb6702ff364447b135e481930b397 Mon Sep 17 00:00:00 2001
+> > From: Janakiram Sistla <janakiram.sistla@gmail.com>
+> > Date: Fri, 13 Nov 2009 08:16:26 +0530
+> > Subject: [PATCH 1/1] Adding radio type FM
 > >
-> > Lets make one thing clear: YOU SHOULD BE THE ONE FIXING IT.
+> > Adding radio type FM in RFKILL_TYPE_.FM also belongs to
+> > same class of with both TX/RX capability.
+> > Also Added input type for the above same.
 > >
-> > I'm not in slightest interested in wasting my time on such
-> > things and educating some maintainers about basics.
+> > Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
+> > ---
+> >  include/linux/input.h  |    1 +
+> >  include/linux/rfkill.h |    1 +
+> >  net/rfkill/core.c      |    2 ++
+> >  net/rfkill/input.c     |    9 +++++++++
+> >  4 files changed, 13 insertions(+), 0 deletions(-)
 > >
-> > [ Code duplication is bad, mmm'okay?  Just say no, mmm'okay? ]
+> > diff --git a/include/linux/input.h b/include/linux/input.h
+> > index 0ccfc30..f03ae90 100644
+> > --- a/include/linux/input.h
+> > +++ b/include/linux/input.h
+> > @@ -376,6 +376,7 @@ struct input_absinfo {
+> >  #define KEY_DISPLAY_OFF              245     /* display device to off state */
 > >
-> 
-> Bart,
-> 
-> Are you really interested in working with us (the rt2x00 project) in
-> getting the rt2800{pci,usb}
-> drivers in a better shape, or do you just want to continue your
-> ramblings on how bad you
-> think the rt2x00 maintainers, wireless maintainer, and networking
-> maintainer are in your view?
-> 
-> Just continuing these discussions doesn't help a bit as Ivo, John, and
-> David said they disagreed
-> with you on this topic.
-
-I tried explain many times that it is not about what is in MAINTAINERS
-file or what somebody says.
-
-> If you just want to continue with a hostile take-over of the rt2800
-> maintainership, then please
-> let us know that, so that we stop spending time on useless
-
-I fail to see why you see it as a hostile takeover.
-
-I just did what should have been done in the first place (+ I'm going
-to push drivers further in this direction in my tree) and I was always
-pretty clear that once staging drivers become sufficiently cleaned up
-I would start re-basing my efforts on in kernel drivers.
-
-I will be glad to cooperate with you or anyone else from rt2x00 project.
-However I will not spin in some stupid bureaucracy when I see that things
-can be done more effectively.
-
-> discussions, and let John Linville
-> decide how he wants to handle this situation. It would be a shame of
-> the good patches and work
-> you did, but if that's the case, than that's it.
-
-John can just pull my tree in right now since it is based on his tree
-and it would be an immediate improvement over what its in his tree.
-
-It is up to him, or Ivo can also pull my patches into his tree.
-
-You can also decide to throw up my patches completely or re-do them
-for some silly reasons.  I won't be making much noise about it since
-I'll be already on some next patches..
-
-> Otherwise, please focus on the technical contents of the patches and
-> work with us to get
-> these drivers in a better shape.
-
-This is what I'm focused on, if you have any technical arguments w.r.t.
-my patches I'm willing to listen and address them in sensible time
-(if they are valid).  I would also be happy to work with people with any
-patches that they are working on currently.
-
-Thanks.
--- 
-Bartlomiej Zolnierkiewicz
+> >  #define KEY_WIMAX            246
+> > +#define KEY_FM                       247
+> >
+> >  /* Range 248 - 255 is reserved for special needs of AT keyboard driver */
+> >
+> > diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+> > index 3392c59..03f5598 100644
+> > --- a/include/linux/rfkill.h
+> > +++ b/include/linux/rfkill.h
+> > @@ -45,6 +45,7 @@ enum rfkill_type {
+> >       RFKILL_TYPE_WIMAX,
+> >       RFKILL_TYPE_WWAN,
+> >       RFKILL_TYPE_GPS,
+> > +     RFKILL_TYPE_FM,
+> >       NUM_RFKILL_TYPES,
+> >  };
+> >
+> > diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+> > index ba2efb9..b8ac206 100644
+> > --- a/net/rfkill/core.c
+> > +++ b/net/rfkill/core.c
+> > @@ -592,6 +592,8 @@ static const char *rfkill_get_type_str(enum
+> > rfkill_type type)
+> >               return "wwan";
+> >       case RFKILL_TYPE_GPS:
+> >               return "gps";
+> > +     case RRFKILL_TYPE_FM:
+> > +             return "fm";
+> >       default:
+> >               BUG();
+> >       }
+>
+> this part is fine with me.
+>
+> > diff --git a/net/rfkill/input.c b/net/rfkill/input.c
+> > index a7295ad..f51b16d 100644
+> > --- a/net/rfkill/input.c
+> > +++ b/net/rfkill/input.c
+> > @@ -212,6 +212,9 @@ static void rfkill_event(struct input_handle
+> > *handle, unsigned int type,
+> >               case KEY_WIMAX:
+> >                       rfkill_schedule_toggle(RFKILL_TYPE_WIMAX);
+> >                       break;
+> > +             case KEY_FM:
+> > +                     rfkill_schedule_toggle(RFKILL_TYPE_FM);
+> > +                     break;
+> >               }
+> >       } else if (type == EV_SW && code == SW_RFKILL_ALL)
+> >               rfkill_schedule_evsw_rfkillall(data);
+> > @@ -290,6 +293,12 @@ static const struct input_device_id rfkill_ids[] = {
+> >               .keybit = { [BIT_WORD(KEY_UWB)] = BIT_MASK(KEY_UWB) },
+> >       },
+> >       {
+> > +             .flags = INPUT_DEVICE_ID_MATCH_EVBIT |
+> > +                             INPUT_DEVICE_ID_MATCH_KEYBIT,
+> > +             .evbit = { BIT_MASK(EV_KEY) },
+> > +             .keybit = { [BIT_WORD(KEY_UWB)] = BIT_MASK(KEY_UWB) },
+> > +     },
+> > +     {
+> >               .flags = INPUT_DEVICE_ID_MATCH_EVBIT | INPUT_DEVICE_ID_MATCH_KEYBIT,
+> >               .evbit = { BIT_MASK(EV_KEY) },
+> >               .keybit = { [BIT_WORD(KEY_WIMAX)] = BIT_MASK(KEY_WIMAX) },
+>
+> So besides the pointed of the copy-and-paste mistake, I don't think we
+> should be doing this. Unless you point me to hardware that actually has
+> a physical RFKILL button for FM. We also didn't add key define for GPS
+> since there is no hardware that has this.
+>
+> If you think you need this for some weird handling then go one step back
+> and read the re-written RFKILL subsystem design.
+>
+> Regards
+>
+> Marcel
+>
+>
+>
