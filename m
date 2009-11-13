@@ -1,64 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f42.google.com ([209.85.160.42]:50616 "EHLO
-	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750837AbZKIS65 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 13:58:57 -0500
-Received: by pwi3 with SMTP id 3so793402pwi.21
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 10:59:02 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87ocncdrfz.fsf@purkki.valot.fi>
-References: <4AF6C7CD.7060108@web.de> <878wehf85v.fsf@purkki.valot.fi>
-	 <4AF6CC02.8080204@web.de> <m3639k9kq4.wl%holgerschurig@gmail.com>
-	 <87ocncdrfz.fsf@purkki.valot.fi>
-Date: Mon, 9 Nov 2009 10:52:30 -0800
-Message-ID: <fd145f7d0911091052m187aad9dh6c03f593a2580067@mail.gmail.com>
-Subject: Re: ar9170 in AP mode
-From: Jeffrey Baker <jwbaker@gmail.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:43660 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932277AbZKMT4l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Nov 2009 14:56:41 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 05/16] iwlwifi: remove external reference for non-exist data structure
+Date: Fri, 13 Nov 2009 11:56:27 -0800
+Message-Id: <1258142198-3223-6-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
+References: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 9, 2009 at 12:37 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
-> Holger Schurig <holgerschurig@googlemail.com> writes:
->
->>> How common is the combination of powersaving and mcast in practice?
->>> Given that quite a few useful scenarios are blocked right now (unless
->>> you know what to patch), I would at least vote for a config option or a
->>> module parameter. That gives a chance to warn the user about this
->>> limitation without locking out people that are no hackers.
->>
->> In my case (hand-help devices) it's very common. Without power-save,
->> the battery would be drained so fast it wouldn't be usable.
->
-> Yes, just to give a concrete example of n810 wlan idle case
-> (associated, but no data transfered):
->
-> ps off  7 hours
-> ps on   7 days
->
-> Huge difference.
->
->> And with power-save and an AP that can't handle this, you'd get
->> weird errors.
->
-> Exactly. These kinds of errors are very difficult for the users to
-> understand.
->
->> So, I personally prefer to have "Do an AP right" or "Don't do it at
->> all". But please no general enablement.
->>
->> But, for example, having some CONFIG_AR9K_AP_MODE depending on
->> CONFIG_EXPERIMENTAL and a bit fat warning would do for me. Hopefully
->> this would scara away distros, so that they don't turn this on for
->> there standard kernel :-)
->
-> I think EXPERIMENTAL is not enough, I would prefer that the user needs
-> to patch the driver to enable it. Or if that's not good enough, then
-> maybe depend on BROKEN.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Is this broken on all ar9k or just the 9170?
+Number of data structure for 6000 series no longer in production, the
+data structure already being removed; also need to remove the external
+reference define in iwl-dev.h
 
--jwb
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 273adee..774a315 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -55,9 +55,6 @@ extern struct iwl_cfg iwl5350_agn_cfg;
+ extern struct iwl_cfg iwl5100_bg_cfg;
+ extern struct iwl_cfg iwl5100_abg_cfg;
+ extern struct iwl_cfg iwl5150_agn_cfg;
+-extern struct iwl_cfg iwl6000h_2agn_cfg;
+-extern struct iwl_cfg iwl6000h_2abg_cfg;
+-extern struct iwl_cfg iwl6000h_2bg_cfg;
+ extern struct iwl_cfg iwl6000i_2agn_cfg;
+ extern struct iwl_cfg iwl6000i_2abg_cfg;
+ extern struct iwl_cfg iwl6000i_2bg_cfg;
+-- 
+1.5.6.3
+
