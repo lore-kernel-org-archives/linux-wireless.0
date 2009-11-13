@@ -1,60 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:58797 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755374AbZKBRcQ (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:60766 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755887AbZKMRS6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 12:32:16 -0500
+	Fri, 13 Nov 2009 12:18:58 -0500
 MIME-Version: 1.0
-In-Reply-To: <20091102170114.GE14046@tuxdriver.com>
-References: <1256886023.3555.5.camel@johannes.local>
-	 <20091030110616.GB6150@ff.dom.local>
-	 <20091030150223.GA2586@tuxdriver.com> <20091102091038.GA9044@elte.hu>
-	 <1257153807.3555.173.camel@johannes.local>
-	 <20091102100702.GA16963@elte.hu>
-	 <20091102170114.GE14046@tuxdriver.com>
-Date: Mon, 2 Nov 2009 17:32:18 +0000
-Message-ID: <efe7343f0911020932l21a570c8u9478568329d38e2c@mail.gmail.com>
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-From: Luis Correia <luis.f.correia@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ingo Molnar <mingo@elte.hu>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4e5e476b0911100412yb51d472r24be8b2068204348@mail.gmail.com>
+References: <1257537660-5301-1-git-send-email-lrodriguez@atheros.com>
+	<200911072152.57596.trenn@suse.de> <4AF5F47C.5000402@linux.intel.com>
+	<200911072347.05786.trenn@suse.de> <4AF5FBC7.9000105@linux.intel.com>
+	<43e72e890911090832v1c809482yde7e767502271376@mail.gmail.com>
+	<4e5e476b0911100412yb51d472r24be8b2068204348@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 13 Nov 2009 09:18:43 -0800
+Message-ID: <43e72e890911130918v5a4c4fabt2deda5a4ab75ff5@mail.gmail.com>
+Subject: Re: [PATCH] cpu-freq: add troubleshooting section for FSB changes
+To: Corrado Zoccolo <czoccolo@gmail.com>
+Cc: Arjan van de Ven <arjan@linux.intel.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Aeolus Yang <Aeolus.Yang@atheros.com>,
+	Jonathan May <Jonathan.May@atheros.com>,
+	Thomas Renninger <trenn@suse.de>, davej@redhat.com,
+	cpufreq@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Matthew Garrett <mjg@redhat.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Amod Bodas <Amod.Bodas@atheros.com>,
+	David Quan <David.Quan@atheros.com>,
+	Kishore Jotwani <Kishore.Jotwani@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[huge snip]
+On Tue, Nov 10, 2009 at 4:12 AM, Corrado Zoccolo <czoccolo@gmail.com> wrote:
+> Hi,
+> On Mon, Nov 9, 2009 at 5:32 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>
+>> And we tested this (reducing the min cpu freq to one less than the
+>> highest supported P state to avoid an FSB speed change) and it seems
+>> doing the steps described here did not fix the issue. But at least now
+>> if anyone else wants to verify this they can with some sort of
+>> documentaiton.
+>>
+>> So to confirm though -- we are seeing a huge performance depredation
+>> mainly on RX on an Intel Pine Trail platform with SpeedStep enabled on
+>> the BIOS.
+>>
+>> Let me get into the specifics in case anyone is able to help. The
+>> issue is with ath9k on RX and the CPU on C3 state requesting DMA over
+>> PCI-E. We typically would get about 110 Mbps with an AR9285 (single
+>> stream) but when SpeedStep is enabled it goes down to 25 Mbps. At the
+>> PCI-E level we are seeing huge latencies introduced when SpeedStep is
+>> used for DMA requests to the Intel root complex on the Intel Pine
+>> trail platform. Latencies are about 20-60 us.
+>
+> You mentioned speedstep and cpufreq, but the problem is with C3 state
+> and cpuidle (probably the BIOS mixes the two concepts, but we should
+> keep them separated).
+> C3 is not related to the core or FSB frequency, it is an idle state.
+> When in C3, the CPU is not ready to perform any operation, not just
+> slower, and depending on the CPU hw, it may take several us to wake up
+> (even 85us, on an Atom).
+>
+>>
+>> Is there a timeout threshold change that will cause the Intel chipset
+>> wait for some time after completion before going into a C3 state? Are
+>> there any other explanations for seeing such huge latencies on C3
+>> state?
+> There is a patch from Arjan for the cpuidle menu governor, that may fix it.
+> http://linux.derkeiler.com/Mailing-Lists/Kernel/2009-09/msg05276.html
+> It is already present in 2.6.32.
 
-This is going to be my last reply to this thread (even if I get to be insulted).
+Thanks all for your feedback -- this was determined to be a BIOS bug
+:) Anyway, hope you do consider the patch for inclusion.
 
-I'm not a coder, I'm a tester and administrator for the rt2x00 project.
-I'm not happy about the current state of the rt2x00 in-kernel drivers.
-I tend to agree that more could be done.
-
-Even though I'm not a coder, I could be hipotetically responsable for
-the current situation. It is my job function to motivate people to
-work on the rt2x00 in-kernel drivers, but apparently I've failed here.
-It's not an atitude problem, as some have suggested, it's just life.
-
-About Bartlomiej, there is only one more thing that I'll say:
-
-I've searched on my GMail archives and the only patch Bart has
-provided so far for the rt2x00 project is this:
-
-[PATCH] MAINTAINERS: rt2x00 list is moderated
-
-Which, while technically correct, adds nothing to the project.
-
-So, I will personally continue to ignore Bart's comments, regards and
-rants, until he provides patches for rt2x00 that actually make the
-driver better.
-
-Luis Correia
-rt2x00 project admin,
-(but not writing this email as an official project statement)
+  Luis
