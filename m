@@ -1,63 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45917 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752444AbZKSK5D (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:49599 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756701AbZKMSTO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2009 05:57:03 -0500
-Subject: Re: scanning question
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chuck Tuffli <ctuffli@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <8999a3120911181742y364c763j3b5b88e50890332c@mail.gmail.com>
-References: <8999a3120911181742y364c763j3b5b88e50890332c@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-BFu1m9MPKmtoNeEzhjQa"
-Date: Thu, 19 Nov 2009 11:56:37 +0100
-Message-ID: <1258628197.7094.3.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 13 Nov 2009 13:19:14 -0500
+MIME-Version: 1.0
+In-Reply-To: <4fb5db50911122132t6ad3b5ccsfc0691a63b9a34ac@mail.gmail.com>
+References: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
+	 <1258082571.7715.13.camel@violet>
+	 <4fb5db50911122132t6ad3b5ccsfc0691a63b9a34ac@mail.gmail.com>
+Date: Fri, 13 Nov 2009 23:49:18 +0530
+Message-ID: <4fb5db50911131019x51b88cdevba3d61648b83143c@mail.gmail.com>
+Subject: Re: [patch 0/1] Adding radio type FM
+From: Janakiram Sistla <janakiram.sistla@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Marcel,
 
---=-BFu1m9MPKmtoNeEzhjQa
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Let me know if this patch can go ahead...........and i can go ahead
+with this in rfkill utility.......
 
-On Wed, 2009-11-18 at 17:42 -0800, Chuck Tuffli wrote:
-> I'm implementing a mac80211 driver and have a question about the
-> expected behavior during software based scanning. Can the driver
-> assume that mac80211 won't start a scan until all previous TX
-> complete? If not, what is the expected behavior of the driver? Finish
-> current TX before starting the scan? Drop current TX? Something else?
-> TIA!
+Regards,
+Ram.
 
-No, you can't assume that right now, unfortunately. We've been wanting
-to implement a flush_tx() callback for a long time now but nobody did so
-far. Some drivers might flush in the pre_scan() callback, but I think
-that isn't actually correct because the nullfunc frame we might send
-might pass other frames on the hw queues/fifos.
-
-johannes
-
---=-BFu1m9MPKmtoNeEzhjQa
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLBSRiAAoJEODzc/N7+QmaUL8P/2HVjadAfBnhv9eH3m1Cj/4+
-IT8RPjzCZlTXAXhUZmVZ7nr+rKxBYl4fVeLGQG+8UHmYeX6itMQC+z8EP0PQkUUc
-TA61ySyFxRqWmnw9npzFY1wJn23Pgy0u2VgoyjPpTUR8nJe3QJONfU/d3rFfoC+x
-+m4LQi69dHMssKoZr9rxoyszzWN5IFR3MMiDuRt/4/qfJ/jZ2LuwQvbtMpJZolty
-nUpgs7GDHWk8IKqP87jQC2dayv0BgWERR6wyNRdtCtuyA+4dI58vFyt07itSEllt
-Dt7p7Kb/FZfuqEAKoITMM5CIrftSIr+AqZptCWoXHJvOYXrY+QAm9vYxdFHaDN00
-wykodMJm6Te1s4Lroe+iQhA8hEHB0G2YZ7+QbEE8M4BEkM0bRY6g62XA2FNPDkQT
-MQpO13shUj7UT6czR03t5E89i1yCTmI3Bwa82mbtg7u/xg3br1f6ao/xx9AMdAc/
-xb4zbbNHpvBjioY1qDD9CBz9fR+V9LyLrZ6pk3n/bU62K0yor4KP/l2ZiRH0ueM+
-eOfkHbD1gl/VZklNNlvV4bY4hkHU9yH1rNIDGfhnUDGcXWCXZfKAywV4jfcvBnfX
-At1xUQAOTV7fSL6twGdqLUhMkn4Vlz69XIa0+en3vdhu7gQ0+Dq7htK86JkhMj0D
-8fdEEs7HtI+nsPyDkGn4
-=mz1s
------END PGP SIGNATURE-----
-
---=-BFu1m9MPKmtoNeEzhjQa--
-
+On Fri, Nov 13, 2009 at 11:02 AM, Janakiram Sistla
+<janakiram.sistla@gmail.com> wrote:
+> HI Marcel,
+>
+> Yes as pointed out i am pointing to Toshiba Satellite A305
+> notebook.This has an FM key which enables FM.
+>
+> Regards,
+> Ram.
+> On 11/13/09, Marcel Holtmann <marcel@holtmann.org> wrote:
+>> Hi Janakiram,
+>>
+>> > From 1b1493392faeb6702ff364447b135e481930b397 Mon Sep 17 00:00:00 2001
+>> > From: Janakiram Sistla <janakiram.sistla@gmail.com>
+>> > Date: Fri, 13 Nov 2009 08:16:26 +0530
+>> > Subject: [PATCH 1/1] Adding radio type FM
+>> >
+>> > Adding radio type FM in RFKILL_TYPE_.FM also belongs to
+>> > same class of with both TX/RX capability.
+>> > Also Added input type for the above same.
+>> >
+>> > Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
+>> > ---
+>> >  include/linux/input.h  |    1 +
+>> >  include/linux/rfkill.h |    1 +
+>> >  net/rfkill/core.c      |    2 ++
+>> >  net/rfkill/input.c     |    9 +++++++++
+>> >  4 files changed, 13 insertions(+), 0 deletions(-)
+>> >
+>> > diff --git a/include/linux/input.h b/include/linux/input.h
+>> > index 0ccfc30..f03ae90 100644
+>> > --- a/include/linux/input.h
+>> > +++ b/include/linux/input.h
+>> > @@ -376,6 +376,7 @@ struct input_absinfo {
+>> >  #define KEY_DISPLAY_OFF              245     /* display device to off state */
+>> >
+>> >  #define KEY_WIMAX            246
+>> > +#define KEY_FM                       247
+>> >
+>> >  /* Range 248 - 255 is reserved for special needs of AT keyboard driver */
+>> >
+>> > diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+>> > index 3392c59..03f5598 100644
+>> > --- a/include/linux/rfkill.h
+>> > +++ b/include/linux/rfkill.h
+>> > @@ -45,6 +45,7 @@ enum rfkill_type {
+>> >       RFKILL_TYPE_WIMAX,
+>> >       RFKILL_TYPE_WWAN,
+>> >       RFKILL_TYPE_GPS,
+>> > +     RFKILL_TYPE_FM,
+>> >       NUM_RFKILL_TYPES,
+>> >  };
+>> >
+>> > diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+>> > index ba2efb9..b8ac206 100644
+>> > --- a/net/rfkill/core.c
+>> > +++ b/net/rfkill/core.c
+>> > @@ -592,6 +592,8 @@ static const char *rfkill_get_type_str(enum
+>> > rfkill_type type)
+>> >               return "wwan";
+>> >       case RFKILL_TYPE_GPS:
+>> >               return "gps";
+>> > +     case RRFKILL_TYPE_FM:
+>> > +             return "fm";
+>> >       default:
+>> >               BUG();
+>> >       }
+>>
+>> this part is fine with me.
+>>
+>> > diff --git a/net/rfkill/input.c b/net/rfkill/input.c
+>> > index a7295ad..f51b16d 100644
+>> > --- a/net/rfkill/input.c
+>> > +++ b/net/rfkill/input.c
+>> > @@ -212,6 +212,9 @@ static void rfkill_event(struct input_handle
+>> > *handle, unsigned int type,
+>> >               case KEY_WIMAX:
+>> >                       rfkill_schedule_toggle(RFKILL_TYPE_WIMAX);
+>> >                       break;
+>> > +             case KEY_FM:
+>> > +                     rfkill_schedule_toggle(RFKILL_TYPE_FM);
+>> > +                     break;
+>> >               }
+>> >       } else if (type == EV_SW && code == SW_RFKILL_ALL)
+>> >               rfkill_schedule_evsw_rfkillall(data);
+>> > @@ -290,6 +293,12 @@ static const struct input_device_id rfkill_ids[] = {
+>> >               .keybit = { [BIT_WORD(KEY_UWB)] = BIT_MASK(KEY_UWB) },
+>> >       },
+>> >       {
+>> > +             .flags = INPUT_DEVICE_ID_MATCH_EVBIT |
+>> > +                             INPUT_DEVICE_ID_MATCH_KEYBIT,
+>> > +             .evbit = { BIT_MASK(EV_KEY) },
+>> > +             .keybit = { [BIT_WORD(KEY_UWB)] = BIT_MASK(KEY_UWB) },
+>> > +     },
+>> > +     {
+>> >               .flags = INPUT_DEVICE_ID_MATCH_EVBIT | INPUT_DEVICE_ID_MATCH_KEYBIT,
+>> >               .evbit = { BIT_MASK(EV_KEY) },
+>> >               .keybit = { [BIT_WORD(KEY_WIMAX)] = BIT_MASK(KEY_WIMAX) },
+>>
+>> So besides the pointed of the copy-and-paste mistake, I don't think we
+>> should be doing this. Unless you point me to hardware that actually has
+>> a physical RFKILL button for FM. We also didn't add key define for GPS
+>> since there is no hardware that has this.
+>>
+>> If you think you need this for some weird handling then go one step back
+>> and read the re-written RFKILL subsystem design.
+>>
+>> Regards
+>>
+>> Marcel
+>>
+>>
+>>
+>
