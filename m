@@ -1,35 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:35053 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757994AbZKDTq5 (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:53772 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932313AbZKMX1O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 14:46:57 -0500
+	Fri, 13 Nov 2009 18:27:14 -0500
+Received: by iwn8 with SMTP id 8so3036112iwn.33
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2009 15:27:20 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20091104173425.28463.74288.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-	 <20091104173425.28463.74288.sendpatchset@localhost.localdomain>
-Date: Wed, 4 Nov 2009 20:47:02 +0100
-Message-ID: <14add3d10911041147v7016eb8egd73e8d2c3bb2f554@mail.gmail.com>
-Subject: Re: [PATCH 20/41] rt2800pci: add rt2800_rf_[read,write]() wrappers
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <200911140023.08161.chunkeey@googlemail.com>
+References: <200911140023.08161.chunkeey@googlemail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 13 Nov 2009 15:27:00 -0800
+Message-ID: <43e72e890911131527t38c8e85ci8bb9824ef0ba7cb4@mail.gmail.com>
+Subject: Re: [RFC] wireless: add BlockAck frame structure
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jouni Malinen <jouni.malinen@atheros.com>,
+	linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 4, 2009 at 6:34 PM, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2800pci: add rt2800_rf_[read,write]() wrappers
->
-> Part of preparations for later code unification.
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
+On Fri, Nov 13, 2009 at 3:23 PM, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+> This patch adds the BlockAck frame structure as described in
+> 802.11n specification section 7.2.1.8.
 
-For what is is worth:
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+No users?
