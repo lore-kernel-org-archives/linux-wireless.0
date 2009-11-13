@@ -1,68 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:58471 "EHLO
-	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757130AbZKWVpF (ORCPT
+Received: from d112a2.x-mailer.de ([212.162.53.4]:37128 "EHLO
+	d112a2.x-mailer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752774AbZKMNum (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 16:45:05 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH v2 3/8] rt2x00: Clean up use of rt2x00_intf_is_pci.
-Date: Mon, 23 Nov 2009 22:44:49 +0100
-Message-Id: <1259012694-14869-4-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1259012694-14869-3-git-send-email-gwingerde@gmail.com>
-References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-2-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-3-git-send-email-gwingerde@gmail.com>
+	Fri, 13 Nov 2009 08:50:42 -0500
+From: Karsten Keil <keil@b1-systems.de>
+To: Dominik Brodowski <linux@dominikbrodowski.net>
+Subject: Re: [PATCH 11/13] pcmcia: pcmcia_request_window() doesn't need a pointer to a pointer
+Date: Fri, 13 Nov 2009 13:21:17 +0100
+Cc: linux-pcmcia@lists.infradead.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
+	Jiri Kosina <jkosina@suse.cz>
+References: <20091111203303.GA7939@comet.dominikbrodowski.net> <1257971899-9274-11-git-send-email-linux@dominikbrodowski.net>
+In-Reply-To: <1257971899-9274-11-git-send-email-linux@dominikbrodowski.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-6"
+Message-Id: <200911131321.17363.keil@b1-systems.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RT chipsets are unique across both PCI and USB busses, and don't overlap.
-Therefore there is no need to test for bus type when only checking for
-chipset type. Remove the redundant checks.
+On Mittwoch, 11. November 2009 21:38:17 Dominik Brodowski wrote:
+> pcmcia_request_window() only needs a pointer to struct pcmcia_device, not
+> a pointer to a pointer.
+> 
+> CC: netdev@vger.kernel.org
+> CC: linux-wireless@vger.kernel.org
+> CC: linux-scsi@vger.kernel.org
+> CC: Jiri Kosina <jkosina@suse.cz>
+> CC: Karsten Keil <isdn@linux-pingi.de>
+> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+> ---
+>  drivers/char/pcmcia/ipwireless/main.c         |    4 ++--
+>  drivers/isdn/hisax/sedlbauer_cs.c             |    2 +-
+For  ISDN 
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Acked-by: Ivo van Doorn <ivdoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   17 +++++++----------
- 1 files changed, 7 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index fcd0c88..02ffcf5 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -217,14 +217,12 @@ void rt2800_mcu_request(struct rt2x00_dev *rt2x00dev,
- {
- 	u32 reg;
- 
--	if (rt2x00_intf_is_pci(rt2x00dev)) {
--		/*
--		* RT2880 and RT3052 don't support MCU requests.
--		*/
--		if (rt2x00_rt(&rt2x00dev->chip, RT2880) ||
--		    rt2x00_rt(&rt2x00dev->chip, RT3052))
--			return;
--	}
-+	/*
-+	 * RT2880 and RT3052 don't support MCU requests.
-+	 */
-+	if (rt2x00_rt(&rt2x00dev->chip, RT2880) ||
-+	    rt2x00_rt(&rt2x00dev->chip, RT3052))
-+		return;
- 
- 	mutex_lock(&rt2x00dev->csr_mutex);
- 
-@@ -1482,8 +1480,7 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 		rt2800_bbp_write(rt2x00dev, 105, 0x05);
- 	}
- 
--	if (rt2x00_intf_is_pci(rt2x00dev) &&
--	    rt2x00_rt(&rt2x00dev->chip, RT3052)) {
-+	if (rt2x00_rt(&rt2x00dev->chip, RT3052)) {
- 		rt2800_bbp_write(rt2x00dev, 31, 0x08);
- 		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
- 		rt2800_bbp_write(rt2x00dev, 80, 0x08);
--- 
-1.6.5.3
-
+Acked-by: Karsten Keil <keil@b1-systems.de>
