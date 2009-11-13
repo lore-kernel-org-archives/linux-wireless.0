@@ -1,73 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emita2.mittwald.de ([85.199.129.253]:49635 "EHLO
-	emita2.mittwald.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753948AbZKEPJ0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2009 10:09:26 -0500
-Received: from mx51.mymxserver.com (mail5101.mittwald.de [172.16.51.1])
-	by emita2.mittwald.de (Postfix) with ESMTP id 598355FD3C1
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2009 15:59:36 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id 776D2148011
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2009 15:59:29 +0100 (CET)
-Received: from mx51.mymxserver.com ([127.0.0.1])
-	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id Pr28YWNzoAj3 for <linux-wireless@vger.kernel.org>;
-	Thu,  5 Nov 2009 15:59:29 +0100 (CET)
-Received: from lin01.mn-solutions.de (pD95FA34E.dip0.t-ipconnect.de [217.95.163.78])
-	by mx51.mymxserver.com (Postfix) with ESMTP id 731FD14800C
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2009 15:59:23 +0100 (CET)
-Received: from mnz66.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with SMTP id 8DD6F1E004F
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Nov 2009 15:59:16 +0100 (CET)
-Date: Thu, 05 Nov 2009 15:59:16 +0100
-Subject: BUG: oops when "rmmod ipw2200"
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org
+Received: from mail.atheros.com ([12.36.123.2]:30004 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754941AbZKMJMh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Nov 2009 04:12:37 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2009 01:12:43 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 1/2] ath9k_hw: Fix possible OOB array indexing in gen_timer_index[] on 64-bit
+Date: Fri, 13 Nov 2009 14:32:39 +0530
+Message-ID: <1258102960-22768-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
-Message-Id: <S1754043AbZKEPJ1/20091105150927Z+225@vger.kernel.org>
 
-This happened on wireless-testing v2.6.32-rc6-41575-g5e68bfb. I
-modprobed ipw2200, put it into monitor mode, used tshark a while to
-monitor, then I stopped tshark, "ifconfig eth2 down" and finally
-"rmmod ipw2200", and voila:
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-[  917.189620] ------------[ cut here ]------------
-[  917.189717] kernel BUG at net/wireless/core.c:543!
-[  917.189805] invalid opcode: 0000 [#1] PREEMPT SMP
-[  917.190002] last sysfs file: /sys/devices/pci0000:00/0000:00:1e.0/0000:02:0d.0/firmware/0000:02:0d.0/loading
-[  917.190136] Modules linked in: lib80211_crypt_wep ipw2200(-) libipw lib80211 ath5k mac80211 ath cfg80211 psmouse uhci_hcd
-[  917.190680]
-[  917.190759] Pid: 1763, comm: rmmod Not tainted (2.6.32-rc6-wl #26) Amilo M1425
-[  917.190886] EIP: 0060:[<f8accf34>] EFLAGS: 00010202 CPU: 0
-[  917.190992] EIP is at wiphy_unregister+0xd3/0x175 [cfg80211]
-[  917.191083] EAX: f601d4c4 EBX: 00000000 ECX: 00000000 EDX: f79e8600
-[  917.191176] ESI: f601d400 EDI: f95b4350 EBP: f6009eb4 ESP: f6009e8c
-[  917.191269]  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
-[  917.191360] Process rmmod (pid: 1763, ti=f6008000 task=f79e8130 task.ti=f6008000)
-[  917.191486] Stack:
-[  917.191562]  f601d5a0 f601d484 f6460e98 f6009ea0 c01407ee f6009eb8 00000246 f64604c0
-[  917.191916] <0> f6460e5c f95b4350 f6009ec0 f94fd030 f6460e98 f6009edc f95a9d4f f787bc00
-[  917.192100] <0> f787bc58 f787bc00 f95b4350 f95b4350 f6009ee8 c0207fca f787bc58 f6009ef8
-[  917.192100] Call Trace:
-[  917.192100]  [<c01407ee>] ? trace_hardirqs_on+0xb/0xd
-[  917.192100]  [<f94fd030>] ? unregister_ieee80211+0xe/0x27 [libipw]
-[  917.192100]  [<f95a9d4f>] ? ipw_pci_remove+0x59/0x227 [ipw2200]
-[  917.192100]  [<c0207fca>] ? pci_device_remove+0x19/0x39
-[  917.192100]  [<c02b93a4>] ? __device_release_driver+0x59/0x9d
-[  917.192100]  [<c02b944f>] ? driver_detach+0x67/0x85
-[  917.192100]  [<c02b88d6>] ? bus_remove_driver+0x69/0x85
-[  917.192100]  [<c02b9878>] ? driver_unregister+0x4d/0x54
-[  917.192100]  [<c02081c3>] ? pci_unregister_driver+0x28/0x71
-[  917.192100]  [<f95a9cf4>] ? ipw_exit+0x1c/0x1e [ipw2200]
-[  917.192100]  [<c0148e2b>] ? sys_delete_module+0x192/0x1ef
-[  917.192100]  [<c0162cdb>] ? remove_vma+0x52/0x58
-[  917.192100]  [<c01028bb>] ? sysenter_exit+0xf/0x18
-[  917.192100]  [<c0102888>] ? sysenter_do_call+0x12/0x36
-[  917.192100] Code: 74 07 e8 81 bc 8c c7 eb c8 8d 55 e0 89 f8 e8 d6 6d 66 c7 8b 45 dc 31 d2 e8 81 cc 8c c7 8d 86 c4 00 00 00 39 86 c4 00 00 00 74 04 <0f> 0b eb fe 8b 45 dc 8d 5e 0c e8 5a cc 8c c7 8b 86 94 03 00 00
-[  917.192100] EIP: [<f8accf34>] wiphy_unregister+0xd3/0x175 [cfg80211] SS:ESP 0068:f6009e8c
-[  917.203718] ---[ end trace bcaaf449945a5100 ]---
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 6d3e314..abaa2f0 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -432,7 +432,7 @@ struct ath9k_hw_version {
+  * Using de Bruijin sequence to to look up 1's index in a 32 bit number
+  * debruijn32 = 0000 0111 0111 1100 1011 0101 0011 0001
+  */
+-#define debruijn32 0x077CB531UL
++#define debruijn32 0x077CB531U
+ 
+ struct ath_gen_timer_configuration {
+ 	u32 next_addr;
+-- 
+1.5.5.1
 
---
-http://www.holgerschurig.de
