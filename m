@@ -1,139 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:17999 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751708AbZKQQuI (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:56074 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755007AbZKMIze (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 11:50:08 -0500
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 16/16] wl1251: add NVS in EEPROM support
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Nov 2009 18:50:09 +0200
-Message-ID: <20091117165008.2236.5592.stgit@tikku>
-In-Reply-To: <20091117164614.2236.8543.stgit@tikku>
-References: <20091117164614.2236.8543.stgit@tikku>
+	Fri, 13 Nov 2009 03:55:34 -0500
+Received: by bwz27 with SMTP id 27so3156106bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2009 00:55:37 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1258097485.3899.76.camel@johannes.local>
+References: <f74418680911120331w1ea31a68y56440dc0fbd253bb@mail.gmail.com>
+	 <40101cc30911120618m5d9acd34pf6aa9ec89c6c40b8@mail.gmail.com>
+	 <20091112154440.GD19349@tux>
+	 <43e72e890911120749n72360f0btfb058ab3a521eabb@mail.gmail.com>
+	 <40101cc30911121118h17db32a1y61edac1a4c0aec24@mail.gmail.com>
+	 <1258054304.3899.36.camel@johannes.local>
+	 <40101cc30911121418h4109d62bv763bed2036446901@mail.gmail.com>
+	 <1258097485.3899.76.camel@johannes.local>
+Date: Fri, 13 Nov 2009 09:55:37 +0100
+Message-ID: <f74418680911130055o7d8fa94brc3fd7a0c315bb7b0@mail.gmail.com>
+Subject: Re: [ath9k-devel] Possible memory leak in ath9k monitor mode
+	injection
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: rodriguez@atheros.com, technoboy85@gmail.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David-John Willis <John.Willis@Distant-earth.com>
+2009/11/13 Johannes Berg <johannes@sipsolutions.net>:
+> On Thu, 2009-11-12 at 23:18 +0100, Matteo Croce wrote:
+>
+>> kmalloc-64 is definitely getting fat
+>
+> Is it the same with ath5k?
+>
+> I don't see any allocations like that in mac80211.
+>
+> johannes
+>
 
-wl1251 supports also that NVS is stored in a separate EEPROM, add support
-for that.
+Yes, I tested ath5k/mac80211 and ath9k/mac80211 and both show the same problem
+whereas madwifi/net80211, tested with the same module, has not memory leak.
 
-kvalo: use platform data instead Kconfig and use kernel style
-
-Signed-off-by: David-John Willis <John.Willis@Distant-earth.com>
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
-
- drivers/net/wireless/wl12xx/wl1251.h      |    1 +
- drivers/net/wireless/wl12xx/wl1251_boot.c |   20 +++++++++++++-------
- drivers/net/wireless/wl12xx/wl1251_reg.h  |    6 ++++++
- drivers/net/wireless/wl12xx/wl1251_spi.c  |    2 ++
- include/linux/spi/wl12xx.h                |    1 +
- 5 files changed, 23 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1251.h b/drivers/net/wireless/wl12xx/wl1251.h
-index a839466..054533f 100644
---- a/drivers/net/wireless/wl12xx/wl1251.h
-+++ b/drivers/net/wireless/wl12xx/wl1251.h
-@@ -269,6 +269,7 @@ struct wl1251 {
- 
- 	void (*set_power)(bool enable);
- 	int irq;
-+	bool use_eeprom;
- 
- 	enum wl1251_state state;
- 	struct mutex mutex;
-diff --git a/drivers/net/wireless/wl12xx/wl1251_boot.c b/drivers/net/wireless/wl12xx/wl1251_boot.c
-index 5094f24..2e733e7 100644
---- a/drivers/net/wireless/wl12xx/wl1251_boot.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_boot.c
-@@ -494,13 +494,19 @@ int wl1251_boot(struct wl1251 *wl)
- 		goto out;
- 
- 	/* 2. start processing NVS file */
--	ret = wl1251_boot_upload_nvs(wl);
--	if (ret < 0)
--		goto out;
--
--	/* write firmware's last address (ie. it's length) to
--	 * ACX_EEPROMLESS_IND_REG */
--	wl1251_reg_write32(wl, ACX_EEPROMLESS_IND_REG, wl->fw_len);
-+	if (wl->use_eeprom) {
-+		wl1251_reg_write32(wl, ACX_REG_EE_START, START_EEPROM_MGR);
-+		msleep(4000);
-+		wl1251_reg_write32(wl, ACX_EEPROMLESS_IND_REG, USE_EEPROM);
-+	} else {
-+		ret = wl1251_boot_upload_nvs(wl);
-+		if (ret < 0)
-+			goto out;
-+
-+		/* write firmware's last address (ie. it's length) to
-+		 * ACX_EEPROMLESS_IND_REG */
-+		wl1251_reg_write32(wl, ACX_EEPROMLESS_IND_REG, wl->fw_len);
-+	}
- 
- 	/* 6. read the EEPROM parameters */
- 	tmp = wl1251_reg_read32(wl, SCR_PAD2);
-diff --git a/drivers/net/wireless/wl12xx/wl1251_reg.h b/drivers/net/wireless/wl12xx/wl1251_reg.h
-index 06e1bd9..0ca3b43 100644
---- a/drivers/net/wireless/wl12xx/wl1251_reg.h
-+++ b/drivers/net/wireless/wl12xx/wl1251_reg.h
-@@ -370,6 +370,7 @@ enum wl12xx_acx_int_reg {
-  EEPROM location specified in the EE_ADDR register.
-  The Wlan hardware hardware clears this bit automatically.
- *===============================================*/
-+#define EE_CTL                              (REGISTERS_BASE + 0x2000)
- #define ACX_EE_CTL_REG                      EE_CTL
- #define EE_WRITE                            0x00000001ul
- #define EE_READ                             0x00000002ul
-@@ -380,6 +381,7 @@ enum wl12xx_acx_int_reg {
-   This register specifies the address
-   within the EEPROM from/to which to read/write data.
-   ===============================================*/
-+#define EE_ADDR                             (REGISTERS_BASE + 0x2008)
- #define ACX_EE_ADDR_REG                     EE_ADDR
- 
- /*===============================================
-@@ -389,8 +391,12 @@ enum wl12xx_acx_int_reg {
-   data from the EEPROM or the write data
-   to be written to the EEPROM.
-   ===============================================*/
-+#define EE_DATA                             (REGISTERS_BASE + 0x2004)
- #define ACX_EE_DATA_REG                     EE_DATA
- 
-+#define EEPROM_ACCESS_TO                    10000   /* timeout counter */
-+#define START_EEPROM_MGR                    0x00000001
-+
- /*===============================================
-   EEPROM Base Address  - 32bit RW
-   ------------------------------------------
-diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
-index 2cf8a21..9cc8c32 100644
---- a/drivers/net/wireless/wl12xx/wl1251_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
-@@ -270,6 +270,8 @@ static int __devinit wl1251_spi_probe(struct spi_device *spi)
- 		return -ENODEV;
- 	}
- 
-+	wl->use_eeprom = pdata->use_eeprom;
-+
- 	ret = request_irq(wl->irq, wl1251_irq, 0, DRIVER_NAME, wl);
- 	if (ret < 0) {
- 		wl1251_error("request_irq() failed: %d", ret);
-diff --git a/include/linux/spi/wl12xx.h b/include/linux/spi/wl12xx.h
-index 11430ca..aed64ed 100644
---- a/include/linux/spi/wl12xx.h
-+++ b/include/linux/spi/wl12xx.h
-@@ -26,6 +26,7 @@
- 
- struct wl12xx_platform_data {
- 	void (*set_power)(bool enable);
-+	bool use_eeprom;
- };
- 
- #endif
-
+Lorenzo
