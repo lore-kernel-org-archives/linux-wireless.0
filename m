@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:44040 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932939AbZKDVvB convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51337 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755111AbZKMDNk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 16:51:01 -0500
-Received: by iwn10 with SMTP id 10so5306544iwn.4
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 13:51:06 -0800 (PST)
+	Thu, 12 Nov 2009 22:13:40 -0500
+Date: Thu, 12 Nov 2009 22:09:50 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Janakiram Sistla <janakiram.sistla@gmail.com>
+Cc: majordomo@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [patch 0/1] Adding radio type FM
+Message-ID: <20091113030950.GB4054@tuxdriver.com>
+References: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4AF1F653.4000905@irobot.com>
-References: <4AF0D54D.4090303@irobot.com> <200911041653.33737.chunkeey@googlemail.com>
-	<alpine.DEB.2.00.0911050951000.16407@kauri.acheron.indranet.co.nz>
-	<200911042242.48991.chunkeey@googlemail.com> <4AF1F653.4000905@irobot.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 4 Nov 2009 13:50:46 -0800
-Message-ID: <43e72e890911041350i75108dc3g454ab8577d8abacd@mail.gmail.com>
-Subject: Re: compat-wireless and minstrel
-To: Adam Wozniak <awozniak@irobot.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	linux-wireless@vger.kernel.org, nbd@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 4, 2009 at 1:46 PM, Adam Wozniak <awozniak@irobot.com> wrote:
->
-> $ ls -la /lib/firmware/ar9170*
-> -rw-r--r-- 1 root root 83968 2009-10-17 15:55 /lib/firmware/ar9170-1.fw
-> -rw-r--r-- 1 root root Â 3508 2009-10-17 15:55 /lib/firmware/ar9170-2.fw
-> -rw-r--r-- 1 root root 15960 2009-10-17 15:55 /lib/firmware/ar9170.fw
->
-> It is unclear to me which are actually used.
+On Fri, Nov 13, 2009 at 08:39:27AM +0530, Janakiram Sistla wrote:
+> From 1b1493392faeb6702ff364447b135e481930b397 Mon Sep 17 00:00:00 2001
+> From: Janakiram Sistla <janakiram.sistla@gmail.com>
+> Date: Fri, 13 Nov 2009 08:16:26 +0530
+> Subject: [PATCH 1/1] Adding radio type FM
+> 
+> Adding radio type FM in RFKILL_TYPE_.FM also belongs to
+> same class of with both TX/RX capability.
+> Also Added input type for the above same.
+> 
+> Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
 
-By default the ar9170.fw is tried first, if that fails then the others
-are tried. The 2-stage firmware will not be tried if your device
-cannot handle it but right now only the AVM Fritz devices can't handle
-the 2-stage firmware.
+> @@ -290,6 +293,12 @@ static const struct input_device_id rfkill_ids[] = {
+>  		.keybit = { [BIT_WORD(KEY_UWB)] = BIT_MASK(KEY_UWB) },
+>  	},
+>  	{
+> +		.flags = INPUT_DEVICE_ID_MATCH_EVBIT |
+> +				INPUT_DEVICE_ID_MATCH_KEYBIT,
+> +		.evbit = { BIT_MASK(EV_KEY) },
+> +		.keybit = { [BIT_WORD(KEY_UWB)] = BIT_MASK(KEY_UWB) },
+> +	},
 
-Christian should we just remove 2-stage fw support?
+Surely this should be KEY_FM?
 
-  Luis
+John
+-- 
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
