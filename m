@@ -1,46 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f215.google.com ([209.85.219.215]:60454 "EHLO
-	mail-ew0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752903AbZK1VIs (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41107 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752987AbZKMOrS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Nov 2009 16:08:48 -0500
-Received: by ewy7 with SMTP id 7so2993584ewy.28
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Nov 2009 13:08:53 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: annotate sleeping driver ops
-References: <1259439566-26397-1-git-send-email-kalle.valo@iki.fi>
-	<1259440583.5428.32.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sat, 28 Nov 2009 23:08:52 +0200
-In-Reply-To: <1259440583.5428.32.camel@johannes.local> (Johannes Berg's message of "Sat\, 28 Nov 2009 21\:36\:23 +0100")
-Message-ID: <87638u8ihn.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 13 Nov 2009 09:47:18 -0500
+Subject: Re: R:Re: [ath9k-devel] Possible memory leak in ath9k monitor mode
+  injection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Matteo Croce <technoboy85@gmail.com>
+Cc: Lorenzo.Bianconi83@gmail.com, linux-wireless@vger.kernel.org,
+	alessandro.erta@gmail.com
+In-Reply-To: <40101cc30911130642j549538cfmac13ebb320d33f7@mail.gmail.com>
+References: <f74418680911130055o7d8fa94brc3fd7a0c315bb7b0@mail.gmail.com>
+	 <0015174c1d0a8aa23304783ef2ae@google.com>
+	 <40101cc30911130642j549538cfmac13ebb320d33f7@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-xkZ69jnKYgvDhYH00xG8"
+Date: Fri, 13 Nov 2009 15:47:20 +0100
+Message-ID: <1258123640.6167.24.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
 
-> On Sat, 2009-11-28 at 22:19 +0200, Kalle Valo wrote:
->> To make it easier to notice cases of calling sleeping ops in atomic context,
->> annotate driver-ops.h with appropiate might_sleep() calls. At the same time,
->> also document in mac80211.h the op functions with missing contexts.
->> 
->> mac80211 doesn't seem to use get_tx_stats anywhere currently. Just to be on
->> the safe side, I documented it to be atomic, but hopefully the op can be
->> removed in the future.
->> 
->> Compile-tested only.
->
-> Nice, thanks. Haven't reviewed it in detail, but I'll trust you :)
->
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+--=-xkZ69jnKYgvDhYH00xG8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for the trust! I'll, just in case, test the patch tomorrow both
-with iwl3945 and wl1251 so that this trust doesn't backfire =)
+On Fri, 2009-11-13 at 15:42 +0100, Matteo Croce wrote:
 
-But first some sleep.
+> > - if (frame_type =3D=3D ATH9K_NOT_INTERNAL)
+> > + if (frame_type =3D=3D ATH9K_NOT_INTERNAL) {
+> > ieee80211_tx_status(hw, skb);
+> > - else
+> > + kfree(tx_info_priv);
+> > + } else
+> > ath9k_tx_status(hw, skb);
+> > }
+>=20
+> What about adding that line in ieee80211_tx_status() instead of
+> ath_tx_complete()?
+> That will hopefully fix other drivers too.
 
--- 
-Kalle Valo
+Umm, no, this is an atheros-ism that ought to be removed anyway, but
+it's not possible this particular problem affects other drivers.
+
+johannes
+
+--=-xkZ69jnKYgvDhYH00xG8
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK/XF1AAoJEODzc/N7+QmawB8P/jK8XodQkU5+k66z7gQvZ12z
+zsH3vAkl1muM5E8hPR+0a0tAAv5kD3iijpv7SGgLI42gTQzKLRDqMMJTipUIlBwM
+VMKW/jbe9nxmc8y0cgE2abjn8BhJqwFCw2q9PfaCXrXq84/4l++kzSQxlphekVrO
+Ciqv84t2PFdGTNlP+HwfICBcSuDZ0ut6KW5TG0U7WEGaGT35Yaxd7ciVqmlD83qh
+hfjKDwTXTECSpw5uNRWDGovxPpFJX9THtWTff3S6FRguJR3iuPsGqQ2LSNHe1wao
+nYEA3taR7N8oQvo4ws+DLuxoAZ70UIsIJ8Cl3OfifEJ71FDSW3W7e08FGdTzci6F
+tM/u7c0SQDIlSXATIOS53RuQs0vRy2Xfvw8XXMkXz3mGIi9DfVkuCppHmoG/2Q9N
+5oZ14i8k/pBL2DwksEuUzjnRmDSW2rzhYYYwtCE+ndC9o5BQSc/NgUxxBflT16AS
+kgKizCcaOW2hrIb+PqozCWUgiAQYNVcQ1lrOKEssQ6i72XVV7RV4cUXvnbAKMf8P
+e1RvxlQXexON/EZ8XHA254CKkDgXCDB8fNYRhdR1w1+wy5pQrZTf/J8geEBhHy7u
+JCwAFsVNLEmxvPG4DlrmSalNu86Qf4ARnOEPIui6Vmn/RWZHNzL77FRHMKAARdGm
+d5wikkLrr9xWn0nN3IBg
+=LElo
+-----END PGP SIGNATURE-----
+
+--=-xkZ69jnKYgvDhYH00xG8--
+
