@@ -1,58 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:48692 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754903AbZKMCJC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 21:09:02 -0500
-Received: by iwn8 with SMTP id 8so2306521iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 18:09:08 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1d91afb90911121758o6109145cl23894afda8bcbee2@mail.gmail.com>
-References: <1d91afb90911112231n54696c5fh950ba0102740d444@mail.gmail.com>
-	<45e8e6c40911112302s7c5c3e5cq496289512410ecba@mail.gmail.com>
-	<200911120847.44150.sturmflut@lieberbiber.de> <1258051444.2347.124.camel@localhost.localdomain>
-	<1258051800.2347.127.camel@localhost.localdomain> <1d91afb90911121758o6109145cl23894afda8bcbee2@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 13 Nov 2009 13:08:48 +1100
-Message-ID: <646765f40911121808m291a1b6amc13420e6fe384ddd@mail.gmail.com>
-Subject: Re: Looking for the datasheet of zd1211rw...
-To: tomas zheng <tomaswlan.zheng@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Simon Raffeiner <sturmflut@lieberbiber.de>,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:43660 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932265AbZKMT4r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Nov 2009 14:56:47 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Daniel C Halperin <daniel.c.halperin@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 11/16] iwlwifi: fix bugs in beacon configuration
+Date: Fri, 13 Nov 2009 11:56:33 -0800
+Message-Id: <1258142198-3223-12-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
+References: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 13, 2009 at 12:58, tomas zheng <tomaswlan.zheng@gmail.com> wrote:
-> Hi Dan and Guys,
->
-> Thanks very much for your information.
-> Very appreciated.
-> I will try this today.
->
-> But why I can not find the detail datasheet about 88W83xxxx on
-> http://www.marvell.com and some googling?
-> Anyone happened has it? Or , where should I go if I want it?
+From: Daniel C Halperin <daniel.c.halperin@intel.com>
 
-Given Marvell's disinterest in Linux support for older 88w83xx
-chipsets, I doubt you'll be able to get it for free, let alone under
-NDA.
+When sending beacon commands to the uCode, we must
+inform it of the offset in the beacon frame of the
+TIM Element so it can transmit packets from the
+correct queue. This functionality is implemented
+in iwl_set_beacon_tim().
 
-Your best bet, if you're desperate for Linux support, is to port over
-the old vendor driver to mac80211 as Dan pointed out.
+Fix a bug setting the rate_n_flags for the beacon
+packet. First, it should not use the station table's
+rate (it's a management frame), and second it needs
+to properly configure the TX antennas.
 
-Otherwise, NDISwrapper might be your friend.
+Finally, also, clean up and comment relevant functions.
 
-Or you could do what I did when faced with a similar card, make my
-other options (a rt2500pci based card) work.
+Signed-off-by: Daniel C Halperin <daniel.c.halperin@intel.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |   83 +++++++++++++++++++++++--------
+ drivers/net/wireless/iwlwifi/iwl-core.c |    1 +
+ 2 files changed, 63 insertions(+), 21 deletions(-)
 
-Thanks,
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index d2050d0..24f3192 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -311,7 +311,7 @@ static void iwl_free_frame(struct iwl_priv *priv, struct iwl_frame *frame)
+ 	list_add(&frame->list, &priv->free_frames);
+ }
+ 
+-static unsigned int iwl_fill_beacon_frame(struct iwl_priv *priv,
++static u32 iwl_fill_beacon_frame(struct iwl_priv *priv,
+ 					  struct ieee80211_hdr *hdr,
+ 					  int left)
+ {
+@@ -328,34 +328,74 @@ static unsigned int iwl_fill_beacon_frame(struct iwl_priv *priv,
+ 	return priv->ibss_beacon->len;
+ }
+ 
++/* Parse the beacon frame to find the TIM element and set tim_idx & tim_size */
++static void iwl_set_beacon_tim(struct iwl_priv *priv,
++		struct iwl_tx_beacon_cmd *tx_beacon_cmd,
++		u8 *beacon, u32 frame_size)
++{
++	u16 tim_idx;
++	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)beacon;
++
++	/*
++	 * The index is relative to frame start but we start looking at the
++	 * variable-length part of the beacon.
++	 */
++	tim_idx = mgmt->u.beacon.variable - beacon;
++
++	/* Parse variable-length elements of beacon to find WLAN_EID_TIM */
++	while ((tim_idx < (frame_size - 2)) &&
++			(beacon[tim_idx] != WLAN_EID_TIM))
++		tim_idx += beacon[tim_idx+1] + 2;
++
++	/* If TIM field was found, set variables */
++	if ((tim_idx < (frame_size - 1)) && (beacon[tim_idx] == WLAN_EID_TIM)) {
++		tx_beacon_cmd->tim_idx = cpu_to_le16(tim_idx);
++		tx_beacon_cmd->tim_size = beacon[tim_idx+1];
++	} else
++		IWL_WARN(priv, "Unable to find TIM Element in beacon\n");
++}
++
+ static unsigned int iwl_hw_get_beacon_cmd(struct iwl_priv *priv,
+-				       struct iwl_frame *frame, u8 rate)
++				       struct iwl_frame *frame)
+ {
+ 	struct iwl_tx_beacon_cmd *tx_beacon_cmd;
+-	unsigned int frame_size;
++	u32 frame_size;
++	u32 rate_flags;
++	u32 rate;
++	/*
++	 * We have to set up the TX command, the TX Beacon command, and the
++	 * beacon contents.
++	 */
+ 
++	/* Initialize memory */
+ 	tx_beacon_cmd = &frame->u.beacon;
+ 	memset(tx_beacon_cmd, 0, sizeof(*tx_beacon_cmd));
+ 
+-	tx_beacon_cmd->tx.sta_id = priv->hw_params.bcast_sta_id;
+-	tx_beacon_cmd->tx.stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
+-
++	/* Set up TX beacon contents */
+ 	frame_size = iwl_fill_beacon_frame(priv, tx_beacon_cmd->frame,
+ 				sizeof(frame->u) - sizeof(*tx_beacon_cmd));
++	if (WARN_ON_ONCE(frame_size > MAX_MPDU_SIZE))
++		return 0;
+ 
+-	BUG_ON(frame_size > MAX_MPDU_SIZE);
++	/* Set up TX command fields */
+ 	tx_beacon_cmd->tx.len = cpu_to_le16((u16)frame_size);
++	tx_beacon_cmd->tx.sta_id = priv->hw_params.bcast_sta_id;
++	tx_beacon_cmd->tx.stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
++	tx_beacon_cmd->tx.tx_flags = TX_CMD_FLG_SEQ_CTL_MSK |
++		TX_CMD_FLG_TSF_MSK | TX_CMD_FLG_STA_RATE_MSK;
+ 
+-	if ((rate == IWL_RATE_1M_PLCP) || (rate >= IWL_RATE_2M_PLCP))
+-		tx_beacon_cmd->tx.rate_n_flags =
+-			iwl_hw_set_rate_n_flags(rate, RATE_MCS_CCK_MSK);
+-	else
+-		tx_beacon_cmd->tx.rate_n_flags =
+-			iwl_hw_set_rate_n_flags(rate, 0);
++	/* Set up TX beacon command fields */
++	iwl_set_beacon_tim(priv, tx_beacon_cmd, (u8 *)tx_beacon_cmd->frame,
++			frame_size);
+ 
+-	tx_beacon_cmd->tx.tx_flags = TX_CMD_FLG_SEQ_CTL_MSK |
+-				     TX_CMD_FLG_TSF_MSK |
+-				     TX_CMD_FLG_STA_RATE_MSK;
++	/* Set up packet rate and flags */
++	rate = iwl_rate_get_lowest_plcp(priv);
++	priv->mgmt_tx_ant = iwl_toggle_tx_ant(priv, priv->mgmt_tx_ant);
++	rate_flags = iwl_ant_idx_to_flags(priv->mgmt_tx_ant);
++	if ((rate >= IWL_FIRST_CCK_RATE) && (rate <= IWL_LAST_CCK_RATE))
++		rate_flags |= RATE_MCS_CCK_MSK;
++	tx_beacon_cmd->tx.rate_n_flags = iwl_hw_set_rate_n_flags(rate,
++			rate_flags);
+ 
+ 	return sizeof(*tx_beacon_cmd) + frame_size;
+ }
+@@ -364,19 +404,20 @@ static int iwl_send_beacon_cmd(struct iwl_priv *priv)
+ 	struct iwl_frame *frame;
+ 	unsigned int frame_size;
+ 	int rc;
+-	u8 rate;
+ 
+ 	frame = iwl_get_free_frame(priv);
+-
+ 	if (!frame) {
+ 		IWL_ERR(priv, "Could not obtain free frame buffer for beacon "
+ 			  "command.\n");
+ 		return -ENOMEM;
+ 	}
+ 
+-	rate = iwl_rate_get_lowest_plcp(priv);
+-
+-	frame_size = iwl_hw_get_beacon_cmd(priv, frame, rate);
++	frame_size = iwl_hw_get_beacon_cmd(priv, frame);
++	if (!frame_size) {
++		IWL_ERR(priv, "Error configuring the beacon command\n");
++		iwl_free_frame(priv, frame);
++		return -EINVAL;
++	}
+ 
+ 	rc = iwl_send_cmd_pdu(priv, REPLY_TX_BEACON, frame_size,
+ 			      &frame->u.cmd[0]);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 83b7f60..294d50c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -209,6 +209,7 @@ u8 iwl_toggle_tx_ant(struct iwl_priv *priv, u8 ant)
+ 	}
+ 	return ant;
+ }
++EXPORT_SYMBOL(iwl_toggle_tx_ant);
+ 
+ const u8 iwl_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+ EXPORT_SYMBOL(iwl_bcast_addr);
 -- 
+1.5.6.3
 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
