@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:56166 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754668AbZKIMjq (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:45803 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752076AbZKMQTn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 07:39:46 -0500
-Received: by mail-fx0-f221.google.com with SMTP id 21so156761fxm.21
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 04:39:51 -0800 (PST)
-From: Rui Paulo <rpaulo@gmail.com>
-To: linville@tuxdriver.com
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Rui Paulo <rpaulo@gmail.com>,
-	Javier Cardona <javier@cozybit.com>
-Subject: [PATCH 02/21] mac80211: set MESH_TTL to 31
-Date: Mon,  9 Nov 2009 12:39:22 +0000
-Message-Id: <1257770381-7680-3-git-send-email-rpaulo@gmail.com>
-In-Reply-To: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
-References: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
+	Fri, 13 Nov 2009 11:19:43 -0500
+MIME-Version: 1.0
+In-Reply-To: <51058d550911130206m2982d20dq51bcf943f1ec91c3@mail.gmail.com>
+References: <43e72e890911121754p751060b1h1cec7eeb78da8806@mail.gmail.com>
+	<51058d550911130206m2982d20dq51bcf943f1ec91c3@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 13 Nov 2009 08:19:29 -0800
+Message-ID: <43e72e890911130819m42c3da2bv4e956c5eed75617c@mail.gmail.com>
+Subject: Re: [ANN] Stable compat-wireless 2.6.32-rc7 released
+To: Greg Oliver <oliver.greg@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update the mesh time to live field to 31 according to draft 3.03.
+On Fri, Nov 13, 2009 at 2:06 AM, Greg Oliver <oliver.greg@gmail.com> wrote:
+> On Thu, Nov 12, 2009 at 7:54 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> Along with the 2.6.32-rc7 comes the stable compat-wireless based [1]
+>> on it [2] which allows you to get the 2.6.32-rc7 wireless subsystem
+>> and new wireless drivers compilable and installed on older kernels.
+>> This is like the general compat-wireless releases but are *stable* and
+>> should be *stable*. Please report any issues ASAP. For details on
+>> changes you can refer to the ChangeLog-2.6.32-rc7-wireless [3].
+>>
+>>  Luis
+>>
+>> [1] http://wireless.kernel.org/en/users/Download/stable
+>> [2] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.32/compat-wireless-2.6.32-rc7.tar.bz2
+>> [3] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.32/ChangeLog-2.6.32-rc7-wireless
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+> The link on kernel.org for rc7 is linked to rc6...  (rc7 does exist
+> there though)...
 
-Signed-off-by: Rui Paulo <rpaulo@gmail.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
-Tested-by: Brian Cavagnolo <brian@cozybit.com>
----
- net/mac80211/mesh.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+That seems fixed now.
 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index dd1c193..9948107 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -174,7 +174,7 @@ struct mesh_rmc {
- #define MESH_CFG_CMP_LEN 	(IEEE80211_MESH_CONFIG_LEN - 2)
- 
- /* Default values, timeouts in ms */
--#define MESH_TTL 		5
-+#define MESH_TTL 		31
- #define MESH_MAX_RETR	 	3
- #define MESH_RET_T 		100
- #define MESH_CONF_T 		100
--- 
-1.5.6.5
-
+  Luis
