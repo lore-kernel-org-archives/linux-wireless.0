@@ -1,151 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:40482 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754025AbZKIX3D (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:51965 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752242AbZKMFe0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 18:29:03 -0500
-Date: Mon, 09 Nov 2009 17:29:04 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: bzolnier@gmail.com,
-	Bernhard Schiffner <bernhard@schiffner-limbach.de>,
+	Fri, 13 Nov 2009 00:34:26 -0500
+Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: Matthew Garrett <mjg@redhat.com>, linux-input@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-Subject: [RFT 1/6] rtl8187se: Create file rtl8187se.h
-Message-ID: <4af8a5c0.l8URAVRIzVyJCUaE%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090911051259.GC23210@core.coreip.homeip.net>
+References: <1252603292-20830-1-git-send-email-mjg@redhat.com>
+	 <20090911051259.GC23210@core.coreip.homeip.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 13 Nov 2009 06:34:26 +0100
+Message-ID: <1258090466.3299.6.camel@violet>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Create the base header file for rtl8187se.
+Hi Matthew,
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+> > Most laptops have keys that are intended to toggle all device state, not
+> > just wifi. These are currently generally mapped to KEY_WLAN. As a result,
+> > rfkill will only kill or enable wifi in response to the key press. This
+> > confuses users and can make it difficult for them to enable bluetooth
+> > and wwan devices.
+> > 
+> > This patch adds a new keycode, KEY_RFKILL_ALL. It indicates that the
+> 
+> The new name in description does not match the code...
+> 
+> > system should toggle the state of all rfkillable devices.
+> 
+> Hmm, rfkill changes usually go through net tree so unless they want me
+> to push it though I'll just ACK the new keycode.
+> 
+> > 
+> > Signed-off-by: Matthew Garrett <mjg@redhat.com>
+> 
+> Acked-by: Dmitry Torokhov <dtor@mail.ru>
 
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187se.h
-===================================================================
---- /dev/null
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187se.h
-@@ -0,0 +1,122 @@
-+#ifndef RTL8187SE_H
-+#define RTL8187SE_H
-+
-+#include "rtl818x.h"
-+
-+#define MAX_RX_SIZE IEEE80211_MAX_RTS_THRESHOLD
-+
-+#define RF_PARAM_ANALOGPHY	(1 << 0)
-+#define RF_PARAM_ANTBDEFAULT	(1 << 1)
-+#define RF_PARAM_CARRIERSENSE1	(1 << 2)
-+#define RF_PARAM_CARRIERSENSE2	(1 << 3)
-+
-+#define BB_ANTATTEN_CHAN14	0x0C
-+#define BB_ANTENNA_B 		0x40
-+
-+#define BB_HOST_BANG 		(1 << 30)
-+#define BB_HOST_BANG_EN 	(1 << 2)
-+#define BB_HOST_BANG_CLK 	(1 << 1)
-+#define BB_HOST_BANG_DATA	1
-+
-+#define ANAPARAM_TXDACOFF_SHIFT	27
-+#define ANAPARAM_PWR0_SHIFT	28
-+#define ANAPARAM_PWR0_MASK 	(0x07 << ANAPARAM_PWR0_SHIFT)
-+#define ANAPARAM_PWR1_SHIFT	20
-+#define ANAPARAM_PWR1_MASK	(0x7F << ANAPARAM_PWR1_SHIFT)
-+
-+struct rtl8187se_tx_desc {
-+	__le32 flags;
-+	__le16 rts_duration;
-+	__le16 plcp_len;
-+	__le32 tx_buf;
-+	__le32 frame_len;
-+	__le32 next_tx_desc;
-+	u8 cw;
-+	u8 retry_limit;
-+	u8 agc;
-+	u8 flags2;
-+	u32 reserved[2];
-+} __attribute__ ((packed));
-+
-+struct rtl8187se_rx_desc {
-+	__le32 flags;
-+	__le32 flags2;
-+	union {
-+		__le32 rx_buf;
-+		__le64 tsft;
-+	};
-+} __attribute__ ((packed));
-+
-+struct rtl8187se_tx_ring {
-+	struct rtl8187se_tx_desc *desc;
-+	dma_addr_t dma;
-+	unsigned int idx;
-+	unsigned int entries;
-+	struct sk_buff_head queue;
-+};
-+
-+struct rtl8187se_priv {
-+	/* common between rtl818x drivers */
-+	struct rtl818x_csr __iomem *map;
-+	const struct rtl818x_rf_ops *rf;
-+	struct ieee80211_vif *vif;
-+	int mode;
-+
-+	/* rtl8187se driver specific */
-+	spinlock_t lock;
-+	struct rtl8187se_rx_desc *rx_ring;
-+	dma_addr_t rx_ring_dma;
-+	unsigned int rx_idx;
-+	struct sk_buff *rx_buf[32];
-+	struct rtl8187se_tx_ring tx_ring[4];
-+	struct ieee80211_channel channels[14];
-+	struct ieee80211_rate rates[12];
-+	struct ieee80211_supported_band band;
-+	struct pci_dev *pdev;
-+	u32 rx_conf;
-+
-+	u32 anaparam;
-+	u16 rfparam;
-+	u8 csthreshold;
-+};
-+
-+void rtl8187se_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
-+void rtl8187se_set_anaparam(struct rtl8187se_priv *priv, u32 anaparam);
-+
-+static inline u8 rtl818x_ioread8(struct rtl8187se_priv *priv, u8 __iomem *addr)
-+{
-+	return ioread8(addr);
-+}
-+
-+static inline u16 rtl818x_ioread16(struct rtl8187se_priv *priv,
-+				   __le16 __iomem *addr)
-+{
-+	return ioread16(addr);
-+}
-+
-+static inline u32 rtl818x_ioread32(struct rtl8187se_priv *priv,
-+				    __le32 __iomem *addr)
-+{
-+	return ioread32(addr);
-+}
-+
-+static inline void rtl818x_iowrite8(struct rtl8187se_priv *priv,
-+				    u8 __iomem *addr, u8 val)
-+{
-+	iowrite8(val, addr);
-+}
-+
-+static inline void rtl818x_iowrite16(struct rtl8187se_priv *priv,
-+				     __le16 __iomem *addr, u16 val)
-+{
-+	iowrite16(val, addr);
-+}
-+
-+static inline void rtl818x_iowrite32(struct rtl8187se_priv *priv,
-+				     __le32 __iomem *addr, u32 val)
-+{
-+	iowrite32(val, addr);
-+}
-+
-+#endif /* RTL8187SE_H */
-+
+Acked-by: Marcel Holtmann <marcel@holtmann.org>
+
+Regards
+
+Marcel
+
+
