@@ -1,133 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:5665 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756553AbZKDRdj (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:48692 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754903AbZKMCJC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 12:33:39 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 04 Nov 2009 18:33:20 +0100
-Message-Id: <20091104173320.28463.59233.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-Subject: [PATCH 11/41] rt2800usb: add rt2800_register_multi[read,write]() wrappers
+	Thu, 12 Nov 2009 21:09:02 -0500
+Received: by iwn8 with SMTP id 8so2306521iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 18:09:08 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1d91afb90911121758o6109145cl23894afda8bcbee2@mail.gmail.com>
+References: <1d91afb90911112231n54696c5fh950ba0102740d444@mail.gmail.com>
+	<45e8e6c40911112302s7c5c3e5cq496289512410ecba@mail.gmail.com>
+	<200911120847.44150.sturmflut@lieberbiber.de> <1258051444.2347.124.camel@localhost.localdomain>
+	<1258051800.2347.127.camel@localhost.localdomain> <1d91afb90911121758o6109145cl23894afda8bcbee2@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 13 Nov 2009 13:08:48 +1100
+Message-ID: <646765f40911121808m291a1b6amc13420e6fe384ddd@mail.gmail.com>
+Subject: Re: Looking for the datasheet of zd1211rw...
+To: tomas zheng <tomaswlan.zheng@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Simon Raffeiner <sturmflut@lieberbiber.de>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] rt2800usb: add rt2800_register_multi[read,write]() wrappers
+On Fri, Nov 13, 2009 at 12:58, tomas zheng <tomaswlan.zheng@gmail.com> wrote:
+> Hi Dan and Guys,
+>
+> Thanks very much for your information.
+> Very appreciated.
+> I will try this today.
+>
+> But why I can not find the detail datasheet about 88W83xxxx on
+> http://www.marvell.com and some googling?
+> Anyone happened has it? Or , where should I go if I want it?
 
-Part of preparations for later code unification.
+Given Marvell's disinterest in Linux support for older 88w83xx
+chipsets, I doubt you'll be able to get it for free, let alone under
+NDA.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |   16 ++++++++--------
- drivers/net/wireless/rt2x00/rt2800usb.h |   14 ++++++++++++++
- 2 files changed, 22 insertions(+), 8 deletions(-)
+Your best bet, if you're desperate for Linux support, is to port over
+the old vendor driver to mac80211 as Dan pointed out.
 
-Index: b/drivers/net/wireless/rt2x00/rt2800usb.c
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -374,7 +374,7 @@ static void rt2800usb_config_wcid_attr(s
- 	    (crypto->cipher == CIPHER_AES))
- 		iveiv_entry.iv[3] |= 0x20;
- 	iveiv_entry.iv[3] |= key->keyidx << 6;
--	rt2x00usb_register_multiwrite(rt2x00dev, offset,
-+	rt2800_register_multiwrite(rt2x00dev, offset,
- 				      &iveiv_entry, sizeof(iveiv_entry));
- 
- 	offset = MAC_WCID_ENTRY(key->hw_key_idx);
-@@ -382,7 +382,7 @@ static void rt2800usb_config_wcid_attr(s
- 	memset(&wcid_entry, 0, sizeof(wcid_entry));
- 	if (crypto->cmd == SET_KEY)
- 		memcpy(&wcid_entry, crypto->address, ETH_ALEN);
--	rt2x00usb_register_multiwrite(rt2x00dev, offset,
-+	rt2800_register_multiwrite(rt2x00dev, offset,
- 				      &wcid_entry, sizeof(wcid_entry));
- }
- 
-@@ -406,7 +406,7 @@ static int rt2800usb_config_shared_key(s
- 		       sizeof(key_entry.rx_mic));
- 
- 		offset = SHARED_KEY_ENTRY(key->hw_key_idx);
--		rt2x00usb_register_multiwrite(rt2x00dev, offset,
-+		rt2800_register_multiwrite(rt2x00dev, offset,
- 					      &key_entry, sizeof(key_entry));
- 	}
- 
-@@ -461,7 +461,7 @@ static int rt2800usb_config_pairwise_key
- 		       sizeof(key_entry.rx_mic));
- 
- 		offset = PAIRWISE_KEY_ENTRY(key->hw_key_idx);
--		rt2x00usb_register_multiwrite(rt2x00dev, offset,
-+		rt2800_register_multiwrite(rt2x00dev, offset,
- 					      &key_entry, sizeof(key_entry));
- 	}
- 
-@@ -549,7 +549,7 @@ static void rt2800usb_config_intf(struct
- 		rt2x00_set_field32(&reg, MAC_ADDR_DW1_UNICAST_TO_ME_MASK, 0xff);
- 		conf->mac[1] = cpu_to_le32(reg);
- 
--		rt2x00usb_register_multiwrite(rt2x00dev, MAC_ADDR_DW0,
-+		rt2800_register_multiwrite(rt2x00dev, MAC_ADDR_DW0,
- 					      conf->mac, sizeof(conf->mac));
- 	}
- 
-@@ -559,7 +559,7 @@ static void rt2800usb_config_intf(struct
- 		rt2x00_set_field32(&reg, MAC_BSSID_DW1_BSS_BCN_NUM, 0);
- 		conf->bssid[1] = cpu_to_le32(reg);
- 
--		rt2x00usb_register_multiwrite(rt2x00dev, MAC_BSSID_DW0,
-+		rt2800_register_multiwrite(rt2x00dev, MAC_BSSID_DW0,
- 					      conf->bssid, sizeof(conf->bssid));
- 	}
- }
-@@ -1458,7 +1458,7 @@ static int rt2800usb_init_registers(stru
- 
- 	for (i = 0; i < 256; i++) {
- 		u32 wcid[2] = { 0xffffffff, 0x00ffffff };
--		rt2x00usb_register_multiwrite(rt2x00dev, MAC_WCID_ENTRY(i),
-+		rt2800_register_multiwrite(rt2x00dev, MAC_WCID_ENTRY(i),
- 					      wcid, sizeof(wcid));
- 
- 		rt2800_register_write(rt2x00dev, MAC_WCID_ATTR_ENTRY(i), 1);
-@@ -2646,7 +2646,7 @@ static void rt2800usb_get_tkip_seq(struc
- 	u32 offset;
- 
- 	offset = MAC_IVEIV_ENTRY(hw_key_idx);
--	rt2x00usb_register_multiread(rt2x00dev, offset,
-+	rt2800_register_multiread(rt2x00dev, offset,
- 				      &iveiv_entry, sizeof(iveiv_entry));
- 
- 	memcpy(&iveiv_entry.iv[0], iv16, sizeof(iv16));
-Index: b/drivers/net/wireless/rt2x00/rt2800usb.h
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800usb.h
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.h
-@@ -48,6 +48,20 @@ static inline void rt2800_register_write
- 	rt2x00usb_register_write_lock(rt2x00dev, offset, value);
- }
- 
-+static inline void rt2800_register_multiread(struct rt2x00_dev *rt2x00dev,
-+					     const unsigned int offset,
-+					     void *value, const u32 length)
-+{
-+	rt2x00usb_register_multiread(rt2x00dev, offset, value, length);
-+}
-+
-+static inline void rt2800_register_multiwrite(struct rt2x00_dev *rt2x00dev,
-+					      const unsigned int offset,
-+					      void *value, const u32 length)
-+{
-+	rt2x00usb_register_multiwrite(rt2x00dev, offset, value, length);
-+}
-+
- /*
-  * RF chip defines.
-  *
+Otherwise, NDISwrapper might be your friend.
+
+Or you could do what I did when faced with a similar card, make my
+other options (a rt2500pci based card) work.
+
+Thanks,
+
+-- 
+
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+.Plan: http://sites.google.com/site/juliancalaby/
