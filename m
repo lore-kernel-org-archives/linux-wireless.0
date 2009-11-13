@@ -1,33 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:35134 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758255AbZKESv6 (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.187]:65310 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756012AbZKMKs5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2009 13:51:58 -0500
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 22/41] rt2800pci: add rt2800_mcu_request() wrapper
-Date: Thu, 5 Nov 2009 19:52:00 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173439.28463.20951.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173439.28463.20951.sendpatchset@localhost.localdomain>
+	Fri, 13 Nov 2009 05:48:57 -0500
+From: Bernhard Schiffner <bernhard@schiffner-limbach.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC/RFT 2/6 V2] rtl8187se: Create file rtl8187se_dev.c
+Date: Fri, 13 Nov 2009 11:49:10 +0100
+Cc: John W Linville <linville@tuxdriver.com>, bzolnier@gmail.com,
+	linux-wireless@vger.kernel.org
+References: <4afb8fa1.nfiZuHNJ466dvkyn%Larry.Finger@lwfinger.net>
+In-Reply-To: <4afb8fa1.nfiZuHNJ466dvkyn%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911051952.00730.IvDoorn@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200911131149.11080.bernhard@schiffner-limbach.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2800pci: add rt2800_mcu_request() wrapper
+On Thursday 12 November 2009 05:31:29 Larry Finger wrote:
+> Create the main device file for rtl8187se.
 > 
-> Part of preparations for later code unification.
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+This little typo prevents module from loading.
+(compare with staging/rtl8187se, given by lspci too.)
 
+Bernhard
+
+
+bs7:/usr/src/kernel_rtl8187se# git diff
+diff --git a/drivers/net/wireless/rtl818x/rtl8187se_dev.c 
+b/drivers/net/wireless/rtl818x/rtl8187se_dev.c
+index f998ff9..1f479de 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187se_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187se_dev.c
+@@ -29,7 +29,7 @@ MODULE_DESCRIPTION("RTL8187SE PCI wireless driver");
+ MODULE_LICENSE("GPL");
+
+ static struct pci_device_id rtl8187se_table[] __devinitdata = {
+-       { PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8189) },
++       { PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8199) },
+        { }
+ };
