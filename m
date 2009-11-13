@@ -1,86 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36590 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756666AbZKCHqA (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:59833 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754764AbZKMOUJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 02:46:00 -0500
-Subject: Re: Please consider reverting
- 7d930bc33653d5592dc386a76a38f39c2e962344
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	David Miller <davem@davemloft.net>,
-	torvalds@linux-foundation.org, linville@tuxdriver.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1257232587.3420.55.camel@localhost.localdomain>
-References: <20091103053156.GA3212@core.coreip.homeip.net>
-	 <20091102.224957.32364226.davem@davemloft.net>
-	 <20091103065238.GE3212@core.coreip.homeip.net>
-	 <1257232587.3420.55.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-TF7Xj/Q8kb7N9qAmaura"
-Date: Tue, 03 Nov 2009 08:44:59 +0100
-Message-ID: <1257234299.28469.25.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 13 Nov 2009 09:20:09 -0500
+Received: by yxe17 with SMTP id 17so2927570yxe.33
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2009 06:20:14 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <646765f40911121808m291a1b6amc13420e6fe384ddd@mail.gmail.com>
+References: <1d91afb90911112231n54696c5fh950ba0102740d444@mail.gmail.com>
+	 <45e8e6c40911112302s7c5c3e5cq496289512410ecba@mail.gmail.com>
+	 <200911120847.44150.sturmflut@lieberbiber.de>
+	 <1258051444.2347.124.camel@localhost.localdomain>
+	 <1258051800.2347.127.camel@localhost.localdomain>
+	 <1d91afb90911121758o6109145cl23894afda8bcbee2@mail.gmail.com>
+	 <646765f40911121808m291a1b6amc13420e6fe384ddd@mail.gmail.com>
+Date: Fri, 13 Nov 2009 22:20:14 +0800
+Message-ID: <1d91afb90911130620k2fd89166k9befcc1a643a4639@mail.gmail.com>
+Subject: Re: Looking for the datasheet of zd1211rw...
+From: tomas zheng <tomaswlan.zheng@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Simon Raffeiner <sturmflut@lieberbiber.de>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Yes,NDISwrapper  is a good choice.
+Thanks for you help.
 
---=-TF7Xj/Q8kb7N9qAmaura
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2009-11-03 at 16:16 +0900, Marcel Holtmann wrote:
-
-> and can we please stop jumping the gun here and going past the subsystem
-> maintainers. I think this happens a little bit too much lately.
-
-I'll rant a bit too -- I've been very annoyed by this many times. Note
-this isn't really against you (Dmitry) in particular, just another
-case ... but it does tick me off that many times when somebody manages
-to blame a failure on a specific commit the first thing they do is ask
-somebody way "above" (in terms of patch flow into mainline) the person
-writing the patch (like Linus here) to revert it.
-
-It'd help communication and be so much more friendly if the subject was
-"found problem with commit ..." instead of "please consider
-reverting ..." (which was comparatively friendly already!). You can even
-leave the body almost identical, but I think it's presumptuous to
-effectively say "hey I know the solution for the problem already". I'll
-venture a guess and say that wasn't even the intent, but it certainly
-comes across like that if you write an email with this subject, and
-start the body with "Hi Linus," not even addressing the patch author,
-just adding them to CC out of courtesy.
-
-Should I think this is accepted practice?
-
-</rant>
-
-Before you get the wrong impression, yes, certainly this particular
-commit was bad, and it shouldn't have happened. I tested it, but clearly
-not every aspect of it. That's clearly my fault, I apologise for that.
-
-johannes
-
---=-TF7Xj/Q8kb7N9qAmaura
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK7993AAoJEODzc/N7+QmaKdoP/0AM7H5kUttjAafmMRj324Az
-okHOq6o2uDpI5aou5yzhXwdSp8V5rxdbH3vonaPLNPT5cWpUb4tAWgMi4H9TphrS
-MMF9nHEI45B40zodygaV2JEBkOM/Bms1QhaQDhijEnLN8BV4++A5XYGjsyWIpCD9
-pAfUTdW1uKeijnA7cmV5naZ0ujtKKhIoxARtpSi5v4Utfpfzh3oKGpqdWLU1N8f9
-yF/j/QztqUZyxW6tjxZ4obBKxAsx1boYRZRhMZlwihncyE3sPe4AyDbV7eABawJI
-tgmH/G5qv6ajTQl+C617nRWl8LeqIFNhh/jJazPK9NqcgFm8zhbJKissocCc3i1t
-9QRsjKdGNXI14FzGaC+4D+DjajxKNtmdGc3lPHOD4ZEanz4zXyUd3nOniha5eipb
-5C3oNHfaV5+AgqQtZdrcVJN4xlLC7OEXcCr13n+a70WbPd2WpbGQzaRI3cpIWZEO
-aBXr5WCsShXtBAXsAfCefgOt1TrO2ewi+nkMzXjTuTvOPAZGw6/0emqsmqP7Y1rV
-XGcAzstjvSJaFetcDY9Db1frwvHfFFZXDRLeO/unOeGQFJN1T6Jraiet8zP9bnja
-BWpzcusiLmu+PU18yscGvwlH4ki6XucFFNE6I5TE6iZhVvHJCBn8iFefX4yAhaIy
-qTGDP4h3604+vk4Sirho
-=2BpU
------END PGP SIGNATURE-----
-
---=-TF7Xj/Q8kb7N9qAmaura--
-
+On Fri, Nov 13, 2009 at 10:08 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> On Fri, Nov 13, 2009 at 12:58, tomas zheng <tomaswlan.zheng@gmail.com> wrote:
+>> Hi Dan and Guys,
+>>
+>> Thanks very much for your information.
+>> Very appreciated.
+>> I will try this today.
+>>
+>> But why I can not find the detail datasheet about 88W83xxxx on
+>> http://www.marvell.com and some googling?
+>> Anyone happened has it? Or , where should I go if I want it?
+>
+> Given Marvell's disinterest in Linux support for older 88w83xx
+> chipsets, I doubt you'll be able to get it for free, let alone under
+> NDA.
+>
+> Your best bet, if you're desperate for Linux support, is to port over
+> the old vendor driver to mac80211 as Dan pointed out.
+>
+> Otherwise, NDISwrapper might be your friend.
+>
+> Or you could do what I did when faced with a similar card, make my
+> other options (a rt2500pci based card) work.
+>
+> Thanks,
+>
+> --
+>
+> Julian Calaby
+>
+> Email: julian.calaby@gmail.com
+> .Plan: http://sites.google.com/site/juliancalaby/
+>
