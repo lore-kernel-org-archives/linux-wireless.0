@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:58954
-	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755465AbZKBVL3 (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:40387 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757001AbZKMU0U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 16:11:29 -0500
-Date: Mon, 2 Nov 2009 13:11:23 -0800
-From: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Frank Schaefer <schaefer.frank@gmx.net>,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
-Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB N devices in cdrom mode
-Message-ID: <20091102211123.GI24436@one-eyed-alien.net>
-References: <200910171606.02961.oliver@neukum.org> <Pine.LNX.4.44L0.0910171130550.25594-100000@netrider.rowland.org> <20091017220313.GH24502@one-eyed-alien.net> <4ADC3657.6080906@gmx.net> <4AEDCCA0.8050709@gmx.net> <4AEDD380.40408@draisberghof.de> <4AEDEB85.5080105@gmx.net> <20091102005144.GE24436@one-eyed-alien.net> <4AEF3CAD.10809@gmx.net> <1257193115.1027.24.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="gTY1JhLGodeuSBqf"
-In-Reply-To: <1257193115.1027.24.camel@localhost.localdomain>
+	Fri, 13 Nov 2009 15:26:20 -0500
+Received: by iwn8 with SMTP id 8so2924660iwn.33
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2009 12:26:25 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890911120732m74dbe2d4m14dd146cd0fb3016@mail.gmail.com>
+References: <02a401ca6370$51fa0ff0$f5ee2fd0$@kaist.ac.kr> <43e72e890911120732m74dbe2d4m14dd146cd0fb3016@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 13 Nov 2009 12:26:05 -0800
+Message-ID: <43e72e890911131226i1a58560haeddca42c76bc1a9@mail.gmail.com>
+Subject: Re: ath9k: Unknown symbol
+To: Jinsung Lee <ljs@netsys.kaist.ac.kr>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Nov 12, 2009 at 7:32 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Thu, Nov 12, 2009 at 12:15 AM, Jinsung Lee <ljs@netsys.kaist.ac.kr> wrote:
+>> Hi, all.
+>>
+>> I installed compat-wireless-2009-11-12 and compiled successfully.
+>> But when inputting the command "modprobe ath9k", I saw the following
+>> message:
+>>
+>> FATAL: Error inserting ath9k
+>> (/lib/modules/2.6.32-020632rc6-generic/updates/drivers/net/wireless/ath/ath9
+>> k/ath9k.ko): Unknown symbol in module, or unknown parameter (see dmesg)
+>>
+>> And dmesg shows the following:
+>>
+>> [582122.800191] ath9k: Unknown symbol ath9k_cmn_rx_skb_preprocess
+>> [582122.803675] ath9k: Unknown symbol ath9k_cmn_rx_skb_postprocess
+>>
+>> Actually, I haven't seen this kind of message before.
+>> Is there any workaround solution for this?
+>
+> compat-wireless just needs to be updated, I'll take care of this.
 
---gTY1JhLGodeuSBqf
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Ok try the new tarball release.
 
-On Mon, Nov 02, 2009 at 12:18:35PM -0800, Dan Williams wrote:
-> Devices with fake driver CDs and how they are handled currently:
->=20
-> Zydas WLAN   - kernel
-> Huawei 3G    - kernel  (unusual_devs entry)
-> Sierra 3G    - kernel  (drivers/usb/serial/sierra.c)
-> Option 3G    - udev rules, 'rezero', or usb_modeswitch
-> ZTE 3G       - udev rules, simple 'eject'
+git-describe for wireless-testing.git says: v2.6.32-rc6-41741-ga601a39
+This is a bleeding edge compat-wireless release based on: master-2009-11-11
+This is compat-release: master-2009-11-11
 
-It's worth noting that for some of these which are handled in-kernel, it
-had to be done that way because their storage-emulation was so poor that
-the normal 'eject' WOULD NOT work properly.
-
-Any device which can be handled in userspace SHOULD be handled there.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-But where are the THEMES?!  How do you expect me to use an OS without=20
-themes?!
-					-- Stef
-User Friendly, 10/9/1998
-
---gTY1JhLGodeuSBqf
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFK70r7HL9iwnUZqnkRAkP+AJ95takg/AUNwLej/Per/JORgu9plgCePxWp
-iMujnaBqDJvRYuZ/dhwij4o=
-=F9NV
------END PGP SIGNATURE-----
-
---gTY1JhLGodeuSBqf--
+  Luis
