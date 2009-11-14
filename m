@@ -1,141 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:58751 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753056AbZK2OB3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Nov 2009 09:01:29 -0500
-Received: from list by lo.gmane.org with local (Exim 4.50)
-	id 1NEkLG-0003WH-RG
-	for linux-wireless@vger.kernel.org; Sun, 29 Nov 2009 15:01:34 +0100
-Received: from 85-127-91-18.dynamic.xdsl-line.inode.at ([85.127.91.18])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Nov 2009 15:01:34 +0100
-Received: from tim by 85-127-91-18.dynamic.xdsl-line.inode.at with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Nov 2009 15:01:34 +0100
-To: linux-wireless@vger.kernel.org
-From: Tim Blechmann <tim@klingt.org>
-Subject: Re: rt61pci bug
-Date: Sun, 29 Nov 2009 15:01:02 +0100
-Message-ID: <4B127E9E.1090008@klingt.org>
-References: <4AE43028.30703@klingt.org> <hcsfgm$bft$1@ger.gmane.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig4E94235E0AA08E8D965FD4C4"
-In-Reply-To: <hcsfgm$bft$1@ger.gmane.org>
+Received: from ey-out-2122.google.com ([74.125.78.27]:55559 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751294AbZKNTem (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Nov 2009 14:34:42 -0500
+Received: by ey-out-2122.google.com with SMTP id 9so1366062eyd.19
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Nov 2009 11:34:47 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 1/2] rt2x00: Log RT/RF chipset information correctly.
+Date: Sat, 14 Nov 2009 20:34:44 +0100
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+References: <1258226436-4673-1-git-send-email-gwingerde@gmail.com> <1258226436-4673-2-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1258226436-4673-2-git-send-email-gwingerde@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911142034.45091.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig4E94235E0AA08E8D965FD4C4
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Saturday 14 November 2009, Gertjan van Wingerde wrote:
+> Some drivers (rt2800* most notably) cannot set the RF and RT chipset in
+> the correct order to have the information logging in rt2x00_set_chip
+> be correct.
+> Fix this by decoupling the setting of the chipset information from the
+> logging of the chipset information so that drivers can determine
+> themselves when all information is set.
+> 
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-On 11/04/2009 07:00 PM, Tim Blechmann wrote:
->> running the rt61pci module on 2.6.31.5 works fine, but using the recen=
-t=20
->> linus/master (2.6.32-rc5) results in this:
->=20
-> same issue with 2.6.32-rc5 ... new bootlog with more debugging info
-> attached ...
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-i was still able to reproduce this issue with 2.6.32-rc8 ... it would=20
-be nice, if someone could have a look into this issue before 2.6.32 is=20
-released ...
+> ---
+>  drivers/net/wireless/rt2x00/rt2400pci.c |    1 +
+>  drivers/net/wireless/rt2x00/rt2500pci.c |    1 +
+>  drivers/net/wireless/rt2x00/rt2500usb.c |    1 +
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    1 +
+>  drivers/net/wireless/rt2x00/rt2x00.h    |   11 +++++++----
+>  drivers/net/wireless/rt2x00/rt61pci.c   |    1 +
+>  drivers/net/wireless/rt2x00/rt73usb.c   |    1 +
+>  7 files changed, 13 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+> index 0f912f5..6e68bc7 100644
+> --- a/drivers/net/wireless/rt2x00/rt2400pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+> @@ -1341,6 +1341,7 @@ static int rt2400pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
+>  	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
+>  	rt2x00pci_register_read(rt2x00dev, CSR0, &reg);
+>  	rt2x00_set_chip_rf(rt2x00dev, value, reg);
+> +	rt2x00_print_chip(rt2x00dev);
+>  
+>  	if (!rt2x00_rf(&rt2x00dev->chip, RF2420) &&
+>  	    !rt2x00_rf(&rt2x00dev->chip, RF2421)) {
+> diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+> index 6618cbd..9a31e5e 100644
+> --- a/drivers/net/wireless/rt2x00/rt2500pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+> @@ -1505,6 +1505,7 @@ static int rt2500pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
+>  	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
+>  	rt2x00pci_register_read(rt2x00dev, CSR0, &reg);
+>  	rt2x00_set_chip_rf(rt2x00dev, value, reg);
+> +	rt2x00_print_chip(rt2x00dev);
+>  
+>  	if (!rt2x00_rf(&rt2x00dev->chip, RF2522) &&
+>  	    !rt2x00_rf(&rt2x00dev->chip, RF2523) &&
+> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+> index bb64473..b2de43e 100644
+> --- a/drivers/net/wireless/rt2x00/rt2500usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+> @@ -1409,6 +1409,7 @@ static int rt2500usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
+>  	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
+>  	rt2500usb_register_read(rt2x00dev, MAC_CSR0, &reg);
+>  	rt2x00_set_chip(rt2x00dev, RT2570, value, reg);
+> +	rt2x00_print_chip(rt2x00dev);
+>  
+>  	if (!rt2x00_check_rev(&rt2x00dev->chip, 0x000ffff0, 0) ||
+>  	    rt2x00_check_rev(&rt2x00dev->chip, 0x0000000f, 0)) {
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index d88857c..c710805 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -1854,6 +1854,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+>  			return -ENODEV;
+>  		}
+>  	}
+> +	rt2x00_print_chip(rt2x00dev);
+>  
+>  	if (!rt2x00_rf(&rt2x00dev->chip, RF2820) &&
+>  	    !rt2x00_rf(&rt2x00dev->chip, RF2850) &&
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+> index 62da572..1cbb7ac 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+> @@ -906,10 +906,6 @@ static inline void rt2x00_eeprom_write(struct rt2x00_dev *rt2x00dev,
+>  static inline void rt2x00_set_chip(struct rt2x00_dev *rt2x00dev,
+>  				   const u16 rt, const u16 rf, const u32 rev)
+>  {
+> -	INFO(rt2x00dev,
+> -	     "Chipset detected - rt: %04x, rf: %04x, rev: %08x.\n",
+> -	     rt, rf, rev);
+> -
+>  	rt2x00dev->chip.rt = rt;
+>  	rt2x00dev->chip.rf = rf;
+>  	rt2x00dev->chip.rev = rev;
+> @@ -927,6 +923,13 @@ static inline void rt2x00_set_chip_rf(struct rt2x00_dev *rt2x00dev,
+>  	rt2x00_set_chip(rt2x00dev, rt2x00dev->chip.rt, rf, rev);
+>  }
+>  
+> +static inline void rt2x00_print_chip(struct rt2x00_dev *rt2x00dev)
+> +{
+> +	INFO(rt2x00dev,
+> +	     "Chipset detected - rt: %04x, rf: %04x, rev: %08x.\n",
+> +	     rt2x00dev->chip.rt, rt2x00dev->chip.rf, rt2x00dev->chip.rev);
+> +}
+> +
+>  static inline char rt2x00_rt(const struct rt2x00_chip *chipset, const u16 chip)
+>  {
+>  	return (chipset->rt == chip);
+> diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+> index 6e46135..bf04605 100644
+> --- a/drivers/net/wireless/rt2x00/rt61pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt61pci.c
+> @@ -2300,6 +2300,7 @@ static int rt61pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
+>  	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
+>  	rt2x00pci_register_read(rt2x00dev, MAC_CSR0, &reg);
+>  	rt2x00_set_chip_rf(rt2x00dev, value, reg);
+> +	rt2x00_print_chip(rt2x00dev);
+>  
+>  	if (!rt2x00_rf(&rt2x00dev->chip, RF5225) &&
+>  	    !rt2x00_rf(&rt2x00dev->chip, RF5325) &&
+> diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+> index 7236f01..5bbcf66 100644
+> --- a/drivers/net/wireless/rt2x00/rt73usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt73usb.c
+> @@ -1825,6 +1825,7 @@ static int rt73usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
+>  	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
+>  	rt2x00usb_register_read(rt2x00dev, MAC_CSR0, &reg);
+>  	rt2x00_set_chip(rt2x00dev, RT2571, value, reg);
+> +	rt2x00_print_chip(rt2x00dev);
+>  
+>  	if (!rt2x00_check_rev(&rt2x00dev->chip, 0x000ffff0, 0x25730) ||
+>  	    rt2x00_check_rev(&rt2x00dev->chip, 0x0000000f, 0)) {
 
-dmesg from 2.6.32-rc8:
-[   10.249098] rt61pci 0000:06:00.0: PCI INT A -> GSI 16 (level, low) -> =
-IRQ 16
-[   10.257182] phy0 -> rt61pci_validate_eeprom: EEPROM recovery - NIC: 0x=
-ff80
-[   10.257184] phy0 -> rt61pci_validate_eeprom: EEPROM recovery - Led: 0x=
-e0ff
-[   10.257187] phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 030=
-2, rf: 0003, rev: 0002561c.
-[   10.351794] Registered led device: rt61pci-phy0::radio
-[   10.351839] Registered led device: rt61pci-phy0::assoc
-[   14.342046] rt61pci 0000:06:00.0: firmware: requesting rt2561.bin
-[   14.395533] phy0 -> rt2x00lib_request_firmware: Info - Firmware detect=
-ed - version: 0.8.
-[   14.421238] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 0 - =
-CWmin: 3, CWmax: 4, Aifs: 2, TXop: 102.
-[   14.421245] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 1 - =
-CWmin: 4, CWmax: 5, Aifs: 2, TXop: 188.
-[   14.421252] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 2 - =
-CWmin: 5, CWmax: 10, Aifs: 3, TXop: 0.
-[   14.421258] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 3 - =
-CWmin: 5, CWmax: 10, Aifs: 7, TXop: 0.
-[  273.404685] phy0 -> rt2x00queue_write_tx_frame: Error - Arrived at non=
--free entry in the non-full queue 2.
-[  273.404687] Please file bug report to http://rt2x00.serialmonkey.com.
-[  282.143549] wlan0: no IPv6 routers present
-[  357.304908] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 2
-[  357.333806] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 9
-[  360.172776] phy0 -> rt2x00queue_write_tx_frame: Error - Arrived at non=
--free entry in the non-full queue 2.
-[  360.172778] Please file bug report to http://rt2x00.serialmonkey.com.
-[  360.172782] phy0 -> rt2x00mac_tx_rts_cts: Warning - Failed to send RTS=
-/CTS frame.
-[  383.880010] No probe response from AP 00:24:fe:09:94:18 after 500ms, d=
-isconnecting.
-[  383.880026] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 0 - =
-CWmin: 2, CWmax: 3, Aifs: 2, TXop: 47.
-[  383.880034] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 1 - =
-CWmin: 3, CWmax: 4, Aifs: 2, TXop: 94.
-[  383.880042] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 2 - =
-CWmin: 4, CWmax: 10, Aifs: 3, TXop: 0.
-[  383.880050] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 3 - =
-CWmin: 4, CWmax: 10, Aifs: 7, TXop: 0.
-[  385.220460] wlan0: direct probe to AP 00:24:fe:09:94:18 (try 1)
-[  385.421337] wlan0: direct probe to AP 00:24:fe:09:94:18 (try 2)
-[  385.621304] wlan0: direct probe to AP 00:24:fe:09:94:18 (try 3)
-[  385.821264] wlan0: direct probe to AP 00:24:fe:09:94:18 timed out
-
-
-lspci -vvv:
-
-06:00.0 Network controller: RaLink RT2561/RT61 rev B 802.11g
-	Subsystem: D-Link System Inc Device 3c09
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Step=
-ping- SERR+ FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dslow >TAbort- <TAbort=
-- <MAbort- >SERR- <PERR- INTx-
-	Latency: 64, Cache Line Size: 64 bytes
-	Interrupt: pin A routed to IRQ 16
-	Region 0: Memory at fb6f8000 (32-bit, non-prefetchable) [size=3D32K]
-	Capabilities: [40] Power Management version 2
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA PME(D0-,D1-,D2-,D3hot-,D3c=
-old-)
-		Status: D0 PME-Enable- DSel=3D0 DScale=3D0 PME-
-	Kernel driver in use: rt61pci
-	Kernel modules: rt61pci
-
-thanks, tim
-
---=20
-tim@klingt.org
-http://tim.klingt.org
-
-Happiness is a byproduct of function, purpose, and conflict; those who
-seek happiness for itself seek victory without war.
-  William S. Burroughs
-
-
---------------enig4E94235E0AA08E8D965FD4C4
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAksSfqEACgkQdL+4qsZfVsvFFgCgm6y5W74z8KXIy+mvMQGmmf7Z
-E2cAnRKusCa+Qk1Z1PlR/FvGyyXjpRh1
-=ugc6
------END PGP SIGNATURE-----
-
---------------enig4E94235E0AA08E8D965FD4C4--
 
