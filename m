@@ -1,68 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:43809 "EHLO
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:38306 "EHLO
 	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751542AbZKQWDy convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1750737AbZKNRht convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 17:03:54 -0500
-Received: by fxm21 with SMTP id 21so512692fxm.21
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2009 14:03:59 -0800 (PST)
+	Sat, 14 Nov 2009 12:37:49 -0500
 MIME-Version: 1.0
-In-Reply-To: <cb0375e10911061145ja572542hde731eee7279ea1@mail.gmail.com>
-References: <cb0375e10911031538n62fe7473x4dd41329b9264b5c@mail.gmail.com>
-	 <1257327017.28469.76.camel@johannes.local>
-	 <cb0375e10911061145ja572542hde731eee7279ea1@mail.gmail.com>
-Date: Tue, 17 Nov 2009 17:03:59 -0500
-Message-ID: <cb0375e10911171403g7863a37bscafab483836573a@mail.gmail.com>
-Subject: Re: iwlwifi connection troubles, maybe aggregation related
-From: Andrew Lutomirski <luto@mit.edu>
-To: Johannes Berg <johannes@sipsolutions.net>, oliver.greg@gmail.com
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+In-Reply-To: <1258216474.3299.24.camel@violet>
+References: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
+	 <1258082571.7715.13.camel@violet>
+	 <4fb5db50911140519q70bbdd00qb585153c4926df96@mail.gmail.com>
+	 <1258216474.3299.24.camel@violet>
+Date: Sat, 14 Nov 2009 23:07:54 +0530
+Message-ID: <4fb5db50911140937j278584e5nf9e4d5767a44a920@mail.gmail.com>
+Subject: Re: [patch 0/1] Adding radio type FM
+From: Janakiram Sistla <janakiram.sistla@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greg: I'm not sure your bug is the same as mine.  I don't get oopses.
+Hi Marcel,
 
-This bug has been here for a long time and it's getting old, so it's
-now #2120 :)
+I thought i would see the change first in include/linux/rfkill.h
+getting accepted and then i can add the change in core.c also.
 
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2120
+Let me know if i can push both in the same patch.
 
---Andy
+Regards,
+Ram.
 
-On Fri, Nov 6, 2009 at 2:45 PM, Andrew Lutomirski <luto@mit.edu> wrote:
-> On Wed, Nov 4, 2009 at 4:30 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> On Tue, 2009-11-03 at 18:38 -0500, Andrew Lutomirski wrote:
->>
->>> iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:21:d8:49:4a:52 tid = 0
->>
->>> Turning on or off power management and fiddling with
->>> no_sleep_autoadjust makes no difference.  Setting tx_agg_tid_enable to
->>> zero in debugfs while the connection was working seemed to make it a
->>> little more reliable (it lasted long enough to do "git pull" but not
->>> much longer).
->>>
->>> After running "iw dev wlan0 disconnect" a few times, I start to get
->>> errors like this:
->>>
->>> [18078.209635] iwlagn 0000:03:00.0: SENSITIVITY_CMD failed
->>> [18078.313461] iwlagn 0000:03:00.0: No space for Tx
->>> [18078.313467] iwlagn 0000:03:00.0: Error sending SENSITIVITY_CMD:
->>> enqueue_hcmd failed: -28
->>> [18078.313470] iwlagn 0000:03:00.0: SENSITIVITY_CMD failed
->>> [18078.522409] iwlagn 0000:03:00.0: No space for Tx
->>> [18078.522414] iwlagn 0000:03:00.0: Error sending SENSITIVITY_CMD:
->>> enqueue_hcmd failed: -28
->>
->> Sounds like the firmware messes up ...
->>
->> Maybe as a first workaround you could modprobe iwlagn with
->> 11n_disable=1. But I don't know at this point what the problem could be.
+On Sat, Nov 14, 2009 at 10:04 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi Janakiram,
 >
-> 11n_disable50=1 seems to work.  I'll reply again if it stops working.
+>> Resubmitting patch  adding Marcels Comments
+>>
+>> From f72e4bdef7c423259f2f8f0615d024a25294ea8f Mon Sep 17 00:00:00 2001
+>> From: Janakiram Sistla <janakiram.sistla@gmail.com>
+>> Date: Sat, 14 Nov 2009 18:42:35 +0530
+>> Subject: [PATCH 1/1] Adding radio type FM
+>>
+>> Adding radio type FM in RFKILL_TYPE_.FM also belongs to
+>> same class of with both TX/RX capability.
+>>
+>> Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
+>> ---
+>>  include/linux/rfkill.h |    1 +
+>>  1 files changed, 1 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+>> index 3392c59..03f5598 100644
+>> --- a/include/linux/rfkill.h
+>> +++ b/include/linux/rfkill.h
+>> @@ -45,6 +45,7 @@ enum rfkill_type {
+>>       RFKILL_TYPE_WIMAX,
+>>       RFKILL_TYPE_WWAN,
+>>       RFKILL_TYPE_GPS,
+>> +     RFKILL_TYPE_FM,
+>>       NUM_RFKILL_TYPES,
+>>  };
 >
-> Do the Intel folks have any ideas?
+> and what about rfkill_get_type_str() changes?
 >
-> Thanks,
-> Andy
+> Regards
+>
+> Marcel
+>
+>
 >
