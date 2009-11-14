@@ -1,83 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:58574 "EHLO
-	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757275AbZKWVpS (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:37193 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753567AbZKNCNj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 16:45:18 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH v2 8/8] rt2x00: Properly request tx headroom for alignment operations.
-Date: Mon, 23 Nov 2009 22:44:54 +0100
-Message-Id: <1259012694-14869-9-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1259012694-14869-8-git-send-email-gwingerde@gmail.com>
-References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-2-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-3-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-4-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-5-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-6-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-7-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-8-git-send-email-gwingerde@gmail.com>
+	Fri, 13 Nov 2009 21:13:39 -0500
+Received: by iwn8 with SMTP id 8so3105854iwn.33
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2009 18:13:45 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <40101cc30911130420n6fa79a55vfc2bffc615e9606b@mail.gmail.com>
+References: <f74418680911120331w1ea31a68y56440dc0fbd253bb@mail.gmail.com>
+	<40101cc30911120618m5d9acd34pf6aa9ec89c6c40b8@mail.gmail.com>
+	<20091112154440.GD19349@tux> <43e72e890911120749n72360f0btfb058ab3a521eabb@mail.gmail.com>
+	<40101cc30911121118h17db32a1y61edac1a4c0aec24@mail.gmail.com>
+	<1258054304.3899.36.camel@johannes.local> <40101cc30911121418h4109d62bv763bed2036446901@mail.gmail.com>
+	<1258097485.3899.76.camel@johannes.local> <f74418680911130055o7d8fa94brc3fd7a0c315bb7b0@mail.gmail.com>
+	<40101cc30911130420n6fa79a55vfc2bffc615e9606b@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 13 Nov 2009 18:13:25 -0800
+Message-ID: <43e72e890911131813g2bc15fe6rd9c636959f698535@mail.gmail.com>
+Subject: Re: [ath9k-devel] Possible memory leak in ath9k monitor mode
+	injection
+To: Matteo Croce <technoboy85@gmail.com>
+Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	rodriguez@atheros.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Current rt2x00 drivers may result in a "ieee80211_tx_status: headroom too
-small" error message when a frame needs to be properly aligned before
-transmitting it.
-This is because the space needed to ensure proper alignment isn't
-requested from mac80211.
-Fix this by adding sufficient amount of alignment space to the amount
-of headroom requested for TX frames.
+On Fri, Nov 13, 2009 at 4:20 AM, Matteo Croce <technoboy85@gmail.com> wrote:
+> On Fri, Nov 13, 2009 at 12:27 PM,  <Lorenzo.Bianconi83@gmail.com> wrote:
+>> Il giorno , Lorenzo Bianconi <lorenzo.bianconi83@gmail.com> ha scritto:
+>>> 2009/11/13 Johannes Berg johannes@sipsolutions.net>:
+>>> Yes, I tested ath5k/mac80211 and ath9k/mac80211 and both show the same
+>>> problem
+>>>
+>>> whereas madwifi/net80211, tested with the same module, has not memory
+>>> leak.
+>>>
+>>
+>> Hi all,
+>>
+>> I found a way to stop the mem leak. In the ath_tx_complete() function I have
+>> noticed that the struct tx_info_priv is not freed. I have made the following
+>> changes and now the memory remains stable. I do not know if this is the
+>> right place to put the kfree(tx_info_priv), however this seems to solve the
+>> issue.
+>>
+>> Cheers,
+>>
+>> Lorenzo
+>>
+>> @@ -1825,9 +1825,10 @@
+>> SC_OP_WAIT_FOR_TX_ACK));
+>> }
+>>
+>> - if (frame_type == ATH9K_NOT_INTERNAL)
+>> + if (frame_type == ATH9K_NOT_INTERNAL) {
+>> ieee80211_tx_status(hw, skb);
+>> - else
+>> + kfree(tx_info_priv);
+>> + } else
+>> ath9k_tx_status(hw, skb);
+>> }
+>
+> That's great. I'll try the fix with ath5k too
 
-Reported-by: David Ellingsworth <david@identd.dyndns.org>
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00.h    |    6 ++++++
- drivers/net/wireless/rt2x00/rt2x00dev.c |   12 +++++++++++-
- 2 files changed, 17 insertions(+), 1 deletions(-)
+Can you guys try Felix's RFC patches ? It removes this completely.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 4d841c0..dcfc8c2 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -113,6 +113,12 @@
- 	(  ((unsigned long)((__skb)->data + (__header))) & 3 )
- 
- /*
-+ * Constants for extra TX headroom for alignment purposes.
-+ */
-+#define RT2X00_ALIGN_SIZE	4 /* Only whole frame needs alignment */
-+#define RT2X00_L2PAD_SIZE	8 /* Both header & payload need alignment */
-+
-+/*
-  * Standard timing and size defines.
-  * These values should follow the ieee80211 specifications.
-  */
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 06c43ca..265e66d 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -686,7 +686,17 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Initialize extra TX headroom required.
- 	 */
--	rt2x00dev->hw->extra_tx_headroom = rt2x00dev->ops->extra_tx_headroom;
-+	rt2x00dev->hw->extra_tx_headroom =
-+		max_t(unsigned int, IEEE80211_TX_STATUS_HEADROOM,
-+		      rt2x00dev->ops->extra_tx_headroom);
-+
-+	/*
-+	 * Take TX headroom required for alignment into account.
-+	 */
-+	if (test_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags))
-+		rt2x00dev->hw->extra_tx_headroom += RT2X00_L2PAD_SIZE;
-+	else if (test_bit(DRIVER_REQUIRE_DMA, &rt2x00dev->flags))
-+		rt2x00dev->hw->extra_tx_headroom += RT2X00_ALIGN_SIZE;
- 
- 	/*
- 	 * Register HW.
--- 
-1.6.5.3
-
+  Luis
