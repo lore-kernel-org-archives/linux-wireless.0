@@ -1,173 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dmz4.indranet.co.nz ([203.97.93.68]:57825 "EHLO
-	mail.indranet.co.nz" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1754462AbZKPXMW (ORCPT
+Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:61072 "EHLO
+	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751300AbZKNTUt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2009 18:12:22 -0500
-Date: Tue, 17 Nov 2009 12:13:14 +1300 (NZDT)
-From: Derek Smithies <derek@indranet.co.nz>
-To: Adam Wozniak <awozniak@irobot.com>
-cc: Johannes Berg <johannes@sipsolutions.net>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: Re: Adhoc networking, was Re: compat-wireless and minstrel
-In-Reply-To: <4B01D4A5.7060204@irobot.com>
-Message-ID: <alpine.DEB.2.00.0911171156210.3829@kauri.acheron.indranet.co.nz>
-References: <4AF0D54D.4090303@irobot.com>  <alpine.DEB.2.00.0911111508391.6214@kauri.acheron.indranet.co.nz>  <4AFC655A.5020706@irobot.com> <200911122103.27455.chunkeey@googlemail.com>  <4AFC8E4F.5090307@irobot.com>  <4AFC8F0D.5020700@irobot.com>
- <1258097352.3899.75.camel@johannes.local>  <4AFDDF19.8060202@irobot.com>  <1258191039.6167.40.camel@johannes.local>  <4B018B26.2070008@irobot.com> <1258392453.32159.28.camel@johannes.local> <4B0192A6.9050808@irobot.com> <alpine.DEB.2.00.0911170938380.3829@kauri.acheron.indranet.co.nz>
- <4B01D4A5.7060204@irobot.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+	Sat, 14 Nov 2009 14:20:49 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 1/2] rt2x00: Log RT/RF chipset information correctly.
+Date: Sat, 14 Nov 2009 20:20:35 +0100
+Message-Id: <1258226436-4673-2-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1258226436-4673-1-git-send-email-gwingerde@gmail.com>
+References: <1258226436-4673-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Some drivers (rt2800* most notably) cannot set the RF and RT chipset in
+the correct order to have the information logging in rt2x00_set_chip
+be correct.
+Fix this by decoupling the setting of the chipset information from the
+logging of the chipset information so that drivers can determine
+themselves when all information is set.
 
-Referring back to my letter below, you see that when A&B agree on their 
-BSSID,  this implies that A&B have agreed on:
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2400pci.c |    1 +
+ drivers/net/wireless/rt2x00/rt2500pci.c |    1 +
+ drivers/net/wireless/rt2x00/rt2500usb.c |    1 +
+ drivers/net/wireless/rt2x00/rt2800lib.c |    1 +
+ drivers/net/wireless/rt2x00/rt2x00.h    |   11 +++++++----
+ drivers/net/wireless/rt2x00/rt61pci.c   |    1 +
+ drivers/net/wireless/rt2x00/rt73usb.c   |    1 +
+ 7 files changed, 13 insertions(+), 4 deletions(-)
 
->> a)supported rates
->> b)the value of X, the value of x
->> c)the channel
->> d)the ESSSID
-
-
-When B&C start talking, and C adopts the same BSSID as B, then we have (by 
-inference) that C has agreed to the same rates as A. There is no need to 
-pass rate information between C and A.
-
-===========================
-Ok, now here is a silly example. 
-Suppose C supports bitrates b4,b5 and b6.
-
-B does not support bitrates b4,b5 and b6.
-
-Further, A does support bitrates b4,b5,b6
-
-This could be that B only does 1, 2, 5.5 and 11MBits/sec. But A&C do 
-everything up to 54Mbit/sec.
-
-
-B has caused a problem cause he is deficient (not doing G-Rates)
-
-In one view, B should report that he has all the rates of A. B would then 
-hope that A's rate control algorithm will detect that B cannot do the 
-G-rates. Minstrel will do this fine. Stepup-Stepdown rate algorithms will 
-struggle here if their table is constructed in the wrong order.
-
-For this network, the BSSID defines the basic service set. you cannot have 
-nodes on the same BSSID who report as handling different rate sets.
-
-
-
-Derek.
-
-
-
-On Mon, 16 Nov 2009, Adam Wozniak wrote:
-
-> In your example where A&C can pass data, but not hear each other's beacons, 
-> how is rate information passed between them?  ProbeReq/Resp ?
->
-> Derek Smithies wrote:
->> Hi,
->>  Statistics is a wonderful thing.
->> Every node is required to send a beacon at time
->> X+r, X+x+r, X+2x+r, X+3x+r, ......
->> 
->> All nodes are agreed on the value of x (which is the beacon interval).
->> All nodes are agreed on the value of X
->> r is a random value, and is (from memory) 20 slots long.
->> 
->> given this, all nodes work (to borrow an analogy from music) in time, or 
->> beat in sync with each other.
->> 
->> Now, if a node hears a beacon on its BSSID inside that r period, the node 
->> will not transmit a beacon. This way, for a 20 node network in a room, you 
->> should only get 1 (or sometimes 2) beacons transmitted every beacon 
->> interval.
->> 
->> If we assume that every node correctly attempts to send a beacon somewhere 
->> in that period r, and that somewhere is randomly distributed, then we will 
->> hear a beacon from most nodes, which is good enough.
->> 
->> Consider the case of three nodes, A, B, C.
->> 
->> A and B are turned on, and create an Adhoc network. A and B agree on
->> a)supported rates
->> b)the value of X, the value of x
->> c)the channel
->> d)the ESSSID
->> and so start sending a beacon. Inside this beacon is  BSSID. The BSSID is a 
->> random value. The particular random value used implies acceptance of 
->> a,b,c,d. Look at the name. Basic Service Set ID. The basic service set is 
->> the collection of those values a,b,c,d.
->> 
->> Now, node C is turned on. A is positioned such that A&C cannot communicate. 
->> However, B can communicate with A&C.
->> 
->> C is turned on, detects the presence of B, likes B's beacons, and agrees on 
->> all the settings in B's beacons. In other words, C likes and agrees with 
->> a,b,c,d.
->> So C starts sending beacons with the same BSSID as B.
->> At this point, it does not matter that A cannot set C's beacons. A and C 
->> have agreed on the BSSID.
->> 
->> Change the story a little bit.
->> In this locality, there is often a burst of 1ms of noise every 2ms. This 
->> means that most beacons are shotdown. However, data packets at 54Mbit/sec 
->> get through.
->>  A&B saw each others beacons and agreed on a BSSID. C was turned on, and 
->> agreed with the BSSID of B.
->> 
->> C sends out data packets, with the BSSID of B. A sees the datapackets of C. 
->> Since the datapackets of C have A's BSSID, A has to accept them.
->> 
->> Now, you see where this is all going. What is the meaning of a beacon 
->> containing a BSSID of all zero ?
->> Further, you see that all nodes do need to send a beacon. This makes node 
->> discovery a little easier.
->> Even though A and C cannot see each others beacons, they should still 
->> communicate as they have the same agreed on BSSID.
->> 
->> Derek.
->> 
->> 
->> On Mon, 16 Nov 2009, Adam Wozniak wrote:
->> 
->>> This assumption seems too stoichastic.  Reading 802.11-2007 section 
->>> 11.1.2.2, it doesn't seem that we're guaranteed to always receive beacons 
->>> from all stations.  Stations will cancel their pending beacon transmission 
->>> if they receive a beacon before their random delay times out.  In the 
->>> extreme case where the number of stations is very large, it seems possible 
->>> that you may never hear beacons for some stations.
->>> 
->>> Johannes Berg wrote:
->>>> On Mon, 2009-11-16 at 09:25 -0800, Adam Wozniak wrote:
->>>> 
->>>>> If we have only three stations in an ad-hoc network, where all three can 
->>>>> hear the other two, only one of them should be beaconing, correct? 
->>>> 
->>>> No, if they all behave correctly beaconing will be distributed.
->>>> 
->>>> johannes
->>>> 
->>> 
->>> 
->>> 
->> 
->
->
->
-
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index 0f912f5..6e68bc7 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -1341,6 +1341,7 @@ static int rt2400pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
+ 	rt2x00pci_register_read(rt2x00dev, CSR0, &reg);
+ 	rt2x00_set_chip_rf(rt2x00dev, value, reg);
++	rt2x00_print_chip(rt2x00dev);
+ 
+ 	if (!rt2x00_rf(&rt2x00dev->chip, RF2420) &&
+ 	    !rt2x00_rf(&rt2x00dev->chip, RF2421)) {
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 6618cbd..9a31e5e 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -1505,6 +1505,7 @@ static int rt2500pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
+ 	rt2x00pci_register_read(rt2x00dev, CSR0, &reg);
+ 	rt2x00_set_chip_rf(rt2x00dev, value, reg);
++	rt2x00_print_chip(rt2x00dev);
+ 
+ 	if (!rt2x00_rf(&rt2x00dev->chip, RF2522) &&
+ 	    !rt2x00_rf(&rt2x00dev->chip, RF2523) &&
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index bb64473..b2de43e 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1409,6 +1409,7 @@ static int rt2500usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
+ 	rt2500usb_register_read(rt2x00dev, MAC_CSR0, &reg);
+ 	rt2x00_set_chip(rt2x00dev, RT2570, value, reg);
++	rt2x00_print_chip(rt2x00dev);
+ 
+ 	if (!rt2x00_check_rev(&rt2x00dev->chip, 0x000ffff0, 0) ||
+ 	    rt2x00_check_rev(&rt2x00dev->chip, 0x0000000f, 0)) {
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index d88857c..c710805 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1854,6 +1854,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 			return -ENODEV;
+ 		}
+ 	}
++	rt2x00_print_chip(rt2x00dev);
+ 
+ 	if (!rt2x00_rf(&rt2x00dev->chip, RF2820) &&
+ 	    !rt2x00_rf(&rt2x00dev->chip, RF2850) &&
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 62da572..1cbb7ac 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -906,10 +906,6 @@ static inline void rt2x00_eeprom_write(struct rt2x00_dev *rt2x00dev,
+ static inline void rt2x00_set_chip(struct rt2x00_dev *rt2x00dev,
+ 				   const u16 rt, const u16 rf, const u32 rev)
+ {
+-	INFO(rt2x00dev,
+-	     "Chipset detected - rt: %04x, rf: %04x, rev: %08x.\n",
+-	     rt, rf, rev);
+-
+ 	rt2x00dev->chip.rt = rt;
+ 	rt2x00dev->chip.rf = rf;
+ 	rt2x00dev->chip.rev = rev;
+@@ -927,6 +923,13 @@ static inline void rt2x00_set_chip_rf(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_chip(rt2x00dev, rt2x00dev->chip.rt, rf, rev);
+ }
+ 
++static inline void rt2x00_print_chip(struct rt2x00_dev *rt2x00dev)
++{
++	INFO(rt2x00dev,
++	     "Chipset detected - rt: %04x, rf: %04x, rev: %08x.\n",
++	     rt2x00dev->chip.rt, rt2x00dev->chip.rf, rt2x00dev->chip.rev);
++}
++
+ static inline char rt2x00_rt(const struct rt2x00_chip *chipset, const u16 chip)
+ {
+ 	return (chipset->rt == chip);
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 6e46135..bf04605 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -2300,6 +2300,7 @@ static int rt61pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
+ 	rt2x00pci_register_read(rt2x00dev, MAC_CSR0, &reg);
+ 	rt2x00_set_chip_rf(rt2x00dev, value, reg);
++	rt2x00_print_chip(rt2x00dev);
+ 
+ 	if (!rt2x00_rf(&rt2x00dev->chip, RF5225) &&
+ 	    !rt2x00_rf(&rt2x00dev->chip, RF5325) &&
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 7236f01..5bbcf66 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1825,6 +1825,7 @@ static int rt73usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
+ 	rt2x00usb_register_read(rt2x00dev, MAC_CSR0, &reg);
+ 	rt2x00_set_chip(rt2x00dev, RT2571, value, reg);
++	rt2x00_print_chip(rt2x00dev);
+ 
+ 	if (!rt2x00_check_rev(&rt2x00dev->chip, 0x000ffff0, 0x25730) ||
+ 	    rt2x00_check_rev(&rt2x00dev->chip, 0x0000000f, 0)) {
 -- 
-Derek Smithies Ph.D.
-IndraNet Technologies Ltd.
-ph +64 3 365 6485
-Web: http://www.indranet-technologies.com/
+1.6.5.2
 
-"The only thing IE should be used for is to download Fire Fox"
-
-"My favorite language is call STAR. It's extremely concise. It has
-  exactly one verb '*', which does exactly what I want at the moment."
-     --Larry Wall
