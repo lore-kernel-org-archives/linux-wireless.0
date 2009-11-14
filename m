@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 39.mail-out.ovh.net ([213.251.138.60]:42890 "HELO
-	39.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753347AbZK2ABx (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:41514 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754753AbZKNJLX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Nov 2009 19:01:53 -0500
-Message-ID: <4B11B860.4080607@free.fr>
-Date: Sun, 29 Nov 2009 00:55:12 +0100
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+	Sat, 14 Nov 2009 04:11:23 -0500
+Received: by iwn8 with SMTP id 8so3225929iwn.33
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Nov 2009 01:11:29 -0800 (PST)
 MIME-Version: 1.0
-To: rt2x00 Users List <users@rt2x00.serialmonkey.com>
-CC: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] [PATCH] rt2x00: Further L2 padding fixes.
-References: <1259433154-2587-1-git-send-email-gwingerde@gmail.com>	<200911282226.58091.IvDoorn@gmail.com> <4B1199A7.7090903@gmail.com>
-In-Reply-To: <4B1199A7.7090903@gmail.com>
+In-Reply-To: <1258164519.20338.12.camel@localhost.localdomain>
+References: <1d91afb90911112231n54696c5fh950ba0102740d444@mail.gmail.com>
+	<45e8e6c40911112302s7c5c3e5cq496289512410ecba@mail.gmail.com>
+	<200911120847.44150.sturmflut@lieberbiber.de> <1258051444.2347.124.camel@localhost.localdomain>
+	<1258051800.2347.127.camel@localhost.localdomain> <1d91afb90911121758o6109145cl23894afda8bcbee2@mail.gmail.com>
+	<646765f40911121808m291a1b6amc13420e6fe384ddd@mail.gmail.com>
+	<1d91afb90911130620k2fd89166k9befcc1a643a4639@mail.gmail.com>
+	<1258164519.20338.12.camel@localhost.localdomain>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sat, 14 Nov 2009 20:11:09 +1100
+Message-ID: <646765f40911140111m131889dh2b377eef5270629b@mail.gmail.com>
+Subject: Re: Looking for the datasheet of zd1211rw...
+To: Dan Williams <dcbw@redhat.com>
+Cc: tomas zheng <tomaswlan.zheng@gmail.com>,
+	Simon Raffeiner <sturmflut@lieberbiber.de>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gertjan van Wingerde a écrit :
-> On 11/28/09 22:26, Ivo van Doorn wrote:
->>> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
->>> index b8f0954..562a344 100644
->>> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
->>> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
->>> @@ -181,7 +181,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
->>>  	unsigned int frame_length = skb->len;
->>>  	unsigned int header_align = ALIGN_SIZE(skb, 0);
->>>  	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
->>> -	unsigned int l2pad = 4 - (payload_align - header_align);
->>> +	unsigned int l2pad = 4 - (header_length & 3);
+On Sat, Nov 14, 2009 at 13:08, Dan Williams <dcbw@redhat.com> wrote:
+> On Fri, 2009-11-13 at 22:20 +0800, tomas zheng wrote:
+>> Yes,NDISwrapper  is a good choice.
+>
+> Well, not a *good* choice, but about the only choice you have.
 
-Humm... is header_length = 24, then your formula gives l2pad = 4. If so,
-this is wrong. Do I miss something?
+I was expecting you (or someone else) to point that out =)
 
-BTW, I'm trying to prepare some patches for rt2800usb and padding. I
-must admit the current framework is a bit complex compared to other
-drivers (ath9k for instance).
+Thanks,
 
-To give something similar to ath9k where the pad position is computed
-based on the hdr->frame_control field only (my guess is that's what the
-HW does anyway), we have :
+-- 
 
-int rt2800usb_padpos(__le16 frame_control)
-{
-  int padpos = 24;
-  if (ieee80211_is_data(frame_control)) {
-	padpos = ieee80211_hdrlen(frame_control);
-  }
-  return padpos;
-}
+Julian Calaby
 
-then later : int padsize = padpos & 3;
-
-then the usual check before doing the real padding or unpadding :
-if (padsize && skb->len>padpos) {
-  do padding or unpadding
-}
-
-My 2 cents,
-Benoit
+Email: julian.calaby@gmail.com
+.Plan: http://sites.google.com/site/juliancalaby/
