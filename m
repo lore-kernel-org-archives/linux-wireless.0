@@ -1,66 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from exchange.solarflare.com ([216.237.3.220]:56028 "EHLO
-	exchange.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752250AbZKWN03 (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:63300 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750821AbZKNRnT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 08:26:29 -0500
-Subject: Re: A generic kernel compatibilty code
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org
-In-Reply-To: <43e72e890911201307g2a1f280aie223ed4fd270aad@mail.gmail.com>
-References: <43e72e890911201245r4de5b039hb2dd5011dabf2399@mail.gmail.com>
-	 <1258750858.2877.58.camel@achroite.uk.solarflarecom.com>
-	 <43e72e890911201307g2a1f280aie223ed4fd270aad@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 23 Nov 2009 13:26:33 +0000
-Message-Id: <1258982793.2845.13.camel@achroite.uk.solarflarecom.com>
-Mime-Version: 1.0
+	Sat, 14 Nov 2009 12:43:19 -0500
+Received: by iwn8 with SMTP id 8so3375686iwn.33
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Nov 2009 09:43:25 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1258159451.4589.3.camel@localhost.localdomain>
+References: <1258156563.4589.2.camel@localhost.localdomain>
+	<43e72e890911131614v1b5ac6f5xa80caab69f400d4e@mail.gmail.com>
+	<1258159451.4589.3.camel@localhost.localdomain>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sat, 14 Nov 2009 09:43:05 -0800
+Message-ID: <43e72e890911140943t3a70b9a9g3ab9002b4acb92de@mail.gmail.com>
+Subject: Re: Unable to buid mac80211 with pid and minstrel
+To: =?UTF-8?Q?Mart=C3=ADn_Ernesto_Barreyro?= <barreyromartin@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-11-20 at 13:07 -0800, Luis R. Rodriguez wrote:
-> On Fri, Nov 20, 2009 at 1:00 PM, Ben Hutchings
-> <bhutchings@solarflare.com> wrote:
-> > On Fri, 2009-11-20 at 12:45 -0800, Luis R. Rodriguez wrote:
-> >> Everyone and their mother reinvents the wheel when it comes to
-> >> backporting kernel modules. It a painful job and it seems to me an
-> >> alternative is possible. If we can write generic compatibilty code for
-> >> a new routine introduced on the next kernel how about just merging it
-> >> to the kernel under some generic compat module. This would be
-> >> completey ignored by everyone using the stable kernel but can be
-> >> copied by anyone doing backport work.
-> >>
-> >> So I'm thinking something as simple as a generic compat/comat.ko with
-> >> compat-2.6.32.[ch] files.
-> >>
-> >> We've already backported everything needed for wireless drivers under
-> >> compat-wireless under this format down to even 2.6.25.
-> > [...]
-> >
-> > If you think 2.6.25 is old then I don't think you understand the scale
-> > of the problem.
-> >
-> > OEMs still expect us to support RHEL 4 (2.6.9) and SLES 9 (2.6.5) though
-> > the latter will probably be dropped soon.  Some other vendors apparently
-> > still need to support even 2.4 kernels!
-> 
-> Heh understood. Well shouldn't this help with that then? Sure I'd love
-> to see the Enteprise Linux releases on 2.6.31 but that's not going to
-> happen right? Shouldn't this help then?
+On Fri, Nov 13, 2009 at 4:44 PM, Martín Ernesto Barreyro
+<barreyromartin@gmail.com> wrote:
+> El vie, 13-11-2009 a las 16:14 -0800, Luis R. Rodriguez escribió:
+>> On Fri, Nov 13, 2009 at 3:56 PM, Martín Ernesto Barreyro
+>> <barreyromartin@gmail.com> wrote:
+>> > Hello I'm trying to build the wireless testing kernel with pid and
+>> > minstrel and then select them from one or another.
+>> >
+>> > Can someone give me a clue?
+>>
+>> IIRC I had to enable embedded.
+>>
+>>   Luis
+>
+> Thanks, now it appears.
 
-You'd really have to ask the 'enterprise' vendors whether they'd be
-interested in working on some sort of shared forward-compat library.  If
-the library is to include a module rather than being statically linked
-into each module that needs it then there can only be one instance in
-the system.
+Anyone recall why PID is pegged to embedded?
 
-Ben.
-
--- 
-Ben Hutchings, Senior Software Engineer, Solarflare Communications
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
-
+  Luis
