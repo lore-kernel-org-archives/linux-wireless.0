@@ -1,77 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:60766 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755887AbZKMRS6 (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:33922 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750755AbZKNSFK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 12:18:58 -0500
-MIME-Version: 1.0
-In-Reply-To: <4e5e476b0911100412yb51d472r24be8b2068204348@mail.gmail.com>
-References: <1257537660-5301-1-git-send-email-lrodriguez@atheros.com>
-	<200911072152.57596.trenn@suse.de> <4AF5F47C.5000402@linux.intel.com>
-	<200911072347.05786.trenn@suse.de> <4AF5FBC7.9000105@linux.intel.com>
-	<43e72e890911090832v1c809482yde7e767502271376@mail.gmail.com>
-	<4e5e476b0911100412yb51d472r24be8b2068204348@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 13 Nov 2009 09:18:43 -0800
-Message-ID: <43e72e890911130918v5a4c4fabt2deda5a4ab75ff5@mail.gmail.com>
-Subject: Re: [PATCH] cpu-freq: add troubleshooting section for FSB changes
-To: Corrado Zoccolo <czoccolo@gmail.com>
-Cc: Arjan van de Ven <arjan@linux.intel.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Aeolus Yang <Aeolus.Yang@atheros.com>,
-	Jonathan May <Jonathan.May@atheros.com>,
-	Thomas Renninger <trenn@suse.de>, davej@redhat.com,
-	cpufreq@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Matthew Garrett <mjg@redhat.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Amod Bodas <Amod.Bodas@atheros.com>,
-	David Quan <David.Quan@atheros.com>,
-	Kishore Jotwani <Kishore.Jotwani@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 14 Nov 2009 13:05:10 -0500
+Subject: Re: [patch 0/1] Adding radio type FM
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Janakiram Sistla <janakiram.sistla@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <4fb5db50911140937j278584e5nf9e4d5767a44a920@mail.gmail.com>
+References: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
+	 <1258082571.7715.13.camel@violet>
+	 <4fb5db50911140519q70bbdd00qb585153c4926df96@mail.gmail.com>
+	 <1258216474.3299.24.camel@violet>
+	 <4fb5db50911140937j278584e5nf9e4d5767a44a920@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 14 Nov 2009 19:05:09 +0100
+Message-ID: <1258221909.3299.26.camel@violet>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 10, 2009 at 4:12 AM, Corrado Zoccolo <czoccolo@gmail.com> wrote:
-> Hi,
-> On Mon, Nov 9, 2009 at 5:32 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>
->> And we tested this (reducing the min cpu freq to one less than the
->> highest supported P state to avoid an FSB speed change) and it seems
->> doing the steps described here did not fix the issue. But at least now
->> if anyone else wants to verify this they can with some sort of
->> documentaiton.
->>
->> So to confirm though -- we are seeing a huge performance depredation
->> mainly on RX on an Intel Pine Trail platform with SpeedStep enabled on
->> the BIOS.
->>
->> Let me get into the specifics in case anyone is able to help. The
->> issue is with ath9k on RX and the CPU on C3 state requesting DMA over
->> PCI-E. We typically would get about 110 Mbps with an AR9285 (single
->> stream) but when SpeedStep is enabled it goes down to 25 Mbps. At the
->> PCI-E level we are seeing huge latencies introduced when SpeedStep is
->> used for DMA requests to the Intel root complex on the Intel Pine
->> trail platform. Latencies are about 20-60 us.
->
-> You mentioned speedstep and cpufreq, but the problem is with C3 state
-> and cpuidle (probably the BIOS mixes the two concepts, but we should
-> keep them separated).
-> C3 is not related to the core or FSB frequency, it is an idle state.
-> When in C3, the CPU is not ready to perform any operation, not just
-> slower, and depending on the CPU hw, it may take several us to wake up
-> (even 85us, on an Atom).
->
->>
->> Is there a timeout threshold change that will cause the Intel chipset
->> wait for some time after completion before going into a C3 state? Are
->> there any other explanations for seeing such huge latencies on C3
->> state?
-> There is a patch from Arjan for the cpuidle menu governor, that may fix it.
-> http://linux.derkeiler.com/Mailing-Lists/Kernel/2009-09/msg05276.html
-> It is already present in 2.6.32.
+Hi Janakiram,
 
-Thanks all for your feedback -- this was determined to be a BIOS bug
-:) Anyway, hope you do consider the patch for inclusion.
+> I thought i would see the change first in include/linux/rfkill.h
+> getting accepted and then i can add the change in core.c also.
+> 
+> Let me know if i can push both in the same patch.
 
-  Luis
+I said that you can add RFKILL_TYPE_FM to the RFKILL subsystem, but the
+input changes might not be the right ones. Since eventually the
+in-kernel input support will be removed.
+
+And I did ask if the FM button you see is a generic RFKILL toggle or a
+FM specific button. Especially since you had a copy-and-paste mistake in
+your patches, that code path clearly was never tested by you.
+
+Regards
+
+Marcel
+
+
