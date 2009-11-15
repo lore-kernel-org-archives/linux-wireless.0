@@ -1,39 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li12-156.members.linode.com ([70.85.129.156]:54038 "EHLO
-	defaultvalue.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753413AbZKGWSH (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37609 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752968AbZKOO1r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 17:18:07 -0500
-From: Rob Browning <rlb@defaultvalue.org>
-To: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
-Subject: Re: ath9k based AP stops responding after half a day or so
-References: <87my37if04.fsf@raven.defaultvalue.org>
-Date: Sat, 07 Nov 2009 14:18:12 -0800
-In-Reply-To: <87my37if04.fsf@raven.defaultvalue.org> (Rob Browning's message
-	of "Sat, 31 Oct 2009 11:40:11 -0700")
-Message-ID: <87skcqgesb.fsf@raven.defaultvalue.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 15 Nov 2009 09:27:47 -0500
+Subject: Re: [PATCH 1/2] mac80211: add private driver flags and ampdu
+ length to tx info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <4B000DF5.4020606@openwrt.org>
+References: <4AFED564.8030804@openwrt.org>
+	 <1258293706.6294.7.camel@johannes.local>  <4B000DF5.4020606@openwrt.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-EwjQ2tISWfsbRpQm9ATM"
+Date: Sun, 15 Nov 2009 15:27:43 +0100
+Message-ID: <1258295263.32159.2.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rob Browning <rlb@defaultvalue.org> writes:
 
-> I have an machine that's running a recent compat-wireless (2009-10-17),
-> kernel 2.6.30-2-686 (Debian), and a build of hostapd as of 2009-10-17
-> (08d38568).  The machine also has an AR5008 (ath9k) based PCI card.
->
-> After the machine reboots, wireless clients can connect to the AP
-> normally for a half day or so.  Then, at some point, all connections
-> fail, and clients cannot even see the network until the machine is
-> rebooted.  Reloading the wireless modules, and restarting hostapd
-> doesn't help.
+--=-EwjQ2tISWfsbRpQm9ATM
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Just as an update, this problem persists with hostapd as of eb999fef,
-and compat-wireless 2009-11-03.
+On Sun, 2009-11-15 at 15:19 +0100, Felix Fietkau wrote:
 
-I'd be happy to provide further information.
--- 
-Rob Browning
-rlb @defaultvalue.org and @debian.org; previously @cs.utexas.edu
-GPG as of 2002-11-03 14DD 432F AE39 534D B592 F9A0 25C8 D377 8C7E 73A4
+> >> + * @ampdu_ack_len: number of acked aggregated frames.
+> >> + * 	relevant only if ieee80211_tx_status_ampdu was set.
+> >=20
+> > why lowercase that?
+> Sorry, late night vim accident. I'll resend...
+
+same a few lines down too
+
+> >> -	/* 2 byte hole */
+> >> -	u8 pad[2];
+> >> +	u8 driver_flags;
+> >> +	u8 pad;
+> >=20
+> > The ampdu_len seems ok, but I'm still not convinced this is right.
+> > Drivers _should_ have enough space in the driver parts of this struct,
+> > and not need flags here. I realise that you do need that because of the
+> > RC and other internal things, but maybe you could simply use "pad[0]"
+> > for that so not to encourage others to start doing this too?
+
+> If you prefer it using the padding directly, I can change it to that
+> too. I don't mind as long as I have space to put that stuff into and
+> don't need to use rate_driver_data.
+
+I can't really decide. On the one hand, using pad seems bad, but on the
+other hand I'm still hoping this will just be temporary (for some value
+thereof). But in that case I fear that we might find somebody else
+started using the new field and we need to fix that driver too then...
+
+Thoughts?
+
+johannes
+
+
+--=-EwjQ2tISWfsbRpQm9ATM
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLAA/bAAoJEODzc/N7+QmazNsP/AlKbsWa2EVCV/SJqBzekVra
+BVAyD+qttXChwrZeMQDzh4qQXD1jn0vN4OnxgwnHBGnfssWe6MkgxAeayDGVh/3F
+GHE9nUsHjEJjGIIBOHl44ySZWvqumpvDrqmuvuZOLeIlgVdMMGc3sxC7isOjgEEc
+5JKvUlvVPhbHo4fX/+ubOPGgJ8vslEpZSMxuCaguPa3XLZpFY4fw5zZycYN8KSJU
+61+LXJ77XRwCyC2t9DjJaS4py2p8zzVKEZu90793bCJCf0+rmLeYCdqSMrpHq+Lz
+NA49Pnvr8yB9ujJEfMwc8bV6PQc0lT1cejLluq9Eo9doaSKkAEEwnrRfko0g6bbV
+/tp2MhUiUY3YOcMLF4ZSDJCOqnUnzYbsowKNdh3JWLX0Nz3VCkmXEnqxbS7wnGzm
+oeuupbDV70PSjUuj+g4NDKQS4FEVuEsI6uVgZf3TmPkjJEixelhA7CHA1U7eURQY
+1qscLhh7rcLb2kFeWOGtAfIXnjdY0AV4F5gz7xnAnlqPlSj4817iUDsajwVILcul
+KCZ7UqudIibJ3fACHhtFJDuFoTY+AwbJ6E7oNxF+MrQe4i96Y91meMku1zJmjJ5/
+IIoqIWiY6c46ieGf4w+n10BuUcl/VTHXUqZRrHnc0LVifOLceo9Q389Ouix/LjGe
+/RSxCw8DNX8mLfpPPUDZ
+=f+yU
+-----END PGP SIGNATURE-----
+
+--=-EwjQ2tISWfsbRpQm9ATM--
+
