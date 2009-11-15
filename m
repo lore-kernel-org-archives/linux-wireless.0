@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:45090 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756788AbZKDXlO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 18:41:14 -0500
+Received: from nbd.name ([88.198.39.176]:48476 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751090AbZKOV1O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Nov 2009 16:27:14 -0500
+Message-ID: <4B007235.3050108@openwrt.org>
+Date: Sun, 15 Nov 2009 22:27:17 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 4 Nov 2009 15:40:59 -0800
-Message-ID: <43e72e890911041540hd1e5f87u8d282d9c95857504@mail.gmail.com>
-Subject: Reverting 5d423 fixes loading of ath9k on Acer Extensa 7630EZ
-To: Ingo Molnar <mingo@elte.hu>, linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Yannick Roehlly <yannick.roehlly@free.fr>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jesse.barnes@intel.com>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"John W. Linville" <linville@tuxdriver.com>, berndl81@gmx.at,
-	Greg KH <greg@kroah.com>
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] ath9k: fix massive rx packet loss issue
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ingo,
+This patch fixes a regression introduced in
 
-reverting the commit 5d423, titled "x86/pci: remove rounding quirk
-from e820_setup_gap()" fixes loading of ath9k on an Acer Extensa
-7630EZ. We've troubleshooted the issue with the user,  Bernhard, who
-eventually did a full bisect between 2.6.30 and 2.6.31 and found 5d423
-was the culprit. For details please feel free to check:
+  commit 701396910a42dc69cf0284f4727e48f5e0f83151
+  [PATCH 18/29] ath9k: avoid the copy skb->cb on every RX'd skb
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14402
+With that change, the rx status in skb->cb was left uninitialized
 
-Can you please consider reviewing this issue and help determine if
-this indeed needs to be reverted for 2.6.32 and the next 2.6.31.y.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
 
-I am curious if other devices would work by reverting this as well.
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -203,6 +203,7 @@ int ath9k_cmn_rx_skb_preprocess(struct a
+ {
+ 	struct ath_hw *ah = common->ah;
+ 
++	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
+ 	if (!ath9k_rx_accept(common, skb, rx_status, rx_stats, decrypt_error))
+ 		return -EINVAL;
+ 
 
-  Luis
