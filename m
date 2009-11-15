@@ -1,77 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59121 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751642AbZKPKWQ (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:31100 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753053AbZKOOS1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2009 05:22:16 -0500
-Subject: Re: [PATCH] rndis_wlan: handle NL80211_AUTHTYPE_AUTOMATIC
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Sun, 15 Nov 2009 09:18:27 -0500
+Received: by ey-out-2122.google.com with SMTP id 9so1624446eyd.19
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Nov 2009 06:18:32 -0800 (PST)
+Message-ID: <4B000DAB.10305@gmail.com>
+Date: Sun, 15 Nov 2009 15:18:19 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: sturmflut@lieberbiber.de
+CC: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <20091116095653.17419.49151.stgit@fate.lan>
-References: <20091116095653.17419.49151.stgit@fate.lan>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zxcV5ORAxcVaZHbWCBR7"
-Date: Mon, 16 Nov 2009 11:22:04 +0100
-Message-ID: <1258366924.32159.11.camel@johannes.local>
-Mime-Version: 1.0
+Subject: Re: [rt2x00-users] Kernel Bug using current rt2x00usb and an RT2070L
+ device
+References: <200911151403.56479.sturmflut@lieberbiber.de>
+In-Reply-To: <200911151403.56479.sturmflut@lieberbiber.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 11/15/09 14:03, Simon Raffeiner wrote:
+> Hi lists,
+> 
+> I built the current compat-wireless on a stock Ubuntu 2.6.31-14-generic kernel (Ubuntu 9.10 Karmic Koala), plugged in my Sitecom WL-608v1 USB adapter (USB ID 0df6:003f) and hit the following kernel Bug:
+> 
+> [ 3097.169534] ------------[ cut here ]------------                                    
+> [ 3097.169538] kernel BUG at /home/sturmflut/compat-wireless-2.6/drivers/net/wireless/rt2x00/rt2x00usb.c:86!                                                                  
+> [ 3097.169541] invalid opcode: 0000 [#1] SMP                                           
+> [ 3097.169544] last sysfs file: /sys/devices/pci0000:00/0000:00:18.3/temp1_input       
+> [ 3097.169546] CPU 0                                                                   
 
---=-zxcV5ORAxcVaZHbWCBR7
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Mon, 2009-11-16 at 11:56 +0200, Jussi Kivilinna wrote:
-> rndis_wlan didn't know about NL80211_AUTHTYPE_AUTOMATIC and simple
-> setup with 'iwconfig wlan essid no-encrypt' would fail (ENOSUPP).
->=20
-> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> ---
->=20
->  drivers/net/wireless/rndis_wlan.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rnd=
-is_wlan.c
-> index 54175b6..dfc61fd 100644
-> --- a/drivers/net/wireless/rndis_wlan.c
-> +++ b/drivers/net/wireless/rndis_wlan.c
-> @@ -1070,7 +1070,8 @@ static int set_auth_mode(struct usbnet *usbdev, u32=
- wpa_version,
->  			auth_mode =3D NDIS_80211_AUTH_WPA_NONE;
->  	} else if (auth_type =3D=3D NL80211_AUTHTYPE_SHARED_KEY)
->  		auth_mode =3D NDIS_80211_AUTH_SHARED;
-> -	else if (auth_type =3D=3D NL80211_AUTHTYPE_OPEN_SYSTEM)
-> +	else if (auth_type =3D=3D NL80211_AUTHTYPE_OPEN_SYSTEM ||
-> +			auth_type =3D=3D NL80211_AUTHTYPE_AUTOMATIC)
->  		auth_mode =3D NDIS_80211_AUTH_OPEN;
+I sent a patch to fix this just yesterday. See:
 
-Will that try open and shared though?
+http://marc.info/?l=linux-wireless&m=125822646218485&w=2
 
-johannes
-
---=-zxcV5ORAxcVaZHbWCBR7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLASfIAAoJEODzc/N7+QmaXwEP/Rhp2gw5pNPflP4fN8JOGcHc
-E6BIv2TUx1I9fbpd65JxRSFtyk7SCM5sEnZ0kamtl/OjfULd1SP5Q9N6iZpLRBT4
-Z3O2htdjzED9PRhz1xqsRvSPQ7oC1zcMQP64dnyG/a/MLJmmOCbs9dXRM/NcRhOH
-f1X52G5BT/iVp7HE/7INgZ/01Cqgrg9yeEr/eDhOimWX2ML0pmQenX3sz6Svc9W2
-yzE3UUOK9zpr5K2njOHvBIP1fJ1VhdTc+AovtlDVSCIFWJnD1foUh9J/6domicRh
-FeuPgl/QbXxPXslLbmTpehMqJG1hZ0//y9Ok9Vg5UY9NEOBvU+GKlXil1oMYYJ92
-N2sBy2e5ItXROxUsaQggOYW8xR1b2wQYmYr2ppNbXSfDiXTxQ9W4f4yzp9JpdKKd
-iMvVAyHc9E4Eb2zVMKPBmkoiW7q2FxrWukra8zQ8t1/sYq/hmgc+sDbFVtOwh8/t
-jiEUtHlI/WQA2JmUJjlNWqChaaKitDbuDoR9DeQw8oTETUaPrrJX0HNk74e/2XnD
-iab7zsWHicrWbNTM0mfltirZn+qkJFSHEJd0r3GxY2+rx6cJZICIHoyPZNXmx3qK
-jiXdZadMoONl5jBZ/FKw5toESHoRFkAiWpGZECLfe1MYrP1Zf5/r0xzKsWys/40C
-b2qZ7IMMkiockIv0r5rx
-=Wppc
------END PGP SIGNATURE-----
-
---=-zxcV5ORAxcVaZHbWCBR7--
+---
+Gertjan.
 
