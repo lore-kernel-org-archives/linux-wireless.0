@@ -1,42 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from g4t0016.houston.hp.com ([15.201.24.19]:23240 "EHLO
-	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754054AbZKPVG3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2009 16:06:29 -0500
-From: Bjorn Helgaas <bjorn.helgaas@hp.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 14450] New: [2.6.31] Network interfaces are dead with 2.6.31 (iwlagn and sky2)
-Date: Mon, 16 Nov 2009 15:06:30 -0600
-Cc: orion.linbug@gmail.com, bugzilla-daemon@bugzilla.kernel.org,
-	bugme-daemon@bugzilla.kernel.org, netdev@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	linux-wireless@vger.kernel.org
-References: <bug-14450-10286@http.bugzilla.kernel.org/> <20091103152146.5785195a.akpm@linux-foundation.org> <200911040947.28054.bjorn.helgaas@hp.com>
-In-Reply-To: <200911040947.28054.bjorn.helgaas@hp.com>
+Received: from bu3sch.de ([62.75.166.246]:34507 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752137AbZKOLfG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Nov 2009 06:35:06 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: stable@kernel.org
+Subject: [PATCH stable] b43: Fix DMA TX bounce buffer copying
+Date: Sun, 15 Nov 2009 12:34:31 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200911161406.33473.bjorn.helgaas@hp.com>
+  charset="us-ascii"
+Message-Id: <200911151234.33621.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 04 November 2009 09:47:26 am Bjorn Helgaas wrote:
-> On Tuesday 03 November 2009 04:21:46 pm Andrew Morton wrote:
-> > 
-> > (switched to email.  Please respond via emailed reply-to-all, not via the
-> > bugzilla web interface).
-> 
-> > > http://bugzilla.kernel.org/show_bug.cgi?id=14450
-> 
-> This looks like a duplicate of http://bugzilla.kernel.org/show_bug.cgi?id=13940
-> 
-> There's a patch in that bug that is upstream already:
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=15b812f1d0a5ca8f5efe7f5882f468af10682ca8
-> 
-> Please try booting 2.6.31 with "pci=use_crs" and report the result.
-> 
-> If possible, please also try booting an upstream kernel containing
-> the patch above (without "pci=use_crs") and report that result, too.
+commit 9a3f45116f5e08819136cd512fd7f6450ac22aa8
+Author: Michael Buesch <mb@bu3sch.de>
+Date:   Wed Oct 28 22:08:13 2009 +0100
 
-Ping!  A.G., have you had a chance to try this out?
+    b43: Fix DMA TX bounce buffer copying
+    
+    b43 allocates a bouncebuffer, if the supplied TX skb is in an invalid
+    memory range for DMA.
+    However, this is broken in that it fails to copy over some metadata to the
+    new skb.
+    
+    This patch fixes three problems:
+    * Failure to adjust the ieee80211_tx_info pointer to the new buffer.
+      This results in a kmemcheck warning.
+    * Failure to copy the skb cb, which contains ieee80211_tx_info, to the new skb.
+      This results in breakage of various TX-status postprocessing (Rate control).
+    * Failure to transfer the queue mapping.
+      This results in the wrong queue being stopped on saturation and can result in queue overflow.
+    
+    Signed-off-by: Michael Buesch <mb@bu3sch.de>
+    Tested-by: Christian Casteyde <casteyde.christian@free.fr>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+---
+
+We forgot to CC -stable on this patch, but it fixes a bug that users are hitting
+(bug #14582)
+
+
+---
+ drivers/net/wireless/b43/dma.c |   15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+--- linux-2.6.31.orig/drivers/net/wireless/b43/dma.c
++++ linux-2.6.31/drivers/net/wireless/b43/dma.c
+@@ -1158,8 +1158,9 @@ struct b43_dmaring *parse_cookie(struct 
+ }
+ 
+ static int dma_tx_fragment(struct b43_dmaring *ring,
+-			   struct sk_buff *skb)
++			   struct sk_buff **in_skb)
+ {
++	struct sk_buff *skb = *in_skb;
+ 	const struct b43_dma_ops *ops = ring->ops;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	u8 *header;
+@@ -1225,8 +1226,14 @@ static int dma_tx_fragment(struct b43_dm
+ 		}
+ 
+ 		memcpy(skb_put(bounce_skb, skb->len), skb->data, skb->len);
++		memcpy(bounce_skb->cb, skb->cb, sizeof(skb->cb));
++		bounce_skb->dev = skb->dev;
++		skb_set_queue_mapping(bounce_skb, skb_get_queue_mapping(skb));
++		info = IEEE80211_SKB_CB(bounce_skb);
++
+ 		dev_kfree_skb_any(skb);
+ 		skb = bounce_skb;
++		*in_skb = bounce_skb;
+ 		meta->skb = skb;
+ 		meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
+ 		if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
+@@ -1359,7 +1366,11 @@ int b43_dma_tx(struct b43_wldev *dev, st
+ 	 * static, so we don't need to store it per frame. */
+ 	ring->queue_prio = skb_get_queue_mapping(skb);
+ 
+-	err = dma_tx_fragment(ring, skb);
++	/* dma_tx_fragment might reallocate the skb, so invalidate pointers pointing
++	 * into the skb data or cb now. */
++	hdr = NULL;
++	info = NULL;
++	err = dma_tx_fragment(ring, &skb);
+ 	if (unlikely(err == -ENOKEY)) {
+ 		/* Drop this packet, as we don't have the encryption key
+ 		 * anymore and must not transmit it unencrypted. */
+
+-- 
+Greetings, Michael.
