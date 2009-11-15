@@ -1,35 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out003.kontent.com ([81.88.40.217]:37198 "EHLO
-	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751611AbZKCLCo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 06:02:44 -0500
-From: Oliver Neukum <oliver@neukum.org>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB N devices in cdrom mode
-Date: Tue, 3 Nov 2009 11:55:05 +0100
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>,
-	Frank Schaefer <schaefer.frank@gmx.net>,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
-References: <200910171606.02961.oliver@neukum.org> <20091102211123.GI24436@one-eyed-alien.net> <1257198124.1027.63.camel@localhost.localdomain>
-In-Reply-To: <1257198124.1027.63.camel@localhost.localdomain>
+Received: from bu3sch.de ([62.75.166.246]:34335 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751889AbZKOLdg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Nov 2009 06:33:36 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: stable@kernel.org
+Subject: [PATCH stable] b43: Work around mac80211 race condition
+Date: Sun, 15 Nov 2009 12:33:08 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911031155.06400.oliver@neukum.org>
+  charset="us-ascii"
+Message-Id: <200911151233.10530.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Montag, 2. November 2009 22:42:04 schrieb Dan Williams:
-> The kernel drivers know which devices are supported and how to drive
-> them.  But because the eject code isn't in kernelspace, all that device
-> selection logic has to be duplicated in userspace with usb_modeswitch.
-> Pretty dumb.
+commit 18c6951091eca7645005a71b556106cc99a6f4b1
+Author: Larry Finger <Larry.Finger@lwfinger.net>
+Date:   Wed Jul 29 10:54:06 2009 -0500
 
-No, the kernel doesn't have to know which devices need a mode switch.
-Nor does user space need to know which driver a device needs to switch its
-mode.
+    b43: Work around mac80211 race condition
+    
+    As shown in http://thread.gmane.org/gmane.linux.kernel.wireless.general/36497,
+    mac80211 has a bug that allows a call to the TX routine after the queues have
+    been stopped. This situation will only occur under extreme stress. Although
+    b43 does not crash when this condition occurs, it does generate a WARN_ON and
+    also logs a queue overrun message. This patch recognizes b43 is not at fault
+    and logs a message only when the most verbose debugging mode is enabled. In
+    the unlikely event that the queue is not stopped when the DMA queue becomes
+    full, then a warning is issued.
+    
+    During testing of this patch with one output stream running repeated tcpperf
+    writes and a second running a flood ping, this routine was entered with
+    the DMA ring stopped about once per hour. The condition where the DMA queue is
+    full but the ring has not been stopped has never been seen by me.
+    
+    Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-	Regards
-		Oliver
 
+---
+
+We forgot to CC -stable on this patch, but it fixes a bug that users are hitting
+(bug #14582)
+
+
+diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
+index 7964cc3..41a0e9c 100644
+--- a/drivers/net/wireless/b43/dma.c
++++ b/drivers/net/wireless/b43/dma.c
+@@ -1334,13 +1334,22 @@ int b43_dma_tx(struct b43_wldev *dev, struct sk_buff *skb)
+ 	spin_lock_irqsave(&ring->lock, flags);
+ 
+ 	B43_WARN_ON(!ring->tx);
+-	/* Check if the queue was stopped in mac80211,
+-	 * but we got called nevertheless.
+-	 * That would be a mac80211 bug. */
+-	B43_WARN_ON(ring->stopped);
+ 
+-	if (unlikely(free_slots(ring) < TX_SLOTS_PER_FRAME)) {
+-		b43warn(dev->wl, "DMA queue overflow\n");
++	if (unlikely(ring->stopped)) {
++		/* We get here only because of a bug in mac80211.
++		 * Because of a race, one packet may be queued after
++		 * the queue is stopped, thus we got called when we shouldn't.
++		 * For now, just refuse the transmit. */
++		if (b43_debug(dev, B43_DBG_DMAVERBOSE))
++			b43err(dev->wl, "Packet after queue stopped\n");
++		err = -ENOSPC;
++		goto out_unlock;
++	}
++
++	if (unlikely(WARN_ON(free_slots(ring) < TX_SLOTS_PER_FRAME))) {
++		/* If we get here, we have a real error with the queue
++		 * full, but queues not stopped. */
++		b43err(dev->wl, "DMA queue overflow\n");
+ 		err = -ENOSPC;
+ 		goto out_unlock;
+ 	}
+
+-- 
+Greetings, Michael.
