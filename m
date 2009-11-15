@@ -1,137 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:15025 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756374AbZKKKaq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 05:30:46 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: [PATCH, v2] cfg80211: introduce nl80211_get_ifidx()
-Date: Wed, 11 Nov 2009 11:30:02 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>
+Received: from nbd.name ([88.198.39.176]:41972 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751238AbZKOWH0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Nov 2009 17:07:26 -0500
+Message-ID: <4B007BA2.5020209@openwrt.org>
+Date: Sun, 15 Nov 2009 23:07:30 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200911111130.02671.holgerschurig@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2 1/2] mac80211: add the total ampdu length to tx info
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-... which get's rid of three indentical cut-n-paste sections.
-
-Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
-
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-v2: moved setting of cb->args[0] in nl80211_dump_scan()
-    changed to "diff -p"
 
---- linux-wl.orig/net/wireless/nl80211.c
-+++ linux-wl/net/wireless/nl80211.c
-@@ -151,6 +151,26 @@ nl80211_key_policy[NL80211_KEY_MAX + 1] 
- 	[NL80211_KEY_DEFAULT_MGMT] = { .type = NLA_FLAG },
- };
- 
-+/* ifidx get helper */
-+static int nl80211_get_ifidx(struct netlink_callback *cb)
-+{
-+	int res;
-+
-+	res = nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
-+			  nl80211_fam.attrbuf, nl80211_fam.maxattr,
-+			  nl80211_policy);
-+	if (res)
-+		return res;
-+
-+	if (!nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX])
-+		return -EINVAL;
-+
-+	res = nla_get_u32(nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX]);
-+	if (!res)
-+		return -EINVAL;
-+	return res;
-+}
-+
- /* IE validation */
- static bool is_valid_ie_attr(const struct nlattr *attr)
- {
-@@ -1682,20 +1702,10 @@ static int nl80211_dump_station(struct s
- 	int sta_idx = cb->args[1];
- 	int err;
- 
--	if (!ifidx) {
--		err = nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
--				  nl80211_fam.attrbuf, nl80211_fam.maxattr,
--				  nl80211_policy);
--		if (err)
--			return err;
--
--		if (!nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX])
--			return -EINVAL;
--
--		ifidx = nla_get_u32(nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX]);
--		if (!ifidx)
--			return -EINVAL;
--	}
-+	if (!ifidx)
-+		ifidx = nl80211_get_ifidx(cb);
-+	if (ifidx < 0)
-+		return ifidx;
- 
- 	rtnl_lock();
- 
-@@ -2145,20 +2155,10 @@ static int nl80211_dump_mpath(struct sk_
- 	int path_idx = cb->args[1];
- 	int err;
- 
--	if (!ifidx) {
--		err = nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
--				  nl80211_fam.attrbuf, nl80211_fam.maxattr,
--				  nl80211_policy);
--		if (err)
--			return err;
--
--		if (!nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX])
--			return -EINVAL;
--
--		ifidx = nla_get_u32(nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX]);
--		if (!ifidx)
--			return -EINVAL;
--	}
-+	if (!ifidx)
-+		ifidx = nl80211_get_ifidx(cb);
-+	if (ifidx < 0)
-+		return ifidx;
- 
- 	rtnl_lock();
- 
-@@ -3181,21 +3181,11 @@ static int nl80211_dump_scan(struct sk_b
- 	int start = cb->args[1], idx = 0;
- 	int err;
- 
--	if (!ifidx) {
--		err = nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
--				  nl80211_fam.attrbuf, nl80211_fam.maxattr,
--				  nl80211_policy);
--		if (err)
--			return err;
--
--		if (!nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX])
--			return -EINVAL;
--
--		ifidx = nla_get_u32(nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX]);
--		if (!ifidx)
--			return -EINVAL;
--		cb->args[0] = ifidx;
--	}
-+	if (!ifidx)
-+		ifidx = nl80211_get_ifidx(cb);
-+	if (ifidx < 0)
-+		return ifidx;
-+	cb->args[0] = ifidx;
- 
- 	dev = dev_get_by_index(sock_net(skb->sk), ifidx);
- 	if (!dev)
-
-
--- 
-http://www.holgerschurig.de
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -390,10 +390,12 @@ struct ieee80211_tx_rate {
+  * @control: union for control data
+  * @status: union for status data
+  * @driver_data: array of driver_data pointers
+- * @ampdu_ack_len: number of aggregated frames.
++ * @ampdu_ack_len: number of acked aggregated frames.
+  * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
+  * @ampdu_ack_map: block ack bit map for the aggregation.
+  * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
++ * @ampdu_len: number of aggregated frames.
++ * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
+  * @ack_signal: signal strength of the ACK frame
+  */
+ struct ieee80211_tx_info {
+@@ -428,7 +430,8 @@ struct ieee80211_tx_info {
+ 			u8 ampdu_ack_len;
+ 			u64 ampdu_ack_map;
+ 			int ack_signal;
+-			/* 8 bytes free */
++			u8 ampdu_len;
++			/* 7 bytes free */
+ 		} status;
+ 		struct {
+ 			struct ieee80211_tx_rate driver_rates[
