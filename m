@@ -1,76 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:54851 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751868AbZK1Xym (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Nov 2009 18:54:42 -0500
-Received: by fxm5 with SMTP id 5so2617333fxm.28
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Nov 2009 15:54:48 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/5] ar9170: small misc changes
-Cc: John W Linville <linville@tuxdriver.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sun, 29 Nov 2009 00:59:48 +0100
+Received: from nbd.name ([88.198.39.176]:33691 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752950AbZKOOgX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Nov 2009 09:36:23 -0500
+Message-ID: <4B0011EB.5080008@openwrt.org>
+Date: Sun, 15 Nov 2009 15:36:27 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200911290059.48760.chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 1/2] mac80211: add private driver flags and ampdu length
+ to tx info
+References: <4AFED564.8030804@openwrt.org>	 <1258293706.6294.7.camel@johannes.local>  <4B000DF5.4020606@openwrt.org> <1258295263.32159.2.camel@johannes.local>
+In-Reply-To: <1258295263.32159.2.camel@johannes.local>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch aggregates a bunch of small random changes 
-that won't fit really anywhere else properly.
+Johannes Berg wrote:
+> On Sun, 2009-11-15 at 15:19 +0100, Felix Fietkau wrote:
+> 
+>> >> + * @ampdu_ack_len: number of acked aggregated frames.
+>> >> + * 	relevant only if ieee80211_tx_status_ampdu was set.
+>> > 
+>> > why lowercase that?
+>> Sorry, late night vim accident. I'll resend...
+> 
+> same a few lines down too
+> 
+>> >> -	/* 2 byte hole */
+>> >> -	u8 pad[2];
+>> >> +	u8 driver_flags;
+>> >> +	u8 pad;
+>> > 
+>> > The ampdu_len seems ok, but I'm still not convinced this is right.
+>> > Drivers _should_ have enough space in the driver parts of this struct,
+>> > and not need flags here. I realise that you do need that because of the
+>> > RC and other internal things, but maybe you could simply use "pad[0]"
+>> > for that so not to encourage others to start doing this too?
+> 
+>> If you prefer it using the padding directly, I can change it to that
+>> too. I don't mind as long as I have space to put that stuff into and
+>> don't need to use rate_driver_data.
+> 
+> I can't really decide. On the one hand, using pad seems bad, but on the
+> other hand I'm still hoping this will just be temporary (for some value
+> thereof). But in that case I fear that we might find somebody else
+> started using the new field and we need to fix that driver too then...
+There are only two parts that need this. The first one is the ath9k
+virtual wiphy type, no idea when that will change.
+The second one is for passing stuff to rate control. That one will go
+away once we replace ath9k's rc.c ;)
+It might just be temporary...
 
-1. move tid-locating macro into a separate function.
-
-2. remove redundant NULL check.
-
-3. add modulation mask definition
-
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
-index d8ecf85..20f04ab 100644
---- a/drivers/net/wireless/ath/ar9170/main.c
-+++ b/drivers/net/wireless/ath/ar9170/main.c
-@@ -194,12 +194,15 @@ static inline u16 ar9170_get_seq(struct sk_buff *skb)
- 	return ar9170_get_seq_h((void *) txc->frame_data);
- }
- 
-+static inline u16 ar9170_get_tid_h(struct ieee80211_hdr *hdr)
-+{
-+	return (ieee80211_get_qos_ctl(hdr))[0] & IEEE80211_QOS_CTL_TID_MASK;
-+}
-+
- static inline u16 ar9170_get_tid(struct sk_buff *skb)
- {
- 	struct ar9170_tx_control *txc = (void *) skb->data;
--	struct ieee80211_hdr *hdr = (void *) txc->frame_data;
--
--	return (ieee80211_get_qos_ctl(hdr))[0] & IEEE80211_QOS_CTL_TID_MASK;
-+	return ar9170_get_tid_h((struct ieee80211_hdr *) txc->frame_data);
- }
- 
- #define GET_NEXT_SEQ(seq)	((seq + 1) & 0x0fff)
-@@ -1660,8 +1663,7 @@ static bool ar9170_tx_ampdu(struct ar9170 *ar)
- 		 * tell the FW/HW that this is the last frame,
- 		 * that way it will wait for the immediate block ack.
- 		 */
--		if (likely(skb_peek_tail(&agg)))
--			ar9170_tx_indicate_immba(ar, skb_peek_tail(&agg));
-+		ar9170_tx_indicate_immba(ar, skb_peek_tail(&agg));
- 
- #ifdef AR9170_TXAGG_DEBUG
- 		printk(KERN_DEBUG "%s: generated A-MPDU looks like this:\n",
-diff --git a/drivers/net/wireless/ath/ar9170/hw.h b/drivers/net/wireless/ath/ar9170/hw.h
-index 701ddb7..0a1d4c2 100644
---- a/drivers/net/wireless/ath/ar9170/hw.h
-+++ b/drivers/net/wireless/ath/ar9170/hw.h
-@@ -276,6 +276,7 @@ struct ar9170_tx_control {
- #define AR9170_TX_MAC_RATE_PROBE		0x8000
- 
- /* either-or */
-+#define AR9170_TX_PHY_MOD_MASK			0x00000003
- #define AR9170_TX_PHY_MOD_CCK			0x00000000
- #define AR9170_TX_PHY_MOD_OFDM			0x00000001
- #define AR9170_TX_PHY_MOD_HT			0x00000002
+- Felix
