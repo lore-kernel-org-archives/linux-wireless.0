@@ -1,143 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:2277 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755340AbZKIMkT (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46859 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752992AbZKPS5g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 07:40:19 -0500
-Received: by fg-out-1718.google.com with SMTP id d23so702887fga.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 04:40:25 -0800 (PST)
-From: Rui Paulo <rpaulo@gmail.com>
-To: linville@tuxdriver.com
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Rui Paulo <rpaulo@gmail.com>,
-	Javier Cardona <rpaulo@cozybit.com>
-Subject: [PATCH 08/21] mac80211: allow processing of more than one HWMP IE
-Date: Mon,  9 Nov 2009 12:39:28 +0000
-Message-Id: <1257770381-7680-9-git-send-email-rpaulo@gmail.com>
-In-Reply-To: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
-References: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
+	Mon, 16 Nov 2009 13:57:36 -0500
+Subject: Re: iw [PATCH] update to latest kernel changes (mesh)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rui Paulo <rpaulo@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1257771187-7894-2-git-send-email-rpaulo@gmail.com>
+References: <1257771187-7894-1-git-send-email-rpaulo@gmail.com>
+	 <1257771187-7894-2-git-send-email-rpaulo@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-e7varSWYs2tiz32ScI5X"
+Date: Mon, 16 Nov 2009 19:57:41 +0100
+Message-ID: <1258397861.32159.37.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since the HWMP IEs are now all optional and the action code is fixed,
-allow the HWMP code to find and process each IE on the path
-selection action frames.
 
-Signed-off-by: Rui Paulo <rpaulo@gmail.com>
-Signed-off-by: Javier Cardona <rpaulo@cozybit.com>
-Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
-Tested-by: Brian Cavagnolo <brian@cozybit.com>
----
- net/mac80211/mesh_hwmp.c |   47 ++++++++++++++++++++++++---------------------
- 1 files changed, 25 insertions(+), 22 deletions(-)
+--=-e7varSWYs2tiz32ScI5X
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 6dbaec5..e67e812 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -192,7 +192,7 @@ int mesh_path_error_tx(u8 *dst, __le32 dst_dsn, u8 *ra,
- 	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
- 	/* BSSID is left zeroed, wildcard value */
- 	mgmt->u.action.category = MESH_PATH_SEL_CATEGORY;
--	mgmt->u.action.u.mesh_action.action_code = MPATH_PERR;
-+	mgmt->u.action.u.mesh_action.action_code = MESH_PATH_SEL_ACTION;
- 	ie_len = 12;
- 	pos = skb_put(skb, 2 + ie_len);
- 	*pos++ = WLAN_EID_PERR;
-@@ -277,7 +277,7 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
-  */
- static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
- 			    struct ieee80211_mgmt *mgmt,
--			    u8 *hwmp_ie)
-+			    u8 *hwmp_ie, enum mpath_frame_type action)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct mesh_path *mpath;
-@@ -288,7 +288,6 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
- 	unsigned long orig_lifetime, exp_time;
- 	u32 last_hop_metric, new_metric;
- 	bool process = true;
--	u8 action = mgmt->u.action.u.mesh_action.action_code;
- 
- 	rcu_read_lock();
- 	sta = sta_info_get(local, mgmt->sa);
-@@ -443,6 +442,7 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 	mhwmp_dbg("received PREQ\n");
- 
- 	if (memcmp(dst_addr, sdata->dev->dev_addr, ETH_ALEN) == 0) {
-+		mhwmp_dbg("PREQ is for us\n");
- 		forward = false;
- 		reply = true;
- 		metric = 0;
-@@ -498,6 +498,7 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 			ifmsh->mshstats.dropped_frames_ttl++;
- 			return;
- 		}
-+		mhwmp_dbg("forwarding the PREQ\n");
- 		--ttl;
- 		flags = PREQ_IE_FLAGS(preq_elem);
- 		preq_id = PREQ_IE_PREQ_ID(preq_elem);
-@@ -524,6 +525,8 @@ static void hwmp_prep_frame_process(struct ieee80211_sub_if_data *sdata,
- 	u8 next_hop[ETH_ALEN];
- 	u32 dst_dsn, orig_dsn, lifetime;
- 
-+	mhwmp_dbg("received PREP\n");
-+
- 	/* Note that we divert from the draft nomenclature and denominate
- 	 * destination to what the draft refers to as origininator. So in this
- 	 * function destnation refers to the final destination of the PREP,
-@@ -625,32 +628,32 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
- 	ieee802_11_parse_elems(mgmt->u.action.u.mesh_action.variable,
- 			len - baselen, &elems);
- 
--	switch (mgmt->u.action.u.mesh_action.action_code) {
--	case MPATH_PREQ:
--		if (!elems.preq || elems.preq_len != 37)
-+	mhwmp_dbg("RX path selection frame\n");
-+	if (elems.preq) {
-+		if (elems.preq_len != 37)
- 			/* Right now we support just 1 destination and no AE */
- 			return;
--		last_hop_metric = hwmp_route_info_get(sdata, mgmt, elems.preq);
--		if (!last_hop_metric)
--			return;
--		hwmp_preq_frame_process(sdata, mgmt, elems.preq, last_hop_metric);
--		break;
--	case MPATH_PREP:
--		if (!elems.prep || elems.prep_len != 31)
-+		last_hop_metric = hwmp_route_info_get(sdata, mgmt, elems.preq,
-+						      MPATH_PREQ);
-+		if (last_hop_metric)
-+			hwmp_preq_frame_process(sdata, mgmt, elems.preq,
-+						last_hop_metric);
-+	}
-+	if (elems.prep) {
-+		if (elems.prep_len != 31)
- 			/* Right now we support no AE */
- 			return;
--		last_hop_metric = hwmp_route_info_get(sdata, mgmt, elems.prep);
--		if (!last_hop_metric)
--			return;
--		hwmp_prep_frame_process(sdata, mgmt, elems.prep, last_hop_metric);
--		break;
--	case MPATH_PERR:
--		if (!elems.perr || elems.perr_len != 12)
-+		last_hop_metric = hwmp_route_info_get(sdata, mgmt, elems.prep,
-+						      MPATH_PREP);
-+		if (last_hop_metric)
-+			hwmp_prep_frame_process(sdata, mgmt, elems.prep,
-+						last_hop_metric);
-+	}
-+	if (elems.perr) {
-+		if (elems.perr_len != 12)
- 			/* Right now we support only one destination per PERR */
- 			return;
- 		hwmp_perr_frame_process(sdata, mgmt, elems.perr);
--	default:
--		return;
- 	}
- 
- }
--- 
-1.5.6.5
+On Mon, 2009-11-09 at 12:53 +0000, Rui Paulo wrote:
+
+>  mpath.c   |    8 ++++----
+>  nl80211.h |   11 +++++++----
+
+> -		[NL80211_MPATH_INFO_DSN] =3D { .type =3D NLA_U32 },
+> +		[NL80211_MPATH_INFO_SN] =3D { .type =3D NLA_U32 },
+
+I've kinda taken this, but it shouldn't have been necessary for
+compiling.
+
+Please don't ever again make API changes in nl80211.h without keeping a
+backward compatible #define and noting so explicitly. I'd also
+appreciate a patch adding the #define DSN SN just in case there are
+other tools using nl80211.h and relying on it already.
+
+johannes
+
+--=-e7varSWYs2tiz32ScI5X
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLAaCcAAoJEODzc/N7+QmahTUQAI1xFdTBhhX37vTqxuTSwQ6d
+qhpj5uq2MEd8XuJcLxkNgQXfyTtYYAG81MUdm8MwQ+8MZsRuPuoaSvSJ/YaB4SGE
+Mluz5COHD5xebqjy/PdshqNzPafyN9BBTcwj6gONbcYIzqPFx/JX/tzbN72R3eWQ
+4rnI54oewGBLGTQRXuDXZHVjKepKUcyXDfQLcZ+Ee3J2xt4tNBBCrheG+QV/c6v0
+CgKPjAJtt9u+7VfUWYQroWdE4ygSnY8xilgktCtrOEDjvwpsgo4yvJC/YlkcnK4m
+X8jGMOPBo1nINtI8WDAaDhBgdOql8gxiM9lqiRRXZroMMezuDrft5e1aMQ/Zom52
+PsScfH9YmVh9oJsCoEAdEFLFLF6W0XDequpJIlb1s+uSYqkxgd7NuHHKfh4orSKs
+Aun4+mnFEXKjTUjkogEX3fUVqA0pJkGlMePciC1ddS+fkRHBNl07Gdaij3U5DQCo
+if1ZFA+bTxLCEylrbfYQMRHad2vWpHaMJ2gabnVgjVNcAOUVYHEcOwabBGzaIvnb
+EPp0P/b+LyHu39nXqcJPL0Gm7wjE8nHo67IWHKau36eynJKEgvAwYf+x2sLVrlBv
+aw+307IOM15MdgjK4WJQMq+kSvVJcNr1mVEgeLsei6RP2O4SEDloRz4shN1lyRao
+MU3ZxBK+g8tvdlqjFrU4
+=iAZI
+-----END PGP SIGNATURE-----
+
+--=-e7varSWYs2tiz32ScI5X--
 
