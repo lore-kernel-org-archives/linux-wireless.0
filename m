@@ -1,58 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:38303 "EHLO lo.gmane.org"
+Received: from mail.atheros.com ([12.36.123.2]:56907 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751946AbZKVM22 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Nov 2009 07:28:28 -0500
-Received: from list by lo.gmane.org with local (Exim 4.50)
-	id 1NCBYO-0000dR-0j
-	for linux-wireless@vger.kernel.org; Sun, 22 Nov 2009 13:28:32 +0100
-Received: from lister.visitors.farnz.org.uk ([81.187.250.199])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2009 13:28:31 +0100
-Received: from simon by lister.visitors.farnz.org.uk with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2009 13:28:31 +0100
-To: linux-wireless@vger.kernel.org
-From: Simon Farnsworth <simon@farnz.org.uk>
-Subject: HTC Hero cannot get an address from an ath5k AP
-Date: Sun, 22 Nov 2009 12:28:03 +0000
-Message-ID: <hebaok$2ip$1@ger.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+	id S1752303AbZKPPgp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Nov 2009 10:36:45 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 16 Nov 2009 07:36:51 -0800
+Date: Mon, 16 Nov 2009 07:36:46 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: Re: [PATCH 2/2] ath9k_hw: Fix AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_BB
+	and its shift value in 0x4054
+Message-ID: <20091116153646.GC4237@tux>
+References: <1258102960-22768-1-git-send-email-vasanth@atheros.com> <1258102960-22768-2-git-send-email-vasanth@atheros.com> <20091113171438.GD3865@tux> <20091116072004.GC27858@vasanth-laptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20091116072004.GC27858@vasanth-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Sun, Nov 15, 2009 at 11:20:07PM -0800, Vasanth Thiagarajan wrote:
+> On Fri, Nov 13, 2009 at 10:44:38PM +0530, Luis Rodriguez wrote:
+> > On Fri, Nov 13, 2009 at 01:02:40AM -0800, Vasanth Thiagarajan wrote:
+> > > The bit value of AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_BB is wrong, it should
+> > > be 0x400 and the number of bits to be right shifted is 10. Having this
+> > > wrong value in 0x4054 sometimes affects bt quality on btcoex environment.
+> > >
+> > > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> >
+> > These both seem small enough and reasonable for stable fixes no?
+> 
+> yeah, I'll resend them CC'ing stable.
+> 
+> > Although I didn't get the impact of the first one..
+> 
+> debruijn32 (0x077CB531UL) is used to find the index of the geric timer
+> which generated the interrupt. On a 64-bit environment, 0x077CB531UL
+> will result in indexing more than 32 in gen_timer_index[] which has
+> memory allocated only for 32 u32.
 
-I've recently acquired a HTC Hero, and thought I'd try and use it with my 
-ath5k based AP. It doesn't work, and I'm at a loss to debug it.
+Can this be added to the commit log?
 
-The only hint I have is that neither of my (Linux-based) laptops can hold 
-association to the AP without traffic flowing continuously, which leads me 
-to suspect power saving issues.
-
-My hostapd configuration file is attached; I've checked that I've used the 
-correct WEP key. I can provide any more information that's needed. My 
-controller appears in lspci as:
-
-02:04.0 Ethernet controller [0200]: Atheros Communications Inc. 
-AR5212/AR5213 Multiprotocol MAC/baseband processor [168c:0013] (rev 01)
-
-and in dmesg as:
-
-[572338.589520] ath5k phy0: Atheros AR5414 chip found (MAC: 0xa5, PHY: 0x61)
-
-I have:
-
-CONFIG_ATH_COMMON=m
-CONFIG_ATH_DEBUG=y
-CONFIG_ATH5K=m
-CONFIG_ATH5K_DEBUG=y
-
-set in my .config, and have debugfs available.
--- 
-Any help will be gratefully received,
-
-Simon Farnsworth
-
+  Luis
