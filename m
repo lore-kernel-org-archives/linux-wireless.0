@@ -1,74 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml108.kpnxchange.com ([195.121.3.12]:60065 "EHLO
-	CPSMTPM-EML108.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757292AbZKSWae (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54294 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753850AbZKPOYj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2009 17:30:34 -0500
-Message-ID: <4B05C70D.1030703@vanwingerde.net>
-Date: Thu, 19 Nov 2009 23:30:37 +0100
-From: Gertjan van Wingerde <gertjan@vanwingerde.net>
-MIME-Version: 1.0
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: request TX status where needed
-References: <1258589310.30511.91.camel@johannes.local> <4B05C234.3000908@gmail.com>
-In-Reply-To: <4B05C234.3000908@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 16 Nov 2009 09:24:39 -0500
+Message-Id: <20091116142412.978249174@sipsolutions.net>
+Date: Mon, 16 Nov 2009 15:21:35 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Jouni Malinen <j@w1.fi>
+Subject: [RFC 1/3] mac80211: move cmntr flag out of rx flags
+References: <20091116142134.288122270@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/19/09 23:09, Gertjan van Wingerde wrote:
-> On 11/19/09 01:08, Johannes Berg wrote:
->> Right now all frames mac80211 hands to the driver
->> have the IEEE80211_TX_CTL_REQ_TX_STATUS flag set to
->> request TX status. This isn't really necessary, only
->> the injected frames need TX status (the latter for
->> hostapd) so move setting this flag.
->>
->> The rate control algorithms also need TX status, but
->> they don't require it.
->>
->> Also, rt2x00 uses that bit for its own purposes and
->> seems to require it being set for all frames, but
->> that can be fixed in rt2x00.
->>
->> This doesn't really change anything for any drivers
->> but in the future drivers using hw-rate control may
->> opt to not report TX status for frames that don't
->> have the IEEE80211_TX_CTL_REQ_TX_STATUS flag set.
->>
->> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->> Acked-by: Ivo van Doorn <IvDoorn@gmail.com> [rt2x00 bits]
->> ---
-> 
->> @@ -287,12 +288,12 @@ void rt2x00lib_txdone(struct queue_entry
->>  	}
->>  
->>  	/*
->> -	 * Only send the status report to mac80211 when TX status was
->> -	 * requested by it. If this was a extra frame coming through
->> -	 * a mac80211 library call (RTS/CTS) then we should not send the
->> -	 * status report back.
->> +	 * Only send the status report to mac80211 when it's a frame
->> +	 * that originated in mac80211. If this was a extra frame coming
->> +	 * through a mac80211 library call (RTS/CTS) then we should not
->> +	 * send the status report back.
->>  	 */
->> -	if (tx_info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)
->> +	if (!(skbdesc_flags & SKBDESC_NOT_MAC80211))
->>  		ieee80211_tx_status_irqsafe(rt2x00dev->hw, entry->skb);
->>  	else
->>  		dev_kfree_skb_irq(entry->skb);
-> 
-> I'm slightly confused here. Shouldn't both the tx_info->flags and skbdesc_flags be checked here?
-> Now we run in the situation where tx_status is report even if mac80211 didn't ask for it.
-> 
+The RX flags should soon be used only for flags
+that cannot change within an a-MPDU, so move the
+cooked monitor flag into the RX status flags.
 
-Never mind. I missed the change from "requested" to "required" for the IEEE80211_TX_CTL_REQ_TX_STATUS flag.
-
-Everything is alright.
-
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
-Gertjan.
+ include/net/mac80211.h     |    4 ++++
+ net/mac80211/ieee80211_i.h |    3 +--
+ net/mac80211/rx.c          |    4 ++--
+ 3 files changed, 7 insertions(+), 4 deletions(-)
+
+--- wireless-testing.orig/include/net/mac80211.h	2009-11-16 15:11:58.000000000 +0100
++++ wireless-testing/include/net/mac80211.h	2009-11-16 15:12:28.000000000 +0100
+@@ -510,6 +510,9 @@ ieee80211_tx_info_clear_status(struct ie
+  * @RX_FLAG_HT: HT MCS was used and rate_idx is MCS index
+  * @RX_FLAG_40MHZ: HT40 (40 MHz) was used
+  * @RX_FLAG_SHORT_GI: Short guard interval was used
++ * @RX_FLAG_INTERNAL_CMTR: set internally after frame was reported
++ *	on cooked monitor to avoid double-reporting it for multiple
++ *	virtual interfaces
+  */
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR	= 1<<0,
+@@ -523,6 +526,7 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_HT		= 1<<9,
+ 	RX_FLAG_40MHZ		= 1<<10,
+ 	RX_FLAG_SHORT_GI	= 1<<11,
++	RX_FLAG_INTERNAL_CMTR	= 1<<12,
+ };
+ 
+ /**
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-11-16 15:11:46.000000000 +0100
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-11-16 15:11:50.000000000 +0100
+@@ -162,8 +162,7 @@ typedef unsigned __bitwise__ ieee80211_r
+ /* frame is destined to interface currently processed (incl. multicast frames) */
+ #define IEEE80211_RX_RA_MATCH		BIT(1)
+ #define IEEE80211_RX_AMSDU		BIT(2)
+-#define IEEE80211_RX_CMNTR_REPORTED	BIT(3)
+-#define IEEE80211_RX_FRAGMENTED		BIT(4)
++#define IEEE80211_RX_FRAGMENTED		BIT(3)
+ 
+ struct ieee80211_rx_data {
+ 	struct sk_buff *skb;
+--- wireless-testing.orig/net/mac80211/rx.c	2009-11-16 15:12:38.000000000 +0100
++++ wireless-testing/net/mac80211/rx.c	2009-11-16 15:13:15.000000000 +0100
+@@ -1864,7 +1864,7 @@ static void ieee80211_rx_cooked_monitor(
+ 	struct net_device *prev_dev = NULL;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 
+-	if (rx->flags & IEEE80211_RX_CMNTR_REPORTED)
++	if (status->flag & RX_FLAG_INTERNAL_CMTR)
+ 		goto out_free_skb;
+ 
+ 	if (skb_headroom(skb) < sizeof(*rthdr) &&
+@@ -1925,7 +1925,7 @@ static void ieee80211_rx_cooked_monitor(
+ 	} else
+ 		goto out_free_skb;
+ 
+-	rx->flags |= IEEE80211_RX_CMNTR_REPORTED;
++	status->flag |= RX_FLAG_INTERNAL_CMTR;
+ 	return;
+ 
+  out_free_skb:
+
+
