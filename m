@@ -1,84 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:35348 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758054AbZKJUaa (ORCPT
+Received: from dmz4.indranet.co.nz ([203.97.93.68]:57825 "EHLO
+	mail.indranet.co.nz" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1754462AbZKPXMW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 15:30:30 -0500
+	Mon, 16 Nov 2009 18:12:22 -0500
+Date: Tue, 17 Nov 2009 12:13:14 +1300 (NZDT)
+From: Derek Smithies <derek@indranet.co.nz>
+To: Adam Wozniak <awozniak@irobot.com>
+cc: Johannes Berg <johannes@sipsolutions.net>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: Re: Adhoc networking, was Re: compat-wireless and minstrel
+In-Reply-To: <4B01D4A5.7060204@irobot.com>
+Message-ID: <alpine.DEB.2.00.0911171156210.3829@kauri.acheron.indranet.co.nz>
+References: <4AF0D54D.4090303@irobot.com>  <alpine.DEB.2.00.0911111508391.6214@kauri.acheron.indranet.co.nz>  <4AFC655A.5020706@irobot.com> <200911122103.27455.chunkeey@googlemail.com>  <4AFC8E4F.5090307@irobot.com>  <4AFC8F0D.5020700@irobot.com>
+ <1258097352.3899.75.camel@johannes.local>  <4AFDDF19.8060202@irobot.com>  <1258191039.6167.40.camel@johannes.local>  <4B018B26.2070008@irobot.com> <1258392453.32159.28.camel@johannes.local> <4B0192A6.9050808@irobot.com> <alpine.DEB.2.00.0911170938380.3829@kauri.acheron.indranet.co.nz>
+ <4B01D4A5.7060204@irobot.com>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890911090749r5b35fb83s4991bb9c44a1773a@mail.gmail.com>
-References: <43e72e890911041540hd1e5f87u8d282d9c95857504@mail.gmail.com>
-	<alpine.LFD.2.01.0911041551220.31845@localhost.localdomain>
-	<20091105071431.GA14055@elte.hu> <43e72e890911081135q78416ef7ua6c5991b15fb2659@mail.gmail.com>
-	<20091109071558.GC453@elte.hu> <43e72e890911090749r5b35fb83s4991bb9c44a1773a@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 10 Nov 2009 12:30:16 -0800
-Message-ID: <43e72e890911101230t23933eaem4d7bc10237e1a725@mail.gmail.com>
-Subject: Re: Reverting 5d423 fixes loading of ath9k on Acer Extensa 7630EZ
-To: Greg KH <greg@kroah.com>, Chris Wright <chrisw@sous-sol.org>,
-	stable@kernel.org
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Yannick Roehlly <yannick.roehlly@free.fr>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jesse.barnes@intel.com>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"John W. Linville" <linville@tuxdriver.com>, berndl81@gmx.at,
-	Ingo Molnar <mingo@elte.hu>,
-	Stefan Bader <stefan.bader@canonical.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 9, 2009 at 7:49 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Sun, Nov 8, 2009 at 11:15 PM, Ingo Molnar <mingo@elte.hu> wrote:
->>
->> * Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>
->>> On Wed, Nov 4, 2009 at 11:14 PM, Ingo Molnar <mingo@elte.hu> wrote:
->>> >
->>> > * Linus Torvalds <torvalds@linux-foundation.org> wrote:
->>> >
->>> >> On Wed, 4 Nov 2009, Luis R. Rodriguez wrote:
->>> >> >
->>> >> > Can you please consider reviewing this issue and help determine if
->>> >> > this indeed needs to be reverted for 2.6.32 and the next 2.6.31.y.
->>> >> >
->>> >> > I am curious if other devices would work by reverting this as well.
->>> >> > [ ... ] For details please feel free to check:
->>> >> >
->>> >> > http://bugzilla.kernel.org/show_bug.cgi?id=14402
->>> >>
->>> >> That same commit was the cause for
->>> >>
->>> >> ?? ?? ?? http://bugzilla.kernel.org/show_bug.cgi?id=13940
->>> >>
->>> >> and we just increased the rounding to make it go away (see commit
->>> >> 15b812f1). But that was a hack.
->>> >>
->>> >> And if that didn't help the ath9k case, then we should just revert
->>> >> entirely.
->>> >
->>> > Agreed - below is the combo 15b812f1 + 5d423ccd revert. (Would be nice
->>> > to get the boot log of the latest post-15b812f1 kernel that Yinghai
->>> > asked for before we revert, in the hope of better understanding the
->>> > problem.)
->>>
->>> Bernhard has confirmed the new patch fixes this issue.
->>
->> Good - so latest kernels should be fine (on Bernhard's box) and no
->> change is needed, right?
+Hi,
+
+Referring back to my letter below, you see that when A&B agree on their 
+BSSID,  this implies that A&B have agreed on:
+
+>> a)supported rates
+>> b)the value of X, the value of x
+>> c)the channel
+>> d)the ESSSID
+
+
+When B&C start talking, and C adopts the same BSSID as B, then we have (by 
+inference) that C has agreed to the same rates as A. There is no need to 
+pass rate information between C and A.
+
+===========================
+Ok, now here is a silly example. 
+Suppose C supports bitrates b4,b5 and b6.
+
+B does not support bitrates b4,b5 and b6.
+
+Further, A does support bitrates b4,b5,b6
+
+This could be that B only does 1, 2, 5.5 and 11MBits/sec. But A&C do 
+everything up to 54Mbit/sec.
+
+
+B has caused a problem cause he is deficient (not doing G-Rates)
+
+In one view, B should report that he has all the rates of A. B would then 
+hope that A's rate control algorithm will detect that B cannot do the 
+G-rates. Minstrel will do this fine. Stepup-Stepdown rate algorithms will 
+struggle here if their table is constructed in the wrong order.
+
+For this network, the BSSID defines the basic service set. you cannot have 
+nodes on the same BSSID who report as handling different rate sets.
+
+
+
+Derek.
+
+
+
+On Mon, 16 Nov 2009, Adam Wozniak wrote:
+
+> In your example where A&C can pass data, but not hear each other's beacons, 
+> how is rate information passed between them?  ProbeReq/Resp ?
 >
-> Yea, but it does mean we need a fix propagated down to older kernels.
+> Derek Smithies wrote:
+>> Hi,
+>>  Statistics is a wonderful thing.
+>> Every node is required to send a beacon at time
+>> X+r, X+x+r, X+2x+r, X+3x+r, ......
+>> 
+>> All nodes are agreed on the value of x (which is the beacon interval).
+>> All nodes are agreed on the value of X
+>> r is a random value, and is (from memory) 20 slots long.
+>> 
+>> given this, all nodes work (to borrow an analogy from music) in time, or 
+>> beat in sync with each other.
+>> 
+>> Now, if a node hears a beacon on its BSSID inside that r period, the node 
+>> will not transmit a beacon. This way, for a 20 node network in a room, you 
+>> should only get 1 (or sometimes 2) beacons transmitted every beacon 
+>> interval.
+>> 
+>> If we assume that every node correctly attempts to send a beacon somewhere 
+>> in that period r, and that somewhere is randomly distributed, then we will 
+>> hear a beacon from most nodes, which is good enough.
+>> 
+>> Consider the case of three nodes, A, B, C.
+>> 
+>> A and B are turned on, and create an Adhoc network. A and B agree on
+>> a)supported rates
+>> b)the value of X, the value of x
+>> c)the channel
+>> d)the ESSSID
+>> and so start sending a beacon. Inside this beacon is  BSSID. The BSSID is a 
+>> random value. The particular random value used implies acceptance of 
+>> a,b,c,d. Look at the name. Basic Service Set ID. The basic service set is 
+>> the collection of those values a,b,c,d.
+>> 
+>> Now, node C is turned on. A is positioned such that A&C cannot communicate. 
+>> However, B can communicate with A&C.
+>> 
+>> C is turned on, detects the presence of B, likes B's beacons, and agrees on 
+>> all the settings in B's beacons. In other words, C likes and agrees with 
+>> a,b,c,d.
+>> So C starts sending beacons with the same BSSID as B.
+>> At this point, it does not matter that A cannot set C's beacons. A and C 
+>> have agreed on the BSSID.
+>> 
+>> Change the story a little bit.
+>> In this locality, there is often a burst of 1ms of noise every 2ms. This 
+>> means that most beacons are shotdown. However, data packets at 54Mbit/sec 
+>> get through.
+>>  A&B saw each others beacons and agreed on a BSSID. C was turned on, and 
+>> agreed with the BSSID of B.
+>> 
+>> C sends out data packets, with the BSSID of B. A sees the datapackets of C. 
+>> Since the datapackets of C have A's BSSID, A has to accept them.
+>> 
+>> Now, you see where this is all going. What is the meaning of a beacon 
+>> containing a BSSID of all zero ?
+>> Further, you see that all nodes do need to send a beacon. This makes node 
+>> discovery a little easier.
+>> Even though A and C cannot see each others beacons, they should still 
+>> communicate as they have the same agreed on BSSID.
+>> 
+>> Derek.
+>> 
+>> 
+>> On Mon, 16 Nov 2009, Adam Wozniak wrote:
+>> 
+>>> This assumption seems too stoichastic.  Reading 802.11-2007 section 
+>>> 11.1.2.2, it doesn't seem that we're guaranteed to always receive beacons 
+>>> from all stations.  Stations will cancel their pending beacon transmission 
+>>> if they receive a beacon before their random delay times out.  In the 
+>>> extreme case where the number of stations is very large, it seems possible 
+>>> that you may never hear beacons for some stations.
+>>> 
+>>> Johannes Berg wrote:
+>>>> On Mon, 2009-11-16 at 09:25 -0800, Adam Wozniak wrote:
+>>>> 
+>>>>> If we have only three stations in an ad-hoc network, where all three can 
+>>>>> hear the other two, only one of them should be beaconing, correct? 
+>>>> 
+>>>> No, if they all behave correctly beaconing will be distributed.
+>>>> 
+>>>> johannes
+>>>> 
+>>> 
+>>> 
+>>> 
+>> 
+>
+>
+>
 
-Greg, please consider applying 15b812f1d0 to stable 2.6.31 as it fixes
-an issue introduced on 2.6.31 and only fixed now for 2.6.32. This
-should fix an issue when loading either sky2 or ath9k on some specific
-platforms.
+-- 
+Derek Smithies Ph.D.
+IndraNet Technologies Ltd.
+ph +64 3 365 6485
+Web: http://www.indranet-technologies.com/
 
-The details for the ath9k debugging are available on this bug:
+"The only thing IE should be used for is to download Fire Fox"
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14402
-
-  Luis
+"My favorite language is call STAR. It's extremely concise. It has
+  exactly one verb '*', which does exactly what I want at the moment."
+     --Larry Wall
