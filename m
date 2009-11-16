@@ -1,137 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:59911 "EHLO
-	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752854AbZK3VJH (ORCPT
+Received: from mail-gx0-f226.google.com ([209.85.217.226]:56822 "EHLO
+	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754823AbZKPXae (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2009 16:09:07 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Benoit Papillault <benoit.papillault@free.fr>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH v3 2/4] rt2x00: Remove SKBDESC_L2_PADDED flag.
-Date: Mon, 30 Nov 2009 22:08:16 +0100
-Message-Id: <1259615298-2305-3-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1259615298-2305-2-git-send-email-gwingerde@gmail.com>
-References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com>
- <1259615298-2305-2-git-send-email-gwingerde@gmail.com>
+	Mon, 16 Nov 2009 18:30:34 -0500
+Message-ID: <4B01E09D.3020608@lwfinger.net>
+Date: Mon, 16 Nov 2009 17:30:37 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Subject: Re: 2.6.32-rc7-git1: Reported regressions 2.6.30 -> 2.6.31
+References: <ipicVA1QUFF.A.zWB.1mdALB@chimera>
+In-Reply-To: <ipicVA1QUFF.A.zWB.1mdALB@chimera>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the improved L2 padding code, this flag is no longer necessary, as the
-rt2x00queue_remove_l2pad is capable of detecting by itself if L2 padding is
-applied.
-For received frames the RX descriptor flag is still being checked.
+On 11/16/2009 04:58 PM, Rafael J. Wysocki wrote:
+> This message contains a list of some regressions introduced between 2.6.30 and
+> 2.6.31, for which there are no fixes in the mainline I know of.  If any of them
+> have been fixed already, please let me know.
+> 
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14181
+> Subject		: b43 causes panic at ifconfig down / shutdown
+> Submitter	: Jeremy Huddleston <jeremyhu@freedesktop.org>
+> Date		: 2009-09-15 18:34 (63 days old)
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800pci.c   |    5 +----
- drivers/net/wireless/rt2x00/rt2800usb.c   |    4 +---
- drivers/net/wireless/rt2x00/rt2x00queue.c |    6 +-----
- drivers/net/wireless/rt2x00/rt2x00queue.h |    5 +----
- 4 files changed, 4 insertions(+), 16 deletions(-)
+This one is fixed by commit d50bae33d1358b909ade05ae121d83d3a60ab63f in
+mainline. The patch was also sent to stable.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 6fcb2bb..458378c 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -835,7 +835,6 @@ static void rt2800pci_fill_rxdone(struct queue_entry *entry,
- 				  struct rxdone_entry_desc *rxdesc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
--	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 	struct queue_entry_priv_pci *entry_priv = entry->priv_data;
- 	__le32 *rxd = entry_priv->desc;
- 	__le32 *rxwi = (__le32 *)entry->skb->data;
-@@ -883,10 +882,8 @@ static void rt2800pci_fill_rxdone(struct queue_entry *entry,
- 	if (rt2x00_get_field32(rxd3, RXD_W3_MY_BSS))
- 		rxdesc->dev_flags |= RXDONE_MY_BSS;
- 
--	if (rt2x00_get_field32(rxd3, RXD_W3_L2PAD)) {
-+	if (rt2x00_get_field32(rxd3, RXD_W3_L2PAD))
- 		rxdesc->dev_flags |= RXDONE_L2PAD;
--		skbdesc->flags |= SKBDESC_L2_PADDED;
--	}
- 
- 	if (rt2x00_get_field32(rxwi1, RXWI_W1_SHORT_GI))
- 		rxdesc->flags |= RX_FLAG_SHORT_GI;
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 1db8667..13baec4 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -625,10 +625,8 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
- 	if (rt2x00_get_field32(rxd0, RXINFO_W0_MY_BSS))
- 		rxdesc->dev_flags |= RXDONE_MY_BSS;
- 
--	if (rt2x00_get_field32(rxd0, RXINFO_W0_L2PAD)) {
-+	if (rt2x00_get_field32(rxd0, RXINFO_W0_L2PAD))
- 		rxdesc->dev_flags |= RXDONE_L2PAD;
--		skbdesc->flags |= SKBDESC_L2_PADDED;
--	}
- 
- 	if (rt2x00_get_field32(rxwi1, RXWI_W1_SHORT_GI))
- 		rxdesc->flags |= RX_FLAG_SHORT_GI;
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 21d5876..719f4ae 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -177,7 +177,6 @@ void rt2x00queue_align_payload(struct sk_buff *skb, unsigned int header_length)
- 
- void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
- {
--	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
- 	unsigned int frame_length = skb->len;
- 	unsigned int header_align = ALIGN_SIZE(skb, 0);
- 	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
-@@ -198,7 +197,6 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
- 		 */
- 		skb_push(skb, header_align);
- 		memmove(skb->data, skb->data + header_align, header_length);
--		skbdesc->flags |= SKBDESC_L2_PADDED;
- 	} else {
- 		/*
- 		 *
-@@ -217,16 +215,14 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
- 			skb->data + header_length + l2pad + payload_align,
- 			frame_length - header_length);
- 		skb_trim(skb, frame_length + l2pad);
--		skbdesc->flags |= SKBDESC_L2_PADDED;
- 	}
- }
- 
- void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int header_length)
- {
--	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
- 	unsigned int l2pad = L2PAD_SIZE(header_length);
- 
--	if (!l2pad || (skbdesc->flags & SKBDESC_L2_PADDED))
-+	if (!l2pad)
- 		return;
- 
- 	memmove(skb->data + l2pad, skb->data, header_length);
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-index 70775e5..c1e482b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-@@ -92,8 +92,6 @@ enum data_queue_qid {
-  * @SKBDESC_DMA_MAPPED_TX: &skb_dma field has been mapped for TX
-  * @SKBDESC_IV_STRIPPED: Frame contained a IV/EIV provided by
-  *	mac80211 but was stripped for processing by the driver.
-- * @SKBDESC_L2_PADDED: Payload has been padded for 4-byte alignment,
-- *	the padded bytes are located between header and payload.
-  * @SKBDESC_NOT_MAC80211: Frame didn't originate from mac80211,
-  *	don't try to pass it back.
-  */
-@@ -101,8 +99,7 @@ enum skb_frame_desc_flags {
- 	SKBDESC_DMA_MAPPED_RX = 1 << 0,
- 	SKBDESC_DMA_MAPPED_TX = 1 << 1,
- 	SKBDESC_IV_STRIPPED = 1 << 2,
--	SKBDESC_L2_PADDED = 1 << 3,
--	SKBDESC_NOT_MAC80211 = 1 << 4,
-+	SKBDESC_NOT_MAC80211 = 1 << 3,
- };
- 
- /**
--- 
-1.6.5.3
-
+Larry
