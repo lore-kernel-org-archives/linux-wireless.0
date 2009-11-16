@@ -1,76 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34667 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750881AbZKJKjh (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:50239 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753861AbZKPUDH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 05:39:37 -0500
-Subject: Re: ar9170 in AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jan Kiszka <jan.kiszka@web.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Holger Schurig <holgerschurig@googlemail.com>,
+	Mon, 16 Nov 2009 15:03:07 -0500
+MIME-Version: 1.0
+In-Reply-To: <4b016848.3j3kclbqZ4ylyZGU%Larry.Finger@lwfinger.net>
+References: <4b016848.3j3kclbqZ4ylyZGU%Larry.Finger@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 16 Nov 2009 21:02:52 +0100
+Message-ID: <69e28c910911161202w5255bff5ydb7fc665b3320bda@mail.gmail.com>
+Subject: Re: [PATCH] staging: rtl8187se: Rename staging driver to avoid name
+	conflict with mainline driver
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Greg Kroah-Hartman <gregkh@suse.de>, linux-kernel@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <4AF88505.2060802@web.de>
-References: <4AF6C7CD.7060108@web.de> <878wehf85v.fsf@purkki.valot.fi>
-	 <4AF6CC02.8080204@web.de> <m3639k9kq4.wl%holgerschurig@gmail.com>
-	 <87ocncdrfz.fsf@purkki.valot.fi> <20091109141458.GA2805@tuxdriver.com>
-	 <4AF88505.2060802@web.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-OjoYU17FAxYiF4nQmC4u"
-Date: Tue, 10 Nov 2009 11:39:02 +0100
-Message-ID: <1257849542.7037.42.camel@johannes.local>
-Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Nov 16, 2009 at 3:57 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Now that active development has begun on a mainline version of
+> a driver for the RTL8187SE that should be called rtl8187se, there
+> is a conflict with the driver in staging with the same name.
+>
+> To solve the conflict, rename the driver in staging to rtl8187se_stage.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>
+> Index: wireless-testing/drivers/staging/Makefile
+> ===================================================================
+> --- wireless-testing.orig/drivers/staging/Makefile
+> +++ wireless-testing/drivers/staging/Makefile
+> @@ -20,7 +20,7 @@ obj-$(CONFIG_COMEDI)          += comedi/
+>  obj-$(CONFIG_ASUS_OLED)                += asus_oled/
+>  obj-$(CONFIG_PANEL)            += panel/
+>  obj-$(CONFIG_ALTERA_PCIE_CHDMA)        += altpciechdma/
+> -obj-$(CONFIG_RTL8187SE)                += rtl8187se/
+> +obj-$(CONFIG_RTL8187SE_STAGE)  += rtl8187se/
+>  obj-$(CONFIG_RTL8192SU)                += rtl8192su/
+>  obj-$(CONFIG_RTL8192E)         += rtl8192e/
+>  obj-$(CONFIG_INPUT_MIMIO)      += mimio/
+> Index: wireless-testing/drivers/staging/rtl8187se/Kconfig
+> ===================================================================
+> --- wireless-testing.orig/drivers/staging/rtl8187se/Kconfig
+> +++ wireless-testing/drivers/staging/rtl8187se/Kconfig
+> @@ -1,4 +1,4 @@
+> -config RTL8187SE
+> +config RTL8187SE_STAGE
+>        tristate "RealTek RTL8187SE Wireless LAN NIC driver"
+>        depends on PCI && WLAN
+>        select WIRELESS_EXT
+> Index: wireless-testing/drivers/staging/rtl8187se/Makefile
+> ===================================================================
+> --- wireless-testing.orig/drivers/staging/rtl8187se/Makefile
+> +++ wireless-testing/drivers/staging/rtl8187se/Makefile
+> @@ -16,7 +16,7 @@ EXTRA_CFLAGS += -DENABLE_LPS
+>
+>  #EXTRA_CFLAGS += -mhard-float -DCONFIG_FORCE_HARD_FLOAT=y
+>
+> -rtl8187se-objs :=                      \
+> +rtl8187se_stage-objs :=                        \
+>                r8180_core.o            \
+>                r8180_93cx6.o           \
+>                r8180_wx.o              \
+> @@ -35,5 +35,5 @@ rtl8187se-objs :=                     \
+>                ieee80211/ieee80211_crypt_ccmp.o        \
+>                ieee80211/ieee80211_crypt_wep.o
+>
+> -obj-$(CONFIG_RTL8187SE)        += rtl8187se.o
+> +obj-$(CONFIG_RTL8187SE_STAGE)  += rtl8187se_stage.o
 
---=-OjoYU17FAxYiF4nQmC4u
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Please make this r8187se.o, to be consistent with the other
+r8180-sa2400 derivative drivers.
 
-On Mon, 2009-11-09 at 22:09 +0100, Jan Kiszka wrote:
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-> Could someone briefly explain how the firmware is supposed to handle
-> this case? By scanning outgoing frames for multicast addresses? Should
-> the DTIM condition be detected and reported (via beacon) only by the
-> firmware, or would the driver be involved to some degree? If we handle
-> this transparently in the firmware, I guess that it would have to buffer
-> not only a single multicast frame, right? Do we have enough memory for
-> this on the chip?
 
-The driver is always involved in some way, cf.
-IEEE80211_TX_CTL_SEND_AFTER_DTIM and
-IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING in mac80211.h
 
-As to what the right thing with ar9170 is -- I don't know. Maybe the
-firmware could buffer a few frames, and the driver can push the
-remaining frames down once the device tells it the beacon was sent. Or
-maybe it's OK, although not perfect, if we simply send the frames once
-the device says the beacon was sent... I've never understood how the QoS
-implementation in this thing works, and that's kinda related.
-
-johannes
-
---=-OjoYU17FAxYiF4nQmC4u
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK+ULCAAoJEODzc/N7+QmaCwAP/2lB2b4pN0HVeICrE4XVTKIC
-xvLN1WvekpwvTkMU3yGX4pKrywsG5U3MMNakVzVmwpLoG+IaHF9GsRwX08MnwcjQ
-EwTK4hCUFp6pz5q+qiUOwu09oXUK20nAcl4uApsqUd9C/HnBLjMbOsTt+DArwnAq
-cgoNUqW1ryUH5orpfy5aHbar37DuvppgDrDFjsbdB9ZBdUAfnjSKtFFInfhnY8IP
-/9o4pyg3MtcSDYRiEnO6A7EJcBxbRPiPsPfk0KjQqtB6vSjp8A0WHRaOXGooQZeZ
-SKSi7yP4OK9EmSGFSAgnbEJ4wyl8VLa4oTKVlreA1tYpC12nu0LSOqGMaX5cl3WR
-o7VkfyEQ5vXziPcggOiV+nXOQz1JJ2jILV6slDrTCxh4E283epVEwPPRsziI5fd2
-kH+ehzY4eJfTxiMMOlOl9o+XiWjh1fiKgVcrz8mz48oS4MjtPW/vNC2jjvTODMBh
-6eU0btg1xVMnaiV/N5n3uBuhsBTa2RCOlb9IcItsd1E3TCB5v1RXRFry6T/bAgut
-H5rjBvJFhyqMzNZXptIEJsPJO4CoOQA/zU8FZv4b6U48ZVpbtI9t3ideZug28ADw
-nB3u1yyrkQ0MRaKXFt9N/XE4HZABBHOw1pnfls16gOJXZXNE+D61SnkWxwhyXZzY
-Y4VhbeixCTK6y/EMIRks
-=Kgev
------END PGP SIGNATURE-----
-
---=-OjoYU17FAxYiF4nQmC4u--
-
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
