@@ -1,60 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55639 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752858AbZKSO2O (ORCPT
+Received: from mail-yw0-f202.google.com ([209.85.211.202]:60628 "EHLO
+	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753343AbZKPO0y convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2009 09:28:14 -0500
-Subject: mesh endian bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rui Paulo <rpaulo@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-MYW5yyqXeQQgCrFbCIT+"
-Date: Thu, 19 Nov 2009 14:51:31 +0100
-Message-ID: <1258638691.7094.16.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 16 Nov 2009 09:26:54 -0500
+Received: by ywh40 with SMTP id 40so3089273ywh.33
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Nov 2009 06:26:59 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20091116023317.GA6331@localhost.localdomain>
+References: <20091116023317.GA6331@localhost.localdomain>
+Date: Mon, 16 Nov 2009 09:21:58 -0500
+Message-ID: <1b7401870911160621v4afe9db8j71a817253e6381f3@mail.gmail.com>
+Subject: Re: [PATCH] rt2800: do not enable tbtt unless we are in a beacon mode
+From: Josef Bacik <josef@toxicpanda.com>
+To: Josef Bacik <josef@redhat.com>
+Cc: linux-wireless@vger.kernel.org, ivdoorn@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Nov 15, 2009 at 9:33 PM, Josef Bacik <josef@redhat.com> wrote:
+> Please be gentle, I'm a fs developer and this is my first foray into drivers, as
+> I'm tired of building ralinks driver everytime I update my kernel.  Whenever I
+> load the rt2800pci driver my box bogs down, and a few printk's later I
+> discovered its because I was getting 10's of thousands of TBTT interrupts a
+> second.  I discovered this was because we were setting the beacon timer to 0,
+> which is apparently what TBTT keys off of.  It seems to me that we should only
+> be enabling TBTT when we are in a beacon transmitting mode, which from what I
+> can tell is in AD-HOC and other such modes where the mac80211 layer would have
+> given us a proper beacon_int to set the beacon timer to instead of 0.  So this
+> is my fix, only enable TBTT if our sync mode is for beacon.  This makes it so my
+> box doesn't die everytime I load the rt2800pci driver.  Let me know if this is
+> acceptable, I just learned all these terms about 15 minutes ago via wikipedia,
+> so I really am not familiar with how this stuff is supposed to work.  Thanks,
+>
+> Signed-off-by: Josef Bacik <josef@redhat.com>
+>
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index eb6d129..e90d6fd 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -560,7 +560,8 @@ void rt2800_config_intf(struct rt2x00_dev *rt2x00dev, struct rt2x00_intf *intf,
+>                rt2800_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
+>                rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_TICKING, 1);
+>                rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_SYNC, conf->sync);
+> -               rt2x00_set_field32(&reg, BCN_TIME_CFG_TBTT_ENABLE, 1);
+> +               rt2x00_set_field32(&reg, BCN_TIME_CFG_TBTT_ENABLE,
+> +                                  (conf->sync == TSF_SYNC_BEACON));
+>                rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
+>        }
+>
 
---=-MYW5yyqXeQQgCrFbCIT+
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Oh btw this is against the wireless-testing git tree, I forgot to
+mention that.  Thanks,
 
-  CHECK   /home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c
-/home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c:471:41: war=
-ning: incorrect type in argument 4 (different base types)
-/home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c:471:41:    =
-expected restricted __le16 [usertype] target_rcode
-/home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c:471:41:    =
-got int
-/home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c:617:36: war=
-ning: incorrect type in argument 4 (different base types)
-/home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c:617:36:    =
-expected restricted __le16 [usertype] target_rcode
-/home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c:617:36:    =
-got int
-
-
---=-MYW5yyqXeQQgCrFbCIT+
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLBU1gAAoJEODzc/N7+Qma8AMQALyQSennvinPGGBJW2GoK/uc
-IXh/9Rdb6ceXRRTuyg+7wosJFJ/5JouI3cqCcGfK1bwt8yqN/7Yjcs5TZRuwhk7s
-rDW+GZuaAoOFQ3hAifrPZTRmI3pxyOpu9dXs3q53pkpB1bgq1HNW+eq2mWBWKN5V
-v76WWXqNvRwAC54l8Bo8ImpmAkg/ymI9mBijD7vl1Tv5hcjZOnwDfGbDalsB3mRh
-YYxh1jqJZFMYjBb/fBnbvnZPJA67mSGfzxb7EWovmagn1+lMs82iNMF0435dsSlY
-PVE8ozfrAWBiaFnHDQtc3L2oCaJJhJJUKykVDalXGzPM1wmoq6+ezHx1oKD0Tqvw
-fk98wvksJxNjRfQ0BVfdI35WHpb4f4gfb7hCSZlU9OtyDv7mwPMPErNlPN2hR3UG
-eWyvPF4vKBy+wuTUek9ntQxwNRcSjJQZF+u6pcNMaiNebBNtxmXGAZEmhh8zj/6R
-AwQtTbX1I8UUzxBRFod0a1Lkk0tsaJ31T8rxUKCdYSWSDba694hY5ifSGeAK4PIT
-2SFJYB1BU+BJWq5fQfpwxf7JkwyTqoH8omSrsl/kzr78RkSiCmcaGzXggkD6MkUC
-w4dNnHIej8tp6JfmnY6fC7G+t4kodzaEeJ8a0baU7IRFi5/IG/NKlOyvMgNLDbew
-AJn8Lvf/4ot55BUwjSfW
-=5N+M
------END PGP SIGNATURE-----
-
---=-MYW5yyqXeQQgCrFbCIT+--
-
+Josef
