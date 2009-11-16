@@ -1,66 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.221.174]:65125 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750782AbZKPRoX (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59121 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751642AbZKPKWQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2009 12:44:23 -0500
-Received: by qyk4 with SMTP id 4so2759257qyk.33
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Nov 2009 09:44:28 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Josef Bacik <josef@redhat.com>
-Subject: Re: [PATCH] rt2800: do not enable tbtt unless we are in a beacon mode
-Date: Mon, 16 Nov 2009 18:44:24 +0100
-Cc: linux-wireless@vger.kernel.org, users@host1.serialmonkey.com,
-	John Linville <linville@tuxdriver.com>
-References: <20091116023317.GA6331@localhost.localdomain>
-In-Reply-To: <20091116023317.GA6331@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200911161844.25162.IvDoorn@gmail.com>
+	Mon, 16 Nov 2009 05:22:16 -0500
+Subject: Re: [PATCH] rndis_wlan: handle NL80211_AUTHTYPE_AUTOMATIC
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20091116095653.17419.49151.stgit@fate.lan>
+References: <20091116095653.17419.49151.stgit@fate.lan>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zxcV5ORAxcVaZHbWCBR7"
+Date: Mon, 16 Nov 2009 11:22:04 +0100
+Message-ID: <1258366924.32159.11.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[ Added john to CC list ]
 
-On Monday 16 November 2009, Josef Bacik wrote:
-> Please be gentle, I'm a fs developer and this is my first foray into drivers, as
-> I'm tired of building ralinks driver everytime I update my kernel.  Whenever I
-> load the rt2800pci driver my box bogs down, and a few printk's later I
-> discovered its because I was getting 10's of thousands of TBTT interrupts a
-> second.  I discovered this was because we were setting the beacon timer to 0,
-> which is apparently what TBTT keys off of.  It seems to me that we should only
-> be enabling TBTT when we are in a beacon transmitting mode, which from what I
-> can tell is in AD-HOC and other such modes where the mac80211 layer would have
-> given us a proper beacon_int to set the beacon timer to instead of 0.  So this
-> is my fix, only enable TBTT if our sync mode is for beacon.  This makes it so my
-> box doesn't die everytime I load the rt2800pci driver.  Let me know if this is
-> acceptable, I just learned all these terms about 15 minutes ago via wikipedia,
-> so I really am not familiar with how this stuff is supposed to work.  Thanks,
-> 
-> Signed-off-by: Josef Bacik <josef@redhat.com>
+--=-zxcV5ORAxcVaZHbWCBR7
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Good catch.
-
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-
+On Mon, 2009-11-16 at 11:56 +0200, Jussi Kivilinna wrote:
+> rndis_wlan didn't know about NL80211_AUTHTYPE_AUTOMATIC and simple
+> setup with 'iwconfig wlan essid no-encrypt' would fail (ENOSUPP).
+>=20
+> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 > ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |    3 ++-
+>=20
+>  drivers/net/wireless/rndis_wlan.c |    3 ++-
 >  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index eb6d129..e90d6fd 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -560,7 +560,8 @@ void rt2800_config_intf(struct rt2x00_dev *rt2x00dev, struct rt2x00_intf *intf,
->  		rt2800_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
->  		rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_TICKING, 1);
->  		rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_SYNC, conf->sync);
-> -		rt2x00_set_field32(&reg, BCN_TIME_CFG_TBTT_ENABLE, 1);
-> +		rt2x00_set_field32(&reg, BCN_TIME_CFG_TBTT_ENABLE,
-> +				   (conf->sync == TSF_SYNC_BEACON));
->  		rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
->  	}
->  
+>=20
+> diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rnd=
+is_wlan.c
+> index 54175b6..dfc61fd 100644
+> --- a/drivers/net/wireless/rndis_wlan.c
+> +++ b/drivers/net/wireless/rndis_wlan.c
+> @@ -1070,7 +1070,8 @@ static int set_auth_mode(struct usbnet *usbdev, u32=
+ wpa_version,
+>  			auth_mode =3D NDIS_80211_AUTH_WPA_NONE;
+>  	} else if (auth_type =3D=3D NL80211_AUTHTYPE_SHARED_KEY)
+>  		auth_mode =3D NDIS_80211_AUTH_SHARED;
+> -	else if (auth_type =3D=3D NL80211_AUTHTYPE_OPEN_SYSTEM)
+> +	else if (auth_type =3D=3D NL80211_AUTHTYPE_OPEN_SYSTEM ||
+> +			auth_type =3D=3D NL80211_AUTHTYPE_AUTOMATIC)
+>  		auth_mode =3D NDIS_80211_AUTH_OPEN;
 
+Will that try open and shared though?
+
+johannes
+
+--=-zxcV5ORAxcVaZHbWCBR7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLASfIAAoJEODzc/N7+QmaXwEP/Rhp2gw5pNPflP4fN8JOGcHc
+E6BIv2TUx1I9fbpd65JxRSFtyk7SCM5sEnZ0kamtl/OjfULd1SP5Q9N6iZpLRBT4
+Z3O2htdjzED9PRhz1xqsRvSPQ7oC1zcMQP64dnyG/a/MLJmmOCbs9dXRM/NcRhOH
+f1X52G5BT/iVp7HE/7INgZ/01Cqgrg9yeEr/eDhOimWX2ML0pmQenX3sz6Svc9W2
+yzE3UUOK9zpr5K2njOHvBIP1fJ1VhdTc+AovtlDVSCIFWJnD1foUh9J/6domicRh
+FeuPgl/QbXxPXslLbmTpehMqJG1hZ0//y9Ok9Vg5UY9NEOBvU+GKlXil1oMYYJ92
+N2sBy2e5ItXROxUsaQggOYW8xR1b2wQYmYr2ppNbXSfDiXTxQ9W4f4yzp9JpdKKd
+iMvVAyHc9E4Eb2zVMKPBmkoiW7q2FxrWukra8zQ8t1/sYq/hmgc+sDbFVtOwh8/t
+jiEUtHlI/WQA2JmUJjlNWqChaaKitDbuDoR9DeQw8oTETUaPrrJX0HNk74e/2XnD
+iab7zsWHicrWbNTM0mfltirZn+qkJFSHEJd0r3GxY2+rx6cJZICIHoyPZNXmx3qK
+jiXdZadMoONl5jBZ/FKw5toESHoRFkAiWpGZECLfe1MYrP1Zf5/r0xzKsWys/40C
+b2qZ7IMMkiockIv0r5rx
+=Wppc
+-----END PGP SIGNATURE-----
+
+--=-zxcV5ORAxcVaZHbWCBR7--
 
