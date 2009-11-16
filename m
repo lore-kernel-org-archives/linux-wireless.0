@@ -1,85 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35899 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753264AbZK1UPe (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:49313 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751161AbZKPCn3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Nov 2009 15:15:34 -0500
-Date: Sat, 28 Nov 2009 15:07:14 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: lrodriguez@atheros.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] [compat-2.6] add split mwl8k
-Message-ID: <20091128200713.GA13520@tuxdriver.com>
-References: <1259271064-11298-1-git-send-email-hauke@hauke-m.de> <1259271064-11298-2-git-send-email-hauke@hauke-m.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1259271064-11298-2-git-send-email-hauke@hauke-m.de>
+	Sun, 15 Nov 2009 21:43:29 -0500
+Subject: Re: [PATCH 1/1] Adding radio type FM
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Janakiram Sistla <janakiram.sistla@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <4fb5db50911151836u5b4844adrd91b56a5ebc7084d@mail.gmail.com>
+References: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
+	 <1258082571.7715.13.camel@violet>
+	 <4fb5db50911140519q70bbdd00qb585153c4926df96@mail.gmail.com>
+	 <1258216474.3299.24.camel@violet>
+	 <4fb5db50911140937j278584e5nf9e4d5767a44a920@mail.gmail.com>
+	 <1258221909.3299.26.camel@violet>
+	 <4fb5db50911151836u5b4844adrd91b56a5ebc7084d@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 16 Nov 2009 03:43:21 +0100
+Message-ID: <1258339401.2003.3.camel@violet>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FWIW, I'm reverting this patch in wireless-testing...
+Hi Janakiram,
 
-On Thu, Nov 26, 2009 at 10:31:04PM +0100, Hauke Mehrtens wrote:
-> 
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  config.mk               |    7 +++++--
->  scripts/admin-update.sh |    2 +-
->  2 files changed, 6 insertions(+), 3 deletions(-)
-> 
-> diff --git a/config.mk b/config.mk
-> index e9e85d7..3ee9e53 100644
-> --- a/config.mk
-> +++ b/config.mk
-> @@ -155,7 +155,7 @@ CONFIG_ATH9K=m
->  # CONFIG_ATH9K_COMMON to an area that doesn't depend on PCI
->  # as you could then have ath9k disabled but ath9k_htc enabled.
->  CONFIG_ATH9K_COMMON=m
-> -# CONFIG_ATH9K_DEBUG=y
-> +# CONFIG_ATH9K_DEBUGFS=y
->  
->  
->  CONFIG_IWLWIFI=m
-> @@ -272,7 +272,10 @@ endif
->  CONFIG_ATMEL=m
->  CONFIG_PCI_ATMEL=m
->  
-> -CONFIG_MWL8K=m
-> +CONFIG_MWL8K=y
-> +CONFIG_MWL8K_COMMON=m
-> +CONFIG_MWL8687=m
-> +CONFIG_MWL8366=m
->  
->  endif
->  ## end of PCI
-> diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-> index f85dacf..a6965a3 100755
-> --- a/scripts/admin-update.sh
-> +++ b/scripts/admin-update.sh
-> @@ -75,13 +75,13 @@ DRIVERS="$DRIVERS drivers/net/wireless/libertas_tf"
->  DRIVERS="$DRIVERS drivers/net/wireless/ipw2x00"
->  DRIVERS="$DRIVERS drivers/net/wireless/wl12xx"
->  DRIVERS="$DRIVERS drivers/net/wireless/iwmc3200wifi"
-> +DRIVERS="$DRIVERS drivers/net/wireless/mwl8k"
->  
->  # Drivers that belong the the wireless directory
->  DRIVER_FILES="adm8211.c  adm8211.h"
->  DRIVER_FILES="$DRIVER_FILES rndis_wlan.c"
->  DRIVER_FILES="$DRIVER_FILES mac80211_hwsim.c"
->  DRIVER_FILES="$DRIVER_FILES at76c50x-usb.c at76c50x-usb.h"
-> -DRIVER_FILES="$DRIVER_FILES mwl8k.c"
->  
->  mkdir -p include/linux/ include/net/ include/linux/usb \
->  	include/linux/unaligned \
-> -- 
-> 1.6.3.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+so first of all, please stop sending emails to majordomo. That is not a
+real person.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> Adding changes  RFKILL type FM  and for RFKILL for FM  in core
+> 
+> From 4bf0ae6c90de9a766914abeb5ab5e5428089b648 Mon Sep 17 00:00:00 2001
+> From: Janakiram Sistla <janakiram.sistla@gmail.com>
+> Date: Mon, 16 Nov 2009 07:58:09 +0530
+> Subject: [PATCH 1/1] Adding radio type FM
+> 
+> Adding radio type FM in RFKILL_TYPE_.FM belongs to
+> same class of with both TX/RX capability.
+> 
+> Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
+
+the patch itself is fine, but can we get at least one with a proper
+commit message. And if you mailer is broken, then either fix it or use
+git send-email.
+
+Regards
+
+Marcel
+
+
