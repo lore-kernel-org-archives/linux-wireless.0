@@ -1,67 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:63153 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752916AbZKUSxh convert rfc822-to-8bit (ORCPT
+Received: from nexus.dynaweb.hu ([195.70.37.87]:57256 "EHLO nexus.dynaweb.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752669AbZKPTwM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Nov 2009 13:53:37 -0500
-Received: by yxe17 with SMTP id 17so3734587yxe.33
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Nov 2009 10:53:43 -0800 (PST)
-Subject: Re: Kernel compilation Question
-Mime-Version: 1.0 (Apple Message framework v1077)
-Content-Type: text/plain; charset=us-ascii
-From: Balaji Ravindran <b@w1an.in>
-In-Reply-To: <200911211910.40687.s.L-H@gmx.de>
-Date: Sat, 21 Nov 2009 10:46:28 -0800
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
-Message-Id: <B6B420E5-2AFB-46D7-B200-B081ACC4F783@w1an.in>
-References: <4B080EFA.6000300@w1an.in> <200911211910.40687.s.L-H@gmx.de>
-To: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
+	Mon, 16 Nov 2009 14:52:12 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by nexus.dynaweb.hu (Postfix) with ESMTP id B322843390
+	for <linux-wireless@vger.kernel.org>; Mon, 16 Nov 2009 20:43:35 +0100 (CET)
+Received: from nexus.dynaweb.hu ([127.0.0.1])
+	by localhost (nexus.dynaweb.hu [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id I5uS00UoEbWV for <linux-wireless@vger.kernel.org>;
+	Mon, 16 Nov 2009 20:43:34 +0100 (CET)
+Received: from raketa.ipn.dynaweb.hu (catv-80-99-36-176.catv.broadband.hu [80.99.36.176])
+	by nexus.dynaweb.hu (Postfix) with ESMTPSA id C5E3542D50
+	for <linux-wireless@vger.kernel.org>; Mon, 16 Nov 2009 20:43:33 +0100 (CET)
+Date: Mon, 16 Nov 2009 20:43:33 +0100
+From: RUMI Szabolcs <rumi_ml@rtfm.hu>
+To: linux-wireless@vger.kernel.org
+Subject: Strange issue with ath5k AP mode
+Message-Id: <20091116204333.bbe4abe0.rumi_ml@rtfm.hu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stephen,
+Hello!
 
-Thanks for your reply. Wow, the four references that you provided makes lot more sense to me. I shall try using some examples in readme mentioned below.
+I've detected a rather strange issue with ath5k AP mode.
 
-Thanks
+Setup:
 
-Balaji R
-On Nov 21, 2009, at 10:10 AM, Stefan Lippers-Hollmann wrote:
+We've got two WiFi-capable mobile phones in the household,
+one is an iPhone 3G and the other is a Samsung GT-S8000 Jét.
+We have several computers (iwl2100, ath5k) which work quite well
+with the ath5k AP (apart from achieving rather low throughput
+with the ath5k client). The AP is an i686-based PC server with
+an ath5k card and runs a 2.6.31-rc6-wl (wireless-testing-git)
+kernel with an uptime of 78 days right now. The wlan0 iface
+uptime was about the same as the kernel.
 
-> Hi
-> 
-> On Saturday 21 November 2009, Balaji Ravindran wrote:
->> Hi all,
->> 
->> I tried compiling the wireless 2.6 kernel on my debian machine using
->> make-kpkg and being lazy, i just did make defconfig, and saw that my
->> compilation went fine without any issues, but i noticed that there was
->> no ramdisk image that was generated when i installed the linux-image*.deb.
-> 
-> For questions about Debian specific packaging helpers like 
-> kernel-package[1], you would better contact debian-user@lists.debian.org 
-> instead.
-> 
->> i did use --initrd option,
-> [...]
-> 
-> Please read /usr/share/doc/kernel-package/README.gz [2], it explains which 
-> hook scripts you have to configure for generating an initramfs, --initrd is
-> not sufficient anymore[3] (since kernel-package 12.000).
-> 
-> Also consider that the Debian kernel team considers kernel-package to be 
-> deprecated in favour of the upstream kernel build system's own 
-> "make deb-pkg" target[4]. 
-> 
-> Unrelated to this topic, I'd suggest to take the configs of your running 
-> (distribution-) kernel as starting point, because this likely introduces 
-> the least amount of surprise (ide vs. libata storage layer, etc.).
-> 
-> Regards
-> 	Stefan Lippers-Hollmann
-> 
-> [1]	http://packages.debian.org/sid/kernel-package
-> [2]	http://git.debian.org/?p=users/srivasta/debian/kernel-package.git;a=blob;f=README (line 284ff)
-> [3]	http://www.golden-gryphon.com/blog/manoj//blog/2009/04/07/Not_your_father__39__s_kernel-package/
-> [4]	http://lists.debian.org/debian-kernel/2009/10/msg00613.html
+Symptoms:
 
+The iPhone did manage to detect all WiFi networks in the
+vicinity, it could detect but it was unable to join my ath5k-based
+network. I triple checked every setting so I'm sure there was no
+problem with those. 
+
+The S8000 Jét has always (apparenty) aborted it's WiFi search
+operation instantly reporting that it could not find any WiFi
+network although I do know that there are many of them in the
+vicinity. I'm not used to bother the AP server too often so at
+first I thought the phone may be faulty, until I tried searching
+for WiFi networks on the street away from home and voilá, suddenly
+it has found lots of networks.
+
+Then I had the idea to shut down the ath5k wlan0 interface at
+home and see what happens. After doing that the S8000 Jét was
+able to search for and find all nearby WiFi networks instantly!
+
+Then I started wlan0 again. From then on the iPhone was able to
+associate and DHCP QUERY on the ath5k network. The Jét can also
+detect it now but still cannot associate. Unfortunately it's
+software is ridiculously stupid at some places and this includes
+WiFi connection management so it might be a problem with the phone
+that I still cannot connect. I'm still working on that.
+
+Anyway, I thought an ath5k AP blocking a client from seeing any
+other WiFi network is strange enough to report here...
+
+Regards,
+Sab
