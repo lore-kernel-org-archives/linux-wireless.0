@@ -1,72 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:15281 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760046AbZKFWxB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 17:53:01 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 10/20] iwlwifi: add FIFO usage for 5000
-Date: Fri,  6 Nov 2009 14:52:53 -0800
-Message-Id: <1257547983-12590-11-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
-References: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:53589 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752049AbZKPR5j (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Nov 2009 12:57:39 -0500
+Subject: Re: [PATCH] mac80211: Do not queue Probe Request frames for
+ station MLME
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni.malinen@atheros.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20091116175408.GA6805@jm.kir.nu>
+References: <20091116175408.GA6805@jm.kir.nu>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-H15lQvsc86sPkwH9skMS"
+Date: Mon, 16 Nov 2009 18:57:41 +0100
+Message-ID: <1258394261.32159.31.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
 
-This is part of the code, but the comment doesn't have it,
-add pointers to the code and the FIFO usage for 5000 and
-up.
+--=-H15lQvsc86sPkwH9skMS
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-prph.h |   19 ++++++++++++++++---
- 1 files changed, 16 insertions(+), 3 deletions(-)
+On Mon, 2009-11-16 at 19:54 +0200, Jouni Malinen wrote:
+> Cooked monitor interfaces cannot currently receive Probe Request
+> frames when the interface is in station mode. However, we do not
+> process Probe Request frames internally in the station MLME, so there
+> is no point in queueing the frame here. Remove Probe Request frames
+> from the queued frame list to allow cooked monitor interfaces to
+> receive these frames.
+>=20
+> Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
-index d393e8f..6d95832 100644
---- a/drivers/net/wireless/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
-@@ -254,7 +254,8 @@
-  * device.  A queue maps to only one (selectable by driver) Tx DMA channel,
-  * but one DMA channel may take input from several queues.
-  *
-- * Tx DMA channels have dedicated purposes.  For 4965, they are used as follows:
-+ * Tx DMA channels have dedicated purposes.  For 4965, they are used as follows
-+ * (cf. default_queue_to_tx_fifo in iwl-4965.c):
-  *
-  * 0 -- EDCA BK (background) frames, lowest priority
-  * 1 -- EDCA BE (best effort) frames, normal priority
-@@ -265,9 +266,21 @@
-  * 6 -- HCCA long frames
-  * 7 -- not used by driver (device-internal only)
-  *
-+ * For 5000 series and up, they are used slightly differently
-+ * (cf. iwl5000_default_queue_to_tx_fifo in iwl-5000.c):
-+ *
-+ * 0 -- EDCA BK (background) frames, lowest priority
-+ * 1 -- EDCA BE (best effort) frames, normal priority
-+ * 2 -- EDCA VI (video) frames, higher priority
-+ * 3 -- EDCA VO (voice) and management frames, highest priority
-+ * 4 -- (TBD)
-+ * 5 -- HCCA short frames
-+ * 6 -- HCCA long frames
-+ * 7 -- Commands
-+ *
-  * Driver should normally map queues 0-6 to Tx DMA/FIFO channels 0-6.
-- * In addition, driver can map queues 7-15 to Tx DMA/FIFO channels 0-3 to
-- * support 11n aggregation via EDCA DMA channels.
-+ * In addition, driver can map the remaining queues to Tx DMA/FIFO
-+ * channels 0-3 to support 11n aggregation via EDCA DMA channels.
-  *
-  * The driver sets up each queue to work in one of two modes:
-  *
--- 
-1.5.6.3
+It's also just unnecessary overhead to put them on the list and process
+them by freeing :)
+
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+
+>=20
+> ---
+>  net/mac80211/mlme.c |    1 -
+>  1 file changed, 1 deletion(-)
+>=20
+> --- uml.orig/net/mac80211/mlme.c	2009-11-13 16:58:27.000000000 +0200
+> +++ uml/net/mac80211/mlme.c	2009-11-13 16:59:20.000000000 +0200
+> @@ -1898,7 +1898,6 @@ ieee80211_rx_result ieee80211_sta_rx_mgm
+>  	fc =3D le16_to_cpu(mgmt->frame_control);
+> =20
+>  	switch (fc & IEEE80211_FCTL_STYPE) {
+> -	case IEEE80211_STYPE_PROBE_REQ:
+>  	case IEEE80211_STYPE_PROBE_RESP:
+>  	case IEEE80211_STYPE_BEACON:
+>  	case IEEE80211_STYPE_AUTH:
+>=20
+
+
+--=-H15lQvsc86sPkwH9skMS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLAZKSAAoJEODzc/N7+QmaYs8P/i4FQpAu9CzX24Aspm4Ge+3x
+Lvif3/ksfXbRolKQXAGP5H5Xvd43vNKwH5qIoiqZzNGfViesjQW1fZM82FoRUv9L
+eHnW2kEEb1mW29DA+aKadxVIR7FGLOyi5OL8uF/uDLSbVvJfLg6KIqDcmZd+oAbt
+8wAbo10DuKo8d/CcZho/3lMGaYFhbcx9OqaBxgIQ7IPTNhMbaz97OHVJKqNGVFhL
+ibcJu9CB0uNNOs/ZoAGXrkjx1FJB88E3uGYdBPsnSHC3jm86Cn6oeCGDRyVU6HE7
+G6NkZC8gNLtVYti+/zmLFxZzrgGSrlpoLc8mawIhX7uSQgHeMRA3XtnNI6/b8t9i
+wiI+WGQGJpKYBwhQYMTaWfA6YSk2EebG1f2bfhCjd4hORULbHwrOqnWKKa+5XQ77
+WFfD4wyUezIIAsOD1qSqpvx/GGylesEh3+8YN0eaN4oY3REyZjKlycHfWJvgS5oN
+dB9GdFMtbLy1fDDP/JjCTqFK6r7WsnWVK012AvRXqNReielMv3AGHoYglK28eUel
+oiPS/VECSC653uZ9xMm+3hM9Lx5AJCwP8dlTAHdrHt4aylXaGUKwLumJs2pml/td
+/KVgb7d3FQgL8P40S+sI7ynGaLWlLuvDvOcoA8fQjK2OKKJePU0xYF4PLlk/lnfO
+iRoyKUOMdwdhZMRHwwDa
+=wPNF
+-----END PGP SIGNATURE-----
+
+--=-H15lQvsc86sPkwH9skMS--
 
