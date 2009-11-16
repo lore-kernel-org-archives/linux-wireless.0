@@ -1,63 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39080 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756676AbZKRNp0 (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:50327 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752335AbZKPSzZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 08:45:26 -0500
-Date: Wed, 18 Nov 2009 08:44:02 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Janakiram Sistla <janakiram.sistla@gmail.com>,
+	Mon, 16 Nov 2009 13:55:25 -0500
+Date: Mon, 16 Nov 2009 19:54:08 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org
-Subject: Re: 
-Message-ID: <20091118134402.GA2911@tuxdriver.com>
-References: <> <1258509054-10901-1-git-send-email-janakiram.sistla@gmail.com> <1258541631.30511.7.camel@johannes.local>
+Subject: [PATCH] mac80211: Do not queue Probe Request frames for station
+ MLME
+Message-ID: <20091116175408.GA6805@jm.kir.nu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1258541631.30511.7.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 18, 2009 at 11:53:51AM +0100, Johannes Berg wrote:
-> On Wed, 2009-11-18 at 07:20 +0530, Janakiram Sistla wrote:
-> 
-> > ---
-> >  include/linux/rfkill.h |    2 ++
-> >  net/rfkill/core.c      |    2 ++
-> >  2 files changed, 4 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-> > index 3392c59..7ae75ef 100644
-> > --- a/include/linux/rfkill.h
-> > +++ b/include/linux/rfkill.h
-> > @@ -35,6 +35,7 @@
-> >   * @RFKILL_TYPE_UWB: switch is on a ultra wideband device.
-> >   * @RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
-> >   * @RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
-> > + * @RFKILL_TYPE_FM: switch is on a wireless FM device.
-> >   * @NUM_RFKILL_TYPES: number of defined rfkill types
-> >   */
-> >  enum rfkill_type {
-> > @@ -44,6 +45,7 @@ enum rfkill_type {
-> >  	RFKILL_TYPE_UWB,
-> >  	RFKILL_TYPE_WIMAX,
-> >  	RFKILL_TYPE_WWAN,
-> > +	RFKILL_TYPE_FM,
-> >  	RFKILL_TYPE_GPS,
-> >  	NUM_RFKILL_TYPES,
-> >  };
-> 
-> Nice try, but no fly. This struct is ABI, you cannot add in the middle.
+Cooked monitor interfaces cannot currently receive Probe Request
+frames when the interface is in station mode. However, we do not
+process Probe Request frames internally in the station MLME, so there
+is no point in queueing the frame here. Remove Probe Request frames
+from the queued frame list to allow cooked monitor interfaces to
+receive these frames.
 
-Ah, good point -- I think I may have inadvertently encourage this
-order. :-(
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-It looks like you'll need the other order -- be mindful of the
-BUILD_BUG_ON I pointed-out in the previous email!
+---
+ net/mac80211/mlme.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-John
+--- uml.orig/net/mac80211/mlme.c	2009-11-13 16:58:27.000000000 +0200
++++ uml/net/mac80211/mlme.c	2009-11-13 16:59:20.000000000 +0200
+@@ -1898,7 +1898,6 @@ ieee80211_rx_result ieee80211_sta_rx_mgm
+ 	fc = le16_to_cpu(mgmt->frame_control);
+ 
+ 	switch (fc & IEEE80211_FCTL_STYPE) {
+-	case IEEE80211_STYPE_PROBE_REQ:
+ 	case IEEE80211_STYPE_PROBE_RESP:
+ 	case IEEE80211_STYPE_BEACON:
+ 	case IEEE80211_STYPE_AUTH:
 
-P.S.  Hmmm...anyone want to add a kerneldoc entry for RFKILL_TYPE_GPS?
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Jouni Malinen                                            PGP id EFC895FA
