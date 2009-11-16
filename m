@@ -1,104 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:45416 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752062AbZK3Rcc (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42351 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752623AbZKPWUm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2009 12:32:32 -0500
-Date: Mon, 30 Nov 2009 18:32:38 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 07/11] mwl8k: get rid of the struct mwl8k_firmware abstraction
-Message-ID: <20091130173238.GW20214@mail.wantstofly.org>
+	Mon, 16 Nov 2009 17:20:42 -0500
+Subject: [PATCH] mac80211: remove dev_hold/put calls
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 16 Nov 2009 23:20:41 +0100
+Message-ID: <1258410041.1375.1.camel@johannes.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   26 +++++++++-----------------
- 1 files changed, 9 insertions(+), 17 deletions(-)
+If we move the rcu sections a little, there's
+no need to touch the device refcount.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index cecabd6..427cbb9 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -127,15 +127,6 @@ struct mwl8k_tx_queue {
- 	struct sk_buff **skb;
- };
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/tx.c |   16 +++++-----------
+ 1 file changed, 5 insertions(+), 11 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/tx.c	2009-11-16 23:11:54.000000000 +0100
++++ wireless-testing/net/mac80211/tx.c	2009-11-16 23:12:02.000000000 +0100
+@@ -1431,8 +1431,6 @@ static void ieee80211_xmit(struct ieee80
+ 	int headroom;
+ 	bool may_encrypt;
  
--/* Pointers to the firmware data and meta information about it.  */
--struct mwl8k_firmware {
--	/* Boot helper code */
--	struct firmware *helper;
+-	dev_hold(sdata->dev);
 -
--	/* Microcode */
--	struct firmware *ucode;
--};
--
- struct mwl8k_priv {
- 	void __iomem *sram;
- 	void __iomem *regs;
-@@ -148,7 +139,8 @@ struct mwl8k_priv {
- 	struct rxd_ops *rxd_ops;
+ 	if (need_dynamic_ps(local)) {
+ 		if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+ 			ieee80211_stop_queues_by_reason(&local->hw,
+@@ -1447,6 +1445,8 @@ static void ieee80211_xmit(struct ieee80
  
- 	/* firmware files and meta data */
--	struct mwl8k_firmware fw;
-+	struct firmware *fw_helper;
-+	struct firmware *fw_ucode;
+ 	info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
  
- 	/* firmware access */
- 	struct mutex fw_mutex;
-@@ -359,8 +351,8 @@ static void mwl8k_release_fw(struct firmware **fw)
++	rcu_read_lock();
++
+ 	if (unlikely(sdata->vif.type == NL80211_IFTYPE_MONITOR)) {
+ 		int hdrlen;
+ 		u16 len_rthdr;
+@@ -1469,7 +1469,6 @@ static void ieee80211_xmit(struct ieee80
+ 			 * support we will need a different mechanism.
+ 			 */
  
- static void mwl8k_release_firmware(struct mwl8k_priv *priv)
- {
--	mwl8k_release_fw(&priv->fw.ucode);
--	mwl8k_release_fw(&priv->fw.helper);
-+	mwl8k_release_fw(&priv->fw_ucode);
-+	mwl8k_release_fw(&priv->fw_helper);
- }
- 
- /* Request fw image */
-@@ -381,7 +373,7 @@ static int mwl8k_request_firmware(struct mwl8k_priv *priv)
- 	int rc;
- 
- 	if (di->helper_image != NULL) {
--		rc = mwl8k_request_fw(priv, di->helper_image, &priv->fw.helper);
-+		rc = mwl8k_request_fw(priv, di->helper_image, &priv->fw_helper);
- 		if (rc) {
- 			printk(KERN_ERR "%s: Error requesting helper "
- 			       "firmware file %s\n", pci_name(priv->pdev),
-@@ -390,11 +382,11 @@ static int mwl8k_request_firmware(struct mwl8k_priv *priv)
+-			rcu_read_lock();
+ 			list_for_each_entry_rcu(tmp_sdata, &local->interfaces,
+ 						list) {
+ 				if (!netif_running(tmp_sdata->dev))
+@@ -1478,13 +1477,10 @@ static void ieee80211_xmit(struct ieee80
+ 					continue;
+ 				if (compare_ether_addr(tmp_sdata->dev->dev_addr,
+ 						       hdr->addr2) == 0) {
+-					dev_hold(tmp_sdata->dev);
+-					dev_put(sdata->dev);
+ 					sdata = tmp_sdata;
+ 					break;
+ 				}
+ 			}
+-			rcu_read_unlock();
  		}
  	}
  
--	rc = mwl8k_request_fw(priv, di->fw_image, &priv->fw.ucode);
-+	rc = mwl8k_request_fw(priv, di->fw_image, &priv->fw_ucode);
- 	if (rc) {
- 		printk(KERN_ERR "%s: Error requesting firmware file %s\n",
- 		       pci_name(priv->pdev), di->fw_image);
--		mwl8k_release_fw(&priv->fw.helper);
-+		mwl8k_release_fw(&priv->fw_helper);
- 		return rc;
+@@ -1498,7 +1494,7 @@ static void ieee80211_xmit(struct ieee80
+ 
+ 	if (ieee80211_skb_resize(local, skb, headroom, may_encrypt)) {
+ 		dev_kfree_skb(skb);
+-		dev_put(sdata->dev);
++		rcu_read_unlock();
+ 		return;
  	}
  
-@@ -555,13 +547,13 @@ static int mwl8k_feed_fw_image(struct mwl8k_priv *priv,
- static int mwl8k_load_firmware(struct ieee80211_hw *hw)
- {
- 	struct mwl8k_priv *priv = hw->priv;
--	struct firmware *fw = priv->fw.ucode;
-+	struct firmware *fw = priv->fw_ucode;
- 	struct mwl8k_device_info *di = priv->device_info;
- 	int rc;
- 	int loops;
+@@ -1509,13 +1505,13 @@ static void ieee80211_xmit(struct ieee80
+ 		!is_multicast_ether_addr(hdr->addr1))
+ 			if (mesh_nexthop_lookup(skb, sdata)) {
+ 				/* skb queued: don't free */
+-				dev_put(sdata->dev);
++				rcu_read_unlock();
+ 				return;
+ 			}
  
- 	if (!memcmp(fw->data, "\x01\x00\x00\x00", 4)) {
--		struct firmware *helper = priv->fw.helper;
-+		struct firmware *helper = priv->fw_helper;
+ 	ieee80211_select_queue(local, skb);
+ 	ieee80211_tx(sdata, skb, false);
+-	dev_put(sdata->dev);
++	rcu_read_unlock();
+ }
  
- 		if (helper == NULL) {
- 			printk(KERN_ERR "%s: helper image needed but none "
--- 
-1.5.6.4
+ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+@@ -1965,12 +1961,10 @@ void ieee80211_tx_pending(unsigned long 
+ 			}
+ 
+ 			sdata = vif_to_sdata(info->control.vif);
+-			dev_hold(sdata->dev);
+ 			spin_unlock_irqrestore(&local->queue_stop_reason_lock,
+ 						flags);
+ 
+ 			txok = ieee80211_tx_pending_skb(local, skb);
+-			dev_put(sdata->dev);
+ 			if (!txok)
+ 				__skb_queue_head(&local->pending[i], skb);
+ 			spin_lock_irqsave(&local->queue_stop_reason_lock,
+
+
