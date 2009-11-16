@@ -1,52 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:57164 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753284AbZK3RNu (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:36495 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754328AbZKPWJc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2009 12:13:50 -0500
-Date: Mon, 30 Nov 2009 18:13:56 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: "John W. Linville" <linville@tuxdriver.com>,
+	Mon, 16 Nov 2009 17:09:32 -0500
+Message-ID: <4B01CD9D.7040601@lwfinger.net>
+Date: Mon, 16 Nov 2009 16:09:33 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: Greg Kroah-Hartman <gregkh@suse.de>, linux-kernel@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH 11/12] mwl8k: don't overwrite mwl8k_vif::bssid until after disassociation
-Message-ID: <20091130171356.GN20214@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [PATCH] staging: rtl8187se: Rename staging driver to avoid name
+ 	conflict with mainline driver
+References: <4b016848.3j3kclbqZ4ylyZGU%Larry.Finger@lwfinger.net> <69e28c910911161202w5255bff5ydb7fc665b3320bda@mail.gmail.com>
+In-Reply-To: <69e28c910911161202w5255bff5ydb7fc665b3320bda@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When disassociating, mac80211 zeroes vif->bss_info.bssid before
-calling our ->bss_info_changed(), but we need the BSSID to remove the
-hardware station database entry for our AP, so we can't clear our
-local copy of the BSSID until after we've done that.
+On 11/16/2009 02:02 PM, Gábor Stefanik wrote:
+>>
+>> -obj-$(CONFIG_RTL8187SE)        += rtl8187se.o
+>> +obj-$(CONFIG_RTL8187SE_STAGE)  += rtl8187se_stage.o
+> 
+> Please make this r8187se.o, to be consistent with the other
+> r8180-sa2400 derivative drivers.
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+I cannot do that. From what I see, the kernel make system creates the .ko file
+from the name specified here. When I make that rtl8187se.o, then I get
+rtl8187se.ko, which is what I want to avoid.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index ca6162b..f80cef9 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -3025,9 +3025,6 @@ static void mwl8k_bss_info_changed(struct ieee80211_hw *hw,
- 	struct mwl8k_vif *mwl8k_vif = MWL8K_VIF(vif);
- 	int rc;
- 
--	if (changed & BSS_CHANGED_BSSID)
--		memcpy(mwl8k_vif->bssid, info->bssid, ETH_ALEN);
--
- 	if ((changed & BSS_CHANGED_ASSOC) == 0)
- 		return;
- 
-@@ -3041,6 +3038,8 @@ static void mwl8k_bss_info_changed(struct ieee80211_hw *hw,
- 		memcpy(&mwl8k_vif->bss_info, info,
- 			sizeof(struct ieee80211_bss_conf));
- 
-+		memcpy(mwl8k_vif->bssid, info->bssid, ETH_ALEN);
-+
- 		/* Install rates */
- 		rc = mwl8k_update_rateset(hw, vif);
- 		if (rc)
--- 
-1.5.6.4
+Larry
