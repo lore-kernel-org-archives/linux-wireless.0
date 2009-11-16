@@ -1,87 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:44020 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751968AbZKGOLn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 09:11:43 -0500
-Received: by bwz27 with SMTP id 27so2066234bwz.21
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2009 06:11:48 -0800 (PST)
+Received: from mail.atheros.com ([12.36.123.2]:33461 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751144AbZKPGKN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Nov 2009 01:10:13 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 15 Nov 2009 22:10:19 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <200911021522.38842.mb@bu3sch.de>
-References: <4888b8cb0911010451w3e824921ob5ee6b7aae5b728b@mail.gmail.com>
-	<69e28c910911020326m67797910ub1df048d8dd3eb7e@mail.gmail.com>
-	<4888b8cb0911020557m226d8bccx36da7949459369f@mail.gmail.com>
-	<200911021522.38842.mb@bu3sch.de>
-From: Thomas Wiecki <thomas.wiecki@googlemail.com>
-Date: Sat, 7 Nov 2009 15:11:25 +0100
-Message-ID: <4888b8cb0911070611j365f2fa7ldde193bfde37f6e3@mail.gmail.com>
-Subject: Re: b43 with 14e4 gives DMA error
-To: Michael Buesch <mb@bu3sch.de>
-Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19200.60648.260654.455459@gargle.gargle.HOWL>
+Date: Mon, 16 Nov 2009 11:40:48 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/4] ath9k: Cleanup bss_info_changed callback
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't know if I did it right, let me know if there is anything else
-you need. Here is kern.log (I added CONFIG_B43_DEBUG to config.mk,
-also, I am running compat-wireless-2009-11-07 -- I also tried most
-recent wireless-testing, however, with the same result):
+* Remove a code chunk dealing with operating mode changes.
+  As noted, all such policy changes are to be done in
+  add_interface.
 
-Nov  7 15:01:30 lateralus kernel: [  101.013386] cfg80211: Calling
-CRDA to update world regulatory domain
-Nov  7 15:01:30 lateralus kernel: [  101.117855] b43-pci-bridge
-0000:0c:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-Nov  7 15:01:30 lateralus kernel: [  101.117878] b43-pci-bridge
-0000:0c:00.0: setting latency timer to 64
-Nov  7 15:01:30 lateralus kernel: [  101.184603] ssb: Sonics Silicon
-Backplane found on PCI device 0000:0c:00.0
-Nov  7 15:01:30 lateralus kernel: [  101.222674] cfg80211: World
-regulatory domain updated:
-Nov  7 15:01:30 lateralus kernel: [  101.222683]        (start_freq -
-end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-Nov  7 15:01:30 lateralus kernel: [  101.222691]        (2402000 KHz -
-2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-Nov  7 15:01:30 lateralus kernel: [  101.222697]        (2457000 KHz -
-2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-Nov  7 15:01:30 lateralus kernel: [  101.222704]        (2474000 KHz -
-2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-Nov  7 15:01:30 lateralus kernel: [  101.222710]        (5170000 KHz -
-5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-Nov  7 15:01:30 lateralus kernel: [  101.222716]        (5735000 KHz -
-5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-Nov  7 15:01:30 lateralus kernel: [  101.237106] b43-phy0: Broadcom
-4312 WLAN found (core revision 15)
-Nov  7 15:01:30 lateralus kernel: [  101.331600] phy0: Selected rate
-control algorithm 'minstrel'
-Nov  7 15:01:30 lateralus kernel: [  101.332296] Registered led
-device: b43-phy0::tx
-Nov  7 15:01:30 lateralus kernel: [  101.332309] Registered led
-device: b43-phy0::rx
-Nov  7 15:01:30 lateralus kernel: [  101.332322] Registered led
-device: b43-phy0::radio
-Nov  7 15:01:30 lateralus kernel: [  101.332368] Broadcom 43xx driver
-loaded [ Features: PML, Firmware-ID: FW13 ]
-Nov  7 15:01:30 lateralus kernel: [  101.424508] b43 ssb0:0: firmware:
-requesting b43/ucode15.fw
-Nov  7 15:01:31 lateralus kernel: [  101.657129] b43 ssb0:0: firmware:
-requesting b43/lp0initvals15.fw
-Nov  7 15:01:31 lateralus kernel: [  101.667660] b43 ssb0:0: firmware:
-requesting b43/lp0bsinitvals15.fw
-Nov  7 15:01:31 lateralus kernel: [  101.820518] b43-phy0: Loading
-firmware version 478.104 (2008-07-01 00:50:23)
-Nov  7 15:01:37 lateralus kernel: [  107.761441] b43-phy0 ERROR: Fatal
-DMA error: 0x00000400, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-0x00000000
-Nov  7 15:01:37 lateralus kernel: [  107.761457] b43-phy0: Controller
-RESET (DMA error) ...
-Nov  7 15:01:37 lateralus kernel: [  107.992539] b43-phy0: Loading
-firmware version 478.104 (2008-07-01 00:50:23)
-Nov  7 15:01:42 lateralus kernel: [  113.617348] b43-phy0: Controller restarted
+* Remove pointless check for empty BSSID.
+  Also, remove mode checks - mac80211 does all the needed checks.
 
-On Mon, Nov 2, 2009 at 3:22 PM, Michael Buesch <mb@bu3sch.de> wrote:
-> Can we have a full kernel log with b43 debugging enabled, please? (CONFIG_B43_DEBUG)
->
-> --
-> Greetings, Michael.
->
+* Handle enabling/disabling beacon transmission properly.
+
+* Handle beacon interval changes for AP mode.
+  The original code depended on config_interface() to update
+  the HW TSF. Since that callback has been removed, handle
+  it properly.
+
+* Remove unneeded code dealing with key/privacy.
+
+* Set the chainmasks to 1x1 for IBSS when the BSSID is set.
+  This was happening uncondionally before.
+
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |  114 +++++++++++----------------------
+ 1 files changed, 37 insertions(+), 77 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 3c02b97..3229c39 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2956,90 +2956,62 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath_vif *avp = (void *)vif->drv_priv;
+-	u32 rfilt = 0;
+-	int error, i;
++	int error;
+ 
+ 	mutex_lock(&sc->mutex);
+ 
+-	/*
+-	 * TODO: Need to decide which hw opmode to use for
+-	 *       multi-interface cases
+-	 * XXX: This belongs into add_interface!
+-	 */
+-	if (vif->type == NL80211_IFTYPE_AP &&
+-	    ah->opmode != NL80211_IFTYPE_AP) {
+-		ah->opmode = NL80211_IFTYPE_STATION;
+-		ath9k_hw_setopmode(ah);
+-		memcpy(common->curbssid, common->macaddr, ETH_ALEN);
++	if (changed & BSS_CHANGED_BSSID) {
++		/* Set BSSID */
++		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
++		memcpy(avp->bssid, bss_conf->bssid, ETH_ALEN);
+ 		common->curaid = 0;
+ 		ath9k_hw_write_associd(ah);
+-		/* Request full reset to get hw opmode changed properly */
+-		sc->sc_flags |= SC_OP_FULL_RESET;
+-	}
+ 
+-	if ((changed & BSS_CHANGED_BSSID) &&
+-	    !is_zero_ether_addr(bss_conf->bssid)) {
+-		switch (vif->type) {
+-		case NL80211_IFTYPE_STATION:
+-		case NL80211_IFTYPE_ADHOC:
+-		case NL80211_IFTYPE_MESH_POINT:
+-			/* Set BSSID */
+-			memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
+-			memcpy(avp->bssid, bss_conf->bssid, ETH_ALEN);
+-			common->curaid = 0;
+-			ath9k_hw_write_associd(ah);
++		/* Set aggregation protection mode parameters */
++		sc->config.ath_aggr_prot = 0;
+ 
+-			/* Set aggregation protection mode parameters */
+-			sc->config.ath_aggr_prot = 0;
++		/* Only legacy IBSS for now */
++		if (vif->type == NL80211_IFTYPE_ADHOC)
++			ath_update_chainmask(sc, 0);
+ 
+-			ath_print(common, ATH_DBG_CONFIG,
+-				  "RX filter 0x%x bssid %pM aid 0x%x\n",
+-				  rfilt, common->curbssid, common->curaid);
++		ath_print(common, ATH_DBG_CONFIG,
++			  "BSSID: %pM aid: 0x%x\n",
++			  common->curbssid, common->curaid);
+ 
+-			/* need to reconfigure the beacon */
+-			sc->sc_flags &= ~SC_OP_BEACONS ;
++		/* need to reconfigure the beacon */
++		sc->sc_flags &= ~SC_OP_BEACONS ;
++	}
+ 
+-			break;
+-		default:
+-			break;
+-		}
++	/* Enable transmission of beacons (AP, IBSS, MESH) */
++	if ((changed & BSS_CHANGED_BEACON) ||
++	    ((changed & BSS_CHANGED_BEACON_ENABLED) && bss_conf->enable_beacon)) {
++		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
++		error = ath_beacon_alloc(aphy, vif);
++		if (!error)
++			ath_beacon_config(sc, vif);
+ 	}
+ 
+-	if ((vif->type == NL80211_IFTYPE_ADHOC) ||
+-	    (vif->type == NL80211_IFTYPE_AP) ||
+-	    (vif->type == NL80211_IFTYPE_MESH_POINT)) {
+-		if ((changed & BSS_CHANGED_BEACON) ||
+-		    (changed & BSS_CHANGED_BEACON_ENABLED &&
+-		     bss_conf->enable_beacon)) {
+-			/*
+-			 * Allocate and setup the beacon frame.
+-			 *
+-			 * Stop any previous beacon DMA.  This may be
+-			 * necessary, for example, when an ibss merge
+-			 * causes reconfiguration; we may be called
+-			 * with beacon transmission active.
+-			 */
+-			ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
++	/* Disable transmission of beacons */
++	if ((changed & BSS_CHANGED_BEACON_ENABLED) && !bss_conf->enable_beacon)
++		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
+ 
++	if (changed & BSS_CHANGED_BEACON_INT) {
++		sc->beacon_interval = bss_conf->beacon_int;
++		/*
++		 * In case of AP mode, the HW TSF has to be reset
++		 * when the beacon interval changes.
++		 */
++		if (vif->type == NL80211_IFTYPE_AP) {
++			sc->sc_flags |= SC_OP_TSF_RESET;
++			ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
+ 			error = ath_beacon_alloc(aphy, vif);
+ 			if (!error)
+ 				ath_beacon_config(sc, vif);
++		} else {
++			ath_beacon_config(sc, vif);
+ 		}
+ 	}
+ 
+-	/* Check for WLAN_CAPABILITY_PRIVACY ? */
+-	if ((avp->av_opmode != NL80211_IFTYPE_STATION)) {
+-		for (i = 0; i < IEEE80211_WEP_NKID; i++)
+-			if (ath9k_hw_keyisvalid(sc->sc_ah, (u16)i))
+-				ath9k_hw_keysetmac(sc->sc_ah,
+-						   (u16)i,
+-						   common->curbssid);
+-	}
+-
+-	/* Only legacy IBSS for now */
+-	if (vif->type == NL80211_IFTYPE_ADHOC)
+-		ath_update_chainmask(sc, 0);
+-
+ 	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
+ 		ath_print(common, ATH_DBG_CONFIG, "BSS Changed PREAMBLE %d\n",
+ 			  bss_conf->use_short_preamble);
+@@ -3065,18 +3037,6 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 		ath9k_bss_assoc_info(sc, vif, bss_conf);
+ 	}
+ 
+-	/*
+-	 * The HW TSF has to be reset when the beacon interval changes.
+-	 * We set the flag here, and ath_beacon_config_ap() would take this
+-	 * into account when it gets called through the subsequent
+-	 * config_interface() call - with IFCC_BEACON in the changed field.
+-	 */
+-
+-	if (changed & BSS_CHANGED_BEACON_INT) {
+-		sc->sc_flags |= SC_OP_TSF_RESET;
+-		sc->beacon_interval = bss_conf->beacon_int;
+-	}
+-
+ 	mutex_unlock(&sc->mutex);
+ }
+ 
+-- 
+1.6.5.2
+
