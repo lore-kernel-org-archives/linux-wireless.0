@@ -1,262 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52817 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756951AbZKFUpG (ORCPT
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:33316 "EHLO
+	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751440AbZKPCgT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 15:45:06 -0500
-Date: Fri, 6 Nov 2009 15:40:34 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-2.6 2009-11-06
-Message-ID: <20091106204034.GI2782@tuxdriver.com>
+	Sun, 15 Nov 2009 21:36:19 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1258221909.3299.26.camel@violet>
+References: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
+	 <1258082571.7715.13.camel@violet>
+	 <4fb5db50911140519q70bbdd00qb585153c4926df96@mail.gmail.com>
+	 <1258216474.3299.24.camel@violet>
+	 <4fb5db50911140937j278584e5nf9e4d5767a44a920@mail.gmail.com>
+	 <1258221909.3299.26.camel@violet>
+Date: Mon, 16 Nov 2009 08:06:23 +0530
+Message-ID: <4fb5db50911151836u5b4844adrd91b56a5ebc7084d@mail.gmail.com>
+Subject: [PATCH 1/1] Adding radio type FM
+From: Janakiram Sistla <janakiram.sistla@gmail.com>
+To: majordomo@vger.kernel.org
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, Marcel Holtmann <marcel@holtmann.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+Adding changes  RFKILL type FM  and for RFKILL for FM  in core
 
-Three more intended for 2.6.32, two oops fixes and a revert of a patch
-that traded one bug for another.  One of the oops fixes reorders some
-cancel_delayed_work_sync calls and the other does some bit testing to
-avoid scheduling work after a device has been removed.
+>From 4bf0ae6c90de9a766914abeb5ab5e5428089b648 Mon Sep 17 00:00:00 2001
+From: Janakiram Sistla <janakiram.sistla@gmail.com>
+Date: Mon, 16 Nov 2009 07:58:09 +0530
+Subject: [PATCH 1/1] Adding radio type FM
 
-Please let me know if there are problems!
+Adding radio type FM in RFKILL_TYPE_.FM belongs to
+same class of with both TX/RX capability.
 
-Thanks,
-
-John
-
+Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
 ---
+ include/linux/rfkill.h |    1 +
+ net/rfkill/core.c      |    2 ++
+ 2 files changed, 3 insertions(+), 0 deletions(-)
 
-Individual patches are available here:
+diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+index 3392c59..03f5598 100644
+--- a/include/linux/rfkill.h
++++ b/include/linux/rfkill.h
+@@ -45,6 +45,7 @@ enum rfkill_type {
+ 	RFKILL_TYPE_WIMAX,
+ 	RFKILL_TYPE_WWAN,
+ 	RFKILL_TYPE_GPS,
++	RFKILL_TYPE_FM,
+ 	NUM_RFKILL_TYPES,
+ };
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
-
----
-
-The following changes since commit bcfe3c2046fc4f16544f2b127f1b159dd1fcad8b:
-  David S. Miller (1):
-        Merge branch 'master' of git://git.kernel.org/.../linville/wireless-2.6
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
-
-John W. Linville (1):
-      Revert "ipw2200: fix oops on missing firmware"
-
-Larry Finger (1):
-      rtl8187: Fix kernel oops when device is removed when LEDS enabled
-
-Sean Cross (1):
-      rt2x00: Don't queue ieee80211 work after USB removal
-
- drivers/net/wireless/ipw2x00/ipw2100.c       |    5 +----
- drivers/net/wireless/ipw2x00/ipw2200.c       |    2 --
- drivers/net/wireless/ipw2x00/libipw.h        |    1 -
- drivers/net/wireless/ipw2x00/libipw_module.c |   14 +++++---------
- drivers/net/wireless/rt2x00/rt2x00dev.c      |    4 ++--
- drivers/net/wireless/rt2x00/rt2x00link.c     |   11 +++++++----
- drivers/net/wireless/rt2x00/rt2x00usb.c      |    9 ++++++++-
- drivers/net/wireless/rtl818x/rtl8187_leds.c  |    4 ++--
- 8 files changed, 25 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index a741d37..240cff1 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -6325,10 +6325,8 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
- 
-       fail:
- 	if (dev) {
--		if (registered) {
--			unregister_ieee80211(priv->ieee);
-+		if (registered)
- 			unregister_netdev(dev);
--		}
- 
- 		ipw2100_hw_stop_adapter(priv);
- 
-@@ -6385,7 +6383,6 @@ static void __devexit ipw2100_pci_remove_one(struct pci_dev *pci_dev)
- 		/* Unregister the device first - this results in close()
- 		 * being called if the device is open.  If we free storage
- 		 * first, then close() will crash. */
--		unregister_ieee80211(priv->ieee);
- 		unregister_netdev(dev);
- 
- 		/* ipw2100_down will ensure that there is no more pending work
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 04341a2..8d58e6e 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -11821,7 +11821,6 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
- 		if (err) {
- 			IPW_ERROR("Failed to register promiscuous network "
- 				  "device (error %d).\n", err);
--			unregister_ieee80211(priv->ieee);
- 			unregister_netdev(priv->net_dev);
- 			goto out_remove_sysfs;
- 		}
-@@ -11872,7 +11871,6 @@ static void __devexit ipw_pci_remove(struct pci_dev *pdev)
- 
- 	mutex_unlock(&priv->mutex);
- 
--	unregister_ieee80211(priv->ieee);
- 	unregister_netdev(priv->net_dev);
- 
- 	if (priv->rxq) {
-diff --git a/drivers/net/wireless/ipw2x00/libipw.h b/drivers/net/wireless/ipw2x00/libipw.h
-index f42ade6..bf45391 100644
---- a/drivers/net/wireless/ipw2x00/libipw.h
-+++ b/drivers/net/wireless/ipw2x00/libipw.h
-@@ -1020,7 +1020,6 @@ static inline int libipw_is_cck_rate(u8 rate)
- /* ieee80211.c */
- extern void free_ieee80211(struct net_device *dev, int monitor);
- extern struct net_device *alloc_ieee80211(int sizeof_priv, int monitor);
--extern void unregister_ieee80211(struct libipw_device *ieee);
- extern int libipw_change_mtu(struct net_device *dev, int new_mtu);
- 
- extern void libipw_networks_age(struct libipw_device *ieee,
-diff --git a/drivers/net/wireless/ipw2x00/libipw_module.c b/drivers/net/wireless/ipw2x00/libipw_module.c
-index be5b809..a0e9f6a 100644
---- a/drivers/net/wireless/ipw2x00/libipw_module.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_module.c
-@@ -235,19 +235,16 @@ void free_ieee80211(struct net_device *dev, int monitor)
- 	libipw_networks_free(ieee);
- 
- 	/* free cfg80211 resources */
--	if (!monitor)
-+	if (!monitor) {
-+		wiphy_unregister(ieee->wdev.wiphy);
-+		kfree(ieee->a_band.channels);
-+		kfree(ieee->bg_band.channels);
- 		wiphy_free(ieee->wdev.wiphy);
-+	}
- 
- 	free_netdev(dev);
- }
- 
--void unregister_ieee80211(struct libipw_device *ieee)
--{
--	wiphy_unregister(ieee->wdev.wiphy);
--	kfree(ieee->a_band.channels);
--	kfree(ieee->bg_band.channels);
--}
--
- #ifdef CONFIG_LIBIPW_DEBUG
- 
- static int debug = 0;
-@@ -333,4 +330,3 @@ module_init(libipw_init);
- 
- EXPORT_SYMBOL(alloc_ieee80211);
- EXPORT_SYMBOL(free_ieee80211);
--EXPORT_SYMBOL(unregister_ieee80211);
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 71761b3..73bbec5 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -815,6 +815,8 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
- 
- 	mutex_init(&rt2x00dev->csr_mutex);
- 
-+	set_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
-+
- 	/*
- 	 * Make room for rt2x00_intf inside the per-interface
- 	 * structure ieee80211_vif.
-@@ -871,8 +873,6 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
- 	rt2x00leds_register(rt2x00dev);
- 	rt2x00debug_register(rt2x00dev);
- 
--	set_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
--
- 	return 0;
- 
- exit:
-diff --git a/drivers/net/wireless/rt2x00/rt2x00link.c b/drivers/net/wireless/rt2x00/rt2x00link.c
-index c64db0b..c708d0b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00link.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00link.c
-@@ -362,8 +362,9 @@ void rt2x00link_start_tuner(struct rt2x00_dev *rt2x00dev)
- 
- 	rt2x00link_reset_tuner(rt2x00dev, false);
- 
--	ieee80211_queue_delayed_work(rt2x00dev->hw,
--				     &link->work, LINK_TUNE_INTERVAL);
-+	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
-+		ieee80211_queue_delayed_work(rt2x00dev->hw,
-+					     &link->work, LINK_TUNE_INTERVAL);
- }
- 
- void rt2x00link_stop_tuner(struct rt2x00_dev *rt2x00dev)
-@@ -469,8 +470,10 @@ static void rt2x00link_tuner(struct work_struct *work)
- 	 * Increase tuner counter, and reschedule the next link tuner run.
- 	 */
- 	link->count++;
--	ieee80211_queue_delayed_work(rt2x00dev->hw,
--				     &link->work, LINK_TUNE_INTERVAL);
-+
-+	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
-+		ieee80211_queue_delayed_work(rt2x00dev->hw,
-+					     &link->work, LINK_TUNE_INTERVAL);
- }
- 
- void rt2x00link_register(struct rt2x00_dev *rt2x00dev)
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 5015448..f02b48a 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -47,6 +47,8 @@ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
- 	    (requesttype == USB_VENDOR_REQUEST_IN) ?
- 	    usb_rcvctrlpipe(usb_dev, 0) : usb_sndctrlpipe(usb_dev, 0);
- 
-+	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
-+		return -ENODEV;
- 
- 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
- 		status = usb_control_msg(usb_dev, pipe, request, requesttype,
-@@ -60,8 +62,10 @@ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
- 		 * -ENODEV: Device has disappeared, no point continuing.
- 		 * All other errors: Try again.
- 		 */
--		else if (status == -ENODEV)
-+		else if (status == -ENODEV) {
-+			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 			break;
-+		}
- 	}
- 
- 	ERROR(rt2x00dev,
-@@ -161,6 +165,9 @@ int rt2x00usb_regbusy_read(struct rt2x00_dev *rt2x00dev,
- {
- 	unsigned int i;
- 
-+	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
-+		return -ENODEV;
-+
- 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
- 		rt2x00usb_register_read_lock(rt2x00dev, offset, reg);
- 		if (!rt2x00_get_field32(*reg, field))
-diff --git a/drivers/net/wireless/rtl818x/rtl8187_leds.c b/drivers/net/wireless/rtl818x/rtl8187_leds.c
-index a1c670f..cf8a4a4 100644
---- a/drivers/net/wireless/rtl818x/rtl8187_leds.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187_leds.c
-@@ -210,10 +210,10 @@ void rtl8187_leds_exit(struct ieee80211_hw *dev)
- 
- 	/* turn the LED off before exiting */
- 	ieee80211_queue_delayed_work(dev, &priv->led_off, 0);
--	cancel_delayed_work_sync(&priv->led_off);
--	cancel_delayed_work_sync(&priv->led_on);
- 	rtl8187_unregister_led(&priv->led_rx);
- 	rtl8187_unregister_led(&priv->led_tx);
-+	cancel_delayed_work_sync(&priv->led_off);
-+	cancel_delayed_work_sync(&priv->led_on);
- }
- #endif /* def CONFIG_RTL8187_LED */
- 
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index ba2efb9..61b716e 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -590,6 +590,8 @@ static const char *rfkill_get_type_str(enum
+rfkill_type type)
+ 		return "wimax";
+ 	case RFKILL_TYPE_WWAN:
+ 		return "wwan";
++	case RFKILL_TYPE_FM:
++		return "fm";
+ 	case RFKILL_TYPE_GPS:
+ 		return "gps";
+ 	default:
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.5.4.3
