@@ -1,80 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:46202 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757535AbZKKXyf (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46878 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753387AbZKPR1d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 18:54:35 -0500
-Date: Wed, 11 Nov 2009 17:54:38 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>, chunkeey@web.de
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] p54usb: Remove DMA buffer from stack
-Message-ID: <4afb4ebe.aG/GwqejIBV6vYXK%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 16 Nov 2009 12:27:33 -0500
+Subject: Re: compat-wireless and minstrel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Adam Wozniak <awozniak@irobot.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	linux-wireless@vger.kernel.org, nbd@openwrt.org
+In-Reply-To: <4B018B26.2070008@irobot.com>
+References: <4AF0D54D.4090303@irobot.com>
+	 <alpine.DEB.2.00.0911111508391.6214@kauri.acheron.indranet.co.nz>
+	 <4AFC655A.5020706@irobot.com> <200911122103.27455.chunkeey@googlemail.com>
+	 <4AFC8E4F.5090307@irobot.com>  <4AFC8F0D.5020700@irobot.com>
+	 <1258097352.3899.75.camel@johannes.local>  <4AFDDF19.8060202@irobot.com>
+	 <1258191039.6167.40.camel@johannes.local>  <4B018B26.2070008@irobot.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-H9hQxmqOENztikwOSc4D"
+Date: Mon, 16 Nov 2009 18:27:33 +0100
+Message-ID: <1258392453.32159.28.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2.6.32-rc6 from wireless-testing, the following warning is emitted:
 
-------------[ cut here ]------------                                                                           
-WARNING: at lib/dma-debug.c:860 check_for_stack+0xaa/0xe0()                                                    
-Hardware name: HP Pavilion dv2700 Notebook PC                                                                  
-ehci_hcd 0000:00:02.1: DMA-API: device driver maps memory fromstack
-	 [addr=ffff8800b6e2bca8]                    
-Modules linked in: <Removed> 
-Pid: 16378, comm: modprobe Not tainted 2.6.32-rc6-wl #244                                                      
-Call Trace:                                                                                                    
- [<ffffffff81049698>] warn_slowpath_common+0x78/0xb0                                                           
- [<ffffffff8104972c>] warn_slowpath_fmt+0x3c/0x40                                                              
- [<ffffffff811ae52a>] check_for_stack+0xaa/0xe0                                                                
- [<ffffffff811afc8d>] debug_dma_map_page+0xfd/0x170                                                            
- [<ffffffffa006297a>] usb_hcd_submit_urb+0x3da/0x9c0 [usbcore]                                                 
- [<ffffffff81076e6f>] ? lockdep_init_map+0x5f/0x5d0                                                            
- [<ffffffffa0063365>] usb_submit_urb+0xe5/0x260 [usbcore]                                                      
- [<ffffffffa0064b7e>] usb_start_wait_urb+0x5e/0xf0 [usbcore]                                                   
- [<ffffffffa0063943>] ? usb_init_urb+0x23/0x40 [usbcore]                                                       
- [<ffffffffa0064cd4>] usb_bulk_msg+0xc4/0x150 [usbcore]                                                        
- [<ffffffffa0441a91>] T.719+0x31/0x40 [p54usb]                                                                 
- [<ffffffffa0441acf>] p54u_upload_firmware_3887+0x2f/0x490 [p54usb]                                            
- [<ffffffffa049c667>] ? p54_parse_firmware+0x427/0x450 [p54common]                                             
- <Rest of traceback removed>
----[ end trace f77df0316ddad3de ]---                                                                           
+--=-H9hQxmqOENztikwOSc4D
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.org>
----
+On Mon, 2009-11-16 at 09:25 -0800, Adam Wozniak wrote:
+> If we have only three stations in an ad-hoc network, where all three can=20
+> hear the other two, only one of them should be beaconing, correct? =20
 
-John,
+No, if they all behave correctly beaconing will be distributed.
 
-This is 2.6.32 material. Sorry to find it so late in the rc cycle. I hop
-DaveM doesn't give you too much trouble.
+johannes
 
-Larry
----
+--=-H9hQxmqOENztikwOSc4D
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Index: wireless-testing/drivers/net/wireless/p54/p54usb.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/p54/p54usb.c
-+++ wireless-testing/drivers/net/wireless/p54/p54usb.c
-@@ -426,12 +426,16 @@ static const char p54u_romboot_3887[] =
- static int p54u_firmware_reset_3887(struct ieee80211_hw *dev)
- {
- 	struct p54u_priv *priv = dev->priv;
--	u8 buf[4];
-+	u8 *buf;
- 	int ret;
- 
--	memcpy(&buf, p54u_romboot_3887, sizeof(buf));
-+	buf = kmalloc(4, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+ 	memcpy(buf, p54u_romboot_3887, 4);
- 	ret = p54u_bulk_msg(priv, P54U_PIPE_DATA,
--			    buf, sizeof(buf));
-+			    buf, 4);
-+	kfree(buf);
- 	if (ret)
- 		dev_err(&priv->udev->dev, "(p54usb) unable to jump to "
- 			"boot ROM (%d)!\n", ret);
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLAYuBAAoJEODzc/N7+QmaBb0P/jGZ0mIBsN696nO4TmF2lTIu
+McB2nGQfYfOqQ7c4eTBtXv80Ci+qsTFSMP2xvbZaFU26PDcc0x1mSDXpTN6M3oFv
+fHPxF5WuY+hTaSQUtPRnap6neu89ssGAXBB4MAKT7OWktvzvvbGbyt+iO+Inpaoc
+ua1o4W7mb7yhRkl4SKSdMNd+Rjie9Ew2WCgk1soZJ3g8WzbqBTrEmzoIE6uFynXb
+YhPAP+oopQsqDqkPrW7bM7vIoB3u/xIZWXtdIZjmamhShA2v7ldswVD+d5tLlpvU
+3M9cP5pU+M1mbVDJoChuD8X5gblBWRcuZ3TpoGSPgAyD2tuIg9RDxfwjCyqGx9BM
+loEYpSpP3v6Y++G0vRF2iI+BaJeydCs/1INE4GxBanZuLb6waTakwpqc/2UkxMo1
+u5Apz29wKJMh7osWBkI8UlLnl0yHsUGdwjiEphQIXqKNb57oi4hMiswqZ97Epgw3
+I57psY9RWwh70wlYdxsHgowgeq3a/ZHdrl9vyZ5Oigu3zdXpe0KY7T0T/qGIi4Xp
+A+NlVkMpsQe3XVaLe5zQ+fh6iAfAvibTc3u3ZeJUBSkfFFxOcmDVnOKawtq7tByd
+LJL5E04usBQKssDfK+/7YTLflnCe0pqtan02H3zvSsGEcINV0wXxkhM3VXdqWzcp
+L1hlBy35U1SnWeYLKGye
+=bWdq
+-----END PGP SIGNATURE-----
+
+--=-H9hQxmqOENztikwOSc4D--
 
