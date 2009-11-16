@@ -1,37 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:62014 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753477AbZKHNuc (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42619 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751632AbZKPK4E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 08:50:32 -0500
-Received: by ewy3 with SMTP id 3so2376272ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 05:50:37 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] rt2500usb: remove dead link tuning code
-Date: Sun, 8 Nov 2009 14:50:35 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <200911081443.35448.bzolnier@gmail.com>
-In-Reply-To: <200911081443.35448.bzolnier@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200911081450.35804.IvDoorn@gmail.com>
+	Mon, 16 Nov 2009 05:56:04 -0500
+Subject: Re: [PATCH v2] rndis_wlan: handle NL80211_AUTHTYPE_AUTOMATIC
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20091116104937.3845.62090.stgit@fate.lan>
+References: <20091116104937.3845.62090.stgit@fate.lan>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-r6ixrxNMbGtoqgMlKjDL"
+Date: Mon, 16 Nov 2009 11:56:02 +0100
+Message-ID: <1258368962.32159.12.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 08 November 2009, Bartlomiej Zolnierkiewicz wrote:
-> Link tuning code from the legacy rt2570 driver turned out to be
-> harmful and got disabled by the commit d06193f ("rt2x00: Disable
-> link tuning in rt2500usb") in August 2008.
-> 
-> There is no reason to keep this dead code any longer so remove it
-> (it can still be retrieved from the git history if necessary).
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Please keep this code. There is no particular reason to delete it,
-and at the moment I prefer this code to be kept close at hand.
+--=-r6ixrxNMbGtoqgMlKjDL
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Ivo
+On Mon, 2009-11-16 at 12:49 +0200, Jussi Kivilinna wrote:
+> rndis_wlan didn't know about NL80211_AUTHTYPE_AUTOMATIC and simple
+> setup with 'iwconfig wlan essid no-encrypt' would fail (ENOSUPP).
+>=20
+> v2: use NDIS_80211_AUTH_AUTO_SWITCH instead of _OPEN.
+>     This will make device try shared key auth first, then open.
+
+Oh how very cool, I was dreading you'd say "can't cfg80211 auto-try
+then" :)
+
+johannes
+
+--=-r6ixrxNMbGtoqgMlKjDL
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLAS++AAoJEODzc/N7+QmamiwQAMrn79uxZ+8eFV6/6fjBIiPl
+Sq2/Sa2k9pE0yI55CB4AjPAY2s+u9WFsgS3wSZqwEdv/f57SDN1qV6UybATIH7XT
+0GvZ3DsFCTMdzalzb9ykUJSBThD6Izvq4242gGV6ppv6HqLgN9KUDDCyvQhvgPj1
+Ktgr1RYa9n9ItDVFBUfhbV6mvdp1oE9J1bw7WsTc1Ar600dTzZnNwewO8t+rcHXO
+RssWBqJ8bCGgn3UaCbaRO4SP7terEhUP97KiifMZ8xe69FqYYaYW+yb7z6fAFSUp
+9k2jtcW+Hw3DK8NYj1AJ/JnHWuM35YWzyV9MefQcWbM8hf+CDHUgNJDzH1j+i69v
+cNxfQeoEp1TtGesHkspHscpCX9jjniEFC7Muy0gl9OjpJ/tQI8wWCTMe+xK73/jK
+vHYGyvTGIEzn1oPrWjiCcloAVEPkG3cV7u8p43Xm+NCbBSvYtnnlHtiZg9lvt3x/
+H1TkYWxjFyI4VAoaKmccFEMmDSBD9c6H4sMpKjLhielCc7BBOgeZw4mrtYx6Z1NZ
+MdYqC6JdknA9wi8/a/7VtH/pq7VEiaaua1Wg24RvPveNr3ZyCN6Ra7B+AvfIQmo6
+B63dBuC2bVZy8PcK5ZrupRbNWYtfkDZVRSI185vVoYfRy0PKzfv3iQkasWe4Vpp5
+bCdDvmVHEj7lpjwJA2xv
+=1oBp
+-----END PGP SIGNATURE-----
+
+--=-r6ixrxNMbGtoqgMlKjDL--
+
