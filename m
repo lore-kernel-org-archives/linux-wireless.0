@@ -1,37 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f226.google.com ([209.85.217.226]:62780 "EHLO
-	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758121AbZKDUEM (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:57622 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752738AbZKPPKS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 15:04:12 -0500
+	Mon, 16 Nov 2009 10:10:18 -0500
+Received: by bwz27 with SMTP id 27so5747439bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Nov 2009 07:10:23 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20091104173525.28463.40807.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-	 <20091104173525.28463.40807.sendpatchset@localhost.localdomain>
-Date: Wed, 4 Nov 2009 21:04:17 +0100
-Message-ID: <14add3d10911041204n2466290fybf42008ab2061bd6@mail.gmail.com>
-Subject: Re: [PATCH 28/41] rt2x00: fix rt2x00pci_register_multi[read,write]()
-	arguments
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <43e72e890911131813g2bc15fe6rd9c636959f698535@mail.gmail.com>
+References: <f74418680911120331w1ea31a68y56440dc0fbd253bb@mail.gmail.com>
+	<20091112154440.GD19349@tux> <43e72e890911120749n72360f0btfb058ab3a521eabb@mail.gmail.com>
+	<40101cc30911121118h17db32a1y61edac1a4c0aec24@mail.gmail.com>
+	<1258054304.3899.36.camel@johannes.local> <40101cc30911121418h4109d62bv763bed2036446901@mail.gmail.com>
+	<1258097485.3899.76.camel@johannes.local> <f74418680911130055o7d8fa94brc3fd7a0c315bb7b0@mail.gmail.com>
+	<40101cc30911130420n6fa79a55vfc2bffc615e9606b@mail.gmail.com>
+	<43e72e890911131813g2bc15fe6rd9c636959f698535@mail.gmail.com>
+From: Matteo Croce <technoboy85@gmail.com>
+Date: Mon, 16 Nov 2009 16:08:57 +0100
+Message-ID: <40101cc30911160708p4dbbf7fdy92c8901a58557808@mail.gmail.com>
+Subject: Re: [ath9k-devel] Possible memory leak in ath9k monitor mode
+	injection
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	rodriguez@atheros.com, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 4, 2009 at 6:35 PM, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2x00: fix rt2x00pci_register_multi[read,write]() arguments
+On Sat, Nov 14, 2009 at 3:13 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Fri, Nov 13, 2009 at 4:20 AM, Matteo Croce <technoboy85@gmail.com> wrote:
+>> On Fri, Nov 13, 2009 at 12:27 PM,  <Lorenzo.Bianconi83@gmail.com> wrote:
+>>> Il giorno , Lorenzo Bianconi <lorenzo.bianconi83@gmail.com> ha scritto:
+>>>> 2009/11/13 Johannes Berg johannes@sipsolutions.net>:
+>>>> Yes, I tested ath5k/mac80211 and ath9k/mac80211 and both show the same
+>>>> problem
+>>>>
+>>>> whereas madwifi/net80211, tested with the same module, has not memory
+>>>> leak.
+>>>>
+>>>
+>>> Hi all,
+>>>
+>>> I found a way to stop the mem leak. In the ath_tx_complete() function I have
+>>> noticed that the struct tx_info_priv is not freed. I have made the following
+>>> changes and now the memory remains stable. I do not know if this is the
+>>> right place to put the kfree(tx_info_priv), however this seems to solve the
+>>> issue.
+>>>
+>>> Cheers,
+>>>
+>>> Lorenzo
+>>>
+>>> @@ -1825,9 +1825,10 @@
+>>> SC_OP_WAIT_FOR_TX_ACK));
+>>> }
+>>>
+>>> - if (frame_type == ATH9K_NOT_INTERNAL)
+>>> + if (frame_type == ATH9K_NOT_INTERNAL) {
+>>> ieee80211_tx_status(hw, skb);
+>>> - else
+>>> + kfree(tx_info_priv);
+>>> + } else
+>>> ath9k_tx_status(hw, skb);
+>>> }
+>>
+>> That's great. I'll try the fix with ath5k too
 >
-> Change type of 'length' argument from u16 to u32 (all arguments
-> match rt2x00usb_register_multi[read,write]() ones now).
+> Can you guys try Felix's RFC patches ? It removes this completely.
 >
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
+>  Luis
+>
 
-For what it is worth:
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Yes they fix the leak
