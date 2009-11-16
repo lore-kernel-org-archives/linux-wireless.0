@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:49531 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758446AbZKESle (ORCPT
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:46764 "EHLO
+	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752155AbZKPEZm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2009 13:41:34 -0500
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 04/41] rt2800pci: fix crypto in TX frame
-Date: Thu, 5 Nov 2009 19:41:36 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173224.28463.49296.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173224.28463.49296.sendpatchset@localhost.localdomain>
+	Sun, 15 Nov 2009 23:25:42 -0500
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911051941.36666.IvDoorn@gmail.com>
+In-Reply-To: <1258339401.2003.3.camel@violet>
+References: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
+	 <1258082571.7715.13.camel@violet>
+	 <4fb5db50911140519q70bbdd00qb585153c4926df96@mail.gmail.com>
+	 <1258216474.3299.24.camel@violet>
+	 <4fb5db50911140937j278584e5nf9e4d5767a44a920@mail.gmail.com>
+	 <1258221909.3299.26.camel@violet>
+	 <4fb5db50911151836u5b4844adrd91b56a5ebc7084d@mail.gmail.com>
+	 <1258339401.2003.3.camel@violet>
+Date: Mon, 16 Nov 2009 09:55:46 +0530
+Message-ID: <4fb5db50911152025j20eba2e6xf243d6af57f81ed1@mail.gmail.com>
+Subject: Re: [PATCH 1/1] Adding radio type FM
+From: Janakiram Sistla <janakiram.sistla@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2800pci: fix crypto in TX frame
-> 
-> Based on rt2800usb patch from Benoit PAPILLAULT
-> (commit 17616310836ad2cc45a64576ef0e1520b0dcc81b).
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Hi Marcel,
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+I am sorry about this.There is a problem with my git send-email.so i
+had to use the mailer.I will surely take complete precaution that it
+will not repeat further.
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800pci.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
-> ===================================================================
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -2195,7 +2195,7 @@ static void rt2800pci_write_tx_desc(stru
->  	rt2x00_set_field32(&word, TXWI_W1_BW_WIN_SIZE, txdesc->ba_size);
->  	rt2x00_set_field32(&word, TXWI_W1_WIRELESS_CLI_ID,
->  			   test_bit(ENTRY_TXD_ENCRYPT, &txdesc->flags) ?
-> -			       (skbdesc->entry->entry_idx + 1) : 0xff);
-> +			   txdesc->key_idx : 0xff);
->  	rt2x00_set_field32(&word, TXWI_W1_MPDU_TOTAL_BYTE_COUNT,
->  			   skb->len - txdesc->l2pad);
->  	rt2x00_set_field32(&word, TXWI_W1_PACKETID,
-> 
+Regards,
+Ram.
 
-
+On 11/16/09, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi Janakiram,
+>
+> so first of all, please stop sending emails to majordomo. That is not a
+> real person.
+>
+> > Adding changes  RFKILL type FM  and for RFKILL for FM  in core
+> >
+> > From 4bf0ae6c90de9a766914abeb5ab5e5428089b648 Mon Sep 17 00:00:00 2001
+> > From: Janakiram Sistla <janakiram.sistla@gmail.com>
+> > Date: Mon, 16 Nov 2009 07:58:09 +0530
+> > Subject: [PATCH 1/1] Adding radio type FM
+> >
+> > Adding radio type FM in RFKILL_TYPE_.FM belongs to
+> > same class of with both TX/RX capability.
+> >
+> > Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
+>
+> the patch itself is fine, but can we get at least one with a proper
+> commit message. And if you mailer is broken, then either fix it or use
+> git send-email.
+>
+> Regards
+>
+> Marcel
+>
+>
+>
