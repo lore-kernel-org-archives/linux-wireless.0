@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3540 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753042AbZKIDAI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 22:00:08 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	ath9k-devel@lists.ath9k.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 3/3] ath5k: add LED definition for BenQ Joybook R55v
-Date: Sun,  8 Nov 2009 21:59:02 -0500
-Message-Id: <1257735542-29658-3-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1257735542-29658-1-git-send-email-me@bobcopeland.com>
-References: <1257735542-29658-1-git-send-email-me@bobcopeland.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:60792 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754645AbZKPXgS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Nov 2009 18:36:18 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: 2.6.32-rc7-git1: Reported regressions 2.6.30 -> 2.6.31
+Date: Tue, 17 Nov 2009 00:35:11 +0100
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+References: <ipicVA1QUFF.A.zWB.1mdALB@chimera> <4B01E09D.3020608@lwfinger.net>
+In-Reply-To: <4B01E09D.3020608@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200911170035.11575.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Setup the GPIOs for the BenQ Joybook netbook.
+On Tuesday 17 November 2009, Larry Finger wrote:
+> On 11/16/2009 04:58 PM, Rafael J. Wysocki wrote:
+> > This message contains a list of some regressions introduced between 2.6.30 and
+> > 2.6.31, for which there are no fixes in the mainline I know of.  If any of them
+> > have been fixed already, please let me know.
+> > 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14181
+> > Subject		: b43 causes panic at ifconfig down / shutdown
+> > Submitter	: Jeremy Huddleston <jeremyhu@freedesktop.org>
+> > Date		: 2009-09-15 18:34 (63 days old)
+> 
+> This one is fixed by commit d50bae33d1358b909ade05ae121d83d3a60ab63f in
+> mainline. The patch was also sent to stable.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath5k/led.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Thanks, closed.
 
-diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
-index fca0cfa..d495890 100644
---- a/drivers/net/wireless/ath/ath5k/led.c
-+++ b/drivers/net/wireless/ath/ath5k/led.c
-@@ -65,6 +65,8 @@ static const struct pci_device_id ath5k_led_devices[] = {
- 	{ ATH_SDEVICE(PCI_VENDOR_ID_AMBIT, 0x0422), ATH_LED(1, 1) },
- 	/* E-machines E510 (tuliom@gmail.com) */
- 	{ ATH_SDEVICE(PCI_VENDOR_ID_AMBIT, 0x0428), ATH_LED(3, 0) },
-+	/* BenQ Joybook R55v (nowymarluk@wp.pl) */
-+	{ ATH_SDEVICE(PCI_VENDOR_ID_QMI, 0x0100), ATH_LED(1, 0) },
- 	/* Acer Extensa 5620z (nekoreeve@gmail.com) */
- 	{ ATH_SDEVICE(PCI_VENDOR_ID_QMI, 0x0105), ATH_LED(3, 0) },
- 	/* Fukato Datacask Jupiter 1014a (mrb74@gmx.at) */
--- 
-1.6.2.5
-
-
+Rafael
