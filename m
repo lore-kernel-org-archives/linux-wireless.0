@@ -1,95 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:51096 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932186AbZKRUjB (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53882 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752705AbZKPNBu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 15:39:01 -0500
-Received: by fg-out-1718.google.com with SMTP id d23so2425790fga.1
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 12:39:06 -0800 (PST)
-Subject: Re: mac80211 breaks suspend to disk
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20091118202802.GE2911@tuxdriver.com>
-References: <1258568836.4512.13.camel@maxim-laptop>
-	 <20091118202802.GE2911@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 18 Nov 2009 22:39:09 +0200
-Message-ID: <1258576749.8018.7.camel@maxim-laptop>
+	Mon, 16 Nov 2009 08:01:50 -0500
+Message-Id: <20091116130052.969527134@sipsolutions.net>
+Date: Mon, 16 Nov 2009 13:58:21 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] mac80211: improve rate handling
+References: <20091116125819.757434347@sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-11-18 at 15:28 -0500, John W. Linville wrote: 
-> On Wed, Nov 18, 2009 at 08:27:16PM +0200, Maxim Levitsky wrote:
-> > Hi,
-> > 
-> > I finally managed to track down a rare hang on resume from disk I see
-> > for some prolonged time.
-> > Symptoms are that sometimes on resume, system almost hangs.
-> > This is I can switch VTs and execute SysRQ sequences.
-> > This is typical when oops happens.
-> > 
-> > I tracked this to BUG_ON in add_timer.
-> > I replaced this with WARN_ON, and here is the backtrace:
-> > 
-> > 
-> >   331.334935] WARNING: at /home/maxim/software/kernel/linux-2.6/kernel/timer.c:791 add_timer+0x36/0x40()
-> > [  331.347374] Hardware name: Aspire 5720     
-> > [  331.359725] Modules linked in: nvidia(P)  af_packet usb_storage usb_libusual cpufreq_powersave iwl3945 nfsd snd_hda_codec_realtek cpufreq_conservative exportfs iwlcore cpufreq_userspace uvcvideo snd_hda_intel acpi_cpufreq nfs videodev mac80211 coretemp lockd snd_hda_codec joydev v4l1_compat tg3 nfs_acl ohci1394 v4l2_compat_ioctl32 snd_hwdep uhci_hcd sbp2 cfg80211 psmouse video ehci_hcd auth_rpcgss libphy lirc_ene0100 ieee1394 output snd_pcm usbcore serio_raw rfkill evdev snd_page_alloc sunrpc fuse lzo lzo_decompress lzo_compress
-> > [  331.428619] Pid: 4394, comm: pm-hibernate Tainted: P           2.6.32-rc7-wl #183
-> > [  331.442747] Call Trace:
-> > [  331.456760]  [<ffffffff81043a98>] warn_slowpath_common+0x78/0xb0
-> > [  331.471119]  [<ffffffff81043adf>] warn_slowpath_null+0xf/0x20
-> > [  331.485475]  [<ffffffff8104f996>] add_timer+0x36/0x40
-> > [  331.499814]  [<ffffffffa01fb34c>] ieee80211_sta_restart+0x4c/0x50 [mac80211]
-> > [  331.514314]  [<ffffffffa020c86c>] ieee80211_reconfig+0x36c/0x420 [mac80211]
-> > [  331.528678]  [<ffffffffa020c65c>] ? ieee80211_reconfig+0x15c/0x420 [mac80211]
-> > [  331.543094]  [<ffffffffa0202fa5>] ieee80211_resume+0x15/0x20 [mac80211]
-> > [  331.557525]  [<ffffffffa01527a5>] wiphy_resume+0x75/0x90 [cfg80211]
-> > [  331.572001]  [<ffffffff81273fee>] dpm_resume_end+0x47e/0x4b0
-> > [  331.586325]  [<ffffffff8107d5e9>] hibernation_snapshot+0xc9/0x280
-> > [  331.600377]  [<ffffffff8107d88d>] hibernate+0xed/0x1f0
-> > [  331.613980]  [<ffffffff8107c00c>] state_store+0xec/0x100
-> > [  331.627577]  [<ffffffff811e05f7>] kobj_attr_store+0x17/0x20
-> > [  331.641242]  [<ffffffff811345a4>] sysfs_write_file+0xd4/0x150
-> > [  331.655056]  [<ffffffff810d02f8>] vfs_write+0xb8/0x1a0
-> > [  331.668718]  [<ffffffff810d04bc>] sys_write+0x4c/0x80
-> > [  331.682153]  [<ffffffff8100beeb>] system_call_fastpath+0x16/0x1b
-> > [  331.695613] ---[ end trace 85c754c80d7debe8 ]---
-> > [  331.709557] PM: Image restored successfully.
-> > 
-> > Now, how the ifmgd->timer could still be pending I have no idea yet, it seems to be explictly
-> > del_timer_sync'ed and timer routine also checks this condition, and doesn't restart itself....
-> > 
-> > Also note that this was seen happening both on resume, and when the suspend image is written (sort of resume too).
-> 
-> Quick glance suggest some hole in the management of the
-> TMR_RUNNING_CHANSW bit?
+Some code currently assumes that there's a valid
+rate pointer even in the HT case, but there can't
+be. To reduce reliance on that, remove the rate
+pointer from the RX data struct and pass it where
+it's needed.
 
-I guess no, I have futher information.
+Also, for now, in radiotap announce HT frames as
+having a DYN channel type, and remove their rate
+from cooked monitor radiotap completely (it isn't
+present in the regular monitor radiotap either.)
 
-I forgot to pay attention to few lines before the oops message:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/ieee80211_i.h |    1 -
+ net/mac80211/rx.c          |   35 ++++++++++++++++++-----------------
+ 2 files changed, 18 insertions(+), 18 deletions(-)
 
-
-[  331.307139] No probe response from AP 00:1b:9e:d8:77:02 after 500ms, try 1
-[  331.320121] ------------[ cut here ]------------
-[  331.334935] WARNING: at /home/maxim/software/kernel/linux-2.6/kernel/timer.c:791 add_timer+0x36/0x40()
-[  331.347374] Hardware name: Aspire 5720     
-.....
-
-This reveals that somehow the ieee80211_sta_work manages to run before ieee80211_sta_restart and it sets the timer....
-
-looking at ieee80211_reconfig it seems suspicious that 'local->suspended = false;' is set so early.
-In fact it is set again to false just prior to 
-
-list_for_each_entry(sdata, &local->interfaces, list) {....
-
-So, I would suspect some lines in this function trigger the work queue.
-
-Seems reasonable?
-
-Best regards,
-	Maxim Levitsky
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-11-16 13:49:10.000000000 +0100
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-11-16 13:49:13.000000000 +0100
+@@ -171,7 +171,6 @@ struct ieee80211_rx_data {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct sta_info *sta;
+ 	struct ieee80211_key *key;
+-	struct ieee80211_rate *rate;
+ 
+ 	unsigned int flags;
+ 	int queue;
+--- wireless-testing.orig/net/mac80211/rx.c	2009-11-16 13:34:46.000000000 +0100
++++ wireless-testing/net/mac80211/rx.c	2009-11-16 13:52:28.000000000 +0100
+@@ -163,6 +163,9 @@ ieee80211_add_rx_radiotap_header(struct 
+ 	if (status->band == IEEE80211_BAND_5GHZ)
+ 		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ,
+ 				   pos);
++	else if (status->flag & RX_FLAG_HT)
++		put_unaligned_le16(IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ,
++				   pos);
+ 	else if (rate->flags & IEEE80211_RATE_ERP_G)
+ 		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ,
+ 				   pos);
+@@ -1845,14 +1848,15 @@ static void ieee80211_rx_michael_mic_rep
+ }
+ 
+ /* TODO: use IEEE80211_RX_FRAGMENTED */
+-static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx)
++static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
++					struct ieee80211_rate *rate)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_local *local = rx->local;
+ 	struct ieee80211_rtap_hdr {
+ 		struct ieee80211_radiotap_header hdr;
+ 		u8 flags;
+-		u8 rate;
++		u8 rate_or_pad;
+ 		__le16 chan_freq;
+ 		__le16 chan_flags;
+ 	} __attribute__ ((packed)) *rthdr;
+@@ -1872,10 +1876,13 @@ static void ieee80211_rx_cooked_monitor(
+ 	rthdr->hdr.it_len = cpu_to_le16(sizeof(*rthdr));
+ 	rthdr->hdr.it_present =
+ 		cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
+-			    (1 << IEEE80211_RADIOTAP_RATE) |
+ 			    (1 << IEEE80211_RADIOTAP_CHANNEL));
+ 
+-	rthdr->rate = rx->rate->bitrate / 5;
++	if (rate) {
++		rthdr->rate_or_pad = rate->bitrate / 5;
++		rthdr->hdr.it_present |=
++			cpu_to_le32(1 << IEEE80211_RADIOTAP_RATE);
++	}
+ 	rthdr->chan_freq = cpu_to_le16(status->freq);
+ 
+ 	if (status->band == IEEE80211_BAND_5GHZ)
+@@ -1928,7 +1935,8 @@ static void ieee80211_rx_cooked_monitor(
+ 
+ static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
+ 					 struct ieee80211_rx_data *rx,
+-					 struct sk_buff *skb)
++					 struct sk_buff *skb,
++					 struct ieee80211_rate *rate)
+ {
+ 	ieee80211_rx_result res = RX_DROP_MONITOR;
+ 
+@@ -1972,7 +1980,7 @@ static void ieee80211_invoke_rx_handlers
+ 			rx->sta->rx_dropped++;
+ 		/* fall through */
+ 	case RX_CONTINUE:
+-		ieee80211_rx_cooked_monitor(rx);
++		ieee80211_rx_cooked_monitor(rx, rate);
+ 		break;
+ 	case RX_DROP_UNUSABLE:
+ 		I802_DEBUG_INC(sdata->local->rx_handlers_drop);
+@@ -2095,7 +2103,6 @@ static void __ieee80211_rx_handle_packet
+ 	memset(&rx, 0, sizeof(rx));
+ 	rx.skb = skb;
+ 	rx.local = local;
+-	rx.rate = rate;
+ 
+ 	if (ieee80211_is_data(hdr->frame_control) || ieee80211_is_mgmt(hdr->frame_control))
+ 		local->dot11ReceivedFragmentCount++;
+@@ -2167,11 +2174,11 @@ static void __ieee80211_rx_handle_packet
+ 				       prev->dev->name);
+ 			continue;
+ 		}
+-		ieee80211_invoke_rx_handlers(prev, &rx, skb_new);
++		ieee80211_invoke_rx_handlers(prev, &rx, skb_new, rate);
+ 		prev = sdata;
+ 	}
+ 	if (prev)
+-		ieee80211_invoke_rx_handlers(prev, &rx, skb);
++		ieee80211_invoke_rx_handlers(prev, &rx, skb, rate);
+ 	else
+ 		dev_kfree_skb(skb);
+ }
+@@ -2200,7 +2207,7 @@ static void ieee80211_release_reorder_fr
+ 					    int index)
+ {
+ 	struct ieee80211_supported_band *sband;
+-	struct ieee80211_rate *rate;
++	struct ieee80211_rate *rate = NULL;
+ 	struct sk_buff *skb = tid_agg_rx->reorder_buf[index];
+ 	struct ieee80211_rx_status *status;
+ 
+@@ -2211,9 +2218,7 @@ static void ieee80211_release_reorder_fr
+ 
+ 	/* release the reordered frames to stack */
+ 	sband = hw->wiphy->bands[status->band];
+-	if (status->flag & RX_FLAG_HT)
+-		rate = sband->bitrates; /* TODO: HT rates */
+-	else
++	if (!(status->flag & RX_FLAG_HT))
+ 		rate = &sband->bitrates[status->rate_idx];
+ 	__ieee80211_rx_handle_packet(hw, skb, rate);
+ 	tid_agg_rx->stored_mpdu_num--;
+@@ -2460,10 +2465,6 @@ void ieee80211_rx(struct ieee80211_hw *h
+ 			 status->rate_idx,
+ 			 status->rate_idx))
+ 			goto drop;
+-		/* HT rates are not in the table - use the highest legacy rate
+-		 * for now since other parts of mac80211 may not yet be fully
+-		 * MCS aware. */
+-		rate = &sband->bitrates[sband->n_bitrates - 1];
+ 	} else {
+ 		if (WARN_ON(status->rate_idx < 0 ||
+ 			    status->rate_idx >= sband->n_bitrates))
 
 
