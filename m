@@ -1,43 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:49261 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753019AbZKJKVO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 05:21:14 -0500
-Date: Tue, 10 Nov 2009 11:21:19 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC,PATCH 00/28] mwl8k updates, initial AP firmware support
-Message-ID: <20091110102119.GR18639@mail.wantstofly.org>
-References: <20091022181916.GB1583@mail.wantstofly.org> <20091104190723.GA10786@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091104190723.GA10786@tuxdriver.com>
+Received: from vps.qorvus.com ([67.213.217.156]:35062 "EHLO vps.qorvus.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753650AbZKQXjP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2009 18:39:15 -0500
+Message-ID: <7C9BF2FB3F6D47238EB6BC9B4441A996@qlaptop2>
+Reply-To: "Tom Sharples" <tsharples@qorvus.com>
+From: "Tom Sharples" <tsharples@qorvus.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"David Acker" <dacker@roinet.com>
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	<madwifi-users@lists.sourceforge.net>,
+	"Andrey Yurovsky" <andrey@cozybit.com>,
+	<madwifi-devel@lists.sourceforge.net>
+References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de> <43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com> <4B02DFF4.1060509@roinet.com><45e8e6c40911171257m7c687380k6e6e2677fd11f851@mail.gmail.com> <43e72e890911171337p4b0d97fcp844266137bb51b56@mail.gmail.com> <4B03193E.2080304@roinet.com><43e72e890911171345q2dc59d66g6ac2a9eec04c577c@mail.gmail.com> <4B031B48.1090105@roinet.com><43e72e890911171404x1a46d07alb54946768d0f9cf5@mail.gmail.com> <4B032390.3080501@roinet.com> <43e72e890911171439q74f30bc2t3e6f4ada19a85594@mail.gmail.com>
+Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and why?
+Date: Tue, 17 Nov 2009 15:39:14 -0800
+MIME-Version: 1.0
+Content-Type: text/plain;
+	format=flowed;
+	charset="utf-8";
+	reply-type=original
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 04, 2009 at 02:07:23PM -0500, John W. Linville wrote:
 
-> > This patch set includes an initial cut at adding support to mwl8k
-> > for AP chips and firmware images.  AP firmware images present a
-> > slightly different command set than STA firmware images do, and this
-> > patch set adds support for those AP commands necessary to initialise
-> > the firmware and allow packet reception.
-> > 
-> > Note that AP/STA interface creation on AP firmware images is not
-> > supported yet, this will be added in another set of patches.
-> > 
-> > (All the code to allow using mwl8k in AP mode exists and works, with
-> > 11n/AMPDU/hw crypto support, etc., it just needs to be cleaned up a
-> > bit more and chopped up into logical chunks suitable for submission.)
-> > 
-> > Comments appreciated!
-> 
-> Are you OK with these being merged?  Or are their particular things
-> you want comments on (or persons you want to comment)?
+>
+>> There are several miniPCI
+>> based radios that require half or quarter width channels on some 
+>> channels.
+>
+> That *require* this?
+>
+>> For example, the Ubiquiti XR7 requires quarter width channels on two of 
+>> its
+>> four available channels.
+>
+> Regulatory wise? What's the restriction based on?
+>
+>> The XR9 requires half width channels on two if its
+>> four available channels.
+>
+> Same here, what's the restriction based on?
+>
+On 900 and the 4.9 Ghz public safety bands, the half or quarter channels are 
+required if you want to:
 
-I just noticed that they have already been merged, but just for the
-record, I'm happy with this patch set.
+(a) Support multiple non-overlapping links within the legally allocated 
+bandwidth. For example, within 900 Mhz there is only 25 Mhz total available, 
+and only two 20-mhz channels defined (which, of course, overlap) so really 
+you've only got one. With 5 Mhz channels, you can operate legally near the 
+edge of the band without interfering with other 900 Mhz links, or 
+transmitting outside of the FCC allocated band.
 
-Thanks.
+(b) Operate legally and efficiently in the 4.9 Ghz public-safety band. The 
+upper and lower three channels defined by the FCC are 5Mhz and 10Mhz. 20 Mhz 
+operation there would violate the allocated band edges.
+
+(b) Be compatible with other company's products that use these channels, 
+e.g. Proxim, Cisco, Ubiquiti, etc.
+
+On 2.4 and 5.8 half and quarter aren't a legal requirement, but they 
+certainly are necessary for efficient operation!
+
+Tom S. 
+
