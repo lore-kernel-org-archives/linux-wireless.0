@@ -1,77 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60368 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756841AbZKWLNK (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:55496 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756402AbZKQWjk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 06:13:10 -0500
-Subject: Re: [PATCH] mwl8k: split driver by chipset
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20091123110211.GS20214@mail.wantstofly.org>
-References: <1258931158.12095.33.camel@localhost.localdomain>
-	 <20091123110211.GS20214@mail.wantstofly.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-oHWuxFzG4lAfEXszxybR"
-Date: Mon, 23 Nov 2009 12:13:09 +0100
-Message-ID: <1258974789.7094.162.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 17 Nov 2009 17:39:40 -0500
+Received: by iwn8 with SMTP id 8so425112iwn.33
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2009 14:39:46 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4B032390.3080501@roinet.com>
+References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de>
+	<43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com>
+	<4B02DFF4.1060509@roinet.com> <45e8e6c40911171257m7c687380k6e6e2677fd11f851@mail.gmail.com>
+	<43e72e890911171337p4b0d97fcp844266137bb51b56@mail.gmail.com>
+	<4B03193E.2080304@roinet.com> <43e72e890911171345q2dc59d66g6ac2a9eec04c577c@mail.gmail.com>
+	<4B031B48.1090105@roinet.com> <43e72e890911171404x1a46d07alb54946768d0f9cf5@mail.gmail.com>
+	<4B032390.3080501@roinet.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 17 Nov 2009 14:39:26 -0800
+Message-ID: <43e72e890911171439q74f30bc2t3e6f4ada19a85594@mail.gmail.com>
+Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and why?
+To: David Acker <dacker@roinet.com>
+Cc: Andrey Yurovsky <andrey@cozybit.com>,
+	Michael Renzmann <mrenzmann@madwifi-project.org>,
+	madwifi-devel@lists.sourceforge.net,
+	madwifi-users@lists.sourceforge.net,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Nov 17, 2009 at 2:28 PM, David Acker <dacker@roinet.com> wrote:
+> Luis R. Rodriguez wrote:
+>>
+>> On Tue, Nov 17, 2009 at 1:53 PM, David Acker <dacker@roinet.com>
+>> wrote:
 
---=-oHWuxFzG4lAfEXszxybR
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+>>> The problem with switching to ath5k would be the loss of
+>>> performance related features (compression, fast frames, turbo),
+>>
+>> These are different than "mesh".
+>
+> Yes, but it would be good if these features were supported over WDS
+> links (and on AP to STA links where both support the features).
 
-On Mon, 2009-11-23 at 12:02 +0100, Lennert Buytenhek wrote:
+Someone would just have to step up to:
 
-> I was wondering if we should really make the support for each chip a
-> different kernel module as you did in your patch, but then I figured
-> that this might be a good way to let the user choose whether to load
-> AP or STA firmware if we have both available, which was still one of
-> the unsolved problems.  I.e., make mwl8366_ap and mwl8366_sta, and
-> then let the user choose which one to load.  Or is there a better way
-> of doing this?
+1) implement these features
+2) support them
 
-Try to load both at probe() time (via the async firmware loading
-interface that I fixed up recently [1], that patch will be in .33), and
-hang on to the firmware images [2]. Register the wiphy with appropriate
-bits depending on which firmware files you found (and fail + unbind if
-you didn't find any, cf. my ar9170 patch [3]). Then you can upload the
-right firmware depending on the type of interface the user is adding.
+>> So let me get this straight.
+>>
+>> You have SoC Atheros solutions that use some userspace custom (not
+>> 802.11s) solution that use fast frames, compression and turbo, oh and
+>>  half/quarter rates? WTF are you doing?
+>
+> Lol, it isn't as crazy as it sounds.  I have meshing running on various
+> platforms. Some use miniPCI atheros based radios, some are SoC based.  I
+> believe I misspoke when I said half/quarter rates.  It is better to say half
+> width (10 MHz) or quarter width (5 MHz) channels.
 
-(Maybe, if needed for EMBEDDED, allow the user to configure which
-firmware you load.)
+OK well this could be supported, and welcomed someone just needs to work on it.
 
-johannes
+> There are several miniPCI
+> based radios that require half or quarter width channels on some channels.
 
-[1] http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-firmware=
--class-nowait.patch
-[2] that is what my patch allows doing
-[3] http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-ar9170-f=
-irmware-request-async.patch
+That *require* this?
 
---=-oHWuxFzG4lAfEXszxybR
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+> For example, the Ubiquiti XR7 requires quarter width channels on two of its
+> four available channels.
 
------BEGIN PGP SIGNATURE-----
+Regulatory wise? What's the restriction based on?
 
-iQIcBAABAgAGBQJLCm5BAAoJEODzc/N7+Qma5eQQAIpjsWbpyc3Kgrng33r+WYkV
-HYjPObDLJRhv6/+fg0l4Oio6+TDdcomFL/o7DhmW3XFOSWkvGV/U/u/06D+U+sfK
-yl4aaLxHDBJMIxbQFainssFRosZqKj/9cNH6pfSTIjoFGaMzJ0N/8cQjDGsRB58Q
-oEVPtB9wBo3vJBiD2VKKmf7Ic+tnpGclH1IWkVylZTXrcwmbgMXmr4D8QkcDwI5T
-8EXdF4xjRditaRZbo614dg7ig6TFOpYPTwSYo0ShnRppD15jq0D8KgPAhLwzjFYX
-128TCxeoxLr1225JMRm9wXXbACLa4wuhL2qpTwEmBU0I24dwrfECKCI50pKpVK/e
-CT8UETO6ypqBbg42J65waI/tvhJtYb3uHnN7ZTQ4HDe/8VSRU6Y9tGsMuj/0Vnnt
-4y+OGGGtuVPO+8nnDy0MNUuNTozwqRMBFMrCQQu/OzaYnR+YWfuueFp8mZ5RagrG
-f3/QrbLM/YclMPpN436lU8VxMIqFAUN8EPpeooy9vKPGJmDIiJ5DOCOm9TFBM2k2
-+J+yx6Hol7awcr623XPq9XH3ERDLK1jWr+0Di5yW7D3QCvYxWMRsXCO3LpyLs2UK
-lH1niQqX/ohUbltOCSR1GY4I1X5HqSKAsU6WFAontUIISFBJGUjnnU+C0IV1jTQ5
-obxQLEpKoD6jcH9XZ4jQ
-=dRAJ
------END PGP SIGNATURE-----
+> The XR9 requires half width channels on two if its
+> four available channels.
 
---=-oHWuxFzG4lAfEXszxybR--
+Same here, what's the restriction based on?
 
+I'll note that CRDA is channel agnostic, it just is cognizant of max
+allowed regulatory width, whether you use smaller width channels is
+left up to cfg80211 then. So supporting custom channel settings would
+just be a matter of listing the supported hardware configurations of
+list of channels and target widths.
+
+>> For backporting we have compat-wireless, it should allow you to use even
+>> today's bleeding edge even on 2.6.25. It should be possible to bring this
+>> down to 2.6.21 even but not many people are interested in that it seems.
+>> Patches are welcomed though.
+>
+> Thanks.  I am trying to decide which is more painful: porting a recent
+> kernel to the hardware or porting compat-wireless down to 2.6.18.
+
+FWIW there are patches/code for 2.6.21..2.6.24 there is just a small
+gap of code needed based on changes since circa 2.6.31 to add backport
+support for 2.6.21..2.6.24. In other words -- it shouldn't be too bad
+to get at least to 2.6.21. Not sure about 2.6.19 and 2.6.18 for PCI.
+
+  Luis
