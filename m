@@ -1,132 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isilmar.linta.de ([213.133.102.198]:47631 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758861AbZKKUi5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 15:38:57 -0500
-Date: Wed, 11 Nov 2009 21:33:03 +0100
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: linux-pcmcia@lists.infradead.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-serial@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [RFC] even more PCMCIA cleanup patches for 2.6.33
-Message-ID: <20091111203303.GA7939@comet.dominikbrodowski.net>
+Received: from smtp.nokia.com ([192.100.122.233]:60658 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751065AbZKQQF6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2009 11:05:58 -0500
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH v2] rx51: add wl1251 wlan driver support
+To: linux-omap@vger.kernel.org
+Cc: aaro.koskinen@nokia.com, linux-wireless@vger.kernel.org
+Date: Tue, 17 Nov 2009 18:05:50 +0200
+Message-ID: <20091117160549.19011.79696.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hej,
+From: Kalle Valo <kalle.valo@nokia.com>
 
-in addition to the patch series already submitted as RFCs and reviewed[*]
-here are 13 more patches intended for submission after 2.6.32 is released.
-The patches will be sent to the PCMCIA list shortly, with CC to other
-lists if deemed appropriate. Also, they can be found in the "pcmcia-test"
-branch at 
+wl1251 is connected to the SPI bus in rx51, add support for this.
 
-	git://git.kernel.org/pub/scm/linux/kernel/git/brodo/pcmcia-2.6.git pcmcia-test
-
-and gitweb at
-
-	http://git.kernel.org/?p=linux/kernel/git/brodo/pcmcia-2.6.git;a=shortlog;h=refs/heads/pcmcia-test
-
-
-[*] 	- patchset sent on Oct 19
-	- patchset sent on Oct 24
-	- Russell King's patchset sent on Oct 27
-
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
 
-Avi Cohen Stuart (1):
-      pcmcia: correct handling for Zoomed Video registers in topic.h
+ arch/arm/mach-omap2/board-rx51-peripherals.c |   85 ++++++++++++++++++++++++++
+ 1 files changed, 85 insertions(+), 0 deletions(-)
 
-Dominik Brodowski (7):
-      pcmcia/staging: update comedi drivers
-      pcmcia: autoload module pcmcia
-      pcmcia: move some window-related code to pcmcia_ioctl.c
-      pcmcia: remove unused "window_t" typedef
-      pcmcia: pcmcia_request_window() doesn't need a pointer to a pointer
-      pcmcia: remove deprecated handle_to_dev() macro
-      pcmcia: rework the irq_req_t typedef
-
-Magnus Damm (4):
-      pcmcia: Pass struct pcmcia_device to pcmcia_release_window()
-      pcmcia: Pass struct pcmcia_device to pcmcia_map_mem_page()
-      pcmcia: Pass struct pcmcia_socket to pcmcia_get_mem_page()
-      pcmcia: Change window_handle_t logic to unsigned long
-
-Randy Dunlap (1):
-      pcmcia: fix printk formats
-
----
-
- drivers/ata/pata_pcmcia.c                        |    1 
- drivers/bluetooth/bluecard_cs.c                  |    4 
- drivers/bluetooth/bt3c_cs.c                      |    4 
- drivers/bluetooth/btuart_cs.c                    |    4 
- drivers/bluetooth/dtl1_cs.c                      |    4 
- drivers/char/pcmcia/cm4000_cs.c                  |    2 
- drivers/char/pcmcia/cm4040_cs.c                  |   10 
- drivers/char/pcmcia/ipwireless/hardware.c        |    8 
- drivers/char/pcmcia/ipwireless/main.c            |   28 +-
- drivers/char/pcmcia/synclink_cs.c                |    3 
- drivers/ide/ide-cs.c                             |    1 
- drivers/isdn/hardware/avm/avm_cs.c               |    2 
- drivers/isdn/hisax/avma1_cs.c                    |    2 
- drivers/isdn/hisax/elsa_cs.c                     |    1 
- drivers/isdn/hisax/sedlbauer_cs.c                |    5 
- drivers/isdn/hisax/teles_cs.c                    |    1 
- drivers/mtd/maps/pcmciamtd.c                     |    6 
- drivers/net/pcmcia/3c574_cs.c                    |    6 
- drivers/net/pcmcia/3c589_cs.c                    |    6 
- drivers/net/pcmcia/axnet_cs.c                    |    3 
- drivers/net/pcmcia/com20020_cs.c                 |   10 
- drivers/net/pcmcia/fmvj18x_cs.c                  |   20 -
- drivers/net/pcmcia/ibmtr_cs.c                    |   25 +-
- drivers/net/pcmcia/nmclan_cs.c                   |    6 
- drivers/net/pcmcia/pcnet_cs.c                    |   17 -
- drivers/net/pcmcia/smc91c92_cs.c                 |   14 -
- drivers/net/pcmcia/xirc2ps_cs.c                  |    9 
- drivers/net/wireless/airo_cs.c                   |    7 
- drivers/net/wireless/atmel_cs.c                  |    5 
- drivers/net/wireless/b43/pcmcia.c                |    6 
- drivers/net/wireless/hostap/hostap_cs.c          |    7 
- drivers/net/wireless/libertas/if_cs.c            |    5 
- drivers/net/wireless/netwave_cs.c                |   11 -
- drivers/net/wireless/orinoco/orinoco_cs.c        |    6 
- drivers/net/wireless/orinoco/spectrum_cs.c       |    6 
- drivers/net/wireless/ray_cs.c                    |   22 --
- drivers/net/wireless/wavelan_cs.c                |   11 -
- drivers/net/wireless/wl3501_cs.c                 |    7 
- drivers/parport/parport_cs.c                     |    1 
- drivers/pcmcia/cs.c                              |    7 
- drivers/pcmcia/cs_internal.h                     |    4 
- drivers/pcmcia/pcmcia_ioctl.c                    |   61 +++++
- drivers/pcmcia/pcmcia_resource.c                 |  153 +++++---------
- drivers/pcmcia/topic.h                           |   15 -
- drivers/scsi/pcmcia/aha152x_stub.c               |    1 
- drivers/scsi/pcmcia/fdomain_stub.c               |    1 
- drivers/scsi/pcmcia/nsp_cs.c                     |    8 
- drivers/scsi/pcmcia/qlogic_stub.c                |    1 
- drivers/scsi/pcmcia/sym53c500_cs.c               |    1 
- drivers/serial/serial_cs.c                       |    3 
- drivers/staging/comedi/drivers/cb_das16_cs.c     |  221 +++++----------------
- drivers/staging/comedi/drivers/das08_cs.c        |  203 +++++--------------
- drivers/staging/comedi/drivers/ni_daq_700.c      |  237 +++++++----------------
- drivers/staging/comedi/drivers/ni_daq_dio24.c    |  236 +++++++---------------
- drivers/staging/comedi/drivers/ni_labpc_cs.c     |  225 +++++++--------------
- drivers/staging/comedi/drivers/ni_mio_cs.c       |  127 ++----------
- drivers/staging/comedi/drivers/quatech_daqp_cs.c |  219 +++++----------------
- drivers/usb/host/sl811_cs.c                      |    3 
- include/pcmcia/cs.h                              |   14 -
- include/pcmcia/cs_types.h                        |    3 
- include/pcmcia/ds.h                              |   12 -
- include/pcmcia/ss.h                              |   11 -
- sound/pcmcia/pdaudiocf/pdaudiocf.c               |    6 
- sound/pcmcia/vx/vxpocket.c                       |    6 
- 64 files changed, 688 insertions(+), 1386 deletions(-)
-
-
-Best,
-	Dominik
+diff --git a/arch/arm/mach-omap2/board-rx51-peripherals.c b/arch/arm/mach-omap2/board-rx51-peripherals.c
+index e34d96a..2417193 100644
+--- a/arch/arm/mach-omap2/board-rx51-peripherals.c
++++ b/arch/arm/mach-omap2/board-rx51-peripherals.c
+@@ -14,6 +14,7 @@
+ #include <linux/input.h>
+ #include <linux/input/matrix_keypad.h>
+ #include <linux/spi/spi.h>
++#include <linux/spi/wl12xx.h>
+ #include <linux/i2c.h>
+ #include <linux/i2c/twl4030.h>
+ #include <linux/clk.h>
+@@ -36,6 +37,37 @@
+ #define SYSTEM_REV_B_USES_VAUX3	0x1699
+ #define SYSTEM_REV_S_USES_VAUX3 0x8
+ 
++#define RX51_WL1251_POWER_GPIO		87
++#define RX51_WL1251_IRQ_GPIO		42
++
++static void rx51_wl1251_set_power(bool enable);
++
++static struct wl12xx_platform_data wl1251_pdata = {
++	.set_power = rx51_wl1251_set_power,
++};
++
++static struct omap2_mcspi_device_config wl1251_mcspi_config = {
++	.turbo_mode	= 0,
++	.single_channel	= 1,
++};
++
++/* list all spi devices here */
++enum {
++	RX51_SPI_WL1251,
++};
++
++static struct spi_board_info rx51_peripherals_spi_board_info[] __initdata = {
++	[RX51_SPI_WL1251] = {
++		.modalias		= "wl1251",
++		.bus_num		= 4,
++		.chip_select		= 0,
++		.max_speed_hz   	= 48000000,
++		.mode                   = SPI_MODE_2,
++		.controller_data	= &wl1251_mcspi_config,
++		.platform_data		= &wl1251_pdata,
++	},
++};
++
+ static int board_keymap[] = {
+ 	KEY(0, 0, KEY_Q),
+ 	KEY(0, 1, KEY_O),
+@@ -257,6 +289,55 @@ static struct regulator_init_data rx51_vdac = {
+ 	},
+ };
+ 
++static void rx51_wl1251_set_power(bool enable)
++{
++	gpio_set_value(RX51_WL1251_POWER_GPIO, enable);
++}
++
++static void __init rx51_init_wl1251(void)
++{
++	int irq, ret;
++
++	ret = gpio_request(RX51_WL1251_POWER_GPIO, "wl1251 power");
++	if (ret < 0)
++		goto error;
++
++	ret = gpio_direction_output(RX51_WL1251_POWER_GPIO, 0);
++	if (ret < 0)
++		goto err_power;
++
++	ret = gpio_request(RX51_WL1251_IRQ_GPIO, "wl1251 irq");
++	if (ret < 0)
++		goto err_power;
++
++	ret = gpio_direction_input(RX51_WL1251_IRQ_GPIO);
++	if (ret < 0)
++		goto err_irq;
++
++	irq = gpio_to_irq(RX51_WL1251_IRQ_GPIO);
++	if (irq < 0)
++		goto err_irq;
++
++	rx51_peripherals_spi_board_info[RX51_SPI_WL1251].irq = irq;
++
++	return;
++
++err_irq:
++	gpio_free(RX51_WL1251_IRQ_GPIO);
++
++err_power:
++	gpio_free(RX51_WL1251_POWER_GPIO);
++
++error:
++	printk(KERN_ERR "wl1251 board initialisation failed\n");
++	wl1251_pdata.set_power = NULL;
++
++	/*
++	 * Now rx51_peripherals_spi_board_info[1].irq is zero and
++	 * set_power is null, and wl1251_probe() will fail.
++	 */
++}
++
+ static int rx51_twlgpio_setup(struct device *dev, unsigned gpio, unsigned n)
+ {
+ 	/* FIXME this gpio setup is just a placeholder for now */
+@@ -538,6 +619,10 @@ static inline void board_smc91x_init(void)
+ 
+ void __init rx51_peripherals_init(void)
+ {
++	rx51_init_wl1251();
++
++	spi_register_board_info(rx51_peripherals_spi_board_info,
++				ARRAY_SIZE(rx51_peripherals_spi_board_info));
+ 	rx51_i2c_init();
+ 	board_onenand_init();
+ 	board_smc91x_init();
 
