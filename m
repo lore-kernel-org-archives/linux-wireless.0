@@ -1,90 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:34860 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753409AbZKDBr1 convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:63685 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751809AbZKQBBX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 20:47:27 -0500
-Received: by bwz27 with SMTP id 27so8326202bwz.21
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2009 17:47:32 -0800 (PST)
+	Mon, 16 Nov 2009 20:01:23 -0500
 MIME-Version: 1.0
-In-Reply-To: <cb0375e10911031538n62fe7473x4dd41329b9264b5c@mail.gmail.com>
-References: <cb0375e10911031538n62fe7473x4dd41329b9264b5c@mail.gmail.com>
-Date: Tue, 3 Nov 2009 19:47:31 -0600
-Message-ID: <51058d550911031747t3d038294qfca3f96b2cb69de1@mail.gmail.com>
-Subject: Re: iwlwifi connection troubles, maybe aggregation related
-From: Greg Oliver <oliver.greg@gmail.com>
-To: Andrew Lutomirski <luto@mit.edu>
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+In-Reply-To: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de>
+References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 16 Nov 2009 17:01:09 -0800
+Message-ID: <43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com>
+Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and why?
+To: Michael Renzmann <mrenzmann@madwifi-project.org>
+Cc: madwifi-devel@lists.sourceforge.net,
+	madwifi-users@lists.sourceforge.net, linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 3, 2009 at 5:38 PM, Andrew Lutomirski <luto@mit.edu> wrote:
-> Hi all-
+On Sun, Nov 15, 2009 at 2:52 AM, Michael Renzmann
+<mrenzmann@madwifi-project.org> wrote:
+> Hi all.
 >
-> My laptop (Intel 5350) has trouble using the wireless networks here.
-> I'm at MIT, which has a bunch of Cisco 1250 AP's (dual-band, MIMO,
-> etc).  Running Windows, everything works perfectly.  On Linux
-> (2.6.31-rc5, but I've seen problems with other, older kernels as
-> well), it sometimes works, but I frequently find the network almost
-> completely unusable.  I can associate and ping just fine, but, as soon
-> as I try to send any significant amount of data, I can no longer
-> transmit.  I can still receive both broadcast and unicast frames, but
-> the network doesn't see anything I send.  An older laptop (presumably
-> with 4965,
+> As you might have noticed, there currently is a discussion [1] going on
+> about the future directions of the MadWifi project, including a decision
+> how to deal with MadWifi driver. It turns out that there are pretty
+> contrary positions in this regard: some would like to see MadWifi being
+> dumped completely as soon as possible, others would prefer to continue
+> development and even implement new features.
 >
-> This seems to be correlated with a line like:
+> What do others think? It appears to me that we know too little about what
+> MadWifi is actually used for today and why. Thus I'd like to start a quick
+> survey.
 >
-> iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:21:d8:49:4a:52 tid = 0
+> It would be great if you could answer some or - ideally - all of the
+> following questions:
 >
-> appearing in dmesg.
+>  1. What are you using MadWifi for?
 >
-> Running "iw dev wlan0 disconnect" will make the connection start
-> working until I try to send data again (presumably because either NM
-> or wpa_supplicant will reassociate).
+>  2. Did you already evaluate ath5k/ath9k? If no, why not?
 >
-> Turning on or off power management and fiddling with
-> no_sleep_autoadjust makes no difference.  Setting tx_agg_tid_enable to
-> zero in debugfs while the connection was working seemed to make it a
-> little more reliable (it lasted long enough to do "git pull" but not
-> much longer).
+>  3. In case you evaluated ath5k/ath9k but did not yet switch: what is the
+> reason for your decision, and what is required before you could switch?
 >
-> After running "iw dev wlan0 disconnect" a few times, I start to get
-> errors like this:
+> Any input is highly welcome, thanks in advance for your time.
 >
-> [18078.209635] iwlagn 0000:03:00.0: SENSITIVITY_CMD failed
-> [18078.313461] iwlagn 0000:03:00.0: No space for Tx
-> [18078.313467] iwlagn 0000:03:00.0: Error sending SENSITIVITY_CMD:
-> enqueue_hcmd failed: -28
-> [18078.313470] iwlagn 0000:03:00.0: SENSITIVITY_CMD failed
-> [18078.522409] iwlagn 0000:03:00.0: No space for Tx
-> [18078.522414] iwlagn 0000:03:00.0: Error sending SENSITIVITY_CMD:
-> enqueue_hcmd failed: -28
+> Bye, Mike
 >
-> The driver doesn't recover until I do "echo 1 >
-> /sys/kernel/debug/ieee80211/phy0/reset"  Oddly enough, after resetting
-> just now, I couldn't trigger the failure again, even though it was
-> 100% reproducible before resetting.
+> [1] http://thread.gmane.org/gmane.linux.drivers.madwifi.project/165
+>
 
-I too have been battling this issue with a 5300 for quite some time..
-I *thought* it was fixed with the 2.6.32 compat-wireless series
-(excluding the -rc4 which kernel oops'ed), only to find out that it
-was because I was farther away from the AP, and negotiating lower
-rates...
+Everyone on kernels >= 2.6.25 would have tried ath5k, granted with
+probably a horrible experience as it was still early development.
 
-My card seems to work just fine through MCS13, about 60% at MCS14, and
-almost always fails at 15..  The intel folks were very helpful in
-trying to fix it, but it was never actually resolved.  I've been
-battling it so long though, though, I was just prepared to wait for
-the magic fix to just show up one day :)
+Everyone on >= 2.6.27 would have tried ath9k.
 
-My machine (like yours), once reliably connected will preform 100%
-until I reboot or unload the module..  It may take 10 insmods to get a
-reliable connection though..
+So some sort of survey on this on madwifi-devel is not fair or just to
+ath5k/ath9k as the only thing it would bring out is those romantics
+still reading madwifi-devel due to some sort of attachment to it. I'm
+not saying those attachments are bad I'm just saying MadWifi is long
+dead to many and those still reading to madwifi lists are obviously
+still trying to use it for one reason or another.
 
-I guess what I'm saying is that I can help debug the issue as well...
-It would be very nice to have this go away...  I have an icon on my
-desktop to reload the wireless subsystem if that tells you how many
-times I have to do it until it loads up reliably...
+Madwifi's future as a Linux driver does not depend on what users wish
+would happen on a legacy driver due to romantic experiences with it
+with extensive features and its history. From a development
+perspective the future of any Linux driver is just to go upstream. Its
+very simple. Any company developing a driver out-of-tree is just not
+doing Linux driver development the right way.
 
--Greg
+Linux distributions won't go around carrying legacy drivers unless
+they serve a purpose and what you'll see is Linux distributions prefer
+upstream drivers for an obvious reason -- its where Linux drivers
+should go.
+
+If a few developers still exist who are committed to helping maintain
+madwifi until ath5k gets feature-parred the easiest solution now
+(since the HAL is open) is to just throw it into staging and hopefully
+that'll attract more developers to help keep it up to date with actual
+current kernels. No -- you won't get 2.4 kernel support though -- if
+you're on 2.4 you should just upgrade. But really best thing as a user
+or motivated developer is to just annotate a missing feature and add
+it upstream through mac80211/cfg80211 as ath5k really should be in a
+decent condition by current kernel standards and Madwifi as a codebase
+can probably just remain in maintenance mode outside of the kernel.
+
+Anything else is just wasting time and electrons.
+
+  Luis
