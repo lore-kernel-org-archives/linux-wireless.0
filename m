@@ -1,62 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:38098 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759290AbZKKWFE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 17:05:04 -0500
-Received: by fxm21 with SMTP id 21so1549392fxm.21
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2009 14:05:08 -0800 (PST)
-Message-ID: <4AFB350F.7010207@lwfinger.net>
-Date: Wed, 11 Nov 2009 16:05:03 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from vps.qorvus.com ([67.213.217.156]:37728 "EHLO vps.qorvus.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753765AbZKQSt6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2009 13:49:58 -0500
+Message-ID: <C32E4D5CD18647DE9A4F47C6EB1A94C2@qlaptop2>
+Reply-To: "Tom Sharples" <tsharples@qorvus.com>
+From: "Tom Sharples" <tsharples@qorvus.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Michael Renzmann" <mrenzmann@madwifi-project.org>
+Cc: <madwifi-users@lists.sourceforge.net>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	<madwifi-devel@lists.sourceforge.net>
+References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de> <43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com> <1803.194.45.26.221.1258473872.squirrel@webmail.madwifi-project.org> <43e72e890911170838g26172725ga4a843dc5292c29f@mail.gmail.com>
+Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and why?
+Date: Tue, 17 Nov 2009 09:51:48 -0800
 MIME-Version: 1.0
-To: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Please share info about power consumption characteristics of
- your USB adapter
-References: <200911112219.08814.jkrzyszt@tis.icnet.pl>
-In-Reply-To: <200911112219.08814.jkrzyszt@tis.icnet.pl>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/11/2009 03:19 PM, Janusz Krzysztofik wrote:
-> Hi,
-> 
-> Please anyone owning one of adapters listed below: if the adapter is supported 
-> by linux-wireless, please check for MaxPower with lsusb -v and give me the 
-> result. I am looking for an adapter with MaxPower less than 300mA and would 
-> rather not buy them all to learn they all do not fit :-).
-> 
-> Once again, sorry for abusing a devel list for this.
-> 
-> Thanks,
-> Janusz
-> 
-> Asus WL-167g V2 (90-I8N2E0-0UAZ)
-> D-Link DWA-125
-> D-Link DWA-140
-> D-Link DWL-G122
-> Intellinet 503457
-> Linksys WUSB100-EU
-> Linksys WUSB54GC-EU
-> Modecom WIFI-CARD-USB-MC-0105
-> Modecom WIFI-CARD-USB-MC-0106
-> Netgear WG111TEE
-> Netgear WPN111EE
-> OvisLink WL-1600USB
-> Pentagram P 6132-08
-> TP-Link TL-WN422G
-> TP-Link TL-WN721N
-> TP-Link TL-WN821N
+Comments inline:
+>
+> My point was that there are already hundreds of users already on ath5k
+> and ath9k and that obviously you will get a biased view of MadWifi /
+> ath5k situation (I don't consider MadWifi any type of alternative to
+> ath9k).
 
-I do not have any of the specific models you mention, but here are the 3 that I
-have:
+We have way more users than this running just our version. There are 
+probably tens of thousands of "users" (embedded systems) that run some 
+flavor of madwifi.
 
-Netgear WG111v2    [Realtek RTL8187L] USB ID 0846:6a00 MaxPower 500mA
-Level One 0301USB  [Realtek RTL8187B] USB ID 0bda:8187 MaxPower 500mA
-Dell 1450 USB      [uses p54usb]      USB ID 413c:8104 MaxPower 500mA
+>>
+>> The development of any software should happen with the user's needs and
+>> requirements in mind
+>
+> Note I didn't say otherwise.
 
-There seems to be a pattern!
+Your comments, at best, give short shrift to the many, many embedded users, 
+esp those who run the 2.4.x kernel. Does anyone actually think it would be 
+practical to remotely upgrade tens of thousands of unattended devices, some 
+of which are miles away from the nearest human, to a 2.6 kernel? Even if 
+only 5% fail to come back online, it would be a logistical and 
+customer-relations disaster. These aren't windows desktops where someone can 
+just curse and then powercycle.
 
-Larry
+>
+> Well to me they are clear and I don't need a survey to understand
+> this. ath5k currently lacks:
+>
+>  * DFS
+>  * Multi-BSS AP functionality
+>  * Roaming
+>  * ANI
+>
+ You also need to add to this list:
+
+* Fast-frames
+* Compression
+* Half / quarter channels (hopefully done in a sensible fashion like AirOS 
+without the countrycode / regdomain BS)
+
+We need to aknowledge that "user" includes not just those surfing on their 
+laptops, but the far larger number of embedded devices running madwifi each 
+and every day, in critical systems, with excellent reliability.
+
+Tom S.
+
+
