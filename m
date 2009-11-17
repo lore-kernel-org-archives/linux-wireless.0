@@ -1,64 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:61936 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754162AbZKTUFJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 15:05:09 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 13/19] iwlwifi: by default, dump entire sram data portion
-Date: Fri, 20 Nov 2009 12:05:04 -0800
-Message-Id: <1258747510-21233-14-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
-References: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
+Received: from qw-out-2122.google.com ([74.125.92.24]:5854 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752580AbZKQRKy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2009 12:10:54 -0500
+Received: by qw-out-2122.google.com with SMTP id 3so63259qwe.37
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2009 09:10:59 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 06/16] wl1251: fix deadlock with ieee80211 beacon filter calls
+References: <20091117164614.2236.8543.stgit@tikku>
+	<20091117164852.2236.24891.stgit@tikku>
+	<1258477288.21197.1.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 17 Nov 2009 19:10:51 +0200
+In-Reply-To: <1258477288.21197.1.camel@johannes.local> (Johannes Berg's message of "Tue\, 17 Nov 2009 18\:01\:28 +0100")
+Message-ID: <87r5rxcc10.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-For "sram" debugfs file, if user did not specify the offset and length,
-dump the entire data portion of sram by default.
-Data portion is 0x800000 - 0x80ffff, but the actual data size is known
-to the driver from the ucode file.
+> On Tue, 2009-11-17 at 18:48 +0200, Kalle Valo wrote:
+>> From: Vidhya Govindan <vidhya.govindan@nokia.com>
+>> 
+>> Lockdep shows that there is a deadlock when calling ieee80211_rssi_changed()
+>> under wl->mutex. Fix it by releasing mutex before calling mac80211 functions.
+>> This patch is based on Work-In-Progress patch sent by Kalle Valo.
+>
+>>  	if (vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID && wl->psm) {
+>>  		wl1251_debug(DEBUG_EVENT, "SYNCHRONIZATION_TIMEOUT_EVENT");
+>> +		/* need to unlock mutex to avoid deadlocking with rtnl */
+>> +		mutex_unlock(&wl->mutex);
+>>  
+>>  		/* indicate to the stack, that beacons have been lost */
+>>  		ieee80211_beacon_loss(wl->vif);
+>> +		mutex_lock(&wl->mutex);
+>
+> That can't be true, ieee80211_beacon_loss() only calls
+> ieee80211_queue_work().
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |   14 +++++++++++---
- 1 files changed, 11 insertions(+), 3 deletions(-)
+You are correct, of course. The problem was in our internal and
+heavily patched 2.6.28 tree, but not in wireless-testing. I should
+have checked this when I was rebasing the patches. Johannes, thank you
+for noticing this!
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 016ff40..5adf0b6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -235,13 +235,21 @@ static ssize_t iwl_dbgfs_sram_read(struct file *file,
- 	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
- 	size_t bufsz;
- 
--	bufsz =  30 + priv->dbgfs->sram_len * sizeof(char) * 12;
-+	/* default is to dump the entire data segment */
-+	if (!priv->dbgfs->sram_offset && !priv->dbgfs->sram_len) {
-+		priv->dbgfs->sram_offset = 0x800000;
-+		if (priv->ucode_type == UCODE_INIT)
-+			priv->dbgfs->sram_len = priv->ucode_init_data.len;
-+		else
-+			priv->dbgfs->sram_len = priv->ucode_data.len;
-+	}
-+	bufsz =  30 + priv->dbgfs->sram_len * sizeof(char) * 10;
- 	buf = kmalloc(bufsz, GFP_KERNEL);
- 	if (!buf)
- 		return -ENOMEM;
--	pos += scnprintf(buf + pos, bufsz - pos, "sram_len: %d\n",
-+	pos += scnprintf(buf + pos, bufsz - pos, "sram_len: 0x%x\n",
- 			priv->dbgfs->sram_len);
--	pos += scnprintf(buf + pos, bufsz - pos, "sram_offset: %d\n",
-+	pos += scnprintf(buf + pos, bufsz - pos, "sram_offset: 0x%x\n",
- 			priv->dbgfs->sram_offset);
- 	for (i = priv->dbgfs->sram_len; i > 0; i -= 4) {
- 		val = iwl_read_targ_mem(priv, priv->dbgfs->sram_offset + \
+John, can you drop this patch or do you want me to resend the patch
+set? Based on stgit there might some problems with patch 10 after
+dropping this patch, but at least stgit was able to handle it
+automatically.
+
 -- 
-1.5.6.3
-
+Kalle Valo
