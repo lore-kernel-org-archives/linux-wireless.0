@@ -1,78 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55630 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757421AbZKRVVc (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:47778 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750772AbZKQFff (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 16:21:32 -0500
-Subject: Re: mac80211 breaks suspend to disk
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1258579170.4525.2.camel@maxim-laptop>
-References: <1258568836.4512.13.camel@maxim-laptop>
-	 <20091118202802.GE2911@tuxdriver.com>
-	 <1258576749.8018.7.camel@maxim-laptop>
-	 <1258578199.30511.80.camel@johannes.local>
-	 <1258579170.4525.2.camel@maxim-laptop>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-J29kL52cClE+otMq3R1T"
-Date: Wed, 18 Nov 2009 22:21:01 +0100
-Message-ID: <1258579261.30511.84.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 17 Nov 2009 00:35:35 -0500
+Date: Mon, 16 Nov 2009 23:35:38 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH V2] staging: rtl8187se: Rename staging driver to avoid
+ name conflict with mainline driver
+Message-ID: <4b02362a.0nr661Zozk1yE8rZ%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Now that active development has begun on a mainline version of
+a driver for the RTL8187SE that should be called rtl8187se, there
+is a conflict with the driver in staging with the same name.
 
---=-J29kL52cClE+otMq3R1T
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+To solve the conflict, rename the driver in staging to r8187se.
 
-On Wed, 2009-11-18 at 23:19 +0200, Maxim Levitsky wrote:
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-> > Then again, we drop RX frames while local->suspended is true, and I
-> > guess we don't really care about missing a few more frames when we're
-> > just waking up, so it should be OK to keep suspended =3D=3D true while =
-doing
-> > the startup.
-> >=20
-> > EXCEPT drivers are going to start using ieee80211_queue_work() already
-> > then from the callbacks, which we must allow.
-> >=20
-> > So ... maybe this?
->=20
->=20
-> This will likely fix this problem.
-> I will run my suspend/resume loop for a while and let you know if it
-> works.
+V2 - Make the name r8187se.
 
-Thanks. I'll take another look at the code to see if there's another
-code path that could now end in warnings, but I don't think so.
-
-I suppose you could reduce your AP's beacon interval to make it more
-likely to trigger.
-
-johannes
-
---=-J29kL52cClE+otMq3R1T
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLBGU5AAoJEODzc/N7+QmaHmIP/3/G5FObmM1K70/JOFDUiuS0
-LCusauVAUyVfhnfH/bMKHtaX7IV3hQis2ipYP4F0y/D6nFh3pcNERNJnZEIplJjq
-jZWbRR312JnKK/8Yze3Z7eh9saBEpldLtPlVpJVTnmKhTgDCqltP5cRGeGw1MIdM
-kLX0ZkE7ffB5I7+JmXjH3Z5fbTfBlKlTsnpG1f5d5HvZRsvE8WOoM93NgEsC4IDe
-k0+WlZVje/bIZgUcO/f8jMVEe4rkEwf/6cx7ZpQOB7G7eS+5avNAwk2rKkaeJ0mL
-VdGcjLHKQmVmOjl8Rlj5hEWcGMPh/DBXOHrWFJ3pUFN2y3cfP1IOBk41/VXSnwfE
-dIa5U3w7sMrjt9xgIyiErVe3g4Bh7ODhtYRKTVnI6WUt7r8E607SJRdtZfNkgUoK
-HITDZK0/FeWKRmZ3rVBaXWZbDSkwbLaFUCi0638oorVyDauExWPAzEOQdIlisxiT
-FzOupI0T2I5NAqr3MNyg2sgTTeHnO0DfYsLGZYEhP/BTwFfaYaJm5Ej+aOA0IAAJ
-v6ZpIucWqUAkmkH0T0p4Usql9efC/XV59bI2M3rze/4mhO/6NhkJ+vPqpJIYn3cX
-Tdt/r2DNBuMeNHL5+fQ7GTDgcrfEgrwFrR4663llOBg8hX5XCaeWfc/Q2edIN/GV
-VFM3Otj7MEGuSIxo18Lx
-=LuoU
------END PGP SIGNATURE-----
-
---=-J29kL52cClE+otMq3R1T--
-
+Index: wireless-testing/drivers/staging/Makefile
+===================================================================
+--- wireless-testing.orig/drivers/staging/Makefile
++++ wireless-testing/drivers/staging/Makefile
+@@ -20,7 +20,7 @@ obj-$(CONFIG_COMEDI)		+= comedi/
+ obj-$(CONFIG_ASUS_OLED)		+= asus_oled/
+ obj-$(CONFIG_PANEL)		+= panel/
+ obj-$(CONFIG_ALTERA_PCIE_CHDMA)	+= altpciechdma/
+-obj-$(CONFIG_RTL8187SE)		+= rtl8187se/
++obj-$(CONFIG_R8187SE)		+= rtl8187se/
+ obj-$(CONFIG_RTL8192SU)		+= rtl8192su/
+ obj-$(CONFIG_RTL8192E)		+= rtl8192e/
+ obj-$(CONFIG_INPUT_MIMIO)	+= mimio/
+Index: wireless-testing/drivers/staging/rtl8187se/Kconfig
+===================================================================
+--- wireless-testing.orig/drivers/staging/rtl8187se/Kconfig
++++ wireless-testing/drivers/staging/rtl8187se/Kconfig
+@@ -1,7 +1,9 @@
+-config RTL8187SE
++config R8187SE
+ 	tristate "RealTek RTL8187SE Wireless LAN NIC driver"
+ 	depends on PCI && WLAN
+ 	select WIRELESS_EXT
+ 	select WEXT_PRIV
+ 	default N
+ 	---help---
++	If built as a module, it will be called r8187se.ko.
++
+Index: wireless-testing/drivers/staging/rtl8187se/Makefile
+===================================================================
+--- wireless-testing.orig/drivers/staging/rtl8187se/Makefile
++++ wireless-testing/drivers/staging/rtl8187se/Makefile
+@@ -16,7 +16,7 @@ EXTRA_CFLAGS += -DENABLE_LPS
+ 
+ #EXTRA_CFLAGS += -mhard-float -DCONFIG_FORCE_HARD_FLOAT=y
+ 
+-rtl8187se-objs :=			\
++r8187se-objs :=			\
+ 		r8180_core.o		\
+ 		r8180_93cx6.o		\
+ 		r8180_wx.o		\
+@@ -35,5 +35,5 @@ rtl8187se-objs :=			\
+ 		ieee80211/ieee80211_crypt_ccmp.o	\
+ 		ieee80211/ieee80211_crypt_wep.o
+ 
+-obj-$(CONFIG_RTL8187SE)	+= rtl8187se.o
++obj-$(CONFIG_R8187SE)	+= r8187se.o
+ 
