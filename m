@@ -1,93 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:41590 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754614AbZKKEKG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 23:10:06 -0500
-Received: from list by lo.gmane.org with local (Exim 4.50)
-	id 1N84X4-0008BO-Cf
-	for linux-wireless@vger.kernel.org; Wed, 11 Nov 2009 05:10:10 +0100
-Received: from 76-10-155-41.dsl.teksavvy.com ([76.10.155.41])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2009 05:10:10 +0100
-Received: from monnier by 76-10-155-41.dsl.teksavvy.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2009 05:10:10 +0100
-To: linux-wireless@vger.kernel.org
-From: Stefan Monnier <monnier@iro.umontreal.ca>
-Subject: Re: rtl8187se locks up when switching network
-Date: Tue, 10 Nov 2009 23:09:47 -0500
-Message-ID: <jwvzl6tiuim.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
-References: <jwvljidrhm3.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
-	<4AFA22DF.8060907@lwfinger.net>
+Received: from xc.sipsolutions.net ([83.246.72.84]:54235 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755849AbZKQRTD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2009 12:19:03 -0500
+Subject: [PATCH] mac80211: make software rate control optional
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 17 Nov 2009 18:18:36 +0100
+Message-ID: <1258478316.21197.3.camel@johannes.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> I've just dine a few more tests, and switching network works just fine
->> if I "modprobe -r rtl8187se" and then "modprobe rth8187se" between the
->> disconnect and the reconnect, but otherwise the system almost always
->> hangs during the connection to the other network.  The way it hangs is
->> always the same: everything just freezes and 2 of the status
->> leds blink.  The exact moment at which the freeze takes place seems to
->> vary: sometimes it's while getting the IP address, other times its
->> earlier.
+Some devices implement the entire rate control in
+firmware in some way, like wl1271 or like iwlwifi
+which does some things in software but not a lot.
+Therefore generic software rate control is rather
+useless for them and just adds avoidable overhead
+to the transmit path.
 
-> Do you mean that the "Caps Lock" and "num lock" LEDs are blinking?
+It's fairly simple to let drivers indicate that
+they do not need rate control, but they need to
+fulfil a number of conditions that we encode in
+WARN_ONs.
 
-Could be (the label got washed away fairly quickly, but since those
-leds are normally always off and I never use num-lock nor caps-lock,
-that sounds right).
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/mac80211.h  |   14 ++++++++++++++
+ net/mac80211/debugfs.c  |    2 +-
+ net/mac80211/rate.c     |   12 +++++++++++-
+ net/mac80211/rate.h     |    9 ++++++---
+ net/mac80211/sta_info.c |   29 ++++++++++++++++++++++-------
+ net/mac80211/tx.c       |    3 ++-
+ 6 files changed, 56 insertions(+), 13 deletions(-)
 
-> If so, that is a kernel panic. You will be able to capture some
-> information about that crash by switching to the logging console
-> (CTRL-ALT-F10) just after you initiate the process that causes
-> the crash.
+--- wireless-testing.orig/include/net/mac80211.h	2009-11-16 17:26:28.000000000 +0100
++++ wireless-testing/include/net/mac80211.h	2009-11-16 17:26:33.000000000 +0100
+@@ -852,6 +852,19 @@ enum ieee80211_tkip_key_type {
+  * any particular flags. There are some exceptions to this rule,
+  * however, so you are advised to review these flags carefully.
+  *
++ * @IEEE80211_HW_HAS_RATE_CONTROL:
++ *	The hardware or firmware includes rate control, and cannot be
++ *	controlled by the stack. As such, no rate control algorithm
++ *	should be instantiated, and the TX rate reported to userspace
++ *	will be taken from the TX status instead of the rate control
++ *	algorithm.
++ *	Note that this requires that the driver implement a number of
++ *	callbacks so it has the correct information, it needs to have
++ *	the @set_rts_threshold callback and must look at the BSS config
++ *	@use_cts_prot for G/N protection, @use_short_slot for slot
++ *	timing in 2.4 GHz and @use_short_preamble for preambles for
++ *	CCK frames.
++ *
+  * @IEEE80211_HW_RX_INCLUDES_FCS:
+  *	Indicates that received frames passed to the stack include
+  *	the FCS at the end.
+@@ -910,6 +923,7 @@ enum ieee80211_tkip_key_type {
+  *	avoid waking up cpu.
+  */
+ enum ieee80211_hw_flags {
++	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
+ 	IEEE80211_HW_RX_INCLUDES_FCS			= 1<<1,
+ 	IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING	= 1<<2,
+ 	IEEE80211_HW_2GHZ_SHORT_SLOT_INCAPABLE		= 1<<3,
+--- wireless-testing.orig/net/mac80211/rate.h	2009-11-16 17:26:28.000000000 +0100
++++ wireless-testing/net/mac80211/rate.h	2009-11-16 17:26:33.000000000 +0100
+@@ -59,6 +59,9 @@ static inline void rate_control_rate_ini
+ 	void *priv_sta = sta->rate_ctrl_priv;
+ 	struct ieee80211_supported_band *sband;
+ 
++	if (!ref)
++		return;
++
+ 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+ 
+ 	ref->ops->rate_init(ref->priv, sband, ista, priv_sta);
+@@ -72,7 +75,7 @@ static inline void rate_control_rate_upd
+ 	struct ieee80211_sta *ista = &sta->sta;
+ 	void *priv_sta = sta->rate_ctrl_priv;
+ 
+-	if (ref->ops->rate_update)
++	if (ref && ref->ops->rate_update)
+ 		ref->ops->rate_update(ref->priv, sband, ista,
+ 				      priv_sta, changed);
+ }
+@@ -97,7 +100,7 @@ static inline void rate_control_add_sta_
+ {
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct rate_control_ref *ref = sta->rate_ctrl;
+-	if (sta->debugfs.dir && ref->ops->add_sta_debugfs)
++	if (ref && sta->debugfs.dir && ref->ops->add_sta_debugfs)
+ 		ref->ops->add_sta_debugfs(ref->priv, sta->rate_ctrl_priv,
+ 					  sta->debugfs.dir);
+ #endif
+@@ -107,7 +110,7 @@ static inline void rate_control_remove_s
+ {
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct rate_control_ref *ref = sta->rate_ctrl;
+-	if (ref->ops->remove_sta_debugfs)
++	if (ref && ref->ops->remove_sta_debugfs)
+ 		ref->ops->remove_sta_debugfs(ref->priv, sta->rate_ctrl_priv);
+ #endif
+ }
+--- wireless-testing.orig/net/mac80211/sta_info.c	2009-11-16 17:26:28.000000000 +0100
++++ wireless-testing/net/mac80211/sta_info.c	2009-11-16 17:26:33.000000000 +0100
+@@ -147,8 +147,10 @@ struct sta_info *sta_info_get_by_idx(str
+ static void __sta_info_free(struct ieee80211_local *local,
+ 			    struct sta_info *sta)
+ {
+-	rate_control_free_sta(sta);
+-	rate_control_put(sta->rate_ctrl);
++	if (sta->rate_ctrl) {
++		rate_control_free_sta(sta);
++		rate_control_put(sta->rate_ctrl);
++	}
+ 
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+ 	printk(KERN_DEBUG "%s: Destroyed STA %pM\n",
+@@ -276,6 +278,23 @@ static void sta_unblock(struct work_stru
+ 		ieee80211_sta_ps_deliver_poll_response(sta);
+ }
+ 
++static int sta_prepare_rate_control(struct ieee80211_local *local,
++				    struct sta_info *sta, gfp_t gfp)
++{
++	if (local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
++		return 0;
++
++	sta->rate_ctrl = rate_control_get(local->rate_ctrl);
++	sta->rate_ctrl_priv = rate_control_alloc_sta(sta->rate_ctrl,
++						     &sta->sta, gfp);
++	if (!sta->rate_ctrl_priv) {
++		rate_control_put(sta->rate_ctrl);
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
+ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 				u8 *addr, gfp_t gfp)
+ {
+@@ -295,11 +314,7 @@ struct sta_info *sta_info_alloc(struct i
+ 	sta->local = local;
+ 	sta->sdata = sdata;
+ 
+-	sta->rate_ctrl = rate_control_get(local->rate_ctrl);
+-	sta->rate_ctrl_priv = rate_control_alloc_sta(sta->rate_ctrl,
+-						     &sta->sta, gfp);
+-	if (!sta->rate_ctrl_priv) {
+-		rate_control_put(sta->rate_ctrl);
++	if (sta_prepare_rate_control(local, sta, gfp)) {
+ 		kfree(sta);
+ 		return NULL;
+ 	}
+--- wireless-testing.orig/net/mac80211/tx.c	2009-11-16 17:26:28.000000000 +0100
++++ wireless-testing/net/mac80211/tx.c	2009-11-16 17:26:33.000000000 +0100
+@@ -1219,7 +1219,8 @@ static int invoke_tx_handlers(struct iee
+ 	CALL_TXH(ieee80211_tx_h_ps_buf);
+ 	CALL_TXH(ieee80211_tx_h_select_key);
+ 	CALL_TXH(ieee80211_tx_h_michael_mic_add);
+-	CALL_TXH(ieee80211_tx_h_rate_ctrl);
++	if (!(tx->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL))
++		CALL_TXH(ieee80211_tx_h_rate_ctrl);
+ 	CALL_TXH(ieee80211_tx_h_misc);
+ 	CALL_TXH(ieee80211_tx_h_sequence);
+ 	CALL_TXH(ieee80211_tx_h_fragment);
+--- wireless-testing.orig/net/mac80211/rate.c	2009-11-16 17:26:28.000000000 +0100
++++ wireless-testing/net/mac80211/rate.c	2009-11-16 17:26:33.000000000 +0100
+@@ -284,9 +284,16 @@ int ieee80211_init_rate_ctrl_alg(struct 
+ 	struct rate_control_ref *ref, *old;
+ 
+ 	ASSERT_RTNL();
++
+ 	if (local->open_count)
+ 		return -EBUSY;
+ 
++	if (local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL) {
++		if (WARN_ON(!local->ops->set_rts_threshold))
++			return -EINVAL;
++		return 0;
++	}
++
+ 	ref = rate_control_alloc(name, local);
+ 	if (!ref) {
+ 		printk(KERN_WARNING "%s: Failed to select rate control "
+@@ -305,7 +312,6 @@ int ieee80211_init_rate_ctrl_alg(struct 
+ 	       "algorithm '%s'\n", wiphy_name(local->hw.wiphy),
+ 	       ref->ops->name);
+ 
+-
+ 	return 0;
+ }
+ 
+@@ -314,6 +320,10 @@ void rate_control_deinitialize(struct ie
+ 	struct rate_control_ref *ref;
+ 
+ 	ref = local->rate_ctrl;
++
++	if (!ref)
++		return;
++
+ 	local->rate_ctrl = NULL;
+ 	rate_control_put(ref);
+ }
+--- wireless-testing.orig/net/mac80211/debugfs.c	2009-11-16 17:26:28.000000000 +0100
++++ wireless-testing/net/mac80211/debugfs.c	2009-11-16 17:26:33.000000000 +0100
+@@ -52,7 +52,7 @@ DEBUGFS_READONLY_FILE(total_ps_buffered,
+ DEBUGFS_READONLY_FILE(wep_iv, 20, "%#08x",
+ 		      local->wep_iv & 0xffffff);
+ DEBUGFS_READONLY_FILE(rate_ctrl_alg, 100, "%s",
+-		      local->rate_ctrl ? local->rate_ctrl->ops->name : "<unset>");
++	local->rate_ctrl ? local->rate_ctrl->ops->name : "hw/driver");
+ 
+ static ssize_t tsf_read(struct file *file, char __user *user_buf,
+ 			     size_t count, loff_t *ppos)
 
-It wasn't easy to do it quickly enough, but I just got a backtrace
-there.  The 1024x600 display doesn't let me see the whole backtrace and
-I don't seem to be able to scroll, so here's the part I can see:
-
-   do_invalid_op+0x6c/0x75
-   skb_put+0x5d/0x67
-   vt_console_print+0x0/0x247
-   up+0x9/0x2a
-   release_console_sem+0x174/0x1a2
-   error_code+0x66/0x6c
-   do_invalid_op+0x0/0x75
-   skb_put+0x5d/0x67
-   ieee80211_association_req+0x189/0x1f8 [rtl8187se]
-   ieee80211_association_req+0x189/0x1f8 [rtl8187se]
-   ieee80211_associate_step+0x24/0x5b [rtl8187se]
-   ieee80211_rx_frame_softmac+0x358/0x498 [rtl8187se]
-   cpumask_next_and+0x23/0x33
-   ieee80211_rx+0x542/0xc9c [rtl8187se]
-   __alloc_skb+0x46/0x111
-   rtl8180_rx+0x728/0x828 [rtl8187se]
-   hrtimer_get_next_event+0x8c/0xa0
-   tasklet_action+0x67/0xad
-   rtl8180_interrupt+0x35d/0x368 [rtl8187se]
-   __do_softirq+0xaa/0x151
-   do_softirq+0x31/0x3c
-   irq_exit+0x26/0x58
-   do_IRQ+0x78/0x89
-   common_interrup+0x29/0x30
-   acpi_idle_enter_bm+0x246/0x281 [processor]
-   cpuidle_idle_call+0x68/0xbb
-   cpu_idle+0x46/0x5f
-   start_kernel+0x2c7/0x2ca
-
->> IIUC this driver is not under active development, but maybe someone
->> knows it enough to try and fix it, or maybe there's some alternative
->> driver for this card that I should try?
-> The vendor driver in staging is not really under active development.
-> We are currently writing a mainline driver that uses mac80211 from the
-> vendor code.  Of course, it is not possible to predict when this
-> driver will be ready.
-
-If/when there's something I can do to help test it, please let me know,
-
-
-        Stefan
 
