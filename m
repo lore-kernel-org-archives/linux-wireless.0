@@ -1,70 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:40568 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932429AbZKDRgG (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51945 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751986AbZKQOAZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 12:36:06 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 04 Nov 2009 18:35:47 +0100
-Message-Id: <20091104173547.28463.36376.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-Subject: [PATCH 31/41] rt2800usb: add RXINFO_DESC_SIZE definition
+	Tue, 17 Nov 2009 09:00:25 -0500
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1NAObd-0006O1-E4
+	for linux-wireless@vger.kernel.org; Tue, 17 Nov 2009 09:00:29 -0500
+Received: from linville-t400.local (linville-t400.local [127.0.0.1])
+	by linville-t400.local (8.14.3/8.14.3) with ESMTP id nAHDr9RX005360
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2009 08:53:09 -0500
+Received: (from linville@localhost)
+	by linville-t400.local (8.14.3/8.14.3/Submit) id nAHDr9tS005358
+	for linux-wireless@vger.kernel.org; Tue, 17 Nov 2009 08:53:09 -0500
+Date: Tue, 17 Nov 2009 08:53:09 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: 2.6.32-rc7-git1: Reported regressions 2.6.30 -> 2.6.31
+	(wireless)
+Message-ID: <20091117135308.GB27743@tuxdriver.com>
+References: <ipicVA1QUFF.A.zWB.1mdALB@chimera>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <ipicVA1QUFF.A.zWB.1mdALB@chimera>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] rt2800usb: add RXINFO_DESC_SIZE definition
+On Mon, Nov 16, 2009 at 11:58:32PM +0100, Rafael J. Wysocki wrote:
+> This message contains a list of some regressions introduced between 2.6.30 and
+> 2.6.31, for which there are no fixes in the mainline I know of.  If any of them
+> have been fixed already, please let me know.
 
-Add RXINFO_DESC_SIZE definition and use it instead of abusing
-RXD_DESC_SIZE one (TXD_DESC_SIZE and RXD_DESC_SIZE are specific
-to PCI version of the chipset).
+> Unresolved regressions
+> ----------------------
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |    4 ++--
- drivers/net/wireless/rt2x00/rt2800usb.h |    3 ++-
- 2 files changed, 4 insertions(+), 3 deletions(-)
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14460
+> Subject		: No wireless connection with Ralink RT2500 since update to kernel 2.6.31
+> Submitter	: Filipp Andjelo <andjelo@gmx.net>
+> Date		: 2009-10-24 21:18 (24 days old)
 
-Index: b/drivers/net/wireless/rt2x00/rt2800usb.c
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -2152,7 +2152,7 @@ static void rt2800usb_fill_rxdone(struct
- 	 */
- 	memcpy(skbdesc->desc, rxd, skbdesc->desc_len);
- 	rxd = (__le32 *)skbdesc->desc;
--	rxwi = &rxd[RXD_DESC_SIZE / sizeof(__le32)];
-+	rxwi = &rxd[RXINFO_DESC_SIZE / sizeof(__le32)];
- 
- 	/*
- 	 * It is now safe to read the descriptor on all architectures.
-@@ -2874,7 +2874,7 @@ static const struct rt2x00lib_ops rt2800
- static const struct data_queue_desc rt2800usb_queue_rx = {
- 	.entry_num		= RX_ENTRIES,
- 	.data_size		= AGGREGATION_SIZE,
--	.desc_size		= RXD_DESC_SIZE + RXWI_DESC_SIZE,
-+	.desc_size		= RXINFO_DESC_SIZE + RXWI_DESC_SIZE,
- 	.priv_size		= sizeof(struct queue_entry_priv_usb),
- };
- 
-Index: b/drivers/net/wireless/rt2x00/rt2800usb.h
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800usb.h
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.h
-@@ -1747,7 +1747,8 @@ struct mac_iveiv_entry {
- #define TXD_DESC_SIZE			( 4 * sizeof(__le32) )
- #define TXINFO_DESC_SIZE		( 1 * sizeof(__le32) )
- #define TXWI_DESC_SIZE			( 4 * sizeof(__le32) )
--#define RXD_DESC_SIZE			( 1 * sizeof(__le32) )
-+#define RXD_DESC_SIZE			( 4 * sizeof(__le32) )
-+#define RXINFO_DESC_SIZE		( 1 * sizeof(__le32) )
- #define RXWI_DESC_SIZE			( 4 * sizeof(__le32) )
- 
- /*
+
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14450
+> Subject		: [2.6.31] Network interfaces are dead with 2.6.31 (iwlagn and sky2)
+> Submitter	: A. G. <orion.linbug@gmail.com>
+> Date		: 2009-10-21 07:30 (27 days old)
+
+
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14417
+> Subject		: [Regression] Wireless driver iwlagn+iwlcore doesn't work after resume (needs reloading)
+> Submitter	: Eddy Petrișor <eddy.petrisor+linbug@gmail.com>
+> Date		: 2009-10-16 11:07 (32 days old)
+
+
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14400
+> Subject		: disable/enable wlan broken with ath5k
+> Submitter	: Daniel Bumke <danielbumke@gmail.com>
+> Date		: 2009-10-13 12:35 (35 days old)
+
+
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14267
+> Subject		: Disassociating atheros wlan
+> Submitter	: Kristoffer Ericson <kristoffer.ericson@gmail.com>
+> Date		: 2009-09-24 10:16 (54 days old)
+> References	: http://marc.info/?l=linux-kernel&m=125378723723384&w=4
+
+
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14181
+> Subject		: b43 causes panic at ifconfig down / shutdown
+> Submitter	: Jeremy Huddleston <jeremyhu@freedesktop.org>
+> Date		: 2009-09-15 18:34 (63 days old)
+
+
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13943
+> Subject		: WARNING: at net/mac80211/mlme.c:2292 with ath5k
+> Submitter	: Fabio Comolli <fabio.comolli@gmail.com>
+> Date		: 2009-08-06 20:15 (103 days old)
+> References	: http://marc.info/?l=linux-kernel&m=124958978600600&w=4
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
