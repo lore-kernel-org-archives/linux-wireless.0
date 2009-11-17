@@ -1,129 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:55272 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751539AbZK1Qmy (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:63277 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753150AbZKQQtp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Nov 2009 11:42:54 -0500
-Date: Sat, 28 Nov 2009 14:42:57 -0200
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ian Molton <ian.molton@collabora.co.uk>,
-	linux-acpi@vger.kernel.org, Corentin Chary <corentincj@iksaif.net>
-Subject: Re: rfkill: persistent device suspend/resume
-Message-ID: <20091128164257.GA28189@khazad-dum.debian.net>
-References: <4A37A3E1.8060606@tuffmail.co.uk>
- <1245161645.13461.3.camel@johannes.local>
- <4A37AEB7.6060405@tuffmail.co.uk>
- <20090618030806.GE29569@khazad-dum.debian.net>
- <20091128124158.GB17373@khazad-dum.debian.net>
- <4B114288.2000409@tuffmail.co.uk>
+	Tue, 17 Nov 2009 11:49:45 -0500
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 11/16] wl1251: Add IRQ looping support
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 17 Nov 2009 18:49:31 +0200
+Message-ID: <20091117164930.2236.43530.stgit@tikku>
+In-Reply-To: <20091117164614.2236.8543.stgit@tikku>
+References: <20091117164614.2236.8543.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4B114288.2000409@tuffmail.co.uk>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 28 Nov 2009, Alan Jenkins wrote:
-> Sorry for my naff patch description. The actual corner case is when
-> the soft rfkill state changes between when we suspend and resume.
+From: Janne Ylalehto <janne.ylalehto@nokia.com>
 
-Ah, ok.
+Add support for IRQ looping. Helps in the case that we have e.g. multiple
+packets coming from the network when we wake up from the ELP.
 
-> "we really want to restore the hardware to the previous soft state"
-> 
-> Context warning: this only affects "persistent" rfkill devices. We
-> currently do this for everything except thinkpad-acpi and
-> eeepc-laptop.
+Signed-off-by: Janne Ylalehto <janne.ylalehto@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
 
-Yes.  This is _only_ about persistent rfkill devices, i.e. thinkpads and
-eeepc.
+ drivers/net/wireless/wl12xx/wl1251_main.c |  127 +++++++++++++++--------------
+ 1 files changed, 67 insertions(+), 60 deletions(-)
 
-> Blame Marcel, the current choice was his suggestion :). I think his
-> argument was that restoring the state could impose policy, and that
-> this would be bad. I didn't resist too hard because his principle
-> provides a marginal feature in eeepc-laptop.
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index cc32ba6..dad010d 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -212,9 +212,10 @@ out:
+ 	return ret;
+ }
+ 
++#define WL1251_IRQ_LOOP_COUNT 10
+ static void wl1251_irq_work(struct work_struct *work)
+ {
+-	u32 intr;
++	u32 intr, ctr = WL1251_IRQ_LOOP_COUNT;
+ 	struct wl1251 *wl =
+ 		container_of(work, struct wl1251, irq_work);
+ 	int ret;
+@@ -235,78 +236,84 @@ static void wl1251_irq_work(struct work_struct *work)
+ 	intr = wl1251_reg_read32(wl, ACX_REG_INTERRUPT_CLEAR);
+ 	wl1251_debug(DEBUG_IRQ, "intr: 0x%x", intr);
+ 
+-	if (wl->data_path) {
+-		wl->rx_counter =
+-			wl1251_mem_read32(wl, wl->data_path->rx_control_addr);
+-
+-		/* We handle a frmware bug here */
+-		switch ((wl->rx_counter - wl->rx_handled) & 0xf) {
+-		case 0:
+-			wl1251_debug(DEBUG_IRQ, "RX: FW and host in sync");
+-			intr &= ~WL1251_ACX_INTR_RX0_DATA;
+-			intr &= ~WL1251_ACX_INTR_RX1_DATA;
+-			break;
+-		case 1:
+-			wl1251_debug(DEBUG_IRQ, "RX: FW +1");
+-			intr |= WL1251_ACX_INTR_RX0_DATA;
+-			intr &= ~WL1251_ACX_INTR_RX1_DATA;
+-			break;
+-		case 2:
+-			wl1251_debug(DEBUG_IRQ, "RX: FW +2");
+-			intr |= WL1251_ACX_INTR_RX0_DATA;
+-			intr |= WL1251_ACX_INTR_RX1_DATA;
+-			break;
+-		default:
+-			wl1251_warning("RX: FW and host out of sync: %d",
+-				       wl->rx_counter - wl->rx_handled);
+-			break;
+-		}
+-
+-		wl->rx_handled = wl->rx_counter;
++	do {
++		if (wl->data_path) {
++			wl->rx_counter = wl1251_mem_read32(
++				wl, wl->data_path->rx_control_addr);
++
++			/* We handle a frmware bug here */
++			switch ((wl->rx_counter - wl->rx_handled) & 0xf) {
++			case 0:
++				wl1251_debug(DEBUG_IRQ,
++					     "RX: FW and host in sync");
++				intr &= ~WL1251_ACX_INTR_RX0_DATA;
++				intr &= ~WL1251_ACX_INTR_RX1_DATA;
++				break;
++			case 1:
++				wl1251_debug(DEBUG_IRQ, "RX: FW +1");
++				intr |= WL1251_ACX_INTR_RX0_DATA;
++				intr &= ~WL1251_ACX_INTR_RX1_DATA;
++				break;
++			case 2:
++				wl1251_debug(DEBUG_IRQ, "RX: FW +2");
++				intr |= WL1251_ACX_INTR_RX0_DATA;
++				intr |= WL1251_ACX_INTR_RX1_DATA;
++				break;
++			default:
++				wl1251_warning(
++					"RX: FW and host out of sync: %d",
++					wl->rx_counter - wl->rx_handled);
++				break;
++			}
+ 
++			wl->rx_handled = wl->rx_counter;
+ 
+-		wl1251_debug(DEBUG_IRQ, "RX counter: %d", wl->rx_counter);
+-	}
++			wl1251_debug(DEBUG_IRQ, "RX counter: %d",
++				     wl->rx_counter);
++		}
+ 
+-	intr &= wl->intr_mask;
++		intr &= wl->intr_mask;
+ 
+-	if (intr == 0) {
+-		wl1251_debug(DEBUG_IRQ, "INTR is 0");
+-		wl1251_reg_write32(wl, ACX_REG_INTERRUPT_MASK,
+-				   ~(wl->intr_mask));
++		if (intr == 0) {
++			wl1251_debug(DEBUG_IRQ, "INTR is 0");
++			goto out_sleep;
++		}
+ 
+-		goto out_sleep;
+-	}
++		if (intr & WL1251_ACX_INTR_RX0_DATA) {
++			wl1251_debug(DEBUG_IRQ, "WL1251_ACX_INTR_RX0_DATA");
++			wl1251_rx(wl);
++		}
+ 
+-	if (intr & WL1251_ACX_INTR_RX0_DATA) {
+-		wl1251_debug(DEBUG_IRQ, "WL1251_ACX_INTR_RX0_DATA");
+-		wl1251_rx(wl);
+-	}
++		if (intr & WL1251_ACX_INTR_RX1_DATA) {
++			wl1251_debug(DEBUG_IRQ, "WL1251_ACX_INTR_RX1_DATA");
++			wl1251_rx(wl);
++		}
+ 
+-	if (intr & WL1251_ACX_INTR_RX1_DATA) {
+-		wl1251_debug(DEBUG_IRQ, "WL1251_ACX_INTR_RX1_DATA");
+-		wl1251_rx(wl);
+-	}
++		if (intr & WL1251_ACX_INTR_TX_RESULT) {
++			wl1251_debug(DEBUG_IRQ, "WL1251_ACX_INTR_TX_RESULT");
++			wl1251_tx_complete(wl);
++		}
+ 
+-	if (intr & WL1251_ACX_INTR_TX_RESULT) {
+-		wl1251_debug(DEBUG_IRQ, "WL1251_ACX_INTR_TX_RESULT");
+-		wl1251_tx_complete(wl);
+-	}
++		if (intr & (WL1251_ACX_INTR_EVENT_A |
++			    WL1251_ACX_INTR_EVENT_B)) {
++			wl1251_debug(DEBUG_IRQ, "WL1251_ACX_INTR_EVENT (0x%x)",
++				     intr);
++			if (intr & WL1251_ACX_INTR_EVENT_A)
++				wl1251_event_handle(wl, 0);
++			else
++				wl1251_event_handle(wl, 1);
++		}
+ 
+-	if (intr & (WL1251_ACX_INTR_EVENT_A | WL1251_ACX_INTR_EVENT_B)) {
+-		wl1251_debug(DEBUG_IRQ, "WL1251_ACX_INTR_EVENT (0x%x)", intr);
+-		if (intr & WL1251_ACX_INTR_EVENT_A)
+-			wl1251_event_handle(wl, 0);
+-		else
+-			wl1251_event_handle(wl, 1);
+-	}
++		if (intr & WL1251_ACX_INTR_INIT_COMPLETE)
++			wl1251_debug(DEBUG_IRQ,
++				     "WL1251_ACX_INTR_INIT_COMPLETE");
+ 
+-	if (intr & WL1251_ACX_INTR_INIT_COMPLETE)
+-		wl1251_debug(DEBUG_IRQ, "WL1251_ACX_INTR_INIT_COMPLETE");
++		intr = wl1251_reg_read32(wl, ACX_REG_INTERRUPT_CLEAR);
+ 
+-	wl1251_reg_write32(wl, ACX_REG_INTERRUPT_MASK, ~(wl->intr_mask));
++	} while (intr && --ctr);
+ 
+ out_sleep:
++	wl1251_reg_write32(wl, ACX_REG_INTERRUPT_MASK, ~(wl->intr_mask));
+ 	wl1251_ps_elp_sleep(wl);
+ 
+ out:
 
-Actually, that is a good argument, and I was not aware of it.
-
-> [That said, I later noticed that it speeds up resume from s2ram.
-> eeepc-laptop is 'special'; its WLDS method takes a whole second to
-> run.]
-
-Which is another good argument.
-
-I can fix the regression in thinkpad-acpi either way, and I have just
-found that I _will_ have to change code in thinkpad-acpi to fix it in
-either case.
-
-But I'd rather do it in the best way possible :)
-
-If the current way (no resume for persistent devices) has real
-advantages, I will just deal with it in the driver.
-
-> To elaborate:
-> 
-> The state in NV-ram may be changed deliberately. On eeepc-laptop,
-> you can change it in the BIOS setup screen - and then resume from
-> hibernation. Marcel suggests that overriding this change would be a
-> policy decision, which userspace should be able to control. The
-> simplest way to do so is to simply preserve the state (and emit an
-> event to notify userspace of the change).
-
-I see.  that's the missing link.  While thinkpads _can_ do that too, it
-changes the *hard* kill line, and it (obviously) cannot be overriden at
-all... When you disable radios in the ThinkPad BIOS, they _stay_
-disabled... at least on the IBM models.
-
-I was aware of the change-in-NVRAM possibility, but dismissed it since
-we don't support booting another OS in the middle of a hibernation
-cycle.  The idea that the BIOS could be used to change NVRAM didn't
-cross my mind.
-
-> I thought thinkpad-acpi might also allow such changes. At least for
-> some controls, the BIOS defaults to implementing them itself, right?
-
-Yes, but for the radios, the BIOS goes the way of "disabled is
-disabled", and doesn't let you change the NVRAM.  That might have
-changed on the newer Lenovo models, but I have not heard of any changes
-yet.
-
-> Even if this isn't true for rfkill on the thinkpad, it's a
-> possibility we may encounter in future. Imagine a system where this
-
-You told me EEEPC takes good advantage of the current way of doing
-things, and I can certainly make it work properly in thinkpad-acpi as
-well.
-
-So, as far as I am concerned, you proved to me that there are strong
-advantages for the current way of doing things, and until there is a
-compelling need to have radios locked on resume, I think it is best to
-leave things as is.
-
-> - hibernate
-> - boot resume kernel
-> - user presses rfkill key -> BIOS toggles the rfkill state
-> - load kernel from hibernation image
-> - rfkill resume now unconditionally overrides the rfkill state
-
-Yeah, ugly mess.
-
-> rfkill-input is scheduled for removal in anticipation of rfkilld. If
-> you want to schedule removal of persistent rfkill devices in
-> anticipation of "rfkilld with persistence", that would seem just as
-> reasonable :-p. I'm sure Johannes would then accept the small change
-> to the rfkill core to fix this regression.
-
-Nah, I think it is best to deal it in the driver, given the data you
-just presented.
-
-And I am strongly against foring users to use rfkilld-based persistence
-in platforms that can do better (i.e. thinkpad-acpi and eeepc) :-)
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
