@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:48218 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751438AbZKHIXF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 03:23:05 -0500
-Date: Sun, 8 Nov 2009 09:23:07 +0100 (CET)
-From: Julia Lawall <julia@diku.dk>
-To: Corey Thomas <coreythomas@charter.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] drivers/net/wireless: correct check on CCS_START_NETWORK
-Message-ID: <Pine.LNX.4.64.0911080922360.2465@ask.diku.dk>
+Received: from static-72-92-88-10.phlapa.fios.verizon.net ([72.92.88.10]:40143
+	"EHLO smtp.roinet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755890AbZKQWcr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2009 17:32:47 -0500
+Message-ID: <4B032492.2080709@roinet.com>
+Date: Tue, 17 Nov 2009 17:32:50 -0500
+From: David Acker <dacker@roinet.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: Marcel Holtmann <marcel@holtmann.org>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	Michael Renzmann <mrenzmann@madwifi-project.org>,
+	madwifi-devel@lists.sourceforge.net,
+	madwifi-users@lists.sourceforge.net,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and why?
+References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de>	 <43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com>	 <4B02DFF4.1060509@roinet.com>	 <45e8e6c40911171257m7c687380k6e6e2677fd11f851@mail.gmail.com>	 <43e72e890911171337p4b0d97fcp844266137bb51b56@mail.gmail.com>	 <4B03193E.2080304@roinet.com>	 <43e72e890911171345q2dc59d66g6ac2a9eec04c577c@mail.gmail.com>	 <4B031B48.1090105@roinet.com> <1258495587.2003.41.camel@violet>
+In-Reply-To: <1258495587.2003.41.camel@violet>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+Marcel Holtmann wrote:
+> Hi David,
+> 
+>> The problem with switching to ath5k would be the loss of performance 
+>> related features (compression, fast frames, turbo), and some required 
+>> features (half/quarter rates are required for some channels on some 
+>> radios).  Also, I don't know if ath5k will work on products based on 
+>> Atheros WiSOCs like Ubiquiti's PicoStation and Bullet.  A lesser issue 
+>> (more of a pain for me than an ath5k issue) is that I have some 
+>> platforms that use an older kernel and moving up to a newer kernel will 
+>> have to be done without hardware vendor support.
+> 
+> and that is exactly not a valid point to include MadWifi into the
+> staging tree. If you are running older kernels, the staging tree doesn't
+> help you at all.
 
-CCS_START_NETWORK is declared in drivers/net/wireless/rayctl.h with the
-comment Values for cmd.  status is previously compared to
-CCS_COMMAND_COMPLETE, which is declared in the same file with the comment
-Values for buffer_status.  Finally, it is possible at this point that cmd
-is CCS_START_NETWORK, because it is compared to that value in an enclosing
-switch that has CCS_START_NETWORK as one of two case labels around this code.
+True.  I happen to agree that Madwifi shouldn't go into staging.  I 
+would rather see the features I noted ported into ath5k.  Thanks!
+-ack
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/net/wireless/ray_cs.c       |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
-index 1c88c2e..5ee9d2a 100644
---- a/drivers/net/wireless/ray_cs.c
-+++ b/drivers/net/wireless/ray_cs.c
-@@ -2074,7 +2074,7 @@ static irqreturn_t ray_interrupt(int irq, void *dev_id)
- 				del_timer(&local->timer);
- 				local->timer.expires = jiffies + HZ * 5;
- 				local->timer.data = (long)local;
--				if (status == CCS_START_NETWORK) {
-+				if (cmd == CCS_START_NETWORK) {
- 					DEBUG(0,
- 					      "ray_cs interrupt network \"%s\" start failed\n",
- 					      local->sparm.b4.a_current_ess_id);
