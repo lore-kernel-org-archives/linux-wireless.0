@@ -1,37 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:34232 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752832AbZKLQRh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 11:17:37 -0500
-Received: by bwz27 with SMTP id 27so2403665bwz.21
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 08:17:41 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: James Grossmann <cctsurf@gmail.com>
-Subject: Re: Prism54/p54pci
-Date: Thu, 12 Nov 2009 17:17:36 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <167ae39b0910071400n218d3d9ey7711b1011f290a73@mail.gmail.com> <200911062133.38842.chunkeey@googlemail.com> <167ae39b0911061252x790d69fei9e798e8c6080f175@mail.gmail.com>
-In-Reply-To: <167ae39b0911061252x790d69fei9e798e8c6080f175@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200911121717.36906.chunkeey@googlemail.com>
+Received: from mail.vyatta.com ([76.74.103.46]:36097 "EHLO mail.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751445AbZKQREZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2009 12:04:25 -0500
+Date: Tue, 17 Nov 2009 09:04:20 -0800
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Buesch <mb@bu3sch.de>, netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [RFC] mac80211: disallow bridging managed/adhoc interfaces
+Message-ID: <20091117090420.0434edc3@nehalam>
+In-Reply-To: <1258476223.21197.0.camel@johannes.local>
+References: <1258465585.3682.7.camel@johannes.local>
+	<200911171504.54170.mb@bu3sch.de>
+	<1258466868.3682.13.camel@johannes.local>
+	<20091117083741.1b165274@nehalam>
+	<1258476223.21197.0.camel@johannes.local>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 06 November 2009 21:52:42 James Grossmann wrote:
-> my caps lock & scroll lock leds are not blinking, and yet the computer
-> is frozen.  (I'm not the best at terminology, I guess that might not
-> be defined as a hard lock.)  I get no odd messages in my syslog.  I am
-> using Ubuntu right now, so I'm guessing that they have all the
-> prettyness going that they can, covering the important messages, but
-> as it's not an actual oops, I'm not certain that's hurting us.
-just a update:
+On Tue, 17 Nov 2009 17:43:43 +0100
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-I can confirm the freeze with ubuntu 9.10 (2.6.31-14 & 2.6.31-15-generic)
-+ compat-wireless + p54pci (either as backport module or compiled from git).
-The original modules (shipped with 2.6.31-14/15) are fine though..?!
+> On Tue, 2009-11-17 at 08:37 -0800, Stephen Hemminger wrote:
+> 
+> > But there are people bridging wireless, and hostap even has a mode for
+> > that. 
+> 
+> But that's the AP side, which this patch doesn't attempt to prevent. It
+> just makes no sense to bridge when connected to an AP or part of an
+> IBSS.
+> 
 
-Regards,
-	Chr 
+Then how does this work now? And will your change break it?
+
+                             kvm1
+                            /
+     ====> wlan0  --- bridge-- kvm2
+                            \
+                             kvm3
