@@ -1,77 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:34014 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751110AbZKDBeH (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33054 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756268AbZKQWpr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 20:34:07 -0500
-MIME-Version: 1.0
-In-Reply-To: <200911040046.54247.bzolnier@gmail.com>
-References: <200911031951.05235.bzolnier@gmail.com> <200911032334.40547.bzolnier@gmail.com>
-	<14add3d10911031509l328e7674kb625b70250ff30fb@mail.gmail.com>
-	<200911040046.54247.bzolnier@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 4 Nov 2009 12:33:52 +1100
-Message-ID: <646765f40911031733u1641c0dr5d4eec30031e7cea@mail.gmail.com>
-Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project tree
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 17 Nov 2009 17:45:47 -0500
+Subject: Re: [RFC v2] mac80211: disallow bridging managed/adhoc interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stephen Hemminger <shemminger@vyatta.com>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <20091117144239.47930866@nehalam>
+References: <1258465585.3682.7.camel@johannes.local>
+	 <1258490898.21197.42.camel@johannes.local>
+	 <20091117144239.47930866@nehalam>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-vtYkaYWN1+BwAnPo/pR3"
+Date: Tue, 17 Nov 2009 23:45:22 +0100
+Message-ID: <1258497922.30511.1.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 4, 2009 at 10:46, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
->> If you just want to continue with a hostile take-over of the rt2800
->> maintainership, then please
->> let us know that, so that we stop spending time on useless
->
-> I fail to see why you see it as a hostile takeover.
 
-Updating MAINTAINERS to replace the current developers with yourself
-can be considered to be a hostile act.
+--=-vtYkaYWN1+BwAnPo/pR3
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-If you want this for your own personal tree, then keep the patch
-private - don't include it in pull requests, patch listings etc.
+On Tue, 2009-11-17 at 14:42 -0800, Stephen Hemminger wrote:
 
-And if you genuinely want the maintainership of the rt28xx drivers,
-then updating MAINTAINERS should be done as an afterthought after
-clearly proving that you are capable of maintaining the driver and
-working with the maintainers of the rt2x00 and wireless subsystems.
+> > Felix has recently added a four-address mode to the AP
+> > and client side that can be used (after negotiating that
+> > it is possible, which must happen out-of-band by setting
+> > up both sides) for bridging, so allow that case.
 
-> I will be glad to cooperate with you or anyone else from rt2x00 project.
-> However I will not spin in some stupid bureaucracy when I see that things
-> can be done more effectively.
+> Looks good, maybe true four-address mode support will be available
+> more widely, and this will no longer be an issue.
 
-It's not "stupid bureaucracy" it's *how* *it's* *done*.
+Doubt it, it breaks the current 802.11 standard, and I think 802.1X too
+if you use WPA/RSN. Anyway, thanks.
 
-If I was going to submit a patch to the Marvell TOPDOG driver to add
-support for another related chipset, I'd be going out of my way to
-make sure that *everyone* involved was 100% happy so that the patch
-can get out to the people who matter: the users.
+I'll take a look tomorrow if we can do this generically in cfg80211, and
+then send a [PATCH] either way.
 
-Everyone has to do this, from big corporations like Intel, to you and
-me. For example, I recall the Intel IWL developers being smacked down
-a few months ago by John and David over exactly what constitutes a
-post-merge window "bugfix".
+johannes
 
-The rules apply to everyone, just because you don't like them doesn't
-mean you can ignore them.
+--=-vtYkaYWN1+BwAnPo/pR3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Thanks,
+-----BEGIN PGP SIGNATURE-----
 
--- 
+iQIcBAABAgAGBQJLAyd/AAoJEODzc/N7+QmaS6UQAJv/vzcZcwW0LNfaAv3ATF0K
+AoW5ysL5qEJ1w1KTmur47NQiRgSjxBiSNkCFvRdvFsiqH3yBw6gTqQ54OSwbxUAW
+/cmV6pCC6IQPsb44BTPYLlcE7vX/lRF0CyHvkEZLnoyHmwmjE5fBECq3zKGegNET
+ajswyZpt3bcf2KI+3Vq9L3WavH/347LeFMeyVcedACvtO4gfceTmfIpdaHws7emn
+8HlB8YlfPQROvgWwnF73pt8VgDLr5WEFh3h187Mpkwm5O168WKGD0kGqYZmcG4lM
++pXBkEILVstkbL3sxeXTwzj6txNFWe8wMPym4WNT40jJ1vlwSeY51hOZ5sKnk6vr
+or7TyB83t11L/igazDj27PtJB8gVMdnvjPHnJ5nrLAdhhiL6dfDDa7uTK3+FrMDe
+uAvbC/J1p+5kYu3ziPOdsq86YkutMr3F6N4hMLIDScvxEYkdr6Scm6I2tGlSqmdB
+QR7fvrMYWQXEMujz5ENqvCdiNG3Yu88Sj22bsZ6uyCsPM0hvq9Z+5qFHi3y1rhkG
+JFufWr1oUVUZxyGIL5/t7DZ8WTeRaCemygvijnSQd3ppkgBWgWk4IA1x05QRK7yL
+U61Px90moizt5MFO9WOLG2enueI5k0UFGhQniP41NiI0ShHj86KCZQdbhD58VDNy
+g6v9jU/p1dFZ7gsYFO13
+=Mw7M
+-----END PGP SIGNATURE-----
 
-Julian Calaby
+--=-vtYkaYWN1+BwAnPo/pR3--
 
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
