@@ -1,47 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:41096 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932095AbZKDRc7 (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:62298 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751888AbZKQXNJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 12:32:59 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 04 Nov 2009 18:32:40 +0100
-Message-Id: <20091104173239.28463.22571.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-Subject: [PATCH 06/41] rt2800pci: fix comment about IV/EIV fields
+	Tue, 17 Nov 2009 18:13:09 -0500
+Received: by iwn8 with SMTP id 8so448217iwn.33
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2009 15:13:15 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20091117225408.GA20540@jm.kir.nu>
+References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de>
+	<4B02DFF4.1060509@roinet.com> <45e8e6c40911171257m7c687380k6e6e2677fd11f851@mail.gmail.com>
+	<43e72e890911171337p4b0d97fcp844266137bb51b56@mail.gmail.com>
+	<4B03193E.2080304@roinet.com> <43e72e890911171345q2dc59d66g6ac2a9eec04c577c@mail.gmail.com>
+	<4B031B48.1090105@roinet.com> <43e72e890911171404x1a46d07alb54946768d0f9cf5@mail.gmail.com>
+	<4B032390.3080501@roinet.com> <20091117225408.GA20540@jm.kir.nu>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 17 Nov 2009 15:12:54 -0800
+Message-ID: <43e72e890911171512k562f9329td56cc741dd1c5151@mail.gmail.com>
+Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and why?
+To: David Acker <dacker@roinet.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	Michael Renzmann <mrenzmann@madwifi-project.org>,
+	madwifi-devel@lists.sourceforge.net,
+	madwifi-users@lists.sourceforge.net,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] rt2800pci: fix comment about IV/EIV fields
+On Tue, Nov 17, 2009 at 2:54 PM, Jouni Malinen <j@w1.fi> wrote:
 
-The bit tested by hardware is TXD_W3_WIV and its value
-equals the negated value of ENTRY_TXD_ENCRYPT_IV bit.
+> Supporting half/quarter width channels sounds reasonable in general. The
+> main problem with this one seems to have been in getting someone
+> dedicated enough to go through the effort in a way that would cleanly
+> extend the regulatory framework in use with cfg80211.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800pci.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I'll elaborate on this part.
 
-Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -2206,8 +2206,8 @@ static void rt2800pci_write_tx_desc(stru
- 
- 	/*
- 	 * Always write 0 to IV/EIV fields, hardware will insert the IV
--	 * from the IVEIV register when ENTRY_TXD_ENCRYPT_IV is set to 0.
--	 * When ENTRY_TXD_ENCRYPT_IV is set to 1 it will use the IV data
-+	 * from the IVEIV register when TXD_W3_WIV is set to 0.
-+	 * When TXD_W3_WIV is set to 1 it will use the IV data
- 	 * from the descriptor. The TXWI_W1_WIRELESS_CLI_ID indicates which
- 	 * crypto entry in the registers should be used to encrypt the frame.
- 	 */
+There actually is no requirement to extend the regulatory framework to
+get this done. What would need to be done is to extend cfg80211 to get
+support for declaring varying channel width support and for a way to
+tell cfg80211 which channels we want enabled for these settings -- or
+figuring out a generic formula on cfg80211. The regulatory rules would
+already be present on cfg80211 -- these would just be used to apply
+the channe flags accordingly. I think there was also the theoretical
+issues with regulatory bands which might overlap but we haven't yet
+faced this issue yet AFAICT.
+
+  Luis
