@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:17927 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752580AbZKQQtX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 11:49:23 -0500
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 06/16] wl1251: fix deadlock with ieee80211 beacon filter calls
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Nov 2009 18:48:53 +0200
-Message-ID: <20091117164852.2236.24891.stgit@tikku>
-In-Reply-To: <20091117164614.2236.8543.stgit@tikku>
-References: <20091117164614.2236.8543.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.vyatta.com ([76.74.103.46]:51549 "EHLO mail.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755857AbZKQWmy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2009 17:42:54 -0500
+Date: Tue, 17 Nov 2009 14:42:39 -0800
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [RFC v2] mac80211: disallow bridging managed/adhoc interfaces
+Message-ID: <20091117144239.47930866@nehalam>
+In-Reply-To: <1258490898.21197.42.camel@johannes.local>
+References: <1258465585.3682.7.camel@johannes.local>
+	<1258490898.21197.42.camel@johannes.local>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vidhya Govindan <vidhya.govindan@nokia.com>
+On Tue, 17 Nov 2009 21:48:18 +0100
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-Lockdep shows that there is a deadlock when calling ieee80211_rssi_changed()
-under wl->mutex. Fix it by releasing mutex before calling mac80211 functions.
-This patch is based on Work-In-Progress patch sent by Kalle Valo.
+> A number of people have tried to add a wireless interface
+> (in managed mode) to a bridge and then complained that it
+> doesn't work. It cannot work, however, because in 802.11
+> networks all packets need to be acknowledged and as such
+> need to be sent to the right address. Promiscuous doesn't
+> help here. The wireless address format used for these
+> links has only space for three addresses, the
+>  * transmitter, which must be equal to the sender (origin)
+>  * receiver (on the wireless medium), which is the AP in
+>    the case of managed mode
+>  * the recipient (destination), which is on the APs local
+>    network segment
+> 
+> In an IBSS, it is similar, but the receiver and recipient
+> must match and the third address is used as the BSSID.
+> 
+> To avoid such mistakes in the future, disallow adding a
+> wireless interface to a bridge.
+> 
+> Felix has recently added a four-address mode to the AP
+> and client side that can be used (after negotiating that
+> it is possible, which must happen out-of-band by setting
+> up both sides) for bridging, so allow that case.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Signed-off-by: Vidhya Govindan <vidhya.govindan@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
+Looks good, maybe true four-address mode support will be available
+more widely, and this will no longer be an issue.
 
- drivers/net/wireless/wl12xx/wl1251_event.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1251_event.c b/drivers/net/wireless/wl12xx/wl1251_event.c
-index 18c301d..f42121c 100644
---- a/drivers/net/wireless/wl12xx/wl1251_event.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_event.c
-@@ -81,9 +81,12 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
- 
- 	if (vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID && wl->psm) {
- 		wl1251_debug(DEBUG_EVENT, "SYNCHRONIZATION_TIMEOUT_EVENT");
-+		/* need to unlock mutex to avoid deadlocking with rtnl */
-+		mutex_unlock(&wl->mutex);
- 
- 		/* indicate to the stack, that beacons have been lost */
- 		ieee80211_beacon_loss(wl->vif);
-+		mutex_lock(&wl->mutex);
- 	}
- 
- 	return 0;
-
+Acked-by: Stephen Hemminger <shemminger@vyatta.com>
