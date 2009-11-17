@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f202.google.com ([209.85.211.202]:34250 "EHLO
-	mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755491AbZKDSoe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 13:44:34 -0500
+Received: from li59-9.members.linode.com ([97.107.129.9]:59231 "EHLO erley.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752278AbZKQXZa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2009 18:25:30 -0500
+Message-ID: <4B033072.9030604@erley.org>
+Date: Tue, 17 Nov 2009 18:23:30 -0500
+From: Pat Erley <pat-lkml@erley.org>
 MIME-Version: 1.0
-In-Reply-To: <20091104173258.28463.94619.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-	 <20091104173258.28463.94619.sendpatchset@localhost.localdomain>
-Date: Wed, 4 Nov 2009 19:44:39 +0100
-Message-ID: <14add3d10911041044m53d97880j3c57648b4652c5fb@mail.gmail.com>
-Subject: Re: [PATCH 08/41] rt2800usb: use rt2x00usb_register_multiwrite() to
-	set key entries
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
+To: Bob Copeland <me@bobcopeland.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Michael Renzmann <mrenzmann@madwifi-project.org>,
+	madwifi-devel@lists.sourceforge.net,
+	madwifi-users@lists.sourceforge.net,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and why?
+References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de>	 <43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com>	 <1803.194.45.26.221.1258473872.squirrel@webmail.madwifi-project.org>	 <43e72e890911170838g26172725ga4a843dc5292c29f@mail.gmail.com> <b6c5339f0911171351m6c7e4e13o8f4329a6f8fb6f8d@mail.gmail.com>
+In-Reply-To: <b6c5339f0911171351m6c7e4e13o8f4329a6f8fb6f8d@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 4, 2009 at 6:32 PM, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2800usb: use rt2x00usb_register_multiwrite() to set key entries
->
-> Since struct hw_key_entry is 32-bytes large and is smaller than
-> CSR cache size (which is 64-bytes large) we can use the standard
-> rt2x00usb_register_multiwrite() helper to set key entries.
->
-> This cleanup is a part of preparations for later code unification.
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
+Bob Copeland wrote:
+> On Tue, Nov 17, 2009 at 11:38 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> 
+>>  * DFS
+>>  * Multi-BSS AP functionality
+>>  * Roaming
+>>  * ANI
+> 
+> Also antenna selection has been requested -- this is dead simple
+> if anyone wants to write appropriate hooks into the stack for it.
+> The code is already in the driver, it just needs some configuration
+> glue.
+> 
+I'm more than willing to attack adding the funtionality to ath5k, if someone else 
+is willing to design and implement the mac80211/nl80211 layer stuff.  I tried 
+doing the half/quarter rate stuff, but got hung up in the higher level, eventually 
+giving up (with, I believe, working ath5k code for it).  I'd code and test with 
+/debug options to get ath5k supporting the features, and then using the mac80211 
+hooks once they're provided.
 
-For what it is worth:
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Pat Erley
