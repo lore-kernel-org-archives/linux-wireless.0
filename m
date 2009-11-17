@@ -1,56 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from katherina.student.utwente.nl ([130.89.168.160]:34260 "EHLO
-	katherina.student.utwente.nl" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751361AbZKDUMp (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57437 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752579AbZKQOFR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 15:12:45 -0500
-Date: Wed, 4 Nov 2009 20:27:04 +0100
-From: Matthijs Kooijman <matthijs@stdin.nl>
-To: rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Cc: Tim Blechmann <tim@klingt.org>, linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] rt61pci bug
-Message-ID: <20091104192704.GJ3418@katherina.student.utwente.nl>
-References: <4AE43028.30703@klingt.org>
- <hcsfgm$bft$1@ger.gmane.org>
- <20091104185212.GL12965@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="WuedheRyq6FDfQ9j"
-In-Reply-To: <20091104185212.GL12965@tuxdriver.com>
+	Tue, 17 Nov 2009 09:05:17 -0500
+Subject: Re: [RFC] mac80211: disallow bridging managed/adhoc interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <20091117135817.GC27743@tuxdriver.com>
+References: <1258465585.3682.7.camel@johannes.local>
+	 <20091117135817.GC27743@tuxdriver.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-JRV/EpuRkHQhC324dy6n"
+Date: Tue, 17 Nov 2009 15:04:52 +0100
+Message-ID: <1258466692.3682.12.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---WuedheRyq6FDfQ9j
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-JRV/EpuRkHQhC324dy6n
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-> [ 1656.653963] Please file bug report to http://rt2x00.serialmonkey.com
+On Tue, 2009-11-17 at 08:58 -0500, John W. Linville wrote:
+
+> > To avoid such mistakes in the future, disallow adding a
+> > wireless interface to a bridge.
+> >=20
+> > Felix has recently added a four-address mode to the AP
+> > and client side that can be used (after negotiating that
+> > it is possible, which must happen out-of-band by setting
+> > up both sides) for bridging, so allow that case.
+> >=20
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 >=20
-> Is that message correct?  The bug reports link at the wiki seems a bit un=
-clear...
-Also, I just noticed that the "mailing lists" link in the first section, as
-well as the "LISTS" link in the menu bar at the top point to the old
-sourceforge lists page, which is empty.
+> ACK -- we get these complaints fairly often...
+>=20
+> I don't think I've sent the 4addr stuff to Dave yet.  Should I just
+> take this through my tree?
 
-Perhaps the frontpage should be reviewed a bit?
+After ack from Stephen maybe?
 
-Gr.
+johannes
 
-Matthijs
-
---WuedheRyq6FDfQ9j
+--=-JRV/EpuRkHQhC324dy6n
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
 
-iEYEARECAAYFAkrx1YgACgkQz0nQ5oovr7wpuwCfVBq1uzBsojHNqodgUQf5MX0a
-EDcAoLq/OZqdA4ZZiUE5SKHJZ9UJ5flg
-=4pgA
+iQIcBAABAgAGBQJLAq2BAAoJEODzc/N7+Qmaad4QAMJAXHaAV72jJRbUuIrIck2v
+p4CzJS4O0gOfTiKQ2P2dJxt84PZxRS0cDsmXdNT95ShAcTrnDo/g7wM0m32cp2kv
+uaLTrWkDb9agKstTFsWxmXlqZhXgm4wHjpsnmL0Hy8Qmr0Ia5zKvIuG/Oe9PvHBc
+TFfWQX78p3Q7DCpPDFXWbIcwG2S4CcMLroR+d1iO+SY0eGchAndkco39i60ZoB5D
+C9iQq9T+DmZB166BzT09pohCW7vR6BX8a3yeg6a4rwCJLLM/taRLic1XlryTk3z7
+K9WUU7PTFPDMHDdmjcUx+wTYPvywsmyYkfSmWFWYPz0U7uJY7vf0ExMqHIKfsRqr
+nSJpakHbaiTxTM3iB7IcPvnHgXarfUqILhv95QFQ7O0ehQZ0UHSyZXGXZRy+4BfR
+uR16aqT6xE0keSs7k6GUdprpUsgKRJqz7IQfKAuVL3xEN/TSqASO4EAVI4E0PZ3Z
+UpjMy6/G3RF2VkD/0ci7T0x3U6XiD0Csgu+EjgUhzuf98NYIwbFmKae1FcArN/XY
+XBEjw+3KSDTQbloJWGzBn093amx507VE+DW0riuuT2GUM0q5shYbg54O9wPGqACl
+Z3KQTZnwbcYQ6rK2aBP1puLp6ESL314MoOHWTIZO32MKzxd8PQSxTj4P3qlWH/Qh
+Cv1hU0oq5wm0LqVt4Jg7
+=m1uT
 -----END PGP SIGNATURE-----
 
---WuedheRyq6FDfQ9j--
+--=-JRV/EpuRkHQhC324dy6n--
+
