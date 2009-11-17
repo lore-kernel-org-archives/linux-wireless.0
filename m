@@ -1,141 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:61072 "EHLO
-	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751300AbZKNTUt (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33059 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756538AbZKQWrJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Nov 2009 14:20:49 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 1/2] rt2x00: Log RT/RF chipset information correctly.
-Date: Sat, 14 Nov 2009 20:20:35 +0100
-Message-Id: <1258226436-4673-2-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1258226436-4673-1-git-send-email-gwingerde@gmail.com>
-References: <1258226436-4673-1-git-send-email-gwingerde@gmail.com>
+	Tue, 17 Nov 2009 17:47:09 -0500
+Subject: Re: [RFC v2] mac80211: disallow bridging managed/adhoc interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <646765f40911171442m467efbc8ped7abc9d529ed095@mail.gmail.com>
+References: <1258465585.3682.7.camel@johannes.local>
+	 <1258490898.21197.42.camel@johannes.local>
+	 <646765f40911171442m467efbc8ped7abc9d529ed095@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-VP+zqB5ijd1Wo8y2Yors"
+Date: Tue, 17 Nov 2009 23:46:45 +0100
+Message-ID: <1258498005.30511.3.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some drivers (rt2800* most notably) cannot set the RF and RT chipset in
-the correct order to have the information logging in rt2x00_set_chip
-be correct.
-Fix this by decoupling the setting of the chipset information from the
-logging of the chipset information so that drivers can determine
-themselves when all information is set.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2400pci.c |    1 +
- drivers/net/wireless/rt2x00/rt2500pci.c |    1 +
- drivers/net/wireless/rt2x00/rt2500usb.c |    1 +
- drivers/net/wireless/rt2x00/rt2800lib.c |    1 +
- drivers/net/wireless/rt2x00/rt2x00.h    |   11 +++++++----
- drivers/net/wireless/rt2x00/rt61pci.c   |    1 +
- drivers/net/wireless/rt2x00/rt73usb.c   |    1 +
- 7 files changed, 13 insertions(+), 4 deletions(-)
+--=-VP+zqB5ijd1Wo8y2Yors
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 0f912f5..6e68bc7 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1341,6 +1341,7 @@ static int rt2400pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
- 	rt2x00pci_register_read(rt2x00dev, CSR0, &reg);
- 	rt2x00_set_chip_rf(rt2x00dev, value, reg);
-+	rt2x00_print_chip(rt2x00dev);
- 
- 	if (!rt2x00_rf(&rt2x00dev->chip, RF2420) &&
- 	    !rt2x00_rf(&rt2x00dev->chip, RF2421)) {
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 6618cbd..9a31e5e 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -1505,6 +1505,7 @@ static int rt2500pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
- 	rt2x00pci_register_read(rt2x00dev, CSR0, &reg);
- 	rt2x00_set_chip_rf(rt2x00dev, value, reg);
-+	rt2x00_print_chip(rt2x00dev);
- 
- 	if (!rt2x00_rf(&rt2x00dev->chip, RF2522) &&
- 	    !rt2x00_rf(&rt2x00dev->chip, RF2523) &&
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index bb64473..b2de43e 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1409,6 +1409,7 @@ static int rt2500usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
- 	rt2500usb_register_read(rt2x00dev, MAC_CSR0, &reg);
- 	rt2x00_set_chip(rt2x00dev, RT2570, value, reg);
-+	rt2x00_print_chip(rt2x00dev);
- 
- 	if (!rt2x00_check_rev(&rt2x00dev->chip, 0x000ffff0, 0) ||
- 	    rt2x00_check_rev(&rt2x00dev->chip, 0x0000000f, 0)) {
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index d88857c..c710805 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1854,6 +1854,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 			return -ENODEV;
- 		}
- 	}
-+	rt2x00_print_chip(rt2x00dev);
- 
- 	if (!rt2x00_rf(&rt2x00dev->chip, RF2820) &&
- 	    !rt2x00_rf(&rt2x00dev->chip, RF2850) &&
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 62da572..1cbb7ac 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -906,10 +906,6 @@ static inline void rt2x00_eeprom_write(struct rt2x00_dev *rt2x00dev,
- static inline void rt2x00_set_chip(struct rt2x00_dev *rt2x00dev,
- 				   const u16 rt, const u16 rf, const u32 rev)
- {
--	INFO(rt2x00dev,
--	     "Chipset detected - rt: %04x, rf: %04x, rev: %08x.\n",
--	     rt, rf, rev);
--
- 	rt2x00dev->chip.rt = rt;
- 	rt2x00dev->chip.rf = rf;
- 	rt2x00dev->chip.rev = rev;
-@@ -927,6 +923,13 @@ static inline void rt2x00_set_chip_rf(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_chip(rt2x00dev, rt2x00dev->chip.rt, rf, rev);
- }
- 
-+static inline void rt2x00_print_chip(struct rt2x00_dev *rt2x00dev)
-+{
-+	INFO(rt2x00dev,
-+	     "Chipset detected - rt: %04x, rf: %04x, rev: %08x.\n",
-+	     rt2x00dev->chip.rt, rt2x00dev->chip.rf, rt2x00dev->chip.rev);
-+}
-+
- static inline char rt2x00_rt(const struct rt2x00_chip *chipset, const u16 chip)
- {
- 	return (chipset->rt == chip);
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 6e46135..bf04605 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2300,6 +2300,7 @@ static int rt61pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
- 	rt2x00pci_register_read(rt2x00dev, MAC_CSR0, &reg);
- 	rt2x00_set_chip_rf(rt2x00dev, value, reg);
-+	rt2x00_print_chip(rt2x00dev);
- 
- 	if (!rt2x00_rf(&rt2x00dev->chip, RF5225) &&
- 	    !rt2x00_rf(&rt2x00dev->chip, RF5325) &&
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 7236f01..5bbcf66 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1825,6 +1825,7 @@ static int rt73usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
- 	rt2x00usb_register_read(rt2x00dev, MAC_CSR0, &reg);
- 	rt2x00_set_chip(rt2x00dev, RT2571, value, reg);
-+	rt2x00_print_chip(rt2x00dev);
- 
- 	if (!rt2x00_check_rev(&rt2x00dev->chip, 0x000ffff0, 0x25730) ||
- 	    rt2x00_check_rev(&rt2x00dev->chip, 0x0000000f, 0)) {
--- 
-1.6.5.2
+On Wed, 2009-11-18 at 09:42 +1100, Julian Calaby wrote:
+> On Wed, Nov 18, 2009 at 07:48, Johannes Berg <johannes@sipsolutions.net> =
+wrote:
+> > --- wireless-testing.orig/net/mac80211/iface.c  2009-11-17 14:20:19.000=
+000000 +0100
+> > +++ wireless-testing/net/mac80211/iface.c       2009-11-17 17:56:08.000=
+000000 +0100
+> > @@ -745,6 +745,11 @@ int ieee80211_if_change_type(struct ieee
+> >        if (type =3D=3D sdata->vif.type)
+> >                return 0;
+> >
+> > +       /* if it's part of a bridge, reject changing type to station/ib=
+ss */
+> > +       if (sdata->dev->br_port && (type =3D=3D NL80211_IFTYPE_ADHOC ||
+> > +                                   type =3D=3D NL80211_IFTYPE_STATION)=
+)
+> > +               return -EBUSY;
+>=20
+> Busy doesn't seem like the right error here ... maybe use -EOPNOTSUPP
+> like the next test?
+
+Not sure, it's a temporary error and you can fix it by removing it from
+the bridge, so it's "busy" in the sense that it is fixed to the current
+mode or any other bridging mode by being in the bridge ... it's not that
+it doesn't support the mode.
+
+johannes
+
+--=-VP+zqB5ijd1Wo8y2Yors
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLAyfSAAoJEODzc/N7+Qma8McP/RwWpszo+GBGcWAYraZSQ4QT
+JIcMBY0Pw/ri5Um9A3V+OBxi/tccUIvdd9+XDklcrOHd4x4TBXpP2S6JHczjYB7q
+iDxd8tYArYw1uH2wcSRjv75K1hXXm7VuComBPblajXf9eDnjSwlOkunYyPtRJPR7
+rO244YdlJ8NFOGRCcVT7FIpM3Tr2nuhKVGjiCJTnJbJMAssZWAJ07fS8zTwzc9j4
+81wV22wvi+us15QDSbPhPlLR/0p1eYMpSObniXiHHEMaNe79VcXZwY1lwBY/xlAv
+hpUamcqknMLCXRc32SidIjnfiIgSIBkyCpdxwUTB6oeEKu9zbs0jSrnpjOfcDVSS
+D/pdJq4Rid7Ia7XAqvKFAljo+DejHtRmxhu4yJcLy7nz6rvzjjssBdnKzhjkzyLX
+hdbULdX1fl0BxqwcQ7kie6UXck1xyoMFuCsVRRLczsvvePMf5ccE8xFZ0K2j2YQM
+BttuUBtqRDW/NQEPveDp3cLf5tONUKwNlTPkYsvFA9jD39D7Z0QiFjfDzi8UF2r1
+0gms8MwY0QXtDOqS6SBx2AQtUWgyL4KMnBtnhTs/3SWbzZh6HbRhoRnJLPASriVh
+Sr79lt9FITYvDupJxFnDUu2+Y/fWozQVT67YsUfCbHHwLtYShEQTTn+qSm/pBOpL
+uwl7xgBfh5COFs9cRQD1
+=QYw4
+-----END PGP SIGNATURE-----
+
+--=-VP+zqB5ijd1Wo8y2Yors--
 
