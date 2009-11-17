@@ -1,69 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.102.11.253]:57190 "EHLO
-	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751174AbZKZUNF (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:52744 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752678AbZKQQVi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 15:13:05 -0500
-From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
-Reply-To: 8an@praha12.net
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] API for setting ACK timeout
-Date: Thu, 26 Nov 2009 21:13:10 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200911261826.08576.8an@praha12.net> <200911262015.03106.8an@praha12.net> <1259263540.24540.9.camel@johannes.local>
-In-Reply-To: <1259263540.24540.9.camel@johannes.local>
+	Tue, 17 Nov 2009 11:21:38 -0500
+Received: by bwz27 with SMTP id 27so91710bwz.21
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2009 08:21:42 -0800 (PST)
+Message-ID: <4B02CD95.2010805@gmail.com>
+Date: Tue, 17 Nov 2009 17:21:41 +0100
+From: Piotr Findeisen <piotr.findeisen@gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1553928.F8ZZZseMbC";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200911262113.10847.8an@praha12.net>
+To: linux-wireless@vger.kernel.org
+Subject: unsupported TL-WN422G (0cf3:1006)
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig73451DD42CC59CF80E58AECC"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1553928.F8ZZZseMbC
-Content-Type: text/plain;
-  charset="utf-8"
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig73451DD42CC59CF80E58AECC
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On 26.11.2009 20:25 Johannes Berg wrote:
-> My standard reference was obviously crap -- let's see, 7.3.2.9 is
-> better.
-Yes, I found the table. And now I also noticed the real difference: the slo=
-t=20
-time according to the standard rises in a step of three (which means ACK=20
-timeout will rise in a step of six). It's quite significant loss of=20
-precision, but it probably shouldn't make much difference in throughput.
+Hi!
 
-Anyway, this solutions would be good enough for us if it was accepted. So y=
-ou=20
-propose to add parameter NL80211_ATTR_WIPHY_COVERAGE to nl80211 and functio=
-ns=20
-set_coverage/get_coverage to cfg80211_ops?
+I've bought TP-LINK WN422G USB wireless card with Zydas chipset (as
+stated by the seller) in the hope it will be supported by zd1211rw
+driver (listed here [1]), but it seems it's not.
+I've tried to find help on linuxforums.org <http://linuxforums.org> [2]
+=E2=80=94 the only open option is to use ndiswrapper, which (a) is report=
+ed not
+to work earlier in the thread and (b) is the last option for me to
+consider. Search in linux-wireless's archives yielded only a result [3]
+with a patch included in my kernel (Ubuntu-2.6.31-14.48).
 
-Lukas Turek
+My card's vendor:product id is 0cf3:1006 (different that the one listed
+[1] for WN422G).
+If i execute the following after plugging the card:
+echo "0cf3 1006 FFFFFFFF FFFFFFFF 0 0 1" | sudo tee -a
+/sys/bus/usb/drivers/zd1211rw/new_id
 
---nextPart1553928.F8ZZZseMbC
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+dmesg reports (notice the 5s interval between first and second entry):
+--------------
+[21745.628183] usb 2-1: reset high speed USB device using ehci_hcd and
+address 9
+[21750.776294] usb 2-1: read over firmware interface failed: -110
+[21750.888072] usb 2-1: reset high speed USB device using ehci_hcd and
+address 9
+[21751.085403] zd1211rw: probe of 2-1:1.0 failed with error -110
+--------------
+
+lsusb reports the card as
+Bus 002 Device 009: ID 0cf3:1006 Atheros Communications, Inc
+
+What I can do to better diagnose the problem and possibly get the card
+working?
+
+
+best regards,
+Piotr Findeisen
+
+
+[1] http://linuxwireless.org/en/users/Devices/USB
+[2]
+http://www.linuxforums.org/forum/wireless-internet/154830-tl-wn422g-probl=
+em-2.html
+[3] 5 messages on 2009-02-04,
+http://marc.info/?l=3Dlinux-wireless&w=3D2&r=3D1&s=3Dwn422g&q=3Db
+<http://marc.info/?l=3Dlinux-wireless&w=3D2&r=3D1&s=3Dwn422g&q=3Db>
+
+
+
+--------------enig73451DD42CC59CF80E58AECC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
+Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-iQIcBAABAgAGBQJLDuFWAAoJEEBjvk/UOfYwTIsQAIJoY0knE1YN7q6m20qhx7qO
-4uD6w8FYWPTV4zvyBjKwqx7AUG+SqyEOwSaCCo1dSbS0MKMg3cqWF3+yObwwn4eN
-ZslFdKVHdDNg1OLYHvqcAQIxO7PCfBN1unZYour5/adG9LC+DApCsSZtfCAIbpI2
-UQFarMtyzxbSPN72J/Cfd4GN3l0Uo9l3YKiAXF73UPruULz9fkh3dcnPuLPCvRSh
-dx+W2nHw7CTcCjFPdyIDAD2wn4zI4j1LhlyLSG9cGweBeqlRx3llN4TYl2XiT73e
-V/QJ8/pQTZ7cObWlwpiER4VQz0AwNGXum34oBgPI+pIsJ0wjLYpVDBS+1UAXccm6
-n/RM3sbLkrrC21BHIiqwQF8Rxjw8PM3kz2M+i3IMrD8pC0xptE9BV/A5XLCJhtJD
-BiEGOK8Bh4ITQSMj1GWjgymdB/3I3gO1heDZNePDwBiY4E8OVqW14E6TEkD5NvhL
-Qr3UHPLyA/VcUTE9f0kUj/Ag0DPq2ZlEulLED8Jb2hjZPEVy31YQxNTSxgqmFbU4
-6zePkDLMh2y+TTpFPYt9ZLAIDBmqxceR0fczIb3wIPW7q3jvxUP0tT5Qf5CUaZ7G
-haB6tzzL2b95It8vAx3prDsTnjOoWB8yuXkvbTH/5FH2dALjKVDoUZoNBCvL8p56
-euRpgvNIZqF8yOf3jRt2
-=HLx4
+iEYEARECAAYFAksCzZUACgkQhIjjAqQbQwMh4ACffE58tS4AXgCEXF1RWRoNuKMm
+XG8An1cfPzfmODoYUv9UiswqkMcRuEVq
+=ZMzS
 -----END PGP SIGNATURE-----
 
---nextPart1553928.F8ZZZseMbC--
+--------------enig73451DD42CC59CF80E58AECC--
