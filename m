@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:53574 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754161AbZKQVhS convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57766 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753185AbZKQOP3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 16:37:18 -0500
-Received: by iwn8 with SMTP id 8so378575iwn.33
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2009 13:37:24 -0800 (PST)
+	Tue, 17 Nov 2009 09:15:29 -0500
+Date: Tue, 17 Nov 2009 09:06:27 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [RFC] mac80211: disallow bridging managed/adhoc interfaces
+Message-ID: <20091117140626.GE27743@tuxdriver.com>
+References: <1258465585.3682.7.camel@johannes.local> <200911171504.54170.mb@bu3sch.de>
 MIME-Version: 1.0
-In-Reply-To: <45e8e6c40911171257m7c687380k6e6e2677fd11f851@mail.gmail.com>
-References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de>
-	<43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com>
-	<4B02DFF4.1060509@roinet.com> <45e8e6c40911171257m7c687380k6e6e2677fd11f851@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 17 Nov 2009 13:37:04 -0800
-Message-ID: <43e72e890911171337p4b0d97fcp844266137bb51b56@mail.gmail.com>
-Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and why?
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: David Acker <dacker@roinet.com>,
-	Michael Renzmann <mrenzmann@madwifi-project.org>,
-	madwifi-devel@lists.sourceforge.net,
-	madwifi-users@lists.sourceforge.net,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200911171504.54170.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 17, 2009 at 12:57 PM, Andrey Yurovsky <andrey@cozybit.com> wrote:
-> On Tue, Nov 17, 2009 at 9:40 AM, David Acker <dacker@roinet.com> wrote:
->>>>  1. What are you using MadWifi for?
->>
->> Wireless mesh on embedded systems.
+On Tue, Nov 17, 2009 at 03:04:52PM +0100, Michael Buesch wrote:
+> On Tuesday 17 November 2009 14:46:25 Johannes Berg wrote:
+> > --- wireless-testing.orig/net/bridge/br_if.c	2009-11-17 14:19:17.000000000 +0100
+> > +++ wireless-testing/net/bridge/br_if.c	2009-11-17 14:20:03.000000000 +0100
+> > @@ -390,6 +390,10 @@ int br_add_if(struct net_bridge *br, str
+> >  	if (dev->br_port != NULL)
+> >  		return -EBUSY;
+> >  
+> > +	/* No bridging devices that dislike that (e.g. wireless) */
+> > +	if (dev->priv_flags & IFF_DONT_BRIDGE)
+> > +		return -EINVAL;
+> 
+> -EOPNOTSUPP?
+> That would probably produce a better error message in userspace.
 
-I'm curious -- what type of Mesh were you talking about David? I
-didn't know MadWifi supported 802.11s so don't know if that is what
-you mean.
+Yes, good point.
 
-> FWIW ath5k has working draft-802.11s mesh mode, in fact it's one of
-> the better-supported drivers.
-
-Thanks for pointing that out Andrey.
-
-  Luis
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
