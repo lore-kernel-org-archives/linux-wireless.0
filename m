@@ -1,74 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:40424 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751593AbZKSXTO convert rfc822-to-8bit (ORCPT
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:54733 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751639AbZKQU5J convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2009 18:19:14 -0500
+	Tue, 17 Nov 2009 15:57:09 -0500
+Received: by pwi3 with SMTP id 3so229018pwi.21
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2009 12:57:14 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <43e72e890911161708o607da2a5hefe98e92fd13ee7a@mail.gmail.com>
-References: <4ADE2F66.1070703@gmail.com> <43e72e890911161515q64ff527cyefd7d769f3c501b@mail.gmail.com>
-	<a44ae5cd0911161641n36d3c746pb69a9cac1eba1784@mail.gmail.com>
-	<43e72e890911161708o607da2a5hefe98e92fd13ee7a@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 19 Nov 2009 15:19:00 -0800
-Message-ID: <43e72e890911191519h73bd6699if860257c049ba1a0@mail.gmail.com>
-Subject: Re: 2.6.32-rc5-git1 -- BUG kmalloc-8192: Poison overwritten (ath9k
-	implicated)
-To: Miles Lane <miles.lane@gmail.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4B02DFF4.1060509@roinet.com>
+References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de>
+	 <43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com>
+	 <4B02DFF4.1060509@roinet.com>
+Date: Tue, 17 Nov 2009 12:57:14 -0800
+Message-ID: <45e8e6c40911171257m7c687380k6e6e2677fd11f851@mail.gmail.com>
+Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and why?
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: David Acker <dacker@roinet.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Michael Renzmann <mrenzmann@madwifi-project.org>,
+	madwifi-devel@lists.sourceforge.net,
+	madwifi-users@lists.sourceforge.net,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 16, 2009 at 5:08 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Mon, Nov 16, 2009 at 4:41 PM, Miles Lane <miles.lane@gmail.com> wrote:
->> On Mon, Nov 16, 2009 at 6:15 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>> On Tue, Oct 20, 2009 at 1:45 PM, Miles Lane <miles.lane@gmail.com> wrote:
->>>> Let me know if you want my .config file.  I think this was triggered by
->>>> suspending my laptop.
->>>>
->>>> BUG kmalloc-8192: Poison overwritten
->>>
->>> Thanks for your report Miles.
->>>
->>> Are you using Linus' tree? Felix wrote some patches that got rid of
->>> the rate control private area which we kmalloc/kfree and at least one
->>> user reported that these patches fixed a memory leak. I'm curious if
->>> the same patches would resolve this issue.
->>>
->>> Only thing is these patches apply against wireless-testing and not
->>> 2.6.32. To test them you'd have to pull wireless-testing master to
->>> your tree and then apply the patches both before and after.
->>>
->>> Would you be up to try that?
->>
->> Yes, definitely.  Thanks.  I will try to accomplish this and let you
->> know if I get stuck.
+On Tue, Nov 17, 2009 at 9:40 AM, David Acker <dacker@roinet.com> wrote:
+>>> �1. What are you using MadWifi for?
 >
-> OK, not sure if a merge of wireless-testing will be clean so you may
-> want to just clone fresh.. Anyway after you get wireless-testing bits
-> you'll want to apply these:
->
-> http://patchwork.kernel.org/patch/60127/
-> http://patchwork.kernel.org/patch/60128/
-> http://patchwork.kernel.org/patch/60126/
->
-> If you want to merge wireless-testing you can try:
->
-> git merge git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
-> master
->
-> If that'd doesn't gos smooth just clone it and I think you should be
-> able to safely --reference your current tree for objects for Linus'
-> tree.
+> Wireless mesh on embedded systems.
 
-Miles I see no reply from you yet so I backported the patches in
-question for you. Can you please try 2.6.32-rc7 and apply these
-patches on top:
+FWIW ath5k has working draft-802.11s mesh mode, in fact it's one of
+the better-supported drivers.
 
-http://bombadil.infradead.org/~mcgrof/patches/ath9k/2009/11-19/70-mac80211-total-ampdu-tx-info.patch
-http://bombadil.infradead.org/~mcgrof/patches/ath9k/2009/11-19/71-ath9k-remove-tx_info_priv.patch
-
-  Luis
+  -Andrey
