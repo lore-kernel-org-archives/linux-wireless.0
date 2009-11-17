@@ -1,105 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:11940 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756087AbZKWXYL convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:43809 "EHLO
+	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751542AbZKQWDy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 18:24:11 -0500
-From: "Cahill, Ben M" <ben.m.cahill@intel.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
-Date: Mon, 23 Nov 2009 15:24:13 -0800
-Subject: RE: [ipw3945-devel] iwl3945 dies on module reload
-Message-ID: <02B3067C068D0549A8CCFCB17D4D318B4E6032E5@orsmsx502.amr.corp.intel.com>
-References: <1258968499.3271.5.camel@maxim-laptop>
-	<1258972050.7094.140.camel@johannes.local>
-	<1258973082.3675.0.camel@maxim-laptop>
-	<1258973362.7094.151.camel@johannes.local>
- <1258996575.9727.2.camel@maxim-laptop>
-In-Reply-To: <1258996575.9727.2.camel@maxim-laptop>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 17 Nov 2009 17:03:54 -0500
+Received: by fxm21 with SMTP id 21so512692fxm.21
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2009 14:03:59 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <cb0375e10911061145ja572542hde731eee7279ea1@mail.gmail.com>
+References: <cb0375e10911031538n62fe7473x4dd41329b9264b5c@mail.gmail.com>
+	 <1257327017.28469.76.camel@johannes.local>
+	 <cb0375e10911061145ja572542hde731eee7279ea1@mail.gmail.com>
+Date: Tue, 17 Nov 2009 17:03:59 -0500
+Message-ID: <cb0375e10911171403g7863a37bscafab483836573a@mail.gmail.com>
+Subject: Re: iwlwifi connection troubles, maybe aggregation related
+From: Andrew Lutomirski <luto@mit.edu>
+To: Johannes Berg <johannes@sipsolutions.net>, oliver.greg@gmail.com
+Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- 
+Greg: I'm not sure your bug is the same as mine.  I don't get oopses.
 
->-----Original Message-----
->From: Maxim Levitsky [mailto:maximlevitsky@gmail.com] 
->Sent: Monday, November 23, 2009 12:16 PM
->To: Johannes Berg
->Cc: linux-wireless; iwlwifi maling list
->Subject: [ipw3945-devel] iwl3945 dies on module reload
->
->When reloading the iwl3945 driver I often get this:
->
->
->[  830.333386] iwl3945: Intel(R) PRO/Wireless 3945ABG/BG 
->Network Connection driver for Linux, 1.2.26kds
->[  830.333407] iwl3945: Copyright(c) 2003-2009 Intel Corporation
->[  830.333536] iwl3945 0000:06:00.0: PCI INT A -> GSI 19 
->(level, low) -> IRQ 19
->[  830.374979] iwl3945 0000:06:00.0: Tunable channels: 13 
->802.11bg, 0 802.11a channels
->[  830.374995] iwl3945 0000:06:00.0: Detected Intel Wireless 
->WiFi Link 3945BG
->[  830.375163] iwl3945 0000:06:00.0: irq 32 for MSI/MSI-X
->[  830.376859] phy0: Selected rate control algorithm 'iwl-3945-rs'
->[  830.427214] iwl3945 0000:06:00.0: firmware: requesting 
->iwlwifi-3945-2.ucode
->[  830.526945] iwl3945 0000:06:00.0: loaded firmware version 15.32.2.9
->[  830.544236] CE: hpet increasing min_delta_ns to 15000 nsec
->[  830.575694] iwl3945 0000:06:00.0: BSM uCode verification 
->failed at addr 0x00003800+0 (of 900), is 0xa5a5a5a2, s/b 0xf802020
->[  830.578862] iwl3945 0000:06:00.0: Hardware error detected.  
->Restarting.
->[  832.570133] iwl3945 0000:06:00.0: Wait for START_ALIVE 
->timeout after 2000ms.
->[  832.622676] iwl3945 0000:06:00.0: BSM uCode verification 
->failed at addr 0x00003800+0 (of 900), is 0xa5a5a5a2, s/b 0xf802020
->[  832.625839] iwl3945 0000:06:00.0: Hardware error detected.  
->Restarting.
->[  834.620132] iwl3945 0000:06:00.0: Wait for START_ALIVE 
->timeout after 2000ms.
+This bug has been here for a long time and it's getting old, so it's
+now #2120 :)
 
-The 0xa5a5a5a2 signature indicates that the device is powered up and the PCI Express link is working, but somehow the device internals have not been powered up / initialized.
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2120
 
-Are you using a very recent version of the driver?  I've done some work in this area in the past couple of months.
+--Andy
 
--- Ben --
-
-
-
+On Fri, Nov 6, 2009 at 2:45 PM, Andrew Lutomirski <luto@mit.edu> wrote:
+> On Wed, Nov 4, 2009 at 4:30 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> On Tue, 2009-11-03 at 18:38 -0500, Andrew Lutomirski wrote:
+>>
+>>> iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:21:d8:49:4a:52 tid = 0
+>>
+>>> Turning on or off power management and fiddling with
+>>> no_sleep_autoadjust makes no difference.  Setting tx_agg_tid_enable to
+>>> zero in debugfs while the connection was working seemed to make it a
+>>> little more reliable (it lasted long enough to do "git pull" but not
+>>> much longer).
+>>>
+>>> After running "iw dev wlan0 disconnect" a few times, I start to get
+>>> errors like this:
+>>>
+>>> [18078.209635] iwlagn 0000:03:00.0: SENSITIVITY_CMD failed
+>>> [18078.313461] iwlagn 0000:03:00.0: No space for Tx
+>>> [18078.313467] iwlagn 0000:03:00.0: Error sending SENSITIVITY_CMD:
+>>> enqueue_hcmd failed: -28
+>>> [18078.313470] iwlagn 0000:03:00.0: SENSITIVITY_CMD failed
+>>> [18078.522409] iwlagn 0000:03:00.0: No space for Tx
+>>> [18078.522414] iwlagn 0000:03:00.0: Error sending SENSITIVITY_CMD:
+>>> enqueue_hcmd failed: -28
+>>
+>> Sounds like the firmware messes up ...
+>>
+>> Maybe as a first workaround you could modprobe iwlagn with
+>> 11n_disable=1. But I don't know at this point what the problem could be.
 >
+> 11n_disable50=1 seems to work.  I'll reply again if it stops working.
 >
->Note that I used antenna=2 parameter to experiment with 
->quality of reception of both antennas
->(this feature strangely works just fine....)
+> Do the Intel folks have any ideas?
 >
->I disabled this option, so next time I feel like rebooting my 
->system, I see if this option was the cause.
->(unlikely)
->
->
->Best regards,
->	Maxim Levitsky
->
->
->
->
->
->
->---------------------------------------------------------------
->---------------
->Let Crystal Reports handle the reporting - Free Crystal 
->Reports 2008 30-Day 
->trial. Simplify your report design, integration and deployment 
->- and focus on 
->what you do best, core application coding. Discover what's new with
->Crystal Reports now.  http://p.sf.net/sfu/bobj-july
->_______________________________________________
->Ipw3945-devel mailing list
->Ipw3945-devel@lists.sourceforge.net
->https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
+> Thanks,
+> Andy
 >
