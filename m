@@ -1,40 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:58803 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754384AbZKVEXE convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41159 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754609AbZKQQoM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Nov 2009 23:23:04 -0500
-Received: by fxm5 with SMTP id 5so3686756fxm.28
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Nov 2009 20:23:08 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <70f6a1ed0911210845s5dd46374ie74e6e105433dcae@mail.gmail.com>
-References: <70f6a1ed0911210845s5dd46374ie74e6e105433dcae@mail.gmail.com>
-Date: Sun, 22 Nov 2009 04:16:01 +0000
-Message-ID: <3ace41890911212016x5d051f7fk7fa0db14189adf9f@mail.gmail.com>
-Subject: Re: Using wireless-testing tree
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Duy Nguyen <dnlove@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 17 Nov 2009 11:44:12 -0500
+Subject: Re: [RFC] mac80211: disallow bridging managed/adhoc interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stephen Hemminger <shemminger@vyatta.com>
+Cc: Michael Buesch <mb@bu3sch.de>, netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <20091117083741.1b165274@nehalam>
+References: <1258465585.3682.7.camel@johannes.local>
+	 <200911171504.54170.mb@bu3sch.de> <1258466868.3682.13.camel@johannes.local>
+	 <20091117083741.1b165274@nehalam>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ptwFEf4fyZay9gg7e8zo"
+Date: Tue, 17 Nov 2009 17:43:43 +0100
+Message-ID: <1258476223.21197.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 21, 2009 at 4:45 PM, Duy Nguyen <dnlove@gmail.com> wrote:
 
-> 2) I have compat-wireless-2.6 tree in my wireless-testing tree.  I
-> still don't know how to create my own compat-wireless even after going
-> through the wiki online.
-> cd compat-wireless-2.6
-> make
-> but it complains about some errors.
+--=-ptwFEf4fyZay9gg7e8zo
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Updating compat-wireless is explained in one of the linuxwireless
-pages: In a nutshell, do something like this: (substituting the
-GIT_TREE value with your local wireless-testing checkout).
+On Tue, 2009-11-17 at 08:37 -0800, Stephen Hemminger wrote:
 
-export GIT_TREE="/home/Hin-Tak/git-stuff/wireless-testing/"
-./script/admin-refresh.sh
+> But there are people bridging wireless, and hostap even has a mode for
+> that.=20
 
-I don't know if using compat-wireless against wireless-testing kernel
-works... (they should be identical). But I know it is convenient to
-just build some drivers, so I hope it works.
+But that's the AP side, which this patch doesn't attempt to prevent. It
+just makes no sense to bridge when connected to an AP or part of an
+IBSS.
+
+johannes
+
+--=-ptwFEf4fyZay9gg7e8zo
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLAtK7AAoJEODzc/N7+QmaKVMQAMj3N0Kfy3bCDMkK7itoK1Rw
+HDrkc7tiOfTzgdVD3xsUaZaZcqnsuJi7U7xp0XfwDtkqUGXjQgEzjTrC7cCqPkcE
+7H/qeNCfrKIXzNKJF6Cni41U1J088s1ufFsa5PgoH8dJcET8xnys9wQ0jeXxwwFh
+BtOXaZngjy0KkP7K/yTVsTMdwAoa3NPg/2yzKRwl7YqDrRxInGeN8pRUEK2dpg0V
+qoqMkLJOoJEc4qvwo/3qxkgeiqIA38t0ib9LDT3lbDx+HK+XTG2p33lgvTwNOIFb
+hRiIITLcqTK4eY9Z/6PRCQTyhLYr7bkLgKe2BesGw6lFHH7VY/rJvA4UMJzQzx3w
+8474UIId1/luY8gpC38Wuo4GcZO/NDgegeX9vsgczoTstq7mUBmfRUEuVeB5cHeu
+MVwRGvh6SjzbMkGSlKCHY/hv5cCYl5StxfJRtXIC68+SAuc01tD64WAk2HX9k+px
+jTVSZCh4054hpFnfzhoBHW46cSq96DOtbZ83Zltf7yNIuyou2mY2hsedH3qZ6poc
+L/XJjUiOuA10fEJji6YW9ZbEpJ0tqGxPsSD1DbCEdVxVwkTs7+c6P/ywF281aLF+
+dbKfY7eyWrJ1++1SgyfUOsilwlTASjoa1gtKHIEmI2ba2/Q0Nw2Zjp8vVyAZdm91
+AKM6RXZ8+m5uIbuObQVk
+=gPCk
+-----END PGP SIGNATURE-----
+
+--=-ptwFEf4fyZay9gg7e8zo--
+
