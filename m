@@ -1,61 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:40316 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753255AbZKAUuR (ORCPT
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:64949 "EHLO
+	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753674AbZKQRsf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Nov 2009 15:50:17 -0500
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Frank Schaefer <schaefer.frank@gmx.net>
-Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB N devices in cdrom mode
-Date: Sun, 1 Nov 2009 21:49:56 +0100
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
-References: <200910171606.02961.oliver@neukum.org> <20091101183553.GB24436@one-eyed-alien.net> <4AEDEE7C.4010406@gmx.net>
-In-Reply-To: <4AEDEE7C.4010406@gmx.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <200911012149.57966.chunkeey@googlemail.com>
+	Tue, 17 Nov 2009 12:48:35 -0500
+Received: by fxm21 with SMTP id 21so245857fxm.21
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2009 09:48:40 -0800 (PST)
+From: Janakiram Sistla <janakiram.sistla@gmail.com>
+To: marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+	Janakiram Sistla <janakiram.sistla@gmail.com>
+Subject: [PATCH 1/1] Adding radio type FM
+Date: Tue, 17 Nov 2009 23:18:33 +0530
+Message-Id: <1258480113-20841-1-git-send-email-janakiram.sistla@gmail.com>
+In-Reply-To: <>
+References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 01 November 2009 21:24:28 Frank Schaefer wrote:
-> Matthew Dharm schrieb:
-> > On Sun, Nov 01, 2009 at 07:29:20PM +0100, Josua Dietze wrote:
-> >   
-> >> Frank Schaefer schrieb:
-> >>
-> >>     
-> >>> I really think the mode-switching should be done in the kernel and not
-> >>> in user-space for reasons of usability.
-> >>>       
-> >> What is wrong with an udev rule entry? By the way, did the "eject" 
-> >> command line tool work as well?
-> >>     
-> >
-> > And I think it should be done in userspace for issues of maintainability
-> > and useability.  It is much easier for users to upgrade their udev then
-> > their kernel.
-> >   
-> Maintainability for whom ? The kernel-devs or the distro-people and the
-> users ? ;)
-> 
-> Please think about the users. They don't know that they have to create
-> udev-rules or have to install additional packages like usb_modeswitch
-> (which is nevertheless a great tool !).
-> And even if they know, they don't want to do that. So it's up to the
-> distros to do this automatically, which will in reality never come true
-> for all devices and distros.
-yes, please think about the users!
+From: Janakiram Sistla <janakiram.sistla@gmail.com>
 
-All not-so-trival-changes have to go through wireless-testing / wireless-next,
-net-next, linux-next until it hits finally the mainline... And then only users
-which are able to update their kernels will benefit, *everyone else* has
-to wait until their distros to pick up the new kernel... this could be easily more
-than a year before the device will work right out of the box for *everyone else*.
+Adding radio type FM in RFKILL_TYPE_.FM belongs to
+same class of with both TX/RX capability.
 
-Therefore udev should be the way to go... and as a bonus: a userspace/udev solution 
-does work with older kernels right away!
+Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
+---
+ include/linux/rfkill.h |    1 +
+ net/rfkill/core.c      |    2 ++
+ 2 files changed, 3 insertions(+), 0 deletions(-)
 
-Regards,
-	Chr
+diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+index 3392c59..03f5598 100644
+--- a/include/linux/rfkill.h
++++ b/include/linux/rfkill.h
+@@ -45,6 +45,7 @@ enum rfkill_type {
+ 	RFKILL_TYPE_WIMAX,
+ 	RFKILL_TYPE_WWAN,
+ 	RFKILL_TYPE_GPS,
++	RFKILL_TYPE_FM,
+ 	NUM_RFKILL_TYPES,
+ };
+ 
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index ba2efb9..61b716e 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -590,6 +590,8 @@ static const char *rfkill_get_type_str(enum rfkill_type type)
+ 		return "wimax";
+ 	case RFKILL_TYPE_WWAN:
+ 		return "wwan";
++	case RFKILL_TYPE_FM:
++		return "fm";
+ 	case RFKILL_TYPE_GPS:
+ 		return "gps";
+ 	default:
+-- 
+1.5.4.3
+
