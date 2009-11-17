@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:26409 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755447AbZKIMl0 (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:17977 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754983AbZKQQt4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 07:41:26 -0500
-Received: by fg-out-1718.google.com with SMTP id e12so1189980fga.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 04:41:31 -0800 (PST)
-From: Rui Paulo <rpaulo@gmail.com>
+	Tue, 17 Nov 2009 11:49:56 -0500
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 14/16] wl1251: Send null data packet with "TODS" bit set
 To: linville@tuxdriver.com
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Rui Paulo <rpaulo@gmail.com>,
-	Javier Cardona <javier@cozybit.com>
-Subject: [PATCH 15/21] mac80211: set the AID field correctly for mesh peer frames
-Date: Mon,  9 Nov 2009 12:39:35 +0000
-Message-Id: <1257770381-7680-16-git-send-email-rpaulo@gmail.com>
-In-Reply-To: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
-References: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 17 Nov 2009 18:49:54 +0200
+Message-ID: <20091117164953.2236.66490.stgit@tikku>
+In-Reply-To: <20091117164614.2236.8543.stgit@tikku>
+References: <20091117164614.2236.8543.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This sets the AID field correctly for mesh peer confirm frames.
+From: Vidhya Govindan <vidhya.govindan@nokia.com>
 
-Signed-off-by: Rui Paulo <rpaulo@gmail.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
-Tested-by: Brian Cavagnolo <brian@cozybit.com>
+According to IEEE80211 standard all the data packets have to be sent with
+TODS bit set. This patch fixes the null data packet format which was sent
+without TODS bit set. This should fix many problems associated with
+power save. Janne Ylalehto also found this fix in the same time as mine,
+for a different bug he was working on.
+
+Signed-off-by: Vidhya Govindan <vidhya.govindan@nokia.com>
+Reviewed-by: Janne Ylalehto <janne.ylalehto@nokia.com>
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
- net/mac80211/mesh_plink.c |    3 ++-
+
+ drivers/net/wireless/wl12xx/wl1251_main.c |    3 ++-
  1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index cf12f61..ec68d20 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -181,7 +181,8 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		if (action == PLINK_CONFIRM) {
- 			pos = skb_put(skb, 4);
- 			/* two-byte status code followed by two-byte AID */
--			memset(pos, 0, 4);
-+			memset(pos, 0, 2);
-+			memcpy(pos + 2, &plid, 2);
- 		}
- 		mesh_mgmt_ies_add(skb, sdata);
- 	}
--- 
-1.5.6.5
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index 2e1c10f..ff4be7b 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -576,7 +576,8 @@ static int wl1251_build_null_data(struct wl1251 *wl)
+ 
+ 	memcpy(template.header.sa, wl->mac_addr, ETH_ALEN);
+ 	template.header.frame_ctl = cpu_to_le16(IEEE80211_FTYPE_DATA |
+-						IEEE80211_STYPE_NULLFUNC);
++						IEEE80211_STYPE_NULLFUNC |
++						IEEE80211_FCTL_TODS);
+ 
+ 	return wl1251_cmd_template_set(wl, CMD_NULL_DATA, &template,
+ 				       sizeof(template));
 
