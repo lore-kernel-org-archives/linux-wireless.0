@@ -1,118 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:5665 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932244AbZKDRev (ORCPT
+Received: from static-72-92-88-10.phlapa.fios.verizon.net ([72.92.88.10]:42284
+	"EHLO smtp.roinet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751968AbZKQVo1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 12:34:51 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 04 Nov 2009 18:34:32 +0100
-Message-Id: <20091104173432.28463.51210.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-Subject: [PATCH 21/41] rt2800usb: add rt2800_mcu_request() wrapper
+	Tue, 17 Nov 2009 16:44:27 -0500
+Message-ID: <4B03193E.2080304@roinet.com>
+Date: Tue, 17 Nov 2009 16:44:30 -0500
+From: David Acker <dacker@roinet.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Andrey Yurovsky <andrey@cozybit.com>,
+	Michael Renzmann <mrenzmann@madwifi-project.org>,
+	madwifi-devel@lists.sourceforge.net,
+	madwifi-users@lists.sourceforge.net,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and why?
+References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de> 	<43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com> 	<4B02DFF4.1060509@roinet.com> <45e8e6c40911171257m7c687380k6e6e2677fd11f851@mail.gmail.com> <43e72e890911171337p4b0d97fcp844266137bb51b56@mail.gmail.com>
+In-Reply-To: <43e72e890911171337p4b0d97fcp844266137bb51b56@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] rt2800usb: add rt2800_mcu_request() wrapper
+Luis R. Rodriguez wrote:
+> On Tue, Nov 17, 2009 at 12:57 PM, Andrey Yurovsky <andrey@cozybit.com> wrote:
+>> On Tue, Nov 17, 2009 at 9:40 AM, David Acker <dacker@roinet.com> wrote:
+>>>>>  1. What are you using MadWifi for?
+>>> Wireless mesh on embedded systems.
+> 
+> I'm curious -- what type of Mesh were you talking about David? I
+> didn't know MadWifi supported 802.11s so don't know if that is what
+> you mean.
+It is a non-802.11s protocol that predates 802.11s development by quite 
+awhile.  It runs over WDS links.  In theory it could run over anything 
+that supports dynamic creation and destruction of WDS links.
 
-Part of preparations for later code unification.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |   27 +++++++++++++++++----------
- 1 file changed, 17 insertions(+), 10 deletions(-)
+>> FWIW ath5k has working draft-802.11s mesh mode, in fact it's one of
+>> the better-supported drivers.
+> 
+> Thanks for pointing that out Andrey.
+Yes, that is good to hear.
 
-Index: b/drivers/net/wireless/rt2x00/rt2800usb.c
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -259,6 +259,13 @@ static void rt2800usb_mcu_request(struct
- 	mutex_unlock(&rt2x00dev->csr_mutex);
- }
- 
-+static inline void rt2800_mcu_request(struct rt2x00_dev *rt2x00dev,
-+				      const u8 command, const u8 token,
-+				      const u8 arg0, const u8 arg1)
-+{
-+	rt2800usb_mcu_request(rt2x00dev, command, token, arg0, arg1);
-+}
-+
- #ifdef CONFIG_RT2X00_LIB_DEBUGFS
- static const struct rt2x00debug rt2800usb_rt2x00debug = {
- 	.owner	= THIS_MODULE,
-@@ -319,10 +326,10 @@ static void rt2800usb_brightness_set(str
- 				   EEPROM_FREQ_LED_MODE);
- 
- 	if (led->type == LED_TYPE_RADIO) {
--		rt2800usb_mcu_request(led->rt2x00dev, MCU_LED, 0xff, ledmode,
-+		rt2800_mcu_request(led->rt2x00dev, MCU_LED, 0xff, ledmode,
- 				      enabled ? 0x20 : 0);
- 	} else if (led->type == LED_TYPE_ASSOC) {
--		rt2800usb_mcu_request(led->rt2x00dev, MCU_LED, 0xff, ledmode,
-+		rt2800_mcu_request(led->rt2x00dev, MCU_LED, 0xff, ledmode,
- 				      enabled ? (bg_mode ? 0x60 : 0xa0) : 0x20);
- 	} else if (led->type == LED_TYPE_QUALITY) {
- 		/*
-@@ -333,7 +340,7 @@ static void rt2800usb_brightness_set(str
- 		 * work with bitshifting:
- 		 *	(1 << level) - 1
- 		 */
--		rt2800usb_mcu_request(led->rt2x00dev, MCU_LED_STRENGTH, 0xff,
-+		rt2800_mcu_request(led->rt2x00dev, MCU_LED_STRENGTH, 0xff,
- 				      (1 << brightness / (LED_FULL / 6)) - 1,
- 				      polarity);
- 	}
-@@ -1243,13 +1250,13 @@ static int rt2800usb_load_firmware(struc
- 	/*
- 	 * Send signal to firmware during boot time.
- 	 */
--	rt2800usb_mcu_request(rt2x00dev, MCU_BOOT_SIGNAL, 0xff, 0, 0);
-+	rt2800_mcu_request(rt2x00dev, MCU_BOOT_SIGNAL, 0xff, 0, 0);
- 
- 	if ((chipset == 0x3070) ||
- 	    (chipset == 0x3071) ||
- 	    (chipset == 0x3572)) {
- 		udelay(200);
--		rt2800usb_mcu_request(rt2x00dev, MCU_CURRENT, 0, 0, 0);
-+		rt2800_mcu_request(rt2x00dev, MCU_CURRENT, 0, 0, 0);
- 		udelay(10);
- 	}
- 
-@@ -1885,15 +1892,15 @@ static int rt2800usb_enable_radio(struct
- 	 * Initialize LED control
- 	 */
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_LED1, &word);
--	rt2800usb_mcu_request(rt2x00dev, MCU_LED_1, 0xff,
-+	rt2800_mcu_request(rt2x00dev, MCU_LED_1, 0xff,
- 			      word & 0xff, (word >> 8) & 0xff);
- 
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_LED2, &word);
--	rt2800usb_mcu_request(rt2x00dev, MCU_LED_2, 0xff,
-+	rt2800_mcu_request(rt2x00dev, MCU_LED_2, 0xff,
- 			      word & 0xff, (word >> 8) & 0xff);
- 
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_LED3, &word);
--	rt2800usb_mcu_request(rt2x00dev, MCU_LED_3, 0xff,
-+	rt2800_mcu_request(rt2x00dev, MCU_LED_3, 0xff,
- 			      word & 0xff, (word >> 8) & 0xff);
- 
- 	return 0;
-@@ -1922,9 +1929,9 @@ static int rt2800usb_set_state(struct rt
- 			       enum dev_state state)
- {
- 	if (state == STATE_AWAKE)
--		rt2800usb_mcu_request(rt2x00dev, MCU_WAKEUP, 0xff, 0, 0);
-+		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, 0xff, 0, 0);
- 	else
--		rt2800usb_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0, 2);
-+		rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0, 2);
- 
- 	return 0;
- }
+-ack
+
+
