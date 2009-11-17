@@ -1,82 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54294 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753850AbZKPOYj (ORCPT
+Received: from mx1.HRZ.Uni-Dortmund.DE ([129.217.128.51]:47887 "EHLO
+	unimail.uni-dortmund.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753442AbZKQLYu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2009 09:24:39 -0500
-Message-Id: <20091116142412.978249174@sipsolutions.net>
-Date: Mon, 16 Nov 2009 15:21:35 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Jouni Malinen <j@w1.fi>
-Subject: [RFC 1/3] mac80211: move cmntr flag out of rx flags
-References: <20091116142134.288122270@sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 17 Nov 2009 06:24:50 -0500
+Message-ID: <4B0281CA.9030101@uni-dortmund.de>
+Date: Tue, 17 Nov 2009 11:58:18 +0100
+From: Thomas Klute <thomas2.klute@uni-dortmund.de>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org,
+	"Christian Lamparter" <chunkeey@web.de>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"Joerg Albert" <jal2@gmx.de>
+Subject: [PATCH] ar9170: Add support for D-Link DWA 160 A2
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The RX flags should soon be used only for flags
-that cannot change within an a-MPDU, so move the
-cooked monitor flag into the RX status flags.
+At least two revisions of the D-Link DWA 160 exist, called A1 and A2. A1
+(USB-ID 07d1:3c10) is already listed in usb.c as D-Link DWA 160A. A2
+(USB-ID 07d1:3a09) works if added to ar9170_usb_ids. I didn't do much
+testing until now, but I was able to connect to APs using WPA or WEP and
+transmit data. This patch is against current wireless-testing (rev
+b648d866b42a29f027262542d636155e3cb4b3cb).
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Summary:
+
+* Add model revision number to the comment for D-Link DWA 160 A1 (07d1:3c10)
+* Add support for D-Link DWA 160 A2 (07d1:3a09)
+
+Signed-off-by: Thomas Klute <thomas2.klute@uni-dortmund.de>
+
 ---
- include/net/mac80211.h     |    4 ++++
- net/mac80211/ieee80211_i.h |    3 +--
- net/mac80211/rx.c          |    4 ++--
- 3 files changed, 7 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ar9170/usb.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
---- wireless-testing.orig/include/net/mac80211.h	2009-11-16 15:11:58.000000000 +0100
-+++ wireless-testing/include/net/mac80211.h	2009-11-16 15:12:28.000000000 +0100
-@@ -510,6 +510,9 @@ ieee80211_tx_info_clear_status(struct ie
-  * @RX_FLAG_HT: HT MCS was used and rate_idx is MCS index
-  * @RX_FLAG_40MHZ: HT40 (40 MHz) was used
-  * @RX_FLAG_SHORT_GI: Short guard interval was used
-+ * @RX_FLAG_INTERNAL_CMTR: set internally after frame was reported
-+ *	on cooked monitor to avoid double-reporting it for multiple
-+ *	virtual interfaces
-  */
- enum mac80211_rx_flags {
- 	RX_FLAG_MMIC_ERROR	= 1<<0,
-@@ -523,6 +526,7 @@ enum mac80211_rx_flags {
- 	RX_FLAG_HT		= 1<<9,
- 	RX_FLAG_40MHZ		= 1<<10,
- 	RX_FLAG_SHORT_GI	= 1<<11,
-+	RX_FLAG_INTERNAL_CMTR	= 1<<12,
- };
- 
- /**
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-11-16 15:11:46.000000000 +0100
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-11-16 15:11:50.000000000 +0100
-@@ -162,8 +162,7 @@ typedef unsigned __bitwise__ ieee80211_r
- /* frame is destined to interface currently processed (incl. multicast frames) */
- #define IEEE80211_RX_RA_MATCH		BIT(1)
- #define IEEE80211_RX_AMSDU		BIT(2)
--#define IEEE80211_RX_CMNTR_REPORTED	BIT(3)
--#define IEEE80211_RX_FRAGMENTED		BIT(4)
-+#define IEEE80211_RX_FRAGMENTED		BIT(3)
- 
- struct ieee80211_rx_data {
- 	struct sk_buff *skb;
---- wireless-testing.orig/net/mac80211/rx.c	2009-11-16 15:12:38.000000000 +0100
-+++ wireless-testing/net/mac80211/rx.c	2009-11-16 15:13:15.000000000 +0100
-@@ -1864,7 +1864,7 @@ static void ieee80211_rx_cooked_monitor(
- 	struct net_device *prev_dev = NULL;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 
--	if (rx->flags & IEEE80211_RX_CMNTR_REPORTED)
-+	if (status->flag & RX_FLAG_INTERNAL_CMTR)
- 		goto out_free_skb;
- 
- 	if (skb_headroom(skb) < sizeof(*rthdr) &&
-@@ -1925,7 +1925,7 @@ static void ieee80211_rx_cooked_monitor(
- 	} else
- 		goto out_free_skb;
- 
--	rx->flags |= IEEE80211_RX_CMNTR_REPORTED;
-+	status->flag |= RX_FLAG_INTERNAL_CMTR;
- 	return;
- 
-  out_free_skb:
-
+diff --git a/drivers/net/wireless/ath/ar9170/usb.c
+b/drivers/net/wireless/ath/ar9170/usb.c
+index 6bdcdf6..e0799d9 100644
+--- a/drivers/net/wireless/ath/ar9170/usb.c
++++ b/drivers/net/wireless/ath/ar9170/usb.c
+@@ -68,8 +68,10 @@ static struct usb_device_id ar9170_usb_ids[] = {
+        { USB_DEVICE(0x0cf3, 0x1002) },
+        /* Cace Airpcap NX */
+        { USB_DEVICE(0xcace, 0x0300) },
+-       /* D-Link DWA 160A */
++       /* D-Link DWA 160 A1 */
+        { USB_DEVICE(0x07d1, 0x3c10) },
++       /* D-Link DWA 160 A2 */
++       { USB_DEVICE(0x07d1, 0x3a09) },
+        /* Netgear WNDA3100 */
+        { USB_DEVICE(0x0846, 0x9010) },
+        /* Netgear WN111 v2 */
 
