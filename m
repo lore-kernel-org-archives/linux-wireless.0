@@ -1,34 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:55448 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759767AbZKFUpK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 15:45:10 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Martin Fuzzey <mfuzzey@gmail.com>
-Subject: Re: b43: firmware loading problem and sleeping BUG
-Date: Fri, 6 Nov 2009 21:45:12 +0100
+Received: from smtp.nokia.com ([192.100.122.230]:53020 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754806AbZKQQuK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2009 11:50:10 -0500
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 15/16] wl1251: remove depcreated qual usage
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org
-References: <ba4215e10911060819y1175e003g695281fe084e07ab@mail.gmail.com> <ba4215e10911061027t413d2c34g8ad66a7982f7c43c@mail.gmail.com> <200911062008.06159.mb@bu3sch.de>
-In-Reply-To: <200911062008.06159.mb@bu3sch.de>
+Date: Tue, 17 Nov 2009 18:50:01 +0200
+Message-ID: <20091117165000.2236.74825.stgit@tikku>
+In-Reply-To: <20091117164614.2236.8543.stgit@tikku>
+References: <20091117164614.2236.8543.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200911062145.14448.mb@bu3sch.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 06 November 2009 20:08:04 Michael Buesch wrote:
-> On Friday 06 November 2009 19:27:17 Martin Fuzzey wrote:
-> > > I think this is easy to fix, because we can replace the spinlock by a mutex, as
-> > > the b43 driver (which is the only user of the code) always allows sleeping now.
-> > > I'll send a patch for testing soon.
-> > >
-> > Great - happy to test it.
-> 
-> There you go.
+From: Kalle Valo <kalle.valo@nokia.com>
 
-This doesn't actually work, because the lowlevel interrupt handler is atomic on PCMCIA.
-So scratch that patch, it will just oops your machine.
+Fixes warnings:
 
--- 
-Greetings, Michael.
+drivers/net/wireless/wl12xx/wl1251_rx.c: In function 'wl1251_rx_status':
+drivers/net/wireless/wl12xx/wl1251_rx.c:75:
+  warning: 'qual' is deprecated (declared at include/net/mac80211.h:555)
+drivers/net/wireless/wl12xx/wl1251_rx.c:77:
+  warning: 'qual' is deprecated (declared at include/net/mac80211.h:555)
+drivers/net/wireless/wl12xx/wl1251_rx.c:77:
+  warning: 'qual' is deprecated (declared at include/net/mac80211.h:555)
+drivers/net/wireless/wl12xx/wl1251_rx.c:77:
+  warning: 'qual' is deprecated (declared at include/net/mac80211.h:555)
+drivers/net/wireless/wl12xx/wl1251_rx.c:78:
+  warning: 'qual' is deprecated (declared at include/net/mac80211.h:555)
+drivers/net/wireless/wl12xx/wl1251_rx.c:78:
+  warning: 'qual' is deprecated (declared at include/net/mac80211.h:555)
+drivers/net/wireless/wl12xx/wl1251_rx.c:78:
+  warning: 'qual' is deprecated (declared at include/net/mac80211.h:555)
+
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+
+ drivers/net/wireless/wl12xx/wl1251_rx.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1251_rx.c b/drivers/net/wireless/wl12xx/wl1251_rx.c
+index 601fe0d..f84cc89 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_rx.c
++++ b/drivers/net/wireless/wl12xx/wl1251_rx.c
+@@ -72,10 +72,6 @@ static void wl1251_rx_status(struct wl1251 *wl,
+ 	}
+ 
+ 	status->signal = desc->rssi;
+-	status->qual = (desc->rssi - WL1251_RX_MIN_RSSI) * 100 /
+-		(WL1251_RX_MAX_RSSI - WL1251_RX_MIN_RSSI);
+-	status->qual = min(status->qual, 100);
+-	status->qual = max(status->qual, 0);
+ 
+ 	/*
+ 	 * FIXME: guessing that snr needs to be divided by two, otherwise
+
