@@ -1,122 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:64528 "EHLO
-	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752399AbZK3VJH (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46369 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752287AbZKQUsn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2009 16:09:07 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Benoit Papillault <benoit.papillault@free.fr>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH v3 3/4] rt2x00: Reorganize L2 padding inserting function.
-Date: Mon, 30 Nov 2009 22:08:17 +0100
-Message-Id: <1259615298-2305-4-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1259615298-2305-3-git-send-email-gwingerde@gmail.com>
-References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com>
- <1259615298-2305-2-git-send-email-gwingerde@gmail.com>
- <1259615298-2305-3-git-send-email-gwingerde@gmail.com>
+	Tue, 17 Nov 2009 15:48:43 -0500
+Subject: [RFC v2] mac80211: disallow bridging managed/adhoc interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: netdev <netdev@vger.kernel.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <1258465585.3682.7.camel@johannes.local>
+References: <1258465585.3682.7.camel@johannes.local>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 17 Nov 2009 21:48:18 +0100
+Message-ID: <1258490898.21197.42.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simplify the rt2x00queue_insert_l2pad function by handling the alignment
-operations one by one. Do not special case special circumstances.
-Basically first perform header alignment, and then perform payload alignment
-(if any payload does exist). This results in a properly aligned skb.
+A number of people have tried to add a wireless interface
+(in managed mode) to a bridge and then complained that it
+doesn't work. It cannot work, however, because in 802.11
+networks all packets need to be acknowledged and as such
+need to be sent to the right address. Promiscuous doesn't
+help here. The wireless address format used for these
+links has only space for three addresses, the
+ * transmitter, which must be equal to the sender (origin)
+ * receiver (on the wireless medium), which is the AP in
+   the case of managed mode
+ * the recipient (destination), which is on the APs local
+   network segment
 
-The end result is better readable code, with better results, as now L2 padding
-is inserted only when a payload is actually present in the frame.
+In an IBSS, it is similar, but the receiver and recipient
+must match and the third address is used as the BSSID.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+To avoid such mistakes in the future, disallow adding a
+wireless interface to a bridge.
+
+Felix has recently added a four-address mode to the AP
+and client side that can be used (after negotiating that
+it is possible, which must happen out-of-band by setting
+up both sides) for bridging, so allow that case.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/rt2x00/rt2x00queue.c |   60 +++++++++++++----------------
- 1 files changed, 27 insertions(+), 33 deletions(-)
+v2: * change error code as requested by Michael
+    * disallow changing wireless mode on a bridged iface
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 719f4ae..7452fa8 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -177,45 +177,38 @@ void rt2x00queue_align_payload(struct sk_buff *skb, unsigned int header_length)
+Should more (all?) of this be in cfg80211?
+
+ include/linux/if.h   |    1 +
+ net/bridge/br_if.c   |    4 ++++
+ net/mac80211/cfg.c   |    9 ++++++++-
+ net/mac80211/iface.c |   22 ++++++++++++++++++++--
+ 4 files changed, 33 insertions(+), 3 deletions(-)
+
+--- wireless-testing.orig/include/linux/if.h	2009-11-17 14:18:36.000000000 +0100
++++ wireless-testing/include/linux/if.h	2009-11-17 14:19:04.000000000 +0100
+@@ -70,6 +70,7 @@
+ #define IFF_XMIT_DST_RELEASE 0x400	/* dev_hard_start_xmit() is allowed to
+ 					 * release skb->dst
+ 					 */
++#define IFF_DONT_BRIDGE 0x800		/* disallow bridging this ether dev */
  
- void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
- {
--	unsigned int frame_length = skb->len;
-+	unsigned int payload_length = skb->len - header_length;
- 	unsigned int header_align = ALIGN_SIZE(skb, 0);
- 	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
- 	unsigned int l2pad = L2PAD_SIZE(header_length);
+ #define IF_GET_IFACE	0x0001		/* for querying only */
+ #define IF_GET_PROTO	0x0002
+--- wireless-testing.orig/net/bridge/br_if.c	2009-11-17 14:19:17.000000000 +0100
++++ wireless-testing/net/bridge/br_if.c	2009-11-17 15:07:59.000000000 +0100
+@@ -390,6 +390,10 @@ int br_add_if(struct net_bridge *br, str
+ 	if (dev->br_port != NULL)
+ 		return -EBUSY;
  
--	if (header_align == payload_align) {
--		/*
--		 * Both header and payload must be moved the same
--		 * amount of bytes to align them properly. This means
--		 * we don't use the L2 padding but just move the entire
--		 * frame.
--		 */
--		rt2x00queue_align_frame(skb);
--	} else if (!payload_align) {
--		/*
--		 * Simple L2 padding, only the header needs to be moved,
--		 * the payload is already properly aligned.
--		 */
--		skb_push(skb, header_align);
--		memmove(skb->data, skb->data + header_align, header_length);
--	} else {
--		/*
--		 *
--		 * Complicated L2 padding, both header and payload need
--		 * to be moved. By default we only move to the start
--		 * of the buffer, so our header alignment needs to be
--		 * increased if there is not enough room for the header
--		 * to be moved.
--		 */
--		if (payload_align > header_align)
--			header_align += 4;
-+	/*
-+	 * Adjust the header alignment if the payload needs to be moved more
-+	 * than the header.
-+	 */
-+	if (payload_align > header_align)
-+		header_align += 4;
++	/* No bridging devices that dislike that (e.g. wireless) */
++	if (dev->priv_flags & IFF_DONT_BRIDGE)
++		return -EOPNOTSUPP;
 +
-+	/* There is nothing to do if no alignment is needed */
-+	if (!header_align)
-+		return;
+ 	p = new_nbp(br, dev);
+ 	if (IS_ERR(p))
+ 		return PTR_ERR(p);
+--- wireless-testing.orig/net/mac80211/cfg.c	2009-11-17 14:21:24.000000000 +0100
++++ wireless-testing/net/mac80211/cfg.c	2009-11-17 14:37:13.000000000 +0100
+@@ -106,8 +106,15 @@ static int ieee80211_change_iface(struct
+ 					    params->mesh_id_len,
+ 					    params->mesh_id);
  
--		skb_push(skb, header_align);
--		memmove(skb->data, skb->data + header_align, header_length);
-+	/* Reserve the amount of space needed in front of the frame */
-+	skb_push(skb, header_align);
+-	if (params->use_4addr >= 0)
++	if (params->use_4addr >= 0) {
+ 		sdata->use_4addr = !!params->use_4addr;
++		sdata->dev->priv_flags &= ~IFF_DONT_BRIDGE;
 +
-+	/*
-+	 * Move the header.
-+	 */
-+	memmove(skb->data, skb->data + header_align, header_length);
++		if ((sdata->vif.type == NL80211_IFTYPE_STATION ||
++		     sdata->vif.type == NL80211_IFTYPE_ADHOC) &&
++		    !sdata->use_4addr)
++			sdata->dev->priv_flags |= IFF_DONT_BRIDGE;
++	}
+ 
+ 	if (sdata->vif.type != NL80211_IFTYPE_MONITOR || !flags)
+ 		return 0;
+--- wireless-testing.orig/net/mac80211/iface.c	2009-11-17 14:20:19.000000000 +0100
++++ wireless-testing/net/mac80211/iface.c	2009-11-17 17:56:08.000000000 +0100
+@@ -745,6 +745,11 @@ int ieee80211_if_change_type(struct ieee
+ 	if (type == sdata->vif.type)
+ 		return 0;
+ 
++	/* if it's part of a bridge, reject changing type to station/ibss */
++	if (sdata->dev->br_port && (type == NL80211_IFTYPE_ADHOC ||
++				    type == NL80211_IFTYPE_STATION))
++		return -EBUSY;
 +
-+	/* Move the payload, if present and if required */
-+	if (payload_length && payload_align)
- 		memmove(skb->data + header_length + l2pad,
- 			skb->data + header_length + l2pad + payload_align,
--			frame_length - header_length);
--		skb_trim(skb, frame_length + l2pad);
--	}
-+			payload_length);
-+
-+	/* Trim the skb to the correct size */
-+	skb_trim(skb, header_length + l2pad + payload_length);
+ 	/* Setting ad-hoc mode on non-IBSS channel is not supported. */
+ 	if (sdata->local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS &&
+ 	    type == NL80211_IFTYPE_ADHOC)
+@@ -769,6 +774,11 @@ int ieee80211_if_change_type(struct ieee
+ 			sdata->local->hw.conf.channel->band);
+ 	sdata->drop_unencrypted = 0;
+ 	sdata->use_4addr = 0;
++	if (sdata->vif.type == NL80211_IFTYPE_STATION ||
++	    sdata->vif.type == NL80211_IFTYPE_ADHOC)
++		sdata->dev->priv_flags |= IFF_DONT_BRIDGE;
++	else
++		sdata->dev->priv_flags &= ~IFF_DONT_BRIDGE;
+ 
+ 	return 0;
  }
+@@ -843,8 +853,16 @@ int ieee80211_if_add(struct ieee80211_lo
+ 					    params->mesh_id_len,
+ 					    params->mesh_id);
  
- void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int header_length)
-@@ -343,7 +336,8 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 	 * Header and alignment information.
- 	 */
- 	txdesc->header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
--	if (test_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags))
-+	if (test_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags) &&
-+	    (entry->skb->len > txdesc->header_length))
- 		txdesc->l2pad = L2PAD_SIZE(txdesc->header_length);
+-	if (params && params->use_4addr >= 0)
+-		sdata->use_4addr = !!params->use_4addr;
++	if (sdata->vif.type == NL80211_IFTYPE_STATION ||
++	    sdata->vif.type == NL80211_IFTYPE_ADHOC)
++		sdata->dev->priv_flags |= IFF_DONT_BRIDGE;
++	else
++		sdata->dev->priv_flags &= ~IFF_DONT_BRIDGE;
++
++	if (params && params->use_4addr > 0) {
++		sdata->use_4addr = true;
++		sdata->dev->priv_flags &= ~IFF_DONT_BRIDGE;
++	}
  
- 	/*
--- 
-1.6.5.3
+ 	mutex_lock(&local->iflist_mtx);
+ 	list_add_tail_rcu(&sdata->list, &local->interfaces);
+
 
