@@ -1,91 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.221.174]:47784 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751281AbZKDFuR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 00:50:17 -0500
-Received: by qyk4 with SMTP id 4so3263650qyk.33
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2009 21:50:22 -0800 (PST)
-Message-ID: <4AF1161D.8070708@gmail.com>
-Date: Wed, 04 Nov 2009 00:50:21 -0500
-From: Richard Farina <sidhayn@gmail.com>
+Received: from venema.h4ckr.net ([217.24.1.135]:40857 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752844AbZKQQXM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2009 11:23:12 -0500
+Message-ID: <1803.194.45.26.221.1258473872.squirrel@webmail.madwifi-project.org>
+Date: Tue, 17 Nov 2009 17:04:32 +0100 (CET)
+Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for,
+      and why?
+From: "Michael Renzmann" <mrenzmann@madwifi-project.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: madwifi-devel@lists.sourceforge.net,
+	madwifi-users@lists.sourceforge.net,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: Possible fix for rtl8187: kernel oops when leds enabled
-References: <4AE5BD6C.2050303@gmail.com> <4AE5C55B.5070309@lwfinger.net> <4AE5CDCB.8090400@gmail.com> <4AF0BB45.5000402@lwfinger.net>
-In-Reply-To: <4AF0BB45.5000402@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de>     
+     <43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com>
+In-Reply-To: <43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> Rick,
->
-> Does this patch fix your problem? I tried to bisect this problem as it
-> looked like a regression; however, the problem was sometimes a little
-> flakey. On one boot of a given kernel, it might run for 3-400 cycles
-> without failing, then fail immediately after rebooting. I suspect that
-> the random contents of some memory location would control that.
->
->   
+[Removed linux-kernel from CC, having this discussion on three mailing
+lists is more than enough]
 
-Larry,
-As you mentioned, this bug was not 100% reliable to reproduce in the 
-first place for either of us, I merely had a much much higher chance of 
-panick for some unknown reason.  That said, I have plugged and unplugged 
-the device a few dozen times while bringing the interface up and down 
-and making the led blink and I'm thrilled to say it no longer kernel 
-panicks on my system.  I'm left with a usable wifi card with a cool 
-flashing led, many thanks for fixing this.
+Hi Luis.
 
-John,
+Luis R. Rodriguez wrote:
+> So some sort of survey on this on madwifi-devel is not fair or just
+> to ath5k/ath9k as the only thing it would bring out is those romantics
+> still reading madwifi-devel due to some sort of attachment to it.
 
-imho this patch should go upstream asap, next dot release if at all 
-possible.  This fixes a significant issue in that the kernel panicked on 
-my system nearly 100% of the time on unplug if the led was enabled.  
-Either way it is up to the maintainers but consider this my vote of 
-confidence.
+I did ask on madwifi-devel and madwifi-users because these are the lists
+where we can reach those who still stick to MadWifi. The whole idea of the
+survey is to learn about their reasons, to find out what exactly prevents
+them from switching to ath[59]k. Thus it was a natural and intentional
+choice - where else would you have asked these questions?
 
-Acked-By: Rick Farina
-Tested-By: Rick Farina
+I disagree about your point on fairness. The survey will hopefully result
+in information that we don't seem to have so far, helping those who
+actively work on ath[59]k to determine which features the users are
+missing in both drivers. This survey is working *towards* ath[59]k, not
+against them.
 
-Thanks,
-Rick Farina
+> Madwifi's future as a Linux driver does not depend on what users wish
+> would happen on a legacy driver due to romantic experiences with it
+> with extensive features and its history.
 
-> This patch was inspired by the code in p54usb, which does not have the
-> problem.
->
->
-> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_leds.c
-> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
-> @@ -210,10 +210,10 @@ void rtl8187_leds_exit(struct ieee80211_
->
->  	/* turn the LED off before exiting */
->  	ieee80211_queue_delayed_work(dev, &priv->led_off, 0);
-> -	cancel_delayed_work_sync(&priv->led_off);
-> -	cancel_delayed_work_sync(&priv->led_on);
->  	rtl8187_unregister_led(&priv->led_rx);
->  	rtl8187_unregister_led(&priv->led_tx);
-> +	cancel_delayed_work_sync(&priv->led_off);
-> +	cancel_delayed_work_sync(&priv->led_on);
->  }
->  #endif /* def CONFIG_RTL8187_LED */
->
-> Thanks for testing,
->
-> Larry
->
->
->
->
->
->
->
->   
+The development of any software should happen with the user's needs and
+requirements in mind, since otherwise that software won't have users and
+all effort spent on the development is a waste. Just doing development
+"the right way" does not guarantee that the result of such development is
+what users actually need and can work with. That's probably especially
+true if one intends to replace an established software by another one.
+
+Again: there must be reasons why a significant amount of MadWifi users
+didn't switch to ath[59]k yet, and we don't seem to have exact ideas what
+these reasons are. Listening to these user to see what can be done to make
+them *want* to switch appears like a good idea to me. At least it's better
+than plainly putting them off with the "take it or leave it,
+romantics!"-like approach you (being an Atheros employee) promote despite
+the fact that those who "leave it" may reconsider their decision for
+Atheros-based equipment.
+
+Bye, Mike
 
