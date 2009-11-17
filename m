@@ -1,50 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:51020 "EHLO vs166246.vserver.de"
+Received: from smtp1.irobot.com ([206.83.81.187]:29168 "EHLO smtp1.irobot.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752906AbZKVSTM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Nov 2009 13:19:12 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] b43: Rewrite DMA Tx status handling sanity checks
-Date: Sun, 22 Nov 2009 19:19:00 +0100
-Cc: bcm43xx-dev@lists.berlios.de,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-References: <200911192224.29491.mb@bu3sch.de> <200911221852.19143.mb@bu3sch.de> <4B097EE8.10902@lwfinger.net>
-In-Reply-To: <4B097EE8.10902@lwfinger.net>
+	id S1753523AbZKQRjp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2009 12:39:45 -0500
+Message-ID: <4B02DFE3.9040602@irobot.com>
+Date: Tue, 17 Nov 2009 09:39:47 -0800
+From: Adam Wozniak <awozniak@irobot.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200911221919.02550.mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Derek Smithies <derek@indranet.co.nz>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: Re: Adhoc networking, was Re: compat-wireless and minstrel
+References: <4AF0D54D.4090303@irobot.com>	 <alpine.DEB.2.00.0911111508391.6214@kauri.acheron.indranet.co.nz>	 <4AFC655A.5020706@irobot.com> <200911122103.27455.chunkeey@googlemail.com>	 <4AFC8E4F.5090307@irobot.com>  <4AFC8F0D.5020700@irobot.com>	 <1258097352.3899.75.camel@johannes.local>  <4AFDDF19.8060202@irobot.com>	 <1258191039.6167.40.camel@johannes.local>  <4B018B26.2070008@irobot.com>	 <1258392453.32159.28.camel@johannes.local> <4B0192A6.9050808@irobot.com>	 <alpine.DEB.2.00.0911170938380.3829@kauri.acheron.indranet.co.nz>	 <4B01D4A5.7060204@irobot.com>	 <alpine.DEB.2.00.0911171156210.3829@kauri.acheron.indranet.co.nz>	 <4B01E298.3030602@irobot.com>	 <alpine.DEB.2.00.0911171314470.3829@kauri.acheron.indranet.co.nz> <1258443484.1375.8.camel@johannes.local>
+In-Reply-To: <1258443484.1375.8.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 22 November 2009 19:11:52 Larry Finger wrote:
-> On 11/22/2009 11:52 AM, Michael Buesch wrote:
-> > On Thursday 19 November 2009 22:24:29 Michael Buesch wrote:
-> >> This rewrites the error handling policies in the TX status handler.
-> >> It tries to be error-tolerant as in "try hard to not crash the machine".
-> >> It won't recover from errors (that are bugs in the firmware or driver),
-> >> because that's impossible. However, it will return a more or less useful
-> >> error message and bail out. It also tries hard to use rate-limited messages
-> >> to not flood the syslog in case of a failure.
-> >>
-> >> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> > 
-> > So did somebody try this with opensource firmware, yet?
-> 
-> I'm testing now. So far, it has survived about 18 hours running tcpperf in one
-> console, and a flood ping in another.
+Johannes Berg wrote:
+> No, point a) is incorrect -- it is the _basic_ rate set only, not the
+> entire rate set. Hence not knowing which rates a station actually
+> supports.
+>   
+In either case, having minstrel use all rates doesn't seem like it 
+should hurt much.  This is the patch I'm running with now, and it seems 
+to work.  The changes in ibss.c make sure supp_rates is initialized 
+properly, and that rate control is called when a change occurs.  If 
+other stuff is working right (?) this should help PID and other rate 
+control algorithms.  The changes in rc80211_minstrel.c make it ignore 
+the supported rates set and just try everything.
 
-Cool. Thanks for testing. I'd have expected it to blow up, though. It's a little bit
-strange, because there still are reports of blowing up opensource firmware. This patch
-should produce better error messages in that case (it will not fix the blown firmware).
 
-> It looks really good, but I want at least 
-> 24 hours before committing.
+diff -upr compat-wireless-2009-11-17/net/mac80211/ibss.c 
+compat-wireless-2009-11-17a/net/mac80211/ibss.c
+--- compat-wireless-2009-11-17/net/mac80211/ibss.c    2009-11-16 
+21:17:21.000000000 -0800
++++ compat-wireless-2009-11-17a/net/mac80211/ibss.c    2009-11-17 
+09:01:54.287720290 -0800
+@@ -246,9 +246,13 @@ static void ieee80211_rx_bss_info(struct
+     if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
+         return;
+ 
++    supp_rates = ieee80211_sta_get_rates(local, elems, band);
++
++    /* make sure mandatory rates are always added */
++    supp_rates |= ieee80211_mandatory_rates(local, band);
++
+     if (sdata->vif.type == NL80211_IFTYPE_ADHOC && elems->supp_rates &&
+         memcmp(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0) {
+-        supp_rates = ieee80211_sta_get_rates(local, elems, band);
+ 
+         rcu_read_lock();
+ 
+@@ -257,12 +261,10 @@ static void ieee80211_rx_bss_info(struct
+             u32 prev_rates;
+ 
+             prev_rates = sta->sta.supp_rates[band];
+-            /* make sure mandatory rates are always added */
+-            sta->sta.supp_rates[band] = supp_rates |
+-                ieee80211_mandatory_rates(local, band);
++            sta->sta.supp_rates[band] = supp_rates;
+ 
++            if (sta->sta.supp_rates[band] != prev_rates) {
+ #ifdef CONFIG_MAC80211_IBSS_DEBUG
+-            if (sta->sta.supp_rates[band] != prev_rates)
+                 printk(KERN_DEBUG "%s: updated supp_rates set "
+                     "for %pM based on beacon info (0x%llx | "
+                     "0x%llx -> 0x%llx)\n",
+@@ -272,6 +274,8 @@ static void ieee80211_rx_bss_info(struct
+                     (unsigned long long) supp_rates,
+                     (unsigned long long) sta->sta.supp_rates[band]);
+ #endif
++                rate_control_rate_init(sta);
++            }
+         } else
+             ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 
+supp_rates);
+ 
+@@ -415,6 +419,15 @@ struct sta_info *ieee80211_ibss_add_sta(
+     sta->sta.supp_rates[band] = supp_rates |
+             ieee80211_mandatory_rates(local, band);
+ 
++#ifdef CONFIG_MAC80211_IBSS_DEBUG
++    printk(KERN_DEBUG "%s: initialized supp_rates set "
++        "for %pM (0x%llx) (band %d)\n",
++        sdata->dev->name,
++        sta->sta.addr,
++        (unsigned long long) sta->sta.supp_rates[band],
++        band);
++#endif
++
+     rate_control_rate_init(sta);
+ 
+     if (sta_info_insert(sta))
+diff -upr compat-wireless-2009-11-17/net/mac80211/rc80211_minstrel.c 
+compat-wireless-2009-11-17a/net/mac80211/rc80211_minstrel.c
+--- compat-wireless-2009-11-17/net/mac80211/rc80211_minstrel.c    
+2009-11-16 21:17:21.000000000 -0800
++++ compat-wireless-2009-11-17a/net/mac80211/rc80211_minstrel.c    
+2009-11-17 09:02:25.544628968 -0800
+@@ -395,8 +395,6 @@ minstrel_rate_init(void *priv, struct ie
+         unsigned int tx_time_single;
+         unsigned int cw = mp->cw_min;
+ 
+-        if (!rate_supported(sta, sband->band, i))
+-            continue;
+         n++;
+         memset(mr, 0, sizeof(*mr));
+ 
 
-Well, no. Just commit it, please. If this breaks, the _firmware_ has to be fixed.
-Not the patch.
-
--- 
-Greetings, Michael.
