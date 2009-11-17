@@ -1,64 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49658 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932135AbZKKXnL (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36706 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753765AbZKQSpd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 18:43:11 -0500
-Subject: Re: Please share info about power consumption characteristics of
- your USB adapter
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200911112219.08814.jkrzyszt@tis.icnet.pl>
-References: <200911112219.08814.jkrzyszt@tis.icnet.pl>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-6f8LZVrshsY1BiXwYBj6"
-Date: Thu, 12 Nov 2009 00:42:41 +0100
-Message-ID: <1257982961.7037.194.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 17 Nov 2009 13:45:33 -0500
+Date: Tue, 17 Nov 2009 13:31:50 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Janakiram Sistla <janakiram.sistla@gmail.com>
+Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] Adding radio type FM
+Message-ID: <20091117183150.GA31701@tuxdriver.com>
+References: <> <1258480113-20841-1-git-send-email-janakiram.sistla@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1258480113-20841-1-git-send-email-janakiram.sistla@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Nov 17, 2009 at 11:18:33PM +0530, Janakiram Sistla wrote:
+> From: Janakiram Sistla <janakiram.sistla@gmail.com>
+> 
+> Adding radio type FM in RFKILL_TYPE_.FM belongs to
+> same class of with both TX/RX capability.
+> 
+> Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
+> ---
+>  include/linux/rfkill.h |    1 +
+>  net/rfkill/core.c      |    2 ++
+>  2 files changed, 3 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+> index 3392c59..03f5598 100644
+> --- a/include/linux/rfkill.h
+> +++ b/include/linux/rfkill.h
+> @@ -45,6 +45,7 @@ enum rfkill_type {
+>  	RFKILL_TYPE_WIMAX,
+>  	RFKILL_TYPE_WWAN,
+>  	RFKILL_TYPE_GPS,
+> +	RFKILL_TYPE_FM,
+>  	NUM_RFKILL_TYPES,
+>  };
+>  
+> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+> index ba2efb9..61b716e 100644
+> --- a/net/rfkill/core.c
+> +++ b/net/rfkill/core.c
+> @@ -590,6 +590,8 @@ static const char *rfkill_get_type_str(enum rfkill_type type)
+>  		return "wimax";
+>  	case RFKILL_TYPE_WWAN:
+>  		return "wwan";
+> +	case RFKILL_TYPE_FM:
+> +		return "fm";
+>  	case RFKILL_TYPE_GPS:
+>  		return "gps";
+>  	default:
 
---=-6f8LZVrshsY1BiXwYBj6
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+My personal taste would dictate that you add the case statement
+in the same place that you added the enum.  Depending on which
+order you choose, you may need to change the BUILD_BUG_ON on line
+601 of net/rfkill/core.c.  (Not sure how you managed to build w/
+this patch...)
 
-On Wed, 2009-11-11 at 22:19 +0100, Janusz Krzysztofik wrote:
+Also, when you add the enum you need to add the corresponding kerneldoc
+(i.e. an @RFKILL_TYPE_FM comment) just above it.
 
-> Please anyone owning one of adapters listed below: if the adapter is supp=
-orted=20
-> by linux-wireless, please check for MaxPower with lsusb -v and give me th=
-e=20
-> result. I am looking for an adapter with MaxPower less than 300mA and wou=
-ld=20
-> rather not buy them all to learn they all do not fit :-).
+Finally, please add "rfkill: " to the beginning of the subject line
+when you resubmit your patch.
 
-Mind you, the USB MaxPower is often incorrect. I've had devices that
-draw significantly more than what the advertise, and I'm sure there are
-devices that draw less...
+Thanks,
 
-johannes
-
---=-6f8LZVrshsY1BiXwYBj6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK+0vpAAoJEODzc/N7+Qma5pUP/0gr8gL/A/Ov6x0w/7lya/TZ
-d9iqHQ2HG1k92d8Wj6DfW/nlINX7hvFXEo/S36uqLEm3sTWmUVnW4ZrREtvqNe4+
-z5SI79TwRXUoPnX+httK63PZ9QmtKy0PyBY//9dgeaIbpxteXYAF8dE1sPv1jYA/
-f2F9PdKZWJyu/6+hJ/4rw8bdQLKZcyYh+MflZpdRH7Ioki4TIeL9Ds7sRuIslAaP
-6iuKxtuDTVql0OQpnsSpvFEn0sRPVPRJr9BauEKS9regJs3v08PJSULvsCO7viL+
-30hJVFYoEIsmWFrYmi3+DWERWMytyIpfnph2Ml2jXH7aQdqyWLZd8qQpDAqbixnX
-CvbMWFu8QumXozMXDSPmsh0KBwNq6W+ueQWULfd2VJq+MdFKHwK98Cj7rkJLwWVH
-lML9JkofLts3+JubQK9u73nEGtIXCwwZiy9aEEJRsC8uOzcThGxkelne57N2jlFf
-fTCdLkqIQeAiUYv6PPkLSvktaxvpmHpZsK4hBs7/ZQSP1OiUZN9j7xAVGcaEGvzI
-62DO/l7Z966E9EYvwzii9oFY+rwFO1UVlG1J+uQBsiKGTsGryMnPaT3aA71CFcLi
-H8E+jzzUIFTdgnUwxe5xEJ7YTHecb7FR0lzrT13H2i8kbHd4ENntFkXiUcq+wwhn
-gcr9hIyBriagjQqCJ65f
-=o6F/
------END PGP SIGNATURE-----
-
---=-6f8LZVrshsY1BiXwYBj6--
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
