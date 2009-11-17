@@ -1,43 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48102 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:57446 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754430AbZKKEKE (ORCPT
+	with ESMTP id S1751198AbZKQOIN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 23:10:04 -0500
-Received: from wireless by sipsolutions.net with local (Exim 4.69)
-	(envelope-from <wireless@sipsolutions.net>)
-	id 1N84X2-0003zB-0z
-	for linux-wireless@vger.kernel.org; Wed, 11 Nov 2009 05:10:08 +0100
-To: linux-wireless@vger.kernel.org
-Subject: [ANN] wireless-regdb: master-2009-11-10
-Reply-to: linux-wireless@vger.kernel.org
-Message-Id: <E1N84X2-0003zB-0z@sipsolutions.net>
-From: wireless@sipsolutions.net
-Date: Wed, 11 Nov 2009 05:10:08 +0100
+	Tue, 17 Nov 2009 09:08:13 -0500
+Subject: Re: [RFC] mac80211: disallow bridging managed/adhoc interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <200911171504.54170.mb@bu3sch.de>
+References: <1258465585.3682.7.camel@johannes.local>
+	 <200911171504.54170.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-3hmV4QFY8KyHA4HerZrN"
+Date: Tue, 17 Nov 2009 15:07:48 +0100
+Message-ID: <1258466868.3682.13.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-A new release of wireless-regdb (master-2009-11-10) is available at:
+--=-3hmV4QFY8KyHA4HerZrN
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2009.11.10.tar.bz2
+On Tue, 2009-11-17 at 15:04 +0100, Michael Buesch wrote:
+> On Tuesday 17 November 2009 14:46:25 Johannes Berg wrote:
+> > --- wireless-testing.orig/net/bridge/br_if.c	2009-11-17 14:19:17.000000=
+000 +0100
+> > +++ wireless-testing/net/bridge/br_if.c	2009-11-17 14:20:03.000000000 +=
+0100
+> > @@ -390,6 +390,10 @@ int br_add_if(struct net_bridge *br, str
+> >  	if (dev->br_port !=3D NULL)
+> >  		return -EBUSY;
+> > =20
+> > +	/* No bridging devices that dislike that (e.g. wireless) */
+> > +	if (dev->priv_flags & IFF_DONT_BRIDGE)
+> > +		return -EINVAL;
+>=20
+> -EOPNOTSUPP?
+> That would probably produce a better error message in userspace.
 
-SHA1 sum: 5c85c8f0e766cb87cc569a3cfebf5154d7762376
+Good idea, will wait a bit for other comments and fix this when I send
+as [PATCH].
 
+johannes
 
-For your convenience the individual regulatory.bin file can be downloaded from:
+--=-3hmV4QFY8KyHA4HerZrN
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-http://wireless.kernel.org/download/wireless-regdb/regulatory.bins/2009.11.10-regulatory.bin
+-----BEGIN PGP SIGNATURE-----
 
-SHA1 sum 3cb82b29560d276dfd6849899b0b5984993614e7
+iQIcBAABAgAGBQJLAq4xAAoJEODzc/N7+QmaIKAP/ApVx7BEWNYy2bOcZn3GcU3r
+I1g5YkFjWJe5m8XIaAfx3cZ0yrnOx064iAC+16AhaZnYYzRbol+6EVqV8iGRbslW
+lv6ZM7Io74/cJCiQI07NDyFZJLIpKk0RxeTZgrOPwtO7fVxRw9C/b3I6QPd9ypaV
+Ei/RqUIiJEn6NIH+80Dv63Q5edy50Tk+KrNsfNGOOhTwg4ql4DSP3aAxDvnBODxO
+OV2cvENI3M/ji3nbYCgixUjjG0uWG9GuJrY5u2EyZd1tJlyjRHyiT7JMFAVxYnhX
+ReRBKRzjH3IP8Mh/f/Y20RC/TX9KzcMaGKkkSrUYFFLyFbButkB4hM+7ISVR/OEW
+n+rqcMSrR4TqQcMia3w8okXHzdpBnTDw9u7jOS4cU7/U9rIooXQ32ODTPbBXvwd+
+FhCavfiLuHV/z6UFyr4sGT60eSIeH2NrIVu3JTBfuxnbI+NV89szbOgIJG/RDQaB
+ssjWL3G6NX8DLULIu9SduPtzy4nZI2uYsPpI5H5GLV1XZYu/8U6Ja5WSN1vvXF6D
+vMNqtkTkbSkLzutRV7AtOCAVE+NUHcptzsJQDHgnM5Gtj3E37es/g9GyKWW3Pd/X
+6YjpmoTuOQnhHQv/th6nuZheMzIU3DDcl+hfn5s8MCO6FFqjRhiP7NQr7DXacDxY
+O00KLydlTXNwnKAfrpfn
+=6DsT
+-----END PGP SIGNATURE-----
 
-Here is the short log of the changes included in this 
-release:
-
-John W. Linville (1):
-      wireless-regdb: update regulatory.bin based on preceding changes.
-
-Luis R. Rodriguez (2):
-      wireless-regdb: update US rules for 5600 MHz - 5650 MHz
-      wireless-regdb: add Aruba (AW)
+--=-3hmV4QFY8KyHA4HerZrN--
 
