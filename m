@@ -1,80 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50256 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752628AbZKHO4B (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:17884 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752631AbZKQQsc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 09:56:01 -0500
-Subject: Re: ar9170 in AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jan Kiszka <jan.kiszka@web.de>
-Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <4AF6D845.9000600@web.de>
-References: <4AF6C7CD.7060108@web.de> <878wehf85v.fsf@purkki.valot.fi>
-	 <4AF6CC02.8080204@web.de> <1257688870.29454.52.camel@johannes.local>
-	 <4AF6D845.9000600@web.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SUXdQEZrSCb7e83ehxxt"
-Date: Sun, 08 Nov 2009 15:56:03 +0100
-Message-ID: <1257692163.29454.54.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 17 Nov 2009 11:48:32 -0500
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 03/16] wl1251: Configure beacon filtering on if PSM used
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 17 Nov 2009 18:48:30 +0200
+Message-ID: <20091117164829.2236.13707.stgit@tikku>
+In-Reply-To: <20091117164614.2236.8543.stgit@tikku>
+References: <20091117164614.2236.8543.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
---=-SUXdQEZrSCb7e83ehxxt
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Enable beacon filtering when PSM is enabled
 
-On Sun, 2009-11-08 at 15:40 +0100, Jan Kiszka wrote:
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
 
-> OK, confirmed with my cellphone: If I enable powersaving, it actually
-> has troubles replying on arp requests.
+ drivers/net/wireless/wl12xx/wl1251_acx.c  |   11 +++++++----
+ drivers/net/wireless/wl12xx/wl1251_acx.h  |    7 ++++++-
+ drivers/net/wireless/wl12xx/wl1251_init.c |    3 ++-
+ drivers/net/wireless/wl12xx/wl1251_main.c |    3 ++-
+ drivers/net/wireless/wl12xx/wl1251_ps.c   |   10 ++++++++++
+ 5 files changed, 27 insertions(+), 7 deletions(-)
 
-Thing is that it just won't see the request.
-
-> I kept it disabled as my previous AP setup (rt2500usb on a special
-> 2.6.21 kernel) used to fail with powersaving as well. So the good news
-> is that one can perfectly run with such a setup for multiple years, and
-> I will continue to do so with ar9170 for now - but I also see your point.
-
-Heh. Well most people don't know how to turn off PS on their cellphone,
-and shouldn't have to either.
-
-> OK, carrying that patch locally will not kill me. Hmm, is there a way in
-> the 802.11 to tell a client to not apply powersaving in this cell - just
-> in case?
-
-No. PS client support is a feature that the standard requires from an
-AP.
-
-> And what can be done to resolve this issue for real? Does the legacy
-> otus driver work fine in this regard? Or are we lacking more information
-> about the hardware?
-
-We just need to find a way to buffer multicast frames until after DTIM.
-Given that we have the firmware sourcecode, it should be doable.
-
-johannes
-
---=-SUXdQEZrSCb7e83ehxxt
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK9tv/AAoJEODzc/N7+Qmale4QAKsIRh6pyGlmbjMLul7UFm0q
-VU2a12yOluuV/LVm8bAjDGIq2JEZLTvGGeSAipQALm30ziatEdBnOkKEnmauEAU5
-0/Y1//Q3NQYuW+v/ST90p6ze3NrCGSgUFHAdVVFUXense/mqUOlhafwKF/W7y7sF
-S7K8MhoGDnBdGHTVlITE3/iMXJ28uBQ4i6WY5Suno1nHP+Z2bcMVMGLwmGsjuLAz
-ulPOKUfdHtXd0RxydmzuVnhm4lacCerpvRuzp70y6wQNUU2F++rTHOvCO941AYVL
-0XgK/JVWqccvawYaBcw3WiGsYc4UXLac+iNzeSfg3nFmxBZlIHiUN8hEb4WZXrRT
-9fNjerwGWXaxJ0WV9UcFw0z0fACVYbLw30O8fS94KYuDj6jB0WD/dxzuca5Z07rY
-222Tabf/wDW10BEYrPxREEtUh1aB6ou2AJrwwL4k0TBxq4rcYafyDEHX5u4WfZ+W
-kb71PgK5N1/XB+IWA/FLoPBaC1Z533cR8a0H31OqfmWb4RzT6ueLx4OSY/ry03BU
-HrQ1YfInirspiDmsBoLQfXuMDAo88SOSK0ePz3N6jE1mN09mA5/RK6uEZKFxvA4d
-oVPHi8kQC73mwn/IQsIwmwBCztXNABvTDs0mZ4hY5lcZw2mhd0eCKreAli81dQK9
-HAOZ6z3tzXIkdNxu99pg
-=dMcC
------END PGP SIGNATURE-----
-
---=-SUXdQEZrSCb7e83ehxxt--
+diff --git a/drivers/net/wireless/wl12xx/wl1251_acx.c b/drivers/net/wireless/wl12xx/wl1251_acx.c
+index 4a9c708..50633e0 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_acx.c
++++ b/drivers/net/wireless/wl12xx/wl1251_acx.c
+@@ -494,7 +494,7 @@ out:
+ 	return ret;
+ }
+ 
+-int wl1251_acx_beacon_filter_opt(struct wl1251 *wl)
++int wl1251_acx_beacon_filter_opt(struct wl1251 *wl, bool enable_filter)
+ {
+ 	struct acx_beacon_filter_option *beacon_filter;
+ 	int ret;
+@@ -507,7 +507,7 @@ int wl1251_acx_beacon_filter_opt(struct wl1251 *wl)
+ 		goto out;
+ 	}
+ 
+-	beacon_filter->enable = 0;
++	beacon_filter->enable = enable_filter;
+ 	beacon_filter->max_num_beacons = 0;
+ 
+ 	ret = wl1251_cmd_configure(wl, ACX_BEACON_FILTER_OPT,
+@@ -525,6 +525,7 @@ out:
+ int wl1251_acx_beacon_filter_table(struct wl1251 *wl)
+ {
+ 	struct acx_beacon_filter_ie_table *ie_table;
++	int idx = 0;
+ 	int ret;
+ 
+ 	wl1251_debug(DEBUG_ACX, "acx beacon filter table");
+@@ -535,8 +536,10 @@ int wl1251_acx_beacon_filter_table(struct wl1251 *wl)
+ 		goto out;
+ 	}
+ 
+-	ie_table->num_ie = 0;
+-	memset(ie_table->table, 0, BEACON_FILTER_TABLE_MAX_SIZE);
++	/* configure default beacon pass-through rules */
++	ie_table->num_ie = 1;
++	ie_table->table[idx++] = BEACON_FILTER_IE_ID_CHANNEL_SWITCH_ANN;
++	ie_table->table[idx++] = BEACON_RULE_PASS_ON_APPEARANCE;
+ 
+ 	ret = wl1251_cmd_configure(wl, ACX_BEACON_FILTER_TABLE,
+ 				   ie_table, sizeof(*ie_table));
+diff --git a/drivers/net/wireless/wl12xx/wl1251_acx.h b/drivers/net/wireless/wl12xx/wl1251_acx.h
+index 926789c..ce1c995 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_acx.h
++++ b/drivers/net/wireless/wl12xx/wl1251_acx.h
+@@ -450,6 +450,11 @@ struct acx_beacon_filter_option {
+ 			   (BEACON_FILTER_TABLE_MAX_VENDOR_SPECIFIC_IE_NUM * \
+ 			    BEACON_FILTER_TABLE_EXTRA_VENDOR_SPECIFIC_IE_SIZE))
+ 
++#define BEACON_RULE_PASS_ON_CHANGE                     BIT(0)
++#define BEACON_RULE_PASS_ON_APPEARANCE                 BIT(1)
++
++#define BEACON_FILTER_IE_ID_CHANNEL_SWITCH_ANN         (37)
++
+ struct acx_beacon_filter_ie_table {
+ 	struct acx_header header;
+ 
+@@ -1283,7 +1288,7 @@ int wl1251_acx_slot(struct wl1251 *wl, enum acx_slot_type slot_time);
+ int wl1251_acx_group_address_tbl(struct wl1251 *wl);
+ int wl1251_acx_service_period_timeout(struct wl1251 *wl);
+ int wl1251_acx_rts_threshold(struct wl1251 *wl, u16 rts_threshold);
+-int wl1251_acx_beacon_filter_opt(struct wl1251 *wl);
++int wl1251_acx_beacon_filter_opt(struct wl1251 *wl, bool enable_filter);
+ int wl1251_acx_beacon_filter_table(struct wl1251 *wl);
+ int wl1251_acx_conn_monit_params(struct wl1251 *wl);
+ int wl1251_acx_sg_enable(struct wl1251 *wl);
+diff --git a/drivers/net/wireless/wl12xx/wl1251_init.c b/drivers/net/wireless/wl12xx/wl1251_init.c
+index 035ab11..5cb5733 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_init.c
++++ b/drivers/net/wireless/wl12xx/wl1251_init.c
+@@ -147,7 +147,8 @@ int wl1251_hw_init_beacon_filter(struct wl1251 *wl)
+ {
+ 	int ret;
+ 
+-	ret = wl1251_acx_beacon_filter_opt(wl);
++	/* disable beacon filtering at this stage */
++	ret = wl1251_acx_beacon_filter_opt(wl, false);
+ 	if (ret < 0)
+ 		return ret;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index 601c430..900e6e2 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -1323,7 +1323,8 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
+ 
+ 	wl->hw->flags = IEEE80211_HW_SIGNAL_DBM |
+ 		IEEE80211_HW_NOISE_DBM |
+-		IEEE80211_HW_SUPPORTS_PS;
++		IEEE80211_HW_SUPPORTS_PS |
++		IEEE80211_HW_BEACON_FILTER;
+ 
+ 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+ 	wl->hw->wiphy->max_scan_ssids = 1;
+diff --git a/drivers/net/wireless/wl12xx/wl1251_ps.c b/drivers/net/wireless/wl12xx/wl1251_ps.c
+index c53e287..c3e348a 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_ps.c
++++ b/drivers/net/wireless/wl12xx/wl1251_ps.c
+@@ -119,6 +119,11 @@ int wl1251_ps_set_mode(struct wl1251 *wl, enum wl1251_cmd_ps_mode mode)
+ 	case STATION_POWER_SAVE_MODE:
+ 		wl1251_debug(DEBUG_PSM, "entering psm");
+ 
++		/* enable beacon filtering */
++		ret = wl1251_acx_beacon_filter_opt(wl, true);
++		if (ret < 0)
++			return ret;
++
+ 		ret = wl1251_acx_wake_up_conditions(wl,
+ 						    WAKE_UP_EVENT_DTIM_BITMAP,
+ 						    wl->listen_int);
+@@ -142,6 +147,11 @@ int wl1251_ps_set_mode(struct wl1251 *wl, enum wl1251_cmd_ps_mode mode)
+ 		if (ret < 0)
+ 			return ret;
+ 
++		/* disable beacon filtering */
++		ret = wl1251_acx_beacon_filter_opt(wl, false);
++		if (ret < 0)
++			return ret;
++
+ 		ret = wl1251_acx_wake_up_conditions(wl,
+ 						    WAKE_UP_EVENT_DTIM_BITMAP,
+ 						    wl->listen_int);
 
