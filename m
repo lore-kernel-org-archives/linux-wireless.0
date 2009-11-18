@@ -1,49 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:6948 "EHLO mga14.intel.com"
+Received: from c60.cesmail.net ([216.154.195.49]:41386 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753774AbZKIDdt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 22:33:49 -0500
-Subject: Re: [PATCH 48/75] ipw2200: declare MODULE_FIRMWARE
-From: Zhu Yi <yi.zhu@intel.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: John Linville <linville@tuxdriver.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
+	id S1756152AbZKRV6K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Nov 2009 16:58:10 -0500
+Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and
+ why?
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: David Acker <dacker@roinet.com>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	Michael Renzmann <mrenzmann@madwifi-project.org>,
+	madwifi-devel@lists.sourceforge.net,
+	madwifi-users@lists.sourceforge.net,
 	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1257631150.15927.458.camel@localhost>
-References: <1257631150.15927.458.camel@localhost>
+In-Reply-To: <43e72e890911171512k562f9329td56cc741dd1c5151@mail.gmail.com>
+References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de>
+	 <4B02DFF4.1060509@roinet.com>
+	 <45e8e6c40911171257m7c687380k6e6e2677fd11f851@mail.gmail.com>
+	 <43e72e890911171337p4b0d97fcp844266137bb51b56@mail.gmail.com>
+	 <4B03193E.2080304@roinet.com>
+	 <43e72e890911171345q2dc59d66g6ac2a9eec04c577c@mail.gmail.com>
+	 <4B031B48.1090105@roinet.com>
+	 <43e72e890911171404x1a46d07alb54946768d0f9cf5@mail.gmail.com>
+	 <4B032390.3080501@roinet.com> <20091117225408.GA20540@jm.kir.nu>
+	 <43e72e890911171512k562f9329td56cc741dd1c5151@mail.gmail.com>
 Content-Type: text/plain
-Date: Mon, 09 Nov 2009 11:33:29 +0800
-Message-Id: <1257737609.5538.995.camel@debian>
+Date: Wed, 18 Nov 2009 16:58:12 -0500
+Message-Id: <1258581492.10593.24.camel@mj>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2009-11-08 at 05:59 +0800, Ben Hutchings wrote:
-> Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
-> ---
->  drivers/net/wireless/ipw2x00/ipw2200.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
+On Tue, 2009-11-17 at 15:12 -0800, Luis R. Rodriguez wrote:
+> On Tue, Nov 17, 2009 at 2:54 PM, Jouni Malinen <j@w1.fi> wrote:
 > 
-> diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-> index e2af22b..d03ef19 100644
-> --- a/drivers/net/wireless/ipw2x00/ipw2200.c
-> +++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-> @@ -81,6 +81,11 @@ MODULE_DESCRIPTION(DRV_DESCRIPTION);
->  MODULE_VERSION(DRV_VERSION);
->  MODULE_AUTHOR(DRV_COPYRIGHT);
->  MODULE_LICENSE("GPL");
-> +MODULE_FIRMWARE("ipw2200-ibss.fw");
-> +#ifdef CONFIG_IPW2200_MONITOR
-> +MODULE_FIRMWARE("ipw2200-sniffer.fw");
-> +#endif
-> +MODULE_FIRMWARE("ipw2200-bss.fw");
->  
->  static int cmdlog = 0;
->  static int debug = 0;
+> > Supporting half/quarter width channels sounds reasonable in general. The
+> > main problem with this one seems to have been in getting someone
+> > dedicated enough to go through the effort in a way that would cleanly
+> > extend the regulatory framework in use with cfg80211.
+> 
+> I'll elaborate on this part.
+> 
+> There actually is no requirement to extend the regulatory framework to
+> get this done.
 
-Acked-by: Zhu Yi <yi.zhu@intel.com>
+I think we should try to err on the safe side when dealing with
+regulations.
 
-Thanks,
--yi
+CRDA regulates the frequencies allocated for 802.11 protocol.  Part of
+the protocol is collision avoidance using RTS/CTS.
 
+Stations using half and quarter channels won't see standard width
+control frames.  Likewise, standard stations won't be able to interpret
+any narrow channel traffic.  Thus, the stations using different channel
+width affect each other as dumb noise emitters, somewhat like bluetooth
+and even microwave ovens.
+
+My impression is that many new bands are allocated for 802.11 under
+strict conditions, such as power limits, DFS and TPC.  TPC in particular
+is designed to reduce interference between networks.
+
+Is it true that no country limits transmissions in any band to the
+standard channel width?  Can we reasonably rely on things staying that
+way?
+
+-- 
+Regards,
+Pavel Roskin
