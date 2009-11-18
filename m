@@ -1,34 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:36495 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754328AbZKPWJc (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44421 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752968AbZKRDDR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2009 17:09:32 -0500
-Message-ID: <4B01CD9D.7040601@lwfinger.net>
-Date: Mon, 16 Nov 2009 16:09:33 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 17 Nov 2009 22:03:17 -0500
+Date: Tue, 17 Nov 2009 21:59:20 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stefan Monnier <monnier@iro.umontreal.ca>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [RFC v2] mac80211: disallow bridging managed/adhoc interfaces
+Message-ID: <20091118025920.GA4588@tuxdriver.com>
+References: <1258465585.3682.7.camel@johannes.local> <1258490898.21197.42.camel@johannes.local> <jwvy6m4bnqp.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: Greg Kroah-Hartman <gregkh@suse.de>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8187se: Rename staging driver to avoid name
- 	conflict with mainline driver
-References: <4b016848.3j3kclbqZ4ylyZGU%Larry.Finger@lwfinger.net> <69e28c910911161202w5255bff5ydb7fc665b3320bda@mail.gmail.com>
-In-Reply-To: <69e28c910911161202w5255bff5ydb7fc665b3320bda@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <jwvy6m4bnqp.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/16/2009 02:02 PM, Gábor Stefanik wrote:
->>
->> -obj-$(CONFIG_RTL8187SE)        += rtl8187se.o
->> +obj-$(CONFIG_RTL8187SE_STAGE)  += rtl8187se_stage.o
+On Tue, Nov 17, 2009 at 08:59:03PM -0500, Stefan Monnier wrote:
+> > A number of people have tried to add a wireless interface
+> > (in managed mode) to a bridge and then complained that it
+> > doesn't work. It cannot work, however, because in 802.11
+> [...]
+> > To avoid such mistakes in the future, disallow adding a
+> > wireless interface to a bridge.
 > 
-> Please make this r8187se.o, to be consistent with the other
-> r8180-sa2400 derivative drivers.
+> As someone who's been bitten by this, I fully support this change.
+> Still, it makes me wonder: my broadcom-based home-router using the wl.o
+> driver can be set in "client bridge" mode.  How does it work?
 
-I cannot do that. From what I see, the kernel make system creates the .ko file
-from the name specified here. When I make that rtl8187se.o, then I get
-rtl8187se.ko, which is what I want to avoid.
+If I'm not mistaken, that has a bunch of code embedded in it that
+among other things can do a layer-2 version of NAT to rewrite the
+MAC adresses for frames on the air.
 
-Larry
+YMMV...
+
+John
+-- 
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
