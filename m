@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42015
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758514AbZKKTkr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 14:40:47 -0500
-Date: Wed, 11 Nov 2009 11:41:14 -0800 (PST)
-Message-Id: <20091111.114114.228545645.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2009-11-11
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20091111.112031.184370997.davem@davemloft.net>
-References: <20091111172255.GH4392@tuxdriver.com>
-	<20091111.112031.184370997.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail.atheros.com ([12.36.123.2]:49752 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756991AbZKRVMA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Nov 2009 16:12:00 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 13:12:07 -0800
+Date: Wed, 18 Nov 2009 13:12:01 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: move TX status processing to process context
+Message-ID: <20091118211201.GJ6581@tux>
+References: <1258571772.30511.54.camel@johannes.local> <20091118195339.GB25188@bombadil.infradead.org> <1258574517.30511.61.camel@johannes.local> <20091118202334.GG6581@tux> <1258576479.30511.65.camel@johannes.local> <20091118210654.GI6581@tux>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20091118210654.GI6581@tux>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Miller <davem@davemloft.net>
-Date: Wed, 11 Nov 2009 11:20:31 -0800 (PST)
-
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Wed, 11 Nov 2009 12:22:55 -0500
+On Wed, Nov 18, 2009 at 01:06:54PM -0800, Luis Rodriguez wrote:
 > 
->> P.S.  Due to the aformentioned iwlwifi fix, this will cause -next
->> conflicts for sfr.  You may want to pull net-2.6 into net-next-2.6 after
->> pulling this.  The iwlwifi conflicts can be resolved by taking the bigger
->> hunks...
+> OK, but can't you still have a driver spam mac80211 with a lot of
+> ieee80211_tx_status_irqsafe() calls in soft irq context with the final
+> skb requiring the tx complete, in that case the queue *will* get stuffed
+> and you could potentially free more if so desired.
 > 
-> Yep, I noticed this, I'll sort it out, thanks.
+> Also, if our goal is to just avoid adding the skb if it does not require
+> a tx complete and our queue size is too large
 
-I just pushed out the merge to net-next-2.6, please double
-check my work.
+Hit send too early, I meant if our goal is to avoid adding the skb
+if we've reached our limit why not just ree it immediately instead
+of queing it and dequeing it. Wouldn't we even be able to just
+return and not bother mac80211 about it at all?
 
-Thanks!
+> 
+>         if (!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) &&
+>             num + 1 > IEEE80211_TX_STATUS_QUEUE_LIMIT)
+		{
+>                 dev_kfree_skb_irq(skb);
+		return;
+	}
+>         else
+>                 skb_queue_tail(&local->skb_queue)
