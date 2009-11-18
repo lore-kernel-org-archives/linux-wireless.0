@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li59-9.members.linode.com ([97.107.129.9]:47422 "EHLO erley.org"
+Received: from nbd.name ([88.198.39.176]:44320 "EHLO ds10.mine.nu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755891AbZKJPAa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 10:00:30 -0500
+	id S1755560AbZKRPgo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Nov 2009 10:36:44 -0500
+Message-ID: <4B04148E.6010202@openwrt.org>
+Date: Wed, 18 Nov 2009 16:36:46 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Date: Tue, 10 Nov 2009 09:50:43 -0500
-From: <pat-lkml@erley.org>
-To: Holger Schurig <holgerschurig@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] cfg80211: introduce =?UTF-8?Q?nl=38=30=32=31=31=5Fget=5Fifidx?=
- =?UTF-8?Q?=28=29?=
-In-Reply-To: <m3aayu1ttc.wl%holgerschurig@gmail.com>
-References: <m3aayu1ttc.wl%holgerschurig@gmail.com>
-Message-ID: <05d7281ddd3780e3d7f4b485ce361b87@127.0.0.1>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [PATCH v2 1/2] ath9k: properly use the mac80211 rate control
+ api
+References: <4B037881.8020509@openwrt.org> <20091118152909.GC2911@tuxdriver.com>
+In-Reply-To: <20091118152909.GC2911@tuxdriver.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 10 Nov 2009 12:51:43 +0100, Holger Schurig
-<holgerschurig@googlemail.com> wrote:
+John W. Linville wrote:
+> On Wed, Nov 18, 2009 at 05:30:57AM +0100, Felix Fietkau wrote:
+>> This patch changes ath9k to pass proper MCS indexes and flags
+>> between the RC and the rest of the driver code.
+>> sc->cur_rate_table remains, as it's used by the RC code internally,
+>> but the rest of the driver code no longer uses it, so a potential
+>> new RC for ath9k would not have to update it.
+>> 
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>> ---
+>> - replaces sc->hw usage with common->hw
+>> - initializes unused tx status rates to -1 for minstrel compatibility
+>> - split up for easier review
+>> - tested in ap mode with minstrel against a legacy STA
+>> - v2: fix bisectability
+> 
+>   CC [M]  drivers/net/wireless/ath/ath9k/rc.o
+> drivers/net/wireless/ath/ath9k/rc.c: In function ‘ath_tx_status’:
+> drivers/net/wireless/ath/ath9k/rc.c:1272: warning: passing argument 2 of ‘ath_debug_stat_rc’ makes pointer from integer without a cast
+> drivers/net/wireless/ath/ath9k/debug.h:173: note: expected ‘struct sk_buff *’ but argument is of type ‘int’
+Sorry, I must have lost a patch chunk there. Will fix it later.
 
-> @@ -3182,20 +3182,11 @@
->  	int err;
->  
->  	if (!ifidx) {
-> -		err = nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
-> -				  nl80211_fam.attrbuf, nl80211_fam.maxattr,
-> -				  nl80211_policy);
-> -		if (err)
-> -			return err;
-> -
-> -		if (!nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX])
-> -			return -EINVAL;
-> -
-> -		ifidx = nla_get_u32(nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX]);
-> -		if (!ifidx)
-> -			return -EINVAL;
-> +		ifidx = nl80211_get_ifidx(cb);
-
-do you need an:
-
- if(ifidx < 0)
-    return ifidx;
-
-here, as you assign it to cb->args[0], which differs from the original
-behavior.
-
->  		cb->args[0] = ifidx;
->  	}
-> +	if (ifidx < 0)
-> +		return ifidx;
->  
->  	dev = dev_get_by_index(sock_net(skb->sk), ifidx);
->  	if (!dev)
-
+- Felix
