@@ -1,44 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:58794 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755319AbZKMDpZ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38938 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752130AbZKRUa0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 22:45:25 -0500
+	Wed, 18 Nov 2009 15:30:26 -0500
+Date: Wed, 18 Nov 2009 15:28:02 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: mac80211 breaks suspend to disk
+Message-ID: <20091118202802.GE2911@tuxdriver.com>
+References: <1258568836.4512.13.camel@maxim-laptop>
 MIME-Version: 1.0
-In-Reply-To: <1258083706.7715.16.camel@violet>
-References: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
-	<20091113030950.GB4054@tuxdriver.com> <4fb5db50911121925t1a6770ddtbd5f01477470046d@mail.gmail.com>
-	<646765f40911121929p5aa416c3o99f33bd5b5d8c5cb@mail.gmail.com>
-	<1258083706.7715.16.camel@violet>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 13 Nov 2009 14:45:10 +1100
-Message-ID: <646765f40911121945p7080b920s230b92fb02b04ae7@mail.gmail.com>
-Subject: Re: [patch 0/1] Adding radio type FM
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Janakiram Sistla <janakiram.sistla@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1258568836.4512.13.camel@maxim-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 13, 2009 at 14:41, Marcel Holtmann <marcel@holtmann.org> wrote:
-> Hi Julian,
->
-> please stop CCing majordomo@vger.kernel.org since that one is not a
-> mailing list.
+On Wed, Nov 18, 2009 at 08:27:16PM +0200, Maxim Levitsky wrote:
+> Hi,
+> 
+> I finally managed to track down a rare hang on resume from disk I see
+> for some prolonged time.
+> Symptoms are that sometimes on resume, system almost hangs.
+> This is I can switch VTs and execute SysRQ sequences.
+> This is typical when oops happens.
+> 
+> I tracked this to BUG_ON in add_timer.
+> I replaced this with WARN_ON, and here is the backtrace:
+> 
+> 
+>   331.334935] WARNING: at /home/maxim/software/kernel/linux-2.6/kernel/timer.c:791 add_timer+0x36/0x40()
+> [  331.347374] Hardware name: Aspire 5720     
+> [  331.359725] Modules linked in: nvidia(P)  af_packet usb_storage usb_libusual cpufreq_powersave iwl3945 nfsd snd_hda_codec_realtek cpufreq_conservative exportfs iwlcore cpufreq_userspace uvcvideo snd_hda_intel acpi_cpufreq nfs videodev mac80211 coretemp lockd snd_hda_codec joydev v4l1_compat tg3 nfs_acl ohci1394 v4l2_compat_ioctl32 snd_hwdep uhci_hcd sbp2 cfg80211 psmouse video ehci_hcd auth_rpcgss libphy lirc_ene0100 ieee1394 output snd_pcm usbcore serio_raw rfkill evdev snd_page_alloc sunrpc fuse lzo lzo_decompress lzo_compress
+> [  331.428619] Pid: 4394, comm: pm-hibernate Tainted: P           2.6.32-rc7-wl #183
+> [  331.442747] Call Trace:
+> [  331.456760]  [<ffffffff81043a98>] warn_slowpath_common+0x78/0xb0
+> [  331.471119]  [<ffffffff81043adf>] warn_slowpath_null+0xf/0x20
+> [  331.485475]  [<ffffffff8104f996>] add_timer+0x36/0x40
+> [  331.499814]  [<ffffffffa01fb34c>] ieee80211_sta_restart+0x4c/0x50 [mac80211]
+> [  331.514314]  [<ffffffffa020c86c>] ieee80211_reconfig+0x36c/0x420 [mac80211]
+> [  331.528678]  [<ffffffffa020c65c>] ? ieee80211_reconfig+0x15c/0x420 [mac80211]
+> [  331.543094]  [<ffffffffa0202fa5>] ieee80211_resume+0x15/0x20 [mac80211]
+> [  331.557525]  [<ffffffffa01527a5>] wiphy_resume+0x75/0x90 [cfg80211]
+> [  331.572001]  [<ffffffff81273fee>] dpm_resume_end+0x47e/0x4b0
+> [  331.586325]  [<ffffffff8107d5e9>] hibernation_snapshot+0xc9/0x280
+> [  331.600377]  [<ffffffff8107d88d>] hibernate+0xed/0x1f0
+> [  331.613980]  [<ffffffff8107c00c>] state_store+0xec/0x100
+> [  331.627577]  [<ffffffff811e05f7>] kobj_attr_store+0x17/0x20
+> [  331.641242]  [<ffffffff811345a4>] sysfs_write_file+0xd4/0x150
+> [  331.655056]  [<ffffffff810d02f8>] vfs_write+0xb8/0x1a0
+> [  331.668718]  [<ffffffff810d04bc>] sys_write+0x4c/0x80
+> [  331.682153]  [<ffffffff8100beeb>] system_call_fastpath+0x16/0x1b
+> [  331.695613] ---[ end trace 85c754c80d7debe8 ]---
+> [  331.709557] PM: Image restored successfully.
+> 
+> Now, how the ifmgd->timer could still be pending I have no idea yet, it seems to be explictly
+> del_timer_sync'ed and timer routine also checks this condition, and doesn't restart itself....
+> 
+> Also note that this was seen happening both on resume, and when the suspend image is written (sort of resume too).
 
-I never intended to: I didn't check the CCs when I hit reply-all.
+Quick glance suggest some hole in the management of the
+TMR_RUNNING_CHANSW bit?
 
-I realised it had been CC'd right after it sent me an email telling me
-(in a rather verbose fashion) that I was an idiot.
+Johannes, ideas?
 
-Thanks,
-
+John
 -- 
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
