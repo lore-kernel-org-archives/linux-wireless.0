@@ -1,81 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:47358 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759108AbZKYUzy (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42170 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757697AbZKRQa0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 15:55:54 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH] ath9k: enable 2GHz band only if the device supports it
-Date: Wed, 25 Nov 2009 21:29:15 +0100
-Message-Id: <1259180955-2145-1-git-send-email-juhosg@openwrt.org>
+	Wed, 18 Nov 2009 11:30:26 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Matthew Garrett <mjg@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 3/3] ipw2200: Set core hw rfkill status when hardware changes state
+Date: Wed, 18 Nov 2009 11:25:50 -0500
+Message-Id: <1258561550-20574-3-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1258561550-20574-2-git-send-email-linville@tuxdriver.com>
+References: <1258561550-20574-1-git-send-email-linville@tuxdriver.com>
+ <1258561550-20574-2-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, the 2GHz band is enabled unconditionally, even if the device
-does not support it.
+From: Matthew Garrett <mjg@redhat.com>
 
-Changes-licensed-under: ISC
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+ipw2200 is able to detect when it's been hard-killed, but doesn't update
+the core rfkill state or update userspace. Ensure that the state is updated,
+allowing the rfkill core to notify userspace.
+
+Signed-off-by: Matthew Garrett <mjg@redhat.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |   26 ++++++++++++++++----------
- 1 files changed, 16 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ipw2x00/ipw2200.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index cbf5d2a..c0daef0 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1826,12 +1826,14 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index ed31d5c..c28984a 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -1758,10 +1758,13 @@ static DEVICE_ATTR(direct_dword, S_IWUSR | S_IRUGO,
  
- 	/* setup channels and rates */
- 
--	sc->sbands[IEEE80211_BAND_2GHZ].channels = ath9k_2ghz_chantable;
--	sc->sbands[IEEE80211_BAND_2GHZ].bitrates =
--		sc->rates[IEEE80211_BAND_2GHZ];
--	sc->sbands[IEEE80211_BAND_2GHZ].band = IEEE80211_BAND_2GHZ;
--	sc->sbands[IEEE80211_BAND_2GHZ].n_channels =
--		ARRAY_SIZE(ath9k_2ghz_chantable);
-+	if (test_bit(ATH9K_MODE_11G, sc->sc_ah->caps.wireless_modes)) {
-+		sc->sbands[IEEE80211_BAND_2GHZ].channels = ath9k_2ghz_chantable;
-+		sc->sbands[IEEE80211_BAND_2GHZ].bitrates =
-+			sc->rates[IEEE80211_BAND_2GHZ];
-+		sc->sbands[IEEE80211_BAND_2GHZ].band = IEEE80211_BAND_2GHZ;
-+		sc->sbands[IEEE80211_BAND_2GHZ].n_channels =
-+			ARRAY_SIZE(ath9k_2ghz_chantable);
+ static int rf_kill_active(struct ipw_priv *priv)
+ {
+-	if (0 == (ipw_read32(priv, 0x30) & 0x10000))
++	if (0 == (ipw_read32(priv, 0x30) & 0x10000)) {
+ 		priv->status |= STATUS_RF_KILL_HW;
+-	else
++		wiphy_rfkill_set_hw_state(priv->ieee->wdev.wiphy, true);
++	} else {
+ 		priv->status &= ~STATUS_RF_KILL_HW;
++		wiphy_rfkill_set_hw_state(priv->ieee->wdev.wiphy, false);
 +	}
  
- 	if (test_bit(ATH9K_MODE_11A, sc->sc_ah->caps.wireless_modes)) {
- 		sc->sbands[IEEE80211_BAND_5GHZ].channels = ath9k_5ghz_chantable;
-@@ -1906,8 +1908,9 @@ void ath_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 
- 	hw->rate_control_algorithm = "ath9k_rate_control";
- 
--	hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
--		&sc->sbands[IEEE80211_BAND_2GHZ];
-+	if (test_bit(ATH9K_MODE_11G, sc->sc_ah->caps.wireless_modes))
-+		hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
-+			&sc->sbands[IEEE80211_BAND_2GHZ];
- 	if (test_bit(ATH9K_MODE_11A, sc->sc_ah->caps.wireless_modes))
- 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
- 			&sc->sbands[IEEE80211_BAND_5GHZ];
-@@ -1946,9 +1949,12 @@ int ath_init_device(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	reg = &common->regulatory;
- 
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
--		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
-+		if (test_bit(ATH9K_MODE_11G, ah->caps.wireless_modes))
-+			setup_ht_cap(sc,
-+				     &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
- 		if (test_bit(ATH9K_MODE_11A, ah->caps.wireless_modes))
--			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
-+			setup_ht_cap(sc,
-+				     &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
- 	}
- 
- 	/* initialize tx/rx engine */
+ 	return (priv->status & STATUS_RF_KILL_HW) ? 1 : 0;
+ }
+@@ -2044,6 +2047,7 @@ static void ipw_irq_tasklet(struct ipw_priv *priv)
+ 	if (inta & IPW_INTA_BIT_RF_KILL_DONE) {
+ 		IPW_DEBUG_RF_KILL("RF_KILL_DONE\n");
+ 		priv->status |= STATUS_RF_KILL_HW;
++		wiphy_rfkill_set_hw_state(priv->ieee->wdev.wiphy, true);
+ 		wake_up_interruptible(&priv->wait_command_queue);
+ 		priv->status &= ~(STATUS_ASSOCIATED | STATUS_ASSOCIATING);
+ 		cancel_delayed_work(&priv->request_scan);
 -- 
-1.5.3.2
+1.6.2.5
 
