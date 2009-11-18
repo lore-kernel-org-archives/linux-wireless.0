@@ -1,39 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:33834 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933032AbZKDVzj convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:52283 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751126AbZKRLbc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 16:55:39 -0500
-Received: by iwn10 with SMTP id 10so5309759iwn.4
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 13:55:45 -0800 (PST)
+	Wed, 18 Nov 2009 06:31:32 -0500
+Received: by bwz27 with SMTP id 27so984409bwz.21
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 03:31:37 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4AF1F7F2.1020806@irobot.com>
-References: <4AF0D54D.4090303@irobot.com> <200911041653.33737.chunkeey@googlemail.com>
-	<alpine.DEB.2.00.0911050951000.16407@kauri.acheron.indranet.co.nz>
-	<200911042242.48991.chunkeey@googlemail.com> <4AF1F653.4000905@irobot.com>
-	<43e72e890911041350i75108dc3g454ab8577d8abacd@mail.gmail.com>
-	<4AF1F7F2.1020806@irobot.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 4 Nov 2009 13:55:25 -0800
-Message-ID: <43e72e890911041355l2ad1368fv277fce5b30f81877@mail.gmail.com>
-Subject: Re: compat-wireless and minstrel
-To: Adam Wozniak <awozniak@irobot.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	linux-wireless@vger.kernel.org, nbd@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1258541631.30511.7.camel@johannes.local>
+References: <1258509054-10901-1-git-send-email-janakiram.sistla@gmail.com>
+	 <1258541631.30511.7.camel@johannes.local>
+Date: Wed, 18 Nov 2009 17:01:36 +0530
+Message-ID: <4fb5db50911180331n3e7a2d0fl73ec6a056eda1664@mail.gmail.com>
+Subject: Re:
+From: Janakiram Sistla <janakiram.sistla@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 4, 2009 at 1:53 PM, Adam Wozniak <awozniak@irobot.com> wrote:
-> My guess from this is that I'm using the single stage:
+On Wed, Nov 18, 2009 at 4:23 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2009-11-18 at 07:20 +0530, Janakiram Sistla wrote:
 >
-> # dmesg | grep ar9170
-> [ Â 273.608189] usb 2-1: firmware: requesting ar9170.fw
-> [ Â 274.019650] Registered led device: ar9170-phy1::tx
-> [ Â 274.019698] Registered led device: ar9170-phy1::assoc
-> [ Â 274.019751] usbcore: registered new interface driver ar9170usb
+>> ---
+>>  include/linux/rfkill.h |    2 ++
+>>  net/rfkill/core.c      |    2 ++
+>>  2 files changed, 4 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+>> index 3392c59..7ae75ef 100644
+>> --- a/include/linux/rfkill.h
+>> +++ b/include/linux/rfkill.h
+>> @@ -35,6 +35,7 @@
+>>   * @RFKILL_TYPE_UWB: switch is on a ultra wideband device.
+>>   * @RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
+>>   * @RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
+>> + * @RFKILL_TYPE_FM: switch is on a wireless FM device.
+>>   * @NUM_RFKILL_TYPES: number of defined rfkill types
+>>   */
+>>  enum rfkill_type {
+>> @@ -44,6 +45,7 @@ enum rfkill_type {
+>>       RFKILL_TYPE_UWB,
+>>       RFKILL_TYPE_WIMAX,
+>>       RFKILL_TYPE_WWAN,
+>> +     RFKILL_TYPE_FM,
+>>       RFKILL_TYPE_GPS,
+>>       NUM_RFKILL_TYPES,
+>>  };
+>
+> Nice try, but no fly. This struct is ABI, you cannot add in the middle.
+Is it ok if i can add my change after RFKILL_TYPE_GPS.But with respect
+to the change i made i also made the necessary changes in core.c.
 
-Affirmative.
-
-  Luis
+>
+> johannes
+>
