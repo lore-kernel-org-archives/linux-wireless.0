@@ -1,63 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:57525 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758610AbZKFVpx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 16:45:53 -0500
-Received: by bwz27 with SMTP id 27so1658326bwz.21
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 13:45:57 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: James Grossmann <cctsurf@gmail.com>
-Subject: Re: Prism54/p54pci
-Date: Fri, 6 Nov 2009 22:45:51 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <167ae39b0910071400n218d3d9ey7711b1011f290a73@mail.gmail.com> <200911062133.38842.chunkeey@googlemail.com> <167ae39b0911061252x790d69fei9e798e8c6080f175@mail.gmail.com>
-In-Reply-To: <167ae39b0911061252x790d69fei9e798e8c6080f175@mail.gmail.com>
+Received: from mgw1.diku.dk ([130.225.96.91]:59995 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932389AbZKRSZ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Nov 2009 13:25:58 -0500
+Date: Wed, 18 Nov 2009 19:26:02 +0100 (CET)
+From: Julia Lawall <julia@diku.dk>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	arnd@arndb.de, joe@perches.com, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: [PATCH 16/16] drivers/net/wireless/rtl818x: remove exceptional & on
+ function name
+Message-ID: <Pine.LNX.4.64.0911181925440.20943@ask.diku.dk>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200911062245.51445.chunkeey@googlemail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 06 November 2009 21:52:42 James Grossmann wrote:
-> my caps lock & scroll lock leds are not blinking, and yet the computer
-> is frozen.  (I'm not the best at terminology, I guess that might not
-> be defined as a hard lock.)  I get no odd messages in my syslog.  I am
-> using Ubuntu right now, so I'm guessing that they have all the
-> prettyness going that they can, covering the important messages, but
-> as it's not an actual oops, I'm not certain that's hurting us.
+From: Julia Lawall <julia@diku.dk>
 
-Ubuntu's kernel team provide some helpful texts about getting more
-informations out of the crashes: (a bit of a hassle)
-https://wiki.ubuntu.com/KernelTeam/CrashdumpRecipe
-https://help.ubuntu.com/community/DebuggingSystemCrash
+In this file, function names are otherwise used as pointers without &.
 
-but maybe you can save you some time:
-1. if possible update your compat-wireless
-   a crash bug (affects compat-wireless, wireless-testing and even -rcX series)
-   has been fixed. This bug is known to strike on configurations with a
-   high number of auth/assoc/deauth - cycles.
+A simplified version of the semantic patch that makes this change is as
+follows: (http://coccinelle.lip6.fr/)
 
-	http://thread.gmane.org/gmane.linux.kernel/908831/focus=41872
+// <smpl>
+@r@
+identifier f;
+@@
 
-2. Quintin Pitts had/has problems with the reliability of his
-   p54pci <-> pci-bus and wrote a patch:
-       http://patchwork.kernel.org/patch/53004/raw/
+f(...) { ... }
 
-    unfortunately for him, his pci-bridge is known to be faulty,
-    but maybe he found some real bugs after all.
+@@
+identifier r.f;
+@@
 
-3. replace firmware:
-	http://daemonizer.de/prism54/prism54-fw/fw-softmac/2.13.1.0.arm
-	http://daemonizer.de/prism54/prism54-fw/fw-softmac/lmac_2.7.0.0.arm
+- &f
++ f
+// </smpl>
 
-> I am using network-manager, so it does reconnect, however, I find that
-> to be less than optimal.
-yeah, normally you can see such phenomena when you have a funky AP and 
-enable wifi powersaving... but this is unlikely, as the ps is disabled
-(can be enabled with iwconfig wlanX power on) for this reason.
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
-can you please tell me more about your AP?
-e.g: Product Name, Vendor, firmware revision,
-is it 802.11 a/b/g/n, is WEP/WPA(2) enabled, or is it just an open ap?
+---
+ drivers/net/wireless/rtl818x/rtl8180_dev.c     |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl818x/rtl8180_dev.c b/drivers/net/wireless/rtl818x/rtl8180_dev.c
+index 16429c4..a1a3dd1 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180_dev.c
+@@ -548,7 +548,7 @@ static int rtl8180_start(struct ieee80211_hw *dev)
+ 	rtl818x_iowrite32(priv, &priv->map->TNPDA, priv->tx_ring[1].dma);
+ 	rtl818x_iowrite32(priv, &priv->map->TLPDA, priv->tx_ring[0].dma);
+ 
+-	ret = request_irq(priv->pdev->irq, &rtl8180_interrupt,
++	ret = request_irq(priv->pdev->irq, rtl8180_interrupt,
+ 			  IRQF_SHARED, KBUILD_MODNAME, dev);
+ 	if (ret) {
+ 		printk(KERN_ERR "%s: failed to register IRQ handler\n",
