@@ -1,229 +1,320 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:51025 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753536AbZK0Lp1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2009 06:45:27 -0500
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: htl10@users.sourceforge.net
-Subject: Re: RTL8187 warnings on suspend
-Date: Fri, 27 Nov 2009 09:45:31 -0200
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
+Received: from bu3sch.de ([62.75.166.246]:57051 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758411AbZKRTyK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Nov 2009 14:54:10 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] b43: Enforce DMA descriptor memory constraints
+Date: Wed, 18 Nov 2009 20:53:05 +0100
+Cc: bcm43xx-dev@lists.berlios.de,
 	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <665313.63774.qm@web23102.mail.ird.yahoo.com>
-In-Reply-To: <665313.63774.qm@web23102.mail.ird.yahoo.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200911270945.31125.herton@mandriva.com.br>
+Message-Id: <200911182053.05488.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Qui 26 Nov 2009, às 22:10:10, Hin-Tak Leung escreveu:
-> --- On Thu, 26/11/09, Herton Ronaldo Krzesinski <herton@mandriva.com.br> wrote:
-> 
-> > > My approach wasn't good, I have another try, this one
-> > I couldn't test yet
-> > > as I'm away from the laptop with rtl8187 until
-> > tomorrow, but I decided to post
-> > > it now (sorry for another patch dump, this I hope
-> > should work):
-> > 
-> > There were some missing bits, this worked in my tests:
-> > 
-> > diff --git a/drivers/net/wireless/rtl818x/rtl8187.h
-> > b/drivers/net/wireless/rtl818x/rtl8187.h
-> > index bf9175a..6d4bd5c 100644
-> > --- a/drivers/net/wireless/rtl818x/rtl8187.h
-> > +++ b/drivers/net/wireless/rtl818x/rtl8187.h
-> > @@ -134,6 +134,7 @@ struct rtl8187_priv {
-> >          __le32 bits32;
-> >      } *io_dmabuf;
-> >      bool rfkill_off;
-> > +    bool stopped;
-> >  };
-> >  
-> >  void rtl8187_write_phy(struct ieee80211_hw *dev, u8 addr,
-> > u32 data);
-> > diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> > b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> > index 2017ccc..159e5bf 100644
-> > --- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> > +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> > @@ -990,6 +990,7 @@ static int rtl8187_start(struct
-> > ieee80211_hw *dev)
-> >  
-> >  rtl8187_start_exit:
-> >     
-> > mutex_unlock(&priv->conf_mutex);
-> > +    priv->stopped = false;
-> >      return ret;
-> >  }
-> >  
-> > @@ -1022,6 +1023,14 @@ static void rtl8187_stop(struct
-> > ieee80211_hw *dev)
-> >  
-> >      if (!priv->is_rtl8187b)
-> >         
-> > cancel_delayed_work_sync(&priv->work);
-> > +
-> > +#ifdef CONFIG_RTL8187_LEDS
-> > +    /* XXX: turn the LED off */
-> > +   
-> > cancel_delayed_work_sync(&priv->led_on);
-> > +    ieee80211_queue_delayed_work(dev,
-> > &priv->led_off, 0);
-> > +   
-> > flush_delayed_work(&priv->led_off);
-> > +#endif
-> > +    priv->stopped = true;
-> >  }
-> >  
-> >  static int rtl8187_add_interface(struct ieee80211_hw
-> > *dev,
-> > diff --git a/drivers/net/wireless/rtl818x/rtl8187_leds.c
-> > b/drivers/net/wireless/rtl818x/rtl8187_leds.c
-> > index cf8a4a4..fd07235 100644
-> > --- a/drivers/net/wireless/rtl818x/rtl8187_leds.c
-> > +++ b/drivers/net/wireless/rtl818x/rtl8187_leds.c
-> > @@ -107,6 +107,9 @@ static void
-> > rtl8187_led_brightness_set(struct led_classdev *led_dev,
-> >      struct ieee80211_hw *hw = led->dev;
-> >      struct rtl8187_priv *priv =
-> > hw->priv;
-> >  
-> > +    if (priv->stopped)
-> > +        return;
-> > +
-> >      if (brightness == LED_OFF) {
-> >         
-> > ieee80211_queue_delayed_work(hw, &priv->led_off, 0);
-> >          /* The LED is off
-> > for 1/20 sec so that it just blinks. */
-> > @@ -192,10 +195,8 @@ void rtl8187_leds_init(struct
-> > ieee80211_hw *dev, u16 custid)
-> >     
-> >      "rtl8187-%s::rx",
-> > wiphy_name(dev->wiphy));
-> >      err = rtl8187_register_led(dev,
-> > &priv->led_rx, name,
-> >         
-> >      ieee80211_get_rx_led_name(dev),
-> > ledpin);
-> > -    if (!err) {
-> > -       
-> > ieee80211_queue_delayed_work(dev, &priv->led_on, 0);
-> > +    if (!err)
-> >          return;
-> > -    }
-> >      /* registration of RX LED failed -
-> > unregister TX */
-> >     
-> > rtl8187_unregister_led(&priv->led_tx);
-> >  error:
-> > @@ -208,8 +209,6 @@ void rtl8187_leds_exit(struct
-> > ieee80211_hw *dev)
-> >  {
-> >      struct rtl8187_priv *priv =
-> > dev->priv;
-> >  
-> > -    /* turn the LED off before exiting */
-> > -    ieee80211_queue_delayed_work(dev,
-> > &priv->led_off, 0);
-> >     
-> > rtl8187_unregister_led(&priv->led_rx);
-> >     
-> > rtl8187_unregister_led(&priv->led_tx);
-> >     
-> > cancel_delayed_work_sync(&priv->led_off);
-> > 
-> > 
-> > But it is a bit of a hack, I think we should change
-> > LEDS_OFF case to not have
-> > to turn the led off on stop/exit (mac80211 already calls
-> > led off on stop, but
-> > on rtl8187 because the LEDS_OFF treatment in
-> > rtl8187_led_brightness_set
-> > we have to turn it off on exit). I'll see if I can make a
-> > better patch.
-> > 
-> 
-> 
-> Apologies for being not very responsive. This looks a bit ugly - you are trying to set a flag so that if _stop() is called first, most of _led_set() is by-passed... is there a better way?
+Enforce all device constraints on the descriptor memory region.
 
-_stop will always be called first in suspend, mac80211 calls everything in
-right order. The problem here is that in suspend the device is disconnected
-(probably because we don't have any reset/resume support), so
-rtl8187_disconnect is called while mac80211 is already suspended.
-In rtl8187_disconnect we unregister the leds, and the leds subsystem calls
-rtl8187_led_brightness_set to turn the led off again, which calls
-ieee80211_queue_delayed_work and thus the warning.
+There are several constraints on the descriptor memory, as documented
+in the specification. The current code does not enforce them and/or
+incorrectly enforces them.
 
-Also because we don't register assoc/radio leds, we end up now having to put
-led switch code in rtl8187_stop, and assume led always on in tx/rx, this is
-something now worth to look and fix.
+Those constraints are:
+- The address limitations on 30/32bit engines, that also apply to
+  the skbs.
+- The 4k alignment requirement on 30/32bit engines.
+- The 8k alignment requirement on 64bit engines.
 
-A better patch is below, tested here now too, avoiding adding the extra stopped
-flag:
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-index 2017ccc..25cd10c 100644
---- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -1022,6 +1022,13 @@ static void rtl8187_stop(struct ieee80211_hw *dev)
- 
- 	if (!priv->is_rtl8187b)
- 		cancel_delayed_work_sync(&priv->work);
-+
-+#ifdef CONFIG_RTL8187_LEDS
-+	/* XXX: turn the LED off */
-+	cancel_delayed_work_sync(&priv->led_on);
-+	ieee80211_queue_delayed_work(dev, &priv->led_off, 0);
-+	flush_delayed_work(&priv->led_off);
-+#endif
+---
+
+It's not entirely clear if any 64bit devices exist that _really_ need the 8k
+alignment. However, I think it does not hurt much if we enforce it anyway.
+The patch removes the always-set-GFP_DMA-on-64bit-devices hack. The combination of
+the new enforcements should be enough to keep every device happy, including those
+which needed the GFP_DMA hack. The new code will dynamically check if GFP_DMA is
+required, instead of statically doing it all the time.
+John, please queue for the next feature release. This patch still needs a fair
+amount of testing. I think the best way to get it is to simply apply it. If this
+causes any regressions, we can (temporary) revert it.
+
+This also is a candidate for a b43legacy backport.
+
+
+Index: wireless-testing/drivers/net/wireless/b43/dma.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/dma.c	2009-11-18 19:09:38.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/dma.c	2009-11-18 19:21:17.000000000 +0100
+@@ -383,44 +383,160 @@ static inline
+ 	}
  }
  
- static int rtl8187_add_interface(struct ieee80211_hw *dev,
-diff --git a/drivers/net/wireless/rtl818x/rtl8187_leds.c b/drivers/net/wireless/rtl818x/rtl8187_leds.c
-index cf8a4a4..f7f43c6 100644
---- a/drivers/net/wireless/rtl818x/rtl8187_leds.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187_leds.c
-@@ -107,6 +107,16 @@ static void rtl8187_led_brightness_set(struct led_classdev *led_dev,
- 	struct ieee80211_hw *hw = led->dev;
- 	struct rtl8187_priv *priv = hw->priv;
- 
-+	/* Don't queue led work if we are unregistering, we and mac80211 already
-+	 * turns led off on rtl8187 stop, and we get warnings on suspend without
-+	 * this, as interface is already suspended and we can't call anymore
-+	 * ieee80211_queue_delayed_work. We depend here on the fact that
-+	 * led_classdev_unregister calls led_trigger_set(led_dev, NULL), and
-+	 * trigger is set to NULL before led_set_brightness inside
-+	 * led_trigger_set */
-+	if (!led_dev->trigger)
-+		return;
++/* Check if a DMA region fits the device constraints.
++ * Returns true, if the region is OK for usage with this device. */
++static inline bool b43_dma_address_ok(struct b43_dmaring *ring,
++				      dma_addr_t addr, size_t size)
++{
++	switch (ring->type) {
++	case B43_DMA_30BIT:
++		if ((u64)addr + size > (1ULL << 30))
++			return 0;
++		break;
++	case B43_DMA_32BIT:
++		if ((u64)addr + size > (1ULL << 32))
++			return 0;
++		break;
++	case B43_DMA_64BIT:
++		/* Currently we can't have addresses beyond
++		 * 64bit in the kernel. */
++		break;
++	}
++	return 1;
++}
 +
- 	if (brightness == LED_OFF) {
- 		ieee80211_queue_delayed_work(hw, &priv->led_off, 0);
- 		/* The LED is off for 1/20 sec so that it just blinks. */
-@@ -208,8 +218,6 @@ void rtl8187_leds_exit(struct ieee80211_hw *dev)
++#define is_4k_aligned(addr)	(((u64)(addr) & 0x0FFFull) == 0)
++#define is_8k_aligned(addr)	(((u64)(addr) & 0x1FFFull) == 0)
++
++static void b43_unmap_and_free_ringmem(struct b43_dmaring *ring, void *base,
++				       dma_addr_t dmaaddr, size_t size)
++{
++	ssb_dma_unmap_single(ring->dev->dev, dmaaddr, size, DMA_TO_DEVICE);
++	free_pages((unsigned long)base, get_order(size));
++}
++
++static void * __b43_get_and_map_ringmem(struct b43_dmaring *ring,
++					dma_addr_t *dmaaddr, size_t size,
++					gfp_t gfp_flags)
++{
++	void *base;
++
++	base = (void *)__get_free_pages(gfp_flags, get_order(size));
++	if (!base)
++		return NULL;
++	memset(base, 0, size);
++	*dmaaddr = ssb_dma_map_single(ring->dev->dev, base, size,
++				      DMA_TO_DEVICE);
++	if (ssb_dma_mapping_error(ring->dev->dev, *dmaaddr)) {
++		free_pages((unsigned long)base, get_order(size));
++		return NULL;
++	}
++
++	return base;
++}
++
++static void * b43_get_and_map_ringmem(struct b43_dmaring *ring,
++				      dma_addr_t *dmaaddr, size_t size)
++{
++	void *base;
++
++	base = __b43_get_and_map_ringmem(ring, dmaaddr, size,
++					 GFP_KERNEL);
++	if (!base) {
++		b43err(ring->dev->wl, "Failed to allocate or map pages "
++		       "for DMA ringmemory\n");
++		return NULL;
++	}
++	if (!b43_dma_address_ok(ring, *dmaaddr, size)) {
++		/* The memory does not fit our device constraints.
++		 * Retry with GFP_DMA set to get lower memory. */
++		b43_unmap_and_free_ringmem(ring, base, *dmaaddr, size);
++		base = __b43_get_and_map_ringmem(ring, dmaaddr, size,
++						 GFP_KERNEL | GFP_DMA);
++		if (!base) {
++			b43err(ring->dev->wl, "Failed to allocate or map pages "
++			       "in the GFP_DMA region for DMA ringmemory\n");
++			return NULL;
++		}
++		if (!b43_dma_address_ok(ring, *dmaaddr, size)) {
++			b43_unmap_and_free_ringmem(ring, base, *dmaaddr, size);
++			b43err(ring->dev->wl, "Failed to allocate DMA "
++			       "ringmemory that fits device constraints\n");
++			return NULL;
++		}
++	}
++	/* We expect the memory to be 4k aligned, at least. */
++	if (B43_WARN_ON(!is_4k_aligned(*dmaaddr))) {
++		b43_unmap_and_free_ringmem(ring, base, *dmaaddr, size);
++		return NULL;
++	}
++
++	return base;
++}
++
+ static int alloc_ringmemory(struct b43_dmaring *ring)
  {
- 	struct rtl8187_priv *priv = dev->priv;
+-	gfp_t flags = GFP_KERNEL;
++	unsigned int required;
++	void *base;
++	dma_addr_t dmaaddr;
  
--	/* turn the LED off before exiting */
--	ieee80211_queue_delayed_work(dev, &priv->led_off, 0);
- 	rtl8187_unregister_led(&priv->led_rx);
- 	rtl8187_unregister_led(&priv->led_tx);
- 	cancel_delayed_work_sync(&priv->led_off);
-
-
-> 
-> Hin-Tak
-> 
-> 
->       
-> 
+-	/* The specs call for 4K buffers for 30- and 32-bit DMA with 4K
+-	 * alignment and 8K buffers for 64-bit DMA with 8K alignment. Testing
+-	 * has shown that 4K is sufficient for the latter as long as the buffer
+-	 * does not cross an 8K boundary.
+-	 *
+-	 * For unknown reasons - possibly a hardware error - the BCM4311 rev
+-	 * 02, which uses 64-bit DMA, needs the ring buffer in very low memory,
+-	 * which accounts for the GFP_DMA flag below.
+-	 *
+-	 * The flags here must match the flags in free_ringmemory below!
++	/* There are several requirements to the descriptor ring memory:
++	 * - The memory region needs to fit the address constraints for the
++	 *   device (same as for frame buffers).
++	 * - For 30/32bit DMA devices, the descriptor ring must be 4k aligned.
++	 * - For 64bit DMA devices, the descriptor ring must be 8k aligned.
+ 	 */
++
+ 	if (ring->type == B43_DMA_64BIT)
+-		flags |= GFP_DMA;
+-	ring->descbase = ssb_dma_alloc_consistent(ring->dev->dev,
+-						  B43_DMA_RINGMEMSIZE,
+-						  &(ring->dmabase), flags);
+-	if (!ring->descbase) {
+-		b43err(ring->dev->wl, "DMA ringmemory allocation failed\n");
++		required = ring->nr_slots * sizeof(struct b43_dmadesc64);
++	else
++		required = ring->nr_slots * sizeof(struct b43_dmadesc32);
++	if (B43_WARN_ON(required > 0x1000))
+ 		return -ENOMEM;
+-	}
+-	memset(ring->descbase, 0, B43_DMA_RINGMEMSIZE);
++
++	ring->alloc_descsize = 0x1000;
++	base = b43_get_and_map_ringmem(ring, &dmaaddr, ring->alloc_descsize);
++	if (!base)
++		return -ENOMEM;
++	ring->alloc_descbase = base;
++	ring->alloc_dmabase = dmaaddr;
++
++	if ((ring->type != B43_DMA_64BIT) || is_8k_aligned(dmaaddr)) {
++		/* We're on <=32bit DMA, or we already got 8k aligned memory.
++		 * That's all we need, so we're fine. */
++		ring->descbase = base;
++		ring->dmabase = dmaaddr;
++		return 0;
++	}
++	b43_unmap_and_free_ringmem(ring, base, dmaaddr, ring->alloc_descsize);
++
++	/* Ok, we failed at the 8k alignment requirement.
++	 * Try to force-align the memory region now. */
++	ring->alloc_descsize = 0x2000;
++	base = b43_get_and_map_ringmem(ring, &dmaaddr, ring->alloc_descsize);
++	if (!base)
++		return -ENOMEM;
++	ring->alloc_descbase = base;
++	ring->alloc_dmabase = dmaaddr;
++
++	if (is_8k_aligned(dmaaddr)) {
++		/* We're already 8k aligned. That Ok, too. */
++		ring->descbase = base;
++		ring->dmabase = dmaaddr;
++		return 0;
++	}
++	/* Force-align it to 8k */
++	ring->descbase = (void *)((u8 *)base + 0x1000);
++	ring->dmabase = dmaaddr + 0x1000;
++	B43_WARN_ON(!is_8k_aligned(ring->dmabase));
+ 
+ 	return 0;
+ }
+ 
+ static void free_ringmemory(struct b43_dmaring *ring)
+ {
+-	gfp_t flags = GFP_KERNEL;
+-
+-	if (ring->type == B43_DMA_64BIT)
+-		flags |= GFP_DMA;
+-
+-	ssb_dma_free_consistent(ring->dev->dev, B43_DMA_RINGMEMSIZE,
+-				ring->descbase, ring->dmabase, flags);
++	b43_unmap_and_free_ringmem(ring, ring->alloc_descbase,
++				   ring->alloc_dmabase, ring->alloc_descsize);
+ }
+ 
+ /* Reset the RX DMA channel */
+@@ -530,29 +646,14 @@ static bool b43_dma_mapping_error(struct
+ 	if (unlikely(ssb_dma_mapping_error(ring->dev->dev, addr)))
+ 		return 1;
+ 
+-	switch (ring->type) {
+-	case B43_DMA_30BIT:
+-		if ((u64)addr + buffersize > (1ULL << 30))
+-			goto address_error;
+-		break;
+-	case B43_DMA_32BIT:
+-		if ((u64)addr + buffersize > (1ULL << 32))
+-			goto address_error;
+-		break;
+-	case B43_DMA_64BIT:
+-		/* Currently we can't have addresses beyond
+-		 * 64bit in the kernel. */
+-		break;
++	if (!b43_dma_address_ok(ring, addr, buffersize)) {
++		/* We can't support this address. Unmap it again. */
++		unmap_descbuffer(ring, addr, buffersize, dma_to_device);
++		return 1;
+ 	}
+ 
+ 	/* The address is OK. */
+ 	return 0;
+-
+-address_error:
+-	/* We can't support this address. Unmap it again. */
+-	unmap_descbuffer(ring, addr, buffersize, dma_to_device);
+-
+-	return 1;
+ }
+ 
+ static bool b43_rx_buffer_is_poisoned(struct b43_dmaring *ring, struct sk_buff *skb)
+@@ -614,6 +715,9 @@ static int setup_rx_descbuffer(struct b4
+ 	meta->dmaaddr = dmaaddr;
+ 	ring->ops->fill_descriptor(ring, desc, dmaaddr,
+ 				   ring->rx_buffersize, 0, 0, 0);
++	ssb_dma_sync_single_for_device(ring->dev->dev,
++				       ring->alloc_dmabase,
++				       ring->alloc_descsize, DMA_TO_DEVICE);
+ 
+ 	return 0;
+ }
+@@ -1246,6 +1350,9 @@ static int dma_tx_fragment(struct b43_dm
+ 	}
+ 	/* Now transfer the whole frame. */
+ 	wmb();
++	ssb_dma_sync_single_for_device(ring->dev->dev,
++				       ring->alloc_dmabase,
++				       ring->alloc_descsize, DMA_TO_DEVICE);
+ 	ops->poke_tx(ring, next_slot(ring, slot));
+ 	return 0;
+ 
+Index: wireless-testing/drivers/net/wireless/b43/dma.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/dma.h	2009-11-18 19:09:38.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/dma.h	2009-11-18 19:29:49.000000000 +0100
+@@ -157,7 +157,6 @@ struct b43_dmadesc_generic {
+ } __attribute__ ((__packed__));
+ 
+ /* Misc DMA constants */
+-#define B43_DMA_RINGMEMSIZE		PAGE_SIZE
+ #define B43_DMA0_RX_FRAMEOFFSET		30
+ 
+ /* DMA engine tuning knobs */
+@@ -243,6 +242,12 @@ struct b43_dmaring {
+ 	/* The QOS priority assigned to this ring. Only used for TX rings.
+ 	 * This is the mac80211 "queue" value. */
+ 	u8 queue_prio;
++	/* Pointers and size of the originally allocated and mapped memory
++	 * region for the descriptor ring. */
++	void *alloc_descbase;
++	dma_addr_t alloc_dmabase;
++	unsigned int alloc_descsize;
++	/* Pointer to our wireless device. */
+ 	struct b43_wldev *dev;
+ #ifdef CONFIG_B43_DEBUG
+ 	/* Maximum number of used slots. */
 
 -- 
-[]'s
-Herton
+Greetings, Michael.
