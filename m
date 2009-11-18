@@ -1,90 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:32992 "EHLO ds10.mine.nu"
+Received: from mail.atheros.com ([12.36.123.2]:50029 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750929AbZKJRxI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 12:53:08 -0500
-Message-ID: <4AF9A886.9090902@openwrt.org>
-Date: Tue, 10 Nov 2009 18:53:10 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1754938AbZKRVPV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Nov 2009 16:15:21 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 13:15:27 -0800
+Date: Wed, 18 Nov 2009 13:15:21 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: move TX status processing to process context
+Message-ID: <20091118211521.GK6581@tux>
+References: <1258571772.30511.54.camel@johannes.local> <20091118195339.GB25188@bombadil.infradead.org> <1258574517.30511.61.camel@johannes.local> <20091118202334.GG6581@tux> <1258576479.30511.65.camel@johannes.local> <20091118210654.GI6581@tux> <1258578682.30511.82.camel@johannes.local>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 1/2] nl80211: add a parameter for using 4-address frames on
- virtual interfaces
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1258578682.30511.82.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
+On Wed, Nov 18, 2009 at 01:11:22PM -0800, Johannes Berg wrote:
+> On Wed, 2009-11-18 at 13:06 -0800, Luis R. Rodriguez wrote:
+> 
+> > OK, but can't you still have a driver spam mac80211 with a lot of
+> > ieee80211_tx_status_irqsafe() calls in soft irq context with the final
+> > skb requiring the tx complete, in that case the queue *will* get stuffed
+> > and you could potentially free more if so desired.
+> 
+> But it'll get stuffed one by one, and we free them as we stuff the
+> queue, so it can't ever loop :)
 
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -584,6 +584,8 @@ enum nl80211_commands {
-  *	changed then the list changed and the dump should be repeated
-  *	completely from scratch.
-  *
-+ * @NL80211_ATTR_4ADDR: Use 4-address frames on a virtual interface
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -714,6 +716,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_PID,
- 
-+	NL80211_ATTR_4ADDR,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -207,10 +207,12 @@ struct ieee80211_supported_band {
-  * struct vif_params - describes virtual interface parameters
-  * @mesh_id: mesh ID to use
-  * @mesh_id_len: length of the mesh ID
-+ * @use_4addr: use 4-address frames
-  */
- struct vif_params {
-        u8 *mesh_id;
-        int mesh_id_len;
-+       int use_4addr;
- };
- 
- /**
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -140,6 +140,7 @@ static struct nla_policy nl80211_policy[
- 	[NL80211_ATTR_CIPHER_SUITE_GROUP] = { .type = NLA_U32 },
- 	[NL80211_ATTR_WPA_VERSIONS] = { .type = NLA_U32 },
- 	[NL80211_ATTR_PID] = { .type = NLA_U32 },
-+	[NL80211_ATTR_4ADDR] = { .type = NLA_U8 },
- };
- 
- /* policy for the attributes */
-@@ -989,6 +990,13 @@ static int nl80211_set_interface(struct 
- 		change = true;
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_4ADDR]) {
-+		params.use_4addr = !!nla_get_u8(info->attrs[NL80211_ATTR_4ADDR]);
-+		change = true;
-+	} else {
-+		params.use_4addr = -1;
-+	}
-+
- 	if (info->attrs[NL80211_ATTR_MNTR_FLAGS]) {
- 		if (ntype != NL80211_IFTYPE_MONITOR) {
- 			err = -EINVAL;
-@@ -1055,6 +1063,9 @@ static int nl80211_new_interface(struct 
- 		params.mesh_id_len = nla_len(info->attrs[NL80211_ATTR_MESH_ID]);
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_4ADDR])
-+		params.use_4addr = !!nla_get_u8(info->attrs[NL80211_ATTR_4ADDR]);
-+
- 	err = parse_monitor_flags(type == NL80211_IFTYPE_MONITOR ?
- 				  info->attrs[NL80211_ATTR_MNTR_FLAGS] : NULL,
- 				  &flags);
+Ah yes, I see... :)
+
+> > Also, if our goal is to just avoid adding the skb if it does not require
+> > a tx complete and our queue size is too large
+> > 
+> > 	if (!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) &&
+> > 	    num + 1 > IEEE80211_TX_STATUS_QUEUE_LIMIT)
+> > 		dev_kfree_skb_irq(skb);
+> > 	else
+> > 		skb_queue_tail(&local->skb_queue)
+> 
+> No, we actually want to drop the older ones in that case.
+
+Got it.. some info added behind this logic might help.
+
+> > > However ... right now we never use _any_ unreliable at all, but I
+> > > suspect we will want to change that again at some point.
+> > 
+> > Just curious -- what would be a use case for that?
+> 
+> Any time we don't need TX status for rate control it'd be OK to drop
+> frames that we don't need the status for. For example the hw-rc case my
+> patch from yesterday introduced.
+
+Oh, haven't gotten to TX just yet, thanks this will probaby help.
+
+  Luis
