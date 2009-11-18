@@ -1,35 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:55285 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754503AbZKRPsA (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39154 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932329AbZKRS0y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 10:48:00 -0500
-From: Marcel Holtmann <marcel@holtmann.org>
-To: linux-wireless@vger.kernel.org
-Cc: Marcel Holtmann <marcel@holtmann.org>
-Subject: [PATCH 1/2] rfkill: Add missing description for RFKILL_TYPE_GPS
-Date: Wed, 18 Nov 2009 16:48:00 +0100
-Message-Id: <1258559281-20935-1-git-send-email-marcel@holtmann.org>
+	Wed, 18 Nov 2009 13:26:54 -0500
+Subject: Re: [PATCH] mac80211: use a structure to hold the mesh config
+ information element
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rui Paulo <rpaulo@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1258568579-21900-1-git-send-email-rpaulo@gmail.com>
+References: <1258568579-21900-1-git-send-email-rpaulo@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-mUP/oC+z/O5VOOy5gNLJ"
+Date: Wed, 18 Nov 2009 19:26:29 +0100
+Message-ID: <1258568789.30511.52.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
----
- include/linux/rfkill.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index 3392c59..a75e9e5 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -35,6 +35,7 @@
-  * @RFKILL_TYPE_UWB: switch is on a ultra wideband device.
-  * @RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
-  * @RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
-+ * @RFKILL_TYPE_GPS: switch is on a GPS device.
-  * @NUM_RFKILL_TYPES: number of defined rfkill types
-  */
- enum rfkill_type {
--- 
-1.6.3.3
+--=-mUP/oC+z/O5VOOy5gNLJ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Cool, thanks.
+
+>                 case WLAN_EID_MESH_CONFIG:
+>                         elems->mesh_config =3D pos;
+> -                       elems->mesh_config_len =3D elen;
+>                         break;
+
+Should there be a length check here?
+
+johannes
+
+--=-mUP/oC+z/O5VOOy5gNLJ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLBDxSAAoJEODzc/N7+QmaAzAQALX3N2gcPSo8+vlHYGTGkZgh
+KF48V2+1Rxhlx+nrVOWAl4CHa8Or1ZxAHaIezgF3objNmcINLjUaymokzPOAMDva
+G3nqzQv3HkCHQ8BVdui9pS4zh1eAJPzPgsFmzVk1bWBlhsw7LH3vGQDx7JRVFu7d
+9FZklOgQa8U3hsE1474mlXK9ZjIZpeq/r3/JqCRzcfni2doxBtbNO/TvehCuG/zU
+vXbhIy8Zqzmu1jzuwKZYE5AbqUXcnAD2DE/HYwjVUlaTiJux905YEmLiW0H6+rQk
+bkrAf9ZxMSPuG/MCMLmWJmU+tkMCgzXWPN3HbMQbwSC75c+NSR3gH/QiNAvQL5SY
+JpeKug1aZb3ZWb38gw2dpOiQlzocsUZI+2OXy7lociPk/5cbJoMcKi+SOKfSPvp3
+s4b2TZ+YFb87UYh00FksAkVxEA2u1IUy6bVr3IfIfP1VpFQrxiWcFmV+C64nYsMM
+KUkWuruqBTgp9+7wvOmtTph0g1I1xi6F5/0t4yLuWcbntQkaSuJeSVas1dxFl4AW
+T3EUhmo/mVbY1/PFR2qFETks41aiIUZfwn2NkrCMczdlIOWH4w3+08hPgUAGCYSg
+9ONTESB7R6H2vxFMksfMAk4y1BNw//xv3O6bzXv3MeHqAoIRVlV39KUABPtNGhNW
+N3G3Eoplp0JL56Nj9i9E
+=kIpV
+-----END PGP SIGNATURE-----
+
+--=-mUP/oC+z/O5VOOy5gNLJ--
 
