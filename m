@@ -1,34 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:58268 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759191AbZKYVix (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 16:38:53 -0500
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2009 13:39:00 -0800
-Date: Wed, 25 Nov 2009 13:38:57 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Gabor Juhos <juhosg@openwrt.org>
-CC: John Linville <linville@tuxdriver.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] [PATCH] ath9k: enable 2GHz band only if the
-	device supports it
-Message-ID: <20091125213857.GM5006@tux>
-References: <1259180955-2145-1-git-send-email-juhosg@openwrt.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:54207 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757917AbZKRRdc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Nov 2009 12:33:32 -0500
+Date: Wed, 18 Nov 2009 09:27:51 -0800 (PST)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: fix addba timer (again...)
+In-Reply-To: <1258560906.30511.43.camel@johannes.local>
+Message-ID: <alpine.LFD.2.01.0911180922120.4644@localhost.localdomain>
+References: <1258560906.30511.43.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1259180955-2145-1-git-send-email-juhosg@openwrt.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 25, 2009 at 12:29:15PM -0800, Gabor Juhos wrote:
-> Currently, the 2GHz band is enabled unconditionally, even if the device
-> does not support it.
 
-This is true, but we don't have any 11n 5 GHz only devices,
-The patch is fine too though but it'd be better if you fail
-with a proper ath_print ATH_DBG_FATAL message if neither band
-has been marked as supported.
 
-  Luis
+On Wed, 18 Nov 2009, Johannes Berg wrote:
+> 
+> Linus pointed out that del_timer_sync() isn't actually needed if we make 
+> the timer able to deal with no longer being needed when it gets queued 
+> _while_ we're in the locked section that also deletes it. For that the 
+> timer function only needs to check the HT_ADDBA_RECEIVED_MSK bit as well 
+> as the HT_ADDBA_REQUESTED_MSK bit, only if the former is clear should it 
+> do anything.
+
+Ok, this looks sane. It's not really worth me Acking it, since I don't 
+actually know the code or the hardware, so I can't really judge whether 
+this is in any way a good thing.
+
+But from a "design patterns" standpoint it no longer triggers my WTF 
+reaction.
+
+It's just bound to be more robust to have the timer just check the state 
+of things itself rather than depend on some (complex and almost inevitably 
+racy) "timer is only enabled IFF certain-state-is-true" rule.
+
+			Linus
