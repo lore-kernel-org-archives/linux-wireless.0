@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:2277 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755253AbZKIMkA (ORCPT
+Received: from gv-out-0910.google.com ([216.239.58.190]:35513 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757158AbZKRWF6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 07:40:00 -0500
-Received: by fg-out-1718.google.com with SMTP id d23so702887fga.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 04:40:05 -0800 (PST)
-From: Rui Paulo <rpaulo@gmail.com>
-To: linville@tuxdriver.com
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Rui Paulo <rpaulo@gmail.com>,
-	Javier Cardona <javier@cozybit.com>
-Subject: [PATCH 04/21] mac80211: fix typo in a comment
-Date: Mon,  9 Nov 2009 12:39:24 +0000
-Message-Id: <1257770381-7680-5-git-send-email-rpaulo@gmail.com>
-In-Reply-To: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
-References: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
+	Wed, 18 Nov 2009 17:05:58 -0500
+Received: by gv-out-0910.google.com with SMTP id r4so349841gve.37
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 14:06:03 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: request TX status where needed
+Date: Wed, 18 Nov 2009 23:06:00 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+References: <1258580330.30511.85.camel@johannes.local>
+In-Reply-To: <1258580330.30511.85.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200911182306.01101.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Signed-off-by: Rui Paulo <rpaulo@gmail.com>
-Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
-Tested-by: Brian Cavagnolo <brian@cozybit.com>
----
- net/mac80211/mesh_plink.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Wednesday 18 November 2009, Johannes Berg wrote:
+> Right now all frames mac80211 hands to the driver
+> have the IEEE80211_TX_CTL_REQ_TX_STATUS flag set to
+> request TX status. This isn't really necessary, only
+> the injected frames need TX status (the latter for
+> hostapd) so move setting this flag.
+> 
+> The rate control algorithms also need TX status, but
+> they don't require it.
+> 
+> Also, rt2x00 uses that bit for its own purposes and
+> seems to require it being set for all frames, but
+> that can be fixed in rt2x00.
+> 
+> This doesn't really change anything for any drivers
+> but in the future drivers using hw-rate control may
+> opt to not report TX status for frames that don't
+> have the IEEE80211_TX_CTL_REQ_TX_STATUS flag set.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index f98c8d2..4188752 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -79,7 +79,7 @@ void mesh_plink_dec_estab_count(struct ieee80211_sub_if_data *sdata)
- /**
-  * mesh_plink_fsm_restart - restart a mesh peer link finite state machine
-  *
-- * @sta: mes peer link to restart
-+ * @sta: mesh peer link to restart
-  *
-  * Locking: this function must be called holding sta->lock
-  */
--- 
-1.5.6.5
+Looks good. Thanks.
+
+For the rt2x00 part:
+
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+
+
+
 
