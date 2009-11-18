@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:62471 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752734AbZKHNkR (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37755 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752386AbZKRPaa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 08:40:17 -0500
-Received: by mail-ew0-f207.google.com with SMTP id 3so2371374ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 05:40:22 -0800 (PST)
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>
-Date: Sun, 08 Nov 2009 14:39:55 +0100
-Message-Id: <20091108133955.23584.79455.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091108133854.23584.86842.sendpatchset@localhost.localdomain>
-References: <20091108133854.23584.86842.sendpatchset@localhost.localdomain>
-Subject: [PATCH 9/9] rt2800usb: add eFuse EEPROM support
+	Wed, 18 Nov 2009 10:30:30 -0500
+Date: Wed, 18 Nov 2009 10:29:10 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [PATCH v2 1/2] ath9k: properly use the mac80211 rate control
+	api
+Message-ID: <20091118152909.GC2911@tuxdriver.com>
+References: <4B037881.8020509@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4B037881.8020509@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] rt2800usb: add eFuse EEPROM support
+On Wed, Nov 18, 2009 at 05:30:57AM +0100, Felix Fietkau wrote:
+> This patch changes ath9k to pass proper MCS indexes and flags
+> between the RC and the rest of the driver code.
+> sc->cur_rate_table remains, as it's used by the RC code internally,
+> but the rest of the driver code no longer uses it, so a potential
+> new RC for ath9k would not have to update it.
+> 
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+> - replaces sc->hw usage with common->hw
+> - initializes unused tx status rates to -1 for minstrel compatibility
+> - split up for easier review
+> - tested in ap mode with minstrel against a legacy STA
+> - v2: fix bisectability
 
-It is needed for at least RT3070 chip.
+  CC [M]  drivers/net/wireless/ath/ath9k/rc.o
+drivers/net/wireless/ath/ath9k/rc.c: In function ‘ath_tx_status’:
+drivers/net/wireless/ath/ath9k/rc.c:1272: warning: passing argument 2 of ‘ath_debug_stat_rc’ makes pointer from integer without a cast
+drivers/net/wireless/ath/ath9k/debug.h:173: note: expected ‘struct sk_buff *’ but argument is of type ‘int’
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-Index: b/drivers/net/wireless/rt2x00/rt2800usb.c
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -667,7 +667,11 @@ static void rt2800usb_fill_rxdone(struct
-  */
- static int rt2800usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- {
--	rt2x00usb_eeprom_read(rt2x00dev, rt2x00dev->eeprom, EEPROM_SIZE);
-+	if (rt2800_efuse_detect(rt2x00dev))
-+		rt2800_read_eeprom_efuse(rt2x00dev);
-+	else
-+		rt2x00usb_eeprom_read(rt2x00dev, rt2x00dev->eeprom,
-+				      EEPROM_SIZE);
- 
- 	return rt2800_validate_eeprom(rt2x00dev);
- }
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
