@@ -1,107 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53997 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756379AbZKBRAJ (ORCPT
+Received: from static-72-92-88-10.phlapa.fios.verizon.net ([72.92.88.10]:42754
+	"EHLO smtp.roinet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753243AbZKRPfI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 12:00:09 -0500
-Date: Mon, 2 Nov 2009 11:46:16 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Jarek Poplawski <jarkao2@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-Message-ID: <20091102164615.GD14046@tuxdriver.com>
-References: <1256886023.3555.5.camel@johannes.local> <20091030110616.GB6150@ff.dom.local> <20091030150223.GA2586@tuxdriver.com> <20091102091038.GA9044@elte.hu>
+	Wed, 18 Nov 2009 10:35:08 -0500
+Message-ID: <4B04142F.6060101@roinet.com>
+Date: Wed, 18 Nov 2009 10:35:11 -0500
+From: David Acker <dacker@roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091102091038.GA9044@elte.hu>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	madwifi-users@lists.sourceforge.net,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	madwifi-devel@lists.sourceforge.net
+Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and why?
+References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de>	<43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com>	<4B02DFF4.1060509@roinet.com>	<45e8e6c40911171257m7c687380k6e6e2677fd11f851@mail.gmail.com>	<43e72e890911171337p4b0d97fcp844266137bb51b56@mail.gmail.com>	<4B03193E.2080304@roinet.com>	<43e72e890911171345q2dc59d66g6ac2a9eec04c577c@mail.gmail.com> <4B031B48.1090105@roinet.com> <4B03304C.2000403@openwrt.org>
+In-Reply-To: <4B03304C.2000403@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 02, 2009 at 10:10:38AM +0100, Ingo Molnar wrote:
+Felix Fietkau wrote:
+> David Acker wrote:
+>> Also, I don't know if ath5k will work on products based on 
+>> Atheros WiSOCs like Ubiquiti's PicoStation and Bullet.
+> I have some work in progress patches for that. They won't work yet (in
+> fact I just ported them to a newer version of compat-wireless without
+> testing, so they probably won't even compile yet *g*), but according to
+> my rough estimation, they contain about 70-80% of what's necessary to
+> support this hw. You can find them at http://nbd.name/ath5k-wisoc.tar.gz
+> If anybody is seriously interested in hacking on this stuff, please take
+> a look at this patch series and contact me afterwards...
+Interesting.  Time permitting, I will try to take a look at this a bit 
+this week.
+
+
 > 
-> * John W. Linville <linville@tuxdriver.com> wrote:
+>> A lesser issue 
+>> (more of a pain for me than an ath5k issue) is that I have some 
+>> platforms that use an older kernel and moving up to a newer kernel will 
+>> have to be done without hardware vendor support.
+> What platforms with old kernels are you using? Maybe some of them are
+> being worked on in OpenWrt already ;)
+Perhaps.  I have a CM-X255 
+http://www.compulab.co.il/x255/html/x255-cm-datasheet.htm combined with 
+a custom board for PCI with an intel pro 100 and a miniPCI slot holding 
+a ubiquiti card.
 
-<snip>
-
-> > Ever since Bartlomiej decided to tear himself away from 
-> > drivers/staging, he has been nothing but negative -- petty, whining, 
-> > indignat, whatever.  Just what has he done to merit any special 
-> > consideration here?  Why should he have any sort of veto over rt2x00?
-> 
-> I got curious, as my past experience with Bartlomiej is that he is a 
-> factual, reliable, knowledgable upstream driver developer interested in 
-> difficult pieces of code others are reluctant to touch, for whom it is 
-> rather atypical to get 'petty, whining, indignant'.
- 
-YMMV...
-
-<snip>
-
-> Bartlomiej's reply (<1255792104.3434.2.camel@johannes.local>) ignored 
-> the attack (gracefully) and replied to the technical portion only:
-> 
->  | > Tell me you're kidding -- comparing 2k duplicated LOC with a driver 
->  | > that ships its own wifi stack?
->  |
->  | Why would I be?
->  |
->  | 1) The patch is submitted to kernel _proper_ not kernel staging so I 
->  | see no excuse for duplicating 2-4 KLOC and it should be fixed.
->  |
->  | 2) The fact that the some staging driver consists in 90% of crap 
->  | doesn't mean that it doesn't have some good design ideas..  (i.e. 
->  | abstracting chipset registers access in a discussed case)
-> 
-> To which technical point Johannes elected not to reply. (Effectively 
-> conceding Bartlomiej's point as per lkml discussion rules.)
-
-Really?  "Last post wins" is the rule?  I hope you are joking...
-
-> I can understand David trusting your judgement and not wanting to get 
-> involved in the fine details, but having read the surrounding discussion 
-> i dont understand your interpretation of the events, and i dont 
-> understand on what basis you launched your very serious accusation, that 
-> he is being 'petty, whining, indignant'. Every reply from him in that 
-> thread is the exact opposite of that. Care to elaborate?
-
-Despite your links, we seem to be reading different threads.  I'm not
-sure I can reach your conclusions even with the most generous reading
-of Bartlomiej's posts and the most critical readings of _everyone_
-else's.
-
-It seems Bartlomiej has taken it personally that we don't like having
-the Ralink vendor drivers in the staging tree and he has decided to be
-an irritant in linux-wireless as some sort of revenge.  As a bonus,
-he has thrown-in some random ramblings attacking the inclusion of
-Pulseaudio in Fedora and criticizing Dave's handling of the ide tree.
-And worst of all he has chosen to make a big stink about whether or
-not the rt2x00 family of drivers (which shares tons of code already,
-BTW) is sharing enough code for his taste in drivers that are currently
-under active development.
-
-Now you have come along to defend him for whatever your reasons,
-and you have chosen to act as if Bartlomiej has been ignored simply
-because you don't like the responses he got.  Further, you seem to
-expect me to have given him some veto over a driver for which has
-has contributed essentially nothing[1].  Why?  Simply because he doesn't
-agree with the driver maintainer's JUDGMENT CALL?  Or mine?  Or Dave's?
-And for all his objections, he can't be bothered to offer a patch?
-
-I can only guess as to why you are being deferential to Bartlomiej
-and overlooking not only how he has treated the rest of us but also
-that his technical complaint is minor.  I can only ask you to consider
-that maybe Bartlomiej is not so aggrieved as he claims.
-
-John
-
-[1] Even his bug reports and code reviews have clearly been from the
-perspective of "you should just be using the staging driver".
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+-ack
