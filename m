@@ -1,79 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57317 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751013AbZKCIcA (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:40981 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752531AbZKRBuz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 03:32:00 -0500
-Subject: Re: Please consider reverting
- 7d930bc33653d5592dc386a76a38f39c2e962344
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	David Miller <davem@davemloft.net>,
-	torvalds@linux-foundation.org, linville@tuxdriver.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20091103082201.GG3212@core.coreip.homeip.net>
-References: <20091103053156.GA3212@core.coreip.homeip.net>
-	 <20091102.224957.32364226.davem@davemloft.net>
-	 <20091103065238.GE3212@core.coreip.homeip.net>
-	 <1257232587.3420.55.camel@localhost.localdomain>
-	 <1257234299.28469.25.camel@johannes.local>
-	 <20091103082201.GG3212@core.coreip.homeip.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-CB/G62bNgs40g0cTiXAB"
-Date: Tue, 03 Nov 2009 09:31:01 +0100
-Message-ID: <1257237061.28469.43.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 17 Nov 2009 20:50:55 -0500
+Received: by yxe17 with SMTP id 17so641533yxe.33
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2009 17:51:01 -0800 (PST)
+From: Janakiram Sistla <janakiram.sistla@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Janakiram Sistla <janakiram.sistla@gmail.com>
+Subject: 
+Date: Wed, 18 Nov 2009 07:20:54 +0530
+Message-Id: <1258509054-10901-1-git-send-email-janakiram.sistla@gmail.com>
+In-Reply-To: <>
+References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Janakiram Sistla <janakiram.sistla@gmail.com>
 
---=-CB/G62bNgs40g0cTiXAB
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Adding radio type FM in RFKILL_TYPE_.FM belongs to
+same class of with both TX/RX capability
 
-On Tue, 2009-11-03 at 00:22 -0800, Dmitry Torokhov wrote:
+Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
+---
+ include/linux/rfkill.h |    2 ++
+ net/rfkill/core.c      |    2 ++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
 
-> I do not understand what the fuss is about. We are pretty far in release
-> process (rc6 is about to be cut I'd expect) and we have an issue that
-> for all practical purposes kills the box on resume. Yes, I want action
-> to be swift in this case and (unless author or maintainer - who were
-> CCed on the email - have otehr solutiuon) the offending commit to be
-> reverted. If it was rc1 or rc2 or 3 I'd feel differently.
-
-Oh, I don't disagree that swift action is good.
-
-I just think that it's a matter of courtesy that should be independent
-from the release cycle to ask the author/maintainer by default, not as a
-second thought ("unless [...] have other solution"). You can always CC
-Linus and ask him to revert if you don't get a response.
-
-What's wrong with that? It doesn't actually delay the action, but it
-makes the discussion much more friendly and cooperative instead of
-giving the author and maintainer the feeling that their opinion only
-matters as a second thought.
-
-johannes
-
---=-CB/G62bNgs40g0cTiXAB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK7+pBAAoJEODzc/N7+QmaleEQALrJx+RBh+PaAX6bDz6T6s0S
-x1RsLBe/yeYwR0hUa/T+LSDCWdIY/W5YhPeSYSCCO4eF5WCMAq6Bj19XhjMmlADj
-ucVCJPuGgHshRVGRGaCjlGdxKW+PeuKbuRcTqjiPfXQKFy51jgh00VKWYkTxjQ3x
-L/nnB9qwH0ig32oVbC4Q5KmZ7I2/hUci9KE1SMIErWOBnPTq+6YzghNSQdbNz1S9
-alr30zWvZzFkUfGzNlew8emyhr9If/l1jFrY9laf7GHo2ZRmHzvXgFxBnmIh1Xiz
-dNxYOb2Tz5ai318EM6G0H5uqZXMc8ZXe85garcAu4RYlWCLrgF2j09+CyiPgGnmi
-HPFn1yrP8nkMiiZADwh4mh7fhObc8iRgSyOkhua1DPEJ+QVCgjcgXsZ3OrhlBLoO
-FDlvcYqnM3sH33CVq1CUVNZFx0WBwFdGHQ6yJT7DAQH0cHqlwE0JRcDDCOYY0e13
-NgycI/UJ3DUGapKbVMmjmifa5QHUSHAHCfONLqmvyGrFnwgSJjAjPN9qk4MvMRfP
-x1AXhFiTyqRN5FP9jzLa4yg/1LGdYYW8QyK2jp8pyqqXJzbSmCscfZV2zeSZgoP+
-PX0NZGQC0NBCIFOvoq2FpqSvH4HdKsNZt2Dt0daAL8kwBayLpRzYEGDajGn+otCN
-BL6fnpXhpxgy71pgHRj7
-=GiP9
------END PGP SIGNATURE-----
-
---=-CB/G62bNgs40g0cTiXAB--
+diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+index 3392c59..7ae75ef 100644
+--- a/include/linux/rfkill.h
++++ b/include/linux/rfkill.h
+@@ -35,6 +35,7 @@
+  * @RFKILL_TYPE_UWB: switch is on a ultra wideband device.
+  * @RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
+  * @RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
++ * @RFKILL_TYPE_FM: switch is on a wireless FM device.
+  * @NUM_RFKILL_TYPES: number of defined rfkill types
+  */
+ enum rfkill_type {
+@@ -44,6 +45,7 @@ enum rfkill_type {
+ 	RFKILL_TYPE_UWB,
+ 	RFKILL_TYPE_WIMAX,
+ 	RFKILL_TYPE_WWAN,
++	RFKILL_TYPE_FM,
+ 	RFKILL_TYPE_GPS,
+ 	NUM_RFKILL_TYPES,
+ };
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index ba2efb9..61b716e 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -590,6 +590,8 @@ static const char *rfkill_get_type_str(enum rfkill_type type)
+ 		return "wimax";
+ 	case RFKILL_TYPE_WWAN:
+ 		return "wwan";
++	case RFKILL_TYPE_FM:
++		return "fm";
+ 	case RFKILL_TYPE_GPS:
+ 		return "gps";
+ 	default:
+-- 
+1.5.4.3
 
