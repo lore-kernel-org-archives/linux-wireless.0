@@ -1,61 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:50029 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754938AbZKRVPV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 16:15:21 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 13:15:27 -0800
-Date: Wed, 18 Nov 2009 13:15:21 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mac80211: move TX status processing to process context
-Message-ID: <20091118211521.GK6581@tux>
-References: <1258571772.30511.54.camel@johannes.local> <20091118195339.GB25188@bombadil.infradead.org> <1258574517.30511.61.camel@johannes.local> <20091118202334.GG6581@tux> <1258576479.30511.65.camel@johannes.local> <20091118210654.GI6581@tux> <1258578682.30511.82.camel@johannes.local>
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:42227 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932604AbZKRTSP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Nov 2009 14:18:15 -0500
+Received: by iwn8 with SMTP id 8so1131275iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 11:18:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1258578682.30511.82.camel@johannes.local>
+In-Reply-To: <a563a2d5dfdbca955cbac7a65790f443@127.0.0.1>
+References: <b0c954732ea30effda967bd97ef30597@127.0.0.1> <43e72e890911171335n3193b63foa6f473ceb659f3ab@mail.gmail.com>
+	<a563a2d5dfdbca955cbac7a65790f443@127.0.0.1>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 18 Nov 2009 11:18:01 -0800
+Message-ID: <43e72e890911181118o416145ach6b7140341cb6dfc5@mail.gmail.com>
+Subject: Re: [ath5k-devel] "iwlist scan" shows same ap twice
+To: Florian Engelhardt <flo@dotbox.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel@lists.ath5k.org, Bob Copeland <me@bobcopeland.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 18, 2009 at 01:11:22PM -0800, Johannes Berg wrote:
-> On Wed, 2009-11-18 at 13:06 -0800, Luis R. Rodriguez wrote:
-> 
-> > OK, but can't you still have a driver spam mac80211 with a lot of
-> > ieee80211_tx_status_irqsafe() calls in soft irq context with the final
-> > skb requiring the tx complete, in that case the queue *will* get stuffed
-> > and you could potentially free more if so desired.
-> 
-> But it'll get stuffed one by one, and we free them as we stuff the
-> queue, so it can't ever loop :)
+On Wed, Nov 18, 2009 at 11:09 AM, Florian Engelhardt <flo@dotbox.org> wrote:
+> On Tue, 17 Nov 2009 13:35:24 -0800, "Luis R. Rodriguez" <mcgrof@gmail.com>
+> wrote:
+>
+>> That's wild. What kernel are you using?
+>
+> # uname -a
+> Linux eka 2.6.31-ARCH #1 SMP PREEMPT Tue Nov 10 19:48:17 CET 2009 i686
+> Intel(R) Atom(TM) CPU N270 @ 1.60GHz GenuineIntel GNU/Linux
+>
+>> Have you tried:
+>> http://wireless.kernel.org/en/users/Download/stable
+>> or
+>> http://wireless.kernel.org/en/users/Download
+>
+> Tried both, no change.
+>
+>> Can you provide the output of 'iw list', your dmesg, and your 'iw dev
+>> wlan0 scan'.
+>
+> See attached files. Despite that i can add one additional information: I
+> have a second Laptop with Intel WLAN Chip, and it shows exactly the same
+> behaviour, MA-WLAN two, sometimes three times, with none of the addresses
+> being correct.
+>
+> Somehow, i can not reproduce this kind of behaviour with my own wlan. It
+> shows up only one time, not multiple, but it did two days ago on the ath5k
+> chipset based netbook
 
-Ah yes, I see... :)
+As Bob pointed out your scan shows two beacons received on different BSSes:
 
-> > Also, if our goal is to just avoid adding the skb if it does not require
-> > a tx complete and our queue size is too large
-> > 
-> > 	if (!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) &&
-> > 	    num + 1 > IEEE80211_TX_STATUS_QUEUE_LIMIT)
-> > 		dev_kfree_skb_irq(skb);
-> > 	else
-> > 		skb_queue_tail(&local->skb_queue)
-> 
-> No, we actually want to drop the older ones in that case.
+00:80:48:5c:86:5d
+00:80:48:5c:86:48
 
-Got it.. some info added behind this logic might help.
+The TSF on the second one seems odd though. Do you have access to the
+AP? Can you change the channel to see if you see the two beacons on a
+new channel?
 
-> > > However ... right now we never use _any_ unreliable at all, but I
-> > > suspect we will want to change that again at some point.
-> > 
-> > Just curious -- what would be a use case for that?
-> 
-> Any time we don't need TX status for rate control it'd be OK to drop
-> frames that we don't need the status for. For example the hw-rc case my
-> patch from yesterday introduced.
+Can you try rebooting it?
 
-Oh, haven't gotten to TX just yet, thanks this will probaby help.
-
-  Luis
+BSS 00:80:48:5c:86:5d (on wlan0)
+	TSF: 276107264385 usec (3d, 04:41:47)
+	freq: 2457
+	beacon interval: 100
+	capability: ESS Privacy ShortPreamble (0x0031)
+	signal: -92.00 dBm
+	SSID: MA-WLAN
+	Supported rates: 1.0* 2.0* 5.5 11.0
+	DS Parameter set: channel 10
+	Country: NA (in/outdoor), data: 0a 02 12
+	ERP: <no flags>
+	Extended supported rates: 6.0 9.0 12.0 18.0 24.0 36.0 48.0 54.0
+	RSN:	 * Version: 1
+		 * Group cipher: TKIP
+		 * Pairwise ciphers: TKIP CCMP
+		 * Authentication suites: PSK
+		 * Capabilities: PreAuth (0x0001)
+BSS 00:80:48:5c:86:48 (on wlan0)
+	TSF: 921985 usec (0d, 00:00:00)
+	freq: 2457
+	beacon interval: 100
+	capability: ESS Privacy ShortPreamble (0x0031)
+	signal: -99.00 dBm
+	SSID: MA-WLAN
+	Supported rates: 1.0* 2.0* 5.5 11.0
+	DS Parameter set: channel 10
+	Country: NA (in/outdoor), data: 0a 02 12
+	ERP: <no flags>
+	Extended supported rates: 6.0 9.0 12.0 18.0 24.0 36.0 48.0 54.0
+	RSN:	 * Version: 1
+		 * Group cipher: TKIP
+		 * Pairwise ciphers: TKIP CCMP
+		 * Authentication suites: PSK
+		 * Capabilities: PreAuth (0x0001)
