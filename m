@@ -1,119 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:17856 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752245AbZKQQsT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 11:48:19 -0500
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 01/16] wl1251: Add connection monitoring configuration
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Nov 2009 18:48:14 +0200
-Message-ID: <20091117164813.2236.91626.stgit@tikku>
-In-Reply-To: <20091117164614.2236.8543.stgit@tikku>
-References: <20091117164614.2236.8543.stgit@tikku>
+Received: from venema.h4ckr.net ([217.24.1.135]:57779 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751808AbZKRHXw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Nov 2009 02:23:52 -0500
+Message-ID: <44489.95.222.252.67.1258529032.squirrel@webmail.otaku42.de>
+Date: Wed, 18 Nov 2009 08:23:52 +0100 (CET)
+Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for,
+      and why?
+From: "Michael Renzmann" <mrenzmann@madwifi-project.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: madwifi-devel@lists.sourceforge.net,
+	madwifi-users@lists.sourceforge.net,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII
+References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de>   
+    <43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com>   
+    <1803.194.45.26.221.1258473872.squirrel@webmail.madwifi-project.org>   
+    <43e72e890911170838g26172725ga4a843dc5292c29f@mail.gmail.com>
+In-Reply-To: <43e72e890911170838g26172725ga4a843dc5292c29f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Hi Luis.
 
-Add configuration for connection monitor (number of allowed beacons, and
-timeout after last received beacon.)
+Luis R. Rodriguez wrote:
+> You started with: [...] This alone is an invitation for discussion
+> between MadWifi and ath5k as supported drivers.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
+My original motivation is explained on [1]. In a few words: I wonder
+whether the MadWifi project has a future, and if yes, what this future
+could look like. This includes stuff like "what can the project (as an
+entity) do to contribute to bringing ath[59]k forward" and "what can we do
+to allow users for a smooth transition from MadWifi to ath[59]k".
 
- drivers/net/wireless/wl12xx/wl1251_acx.c  |   29 +++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1251_acx.h  |   11 +++++++++++
- drivers/net/wireless/wl12xx/wl1251_init.c |    5 +++++
- 3 files changed, 45 insertions(+), 0 deletions(-)
+I did start the survey in the hope that it helps to identify fields for
+improvements, which could also be possible future tasks for the project.
+The introduction to the survey is a description of the positions I saw as
+answers on my "future of the project" post on the madwifi-project mailing
+list. Not more, not less.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_acx.c b/drivers/net/wireless/wl12xx/wl1251_acx.c
-index 10b26c4..4a9c708 100644
---- a/drivers/net/wireless/wl12xx/wl1251_acx.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_acx.c
-@@ -550,6 +550,35 @@ out:
- 	return ret;
- }
- 
-+int wl1251_acx_conn_monit_params(struct wl1251 *wl)
-+{
-+	struct acx_conn_monit_params *acx;
-+	int ret;
-+
-+	wl1251_debug(DEBUG_ACX, "acx connection monitor parameters");
-+
-+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-+	if (!acx) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	acx->synch_fail_thold = SYNCH_FAIL_DEFAULT_THRESHOLD;
-+	acx->bss_lose_timeout = NO_BEACON_DEFAULT_TIMEOUT;
-+
-+	ret = wl1251_cmd_configure(wl, ACX_CONN_MONIT_PARAMS,
-+				   acx, sizeof(*acx));
-+	if (ret < 0) {
-+		wl1251_warning("failed to set connection monitor "
-+			       "parameters: %d", ret);
-+		goto out;
-+	}
-+
-+out:
-+	kfree(acx);
-+	return ret;
-+}
-+
- int wl1251_acx_sg_enable(struct wl1251 *wl)
- {
- 	struct acx_bt_wlan_coex *pta;
-diff --git a/drivers/net/wireless/wl12xx/wl1251_acx.h b/drivers/net/wireless/wl12xx/wl1251_acx.h
-index cafb914..926789c 100644
---- a/drivers/net/wireless/wl12xx/wl1251_acx.h
-+++ b/drivers/net/wireless/wl12xx/wl1251_acx.h
-@@ -458,6 +458,16 @@ struct acx_beacon_filter_ie_table {
- 	u8 pad[3];
- } __attribute__ ((packed));
- 
-+#define SYNCH_FAIL_DEFAULT_THRESHOLD    5     /* number of beacons */
-+#define NO_BEACON_DEFAULT_TIMEOUT       (100) /* TU */
-+
-+struct acx_conn_monit_params {
-+	struct acx_header header;
-+
-+	u32 synch_fail_thold; /* number of beacons missed */
-+	u32 bss_lose_timeout; /* number of TU's from synch fail */
-+};
-+
- enum {
- 	SG_ENABLE = 0,
- 	SG_DISABLE,
-@@ -1275,6 +1285,7 @@ int wl1251_acx_service_period_timeout(struct wl1251 *wl);
- int wl1251_acx_rts_threshold(struct wl1251 *wl, u16 rts_threshold);
- int wl1251_acx_beacon_filter_opt(struct wl1251 *wl);
- int wl1251_acx_beacon_filter_table(struct wl1251 *wl);
-+int wl1251_acx_conn_monit_params(struct wl1251 *wl);
- int wl1251_acx_sg_enable(struct wl1251 *wl);
- int wl1251_acx_sg_cfg(struct wl1251 *wl);
- int wl1251_acx_cca_threshold(struct wl1251 *wl);
-diff --git a/drivers/net/wireless/wl12xx/wl1251_init.c b/drivers/net/wireless/wl12xx/wl1251_init.c
-index b2ee4f4..035ab11 100644
---- a/drivers/net/wireless/wl12xx/wl1251_init.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_init.c
-@@ -364,6 +364,11 @@ int wl1251_hw_init(struct wl1251 *wl)
- 	if (ret < 0)
- 		goto out_free_data_path;
- 
-+	/* Initialize connection monitoring thresholds */
-+	ret = wl1251_acx_conn_monit_params(wl);
-+	if (ret < 0)
-+		goto out_free_data_path;
-+
- 	/* Beacon filtering */
- 	ret = wl1251_hw_init_beacon_filter(wl);
- 	if (ret < 0)
+Although I have my own opinion an all this I've tried to keep a neutral
+position. But to put it straight: I'm not trying to discredit the efforts
+and advancements that have been made on ath[59]k. I do not intend to
+question whether ath[59]k is the future. I do not intend to revive the
+MadWifi (the driver) development in some way or the other, nor am I
+promoting to add new features to MadWifi (the driver). And I do not intend
+to play off ath5k against MadWifi. So please, stop to allege me of such
+BS.
+
+Bye, Mike
+
+[1] http://article.gmane.org/gmane.linux.drivers.madwifi.project/165
 
