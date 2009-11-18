@@ -1,38 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:51374 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757502AbZKMUlX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 15:41:23 -0500
-Subject: Re: [PATCH 00/16] iwlwifi updates 11/13/2009
-From: reinette chatre <reinette.chatre@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <43e72e890911131212k3b530f6bte948f7414bc87c86@mail.gmail.com>
-References: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
-	 <43e72e890911131212k3b530f6bte948f7414bc87c86@mail.gmail.com>
-Content-Type: text/plain
-Date: Fri, 13 Nov 2009 12:41:28 -0800
-Message-Id: <1258144888.21134.31136.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:36124 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757880AbZKRR0l convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Nov 2009 12:26:41 -0500
+Received: by bwz27 with SMTP id 27so1369086bwz.21
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 09:26:46 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1258560310.2003.91.camel@violet>
+References: <1258557771-10776-1-git-send-email-janakiram.sistla@gmail.com>
+	 <1258558500.2003.88.camel@violet>
+	 <4fb5db50911180755u4e01814bvcc4d0ec8d396abd@mail.gmail.com>
+	 <1258560310.2003.91.camel@violet>
+Date: Wed, 18 Nov 2009 22:56:46 +0530
+Message-ID: <4fb5db50911180926v1376b67bya3e14419643c2e00@mail.gmail.com>
+Subject: Re: [PATCH 2/2] Adding kerneldoc entry for radio type GPS
+From: Janakiram Sistla <janakiram.sistla@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+On Wed, Nov 18, 2009 at 9:35 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi Janakiram,
+>
+>> >>
+>> >> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+>> >> index d787d5f..212f555 100644
+>> >> --- a/include/linux/rfkill.h
+>> >> +++ b/include/linux/rfkill.h
+>> >> @@ -36,6 +36,7 @@
+>> >>   * @RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
+>> >>   * @RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
+>> >>   * @RFKILL_TYPE_FM: switch is on a FM device.
+>> >> + * @RFKILL_TYPE_GPS: switch is on a GPS device.
+>> >>   * @NUM_RFKILL_TYPES: number of defined rfkill types
+>> >>   */
+>> >>  enum rfkill_type {
+>> >
+>> > so this is getting stupid right now. I am sick of a really simple patch
+>> > causes so much trouble. Even this one is wrong again. The GPS doc should
+>> > obviously before FM.
+>> Marcel I think you want me to submit GPS doc patch first.I will be
+>> doing it shortly and then i will do it for FM.I am sorry for this mis
+>> understanding
+>
+> I don't care in which order you submit the patches, but the order of the
+> documentation should match the order in the enum. That is not a strict
+> requirement, but here it makes total sense to do so.
+>
+> Also don't worry with the patches anymore. This took way too much ping
+> pong to get it right, that I just wrote them by myself and submitted
+> them for inclusion.
 
-On Fri, 2009-11-13 at 12:12 -0800, Luis R. Rodriguez wrote:
-> On Fri, Nov 13, 2009 at 11:56 AM, Reinette Chatre
-> <reinette.chatre@intel.com> wrote:
-> 
-> A general description of what this series addresses would be nice.
+I hope in that case  i think it should be give signed off by both authors  for
+both the patches.
+> Regards
+>
+> Marcel
+>
+>
+>
 
-Usually I do. In this case most of the patches stand on their own and
-commenting on them would essentially just be the subject line rewritten.
-
-Reinette
-
-
-
-
+Regards,
+Ram.
