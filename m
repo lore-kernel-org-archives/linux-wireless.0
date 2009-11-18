@@ -1,66 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34229 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932082AbZKRXrP (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40121 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755742AbZKRPAZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 18:47:15 -0500
-Subject: Re: [PATCH 15/16] iwlwifi: handle unicast PS buffering
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1258587250.8981.11.camel@maxim-laptop>
-References: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
-	 <1258142198-3223-16-git-send-email-reinette.chatre@intel.com>
-	 <1258150491.4182.6.camel@maxim-laptop>
-	 <1258150857.6167.28.camel@johannes.local>
-	 <1258587250.8981.11.camel@maxim-laptop>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-5EodA/rkM3gw814opm7i"
-Date: Thu, 19 Nov 2009 00:46:46 +0100
-Message-ID: <1258588006.30511.90.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 18 Nov 2009 10:00:25 -0500
+Date: Wed, 18 Nov 2009 09:45:57 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Janakiram Sistla <janakiram.sistla@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: 
+Message-ID: <20091118144557.GB2911@tuxdriver.com>
+References: <1258509054-10901-1-git-send-email-janakiram.sistla@gmail.com> <1258541631.30511.7.camel@johannes.local> <20091118134402.GA2911@tuxdriver.com> <4fb5db50911180619j6d3e6815i40602f0232b8e472@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4fb5db50911180619j6d3e6815i40602f0232b8e472@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Nov 18, 2009 at 07:49:30PM +0530, Janakiram Sistla wrote:
+> On Wed, Nov 18, 2009 at 7:14 PM, John W. Linville
 
---=-5EodA/rkM3gw814opm7i
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> > P.S.  Hmmm...anyone want to add a kerneldoc entry for RFKILL_TYPE_GPS?
+> Can i add this ???
 
-On Thu, 2009-11-19 at 01:34 +0200, Maxim Levitsky wrote:
+Sure, but please do a different patch for that.  Make it the first
+one, so that it can be applied even if there is still a problem with
+the other patch.
 
-> So, the multicast/unicast buffering is the sole problem that forbids AP
-> mode, right?
+Thanks,
 
-No, unicast buffering is actually working after this patch :)
-
-So multicast remains. I cannot make it send multicast after DTIM count
-=3D=3D 0 beacons, it either sends multicast too late or too early. Haven't
-tried 3945 of course, those don't seem to work in my machine.
-
-johannes
-
---=-5EodA/rkM3gw814opm7i
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLBIdiAAoJEODzc/N7+Qmar+0QAKmVVd3gukDlMStVC3juR+CG
-GctfEKBAC2DlFjigaCEbMxF/iB96jHkSVBiKuoaGprb/p7O5sKDGLE54tjTiGtCA
-awAhNCTL/NbZmcarhVBz5n/mvKg9YlXONwtmAVUiMGNI0HS54DSOuYpOtcmHctXs
-1JQq7C+EpnBhO+pE1uVBAfJgWhdeEBgTxDdVKiT/YR9NXYH4Zd2BtU5xuJ8EGxUr
-9qarFQfs3q+oCUT+wDMNWJf5OTai3lFmToYBkCoYEbyX+HJc4klI953Zz/CbXQmW
-F7VLEMRkC/ouDxlODgye7wKceWUT6X74aC2d95Mkj8SRWUqLhbmlVH/PkJsbxXns
-RLXMJi5+Ah9bIfJIDZa5eyW5rLBeZrY2JMUUyPjYeX0JPcXJB6Je4NjgY2/5Yci8
-XhH4DVCsKcAXDdA1ZjTSoh3MmwsOliuDULo9/BSe+RtXkY5DF4vg1+dTrviTtmtY
-CvCbI9tLLDt5tjuBvl8xFLg1E4bN32I7tlKiCeNilER9AftiSfCP3wDTStDmRpCj
-5M09j39g3Fl9SGgvLQLE0+D/vL/2gvqhmyju5pb+9dM56joCGheqH4ppaN8WMDm1
-5XkAe5HnKgzEpnyw74d184it/6bIIkW1pac2rlH9rwyp/TY8gfVYEQsQ1irRkuBK
-I/jebB0I02sJdkDFiBsw
-=+mwg
------END PGP SIGNATURE-----
-
---=-5EodA/rkM3gw814opm7i--
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
