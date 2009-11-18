@@ -1,128 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43629 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751041AbZKQNqx (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:17851 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755491AbZKRSaD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 08:46:53 -0500
-Subject: [RFC] mac80211: disallow bridging managed/adhoc interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev <netdev@vger.kernel.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 17 Nov 2009 14:46:25 +0100
-Message-ID: <1258465585.3682.7.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 18 Nov 2009 13:30:03 -0500
+Received: by ey-out-2122.google.com with SMTP id d26so234939eyd.5
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 10:30:08 -0800 (PST)
+From: Rui Paulo <rpaulo@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Rui Paulo <rpaulo@gmail.com>
+Subject: [PATCH] mac80211: update cfg80211 scan result code for the updated mesh conf IE
+Date: Wed, 18 Nov 2009 18:22:59 +0000
+Message-Id: <1258568579-21900-2-git-send-email-rpaulo@gmail.com>
+In-Reply-To: <1258568579-21900-1-git-send-email-rpaulo@gmail.com>
+References: <1258568579-21900-1-git-send-email-rpaulo@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A number of people have tried to add a wireless interface
-(in managed mode) to a bridge and then complained that it
-doesn't work. It cannot work, however, because in 802.11
-networks all packets need to be acknowledged and as such
-need to be sent to the right address. Promiscuous doesn't
-help here. The wireless address format used for these
-links has only space for three addresses, the
- * transmitter, which must be equal to the sender (origin)
- * receiver (on the wireless medium), which is the AP in
-   the case of managed mode
- * the recipient (destination), which is on the APs local
-   network segment
-
-In an IBSS, it is similar, but the receiver and recipient
-must match and the third address is used as the BSSID.
-
-To avoid such mistakes in the future, disallow adding a
-wireless interface to a bridge.
-
-Felix has recently added a four-address mode to the AP
-and client side that can be used (after negotiating that
-it is possible, which must happen out-of-band by setting
-up both sides) for bridging, so allow that case.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Rui Paulo <rpaulo@gmail.com>
 ---
- include/linux/if.h   |    1 +
- net/bridge/br_if.c   |    4 ++++
- net/mac80211/cfg.c   |    9 ++++++++-
- net/mac80211/iface.c |   17 +++++++++++++++--
- 4 files changed, 28 insertions(+), 3 deletions(-)
+ net/wireless/scan.c |   31 ++++++++++++++++++-------------
+ 1 files changed, 18 insertions(+), 13 deletions(-)
 
---- wireless-testing.orig/include/linux/if.h	2009-11-17 14:18:36.000000000 +0100
-+++ wireless-testing/include/linux/if.h	2009-11-17 14:19:04.000000000 +0100
-@@ -70,6 +70,7 @@
- #define IFF_XMIT_DST_RELEASE 0x400	/* dev_hard_start_xmit() is allowed to
- 					 * release skb->dst
- 					 */
-+#define IFF_DONT_BRIDGE 0x800		/* disallow bridging this ether dev */
- 
- #define IF_GET_IFACE	0x0001		/* for querying only */
- #define IF_GET_PROTO	0x0002
---- wireless-testing.orig/net/bridge/br_if.c	2009-11-17 14:19:17.000000000 +0100
-+++ wireless-testing/net/bridge/br_if.c	2009-11-17 14:20:03.000000000 +0100
-@@ -390,6 +390,10 @@ int br_add_if(struct net_bridge *br, str
- 	if (dev->br_port != NULL)
- 		return -EBUSY;
- 
-+	/* No bridging devices that dislike that (e.g. wireless) */
-+	if (dev->priv_flags & IFF_DONT_BRIDGE)
-+		return -EINVAL;
-+
- 	p = new_nbp(br, dev);
- 	if (IS_ERR(p))
- 		return PTR_ERR(p);
---- wireless-testing.orig/net/mac80211/cfg.c	2009-11-17 14:21:24.000000000 +0100
-+++ wireless-testing/net/mac80211/cfg.c	2009-11-17 14:37:13.000000000 +0100
-@@ -106,8 +106,15 @@ static int ieee80211_change_iface(struct
- 					    params->mesh_id_len,
- 					    params->mesh_id);
- 
--	if (params->use_4addr >= 0)
-+	if (params->use_4addr >= 0) {
- 		sdata->use_4addr = !!params->use_4addr;
-+		sdata->dev->priv_flags &= ~IFF_DONT_BRIDGE;
-+
-+		if ((sdata->vif.type == NL80211_IFTYPE_STATION ||
-+		     sdata->vif.type == NL80211_IFTYPE_ADHOC) &&
-+		    !sdata->use_4addr)
-+			sdata->dev->priv_flags |= IFF_DONT_BRIDGE;
-+	}
- 
- 	if (sdata->vif.type != NL80211_IFTYPE_MONITOR || !flags)
- 		return 0;
---- wireless-testing.orig/net/mac80211/iface.c	2009-11-17 14:20:19.000000000 +0100
-+++ wireless-testing/net/mac80211/iface.c	2009-11-17 14:33:25.000000000 +0100
-@@ -769,6 +769,11 @@ int ieee80211_if_change_type(struct ieee
- 			sdata->local->hw.conf.channel->band);
- 	sdata->drop_unencrypted = 0;
- 	sdata->use_4addr = 0;
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION ||
-+	    sdata->vif.type == NL80211_IFTYPE_ADHOC)
-+		sdata->dev->priv_flags |= IFF_DONT_BRIDGE;
-+	else
-+		sdata->dev->priv_flags &= ~IFF_DONT_BRIDGE;
- 
- 	return 0;
- }
-@@ -843,8 +848,16 @@ int ieee80211_if_add(struct ieee80211_lo
- 					    params->mesh_id_len,
- 					    params->mesh_id);
- 
--	if (params && params->use_4addr >= 0)
--		sdata->use_4addr = !!params->use_4addr;
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION ||
-+	    sdata->vif.type == NL80211_IFTYPE_ADHOC)
-+		sdata->dev->priv_flags |= IFF_DONT_BRIDGE;
-+	else
-+		sdata->dev->priv_flags &= ~IFF_DONT_BRIDGE;
-+
-+	if (params && params->use_4addr > 0) {
-+		sdata->use_4addr = true;
-+		sdata->dev->priv_flags &= ~IFF_DONT_BRIDGE;
-+	}
- 
- 	mutex_lock(&local->iflist_mtx);
- 	list_add_tail_rcu(&sdata->list, &local->interfaces);
-
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index d03447d..227d57b 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -874,35 +874,40 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+ 			cfg = ie + 2;
+ 			memset(&iwe, 0, sizeof(iwe));
+ 			iwe.cmd = IWEVCUSTOM;
+-			sprintf(buf, "Mesh network (version %d)", cfg[0]);
++			sprintf(buf, "Mesh Network Path Selection Protocol ID: "
++				"0x%02X", cfg[0]);
+ 			iwe.u.data.length = strlen(buf);
+ 			current_ev = iwe_stream_add_point(info, current_ev,
+ 							  end_buf,
+ 							  &iwe, buf);
+-			sprintf(buf, "Path Selection Protocol ID: "
+-				"0x%02X%02X%02X%02X", cfg[1], cfg[2], cfg[3],
+-							cfg[4]);
++			sprintf(buf, "Path Selection Metric ID: 0x%02X",
++				cfg[1]);
+ 			iwe.u.data.length = strlen(buf);
+ 			current_ev = iwe_stream_add_point(info, current_ev,
+ 							  end_buf,
+ 							  &iwe, buf);
+-			sprintf(buf, "Path Selection Metric ID: "
+-				"0x%02X%02X%02X%02X", cfg[5], cfg[6], cfg[7],
+-							cfg[8]);
++			sprintf(buf, "Congestion Control Mode ID: 0x%02X",
++				cfg[2]);
+ 			iwe.u.data.length = strlen(buf);
+ 			current_ev = iwe_stream_add_point(info, current_ev,
+ 							  end_buf,
+ 							  &iwe, buf);
+-			sprintf(buf, "Congestion Control Mode ID: "
+-				"0x%02X%02X%02X%02X", cfg[9], cfg[10],
+-							cfg[11], cfg[12]);
++			sprintf(buf, "Synchronization ID: 0x%02X", cfg[3]);
+ 			iwe.u.data.length = strlen(buf);
+ 			current_ev = iwe_stream_add_point(info, current_ev,
+ 							  end_buf,
+ 							  &iwe, buf);
+-			sprintf(buf, "Channel Precedence: "
+-				"0x%02X%02X%02X%02X", cfg[13], cfg[14],
+-							cfg[15], cfg[16]);
++			sprintf(buf, "Authentication ID: 0x%02X", cfg[4]);
++			iwe.u.data.length = strlen(buf);
++			current_ev = iwe_stream_add_point(info, current_ev,
++							  end_buf,
++							  &iwe, buf);
++			sprintf(buf, "Formation Info: 0x%02X", cfg[5]);
++			iwe.u.data.length = strlen(buf);
++			current_ev = iwe_stream_add_point(info, current_ev,
++							  end_buf,
++							  &iwe, buf);
++			sprintf(buf, "Capabilities: 0x%02X", cfg[6]);
+ 			iwe.u.data.length = strlen(buf);
+ 			current_ev = iwe_stream_add_point(info, current_ev,
+ 							  end_buf,
+-- 
+1.5.6.5
 
