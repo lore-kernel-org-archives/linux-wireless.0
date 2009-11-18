@@ -1,241 +1,502 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:58537 "EHLO
-	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757246AbZKWVpN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 16:45:13 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH v2 6/8] rt2x00: Centralize setting of extra TX headroom requested by rt2x00.
-Date: Mon, 23 Nov 2009 22:44:52 +0100
-Message-Id: <1259012694-14869-7-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1259012694-14869-6-git-send-email-gwingerde@gmail.com>
-References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-2-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-3-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-4-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-5-git-send-email-gwingerde@gmail.com>
- <1259012694-14869-6-git-send-email-gwingerde@gmail.com>
+Received: from nbd.name ([88.198.39.176]:47908 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755055AbZKREch (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2009 23:32:37 -0500
+Message-ID: <4B0378EA.6050609@openwrt.org>
+Date: Wed, 18 Nov 2009 05:32:42 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2 2/2] ath9k: clean up rc rate table
+References: <4B037881.8020509@openwrt.org>
+In-Reply-To: <4B037881.8020509@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set the value of extra_tx_headroom in a central place, rather than in each
-of the drivers. This is preparatory for taking alignment space into account
-in the TX headroom requested by rt2x00.
+Remove some fields from struct ath_rate_table that are now unused.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/rt2x00/rt2400pci.c |    2 +-
- drivers/net/wireless/rt2x00/rt2500pci.c |    3 +--
- drivers/net/wireless/rt2x00/rt2500usb.c |    3 +--
- drivers/net/wireless/rt2x00/rt2800lib.c |    6 ------
- drivers/net/wireless/rt2x00/rt2800pci.c |    7 ++++---
- drivers/net/wireless/rt2x00/rt2800usb.c |    1 +
- drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
- drivers/net/wireless/rt2x00/rt2x00dev.c |    5 +++++
- drivers/net/wireless/rt2x00/rt61pci.c   |    2 +-
- drivers/net/wireless/rt2x00/rt73usb.c   |    2 +-
- 10 files changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 7f900be..e7f4640 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1432,7 +1432,6 @@ static int rt2400pci_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 			       IEEE80211_HW_SIGNAL_DBM |
- 			       IEEE80211_HW_SUPPORTS_PS |
- 			       IEEE80211_HW_PS_NULLFUNC_STACK;
--	rt2x00dev->hw->extra_tx_headroom = 0;
- 
- 	SET_IEEE80211_DEV(rt2x00dev->hw, rt2x00dev->dev);
- 	SET_IEEE80211_PERM_ADDR(rt2x00dev->hw,
-@@ -1629,6 +1628,7 @@ static const struct rt2x00_ops rt2400pci_ops = {
- 	.eeprom_size		= EEPROM_SIZE,
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
-+	.extra_tx_headroom	= 0,
- 	.rx			= &rt2400pci_queue_rx,
- 	.tx			= &rt2400pci_queue_tx,
- 	.bcn			= &rt2400pci_queue_bcn,
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 30960fd..408fcfc 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -1733,8 +1733,6 @@ static int rt2500pci_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 			       IEEE80211_HW_SUPPORTS_PS |
- 			       IEEE80211_HW_PS_NULLFUNC_STACK;
- 
--	rt2x00dev->hw->extra_tx_headroom = 0;
--
- 	SET_IEEE80211_DEV(rt2x00dev->hw, rt2x00dev->dev);
- 	SET_IEEE80211_PERM_ADDR(rt2x00dev->hw,
- 				rt2x00_eeprom_addr(rt2x00dev,
-@@ -1928,6 +1926,7 @@ static const struct rt2x00_ops rt2500pci_ops = {
- 	.eeprom_size		= EEPROM_SIZE,
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
-+	.extra_tx_headroom	= 0,
- 	.rx			= &rt2500pci_queue_rx,
- 	.tx			= &rt2500pci_queue_tx,
- 	.bcn			= &rt2500pci_queue_bcn,
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 02290f6..83f2592 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1656,8 +1656,6 @@ static int rt2500usb_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	    IEEE80211_HW_SUPPORTS_PS |
- 	    IEEE80211_HW_PS_NULLFUNC_STACK;
- 
--	rt2x00dev->hw->extra_tx_headroom = TXD_DESC_SIZE;
--
- 	SET_IEEE80211_DEV(rt2x00dev->hw, rt2x00dev->dev);
- 	SET_IEEE80211_PERM_ADDR(rt2x00dev->hw,
- 				rt2x00_eeprom_addr(rt2x00dev,
-@@ -1829,6 +1827,7 @@ static const struct rt2x00_ops rt2500usb_ops = {
- 	.eeprom_size		= EEPROM_SIZE,
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
-+	.extra_tx_headroom	= TXD_DESC_SIZE,
- 	.rx			= &rt2500usb_queue_rx,
- 	.tx			= &rt2500usb_queue_tx,
- 	.bcn			= &rt2500usb_queue_bcn,
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 02ffcf5..eb1e1d0 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2030,12 +2030,6 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	    IEEE80211_HW_SUPPORTS_PS |
- 	    IEEE80211_HW_PS_NULLFUNC_STACK;
- 
--	if (rt2x00_intf_is_usb(rt2x00dev))
--		rt2x00dev->hw->extra_tx_headroom =
--			TXINFO_DESC_SIZE + TXWI_DESC_SIZE;
--	else if (rt2x00_intf_is_pci(rt2x00dev))
--		rt2x00dev->hw->extra_tx_headroom = TXWI_DESC_SIZE;
--
- 	SET_IEEE80211_DEV(rt2x00dev->hw, rt2x00dev->dev);
- 	SET_IEEE80211_PERM_ADDR(rt2x00dev->hw,
- 				rt2x00_eeprom_addr(rt2x00dev,
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 029a45f..dfc886f 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -652,7 +652,7 @@ static void rt2800pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- {
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
- 	__le32 *txd = skbdesc->desc;
--	__le32 *txwi = (__le32 *)(skb->data - rt2x00dev->hw->extra_tx_headroom);
-+	__le32 *txwi = (__le32 *)(skb->data - rt2x00dev->ops->extra_tx_headroom);
- 	u32 word;
- 
- 	/*
-@@ -725,14 +725,14 @@ static void rt2800pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field32(&word, TXD_W1_BURST,
- 			   test_bit(ENTRY_TXD_BURST, &txdesc->flags));
- 	rt2x00_set_field32(&word, TXD_W1_SD_LEN0,
--			   rt2x00dev->hw->extra_tx_headroom);
-+			   rt2x00dev->ops->extra_tx_headroom);
- 	rt2x00_set_field32(&word, TXD_W1_LAST_SEC0, 0);
- 	rt2x00_set_field32(&word, TXD_W1_DMA_DONE, 0);
- 	rt2x00_desc_write(txd, 1, word);
- 
- 	rt2x00_desc_read(txd, 2, &word);
- 	rt2x00_set_field32(&word, TXD_W2_SD_PTR1,
--			   skbdesc->skb_dma + rt2x00dev->hw->extra_tx_headroom);
-+			   skbdesc->skb_dma + rt2x00dev->ops->extra_tx_headroom);
- 	rt2x00_desc_write(txd, 2, word);
- 
- 	rt2x00_desc_read(txd, 3, &word);
-@@ -1207,6 +1207,7 @@ static const struct rt2x00_ops rt2800pci_ops = {
- 	.eeprom_size		= EEPROM_SIZE,
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
-+	.extra_tx_headroom	= TXWI_DESC_SIZE,
- 	.rx			= &rt2800pci_queue_rx,
- 	.tx			= &rt2800pci_queue_tx,
- 	.bcn			= &rt2800pci_queue_bcn,
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 208316a..af85d18 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -796,6 +796,7 @@ static const struct rt2x00_ops rt2800usb_ops = {
- 	.eeprom_size		= EEPROM_SIZE,
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
-+	.extra_tx_headroom	= TXINFO_DESC_SIZE + TXWI_DESC_SIZE,
- 	.rx			= &rt2800usb_queue_rx,
- 	.tx			= &rt2800usb_queue_tx,
- 	.bcn			= &rt2800usb_queue_bcn,
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 1cbb7ac..4d841c0 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -588,6 +588,7 @@ struct rt2x00_ops {
- 	const unsigned int eeprom_size;
- 	const unsigned int rf_size;
- 	const unsigned int tx_queues;
-+	const unsigned int extra_tx_headroom;
- 	const struct data_queue_desc *rx;
- 	const struct data_queue_desc *tx;
- 	const struct data_queue_desc *bcn;
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 4a4b7e4..06c43ca 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -684,6 +684,11 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
- 	rt2x00dev->hw->queues = rt2x00dev->ops->tx_queues;
- 
- 	/*
-+	 * Initialize extra TX headroom required.
-+	 */
-+	rt2x00dev->hw->extra_tx_headroom = rt2x00dev->ops->extra_tx_headroom;
-+
-+	/*
- 	 * Register HW.
- 	 */
- 	status = ieee80211_register_hw(rt2x00dev->hw);
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 4cb9afe..687e17d 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2546,7 +2546,6 @@ static int rt61pci_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	    IEEE80211_HW_SIGNAL_DBM |
- 	    IEEE80211_HW_SUPPORTS_PS |
- 	    IEEE80211_HW_PS_NULLFUNC_STACK;
--	rt2x00dev->hw->extra_tx_headroom = 0;
- 
- 	SET_IEEE80211_DEV(rt2x00dev->hw, rt2x00dev->dev);
- 	SET_IEEE80211_PERM_ADDR(rt2x00dev->hw,
-@@ -2794,6 +2793,7 @@ static const struct rt2x00_ops rt61pci_ops = {
- 	.eeprom_size		= EEPROM_SIZE,
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
-+	.extra_tx_headroom	= 0,
- 	.rx			= &rt61pci_queue_rx,
- 	.tx			= &rt61pci_queue_tx,
- 	.bcn			= &rt61pci_queue_bcn,
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index d13a051..ced3b6a 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2069,7 +2069,6 @@ static int rt73usb_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	    IEEE80211_HW_SIGNAL_DBM |
- 	    IEEE80211_HW_SUPPORTS_PS |
- 	    IEEE80211_HW_PS_NULLFUNC_STACK;
--	rt2x00dev->hw->extra_tx_headroom = TXD_DESC_SIZE;
- 
- 	SET_IEEE80211_DEV(rt2x00dev->hw, rt2x00dev->dev);
- 	SET_IEEE80211_PERM_ADDR(rt2x00dev->hw,
-@@ -2312,6 +2311,7 @@ static const struct rt2x00_ops rt73usb_ops = {
- 	.eeprom_size		= EEPROM_SIZE,
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
-+	.extra_tx_headroom	= TXD_DESC_SIZE,
- 	.rx			= &rt73usb_queue_rx,
- 	.tx			= &rt73usb_queue_tx,
- 	.bcn			= &rt73usb_queue_bcn,
--- 
-1.6.5.3
+--- a/drivers/net/wireless/ath/ath9k/rc.h
++++ b/drivers/net/wireless/ath/ath9k/rc.h
+@@ -112,14 +112,12 @@ struct ath_rate_table {
+ 		u32 ratekbps;
+ 		u32 user_ratekbps;
+ 		u8 ratecode;
+-		u8 short_preamble;
+ 		u8 dot11rate;
+ 		u8 ctrl_rate;
+ 		u8 base_index;
+ 		u8 cw40index;
+ 		u8 sgi_index;
+ 		u8 ht_index;
+-		u32 max_4ms_framelen;
+ 	} info[RATE_TABLE_SIZE];
+ 	u32 probe_interval;
+ 	u8 initial_ratemax;
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -22,131 +22,89 @@ static const struct ath_rate_table ar541
+ 	8, /* MCS start */
+ 	{
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 6000, /* 6 Mb */
+-			5400, 0, 0x00, 12,
+-			0, 0, 0, 0, 0, 0 },
++			5400, 0, 12, 0, 0, 0, 0, 0 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 9000, /* 9 Mb */
+-			7800,  1, 0x00, 18,
+-			0, 1, 1, 1, 1, 0 },
++			7800,  1, 18, 0, 1, 1, 1, 1 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 12000, /* 12 Mb */
+-			10000, 2, 0x00, 24,
+-			2, 2, 2, 2, 2, 0 },
++			10000, 2, 24, 2, 2, 2, 2, 2 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 18000, /* 18 Mb */
+-			13900, 3, 0x00, 36,
+-			2,  3, 3, 3, 3, 0 },
++			13900, 3, 36, 2, 3, 3, 3, 3 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 24000, /* 24 Mb */
+-			17300, 4, 0x00, 48,
+-			4,  4, 4, 4, 4, 0 },
++			17300, 4, 48, 4, 4, 4, 4, 4 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 36000, /* 36 Mb */
+-			23000, 5, 0x00, 72,
+-			4,  5, 5, 5, 5, 0 },
++			23000, 5, 72, 4, 5, 5, 5, 5 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 48000, /* 48 Mb */
+-			27400, 6, 0x00, 96,
+-			4,  6, 6, 6, 6, 0 },
++			27400, 6, 96, 4, 6, 6, 6, 6 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 54000, /* 54 Mb */
+-			29300, 7, 0x00, 108,
+-			4,  7, 7, 7, 7, 0 },
++			29300, 7, 108, 4, 7, 7, 7, 7 },
+ 		{ VALID_2040, VALID_2040, WLAN_RC_PHY_HT_20_SS, 6500, /* 6.5 Mb */
+-			6400, 0, 0x00, 0,
+-			0, 8, 24, 8, 24, 3216 },
++			6400, 0, 0, 0, 8, 24, 8, 24 },
+ 		{ VALID_20, VALID_20, WLAN_RC_PHY_HT_20_SS, 13000, /* 13 Mb */
+-			12700, 1, 0x00, 1,
+-			2, 9, 25, 9, 25, 6434 },
++			12700, 1, 1, 2, 9, 25, 9, 25 },
+ 		{ VALID_20, VALID_20, WLAN_RC_PHY_HT_20_SS, 19500, /* 19.5 Mb */
+-			18800, 2, 0x00, 2,
+-			2, 10, 26, 10, 26, 9650 },
++			18800, 2, 2, 2, 10, 26, 10, 26 },
+ 		{ VALID_20, VALID_20, WLAN_RC_PHY_HT_20_SS, 26000, /* 26 Mb */
+-			25000, 3, 0x00, 3,
+-			4,  11, 27, 11, 27, 12868 },
++			25000, 3, 3, 4, 11, 27, 11, 27 },
+ 		{ VALID_20, VALID_20, WLAN_RC_PHY_HT_20_SS, 39000, /* 39 Mb */
+-			36700, 4, 0x00, 4,
+-			4,  12, 28, 12, 28, 19304 },
++			36700, 4, 4, 4, 12, 28, 12, 28 },
+ 		{ INVALID, VALID_20, WLAN_RC_PHY_HT_20_SS, 52000, /* 52 Mb */
+-			48100, 5, 0x00, 5,
+-			4,  13, 29, 13, 29, 25740 },
++			48100, 5, 5, 4, 13, 29, 13, 29 },
+ 		{ INVALID, VALID_20, WLAN_RC_PHY_HT_20_SS, 58500, /* 58.5 Mb */
+-			53500, 6, 0x00, 6,
+-			4,  14, 30, 14, 30,  28956 },
++			53500, 6, 6, 4, 14, 30, 14, 30 },
+ 		{ INVALID, VALID_20, WLAN_RC_PHY_HT_20_SS, 65000, /* 65 Mb */
+-			59000, 7, 0x00, 7,
+-			4,  15, 31, 15, 32, 32180 },
++			59000, 7, 7, 4, 15, 31, 15, 32 },
+ 		{ INVALID, INVALID, WLAN_RC_PHY_HT_20_DS, 13000, /* 13 Mb */
+-			12700, 8, 0x00,
+-			8, 3, 16, 33, 16, 33, 6430 },
++			12700, 8, 8, 3, 16, 33, 16, 33 },
+ 		{ INVALID, INVALID, WLAN_RC_PHY_HT_20_DS, 26000, /* 26 Mb */
+-			24800, 9, 0x00, 9,
+-			2, 17, 34, 17, 34, 12860 },
++			24800, 9, 9, 2, 17, 34, 17, 34 },
+ 		{ INVALID, INVALID, WLAN_RC_PHY_HT_20_DS, 39000, /* 39 Mb */
+-			36600, 10, 0x00, 10,
+-			2, 18, 35, 18, 35, 19300 },
++			36600, 10, 10, 2, 18, 35, 18, 35 },
+ 		{ VALID_20, INVALID, WLAN_RC_PHY_HT_20_DS, 52000, /* 52 Mb */
+-			48100, 11, 0x00, 11,
+-			4,  19, 36, 19, 36, 25736 },
++			48100, 11, 11, 4, 19, 36, 19, 36 },
+ 		{ VALID_20, INVALID, WLAN_RC_PHY_HT_20_DS, 78000, /* 78 Mb */
+-			69500, 12, 0x00, 12,
+-			4,  20, 37, 20, 37, 38600 },
++			69500, 12, 12, 4, 20, 37, 20, 37 },
+ 		{ VALID_20, INVALID, WLAN_RC_PHY_HT_20_DS, 104000, /* 104 Mb */
+-			89500, 13, 0x00, 13,
+-			4,  21, 38, 21, 38, 51472 },
++			89500, 13, 13, 4, 21, 38, 21, 38 },
+ 		{ VALID_20, INVALID, WLAN_RC_PHY_HT_20_DS, 117000, /* 117 Mb */
+-			98900, 14, 0x00, 14,
+-			4,  22, 39, 22, 39, 57890 },
++			98900, 14, 14, 4, 22, 39, 22, 39 },
+ 		{ VALID_20, INVALID, WLAN_RC_PHY_HT_20_DS, 130000, /* 130 Mb */
+-			108300, 15, 0x00, 15,
+-			4,  23, 40, 23, 41, 64320 },
++			108300, 15, 15, 4, 23, 40, 23, 41 },
+ 		{ VALID_40, VALID_40, WLAN_RC_PHY_HT_40_SS, 13500, /* 13.5 Mb */
+-			13200, 0, 0x00, 0,
+-			0, 8, 24, 24, 24, 6684 },
++			13200, 0, 0, 0, 8, 24, 24, 24 },
+ 		{ VALID_40, VALID_40, WLAN_RC_PHY_HT_40_SS, 27500, /* 27.0 Mb */
+-			25900, 1, 0x00, 1,
+-			2, 9, 25, 25, 25, 13368 },
++			25900, 1, 1, 2, 9, 25, 25, 25 },
+ 		{ VALID_40, VALID_40, WLAN_RC_PHY_HT_40_SS, 40500, /* 40.5 Mb */
+-			38600, 2, 0x00, 2,
+-			2, 10, 26, 26, 26, 20052 },
++			38600, 2, 2, 2, 10, 26, 26, 26 },
+ 		{ VALID_40, VALID_40, WLAN_RC_PHY_HT_40_SS, 54000, /* 54 Mb */
+-			49800, 3, 0x00, 3,
+-			4,  11, 27, 27, 27, 26738 },
++			49800, 3, 3, 4, 11, 27, 27, 27 },
+ 		{ VALID_40, VALID_40, WLAN_RC_PHY_HT_40_SS, 81500, /* 81 Mb */
+-			72200, 4, 0x00, 4,
+-			4,  12, 28, 28, 28, 40104 },
++			72200, 4, 4, 4, 12, 28, 28, 28 },
+ 		{ INVALID, VALID_40, WLAN_RC_PHY_HT_40_SS, 108000, /* 108 Mb */
+-			92900, 5, 0x00, 5,
+-			4,  13, 29, 29, 29, 53476 },
++			92900, 5, 5, 4, 13, 29, 29, 29 },
+ 		{ INVALID, VALID_40, WLAN_RC_PHY_HT_40_SS, 121500, /* 121.5 Mb */
+-			102700, 6, 0x00, 6,
+-			4,  14, 30, 30, 30, 60156 },
++			102700, 6, 6, 4, 14, 30, 30, 30 },
+ 		{ INVALID, VALID_40, WLAN_RC_PHY_HT_40_SS, 135000, /* 135 Mb */
+-			112000, 7, 0x00, 7,
+-			4,  15, 31, 32, 32, 66840 },
++			112000, 7, 7, 4, 15, 31, 32, 32 },
+ 		{ INVALID, VALID_40, WLAN_RC_PHY_HT_40_SS_HGI, 150000, /* 150 Mb */
+-			122000, 7, 0x00, 7,
+-			4,  15, 31, 32, 32, 74200 },
++			122000, 7, 7, 4, 15, 31, 32, 32 },
+ 		{ INVALID, INVALID, WLAN_RC_PHY_HT_40_DS, 27000, /* 27 Mb */
+-			25800, 8, 0x00, 8,
+-			0, 16, 33, 33, 33, 13360 },
++			25800, 8, 8, 0, 16, 33, 33, 33 },
+ 		{ INVALID, INVALID, WLAN_RC_PHY_HT_40_DS, 54000, /* 54 Mb */
+-			49800, 9, 0x00, 9,
+-			2, 17, 34, 34, 34, 26720 },
++			49800, 9, 9, 2, 17, 34, 34, 34 },
+ 		{ INVALID, INVALID, WLAN_RC_PHY_HT_40_DS, 81000, /* 81 Mb */
+-			71900, 10, 0x00, 10,
+-			2, 18, 35, 35, 35, 40080 },
++			71900, 10, 10, 2, 18, 35, 35, 35 },
+ 		{ VALID_40, INVALID, WLAN_RC_PHY_HT_40_DS, 108000, /* 108 Mb */
+-			92500, 11, 0x00, 11,
+-			4,  19, 36, 36, 36, 53440 },
++			92500, 11, 11, 4, 19, 36, 36, 36 },
+ 		{ VALID_40, INVALID, WLAN_RC_PHY_HT_40_DS, 162000, /* 162 Mb */
+-			130300, 12, 0x00, 12,
+-			4,  20, 37, 37, 37, 80160 },
++			130300, 12, 12, 4, 20, 37, 37, 37 },
+ 		{ VALID_40, INVALID, WLAN_RC_PHY_HT_40_DS, 216000, /* 216 Mb */
+-			162800, 13, 0x00, 13,
+-			4,  21, 38, 38, 38, 106880 },
++			162800, 13, 13, 4, 21, 38, 38, 38 },
+ 		{ VALID_40, INVALID, WLAN_RC_PHY_HT_40_DS, 243000, /* 243 Mb */
+-			178200, 14, 0x00, 14,
+-			4,  22, 39, 39, 39, 120240 },
++			178200, 14, 14, 4, 22, 39, 39, 39 },
+ 		{ VALID_40, INVALID, WLAN_RC_PHY_HT_40_DS, 270000, /* 270 Mb */
+-			192100, 15, 0x00, 15,
+-			4,  23, 40, 41, 41, 133600 },
++			192100, 15, 15, 4, 23, 40, 41, 41 },
+ 		{ VALID_40, INVALID, WLAN_RC_PHY_HT_40_DS_HGI, 300000, /* 300 Mb */
+-			207000, 15, 0x00, 15,
+-			4,  23, 40, 41, 41, 148400 },
++			207000, 15, 15, 4, 23, 40, 41, 41 },
+ 	},
+ 	50,  /* probe interval */
+ 	WLAN_RC_HT_FLAG,  /* Phy rates allowed initially */
+@@ -160,144 +118,98 @@ static const struct ath_rate_table ar541
+ 	12, /* MCS start */
+ 	{
+ 		{ VALID_ALL, VALID_ALL, WLAN_RC_PHY_CCK, 1000, /* 1 Mb */
+-			900, 0, 0x00, 2,
+-			0, 0, 0, 0, 0, 0 },
++			900, 0, 2, 0, 0, 0, 0, 0 },
+ 		{ VALID_ALL, VALID_ALL, WLAN_RC_PHY_CCK, 2000, /* 2 Mb */
+-			1900, 1, 0x04, 4,
+-			1, 1, 1, 1, 1, 0 },
++			1900, 1, 4, 1, 1, 1, 1, 1 },
+ 		{ VALID_ALL, VALID_ALL, WLAN_RC_PHY_CCK, 5500, /* 5.5 Mb */
+-			4900, 2, 0x04, 11,
+-			2, 2, 2, 2, 2, 0 },
++			4900, 2, 11, 2, 2, 2, 2, 2 },
+ 		{ VALID_ALL, VALID_ALL, WLAN_RC_PHY_CCK, 11000, /* 11 Mb */
+-			8100, 3, 0x04, 22,
+-			3, 3, 3, 3, 3, 0 },
++			8100, 3, 22, 3, 3, 3, 3, 3 },
+ 		{ INVALID, INVALID, WLAN_RC_PHY_OFDM, 6000, /* 6 Mb */
+-			5400, 4, 0x00, 12,
+-			4, 4, 4, 4, 4, 0 },
++			5400, 4, 12, 4, 4, 4, 4, 4 },
+ 		{ INVALID, INVALID, WLAN_RC_PHY_OFDM, 9000, /* 9 Mb */
+-			7800, 5, 0x00, 18,
+-			4, 5, 5, 5, 5, 0 },
++			7800, 5, 18, 4, 5, 5, 5, 5 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 12000, /* 12 Mb */
+-			10100, 6, 0x00, 24,
+-			6, 6, 6, 6, 6, 0 },
++			10100, 6, 24, 6, 6, 6, 6, 6 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 18000, /* 18 Mb */
+-			14100, 7, 0x00, 36,
+-			6, 7, 7, 7, 7, 0 },
++			14100, 7, 36, 6, 7, 7, 7, 7 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 24000, /* 24 Mb */
+-			17700, 8, 0x00, 48,
+-			8,  8, 8, 8, 8, 0 },
++			17700, 8, 48, 8, 8, 8, 8, 8 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 36000, /* 36 Mb */
+-			23700, 9, 0x00, 72,
+-			8,  9, 9, 9, 9, 0 },
++			23700, 9, 72, 8, 9, 9, 9, 9 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 48000, /* 48 Mb */
+-			27400, 10, 0x00, 96,
+-			8,  10, 10, 10, 10, 0 },
++			27400, 10, 96, 8, 10, 10, 10, 10 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 54000, /* 54 Mb */
+-			30900, 11, 0x00, 108,
+-			8,  11, 11, 11, 11, 0 },
++			30900, 11, 108, 8, 11, 11, 11, 11 },
+ 		{ INVALID, INVALID, WLAN_RC_PHY_HT_20_SS, 6500, /* 6.5 Mb */
+-			6400, 0, 0x00, 0,
+-			4, 12, 28, 12, 28, 3216 },
++			6400, 0, 0, 4, 12, 28, 12, 28 },
+ 		{ VALID_20, VALID_20, WLAN_RC_PHY_HT_20_SS, 13000, /* 13 Mb */
+-			12700, 1, 0x00, 1,
+-			6, 13, 29, 13, 29, 6434 },
++			12700, 1, 1, 6, 13, 29, 13, 29 },
+ 		{ VALID_20, VALID_20, WLAN_RC_PHY_HT_20_SS, 19500, /* 19.5 Mb */
+-			18800, 2, 0x00, 2,
+-			6, 14, 30, 14, 30, 9650 },
++			18800, 2, 2, 6, 14, 30, 14, 30 },
+ 		{ VALID_20, VALID_20, WLAN_RC_PHY_HT_20_SS, 26000, /* 26 Mb */
+-			25000, 3, 0x00, 3,
+-			8,  15, 31, 15, 31, 12868 },
++			25000, 3, 3, 8, 15, 31, 15, 31 },
+ 		{ VALID_20, VALID_20, WLAN_RC_PHY_HT_20_SS, 39000, /* 39 Mb */
+-			36700, 4, 0x00, 4,
+-			8,  16, 32, 16, 32, 19304 },
++			36700, 4, 4, 8, 16, 32, 16, 32 },
+ 		{ INVALID, VALID_20, WLAN_RC_PHY_HT_20_SS, 52000, /* 52 Mb */
+-			48100, 5, 0x00, 5,
+-			8,  17, 33, 17, 33, 25740 },
++			48100, 5, 5, 8, 17, 33, 17, 33 },
+ 		{ INVALID,  VALID_20, WLAN_RC_PHY_HT_20_SS, 58500, /* 58.5 Mb */
+-			53500, 6, 0x00, 6,
+-			8,  18, 34, 18, 34, 28956 },
++			53500, 6, 6, 8, 18, 34, 18, 34 },
+ 		{ INVALID, VALID_20, WLAN_RC_PHY_HT_20_SS, 65000, /* 65 Mb */
+-			59000, 7, 0x00, 7,
+-			8,  19, 35, 19, 36, 32180 },
++			59000, 7, 7, 8, 19, 35, 19, 36 },
+ 		{ INVALID, INVALID, WLAN_RC_PHY_HT_20_DS, 13000, /* 13 Mb */
+-			12700, 8, 0x00, 8,
+-			4, 20, 37, 20, 37, 6430 },
++			12700, 8, 8, 4, 20, 37, 20, 37 },
+ 		{ INVALID, INVALID, WLAN_RC_PHY_HT_20_DS, 26000, /* 26 Mb */
+-			24800, 9, 0x00, 9,
+-			6, 21, 38, 21, 38, 12860 },
++			24800, 9, 9, 6, 21, 38, 21, 38 },
+ 		{ INVALID, INVALID, WLAN_RC_PHY_HT_20_DS, 39000, /* 39 Mb */
+-			36600, 10, 0x00, 10,
+-			6, 22, 39, 22, 39, 19300 },
++			36600, 10, 10, 6, 22, 39, 22, 39 },
+ 		{ VALID_20, INVALID, WLAN_RC_PHY_HT_20_DS, 52000, /* 52 Mb */
+-			48100, 11, 0x00, 11,
+-			8,  23, 40, 23, 40, 25736 },
++			48100, 11, 11, 8, 23, 40, 23, 40 },
+ 		{ VALID_20, INVALID, WLAN_RC_PHY_HT_20_DS, 78000, /* 78 Mb */
+-			69500, 12, 0x00, 12,
+-			8,  24, 41, 24, 41, 38600 },
++			69500, 12, 12, 8, 24, 41, 24, 41 },
+ 		{ VALID_20, INVALID, WLAN_RC_PHY_HT_20_DS, 104000, /* 104 Mb */
+-			89500, 13, 0x00, 13,
+-			8,  25, 42, 25, 42, 51472 },
++			89500, 13, 13, 8, 25, 42, 25, 42 },
+ 		{ VALID_20, INVALID, WLAN_RC_PHY_HT_20_DS, 117000, /* 117 Mb */
+-			98900, 14, 0x00, 14,
+-			8,  26, 43, 26, 44, 57890 },
++			98900, 14, 14, 8, 26, 43, 26, 44 },
+ 		{ VALID_20, INVALID, WLAN_RC_PHY_HT_20_DS, 130000, /* 130 Mb */
+-			108300, 15, 0x00, 15,
+-			8,  27, 44, 27, 45, 64320 },
++			108300, 15, 15, 8, 27, 44, 27, 45 },
+ 		{ VALID_40, VALID_40, WLAN_RC_PHY_HT_40_SS, 13500, /* 13.5 Mb */
+-			13200, 0, 0x00, 0,
+-			8, 12, 28, 28, 28, 6684 },
++			13200, 0, 0, 8, 12, 28, 28, 28 },
+ 		{ VALID_40, VALID_40, WLAN_RC_PHY_HT_40_SS, 27500, /* 27.0 Mb */
+-			25900, 1, 0x00, 1,
+-			8, 13, 29, 29, 29, 13368 },
++			25900, 1, 1, 8, 13, 29, 29, 29 },
+ 		{ VALID_40, VALID_40, WLAN_RC_PHY_HT_40_SS, 40500, /* 40.5 Mb */
+-			38600, 2, 0x00, 2,
+-			8, 14, 30, 30, 30, 20052 },
++			38600, 2, 2, 8, 14, 30, 30, 30 },
+ 		{ VALID_40, VALID_40, WLAN_RC_PHY_HT_40_SS, 54000, /* 54 Mb */
+-			49800, 3, 0x00, 3,
+-			8,  15, 31, 31, 31, 26738 },
++			49800, 3, 3, 8,  15, 31, 31, 31 },
+ 		{ VALID_40, VALID_40, WLAN_RC_PHY_HT_40_SS, 81500, /* 81 Mb */
+-			72200, 4, 0x00, 4,
+-			8,  16, 32, 32, 32, 40104 },
++			72200, 4, 4, 8, 16, 32, 32, 32 },
+ 		{ INVALID, VALID_40, WLAN_RC_PHY_HT_40_SS, 108000, /* 108 Mb */
+-			92900, 5, 0x00, 5,
+-			8,  17, 33, 33, 33, 53476 },
++			92900, 5, 5, 8, 17, 33, 33, 33 },
+ 		{ INVALID,  VALID_40, WLAN_RC_PHY_HT_40_SS, 121500, /* 121.5 Mb */
+-			102700, 6, 0x00, 6,
+-			8,  18, 34, 34, 34, 60156 },
++			102700, 6, 6, 8, 18, 34, 34, 34 },
+ 		{ INVALID, VALID_40, WLAN_RC_PHY_HT_40_SS, 135000, /* 135 Mb */
+-			112000, 7, 0x00, 7,
+-			8,  19, 35, 36, 36, 66840 },
++			112000, 7, 7, 8, 19, 35, 36, 36 },
+ 		{ INVALID, VALID_40, WLAN_RC_PHY_HT_40_SS_HGI, 150000, /* 150 Mb */
+-			122000, 7, 0x00, 7,
+-			8,  19, 35, 36, 36, 74200 },
++			122000, 7, 7, 8, 19, 35, 36, 36 },
+ 		{ INVALID, INVALID, WLAN_RC_PHY_HT_40_DS, 27000, /* 27 Mb */
+-			25800, 8, 0x00, 8,
+-			8, 20, 37, 37, 37, 13360 },
++			25800, 8, 8, 8, 20, 37, 37, 37 },
+ 		{ INVALID, INVALID, WLAN_RC_PHY_HT_40_DS, 54000, /* 54 Mb */
+-			49800, 9, 0x00, 9,
+-			8, 21, 38, 38, 38, 26720 },
++			49800, 9, 9, 8, 21, 38, 38, 38 },
+ 		{ INVALID, INVALID, WLAN_RC_PHY_HT_40_DS, 81000, /* 81 Mb */
+-			71900, 10, 0x00, 10,
+-			8, 22, 39, 39, 39, 40080 },
++			71900, 10, 10, 8, 22, 39, 39, 39 },
+ 		{ VALID_40, INVALID, WLAN_RC_PHY_HT_40_DS, 108000, /* 108 Mb */
+-			92500, 11, 0x00, 11,
+-			8,  23, 40, 40, 40, 53440 },
++			92500, 11, 11, 8, 23, 40, 40, 40 },
+ 		{ VALID_40, INVALID, WLAN_RC_PHY_HT_40_DS, 162000, /* 162 Mb */
+-			130300, 12, 0x00, 12,
+-			8,  24, 41, 41, 41, 80160 },
++			130300, 12, 12, 8, 24, 41, 41, 41 },
+ 		{ VALID_40, INVALID, WLAN_RC_PHY_HT_40_DS, 216000, /* 216 Mb */
+-			162800, 13, 0x00, 13,
+-			8,  25, 42, 42, 42, 106880 },
++			162800, 13, 13, 8, 25, 42, 42, 42 },
+ 		{ VALID_40, INVALID, WLAN_RC_PHY_HT_40_DS, 243000, /* 243 Mb */
+-			178200, 14, 0x00, 14,
+-			8,  26, 43, 43, 43, 120240 },
++			178200, 14, 14, 8, 26, 43, 43, 43 },
+ 		{ VALID_40, INVALID, WLAN_RC_PHY_HT_40_DS, 270000, /* 270 Mb */
+-			192100, 15, 0x00, 15,
+-			8,  27, 44, 45, 45, 133600 },
++			192100, 15, 15, 8, 27, 44, 45, 45 },
+ 		{ VALID_40, INVALID, WLAN_RC_PHY_HT_40_DS_HGI, 300000, /* 300 Mb */
+-			207000, 15, 0x00, 15,
+-			8,  27, 44, 45, 45, 148400 },
+-		},
++			207000, 15, 15, 8, 27, 44, 45, 45 },
++	},
+ 	50,  /* probe interval */
+ 	WLAN_RC_HT_FLAG,  /* Phy rates allowed initially */
+ };
+@@ -307,29 +219,21 @@ static const struct ath_rate_table ar541
+ 	0,
+ 	{
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 6000, /* 6 Mb */
+-			5400, 0, 0x00, 12,
+-			0, 0, 0 },
++			5400, 0, 12, 0, 0, 0 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 9000, /* 9 Mb */
+-			7800, 1, 0x00, 18,
+-			0, 1, 0 },
++			7800,  1, 18, 0, 1, 0 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 12000, /* 12 Mb */
+-			10000, 2, 0x00, 24,
+-			2, 2, 0 },
++			10000, 2, 24, 2, 2, 0 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 18000, /* 18 Mb */
+-			13900, 3, 0x00, 36,
+-			2, 3, 0 },
++			13900, 3, 36, 2, 3, 0 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 24000, /* 24 Mb */
+-			17300, 4, 0x00, 48,
+-			4,  4, 0 },
++			17300, 4, 48, 4, 4, 0 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 36000, /* 36 Mb */
+-			23000, 5, 0x00, 72,
+-			4,  5, 0 },
++			23000, 5, 72, 4, 5, 0 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 48000, /* 48 Mb */
+-			27400, 6, 0x00, 96,
+-			4,  6, 0 },
++			27400, 6, 96, 4, 6, 0 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 54000, /* 54 Mb */
+-			29300, 7, 0x00, 108,
+-			4,  7, 0 },
++			29300, 7, 108, 4, 7, 0 },
+ 	},
+ 	50,  /* probe interval */
+ 	0,   /* Phy rates allowed initially */
+@@ -340,41 +244,29 @@ static const struct ath_rate_table ar541
+ 	0,
+ 	{
+ 		{ VALID, VALID, WLAN_RC_PHY_CCK, 1000, /* 1 Mb */
+-			900, 0, 0x00, 2,
+-			0, 0, 0 },
++			900, 0, 2, 0, 0, 0 },
+ 		{ VALID, VALID, WLAN_RC_PHY_CCK, 2000, /* 2 Mb */
+-			1900, 1, 0x04, 4,
+-			1, 1, 0 },
++			1900, 1, 4, 1, 1, 0 },
+ 		{ VALID, VALID, WLAN_RC_PHY_CCK, 5500, /* 5.5 Mb */
+-			4900, 2, 0x04, 11,
+-			2, 2, 0 },
++			4900, 2, 11, 2, 2, 0 },
+ 		{ VALID, VALID, WLAN_RC_PHY_CCK, 11000, /* 11 Mb */
+-			8100, 3, 0x04, 22,
+-			3, 3, 0 },
++			8100, 3, 22, 3, 3, 0 },
+ 		{ INVALID, INVALID, WLAN_RC_PHY_OFDM, 6000, /* 6 Mb */
+-			5400, 4, 0x00, 12,
+-			4, 4, 0 },
++			5400, 4, 12, 4, 4, 0 },
+ 		{ INVALID, INVALID, WLAN_RC_PHY_OFDM, 9000, /* 9 Mb */
+-			7800, 5, 0x00, 18,
+-			4, 5, 0 },
++			7800, 5, 18, 4, 5, 0 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 12000, /* 12 Mb */
+-			10000, 6, 0x00, 24,
+-			6, 6, 0 },
++			10000, 6, 24, 6, 6, 0 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 18000, /* 18 Mb */
+-			13900, 7, 0x00, 36,
+-			6, 7, 0 },
++			13900, 7, 36, 6, 7, 0 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 24000, /* 24 Mb */
+-			17300, 8, 0x00, 48,
+-			8,  8, 0 },
++			17300, 8, 48, 8, 8, 0 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 36000, /* 36 Mb */
+-			23000, 9, 0x00, 72,
+-			8,  9, 0 },
++			23000, 9, 72, 8, 9, 0 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 48000, /* 48 Mb */
+-			27400, 10, 0x00, 96,
+-			8,  10, 0 },
++			27400, 10, 96, 8, 10, 0 },
+ 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 54000, /* 54 Mb */
+-			29300, 11, 0x00, 108,
+-			8,  11, 0 },
++			29300, 11, 108, 8, 11, 0 },
+ 	},
+ 	50,  /* probe interval */
+ 	0,   /* Phy rates allowed initially */
 
