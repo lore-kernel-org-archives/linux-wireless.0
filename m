@@ -1,38 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:15231 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754895AbZKSPuJ convert rfc822-to-8bit (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58169
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758284AbZKRSvx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2009 10:50:09 -0500
-Received: by ey-out-2122.google.com with SMTP id 4so44645eyf.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Nov 2009 07:50:14 -0800 (PST)
-Subject: Re: mesh endian bugs
-Mime-Version: 1.0 (Apple Message framework v1077)
-Content-Type: text/plain; charset=us-ascii
-From: Rui Paulo <rpaulo@gmail.com>
-In-Reply-To: <1258638691.7094.16.camel@johannes.local>
-Date: Thu, 19 Nov 2009 15:50:10 +0000
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Message-Id: <7CA4D235-AFC1-4B4A-9025-3A426997706C@gmail.com>
-References: <1258638691.7094.16.camel@johannes.local>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 18 Nov 2009 13:51:53 -0500
+Date: Wed, 18 Nov 2009 10:52:10 -0800 (PST)
+Message-Id: <20091118.105210.28433234.davem@davemloft.net>
+To: julia@diku.dk
+Cc: flamingice@sourmilk.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	arnd@arndb.de, joe@perches.com, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH 13/16] drivers/net/adm8211.c: remove exceptional & on
+ function name
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <Pine.LNX.4.64.0911181924310.20943@ask.diku.dk>
+References: <Pine.LNX.4.64.0911181924310.20943@ask.diku.dk>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Julia Lawall <julia@diku.dk>
+Date: Wed, 18 Nov 2009 19:24:50 +0100 (CET)
 
-On 19 Nov 2009, at 13:51, Johannes Berg wrote:
+> In this file, function names are otherwise used as pointers without &.
+ ...
+> Signed-off-by: Julia Lawall <julia@diku.dk>
 
->  CHECK   /home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c
-> /home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c:471:41: warning: incorrect type in argument 4 (different base types)
-> /home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c:471:41:    expected restricted __le16 [usertype] target_rcode
-> /home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c:471:41:    got int
-> /home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c:617:36: warning: incorrect type in argument 4 (different base types)
-> /home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c:617:36:    expected restricted __le16 [usertype] target_rcode
-> /home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c:617:36:    got int
-
-Thanks Johannes. How does one perform this check?
-
---
-Rui Paulo
-
+Applied.
