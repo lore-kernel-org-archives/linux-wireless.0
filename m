@@ -1,102 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:51186 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754476AbZKQSF6 convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:51096 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932186AbZKRUjB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 13:05:58 -0500
-Received: by iwn8 with SMTP id 8so207530iwn.33
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2009 10:06:03 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <C32E4D5CD18647DE9A4F47C6EB1A94C2@qlaptop2>
-References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de>
-	<43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com>
-	<1803.194.45.26.221.1258473872.squirrel@webmail.madwifi-project.org>
-	<43e72e890911170838g26172725ga4a843dc5292c29f@mail.gmail.com>
-	<C32E4D5CD18647DE9A4F47C6EB1A94C2@qlaptop2>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 17 Nov 2009 10:05:43 -0800
-Message-ID: <43e72e890911171005y1d06e4aan4c5fd35db03dc66b@mail.gmail.com>
-Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and why?
-To: Tom Sharples <tsharples@qorvus.com>
-Cc: Michael Renzmann <mrenzmann@madwifi-project.org>,
-	madwifi-users@lists.sourceforge.net,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	madwifi-devel@lists.sourceforge.net
-Content-Type: text/plain; charset=UTF-8
+	Wed, 18 Nov 2009 15:39:01 -0500
+Received: by fg-out-1718.google.com with SMTP id d23so2425790fga.1
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 12:39:06 -0800 (PST)
+Subject: Re: mac80211 breaks suspend to disk
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20091118202802.GE2911@tuxdriver.com>
+References: <1258568836.4512.13.camel@maxim-laptop>
+	 <20091118202802.GE2911@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 18 Nov 2009 22:39:09 +0200
+Message-ID: <1258576749.8018.7.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 17, 2009 at 9:51 AM, Tom Sharples <tsharples@qorvus.com> wrote:
-> Comments inline:
->>
->> My point was that there are already hundreds of users already on ath5k
->> and ath9k and that obviously you will get a biased view of MadWifi /
->> ath5k situation (I don't consider MadWifi any type of alternative to
->> ath9k).
->
-> We have way more users than this running just our version. There are
-> probably tens of thousands of "users" (embedded systems) that run some
-> flavor of madwifi.
+On Wed, 2009-11-18 at 15:28 -0500, John W. Linville wrote: 
+> On Wed, Nov 18, 2009 at 08:27:16PM +0200, Maxim Levitsky wrote:
+> > Hi,
+> > 
+> > I finally managed to track down a rare hang on resume from disk I see
+> > for some prolonged time.
+> > Symptoms are that sometimes on resume, system almost hangs.
+> > This is I can switch VTs and execute SysRQ sequences.
+> > This is typical when oops happens.
+> > 
+> > I tracked this to BUG_ON in add_timer.
+> > I replaced this with WARN_ON, and here is the backtrace:
+> > 
+> > 
+> >   331.334935] WARNING: at /home/maxim/software/kernel/linux-2.6/kernel/timer.c:791 add_timer+0x36/0x40()
+> > [  331.347374] Hardware name: Aspire 5720     
+> > [  331.359725] Modules linked in: nvidia(P)  af_packet usb_storage usb_libusual cpufreq_powersave iwl3945 nfsd snd_hda_codec_realtek cpufreq_conservative exportfs iwlcore cpufreq_userspace uvcvideo snd_hda_intel acpi_cpufreq nfs videodev mac80211 coretemp lockd snd_hda_codec joydev v4l1_compat tg3 nfs_acl ohci1394 v4l2_compat_ioctl32 snd_hwdep uhci_hcd sbp2 cfg80211 psmouse video ehci_hcd auth_rpcgss libphy lirc_ene0100 ieee1394 output snd_pcm usbcore serio_raw rfkill evdev snd_page_alloc sunrpc fuse lzo lzo_decompress lzo_compress
+> > [  331.428619] Pid: 4394, comm: pm-hibernate Tainted: P           2.6.32-rc7-wl #183
+> > [  331.442747] Call Trace:
+> > [  331.456760]  [<ffffffff81043a98>] warn_slowpath_common+0x78/0xb0
+> > [  331.471119]  [<ffffffff81043adf>] warn_slowpath_null+0xf/0x20
+> > [  331.485475]  [<ffffffff8104f996>] add_timer+0x36/0x40
+> > [  331.499814]  [<ffffffffa01fb34c>] ieee80211_sta_restart+0x4c/0x50 [mac80211]
+> > [  331.514314]  [<ffffffffa020c86c>] ieee80211_reconfig+0x36c/0x420 [mac80211]
+> > [  331.528678]  [<ffffffffa020c65c>] ? ieee80211_reconfig+0x15c/0x420 [mac80211]
+> > [  331.543094]  [<ffffffffa0202fa5>] ieee80211_resume+0x15/0x20 [mac80211]
+> > [  331.557525]  [<ffffffffa01527a5>] wiphy_resume+0x75/0x90 [cfg80211]
+> > [  331.572001]  [<ffffffff81273fee>] dpm_resume_end+0x47e/0x4b0
+> > [  331.586325]  [<ffffffff8107d5e9>] hibernation_snapshot+0xc9/0x280
+> > [  331.600377]  [<ffffffff8107d88d>] hibernate+0xed/0x1f0
+> > [  331.613980]  [<ffffffff8107c00c>] state_store+0xec/0x100
+> > [  331.627577]  [<ffffffff811e05f7>] kobj_attr_store+0x17/0x20
+> > [  331.641242]  [<ffffffff811345a4>] sysfs_write_file+0xd4/0x150
+> > [  331.655056]  [<ffffffff810d02f8>] vfs_write+0xb8/0x1a0
+> > [  331.668718]  [<ffffffff810d04bc>] sys_write+0x4c/0x80
+> > [  331.682153]  [<ffffffff8100beeb>] system_call_fastpath+0x16/0x1b
+> > [  331.695613] ---[ end trace 85c754c80d7debe8 ]---
+> > [  331.709557] PM: Image restored successfully.
+> > 
+> > Now, how the ifmgd->timer could still be pending I have no idea yet, it seems to be explictly
+> > del_timer_sync'ed and timer routine also checks this condition, and doesn't restart itself....
+> > 
+> > Also note that this was seen happening both on resume, and when the suspend image is written (sort of resume too).
+> 
+> Quick glance suggest some hole in the management of the
+> TMR_RUNNING_CHANSW bit?
 
-Haha are you really trying to out count modern Linux kernel users with
-MadWifi embedded users?
+I guess no, I have futher information.
 
->>> The development of any software should happen with the user's needs and
->>> requirements in mind
->>
->> Note I didn't say otherwise.
->
-> Your comments, at best, give short shrift to the many, many embedded users,
-> esp those who run the 2.4.x kernel. Does anyone actually think it would be
-> practical to remotely upgrade tens of thousands of unattended devices, some
-> of which are miles away from the nearest human, to a 2.6 kernel?
+I forgot to pay attention to few lines before the oops message:
 
-What do you expect to get out of MadWifi at this point if not just
-maintenance mode support for that box you cannot even upgrade a full
-kernel on that is miles away from any human being?
 
-> Even if
-> only 5% fail to come back online, it would be a logistical and
-> customer-relations disaster. These aren't windows desktops where someone can
-> just curse and then powercycle.
+[  331.307139] No probe response from AP 00:1b:9e:d8:77:02 after 500ms, try 1
+[  331.320121] ------------[ cut here ]------------
+[  331.334935] WARNING: at /home/maxim/software/kernel/linux-2.6/kernel/timer.c:791 add_timer+0x36/0x40()
+[  331.347374] Hardware name: Aspire 5720     
+.....
 
-You can perfectly stick to what you have, like I said no one is
-forcing you to do anything different, but failing to understand that
-MadWifi development has come to a stand still maintenance mode would
-be just as ludicrous as expecting you to upgrade every single box you
-have out there.
+This reveals that somehow the ieee80211_sta_work manages to run before ieee80211_sta_restart and it sets the timer....
 
->> Well to me they are clear and I don't need a survey to understand
->> this. ath5k currently lacks:
->>
->>  * DFS
->>  * Multi-BSS AP functionality
->>  * Roaming
->>  * ANI
->>
-> You also need to add to this list:
->
-> * Fast-frames
-> * Compression
+looking at ieee80211_reconfig it seems suspicious that 'local->suspended = false;' is set so early.
+In fact it is set again to false just prior to 
 
-Not sure if the above are vendor extensions, if so and if they require
-some tweaking on mac8021 chances are you won't get them upstream.
+list_for_each_entry(sdata, &local->interfaces, list) {....
 
-> * Half / quarter channels (hopefully done in a sensible fashion like AirOS
-> without the countrycode / regdomain BS)
+So, I would suspect some lines in this function trigger the work queue.
 
-As far as its supported by IEEE this seems reasonable, you just need
-motivated developers.
+Seems reasonable?
 
-> We need to aknowledge that "user" includes not just those surfing on their
-> laptops, but the far larger number of embedded devices running madwifi each
-> and every day, in critical systems, with excellent reliability.
+Best regards,
+	Maxim Levitsky
 
-Sure, but just as with MadWifi if you don't have embedded interested
-developers on MadWifi you won't get them on ath5k. What should also be
-realized though is that not every single knob and feature of MadWifi
-will make it upstream. Anything vendor specific or hackish will simply
-not make it up -- unless you really have a motivated developer willing
-to support it.
 
-  Luis
