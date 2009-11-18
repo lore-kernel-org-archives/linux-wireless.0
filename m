@@ -1,46 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:50612 "EHLO
-	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754875AbZKWHQe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 02:16:34 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 4/6] rt2x00: Fix typo (lengt --> length) in rt2x00queue.c
-Date: Mon, 23 Nov 2009 08:16:03 +0100
-Message-Id: <1258960565-26736-5-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1258960565-26736-4-git-send-email-gwingerde@gmail.com>
-References: <1258960565-26736-1-git-send-email-gwingerde@gmail.com>
- <1258960565-26736-2-git-send-email-gwingerde@gmail.com>
- <1258960565-26736-3-git-send-email-gwingerde@gmail.com>
- <1258960565-26736-4-git-send-email-gwingerde@gmail.com>
+Received: from mgw2.diku.dk ([130.225.96.92]:56445 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932262AbZKRSZX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Nov 2009 13:25:23 -0500
+Date: Wed, 18 Nov 2009 19:25:25 +0100 (CET)
+From: Julia Lawall <julia@diku.dk>
+To: Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	arnd@arndb.de, joe@perches.com, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: [PATCH 14/16] drivers/net/wireless/iwlwifi: remove exceptional & on
+ function name
+Message-ID: <Pine.LNX.4.64.0911181924510.20943@ask.diku.dk>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+From: Julia Lawall <julia@diku.dk>
+
+In this file, function names are otherwise used as pointers without &.
+
+A simplified version of the semantic patch that makes this change is as
+follows: (http://coccinelle.lip6.fr/)
+
+// <smpl>
+@r@
+identifier f;
+@@
+
+f(...) { ... }
+
+@@
+identifier r.f;
+@@
+
+- &f
++ f
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
 ---
- drivers/net/wireless/rt2x00/rt2x00queue.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c     |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index eaedee8..32d4aea 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -162,10 +162,10 @@ void rt2x00queue_align_frame(struct sk_buff *skb)
- 	skb_trim(skb, frame_length);
- }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+index dc81e19..d4b4988 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+@@ -355,7 +355,7 @@ static void rs_rate_init(void *priv_r, struct ieee80211_supported_band *sband,
  
--void rt2x00queue_align_payload(struct sk_buff *skb, unsigned int header_lengt)
-+void rt2x00queue_align_payload(struct sk_buff *skb, unsigned int header_length)
- {
- 	unsigned int frame_length = skb->len;
--	unsigned int align = ALIGN_SIZE(skb, header_lengt);
-+	unsigned int align = ALIGN_SIZE(skb, header_length);
+ 	init_timer(&rs_sta->rate_scale_flush);
+ 	rs_sta->rate_scale_flush.data = (unsigned long)rs_sta;
+-	rs_sta->rate_scale_flush.function = &iwl3945_bg_rate_scale_flush;
++	rs_sta->rate_scale_flush.function = iwl3945_bg_rate_scale_flush;
  
- 	if (!align)
- 		return;
--- 
-1.6.5.3
-
+ 	for (i = 0; i < IWL_RATE_COUNT_3945; i++)
+ 		iwl3945_clear_window(&rs_sta->win[i]);
