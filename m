@@ -1,72 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:51890 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759624AbZKKXWe (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:49160 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757454AbZKRPzB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 18:22:34 -0500
-Received: by ey-out-2122.google.com with SMTP id 9so367396eyd.5
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2009 15:22:39 -0800 (PST)
-Message-ID: <4AFB4732.8090801@gmail.com>
-Date: Thu, 12 Nov 2009 00:22:26 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Wed, 18 Nov 2009 10:55:01 -0500
+Received: by bwz27 with SMTP id 27so1269661bwz.21
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 07:55:06 -0800 (PST)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] rt2x00: Fix rt2800lib RF chip programming selection.
-References: <1257803998-5412-1-git-send-email-gwingerde@gmail.com> <20091111220755.GN4392@tuxdriver.com>
-In-Reply-To: <20091111220755.GN4392@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1258558500.2003.88.camel@violet>
+References: <1258557771-10776-1-git-send-email-janakiram.sistla@gmail.com>
+	 <1258558500.2003.88.camel@violet>
+Date: Wed, 18 Nov 2009 21:25:06 +0530
+Message-ID: <4fb5db50911180755u4e01814bvcc4d0ec8d396abd@mail.gmail.com>
+Subject: Re: [PATCH 2/2] Adding kerneldoc entry for radio type GPS
+From: Janakiram Sistla <janakiram.sistla@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/11/09 23:07, John W. Linville wrote:
-> On Mon, Nov 09, 2009 at 10:59:58PM +0100, Gertjan van Wingerde wrote:
->> Mirror the legacy Ralink driver with respect to rt2800 RF register programming. Execute
->> rt2800_config_channel_rt3x for all RF2020, RF3020, RF3021 & RF3022 chipsets when operating on RT3070
->> devices.
+On Wed, Nov 18, 2009 at 9:05 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi guys,
+>
+>> From: Janakiram Sistla <janakiram.sistla@gmail.com>
 >>
->> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>>
+>> Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
 >> ---
->>  drivers/net/wireless/rt2x00/rt2800lib.c |   10 +++++++---
->>  1 files changed, 7 insertions(+), 3 deletions(-)
+>>  include/linux/rfkill.h |    1 +
+>>  1 files changed, 1 insertions(+), 0 deletions(-)
 >>
->> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
->> index 2c91c44..446087e 100644
->> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
->> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
->> @@ -806,10 +806,14 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
->>  	unsigned int tx_pin;
->>  	u8 bbp;
->>  
->> -	if (rt2x00_rev(&rt2x00dev->chip) != RT3070_VERSION)
->> -		rt2800_config_channel_rt2x(rt2x00dev, conf, rf, info);
->> -	else
->> +	if (rt2x00_rt(&rt2x00dev->chip, RT3070) &&	
->> +           (rt2x00_rf(&rt2x00dev->chip, RF2020) ||
->> +	     rt2x00_rf(&rt2x00dev->chip, RF3020) ||
->> +	     rt2x00_rf(&rt2x00dev->chip, RF3021) ||
->> +	     rt2x00_rf(&rt2x00dev->chip, RF3022)))
->>  		rt2800_config_channel_rt3x(rt2x00dev, conf, rf, info);
->> +	else
->> +		rt2800_config_channel_rt2x(rt2x00dev, conf, rf, info);
->>  
->>  	/*
->>  	 * Change BBP settings
-> 
->   CC [M]  drivers/net/wireless/rt2x00/rt2800lib.o
-> drivers/net/wireless/rt2x00/rt2800lib.c: In function â€˜rt2800_config_channelâ€™:
-> drivers/net/wireless/rt2x00/rt2800lib.c:809: error: â€˜RF3070â€™ undeclared (first use in this function)
-> drivers/net/wireless/rt2x00/rt2800lib.c:809: error: (Each undeclared identifier is reported only once
-> drivers/net/wireless/rt2x00/rt2800lib.c:809: error: for each function it appears in.)
-> 
+>> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+>> index d787d5f..212f555 100644
+>> --- a/include/linux/rfkill.h
+>> +++ b/include/linux/rfkill.h
+>> @@ -36,6 +36,7 @@
+>>   * @RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
+>>   * @RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
+>>   * @RFKILL_TYPE_FM: switch is on a FM device.
+>> + * @RFKILL_TYPE_GPS: switch is on a GPS device.
+>>   * @NUM_RFKILL_TYPES: number of defined rfkill types
+>>   */
+>>  enum rfkill_type {
+>
+> so this is getting stupid right now. I am sick of a really simple patch
+> causes so much trouble. Even this one is wrong again. The GPS doc should
+> obviously before FM.
+Marcel I think you want me to submit GPS doc patch first.I will be
+doing it shortly and then i will do it for FM.I am sorry for this mis
+understanding
+>
+> Regards
+>
+> Marcel
+>
+>
+>
 
-Me very confused here. This patch doesn't even introduce the RF3070 symbol, nor can I see where it is used.
-It does use symbol RT3070 on line 809, but that one is introduced in an earlier patch.
-Ah, did you apply the RT3070 USB chipset detection patch before this one?
-
-Still wouldn't explain the compile error on symbol RF3070 though.
-
----
-Gertjan.
+Regards,
+Ram.
