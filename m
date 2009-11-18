@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:55535 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753150AbZKQQ6v convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 11:58:51 -0500
-From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
-To: Piotr Findeisen <piotr.findeisen@gmail.com>
-Subject: Re: unsupported TL-WN422G (0cf3:1006)
-Date: Tue, 17 Nov 2009 17:58:49 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <4B02CD95.2010805@gmail.com>
-In-Reply-To: <4B02CD95.2010805@gmail.com>
+Received: from nbd.name ([88.198.39.176]:59877 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756391AbZKREGr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Nov 2009 23:06:47 -0500
+Message-ID: <4B0372DC.7010209@openwrt.org>
+Date: Wed, 18 Nov 2009 05:06:52 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <200911171758.53596.s.L-H@gmx.de>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 1/2] ath9k: properly use the mac80211 rate control api
+References: <4B03700F.50309@openwrt.org>
+In-Reply-To: <4B03700F.50309@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
-
-On Tuesday 17 November 2009, Piotr Findeisen wrote:
-> Hi!
+Felix Fietkau wrote:
+> This patch changes ath9k to pass proper MCS indexes and flags
+> between the RC and the rest of the driver code.
+> sc->cur_rate_table remains, as it's used by the RC code internally,
+> but the rest of the driver code no longer uses it, so a potential
+> new RC for ath9k would not have to update it.
 > 
-> I've bought TP-LINK WN422G USB wireless card with Zydas chipset (as
-> stated by the seller) in the hope it will be supported by zd1211rw
-> driver (listed here [1]), but it seems it's not.
-> I've tried to find help on linuxforums.org <http://linuxforums.org> [2]
-> — the only open option is to use ndiswrapper, which (a) is reported not
-> to work earlier in the thread and (b) is the last option for me to
-> consider. Search in linux-wireless's archives yielded only a result [3]
-> with a patch included in my kernel (Ubuntu-2.6.31-14.48).
-> 
-> My card's vendor:product id is 0cf3:1006 (different that the one listed
-> [1] for WN422G).
-[...]
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+> - replaces sc->hw usage with common->hw
+> - initializes unused tx status rates to -1 for minstrel compatibility
+> - split up for easier review
+> - tested in ap mode with minstrel against a legacy STA
+Sorry, disregard that patch. It doesn't really work when split up this
+way, as I still need to adjust the MCS indexes, which is currently done
+in the second patch. I'll resend later...
 
-If you take a look at the vendor's windows driver for TP-LINK WN422G *v2*,
-it becomes obvious that the device does not use the ZyDAS zd1211/ Atheros 
-5007UG cipset, but has switched to the new Atheros AR9271 chipset (which 
-technically is a 150 MBit/s 802.11n "lite" chipset family) instead.
+- Felix
 
-%ATHER.DeviceDesc.9271% = ATHER_DEV_9271.ndi,     USB\VID_0CF3&PID_9271
-%ATHER.DeviceDesc.7010% = ATHER_DEV_7010.ndi,     USB\VID_0CF3&PID_7010
-%ATHER.DeviceDesc.1006% = ATHER_DEV_1006.ndi,     USB\VID_0CF3&PID_1006
-
-At this moment a new driver called ath9k_htc is under (early) development:
-	http://wireless.kernel.org/en/users/Drivers/ath9k_htc
-
-Regards
-	Stefan Lippers-Hollmann
