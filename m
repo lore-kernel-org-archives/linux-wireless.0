@@ -1,35 +1,419 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:46260 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758139AbZKETHe (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42168 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755835AbZKRQa0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2009 14:07:34 -0500
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 35/41] rt2800: prepare for rt2800lib addition
-Date: Thu, 5 Nov 2009 20:07:36 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173617.28463.6733.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173617.28463.6733.sendpatchset@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911052007.37268.IvDoorn@gmail.com>
+	Wed, 18 Nov 2009 11:30:26 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/3] libipw: initiate cfg80211 API conversion (v2)
+Date: Wed, 18 Nov 2009 11:25:48 -0500
+Message-Id: <1258561550-20574-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2800: prepare for rt2800lib addition
-> 
-> Part of preparations for later code unification.
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Initiate the conversion of libipw to the new cfg80211 configuration API.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+For now, leave CONFIG_IPW2200_PROMISCUOUS stuff alone.  Eventually
+migrate it to cfg80211 when the add/del/change_virtual_intf methods
+are implemented.
 
+(v2: Fix unconditional wiphy_unregister in libipw which was causing
+     problems for ipw2100, somewhat based on prior attempted fix
+     by Zhu Yi <yi.zhu@intel.com>.  Previously both original version of
+     this patch and Zhu Yi's fix attempt were reverted due to
+     discovery of regressions. -- JWL)
 
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/ipw2x00/ipw2100.c       |    6 +-
+ drivers/net/wireless/ipw2x00/ipw2200.c       |  145 +++++++++++++++++++++-----
+ drivers/net/wireless/ipw2x00/libipw.h        |    8 +-
+ drivers/net/wireless/ipw2x00/libipw_module.c |   38 ++++++-
+ 4 files changed, 161 insertions(+), 36 deletions(-)
+
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+index b740837..a9bc8a9 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+@@ -6029,7 +6029,7 @@ static struct net_device *ipw2100_alloc_device(struct pci_dev *pci_dev,
+ 	struct ipw2100_priv *priv;
+ 	struct net_device *dev;
+ 
+-	dev = alloc_ieee80211(sizeof(struct ipw2100_priv));
++	dev = alloc_ieee80211(sizeof(struct ipw2100_priv), 0);
+ 	if (!dev)
+ 		return NULL;
+ 	priv = libipw_priv(dev);
+@@ -6342,7 +6342,7 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
+ 		sysfs_remove_group(&pci_dev->dev.kobj,
+ 				   &ipw2100_attribute_group);
+ 
+-		free_ieee80211(dev);
++		free_ieee80211(dev, 0);
+ 		pci_set_drvdata(pci_dev, NULL);
+ 	}
+ 
+@@ -6400,7 +6400,7 @@ static void __devexit ipw2100_pci_remove_one(struct pci_dev *pci_dev)
+ 		if (dev->base_addr)
+ 			iounmap((void __iomem *)dev->base_addr);
+ 
+-		free_ieee80211(dev);
++		free_ieee80211(dev, 0);
+ 	}
+ 
+ 	pci_release_regions(pci_dev);
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index 9fe0e80..ed31d5c 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -109,6 +109,25 @@ static int antenna = CFG_SYS_ANTENNA_BOTH;
+ static int rtap_iface = 0;     /* def: 0 -- do not create rtap interface */
+ #endif
+ 
++static struct ieee80211_rate ipw2200_rates[] = {
++	{ .bitrate = 10 },
++	{ .bitrate = 20, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 55, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 110, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 60 },
++	{ .bitrate = 90 },
++	{ .bitrate = 120 },
++	{ .bitrate = 180 },
++	{ .bitrate = 240 },
++	{ .bitrate = 360 },
++	{ .bitrate = 480 },
++	{ .bitrate = 540 }
++};
++
++#define ipw2200_a_rates		(ipw2200_rates + 4)
++#define ipw2200_num_a_rates	8
++#define ipw2200_bg_rates	(ipw2200_rates + 0)
++#define ipw2200_num_bg_rates	12
+ 
+ #ifdef CONFIG_IPW2200_QOS
+ static int qos_enable = 0;
+@@ -8660,24 +8679,6 @@ static int ipw_sw_reset(struct ipw_priv *priv, int option)
+  *
+  */
+ 
+-static int ipw_wx_get_name(struct net_device *dev,
+-			   struct iw_request_info *info,
+-			   union iwreq_data *wrqu, char *extra)
+-{
+-	struct ipw_priv *priv = libipw_priv(dev);
+-	mutex_lock(&priv->mutex);
+-	if (priv->status & STATUS_RF_KILL_MASK)
+-		strcpy(wrqu->name, "radio off");
+-	else if (!(priv->status & STATUS_ASSOCIATED))
+-		strcpy(wrqu->name, "unassociated");
+-	else
+-		snprintf(wrqu->name, IFNAMSIZ, "IEEE 802.11%c",
+-			 ipw_modes[priv->assoc_request.ieee_mode]);
+-	IPW_DEBUG_WX("Name: %s\n", wrqu->name);
+-	mutex_unlock(&priv->mutex);
+-	return 0;
+-}
+-
+ static int ipw_set_channel(struct ipw_priv *priv, u8 channel)
+ {
+ 	if (channel == 0) {
+@@ -9977,7 +9978,7 @@ static int ipw_wx_sw_reset(struct net_device *dev,
+ /* Rebase the WE IOCTLs to zero for the handler array */
+ #define IW_IOCTL(x) [(x)-SIOCSIWCOMMIT]
+ static iw_handler ipw_wx_handlers[] = {
+-	IW_IOCTL(SIOCGIWNAME) = ipw_wx_get_name,
++	IW_IOCTL(SIOCGIWNAME) = (iw_handler) cfg80211_wext_giwname,
+ 	IW_IOCTL(SIOCSIWFREQ) = ipw_wx_set_freq,
+ 	IW_IOCTL(SIOCGIWFREQ) = ipw_wx_get_freq,
+ 	IW_IOCTL(SIOCSIWMODE) = ipw_wx_set_mode,
+@@ -11422,16 +11423,100 @@ static void ipw_bg_down(struct work_struct *work)
+ /* Called by register_netdev() */
+ static int ipw_net_init(struct net_device *dev)
+ {
++	int i, rc = 0;
+ 	struct ipw_priv *priv = libipw_priv(dev);
++	const struct libipw_geo *geo = libipw_get_geo(priv->ieee);
++	struct wireless_dev *wdev = &priv->ieee->wdev;
+ 	mutex_lock(&priv->mutex);
+ 
+ 	if (ipw_up(priv)) {
+-		mutex_unlock(&priv->mutex);
+-		return -EIO;
++		rc = -EIO;
++		goto out;
+ 	}
+ 
++	memcpy(wdev->wiphy->perm_addr, priv->mac_addr, ETH_ALEN);
++
++	/* fill-out priv->ieee->bg_band */
++	if (geo->bg_channels) {
++		struct ieee80211_supported_band *bg_band = &priv->ieee->bg_band;
++
++		bg_band->band = IEEE80211_BAND_2GHZ;
++		bg_band->n_channels = geo->bg_channels;
++		bg_band->channels =
++			kzalloc(geo->bg_channels *
++				sizeof(struct ieee80211_channel), GFP_KERNEL);
++		/* translate geo->bg to bg_band.channels */
++		for (i = 0; i < geo->bg_channels; i++) {
++			bg_band->channels[i].band = IEEE80211_BAND_2GHZ;
++			bg_band->channels[i].center_freq = geo->bg[i].freq;
++			bg_band->channels[i].hw_value = geo->bg[i].channel;
++			bg_band->channels[i].max_power = geo->bg[i].max_power;
++			if (geo->bg[i].flags & LIBIPW_CH_PASSIVE_ONLY)
++				bg_band->channels[i].flags |=
++					IEEE80211_CHAN_PASSIVE_SCAN;
++			if (geo->bg[i].flags & LIBIPW_CH_NO_IBSS)
++				bg_band->channels[i].flags |=
++					IEEE80211_CHAN_NO_IBSS;
++			if (geo->bg[i].flags & LIBIPW_CH_RADAR_DETECT)
++				bg_band->channels[i].flags |=
++					IEEE80211_CHAN_RADAR;
++			/* No equivalent for LIBIPW_CH_80211H_RULES,
++			   LIBIPW_CH_UNIFORM_SPREADING, or
++			   LIBIPW_CH_B_ONLY... */
++		}
++		/* point at bitrate info */
++		bg_band->bitrates = ipw2200_bg_rates;
++		bg_band->n_bitrates = ipw2200_num_bg_rates;
++
++		wdev->wiphy->bands[IEEE80211_BAND_2GHZ] = bg_band;
++	}
++
++	/* fill-out priv->ieee->a_band */
++	if (geo->a_channels) {
++		struct ieee80211_supported_band *a_band = &priv->ieee->a_band;
++
++		a_band->band = IEEE80211_BAND_5GHZ;
++		a_band->n_channels = geo->a_channels;
++		a_band->channels =
++			kzalloc(geo->a_channels *
++				sizeof(struct ieee80211_channel), GFP_KERNEL);
++		/* translate geo->bg to a_band.channels */
++		for (i = 0; i < geo->a_channels; i++) {
++			a_band->channels[i].band = IEEE80211_BAND_2GHZ;
++			a_band->channels[i].center_freq = geo->a[i].freq;
++			a_band->channels[i].hw_value = geo->a[i].channel;
++			a_band->channels[i].max_power = geo->a[i].max_power;
++			if (geo->a[i].flags & LIBIPW_CH_PASSIVE_ONLY)
++				a_band->channels[i].flags |=
++					IEEE80211_CHAN_PASSIVE_SCAN;
++			if (geo->a[i].flags & LIBIPW_CH_NO_IBSS)
++				a_band->channels[i].flags |=
++					IEEE80211_CHAN_NO_IBSS;
++			if (geo->a[i].flags & LIBIPW_CH_RADAR_DETECT)
++				a_band->channels[i].flags |=
++					IEEE80211_CHAN_RADAR;
++			/* No equivalent for LIBIPW_CH_80211H_RULES,
++			   LIBIPW_CH_UNIFORM_SPREADING, or
++			   LIBIPW_CH_B_ONLY... */
++		}
++		/* point at bitrate info */
++		a_band->bitrates = ipw2200_a_rates;
++		a_band->n_bitrates = ipw2200_num_a_rates;
++
++		wdev->wiphy->bands[IEEE80211_BAND_5GHZ] = a_band;
++	}
++
++	set_wiphy_dev(wdev->wiphy, &priv->pci_dev->dev);
++
++	/* With that information in place, we can now register the wiphy... */
++	if (wiphy_register(wdev->wiphy)) {
++		rc = -EIO;
++		goto out;
++	}
++
++out:
+ 	mutex_unlock(&priv->mutex);
+-	return 0;
++	return rc;
+ }
+ 
+ /* PCI driver stuff */
+@@ -11562,7 +11647,7 @@ static int ipw_prom_alloc(struct ipw_priv *priv)
+ 	if (priv->prom_net_dev)
+ 		return -EPERM;
+ 
+-	priv->prom_net_dev = alloc_ieee80211(sizeof(struct ipw_prom_priv));
++	priv->prom_net_dev = alloc_ieee80211(sizeof(struct ipw_prom_priv), 1);
+ 	if (priv->prom_net_dev == NULL)
+ 		return -ENOMEM;
+ 
+@@ -11581,7 +11666,7 @@ static int ipw_prom_alloc(struct ipw_priv *priv)
+ 
+ 	rc = register_netdev(priv->prom_net_dev);
+ 	if (rc) {
+-		free_ieee80211(priv->prom_net_dev);
++		free_ieee80211(priv->prom_net_dev, 1);
+ 		priv->prom_net_dev = NULL;
+ 		return rc;
+ 	}
+@@ -11595,7 +11680,7 @@ static void ipw_prom_free(struct ipw_priv *priv)
+ 		return;
+ 
+ 	unregister_netdev(priv->prom_net_dev);
+-	free_ieee80211(priv->prom_net_dev);
++	free_ieee80211(priv->prom_net_dev, 1);
+ 
+ 	priv->prom_net_dev = NULL;
+ }
+@@ -11623,7 +11708,7 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
+ 	struct ipw_priv *priv;
+ 	int i;
+ 
+-	net_dev = alloc_ieee80211(sizeof(struct ipw_priv));
++	net_dev = alloc_ieee80211(sizeof(struct ipw_priv), 0);
+ 	if (net_dev == NULL) {
+ 		err = -ENOMEM;
+ 		goto out;
+@@ -11771,7 +11856,7 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
+ 	pci_disable_device(pdev);
+ 	pci_set_drvdata(pdev, NULL);
+       out_free_ieee80211:
+-	free_ieee80211(priv->net_dev);
++	free_ieee80211(priv->net_dev, 0);
+       out:
+ 	return err;
+ }
+@@ -11838,7 +11923,11 @@ static void __devexit ipw_pci_remove(struct pci_dev *pdev)
+ 	pci_release_regions(pdev);
+ 	pci_disable_device(pdev);
+ 	pci_set_drvdata(pdev, NULL);
+-	free_ieee80211(priv->net_dev);
++	/* wiphy_unregister needs to be here, before free_ieee80211 */
++	wiphy_unregister(priv->ieee->wdev.wiphy);
++	kfree(priv->ieee->a_band.channels);
++	kfree(priv->ieee->bg_band.channels);
++	free_ieee80211(priv->net_dev, 0);
+ 	free_firmware();
+ }
+ 
+diff --git a/drivers/net/wireless/ipw2x00/libipw.h b/drivers/net/wireless/ipw2x00/libipw.h
+index 1e334ff..bf45391 100644
+--- a/drivers/net/wireless/ipw2x00/libipw.h
++++ b/drivers/net/wireless/ipw2x00/libipw.h
+@@ -31,6 +31,7 @@
+ #include <linux/ieee80211.h>
+ 
+ #include <net/lib80211.h>
++#include <net/cfg80211.h>
+ 
+ #define LIBIPW_VERSION "git-1.1.13"
+ 
+@@ -783,12 +784,15 @@ struct libipw_geo {
+ 
+ struct libipw_device {
+ 	struct net_device *dev;
++	struct wireless_dev wdev;
+ 	struct libipw_security sec;
+ 
+ 	/* Bookkeeping structures */
+ 	struct libipw_stats ieee_stats;
+ 
+ 	struct libipw_geo geo;
++	struct ieee80211_supported_band bg_band;
++	struct ieee80211_supported_band a_band;
+ 
+ 	/* Probe / Beacon management */
+ 	struct list_head network_free_list;
+@@ -1014,8 +1018,8 @@ static inline int libipw_is_cck_rate(u8 rate)
+ }
+ 
+ /* ieee80211.c */
+-extern void free_ieee80211(struct net_device *dev);
+-extern struct net_device *alloc_ieee80211(int sizeof_priv);
++extern void free_ieee80211(struct net_device *dev, int monitor);
++extern struct net_device *alloc_ieee80211(int sizeof_priv, int monitor);
+ extern int libipw_change_mtu(struct net_device *dev, int new_mtu);
+ 
+ extern void libipw_networks_age(struct libipw_device *ieee,
+diff --git a/drivers/net/wireless/ipw2x00/libipw_module.c b/drivers/net/wireless/ipw2x00/libipw_module.c
+index eb2b608..e8a1ac5 100644
+--- a/drivers/net/wireless/ipw2x00/libipw_module.c
++++ b/drivers/net/wireless/ipw2x00/libipw_module.c
+@@ -62,6 +62,9 @@ MODULE_DESCRIPTION(DRV_DESCRIPTION);
+ MODULE_AUTHOR(DRV_COPYRIGHT);
+ MODULE_LICENSE("GPL");
+ 
++struct cfg80211_ops libipw_config_ops = { };
++void *libipw_wiphy_privid = &libipw_wiphy_privid;
++
+ static int libipw_networks_allocate(struct libipw_device *ieee)
+ {
+ 	if (ieee->networks)
+@@ -140,7 +143,7 @@ int libipw_change_mtu(struct net_device *dev, int new_mtu)
+ }
+ EXPORT_SYMBOL(libipw_change_mtu);
+ 
+-struct net_device *alloc_ieee80211(int sizeof_priv)
++struct net_device *alloc_ieee80211(int sizeof_priv, int monitor)
+ {
+ 	struct libipw_device *ieee;
+ 	struct net_device *dev;
+@@ -157,10 +160,31 @@ struct net_device *alloc_ieee80211(int sizeof_priv)
+ 
+ 	ieee->dev = dev;
+ 
++	if (!monitor) {
++		ieee->wdev.wiphy = wiphy_new(&libipw_config_ops, 0);
++		if (!ieee->wdev.wiphy) {
++			LIBIPW_ERROR("Unable to allocate wiphy.\n");
++			goto failed_free_netdev;
++		}
++
++		ieee->dev->ieee80211_ptr = &ieee->wdev;
++		ieee->wdev.iftype = NL80211_IFTYPE_STATION;
++
++		/* Fill-out wiphy structure bits we know...  Not enough info
++		   here to call set_wiphy_dev or set MAC address or channel info
++		   -- have to do that in ->ndo_init... */
++		ieee->wdev.wiphy->privid = libipw_wiphy_privid;
++
++		ieee->wdev.wiphy->max_scan_ssids = 1;
++		ieee->wdev.wiphy->max_scan_ie_len = 0;
++		ieee->wdev.wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION)
++						| BIT(NL80211_IFTYPE_ADHOC);
++	}
++
+ 	err = libipw_networks_allocate(ieee);
+ 	if (err) {
+ 		LIBIPW_ERROR("Unable to allocate beacon storage: %d\n", err);
+-		goto failed_free_netdev;
++		goto failed_free_wiphy;
+ 	}
+ 	libipw_networks_initialize(ieee);
+ 
+@@ -193,19 +217,27 @@ struct net_device *alloc_ieee80211(int sizeof_priv)
+ 
+ 	return dev;
+ 
++failed_free_wiphy:
++	if (!monitor)
++		wiphy_free(ieee->wdev.wiphy);
+ failed_free_netdev:
+ 	free_netdev(dev);
+ failed:
+ 	return NULL;
+ }
+ 
+-void free_ieee80211(struct net_device *dev)
++void free_ieee80211(struct net_device *dev, int monitor)
+ {
+ 	struct libipw_device *ieee = netdev_priv(dev);
+ 
+ 	lib80211_crypt_info_free(&ieee->crypt_info);
+ 
+ 	libipw_networks_free(ieee);
++
++	/* free cfg80211 resources */
++	if (!monitor)
++		wiphy_free(ieee->wdev.wiphy);
++
+ 	free_netdev(dev);
+ }
+ 
+-- 
+1.6.2.5
 
