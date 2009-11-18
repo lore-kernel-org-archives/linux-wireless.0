@@ -1,56 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43297 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755581AbZKEPpH (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:49883 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757923AbZKRREW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2009 10:45:07 -0500
-Date: Thu, 5 Nov 2009 10:33:29 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Holger Schurig <holgerschurig@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: Re: BUG: oops when "rmmod ipw2200"
-Message-ID: <20091105153329.GB2817@tuxdriver.com>
-References: <S1754043AbZKEPJ1/20091105150927Z+225@vger.kernel.org>
+	Wed, 18 Nov 2009 12:04:22 -0500
+Received: by bwz27 with SMTP id 27so1344918bwz.21
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 09:04:27 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <S1754043AbZKEPJ1/20091105150927Z+225@vger.kernel.org>
+In-Reply-To: <1258560310.2003.91.camel@violet>
+References: <1258557771-10776-1-git-send-email-janakiram.sistla@gmail.com>
+	 <1258558500.2003.88.camel@violet>
+	 <4fb5db50911180755u4e01814bvcc4d0ec8d396abd@mail.gmail.com>
+	 <1258560310.2003.91.camel@violet>
+Date: Wed, 18 Nov 2009 22:34:26 +0530
+Message-ID: <4fb5db50911180904tf80bef3x37db0f93359d3e7a@mail.gmail.com>
+Subject: Re: [PATCH 2/2] Adding kerneldoc entry for radio type GPS
+From: Janakiram Sistla <janakiram.sistla@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 05, 2009 at 03:59:16PM +0100, Holger Schurig wrote:
-> This happened on wireless-testing v2.6.32-rc6-41575-g5e68bfb. I
-> modprobed ipw2200, put it into monitor mode, used tshark a while to
-> monitor, then I stopped tshark, "ifconfig eth2 down" and finally
-> "rmmod ipw2200", and voila:
-> 
-> [  917.189620] ------------[ cut here ]------------
-> [  917.189717] kernel BUG at net/wireless/core.c:543!
-> [  917.189805] invalid opcode: 0000 [#1] PREEMPT SMP
-> [  917.190002] last sysfs file: /sys/devices/pci0000:00/0000:00:1e.0/0000:02:0d.0/firmware/0000:02:0d.0/loading
-> [  917.190136] Modules linked in: lib80211_crypt_wep ipw2200(-) libipw lib80211 ath5k mac80211 ath cfg80211 psmouse uhci_hcd
+On Wed, Nov 18, 2009 at 9:35 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi Janakiram,
+>
+>> >>
+>> >> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+>> >> index d787d5f..212f555 100644
+>> >> --- a/include/linux/rfkill.h
+>> >> +++ b/include/linux/rfkill.h
+>> >> @@ -36,6 +36,7 @@
+>> >>   * @RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
+>> >>   * @RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
+>> >>   * @RFKILL_TYPE_FM: switch is on a FM device.
+>> >> + * @RFKILL_TYPE_GPS: switch is on a GPS device.
+>> >>   * @NUM_RFKILL_TYPES: number of defined rfkill types
+>> >>   */
+>> >>  enum rfkill_type {
+>> >
+>> > so this is getting stupid right now. I am sick of a really simple patch
+>> > causes so much trouble. Even this one is wrong again. The GPS doc should
+>> > obviously before FM.
+>> Marcel I think you want me to submit GPS doc patch first.I will be
+>> doing it shortly and then i will do it for FM.I am sorry for this mis
+>> understanding
+>
+> I don't care in which order you submit the patches, but the order of the
+> documentation should match the order in the enum. That is not a strict
+> requirement, but here it makes total sense to do so.
+>
+> Also don't worry with the patches anymore. This took way too much ping
+> pong to get it right, that I just wrote them by myself and submitted
+> them for inclusion.
+>
+> Regards
+>
+> Marcel
+>
+>
+>
 
-<snip>
+I hope in that case  i think it should be give signed off by both for
+both the patches.
 
-Crud...this has to be the following:
-
-commit e6c5fc53d0f44a772398402ee8a1879818e42b4e
-Author: Zhu Yi <yi.zhu@intel.com>
-Date:   Thu Oct 15 14:50:28 2009 +0800
-
-    ipw2200: fix oops on missing firmware
-    
-    For non-monitor interfaces, the syntax for alloc_ieee80211/free_80211
-    is wrong. Because alloc_ieee80211 only creates (wiphy_new) a wiphy, but
-    free_80211() does wiphy_unregister() also. This is only correct when
-    the later wiphy_register() is called successfully, which apparently
-    is not the case for your fw doesn't exist one.
-    
-    Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-Can you revert that and attempt to recreate?
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Regards,
+Ram
