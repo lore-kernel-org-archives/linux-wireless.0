@@ -1,67 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dmz4.indranet.co.nz ([203.97.93.68]:65099 "EHLO
-	mail.indranet.co.nz" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1754620AbZKKAy7 (ORCPT
+Received: from wal-mailgw1.qinetiq-na.com ([65.209.22.159]:13928 "EHLO
+	WALQNAOMAIL1T.qnao.net" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752682AbZKSPXy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 19:54:59 -0500
-Date: Wed, 11 Nov 2009 13:55:27 +1300 (NZDT)
-From: Derek Smithies <derek@indranet.co.nz>
-To: Adam Wozniak <awozniak@irobot.com>
-cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, nbd@openwrt.org
-Subject: Re: compat-wireless and minstrel
-In-Reply-To: <4AF9F03E.2010405@irobot.com>
-Message-ID: <alpine.DEB.2.00.0911111217580.6214@kauri.acheron.indranet.co.nz>
-References: <4AF0D54D.4090303@irobot.com> <200911041653.33737.chunkeey@googlemail.com> <alpine.DEB.2.00.0911050951000.16407@kauri.acheron.indranet.co.nz> <4AF9F03E.2010405@irobot.com>
+	Thu, 19 Nov 2009 10:23:54 -0500
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01CA6928.40A771F1"
+Subject: Kernel oops in ath9k
+Date: Thu, 19 Nov 2009 09:54:53 -0500
+Message-ID: <712C9C7AD151C847B09F32EDA56A94CF0115C555@WALQNAOMAIL1T.qnao.net>
+From: "Douglass, Woodrow" <Woodrow.Douglass@QinetiQ-NA.com>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-> Do you know which frames in the mac80211 code are missing this required 
-> information?  Or was that conjecture?
+This is a multi-part message in MIME format.
 
-it was mostly conjecture. I had done some work with an earlier pull of 
-compat wireless in adhoc. the rates tried by minstrel were bad - it was 
-stuck at the slowest rate.
+------_=_NextPart_001_01CA6928.40A771F1
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-I too had found that the fix was to adjust the array so that all rates 
-were marked as supported.
+Hi all,
 
-Derek
+I'm not sure if this is the right place to post this, but I may have a
+bug report for the ath9k driver.
 
-On Tue, 10 Nov 2009, Adam Wozniak wrote:
+I'm running a single board computer with a 600Mhz celeron processor. On
+the minipci bus I have a Ubiquiti SR71-12 802.11n card. Also attached is
+a shell script with the commands I run to cause the oops. Note that the
+first time the ifconfig line in this script is run, a "SIOCSIFFLAGS:
+Input/Output Error" is triggered, the kernel oops happens about 5
+seconds after the ifconfig line is run a second time.
 
-> Reading through the 802.11 spec, it appears to me that "Supported rates" (and 
-> "Extended Supported Rates" when number of rates > 8) is REQUIRED for all 
-> management frames except authentication, deauthentication, and action frames. 
-> (IEEE 802.11-2007, 7.2.3)
->
-> Do you know which frames in the mac80211 code are missing this required 
-> information?  Or was that conjecture?
->
-> Looking at mac80211/tx.c ieee80211_beacon_get_tim, it is not clear to me how 
-> (or if) this rate information is being set for ad-hoc beacons.
->
-> Derek Smithies wrote:
->> Some management frames don't contain a full report of the rates supported 
->> by the sender.
->> My view is that node A (in this example) is incorrectly determining that B 
->> only supports the 1mb/sec rate. Consequently, node A fills the 
->> rate_supported  array with one rate - 1mb/sec.
->
->
->
+If this is not the right place to post this, could someone please point
+me in the right direction? Thanks.
 
--- 
-Derek Smithies Ph.D.
-IndraNet Technologies Ltd.
-ph +64 3 365 6485
-Web: http://www.indranet-technologies.com/
+And thanks again for donating your time to such a great project!
 
-"The only thing IE should be used for is to download Fire Fox"
+-Woody
 
-"My favorite language is call STAR. It's extremely concise. It has
-  exactly one verb '*', which does exactly what I want at the moment."
-     --Larry Wall
+------_=_NextPart_001_01CA6928.40A771F1
+Content-Type: text/plain;
+	name="oops.txt"
+Content-Transfer-Encoding: base64
+Content-Description: oops.txt
+Content-Disposition: attachment;
+	filename="oops.txt"
+
+WyAgMjkyLjgxNjA1OF0gd2xhbjA6IENyZWF0aW5nIG5ldyBJQlNTIG5ldHdvcmssIEJTU0lEIDY2
+OjRhOjBiOmYxOmNmOjk2ClsgIDI5My4wMDE0OTNdIEJVRzogdW5hYmxlIHRvIGhhbmRsZSBrZXJu
+ZWwgTlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlIGF0IDAwMDAwMDE4ClsgIDI5My4wMDE2NThdIElQ
+OiBbPGRlYmNjYWMxPl0gYXRoX2JlYWNvbl9zZXR1cCsweDU5LzB4ZWEgW2F0aDlrXQpbICAyOTMu
+MDAxODA0XSAqcGRlID0gMDAwMDAwMDAgClsgIDI5My4wMDE5MDFdIE9vcHM6IDAwMDAgWyMxXSBT
+TVAgClsgIDI5My4wMDIwMzJdIGxhc3Qgc3lzZnMgZmlsZTogL3N5cy9jbGFzcy9maXJtd2FyZS8w
+MDAwOjAxOjA3LjAvbG9hZGluZwpbICAyOTMuMDAyMTA1XSBNb2R1bGVzIGxpbmtlZCBpbjogbG9v
+cCBhcmM0IGVjYiBhdGg5ayBtYWM4MDIxMSBsZWRfY2xhc3MgYXRoIGNmZzgwMjExIHJma2lsbCBw
+YXJwb3J0X3BjIHBhcnBvcnQgc25kX2ludGVsOHgwIGJ1dHRvbiBwcm9jZXNzb3Igc25kX2FjOTdf
+Y29kZWMgYWM5N19idXMgc25kX3BjbSBzbmRfdGltZXIgc25kIHNvdW5kY29yZSBpMmNfaTgwMSBz
+bmRfcGFnZV9hbGxvYyBzZXJpb19yYXcgc2hwY2hwIGkyY19jb3JlIHBjaV9ob3RwbHVnIGludGVs
+X2FncCBybmdfY29yZSBhZ3BnYXJ0IHBjc3BrciBqb3lkZXYgZXZkZXYgdXNiaGlkIGhpZCBleHQz
+IGpiZCBtYmNhY2hlIHNkX21vZCBwaWl4IGlkZV9wY2lfZ2VuZXJpYyBpZGVfY29yZSBhdGFfZ2Vu
+ZXJpYyBhdGFfcGlpeCBsaWJhdGEgc2NzaV9tb2QgZWhjaV9oY2QgdWhjaV9oY2QgZTEwMCBtaWkg
+ZmxvcHB5IHVzYmNvcmUgbmxzX2Jhc2UgdGhlcm1hbCBmYW4gdGhlcm1hbF9zeXMgW2xhc3QgdW5s
+b2FkZWQ6IHNjc2lfd2FpdF9zY2FuXQpbICAyOTMuMDA0MzIzXSAKWyAgMjkzLjAwNDM4Nl0gUGlk
+OiAxNDU0LCBjb21tOiBwaHkwIE5vdCB0YWludGVkICgyLjYuMzEuNiAjMSkgIApbICAyOTMuMDA0
+NDU5XSBFSVA6IDAwNjA6WzxkZWJjY2FjMT5dIEVGTEFHUzogMDAwMTAyNDYgQ1BVOiAwClsgIDI5
+My4wMDQ1NThdIEVJUCBpcyBhdCBhdGhfYmVhY29uX3NldHVwKzB4NTkvMHhlYSBbYXRoOWtdClsg
+IDI5My4wMDQ2MjldIEVBWDogMDAwMDAwMDAgRUJYOiBkYzRkNTAwMCBFQ1g6IGRjODFhOTc0IEVE
+WDogMDAwMDAwMjIKWyAgMjkzLjAwNDcwM10gRVNJOiBkYzgxYTk3NCBFREk6IGRjNzM2MGMwIEVC
+UDogZGM0YzgwMDAgRVNQOiBkYzhiZGQwNApbICAyOTMuMDA0Nzc3XSAgRFM6IDAwN2IgRVM6IDAw
+N2IgRlM6IDAwZDggR1M6IDAwMDAgU1M6IDAwNjgKWyAgMjkzLjAwNDg0OF0gUHJvY2VzcyBwaHkw
+IChwaWQ6IDE0NTQsIHRpPWRjOGJjMDAwIHRhc2s9ZGMxZTNhZTAgdGFzay50aT1kYzhiYzAwMCkK
+WyAgMjkzLjAwNDg0OF0gU3RhY2s6ClsgIDI5My4wMDQ4NDhdICBkYzgxYTk3NCBjMTAxM2E0OSAw
+MDAxOTAwMCBkYzRjODAwMCBjMTAwMzk5NiAwMDAxOTAwMCAwMDAxOTAwMCAwMDAwODI0MApbICAy
+OTMuMDA0ODQ4XSA8MD4gZGM0YzgwMDAgMDAwMDAwODcgMDAwMDAwMDAgZGVhZGJlZWYgMDAwMDAw
+N2IgMDAwMDAwN2IgMDAwMDAwZDggMDAwMDAwMDAKWyAgMjkzLjAwNDg0OF0gPDA+IGM4MmRiZWVm
+IGRjNGM4MDAwIDA0MDAxMDAwIDAwMDAwMDAwIGRlYmJlOGRhIGRjMTg3MDAwIGRjODFhOTc0IGRj
+NGM4MDAwClsgIDI5My4wMDQ4NDhdIENhbGwgVHJhY2U6ClsgIDI5My4wMDQ4NDhdICBbPGMxMDEz
+YTQ5Pl0gPyBzbXBfYXBpY190aW1lcl9pbnRlcnJ1cHQrMHg2Yy8weDc2ClsgIDI5My4wMDQ4NDhd
+ICBbPGMxMDAzOTk2Pl0gPyBhcGljX3RpbWVyX2ludGVycnVwdCsweDJhLzB4MzAKWyAgMjkzLjAw
+NDg0OF0gIFs8ZGViYmU4ZGE+XSA/IGF0aDlrX2h3X3NldF9pbnRlcnJ1cHRzKzB4MWRmLzB4MjVk
+IFthdGg5a10KWyAgMjkzLjAwNDg0OF0gIFs8ZGViY2NkMWY+XSA/IGF0aF9iZWFjb25fY29uZmln
+KzB4MWNkLzB4MzYyIFthdGg5a10KWyAgMjkzLjAwNDg0OF0gIFs8ZGViY2QxMTc+XSA/IGF0aF9i
+ZWFjb25fYWxsb2MrMHgxYmUvMHgyMTUgW2F0aDlrXQpbICAyOTMuMDA0ODQ4XSAgWzxkZWJjZTJm
+Nj5dID8gYXRoOWtfYnNzX2luZm9fY2hhbmdlZCsweDE1ZC8weDMxZiBbYXRoOWtdClsgIDI5My4w
+MDQ4NDhdICBbPGRlYmNlMTk5Pl0gPyBhdGg5a19ic3NfaW5mb19jaGFuZ2VkKzB4MC8weDMxZiBb
+YXRoOWtdClsgIDI5My4wMDQ4NDhdICBbPGRlYTI2ZmI1Pl0gPyBpZWVlODAyMTFfYnNzX2luZm9f
+Y2hhbmdlX25vdGlmeSsweDEwZC8weDExZCBbbWFjODAyMTFdClsgIDI5My4wMDQ4NDhdICBbPGRl
+YTJiOGQ4Pl0gPyBfX2llZWU4MDIxMV9zdGFfam9pbl9pYnNzKzB4MzM0LzB4M2E2IFttYWM4MDIx
+MV0KWyAgMjkzLjAwNDg0OF0gIFs8YzExNzE1MmQ+XSA/IGV4dHJhY3RfZW50cm9weSsweDNlLzB4
+ODQKWyAgMjkzLjAwNDg0OF0gIFs8ZGVhMmJjNjY+XSA/IGllZWU4MDIxMV9zdGFfZmluZF9pYnNz
+KzB4MzFjLzB4M2IwIFttYWM4MDIxMV0KWyAgMjkzLjAwNDg0OF0gIFs8YzEwMjFlMmM+XSA/IHVw
+ZGF0ZV9jdXJyKzB4NjYvMHgxODcKWyAgMjkzLjAwNDg0OF0gIFs8YzEwMjI0YTc+XSA/IGRlcXVl
+dWVfZW50aXR5KzB4MTAvMHgxMWIKWyAgMjkzLjAwNDg0OF0gIFs8ZGVhMmMyYzI+XSA/IGllZWU4
+MDIxMV9pYnNzX3dvcmsrMHgyOTEvMHgzNGYgW21hYzgwMjExXQpbICAyOTMuMDA0ODQ4XSAgWzxj
+MTIxOWRhMj5dID8gc2NoZWR1bGUrMHg4MTEvMHg4N2YKWyAgMjkzLjAwNDg0OF0gIFs8YzEwMjg3
+ZjA+XSA/IGZpbmlzaF90YXNrX3N3aXRjaCsweDRhLzB4Y2EKWyAgMjkzLjAwNDg0OF0gIFs8YzEw
+M2M0ZmI+XSA/IHdvcmtlcl90aHJlYWQrMHgxM2UvMHgxYzAKWyAgMjkzLjAwNDg0OF0gIFs8ZGVh
+MmMwMzE+XSA/IGllZWU4MDIxMV9pYnNzX3dvcmsrMHgwLzB4MzRmIFttYWM4MDIxMV0KWyAgMjkz
+LjAwNDg0OF0gIFs8YzEwM2ZhNTY+XSA/IGF1dG9yZW1vdmVfd2FrZV9mdW5jdGlvbisweDAvMHgy
+ZApbICAyOTMuMDA0ODQ4XSAgWzxjMTAzYzNiZD5dID8gd29ya2VyX3RocmVhZCsweDAvMHgxYzAK
+WyAgMjkzLjAwNDg0OF0gIFs8YzEwM2Y3YjM+XSA/IGt0aHJlYWQrMHg2ZS8weDczClsgIDI5My4w
+MDQ4NDhdICBbPGMxMDNmNzQ1Pl0gPyBrdGhyZWFkKzB4MC8weDczClsgIDI5My4wMDQ4NDhdICBb
+PGMxMDAzYjc3Pl0gPyBrZXJuZWxfdGhyZWFkX2hlbHBlcisweDcvMHgxMApbICAyOTMuMDA0ODQ4
+XSBDb2RlOiAxOCBiYSAyMiAwMCAwMCAwMCA4OSAwMyBlYiAwYiBjNyAwMyAwMCAwMCAwMCAwMCBi
+YSAwMiAwMCAwMCAwMCA4YiA0MSAxYyA4OSA0MyAwNCA4YiAwYyAyNCA4YiA4MSA1MCAwNyAwMCAw
+MCBmNiA4MSBlNCAwMCAwMCAwMCAyMCA8OGI+IDcwIDE4IDc0IDA1IDhhIDQ4IDE5IDA5IGNlIDhi
+IDRmIDUwIDg5IGU4IDUyIDg5IGRhIDZhIDAwIDZhIApbICAyOTMuMDA0ODQ4XSBFSVA6IFs8ZGVi
+Y2NhYzE+XSBhdGhfYmVhY29uX3NldHVwKzB4NTkvMHhlYSBbYXRoOWtdIFNTOkVTUCAwMDY4OmRj
+OGJkZDA0ClsgIDI5My4wMDQ4NDhdIENSMjogMDAwMDAwMDAwMDAwMDAxOApbICAyOTMuMDEwODkw
+XSAtLS1bIGVuZCB0cmFjZSA3MWJkN2RlODZkYTY4YmE3IF0tLS0K
+
+------_=_NextPart_001_01CA6928.40A771F1
+Content-Type: application/octet-stream;
+	name="wireless.sh"
+Content-Transfer-Encoding: base64
+Content-Description: wireless.sh
+Content-Disposition: attachment;
+	filename="wireless.sh"
+
+IyEvYmluL2Jhc2gKCml3Y29uZmlnIHdsYW4wIG1vZGUgYWQtaG9jIGNoYW5uZWwgMSBlc3NpZCBh
+dGstdGVzdAppZmNvbmZpZyB3bGFuMCAxOTIuMTY4LjAuMSBuZXRtYXNrIDI1NS4yNTUuMjU1LjAK
+
+------_=_NextPart_001_01CA6928.40A771F1--
