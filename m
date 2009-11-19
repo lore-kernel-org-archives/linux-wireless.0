@@ -1,110 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:41042 "EHLO mx3.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751488AbZKCRFH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 12:05:07 -0500
-Date: Tue, 3 Nov 2009 18:04:29 +0100
-From: Ingo Molnar <mingo@elte.hu>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
-	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Please consider reverting
-	7d930bc33653d5592dc386a76a38f39c2e962344
-Message-ID: <20091103170429.GA3074@elte.hu>
-References: <20091103053156.GA3212@core.coreip.homeip.net> <20091102.224957.32364226.davem@davemloft.net> <20091103065238.GE3212@core.coreip.homeip.net> <1257232587.3420.55.camel@localhost.localdomain> <alpine.LFD.2.01.0911030719430.31845@localhost.localdomain> <1257262588.3420.79.camel@localhost.localdomain> <alpine.LFD.2.01.0911030738260.31845@localhost.localdomain> <1257264485.3420.87.camel@localhost.localdomain> <20091103162955.GA4836@elte.hu> <1257266984.3420.111.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1257266984.3420.111.camel@localhost.localdomain>
+Received: from xc.sipsolutions.net ([83.246.72.84]:41254 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753001AbZKSAIx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Nov 2009 19:08:53 -0500
+Subject: [PATCH] mac80211: request TX status where needed
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 19 Nov 2009 01:08:30 +0100
+Message-ID: <1258589310.30511.91.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Right now all frames mac80211 hands to the driver
+have the IEEE80211_TX_CTL_REQ_TX_STATUS flag set to
+request TX status. This isn't really necessary, only
+the injected frames need TX status (the latter for
+hostapd) so move setting this flag.
 
-Hi Marcel,
+The rate control algorithms also need TX status, but
+they don't require it.
 
-* Marcel Holtmann <marcel@holtmann.org> wrote:
+Also, rt2x00 uses that bit for its own purposes and
+seems to require it being set for all frames, but
+that can be fixed in rt2x00.
 
-> Hi Ingo,
-> 
-> > > > > no questions that it needs fixed, I agree with you. However just blindly
-> > > > > reverting something, because it fixes it for one or two people, might
-> > > > > have side effects that causes more problems than the revert would
-> > > > > actually fix.
-> > > > 
-> > > > Stop whining. Really.
-> > > > 
-> > > > Everybody understands that it should be fixed.  That's not the question.
-> > > > 
-> > > > But it should be fixed _quickly_. In this case, I have a bisection report 
-> > > > FROM TWO DAYS AGO. And I'm still kicking myself for not just reverting 
-> > > > that piece-of-shit commit then, because I spent the time to look at the 
-> > > > oops and the commit, and could tell that it was crap.
-> > > > 
-> > > > Instead, I _did_ wait for the subsystem maintainer to get around to it. As 
-> > > > a result of waiting, I've now wasted time for a lot of other people.
-> > > 
-> > > I do have a patch in my inbox from Johannes from 4 days ago that fixes 
-> > > this issue.
-> > > 
-> > > 	http://marc.info/?l=linux-wireless&m=125697124819563&w=2
-> > > 
-> > > So what is the take away from this now? Do you wanna have Johannes 
-> > > step over John and Dave and send such a patch directly to you?
-> > 
-> > The problem as i see it is the kind of answer Johannes gave when the bug 
-> > was bisected to by Jeff Chua two days ago:
-> > 
-> >   Subject: wpa2 hangs v2.6.32-rc5-402-gb6727b1. Revert
-> >            7d930bc33653d5592dc386a76a38f39c2e962344 fixed it.
-> > 
-> >  [ <1257151742.3555.165.camel@johannes.local> ]
-> >  ...
-> >  |
-> >  | On Sun, 2009-11-01 at 23:18 +0800, Jeff Chua wrote:
-> >  | > wpa2 (wpa_supplicant) hangs v2.6.32-rc5-402-gb6727b1.
-> >  |
-> >  | Explain?
-> >  |
-> >  | > Reverting 7d930bc33653d5592dc386a76a38f39c2e962344 fixes it.
-> >  |
-> >  | Certainly not a good idea, will break when your AP denies association.
-> >  |
-> >  | johannes
-> > 
-> > Unhelpful, defensive, in denial.
-> > 
-> > Plus that you tried to berate Dmitry in this particular thread about the 
-> > revert was pretty bad form too IMO.
-> > 
-> > _Anyone_ who went through the unnecessary, avoidable cost of having to 
-> > do a bisection of a 3 days old commit merged at around -rc5 time is in 
-> > his full rights to ask for a revert, straight from Linus if he thinks 
-> > so. No ifs and when about it.
-> > 
-> > So IMO you are showing the wrong kind of attitude for a post-rc5 
-> > regression, by a _wide_ margin. The right kind of attitude would be:
-> > 
-> >   "Oops, my bad - thanks. I've queued up a revert."
-> > 
-> > or:
-> > 
-> >   "Oops, my bad - thanks. Does the attached patch fix it?
-> >    If not we'll revert it."
-> > 
-> > Furthermore, your 'hey, nothing happened, we fixed it after all' 
-> > argument is just a forewarning that you learned nothing and such 
-> > avoidable incidents could repeat in the future.
-> 
-> who said 'hey, nothing happened, we fixed it after all'. The fix for
-> this issue is 4 days old and was already on the way to Linus. And I
-> remember the first response was that this got fixed already and that the
-> patch is going to Linus.
+This doesn't really change anything for any drivers
+but in the future drivers using hw-rate control may
+opt to not report TX status for frames that don't
+have the IEEE80211_TX_CTL_REQ_TX_STATUS flag set.
 
-Well, what formed my opinion was the first response to Jeff Chua's 
-bisection result - see it above, i quoted it in its entirety.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com> [rt2x00 bits]
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c   |   11 ++++++-----
+ drivers/net/wireless/rt2x00/rt2x00lib.h   |    4 +++-
+ drivers/net/wireless/rt2x00/rt2x00mac.c   |    5 ++---
+ drivers/net/wireless/rt2x00/rt2x00queue.c |    6 +++++-
+ drivers/net/wireless/rt2x00/rt2x00queue.h |    5 ++++-
+ include/net/mac80211.h                    |    2 +-
+ net/mac80211/tx.c                         |    4 ++--
+ 7 files changed, 23 insertions(+), 14 deletions(-)
 
-Thanks,
+--- wireless-testing.orig/net/mac80211/tx.c	2009-11-19 01:05:45.000000000 +0100
++++ wireless-testing/net/mac80211/tx.c	2009-11-19 01:05:47.000000000 +0100
+@@ -1443,8 +1443,6 @@ static void ieee80211_xmit(struct ieee80
+ 		        msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
+ 	}
+ 
+-	info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
+-
+ 	rcu_read_lock();
+ 
+ 	if (unlikely(sdata->vif.type == NL80211_IFTYPE_MONITOR)) {
+@@ -1575,6 +1573,8 @@ netdev_tx_t ieee80211_monitor_start_xmit
+ 
+ 	memset(info, 0, sizeof(*info));
+ 
++	info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
++
+ 	/* pass the radiotap header up to xmit */
+ 	ieee80211_xmit(IEEE80211_DEV_TO_SUB_IF(dev), skb);
+ 	return NETDEV_TX_OK;
+--- wireless-testing.orig/include/net/mac80211.h	2009-11-19 01:05:44.000000000 +0100
++++ wireless-testing/include/net/mac80211.h	2009-11-19 01:05:47.000000000 +0100
+@@ -219,7 +219,7 @@ struct ieee80211_bss_conf {
+  *
+  * These flags are used with the @flags member of &ieee80211_tx_info.
+  *
+- * @IEEE80211_TX_CTL_REQ_TX_STATUS: request TX status callback for this frame.
++ * @IEEE80211_TX_CTL_REQ_TX_STATUS: require TX status callback for this frame.
+  * @IEEE80211_TX_CTL_ASSIGN_SEQ: The driver has to assign a sequence
+  *	number to this frame, taking care of not overwriting the fragment
+  *	number and increasing the sequence number only when the
+--- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2x00dev.c	2009-11-19 01:05:43.000000000 +0100
++++ wireless-testing/drivers/net/wireless/rt2x00/rt2x00dev.c	2009-11-19 01:05:47.000000000 +0100
+@@ -205,6 +205,7 @@ void rt2x00lib_txdone(struct queue_entry
+ 	enum data_queue_qid qid = skb_get_queue_mapping(entry->skb);
+ 	unsigned int header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
+ 	u8 rate_idx, rate_flags, retry_rates;
++	u8 skbdesc_flags = skbdesc->flags;
+ 	unsigned int i;
+ 	bool success;
+ 
+@@ -287,12 +288,12 @@ void rt2x00lib_txdone(struct queue_entry
+ 	}
+ 
+ 	/*
+-	 * Only send the status report to mac80211 when TX status was
+-	 * requested by it. If this was a extra frame coming through
+-	 * a mac80211 library call (RTS/CTS) then we should not send the
+-	 * status report back.
++	 * Only send the status report to mac80211 when it's a frame
++	 * that originated in mac80211. If this was a extra frame coming
++	 * through a mac80211 library call (RTS/CTS) then we should not
++	 * send the status report back.
+ 	 */
+-	if (tx_info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)
++	if (!(skbdesc_flags & SKBDESC_NOT_MAC80211))
+ 		ieee80211_tx_status_irqsafe(rt2x00dev->hw, entry->skb);
+ 	else
+ 		dev_kfree_skb_irq(entry->skb);
+--- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2x00lib.h	2009-11-19 01:05:43.000000000 +0100
++++ wireless-testing/drivers/net/wireless/rt2x00/rt2x00lib.h	2009-11-19 01:05:47.000000000 +0100
+@@ -162,8 +162,10 @@ void rt2x00queue_remove_l2pad(struct sk_
+  * rt2x00queue_write_tx_frame - Write TX frame to hardware
+  * @queue: Queue over which the frame should be send
+  * @skb: The skb to send
++ * @local: frame is not from mac80211
+  */
+-int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb);
++int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
++			       bool local);
+ 
+ /**
+  * rt2x00queue_update_beacon - Send new beacon from mac80211 to hardware
+--- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2x00mac.c	2009-11-19 01:05:43.000000000 +0100
++++ wireless-testing/drivers/net/wireless/rt2x00/rt2x00mac.c	2009-11-19 01:06:59.000000000 +0100
+@@ -66,7 +66,6 @@ static int rt2x00mac_tx_rts_cts(struct r
+ 	rts_info = IEEE80211_SKB_CB(skb);
+ 	rts_info->control.rates[0].flags &= ~IEEE80211_TX_RC_USE_RTS_CTS;
+ 	rts_info->control.rates[0].flags &= ~IEEE80211_TX_RC_USE_CTS_PROTECT;
+-	rts_info->flags &= ~IEEE80211_TX_CTL_REQ_TX_STATUS;
+ 
+ 	if (tx_info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT)
+ 		rts_info->flags |= IEEE80211_TX_CTL_NO_ACK;
+@@ -91,7 +90,7 @@ static int rt2x00mac_tx_rts_cts(struct r
+ 				  frag_skb->data, data_length, tx_info,
+ 				  (struct ieee80211_rts *)(skb->data));
+ 
+-	retval = rt2x00queue_write_tx_frame(queue, skb);
++	retval = rt2x00queue_write_tx_frame(queue, skb, true);
+ 	if (retval) {
+ 		dev_kfree_skb_any(skb);
+ 		WARNING(rt2x00dev, "Failed to send RTS/CTS frame.\n");
+@@ -153,7 +152,7 @@ int rt2x00mac_tx(struct ieee80211_hw *hw
+ 			goto exit_fail;
+ 	}
+ 
+-	if (rt2x00queue_write_tx_frame(queue, skb))
++	if (rt2x00queue_write_tx_frame(queue, skb, false))
+ 		goto exit_fail;
+ 
+ 	if (rt2x00queue_threshold(queue))
+--- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2x00queue.c	2009-11-19 01:05:43.000000000 +0100
++++ wireless-testing/drivers/net/wireless/rt2x00/rt2x00queue.c	2009-11-19 01:05:47.000000000 +0100
+@@ -454,7 +454,8 @@ static void rt2x00queue_write_tx_descrip
+ 		rt2x00dev->ops->lib->kick_tx_queue(rt2x00dev, queue->qid);
+ }
+ 
+-int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
++int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
++			       bool local)
+ {
+ 	struct ieee80211_tx_info *tx_info;
+ 	struct queue_entry *entry = rt2x00queue_get_entry(queue, Q_INDEX);
+@@ -495,6 +496,9 @@ int rt2x00queue_write_tx_frame(struct da
+ 	skbdesc->tx_rate_idx = rate_idx;
+ 	skbdesc->tx_rate_flags = rate_flags;
+ 
++	if (local)
++		skbdesc->flags |= SKBDESC_NOT_MAC80211;
++
+ 	/*
+ 	 * When hardware encryption is supported, and this frame
+ 	 * is to be encrypted, we should strip the IV/EIV data from
+--- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2x00queue.h	2009-11-19 01:05:43.000000000 +0100
++++ wireless-testing/drivers/net/wireless/rt2x00/rt2x00queue.h	2009-11-19 01:05:47.000000000 +0100
+@@ -94,12 +94,15 @@ enum data_queue_qid {
+  *	mac80211 but was stripped for processing by the driver.
+  * @SKBDESC_L2_PADDED: Payload has been padded for 4-byte alignment,
+  *	the padded bytes are located between header and payload.
++ * @SKBDESC_NOT_MAC80211: Frame didn't originate from mac80211,
++ *	don't try to pass it back.
+  */
+ enum skb_frame_desc_flags {
+ 	SKBDESC_DMA_MAPPED_RX = 1 << 0,
+ 	SKBDESC_DMA_MAPPED_TX = 1 << 1,
+ 	SKBDESC_IV_STRIPPED = 1 << 2,
+-	SKBDESC_L2_PADDED = 1 << 3
++	SKBDESC_L2_PADDED = 1 << 3,
++	SKBDESC_NOT_MAC80211 = 1 << 4,
+ };
+ 
+ /**
 
-	Ingo
+
