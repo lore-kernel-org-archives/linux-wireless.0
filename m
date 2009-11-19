@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:51618 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933225AbZKXPNf (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54182 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756849AbZKSWaD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 10:13:35 -0500
-Received: by bwz27 with SMTP id 27so6061516bwz.21
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Nov 2009 07:13:41 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <heeo7d$pg4$1@ger.gmane.org>
-References: <hebaok$2ip$1@ger.gmane.org> <heeo7d$pg4$1@ger.gmane.org>
-Date: Tue, 24 Nov 2009 10:13:40 -0500
-Message-ID: <b6c5339f0911240713y70dc461cp3c9fbb3235eed0ca@mail.gmail.com>
-Subject: Re: HTC Hero cannot get an address from an ath5k AP
-From: Bob Copeland <me@bobcopeland.com>
-To: Simon Farnsworth <simon@farnz.org.uk>
-Cc: linux-wireless@vger.kernel.org,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 19 Nov 2009 17:30:03 -0500
+Subject: Re: mesh endian bugs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rui Paulo <rpaulo@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1258669774.7094.27.camel@johannes.local>
+References: <1258638691.7094.16.camel@johannes.local>
+	 <7CA4D235-AFC1-4B4A-9025-3A426997706C@gmail.com>
+	 <1258669774.7094.27.camel@johannes.local>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-TCVRxfN51W90HfgihgcM"
+Date: Thu, 19 Nov 2009 23:30:07 +0100
+Message-ID: <1258669807.7094.28.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 23, 2009 at 2:36 PM, Simon Farnsworth <simon@farnz.org.uk> wrote:
-> On Sunday 22 November 2009 12:28, Simon Farnsworth wrote:
->
->> My hostapd configuration file is attached; I've checked that I've used the
->> correct WEP key. I can provide any more information that's needed. My
->> controller appears in lspci as:
 
-Hi Simon,
+--=-TCVRxfN51W90HfgihgcM
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-I am sure this is an issue with power saving -- this patch may help
-somewhat, but the last time I looked at it, there were still some
-additional issues:
+On Thu, 2009-11-19 at 23:29 +0100, Johannes Berg wrote:
 
-http://patchwork.kernel.org/patch/56785/
+> make M=3Dnet/mac80211 C=3D1
 
-Also I never did get beacon gating to work wrt the discussion
-around the patch.
+or C=3D2 to check all files (C=3D1 checks files that are recompiled, C=3D2
+checks all files)
 
-Unfortunately I'm completely slammed for the next 3-4 weeks until this
-semester ends, so unable to do any wireless work.  Would anyone else
-care to take a shot at narrowing this down?
+johannes
 
--- 
-Bob Copeland %% www.bobcopeland.com
+--=-TCVRxfN51W90HfgihgcM
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLBcbsAAoJEODzc/N7+QmalB4P/iKKz7A2aPcD/ELyNR+vFUH2
+4YZAa2VydsJ3SD8eOUZSfpCFiui2r3hOd3f1ALUWDJdAaOWysEI/A6s/6agqfIvx
+TYH93/izaCOEGcHT+YVEeUUXWesjCq8FbgJKJ54Wm4vt7lWh3q8UBacG2faR4B61
+AOzsQWKLYtvaiV37UO7vpny4ttDz8gQ3/RsLBwJHuqEr22bxxvV4A9cw1uC0NbcD
+D6kqJfUhQeeFbM6fhbVDIHeHKH3pL26NGcTD8E/8+vEjyoz1rJiieq1C4KWO7Gax
+NbDjf2ihkcQ/0eLuPFJOawgBAKxF4i/XoY//8h0/9KJXOOCT3lMwoBK24trFIyrd
+1D6fsHqCaj4gQCb+/B30WNBdJQR4sevGlMINQox3CE04c/QWlh8+BlPy8zP0U8aX
+hWBDCZ0KDHsE7x8Qwfx3YOfFbb899sQIQZ+9fSns+Rm4pbAXkj6LOijfCfofYnkP
+8ht60hymBIon1OTocD+r0vjB+FHEddbaF7C1m+y8y7uGShuV8UbTeaEv31UNlvgU
+yjmeZKNrdtl7yFPHIAb2wiviDKYF+yZFDrLDBcsdYb1UsxF2/VkLqXTPMPbxMi3D
+olgZ/dOfrpYRyB3acCRRjDW83D4GjCQrR1Acbu//t/ez6WAUwLFTClIrs4C/rGqk
+3I3DzfrNs72YbA9vyBtT
+=06E+
+-----END PGP SIGNATURE-----
+
+--=-TCVRxfN51W90HfgihgcM--
+
