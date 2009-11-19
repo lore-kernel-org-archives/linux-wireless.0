@@ -1,32 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:43535 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753366AbZKHNol (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:10853 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756793AbZKSWJz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 08:44:41 -0500
-Received: by ewy3 with SMTP id 3so2373818ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 05:44:46 -0800 (PST)
-Message-ID: <4AF6CB4C.4050605@gmail.com>
-Date: Sun, 08 Nov 2009 14:44:44 +0100
+	Thu, 19 Nov 2009 17:09:55 -0500
+Received: by ey-out-2122.google.com with SMTP id d26so147699eyd.5
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Nov 2009 14:10:00 -0800 (PST)
+Message-ID: <4B05C234.3000908@gmail.com>
+Date: Thu, 19 Nov 2009 23:09:56 +0100
 From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-To: Ivo van Doorn <ivdoorn@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	rt2x00 Core Developers List <coredev@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH] rt2x00: Remove deprecated ieee80211_rx_status->qual usage
-References: <200911081437.49121.IvDoorn@gmail.com>
-In-Reply-To: <200911081437.49121.IvDoorn@gmail.com>
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: request TX status where needed
+References: <1258589310.30511.91.camel@johannes.local>
+In-Reply-To: <1258589310.30511.91.camel@johannes.local>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/08/09 14:37, Ivo van Doorn wrote:
-> ieee80211_rx_status->qual has been marked deprecated.
-> This allows us to remove several functions and fields which
-> were used to calculate a reasonable value for it.
+On 11/19/09 01:08, Johannes Berg wrote:
+> Right now all frames mac80211 hands to the driver
+> have the IEEE80211_TX_CTL_REQ_TX_STATUS flag set to
+> request TX status. This isn't really necessary, only
+> the injected frames need TX status (the latter for
+> hostapd) so move setting this flag.
 > 
-> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> The rate control algorithms also need TX status, but
+> they don't require it.
+> 
+> Also, rt2x00 uses that bit for its own purposes and
+> seems to require it being set for all frames, but
+> that can be fixed in rt2x00.
+> 
+> This doesn't really change anything for any drivers
+> but in the future drivers using hw-rate control may
+> opt to not report TX status for frames that don't
+> have the IEEE80211_TX_CTL_REQ_TX_STATUS flag set.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Acked-by: Ivo van Doorn <IvDoorn@gmail.com> [rt2x00 bits]
 > ---
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> @@ -287,12 +288,12 @@ void rt2x00lib_txdone(struct queue_entry
+>  	}
+>  
+>  	/*
+> -	 * Only send the status report to mac80211 when TX status was
+> -	 * requested by it. If this was a extra frame coming through
+> -	 * a mac80211 library call (RTS/CTS) then we should not send the
+> -	 * status report back.
+> +	 * Only send the status report to mac80211 when it's a frame
+> +	 * that originated in mac80211. If this was a extra frame coming
+> +	 * through a mac80211 library call (RTS/CTS) then we should not
+> +	 * send the status report back.
+>  	 */
+> -	if (tx_info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)
+> +	if (!(skbdesc_flags & SKBDESC_NOT_MAC80211))
+>  		ieee80211_tx_status_irqsafe(rt2x00dev->hw, entry->skb);
+>  	else
+>  		dev_kfree_skb_irq(entry->skb);
+
+I'm slightly confused here. Shouldn't both the tx_info->flags and skbdesc_flags be checked here?
+Now we run in the situation where tx_status is report even if mac80211 didn't ask for it.
+
+---
+Gertjan.
