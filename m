@@ -1,32 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta-1.ms.rz.RWTH-Aachen.DE ([134.130.7.72]:37601 "EHLO
-	mta-1.ms.rz.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752773AbZKJRmp (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:62038 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753248AbZKSTnv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 12:42:45 -0500
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-15
-Received: from ironport-out-1.rz.rwth-aachen.de ([134.130.5.40])
- by mta-1.ms.rz.RWTH-Aachen.de
- (Sun Java(tm) System Messaging Server 6.3-7.04 (built Sep 26 2008))
- with ESMTP id <0KSW009KHL5E8Y70@mta-1.ms.rz.RWTH-Aachen.de> for
- linux-wireless@vger.kernel.org; Tue, 10 Nov 2009 18:12:50 +0100 (CET)
-Message-id: <4AF99EF9.4040408@nets.rwth-aachen.de>
-Date: Tue, 10 Nov 2009 18:12:25 +0100
-From: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
-To: ath5k-devel@lists.ath5k.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: ath5k: 2.6.32-rc6 "no further txbuf available, dropping packet"
+	Thu, 19 Nov 2009 14:43:51 -0500
+Date: Thu, 19 Nov 2009 13:43:54 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] ssb: Unconditionally log results of core scans
+Message-ID: <4b059ffa.0PbmHUedj2WTwpAO%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+At present, the results of an SSB core scan are only logged when
+CONFIG_SSB_DEBUG is "y". As this may not be set in a distro kernel,
+it is difficult interpret many problems posted in bug reports or in
+help forums.
 
-is there any reason the packet is dropped and "NETDEV_TX_OK" is returned,
-in this case?
-Seems pretty stupid to me, because now we are randomly dropping
-packets before kernel queuing (qdisc etc) can handle them,
-or am I missing something?
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Best regards,
-Arnd
+Index: wireless-testing/drivers/ssb/scan.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/scan.c
++++ wireless-testing/drivers/ssb/scan.c
+@@ -354,7 +354,7 @@ int ssb_bus_scan(struct ssb_bus *bus,
+ 		dev->bus = bus;
+ 		dev->ops = bus->ops;
+ 
+-		ssb_dprintk(KERN_INFO PFX
++		printk(KERN_INFO PFX
+ 			    "Core %d found: %s "
+ 			    "(cc 0x%03X, rev 0x%02X, vendor 0x%04X)\n",
+ 			    i, ssb_core_name(dev->id.coreid),
