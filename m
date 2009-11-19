@@ -1,34 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49452 "EHLO mga02.intel.com"
+Received: from smtp19.orange.fr ([80.12.242.18]:17847 "EHLO smtp19.orange.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751848AbZK3Cet (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Nov 2009 21:34:49 -0500
-Subject: Re: [RFC 1/2] wireless: add ieee80211_asmdu_to_8023s
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1259314217.12157.3.camel@debian>
-References: <1259215413-16753-1-git-send-email-yi.zhu@intel.com>
-	 <1259229943.32372.50.camel@johannes.local>
-	 <1259290376.13126.219.camel@debian>
-	 <1259313653.5428.5.camel@johannes.local>  <1259314217.12157.3.camel@debian>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 30 Nov 2009 10:34:54 +0800
-Message-ID: <1259548494.12157.19.camel@debian>
-Mime-Version: 1.0
+	id S1752373AbZKSVTZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Nov 2009 16:19:25 -0500
+From: Benoit Papillault <benoit.papillault@free.fr>
+To: lrodriguez@atheros.com
+Cc: jmalinen@atheros.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Subject: [PATCH] ath9k: This patch fix RX unpadding for any received frame.
+Date: Thu, 19 Nov 2009 22:19:26 +0100
+Message-Id: <1258665566-4212-1-git-send-email-benoit.papillault@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-11-27 at 17:30 +0800, Zhu Yi wrote:
-> > No, davem and I optimised that away a long time ago via using
-> > netdev->needed_headroom and netdev->needed_tailroom. It even works
-> for bridges and their slave devices, iirc. 
-> 
-> I missed this. Will check it. If so, I'll add another parameter to
-> pass the extra hw tx headroom to ieee80211_asmdu_to_8023s. 
+From: Benoit PAPILLAULT <benoit@benoit-laptop.(none)>
 
-Now I see your changes to LL_RESERVED_SPACE*(). Thanks!
+It has been tested with a 802.11 frame generator and by checking the FCS field
+of each received frame with the value reported by the Atheros hardware. This
+patch is useful if you are trying to analyze non standard 802.11 frame going
+over the air.
 
--yi
+Signed-off-by: Benoit PAPILLAULT <benoit@benoit-laptop.(none)>
+---
+ drivers/net/wireless/ath/ath9k/common.c |   19 ++++++++++++++-----
+ 1 files changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+index 2f1e161..4a13632 100644
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -231,26 +231,35 @@ void ath9k_cmn_rx_skb_postprocess(struct ath_common *common,
+ {
+ 	struct ath_hw *ah = common->ah;
+ 	struct ieee80211_hdr *hdr;
+-	int hdrlen, padsize;
++	int hdrlen, padpos, padsize;
+ 	u8 keyix;
+ 	__le16 fc;
+ 
+ 	/* see if any padding is done by the hw and remove it */
+ 	hdr = (struct ieee80211_hdr *) skb->data;
+ 	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
++	padpos = 24;
+ 	fc = hdr->frame_control;
++	if ((fc & cpu_to_le16(IEEE80211_FCTL_FROMDS|IEEE80211_FCTL_TODS)) ==
++	    cpu_to_le16(IEEE80211_FCTL_FROMDS|IEEE80211_FCTL_TODS)) {
++	  padpos += 6; /* ETH_ALEN */
++	}
++	if ((fc & cpu_to_le16(IEEE80211_STYPE_QOS_DATA|IEEE80211_FCTL_FTYPE)) ==
++	    cpu_to_le16(IEEE80211_STYPE_QOS_DATA|IEEE80211_FTYPE_DATA)) {
++	  padpos += 2;
++	}
+ 
+ 	/* The MAC header is padded to have 32-bit boundary if the
+ 	 * packet payload is non-zero. The general calculation for
+ 	 * padsize would take into account odd header lengths:
+-	 * padsize = (4 - hdrlen % 4) % 4; However, since only
++	 * padsize = (4 - padpos % 4) % 4; However, since only
+ 	 * even-length headers are used, padding can only be 0 or 2
+ 	 * bytes and we can optimize this a bit. In addition, we must
+ 	 * not try to remove padding from short control frames that do
+ 	 * not have payload. */
+-	padsize = hdrlen & 3;
+-	if (padsize && hdrlen >= 24) {
+-		memmove(skb->data + padsize, skb->data, hdrlen);
++	padsize = padpos & 3;
++	if (padsize && skb->len>=padpos+padsize+FCS_LEN) {
++		memmove(skb->data + padsize, skb->data, padpos);
+ 		skb_pull(skb, padsize);
+ 	}
+ 
+-- 
+1.6.3.3
+
+
 
