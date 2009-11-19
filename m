@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f171.google.com ([209.85.222.171]:50418 "EHLO
-	mail-pz0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750814AbZKLHCc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 02:02:32 -0500
-Received: by pzk1 with SMTP id 1so340382pzk.33
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2009 23:02:37 -0800 (PST)
+Received: from vps.qorvus.com ([67.213.217.156]:60230 "EHLO vps.qorvus.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757407AbZKSAGt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Nov 2009 19:06:49 -0500
+Message-ID: <51F2C267831840889F0E80F703420175@tsharplesoffic>
+From: "Tom Sharples" <tsharples@qorvus.com>
+To: "Pavel Roskin" <proski@gnu.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "David Acker" <dacker@roinet.com>,
+	"Andrey Yurovsky" <andrey@cozybit.com>,
+	<madwifi-users@lists.sourceforge.net>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	<madwifi-devel@lists.sourceforge.net>
+References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de><43e72e890911171337p4b0d97fcp844266137bb51b56@mail.gmail.com><4B03193E.2080304@roinet.com><43e72e890911171345q2dc59d66g6ac2a9eec04c577c@mail.gmail.com><4B031B48.1090105@roinet.com><43e72e890911171404x1a46d07alb54946768d0f9cf5@mail.gmail.com><4B032390.3080501@roinet.com> <20091117225408.GA20540@jm.kir.nu><43e72e890911171512k562f9329td56cc741dd1c5151@mail.gmail.com><1258581492.10593.24.camel@mj><43e72e890911181408r43dadf7av277b255eb9007481@mail.gmail.com> <1258585953.9914.5.camel@mj>
+In-Reply-To: <1258585953.9914.5.camel@mj>
+Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and why?
+Date: Wed, 18 Nov 2009 16:05:55 -0800
 MIME-Version: 1.0
-In-Reply-To: <1d91afb90911112231n54696c5fh950ba0102740d444@mail.gmail.com>
-References: <1d91afb90911112231n54696c5fh950ba0102740d444@mail.gmail.com>
-Date: Wed, 11 Nov 2009 23:02:36 -0800
-Message-ID: <45e8e6c40911112302s7c5c3e5cq496289512410ecba@mail.gmail.com>
-Subject: Re: Looking for the datasheet of zd1211rw...
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: tomas zheng <tomaswlan.zheng@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It looks like a Marvell device (and therefore not a zd1211) from what
-you posted.
+No reason to be more "pure" about this than the major manufacturers with FCC 
+/ CE certification (e.g. Motorola, Proxim, Trango, Tranzio, Ubiquiti, etc ). 
+Besides any liability lies with the manufacturer / installer, certainly not 
+Ath5k / Madwifi developers.
 
-On Wed, Nov 11, 2009 at 10:31 PM, tomas zheng <tomaswlan.zheng@gmail.com> wrote:
-> Hi All,
+Tom S.
+
+
+>>
+>> Are you aware of any regulatory rules which prohibit narrower
+>> channels? It just seems odd.
 >
-> I have one  usb wireless device which can not work on my pc, some one
-> said it use zd1211rw driver.
-> Unfortunately, I did not find the datasheet of this chipset, can
-> anyone kindly share the datasheet with me, please?
-> BTW,  has any one have the some experience about this device?
+> No, I'm not aware of such limitations.  OK, you are not aware of such
+> limitations either, then perhaps we can go ahead with the narrow
+> channels.
 >
-> Thanks very much, any clue will be very appreciated.
+> -- 
+> Regards,
+> Pavel Roskin
 >
-> Cheng K T
->
->
-> Device Descriptor:
-> bcdUSB:             0x0200
-> bDeviceClass:         0x00
-> bDeviceSubClass:      0x00
-> bDeviceProtocol:      0x00
-> bMaxPacketSize0:      0x40 (64)
-> idVendor:           0x1286 (MARVELL SEMICONDUCTOR, INC.)
-> idProduct:          0x1FAB
-> bcdDevice:          0x0001
-> iManufacturer:        0x01
-> 0x0409: "MARVELL "
-> iProduct:             0x02
-> 0x0409: "MARVELL Wireless Device V1.0.1.0
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+
