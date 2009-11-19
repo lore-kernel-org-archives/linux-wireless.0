@@ -1,44 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:33922 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750755AbZKNSFK (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55639 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752858AbZKSO2O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Nov 2009 13:05:10 -0500
-Subject: Re: [patch 0/1] Adding radio type FM
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Janakiram Sistla <janakiram.sistla@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <4fb5db50911140937j278584e5nf9e4d5767a44a920@mail.gmail.com>
-References: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
-	 <1258082571.7715.13.camel@violet>
-	 <4fb5db50911140519q70bbdd00qb585153c4926df96@mail.gmail.com>
-	 <1258216474.3299.24.camel@violet>
-	 <4fb5db50911140937j278584e5nf9e4d5767a44a920@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 14 Nov 2009 19:05:09 +0100
-Message-ID: <1258221909.3299.26.camel@violet>
+	Thu, 19 Nov 2009 09:28:14 -0500
+Subject: mesh endian bugs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rui Paulo <rpaulo@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-MYW5yyqXeQQgCrFbCIT+"
+Date: Thu, 19 Nov 2009 14:51:31 +0100
+Message-ID: <1258638691.7094.16.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Janakiram,
 
-> I thought i would see the change first in include/linux/rfkill.h
-> getting accepted and then i can add the change in core.c also.
-> 
-> Let me know if i can push both in the same patch.
+--=-MYW5yyqXeQQgCrFbCIT+
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-I said that you can add RFKILL_TYPE_FM to the RFKILL subsystem, but the
-input changes might not be the right ones. Since eventually the
-in-kernel input support will be removed.
+  CHECK   /home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c
+/home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c:471:41: war=
+ning: incorrect type in argument 4 (different base types)
+/home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c:471:41:    =
+expected restricted __le16 [usertype] target_rcode
+/home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c:471:41:    =
+got int
+/home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c:617:36: war=
+ning: incorrect type in argument 4 (different base types)
+/home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c:617:36:    =
+expected restricted __le16 [usertype] target_rcode
+/home/johannes/sys/wireless-testing/net/mac80211/mesh_pathtbl.c:617:36:    =
+got int
 
-And I did ask if the FM button you see is a generic RFKILL toggle or a
-FM specific button. Especially since you had a copy-and-paste mistake in
-your patches, that code path clearly was never tested by you.
 
-Regards
+--=-MYW5yyqXeQQgCrFbCIT+
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Marcel
+-----BEGIN PGP SIGNATURE-----
 
+iQIcBAABAgAGBQJLBU1gAAoJEODzc/N7+Qma8AMQALyQSennvinPGGBJW2GoK/uc
+IXh/9Rdb6ceXRRTuyg+7wosJFJ/5JouI3cqCcGfK1bwt8yqN/7Yjcs5TZRuwhk7s
+rDW+GZuaAoOFQ3hAifrPZTRmI3pxyOpu9dXs3q53pkpB1bgq1HNW+eq2mWBWKN5V
+v76WWXqNvRwAC54l8Bo8ImpmAkg/ymI9mBijD7vl1Tv5hcjZOnwDfGbDalsB3mRh
+YYxh1jqJZFMYjBb/fBnbvnZPJA67mSGfzxb7EWovmagn1+lMs82iNMF0435dsSlY
+PVE8ozfrAWBiaFnHDQtc3L2oCaJJhJJUKykVDalXGzPM1wmoq6+ezHx1oKD0Tqvw
+fk98wvksJxNjRfQ0BVfdI35WHpb4f4gfb7hCSZlU9OtyDv7mwPMPErNlPN2hR3UG
+eWyvPF4vKBy+wuTUek9ntQxwNRcSjJQZF+u6pcNMaiNebBNtxmXGAZEmhh8zj/6R
+AwQtTbX1I8UUzxBRFod0a1Lkk0tsaJ31T8rxUKCdYSWSDba694hY5ifSGeAK4PIT
+2SFJYB1BU+BJWq5fQfpwxf7JkwyTqoH8omSrsl/kzr78RkSiCmcaGzXggkD6MkUC
+w4dNnHIej8tp6JfmnY6fC7G+t4kodzaEeJ8a0baU7IRFi5/IG/NKlOyvMgNLDbew
+AJn8Lvf/4ot55BUwjSfW
+=5N+M
+-----END PGP SIGNATURE-----
+
+--=-MYW5yyqXeQQgCrFbCIT+--
 
