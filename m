@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f42.google.com ([209.85.160.42]:40394 "EHLO
-	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750912AbZKGTCc (ORCPT
+Received: from smtp6.freeserve.com ([193.252.22.190]:52957 "EHLO
+	smtp6.freeserve.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754349AbZKTUGT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 14:02:32 -0500
-Received: by pwj9 with SMTP id 9so1220316pwj.21
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2009 11:02:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890911060821r2703c186lbb75c40b449b2c55@mail.gmail.com>
-References: <fd145f7d0911060004j55b06482tca088685d0626249@mail.gmail.com>
-	 <43e72e890911060821r2703c186lbb75c40b449b2c55@mail.gmail.com>
-Date: Sat, 7 Nov 2009 11:02:37 -0800
-Message-ID: <fd145f7d0911071102l3b7710fndb84fb738133dcb3@mail.gmail.com>
-Subject: Re: Getting random regulatory domains on boot-up with ath9k
-From: Jeffrey Baker <jwbaker@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 20 Nov 2009 15:06:19 -0500
+Received: from smtp6.freeserve.com (mwinf3628 [10.232.31.128])
+	by mwinf3605.me.freeserve.com (SMTP Server) with ESMTP id A79071C0036E
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Nov 2009 20:58:11 +0100 (CET)
+Date: Fri, 20 Nov 2009 19:58:34 +0000
+From: Chris Vine <chris@cvine.freeserve.co.uk>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: William Bourque <william.bourque@polymtl.ca>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: Fatal DMA error problem with netbook and BCM4312
+Message-ID: <20091120195834.334d8bc0@boulder.homenet>
+In-Reply-To: <4B068ED9.5070107@lwfinger.net>
+References: <4AFA09C8.4060602@gmail.com>
+	<200911131216.43704.mb@bu3sch.de>
+	<4AFD83CA.2050508@lwfinger.net>
+	<200911131836.26857.mb@bu3sch.de>
+	<4AFD9E20.3060501@gmail.com>
+	<4AFDD1C9.4050402@lwfinger.net>
+	<4AFDF68C.4040804@polymtl.ca>
+	<4AFE1E5F.9040009@lwfinger.net>
+	<4AFEFC2C.5030704@polymtl.ca>
+	<4B068ED9.5070107@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 6, 2009 at 8:21 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Fri, Nov 6, 2009 at 12:04 AM, Jeffrey Baker <jwbaker@gmail.com> wrote:
-> So one way or another user intervention is required to alter current
-> regulatory solutions. For Linux though the best solution *as an end
-> user* to enable AP mode is not to alter wireless-regdb but instead to
-> report your issue. In your case you have a non-trivial regression
-> which does indeed need to be addressed.
+On Fri, 20 Nov 2009 06:43:05 -0600
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> One last check. I would appreciate receiving answers to the following
+> questions. These questions apply to anyone else with this problem.
+> 
+> Does the pm_qos patch help your "fatal DMA error" problem,
+> particularly when booted from power-off?
+> 
+> If you warm-boot after loading the wl driver, does the patch make any
+> difference?
 
-Thanks, your email(s) explained a great number of issues.  I don't
-have the expertise to contribute here, so I leave it in your capable
-hands.  I would say, however, that from the _user's_ perspective, the
-best thing is if a wifi card bought in the USA from a USA retailer
-automagically conformed to USA regulations, even if that's an issue to
-be taken up with the card manufacturer and not with the driver
-authors.
+What's the date/time of the last patch you posted for this and what
+kernel does it apply to?
 
--jwb
+Chris
+
+
