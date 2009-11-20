@@ -1,37 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:43399 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753568AbZKWTZc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 14:25:32 -0500
-Received: by ewy19 with SMTP id 19so2192281ewy.21
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 11:25:38 -0800 (PST)
-Message-ID: <4B0AE1AF.9070107@gmail.com>
-Date: Mon, 23 Nov 2009 20:25:35 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 5/6] rt2x00: Properly request tx headroom for alignment
- operations.
-References: <1258960565-26736-1-git-send-email-gwingerde@gmail.com>	 <1258960565-26736-2-git-send-email-gwingerde@gmail.com>	 <1258960565-26736-3-git-send-email-gwingerde@gmail.com>	 <1258960565-26736-4-git-send-email-gwingerde@gmail.com>	 <1258960565-26736-5-git-send-email-gwingerde@gmail.com>	 <1258960565-26736-6-git-send-email-gwingerde@gmail.com> <1258972737.7094.147.camel@johannes.local>
-In-Reply-To: <1258972737.7094.147.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([143.182.124.21]:61936 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754162AbZKTUFJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Nov 2009 15:05:09 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 13/19] iwlwifi: by default, dump entire sram data portion
+Date: Fri, 20 Nov 2009 12:05:04 -0800
+Message-Id: <1258747510-21233-14-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
+References: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/23/09 11:38, Johannes Berg wrote:
-> On Mon, 2009-11-23 at 08:16 +0100, Gertjan van Wingerde wrote:
-> 
-> This patch would be a LOT easier to read if you didn't do unrelated
-> whitespace cleanups.
-> 
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Well their not really unrelated (they ensure that everything is still properly
-lined out when the new member extra_tx_headroom is added), but I can see that
-it distracts from the real "meat" of the patch.
-I'll see if I can do a preparatory "whitespace cleanup" patch.
+For "sram" debugfs file, if user did not specify the offset and length,
+dump the entire data portion of sram by default.
+Data portion is 0x800000 - 0x80ffff, but the actual data size is known
+to the driver from the ucode file.
 
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
-Gertjan.
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |   14 +++++++++++---
+ 1 files changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 016ff40..5adf0b6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -235,13 +235,21 @@ static ssize_t iwl_dbgfs_sram_read(struct file *file,
+ 	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
+ 	size_t bufsz;
+ 
+-	bufsz =  30 + priv->dbgfs->sram_len * sizeof(char) * 12;
++	/* default is to dump the entire data segment */
++	if (!priv->dbgfs->sram_offset && !priv->dbgfs->sram_len) {
++		priv->dbgfs->sram_offset = 0x800000;
++		if (priv->ucode_type == UCODE_INIT)
++			priv->dbgfs->sram_len = priv->ucode_init_data.len;
++		else
++			priv->dbgfs->sram_len = priv->ucode_data.len;
++	}
++	bufsz =  30 + priv->dbgfs->sram_len * sizeof(char) * 10;
+ 	buf = kmalloc(bufsz, GFP_KERNEL);
+ 	if (!buf)
+ 		return -ENOMEM;
+-	pos += scnprintf(buf + pos, bufsz - pos, "sram_len: %d\n",
++	pos += scnprintf(buf + pos, bufsz - pos, "sram_len: 0x%x\n",
+ 			priv->dbgfs->sram_len);
+-	pos += scnprintf(buf + pos, bufsz - pos, "sram_offset: %d\n",
++	pos += scnprintf(buf + pos, bufsz - pos, "sram_offset: 0x%x\n",
+ 			priv->dbgfs->sram_offset);
+ 	for (i = priv->dbgfs->sram_len; i > 0; i -= 4) {
+ 		val = iwl_read_targ_mem(priv, priv->dbgfs->sram_offset + \
+-- 
+1.5.6.3
+
