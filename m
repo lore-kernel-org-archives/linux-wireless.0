@@ -1,128 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38596 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752632AbZKPP1h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2009 10:27:37 -0500
-Subject: Re: [PATCH 04/16] iwlwifi: drop non-production PCI-IDs for 6x50
- series
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <69e28c910911140726x96646dcgdc8ff8592e459dcf@mail.gmail.com>
-References: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
-	 <1258142198-3223-5-git-send-email-reinette.chatre@intel.com>
-	 <69e28c910911140726x96646dcgdc8ff8592e459dcf@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 16 Nov 2009 06:24:40 -0800
-Message-Id: <1258381480.14710.76.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:48564 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754974AbZKTUyF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Nov 2009 15:54:05 -0500
+MIME-Version: 1.0
+In-Reply-To: <43e72e890911201251t6210ee19n177eaf003a4fffc@mail.gmail.com>
+References: <43e72e890911201245r4de5b039hb2dd5011dabf2399@mail.gmail.com>
+	<43e72e890911201251t6210ee19n177eaf003a4fffc@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 20 Nov 2009 12:53:51 -0800
+Message-ID: <43e72e890911201253obc466c8k2102e04457c48c92@mail.gmail.com>
+Subject: Re: A generic kernel compatibilty code
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2009-11-14 at 07:26 -0800, Gábor Stefanik wrote:
-> Does that mean, Centrino 6350AGN cancelled?
-yes
+On Fri, Nov 20, 2009 at 12:51 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Fri, Nov 20, 2009 at 12:45 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> Everyone and their mother reinvents the wheel when it comes to
+>> backporting kernel modules. It a painful job and it seems to me an
+>> alternative is possible. If we can write generic compatibilty code for
+>> a new routine introduced on the next kernel how about just merging it
+>> to the kernel under some generic compat module. This would be
+>> completey ignored by everyone using the stable kernel but can be
+>> copied by anyone doing backport work.
+>>
+>> So I'm thinking something as simple as a generic compat/comat.ko with
+>> compat-2.6.32.[ch] files.
+>
+> FWIW, I meant a compat-2.6.32.[ch] and compat-2.6.31.[ch] and so on.
+> All these would link to the compat.ko
 
-> 
-> On Fri, Nov 13, 2009 at 8:56 PM, Reinette Chatre
-> <reinette.chatre@intel.com> wrote:
-> > From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> >
-> > drop the non-production PCI-IDs for 6x50 series
-> >
-> > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-> > ---
-> >  drivers/net/wireless/iwlwifi/iwl-6000.c |   32 -------------------------------
-> >  drivers/net/wireless/iwlwifi/iwl-agn.c  |    3 --
-> >  drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 -
-> >  3 files changed, 0 insertions(+), 36 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-> > index 72ed944..4ab9897 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-> > @@ -456,37 +456,5 @@ struct iwl_cfg iwl6000_3agn_cfg = {
-> >        .support_ct_kill_exit = true,
-> >  };
-> >
-> > -struct iwl_cfg iwl6050_3agn_cfg = {
-> > -       .name = "6050 Series 3x3 AGN",
-> > -       .fw_name_pre = IWL6050_FW_PRE,
-> > -       .ucode_api_max = IWL6050_UCODE_API_MAX,
-> > -       .ucode_api_min = IWL6050_UCODE_API_MIN,
-> > -       .sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
-> > -       .ops = &iwl6050_ops,
-> > -       .eeprom_size = OTP_LOW_IMAGE_SIZE,
-> > -       .eeprom_ver = EEPROM_6050_EEPROM_VERSION,
-> > -       .eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
-> > -       .num_of_queues = IWL50_NUM_QUEUES,
-> > -       .num_of_ampdu_queues = IWL50_NUM_AMPDU_QUEUES,
-> > -       .mod_params = &iwl50_mod_params,
-> > -       .valid_tx_ant = ANT_ABC,
-> > -       .valid_rx_ant = ANT_ABC,
-> > -       .pll_cfg_val = 0,
-> > -       .set_l0s = true,
-> > -       .use_bsm = false,
-> > -       .pa_type = IWL_PA_SYSTEM,
-> > -       .max_ll_items = OTP_MAX_LL_ITEMS_6x50,
-> > -       .shadow_ram_support = true,
-> > -       .ht_greenfield_support = true,
-> > -       .led_compensation = 51,
-> > -       .use_rts_for_ht = true, /* use rts/cts protection */
-> > -       .chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
-> > -       .supports_idle = true,
-> > -       .adv_thermal_throttle = true,
-> > -       .support_ct_kill_exit = true,
-> > -       .support_sm_ps = true,
-> > -       .support_wimax_coexist = true,
-> > -};
-> > -
-> >  MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
-> >  MODULE_FIRMWARE(IWL6050_MODULE_FIRMWARE(IWL6050_UCODE_API_MAX));
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> > index 29f7510..24baf2c 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> > @@ -3485,13 +3485,10 @@ static struct pci_device_id iwl_hw_card_ids[] = {
-> >        {IWL_PCI_DEVICE(0x4239, 0x1316, iwl6000i_2abg_cfg)},
-> >
-> >  /* 6x50 WiFi/WiMax Series */
-> > -       {IWL_PCI_DEVICE(0x0086, 0x1101, iwl6050_3agn_cfg)},
-> > -       {IWL_PCI_DEVICE(0x0086, 0x1121, iwl6050_3agn_cfg)},
-> >        {IWL_PCI_DEVICE(0x0087, 0x1301, iwl6050_2agn_cfg)},
-> >        {IWL_PCI_DEVICE(0x0087, 0x1306, iwl6050_2abg_cfg)},
-> >        {IWL_PCI_DEVICE(0x0087, 0x1321, iwl6050_2agn_cfg)},
-> >        {IWL_PCI_DEVICE(0x0087, 0x1326, iwl6050_2abg_cfg)},
-> > -       {IWL_PCI_DEVICE(0x0088, 0x1111, iwl6050_3agn_cfg)},
-> >        {IWL_PCI_DEVICE(0x0089, 0x1311, iwl6050_2agn_cfg)},
-> >        {IWL_PCI_DEVICE(0x0089, 0x1316, iwl6050_2abg_cfg)},
-> >
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-> > index d0f0915..273adee 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-> > @@ -64,7 +64,6 @@ extern struct iwl_cfg iwl6000i_2bg_cfg;
-> >  extern struct iwl_cfg iwl6000_3agn_cfg;
-> >  extern struct iwl_cfg iwl6050_2agn_cfg;
-> >  extern struct iwl_cfg iwl6050_2abg_cfg;
-> > -extern struct iwl_cfg iwl6050_3agn_cfg;
-> >  extern struct iwl_cfg iwl1000_bgn_cfg;
-> >  extern struct iwl_cfg iwl1000_bg_cfg;
-> >
-> > --
-> > 1.5.6.3
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> 
-> 
-> 
+I supose this could juse be a separate tree with some generic
+compat.ko module. That might work better.
 
+  Luis
