@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:40387 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757001AbZKMU0U (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 15:26:20 -0500
-Received: by iwn8 with SMTP id 8so2924660iwn.33
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2009 12:26:25 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890911120732m74dbe2d4m14dd146cd0fb3016@mail.gmail.com>
-References: <02a401ca6370$51fa0ff0$f5ee2fd0$@kaist.ac.kr> <43e72e890911120732m74dbe2d4m14dd146cd0fb3016@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 13 Nov 2009 12:26:05 -0800
-Message-ID: <43e72e890911131226i1a58560haeddca42c76bc1a9@mail.gmail.com>
-Subject: Re: ath9k: Unknown symbol
-To: Jinsung Lee <ljs@netsys.kaist.ac.kr>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([143.182.124.21]:36539 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753652AbZKTUFI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Nov 2009 15:05:08 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 10/19] iwlwifi: fix reserved2 field in iwl4965_addsta
+Date: Fri, 20 Nov 2009 12:05:01 -0800
+Message-Id: <1258747510-21233-11-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
+References: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 12, 2009 at 7:32 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Thu, Nov 12, 2009 at 12:15 AM, Jinsung Lee <ljs@netsys.kaist.ac.kr> wrote:
->> Hi, all.
->>
->> I installed compat-wireless-2009-11-12 and compiled successfully.
->> But when inputting the command "modprobe ath9k", I saw the following
->> message:
->>
->> FATAL: Error inserting ath9k
->> (/lib/modules/2.6.32-020632rc6-generic/updates/drivers/net/wireless/ath/ath9
->> k/ath9k.ko): Unknown symbol in module, or unknown parameter (see dmesg)
->>
->> And dmesg shows the following:
->>
->> [582122.800191] ath9k: Unknown symbol ath9k_cmn_rx_skb_preprocess
->> [582122.803675] ath9k: Unknown symbol ath9k_cmn_rx_skb_postprocess
->>
->> Actually, I haven't seen this kind of message before.
->> Is there any workaround solution for this?
->
-> compat-wireless just needs to be updated, I'll take care of this.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Ok try the new tarball release.
+reserved2 field in "struct iwl4965_addsta_cmd" is __le16.
 
-git-describe for wireless-testing.git says: v2.6.32-rc6-41741-ga601a39
-This is a bleeding edge compat-wireless release based on: master-2009-11-11
-This is compat-release: master-2009-11-11
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 61ecd90..386513b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -1820,7 +1820,7 @@ static u16 iwl4965_build_addsta_hcmd(const struct iwl_addsta_cmd *cmd, u8 *data)
+ 	addsta->add_immediate_ba_ssn = cmd->add_immediate_ba_ssn;
+ 	addsta->sleep_tx_count = cmd->sleep_tx_count;
+ 	addsta->reserved1 = cpu_to_le16(0);
+-	addsta->reserved2 = cpu_to_le32(0);
++	addsta->reserved2 = cpu_to_le16(0);
+ 
+ 	return (u16)sizeof(struct iwl4965_addsta_cmd);
+ }
+-- 
+1.5.6.3
+
