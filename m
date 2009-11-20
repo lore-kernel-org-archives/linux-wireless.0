@@ -1,111 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:35495 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753552AbZKHSOr (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:44181 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754741AbZKTVi7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 13:14:47 -0500
-Received: by ewy3 with SMTP id 3so2503913ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 10:14:51 -0800 (PST)
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 8/9] rt2800: add eFuse EEPROM support code to rt2800lib
-Date: Sun, 8 Nov 2009 19:13:49 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <20091108133854.23584.86842.sendpatchset@localhost.localdomain> <200911081834.51635.bzolnier@gmail.com> <200911081908.23307.IvDoorn@gmail.com>
-In-Reply-To: <200911081908.23307.IvDoorn@gmail.com>
+	Fri, 20 Nov 2009 16:38:59 -0500
 MIME-Version: 1.0
-Message-Id: <200911081913.49917.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
+In-Reply-To: <20091120211837.GA22815@tuxdriver.com>
+References: <43e72e890911201245r4de5b039hb2dd5011dabf2399@mail.gmail.com>
+	<43e72e890911201251t6210ee19n177eaf003a4fffc@mail.gmail.com>
+	<43e72e890911201253obc466c8k2102e04457c48c92@mail.gmail.com>
+	<20091120211837.GA22815@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 20 Nov 2009 13:38:45 -0800
+Message-ID: <43e72e890911201338w4c403d51q651afc3638d1739c@mail.gmail.com>
+Subject: Re: A generic kernel compatibilty code
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 08 November 2009 19:08:23 Ivo van Doorn wrote:
-> On Sunday 08 November 2009, Bartlomiej Zolnierkiewicz wrote:
-> > On Sunday 08 November 2009 14:55:59 Ivo van Doorn wrote:
-> > > On Sunday 08 November 2009, Bartlomiej Zolnierkiewicz wrote:
-> > > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > > Subject: [PATCH] rt2800: add eFuse EEPROM support code to rt2800lib
-> > > > 
-> > > > eFuse EEPROM is used also by USB chips (i.e. RT3070)
-> > > > so move the needed code from rt2800pci to rt2800lib.
-> > > > 
-> > > > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > > ---
-> > > >  drivers/net/wireless/rt2x00/rt2800.h    |   29 +++++++++++++++++++++
-> > > >  drivers/net/wireless/rt2x00/rt2800lib.c |   43 ++++++++++++++++++++++++++++++++
-> > > >  drivers/net/wireless/rt2x00/rt2800lib.h |    2 +
-> > > >  drivers/net/wireless/rt2x00/rt2800pci.c |   38 ++--------------------------
-> > > >  drivers/net/wireless/rt2x00/rt2800pci.h |   29 ---------------------
-> > > >  5 files changed, 77 insertions(+), 64 deletions(-)
-> > > 
-> > > 
-> > > > ===================================================================
-> > > > --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> > > > +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> > > > @@ -147,44 +147,12 @@ static void rt2800pci_read_eeprom_pci(st
-> > > >  
-> > > >  static int rt2800pci_efuse_detect(struct rt2x00_dev *rt2x00dev)
-> > > >  {
-> > > > -	u32 reg;
-> > > > -
-> > > > -	rt2800_register_read(rt2x00dev, EFUSE_CTRL, &reg);
-> > > > -
-> > > > -	return rt2x00_get_field32(reg, EFUSE_CTRL_PRESENT);
-> > > > +	return rt2800_efuse_detect(rt2x00dev);
-> > > >  }
-> > > 
-> > > It would be better to fix all calls to rt2800pci_efuse_detect to use rt2800_efuse_detect
-> > > rather then adding a special wrapper function for it.
-> > > 
-> > > > -static void rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
-> > > > +static inline void rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
-> > > >  {
-> > > > -	unsigned int i;
-> > > > -
-> > > > -	for (i = 0; i < EEPROM_SIZE / sizeof(u16); i += 8)
-> > > > -		rt2800pci_efuse_read(rt2x00dev, i);
-> > > > +	rt2800_read_eeprom_efuse(rt2x00dev);
-> > > >  }
-> > > 
-> > > Same here.
-> > 
-> > Could you please explain some more what do you mean by that?
-> > (Please note that we have an extra SOC handling in rt2800pci.c.)
-> 
-> Your changes made the following 2 functions:
-> 
-> int rt2800pci_efuse_detect(struct rt2x00_dev *rt2x00dev)
-> {
-> 	return rt2800_efuse_detect(rt2x00dev);
-> }
-> 
-> void rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
-> {
-> 	rt2800_read_eeprom_efuse(rt2x00dev);
-> }
-> 
-> So why do we need rt2800pci_* versions in this case? They simply wrap
-> the rt2800 library function without providing anything extra...
+On Fri, Nov 20, 2009 at 1:18 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Fri, Nov 20, 2009 at 12:53:51PM -0800, Luis R. Rodriguez wrote:
+>> On Fri, Nov 20, 2009 at 12:51 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> > On Fri, Nov 20, 2009 at 12:45 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> >> Everyone and their mother reinvents the wheel when it comes to
+>> >> backporting kernel modules. It a painful job and it seems to me an
+>> >> alternative is possible. If we can write generic compatibilty code for
+>> >> a new routine introduced on the next kernel how about just merging it
+>> >> to the kernel under some generic compat module. This would be
+>> >> completey ignored by everyone using the stable kernel but can be
+>> >> copied by anyone doing backport work.
+>> >>
+>> >> So I'm thinking something as simple as a generic compat/comat.ko with
+>> >> compat-2.6.32.[ch] files.
+>> >
+>> > FWIW, I meant a compat-2.6.32.[ch] and compat-2.6.31.[ch] and so on.
+>> > All these would link to the compat.ko
+>>
+>> I supose this could juse be a separate tree with some generic
+>> compat.ko module. That might work better.
+>
+> This is what I would suggest for pursuing this idea.  Perhaps you
+> could split-off from compat-wireless, then make that tree depend on
+> the new tree (compat-core?)...
 
-Please go read the original code..
+OK thanks, will try that for the next kernel.
 
-#ifdef CONFIG_RT2800PCI_PCI
-...
-[ the code quoted in your mail ]
-...
-#else
-static inline void rt2800pci_read_eeprom_pci(struct rt2x00_dev *rt2x00dev)
-{
-}
-
-static inline void rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
-{
-}
-#endif /* CONFIG_RT2800PCI_PCI */
-
-[ #else is for CONFIG_RT2800PCI_WISOC ]
-
--- 
-Bartlomiej Zolnierkiewicz
+  Luis
