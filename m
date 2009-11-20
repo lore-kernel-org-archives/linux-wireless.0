@@ -1,139 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56144 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752830AbZKGUTC (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:54593 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753214AbZKTX1H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 15:19:02 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	mcgrof@gmail.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 13/29] ath9k: move RX check code into helper ath9k_rx_accept()
-Date: Sat,  7 Nov 2009 15:18:50 -0500
-Message-Id: <1257625146-17971-14-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
-References: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 20 Nov 2009 18:27:07 -0500
+Received: by iwn8 with SMTP id 8so2909412iwn.33
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Nov 2009 15:27:12 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1258756647.2714.17.camel@localhost.localdomain>
+References: <1258756647.2714.17.camel@localhost.localdomain>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 20 Nov 2009 15:26:52 -0800
+Message-ID: <43e72e890911201526y5b36328ft3a510e546508df66@mail.gmail.com>
+Subject: Re: iwlagn + Ad-Hoc + 5Ghz
+To: Jeremy Moles <jeremy@emperorlinux.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This does sanity checking on the skb and RX status descriptor
-prior to processing.
+On Fri, Nov 20, 2009 at 2:37 PM, Jeremy Moles <jeremy@emperorlinux.com> wrote:
+>
+> Hello all! I have a group of machine here with an app that needs to set
+> up an ad-hoc network in 5Ghz+ range. The machines themselves are all
+> different (a Panasonic, a Dell, and a Lenovo) but they are all using
+> 5100 cards, a 2.6.31 kernel, and the 2.6.31-rc7 driver from the website.
+>
+> Using the command "iw list" I can get a lot of helpful info, but I see
+> "no IBSS" on any channel over 11, and I'm beginning to think that this
+> just isn't supported on these cards yet.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/recv.c |   63 +++++++++++++++++++++-----------
- 1 files changed, 41 insertions(+), 22 deletions(-)
+No, this has nothing to do not supporting IBSS but instead you should
+read "no IBSS" more as a regulatory rule that implies you cannot use a
+mode of operation that can beacon. We should at least rename this on
+iw for now to make thins clearer.
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index fa78914..6e00eaf 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -86,28 +86,19 @@ static void ath_setdefantenna(struct ath_softc *sc, u32 antenna)
- 	sc->rx.rxotherant = 0;
- }
- 
--/*
-- * For Decrypt or Demic errors, we only mark packet status here and always push
-- * up the frame up to let mac80211 handle the actual error case, be it no
-- * decryption key or real decryption error. This let us keep statistics there.
-- */
--static int ath_rx_prepare(struct ath_common *common,
--			  struct ieee80211_hw *hw,
--			  struct sk_buff *skb, struct ath_rx_status *rx_stats,
--			  struct ieee80211_rx_status *rx_status,
--			  bool *decrypt_error)
-+/* Assumes you've already done the endian to CPU conversion */
-+static bool ath9k_rx_accept(struct ath_common *common,
-+			    struct sk_buff *skb,
-+			    struct ieee80211_rx_status *rxs,
-+			    struct ath_rx_status *rx_stats,
-+			    bool *decrypt_error)
- {
- 	struct ath_hw *ah = common->ah;
- 	struct ieee80211_hdr *hdr;
--	u8 ratecode;
- 	__le16 fc;
--	struct ieee80211_sta *sta;
--	struct ath_node *an;
--	int last_rssi = ATH_RSSI_DUMMY_MARKER;
- 
--	hdr = (struct ieee80211_hdr *)skb->data;
-+	hdr = (struct ieee80211_hdr *) skb->data;
- 	fc = hdr->frame_control;
--	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
- 
- 	if (rx_stats->rs_more) {
- 		/*
-@@ -117,12 +108,12 @@ static int ath_rx_prepare(struct ath_common *common,
- 		 * error frames in Monitor mode.
- 		 */
- 		if (ah->opmode != NL80211_IFTYPE_MONITOR)
--			goto rx_next;
-+			return false;
- 	} else if (rx_stats->rs_status != 0) {
- 		if (rx_stats->rs_status & ATH9K_RXERR_CRC)
--			rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
-+			rxs->flag |= RX_FLAG_FAILED_FCS_CRC;
- 		if (rx_stats->rs_status & ATH9K_RXERR_PHY)
--			goto rx_next;
-+			return false;
- 
- 		if (rx_stats->rs_status & ATH9K_RXERR_DECRYPT) {
- 			*decrypt_error = true;
-@@ -135,7 +126,7 @@ static int ath_rx_prepare(struct ath_common *common,
- 				 */
- 				rx_stats->rs_status &= ~ATH9K_RXERR_MIC;
- 			else
--				rx_status->flag |= RX_FLAG_MMIC_ERROR;
-+				rxs->flag |= RX_FLAG_MMIC_ERROR;
- 		}
- 		/*
- 		 * Reject error frames with the exception of
-@@ -146,14 +137,42 @@ static int ath_rx_prepare(struct ath_common *common,
- 			if (rx_stats->rs_status &
- 			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC |
- 			      ATH9K_RXERR_CRC))
--				goto rx_next;
-+				return false;
- 		} else {
- 			if (rx_stats->rs_status &
- 			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC)) {
--				goto rx_next;
-+				return false;
- 			}
- 		}
- 	}
-+	return true;
-+}
-+
-+/*
-+ * For Decrypt or Demic errors, we only mark packet status here and always push
-+ * up the frame up to let mac80211 handle the actual error case, be it no
-+ * decryption key or real decryption error. This let us keep statistics there.
-+ */
-+static int ath_rx_prepare(struct ath_common *common,
-+			  struct ieee80211_hw *hw,
-+			  struct sk_buff *skb, struct ath_rx_status *rx_stats,
-+			  struct ieee80211_rx_status *rx_status,
-+			  bool *decrypt_error)
-+{
-+	struct ath_hw *ah = common->ah;
-+	struct ieee80211_hdr *hdr;
-+	u8 ratecode;
-+	__le16 fc;
-+	struct ieee80211_sta *sta;
-+	struct ath_node *an;
-+	int last_rssi = ATH_RSSI_DUMMY_MARKER;
-+
-+	hdr = (struct ieee80211_hdr *)skb->data;
-+	fc = hdr->frame_control;
-+	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
-+
-+	if (!ath9k_rx_accept(common, skb, rx_status, rx_stats, decrypt_error))
-+		goto rx_next;
- 
- 	ratecode = rx_stats->rs_rate;
- 
--- 
-1.6.5.2.143.g8cc62
+What you see should be part of the default rules embedded on the
+device's EEPROM. Beaconing is allowed on channel 11 even on the most
+restrictive regulatory domain and this is why the world regulatory
+domain allows 1-11 to beacon too.
 
+You should enable debugging on the driver upon load to confirm whether
+this rule is coming from the EEPROM. Do you have
+CONFIG_WIRELESS_OLD_REGULATORY? I think even that (by default it used
+the US) enabled beaconing. Drivers can overrule things though if their
+EEPROM mandates this.
+
+  Luis
