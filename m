@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:16751 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754149AbZKBIED (ORCPT
+Received: from mail-gx0-f226.google.com ([209.85.217.226]:63169 "EHLO
+	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754669AbZKTUFY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 03:04:03 -0500
-Message-ID: <4AEE9269.40006@nokia.com>
-Date: Mon, 02 Nov 2009 10:03:53 +0200
-From: Luciano Coelho <luciano.coelho@nokia.com>
+	Fri, 20 Nov 2009 15:05:24 -0500
+Received: by gxk26 with SMTP id 26so3280939gxk.1
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Nov 2009 12:05:30 -0800 (PST)
+Message-ID: <4B06F685.1020405@lwfinger.net>
+Date: Fri, 20 Nov 2009 14:05:25 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: "ext Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] wl1271: use __dev_alloc_skb() on RX
-References: <1256927746-19352-1-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1256927746-19352-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Chris Vine <chris@cvine.freeserve.co.uk>
+CC: William Bourque <william.bourque@polymtl.ca>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: Fatal DMA error problem with netbook and BCM4312
+References: <4AFA09C8.4060602@gmail.com>	<200911131216.43704.mb@bu3sch.de>	<4AFD83CA.2050508@lwfinger.net>	<200911131836.26857.mb@bu3sch.de>	<4AFD9E20.3060501@gmail.com>	<4AFDD1C9.4050402@lwfinger.net>	<4AFDF68C.4040804@polymtl.ca>	<4AFE1E5F.9040009@lwfinger.net>	<4AFEFC2C.5030704@polymtl.ca>	<4B068ED9.5070107@lwfinger.net> <20091120195834.334d8bc0@boulder.homenet>
+In-Reply-To: <20091120195834.334d8bc0@boulder.homenet>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luiz,
-
-ext Luis R. Rodriguez wrote:
-> RX is handled in a workqueue therefore allocating for GFP_ATOMIC
-> is overkill and not required.
-
-
-Yes, this looks like the correct thing to do.  Thank you for pointing out! Can 
-you send the patch again to Linville for integration?
-
-
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+On 11/20/2009 01:58 PM, Chris Vine wrote:
+> On Fri, 20 Nov 2009 06:43:05 -0600
+> Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> One last check. I would appreciate receiving answers to the following
+>> questions. These questions apply to anyone else with this problem.
+>>
+>> Does the pm_qos patch help your "fatal DMA error" problem,
+>> particularly when booted from power-off?
+>>
+>> If you warm-boot after loading the wl driver, does the patch make any
+>> difference?
 > 
-> --- 
-> 
-> This goes untested and not even compile tested but just thought this was odd.
-> 
-> diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c b/drivers/net/wireless/wl12xx/wl1271_rx.c
-> index 37d81ab..ca645f3 100644
-> --- a/drivers/net/wireless/wl12xx/wl1271_rx.c
-> +++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
-> @@ -159,7 +159,7 @@ static void wl1271_rx_handle_data(struct wl1271 *wl, u32 length)
->  	u8 *buf;
->  	u8 beacon = 0;
->  
-> -	skb = dev_alloc_skb(length);
-> +	skb = __dev_alloc_skb(length, GFP_KERNEL);
->  	if (!skb) {
->  		wl1271_error("Couldn't allocate RX frame");
->  		return;
+> What's the date/time of the last patch you posted for this and what
+> kernel does it apply to?
 
-Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
+Friday 11/13 ar 22:38 CET. The link is at
+https://lists.berlios.de/pipermail/bcm43xx-dev/2009-November/006338.html.
 
--- 
-Cheers,
-Luca.
+The patch is written for wireless-testing, but it should apply on mainline
+kernels as well.
+
+Larry
+
