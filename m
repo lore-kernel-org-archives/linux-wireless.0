@@ -1,50 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:49790 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753026AbZKWS3F (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:59926 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755853AbZKTBhW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 13:29:05 -0500
-Received: by ewy19 with SMTP id 19so2134520ewy.21
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 10:29:11 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 4/6] rt2x00: Fix typo (lengt --> length) in rt2x00queue.c
-Date: Mon, 23 Nov 2009 19:29:08 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-References: <1258960565-26736-1-git-send-email-gwingerde@gmail.com> <1258960565-26736-4-git-send-email-gwingerde@gmail.com> <1258960565-26736-5-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1258960565-26736-5-git-send-email-gwingerde@gmail.com>
+	Thu, 19 Nov 2009 20:37:22 -0500
+Received: by iwn8 with SMTP id 8so2234185iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Nov 2009 17:37:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911231929.08635.IvDoorn@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 19 Nov 2009 17:37:08 -0800
+Message-ID: <43e72e890911191737i5b82ca27xe0c363e02a05f497@mail.gmail.com>
+Subject: There will not be a 2.6.32-rc8 compat-wireless package
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 23 November 2009, Gertjan van Wingerde wrote:
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Because the 2.6.32-rc8 diff stat includes no wireless fixes:
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Fast forward
+ Makefile                |    2 +-
+ drivers/char/vt_ioctl.c |    6 +++---
+ drivers/pci/dmar.c      |    3 +++
+ fs/nfs/nfs4proc.c       |    2 +-
+ include/linux/vt.h      |    4 ++--
+ net/sunrpc/addr.c       |   18 ++++++++----------
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00queue.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> index eaedee8..32d4aea 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> @@ -162,10 +162,10 @@ void rt2x00queue_align_frame(struct sk_buff *skb)
->  	skb_trim(skb, frame_length);
->  }
->  
-> -void rt2x00queue_align_payload(struct sk_buff *skb, unsigned int header_lengt)
-> +void rt2x00queue_align_payload(struct sk_buff *skb, unsigned int header_length)
->  {
->  	unsigned int frame_length = skb->len;
-> -	unsigned int align = ALIGN_SIZE(skb, header_lengt);
-> +	unsigned int align = ALIGN_SIZE(skb, header_length);
->  
->  	if (!align)
->  		return;
-
-
+  Luis
