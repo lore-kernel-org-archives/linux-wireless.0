@@ -1,69 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:54429 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759445AbZKFRKv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 12:10:51 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Martin Fuzzey <mfuzzey@gmail.com>
-Subject: Re: [PATCH] SSB: fix 32 bit PCMCIA access.
-Date: Fri, 6 Nov 2009 18:10:35 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <20091106155605.20585.15955.stgit@srv002.fuzzey.net>
-In-Reply-To: <20091106155605.20585.15955.stgit@srv002.fuzzey.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200911061810.37018.mb@bu3sch.de>
+Received: from exchange.solarflare.com ([216.237.3.220]:22317 "EHLO
+	exchange.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754175AbZKTVA7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Nov 2009 16:00:59 -0500
+Subject: Re: A generic kernel compatibilty code
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org
+In-Reply-To: <43e72e890911201245r4de5b039hb2dd5011dabf2399@mail.gmail.com>
+References: <43e72e890911201245r4de5b039hb2dd5011dabf2399@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 20 Nov 2009 21:00:58 +0000
+Message-Id: <1258750858.2877.58.camel@achroite.uk.solarflarecom.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 06 November 2009 16:56:05 Martin Fuzzey wrote:
-> The scan function was using 32 bit access which does not
-> work on 16bit CF cards.
+On Fri, 2009-11-20 at 12:45 -0800, Luis R. Rodriguez wrote:
+> Everyone and their mother reinvents the wheel when it comes to
+> backporting kernel modules. It a painful job and it seems to me an
+> alternative is possible. If we can write generic compatibilty code for
+> a new routine introduced on the next kernel how about just merging it
+> to the kernel under some generic compat module. This would be
+> completey ignored by everyone using the stable kernel but can be
+> copied by anyone doing backport work.
 > 
-> This patch corrects this by doing two 16 bit reads like
-> ssb_pcmcia_read32 already does (unfortunately we don't
-> have a struct ssb_device to use that directly).
+> So I'm thinking something as simple as a generic compat/comat.ko with
+> compat-2.6.32.[ch] files.
 > 
-> Signed-off-by: Martin Fuzzey <mfuzzey@gmail.com>
-> 
-> ---
-> 
->  drivers/ssb/scan.c |    9 ++++++++-
->  1 files changed, 8 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/ssb/scan.c b/drivers/ssb/scan.c
-> index b74212d..6721fa8 100644
-> --- a/drivers/ssb/scan.c
-> +++ b/drivers/ssb/scan.c
-> @@ -162,6 +162,9 @@ static u8 chipid_to_nrcores(u16 chipid)
->  static u32 scan_read32(struct ssb_bus *bus, u8 current_coreidx,
->  		       u16 offset)
->  {
-> +	unsigned long flags;
-> +	u32 lo, hi;
-> +
->  	switch (bus->bustype) {
->  	case SSB_BUSTYPE_SSB:
->  		offset += current_coreidx * SSB_CORE_SIZE;
-> @@ -174,7 +177,11 @@ static u32 scan_read32(struct ssb_bus *bus, u8 current_coreidx,
->  			offset -= 0x800;
->  		} else
->  			ssb_pcmcia_switch_segment(bus, 0);
-> -		break;
-> +		spin_lock_irqsave(&bus->bar_lock, flags);
-> +		lo = readw(bus->mmio + offset);
-> +		hi = readw(bus->mmio + offset + 2);
-> +		spin_unlock_irqrestore(&bus->bar_lock, flags);
-> +		return lo | (hi << 16);
->  	case SSB_BUSTYPE_SDIO:
->  		offset += current_coreidx * SSB_CORE_SIZE;
->  		return ssb_sdio_scan_read32(bus, offset);
+> We've already backported everything needed for wireless drivers under
+> compat-wireless under this format down to even 2.6.25.
+[...]
 
-Thanks for spotting this. This really looks like a bug.
-I'll test this patch on my device and remove the unnecessary locks and then resubmit upstream.
+If you think 2.6.25 is old then I don't think you understand the scale
+of the problem.
 
-Next time, please make sure to Cc maintainers. See the MAINTAINERS file.
+OEMs still expect us to support RHEL 4 (2.6.9) and SLES 9 (2.6.5) though
+the latter will probably be dropped soon.  Some other vendors apparently
+still need to support even 2.4 kernels!
+
+Ben.
 
 -- 
-Greetings, Michael.
+Ben Hutchings, Senior Software Engineer, Solarflare Communications
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
+
