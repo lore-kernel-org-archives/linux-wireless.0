@@ -1,46 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f42.google.com ([209.85.160.42]:39115 "EHLO
-	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752507AbZKXFhr (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:45826 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754417AbZKTVCY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 00:37:47 -0500
-Received: by pwi3 with SMTP id 3so3936542pwi.21
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 21:37:53 -0800 (PST)
+	Fri, 20 Nov 2009 16:02:24 -0500
+Received: by ewy19 with SMTP id 19so185250ewy.21
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Nov 2009 13:02:29 -0800 (PST)
+To: Dan Williams <dcbw@redhat.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC] p54: software hot-swap eeprom image
+References: <200911202027.13284.chunkeey@googlemail.com>
+	<87y6m1aqro.fsf@purkki.valot.fi>
+	<1258750095.26965.105.camel@localhost.localdomain>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 20 Nov 2009 23:02:27 +0200
+In-Reply-To: <1258750095.26965.105.camel@localhost.localdomain> (Dan Williams's message of "Fri\, 20 Nov 2009 12\:48\:15 -0800")
+Message-ID: <87pr7cc3ks.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-In-Reply-To: <4b0b2bfc.wTVOnoPYuzV3oG6G%Larry.Finger@lwfinger.net>
-References: <4b0b2bfc.wTVOnoPYuzV3oG6G%Larry.Finger@lwfinger.net>
-Date: Tue, 24 Nov 2009 08:37:53 +0300
-Message-ID: <adf480660911232137x5459441chde17fb77004e3cb4@mail.gmail.com>
-Subject: Re: [PATCH] b43legacy: Fix problem for PPC architecture noted in Red
-	Hat Bugzilla #538523
-From: Peter Lemenkov <lemenkov@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello All!
+Dan Williams <dcbw@redhat.com> writes:
 
-2009/11/24 Larry Finger <Larry.Finger@lwfinger.net>:
-> For PPC architecture with PHY Revision < 3, a read of the register
-> B43_MMIO_HWENABLED_LO will cause a CPU fault unless b43legacy_status()
-> returns a value of 2 (B43legacy_STAT_STARTED); however, one finds that
-> the driver is unable to associate after resuming from hibernation unless
-> this routine returns 1. To satisfy both conditions, the routine is rewritten
-> to return TRUE whenever b43legacy_status() returns a value < 2.
+>> Wasn't the concensus that request_firmware() will be used for this
+>> kind of device specific data? stlc45xx had a similar sysfs interface
+>> and people didn't like it. And I tend to agree with them, adding odd
+>> sysfs files is not the best way to handle this.
 >
-> This patch fixes the second problem listed in the postings for Red Hat
-> Bugzilla #538523.
+> It could be yes, but what would the trigger to upload the new firmware
+> be?  A /standard/ sysfs file that you
 >
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.org>
+> echo "new-firmware-v345" > eeprom_write
+>
+> into that would then request_firmware("new-firmware-v345")?
 
-Seems that b43 has similar issue(s):
+To be sure that we are talking about the same stuff, let's clarify
+this a bit first. There are two different use cases where eeprom from
+user space is needed:
 
-https://bugzilla.redhat.com/show_bug.cgi?id=539267
+Category 1. Devices which don't have eeprom at all and require the
+            user space provides the eeprom data during every device
+            boot. These devices won't even function correctly if they
+            don't get the correct eeprom data from user space. As an
+            example, grep nvs from wl12xx.
+
+Category 2. Devices which have eeprom but can be updated by user.
+
+So we have two separate problems here.
+
+For category 1 devices request_firmware() was proposed earlier and for
+category 2 the ethtool support you mentioned sounds like a viable
+option.
 
 -- 
-With best regards, Peter Lemenkov.
+Kalle Valo
