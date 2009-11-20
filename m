@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47437 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932107AbZKLDaP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 22:30:15 -0500
-Date: Wed, 11 Nov 2009 22:20:45 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Zheng, Jeff" <jeff.zheng@intel.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"wifi-test-devel@lists.sourceforge.net"
-	<wifi-test-devel@lists.sourceforge.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-Subject: Re: [ANNOUNCE] wifi-test 1.0 released
-Message-ID: <20091112032045.GA1489@tuxdriver.com>
-References: <154E55ADF9629D4E8D13F08BF92ABEB63FDC983366@PDSMSX501.ccr.corp.intel.com> <20091111152214.GG4392@tuxdriver.com> <154E55ADF9629D4E8D13F08BF92ABEB63FDC98336B@PDSMSX501.ccr.corp.intel.com> <43e72e890911110931l893b90dta2d5806d10189925@mail.gmail.com> <20091111183643.GJ4392@tuxdriver.com> <154E55ADF9629D4E8D13F08BF92ABEB63FDC9833D2@PDSMSX501.ccr.corp.intel.com>
+Received: from wal-mailgw1.qinetiq-na.com ([65.209.22.159]:45976 "EHLO
+	WALQNAOMAIL1T.qnao.net" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755156AbZKTUyG convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Nov 2009 15:54:06 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <154E55ADF9629D4E8D13F08BF92ABEB63FDC9833D2@PDSMSX501.ccr.corp.intel.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: Kernel oops in ath9k
+Date: Fri, 20 Nov 2009 15:54:09 -0500
+Message-ID: <712C9C7AD151C847B09F32EDA56A94CF0115C91F@WALQNAOMAIL1T.qnao.net>
+In-Reply-To: <43e72e890911200840u88d6d44t60fa29c0eaffb609@mail.gmail.com>
+References: <712C9C7AD151C847B09F32EDA56A94CF0115C555@WALQNAOMAIL1T.qnao.net> <1258687496.12864.35.camel@ct> <712C9C7AD151C847B09F32EDA56A94CF0115C73C@WALQNAOMAIL1T.qnao.net> <43e72e890911200654g6bd78909s5b6062cd82155b6d@mail.gmail.com> <712C9C7AD151C847B09F32EDA56A94CF0115C7F3@WALQNAOMAIL1T.qnao.net> <43e72e890911200840u88d6d44t60fa29c0eaffb609@mail.gmail.com>
+From: "Douglass, Woodrow" <Woodrow.Douglass@QinetiQ-NA.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Pavel Roskin" <proski@gnu.org>, <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 12, 2009 at 10:35:52AM +0800, Zheng, Jeff wrote:
-> >Hey, good idea...maybe something for an openwrt AP... :-)
-> >
+http://img406.imageshack.us/img406/910/kernelcrash.jpg
+
+After running the script I sent earlier, this is what happens with the
+latest released compat-wireless. Sorry if the image is a little blurry
+at the top, it's the best camera I could get on short notice.
+
+Thanks again
+-Woody
+
+> -----Original Message-----
+> From: Luis R. Rodriguez [mailto:mcgrof@gmail.com] 
+> Sent: Friday, November 20, 2009 11:40 AM
+> To: Douglass, Woodrow
+> Cc: Pavel Roskin; linux-wireless@vger.kernel.org
+> Subject: Re: Kernel oops in ath9k
 > 
-> Hi Linville,
+> On Fri, Nov 20, 2009 at 8:13 AM, Douglass, Woodrow 
+> <Woodrow.Douglass@qinetiq-na.com> wrote:
+> > Ok I compiled compat-wireless-2.6.32-rc7.tar.bz2, ran the 
+> script, and 
+> > now the kernel outright crashed rather then just oopsing. 
+> The terminal 
+> > is all locked up, is there any way I can post the crash dump here?
 > 
-> Do you mean that I configure openwrt AP without remote login?
- 
-No, not necessarily.  I was suggesting that an openwrt API might be
-a good target for your test setup.  They are more commonly available
-than "enterprisey" stuff from Cisco. :-)
-
-> We have script to configure asus AP using nvram after remote login.
-
-Cool...
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> Are you asking for help in trying to get the dump or for 
+> where to post the dump? If the later then please use a 
+> pastebin or upload your file somwhere.
+> 
+>   Luis
+> 
