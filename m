@@ -1,111 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:63710 "EHLO mga02.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:36539 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932316AbZKMT4t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 14:56:49 -0500
+	id S1753299AbZKTUFF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Nov 2009 15:05:05 -0500
 From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
 	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>,
 	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 13/16] iwlwifi: report PS filtered status
-Date: Fri, 13 Nov 2009 11:56:35 -0800
-Message-Id: <1258142198-3223-14-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
-References: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
+Subject: [PATCH 00/19]  iwlwifi updates 11/20/2009
+Date: Fri, 20 Nov 2009 12:04:51 -0800
+Message-Id: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+This series includes various fixes and cleanup. Driver is now able to do
+single byte writes to treat registers with single-byte fields correctly
+and not rely on execution order. A previous patch "iwlwifi:
+separate led function from statistic notification" broke LEDs on 3945. This
+is now fixed. Some more LED cleanup is also included. More work surrounding
+SM PS is included. debugfs received some attention with files now having
+correct permissions, all TX queue information can now be displayed, memory
+for display of sram contents is now dynamically allocated, and if a user
+did not specify the offset and length when dumping sram contents then the
+entire data portion will be printed. It is now possible
+to separate IO tracing to reduce amount of data. The pci ids of 5000 series
+is updated to reflect what is in production. A uCode error log as well as
+portion of the event log is now always printed when a problem occurs, user
+does not need to set debug flags. Driver now informs uCode promptly when
+disassociated to prevent uCode from sending data to AP.
 
-When a frame is sent to a sleeping station, the
-microcode reports TX_STATUS_FAIL_DEST_PS as its
-status -- we need to translate that to the flag
-that mac80211 expects.
+"iwlwifi: no need to set use_rts_for_ht for BG device" fixes a merge
+problem that is present in wireless-testing but not in wireless-next-2.6
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    6 ++----
- drivers/net/wireless/iwlwifi/iwl-5000.c     |    6 ++----
- drivers/net/wireless/iwlwifi/iwl-commands.h |   15 +++++++++++++++
- 3 files changed, 19 insertions(+), 8 deletions(-)
+Ben M Cahill (2):
+  iwlwifi: Add iwl_write8()
+  iwlagn: Use iwl_write8() for CSR_INT_COALESCING register
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index cc39424..39e7244 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -1865,8 +1865,7 @@ static int iwl4965_tx_status_reply_tx(struct iwl_priv *priv,
- 		info = IEEE80211_SKB_CB(priv->txq[txq_id].txb[idx].skb[0]);
- 		info->status.rates[0].count = tx_resp->failure_frame + 1;
- 		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
--		info->flags |= iwl_is_tx_success(status) ?
--			IEEE80211_TX_STAT_ACK : 0;
-+		info->flags |= iwl_tx_status_to_mac80211(status);
- 		iwl_hwrate_to_tx_control(priv, rate_n_flags, info);
- 		/* FIXME: code repetition end */
- 
-@@ -2021,8 +2020,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 		}
- 	} else {
- 		info->status.rates[0].count = tx_resp->failure_frame + 1;
--		info->flags |= iwl_is_tx_success(status) ?
--					IEEE80211_TX_STAT_ACK : 0;
-+		info->flags |= iwl_tx_status_to_mac80211(status);
- 		iwl_hwrate_to_tx_control(priv,
- 					le32_to_cpu(tx_resp->rate_n_flags),
- 					info);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 60b1a7e..30b1d66 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -994,8 +994,7 @@ static int iwl5000_tx_status_reply_tx(struct iwl_priv *priv,
- 		info = IEEE80211_SKB_CB(priv->txq[txq_id].txb[idx].skb[0]);
- 		info->status.rates[0].count = tx_resp->failure_frame + 1;
- 		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
--		info->flags |= iwl_is_tx_success(status) ?
--					IEEE80211_TX_STAT_ACK : 0;
-+		info->flags |= iwl_tx_status_to_mac80211(status);
- 		iwl_hwrate_to_tx_control(priv, rate_n_flags, info);
- 
- 		/* FIXME: code repetition end */
-@@ -1140,8 +1139,7 @@ static void iwl5000_rx_reply_tx(struct iwl_priv *priv,
- 		BUG_ON(txq_id != txq->swq_id);
- 
- 		info->status.rates[0].count = tx_resp->failure_frame + 1;
--		info->flags |= iwl_is_tx_success(status) ?
--					IEEE80211_TX_STAT_ACK : 0;
-+		info->flags |= iwl_tx_status_to_mac80211(status);
- 		iwl_hwrate_to_tx_control(priv,
- 					le32_to_cpu(tx_resp->rate_n_flags),
- 					info);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 6e23a2b..87a7f28 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -1690,6 +1690,21 @@ enum {
- 	TX_ABORT_REQUIRED_MSK = 0x80000000,	/* bits 31:31 */
- };
- 
-+static inline u32 iwl_tx_status_to_mac80211(u32 status)
-+{
-+	status &= TX_STATUS_MSK;
-+
-+	switch (status) {
-+	case TX_STATUS_SUCCESS:
-+	case TX_STATUS_DIRECT_DONE:
-+		return IEEE80211_TX_STAT_ACK;
-+	case TX_STATUS_FAIL_DEST_PS:
-+		return IEEE80211_TX_STAT_TX_FILTERED;
-+	default:
-+		return 0;
-+	}
-+}
-+
- static inline bool iwl_is_tx_success(u32 status)
- {
- 	status &= TX_STATUS_MSK;
--- 
-1.5.6.3
+Jay Sternberg (1):
+  iwlwifi: Tell the ucode immediately when association state changes
+
+Johannes Berg (1):
+  iwlwifi: separate IO tracing
+
+Reinette Chatre (2):
+  iwl3945: removed unused struct and definitions
+  iwlwifi: no need to set use_rts_for_ht for BG device
+
+Wey-Yi Guy (13):
+  iwlwifi: control led while update tx/rx bytes counts
+  iwlwifi: set sm_ps_mode as part of cfg parameters
+  iwlwifi: reset led_tpt when clear tx/rx traffic byte counts
+  iwlwifi: set read/write permission for debugfs files
+  iwlwifi: increase tx_queue debugfs buffer size
+  iwlwifi: dynamically allocate buffer for sram debugfs file
+  iwlwifi: fix reserved2 field in iwl4965_addsta
+  iwlwifi: update supported PCI_ID list for 5xx0 series
+  iwlwifi: by default, dump entire sram data portion
+  iwlwifi: dump error log when uCode error occurred
+  iwlwifi: print limited number of event log when uCode error
+  iwlwifi: change message for cmd queue full error
+  iwlwifi: remove reset led_tpt from iwl_leds_init()
+
+ drivers/net/wireless/iwlwifi/iwl-1000.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |   11 +--
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |   33 +++++-
+ drivers/net/wireless/iwlwifi/iwl-6000.c     |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |  174 ++++++++++++++++++++-------
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   76 ++++++------
+ drivers/net/wireless/iwlwifi/iwl-core.h     |   22 +---
+ drivers/net/wireless/iwlwifi/iwl-csr.h      |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-debug.h    |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c  |  125 ++++++++++----------
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |   12 +--
+ drivers/net/wireless/iwlwifi/iwl-devtrace.c |    1 +
+ drivers/net/wireless/iwlwifi/iwl-devtrace.h |   21 +++-
+ drivers/net/wireless/iwlwifi/iwl-io.h       |   20 +++
+ drivers/net/wireless/iwlwifi/iwl-led.c      |    1 -
+ drivers/net/wireless/iwlwifi/iwl-rx.c       |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-tx.c       |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   74 ++++++++++--
+ 20 files changed, 395 insertions(+), 204 deletions(-)
 
