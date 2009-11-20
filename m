@@ -1,32 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.irobot.com ([206.83.81.187]:40426 "EHLO smtp1.irobot.com"
+Received: from mga03.intel.com ([143.182.124.21]:61936 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933768AbZKXSnA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 13:43:00 -0500
-Message-ID: <4B0C2938.1050604@irobot.com>
-Date: Tue, 24 Nov 2009 10:43:04 -0800
-From: Adam Wozniak <awozniak@irobot.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Derek Smithies <derek@indranet.co.nz>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH 2/2] mac80211: minstrel try all rates
-References: <4AF0D54D.4090303@irobot.com>	 <4AFC8F0D.5020700@irobot.com>	 <1258097352.3899.75.camel@johannes.local>	 <4AFDDF19.8060202@irobot.com>	 <1258191039.6167.40.camel@johannes.local>	 <4B018B26.2070008@irobot.com>	 <1258392453.32159.28.camel@johannes.local>	 <4B0192A6.9050808@irobot.com>	 <alpine.DEB.2.00.0911170938380.3829@kauri.acheron.indranet.co.nz>	 <4B01D4A5.7060204@irobot.com>	 <alpine.DEB.2.00.0911171156210.3829@kauri.acheron.indranet.co.nz>	 <4B01E298.3030602@irobot.com>	 <alpine.DEB.2.00.0911171314470.3829@kauri.acheron.indranet.co.nz>	 <1258443484.1375.8.camel@johannes.local> <4B02DFE3.9040602@irobot.com>	 <4B0AEEE3.2050808@irobot.com> <1259018866.7094.189.camel@johannes.local>	 <4B0B2F6E.7050907@irobot.com> <1259025067.7094.208.camel@johannes.local>	 <4B0C1527.60305@irobot.com> <1259084493.3491.21.camel@johannes.local>	 <4B0C1E0A.9020003@irobot.com> <1259085518.3491.24.camel@johannes.local>	 <4B0C2720.3090308@irobot.com> <1259087819.3491.30.camel@johannes.local>
-In-Reply-To: <1259087819.3491.30.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	id S1754059AbZKTUFI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Nov 2009 15:05:08 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 11/19] iwlwifi: separate IO tracing
+Date: Fri, 20 Nov 2009 12:05:02 -0800
+Message-Id: <1258747510-21233-12-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
+References: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> However, that reminds me that I actually wanted to get rid of
-> rate_init() since it's mostly not useful to have it separate from
-> alloc_sta()... oh well.
->
-> I suppose if we document clearly that rate_init maybe called multiple
-> times and audit the existing algorithms the patch could be ok.
->   
-As far as I can tell, minstrel_rate_init does not do any allocation.  
-The pid_algo version does not appear to do any allocation either.
+From: Johannes Berg <johannes@sipsolutions.net>
 
---Adam Wozniak
+Since IO tracing is usually not needed and
+generates a lot of data, separate it into
+its own trace system so that we can always
+enable iwlwifi:* and not have to worry about
+getting too much data. If IO tracing is then
+really needed we can enable iwlwifi_io:* in
+addition and get that data.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-devtrace.h |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-devtrace.h b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
+index f2d4b01..2136196 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-devtrace.h
++++ b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
+@@ -14,7 +14,7 @@ static inline void trace_ ## name(proto) {}
+ #define PRIV_ASSIGN	__entry->priv = priv
+ 
+ #undef TRACE_SYSTEM
+-#define TRACE_SYSTEM iwlwifi
++#define TRACE_SYSTEM iwlwifi_io
+ 
+ TRACE_EVENT(iwlwifi_dev_ioread32,
+ 	TP_PROTO(struct iwl_priv *priv, u32 offs, u32 val),
+@@ -64,6 +64,9 @@ TRACE_EVENT(iwlwifi_dev_iowrite32,
+ 	TP_printk("[%p] write io[%#x] = %#x)", __entry->priv, __entry->offs, __entry->val)
+ );
+ 
++#undef TRACE_SYSTEM
++#define TRACE_SYSTEM iwlwifi
++
+ TRACE_EVENT(iwlwifi_dev_hcmd,
+ 	TP_PROTO(struct iwl_priv *priv, void *hcmd, size_t len, u32 flags),
+ 	TP_ARGS(priv, hcmd, len, flags),
+-- 
+1.5.6.3
+
