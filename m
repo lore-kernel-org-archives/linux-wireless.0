@@ -1,33 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:46124 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754074AbZKHMls (ORCPT
+Received: from router.emperor-sw2.exsbs.net ([208.254.201.37]:44430 "EHLO
+	sade.emperorlinux.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752411AbZKTXEV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 07:41:48 -0500
-Received: by mail-ew0-f207.google.com with SMTP id 3so2346758ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 04:41:53 -0800 (PST)
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [RFC/RFT] rt2x00: Add dynamic detection of eFuse EEPROM in rt2800pci.
-Date: Sun, 8 Nov 2009 13:40:15 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-References: <1257679835-25269-1-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1257679835-25269-1-git-send-email-gwingerde@gmail.com>
-MIME-Version: 1.0
-Message-Id: <200911081340.15474.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
+	Fri, 20 Nov 2009 18:04:21 -0500
+Received: from [192.168.1.196] (dhcp196.emperorlinux.com [192.168.1.196])
+	by sade.emperorlinux.com (Postfix) with ESMTP id 235887EA800
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Nov 2009 16:29:54 -0500 (EST)
+Subject: iwlagn + Ad-Hoc + 5Ghz
+From: Jeremy Moles <jeremy@emperorlinux.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Fri, 20 Nov 2009 17:37:27 -0500
+Message-Id: <1258756647.2714.17.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 08 November 2009 12:30:35 Gertjan van Wingerde wrote:
-> Instead of assuming that all rt3090 devices will have an eFuse EEPROM, do as the legacy Ralink driver,
-> and detect at run-time whether an eFuse EEPROM is present.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Hello all! I have a group of machine here with an app that needs to set
+up an ad-hoc network in 5Ghz+ range. The machines themselves are all
+different (a Panasonic, a Dell, and a Lenovo) but they are all using
+5100 cards, a 2.6.31 kernel, and the 2.6.31-rc7 driver from the website.
 
-Incidentally I made a very similar patch on Friday as a preparation for
-other changes but this version is a bit more readable (cause it adds
-rt2800pci_efuse_detect() helper) so I'll replace my version by your patch.
+Using the command "iw list" I can get a lot of helpful info, but I see
+"no IBSS" on any channel over 11, and I'm beginning to think that this
+just isn't supported on these cards yet. Am I right here, or is it in
+fact supported and I am just missing something? Could the hardware,
+perhaps, be configured on a very low level to not allow something like
+this?
+
+Thanks in advance. :)
+
