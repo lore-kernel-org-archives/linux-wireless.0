@@ -1,105 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41254 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751022AbZKBRPI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 12:15:08 -0500
-Date: Mon, 2 Nov 2009 12:01:15 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-Message-ID: <20091102170114.GE14046@tuxdriver.com>
-References: <1256886023.3555.5.camel@johannes.local> <20091030110616.GB6150@ff.dom.local> <20091030150223.GA2586@tuxdriver.com> <20091102091038.GA9044@elte.hu> <1257153807.3555.173.camel@johannes.local> <20091102100702.GA16963@elte.hu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091102100702.GA16963@elte.hu>
+Received: from c60.cesmail.net ([216.154.195.49]:33349 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757277AbZKTDYz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Nov 2009 22:24:55 -0500
+Subject: Re: Kernel oops in ath9k
+From: Pavel Roskin <proski@gnu.org>
+To: "Douglass, Woodrow" <Woodrow.Douglass@QinetiQ-NA.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <712C9C7AD151C847B09F32EDA56A94CF0115C555@WALQNAOMAIL1T.qnao.net>
+References: <712C9C7AD151C847B09F32EDA56A94CF0115C555@WALQNAOMAIL1T.qnao.net>
+Content-Type: text/plain
+Date: Thu, 19 Nov 2009 22:24:56 -0500
+Message-Id: <1258687496.12864.35.camel@ct>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 02, 2009 at 11:07:02AM +0100, Ingo Molnar wrote:
+On Thu, 2009-11-19 at 09:54 -0500, Douglass, Woodrow wrote:
+> Hi all,
 > 
-> * Johannes Berg <johannes@sipsolutions.net> wrote:
-> 
-> > On Mon, 2009-11-02 at 10:10 +0100, Ingo Molnar wrote:
-> > 
-> > > So i have read the thread you and Bartlomiej referenced:
-> > > 
-> > >     http://lkml.org/lkml/2009/10/17/81
-> > > 
-> > > ... and my understanding of that discussion is very different from 
-> > > yours. Here is my annotated history of the beginnings of that 
-> > > discussion:
-> > 
-> > [snip]
-> > 
-> > You shouldn't ignore all previous interaction between Bart and us -- 
-> > which wasn't pretty: http://thread.gmane.org/gmane.linux.kernel/901892
-> 
-> I have seen that exchange too - here's the lkml.org link for those who 
-> like the lkml.org format:
-> 
->    http://lkml.org/lkml/2009/10/13/186
-> 
-> And i can see no supporting fact here either, for the (very serious) 
-> accusation launched by John Linville, that Bartlomiej is 'petty, 
-> whining, indignant'. In my reading he is the opposite of that, even in 
-> this second thread you point out.
+> I'm not sure if this is the right place to post this, but I may have a
+> bug report for the ath9k driver.
 
-Again, you seem to be very generous to Bartlomiej and very critical of
-the rest of us in your readings.
+You may want to post to ath9k-devel@lists.ath9k.org, as the problem
+seems to be specific to the Atheros driver.
 
-> So, no matter how much you disagree about the code and its direction, 
-> please either back up your assertion with specific links to a pattern of 
-> misbehavior or apologize for the ad-hominen attacks against Bartlomiej.
+> I'm running a single board computer with a 600Mhz celeron processor. On
+> the minipci bus I have a Ubiquiti SR71-12 802.11n card.
 
-His behavior is evident in the threads you cited.  How you do not
-see that is a mystery.
+It would be helpful if you also specified the exact version of the
+kernel.
 
-> > Of course we were biased when he came around with that petty code 
-> > duplication argument, since it seemed to support only his agenda of 
-> > working only with the staging drivers.
-> 
-> Why do you think that disagreeing in the past gives you the right to get 
-> into ad-hominens? You should concentrate on the code and on the 
-> technical side, not on the person making the argument.
-> 
-> Also, why do you characterise a code duplication argument as 'petty'?
+>  Also attached is
+> a shell script with the commands I run to cause the oops. Note that the
+> first time the ifconfig line in this script is run, a "SIOCSIFFLAGS:
+> Input/Output Error" is triggered, the kernel oops happens about 5
+> seconds after the ifconfig line is run a second time.
 
-Did you actually look at the thread?  Or did you simply here "code
-duplication" and run with it?
- 
-> Bloat and unnecessary technical forking is the #1 enemy of Linux. 
-> Integrating code and infrastructure is the #1 strength of Linux.
-> 
-> Upstream subsystems/drivers running away with their private 
-> implementations has its clear costs:
+I can reproduce "Input/Output Error" with SR71-12, but not the oops with
+the current linux-wireless.
 
-...which has nothing to do with the case at hand.  Please do not
-perpetuate this myth.  If anything, your argument applies far more
-to the drivers in staging that Bartlomiej has focused his attention
-upon until recently.
+I know that it's caused by returning false in this code in file
+drivers/net/wireless/ath/ath9k/calib.c, function ath9k_hw_init_cal():
 
-<snip>
+                /* Poll for offset calibration complete */
+                if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
+                                   0, AH_WAIT_TIMEOUT)) {
+                        ath_print(common, ATH_DBG_CALIBRATE,
+                                  "offset calibration failed to "
+                                  "complete in 1ms; noisy environment?\n");
+                        return false;
+                }
 
-> [ I dont know why drivers/staging/ is even an argument here - he argued
->   about the technical qualities of a new upstream driver, not about a
->   staging driver. Upstream drivers are to be held to higher standards,
->   _especially_ now that we can isolate not-clean-enough-yet drivers into
->   drivers/staging/, without hurting users. ]
+With full debugging (modprobe ath9k debug=0xffffffff), the kernel
+messages are (with some context):
 
-If you had been keeping-up, you would realize that Bartlomiej is upset
-about our criticisms of the Ralink drivers in staging.  That would seem
-to be the reason he has made himself such an irritant in linux-wireless
-over the past few weeks.
+ath: Reset TXQ, inactive queue: 7
+ath: Reset TX queue: 8
+ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
+ath: Reset TX queue: 9
+ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
+ath: ah->misc_mode 0x4
+ath: timeout (100000 us) on reg 0x9860: 0xdeadbeef & 0x00000001 != 0x00000000
+ath: offset calibration failed to complete in 1ms; noisy environment?
+ath: Unable to reset hardware; reset status -5 (freq 2412 MHz)
 
-John
+I have access to various Ubiquiti cards, but SR71-12 is the only one
+that fails.  I know that it works in Windows XP with the Ubiquiti driver
+for other SR71 cards (the inf file should be tweaked to recognize the
+revision of SR71-12).  That makes me think the problem is not in the
+hardware and not in the noisy environment.
+
+ath9k identifies the card as:
+
+phy0: Atheros AR9280 Rev:2 mem=0xffffc90010da0000, irq=18
+
+# lspci -vnn -s 03:01.0
+03:01.0 Network controller [0280]: Atheros Communications Inc. AR922X
+Wireless Network Adapter [168c:0029] (rev 01)
+        Subsystem: Device [0777:4002]
+        Flags: bus master, 66MHz, medium devsel, latency 168, IRQ 18
+        Memory at fe3f0000 (32-bit, non-prefetchable) [size=64K]
+        Capabilities: [44] Power Management version 2
+        Kernel driver in use: ath9k
+        Kernel modules: ath9k
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Regards,
+Pavel Roskin
