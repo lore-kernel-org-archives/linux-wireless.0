@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:59879 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752415AbZK1RRv (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:61849 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752612AbZKTOyi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Nov 2009 12:17:51 -0500
-Date: Sat, 28 Nov 2009 15:17:54 -0200
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ian Molton <ian.molton@collabora.co.uk>,
-	linux-acpi@vger.kernel.org, Corentin Chary <corentincj@iksaif.net>
-Subject: Re: rfkill: persistent device suspend/resume
-Message-ID: <20091128171754.GB28189@khazad-dum.debian.net>
-References: <4A37A3E1.8060606@tuffmail.co.uk>
- <1245161645.13461.3.camel@johannes.local>
- <4A37AEB7.6060405@tuffmail.co.uk>
- <20090618030806.GE29569@khazad-dum.debian.net>
- <20091128124158.GB17373@khazad-dum.debian.net>
- <1259413945.5428.21.camel@johannes.local>
- <20091128132752.GD17373@khazad-dum.debian.net>
- <1259415589.5428.22.camel@johannes.local>
+	Fri, 20 Nov 2009 09:54:38 -0500
+Received: by iwn8 with SMTP id 8so2579075iwn.33
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Nov 2009 06:54:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1259415589.5428.22.camel@johannes.local>
+In-Reply-To: <712C9C7AD151C847B09F32EDA56A94CF0115C73C@WALQNAOMAIL1T.qnao.net>
+References: <712C9C7AD151C847B09F32EDA56A94CF0115C555@WALQNAOMAIL1T.qnao.net>
+	<1258687496.12864.35.camel@ct> <712C9C7AD151C847B09F32EDA56A94CF0115C73C@WALQNAOMAIL1T.qnao.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 20 Nov 2009 06:54:23 -0800
+Message-ID: <43e72e890911200654g6bd78909s5b6062cd82155b6d@mail.gmail.com>
+Subject: Re: Kernel oops in ath9k
+To: "Douglass, Woodrow" <Woodrow.Douglass@qinetiq-na.com>
+Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 28 Nov 2009, Johannes Berg wrote:
-> On Sat, 2009-11-28 at 11:27 -0200, Henrique de Moraes Holschuh wrote:
-> > > static int rfkill_resume(struct device *dev)
-> > > {
-> > >         struct rfkill *rfkill = to_rfkill(dev);
-> > >         bool cur;
-> > > 
-> > >         if (!rfkill->persistent) {
-> > >                 cur = !!(rfkill->state & RFKILL_BLOCK_SW);
-> > >                 rfkill_set_block(rfkill, cur);
-> > >         }
-> > 
-> > The issue I am reporting is _only_ about persistent devices, so it is the
-> > if(!rfkill->persistent) that is the problem.  It works perfectly for the
-> > other devices.
-> 
-> So then I don't understand -- if the device specifically said that it
-> was persistent, what kind of help does it need, and why does it not just
-> unset persistent if it needs it?
+On Fri, Nov 20, 2009 at 5:56 AM, Douglass, Woodrow
+<Woodrow.Douglass@qinetiq-na.com> wrote:
+> Thanks for the quick reply Pavel! I've seen this Oops with kernel
+> 2.6.31.6, as well as with the  latest linux-wireless that I downloaded
+> on the 18th of november. Also, it's interesting that the card is
+> identified as having a AR9280 chipset, the website for the card
+> (http://www.ubnt.com/products/sr7112.php) says the card has an AR9220
+> chipset. Could this be causing the problem?
 
-Never mind, Alan gave me various good reasons for the code to remain as is,
-and I will fix it in the driver in another way.
+Nah, your card is just PCI version of the AR9280. We just need to
+distinguish that on the print on ath9k load. So PCI-express is AR9280
+and mini-pci AR9220.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+> I'm going to repost this to the ath9k mailing list you mentioned.
+
+linux-wireless is fine too though no need to repost there. I just
+tested your script with AR5416 and it worked fine, can you please try
+the latest compat-wireless, either latest stable or bleeding edge?
+
+http://wireless.kernel.org/en/users/Download/stable
+http://wireless.kernel.org/en/users/Download
+
+  Luis
