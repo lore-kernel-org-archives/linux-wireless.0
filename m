@@ -1,117 +1,341 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:50063 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750845AbZKHX6F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 18:58:05 -0500
-Received: by yxe17 with SMTP id 17so2171891yxe.33
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 15:58:09 -0800 (PST)
-Subject: [PATCH] at76c50x-usb: Remove mac2str and replace with %pM format
- specifier.
-From: Jason Andryuk <jandryuk@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kalle.valo@iki.fi>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 08 Nov 2009 18:58:01 -0500
-Message-ID: <1257724681.21194.921.camel@rainbow>
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:42088 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754188AbZKTUFK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Nov 2009 15:05:10 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 16/19] iwlwifi: print limited number of event log when uCode error
+Date: Fri, 20 Nov 2009 12:05:07 -0800
+Message-Id: <1258747510-21233-17-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
+References: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-at76c50x-usb: Remove mac2str and replace with %pM format specifier.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Signed-off-by: Jason Andryuk <jandryuk@gmail.com>
---
+To help iwlagn uCode debugging, event log will dump to syslog when driver
+detect uCode error occurred, but this only happen when compile with
+CONFIG_IWLWIFI_DEBUG and debug flag is enabled; which is not always
+the case. Also, there is another problem, if the flag is set, the entire
+event log buffer will be dump to syslog, it can flood the syslog and
+make it very difficult to debug the problem.
 
-diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
-index e559dc9..d9f2c52 100644
---- a/drivers/net/wireless/at76c50x-usb.c
-+++ b/drivers/net/wireless/at76c50x-usb.c
-@@ -524,20 +524,6 @@ static char *hex2str(void *buf, int len)
- 	return ret;
+Change the default to only dump last 20 entries of event log to syslog
+unless the following condition meets:
+1. both compile with CONFIG_IWLWIFI_DEBUG and debug flag
+is enabled, and then dump the entire event buffer to syslog.
+2. dump event log request from debugfs
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Acked-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   76 ++++++++++++++++++++++-----
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    8 +--
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   74 ++++++++++++++++++++++----
+ 6 files changed, 130 insertions(+), 37 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index a41f0e0..ecc23ec 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -227,7 +227,7 @@ extern void iwl3945_rx_replenish(void *data);
+ extern void iwl3945_rx_queue_reset(struct iwl_priv *priv, struct iwl_rx_queue *rxq);
+ extern unsigned int iwl3945_fill_beacon_frame(struct iwl_priv *priv,
+ 					struct ieee80211_hdr *hdr,int left);
+-extern void iwl3945_dump_nic_event_log(struct iwl_priv *priv);
++extern void iwl3945_dump_nic_event_log(struct iwl_priv *priv, bool full_log);
+ extern void iwl3945_dump_nic_error_log(struct iwl_priv *priv);
+ 
+ /*
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 463e31a..c96513b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1697,8 +1697,6 @@ void iwl_dump_nic_error_log(struct iwl_priv *priv)
+ 
  }
  
--#define MAC2STR_BUFFERS 4
+-#ifdef CONFIG_IWLWIFI_DEBUG
 -
--static inline char *mac2str(u8 *mac)
--{
--	static atomic_t a = ATOMIC_INIT(0);
--	static char bufs[MAC2STR_BUFFERS][6 * 3];
--	char *str;
--
--	str = bufs[atomic_inc_return(&a) & (MAC2STR_BUFFERS - 1)];
--	sprintf(str, "%02x:%02x:%02x:%02x:%02x:%02x",
--		mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
--	return str;
--}
--
- /* LED trigger */
- static int tx_activity;
- static void at76_ledtrig_tx_timerfunc(unsigned long data);
-@@ -973,13 +959,13 @@ static void at76_dump_mib_mac_addr(struct at76_priv *priv)
- 		goto exit;
+ #define EVENT_START_OFFSET  (4 * sizeof(u32))
+ 
+ /**
+@@ -1759,10 +1757,42 @@ static void iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
+ 	spin_unlock_irqrestore(&priv->reg_lock, reg_flags);
+ }
+ 
++/**
++ * iwl_print_last_event_logs - Dump the newest # of event log to syslog
++ */
++static void iwl_print_last_event_logs(struct iwl_priv *priv, u32 capacity,
++				      u32 num_wraps, u32 next_entry,
++				      u32 size, u32 mode)
++{
++	/*
++	 * display the newest DEFAULT_LOG_ENTRIES entries
++	 * i.e the entries just before the next ont that uCode would fill.
++	 */
++	if (num_wraps) {
++		if (next_entry < size) {
++			iwl_print_event_log(priv,
++					capacity - (size - next_entry),
++					size - next_entry, mode);
++			iwl_print_event_log(priv, 0,
++				    next_entry, mode);
++		} else
++			iwl_print_event_log(priv, next_entry - size,
++				    size, mode);
++	} else {
++		if (next_entry < size)
++			iwl_print_event_log(priv, 0, next_entry, mode);
++		else
++			iwl_print_event_log(priv, next_entry - size,
++					    size, mode);
++	}
++}
++
+ /* For sanity check only.  Actual size is determined by uCode, typ. 512 */
+ #define MAX_EVENT_LOG_SIZE (512)
+ 
+-void iwl_dump_nic_event_log(struct iwl_priv *priv)
++#define DEFAULT_DUMP_EVENT_LOG_ENTRIES (20)
++
++void iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log)
+ {
+ 	u32 base;       /* SRAM byte address of event log header */
+ 	u32 capacity;   /* event log capacity in # entries */
+@@ -1807,19 +1837,37 @@ void iwl_dump_nic_event_log(struct iwl_priv *priv)
+ 		return;
  	}
  
--	at76_dbg(DBG_MIB, "%s: MIB MAC_ADDR: mac_addr %s res 0x%x 0x%x",
-+	at76_dbg(DBG_MIB, "%s: MIB MAC_ADDR: mac_addr %pM res 0x%x 0x%x",
- 		 wiphy_name(priv->hw->wiphy),
--		 mac2str(m->mac_addr), m->res[0], m->res[1]);
-+		 m->mac_addr, m->res[0], m->res[1]);
- 	for (i = 0; i < ARRAY_SIZE(m->group_addr); i++)
--		at76_dbg(DBG_MIB, "%s: MIB MAC_ADDR: group addr %d: %s, "
-+		at76_dbg(DBG_MIB, "%s: MIB MAC_ADDR: group addr %d: %pM, "
- 			 "status %d", wiphy_name(priv->hw->wiphy), i,
--			 mac2str(m->group_addr[i]), m->group_addr_status[i]);
-+			 m->group_addr[i], m->group_addr_status[i]);
- exit:
- 	kfree(m);
- }
-@@ -1042,7 +1028,7 @@ static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
- 	at76_dbg(DBG_MIB, "%s: MIB MAC_MGMT: beacon_period %d CFP_max_duration "
- 		 "%d medium_occupancy_limit %d station_id 0x%x ATIM_window %d "
- 		 "CFP_mode %d privacy_opt_impl %d DTIM_period %d CFP_period %d "
--		 "current_bssid %s current_essid %s current_bss_type %d "
-+		 "current_bssid %pM current_essid %s current_bss_type %d "
- 		 "pm_mode %d ibss_change %d res %d "
- 		 "multi_domain_capability_implemented %d "
- 		 "international_roaming %d country_string %.3s",
-@@ -1051,7 +1037,7 @@ static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
- 		 le16_to_cpu(m->medium_occupancy_limit),
- 		 le16_to_cpu(m->station_id), le16_to_cpu(m->ATIM_window),
- 		 m->CFP_mode, m->privacy_option_implemented, m->DTIM_period,
--		 m->CFP_period, mac2str(m->current_bssid),
-+		 m->CFP_period, m->current_bssid,
- 		 hex2str(m->current_essid, IW_ESSID_MAX_SIZE),
- 		 m->current_bss_type, m->power_mgmt_mode, m->ibss_change,
- 		 m->res, m->multi_domain_capability_implemented,
-@@ -1080,7 +1066,7 @@ static void at76_dump_mib_mac(struct at76_priv *priv)
- 		 "cwmin %d cwmax %d short_retry_time %d long_retry_time %d "
- 		 "scan_type %d scan_channel %d probe_delay %u "
- 		 "min_channel_time %d max_channel_time %d listen_int %d "
--		 "desired_ssid %s desired_bssid %s desired_bsstype %d",
-+		 "desired_ssid %s desired_bssid %pM desired_bsstype %d",
- 		 wiphy_name(priv->hw->wiphy),
- 		 le32_to_cpu(m->max_tx_msdu_lifetime),
- 		 le32_to_cpu(m->max_rx_lifetime),
-@@ -1092,7 +1078,7 @@ static void at76_dump_mib_mac(struct at76_priv *priv)
- 		 le16_to_cpu(m->max_channel_time),
- 		 le16_to_cpu(m->listen_interval),
- 		 hex2str(m->desired_ssid, IW_ESSID_MAX_SIZE),
--		 mac2str(m->desired_bssid), m->desired_bsstype);
-+		 m->desired_bssid, m->desired_bsstype);
- exit:
- 	kfree(m);
- }
-@@ -2284,9 +2270,9 @@ static int at76_init_new_device(struct at76_priv *priv,
+-	IWL_ERR(priv, "Start IWL Event Log Dump: display count %d, wraps %d\n",
+-			size, num_wraps);
+-
+-	/* if uCode has wrapped back to top of log, start at the oldest entry,
+-	 * i.e the next one that uCode would fill. */
+-	if (num_wraps)
+-		iwl_print_event_log(priv, next_entry,
+-					capacity - next_entry, mode);
+-	/* (then/else) start at top of log */
+-	iwl_print_event_log(priv, 0, next_entry, mode);
++#ifdef CONFIG_IWLWIFI_DEBUG
++	if (!(iwl_get_debug_level(priv) & IWL_DL_FW_ERRORS))
++		size = (size > DEFAULT_DUMP_EVENT_LOG_ENTRIES)
++			? DEFAULT_DUMP_EVENT_LOG_ENTRIES : size;
++#else
++	size = (size > DEFAULT_DUMP_EVENT_LOG_ENTRIES)
++		? DEFAULT_DUMP_EVENT_LOG_ENTRIES : size;
++#endif
++	IWL_ERR(priv, "Start IWL Event Log Dump: display last %u entries\n",
++		size);
  
- 	priv->mac80211_registered = 1;
+-}
++#ifdef CONFIG_IWLWIFI_DEBUG
++	if ((iwl_get_debug_level(priv) & IWL_DL_FW_ERRORS) || full_log) {
++		/*
++		 * if uCode has wrapped back to top of log,
++		 * start at the oldest entry,
++		 * i.e the next one that uCode would fill.
++		 */
++		if (num_wraps)
++			iwl_print_event_log(priv, next_entry,
++					    capacity - next_entry, mode);
++		/* (then/else) start at top of log */
++		iwl_print_event_log(priv, 0, next_entry, mode);
++	} else
++		iwl_print_last_event_logs(priv, capacity, num_wraps,
++					next_entry, size, mode);
++#else
++	iwl_print_last_event_logs(priv, capacity, num_wraps,
++				next_entry, size, mode);
+ #endif
++}
  
--	printk(KERN_INFO "%s: USB %s, MAC %s, firmware %d.%d.%d-%d\n",
-+	printk(KERN_INFO "%s: USB %s, MAC %pM, firmware %d.%d.%d-%d\n",
- 	       wiphy_name(priv->hw->wiphy),
--	       dev_name(&interface->dev), mac2str(priv->mac_addr),
-+	       dev_name(&interface->dev), priv->mac_addr,
- 	       priv->fw_version.major, priv->fw_version.minor,
- 	       priv->fw_version.patch, priv->fw_version.build);
- 	printk(KERN_INFO "%s: regulatory domain 0x%02x: %s\n",
+ /**
+  * iwl_alive_start - called after REPLY_ALIVE notification received
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 159d555..574d366 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1363,11 +1363,10 @@ void iwl_irq_handle_error(struct iwl_priv *priv)
+ 	clear_bit(STATUS_HCMD_ACTIVE, &priv->status);
+ 
+ 	priv->cfg->ops->lib->dump_nic_error_log(priv);
++	priv->cfg->ops->lib->dump_nic_event_log(priv, false);
+ #ifdef CONFIG_IWLWIFI_DEBUG
+-	if (iwl_get_debug_level(priv) & IWL_DL_FW_ERRORS) {
+-		priv->cfg->ops->lib->dump_nic_event_log(priv);
++	if (iwl_get_debug_level(priv) & IWL_DL_FW_ERRORS)
+ 		iwl_print_rx_config_cmd(priv);
+-	}
+ #endif
+ 
+ 	wake_up_interruptible(&priv->wait_command_queue);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 1f99a5b..f1d6fdc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -167,7 +167,7 @@ struct iwl_lib_ops {
+ 	int (*is_valid_rtc_data_addr)(u32 addr);
+ 	/* 1st ucode load */
+ 	int (*load_ucode)(struct iwl_priv *priv);
+-	void (*dump_nic_event_log)(struct iwl_priv *priv);
++	void (*dump_nic_event_log)(struct iwl_priv *priv, bool full_log);
+ 	void (*dump_nic_error_log)(struct iwl_priv *priv);
+ 	int (*set_channel_switch)(struct iwl_priv *priv, u16 channel);
+ 	/* power management */
+@@ -579,14 +579,10 @@ int iwl_pci_resume(struct pci_dev *pdev);
+ *  Error Handling Debugging
+ ******************************************************/
+ void iwl_dump_nic_error_log(struct iwl_priv *priv);
++void iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log);
+ #ifdef CONFIG_IWLWIFI_DEBUG
+-void iwl_dump_nic_event_log(struct iwl_priv *priv);
+ void iwl_print_rx_config_cmd(struct iwl_priv *priv);
+ #else
+-static inline void iwl_dump_nic_event_log(struct iwl_priv *priv)
+-{
+-}
+-
+ static inline void iwl_print_rx_config_cmd(struct iwl_priv *priv)
+ {
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 5adf0b6..21e0f66 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -436,7 +436,7 @@ static ssize_t iwl_dbgfs_log_event_write(struct file *file,
+ 	if (sscanf(buf, "%d", &event_log_flag) != 1)
+ 		return -EFAULT;
+ 	if (event_log_flag == 1)
+-		priv->cfg->ops->lib->dump_nic_event_log(priv);
++		priv->cfg->ops->lib->dump_nic_event_log(priv, true);
+ 
+ 	return count;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 8dc7f77..0db9b79 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -1483,7 +1483,6 @@ static inline void iwl_synchronize_irq(struct iwl_priv *priv)
+ 	tasklet_kill(&priv->irq_tasklet);
+ }
+ 
+-#ifdef CONFIG_IWLWIFI_DEBUG
+ static const char *desc_lookup(int i)
+ {
+ 	switch (i) {
+@@ -1614,10 +1613,42 @@ static void iwl3945_print_event_log(struct iwl_priv *priv, u32 start_idx,
+ 	spin_unlock_irqrestore(&priv->reg_lock, reg_flags);
+ }
+ 
++/**
++ * iwl3945_print_last_event_logs - Dump the newest # of event log to syslog
++ */
++static void iwl3945_print_last_event_logs(struct iwl_priv *priv, u32 capacity,
++				      u32 num_wraps, u32 next_entry,
++				      u32 size, u32 mode)
++{
++	/*
++	 * display the newest DEFAULT_LOG_ENTRIES entries
++	 * i.e the entries just before the next ont that uCode would fill.
++	 */
++	if (num_wraps) {
++		if (next_entry < size) {
++			iwl3945_print_event_log(priv,
++					capacity - (size - next_entry),
++					size - next_entry, mode);
++			iwl3945_print_event_log(priv, 0,
++				    next_entry, mode);
++		} else
++			iwl3945_print_event_log(priv, next_entry - size,
++				    size, mode);
++	} else {
++		if (next_entry < size)
++			iwl3945_print_event_log(priv, 0, next_entry, mode);
++		else
++			iwl3945_print_event_log(priv, next_entry - size,
++					    size, mode);
++	}
++}
++
+ /* For sanity check only.  Actual size is determined by uCode, typ. 512 */
+ #define IWL3945_MAX_EVENT_LOG_SIZE (512)
+ 
+-void iwl3945_dump_nic_event_log(struct iwl_priv *priv)
++#define DEFAULT_IWL3945_DUMP_EVENT_LOG_ENTRIES (20)
++
++void iwl3945_dump_nic_event_log(struct iwl_priv *priv, bool full_log)
+ {
+ 	u32 base;       /* SRAM byte address of event log header */
+ 	u32 capacity;   /* event log capacity in # entries */
+@@ -1658,8 +1689,17 @@ void iwl3945_dump_nic_event_log(struct iwl_priv *priv)
+ 		return;
+ 	}
+ 
+-	IWL_ERR(priv, "Start IWL Event Log Dump: display count %d, wraps %d\n",
+-		  size, num_wraps);
++#ifdef CONFIG_IWLWIFI_DEBUG
++	if (!(iwl_get_debug_level(priv) & IWL_DL_FW_ERRORS))
++		size = (size > DEFAULT_IWL3945_DUMP_EVENT_LOG_ENTRIES)
++			? DEFAULT_IWL3945_DUMP_EVENT_LOG_ENTRIES : size;
++#else
++	size = (size > DEFAULT_IWL3945_DUMP_EVENT_LOG_ENTRIES)
++		? DEFAULT_IWL3945_DUMP_EVENT_LOG_ENTRIES : size;
++#endif
++
++	IWL_ERR(priv, "Start IWL Event Log Dump: display last %d count\n",
++		  size);
+ 
+ 	/* if uCode has wrapped back to top of log, start at the oldest entry,
+ 	 * i.e the next one that uCode would fill. */
+@@ -1670,18 +1710,28 @@ void iwl3945_dump_nic_event_log(struct iwl_priv *priv)
+ 	/* (then/else) start at top of log */
+ 	iwl3945_print_event_log(priv, 0, next_entry, mode);
+ 
+-}
++#ifdef CONFIG_IWLWIFI_DEBUG
++	if ((iwl_get_debug_level(priv) & IWL_DL_FW_ERRORS) || full_log) {
++		/* if uCode has wrapped back to top of log,
++		 * start at the oldest entry,
++		 * i.e the next one that uCode would fill.
++		 */
++		if (num_wraps)
++			iwl3945_print_event_log(priv, next_entry,
++				    capacity - next_entry, mode);
++
++		/* (then/else) start at top of log */
++		iwl3945_print_event_log(priv, 0, next_entry, mode);
++	} else
++		iwl3945_print_last_event_logs(priv, capacity, num_wraps,
++					next_entry, size, mode);
+ #else
+-void iwl3945_dump_nic_event_log(struct iwl_priv *priv)
+-{
+-}
++	iwl3945_print_last_event_logs(priv, capacity, num_wraps,
++				next_entry, size, mode);
++#endif
+ 
+-void iwl3945_dump_nic_error_log(struct iwl_priv *priv)
+-{
+ }
+ 
+-#endif
+-
+ static void iwl3945_irq_tasklet(struct iwl_priv *priv)
+ {
+ 	u32 inta, handled = 0;
+-- 
+1.5.6.3
 
