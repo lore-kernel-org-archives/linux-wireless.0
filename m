@@ -1,243 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:42409 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756654AbZKFTI0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 14:08:26 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Martin Fuzzey <mfuzzey@gmail.com>
-Subject: Re: b43: firmware loading problem and sleeping BUG
-Date: Fri, 6 Nov 2009 20:08:04 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <ba4215e10911060819y1175e003g695281fe084e07ab@mail.gmail.com> <200911061822.17121.mb@bu3sch.de> <ba4215e10911061027t413d2c34g8ad66a7982f7c43c@mail.gmail.com>
-In-Reply-To: <ba4215e10911061027t413d2c34g8ad66a7982f7c43c@mail.gmail.com>
+Received: from 27.mail-out.ovh.net ([91.121.30.210]:45190 "HELO
+	27.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754780AbZKTV3R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Nov 2009 16:29:17 -0500
+Message-ID: <4B0708A3.3060209@free.fr>
+Date: Fri, 20 Nov 2009 22:22:43 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-Message-Id: <200911062008.06159.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: jmalinen@atheros.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: [PATCH] ath9k: This patch fix RX unpadding for any received
+ frame.
+References: <1258665566-4212-1-git-send-email-benoit.papillault@free.fr> <43e72e890911200917m47ad6a8aje23577bf734b4952@mail.gmail.com>
+In-Reply-To: <43e72e890911200917m47ad6a8aje23577bf734b4952@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 06 November 2009 19:27:17 Martin Fuzzey wrote:
-> > I think this is easy to fix, because we can replace the spinlock by a mutex, as
-> > the b43 driver (which is the only user of the code) always allows sleeping now.
-> > I'll send a patch for testing soon.
-> >
-> Great - happy to test it.
+Luis R. Rodriguez a écrit :
+> On Thu, Nov 19, 2009 at 1:19 PM, Benoit Papillault
+> <benoit.papillault@free.fr> wrote:
+>> From: Benoit PAPILLAULT <benoit@benoit-laptop.(none)>
+>>
+>> It has been tested with a 802.11 frame generator and by checking the FCS field
+>> of each received frame with the value reported by the Atheros hardware. This
+>> patch is useful if you are trying to analyze non standard 802.11 frame going
+>> over the air.
+> 
+> Thank you for your patch! But can you please elaborate on your commit
+> log entry? This just tells me that you've tested it and how its useful
+> but it in no way tells me what you found was wrong and also does not
+> explain how you fixed it.
 
-There you go. Note that I did not test it, as trying to use my pcmcia card throws
-a hell of a lot oopses at me and the firmware finally force-resets the hardware
-for some reason. This needs some debugging first...
+Sure. I use a 802.11 frame generator that generates every value for the
+first 2 bytes (frame control field) and a varying length. What was wrong
+is that using ath9k and a monitor interface, I was getting frames with
+padding still inside or unpadding done at the wrong position and as
+such, wrong FCS. In order to fix it, I use the FCS field of received
+frame and tried every position and size for unpadding. This way I found
+a formula that gives me the exact position and size for proper
+unpadding. I then put this formula into ath9k. This formula is different
+from 802.11 hdrlen.
 
+> 
+>> Signed-off-by: Benoit PAPILLAULT <benoit@benoit-laptop.(none)>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/common.c |   19 ++++++++++++++-----
+>>  1 files changed, 14 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+>> index 2f1e161..4a13632 100644
+>> --- a/drivers/net/wireless/ath/ath9k/common.c
+>> +++ b/drivers/net/wireless/ath/ath9k/common.c
+>> @@ -231,26 +231,35 @@ void ath9k_cmn_rx_skb_postprocess(struct ath_common *common,
+>>  {
+>>        struct ath_hw *ah = common->ah;
+>>        struct ieee80211_hdr *hdr;
+>> -       int hdrlen, padsize;
+>> +       int hdrlen, padpos, padsize;
+>>        u8 keyix;
+>>        __le16 fc;
+>>
+>>        /* see if any padding is done by the hw and remove it */
+>>        hdr = (struct ieee80211_hdr *) skb->data;
+>>        hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+>> +       padpos = 24;
+>>        fc = hdr->frame_control;
+>> +       if ((fc & cpu_to_le16(IEEE80211_FCTL_FROMDS|IEEE80211_FCTL_TODS)) ==
+>> +           cpu_to_le16(IEEE80211_FCTL_FROMDS|IEEE80211_FCTL_TODS)) {
+>> +         padpos += 6; /* ETH_ALEN */
+>> +       }
+> 
+> How about just using ETH_ALEN then?
 
-Index: wireless-testing/drivers/ssb/main.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/main.c	2009-10-09 19:50:16.000000000 +0200
-+++ wireless-testing/drivers/ssb/main.c	2009-11-06 19:47:18.000000000 +0100
-@@ -740,7 +740,7 @@ static int ssb_bus_register(struct ssb_b
- {
- 	int err;
- 
--	spin_lock_init(&bus->bar_lock);
-+	mutex_init(&bus->register_mutex);
- 	INIT_LIST_HEAD(&bus->list);
- #ifdef CONFIG_SSB_EMBEDDED
- 	spin_lock_init(&bus->gpio_lock);
-Index: wireless-testing/drivers/ssb/pcmcia.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/pcmcia.c	2009-07-28 22:53:08.000000000 +0200
-+++ wireless-testing/drivers/ssb/pcmcia.c	2009-11-06 19:35:59.000000000 +0100
-@@ -238,15 +238,14 @@ static int select_core_and_segment(struc
- static u8 ssb_pcmcia_read8(struct ssb_device *dev, u16 offset)
- {
- 	struct ssb_bus *bus = dev->bus;
--	unsigned long flags;
- 	int err;
- 	u8 value = 0xFF;
- 
--	spin_lock_irqsave(&bus->bar_lock, flags);
-+	mutex_lock(&bus->register_mutex);
- 	err = select_core_and_segment(dev, &offset);
- 	if (likely(!err))
- 		value = readb(bus->mmio + offset);
--	spin_unlock_irqrestore(&bus->bar_lock, flags);
-+	mutex_unlock(&bus->register_mutex);
- 
- 	return value;
- }
-@@ -254,15 +253,14 @@ static u8 ssb_pcmcia_read8(struct ssb_de
- static u16 ssb_pcmcia_read16(struct ssb_device *dev, u16 offset)
- {
- 	struct ssb_bus *bus = dev->bus;
--	unsigned long flags;
- 	int err;
- 	u16 value = 0xFFFF;
- 
--	spin_lock_irqsave(&bus->bar_lock, flags);
-+	mutex_lock(&bus->register_mutex);
- 	err = select_core_and_segment(dev, &offset);
- 	if (likely(!err))
- 		value = readw(bus->mmio + offset);
--	spin_unlock_irqrestore(&bus->bar_lock, flags);
-+	mutex_unlock(&bus->register_mutex);
- 
- 	return value;
- }
-@@ -270,17 +268,16 @@ static u16 ssb_pcmcia_read16(struct ssb_
- static u32 ssb_pcmcia_read32(struct ssb_device *dev, u16 offset)
- {
- 	struct ssb_bus *bus = dev->bus;
--	unsigned long flags;
- 	int err;
- 	u32 lo = 0xFFFFFFFF, hi = 0xFFFFFFFF;
- 
--	spin_lock_irqsave(&bus->bar_lock, flags);
-+	mutex_lock(&bus->register_mutex);
- 	err = select_core_and_segment(dev, &offset);
- 	if (likely(!err)) {
- 		lo = readw(bus->mmio + offset);
- 		hi = readw(bus->mmio + offset + 2);
- 	}
--	spin_unlock_irqrestore(&bus->bar_lock, flags);
-+	mutex_unlock(&bus->register_mutex);
- 
- 	return (lo | (hi << 16));
- }
-@@ -290,11 +287,10 @@ static void ssb_pcmcia_block_read(struct
- 				  size_t count, u16 offset, u8 reg_width)
- {
- 	struct ssb_bus *bus = dev->bus;
--	unsigned long flags;
- 	void __iomem *addr = bus->mmio + offset;
- 	int err;
- 
--	spin_lock_irqsave(&bus->bar_lock, flags);
-+	mutex_lock(&bus->register_mutex);
- 	err = select_core_and_segment(dev, &offset);
- 	if (unlikely(err)) {
- 		memset(buffer, 0xFF, count);
-@@ -339,52 +335,49 @@ static void ssb_pcmcia_block_read(struct
- 		SSB_WARN_ON(1);
- 	}
- unlock:
--	spin_unlock_irqrestore(&bus->bar_lock, flags);
-+	mutex_unlock(&bus->register_mutex);
- }
- #endif /* CONFIG_SSB_BLOCKIO */
- 
- static void ssb_pcmcia_write8(struct ssb_device *dev, u16 offset, u8 value)
- {
- 	struct ssb_bus *bus = dev->bus;
--	unsigned long flags;
- 	int err;
- 
--	spin_lock_irqsave(&bus->bar_lock, flags);
-+	mutex_lock(&bus->register_mutex);
- 	err = select_core_and_segment(dev, &offset);
- 	if (likely(!err))
- 		writeb(value, bus->mmio + offset);
- 	mmiowb();
--	spin_unlock_irqrestore(&bus->bar_lock, flags);
-+	mutex_unlock(&bus->register_mutex);
- }
- 
- static void ssb_pcmcia_write16(struct ssb_device *dev, u16 offset, u16 value)
- {
- 	struct ssb_bus *bus = dev->bus;
--	unsigned long flags;
- 	int err;
- 
--	spin_lock_irqsave(&bus->bar_lock, flags);
-+	mutex_lock(&bus->register_mutex);
- 	err = select_core_and_segment(dev, &offset);
- 	if (likely(!err))
- 		writew(value, bus->mmio + offset);
- 	mmiowb();
--	spin_unlock_irqrestore(&bus->bar_lock, flags);
-+	mutex_unlock(&bus->register_mutex);
- }
- 
- static void ssb_pcmcia_write32(struct ssb_device *dev, u16 offset, u32 value)
- {
- 	struct ssb_bus *bus = dev->bus;
--	unsigned long flags;
- 	int err;
- 
--	spin_lock_irqsave(&bus->bar_lock, flags);
-+	mutex_lock(&bus->register_mutex);
- 	err = select_core_and_segment(dev, &offset);
- 	if (likely(!err)) {
- 		writew((value & 0x0000FFFF), bus->mmio + offset);
- 		writew(((value & 0xFFFF0000) >> 16), bus->mmio + offset + 2);
- 	}
- 	mmiowb();
--	spin_unlock_irqrestore(&bus->bar_lock, flags);
-+	mutex_unlock(&bus->register_mutex);
- }
- 
- #ifdef CONFIG_SSB_BLOCKIO
-@@ -392,11 +385,10 @@ static void ssb_pcmcia_block_write(struc
- 				   size_t count, u16 offset, u8 reg_width)
- {
- 	struct ssb_bus *bus = dev->bus;
--	unsigned long flags;
- 	void __iomem *addr = bus->mmio + offset;
- 	int err;
- 
--	spin_lock_irqsave(&bus->bar_lock, flags);
-+	mutex_lock(&bus->register_mutex);
- 	err = select_core_and_segment(dev, &offset);
- 	if (unlikely(err))
- 		goto unlock;
-@@ -440,7 +432,7 @@ static void ssb_pcmcia_block_write(struc
- 	}
- unlock:
- 	mmiowb();
--	spin_unlock_irqrestore(&bus->bar_lock, flags);
-+	mutex_unlock(&bus->register_mutex);
- }
- #endif /* CONFIG_SSB_BLOCKIO */
- 
-Index: wireless-testing/include/linux/ssb/ssb.h
-===================================================================
---- wireless-testing.orig/include/linux/ssb/ssb.h	2009-11-01 13:58:49.000000000 +0100
-+++ wireless-testing/include/linux/ssb/ssb.h	2009-11-06 19:32:32.000000000 +0100
-@@ -278,9 +278,8 @@ struct ssb_bus {
- 		/* Current SSB base address window for SDIO. */
- 		u32 sdio_sbaddr;
- 	};
--	/* Lock for core and segment switching.
--	 * On PCMCIA-host busses this is used to protect the whole MMIO access. */
--	spinlock_t bar_lock;
-+	/* Mutex to enforce one hardware register read/write is an atomic operation. */
-+	struct mutex register_mutex;
- 
- 	/* The host-bus this backplane is running on. */
- 	enum ssb_bustype bustype;
-Index: wireless-testing/drivers/ssb/pci.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/pci.c	2009-10-09 19:50:16.000000000 +0200
-+++ wireless-testing/drivers/ssb/pci.c	2009-11-06 20:04:11.000000000 +0100
-@@ -63,7 +63,6 @@ int ssb_pci_switch_core(struct ssb_bus *
- 			struct ssb_device *dev)
- {
- 	int err;
--	unsigned long flags;
- 
- #if SSB_VERBOSE_PCICORESWITCH_DEBUG
- 	ssb_printk(KERN_INFO PFX
-@@ -72,11 +71,9 @@ int ssb_pci_switch_core(struct ssb_bus *
- 		   dev->core_index);
- #endif
- 
--	spin_lock_irqsave(&bus->bar_lock, flags);
- 	err = ssb_pci_switch_coreidx(bus, dev->core_index);
- 	if (!err)
- 		bus->mapped_device = dev;
--	spin_unlock_irqrestore(&bus->bar_lock, flags);
- 
- 	return err;
- }
+Indeed. I was just in a hurry.
 
+> 
+>> +       if ((fc & cpu_to_le16(IEEE80211_STYPE_QOS_DATA|IEEE80211_FCTL_FTYPE)) ==
+>> +           cpu_to_le16(IEEE80211_STYPE_QOS_DATA|IEEE80211_FTYPE_DATA)) {
+>> +         padpos += 2;
+>> +       }
+>>
+>>        /* The MAC header is padded to have 32-bit boundary if the
+>>         * packet payload is non-zero. The general calculation for
+>>         * padsize would take into account odd header lengths:
+>> -        * padsize = (4 - hdrlen % 4) % 4; However, since only
+>> +        * padsize = (4 - padpos % 4) % 4; However, since only
+>>         * even-length headers are used, padding can only be 0 or 2
+>>         * bytes and we can optimize this a bit. In addition, we must
+>>         * not try to remove padding from short control frames that do
+>>         * not have payload. */
+>> -       padsize = hdrlen & 3;
+>> -       if (padsize && hdrlen >= 24) {
+>> -               memmove(skb->data + padsize, skb->data, hdrlen);
+>> +       padsize = padpos & 3;
+>> +       if (padsize && skb->len>=padpos+padsize+FCS_LEN) {
+>> +               memmove(skb->data + padsize, skb->data, padpos);
+>>                skb_pull(skb, padsize);
+>>        }
+> 
+> If the skb->len would have been short ieee80211_get_hdrlen_from_skb()
+> would have picked up on this and 0 would have been used for hdrlen
+> therefore skipping this operation. With this patch even if skb->len
+> was 0 your padsize is always based on some static value. Additionally
+> its unclear to me how and why you substitute
+> ieee80211_get_hdrlen_from_skb() to a static 24 + something.
 
--- 
-Greetings, Michael.
+The substitution is indeed the key of this patch. The check about
+skb->len is to make sure that the frame is large enough to contain the
+computed padding, which cannot be contained in the FCS field itself.
+
+> 
+> Also the possible static values for padpos are either (24 + 2) or (24
+> + 6) right? Well these & 3 will always give true. So you are always
+> padding and this changes the way this was being implemented.
+
+It can be 24, 24+6=30, 24+2=26 or 24+6+2=28. With the &3 mask, this
+gives : 0 (for 24), 2 (for 30), 2 (for 26) and 0 (for 28).
+
+> 
+> Unless I'm missing something.
+> 
+>   Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+Regards,
+Benoit
