@@ -1,40 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:48344 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934298AbZKXWzA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 17:55:00 -0500
-Subject: Re: [RFC 1/3] nl80211: PMKSA caching support
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <ff5bf1a69ecd3ed3695089cf62e6ab51689b683a.1259075573.git.sameo@linux.intel.com>
-References: <cover.1259075573.git.sameo@linux.intel.com>
-	 <ff5bf1a69ecd3ed3695089cf62e6ab51689b683a.1259075573.git.sameo@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 24 Nov 2009 23:54:57 +0100
-Message-ID: <1259103297.2967.40.camel@violet>
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:54089 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752819AbZKTLov (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Nov 2009 06:44:51 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Florian Fainelli <florian@openwrt.org>
+Subject: Re: [PATCH RFC] ssb: Generic SPROM override for devices without SPROM
+Date: Fri, 20 Nov 2009 12:44:49 +0100
+Cc: bcm43xx-dev@lists.berlios.de,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Oncaphillis <oncaphillis@snafu.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <200911201212.19588.mb@bu3sch.de> <200911201238.08005.florian@openwrt.org>
+In-Reply-To: <200911201238.08005.florian@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200911201244.51138.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Samuel,
+On Friday 20 November 2009 12:38:07 Florian Fainelli wrote:
+> Why not call once random_ether_addr instead of using some kind of hash? Is it 
+> because you
+> want the same MAC from a reboot to another?
 
->  /* policy for the attributes */
-> @@ -561,6 +563,9 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
->  	CMD(deauth, DEAUTHENTICATE);
->  	CMD(disassoc, DISASSOCIATE);
->  	CMD(join_ibss, JOIN_IBSS);
-> +	CMD(set_pmksa, SET_PMKSA);
-> +	CMD(del_pmksa, DEL_PMKSA);
-> +	CMD(flush_pmksa, FLUSH_PMKSA);
+yes.
 
-once these have been accepted, don't forget to send a patch for iw that
-actually prints out the supported command list.
+> Ok, so for BCM63xx I would no longer have to declare my SPROM, fine.
 
-Regards
+No you still need to do that. The sprom is device specific.
+You need to call ssb_register_sprom_override() from the arch code with
+that callback that sets up your sprom image.
 
-Marcel
-
-
+-- 
+Greetings, Michael.
