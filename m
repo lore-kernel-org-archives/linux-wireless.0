@@ -1,45 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:61888 "EHLO
-	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754848AbZKIV7F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 16:59:05 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH] rt2x00: Fix typo in rf programming of rt2800lib.
-Date: Mon,  9 Nov 2009 22:59:04 +0100
-Message-Id: <1257803944-5344-1-git-send-email-gwingerde@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:24403 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753017AbZKTB0d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Nov 2009 20:26:33 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 19 Nov 2009 17:26:40 -0800
+Subject: Re: master-2009-11-19 busted? can't hold network connection for
+ more than 1 second
+From: Felix Bitterli <Felix.Bitterli@atheros.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1258678718.5323.8.camel@darkslate>
+References: <1258678718.5323.8.camel@darkslate>
+Content-Type: text/plain
+Date: Thu, 19 Nov 2009 17:26:39 -0800
+Message-ID: <1258680399.6345.3.camel@darkslate>
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix a type in rt2800_config_channel_rt3x. The second write to RF register 2 should be to RF register 3.
-This is confirmed by the legacy Ralink code.
+On Thu, 2009-11-19 at 16:58 -0800, Felix Bitterli wrote:
+> Hi,
+> 
+> does anybody else see this?(sorry I can't bisect today, might have time
+> tomorrow)
+> 
+> Wireless testing kernel master-2009-11-19 can't hold a network
+> connection for more than 1 second, master-2009-11-18 is fine.
+> 
+> H/W Thinkpad T43, Atheros AR9280 Rev:2 mem=0xf89e0000, irq=21
+> 
+> Network office Wpa2/psk, tons of traffic/aps/clients.
+> 
+> Thanks guys.
+> Felix
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
+Sorry, was a H/W issue. Fine after 2nd reboot.
 
-Corrected the subject of the email to state that it is a single patch.
+And miniPCI hotplug is the answer to the popular question (don't do
+this).
 
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On each reboot I need to do a miniPCI hotplug once boot passes bios
+check (at grub menu I plug the card back in). It's kind of neat that the
+laptop still works after about 300 hotplugs. Guess why I like suspend.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 24b3af4..2c91c44 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -774,7 +774,7 @@ static void rt2800_config_channel_rt3x(struct rt2x00_dev *rt2x00dev,
- 	u8 rfcsr;
- 
- 	rt2800_rfcsr_write(rt2x00dev, 2, rf->rf1);
--	rt2800_rfcsr_write(rt2x00dev, 2, rf->rf3);
-+	rt2800_rfcsr_write(rt2x00dev, 3, rf->rf3);
- 
- 	rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
- 	rt2x00_set_field8(&rfcsr, RFCSR6_R, rf->rf2);
--- 
-1.6.5.2
+Thanks guys.
+Felix
 
