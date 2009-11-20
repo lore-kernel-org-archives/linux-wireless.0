@@ -1,91 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:33202 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752469AbZKYHOK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 02:14:10 -0500
-Received: by ewy19 with SMTP id 19so92455ewy.21
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Nov 2009 23:14:15 -0800 (PST)
-Date: Wed, 25 Nov 2009 10:14:12 +0300
-From: Alexey Dobriyan <adobriyan@gmail.com>
-To: linville@tuxdriver.com, akpm@linux-foundation.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ipw2x00: convert to seq_file
-Message-ID: <20091125071412.GC3459@x200.malnet.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga03.intel.com ([143.182.124.21]:42088 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754194AbZKTUFK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Nov 2009 15:05:10 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Jay Sternberg <jay.e.sternberg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 15/19] iwlwifi: Tell the ucode immediately when association state changes
+Date: Fri, 20 Nov 2009 12:05:06 -0800
+Message-Id: <1258747510-21233-16-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
+References: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+From: Jay Sternberg <jay.e.sternberg@intel.com>
+
+When we get a state change of associated or not, we need to tell the
+ucode via the RX_ON command using the filter flags.  This will prevent
+the ucode from sending any packets when not associated, specifically not
+sending NULL QOS packets after a deauthentication which causes the AP to
+repeatedly send deauth's in some situations.
+
+Signed-off-by: Jay Sternberg <jay.e.sternberg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
- drivers/net/wireless/ipw2x00/libipw_module.c |   33 ++++++++++++++++++---------
- 1 file changed, 22 insertions(+), 11 deletions(-)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index b62267e..159d555 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2479,6 +2479,16 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 		} else {
+ 			priv->assoc_id = 0;
+ 			iwl_led_disassociate(priv);
++
++			/*
++			 * inform the ucode that there is no longer an
++			 * association and that no more packets should be
++			 * send
++			 */
++			priv->staging_rxon.filter_flags &=
++				~RXON_FILTER_ASSOC_MSK;
++			priv->staging_rxon.assoc_id = 0;
++			iwlcore_commit_rxon(priv);
+ 		}
+ 	}
+ 
+-- 
+1.5.6.3
 
---- a/drivers/net/wireless/ipw2x00/libipw_module.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_module.c
-@@ -216,17 +216,22 @@ u32 libipw_debug_level = 0;
- EXPORT_SYMBOL_GPL(libipw_debug_level);
- static struct proc_dir_entry *libipw_proc = NULL;
- 
--static int show_debug_level(char *page, char **start, off_t offset,
--			    int count, int *eof, void *data)
-+static int debug_level_proc_show(struct seq_file *m, void *v)
- {
--	return snprintf(page, count, "0x%08X\n", libipw_debug_level);
-+	seq_printf(m, "0x%08X\n", libipw_debug_level);
-+	return 0;
- }
- 
--static int store_debug_level(struct file *file, const char __user * buffer,
--			     unsigned long count, void *data)
-+static int debug_level_proc_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, debug_level_proc_show, NULL);
-+}
-+
-+static ssize_t debug_level_proc_write(struct file *file,
-+		const char __user *buffer, size_t count, loff_t *pos)
- {
- 	char buf[] = "0x00000000\n";
--	unsigned long len = min((unsigned long)sizeof(buf) - 1, count);
-+	size_t len = min(sizeof(buf) - 1, count);
- 	unsigned long val;
- 
- 	if (copy_from_user(buf, buffer, len))
-@@ -240,6 +245,15 @@ static int store_debug_level(struct file *file, const char __user * buffer,
- 
- 	return strnlen(buf, len);
- }
-+
-+static const struct file_operations debug_level_proc_fops = {
-+	.owner		= THIS_MODULE,
-+	.open		= debug_level_proc_open,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+	.release	= single_release,
-+	.write		= debug_level_proc_write,
-+};
- #endif				/* CONFIG_LIBIPW_DEBUG */
- 
- static int __init libipw_init(void)
-@@ -254,16 +268,13 @@ static int __init libipw_init(void)
- 				" proc directory\n");
- 		return -EIO;
- 	}
--	e = create_proc_entry("debug_level", S_IFREG | S_IRUGO | S_IWUSR,
--			      libipw_proc);
-+	e = proc_create("debug_level", S_IRUGO | S_IWUSR, libipw_proc,
-+			&debug_level_proc_fops);
- 	if (!e) {
- 		remove_proc_entry(DRV_NAME, init_net.proc_net);
- 		libipw_proc = NULL;
- 		return -EIO;
- 	}
--	e->read_proc = show_debug_level;
--	e->write_proc = store_debug_level;
--	e->data = NULL;
- #endif				/* CONFIG_LIBIPW_DEBUG */
- 
- 	printk(KERN_INFO DRV_NAME ": " DRV_DESCRIPTION ", " DRV_VERSION "\n");
