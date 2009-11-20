@@ -1,84 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:41096 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932180AbZKDReC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 12:34:02 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 04 Nov 2009 18:33:41 +0100
-Message-Id: <20091104173341.28463.11122.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-Subject: [PATCH 14/41] rt2800pci: add rt2800_regbusy_read() wrapper
+Received: from mail.atheros.com ([12.36.123.2]:22769 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754842AbZKTA6c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Nov 2009 19:58:32 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 19 Nov 2009 16:58:39 -0800
+Subject: master-2009-11-19 busted? can't hold network connection for more
+ than 1 second
+From: Felix Bitterli <Felix.Bitterli@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain
+Date: Thu, 19 Nov 2009 16:58:38 -0800
+Message-ID: <1258678718.5323.8.camel@darkslate>
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] rt2800pci: add rt2800_regbusy_read() wrapper
+Hi,
 
-Part of preparations for later code unification.
+does anybody else see this?(sorry I can't bisect today, might have time
+tomorrow)
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800pci.c |   12 ++++++------
- drivers/net/wireless/rt2x00/rt2800pci.h |    8 ++++++++
- 2 files changed, 14 insertions(+), 6 deletions(-)
+Wireless testing kernel master-2009-11-19 can't hold a network
+connection for more than 1 second, master-2009-11-18 is fine.
 
-Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -69,14 +69,14 @@ MODULE_PARM_DESC(nohwcrypt, "Disable har
-  * The _lock versions must be used if you already hold the csr_mutex
-  */
- #define WAIT_FOR_BBP(__dev, __reg) \
--	rt2x00pci_regbusy_read((__dev), BBP_CSR_CFG, BBP_CSR_CFG_BUSY, (__reg))
-+	rt2800_regbusy_read((__dev), BBP_CSR_CFG, BBP_CSR_CFG_BUSY, (__reg))
- #define WAIT_FOR_RFCSR(__dev, __reg) \
--	rt2x00pci_regbusy_read((__dev), RF_CSR_CFG, RF_CSR_CFG_BUSY, (__reg))
-+	rt2800_regbusy_read((__dev), RF_CSR_CFG, RF_CSR_CFG_BUSY, (__reg))
- #define WAIT_FOR_RF(__dev, __reg) \
--	rt2x00pci_regbusy_read((__dev), RF_CSR_CFG0, RF_CSR_CFG0_BUSY, (__reg))
-+	rt2800_regbusy_read((__dev), RF_CSR_CFG0, RF_CSR_CFG0_BUSY, (__reg))
- #define WAIT_FOR_MCU(__dev, __reg) \
--	rt2x00pci_regbusy_read((__dev), H2M_MAILBOX_CSR, \
--			       H2M_MAILBOX_CSR_OWNER, (__reg))
-+	rt2800_regbusy_read((__dev), H2M_MAILBOX_CSR, \
-+			    H2M_MAILBOX_CSR_OWNER, (__reg))
- 
- static void rt2800pci_bbp_write(struct rt2x00_dev *rt2x00dev,
- 				const unsigned int word, const u8 value)
-@@ -350,7 +350,7 @@ static void rt2800pci_efuse_read(struct 
- 	rt2800_register_write(rt2x00dev, EFUSE_CTRL, reg);
- 
- 	/* Wait until the EEPROM has been loaded */
--	rt2x00pci_regbusy_read(rt2x00dev, EFUSE_CTRL, EFUSE_CTRL_KICK, &reg);
-+	rt2800_regbusy_read(rt2x00dev, EFUSE_CTRL, EFUSE_CTRL_KICK, &reg);
- 
- 	/* Apparently the data is read from end to start */
- 	rt2800_register_read(rt2x00dev, EFUSE_DATA3,
-Index: b/drivers/net/wireless/rt2x00/rt2800pci.h
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800pci.h
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.h
-@@ -63,6 +63,14 @@ static inline void rt2800_register_multi
- 	rt2x00pci_register_multiwrite(rt2x00dev, offset, value, length);
- }
- 
-+static inline int rt2800_regbusy_read(struct rt2x00_dev *rt2x00dev,
-+				      const unsigned int offset,
-+				      const struct rt2x00_field32 field,
-+				      u32 *reg)
-+{
-+	return rt2x00pci_regbusy_read(rt2x00dev, offset, field, reg);
-+}
-+
- /*
-  * RF chip defines.
-  *
+H/W Thinkpad T43, Atheros AR9280 Rev:2 mem=0xf89e0000, irq=21
+
+Network office Wpa2/psk, tons of traffic/aps/clients.
+
+Thanks guys.
+Felix
+
