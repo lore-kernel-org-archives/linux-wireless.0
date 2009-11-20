@@ -1,113 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dmz4.indranet.co.nz ([203.97.93.68]:49251 "EHLO
-	mail.indranet.co.nz" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1756740AbZKKCJI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 21:09:08 -0500
-Date: Wed, 11 Nov 2009 15:09:38 +1300 (NZDT)
-From: Derek Smithies <derek@indranet.co.nz>
-To: Adam Wozniak <awozniak@irobot.com>
-cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, nbd@openwrt.org
-Subject: Re: compat-wireless and minstrel
-In-Reply-To: <4AFA0E76.6060806@irobot.com>
-Message-ID: <alpine.DEB.2.00.0911111508391.6214@kauri.acheron.indranet.co.nz>
-References: <4AF0D54D.4090303@irobot.com> <200911041653.33737.chunkeey@googlemail.com> <alpine.DEB.2.00.0911050951000.16407@kauri.acheron.indranet.co.nz> <4AF9F03E.2010405@irobot.com> <alpine.DEB.2.00.0911111217580.6214@kauri.acheron.indranet.co.nz>
- <4AFA0E76.6060806@irobot.com>
+Received: from mail.gmx.net ([213.165.64.20]:41180 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751814AbZKTOer (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Nov 2009 09:34:47 -0500
+From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH RFC] ssb: Generic SPROM override for devices without SPROM
+Date: Fri, 20 Nov 2009 15:34:49 +0100
+Cc: bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <200911201212.19588.mb@bu3sch.de> <4B06A233.2070708@lwfinger.net>
+In-Reply-To: <4B06A233.2070708@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200911201534.51602.s.L-H@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi
 
-> Is it possible this is the problem? (note supp_rates is used at the bottom of 
-> the function, outside the "if")
+On Friday 20 November 2009, Larry Finger wrote:
+> On 11/20/2009 05:12 AM, Michael Buesch wrote:
+[...]
+> You might look at the "root=" part of /proc/cmdline. Mine says
+> "root=/dev/disk/by-id/ata-TOSHIBA_MK2546GSX_18C2P0KCT-part1". That disk serial
+> number would certainly be unique. Even if it just said "root=/dev/sda1", it
+> would be repeatable.
+[...]
 
-Could be. Did it fix your problem?
+"by-id" has the disadvantage that it changes with the means of accessing 
+the disk, namely if your driver uses the old (obsolete) ide API or is a new
+libata driver.
 
-Derek.
+Technically only "by-uuid" is relatively guaranteed to be stable (unless a 
+partition gets cloned with dd), with "by-label" coming close (only bad if 
+any disk or USB storage device duplicates an existing label, like "root").
 
-On Tue, 10 Nov 2009, Adam Wozniak wrote:
-
-> Is it possible this is the problem? (note supp_rates is used at the bottom of 
-> the function, outside the "if")
->
-> *** a/net/mac80211/ibss.c    2009-11-02 09:11:36.000000000 -0800
-> --- b/net/mac80211/ibss.c    2009-11-10 16:31:46.291563951 -0800
-> ***************
-> *** 246,254 ****
->     if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
->         return;
->
->     if (sdata->vif.type == NL80211_IFTYPE_ADHOC && elems->supp_rates &&
->         memcmp(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0) {
-> -         supp_rates = ieee80211_sta_get_rates(local, elems, band);
->
->         rcu_read_lock();
->
-> --- 246,255 ----
->     if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
->         return;
->
-> +     supp_rates = ieee80211_sta_get_rates(local, elems, band);
-> +
->     if (sdata->vif.type == NL80211_IFTYPE_ADHOC && elems->supp_rates &&
->         memcmp(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0) {
->
->         rcu_read_lock();
->
->
->
-> Derek Smithies wrote:
->> Hi,
->>> Do you know which frames in the mac80211 code are missing this required 
->>> information?  Or was that conjecture?
->> 
->> it was mostly conjecture. I had done some work with an earlier pull of 
->> compat wireless in adhoc. the rates tried by minstrel were bad - it was 
->> stuck at the slowest rate.
->> 
->> I too had found that the fix was to adjust the array so that all rates were 
->> marked as supported.
->> 
->> Derek
->> 
->> On Tue, 10 Nov 2009, Adam Wozniak wrote:
->> 
->>> Reading through the 802.11 spec, it appears to me that "Supported rates" 
->>> (and "Extended Supported Rates" when number of rates > 8) is REQUIRED for 
->>> all management frames except authentication, deauthentication, and action 
->>> frames. (IEEE 802.11-2007, 7.2.3)
->>> 
->>> Do you know which frames in the mac80211 code are missing this required 
->>> information?  Or was that conjecture?
->>> 
->>> Looking at mac80211/tx.c ieee80211_beacon_get_tim, it is not clear to me 
->>> how (or if) this rate information is being set for ad-hoc beacons.
->>> 
->>> Derek Smithies wrote:
->>>> Some management frames don't contain a full report of the rates supported 
->>>> by the sender.
->>>> My view is that node A (in this example) is incorrectly determining that 
->>>> B only supports the 1mb/sec rate. Consequently, node A fills the 
->>>> rate_supported  array with one rate - 1mb/sec.
->>> 
->>> 
->>> 
->> 
->
->
->
-
--- 
-Derek Smithies Ph.D.
-IndraNet Technologies Ltd.
-ph +64 3 365 6485
-Web: http://www.indranet-technologies.com/
-
-"The only thing IE should be used for is to download Fire Fox"
-
-"My favorite language is call STAR. It's extremely concise. It has
-  exactly one verb '*', which does exactly what I want at the moment."
-     --Larry Wall
+Regards
+	Stefan Lippers-Hollmann
