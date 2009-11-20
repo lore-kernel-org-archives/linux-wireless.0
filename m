@@ -1,39 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:40178 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751185AbZKIWVA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 17:21:00 -0500
-Subject: Re: [PATCH] iwlcore: Allow runtime configuration of
- no_sleep_autoadjust
-From: reinette chatre <reinette.chatre@intel.com>
-To: Andrew Lutomirski <andy@luto.us>
-Cc: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <cb0375e10911091007w45fa5653y8ed4f043f37074b6@mail.gmail.com>
-References: <cb0375e10911081130k5d8f8347y999cf66a98e6898a@mail.gmail.com>
-	 <1257787187.21134.22331.camel@rc-desk>
-	 <cb0375e10911091007w45fa5653y8ed4f043f37074b6@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 09 Nov 2009 14:21:05 -0800
-Message-Id: <1257805265.21134.22738.camel@rc-desk>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35739 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757116AbZKTBI4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Nov 2009 20:08:56 -0500
+Date: Thu, 19 Nov 2009 20:04:57 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Felix Bitterli <Felix.Bitterli@atheros.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: master-2009-11-19 busted? can't hold network connection for more
+ than 1 second
+Message-ID: <20091120010457.GA2633@tuxdriver.com>
+References: <1258678718.5323.8.camel@darkslate>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1258678718.5323.8.camel@darkslate>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andrew,
-
-On Mon, 2009-11-09 at 10:07 -0800, Andrew Lutomirski wrote:
-> Hmm.  It looks like sleep_level_override in debugfs can do exactly what I want.
-
-You have not really stated what you are trying to do here so it is hard
-to tell. sleep_level_override lets you hardcode the power saving index.
-
+On Thu, Nov 19, 2009 at 04:58:38PM -0800, Felix Bitterli wrote:
+> Hi,
 > 
-> Is there any reason that no_sleep_autoadjust doesn't just make
-> sleep_level_override default to 1?
+> does anybody else see this?(sorry I can't bisect today, might have time
+> tomorrow)
+> 
+> Wireless testing kernel master-2009-11-19 can't hold a network
+> connection for more than 1 second, master-2009-11-18 is fine.
+> 
+> H/W Thinkpad T43, Atheros AR9280 Rev:2 mem=0xf89e0000, irq=21
+> 
+> Network office Wpa2/psk, tons of traffic/aps/clients.
 
-That does seem what it is doing in iwl_power_update_mode().
+Bisect should be pretty easy...? :-)
 
-Reinette
-
-
+John
+-- 
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
