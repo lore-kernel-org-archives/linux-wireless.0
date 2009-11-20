@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:26155 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753247AbZKATGH (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:54212 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752989AbZKTUcO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Nov 2009 14:06:07 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-Date: Sun, 1 Nov 2009 20:04:59 +0100
-Cc: Jarek Poplawski <jarkao2@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-References: <1256886023.3555.5.camel@johannes.local> <20091030110616.GB6150@ff.dom.local> <20091030150223.GA2586@tuxdriver.com>
-In-Reply-To: <20091030150223.GA2586@tuxdriver.com>
+	Fri, 20 Nov 2009 15:32:14 -0500
 MIME-Version: 1.0
-Message-Id: <200911012004.59718.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+In-Reply-To: <1258746786.26965.83.camel@localhost.localdomain>
+References: <200911202027.13284.chunkeey@googlemail.com> <1258746786.26965.83.camel@localhost.localdomain>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 20 Nov 2009 12:32:00 -0800
+Message-ID: <43e72e890911201232m1e0d573cq74f40580296ca81d@mail.gmail.com>
+Subject: Re: [RFC] p54: software hot-swap eeprom image
+To: Dan Williams <dcbw@redhat.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 30 October 2009 16:02:24 John W. Linville wrote:
+On Fri, Nov 20, 2009 at 11:53 AM, Dan Williams <dcbw@redhat.com> wrote:
+> On Fri, 2009-11-20 at 20:27 +0100, Christian Lamparter wrote:
+>> This (aggregated) patch adds a new sysfs file "eeprom_overwrite"
+>> which can be used to upload an customized eeprom image to the
+>> driver during normal operation.
+>>
+>> The old wlanX device will quickly vanish. And if the new EEPROM
+>> image passes all sanity checks the device will reappear.
+>>
+>> Hopefully, this proves to be an adequate solution for everyone
+>> with a bad/missing EEPROM data/chip.
+>
+> Honestly I wonder if this would be better done with ethtool.  There's
+> already ethtool --eeprom-dump, would it be so hard to do an ethtool
+> --eeprom-load ?
+>
+> I can see a number of devices doing this, so in my mind it makes sense
+> to have a generic facility for this sort of thing.  But then again it's
+> not so common an operation and its fraught with danger :)  Libertas
+> could potentially use this, but libertas has *two* EEPROM images that it
+> might need to update.  So if ethtool did grow --eeprom-load we may want
+> to account for more than one eeprom image.
+>
+> What do people think?
 
-> Ever since Bartlomiej decided to tear himself away from
-> drivers/staging, he has been nothing but negative -- petty, whining,
+Can't request_firmware() be generalized for this sort of stuff too?
 
-I think that you should ping Greg about this since somebody impersonating
-for me is sending him patches.  Last week alone over 20 such patches were
-merged -- who knows what this person might be planning.. ;)
-
-Probably the following patch was the source of confusion:
-
-	http://patchwork.kernel.org/patch/55076/
-
-It just aligns my personal interests w/ ongoing work done by other people,
-hch is working on mac80211 via driver and Greg has announced some time ago
-that he was going to work on proper rtl819x support.
-
--- 
-Bartlomiej Zolnierkiewicz
+  Luis
