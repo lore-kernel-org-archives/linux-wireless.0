@@ -1,76 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40658 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752824AbZK0JU6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2009 04:20:58 -0500
-Subject: Re: [RFC 1/2] wireless: add ieee80211_asmdu_to_8023s
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1259290376.13126.219.camel@debian>
-References: <1259215413-16753-1-git-send-email-yi.zhu@intel.com>
-	 <1259229943.32372.50.camel@johannes.local>
-	 <1259290376.13126.219.camel@debian>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-5jSaHKyn3w6O/zXVsiU5"
-Date: Fri, 27 Nov 2009 10:20:53 +0100
-Message-ID: <1259313653.5428.5.camel@johannes.local>
-Mime-Version: 1.0
+Received: from wal-mailgw1.qinetiq-na.com ([65.209.22.159]:1391 "EHLO
+	WALQNAOMAIL1T.qnao.net" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752268AbZKTN4d convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Nov 2009 08:56:33 -0500
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: Kernel oops in ath9k
+Date: Fri, 20 Nov 2009 08:56:09 -0500
+Message-ID: <712C9C7AD151C847B09F32EDA56A94CF0115C73C@WALQNAOMAIL1T.qnao.net>
+In-Reply-To: <1258687496.12864.35.camel@ct>
+References: <712C9C7AD151C847B09F32EDA56A94CF0115C555@WALQNAOMAIL1T.qnao.net> <1258687496.12864.35.camel@ct>
+From: "Douglass, Woodrow" <Woodrow.Douglass@QinetiQ-NA.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Cc: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Thanks for the quick reply Pavel! I've seen this Oops with kernel
+2.6.31.6, as well as with the  latest linux-wireless that I downloaded
+on the 18th of november. Also, it's interesting that the card is
+identified as having a AR9280 chipset, the website for the card
+(http://www.ubnt.com/products/sr7112.php) says the card has an AR9220
+chipset. Could this be causing the problem?
 
---=-5jSaHKyn3w6O/zXVsiU5
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I'm going to repost this to the ath9k mailing list you mentioned.
 
-On Fri, 2009-11-27 at 10:52 +0800, Zhu Yi wrote:
+Thanks again,
+Woody
 
-> > Also -- you lost the extra TX headroom which I think mac80211 as an AP
-> > requires since it could forward these frames? Or does that not happen?
-> > Not sure right now why that was there to start with.=20
->=20
-> Yes, I'd like to hear more feedback on this. I think it's a trade off
-> between performance optimization and clean interface. As we already use
-> dev_alloc_skb to reserve 32 bytes headroom, it should be enough for most
-> of the current drivers.=20
-
-Is it? I don't think so. Many drivers go up beyond that as far as I
-know. Then some do different things like putting it in a different DMA
-block.
-
-> While for those drivers really need a bigger
-> extra headroom and support Rx aggregation, this probably means
-> ieee80211_skb_resize. But the resize should always happen for every
-> packet from the IP stack, right?
-
-No, davem and I optimised that away a long time ago via using
-netdev->needed_headroom and netdev->needed_tailroom. It even works for
-bridges and their slave devices, iirc.
-
-johannes
-
---=-5jSaHKyn3w6O/zXVsiU5
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLD5nxAAoJEODzc/N7+QmaMXMP/ivFxRvFOrliLavKs28FbOld
-9gs8fitGvGrardeGbAE6lVTkBwR467FptG445kbv6wU/Vbs+SqcBnf9c+qFVrpxT
-PutuhaCzRBdR2NHV/eNOr/sh2SPU/tRLVX3fJCt5RVhsU/jmaK0L+ZZlNka3FwsV
-9+5mjQ56WHTWvE0qrs2YUMMvfoZDdipKjUIYNKPHZ8kLugSk6ayjpyU9EUPTwTo2
-+tr51GSsPXxO5pEHkYVhxkCAJTR5xg+vN5jGIoZy3GbKd+Ck0LydJnBkZyIfV/Vb
-UYZV4aaWa37LI0ajLK2fgHmoNv4+Z0eA145gJS6Nam/0367TZm7XjIc7zemrnqmy
-HRie8CWUrnPpYdeAEXVby6zeGFP6bFMdwnX5wYyv0Rosv8OHXLW+sPueT0flEpLL
-QFkyX76fl8JuAz4q7HJQRzzoTAco5e0EDNLv/CuN7W4EuInhDJRINpi3kToxFwJG
-WVCA9sgJK4LS2vqdegH3iZFjW0N96/IadVwhaTLESxT0K7iK+nQ5vjnnWYthLXQ0
-4JWtuYXw2f8PpjVVX2FcIqEXT0my+3cDuTMmEmo8N0nSCV+liLLzMT7PIra8X9O2
-BCyFAvq7K5G7wHpN4ODR6tOzo2rV93+X3Pw9G0O16h8V7Kxy510J0DW9Zz9bvpAJ
-/cHZm69Ss9Og6woB88oV
-=85wr
------END PGP SIGNATURE-----
-
---=-5jSaHKyn3w6O/zXVsiU5--
-
+> -----Original Message-----
+> From: Pavel Roskin [mailto:proski@gnu.org] 
+> Sent: Thursday, November 19, 2009 10:25 PM
+> To: Douglass, Woodrow
+> Cc: linux-wireless@vger.kernel.org
+> Subject: Re: Kernel oops in ath9k
+> 
+> On Thu, 2009-11-19 at 09:54 -0500, Douglass, Woodrow wrote:
+> > Hi all,
+> > 
+> > I'm not sure if this is the right place to post this, but I 
+> may have a 
+> > bug report for the ath9k driver.
+> 
+> You may want to post to ath9k-devel@lists.ath9k.org, as the 
+> problem seems to be specific to the Atheros driver.
+> 
+> > I'm running a single board computer with a 600Mhz celeron 
+> processor. 
+> > On the minipci bus I have a Ubiquiti SR71-12 802.11n card.
+> 
+> It would be helpful if you also specified the exact version 
+> of the kernel.
+> 
+> >  Also attached is
+> > a shell script with the commands I run to cause the oops. Note that 
+> > the first time the ifconfig line in this script is run, a 
+> "SIOCSIFFLAGS:
+> > Input/Output Error" is triggered, the kernel oops happens about 5 
+> > seconds after the ifconfig line is run a second time.
+> 
+> I can reproduce "Input/Output Error" with SR71-12, but not 
+> the oops with the current linux-wireless.
+> 
+> I know that it's caused by returning false in this code in 
+> file drivers/net/wireless/ath/ath9k/calib.c, function 
+> ath9k_hw_init_cal():
+> 
+>                 /* Poll for offset calibration complete */
+>                 if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, 
+> AR_PHY_AGC_CONTROL_CAL,
+>                                    0, AH_WAIT_TIMEOUT)) {
+>                         ath_print(common, ATH_DBG_CALIBRATE,
+>                                   "offset calibration failed to "
+>                                   "complete in 1ms; noisy 
+> environment?\n");
+>                         return false;
+>                 }
+> 
+> With full debugging (modprobe ath9k debug=0xffffffff), the 
+> kernel messages are (with some context):
+> 
+> ath: Reset TXQ, inactive queue: 7
+> ath: Reset TX queue: 8
+> ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
+> ath: Reset TX queue: 9
+> ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
+> ath: ah->misc_mode 0x4
+> ath: timeout (100000 us) on reg 0x9860: 0xdeadbeef & 
+> 0x00000001 != 0x00000000
+> ath: offset calibration failed to complete in 1ms; noisy environment?
+> ath: Unable to reset hardware; reset status -5 (freq 2412 MHz)
+> 
+> I have access to various Ubiquiti cards, but SR71-12 is the 
+> only one that fails.  I know that it works in Windows XP with 
+> the Ubiquiti driver for other SR71 cards (the inf file should 
+> be tweaked to recognize the revision of SR71-12).  That makes 
+> me think the problem is not in the hardware and not in the 
+> noisy environment.
+> 
+> ath9k identifies the card as:
+> 
+> phy0: Atheros AR9280 Rev:2 mem=0xffffc90010da0000, irq=18
+> 
+> # lspci -vnn -s 03:01.0
+> 03:01.0 Network controller [0280]: Atheros Communications 
+> Inc. AR922X Wireless Network Adapter [168c:0029] (rev 01)
+>         Subsystem: Device [0777:4002]
+>         Flags: bus master, 66MHz, medium devsel, latency 168, IRQ 18
+>         Memory at fe3f0000 (32-bit, non-prefetchable) [size=64K]
+>         Capabilities: [44] Power Management version 2
+>         Kernel driver in use: ath9k
+>         Kernel modules: ath9k
+> 
+> --
+> Regards,
+> Pavel Roskin
+> 
