@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:42376 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752222AbZKTOLI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 09:11:08 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH RFC] ssb: Generic SPROM override for devices without SPROM
-Date: Fri, 20 Nov 2009 15:11:09 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+Received: from xc.sipsolutions.net ([83.246.72.84]:53675 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752678AbZKTJJQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Nov 2009 04:09:16 -0500
+Subject: [PATCH] mac80211: fix rcu locking
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-References: <200911201212.19588.mb@bu3sch.de> <4B06A233.2070708@lwfinger.net>
-In-Reply-To: <4B06A233.2070708@lwfinger.net>
-MIME-Version: 1.0
-Message-Id: <200911201511.11042.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 20 Nov 2009 10:09:14 +0100
+Message-ID: <1258708154.7094.41.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 20 November 2009 15:05:39 Larry Finger wrote:
-> On 11/20/2009 05:12 AM, Michael Buesch wrote:
-> > This patch adds a generic mechanism for overriding the SPROM mechanism
-> > on devices without SPROM hardware.
-> > 
-> > There currently is a major problem with this:
-> > It tries to deduce a MAC address from various hardware parameters. But
-> > currently it will result in the same MAC address for machines of the same
-> > type. Does somebody have an idea of some device-instance specific serial
-> > number or something similar that could be hashed into the MAC?
-> 
-> You might look at the "root=" part of /proc/cmdline. Mine says
-> "root=/dev/disk/by-id/ata-TOSHIBA_MK2546GSX_18C2P0KCT-part1". That disk serial
-> number would certainly be unique. Even if it just said "root=/dev/sda1", it
-> would be repeatable.
+Add a missing rcu_read_unlock() before jumping out
+of the ieee80211_change_station() function in the
+error case.
 
-Ok, I think this is getting ugly :)
-The problem with all this is that if you change the harddisk, or change the partitioning,
-the wireless mac address would change. That would surely lead to confusion.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+*points finger at*
 
-I think we probably have to drop this patch and instead do a mechanism that
-fetches the sprom from userspace, if the card doesn't have one. This way we
-can have a script in userspace that generates the image based on the PCI ID
-information and just randomizes the MAC address once. The firmware loading
-mechanism would be useful for that.
-In case of an embedded device with the MAC in the nvram, the kernel can still
-override the mac address provided by userspace.
+  commit fed1557d868e3a15b8a10700f79353e1f362e3a1
+  Author: Felix Fietkau <nbd@openwrt.org>
+  Date:   Tue Nov 10 20:10:05 2009 +0100
 
--- 
-Greetings, Michael.
+      mac80211: implement support for 4-address frames for AP and client mode
+
+ net/mac80211/cfg.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+--- wireless-testing.orig/net/mac80211/cfg.c	2009-11-20 10:04:21.000000000 +0100
++++ wireless-testing/net/mac80211/cfg.c	2009-11-20 10:04:37.000000000 +0100
+@@ -818,8 +818,10 @@ static int ieee80211_change_station(stru
+ 		}
+ 
+ 		if (params->vlan->ieee80211_ptr->use_4addr) {
+-			if (vlansdata->u.vlan.sta)
++			if (vlansdata->u.vlan.sta) {
++				rcu_read_unlock();
+ 				return -EBUSY;
++			}
+ 
+ 			rcu_assign_pointer(vlansdata->u.vlan.sta, sta);
+ 		}
+
+
