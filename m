@@ -1,29 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:59081 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753062AbZKWSMh (ORCPT
+Received: from mail-gx0-f226.google.com ([209.85.217.226]:41556 "EHLO
+	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753696AbZKTOFg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 13:12:37 -0500
-Received: by ewy19 with SMTP id 19so2118321ewy.21
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 10:12:42 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 2/6] rt2x00: Remove unused variable frame_control from rt2x00mac_tx.
-Date: Mon, 23 Nov 2009 19:12:39 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-References: <1258960565-26736-1-git-send-email-gwingerde@gmail.com> <1258960565-26736-2-git-send-email-gwingerde@gmail.com> <1258960565-26736-3-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1258960565-26736-3-git-send-email-gwingerde@gmail.com>
+	Fri, 20 Nov 2009 09:05:36 -0500
+Received: by gxk26 with SMTP id 26so2970183gxk.1
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Nov 2009 06:05:42 -0800 (PST)
+Message-ID: <4B06A233.2070708@lwfinger.net>
+Date: Fri, 20 Nov 2009 08:05:39 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911231912.40056.IvDoorn@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+CC: bcm43xx-dev@lists.berlios.de,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Oncaphillis <oncaphillis@snafu.de>
+Subject: Re: [PATCH RFC] ssb: Generic SPROM override for devices without SPROM
+References: <200911201212.19588.mb@bu3sch.de>
+In-Reply-To: <200911201212.19588.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 23 November 2009, Gertjan van Wingerde wrote:
-> As additional fallout also remove the also unused variable ieee80211hdr.
+On 11/20/2009 05:12 AM, Michael Buesch wrote:
+> This patch adds a generic mechanism for overriding the SPROM mechanism
+> on devices without SPROM hardware.
 > 
-> Reported-by: Johannes Stezenbach <js@sig21.net>
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> There currently is a major problem with this:
+> It tries to deduce a MAC address from various hardware parameters. But
+> currently it will result in the same MAC address for machines of the same
+> type. Does somebody have an idea of some device-instance specific serial
+> number or something similar that could be hashed into the MAC?
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+You might look at the "root=" part of /proc/cmdline. Mine says
+"root=/dev/disk/by-id/ata-TOSHIBA_MK2546GSX_18C2P0KCT-part1". That disk serial
+number would certainly be unique. Even if it just said "root=/dev/sda1", it
+would be repeatable.
+
+Larry
+
