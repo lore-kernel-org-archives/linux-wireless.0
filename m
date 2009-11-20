@@ -1,47 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:43584 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932252AbZKMX54 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 18:57:56 -0500
-Received: by bwz27 with SMTP id 27so4039905bwz.21
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2009 15:58:00 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] ar9170: do not discard valuable DUPOFDM frames
-Date: Sat, 14 Nov 2009 00:57:58 +0100
-Cc: linville@tuxdriver.com
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200911140057.58302.chunkeey@googlemail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:38709 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755147AbZKTTpf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Nov 2009 14:45:35 -0500
+Subject: Re: Ad-hoc mode support
+From: Dan Williams <dcbw@redhat.com>
+To: "Antonio R. Costa" <costa.antonior@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <b0c88b10911200159p1c4a56a5m9d9ede81151a6fef@mail.gmail.com>
+References: <b0c88b10911200159p1c4a56a5m9d9ede81151a6fef@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 20 Nov 2009 11:45:54 -0800
+Message-Id: <1258746354.26965.77.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables the driver to process all incoming
-dupofdm-modulated frames when operating in HT40 mode.
+On Fri, 2009-11-20 at 10:59 +0100, Antonio R. Costa wrote:
+> Hi guys,
+>   I need some suggestions about choosing an USB dongle whose driver
+> supports ad-hoc mode under Linux.
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
-index 7e59b82..bd2a276 100644
---- a/drivers/net/wireless/ath/ar9170/main.c
-+++ b/drivers/net/wireless/ath/ar9170/main.c
-@@ -850,6 +850,7 @@ static int ar9170_rx_mac_status(struct ar9170 *ar,
- 		}
- 		break;
- 
-+	case AR9170_RX_STATUS_MODULATION_DUPOFDM:
- 	case AR9170_RX_STATUS_MODULATION_OFDM:
- 		switch (head->plcp[0] & 0xf) {
- 		case 0xb:
-@@ -897,8 +898,7 @@ static int ar9170_rx_mac_status(struct ar9170 *ar,
- 		status->flag |= RX_FLAG_HT;
- 		break;
- 
--	case AR9170_RX_STATUS_MODULATION_DUPOFDM:
--		/* XXX */
-+	default:
- 		if (ar9170_nag_limiter(ar))
- 			printk(KERN_ERR "%s: invalid modulation\n",
- 			       wiphy_name(ar->hw->wiphy));
+Try an rt73usb-driven device like the Hawking HWUG1A or any of the other
+adapters that are rt2x00 or zd1211 based.  I can't guarantee that all
+these below are actually zd1211b or rt73 (besides the Hawking which I
+have right next to me) but here's a list with cdw.com part #s from a
+while ago.
+
+SMC SMCWUSB-G EZ Connect g 2.4GHz 54Mbps Wireless USB 2.0 Adapter ($31.99)  zd1211b
+CDW Part:  	1031059
+Mfg. Part:  	SMCWUSB-G
+UNSPSC:  	43201409
+
+D-Link Wireless G USB Adapter ($49.99)  rt73usb
+CDW Part:  	1080593
+Mfg. Part:  	WUA-1340
+UNSPSC:  	43201409
+
+Linksys Compact Wireless-G USB Adapter ($59.99)  rt73usb
+CDW Part:  	919115
+Mfg. Part:  	WUSB54GC
+UNSPSC:  	43201409
+
+Hawking HWUG1A Wireless-G USB Adapter Product ID  ($62.99)
+CDW Part:  	1157994
+Mfg. Part:  	HWUG1A
+UNSPSC:  	43201409
+
+TRENDnet 802.11g Wireless & Bluetooth Combo USB Adapter  ($59.99)  zd1211
+CDW Part:  	936507
+Mfg. Part:  	TBW-103UB
+UNSPSC:  	43201409
+
+3Com OfficeConnect Wireless 54Mbps 11g Compact USB Adapter  ($53.99)  zd1211b
+CDW Part:  	698171
+Mfg. Part:  	3CRUSB10075
+UNSPSC:  	43201409
+
+Hawking HWUG1 Wireless-G USB Adapter  ($55.99)  rt2570
+CDW Part:  	1038208
+Mfg. Part:  	HWUG1
+UNSPSC:  	43201409
+
+Netopia 3-D Reach Wireless Adapter - network adapter  ($49.99)  rt71
+CDW Part:  	845451
+Mfg. Part:  	TER/GUSB-N1
+UNSPSC:  	43201409
+
+TRENDnet TEW 429UB Wireless USB Adapter  ($59.99)  zd1211b
+CDW Part:  	828030
+Mfg. Part:  	TEW-429UB
+UNSPSC:  	43201409
+
+ZyXEL ZyAIR AG-225H - network adapter  ($63.99)  zd1211  (USB, has A)
+CDW Part:  	864954
+Mfg. Part:  	AG-222H
+UNSPSC:  	43201409
+
+IOGEAR WiFi 54g USB Adapter  ($32.99)  zd1211
+CDW Part:  	785329
+Mfg. Part:  	GWU523
+UNSPSC:  	43201409
+
+
