@@ -1,37 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f182.google.com ([209.85.211.182]:64794 "EHLO
-	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751510AbZK0Rs6 (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:63569 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753404AbZKTXdu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2009 12:48:58 -0500
-Received: by ywh12 with SMTP id 12so1858215ywh.21
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2009 09:49:05 -0800 (PST)
-Message-ID: <4B10110E.8030402@lwfinger.net>
-Date: Fri, 27 Nov 2009 11:49:02 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 20 Nov 2009 18:33:50 -0500
+Received: by bwz27 with SMTP id 27so3835759bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Nov 2009 15:33:55 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Subject: Re: [RFC] p54: software hot-swap eeprom image
+Date: Sat, 21 Nov 2009 00:33:49 +0100
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Dan Williams <dcbw@redhat.com>
+References: <200911202027.13284.chunkeey@googlemail.com> <87y6m1aqro.fsf@purkki.valot.fi>
+In-Reply-To: <87y6m1aqro.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-CC: htl10@users.sourceforge.net, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: RTL8187 warnings on suspend
-References: <665313.63774.qm@web23102.mail.ird.yahoo.com> <200911270945.31125.herton@mandriva.com.br>
-In-Reply-To: <200911270945.31125.herton@mandriva.com.br>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200911210033.49887.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/27/2009 05:45 AM, Herton Ronaldo Krzesinski wrote:
+On Friday 20 November 2009 21:24:27 Kalle Valo wrote:
+> Christian Lamparter <chunkeey@googlemail.com> writes:
 > 
-> Also because we don't register assoc/radio leds, we end up now having to put
-> led switch code in rtl8187_stop, and assume led always on in tx/rx, this is
-> something now worth to look and fix.
+> > This (aggregated) patch adds a new sysfs file "eeprom_overwrite"
+> > which can be used to upload an customized eeprom image to the
+> > driver during normal operation.
+> >
+> > The old wlanX device will quickly vanish. And if the new EEPROM
+> > image passes all sanity checks the device will reappear.
+> >
+> > Hopefully, this proves to be an adequate solution for everyone
+> > with a bad/missing EEPROM data/chip.
 > 
-> A better patch is below, tested here now too, avoiding adding the extra stopped
-> flag:
+> Wasn't the concensus that request_firmware() will be used for this
+> kind of device specific data? stlc45xx had a similar sysfs interface
+> and people didn't like it. And I tend to agree with them, adding odd
+> sysfs files is not the best way to handle this.
 
-I cannot test with suspend to RAM as it fails on my computer even without
-rtl8187 being loaded. This patch survived my load/unload tests, but failed when
-I tried unplugging/plugging the device - it crashed KDE and I ended up at the X
-login screen. Without the patch, I have not seen that failure.
+no, I wanted something that could fix every possible problem.
 
-Larry
+I know of several different devices which could use more or
+less the same fixes, but we want to retain the mac-addresses, 
+baseband/mac processor info, PHYs and hw-layout related features
+(or in other words: 95% of the eeprom _other_ content).
+
+Here's *real* list of the problems:
+p54pci devices:
+1. CardBus Netgear WG511 (duette phy / ISL3880 mac)
+		- (no country code)
+		- (disabled antenna diversity)
+		- *swapped rssi<->dbm parameters*
+		  => affects internal calibration and link stability,
+			 renders dBm reading totally useless,
+
+2. miniPCI ZComax XG-601 (frisbee phy / ISL3880 mac)
+		- (no country code)
+		- (disabled antenna diversity)
+
+3. miniPCI ZComax XG-603 (frisbee phy / ISL3886 mac)
+		- (no country code)
+		- (disabled antenna diversity)
+		- *fixed* output power limits
+		  (the card _only_ transmits @ 14 dBm)
+
+4. miniPCI Allnet 271 (frisbee phy / ISL3880 mac)
+		- (no country code)
+		- (disabled antenna diversity)
+
+5. James' minipci Gigafast WF728-AEX (frisbee phy / isl3880 mac)
+		- (no country code)
+		- (disabled antenna diversity)
+		- incomplete phy calibration data
+		  => card only works on channel 1, 7, 12, 14
+
+p54usb devices:
+1. Dell 1450 USB (crossbow phy / ISL3892 mac)
+		- *wrong* country code
+		  (disables all non-US channels, even though it's OK to use them in the EU)
+	   	- disabled antenna diversity
+
+Or in other words, I haven't come a cross a single p54 device with
+a proper EEPROM since I picked up my first card 3/4 years ago...
+
+anyway, I had to think about it again:
+eeprom_overwrite is no longer meant to fully replace the onboard eeprom, or
+in p54spi's case the supplied (minimal) blob data. It should (not yet, but
+hopefully in the next RFC, if we all agree on something) merely allow
+users to fix the faulty pieces without altering the unaffected bits 
+(like volatile patch deltas for the static const eeprom).
+In fact I gave it a new name already: volatile_eeprom_patch :-D .
+
+I'm unsure about ethtool --eeprom-load. Because unlike --change-eeprom,
+we won't be able to mess around with low-level physical bits flipping
+in the EEPROM itself, so people might get confused why they _setting_
+doesn't stick over modules reloads/reboots etc...
+
+Regards,
+	Chr
+
+---
+damn bugs!
