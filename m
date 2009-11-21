@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:60153 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752154AbZK3WIz (ORCPT
+Received: from 42.mail-out.ovh.net ([213.251.189.42]:54085 "HELO
+	42.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751128AbZKUI5k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2009 17:08:55 -0500
-Date: Mon, 30 Nov 2009 14:08:21 -0800 (PST)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2009-11-30 (security fixes too)
-In-Reply-To: <20091130194706.GE21401@tuxdriver.com>
-Message-ID: <alpine.LFD.2.00.0911301406230.2872@localhost.localdomain>
-References: <20091130194706.GE21401@tuxdriver.com>
+	Sat, 21 Nov 2009 03:57:40 -0500
+Message-ID: <4B07A9F8.9050306@free.fr>
+Date: Sat, 21 Nov 2009 09:51:04 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Jeremy Moles <jeremy@emperorlinux.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: iwlagn + Ad-Hoc + 5Ghz
+References: <1258756647.2714.17.camel@localhost.localdomain> <43e72e890911201526y5b36328ft3a510e546508df66@mail.gmail.com>
+In-Reply-To: <43e72e890911201526y5b36328ft3a510e546508df66@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On Mon, 30 Nov 2009, John W. Linville wrote:
+Luis R. Rodriguez a écrit :
+> On Fri, Nov 20, 2009 at 2:37 PM, Jeremy Moles <jeremy@emperorlinux.com> wrote:
+>> Hello all! I have a group of machine here with an app that needs to set
+>> up an ad-hoc network in 5Ghz+ range. The machines themselves are all
+>> different (a Panasonic, a Dell, and a Lenovo) but they are all using
+>> 5100 cards, a 2.6.31 kernel, and the 2.6.31-rc7 driver from the website.
+>>
+>> Using the command "iw list" I can get a lot of helpful info, but I see
+>> "no IBSS" on any channel over 11, and I'm beginning to think that this
+>> just isn't supported on these cards yet.
 > 
-> If a) you have already taken Dave's latest pull request; and, b) you
-> don't want to wait for his next one to get the mac80211 security fixes
-> from Johannes, then you can at your discretion pull from here:
+> No, this has nothing to do not supporting IBSS but instead you should
+> read "no IBSS" more as a regulatory rule that implies you cannot use a
+> mode of operation that can beacon. We should at least rename this on
+> iw for now to make thins clearer.
 > 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git security
+> What you see should be part of the default rules embedded on the
+> device's EEPROM. Beaconing is allowed on channel 11 even on the most
+> restrictive regulatory domain and this is why the world regulatory
+> domain allows 1-11 to beacon too.
+> 
+> You should enable debugging on the driver upon load to confirm whether
+> this rule is coming from the EEPROM. Do you have
+> CONFIG_WIRELESS_OLD_REGULATORY? I think even that (by default it used
+> the US) enabled beaconing. Drivers can overrule things though if their
+> EEPROM mandates this.
+> 
+>   Luis
 
-Hmm. If I pull the 'security' branch, I get
+Hello,
 
- drivers/net/wireless/iwlwifi/iwl-tx.c |   10 +++++++++-
- include/net/mac80211.h                |    6 ++++++
- net/mac80211/agg-rx.c                 |    4 ----
- net/mac80211/agg-tx.c                 |   17 ++++++++---------
- net/mac80211/ht.c                     |    8 +++-----
- net/mac80211/ieee80211_i.h            |    2 ++
- 6 files changed, 28 insertions(+), 19 deletions(-)
+I got the same problem with Intel 4965 and Intel 5350 since those cards
+are using the same drivers. Like Luis mentionned, "no IBSS" should be
+read as "no beaconing authorized by local regulation". However, I think
+the iwlagn interpretation is a bit broad and such restrictions should be
+done by the CRDA framework instead of the driver itself.
 
-which does not match what you then descibe in the rest of the email 
-(changelog and diffstat).
+Here in France, IBSS is authorized on all channels. So I made a small
+patch to enable the EEPROM_CHANNEL_IBSS flag everywhere (in iwl-core.c
+and iwl-dev.h) and it just works.
 
-What you describe seems to be the master branch. 
+Will try to post the patch on Monday.
 
-So I'm not going to pull either, and will wait for confirmation of exactly 
-what you wanted me to pull.
-
-				Linus
+Regards,
+Benoit
