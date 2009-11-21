@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:64487 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750825AbZKGKxt (ORCPT
+Received: from lunatiki.de ([85.214.70.22]:56073 "EHLO
+	h1112006.serverkompetenz.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756590AbZKURvW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 05:53:49 -0500
-Received: by ewy3 with SMTP id 3so1795254ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2009 02:53:54 -0800 (PST)
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"libertas-dev\@lists.infradead.org"
-	<libertas-dev@lists.infradead.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: Re: [PATCH] Libertas: Fix issues while configuring host sleep
-References: <1257383195-951-1-git-send-email-bzhao@marvell.com>
-	<20091106201924.GH2782@tuxdriver.com>
-	<477F20668A386D41ADCC57781B1F704306E01F78F3@SC-VEXCH1.marvell.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sat, 07 Nov 2009 12:53:51 +0200
-In-Reply-To: <477F20668A386D41ADCC57781B1F704306E01F78F3@SC-VEXCH1.marvell.com> (Bing Zhao's message of "Fri\, 6 Nov 2009 13\:27\:50 -0800")
-Message-ID: <87hbt6fvwg.fsf@purkki.valot.fi>
+	Sat, 21 Nov 2009 12:51:22 -0500
+From: Patrick Grimm <patrick@lunatiki.de>
+To: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Subject: Re: iwlagn + Ad-Hoc + 5Ghz
+Date: Sat, 21 Nov 2009 18:21:53 +0100
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Jeremy Moles <jeremy@emperorlinux.com>,
+	linux-wireless@vger.kernel.org
+References: <1258756647.2714.17.camel@localhost.localdomain> <43e72e890911201526y5b36328ft3a510e546508df66@mail.gmail.com> <4B07A9F8.9050306@free.fr>
+In-Reply-To: <4B07A9F8.9050306@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200911211821.53377.patrick@lunatiki.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bing Zhao <bzhao@marvell.com> writes:
+Am Samstag, 21. November 2009 09:51:04 schrieb Benoit PAPILLAULT:
+> Hello,
+> 
+> I got the same problem with Intel 4965 and Intel 5350 since those cards
+> are using the same drivers. Like Luis mentionned, "no IBSS" should be
+> read as "no beaconing authorized by local regulation". However, I think
+> the iwlagn interpretation is a bit broad and such restrictions should be
+> done by the CRDA framework instead of the driver itself.
+> 
+> Here in France, IBSS is authorized on all channels. So I made a small
+> patch to enable the EEPROM_CHANNEL_IBSS flag everywhere (in iwl-core.c
+> and iwl-dev.h) and it just works.
+> 
+> Will try to post the patch on Monday.
+Hi
 
->> The reformatting is a distraction.  It would be better to do just
->> the fix part separately, especially if you are targetting 2.6.32.
->
-> Without the reformatting, the change would be like this:
->
-> +	if (wol->wolopts == 0)    criteria |= EHS_REMOVE_WAKEUP;
->
-> But the "checkpatch.pl" script gave me an error on that:
-> "ERROR: trailing statements should be on next line"
+I have set iw reg DE and the channel 12 and 13 have also the "no IBSS" Flag.
+Fix your Patch this too?
 
-You can do the reformatting in the first patch and the second patch
-would contain the actual fix.
+Greetings
+                       Patrick
 
--- 
-Kalle Valo
