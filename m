@@ -1,43 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:55557 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751536AbZKWTgj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 14:36:39 -0500
-Received: from list by lo.gmane.org with local (Exim 4.50)
-	id 1NCeiJ-0005fn-2i
-	for linux-wireless@vger.kernel.org; Mon, 23 Nov 2009 20:36:43 +0100
-Received: from lister.visitors.farnz.org.uk ([81.187.250.199])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 20:36:43 +0100
-Received: from simon by lister.visitors.farnz.org.uk with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 20:36:43 +0100
-To: linux-wireless@vger.kernel.org
-From: Simon Farnsworth <simon@farnz.org.uk>
-Subject: Re: HTC Hero cannot get an address from an ath5k AP
-Date: Mon, 23 Nov 2009 19:36:13 +0000
-Message-ID: <heeo7d$pg4$1@ger.gmane.org>
-References: <hebaok$2ip$1@ger.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mail-gx0-f226.google.com ([209.85.217.226]:43676 "EHLO
+	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756050AbZKUQCG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Nov 2009 11:02:06 -0500
+Received: by gxk26 with SMTP id 26so3737825gxk.1
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Nov 2009 08:02:12 -0800 (PST)
+Message-ID: <4B080EFA.6000300@w1an.in>
+Date: Sat, 21 Nov 2009 08:02:02 -0800
+From: Balaji Ravindran <b@w1an.in>
+MIME-Version: 1.0
+To: Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Kernel compilation Question
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 22 November 2009 12:28, Simon Farnsworth wrote:
+Hi all,
 
-> My hostapd configuration file is attached; I've checked that I've used the
-> correct WEP key. I can provide any more information that's needed. My
-> controller appears in lspci as:
-> 
-Just realised that I forgot the most important information:
+I tried compiling the wireless 2.6 kernel on my debian machine using
+make-kpkg and being lazy, i just did make defconfig, and saw that my
+compilation went fine without any issues, but i noticed that there was
+no ramdisk image that was generated when i installed the linux-image*.deb.
 
-My kernel is wireless-testing git master as of commit 
-fe1bafb0a2e95c9379df62e6ccc80713096c283c
+i did use --initrd option,
 
-My hostapd is git master as of commit 
-224f7bda793010087833899a5b203ac80a05b208
+Was it because, using make defconfig compiles everything on the kernel
+itself? Aren't there any 'm' option in defaults?(dunno just asking if
+this is the case)
 
--- 
-Simon
+or did i miss something out
 
+Please see if i missed some step
+
+Summary of steps performed.
+
+extracted wireless 2.6 source onto /usr/src
+
+created symbolic link
+
+make defconfig (i did not copy my existing config file to .config, i
+just wanted to try out make defconfig option)
+
+make-kpkg --initrd --append-to-version=foo --revision=bar kernel_image
+modules_image kernel_headers
+
+this created 2 files linux-image* and linux-headers*, i was missing the
+modules image also(but that was a second question)
+
+did dpkg -i linux-image*
+
+updated grub and placed files in /boot, but did not create initrd image.
+Why is that?
+
+Thanks
+
+Balaji R
