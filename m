@@ -1,78 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:48918 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753553AbZKHR7Z (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:63153 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752916AbZKUSxh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 12:59:25 -0500
-Received: by ewy3 with SMTP id 3so2495992ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 09:59:30 -0800 (PST)
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 1/9] rt2800: prepare for unification of EEPROM support code
-Date: Sun, 8 Nov 2009 18:41:20 +0100
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-References: <20091108133854.23584.86842.sendpatchset@localhost.localdomain> <4AF6D2A0.50204@gmail.com>
-In-Reply-To: <4AF6D2A0.50204@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200911081841.20717.bzolnier@gmail.com>
+	Sat, 21 Nov 2009 13:53:37 -0500
+Received: by yxe17 with SMTP id 17so3734587yxe.33
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Nov 2009 10:53:43 -0800 (PST)
+Subject: Re: Kernel compilation Question
+Mime-Version: 1.0 (Apple Message framework v1077)
+Content-Type: text/plain; charset=us-ascii
+From: Balaji Ravindran <b@w1an.in>
+In-Reply-To: <200911211910.40687.s.L-H@gmx.de>
+Date: Sat, 21 Nov 2009 10:46:28 -0800
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
+Message-Id: <B6B420E5-2AFB-46D7-B200-B081ACC4F783@w1an.in>
+References: <4B080EFA.6000300@w1an.in> <200911211910.40687.s.L-H@gmx.de>
+To: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 08 November 2009 15:16:00 Gertjan van Wingerde wrote:
-> On 11/08/09 14:38, Bartlomiej Zolnierkiewicz wrote:
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH] rt2800: prepare for unification of EEPROM support code
-> > 
-> > * Factor out common code from rt2800[pci,usb]_validate_eeprom()
-> >   to rt2800_validate_eeprom().
-> > 
-> > * Fix interface specific comment in rt2800[pci,usb]_validate_eeprom().
-> > 
-> > * Enclose interface specific code in rt2800[pci,usb]_init_eeprom()
-> >   with rt2x00_intf_is_[pci,usb]() checks.
-> > 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > ---
-> > on top of "rt2x00: Add dynamic detection of eFuse EEPROM in rt2800pci."
-> > patch from Gertjan
-> > 
-> >  drivers/net/wireless/rt2x00/rt2800pci.c |   51 ++++++++++++++++++--------------
-> >  drivers/net/wireless/rt2x00/rt2800usb.c |   40 +++++++++++++++----------
-> >  2 files changed, 55 insertions(+), 36 deletions(-)
-> > 
+Hi Stephen,
+
+Thanks for your reply. Wow, the four references that you provided makes lot more sense to me. I shall try using some examples in readme mentioned below.
+
+Thanks
+
+Balaji R
+On Nov 21, 2009, at 10:10 AM, Stefan Lippers-Hollmann wrote:
+
+> Hi
 > 
-> <snip>
+> On Saturday 21 November 2009, Balaji Ravindran wrote:
+>> Hi all,
+>> 
+>> I tried compiling the wireless 2.6 kernel on my debian machine using
+>> make-kpkg and being lazy, i just did make defconfig, and saw that my
+>> compilation went fine without any issues, but i noticed that there was
+>> no ramdisk image that was generated when i installed the linux-image*.deb.
 > 
-> > @@ -1234,8 +1241,10 @@ static int rt2800pci_init_eeprom(struct 
-> >  	    !rt2x00_rf(&rt2x00dev->chip, RF2750) &&
-> >  	    !rt2x00_rf(&rt2x00dev->chip, RF3020) &&
-> >  	    !rt2x00_rf(&rt2x00dev->chip, RF2020) &&
-> > -	    !rt2x00_rf(&rt2x00dev->chip, RF3021) &&
-> > -	    !rt2x00_rf(&rt2x00dev->chip, RF3022)) {
-> > +	    (rt2x00_intf_is_usb(rt2x00dev) ||
-> > +	     (rt2x00_intf_is_pci(rt2x00dev) &&
-> > +	      !rt2x00_rf(&rt2x00dev->chip, RF3021) &&
-> > +	      !rt2x00_rf(&rt2x00dev->chip, RF3022)))) {
-> >  		ERROR(rt2x00dev, "Invalid RF chipset detected.\n");
-> >  		return -ENODEV;
-> >  	}
+> For questions about Debian specific packaging helpers like 
+> kernel-package[1], you would better contact debian-user@lists.debian.org 
+> instead.
 > 
-> Can we leave this as-is. There are rt2800usb devices that support these RF chipsets as well (I am now the proud owner of such a device), so there is no
-> need to restrict the use of these RF chipsets to just PCI devices.
+>> i did use --initrd option,
+> [...]
+> 
+> Please read /usr/share/doc/kernel-package/README.gz [2], it explains which 
+> hook scripts you have to configure for generating an initramfs, --initrd is
+> not sufficient anymore[3] (since kernel-package 12.000).
+> 
+> Also consider that the Debian kernel team considers kernel-package to be 
+> deprecated in favour of the upstream kernel build system's own 
+> "make deb-pkg" target[4]. 
+> 
+> Unrelated to this topic, I'd suggest to take the configs of your running 
+> (distribution-) kernel as starting point, because this likely introduces 
+> the least amount of surprise (ide vs. libata storage layer, etc.).
+> 
+> Regards
+> 	Stefan Lippers-Hollmann
+> 
+> [1]	http://packages.debian.org/sid/kernel-package
+> [2]	http://git.debian.org/?p=users/srivasta/debian/kernel-package.git;a=blob;f=README (line 284ff)
+> [3]	http://www.golden-gryphon.com/blog/manoj//blog/2009/04/07/Not_your_father__39__s_kernel-package/
+> [4]	http://lists.debian.org/debian-kernel/2009/10/msg00613.html
 
-Please note that the patch doesn't change the current behavior of rt2800usb
-and for bisectability reasons I would strongly prefer for it to stay this way.
-
-> So, if we leave this as-is then the EEPROM unification ensures rt2800usb will "support" these RF chipsets as well.
-
-Lets work in incremental fashion -- when there is a need to do such change
-lets just do it against current tree and apply it as soon as possible (this
-way we won't be spending time on micro-decisions).
-
-IOW just make a post- (or pre-) patch and I'll deal with it.
-
-Thanks.
--- 
-Bartlomiej Zolnierkiewicz
