@@ -1,176 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:34905 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759553AbZKFSRI (ORCPT
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:52993 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755316AbZKVVRj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 13:17:08 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 00/41] rewritten rt2800 drivers
-Date: Fri, 6 Nov 2009 17:28:42 +0100
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <43e72e890911051306q632ad8ar833346f5a4ea60fa@mail.gmail.com> <4AF340CE.5000709@gmail.com>
-In-Reply-To: <4AF340CE.5000709@gmail.com>
+	Sun, 22 Nov 2009 16:17:39 -0500
 MIME-Version: 1.0
-Message-Id: <200911061728.42531.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="utf-8"
+In-Reply-To: <4B099624.4010106@vanwingerde.net>
+References: <30353c3d0911201730n4682ff7dy8225d475599eb9bb@mail.gmail.com>
+	 <4B0806EC.3050201@gmail.com>
+	 <30353c3d0911212309i20c9b9d3y821b508d8f1c81a4@mail.gmail.com>
+	 <4B0932C8.90208@gmail.com>
+	 <30353c3d0911220959l68cde41cpfd8c02c290497c30@mail.gmail.com>
+	 <4B09878D.8060708@gmail.com> <4B099624.4010106@vanwingerde.net>
+Date: Sun, 22 Nov 2009 16:17:43 -0500
+Message-ID: <30353c3d0911221317q4eb4d580r1551403e07657045@mail.gmail.com>
+Subject: Re: [rt2x00-users] ieee80211_tx_status: headroom too small
+From: David Ellingsworth <david@identd.dyndns.org>
+To: Gertjan van Wingerde <gertjan@vanwingerde.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 05 November 2009 22:17:02 Gertjan van Wingerde wrote:
-> On 11/05/09 22:06, Luis R. Rodriguez wrote:
-> > On Thu, Nov 5, 2009 at 12:59 PM, Gertjan van Wingerde
-> > <gwingerde@gmail.com> wrote:
-> >> On 11/04/09 21:19, Gertjan van Wingerde wrote:
-> >>> On Wed, Nov 4, 2009 at 6:31 PM, Bartlomiej Zolnierkiewicz
-> >>> <bzolnier@gmail.com> wrote:
-> >>>>
-> >>>> Hi,
-> >>>>
-> >>>> Here is the rt2800 rewrite in the form of patches (I've trimmed cc:
-> >>>> list considerably since I'm not sure whether most people really want
-> >>>> to see 40+ patches in their mailboxes).
-> >>>>
-> >>>>
-> >>>> There were some minor changes since yesterday:
-> >>>>
-> >>>> - two new patches were added at the top of tree fixing Kconfig help
-> >>>>  entries of rt2800[pci,usb] drivers to be more helpful and to prevent
-> >>>>  wasting people's time (I think that patch #1 should go to Linus'
-> >>>>  tree as soon as possible, ditto for patch #2 and net-next tree)
-> >>>>
-> >>>> - patch descriptions were improved for many patches
-> >>>>  (suggestion from Ingo)
-> >>>>
-> >>>> - rt2x00_intf_is_[pci,usb]() helpers for commonly used checks were
-> >>>>  added to "rt2x00: add support for different chipset interfaces" patch
-> >>>>  (suggestion from Ivo)
-> >>>>
-> >>>> - addition of separate rt2800 MAINTAINERS entry was dropped for now
-> >>>>  because it stirred needless controversies distracting people from
-> >>>>  technical issues (thanks to Julian Calaby for pointing this to me),
-> >>>>  the goal of change was to make sure that people won't bother busy
-> >>>>  rt2x00 maintainers about rt2800 tree so it is not a big deal anyway
-> >>>>
-> >>>>
-> >>>> The rt2800 tree has also been updated to reflect those changes
-> >>>> (old branch is still available as rt2800-v1 for reference):
-> >>>>
-> >>>> The following changes since commit fa867e7355a1bdcd9bf7d55ebe9296f5b9c4028a:
-> >>>>  Juuso Oikarinen (1):
-> >>>>        wl1271: Generalize command response reading
-> >>>>
-> >>>> are available in the git repository at:
-> >>>>
-> >>>>  git://git.kernel.org/pub/scm/linux/kernel/git/bart/misc.git rt2800
-> >>>>
-> >>>> Bartlomiej Zolnierkiewicz (41):
-> >>>>      rt2800usb: make Kconfig help entry more helpful
-> >>>>      rt2800pci: make Kconfig help entry more helpful
-> >>>>      rt2800usb: fix rt2800usb_rfcsr_read()
-> >>>>      rt2800pci: fix crypto in TX frame
-> >>>>      rt2800pci: fix comment about register access
-> >>>>      rt2800pci: fix comment about IV/EIV fields
-> >>>>      rt2x00: fix rt2x00usb_register_read() comment
-> >>>>      rt2800usb: use rt2x00usb_register_multiwrite() to set key entries
-> >>>>      rt2800usb: add rt2800_register_[read,write]() wrappers
-> >>>>      rt2800pci: add rt2800_register_[read,write]() wrappers
-> >>>>      rt2800usb: add rt2800_register_multi[read,write]() wrappers
-> >>>>      rt2800pci: add rt2800_register_multi[read,write]() wrappers
-> >>>>      rt2800usb: add rt2800_regbusy_read() wrapper
-> >>>>      rt2800pci: add rt2800_regbusy_read() wrapper
-> >>>>      rt2800usb: add rt2800_bbp_[read,write]() wrappers
-> >>>>      rt2800pci: add rt2800_bbp_[read,write]() wrappers
-> >>>>      rt2800usb: add rt2800_rfcsr_[read,write]() wrappers
-> >>>>      rt2800pci: add rt2800_rfcsr_[read,write]() wrappers
-> >>>>      rt2800usb: add rt2800_rf_[read,write]() wrappers
-> >>>>      rt2800pci: add rt2800_rf_[read,write]() wrappers
-> >>>>      rt2800usb: add rt2800_mcu_request() wrapper
-> >>>>      rt2800pci: add rt2800_mcu_request() wrapper
-> >>>>      rt2x00: add driver private field to struct rt2x00_dev
-> >>>>      rt2800usb: convert to use struct rt2800_ops methods
-> >>>>      rt2800pci: convert to use struct rt2800_ops methods
-> >>>>      rt2x00: fix rt2x00usb_register_multiwrite() arguments
-> >>>>      rt2x00: fix rt2x00usb_regbusy_read() arguments
-> >>>>      rt2x00: fix rt2x00pci_register_multi[read,write]() arguments
-> >>>>      rt2800: add rt2800lib.h
-> >>>>      rt2800usb: fix comments in rt2800usb.h
-> >>>>      rt2800usb: add RXINFO_DESC_SIZE definition
-> >>>>      rt2800: fix duplication in header files
-> >>>>      rt2800: fix comments in rt2800.h
-> >>>>      rt2x00: add support for different chipset interfaces
-> >>>>      rt2800: prepare for rt2800lib addition
-> >>>>      rt2800: add rt2800lib (part one)
-> >>>>      rt2x00: remove needless ifdefs from rt2x00leds.h
-> >>>>      rt2800: add rt2800lib (part two)
-> >>>>      rt2x00: move REGISTER_BUSY_* definitions to rt2x00.h
-> >>>>      rt2800: add rt2800lib (part three)
-> >>>>      rt2800: add rt2800lib (part four)
-> >>>>
-> >>>>  drivers/net/wireless/rt2x00/Kconfig      |   16 +-
-> >>>>  drivers/net/wireless/rt2x00/Makefile     |    1 +
-> >>>>  drivers/net/wireless/rt2x00/rt2800.h     | 1816 ++++++++++++++++++++++++++++
-> >>>>  drivers/net/wireless/rt2x00/rt2800lib.c  | 1817 ++++++++++++++++++++++++++++
-> >>>>  drivers/net/wireless/rt2x00/rt2800lib.h  |  134 +++
-> >>>>  drivers/net/wireless/rt2x00/rt2800pci.c  | 1908 +++---------------------------
-> >>>>  drivers/net/wireless/rt2x00/rt2800pci.h  | 1780 ----------------------------
-> >>>>  drivers/net/wireless/rt2x00/rt2800usb.c  | 1828 ++---------------------------
-> >>>>  drivers/net/wireless/rt2x00/rt2800usb.h  | 1818 +----------------------------
-> >>>>  drivers/net/wireless/rt2x00/rt2x00.h     |   43 +
-> >>>>  drivers/net/wireless/rt2x00/rt2x00leds.h |    4 -
-> >>>>  drivers/net/wireless/rt2x00/rt2x00pci.h  |   24 +-
-> >>>>  drivers/net/wireless/rt2x00/rt2x00usb.c  |    2 +-
-> >>>>  drivers/net/wireless/rt2x00/rt2x00usb.h  |   17 +-
-> >>>>  14 files changed, 4048 insertions(+), 7160 deletions(-)
-> >>>>  create mode 100644 drivers/net/wireless/rt2x00/rt2800.h
-> >>>>  create mode 100644 drivers/net/wireless/rt2x00/rt2800lib.c
-> >>>>  create mode 100644 drivers/net/wireless/rt2x00/rt2800lib.h
-> >>>>
-> >>>
-> >>> Hi Bart,
-> >>>
-> >>> Many thanks for these patches.
-> >>>
-> >>> So far I have been able to go through the first 30 patches of the
-> >>> series. I'll finish the other 11 tomorrow (when I'm back home and have
-> >>> better facilities to review these more elaborate patches of the
-> >>> series).
-> >>> They all look fine to me, I only had a comment for patch 10.
-> >>>
-> >>> I've sent my ACKs for the remaining 29 I reviewed.
-> >>>
-> >>> I guess Ivo still has to review them as well, as, so far, he has been
-> >>> the one of the rt2x00 project to give the final ACK for inclusion,
-> >>> unless he indicates that he is fine with my assessments.
-> >>>
-> >>> ---
-> >>> Gertjan
-> >>> rt2x00 developer
-> >>>
-> >>
-> >> OK. I have now completed my review of the remaining patches and have sent my ACKs for those.
-> > 
-> > A little summary would be nice for those who don't want to read single
-> > line acks/nacks.
-> > 
-> 
-> I'm sorry. In my mind the message was clear that I Acked all of the remaining patches in the series.
-> Apparently not :-(
-> 
-> So, basically, from my side all patches have been acked, with the exception of path 10 of the series (which was only a minor issue).
+On Sun, Nov 22, 2009 at 2:51 PM, Gertjan van Wingerde
+<gertjan@vanwingerde.net> wrote:
+> On 11/22/09 19:48, Gertjan van Wingerde wrote:
+>> On 11/22/09 18:59, David Ellingsworth wrote:
+>>> On Sun, Nov 22, 2009 at 7:47 AM, Gertjan van Wingerde
+>>> <gwingerde@gmail.com> wrote:
+>>>> On 11/22/09 08:09, David Ellingsworth wrote:
+>>>>> On Sat, Nov 21, 2009 at 10:27 AM, Gertjan van Wingerde
+>>>>> <gwingerde@gmail.com> wrote:
+>>>>>> On 11/21/09 02:30, David Ellingsworth wrote:
+>>>>>>> Wasn't sure where to send this, but with the latest 2.6.32-rc8-wl
+>>>>>>> kernel built from the wireless-testing repository I'm getting a number
+>>>>>>> of "ieee80211_tx_status: headroom too small" errors in my syslog. I'm
+>>>>>>> using the rt61pci driver in conjunction with hostap as a wpa2 secured
+>>>>>>> access point. The relevant information about my card from lspci is:
+>>>>>>>
+>>>>>>> 01:08.0 0280: 1814:0301
+>>>>>>>         Subsystem: 1458:e934
+>>>>>>>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop-
+>>>>>>> ParErr- Stepping- SERR+ FastB2B- DisINTx-
+>>>>>>>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort-
+>>>>>>> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>>>>>>         Latency: 64, Cache Line Size: 128 bytes
+>>>>>>>         Interrupt: pin A routed to IRQ 18
+>>>>>>>         Region 0: Memory at fe6f0000 (32-bit, non-prefetchable) [size=32K]
+>>>>>>>         Capabilities: [40] Power Management version 2
+>>>>>>>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
+>>>>>>> PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>>>>>>>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>>>>>>>         Kernel driver in use: rt61pci
+>>>>>>>
+>>>>>>> If you need any other information, I'll be happy to provide it.
+>>>>>>>
+>>>>>>
+>>>>>> Hi David,
+>>>>>>
+>>>>>> This seems to be caused by the rt2x00 driver not properly declaring its alignment
+>>>>>> maneuvring space properly, and thus it doesn't leave enough headroom left for
+>>>>>> copying to the monitor interface.
+>>>>>>
+>>>>>> Can you check whether the attached patch fixes the issue for you?
+>>>>>> Note: patch looks a bit bigger than it actually is due to indenting cleanups.
+>>>>>>
+>>>>>
+>>>>> Gertjan,
+>>>>>
+>>>>> I haven't really been able to test this. The kernel version I was
+>>>>> using at the time was 2.6.32-rc7-wl and not 2.6.32-rc8-wl. I'm rather
+>>>>> certain the patch will resolve the issue, but I've been unable to get
+>>>>> my wireless card to function properly with the latest 2.6.32-rc8-wl
+>>>>> master branch. I'm not entirely sure what changed since two days ago,
+>>>>> but I know the following:
+>>>>>
+>>>>> 1. 2.6.32-rc8 from Linus' master branch works fine but still exhibits
+>>>>> this issue. However, this patch will not apply on top of 2.6.32-rc8.
+>>>>>
+>>>>> 2. 2.6.32-rc7-wl(11/19/2009) worked fine with the exception of the
+>>>>> above mentioned error. Unable to test patch since I pulled all the
+>>>>> recent modifications down.
+>>>>> 3. 2.6.32-rc8-wl does not work at all for me, but patch does apply.
+>>>>>
+>>>>> I'm not entirely sure what the differences are between Linus' master
+>>>>> branch of 2.6.32-rc8 and the current 2.6.32-rc8-wl tree are or what
+>>>>> changes have been made on the wireless-testing master branch in the
+>>>>> last couple of days that are preventing me from fully testing this
+>>>>> patch.
+>>>>>
+>>>>> With the current wireless-testing master branch, 2.6.32-rc8-wl, with
+>>>>> and without the patch I can associate and authenticate with my AP but
+>>>>> am unable to do anything else. Any attempt to establish a wireless
+>>>>> connection thus dies while trying to obtain an ip address via DHCP.
+>>>>> Sadly, no errors are logged indicating what the cause of this problem
+>>>>> might be. Given that I've only seen these errors after establishing a
+>>>>> wireless connection, it's a little difficult for me to test without
+>>>>> being able to transmit any data.
+>>>>>
+>>>>> I don't know if it's worth the effort or not, but if this patch were
+>>>>> re-based against Linus' master branch I might be able to test it since
+>>>>> my AP at least works with 2.6.32-rc8.
+>>>>
+>>>> David,
+>>>>
+>>>> OK. Find attached the patch ported to Linus' tree. It should apply to
+>>>> any version of Linus' tree after 2.6.32-rc8.
+>>>> I think it is good to get real confirmation that the patch behaves
+>>>> as expected.
+>>>>
+>>>> ---
+>>>> Gertjan.
+>>>>
+>>>
+>>> Gertjan,
+>>>
+>>> The patch applies but doesn't quite fix the issue with the rt61pci
+>>> driver. With the patch applied, I still occasionally receive the error
+>>> message. I added a printk after the error to see how much was missing.
+>>> It indicates that skb_headroom is 12 and sizeof(*rthdr) is 13 when it
+>>> fails.
+>>>
+>>
+>> David,
+>>
+>> That is unexpected. This more starts to look like a problem that is
+>> outside of rt2x00.
+>>
+>> Would you be able to see what the available skb_headroom is when the TX
+>> frame enters the rt61pci driver, i.e. when the rt2x00mac_tx function is
+>> entered?
+>>
+>
+> (cc-ing Johannes, as this seems to be pointing towards mac80211 as well)
+>
+> David,
+>
+> I think I got figured out why the patch I sent didn't work. It seems mac80211
+> doesn't reserve headroom for both the driver requested space and the special
+> monitor interface header at the same time, but just for the maximum of the two.
+> This seems to be because it assumes that they are not needed at the same time.
+> However, this is not true for rt2x00, as it uses the headroom to align the frame
+> and never reclaims the used headroom (as the whole frame was moved forward in the
+> skb).
+>
+> The easy fix here is to let mac80211 reserve headroom for both numbers, instead of
+> just the maximum.
+>
+> Find the patch to achieve that attached.
+>
+> I think that with both the rt2x00 patch and this patch applied the problem should
+> be gone.
+>
+> ---
+> Gertjan.
+>
 
-Thanks a lot for quick reaction and review!
+Gertjan,
 
-I've updated relevant patches w/ your and Ivo's ACKs.
+>From what I can tell, the combination of both of these patches seems
+to correct the issue. I have not experienced the error after applying
+the patch to mac80211. Thanks for the help.
 
-I have also small process related suggestion: if possible please group ACKs
-together into the reply for 00/ mail (like you just did now), this way there
-is a higher chance that I will not lose some of ACKs or review comments.
+Regards,
 
-Thanks.
--- 
-Bartlomiej Zolnierkiewicz
+David Ellingsworth
