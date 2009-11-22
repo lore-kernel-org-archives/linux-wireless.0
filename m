@@ -1,38 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:48476 "EHLO ds10.mine.nu"
+Received: from bu3sch.de ([62.75.166.246]:47740 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751090AbZKOV1O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Nov 2009 16:27:14 -0500
-Message-ID: <4B007235.3050108@openwrt.org>
-Date: Sun, 15 Nov 2009 22:27:17 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1755316AbZKVRwS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Nov 2009 12:52:18 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] b43: Rewrite DMA Tx status handling sanity checks
+Date: Sun, 22 Nov 2009 18:52:17 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Lorenzo Nava <navalorenx@gmail.com>
+References: <200911192224.29491.mb@bu3sch.de>
+In-Reply-To: <200911192224.29491.mb@bu3sch.de>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath9k: fix massive rx packet loss issue
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200911221852.19143.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a regression introduced in
+On Thursday 19 November 2009 22:24:29 Michael Buesch wrote:
+> This rewrites the error handling policies in the TX status handler.
+> It tries to be error-tolerant as in "try hard to not crash the machine".
+> It won't recover from errors (that are bugs in the firmware or driver),
+> because that's impossible. However, it will return a more or less useful
+> error message and bail out. It also tries hard to use rate-limited messages
+> to not flood the syslog in case of a failure.
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-  commit 701396910a42dc69cf0284f4727e48f5e0f83151
-  [PATCH 18/29] ath9k: avoid the copy skb->cb on every RX'd skb
+So did somebody try this with opensource firmware, yet?
 
-With that change, the rx status in skb->cb was left uninitialized
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
-
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -203,6 +203,7 @@ int ath9k_cmn_rx_skb_preprocess(struct a
- {
- 	struct ath_hw *ah = common->ah;
- 
-+	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
- 	if (!ath9k_rx_accept(common, skb, rx_status, rx_stats, decrypt_error))
- 		return -EINVAL;
- 
-
+-- 
+Greetings, Michael.
