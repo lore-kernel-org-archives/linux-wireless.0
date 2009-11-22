@@ -1,79 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48637 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752361AbZKJBeA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 20:34:00 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, reinette.chatre@intel.com,
-	"John W. Linville" <linville@linville-t41.local>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [RFC] iwlagn: reenable AP mode
-Date: Mon,  9 Nov 2009 20:30:10 -0500
-Message-Id: <1257816610-26290-1-git-send-email-linville@linville-t41.local>
+Received: from ogre.sisk.pl ([217.79.144.158]:33456 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753963AbZKVOTU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Nov 2009 09:19:20 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [Bug #14267] Disassociating atheros wlan
+Date: Sun, 22 Nov 2009 15:19:54 +0100
+Cc: "Justin P. Mattock" <justinmattock@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Kristoffer Ericson <kristoffer.ericson@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <7qTjLRFNcGF.A.eSE.kCACLB@chimera> <4B08258E.9050607@gmail.com> <1258886823.7094.101.camel@johannes.local>
+In-Reply-To: <1258886823.7094.101.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200911221519.54284.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-Really just poking around here...am I on the right track?  Or is the
-iwlagn firmware supposed to handle buffering broadcast frames?
+On Sunday 22 November 2009, Johannes Berg wrote:
+> On Sat, 2009-11-21 at 09:38 -0800, Justin P. Mattock wrote:
+> 
+> > I did a bisect yesterday on this, and the results
+> > seemed to have worked over here by reverting:
+> > 
+> > 75e6c3b72b3ab01c47629f3fbd0fed4e6550bf3a
+> > cfg80211: lower dynamic PS timeout to 100ms
+> > 
+> > if Kristoffer can try reverting this one
+> > to see, then we can go from there.
+> 
+> So that just means the driver is broken. Please run
+> 
+> 	iwconfig wlan0 power off
+> 
+> to fix it then. And the patch below will disable it by default since
+> it's broken.
+> 
+> johannes
+> 
+> --- wireless-testing.orig/drivers/net/wireless/ath/ath9k/main.c	2009-11-22 11:44:41.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/ath/ath9k/main.c	2009-11-22 11:45:26.000000000 +0100
+> @@ -1893,6 +1893,8 @@ void ath_set_hw_capab(struct ath_softc *
+>  		BIT(NL80211_IFTYPE_ADHOC) |
+>  		BIT(NL80211_IFTYPE_MESH_POINT);
+>  
+> +	hw->wiphy->ps_default = false;
+> +
+>  	hw->queues = 4;
+>  	hw->max_rates = 4;
+>  	hw->channel_change_time = 5000;
 
-Looking at Johannes's docs, I don't see anything that seems
-to relate to "implement sequence numbering for frames with the
-IEEE80211_TX_CTL_ASSIGN_SEQ flag (or ask the hardware to do it for
-those frames)".  Anyone know how to ask the hardware to do that?
-
-I also don't see anything for "When sending probe response frames,
-the timestamp must be adjusted by the hardware or firmware."  But,
-I didn't look too hard -- maybe I missed it?
-
- drivers/net/wireless/iwlwifi/iwl-agn.c |   16 +++++++++++++---
- 1 files changed, 13 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 2bbd04d..d02874e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -558,9 +558,17 @@ static void iwl_bg_beacon_update(struct work_struct *work)
- {
- 	struct iwl_priv *priv =
- 		container_of(work, struct iwl_priv, beacon_update);
--	struct sk_buff *beacon;
-+	struct sk_buff *beacon, *skb;
- 
--	/* Pull updated AP beacon from mac80211. will fail if not in AP mode */
-+	/* Tx buffered bcast/mcast traffic. */
-+	skb = ieee80211_get_buffered_bc(priv->hw, priv->vif);
-+	while (skb) {
-+		if (iwl_tx_skb(priv, skb))
-+			dev_kfree_skb_any(skb);
-+		skb = ieee80211_get_buffered_bc(priv->hw, priv->vif);
-+	}
-+
-+	/* Pull updated AP beacon from mac80211. */
- 	beacon = ieee80211_beacon_get(priv->hw, priv->vif);
- 
- 	if (!beacon) {
-@@ -2316,7 +2324,8 @@ static int iwl_setup_mac(struct iwl_priv *priv)
- 	hw->flags = IEEE80211_HW_SIGNAL_DBM |
- 		    IEEE80211_HW_NOISE_DBM |
- 		    IEEE80211_HW_AMPDU_AGGREGATION |
--		    IEEE80211_HW_SPECTRUM_MGMT;
-+		    IEEE80211_HW_SPECTRUM_MGMT |
-+		    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING;
- 
- 	if (!priv->cfg->broken_powersave)
- 		hw->flags |= IEEE80211_HW_SUPPORTS_PS |
-@@ -2324,6 +2333,7 @@ static int iwl_setup_mac(struct iwl_priv *priv)
- 
- 	hw->sta_data_size = sizeof(struct iwl_station_priv);
- 	hw->wiphy->interface_modes =
-+		BIT(NL80211_IFTYPE_AP) |
- 		BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC);
- 
--- 
-1.6.2.5
-
+OK, so perhaps this patch should be applied until th ath9k driver is fixed?  Luis?  John?
