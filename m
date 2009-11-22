@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.klingt.org ([86.59.21.178]:37555 "EHLO klingt.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752477AbZK2R2Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Nov 2009 12:28:25 -0500
-Message-ID: <4B12AF38.4090609@klingt.org>
-Date: Sun, 29 Nov 2009 18:28:24 +0100
-From: Tim Blechmann <tim@klingt.org>
+Received: from sirokuusama.dnainternet.net ([83.102.40.133]:46164 "EHLO
+	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752906AbZKVSQm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Nov 2009 13:16:42 -0500
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 2/2] rndis_wlan: disable stall workaround
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 22 Nov 2009 20:16:47 +0200
+Message-ID: <20091122181647.24641.86877.stgit@fate.lan>
+In-Reply-To: <20091122181642.24641.73461.stgit@fate.lan>
+References: <20091122181642.24641.73461.stgit@fate.lan>
 MIME-Version: 1.0
-To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rt61pci bug
-References: <4AE43028.30703@klingt.org> <hcsfgm$bft$1@ger.gmane.org> 	<4B127E9E.1090008@klingt.org> <69e28c910911290859mc1da58ree7b2d3fa8dc371d@mail.gmail.com>
-In-Reply-To: <69e28c910911290859mc1da58ree7b2d3fa8dc371d@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig043904BB3525E705BB5D3F0C"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig043904BB3525E705BB5D3F0C
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Stall workaround doesn't work with bcm4320a devices like with bcm4320b. 
+This workaround actually causes more stalls/device freeze on bcm4320a.
+Therefore disable stall workaround by default.
 
-> Could you please try a bisect between 2.6.31 and 2.6.32-rc5? That
-> should reveal the faulty commit.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
-can you give me some hints, which source files, i should pay attention to=
-?
+ drivers/net/wireless/rndis_wlan.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-thnx, tim
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 8b09b04..2ecbedb 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -83,11 +83,11 @@ MODULE_PARM_DESC(roamdelta,
+ 	"set roaming tendency: 0=aggressive, 1=moderate, "
+ 				"2=conservative (default: moderate)");
+ 
+-static int modparam_workaround_interval = 500;
++static int modparam_workaround_interval;
+ module_param_named(workaround_interval, modparam_workaround_interval,
+ 							int, 0444);
+ MODULE_PARM_DESC(workaround_interval,
+-	"set stall workaround interval in msecs (default: 500)");
++	"set stall workaround interval in msecs (0=disabled) (default: 0)");
+ 
+ 
+ /* various RNDIS OID defs */
+@@ -2550,7 +2550,7 @@ static void rndis_device_poller(struct work_struct *work)
+ 	/* Workaround transfer stalls on poor quality links.
+ 	 * TODO: find right way to fix these stalls (as stalls do not happen
+ 	 * with ndiswrapper/windows driver). */
+-	if (priv->last_qual <= 25) {
++	if (priv->param_workaround_interval > 0 && priv->last_qual <= 25) {
+ 		/* Decrease stats worker interval to catch stalls.
+ 		 * faster. Faster than 400-500ms causes packet loss,
+ 		 * Slower doesn't catch stalls fast enough.
 
---=20
-tim@klingt.org
-http://tim.klingt.org
-
-The first question I ask myself when something doesn't seem to be
-beautiful is why do I think it's not beautiful. And very shortly you
-discover that there is no reason.
-  John Cage.
-
-
---------------enig043904BB3525E705BB5D3F0C
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEQEARECAAYFAksSrzgACgkQdL+4qsZfVsvU1ACNEfLfCuXAGIJXmZNI25wCzX7P
-AJ9cIAyw/vxZoCM9TFlRasUEYaUMWQ==
-=EYjB
------END PGP SIGNATURE-----
-
---------------enig043904BB3525E705BB5D3F0C--
