@@ -1,103 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:47316 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759947AbZKFWxE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 17:53:04 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Ben Cahill <ben.m.cahill@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 14/20] iwlwifi: Limit size of Event Log dump
-Date: Fri,  6 Nov 2009 14:52:57 -0800
-Message-Id: <1257547983-12590-15-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
-References: <1257547983-12590-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:38360 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755241AbZKVQIN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Nov 2009 11:08:13 -0500
+Message-ID: <4B096226.4040505@gmail.com>
+Date: Sun, 22 Nov 2009 08:09:10 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: Kristoffer Ericson <kristoffer.ericson@gmail.com>
+CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [Bug #14267] Disassociating atheros wlan
+References: <7qTjLRFNcGF.A.eSE.kCACLB@chimera>	<4B08258E.9050607@gmail.com>	<1258886823.7094.101.camel@johannes.local>	<200911221519.54284.rjw@sisk.pl> <20091122162131.0e2e60ef.kristoffer.ericson@gmail.com>
+In-Reply-To: <20091122162131.0e2e60ef.kristoffer.ericson@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
+Kristoffer Ericson wrote:
+> On Sun, 22 Nov 2009 15:19:54 +0100
+> "Rafael J. Wysocki"<rjw@sisk.pl>  wrote:
+>
+>    
+>> On Sunday 22 November 2009, Johannes Berg wrote:
+>>      
+>>> On Sat, 2009-11-21 at 09:38 -0800, Justin P. Mattock wrote:
+>>>
+>>>        
+>>>> I did a bisect yesterday on this, and the results
+>>>> seemed to have worked over here by reverting:
+>>>>
+>>>> 75e6c3b72b3ab01c47629f3fbd0fed4e6550bf3a
+>>>> cfg80211: lower dynamic PS timeout to 100ms
+>>>>
+>>>> if Kristoffer can try reverting this one
+>>>> to see, then we can go from there.
+>>>>          
+>>> So that just means the driver is broken. Please run
+>>>
+>>> 	iwconfig wlan0 power off
+>>>
+>>> to fix it then. And the patch below will disable it by default since
+>>> it's broken.
+>>>
+>>> johannes
+>>>
+>>> --- wireless-testing.orig/drivers/net/wireless/ath/ath9k/main.c	2009-11-22 11:44:41.000000000 +0100
+>>> +++ wireless-testing/drivers/net/wireless/ath/ath9k/main.c	2009-11-22 11:45:26.000000000 +0100
+>>> @@ -1893,6 +1893,8 @@ void ath_set_hw_capab(struct ath_softc *
+>>>   		BIT(NL80211_IFTYPE_ADHOC) |
+>>>   		BIT(NL80211_IFTYPE_MESH_POINT);
+>>>
+>>> +	hw->wiphy->ps_default = false;
+>>> +
+>>>   	hw->queues = 4;
+>>>   	hw->max_rates = 4;
+>>>   	hw->channel_change_time = 5000;
+>>>        
+>> OK, so perhaps this patch should be applied until th ath9k driver is fixed?  Luis?  John?
+>>      
+>
+> I applied the patch from johannes and it ended my issues atleast. I ran my machine for approx
+> 2 hours without seeing the disconnect issue (which I usually saw after 15-25min). Cant be 100% of course
+> but so far so good.
+>
+> I agree with Justin that we could wait until he gets a chance to test it. It should be accepted
+> after initial merge (and stable trees) after that I think. Rafael thoughts?
+>
+> Also, we should notify the atheros people so they could start fixing the driver (in a perfect world).
+>
+> Best wishes
+> Kristoffer Ericson
+>
+>
+>
+>    
+I can probably test it out, main problem
+is where I'm headed internet connection might
+not be strong enough to run any kind of media
+(hotel connections are only strong enough to retrieve e-mails
+streaming music/movies can be a bit much). luckily
+I'm away only for a few days.
 
-If device provides bad values for Event Log parameters (due to being asleep
-or SRAM corruption, etc.), the size can be very, very large (e.g. 0xa5a5a5a5),
-which can flood system log.
-
-Sanity-check capacity and next_entry values and limit to reasonable size dump.
-
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   15 +++++++++++++++
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   15 +++++++++++++++
- 2 files changed, 30 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index eff52b1..be99d19 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1703,6 +1703,9 @@ static void iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
- 	}
- }
- 
-+/* For sanity check only.  Actual size is determined by uCode, typ. 512 */
-+#define MAX_EVENT_LOG_SIZE (512)
-+
- void iwl_dump_nic_event_log(struct iwl_priv *priv)
- {
- 	u32 base;       /* SRAM byte address of event log header */
-@@ -1728,6 +1731,18 @@ void iwl_dump_nic_event_log(struct iwl_priv *priv)
- 	num_wraps = iwl_read_targ_mem(priv, base + (2 * sizeof(u32)));
- 	next_entry = iwl_read_targ_mem(priv, base + (3 * sizeof(u32)));
- 
-+	if (capacity > MAX_EVENT_LOG_SIZE) {
-+		IWL_ERR(priv, "Log capacity %d is bogus, limit to %d entries\n",
-+			capacity, MAX_EVENT_LOG_SIZE);
-+		capacity = MAX_EVENT_LOG_SIZE;
-+	}
-+
-+	if (next_entry > MAX_EVENT_LOG_SIZE) {
-+		IWL_ERR(priv, "Log write index %d is bogus, limit to %d\n",
-+			next_entry, MAX_EVENT_LOG_SIZE);
-+		next_entry = MAX_EVENT_LOG_SIZE;
-+	}
-+
- 	size = num_wraps ? capacity : next_entry;
- 
- 	/* bail out if nothing in log */
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 84dce68..75caa5f 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1604,6 +1604,9 @@ static void iwl3945_print_event_log(struct iwl_priv *priv, u32 start_idx,
- 	}
- }
- 
-+/* For sanity check only.  Actual size is determined by uCode, typ. 512 */
-+#define IWL3945_MAX_EVENT_LOG_SIZE (512)
-+
- void iwl3945_dump_nic_event_log(struct iwl_priv *priv)
- {
- 	u32 base;       /* SRAM byte address of event log header */
-@@ -1625,6 +1628,18 @@ void iwl3945_dump_nic_event_log(struct iwl_priv *priv)
- 	num_wraps = iwl_read_targ_mem(priv, base + (2 * sizeof(u32)));
- 	next_entry = iwl_read_targ_mem(priv, base + (3 * sizeof(u32)));
- 
-+	if (capacity > IWL3945_MAX_EVENT_LOG_SIZE) {
-+		IWL_ERR(priv, "Log capacity %d is bogus, limit to %d entries\n",
-+			capacity, IWL3945_MAX_EVENT_LOG_SIZE);
-+		capacity = IWL3945_MAX_EVENT_LOG_SIZE;
-+	}
-+
-+	if (next_entry > IWL3945_MAX_EVENT_LOG_SIZE) {
-+		IWL_ERR(priv, "Log write index %d is bogus, limit to %d\n",
-+			next_entry, IWL3945_MAX_EVENT_LOG_SIZE);
-+		next_entry = IWL3945_MAX_EVENT_LOG_SIZE;
-+	}
-+
- 	size = num_wraps ? capacity : next_entry;
- 
- 	/* bail out if nothing in log */
--- 
-1.5.6.3
-
+Justin P. Mattock
