@@ -1,47 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:49160 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751008AbZKCVNI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 16:13:08 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-Date: Tue, 3 Nov 2009 22:04:51 +0100
-Cc: netdev@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <1256886023.3555.5.camel@johannes.local> <200911032059.23409.bzolnier@gmail.com> <200911032132.31533.IvDoorn@gmail.com>
-In-Reply-To: <200911032132.31533.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Message-Id: <200911032204.51085.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Received: from lo.gmane.org ([80.91.229.12]:38303 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751946AbZKVM22 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Nov 2009 07:28:28 -0500
+Received: from list by lo.gmane.org with local (Exim 4.50)
+	id 1NCBYO-0000dR-0j
+	for linux-wireless@vger.kernel.org; Sun, 22 Nov 2009 13:28:32 +0100
+Received: from lister.visitors.farnz.org.uk ([81.187.250.199])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2009 13:28:31 +0100
+Received: from simon by lister.visitors.farnz.org.uk with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2009 13:28:31 +0100
+To: linux-wireless@vger.kernel.org
+From: Simon Farnsworth <simon@farnz.org.uk>
+Subject: HTC Hero cannot get an address from an ath5k AP
+Date: Sun, 22 Nov 2009 12:28:03 +0000
+Message-ID: <hebaok$2ip$1@ger.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 03 November 2009 21:32:30 Ivo van Doorn wrote:
+Hello,
 
-> > rt2800pci patch itself has been getting dust in your tree since at least
-> > April (it hasn't received any bigger updates since then)..
-> 
-> And how many times do I have to repeat the reason?
-> I think that after dozens of mails, the message should have been clear, especially
-> to somebody who apparently has been monitoring and worrying about the development
-> process for the last 2 years....
+I've recently acquired a HTC Hero, and thought I'd try and use it with my 
+ath5k based AP. It doesn't work, and I'm at a loss to debug it.
 
-Just for the record:
+The only hint I have is that neither of my (Linux-based) laptops can hold 
+association to the AP without traffic flowing continuously, which leads me 
+to suspect power saving issues.
 
-I got only interested in rt2x00 support around April this year (while I was
-doing major staging cleanups everywhere) and I was hearing back then that
-rt2800pci will be merged "really soon" and that the project is making "great
-progress"..
+My hostapd configuration file is attached; I've checked that I've used the 
+correct WEP key. I can provide any more information that's needed. My 
+controller appears in lspci as:
 
+02:04.0 Ethernet controller [0200]: Atheros Communications Inc. 
+AR5212/AR5213 Multiprotocol MAC/baseband processor [168c:0013] (rev 01)
+
+and in dmesg as:
+
+[572338.589520] ath5k phy0: Atheros AR5414 chip found (MAC: 0xa5, PHY: 0x61)
+
+I have:
+
+CONFIG_ATH_COMMON=m
+CONFIG_ATH_DEBUG=y
+CONFIG_ATH5K=m
+CONFIG_ATH5K_DEBUG=y
+
+set in my .config, and have debugfs available.
 -- 
-Bartlomiej Zolnierkiewicz
+Any help will be gratefully received,
+
+Simon Farnsworth
+
