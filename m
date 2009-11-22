@@ -1,60 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:41180 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759362AbZKFPye (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 10:54:34 -0500
-Received: from list by lo.gmane.org with local (Exim 4.50)
-	id 1N6R90-00009s-5X
-	for linux-wireless@vger.kernel.org; Fri, 06 Nov 2009 16:54:39 +0100
-Received: from host204-255-dynamic.1-87-r.retail.telecomitalia.it ([87.1.255.204])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 16:54:34 +0100
-Received: from carlo_parata by host204-255-dynamic.1-87-r.retail.telecomitalia.it with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 16:54:34 +0100
-To: linux-wireless@vger.kernel.org
-From: Carlo Parata <carlo_parata@hotmail.com>
-Subject: Re: [PATCH] Wifi led does not work on Acer Aspire One D250 (ath5k driver)
-Date: Fri, 6 Nov 2009 15:54:11 +0000 (UTC)
-Message-ID: <loom.20091106T165330-596@post.gmane.org>
-References: <loom.20091106T135746-452@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:58803 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754384AbZKVEXE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Nov 2009 23:23:04 -0500
+Received: by fxm5 with SMTP id 5so3686756fxm.28
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Nov 2009 20:23:08 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <70f6a1ed0911210845s5dd46374ie74e6e105433dcae@mail.gmail.com>
+References: <70f6a1ed0911210845s5dd46374ie74e6e105433dcae@mail.gmail.com>
+Date: Sun, 22 Nov 2009 04:16:01 +0000
+Message-ID: <3ace41890911212016x5d051f7fk7fa0db14189adf9f@mail.gmail.com>
+Subject: Re: Using wireless-testing tree
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Duy Nguyen <dnlove@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Carlo Parata <carlo_parata@...> writes:
+On Sat, Nov 21, 2009 at 4:45 PM, Duy Nguyen <dnlove@gmail.com> wrote:
 
-> 
-> With this patch, a Acer Aspire One D250 can turn on the wifi led. The array of
-> compatible devices in ath5k driver now includes the hardware present in this
-> computer, as well as the led pin and polarity.
-> 
-> --- ../led.c	2009-11-06 06:16:39.000000000 +0100
-> +++ ./drivers/net/wireless/ath/ath5k/led.c	2009-11-06 12:37:44.000000000 +0100
-> @@ -73,6 +73,8 @@
->  	{ ATH_SDEVICE(PCI_VENDOR_ID_HP, 0x0137b), ATH_LED(3, 1) },
->  	/* IBM-specific AR5212 (all others) */
->  	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5212_IBM), ATH_LED(0, 0) },
-> +        /* Acer Aspire One D250 AR5007EG */
-> +	{ PCI_VDEVICE(ATHEROS, 0x001c), ATH_LED(3, 1) },
->  	{ }
->  };
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@...
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+> 2) I have compat-wireless-2.6 tree in my wireless-testing tree.  I
+> still don't know how to create my own compat-wireless even after going
+> through the wiki online.
+> cd compat-wireless-2.6
+> make
+> but it complains about some errors.
 
+Updating compat-wireless is explained in one of the linuxwireless
+pages: In a nutshell, do something like this: (substituting the
+GIT_TREE value with your local wireless-testing checkout).
 
-Excuse me but it is the first post for me in this mailing list.
-How can I find out the subdevice of my wireless card?
-The device specifications shown by Windows XP are:
+export GIT_TREE="/home/Hin-Tak/git-stuff/wireless-testing/"
+./script/admin-refresh.sh
 
-PCI\VEN_168C&DEV_001C&SUBSYS_E00D105B&REV_01\4&192AC53F&0&00E0
-
-Thanks
-
+I don't know if using compat-wireless against wireless-testing kernel
+works... (they should be identical). But I know it is convenient to
+just build some drivers, so I hope it works.
