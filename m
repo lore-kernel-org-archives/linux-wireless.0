@@ -1,51 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:63257 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751564AbZKLSez convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 13:34:55 -0500
-Received: by fxm21 with SMTP id 21so2564138fxm.21
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 10:34:58 -0800 (PST)
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
+Received: from d1.icnet.pl ([212.160.220.21]:55146 "EHLO d1.icnet.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753499AbZKVAPN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Nov 2009 19:15:13 -0500
+From: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
+To: linux-wireless@vger.kernel.org
 Subject: Re: Please share info about power consumption characteristics of your USB adapter
-Date: Thu, 12 Nov 2009 19:34:15 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200911112219.08814.jkrzyszt@tis.icnet.pl> <200911121731.35069.jkrzyszt@tis.icnet.pl> <200911121811.34251.jkrzyszt@tis.icnet.pl>
-In-Reply-To: <200911121811.34251.jkrzyszt@tis.icnet.pl>
+Date: Sun, 22 Nov 2009 01:15:09 +0100
+References: <200911112219.08814.jkrzyszt@tis.icnet.pl>
+In-Reply-To: <200911112219.08814.jkrzyszt@tis.icnet.pl>
 MIME-Version: 1.0
-Message-Id: <200911121934.15989.bzolnier@gmail.com>
-Content-Type: Text/Plain;
+Content-Type: text/plain;
   charset="utf-8"
+Message-Id: <200911220115.10767.jkrzyszt@tis.icnet.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 12 November 2009 18:11:32 Janusz Krzysztofik wrote:
-> Thursday 12 November 2009 17:31:33 Janusz Krzysztofik napisał(a):
-> > Wednesday 11 November 2009 22:52:16 Bartlomiej Zolnierkiewicz napisał(a):
-> > > On Wednesday 11 November 2009 22:19:07 Janusz Krzysztofik wrote:
-> > > > Pentagram P 6132-08
-> > >
-> > > 450mA so you can cross this one out from your list.
-> >
-> > Dzięki.
-> >
-> > Gdyby podał mi Pan więcej danych: pasujący sterownik, identyfikator USB, to
-> > wpisałbym to do odpowiedniej tabelki, tak jak zrobiłem z danymi otrzymanymi
-> > od innych.
-> >
-> > Janusz
-> 
-> Sorry, I didn't inted to send that message to the list. I asked for more data 
-> (driver, USB ID) on Pentagram P 6132-08 to put it into the wiki.
+Wednesday 11 November 2009 22:19:07 Janusz Krzysztofik wrote:
+> Please anyone owning one of adapters listed below: if the adapter is
+> supported by linux-wireless, please check for MaxPower with lsusb -v and
+> give me the result. I am looking for an adapter with MaxPower less than
+> 300mA and would rather not buy them all to learn they all do not fit :-).
 
-USB IDs:
+Hi,
 
-  idVendor           0x148f Ralink Technology, Corp.      
-  idProduct          0x3070                               
+Thank you all who shared their adapter data. All info I got from you should 
+now be available in device tables on the linux-wireless wiki.
 
-and the driver is rt2800usb (or alternatively staging/rt2870sta).
+BTW, I didn't find what I was looking for. Now I'm going to investigate if I 
+could switch to using bluetooth networking, that seems less power hungry.
 
-Pozdrawiam.
--- 
-Bartlomiej Zolnierkiewicz
+Thanks,
+Janusz
