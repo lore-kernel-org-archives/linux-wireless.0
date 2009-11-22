@@ -1,104 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:58070 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757538AbZKJSeQ convert rfc822-to-8bit (ORCPT
+Received: from smtp6.freeserve.com ([193.252.22.190]:45123 "EHLO
+	smtp6.freeserve.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753136AbZKVTDr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 13:34:16 -0500
-Received: by ewy3 with SMTP id 3so329626ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2009 10:34:21 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH v2] rt2x00: Properly detect Ralink RT3070 devices.
-Date: Tue, 10 Nov 2009 19:34:19 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-References: <1257804992-7882-1-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1257804992-7882-1-git-send-email-gwingerde@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911101934.19300.IvDoorn@gmail.com>
+	Sun, 22 Nov 2009 14:03:47 -0500
+Date: Sun, 22 Nov 2009 19:03:53 +0000
+From: Chris Vine <chris@cvine.freeserve.co.uk>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: Fatal DMA error problem with netbook and BCM4312
+Message-ID: <20091122190353.06cfdab7@boulder.homenet>
+In-Reply-To: <20091121001512.02326eda@boulder.homenet>
+References: <4AFA09C8.4060602@gmail.com>
+	<200911131216.43704.mb@bu3sch.de>
+	<4AFD83CA.2050508@lwfinger.net>
+	<200911131836.26857.mb@bu3sch.de>
+	<4AFD9E20.3060501@gmail.com>
+	<4AFDD1C9.4050402@lwfinger.net>
+	<4AFDF68C.4040804@polymtl.ca>
+	<4AFE1E5F.9040009@lwfinger.net>
+	<4AFEFC2C.5030704@polymtl.ca>
+	<4B068ED9.5070107@lwfinger.net>
+	<20091120195834.334d8bc0@boulder.homenet>
+	<4B06F685.1020405@lwfinger.net>
+	<20091121001512.02326eda@boulder.homenet>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 09 November 2009, Gertjan van Wingerde wrote:
-> Allow rt2800usb to properly detect RT307X based devices, and set the appropriate chipset values.
+On Sat, 21 Nov 2009 00:15:12 +0000
+Chris Vine <chris@cvine.freeserve.co.uk> wrote:
+> WARM BOOT FROM KERNEL WITH WL MODULE INSTALLED
 > 
-> Signed-off-by: Gertjan van Wingede <gwingerde@gmail.com>
+> The patched kernel makes no change on a warm boot in the sense that
+> if I warm boot after initialising the wireless device with the wl
+> module then the b43 module appears to work correctly, both with and
+> without the patch applied.
+> 
+> On the same stress test as mentioned above, I have not been able to
+> induce the DMA errors nor kernel warnings.  It resolutely refuses to
+> do anything except work correctly.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+This is just to say that I have carried out further stress tests today
+after warm booting to an unpatched linux-2.6.32-rc8 kernel with the b43
+driver (on the assumption that unpatched is the least favourable case
+for the driver).  This is a warm reboot from a 2.6.31.6 kernel which had
+the wl driver installed.
 
-> ---
-> 
-> Fix the typo found by Gábor Stefanik.
-> 
-> ---
->  drivers/net/wireless/rt2x00/rt2800usb.c |   21 ++++++++++++++-------
->  drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
->  2 files changed, 15 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index d22ab64..bd2f6e6 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -790,16 +790,19 @@ static int rt2800usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
->  	 */
->  	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
->  	rt2800_register_read(rt2x00dev, MAC_CSR0, &reg);
-> -	rt2x00_set_chip(rt2x00dev, RT2870, value, reg);
-> +	rt2x00_set_chip_rf(rt2x00dev, value, reg);
->  
->  	/*
->  	 * The check for rt2860 is not a typo, some rt2870 hardware
->  	 * identifies itself as rt2860 in the CSR register.
->  	 */
-> -	if (!rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28600000) &&
-> -	    !rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28700000) &&
-> -	    !rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28800000) &&
-> -	    !rt2x00_check_rev(&rt2x00dev->chip, 0xffff0000, 0x30700000)) {
-> +	if (rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28600000) ||
-> +	    rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28700000) ||
-> +	    rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28800000)) {
-> +		rt2x00_set_chip_rt(rt2x00dev, RT2870);
-> +	} else if (rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x30700000)) {
-> +		rt2x00_set_chip_rt(rt2x00dev, RT3070);
-> +	} else {
->  		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
->  		return -ENODEV;
->  	}
-> @@ -809,7 +812,9 @@ static int rt2800usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
->  	    !rt2x00_rf(&rt2x00dev->chip, RF2720) &&
->  	    !rt2x00_rf(&rt2x00dev->chip, RF2750) &&
->  	    !rt2x00_rf(&rt2x00dev->chip, RF3020) &&
-> -	    !rt2x00_rf(&rt2x00dev->chip, RF2020)) {
-> +	    !rt2x00_rf(&rt2x00dev->chip, RF2020) &&
-> +	    !rt2x00_rf(&rt2x00dev->chip, RF3021) &&
-> +	    !rt2x00_rf(&rt2x00dev->chip, RF3022)) {
->  		ERROR(rt2x00dev, "Invalid RF chipset detected.\n");
->  		return -ENODEV;
->  	}
-> @@ -1028,7 +1033,9 @@ static int rt2800usb_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
->  		spec->num_channels = ARRAY_SIZE(rf_vals);
->  		spec->channels = rf_vals;
->  	} else if (rt2x00_rf(&rt2x00dev->chip, RF3020) ||
-> -		   rt2x00_rf(&rt2x00dev->chip, RF2020)) {
-> +		   rt2x00_rf(&rt2x00dev->chip, RF2020) ||
-> +		   rt2x00_rf(&rt2x00dev->chip, RF3021) ||
-> +		   rt2x00_rf(&rt2x00dev->chip, RF3022)) {
->  		spec->num_channels = ARRAY_SIZE(rf_vals_3070);
->  		spec->channels = rf_vals_3070;
->  	}
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> index fd13264..181496e 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> @@ -172,6 +172,7 @@ struct rt2x00_chip {
->  #define RT3052		0x3052	/* WSOC */
->  #define RT3090		0x3090	/* 2.4GHz PCIe */
->  #define RT2870		0x1600
-> +#define RT3070		0x1800
->  
->  	u16 rf;
->  	u32 rev;
+I have created an extended period of high speed traffic on my wireless
+lan and I cannot induce any errors at all with the b43 driver on a warm
+reboot.
+
+This makes me wonder whether the patch is just (partially) masking the
+problem rather than actually dealing with it.
+
+Chris
+
+PS   The wl driver was compiled from
+hybrid-portsrc-x86_32-v5.10.91.9.3.tar.gz available at
+http://www.broadcom.com/support/802.11/linux_sta.php .  (Note for
+anyone want to try this with a warm boot from 2.6.32, that this driver
+will not compile with 2.6.32 without patching the headers of one of the
+blob glue files as one of them fails to include linux/sched.h.)
 
 
