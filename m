@@ -1,156 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:5665 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932118AbZKDRdq (ORCPT
+Received: from mail-gx0-f226.google.com ([209.85.217.226]:48763 "EHLO
+	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752485AbZKVSLs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 12:33:46 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 04 Nov 2009 18:33:27 +0100
-Message-Id: <20091104173327.28463.25410.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-Subject: [PATCH 12/41] rt2800pci: add rt2800_register_multi[read,write]() wrappers
+	Sun, 22 Nov 2009 13:11:48 -0500
+Received: by gxk26 with SMTP id 26so4259415gxk.1
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2009 10:11:55 -0800 (PST)
+Message-ID: <4B097EE8.10902@lwfinger.net>
+Date: Sun, 22 Nov 2009 12:11:52 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: bcm43xx-dev@lists.berlios.de,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+Subject: Re: [PATCH] b43: Rewrite DMA Tx status handling sanity checks
+References: <200911192224.29491.mb@bu3sch.de> <200911221852.19143.mb@bu3sch.de>
+In-Reply-To: <200911221852.19143.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] rt2800pci: add rt2800_register_multi[read,write]() wrappers
+On 11/22/2009 11:52 AM, Michael Buesch wrote:
+> On Thursday 19 November 2009 22:24:29 Michael Buesch wrote:
+>> This rewrites the error handling policies in the TX status handler.
+>> It tries to be error-tolerant as in "try hard to not crash the machine".
+>> It won't recover from errors (that are bugs in the firmware or driver),
+>> because that's impossible. However, it will return a more or less useful
+>> error message and bail out. It also tries hard to use rate-limited messages
+>> to not flood the syslog in case of a failure.
+>>
+>> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> 
+> So did somebody try this with opensource firmware, yet?
 
-Part of preparations for later code unification.
+I'm testing now. So far, it has survived about 18 hours running tcpperf in one
+console, and a flood ping in another. It looks really good, but I want at least
+24 hours before committing.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800pci.c |   22 +++++++++++-----------
- drivers/net/wireless/rt2x00/rt2800pci.h |   15 +++++++++++++++
- 2 files changed, 26 insertions(+), 11 deletions(-)
-
-Index: b/drivers/net/wireless/rt2x00/rt2800pci.c
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -525,7 +525,7 @@ static void rt2800pci_config_wcid_attr(s
- 	    (crypto->cipher == CIPHER_AES))
- 		iveiv_entry.iv[3] |= 0x20;
- 	iveiv_entry.iv[3] |= key->keyidx << 6;
--	rt2x00pci_register_multiwrite(rt2x00dev, offset,
-+	rt2800_register_multiwrite(rt2x00dev, offset,
- 				      &iveiv_entry, sizeof(iveiv_entry));
- 
- 	offset = MAC_WCID_ENTRY(key->hw_key_idx);
-@@ -533,7 +533,7 @@ static void rt2800pci_config_wcid_attr(s
- 	memset(&wcid_entry, 0, sizeof(wcid_entry));
- 	if (crypto->cmd == SET_KEY)
- 		memcpy(&wcid_entry, crypto->address, ETH_ALEN);
--	rt2x00pci_register_multiwrite(rt2x00dev, offset,
-+	rt2800_register_multiwrite(rt2x00dev, offset,
- 				      &wcid_entry, sizeof(wcid_entry));
- }
- 
-@@ -557,7 +557,7 @@ static int rt2800pci_config_shared_key(s
- 		       sizeof(key_entry.rx_mic));
- 
- 		offset = SHARED_KEY_ENTRY(key->hw_key_idx);
--		rt2x00pci_register_multiwrite(rt2x00dev, offset,
-+		rt2800_register_multiwrite(rt2x00dev, offset,
- 					      &key_entry, sizeof(key_entry));
- 	}
- 
-@@ -613,7 +613,7 @@ static int rt2800pci_config_pairwise_key
- 		       sizeof(key_entry.rx_mic));
- 
- 		offset = PAIRWISE_KEY_ENTRY(key->hw_key_idx);
--		rt2x00pci_register_multiwrite(rt2x00dev, offset,
-+		rt2800_register_multiwrite(rt2x00dev, offset,
- 					      &key_entry, sizeof(key_entry));
- 	}
- 
-@@ -701,7 +701,7 @@ static void rt2800pci_config_intf(struct
- 		rt2x00_set_field32(&reg, MAC_ADDR_DW1_UNICAST_TO_ME_MASK, 0xff);
- 		conf->mac[1] = cpu_to_le32(reg);
- 
--		rt2x00pci_register_multiwrite(rt2x00dev, MAC_ADDR_DW0,
-+		rt2800_register_multiwrite(rt2x00dev, MAC_ADDR_DW0,
- 					      conf->mac, sizeof(conf->mac));
- 	}
- 
-@@ -711,7 +711,7 @@ static void rt2800pci_config_intf(struct
- 		rt2x00_set_field32(&reg, MAC_BSSID_DW1_BSS_BCN_NUM, 0);
- 		conf->bssid[1] = cpu_to_le32(reg);
- 
--		rt2x00pci_register_multiwrite(rt2x00dev, MAC_BSSID_DW0,
-+		rt2800_register_multiwrite(rt2x00dev, MAC_BSSID_DW0,
- 					      conf->bssid, sizeof(conf->bssid));
- 	}
- }
-@@ -1296,7 +1296,7 @@ static int rt2800pci_load_firmware(struc
- 	/*
- 	 * Write firmware to device.
- 	 */
--	rt2x00pci_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
-+	rt2800_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
- 				      data, len);
- 
- 	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000);
-@@ -1612,7 +1612,7 @@ static int rt2800pci_init_registers(stru
- 
- 	for (i = 0; i < 256; i++) {
- 		u32 wcid[2] = { 0xffffffff, 0x00ffffff };
--		rt2x00pci_register_multiwrite(rt2x00dev, MAC_WCID_ENTRY(i),
-+		rt2800_register_multiwrite(rt2x00dev, MAC_WCID_ENTRY(i),
- 					      wcid, sizeof(wcid));
- 
- 		rt2800_register_write(rt2x00dev, MAC_WCID_ATTR_ENTRY(i), 1);
-@@ -2276,10 +2276,10 @@ static void rt2800pci_write_beacon(struc
- 	 * Write entire beacon with descriptor to register.
- 	 */
- 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
--	rt2x00pci_register_multiwrite(rt2x00dev,
-+	rt2800_register_multiwrite(rt2x00dev,
- 				      beacon_base,
- 				      skbdesc->desc, skbdesc->desc_len);
--	rt2x00pci_register_multiwrite(rt2x00dev,
-+	rt2800_register_multiwrite(rt2x00dev,
- 				      beacon_base + skbdesc->desc_len,
- 				      entry->skb->data, entry->skb->len);
- 
-@@ -3010,7 +3010,7 @@ static void rt2800pci_get_tkip_seq(struc
- 	u32 offset;
- 
- 	offset = MAC_IVEIV_ENTRY(hw_key_idx);
--	rt2x00pci_register_multiread(rt2x00dev, offset,
-+	rt2800_register_multiread(rt2x00dev, offset,
- 				      &iveiv_entry, sizeof(iveiv_entry));
- 
- 	memcpy(&iveiv_entry.iv[0], iv16, sizeof(iv16));
-Index: b/drivers/net/wireless/rt2x00/rt2800pci.h
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800pci.h
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.h
-@@ -48,6 +48,21 @@ static inline void rt2800_register_write
- 	rt2x00pci_register_write(rt2x00dev, offset, value);
- }
- 
-+static inline void rt2800_register_multiread(struct rt2x00_dev *rt2x00dev,
-+					     const unsigned int offset,
-+					     void *value, const u16 length)
-+{
-+	rt2x00pci_register_multiread(rt2x00dev, offset, value, length);
-+}
-+
-+static inline void rt2800_register_multiwrite(struct rt2x00_dev *rt2x00dev,
-+					      const unsigned int offset,
-+					      const void *value,
-+					      const u16 length)
-+{
-+	rt2x00pci_register_multiwrite(rt2x00dev, offset, value, length);
-+}
-+
- /*
-  * RF chip defines.
-  *
+Larry
