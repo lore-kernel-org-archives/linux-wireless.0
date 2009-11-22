@@ -1,378 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53881 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758456AbZKYQv1 (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:33710 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753238AbZKVSsx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 11:51:27 -0500
-Message-Id: <20091125164821.184669673@sipsolutions.net>
-Date: Wed, 25 Nov 2009 17:46:17 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 3/5] mac80211: correctly place aMPDU RX reorder code
-References: <20091125164614.427835023@sipsolutions.net>
-Mime-Version: 1.0
+	Sun, 22 Nov 2009 13:48:53 -0500
+Message-ID: <4B09878D.8060708@gmail.com>
+Date: Sun, 22 Nov 2009 19:48:45 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: David Ellingsworth <david@identd.dyndns.org>
+CC: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [rt2x00-users] ieee80211_tx_status: headroom too small
+References: <30353c3d0911201730n4682ff7dy8225d475599eb9bb@mail.gmail.com>	 <4B0806EC.3050201@gmail.com>	 <30353c3d0911212309i20c9b9d3y821b508d8f1c81a4@mail.gmail.com>	 <4B0932C8.90208@gmail.com> <30353c3d0911220959l68cde41cpfd8c02c290497c30@mail.gmail.com>
+In-Reply-To: <30353c3d0911220959l68cde41cpfd8c02c290497c30@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As indicated by the comment, the aMPDU RX reorder code
-should logically be after ieee80211_rx_h_check(). The
-previous patch moved the code there, and this patch now
-hooks it up in that place by introducing a list of skbs
-that are then processed by the remaining handlers. The
-list may be empty if the function is buffering the skb
-to release it later.
+On 11/22/09 18:59, David Ellingsworth wrote:
+> On Sun, Nov 22, 2009 at 7:47 AM, Gertjan van Wingerde
+> <gwingerde@gmail.com> wrote:
+>> On 11/22/09 08:09, David Ellingsworth wrote:
+>>> On Sat, Nov 21, 2009 at 10:27 AM, Gertjan van Wingerde
+>>> <gwingerde@gmail.com> wrote:
+>>>> On 11/21/09 02:30, David Ellingsworth wrote:
+>>>>> Wasn't sure where to send this, but with the latest 2.6.32-rc8-wl
+>>>>> kernel built from the wireless-testing repository I'm getting a number
+>>>>> of "ieee80211_tx_status: headroom too small" errors in my syslog. I'm
+>>>>> using the rt61pci driver in conjunction with hostap as a wpa2 secured
+>>>>> access point. The relevant information about my card from lspci is:
+>>>>>
+>>>>> 01:08.0 0280: 1814:0301
+>>>>>         Subsystem: 1458:e934
+>>>>>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop-
+>>>>> ParErr- Stepping- SERR+ FastB2B- DisINTx-
+>>>>>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort-
+>>>>> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>>>>         Latency: 64, Cache Line Size: 128 bytes
+>>>>>         Interrupt: pin A routed to IRQ 18
+>>>>>         Region 0: Memory at fe6f0000 (32-bit, non-prefetchable) [size=32K]
+>>>>>         Capabilities: [40] Power Management version 2
+>>>>>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
+>>>>> PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>>>>>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>>>>>         Kernel driver in use: rt61pci
+>>>>>
+>>>>> If you need any other information, I'll be happy to provide it.
+>>>>>
+>>>>
+>>>> Hi David,
+>>>>
+>>>> This seems to be caused by the rt2x00 driver not properly declaring its alignment
+>>>> maneuvring space properly, and thus it doesn't leave enough headroom left for
+>>>> copying to the monitor interface.
+>>>>
+>>>> Can you check whether the attached patch fixes the issue for you?
+>>>> Note: patch looks a bit bigger than it actually is due to indenting cleanups.
+>>>>
+>>>
+>>> Gertjan,
+>>>
+>>> I haven't really been able to test this. The kernel version I was
+>>> using at the time was 2.6.32-rc7-wl and not 2.6.32-rc8-wl. I'm rather
+>>> certain the patch will resolve the issue, but I've been unable to get
+>>> my wireless card to function properly with the latest 2.6.32-rc8-wl
+>>> master branch. I'm not entirely sure what changed since two days ago,
+>>> but I know the following:
+>>>
+>>> 1. 2.6.32-rc8 from Linus' master branch works fine but still exhibits
+>>> this issue. However, this patch will not apply on top of 2.6.32-rc8.
+>>>
+>>> 2. 2.6.32-rc7-wl(11/19/2009) worked fine with the exception of the
+>>> above mentioned error. Unable to test patch since I pulled all the
+>>> recent modifications down.
+>>> 3. 2.6.32-rc8-wl does not work at all for me, but patch does apply.
+>>>
+>>> I'm not entirely sure what the differences are between Linus' master
+>>> branch of 2.6.32-rc8 and the current 2.6.32-rc8-wl tree are or what
+>>> changes have been made on the wireless-testing master branch in the
+>>> last couple of days that are preventing me from fully testing this
+>>> patch.
+>>>
+>>> With the current wireless-testing master branch, 2.6.32-rc8-wl, with
+>>> and without the patch I can associate and authenticate with my AP but
+>>> am unable to do anything else. Any attempt to establish a wireless
+>>> connection thus dies while trying to obtain an ip address via DHCP.
+>>> Sadly, no errors are logged indicating what the cause of this problem
+>>> might be. Given that I've only seen these errors after establishing a
+>>> wireless connection, it's a little difficult for me to test without
+>>> being able to transmit any data.
+>>>
+>>> I don't know if it's worth the effort or not, but if this patch were
+>>> re-based against Linus' master branch I might be able to test it since
+>>> my AP at least works with 2.6.32-rc8.
+>>
+>> David,
+>>
+>> OK. Find attached the patch ported to Linus' tree. It should apply to
+>> any version of Linus' tree after 2.6.32-rc8.
+>> I think it is good to get real confirmation that the patch behaves
+>> as expected.
+>>
+>> ---
+>> Gertjan.
+>>
+> 
+> Gertjan,
+> 
+> The patch applies but doesn't quite fix the issue with the rt61pci
+> driver. With the patch applied, I still occasionally receive the error
+> message. I added a printk after the error to see how much was missing.
+> It indicates that skb_headroom is 12 and sizeof(*rthdr) is 13 when it
+> fails.
+> 
 
-The only change needed to the RX data is that the crypto
-handler needs to clear the key that may be set from a
-previous loop iteration, and that not everything can be
-in the rx flags now.
+David,
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+That is unexpected. This more starts to look like a problem that is
+outside of rt2x00.
+
+Would you be able to see what the available skb_headroom is when the TX
+frame enters the rt61pci driver, i.e. when the rt2x00mac_tx function is
+entered?
+
 ---
-v2: ieee80211_rx_reorder_ampdu must not ignore the return
-    value of ieee80211_sta_manage_reorder_buf()
-
- net/mac80211/ieee80211_i.h |    1 
- net/mac80211/rx.c          |  168 +++++++++++++++++++++++++--------------------
- 2 files changed, 96 insertions(+), 73 deletions(-)
-
---- wireless-testing.orig/net/mac80211/rx.c	2009-11-25 16:23:44.000000000 +0100
-+++ wireless-testing/net/mac80211/rx.c	2009-11-25 17:43:56.000000000 +0100
-@@ -27,10 +27,6 @@
- #include "tkip.h"
- #include "wme.h"
- 
--static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
--					 struct sk_buff *skb,
--					 struct ieee80211_rate *rate);
--
- /*
-  * monitor mode reception
-  *
-@@ -555,7 +551,8 @@ static inline u16 seq_sub(u16 sq1, u16 s
- 
- static void ieee80211_release_reorder_frame(struct ieee80211_hw *hw,
- 					    struct tid_ampdu_rx *tid_agg_rx,
--					    int index)
-+					    int index,
-+					    struct sk_buff_head *frames)
- {
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_rate *rate = NULL;
-@@ -571,9 +568,9 @@ static void ieee80211_release_reorder_fr
- 	sband = hw->wiphy->bands[status->band];
- 	if (!(status->flag & RX_FLAG_HT))
- 		rate = &sband->bitrates[status->rate_idx];
--	__ieee80211_rx_handle_packet(hw, skb, rate);
- 	tid_agg_rx->stored_mpdu_num--;
- 	tid_agg_rx->reorder_buf[index] = NULL;
-+	skb_queue_tail(frames, skb);
- 
- no_frame:
- 	tid_agg_rx->head_seq_num = seq_inc(tid_agg_rx->head_seq_num);
-@@ -581,14 +578,15 @@ no_frame:
- 
- static void ieee80211_release_reorder_frames(struct ieee80211_hw *hw,
- 					     struct tid_ampdu_rx *tid_agg_rx,
--					     u16 head_seq_num)
-+					     u16 head_seq_num,
-+					     struct sk_buff_head *frames)
- {
- 	int index;
- 
- 	while (seq_less(tid_agg_rx->head_seq_num, head_seq_num)) {
- 		index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
- 							tid_agg_rx->buf_size;
--		ieee80211_release_reorder_frame(hw, tid_agg_rx, index);
-+		ieee80211_release_reorder_frame(hw, tid_agg_rx, index, frames);
- 	}
- }
- 
-@@ -608,7 +606,8 @@ static void ieee80211_release_reorder_fr
-  */
- static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
- 					     struct tid_ampdu_rx *tid_agg_rx,
--					     struct sk_buff *skb)
-+					     struct sk_buff *skb,
-+					     struct sk_buff_head *frames)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	u16 sc = le16_to_cpu(hdr->seq_ctrl);
-@@ -632,7 +631,8 @@ static bool ieee80211_sta_manage_reorder
- 	if (!seq_less(mpdu_seq_num, head_seq_num + buf_size)) {
- 		head_seq_num = seq_inc(seq_sub(mpdu_seq_num, buf_size));
- 		/* release stored frames up to new head to stack */
--		ieee80211_release_reorder_frames(hw, tid_agg_rx, head_seq_num);
-+		ieee80211_release_reorder_frames(hw, tid_agg_rx, head_seq_num,
-+						 frames);
- 	}
- 
- 	/* Now the new frame is always in the range of the reordering buffer */
-@@ -687,7 +687,8 @@ static bool ieee80211_sta_manage_reorder
- 				       "frames\n",
- 				       wiphy_name(hw->wiphy));
- #endif
--			ieee80211_release_reorder_frame(hw, tid_agg_rx, j);
-+			ieee80211_release_reorder_frame(hw, tid_agg_rx,
-+							j, frames);
- 
- 			/*
- 			 * Increment the head seq# also for the skipped slots.
-@@ -697,7 +698,7 @@ static bool ieee80211_sta_manage_reorder
- 			skipped = 0;
- 		}
- 	} else while (tid_agg_rx->reorder_buf[index]) {
--		ieee80211_release_reorder_frame(hw, tid_agg_rx, index);
-+		ieee80211_release_reorder_frame(hw, tid_agg_rx, index, frames);
- 		index =	seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
- 							tid_agg_rx->buf_size;
- 	}
-@@ -709,38 +710,39 @@ static bool ieee80211_sta_manage_reorder
-  * Reorder MPDUs from A-MPDUs, keeping them on a buffer. Returns
-  * true if the MPDU was buffered, false if it should be processed.
-  */
--static bool ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
--				       struct sk_buff *skb)
-+static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx,
-+				       struct sk_buff_head *frames)
- {
-+	struct sk_buff *skb = rx->skb;
-+	struct ieee80211_local *local = rx->local;
- 	struct ieee80211_hw *hw = &local->hw;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
--	struct sta_info *sta;
-+	struct sta_info *sta = rx->sta;
- 	struct tid_ampdu_rx *tid_agg_rx;
- 	u16 sc;
- 	int tid;
- 
- 	if (!ieee80211_is_data_qos(hdr->frame_control))
--		return false;
-+		goto dont_reorder;
- 
- 	/*
- 	 * filter the QoS data rx stream according to
- 	 * STA/TID and check if this STA/TID is on aggregation
- 	 */
- 
--	sta = sta_info_get(local, hdr->addr2);
- 	if (!sta)
--		return false;
-+		goto dont_reorder;
- 
- 	tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
- 
- 	if (sta->ampdu_mlme.tid_state_rx[tid] != HT_AGG_STATE_OPERATIONAL)
--		return false;
-+		goto dont_reorder;
- 
- 	tid_agg_rx = sta->ampdu_mlme.tid_rx[tid];
- 
- 	/* qos null data frames are excluded */
- 	if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
--		return false;
-+		goto dont_reorder;
- 
- 	/* new, potentially un-ordered, ampdu frame - process it */
- 
-@@ -755,10 +757,14 @@ static bool ieee80211_rx_reorder_ampdu(s
- 		ieee80211_sta_stop_rx_ba_session(sta->sdata, sta->sta.addr,
- 			tid, 0, WLAN_REASON_QSTA_REQUIRE_SETUP);
- 		dev_kfree_skb(skb);
--		return true;
-+		return;
- 	}
- 
--	return ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, skb);
-+	if (ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, skb, frames))
-+		return;
-+
-+ dont_reorder:
-+	__skb_queue_tail(frames, skb);
- }
- 
- static ieee80211_rx_result debug_noinline
-@@ -863,6 +869,9 @@ ieee80211_rx_h_decrypt(struct ieee80211_
- 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
- 		return RX_CONTINUE;
- 
-+	/* start without a key */
-+	rx->key = NULL;
-+
- 	if (rx->sta)
- 		stakey = rcu_dereference(rx->sta->key);
- 
-@@ -1815,7 +1824,7 @@ ieee80211_rx_h_data(struct ieee80211_rx_
- }
- 
- static ieee80211_rx_result debug_noinline
--ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx)
-+ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx, struct sk_buff_head *frames)
- {
- 	struct ieee80211_local *local = rx->local;
- 	struct ieee80211_hw *hw = &local->hw;
-@@ -1845,7 +1854,8 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_
- 				  TU_TO_EXP_TIME(tid_agg_rx->timeout));
- 
- 		/* release stored frames up to start of BAR */
--		ieee80211_release_reorder_frames(hw, tid_agg_rx, start_seq_num);
-+		ieee80211_release_reorder_frames(hw, tid_agg_rx, start_seq_num,
-+						 frames);
- 		kfree_skb(skb);
- 		return RX_QUEUED;
- 	}
-@@ -2168,8 +2178,11 @@ static void ieee80211_invoke_rx_handlers
- 					 struct sk_buff *skb,
- 					 struct ieee80211_rate *rate)
- {
-+	struct sk_buff_head reorder_release;
- 	ieee80211_rx_result res = RX_DROP_MONITOR;
- 
-+	__skb_queue_head_init(&reorder_release);
-+
- 	rx->skb = skb;
- 	rx->sdata = sdata;
- 
-@@ -2177,50 +2190,72 @@ static void ieee80211_invoke_rx_handlers
- 	do {				\
- 		res = rxh(rx);		\
- 		if (res != RX_CONTINUE)	\
--			goto rxh_done;  \
-+			goto rxh_next;  \
- 	} while (0);
- 
-+	/*
-+	 * NB: the rxh_next label works even if we jump
-+	 *     to it from here because then the list will
-+	 *     be empty, which is a trivial check
-+	 */
- 	CALL_RXH(ieee80211_rx_h_passive_scan)
- 	CALL_RXH(ieee80211_rx_h_check)
--	CALL_RXH(ieee80211_rx_h_decrypt)
--	CALL_RXH(ieee80211_rx_h_check_more_data)
--	CALL_RXH(ieee80211_rx_h_sta_process)
--	CALL_RXH(ieee80211_rx_h_defragment)
--	CALL_RXH(ieee80211_rx_h_ps_poll)
--	CALL_RXH(ieee80211_rx_h_michael_mic_verify)
--	/* must be after MMIC verify so header is counted in MPDU mic */
--	CALL_RXH(ieee80211_rx_h_remove_qos_control)
--	CALL_RXH(ieee80211_rx_h_amsdu)
-+
-+	ieee80211_rx_reorder_ampdu(rx, &reorder_release);
-+
-+	while ((skb = __skb_dequeue(&reorder_release))) {
-+		/*
-+		 * all the other fields are valid across frames
-+		 * that belong to an aMPDU since they are on the
-+		 * same TID from the same station
-+		 */
-+		rx->skb = skb;
-+
-+		CALL_RXH(ieee80211_rx_h_decrypt)
-+		CALL_RXH(ieee80211_rx_h_check_more_data)
-+		CALL_RXH(ieee80211_rx_h_sta_process)
-+		CALL_RXH(ieee80211_rx_h_defragment)
-+		CALL_RXH(ieee80211_rx_h_ps_poll)
-+		CALL_RXH(ieee80211_rx_h_michael_mic_verify)
-+		/* must be after MMIC verify so header is counted in MPDU mic */
-+		CALL_RXH(ieee80211_rx_h_remove_qos_control)
-+		CALL_RXH(ieee80211_rx_h_amsdu)
- #ifdef CONFIG_MAC80211_MESH
--	if (ieee80211_vif_is_mesh(&sdata->vif))
--		CALL_RXH(ieee80211_rx_h_mesh_fwding);
-+		if (ieee80211_vif_is_mesh(&sdata->vif))
-+			CALL_RXH(ieee80211_rx_h_mesh_fwding);
- #endif
--	CALL_RXH(ieee80211_rx_h_data)
--	CALL_RXH(ieee80211_rx_h_ctrl)
--	CALL_RXH(ieee80211_rx_h_action)
--	CALL_RXH(ieee80211_rx_h_mgmt)
-+		CALL_RXH(ieee80211_rx_h_data)
-+
-+		/* special treatment -- needs the queue */
-+		res = ieee80211_rx_h_ctrl(rx, &reorder_release);
-+		if (res != RX_CONTINUE)
-+			goto rxh_next;
-+
-+		CALL_RXH(ieee80211_rx_h_action)
-+		CALL_RXH(ieee80211_rx_h_mgmt)
- 
- #undef CALL_RXH
- 
-- rxh_done:
--	switch (res) {
--	case RX_DROP_MONITOR:
--		I802_DEBUG_INC(sdata->local->rx_handlers_drop);
--		if (rx->sta)
--			rx->sta->rx_dropped++;
--		/* fall through */
--	case RX_CONTINUE:
--		ieee80211_rx_cooked_monitor(rx, rate);
--		break;
--	case RX_DROP_UNUSABLE:
--		I802_DEBUG_INC(sdata->local->rx_handlers_drop);
--		if (rx->sta)
--			rx->sta->rx_dropped++;
--		dev_kfree_skb(rx->skb);
--		break;
--	case RX_QUEUED:
--		I802_DEBUG_INC(sdata->local->rx_handlers_queued);
--		break;
-+ rxh_next:
-+		switch (res) {
-+		case RX_DROP_MONITOR:
-+			I802_DEBUG_INC(sdata->local->rx_handlers_drop);
-+			if (rx->sta)
-+				rx->sta->rx_dropped++;
-+			/* fall through */
-+		case RX_CONTINUE:
-+			ieee80211_rx_cooked_monitor(rx, rate);
-+			break;
-+		case RX_DROP_UNUSABLE:
-+			I802_DEBUG_INC(sdata->local->rx_handlers_drop);
-+			if (rx->sta)
-+				rx->sta->rx_dropped++;
-+			dev_kfree_skb(rx->skb);
-+			break;
-+		case RX_QUEUED:
-+			I802_DEBUG_INC(sdata->local->rx_handlers_queued);
-+			break;
-+		}
- 	}
- }
- 
-@@ -2494,20 +2529,7 @@ void ieee80211_rx(struct ieee80211_hw *h
- 		return;
- 	}
- 
--	/*
--	 * In theory, the block ack reordering should happen after duplicate
--	 * removal (ieee80211_rx_h_check(), which is an RX handler). As such,
--	 * the call to ieee80211_rx_reorder_ampdu() should really be moved to
--	 * happen as a new RX handler between ieee80211_rx_h_check and
--	 * ieee80211_rx_h_decrypt. This cleanup may eventually happen, but for
--	 * the time being, the call can be here since RX reorder buf processing
--	 * will implicitly skip duplicates. We could, in theory at least,
--	 * process frames that ieee80211_rx_h_passive_scan would drop (e.g.,
--	 * frames from other than operational channel), but that should not
--	 * happen in normal networks.
--	 */
--	if (!ieee80211_rx_reorder_ampdu(local, skb))
--		__ieee80211_rx_handle_packet(hw, skb, rate);
-+	__ieee80211_rx_handle_packet(hw, skb, rate);
- 
- 	rcu_read_unlock();
- 
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-11-25 16:23:43.000000000 +0100
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-11-25 16:24:18.000000000 +0100
-@@ -164,6 +164,7 @@ typedef unsigned __bitwise__ ieee80211_r
- #define IEEE80211_RX_RA_MATCH		BIT(1)
- #define IEEE80211_RX_AMSDU		BIT(2)
- #define IEEE80211_RX_FRAGMENTED		BIT(3)
-+/* only add flags here that do not change with subframes of an aMPDU */
- 
- struct ieee80211_rx_data {
- 	struct sk_buff *skb;
-
+Gertjan.
 
