@@ -1,88 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:42168 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755263AbZKKMWT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 07:22:19 -0500
-Message-ID: <4AFAAC7F.8000903@openwrt.org>
-Date: Wed, 11 Nov 2009 13:22:23 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] iw: add a command for moving a STA into an AP VLAN
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:58574 "EHLO
+	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757275AbZKWVpS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2009 16:45:18 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH v2 8/8] rt2x00: Properly request tx headroom for alignment operations.
+Date: Mon, 23 Nov 2009 22:44:54 +0100
+Message-Id: <1259012694-14869-9-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1259012694-14869-8-git-send-email-gwingerde@gmail.com>
+References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com>
+ <1259012694-14869-2-git-send-email-gwingerde@gmail.com>
+ <1259012694-14869-3-git-send-email-gwingerde@gmail.com>
+ <1259012694-14869-4-git-send-email-gwingerde@gmail.com>
+ <1259012694-14869-5-git-send-email-gwingerde@gmail.com>
+ <1259012694-14869-6-git-send-email-gwingerde@gmail.com>
+ <1259012694-14869-7-git-send-email-gwingerde@gmail.com>
+ <1259012694-14869-8-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
+Current rt2x00 drivers may result in a "ieee80211_tx_status: headroom too
+small" error message when a frame needs to be properly aligned before
+transmitting it.
+This is because the space needed to ensure proper alignment isn't
+requested from mac80211.
+Fix this by adding sufficient amount of alignment space to the amount
+of headroom requested for TX frames.
 
---- a/station.c
-+++ b/station.c
-@@ -196,7 +196,7 @@ COMMAND(station, del, "<MAC address>",
- 	NL80211_CMD_DEL_STATION, 0, CIB_NETDEV, handle_station_get,
- 	"Remove the given station entry (use with caution!)");
+Reported-by: David Ellingsworth <david@identd.dyndns.org>
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h    |    6 ++++++
+ drivers/net/wireless/rt2x00/rt2x00dev.c |   12 +++++++++++-
+ 2 files changed, 17 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 4d841c0..dcfc8c2 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -113,6 +113,12 @@
+ 	(  ((unsigned long)((__skb)->data + (__header))) & 3 )
  
--static int handle_station_set(struct nl80211_state *state,
-+static int handle_station_set_plink(struct nl80211_state *state,
- 			      struct nl_cb *cb,
- 			      struct nl_msg *msg,
- 			      int argc, char **argv)
-@@ -241,9 +241,56 @@ static int handle_station_set(struct nl8
- 	return -ENOBUFS;
- }
- COMMAND(station, set, "<MAC address> plink_action <open|block>",
--	NL80211_CMD_SET_STATION, 0, CIB_NETDEV, handle_station_set,
-+	NL80211_CMD_SET_STATION, 0, CIB_NETDEV, handle_station_set_plink,
- 	"Set mesh peer link action for this station (peer).");
+ /*
++ * Constants for extra TX headroom for alignment purposes.
++ */
++#define RT2X00_ALIGN_SIZE	4 /* Only whole frame needs alignment */
++#define RT2X00_L2PAD_SIZE	8 /* Both header & payload need alignment */
++
++/*
+  * Standard timing and size defines.
+  * These values should follow the ieee80211 specifications.
+  */
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 06c43ca..265e66d 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -686,7 +686,17 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	/*
+ 	 * Initialize extra TX headroom required.
+ 	 */
+-	rt2x00dev->hw->extra_tx_headroom = rt2x00dev->ops->extra_tx_headroom;
++	rt2x00dev->hw->extra_tx_headroom =
++		max_t(unsigned int, IEEE80211_TX_STATUS_HEADROOM,
++		      rt2x00dev->ops->extra_tx_headroom);
++
++	/*
++	 * Take TX headroom required for alignment into account.
++	 */
++	if (test_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags))
++		rt2x00dev->hw->extra_tx_headroom += RT2X00_L2PAD_SIZE;
++	else if (test_bit(DRIVER_REQUIRE_DMA, &rt2x00dev->flags))
++		rt2x00dev->hw->extra_tx_headroom += RT2X00_ALIGN_SIZE;
  
-+static int handle_station_set_vlan(struct nl80211_state *state,
-+			      struct nl_cb *cb,
-+			      struct nl_msg *msg,
-+			      int argc, char **argv)
-+{
-+	unsigned char mac_addr[ETH_ALEN];
-+	unsigned long sta_vlan = 0;
-+	char *err = NULL;
-+
-+	if (argc < 3)
-+		return 1;
-+
-+	if (mac_addr_a2n(mac_addr, argv[0])) {
-+		fprintf(stderr, "invalid mac address\n");
-+		return 2;
-+	}
-+	argc--;
-+	argv++;
-+
-+	if (strcmp("vlan", argv[0]) != 0)
-+		return 1;
-+	argc--;
-+	argv++;
-+
-+	sta_vlan = strtoul(argv[0], &err, 0);
-+	if (err && *err) {
-+		fprintf(stderr, "invalid vlan id\n");
-+		return 2;
-+	}
-+	argc--;
-+	argv++;
-+
-+	if (argc)
-+		return 1;
-+
-+	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
-+	NLA_PUT_U32(msg, NL80211_ATTR_STA_VLAN, sta_vlan);
-+
-+	return 0;
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+COMMAND(station, set, "<MAC address> vlan <ifindex>",
-+	NL80211_CMD_SET_STATION, 0, CIB_NETDEV, handle_station_set_vlan,
-+	"Set an AP VLAN for this station.");
-+
-+
- static int handle_station_dump(struct nl80211_state *state,
- 			       struct nl_cb *cb,
- 			       struct nl_msg *msg,
+ 	/*
+ 	 * Register HW.
+-- 
+1.6.5.3
+
