@@ -1,57 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:42286 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755970AbZKDNDx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 08:03:53 -0500
-Date: Wed, 4 Nov 2009 14:03:54 +0100 (CET)
-From: Jiri Kosina <jkosina@suse.cz>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Luis Correia <luis.f.correia@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-In-Reply-To: <20091102211629.GA1322@ucw.cz>
-Message-ID: <alpine.LRH.2.00.0911041403480.31913@twin.jikos.cz>
-References: <1256886023.3555.5.camel@johannes.local> <20091030110616.GB6150@ff.dom.local> <20091030150223.GA2586@tuxdriver.com> <20091102091038.GA9044@elte.hu> <1257153807.3555.173.camel@johannes.local> <20091102100702.GA16963@elte.hu> <20091102170114.GE14046@tuxdriver.com>
- <efe7343f0911020932l21a570c8u9478568329d38e2c@mail.gmail.com> <20091102211629.GA1322@ucw.cz>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from xc.sipsolutions.net ([83.246.72.84]:60368 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756841AbZKWLNK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2009 06:13:10 -0500
+Subject: Re: [PATCH] mwl8k: split driver by chipset
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20091123110211.GS20214@mail.wantstofly.org>
+References: <1258931158.12095.33.camel@localhost.localdomain>
+	 <20091123110211.GS20214@mail.wantstofly.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-oHWuxFzG4lAfEXszxybR"
+Date: Mon, 23 Nov 2009 12:13:09 +0100
+Message-ID: <1258974789.7094.162.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2 Nov 2009, Pavel Machek wrote:
 
-> > I've searched on my GMail archives and the only patch Bart has
-> > provided so far for the rt2x00 project is this:
-> > 
-> > [PATCH] MAINTAINERS: rt2x00 list is moderated
-> > 
-> > Which, while technically correct, adds nothing to the project.
-> > 
-> > So, I will personally continue to ignore Bart's comments, regards and
-> > rants, until he provides patches for rt2x00 that actually make the
-> > driver better.
-> 
-> Well, he provided review feedback... he should be thanked for that,
-> not flamed for it.
+--=-oHWuxFzG4lAfEXszxybR
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-He has actually written real patches (and quite non-trivial both in amount 
-and in functionality), see
+On Mon, 2009-11-23 at 12:02 +0100, Lennert Buytenhek wrote:
 
-	http://lkml.org/lkml/2009/11/3/372
+> I was wondering if we should really make the support for each chip a
+> different kernel module as you did in your patch, but then I figured
+> that this might be a good way to let the user choose whether to load
+> AP or STA firmware if we have both available, which was still one of
+> the unsolved problems.  I.e., make mwl8366_ap and mwl8366_sta, and
+> then let the user choose which one to load.  Or is there a better way
+> of doing this?
 
-But yes, he got flamed for this for some odd reason. I got the impression 
-that the community around rt2x00 doesn't like (or understand) the way how 
-opensource development happens.
+Try to load both at probe() time (via the async firmware loading
+interface that I fixed up recently [1], that patch will be in .33), and
+hang on to the firmware images [2]. Register the wiphy with appropriate
+bits depending on which firmware files you found (and fail + unbind if
+you didn't find any, cf. my ar9170 patch [3]). Then you can upload the
+right firmware depending on the type of interface the user is adding.
 
--- 
-Jiri Kosina
-SUSE Labs, Novell Inc.
+(Maybe, if needed for EMBEDDED, allow the user to configure which
+firmware you load.)
+
+johannes
+
+[1] http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-firmware=
+-class-nowait.patch
+[2] that is what my patch allows doing
+[3] http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-ar9170-f=
+irmware-request-async.patch
+
+--=-oHWuxFzG4lAfEXszxybR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLCm5BAAoJEODzc/N7+Qma5eQQAIpjsWbpyc3Kgrng33r+WYkV
+HYjPObDLJRhv6/+fg0l4Oio6+TDdcomFL/o7DhmW3XFOSWkvGV/U/u/06D+U+sfK
+yl4aaLxHDBJMIxbQFainssFRosZqKj/9cNH6pfSTIjoFGaMzJ0N/8cQjDGsRB58Q
+oEVPtB9wBo3vJBiD2VKKmf7Ic+tnpGclH1IWkVylZTXrcwmbgMXmr4D8QkcDwI5T
+8EXdF4xjRditaRZbo614dg7ig6TFOpYPTwSYo0ShnRppD15jq0D8KgPAhLwzjFYX
+128TCxeoxLr1225JMRm9wXXbACLa4wuhL2qpTwEmBU0I24dwrfECKCI50pKpVK/e
+CT8UETO6ypqBbg42J65waI/tvhJtYb3uHnN7ZTQ4HDe/8VSRU6Y9tGsMuj/0Vnnt
+4y+OGGGtuVPO+8nnDy0MNUuNTozwqRMBFMrCQQu/OzaYnR+YWfuueFp8mZ5RagrG
+f3/QrbLM/YclMPpN436lU8VxMIqFAUN8EPpeooy9vKPGJmDIiJ5DOCOm9TFBM2k2
++J+yx6Hol7awcr623XPq9XH3ERDLK1jWr+0Di5yW7D3QCvYxWMRsXCO3LpyLs2UK
+lH1niQqX/ohUbltOCSR1GY4I1X5HqSKAsU6WFAontUIISFBJGUjnnU+C0IV1jTQ5
+obxQLEpKoD6jcH9XZ4jQ
+=dRAJ
+-----END PGP SIGNATURE-----
+
+--=-oHWuxFzG4lAfEXszxybR--
 
