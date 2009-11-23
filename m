@@ -1,56 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:51014 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759562AbZKFUdi (ORCPT
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:60949 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757328AbZKWWSm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 15:33:38 -0500
-Received: by bwz27 with SMTP id 27so1592652bwz.21
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 12:33:43 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: James Grossmann <cctsurf@gmail.com>
-Subject: Re: Prism54/p54pci
-Date: Fri, 6 Nov 2009 21:33:38 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <167ae39b0910071400n218d3d9ey7711b1011f290a73@mail.gmail.com> <200911062014.19363.chunkeey@googlemail.com> <167ae39b0911061137m72a1e7e9le0e2b59b64be2821@mail.gmail.com>
-In-Reply-To: <167ae39b0911061137m72a1e7e9le0e2b59b64be2821@mail.gmail.com>
+	Mon, 23 Nov 2009 17:18:42 -0500
+Received: by fxm5 with SMTP id 5so5222291fxm.28
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 14:18:47 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200911062133.38842.chunkeey@googlemail.com>
+In-Reply-To: <1259012694-14869-2-git-send-email-gwingerde@gmail.com>
+References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com>
+	 <1259012694-14869-2-git-send-email-gwingerde@gmail.com>
+Date: Mon, 23 Nov 2009 17:18:47 -0500
+Message-ID: <30353c3d0911231418s4aedc5c3vc9cfead334a02c3f@mail.gmail.com>
+Subject: Re: [rt2x00-users] [PATCH v2 1/8] rt2x00: Only initialize HT on
+	rt2800 devices that support it.
+From: David Ellingsworth <david@identd.dyndns.org>
+To: rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 06 November 2009 20:37:00 James Grossmann wrote:
-> Doing it from the console doesn't seem to give a kernel oops... it
-> just locks up the computer such that I can't even change the caps lock
-> status. It starts the connection, and then the activity light on the
-> card goes on and the computer is locked up.
-well, there are other ways to capture the oops, but I don't think
-your laptop has a serial console or a real reset button?!
+On Mon, Nov 23, 2009 at 4:44 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> Some RT28xx/RT30xx devices don't support 802.11n, when they are combined with
+> the RF2020 chipset. Ensure that HT is disabled for these devices.
+>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    6 +++++-
+>  1 files changed, 5 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index e94f1e1..fcd0c88 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -2072,7 +2072,11 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+>        /*
+>         * Initialize HT information.
+>         */
+> -       spec->ht.ht_supported = true;
+> +       if (!rt2x00_rf(chip, RF2020))
+> +               spec->ht.ht_supported = true;
+> +       else
+> +               spec->ht.ht_supported = false;
+> +
 
-does your caps lock & scroll lock LED blink? (they should)
+Maybe I'm the only one, but I hate conditional statements with no
+meaning. Maybe this instead?
 
-does the kernel reboot itself (after ~10 seconds), if you add 
-panic=10
-to the kernel-parameters in grub configuration?
+spec->ht.ht_supported = !rt2x00_rf(chip, RF2020);
 
-do you have some sort of bootsplash or frame buffer console?
-(e.g. KMS/vesa/etc...) because these advanced features can make it
-really hard to get the message to the screen before it goes black.
-
-is there nothing in /var/log/syslog after a crash?
-
-> With regard to the losing connection/timing out, I'm seeing that a
-> fair amount, when I have data transferring (watching an active ssh
-> connection, or streaming audio), and especially when I'm not doing
-> anything...
-well, there could be several different things, I hope you're using
-services like Network-manager, wpa_supplicant to manage your connection.
-Because they will automatically reconnect as soon as the link dies.
-
-what could be interesting: iw dev wlanX scan / iwlist wlanX scan
-dump from your AP... especially the TSF/tsf value, 
-(it's a hexadecimal value which acts like a uptime for the AP)
-
-Regards,
-	Chr
+>        spec->ht.cap =
+>            IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
+>            IEEE80211_HT_CAP_GRN_FLD |
+> --
+> 1.6.5.3
+>
+>
+> _______________________________________________
+> users mailing list
+> users@rt2x00.serialmonkey.com
+> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
+>
