@@ -1,74 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:63900 "EHLO
-	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754080AbZK2Lr4 (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:41130 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756788AbZKWVXB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Nov 2009 06:47:56 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Alban Browaeys <prahal@yahoo.com>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH v2] rt2x00: Further L2 padding fixes.
-Date: Sun, 29 Nov 2009 12:47:58 +0100
-Message-Id: <1259495278-2264-1-git-send-email-gwingerde@gmail.com>
+	Mon, 23 Nov 2009 16:23:01 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 5/8] wl1271: set radio and general params also for PLT
+Date: Mon, 23 Nov 2009 23:22:16 +0200
+Message-Id: <1259011339-28149-6-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1259011339-28149-1-git-send-email-luciano.coelho@nokia.com>
+References: <1259011339-28149-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix a couple of more bugs in the L2 padding code:
-1. Compute the amount of L2 padding correctly (in 3 places).
-2. Trim the skb correctly when the L2 padding has been applied.
+We need to set the radio and general parameters when starting PLT mode.  This
+patch adds calls to TEST_CMD_INI_RADIO_PARAMS and
+TEST_CMD_INIT_GENERAL_PARAMS when initializing PLT mode.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
+ drivers/net/wireless/wl12xx/wl1271_init.c |    4 ++--
+ drivers/net/wireless/wl12xx/wl1271_init.h |    2 ++
+ drivers/net/wireless/wl12xx/wl1271_main.c |   11 +++++++++++
+ 3 files changed, 15 insertions(+), 2 deletions(-)
 
-v2:
-- Fix bug detect by Benoit Papillault.
-
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index b8f0954..9082fad 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -181,7 +181,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
- 	unsigned int frame_length = skb->len;
- 	unsigned int header_align = ALIGN_SIZE(skb, 0);
- 	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
--	unsigned int l2pad = 4 - (payload_align - header_align);
-+	unsigned int l2pad = (4 - (header_length & 3)) & 3;
- 
- 	if (header_align == payload_align) {
- 		/*
-@@ -216,6 +216,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
- 		memmove(skb->data + header_length + l2pad,
- 			skb->data + header_length + l2pad + payload_align,
- 			frame_length - header_length);
-+		skb_trim(skb, frame_length + l2pad);
- 		skbdesc->flags |= SKBDESC_L2_PADDED;
- 	}
+diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
+index 7c2017f..95ee036 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_init.c
++++ b/drivers/net/wireless/wl12xx/wl1271_init.c
+@@ -193,7 +193,7 @@ static int wl1271_init_beacon_broadcast(struct wl1271 *wl)
+ 	return 0;
  }
-@@ -223,7 +224,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
- void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int header_length)
+ 
+-static int wl1271_init_general_parms(struct wl1271 *wl)
++int wl1271_init_general_parms(struct wl1271 *wl)
  {
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
--	unsigned int l2pad = 4 - (header_length & 3);
-+	unsigned int l2pad = (4 - (header_length & 3)) & 3;
+ 	struct wl1271_general_parms *gen_parms;
+ 	struct conf_general_parms *g = &wl->conf.init.genparam;
+@@ -224,7 +224,7 @@ static int wl1271_init_general_parms(struct wl1271 *wl)
+ 	return 0;
+ }
  
- 	if (!l2pad || (skbdesc->flags & SKBDESC_L2_PADDED))
- 		return;
-@@ -346,7 +347,7 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 	 * Header and alignment information.
- 	 */
- 	txdesc->header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
--	txdesc->l2pad = ALIGN_SIZE(entry->skb, txdesc->header_length);
-+	txdesc->l2pad = (4 - (txdesc->header_length & 3)) & 3;
+-static int wl1271_init_radio_parms(struct wl1271 *wl)
++int wl1271_init_radio_parms(struct wl1271 *wl)
+ {
+ 	struct wl1271_radio_parms *radio_parms;
+ 	struct conf_radio_parms *r = &wl->conf.init.radioparam;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_init.h b/drivers/net/wireless/wl12xx/wl1271_init.h
+index 6e21cee..539b57f 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_init.h
++++ b/drivers/net/wireless/wl12xx/wl1271_init.h
+@@ -28,6 +28,8 @@
  
- 	/*
- 	 * Check whether this frame is to be acked.
+ int wl1271_hw_init_power_auth(struct wl1271 *wl);
+ int wl1271_hw_init(struct wl1271 *wl);
++int wl1271_init_general_parms(struct wl1271 *wl);
++int wl1271_init_radio_parms(struct wl1271 *wl);
+ 
+ /* These are not really a TEST_CMD, but the ref driver uses them as such */
+ #define TEST_CMD_INI_FILE_RADIO_PARAM   0x19
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index c8652ee..d4e6039 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -354,6 +354,17 @@ static int wl1271_plt_init(struct wl1271 *wl)
+ {
+ 	int ret;
+ 
++	/* FIXME: the following parameter setting functions return error
++	 * codes - the reason is so far unknown. The -EIO is therefore
++	 * ignored for the time being. */
++	ret = wl1271_init_general_parms(wl);
++	if (ret < 0 && ret != -EIO)
++		return ret;
++
++	ret = wl1271_init_radio_parms(wl);
++	if (ret < 0 && ret != -EIO)
++		return ret;
++
+ 	ret = wl1271_acx_init_mem_config(wl);
+ 	if (ret < 0)
+ 		return ret;
 -- 
-1.6.5.3
+1.6.3.3
 
