@@ -1,144 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.mail.elte.hu ([157.181.151.9]:50359 "EHLO mx2.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752960AbZKBJKr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 04:10:47 -0500
-Date: Mon, 2 Nov 2009 10:10:38 +0100
-From: Ingo Molnar <mingo@elte.hu>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jarek Poplawski <jarkao2@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-Message-ID: <20091102091038.GA9044@elte.hu>
-References: <1256886023.3555.5.camel@johannes.local> <20091030110616.GB6150@ff.dom.local> <20091030150223.GA2586@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091030150223.GA2586@tuxdriver.com>
+Received: from smtp.nokia.com ([192.100.122.233]:40110 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752872AbZKWVXD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2009 16:23:03 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/8] wl1271: fix the inetdev notifier callback return values
+Date: Mon, 23 Nov 2009 23:22:15 +0200
+Message-Id: <1259011339-28149-5-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1259011339-28149-1-git-send-email-luciano.coelho@nokia.com>
+References: <1259011339-28149-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The wl1271_dev_notify() was returning 0 or -ENODEV, when it should return
+NOTIFY_* instead.  Now we use NOTIFY_DONE when we didn't handle the event or
+NOTIFY_OK when we have handled it.
 
-* John W. Linville <linville@tuxdriver.com> wrote:
+For inetdev notifications, it doesn't matter whether we use NOTIFY_DONE or
+NOTIFY_OK, because it ignores the return value of the call to
+blocking_notifier_call_chain().  But the notify.h header says that
+NOTIFY_DONE is "Don't care" and NOTIFY_OK is "Suits me", so that seems to be
+the right way to do it.
 
-> On Fri, Oct 30, 2009 at 11:06:16AM +0000, Jarek Poplawski wrote:
-> 
-> > There are various ways to disagree, and ignoring by John questions
-> > from a merited developer both in this referenced lkml and current
-> > threads looks at least strange (if not offensive) as well.
-> 
-> Did you read the thread for which Bartlomiej provided a link earlier? 
-> There were ten responses (only three of them from him) in that thread. 
-> His comments were not ignored, they were rejected.
-> 
-> Ever since Bartlomiej decided to tear himself away from 
-> drivers/staging, he has been nothing but negative -- petty, whining, 
-> indignat, whatever.  Just what has he done to merit any special 
-> consideration here?  Why should he have any sort of veto over rt2x00?
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-I got curious, as my past experience with Bartlomiej is that he is a 
-factual, reliable, knowledgable upstream driver developer interested in 
-difficult pieces of code others are reluctant to touch, for whom it is 
-rather atypical to get 'petty, whining, indignant'.
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 90916ed..c8652ee 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -815,15 +815,15 @@ static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
+ 
+ 	wdev = dev->ieee80211_ptr;
+ 	if (wdev == NULL)
+-		return -ENODEV;
++		return NOTIFY_DONE;
+ 
+ 	wiphy = wdev->wiphy;
+ 	if (wiphy == NULL)
+-		return -ENODEV;
++		return NOTIFY_DONE;
+ 
+ 	hw = wiphy_priv(wiphy);
+ 	if (hw == NULL)
+-		return -ENODEV;
++		return NOTIFY_DONE;
+ 
+ 	/* Check that the interface is one supported by this driver. */
+ 	wl_temp = hw->priv;
+@@ -832,7 +832,7 @@ static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
+ 			break;
+ 	}
+ 	if (wl == NULL)
+-		return -ENODEV;
++		return NOTIFY_DONE;
+ 
+ 	/* Get the interface IP address for the device. "ifa" will become
+ 	   NULL if:
+@@ -868,7 +868,7 @@ static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
+ out:
+ 	mutex_unlock(&wl->mutex);
+ 
+-	return ret;
++	return NOTIFY_OK;
+ }
+ 
+ static struct notifier_block wl1271_dev_notifier = {
+-- 
+1.6.3.3
 
-So i have read the thread you and Bartlomiej referenced:
-
-    http://lkml.org/lkml/2009/10/17/81
-
-... and my understanding of that discussion is very different from 
-yours. Here is my annotated history of the beginnings of that 
-discussion:
-
-Bartlomiej (in <200910171654.03344.bzolnier@gmail.com>) started his 
-review of the driver with:
-
- | First let me say that I'm very happy to see this patch finally being 
- | submitted and I appreciate the effort..
- |
- | (I'll give it a spin on Eee 901 w/ 2.6.32-rc5 sometime later..)
-
-Very friendly and constructive. Pretty much the Bartlomiej i have known 
-for years.
-
-Then he continues with his technical observations:
-
- | Now to the less happy part..
- |
- | I also used the opportunity to take a closer look at this driver and 
- | it seems that it needlessly adds around 2 KLOC to kernel by 
- | duplicating the common content of rt2800usb.h to rt2800pci.h instead 
- | of moving it to the shared header (like it is done in the staging 
- | crap drivers):
- |
- | [...]
- |
- | All in all, the total amount of the kernel code needed for 
- | implementing rt2800pci functionality should 1-2 KLOC instead of the 
- | current 5 KLOC.
-
-Looks like a valid technical point that should be replied to in ernest.
-
-Johannes Berg's first reply (<1255792104.3434.2.camel@johannes.local>) 
-ignored Bartlomiej's friendly approach and launched a combative, 
-emotion-laden, unconstructive (and technically inapposite) attack:
-
- | Tell me you're kidding -- comparing 2k duplicated LOC with a driver 
- | that ships its own wifi stack?
-
-Bartlomiej's reply (<1255792104.3434.2.camel@johannes.local>) ignored 
-the attack (gracefully) and replied to the technical portion only:
-
- | > Tell me you're kidding -- comparing 2k duplicated LOC with a driver 
- | > that ships its own wifi stack?
- |
- | Why would I be?
- |
- | 1) The patch is submitted to kernel _proper_ not kernel staging so I 
- | see no excuse for duplicating 2-4 KLOC and it should be fixed.
- |
- | 2) The fact that the some staging driver consists in 90% of crap 
- | doesn't mean that it doesn't have some good design ideas..  (i.e. 
- | abstracting chipset registers access in a discussed case)
-
-To which technical point Johannes elected not to reply. (Effectively 
-conceding Bartlomiej's point as per lkml discussion rules.)
-
-[ There are similar patterns in other threads of this discussion - the 
-  reply in (<200910181859.22413.IvDoorn@gmail.com>) and followups 
-  were similarly dismissive (while not as combative as Johannes's reply) 
-  - with an often offensive tone against Bartlomiej. ]
-
-Bartlomiej followed up with his test results in another message in 
-<200910172318.56929.bzolnier@gmail.com>. Corroborated by Luis Correia in 
-<efe7343f0910180240o223ac346j3dd7c45c7460ec41@mail.gmail.com>. Both 
-messages were factual, constructive and friendly.
-
-Neither failure report was replied to in that thread and remains ignored 
-up to today, 15 days down the line.
-
-Alas, the portion of the story that is visible in that discussion on 
-lkml contradicts your claim almost 180 degrees. The person being 
-attacked there was Bartlomiej and i simply dont see where you got the 
-conclusion from that he was 'petty, whining, indignant'.
-
-Now look at the aftermath from Bartlomiej's perspective: this 
-non-working driver with arguably unresponsive, unfriendly maintainers 
-got pulled twice (first by you and then by David), and it is now on the 
-unstoppable path upstream. By omission he's been forced to raise these 
-issues at every hop that pulls this piece of code - and it was not his 
-choice to be exposed to such a spiral of a workflow.
-
-I can understand David trusting your judgement and not wanting to get 
-involved in the fine details, but having read the surrounding discussion 
-i dont understand your interpretation of the events, and i dont 
-understand on what basis you launched your very serious accusation, that 
-he is being 'petty, whining, indignant'. Every reply from him in that 
-thread is the exact opposite of that. Care to elaborate?
-
-Thanks,
-
-	Ingo
