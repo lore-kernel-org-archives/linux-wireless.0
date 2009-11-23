@@ -1,96 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:1763 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934172AbZKXW7P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 17:59:15 -0500
-Date: Wed, 25 Nov 2009 00:01:01 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH v2 2/3] cfg80211: Add PMKSA wext compatibility handler
-Message-ID: <20091124230100.GC8290@sortiz.org>
-References: <cover.1259075573.git.sameo@linux.intel.com>
- <fce5ca6545ef79bb7ce9c9abf3e9348d070637dc.1259075573.git.sameo@linux.intel.com>
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:55282 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755999AbZKWBeE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Nov 2009 20:34:04 -0500
+Received: by yxe17 with SMTP id 17so4332022yxe.33
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2009 17:34:11 -0800 (PST)
+Message-ID: <4B09E691.8020205@lwfinger.net>
+Date: Sun, 22 Nov 2009 19:34:09 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <fce5ca6545ef79bb7ce9c9abf3e9348d070637dc.1259075573.git.sameo@linux.intel.com>
+To: Michael Buesch <mb@bu3sch.de>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] b43: Rewrite DMA Tx status handling sanity checks
+References: <200911192224.29491.mb@bu3sch.de>
+In-Reply-To: <200911192224.29491.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the addition of the *_pmksa cfg80211 ops, we can now add the
-corresponding wireless extensions compatibility handler.
+On 11/19/2009 03:24 PM, Michael Buesch wrote:
+> This rewrites the error handling policies in the TX status handler.
+> It tries to be error-tolerant as in "try hard to not crash the machine".
+> It won't recover from errors (that are bugs in the firmware or driver),
+> because that's impossible. However, it will return a more or less useful
+> error message and bail out. It also tries hard to use rate-limited messages
+> to not flood the syslog in case of a failure.
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> 
+> ---
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
+Tested and ACKed by Larry Finger. Not only does this improve the error handling
+for b43, but it also appears to fix the skb == NULL error that I experienced
+with the open-source firmware.
 
-v2: Fixed a coding style issue thanks to johill's eagle eye.
+John - please push this into wireless-testing. It should also go to 2.6.32, but
+it is likely too large for the current stage. At least Cc it to stable.
 
- net/wireless/wext-compat.c |   42 ++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 42 insertions(+), 0 deletions(-)
-
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index 29091ac..584eb48 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -1401,6 +1401,47 @@ int cfg80211_wext_giwessid(struct net_device *dev,
- }
- EXPORT_SYMBOL_GPL(cfg80211_wext_giwessid);
- 
-+int cfg80211_wext_siwpmksa(struct net_device *dev,
-+			   struct iw_request_info *info,
-+			   struct iw_point *data, char *extra)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+	struct cfg80211_pmksa cfg_pmksa;
-+	struct iw_pmksa *pmksa = (struct iw_pmksa *)extra;
-+
-+	memset(&cfg_pmksa, 0, sizeof(struct cfg80211_pmksa));
-+
-+	if (wdev->iftype != NL80211_IFTYPE_STATION)
-+		return -EINVAL;
-+
-+	cfg_pmksa.bssid = pmksa->bssid.sa_data;
-+	cfg_pmksa.pmkid = pmksa->pmkid;
-+
-+	switch (pmksa->cmd) {
-+	case IW_PMKSA_ADD:
-+		if (!rdev->ops->set_pmksa)
-+			return -EOPNOTSUPP;
-+
-+		return rdev->ops->set_pmksa(&rdev->wiphy, dev, &cfg_pmksa);
-+
-+	case IW_PMKSA_REMOVE:
-+		if (!rdev->ops->del_pmksa)
-+			return -EOPNOTSUPP;
-+
-+		return rdev->ops->del_pmksa(&rdev->wiphy, dev, &cfg_pmksa);
-+
-+	case IW_PMKSA_FLUSH:
-+		if (!rdev->ops->flush_pmksa)
-+			return -EOPNOTSUPP;
-+
-+		return rdev->ops->flush_pmksa(&rdev->wiphy, dev);
-+
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+}
-+
- static const iw_handler cfg80211_handlers[] = {
- 	[IW_IOCTL_IDX(SIOCGIWNAME)]	= (iw_handler) cfg80211_wext_giwname,
- 	[IW_IOCTL_IDX(SIOCSIWFREQ)]	= (iw_handler) cfg80211_wext_siwfreq,
-@@ -1433,6 +1474,7 @@ static const iw_handler cfg80211_handlers[] = {
- 	[IW_IOCTL_IDX(SIOCSIWAUTH)]	= (iw_handler) cfg80211_wext_siwauth,
- 	[IW_IOCTL_IDX(SIOCGIWAUTH)]	= (iw_handler) cfg80211_wext_giwauth,
- 	[IW_IOCTL_IDX(SIOCSIWENCODEEXT)]= (iw_handler) cfg80211_wext_siwencodeext,
-+	[IW_IOCTL_IDX(SIOCSIWPMKSA)]	= (iw_handler) cfg80211_wext_siwpmksa,
- };
- 
- const struct iw_handler_def cfg80211_wext_handler = {
--- 
-1.6.3.3
-
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+Larry
