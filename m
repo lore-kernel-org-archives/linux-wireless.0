@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40047 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757419AbZKKPaP (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:53542 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754073AbZKWBwn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 10:30:15 -0500
-Date: Wed, 11 Nov 2009 10:22:14 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Zheng, Jeff" <jeff.zheng@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"wifi-test-devel@lists.sourceforge.net"
-	<wifi-test-devel@lists.sourceforge.net>
-Subject: Re: [ANNOUNCE] wifi-test 1.0 released
-Message-ID: <20091111152214.GG4392@tuxdriver.com>
-References: <154E55ADF9629D4E8D13F08BF92ABEB63FDC983366@PDSMSX501.ccr.corp.intel.com>
+	Sun, 22 Nov 2009 20:52:43 -0500
+Received: by yxe17 with SMTP id 17so4340647yxe.33
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2009 17:52:49 -0800 (PST)
+Message-ID: <4B09EAEF.6010202@lwfinger.net>
+Date: Sun, 22 Nov 2009 19:52:47 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <154E55ADF9629D4E8D13F08BF92ABEB63FDC983366@PDSMSX501.ccr.corp.intel.com>
+To: Chris Vine <chris@cvine.freeserve.co.uk>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: Fatal DMA error problem with netbook and BCM4312
+References: <4AFA09C8.4060602@gmail.com> <200911131216.43704.mb@bu3sch.de>	<4AFD83CA.2050508@lwfinger.net> <200911131836.26857.mb@bu3sch.de>	<4AFD9E20.3060501@gmail.com> <4AFDD1C9.4050402@lwfinger.net>	<4AFDF68C.4040804@polymtl.ca> <4AFE1E5F.9040009@lwfinger.net>	<4AFEFC2C.5030704@polymtl.ca> <4B068ED9.5070107@lwfinger.net>	<20091120195834.334d8bc0@boulder.homenet>	<4B06F685.1020405@lwfinger.net>	<20091121001512.02326eda@boulder.homenet> <20091122190353.06cfdab7@boulder.homenet>
+In-Reply-To: <20091122190353.06cfdab7@boulder.homenet>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 11, 2009 at 10:59:27PM +0800, Zheng, Jeff wrote:
-> All,
+On 11/22/2009 01:03 PM, Chris Vine wrote:
+> On Sat, 21 Nov 2009 00:15:12 +0000
+> Chris Vine <chris@cvine.freeserve.co.uk> wrote:
+>> WARM BOOT FROM KERNEL WITH WL MODULE INSTALLED
+>>
+>> The patched kernel makes no change on a warm boot in the sense that
+>> if I warm boot after initialising the wireless device with the wl
+>> module then the b43 module appears to work correctly, both with and
+>> without the patch applied.
+>>
+>> On the same stress test as mentioned above, I have not been able to
+>> induce the DMA errors nor kernel warnings.  It resolutely refuses to
+>> do anything except work correctly.
 > 
-> The wifi-test project is raised by Intel with a goal to deliver test suites
-> to opensource community that validates linux wireless drivers. wifi-test
-> 1.0 covers following wireless features:
-> + BSS: BSS association, fragmentation/RTS/CTS, BSS channels etc
-> + IBSS: IBSS association, IBSS fragmentation/RTS/CTS, IBSS channels.
-> + Security: WEP (BSS/IBSS), WPA/WPA2, 802.1X.
-> + Power management: S3/S4, RFKILL
-> + Performance: upload/download speed for different combinations.
-> + Others: Wext mode, nl80211 mode
-> + 802.11 a/b/g/n: Above features in a/b/g/n band.
+> This is just to say that I have carried out further stress tests today
+> after warm booting to an unpatched linux-2.6.32-rc8 kernel with the b43
+> driver (on the assumption that unpatched is the least favourable case
+> for the driver).  This is a warm reboot from a 2.6.31.6 kernel which had
+> the wl driver installed.
 > 
-> You can download wifi-test 1.0 from:
-> http://intellinuxwireless.org/testing/Download/wifi-test-1.0.tar.gz
-> or through git tree:
-> http://www.intellinuxwireless.org/repos/wifi-test.git
+> I have created an extended period of high speed traffic on my wireless
+> lan and I cannot induce any errors at all with the b43 driver on a warm
+> reboot.
 > 
-> For more information, please see
-> http://intellinuxwireless.org/testing/wifi-test.html
+> This makes me wonder whether the patch is just (partially) masking the
+> problem rather than actually dealing with it.
 
-Hey, that looks pretty cool...thanks!
+We know that the wl driver does something to the interface that persists across
+a warm boot - we just do not know what. It does not appear to be done in any of
+the MMIO traffic - at least I have not seen it in the mmio-trace output. If
+anyone has a KVM setup using PCI passthrough, it is possible to trace PCI
+configuration traffic?
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Have you tried running your system with the patch entitled "[PATCH] b43: Rewrite
+DMA Tx status handling sanity checks"? It cleared up some of the problems that I
+was seeing with the open-source firmware.
+
+Larry
