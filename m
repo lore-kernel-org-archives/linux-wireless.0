@@ -1,35 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:14437 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755826AbZKIXsY convert rfc822-to-8bit (ORCPT
+Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:50638 "EHLO
+	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754613AbZKWHQn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 18:48:24 -0500
-Received: by ey-out-2122.google.com with SMTP id 4so88004eyf.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 15:48:28 -0800 (PST)
-Subject: Re: [PATCH 11/21] mac80211: add WLAN_EID_RANN
-Mime-Version: 1.0 (Apple Message framework v1077)
-Content-Type: text/plain; charset=us-ascii
-From: Rui Paulo <rpaulo@gmail.com>
-In-Reply-To: <1257773259.29454.175.camel@johannes.local>
-Date: Mon, 9 Nov 2009 23:48:25 +0000
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Javier Cardona <javier@cozybit.com>
-Message-Id: <12E17985-EB12-4BA1-AE31-14DC6B966D5B@gmail.com>
-References: <1257770381-7680-1-git-send-email-rpaulo@gmail.com> <1257770381-7680-12-git-send-email-rpaulo@gmail.com> <1257771552.29454.171.camel@johannes.local> <B2865F30-1886-4985-AB76-2AAB769530F4@gmail.com> <1257773259.29454.175.camel@johannes.local>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 23 Nov 2009 02:16:43 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 6/6] mac80211: Allow extra TX headroom to be consumed by drivers.
+Date: Mon, 23 Nov 2009 08:16:05 +0100
+Message-Id: <1258960565-26736-7-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1258960565-26736-6-git-send-email-gwingerde@gmail.com>
+References: <1258960565-26736-1-git-send-email-gwingerde@gmail.com>
+ <1258960565-26736-2-git-send-email-gwingerde@gmail.com>
+ <1258960565-26736-3-git-send-email-gwingerde@gmail.com>
+ <1258960565-26736-4-git-send-email-gwingerde@gmail.com>
+ <1258960565-26736-5-git-send-email-gwingerde@gmail.com>
+ <1258960565-26736-6-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Allow drivers to consume the extra TX headroom they are requesting instead
+of assuming they will give it back. This specifically is the case for
+the rt2x00 driver, as a large part of the requested extra TX headroom is
+used to properly align the frame for DMA usage, and the frame is never
+moved back to the original location.
+Fix this by reserving TX headroom accounting for both the driver requested
+amount and the special monitor interface header that needs to be added,
+instead of just the maximum of the two.
 
-On 9 Nov 2009, at 13:27, Johannes Berg wrote:
-> But you were just adding a new one, so I figured I could ask you to make
-> the new one nicer, but couldn't really ask you to fix the old ones :) If
-> you want to, I'd welcome it.
+See http://marc.info/?l=linux-kernel&m=125892467801662&w=2 for details.
 
-I hope what I just sent is what you had in mind. I'll try to fix the old ones on a subsequent patchset.
+Reported-by: David Ellingsworth <david@identd.dyndns.org>
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Tested-by: David Ellingsworth <david@identd.dyndns.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/main.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Thanks,
---
-Rui Paulo
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index dd8ec8d..e666b66 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -515,8 +515,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	 * and we need some headroom for passing the frame to monitor
+ 	 * interfaces, but never both at the same time.
+ 	 */
+-	local->tx_headroom = max_t(unsigned int , local->hw.extra_tx_headroom,
+-				   sizeof(struct ieee80211_tx_status_rtap_hdr));
++	local->tx_headroom = local->hw.extra_tx_headroom +
++				   sizeof(struct ieee80211_tx_status_rtap_hdr);
+ 
+ 	debugfs_hw_add(local);
+ 
+-- 
+1.6.5.3
 
