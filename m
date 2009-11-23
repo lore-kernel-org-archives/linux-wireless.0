@@ -1,71 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48896 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755786AbZKIMyY (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:40104 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756202AbZKWVXA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 07:54:24 -0500
-Subject: Re: Incorrect signal levels reported using wpa_supplicant's
- driver_nl80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexander Sack <asac@ubuntu.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Maxim Levitsky <maximlevitsky@gmail.com>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	networkmanager-list <networkmanager-list@gnome.org>
-In-Reply-To: <20091109125016.GK1579@jwsdot.com>
-References: <1256953837.9681.13.camel@maxim-laptop>
-	 <1257190833.1027.4.camel@localhost.localdomain>
-	 <20091109125016.GK1579@jwsdot.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-eh0g0kTNSMztQlSA6Ip6"
-Date: Mon, 09 Nov 2009 13:54:21 +0100
-Message-ID: <1257771261.29454.169.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 23 Nov 2009 16:23:00 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/8] wl1271 patches of the week
+Date: Mon, 23 Nov 2009 23:22:11 +0200
+Message-Id: <1259011339-28149-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi John et al,
 
---=-eh0g0kTNSMztQlSA6Ip6
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Here are some patches that were still pending on our internal tree.  They are
+mostly fixes, without any new implementation.
 
-On Mon, 2009-11-09 at 13:50 +0100, Alexander Sack wrote:
+Cheers,
+Luca.
 
-> > Soon.  We've got some patches for this, but we'll also need tons of
-> > testing.  The WEXT stuff is pretty baked while nl80211 is still under
-> > some flux.  But of course the only way we bake nl80211 is by switching
-> > to it...
->=20
-> iirc, we currently we hardcode wext in NM code. How about adding a keyfil=
-e
-> config that users could use to switch to nl80211 until we feel confident
-> that it's good enough for everyone?
 
-commit d27df100b587dd95f3256a8baf9db0c5d4380089 in wpa_supplicant allows
-you to do that by editing the service file.
+Juuso Oikarinen (3):
+  wl1271: Decrease BET consecutive terminated beacons value to 10
+  wl1271: Prevent PSM-entry retry loop if PSM cancelled
+  wl1271: Set PSM support flags in driver configuration
 
-johannes
+Luciano Coelho (5):
+  wl1271: fix the inetdev notifier callback return values
+  wl1271: set radio and general params also for PLT
+  wl1271: fix radio and general parameters commands
+  wl1271: remove workaround to ignore -EIO from radio and general
+    params
+  wl1271: Remove REF_CLK hack
 
---=-eh0g0kTNSMztQlSA6Ip6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK+BD5AAoJEODzc/N7+Qmah3MQAL0v03JFGWYZLvVczDUtyZMq
-7A1dFF5cGD112HOB8LvbcbtcsIC+HVNM9XBDqJOstIil+EP3e3mRirclC3rqtZUy
-Sjyhrau8Lh7WVjDffZP+TBeWv8ts0o/EEj0heFcDdemK37UTNYpxg2SM15FfBy2d
-X8xwixaN2TMjiYwz7RPqsWvFE1QnbPrGkblnE+ouWHqDr7rJkrDr205HUsAO7Qlb
-G7CfN8vBDv45IgLrwruOXXtTAmeEgM7U0PWv5m4NlJHMnk1bNBrwzyBpdcUzEfsR
-BtdFGZL/RV9cIiKHj2nhNeyCqFKf3MQe4ULmxShO7fMLVqXr8/J/1IHzki7fkLow
-d61isOlCA7wZwIpddyOtwEdi2OqkdBJjDywEie6Y8aF2TIKvRegbU+9ety2IqNIy
-vrBmde3Bwo1rYdSCdFCnqrYh7VZC1fJbIsAQBskKacYjzGA50rtT60fzW2FOvOoA
-gjt8g/GM9ia6QaHS9tmOuvdcLUcaUELV0/mqSjl8oGxYZ7CUU7y1odQZFaLYR8DZ
-z4tPMFtIhgnx3uyNsxpAToILuxpvedy47d7KtFsxQ/7P0qowZItqPcZ5Wl9Q15lf
-wXKIn85A2aaiV+u3EJ+XegkYo1+gXQaDqMSGw6PUk5ARn6NETg/mbCcGygGw5gSO
-gBLjg3fNd2QLKgOnCWiy
-=8oqU
------END PGP SIGNATURE-----
-
---=-eh0g0kTNSMztQlSA6Ip6--
+ drivers/net/wireless/wl12xx/wl1271_cmd.c   |  107 +++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1271_cmd.h   |   72 +++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1271_event.c |    8 ++-
+ drivers/net/wireless/wl12xx/wl1271_init.c  |  117 +---------------------------
+ drivers/net/wireless/wl12xx/wl1271_init.h  |   70 -----------------
+ drivers/net/wireless/wl12xx/wl1271_main.c  |   32 ++++----
+ 6 files changed, 206 insertions(+), 200 deletions(-)
 
