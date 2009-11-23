@@ -1,71 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:43726 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755074AbZKIWLe (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59252 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757006AbZKWLej (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 17:11:34 -0500
-Received: by ey-out-2122.google.com with SMTP id 4so69911eyf.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 14:11:38 -0800 (PST)
-Message-ID: <4AF89398.6060305@gmail.com>
-Date: Mon, 09 Nov 2009 23:11:36 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] rt2x00: Properly detect Ralink RT3070 devices.
-References: <1257803976-5378-1-git-send-email-gwingerde@gmail.com> <69e28c910911091404i18e4e4b8ydd9d334bc833de3b@mail.gmail.com>
-In-Reply-To: <69e28c910911091404i18e4e4b8ydd9d334bc833de3b@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 23 Nov 2009 06:34:39 -0500
+Subject: Re: [PATCH] mwl8k: split driver by chipset
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20091123112916.GT20214@mail.wantstofly.org>
+References: <1258931158.12095.33.camel@localhost.localdomain>
+	 <20091123110211.GS20214@mail.wantstofly.org>
+	 <1258974789.7094.162.camel@johannes.local>
+	 <20091123112916.GT20214@mail.wantstofly.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-D84LX6/Di1/mi0y+pwu/"
+Date: Mon, 23 Nov 2009 12:34:41 +0100
+Message-ID: <1258976081.7094.164.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/09/09 23:04, Gábor Stefanik wrote:
-> On Mon, Nov 9, 2009 at 10:59 PM, Gertjan van Wingerde
-> <gwingerde@gmail.com> wrote:
->> Allow rt2800usb to properly detect RT307X based devices, and set the appropriate chipset values.
->>
->> Signed-off-by: Gertjan van Wingede <gwingerde@gmail.com>
->> ---
->>  drivers/net/wireless/rt2x00/rt2800usb.c |   21 ++++++++++++++-------
->>  drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
->>  2 files changed, 15 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
->> index d22ab64..bd2f6e6 100644
->> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
->> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
->> @@ -790,16 +790,19 @@ static int rt2800usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
->>         */
->>        value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RF_TYPE);
->>        rt2800_register_read(rt2x00dev, MAC_CSR0, &reg);
->> -       rt2x00_set_chip(rt2x00dev, RT2870, value, reg);
->> +       rt2x00_set_chip_rf(rt2x00dev, value, reg);
->>
->>        /*
->>         * The check for rt2860 is not a typo, some rt2870 hardware
->>         * identifies itself as rt2860 in the CSR register.
->>         */
->> -       if (!rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28600000) &&
->> -           !rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28700000) &&
->> -           !rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28800000) &&
->> -           !rt2x00_check_rev(&rt2x00dev->chip, 0xffff0000, 0x30700000)) {
->> +       if (rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28600000) ||
->> +           rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28700000) ||
->> +           rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x28800000)) {
->> +               rt2x00_set_chip_rt(rt2x00dev, RT3070);
-> 
-> Typo?
-> 
 
-Doh. You're right. And I did even test this on a RT2870 device :-(
+--=-D84LX6/Di1/mi0y+pwu/
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for noticing this.
+On Mon, 2009-11-23 at 12:29 +0100, Lennert Buytenhek wrote:
 
-I'll resend the patch with this fixed.
+> This has the problem that e.g. if someone creates a STA interface first,
+> and we load the STA firmware image in response to that, and then creates
+> an additional AP interface, we'd have reload the chip while there's
+> still an active interface (the original STA one), which seems somewhat
+> involved.  Just rejecting the second add_interface() seems undesirable,
+> as then the outcome of two add_interface() calls will depend on their
+> order.
+>=20
+> (AP firmware supports both AP and STA interfaces, but e.g. it doesn't
+> do STA power save and such.)
+>=20
+> It'll also have some consequences if there are monitor interfaces, as
+> e.g. STA firmware allows fine-grained control over the receive filter,
+> while the AP firmware does not.
 
-But first, I need to find a brown paper bag somewhere. ;-)
+Hah well in that case it won't really work because you really shouldn't
+change capabilities on the fly. I have no useful idea then, sorry.
 
----
-Gertjan.
+johannes
+
+--=-D84LX6/Di1/mi0y+pwu/
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLCnNLAAoJEODzc/N7+Qmar2EP/29Ppgup+5w9u9h30ujhclGD
+wL51uXAAOS+WpT5+5NeIgZvHEEFHh9lnDFzp/0hM6ftVPX8BL+JoJulUC3IVw+XK
+YoIf4MMneTMkBLgRcgiXjQVvP5IgWQkJbg/uPSlQr32Fy9hbZS5tsZLJXVLWVuqK
+21bSMDH1u1FGseC25oWZXo5AObtw134hTG++s74F5NPUCOp2iIuJdltK8QZRWrpd
+P5TxMFegw/sQpKRIfsCRocQHXrfa8AsfMIDtOs7gPr8orTTY2SM5h3qakfV0Vu6g
+nJ0Sj9xT6txMliEuX1JAaxblQXYY8fpKClj8TZ+V8pMmRZyu3flYWk8IMrBAEw+K
+KCadd4kvdDLbaE1n6YnrJjwwSr89Asz7JOqFugdXTk7RgkvQneYLUV2RIMUtHvsL
+zuSBVv2e23PNLBu89+2/mYuOXKxwjK0IAQ60poqZ0/rYCl/zy52Glni3BBKkchCt
+MprBtsLzO9lL8y06iN3iNpFfxsrtCoPpbvZJ4O2NZ83LQP7AIqeXkSPHzI8Sl6cn
+xM0l8ES8brUdm026ce3+jpn62ulOKbiFhE1sTf07CKHb+O1G8A5tJ3JoUcbxUssD
+CE+x8V51xow6oT/mP4hN1mhZP4w08pUjsh0sX2LEqsOyLVcFvA9j1V3WncjGmu+Q
+Gs7wNohANbTNvABtbUFc
+=X8LR
+-----END PGP SIGNATURE-----
+
+--=-D84LX6/Di1/mi0y+pwu/--
+
