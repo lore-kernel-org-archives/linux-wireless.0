@@ -1,58 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:33691 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752950AbZKOOgX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Nov 2009 09:36:23 -0500
-Message-ID: <4B0011EB.5080008@openwrt.org>
-Date: Sun, 15 Nov 2009 15:36:27 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:39179 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750938AbZKWIN1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2009 03:13:27 -0500
+Received: by bwz27 with SMTP id 27so4744486bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 00:13:32 -0800 (PST)
+Subject: Re: mac80211 breaks suspend to disk
+From: Maxim Levitsky <maximlevitsky@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 1/2] mac80211: add private driver flags and ampdu length
- to tx info
-References: <4AFED564.8030804@openwrt.org>	 <1258293706.6294.7.camel@johannes.local>  <4B000DF5.4020606@openwrt.org> <1258295263.32159.2.camel@johannes.local>
-In-Reply-To: <1258295263.32159.2.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1258640999.7094.19.camel@johannes.local>
+References: <1258568836.4512.13.camel@maxim-laptop>
+	 <20091118202802.GE2911@tuxdriver.com>
+	 <1258576749.8018.7.camel@maxim-laptop>
+	 <1258578199.30511.80.camel@johannes.local>
+	 <1258579170.4525.2.camel@maxim-laptop>
+	 <1258579261.30511.84.camel@johannes.local>
+	 <1258638183.5063.4.camel@maxim-laptop>
+	 <1258640999.7094.19.camel@johannes.local>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 23 Nov 2009 10:13:27 +0200
+Message-ID: <1258964007.30731.3.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Sun, 2009-11-15 at 15:19 +0100, Felix Fietkau wrote:
+On Thu, 2009-11-19 at 15:29 +0100, Johannes Berg wrote: 
+> On Thu, 2009-11-19 at 15:43 +0200, Maxim Levitsky wrote:
 > 
->> >> + * @ampdu_ack_len: number of acked aggregated frames.
->> >> + * 	relevant only if ieee80211_tx_status_ampdu was set.
->> > 
->> > why lowercase that?
->> Sorry, late night vim accident. I'll resend...
+> > This problem definitely is fixed.
 > 
-> same a few lines down too
+> Thanks for checking.
 > 
->> >> -	/* 2 byte hole */
->> >> -	u8 pad[2];
->> >> +	u8 driver_flags;
->> >> +	u8 pad;
->> > 
->> > The ampdu_len seems ok, but I'm still not convinced this is right.
->> > Drivers _should_ have enough space in the driver parts of this struct,
->> > and not need flags here. I realise that you do need that because of the
->> > RC and other internal things, but maybe you could simply use "pad[0]"
->> > for that so not to encourage others to start doing this too?
+> > One more finding from the hibernate loop though:
+> > 
+> > Nov 19 12:25:49 maxim-laptop NetworkManager: <info>  (wlan0): deactivating device (reason: 37).
+> > Nov 19 12:25:49 maxim-laptop NetworkManager: <info>  (wlan0): canceled DHCP transaction, dhcp client pid 6130
+> > Nov 19 12:25:49 maxim-laptop kernel: [  239.925841] wlan0: disassociating from 00:1b:9e:d8:77:02 by local choice (reason=3)
+> > Nov 19 12:25:49 maxim-laptop kernel: [  239.940401] phy0: Removed STA 00:1b:9e:d8:77:02
+> > Nov 19 12:25:49 maxim-laptop kernel: [  239.982746] phy0: Destroyed STA 00:1b:9e:d8:77:02
+> > Nov 19 12:25:49 maxim-laptop NetworkManager: <WARN>  check_one_route(): (wlan0) error -34 returned from rtnl_route_del(): Sucess#012
+> > Nov 19 12:25:49 maxim-laptop NetworkManager: <info>  (wlan0): cleaning up...
+> > Nov 19 12:25:49 maxim-laptop NetworkManager: <info>  (wlan0): taking down device.
+> > Nov 19 12:25:49 maxim-laptop avahi-daemon[1626]: Withdrawing address record for 10.1.0.2 on wlan0.
+> > Nov 19 12:25:49 maxim-laptop avahi-daemon[1626]: Leaving mDNS multicast group on interface wlan0.IPv4 with address 10.1.0.2.
+> > Nov 19 12:25:49 maxim-laptop kernel: [  239.998665] wlan0: deauthenticating from 00:1b:9e:d8:77:02 by local choice (reason=3)
+> > Nov 19 12:25:49 maxim-laptop kernel: [  240.072664] phy0: device now idle
+> > Nov 19 12:25:49 maxim-laptop kernel: [  240.105115] ------------[ cut here ]------------
+> > Nov 19 12:25:49 maxim-laptop avahi-daemon[1626]: Interface wlan0.IPv4 no longer relevant for mDNS.
+> > Nov 19 12:25:49 maxim-laptop kernel: [  240.120021] WARNING: at /home/maxim/software/kernel/linux-2.6/net/wireless/core.c:618 wdev_cleanup_work+0xe9/0x110 [cfg80211]()
 > 
->> If you prefer it using the padding directly, I can change it to that
->> too. I don't mind as long as I have space to put that stuff into and
->> don't need to use rate_driver_data.
+> You're using 3945 it seems, this kind of warning happens when it doesn't
+> do the scan notifications properly. I'd look at 3945 for this one.
 > 
-> I can't really decide. On the one hand, using pad seems bad, but on the
-> other hand I'm still hoping this will just be temporary (for some value
-> thereof). But in that case I fear that we might find somebody else
-> started using the new field and we need to fix that driver too then...
-There are only two parts that need this. The first one is the ath9k
-virtual wiphy type, no idea when that will change.
-The second one is for passing stuff to rate control. That one will go
-away once we replace ath9k's rc.c ;)
-It might just be temporary...
+> > Other that that, I got few freezes, this time with no feedback whatsoever, blank screen, thus very likely something different.
+> > Might be nvidia proprietary driver fault too.
+> 
+> Fun
+And after removing acpi global lock that protects access to EC on my
+system, but somehow ether isn't released, or I don't know what, my
+system just survived 280 s2disk cycles, with everything enabled.
 
-- Felix
+http://bugzilla.kernel.org/show_bug.cgi?id=14668
+(not related to wireless stack in any way)
+
+
+
