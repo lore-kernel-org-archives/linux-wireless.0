@@ -1,61 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57048 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756858AbZKBV7f (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:64202 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754260AbZKWUvA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 16:59:35 -0500
-Subject: Re: pull request: wireless-2.6 2009-11-02
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20091102214022.GM14046@tuxdriver.com>
-References: <20091102214022.GM14046@tuxdriver.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-HLSWmaxz+GlkxFdFoju/"
-Date: Mon, 02 Nov 2009 22:59:26 +0100
-Message-ID: <1257199166.28469.2.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 23 Nov 2009 15:51:00 -0500
+Received: by ewy19 with SMTP id 19so2279989ewy.21
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 12:51:05 -0800 (PST)
+Message-ID: <4B0AF5B6.40102@gmail.com>
+Date: Mon, 23 Nov 2009 21:51:02 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/6] rt2x00: Properly request tx headroom for alignment
+ operations.
+References: <1258960565-26736-1-git-send-email-gwingerde@gmail.com> <1258960565-26736-5-git-send-email-gwingerde@gmail.com> <1258960565-26736-6-git-send-email-gwingerde@gmail.com> <200911231933.04875.IvDoorn@gmail.com>
+In-Reply-To: <200911231933.04875.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 11/23/09 19:33, Ivo van Doorn wrote:
+> On Monday 23 November 2009, Gertjan van Wingerde wrote:
+>> Current rt2x00 drivers may result in a "ieee80211_tx_status: headroom too
+>> small" error message when a frame needs to be properly aligned before
+>> transmitting it.
+>> This is because the space needed to ensure proper alignment isn't
+>> requested from mac80211.
+>> Fix this by adding sufficient amount of alignment space to the amount
+>> of headroom requested for TX frames.
+>>
+>> Reported-by: David Ellingsworth <david@identd.dyndns.org>
+>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>> Tested-by: David Ellingsworth <david@identd.dyndns.org>
+>> ---
+>>  drivers/net/wireless/rt2x00/rt2400pci.c   |   30 +++++++++++++++-------------
+>>  drivers/net/wireless/rt2x00/rt2500pci.c   |   30 +++++++++++++++-------------
+>>  drivers/net/wireless/rt2x00/rt2500usb.c   |   29 ++++++++++++++-------------
+>>  drivers/net/wireless/rt2x00/rt2800lib.c   |    7 +----
+>>  drivers/net/wireless/rt2x00/rt2800pci.c   |   31 +++++++++++++++--------------
+>>  drivers/net/wireless/rt2x00/rt2800usb.c   |   25 ++++++++++++-----------
+>>  drivers/net/wireless/rt2x00/rt2x00.h      |    7 ++++++
+>>  drivers/net/wireless/rt2x00/rt2x00queue.c |    6 ++--
+>>  drivers/net/wireless/rt2x00/rt61pci.c     |   28 ++++++++++++++------------
+>>  drivers/net/wireless/rt2x00/rt73usb.c     |   27 +++++++++++++------------
+>>  10 files changed, 117 insertions(+), 103 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+>> index 6e68bc7..f534d70 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2400pci.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+>> @@ -1432,7 +1432,8 @@ static int rt2400pci_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+>>  			       IEEE80211_HW_SIGNAL_DBM |
+>>  			       IEEE80211_HW_SUPPORTS_PS |
+>>  			       IEEE80211_HW_PS_NULLFUNC_STACK;
+>> -	rt2x00dev->hw->extra_tx_headroom = 0;
+>> +	rt2x00dev->hw->extra_tx_headroom = rt2x00dev->ops->extra_tx_headroom +
+>> +	    					RT2X00_ALIGN_SIZE;
+> 
+> Can't rt2x00lib initialize rt2x00dev->hw->extra_tx_headroom?
+> The drivers aren't performing the aligning, so it is logical that rt2x00lib
+> adds the required bytes rather than the drivers. The driver already sets
+> the value in ops->extra_tx_headroom, so it can rely on rt2x00lib to do the rest.
+> 
 
---=-HLSWmaxz+GlkxFdFoju/
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I guess that that can be done as an extra cleanup. Will do in a revision.
 
-On Mon, 2009-11-02 at 16:40 -0500, John W. Linville wrote:
+>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> index b809c49..de358b5 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> @@ -2030,11 +2030,8 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+>>  	    IEEE80211_HW_SUPPORTS_PS |
+>>  	    IEEE80211_HW_PS_NULLFUNC_STACK;
+>>  
+>> -	if (rt2x00_intf_is_usb(rt2x00dev))
+>> -		rt2x00dev->hw->extra_tx_headroom =
+>> -			TXINFO_DESC_SIZE + TXWI_DESC_SIZE;
+>> -	else if (rt2x00_intf_is_pci(rt2x00dev))
+>> -		rt2x00dev->hw->extra_tx_headroom = TXWI_DESC_SIZE;
+>> +	rt2x00dev->hw->extra_tx_headroom = rt2x00dev->ops->extra_tx_headroom +
+>> +	    					RT2X00_L2PAD_SIZE;
+> 
+> In this case we don't use RT2X00_ALIGN_SIZE, but the driver does set a flag to tell
+> rt2x00lib that L2padding should be used rather then aligning. So this case would still
+> hold when it is moved to rt2x00lib.
+> 
 
-> There are several from Johannes -- I'm sure there was sake involved...  :=
--)
+Yep, will do in a revision.
 
-More likely there was sake involved when I did that patch adding that
-NULL-ptr deref!
+>>  /*
+>> + * Constants for extra TX headroom for alignment purposes.
+>> + */
+>> +#define RT2X00_ALIGN_SIZE	4
+>> +#define RT2X00_L2PAD_SIZE	8
+> 
+> #define RT2X00_L2PAD_SIZE		RT2X00_ALIGN_SIZE + 4
+> 
+> Would probably better indicate why you are using 8.
+> 
 
-Thanks :)
+I'll add some comments on what these values represent. Don't think that defining RT2X00_L2PAD_SIZE
+in your proposed way would help explaining, but some proper comments will.
 
-johannes
-
-
---=-HLSWmaxz+GlkxFdFoju/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK71Y6AAoJEODzc/N7+Qma1nQQAJh6bRilIfVOsdBpAPBIKtQj
-L6qANDIQbfJBSSr/RPSc+O0moWXccG8BZWB0CYFewnAllQyAQCwR3w2rU9viTq/q
-vrN6IjWi89vemnddmce7w855KuK29Ao8KH/0bLYsohG3WRDaNM+F0Unaq0MuK4/5
-tipQTsJr5O3yWXeLIH/A+4HucRBmtof9t6vwm0EGJO/+jQHpKFlXOozmC0ZqM+1l
-gwxMIGPRrorH2MshIW/LD0rkkG35x0IpktFd8QhJMipDl+Vlmu88QeyF7diXt1fh
-MpsEK4JEusoB5K2K3Ao7AyL/kAy6+HjMur3CczQ0Q5nPJ5iBcAifJ2C1ixcd9N/a
-r2Vo7lRcpiqvd8UYU/WU0CFmpv5HtgW7NBAfOkp+R1fgsgM++/zDL35vuvCxOLAn
-kyn/rLVLRMn4FP5FK1nmhiVr91XYhYNeK6dA9PXmo6E4fwQFWqBKdRsBrqqPIPle
-x7R1fE6P4cABX4qQr5PknnPeTfOV2w+3dg3hvOFuSCkSoLIRUNPp8A0dORrP2dkU
-9bKMLGXuaohSzC4vZQkX78fyqcBrpGZdEnNVB2o04TqKCAqkaIk8No5VXMdQFFUv
-rHitRD7dY+lAESlMP9rx5+IR/SUtPpKolhtflUpZPsxe9T6ftbUE24XQtd3sdOGi
-RL3iPHz92lz6F0F0PpMB
-=kuUR
------END PGP SIGNATURE-----
-
---=-HLSWmaxz+GlkxFdFoju/--
-
+---
+Gertjan.
