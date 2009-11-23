@@ -1,47 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:45803 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752076AbZKMQTn convert rfc822-to-8bit (ORCPT
+Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:58471 "EHLO
+	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757130AbZKWVpF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 11:19:43 -0500
-MIME-Version: 1.0
-In-Reply-To: <51058d550911130206m2982d20dq51bcf943f1ec91c3@mail.gmail.com>
-References: <43e72e890911121754p751060b1h1cec7eeb78da8806@mail.gmail.com>
-	<51058d550911130206m2982d20dq51bcf943f1ec91c3@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 13 Nov 2009 08:19:29 -0800
-Message-ID: <43e72e890911130819m42c3da2bv4e956c5eed75617c@mail.gmail.com>
-Subject: Re: [ANN] Stable compat-wireless 2.6.32-rc7 released
-To: Greg Oliver <oliver.greg@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 23 Nov 2009 16:45:05 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH v2 3/8] rt2x00: Clean up use of rt2x00_intf_is_pci.
+Date: Mon, 23 Nov 2009 22:44:49 +0100
+Message-Id: <1259012694-14869-4-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1259012694-14869-3-git-send-email-gwingerde@gmail.com>
+References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com>
+ <1259012694-14869-2-git-send-email-gwingerde@gmail.com>
+ <1259012694-14869-3-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 13, 2009 at 2:06 AM, Greg Oliver <oliver.greg@gmail.com> wrote:
-> On Thu, Nov 12, 2009 at 7:54 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> Along with the 2.6.32-rc7 comes the stable compat-wireless based [1]
->> on it [2] which allows you to get the 2.6.32-rc7 wireless subsystem
->> and new wireless drivers compilable and installed on older kernels.
->> This is like the general compat-wireless releases but are *stable* and
->> should be *stable*. Please report any issues ASAP. For details on
->> changes you can refer to the ChangeLog-2.6.32-rc7-wireless [3].
->>
->>  Luis
->>
->> [1] http://wireless.kernel.org/en/users/Download/stable
->> [2] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.32/compat-wireless-2.6.32-rc7.tar.bz2
->> [3] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.32/ChangeLog-2.6.32-rc7-wireless
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-> The link on kernel.org for rc7 is linked to rc6...  (rc7 does exist
-> there though)...
+RT chipsets are unique across both PCI and USB busses, and don't overlap.
+Therefore there is no need to test for bus type when only checking for
+chipset type. Remove the redundant checks.
 
-That seems fixed now.
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Acked-by: Ivo van Doorn <ivdoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   17 +++++++----------
+ 1 files changed, 7 insertions(+), 10 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index fcd0c88..02ffcf5 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -217,14 +217,12 @@ void rt2800_mcu_request(struct rt2x00_dev *rt2x00dev,
+ {
+ 	u32 reg;
+ 
+-	if (rt2x00_intf_is_pci(rt2x00dev)) {
+-		/*
+-		* RT2880 and RT3052 don't support MCU requests.
+-		*/
+-		if (rt2x00_rt(&rt2x00dev->chip, RT2880) ||
+-		    rt2x00_rt(&rt2x00dev->chip, RT3052))
+-			return;
+-	}
++	/*
++	 * RT2880 and RT3052 don't support MCU requests.
++	 */
++	if (rt2x00_rt(&rt2x00dev->chip, RT2880) ||
++	    rt2x00_rt(&rt2x00dev->chip, RT3052))
++		return;
+ 
+ 	mutex_lock(&rt2x00dev->csr_mutex);
+ 
+@@ -1482,8 +1480,7 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_bbp_write(rt2x00dev, 105, 0x05);
+ 	}
+ 
+-	if (rt2x00_intf_is_pci(rt2x00dev) &&
+-	    rt2x00_rt(&rt2x00dev->chip, RT3052)) {
++	if (rt2x00_rt(&rt2x00dev->chip, RT3052)) {
+ 		rt2800_bbp_write(rt2x00dev, 31, 0x08);
+ 		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
+ 		rt2800_bbp_write(rt2x00dev, 80, 0x08);
+-- 
+1.6.5.3
+
