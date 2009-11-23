@@ -1,50 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp6.freeserve.com ([193.252.22.190]:52957 "EHLO
-	smtp6.freeserve.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754349AbZKTUGT (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.25]:19435 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752349AbZKWVrr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 15:06:19 -0500
-Received: from smtp6.freeserve.com (mwinf3628 [10.232.31.128])
-	by mwinf3605.me.freeserve.com (SMTP Server) with ESMTP id A79071C0036E
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Nov 2009 20:58:11 +0100 (CET)
-Date: Fri, 20 Nov 2009 19:58:34 +0000
-From: Chris Vine <chris@cvine.freeserve.co.uk>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: William Bourque <william.bourque@polymtl.ca>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: Fatal DMA error problem with netbook and BCM4312
-Message-ID: <20091120195834.334d8bc0@boulder.homenet>
-In-Reply-To: <4B068ED9.5070107@lwfinger.net>
-References: <4AFA09C8.4060602@gmail.com>
-	<200911131216.43704.mb@bu3sch.de>
-	<4AFD83CA.2050508@lwfinger.net>
-	<200911131836.26857.mb@bu3sch.de>
-	<4AFD9E20.3060501@gmail.com>
-	<4AFDD1C9.4050402@lwfinger.net>
-	<4AFDF68C.4040804@polymtl.ca>
-	<4AFE1E5F.9040009@lwfinger.net>
-	<4AFEFC2C.5030704@polymtl.ca>
-	<4B068ED9.5070107@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 23 Nov 2009 16:47:47 -0500
+MIME-Version: 1.0
+In-Reply-To: <43e72e890911191519h73bd6699if860257c049ba1a0@mail.gmail.com>
+References: <4ADE2F66.1070703@gmail.com> <43e72e890911161515q64ff527cyefd7d769f3c501b@mail.gmail.com>
+	<a44ae5cd0911161641n36d3c746pb69a9cac1eba1784@mail.gmail.com>
+	<43e72e890911161708o607da2a5hefe98e92fd13ee7a@mail.gmail.com>
+	<43e72e890911191519h73bd6699if860257c049ba1a0@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 23 Nov 2009 13:47:32 -0800
+Message-ID: <43e72e890911231347k48f105dcw24dd99c1c39f034@mail.gmail.com>
+Subject: Re: 2.6.32-rc5-git1 -- BUG kmalloc-8192: Poison overwritten (ath9k
+	implicated)
+To: Miles Lane <miles.lane@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 20 Nov 2009 06:43:05 -0600
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> One last check. I would appreciate receiving answers to the following
-> questions. These questions apply to anyone else with this problem.
-> 
-> Does the pm_qos patch help your "fatal DMA error" problem,
-> particularly when booted from power-off?
-> 
-> If you warm-boot after loading the wl driver, does the patch make any
-> difference?
+On Thu, Nov 19, 2009 at 3:19 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Mon, Nov 16, 2009 at 5:08 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Mon, Nov 16, 2009 at 4:41 PM, Miles Lane <miles.lane@gmail.com> wrote:
+>>> On Mon, Nov 16, 2009 at 6:15 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>>> On Tue, Oct 20, 2009 at 1:45 PM, Miles Lane <miles.lane@gmail.com> wrote:
+>>>>> Let me know if you want my .config file.  I think this was triggered by
+>>>>> suspending my laptop.
+>>>>>
+>>>>> BUG kmalloc-8192: Poison overwritten
+>>>>
+>>>> Thanks for your report Miles.
+>>>>
+>>>> Are you using Linus' tree? Felix wrote some patches that got rid of
+>>>> the rate control private area which we kmalloc/kfree and at least one
+>>>> user reported that these patches fixed a memory leak. I'm curious if
+>>>> the same patches would resolve this issue.
+>>>>
+>>>> Only thing is these patches apply against wireless-testing and not
+>>>> 2.6.32. To test them you'd have to pull wireless-testing master to
+>>>> your tree and then apply the patches both before and after.
+>>>>
+>>>> Would you be up to try that?
+>>>
+>>> Yes, definitely.  Thanks.  I will try to accomplish this and let you
+>>> know if I get stuck.
+>>
+>> OK, not sure if a merge of wireless-testing will be clean so you may
+>> want to just clone fresh.. Anyway after you get wireless-testing bits
+>> you'll want to apply these:
+>>
+>> http://patchwork.kernel.org/patch/60127/
+>> http://patchwork.kernel.org/patch/60128/
+>> http://patchwork.kernel.org/patch/60126/
+>>
+>> If you want to merge wireless-testing you can try:
+>>
+>> git merge git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+>> master
+>>
+>> If that'd doesn't gos smooth just clone it and I think you should be
+>> able to safely --reference your current tree for objects for Linus'
+>> tree.
+>
+> Miles I see no reply from you yet so I backported the patches in
+> question for you. Can you please try 2.6.32-rc7 and apply these
+> patches on top:
+>
+> http://bombadil.infradead.org/~mcgrof/patches/ath9k/2009/11-19/70-mac80211-total-ampdu-tx-info.patch
+> http://bombadil.infradead.org/~mcgrof/patches/ath9k/2009/11-19/71-ath9k-remove-tx_info_priv.patch
 
-What's the date/time of the last patch you posted for this and what
-kernel does it apply to?
+Miles, any luck testing this?
 
-Chris
-
-
+  Luis
