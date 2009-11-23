@@ -1,82 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hiems2.ing.unibs.it ([192.167.23.204]:33416 "EHLO
-	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756489AbZKWLID (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:49790 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753026AbZKWS3F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 06:08:03 -0500
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>
-Message-Id: <5A2C6B7F-5617-49AA-B22A-A5574D6CD9FA@ing.unibs.it>
-From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-To: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>
-In-Reply-To: <200911231149.38494.mb@bu3sch.de>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v936)
-Subject: Re: [PATCH] b43: Rewrite DMA Tx status handling sanity checks
-Date: Mon, 23 Nov 2009 12:00:15 +0100
-References: <200911192224.29491.mb@bu3sch.de> <4B0A137B.7050604@lwfinger.net> <200911231149.38494.mb@bu3sch.de>
+	Mon, 23 Nov 2009 13:29:05 -0500
+Received: by ewy19 with SMTP id 19so2134520ewy.21
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 10:29:11 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 4/6] rt2x00: Fix typo (lengt --> length) in rt2x00queue.c
+Date: Mon, 23 Nov 2009 19:29:08 +0100
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+References: <1258960565-26736-1-git-send-email-gwingerde@gmail.com> <1258960565-26736-4-git-send-email-gwingerde@gmail.com> <1258960565-26736-5-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1258960565-26736-5-git-send-email-gwingerde@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911231929.08635.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Nov 23, 2009, at 11:49 AM, Michael Buesch wrote:
+On Monday 23 November 2009, Gertjan van Wingerde wrote:
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-> On Monday 23 November 2009 05:45:47 Larry Finger wrote:
->> On 11/19/2009 03:24 PM, Michael Buesch wrote:
->>> This rewrites the error handling policies in the TX status handler.
->>> It tries to be error-tolerant as in "try hard to not crash the  
->>> machine".
->>> It won't recover from errors (that are bugs in the firmware or  
->>> driver),
->>> because that's impossible. However, it will return a more or less  
->>> useful
->>> error message and bail out. It also tries hard to use rate-limited  
->>> messages
->>> to not flood the syslog in case of a failure.
->>
->> This patch definitely helped open-source firmware, but it is not a  
->> complete fix.
->
-> It is no fix _at_ _all_.
-> The patch does not change a single line of code that wasn't either  
-> an assertion
-> or a machine crash before.
-> So it just transforms assertions into more verbose assertions and  
-> crashes into
-> assertions without a crash.
->
->> debug: Out of order TX status report on DMA ring 1. Expected 114,  
->> but got 146
->
-> Ok, this is what I expected.
->
-> Let's see what's going on. Here's the ring. o is unused, * is used.
->
-> ooooooooooooooo 
-> ***************************************************ooooooooooooooooooooooooooo
->               ^               ^                                 ^
->               114             146                               newest
->               oldest
->
-> So as you can see, the firmware reported a TX status for a frame  
-> right in the middle of
-> the ringbuffer. The new code detects this now before getting a  
-> double free and/or silent
-> memory corruption (freeing of used memory).
-Hi Michael,
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-so you can observe this behavior at your site. Do you mind describing  
-the exact configuration? Maybe this time I can reproduce this  
-behavior, as I tried everything to make it happen. I also asked Larry  
-one of his boards and put it into several PCs but had no chance to  
-reproduce the crash. Could you please also report the neighboring  
-stations, the AP you are connected and so on.
-
-Many thanks,
--Francesco
-
-
-
-Informativa sulla privacy: http://help.ing.unibs.it/privacy.php
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00queue.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> index eaedee8..32d4aea 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> @@ -162,10 +162,10 @@ void rt2x00queue_align_frame(struct sk_buff *skb)
+>  	skb_trim(skb, frame_length);
+>  }
+>  
+> -void rt2x00queue_align_payload(struct sk_buff *skb, unsigned int header_lengt)
+> +void rt2x00queue_align_payload(struct sk_buff *skb, unsigned int header_length)
+>  {
+>  	unsigned int frame_length = skb->len;
+> -	unsigned int align = ALIGN_SIZE(skb, header_lengt);
+> +	unsigned int align = ALIGN_SIZE(skb, header_length);
+>  
+>  	if (!align)
+>  		return;
 
 
