@@ -1,66 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:60743 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751984AbZKDPxh (ORCPT
+Received: from mail-bw0-f223.google.com ([209.85.218.223]:51330 "EHLO
+	mail-bw0-f223.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757487AbZKWXy1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 10:53:37 -0500
-Received: by ewy3 with SMTP id 3so3232790ewy.37
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 07:53:42 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Adam Wozniak <awozniak@irobot.com>
-Subject: Re: compat-wireless and minstrel
-Date: Wed, 4 Nov 2009 16:53:33 +0100
-Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	derek@indranet.co.nz
-References: <4AF0D54D.4090303@irobot.com>
-In-Reply-To: <4AF0D54D.4090303@irobot.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200911041653.33737.chunkeey@googlemail.com>
+	Mon, 23 Nov 2009 18:54:27 -0500
+Received: by bwz23 with SMTP id 23so5840043bwz.29
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 15:54:33 -0800 (PST)
+Subject: RE: [ipw3945-devel] iwl3945 dies on module reload
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: "Cahill, Ben M" <ben.m.cahill@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <02B3067C068D0549A8CCFCB17D4D318B4E6032E5@orsmsx502.amr.corp.intel.com>
+References: <1258968499.3271.5.camel@maxim-laptop>
+	 <1258972050.7094.140.camel@johannes.local>
+	 <1258973082.3675.0.camel@maxim-laptop>
+	 <1258973362.7094.151.camel@johannes.local>
+	 <1258996575.9727.2.camel@maxim-laptop>
+	 <02B3067C068D0549A8CCFCB17D4D318B4E6032E5@orsmsx502.amr.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 24 Nov 2009 01:54:28 +0200
+Message-ID: <1259020468.16650.0.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 04 November 2009 02:13:49 Adam Wozniak wrote:
-> I have two systems under test, both Dell laptops (a Latitude D630 and an 
-> Inspiron 600m) both running Ubuntu 9.10 with the latest updates, and 
-> bleeding edge compat-wireless-2009-11-02.  I'm using identical AR9170 
-> based D-Link DWA-160 USB 802.11adapters.  I'm using nuttcp to measure 
-> throughput.  I'm running in ad-hoc mode.  Both machines have the same 
-> ar9170 files in /lib/firmware.  The machines are sitting about 5 feet 
-> apart in my office.
+On Mon, 2009-11-23 at 15:24 -0800, Cahill, Ben M wrote: 
 > 
-> I'm having occasional problems where throughput drops through the floor 
-> (0.5Mbps - 1.5Mbps).  When I cat 
-> /sys/kernel/debug/ieee80211/*/stations/*/rc_stats, one of the machines 
-> lists the full set of rates, but the other only lists 1M and 54M.  After 
-> a period of time, that machine drops 54M and lists only one rate 
-> (1Mbps), and the throughput listed by nuttcp drops accordingly.  I 
-> assume that, for whatever reason, the rates drop off the list and 
-> minstrel uses the only one left available to it.
+> >-----Original Message-----
+> >From: Maxim Levitsky [mailto:maximlevitsky@gmail.com] 
+> >Sent: Monday, November 23, 2009 12:16 PM
+> >To: Johannes Berg
+> >Cc: linux-wireless; iwlwifi maling list
+> >Subject: [ipw3945-devel] iwl3945 dies on module reload
+> >
+> >When reloading the iwl3945 driver I often get this:
+> >
+> >
+> >[  830.333386] iwl3945: Intel(R) PRO/Wireless 3945ABG/BG 
+> >Network Connection driver for Linux, 1.2.26kds
+> >[  830.333407] iwl3945: Copyright(c) 2003-2009 Intel Corporation
+> >[  830.333536] iwl3945 0000:06:00.0: PCI INT A -> GSI 19 
+> >(level, low) -> IRQ 19
+> >[  830.374979] iwl3945 0000:06:00.0: Tunable channels: 13 
+> >802.11bg, 0 802.11a channels
+> >[  830.374995] iwl3945 0000:06:00.0: Detected Intel Wireless 
+> >WiFi Link 3945BG
+> >[  830.375163] iwl3945 0000:06:00.0: irq 32 for MSI/MSI-X
+> >[  830.376859] phy0: Selected rate control algorithm 'iwl-3945-rs'
+> >[  830.427214] iwl3945 0000:06:00.0: firmware: requesting 
+> >iwlwifi-3945-2.ucode
+> >[  830.526945] iwl3945 0000:06:00.0: loaded firmware version 15.32.2.9
+> >[  830.544236] CE: hpet increasing min_delta_ns to 15000 nsec
+> >[  830.575694] iwl3945 0000:06:00.0: BSM uCode verification 
+> >failed at addr 0x00003800+0 (of 900), is 0xa5a5a5a2, s/b 0xf802020
+> >[  830.578862] iwl3945 0000:06:00.0: Hardware error detected.  
+> >Restarting.
+> >[  832.570133] iwl3945 0000:06:00.0: Wait for START_ALIVE 
+> >timeout after 2000ms.
+> >[  832.622676] iwl3945 0000:06:00.0: BSM uCode verification 
+> >failed at addr 0x00003800+0 (of 900), is 0xa5a5a5a2, s/b 0xf802020
+> >[  832.625839] iwl3945 0000:06:00.0: Hardware error detected.  
+> >Restarting.
+> >[  834.620132] iwl3945 0000:06:00.0: Wait for START_ALIVE 
+> >timeout after 2000ms.
 > 
-> If I modify include/net/mac80211.h and force the inline function 
-> rate_supported to always return 1, this fixes the problem.  However, I 
-> think this is a band aid around some other issue.
+> The 0xa5a5a5a2 signature indicates that the device is powered up and the PCI Express link is working, but somehow the device internals have not been powered up / initialized.
 > 
-> Any clues or ideas what the real issue might be here?
-no, but there are a few knobs you can play with...
+> Are you using a very recent version of the driver?  I've done some work in this area in the past couple of months.
 
-First of: more debug data
 
-1. enable some ibss-related verbose messages
-   open config.mk (in your compat-wireless directory)
-   and get rid of the leading "# " <-- "sharp + space"
-   in front of # CONFIG_MAC80211_IBSS_DEBUG=y
-   (rebuild, reload, retest & checkout dmesg for a _flood_
-    of potential interesting data)
+I use -git tip of wireless-testing
 
-2. do you think you can get a capture any beacons, auth, assoc, reassoc 
-   management frames form the misbehaving setup?
+Best regards,
+Maxim Levitsky
 
-3. cat /sys/kernel/debug/ieee80211/*/stations/*/rc_stats perhaps?
-   (yeah, I know... sort of pointless, but people have different believes
-    and somehow they have the bad tendency to really _stick_ to it!)
-
-Regards,
-	Chr
