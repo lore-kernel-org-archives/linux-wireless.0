@@ -1,52 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:58808 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753582AbZKFXRG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 18:17:06 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>, stable@kernel.org
-Subject: [PATCH 2/2 v2.6.32] iwlwifi: Fix issue on file transfer stalled in HT mode
-Date: Fri,  6 Nov 2009 15:17:05 -0800
-Message-Id: <1257549425-13591-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1257549425-13591-1-git-send-email-reinette.chatre@intel.com>
-References: <1257549425-13591-1-git-send-email-reinette.chatre@intel.com>
+Received: from hogsmeade.leitwerk.net ([217.28.96.50]:44284 "EHLO
+	hogsmeade.leitwerk.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756439AbZKWJ60 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2009 04:58:26 -0500
+From: Simon Raffeiner <sturmflut@lieberbiber.de>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 1/6] rt2x00: Only initialize HT on rt2800 devices that support it.
+Date: Mon, 23 Nov 2009 10:58:31 +0100
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Ivo van Doorn <ivdoorn@gmail.com>
+References: <1258960565-26736-1-git-send-email-gwingerde@gmail.com> <1258960565-26736-2-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1258960565-26736-2-git-send-email-gwingerde@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <200911231058.31157.sturmflut@lieberbiber.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Am Montag, 23. November 2009 08:16:00 schrieb Gertjan van Wingerde:
+> Some RT28xx/RT30xx devices don't support 802.11n, when they are combined with
+> the RF2020 chipset. Ensure that HT is disabled for these devices.
 
-Turn on RTS/CTS for HT to prevent uCode TX fifo underrun
+Hi Gertjan,
 
-This is fix for
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2103
+do you know if this fixes the RT2070L chipset? It's an RT3070 descendant without 802.11n support, I cracked the device open and there's no RF2020 to be seen - just a single RT2070L chip. Somebody posted that the RT2070L has the RF part integrated to make it cheaper, maybe RT2070 = RT3070 + RF2020 in a single chip?
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Tested-by: Jiajia Zheng <jiajia.zheng@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-cc: stable@kernel.org
----
-These patches are also targeting stable but do not apply there in its
-current form. They will be backported and submitted there once they make it
-into linux-2.6. The cc to stable@kernel.org is just informational.
+I can't test my own device at the moment.
 
- drivers/net/wireless/iwlwifi/iwl-1000.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 2716b91..950267a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -161,5 +161,6 @@ struct iwl_cfg iwl1000_bgn_cfg = {
- 	.max_ll_items = OTP_MAX_LL_ITEMS_1000,
- 	.shadow_ram_support = false,
- 	.ht_greenfield_support = true,
-+	.use_rts_for_ht = true, /* use rts/cts protection */
- };
- 
--- 
-1.5.6.3
-
+regards
+Simon Raffeiner
