@@ -1,36 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f226.google.com ([209.85.217.226]:33563 "EHLO
-	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757970AbZKDUBq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 15:01:46 -0500
+Received: from bu3sch.de ([62.75.166.246]:39648 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757181AbZKWLF2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2009 06:05:28 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+Subject: Re: [PATCH] b43: Rewrite DMA Tx status handling sanity checks
+Date: Mon, 23 Nov 2009 12:05:30 +0100
+Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <200911192224.29491.mb@bu3sch.de> <200911231149.38494.mb@bu3sch.de> <5A2C6B7F-5617-49AA-B22A-A5574D6CD9FA@ing.unibs.it>
+In-Reply-To: <5A2C6B7F-5617-49AA-B22A-A5574D6CD9FA@ing.unibs.it>
 MIME-Version: 1.0
-In-Reply-To: <20091104173518.28463.61728.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-	 <20091104173518.28463.61728.sendpatchset@localhost.localdomain>
-Date: Wed, 4 Nov 2009 21:01:51 +0100
-Message-ID: <14add3d10911041201m5fe0eee5j8d20ed62ed022396@mail.gmail.com>
-Subject: Re: [PATCH 27/41] rt2x00: fix rt2x00usb_regbusy_read() arguments
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200911231205.33093.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 4, 2009 at 6:35 PM, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2x00: fix rt2x00usb_regbusy_read() arguments
->
-> Add const to 'field' argument of rt2x00usb_regbusy_read()
-> (all arguments match rt2x00pci_regbusy_read() ones now).
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
+On Monday 23 November 2009 12:00:15 Francesco Gringoli wrote:
+> Hi Michael,
+> 
+> so you can observe this behavior at your site. Do you mind describing  
+> the exact configuration? Maybe this time I can reproduce this  
+> behavior, as I tried everything to make it happen. I also asked Larry  
+> one of his boards and put it into several PCs but had no chance to  
+> reproduce the crash. Could you please also report the neighboring  
+> stations, the AP you are connected and so on.
 
-For what it is worth:
+I don't reproduce this, because I never really tried running the opensource firmware.
+Larry reproduced it, this time.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+-- 
+Greetings, Michael.
