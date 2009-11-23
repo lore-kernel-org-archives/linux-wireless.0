@@ -1,96 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:40568 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932315AbZKDRgV (ORCPT
+Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:58488 "EHLO
+	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757157AbZKWVpG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 12:36:21 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: linux-wireless@vger.kernel.org
+	Mon, 23 Nov 2009 16:45:06 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
 Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 04 Nov 2009 18:36:02 +0100
-Message-Id: <20091104173602.28463.31521.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-Subject: [PATCH 33/41] rt2800: fix comments in rt2800.h
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH v2 4/8] rt2x00: Fix typo (lengt --> length) in rt2x00queue.c
+Date: Mon, 23 Nov 2009 22:44:50 +0100
+Message-Id: <1259012694-14869-5-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1259012694-14869-4-git-send-email-gwingerde@gmail.com>
+References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com>
+ <1259012694-14869-2-git-send-email-gwingerde@gmail.com>
+ <1259012694-14869-3-git-send-email-gwingerde@gmail.com>
+ <1259012694-14869-4-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] rt2800: fix comments in rt2800.h
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Acked-by: Ivo van Doorn <ivdoorn@gmail.com>
 ---
- drivers/net/wireless/rt2x00/rt2800usb.h |   42 +++++++++++++++-----------------
- 1 file changed, 20 insertions(+), 22 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00queue.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Index: b/drivers/net/wireless/rt2x00/rt2800usb.h
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -181,8 +181,8 @@
-  * WMM_AIFSN_CFG: Aifsn for each EDCA AC
-  * AIFSN0: AC_BE
-  * AIFSN1: AC_BK
-- * AIFSN1: AC_VI
-- * AIFSN1: AC_VO
-+ * AIFSN2: AC_VI
-+ * AIFSN3: AC_VO
-  */
- #define WMM_AIFSN_CFG			0x0214
- #define WMM_AIFSN_CFG_AIFSN0		FIELD32(0x0000000f)
-@@ -194,8 +194,8 @@
-  * WMM_CWMIN_CSR: CWmin for each EDCA AC
-  * CWMIN0: AC_BE
-  * CWMIN1: AC_BK
-- * CWMIN1: AC_VI
-- * CWMIN1: AC_VO
-+ * CWMIN2: AC_VI
-+ * CWMIN3: AC_VO
-  */
- #define WMM_CWMIN_CFG			0x0218
- #define WMM_CWMIN_CFG_CWMIN0		FIELD32(0x0000000f)
-@@ -207,8 +207,8 @@
-  * WMM_CWMAX_CSR: CWmax for each EDCA AC
-  * CWMAX0: AC_BE
-  * CWMAX1: AC_BK
-- * CWMAX1: AC_VI
-- * CWMAX1: AC_VO
-+ * CWMAX2: AC_VI
-+ * CWMAX3: AC_VO
-  */
- #define WMM_CWMAX_CFG			0x021c
- #define WMM_CWMAX_CFG_CWMAX0		FIELD32(0x0000000f)
-@@ -528,9 +529,6 @@
- /*
-  * RF_CSR_CFG2: RF control register
-  * VALUE: Register value to program into RF
-- * RFGAP: Gap between BB_CONTROL_RF and RF_LE
-- *        0: 3 system clock cycle (37.5usec)
-- *        1: 5 system clock cycle (62.5usec)
-  */
- #define RF_CSR_CFG2			0x1028
- #define RF_CSR_CFG2_VALUE		FIELD32(0x00ffffff)
-@@ -1306,8 +1304,8 @@
-  * PAIRWISE_KEY_TABLE_BASE: 32-byte * 256 entry
-  * MAC_IVEIV_TABLE_BASE: 8-byte * 256-entry
-  * MAC_WCID_ATTRIBUTE_BASE: 4-byte * 256-entry
-- * SHARED_KEY_TABLE_BASE: 32 bytes * 32-entry
-- * SHARED_KEY_MODE_BASE: 4 bits * 32-entry
-+ * SHARED_KEY_TABLE_BASE: 32-byte * 16-entry
-+ * SHARED_KEY_MODE_BASE: 4-byte * 16-entry
-  */
- #define MAC_WCID_BASE			0x1800
- #define PAIRWISE_KEY_TABLE_BASE		0x4000
-@@ -1416,7 +1414,7 @@ struct mac_iveiv_entry {
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index eaedee8..32d4aea 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -162,10 +162,10 @@ void rt2x00queue_align_frame(struct sk_buff *skb)
+ 	skb_trim(skb, frame_length);
+ }
  
- /*
-  * HW_DFS_CTS_BASE:
-- * FS CTS frame base address. It's where mac stores CTS frame for DFS.
-+ * DFS CTS frame base address. It's where mac stores CTS frame for DFS.
-  */
- #define HW_DFS_CTS_BASE			0x7780
+-void rt2x00queue_align_payload(struct sk_buff *skb, unsigned int header_lengt)
++void rt2x00queue_align_payload(struct sk_buff *skb, unsigned int header_length)
+ {
+ 	unsigned int frame_length = skb->len;
+-	unsigned int align = ALIGN_SIZE(skb, header_lengt);
++	unsigned int align = ALIGN_SIZE(skb, header_length);
  
+ 	if (!align)
+ 		return;
+-- 
+1.6.5.3
+
