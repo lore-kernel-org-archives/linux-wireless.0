@@ -1,58 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51949 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752272AbZKQOAb (ORCPT
+Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:50582 "EHLO
+	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754599AbZKWHQ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 09:00:31 -0500
-Date: Tue, 17 Nov 2009 08:58:17 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [RFC] mac80211: disallow bridging managed/adhoc interfaces
-Message-ID: <20091117135817.GC27743@tuxdriver.com>
-References: <1258465585.3682.7.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1258465585.3682.7.camel@johannes.local>
+	Mon, 23 Nov 2009 02:16:28 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 2/6] rt2x00: Remove unused variable frame_control from rt2x00mac_tx.
+Date: Mon, 23 Nov 2009 08:16:01 +0100
+Message-Id: <1258960565-26736-3-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1258960565-26736-2-git-send-email-gwingerde@gmail.com>
+References: <1258960565-26736-1-git-send-email-gwingerde@gmail.com>
+ <1258960565-26736-2-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 17, 2009 at 02:46:25PM +0100, Johannes Berg wrote:
-> A number of people have tried to add a wireless interface
-> (in managed mode) to a bridge and then complained that it
-> doesn't work. It cannot work, however, because in 802.11
-> networks all packets need to be acknowledged and as such
-> need to be sent to the right address. Promiscuous doesn't
-> help here. The wireless address format used for these
-> links has only space for three addresses, the
->  * transmitter, which must be equal to the sender (origin)
->  * receiver (on the wireless medium), which is the AP in
->    the case of managed mode
->  * the recipient (destination), which is on the APs local
->    network segment
-> 
-> In an IBSS, it is similar, but the receiver and recipient
-> must match and the third address is used as the BSSID.
-> 
-> To avoid such mistakes in the future, disallow adding a
-> wireless interface to a bridge.
-> 
-> Felix has recently added a four-address mode to the AP
-> and client side that can be used (after negotiating that
-> it is possible, which must happen out-of-band by setting
-> up both sides) for bridging, so allow that case.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+As additional fallout also remove the also unused variable ieee80211hdr.
 
-ACK -- we get these complaints fairly often...
+Reported-by: Johannes Stezenbach <js@sig21.net>
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00mac.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-I don't think I've sent the 4addr stuff to Dave yet.  Should I just
-take this through my tree?
-
-John
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 9c90ceb..de549c2 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -103,10 +103,8 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_hdr *ieee80211hdr = (struct ieee80211_hdr *)skb->data;
+ 	enum data_queue_qid qid = skb_get_queue_mapping(skb);
+ 	struct data_queue *queue;
+-	u16 frame_control;
+ 
+ 	/*
+ 	 * Mac80211 might be calling this function while we are trying
+@@ -141,7 +139,6 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	 * either RTS or CTS-to-self frame and handles everything
+ 	 * inside the hardware.
+ 	 */
+-	frame_control = le16_to_cpu(ieee80211hdr->frame_control);
+ 	if ((tx_info->control.rates[0].flags & (IEEE80211_TX_RC_USE_RTS_CTS |
+ 						IEEE80211_TX_RC_USE_CTS_PROTECT)) &&
+ 	    !rt2x00dev->ops->hw->set_rts_threshold) {
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.5.3
+
