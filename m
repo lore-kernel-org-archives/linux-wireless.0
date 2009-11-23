@@ -1,78 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:31482 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932297AbZKMT4r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 14:56:47 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Daniel C Halperin <daniel.c.halperin@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 12/16] iwlwifi: make iwlwifi send beacons
-Date: Fri, 13 Nov 2009 11:56:34 -0800
-Message-Id: <1258142198-3223-13-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
-References: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:50450 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757071AbZKWKlm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2009 05:41:42 -0500
+Subject: Re: [PATCH 6/6] mac80211: Allow extra TX headroom to be consumed
+ by drivers.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <1258960565-26736-7-git-send-email-gwingerde@gmail.com>
+References: <1258960565-26736-1-git-send-email-gwingerde@gmail.com>
+	 <1258960565-26736-2-git-send-email-gwingerde@gmail.com>
+	 <1258960565-26736-3-git-send-email-gwingerde@gmail.com>
+	 <1258960565-26736-4-git-send-email-gwingerde@gmail.com>
+	 <1258960565-26736-5-git-send-email-gwingerde@gmail.com>
+	 <1258960565-26736-6-git-send-email-gwingerde@gmail.com>
+	 <1258960565-26736-7-git-send-email-gwingerde@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-aOpQLKY0NLu5NvKueA6s"
+Date: Mon, 23 Nov 2009 11:41:44 +0100
+Message-ID: <1258972904.7094.150.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel C Halperin <daniel.c.halperin@intel.com>
 
-Handle BSS_CHANGED_BEACON_ENABLED to enable the sending
-of beacons. Also set the correct HT RXON and QoS config.
+--=-aOpQLKY0NLu5NvKueA6s
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Daniel C Halperin <daniel.c.halperin@intel.com>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c  |    5 +++++
- drivers/net/wireless/iwlwifi/iwl-core.c |    8 ++++++++
- 2 files changed, 13 insertions(+), 0 deletions(-)
+On Mon, 2009-11-23 at 08:16 +0100, Gertjan van Wingerde wrote:
+> Allow drivers to consume the extra TX headroom they are requesting instea=
+d
+> of assuming they will give it back. This specifically is the case for
+> the rt2x00 driver, as a large part of the requested extra TX headroom is
+> used to properly align the frame for DMA usage, and the frame is never
+> moved back to the original location.
+> Fix this by reserving TX headroom accounting for both the driver requeste=
+d
+> amount and the special monitor interface header that needs to be added,
+> instead of just the maximum of the two.
+>=20
+> See http://marc.info/?l=3Dlinux-kernel&m=3D125892467801662&w=3D2 for deta=
+ils.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 24f3192..6db7447 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2564,6 +2564,10 @@ void iwl_config_ap(struct iwl_priv *priv)
- 			IWL_WARN(priv, "REPLY_RXON_TIMING failed - "
- 					"Attempting to continue.\n");
- 
-+		/* AP has all antennas */
-+		priv->chain_noise_data.active_chains =
-+			priv->hw_params.valid_rx_ant;
-+		iwl_set_rxon_ht(priv, &priv->current_ht_config);
- 		if (priv->cfg->ops->hcmd->set_rxon_chain)
- 			priv->cfg->ops->hcmd->set_rxon_chain(priv);
- 
-@@ -2592,6 +2596,7 @@ void iwl_config_ap(struct iwl_priv *priv)
- 		/* restore RXON assoc */
- 		priv->staging_rxon.filter_flags |= RXON_FILTER_ASSOC_MSK;
- 		iwlcore_commit_rxon(priv);
-+		iwl_reset_qos(priv);
- 		spin_lock_irqsave(&priv->lock, flags);
- 		iwl_activate_qos(priv, 1);
- 		spin_unlock_irqrestore(&priv->lock, flags);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 294d50c..3d49a65 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2498,6 +2498,14 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 		}
- 	}
- 
-+	if ((changes & BSS_CHANGED_BEACON_ENABLED) &&
-+	    vif->bss_conf.enable_beacon) {
-+		memcpy(priv->staging_rxon.bssid_addr,
-+		       bss_conf->bssid, ETH_ALEN);
-+		memcpy(priv->bssid, bss_conf->bssid, ETH_ALEN);
-+		iwlcore_config_ap(priv);
-+	}
-+
- 	mutex_unlock(&priv->mutex);
- 
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
--- 
-1.5.6.3
+> -	local->tx_headroom =3D max_t(unsigned int , local->hw.extra_tx_headroom=
+,
+> -				   sizeof(struct ieee80211_tx_status_rtap_hdr));
+> +	local->tx_headroom =3D local->hw.extra_tx_headroom +
+> +				   sizeof(struct ieee80211_tx_status_rtap_hdr);
+
+Even though the radiotap header currently is only 13 bytes long, I don't
+really like this, you're not consuming all of extra_tx_headroom! I'd
+rather have a definition somewhere
+
+#define MAC80211_TX_STATUS_HEADROOM		13
+
+(with a BUILD_BUG_ON(sizeof(rtap_hdr) =3D=3D MAC80211_TX_STATUS_HEADROOM))
+so that you can make the driver set
+	extra_tx_headroom =3D max_t(MAC80211_TX_STATUS_HEADROOM, txi) + align;
+
+johannes
+
+--=-aOpQLKY0NLu5NvKueA6s
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLCmbkAAoJEODzc/N7+Qma69QP/AxmyNVEjIe/rjsihRTkXrOj
+AOwnWGR9v8WYWAnAJxWbW0DZu6SXYz1LBHIhET1pv9hda4hShA24Jv3kAOs1DvdZ
+dHkmHHisSa5df/aJUWZraigu2ajp5Ab6alNkCMvIk6L1CoRoczmZyQ3H1NSt7wKi
+coxxtQpXaSn3mItpsl8ccV7yg0/vn6yBD/Mm3ORD/ZoYamp06E5d8dNVKh2clnGF
+jWj1Gh5JR7vafOsrb6Hnv8Mt1Y1B9Dz48mDB3TxVPfrDDhzdKFv9V5NNVYHW9nst
+362oN54zSMMnWFOuyweFQXAnNYWECWAT0HCviVmty7Cus/1Ja5gPh9uwNuqfhVXI
+cnhHr0D7LsyGqWuoBhliuTi1vaUg+g9JH7SUajg6x2ve/REkejUsMynT7A4iG8pk
+fwsBeIwNmWHbJpZeFB31GC1dYEv4c3On8cSda8EkURYB9Mjlkk6ULbkq/GBA/eFg
+8rakjzz/ilVpEZXf9ncoyHDj4SxnIFCidrixkfs11HVlaYRxFaStgWOk7t/xv7UB
+q+lIo3VNZBt9hYafZdu42+uHNh9GLAn/GPxJRyq2BrBSpHn4cBKqwuyI+j3+RXMH
+uXQqRZ7/PubVyFxT3DBMY5ocgN7R4Bv109Nfe4nh8jN/HH/pxzSE5BZTmgoz4Yqr
+B3g+9kwH6FwRs//4L1Je
+=S/1Y
+-----END PGP SIGNATURE-----
+
+--=-aOpQLKY0NLu5NvKueA6s--
 
