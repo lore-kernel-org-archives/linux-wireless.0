@@ -1,84 +1,214 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:47150 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755074AbZKIXrF (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52258 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754286AbZKWWAf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 18:47:05 -0500
-Received: by mail-ew0-f228.google.com with SMTP id 28so3974559ewy.18
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 15:47:10 -0800 (PST)
-From: Rui Paulo <rpaulo@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Rui Paulo <rpaulo@gmail.com>
-Subject: [PATCH v2 03/20] mac80211: implement the meshconf formation info field
-Date: Mon,  9 Nov 2009 23:46:41 +0000
-Message-Id: <1257810418-30075-4-git-send-email-rpaulo@gmail.com>
-In-Reply-To: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
-References: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
+	Mon, 23 Nov 2009 17:00:35 -0500
+Date: Mon, 23 Nov 2009 16:42:52 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2009-11-23
+Message-ID: <20091123214251.GB9045@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Mesh Configuration Formation Info field contains the number of
-neighbors.  This means that the beacon must be updated every time a
-peer joins or leaves.
+Dave,
 
-Signed-off-by: Rui Paulo <rpaulo@gmail.com>
-Signed-off-by: Javier Cardona <rpaulo@gmail.com>
-Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
-Tested-by: Brian Cavagnolo <brian@cozybit.com>
+Here are a few more fixes intended for 2.6.32.  They are small and
+self-contained and mostly speak for themselves.
+
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
 ---
- net/mac80211/mesh.c       |    9 ++++++---
- net/mac80211/mesh_plink.c |    2 ++
- 2 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index a49a337..7942518 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -223,6 +223,7 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_supported_band *sband;
- 	u8 *pos;
- 	int len, i, rate;
-+	u8 neighbors;
+Individual patches are available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
+
+---
+
+The following changes since commit 70e3bb504ccfe6ba725ab120bdb516d205d834f9:
+  Divy Le Ray (1):
+        cxgb3: fix premature page unmap
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+Johannes Berg (3):
+      mac80211: fix addba timer (again...)
+      mac80211: fix resume
+      rfkill: fix miscdev ops
+
+John W. Linville (1):
+      ath9k: set ps_default as false
+
+ drivers/net/wireless/ath/ath9k/main.c |    2 ++
+ net/mac80211/agg-tx.c                 |   18 ++++++++----------
+ net/mac80211/ieee80211_i.h            |    8 ++++++++
+ net/mac80211/util.c                   |   19 +++++++++----------
+ net/rfkill/core.c                     |    1 +
+ 5 files changed, 28 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 52bed89..43d2be9 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1555,6 +1555,8 @@ void ath_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		BIT(NL80211_IFTYPE_ADHOC) |
+ 		BIT(NL80211_IFTYPE_MESH_POINT);
  
- 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
- 	len = sband->n_bitrates;
-@@ -271,9 +272,11 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- 	/* Authentication Protocol identifier */
- 	*pos++ = sdata->u.mesh.mesh_auth_id;
++	hw->wiphy->ps_default = false;
++
+ 	hw->queues = 4;
+ 	hw->max_rates = 4;
+ 	hw->channel_change_time = 5000;
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index b09948c..206fd82 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -173,12 +173,14 @@ static void sta_addba_resp_timer_expired(unsigned long data)
  
--	/* Mesh Formation Info */
--	memset(pos, 0x00, 1);
--	pos += 1;
-+	/* Mesh Formation Info - number of neighbors */
-+	neighbors = atomic_read(&sdata->u.mesh.mshstats.estab_plinks);
-+	/* Number of neighbor mesh STAs or 15 whichever is smaller */
-+	neighbors = (neighbors > 15) ? 15 : neighbors;
-+	*pos++ = neighbors << 1;
+ 	/* check if the TID waits for addBA response */
+ 	spin_lock_bh(&sta->lock);
+-	if (!(*state & HT_ADDBA_REQUESTED_MSK)) {
++	if ((*state & (HT_ADDBA_REQUESTED_MSK | HT_ADDBA_RECEIVED_MSK)) !=
++						HT_ADDBA_REQUESTED_MSK) {
+ 		spin_unlock_bh(&sta->lock);
+ 		*state = HT_AGG_STATE_IDLE;
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 		printk(KERN_DEBUG "timer expired on tid %d but we are not "
+-				"expecting addBA response there", tid);
++				"(or no longer) expecting addBA response there",
++			tid);
+ #endif
+ 		return;
+ 	}
+@@ -666,21 +668,21 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
  
- 	/* Mesh capability */
- 	sdata->u.mesh.accepting_plinks = mesh_plink_availables(sdata);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index ffcbad7..f98c8d2 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -65,6 +65,7 @@ void mesh_plink_inc_estab_count(struct ieee80211_sub_if_data *sdata)
- {
- 	atomic_inc(&sdata->u.mesh.mshstats.estab_plinks);
- 	mesh_accept_plinks_update(sdata);
-+	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
+ 	state = &sta->ampdu_mlme.tid_state_tx[tid];
+ 
+-	del_timer_sync(&sta->ampdu_mlme.tid_tx[tid]->addba_resp_timer);
+-
+ 	spin_lock_bh(&sta->lock);
+ 
+ 	if (!(*state & HT_ADDBA_REQUESTED_MSK))
+-		goto timer_still_needed;
++		goto out;
+ 
+ 	if (mgmt->u.action.u.addba_resp.dialog_token !=
+ 		sta->ampdu_mlme.tid_tx[tid]->dialog_token) {
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 		printk(KERN_DEBUG "wrong addBA response token, tid %d\n", tid);
+ #endif /* CONFIG_MAC80211_HT_DEBUG */
+-		goto timer_still_needed;
++		goto out;
+ 	}
+ 
++	del_timer(&sta->ampdu_mlme.tid_tx[tid]->addba_resp_timer);
++
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 	printk(KERN_DEBUG "switched off addBA timer for tid %d \n", tid);
+ #endif /* CONFIG_MAC80211_HT_DEBUG */
+@@ -699,10 +701,6 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+ 		___ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR);
+ 	}
+ 
+-	goto out;
+-
+- timer_still_needed:
+-	add_timer(&sta->ampdu_mlme.tid_tx[tid]->addba_resp_timer);
+  out:
+ 	spin_unlock_bh(&sta->lock);
  }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 588005c..a910bf1 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -662,6 +662,14 @@ struct ieee80211_local {
+ 	bool suspended;
  
- static inline
-@@ -72,6 +73,7 @@ void mesh_plink_dec_estab_count(struct ieee80211_sub_if_data *sdata)
+ 	/*
++	 * Resuming is true while suspended, but when we're reprogramming the
++	 * hardware -- at that time it's allowed to use ieee80211_queue_work()
++	 * again even though some other parts of the stack are still suspended
++	 * and we still drop received frames to avoid waking the stack.
++	 */
++	bool resuming;
++
++	/*
+ 	 * quiescing is true during the suspend process _only_ to
+ 	 * ease timer cancelling etc.
+ 	 */
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index aeb65b3..e6c08da 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -520,9 +520,9 @@ EXPORT_SYMBOL_GPL(ieee80211_iterate_active_interfaces_atomic);
+  */
+ static bool ieee80211_can_queue_work(struct ieee80211_local *local)
  {
- 	atomic_dec(&sdata->u.mesh.mshstats.estab_plinks);
- 	mesh_accept_plinks_update(sdata);
-+	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
- }
+-        if (WARN(local->suspended, "queueing ieee80211 work while "
+-		 "going to suspend\n"))
+-                return false;
++	if (WARN(local->suspended && !local->resuming,
++		 "queueing ieee80211 work while going to suspend\n"))
++		return false;
  
- /**
+ 	return true;
+ }
+@@ -1025,13 +1025,9 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	struct sta_info *sta;
+ 	unsigned long flags;
+ 	int res;
+-	bool from_suspend = local->suspended;
+ 
+-	/*
+-	 * We're going to start the hardware, at that point
+-	 * we are no longer suspended and can RX frames.
+-	 */
+-	local->suspended = false;
++	if (local->suspended)
++		local->resuming = true;
+ 
+ 	/* restart hardware */
+ 	if (local->open_count) {
+@@ -1129,11 +1125,14 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	 * If this is for hw restart things are still running.
+ 	 * We may want to change that later, however.
+ 	 */
+-	if (!from_suspend)
++	if (!local->suspended)
+ 		return 0;
+ 
+ #ifdef CONFIG_PM
++	/* first set suspended false, then resuming */
+ 	local->suspended = false;
++	mb();
++	local->resuming = false;
+ 
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+ 		switch(sdata->vif.type) {
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index dbeaf29..7cb57ff 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -1188,6 +1188,7 @@ static long rfkill_fop_ioctl(struct file *file, unsigned int cmd,
+ #endif
+ 
+ static const struct file_operations rfkill_fops = {
++	.owner		= THIS_MODULE,
+ 	.open		= rfkill_fop_open,
+ 	.read		= rfkill_fop_read,
+ 	.write		= rfkill_fop_write,
 -- 
-1.5.6.5
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
