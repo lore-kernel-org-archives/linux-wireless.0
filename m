@@ -1,37 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:60309 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755413AbZKDT7R (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:48274 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753853AbZKWUu2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 14:59:17 -0500
-MIME-Version: 1.0
-In-Reply-To: <20091104173510.28463.24779.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-	 <20091104173510.28463.24779.sendpatchset@localhost.localdomain>
-Date: Wed, 4 Nov 2009 20:59:22 +0100
-Message-ID: <14add3d10911041159x78ff5e12ta3d787c502836276@mail.gmail.com>
-Subject: Re: [PATCH 26/41] rt2x00: fix rt2x00usb_register_multiwrite()
-	arguments
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 23 Nov 2009 15:50:28 -0500
+Received: from smtp05.web.de (fmsmtp05.dlan.cinetic.de [172.20.4.166])
+	by fmmailgate02.web.de (Postfix) with ESMTP id 94664143FD7F9
+	for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 21:50:34 +0100 (CET)
+Received: from [62.96.140.125] (helo=[172.20.2.20])
+	by smtp05.web.de with asmtp (TLSv1:AES128-SHA:128)
+	(WEB.DE 4.110 #314)
+	id 1NCfrm-0003h5-00
+	for linux-wireless@vger.kernel.org; Mon, 23 Nov 2009 21:50:34 +0100
+From: Ali Jelveh <jelveh@web.de>
+Content-Type: text/plain; charset=us-ascii; format=flowed; delsp=yes
+Subject: ath9k and multiple ssids
+Date: Mon, 23 Nov 2009 21:50:34 +0100
+References: <4F794DBA-82EF-4254-A874-ADFF05287CF4@web.de>
+To: linux-wireless@vger.kernel.org
+Message-Id: <D16ADE3A-61E2-4F46-ADD6-D3C8824A9BE9@web.de>
+Mime-Version: 1.0 (Apple Message framework v1076)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 4, 2009 at 6:35 PM, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2x00: fix rt2x00usb_register_multiwrite() arguments
->
-> Add const to 'value' argument of rt2x00usb_register_multiwrite()
-> (all arguments match rt2x00pci_register_multiwrite() ones now).
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
+Hi all!
 
-For what it is worth:
+I'm trying to get multiple ssids to work with hostapd (2.6.31 kernel  
+and hostapd v0.6.9, driver=nl80211) thru adding a bss=wlan0_1 and  
+ssid=someothername to the config, I get an "Invalid BSSID mask" error  
+- so my question is: should this work? or isn't that feature  
+implemented in my current wireless driver?
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Thanks for your help!
+
+Ali
+
