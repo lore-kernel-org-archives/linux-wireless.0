@@ -1,72 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:51259 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752109AbZK0LUt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Nov 2009 06:20:49 -0500
-Received: by bwz27 with SMTP id 27so1094074bwz.21
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2009 03:20:54 -0800 (PST)
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-Cc: Vivek Natarajan <vnatarajan@atheros.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Fix dynamic power save for scanning.
-References: <1259063627-20033-1-git-send-email-vnatarajan@atheros.com>
-	<1259063627-20033-2-git-send-email-vnatarajan@atheros.com>
-	<87einlaeut.fsf@purkki.valot.fi>
-	<8e92b4100911260309o6120ef22j1f22d4dd6e8e964c@mail.gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 27 Nov 2009 13:20:52 +0200
-In-Reply-To: <8e92b4100911260309o6120ef22j1f22d4dd6e8e964c@mail.gmail.com> (Vivek Natarajan's message of "Thu\, 26 Nov 2009 16\:39\:28 +0530")
-Message-ID: <87y6ls8b8r.fsf@purkki.valot.fi>
+Received: from bu3sch.de ([62.75.166.246]:47736 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752758AbZKWT76 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2009 14:59:58 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ssb: Fix range check in sprom write
+Date: Mon, 23 Nov 2009 20:58:06 +0100
+Cc: bcm43xx-dev@lists.berlios.de,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-Id: <200911232058.06369.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vivek Natarajan <vivek.natraj@gmail.com> writes:
+The range check in the sprom image parser hex2sprom() is broken.
+One sprom word is 4 hex characters.
+This fixes the check and also adds much better sanity checks to the code.
+We better make sure the image is OK by doing some sanity checks to avoid
+bricking the device by accident.
 
-> On Thu, Nov 26, 2009 at 1:37 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
->> Vivek Natarajan <vnatarajan@atheros.com> writes:
->>
->> I don't like the idea of adding more state variables to
->> ieee80211_local. We should be removing them instead because the code
->> is getting quite complex. Is there any way to fix this but not add a
->> new variable?
->
-> In this case, I need a variable to store the PS state before scan so
-> that I can restore the same state when we come back to home channel.
->
-> There are only two variables relating to this context:
-> the flag IEEE80211_CONF_PS and ps_sdata
-> CONF_PS flag is getting changed in scan_ps_enable.
-> After association, ps_sdata is always set since power save is enabled
-> by default.
-> This will be changed if the power save is disabled through iwconfig
-> which may happen during scan too. Hence I cannot use this too.
-> So, I had to introduce a new variable.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Cc: stable@kernel.org
 
-Ok, we have to live with this then.
+---
 
->> You need to take into account that dynamic_ps_timeout can be zero.
->
-> When dynamic_ps_timeout is zero, as soon as the station is associated,
-> CONF_PS will be set and communicated to the driver.
-> If a scan request comes in this period, there will be a issue with my
-> fix. I think this is the case you are pointing at. If so, I think the
-> following chunk will work:
->
-> @@ -277,6 +279,10 @@ static void ieee80211_scan_ps_disable(struct
-> ieee80211_sub_if_data *sdata)
->                 */
->                local->hw.conf.flags |= IEEE80211_CONF_PS;
->                ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-> +       } else if (local->hw.conf.dynamic_ps_timeout > 0){
-> +               ieee80211_send_nullfunc(local, sdata, 0);
-> +               mod_timer(&local->dynamic_ps_timer, jiffies +
-> +                         msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
-
-Yes, this should be enough. Please also add a comment why we send a
-nullfunc frame.
+Index: wireless-testing/drivers/ssb/sprom.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/sprom.c	2009-11-23 14:24:57.000000000 +0100
++++ wireless-testing/drivers/ssb/sprom.c	2009-11-23 20:43:04.000000000 +0100
+@@ -13,6 +13,8 @@
+ 
+ #include "ssb_private.h"
+ 
++#include <linux/ctype.h>
++
+ 
+ static const struct ssb_sprom *fallback_sprom;
+ 
+@@ -33,17 +35,27 @@ static int sprom2hex(const u16 *sprom, c
+ static int hex2sprom(u16 *sprom, const char *dump, size_t len,
+ 		     size_t sprom_size_words)
+ {
+-	char tmp[5] = { 0 };
+-	int cnt = 0;
++	char c, tmp[5] = { 0 };
++	int err, cnt = 0;
+ 	unsigned long parsed;
+ 
+-	if (len < sprom_size_words * 2)
++	/* Strip whitespace at the end. */
++	while (len) {
++		c = dump[len - 1];
++		if (!isspace(c) && c != '\0')
++			break;
++		len--;
++	}
++	/* Length must match exactly. */
++	if (len != sprom_size_words * 4)
+ 		return -EINVAL;
+ 
+ 	while (cnt < sprom_size_words) {
+ 		memcpy(tmp, dump, 4);
+ 		dump += 4;
+-		parsed = simple_strtoul(tmp, NULL, 16);
++		err = strict_strtoul(tmp, 16, &parsed);
++		if (err)
++			return err;
+ 		sprom[cnt++] = swab16((u16)parsed);
+ 	}
+ 
 
 -- 
-Kalle Valo
+Greetings, Michael.
