@@ -1,92 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44599 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751683AbZKCI5w (ORCPT
+Received: from exchange.solarflare.com ([216.237.3.220]:56028 "EHLO
+	exchange.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752250AbZKWN03 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 03:57:52 -0500
-Subject: Re: Please consider reverting
- 7d930bc33653d5592dc386a76a38f39c2e962344
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	David Miller <davem@davemloft.net>,
-	torvalds@linux-foundation.org, linville@tuxdriver.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20091103084744.GH3212@core.coreip.homeip.net>
-References: <20091103053156.GA3212@core.coreip.homeip.net>
-	 <20091102.224957.32364226.davem@davemloft.net>
-	 <20091103065238.GE3212@core.coreip.homeip.net>
-	 <1257232587.3420.55.camel@localhost.localdomain>
-	 <1257234299.28469.25.camel@johannes.local>
-	 <20091103082201.GG3212@core.coreip.homeip.net>
-	 <1257237061.28469.43.camel@johannes.local>
-	 <20091103084744.GH3212@core.coreip.homeip.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-tlsOiG7Ha1iFrFT8JysY"
-Date: Tue, 03 Nov 2009 09:57:03 +0100
-Message-ID: <1257238623.28469.47.camel@johannes.local>
+	Mon, 23 Nov 2009 08:26:29 -0500
+Subject: Re: A generic kernel compatibilty code
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org
+In-Reply-To: <43e72e890911201307g2a1f280aie223ed4fd270aad@mail.gmail.com>
+References: <43e72e890911201245r4de5b039hb2dd5011dabf2399@mail.gmail.com>
+	 <1258750858.2877.58.camel@achroite.uk.solarflarecom.com>
+	 <43e72e890911201307g2a1f280aie223ed4fd270aad@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 23 Nov 2009 13:26:33 +0000
+Message-Id: <1258982793.2845.13.camel@achroite.uk.solarflarecom.com>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2009-11-20 at 13:07 -0800, Luis R. Rodriguez wrote:
+> On Fri, Nov 20, 2009 at 1:00 PM, Ben Hutchings
+> <bhutchings@solarflare.com> wrote:
+> > On Fri, 2009-11-20 at 12:45 -0800, Luis R. Rodriguez wrote:
+> >> Everyone and their mother reinvents the wheel when it comes to
+> >> backporting kernel modules. It a painful job and it seems to me an
+> >> alternative is possible. If we can write generic compatibilty code for
+> >> a new routine introduced on the next kernel how about just merging it
+> >> to the kernel under some generic compat module. This would be
+> >> completey ignored by everyone using the stable kernel but can be
+> >> copied by anyone doing backport work.
+> >>
+> >> So I'm thinking something as simple as a generic compat/comat.ko with
+> >> compat-2.6.32.[ch] files.
+> >>
+> >> We've already backported everything needed for wireless drivers under
+> >> compat-wireless under this format down to even 2.6.25.
+> > [...]
+> >
+> > If you think 2.6.25 is old then I don't think you understand the scale
+> > of the problem.
+> >
+> > OEMs still expect us to support RHEL 4 (2.6.9) and SLES 9 (2.6.5) though
+> > the latter will probably be dropped soon.  Some other vendors apparently
+> > still need to support even 2.4 kernels!
+> 
+> Heh understood. Well shouldn't this help with that then? Sure I'd love
+> to see the Enteprise Linux releases on 2.6.31 but that's not going to
+> happen right? Shouldn't this help then?
 
---=-tlsOiG7Ha1iFrFT8JysY
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+You'd really have to ask the 'enterprise' vendors whether they'd be
+interested in working on some sort of shared forward-compat library.  If
+the library is to include a module rather than being statically linked
+into each module that needs it then there can only be one instance in
+the system.
 
-On Tue, 2009-11-03 at 00:47 -0800, Dmitry Torokhov wrote:
+Ben.
 
-> > I just think that it's a matter of courtesy that should be independent
-> > from the release cycle to ask the author/maintainer by default, not as =
-a
-> > second thought ("unless [...] have other solution"). You can always CC
-> > Linus and ask him to revert if you don't get a response.
-> >=20
-> > What's wrong with that? It doesn't actually delay the action, but it
-> > makes the discussion much more friendly and cooperative instead of
-> > giving the author and maintainer the feeling that their opinion only
-> > matters as a second thought.
-> >=20
->=20
-> I think you are reading too much into who was addressed directly and who
-> was "only" CCed...=20
-
-Maybe. But it seems to be happening pretty often recently that people
-first ask for a revert and then for a fix, ignoring any thought that
-might have gone into a particular commit...
-
-> OK, next time (which I hope won't happen :) )=20
-
-So do I! :)
-
-> I'll just address everyone directly. Will that work?
-
-Much better, at least for me. Hey, I try to respond quickly.
-
-(incidentally, I can't imagine an upstream revert actually helping at
-all ... that just creates a merge mess)
-
-johannes
-
---=-tlsOiG7Ha1iFrFT8JysY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK7/BbAAoJEODzc/N7+QmaNLgQAMSl1Ejh/5Dt+PSSAKFt0InI
-757zMCa7KNsn0loeNskRKzZXcXpDXDb/WEDRGGoa3tyCrCXnpKNLB6eYxtZp97ZS
-f1WzQIY9q5UVMLDfEInHNWHtoN9ZCsexA+SCkKz1Yhtfmjw4geLnSjaqUuAIXmgg
-pgf3P7RkHXgrg9sCi6tXAIGs00ZGYz452UXDURYHHEvMRjdGjH6IV7/GUZTLxHae
-vN6dX8ceda46cEm5pKB6tKmGBsOFq44I7hFrN9Skk3RvwOEHEEE+o7JS9gUo6tSb
-rtuB5fGO6kSj/gh9dioaRWxQNGfLOyFOenVrlXxgSHhGiRirapbAL7oG8K16/Fl9
-h+4JnSPuhrsA5EWl6tNuQy93GPE8UneqtkJKU3/r4yW0bCR+h15Llg8PQQ/d0viL
-W9f3j78WRYTFai7+L1A9WqkPzaWIwxFNgaDeI/aIGle5GvC/yjyT1X0OuRfnuSlB
-/eY/lppyxGb7US3CJnh3MZus8liDyErjFljZLZmM/rDb9pn3L2qe8zG3O4JWQfUs
-AxK7FpByU7PCnICUtuTXhETUGqR24vgjvlOGxVMwhZ4K3E1PzoXoseaxdHUp2tRS
-lKokZ1KF+BAGKm5fRb/SH+djhRC0iOFS9JDn7Rcgg0rfM+Igtm2hwscIr2V33hRp
-LlPjCGrJbw3fkQILF4bD
-=ddFN
------END PGP SIGNATURE-----
-
---=-tlsOiG7Ha1iFrFT8JysY--
+-- 
+Ben Hutchings, Senior Software Engineer, Solarflare Communications
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
