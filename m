@@ -1,30 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:10166 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756179AbZKETBY (ORCPT
+Received: from mail-gx0-f226.google.com ([209.85.217.226]:49237 "EHLO
+	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756096AbZKWCLO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2009 14:01:24 -0500
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 30/41] rt2800usb: fix comments in rt2800usb.h
-Date: Thu, 5 Nov 2009 20:01:26 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173539.28463.82770.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173539.28463.82770.sendpatchset@localhost.localdomain>
+	Sun, 22 Nov 2009 21:11:14 -0500
+Received: by gxk26 with SMTP id 26so4445381gxk.1
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Nov 2009 18:11:20 -0800 (PST)
+Message-ID: <4B09EF44.3050804@lwfinger.net>
+Date: Sun, 22 Nov 2009 20:11:16 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911052001.27030.IvDoorn@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Question about mac80211 callback
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2800usb: fix comments in rt2800usb.h
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Johannes,
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+I tried to figure this out from the code, but I kept getting lost.
+
+When a computer goes into hibernation, which of the mac80211 callback routines
+are called, and which ones on the following resume? The problem arises due to
+the problem in Bug #14267. The routine to check the hardware status of the
+RFKILL switch is being entered with b43_status() returning 0, thus the hardware
+switch is not checked. If we do not check for that condition, then we get a
+machine fault on PPC. I would like to be able to track this problem down. I've
+already entered two bad patches in this area.
+
+Thanks,
+
+Larry
