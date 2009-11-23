@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:53475 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752208AbZKQVpn convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:41192 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757119AbZKWVXK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 16:45:43 -0500
-Received: by iwn8 with SMTP id 8so385364iwn.33
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Nov 2009 13:45:49 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4B03193E.2080304@roinet.com>
-References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de>
-	<43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com>
-	<4B02DFF4.1060509@roinet.com> <45e8e6c40911171257m7c687380k6e6e2677fd11f851@mail.gmail.com>
-	<43e72e890911171337p4b0d97fcp844266137bb51b56@mail.gmail.com>
-	<4B03193E.2080304@roinet.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 17 Nov 2009 13:45:29 -0800
-Message-ID: <43e72e890911171345q2dc59d66g6ac2a9eec04c577c@mail.gmail.com>
-Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and why?
-To: David Acker <dacker@roinet.com>
-Cc: Andrey Yurovsky <andrey@cozybit.com>,
-	Michael Renzmann <mrenzmann@madwifi-project.org>,
-	madwifi-devel@lists.sourceforge.net,
-	madwifi-users@lists.sourceforge.net,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 23 Nov 2009 16:23:10 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 8/8] wl1271: Remove REF_CLK hack
+Date: Mon, 23 Nov 2009 23:22:19 +0200
+Message-Id: <1259011339-28149-9-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1259011339-28149-1-git-send-email-luciano.coelho@nokia.com>
+References: <1259011339-28149-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 17, 2009 at 1:44 PM, David Acker <dacker@roinet.com> wrote:
-> Luis R. Rodriguez wrote:
->>
->> On Tue, Nov 17, 2009 at 12:57 PM, Andrey Yurovsky <andrey@cozybit.com>
->> wrote:
->>>
->>> On Tue, Nov 17, 2009 at 9:40 AM, David Acker <dacker@roinet.com> wrote:
->>>>>>
->>>>>>  1. What are you using MadWifi for?
->>>>
->>>> Wireless mesh on embedded systems.
->>
->> I'm curious -- what type of Mesh were you talking about David? I
->> didn't know MadWifi supported 802.11s so don't know if that is what
->> you mean.
->
-> It is a non-802.11s protocol that predates 802.11s development by quite
-> awhile.  It runs over WDS links.  In theory it could run over anything that
-> supports dynamic creation and destruction of WDS links.
+This hack was totally wrong and was "needed" because of a problem in the way
+we were sending the GENERAL_PARMS command to the firmware.  Now that that
+problem has been fixed, this hack can be removed.
 
-So its a some sort of MadWifi-only hack?
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    9 +--------
+ 1 files changed, 1 insertions(+), 8 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 64d0526..b62c00f 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -251,14 +251,7 @@ static struct conf_drv_settings default_conf = {
+ 		},
+ 		.sr_enable                   = 1,
+ 		.genparam                    = {
+-			/*
+-			 * FIXME: The correct value CONF_REF_CLK_38_4_E
+-			 *        causes the firmware to crash on boot.
+-			 *        The value 5 apparently is an
+-			 *        unnoficial XTAL configuration of the
+-			 *        same frequency, which appears to work.
+-			 */
+-			.ref_clk             = 5,
++			.ref_clk             = CONF_REF_CLK_38_4_E,
+ 			.settling_time       = 5,
+ 			.clk_valid_on_wakeup = 0,
+ 			.dc2dcmode           = 0,
+-- 
+1.6.3.3
+
