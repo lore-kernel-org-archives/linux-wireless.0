@@ -1,66 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:52051 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932972AbZKDVwo convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:65479 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753299AbZKWTU3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 16:52:44 -0500
-Received: by mail-iw0-f180.google.com with SMTP id 10so5307431iwn.4
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 13:52:50 -0800 (PST)
+	Mon, 23 Nov 2009 14:20:29 -0500
+Received: by ewy19 with SMTP id 19so2187139ewy.21
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 11:20:34 -0800 (PST)
+Message-ID: <4B0AE07F.5030603@gmail.com>
+Date: Mon, 23 Nov 2009 20:20:31 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890911041352i334e170at71a519383d48a08@mail.gmail.com>
-References: <43e72e890911041204n55b54f8iace79938b40baa32@mail.gmail.com>
-	<40f31dec0911041212p16cfc78eia1ab1817e425e767@mail.gmail.com>
-	<43e72e890911041330j581e7bacp4e7b83a11c1de0e8@mail.gmail.com>
-	<43e72e890911041336n7ffae0d2u135321a588f3e613@mail.gmail.com>
-	<43e72e890911041352i334e170at71a519383d48a08@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 4 Nov 2009 13:52:30 -0800
-Message-ID: <43e72e890911041352n3a398b41h8927387c228661c5@mail.gmail.com>
-Subject: Re: pci_set_mwi() and ath5k
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org, Matthew Wilcox <matthew@wil.cx>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	Kyle McMartin <kyle@mcmartin.ca>
-Content-Type: text/plain; charset=UTF-8
+To: Simon Raffeiner <sturmflut@lieberbiber.de>
+CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 1/6] rt2x00: Only initialize HT on rt2800 devices that
+ support it.
+References: <1258960565-26736-1-git-send-email-gwingerde@gmail.com> <1258960565-26736-2-git-send-email-gwingerde@gmail.com> <200911231058.31157.sturmflut@lieberbiber.de>
+In-Reply-To: <200911231058.31157.sturmflut@lieberbiber.de>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 4, 2009 at 1:52 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Wed, Nov 4, 2009 at 1:36 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Wed, Nov 4, 2009 at 1:30 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>> On Wed, Nov 4, 2009 at 12:12 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
->>>> 2009/11/4 Luis R. Rodriguez <mcgrof@gmail.com>:
->>>>> Curious if anyone recalls the issues seen with enabling MWI on ath5k.
->>>>> I could have sworn there was some discussion on this but for the life
->>>>> of me I cannot find it.
->>>>>
->>>>>  Luis
->>>>
->>>> Maybe this one ?
->>>> http://osdir.com/ml/linux.drivers.ath5k.devel/2008-07/msg00088.html
->>>
->>> That was it, thanks! For the record then Kyle pointed to this bug:
->>>
->>> http://marc.info/?t=121430463700001&r=1&w=2
->>>
->>> as a reference for possible issues.
->>
->> Actually the threads above are for MSI, not MWI, which would be set
->> with pci_set_mwi() not pci_disable_msi().
->>
->> MWI is for enabling memory write invalidate.
->>
->> I guess we never had the MWI discussion then for ath5k,
->>
->> Either way I'm reluctant to enable it and was actually considering
->> simplifying the the PCI cache line size thing on ath/ath5k/ath9k. Will
->> send an RFC.
->
-> Even better: I just confirmation from our systems team that our legacy
-> devices and 11n PCI devices don't support MWR so I'll remove all that
-> cruft crap.
+On 11/23/09 10:58, Simon Raffeiner wrote:
+> Am Montag, 23. November 2009 08:16:00 schrieb Gertjan van Wingerde:
+>> Some RT28xx/RT30xx devices don't support 802.11n, when they are combined with
+>> the RF2020 chipset. Ensure that HT is disabled for these devices.
+> 
+> Hi Gertjan,
+> 
+> do you know if this fixes the RT2070L chipset? It's an RT3070 descendant without 802.11n support, I cracked the device open and there's no RF2020 to be seen - just a single RT2070L chip. Somebody posted that the RT2070L has the RF part integrated to make it cheaper, maybe RT2070 = RT3070 + RF2020 in a single chip?
+> 
+> I can't test my own device at the moment.
+> 
 
-I meant MWI of course.
+Hi Simon,
 
-  Luis
+I would be surprised if this fixes the RT2070L chipset, but it is a
+small step in the right direction.
+
+My guess is that the RT2070L chipset is a RT3070 combined with a RF2020 in
+a single chip. At least that is how my RT2070L device identifies itself.
+
+---
+Gertjan.
