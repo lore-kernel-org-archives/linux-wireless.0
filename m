@@ -1,43 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:54207 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757917AbZKRRdc (ORCPT
+Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:50555 "EHLO
+	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752884AbZKWHQT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 12:33:32 -0500
-Date: Wed, 18 Nov 2009 09:27:51 -0800 (PST)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: fix addba timer (again...)
-In-Reply-To: <1258560906.30511.43.camel@johannes.local>
-Message-ID: <alpine.LFD.2.01.0911180922120.4644@localhost.localdomain>
-References: <1258560906.30511.43.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Mon, 23 Nov 2009 02:16:19 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 1/6] rt2x00: Only initialize HT on rt2800 devices that support it.
+Date: Mon, 23 Nov 2009 08:16:00 +0100
+Message-Id: <1258960565-26736-2-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1258960565-26736-1-git-send-email-gwingerde@gmail.com>
+References: <1258960565-26736-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Some RT28xx/RT30xx devices don't support 802.11n, when they are combined with
+the RF2020 chipset. Ensure that HT is disabled for these devices.
 
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   59 +++++++++++++++++--------------
+ 1 files changed, 32 insertions(+), 27 deletions(-)
 
-On Wed, 18 Nov 2009, Johannes Berg wrote:
-> 
-> Linus pointed out that del_timer_sync() isn't actually needed if we make 
-> the timer able to deal with no longer being needed when it gets queued 
-> _while_ we're in the locked section that also deletes it. For that the 
-> timer function only needs to check the HT_ADDBA_RECEIVED_MSK bit as well 
-> as the HT_ADDBA_REQUESTED_MSK bit, only if the former is clear should it 
-> do anything.
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index e94f1e1..ac393c3 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2070,34 +2070,39 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	}
+ 
+ 	/*
+-	 * Initialize HT information.
++	 * Initialize HT information, unless when we're on RF2020, which doesn't
++	 * support 802.11n.
+ 	 */
+-	spec->ht.ht_supported = true;
+-	spec->ht.cap =
+-	    IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
+-	    IEEE80211_HT_CAP_GRN_FLD |
+-	    IEEE80211_HT_CAP_SGI_20 |
+-	    IEEE80211_HT_CAP_SGI_40 |
+-	    IEEE80211_HT_CAP_TX_STBC |
+-	    IEEE80211_HT_CAP_RX_STBC |
+-	    IEEE80211_HT_CAP_PSMP_SUPPORT;
+-	spec->ht.ampdu_factor = 3;
+-	spec->ht.ampdu_density = 4;
+-	spec->ht.mcs.tx_params =
+-	    IEEE80211_HT_MCS_TX_DEFINED |
+-	    IEEE80211_HT_MCS_TX_RX_DIFF |
+-	    ((rt2x00_get_field16(eeprom, EEPROM_ANTENNA_TXPATH) - 1) <<
+-		IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT);
+-
+-	switch (rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RXPATH)) {
+-	case 3:
+-		spec->ht.mcs.rx_mask[2] = 0xff;
+-	case 2:
+-		spec->ht.mcs.rx_mask[1] = 0xff;
+-	case 1:
+-		spec->ht.mcs.rx_mask[0] = 0xff;
+-		spec->ht.mcs.rx_mask[4] = 0x1; /* MCS32 */
+-		break;
++	if (!rt2x00_rf(chip, RF2020)) {
++		spec->ht.ht_supported = true;
++		spec->ht.cap =
++			IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
++			IEEE80211_HT_CAP_GRN_FLD |
++			IEEE80211_HT_CAP_SGI_20 |
++			IEEE80211_HT_CAP_SGI_40 |
++			IEEE80211_HT_CAP_TX_STBC |
++			IEEE80211_HT_CAP_RX_STBC |
++			IEEE80211_HT_CAP_PSMP_SUPPORT;
++		spec->ht.ampdu_factor = 3;
++		spec->ht.ampdu_density = 4;
++		spec->ht.mcs.tx_params =
++			IEEE80211_HT_MCS_TX_DEFINED |
++			IEEE80211_HT_MCS_TX_RX_DIFF |
++			((rt2x00_get_field16(eeprom, EEPROM_ANTENNA_TXPATH) - 1) <<
++				IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT);
++
++		switch (rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RXPATH)) {
++		case 3:
++			spec->ht.mcs.rx_mask[2] = 0xff;
++		case 2:
++			spec->ht.mcs.rx_mask[1] = 0xff;
++		case 1:
++			spec->ht.mcs.rx_mask[0] = 0xff;
++			spec->ht.mcs.rx_mask[4] = 0x1; /* MCS32 */
++			break;
++		}
++	} else {
++		spec->ht.ht_supported = false;
+ 	}
+ 
+ 	/*
+-- 
+1.6.5.3
 
-Ok, this looks sane. It's not really worth me Acking it, since I don't 
-actually know the code or the hardware, so I can't really judge whether 
-this is in any way a good thing.
-
-But from a "design patterns" standpoint it no longer triggers my WTF 
-reaction.
-
-It's just bound to be more robust to have the timer just check the state 
-of things itself rather than depend on some (complex and almost inevitably 
-racy) "timer is only enabled IFF certain-state-is-true" rule.
-
-			Linus
