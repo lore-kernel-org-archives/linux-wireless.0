@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:48303 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752199AbZKLOnz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 09:43:55 -0500
-Received: by fg-out-1718.google.com with SMTP id d23so2082259fga.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 06:44:00 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4afb8fa1.BSj+U96EOaXrlQvr%Larry.Finger@lwfinger.net>
-References: <4afb8fa1.BSj+U96EOaXrlQvr%Larry.Finger@lwfinger.net>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 12 Nov 2009 15:43:40 +0100
-Message-ID: <69e28c910911120643l7321818ci1fd6479821e3b9f7@mail.gmail.com>
-Subject: Re: [RFC/RFT 0/6 V2] rtl8187se: Initial introduction of driver
+Received: from bu3sch.de ([62.75.166.246]:35689 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756569AbZKWKaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2009 05:30:23 -0500
+From: Michael Buesch <mb@bu3sch.de>
 To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>, bzolnier@gmail.com,
-	Bernhard Schiffner <bernhard@schiffner-limbach.de>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: [PATCH] b43: Rewrite DMA Tx status handling sanity checks
+Date: Mon, 23 Nov 2009 11:30:22 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <200911192224.29491.mb@bu3sch.de> <4B09E691.8020205@lwfinger.net>
+In-Reply-To: <4B09E691.8020205@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200911231130.23873.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Might be worthy in the long run to create a common rtl81xx library
-module, especially when work on RTL819x begins.
+On Monday 23 November 2009 02:34:09 Larry Finger wrote:
+> On 11/19/2009 03:24 PM, Michael Buesch wrote:
+> > This rewrites the error handling policies in the TX status handler.
+> > It tries to be error-tolerant as in "try hard to not crash the machine".
+> > It won't recover from errors (that are bugs in the firmware or driver),
+> > because that's impossible. However, it will return a more or less useful
+> > error message and bail out. It also tries hard to use rate-limited messages
+> > to not flood the syslog in case of a failure.
+> > 
+> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> > 
+> > ---
+> 
+> Tested and ACKed by Larry Finger. Not only does this improve the error handling
+> for b43, but it also appears to fix the skb == NULL error that I experienced
+> with the open-source firmware.
 
-On Thu, Nov 12, 2009 at 5:31 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Patches to introduce a driver for the RTL8187SE PCI-based device.
->
-> Note: This driver is only compile-tested and will require more work
-> for it to be useful. I'm posting now to let others know what I have done.
->
-> I have applied for an account at kernel.org. If my request is approved, I
-> plan to establish an rtl8187se git tree.
->
-> Patch 1/6: Create file rtl8187se.h
-> Patch 2/6: Create file rtl8187se_dev.c
-> Patch 3/6: Create file rtl8187se_rtl8225.c
-> Patch 4/6: Create file rtl8187se_rtl8225.h
-> Patch 5/6: Modify file rtl818x.h
-> Patch 6/6: Modify Kconfig and Makefile for rtl8187se
->
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I don't think there's any way it can fix this. The patch doesn't change the
+code behavior. It just changes the sanity checks, that under normal circumstances
+should never trigger.
 
+> John - please push this into wireless-testing. It should also go to 2.6.32, but
+> it is likely too large for the current stage. At least Cc it to stable.
 
+Don't put it into stable. This is not a fix.
+I don't think it's suitable for 2.6.32 at this stage, too.
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Greetings, Michael.
