@@ -1,92 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:27748 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760641AbZKZPJK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 10:09:10 -0500
-Subject: [PATCH 06/12] wl1251: fix payload alignment
-To: linville@tuxdriver.com
-From: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 26 Nov 2009 17:09:04 +0200
-Message-ID: <20091126150904.917.8182.stgit@tikku>
-In-Reply-To: <20091126150141.917.35278.stgit@tikku>
-References: <20091126150141.917.35278.stgit@tikku>
+Received: from mga09.intel.com ([134.134.136.24]:18267 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934057AbZKXXAl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Nov 2009 18:00:41 -0500
+Date: Wed, 25 Nov 2009 00:02:26 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH v2 3/3] iwmc3200wifi: Implement cfg80211 PMKSA API
+Message-ID: <20091124230225.GD8290@sortiz.org>
+References: <cover.1259075573.git.sameo@linux.intel.com>
+ <601a0b604e70a6a72481e02860c6a6430351cd34.1259075573.git.sameo@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <601a0b604e70a6a72481e02860c6a6430351cd34.1259075573.git.sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+We need to implement the PMKSA API for proper WPA2 pre-auth and fast
+re-association. Our fullmac device generates all (re-)assoc IEs, and thus it
+needs the right PMKIDs. With this implementation we now get them from
+wpa_supplicant.
 
-mac80211 complained that in some cases IP payload was not aligned, this
-happens if the 802.11 header is not aligned with four. In that case we have
-to move entire packet to make the payload properly aligned.
-
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- drivers/net/wireless/wl12xx/wl1251_rx.c |   17 ++++++++++++++++-
- 1 files changed, 16 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_rx.c b/drivers/net/wireless/wl12xx/wl1251_rx.c
-index f84cc89..04f3dcd 100644
---- a/drivers/net/wireless/wl12xx/wl1251_rx.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_rx.c
-@@ -22,6 +22,7 @@
-  *
-  */
+v2: Set wiphy->max_num_pmkids
+
+ drivers/net/wireless/iwmc3200wifi/cfg80211.c |   31 ++++++++++++++++++++++++++
+ drivers/net/wireless/iwmc3200wifi/commands.c |   22 ++++++++++++++++++
+ drivers/net/wireless/iwmc3200wifi/commands.h |   13 +++++++++++
+ drivers/net/wireless/iwmc3200wifi/umac.h     |    2 +
+ 4 files changed, 68 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+index 7cfc2c0..7c4f44a 100644
+--- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
++++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+@@ -725,6 +725,33 @@ static int iwm_cfg80211_set_power_mgmt(struct wiphy *wiphy,
+ 				       CFG_POWER_INDEX, iwm->conf.power_index);
+ }
  
-+#include <linux/string.h>
- #include <linux/skbuff.h>
- #include <net/mac80211.h>
- 
-@@ -32,6 +33,9 @@
- #include "wl1251_cmd.h"
- #include "wl1251_acx.h"
- 
-+/* needs to be divisible by four because of DMA */
-+#define WL1251_RX_ALIGNMENT	4
++int iwm_cfg80211_set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
++			   struct cfg80211_pmksa *pmksa)
++{
++	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
 +
- static void wl1251_rx_header(struct wl1251 *wl,
- 			     struct wl1251_rx_descriptor *desc)
- {
-@@ -106,6 +110,7 @@ static void wl1251_rx_body(struct wl1251 *wl,
- 	struct sk_buff *skb;
- 	struct ieee80211_rx_status status;
- 	u8 *rx_buffer, beacon = 0;
-+	unsigned char *from, *to;
- 	u16 length, *fc;
- 	u32 curr_id, last_id_inc, rx_packet_ring_addr;
- 
-@@ -126,12 +131,15 @@ static void wl1251_rx_body(struct wl1251 *wl,
- 	if (wl->rx_current_buffer)
- 		rx_packet_ring_addr += wl->data_path->rx_packet_ring_chunk_size;
- 
--	skb = dev_alloc_skb(length);
-+	skb = dev_alloc_skb(length + WL1251_RX_ALIGNMENT);
- 	if (!skb) {
- 		wl1251_error("Couldn't allocate RX frame");
- 		return;
- 	}
- 
-+	/* for the case if payload is unaligned */
-+	skb_reserve(skb, WL1251_RX_ALIGNMENT);
++	return iwm_send_pmkid_update(iwm, pmksa, IWM_CMD_PMKID_ADD);
++}
 +
- 	rx_buffer = skb_put(skb, length);
- 	wl1251_mem_read(wl, rx_packet_ring_addr, rx_buffer, length);
++int iwm_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
++			   struct cfg80211_pmksa *pmksa)
++{
++	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
++
++	return iwm_send_pmkid_update(iwm, pmksa, IWM_CMD_PMKID_DEL);
++}
++
++int iwm_cfg80211_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
++{
++	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
++	struct cfg80211_pmksa pmksa;
++
++	memset(&pmksa, 0, sizeof(struct cfg80211_pmksa));
++
++	return iwm_send_pmkid_update(iwm, &pmksa, IWM_CMD_PMKID_FLUSH);
++}
++
++
+ static struct cfg80211_ops iwm_cfg80211_ops = {
+ 	.change_virtual_intf = iwm_cfg80211_change_iface,
+ 	.add_key = iwm_cfg80211_add_key,
+@@ -741,6 +768,9 @@ static struct cfg80211_ops iwm_cfg80211_ops = {
+ 	.set_tx_power = iwm_cfg80211_set_txpower,
+ 	.get_tx_power = iwm_cfg80211_get_txpower,
+ 	.set_power_mgmt = iwm_cfg80211_set_power_mgmt,
++	.set_pmksa = iwm_cfg80211_set_pmksa,
++	.del_pmksa = iwm_cfg80211_del_pmksa,
++	.flush_pmksa = iwm_cfg80211_flush_pmksa,
+ };
  
-@@ -140,6 +148,13 @@ static void wl1251_rx_body(struct wl1251 *wl,
+ static const u32 cipher_suites[] = {
+@@ -786,6 +816,7 @@ struct wireless_dev *iwm_wdev_alloc(int sizeof_bus, struct device *dev)
  
- 	fc = (u16 *)skb->data;
+ 	set_wiphy_dev(wdev->wiphy, dev);
+ 	wdev->wiphy->max_scan_ssids = UMAC_WIFI_IF_PROBE_OPTION_MAX;
++	wdev->wiphy->max_num_pmkids = UMAC_MAX_NUM_PMKIDS;
+ 	wdev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+ 				       BIT(NL80211_IFTYPE_ADHOC);
+ 	wdev->wiphy->bands[IEEE80211_BAND_2GHZ] = &iwm_band_2ghz;
+diff --git a/drivers/net/wireless/iwmc3200wifi/commands.c b/drivers/net/wireless/iwmc3200wifi/commands.c
+index 46ca7c5..bd06307 100644
+--- a/drivers/net/wireless/iwmc3200wifi/commands.c
++++ b/drivers/net/wireless/iwmc3200wifi/commands.c
+@@ -960,3 +960,25 @@ int iwm_send_umac_stop_resume_tx(struct iwm_priv *iwm,
+ 				 sizeof(struct iwm_umac_cmd_stop_resume_tx));
  
-+	if (ieee80211_hdrlen(*fc) & 0x3) {
-+		from = skb->data;
-+		to = skb_push(skb, 2);
-+		memmove(to, from, skb->len);
-+		fc = (u16 *) skb->data;
+ }
++
++int iwm_send_pmkid_update(struct iwm_priv *iwm,
++			  struct cfg80211_pmksa *pmksa, u32 command)
++{
++	struct iwm_umac_pmkid_update update;
++	int ret;
++
++	memset(&update, 0, sizeof(struct iwm_umac_pmkid_update));
++
++	update.command = cpu_to_le32(command);
++	memcpy(&update.bssid, pmksa->bssid, ETH_ALEN);
++	memcpy(&update.pmkid, pmksa->pmkid, WLAN_PMKID_LEN);
++
++	ret = iwm_send_wifi_if_cmd(iwm, &update,
++				   sizeof(struct iwm_umac_pmkid_update), 0);
++	if (ret) {
++		IWM_ERR(iwm, "PMKID update command failed\n");
++		return ret;
 +	}
 +
- 	if ((*fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_BEACON)
- 		beacon = 1;
++	return 0;
++}
+diff --git a/drivers/net/wireless/iwmc3200wifi/commands.h b/drivers/net/wireless/iwmc3200wifi/commands.h
+index 95cdf94..06af055 100644
+--- a/drivers/net/wireless/iwmc3200wifi/commands.h
++++ b/drivers/net/wireless/iwmc3200wifi/commands.h
+@@ -458,6 +458,17 @@ struct iwm_umac_cmd_stop_resume_tx {
+ 	u16 reserved;
+ } __attribute__ ((packed));
  
++#define IWM_CMD_PMKID_ADD   1
++#define IWM_CMD_PMKID_DEL   2
++#define IWM_CMD_PMKID_FLUSH 3
++
++struct iwm_umac_pmkid_update {
++	__le32 command;
++	u8 bssid[ETH_ALEN];
++	__le16 reserved;
++	u8 pmkid[WLAN_PMKID_LEN];
++} __attribute__ ((packed));
++
+ /* LMAC commands */
+ int iwm_read_mac(struct iwm_priv *iwm, u8 *mac);
+ int iwm_send_prio_table(struct iwm_priv *iwm);
+@@ -488,6 +499,8 @@ int iwm_scan_ssids(struct iwm_priv *iwm, struct cfg80211_ssid *ssids,
+ int iwm_scan_one_ssid(struct iwm_priv *iwm, u8 *ssid, int ssid_len);
+ int iwm_send_umac_stop_resume_tx(struct iwm_priv *iwm,
+ 				 struct iwm_umac_notif_stop_resume_tx *ntf);
++int iwm_send_pmkid_update(struct iwm_priv *iwm,
++			  struct cfg80211_pmksa *pmksa, u32 command);
+ 
+ /* UDMA commands */
+ int iwm_target_reset(struct iwm_priv *iwm);
+diff --git a/drivers/net/wireless/iwmc3200wifi/umac.h b/drivers/net/wireless/iwmc3200wifi/umac.h
+index 70094bf..7f54a14 100644
+--- a/drivers/net/wireless/iwmc3200wifi/umac.h
++++ b/drivers/net/wireless/iwmc3200wifi/umac.h
+@@ -298,6 +298,7 @@ struct iwm_udma_out_wifi_hdr {
+ #define UMAC_WIFI_IF_CMD_GLOBAL_TX_KEY_ID                0x1B
+ #define UMAC_WIFI_IF_CMD_SET_HOST_EXTENDED_IE            0x1C
+ #define UMAC_WIFI_IF_CMD_GET_SUPPORTED_CHANNELS          0x1E
++#define UMAC_WIFI_IF_CMD_PMKID_UPDATE                    0x1F
+ #define UMAC_WIFI_IF_CMD_TX_PWR_TRIGGER                  0x20
+ 
+ /* UMAC WiFi interface ports */
+@@ -771,6 +772,7 @@ struct iwm_umac_notif_stop_resume_tx {
+ 	__le16 stop_resume_tid_msk; /* tid bitmask */
+ } __attribute__ ((packed));
+ 
++#define UMAC_MAX_NUM_PMKIDS 4
+ 
+ /* WiFi interface wrapper header */
+ struct iwm_umac_wifi_if {
+-- 
+1.6.3.3
 
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
