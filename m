@@ -1,61 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:35804 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755322AbZKIMkN (ORCPT
+Received: from mail-yw0-f182.google.com ([209.85.211.182]:56600 "EHLO
+	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757555AbZKXCZH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 07:40:13 -0500
-Received: by mail-bw0-f227.google.com with SMTP id 27so3395312bwz.21
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 04:40:18 -0800 (PST)
-From: Rui Paulo <rpaulo@gmail.com>
-To: linville@tuxdriver.com
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Rui Paulo <rpaulo@gmail.com>,
-	Javier Cardona <javier@cozybit.com>
-Subject: [PATCH 06/21] mac80211: update the format of path selection frames
-Date: Mon,  9 Nov 2009 12:39:26 +0000
-Message-Id: <1257770381-7680-7-git-send-email-rpaulo@gmail.com>
-In-Reply-To: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
-References: <1257770381-7680-1-git-send-email-rpaulo@gmail.com>
+	Mon, 23 Nov 2009 21:25:07 -0500
+Received: by ywh12 with SMTP id 12so5946537ywh.21
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 18:25:14 -0800 (PST)
+Message-ID: <4B0B43C8.1040508@gmail.com>
+Date: Mon, 23 Nov 2009 21:24:08 -0500
+From: Arnaud Lacombe <lacombar@gmail.com>
+MIME-Version: 1.0
+To: mcgrof@bombadil.infradead.org
+CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
+Subject: [PATCH 03/13] Add skeleton for 2.6.18
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update the format of path selection frames according to latest
-draft (3.03).
-
-Signed-off-by: Rui Paulo <rpaulo@gmail.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
-Tested-by: Brian Cavagnolo <brian@cozybit.com>
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
 ---
- net/mac80211/mesh.h      |    1 +
- net/mac80211/mesh_hwmp.c |    2 +-
- 2 files changed, 2 insertions(+), 1 deletions(-)
+ Makefile        |    1 +
+ compat-2.6.18.c |   18 ++++++++++++++++++
+ compat-2.6.18.h |   12 ++++++++++++
+ compat.h        |    1 +
+ 4 files changed, 32 insertions(+), 0 deletions(-)
+ create mode 100644 compat-2.6.18.c
+ create mode 100644 compat-2.6.18.h
 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 536d5c0..2fd3e20 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -208,6 +208,7 @@ struct mesh_rmc {
- /* Pending ANA approval */
- #define MESH_PLINK_CATEGORY	30
- #define MESH_PATH_SEL_CATEGORY	32
-+#define MESH_PATH_SEL_ACTION	0
- 
- /* Public interfaces */
- /* Various */
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 29b82e9..c291cdb 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -105,7 +105,7 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
- 	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
- 	/* BSSID is left zeroed, wildcard value */
- 	mgmt->u.action.category = MESH_PATH_SEL_CATEGORY;
--	mgmt->u.action.u.mesh_action.action_code = action;
-+	mgmt->u.action.u.mesh_action.action_code = MESH_PATH_SEL_ACTION;
- 
- 	switch (action) {
- 	case MPATH_PREQ:
+diff --git a/Makefile b/Makefile
+index fe008df..9afc687 100644
+--- a/Makefile
++++ b/Makefile
+@@ -23,6 +23,7 @@ compat-y += main.o
+
+ # Compat kernel compatibility code
+ compat-$(CONFIG_COMPAT_KERNEL_14) += compat-2.6.14.o
++compat-$(CONFIG_COMPAT_KERNEL_18) += compat-2.6.18.o
+ compat-$(CONFIG_COMPAT_KERNEL_22) += compat-2.6.22.o
+ compat-$(CONFIG_COMPAT_KERNEL_23) += compat-2.6.23.o
+ compat-$(CONFIG_COMPAT_KERNEL_24) += compat-2.6.24.o
+diff --git a/compat-2.6.18.c b/compat-2.6.18.c
+new file mode 100644
+index 0000000..c7fb2e4
+--- /dev/null
++++ b/compat-2.6.18.c
+@@ -0,0 +1,18 @@
++/*
++ * Copyright 2007	Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * Compatibility file for Linux wireless for kernels 2.6.18.
++ */
++
++#include <net/compat.h>
++
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18))
++
++/* 2.6.18 compat code goes here */
++
++#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) */
++
+diff --git a/compat-2.6.18.h b/compat-2.6.18.h
+new file mode 100644
+index 0000000..077f28b
+--- /dev/null
++++ b/compat-2.6.18.h
+@@ -0,0 +1,12 @@
++#ifndef LINUX_26_18_COMPAT_H
++#define LINUX_26_18_COMPAT_H
++
++#include <linux/autoconf.h>
++#include <linux/version.h>
++
++/* Compat work for 2.6.18 */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18))
++
++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)) */
++
++#endif /* LINUX_26_18_COMPAT_H */
+diff --git a/compat.h b/compat.h
+index e537c23..433840c 100644
+--- a/compat.h
++++ b/compat.h
+@@ -10,6 +10,7 @@
+  */
+
+ #include "compat-2.6.14.h"
++#include "compat-2.6.18.h"
+ #include "compat-2.6.22.h"
+ #include "compat-2.6.23.h"
+ #include "compat-2.6.24.h"
 -- 
-1.5.6.5
+1.6.3.3.385.g60647.dirty
+
 
