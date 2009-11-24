@@ -1,94 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f179.google.com ([209.85.216.179]:61068 "EHLO
-	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750858AbZKCFbz (ORCPT
+Received: from mail-ew0-f215.google.com ([209.85.219.215]:33312 "EHLO
+	mail-ew0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933841AbZKXTMz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 00:31:55 -0500
-Date: Mon, 2 Nov 2009 21:31:56 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: Please consider reverting 7d930bc33653d5592dc386a76a38f39c2e962344
-Message-ID: <20091103053156.GA3212@core.coreip.homeip.net>
+	Tue, 24 Nov 2009 14:12:55 -0500
+Received: by ewy7 with SMTP id 7so80353ewy.28
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Nov 2009 11:12:59 -0800 (PST)
+Message-ID: <4B0C3035.7010003@gmail.com>
+Date: Tue, 24 Nov 2009 20:12:53 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 8/8] rt2x00: Properly request tx headroom for alignment
+ operations.
+References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com> <1259012694-14869-8-git-send-email-gwingerde@gmail.com> <1259012694-14869-9-git-send-email-gwingerde@gmail.com> <200911241819.29685.IvDoorn@gmail.com>
+In-Reply-To: <200911241819.29685.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Linus,
+On 11/24/09 18:19, Ivo van Doorn wrote:
+> On Monday 23 November 2009, Gertjan van Wingerde wrote:
+>> Current rt2x00 drivers may result in a "ieee80211_tx_status: headroom too
+>> small" error message when a frame needs to be properly aligned before
+>> transmitting it.
+>> This is because the space needed to ensure proper alignment isn't
+>> requested from mac80211.
+>> Fix this by adding sufficient amount of alignment space to the amount
+>> of headroom requested for TX frames.
+>>
+>> Reported-by: David Ellingsworth <david@identd.dyndns.org>
+>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>> ---
+>>  drivers/net/wireless/rt2x00/rt2x00.h    |    6 ++++++
+>>  drivers/net/wireless/rt2x00/rt2x00dev.c |   12 +++++++++++-
+>>  2 files changed, 17 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+>> index 4d841c0..dcfc8c2 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+>> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+>> @@ -113,6 +113,12 @@
+>>  	(  ((unsigned long)((__skb)->data + (__header))) & 3 )
+>>  
+>>  /*
+>> + * Constants for extra TX headroom for alignment purposes.
+>> + */
+>> +#define RT2X00_ALIGN_SIZE	4 /* Only whole frame needs alignment */
+>> +#define RT2X00_L2PAD_SIZE	8 /* Both header & payload need alignment */
+> 
+> Now that I think of it, why do we need 8 byte for L2 padding?
+> Shouldn't we need the same size for regular alignment, L2 padding only indicates
+> the padding occurs between header and payload rather then before the header only.
+> So unless I am mistaken about how I coded the header & payload moving in rt2x00lib,
+> you always need at most 4 bytes.
+> 
 
-It looks like
+Nope. If I read the code right then the header can be moved by more than 4 bytes, namely
+when the payload needs to be shifted more than the header. In that case the header is
+shifted an extra 4 bytes to make room for the payload. However, 8 is the obvious maximum.
 
-commit 7d930bc33653d5592dc386a76a38f39c2e962344
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Tue Oct 20 15:08:53 2009 +0900
-
-    cfg80211: sme: deauthenticate on assoc failure
-
-    When the in-kernel SME gets an association failure from
-    the AP we don't deauthenticate, and thus get into a very
-    confused state which will lead to warnings later on. Fix
-    this by actually deauthenticating when the AP indicates
-    an association failure.
-
-    (Brought to you by the hacking session at Kernel Summit 2009 in Tokyo,
-    Japan. -- JWL)
-
-    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-is causing oops on resume:
-
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588844] BUG: unable to handle kernel NULL pointer dereference at (null)
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588852] IP: [<ffffffffa0b6d4d3>] cfg80211_conn_work+0x87/0x128 [cfg80211]
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588869] PGD 110bb4067 PUD 11a605067 PMD 0
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588875] Oops: 0000 [#1] PREEMPT SMP
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588880] last sysfs file: /sys/power/state
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588884] CPU 0
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588886] Modules linked in: fuse rfcomm sco bnep l2cap crc16 sunrpc autofs4 coretemp hwmon vmnet vmblock vsock vmci vmmon acpi_cpufreq uinput arc4 ecb snd_hda_codec_idt iwl3945 joydev iwlcore snd_hda_intel firewire_ohci snd_hda_codec snd_hwdep snd_pcm ppdev mac80211 tg3 firewire_core parport_pc psmouse snd_timer yenta_socket dell_laptop parport cfg80211 dcdbas nvidia(P) wmi video ac btusb bluetooth crc_itu_t rsrc_nonstatic serio_raw snd libphy battery pcspkr output iTCO_wdt soundcore snd_page_alloc i2c_i801 i2c_core iTCO_vendor_support ohci_hcd [last unloaded: microcode]
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588957] Pid: 9, comm: events/0 Tainted: P           2.6.32-rc5 #78 Latitude D630
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588960] RIP: 0010:[<ffffffffa0b6d4d3>]  [<ffffffffa0b6d4d3>] cfg80211_conn_work+0x87/0x128 [cfg80211]
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588970] RSP: 0000:ffff88011f8afd10  EFLAGS: 00010246
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588973] RAX: 0000000000000000 RBX: ffff8801183d4810 RCX: 0000000000000000
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588975] RDX: 0000000000000000 RSI: 0000000000000003 RDI: ffff8801183d4810
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588978] RBP: ffff88011f8afd80 R08: ffff8801183d4870 R09: 0000000000000000
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588981] R10: 0000000000000000 R11: 0000000000000000 R12: ffff880118de0000
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588983] R13: ffff88011f8afd40 R14: ffff880118de00f8 R15: ffff880118de0018
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588986] FS:  0000000000000000(0000) GS:ffff880028200000(0000) knlGS:0000000000000000
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588989] CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588992] CR2: 0000000000000000 CR3: 000000011afe5000 CR4: 00000000000006f0
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588995] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.588997] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589001] Process events/0 (pid: 9, threadinfo ffff88011f8ae000, task ffff88011f8b8000)
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589003] Stack:
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589005]  0000000000000000 ffffffff8105b93e ffff880100000000 0000000000000046
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006] <0> ffff88011f8afd50 ffff880118de0170 ffff88011f8afdf0 0000000000000246
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006] <0> ffff88011f8afd60 ffff8800282169c0 ffff88011f8b8000 ffff880118de0260
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006] Call Trace:
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006]  [<ffffffff8105b93e>] ? run_workqueue+0x12f/0x26d
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006]  [<ffffffff8105b990>] run_workqueue+0x181/0x26d
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006]  [<ffffffff8105b93e>] ? run_workqueue+0x12f/0x26d
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006]  [<ffffffffa0b6d44c>] ? cfg80211_conn_work+0x0/0x128 [cfg80211]
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006]  [<ffffffff8105bb5c>] worker_thread+0xe0/0xf3
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006]  [<ffffffff8105f951>] ? autoremove_wake_function+0x0/0x34
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006]  [<ffffffff8105ba7c>] ? worker_thread+0x0/0xf3
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006]  [<ffffffff8105f5ed>] kthread+0x7a/0x82
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006]  [<ffffffff8100cc9a>] child_rip+0xa/0x20
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006]  [<ffffffff8100c600>] ? restore_args+0x0/0x30
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006]  [<ffffffff8105f573>] ? kthread+0x0/0x82
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006]  [<ffffffff8100cc90>] ? child_rip+0x0/0x20
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006] Code: eb 7f 48 89 df e8 ba e7 ff ff 48 8b 43 20 f6 40 48 01 74 5d 83 bb fc 00 00 00 01 75 54 48 8b 83 00 01 00 00 48 89 df 48 8b 40 08 <8b> 10 41 89 55 00 66 8b 40 04 66 41 89 45 04 e8 c6 eb ff ff 85
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006] RIP  [<ffffffffa0b6d4d3>] cfg80211_conn_work+0x87/0x128 [cfg80211]
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006]  RSP <ffff88011f8afd10>
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589006] CR2: 0000000000000000
-Nov  2 20:24:01 dtor-d630 kernel: [ 4696.589257] ---[ end trace 7169bd444788bb37 ]---
-
-Reverting this particular commit allows me to suspend/resume again.
-
-Thanks!
-
--- 
-Dmitry
+---
+Gertjan.
