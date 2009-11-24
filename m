@@ -1,86 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45070 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752529AbZKYLgQ (ORCPT
+Received: from smtp5.freeserve.com ([193.252.22.151]:23916 "EHLO
+	smtp6.freeserve.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S934232AbZKXVQD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 06:36:16 -0500
-Subject: Re: [RFC PATCH] mac80211: Send null data frame after disabling
- power save in Tx path.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vivek Natarajan <vnatarajan@atheros.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1259132754-18164-1-git-send-email-vnatarajan@atheros.com>
-References: <1259132754-18164-1-git-send-email-vnatarajan@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-4+/P+QJTYXD1y/R/h1IA"
-Date: Wed, 25 Nov 2009 11:21:01 +0100
-Message-ID: <1259144461.3491.58.camel@johannes.local>
+	Tue, 24 Nov 2009 16:16:03 -0500
+Date: Tue, 24 Nov 2009 21:15:52 +0000
+From: Chris Vine <chris@cvine.freeserve.co.uk>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: bcm43xx devel <Bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.df>,
+	William Bourque <william.bourque@polymtl.ca>
+Subject: Re: DMA errors with BCM4312 - an update
+Message-ID: <20091124211552.533a2b4e@boulder.homenet>
+In-Reply-To: <4B0C2EC3.5010408@lwfinger.net>
+References: <4B0C2EC3.5010408@lwfinger.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 24 Nov 2009 13:06:43 -0600
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> This E-mail is to summarize what I have learned to date.
+> 
+> The pm_qos change does nothing useful. It may have helped a little,
+> but the side effects are far worse than the benefits.
+> 
+> Most systems work better with b43 when warm booted after Broadcom's
+> wl driver was loaded. The conclusion is that wl is making some change
+> in the setup that b43 is not.
+> 
+> (3) Based on the above, I have done MMIO and PCI-E configuration
+> tracing for the two drivers and found some real differences. After
+> seeing these, I did more RE work, and found some setup for the PCI-E
+> core that was missed earlier. I am still working on the changes. What
+> I have completed is found at
+> 
+> http://bcm-v4.sipsolutions.net/PCI-E#PCI-E_Setup
+> 
+> I doubt that most of these new routines will affect the problem
+> interfaces as they apply only to PCI-E core revisions 7 and 8. My
+> BCM4312 has rev 9. I do not know what versions are giving the
+> trouble. With SSB_DEBUG enabled, it will be in a log line as follows:
+> 
+> ssb: Core 3 found: PCI-E (cc 0x820, rev 0x09, vendor 0x4243)
+> 
+> If you are seeing the DMA error, please supply the above info.
+> 
+> The "PCI-E Miscellaneous Configuration" routine that is not yet
+> finished does run on my system and is the source of the tracing
+> differences. If the problem cards has a revision newer than 9, I will
+> probably need an MMIO trace for your device.
 
---=-4+/P+QJTYXD1y/R/h1IA
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+This is mine, the same revision as yours, but which demonstrates the
+DMA errors:
 
-On Wed, 2009-11-25 at 12:35 +0530, Vivek Natarajan wrote:
-> For drivers setting IEEE80211_HW_PS_NULLFUNC_STACK, a null data frame
-> with PM bit off has to be sent before sending normal data frames.
-> If it is done in ps_disable_work, the actual data frame would be
-> queued first before this work is executed and hence null data frame
-> will be queued later. And also, this null data frame has to be sent
-> only after clearing CONF_PS.
-> Hence, directly clearing CONF_PS and sending null data frame in
-> ieee80211_xmit seems to function properly.
->=20
-> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
-> ---
->  net/mac80211/tx.c |    8 ++++----
->  1 files changed, 4 insertions(+), 4 deletions(-)
->=20
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 943def2..51f537c 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -1433,10 +1433,10 @@ static void ieee80211_xmit(struct ieee80211_sub_i=
-f_data *sdata,
-> =20
->  	if (need_dynamic_ps(local)) {
->  		if (local->hw.conf.flags & IEEE80211_CONF_PS) {
-> -			ieee80211_stop_queues_by_reason(&local->hw,
-> -					IEEE80211_QUEUE_STOP_REASON_PS);
-> -			ieee80211_queue_work(&local->hw,
-> -					&local->dynamic_ps_disable_work);
-> +			local->hw.conf.flags &=3D ~IEEE80211_CONF_PS;
-> +			ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-> +			if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)
-> +				ieee80211_send_nullfunc(local, sdata, 0);
+ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x16, vendor 0x4243)
+ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0F, vendor 0x4243)
+ssb: Core 2 found: PCMCIA (cc 0x80D, rev 0x0A, vendor 0x4243)
+ssb: Core 3 found: PCI-E (cc 0x820, rev 0x09, vendor 0x4243)
+ssb: Found rev 1 PMU (capabilities 0x02A62F01)
+ssb: SPROM revision 8 detected.
+ssb: Sonics Silicon Backplane found on PCI device 0000:03:00.0
 
-Regardless of Kalle's comment I thought I'd point out that you cannot do
-this anyway as _hw_config() must be able to sleep.
+Chris
 
-johannes
-
---=-4+/P+QJTYXD1y/R/h1IA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLDQUKAAoJEODzc/N7+Qma8tMQALmImTMKW5J6MQySxkCIunAe
-gGf+WFmr2x07nUZlNCrziVpkIT+6igw9tYrssRf5Qkc8z8C7cDsF/Ur1rtbme8uH
-2eCzdA6vxnIaVX6tgOmxXJ3DD6bL8mxcTbrSerc2+hRTFz/Abf6jlZb9IV059wYC
-adwTPU+cXkG7A6XJ5Zn3RvCQ+DTZetry/51RiuaH+yRYgT5OC+F8P5nI+2qPLqGa
-A8+D61Wky3TQGFkEX+R7LP9ClyBO6NqEF74UiA3SHfspHDeST/kGcN/DPAVVM9V1
-tR2V2HpdR+iXq1vwVj2NxMo+b6cnuoc4Y9EMYfNLk5Fy5Kev50e3nWF58Lfe18dc
-sQ0lqEye82+r+Vpmf4PsKSkrUV4dOr6N4ZpEjMSmecOGGdNVbw4lUh66MdaxMNAZ
-LY1u9rsrnLlpQMk/UPJd1lzP6ls2a2KGoDKNIJFZpkhup3eZXxSeHB2ZXs5Zcp0k
-kVTxaOp2SDCrWNPMM6ImRlC5RDpluV4dpyLK0xV9KI8XB3gf+h+WQi5AMIh+wtdG
-1VM/gO+wIRkhGKd9/ihi2EYFBo3sYzZTj0YmGNxX+J3rJOve1uLgBgRw3RpKG7/F
-Od+zZDYzz2sFFdK/2qPXXLLtE/Qe2CRyyJKEAXfd+SDNzEMjKsvjKqvay73XoI2w
-0u0dWLNsp63Andjg2msv
-=DP+7
------END PGP SIGNATURE-----
-
---=-4+/P+QJTYXD1y/R/h1IA--
 
