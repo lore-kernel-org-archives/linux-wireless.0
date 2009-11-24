@@ -1,68 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:63373 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758276AbZKESkX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2009 13:40:23 -0500
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 01/41] rt2800usb: make Kconfig help entry more helpful
-Date: Thu, 5 Nov 2009 19:40:24 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173158.28463.66661.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173158.28463.66661.sendpatchset@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911051940.24841.IvDoorn@gmail.com>
+Received: from smtp2e.orange.fr ([80.12.242.113]:22997 "EHLO smtp2e.orange.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933126AbZKXOt1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Nov 2009 09:49:27 -0500
+From: Benoit Papillault <benoit.papillault@free.fr>
+To: lrodriguez@atheros.com
+Cc: jmalinen@atheros.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Subject: [PATCH] ath9k: This patch fix RX unpadding for any received frame.
+Date: Tue, 24 Nov 2009 15:49:17 +0100
+Message-Id: <1259074158-2101-1-git-send-email-benoit.papillault@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 04 November 2009, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2800usb: make Kconfig help entry more helpful
-> 
-> Document known issues with the driver to aid distribution makers,
-> users and developers in making informed decisions instead of wasting
-> their time needlessly.
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Benoit PAPILLAULT <benoit@benoit-laptop.(none)>
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+It has been tested with a 802.11 frame generator and by checking the FCS field
+of each received frame with the value reported by the Atheros hardware. This
+patch is useful if you are trying to analyze non standard 802.11 frame going
+over the air.
 
-> ---
-> This reflects the actual state of affairs for driver in Linus' tree.
-> 
->  drivers/net/wireless/rt2x00/Kconfig |    6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> Index: b/drivers/net/wireless/rt2x00/Kconfig
-> ===================================================================
-> --- a/drivers/net/wireless/rt2x00/Kconfig
-> +++ b/drivers/net/wireless/rt2x00/Kconfig
-> @@ -104,7 +104,7 @@ config RT73USB
->  	  When compiled as a module, this driver will be called rt73usb.
->  
->  config RT2800USB
-> -	tristate "Ralink rt2800 (USB) support"
-> +	tristate "Ralink rt2800 (USB) support (EXPERIMENTAL)"
->  	depends on USB && EXPERIMENTAL
->  	select RT2X00_LIB_USB
->  	select RT2X00_LIB_HT
-> @@ -115,6 +115,10 @@ config RT2800USB
->  	  This adds experimental support for rt2800 wireless chipset family.
->  	  Supported chips: RT2770, RT2870 & RT3070.
->  
-> +	  Known issues:
-> +	  - support for RT2870 chips doesn't work with 802.11n APs yet
-> +	  - support for RT3070 chips is non-functional at the moment
-> +
->  	  When compiled as a module, this driver will be called "rt2800usb.ko".
->  
->  config RT2X00_LIB_PCI
-> 
+Signed-off-by: Benoit PAPILLAULT <benoit@benoit-laptop.(none)>
+---
+ drivers/net/wireless/ath/ath9k/common.c |   19 ++++++++++++++-----
+ 1 files changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+index 2f1e161..4a13632 100644
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -231,26 +231,35 @@ void ath9k_cmn_rx_skb_postprocess(struct ath_common *common,
+ {
+ 	struct ath_hw *ah = common->ah;
+ 	struct ieee80211_hdr *hdr;
+-	int hdrlen, padsize;
++	int hdrlen, padpos, padsize;
+ 	u8 keyix;
+ 	__le16 fc;
+ 
+ 	/* see if any padding is done by the hw and remove it */
+ 	hdr = (struct ieee80211_hdr *) skb->data;
+ 	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
++	padpos = 24;
+ 	fc = hdr->frame_control;
++	if ((fc & cpu_to_le16(IEEE80211_FCTL_FROMDS|IEEE80211_FCTL_TODS)) ==
++	    cpu_to_le16(IEEE80211_FCTL_FROMDS|IEEE80211_FCTL_TODS)) {
++	  padpos += 6; /* ETH_ALEN */
++	}
++	if ((fc & cpu_to_le16(IEEE80211_STYPE_QOS_DATA|IEEE80211_FCTL_FTYPE)) ==
++	    cpu_to_le16(IEEE80211_STYPE_QOS_DATA|IEEE80211_FTYPE_DATA)) {
++	  padpos += 2;
++	}
+ 
+ 	/* The MAC header is padded to have 32-bit boundary if the
+ 	 * packet payload is non-zero. The general calculation for
+ 	 * padsize would take into account odd header lengths:
+-	 * padsize = (4 - hdrlen % 4) % 4; However, since only
++	 * padsize = (4 - padpos % 4) % 4; However, since only
+ 	 * even-length headers are used, padding can only be 0 or 2
+ 	 * bytes and we can optimize this a bit. In addition, we must
+ 	 * not try to remove padding from short control frames that do
+ 	 * not have payload. */
+-	padsize = hdrlen & 3;
+-	if (padsize && hdrlen >= 24) {
+-		memmove(skb->data + padsize, skb->data, hdrlen);
++	padsize = padpos & 3;
++	if (padsize && skb->len>=padpos+padsize+FCS_LEN) {
++		memmove(skb->data + padsize, skb->data, padpos);
+ 		skb_pull(skb, padsize);
+ 	}
+ 
+-- 
+1.6.3.3
+
 
 
