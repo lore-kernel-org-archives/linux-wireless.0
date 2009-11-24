@@ -1,140 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:40933 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757217AbZKCDH5 (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:11388 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933275AbZKXPZt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 22:07:57 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
-Subject: [RFT 3/9] ath9k: simpify RX by calling ath_get_virt_hw() once
-Date: Mon,  2 Nov 2009 22:07:55 -0500
-Message-Id: <1257217681-27180-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1257217681-27180-1-git-send-email-lrodriguez@atheros.com>
-References: <1257217681-27180-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 24 Nov 2009 10:25:49 -0500
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [RFC 3/3] iwmc3200wifi: Implement cfg80211 PMKSA API
+Date: Tue, 24 Nov 2009 16:26:54 +0100
+Message-Id: <601a0b604e70a6a72481e02860c6a6430351cd34.1259075573.git.sameo@linux.intel.com>
+In-Reply-To: <fce5ca6545ef79bb7ce9c9abf3e9348d070637dc.1259075573.git.sameo@linux.intel.com>
+References: <cover.1259075573.git.sameo@linux.intel.com>
+ <ff5bf1a69ecd3ed3695089cf62e6ab51689b683a.1259075573.git.sameo@linux.intel.com>
+ <fce5ca6545ef79bb7ce9c9abf3e9348d070637dc.1259075573.git.sameo@linux.intel.com>
+In-Reply-To: <cover.1259075573.git.sameo@linux.intel.com>
+References: <cover.1259075573.git.sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath_get_virt_hw() is required on RX to determine for which virtual
-wiphy an skb came in for. Instead of searching for the hw twice do
-it only once.
+We need to implement the PMKSA API for proper WPA2 pre-auth and fast
+re-association. Our fullmac device generates all (re-)assoc IEs, and thus it
+needs the right PMKIDs. With this implementation we now get them from
+wpa_supplicant.
 
-Cc: Jouni.Malinen <Jouni.Malinen@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- drivers/net/wireless/ath/ath9k/recv.c |   28 ++++++++++++++++++----------
- 1 files changed, 18 insertions(+), 10 deletions(-)
+ drivers/net/wireless/iwmc3200wifi/cfg80211.c |   30 ++++++++++++++++++++++++++
+ drivers/net/wireless/iwmc3200wifi/commands.c |   22 +++++++++++++++++++
+ drivers/net/wireless/iwmc3200wifi/commands.h |   13 +++++++++++
+ drivers/net/wireless/iwmc3200wifi/umac.h     |    1 +
+ 4 files changed, 66 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index c880a55..330cd3b 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -105,23 +105,21 @@ static u64 ath_extend_tsf(struct ath_softc *sc, u32 rstamp)
-  * up the frame up to let mac80211 handle the actual error case, be it no
-  * decryption key or real decryption error. This let us keep statistics there.
-  */
--static int ath_rx_prepare(struct sk_buff *skb, struct ath_desc *ds,
-+static int ath_rx_prepare(struct ieee80211_hw *hw,
-+			  struct sk_buff *skb, struct ath_desc *ds,
- 			  struct ieee80211_rx_status *rx_status, bool *decrypt_error,
- 			  struct ath_softc *sc)
- {
- 	struct ieee80211_hdr *hdr;
- 	u8 ratecode;
- 	__le16 fc;
--	struct ieee80211_hw *hw;
- 	struct ieee80211_sta *sta;
- 	struct ath_node *an;
- 	int last_rssi = ATH_RSSI_DUMMY_MARKER;
- 
--
- 	hdr = (struct ieee80211_hdr *)skb->data;
- 	fc = hdr->frame_control;
- 	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
--	hw = ath_get_virt_hw(sc, hdr);
- 
- 	if (ds->ds_rxstat.rs_more) {
- 		/*
-@@ -615,7 +613,8 @@ static void ath_rx_ps(struct ath_softc *sc, struct sk_buff *skb)
- 	}
+diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+index 7cfc2c0..c74f9f9 100644
+--- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
++++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+@@ -725,6 +725,33 @@ static int iwm_cfg80211_set_power_mgmt(struct wiphy *wiphy,
+ 				       CFG_POWER_INDEX, iwm->conf.power_index);
  }
  
--static void ath_rx_send_to_mac80211(struct ath_softc *sc, struct sk_buff *skb,
-+static void ath_rx_send_to_mac80211(struct ieee80211_hw *hw,
-+				    struct ath_softc *sc, struct sk_buff *skb,
- 				    struct ieee80211_rx_status *rx_status)
- {
- 	struct ieee80211_hdr *hdr;
-@@ -647,7 +646,7 @@ static void ath_rx_send_to_mac80211(struct ath_softc *sc, struct sk_buff *skb,
- 	} else {
- 		/* Deliver unicast frames based on receiver address */
- 		memcpy(IEEE80211_SKB_RXCB(skb), rx_status, sizeof(*rx_status));
--		ieee80211_rx(ath_get_virt_hw(sc, hdr), skb);
-+		ieee80211_rx(hw, skb);
- 	}
- }
- 
-@@ -663,6 +662,12 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 	struct ieee80211_rx_status rx_status;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	/*
-+	 * The hw can techncically differ from common->hw when using ath9k
-+	 * virtual wiphy so to account for that we iterate over the active
-+	 * wiphys and find the appropriate wiphy and therefore hw.
-+	 */
-+	struct ieee80211_hw *hw = NULL;
- 	struct ieee80211_hdr *hdr;
- 	int hdrlen, padsize, retval;
- 	bool decrypt_error = false;
-@@ -742,6 +747,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 				sc->rx.bufsize,
- 				DMA_FROM_DEVICE);
- 
-+		hdr = (struct ieee80211_hdr *) skb->data;
-+		hw = ath_get_virt_hw(sc, hdr);
++int iwm_cfg80211_set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
++			   struct cfg80211_pmksa *pmksa)
++{
++	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
 +
- 		/*
- 		 * If we're asked to flush receive queue, directly
- 		 * chain it back at the queue without processing it.
-@@ -756,7 +764,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 		if (sc->rx.bufsize < ds->ds_rxstat.rs_datalen)
- 			goto requeue;
++	return iwm_send_pmkid_update(iwm, pmksa, IWM_CMD_PMKID_ADD);
++}
++
++int iwm_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
++			   struct cfg80211_pmksa *pmksa)
++{
++	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
++
++	return iwm_send_pmkid_update(iwm, pmksa, IWM_CMD_PMKID_DEL);
++}
++
++int iwm_cfg80211_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
++{
++	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
++	struct cfg80211_pmksa pmksa;
++
++	memset(&pmksa, 0, sizeof(struct cfg80211_pmksa));
++
++	return iwm_send_pmkid_update(iwm, &pmksa, IWM_CMD_PMKID_FLUSH);
++}
++
++
+ static struct cfg80211_ops iwm_cfg80211_ops = {
+ 	.change_virtual_intf = iwm_cfg80211_change_iface,
+ 	.add_key = iwm_cfg80211_add_key,
+@@ -741,6 +768,9 @@ static struct cfg80211_ops iwm_cfg80211_ops = {
+ 	.set_tx_power = iwm_cfg80211_set_txpower,
+ 	.get_tx_power = iwm_cfg80211_get_txpower,
+ 	.set_power_mgmt = iwm_cfg80211_set_power_mgmt,
++	.set_pmksa = iwm_cfg80211_set_pmksa,
++	.del_pmksa = iwm_cfg80211_del_pmksa,
++	.flush_pmksa = iwm_cfg80211_flush_pmksa,
+ };
  
--		if (!ath_rx_prepare(skb, ds, &rx_status, &decrypt_error, sc))
-+		if (!ath_rx_prepare(hw, skb, ds,
-+				    &rx_status, &decrypt_error, sc))
- 			goto requeue;
+ static const u32 cipher_suites[] = {
+diff --git a/drivers/net/wireless/iwmc3200wifi/commands.c b/drivers/net/wireless/iwmc3200wifi/commands.c
+index 46ca7c5..bd06307 100644
+--- a/drivers/net/wireless/iwmc3200wifi/commands.c
++++ b/drivers/net/wireless/iwmc3200wifi/commands.c
+@@ -960,3 +960,25 @@ int iwm_send_umac_stop_resume_tx(struct iwm_priv *iwm,
+ 				 sizeof(struct iwm_umac_cmd_stop_resume_tx));
  
- 		/* Ensure we always have an skb to requeue once we are done
-@@ -778,7 +787,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 		skb_put(skb, ds->ds_rxstat.rs_datalen);
+ }
++
++int iwm_send_pmkid_update(struct iwm_priv *iwm,
++			  struct cfg80211_pmksa *pmksa, u32 command)
++{
++	struct iwm_umac_pmkid_update update;
++	int ret;
++
++	memset(&update, 0, sizeof(struct iwm_umac_pmkid_update));
++
++	update.command = cpu_to_le32(command);
++	memcpy(&update.bssid, pmksa->bssid, ETH_ALEN);
++	memcpy(&update.pmkid, pmksa->pmkid, WLAN_PMKID_LEN);
++
++	ret = iwm_send_wifi_if_cmd(iwm, &update,
++				   sizeof(struct iwm_umac_pmkid_update), 0);
++	if (ret) {
++		IWM_ERR(iwm, "PMKID update command failed\n");
++		return ret;
++	}
++
++	return 0;
++}
+diff --git a/drivers/net/wireless/iwmc3200wifi/commands.h b/drivers/net/wireless/iwmc3200wifi/commands.h
+index 95cdf94..06af055 100644
+--- a/drivers/net/wireless/iwmc3200wifi/commands.h
++++ b/drivers/net/wireless/iwmc3200wifi/commands.h
+@@ -458,6 +458,17 @@ struct iwm_umac_cmd_stop_resume_tx {
+ 	u16 reserved;
+ } __attribute__ ((packed));
  
- 		/* see if any padding is done by the hw and remove it */
--		hdr = (struct ieee80211_hdr *)skb->data;
- 		hdrlen = ieee80211_get_hdrlen_from_skb(skb);
- 		fc = hdr->frame_control;
++#define IWM_CMD_PMKID_ADD   1
++#define IWM_CMD_PMKID_DEL   2
++#define IWM_CMD_PMKID_FLUSH 3
++
++struct iwm_umac_pmkid_update {
++	__le32 command;
++	u8 bssid[ETH_ALEN];
++	__le16 reserved;
++	u8 pmkid[WLAN_PMKID_LEN];
++} __attribute__ ((packed));
++
+ /* LMAC commands */
+ int iwm_read_mac(struct iwm_priv *iwm, u8 *mac);
+ int iwm_send_prio_table(struct iwm_priv *iwm);
+@@ -488,6 +499,8 @@ int iwm_scan_ssids(struct iwm_priv *iwm, struct cfg80211_ssid *ssids,
+ int iwm_scan_one_ssid(struct iwm_priv *iwm, u8 *ssid, int ssid_len);
+ int iwm_send_umac_stop_resume_tx(struct iwm_priv *iwm,
+ 				 struct iwm_umac_notif_stop_resume_tx *ntf);
++int iwm_send_pmkid_update(struct iwm_priv *iwm,
++			  struct cfg80211_pmksa *pmksa, u32 command);
  
-@@ -825,7 +833,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 			bf->bf_mpdu = NULL;
- 			ath_print(common, ATH_DBG_FATAL,
- 				  "dma_mapping_error() on RX\n");
--			ath_rx_send_to_mac80211(sc, skb, &rx_status);
-+			ath_rx_send_to_mac80211(hw, sc, skb, &rx_status);
- 			break;
- 		}
- 		bf->bf_dmacontext = bf->bf_buf_addr;
-@@ -846,7 +854,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 					     SC_OP_WAIT_FOR_PSPOLL_DATA)))
- 			ath_rx_ps(sc, skb);
+ /* UDMA commands */
+ int iwm_target_reset(struct iwm_priv *iwm);
+diff --git a/drivers/net/wireless/iwmc3200wifi/umac.h b/drivers/net/wireless/iwmc3200wifi/umac.h
+index 70094bf..24c7c7a 100644
+--- a/drivers/net/wireless/iwmc3200wifi/umac.h
++++ b/drivers/net/wireless/iwmc3200wifi/umac.h
+@@ -298,6 +298,7 @@ struct iwm_udma_out_wifi_hdr {
+ #define UMAC_WIFI_IF_CMD_GLOBAL_TX_KEY_ID                0x1B
+ #define UMAC_WIFI_IF_CMD_SET_HOST_EXTENDED_IE            0x1C
+ #define UMAC_WIFI_IF_CMD_GET_SUPPORTED_CHANNELS          0x1E
++#define UMAC_WIFI_IF_CMD_PMKID_UPDATE                    0x1F
+ #define UMAC_WIFI_IF_CMD_TX_PWR_TRIGGER                  0x20
  
--		ath_rx_send_to_mac80211(sc, skb, &rx_status);
-+		ath_rx_send_to_mac80211(hw, sc, skb, &rx_status);
- 
- requeue:
- 		list_move_tail(&bf->list, &sc->rx.rxbuf);
+ /* UMAC WiFi interface ports */
 -- 
-1.6.5.2.143.g8cc62
+1.6.3.3
 
