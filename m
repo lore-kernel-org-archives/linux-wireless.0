@@ -1,137 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:21734 "EHLO mga03.intel.com"
+Received: from bu3sch.de ([62.75.166.246]:39609 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753952AbZKTUFH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 15:05:07 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 07/19] iwlwifi: set read/write permission for debugfs files
-Date: Fri, 20 Nov 2009 12:04:58 -0800
-Message-Id: <1258747510-21233-8-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
-References: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
+	id S932131AbZKXKws (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Nov 2009 05:52:48 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de, oncaphillis@snafu.de
+Subject: Re: [PATCH RFC] ssb: Generic SPROM override for devices without SPROM
+Date: Tue, 24 Nov 2009 11:52:49 +0100
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <200911201212.19588.mb@bu3sch.de> <4B0B9E99.1060201@snafu.de>
+In-Reply-To: <4B0B9E99.1060201@snafu.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200911241152.51787.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Tuesday 24 November 2009 09:51:37 Oncaphillis wrote:
+> On 11/20/2009 12:12 PM, Michael Buesch wrote:
+> > This patch adds a generic mechanism for overriding the SPROM mechanism
+> > on devices without SPROM hardware.
+> >
+> > There currently is a major problem with this:
+> > It tries to deduce a MAC address from various hardware parameters. But
+> > currently it will result in the same MAC address for machines of the same
+> > type. Does somebody have an idea of some device-instance specific serial
+> > number or something similar that could be hashed into the MAC?
+> >
+> What version is this patch against ? I tries rc7,rc8 and 2.6.31.6.
+> But it doesn't work for me.
 
-Set the correct Read/Write file permission for iwlwifi debugfs files
-based on the functionality of the files
+wireless testing
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |    8 ++--
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |   58 ++++++++++++++--------------
- 2 files changed, 33 insertions(+), 33 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 2f09e3b..fe511cb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -2964,16 +2964,16 @@ static void rs_add_debugfs(void *priv, void *priv_sta,
- {
- 	struct iwl_lq_sta *lq_sta = priv_sta;
- 	lq_sta->rs_sta_dbgfs_scale_table_file =
--		debugfs_create_file("rate_scale_table", 0600, dir,
-+		debugfs_create_file("rate_scale_table", S_IRUSR | S_IWUSR, dir,
- 				lq_sta, &rs_sta_dbgfs_scale_table_ops);
- 	lq_sta->rs_sta_dbgfs_stats_table_file =
--		debugfs_create_file("rate_stats_table", 0600, dir,
-+		debugfs_create_file("rate_stats_table", S_IRUSR, dir,
- 			lq_sta, &rs_sta_dbgfs_stats_table_ops);
- 	lq_sta->rs_sta_dbgfs_rate_scale_data_file =
--		debugfs_create_file("rate_scale_data", 0600, dir,
-+		debugfs_create_file("rate_scale_data", S_IRUSR, dir,
- 			lq_sta, &rs_sta_dbgfs_rate_scale_data_ops);
- 	lq_sta->rs_sta_dbgfs_tx_agg_tid_en_file =
--		debugfs_create_u8("tx_agg_tid_enable", 0600, dir,
-+		debugfs_create_u8("tx_agg_tid_enable", S_IRUSR | S_IWUSR, dir,
- 		&lq_sta->tx_agg_tid_en);
- 
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index b8f9edc..e6194c8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -47,9 +47,9 @@
- 		goto err; 						\
- } while (0)
- 
--#define DEBUGFS_ADD_FILE(name, parent) do {                             \
-+#define DEBUGFS_ADD_FILE(name, parent, mode) do {                       \
- 	dbgfs->dbgfs_##parent##_files.file_##name =                     \
--	debugfs_create_file(#name, S_IWUSR | S_IRUSR,                   \
-+	debugfs_create_file(#name, mode,                                \
- 				dbgfs->dir_##parent, priv,              \
- 				&iwl_dbgfs_##name##_ops);               \
- 	if (!(dbgfs->dbgfs_##parent##_files.file_##name))               \
-@@ -1868,34 +1868,34 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
- 	DEBUGFS_ADD_DIR(data, dbgfs->dir_drv);
- 	DEBUGFS_ADD_DIR(rf, dbgfs->dir_drv);
- 	DEBUGFS_ADD_DIR(debug, dbgfs->dir_drv);
--	DEBUGFS_ADD_FILE(nvm, data);
--	DEBUGFS_ADD_FILE(sram, data);
--	DEBUGFS_ADD_FILE(log_event, data);
--	DEBUGFS_ADD_FILE(stations, data);
--	DEBUGFS_ADD_FILE(channels, data);
--	DEBUGFS_ADD_FILE(status, data);
--	DEBUGFS_ADD_FILE(interrupt, data);
--	DEBUGFS_ADD_FILE(qos, data);
--	DEBUGFS_ADD_FILE(led, data);
--	DEBUGFS_ADD_FILE(sleep_level_override, data);
--	DEBUGFS_ADD_FILE(current_sleep_command, data);
--	DEBUGFS_ADD_FILE(thermal_throttling, data);
--	DEBUGFS_ADD_FILE(disable_ht40, data);
--	DEBUGFS_ADD_FILE(rx_statistics, debug);
--	DEBUGFS_ADD_FILE(tx_statistics, debug);
--	DEBUGFS_ADD_FILE(traffic_log, debug);
--	DEBUGFS_ADD_FILE(rx_queue, debug);
--	DEBUGFS_ADD_FILE(tx_queue, debug);
--	DEBUGFS_ADD_FILE(tx_power, debug);
--	DEBUGFS_ADD_FILE(power_save_status, debug);
--	DEBUGFS_ADD_FILE(clear_ucode_statistics, debug);
--	DEBUGFS_ADD_FILE(clear_traffic_statistics, debug);
-+	DEBUGFS_ADD_FILE(nvm, data, S_IRUSR);
-+	DEBUGFS_ADD_FILE(sram, data, S_IWUSR | S_IRUSR);
-+	DEBUGFS_ADD_FILE(log_event, data, S_IWUSR);
-+	DEBUGFS_ADD_FILE(stations, data, S_IRUSR);
-+	DEBUGFS_ADD_FILE(channels, data, S_IRUSR);
-+	DEBUGFS_ADD_FILE(status, data, S_IRUSR);
-+	DEBUGFS_ADD_FILE(interrupt, data, S_IWUSR | S_IRUSR);
-+	DEBUGFS_ADD_FILE(qos, data, S_IRUSR);
-+	DEBUGFS_ADD_FILE(led, data, S_IRUSR);
-+	DEBUGFS_ADD_FILE(sleep_level_override, data, S_IWUSR | S_IRUSR);
-+	DEBUGFS_ADD_FILE(current_sleep_command, data, S_IRUSR);
-+	DEBUGFS_ADD_FILE(thermal_throttling, data, S_IRUSR);
-+	DEBUGFS_ADD_FILE(disable_ht40, data, S_IWUSR | S_IRUSR);
-+	DEBUGFS_ADD_FILE(rx_statistics, debug, S_IRUSR);
-+	DEBUGFS_ADD_FILE(tx_statistics, debug, S_IRUSR);
-+	DEBUGFS_ADD_FILE(traffic_log, debug, S_IWUSR | S_IRUSR);
-+	DEBUGFS_ADD_FILE(rx_queue, debug, S_IRUSR);
-+	DEBUGFS_ADD_FILE(tx_queue, debug, S_IRUSR);
-+	DEBUGFS_ADD_FILE(tx_power, debug, S_IRUSR);
-+	DEBUGFS_ADD_FILE(power_save_status, debug, S_IRUSR);
-+	DEBUGFS_ADD_FILE(clear_ucode_statistics, debug, S_IWUSR);
-+	DEBUGFS_ADD_FILE(clear_traffic_statistics, debug, S_IWUSR);
- 	if ((priv->hw_rev & CSR_HW_REV_TYPE_MSK) != CSR_HW_REV_TYPE_3945) {
--		DEBUGFS_ADD_FILE(ucode_rx_stats, debug);
--		DEBUGFS_ADD_FILE(ucode_tx_stats, debug);
--		DEBUGFS_ADD_FILE(ucode_general_stats, debug);
--		DEBUGFS_ADD_FILE(sensitivity, debug);
--		DEBUGFS_ADD_FILE(chain_noise, debug);
-+		DEBUGFS_ADD_FILE(ucode_rx_stats, debug, S_IRUSR);
-+		DEBUGFS_ADD_FILE(ucode_tx_stats, debug, S_IRUSR);
-+		DEBUGFS_ADD_FILE(ucode_general_stats, debug, S_IRUSR);
-+		DEBUGFS_ADD_FILE(sensitivity, debug, S_IRUSR);
-+		DEBUGFS_ADD_FILE(chain_noise, debug, S_IRUSR);
- 	}
- 	DEBUGFS_ADD_BOOL(disable_sensitivity, rf, &priv->disable_sens_cal);
- 	DEBUGFS_ADD_BOOL(disable_chain_noise, rf,
 -- 
-1.5.6.3
-
+Greetings, Michael.
