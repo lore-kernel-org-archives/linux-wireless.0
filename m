@@ -1,77 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:40568 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932413AbZKDRf7 (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:47261 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933576AbZKXRtC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 12:35:59 -0500
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 04 Nov 2009 18:35:39 +0100
-Message-Id: <20091104173539.28463.82770.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain>
-Subject: [PATCH 30/41] rt2800usb: fix comments in rt2800usb.h
+	Tue, 24 Nov 2009 12:49:02 -0500
+Date: Tue, 24 Nov 2009 19:49:04 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Ali Jelveh <jelveh@web.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ath9k and multiple ssids
+Message-ID: <20091124174904.GA17305@jm.kir.nu>
+References: <4F794DBA-82EF-4254-A874-ADFF05287CF4@web.de>
+ <D16ADE3A-61E2-4F46-ADD6-D3C8824A9BE9@web.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <D16ADE3A-61E2-4F46-ADD6-D3C8824A9BE9@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] rt2800usb: fix comments in rt2800usb.h
+On Mon, Nov 23, 2009 at 09:50:34PM +0100, Ali Jelveh wrote:
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.h |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+> I'm trying to get multiple ssids to work with hostapd (2.6.31 kernel
+> and hostapd v0.6.9, driver=nl80211) thru adding a bss=wlan0_1 and
+> ssid=someothername to the config, I get an "Invalid BSSID mask"
+> error - so my question is: should this work? or isn't that feature
+> implemented in my current wireless driver?
 
-Index: b/drivers/net/wireless/rt2x00/rt2800usb.h
-===================================================================
---- a/drivers/net/wireless/rt2x00/rt2800usb.h
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.h
-@@ -61,7 +61,7 @@
- 
- /*
-  * Signal information.
-- * Defaul offset is required for RSSI <-> dBm conversion.
-+ * Default offset is required for RSSI <-> dBm conversion.
-  */
- #define DEFAULT_RSSI_OFFSET		120 /* FIXME */
- 
-@@ -87,12 +87,6 @@
-  */
- 
- /*
-- * HOST-MCU shared memory
-- */
--#define HOST_CMD_CSR			0x0404
--#define HOST_CMD_CSR_HOST_COMMAND	FIELD32(0x000000ff)
--
--/*
-  * INT_SOURCE_CSR: Interrupt source register.
-  * Write one to clear corresponding bit.
-  * TX_FIFO_STATUS: FIFO Statistics is full, sw should read 0x171c
-@@ -351,6 +345,12 @@
- #define PBF_SYS_CTRL_HOST_RAM_WRITE	FIELD32(0x00010000)
- 
- /*
-+ * HOST-MCU shared memory
-+ */
-+#define HOST_CMD_CSR			0x0404
-+#define HOST_CMD_CSR_HOST_COMMAND	FIELD32(0x000000ff)
-+
-+/*
-  * PBF registers
-  * Most are for debug. Driver doesn't touch PBF register.
-  */
-@@ -1776,7 +1776,7 @@ struct mac_iveiv_entry {
- 
- /*
-  * Word3
-- * WIV: Wireless Info Valid. 1: Driver filled WI,  0: DMA needs to copy WI
-+ * WIV: Wireless Info Valid. 1: Driver filled WI, 0: DMA needs to copy WI
-  * QSEL: Select on-chip FIFO ID for 2nd-stage output scheduler.
-  *       0:MGMT, 1:HCCA 2:EDCA
-  */
+Please try with hostapd v0.7.0; 0.6.9 is way too old for many nl80211
+interface features. If you cannot get this working with 0.7.0, please
+send more verbose debug log from hostapd. Which MAC address does your
+card have?
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
