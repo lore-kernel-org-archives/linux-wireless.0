@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42619 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751632AbZKPK4E (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2009 05:56:04 -0500
-Subject: Re: [PATCH v2] rndis_wlan: handle NL80211_AUTHTYPE_AUTOMATIC
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20091116104937.3845.62090.stgit@fate.lan>
-References: <20091116104937.3845.62090.stgit@fate.lan>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-r6ixrxNMbGtoqgMlKjDL"
-Date: Mon, 16 Nov 2009 11:56:02 +0100
-Message-ID: <1258368962.32159.12.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:10115 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932212AbZKXLx5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Nov 2009 06:53:57 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 24 Nov 2009 03:54:04 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] cfg80211: Clear encryption privacy when key off is done.
+Date: Tue, 24 Nov 2009 17:23:47 +0530
+Message-ID: <1259063627-20033-3-git-send-email-vnatarajan@atheros.com>
+In-Reply-To: <1259063627-20033-2-git-send-email-vnatarajan@atheros.com>
+References: <1259063627-20033-1-git-send-email-vnatarajan@atheros.com>
+ <1259063627-20033-2-git-send-email-vnatarajan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When the current_bss is not set, 'iwconfig <iface> key off' does not
+clear the private flag. Hence after we connect with WEP to an AP and
+then try to connect with another non-WEP AP, it does not work.
+This issue will not be seen if supplicant is used.
 
---=-r6ixrxNMbGtoqgMlKjDL
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ net/wireless/wext-compat.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-On Mon, 2009-11-16 at 12:49 +0200, Jussi Kivilinna wrote:
-> rndis_wlan didn't know about NL80211_AUTHTYPE_AUTOMATIC and simple
-> setup with 'iwconfig wlan essid no-encrypt' would fail (ENOSUPP).
->=20
-> v2: use NDIS_80211_AUTH_AUTO_SWITCH instead of _OPEN.
->     This will make device try shared key auth first, then open.
-
-Oh how very cool, I was dreading you'd say "can't cfg80211 auto-try
-then" :)
-
-johannes
-
---=-r6ixrxNMbGtoqgMlKjDL
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLAS++AAoJEODzc/N7+QmamiwQAMrn79uxZ+8eFV6/6fjBIiPl
-Sq2/Sa2k9pE0yI55CB4AjPAY2s+u9WFsgS3wSZqwEdv/f57SDN1qV6UybATIH7XT
-0GvZ3DsFCTMdzalzb9ykUJSBThD6Izvq4242gGV6ppv6HqLgN9KUDDCyvQhvgPj1
-Ktgr1RYa9n9ItDVFBUfhbV6mvdp1oE9J1bw7WsTc1Ar600dTzZnNwewO8t+rcHXO
-RssWBqJ8bCGgn3UaCbaRO4SP7terEhUP97KiifMZ8xe69FqYYaYW+yb7z6fAFSUp
-9k2jtcW+Hw3DK8NYj1AJ/JnHWuM35YWzyV9MefQcWbM8hf+CDHUgNJDzH1j+i69v
-cNxfQeoEp1TtGesHkspHscpCX9jjniEFC7Muy0gl9OjpJ/tQI8wWCTMe+xK73/jK
-vHYGyvTGIEzn1oPrWjiCcloAVEPkG3cV7u8p43Xm+NCbBSvYtnnlHtiZg9lvt3x/
-H1TkYWxjFyI4VAoaKmccFEMmDSBD9c6H4sMpKjLhielCc7BBOgeZw4mrtYx6Z1NZ
-MdYqC6JdknA9wi8/a/7VtH/pq7VEiaaua1Wg24RvPveNr3ZyCN6Ra7B+AvfIQmo6
-B63dBuC2bVZy8PcK5ZrupRbNWYtfkDZVRSI185vVoYfRy0PKzfv3iQkasWe4Vpp5
-bCdDvmVHEj7lpjwJA2xv
-=1oBp
------END PGP SIGNATURE-----
-
---=-r6ixrxNMbGtoqgMlKjDL--
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 29091ac..000df52 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -479,6 +479,7 @@ static int __cfg80211_set_encryption(struct cfg80211_registered_device *rdev,
+ 			}
+ 			err = rdev->ops->del_key(&rdev->wiphy, dev, idx, addr);
+ 		}
++		wdev->wext.connect.privacy = false;
+ 		/*
+ 		 * Applications using wireless extensions expect to be
+ 		 * able to delete keys that don't exist, so allow that.
+-- 
+1.6.0.4
 
