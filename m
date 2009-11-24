@@ -1,69 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:33316 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751440AbZKPCgT (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:37102 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932383AbZKXRNB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Nov 2009 21:36:19 -0500
+	Tue, 24 Nov 2009 12:13:01 -0500
+Received: by fg-out-1718.google.com with SMTP id d23so2739746fga.1
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Nov 2009 09:13:06 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH v2 5/8] rt2x00: Whitespace cleanup.
+Date: Tue, 24 Nov 2009 18:13:02 +0100
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com> <1259012694-14869-5-git-send-email-gwingerde@gmail.com> <1259012694-14869-6-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1259012694-14869-6-git-send-email-gwingerde@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1258221909.3299.26.camel@violet>
-References: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
-	 <1258082571.7715.13.camel@violet>
-	 <4fb5db50911140519q70bbdd00qb585153c4926df96@mail.gmail.com>
-	 <1258216474.3299.24.camel@violet>
-	 <4fb5db50911140937j278584e5nf9e4d5767a44a920@mail.gmail.com>
-	 <1258221909.3299.26.camel@violet>
-Date: Mon, 16 Nov 2009 08:06:23 +0530
-Message-ID: <4fb5db50911151836u5b4844adrd91b56a5ebc7084d@mail.gmail.com>
-Subject: [PATCH 1/1] Adding radio type FM
-From: Janakiram Sistla <janakiram.sistla@gmail.com>
-To: majordomo@vger.kernel.org
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, Marcel Holtmann <marcel@holtmann.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911241813.02788.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding changes  RFKILL type FM  and for RFKILL for FM  in core
+On Monday 23 November 2009, Gertjan van Wingerde wrote:
+> Clean up the use of whitespace in the initialization of the rt2x00_ops
+> structures. This is preparatory for a later patch that adds members
+> to that structure, which require different whitespace alignment.
+> 
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
->From 4bf0ae6c90de9a766914abeb5ab5e5428089b648 Mon Sep 17 00:00:00 2001
-From: Janakiram Sistla <janakiram.sistla@gmail.com>
-Date: Mon, 16 Nov 2009 07:58:09 +0530
-Subject: [PATCH 1/1] Adding radio type FM
-
-Adding radio type FM in RFKILL_TYPE_.FM belongs to
-same class of with both TX/RX capability.
-
-Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
----
- include/linux/rfkill.h |    1 +
- net/rfkill/core.c      |    2 ++
- 2 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index 3392c59..03f5598 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -45,6 +45,7 @@ enum rfkill_type {
- 	RFKILL_TYPE_WIMAX,
- 	RFKILL_TYPE_WWAN,
- 	RFKILL_TYPE_GPS,
-+	RFKILL_TYPE_FM,
- 	NUM_RFKILL_TYPES,
- };
-
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index ba2efb9..61b716e 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -590,6 +590,8 @@ static const char *rfkill_get_type_str(enum
-rfkill_type type)
- 		return "wimax";
- 	case RFKILL_TYPE_WWAN:
- 		return "wwan";
-+	case RFKILL_TYPE_FM:
-+		return "fm";
- 	case RFKILL_TYPE_GPS:
- 		return "gps";
- 	default:
--- 
-1.5.4.3
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
