@@ -1,93 +1,260 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:59618 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750904AbZKFRsX (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:57464 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757732AbZKXHxU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 12:48:23 -0500
-Received: by bwz27 with SMTP id 27so1423588bwz.21
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 09:48:27 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: James Grossmann <cctsurf@gmail.com>
-Subject: Re: Prism54/p54pci
-Date: Fri, 6 Nov 2009 18:48:21 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <167ae39b0910071400n218d3d9ey7711b1011f290a73@mail.gmail.com> <200911021611.37354.chunkeey@googlemail.com> <167ae39b0911060900i2c8f4a78w4edecdcec36f1a38@mail.gmail.com>
-In-Reply-To: <167ae39b0911060900i2c8f4a78w4edecdcec36f1a38@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200911061848.21681.chunkeey@googlemail.com>
+	Tue, 24 Nov 2009 02:53:20 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Vivek Natarajan <Vivek.Natarajan@atheros.com>
+Subject: [PATCH] ath9k: fix processing of TX PS null data frames
+Date: Tue, 24 Nov 2009 02:53:25 -0500
+Message-Id: <1259049205-32596-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 06 November 2009 18:00:54 James Grossmann wrote:
-> It connects up with the patch!
-> I'll attach a dmesg for any info you might be able to glean from that.
->  THANKS!
+When mac80211 was telling us to go into Powersave we listened
+and immediately turned RX off. This meant hardware would not
+see the ACKs from the AP we're associated with and hardware
+we'd end up retransmiting the null data frame in a loop
+helplessly.
 
-it's a start, but there are some serious implications.
+Fix this by keeping track of the transmitted nullfunc frames
+and only when we are sure the AP has sent back an ACK do we
+go ahead and shut RX off.
 
-but first: what is your signal (dBm) reading (iwconfig / iw dev wlanX info)?
-
-I'm asking this because your device is only fine-tunable for
-channel 1, 7, 13 & 14 with the current data points.
-
-some performance figures would be nice as well.
-e.g.: iperf (tcp) should be > 18Mbit/s,
-      if you are close & free line of sight
-
-second: what should we do about these devices?
-
-Surely, the best thing would be to simply reprogram the eeprom,
-but this (being complicated work) requires soldering skills/tools,
-a steady hand and enough boredom. Therefor this is likely the least
-ideal option to put into the WIKI @ wireless.kernel.org .
-Any suitable ideas?
-
-Regards,
-	Chr
-
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Vivek Natarajan <Vivek.Natarajan@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-> [ 5593.622225] cfg80211: Calling CRDA to update world regulatory
-> domain
-> [ 5593.756965] p54pci 0000:03:00.0: PCI INT A -> Link[LNKA] -> GSI 11
-> (level, low) -> IRQ 11
-> [ 5593.757087] p54pci 0000:03:00.0: firmware: requesting isl3886pci
-> [ 5593.799682] cfg80211: World regulatory domain updated:
-> [ 5593.799693]  (start_freq - end_freq @ bandwidth),
-> (max_antenna_gain, max_eirp)
-> [ 5593.799701]  (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi,
-> 2000 mBm)
-> [ 5593.799708]  (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi,
-> 2000 mBm)
-> [ 5593.799714]  (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi,
-> 2000 mBm)
-> [ 5593.799721]  (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> [ 5593.799728]  (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> [ 5593.826106] phy0: p54 detected a LM86 firmware
-> [ 5593.826115] p54: rx_mtu reduced from 3240 to 2376
-> [ 5593.826121] phy0: FW rev 2.13.12.0 - Softmac protocol 5.9
-> [ 5593.826127] phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
-> [ 5593.943095] phy0: hwaddr 00:xx:xx:xx:xx:xx, MAC:isl3880 RF:Frisbee
->
-> [ 5593.943532] phy0: Selected rate control algorithm 'minstrel'
-> [ 5593.945386] Registered led device: p54-phy0::assoc
-> [ 5593.945426] Registered led device: p54-phy0::tx
-> [ 5593.945466] Registered led device: p54-phy0::rx
-> [ 5593.945507] Registered led device: p54-phy0::radio
-> [ 5593.945521] p54pci 0000:03:00.0: is registered as 'phy0'
-> [ 5593.973148] udev: renamed network interface wlan0 to wlan1
-> [ 5594.105670] ADDRCONF(NETDEV_UP): wlan1: link is not ready
-> [ 5601.380939] wlan1: deauthenticating from 00:xx:xx:xx:xx:xx by local
-> choice (reason=3)
-> [ 5601.381046] wlan1: direct probe to AP 00:xx:xx:xx:xx:xx (try 1)
-> [ 5601.385723] wlan1: direct probe responded
-> [ 5601.385738] wlan1: authenticate with AP 00:xx:xx:xx:xx:xx (try 1)
-> [ 5601.387961] wlan1: authenticated
-> [ 5601.388049] wlan1: associate with AP 00:xx:xx:xx:xx:xx (try 1)
-> [ 5601.390237] wlan1: RX AssocResp from 00:xx:xx:xx:xx:xx (capab=0x401
-> status=0 aid=2)
-> [ 5601.390246] wlan1: associated
-> [ 5601.391891] ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
-> [ 5612.024163] wlan1: no IPv6 routers present
-> 
+
+This should illustrate some changes we need on mac80211 to help
+with enabling and completing dynamic PS. The If we don't get an
+ACK we be able to tell mac80211 enabling dynamic PS failed so it
+can stop assuming we've successfully enabled it. 
+
+Curious how this works with other hardware. When you enable
+dynamic PS can you easily check for the ACK from the AP?
+
+What can we do on mac80211 to help with this without making it
+too complex?
+
+  Luis
+
+
+ drivers/net/wireless/ath/ath9k/ath9k.h  |    2 ++
+ drivers/net/wireless/ath/ath9k/common.h |    1 +
+ drivers/net/wireless/ath/ath9k/mac.c    |    9 +++++++++
+ drivers/net/wireless/ath/ath9k/mac.h    |    6 ++++++
+ drivers/net/wireless/ath/ath9k/main.c   |   20 ++++++++++++++++++--
+ drivers/net/wireless/ath/ath9k/reg.h    |   15 ++++++++++++---
+ drivers/net/wireless/ath/ath9k/xmit.c   |   21 +++++++++++++++++++++
+ 7 files changed, 69 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 2a40fa2..bc81401 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -421,6 +421,8 @@ struct ath_led {
+ #define SC_OP_WAIT_FOR_TX_ACK   BIT(18)
+ #define SC_OP_BEACON_SYNC       BIT(19)
+ #define SC_OP_BT_PRIORITY_DETECTED BIT(21)
++#define SC_OP_NULLFUNC_COMPLETED BIT(22)
++#define SC_OP_PS_ENABLED	BIT(23)
+ 
+ struct ath_wiphy;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
+index 4e11760..b230bb1 100644
+--- a/drivers/net/wireless/ath/ath9k/common.h
++++ b/drivers/net/wireless/ath/ath9k/common.h
+@@ -78,6 +78,7 @@ struct ath_buf {
+ 	dma_addr_t bf_daddr;		/* physical addr of desc */
+ 	dma_addr_t bf_buf_addr;		/* physical addr of data buffer */
+ 	bool bf_stale;
++	bool bf_isnullfunc;
+ 	u16 bf_flags;
+ 	struct ath_buf_state bf_state;
+ 	dma_addr_t bf_dmacontext;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 46466ff..09ed441 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -231,6 +231,8 @@ int ath9k_hw_txprocdesc(struct ath_hw *ah, struct ath_desc *ds)
+ 	ds->ds_txstat.ts_status = 0;
+ 	ds->ds_txstat.ts_flags = 0;
+ 
++	if (ads->ds_txstatus1 & AR_FrmXmitOK)
++		ds->ds_txstat.ts_status |= ATH9K_TX_ACKED;
+ 	if (ads->ds_txstatus1 & AR_ExcessiveRetries)
+ 		ds->ds_txstat.ts_status |= ATH9K_TXERR_XRETRY;
+ 	if (ads->ds_txstatus1 & AR_Filtered)
+@@ -926,6 +928,13 @@ void ath9k_hw_setuprxdesc(struct ath_hw *ah, struct ath_desc *ds,
+ }
+ EXPORT_SYMBOL(ath9k_hw_setuprxdesc);
+ 
++/*
++ * This can stop or re-enables RX.
++ *
++ * If bool is set this will kill any frame which is currently being
++ * transferred between the MAC and baseband and also prevent any new
++ * frames from getting started.
++ */
+ bool ath9k_hw_setrxabort(struct ath_hw *ah, bool set)
+ {
+ 	u32 reg;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index fefb65d..bd602b8 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -76,6 +76,7 @@
+ #define ATH9K_TXERR_FIFO           0x04
+ #define ATH9K_TXERR_XTXOP          0x08
+ #define ATH9K_TXERR_TIMER_EXPIRED  0x10
++#define ATH9K_TX_ACKED		   0x20
+ 
+ #define ATH9K_TX_BA                0x01
+ #define ATH9K_TX_PWRMGMT           0x02
+@@ -380,6 +381,11 @@ struct ar5416_desc {
+ #define AR_TxBaStatus       0x40000000
+ #define AR_TxStatusRsvd01   0x80000000
+ 
++/*
++ * AR_FrmXmitOK - Frame transmission success flag. If set, the frame was
++ * transmitted successfully. If clear, no ACK or BA was received to indicate
++ * successful transmission when we were expecting an ACK or BA.
++ */
+ #define AR_FrmXmitOK            0x00000001
+ #define AR_ExcessiveRetries     0x00000002
+ #define AR_FIFOUnderrun         0x00000004
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 16bdb1b..3fc9af9 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2729,8 +2729,15 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 		}
+ 	}
+ 
++	/*
++	 * We just prepare to enable PS. We have to wait until our AP has
++	 * ACK'd our null data frame to disable RX otherwise we'll ignore
++	 * those ACKs and end up retransmitting the same null data frames.
++	 * IEEE80211_CONF_CHANGE_PS is only passed by mac80211 for STA mode.
++	 */
+ 	if (changed & IEEE80211_CONF_CHANGE_PS) {
+ 		if (conf->flags & IEEE80211_CONF_PS) {
++			sc->sc_flags |= SC_OP_PS_ENABLED;
+ 			if (!(ah->caps.hw_caps &
+ 			      ATH9K_HW_CAP_AUTOSLEEP)) {
+ 				if ((sc->imask & ATH9K_INT_TIM_TIMER) == 0) {
+@@ -2738,11 +2745,20 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 					ath9k_hw_set_interrupts(sc->sc_ah,
+ 							sc->imask);
+ 				}
+-				ath9k_hw_setrxabort(sc->sc_ah, 1);
+ 			}
+-			sc->ps_enabled = true;
++			/*
++			 * At this point we know hardware has received an ACK
++			 * of a previously sent null data frame.
++			 */
++			if ((sc->sc_flags & SC_OP_NULLFUNC_COMPLETED)) {
++				sc->sc_flags &= ~SC_OP_NULLFUNC_COMPLETED;
++				sc->ps_enabled = true;
++				ath9k_hw_setrxabort(sc->sc_ah, 1);
++                        }
+ 		} else {
+ 			sc->ps_enabled = false;
++			sc->sc_flags &= ~(SC_OP_PS_ENABLED |
++					  SC_OP_NULLFUNC_COMPLETED);
+ 			ath9k_setpower(sc, ATH9K_PM_AWAKE);
+ 			if (!(ah->caps.hw_caps &
+ 			      ATH9K_HW_CAP_AUTOSLEEP)) {
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 49ec25f..8e653fb 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1332,13 +1332,22 @@ enum {
+ #define AR_MCAST_FIL0       0x8040
+ #define AR_MCAST_FIL1       0x8044
+ 
++/*
++ * AR_DIAG_SW - Register which can be used for diagnostics and testing purposes.
++ *
++ * The force RX abort (AR_DIAG_RX_ABORT, bit 25) can be used in conjunction with
++ * RX block (AR_DIAG_RX_DIS, bit 5) to help fast channel change to shut down
++ * receive. The force RX abort bit will kill any frame which is currently being
++ * transferred between the MAC and baseband. The RX block bit (AR_DIAG_RX_DIS)
++ * will prevent any new frames from getting started.
++ */
+ #define AR_DIAG_SW                  0x8048
+ #define AR_DIAG_CACHE_ACK           0x00000001
+ #define AR_DIAG_ACK_DIS             0x00000002
+ #define AR_DIAG_CTS_DIS             0x00000004
+ #define AR_DIAG_ENCRYPT_DIS         0x00000008
+ #define AR_DIAG_DECRYPT_DIS         0x00000010
+-#define AR_DIAG_RX_DIS              0x00000020
++#define AR_DIAG_RX_DIS              0x00000020 /* RX block */
+ #define AR_DIAG_LOOP_BACK           0x00000040
+ #define AR_DIAG_CORR_FCS            0x00000080
+ #define AR_DIAG_CHAN_INFO           0x00000100
+@@ -1347,12 +1356,12 @@ enum {
+ #define AR_DIAG_FRAME_NV0           0x00020000
+ #define AR_DIAG_OBS_PT_SEL1         0x000C0000
+ #define AR_DIAG_OBS_PT_SEL1_S       18
+-#define AR_DIAG_FORCE_RX_CLEAR      0x00100000
++#define AR_DIAG_FORCE_RX_CLEAR      0x00100000 /* force rx_clear high */
+ #define AR_DIAG_IGNORE_VIRT_CS      0x00200000
+ #define AR_DIAG_FORCE_CH_IDLE_HIGH  0x00400000
+ #define AR_DIAG_EIFS_CTRL_ENA       0x00800000
+ #define AR_DIAG_DUAL_CHAIN_INFO     0x01000000
+-#define AR_DIAG_RX_ABORT            0x02000000
++#define AR_DIAG_RX_ABORT            0x02000000 /* Force RX abort */
+ #define AR_DIAG_SATURATE_CYCLE_CNT  0x04000000
+ #define AR_DIAG_OBS_PT_SEL2         0x08000000
+ #define AR_DIAG_RX_CLEAR_CTL_LOW    0x10000000
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 745d919..e9194e9 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1602,6 +1602,14 @@ static int ath_tx_setup_buffer(struct ieee80211_hw *hw, struct ath_buf *bf,
+ 	}
+ 
+ 	bf->bf_buf_addr = bf->bf_dmacontext;
++
++	/* tag if this is a nullfunc frame to enable PS when AP acks it */
++	if (ieee80211_is_nullfunc(fc) && ieee80211_has_pm(fc)) {
++		bf->bf_isnullfunc = true;
++		sc->sc_flags &= ~SC_OP_NULLFUNC_COMPLETED;
++	} else
++		bf->bf_isnullfunc = false;
++
+ 	return 0;
+ }
+ 
+@@ -1995,6 +2003,19 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
+ 		}
+ 
+ 		/*
++		 * We now know the nullfunc frame has been ACKed so we
++		 * can disable RX.
++		 */
++		if (bf->bf_isnullfunc &&
++		    (ds->ds_txstat.ts_status & ATH9K_TX_ACKED)) {
++			if ((sc->sc_flags & SC_OP_PS_ENABLED)) {
++				sc->ps_enabled = true;
++				ath9k_hw_setrxabort(sc->sc_ah, 1);
++			} else
++				sc->sc_flags |= SC_OP_NULLFUNC_COMPLETED;
++		}
++
++		/*
+ 		 * Remove ath_buf's of the same transmit unit from txq,
+ 		 * however leave the last descriptor back as the holding
+ 		 * descriptor for hw.
+-- 
+1.6.5.2.155.gbb47
+
