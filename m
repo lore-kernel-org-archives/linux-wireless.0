@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:51093 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752076AbZKKAkw (ORCPT
+Received: from mail-yw0-f182.google.com ([209.85.211.182]:46844 "EHLO
+	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757786AbZKXC0b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 19:40:52 -0500
-Received: by iwn8 with SMTP id 8so537979iwn.33
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2009 16:40:58 -0800 (PST)
+	Mon, 23 Nov 2009 21:26:31 -0500
+Received: by ywh12 with SMTP id 12so5947609ywh.21
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 18:26:38 -0800 (PST)
+Message-ID: <4B0B441C.8090801@gmail.com>
+Date: Mon, 23 Nov 2009 21:25:32 -0500
+From: Arnaud Lacombe <lacombar@gmail.com>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 10 Nov 2009 16:40:38 -0800
-Message-ID: <43e72e890911101640r69ad67c6l2e48250596c19d44@mail.gmail.com>
-Subject: ath9k rate control - busted
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: ath9k-devel@lists.ath9k.org, Aeolus Yang <Aeolus.Yang@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+To: mcgrof@bombadil.infradead.org
+CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
+Subject: [PATCH 11/13] Add more `skb->dst' accessors
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After the oops I just described in the previous e-mail I disabled the
-"Wireless-N only" feature and set the AP to "Wireless-BG only" feature
-on the AP. I then observed some terrible throughput on iperf using UDP
-(TX'ing out). Here is the last "watch cat rcstat" output, the box then
-just hung with no panic or trace (even through netconsole):
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+---
+ compat-2.6.31.h |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
 
-Every 2.0s: cat rcstat
-                              Tue Nov 10 16:31:56 2009
+diff --git a/compat-2.6.31.h b/compat-2.6.31.h
+index a91e033..6b2dd5e 100644
+--- a/compat-2.6.31.h
++++ b/compat-2.6.31.h
+@@ -99,6 +99,21 @@ static inline void skb_dst_drop(struct sk_buff *skb)
+ 	skb->dst = NULL;
+ }
 
- Rate         Success  Retries  XRetries PER
++static inline struct dst_entry *skb_dst(const struct sk_buff *skb)
++{
++	return (struct dst_entry *)skb->dst;
++}
++
++static inline void skb_dst_set(struct sk_buff *skb, struct dst_entry *dst)
++{
++	skb->dst = (unsigned long)dst;
++}
++
++static inline struct rtable *skb_rtable(const struct sk_buff *skb)
++{
++	return (struct rtable *)skb_dst(skb);
++}
++
+ extern int genl_register_family_with_ops(struct genl_family *family,
+ 	struct genl_ops *ops, size_t n_ops);
 
-  1.0:      712     4930     1491      100
-  2.0:      103      453      159       87
-  5.5:      111      202       55       28
- 11.0:        8       30       11       43
-  6.0:        0        0        0        0
-  9.0:        0        0        0        0
- 12.0:        5       19        7       87
- 18.0:        1       14        6       75
- 24.0:        1        6        1       30
- 36.0:        0        0        0        0
- 48.0:        0        0        0        0
- 54.0:        0        0        0        0
+-- 
+1.6.3.3.385.g60647.dirty
 
-Its unclear if something other than the rate control algorithm used is
-what could be busted, I cannot see from the logs.
 
-One way or another I think we should prioritize making ath9k work with
-minstrel optionally on legacy networks at least for now, and see if we
-can help Felix test/advance minstrel support for MCS rate support.
-
-The ath9k rate control code proves unmaintainable, not clearly
-understood even with things like this:
-
-/* Update PER, RSSI and whatever else that the code thinks it is doing.
-   If you can make sense of all this, you really need to go out more. */
-
-We can't possibly successfully maintain a driver with code like this.
-
-  Luis
