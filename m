@@ -1,43 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:59801 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754599AbZKCUgM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 15:36:12 -0500
-Message-ID: <4AF09117.4040804@gmx.net>
-Date: Tue, 03 Nov 2009 21:22:47 +0100
-From: Frank Schaefer <schaefer.frank@gmx.net>
+Received: from bu3sch.de ([62.75.166.246]:44363 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933321AbZKXVUr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Nov 2009 16:20:47 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Chris Vine <chris@cvine.freeserve.co.uk>
+Subject: Re: DMA errors with BCM4312 - an update
+Date: Tue, 24 Nov 2009 22:20:45 +0100
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	bcm43xx devel <Bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.df>,
+	William Bourque <william.bourque@polymtl.ca>
+References: <4B0C2EC3.5010408@lwfinger.net> <20091124211552.533a2b4e@boulder.homenet>
+In-Reply-To: <20091124211552.533a2b4e@boulder.homenet>
 MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB
- N devices in cdrom mode
-References: <200910171606.02961.oliver@neukum.org>	 <Pine.LNX.4.44L0.0910171130550.25594-100000@netrider.rowland.org>	 <20091017220313.GH24502@one-eyed-alien.net> <4ADC3657.6080906@gmx.net>	 <4AEDCCA0.8050709@gmx.net> <4AEDD380.40408@draisberghof.de>	 <4AEDEB85.5080105@gmx.net> <20091102005144.GE24436@one-eyed-alien.net>	 <4AEF3CAD.10809@gmx.net> <1257193115.1027.24.camel@localhost.localdomain>	 <20091102210519.7d309fb9@lxorguk.ukuu.org.uk> <1257198359.1027.67.camel@localhost.localdomain>
-In-Reply-To: <1257198359.1027.67.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200911242220.47497.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams schrieb:
-> ...
-> Maybe there's a better way as I said a bit lower in the thread; could we
-> put the logic for ejection into the driver (and not usb_modeswitch or
-> whatever) but put the decision into userspace in udev?
->
-> Right now the kernel drivers know what hardware they support, and that's
-> a great place to also put how to eject the fake driver CD.  So the
-> mechanism could live in the kernel still (instead of in usb_modeswitch
-> in userspace) while the actual decision still gets made in userspace
-> with udev rules.  The rules would say something like "if this USB
-> storage device has an 'fakecd' attribute, then touch the 'ejectmeharder'
-> attribute" instead of complex rules to run usb_modeswitch that duplicate
-> all the device IDs in userspace.  If you need to rummage around on the
-> driver CD for whatever reason, you disable the udev rule.  Maybe?
-> ...
-That would make system-configuration much easier and would also reduce
-the work for the distros.
-Mode-switch-tools would be much easier to maintain, too.
+On Tuesday 24 November 2009 22:15:52 Chris Vine wrote:
+> On Tue, 24 Nov 2009 13:06:43 -0600
+> Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> > This E-mail is to summarize what I have learned to date.
+> > 
+> > The pm_qos change does nothing useful. It may have helped a little,
+> > but the side effects are far worse than the benefits.
+> > 
+> > Most systems work better with b43 when warm booted after Broadcom's
+> > wl driver was loaded. The conclusion is that wl is making some change
+> > in the setup that b43 is not.
+> > 
+> > (3) Based on the above, I have done MMIO and PCI-E configuration
+> > tracing for the two drivers and found some real differences. After
+> > seeing these, I did more RE work, and found some setup for the PCI-E
+> > core that was missed earlier. I am still working on the changes. What
+> > I have completed is found at
+> > 
+> > http://bcm-v4.sipsolutions.net/PCI-E#PCI-E_Setup
+> > 
+> > I doubt that most of these new routines will affect the problem
+> > interfaces as they apply only to PCI-E core revisions 7 and 8. My
+> > BCM4312 has rev 9. I do not know what versions are giving the
+> > trouble. With SSB_DEBUG enabled, it will be in a log line as follows:
+> > 
+> > ssb: Core 3 found: PCI-E (cc 0x820, rev 0x09, vendor 0x4243)
+> > 
+> > If you are seeing the DMA error, please supply the above info.
+> > 
+> > The "PCI-E Miscellaneous Configuration" routine that is not yet
+> > finished does run on my system and is the source of the tracing
+> > differences. If the problem cards has a revision newer than 9, I will
+> > probably need an MMIO trace for your device.
+> 
+> This is mine, the same revision as yours, but which demonstrates the
+> DMA errors:
+> 
+> ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x16, vendor 0x4243)
+> ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0F, vendor 0x4243)
+> ssb: Core 2 found: PCMCIA (cc 0x80D, rev 0x0A, vendor 0x4243)
+> ssb: Core 3 found: PCI-E (cc 0x820, rev 0x09, vendor 0x4243)
+> ssb: Found rev 1 PMU (capabilities 0x02A62F01)
 
-How do you want to implement this policy-hint ?
+Larry, do you also have the same PMU?
 
-Frank
-
+-- 
+Greetings, Michael.
