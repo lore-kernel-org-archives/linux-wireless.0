@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:23623 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760646AbZKZPJn (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:55929 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756103AbZKXAmb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 10:09:43 -0500
-Subject: [PATCH 11/12] wl1251: update tx_hdr when aliging skb in tx
-To: linville@tuxdriver.com
-From: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 26 Nov 2009 17:09:38 +0200
-Message-ID: <20091126150938.917.43592.stgit@tikku>
-In-Reply-To: <20091126150141.917.35278.stgit@tikku>
-References: <20091126150141.917.35278.stgit@tikku>
+	Mon, 23 Nov 2009 19:42:31 -0500
+Date: Mon, 23 Nov 2009 18:42:36 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] b43legacy: Fix problem for PPC architecture noted in Red
+ Hat Bugzilla #538523
+Message-ID: <4b0b2bfc.wTVOnoPYuzV3oG6G%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+For PPC architecture with PHY Revision < 3, a read of the register
+B43_MMIO_HWENABLED_LO will cause a CPU fault unless b43legacy_status()
+returns a value of 2 (B43legacy_STAT_STARTED); however, one finds that
+the driver is unable to associate after resuming from hibernation unless
+this routine returns 1. To satisfy both conditions, the routine is rewritten
+to return TRUE whenever b43legacy_status() returns a value < 2.
 
-Before transmission when aligning the buffer to 4-byte bounday, tx_hdr
-needs to be updated. Otherwise debug logs print false data.
+This patch fixes the second problem listed in the postings for Red Hat
+Bugzilla #538523.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.org>
 ---
- drivers/net/wireless/wl12xx/wl1251_tx.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_tx.c b/drivers/net/wireless/wl12xx/wl1251_tx.c
-index faa23ef..c822318 100644
---- a/drivers/net/wireless/wl12xx/wl1251_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_tx.c
-@@ -219,6 +219,7 @@ static int wl1251_tx_send_packet(struct wl1251 *wl, struct sk_buff *skb,
- 			/* align the buffer on a 4-byte boundary */
- 			skb_reserve(skb, offset);
- 			memmove(skb->data, src, skb->len);
-+			tx_hdr = (struct tx_double_buffer_desc *) skb->data;
- 		} else {
- 			wl1251_info("No handler, fixme!");
- 			return -EINVAL;
+John,
 
+This is 2.6.32 material.
+
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/b43legacy/rfkill.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43legacy/rfkill.c
++++ wireless-testing/drivers/net/wireless/b43legacy/rfkill.c
+@@ -34,6 +34,13 @@ bool b43legacy_is_hw_radio_enabled(struc
+ 		      & B43legacy_MMIO_RADIO_HWENABLED_HI_MASK))
+ 			return 1;
+ 	} else {
++		/* To prevent CPU fault on PPC, do not read a register
++		 * unless the interface is started; however, on resume
++		 * for hibernation, this routine is entered early. When
++		 * that happens, unconditionally return TRUE.
++		 */
++		if (b43legacy_status(dev) < B43legacy_STAT_STARTED)
++			return 1;
+ 		if (b43legacy_read16(dev, B43legacy_MMIO_RADIO_HWENABLED_LO)
+ 		    & B43legacy_MMIO_RADIO_HWENABLED_LO_MASK)
+ 			return 1;
