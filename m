@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.89]:30671 "EHLO
-	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S934252AbZKXWs4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 17:48:56 -0500
-Date: Tue, 24 Nov 2009 23:50:42 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: Re: [RFC 1/3] nl80211: PMKSA caching support
-Message-ID: <20091124225041.GA8290@sortiz.org>
-References: <cover.1259075573.git.sameo@linux.intel.com>
- <ff5bf1a69ecd3ed3695089cf62e6ab51689b683a.1259075573.git.sameo@linux.intel.com>
- <20091124174105.GA17213@jm.kir.nu>
+Received: from jazz.viagenie.ca ([206.123.31.2]:57724 "EHLO jazz.viagenie.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933988AbZKXWig (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Nov 2009 17:38:36 -0500
+Received: from ringo.viagenie.ca (ringo.viagenie.ca [IPv6:2620:0:230:c000::67])
+	by jazz.viagenie.ca (Postfix) with ESMTPA id 3FA6B20E63
+	for <linux-wireless@vger.kernel.org>; Tue, 24 Nov 2009 17:30:08 -0500 (EST)
+Message-ID: <4B0C5E6F.5040302@viagenie.ca>
+Date: Tue, 24 Nov 2009 17:30:07 -0500
+From: Simon Perreault <simon.perreault@viagenie.ca>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091124174105.GA17213@jm.kir.nu>
+To: linux-wireless@vger.kernel.org
+Subject: Hardware for 802.11s
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jouni,
+Hello,
 
-On Tue, Nov 24, 2009 at 07:41:05PM +0200, Jouni Malinen wrote:
-> On Tue, Nov 24, 2009 at 04:26:52PM +0100, Samuel Ortiz wrote:
-> > This is an interface to set, delete and flush PMKIDs through nl80211.
-> > Main users would be fullmac devices which firmwares are capable of generating
-> > the RSN IEs for the re-association requests, e.g. iwmc3200wifi.
-> 
-> Is there a maximum number of PMKSA cache entries that the driver can
-> handle? If so, it might be useful to provide a mechanism to indicate
-> that limit (e.g., something similar to NL80211_ATTR_MAX_NUM_SCAN_SSIDS).
-Good point. I'll add that to the patch.
+I want to run 802.11s.
 
-Cheers,
-Samuel.
+I tried a pair of Linksys WRT54GL v1.1 (Broadcom 5352) with the b43 driver,
+kernel 2.6.30.9, OpenWRT trunk (r18526). Doesn't work. I don't see anything in
+"iw ... station dump".
+Side question: is this expected behaviour?
 
-> -- 
-> Jouni Malinen                                            PGP id EFC895FA
+Can anyone recommend something I can buy on which 802.11s will work? I couldn't
+Google anyone saying e.g. "I used the ACME Router 1.0 and it worked."
 
+Thanks,
+Simon
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+DNS64 open-source   --> http://ecdysis.viagenie.ca
+STUN/TURN server    --> http://numb.viagenie.ca
+vCard 4.0           --> http://www.vcarddav.org
