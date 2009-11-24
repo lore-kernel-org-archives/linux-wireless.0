@@ -1,82 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53589 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752049AbZKPR5j (ORCPT
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:39115 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752507AbZKXFhr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2009 12:57:39 -0500
-Subject: Re: [PATCH] mac80211: Do not queue Probe Request frames for
- station MLME
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20091116175408.GA6805@jm.kir.nu>
-References: <20091116175408.GA6805@jm.kir.nu>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-H15lQvsc86sPkwH9skMS"
-Date: Mon, 16 Nov 2009 18:57:41 +0100
-Message-ID: <1258394261.32159.31.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 24 Nov 2009 00:37:47 -0500
+Received: by pwi3 with SMTP id 3so3936542pwi.21
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 21:37:53 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4b0b2bfc.wTVOnoPYuzV3oG6G%Larry.Finger@lwfinger.net>
+References: <4b0b2bfc.wTVOnoPYuzV3oG6G%Larry.Finger@lwfinger.net>
+Date: Tue, 24 Nov 2009 08:37:53 +0300
+Message-ID: <adf480660911232137x5459441chde17fb77004e3cb4@mail.gmail.com>
+Subject: Re: [PATCH] b43legacy: Fix problem for PPC architecture noted in Red
+	Hat Bugzilla #538523
+From: Peter Lemenkov <lemenkov@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello All!
 
---=-H15lQvsc86sPkwH9skMS
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+2009/11/24 Larry Finger <Larry.Finger@lwfinger.net>:
+> For PPC architecture with PHY Revision < 3, a read of the register
+> B43_MMIO_HWENABLED_LO will cause a CPU fault unless b43legacy_status()
+> returns a value of 2 (B43legacy_STAT_STARTED); however, one finds that
+> the driver is unable to associate after resuming from hibernation unless
+> this routine returns 1. To satisfy both conditions, the routine is rewritten
+> to return TRUE whenever b43legacy_status() returns a value < 2.
+>
+> This patch fixes the second problem listed in the postings for Red Hat
+> Bugzilla #538523.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.org>
 
-On Mon, 2009-11-16 at 19:54 +0200, Jouni Malinen wrote:
-> Cooked monitor interfaces cannot currently receive Probe Request
-> frames when the interface is in station mode. However, we do not
-> process Probe Request frames internally in the station MLME, so there
-> is no point in queueing the frame here. Remove Probe Request frames
-> from the queued frame list to allow cooked monitor interfaces to
-> receive these frames.
->=20
-> Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+Seems that b43 has similar issue(s):
 
-It's also just unnecessary overhead to put them on the list and process
-them by freeing :)
+https://bugzilla.redhat.com/show_bug.cgi?id=539267
 
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
-
->=20
-> ---
->  net/mac80211/mlme.c |    1 -
->  1 file changed, 1 deletion(-)
->=20
-> --- uml.orig/net/mac80211/mlme.c	2009-11-13 16:58:27.000000000 +0200
-> +++ uml/net/mac80211/mlme.c	2009-11-13 16:59:20.000000000 +0200
-> @@ -1898,7 +1898,6 @@ ieee80211_rx_result ieee80211_sta_rx_mgm
->  	fc =3D le16_to_cpu(mgmt->frame_control);
-> =20
->  	switch (fc & IEEE80211_FCTL_STYPE) {
-> -	case IEEE80211_STYPE_PROBE_REQ:
->  	case IEEE80211_STYPE_PROBE_RESP:
->  	case IEEE80211_STYPE_BEACON:
->  	case IEEE80211_STYPE_AUTH:
->=20
-
-
---=-H15lQvsc86sPkwH9skMS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLAZKSAAoJEODzc/N7+QmaYs8P/i4FQpAu9CzX24Aspm4Ge+3x
-Lvif3/ksfXbRolKQXAGP5H5Xvd43vNKwH5qIoiqZzNGfViesjQW1fZM82FoRUv9L
-eHnW2kEEb1mW29DA+aKadxVIR7FGLOyi5OL8uF/uDLSbVvJfLg6KIqDcmZd+oAbt
-8wAbo10DuKo8d/CcZho/3lMGaYFhbcx9OqaBxgIQ7IPTNhMbaz97OHVJKqNGVFhL
-ibcJu9CB0uNNOs/ZoAGXrkjx1FJB88E3uGYdBPsnSHC3jm86Cn6oeCGDRyVU6HE7
-G6NkZC8gNLtVYti+/zmLFxZzrgGSrlpoLc8mawIhX7uSQgHeMRA3XtnNI6/b8t9i
-wiI+WGQGJpKYBwhQYMTaWfA6YSk2EebG1f2bfhCjd4hORULbHwrOqnWKKa+5XQ77
-WFfD4wyUezIIAsOD1qSqpvx/GGylesEh3+8YN0eaN4oY3REyZjKlycHfWJvgS5oN
-dB9GdFMtbLy1fDDP/JjCTqFK6r7WsnWVK012AvRXqNReielMv3AGHoYglK28eUel
-oiPS/VECSC653uZ9xMm+3hM9Lx5AJCwP8dlTAHdrHt4aylXaGUKwLumJs2pml/td
-/KVgb7d3FQgL8P40S+sI7ynGaLWlLuvDvOcoA8fQjK2OKKJePU0xYF4PLlk/lnfO
-iRoyKUOMdwdhZMRHwwDa
-=wPNF
------END PGP SIGNATURE-----
-
---=-H15lQvsc86sPkwH9skMS--
-
+-- 
+With best regards, Peter Lemenkov.
