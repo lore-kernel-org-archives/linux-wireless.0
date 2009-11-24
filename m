@@ -1,70 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:40971 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752549AbZKJIlN (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:48713 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757555AbZKXCZx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 03:41:13 -0500
-Subject: Re: Incorrect signal levels reported using wpa_supplicant's
- driver_nl80211
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Alexander Sack <asac@ubuntu.com>,
-	Maxim Levitsky <maximlevitsky@gmail.com>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	networkmanager-list <networkmanager-list@gnome.org>
-In-Reply-To: <1257834468.15493.31.camel@localhost.localdomain>
-References: <1256953837.9681.13.camel@maxim-laptop>
-	 <1257190833.1027.4.camel@localhost.localdomain>
-	 <20091109125016.GK1579@jwsdot.com>
-	 <1257771261.29454.169.camel@johannes.local>
-	 <1257772174.3024.11.camel@violet>
-	 <1257834468.15493.31.camel@localhost.localdomain>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 10 Nov 2009 09:41:11 +0100
-Message-ID: <1257842471.3024.29.camel@violet>
-Mime-Version: 1.0
+	Mon, 23 Nov 2009 21:25:53 -0500
+Received: by yxe17 with SMTP id 17so5308557yxe.33
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 18:25:59 -0800 (PST)
+Message-ID: <4B0B43EA.9080304@gmail.com>
+Date: Mon, 23 Nov 2009 21:24:42 -0500
+From: Arnaud Lacombe <lacombar@gmail.com>
+MIME-Version: 1.0
+To: mcgrof@bombadil.infradead.org
+CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
+Subject: [PATCH 06/13] Add compatibility call for kmem_cache_destroy()
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+On commit 133d205a, kmem_cache_destroy() was made returning void, while
+older
+kernel could return an error value.
 
-> > > > > Soon.  We've got some patches for this, but we'll also need tons of
-> > > > > testing.  The WEXT stuff is pretty baked while nl80211 is still under
-> > > > > some flux.  But of course the only way we bake nl80211 is by switching
-> > > > > to it...
-> > > > 
-> > > > iirc, we currently we hardcode wext in NM code. How about adding a keyfile
-> > > > config that users could use to switch to nl80211 until we feel confident
-> > > > that it's good enough for everyone?
-> > > 
-> > > commit d27df100b587dd95f3256a8baf9db0c5d4380089 in wpa_supplicant allows
-> > > you to do that by editing the service file.
-> > 
-> > that is funny, when I asked for a global command line switch for
-> > choosing a different driver, the argument was that the application
-> > adding the interface is suppose to do it by itself. Now we can do it in
-> > the service file. Never the less ConnMan got its own switch to choose
-> > which driver will be used. Does help a lot in testing and is way easier
-> > since you don't have to restart wpa_supplicant all the time.
-> 
-> In reality, NM upstream will just switch over one day and distros that
-> use shitty and/or proprietary drivers will need to either (a) fix them,
-> or (b) patch NM to use wext locally.  That's how progress gets made.
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+---
+ compat-2.6.19.h |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-my goal is to run completely without wext driver in wpa_supplicant and
-WEXT disabled in the kernel. However so far it caused some issues. I
-think that most of them got fixed, but I never got around fully
-verifying it. In the Moblin 2.0 timeframe we had for some time
-nl80211,wext as driver selection, but unfortunately that never worked
-out. I hope for Moblin 2.2 we are able to get this up and running.
+diff --git a/compat-2.6.19.h b/compat-2.6.19.h
+index 7967390..017044c 100644
+--- a/compat-2.6.19.h
++++ b/compat-2.6.19.h
+@@ -7,6 +7,19 @@
+ /* Compat work for 2.6.19 */
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19))
 
-One big missing piece is of course a new stable release of
-wpa_supplicant that contains all the fixes.
++#include <linux/slab.h>
++
++static inline int
++compat_kmem_cache_destroy(struct kmem_cache *cachep)
++{
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19))
++	return kmem_cache_destroy(cachep);
++#else
++	kmem_cache_destroy(cachep);
++	return 0;
++#endif
++}
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)) */
 
-Regards
-
-Marcel
+ #endif /* LINUX_26_19_COMPAT_H */
+-- 
+1.6.3.3.385.g60647.dirty
 
 
