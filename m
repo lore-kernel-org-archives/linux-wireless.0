@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:33839 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751141AbZKDAlh (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:63362 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933184AbZKXQLd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 19:41:37 -0500
-Date: Wed, 4 Nov 2009 00:40:15 +0000
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jarek Poplawski <jarkao2@gmail.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	David Miller <davem@davemloft.net>
-Subject: Re: [announce] new rt2800 drivers for Ralink wireless & project
- tree
-Message-ID: <20091104004015.23c4c1a3@lxorguk.ukuu.org.uk>
-In-Reply-To: <200911040052.28323.bzolnier@gmail.com>
-References: <200911031951.05235.bzolnier@gmail.com>
-	<200911032334.40547.bzolnier@gmail.com>
-	<20091103234835.3042f7b5@lxorguk.ukuu.org.uk>
-	<200911040052.28323.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 24 Nov 2009 11:11:33 -0500
+Received: by iwn1 with SMTP id 1so576672iwn.33
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Nov 2009 08:11:39 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <19150.47688.575023.623047@gargle.gargle.HOWL>
+References: <19150.47688.575023.623047@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 24 Nov 2009 08:11:19 -0800
+Message-ID: <43e72e890911240811t2e2a70a3k98ca2516ca5dc4b6@mail.gmail.com>
+Subject: Re: [PATCH] ath9k: Fix TX hang poll routine
+To: Sujith <Sujith.Manoharan@atheros.com>, Greg KH <greg@kroah.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 4 Nov 2009 00:52:28 +0100
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+On Thu, Oct 8, 2009 at 8:21 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> When TX is hung, the chip is reset. Ensure that
+> the chip is awake by using the PS wrappers.
+>
+> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/xmit.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+> index a8620b1..2a4efcb 100644
+> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+> @@ -2079,7 +2079,9 @@ static void ath_tx_complete_poll_work(struct work_struct *work)
+>        if (needreset) {
+>                ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_RESET,
+>                          "tx hung, resetting the chip\n");
+> +               ath9k_ps_wakeup(sc);
+>                ath_reset(sc, false);
+> +               ath9k_ps_restore(sc);
+>        }
+>
+>        ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work,
+> --
 
-> On Wednesday 04 November 2009 00:48:35 Alan Cox wrote:
-> > > > Yeah I know that. But like I said, I still needed to get around to do that,
-> > > > and I am very happy you were interested in fixing it.
-> > > 
-> > > Lets make one thing clear: YOU SHOULD BE THE ONE FIXING IT.
-> > 
-> > Really - you have a service and support contract with Ivo.. no i thought
-> > not.
-> 
-> Just today I got PM from somebody complaining to me about non-working
-> pata_pdc2026x_old (pdc202xx_old works fine for him) simply because
-> I fixed some bug there some time ago....
+John this should be pulled to 2.6.32 if possible. It would do the
+actual reset and fix TX properly if we are asleep.
 
-And didn't bother committing a patch to both sets of code bec
+  Luis
