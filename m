@@ -1,183 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:20362 "EHLO mail.atheros.com"
+Received: from smtp1.irobot.com ([206.83.81.187]:41275 "EHLO smtp1.irobot.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756173AbZKKJx1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 04:53:27 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Nov 2009 01:53:33 -0800
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<ath9k-devel@lists.ath9k.org>
-Subject: [PATCH] wireless-regdb: Update the regulatory domain for a few countries.
-Date: Wed, 11 Nov 2009 15:23:22 +0530
-Message-ID: <1257933202-2659-2-git-send-email-vnatarajan@atheros.com>
-In-Reply-To: <1257933202-2659-1-git-send-email-vnatarajan@atheros.com>
-References: <1257933202-2659-1-git-send-email-vnatarajan@atheros.com>
+	id S1757896AbZKXToi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Nov 2009 14:44:38 -0500
+Message-ID: <4B0C37AA.3070805@irobot.com>
+Date: Tue, 24 Nov 2009 11:44:42 -0800
+From: Adam Wozniak <awozniak@irobot.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Derek Smithies <derek@indranet.co.nz>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH 2/2] mac80211: minstrel try all rates
+References: <4AF0D54D.4090303@irobot.com>	 <4AFDDF19.8060202@irobot.com>	 <1258191039.6167.40.camel@johannes.local>	 <4B018B26.2070008@irobot.com>	 <1258392453.32159.28.camel@johannes.local>	 <4B0192A6.9050808@irobot.com>	 <alpine.DEB.2.00.0911170938380.3829@kauri.acheron.indranet.co.nz>	 <4B01D4A5.7060204@irobot.com>	 <alpine.DEB.2.00.0911171156210.3829@kauri.acheron.indranet.co.nz>	 <4B01E298.3030602@irobot.com>	 <alpine.DEB.2.00.0911171314470.3829@kauri.acheron.indranet.co.nz>	 <1258443484.1375.8.camel@johannes.local> <4B02DFE3.9040602@irobot.com>	 <4B0AEEE3.2050808@irobot.com> <1259018866.7094.189.camel@johannes.local>	 <4B0B2F6E.7050907@irobot.com> <1259025067.7094.208.camel@johannes.local>	 <4B0C1527.60305@irobot.com> <1259084493.3491.21.camel@johannes.local>	 <4B0C1E0A.9020003@irobot.com> <1259085518.3491.24.camel@johannes.local>	 <4B0C2720.3090308@irobot.com> <1259087819.3491.30.camel@johannes.local>	 <4B0C2938.1050604@irobot.com> <1259089255.3491.31.camel@johannes.local>
+In-Reply-To: <1259089255.3491.31.camel@johannes.local>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Modify the regulatory domain for the following countries,
-Change Argentina(AR) to FCC3_World,
-Change Croatia(HR) to ETSI1_World,
-Change Hong Kong(HK) to FCC3_World,
-Change Indonesia(ID) to NULL1_World,
-Change Jamaica(JM) to FCC3_World,
-Change Kuwait(KW) to ETSI3_World,
-Change Oman(OM) to FCC3_World,
-Change Qatar(QA) to APL1_World,
-Change Trinidad and Tobago(TT) to FCC3_World,
-Change Uruguay(UY) to FCC3_World.
+Johannes Berg wrote:
+> On Tue, 2009-11-24 at 10:43 -0800, Adam Wozniak wrote:
+>   
+>> As far as I can tell, minstrel_rate_init does not do any allocation.  
+>> The pid_algo version does not appear to do any allocation either.
+>>     
+>
+> There are three more -- iwlwifi (2x) and ath9k
+>   
+Ugh.  Why aren't these in with the mac80211 code?  Do they rely on 
+something hardware specific?
 
-And also enable HT40 mode in 5 GHz for AR, BA, HR, JO, OM, TT, UY
-which was disabled earlier.
+I could not find any allocations in the rate_init in any of these:
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- db.txt |   53 +++++++++++++++++++++++++++++++++--------------------
- 1 files changed, 33 insertions(+), 20 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index a99b3b7..e63a43e 100644
---- a/db.txt
-+++ b/db.txt
-@@ -31,8 +31,10 @@ country AN:
- 
- country AR:
- 	(2402 - 2482 @ 20), (N/A, 20)
--	(5270 - 5330 @ 20), (3, 17), DFS
--	(5735 - 5815 @ 20), (3, 30)
-+	(5170 - 5250 @ 40), (3, 17)
-+	(5250 - 5330 @ 40), (3, 20), DFS
-+	(5490 - 5710 @ 40), (3, 20), DFS
-+	(5735 - 5835 @ 40), (3, 30)
- 
- country AT:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -59,9 +61,9 @@ country AZ:
- 
- country BA:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 20), (N/A, 20)
--	(5250 - 5330 @ 20), (N/A, 20), DFS
--	(5490 - 5710 @ 20), (N/A, 27), DFS
-+	(5170 - 5250 @ 40), (N/A, 20)
-+	(5250 - 5330 @ 40), (N/A, 20), DFS
-+	(5490 - 5710 @ 40), (N/A, 27), DFS
- 
- country BB:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -283,14 +285,16 @@ country HN:
- 
- country HK:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (3, 23)
--	(5250 - 5330 @ 40), (3, 23), DFS
-+	(5170 - 5250 @ 40), (3, 17)
-+	(5250 - 5330 @ 40), (3, 20), DFS
-+	(5490 - 5710 @ 40), (3, 20), DFS
- 	(5735 - 5835 @ 40), (3, 30)
- 
- country HR:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 20), (N/A, 20)
--	(5250 - 5330 @ 20), (N/A, 20), DFS
-+	(5170 - 5250 @ 40), (N/A, 20)
-+	(5250 - 5330 @ 40), (N/A, 20), DFS
-+	(5490 - 5710 @ 40), (N/A, 27), DFS
- 
- country HT:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -306,7 +310,6 @@ country HU:
- 
- country ID:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5735 - 5835 @ 20), (N/A, 30)
- 
- country IE:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -341,9 +344,10 @@ country IT:
- 
- country JM:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 40), (N/A, 20)
--	(5250 - 5330 @ 40), (N/A, 20), DFS
--	(5490 - 5710 @ 40), (N/A, 27), DFS
-+	(5170 - 5250 @ 40), (3, 17)
-+	(5250 - 5330 @ 40), (3, 20), DFS
-+	(5490 - 5710 @ 40), (3, 20), DFS
-+	(5735 - 5835 @ 40), (3, 30)
- 
- country JP:
- 	(2402 - 2472 @ 40), (N/A, 20)
-@@ -361,7 +365,7 @@ country JP:
- 
- country JO:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 20), (N/A, 18)
-+	(5170 - 5250 @ 40), (N/A, 18)
- 
- country KH:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -385,6 +389,8 @@ country KR:
- 
- country KW:
- 	(2402 - 2482 @ 40), (N/A, 20)
-+	(5170 - 5250 @ 40), (N/A, 20)
-+	(5250 - 5330 @ 40), (N/A, 20), DFS
- 
- country KZ:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -481,9 +487,10 @@ country NZ:
- 
- country OM:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 20), (N/A, 20)
--	(5250 - 5330 @ 20), (N/A, 20), DFS
--	(5735 - 5835 @ 20), (N/A, 20)
-+	(5170 - 5250 @ 40), (3, 17)
-+	(5250 - 5330 @ 40), (3, 20), DFS
-+	(5490 - 5710 @ 40), (3, 20), DFS
-+	(5735 - 5835 @ 40), (3, 30)
- 
- country PA:
- 	(2402 - 2472 @ 40), (3, 27)
-@@ -528,6 +535,7 @@ country PR:
- 
- country QA:
- 	(2402 - 2482 @ 40), (N/A, 20)
-+	(5735 - 5835 @ 40), (N/A, 30)
- 
- country RO:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -585,8 +593,10 @@ country TH:
- 
- country TT:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 20), (N/A, 18)
--	(5250 - 5330 @ 20), (N/A, 18), DFS
-+	(5170 - 5250 @ 40), (3, 17)
-+	(5250 - 5330 @ 40), (3, 20), DFS
-+	(5490 - 5710 @ 40), (3, 20), DFS
-+	(5735 - 5835 @ 40), (3, 30)
- 
- country TN:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -611,7 +621,10 @@ country US:
- 
- country UY:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5735 - 5815 @ 20), (N/A, 23)
-+	(5170 - 5250 @ 40), (3, 17)
-+	(5250 - 5330 @ 40), (3, 20), DFS
-+	(5490 - 5710 @ 40), (3, 20), DFS
-+	(5735 - 5835 @ 40), (3, 30)
- 
- country UZ:
- 	(2402 - 2472 @ 40), (3, 27)
--- 
-1.6.0.4
+./drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+./drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+./drivers/net/wireless/ath/ath9k/rc.c
 
