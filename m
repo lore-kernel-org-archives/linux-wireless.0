@@ -1,101 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:57851 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756706AbZKUSUI convert rfc822-to-8bit (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:52888 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933226AbZKXPZm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Nov 2009 13:20:08 -0500
-Received: by iwn8 with SMTP id 8so3223076iwn.33
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Nov 2009 10:20:13 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4B07A9F8.9050306@free.fr>
-References: <1258756647.2714.17.camel@localhost.localdomain>
-	<43e72e890911201526y5b36328ft3a510e546508df66@mail.gmail.com>
-	<4B07A9F8.9050306@free.fr>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sat, 21 Nov 2009 10:19:53 -0800
-Message-ID: <43e72e890911211019l4f4ede6bqef71009386467a59@mail.gmail.com>
-Subject: Re: iwlagn + Ad-Hoc + 5Ghz
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Cc: Jeremy Moles <jeremy@emperorlinux.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 24 Nov 2009 10:25:42 -0500
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [RFC 2/3] cfg80211: Add PMKSA wext compatibility handler
+Date: Tue, 24 Nov 2009 16:26:53 +0100
+Message-Id: <fce5ca6545ef79bb7ce9c9abf3e9348d070637dc.1259075573.git.sameo@linux.intel.com>
+In-Reply-To: <ff5bf1a69ecd3ed3695089cf62e6ab51689b683a.1259075573.git.sameo@linux.intel.com>
+References: <cover.1259075573.git.sameo@linux.intel.com>
+ <ff5bf1a69ecd3ed3695089cf62e6ab51689b683a.1259075573.git.sameo@linux.intel.com>
+In-Reply-To: <cover.1259075573.git.sameo@linux.intel.com>
+References: <cover.1259075573.git.sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 21, 2009 at 12:51 AM, Benoit PAPILLAULT
-<benoit.papillault@free.fr> wrote:
-> Luis R. Rodriguez a écrit :
->> On Fri, Nov 20, 2009 at 2:37 PM, Jeremy Moles <jeremy@emperorlinux.com> wrote:
->>> Hello all! I have a group of machine here with an app that needs to set
->>> up an ad-hoc network in 5Ghz+ range. The machines themselves are all
->>> different (a Panasonic, a Dell, and a Lenovo) but they are all using
->>> 5100 cards, a 2.6.31 kernel, and the 2.6.31-rc7 driver from the website.
->>>
->>> Using the command "iw list" I can get a lot of helpful info, but I see
->>> "no IBSS" on any channel over 11, and I'm beginning to think that this
->>> just isn't supported on these cards yet.
->>
->> No, this has nothing to do not supporting IBSS but instead you should
->> read "no IBSS" more as a regulatory rule that implies you cannot use a
->> mode of operation that can beacon. We should at least rename this on
->> iw for now to make thins clearer.
->>
->> What you see should be part of the default rules embedded on the
->> device's EEPROM. Beaconing is allowed on channel 11 even on the most
->> restrictive regulatory domain and this is why the world regulatory
->> domain allows 1-11 to beacon too.
->>
->> You should enable debugging on the driver upon load to confirm whether
->> this rule is coming from the EEPROM. Do you have
->> CONFIG_WIRELESS_OLD_REGULATORY? I think even that (by default it used
->> the US) enabled beaconing. Drivers can overrule things though if their
->> EEPROM mandates this.
->>
->>   Luis
->
-> Hello,
->
-> I got the same problem with Intel 4965 and Intel 5350 since those cards
-> are using the same drivers. Like Luis mentionned, "no IBSS" should be
-> read as "no beaconing authorized by local regulation".
+With the addition of the *_pmksa cfg80211 ops, we can now add the
+corresponding wireless extensions compatibility handler.
 
-That's the case for the cfg80211 / CRDA db regulatory no-ibss flag.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ net/wireless/wext-compat.c |   42 ++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 42 insertions(+), 0 deletions(-)
 
-> However, I think
-> the iwlagn interpretation is a bit broad and such restrictions should be
-> done by the CRDA framework instead of the driver itself.
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 29091ac..7e7985e 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -1401,6 +1401,47 @@ int cfg80211_wext_giwessid(struct net_device *dev,
+ }
+ EXPORT_SYMBOL_GPL(cfg80211_wext_giwessid);
+ 
++int cfg80211_wext_siwpmksa(struct net_device *dev,
++			   struct iw_request_info *info,
++			   struct iw_point *data, char *extra)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	struct cfg80211_pmksa cfg_pmksa;
++	struct iw_pmksa* pmksa = (struct iw_pmksa *)extra;
++
++	memset(&cfg_pmksa, 0, sizeof(struct cfg80211_pmksa));
++
++	if (wdev->iftype != NL80211_IFTYPE_STATION)
++		return -EINVAL;
++
++	cfg_pmksa.bssid = pmksa->bssid.sa_data;
++	cfg_pmksa.pmkid = pmksa->pmkid;
++
++	switch (pmksa->cmd) {
++	case IW_PMKSA_ADD:
++		if (!rdev->ops->set_pmksa)
++			return -EOPNOTSUPP;
++
++		return rdev->ops->set_pmksa(&rdev->wiphy, dev, &cfg_pmksa);
++
++	case IW_PMKSA_REMOVE:
++		if (!rdev->ops->del_pmksa)
++			return -EOPNOTSUPP;
++
++		return rdev->ops->del_pmksa(&rdev->wiphy, dev, &cfg_pmksa);
++
++	case IW_PMKSA_FLUSH:
++		if (!rdev->ops->flush_pmksa)
++			return -EOPNOTSUPP;
++
++		return rdev->ops->flush_pmksa(&rdev->wiphy, dev);
++
++	default:
++		return -EOPNOTSUPP;
++	}
++}
++
+ static const iw_handler cfg80211_handlers[] = {
+ 	[IW_IOCTL_IDX(SIOCGIWNAME)]	= (iw_handler) cfg80211_wext_giwname,
+ 	[IW_IOCTL_IDX(SIOCSIWFREQ)]	= (iw_handler) cfg80211_wext_siwfreq,
+@@ -1433,6 +1474,7 @@ static const iw_handler cfg80211_handlers[] = {
+ 	[IW_IOCTL_IDX(SIOCSIWAUTH)]	= (iw_handler) cfg80211_wext_siwauth,
+ 	[IW_IOCTL_IDX(SIOCGIWAUTH)]	= (iw_handler) cfg80211_wext_giwauth,
+ 	[IW_IOCTL_IDX(SIOCSIWENCODEEXT)]= (iw_handler) cfg80211_wext_siwencodeext,
++	[IW_IOCTL_IDX(SIOCSIWPMKSA)]	= (iw_handler) cfg80211_wext_siwpmksa,
+ };
+ 
+ const struct iw_handler_def cfg80211_wext_handler = {
+-- 
+1.6.3.3
 
-Its my understanding such a change would require a firmware change,
-its not so simple for iwl.
-
-> Here in France, IBSS is authorized on all channels. So I made a small
-> patch to enable the EEPROM_CHANNEL_IBSS flag
-
-This may or may not mean no-beaconing, you'd need documentation or
-confirmation from someone. Or manual testing against AP / Mesh modes
-too.
-
-> everywhere (in iwl-core.c and iwl-dev.h) and it just works.
-
-I'm surprised it works without issues, it is likely you will run into
-an issue. I could be wrong though. You may want to test against older
-supported firmware as well.
-
-The driver is always giving the last say with regards to regulatory.
-Although a savvy technical user may indeed know better current
-legislation does not allow for blindly trusting the user and in fact
-can potentially penalize for it. As an example you can read the recent
-clarification by the FCC regarding selecting your regulatory domain
-[1].
-
-So although your change may work your are not considering the fact
-that iwl card world roam into different regions and as such they
-cannot choose a country or extract it from the card and therefore
-cannot just allow everything and let the user select a regulatory
-domain. If regulatory agencies start shifting responsibility of
-regulatory compliance down to the user then things would be easier,
-but we're simply not there yet.
-
-[1] http://wireless.kernel.org/en/developers/Regulatory/CRDA#Helping_compliance_by_allowing_to_change_regulatory_domains
-
-  Luis
