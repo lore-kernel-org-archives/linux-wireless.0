@@ -1,64 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:61462 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750882AbZKMMUY (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:39830 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757716AbZKXCZO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 07:20:24 -0500
-Received: by bwz27 with SMTP id 27so3347205bwz.21
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2009 04:20:28 -0800 (PST)
+	Mon, 23 Nov 2009 21:25:14 -0500
+Received: by mail-yx0-f187.google.com with SMTP id 17so5307924yxe.33
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 18:25:21 -0800 (PST)
+Message-ID: <4B0B43CF.1000102@gmail.com>
+Date: Mon, 23 Nov 2009 21:24:15 -0500
+From: Arnaud Lacombe <lacombar@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <f74418680911130055o7d8fa94brc3fd7a0c315bb7b0@mail.gmail.com>
-References: <f74418680911120331w1ea31a68y56440dc0fbd253bb@mail.gmail.com>
-	<40101cc30911120618m5d9acd34pf6aa9ec89c6c40b8@mail.gmail.com>
-	<20091112154440.GD19349@tux> <43e72e890911120749n72360f0btfb058ab3a521eabb@mail.gmail.com>
-	<40101cc30911121118h17db32a1y61edac1a4c0aec24@mail.gmail.com>
-	<1258054304.3899.36.camel@johannes.local> <40101cc30911121418h4109d62bv763bed2036446901@mail.gmail.com>
-	<1258097485.3899.76.camel@johannes.local> <f74418680911130055o7d8fa94brc3fd7a0c315bb7b0@mail.gmail.com>
-From: Matteo Croce <technoboy85@gmail.com>
-Date: Fri, 13 Nov 2009 13:20:08 +0100
-Message-ID: <40101cc30911130420n6fa79a55vfc2bffc615e9606b@mail.gmail.com>
-Subject: Re: [ath9k-devel] Possible memory leak in ath9k monitor mode
-	injection
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, rodriguez@atheros.com,
-	linux-wireless@vger.kernel.org
+To: mcgrof@bombadil.infradead.org
+CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
+Subject: [PATCH 04/13] Add roundup() compatibility macro
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 13, 2009 at 12:27 PM,  <Lorenzo.Bianconi83@gmail.com> wrote:
-> Il giorno , Lorenzo Bianconi <lorenzo.bianconi83@gmail.com> ha scritto:
->> 2009/11/13 Johannes Berg johannes@sipsolutions.net>:
->> Yes, I tested ath5k/mac80211 and ath9k/mac80211 and both show the same
->> problem
->>
->> whereas madwifi/net80211, tested with the same module, has not memory
->> leak.
->>
->
-> Hi all,
->
-> I found a way to stop the mem leak. In the ath_tx_complete() function I have
-> noticed that the struct tx_info_priv is not freed. I have made the following
-> changes and now the memory remains stable. I do not know if this is the
-> right place to put the kfree(tx_info_priv), however this seems to solve the
-> issue.
->
-> Cheers,
->
-> Lorenzo
->
-> @@ -1825,9 +1825,10 @@
-> SC_OP_WAIT_FOR_TX_ACK));
-> }
->
-> - if (frame_type == ATH9K_NOT_INTERNAL)
-> + if (frame_type == ATH9K_NOT_INTERNAL) {
-> ieee80211_tx_status(hw, skb);
-> - else
-> + kfree(tx_info_priv);
-> + } else
-> ath9k_tx_status(hw, skb);
-> }
+Added on commit b4cac1a0 by David Howells in include/linux/kernel.h.
 
-That's great. I'll try the fix with ath5k too
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+---
+ compat-2.6.18.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/compat-2.6.18.h b/compat-2.6.18.h
+index 077f28b..3245c42 100644
+--- a/compat-2.6.18.h
++++ b/compat-2.6.18.h
+@@ -7,6 +7,8 @@
+ /* Compat work for 2.6.18 */
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18))
+
++#define roundup(x, y)	((((x) + ((y) - 1)) / (y)) * (y))
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)) */
+
+ #endif /* LINUX_26_18_COMPAT_H */
+-- 
+1.6.3.3.385.g60647.dirty
+
+
