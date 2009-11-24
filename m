@@ -1,99 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f182.google.com ([209.85.211.182]:56600 "EHLO
-	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757752AbZKXCZ0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 21:25:26 -0500
-Received: by mail-yw0-f182.google.com with SMTP id 12so5946537ywh.21
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 18:25:33 -0800 (PST)
-Message-ID: <4B0B43D7.7020308@gmail.com>
-Date: Mon, 23 Nov 2009 21:24:23 -0500
-From: Arnaud Lacombe <lacombar@gmail.com>
+Received: from smtp1.irobot.com ([206.83.81.187]:40426 "EHLO smtp1.irobot.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933768AbZKXSnA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Nov 2009 13:43:00 -0500
+Message-ID: <4B0C2938.1050604@irobot.com>
+Date: Tue, 24 Nov 2009 10:43:04 -0800
+From: Adam Wozniak <awozniak@irobot.com>
 MIME-Version: 1.0
-To: mcgrof@bombadil.infradead.org
-CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
-Subject: [PATCH 05/13] Add skeleton for 2.6.19
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Derek Smithies <derek@indranet.co.nz>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH 2/2] mac80211: minstrel try all rates
+References: <4AF0D54D.4090303@irobot.com>	 <4AFC8F0D.5020700@irobot.com>	 <1258097352.3899.75.camel@johannes.local>	 <4AFDDF19.8060202@irobot.com>	 <1258191039.6167.40.camel@johannes.local>	 <4B018B26.2070008@irobot.com>	 <1258392453.32159.28.camel@johannes.local>	 <4B0192A6.9050808@irobot.com>	 <alpine.DEB.2.00.0911170938380.3829@kauri.acheron.indranet.co.nz>	 <4B01D4A5.7060204@irobot.com>	 <alpine.DEB.2.00.0911171156210.3829@kauri.acheron.indranet.co.nz>	 <4B01E298.3030602@irobot.com>	 <alpine.DEB.2.00.0911171314470.3829@kauri.acheron.indranet.co.nz>	 <1258443484.1375.8.camel@johannes.local> <4B02DFE3.9040602@irobot.com>	 <4B0AEEE3.2050808@irobot.com> <1259018866.7094.189.camel@johannes.local>	 <4B0B2F6E.7050907@irobot.com> <1259025067.7094.208.camel@johannes.local>	 <4B0C1527.60305@irobot.com> <1259084493.3491.21.camel@johannes.local>	 <4B0C1E0A.9020003@irobot.com> <1259085518.3491.24.camel@johannes.local>	 <4B0C2720.3090308@irobot.com> <1259087819.3491.30.camel@johannes.local>
+In-Reply-To: <1259087819.3491.30.camel@johannes.local>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- Makefile        |    1 +
- compat-2.6.19.c |   18 ++++++++++++++++++
- compat-2.6.19.h |   12 ++++++++++++
- compat.h        |    1 +
- 4 files changed, 32 insertions(+), 0 deletions(-)
- create mode 100644 compat-2.6.19.c
- create mode 100644 compat-2.6.19.h
+Johannes Berg wrote:
+> However, that reminds me that I actually wanted to get rid of
+> rate_init() since it's mostly not useful to have it separate from
+> alloc_sta()... oh well.
+>
+> I suppose if we document clearly that rate_init maybe called multiple
+> times and audit the existing algorithms the patch could be ok.
+>   
+As far as I can tell, minstrel_rate_init does not do any allocation.  
+The pid_algo version does not appear to do any allocation either.
 
-diff --git a/Makefile b/Makefile
-index 9afc687..3f1a4ad 100644
---- a/Makefile
-+++ b/Makefile
-@@ -24,6 +24,7 @@ compat-y += main.o
- # Compat kernel compatibility code
- compat-$(CONFIG_COMPAT_KERNEL_14) += compat-2.6.14.o
- compat-$(CONFIG_COMPAT_KERNEL_18) += compat-2.6.18.o
-+compat-$(CONFIG_COMPAT_KERNEL_19) += compat-2.6.19.o
- compat-$(CONFIG_COMPAT_KERNEL_22) += compat-2.6.22.o
- compat-$(CONFIG_COMPAT_KERNEL_23) += compat-2.6.23.o
- compat-$(CONFIG_COMPAT_KERNEL_24) += compat-2.6.24.o
-diff --git a/compat-2.6.19.c b/compat-2.6.19.c
-new file mode 100644
-index 0000000..fc75b64
---- /dev/null
-+++ b/compat-2.6.19.c
-@@ -0,0 +1,18 @@
-+/*
-+ * Copyright 2007	Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * Compatibility file for Linux wireless for kernels 2.6.19.
-+ */
-+
-+#include <net/compat.h>
-+
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19))
-+
-+/* 2.6.19 compat code goes here */
-+
-+#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19) */
-+
-diff --git a/compat-2.6.19.h b/compat-2.6.19.h
-new file mode 100644
-index 0000000..7967390
---- /dev/null
-+++ b/compat-2.6.19.h
-@@ -0,0 +1,12 @@
-+#ifndef LINUX_26_19_COMPAT_H
-+#define LINUX_26_19_COMPAT_H
-+
-+#include <linux/autoconf.h>
-+#include <linux/version.h>
-+
-+/* Compat work for 2.6.19 */
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19))
-+
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)) */
-+
-+#endif /* LINUX_26_19_COMPAT_H */
-diff --git a/compat.h b/compat.h
-index 433840c..f835aef 100644
---- a/compat.h
-+++ b/compat.h
-@@ -11,6 +11,7 @@
-
- #include "compat-2.6.14.h"
- #include "compat-2.6.18.h"
-+#include "compat-2.6.19.h"
- #include "compat-2.6.22.h"
- #include "compat-2.6.23.h"
- #include "compat-2.6.24.h"
--- 
-1.6.3.3.385.g60647.dirty
-
-
+--Adam Wozniak
