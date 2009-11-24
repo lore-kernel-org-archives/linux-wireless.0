@@ -1,32 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:54136 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754239AbZKHOih (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:36809 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752570AbZKXAkk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 09:38:37 -0500
-Received: by ewy3 with SMTP id 3so2398166ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 06:38:41 -0800 (PST)
-Message-ID: <4AF6D7EF.60405@gmail.com>
-Date: Sun, 08 Nov 2009 15:38:39 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Mon, 23 Nov 2009 19:40:40 -0500
+Date: Mon, 23 Nov 2009 18:40:45 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: casteyde.christian@free.fr, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] b43: Fix regression from Bug #14538
+Message-ID: <4b0b2b8d.xO2YhnfbtfQkOOaq%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-CC: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 8/9] rt2800: add eFuse EEPROM support code to rt2800lib
-References: <20091108133854.23584.86842.sendpatchset@localhost.localdomain> <20091108133948.23584.12804.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091108133948.23584.12804.sendpatchset@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/08/09 14:39, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2800: add eFuse EEPROM support code to rt2800lib
-> 
-> eFuse EEPROM is used also by USB chips (i.e. RT3070)
-> so move the needed code from rt2800pci to rt2800lib.
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
+The routine b43_is_hw_radio_enabled() has long been a problem.
+For PPC architecture with PHY Revision < 3, a read of the register
+B43_MMIO_HWENABLED_LO will cause a CPU fault unless b43_status()
+returns a value of 2 (B43_STAT_STARTED) (BUG 14181). Fixing that
+results in Bug 14538 in which the driver is unable to reassociate
+after resuming from hibernation because b43_status() returns 0.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+The correct fix would be to determine why the status is 0; however,
+I have not yet found why that happens. The correct value is found for
+my device, which has PHY revision >= 3.
+
+Returning TRUE when the PHY revision < 3 and b43_status() returns 0 fixes
+the regression for 2.6.32.
+
+This patch fixes the problem in Red Hat Bugzilla #538523.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Tested-by: Christian Casteyde <casteyde.christian@free.fr>
+---
+
+John,
+
+Your suggested change was a good one and has been implemented. This is
+2.6.32 material and should be backported to stable; however, it may not
+apply cleanly. Should I make it Cc: stable, or submit it to GregKH in the
+proper form once it is committed to mainline?
+
+Larry
+---
+
+
+Index: wireless-testing/drivers/net/wireless/b43/rfkill.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/rfkill.c
++++ wireless-testing/drivers/net/wireless/b43/rfkill.c
+@@ -33,8 +33,14 @@ bool b43_is_hw_radio_enabled(struct b43_
+ 		      & B43_MMIO_RADIO_HWENABLED_HI_MASK))
+ 			return 1;
+ 	} else {
+-		if (b43_status(dev) >= B43_STAT_STARTED &&
+-		    b43_read16(dev, B43_MMIO_RADIO_HWENABLED_LO)
++		/* To prevent CPU fault on PPC, do not read a register
++		 * unless the interface is started; however, on resume
++		 * for hibernation, this routine is entered early. When
++		 * that happens, unconditionally return TRUE.
++		 */
++		if (b43_status(dev) < B43_STAT_STARTED)
++			return 1;
++		if (b43_read16(dev, B43_MMIO_RADIO_HWENABLED_LO)
+ 		    & B43_MMIO_RADIO_HWENABLED_LO_MASK)
+ 			return 1;
+ 	}
