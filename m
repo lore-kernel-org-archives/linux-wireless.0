@@ -1,60 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:57230 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752532AbZKRXMi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 18:12:38 -0500
-Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and
- why?
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: madwifi-users@lists.sourceforge.net,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	madwifi-devel@lists.sourceforge.net,
-	David Acker <dacker@roinet.com>,
-	Andrey Yurovsky <andrey@cozybit.com>
-In-Reply-To: <43e72e890911181408r43dadf7av277b255eb9007481@mail.gmail.com>
-References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de>
-	 <43e72e890911171337p4b0d97fcp844266137bb51b56@mail.gmail.com>
-	 <4B03193E.2080304@roinet.com>
-	 <43e72e890911171345q2dc59d66g6ac2a9eec04c577c@mail.gmail.com>
-	 <4B031B48.1090105@roinet.com>
-	 <43e72e890911171404x1a46d07alb54946768d0f9cf5@mail.gmail.com>
-	 <4B032390.3080501@roinet.com> <20091117225408.GA20540@jm.kir.nu>
-	 <43e72e890911171512k562f9329td56cc741dd1c5151@mail.gmail.com>
-	 <1258581492.10593.24.camel@mj>
-	 <43e72e890911181408r43dadf7av277b255eb9007481@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 18 Nov 2009 18:12:33 -0500
-Message-Id: <1258585953.9914.5.camel@mj>
+Received: from xc.sipsolutions.net ([83.246.72.84]:50423 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933331AbZKXRPB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Nov 2009 12:15:01 -0500
+Subject: Re: [PATCH v2 2/2] mac80211: minstrel try all rates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Adam Wozniak <awozniak@irobot.com>
+Cc: Derek Smithies <derek@indranet.co.nz>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <1259082331.2573.19.camel@awozniak-laptop>
+References: <4AF0D54D.4090303@irobot.com>
+	 <alpine.DEB.2.00.0911111508391.6214@kauri.acheron.indranet.co.nz>
+	 <4AFC655A.5020706@irobot.com> <200911122103.27455.chunkeey@googlemail.com>
+	 <4AFC8E4F.5090307@irobot.com>  <4AFC8F0D.5020700@irobot.com>
+	 <1258097352.3899.75.camel@johannes.local>  <4AFDDF19.8060202@irobot.com>
+	 <1258191039.6167.40.camel@johannes.local>  <4B018B26.2070008@irobot.com>
+	 <1258392453.32159.28.camel@johannes.local> <4B0192A6.9050808@irobot.com>
+	 <alpine.DEB.2.00.0911170938380.3829@kauri.acheron.indranet.co.nz>
+	 <4B01D4A5.7060204@irobot.com>
+	 <alpine.DEB.2.00.0911171156210.3829@kauri.acheron.indranet.co.nz>
+	 <4B01E298.3030602@irobot.com>
+	 <alpine.DEB.2.00.0911171314470.3829@kauri.acheron.indranet.co.nz>
+	 <1258443484.1375.8.camel@johannes.local> <4B02DFE3.9040602@irobot.com>
+	 <4B0AEEE3.2050808@irobot.com> <1259018866.7094.189.camel@johannes.local>
+	 <4B0B2F6E.7050907@irobot.com>  <1259082331.2573.19.camel@awozniak-laptop>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-KVnHawgzG7isWMSlDARS"
+Date: Tue, 24 Nov 2009 18:14:11 +0100
+Message-ID: <1259082851.3491.18.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-11-18 at 14:08 -0800, Luis R. Rodriguez wrote:
 
-> So for now countries either take the FCC, are part of a larger group
-> like in Europe or are a head ache to deal with due to historical
-> changes on regulatory rules (Japan). So far I've seen rules set for
-> bands and with max EIRP and antenna gain. Sometimes you have quirky
-> rules for antenna gain like in the US for the 3:1 rule (but we don't
-> yet allow you to modify your antenna on linux and specific your new
-> dbi antenna gain, and this actually is assumed won't change on the
-> client side).
-> 
-> For width I'm told some countries do not allow HT40 and that this
-> should change in the future.
-> 
-> I haven't seen rules for finer level of control which is why I said I
-> we should not need to change anything. Right now  I've only have heard
-> of countries sometimes disallowing HT40, but that's it.
-> 
-> Are you aware of any regulatory rules which prohibit narrower
-> channels? It just seems odd.
+--=-KVnHawgzG7isWMSlDARS
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-No, I'm not aware of such limitations.  OK, you are not aware of such
-limitations either, then perhaps we can go ahead with the narrow
-channels.
+On Tue, 2009-11-24 at 09:05 -0800, Adam Wozniak wrote:
+> In Ad-Hoc mode, it is possible for minstrel to be initialized without com=
+plete rate information.
+> In these cases, throughput suffers because not all rates are tried.  This=
+ patch tells minstrel to try all rates. =20
+> This won't cause problems, because unsupported rates will simply fail, ca=
+using minstrel to set their probability to 0%.
+> (Hopefully not whitespace damaged this time)
 
--- 
-Regards,
-Pavel Roskin
+I still stand by this being the wrong thing to do
+
+johannes
+
+> Signed-off-by: Adam Wozniak <awozniak@irobot.com>
+> ---
+> diff --git a/net/mac80211/rc80211_minstrel.c
+> b/net/mac80211/rc80211_minstrel.c
+> index 6e5d68b..3a8fe30 100644
+> --- a/net/mac80211/rc80211_minstrel.c
+> +++ b/net/mac80211/rc80211_minstrel.c
+> @@ -395,8 +395,6 @@ minstrel_rate_init(void *priv, struct
+> ieee80211_supported_band *sband,
+>  		unsigned int tx_time_single;
+>  		unsigned int cw =3D mp->cw_min;
+> =20
+> -		if (!rate_supported(sta, sband->band, i))
+> -			continue;
+>  		n++;
+>  		memset(mr, 0, sizeof(*mr));
+> =20
+>=20
+>=20
+
+
+--=-KVnHawgzG7isWMSlDARS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLDBRgAAoJEODzc/N7+QmaZFAP/2Nu0plfJkERKPKgsLXHHA68
+eufegrs1RQxjjNVogHftwFHlA8ZgUGzHcSJ1RCyN3yGjwMqKiRncbpgvJ/1d+DkP
+TycumCU65hgVXSmvhPYnPxgf+/jhjkZ8WrRpV7Kdqx9W0LP47QjD3qEZnllYJ3qk
+szRKlyd/3gJOSwe2j93Ku+pldccAm+RECMDCCeSJpPZX5q+PpCJBCekJ/jHcnyu9
+By+4cojD57wiaH5zKWhU0weK7GOl/iFKih3DCoWiq8z6AgSmJXM+y1A6fGfFMJJ5
+fgxjKyVIBUDg3rUDUrbeqneIviPBKVzr16nrhXRP0wVOMqgFXTxWUzFwl2JdO3qh
+i6EpngUK+JnPMEfqq+rY6t76+dnBkaX2jsJcx3UZWoetwIUvn0hBWeAEsAs7KOt3
+knPQoQI7yqq2u6AEyqD77mwFXebwXxJu+n95Osp2KC1kzYrpc+IzX8WOSn79b9+i
+llIyKCQdlztTQokAEwd0Wm59K+PQ6qaYJ4edDzfnTDlZhz0KCc65j8uvQKJX/K6w
+umwnJ/q6hju9D948tc9bfDFNuJqFnXved63jtRa0Jn0PS24oKdVpwIJkv6KBpSHo
+Qzocpsz7nISfJleKRQs9IafOrtMcm5f/UWKX2jO7LWUhJkVTo0cujHnhPrf0xKJy
+a/lAbAMfVE1DnFWSHuch
+=YNlL
+-----END PGP SIGNATURE-----
+
+--=-KVnHawgzG7isWMSlDARS--
+
