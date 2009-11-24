@@ -1,167 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:57146 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752556AbZK3RMD (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57337 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758101AbZKXTrl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2009 12:12:03 -0500
-Date: Mon, 30 Nov 2009 18:12:08 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 03/12] mwl8k: prevent corruption of QoS field on receive
-Message-ID: <20091130171208.GF20214@mail.wantstofly.org>
+	Tue, 24 Nov 2009 14:47:41 -0500
+Subject: Re: [PATCH 2/2] mac80211: minstrel try all rates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Adam Wozniak <awozniak@irobot.com>
+Cc: Derek Smithies <derek@indranet.co.nz>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <4B0C37AA.3070805@irobot.com>
+References: <4AF0D54D.4090303@irobot.com>	 <4AFDDF19.8060202@irobot.com>
+	 <1258191039.6167.40.camel@johannes.local>	 <4B018B26.2070008@irobot.com>
+	 <1258392453.32159.28.camel@johannes.local>	 <4B0192A6.9050808@irobot.com>
+	 <alpine.DEB.2.00.0911170938380.3829@kauri.acheron.indranet.co.nz>
+	 <4B01D4A5.7060204@irobot.com>
+	 <alpine.DEB.2.00.0911171156210.3829@kauri.acheron.indranet.co.nz>
+	 <4B01E298.3030602@irobot.com>
+	 <alpine.DEB.2.00.0911171314470.3829@kauri.acheron.indranet.co.nz>
+	 <1258443484.1375.8.camel@johannes.local> <4B02DFE3.9040602@irobot.com>
+	 <4B0AEEE3.2050808@irobot.com> <1259018866.7094.189.camel@johannes.local>
+	 <4B0B2F6E.7050907@irobot.com> <1259025067.7094.208.camel@johannes.local>
+	 <4B0C1527.60305@irobot.com> <1259084493.3491.21.camel@johannes.local>
+	 <4B0C1E0A.9020003@irobot.com> <1259085518.3491.24.camel@johannes.local>
+	 <4B0C2720.3090308@irobot.com> <1259087819.3491.30.camel@johannes.local>
+	 <4B0C2938.1050604@irobot.com> <1259089255.3491.31.camel@johannes.local>
+	 <4B0C37AA.3070805@irobot.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-VROJ9wxb8EsjUMMkjpB3"
+Date: Tue, 24 Nov 2009 20:47:07 +0100
+Message-ID: <1259092027.3491.33.camel@johannes.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Packets exchanged between the mwl8k driver and the firmware always
-have a 4-address header without QoS field.  For QoS packets, the QoS
-field is passed to/from the firmware via the tx/rx descriptors.
 
-We were handling this correctly on transmit, but not on receive -- if
-a QoS packet was received, we would leave garbage in the QoS field in
-the packet passed up to the stack, which is Bad(tm).
+--=-VROJ9wxb8EsjUMMkjpB3
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Also, if the packet received on the air was a 4-address without QoS
-packet, we would forget to skb_pull the 2-byte DMA length prefix off.
+On Tue, 2009-11-24 at 11:44 -0800, Adam Wozniak wrote:
+> Johannes Berg wrote:
+> > On Tue, 2009-11-24 at 10:43 -0800, Adam Wozniak wrote:
+> >  =20
+> >> As far as I can tell, minstrel_rate_init does not do any allocation. =20
+> >> The pid_algo version does not appear to do any allocation either.
+> >>    =20
+> >
+> > There are three more -- iwlwifi (2x) and ath9k
+> >  =20
+> Ugh.  Why aren't these in with the mac80211 code?  Do they rely on=20
+> something hardware specific?
 
-This patch adds an argument to the ->rxd_process() receive descriptor
-operation to retrieve the QoS field from the receive descriptor, and
-extends mwl8k_remove_dma_header() to insert this field back into the
-packet if the packet received is a QoS packet.  It also fixes
-mwl8k_remove_dma_header() to strip off the length prefix in all cases.
+Yeah ... they should go away.
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   48 ++++++++++++++++++++++++++++--------------
- 1 files changed, 32 insertions(+), 16 deletions(-)
+> I could not find any allocations in the rate_init in any of these:
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index a72ee1f..8eed851 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -84,7 +84,8 @@ struct rxd_ops {
- 	int rxd_size;
- 	void (*rxd_init)(void *rxd, dma_addr_t next_dma_addr);
- 	void (*rxd_refill)(void *rxd, dma_addr_t addr, int len);
--	int (*rxd_process)(void *rxd, struct ieee80211_rx_status *status);
-+	int (*rxd_process)(void *rxd, struct ieee80211_rx_status *status,
-+			   __le16 *qos);
- };
- 
- struct mwl8k_device_info {
-@@ -699,21 +700,29 @@ static inline u16 mwl8k_qos_setbit_qlen(u16 qos, u8 len)
- struct mwl8k_dma_data {
- 	__le16 fwlen;
- 	struct ieee80211_hdr wh;
-+	char data[0];
- } __attribute__((packed));
- 
- /* Routines to add/remove DMA header from skb.  */
--static inline void mwl8k_remove_dma_header(struct sk_buff *skb)
-+static inline void mwl8k_remove_dma_header(struct sk_buff *skb, __le16 qos)
- {
--	struct mwl8k_dma_data *tr = (struct mwl8k_dma_data *)skb->data;
--	void *dst, *src = &tr->wh;
--	int hdrlen = ieee80211_hdrlen(tr->wh.frame_control);
--	u16 space = sizeof(struct mwl8k_dma_data) - hdrlen;
-+	struct mwl8k_dma_data *tr;
-+	int hdrlen;
-+
-+	tr = (struct mwl8k_dma_data *)skb->data;
-+	hdrlen = ieee80211_hdrlen(tr->wh.frame_control);
- 
--	dst = (void *)tr + space;
--	if (dst != src) {
--		memmove(dst, src, hdrlen);
--		skb_pull(skb, space);
-+	if (hdrlen != sizeof(tr->wh)) {
-+		if (ieee80211_is_data_qos(tr->wh.frame_control)) {
-+			memmove(tr->data - hdrlen, &tr->wh, hdrlen - 2);
-+			*((__le16 *)(tr->data - 2)) = qos;
-+		} else {
-+			memmove(tr->data - hdrlen, &tr->wh, hdrlen);
-+		}
- 	}
-+
-+	if (hdrlen != sizeof(*tr))
-+		skb_pull(skb, sizeof(*tr) - hdrlen);
- }
- 
- static inline void mwl8k_add_dma_header(struct sk_buff *skb)
-@@ -793,7 +802,8 @@ static void mwl8k_rxd_8366_refill(void *_rxd, dma_addr_t addr, int len)
- }
- 
- static int
--mwl8k_rxd_8366_process(void *_rxd, struct ieee80211_rx_status *status)
-+mwl8k_rxd_8366_process(void *_rxd, struct ieee80211_rx_status *status,
-+		       __le16 *qos)
- {
- 	struct mwl8k_rxd_8366 *rxd = _rxd;
- 
-@@ -823,6 +833,8 @@ mwl8k_rxd_8366_process(void *_rxd, struct ieee80211_rx_status *status)
- 	status->band = IEEE80211_BAND_2GHZ;
- 	status->freq = ieee80211_channel_to_frequency(rxd->channel);
- 
-+	*qos = rxd->qos_control;
-+
- 	return le16_to_cpu(rxd->pkt_len);
- }
- 
-@@ -881,7 +893,8 @@ static void mwl8k_rxd_8687_refill(void *_rxd, dma_addr_t addr, int len)
- }
- 
- static int
--mwl8k_rxd_8687_process(void *_rxd, struct ieee80211_rx_status *status)
-+mwl8k_rxd_8687_process(void *_rxd, struct ieee80211_rx_status *status,
-+		       __le16 *qos)
- {
- 	struct mwl8k_rxd_8687 *rxd = _rxd;
- 	u16 rate_info;
-@@ -912,6 +925,8 @@ mwl8k_rxd_8687_process(void *_rxd, struct ieee80211_rx_status *status)
- 	status->band = IEEE80211_BAND_2GHZ;
- 	status->freq = ieee80211_channel_to_frequency(rxd->channel);
- 
-+	*qos = rxd->qos_control;
-+
- 	return le16_to_cpu(rxd->pkt_len);
- }
- 
-@@ -1083,6 +1098,7 @@ static int rxq_process(struct ieee80211_hw *hw, int index, int limit)
- 		void *rxd;
- 		int pkt_len;
- 		struct ieee80211_rx_status status;
-+		__le16 qos;
- 
- 		skb = rxq->buf[rxq->head].skb;
- 		if (skb == NULL)
-@@ -1090,7 +1106,7 @@ static int rxq_process(struct ieee80211_hw *hw, int index, int limit)
- 
- 		rxd = rxq->rxd + (rxq->head * priv->rxd_ops->rxd_size);
- 
--		pkt_len = priv->rxd_ops->rxd_process(rxd, &status);
-+		pkt_len = priv->rxd_ops->rxd_process(rxd, &status, &qos);
- 		if (pkt_len < 0)
- 			break;
- 
-@@ -1108,7 +1124,7 @@ static int rxq_process(struct ieee80211_hw *hw, int index, int limit)
- 		rxq->rxd_count--;
- 
- 		skb_put(skb, pkt_len);
--		mwl8k_remove_dma_header(skb);
-+		mwl8k_remove_dma_header(skb, qos);
- 
- 		/*
- 		 * Check for a pending join operation.  Save a
-@@ -1354,7 +1370,7 @@ static void mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int force)
- 		BUG_ON(skb == NULL);
- 		pci_unmap_single(priv->pdev, addr, size, PCI_DMA_TODEVICE);
- 
--		mwl8k_remove_dma_header(skb);
-+		mwl8k_remove_dma_header(skb, tx_desc->qos_control);
- 
- 		/* Mark descriptor as unused */
- 		tx_desc->pkt_phys_addr = 0;
--- 
-1.5.6.4
+Ok, but can they all deal with calling get_rate and rate_init at the
+same time? I think that could happen now, no?
+
+johannes
+
+--=-VROJ9wxb8EsjUMMkjpB3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLDDg4AAoJEODzc/N7+Qma4pYP+wbHVO6BwmxZlLHlWgOmmQux
+qG9tqPuo9Ho3enDrudn4We8WvH68klsa8RVlrXe35ifrq+C9EAk+D/grAfKM/SIC
+vkkS9MbjX2ctAT6VQ1zqIKeDHV+U+gk6awevWvIls0XjCwhIKnjP2Qa5xVWkArVM
+cWn4gDbO0rwBbEIdk3uj7vk10HwiAjQyamynQLvtXLTJBlMkgJPKVfwTK3BNlumf
+msPlLYv8iyqhJXpC1mmpVELbZg8qsJW+LZFdQ1E0Poj9+TUSj7AClvZUb7I7DcFj
+gyWeGdKwmM3lpmWsaF3ldCzXilLw0R4TrBaHWahqk25ol3MadIdTeeMQnaH4ADRZ
+2wMIuopjRqTwb0qG4uw7w3aA00KbbULCV+/3tOwd20ZqLeGJGAGpI/h02XBZ4wTk
+R+Swn4rA7/Y4pitcYN+kr2Ppgj0YQDeiaAubPy4GtCyEnY3is8dXlN3u+zNpU8sN
+KJGr1i8MVnq+NjwNntOOGsT4X4C+p9w7q/RqW292dzyN3+RUNlD16EIFtHUkogAE
+ouCX6yyDP9bhIhSsru2nIMaza4oCD1jPyUa8FTMNnSFXAoW1k3b+ptEC/tPpgECD
+ecVPVm1iWUl/Q+WwsVCbS2W//DoVMTC1EOyYRngham32zAIDDGY5GNKkPoeTCyg8
++gXvBHUWSM/r4xoiLH9D
+=wSVN
+-----END PGP SIGNATURE-----
+
+--=-VROJ9wxb8EsjUMMkjpB3--
+
