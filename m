@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:32887 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759720AbZKLBFQ convert rfc822-to-8bit (ORCPT
+Received: from mga05.intel.com ([192.55.52.89]:30671 "EHLO
+	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S934252AbZKXWs4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 20:05:16 -0500
-From: "Zheng, Jeff" <jeff.zheng@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"wifi-test-devel@lists.sourceforge.net"
-	<wifi-test-devel@lists.sourceforge.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-Date: Thu, 12 Nov 2009 09:04:43 +0800
-Subject: RE: [ANNOUNCE] wifi-test 1.0 released
-Message-ID: <154E55ADF9629D4E8D13F08BF92ABEB63FDC98338B@PDSMSX501.ccr.corp.intel.com>
-References: <154E55ADF9629D4E8D13F08BF92ABEB63FDC983366@PDSMSX501.ccr.corp.intel.com>
- 	<20091111152214.GG4392@tuxdriver.com>
- <154E55ADF9629D4E8D13F08BF92ABEB63FDC98336B@PDSMSX501.ccr.corp.intel.com>
- <43e72e890911110931l893b90dta2d5806d10189925@mail.gmail.com>
-In-Reply-To: <43e72e890911110931l893b90dta2d5806d10189925@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 24 Nov 2009 17:48:56 -0500
+Date: Tue, 24 Nov 2009 23:50:42 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: Re: [RFC 1/3] nl80211: PMKSA caching support
+Message-ID: <20091124225041.GA8290@sortiz.org>
+References: <cover.1259075573.git.sameo@linux.intel.com>
+ <ff5bf1a69ecd3ed3695089cf62e6ab51689b683a.1259075573.git.sameo@linux.intel.com>
+ <20091124174105.GA17213@jm.kir.nu>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091124174105.GA17213@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+Hi Jouni,
 
->
->Thank you guys so much for this, I just reviewed it and it seems you
->do need some AP with remote login, a bit overkill for end users but I
->hope it'll prove valuable for our own testing as well.
-Yes. There are some configurations, config.sh may help.
+On Tue, Nov 24, 2009 at 07:41:05PM +0200, Jouni Malinen wrote:
+> On Tue, Nov 24, 2009 at 04:26:52PM +0100, Samuel Ortiz wrote:
+> > This is an interface to set, delete and flush PMKIDs through nl80211.
+> > Main users would be fullmac devices which firmwares are capable of generating
+> > the RSN IEs for the re-association requests, e.g. iwmc3200wifi.
+> 
+> Is there a maximum number of PMKSA cache entries that the driver can
+> handle? If so, it might be useful to provide a mechanism to indicate
+> that limit (e.g., something similar to NL80211_ATTR_MAX_NUM_SCAN_SSIDS).
+Good point. I'll add that to the patch.
 
->
->Are you interested in receiving patches for simple end user tests
->against an AP with no login?
-Sure. Patches are alwasys welcom
+Cheers,
+Samuel.
 
->
->BTW I've created a wiki page for this here:
->
->http://wireless.kernel.org/en/developers/Testing/wifi-test
->
->Can we instead rely on a wiki instead of a static page that only a few
->have access to?
->
-Good idea. 
+> -- 
+> Jouni Malinen                                            PGP id EFC895FA
 
-Bests
-Jeff
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
