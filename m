@@ -1,62 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:53020 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754806AbZKQQuK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 11:50:10 -0500
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 15/16] wl1251: remove depcreated qual usage
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Nov 2009 18:50:01 +0200
-Message-ID: <20091117165000.2236.74825.stgit@tikku>
-In-Reply-To: <20091117164614.2236.8543.stgit@tikku>
-References: <20091117164614.2236.8543.stgit@tikku>
+Received: from smtp1.irobot.com ([206.83.81.187]:34318 "EHLO smtp1.irobot.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757612AbZKXA5O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Nov 2009 19:57:14 -0500
+Message-ID: <4B0B2F6E.7050907@irobot.com>
+Date: Mon, 23 Nov 2009 16:57:18 -0800
+From: Adam Wozniak <awozniak@irobot.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Derek Smithies <derek@indranet.co.nz>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 2/2] mac80211: minstrel try all rates
+References: <4AF0D54D.4090303@irobot.com>	 <alpine.DEB.2.00.0911111508391.6214@kauri.acheron.indranet.co.nz>	 <4AFC655A.5020706@irobot.com> <200911122103.27455.chunkeey@googlemail.com>	 <4AFC8E4F.5090307@irobot.com>  <4AFC8F0D.5020700@irobot.com>	 <1258097352.3899.75.camel@johannes.local>  <4AFDDF19.8060202@irobot.com>	 <1258191039.6167.40.camel@johannes.local>  <4B018B26.2070008@irobot.com>	 <1258392453.32159.28.camel@johannes.local> <4B0192A6.9050808@irobot.com>	 <alpine.DEB.2.00.0911170938380.3829@kauri.acheron.indranet.co.nz>	 <4B01D4A5.7060204@irobot.com>	 <alpine.DEB.2.00.0911171156210.3829@kauri.acheron.indranet.co.nz>	 <4B01E298.3030602@irobot.com>	 <alpine.DEB.2.00.0911171314470.3829@kauri.acheron.indranet.co.nz>	 <1258443484.1375.8.camel@johannes.local> <4B02DFE3.9040602@irobot.com>	 <4B0AEEE3.2050808@irobot.com> <1259018866.7094.189.camel@johannes.local>
+In-Reply-To: <1259018866.7094.189.camel@johannes.local>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+In Ad-Hoc mode, it is possible for minstrel to be initialized without 
+complete rate information.  In these cases, throughput suffers because 
+not all rates are tried.  This patch tells minstrel to try all rates.  
+This won't cause problems, because unsupported rates will simply fail, 
+causing minstrel to set their probability to 0%.
 
-Fixes warnings:
-
-drivers/net/wireless/wl12xx/wl1251_rx.c: In function 'wl1251_rx_status':
-drivers/net/wireless/wl12xx/wl1251_rx.c:75:
-  warning: 'qual' is deprecated (declared at include/net/mac80211.h:555)
-drivers/net/wireless/wl12xx/wl1251_rx.c:77:
-  warning: 'qual' is deprecated (declared at include/net/mac80211.h:555)
-drivers/net/wireless/wl12xx/wl1251_rx.c:77:
-  warning: 'qual' is deprecated (declared at include/net/mac80211.h:555)
-drivers/net/wireless/wl12xx/wl1251_rx.c:77:
-  warning: 'qual' is deprecated (declared at include/net/mac80211.h:555)
-drivers/net/wireless/wl12xx/wl1251_rx.c:78:
-  warning: 'qual' is deprecated (declared at include/net/mac80211.h:555)
-drivers/net/wireless/wl12xx/wl1251_rx.c:78:
-  warning: 'qual' is deprecated (declared at include/net/mac80211.h:555)
-drivers/net/wireless/wl12xx/wl1251_rx.c:78:
-  warning: 'qual' is deprecated (declared at include/net/mac80211.h:555)
-
-
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Adam Wozniak <awozniak@irobot.com>
 ---
-
- drivers/net/wireless/wl12xx/wl1251_rx.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1251_rx.c b/drivers/net/wireless/wl12xx/wl1251_rx.c
-index 601fe0d..f84cc89 100644
---- a/drivers/net/wireless/wl12xx/wl1251_rx.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_rx.c
-@@ -72,10 +72,6 @@ static void wl1251_rx_status(struct wl1251 *wl,
- 	}
+diff --git a/net/mac80211/rc80211_minstrel.c 
+b/net/mac80211/rc80211_minstrel.c
+index 6e5d68b..3a8fe30 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -395,8 +395,6 @@ minstrel_rate_init(void *priv, struct 
+ieee80211_supported_band *sband,
+         unsigned int tx_time_single;
+         unsigned int cw = mp->cw_min;
  
- 	status->signal = desc->rssi;
--	status->qual = (desc->rssi - WL1251_RX_MIN_RSSI) * 100 /
--		(WL1251_RX_MAX_RSSI - WL1251_RX_MIN_RSSI);
--	status->qual = min(status->qual, 100);
--	status->qual = max(status->qual, 0);
+-        if (!rate_supported(sta, sband->band, i))
+-            continue;
+         n++;
+         memset(mr, 0, sizeof(*mr));
  
- 	/*
- 	 * FIXME: guessing that snr needs to be divided by two, otherwise
 
