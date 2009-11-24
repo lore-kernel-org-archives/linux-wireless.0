@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:23645 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760658AbZKZPJu (ORCPT
+Received: from gundega.hpl.hp.com ([192.6.19.190]:54606 "EHLO
+	gundega.hpl.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933964AbZKXS7e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 10:09:50 -0500
-Subject: [PATCH 12/12] wl1251: enable WMM
-To: linville@tuxdriver.com
-From: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 26 Nov 2009 17:09:45 +0200
-Message-ID: <20091126150945.917.10816.stgit@tikku>
-In-Reply-To: <20091126150141.917.35278.stgit@tikku>
-References: <20091126150141.917.35278.stgit@tikku>
+	Tue, 24 Nov 2009 13:59:34 -0500
+Date: Tue, 24 Nov 2009 10:47:08 -0800
+From: Jean Tourrilhes <jt@hpl.hp.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] WE: Fix set events not propagated
+Message-ID: <20091124184708.GA30638@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+	Hi,
 
-Everything is ready now and we can enable WMM in mac80211.
+	I've just noticed that some events are no longer propagated
+for some wireless drivers. Basically, SET request with a extra payload
+for driver without commit handler. The fix is pretty simple, see
+attached.
+	Actually, a few lines below this line, you will see that the
+event generation for simple SET (iwpoint-less ?) is done properly,
+and this other event generation does not need fixing.
+	Regards,
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1251_main.c |    2 ++
- drivers/net/wireless/wl12xx/wl1251_tx.h   |    3 ---
- 2 files changed, 2 insertions(+), 3 deletions(-)
+	Jean
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index e1c4dd3..6aeffbe 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -1382,6 +1382,8 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
- 	wl->hw->wiphy->max_scan_ssids = 1;
- 	wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wl1251_band_2ghz;
+Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
+
+diff -u -p linux/net/wireless/wext.j1.c linux/net/wireless/wext.c
+--- linux/net/wireless/wext.j1.c	2009-11-23 17:42:24.000000000 -0800
++++ linux/net/wireless/wext.c	2009-11-23 17:44:41.000000000 -0800
+@@ -809,7 +809,8 @@ static int ioctl_standard_iw_point(struc
+ 	}
  
-+	wl->hw->queues = 4;
-+
- 	ret = wl1251_register_hw(wl);
- 	if (ret)
- 		goto out;
-diff --git a/drivers/net/wireless/wl12xx/wl1251_tx.h b/drivers/net/wireless/wl12xx/wl1251_tx.h
-index b7bead8..55856c6 100644
---- a/drivers/net/wireless/wl12xx/wl1251_tx.h
-+++ b/drivers/net/wireless/wl12xx/wl1251_tx.h
-@@ -212,9 +212,6 @@ struct tx_result {
+ 	/* Generate an event to notify listeners of the change */
+-	if ((descr->flags & IW_DESCR_FLAG_EVENT) && err == -EIWCOMMIT) {
++	if ((descr->flags & IW_DESCR_FLAG_EVENT) &&
++	    ((err == 0) || (err == -EIWCOMMIT))) {
+ 		union iwreq_data *data = (union iwreq_data *) iwp;
  
- static inline int wl1251_tx_get_queue(int queue)
- {
--	/* FIXME: use best effort until WMM is enabled */
--	return QOS_AC_BE;
--
- 	switch (queue) {
- 	case 0:
- 		return QOS_AC_VO;
+ 		if (descr->flags & IW_DESCR_FLAG_RESTRICT)
+
 
