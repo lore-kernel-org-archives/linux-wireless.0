@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56149 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752836AbZKGUTC (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:38321 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964946AbZKYXui (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 15:19:02 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	mcgrof@gmail.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 19/29] ath9k: move the rx_stats->rs_datalen check to ath9k_rx_accept()
-Date: Sat,  7 Nov 2009 15:18:56 -0500
-Message-Id: <1257625146-17971-20-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
-References: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 25 Nov 2009 18:50:38 -0500
+Received: by ewy19 with SMTP id 19so267699ewy.21
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2009 15:50:43 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [ANN] Ralink specsheets
+Date: Thu, 26 Nov 2009 00:50:40 +0100
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+References: <200911241817.21399.IvDoorn@gmail.com> <646765f40911241848m27971e72v93b31c5905ddc238@mail.gmail.com>
+In-Reply-To: <646765f40911241848m27971e72v93b31c5905ddc238@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200911260050.40843.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/recv.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+On Wednesday 25 November 2009, Julian Calaby wrote:
+> On Wed, Nov 25, 2009 at 04:17, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> > Hi,
+> >
+> > Recently Ralink has published their specification sheets for some of their
+> > older chipsets on their website. In particular the rt73 and rt61 chipsets.
+> >
+> > For those who are interested in the official register definitions from the Ralink hardware:
+> >
+> > RT2571W:
+> > http://www.ralinktech.com/download.php?t=U0wyRnpjMlYwY3k4eU1EQTVMekE0THpNeEwzQnliMlIxWTNRNE5EVTRNelEwTWpZMkxuQmtaajA5UFVSVFVsUXlOVGN4VjE5V015NHpYekEyTWpJd053PT1D
+> >
+> > RT2661:
+> > http://www.ralinktech.com/download.php?t=U0wyRnpjMlYwY3k4eU1EQTVMekEzTHpNeEwzQnliMlIxWTNReU16UXhORGs0TURZekxuQmtaajA5UFVSVFVsUXlOall4WDFZekxqTmZNRFV4TkRBNEM%3D
+> >
+> > RT2561S:
+> > http://www.ralinktech.com/download.php?t=U0wyRnpjMlYwY3k4eU1EQTVMekEzTHpNeEwzQnliMlIxWTNReU16UTNPVFEyTlRJeUxuQmtaajA5UFVSVFVsUXlOVFl4VTE5V015NHhYekV5TVRnd05tUnZZdz09Qw%3D%3D
+> >
+> > RT2561:
+> > http://www.ralinktech.com/download.php?t=U0wyRnpjMlYwY3k4eU1EQTVMekEzTHpNeEwzQnliMlIxWTNReU16UTBOVFF5TnpBeUxuQmtaajA5UFVSVFVsUXlOVFl4WDFZekxqSmZNVEF4T0RBM0M%3D
+> 
+> Are these going to be put on the wiki? and are the specsheets for
+> older parts available?
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 0793614..4420a58 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -100,6 +100,9 @@ static bool ath9k_rx_accept(struct ath_common *common,
- 	hdr = (struct ieee80211_hdr *) skb->data;
- 	fc = hdr->frame_control;
- 
-+	if (!rx_stats->rs_datalen)
-+		return false;
-+
- 	if (rx_stats->rs_more) {
- 		/*
- 		 * Frame spans multiple descriptors; this cannot happen yet
-@@ -793,9 +796,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 		if (flush)
- 			goto requeue;
- 
--		if (!rx_stats->rs_datalen)
--			goto requeue;
--
- 		/* The status portion of the descriptor could get corrupted. */
- 		if (sc->rx.bufsize < rx_stats->rs_datalen)
- 			goto requeue;
--- 
-1.6.5.2.143.g8cc62
+Well I couldn't find the older specsheets, but I'll ask Ralink to see if they
+are willing to release those documents as well.
 
+Ivo
