@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:37894 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753352AbZKGWAg convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 17:00:36 -0500
-From: Ben Hutchings <ben@decadent.org.uk>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 07 Nov 2009 22:00:38 +0000
-Message-ID: <1257631238.15927.463.camel@localhost>
-Mime-Version: 1.0
-Subject: [PATCH 51/75] libertas_tf_usb: declare MODULE_FIRMWARE
+Received: from jazz.viagenie.ca ([206.123.31.2]:39497 "EHLO jazz.viagenie.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758618AbZKYNt5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Nov 2009 08:49:57 -0500
+Message-ID: <4B0D360A.3080801@viagenie.ca>
+Date: Wed, 25 Nov 2009 08:50:02 -0500
+From: Simon Perreault <simon.perreault@viagenie.ca>
+MIME-Version: 1.0
+To: Pat Erley <pat-lkml@erley.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Hardware for 802.11s
+References: <4B0C5E6F.5040302@viagenie.ca> <4B0C6493.7010805@erley.org>
+In-Reply-To: <4B0C6493.7010805@erley.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
----
- drivers/net/wireless/libertas_tf/if_usb.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Thanks for your reply.
 
-diff --git a/drivers/net/wireless/libertas_tf/if_usb.c b/drivers/net/wireless/libertas_tf/if_usb.c
-index 392337b..3691c30 100644
---- a/drivers/net/wireless/libertas_tf/if_usb.c
-+++ b/drivers/net/wireless/libertas_tf/if_usb.c
-@@ -23,6 +23,8 @@
- static char *lbtf_fw_name = "lbtf_usb.bin";
- module_param_named(fw_name, lbtf_fw_name, charp, 0644);
- 
-+MODULE_FIRMWARE("lbtf_usb.bin");
-+
- static struct usb_device_id if_usb_table[] = {
- 	/* Enter the device signature inside */
- 	{ USB_DEVICE(0x1286, 0x2001) },
+Pat Erley wrote, on 2009-11-24 17:56:
+> I don't have time tonight, but I believe you can make b43 work by triggering a 
+> scan after bringing the interface up.  I know I've made b43 work in the past.
+
+What do you mean, "triggering a scan"? What command line does that translate into?
+
+I've tried all variations of "iw ... scan ..." I could think of and eventually I
+got this:
+
+root@OpenWrt-2:~# iw dev mesh0 station dump
+Station 00:21:29:8a:e6:01 (on mesh0)
+	inactive time:	811216 ms
+	rx bytes:	546
+	rx packets:	13
+	tx bytes:	334
+	tx packets:	5
+	signal:  	-6 dBm
+	tx bitrate:	1.0 MBit/s
+	mesh llid:	0
+	mesh plid:	0
+	mesh plink:	LISTEN
+
+Yay, a blip!!!
+
+But the other WRT54GL still shows nothing, and of course I still can't ping.
+
+Thanks,
+Simon
 -- 
-1.6.5.2
-
-
-
+DNS64 open-source   --> http://ecdysis.viagenie.ca
+STUN/TURN server    --> http://numb.viagenie.ca
+vCard 4.0           --> http://www.vcarddav.org
