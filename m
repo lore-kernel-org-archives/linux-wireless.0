@@ -1,306 +1,514 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:45422 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752546AbZK3Rct (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53879 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757948AbZKYQuz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Nov 2009 12:32:49 -0500
-Date: Mon, 30 Nov 2009 18:32:54 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 09/11] mwl8k: fix up AP vs. STA firmware image receive descriptor handling
-Message-ID: <20091130173254.GY20214@mail.wantstofly.org>
+	Wed, 25 Nov 2009 11:50:55 -0500
+Message-Id: <20091125164821.018412090@sipsolutions.net>
+Date: Wed, 25 Nov 2009 17:46:16 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 2/5] mac80211: move aMPDU RX reorder code
+References: <20091125164614.427835023@sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The receive descriptor ops that are currently marked as being for
-8687 only are actually used for all STA firmware images, whereas the
-receive descriptor ops marked as 8366 are only used on 8366 when an
-AP firmware image is in use.
+This code should be part of RX handlers, so move it
+to the place where it belongs without changing it.
+A follow-up patch will do the changes to hook it up.
+The sole purpose of this code move is to make the
+other patch readable, it doesn't change the code at
+all except that it now requires a different static
+function declaration (which will go away too).
 
-Rename the receive descriptor ops to reflect this, use the STA ops
-unconditionally if the firmware image loaded reported the STA ready
-code, and rename the mwl8k_device_info::rxd_ops member to ap_rxd_ops
-to indicate that it should only be used if we are running on AP
-firmware.
-
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/mwl8k.c |  124 ++++++++++++++++++++----------------------
- 1 files changed, 60 insertions(+), 64 deletions(-)
+ net/mac80211/rx.c |  459 ++++++++++++++++++++++++++----------------------------
+ 1 file changed, 229 insertions(+), 230 deletions(-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 9f74dca..36c826c 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -93,8 +93,7 @@ struct mwl8k_device_info {
- 	char *part_name;
- 	char *helper_image;
- 	char *fw_image;
--	struct rxd_ops *rxd_ops;
--	u16 modes;
-+	struct rxd_ops *ap_rxd_ops;
- };
+--- wireless-testing.orig/net/mac80211/rx.c	2009-11-19 01:14:17.000000000 +0100
++++ wireless-testing/net/mac80211/rx.c	2009-11-19 01:14:21.000000000 +0100
+@@ -27,9 +27,9 @@
+ #include "tkip.h"
+ #include "wme.h"
  
- struct mwl8k_rx_queue {
-@@ -581,10 +580,7 @@ static int mwl8k_load_firmware(struct ieee80211_hw *hw)
- 		return rc;
- 	}
- 
--	if (priv->device_info->modes & BIT(NL80211_IFTYPE_AP))
--		iowrite32(MWL8K_MODE_AP, priv->regs + MWL8K_HIU_GEN_PTR);
--	else
--		iowrite32(MWL8K_MODE_STA, priv->regs + MWL8K_HIU_GEN_PTR);
-+	iowrite32(MWL8K_MODE_STA, priv->regs + MWL8K_HIU_GEN_PTR);
- 
- 	loops = 500000;
- 	do {
-@@ -721,9 +717,9 @@ static inline void mwl8k_add_dma_header(struct sk_buff *skb)
- 
+-static void ieee80211_release_reorder_frames(struct ieee80211_hw *hw,
+-					     struct tid_ampdu_rx *tid_agg_rx,
+-					     u16 head_seq_num);
++static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
++					 struct sk_buff *skb,
++					 struct ieee80211_rate *rate);
  
  /*
-- * Packet reception for 88w8366.
-+ * Packet reception for 88w8366 AP firmware.
-  */
--struct mwl8k_rxd_8366 {
-+struct mwl8k_rxd_8366_ap {
- 	__le16 pkt_len;
- 	__u8 sq2;
- 	__u8 rate;
-@@ -741,23 +737,23 @@ struct mwl8k_rxd_8366 {
- 	__u8 rx_ctrl;
- } __attribute__((packed));
- 
--#define MWL8K_8366_RATE_INFO_MCS_FORMAT		0x80
--#define MWL8K_8366_RATE_INFO_40MHZ		0x40
--#define MWL8K_8366_RATE_INFO_RATEID(x)		((x) & 0x3f)
-+#define MWL8K_8366_AP_RATE_INFO_MCS_FORMAT	0x80
-+#define MWL8K_8366_AP_RATE_INFO_40MHZ		0x40
-+#define MWL8K_8366_AP_RATE_INFO_RATEID(x)	((x) & 0x3f)
- 
--#define MWL8K_8366_RX_CTRL_OWNED_BY_HOST	0x80
-+#define MWL8K_8366_AP_RX_CTRL_OWNED_BY_HOST	0x80
- 
--static void mwl8k_rxd_8366_init(void *_rxd, dma_addr_t next_dma_addr)
-+static void mwl8k_rxd_8366_ap_init(void *_rxd, dma_addr_t next_dma_addr)
- {
--	struct mwl8k_rxd_8366 *rxd = _rxd;
-+	struct mwl8k_rxd_8366_ap *rxd = _rxd;
- 
- 	rxd->next_rxd_phys_addr = cpu_to_le32(next_dma_addr);
--	rxd->rx_ctrl = MWL8K_8366_RX_CTRL_OWNED_BY_HOST;
-+	rxd->rx_ctrl = MWL8K_8366_AP_RX_CTRL_OWNED_BY_HOST;
+  * monitor mode reception
+@@ -534,6 +534,232 @@ ieee80211_rx_mesh_check(struct ieee80211
+ 	return RX_CONTINUE;
  }
  
--static void mwl8k_rxd_8366_refill(void *_rxd, dma_addr_t addr, int len)
-+static void mwl8k_rxd_8366_ap_refill(void *_rxd, dma_addr_t addr, int len)
- {
--	struct mwl8k_rxd_8366 *rxd = _rxd;
-+	struct mwl8k_rxd_8366_ap *rxd = _rxd;
- 
- 	rxd->pkt_len = cpu_to_le16(len);
- 	rxd->pkt_phys_addr = cpu_to_le32(addr);
-@@ -766,12 +762,12 @@ static void mwl8k_rxd_8366_refill(void *_rxd, dma_addr_t addr, int len)
- }
- 
- static int
--mwl8k_rxd_8366_process(void *_rxd, struct ieee80211_rx_status *status,
--		       __le16 *qos)
-+mwl8k_rxd_8366_ap_process(void *_rxd, struct ieee80211_rx_status *status,
-+			  __le16 *qos)
- {
--	struct mwl8k_rxd_8366 *rxd = _rxd;
-+	struct mwl8k_rxd_8366_ap *rxd = _rxd;
- 
--	if (!(rxd->rx_ctrl & MWL8K_8366_RX_CTRL_OWNED_BY_HOST))
-+	if (!(rxd->rx_ctrl & MWL8K_8366_AP_RX_CTRL_OWNED_BY_HOST))
- 		return -1;
- 	rmb();
- 
-@@ -780,11 +776,11 @@ mwl8k_rxd_8366_process(void *_rxd, struct ieee80211_rx_status *status,
- 	status->signal = -rxd->rssi;
- 	status->noise = -rxd->noise_floor;
- 
--	if (rxd->rate & MWL8K_8366_RATE_INFO_MCS_FORMAT) {
-+	if (rxd->rate & MWL8K_8366_AP_RATE_INFO_MCS_FORMAT) {
- 		status->flag |= RX_FLAG_HT;
--		if (rxd->rate & MWL8K_8366_RATE_INFO_40MHZ)
-+		if (rxd->rate & MWL8K_8366_AP_RATE_INFO_40MHZ)
- 			status->flag |= RX_FLAG_40MHZ;
--		status->rate_idx = MWL8K_8366_RATE_INFO_RATEID(rxd->rate);
-+		status->rate_idx = MWL8K_8366_AP_RATE_INFO_RATEID(rxd->rate);
- 	} else {
- 		int i;
- 
-@@ -804,17 +800,17 @@ mwl8k_rxd_8366_process(void *_rxd, struct ieee80211_rx_status *status,
- 	return le16_to_cpu(rxd->pkt_len);
- }
- 
--static struct rxd_ops rxd_8366_ops = {
--	.rxd_size	= sizeof(struct mwl8k_rxd_8366),
--	.rxd_init	= mwl8k_rxd_8366_init,
--	.rxd_refill	= mwl8k_rxd_8366_refill,
--	.rxd_process	= mwl8k_rxd_8366_process,
-+static struct rxd_ops rxd_8366_ap_ops = {
-+	.rxd_size	= sizeof(struct mwl8k_rxd_8366_ap),
-+	.rxd_init	= mwl8k_rxd_8366_ap_init,
-+	.rxd_refill	= mwl8k_rxd_8366_ap_refill,
-+	.rxd_process	= mwl8k_rxd_8366_ap_process,
- };
- 
- /*
-- * Packet reception for 88w8687.
-+ * Packet reception for STA firmware.
-  */
--struct mwl8k_rxd_8687 {
-+struct mwl8k_rxd_sta {
- 	__le16 pkt_len;
- 	__u8 link_quality;
- 	__u8 noise_level;
-@@ -831,26 +827,26 @@ struct mwl8k_rxd_8687 {
- 	__u8 pad2[2];
- } __attribute__((packed));
- 
--#define MWL8K_8687_RATE_INFO_SHORTPRE		0x8000
--#define MWL8K_8687_RATE_INFO_ANTSELECT(x)	(((x) >> 11) & 0x3)
--#define MWL8K_8687_RATE_INFO_RATEID(x)		(((x) >> 3) & 0x3f)
--#define MWL8K_8687_RATE_INFO_40MHZ		0x0004
--#define MWL8K_8687_RATE_INFO_SHORTGI		0x0002
--#define MWL8K_8687_RATE_INFO_MCS_FORMAT		0x0001
-+#define MWL8K_STA_RATE_INFO_SHORTPRE		0x8000
-+#define MWL8K_STA_RATE_INFO_ANTSELECT(x)	(((x) >> 11) & 0x3)
-+#define MWL8K_STA_RATE_INFO_RATEID(x)		(((x) >> 3) & 0x3f)
-+#define MWL8K_STA_RATE_INFO_40MHZ		0x0004
-+#define MWL8K_STA_RATE_INFO_SHORTGI		0x0002
-+#define MWL8K_STA_RATE_INFO_MCS_FORMAT		0x0001
- 
--#define MWL8K_8687_RX_CTRL_OWNED_BY_HOST	0x02
-+#define MWL8K_STA_RX_CTRL_OWNED_BY_HOST		0x02
- 
--static void mwl8k_rxd_8687_init(void *_rxd, dma_addr_t next_dma_addr)
-+static void mwl8k_rxd_sta_init(void *_rxd, dma_addr_t next_dma_addr)
- {
--	struct mwl8k_rxd_8687 *rxd = _rxd;
-+	struct mwl8k_rxd_sta *rxd = _rxd;
- 
- 	rxd->next_rxd_phys_addr = cpu_to_le32(next_dma_addr);
--	rxd->rx_ctrl = MWL8K_8687_RX_CTRL_OWNED_BY_HOST;
-+	rxd->rx_ctrl = MWL8K_STA_RX_CTRL_OWNED_BY_HOST;
- }
- 
--static void mwl8k_rxd_8687_refill(void *_rxd, dma_addr_t addr, int len)
-+static void mwl8k_rxd_sta_refill(void *_rxd, dma_addr_t addr, int len)
- {
--	struct mwl8k_rxd_8687 *rxd = _rxd;
-+	struct mwl8k_rxd_sta *rxd = _rxd;
- 
- 	rxd->pkt_len = cpu_to_le16(len);
- 	rxd->pkt_phys_addr = cpu_to_le32(addr);
-@@ -859,13 +855,13 @@ static void mwl8k_rxd_8687_refill(void *_rxd, dma_addr_t addr, int len)
- }
- 
- static int
--mwl8k_rxd_8687_process(void *_rxd, struct ieee80211_rx_status *status,
-+mwl8k_rxd_sta_process(void *_rxd, struct ieee80211_rx_status *status,
- 		       __le16 *qos)
- {
--	struct mwl8k_rxd_8687 *rxd = _rxd;
-+	struct mwl8k_rxd_sta *rxd = _rxd;
- 	u16 rate_info;
- 
--	if (!(rxd->rx_ctrl & MWL8K_8687_RX_CTRL_OWNED_BY_HOST))
-+	if (!(rxd->rx_ctrl & MWL8K_STA_RX_CTRL_OWNED_BY_HOST))
- 		return -1;
- 	rmb();
- 
-@@ -875,16 +871,16 @@ mwl8k_rxd_8687_process(void *_rxd, struct ieee80211_rx_status *status,
- 
- 	status->signal = -rxd->rssi;
- 	status->noise = -rxd->noise_level;
--	status->antenna = MWL8K_8687_RATE_INFO_ANTSELECT(rate_info);
--	status->rate_idx = MWL8K_8687_RATE_INFO_RATEID(rate_info);
-+	status->antenna = MWL8K_STA_RATE_INFO_ANTSELECT(rate_info);
-+	status->rate_idx = MWL8K_STA_RATE_INFO_RATEID(rate_info);
- 
--	if (rate_info & MWL8K_8687_RATE_INFO_SHORTPRE)
-+	if (rate_info & MWL8K_STA_RATE_INFO_SHORTPRE)
- 		status->flag |= RX_FLAG_SHORTPRE;
--	if (rate_info & MWL8K_8687_RATE_INFO_40MHZ)
-+	if (rate_info & MWL8K_STA_RATE_INFO_40MHZ)
- 		status->flag |= RX_FLAG_40MHZ;
--	if (rate_info & MWL8K_8687_RATE_INFO_SHORTGI)
-+	if (rate_info & MWL8K_STA_RATE_INFO_SHORTGI)
- 		status->flag |= RX_FLAG_SHORT_GI;
--	if (rate_info & MWL8K_8687_RATE_INFO_MCS_FORMAT)
-+	if (rate_info & MWL8K_STA_RATE_INFO_MCS_FORMAT)
- 		status->flag |= RX_FLAG_HT;
- 
- 	status->band = IEEE80211_BAND_2GHZ;
-@@ -895,11 +891,11 @@ mwl8k_rxd_8687_process(void *_rxd, struct ieee80211_rx_status *status,
- 	return le16_to_cpu(rxd->pkt_len);
- }
- 
--static struct rxd_ops rxd_8687_ops = {
--	.rxd_size	= sizeof(struct mwl8k_rxd_8687),
--	.rxd_init	= mwl8k_rxd_8687_init,
--	.rxd_refill	= mwl8k_rxd_8687_refill,
--	.rxd_process	= mwl8k_rxd_8687_process,
-+static struct rxd_ops rxd_sta_ops = {
-+	.rxd_size	= sizeof(struct mwl8k_rxd_sta),
-+	.rxd_init	= mwl8k_rxd_sta_init,
-+	.rxd_refill	= mwl8k_rxd_sta_refill,
-+	.rxd_process	= mwl8k_rxd_sta_process,
- };
- 
- 
-@@ -3268,15 +3264,12 @@ static struct mwl8k_device_info mwl8k_info_tbl[] __devinitdata = {
- 		.part_name	= "88w8687",
- 		.helper_image	= "mwl8k/helper_8687.fw",
- 		.fw_image	= "mwl8k/fmimage_8687.fw",
--		.rxd_ops	= &rxd_8687_ops,
--		.modes		= BIT(NL80211_IFTYPE_STATION),
- 	},
- 	[MWL8366] = {
- 		.part_name	= "88w8366",
- 		.helper_image	= "mwl8k/helper_8366.fw",
- 		.fw_image	= "mwl8k/fmimage_8366.fw",
--		.rxd_ops	= &rxd_8366_ops,
--		.modes		= 0,
-+		.ap_rxd_ops	= &rxd_8366_ap_ops,
- 	},
- };
- 
-@@ -3381,7 +3374,10 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
- 	mwl8k_release_firmware(priv);
- 
- 
--	priv->rxd_ops = priv->device_info->rxd_ops;
-+	if (priv->ap_fw)
-+		priv->rxd_ops = priv->device_info->ap_rxd_ops;
-+	else
-+		priv->rxd_ops = &rxd_sta_ops;
- 
- 	priv->sniffer_enabled = false;
- 	priv->wmm_enabled = false;
-@@ -3410,8 +3406,6 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
- 
- 	hw->queues = MWL8K_TX_QUEUES;
- 
--	hw->wiphy->interface_modes = priv->device_info->modes;
--
- 	/* Set rssi and noise values to dBm */
- 	hw->flags |= IEEE80211_HW_SIGNAL_DBM | IEEE80211_HW_NOISE_DBM;
- 	hw->vif_data_size = sizeof(struct mwl8k_vif);
-@@ -3481,6 +3475,8 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
- 			rc = mwl8k_cmd_set_hw_spec(hw);
- 	} else {
- 		rc = mwl8k_cmd_get_hw_spec_sta(hw);
++#define SEQ_MODULO 0x1000
++#define SEQ_MASK   0xfff
 +
-+		hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
- 	}
- 	if (rc) {
- 		printk(KERN_ERR "%s: Cannot initialise firmware\n",
--- 
-1.5.6.4
++static inline int seq_less(u16 sq1, u16 sq2)
++{
++	return ((sq1 - sq2) & SEQ_MASK) > (SEQ_MODULO >> 1);
++}
++
++static inline u16 seq_inc(u16 sq)
++{
++	return (sq + 1) & SEQ_MASK;
++}
++
++static inline u16 seq_sub(u16 sq1, u16 sq2)
++{
++	return (sq1 - sq2) & SEQ_MASK;
++}
++
++
++static void ieee80211_release_reorder_frame(struct ieee80211_hw *hw,
++					    struct tid_ampdu_rx *tid_agg_rx,
++					    int index)
++{
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_rate *rate = NULL;
++	struct sk_buff *skb = tid_agg_rx->reorder_buf[index];
++	struct ieee80211_rx_status *status;
++
++	if (!skb)
++		goto no_frame;
++
++	status = IEEE80211_SKB_RXCB(skb);
++
++	/* release the reordered frames to stack */
++	sband = hw->wiphy->bands[status->band];
++	if (!(status->flag & RX_FLAG_HT))
++		rate = &sband->bitrates[status->rate_idx];
++	__ieee80211_rx_handle_packet(hw, skb, rate);
++	tid_agg_rx->stored_mpdu_num--;
++	tid_agg_rx->reorder_buf[index] = NULL;
++
++no_frame:
++	tid_agg_rx->head_seq_num = seq_inc(tid_agg_rx->head_seq_num);
++}
++
++static void ieee80211_release_reorder_frames(struct ieee80211_hw *hw,
++					     struct tid_ampdu_rx *tid_agg_rx,
++					     u16 head_seq_num)
++{
++	int index;
++
++	while (seq_less(tid_agg_rx->head_seq_num, head_seq_num)) {
++		index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
++							tid_agg_rx->buf_size;
++		ieee80211_release_reorder_frame(hw, tid_agg_rx, index);
++	}
++}
++
++/*
++ * Timeout (in jiffies) for skb's that are waiting in the RX reorder buffer. If
++ * the skb was added to the buffer longer than this time ago, the earlier
++ * frames that have not yet been received are assumed to be lost and the skb
++ * can be released for processing. This may also release other skb's from the
++ * reorder buffer if there are no additional gaps between the frames.
++ */
++#define HT_RX_REORDER_BUF_TIMEOUT (HZ / 10)
++
++/*
++ * As this function belongs to the RX path it must be under
++ * rcu_read_lock protection. It returns false if the frame
++ * can be processed immediately, true if it was consumed.
++ */
++static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
++					     struct tid_ampdu_rx *tid_agg_rx,
++					     struct sk_buff *skb)
++{
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	u16 sc = le16_to_cpu(hdr->seq_ctrl);
++	u16 mpdu_seq_num = (sc & IEEE80211_SCTL_SEQ) >> 4;
++	u16 head_seq_num, buf_size;
++	int index;
++
++	buf_size = tid_agg_rx->buf_size;
++	head_seq_num = tid_agg_rx->head_seq_num;
++
++	/* frame with out of date sequence number */
++	if (seq_less(mpdu_seq_num, head_seq_num)) {
++		dev_kfree_skb(skb);
++		return true;
++	}
++
++	/*
++	 * If frame the sequence number exceeds our buffering window
++	 * size release some previous frames to make room for this one.
++	 */
++	if (!seq_less(mpdu_seq_num, head_seq_num + buf_size)) {
++		head_seq_num = seq_inc(seq_sub(mpdu_seq_num, buf_size));
++		/* release stored frames up to new head to stack */
++		ieee80211_release_reorder_frames(hw, tid_agg_rx, head_seq_num);
++	}
++
++	/* Now the new frame is always in the range of the reordering buffer */
++
++	index = seq_sub(mpdu_seq_num, tid_agg_rx->ssn) % tid_agg_rx->buf_size;
++
++	/* check if we already stored this frame */
++	if (tid_agg_rx->reorder_buf[index]) {
++		dev_kfree_skb(skb);
++		return true;
++	}
++
++	/*
++	 * If the current MPDU is in the right order and nothing else
++	 * is stored we can process it directly, no need to buffer it.
++	 */
++	if (mpdu_seq_num == tid_agg_rx->head_seq_num &&
++	    tid_agg_rx->stored_mpdu_num == 0) {
++		tid_agg_rx->head_seq_num = seq_inc(tid_agg_rx->head_seq_num);
++		return false;
++	}
++
++	/* put the frame in the reordering buffer */
++	tid_agg_rx->reorder_buf[index] = skb;
++	tid_agg_rx->reorder_time[index] = jiffies;
++	tid_agg_rx->stored_mpdu_num++;
++	/* release the buffer until next missing frame */
++	index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
++						tid_agg_rx->buf_size;
++	if (!tid_agg_rx->reorder_buf[index] &&
++	    tid_agg_rx->stored_mpdu_num > 1) {
++		/*
++		 * No buffers ready to be released, but check whether any
++		 * frames in the reorder buffer have timed out.
++		 */
++		int j;
++		int skipped = 1;
++		for (j = (index + 1) % tid_agg_rx->buf_size; j != index;
++		     j = (j + 1) % tid_agg_rx->buf_size) {
++			if (!tid_agg_rx->reorder_buf[j]) {
++				skipped++;
++				continue;
++			}
++			if (!time_after(jiffies, tid_agg_rx->reorder_time[j] +
++					HT_RX_REORDER_BUF_TIMEOUT))
++				break;
++
++#ifdef CONFIG_MAC80211_HT_DEBUG
++			if (net_ratelimit())
++				printk(KERN_DEBUG "%s: release an RX reorder "
++				       "frame due to timeout on earlier "
++				       "frames\n",
++				       wiphy_name(hw->wiphy));
++#endif
++			ieee80211_release_reorder_frame(hw, tid_agg_rx, j);
++
++			/*
++			 * Increment the head seq# also for the skipped slots.
++			 */
++			tid_agg_rx->head_seq_num =
++				(tid_agg_rx->head_seq_num + skipped) & SEQ_MASK;
++			skipped = 0;
++		}
++	} else while (tid_agg_rx->reorder_buf[index]) {
++		ieee80211_release_reorder_frame(hw, tid_agg_rx, index);
++		index =	seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
++							tid_agg_rx->buf_size;
++	}
++
++	return true;
++}
++
++/*
++ * Reorder MPDUs from A-MPDUs, keeping them on a buffer. Returns
++ * true if the MPDU was buffered, false if it should be processed.
++ */
++static bool ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
++				       struct sk_buff *skb)
++{
++	struct ieee80211_hw *hw = &local->hw;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	struct sta_info *sta;
++	struct tid_ampdu_rx *tid_agg_rx;
++	u16 sc;
++	int tid;
++
++	if (!ieee80211_is_data_qos(hdr->frame_control))
++		return false;
++
++	/*
++	 * filter the QoS data rx stream according to
++	 * STA/TID and check if this STA/TID is on aggregation
++	 */
++
++	sta = sta_info_get(local, hdr->addr2);
++	if (!sta)
++		return false;
++
++	tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
++
++	if (sta->ampdu_mlme.tid_state_rx[tid] != HT_AGG_STATE_OPERATIONAL)
++		return false;
++
++	tid_agg_rx = sta->ampdu_mlme.tid_rx[tid];
++
++	/* qos null data frames are excluded */
++	if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
++		return false;
++
++	/* new, potentially un-ordered, ampdu frame - process it */
++
++	/* reset session timer */
++	if (tid_agg_rx->timeout)
++		mod_timer(&tid_agg_rx->session_timer,
++			  TU_TO_EXP_TIME(tid_agg_rx->timeout));
++
++	/* if this mpdu is fragmented - terminate rx aggregation session */
++	sc = le16_to_cpu(hdr->seq_ctrl);
++	if (sc & IEEE80211_SCTL_FRAG) {
++		ieee80211_sta_stop_rx_ba_session(sta->sdata, sta->sta.addr,
++			tid, 0, WLAN_REASON_QSTA_REQUIRE_SETUP);
++		dev_kfree_skb(skb);
++		return true;
++	}
++
++	return ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, skb);
++}
+ 
+ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
+@@ -2187,233 +2413,6 @@ static void __ieee80211_rx_handle_packet
+ 		dev_kfree_skb(skb);
+ }
+ 
+-#define SEQ_MODULO 0x1000
+-#define SEQ_MASK   0xfff
+-
+-static inline int seq_less(u16 sq1, u16 sq2)
+-{
+-	return ((sq1 - sq2) & SEQ_MASK) > (SEQ_MODULO >> 1);
+-}
+-
+-static inline u16 seq_inc(u16 sq)
+-{
+-	return (sq + 1) & SEQ_MASK;
+-}
+-
+-static inline u16 seq_sub(u16 sq1, u16 sq2)
+-{
+-	return (sq1 - sq2) & SEQ_MASK;
+-}
+-
+-
+-static void ieee80211_release_reorder_frame(struct ieee80211_hw *hw,
+-					    struct tid_ampdu_rx *tid_agg_rx,
+-					    int index)
+-{
+-	struct ieee80211_supported_band *sband;
+-	struct ieee80211_rate *rate = NULL;
+-	struct sk_buff *skb = tid_agg_rx->reorder_buf[index];
+-	struct ieee80211_rx_status *status;
+-
+-	if (!skb)
+-		goto no_frame;
+-
+-	status = IEEE80211_SKB_RXCB(skb);
+-
+-	/* release the reordered frames to stack */
+-	sband = hw->wiphy->bands[status->band];
+-	if (!(status->flag & RX_FLAG_HT))
+-		rate = &sband->bitrates[status->rate_idx];
+-	__ieee80211_rx_handle_packet(hw, skb, rate);
+-	tid_agg_rx->stored_mpdu_num--;
+-	tid_agg_rx->reorder_buf[index] = NULL;
+-
+-no_frame:
+-	tid_agg_rx->head_seq_num = seq_inc(tid_agg_rx->head_seq_num);
+-}
+-
+-static void ieee80211_release_reorder_frames(struct ieee80211_hw *hw,
+-					     struct tid_ampdu_rx *tid_agg_rx,
+-					     u16 head_seq_num)
+-{
+-	int index;
+-
+-	while (seq_less(tid_agg_rx->head_seq_num, head_seq_num)) {
+-		index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
+-							tid_agg_rx->buf_size;
+-		ieee80211_release_reorder_frame(hw, tid_agg_rx, index);
+-	}
+-}
+-
+-/*
+- * Timeout (in jiffies) for skb's that are waiting in the RX reorder buffer. If
+- * the skb was added to the buffer longer than this time ago, the earlier
+- * frames that have not yet been received are assumed to be lost and the skb
+- * can be released for processing. This may also release other skb's from the
+- * reorder buffer if there are no additional gaps between the frames.
+- */
+-#define HT_RX_REORDER_BUF_TIMEOUT (HZ / 10)
+-
+-/*
+- * As this function belongs to the RX path it must be under
+- * rcu_read_lock protection. It returns false if the frame
+- * can be processed immediately, true if it was consumed.
+- */
+-static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
+-					     struct tid_ampdu_rx *tid_agg_rx,
+-					     struct sk_buff *skb)
+-{
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	u16 sc = le16_to_cpu(hdr->seq_ctrl);
+-	u16 mpdu_seq_num = (sc & IEEE80211_SCTL_SEQ) >> 4;
+-	u16 head_seq_num, buf_size;
+-	int index;
+-
+-	buf_size = tid_agg_rx->buf_size;
+-	head_seq_num = tid_agg_rx->head_seq_num;
+-
+-	/* frame with out of date sequence number */
+-	if (seq_less(mpdu_seq_num, head_seq_num)) {
+-		dev_kfree_skb(skb);
+-		return true;
+-	}
+-
+-	/*
+-	 * If frame the sequence number exceeds our buffering window
+-	 * size release some previous frames to make room for this one.
+-	 */
+-	if (!seq_less(mpdu_seq_num, head_seq_num + buf_size)) {
+-		head_seq_num = seq_inc(seq_sub(mpdu_seq_num, buf_size));
+-		/* release stored frames up to new head to stack */
+-		ieee80211_release_reorder_frames(hw, tid_agg_rx, head_seq_num);
+-	}
+-
+-	/* Now the new frame is always in the range of the reordering buffer */
+-
+-	index = seq_sub(mpdu_seq_num, tid_agg_rx->ssn) % tid_agg_rx->buf_size;
+-
+-	/* check if we already stored this frame */
+-	if (tid_agg_rx->reorder_buf[index]) {
+-		dev_kfree_skb(skb);
+-		return true;
+-	}
+-
+-	/*
+-	 * If the current MPDU is in the right order and nothing else
+-	 * is stored we can process it directly, no need to buffer it.
+-	 */
+-	if (mpdu_seq_num == tid_agg_rx->head_seq_num &&
+-	    tid_agg_rx->stored_mpdu_num == 0) {
+-		tid_agg_rx->head_seq_num = seq_inc(tid_agg_rx->head_seq_num);
+-		return false;
+-	}
+-
+-	/* put the frame in the reordering buffer */
+-	tid_agg_rx->reorder_buf[index] = skb;
+-	tid_agg_rx->reorder_time[index] = jiffies;
+-	tid_agg_rx->stored_mpdu_num++;
+-	/* release the buffer until next missing frame */
+-	index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
+-						tid_agg_rx->buf_size;
+-	if (!tid_agg_rx->reorder_buf[index] &&
+-	    tid_agg_rx->stored_mpdu_num > 1) {
+-		/*
+-		 * No buffers ready to be released, but check whether any
+-		 * frames in the reorder buffer have timed out.
+-		 */
+-		int j;
+-		int skipped = 1;
+-		for (j = (index + 1) % tid_agg_rx->buf_size; j != index;
+-		     j = (j + 1) % tid_agg_rx->buf_size) {
+-			if (!tid_agg_rx->reorder_buf[j]) {
+-				skipped++;
+-				continue;
+-			}
+-			if (!time_after(jiffies, tid_agg_rx->reorder_time[j] +
+-					HT_RX_REORDER_BUF_TIMEOUT))
+-				break;
+-
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-			if (net_ratelimit())
+-				printk(KERN_DEBUG "%s: release an RX reorder "
+-				       "frame due to timeout on earlier "
+-				       "frames\n",
+-				       wiphy_name(hw->wiphy));
+-#endif
+-			ieee80211_release_reorder_frame(hw, tid_agg_rx, j);
+-
+-			/*
+-			 * Increment the head seq# also for the skipped slots.
+-			 */
+-			tid_agg_rx->head_seq_num =
+-				(tid_agg_rx->head_seq_num + skipped) & SEQ_MASK;
+-			skipped = 0;
+-		}
+-	} else while (tid_agg_rx->reorder_buf[index]) {
+-		ieee80211_release_reorder_frame(hw, tid_agg_rx, index);
+-		index =	seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
+-							tid_agg_rx->buf_size;
+-	}
+-
+-	return true;
+-}
+-
+-/*
+- * Reorder MPDUs from A-MPDUs, keeping them on a buffer. Returns
+- * true if the MPDU was buffered, false if it should be processed.
+- */
+-static bool ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
+-				       struct sk_buff *skb)
+-{
+-	struct ieee80211_hw *hw = &local->hw;
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	struct sta_info *sta;
+-	struct tid_ampdu_rx *tid_agg_rx;
+-	u16 sc;
+-	int tid;
+-
+-	if (!ieee80211_is_data_qos(hdr->frame_control))
+-		return false;
+-
+-	/*
+-	 * filter the QoS data rx stream according to
+-	 * STA/TID and check if this STA/TID is on aggregation
+-	 */
+-
+-	sta = sta_info_get(local, hdr->addr2);
+-	if (!sta)
+-		return false;
+-
+-	tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
+-
+-	if (sta->ampdu_mlme.tid_state_rx[tid] != HT_AGG_STATE_OPERATIONAL)
+-		return false;
+-
+-	tid_agg_rx = sta->ampdu_mlme.tid_rx[tid];
+-
+-	/* qos null data frames are excluded */
+-	if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
+-		return false;
+-
+-	/* new, potentially un-ordered, ampdu frame - process it */
+-
+-	/* reset session timer */
+-	if (tid_agg_rx->timeout)
+-		mod_timer(&tid_agg_rx->session_timer,
+-			  TU_TO_EXP_TIME(tid_agg_rx->timeout));
+-
+-	/* if this mpdu is fragmented - terminate rx aggregation session */
+-	sc = le16_to_cpu(hdr->seq_ctrl);
+-	if (sc & IEEE80211_SCTL_FRAG) {
+-		ieee80211_sta_stop_rx_ba_session(sta->sdata, sta->sta.addr,
+-			tid, 0, WLAN_REASON_QSTA_REQUIRE_SETUP);
+-		dev_kfree_skb(skb);
+-		return true;
+-	}
+-
+-	return ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, skb);
+-}
+-
+ /*
+  * This is the receive path handler. It is called by a low level driver when an
+  * 802.11 MPDU is received from the hardware.
+
+
