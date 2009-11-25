@@ -1,46 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:60066 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935117AbZKYV4U convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53626 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934713AbZKYOIP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 16:56:20 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] airo: Fix integer overflow warning
-Date: Wed, 25 Nov 2009 22:55:11 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200911252255.11570.mb@bu3sch.de>
+	Wed, 25 Nov 2009 09:08:15 -0500
+Subject: Re: [PATCH 0/5] mac80211: stations per virtual interface, netdev
+ reduction
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20091125133243.163478670@sipsolutions.net>
+References: <20091125133243.163478670@sipsolutions.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-lXfGoyyQhoWv0uyp83ZE"
+Date: Wed, 25 Nov 2009 15:07:44 +0100
+Message-ID: <1259158064.32372.8.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On BigEndian gcc complains:
 
-drivers/net/wireless/airo.c: In function ‘sniffing_mode’:
-drivers/net/wireless/airo.c:4809: warning: integer overflow in expression
+--=-lXfGoyyQhoWv0uyp83ZE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Fix this by doing the bitwise AND on the host-endian value.
+On Wed, 2009-11-25 at 14:38 +0100, Johannes Berg wrote:
+> This patchset finally converts station to fully be
+> managed per virtual interface.
+>=20
+> There are also two patches to remove the use of netdevs
+> in mac80211.
+>=20
+> I've been running with this for a while with a few
+> other scenarios too (like hwsim AP test) so I'm pretty
+> confident it works.
 
----
+Hoh humm, of course the minute I send it out I find out that it's
+broken. Ignore this, sorry.
 
-I don't know why GCC warns, however. The original code looks OK to me, too.
+johannes
 
+--=-lXfGoyyQhoWv0uyp83ZE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Index: wireless-testing/drivers/net/wireless/airo.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/airo.c	2009-11-01 13:58:47.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/airo.c	2009-11-25 22:49:18.000000000 +0100
-@@ -4806,7 +4806,7 @@ static int airo_config_commit(struct net
- 
- static inline int sniffing_mode(struct airo_info *ai)
- {
--	return le16_to_cpu(ai->config.rmode & RXMODE_MASK) >=
-+	return (le16_to_cpu(ai->config.rmode) & le16_to_cpu(RXMODE_MASK)) >=
- 		le16_to_cpu(RXMODE_RFMON);
- }
- 
+-----BEGIN PGP SIGNATURE-----
 
--- 
-Greetings, Michael.
+iQIcBAABAgAGBQJLDTotAAoJEODzc/N7+QmarbwP/jnJ0JRNQmWd127r5TInxJH9
+wxOgKUeGKBva6Udiod3e2wJLoR2gXZhnIgGHbmhBVXLmnjlvm3WdLw6lKJvh3uTL
+DNOBMd2ZZpMW0/y91kM4rUqSmMNIFtwitKprrW4RAThNJkRW53G/MYs5Sm5GQF8D
+Gex28Z2V+bkVXTECrnT1HONb5WKhIILddnkC887Tb9f+nZ6iW4x0UL80z1LCF861
+112UnvPyKpNowg4oUv/xXCvIqORfZ6lRhK1dTfSrRn8A1JSlemyJWf7pK79m6KSd
+QSKWWWJx0OkdOdKToffvD5ZM9OJ4vgeW3s8a3kNUJ1zwkkHAmssgVMljSC6ihDux
+5OBKAGpf8iiJ8CSISR5Aq0636WgfxZy0vFxe8JQRMS6rUCRYtX2W2JCDOO5yvbtl
+4TXoS3ZZClsWS/YDynRakzrOwIBlZmxAD7KBWwpn53rc2IayB5GnDVqPZtUUXu9u
+R7fRZtv8cNUpdFvPdNBZTHOKQYhgoJ/K7efpTYFhem9Xvc7w1kinLOuPZ44+WhMT
+3qiRV/ifflnpRb6RnG8tTGCe/tObM+W6Vdw61Qp9Wv6QV4GzqtmkaB6xisHZ/SMf
+kfoPJSEhuwURaMqE+jSup5MqcastvCPjn+HHp2gJzPsgBpCXE6/eh2v1ksT42c4a
+O7h2n4IQrme6bWi/5jLe
+=POe8
+-----END PGP SIGNATURE-----
+
+--=-lXfGoyyQhoWv0uyp83ZE--
+
