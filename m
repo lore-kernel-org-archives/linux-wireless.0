@@ -1,58 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:47640 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750819AbZKIKyI (ORCPT
+Received: from mail-pz0-f171.google.com ([209.85.222.171]:35191 "EHLO
+	mail-pz0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758074AbZKYPfW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 05:54:08 -0500
-Date: Mon, 9 Nov 2009 12:54:10 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Holger Schurig <holgerschurig@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: erraneous connect with short-slot-time fails
-Message-ID: <20091109105410.GA1443@jm.kir.nu>
-References: <m3zl6wq8x7.wl%holgerschurig@gmail.com>
+	Wed, 25 Nov 2009 10:35:22 -0500
+Received: by pzk1 with SMTP id 1so5690263pzk.33
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2009 07:35:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <m3zl6wq8x7.wl%holgerschurig@gmail.com>
+In-Reply-To: <4B0C6493.7010805@erley.org>
+References: <4B0C5E6F.5040302@viagenie.ca> <4B0C6493.7010805@erley.org>
+Date: Wed, 25 Nov 2009 07:35:27 -0800
+Message-ID: <45e8e6c40911250735o334e23degdf0f1e421aa590b9@mail.gmail.com>
+Subject: Re: Hardware for 802.11s
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: Pat Erley <pat-lkml@erley.org>
+Cc: Simon Perreault <simon.perreault@viagenie.ca>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 09, 2009 at 11:39:16AM +0100, Holger Schurig wrote:
+On Tue, Nov 24, 2009 at 2:56 PM, Pat Erley <pat-lkml@erley.org> wrote:
+> Simon Perreault wrote:
+>> Hello,
+>>
+>> I want to run 802.11s.
+>>
+>> I tried a pair of Linksys WRT54GL v1.1 (Broadcom 5352) with the b43 driver,
+>> kernel 2.6.30.9, OpenWRT trunk (r18526). Doesn't work. I don't see anything in
+>> "iw ... station dump".
+>> Side question: is this expected behaviour?
+>>
+>> Can anyone recommend something I can buy on which 802.11s will work? I couldn't
+>> Google anyone saying e.g. "I used the ACME Router 1.0 and it worked."
+>
+> I don't have time tonight, but I believe you can make b43 work by triggering a
+> scan after bringing the interface up.  I know I've made b43 work in the past.
 
-> wlan0 (phy #4): assoc 00:1b:d4:44:35:90 -> 00:15:e9:84:1a:54 status: 25: Association request rejected due to requesting station not supporting the short slot time option
+The scanning workaround is needed to deal with bugs in the ath9k and
+rt2x00 drivers, however there was no problem with b43 last time I
+checked.  The station dump should show you output provided that you
+have more than one mesh node within range, with the same mesh ID, and
+on the same channel.  Can you please use a sniffer on the channel you
+picked (it's channel 1 by default) and confirm that you see mesh
+beacons from your devices once you "ifconfig up"?  Thanks,
 
-> First thing: the error message is confused. I turned off
-> short-slot-time on the AP, so it's the AP that does not support it.
-
-However, that text is correct as far as the proper use of status 25 is
-concerned. Which AP is this?
-
-> However, the real question remains: why does the station
-> (ath5k+mac80211) tries to use short-slot-time in the first place? In
-> the probe response, the AP says clearly that he doesn't support this.
-
-IEEE 802.11-2007 states that the station indicates its support for short
-slot time in (re)association request. This does not depend what the BSS
-is currently using (slot time subfield inbeacon/probe
-response/(re)association response frames).
-
-> CONCLUSION: mac80211 tries to use short-slot time.
-
-No.. It only indicates that it supports short slot time. It is up to the
-AP to decide whether short slot time is used in the BSS.
-
-> CONCLUSION: the AP doesn't like that. And the textual representation
-> from tshark for this error as also confused about the roles of AP and
-> station :-)
-
-The "AP doesn't like that" part seems correct. The textual
-representation may be confusing, but it is correct. The AP behavior is
-not.
-
-> Who's the culprit, mac80211 or wpa_supplicant?
-
-Neither, the AP is. Have you verified whether you can work around this
-by hardcoding mac80211 to send out zero as the short slot time?
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+  -Andrey
