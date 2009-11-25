@@ -1,70 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:48332 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752058AbZKZVbK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 16:31:10 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] [compat-2.6] add split mwl8k
-Date: Thu, 26 Nov 2009 22:31:04 +0100
-Message-Id: <1259271064-11298-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1259271064-11298-1-git-send-email-hauke@hauke-m.de>
-References: <1259271064-11298-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:34704 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757628AbZKYPhE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Nov 2009 10:37:04 -0500
+Received: by iwn1 with SMTP id 1so1306126iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2009 07:37:10 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <200911250941.10929.holgerschurig@gmail.com>
+References: <200911250941.10929.holgerschurig@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 25 Nov 2009 07:36:50 -0800
+Message-ID: <43e72e890911250736l33afdf8ak1c806e5f5482f9da@mail.gmail.com>
+Subject: Re: PROPOSAL: cfg80211 antenna selection
+To: Holger Schurig <holgerschurig@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Nov 25, 2009 at 12:41 AM, Holger Schurig
+<holgerschurig@gmail.com> wrote:
+> Hi,
+>
+> I just wondered how we can do the antenna and diversity
+> selection.
+>
+> Assumption: 32 antennas are enought
+>
+>
+>
+> My current idea is this:
+>
+>  struct cfg80211_ops {
+> +int (*set_antennas)(struct wiphy *wiphy, struct net_device *dev,
+> +                    u32 rx_antenna_mask, u32 tx_antenna_mask);
+> +int (*get_antennas)(struct wiphy *wiphy, struct net_device *dev,
+> +                    u32 *rx_antenna_mask, u32 tx_antenna_mask);
+>  }
+>
+>  struct wiphy {
+> +u8 max_antennas;
+>  }
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- config.mk               |    7 +++++--
- scripts/admin-update.sh |    2 +-
- 2 files changed, 6 insertions(+), 3 deletions(-)
+While at it might as well make this some configurable struct which the
+drivers can add to the wiphy just as with the subbands. Also please
+add the max antenna gain in mbi and start seeing if we can collect
+this. On laptops with Atheros devices this would come from the EEPROM
+so the driver should be able to set this upon initialization (probably
+on hw init) and then cfg80211 can do more of the final computation to
+the max eirp used.
 
-diff --git a/config.mk b/config.mk
-index e9e85d7..3ee9e53 100644
---- a/config.mk
-+++ b/config.mk
-@@ -155,7 +155,7 @@ CONFIG_ATH9K=m
- # CONFIG_ATH9K_COMMON to an area that doesn't depend on PCI
- # as you could then have ath9k disabled but ath9k_htc enabled.
- CONFIG_ATH9K_COMMON=m
--# CONFIG_ATH9K_DEBUG=y
-+# CONFIG_ATH9K_DEBUGFS=y
- 
- 
- CONFIG_IWLWIFI=m
-@@ -272,7 +272,10 @@ endif
- CONFIG_ATMEL=m
- CONFIG_PCI_ATMEL=m
- 
--CONFIG_MWL8K=m
-+CONFIG_MWL8K=y
-+CONFIG_MWL8K_COMMON=m
-+CONFIG_MWL8687=m
-+CONFIG_MWL8366=m
- 
- endif
- ## end of PCI
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index f85dacf..a6965a3 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -75,13 +75,13 @@ DRIVERS="$DRIVERS drivers/net/wireless/libertas_tf"
- DRIVERS="$DRIVERS drivers/net/wireless/ipw2x00"
- DRIVERS="$DRIVERS drivers/net/wireless/wl12xx"
- DRIVERS="$DRIVERS drivers/net/wireless/iwmc3200wifi"
-+DRIVERS="$DRIVERS drivers/net/wireless/mwl8k"
- 
- # Drivers that belong the the wireless directory
- DRIVER_FILES="adm8211.c  adm8211.h"
- DRIVER_FILES="$DRIVER_FILES rndis_wlan.c"
- DRIVER_FILES="$DRIVER_FILES mac80211_hwsim.c"
- DRIVER_FILES="$DRIVER_FILES at76c50x-usb.c at76c50x-usb.h"
--DRIVER_FILES="$DRIVER_FILES mwl8k.c"
- 
- mkdir -p include/linux/ include/net/ include/linux/usb \
- 	include/linux/unaligned \
--- 
-1.6.3.3
+Not sure how to get this from other cards. Anyone know how about on
+b43, iwlwifi, rallink (I guess I can read the docs now :)) ?
 
+Not sure if allowing for ops for chainmask setting would also be
+helpeful here, that would need some review.
+
+There is still one missing part to do a real final max eirp
+computation on cfg80211 would be that of evaluation the CTL indexes if
+there could be a common ground found amongst devices but last I tried
+it seemed this was a pipe dream since other drivers do not expose any
+of this, people working on certain drivers may not be aware of how
+this is implemented on their devices yet or they may just use a
+relatively conservative value for all edges.
+
+Although a user should likely not be allowed to decrease the
+configured eirp we *should* be able to allow user to increase it
+through userspace as well to help with compliance to help adjust the
+max eirp as well.
+
+Finally, I theorize that if the antenna gain *was* indeed properly set
+and this information was available even at some other level (say BIOS
+and somehow we can extract that) it should technically then be
+possible to put in the right code to technically allow swapping
+wireless cards on laptops and perhaps then a solid argument can be
+made against the silly BIOS locks put in place out there. The only
+consideration which probably may not allow for this is calibration,
+unless of course legislation would be OK with users doing calibration
+themselves and if tools were available to the user.
+
+  Luis
