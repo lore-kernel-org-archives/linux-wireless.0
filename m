@@ -1,82 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-72-92-88-10.phlapa.fios.verizon.net ([72.92.88.10]:40203
-	"EHLO smtp.roinet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753674AbZKQRrb (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:51512 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758842AbZKYV3q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 12:47:31 -0500
-Message-ID: <4B02DFF4.1060509@roinet.com>
-Date: Tue, 17 Nov 2009 12:40:04 -0500
-From: David Acker <dacker@roinet.com>
+	Wed, 25 Nov 2009 16:29:46 -0500
+Received: by ey-out-2122.google.com with SMTP id 4so53557eyf.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2009 13:29:51 -0800 (PST)
+Message-ID: <4B0DA1CC.4020308@gmail.com>
+Date: Wed, 25 Nov 2009 22:29:48 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Michael Renzmann <mrenzmann@madwifi-project.org>,
-	madwifi-devel@lists.sourceforge.net,
-	madwifi-users@lists.sourceforge.net,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [Madwifi-devel] Survey: What are you using MadWifi for, and why?
-References: <2205.95.222.251.107.1258282369.squirrel@webmail.otaku42.de> <43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com>
-In-Reply-To: <43e72e890911161701p61d0db5ag25a1459f900b3ab7@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH v2 8/8] rt2x00: Properly request tx headroom for	alignment
+ operations.
+References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com> <1259012694-14869-2-git-send-email-gwingerde@gmail.com> <1259012694-14869-3-git-send-email-gwingerde@gmail.com> <1259012694-14869-4-git-send-email-gwingerde@gmail.com> <1259012694-14869-5-git-send-email-gwingerde@gmail.com> <1259012694-14869-6-git-send-email-gwingerde@gmail.com> <1259012694-14869-7-git-send-email-gwingerde@gmail.com> <1259012694-14869-8-git-send-email-gwingerde@gmail.com> <1259012694-14869-9-git-send-email-gwingerde@gmail.com> <20091125194746.GG7800@tuxdriver.com>
+In-Reply-To: <20091125194746.GG7800@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Sun, Nov 15, 2009 at 2:52 AM, Michael Renzmann
-> <mrenzmann@madwifi-project.org> wrote:
->> Hi all.
+On 11/25/09 20:47, John W. Linville wrote:
+> On Mon, Nov 23, 2009 at 10:44:54PM +0100, Gertjan van Wingerde wrote:
+>> Current rt2x00 drivers may result in a "ieee80211_tx_status: headroom too
+>> small" error message when a frame needs to be properly aligned before
+>> transmitting it.
+>> This is because the space needed to ensure proper alignment isn't
+>> requested from mac80211.
+>> Fix this by adding sufficient amount of alignment space to the amount
+>> of headroom requested for TX frames.
 >>
->> As you might have noticed, there currently is a discussion [1] going on
->> about the future directions of the MadWifi project, including a decision
->> how to deal with MadWifi driver. It turns out that there are pretty
->> contrary positions in this regard: some would like to see MadWifi being
->> dumped completely as soon as possible, others would prefer to continue
->> development and even implement new features.
->>
->> What do others think? It appears to me that we know too little about what
->> MadWifi is actually used for today and why. Thus I'd like to start a quick
->> survey.
->>
->> It would be great if you could answer some or - ideally - all of the
->> following questions:
->>
+>> Reported-by: David Ellingsworth <david@identd.dyndns.org>
+>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> 
+>   CC [M]  drivers/net/wireless/rt2x00/rt2x00dev.o
+> drivers/net/wireless/rt2x00/rt2x00dev.c: In function ‘rt2x00lib_probe_hw’:
+> drivers/net/wireless/rt2x00/rt2x00dev.c:690: error: ‘IEEE80211_TX_STATUS_HEADROOM’ undeclared (first use in this function)
+> drivers/net/wireless/rt2x00/rt2x00dev.c:690: error: (Each undeclared identifier is reported only once
+> drivers/net/wireless/rt2x00/rt2x00dev.c:690: error: for each function it appears in.)
+> 
+> Did I miss a patch?
 
-Personally, I would love to switch to ath5k but I am stuck using madwifi 
-due to a need for features that are missing on ath5k.  I think the 
-issues I have are pretty common for the wireless router community.  See 
-below for more details.
+Patch 7 of the series creates that define within mac80211. It is a prerequisite for this patch.
 
-
->>  1. What are you using MadWifi for?
-Wireless mesh on embedded systems.
-
->>
->>  2. Did you already evaluate ath5k/ath9k? If no, why not?
-I have monitored the list and saw significant issues with ath5k in AP 
-mode early on.  AP mode and WDS mode are the main modes we use.  We 
-rarely need client mode.  Also, folks seemed resistant to adding all the 
-features of madwifi to ath5k/mac80211.
-
->>
->>  3. In case you evaluated ath5k/ath9k but did not yet switch: what is the
->> reason for your decision, and what is required before you could switch?
-ath5k has been missing features that madwifi has and was reported as 
-very unstable in AP mode in the past.  In some platforms I must use 
-older kernels (2.6.18) due to limited kernel support from an embedded 
-hardware vendor.  In some setups I need DFS support.  I need multiple 
-SSID support with each SSID supporting different crypto settings and I 
-need hardware crypto support.  These were all issues at different times. 
-  Some of them may be resolved at this point but they all existed (or 
-seemed to exist to me) at one point and convinced me to avoid working on 
-switching from madwifi to ath5k.
-
-There was a thread not too long ago ( 
-http://marc.info/?l=linux-wireless&m=125152150203308&w=2 ) that 
-discussed some features that are in madwifi but not in ath5k.  I would 
-love to see dynamic and static turbo modes supported in ath5k.  Half and 
-quarter rates are required to use certain channels on devices from 
-Ubiquiti (XR7 and XR9 for example).  Fast frames and hardware 
-compression can also improve performance in certain situations.
-
-Also, support for WiSOCs like the PicoStation and Bullet from Ubiquiti 
-would be required to switch from madwifi on those platforms.
-
--ack
+---
+Gertjan.
