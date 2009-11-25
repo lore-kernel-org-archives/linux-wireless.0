@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:45622 "EHLO bar.sig21.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752790AbZKLPZ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 10:25:59 -0500
-Date: Thu, 12 Nov 2009 16:26:00 +0100
-From: Johannes Stezenbach <js@sig21.net>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: ath9k: DMA failed to stop in 10 ms
-Message-ID: <20091112152600.GA7562@sig21.net>
+Received: from ey-out-2122.google.com ([74.125.78.25]:24664 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965000AbZKYXtj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Nov 2009 18:49:39 -0500
+Received: by ey-out-2122.google.com with SMTP id 4so80744eyf.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2009 15:49:44 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH] rt2x00: Fix padding bug on L2PAD devices.
+Date: Thu, 26 Nov 2009 00:49:42 +0100
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+References: <1259100692-23315-1-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1259100692-23315-1-git-send-email-gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200911260049.42577.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tuesday 24 November 2009, Gertjan van Wingerde wrote:
+> While reviewing the l2pad function to align both the header and the payload
+> on a DMA-capable boundary a bug was discovered where the payload would not
+> be properly aligned. The header_align value was used where the payload_align
+> value should have been used.
+> 
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-I have a Samsung N130 netbook which has
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-  phy0: Atheros AR9285 MAC/BB Rev:2 AR5133 RF Rev:e0: mem=0xf80e0000, irq=16
-
-and I run Debain unstable with a linux-2.6.32-rc6-166-g799dd75 kernel.
-
-
-When running kismet I get a lot of
-
-[ 2030.531809] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
-[ 2030.731944] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
-[ 2030.968118] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
-[ 2031.169580] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
-[ 2031.397604] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
-[ 2031.653803] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
-[ 2031.883503] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
-[ 2032.092719] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
-[ 2032.332719] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
-[ 2032.539756] ath9k: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x00000020
-
-This is 100% reproducable.  However it seems kismet is still working
-(but probably missing some frames due to the issue).
-
-
-Connecting to and AP via WPA2 works (but I didn't test much yet), but
-when I terminate wpa_supplicant I also get one of the "DMA failed to stop"
-messages (same AR_CR and AR_DIAG_SW).
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00queue.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> index 32d4aea..239afc7 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> @@ -214,7 +214,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
+>  		skb_push(skb, header_align);
+>  		memmove(skb->data, skb->data + header_align, header_length);
+>  		memmove(skb->data + header_length + l2pad,
+> -			skb->data + header_length + l2pad + header_align,
+> +			skb->data + header_length + l2pad + payload_align,
+>  			frame_length - header_length);
+>  		skbdesc->flags |= SKBDESC_L2_PADDED;
+>  	}
 
 
-Is it safe to assume that the message is caused by an invalid
-RX DMA descriptor?  Or hat else could cause DMA to fail to complete?
-
-
-Thanks
-Johannes
