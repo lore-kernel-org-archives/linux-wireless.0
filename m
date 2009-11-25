@@ -1,69 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:28709 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755506AbZKBPcF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 10:32:05 -0500
-Subject: Re: [PATCH 14/15] iwlwifi: add SM PS support for 6x50 series
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Received: from stinky.trash.net ([213.144.137.162]:32835 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751539AbZKYQmt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Nov 2009 11:42:49 -0500
+Message-ID: <4B0D5E8D.2070408@trash.net>
+Date: Wed, 25 Nov 2009 17:42:53 +0100
+From: Patrick McHardy <kaber@trash.net>
+MIME-Version: 1.0
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1257017010.3555.139.camel@johannes.local>
-References: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
-	 <1256938578-9638-15-git-send-email-reinette.chatre@intel.com>
-	 <1256968411.3555.77.camel@johannes.local>
-	 <1257011058.8387.14.camel@wwguy-ubuntu>
-	 <1257017010.3555.139.camel@johannes.local>
-Content-Type: text/plain
-Date: Mon, 02 Nov 2009 07:29:33 -0800
-Message-Id: <1257175773.8387.22.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+CC: linux-wireless@vger.kernel.org
+Subject: Re: RFC: mac80211: add ethtool support
+References: <4B0D58EA.8060304@trash.net>	 <1259166692.32372.13.camel@johannes.local>  <4B0D5C8F.3040005@trash.net> <1259167010.32372.14.camel@johannes.local>
+In-Reply-To: <1259167010.32372.14.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2009-10-31 at 12:23 -0700, Johannes Berg wrote:
-> On Sat, 2009-10-31 at 10:44 -0700, Guy, Wey-Yi wrote:
+Johannes Berg wrote:
+> On Wed, 2009-11-25 at 17:34 +0100, Patrick McHardy wrote:
+>> Johannes Berg wrote:
+>>> On Wed, 2009-11-25 at 17:18 +0100, Patrick McHardy wrote:
+>>>>     mac80211: add ethtool support
+>>>>     
+>>>>     Add ethtool support and add a drvname field to struct ieee80211_ops, which is
+>>>>     used for ethtool driver information. This is useful with multiple different
+>>>>     wireless cards to find out which device is using which driver.
+>>>>     
+>>> I thought we _had_ ethtool support via cfg80211?!
+>> Mhh good point :) For some reason it didn't show any information, but
+>> that might have been a mistake on my part. I'll give it another shot :)
 > 
-> > > >  	ht_info->cap |= IEEE80211_HT_CAP_SGI_20;
-> > > > -	ht_info->cap |= (IEEE80211_HT_CAP_SM_PS &
-> > > > -			     (WLAN_HT_CAP_SM_PS_DISABLED << 2));
-> > > > +	if (priv->cfg->support_sm_ps)
-> > > > +		ht_info->cap |= (IEEE80211_HT_CAP_SM_PS &
-> > > > +				     (WLAN_HT_CAP_SM_PS_DYNAMIC << 2));
-> > > > +	else
-> > > > +		ht_info->cap |= (IEEE80211_HT_CAP_SM_PS &
-> > > > +				     (WLAN_HT_CAP_SM_PS_DISABLED << 2));
-> > > 
-> > > here we always and unconditionally advertise dynamic SM-PS mode?
-> > 
-> > I am confuse, it is based on "priv->cfg->support_sm_ps", so it is not
-> > always dynamic SM-PS mode.
-> 
-> Right, sorry -- but here it _only_ depends on "support_sm_ps", whereas
-> 
-> > > > +	if (priv->cfg->support_sm_ps) {
-> > > > +		/* # Rx chains when idling and maybe trying to save power */
-> > > > +		switch (priv->current_ht_config.sm_ps) {
-> 
-> Here it also depends on current_ht_config.sm_ps, which is not very
-> useful. Using the AP setting is wrong, and above, assuming
-> "support_sm_ps" [1] is true, this should just always fall into the
-> dynamic case so the value "current_ht_config.sm_ps" isn't useful and can
-> imho be removed.
+> It probably won't show the driver name because we haven't pushed that
+> through in any way?
 
-Right, I already fix it and not reference to AP's setting. Thanks
+Its actually showing:
 
-> 
-> [1] which btw I'd have called "use_sm_ps" since all hardware supports it
-> afaik
+# ethtool -i wlan0
+Cannot get driver information: Operation not supported
 
-That is a good point. On the other hand, I think it will make more sense
-shoice the sm_ps mode in priv->conf instead of just a boolean value of
-"use" or "not" use.
-
-I will submit another patch to fix this.
- 
-
+which shouldn't happen, since the callback is defined. I'll
+have a closer look at this.
