@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:31482 "EHLO mga02.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:13197 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932204AbZKMT4n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 14:56:43 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Ben Cahill <ben.m.cahill@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 07/16] iwl3945: Reset saved POWER_TABLE_CMD in "up"
-Date: Fri, 13 Nov 2009 11:56:29 -0800
-Message-Id: <1258142198-3223-8-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
-References: <1258142198-3223-1-git-send-email-reinette.chatre@intel.com>
+	id S1752069AbZKYHFw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Nov 2009 02:05:52 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 24 Nov 2009 23:05:58 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [RFC PATCH] mac80211: Send null data frame after disabling power save in Tx path.
+Date: Wed, 25 Nov 2009 12:35:54 +0530
+Message-ID: <1259132754-18164-1-git-send-email-vnatarajan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
+For drivers setting IEEE80211_HW_PS_NULLFUNC_STACK, a null data frame
+with PM bit off has to be sent before sending normal data frames.
+If it is done in ps_disable_work, the actual data frame would be
+queued first before this work is executed and hence null data frame
+will be queued later. And also, this null data frame has to be sent
+only after clearing CONF_PS.
+Hence, directly clearing CONF_PS and sending null data frame in
+ieee80211_xmit seems to function properly.
 
-Power-saving logic will not re-issue a POWER_TABLE_CMD if a new command
-matches the prior one.  This can be bad if we re-start the device due to
-e.g. uCode error; the new POWER_TABLE_CMD (required to invoke power-saving)
-may match the prior POWER_TABLE_CMD issued before the uCode error.
-
-Ensure the POWER_TABLE_CMD is sent to device when uCode is up.
-
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ net/mac80211/tx.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 1e05c91..4325dbf 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2494,7 +2494,7 @@ static void iwl3945_alive_start(struct iwl_priv *priv)
- 	priv->active_rate = priv->rates_mask;
- 	priv->active_rate_basic = priv->rates_mask & IWL_BASIC_RATES_MASK;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 943def2..51f537c 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1433,10 +1433,10 @@ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
  
--	iwl_power_update_mode(priv, false);
-+	iwl_power_update_mode(priv, true);
+ 	if (need_dynamic_ps(local)) {
+ 		if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+-			ieee80211_stop_queues_by_reason(&local->hw,
+-					IEEE80211_QUEUE_STOP_REASON_PS);
+-			ieee80211_queue_work(&local->hw,
+-					&local->dynamic_ps_disable_work);
++			local->hw.conf.flags &= ~IEEE80211_CONF_PS;
++			ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++			if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)
++				ieee80211_send_nullfunc(local, sdata, 0);
+ 		}
  
- 	if (iwl_is_associated(priv)) {
- 		struct iwl3945_rxon_cmd *active_rxon =
+ 		mod_timer(&local->dynamic_ps_timer, jiffies +
 -- 
-1.5.6.3
+1.6.0.4
 
