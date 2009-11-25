@@ -1,67 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52292 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35729 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759826AbZKFVAG (ORCPT
+	with ESMTP id S934508AbZKYOPe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 16:00:06 -0500
-Date: Fri, 6 Nov 2009 15:57:25 -0500
+	Wed, 25 Nov 2009 09:15:34 -0500
+Date: Wed, 25 Nov 2009 09:06:17 -0500
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 15/28] mwl8k: change pci id table driver data to a
-	structure pointer
-Message-ID: <20091106205724.GJ2782@tuxdriver.com>
-References: <20091022182046.GQ1583@mail.wantstofly.org>
+To: Holger Schurig <holgerschurig@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH 1/5] libertas: rename mesh.c into persistcfg.c
+Message-ID: <20091125140617.GD7800@tuxdriver.com>
+References: <200911251308.55837.holgerschurig@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091022182046.GQ1583@mail.wantstofly.org>
+In-Reply-To: <200911251308.55837.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 22, 2009 at 08:20:47PM +0200, Lennert Buytenhek wrote:
-> To prepare for adding support for more device types, introduce a
-> new structure, mwl8k_device_info, where per-device information can
-> be stored, and change the pci id table driver data from an integer
-> indicating only the part number to a pointer to a mwl8k_device_info
-> structure.
+On Wed, Nov 25, 2009 at 01:08:55PM +0100, Holger Schurig wrote:
+> mesh.c will be the file where we concentrate all mesh-related
+> code. This allows us to either add a KConfig entry for mesh and
+> makes matters easier for the cfg80211 transition.
 > 
-> Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+> Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
 > ---
->  drivers/net/wireless/mwl8k.c |   47 ++++++++++++++++++++++++++---------------
->  1 files changed, 30 insertions(+), 17 deletions(-)
+> 
+> This is the equivalent of "git mv persistcfg.c mesh.c" and fixing up the Makefile
+> 
+>  drivers/net/wireless/libertas/Makefile     |    2 +-
+>  drivers/net/wireless/libertas/mesh.c       |  453 ++++++++++++++++++++++++++++
+>  drivers/net/wireless/libertas/persistcfg.c |  453 ----------------------------
+>  3 files changed, 454 insertions(+), 454 deletions(-)
+>  create mode 100644 drivers/net/wireless/libertas/mesh.c
+>  delete mode 100644 drivers/net/wireless/libertas/persistcfg.c
 
-> @@ -2940,6 +2936,22 @@ static void mwl8k_finalize_join_worker(struct work_struct *work)
->  	priv->beacon_skb = NULL;
->  }
->  
-> +static struct mwl8k_device_info di_8687 = {
-> +	.part_num	= 8687,
-> +};
-> +
-> +static DEFINE_PCI_DEVICE_TABLE(mwl8k_pci_id_table) = {
-> +	{
-> +		PCI_VDEVICE(MARVELL, 0x2a2b),
-> +		.driver_data = (unsigned long)&di_8687,
-> +	}, {
-> +		PCI_VDEVICE(MARVELL, 0x2a30),
-> +		.driver_data = (unsigned long)&di_8687,
-> +	}, {
-> +	},
-> +};
-> +MODULE_DEVICE_TABLE(pci, mwl8k_pci_id_table);
-> +
->  static int __devinit mwl8k_probe(struct pci_dev *pdev,
->  				 const struct pci_device_id *id)
->  {
+Your subject is confusing, it seems backwards.
 
-My only complaint here is that using a pointer for
-driver_data make it difficult and potentially dangerous to use
-/sys/bus/pci/drivers/.../new_id to add a PCI ID to the device.
-
-Using an integer instead makes that a bit safer and easier to use.
-drivers/net/3c59x.c provides a decent example.
-
-John
 -- 
 John W. Linville		Someday the world will need a hero, and you
 linville@tuxdriver.com			might be all we have.  Be ready.
