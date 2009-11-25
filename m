@@ -1,51 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:42088 "EHLO mga03.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:58268 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754324AbZKTUFL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 15:05:11 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 19/19 w-t only] iwlwifi: no need to set use_rts_for_ht for BG device
-Date: Fri, 20 Nov 2009 12:05:10 -0800
-Message-Id: <1258747510-21233-20-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
-References: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
+	id S1759191AbZKYVix (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Nov 2009 16:38:53 -0500
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2009 13:39:00 -0800
+Date: Wed, 25 Nov 2009 13:38:57 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Gabor Juhos <juhosg@openwrt.org>
+CC: John Linville <linville@tuxdriver.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [PATCH] ath9k: enable 2GHz band only if the
+	device supports it
+Message-ID: <20091125213857.GM5006@tux>
+References: <1259180955-2145-1-git-send-email-juhosg@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1259180955-2145-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+On Wed, Nov 25, 2009 at 12:29:15PM -0800, Gabor Juhos wrote:
+> Currently, the 2GHz band is enabled unconditionally, even if the device
+> does not support it.
 
-The device configuration being changed here only affects devices that
-cannot to N mode. Setting this HT only value is thus not needed.
+This is true, but we don't have any 11n 5 GHz only devices,
+The patch is fine too though but it'd be better if you fail
+with a proper ath_print ATH_DBG_FATAL message if neither band
+has been marked as supported.
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
-
-This seems to be a merge problem introduced by iwlwifi's usage of the
-iwl_cfg structure ... when these structures gets too long and they have too
-many duplicate initializations there is trouble for correct patch merging.
-
-The problem does not exist in wireless-next-2.6, but does in
-wireless-testing. This patch is thus only for wireless-testing.
-
- drivers/net/wireless/iwlwifi/iwl-1000.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 325b244..59f2332 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -198,7 +198,6 @@ struct iwl_cfg iwl1000_bg_cfg = {
- 	.shadow_ram_support = false,
- 	.ht_greenfield_support = true,
- 	.led_compensation = 51,
--	.use_rts_for_ht = true, /* use rts/cts protection */
- 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
- 	.support_ct_kill_exit = true,
- };
--- 
-1.5.6.3
-
+  Luis
