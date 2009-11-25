@@ -1,61 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:57478 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752011AbZKCXWr (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35229 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759727AbZKYUAh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 18:22:47 -0500
-Received: by yxe17 with SMTP id 17so5897652yxe.33
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2009 15:22:52 -0800 (PST)
-Message-ID: <4AF0BB45.5000402@lwfinger.net>
-Date: Tue, 03 Nov 2009 17:22:45 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 25 Nov 2009 15:00:37 -0500
+Date: Wed, 25 Nov 2009 14:47:46 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH v2 8/8] rt2x00: Properly request tx headroom for
+	alignment operations.
+Message-ID: <20091125194746.GG7800@tuxdriver.com>
+References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com> <1259012694-14869-2-git-send-email-gwingerde@gmail.com> <1259012694-14869-3-git-send-email-gwingerde@gmail.com> <1259012694-14869-4-git-send-email-gwingerde@gmail.com> <1259012694-14869-5-git-send-email-gwingerde@gmail.com> <1259012694-14869-6-git-send-email-gwingerde@gmail.com> <1259012694-14869-7-git-send-email-gwingerde@gmail.com> <1259012694-14869-8-git-send-email-gwingerde@gmail.com> <1259012694-14869-9-git-send-email-gwingerde@gmail.com>
 MIME-Version: 1.0
-To: Richard Farina <sidhayn@gmail.com>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Possible fix for rtl8187: kernel oops when leds enabled
-References: <4AE5BD6C.2050303@gmail.com> <4AE5C55B.5070309@lwfinger.net> <4AE5CDCB.8090400@gmail.com>
-In-Reply-To: <4AE5CDCB.8090400@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1259012694-14869-9-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rick,
+On Mon, Nov 23, 2009 at 10:44:54PM +0100, Gertjan van Wingerde wrote:
+> Current rt2x00 drivers may result in a "ieee80211_tx_status: headroom too
+> small" error message when a frame needs to be properly aligned before
+> transmitting it.
+> This is because the space needed to ensure proper alignment isn't
+> requested from mac80211.
+> Fix this by adding sufficient amount of alignment space to the amount
+> of headroom requested for TX frames.
+> 
+> Reported-by: David Ellingsworth <david@identd.dyndns.org>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Does this patch fix your problem? I tried to bisect this problem as it
-looked like a regression; however, the problem was sometimes a little
-flakey. On one boot of a given kernel, it might run for 3-400 cycles
-without failing, then fail immediately after rebooting. I suspect that
-the random contents of some memory location would control that.
+  CC [M]  drivers/net/wireless/rt2x00/rt2x00dev.o
+drivers/net/wireless/rt2x00/rt2x00dev.c: In function ‘rt2x00lib_probe_hw’:
+drivers/net/wireless/rt2x00/rt2x00dev.c:690: error: ‘IEEE80211_TX_STATUS_HEADROOM’ undeclared (first use in this function)
+drivers/net/wireless/rt2x00/rt2x00dev.c:690: error: (Each undeclared identifier is reported only once
+drivers/net/wireless/rt2x00/rt2x00dev.c:690: error: for each function it appears in.)
 
-This patch was inspired by the code in p54usb, which does not have the
-problem.
+Did I miss a patch?
 
-
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_leds.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
-@@ -210,10 +210,10 @@ void rtl8187_leds_exit(struct ieee80211_
-
- 	/* turn the LED off before exiting */
- 	ieee80211_queue_delayed_work(dev, &priv->led_off, 0);
--	cancel_delayed_work_sync(&priv->led_off);
--	cancel_delayed_work_sync(&priv->led_on);
- 	rtl8187_unregister_led(&priv->led_rx);
- 	rtl8187_unregister_led(&priv->led_tx);
-+	cancel_delayed_work_sync(&priv->led_off);
-+	cancel_delayed_work_sync(&priv->led_on);
- }
- #endif /* def CONFIG_RTL8187_LED */
-
-Thanks for testing,
-
-Larry
-
-
-
-
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
