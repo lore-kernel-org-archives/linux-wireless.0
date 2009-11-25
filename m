@@ -1,86 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56122 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752793AbZKGUTC (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36425 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935123AbZKYWAm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 15:19:02 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	mcgrof@gmail.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 00/29] ath: virtual wiphy updates / add ath9k_common
-Date: Sat,  7 Nov 2009 15:18:37 -0500
-Message-Id: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 25 Nov 2009 17:00:42 -0500
+Date: Wed, 25 Nov 2009 16:48:11 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH v2 8/8] rt2x00: Properly request tx headroom for
+	alignment operations.
+Message-ID: <20091125214811.GA22715@tuxdriver.com>
+References: <1259012694-14869-2-git-send-email-gwingerde@gmail.com> <1259012694-14869-3-git-send-email-gwingerde@gmail.com> <1259012694-14869-4-git-send-email-gwingerde@gmail.com> <1259012694-14869-5-git-send-email-gwingerde@gmail.com> <1259012694-14869-6-git-send-email-gwingerde@gmail.com> <1259012694-14869-7-git-send-email-gwingerde@gmail.com> <1259012694-14869-8-git-send-email-gwingerde@gmail.com> <1259012694-14869-9-git-send-email-gwingerde@gmail.com> <20091125194746.GG7800@tuxdriver.com> <4B0DA1CC.4020308@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4B0DA1CC.4020308@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The first set of patches are the virtual wiphy updates which I had
-sent out as RFTs, I've not tested them. The others are changes to
-ath9k to add a new module ath9k_common to be shared between ath9k
-and ath9k_htc. For now it only has some common RX helpers but will
-grow as I see more and more being shared.
+On Wed, Nov 25, 2009 at 10:29:48PM +0100, Gertjan van Wingerde wrote:
+> On 11/25/09 20:47, John W. Linville wrote:
+> > On Mon, Nov 23, 2009 at 10:44:54PM +0100, Gertjan van Wingerde wrote:
+> >> Current rt2x00 drivers may result in a "ieee80211_tx_status: headroom too
+> >> small" error message when a frame needs to be properly aligned before
+> >> transmitting it.
+> >> This is because the space needed to ensure proper alignment isn't
+> >> requested from mac80211.
+> >> Fix this by adding sufficient amount of alignment space to the amount
+> >> of headroom requested for TX frames.
+> >>
+> >> Reported-by: David Ellingsworth <david@identd.dyndns.org>
+> >> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> > 
+> >   CC [M]  drivers/net/wireless/rt2x00/rt2x00dev.o
+> > drivers/net/wireless/rt2x00/rt2x00dev.c: In function ‘rt2x00lib_probe_hw’:
+> > drivers/net/wireless/rt2x00/rt2x00dev.c:690: error: ‘IEEE80211_TX_STATUS_HEADROOM’ undeclared (first use in this function)
+> > drivers/net/wireless/rt2x00/rt2x00dev.c:690: error: (Each undeclared identifier is reported only once
+> > drivers/net/wireless/rt2x00/rt2x00dev.c:690: error: for each function it appears in.)
+> > 
+> > Did I miss a patch?
+> 
+> Patch 7 of the series creates that define within mac80211. It is a prerequisite for this patch.
 
-I've tested these changes with ath5k, ath9k and ar9170 on the ath9k_htc
-driver. ath9k_htc now scans with this common shared code.
+OK, thanks -- somehow it didn't make it out of my mailbox in into
+the mbox file I fed to git...
 
-If you'd like the all in one patch you can grab it from here:
-
-http://bombadil.infradead.org/~mcgrof/patches/ath/2009/11/all-pending-2009-11-07.patch
-
-The ath9k_htc git tree has a branch called rx-rework which you can check
-out and use if you apply the patch above. Next on the agenda will be to add
-some initial TX support to ath9k_htc. More common stuff will be moved
-into ath9k_common as we move along.
-
-Luis R. Rodriguez (29):
-  ath9k: fix listening to idle requests
-  ath9k: update hw configuration for virtual wiphys
-  ath9k: simpify RX by calling ath_get_virt_hw() once
-  ath9k: use the passed ieee80211_hw on ath_rx_prepare()
-  ath9k: pass the ieee80211_hw on radio enable/disable
-  ath9k: use correct hw for tx aggregation TX completion
-  ath9k: use the right hw on ath_tx_setup_buffer() for HT
-  ath9k: handle low buffer space for virtual wiphys
-  ath9k: do not pass the entire descriptor to ath_rx_prepare()
-  ath9k_hw: move ath_extend_tsf() to hw code to share as
-    ath9k_hw_extend_tsf()
-  ath9k: move struct ath_ani to common area
-  ath9k: use the ieee80211_hw to get to an sband on ath_rx_prepare()
-  ath9k: move RX check code into helper ath9k_rx_accept()
-  ath9k: remove temp variable ratecode from ath_rx_prepare()
-  ath9k: move rate descriptor reading into a helper
-  ath9k: move qual processing into a helper
-  ath9k: move rssi processing into a helper
-  ath9k: avoid the copy skb->cb on every RX'd skb
-  ath9k: move the rx_stats->rs_datalen check to ath9k_rx_accept()
-  ath: move the rx bufsize to common to share with ath5k/ath9k
-  ath5k: remove double cache alignment, ath_rxbuf_alloc() already does
-    it
-  ath9k: move the max rx buffer size check to ath9k_rx_accept()
-  ath9k: rename ath_rx_prepare() to ath9k_rx_skb_preprocess()
-  ath9k: move driver keymap, keymax and splitmic to common
-  ath5k: use the common->keymap
-  ath9k: move RX skb post processing to a helper
-  ath9k_common: add new module to share 802.11n driver helpers
-  ath9k_common: remove ath9k_compute_qual()
-  ath9k_common: clarify and correct jumbogram processing
-
- drivers/net/wireless/ath/ath.h           |   28 +++
- drivers/net/wireless/ath/ath5k/base.c    |   32 ++-
- drivers/net/wireless/ath/ath5k/base.h    |    2 -
- drivers/net/wireless/ath/ath9k/Kconfig   |    3 +
- drivers/net/wireless/ath/ath9k/Makefile  |    3 +
- drivers/net/wireless/ath/ath9k/ath9k.h   |  130 ++-----------
- drivers/net/wireless/ath/ath9k/common.c  |  285 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/common.h  |  123 ++++++++++++
- drivers/net/wireless/ath/ath9k/hw.c      |   15 ++
- drivers/net/wireless/ath/ath9k/hw.h      |    1 +
- drivers/net/wireless/ath/ath9k/main.c    |  243 +++++++++++++-----------
- drivers/net/wireless/ath/ath9k/rc.h      |    2 +
- drivers/net/wireless/ath/ath9k/recv.c    |  313 +++++-------------------------
- drivers/net/wireless/ath/ath9k/virtual.c |   79 +++++++-
- drivers/net/wireless/ath/ath9k/xmit.c    |   19 ++-
- 15 files changed, 766 insertions(+), 512 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/common.c
- create mode 100644 drivers/net/wireless/ath/ath9k/common.h
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
