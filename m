@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:44111 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751682AbZKCXix (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:60066 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935117AbZKYV4U convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 18:38:53 -0500
-Received: by bwz27 with SMTP id 27so8234291bwz.21
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Nov 2009 15:38:57 -0800 (PST)
+	Wed, 25 Nov 2009 16:56:20 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] airo: Fix integer overflow warning
+Date: Wed, 25 Nov 2009 22:55:11 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-Date: Tue, 3 Nov 2009 18:38:57 -0500
-Message-ID: <cb0375e10911031538n62fe7473x4dd41329b9264b5c@mail.gmail.com>
-Subject: iwlwifi connection troubles, maybe aggregation related
-From: Andrew Lutomirski <luto@mit.edu>
-To: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200911252255.11570.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all-
+On BigEndian gcc complains:
 
-My laptop (Intel 5350) has trouble using the wireless networks here.
-I'm at MIT, which has a bunch of Cisco 1250 AP's (dual-band, MIMO,
-etc).  Running Windows, everything works perfectly.  On Linux
-(2.6.31-rc5, but I've seen problems with other, older kernels as
-well), it sometimes works, but I frequently find the network almost
-completely unusable.  I can associate and ping just fine, but, as soon
-as I try to send any significant amount of data, I can no longer
-transmit.  I can still receive both broadcast and unicast frames, but
-the network doesn't see anything I send.  An older laptop (presumably
-with 4965,
+drivers/net/wireless/airo.c: In function ‘sniffing_mode’:
+drivers/net/wireless/airo.c:4809: warning: integer overflow in expression
 
-This seems to be correlated with a line like:
+Fix this by doing the bitwise AND on the host-endian value.
 
-iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:21:d8:49:4a:52 tid = 0
+---
 
-appearing in dmesg.
+I don't know why GCC warns, however. The original code looks OK to me, too.
 
-Running "iw dev wlan0 disconnect" will make the connection start
-working until I try to send data again (presumably because either NM
-or wpa_supplicant will reassociate).
 
-Turning on or off power management and fiddling with
-no_sleep_autoadjust makes no difference.  Setting tx_agg_tid_enable to
-zero in debugfs while the connection was working seemed to make it a
-little more reliable (it lasted long enough to do "git pull" but not
-much longer).
+Index: wireless-testing/drivers/net/wireless/airo.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/airo.c	2009-11-01 13:58:47.000000000 +0100
++++ wireless-testing/drivers/net/wireless/airo.c	2009-11-25 22:49:18.000000000 +0100
+@@ -4806,7 +4806,7 @@ static int airo_config_commit(struct net
+ 
+ static inline int sniffing_mode(struct airo_info *ai)
+ {
+-	return le16_to_cpu(ai->config.rmode & RXMODE_MASK) >=
++	return (le16_to_cpu(ai->config.rmode) & le16_to_cpu(RXMODE_MASK)) >=
+ 		le16_to_cpu(RXMODE_RFMON);
+ }
+ 
 
-After running "iw dev wlan0 disconnect" a few times, I start to get
-errors like this:
-
-[18078.209635] iwlagn 0000:03:00.0: SENSITIVITY_CMD failed
-[18078.313461] iwlagn 0000:03:00.0: No space for Tx
-[18078.313467] iwlagn 0000:03:00.0: Error sending SENSITIVITY_CMD:
-enqueue_hcmd failed: -28
-[18078.313470] iwlagn 0000:03:00.0: SENSITIVITY_CMD failed
-[18078.522409] iwlagn 0000:03:00.0: No space for Tx
-[18078.522414] iwlagn 0000:03:00.0: Error sending SENSITIVITY_CMD:
-enqueue_hcmd failed: -28
-
-The driver doesn't recover until I do "echo 1 >
-/sys/kernel/debug/ieee80211/phy0/reset"  Oddly enough, after resetting
-just now, I couldn't trigger the failure again, even though it was
-100% reproducible before resetting.
-
-Thanks,
-Andy
+-- 
+Greetings, Michael.
