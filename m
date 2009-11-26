@@ -1,46 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:56074 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755007AbZKMIze (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:54629 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759502AbZKZJpt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Nov 2009 03:55:34 -0500
-Received: by bwz27 with SMTP id 27so3156106bwz.21
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Nov 2009 00:55:37 -0800 (PST)
+	Thu, 26 Nov 2009 04:45:49 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 6/6] libertas: make mesh configurable
+Date: Thu, 26 Nov 2009 10:45:42 +0100
 MIME-Version: 1.0
-In-Reply-To: <1258097485.3899.76.camel@johannes.local>
-References: <f74418680911120331w1ea31a68y56440dc0fbd253bb@mail.gmail.com>
-	 <40101cc30911120618m5d9acd34pf6aa9ec89c6c40b8@mail.gmail.com>
-	 <20091112154440.GD19349@tux>
-	 <43e72e890911120749n72360f0btfb058ab3a521eabb@mail.gmail.com>
-	 <40101cc30911121118h17db32a1y61edac1a4c0aec24@mail.gmail.com>
-	 <1258054304.3899.36.camel@johannes.local>
-	 <40101cc30911121418h4109d62bv763bed2036446901@mail.gmail.com>
-	 <1258097485.3899.76.camel@johannes.local>
-Date: Fri, 13 Nov 2009 09:55:37 +0100
-Message-ID: <f74418680911130055o7d8fa94brc3fd7a0c315bb7b0@mail.gmail.com>
-Subject: Re: [ath9k-devel] Possible memory leak in ath9k monitor mode
-	injection
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: rodriguez@atheros.com, technoboy85@gmail.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200911261045.42446.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/11/13 Johannes Berg <johannes@sipsolutions.net>:
-> On Thu, 2009-11-12 at 23:18 +0100, Matteo Croce wrote:
->
->> kmalloc-64 is definitely getting fat
->
-> Is it the same with ath5k?
->
-> I don't see any allocations like that in mac80211.
->
-> johannes
->
+Mostly for the embedded people that know beforehand that they don't need
+MESH at all and want to save some bytes, but also helpful for the upcoming
+cfg80211 transition.
 
-Yes, I tested ath5k/mac80211 and ath9k/mac80211 and both show the same problem
-whereas madwifi/net80211, tested with the same module, has not memory leak.
+   text    data     bss     dec     hex filename
+ 114264    2308     140  116712   1c7e8 libertas.ko   with mesh
+ 105026    2000     140  107166   1a29e libertas.ko   without mesh
+ --------------------------------------------------
+  -9238    -308           -9546
 
-Lorenzo
+
+Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
+
+---
+
+I added dummy defines in mesh.h so that the code doesn't get sprinkled with
+"#ifdef CONFIG_LIBERTAS_MESH".  As wext.c gets deleted by the upcoming
+cfg80211 patch anyway, I felt free to add #ifdef's there.
+
+Dan said that he converted mesh to new-style commands. Once this patch
+lands in mainline, the #ifdef in cmd.c also goes away.
+
+
+--- linux-wl.orig/drivers/net/wireless/libertas/Kconfig
++++ linux-wl/drivers/net/wireless/libertas/Kconfig
+@@ -37,3 +37,10 @@ config LIBERTAS_DEBUG
+ 	depends on LIBERTAS
+ 	---help---
+ 	  Debugging support.
++
++config LIBERTAS_MESH
++	bool "Enable mesh support"
++	depends on LIBERTAS && WIRELESS_EXT
++	select WEXT_SPY
++	help
++	  This enables Libertas' MESH support, used by e.g. the OLPC people.
+--- linux-wl.orig/drivers/net/wireless/libertas/Makefile
++++ linux-wl/drivers/net/wireless/libertas/Makefile
+@@ -5,11 +5,11 @@ libertas-y += cmdresp.o
+ libertas-y += debugfs.o
+ libertas-y += ethtool.o
+ libertas-y += main.o
+-libertas-y += mesh.o
+ libertas-y += rx.o
+ libertas-y += scan.o
+ libertas-y += tx.o
+ libertas-y += wext.o
++libertas-$(CONFIG_LIBERTAS_MESH) += mesh.o
+ 
+ usb8xxx-objs += if_usb.o
+ libertas_cs-objs += if_cs.o
+--- linux-wl.orig/drivers/net/wireless/libertas/mesh.h
++++ linux-wl/drivers/net/wireless/libertas/mesh.h
+@@ -9,6 +9,8 @@
+ #include <net/lib80211.h>
+ 
+ 
++#ifdef CONFIG_LIBERTAS_MESH
++
+ /* Mesh statistics */
+ struct lbs_mesh_stats {
+ 	u32	fwd_bcast_cnt;		/* Fwd: Broadcast counter */
+@@ -89,5 +91,20 @@ void lbs_mesh_ethtool_get_strings(struct
+ #define lbs_mesh_open(priv) (priv->mesh_open)
+ #define lbs_mesh_connected(priv) (priv->mesh_connect_status==LBS_CONNECTED)
+ 
++#else
++
++#define lbs_init_mesh(priv)
++#define lbs_deinit_mesh(priv)
++#define lbs_add_mesh(priv)
++#define lbs_remove_mesh(priv)
++#define lbs_mesh_set_dev(priv, dev, rxpd) (dev)
++#define lbs_mesh_set_txpd(priv, dev, txpd)
++#define lbs_mesh_config(priv, enable, chan)
++#define lbs_mesh_open(priv) (0)
++#define lbs_mesh_connected(priv) (0)
++
++#endif
++
++
+ 
+ #endif
+--- linux-wl.orig/drivers/net/wireless/libertas/dev.h
++++ linux-wl/drivers/net/wireless/libertas/dev.h
+@@ -39,12 +39,14 @@ struct lbs_private {
+ 
+ 	/* Mesh */
+ 	struct net_device *mesh_dev; /* Virtual device */
++#ifdef CONFIG_LIBERTAS_MESH
+ 	u32 mesh_connect_status;
+ 	struct lbs_mesh_stats mstats;
+ 	int mesh_open;
+ 	uint16_t mesh_tlv;
+ 	u8 mesh_ssid[IEEE80211_MAX_SSID_LEN + 1];
+ 	u8 mesh_ssid_len;
++#endif
+ 
+ 	/* Monitor mode */
+ 	struct net_device *rtap_net_dev;
+--- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
++++ linux-wl/drivers/net/wireless/libertas/cmd.c
+@@ -998,6 +998,8 @@ int lbs_prepare_and_send_command(struct 
+ 		ret = 0;
+ 		break;
+ 
++#ifdef CONFIG_LIBERTAS_MESH
++
+ 	case CMD_BT_ACCESS:
+ 		ret = lbs_cmd_bt_access(cmdptr, cmd_action, pdata_buf);
+ 		break;
+@@ -1006,6 +1008,8 @@ int lbs_prepare_and_send_command(struct 
+ 		ret = lbs_cmd_fwt_access(cmdptr, cmd_action, pdata_buf);
+ 		break;
+ 
++#endif
++
+ 	case CMD_802_11_BEACON_CTRL:
+ 		ret = lbs_cmd_bcn_ctrl(priv, cmdptr, cmd_action);
+ 		break;
+--- linux-wl.orig/drivers/net/wireless/libertas/ethtool.c
++++ linux-wl/drivers/net/wireless/libertas/ethtool.c
+@@ -114,9 +114,11 @@ const struct ethtool_ops lbs_ethtool_ops
+ 	.get_drvinfo = lbs_ethtool_get_drvinfo,
+ 	.get_eeprom =  lbs_ethtool_get_eeprom,
+ 	.get_eeprom_len = lbs_ethtool_get_eeprom_len,
++#ifdef CONFIG_LIBERTAS_MESH
+ 	.get_sset_count = lbs_mesh_ethtool_get_sset_count,
+ 	.get_ethtool_stats = lbs_mesh_ethtool_get_stats,
+ 	.get_strings = lbs_mesh_ethtool_get_strings,
++#endif
+ 	.get_wol = lbs_ethtool_get_wol,
+ 	.set_wol = lbs_ethtool_set_wol,
+ };
+--- linux-wl.orig/drivers/net/wireless/libertas/wext.c
++++ linux-wl/drivers/net/wireless/libertas/wext.c
+@@ -298,6 +298,7 @@ static int lbs_get_nick(struct net_devic
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_LIBERTAS_MESH
+ static int mesh_get_nick(struct net_device *dev, struct iw_request_info *info,
+ 			 struct iw_point *dwrq, char *extra)
+ {
+@@ -321,6 +322,7 @@ static int mesh_get_nick(struct net_devi
+ 	lbs_deb_leave(LBS_DEB_WEXT);
+ 	return 0;
+ }
++#endif
+ 
+ static int lbs_set_rts(struct net_device *dev, struct iw_request_info *info,
+ 			struct iw_param *vwrq, char *extra)
+@@ -1010,6 +1012,7 @@ out:
+ 	return ret;
+ }
+ 
++#ifdef CONFIG_LIBERTAS_MESH
+ static int lbs_mesh_set_freq(struct net_device *dev,
+ 			     struct iw_request_info *info,
+ 			     struct iw_freq *fwrq, char *extra)
+@@ -1061,6 +1064,7 @@ out:
+ 	lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
+ 	return ret;
+ }
++#endif
+ 
+ static int lbs_set_rate(struct net_device *dev, struct iw_request_info *info,
+ 		  struct iw_param *vwrq, char *extra)
+@@ -2110,6 +2114,7 @@ out:
+ 	return ret;
+ }
+ 
++#ifdef CONFIG_LIBERTAS_MESH
+ static int lbs_mesh_get_essid(struct net_device *dev,
+ 			      struct iw_request_info *info,
+ 			      struct iw_point *dwrq, char *extra)
+@@ -2163,6 +2168,7 @@ static int lbs_mesh_set_essid(struct net
+ 	lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
+ 	return ret;
+ }
++#endif
+ 
+ /**
+  *  @brief Connect to the AP or Ad-hoc Network with specific bssid
+@@ -2269,7 +2275,13 @@ static const iw_handler lbs_handler[] = 
+ 	(iw_handler) lbs_get_encodeext,/* SIOCGIWENCODEEXT */
+ 	(iw_handler) NULL,		/* SIOCSIWPMKSA */
+ };
++struct iw_handler_def lbs_handler_def = {
++	.num_standard	= ARRAY_SIZE(lbs_handler),
++	.standard	= (iw_handler *) lbs_handler,
++	.get_wireless_stats = lbs_get_wireless_stats,
++};
+ 
++#ifdef CONFIG_LIBERTAS_MESH
+ static const iw_handler mesh_wlan_handler[] = {
+ 	(iw_handler) NULL,	/* SIOCSIWCOMMIT */
+ 	(iw_handler) lbs_get_name,	/* SIOCGIWNAME */
+@@ -2327,14 +2339,10 @@ static const iw_handler mesh_wlan_handle
+ 	(iw_handler) lbs_get_encodeext,/* SIOCGIWENCODEEXT */
+ 	(iw_handler) NULL,		/* SIOCSIWPMKSA */
+ };
+-struct iw_handler_def lbs_handler_def = {
+-	.num_standard	= ARRAY_SIZE(lbs_handler),
+-	.standard	= (iw_handler *) lbs_handler,
+-	.get_wireless_stats = lbs_get_wireless_stats,
+-};
+ 
+ struct iw_handler_def mesh_handler_def = {
+ 	.num_standard	= ARRAY_SIZE(mesh_wlan_handler),
+ 	.standard	= (iw_handler *) mesh_wlan_handler,
+ 	.get_wireless_stats = lbs_get_wireless_stats,
+ };
++#endif
+
+-- 
+http://www.holgerschurig.de
