@@ -1,37 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f215.google.com ([209.85.219.215]:62868 "EHLO
-	mail-ew0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753621AbZK1VJk (ORCPT
+Received: from mail-gx0-f226.google.com ([209.85.217.226]:50143 "EHLO
+	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755310AbZKZQTn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Nov 2009 16:09:40 -0500
-Received: by ewy7 with SMTP id 7so2994087ewy.28
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Nov 2009 13:09:46 -0800 (PST)
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: annotate sleeping driver ops
-References: <1259439566-26397-1-git-send-email-kalle.valo@iki.fi>
-	<200911282200.28477.mb@bu3sch.de>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sat, 28 Nov 2009 23:09:44 +0200
-In-Reply-To: <200911282200.28477.mb@bu3sch.de> (Michael Buesch's message of "Sat\, 28 Nov 2009 22\:00\:26 +0100")
-Message-ID: <871vji8ig7.fsf@purkki.valot.fi>
+	Thu, 26 Nov 2009 11:19:43 -0500
+Message-ID: <4B0EAAA2.1080708@lwfinger.net>
+Date: Thu, 26 Nov 2009 10:19:46 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Stefan Bader <stefan.bader@canonical.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	stable@kernel.org
+Subject: Re: [PATCH] b43legacy: Port b43 rfkill fix to b43legacy
+References: <1259246955-24386-1-git-send-email-stefan.bader@canonical.com>
+In-Reply-To: <1259246955-24386-1-git-send-email-stefan.bader@canonical.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch <mb@bu3sch.de> writes:
+On 11/26/2009 08:49 AM, Stefan Bader wrote:
+> Resending this. I believe I messed up with the recipients the last time.
+> 
+> -Stefan
+> 
+>>From d800aef9db80ba1168f336791f4c5e8d4d0517c3 Mon Sep 17 00:00:00 2001
+> From: Stefan Bader <stefan.bader@canonical.com>
+> Date: Thu, 19 Nov 2009 14:52:22 -0600
+> Subject: [PATCH] b43legacy: Port b43 rfkill fix to b43legacy
+> 
+> BugLink: https://bugs.launchpad.net/bugs/476154
+> 
+> "b43: Fix Bugzilla #14181 and the bug from the previous 'fix'" fixed
+> a crash with the b43 driver, that happens if the radio switch is
+> turned off.
+> The same happens when using the b43legacy driver and it was verified,
+> that the same changes just work in that case too.
+> 
+> Signed-off-by: Stefan Bader <stefan.bader@canonical.com>
+> ---
+>  drivers/net/wireless/b43legacy/rfkill.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43legacy/rfkill.c b/drivers/net/wireless/b43legacy/rfkill.c
+> index 8783022..ad7083e 100644
+> --- a/drivers/net/wireless/b43legacy/rfkill.c
+> +++ b/drivers/net/wireless/b43legacy/rfkill.c
+> @@ -34,7 +34,8 @@ bool b43legacy_is_hw_radio_enabled(struct b43legacy_wldev *dev)
+>  		      & B43legacy_MMIO_RADIO_HWENABLED_HI_MASK))
+>  			return 1;
+>  	} else {
+> -		if (b43legacy_read16(dev, B43legacy_MMIO_RADIO_HWENABLED_LO)
+> +		if (b43legacy_status(dev) >= B43legacy_STAT_STARTED &&
+> +		    b43legacy_read16(dev, B43legacy_MMIO_RADIO_HWENABLED_LO)
+>  		    & B43legacy_MMIO_RADIO_HWENABLED_LO_MASK)
+>  			return 1;
+>  	}
 
-> On Saturday 28 November 2009 21:19:26 Kalle Valo wrote:
->> mac80211 doesn't seem to use get_tx_stats anywhere currently. Just to be on
->> the safe side, I documented it to be atomic, but hopefully the op can be
->> removed in the future.
->
-> Well, b43 takes a mutex in that callback. I think that's OK, because if it's
-> never called, it's pretty safe to sleep there. ;)
+This issue is already addressed by the patch in
+http://marc.info/?l=linux-wireless&m=125902335810157&w=2.
 
-Yeah, it should be safe. And I'm planning to remove this code anyway,
-see the other thread I started.
+Larry
 
--- 
-Kalle Valo
