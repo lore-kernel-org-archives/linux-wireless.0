@@ -1,49 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:40804 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752735AbZKHMhi (ORCPT
+Received: from parez.praha12.net ([78.102.11.253]:41171 "EHLO
+	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752153AbZKZTO5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 07:37:38 -0500
-Received: by ewy3 with SMTP id 3so2345053ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 04:37:43 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Subject: Re: [PATCH] rt2x00: fix build of rt2800lib
-Date: Sun, 8 Nov 2009 13:37:21 +0100
-Cc: gwingerde@gmail.com, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com, bzolnier@gmail.com
-References: <1257682021-23810-1-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1257682021-23810-1-git-send-email-hauke@hauke-m.de>
+	Thu, 26 Nov 2009 14:14:57 -0500
+From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
+Reply-To: 8an@praha12.net
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] API for setting ACK timeout
+Date: Thu, 26 Nov 2009 20:14:57 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <200911261826.08576.8an@praha12.net> <1259259493.24540.5.camel@johannes.local>
+In-Reply-To: <1259259493.24540.5.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911081337.21713.IvDoorn@gmail.com>
+Content-Type: multipart/signed;
+  boundary="nextPart2178116.P9MDOUYjod";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200911262015.03106.8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 08 November 2009, Hauke Mehrtens wrote:
-> rt2x00usb.h uses lots of definitions from linux/usb.h.
+--nextPart2178116.P9MDOUYjod
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-rt2800lib should not depend on either PCI or USB,
-so which defines from usb.h are used in rt2x00lib.c?
+On 26.11.2009 19:18 Johannes Berg wrote:
+> I discussed this with Alina a while back (in private, she didn't want to
+> discuss in English) and we came to the conclusion that set_coverage()
+> should be done like 802.11-2007 17.3.8.6 specifies for 5ghz, but could
+> be done for 2.4ghz as well. Thoughts? It would also allow us to actually
+> advertise that to compatible clients.
 
-Ivo
+If I understand the standard correctly, it means the slottime should be
+(9 + propagation_delay), which equals (9 + distance / 300). And that's=20
+basically the same as the formula from Madwifi's athctrl I wanted to use:
+int slottime =3D 9 + (distance / 300) + ((distance % 300) ? 1 : 0);
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 5c7d74a..b601a1a 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -29,6 +29,7 @@
->  
->  #include <linux/kernel.h>
->  #include <linux/module.h>
-> +#include <linux/usb.h>
->  
->  #include "rt2x00.h"
->  #ifdef CONFIG_RT2800USB
+The main difference is that the coverage classes have an upper limit under=
+=20
+28km, but I don't see the point in artifically limiting maximum link distan=
+ce=20
+(30km link could be done with big enough antennas).
 
+And I would prefer if the userspace API operated with distance rather than=
+=20
+coverage classes, because it allows the user to set it correctly without=20
+reading a thousand page document. The coverage class could be then calculat=
+ed=20
+for use in beacons as you proposed. Of course, in this case we would be=20
+constrained by the maximum coverage class in the standard.
 
+Lukas Turek
+
+--nextPart2178116.P9MDOUYjod
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iQIcBAABAgAGBQJLDtO3AAoJEEBjvk/UOfYwRbIP/3vHQBJtEMgPvYNNNwK1iLEw
+lZ9iOp35pzzXJu74M7F/GnKZsZC36nJKaHsyjmMbrDK1cvU/GgUALrDEIH7pM9qz
+3m1Iq60VF//HwrNynzP3i6f6yZ9tWxWTVdXibw/EZugqYhp3JZ+i3dzZDolj0OkL
+E+JyvV350o/8jamknKTKFC9n93CCtp1mKHNtqO5lY1MSl5yjKdkcnwInyu39AeTc
+9M9KsWCf6IKhRJ4H3ozU13lGLX/YxcJMjCKKalQSzfxEtYhoAGhOePQnPeo2K/6L
+p1ZwpM3jXAKI18JkZ2e+GjVdZR08OxWQqk7ioxBITo7+FszviMVqtti+uZ9+vUtQ
+aLLG06O39bz+MiFdbE6/48VAJv6hB4aWOizrTkzgCF4+NogVOTWGwqEveacPUtR+
+3qSt0+MNrKwaqSTrCmYCeC/GL95umu+IZwgLUflIRIYbm9cryhz/2PqEbGPY0jzx
+m5avpGcMzvIbXbWFAHBnkA2gziDfu8OTi2Ay0r2NpEUA0vYGEWeEY3GYLoq7RHP9
+e2CGP1rwSt0xAS4TOX8WH1Ee7R99gWnnIFly3KhzEj9WnuDT4uK5tYO9kCKifB+B
+GAdA6NdyAtp3AHE2cO8A2xLC4JUMdOqr0DlAs2X6dAce6n2aA/9sdGg20P7luKsG
+ZCvuLo4LVPYOlp4PqkKY
+=D1Oa
+-----END PGP SIGNATURE-----
+
+--nextPart2178116.P9MDOUYjod--
