@@ -1,71 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:38306 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750737AbZKNRht convert rfc822-to-8bit (ORCPT
+Received: from parez.praha12.net ([78.102.11.253]:40676 "EHLO
+	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750919AbZKZUql (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Nov 2009 12:37:49 -0500
+	Thu, 26 Nov 2009 15:46:41 -0500
+From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
+Reply-To: 8an@praha12.net
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] API for setting ACK timeout
+Date: Thu, 26 Nov 2009 21:46:47 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <200911261826.08576.8an@praha12.net> <200911262113.10847.8an@praha12.net> <1259266544.5428.0.camel@johannes.local>
+In-Reply-To: <1259266544.5428.0.camel@johannes.local>
 MIME-Version: 1.0
-In-Reply-To: <1258216474.3299.24.camel@violet>
-References: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
-	 <1258082571.7715.13.camel@violet>
-	 <4fb5db50911140519q70bbdd00qb585153c4926df96@mail.gmail.com>
-	 <1258216474.3299.24.camel@violet>
-Date: Sat, 14 Nov 2009 23:07:54 +0530
-Message-ID: <4fb5db50911140937j278584e5nf9e4d5767a44a920@mail.gmail.com>
-Subject: Re: [patch 0/1] Adding radio type FM
-From: Janakiram Sistla <janakiram.sistla@gmail.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed;
+  boundary="nextPart1377993.Fc8xXOarFB";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200911262146.47311.8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marcel,
+--nextPart1377993.Fc8xXOarFB
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I thought i would see the change first in include/linux/rfkill.h
-getting accepted and then i can add the change in core.c also.
+On 26.11.2009 21:15 Johannes Berg wrote:
+> It only affects lost packets anyway, no?
+Yes, it does, and 6us is still nothing compared to the transmit duration
+(at least 100us).
 
-Let me know if i can push both in the same patch.
+> Would that be sufficient? It'd be kinda cool if mac80211 auto-configured
+> itself if it picked up a beacon that had this information, etc.
+We just need an API for setting ACK timeout on long distance point-to-point=
+=20
+links, so this is definitely enough. Unfortunately I can't promise I will=20
+have enough time to implement the automatic configuration, although I see i=
+t=20
+would be useful for us too.
 
-Regards,
-Ram.
+Lukas Turek
 
-On Sat, Nov 14, 2009 at 10:04 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
-> Hi Janakiram,
->
->> Resubmitting patch  adding Marcels Comments
->>
->> From f72e4bdef7c423259f2f8f0615d024a25294ea8f Mon Sep 17 00:00:00 2001
->> From: Janakiram Sistla <janakiram.sistla@gmail.com>
->> Date: Sat, 14 Nov 2009 18:42:35 +0530
->> Subject: [PATCH 1/1] Adding radio type FM
->>
->> Adding radio type FM in RFKILL_TYPE_.FM also belongs to
->> same class of with both TX/RX capability.
->>
->> Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
->> ---
->>  include/linux/rfkill.h |    1 +
->>  1 files changed, 1 insertions(+), 0 deletions(-)
->>
->> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
->> index 3392c59..03f5598 100644
->> --- a/include/linux/rfkill.h
->> +++ b/include/linux/rfkill.h
->> @@ -45,6 +45,7 @@ enum rfkill_type {
->>       RFKILL_TYPE_WIMAX,
->>       RFKILL_TYPE_WWAN,
->>       RFKILL_TYPE_GPS,
->> +     RFKILL_TYPE_FM,
->>       NUM_RFKILL_TYPES,
->>  };
->
-> and what about rfkill_get_type_str() changes?
->
-> Regards
->
-> Marcel
->
->
->
+--nextPart1377993.Fc8xXOarFB
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iQIcBAABAgAGBQJLDuk3AAoJEEBjvk/UOfYwM+AP/0HQDaoNizg7az+kEEyOXjvp
+VMQJHfMwS7JjtUZelKM0ix9J3h/AZoFTWkkjfp/5hOIuLkWe7zEdtx17bbjKeNq2
+J5I8fRZvJDy2oEaklPV83tHenOgDf7AmeYOkj4pSIC5ye0yOsrgJDb18O3+R0HvX
+WQDnuuRHNAJ+2WZz5amw98AM84DHHFwjJQUosSsPFGtXct+IWU77QVu6XTSlAkJx
+Oiimt9divMGRNPLyTZ9KF1IbwtQsVucwJoNL38Vf3+o58E0URvZ7pPIjazj0TeM2
+XUFCMpMxqOeJ2hMsqtxOKfAq0ggUMhhRIFYdH/TQiYljZir+EPVc/we0aS6sCRps
+W37xlO4PHQLt3/1JA20otCQR1FabVtLQed68OyejbeQjdwSF1qwK4qSFpZfjBK+v
+OQR+cVNW0CrmH7pERyJNIl7gpu4oJrnjTC7nj7BcaBsqQP431pXJ+DnjSJLBQKPT
+KOp2aww77HEg9QqHtXM93KewTEn2SvUVsuBvemRm9hNp0BKgPxjiRKFgSgOycHlm
+OrQ1aEx1jE8fK0H5rTkro7KAgkftEvJVfyyjlGqm/395ifSyaGhVln+2rEy7+JTy
+IJb2dsmbuPvXlCcyGg53Mt47K0KKcFQPTcA/NEds+VgP6B2NE4l1sAiWGomjWcfU
+nnYPqQY3r6OUB6giECam
+=+SHW
+-----END PGP SIGNATURE-----
+
+--nextPart1377993.Fc8xXOarFB--
