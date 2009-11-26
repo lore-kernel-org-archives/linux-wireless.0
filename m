@@ -1,69 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56130 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752797AbZKGUTC (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:23592 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760575AbZKZPIx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 15:19:02 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+	Thu, 26 Nov 2009 10:08:53 -0500
+Subject: [PATCH 03/12] wl1251: fix error handling in wl1251_op_config()
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	mcgrof@gmail.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 29/29] ath9k_common: clarify and correct jumbogram processing
-Date: Sat,  7 Nov 2009 15:19:06 -0500
-Message-Id: <1257625146-17971-30-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
-References: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 26 Nov 2009 17:08:43 +0200
+Message-ID: <20091126150843.917.6633.stgit@tikku>
+In-Reply-To: <20091126150141.917.35278.stgit@tikku>
+References: <20091126150141.917.35278.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jumbograms are frames put together linked together through
-more than one descriptor. For example ath9k_htc will use this
-to send from the target a large frame split up into 2 or more
-segments. The driver then would be in charge of putting the
-frame back together.
+From: Kalle Valo <kalle.valo@nokia.com>
 
-When jumbograms are constructed the rx_stats->rs_more will
-bet set and rx_stats->rs_status will not have any valid content
-as the actual status will only be avialable at the end of
-the chained descriptors.
+Not all return values were checked and one exit from function didn't put
+firmware sleep after the error.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
- drivers/net/wireless/ath/ath9k/common.c |   21 +++++++++++----------
- 1 files changed, 11 insertions(+), 10 deletions(-)
+ drivers/net/wireless/wl12xx/wl1251_main.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index 80edf7a..acd4bb5 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -53,16 +53,17 @@ static bool ath9k_rx_accept(struct ath_common *common,
- 	if (rx_stats->rs_datalen > common->rx_bufsize)
- 		return false;
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index e9fb2ca..8ba6742 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -641,20 +641,25 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		 * through the bss_info_changed() hook.
+ 		 */
+ 		ret = wl1251_ps_set_mode(wl, STATION_POWER_SAVE_MODE);
++		if (ret < 0)
++			goto out_sleep;
+ 	} else if (!(conf->flags & IEEE80211_CONF_PS) &&
+ 		   wl->psm_requested) {
+ 		wl1251_debug(DEBUG_PSM, "psm disabled");
  
--	if (rx_stats->rs_more) {
--		/*
--		 * Frame spans multiple descriptors; this cannot happen yet
--		 * as we don't support jumbograms. If not in monitor mode,
--		 * discard the frame. Enable this if you want to see
--		 * error frames in Monitor mode.
--		 */
--		if (ah->opmode != NL80211_IFTYPE_MONITOR)
--			return false;
--	} else if (rx_stats->rs_status != 0) {
-+	/*
-+	 * rs_more indicates chained descriptors which can be used
-+	 * to link buffers together for a sort of scatter-gather
-+	 * operation.
-+	 *
-+	 * The rx_stats->rs_status will not be set until the end of the
-+	 * chained descriptors so it can be ignored if rs_more is set. The
-+	 * rs_more will be false at the last element of the chained
-+	 * descriptors.
-+	 */
-+	if (!rx_stats->rs_more && rx_stats->rs_status != 0) {
- 		if (rx_stats->rs_status & ATH9K_RXERR_CRC)
- 			rxs->flag |= RX_FLAG_FAILED_FCS_CRC;
- 		if (rx_stats->rs_status & ATH9K_RXERR_PHY)
--- 
-1.6.5.2.143.g8cc62
+ 		wl->psm_requested = false;
+ 
+-		if (wl->psm)
++		if (wl->psm) {
+ 			ret = wl1251_ps_set_mode(wl, STATION_ACTIVE_MODE);
++			if (ret < 0)
++				goto out_sleep;
++		}
+ 	}
+ 
+ 	if (conf->power_level != wl->power_level) {
+ 		ret = wl1251_acx_tx_power(wl, conf->power_level);
+ 		if (ret < 0)
+-			goto out;
++			goto out_sleep;
+ 
+ 		wl->power_level = conf->power_level;
+ 	}
 
