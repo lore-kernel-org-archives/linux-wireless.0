@@ -1,50 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37688 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758189AbZKFQPH (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:37059 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752808AbZKZJn2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 11:15:07 -0500
-Date: Fri, 6 Nov 2009 11:09:26 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Carlo Parata <carlo_parata@hotmail.com>
-Cc: linux-wireless@vger.kernel.org, me@bobcopeland.com
-Subject: Re: [PATCH] Wifi led does not work on Acer Aspire One D250 (ath5k
-	driver)
-Message-ID: <20091106160926.GA2782@tuxdriver.com>
-References: <loom.20091106T135746-452@post.gmane.org>
+	Thu, 26 Nov 2009 04:43:28 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 1/6] libertas: remove mesh_autostart_enabled and sync_channel
+Date: Thu, 26 Nov 2009 10:43:18 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <loom.20091106T135746-452@post.gmane.org>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200911261043.18094.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 06, 2009 at 01:00:02PM +0000, Carlo Parata wrote:
-> With this patch, a Acer Aspire One D250 can turn on the wifi led. The array of
-> compatible devices in ath5k driver now includes the hardware present in this
-> computer, as well as the led pin and polarity.
-> 
-> --- ../led.c	2009-11-06 06:16:39.000000000 +0100
-> +++ ./drivers/net/wireless/ath/ath5k/led.c	2009-11-06 12:37:44.000000000 +0100
-> @@ -73,6 +73,8 @@
->  	{ ATH_SDEVICE(PCI_VENDOR_ID_HP, 0x0137b), ATH_LED(3, 1) },
->  	/* IBM-specific AR5212 (all others) */
->  	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5212_IBM), ATH_LED(0, 0) },
-> +        /* Acer Aspire One D250 AR5007EG */
-> +	{ PCI_VDEVICE(ATHEROS, 0x001c), ATH_LED(3, 1) },
->  	{ }
->  };
+mesh_autostart_enabled was nowhere set. Rumor is that this is used in the
+OLPC tree, but they never did submit their code upstream.
 
-FWIW, a similar patch earlier this week drew the following from Bob Copeand:
+After removing this code, it turned out that the sync_channel stuff is now
+also unused, so get rid of that as well.
 
-"... but can you by chance put a contact address in the comment?  I've been
-collecting them in case we one day figure out a better way to do this so it's
-easy to find the people to retest."
+Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
 
-Would you mind complying with his request?  Or have I mistakend his applicability?
 
-Thanks,
+--- linux-wl.orig/drivers/net/wireless/libertas/cmdresp.c
++++ linux-wl/drivers/net/wireless/libertas/cmdresp.c
+@@ -485,20 +485,8 @@ int lbs_process_event(struct lbs_private
+ 		break;
+ 
+ 	case MACREG_INT_CODE_MESH_AUTO_STARTED:
+-		/* Ignore spurious autostart events if autostart is disabled */
+-		if (!priv->mesh_autostart_enabled) {
+-			lbs_pr_info("EVENT: MESH_AUTO_STARTED (ignoring)\n");
+-			break;
+-		}
+-		lbs_pr_info("EVENT: MESH_AUTO_STARTED\n");
+-		priv->mesh_connect_status = LBS_CONNECTED;
+-		if (priv->mesh_open) {
+-			netif_carrier_on(priv->mesh_dev);
+-			if (!priv->tx_pending_len)
+-				netif_wake_queue(priv->mesh_dev);
+-		}
+-		priv->mode = IW_MODE_ADHOC;
+-		schedule_work(&priv->sync_channel);
++		/* Ignore spurious autostart events */
++		lbs_pr_info("EVENT: MESH_AUTO_STARTED (ignoring)\n");
+ 		break;
+ 
+ 	default:
+--- linux-wl.orig/drivers/net/wireless/libertas/dev.h
++++ linux-wl/drivers/net/wireless/libertas/dev.h
+@@ -42,11 +42,9 @@ struct lbs_private {
+ 	u32 mesh_connect_status;
+ 	struct lbs_mesh_stats mstats;
+ 	int mesh_open;
+-	int mesh_autostart_enabled;
+ 	uint16_t mesh_tlv;
+ 	u8 mesh_ssid[IEEE80211_MAX_SSID_LEN + 1];
+ 	u8 mesh_ssid_len;
+-	struct work_struct sync_channel;
+ 
+ 	/* Monitor mode */
+ 	struct net_device *rtap_net_dev;
+--- linux-wl.orig/drivers/net/wireless/libertas/main.c
++++ linux-wl/drivers/net/wireless/libertas/main.c
+@@ -806,18 +806,6 @@ int lbs_exit_auto_deep_sleep(struct lbs_
+ 	return 0;
+ }
+ 
+-static void lbs_sync_channel_worker(struct work_struct *work)
+-{
+-	struct lbs_private *priv = container_of(work, struct lbs_private,
+-		sync_channel);
+-
+-	lbs_deb_enter(LBS_DEB_MAIN);
+-	if (lbs_update_channel(priv))
+-		lbs_pr_info("Channel synchronization failed.");
+-	lbs_deb_leave(LBS_DEB_MAIN);
+-}
+-
+-
+ static int lbs_init_adapter(struct lbs_private *priv)
+ {
+ 	size_t bufsize;
+@@ -997,7 +985,6 @@ struct lbs_private *lbs_add_card(void *c
+ 	INIT_DELAYED_WORK(&priv->assoc_work, lbs_association_worker);
+ 	INIT_DELAYED_WORK(&priv->scan_work, lbs_scan_worker);
+ 	INIT_WORK(&priv->mcast_work, lbs_set_mcast_worker);
+-	INIT_WORK(&priv->sync_channel, lbs_sync_channel_worker);
+ 
+ 	priv->mesh_open = 0;
+ 	sprintf(priv->mesh_ssid, "mesh");
 
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+http://www.holgerschurig.de
