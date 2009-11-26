@@ -1,84 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:14613 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933602AbZKYIlX (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48451 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750826AbZKZSNC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 03:41:23 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id E322F148005
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2009 09:41:28 +0100 (CET)
-Received: from mx51.mymxserver.com ([127.0.0.1])
-	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id UzM51o9TJNXT for <linux-wireless@vger.kernel.org>;
-	Wed, 25 Nov 2009 09:41:28 +0100 (CET)
-Received: from lin01.mn-solutions.de (pD95FA5E7.dip0.t-ipconnect.de [217.95.165.231])
-	by mx51.mymxserver.com (Postfix) with ESMTP id 866ED148010
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2009 09:41:28 +0100 (CET)
-Received: from schurig.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id 17CB71E004F
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2009 09:41:15 +0100 (CET)
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: PROPOSAL: cfg80211 antenna selection
-Date: Wed, 25 Nov 2009 09:41:10 +0100
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200911250941.10929.holgerschurig@gmail.com>
+	Thu, 26 Nov 2009 13:13:02 -0500
+Subject: Re: [PATCH 06/12] wl1251: fix payload alignment
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <877htd9v5a.fsf@purkki.valot.fi>
+References: <20091126150141.917.35278.stgit@tikku>
+	 <20091126150904.917.8182.stgit@tikku>  <877htd9v5a.fsf@purkki.valot.fi>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ZcF8sCFddABMWem4fgLl"
+Date: Thu, 26 Nov 2009 19:13:03 +0100
+Message-ID: <1259259183.24540.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, 
 
-I just wondered how we can do the antenna and diversity
-selection.
+--=-ZcF8sCFddABMWem4fgLl
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Assumption: 32 antennas are enought
+On Thu, 2009-11-26 at 17:13 +0200, Kalle Valo wrote:
+> Kalle Valo <kalle.valo@iki.fi> writes:
+>=20
+> > mac80211 complained that in some cases IP payload was not aligned, this
+> > happens if the 802.11 header is not aligned with four. In that case we =
+have
+> > to move entire packet to make the payload properly aligned.
 
+Eh, turn off the debugging option ...
 
+> > +	if (ieee80211_hdrlen(*fc) & 0x3) {
+> > +		from =3D skb->data;
+> > +		to =3D skb_push(skb, 2);
+> > +		memmove(to, from, skb->len);
+> > +		fc =3D (u16 *) skb->data;
+> > +	}
+>=20
+> I would like to get comments about this. Is memmove() the right way to
+> do this?
 
-My current idea is this:
+mac80211 takes care of this for you, after warning :)
 
- struct cfg80211_ops {
-+int (*set_antennas)(struct wiphy *wiphy, struct net_device *dev,
-+                    u32 rx_antenna_mask, u32 tx_antenna_mask);
-+int (*get_antennas)(struct wiphy *wiphy, struct net_device *dev,
-+                    u32 *rx_antenna_mask, u32 tx_antenna_mask);
- }
+The point of the warning is to make developers aware that alignment by
+firmware will be better. If you can't put the packet into the right
+place directly from the device, don't bother, the memmove is done by
+mac80211.
 
- struct wiphy {
-+u8 max_antennas;
- }
-
-wiphy->max_antennas will just be used by user-space to query the 
-driver capability, e.g. in "iw list".
-
-
-A driver must have wiphy->max_antennas && ops->set/get_antennas
-set in order to have antenna-selection. xx_antenna_mask is a 
-bitfield, where the active bits denote which antenna to use.
-
-When more than one bits are set in tx_antenna_mask, the driver 
-may use diversity. This means that my proposal doesn't support 
-diffentiating between diversity and sending the same frame 
-throught several anteannas at the same time. Not sure if this is 
-a short-coming, e.g. if there's a use-case behind this or not.
-
-Another thing I'm not sure is if we really need rx_antenna_mask. 
-it would allow us to receive with one antenna, but send with 
-another one. Is this over-design or a real use-case?
+johannes
 
 
-If a driver doesn't support diversity, the driver simply returns 
-an error if more than one bit is set in the mask.
+--=-ZcF8sCFddABMWem4fgLl
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
 
-For iw, I'd then be able to do:
+iQIcBAABAgAGBQJLDsUsAAoJEODzc/N7+QmaHtUQALAbRdJEP86g8f9thLnDW2Al
+s31G+89eaWQfSjN7TYUyoG5qGK9ZN9Q7aFO5IsyJ+Xke0D7DjwYyVPB9ysQPKivc
+2blS3xBBDcB5mbwOofSqnqXum9jcVepuGjWPx3NuWL93ZR8BUx9XqAnHfFjxaTFx
+s4TiXjYvHXT15irWUTXIUHeupHNtCkY41UU/VgpmgXt0A7mu4vcVoD7SFpzrWLTS
+QN49VF3wZzk8pwX3V1urAEEW4HfAboDyOxwmFH3XMMPRqkcwUACpbQrFibsIBG4m
+X5HRiUhch7AW0Va5GmeqIau7IYQvMCS7WXtDYuEt3mohoOyv3at/misDj4xmMbbb
+tTBzoLb0Frq9nDysEumsDWeIO6bWWAmqy2qBYsQEGSAq4I4O07vIjgbD2kGlmmeH
+6aiWf7QUFLnquqW/ZLYbCkNbU6na2NHMq+DuYb6Wx86IvwiP2cOQiX9Wja6lXHpG
+lu+OtnhJwZBqOjEf0oWajml6Dzpfyv79CFZMTDM38YOWgX4nm4FVzaXm33zuBSVG
+nCDf2UCDNj4pGoxo36pTgoL4Voi5IWlHbwKqMX13N1AGsaCpLYTCdP3fJ2W4GbIP
+k5wl0f8raph/TcQoD3nTcD6OzNipvjVYi+oiCWo/4grl4cpgX+a718q9WfRIIlyq
+5hYrFqDxGgEYaU2afEm9
+=o5ct
+-----END PGP SIGNATURE-----
 
-iw wlan0 get antennas
-iw wlan0 set antenna 0 1         (set both tx/rx antenna mask)
-iw wlan0 set antenna tx 0 rx 1
+--=-ZcF8sCFddABMWem4fgLl--
 
-
--- 
-http://www.holgerschurig.de
