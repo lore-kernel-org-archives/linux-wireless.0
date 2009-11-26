@@ -1,122 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:61523 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750907AbZKVR65 convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53904 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750744AbZKZTZi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Nov 2009 12:58:57 -0500
-MIME-Version: 1.0
-In-Reply-To: <4B0932C8.90208@gmail.com>
-References: <30353c3d0911201730n4682ff7dy8225d475599eb9bb@mail.gmail.com>
-	 <4B0806EC.3050201@gmail.com>
-	 <30353c3d0911212309i20c9b9d3y821b508d8f1c81a4@mail.gmail.com>
-	 <4B0932C8.90208@gmail.com>
-Date: Sun, 22 Nov 2009 12:59:02 -0500
-Message-ID: <30353c3d0911220959l68cde41cpfd8c02c290497c30@mail.gmail.com>
-Subject: Re: [rt2x00-users] ieee80211_tx_status: headroom too small
-From: David Ellingsworth <david@identd.dyndns.org>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 26 Nov 2009 14:25:38 -0500
+Subject: Re: [RFC] API for setting ACK timeout
+From: Johannes Berg <johannes@sipsolutions.net>
+To: 8an@praha12.net
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200911262015.03106.8an@praha12.net>
+References: <200911261826.08576.8an@praha12.net>
+	 <1259259493.24540.5.camel@johannes.local>
+	 <200911262015.03106.8an@praha12.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-f6tZH3HboW0YUABsozAi"
+Date: Thu, 26 Nov 2009 20:25:40 +0100
+Message-ID: <1259263540.24540.9.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 22, 2009 at 7:47 AM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> On 11/22/09 08:09, David Ellingsworth wrote:
->> On Sat, Nov 21, 2009 at 10:27 AM, Gertjan van Wingerde
->> <gwingerde@gmail.com> wrote:
->>> On 11/21/09 02:30, David Ellingsworth wrote:
->>>> Wasn't sure where to send this, but with the latest 2.6.32-rc8-wl
->>>> kernel built from the wireless-testing repository I'm getting a number
->>>> of "ieee80211_tx_status: headroom too small" errors in my syslog. I'm
->>>> using the rt61pci driver in conjunction with hostap as a wpa2 secured
->>>> access point. The relevant information about my card from lspci is:
->>>>
->>>> 01:08.0 0280: 1814:0301
->>>>         Subsystem: 1458:e934
->>>>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop-
->>>> ParErr- Stepping- SERR+ FastB2B- DisINTx-
->>>>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort-
->>>> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>>>         Latency: 64, Cache Line Size: 128 bytes
->>>>         Interrupt: pin A routed to IRQ 18
->>>>         Region 0: Memory at fe6f0000 (32-bit, non-prefetchable) [size=32K]
->>>>         Capabilities: [40] Power Management version 2
->>>>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
->>>> PME(D0-,D1-,D2-,D3hot-,D3cold-)
->>>>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
->>>>         Kernel driver in use: rt61pci
->>>>
->>>> If you need any other information, I'll be happy to provide it.
->>>>
->>>
->>> Hi David,
->>>
->>> This seems to be caused by the rt2x00 driver not properly declaring its alignment
->>> maneuvring space properly, and thus it doesn't leave enough headroom left for
->>> copying to the monitor interface.
->>>
->>> Can you check whether the attached patch fixes the issue for you?
->>> Note: patch looks a bit bigger than it actually is due to indenting cleanups.
->>>
->>
->> Gertjan,
->>
->> I haven't really been able to test this. The kernel version I was
->> using at the time was 2.6.32-rc7-wl and not 2.6.32-rc8-wl. I'm rather
->> certain the patch will resolve the issue, but I've been unable to get
->> my wireless card to function properly with the latest 2.6.32-rc8-wl
->> master branch. I'm not entirely sure what changed since two days ago,
->> but I know the following:
->>
->> 1. 2.6.32-rc8 from Linus' master branch works fine but still exhibits
->> this issue. However, this patch will not apply on top of 2.6.32-rc8.
->>
->> 2. 2.6.32-rc7-wl(11/19/2009) worked fine with the exception of the
->> above mentioned error. Unable to test patch since I pulled all the
->> recent modifications down.
->> 3. 2.6.32-rc8-wl does not work at all for me, but patch does apply.
->>
->> I'm not entirely sure what the differences are between Linus' master
->> branch of 2.6.32-rc8 and the current 2.6.32-rc8-wl tree are or what
->> changes have been made on the wireless-testing master branch in the
->> last couple of days that are preventing me from fully testing this
->> patch.
->>
->> With the current wireless-testing master branch, 2.6.32-rc8-wl, with
->> and without the patch I can associate and authenticate with my AP but
->> am unable to do anything else. Any attempt to establish a wireless
->> connection thus dies while trying to obtain an ip address via DHCP.
->> Sadly, no errors are logged indicating what the cause of this problem
->> might be. Given that I've only seen these errors after establishing a
->> wireless connection, it's a little difficult for me to test without
->> being able to transmit any data.
->>
->> I don't know if it's worth the effort or not, but if this patch were
->> re-based against Linus' master branch I might be able to test it since
->> my AP at least works with 2.6.32-rc8.
->
-> David,
->
-> OK. Find attached the patch ported to Linus' tree. It should apply to
-> any version of Linus' tree after 2.6.32-rc8.
-> I think it is good to get real confirmation that the patch behaves
-> as expected.
->
-> ---
-> Gertjan.
->
 
-Gertjan,
+--=-f6tZH3HboW0YUABsozAi
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The patch applies but doesn't quite fix the issue with the rt61pci
-driver. With the patch applied, I still occasionally receive the error
-message. I added a printk after the error to see how much was missing.
-It indicates that skb_headroom is 12 and sizeof(*rthdr) is 13 when it
-fails.
+On Thu, 2009-11-26 at 20:14 +0100, Luk=C3=A1=C5=A1 Turek wrote:
+> On 26.11.2009 19:18 Johannes Berg wrote:
+> > I discussed this with Alina a while back (in private, she didn't want t=
+o
+> > discuss in English) and we came to the conclusion that set_coverage()
+> > should be done like 802.11-2007 17.3.8.6 specifies for 5ghz, but could
+> > be done for 2.4ghz as well. Thoughts? It would also allow us to actuall=
+y
+> > advertise that to compatible clients.
 
-Regards,
+My standard reference was obviously crap -- let's see, 7.3.2.9 is
+better.
 
-David Ellingsworth
+> If I understand the standard correctly, it means the slottime should be
+> (9 + propagation_delay), which equals (9 + distance / 300). And that's=20
+> basically the same as the formula from Madwifi's athctrl I wanted to use:
+> int slottime =3D 9 + (distance / 300) + ((distance % 300) ? 1 : 0);
+
+That formula is a weird way of rounding up ...
+
+> The main difference is that the coverage classes have an upper limit unde=
+r=20
+> 28km, but I don't see the point in artifically limiting maximum link dist=
+ance=20
+> (30km link could be done with big enough antennas).
+>=20
+> And I would prefer if the userspace API operated with distance rather tha=
+n=20
+> coverage classes, because it allows the user to set it correctly without=20
+> reading a thousand page document. The coverage class could be then calcul=
+ated=20
+> for use in beacons as you proposed. Of course, in this case we would be=20
+> constrained by the maximum coverage class in the standard.
+
+No, you want the _user_ API to be operated with distance, not the
+_userspace_ API. Conversion like that ought to be done in iw, not the
+kernel.
+
+johannes
+
+--=-f6tZH3HboW0YUABsozAi
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLDtYxAAoJEODzc/N7+QmanHQQAIVBJvdqZzMYmcMnHGOJFRBV
+G8VvP4o5NTMvbY9j5+ovKJvCzAQAZK5pJS7JmJMtqSrWN524OLP8nXWvfYxFYlPh
+nPjAMiVqqdcybj1v8E7N/RItq1VeU2zO6PNJP5DGsbvmTyQkqYecRxSRmKyeCstr
+Mwwo8S/D6QwoYsSf8V3Erud9a1PwhiQgpXtjUIQvJGoiSaOY/IemjI2VLNAovdjf
+sPaHfHjyYQg9HJXqB38RT2o/UOkaFYMqFgK4owfJdjIfTTSsCClwAFV5QwM8j4t/
+d1PXEZa2H7MFahOg2vJpsbuD9JHOf4lJx+O9P/Myz3++Uf3yEwRvbPxeLYw1r4JD
+SWS02ZX9Fam3dASZO5q5Xf6kxxH18/KFY7/FJQPNiIjLsqRN5xDiRnmuCQWoEyik
+PYh48d9iHDxVmsxXSXSBzlpj8R73ZAu5tRcc+uQYHvks+n4YaTCxpUP8FmKdhnmE
+C70ZCHx1H80CuChpjfSc+TfWhZoYUfLXWWIpPbO/NMBU4gcd0Q5mxOpgyfWk/dAk
+WKChBct9OCytkEKNNDb3Y4KWxFrtTdmqyLZmBBK64YtlbEd755n5pqbPrtqHNzl6
+rfpvH3JN6jPPQE+lwTP32vtBICqRMoEsfj3rbKZzmx2Ktw3tRTUYSlWK5mDOMO6s
+X2Xwk9XPNFu9ToNrP1+O
+=Ydv3
+-----END PGP SIGNATURE-----
+
+--=-f6tZH3HboW0YUABsozAi--
+
