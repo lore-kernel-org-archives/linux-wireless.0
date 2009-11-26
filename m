@@ -1,63 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:61056 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755692AbZKFTUt convert rfc822-to-8bit (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:17991 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754644AbZKZN4c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 14:20:49 -0500
-Received: by iwn10 with SMTP id 10so1037702iwn.4
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 11:20:54 -0800 (PST)
+	Thu, 26 Nov 2009 08:56:32 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH] libertas: move more association code to assoc.c
+Date: Thu, 26 Nov 2009 14:56:20 +0100
 MIME-Version: 1.0
-In-Reply-To: <20091106183833.GC2782@tuxdriver.com>
-References: <43e72e890911060857l6e383578nc1c7d0f2ba63529f@mail.gmail.com>
-	<b6c5339f0911060929w78d16192o6c48e432e8e8c830@mail.gmail.com>
-	<43e72e890911060945s3b00e056u1efe483bd88ebd30@mail.gmail.com>
-	<20091106183833.GC2782@tuxdriver.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 6 Nov 2009 11:20:34 -0800
-Message-ID: <43e72e890911061120mc3f66cbl272adc273a39cb0c@mail.gmail.com>
-Subject: Re: Changing the way we handle region codes on Linux (public thread)
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Vivek Natarajan <Vivek.Natarajan@atheros.com>,
-	Vivek Natarajan <vivek.natraj@gmail.com>,
-	Jeffrey Baker <jwbaker@gmail.com>,
-	David Quan <David.Quan@atheros.com>,
-	Michael Green <Michael.Green@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200911261456.20476.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 6, 2009 at 10:38 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Fri, Nov 06, 2009 at 09:45:29AM -0800, Luis R. Rodriguez wrote:
->> On Fri, Nov 6, 2009 at 9:29 AM, Bob Copeland <me@bobcopeland.com> wrote:
->> > On Fri, Nov 6, 2009 at 11:57 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> >
->> >> I think that sums it up.
->> >
->> > I personally still like the idea of pushing the vendor-specific
->> > codes out to user space and having psuedo-country codes for
->> > those (e.g. "ATH_37").  Then the driver doesn't need all of the
->> > static rules loaded all the time and it would drop a lot of
->> > policy code from the driver.  CRDA could be enhanced to load
->> > multiple databases, one for pure iso-3166 codes, one with
->> > Atheros codes, one with Intel, etc.
->
-> <snip>
->
->> But with that said -- I think the region-code scheme is overly complex
->> and am not sure if aiding it is something we should focus energy and
->> resources on. It would seem better to me to focus on more cleaner
->> solutions and leave that old stuff as legacy solutions.
->
-> That's the thing about "legacy" stuff -- it doesn't go away just from
-> ignoring it!
+Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
 
-True.
 
-> FWIW, I think Bob's suggestion makes a lot of sense.
+--- linux-wl.orig/drivers/net/wireless/libertas/assoc.c
++++ linux-wl/drivers/net/wireless/libertas/assoc.c
+@@ -1943,7 +1943,7 @@ out:
+ }
+ 
+ 
+-void lbs_association_worker(struct work_struct *work)
++static void lbs_association_worker(struct work_struct *work)
+ {
+ 	struct lbs_private *priv = container_of(work, struct lbs_private,
+ 		assoc_work.work);
+@@ -2237,3 +2237,24 @@ int lbs_cmd_80211_deauthenticate(struct 
+ 	return ret;
+ }
+ 
++
++void lbs_assoc_init(struct lbs_private *priv)
++{
++	lbs_deb_enter(LBS_DEB_ASSOC);
++
++	INIT_DELAYED_WORK(&priv->assoc_work, lbs_association_worker);
++	priv->mode = IW_MODE_INFRA;
++	priv->enablehwauto = 1;
++
++	lbs_deb_leave(LBS_DEB_ASSOC);
++}
++
++
++void lbs_assoc_deinit(struct lbs_private *priv)
++{
++	lbs_deb_enter(LBS_DEB_ASSOC);
++
++	cancel_delayed_work_sync(&priv->assoc_work);
++
++	lbs_deb_leave(LBS_DEB_ASSOC);
++}
+--- linux-wl.orig/drivers/net/wireless/libertas/assoc.h
++++ linux-wl/drivers/net/wireless/libertas/assoc.h
+@@ -124,7 +124,6 @@ struct assoc_request {
+ 
+ extern u8 lbs_bg_rates[MAX_RATES];
+ 
+-void lbs_association_worker(struct work_struct *work);
+ struct assoc_request *lbs_get_association_request(struct lbs_private *priv);
+ 
+ int lbs_adhoc_stop(struct lbs_private *priv);
+@@ -152,4 +151,7 @@ int lbs_cmd_802_11_enable_rsn(struct lbs
+ int lbs_cmd_802_11_key_material(struct lbs_private *priv, uint16_t cmd_action,
+ 				struct assoc_request *assoc);
+ 
++void lbs_assoc_init(struct lbs_private *priv);
++void lbs_assoc_deinit(struct lbs_private *priv);
++
+ #endif /* _LBS_ASSOC_H */
+--- linux-wl.orig/drivers/net/wireless/libertas/main.c
++++ linux-wl/drivers/net/wireless/libertas/main.c
+@@ -818,13 +818,12 @@ static int lbs_init_adapter(struct lbs_p
+ 
+ 	memset(priv->current_addr, 0xff, ETH_ALEN);
+ 
++	lbs_assoc_init(priv);
+ 	priv->connect_status = LBS_DISCONNECTED;
+ 	priv->secinfo.auth_mode = IW_AUTH_ALG_OPEN_SYSTEM;
+-	priv->mode = IW_MODE_INFRA;
+ 	priv->channel = DEFAULT_AD_HOC_CHANNEL;
+ 	priv->mac_control = CMD_ACT_MAC_RX_ON | CMD_ACT_MAC_TX_ON;
+ 	priv->radio_on = 1;
+-	priv->enablehwauto = 1;
+ 	priv->psmode = LBS802_11POWERMODECAM;
+ 	priv->psstate = PS_STATE_FULL_POWER;
+ 	priv->is_deep_sleep = 0;
+@@ -964,7 +963,6 @@ struct lbs_private *lbs_add_card(void *c
+ 	}
+ 
+ 	priv->work_thread = create_singlethread_workqueue("lbs_worker");
+-	INIT_DELAYED_WORK(&priv->assoc_work, lbs_association_worker);
+ 	INIT_WORK(&priv->mcast_work, lbs_set_mcast_worker);
+ 
+ 	priv->wol_criteria = 0xffffffff;
+@@ -1002,7 +1000,7 @@ void lbs_remove_card(struct lbs_private 
+ 
+ 	dev = priv->dev;
+ 
+-	cancel_delayed_work_sync(&priv->assoc_work);
++	lbs_assoc_deinit(priv);
+ 	cancel_work_sync(&priv->mcast_work);
+ 
+ 	/* worker thread destruction blocks on the in-flight command which
 
-Patches welcomed then :)
-
-  Luis
+-- 
+http://www.holgerschurig.de
