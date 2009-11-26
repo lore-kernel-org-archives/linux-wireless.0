@@ -1,61 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33108 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754059AbZKTVQh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 16:16:37 -0500
-Date: Fri, 20 Nov 2009 19:16:39 -0200
-From: Mauro Carvalho Chehab <mchehab@infradead.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org
-Subject: Re: A generic kernel compatibilty code
-Message-ID: <20091120191639.263714e2@pedra>
-In-Reply-To: <43e72e890911201245r4de5b039hb2dd5011dabf2399@mail.gmail.com>
-References: <43e72e890911201245r4de5b039hb2dd5011dabf2399@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from jazz.viagenie.ca ([206.123.31.2]:56940 "EHLO jazz.viagenie.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751169AbZKZUYa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2009 15:24:30 -0500
+Message-ID: <4B0EE402.4040301@viagenie.ca>
+Date: Thu, 26 Nov 2009 15:24:34 -0500
+From: Simon Perreault <simon.perreault@viagenie.ca>
+MIME-Version: 1.0
+To: Andrey Yurovsky <andrey@cozybit.com>
+CC: Pat Erley <pat-lkml@erley.org>, linux-wireless@vger.kernel.org
+Subject: Re: Hardware for 802.11s
+References: <4B0C5E6F.5040302@viagenie.ca> <4B0C6493.7010805@erley.org> <45e8e6c40911250735o334e23degdf0f1e421aa590b9@mail.gmail.com>
+In-Reply-To: <45e8e6c40911250735o334e23degdf0f1e421aa590b9@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+Andrey Yurovsky wrote, on 2009-11-25 10:35:
+> Can you please use a sniffer on the channel you
+> picked (it's channel 1 by default) and confirm that you see mesh
+> beacons from your devices once you "ifconfig up"?
 
-Em Fri, 20 Nov 2009 12:45:51 -0800
-"Luis R. Rodriguez" <mcgrof@gmail.com> escreveu:
+We just tried this and did not see *anything*.
 
-> Everyone and their mother reinvents the wheel when it comes to
-> backporting kernel modules. It a painful job and it seems to me an
-> alternative is possible. If we can write generic compatibilty code for
-> a new routine introduced on the next kernel how about just merging it
-> to the kernel under some generic compat module. This would be
-> completey ignored by everyone using the stable kernel but can be
-> copied by anyone doing backport work.
-> 
-> So I'm thinking something as simple as a generic compat/comat.ko with
-> compat-2.6.32.[ch] files.
-> 
-> We've already backported everything needed for wireless drivers under
-> compat-wireless under this format down to even 2.6.25. I volunteer to
-> be the sucker for this if this is reasonable and given the shot to try
-> it.
-> 
-
-We have several backport stuff at our development tree, that works for
-V4L/DVB up to kernel 2.6.16 (so, up to RHEL5).
-
-It is based on a compat.h file, plus some extra tests inside the drivers.
-They are at:
-	http://linuxtv.org/hg/v4l-dvb
-
-I also started working on a different approach of dynamically patching the
-drivers based on some semantic rules, parsed in perl, but I hadn't enough
-time to finish.
-
-If you want to take a look, it is at:
-
-	http://linuxtv.org/hg/~mchehab/backport/
-
-
-Cheers,
-Mauro
+Thanks,
+Simon
+-- 
+DNS64 open-source   --> http://ecdysis.viagenie.ca
+STUN/TURN server    --> http://numb.viagenie.ca
+vCard 4.0           --> http://www.vcarddav.org
