@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:40406 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757101AbZKDRHV (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:23623 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760646AbZKZPJn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 12:07:21 -0500
-Date: Wed, 4 Nov 2009 12:07:25 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: Frank Schaefer <schaefer.frank@gmx.net>,
-	USB list <linux-usb@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ar9170usb: add mode-switching for AVM Fritz!WLAN USB N
- devices in cdrom mode
-In-Reply-To: <1257351909.28469.97.camel@johannes.local>
-Message-ID: <Pine.LNX.4.44L0.0911041204540.2968-100000@iolanthe.rowland.org>
+	Thu, 26 Nov 2009 10:09:43 -0500
+Subject: [PATCH 11/12] wl1251: update tx_hdr when aliging skb in tx
+To: linville@tuxdriver.com
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 26 Nov 2009 17:09:38 +0200
+Message-ID: <20091126150938.917.43592.stgit@tikku>
+In-Reply-To: <20091126150141.917.35278.stgit@tikku>
+References: <20091126150141.917.35278.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 4 Nov 2009, Johannes Berg wrote:
+From: Kalle Valo <kalle.valo@nokia.com>
 
-> On Wed, 2009-11-04 at 11:16 -0500, Alan Stern wrote:
-> 
-> > Here's my first attempt at considering all the pros and cons.  Has
-> > anything important been left out?
-> 
-> [snip]
-> 
-> I think you forgot to consider the case where both the driver and the
-> mode switch code need an update to handle a new device. This is relevant
-> in the case where a new device shows up that needs mode-switching, but
-> even after switching has an ID that the current driver doesn't know
-> about.
+Before transmission when aligning the buffer to 4-byte bounday, tx_hdr
+needs to be updated. Otherwise debug logs print false data.
 
-This could be handled by programs like usb_modeswitch.  The USB serial 
-drivers allow IDs to be added dynamically.
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1251_tx.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Of course, if something more than that is required then the situation 
-would be different.  However I think this is pretty rare.
-
-Alan Stern
+diff --git a/drivers/net/wireless/wl12xx/wl1251_tx.c b/drivers/net/wireless/wl12xx/wl1251_tx.c
+index faa23ef..c822318 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1251_tx.c
+@@ -219,6 +219,7 @@ static int wl1251_tx_send_packet(struct wl1251 *wl, struct sk_buff *skb,
+ 			/* align the buffer on a 4-byte boundary */
+ 			skb_reserve(skb, offset);
+ 			memmove(skb->data, src, skb->len);
++			tx_hdr = (struct tx_double_buffer_desc *) skb->data;
+ 		} else {
+ 			wl1251_info("No handler, fixme!");
+ 			return -EINVAL;
 
