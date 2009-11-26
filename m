@@ -1,47 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:49818 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752358AbZKOOTe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Nov 2009 09:19:34 -0500
-Message-ID: <4B000DF5.4020606@openwrt.org>
-Date: Sun, 15 Nov 2009 15:19:33 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from smtp.nokia.com ([192.100.122.230]:58483 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759886AbZKZJCP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2009 04:02:15 -0500
+Subject: [PATCH 0/3] wl1251 power save fixes for 2.6.33
+To: linville@tuxdriver.com
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 26 Nov 2009 10:55:48 +0200
+Message-ID: <20091126085256.1564.77644.stgit@tikku>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 1/2] mac80211: add private driver flags and ampdu length
- to tx info
-References: <4AFED564.8030804@openwrt.org> <1258293706.6294.7.camel@johannes.local>
-In-Reply-To: <1258293706.6294.7.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Sat, 2009-11-14 at 17:05 +0100, Felix Fietkau wrote:
-> 
->> - * @ampdu_ack_len: number of aggregated frames.
->> - * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
->> + * @ampdu_ack_len: number of acked aggregated frames.
->> + * 	relevant only if ieee80211_tx_status_ampdu was set.
-> 
-> why lowercase that?
-Sorry, late night vim accident. I'll resend...
+Hi John,
 
->> -	/* 2 byte hole */
->> -	u8 pad[2];
->> +	u8 driver_flags;
->> +	u8 pad;
-> 
-> The ampdu_len seems ok, but I'm still not convinced this is right.
-> Drivers _should_ have enough space in the driver parts of this struct,
-> and not need flags here. I realise that you do need that because of the
-> RC and other internal things, but maybe you could simply use "pad[0]"
-> for that so not to encourage others to start doing this too?
-If you prefer it using the padding directly, I can change it to that
-too. I don't mind as long as I have space to put that stuff into and
-don't need to use rate_driver_data.
+my testing revealed serious power save problems in wl1251. If possible,
+please send the fixes to 2.6.33. The patches should be simple enough and
+they make a huge improvement.
 
-- Felix
+---
+
+Kalle Valo (3):
+      wl1251: remove false warning messages
+      wl1251: fix bssid handling
+      wl1251: don't build null data template in wl1251_op_config()
+
+
+ drivers/net/wireless/wl12xx/wl1251_main.c |   36 ++++++++++++-----------------
+ 1 files changed, 15 insertions(+), 21 deletions(-)
+
