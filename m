@@ -1,31 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:54544 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759849AbZKFV2H (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:40304 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754911AbZKZN5K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 16:28:07 -0500
-Received: by yxe17 with SMTP id 17so1260486yxe.33
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 13:28:12 -0800 (PST)
-Subject: Changing from Minstrel to PID
-From: =?ISO-8859-1?Q?Mart=EDn?= Ernesto Barreyro
-	<barreyromartin@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 06 Nov 2009 18:29:16 -0300
-Message-ID: <1257542956.6565.2.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Thu, 26 Nov 2009 08:57:10 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH] libertas: fixup cfg.h
+Date: Thu, 26 Nov 2009 14:57:01 +0100
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200911261457.01111.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, I have a rtl8187 wireless card and I've allways have problems
-with the rate control using minstrel. So everytime my kernel updates
-(recently it went from 2.30 to 2.31) i have to recompile mi kernel
-setting pid as my default rate control algorithm.
+a) no need to include "dev.h"
+b) declaration of lbs_send_specific_ssid_scan() and lbs_scan_networks()
+   came in by accident from an experimental patch
 
-Is there a way to change that without compiling the kernel?
+Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
 
+
+--- linux-wl.orig/drivers/net/wireless/libertas/cfg.h
++++ linux-wl/drivers/net/wireless/libertas/cfg.h
+@@ -1,15 +1,11 @@
+ #ifndef __LBS_CFG80211_H__
+ #define __LBS_CFG80211_H__
+ 
+-#include "dev.h"
++struct device;
++struct lbs_private;
+ 
+ struct wireless_dev *lbs_cfg_alloc(struct device *dev);
+ int lbs_cfg_register(struct lbs_private *priv);
+ void lbs_cfg_free(struct lbs_private *priv);
+ 
+-int lbs_send_specific_ssid_scan(struct lbs_private *priv, u8 *ssid,
+-	u8 ssid_len);
+-int lbs_scan_networks(struct lbs_private *priv, int full_scan);
+-
+-
+ #endif
 
 -- 
-Martín Ernesto Barreyro <barreyromartin@gmail.com>
-Analista Universitario en Redes de Datos.
-
+http://www.holgerschurig.de
