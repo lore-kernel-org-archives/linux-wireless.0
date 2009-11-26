@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f197.google.com ([209.85.223.197]:54592 "EHLO
-	mail-iw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752402AbZKYG5j convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:58819 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759900AbZKZJCt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 01:57:39 -0500
-Received: by iwn35 with SMTP id 35so1971653iwn.4
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Nov 2009 22:57:45 -0800 (PST)
+	Thu, 26 Nov 2009 04:02:49 -0500
+Subject: [PATCH 3/3] wl1251: don't build null data template in
+	wl1251_op_config()
+To: linville@tuxdriver.com
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 26 Nov 2009 10:56:13 +0200
+Message-ID: <20091126085613.1564.36360.stgit@tikku>
+In-Reply-To: <20091126085256.1564.77644.stgit@tikku>
+References: <20091126085256.1564.77644.stgit@tikku>
 MIME-Version: 1.0
-In-Reply-To: <20091125061834.GA27936@vasanth-laptop>
-References: <1259116677-2249-1-git-send-email-lrodriguez@atheros.com>
-	<20091125061834.GA27936@vasanth-laptop>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 24 Nov 2009 22:50:13 -0800
-Message-ID: <43e72e890911242250o336b4891leb0006cbd4ba464@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: Fix maximum tx fifo settings for single stream
-	devices
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Kyungwan Nam <Kyungwan.Nam@atheros.com>,
-	Bennyam Malavazi <Bennyam.Malavazi@atheros.com>,
-	Stephen Chen <Stephen.Chen@atheros.com>,
-	Shan Palanisamy <Shan.Palanisamy@atheros.com>,
-	Paul Shaw <Paul.Shaw@atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>,
-	stable@kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 24, 2009 at 10:18 PM, Vasanthakumar Thiagarajan
-<vasanth@atheros.com> wrote:
-> On Wed, Nov 25, 2009 at 08:07:57AM +0530, Luis Rodriguez wrote:
->> +
->> +       if (AR_SREV_9285(ah) || AR_SREV_9271(ah))
->> +               pCap->tx_triglevel_max = MAX_TX_FIFO_THRESHOLD >> 1;
->> +       else
->> +               pCap->tx_triglevel_max = MAX_TX_FIFO_THRESHOLD;
->
-> I missed this one, thanks.
+From: Kalle Valo <kalle.valo@nokia.com>
 
-We got AR9285 in on 2.6.29 so I forgot to cc stable on the patch,
-please let me know if you require some help porting this.
+The bssid can be zero when null data template is set in wl1251_op_config().
+It's enough, and especially safe, to set it once after association.
 
-  Luis
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1251_main.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index 50d17fc..2f50a25 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -629,10 +629,6 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+ 			goto out_sleep;
+ 	}
+ 
+-	ret = wl1251_build_null_data(wl);
+-	if (ret < 0)
+-		goto out_sleep;
+-
+ 	if (conf->flags & IEEE80211_CONF_PS && !wl->psm_requested) {
+ 		wl1251_debug(DEBUG_PSM, "psm enabled");
+ 
+
