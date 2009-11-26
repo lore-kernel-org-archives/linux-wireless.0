@@ -1,92 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:52888 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933226AbZKXPZm (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:23645 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760658AbZKZPJu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 10:25:42 -0500
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [RFC 2/3] cfg80211: Add PMKSA wext compatibility handler
-Date: Tue, 24 Nov 2009 16:26:53 +0100
-Message-Id: <fce5ca6545ef79bb7ce9c9abf3e9348d070637dc.1259075573.git.sameo@linux.intel.com>
-In-Reply-To: <ff5bf1a69ecd3ed3695089cf62e6ab51689b683a.1259075573.git.sameo@linux.intel.com>
-References: <cover.1259075573.git.sameo@linux.intel.com>
- <ff5bf1a69ecd3ed3695089cf62e6ab51689b683a.1259075573.git.sameo@linux.intel.com>
-In-Reply-To: <cover.1259075573.git.sameo@linux.intel.com>
-References: <cover.1259075573.git.sameo@linux.intel.com>
+	Thu, 26 Nov 2009 10:09:50 -0500
+Subject: [PATCH 12/12] wl1251: enable WMM
+To: linville@tuxdriver.com
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 26 Nov 2009 17:09:45 +0200
+Message-ID: <20091126150945.917.10816.stgit@tikku>
+In-Reply-To: <20091126150141.917.35278.stgit@tikku>
+References: <20091126150141.917.35278.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the addition of the *_pmksa cfg80211 ops, we can now add the
-corresponding wireless extensions compatibility handler.
+From: Kalle Valo <kalle.valo@nokia.com>
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Everything is ready now and we can enable WMM in mac80211.
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
- net/wireless/wext-compat.c |   42 ++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 42 insertions(+), 0 deletions(-)
+ drivers/net/wireless/wl12xx/wl1251_main.c |    2 ++
+ drivers/net/wireless/wl12xx/wl1251_tx.h   |    3 ---
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index 29091ac..7e7985e 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -1401,6 +1401,47 @@ int cfg80211_wext_giwessid(struct net_device *dev,
- }
- EXPORT_SYMBOL_GPL(cfg80211_wext_giwessid);
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index e1c4dd3..6aeffbe 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -1382,6 +1382,8 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
+ 	wl->hw->wiphy->max_scan_ssids = 1;
+ 	wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wl1251_band_2ghz;
  
-+int cfg80211_wext_siwpmksa(struct net_device *dev,
-+			   struct iw_request_info *info,
-+			   struct iw_point *data, char *extra)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+	struct cfg80211_pmksa cfg_pmksa;
-+	struct iw_pmksa* pmksa = (struct iw_pmksa *)extra;
++	wl->hw->queues = 4;
 +
-+	memset(&cfg_pmksa, 0, sizeof(struct cfg80211_pmksa));
-+
-+	if (wdev->iftype != NL80211_IFTYPE_STATION)
-+		return -EINVAL;
-+
-+	cfg_pmksa.bssid = pmksa->bssid.sa_data;
-+	cfg_pmksa.pmkid = pmksa->pmkid;
-+
-+	switch (pmksa->cmd) {
-+	case IW_PMKSA_ADD:
-+		if (!rdev->ops->set_pmksa)
-+			return -EOPNOTSUPP;
-+
-+		return rdev->ops->set_pmksa(&rdev->wiphy, dev, &cfg_pmksa);
-+
-+	case IW_PMKSA_REMOVE:
-+		if (!rdev->ops->del_pmksa)
-+			return -EOPNOTSUPP;
-+
-+		return rdev->ops->del_pmksa(&rdev->wiphy, dev, &cfg_pmksa);
-+
-+	case IW_PMKSA_FLUSH:
-+		if (!rdev->ops->flush_pmksa)
-+			return -EOPNOTSUPP;
-+
-+		return rdev->ops->flush_pmksa(&rdev->wiphy, dev);
-+
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+}
-+
- static const iw_handler cfg80211_handlers[] = {
- 	[IW_IOCTL_IDX(SIOCGIWNAME)]	= (iw_handler) cfg80211_wext_giwname,
- 	[IW_IOCTL_IDX(SIOCSIWFREQ)]	= (iw_handler) cfg80211_wext_siwfreq,
-@@ -1433,6 +1474,7 @@ static const iw_handler cfg80211_handlers[] = {
- 	[IW_IOCTL_IDX(SIOCSIWAUTH)]	= (iw_handler) cfg80211_wext_siwauth,
- 	[IW_IOCTL_IDX(SIOCGIWAUTH)]	= (iw_handler) cfg80211_wext_giwauth,
- 	[IW_IOCTL_IDX(SIOCSIWENCODEEXT)]= (iw_handler) cfg80211_wext_siwencodeext,
-+	[IW_IOCTL_IDX(SIOCSIWPMKSA)]	= (iw_handler) cfg80211_wext_siwpmksa,
- };
+ 	ret = wl1251_register_hw(wl);
+ 	if (ret)
+ 		goto out;
+diff --git a/drivers/net/wireless/wl12xx/wl1251_tx.h b/drivers/net/wireless/wl12xx/wl1251_tx.h
+index b7bead8..55856c6 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_tx.h
++++ b/drivers/net/wireless/wl12xx/wl1251_tx.h
+@@ -212,9 +212,6 @@ struct tx_result {
  
- const struct iw_handler_def cfg80211_wext_handler = {
--- 
-1.6.3.3
+ static inline int wl1251_tx_get_queue(int queue)
+ {
+-	/* FIXME: use best effort until WMM is enabled */
+-	return QOS_AC_BE;
+-
+ 	switch (queue) {
+ 	case 0:
+ 		return QOS_AC_VO;
 
