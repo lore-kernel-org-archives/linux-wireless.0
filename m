@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:47124 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751911AbZKGSKB convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:27780 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760643AbZKZPJ3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 13:10:01 -0500
-Received: by ewy3 with SMTP id 3so1999164ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2009 10:10:05 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1250927141.23605.3.camel@johannes.local>
-References: <83a869cd0908211513k2e14ba40k251aa8a1e7393a77@mail.gmail.com>
-	 <1250927141.23605.3.camel@johannes.local>
-Date: Sat, 7 Nov 2009 19:10:05 +0100
-Message-ID: <83a869cd0911071010g32c798c6pfecd875a1bf484e0@mail.gmail.com>
-Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
-From: gregor kowski <gregor.kowski@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Thu, 26 Nov 2009 10:09:29 -0500
+Subject: [PATCH 04/12] wl1251: reduce ELP wakeup timeout
+To: linville@tuxdriver.com
+From: Kalle Valo <kalle.valo@iki.fi>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Thu, 26 Nov 2009 17:08:51 +0200
+Message-ID: <20091126150850.917.96234.stgit@tikku>
+In-Reply-To: <20091126150141.917.35278.stgit@tikku>
+References: <20091126150141.917.35278.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Kalle Valo <kalle.valo@nokia.com>
 
-sorry for the long delay.
+The original TI driver uses 100 ms timeout ELP wakeup timeout, better
+to use the same. Otherwise problems with wakeup might get unnoticed.
 
-On Sat, Aug 22, 2009 at 8:45 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sat, 2009-08-22 at 00:13 +0200, gregor kowski wrote:
->
->> +enum ieee80211_internal_tkip_initialized {
->> +     TKIP_INITIALIZED_NONE,
->> +     TKIP_INITIALIZED_PHASE1,
->> +     TKIP_INITIALIZED_UPDATE_KEY,
->> +};
->
-> Those constants and the enum itself really need better names. This way,
-> there's no way to understand what it means without reading all the code.
->
-Could you suggest better name ?
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1251_ps.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-ieee80211_internal_tkip_state and
-TKIP_STATE_NOT_INIT
-TKIP_STATE_PHASE1_DONE
-TKIP_STATE_PHASE1_HW_UPLOADED
-?
+diff --git a/drivers/net/wireless/wl12xx/wl1251_ps.c b/drivers/net/wireless/wl12xx/wl1251_ps.c
+index 9931b19..54a2720 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_ps.c
++++ b/drivers/net/wireless/wl12xx/wl1251_ps.c
+@@ -26,7 +26,8 @@
+ #include "wl1251_cmd.h"
+ #include "wl1251_io.h"
+ 
+-#define WL1251_WAKEUP_TIMEOUT 2000
++/* in ms */
++#define WL1251_WAKEUP_TIMEOUT 100
+ 
+ void wl1251_elp_work(struct work_struct *work)
+ {
 
-Thanks
-
-Gregor
