@@ -1,49 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:48713 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757584AbZKXC0R (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:38370 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760356AbZKZMZ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 21:26:17 -0500
-Received: by mail-yx0-f187.google.com with SMTP id 17so5308557yxe.33
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 18:26:23 -0800 (PST)
-Message-ID: <4B0B440D.4030201@gmail.com>
-Date: Mon, 23 Nov 2009 21:25:17 -0500
-From: Arnaud Lacombe <lacombar@gmail.com>
+	Thu, 26 Nov 2009 07:25:59 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH] libertas: simplyfy lbs_set_regiontable()
+Date: Thu, 26 Nov 2009 13:25:49 +0100
 MIME-Version: 1.0
-To: mcgrof@bombadil.infradead.org
-CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
-Subject: [PATCH 09/13] Add posix SHUT_RD/SHUT_WR/SHUT_RDWR macros
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200911261325.49582.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added on commit 91cf45f0 by Trond Myklebust in include/linux/net.h.
+a) it's only called once
+b) it get's called with band == 0, but setting a field in priv to 0 is
+   superfluous (priv is kzalloc'ed anyway), so parameter "band" can go
+   away
+c) memsetting priv->regiontable is not necessary, too
+d) it get's called with both priv and priv->regioncode, so the former
+   parameter is superfluous
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- compat-2.6.24.h |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
 
-diff --git a/compat-2.6.24.h b/compat-2.6.24.h
-index d8f7c2c..68d33c7 100644
---- a/compat-2.6.24.h
-+++ b/compat-2.6.24.h
-@@ -10,6 +10,13 @@
- /* Added on 2.6.24 in include/linux/types.h by Al viro on commit
-142956af */
- typedef unsigned long               uintptr_t;
 
-+/* From include/linux/net.h */
-+enum sock_shutdown_cmd {
-+	SHUT_RD		= 0,
-+	SHUT_WR		= 1,
-+	SHUT_RDWR	= 2,
-+};
-+
- #if (LINUX_VERSION_CODE == KERNEL_VERSION(2,6,23)) /* Local check */
- /* Added as of 2.6.24 in include/linux/skbuff.h.
-  *
+--- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
++++ linux-wl/drivers/net/wireless/libertas/cmd.c
+@@ -174,7 +174,7 @@ int lbs_update_hw_spec(struct lbs_privat
+ 	if (priv->mesh_dev)
+ 		memcpy(priv->mesh_dev->dev_addr, priv->current_addr, ETH_ALEN);
+ 
+-	if (lbs_set_regiontable(priv, priv->regioncode, 0)) {
++	if (lbs_set_regiontable(priv)) {
+ 		ret = -1;
+ 		goto out;
+ 	}
+--- linux-wl.orig/drivers/net/wireless/libertas/scan.c
++++ linux-wl/drivers/net/wireless/libertas/scan.c
+@@ -272,7 +272,7 @@ static struct chan_freq_power *lbs_get_r
+ 	return NULL;
+ }
+ 
+-int lbs_set_regiontable(struct lbs_private *priv, u8 region, u8 band)
++int lbs_set_regiontable(struct lbs_private *priv)
+ {
+ 	int ret = 0;
+ 	int i = 0;
+@@ -282,21 +282,18 @@ int lbs_set_regiontable(struct lbs_priva
+ 
+ 	lbs_deb_enter(LBS_DEB_MAIN);
+ 
+-	memset(priv->region_channel, 0, sizeof(priv->region_channel));
+-
+-	cfp = lbs_get_region_cfp_table(region, &cfp_no);
++	cfp = lbs_get_region_cfp_table(priv->regioncode, &cfp_no);
+ 	if (cfp != NULL) {
+ 		priv->region_channel[i].nrcfp = cfp_no;
+ 		priv->region_channel[i].CFP = cfp;
+ 	} else {
+ 		lbs_deb_main("wrong region code %#x in band B/G\n",
+-		       region);
++		       priv->regioncode);
+ 		ret = -1;
+ 		goto out;
+ 	}
+ 	priv->region_channel[i].valid = 1;
+-	priv->region_channel[i].region = region;
+-	priv->region_channel[i].band = band;
++	priv->region_channel[i].region = priv->regioncode;
+ 	i++;
+ out:
+ 	lbs_deb_leave_args(LBS_DEB_MAIN, "ret %d", ret);
+--- linux-wl.orig/drivers/net/wireless/libertas/scan.h
++++ linux-wl/drivers/net/wireless/libertas/scan.h
+@@ -46,7 +46,7 @@ struct region_channel {
+ 
+ int lbs_ssid_cmp(u8 *ssid1, u8 ssid1_len, u8 *ssid2, u8 ssid2_len);
+ 
+-int lbs_set_regiontable(struct lbs_private *priv, u8 region, u8 band);
++int lbs_set_regiontable(struct lbs_private *priv);
+ 
+ int lbs_send_specific_ssid_scan(struct lbs_private *priv, u8 *ssid,
+ 				u8 ssid_len);
+
 -- 
-1.6.3.3.385.g60647.dirty
-
-
+http://www.holgerschurig.de
