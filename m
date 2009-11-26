@@ -1,37 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:64198 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753583AbZKIX1e (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:65500 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750919AbZKZVtG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 18:27:34 -0500
-Date: Mon, 09 Nov 2009 17:27:38 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: bzolnier@gmail.com,
-	Bernhard Schiffner <bernhard@schiffner-limbach.de>,
-	linux-wireless@vger.kernel.org
-Subject: [RFT 0/6] rtl8187se: Initial introduction of driver
-Message-ID: <4af8a56a.fCJY51VFS93aEZ0t%Larry.Finger@lwfinger.net>
+	Thu, 26 Nov 2009 16:49:06 -0500
+Received: by iwn1 with SMTP id 1so643610iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2009 13:49:11 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <69e28c910911260902p5385cd33wa0d5e00199235dd1@mail.gmail.com>
+References: <d82e647a0911260557l5cf33449pe41f8902b6889891@mail.gmail.com>
+	<69e28c910911260902p5385cd33wa0d5e00199235dd1@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 26 Nov 2009 13:48:51 -0800
+Message-ID: <43e72e890911261348g32edb851obbba8e265ad22e95@mail.gmail.com>
+Subject: Re: [question] ath9k: 11n monitor mode
+To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: Ming Lei <tom.leiming@gmail.com>, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org, Matteo Croce <matteo@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patches to introduce a driver for the RTL8187SE PCI-based device.
+2009/11/26 Gábor Stefanik <netrolller.3d@gmail.com>:
+> I don't know exactly, but a while ago there was a discussion about how
+> to represent HT rates in Radiotap. AFAIK mac80211 refuses to forward
+> HT packets to monitor interfaces as they don't have a valid CCK or
+> OFDM rate.
 
-Note: This driver is only compile-tested and will require more work
-for it to be useful. I'm posting now to let others know what I have done.
+Matteo added a suggested field for radiotap for MCS rates:
 
-I have applied for an account at kernel.org. If my request is approved, I
-plan to establish an rtl8187se git tree.
+http://www.radiotap.org/suggested-fields/MCS
 
-Patch 1/6: Create file rtl8187se.h
-Patch 2/6: Create file rtl8187se_dev.c
-Patch 3/6: Create file rtl8187se_rtl8225.c
-Patch 4/6: Create file rtl8187se_rtl8225.h
-Patch 5/6: Modify file rtl818x.h
-Patch 6/6: Modify Kconfig and Makefile for rtl8187se
+If approved it could mean then parsing MCS rates.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
-
+  Luis
