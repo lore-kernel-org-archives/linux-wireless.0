@@ -1,111 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:33083 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755117AbZKMDZU (ORCPT
+Received: from parez.praha12.net ([78.102.11.253]:50990 "EHLO
+	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750703AbZKZRxs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 22:25:20 -0500
+	Thu, 26 Nov 2009 12:53:48 -0500
+From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
+Reply-To: 8an@praha12.net
+To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Subject: Re: [RFC] API for setting ACK timeout
+Date: Thu, 26 Nov 2009 18:53:53 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <200911261826.08576.8an@praha12.net> <69e28c910911260932n4bc3e82du33a28ad9a5e8482@mail.gmail.com>
+In-Reply-To: <69e28c910911260932n4bc3e82du33a28ad9a5e8482@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20091113030950.GB4054@tuxdriver.com>
-References: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
-	 <20091113030950.GB4054@tuxdriver.com>
-Date: Fri, 13 Nov 2009 08:55:25 +0530
-Message-ID: <4fb5db50911121925t1a6770ddtbd5f01477470046d@mail.gmail.com>
-Subject: Re: [patch 0/1] Adding radio type FM
-From: Janakiram Sistla <janakiram.sistla@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: majordomo@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed;
+  boundary="nextPart19998932.W4Lsflvyde";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200911261853.53572.8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Resending with added comments from John.
->From 1b1493392faeb6702ff364447b135e481930b397 Mon Sep 17 00:00:00 2001
-From: Janakiram Sistla <janakiram.sistla@gmail.com>
-Date: Fri, 13 Nov 2009 08:16:26 +0530
-Subject: [PATCH 1/1] Adding radio type FM
+--nextPart19998932.W4Lsflvyde
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Adding radio type FM in RFKILL_TYPE_.FM also belongs to
-same class of with both TX/RX capability.
-Also Added input type for the above same.
+On 26.11.2009 18:32 G=C3=A1bor Stefanik wrote:
+> Why not instead allow setting ACK timeout directly, e.g. in
+> milliseconds? (Similar to how signal strength is almost always
+> returned in dBm, even though the devices themselves use all kinds of
+> units.)
 
-Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
----
- include/linux/input.h  |    1 +
- include/linux/rfkill.h |    1 +
- net/rfkill/core.c      |    2 ++
- net/rfkill/input.c     |    9 +++++++++
- 4 files changed, 13 insertions(+), 0 deletions(-)
+Because the timeout does not depend on the distance only, the calculation=20
+involves at least the transmit duration of an ACK frame, and sometimes more=
+,=20
+depending on the hardware (in one of them I saw they added DIFS to the=20
+timeout, forgot which one).
 
-diff --git a/include/linux/input.h b/include/linux/input.h
-index 0ccfc30..f03ae90 100644
---- a/include/linux/input.h
-+++ b/include/linux/input.h
-@@ -376,6 +376,7 @@ struct input_absinfo {
- #define KEY_DISPLAY_OFF		245	/* display device to off state */
+And on Atheros hardware there are three values that depend on link distance=
+:=20
+ACK timeout, CTS timeout and slot time.
 
- #define KEY_WIMAX		246
-+#define KEY_FM			247
+So the equivalent of dBm here is the link distance, not ACK timeout.
 
- /* Range 248 - 255 is reserved for special needs of AT keyboard driver */
+Lukas Turek
 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index 3392c59..03f5598 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -45,6 +45,7 @@ enum rfkill_type {
- 	RFKILL_TYPE_WIMAX,
- 	RFKILL_TYPE_WWAN,
- 	RFKILL_TYPE_GPS,
-+	RFKILL_TYPE_FM,
- 	NUM_RFKILL_TYPES,
- };
+--nextPart19998932.W4Lsflvyde
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index ba2efb9..b8ac206 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -592,6 +592,8 @@ static const char *rfkill_get_type_str(enum
-rfkill_type type)
- 		return "wwan";
- 	case RFKILL_TYPE_GPS:
- 		return "gps";
-+	case RRFKILL_TYPE_FM:
-+		return "fm";
- 	default:
- 		BUG();
- 	}
-diff --git a/net/rfkill/input.c b/net/rfkill/input.c
-index a7295ad..f51b16d 100644
---- a/net/rfkill/input.c
-+++ b/net/rfkill/input.c
-@@ -212,6 +212,9 @@ static void rfkill_event(struct input_handle
-*handle, unsigned int type,
- 		case KEY_WIMAX:
- 			rfkill_schedule_toggle(RFKILL_TYPE_WIMAX);
- 			break;
-+		case KEY_FM:
-+			rfkill_schedule_toggle(RFKILL_TYPE_FM);
-+			break;
- 		}
- 	} else if (type == EV_SW && code == SW_RFKILL_ALL)
- 		rfkill_schedule_evsw_rfkillall(data);
-@@ -290,6 +293,12 @@ static const struct input_device_id rfkill_ids[] = {
- 		.keybit = { [BIT_WORD(KEY_UWB)] = BIT_MASK(KEY_UWB) },
- 	},
- 	{
-+		.flags = INPUT_DEVICE_ID_MATCH_EVBIT |
-+				INPUT_DEVICE_ID_MATCH_KEYBIT,
-+		.evbit = { BIT_MASK(EV_KEY) },
-+		.keybit = { [BIT_WORD(KEY_FM)] = BIT_MASK(KEY_UWB) },
-+	},
-+	{
- 		.flags = INPUT_DEVICE_ID_MATCH_EVBIT | INPUT_DEVICE_ID_MATCH_KEYBIT,
- 		.evbit = { BIT_MASK(EV_KEY) },
- 		.keybit = { [BIT_WORD(KEY_WIMAX)] = BIT_MASK(KEY_WIMAX) },
--- 
-1.5.4.3
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
 
-Regards,
-Ram.
+iQIcBAABAgAGBQJLDsCxAAoJEEBjvk/UOfYw7wIP/0/OhAmdRJIAsbqCQdM1M7EH
+etw7gflbM2EnL+XR0VQtkLjXkSBZcbgxRwoHuXoO6i2vCPI+j5izTJ30FJHNwb6n
+9wGsogY06i/Pu2StAT3+vcvgN6aiOkfejUaFbq+BTskbz2Dl9vJ3Rb9PB3XKMXAa
+sX8RbVEsb9dsBh/hFBNZxizUgOY42F3v02jR/jJ/jAr8ewGgsRbElY8hpyVTvX54
+H7/EUNUNLuAwGIySrKrOem4qRMTY/K9mxRip7N4VdZnLp5ZN9PViA+odxiA95ukz
+10NZliIBQ3i00dmnhdRSHcyKc/505o3Y9/Sk1X7WMGqWYik2CLllXi7jWu/L+9HP
+GQZ40xzjvAWepTewPtS3rzwVGP/W+E4UAszhiOCaoJgx9wzq2TmQFHVFQTwEo0s2
+4iIsU0mwPehmmsPG87/llHraKHmt9tpK8DXlglE7ipGsp9eZcyGp8F99qMOiG5vm
+GW8uGOX2tQ5AtGTnMUUmWJ9NN3ziNA7jjDJzv+kCtDmLsmidluJn+NONUF/3XC6E
+i7nNwa8tCvPEKWFvwuqFX8mX7KLjJJHZIovbAgwoWv0oKKl9Mq6xfiAUAbMW6nMJ
+fhd8TyQthnkwEiBvSz1pGCuIcruN5L0LcTFqRz+5ze8a33FXzX/4a1Y3wkw4RhzZ
+C6+CErWsvAZxMRDvjeKR
+=fSTI
+-----END PGP SIGNATURE-----
+
+--nextPart19998932.W4Lsflvyde--
