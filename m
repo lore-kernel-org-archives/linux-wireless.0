@@ -1,61 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:43492 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750796AbZKCPkH (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:23575 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754904AbZKZPIo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 10:40:07 -0500
-Date: Tue, 3 Nov 2009 07:38:13 -0800 (PST)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Marcel Holtmann <marcel@holtmann.org>
-cc: Johannes Berg <johannes@sipsolutions.net>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	David Miller <davem@davemloft.net>, linville@tuxdriver.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Please consider reverting
- 7d930bc33653d5592dc386a76a38f39c2e962344
-In-Reply-To: <1257262187.3420.73.camel@localhost.localdomain>
-Message-ID: <alpine.LFD.2.01.0911030732150.31845@localhost.localdomain>
-References: <20091103053156.GA3212@core.coreip.homeip.net>  <20091102.224957.32364226.davem@davemloft.net>  <20091103065238.GE3212@core.coreip.homeip.net>  <1257232587.3420.55.camel@localhost.localdomain>  <1257234299.28469.25.camel@johannes.local>
- <20091103082201.GG3212@core.coreip.homeip.net>  <1257237061.28469.43.camel@johannes.local>  <20091103084744.GH3212@core.coreip.homeip.net>  <1257238623.28469.47.camel@johannes.local> <1257262187.3420.73.camel@localhost.localdomain>
+	Thu, 26 Nov 2009 10:08:44 -0500
+Subject: [PATCH 00/12] wl1251 WMM support and minor fixes
+To: linville@tuxdriver.com
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 26 Nov 2009 17:08:22 +0200
+Message-ID: <20091126150141.917.35278.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Moi John, [1]
+
+here are few patches for wl1251. Now there is WMM support and also some
+minor fixes. The patchset applies on top of the wl1251 power save fixes I
+sent earlier today.
+
+These patches are not urgent.
+
+[1] http://en.wiktionary.org/wiki/moi#Finnish 
+    the only easy word in finnish
+
+---
+
+Kalle Valo (12):
+      wl1251: add tx queue status to debugfs
+      wl1251: print a debug message when tx_queue is full
+      wl1251: fix error handling in wl1251_op_config()
+      wl1251: reduce ELP wakeup timeout
+      wl1251: simplify ELP wakeup time calculation
+      wl1251: fix payload alignment
+      wl1251: use __dev_alloc_skb() on RX
+      wl1251: implement acx_ac_cfg to configure hardware queues
+      wl1251: implement wl1251_acx_tid_cfg()
+      wl1251: implement WMM
+      wl1251: update tx_hdr when aliging skb in tx
+      wl1251: enable WMM
 
 
-On Wed, 4 Nov 2009, Marcel Holtmann wrote:
-> 
-> I have to agree here. It happens why too often lately. And this needs to
-> stop. Otherwise why bother with subsystem maintainers? Just send
-> everything to Linus directly and have him to review every line of code.
+ drivers/net/wireless/wl12xx/wl1251.h         |    1 
+ drivers/net/wireless/wl12xx/wl1251_acx.c     |   69 +++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1251_acx.h     |   87 ++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1251_debugfs.c |   23 +++++++
+ drivers/net/wireless/wl12xx/wl1251_init.c    |    5 +
+ drivers/net/wireless/wl12xx/wl1251_init.h    |   47 ++++++++++++++
+ drivers/net/wireless/wl12xx/wl1251_main.c    |   50 ++++++++++++++-
+ drivers/net/wireless/wl12xx/wl1251_ps.c      |    9 +--
+ drivers/net/wireless/wl12xx/wl1251_rx.c      |   17 +++++
+ drivers/net/wireless/wl12xx/wl1251_tx.c      |    9 +--
+ drivers/net/wireless/wl12xx/wl1251_tx.h      |   17 +++++
+ 11 files changed, 323 insertions(+), 11 deletions(-)
 
-You're full of sh*t.
-
-Bugs are bugs. They should be reverted, and the people who introduced them 
-should be SHAMED if the thing was introduced after the merge window.
-
-I don't need to review any line of code at all - a revert is a revert. 
-There's not a lot of review that needs, just a very obvious "that bug 
-causes more problems than it fixed".
-
-And yes, I'm upset, because in this case I saw one of the _earlier_ bisect 
-results too, and I did actually spend time debugging it and sending 
-Johannes the information, because he basically ignored the bisect result. 
-
-That makes me upset. The fact that somebody has bisected the problem means 
-that you should damn well thank them, not complain. And look at the -rc 
-number, look at the commit - and you should realize that "please revert" 
-is OBVIOUSLY the right thing to say to something that introduces problems 
-after -rc5.
-
-The fact is, maintainership does _not_ mean ownership. It means that you 
-should be _responsible_ for the code, and you get credit for it, but if 
-problems happen you do NOT "own" it. Not at all.
-
-If you don't understand that, you shouldn't be a maintainer.
-
-And if it's not obvious - I'm really upset that people are complaining 
-about "please revert" for this case. YOU were wrong. 
-
-		Linus
