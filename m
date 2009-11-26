@@ -1,104 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:32804 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753584AbZKSO34 (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:27748 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760641AbZKZPJK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2009 09:29:56 -0500
-Subject: Re: mac80211 breaks suspend to disk
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1258638183.5063.4.camel@maxim-laptop>
-References: <1258568836.4512.13.camel@maxim-laptop>
-	 <20091118202802.GE2911@tuxdriver.com>
-	 <1258576749.8018.7.camel@maxim-laptop>
-	 <1258578199.30511.80.camel@johannes.local>
-	 <1258579170.4525.2.camel@maxim-laptop>
-	 <1258579261.30511.84.camel@johannes.local>
-	 <1258638183.5063.4.camel@maxim-laptop>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-QPqoFILT+yLqXbxzOLF8"
-Date: Thu, 19 Nov 2009 15:29:59 +0100
-Message-ID: <1258640999.7094.19.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 26 Nov 2009 10:09:10 -0500
+Subject: [PATCH 06/12] wl1251: fix payload alignment
+To: linville@tuxdriver.com
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 26 Nov 2009 17:09:04 +0200
+Message-ID: <20091126150904.917.8182.stgit@tikku>
+In-Reply-To: <20091126150141.917.35278.stgit@tikku>
+References: <20091126150141.917.35278.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Kalle Valo <kalle.valo@nokia.com>
 
---=-QPqoFILT+yLqXbxzOLF8
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+mac80211 complained that in some cases IP payload was not aligned, this
+happens if the 802.11 header is not aligned with four. In that case we have
+to move entire packet to make the payload properly aligned.
 
-On Thu, 2009-11-19 at 15:43 +0200, Maxim Levitsky wrote:
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1251_rx.c |   17 ++++++++++++++++-
+ 1 files changed, 16 insertions(+), 1 deletions(-)
 
-> This problem definitely is fixed.
-
-Thanks for checking.
-
-> One more finding from the hibernate loop though:
->=20
-> Nov 19 12:25:49 maxim-laptop NetworkManager: <info>  (wlan0): deactivatin=
-g device (reason: 37).
-> Nov 19 12:25:49 maxim-laptop NetworkManager: <info>  (wlan0): canceled DH=
-CP transaction, dhcp client pid 6130
-> Nov 19 12:25:49 maxim-laptop kernel: [  239.925841] wlan0: disassociating=
- from 00:1b:9e:d8:77:02 by local choice (reason=3D3)
-> Nov 19 12:25:49 maxim-laptop kernel: [  239.940401] phy0: Removed STA 00:=
-1b:9e:d8:77:02
-> Nov 19 12:25:49 maxim-laptop kernel: [  239.982746] phy0: Destroyed STA 0=
-0:1b:9e:d8:77:02
-> Nov 19 12:25:49 maxim-laptop NetworkManager: <WARN>  check_one_route(): (=
-wlan0) error -34 returned from rtnl_route_del(): Sucess#012
-> Nov 19 12:25:49 maxim-laptop NetworkManager: <info>  (wlan0): cleaning up=
-...
-> Nov 19 12:25:49 maxim-laptop NetworkManager: <info>  (wlan0): taking down=
- device.
-> Nov 19 12:25:49 maxim-laptop avahi-daemon[1626]: Withdrawing address reco=
-rd for 10.1.0.2 on wlan0.
-> Nov 19 12:25:49 maxim-laptop avahi-daemon[1626]: Leaving mDNS multicast g=
-roup on interface wlan0.IPv4 with address 10.1.0.2.
-> Nov 19 12:25:49 maxim-laptop kernel: [  239.998665] wlan0: deauthenticati=
-ng from 00:1b:9e:d8:77:02 by local choice (reason=3D3)
-> Nov 19 12:25:49 maxim-laptop kernel: [  240.072664] phy0: device now idle
-> Nov 19 12:25:49 maxim-laptop kernel: [  240.105115] ------------[ cut her=
-e ]------------
-> Nov 19 12:25:49 maxim-laptop avahi-daemon[1626]: Interface wlan0.IPv4 no =
-longer relevant for mDNS.
-> Nov 19 12:25:49 maxim-laptop kernel: [  240.120021] WARNING: at /home/max=
-im/software/kernel/linux-2.6/net/wireless/core.c:618 wdev_cleanup_work+0xe9=
-/0x110 [cfg80211]()
-
-You're using 3945 it seems, this kind of warning happens when it doesn't
-do the scan notifications properly. I'd look at 3945 for this one.
-
-> Other that that, I got few freezes, this time with no feedback whatsoever=
-, blank screen, thus very likely something different.
-> Might be nvidia proprietary driver fault too.
-
-Fun.
-
-johannes
-
---=-QPqoFILT+yLqXbxzOLF8
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLBVZjAAoJEODzc/N7+QmavwgP/2vG/ejTGp1PvOU+RZWW9Rkb
-dr96YApBAhnLP/qBYSB2fAMhCnxNOJkKeEmocc/P1+yjn1yTHB97vZhelwQstfc1
-UHN9Px2yko5kkAY1gZMriiPMOdke+C+ywrjcadTxQ3ljyvlh2tGtEVUBq9IVDmAY
-cASAdDKVACtyxzupbwrQm9mZKwIbaAMgoK2GMctBGM7BisWMeeFXxJqTuWSoJ2NH
-0rB/ixCwbpK7kZQAa6+EYyPzcU6dCT2Z6rAU3XmoxE24X5RUBi7XqS9V2LJFiXTo
-LEi/k47OqZdTuNOzXnq1fM/wUryoCvsptUcNKwlM8S12obZELu879jZcVkKKDX6d
-OvO0a7UzvzNKcJIAvAvp472YNA04pMMKSxiA++tkfUgTyUhTJ54/PAbKCcu++CAR
-wCK1SL4y9z0cmuO2n/4Mr2F3oPnC3UyFbxH6mhUODuGDt6DNOawDsoeQmOFn0toj
-uqrykresrcp5jIN8/3OTFXLB2EPKXVKGhgA0ZL8EBPLuVlHkh1oICk2o3Nytjgvk
-2J1515VDWPn+LLG0Exa2FeVz81b0mtb2/fC2nzMAmvY0b5QI3TA7R1uTZurw3Tyx
-yMokQQQZ04a4jLIVCCbilwXGA0Ayr9PvpEm0bYf0LOSU++hMQNfjEJ5Ls2AvXcop
-b661j6hN7FhgVzfKstDy
-=xSIL
------END PGP SIGNATURE-----
-
---=-QPqoFILT+yLqXbxzOLF8--
+diff --git a/drivers/net/wireless/wl12xx/wl1251_rx.c b/drivers/net/wireless/wl12xx/wl1251_rx.c
+index f84cc89..04f3dcd 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_rx.c
++++ b/drivers/net/wireless/wl12xx/wl1251_rx.c
+@@ -22,6 +22,7 @@
+  *
+  */
+ 
++#include <linux/string.h>
+ #include <linux/skbuff.h>
+ #include <net/mac80211.h>
+ 
+@@ -32,6 +33,9 @@
+ #include "wl1251_cmd.h"
+ #include "wl1251_acx.h"
+ 
++/* needs to be divisible by four because of DMA */
++#define WL1251_RX_ALIGNMENT	4
++
+ static void wl1251_rx_header(struct wl1251 *wl,
+ 			     struct wl1251_rx_descriptor *desc)
+ {
+@@ -106,6 +110,7 @@ static void wl1251_rx_body(struct wl1251 *wl,
+ 	struct sk_buff *skb;
+ 	struct ieee80211_rx_status status;
+ 	u8 *rx_buffer, beacon = 0;
++	unsigned char *from, *to;
+ 	u16 length, *fc;
+ 	u32 curr_id, last_id_inc, rx_packet_ring_addr;
+ 
+@@ -126,12 +131,15 @@ static void wl1251_rx_body(struct wl1251 *wl,
+ 	if (wl->rx_current_buffer)
+ 		rx_packet_ring_addr += wl->data_path->rx_packet_ring_chunk_size;
+ 
+-	skb = dev_alloc_skb(length);
++	skb = dev_alloc_skb(length + WL1251_RX_ALIGNMENT);
+ 	if (!skb) {
+ 		wl1251_error("Couldn't allocate RX frame");
+ 		return;
+ 	}
+ 
++	/* for the case if payload is unaligned */
++	skb_reserve(skb, WL1251_RX_ALIGNMENT);
++
+ 	rx_buffer = skb_put(skb, length);
+ 	wl1251_mem_read(wl, rx_packet_ring_addr, rx_buffer, length);
+ 
+@@ -140,6 +148,13 @@ static void wl1251_rx_body(struct wl1251 *wl,
+ 
+ 	fc = (u16 *)skb->data;
+ 
++	if (ieee80211_hdrlen(*fc) & 0x3) {
++		from = skb->data;
++		to = skb_push(skb, 2);
++		memmove(to, from, skb->len);
++		fc = (u16 *) skb->data;
++	}
++
+ 	if ((*fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_BEACON)
+ 		beacon = 1;
+ 
 
