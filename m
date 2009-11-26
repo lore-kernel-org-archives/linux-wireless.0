@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:36539 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753964AbZKHMjy (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:12903 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751349AbZKZLw0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 07:39:54 -0500
-Received: by mail-ew0-f207.google.com with SMTP id 3so2345707ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Nov 2009 04:39:59 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH] rt2x00: Update MAINTAINERS
-Date: Sun, 8 Nov 2009 13:39:18 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-References: <1257679880-25306-1-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1257679880-25306-1-git-send-email-gwingerde@gmail.com>
+	Thu, 26 Nov 2009 06:52:26 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH] libertas: remove priv->ratebitmap
+Date: Thu, 26 Nov 2009 12:52:17 +0100
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911081339.18347.IvDoorn@gmail.com>
+  charset="us-ascii"
+Message-Id: <200911261252.18012.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 08 November 2009, Gertjan van Wingerde wrote:
-> Add myself to the list of maintainers for the rt2x00 driver.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Used to be a write-only-variable :-)
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-
-> ---
-> To be applied on top of Ivo's patch to add himself to the list of maintainers.
-> ---
->  MAINTAINERS |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 9292913..fbbda75 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -4329,6 +4329,7 @@ F:	drivers/video/aty/aty128fb.c
->  RALINK RT2X00 WIRELESS LAN DRIVER
->  P:	rt2x00 project
->  M:	Ivo van Doorn <IvDoorn@gmail.com>
-> +M:	Gertjan van Wingerde <gwingerde@gmail.com>
->  L:	linux-wireless@vger.kernel.org
->  L:	users@rt2x00.serialmonkey.com (moderated for non-subscribers)
->  W:	http://rt2x00.serialmonkey.com/
+Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
 
 
+--- linux-wl.orig/drivers/net/wireless/libertas/dev.h
++++ linux-wl/drivers/net/wireless/libertas/dev.h
+@@ -176,7 +176,6 @@ struct lbs_private {
+ 	struct assoc_request * pending_assoc_req;
+ 	struct assoc_request * in_progress_assoc_req;
+ 	uint16_t enablehwauto;
+-	uint16_t ratebitmap;
+ 
+ 	/* ADHOC */
+ 	u16 beacon_period;
+--- linux-wl.orig/drivers/net/wireless/libertas/assoc.c
++++ linux-wl/drivers/net/wireless/libertas/assoc.c
+@@ -390,10 +390,8 @@ int lbs_cmd_802_11_rate_adapt_rateset(st
+ 	cmd.enablehwauto = cpu_to_le16(priv->enablehwauto);
+ 	cmd.bitmap = lbs_rate_to_fw_bitmap(priv->cur_rate, priv->enablehwauto);
+ 	ret = lbs_cmd_with_response(priv, CMD_802_11_RATE_ADAPT_RATESET, &cmd);
+-	if (!ret && cmd_action == CMD_ACT_GET) {
+-		priv->ratebitmap = le16_to_cpu(cmd.bitmap);
++	if (!ret && cmd_action == CMD_ACT_GET)
+ 		priv->enablehwauto = le16_to_cpu(cmd.enablehwauto);
+-	}
+ 
+ 	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
+ 	return ret;
+
+-- 
+http://www.holgerschurig.de
