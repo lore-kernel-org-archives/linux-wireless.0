@@ -1,127 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wal-mailgw1.qinetiq-na.com ([65.209.22.159]:13928 "EHLO
-	WALQNAOMAIL1T.qnao.net" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752682AbZKSPXy (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:37313 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759346AbZKZJoT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Nov 2009 10:23:54 -0500
+	Thu, 26 Nov 2009 04:44:19 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 3/6] libertas: decouple mesh and rtap
+Date: Thu, 26 Nov 2009 10:44:13 +0100
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01CA6928.40A771F1"
-Subject: Kernel oops in ath9k
-Date: Thu, 19 Nov 2009 09:54:53 -0500
-Message-ID: <712C9C7AD151C847B09F32EDA56A94CF0115C555@WALQNAOMAIL1T.qnao.net>
-From: "Douglass, Woodrow" <Woodrow.Douglass@QinetiQ-NA.com>
-To: <linux-wireless@vger.kernel.org>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200911261044.13371.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
+While it's might be technically true that only MESH-enabled firmwares
+are also RTAP-enabled, I like to have this decoupled. 
 
-------_=_NextPart_001_01CA6928.40A771F1
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
 
-Hi all,
 
-I'm not sure if this is the right place to post this, but I may have a
-bug report for the ath9k driver.
+--- linux-wl.orig/drivers/net/wireless/libertas/main.c
++++ linux-wl/drivers/net/wireless/libertas/main.c
+@@ -1075,6 +1075,17 @@ void lbs_remove_card(struct lbs_private 
+ EXPORT_SYMBOL_GPL(lbs_remove_card);
+ 
+ 
++static int lbs_rtap_supported(struct lbs_private *priv)
++{
++	if (MRVL_FW_MAJOR_REV(priv->fwrelease) == MRVL_FW_V5)
++		return 1;
++
++	/* newer firmware use a capability mask */
++	return ((MRVL_FW_MAJOR_REV(priv->fwrelease) >= MRVL_FW_V10) &&
++		(priv->fwcapinfo & MESH_CAPINFO_ENABLE_MASK));
++}
++
++
+ int lbs_start_card(struct lbs_private *priv)
+ {
+ 	struct net_device *dev = priv->dev;
+@@ -1094,12 +1105,14 @@ int lbs_start_card(struct lbs_private *p
+ 
+ 	lbs_update_channel(priv);
+ 
++	lbs_init_mesh(priv);
++
+ 	/*
+ 	 * While rtap isn't related to mesh, only mesh-enabled
+ 	 * firmware implements the rtap functionality via
+ 	 * CMD_802_11_MONITOR_MODE.
+ 	 */
+-	if (lbs_init_mesh(priv)) {
++	if (lbs_rtap_supported(priv)) {
+ 		if (device_create_file(&dev->dev, &dev_attr_lbs_rtap))
+ 			lbs_pr_err("cannot register lbs_rtap attribute\n");
+ 	}
+@@ -1133,7 +1146,9 @@ void lbs_stop_card(struct lbs_private *p
+ 	netif_carrier_off(dev);
+ 
+ 	lbs_debugfs_remove_one(priv);
+-	if (lbs_deinit_mesh(priv))
++	lbs_deinit_mesh(priv);
++
++	if (lbs_rtap_supported(priv))
+ 		device_remove_file(&dev->dev, &dev_attr_lbs_rtap);
+ 
+ 	/* Delete the timeout of the currently processing command */
 
-I'm running a single board computer with a 600Mhz celeron processor. On
-the minipci bus I have a Ubiquiti SR71-12 802.11n card. Also attached is
-a shell script with the commands I run to cause the oops. Note that the
-first time the ifconfig line in this script is run, a "SIOCSIFFLAGS:
-Input/Output Error" is triggered, the kernel oops happens about 5
-seconds after the ifconfig line is run a second time.
-
-If this is not the right place to post this, could someone please point
-me in the right direction? Thanks.
-
-And thanks again for donating your time to such a great project!
-
--Woody
-
-------_=_NextPart_001_01CA6928.40A771F1
-Content-Type: text/plain;
-	name="oops.txt"
-Content-Transfer-Encoding: base64
-Content-Description: oops.txt
-Content-Disposition: attachment;
-	filename="oops.txt"
-
-WyAgMjkyLjgxNjA1OF0gd2xhbjA6IENyZWF0aW5nIG5ldyBJQlNTIG5ldHdvcmssIEJTU0lEIDY2
-OjRhOjBiOmYxOmNmOjk2ClsgIDI5My4wMDE0OTNdIEJVRzogdW5hYmxlIHRvIGhhbmRsZSBrZXJu
-ZWwgTlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlIGF0IDAwMDAwMDE4ClsgIDI5My4wMDE2NThdIElQ
-OiBbPGRlYmNjYWMxPl0gYXRoX2JlYWNvbl9zZXR1cCsweDU5LzB4ZWEgW2F0aDlrXQpbICAyOTMu
-MDAxODA0XSAqcGRlID0gMDAwMDAwMDAgClsgIDI5My4wMDE5MDFdIE9vcHM6IDAwMDAgWyMxXSBT
-TVAgClsgIDI5My4wMDIwMzJdIGxhc3Qgc3lzZnMgZmlsZTogL3N5cy9jbGFzcy9maXJtd2FyZS8w
-MDAwOjAxOjA3LjAvbG9hZGluZwpbICAyOTMuMDAyMTA1XSBNb2R1bGVzIGxpbmtlZCBpbjogbG9v
-cCBhcmM0IGVjYiBhdGg5ayBtYWM4MDIxMSBsZWRfY2xhc3MgYXRoIGNmZzgwMjExIHJma2lsbCBw
-YXJwb3J0X3BjIHBhcnBvcnQgc25kX2ludGVsOHgwIGJ1dHRvbiBwcm9jZXNzb3Igc25kX2FjOTdf
-Y29kZWMgYWM5N19idXMgc25kX3BjbSBzbmRfdGltZXIgc25kIHNvdW5kY29yZSBpMmNfaTgwMSBz
-bmRfcGFnZV9hbGxvYyBzZXJpb19yYXcgc2hwY2hwIGkyY19jb3JlIHBjaV9ob3RwbHVnIGludGVs
-X2FncCBybmdfY29yZSBhZ3BnYXJ0IHBjc3BrciBqb3lkZXYgZXZkZXYgdXNiaGlkIGhpZCBleHQz
-IGpiZCBtYmNhY2hlIHNkX21vZCBwaWl4IGlkZV9wY2lfZ2VuZXJpYyBpZGVfY29yZSBhdGFfZ2Vu
-ZXJpYyBhdGFfcGlpeCBsaWJhdGEgc2NzaV9tb2QgZWhjaV9oY2QgdWhjaV9oY2QgZTEwMCBtaWkg
-ZmxvcHB5IHVzYmNvcmUgbmxzX2Jhc2UgdGhlcm1hbCBmYW4gdGhlcm1hbF9zeXMgW2xhc3QgdW5s
-b2FkZWQ6IHNjc2lfd2FpdF9zY2FuXQpbICAyOTMuMDA0MzIzXSAKWyAgMjkzLjAwNDM4Nl0gUGlk
-OiAxNDU0LCBjb21tOiBwaHkwIE5vdCB0YWludGVkICgyLjYuMzEuNiAjMSkgIApbICAyOTMuMDA0
-NDU5XSBFSVA6IDAwNjA6WzxkZWJjY2FjMT5dIEVGTEFHUzogMDAwMTAyNDYgQ1BVOiAwClsgIDI5
-My4wMDQ1NThdIEVJUCBpcyBhdCBhdGhfYmVhY29uX3NldHVwKzB4NTkvMHhlYSBbYXRoOWtdClsg
-IDI5My4wMDQ2MjldIEVBWDogMDAwMDAwMDAgRUJYOiBkYzRkNTAwMCBFQ1g6IGRjODFhOTc0IEVE
-WDogMDAwMDAwMjIKWyAgMjkzLjAwNDcwM10gRVNJOiBkYzgxYTk3NCBFREk6IGRjNzM2MGMwIEVC
-UDogZGM0YzgwMDAgRVNQOiBkYzhiZGQwNApbICAyOTMuMDA0Nzc3XSAgRFM6IDAwN2IgRVM6IDAw
-N2IgRlM6IDAwZDggR1M6IDAwMDAgU1M6IDAwNjgKWyAgMjkzLjAwNDg0OF0gUHJvY2VzcyBwaHkw
-IChwaWQ6IDE0NTQsIHRpPWRjOGJjMDAwIHRhc2s9ZGMxZTNhZTAgdGFzay50aT1kYzhiYzAwMCkK
-WyAgMjkzLjAwNDg0OF0gU3RhY2s6ClsgIDI5My4wMDQ4NDhdICBkYzgxYTk3NCBjMTAxM2E0OSAw
-MDAxOTAwMCBkYzRjODAwMCBjMTAwMzk5NiAwMDAxOTAwMCAwMDAxOTAwMCAwMDAwODI0MApbICAy
-OTMuMDA0ODQ4XSA8MD4gZGM0YzgwMDAgMDAwMDAwODcgMDAwMDAwMDAgZGVhZGJlZWYgMDAwMDAw
-N2IgMDAwMDAwN2IgMDAwMDAwZDggMDAwMDAwMDAKWyAgMjkzLjAwNDg0OF0gPDA+IGM4MmRiZWVm
-IGRjNGM4MDAwIDA0MDAxMDAwIDAwMDAwMDAwIGRlYmJlOGRhIGRjMTg3MDAwIGRjODFhOTc0IGRj
-NGM4MDAwClsgIDI5My4wMDQ4NDhdIENhbGwgVHJhY2U6ClsgIDI5My4wMDQ4NDhdICBbPGMxMDEz
-YTQ5Pl0gPyBzbXBfYXBpY190aW1lcl9pbnRlcnJ1cHQrMHg2Yy8weDc2ClsgIDI5My4wMDQ4NDhd
-ICBbPGMxMDAzOTk2Pl0gPyBhcGljX3RpbWVyX2ludGVycnVwdCsweDJhLzB4MzAKWyAgMjkzLjAw
-NDg0OF0gIFs8ZGViYmU4ZGE+XSA/IGF0aDlrX2h3X3NldF9pbnRlcnJ1cHRzKzB4MWRmLzB4MjVk
-IFthdGg5a10KWyAgMjkzLjAwNDg0OF0gIFs8ZGViY2NkMWY+XSA/IGF0aF9iZWFjb25fY29uZmln
-KzB4MWNkLzB4MzYyIFthdGg5a10KWyAgMjkzLjAwNDg0OF0gIFs8ZGViY2QxMTc+XSA/IGF0aF9i
-ZWFjb25fYWxsb2MrMHgxYmUvMHgyMTUgW2F0aDlrXQpbICAyOTMuMDA0ODQ4XSAgWzxkZWJjZTJm
-Nj5dID8gYXRoOWtfYnNzX2luZm9fY2hhbmdlZCsweDE1ZC8weDMxZiBbYXRoOWtdClsgIDI5My4w
-MDQ4NDhdICBbPGRlYmNlMTk5Pl0gPyBhdGg5a19ic3NfaW5mb19jaGFuZ2VkKzB4MC8weDMxZiBb
-YXRoOWtdClsgIDI5My4wMDQ4NDhdICBbPGRlYTI2ZmI1Pl0gPyBpZWVlODAyMTFfYnNzX2luZm9f
-Y2hhbmdlX25vdGlmeSsweDEwZC8weDExZCBbbWFjODAyMTFdClsgIDI5My4wMDQ4NDhdICBbPGRl
-YTJiOGQ4Pl0gPyBfX2llZWU4MDIxMV9zdGFfam9pbl9pYnNzKzB4MzM0LzB4M2E2IFttYWM4MDIx
-MV0KWyAgMjkzLjAwNDg0OF0gIFs8YzExNzE1MmQ+XSA/IGV4dHJhY3RfZW50cm9weSsweDNlLzB4
-ODQKWyAgMjkzLjAwNDg0OF0gIFs8ZGVhMmJjNjY+XSA/IGllZWU4MDIxMV9zdGFfZmluZF9pYnNz
-KzB4MzFjLzB4M2IwIFttYWM4MDIxMV0KWyAgMjkzLjAwNDg0OF0gIFs8YzEwMjFlMmM+XSA/IHVw
-ZGF0ZV9jdXJyKzB4NjYvMHgxODcKWyAgMjkzLjAwNDg0OF0gIFs8YzEwMjI0YTc+XSA/IGRlcXVl
-dWVfZW50aXR5KzB4MTAvMHgxMWIKWyAgMjkzLjAwNDg0OF0gIFs8ZGVhMmMyYzI+XSA/IGllZWU4
-MDIxMV9pYnNzX3dvcmsrMHgyOTEvMHgzNGYgW21hYzgwMjExXQpbICAyOTMuMDA0ODQ4XSAgWzxj
-MTIxOWRhMj5dID8gc2NoZWR1bGUrMHg4MTEvMHg4N2YKWyAgMjkzLjAwNDg0OF0gIFs8YzEwMjg3
-ZjA+XSA/IGZpbmlzaF90YXNrX3N3aXRjaCsweDRhLzB4Y2EKWyAgMjkzLjAwNDg0OF0gIFs8YzEw
-M2M0ZmI+XSA/IHdvcmtlcl90aHJlYWQrMHgxM2UvMHgxYzAKWyAgMjkzLjAwNDg0OF0gIFs8ZGVh
-MmMwMzE+XSA/IGllZWU4MDIxMV9pYnNzX3dvcmsrMHgwLzB4MzRmIFttYWM4MDIxMV0KWyAgMjkz
-LjAwNDg0OF0gIFs8YzEwM2ZhNTY+XSA/IGF1dG9yZW1vdmVfd2FrZV9mdW5jdGlvbisweDAvMHgy
-ZApbICAyOTMuMDA0ODQ4XSAgWzxjMTAzYzNiZD5dID8gd29ya2VyX3RocmVhZCsweDAvMHgxYzAK
-WyAgMjkzLjAwNDg0OF0gIFs8YzEwM2Y3YjM+XSA/IGt0aHJlYWQrMHg2ZS8weDczClsgIDI5My4w
-MDQ4NDhdICBbPGMxMDNmNzQ1Pl0gPyBrdGhyZWFkKzB4MC8weDczClsgIDI5My4wMDQ4NDhdICBb
-PGMxMDAzYjc3Pl0gPyBrZXJuZWxfdGhyZWFkX2hlbHBlcisweDcvMHgxMApbICAyOTMuMDA0ODQ4
-XSBDb2RlOiAxOCBiYSAyMiAwMCAwMCAwMCA4OSAwMyBlYiAwYiBjNyAwMyAwMCAwMCAwMCAwMCBi
-YSAwMiAwMCAwMCAwMCA4YiA0MSAxYyA4OSA0MyAwNCA4YiAwYyAyNCA4YiA4MSA1MCAwNyAwMCAw
-MCBmNiA4MSBlNCAwMCAwMCAwMCAyMCA8OGI+IDcwIDE4IDc0IDA1IDhhIDQ4IDE5IDA5IGNlIDhi
-IDRmIDUwIDg5IGU4IDUyIDg5IGRhIDZhIDAwIDZhIApbICAyOTMuMDA0ODQ4XSBFSVA6IFs8ZGVi
-Y2NhYzE+XSBhdGhfYmVhY29uX3NldHVwKzB4NTkvMHhlYSBbYXRoOWtdIFNTOkVTUCAwMDY4OmRj
-OGJkZDA0ClsgIDI5My4wMDQ4NDhdIENSMjogMDAwMDAwMDAwMDAwMDAxOApbICAyOTMuMDEwODkw
-XSAtLS1bIGVuZCB0cmFjZSA3MWJkN2RlODZkYTY4YmE3IF0tLS0K
-
-------_=_NextPart_001_01CA6928.40A771F1
-Content-Type: application/octet-stream;
-	name="wireless.sh"
-Content-Transfer-Encoding: base64
-Content-Description: wireless.sh
-Content-Disposition: attachment;
-	filename="wireless.sh"
-
-IyEvYmluL2Jhc2gKCml3Y29uZmlnIHdsYW4wIG1vZGUgYWQtaG9jIGNoYW5uZWwgMSBlc3NpZCBh
-dGstdGVzdAppZmNvbmZpZyB3bGFuMCAxOTIuMTY4LjAuMSBuZXRtYXNrIDI1NS4yNTUuMjU1LjAK
-
-------_=_NextPart_001_01CA6928.40A771F1--
+-- 
+http://www.holgerschurig.de
