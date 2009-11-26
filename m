@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:40431 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758711AbZKFWBU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 17:01:20 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] mwl8k: use integral index instead of pointer for driver_data
-Date: Fri, 6 Nov 2009 23:01:23 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Lennert Buytenhek <buytenh@marvell.com>
-References: <1257543727-5449-1-git-send-email-linville@tuxdriver.com> <200911062257.01590.mb@bu3sch.de>
-In-Reply-To: <200911062257.01590.mb@bu3sch.de>
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:57227 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965049AbZKZAlp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Nov 2009 19:41:45 -0500
+Received: by iwn1 with SMTP id 1so173380iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2009 16:41:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200911062301.24871.mb@bu3sch.de>
+In-Reply-To: <4B0DCC15.3090506@openwrt.org>
+References: <1259180955-2145-1-git-send-email-juhosg@openwrt.org>
+	<20091125213857.GM5006@tux> <4B0DCC15.3090506@openwrt.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 25 Nov 2009 16:41:31 -0800
+Message-ID: <43e72e890911251641qdb08114p4d5ccc4487efd34c@mail.gmail.com>
+Subject: Re: [ath9k-devel] [PATCH] ath9k: enable 2GHz band only if the device
+	supports it
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Gabor Juhos <juhosg@openwrt.org>,
+	John Linville <linville@tuxdriver.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 06 November 2009 22:56:59 Michael Buesch wrote:
-> On Friday 06 November 2009 22:42:07 John W. Linville wrote:
-> > @@ -3379,7 +3378,7 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
-> >  	priv = hw->priv;
-> >  	priv->hw = hw;
-> >  	priv->pdev = pdev;
-> > -	priv->device_info = (void *)id->driver_data;
-> > +	priv->device_info = &mwl8k_info_tbl[id->driver_data];
-> >  	priv->rxd_ops = priv->device_info->rxd_ops;
-> >  	priv->sniffer_enabled = false;
-> >  	priv->wmm_enabled = false;
-> 
-> What about a sanity check for id->driver_data on the array range? Otherwise one could crash
-> the kernel with sysfs/new_id by accident, as far as I can tell.
-> 
+On Wed, Nov 25, 2009 at 4:30 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> Luis R. Rodriguez wrote:
+>> On Wed, Nov 25, 2009 at 12:29:15PM -0800, Gabor Juhos wrote:
+>>> Currently, the 2GHz band is enabled unconditionally, even if the device
+>>> does not support it.
+>>
+>> This is true, but we don't have any 11n 5 GHz only devices,
+>> The patch is fine too though but it'd be better if you fail
+>> with a proper ath_print ATH_DBG_FATAL message if neither band
+>> has been marked as supported.
+> We do have some ;)
+> Ubiquiti Networks has a few Python+Merlin based devices that are 5GHz
+> only, and we're working on supporting them.
 
-Ok docs say that:
-> Note that driver_data must match the value used by any of the pci_device_id
-> entries defined in the driver. 
+Sexy!
 
-So ignore me.
-
--- 
-Greetings, Michael.
+  Luis
