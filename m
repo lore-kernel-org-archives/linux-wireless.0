@@ -1,44 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:37947 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752444AbZKPKti (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:16010 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759078AbZKZJnz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2009 05:49:38 -0500
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH v2] rndis_wlan: handle NL80211_AUTHTYPE_AUTOMATIC
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 16 Nov 2009 12:49:43 +0200
-Message-ID: <20091116104937.3845.62090.stgit@fate.lan>
+	Thu, 26 Nov 2009 04:43:55 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 2/6] libertas: move mesh-related definitions into mesh.h
+Date: Thu, 26 Nov 2009 10:43:44 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200911261043.45001.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rndis_wlan didn't know about NL80211_AUTHTYPE_AUTOMATIC and simple
-setup with 'iwconfig wlan essid no-encrypt' would fail (ENOSUPP).
+Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
 
-v2: use NDIS_80211_AUTH_AUTO_SWITCH instead of _OPEN.
-    This will make device try shared key auth first, then open.
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
-
- drivers/net/wireless/rndis_wlan.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 54175b6..aa1880a 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -1072,6 +1072,8 @@ static int set_auth_mode(struct usbnet *usbdev, u32 wpa_version,
- 		auth_mode = NDIS_80211_AUTH_SHARED;
- 	else if (auth_type == NL80211_AUTHTYPE_OPEN_SYSTEM)
- 		auth_mode = NDIS_80211_AUTH_OPEN;
-+	else if (auth_type == NL80211_AUTHTYPE_AUTOMATIC)
-+		auth_mode = NDIS_80211_AUTH_AUTO_SWITCH;
- 	else
- 		return -ENOTSUPP;
+--- linux-wl.orig/drivers/net/wireless/libertas/cmd.h
++++ linux-wl/drivers/net/wireless/libertas/cmd.h
+@@ -110,18 +110,6 @@ int lbs_set_snmp_mib(struct lbs_private 
+ int lbs_get_snmp_mib(struct lbs_private *priv, u32 oid, u16 *out_val);
  
+ 
+-/* Mesh related */
+-
+-int lbs_mesh_access(struct lbs_private *priv, uint16_t cmd_action,
+-		    struct cmd_ds_mesh_access *cmd);
+-
+-int lbs_mesh_config_send(struct lbs_private *priv,
+-			 struct cmd_ds_mesh_config *cmd,
+-			 uint16_t action, uint16_t type);
+-
+-int lbs_mesh_config(struct lbs_private *priv, uint16_t enable, uint16_t chan);
+-
+-
+ /* Commands only used in wext.c, assoc. and scan.c */
+ 
+ int lbs_set_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
+--- linux-wl.orig/drivers/net/wireless/libertas/mesh.h
++++ linux-wl/drivers/net/wireless/libertas/mesh.h
+@@ -46,11 +46,20 @@ void lbs_mesh_set_txpd(struct lbs_privat
+ /* Command handling */
+ 
+ struct cmd_ds_command;
++struct cmd_ds_mesh_access;
++struct cmd_ds_mesh_config;
+ 
+ int lbs_cmd_bt_access(struct cmd_ds_command *cmd,
+ 	u16 cmd_action, void *pdata_buf);
+ int lbs_cmd_fwt_access(struct cmd_ds_command *cmd,
+ 	u16 cmd_action, void *pdata_buf);
++int lbs_mesh_access(struct lbs_private *priv, uint16_t cmd_action,
++		    struct cmd_ds_mesh_access *cmd);
++int lbs_mesh_config_send(struct lbs_private *priv,
++			 struct cmd_ds_mesh_config *cmd,
++			 uint16_t action, uint16_t type);
++int lbs_mesh_config(struct lbs_private *priv, uint16_t enable, uint16_t chan);
++
+ 
+ 
+ /* Persistent configuration */
 
+-- 
+http://www.holgerschurig.de
