@@ -1,112 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:45164 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756341AbZKFTg4 convert rfc822-to-8bit (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:51856 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751749AbZKZLrH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 14:36:56 -0500
-Received: by ewy28 with SMTP id 28so1505298ewy.18
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 11:37:00 -0800 (PST)
+	Thu, 26 Nov 2009 06:47:07 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH, v2] libertas: remove priv->capability
+Date: Thu, 26 Nov 2009 12:46:56 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+References: <200911261241.46405.holgerschurig@gmail.com>
+In-Reply-To: <200911261241.46405.holgerschurig@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <200911062014.19363.chunkeey@googlemail.com>
-References: <167ae39b0910071400n218d3d9ey7711b1011f290a73@mail.gmail.com>
-	 <200911061848.21681.chunkeey@googlemail.com>
-	 <167ae39b0911061045i63b1650qa1573aa2427f9812@mail.gmail.com>
-	 <200911062014.19363.chunkeey@googlemail.com>
-Date: Fri, 6 Nov 2009 13:37:00 -0600
-Message-ID: <167ae39b0911061137m72a1e7e9le0e2b59b64be2821@mail.gmail.com>
-Subject: Re: Prism54/p54pci
-From: James Grossmann <cctsurf@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200911261246.56786.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Doing it from the console doesn't seem to give a kernel oops... it
-just locks up the computer such that I can't even change the caps lock
-status.  It starts the connection, and then the activity light on the
-card goes on and the computer is locked up.
-With regard to the losing connection/timing out, I'm seeing that a
-fair amount, when I have data transferring (watching an active ssh
-connection, or streaming audio), and especially when I'm not doing
-anything...
-Thanks,
-James
+This variable was once set to WLAN_CAPABILITY_SHORT_PREAMBLE and
+there's no code that could change the variable to something else.
+Therefore it seems this is not necessary :-)
 
-On Fri, Nov 6, 2009 at 1:14 PM, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
-> On Friday 06 November 2009 19:45:53 James Grossmann wrote:
->> Here's the iwconfig:
->> wlan1     IEEE 802.11bg  ESSID:"newton"
->>           Mode:Managed  Frequency:2.462 GHz  Access Point: 00:xx:xx:xx:xx:xx
->>           Bit Rate=48 Mb/s   Tx-Power=20 dBm
->>           Retry  long limit:7   RTS thr:off   Fragment thr:off
->>           Power Management:off
->>           Link Quality=50/70  Signal level=-60 dBm
->>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
->>
->> I was unable to run the iperf as the client on the laptop
->> (it hard locked the computer twice),
-> huu, that's really bad. especially, since a new release is around the corner.
->
-> Do you think you can catch the oops/bug report?
-> (switch to virtual terminal Alt-Ctrl-F1 and start iperf -c there)
->
->> I ran it as server and received the
->> following at a fair distance from the router (a couple of rooms, same
->> as the iwconfig above)
->> Client connecting to 192.168.1.3, TCP port 5001
->> TCP window size: 16.0 KByte (default)
->> ------------------------------------------------------------
->> [  3] local 192.168.1.5 port 47866 connected with 192.168.1.3 port 5001
->> [ ID] Interval       Transfer     Bandwidth
->> [  3]  0.0-10.4 sec  14.6 MBytes  11.7 Mbits/sec
->>
->> Same test across the room from the router:
->> iperf -c 192.168.1.3
->> ------------------------------------------------------------
->> Client connecting to 192.168.1.3, TCP port 5001
->> TCP window size: 16.0 KByte (default)
->> ------------------------------------------------------------
->> [  3] local 192.168.1.5 port 47867 connected with 192.168.1.3 port 5001
->> [ ID] Interval       Transfer     Bandwidth
->> [  3]  0.0-10.0 sec  21.4 MBytes  17.9 Mbits/sec
->>
->> wlan1     IEEE 802.11bg  ESSID:"newton"
->>           Mode:Managed  Frequency:2.462 GHz  Access Point: 00:xx:xx:xx:xx:xx
->>           Bit Rate=54 Mb/s   Tx-Power=20 dBm
->>           Retry  long limit:7   RTS thr:off   Fragment thr:off
->>           Power Management:off
->>           Link Quality=70/70  Signal level=-37 dBm
->>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
->>
->> Here's a little bit more I've been getting in my dmesg:
->> [   91.453279] wlan1: deauthenticating from 00:xx:xx:xx:xx:xx by local choice (reason=3)
->> [   91.453421] wlan1: direct probe to AP 00:xx:xx:xx:xx:xx (try 1)
->> [   91.457825] wlan1: direct probe responded
->> [   91.457839] wlan1: authenticate with AP 00:xx:xx:xx:xx:xx (try 1)
->> [   91.462748] wlan1: authenticated
->> [   91.462808] wlan1: associate with AP 00:xx:xx:xx:xx:xx (try 1)
->> [   91.465574] wlan1: RX AssocResp from 00:xx:xx:xx:xx:xx (capab=0x401
->> status=0 aid=2)
->> [   91.465584] wlan1: associated
->> [   91.467208] ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
->> [  101.500094] wlan1: no IPv6 routers present
->> [  101.893294] ondemand governor failed, too long transition latency
->> of HW, fallback to performance governor
->
->> [  773.648180] wlan1: deauthenticated from 00:xx:xx:xx:xx:xx (Reason: 7)
->> [  773.649900] wlan1: direct probe to AP 00:xx:xx:xx:xx:xx (try 1)
->> [  773.654069] wlan1: direct probe responded
->> [  773.654082] wlan1: authenticate with AP 00:xx:xx:xx:xx:xx (try 1)
->> [  773.655939] wlan1: deauthenticated from 00:xx:xx:xx:xx:xx (Reason: 7)
->
-> Reason 7 => Class 3 (usually data frames) frame from non-assoc station.
-> Either, your STA timed out (due to lack of traffic?) or the AP lost
-> the connection state for some strange reason (reset?).
->
-> Regards,
->        Chr
->
+Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
+
+---
+v2: forgot to remove "capability" it from struct lbs_private
+
+--- linux-wl.orig/drivers/net/wireless/libertas/dev.h
++++ linux-wl/drivers/net/wireless/libertas/dev.h
+@@ -175,7 +175,6 @@ struct lbs_private {
+ 	struct bss_descriptor *networks;
+ 	struct assoc_request * pending_assoc_req;
+ 	struct assoc_request * in_progress_assoc_req;
+-	u16 capability;
+ 	uint16_t enablehwauto;
+ 	uint16_t ratebitmap;
+ 
+--- linux-wl.orig/drivers/net/wireless/libertas/assoc.c
++++ linux-wl/drivers/net/wireless/libertas/assoc.c
+@@ -807,8 +807,7 @@ static int lbs_try_associate(struct lbs_
+ 	}
+ 
+ 	/* Use short preamble only when both the BSS and firmware support it */
+-	if ((priv->capability & WLAN_CAPABILITY_SHORT_PREAMBLE) &&
+-	    (assoc_req->bss.capability & WLAN_CAPABILITY_SHORT_PREAMBLE))
++	if (assoc_req->bss.capability & WLAN_CAPABILITY_SHORT_PREAMBLE)
+ 		preamble = RADIO_PREAMBLE_SHORT;
+ 
+ 	ret = lbs_set_radio(priv, preamble, 1);
+@@ -939,8 +938,7 @@ static int lbs_adhoc_join(struct lbs_pri
+ 	}
+ 
+ 	/* Use short preamble only when both the BSS and firmware support it */
+-	if ((priv->capability & WLAN_CAPABILITY_SHORT_PREAMBLE) &&
+-	    (bss->capability & WLAN_CAPABILITY_SHORT_PREAMBLE)) {
++	if (bss->capability & WLAN_CAPABILITY_SHORT_PREAMBLE) {
+ 		lbs_deb_join("AdhocJoin: Short preamble\n");
+ 		preamble = RADIO_PREAMBLE_SHORT;
+ 	}
+@@ -1049,7 +1047,7 @@ static int lbs_adhoc_start(struct lbs_pr
+ 	struct assoc_request *assoc_req)
+ {
+ 	struct cmd_ds_802_11_ad_hoc_start cmd;
+-	u8 preamble = RADIO_PREAMBLE_LONG;
++	u8 preamble = RADIO_PREAMBLE_SHORT;
+ 	size_t ratesize = 0;
+ 	u16 tmpcap = 0;
+ 	int ret = 0;
+@@ -1057,11 +1055,6 @@ static int lbs_adhoc_start(struct lbs_pr
+ 
+ 	lbs_deb_enter(LBS_DEB_ASSOC);
+ 
+-	if (priv->capability & WLAN_CAPABILITY_SHORT_PREAMBLE) {
+-		lbs_deb_join("ADHOC_START: Will use short preamble\n");
+-		preamble = RADIO_PREAMBLE_SHORT;
+-	}
+-
+ 	ret = lbs_set_radio(priv, preamble, 1);
+ 	if (ret)
+ 		goto out;
+--- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
++++ linux-wl/drivers/net/wireless/libertas/cmd.c
+@@ -842,9 +842,6 @@ int lbs_set_radio(struct lbs_private *pr
+ 	if (priv->fwrelease < 0x09000000) {
+ 		switch (preamble) {
+ 		case RADIO_PREAMBLE_SHORT:
+-			if (!(priv->capability & WLAN_CAPABILITY_SHORT_PREAMBLE))
+-				goto out;
+-			/* Fall through */
+ 		case RADIO_PREAMBLE_AUTO:
+ 		case RADIO_PREAMBLE_LONG:
+ 			cmd.control = cpu_to_le16(preamble);
+--- linux-wl.orig/drivers/net/wireless/libertas/main.c
++++ linux-wl/drivers/net/wireless/libertas/main.c
+@@ -839,7 +839,6 @@ static int lbs_init_adapter(struct lbs_p
+ 	priv->mac_control = CMD_ACT_MAC_RX_ON | CMD_ACT_MAC_TX_ON;
+ 	priv->radio_on = 1;
+ 	priv->enablehwauto = 1;
+-	priv->capability = WLAN_CAPABILITY_SHORT_PREAMBLE;
+ 	priv->psmode = LBS802_11POWERMODECAM;
+ 	priv->psstate = PS_STATE_FULL_POWER;
+ 	priv->is_deep_sleep = 0;
+
+
+-- 
+http://www.holgerschurig.de
