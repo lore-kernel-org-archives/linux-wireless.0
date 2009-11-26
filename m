@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:55587 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757468AbZKDWSP (ORCPT
+Received: from parez.praha12.net ([78.102.11.253]:53729 "EHLO
+	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755539AbZKZR0E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 17:18:15 -0500
-Received: by ewy3 with SMTP id 3so3659544ewy.37
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 14:18:19 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: compat-wireless and minstrel
-Date: Wed, 4 Nov 2009 23:18:13 +0100
-Cc: Adam Wozniak <awozniak@irobot.com>, linux-wireless@vger.kernel.org
-References: <4AF0D54D.4090303@irobot.com> <4AF1F653.4000905@irobot.com> <43e72e890911041350i75108dc3g454ab8577d8abacd@mail.gmail.com>
-In-Reply-To: <43e72e890911041350i75108dc3g454ab8577d8abacd@mail.gmail.com>
+	Thu, 26 Nov 2009 12:26:04 -0500
+Received: from 8an.javor.praha12.czf (8an.javor.praha12.czf [10.27.67.2])
+	by parez.praha12.net (Postfix) with ESMTPS id BC609EDCF5
+	for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2009 18:26:08 +0100 (CET)
+From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
+Reply-To: 8an@praha12.net
+Date: Thu, 26 Nov 2009 18:26:08 +0100
 MIME-Version: 1.0
-Content-Type: Text/Plain;
+To: linux-wireless@vger.kernel.org
+Subject: [RFC] API for setting ACK timeout
+Content-Type: text/plain;
   charset="utf-8"
-Message-Id: <200911042318.13528.chunkeey@googlemail.com>
+Message-Id: <200911261826.08576.8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 04 November 2009 22:50:46 Luis R. Rodriguez wrote:
-> On Wed, Nov 4, 2009 at 1:46 PM, Adam Wozniak <awozniak@irobot.com> wrote:
-> >
-> > $ ls -la /lib/firmware/ar9170*
-> > -rw-r--r-- 1 root root 83968 2009-10-17 15:55 /lib/firmware/ar9170-1.fw
-> > -rw-r--r-- 1 root root  3508 2009-10-17 15:55 /lib/firmware/ar9170-2.fw
-> > -rw-r--r-- 1 root root 15960 2009-10-17 15:55 /lib/firmware/ar9170.fw
-> >
-> > It is unclear to me which are actually used.
-> 
-> By default the ar9170.fw is tried first, if that fails then the others
-> are tried. The 2-stage firmware will not be tried if your device
-> cannot handle it but right now only the AVM Fritz devices can't handle
-> the 2-stage firmware.
-> 
-> Christian should we just remove 2-stage fw support?
+Hi,
 
-I've moved the two-stage fw into the legacy section some time ago :)
-Maybe a add printk?
+we discussed this in ath5k-devel, but it involves a mac80211 extension, so I'm 
+bringing it here.
 
-Regards,
-	Chr
+Although Wi-Fi was designed for outdoor use, it's also sometimes used for long 
+distance outdoor links. However, long distance links require longer ACK 
+timeout, as packets travel "only" at the speed of light and every kilometer 
+adds almost 7 microseconds to the roundtrip. So for a driver to be usable 
+outdoors it has to permit setting ACK timeout from userspace.
+
+Currently this is supported only by out-of-tree Madwifi driver for Atheros 
+hardware. However, modification of ACK timeout is not an Atheros specific 
+feature. According to a quick skim over the source code in 
+drivers/net/wireless, besides ath5k and ath9k it's at least supported by 
+rt2x00, rtl818x and maybe zd1211.
+
+I think the current hardware support is sufficient for a generic mac80211 
+solution. The exact interpretation of ACK timeout value is hardware specific, 
+so I propose a higher level API operating with link distance.
+
+It consists of a new nl80211 parameter:
+[NL80211_ATTR_WIPHY_DISTANCE] = { .type = NLA_U32 },
+
+The value of the parameter would be a link distance in meters, so after the 
+support is added to iw one could set the ACK timeout on a 3km link using:
+# iw phy0 set distance 3000
+
+Another required change would be extending cfg80211_ops by functions 
+set_distance and get_distance. Calculation of appropriate ACK timeout (and in 
+the case of ath5k, also CTS timeout and slottime) for the distance would be 
+left to the driver (it's a trivial formula).
+
+I can prepare the patches, if you think these extension would be acceptable. 
+Suggestions are welcome.
+
+Lukas Turek
