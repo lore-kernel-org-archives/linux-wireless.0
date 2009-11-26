@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:47150 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755074AbZKIXrH (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:58480 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754851AbZKZPNS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 18:47:07 -0500
-Received: by mail-ew0-f228.google.com with SMTP id 28so3974559ewy.18
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 15:47:12 -0800 (PST)
-From: Rui Paulo <rpaulo@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Rui Paulo <rpaulo@gmail.com>,
-	Javier Cardona <javier@cozybit.com>
-Subject: [PATCH v2 04/20] mac80211: fix typo in a comment
-Date: Mon,  9 Nov 2009 23:46:42 +0000
-Message-Id: <1257810418-30075-5-git-send-email-rpaulo@gmail.com>
-In-Reply-To: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
-References: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
+	Thu, 26 Nov 2009 10:13:18 -0500
+Received: by bwz27 with SMTP id 27so607437bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2009 07:13:24 -0800 (PST)
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: Re: [PATCH 06/12] wl1251: fix payload alignment
+References: <20091126150141.917.35278.stgit@tikku>
+	<20091126150904.917.8182.stgit@tikku>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 26 Nov 2009 17:13:21 +0200
+In-Reply-To: <20091126150904.917.8182.stgit@tikku> (Kalle Valo's message of "Thu\, 26 Nov 2009 17\:09\:04 +0200")
+Message-ID: <877htd9v5a.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Signed-off-by: Rui Paulo <rpaulo@gmail.com>
-Reviewed-by: Andrey Yurovsky <andrey@cozybit.com>
-Tested-by: Brian Cavagnolo <brian@cozybit.com>
----
- net/mac80211/mesh_plink.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Kalle Valo <kalle.valo@iki.fi> writes:
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index f98c8d2..4188752 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -79,7 +79,7 @@ void mesh_plink_dec_estab_count(struct ieee80211_sub_if_data *sdata)
- /**
-  * mesh_plink_fsm_restart - restart a mesh peer link finite state machine
-  *
-- * @sta: mes peer link to restart
-+ * @sta: mesh peer link to restart
-  *
-  * Locking: this function must be called holding sta->lock
-  */
+> mac80211 complained that in some cases IP payload was not aligned, this
+> happens if the 802.11 header is not aligned with four. In that case we have
+> to move entire packet to make the payload properly aligned.
+
+[...]
+
+> +	if (ieee80211_hdrlen(*fc) & 0x3) {
+> +		from = skb->data;
+> +		to = skb_push(skb, 2);
+> +		memmove(to, from, skb->len);
+> +		fc = (u16 *) skb->data;
+> +	}
+
+I would like to get comments about this. Is memmove() the right way to
+do this?
+
 -- 
-1.5.6.5
-
+Kalle Valo
