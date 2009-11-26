@@ -1,80 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:64350 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756130AbZKRVT3 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39114 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751003AbZKZUPl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 16:19:29 -0500
-Received: by fg-out-1718.google.com with SMTP id d23so2443216fga.1
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Nov 2009 13:19:35 -0800 (PST)
-Subject: Re: mac80211 breaks suspend to disk
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1258578199.30511.80.camel@johannes.local>
-References: <1258568836.4512.13.camel@maxim-laptop>
-	 <20091118202802.GE2911@tuxdriver.com>
-	 <1258576749.8018.7.camel@maxim-laptop>
-	 <1258578199.30511.80.camel@johannes.local>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 18 Nov 2009 23:19:30 +0200
-Message-ID: <1258579170.4525.2.camel@maxim-laptop>
+	Thu, 26 Nov 2009 15:15:41 -0500
+Subject: Re: [RFC] API for setting ACK timeout
+From: Johannes Berg <johannes@sipsolutions.net>
+To: 8an@praha12.net
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200911262113.10847.8an@praha12.net>
+References: <200911261826.08576.8an@praha12.net>
+	 <200911262015.03106.8an@praha12.net>
+	 <1259263540.24540.9.camel@johannes.local>
+	 <200911262113.10847.8an@praha12.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Nv39YR5TpVOhKwOxX7hw"
+Date: Thu, 26 Nov 2009 21:15:44 +0100
+Message-ID: <1259266544.5428.0.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-11-18 at 22:03 +0100, Johannes Berg wrote: 
-> On Wed, 2009-11-18 at 22:39 +0200, Maxim Levitsky wrote:
-> 
-> > I forgot to pay attention to few lines before the oops message:
-> > 
-> > 
-> > [  331.307139] No probe response from AP 00:1b:9e:d8:77:02 after 500ms, try 1
-> > [  331.320121] ------------[ cut here ]------------
-> > [  331.334935] WARNING: at /home/maxim/software/kernel/linux-2.6/kernel/timer.c:791 add_timer+0x36/0x40()
-> > [  331.347374] Hardware name: Aspire 5720     
-> > .....
-> 
-> Thanks.
-> 
-> > This reveals that somehow the ieee80211_sta_work manages to run before
-> > ieee80211_sta_restart and it sets the timer....
-> 
-> Indeed.
-> 
-> > looking at ieee80211_reconfig it seems suspicious that
-> > 'local->suspended = false;' is set so early.
-> > In fact it is set again to false just prior to 
-> > 
-> > list_for_each_entry(sdata, &local->interfaces, list) {....
-> > 
-> > So, I would suspect some lines in this function trigger the work
-> > queue.
-> 
-> No, I doubt it, it's most likely just receiving a frame to trigger the
-> function -- ieee80211_sta_rx_mgmt queues the work. If we were still
-> suspended then we'd run into an error situation, like the comment in
-> ieee80211_reconfig explains ...
-> 
-> Catch-22.
-> 
-> Then again, we drop RX frames while local->suspended is true, and I
-> guess we don't really care about missing a few more frames when we're
-> just waking up, so it should be OK to keep suspended == true while doing
-> the startup.
-> 
-> EXCEPT drivers are going to start using ieee80211_queue_work() already
-> then from the callbacks, which we must allow.
-> 
-> So ... maybe this?
 
+--=-Nv39YR5TpVOhKwOxX7hw
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-This will likely fix this problem.
-I will run my suspend/resume loop for a while and let you know if it
-works.
+On Thu, 2009-11-26 at 21:13 +0100, Luk=C3=A1=C5=A1 Turek wrote:
+> On 26.11.2009 20:25 Johannes Berg wrote:
+> > My standard reference was obviously crap -- let's see, 7.3.2.9 is
+> > better.
+> Yes, I found the table. And now I also noticed the real difference: the s=
+lot=20
+> time according to the standard rises in a step of three (which means ACK=20
+> timeout will rise in a step of six). It's quite significant loss of=20
+> precision, but it probably shouldn't make much difference in throughput.
 
-Best regards,
-Maxim Levitsky
+It only affects lost packets anyway, no?
 
+> Anyway, this solutions would be good enough for us if it was accepted. So=
+ you=20
+> propose to add parameter NL80211_ATTR_WIPHY_COVERAGE to nl80211 and funct=
+ions=20
+> set_coverage/get_coverage to cfg80211_ops?
 
+Would that be sufficient? It'd be kinda cool if mac80211 auto-configured
+itself if it picked up a beacon that had this information, etc.
+
+johannes
+
+--=-Nv39YR5TpVOhKwOxX7hw
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLDuHsAAoJEODzc/N7+QmasPMQAICZEVbtniyKmEq9wBG0MJui
+ES1LCYQU/cyhxIsQahW0NnXwYfr86KrxmvNFxA0tUqLhATFrSHqmzPDDcD7N000x
+QF/0+PE9Yxr+uIZScZKDKAyF7dZtjwGhRqmaXLe5eiMbhnl2eUNOOQVH0H17fDos
+IHmvXEO0xZq0OZxrshu5vEjVcNAEZ0bVk+bCkTCDZib00r71hIbil6pkvMRjROzt
+bqQVRZwyFtnflclMILh44h+Dq93Cy3rJv7LaiJn8X4rbN1M/sC4TKwIFNdZHaspF
+UkqO+Lp/OaF5QxY81/DwMm1NShIGGrlhrRhQ6DaPzmzYc66G5M1jEKeSVimOkDah
+aE81JtBxPKrWNuhGCPM8k9Lti4yKniL7sLR644mr54fh8pdUk+hfpjlqi9+gGSv1
+gjZF2Gjiae119wVWDa84qKJs7fAfpmexVJTEv2eq+W5jfuy/UDO0vb6NTgqELZqu
+7+7/t8Ql0rsXEiNX754sfHiHotz926zzd3v6FRvL//qmg69szKBHsbEUHDrpCDxy
+Mz8+0t04u8Yb2GJUPv+f1g1vhpQe7U8hDdwOyE+4TnQd6beZYzsT8gypqPW88GJX
+1Soxo2uPiXm18FmRZ6JyXxJdgLiHTHG36gFdloT9f0WinQ5WGkoy/4od24XnSprb
+qxAPXivhYRS/MgDLQtwc
+=eTmE
+-----END PGP SIGNATURE-----
+
+--=-Nv39YR5TpVOhKwOxX7hw--
 
