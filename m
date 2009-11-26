@@ -1,57 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:43588 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754503AbZKRQFG (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:58791 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759900AbZKZJCq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 11:05:06 -0500
-Subject: Re: [PATCH 2/2] Adding kerneldoc entry for radio type GPS
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Janakiram Sistla <janakiram.sistla@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <4fb5db50911180755u4e01814bvcc4d0ec8d396abd@mail.gmail.com>
-References: <1258557771-10776-1-git-send-email-janakiram.sistla@gmail.com>
-	 <1258558500.2003.88.camel@violet>
-	 <4fb5db50911180755u4e01814bvcc4d0ec8d396abd@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 18 Nov 2009 17:05:10 +0100
-Message-ID: <1258560310.2003.91.camel@violet>
-Mime-Version: 1.0
+	Thu, 26 Nov 2009 04:02:46 -0500
+Subject: [PATCH 2/3] wl1251: fix bssid handling
+To: linville@tuxdriver.com
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 26 Nov 2009 10:56:06 +0200
+Message-ID: <20091126085606.1564.29814.stgit@tikku>
+In-Reply-To: <20091126085256.1564.77644.stgit@tikku>
+References: <20091126085256.1564.77644.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Janakiram,
+From: Kalle Valo <kalle.valo@nokia.com>
 
-> >>
-> >> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-> >> index d787d5f..212f555 100644
-> >> --- a/include/linux/rfkill.h
-> >> +++ b/include/linux/rfkill.h
-> >> @@ -36,6 +36,7 @@
-> >>   * @RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
-> >>   * @RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
-> >>   * @RFKILL_TYPE_FM: switch is on a FM device.
-> >> + * @RFKILL_TYPE_GPS: switch is on a GPS device.
-> >>   * @NUM_RFKILL_TYPES: number of defined rfkill types
-> >>   */
-> >>  enum rfkill_type {
-> >
-> > so this is getting stupid right now. I am sick of a really simple patch
-> > causes so much trouble. Even this one is wrong again. The GPS doc should
-> > obviously before FM.
-> Marcel I think you want me to submit GPS doc patch first.I will be
-> doing it shortly and then i will do it for FM.I am sorry for this mis
-> understanding
+bssid needs to be copied first in wl1251_op_bss_info_changed(), otherwise
+templates will have incorrect bssid and power save will not work
+correctly.
 
-I don't care in which order you submit the patches, but the order of the
-documentation should match the order in the enum. That is not a strict
-requirement, but here it makes total sense to do so.
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1251_main.c |   30 +++++++++++++++--------------
+ 1 files changed, 15 insertions(+), 15 deletions(-)
 
-Also don't worry with the patches anymore. This took way too much ping
-pong to get it right, that I just wrote them by myself and submitted
-them for inclusion.
-
-Regards
-
-Marcel
-
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index 8353139..50d17fc 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -1110,6 +1110,21 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
+ 
++	if (changed & BSS_CHANGED_BSSID) {
++		memcpy(wl->bssid, bss_conf->bssid, ETH_ALEN);
++
++		ret = wl1251_build_null_data(wl);
++		if (ret < 0)
++			goto out;
++
++		if (wl->bss_type != BSS_TYPE_IBSS) {
++			ret = wl1251_join(wl, wl->bss_type, wl->channel,
++					  wl->beacon_int, wl->dtim_period);
++			if (ret < 0)
++				goto out_sleep;
++		}
++	}
++
+ 	if (changed & BSS_CHANGED_ASSOC) {
+ 		if (bss_conf->assoc) {
+ 			wl->beacon_int = bss_conf->beacon_int;
+@@ -1169,21 +1184,6 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
+-	if (changed & BSS_CHANGED_BSSID) {
+-		memcpy(wl->bssid, bss_conf->bssid, ETH_ALEN);
+-
+-		ret = wl1251_build_null_data(wl);
+-		if (ret < 0)
+-			goto out;
+-
+-		if (wl->bss_type != BSS_TYPE_IBSS) {
+-			ret = wl1251_join(wl, wl->bss_type, wl->channel,
+-					  wl->beacon_int, wl->dtim_period);
+-			if (ret < 0)
+-				goto out_sleep;
+-		}
+-	}
+-
+ 	if (changed & BSS_CHANGED_BEACON) {
+ 		beacon = ieee80211_beacon_get(hw, vif);
+ 		ret = wl1251_cmd_template_set(wl, CMD_BEACON, beacon->data,
 
