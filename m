@@ -1,46 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:64591 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752989AbZKTUqF (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:19497 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759107AbZKZHvH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 15:46:05 -0500
+	Thu, 26 Nov 2009 02:51:07 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: PROPOSAL: cfg80211 antenna selection
+Date: Thu, 26 Nov 2009 08:51:00 +0100
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>
+References: <200911250941.10929.holgerschurig@gmail.com> <43e72e890911250736l33afdf8ak1c806e5f5482f9da@mail.gmail.com>
+In-Reply-To: <43e72e890911250736l33afdf8ak1c806e5f5482f9da@mail.gmail.com>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 20 Nov 2009 12:45:51 -0800
-Message-ID: <43e72e890911201245r4de5b039hb2dd5011dabf2399@mail.gmail.com>
-Subject: A generic kernel compatibilty code
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200911260851.00192.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Everyone and their mother reinvents the wheel when it comes to
-backporting kernel modules. It a painful job and it seems to me an
-alternative is possible. If we can write generic compatibilty code for
-a new routine introduced on the next kernel how about just merging it
-to the kernel under some generic compat module. This would be
-completey ignored by everyone using the stable kernel but can be
-copied by anyone doing backport work.
+> While at it might as well make this some configurable struct
+> which the drivers can add to the wiphy just as with the
+> subbands. 
 
-So I'm thinking something as simple as a generic compat/comat.ko with
-compat-2.6.32.[ch] files.
+Something like this?
 
-We've already backported everything needed for wireless drivers under
-compat-wireless under this format down to even 2.6.25. I volunteer to
-be the sucker for this if this is reasonable and given the shot to try
-it.
 
-If you would like a better idea of what I mean please check out this
-git tree and check out the files under compat/*.[ch]
+struct ieee80211_antenna lbs_antennas {
+	u32 hwvalue;
+	u32 flags;
+	u32 capability;
+	int max_gain;
+}
 
-git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6.git
+static struct ieee80211_antenna lbs_antennas[] = {
+	{
+		.hwvalue = 0,
+		.capability = IEEE80211_ANTENNA_RXTX,
+	}
+};
 
-Things which *cannot* be backported through new defines or exported
-symbols are handled manually through patches (check compat/patches/)
-but no need for something like that upstream it seems.
+wiphy->antennas = lbs_antennas;
+wiphy->n_anteanns = ARRAY_SIZE(lbs_antennas);
 
-Please let me know what you think.
+Or should the antennas be added to "struct
+ieee80211_supported_band" instead of wiphy?
 
- Luis
+
+Capabilities could be
+
+#define IEEE80211_ANTENNA_RX         BIT(0)
+#define IEEE80211_ANTENNA_TX         BIT(1)
+#define IEEE80211_ANTENNA_OMNI       BIT(2)
+#define IEEE80211_ANTENNA_SECTIONAL  BIT(3)
+#define IEEE80211_ANTENNA_RXTX
+   (IEEE80211_ANTENNA_RX | IEEE80211_ANTENNA_TX)
+
+An unknown gain would be set to 0.
+
+
+
+> Not sure how to get this from other cards. Anyone know how
+> about on b43, iwlwifi, rallink? 
+
+Libertas doesn't give this to you, AFAIK you can just get the
+number of antennas.
+
+
+> Not sure if allowing for ops for chainmask setting would also
+> be helpeful here, that would need some review.
+
+What is "chainmask setting", I don't even know the concept.
+
+
+
+You didn't give any comment on my mask idea for the user-space 
+API.
+
+-- 
+http://www.holgerschurig.de
