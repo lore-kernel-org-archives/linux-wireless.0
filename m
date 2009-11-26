@@ -1,142 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:11919 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751405AbZKNTe7 (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:46943 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753216AbZKZXkV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Nov 2009 14:34:59 -0500
-Received: by ey-out-2122.google.com with SMTP id 9so556548eyd.5
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Nov 2009 11:35:03 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 2/2] rt2x00: Fix BUG on rt2800usb when trying to read eFuse EEPROM.
-Date: Sat, 14 Nov 2009 20:35:02 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-References: <1258226436-4673-1-git-send-email-gwingerde@gmail.com> <1258226436-4673-2-git-send-email-gwingerde@gmail.com> <1258226436-4673-3-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1258226436-4673-3-git-send-email-gwingerde@gmail.com>
+	Thu, 26 Nov 2009 18:40:21 -0500
+Received: by ewy19 with SMTP id 19so945715ewy.21
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2009 15:40:27 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911142035.02611.IvDoorn@gmail.com>
+In-Reply-To: <200911260851.00192.holgerschurig@gmail.com>
+References: <200911250941.10929.holgerschurig@gmail.com>
+	 <43e72e890911250736l33afdf8ak1c806e5f5482f9da@mail.gmail.com>
+	 <200911260851.00192.holgerschurig@gmail.com>
+Date: Fri, 27 Nov 2009 01:40:26 +0200
+Message-ID: <40f31dec0911261540i2abf7023u225b87ff5e177b96@mail.gmail.com>
+Subject: Re: PROPOSAL: cfg80211 antenna selection
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Holger Schurig <holgerschurig@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 14 November 2009, Gertjan van Wingerde wrote:
-> Current tree hits a BUG_ON in rt2x00_regbusy_read, because the eFuse EEPROM
-> reading code of rt2800lib uses the function without the csr_mutex locked.
-> 
-> Fix this by locking the csr_mutex for the of the EEPROM reading cycly and
-> using the _lock variants of the register reading and writing functions.
-> 
-> This also introcudes the register_read_lock function pointer in the
-> rt2800_ops structure.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |   24 ++++++++++++++----------
->  drivers/net/wireless/rt2x00/rt2800lib.h |   11 +++++++++++
->  drivers/net/wireless/rt2x00/rt2800pci.c |    1 +
->  drivers/net/wireless/rt2x00/rt2800usb.c |    1 +
->  4 files changed, 27 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index c710805..621dac1 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -1684,24 +1684,28 @@ static void rt2800_efuse_read(struct rt2x00_dev *rt2x00dev, unsigned int i)
->  {
->  	u32 reg;
->  
-> -	rt2800_register_read(rt2x00dev, EFUSE_CTRL, &reg);
-> +	mutex_lock(&rt2x00dev->csr_mutex);
-> +
-> +	rt2800_register_read_lock(rt2x00dev, EFUSE_CTRL, &reg);
->  	rt2x00_set_field32(&reg, EFUSE_CTRL_ADDRESS_IN, i);
->  	rt2x00_set_field32(&reg, EFUSE_CTRL_MODE, 0);
->  	rt2x00_set_field32(&reg, EFUSE_CTRL_KICK, 1);
-> -	rt2800_register_write(rt2x00dev, EFUSE_CTRL, reg);
-> +	rt2800_register_write_lock(rt2x00dev, EFUSE_CTRL, reg);
->  
->  	/* Wait until the EEPROM has been loaded */
->  	rt2800_regbusy_read(rt2x00dev, EFUSE_CTRL, EFUSE_CTRL_KICK, &reg);
->  
->  	/* Apparently the data is read from end to start */
-> -	rt2800_register_read(rt2x00dev, EFUSE_DATA3,
-> -				(u32 *)&rt2x00dev->eeprom[i]);
-> -	rt2800_register_read(rt2x00dev, EFUSE_DATA2,
-> -				(u32 *)&rt2x00dev->eeprom[i + 2]);
-> -	rt2800_register_read(rt2x00dev, EFUSE_DATA1,
-> -				(u32 *)&rt2x00dev->eeprom[i + 4]);
-> -	rt2800_register_read(rt2x00dev, EFUSE_DATA0,
-> -				(u32 *)&rt2x00dev->eeprom[i + 6]);
-> +	rt2800_register_read_lock(rt2x00dev, EFUSE_DATA3,
-> +					(u32 *)&rt2x00dev->eeprom[i]);
-> +	rt2800_register_read_lock(rt2x00dev, EFUSE_DATA2,
-> +					(u32 *)&rt2x00dev->eeprom[i + 2]);
-> +	rt2800_register_read_lock(rt2x00dev, EFUSE_DATA1,
-> +					(u32 *)&rt2x00dev->eeprom[i + 4]);
-> +	rt2800_register_read_lock(rt2x00dev, EFUSE_DATA0,
-> +					(u32 *)&rt2x00dev->eeprom[i + 6]);
-> +
-> +	mutex_unlock(&rt2x00dev->csr_mutex);
->  }
->  
->  void rt2800_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
-> index 7c79011..535ce22 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.h
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.h
-> @@ -23,6 +23,8 @@
->  struct rt2800_ops {
->  	void (*register_read)(struct rt2x00_dev *rt2x00dev,
->  			      const unsigned int offset, u32 *value);
-> +	void (*register_read_lock)(struct rt2x00_dev *rt2x00dev,
-> +				   const unsigned int offset, u32 *value);
->  	void (*register_write)(struct rt2x00_dev *rt2x00dev,
->  			       const unsigned int offset, u32 value);
->  	void (*register_write_lock)(struct rt2x00_dev *rt2x00dev,
-> @@ -49,6 +51,15 @@ static inline void rt2800_register_read(struct rt2x00_dev *rt2x00dev,
->  	rt2800ops->register_read(rt2x00dev, offset, value);
->  }
->  
-> +static inline void rt2800_register_read_lock(struct rt2x00_dev *rt2x00dev,
-> +					     const unsigned int offset,
-> +					     u32 *value)
-> +{
-> +	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
-> +
-> +	rt2800ops->register_read_lock(rt2x00dev, offset, value);
-> +}
-> +
->  static inline void rt2800_register_write(struct rt2x00_dev *rt2x00dev,
->  					 const unsigned int offset,
->  					 u32 value)
-> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-> index 46750f6..bb65ffa 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -1058,6 +1058,7 @@ static int rt2800pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
->  
->  static const struct rt2800_ops rt2800pci_rt2800_ops = {
->  	.register_read		= rt2x00pci_register_read,
-> +	.register_read_lock	= rt2x00pci_register_read, /* same for PCI */
->  	.register_write		= rt2x00pci_register_write,
->  	.register_write_lock	= rt2x00pci_register_write, /* same for PCI */
->  
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index b57999b..b1d6393 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -682,6 +682,7 @@ static int rt2800usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
->  
->  static const struct rt2800_ops rt2800usb_rt2800_ops = {
->  	.register_read		= rt2x00usb_register_read,
-> +	.register_read_lock	= rt2x00usb_register_read_lock,
->  	.register_write		= rt2x00usb_register_write,
->  	.register_write_lock	= rt2x00usb_register_write_lock,
->  
+2009/11/26 Holger Schurig <holgerschurig@gmail.com>:
+>> While at it might as well make this some configurable struct
+>> which the drivers can add to the wiphy just as with the
+>> subbands.
+>
+> Something like this?
+>
+>
+> struct ieee80211_antenna lbs_antennas {
+>        u32 hwvalue;
+>        u32 flags;
+>        u32 capability;
+>        int max_gain;
+> }
+>
+> static struct ieee80211_antenna lbs_antennas[] = {
+>        {
+>                .hwvalue = 0,
+>                .capability = IEEE80211_ANTENNA_RXTX,
+>        }
+> };
+>
+> wiphy->antennas = lbs_antennas;
+> wiphy->n_anteanns = ARRAY_SIZE(lbs_antennas);
+>
+> Or should the antennas be added to "struct
+> ieee80211_supported_band" instead of wiphy?
+>
+>
+> Capabilities could be
+>
+> #define IEEE80211_ANTENNA_RX         BIT(0)
+> #define IEEE80211_ANTENNA_TX         BIT(1)
+> #define IEEE80211_ANTENNA_OMNI       BIT(2)
+> #define IEEE80211_ANTENNA_SECTIONAL  BIT(3)
+> #define IEEE80211_ANTENNA_RXTX
+>   (IEEE80211_ANTENNA_RX | IEEE80211_ANTENNA_TX)
+>
+> An unknown gain would be set to 0.
+>
+>
+>
+>> Not sure how to get this from other cards. Anyone know how
+>> about on b43, iwlwifi, rallink?
+>
+> Libertas doesn't give this to you, AFAIK you can just get the
+> number of antennas.
+>
+>
+>> Not sure if allowing for ops for chainmask setting would also
+>> be helpeful here, that would need some review.
+>
+> What is "chainmask setting", I don't even know the concept.
+>
+>
+>
+> You didn't give any comment on my mask idea for the user-space
+> API.
+>
 
 
+This is what we have on ath5k right now...
+
+enum ath5k_ant_mode {
+        AR5K_ANTMODE_DEFAULT    = 0,    /* default antenna setup */
+        AR5K_ANTMODE_FIXED_A    = 1,    /* only antenna A is present */
+        AR5K_ANTMODE_FIXED_B    = 2,    /* only antenna B is present */
+        AR5K_ANTMODE_SINGLE_AP  = 3,    /* sta locked on a single ap */
+        AR5K_ANTMODE_SECTOR_AP  = 4,    /* AP with tx antenna set on tx desc */
+        AR5K_ANTMODE_SECTOR_STA = 5,    /* STA with tx antenna set on tx desc */
+        AR5K_ANTMODE_DEBUG      = 6,    /* Debug mode -A -> Rx, B-> Tx- */
+        AR5K_ANTMODE_MAX,
+};
+
+...think more like antenna setups or scenarios.
+
+#define IEEE80211_ANTENNA_RX         BIT(0)
+
+Also i suggest that we don't use IEEE80211_* for non 80211 related stuff...
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
