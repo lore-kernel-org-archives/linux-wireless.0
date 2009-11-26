@@ -1,35 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:57219 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754753AbZKIW6m (ORCPT
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:34037 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760140AbZKZN5Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 17:58:42 -0500
-Received: by iwn10 with SMTP id 10so2801414iwn.4
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 14:58:48 -0800 (PST)
+	Thu, 26 Nov 2009 08:57:16 -0500
+Received: by pwi3 with SMTP id 3so504667pwi.21
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2009 05:57:23 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1257805260-13265-1-git-send-email-hauke@hauke-m.de>
-References: <1257805260-13265-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 9 Nov 2009 14:58:28 -0800
-Message-ID: <43e72e890911091458n9d1b2aew1977034c874fc68f@mail.gmail.com>
-Subject: Re: [PATCH 0/4] [compat-2.6] Some patches for compat-wireless
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Date: Thu, 26 Nov 2009 21:57:22 +0800
+Message-ID: <d82e647a0911260557l5cf33449pe41f8902b6889891@mail.gmail.com>
+Subject: [question] ath9k: 11n monitor mode
+From: Ming Lei <tom.leiming@gmail.com>
+To: lrodriguez@atheros.com
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 9, 2009 at 2:20 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> Some patches for compat-wireless
-> For kernel 2.6.26 and older debugfs_remove_recursive needs to be
-> backported. The problems with rt2800lib will be fixed in
-> wireless-testing.
->
-> v2: resend patches because of line-wrap.
+Hi Luis,
 
-Applied thanks. BTW git apply still did not like these patches due to
-the tab after From:, it seems git likes no tab there but just a space.
+I find the wireshark can only capture 11b/g packets but any 11n packets over
+my ar9283 card, and I can confirm I have set HT40+ to make it work in 11n mode.
 
-  Luis
+wireshark : 1.2.2
+kernel       : 2.6.32-rc6
 
-[1] http://wireless.kernel.org/en/developers/Documentation/git-guide
+I don't know what is wrong with it, and could ath9k work well in monitor
+mode of 11n?  or other reason?
+
+Look forward to your reply.
+
+Thanks,
+
+-- 
+Lei Ming
