@@ -1,40 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:40365 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759389AbZKFQbB convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:27839 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760656AbZKZPJu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Nov 2009 11:31:01 -0500
-Received: by iwn10 with SMTP id 10so900371iwn.4
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Nov 2009 08:31:06 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890911060821r2703c186lbb75c40b449b2c55@mail.gmail.com>
-References: <fd145f7d0911060004j55b06482tca088685d0626249@mail.gmail.com>
-	<43e72e890911060821r2703c186lbb75c40b449b2c55@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 6 Nov 2009 08:30:46 -0800
-Message-ID: <43e72e890911060830k56f9cdcbi14a03b1389351197@mail.gmail.com>
-Subject: Re: Getting random regulatory domains on boot-up with ath9k
-To: Jeffrey Baker <jwbaker@gmail.com>
+	Thu, 26 Nov 2009 10:09:50 -0500
+Subject: [PATCH 09/12] wl1251: implement wl1251_acx_tid_cfg()
+To: linville@tuxdriver.com
+From: Kalle Valo <kalle.valo@iki.fi>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Date: Thu, 26 Nov 2009 17:09:24 +0200
+Message-ID: <20091126150924.917.98093.stgit@tikku>
+In-Reply-To: <20091126150141.917.35278.stgit@tikku>
+References: <20091126150141.917.35278.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 6, 2009 at 8:21 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+From: Kalle Valo <kalle.valo@nokia.com>
 
->  * The fix for the regression would be to either use an alpha2 which
-> does have an entry and put that first in the array *or* (my
-> preference) to check first the alpha2 set on cfg80211 and see if that
-> maps to a country allowed by your region code and if so get cfg80211
-> to request that regulatory domain to CRDA.
+Needed for WMM.
 
-I just thought of another possible solution for region code stuff --
-just make them static world roaming regulatory domains. But to do this
-it means we'd enable the world roaming features on cfg80211 and
-channels which would typically be disabled would then just become
-passive-scan/no-ibss. I'd have to get buy-in through our internal
-regulatory guys first. This also seems like a clean solution but it
-would mean more static tables define for each major region code we
-have and I am not sure how many of those we have.
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Reviewed-by: Janne Ylalehto <janne.ylalehto@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1251_acx.c  |   36 +++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1251_acx.h  |   55 +++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1251_main.c |   11 ++++++
+ 3 files changed, 102 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/wl12xx/wl1251_acx.c b/drivers/net/wireless/wl12xx/wl1251_acx.c
+index b409c75..beff084 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_acx.c
++++ b/drivers/net/wireless/wl12xx/wl1251_acx.c
+@@ -1009,3 +1009,39 @@ out:
+ 	kfree(acx);
+ 	return ret;
+ }
++
++int wl1251_acx_tid_cfg(struct wl1251 *wl, u8 queue,
++		       enum wl1251_acx_channel_type type,
++		       u8 tsid, enum wl1251_acx_ps_scheme ps_scheme,
++		       enum wl1251_acx_ack_policy ack_policy)
++{
++	struct wl1251_acx_tid_cfg *acx;
++	int ret = 0;
++
++	wl1251_debug(DEBUG_ACX, "acx tid cfg %d type %d tsid %d "
++		     "ps_scheme %d ack_policy %d", queue, type, tsid,
++		     ps_scheme, ack_policy);
++
++	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
++
++	if (!acx) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	acx->queue = queue;
++	acx->type = type;
++	acx->tsid = tsid;
++	acx->ps_scheme = ps_scheme;
++	acx->ack_policy = ack_policy;
++
++	ret = wl1251_cmd_configure(wl, ACX_TID_CFG, acx, sizeof(*acx));
++	if (ret < 0) {
++		wl1251_warning("acx tid cfg failed: %d", ret);
++		goto out;
++	}
++
++out:
++	kfree(acx);
++	return ret;
++}
+diff --git a/drivers/net/wireless/wl12xx/wl1251_acx.h b/drivers/net/wireless/wl12xx/wl1251_acx.h
+index 5679324..26160c4 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_acx.h
++++ b/drivers/net/wireless/wl12xx/wl1251_acx.h
+@@ -1196,6 +1196,57 @@ struct wl1251_acx_ac_cfg {
+ 	u16 txop_limit;
+ } __attribute__ ((packed));
+ 
++
++enum wl1251_acx_channel_type {
++	CHANNEL_TYPE_DCF	= 0,
++	CHANNEL_TYPE_EDCF	= 1,
++	CHANNEL_TYPE_HCCA	= 2,
++};
++
++enum wl1251_acx_ps_scheme {
++	/* regular ps: simple sending of packets */
++	WL1251_ACX_PS_SCHEME_LEGACY	= 0,
++
++	/* sending a packet triggers a unscheduled apsd downstream */
++	WL1251_ACX_PS_SCHEME_UPSD_TRIGGER	= 1,
++
++	/* a pspoll packet will be sent before every data packet */
++	WL1251_ACX_PS_SCHEME_LEGACY_PSPOLL	= 2,
++
++	/* scheduled apsd mode */
++	WL1251_ACX_PS_SCHEME_SAPSD		= 3,
++};
++
++enum wl1251_acx_ack_policy {
++	WL1251_ACX_ACK_POLICY_LEGACY	= 0,
++	WL1251_ACX_ACK_POLICY_NO_ACK	= 1,
++	WL1251_ACX_ACK_POLICY_BLOCK	= 2,
++};
++
++struct wl1251_acx_tid_cfg {
++	struct acx_header header;
++
++	/* tx queue id number (0-7) */
++	u8 queue;
++
++	/* channel access type for the queue, enum wl1251_acx_channel_type */
++	u8 type;
++
++	/* EDCA: ac index (0-3), HCCA: traffic stream id (8-15) */
++	u8 tsid;
++
++	/* ps scheme of the specified queue, enum wl1251_acx_ps_scheme */
++	u8 ps_scheme;
++
++	/* the tx queue ack policy, enum wl1251_acx_ack_policy */
++	u8 ack_policy;
++
++	u8 padding[3];
++
++	/* not supported */
++	u32 apsdconf[2];
++} __attribute__ ((packed));
++
+ /*************************************************************************
+ 
+     Host Interrupt Register (WiLink -> Host)
+@@ -1354,5 +1405,9 @@ int wl1251_acx_mem_cfg(struct wl1251 *wl);
+ int wl1251_acx_wr_tbtt_and_dtim(struct wl1251 *wl, u16 tbtt, u8 dtim);
+ int wl1251_acx_ac_cfg(struct wl1251 *wl, u8 ac, u8 cw_min, u16 cw_max,
+ 		      u8 aifs, u16 txop);
++int wl1251_acx_tid_cfg(struct wl1251 *wl, u8 queue,
++		       enum wl1251_acx_channel_type type,
++		       u8 tsid, enum wl1251_acx_ps_scheme ps_scheme,
++		       enum wl1251_acx_ack_policy ack_policy);
+ 
+ #endif /* __WL1251_ACX_H__ */
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index 4d335d6..253706c 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -1296,7 +1296,18 @@ static int wl1251_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 	ret = wl1251_acx_ac_cfg(wl, wl1251_tx_get_queue(queue),
+ 				params->cw_min, params->cw_max,
+ 				params->aifs, params->txop);
++	if (ret < 0)
++		goto out_sleep;
++
++	ret = wl1251_acx_tid_cfg(wl, wl1251_tx_get_queue(queue),
++				 CHANNEL_TYPE_DCF,
++				 wl1251_tx_get_queue(queue),
++				 WL1251_ACX_PS_SCHEME_LEGACY,
++				 WL1251_ACX_ACK_POLICY_LEGACY);
++	if (ret < 0)
++		goto out_sleep;
+ 
++out_sleep:
+ 	wl1251_ps_elp_sleep(wl);
+ 
+ out:
+
