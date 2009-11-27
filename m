@@ -1,120 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wal-mailgw1.qinetiq-na.com ([65.209.22.159]:1391 "EHLO
-	WALQNAOMAIL1T.qnao.net" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752268AbZKTN4d convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 08:56:33 -0500
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: Kernel oops in ath9k
-Date: Fri, 20 Nov 2009 08:56:09 -0500
-Message-ID: <712C9C7AD151C847B09F32EDA56A94CF0115C73C@WALQNAOMAIL1T.qnao.net>
-In-Reply-To: <1258687496.12864.35.camel@ct>
-References: <712C9C7AD151C847B09F32EDA56A94CF0115C555@WALQNAOMAIL1T.qnao.net> <1258687496.12864.35.camel@ct>
-From: "Douglass, Woodrow" <Woodrow.Douglass@QinetiQ-NA.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Cc: <linux-wireless@vger.kernel.org>
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:51481 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751433AbZK0AAV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2009 19:00:21 -0500
+Received: by fxm5 with SMTP id 5so1171769fxm.28
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Nov 2009 16:00:26 -0800 (PST)
+Subject: Re: Panic in iwl3945 driver
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1259167780.4072.2.camel@maxim-laptop>
+References: <1259167780.4072.2.camel@maxim-laptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 27 Nov 2009 02:00:22 +0200
+Message-ID: <1259280022.3991.12.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for the quick reply Pavel! I've seen this Oops with kernel
-2.6.31.6, as well as with the  latest linux-wireless that I downloaded
-on the 18th of november. Also, it's interesting that the card is
-identified as having a AR9280 chipset, the website for the card
-(http://www.ubnt.com/products/sr7112.php) says the card has an AR9220
-chipset. Could this be causing the problem?
+On Wed, 2009-11-25 at 18:49 +0200, Maxim Levitsky wrote: 
+> Just captured a panic in iwl3945 driver.
+> Will investigate.
+> 
+> <1>[ 7290.414172] IP: [<ffffffffa0dd53a1>] iwl3945_rx_reply_tx+0xc1/0x450 [iwl3945]
+> <4>[ 7290.414205] PGD 0 
+> <1>[ 7290.414214] Thread overran stack, or stack corrupted
+> <0>[ 7290.414229] Oops: 0002 [#1] PREEMPT SMP 
+> <0>[ 7290.414246] last sysfs file: /sys/devices/platform/coretemp.1/temp1_input
+> <4>[ 7290.414265] CPU 0 
+> <4>[ 7290.414274] Modules linked in: af_packet nfsd usb_storage usb_libusual cpufreq_powersave exportfs cpufreq_conservative iwl3945 nfs cpufreq_userspace snd_hda_codec_realtek acpi_cpufreq uvcvideo lockd iwlcore snd_hda_intel joydev coretemp nfs_acl videodev snd_hda_codec mac80211 v4l1_compat snd_hwdep sbp2 v4l2_compat_ioctl32 uhci_hcd psmouse auth_rpcgss ohci1394 cfg80211 ehci_hcd video ieee1394 snd_pcm serio_raw battery ac nvidia(P) usbcore output sunrpc evdev lirc_ene0100 snd_page_alloc rfkill tg3 libphy fuse lzo lzo_decompress lzo_compress
+> <6>[ 7290.414486] Pid: 0, comm: swapper Tainted: P           2.6.32-rc8-wl #213 Aspire 5720     
+> <6>[ 7290.414507] RIP: 0010:[<ffffffffa0dd53a1>]  [<ffffffffa0dd53a1>] iwl3945_rx_reply_tx+0xc1/0x450 [iwl3945]
+> <6>[ 7290.414541] RSP: 0018:ffff880002203d60  EFLAGS: 00010246
+> <6>[ 7290.414557] RAX: 000000000000004f RBX: ffff880064c11600 RCX: 0000000000000013
+> <6>[ 7290.414576] RDX: ffffffffa0ddcf20 RSI: ffff8800512b7008 RDI: 0000000000000038
+> <6>[ 7290.414596] RBP: ffff880002203dd0 R08: 0000000000000000 R09: 0000000000000100
+> <6>[ 7290.414616] R10: 0000000000000001 R11: 0000000000000000 R12: 00000000000000a0
+> <6>[ 7290.414635] R13: 0000000000000002 R14: 0000000000000013 R15: 0000000000020201
+> <6>[ 7290.414655] FS:  0000000000000000(0000) GS:ffff880002200000(0000) knlGS:0000000000000000
+> <6>[ 7290.414677] CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+> <6>[ 7290.414693] CR2: 0000000000000041 CR3: 0000000001001000 CR4: 00000000000006f0
+> <6>[ 7290.414712] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> <6>[ 7290.414732] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+> <4>[ 7290.414752] Process swapper (pid: 0, threadinfo ffffffff81524000, task ffffffff81528b60)
+> <0>[ 7290.414772] Stack:
+> <4>[ 7290.414780]  ffff880002203da0 0000000000000046 0000000000000000 0000000000000046
+> <4>[ 7290.414804] <0> 0000000000000282 0000000000000282 0000000000000282 ffff880064c12010
+> <4>[ 7290.414830] <0> ffff880002203db0 ffff880064c11600 ffff880064c12e50 ffff8800512b7000
+> <0>[ 7290.414858] Call Trace:
+> <0>[ 7290.414867]  <IRQ> 
+> <4>[ 7290.414884]  [<ffffffffa0dc8c47>] iwl3945_irq_tasklet+0x657/0x1740 [iwl3945]
+> <4>[ 7290.414910]  [<ffffffff8138fc60>] ? _spin_unlock+0x30/0x60
+> <4>[ 7290.414931]  [<ffffffff81049a21>] tasklet_action+0x101/0x110
+> <4>[ 7290.414950]  [<ffffffff8104a3d0>] __do_softirq+0xc0/0x160
+> <4>[ 7290.414968]  [<ffffffff8100d01c>] call_softirq+0x1c/0x30
+> <4>[ 7290.414986]  [<ffffffff8100eff5>] do_softirq+0x75/0xb0
+> <4>[ 7290.415003]  [<ffffffff81049ee5>] irq_exit+0x95/0xa0
+> <4>[ 7290.415020]  [<ffffffff8100e547>] do_IRQ+0x77/0xf0
+> <4>[ 7290.415038]  [<ffffffff8100c7d3>] ret_from_intr+0x0/0xf
+> <0>[ 7290.415052]  <EOI> 
+> <4>[ 7290.415067]  [<ffffffff81234efa>] ? acpi_idle_enter_bm+0x270/0x2a5
+> <4>[ 7290.415087]  [<ffffffff81234f04>] ? acpi_idle_enter_bm+0x27a/0x2a5
+> <4>[ 7290.415107]  [<ffffffff81234efa>] ? acpi_idle_enter_bm+0x270/0x2a5
+> <4>[ 7290.415130]  [<ffffffff812c11f3>] ? cpuidle_idle_call+0x93/0xf0
+> <4>[ 7290.415149]  [<ffffffff8100b0d7>] ? cpu_idle+0xa7/0x110
+> <4>[ 7290.415168]  [<ffffffff8137b3d5>] ? rest_init+0x75/0x80
+> <4>[ 7290.415187]  [<ffffffff8158cd0a>] ? start_kernel+0x3a7/0x3b3
+> <4>[ 7290.415206]  [<ffffffff8158c315>] ? x86_64_start_reservations+0x125/0x129
+> <4>[ 7290.415227]  [<ffffffff8158c3fd>] ? x86_64_start_kernel+0xe4/0xeb
+> <0>[ 7290.415243] Code: 00 41 39 ce 0f 8d e8 01 00 00 48 8b 47 40 48 63 d2 48 69 d2 98 00 00 00 4c 8b 04 02 48 c7 c2 20 cf dd a0 49 8d 78 38 49 8d 40 4f <c6> 47 09 00 c6 47 0c 00 c6 47 0f 00 c6 47 12 00 c6 47 15 00 49 
+> <1>[ 7290.415382] RIP  [<ffffffffa0dd53a1>] iwl3945_rx_reply_tx+0xc1/0x450 [iwl3945]
+> <4>[ 7290.415410]  RSP <ffff880002203d60>
+> <0>[ 7290.415421] CR2: 0000000000000041
+> <4>[ 7290.415436] ---[ end trace ec46807277caa515 ]---
+> <0>[ 7290.415450] Kernel panic - not syncing: Fatal exception in interrupt
+> <4>[ 7290.415468] Pid: 0, comm: swapper Tainted: P      D    2.6.32-rc8-wl #213
+> <4>[ 7290.415486] Call Trace:
+> <4>[ 7290.415495]  <IRQ>  [<ffffffff8138c040>] panic+0x7d/0x13a
+> <4>[ 7290.415519]  [<ffffffff8101071a>] oops_end+0xda/0xe0
+> <4>[ 7290.415538]  [<ffffffff8102e1ea>] no_context+0xea/0x250
+> <4>[ 7290.415557]  [<ffffffff81038991>] ? select_task_rq_fair+0x511/0x780
+> <4>[ 7290.415578]  [<ffffffff8102e475>] __bad_area_nosemaphore+0x125/0x1e0
+> <4>[ 7290.415597]  [<ffffffff81038d0c>] ? __enqueue_entity+0x7c/0x80
+> <4>[ 7290.415616]  [<ffffffff81039201>] ? enqueue_task_fair+0x111/0x150
+> <4>[ 7290.415636]  [<ffffffff8102e53e>] bad_area_nosemaphore+0xe/0x10
+> <4>[ 7290.415656]  [<ffffffff8102e8fa>] do_page_fault+0x26a/0x320
+> <4>[ 7290.415674]  [<ffffffff813905df>] page_fault+0x1f/0x30
+> <4>[ 7290.415697]  [<ffffffffa0dd53a1>] ? iwl3945_rx_reply_tx+0xc1/0x450 [iwl3945]
+> <4>[ 7290.415723]  [<ffffffffa0dc8c47>] iwl3945_irq_tasklet+0x657/0x1740 [iwl3945]
+> <4>[ 7290.415746]  [<ffffffff8138fc60>] ? _spin_unlock+0x30/0x60
+> <4>[ 7290.415764]  [<ffffffff81049a21>] tasklet_action+0x101/0x110
+> <4>[ 7290.415783]  [<ffffffff8104a3d0>] __do_softirq+0xc0/0x160
+> <4>[ 7290.415801]  [<ffffffff8100d01c>] call_softirq+0x1c/0x30
+> <4>[ 7290.415818]  [<ffffffff8100eff5>] do_softirq+0x75/0xb0
+> <4>[ 7290.415835]  [<ffffffff81049ee5>] irq_exit+0x95/0xa0
+> <4>[ 7290.415852]  [<ffffffff8100e547>] do_IRQ+0x77/0xf0
+> <4>[ 7290.415869]  [<ffffffff8100c7d3>] ret_from_intr+0x0/0xf
+> <4>[ 7290.415883]  <EOI>  [<ffffffff81234efa>] ? acpi_idle_enter_bm+0x270/0x2a5
+> <4>[ 7290.415911]  [<ffffffff81234f04>] ? acpi_idle_enter_bm+0x27a/0x2a5
+> <4>[ 7290.415931]  [<ffffffff81234efa>] ? acpi_idle_enter_bm+0x270/0x2a5
+> <4>[ 7290.415952]  [<ffffffff812c11f3>] ? cpuidle_idle_call+0x93/0xf0
+> <4>[ 7290.415971]  [<ffffffff8100b0d7>] ? cpu_idle+0xa7/0x110
+> <4>[ 7290.415989]  [<ffffffff8137b3d5>] ? rest_init+0x75/0x80
+> <4>[ 7290.416007]  [<ffffffff8158cd0a>] ? start_kernel+0x3a7/0x3b3
+> <4>[ 7290.416026]  [<ffffffff8158c315>] ? x86_64_start_reservations+0x125/0x129
+> <4>[ 7290.416047]  [<ffffffff8158c3fd>] ? x86_64_start_kernel+0xe4/0xeb
 
-I'm going to repost this to the ath9k mailing list you mentioned.
 
-Thanks again,
-Woody
+This is some very unpleasant problem.
+The thing is that this happens very rarely, and while you use X.
+I had recently few such embarrassing kernel panics (I never had any
+random and rare kernel panics) and I strongly suspect them to be of same
+origin.
 
-> -----Original Message-----
-> From: Pavel Roskin [mailto:proski@gnu.org] 
-> Sent: Thursday, November 19, 2009 10:25 PM
-> To: Douglass, Woodrow
-> Cc: linux-wireless@vger.kernel.org
-> Subject: Re: Kernel oops in ath9k
-> 
-> On Thu, 2009-11-19 at 09:54 -0500, Douglass, Woodrow wrote:
-> > Hi all,
-> > 
-> > I'm not sure if this is the right place to post this, but I 
-> may have a 
-> > bug report for the ath9k driver.
-> 
-> You may want to post to ath9k-devel@lists.ath9k.org, as the 
-> problem seems to be specific to the Atheros driver.
-> 
-> > I'm running a single board computer with a 600Mhz celeron 
-> processor. 
-> > On the minipci bus I have a Ubiquiti SR71-12 802.11n card.
-> 
-> It would be helpful if you also specified the exact version 
-> of the kernel.
-> 
-> >  Also attached is
-> > a shell script with the commands I run to cause the oops. Note that 
-> > the first time the ifconfig line in this script is run, a 
-> "SIOCSIFFLAGS:
-> > Input/Output Error" is triggered, the kernel oops happens about 5 
-> > seconds after the ifconfig line is run a second time.
-> 
-> I can reproduce "Input/Output Error" with SR71-12, but not 
-> the oops with the current linux-wireless.
-> 
-> I know that it's caused by returning false in this code in 
-> file drivers/net/wireless/ath/ath9k/calib.c, function 
-> ath9k_hw_init_cal():
-> 
->                 /* Poll for offset calibration complete */
->                 if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, 
-> AR_PHY_AGC_CONTROL_CAL,
->                                    0, AH_WAIT_TIMEOUT)) {
->                         ath_print(common, ATH_DBG_CALIBRATE,
->                                   "offset calibration failed to "
->                                   "complete in 1ms; noisy 
-> environment?\n");
->                         return false;
->                 }
-> 
-> With full debugging (modprobe ath9k debug=0xffffffff), the 
-> kernel messages are (with some context):
-> 
-> ath: Reset TXQ, inactive queue: 7
-> ath: Reset TX queue: 8
-> ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
-> ath: Reset TX queue: 9
-> ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
-> ath: ah->misc_mode 0x4
-> ath: timeout (100000 us) on reg 0x9860: 0xdeadbeef & 
-> 0x00000001 != 0x00000000
-> ath: offset calibration failed to complete in 1ms; noisy environment?
-> ath: Unable to reset hardware; reset status -5 (freq 2412 MHz)
-> 
-> I have access to various Ubiquiti cards, but SR71-12 is the 
-> only one that fails.  I know that it works in Windows XP with 
-> the Ubiquiti driver for other SR71 cards (the inf file should 
-> be tweaked to recognize the revision of SR71-12).  That makes 
-> me think the problem is not in the hardware and not in the 
-> noisy environment.
-> 
-> ath9k identifies the card as:
-> 
-> phy0: Atheros AR9280 Rev:2 mem=0xffffc90010da0000, irq=18
-> 
-> # lspci -vnn -s 03:01.0
-> 03:01.0 Network controller [0280]: Atheros Communications 
-> Inc. AR922X Wireless Network Adapter [168c:0029] (rev 01)
->         Subsystem: Device [0777:4002]
->         Flags: bus master, 66MHz, medium devsel, latency 168, IRQ 18
->         Memory at fe3f0000 (32-bit, non-prefetchable) [size=64K]
->         Capabilities: [44] Power Management version 2
->         Kernel driver in use: ath9k
->         Kernel modules: ath9k
-> 
-> --
-> Regards,
-> Pavel Roskin
-> 
+This one is first I captured, due to some code that I wrote recently
+that saves printk buffer in predefined location in system ram that isn't
+cleared on reboot in my notebook.
+
+I had put some NULL checks in iwl3945_rx_reply_tx, none did trigger yet,
+nor I had another kernel panic.
+
+Best regards,
+Maxim Levitsky
+
+
