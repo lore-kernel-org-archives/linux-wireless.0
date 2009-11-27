@@ -1,50 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:36190 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751968AbZKNNTP (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39254 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754176AbZK0Jd1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Nov 2009 08:19:15 -0500
-MIME-Version: 1.0
-In-Reply-To: <1258082571.7715.13.camel@violet>
-References: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
-	 <1258082571.7715.13.camel@violet>
-Date: Sat, 14 Nov 2009 18:49:20 +0530
-Message-ID: <4fb5db50911140519q70bbdd00qb585153c4926df96@mail.gmail.com>
-Subject: Re: [patch 0/1] Adding radio type FM
-From: Janakiram Sistla <janakiram.sistla@gmail.com>
-To: majordomo@vger.kernel.org
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, Marcel Holtmann <marcel@holtmann.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 27 Nov 2009 04:33:27 -0500
+Subject: Re: [RFC 1/2] wireless: add ieee80211_asmdu_to_8023s
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1259314217.12157.3.camel@debian>
+References: <1259215413-16753-1-git-send-email-yi.zhu@intel.com>
+	 <1259229943.32372.50.camel@johannes.local>
+	 <1259290376.13126.219.camel@debian>
+	 <1259313653.5428.5.camel@johannes.local>  <1259314217.12157.3.camel@debian>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-xjCJEzVgZTLp9dcW4bbl"
+Date: Fri, 27 Nov 2009 10:33:27 +0100
+Message-ID: <1259314407.5428.8.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Resubmitting patch  adding Marcels Comments
 
->From f72e4bdef7c423259f2f8f0615d024a25294ea8f Mon Sep 17 00:00:00 2001
-From: Janakiram Sistla <janakiram.sistla@gmail.com>
-Date: Sat, 14 Nov 2009 18:42:35 +0530
-Subject: [PATCH 1/1] Adding radio type FM
+--=-xjCJEzVgZTLp9dcW4bbl
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Adding radio type FM in RFKILL_TYPE_.FM also belongs to
-same class of with both TX/RX capability.
+On Fri, 2009-11-27 at 17:30 +0800, Zhu Yi wrote:
+> On Fri, 2009-11-27 at 17:20 +0800, Johannes Berg wrote:
+> > Is it? I don't think so. Many drivers go up beyond that as far as I
+> > know. Then some do different things like putting it in a different DMA
+> > block.
+> >=20
+> > > While for those drivers really need a bigger
+> > > extra headroom and support Rx aggregation, this probably means
+> > > ieee80211_skb_resize. But the resize should always happen for every
+> > > packet from the IP stack, right?
+> >=20
+> > No, davem and I optimised that away a long time ago via using
+> > netdev->needed_headroom and netdev->needed_tailroom. It even works for
+> > bridges and their slave devices, iirc.=20
+>=20
+> I missed this. Will check it. If so, I'll add another parameter to pass
+> the extra hw tx headroom to ieee80211_asmdu_to_8023s.
 
-Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
----
- include/linux/rfkill.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+The thing is that I'm not even sure if we can possibly forward a frame
+after this deaggregation. I'll poke at the code.
 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index 3392c59..03f5598 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -45,6 +45,7 @@ enum rfkill_type {
- 	RFKILL_TYPE_WIMAX,
- 	RFKILL_TYPE_WWAN,
- 	RFKILL_TYPE_GPS,
-+	RFKILL_TYPE_FM,
- 	NUM_RFKILL_TYPES,
- };
+johannes
 
--- 
-1.5.4.3
+--=-xjCJEzVgZTLp9dcW4bbl
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLD5zkAAoJEODzc/N7+QmaF94QAIODJ8eym78eUMCWjbi9/Kpw
+gs95Fms5X4SpNNU5calL4d8l5/PKyzWI0OG505q8u2TsF6aNW8bkyjNaJd23+lbp
+lqkzKuTE37Pyhdju3Psbtkbt5LfyG8YkFPolfQOqxwLWf2cdTJr9cFr4N5N/TzRe
++ZYgKTlHAhvKa4JEy4t8/gh4fXbmbJp4XOHp8duEIrDF08k00jQ5dkHCmAZED0RN
+c+ZomM13kSa1W75Wf5wVvw2cESEiTS0HkR4mDhzAd+6SsMzfPFQ7npFVKFUaHd4g
+2mC0EgzIY1XKLrMdUlSMHtI4aAMsuMc4zg5sAPakjWx6fXIg4/83ajCYKER0C8Vf
+qQIFf8GmF40XyF5iCjsgTRcNuaXxBYXjpH5Nst+aDxN9iqmlqu4tlQoqgnR4ajA2
+MHDh8W6UNiIX4ZTj7LItMMjnC2E56669UxG/UjAUPYr+iayHYhQ9hTBrilihcHIG
+XGGSIJ/YX0mTNE3SSAgKm5+reYQi2q/winIlYGFQQAc6o9WTLxiYt/xpNjc+tqpG
+WM5oYUEFblUvm0dBLZfbR0Tm6oKogn81Vctr8mQ19PtS1FiGExw6+2wPy4PE+H9I
+F6kcCo2xRSNaz3PDm2jbd8XGigFy0baIXKQ7ysGzNjlBohuhKq6RcEQqH4hheLBt
+mbmTCkVl+sx4i2Z4zOpT
+=/z01
+-----END PGP SIGNATURE-----
+
+--=-xjCJEzVgZTLp9dcW4bbl--
+
