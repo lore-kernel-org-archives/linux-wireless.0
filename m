@@ -1,39 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:58636 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757031AbZKEUjo (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:61721 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753421AbZK0OID (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Nov 2009 15:39:44 -0500
-Message-ID: <4AF33812.8080401@gmail.com>
-Date: Thu, 05 Nov 2009 21:39:46 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Fri, 27 Nov 2009 09:08:03 -0500
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id nARE85nJ025516
+	for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2009 08:08:08 -0600
+Received: from [127.0.1.1] (essapo-nirac2521.europe.nokia.com [10.162.252.1])
+	by mgw-sa02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id nARE7xJJ004528
+	for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2009 16:08:03 +0200
+Subject: [RFC PATCH v1 1/4] cfg80211: add U-APSD support
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 27 Nov 2009 16:07:56 +0200
+Message-ID: <20091127140756.2847.34880.stgit@tikku>
+In-Reply-To: <20091127140700.2847.42426.stgit@tikku>
+References: <20091127140700.2847.42426.stgit@tikku>
 MIME-Version: 1.0
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-CC: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 34/41] rt2x00: add support for different chipset interfaces
-References: <20091104173151.28463.68742.sendpatchset@localhost.localdomain> <20091104173610.28463.4270.sendpatchset@localhost.localdomain>
-In-Reply-To: <20091104173610.28463.4270.sendpatchset@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/04/09 18:36, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] rt2x00: add support for different chipset interfaces
-> 
-> Enhance rt2x00 infrastructure by adding explicit information
-> about used chipset interface to struct rt2x00_chip.
-> 
-> The new field will be used by rt2800 drivers for rt2800 library.
-> 
-> Also add commonly used rt2x00_intf_is_pci() and rt2x00_intf_is_usb()
-> helpers to make code easier to read (noticed by Ivo van Doorn).
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
+From: Kalle Valo <kalle.valo@nokia.com>
 
-For what it is worth:
+Experimental patch to add U-APSD support to cfg80211, most probably I'll
+drop this because I don't see any use for this. If we want to control
+U-APSD through cfg80211, this needs to be discussed more.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ include/linux/nl80211.h |    2 ++
+ include/net/cfg80211.h  |    1 +
+ net/wireless/nl80211.c  |    3 +++
+ 3 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index da8ea2e..7bb020b 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1284,6 +1284,7 @@ enum nl80211_meshconf_params {
+  * @NL80211_TXQ_ATTR_CWMAX: Maximum contention window [a value of the form
+  *	2^n-1 in the range 1..32767]
+  * @NL80211_TXQ_ATTR_AIFS: Arbitration interframe space [0..255]
++ * @NL80211_TXQ_ATTR_UAPSD: U-APSD enabled [0..1]
+  * @__NL80211_TXQ_ATTR_AFTER_LAST: Internal
+  * @NL80211_TXQ_ATTR_MAX: Maximum TXQ attribute number
+  */
+@@ -1294,6 +1295,7 @@ enum nl80211_txq_attr {
+ 	NL80211_TXQ_ATTR_CWMIN,
+ 	NL80211_TXQ_ATTR_CWMAX,
+ 	NL80211_TXQ_ATTR_AIFS,
++	NL80211_TXQ_ATTR_UAPSD,
+ 
+ 	/* keep last */
+ 	__NL80211_TXQ_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0884b9a..7be82d7 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -556,6 +556,7 @@ struct ieee80211_txq_params {
+ 	u16 cwmin;
+ 	u16 cwmax;
+ 	u8 aifs;
++	bool uapsd;
+ };
+ 
+ /* from net/wireless.h */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a602843..54c9941 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -670,6 +670,9 @@ static int parse_txq_params(struct nlattr *tb[],
+ 	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
+ 	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
+ 
++	if (tb[NL80211_TXQ_ATTR_UAPSD])
++		txq_params->uapsd = nla_get_u8(tb[NL80211_TXQ_ATTR_UAPSD]);
++
+ 	return 0;
+ }
+ 
+
