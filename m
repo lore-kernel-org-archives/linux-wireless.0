@@ -1,61 +1,332 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:40192 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752898AbZKCQIG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Nov 2009 11:08:06 -0500
-Subject: Re: Please consider reverting
- 7d930bc33653d5592dc386a76a38f39c2e962344
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
-	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <alpine.LFD.2.01.0911030738260.31845@localhost.localdomain>
-References: <20091103053156.GA3212@core.coreip.homeip.net>
-	 <20091102.224957.32364226.davem@davemloft.net>
-	 <20091103065238.GE3212@core.coreip.homeip.net>
-	 <1257232587.3420.55.camel@localhost.localdomain>
-	 <alpine.LFD.2.01.0911030719430.31845@localhost.localdomain>
-	 <1257262588.3420.79.camel@localhost.localdomain>
-	 <alpine.LFD.2.01.0911030738260.31845@localhost.localdomain>
-Content-Type: text/plain
-Date: Wed, 04 Nov 2009 01:08:05 +0900
-Message-Id: <1257264485.3420.87.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:46797 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753755AbZK0DPP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Nov 2009 22:15:15 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v2 1/2] wireless: add ieee80211_amsdu_to_8023s
+Date: Fri, 27 Nov 2009 11:18:36 +0800
+Message-Id: <1259291917-1399-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Linus,
+Move the A-MSDU handling code from mac80211 to cfg80211 so that more
+drivers can use it. The new created function ieee80211_amsdu_to_8023s
+converts an A-MSDU frame to a list of 802.3 frames.
 
-> > no questions that it needs fixed, I agree with you. However just blindly
-> > reverting something, because it fixes it for one or two people, might
-> > have side effects that causes more problems than the revert would
-> > actually fix.
-> 
-> Stop whining. Really.
-> 
-> Everybody understands that it should be fixed.  That's not the question.
-> 
-> But it should be fixed _quickly_. In this case, I have a bisection report 
-> FROM TWO DAYS AGO. And I'm still kicking myself for not just reverting 
-> that piece-of-shit commit then, because I spent the time to look at the 
-> oops and the commit, and could tell that it was crap.
-> 
-> Instead, I _did_ wait for the subsystem maintainer to get around to it. As 
-> a result of waiting, I've now wasted time for a lot of other people.
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+V2: use __ version of sk_buff_head operations and mark addr const
 
-I do have a patch in my inbox from Johannes from 4 days ago that fixes
-this issue.
+ include/net/cfg80211.h |   21 ++++++++-
+ net/mac80211/rx.c      |  107 ++++++++++-------------------------------------
+ net/wireless/util.c    |   96 ++++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 136 insertions(+), 88 deletions(-)
 
-	http://marc.info/?l=linux-wireless&m=125697124819563&w=2
-
-So what is the take away from this now? Do you wanna have Johannes step
-over John and Dave and send such a patch directly to you?
-
-Regards
-
-Marcel
-
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0884b9a..f1353d1 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1578,7 +1578,7 @@ unsigned int ieee80211_hdrlen(__le16 fc);
+  * @addr: the device MAC address
+  * @iftype: the virtual interface type
+  */
+-int ieee80211_data_to_8023(struct sk_buff *skb, u8 *addr,
++int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+ 			   enum nl80211_iftype iftype);
+ 
+ /**
+@@ -1589,10 +1589,27 @@ int ieee80211_data_to_8023(struct sk_buff *skb, u8 *addr,
+  * @bssid: the network bssid (used only for iftype STATION and ADHOC)
+  * @qos: build 802.11 QoS data frame
+  */
+-int ieee80211_data_from_8023(struct sk_buff *skb, u8 *addr,
++int ieee80211_data_from_8023(struct sk_buff *skb, const u8 *addr,
+ 			     enum nl80211_iftype iftype, u8 *bssid, bool qos);
+ 
+ /**
++ * ieee80211_amsdu_to_8023s - decode an IEEE 802.11n A-MSDU frame
++ *
++ * Decode an IEEE 802.11n A-MSDU frame and convert it to a list of
++ * 802.3 frames. This function returns 0 on succeess. In this case,
++ * we optimize the code to reuse the @skb to hold the last 802.3
++ * frame in the @list.
++ *
++ * @skb: The input IEEE 802.11n A-MSDU frame.
++ * @list: The output list of 802.3 frames. It must be allocated and
++ *	initialized by by the caller.
++ * @addr: The device MAC address.
++ * @iftype: The device interface type.
++ */
++int ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
++                             const u8 *addr, enum nl80211_iftype iftype);
++
++/**
+  * cfg80211_classify8021d - determine the 802.1p/1d tag for a data frame
+  * @skb: the data frame
+  */
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 57b8a0a..539c790 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1556,16 +1556,11 @@ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
+ {
+ 	struct net_device *dev = rx->sdata->dev;
+-	struct ieee80211_local *local = rx->local;
+-	u16 ethertype;
+-	u8 *payload;
+-	struct sk_buff *skb = rx->skb, *frame = NULL;
++	struct sk_buff *skb = rx->skb;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	__le16 fc = hdr->frame_control;
+-	const struct ethhdr *eth;
+-	int remaining, err;
+-	u8 dst[ETH_ALEN];
+-	u8 src[ETH_ALEN];
++	int err;
++	struct sk_buff_head frame_list;
+ 
+ 	if (unlikely(!ieee80211_is_data(fc)))
+ 		return RX_CONTINUE;
+@@ -1576,92 +1571,36 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
+ 	if (!(rx->flags & IEEE80211_RX_AMSDU))
+ 		return RX_CONTINUE;
+ 
+-	err = __ieee80211_data_to_8023(rx);
+-	if (unlikely(err))
++	if (ieee80211_has_a4(hdr->frame_control) &&
++	    rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
++	    !rx->sdata->u.vlan.sta)
+ 		return RX_DROP_UNUSABLE;
+ 
+-	skb->dev = dev;
+-
+-	dev->stats.rx_packets++;
+-	dev->stats.rx_bytes += skb->len;
+-
+-	/* skip the wrapping header */
+-	eth = (struct ethhdr *) skb_pull(skb, sizeof(struct ethhdr));
+-	if (!eth)
++	if (is_multicast_ether_addr(hdr->addr1) &&
++	    ((rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
++	      rx->sdata->u.vlan.sta) ||
++	     (rx->sdata->vif.type == NL80211_IFTYPE_STATION &&
++	      rx->sdata->u.mgd.use_4addr)))
+ 		return RX_DROP_UNUSABLE;
+ 
+-	while (skb != frame) {
+-		u8 padding;
+-		__be16 len = eth->h_proto;
+-		unsigned int subframe_len = sizeof(struct ethhdr) + ntohs(len);
+-
+-		remaining = skb->len;
+-		memcpy(dst, eth->h_dest, ETH_ALEN);
+-		memcpy(src, eth->h_source, ETH_ALEN);
+-
+-		padding = ((4 - subframe_len) & 0x3);
+-		/* the last MSDU has no padding */
+-		if (subframe_len > remaining)
+-			return RX_DROP_UNUSABLE;
+-
+-		skb_pull(skb, sizeof(struct ethhdr));
+-		/* if last subframe reuse skb */
+-		if (remaining <= subframe_len + padding)
+-			frame = skb;
+-		else {
+-			/*
+-			 * Allocate and reserve two bytes more for payload
+-			 * alignment since sizeof(struct ethhdr) is 14.
+-			 */
+-			frame = dev_alloc_skb(
+-				ALIGN(local->hw.extra_tx_headroom, 4) +
+-				subframe_len + 2);
+-
+-			if (frame == NULL)
+-				return RX_DROP_UNUSABLE;
++	skb->dev = dev;
++	__skb_queue_head_init(&frame_list);
+ 
+-			skb_reserve(frame,
+-				    ALIGN(local->hw.extra_tx_headroom, 4) +
+-				    sizeof(struct ethhdr) + 2);
+-			memcpy(skb_put(frame, ntohs(len)), skb->data,
+-				ntohs(len));
++	err = ieee80211_amsdu_to_8023s(skb, &frame_list, dev->dev_addr,
++				       rx->sdata->vif.type);
++	if (err)
++		return RX_DROP_UNUSABLE;
+ 
+-			eth = (struct ethhdr *) skb_pull(skb, ntohs(len) +
+-							padding);
+-			if (!eth) {
+-				dev_kfree_skb(frame);
+-				return RX_DROP_UNUSABLE;
+-			}
+-		}
++	dev->stats.rx_packets++;
++	dev->stats.rx_bytes += skb->len;
+ 
+-		skb_reset_network_header(frame);
+-		frame->dev = dev;
+-		frame->priority = skb->priority;
+-		rx->skb = frame;
+-
+-		payload = frame->data;
+-		ethertype = (payload[6] << 8) | payload[7];
+-
+-		if (likely((compare_ether_addr(payload, rfc1042_header) == 0 &&
+-			    ethertype != ETH_P_AARP && ethertype != ETH_P_IPX) ||
+-			   compare_ether_addr(payload,
+-					      bridge_tunnel_header) == 0)) {
+-			/* remove RFC1042 or Bridge-Tunnel
+-			 * encapsulation and replace EtherType */
+-			skb_pull(frame, 6);
+-			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
+-			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
+-		} else {
+-			memcpy(skb_push(frame, sizeof(__be16)),
+-			       &len, sizeof(__be16));
+-			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
+-			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
+-		}
++	while (!skb_queue_empty(&frame_list)) {
++		rx->skb = __skb_dequeue(&frame_list);
+ 
+ 		if (!ieee80211_frame_allowed(rx, fc)) {
+-			if (skb == frame) /* last frame */
++			if (skb == rx->skb) /* last frame */
+ 				return RX_DROP_UNUSABLE;
+-			dev_kfree_skb(frame);
++			dev_kfree_skb(rx->skb);
+ 			continue;
+ 		}
+ 
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 59361fd..63a3d72 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -285,7 +285,7 @@ static int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
+ 	}
+ }
+ 
+-int ieee80211_data_to_8023(struct sk_buff *skb, u8 *addr,
++int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+ 			   enum nl80211_iftype iftype)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+@@ -383,7 +383,7 @@ int ieee80211_data_to_8023(struct sk_buff *skb, u8 *addr,
+ }
+ EXPORT_SYMBOL(ieee80211_data_to_8023);
+ 
+-int ieee80211_data_from_8023(struct sk_buff *skb, u8 *addr,
++int ieee80211_data_from_8023(struct sk_buff *skb, const u8 *addr,
+ 			     enum nl80211_iftype iftype, u8 *bssid, bool qos)
+ {
+ 	struct ieee80211_hdr hdr;
+@@ -497,6 +497,98 @@ int ieee80211_data_from_8023(struct sk_buff *skb, u8 *addr,
+ }
+ EXPORT_SYMBOL(ieee80211_data_from_8023);
+ 
++
++int ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
++			     const u8 *addr, enum nl80211_iftype iftype)
++{
++	struct sk_buff *frame = NULL;
++	u16 ethertype;
++	u8 *payload;
++	const struct ethhdr *eth;
++	int remaining, err;
++	u8 dst[ETH_ALEN], src[ETH_ALEN];
++
++	err = ieee80211_data_to_8023(skb, addr, iftype);
++	if (err)
++		return err;
++
++	/* skip the wrapping header */
++	eth = (struct ethhdr *) skb_pull(skb, sizeof(struct ethhdr));
++	if (!eth)
++		return -1;
++
++	while (skb != frame) {
++		u8 padding;
++		__be16 len = eth->h_proto;
++		unsigned int subframe_len = sizeof(struct ethhdr) + ntohs(len);
++
++		remaining = skb->len;
++		memcpy(dst, eth->h_dest, ETH_ALEN);
++		memcpy(src, eth->h_source, ETH_ALEN);
++
++		padding = (4 - subframe_len) & 0x3;
++		/* the last MSDU has no padding */
++		if (subframe_len > remaining)
++			goto purge;
++
++		skb_pull(skb, sizeof(struct ethhdr));
++		/* reuse skb for the last subframe */
++		if (remaining <= subframe_len + padding)
++			frame = skb;
++		else {
++			/*
++			 * Allocate and reserve two bytes more for payload
++			 * alignment since sizeof(struct ethhdr) is 14.
++			 */
++			frame = dev_alloc_skb(subframe_len + 2);
++			if (!frame)
++				goto purge;
++
++			skb_reserve(frame, sizeof(struct ethhdr) + 2);
++			memcpy(skb_put(frame, ntohs(len)), skb->data,
++				ntohs(len));
++
++			eth = (struct ethhdr *)skb_pull(skb, ntohs(len) +
++							padding);
++			if (!eth) {
++				dev_kfree_skb(frame);
++				goto purge;
++			}
++		}
++
++		skb_reset_network_header(frame);
++		frame->dev = skb->dev;
++		frame->priority = skb->priority;
++
++		payload = frame->data;
++		ethertype = (payload[6] << 8) | payload[7];
++
++		if (likely((compare_ether_addr(payload, rfc1042_header) == 0 &&
++			    ethertype != ETH_P_AARP && ethertype != ETH_P_IPX) ||
++			   compare_ether_addr(payload,
++					      bridge_tunnel_header) == 0)) {
++			/* remove RFC1042 or Bridge-Tunnel
++			 * encapsulation and replace EtherType */
++			skb_pull(frame, 6);
++			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
++			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
++		} else {
++			memcpy(skb_push(frame, sizeof(__be16)), &len,
++				sizeof(__be16));
++			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
++			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
++		}
++		__skb_queue_tail(list, frame);
++	}
++
++	return 0;
++
++ purge:
++	__skb_queue_purge(list);
++	return -1;
++}
++EXPORT_SYMBOL(ieee80211_amsdu_to_8023s);
++
+ /* Given a data frame determine the 802.1p/1d tag to use. */
+ unsigned int cfg80211_classify8021d(struct sk_buff *skb)
+ {
+-- 
+1.6.0.4
 
