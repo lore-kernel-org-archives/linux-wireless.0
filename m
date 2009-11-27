@@ -1,108 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:40482 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755116AbZKMDJX (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44040 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754198AbZK0Jni (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 22:09:23 -0500
-MIME-Version: 1.0
-Date: Fri, 13 Nov 2009 08:39:27 +0530
-Message-ID: <4fb5db50911121909h1619e483ga4aa395af8fc1161@mail.gmail.com>
-Subject: [patch 0/1] Adding radio type FM
-From: Janakiram Sistla <janakiram.sistla@gmail.com>
-To: majordomo@vger.kernel.org
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 27 Nov 2009 04:43:38 -0500
+Subject: Re: [question] ath9k: 11n monitor mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	Matteo Croce <matteo@openwrt.org>
+In-Reply-To: <d82e647a0911261737j2bb9d07fj453e7d43a8f2e2dd@mail.gmail.com>
+References: <d82e647a0911260557l5cf33449pe41f8902b6889891@mail.gmail.com>
+	 <69e28c910911260902p5385cd33wa0d5e00199235dd1@mail.gmail.com>
+	 <43e72e890911261348g32edb851obbba8e265ad22e95@mail.gmail.com>
+	 <d82e647a0911261737j2bb9d07fj453e7d43a8f2e2dd@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-hzweFrJ5GCc3yKws2g+3"
+Date: Fri, 27 Nov 2009 10:43:20 +0100
+Message-ID: <1259315000.5428.14.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 1b1493392faeb6702ff364447b135e481930b397 Mon Sep 17 00:00:00 2001
-From: Janakiram Sistla <janakiram.sistla@gmail.com>
-Date: Fri, 13 Nov 2009 08:16:26 +0530
-Subject: [PATCH 1/1] Adding radio type FM
 
-Adding radio type FM in RFKILL_TYPE_.FM also belongs to
-same class of with both TX/RX capability.
-Also Added input type for the above same.
+--=-hzweFrJ5GCc3yKws2g+3
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Janakiram Sistla <janakiram.sistla@gmail.com>
----
- include/linux/input.h  |    1 +
- include/linux/rfkill.h |    1 +
- net/rfkill/core.c      |    2 ++
- net/rfkill/input.c     |    9 +++++++++
- 4 files changed, 13 insertions(+), 0 deletions(-)
+On Fri, 2009-11-27 at 09:37 +0800, Ming Lei wrote:
+> 2009/11/27 Luis R. Rodriguez <lrodriguez@atheros.com>:
+> > 2009/11/26 G=C3=A1bor Stefanik <netrolller.3d@gmail.com>:
+> >> I don't know exactly, but a while ago there was a discussion about how
+> >> to represent HT rates in Radiotap. AFAIK mac80211 refuses to forward
+> >> HT packets to monitor interfaces as they don't have a valid CCK or
+> >> OFDM rate.
+> >
+> > Matteo added a suggested field for radiotap for MCS rates:
+> >
+> > http://www.radiotap.org/suggested-fields/MCS
+>=20
+> Oh, I see.
+>=20
+> Is there any patch which may let mac80211 forward HT packets to
+> monitor interface now?
+> If there is, where could I find it?
 
-diff --git a/include/linux/input.h b/include/linux/input.h
-index 0ccfc30..f03ae90 100644
---- a/include/linux/input.h
-+++ b/include/linux/input.h
-@@ -376,6 +376,7 @@ struct input_absinfo {
- #define KEY_DISPLAY_OFF		245	/* display device to off state */
+It will forward all frame that it gets from the driver, just not tell
+you it was an HT frame in radiotap since there's no way to -- you'll see
+a frame without rate information.
 
- #define KEY_WIMAX		246
-+#define KEY_FM			247
+johannes
 
- /* Range 248 - 255 is reserved for special needs of AT keyboard driver */
+--=-hzweFrJ5GCc3yKws2g+3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index 3392c59..03f5598 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -45,6 +45,7 @@ enum rfkill_type {
- 	RFKILL_TYPE_WIMAX,
- 	RFKILL_TYPE_WWAN,
- 	RFKILL_TYPE_GPS,
-+	RFKILL_TYPE_FM,
- 	NUM_RFKILL_TYPES,
- };
+-----BEGIN PGP SIGNATURE-----
 
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index ba2efb9..b8ac206 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -592,6 +592,8 @@ static const char *rfkill_get_type_str(enum
-rfkill_type type)
- 		return "wwan";
- 	case RFKILL_TYPE_GPS:
- 		return "gps";
-+	case RRFKILL_TYPE_FM:
-+		return "fm";
- 	default:
- 		BUG();
- 	}
-diff --git a/net/rfkill/input.c b/net/rfkill/input.c
-index a7295ad..f51b16d 100644
---- a/net/rfkill/input.c
-+++ b/net/rfkill/input.c
-@@ -212,6 +212,9 @@ static void rfkill_event(struct input_handle
-*handle, unsigned int type,
- 		case KEY_WIMAX:
- 			rfkill_schedule_toggle(RFKILL_TYPE_WIMAX);
- 			break;
-+		case KEY_FM:
-+			rfkill_schedule_toggle(RFKILL_TYPE_FM);
-+			break;
- 		}
- 	} else if (type == EV_SW && code == SW_RFKILL_ALL)
- 		rfkill_schedule_evsw_rfkillall(data);
-@@ -290,6 +293,12 @@ static const struct input_device_id rfkill_ids[] = {
- 		.keybit = { [BIT_WORD(KEY_UWB)] = BIT_MASK(KEY_UWB) },
- 	},
- 	{
-+		.flags = INPUT_DEVICE_ID_MATCH_EVBIT |
-+				INPUT_DEVICE_ID_MATCH_KEYBIT,
-+		.evbit = { BIT_MASK(EV_KEY) },
-+		.keybit = { [BIT_WORD(KEY_UWB)] = BIT_MASK(KEY_UWB) },
-+	},
-+	{
- 		.flags = INPUT_DEVICE_ID_MATCH_EVBIT | INPUT_DEVICE_ID_MATCH_KEYBIT,
- 		.evbit = { BIT_MASK(EV_KEY) },
- 		.keybit = { [BIT_WORD(KEY_WIMAX)] = BIT_MASK(KEY_WIMAX) },
--- 
-1.5.4.3
+iQIcBAABAgAGBQJLD580AAoJEODzc/N7+QmaTzgQAJiEk0fPxJc3U2t7ajRjxF3q
+rhbdHwqQS4yFI26vWPM6gOvbLhzu16jQSMyPoJnfrWq5bWHlX/UVtIJkz59VtGug
+kjnjOv+VsT7+CvORZ2Uj700ya0XOiTq2+6tq+KkuZB2Doy+jYTwliZiU3OGUKJX+
+M88gb1ri/d6I1kT5yxP2OkyjVR1AyJx/PbJJMipzP1GKHJ/WcVrgpM05xv4c7OqS
+s28qWq1159199CqkmKXnu5SnqLjjgGWLRo8uSobXLhBG0blVJMtcLBUVcnsKl/1p
+RzHT0F+Tv56o+jhCw1CYVyw76jipmdyj84HDagQn096h9wIePORa/WWi3eswp2rv
+P4exLOlDkrFGButVI9AZDM/6LEghOpwJgyqVvzoZnHG+iBdMC/F9M81PMjXXLo5T
+mw3z1IbZEZa9YViQ+hswUhaHn5tf7BGDsL+mjcU+lS/GG6T62qRpVqDUREvTpH6L
+QcwtDJy4TOITg4qXGk8Nsyn2UyiERR8Y+3R1FUzpc4+sv2sEGejpdjIk7FtEWV6q
+xCH6bb+wG3lsQSmh+dO30EREMASODzalW01e5ppJNA4ny4tiFuyon2al5iuR+oLZ
+RU9CmC8cCxhovIcnETst3jP6uGeuh36TzNw9krkV2KWBCHsb4ANXJDDz3+e0lXVm
+XdHtnsTcMcGVMBNk+40d
+=VV9V
+-----END PGP SIGNATURE-----
 
+--=-hzweFrJ5GCc3yKws2g+3--
 
-Regards,
-Janakiram.
-janakiram.sistla@gmail.com
