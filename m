@@ -1,69 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:52147 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752161AbZKQQsT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 11:48:19 -0500
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 00/16] wl1251: beacon filter support and more
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Nov 2009 18:48:05 +0200
-Message-ID: <20091117164614.2236.8543.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga11.intel.com ([192.55.52.93]:1092 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753075AbZK0JaM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Nov 2009 04:30:12 -0500
+Subject: Re: [RFC 1/2] wireless: add ieee80211_asmdu_to_8023s
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1259313653.5428.5.camel@johannes.local>
+References: <1259215413-16753-1-git-send-email-yi.zhu@intel.com>
+	 <1259229943.32372.50.camel@johannes.local>
+	 <1259290376.13126.219.camel@debian>
+	 <1259313653.5428.5.camel@johannes.local>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 27 Nov 2009 17:30:17 +0800
+Message-ID: <1259314217.12157.3.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Fri, 2009-11-27 at 17:20 +0800, Johannes Berg wrote:
+> Is it? I don't think so. Many drivers go up beyond that as far as I
+> know. Then some do different things like putting it in a different DMA
+> block.
+> 
+> > While for those drivers really need a bigger
+> > extra headroom and support Rx aggregation, this probably means
+> > ieee80211_skb_resize. But the resize should always happen for every
+> > packet from the IP stack, right?
+> 
+> No, davem and I optimised that away a long time ago via using
+> netdev->needed_headroom and netdev->needed_tailroom. It even works for
+> bridges and their slave devices, iirc. 
 
-here is a set of patches for wl1251. New features are EEPROM NVS
-support (from David-John Willis) and beacon filtering, but there are
-also some serious fixes and optimisations.
+I missed this. Will check it. If so, I'll add another parameter to pass
+the extra hw tx headroom to ieee80211_asmdu_to_8023s.
 
-These patches are not urgent.
-
----
-
-David-John Willis (1):
-      wl1251: add NVS in EEPROM support
-
-Janne Ylalehto (2):
-      wl1251: Filter out unwanted events
-      wl1251: Add IRQ looping support
-
-Juuso Oikarinen (5):
-      wl1251: Fix regression in IRQ loop handling
-      wl1251: Implement delayed entry into ELP mode
-      wl1251: Configure beacon filtering on if PSM used
-      wl1251: Enable beacon filtering with the stack
-      wl1251: Add connection monitoring configuration
-
-Kalle Valo (3):
-      wl1251: remove depcreated qual usage
-      wl1251: mask aid bits 14 and 15 in ps-poll template
-      wl1251: allocate space for firmware with vmalloc()
-
-Vidhya Govindan (5):
-      wl1251: Send null data packet with "TODS" bit set
-      wl1251: Increase the beacon loss timeout value and handle regain event
-      wl1251: Set the correct dtim period to the firmware
-      wl1251: Add acx command to set tbtt and dtim period
-      wl1251: fix deadlock with ieee80211 beacon filter calls
-
-
- drivers/net/wireless/wl12xx/wl1251.h       |    5 +
- drivers/net/wireless/wl12xx/wl1251_acx.c   |   68 +++++++++++-
- drivers/net/wireless/wl12xx/wl1251_acx.h   |   36 ++++++
- drivers/net/wireless/wl12xx/wl1251_boot.c  |   55 +++++++---
- drivers/net/wireless/wl12xx/wl1251_event.c |   18 +++
- drivers/net/wireless/wl12xx/wl1251_init.c  |    8 +
- drivers/net/wireless/wl12xx/wl1251_main.c  |  162 ++++++++++++++++------------
- drivers/net/wireless/wl12xx/wl1251_ps.c    |   44 +++++++-
- drivers/net/wireless/wl12xx/wl1251_ps.h    |    1 
- drivers/net/wireless/wl12xx/wl1251_reg.h   |    6 +
- drivers/net/wireless/wl12xx/wl1251_rx.c    |    4 -
- drivers/net/wireless/wl12xx/wl1251_spi.c   |    2 
- include/linux/spi/wl12xx.h                 |    1 
- 13 files changed, 314 insertions(+), 96 deletions(-)
+Thanks,
+-yi
 
