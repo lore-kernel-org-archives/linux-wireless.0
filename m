@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wal-mailgw1.qinetiq-na.com ([65.209.22.159]:45976 "EHLO
-	WALQNAOMAIL1T.qnao.net" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755156AbZKTUyG convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 15:54:06 -0500
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:46738 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754475AbZK0Lcz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Nov 2009 06:32:55 -0500
+Received: by bwz27 with SMTP id 27so1101056bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2009 03:33:00 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 06/12] wl1251: fix payload alignment
+References: <20091126150141.917.35278.stgit@tikku>
+	<20091126150904.917.8182.stgit@tikku> <877htd9v5a.fsf@purkki.valot.fi>
+	<1259259183.24540.0.camel@johannes.local>
+	<873a409qdg.fsf@purkki.valot.fi>
+	<1259320319.5428.17.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 27 Nov 2009 13:32:57 +0200
+In-Reply-To: <1259320319.5428.17.camel@johannes.local> (Johannes Berg's message of "Fri\, 27 Nov 2009 12\:11\:59 +0100")
+Message-ID: <87tywg8aom.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: Kernel oops in ath9k
-Date: Fri, 20 Nov 2009 15:54:09 -0500
-Message-ID: <712C9C7AD151C847B09F32EDA56A94CF0115C91F@WALQNAOMAIL1T.qnao.net>
-In-Reply-To: <43e72e890911200840u88d6d44t60fa29c0eaffb609@mail.gmail.com>
-References: <712C9C7AD151C847B09F32EDA56A94CF0115C555@WALQNAOMAIL1T.qnao.net> <1258687496.12864.35.camel@ct> <712C9C7AD151C847B09F32EDA56A94CF0115C73C@WALQNAOMAIL1T.qnao.net> <43e72e890911200654g6bd78909s5b6062cd82155b6d@mail.gmail.com> <712C9C7AD151C847B09F32EDA56A94CF0115C7F3@WALQNAOMAIL1T.qnao.net> <43e72e890911200840u88d6d44t60fa29c0eaffb609@mail.gmail.com>
-From: "Douglass, Woodrow" <Woodrow.Douglass@QinetiQ-NA.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "Pavel Roskin" <proski@gnu.org>, <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-http://img406.imageshack.us/img406/910/kernelcrash.jpg
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-After running the script I sent earlier, this is what happens with the
-latest released compat-wireless. Sorry if the image is a little blurry
-at the top, it's the best camera I could get on short notice.
+> On Fri, 2009-11-27 at 13:08 +0200, Kalle Valo wrote:
+>> Johannes Berg <johannes@sipsolutions.net> writes:
+>> 
+>> > Eh, turn off the debugging option ...
+>> 
+>> Sure. But isn't this warning going to create false alarms for others?
+>
+> That's why it says "Say N unless you're writing a mac80211 based
+> driver."
 
-Thanks again
--Woody
+I was "writing a mac80211 based driver" so I enabled it, and it
+tricked me =)
 
-> -----Original Message-----
-> From: Luis R. Rodriguez [mailto:mcgrof@gmail.com] 
-> Sent: Friday, November 20, 2009 11:40 AM
-> To: Douglass, Woodrow
-> Cc: Pavel Roskin; linux-wireless@vger.kernel.org
-> Subject: Re: Kernel oops in ath9k
-> 
-> On Fri, Nov 20, 2009 at 8:13 AM, Douglass, Woodrow 
-> <Woodrow.Douglass@qinetiq-na.com> wrote:
-> > Ok I compiled compat-wireless-2.6.32-rc7.tar.bz2, ran the 
-> script, and 
-> > now the kernel outright crashed rather then just oopsing. 
-> The terminal 
-> > is all locked up, is there any way I can post the crash dump here?
-> 
-> Are you asking for help in trying to get the dump or for 
-> where to post the dump? If the later then please use a 
-> pastebin or upload your file somwhere.
-> 
->   Luis
-> 
+> Maybe it should say "Say N unless you want to debug potential
+> alignment issues with your driver." Or maybe it should just go away
+> now that we align things properly in mac80211, and most firmware
+> either handles it or not, and there's nothing we can do about the
+> firmware most of the time... And mesh makes it more complex anyway
+> than the warning checks.
+
+Maybe we should just remove it. Like you just said, there isn't much
+we can do. I'll come up with a patch unless I get objections.
+
+-- 
+Kalle Valo
