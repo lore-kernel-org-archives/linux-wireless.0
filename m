@@ -1,43 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:63300 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750821AbZKNRnT convert rfc822-to-8bit (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53806 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750871AbZK0LBk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Nov 2009 12:43:19 -0500
-Received: by iwn8 with SMTP id 8so3375686iwn.33
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Nov 2009 09:43:25 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1258159451.4589.3.camel@localhost.localdomain>
-References: <1258156563.4589.2.camel@localhost.localdomain>
-	<43e72e890911131614v1b5ac6f5xa80caab69f400d4e@mail.gmail.com>
-	<1258159451.4589.3.camel@localhost.localdomain>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sat, 14 Nov 2009 09:43:05 -0800
-Message-ID: <43e72e890911140943t3a70b9a9g3ab9002b4acb92de@mail.gmail.com>
-Subject: Re: Unable to buid mac80211 with pid and minstrel
-To: =?UTF-8?Q?Mart=C3=ADn_Ernesto_Barreyro?= <barreyromartin@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 27 Nov 2009 06:01:40 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis@phoenix3.szarvasnet.hu, R.Rodriguez@phoenix3.szarvasnet.hu,
+	lrodriguez@atheros.com, Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2] ath9k: enable 2GHz band only if the device supports it
+Date: Fri, 27 Nov 2009 12:01:35 +0100
+Message-Id: <1259319695-15826-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 13, 2009 at 4:44 PM, Martín Ernesto Barreyro
-<barreyromartin@gmail.com> wrote:
-> El vie, 13-11-2009 a las 16:14 -0800, Luis R. Rodriguez escribió:
->> On Fri, Nov 13, 2009 at 3:56 PM, Martín Ernesto Barreyro
->> <barreyromartin@gmail.com> wrote:
->> > Hello I'm trying to build the wireless testing kernel with pid and
->> > minstrel and then select them from one or another.
->> >
->> > Can someone give me a clue?
->>
->> IIRC I had to enable embedded.
->>
->>   Luis
->
-> Thanks, now it appears.
+Currently, the 2GHz band is enabled unconditionally, even if the device
+does not support it.
 
-Anyone recall why PID is pegged to embedded?
+Changes-licensed-under: ISC
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+Changes since v1:
+  * rebased against master-2009-11-25 of wireless-testing
+  * an error message has been added, and the driver fail if neither band 
+    has been marked as supported in the EEPROM
 
-  Luis
+ drivers/net/wireless/ath/ath9k/hw.c   |   15 +++++++++++++--
+ drivers/net/wireless/ath/ath9k/hw.h   |    2 +-
+ drivers/net/wireless/ath/ath9k/main.c |   28 +++++++++++++++++-----------
+ 3 files changed, 31 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 493160c..2ec61f0 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -976,7 +976,10 @@ int ath9k_hw_init(struct ath_hw *ah)
+ 		return r;
+ 
+ 	ath9k_hw_init_mode_gain_regs(ah);
+-	ath9k_hw_fill_cap_info(ah);
++	r = ath9k_hw_fill_cap_info(ah);
++	if (r)
++		return r;
++
+ 	ath9k_hw_init_11a_eeprom_fix(ah);
+ 
+ 	r = ath9k_hw_init_macaddr(ah);
+@@ -3112,7 +3115,7 @@ EXPORT_SYMBOL(ath9k_hw_set_sta_beacon_timers);
+ /* HW Capabilities */
+ /*******************/
+ 
+-void ath9k_hw_fill_cap_info(struct ath_hw *ah)
++int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ {
+ 	struct ath9k_hw_capabilities *pCap = &ah->caps;
+ 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
+@@ -3143,6 +3146,12 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	}
+ 
+ 	eeval = ah->eep_ops->get_eeprom(ah, EEP_OP_MODE);
++	if ((eeval & (AR5416_OPFLAGS_11G | AR5416_OPFLAGS_11A)) == 0) {
++		ath_print(common, ATH_DBG_FATAL,
++			  "no band has been marked as supported in EEPROM.\n");
++		return -EINVAL;
++	}
++
+ 	bitmap_zero(pCap->wireless_modes, ATH9K_MODE_MAX);
+ 
+ 	if (eeval & AR5416_OPFLAGS_11A) {
+@@ -3306,6 +3315,8 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	} else {
+ 		btcoex_hw->scheme = ATH_BTCOEX_CFG_NONE;
+ 	}
++
++	return 0;
+ }
+ 
+ bool ath9k_hw_getcapability(struct ath_hw *ah, enum ath9k_capability_type type,
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 46e1572..e2b0c73 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -620,7 +620,7 @@ void ath9k_hw_detach(struct ath_hw *ah);
+ int ath9k_hw_init(struct ath_hw *ah);
+ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		   bool bChannelChange);
+-void ath9k_hw_fill_cap_info(struct ath_hw *ah);
++int ath9k_hw_fill_cap_info(struct ath_hw *ah);
+ bool ath9k_hw_getcapability(struct ath_hw *ah, enum ath9k_capability_type type,
+ 			    u32 capability, u32 *result);
+ bool ath9k_hw_setcapability(struct ath_hw *ah, enum ath9k_capability_type type,
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index b959814..c487434 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1793,13 +1793,15 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
+ 
+ 	/* setup channels and rates */
+ 
+-	sc->sbands[IEEE80211_BAND_2GHZ].channels = ath9k_2ghz_chantable;
+-	sc->sbands[IEEE80211_BAND_2GHZ].band = IEEE80211_BAND_2GHZ;
+-	sc->sbands[IEEE80211_BAND_2GHZ].n_channels =
+-		ARRAY_SIZE(ath9k_2ghz_chantable);
+-	sc->sbands[IEEE80211_BAND_2GHZ].bitrates = ath9k_legacy_rates;
+-	sc->sbands[IEEE80211_BAND_2GHZ].n_bitrates =
+-		ARRAY_SIZE(ath9k_legacy_rates);
++	if (test_bit(ATH9K_MODE_11G, sc->sc_ah->caps.wireless_modes)) {
++		sc->sbands[IEEE80211_BAND_2GHZ].channels = ath9k_2ghz_chantable;
++		sc->sbands[IEEE80211_BAND_2GHZ].band = IEEE80211_BAND_2GHZ;
++		sc->sbands[IEEE80211_BAND_2GHZ].n_channels =
++			ARRAY_SIZE(ath9k_2ghz_chantable);
++		sc->sbands[IEEE80211_BAND_2GHZ].bitrates = ath9k_legacy_rates;
++		sc->sbands[IEEE80211_BAND_2GHZ].n_bitrates =
++			ARRAY_SIZE(ath9k_legacy_rates);
++	}
+ 
+ 	if (test_bit(ATH9K_MODE_11A, sc->sc_ah->caps.wireless_modes)) {
+ 		sc->sbands[IEEE80211_BAND_5GHZ].channels = ath9k_5ghz_chantable;
+@@ -1876,8 +1878,9 @@ void ath_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 
+ 	hw->rate_control_algorithm = "ath9k_rate_control";
+ 
+-	hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
+-		&sc->sbands[IEEE80211_BAND_2GHZ];
++	if (test_bit(ATH9K_MODE_11G, sc->sc_ah->caps.wireless_modes))
++		hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
++			&sc->sbands[IEEE80211_BAND_2GHZ];
+ 	if (test_bit(ATH9K_MODE_11A, sc->sc_ah->caps.wireless_modes))
+ 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
+ 			&sc->sbands[IEEE80211_BAND_5GHZ];
+@@ -1916,9 +1919,12 @@ int ath_init_device(u16 devid, struct ath_softc *sc, u16 subsysid,
+ 	reg = &common->regulatory;
+ 
+ 	if (ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
+-		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
++		if (test_bit(ATH9K_MODE_11G, ah->caps.wireless_modes))
++			setup_ht_cap(sc,
++				     &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
+ 		if (test_bit(ATH9K_MODE_11A, ah->caps.wireless_modes))
+-			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
++			setup_ht_cap(sc,
++				     &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
+ 	}
+ 
+ 	/* initialize tx/rx engine */
+-- 
+1.5.3.2
+
