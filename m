@@ -1,223 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.irobot.com ([206.83.81.187]:61925 "EHLO smtp1.irobot.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754735AbZKLWlO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 17:41:14 -0500
-Message-ID: <4AFC8F0D.5020700@irobot.com>
-Date: Thu, 12 Nov 2009 14:41:17 -0800
-From: Adam Wozniak <awozniak@irobot.com>
+Received: from smtp.nokia.com ([192.100.105.134]:61675 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752786AbZK0OHt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Nov 2009 09:07:49 -0500
+Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id nARE7n54025427
+	for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2009 08:07:54 -0600
+Received: from [127.0.1.1] (essapo-nirac2521.europe.nokia.com [10.162.252.1])
+	by mgw-da01.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id nARE7o9G019850
+	for <linux-wireless@vger.kernel.org>; Fri, 27 Nov 2009 16:07:51 +0200
+Subject: [RFC PATCH v1 0/4] mac80211 client U-APSD support
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 27 Nov 2009 16:07:49 +0200
+Message-ID: <20091127140700.2847.42426.stgit@tikku>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Derek Smithies <derek@indranet.co.nz>,
-	linux-wireless@vger.kernel.org, nbd@openwrt.org
-Subject: Re: compat-wireless and minstrel
-References: <4AF0D54D.4090303@irobot.com> <alpine.DEB.2.00.0911111508391.6214@kauri.acheron.indranet.co.nz> <4AFC655A.5020706@irobot.com> <200911122103.27455.chunkeey@googlemail.com> <4AFC8E4F.5090307@irobot.com>
-In-Reply-To: <4AFC8E4F.5090307@irobot.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whoops, patch was slightly incorrect.  This is better:
+Hello,
 
-*** compat-wireless-2009-11-09/net/mac80211/ibss.c    2009-11-08 
-21:15:06.000000000 -0800
---- compat-wireless-2009-11-09b/net/mac80211/ibss.c    2009-11-12 
-14:39:12.391545084 -0800
-***************
-*** 246,254 ****
-      if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
-          return;
- 
-      if (sdata->vif.type == NL80211_IFTYPE_ADHOC && elems->supp_rates &&
-          memcmp(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0) {
--         supp_rates = ieee80211_sta_get_rates(local, elems, band);
- 
-          rcu_read_lock();
- 
---- 246,258 ----
-      if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
-          return;
- 
-+     supp_rates = ieee80211_sta_get_rates(local, elems, band);
-+
-+     /* make sure mandatory rates are always added */
-+     supp_rates = supp_rates |= ieee80211_mandatory_rates(local, band);
-+
-      if (sdata->vif.type == NL80211_IFTYPE_ADHOC && elems->supp_rates &&
-          memcmp(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0) {
- 
-          rcu_read_lock();
- 
-***************
-*** 257,268 ****
-              u32 prev_rates;
- 
-              prev_rates = sta->sta.supp_rates[band];
-!             /* make sure mandatory rates are always added */
-!             sta->sta.supp_rates[band] = supp_rates |
-!                 ieee80211_mandatory_rates(local, band);
- 
-  #ifdef CONFIG_MAC80211_IBSS_DEBUG
--             if (sta->sta.supp_rates[band] != prev_rates)
-                  printk(KERN_DEBUG "%s: updated supp_rates set "
-                      "for %pM based on beacon info (0x%llx | "
-                      "0x%llx -> 0x%llx)\n",
---- 261,270 ----
-              u32 prev_rates;
- 
-              prev_rates = sta->sta.supp_rates[band];
-!             sta->sta.supp_rates[band] = supp_rates;
- 
-+             if (sta->sta.supp_rates[band] != prev_rates) {
-  #ifdef CONFIG_MAC80211_IBSS_DEBUG
-                  printk(KERN_DEBUG "%s: updated supp_rates set "
-                      "for %pM based on beacon info (0x%llx | "
-                      "0x%llx -> 0x%llx)\n",
-***************
-*** 272,277 ****
---- 274,285 ----
-                      (unsigned long long) supp_rates,
-                      (unsigned long long) sta->sta.supp_rates[band]);
-  #endif
-+
-+                 /* TODO: implement rate_update in minstrel/pid,
-+                  * then change this to rate_control_rate_update.
-+                  */
-+                 rate_control_rate_init(sta);
-+             }
-          } else
-              ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 
-supp_rates);
- 
+here is my suggestion how to add U-APSD client support to mac80211. I
+also included example driver implementation for wl1251.
+
+Most probably I will drop patch 1 and fold patches 2 and 3, but I keep
+them all in for now to make it easier to change things.
+
+Please comment. Also I would like to get comments how U-APSD needs to
+be implemented in different hardware.
+
+---
+
+Kalle Valo (4):
+      cfg80211: add U-APSD support
+      mac80211: add U-APSD support
+      mac80211: add debugfs interface for U-APSD queue configuration
+      wl1251: add U-APSD support
 
 
-
-Adam Wozniak wrote:
-> I see what you're doing there.  That didn't quite work, but I'm fairly 
-> confident this one will.  I'm running my long term test now.  Note the 
-> added call to rate_control_init() when the rate is updated.  This 
-> *should* be rate_control_rate_update, but it doesn't look to me like 
-> that method is implemented in minstrel or the PID code.
->
-> *** compat-wireless-2009-11-09/net/mac80211/ibss.c    2009-11-08 
-> 21:15:06.000000000 -0800
-> --- compat-wireless-2009-11-09b/net/mac80211/ibss.c    2009-11-12 
-> 14:29:16.308550923 -0800
-> ***************
-> *** 246,254 ****
->      if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
->          return;
->
->      if (sdata->vif.type == NL80211_IFTYPE_ADHOC && elems->supp_rates &&
->          memcmp(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0) {
-> -         supp_rates = ieee80211_sta_get_rates(local, elems, band);
->
->          rcu_read_lock();
->
-> --- 246,258 ----
->      if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
->          return;
->
-> +     supp_rates = ieee80211_sta_get_rates(local, elems, band);
-> +
-> +     /* make sure mandatory rates are always added */
-> +     supp_rates = supp_rates |= ieee80211_mandatory_rates(local, band);
-> +
->      if (sdata->vif.type == NL80211_IFTYPE_ADHOC && elems->supp_rates &&
->          memcmp(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0) {
->
->          rcu_read_lock();
->
-> ***************
-> *** 257,268 ****
->              u32 prev_rates;
->
->              prev_rates = sta->sta.supp_rates[band];
-> !             /* make sure mandatory rates are always added */
-> !             sta->sta.supp_rates[band] = supp_rates |
-> !                 ieee80211_mandatory_rates(local, band);
->
->  #ifdef CONFIG_MAC80211_IBSS_DEBUG
-> !             if (sta->sta.supp_rates[band] != prev_rates)
->                  printk(KERN_DEBUG "%s: updated supp_rates set "
->                      "for %pM based on beacon info (0x%llx | "
->                      "0x%llx -> 0x%llx)\n",
-> --- 261,270 ----
->              u32 prev_rates;
->
->              prev_rates = sta->sta.supp_rates[band];
-> !             sta->sta.supp_rates[band] = supp_rates;
->
->  #ifdef CONFIG_MAC80211_IBSS_DEBUG
-> !             if (sta->sta.supp_rates[band] != prev_rates) {
->                  printk(KERN_DEBUG "%s: updated supp_rates set "
->                      "for %pM based on beacon info (0x%llx | "
->                      "0x%llx -> 0x%llx)\n",
-> ***************
-> *** 271,276 ****
-> --- 273,284 ----
->                      (unsigned long long) prev_rates,
->                      (unsigned long long) supp_rates,
->                      (unsigned long long) sta->sta.supp_rates[band]);
-> +
-> +                 /* TODO: implement rate_update in minstrel/pid,
-> +                  * then change this to rate_control_rate_update.
-> +                  */
-> +                 rate_control_rate_init(sta);
-> +             }
->  #endif
->          } else
->              ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 
-> supp_rates);
->
->
->
-> Christian Lamparter wrote:
->> On Thursday 12 November 2009 20:43:22 Adam Wozniak wrote:
->>  
->>> I was hoping for more of an "ah-ha!" response. =)
->>>
->>> It worked well initially, but when I let it run overnight it fell 
->>> back into that same failure mode.
->>>
->>>     
->>
->> great... :\
->>
->> what about this patch?
->> ---
->> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
->> index fbffce9..bde89f7 100644
->> --- a/net/mac80211/ibss.c
->> +++ b/net/mac80211/ibss.c
->> @@ -250,6 +250,9 @@ static void ieee80211_rx_bss_info(struct 
->> ieee80211_sub_if_data *sdata,
->>          memcmp(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0) {
->>          supp_rates = ieee80211_sta_get_rates(local, elems, band);
->>  
->> +        /* make sure mandatory rates are always added */
->> +        supp_rates |= ieee80211_mandatory_rates(local, band);
->> +
->>          rcu_read_lock();
->>  
->>          sta = sta_info_get(local, mgmt->sa);
->> @@ -257,9 +260,7 @@ static void ieee80211_rx_bss_info(struct 
->> ieee80211_sub_if_data *sdata,
->>              u32 prev_rates;
->>  
->>              prev_rates = sta->sta.supp_rates[band];
->> -            /* make sure mandatory rates are always added */
->> -            sta->sta.supp_rates[band] = supp_rates |
->> -                ieee80211_mandatory_rates(local, band);
->> +            sta->sta.supp_rates[band] = supp_rates;
->>  
->>  #ifdef CONFIG_MAC80211_IBSS_DEBUG
->>              if (sta->sta.supp_rates[band] != prev_rates)
->>   
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ drivers/net/wireless/wl12xx/wl1251_main.c |   12 ++++++--
+ include/linux/ieee80211.h                 |    5 ++++
+ include/linux/nl80211.h                   |    2 +
+ include/net/cfg80211.h                    |    1 +
+ include/net/mac80211.h                    |    6 ++++
+ net/mac80211/cfg.c                        |    1 +
+ net/mac80211/debugfs.c                    |   41 +++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h                |    5 ++++
+ net/mac80211/main.c                       |    1 +
+ net/mac80211/mlme.c                       |   36 ++++++++++++++++++++++---
+ net/mac80211/scan.c                       |   18 +++++++++++++
+ net/mac80211/util.c                       |    2 +
+ net/wireless/nl80211.c                    |    3 ++
+ 13 files changed, 125 insertions(+), 8 deletions(-)
 
