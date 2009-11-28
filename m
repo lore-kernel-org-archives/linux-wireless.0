@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:36078 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754806AbZKIWq5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 17:46:57 -0500
-Received: by bwz27 with SMTP id 27so4022805bwz.21
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Nov 2009 14:47:02 -0800 (PST)
+Received: from nbd.name ([88.198.39.176]:56419 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753943AbZK1MGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Nov 2009 07:06:37 -0500
+Message-ID: <4B111249.7080105@openwrt.org>
+Date: Sat, 28 Nov 2009 13:06:33 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1257805265.21134.22738.camel@rc-desk>
-References: <cb0375e10911081130k5d8f8347y999cf66a98e6898a@mail.gmail.com>
-	 <1257787187.21134.22331.camel@rc-desk>
-	 <cb0375e10911091007w45fa5653y8ed4f043f37074b6@mail.gmail.com>
-	 <1257805265.21134.22738.camel@rc-desk>
-Date: Mon, 9 Nov 2009 17:47:02 -0500
-Message-ID: <cb0375e10911091447y375c276emddc5eff38b4b575e@mail.gmail.com>
-Subject: Re: [PATCH] iwlcore: Allow runtime configuration of
-	no_sleep_autoadjust
-From: Andrew Lutomirski <andy@luto.us>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Benoit PAPILLAULT <benoit.papillault@free.fr>
+CC: 8an@praha12.net, linux-wireless@vger.kernel.org
+Subject: Re: [RFC] API for setting ACK timeout
+References: <200911261826.08576.8an@praha12.net> <4B103971.2020308@free.fr>
+In-Reply-To: <4B103971.2020308@free.fr>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 9, 2009 at 5:21 PM, reinette chatre
-<reinette.chatre@intel.com> wrote:
-> Hi Andrew,
->
-> On Mon, 2009-11-09 at 10:07 -0800, Andrew Lutomirski wrote:
->> Hmm.  It looks like sleep_level_override in debugfs can do exactly what I want.
->
-> You have not really stated what you are trying to do here so it is hard
-> to tell. sleep_level_override lets you hardcode the power saving index.
->
->>
->> Is there any reason that no_sleep_autoadjust doesn't just make
->> sleep_level_override default to 1?
->
-> That does seem what it is doing in iwl_power_update_mode().
+Benoit PAPILLAULT wrote:
+> Hello Lukas,
+> 
+> I think that's a good idea indeed. I think the relationship between ACK
+> timeout, CTS timeout and slottime and distance should be common (ie
+> implemented at mac80211 level) since the formula is not so trivial to me
+> (at least, I've seen several formulas flying around). Then, each driver
+> needs to convert ACK timeout since the HW registers probably takes into
+> account some specific MAC hw time.
+> 
+> Moreover, the formula is not the same for 2.4 GHz and 5 GHz.
+> 
+> madwifi had a patch for automatically finding the best ACK timeout,
+> maybe it could be ported to mac80211 as well.
+That patch is a rather ugly hack which involves doing statistics on the
+number of retransmissions while changing the distance setting. It has a
+tendency to crank up the ack timeout whenever there is some loss or
+interference on the link, thereby making the effects of the interference
+even worse. I don't think this should be added to mac80211.
+At some point, I will try to come up with an implementation for ath9k
+which doesn't involve such voodoo, but instead compares the tx timestamp
+of some data packets against the rx timestamp of ack packets. I don't
+know if this will work, but IMHO it's worth a try.
 
-I want to save power.  no_sleep_autoadjust=N and iwconfig wlan0 power
-on does a good job of that.  I assume that no_sleep_autoadjust
-defaults to Y because it's still not reliable (and I seem to have seen
-a few networks where it causes occasional problems).  So I'd like to
-be able to toggle it at runtime, file bug reports when it fails, but
-still be able to use the networks it fails on :)
-
---Andy
+- Felix
