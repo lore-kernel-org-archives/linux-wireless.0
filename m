@@ -1,55 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:42020 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754256AbZKJJU5 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39362 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750881AbZK1NM3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 04:20:57 -0500
-Subject: Re: [RFT 6/6] rtl8187se: Modify Kconfig and Makefile
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>, bzolnier@gmail.com,
-	Bernhard Schiffner <bernhard@schiffner-limbach.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4af8a64a.OAu73X3xIXLBXo18%Larry.Finger@lwfinger.net>
-References: <4af8a64a.OAu73X3xIXLBXo18%Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 10 Nov 2009 10:20:55 +0100
-Message-ID: <1257844855.26914.1.camel@violet>
+	Sat, 28 Nov 2009 08:12:29 -0500
+Subject: Re: rfkill: persistent device suspend/resume
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ian Molton <ian.molton@collabora.co.uk>,
+	linux-acpi@vger.kernel.org, Corentin Chary <corentincj@iksaif.net>
+In-Reply-To: <20091128124158.GB17373@khazad-dum.debian.net>
+References: <4A37A3E1.8060606@tuffmail.co.uk>
+	 <1245161645.13461.3.camel@johannes.local> <4A37AEB7.6060405@tuffmail.co.uk>
+	 <20090618030806.GE29569@khazad-dum.debian.net>
+	 <20091128124158.GB17373@khazad-dum.debian.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-NRRMdYzNejdBaFuSnhUZ"
+Date: Sat, 28 Nov 2009 14:12:25 +0100
+Message-ID: <1259413945.5428.21.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
 
-> Modify configuration and builod system for rtl8187se.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> Index: wireless-testing/drivers/net/wireless/Kconfig
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/Kconfig
-> +++ wireless-testing/drivers/net/wireless/Kconfig
-> @@ -294,6 +294,16 @@ config RTL8187_LEDS
->  	depends on RTL8187 && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = RTL8187)
->  	default y
->  
-> +config RTL8187SE
-> +	tristate "Realtek 8187SE PCI support"
-> +	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
-> +	select EEPROM_93CX6
-> +	---help---
-> +	  This is a driver for RTL8187SE PCI-based cards. If built as a
-> +	  module, it will be named rtl8187se.
-> +
-> +	  Thanks to Realtek for their support!
+--=-NRRMdYzNejdBaFuSnhUZ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-does this really belong into the help text. Having it in the copyright
-header seems enough. Especially since this help text is not offering any
-additional advice or information for the user.
+On Sat, 2009-11-28 at 10:41 -0200, Henrique de Moraes Holschuh wrote:
 
-Regards
+> What do you guys think?   I will cook up a patch to implement the above, =
+but
+> if there are any objections to the idea, I'd like to hear it ASAP, as I d=
+o
+> have a regression to fix :)
 
-Marcel
+What part of that don't we do?
 
+static int rfkill_resume(struct device *dev)
+{
+        struct rfkill *rfkill =3D to_rfkill(dev);
+        bool cur;
+
+        if (!rfkill->persistent) {
+                cur =3D !!(rfkill->state & RFKILL_BLOCK_SW);
+                rfkill_set_block(rfkill, cur);
+        }
+
+
+johannes
+
+--=-NRRMdYzNejdBaFuSnhUZ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLESG2AAoJEODzc/N7+QmaoRYQAKm3BrfyM/9J6um4zJ0PDr1N
+MAZFKJzFhhXAXYTpjhP6bYxkPAF4KilN7wCpHUMtt3gXzBPcTjpQgkbjjWGF7gvG
+dNpIBkr6uAVqHuD6NT//qjrasa3+/NDuF1aaR07ZyxVqjVL65n/FUFlGdIxgvLpl
+tNx3gtTtKTKawV33xL0HAOpBrKdO6MFeUA69RrfEAgPT375N8ZdrBzJdKEXcYn4y
+41lDopxvVMVhMcbLxp/YvC3MYLX7FUptntIMvR9WDTiQ2t0RSKxZmoui7YAqwuBQ
+CB62m69g1n1q9S7beU2f3iZEBsdrrNIvJmvuHY/HRrW2zF7sPFJ1ZiIIWTGcXj1l
+ExJniGsmV1LMCM5W8MQXAwPgsLM20hp1qK4IJddQPC68esbYsBdVlM5tRjj6PrYV
+h1Bbqsuh+2Ry1D7PD/CK/ISvzSq5Hk2ArMOZPqlSizfdi7MdImmcgzLQFPzpP8J7
+6jqsUaAfeIA/9rwfU2wONOH/BvegQljS9981D0WopP636zvwMZAdZAhBUcFJuYlq
+E4jDvyRqGhOtulXzvt158ZZPvVP0yRUM/A5SzL15UYP3+G6Bu4Jm0WRC/zqg0T9Y
+d2XCnOontGQOC3VTB7AmKED+LwOvsunbq02so8tAwW4hKAL9pbEM3RUkLAwzDnFb
+Aqn2lJGibA2UbUa6vfQs
+=rBib
+-----END PGP SIGNATURE-----
+
+--=-NRRMdYzNejdBaFuSnhUZ--
 
