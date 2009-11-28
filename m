@@ -1,67 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:45965 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755869AbZKWQUW convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48375 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751283AbZK1Njt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 11:20:22 -0500
-MIME-Version: 1.0
-In-Reply-To: <1258982793.2845.13.camel@achroite.uk.solarflarecom.com>
-References: <43e72e890911201245r4de5b039hb2dd5011dabf2399@mail.gmail.com>
-	<1258750858.2877.58.camel@achroite.uk.solarflarecom.com> <43e72e890911201307g2a1f280aie223ed4fd270aad@mail.gmail.com>
-	<1258982793.2845.13.camel@achroite.uk.solarflarecom.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 23 Nov 2009 08:20:08 -0800
-Message-ID: <43e72e890911230820x2c784c57he387ffd53a9ccc9@mail.gmail.com>
-Subject: Re: A generic kernel compatibilty code
-To: Ben Hutchings <bhutchings@solarflare.com>
-Cc: linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Sat, 28 Nov 2009 08:39:49 -0500
+Subject: Re: rfkill: persistent device suspend/resume
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ian Molton <ian.molton@collabora.co.uk>,
+	linux-acpi@vger.kernel.org, Corentin Chary <corentincj@iksaif.net>
+In-Reply-To: <20091128132752.GD17373@khazad-dum.debian.net>
+References: <4A37A3E1.8060606@tuffmail.co.uk>
+	 <1245161645.13461.3.camel@johannes.local> <4A37AEB7.6060405@tuffmail.co.uk>
+	 <20090618030806.GE29569@khazad-dum.debian.net>
+	 <20091128124158.GB17373@khazad-dum.debian.net>
+	 <1259413945.5428.21.camel@johannes.local>
+	 <20091128132752.GD17373@khazad-dum.debian.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-p/jXZQ+dRDEX7xjYl9Rp"
+Date: Sat, 28 Nov 2009 14:39:49 +0100
+Message-ID: <1259415589.5428.22.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 23, 2009 at 5:26 AM, Ben Hutchings
-<bhutchings@solarflare.com> wrote:
-> On Fri, 2009-11-20 at 13:07 -0800, Luis R. Rodriguez wrote:
->> On Fri, Nov 20, 2009 at 1:00 PM, Ben Hutchings
->> <bhutchings@solarflare.com> wrote:
->> > On Fri, 2009-11-20 at 12:45 -0800, Luis R. Rodriguez wrote:
->> >> Everyone and their mother reinvents the wheel when it comes to
->> >> backporting kernel modules. It a painful job and it seems to me an
->> >> alternative is possible. If we can write generic compatibilty code for
->> >> a new routine introduced on the next kernel how about just merging it
->> >> to the kernel under some generic compat module. This would be
->> >> completey ignored by everyone using the stable kernel but can be
->> >> copied by anyone doing backport work.
->> >>
->> >> So I'm thinking something as simple as a generic compat/comat.ko with
->> >> compat-2.6.32.[ch] files.
->> >>
->> >> We've already backported everything needed for wireless drivers under
->> >> compat-wireless under this format down to even 2.6.25.
->> > [...]
->> >
->> > If you think 2.6.25 is old then I don't think you understand the scale
->> > of the problem.
->> >
->> > OEMs still expect us to support RHEL 4 (2.6.9) and SLES 9 (2.6.5) though
->> > the latter will probably be dropped soon.  Some other vendors apparently
->> > still need to support even 2.4 kernels!
->>
->> Heh understood. Well shouldn't this help with that then? Sure I'd love
->> to see the Enteprise Linux releases on 2.6.31 but that's not going to
->> happen right? Shouldn't this help then?
->
-> You'd really have to ask the 'enterprise' vendors whether they'd be
-> interested in working on some sort of shared forward-compat library.
 
-OK will do thanks.
+--=-p/jXZQ+dRDEX7xjYl9Rp
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> If the library is to include a module rather than being statically linked
-> into each module that needs it then there can only be one instance in
-> the system.
+On Sat, 2009-11-28 at 11:27 -0200, Henrique de Moraes Holschuh wrote:
 
-Sure, that's the idea.
+> > static int rfkill_resume(struct device *dev)
+> > {
+> >         struct rfkill *rfkill =3D to_rfkill(dev);
+> >         bool cur;
+> >=20
+> >         if (!rfkill->persistent) {
+> >                 cur =3D !!(rfkill->state & RFKILL_BLOCK_SW);
+> >                 rfkill_set_block(rfkill, cur);
+> >         }
+>=20
+> The issue I am reporting is _only_ about persistent devices, so it is the
+> if(!rfkill->persistent) that is the problem.  It works perfectly for the
+> other devices.
 
-  Luis
+So then I don't understand -- if the device specifically said that it
+was persistent, what kind of help does it need, and why does it not just
+unset persistent if it needs it?
+
+johannes
+
+
+--=-p/jXZQ+dRDEX7xjYl9Rp
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLESgiAAoJEODzc/N7+Qma2TQQAIDyK0af5ZPF0dVRS9cJRDwB
+tq51TN0Oi6zFcDXWHO3BUTA6noRHqltZfHSn31pm/fFVbs151XjX5NM7UG/GE8gr
+ijpSBSTd9Nljwkn5USxBi/7ffHkDiBoWnXzfRU2WodTfoi3/GJTDe9c6S88Jqhkc
+Lml/LzyXBOaRDNJDPW/iK0ywl70HpzHdiGZ2ExkWmN/Cx2x/E9GoRuybphNL2AfJ
+pDRoEvkgPHxPFEPs2yi5oT1w80Ya213zXThbvj2jntWDEQdfy6fasnRJBgN6PhGM
+D6imGfkk7EaZ5XIjw2fUb5BRBTa1Gd92192G5pkKBwFOtoyab0pVUnXqANqpR47e
+Vmi0lD3S6K1XtsxXnnfTGhkfYwRBvOJh4rrrRTVPpTLTczvB4qBDnpHQ1pz+3J0H
+GTCT4s7Hi2KfRmUO2vZvWGQJ+VWaMmf01PPkKhouBBrDNOMwGCh29O5bhHPM++cV
+h9MExFG5JnPnCyzLEmTqswLvNPWkyyMgstwDHg1mub5Fbag4Td8y3PPCGUu7v3h8
+sb4gQDXmq19pYgwQG/zgoRQfwKnN6rp6DEA6/wDhYHuqpf71adajY7q/E2YpA5Tm
+35aHVmDP83SAf4OiCY4SmHsanUIVM62ZHVoLnm5WrFPAVLI6gnZCpPCheOnlWm3G
+RRZ8icCgvOu8nHjiTKmw
+=u9fF
+-----END PGP SIGNATURE-----
+
+--=-p/jXZQ+dRDEX7xjYl9Rp--
+
