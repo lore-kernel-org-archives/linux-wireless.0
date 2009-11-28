@@ -1,91 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:38360 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755241AbZKVQIN (ORCPT
+Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:57854 "EHLO
+	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751584AbZK1VoE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Nov 2009 11:08:13 -0500
-Message-ID: <4B096226.4040505@gmail.com>
-Date: Sun, 22 Nov 2009 08:09:10 -0800
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Sat, 28 Nov 2009 16:44:04 -0500
+Message-ID: <4B1199A7.7090903@gmail.com>
+Date: Sat, 28 Nov 2009 22:44:07 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-To: Kristoffer Ericson <kristoffer.ericson@gmail.com>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [Bug #14267] Disassociating atheros wlan
-References: <7qTjLRFNcGF.A.eSE.kCACLB@chimera>	<4B08258E.9050607@gmail.com>	<1258886823.7094.101.camel@johannes.local>	<200911221519.54284.rjw@sisk.pl> <20091122162131.0e2e60ef.kristoffer.ericson@gmail.com>
-In-Reply-To: <20091122162131.0e2e60ef.kristoffer.ericson@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Alban Browaeys <prahal@yahoo.com>
+Subject: Re: [PATCH] rt2x00: Further L2 padding fixes.
+References: <1259433154-2587-1-git-send-email-gwingerde@gmail.com> <200911282226.58091.IvDoorn@gmail.com>
+In-Reply-To: <200911282226.58091.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kristoffer Ericson wrote:
-> On Sun, 22 Nov 2009 15:19:54 +0100
-> "Rafael J. Wysocki"<rjw@sisk.pl>  wrote:
->
->    
->> On Sunday 22 November 2009, Johannes Berg wrote:
->>      
->>> On Sat, 2009-11-21 at 09:38 -0800, Justin P. Mattock wrote:
->>>
->>>        
->>>> I did a bisect yesterday on this, and the results
->>>> seemed to have worked over here by reverting:
->>>>
->>>> 75e6c3b72b3ab01c47629f3fbd0fed4e6550bf3a
->>>> cfg80211: lower dynamic PS timeout to 100ms
->>>>
->>>> if Kristoffer can try reverting this one
->>>> to see, then we can go from there.
->>>>          
->>> So that just means the driver is broken. Please run
->>>
->>> 	iwconfig wlan0 power off
->>>
->>> to fix it then. And the patch below will disable it by default since
->>> it's broken.
->>>
->>> johannes
->>>
->>> --- wireless-testing.orig/drivers/net/wireless/ath/ath9k/main.c	2009-11-22 11:44:41.000000000 +0100
->>> +++ wireless-testing/drivers/net/wireless/ath/ath9k/main.c	2009-11-22 11:45:26.000000000 +0100
->>> @@ -1893,6 +1893,8 @@ void ath_set_hw_capab(struct ath_softc *
->>>   		BIT(NL80211_IFTYPE_ADHOC) |
->>>   		BIT(NL80211_IFTYPE_MESH_POINT);
->>>
->>> +	hw->wiphy->ps_default = false;
->>> +
->>>   	hw->queues = 4;
->>>   	hw->max_rates = 4;
->>>   	hw->channel_change_time = 5000;
->>>        
->> OK, so perhaps this patch should be applied until th ath9k driver is fixed?  Luis?  John?
->>      
->
-> I applied the patch from johannes and it ended my issues atleast. I ran my machine for approx
-> 2 hours without seeing the disconnect issue (which I usually saw after 15-25min). Cant be 100% of course
-> but so far so good.
->
-> I agree with Justin that we could wait until he gets a chance to test it. It should be accepted
-> after initial merge (and stable trees) after that I think. Rafael thoughts?
->
-> Also, we should notify the atheros people so they could start fixing the driver (in a perfect world).
->
-> Best wishes
-> Kristoffer Ericson
->
->
->
->    
-I can probably test it out, main problem
-is where I'm headed internet connection might
-not be strong enough to run any kind of media
-(hotel connections are only strong enough to retrieve e-mails
-streaming music/movies can be a bit much). luckily
-I'm away only for a few days.
+On 11/28/09 22:26, Ivo van Doorn wrote:
+>> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+>> index b8f0954..562a344 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+>> @@ -181,7 +181,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
+>>  	unsigned int frame_length = skb->len;
+>>  	unsigned int header_align = ALIGN_SIZE(skb, 0);
+>>  	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
+>> -	unsigned int l2pad = 4 - (payload_align - header_align);
+>> +	unsigned int l2pad = 4 - (header_length & 3);
+> 
+> Not sure about this, the l2pad should be the total bytes between the header and payload.
+> What if we have a frame for which both the header and the payload should be moved?
 
-Justin P. Mattock
+That is taken into consideration here. The beauty of this is that in order to calculate the
+number of bytes between the header and the payload you don't even have to consider the current
+locations of both in the buffer, because it is only a function of the header length. I.e. if a
+header is 24 bytes long, then no L2 padding is needed, as a properly aligned header will result
+in a properly aligned payload. If a header is 26 bytes long, then 2 bytes of L2 padding is needed
+as there are 2 bytes between the end of the header and the next 4-bytes boundary. This is all
+independent of whether the current header and the current payload are properly aligned.
+So, the value of l2pad shouldn't be used to determine if any alignment needs to be done, it only
+will tell you how many padding bytes will be required between the header and the payload.
+
+Also, note that the same formula is used in the rt2x00queue_remove_l2pad function, and this is basically
+copied from there.
+
+> 
+> The code in this function handles multiple scenarios, one where both the payload and
+> header must be moved or when only one of both should be moved. In each case the l2pad
+> depends on both the payload and header alignment sizes.
+> 
+>>  	if (header_align == payload_align) {
+>>  		/*
+>> @@ -216,6 +216,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
+>>  		memmove(skb->data + header_length + l2pad,
+>>  			skb->data + header_length + l2pad + payload_align,
+>>  			frame_length - header_length);
+>> +		skb_trim(skb, frame_length + l2pad);
+>>  		skbdesc->flags |= SKBDESC_L2_PADDED;
+>>  	}
+>>  }
+>> @@ -346,7 +347,7 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
+>>  	 * Header and alignment information.
+>>  	 */
+>>  	txdesc->header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
+>> -	txdesc->l2pad = ALIGN_SIZE(entry->skb, txdesc->header_length);
+>> +	txdesc->l2pad = 4 - (txdesc->header_length & 3);
+> 
+> ALIGN_SIZE() depends on the actual address of the payload, and thus should be better
+> and indicating the amount of padding which is required. However the bug might be that we need
+> to do the same calculation as in rt2x00queue_insert_l2pad() and make it depend on the ALIGN_SIZE
+> values from header and payload.
+> 
+
+Yep, ALIGN_SIZE does. But the number of l2pad bytes doesn't depend on the actual address of the
+payload, it only depends on the length of the header. See above for the explanation.
+
+---
+Gertjan.
+
