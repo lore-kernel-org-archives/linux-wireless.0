@@ -1,45 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:36026 "EHLO mga11.intel.com"
+Received: from bu3sch.de ([62.75.166.246]:44115 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756362AbZKKPDO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Nov 2009 10:03:14 -0500
-From: "Zheng, Jeff" <jeff.zheng@intel.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"wifi-test-devel@lists.sourceforge.net"
-	<wifi-test-devel@lists.sourceforge.net>
-Date: Wed, 11 Nov 2009 22:59:27 +0800
-Subject: [ANNOUNCE] wifi-test 1.0 released
-Message-ID: <154E55ADF9629D4E8D13F08BF92ABEB63FDC983366@PDSMSX501.ccr.corp.intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1753902AbZK1VA2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Nov 2009 16:00:28 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Kalle Valo <kalle.valo@iki.fi>
+Subject: Re: [PATCH] mac80211: annotate sleeping driver ops
+Date: Sat, 28 Nov 2009 22:00:26 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <1259439566-26397-1-git-send-email-kalle.valo@iki.fi>
+In-Reply-To: <1259439566-26397-1-git-send-email-kalle.valo@iki.fi>
 MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200911282200.28477.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All,
+On Saturday 28 November 2009 21:19:26 Kalle Valo wrote:
+> mac80211 doesn't seem to use get_tx_stats anywhere currently. Just to be on
+> the safe side, I documented it to be atomic, but hopefully the op can be
+> removed in the future.
 
-The wifi-test project is raised by Intel with a goal to deliver test suites
-to opensource community that validates linux wireless drivers. wifi-test
-1.0 covers following wireless features:
-+ BSS: BSS association, fragmentation/RTS/CTS, BSS channels etc
-+ IBSS: IBSS association, IBSS fragmentation/RTS/CTS, IBSS channels.
-+ Security: WEP (BSS/IBSS), WPA/WPA2, 802.1X.
-+ Power management: S3/S4, RFKILL
-+ Performance: upload/download speed for different combinations.
-+ Others: Wext mode, nl80211 mode
-+ 802.11 a/b/g/n: Above features in a/b/g/n band.
+Well, b43 takes a mutex in that callback. I think that's OK, because if it's
+never called, it's pretty safe to sleep there. ;)
 
-You can download wifi-test 1.0 from:
-http://intellinuxwireless.org/testing/Download/wifi-test-1.0.tar.gz
-or through git tree:
-http://www.intellinuxwireless.org/repos/wifi-test.git
-
-For more information, please see
-http://intellinuxwireless.org/testing/wifi-test.html
-
-
-Bests
-Jeff
-
+-- 
+Greetings, Michael.
