@@ -1,56 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:64895 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757220AbZKDVhL convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:51921 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751868AbZK1Xr1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 16:37:11 -0500
-Received: by iwn10 with SMTP id 10so5296212iwn.4
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 13:37:16 -0800 (PST)
+	Sat, 28 Nov 2009 18:47:27 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so548880fgg.1
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Nov 2009 15:47:33 -0800 (PST)
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/5] ar9170: remove dead definitions
+Cc: John W Linville <linville@tuxdriver.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sun, 29 Nov 2009 00:51:54 +0100
 MIME-Version: 1.0
-In-Reply-To: <43e72e890911041330j581e7bacp4e7b83a11c1de0e8@mail.gmail.com>
-References: <43e72e890911041204n55b54f8iace79938b40baa32@mail.gmail.com>
-	<40f31dec0911041212p16cfc78eia1ab1817e425e767@mail.gmail.com>
-	<43e72e890911041330j581e7bacp4e7b83a11c1de0e8@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 4 Nov 2009 13:36:56 -0800
-Message-ID: <43e72e890911041336n7ffae0d2u135321a588f3e613@mail.gmail.com>
-Subject: Re: pci_set_mwi() and ath5k
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org, Matthew Wilcox <matthew@wil.cx>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	Kyle McMartin <kyle@mcmartin.ca>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200911290051.54652.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 4, 2009 at 1:30 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Wed, Nov 4, 2009 at 12:12 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
->> 2009/11/4 Luis R. Rodriguez <mcgrof@gmail.com>:
->>> Curious if anyone recalls the issues seen with enabling MWI on ath5k.
->>> I could have sworn there was some discussion on this but for the life
->>> of me I cannot find it.
->>>
->>>  Luis
->>
->> Maybe this one ?
->> http://osdir.com/ml/linux.drivers.ath5k.devel/2008-07/msg00088.html
->
-> That was it, thanks! For the record then Kyle pointed to this bug:
->
-> http://marc.info/?t=121430463700001&r=1&w=2
->
-> as a reference for possible issues.
+This patch removes dead infrastructure which was meant
+for an out-of-tree rate control algorithm.
 
-Actually the threads above are for MSI, not MWI, which would be set
-with pci_set_mwi() not pci_disable_msi().
-
-MWI is for enabling memory write invalidate.
-
-I guess we never had the MWI discussion then for ath5k,
-
-Either way I'm reluctant to enable it and was actually considering
-simplifying the the PCI cache line size thing on ath/ath5k/ath9k. Will
-send an RFC.
-
-  Luis
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+low priority
+---
+diff --git a/drivers/net/wireless/ath/ar9170/ar9170.h b/drivers/net/wireless/ath/ar9170/ar9170.h
+index 9f94598..d95a7d4 100644
+--- a/drivers/net/wireless/ath/ar9170/ar9170.h
++++ b/drivers/net/wireless/ath/ar9170/ar9170.h
+@@ -109,7 +109,6 @@ struct ar9170_rxstream_mpdu_merge {
+ 	bool has_plcp;
+ };
+ 
+-#define AR9170_NUM_MAX_BA_RETRY	5
+ #define AR9170_NUM_TID	16
+ #define WME_BA_BMP_SIZE         64
+ #define AR9170_NUM_MAX_AGG_LEN	(2 * WME_BA_BMP_SIZE)
+@@ -143,7 +142,6 @@ struct ar9170_sta_tid {
+ 	u16 tid;
+ 	enum ar9170_tid_state state;
+ 	bool active;
+-	u8 retry;
+ };
+ 
+ #define AR9170_QUEUE_TIMEOUT		64
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index f9d6db8..cbf59b1 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -2366,7 +2366,6 @@ static void ar9170_sta_notify(struct ieee80211_hw *hw,
+ 			sta_info->agg[i].state = AR9170_TID_STATE_SHUTDOWN;
+ 			sta_info->agg[i].active = false;
+ 			sta_info->agg[i].ssn = 0;
+-			sta_info->agg[i].retry = 0;
+ 			sta_info->agg[i].tid = i;
+ 			INIT_LIST_HEAD(&sta_info->agg[i].list);
+ 			skb_queue_head_init(&sta_info->agg[i].queue);
