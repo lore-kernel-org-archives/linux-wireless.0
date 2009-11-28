@@ -1,75 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:57622 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752738AbZKPPKS convert rfc822-to-8bit (ORCPT
+Received: from 39.mail-out.ovh.net ([213.251.138.60]:42890 "HELO
+	39.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753347AbZK2ABx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Nov 2009 10:10:18 -0500
-Received: by bwz27 with SMTP id 27so5747439bwz.21
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Nov 2009 07:10:23 -0800 (PST)
+	Sat, 28 Nov 2009 19:01:53 -0500
+Message-ID: <4B11B860.4080607@free.fr>
+Date: Sun, 29 Nov 2009 00:55:12 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890911131813g2bc15fe6rd9c636959f698535@mail.gmail.com>
-References: <f74418680911120331w1ea31a68y56440dc0fbd253bb@mail.gmail.com>
-	<20091112154440.GD19349@tux> <43e72e890911120749n72360f0btfb058ab3a521eabb@mail.gmail.com>
-	<40101cc30911121118h17db32a1y61edac1a4c0aec24@mail.gmail.com>
-	<1258054304.3899.36.camel@johannes.local> <40101cc30911121418h4109d62bv763bed2036446901@mail.gmail.com>
-	<1258097485.3899.76.camel@johannes.local> <f74418680911130055o7d8fa94brc3fd7a0c315bb7b0@mail.gmail.com>
-	<40101cc30911130420n6fa79a55vfc2bffc615e9606b@mail.gmail.com>
-	<43e72e890911131813g2bc15fe6rd9c636959f698535@mail.gmail.com>
-From: Matteo Croce <technoboy85@gmail.com>
-Date: Mon, 16 Nov 2009 16:08:57 +0100
-Message-ID: <40101cc30911160708p4dbbf7fdy92c8901a58557808@mail.gmail.com>
-Subject: Re: [ath9k-devel] Possible memory leak in ath9k monitor mode
-	injection
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	rodriguez@atheros.com, linux-wireless@vger.kernel.org
+To: rt2x00 Users List <users@rt2x00.serialmonkey.com>
+CC: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: [rt2x00-users] [PATCH] rt2x00: Further L2 padding fixes.
+References: <1259433154-2587-1-git-send-email-gwingerde@gmail.com>	<200911282226.58091.IvDoorn@gmail.com> <4B1199A7.7090903@gmail.com>
+In-Reply-To: <4B1199A7.7090903@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 14, 2009 at 3:13 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Fri, Nov 13, 2009 at 4:20 AM, Matteo Croce <technoboy85@gmail.com> wrote:
->> On Fri, Nov 13, 2009 at 12:27 PM,  <Lorenzo.Bianconi83@gmail.com> wrote:
->>> Il giorno , Lorenzo Bianconi <lorenzo.bianconi83@gmail.com> ha scritto:
->>>> 2009/11/13 Johannes Berg johannes@sipsolutions.net>:
->>>> Yes, I tested ath5k/mac80211 and ath9k/mac80211 and both show the same
->>>> problem
->>>>
->>>> whereas madwifi/net80211, tested with the same module, has not memory
->>>> leak.
->>>>
->>>
->>> Hi all,
->>>
->>> I found a way to stop the mem leak. In the ath_tx_complete() function I have
->>> noticed that the struct tx_info_priv is not freed. I have made the following
->>> changes and now the memory remains stable. I do not know if this is the
->>> right place to put the kfree(tx_info_priv), however this seems to solve the
->>> issue.
->>>
->>> Cheers,
->>>
->>> Lorenzo
->>>
->>> @@ -1825,9 +1825,10 @@
->>> SC_OP_WAIT_FOR_TX_ACK));
->>> }
->>>
->>> - if (frame_type == ATH9K_NOT_INTERNAL)
->>> + if (frame_type == ATH9K_NOT_INTERNAL) {
->>> ieee80211_tx_status(hw, skb);
->>> - else
->>> + kfree(tx_info_priv);
->>> + } else
->>> ath9k_tx_status(hw, skb);
->>> }
->>
->> That's great. I'll try the fix with ath5k too
->
-> Can you guys try Felix's RFC patches ? It removes this completely.
->
->  Luis
->
+Gertjan van Wingerde a écrit :
+> On 11/28/09 22:26, Ivo van Doorn wrote:
+>>> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+>>> index b8f0954..562a344 100644
+>>> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
+>>> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+>>> @@ -181,7 +181,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
+>>>  	unsigned int frame_length = skb->len;
+>>>  	unsigned int header_align = ALIGN_SIZE(skb, 0);
+>>>  	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
+>>> -	unsigned int l2pad = 4 - (payload_align - header_align);
+>>> +	unsigned int l2pad = 4 - (header_length & 3);
 
-Yes they fix the leak
+Humm... is header_length = 24, then your formula gives l2pad = 4. If so,
+this is wrong. Do I miss something?
+
+BTW, I'm trying to prepare some patches for rt2800usb and padding. I
+must admit the current framework is a bit complex compared to other
+drivers (ath9k for instance).
+
+To give something similar to ath9k where the pad position is computed
+based on the hdr->frame_control field only (my guess is that's what the
+HW does anyway), we have :
+
+int rt2800usb_padpos(__le16 frame_control)
+{
+  int padpos = 24;
+  if (ieee80211_is_data(frame_control)) {
+	padpos = ieee80211_hdrlen(frame_control);
+  }
+  return padpos;
+}
+
+then later : int padsize = padpos & 3;
+
+then the usual check before doing the real padding or unpadding :
+if (padsize && skb->len>padpos) {
+  do padding or unpadding
+}
+
+My 2 cents,
+Benoit
