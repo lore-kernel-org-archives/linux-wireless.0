@@ -1,55 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34787 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756759AbZKBUpN (ORCPT
+Received: from mail-ew0-f215.google.com ([209.85.219.215]:56388 "EHLO
+	mail-ew0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753015AbZK1UE1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 15:45:13 -0500
-Date: Mon, 2 Nov 2009 15:43:05 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Fix IBSS merge
-Message-ID: <20091102204304.GL14046@tuxdriver.com>
-References: <19182.33851.980271.360757@gargle.gargle.HOWL> <1257151486.3555.161.camel@johannes.local> <20091102153614.GC14046@tuxdriver.com> <4AEF14E9.7060902@nbd.name> <43e72e890911020947i3a9ea736ve95fa6b1fac724a4@mail.gmail.com> <4AEF40A0.2030408@openwrt.org> <43e72e890911021236ra2a77baj6436abcc2d86cb3b@mail.gmail.com>
+	Sat, 28 Nov 2009 15:04:27 -0500
+Received: by ewy7 with SMTP id 7so2955403ewy.28
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Nov 2009 12:04:33 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: mac80211 not using get_tx_stats driver op?
+References: <87hbse8mx7.fsf@purkki.valot.fi>
+	<1259438345.5428.30.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sat, 28 Nov 2009 22:04:31 +0200
+In-Reply-To: <1259438345.5428.30.camel@johannes.local> (Johannes Berg's message of "Sat\, 28 Nov 2009 20\:59\:05 +0100")
+Message-ID: <87d4328lgw.fsf@purkki.valot.fi>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890911021236ra2a77baj6436abcc2d86cb3b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 02, 2009 at 12:36:31PM -0800, Luis R. Rodriguez wrote:
-> On Mon, Nov 2, 2009 at 12:27 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> > Luis R. Rodriguez wrote:
-> >> On Mon, Nov 2, 2009 at 9:20 AM, Felix Fietkau <nbd@nbd.name> wrote:
-> >>> John W. Linville wrote:
-> >>>> On Mon, Nov 02, 2009 at 09:44:46AM +0100, Johannes Berg wrote:
-> >>>>> On Mon, 2009-11-02 at 12:33 +0530, Sujith wrote:
-> >>>>> > Currently, in IBSS mode, a single creator would go into
-> >>>>> > a loop trying to merge/scan. This happens because the IBSS timer is
-> >>>>> > rearmed on finishing a scan and the subsequent
-> >>>>> > timer invocation requests another scan immediately.
-> >>>>> >
-> >>>>> > This patch fixes this issue by checking if we have just completed
-> >>>>> > a scan run trying to merge with other IBSS networks.
-> >>>>>
-> >>>>> Heh, how many people do we need to fix IBSS? :)
-> >>>>
-> >>>> Yeah, no kidding...I suspect that actual IBSS users are few, and a
-> >>>> substantial number of those are doing crazy things with it! :-)
-> >>> Yeah, we're doing crazy things like mesh networks of few hundred
-> >>> nodes... something that 11s isn't really suitable for. :-)
-> >>
-> >> Anyone know if this applies for 32?
-> > What exactly?
-> 
-> The patch.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-The patch applies and seems sane.  It seems like 2.6.32 would need it as well?
+> On Sat, 2009-11-28 at 21:33 +0200, Kalle Valo wrote:
+>> Hello,
+>> 
+>> I noticed that mac80211 is not calling get_tx_stats op anywhere. Is
+>> there a plan to use it somehow or can we just remove it?
+>
+> I thought there was a debugfs file for it?
 
-John
+If there is, I can't find it. I can see drivers implementing the op,
+but I don't see mac80211 using it anywhere.
+
+> I think I once wanted to remove it and then thought we'd keep the
+> code ... there's probably little value in it unless somebody knows a
+> use case?
+
+If someone thinks of something, please tell me. Otherwise I will
+submit a patch removing the code from both mac80211 and drivers. 
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Kalle Valo
