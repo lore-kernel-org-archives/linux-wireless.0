@@ -1,31 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f180.google.com ([209.85.216.180]:52791 "EHLO
-	mail-px0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754763AbZKYJc6 (ORCPT
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:59879 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752415AbZK1RRv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 04:32:58 -0500
-Received: by pxi10 with SMTP id 10so5619069pxi.33
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Nov 2009 01:33:05 -0800 (PST)
+	Sat, 28 Nov 2009 12:17:51 -0500
+Date: Sat, 28 Nov 2009 15:17:54 -0200
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ian Molton <ian.molton@collabora.co.uk>,
+	linux-acpi@vger.kernel.org, Corentin Chary <corentincj@iksaif.net>
+Subject: Re: rfkill: persistent device suspend/resume
+Message-ID: <20091128171754.GB28189@khazad-dum.debian.net>
+References: <4A37A3E1.8060606@tuffmail.co.uk>
+ <1245161645.13461.3.camel@johannes.local>
+ <4A37AEB7.6060405@tuffmail.co.uk>
+ <20090618030806.GE29569@khazad-dum.debian.net>
+ <20091128124158.GB17373@khazad-dum.debian.net>
+ <1259413945.5428.21.camel@johannes.local>
+ <20091128132752.GD17373@khazad-dum.debian.net>
+ <1259415589.5428.22.camel@johannes.local>
 MIME-Version: 1.0
-From: kasi viswanathan <kasi.wireless@gmail.com>
-Date: Wed, 25 Nov 2009 15:02:41 +0530
-Message-ID: <6a2053110911250132p737d6d41y7388b48bb426a82e@mail.gmail.com>
-Subject: AR5523 Support
-To: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1259415589.5428.22.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,
-   i am having an Atheros AR5523 usb wireless card.when i connect it to my
-machine, device is getting recognized and i am able to see the vendor and
-device ids using 'lsusb'.
+On Sat, 28 Nov 2009, Johannes Berg wrote:
+> On Sat, 2009-11-28 at 11:27 -0200, Henrique de Moraes Holschuh wrote:
+> > > static int rfkill_resume(struct device *dev)
+> > > {
+> > >         struct rfkill *rfkill = to_rfkill(dev);
+> > >         bool cur;
+> > > 
+> > >         if (!rfkill->persistent) {
+> > >                 cur = !!(rfkill->state & RFKILL_BLOCK_SW);
+> > >                 rfkill_set_block(rfkill, cur);
+> > >         }
+> > 
+> > The issue I am reporting is _only_ about persistent devices, so it is the
+> > if(!rfkill->persistent) that is the problem.  It works perfectly for the
+> > other devices.
+> 
+> So then I don't understand -- if the device specifically said that it
+> was persistent, what kind of help does it need, and why does it not just
+> unset persistent if it needs it?
 
-but when i issue 'iwconfig' i am not able to see any wireless interfaces.
+Never mind, Alan gave me various good reasons for the code to remain as is,
+and I will fix it in the driver in another way.
 
-any help and pointers will be useful.
-
-if there is no support as of now i am willing to contribute to the driver
-development.
-
-Thanks.
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
