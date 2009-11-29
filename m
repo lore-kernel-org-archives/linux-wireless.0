@@ -1,59 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:45569 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758201AbZKJVkM (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:39813 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753230AbZK2M3u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 16:40:12 -0500
-Received: by ewy3 with SMTP id 3so524628ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2009 13:40:16 -0800 (PST)
-Message-ID: <4AF9DDBE.8000200@gmail.com>
-Date: Tue, 10 Nov 2009 22:40:14 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Sun, 29 Nov 2009 07:29:50 -0500
+Date: Sun, 29 Nov 2009 14:29:42 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH] mac80211: Fix TX status reporting for injected data frames
+Message-ID: <20091129122942.GA21310@jm.kir.nu>
 MIME-Version: 1.0
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: Re: [PATCH] rt2x00: Initialize rf302x RF values properly in rt2800pci.
-References: <1257804017-5446-1-git-send-email-gwingerde@gmail.com> <200911101941.33825.bzolnier@gmail.com>
-In-Reply-To: <200911101941.33825.bzolnier@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/10/09 19:41, Bartlomiej Zolnierkiewicz wrote:
-> 
-> Hi Gertjan,
-> 
-> On Monday 09 November 2009 23:00:17 Gertjan van Wingerde wrote:
->> Insert RF chipset values for the RF302x chipsets. Mirrored from the rt2800usb driver.
->> Also, ensure these RF chipsets are handled properly in rt2800lib for the rt3090 chipset.
->>
->> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
->> ---
->>
->> This one clashes with the patch series sent by Bart. However, I believe that logically this patch
->> belongs before his patch series, as it makes the unification cleaner and clearer.
-> 
-> The change itself is correct and much welcomed but please take a look
-> at the diffstat below:
-> 
->> ---
->>  drivers/net/wireless/rt2x00/rt2800lib.c |    5 +++--
->>  drivers/net/wireless/rt2x00/rt2800pci.c |   31 +++++++++++++++++++++++++++----
->>  drivers/net/wireless/rt2x00/rt2800usb.c |    8 ++++----
->>  3 files changed, 34 insertions(+), 10 deletions(-)
-> 
-> I worry that applying this patch before unification will not make anything
-> cleaner, especially since it duplicates code that unification patch will now
-> have to also remove:
-> 
+An earlier optimization on removing unnecessary traffic on cooked
+monitor interfaces (f6021ac43c4cd556ade8c0b0d641b29fd0181d4a) ended up
+removing quite a bit more than just unnecessary traffic. It was not
+supposed to remove TX status reporting for injected frames, but ended
+up doing it by checking the injected flag in skb->cb only after that
+field had been cleared with memset.. Fix this by taking a local copy
+of the injected flag before skb->cb is cleared.
 
-I agree that the patch in itself won't make things cleaner. However, my argument was that applying this
-patch before unification would make the unification patch cleaner and clearer (i.e. it would be more
-obvious that there is a large degree of overlap).
+This broke user space applications that depend on getting TX status
+notifications for injected data frames. For example, STA inactivity
+poll from hostapd did not work and ended up kicking out stations even
+if they were still present.
 
-However, since I am such a nice guy, I will respin my 2 of my patches (the RT3070 detection for rt2800usb
-and this one) to apply on top of your patch series.
+Signed-off-by: Jouni Malinen <j@w1.fi>
 
 ---
-Gertjan.
+ net/mac80211/status.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+--- uml.orig/net/mac80211/status.c	2009-11-29 13:33:16.000000000 +0200
++++ uml/net/mac80211/status.c	2009-11-29 14:15:50.000000000 +0200
+@@ -148,6 +148,7 @@ void ieee80211_tx_status(struct ieee8021
+ 	struct net_device *prev_dev = NULL;
+ 	struct sta_info *sta;
+ 	int retry_count = -1, i;
++	bool injected;
+ 
+ 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
+ 		/* the HW cannot have attempted that rate */
+@@ -297,6 +298,9 @@ void ieee80211_tx_status(struct ieee8021
+ 	/* for now report the total retry_count */
+ 	rthdr->data_retries = retry_count;
+ 
++	/* Need to make a copy before skb->cb gets cleared */
++	injected = !!(info->flags & IEEE80211_TX_CTL_INJECTED);
++
+ 	/* XXX: is this sufficient for BPF? */
+ 	skb_set_mac_header(skb, 0);
+ 	skb->ip_summed = CHECKSUM_UNNECESSARY;
+@@ -311,7 +315,7 @@ void ieee80211_tx_status(struct ieee8021
+ 				continue;
+ 
+ 			if ((sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES) &&
+-			    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
++			    !injected &&
+ 			    (type == IEEE80211_FTYPE_DATA))
+ 				continue;
+ 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
