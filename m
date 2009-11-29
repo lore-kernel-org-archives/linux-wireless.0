@@ -1,552 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml103.kpnxchange.com ([195.121.3.7]:57031 "EHLO
-	CPSMTPM-EML103.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751206AbZKHPJw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 10:09:52 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH v2] rt2x00: Update copyright statements.
-Date: Sun,  8 Nov 2009 16:09:36 +0100
-Message-Id: <1257692976-2036-1-git-send-email-gwingerde@gmail.com>
+Received: from lo.gmane.org ([80.91.229.12]:58751 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753056AbZK2OB3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Nov 2009 09:01:29 -0500
+Received: from list by lo.gmane.org with local (Exim 4.50)
+	id 1NEkLG-0003WH-RG
+	for linux-wireless@vger.kernel.org; Sun, 29 Nov 2009 15:01:34 +0100
+Received: from 85-127-91-18.dynamic.xdsl-line.inode.at ([85.127.91.18])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Nov 2009 15:01:34 +0100
+Received: from tim by 85-127-91-18.dynamic.xdsl-line.inode.at with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Nov 2009 15:01:34 +0100
+To: linux-wireless@vger.kernel.org
+From: Tim Blechmann <tim@klingt.org>
+Subject: Re: rt61pci bug
+Date: Sun, 29 Nov 2009 15:01:02 +0100
+Message-ID: <4B127E9E.1090008@klingt.org>
+References: <4AE43028.30703@klingt.org> <hcsfgm$bft$1@ger.gmane.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig4E94235E0AA08E8D965FD4C4"
+In-Reply-To: <hcsfgm$bft$1@ger.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As mentioned on the linux-wireless mailing list, the current copyright statements in the rt2x00 are
-meaningless, as the rt2x00 project is not even a formal legal entity. Therefore it is better to replace
-the existing copyright statements with copyright statements for the people that actually wrote the code.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig4E94235E0AA08E8D965FD4C4
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Note: Updated to the best of my knowledge with respect to who contributed considerable amounts of code.
+On 11/04/2009 07:00 PM, Tim Blechmann wrote:
+>> running the rt61pci module on 2.6.31.5 works fine, but using the recen=
+t=20
+>> linus/master (2.6.32-rc5) results in this:
+>=20
+> same issue with 2.6.32-rc5 ... new bootlog with more debugging info
+> attached ...
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-CC: Ivo van Doorn <IvDoorn@gmail.com>
-CC: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-v2:
-- Handle feedback from Ivo.
----
- drivers/net/wireless/rt2x00/rt2400pci.c      |    2 +-
- drivers/net/wireless/rt2x00/rt2400pci.h      |    2 +-
- drivers/net/wireless/rt2x00/rt2500pci.c      |    2 +-
- drivers/net/wireless/rt2x00/rt2500pci.h      |    2 +-
- drivers/net/wireless/rt2x00/rt2500usb.c      |    2 +-
- drivers/net/wireless/rt2x00/rt2500usb.h      |    2 +-
- drivers/net/wireless/rt2x00/rt2800.h         |    9 ++++++++-
- drivers/net/wireless/rt2x00/rt2800lib.c      |   15 ++++++++++-----
- drivers/net/wireless/rt2x00/rt2800pci.c      |    9 ++++++++-
- drivers/net/wireless/rt2x00/rt2800pci.h      |    9 ++++++++-
- drivers/net/wireless/rt2x00/rt2800usb.c      |    6 +++++-
- drivers/net/wireless/rt2x00/rt2800usb.h      |    6 +++++-
- drivers/net/wireless/rt2x00/rt2x00.h         |    3 ++-
- drivers/net/wireless/rt2x00/rt2x00config.c   |    2 +-
- drivers/net/wireless/rt2x00/rt2x00crypto.c   |    2 +-
- drivers/net/wireless/rt2x00/rt2x00debug.c    |    2 +-
- drivers/net/wireless/rt2x00/rt2x00debug.h    |    2 +-
- drivers/net/wireless/rt2x00/rt2x00dev.c      |    2 +-
- drivers/net/wireless/rt2x00/rt2x00dump.h     |    2 +-
- drivers/net/wireless/rt2x00/rt2x00firmware.c |    3 ++-
- drivers/net/wireless/rt2x00/rt2x00ht.c       |    2 +-
- drivers/net/wireless/rt2x00/rt2x00leds.c     |    2 +-
- drivers/net/wireless/rt2x00/rt2x00leds.h     |    2 +-
- drivers/net/wireless/rt2x00/rt2x00lib.h      |    3 ++-
- drivers/net/wireless/rt2x00/rt2x00link.c     |    2 +-
- drivers/net/wireless/rt2x00/rt2x00mac.c      |    2 +-
- drivers/net/wireless/rt2x00/rt2x00pci.c      |    2 +-
- drivers/net/wireless/rt2x00/rt2x00pci.h      |    2 +-
- drivers/net/wireless/rt2x00/rt2x00queue.c    |    3 ++-
- drivers/net/wireless/rt2x00/rt2x00queue.h    |    2 +-
- drivers/net/wireless/rt2x00/rt2x00reg.h      |    2 +-
- drivers/net/wireless/rt2x00/rt2x00soc.c      |    3 ++-
- drivers/net/wireless/rt2x00/rt2x00soc.h      |    2 +-
- drivers/net/wireless/rt2x00/rt2x00usb.c      |    2 +-
- drivers/net/wireless/rt2x00/rt2x00usb.h      |    2 +-
- drivers/net/wireless/rt2x00/rt61pci.c        |    2 +-
- drivers/net/wireless/rt2x00/rt61pci.h        |    2 +-
- drivers/net/wireless/rt2x00/rt73usb.c        |    2 +-
- drivers/net/wireless/rt2x00/rt73usb.h        |    2 +-
- 39 files changed, 82 insertions(+), 43 deletions(-)
+i was still able to reproduce this issue with 2.6.32-rc8 ... it would=20
+be nice, if someone could have a look into this issue before 2.6.32 is=20
+released ...
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 798f625..0f912f5 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.h b/drivers/net/wireless/rt2x00/rt2400pci.h
-index ccd6441..6c21ef6 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.h
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.h
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 2e872ac..6618cbd 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.h b/drivers/net/wireless/rt2x00/rt2500pci.h
-index 54d3795..b007567 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.h
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.h
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 22dd6d9..35e5297 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.h b/drivers/net/wireless/rt2x00/rt2500usb.h
-index b01edca..341a704 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.h
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.h
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index d9b6a72..7ab85d7 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -1,5 +1,12 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
-+	Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>
-+	Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
-+	Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>
-+	Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
-+	Copyright (C) 2009 Mark Asselstine <asselsm@gmail.com>
-+	Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
-+	Copyright (C) 2009 Bart Zolnierkiewicz <bzolnier@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 5c7d74a..aed72a9 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1,10 +1,15 @@
- /*
--	Copyright (C) 2009 Bartlomiej Zolnierkiewicz
--
--	Based on the original rt2800pci.c and rt2800usb.c:
--
--	  Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
--	  <http://rt2x00.serialmonkey.com>
-+	Copyright (C) 2009 Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-+	Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>
-+	Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>
-+	Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
-+	Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>
-+	Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
-+	Copyright (C) 2009 Mark Asselstine <asselsm@gmail.com>
-+	Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
-+	<http://rt2x00.serialmonkey.com>
-+
-+	Based on the original rt2800pci.c and rt2800usb.c.
- 
- 	This program is free software; you can redistribute it and/or modify
- 	it under the terms of the GNU General Public License as published by
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 2f284a6..ac7ac57 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -1,5 +1,12 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>
-+	Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>
-+	Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
-+	Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>
-+	Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
-+	Copyright (C) 2009 Mark Asselstine <asselsm@gmail.com>
-+	Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
-+	Copyright (C) 2009 Bart Zolnierkiewicz <bzolnier@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.h b/drivers/net/wireless/rt2x00/rt2800pci.h
-index 8f944ee..6ae9cbd 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.h
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.h
-@@ -1,5 +1,12 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>
-+	Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>
-+	Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
-+	Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>
-+	Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
-+	Copyright (C) 2009 Mark Asselstine <asselsm@gmail.com>
-+	Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
-+	Copyright (C) 2009 Bart Zolnierkiewicz <bzolnier@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 3168ad4..d22ab64 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -1,5 +1,9 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>
-+	Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
-+	Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
-+	Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
-+	Copyright (C) 2009 Axel Kollhofer <rain_maker@root-forum.org>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.h b/drivers/net/wireless/rt2x00/rt2800usb.h
-index c9d7d40..1cd2c8d 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.h
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.h
-@@ -1,5 +1,9 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>
-+	Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
-+	Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
-+	Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
-+	Copyright (C) 2009 Axel Kollhofer <rain_maker@root-forum.org>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index c83dbae..fd13264 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -1,5 +1,6 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
-+	Copyright (C) 2004 - 2009 Gertjan van Wingerde <gwingerde@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
-index 40a201e..098315a 100644
---- a/drivers/net/wireless/rt2x00/rt2x00config.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00config.c
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00crypto.c b/drivers/net/wireless/rt2x00/rt2x00crypto.c
-index de36837..d291c78 100644
---- a/drivers/net/wireless/rt2x00/rt2x00crypto.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00crypto.c
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
-index 68bc9bb..7d323a7 100644
---- a/drivers/net/wireless/rt2x00/rt2x00debug.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.h b/drivers/net/wireless/rt2x00/rt2x00debug.h
-index 035cbc9..fa11409 100644
---- a/drivers/net/wireless/rt2x00/rt2x00debug.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00debug.h
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 73bbec5..ba2830c 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dump.h b/drivers/net/wireless/rt2x00/rt2x00dump.h
-index fdedb51..727019a 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dump.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00dump.h
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00firmware.c b/drivers/net/wireless/rt2x00/rt2x00firmware.c
-index d2deea2..34beb00 100644
---- a/drivers/net/wireless/rt2x00/rt2x00firmware.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00firmware.c
-@@ -1,5 +1,6 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
-+	Copyright (C) 2004 - 2009 Gertjan van Wingerde <gwingerde@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00ht.c b/drivers/net/wireless/rt2x00/rt2x00ht.c
-index e3cec83..1056c92 100644
---- a/drivers/net/wireless/rt2x00/rt2x00ht.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00ht.c
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00leds.c b/drivers/net/wireless/rt2x00/rt2x00leds.c
-index 49671fe..ca585e3 100644
---- a/drivers/net/wireless/rt2x00/rt2x00leds.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00leds.c
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00leds.h b/drivers/net/wireless/rt2x00/rt2x00leds.h
-index 8e03c04..3b46f0c 100644
---- a/drivers/net/wireless/rt2x00/rt2x00leds.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00leds.h
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
-index 567f029..c71154e 100644
---- a/drivers/net/wireless/rt2x00/rt2x00lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
-@@ -1,5 +1,6 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
-+	Copyright (C) 2004 - 2009 Gertjan van Wingerde <gwingerde@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00link.c b/drivers/net/wireless/rt2x00/rt2x00link.c
-index c708d0b..7083e85 100644
---- a/drivers/net/wireless/rt2x00/rt2x00link.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00link.c
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 929b85f..eed093d 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
-index ece70d7..0feb4d0 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.h b/drivers/net/wireless/rt2x00/rt2x00pci.h
-index ae33eeb..d4f9449 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.h
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 577029e..02972a0 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -1,5 +1,6 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
-+	Copyright (C) 2004 - 2009 Gertjan van Wingerde <gwingerde@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-index a5591fb..97c7895 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00reg.h b/drivers/net/wireless/rt2x00/rt2x00reg.h
-index 983e52e..603bfc0 100644
---- a/drivers/net/wireless/rt2x00/rt2x00reg.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00reg.h
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00soc.c b/drivers/net/wireless/rt2x00/rt2x00soc.c
-index 4abcfa6..19e684f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00soc.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00soc.c
-@@ -1,5 +1,6 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
-+	Copyright (C) 2004 - 2009 Felix Fietkau <nbd@openwrt.org>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00soc.h b/drivers/net/wireless/rt2x00/rt2x00soc.h
-index 5cf114a..8a34166 100644
---- a/drivers/net/wireless/rt2x00/rt2x00soc.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00soc.h
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index aa6c31d..0a751e7 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.h b/drivers/net/wireless/rt2x00/rt2x00usb.h
-index 9943e42..d63e1df 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index b20e3ea..ea8a86f 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.h b/drivers/net/wireless/rt2x00/rt61pci.h
-index 93eb699..6f33f7f 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.h
-+++ b/drivers/net/wireless/rt2x00/rt61pci.h
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 14e7bb2..7236f01 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.h b/drivers/net/wireless/rt2x00/rt73usb.h
-index 81fe0be..e783a09 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.h
-+++ b/drivers/net/wireless/rt2x00/rt73usb.h
-@@ -1,5 +1,5 @@
- /*
--	Copyright (C) 2004 - 2009 rt2x00 SourceForge Project
-+	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
- 	<http://rt2x00.serialmonkey.com>
- 
- 	This program is free software; you can redistribute it and/or modify
--- 
-1.6.5.2
+dmesg from 2.6.32-rc8:
+[   10.249098] rt61pci 0000:06:00.0: PCI INT A -> GSI 16 (level, low) -> =
+IRQ 16
+[   10.257182] phy0 -> rt61pci_validate_eeprom: EEPROM recovery - NIC: 0x=
+ff80
+[   10.257184] phy0 -> rt61pci_validate_eeprom: EEPROM recovery - Led: 0x=
+e0ff
+[   10.257187] phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 030=
+2, rf: 0003, rev: 0002561c.
+[   10.351794] Registered led device: rt61pci-phy0::radio
+[   10.351839] Registered led device: rt61pci-phy0::assoc
+[   14.342046] rt61pci 0000:06:00.0: firmware: requesting rt2561.bin
+[   14.395533] phy0 -> rt2x00lib_request_firmware: Info - Firmware detect=
+ed - version: 0.8.
+[   14.421238] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 0 - =
+CWmin: 3, CWmax: 4, Aifs: 2, TXop: 102.
+[   14.421245] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 1 - =
+CWmin: 4, CWmax: 5, Aifs: 2, TXop: 188.
+[   14.421252] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 2 - =
+CWmin: 5, CWmax: 10, Aifs: 3, TXop: 0.
+[   14.421258] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 3 - =
+CWmin: 5, CWmax: 10, Aifs: 7, TXop: 0.
+[  273.404685] phy0 -> rt2x00queue_write_tx_frame: Error - Arrived at non=
+-free entry in the non-full queue 2.
+[  273.404687] Please file bug report to http://rt2x00.serialmonkey.com.
+[  282.143549] wlan0: no IPv6 routers present
+[  357.304908] phy0 -> rt61pci_txdone: Warning - TX status report missed =
+for entry 2
+[  357.333806] phy0 -> rt61pci_txdone: Warning - TX status report missed =
+for entry 9
+[  360.172776] phy0 -> rt2x00queue_write_tx_frame: Error - Arrived at non=
+-free entry in the non-full queue 2.
+[  360.172778] Please file bug report to http://rt2x00.serialmonkey.com.
+[  360.172782] phy0 -> rt2x00mac_tx_rts_cts: Warning - Failed to send RTS=
+/CTS frame.
+[  383.880010] No probe response from AP 00:24:fe:09:94:18 after 500ms, d=
+isconnecting.
+[  383.880026] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 0 - =
+CWmin: 2, CWmax: 3, Aifs: 2, TXop: 47.
+[  383.880034] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 1 - =
+CWmin: 3, CWmax: 4, Aifs: 2, TXop: 94.
+[  383.880042] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 2 - =
+CWmin: 4, CWmax: 10, Aifs: 3, TXop: 0.
+[  383.880050] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 3 - =
+CWmin: 4, CWmax: 10, Aifs: 7, TXop: 0.
+[  385.220460] wlan0: direct probe to AP 00:24:fe:09:94:18 (try 1)
+[  385.421337] wlan0: direct probe to AP 00:24:fe:09:94:18 (try 2)
+[  385.621304] wlan0: direct probe to AP 00:24:fe:09:94:18 (try 3)
+[  385.821264] wlan0: direct probe to AP 00:24:fe:09:94:18 timed out
+
+
+lspci -vvv:
+
+06:00.0 Network controller: RaLink RT2561/RT61 rev B 802.11g
+	Subsystem: D-Link System Inc Device 3c09
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Step=
+ping- SERR+ FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dslow >TAbort- <TAbort=
+- <MAbort- >SERR- <PERR- INTx-
+	Latency: 64, Cache Line Size: 64 bytes
+	Interrupt: pin A routed to IRQ 16
+	Region 0: Memory at fb6f8000 (32-bit, non-prefetchable) [size=3D32K]
+	Capabilities: [40] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA PME(D0-,D1-,D2-,D3hot-,D3c=
+old-)
+		Status: D0 PME-Enable- DSel=3D0 DScale=3D0 PME-
+	Kernel driver in use: rt61pci
+	Kernel modules: rt61pci
+
+thanks, tim
+
+--=20
+tim@klingt.org
+http://tim.klingt.org
+
+Happiness is a byproduct of function, purpose, and conflict; those who
+seek happiness for itself seek victory without war.
+  William S. Burroughs
+
+
+--------------enig4E94235E0AA08E8D965FD4C4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAksSfqEACgkQdL+4qsZfVsvFFgCgm6y5W74z8KXIy+mvMQGmmf7Z
+E2cAnRKusCa+Qk1Z1PlR/FvGyyXjpRh1
+=ugc6
+-----END PGP SIGNATURE-----
+
+--------------enig4E94235E0AA08E8D965FD4C4--
 
