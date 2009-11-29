@@ -1,52 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f197.google.com ([209.85.223.197]:54675 "EHLO
-	mail-iw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934034AbZKYCsi (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:33490 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754135AbZK2E7y convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 21:48:38 -0500
-Received: by iwn35 with SMTP id 35so1872845iwn.4
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Nov 2009 18:48:44 -0800 (PST)
+	Sat, 28 Nov 2009 23:59:54 -0500
+Received: by iwn1 with SMTP id 1so1579804iwn.33
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Nov 2009 21:00:01 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <200911241817.21399.IvDoorn@gmail.com>
-References: <200911241817.21399.IvDoorn@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 25 Nov 2009 13:48:24 +1100
-Message-ID: <646765f40911241848m27971e72v93b31c5905ddc238@mail.gmail.com>
-Subject: Re: [ANN] Ralink specsheets
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1259468182-25499-1-git-send-email-HinTak.Leung@gmail.com>
+References: <1259468182-25499-1-git-send-email-HinTak.Leung@gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sat, 28 Nov 2009 20:59:41 -0800
+Message-ID: <43e72e890911282059w5857b0b9ic9b0c2ca01625d7d@mail.gmail.com>
+Subject: Re: [PATCH] compat-2.6: split netdev patch to libertas/main.c into
+	two parts
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Hin-Tak Leung <htl10@users.sourceforge.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 25, 2009 at 04:17, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> Hi,
+On Sat, Nov 28, 2009 at 8:16 PM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+> Split netdev patch to libertas/main.c into two parts, one for
+> libertas/main.c and one for libertas/mesh.c, because of the file itself
+> was split in commit in wireless-testing:
 >
-> Recently Ralink has published their specification sheets for some of their
-> older chipsets on their website. In particular the rt73 and rt61 chipsets.
+> commit a4c65e7720b22d0fa76da3b6d00a00bcffd036ab
+> Author: Holger Schurig <holgerschurig@gmail.com>
+> Date:   Wed Nov 25 13:10:15 2009 +0100
 >
-> For those who are interested in the official register definitions from the Ralink hardware:
+>    libertas: moveing mesh-related functions into mesh.c
 >
-> RT2571W:
-> http://www.ralinktech.com/download.php?t=U0wyRnpjMlYwY3k4eU1EQTVMekE0THpNeEwzQnliMlIxWTNRNE5EVTRNelEwTWpZMkxuQmtaajA5UFVSVFVsUXlOVGN4VjE5V015NHpYekEyTWpJd053PT1D
+> Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
 >
-> RT2661:
-> http://www.ralinktech.com/download.php?t=U0wyRnpjMlYwY3k4eU1EQTVMekEzTHpNeEwzQnliMlIxWTNReU16UXhORGs0TURZekxuQmtaajA5UFVSVFVsUXlOall4WDFZekxqTmZNRFV4TkRBNEM%3D
->
-> RT2561S:
-> http://www.ralinktech.com/download.php?t=U0wyRnpjMlYwY3k4eU1EQTVMekEzTHpNeEwzQnliMlIxWTNReU16UTNPVFEyTlRJeUxuQmtaajA5UFVSVFVsUXlOVFl4VTE5V015NHhYekV5TVRnd05tUnZZdz09Qw%3D%3D
->
-> RT2561:
-> http://www.ralinktech.com/download.php?t=U0wyRnpjMlYwY3k4eU1EQTVMekEzTHpNeEwzQnliMlIxWTNReU16UTBOVFF5TnpBeUxuQmtaajA5UFVSVFVsUXlOVFl4WDFZekxqSmZNVEF4T0RBM0M%3D
+> ---
 
-Are these going to be put on the wiki? and are the specsheets for
-older parts available?
-
-Thanks,
-
--- 
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
+applied thanks
