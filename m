@@ -1,388 +1,251 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:33707 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752896AbZKTLjg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 06:39:36 -0500
-Received: by ey-out-2122.google.com with SMTP id 4so340384eyf.19
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Nov 2009 03:39:41 -0800 (PST)
-From: Florian Fainelli <florian@openwrt.org>
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH RFC] ssb: Generic SPROM override for devices without SPROM
-Date: Fri, 20 Nov 2009 12:38:07 +0100
-Cc: bcm43xx-dev@lists.berlios.de,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Oncaphillis <oncaphillis@snafu.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-References: <200911201212.19588.mb@bu3sch.de>
-In-Reply-To: <200911201212.19588.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200911201238.08005.florian@openwrt.org>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:56363 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752624AbZK2WoY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Nov 2009 17:44:24 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, pat-lkml@erley.org,
+	hintak.leung@gmail.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] [compat-2.6] Fix build problem.
+Date: Sun, 29 Nov 2009 23:44:16 +0100
+Message-Id: <1259534657-29043-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Michael,
+The mesh device in libertas uses the method lbs_mesh_dev_open and not lbs_dev_open
+Add backport code for libipw_module.c
 
-On Friday 20 November 2009 12:12:19 Michael Buesch wrote:
-> This patch adds a generic mechanism for overriding the SPROM mechanism
-> on devices without SPROM hardware.
-> 
-> There currently is a major problem with this:
-> It tries to deduce a MAC address from various hardware parameters. But
-> currently it will result in the same MAC address for machines of the same
-> type. Does somebody have an idea of some device-instance specific serial
-> number or something similar that could be hashed into the MAC?
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+The older patch send by me does not apply, because I had some
+problems with my local git tree.
+ compat/patches/01-netdev.patch |   67 ++++++++++++++++++++++++----------------
+ 1 files changed, 40 insertions(+), 27 deletions(-)
 
-BCM63xx is one of the users of this mechanism and we have a pool of MAC 
-addresses that we can use at a given Flash offset, for this we have a function 
-which will read the MAC address pool and know how many MACs we are currently 
-using.
-
-The BCM63xx board code does the following :
-
-- declare and initialize a "safe" sprom v2 structure (bcm63xx_sprom)
-- call board_get_mac_address and store the mac in bcm63xx_sprom.il0mac
-- memcpy il0mac to et0mac and et1mac in bcm63xx_sprom
-- call ssb_arch_set_fallback_sprom(&bcm63xx_sprom) to register our "fake" 
-sprom
-
-I got some comments below:
-
-> 
-> 
-> Index: wireless-testing/drivers/ssb/pci.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/ssb/pci.c	2009-11-19 18:34:42.000000000
->  +0100 +++ wireless-testing/drivers/ssb/pci.c	2009-11-19 18:37:27.000000000
->  +0100 @@ -252,6 +252,9 @@ static int sprom_do_read(struct ssb_bus
->  {
->  	int i;
-> 
-> +	if (!bus->sprom_size)
-> +		return -ENODEV;
-> +
->  	for (i = 0; i < bus->sprom_size; i++)
->  		sprom[i] = ioread16(bus->mmio + SSB_SPROM_BASE + (i * 2));
-> 
-> @@ -265,6 +268,9 @@ static int sprom_do_write(struct ssb_bus
->  	u32 spromctl;
->  	u16 size = bus->sprom_size;
-> 
-> +	if (!size)
-> +		return -ENODEV;
-> +
->  	ssb_printk(KERN_NOTICE PFX "Writing SPROM. Do NOT turn off the power!
->  Please stand by...\n"); err = pci_read_config_dword(pdev, SSB_SPROMCTL,
->  &spromctl);
->  	if (err)
-> @@ -616,10 +622,17 @@ static int sprom_extract(struct ssb_bus
->  static int ssb_pci_sprom_get(struct ssb_bus *bus,
->  			     struct ssb_sprom *sprom)
->  {
-> -	const struct ssb_sprom *fallback;
-> -	int err = -ENOMEM;
-> +	int err;
->  	u16 *buf;
-> 
-> +	bus->sprom_size = 0;
-> +	err = ssb_find_sprom_override(bus, sprom);
-> +	if (!err) {
-> +		ssb_printk(KERN_INFO PFX "Overriding SPROM image\n");
-> +		return 0;
-> +	}
-> +
-> +	err = -ENOMEM;
->  	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
->  	if (!buf)
->  		goto out;
-> @@ -637,22 +650,12 @@ static int ssb_pci_sprom_get(struct ssb_
->  		sprom_do_read(bus, buf);
->  		err = sprom_check_crc(buf, bus->sprom_size);
->  		if (err) {
-> -			/* All CRC attempts failed.
-> -			 * Maybe there is no SPROM on the device?
-> -			 * If we have a fallback, use that. */
-> -			fallback = ssb_get_fallback_sprom();
-> -			if (fallback) {
-> -				memcpy(sprom, fallback, sizeof(*sprom));
-> -				err = 0;
-> -				goto out_free;
-> -			}
->  			ssb_printk(KERN_WARNING PFX "WARNING: Invalid"
->  				   " SPROM CRC (corrupt SPROM)\n");
->  		}
->  	}
->  	err = sprom_extract(bus, sprom, buf, bus->sprom_size);
-> 
-> -out_free:
->  	kfree(buf);
->  out:
->  	return err;
-> Index: wireless-testing/drivers/ssb/sprom.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/ssb/sprom.c	2009-11-19 18:34:42.000000000
->  +0100 +++ wireless-testing/drivers/ssb/sprom.c	2009-11-19
->  18:37:27.000000000 +0100 @@ -13,8 +13,13 @@
-> 
->  #include "ssb_private.h"
-> 
-> +#include <linux/list.h>
-> +#include <linux/spinlock.h>
-> 
-> -static const struct ssb_sprom *fallback_sprom;
-> +
-> +/* List of registered SPROM overrides. */
-> +static LIST_HEAD(override_list);
-> +static DEFINE_SPINLOCK(override_list_lock);
-> 
-> 
->  static int sprom2hex(const u16 *sprom, char *buf, size_t buf_len,
-> @@ -135,35 +140,34 @@ out:
->  	return err ? err : count;
->  }
-> 
-> -/**
-> - * ssb_arch_set_fallback_sprom - Set a fallback SPROM for use if no SPROM
->  is found. - *
-> - * @sprom: The SPROM data structure to register.
-> - *
-> - * With this function the architecture implementation may register a
->  fallback - * SPROM data structure. The fallback is only used for PCI based
->  SSB devices, - * where no valid SPROM can be found in the shadow
->  registers.
-> - *
-> - * This function is useful for weird architectures that have a half-assed
->  SSB device - * hardwired to their PCI bus.
-> - *
-> - * Note that it does only work with PCI attached SSB devices. PCMCIA
->  devices currently - * don't use this fallback.
-> - * Architectures must provide the SPROM for native SSB devices anyway,
-> - * so the fallback also isn't used for native devices.
-> - *
-> - * This function is available for architecture code, only. So it is not
->  exported. - */
-> -int ssb_arch_set_fallback_sprom(const struct ssb_sprom *sprom)
-> -{
-> -	if (fallback_sprom)
-> -		return -EEXIST;
-> -	fallback_sprom = sprom;
-> +void ssb_register_sprom_override(struct ssb_sprom_override *ovr)
-> +{
-> +	spin_lock(&override_list_lock);
-> +	list_add_tail(&ovr->list, &override_list);
-> +	spin_unlock(&override_list_lock);
-> +}
-> +EXPORT_SYMBOL(ssb_register_sprom_override);
-> 
-> -	return 0;
-> +void ssb_unregister_sprom_override(struct ssb_sprom_override *ovr)
-> +{
-> +	spin_lock(&override_list_lock);
-> +	list_del(&ovr->list);
-> +	spin_unlock(&override_list_lock);
->  }
-> +EXPORT_SYMBOL(ssb_unregister_sprom_override);
-> 
-> -const struct ssb_sprom *ssb_get_fallback_sprom(void)
-> +int ssb_find_sprom_override(struct ssb_bus *bus, struct ssb_sprom *buf)
->  {
-> -	return fallback_sprom;
-> +	struct ssb_sprom_override *ovr;
-> +	int err = -ENODEV;
-> +
-> +	spin_lock(&override_list_lock);
-> +	list_for_each_entry(ovr, &override_list, list) {
-> +		err = ovr->probe(bus, buf);
-> +		if (!err)
-> +			break;
-> +	}
-> +	spin_unlock(&override_list_lock);
-> +
-> +	return err;
->  }
-> Index: wireless-testing/drivers/ssb/ssb_private.h
-> ===================================================================
-> --- wireless-testing.orig/drivers/ssb/ssb_private.h	2009-11-19
->  18:34:42.000000000 +0100 +++
->  wireless-testing/drivers/ssb/ssb_private.h	2009-11-19 18:37:27.000000000
->  +0100 @@ -171,7 +171,7 @@ ssize_t ssb_attr_sprom_store(struct ssb_
->  			     const char *buf, size_t count,
->  			     int (*sprom_check_crc)(const u16 *sprom, size_t size),
->  			     int (*sprom_write)(struct ssb_bus *bus, const u16 *sprom));
-> -extern const struct ssb_sprom *ssb_get_fallback_sprom(void);
-> +extern int ssb_find_sprom_override(struct ssb_bus *bus, struct ssb_sprom
->  *buf);
-> 
-> 
->  /* core.c */
-> Index: wireless-testing/include/linux/ssb/ssb.h
-> ===================================================================
-> --- wireless-testing.orig/include/linux/ssb/ssb.h	2009-11-19
->  18:34:42.000000000 +0100 +++
->  wireless-testing/include/linux/ssb/ssb.h	2009-11-19 18:37:27.000000000
->  +0100 @@ -394,9 +394,20 @@ extern int ssb_bus_sdiobus_register(stru
-> 
->  extern void ssb_bus_unregister(struct ssb_bus *bus);
-> 
-> -/* Set a fallback SPROM.
-> - * See kdoc at the function definition for complete documentation. */
-> -extern int ssb_arch_set_fallback_sprom(const struct ssb_sprom *sprom);
-> +/** struct ssb_sprom_override - SPROM override handler
-> + * @probe: Callback function used to probe for a SPROM override.
-> + *	Puts the override image into "buf" and returns 0.
-> + *	If there's no need to override the image, nonzero is returned.
-> + *	This callback runs in atomic context.
-> + * @list: Used internally in ssb. Do not use in the device driver.
-> + */
-> +struct ssb_sprom_override {
-> +	int (*probe)(struct ssb_bus *bus, struct ssb_sprom *buf);
-> +	struct list_head list;
-> +};
-> +
-> +extern void ssb_register_sprom_override(struct ssb_sprom_override *ovr);
-> +extern void ssb_unregister_sprom_override(struct ssb_sprom_override *ovr);
-> 
->  /* Suspend a SSB bus.
->   * Call this from the parent bus suspend routine. */
-> Index: wireless-testing/drivers/ssb/b43_pci_bridge.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/ssb/b43_pci_bridge.c	2009-11-19
->  18:34:42.000000000 +0100 +++
->  wireless-testing/drivers/ssb/b43_pci_bridge.c	2009-11-20
->  12:04:09.000000000 +0100 @@ -5,13 +5,15 @@
->   * because of its small size we include it in the SSB core
->   * instead of creating a standalone module.
->   *
-> - * Copyright 2007  Michael Buesch <mb@bu3sch.de>
-> + * Copyright 2007-2009  Michael Buesch <mb@bu3sch.de>
->   *
->   * Licensed under the GNU/GPL. See COPYING for details.
->   */
-> 
->  #include <linux/pci.h>
->  #include <linux/ssb/ssb.h>
-> +#include <linux/etherdevice.h>
-> +#include <linux/jhash.h>
-> 
->  #include "ssb_private.h"
-> 
-> @@ -36,6 +38,76 @@ static const struct pci_device_id b43_pc
->  };
->  MODULE_DEVICE_TABLE(pci, b43_pci_bridge_tbl);
-> 
-> +
-> +static void pcidev_deduce_mac_address(struct pci_dev *pdev,
-> +				      struct ssb_sprom *sprom,
-> +				      const char *oui)
-> +{
-> +	u32 hash = 0x63E72B6D;
-> +
-> +	hash = jhash(&pdev->device, sizeof(pdev->device), hash);
-> +	hash = jhash(&pdev->subsystem_device, sizeof(pdev->subsystem_device),
->  hash); +	hash = jhash(&pdev->devfn, sizeof(pdev->devfn), hash);
-> +	//TODO: Need machine specific seed
-> +
-> +	sprom->il0mac[3] = hash;
-> +	sprom->il0mac[4] = hash >> 8;
-> +	sprom->il0mac[5] = hash >> 16;
-> +	memcpy(sprom->il0mac, oui, 3);
-> +	memcpy(sprom->et0mac, sprom->il0mac, ETH_ALEN);
-> +	memcpy(sprom->et1mac, sprom->il0mac, ETH_ALEN);
-> +}
-
-Why not call once random_ether_addr instead of using some kind of hash? Is it 
-because you
-want the same MAC from a reboot to another?
-
-
-> +
-> +#define IS_PDEV(pdev, _vendor, _device, _subvendor, _subdevice)		( \
-> +	(pdev->vendor == PCI_VENDOR_ID_##_vendor) &&			\
-> +	(pdev->device == _device) &&					\
-> +	(pdev->subsystem_vendor == PCI_VENDOR_ID_##_subvendor) &&	\
-> +	(pdev->subsystem_device == _subdevice)				)
-> +
-> +static int b43_sprom_override_probe(struct ssb_bus *bus,
-> +				    struct ssb_sprom *sprom)
-> +{
-> +	struct pci_dev *pdev;
-> +
-> +	if (bus->bustype != SSB_BUSTYPE_PCI)
-> +		return -ENODEV;
-> +	pdev = bus->host_pci;
-> +
-> +	if (IS_PDEV(pdev, BROADCOM, 0x4315, FOXCONN, 0xE01B)) {
-> +		static const struct ssb_sprom image = {
-> +			.revision		= 0x02,
-> +			.board_rev		= 0x17,
-> +			.country_code		= 0x0,
-> +			.ant_available_bg 	= 0x3,
-> +			.pa0b0			= 0x15ae,
-> +			.pa0b1			= 0xfa85,
-> +			.pa0b2			= 0xfe8d,
-> +			.pa1b0			= 0xffff,
-> +			.pa1b1			= 0xffff,
-> +			.pa1b2			= 0xffff,
-> +			.gpio0			= 0xff,
-> +			.gpio1			= 0xff,
-> +			.gpio2			= 0xff,
-> +			.gpio3			= 0xff,
-> +			.maxpwr_bg		= 0x004c,
-> +			.itssi_bg		= 0x00,
-> +			.boardflags_lo		= 0x2848,
-> +			.boardflags_hi		= 0x0000,
-> +		};//FIXME This image is not the right one.
-
-Ok, so for BCM63xx I would no longer have to declare my SPROM, fine.
-
-> +
-> +		memcpy(sprom, &image, sizeof(*sprom));
-> +		pcidev_deduce_mac_address(pdev, sprom, "\x00\x15\x58");
-> +
-> +		return 0;
-> +	}
-> +
-> +	return -ENODEV;
-
-What about being able to override the MAC address directly in the case of 
-BCM63XX for instance? If I copy the MAC address from board_get_mac_addres, 
-pcidev_deduce_mac_address would overwrite it anyway right?
-
-> +}
-> +
-> +static struct ssb_sprom_override b43_sprom_override = {
-> +	.probe		= b43_sprom_override_probe,
-> +};
-> +
->  static struct pci_driver b43_pci_bridge_driver = {
->  	.name = "b43-pci-bridge",
->  	.id_table = b43_pci_bridge_tbl,
-> @@ -44,10 +116,20 @@ static struct pci_driver b43_pci_bridge_
-> 
->  int __init b43_pci_ssb_bridge_init(void)
->  {
-> -	return ssb_pcihost_register(&b43_pci_bridge_driver);
-> +	int err;
-> +
-> +	ssb_register_sprom_override(&b43_sprom_override);
-> +	err = ssb_pcihost_register(&b43_pci_bridge_driver);
-> +	if (err) {
-> +		ssb_unregister_sprom_override(&b43_sprom_override);
-> +		return err;
-> +	}
-> +
-> +	return 0;
->  }
-> 
->  void __exit b43_pci_ssb_bridge_exit(void)
->  {
->  	ssb_pcihost_unregister(&b43_pci_bridge_driver);
-> +	ssb_unregister_sprom_override(&b43_sprom_override);
->  }
-> 
-
+diff --git a/compat/patches/01-netdev.patch b/compat/patches/01-netdev.patch
+index 8286bb8..b66e9b0 100644
+--- a/compat/patches/01-netdev.patch
++++ b/compat/patches/01-netdev.patch
+@@ -72,7 +72,7 @@ without creating a headache on maintenance of the pathes.
+  
+ --- a/drivers/net/wireless/rndis_wlan.c	2009-09-02 14:08:52.418110490 -0700
+ +++ b/drivers/net/wireless/rndis_wlan.c	2009-09-02 14:08:52.930092180 -0700
+-@@ -2669,6 +2669,7 @@
++@@ -2670,6 +2670,7 @@
+  	return 0;
+  }
+  
+@@ -80,7 +80,7 @@ without creating a headache on maintenance of the pathes.
+  /* same as rndis_netdev_ops but with local multicast handler */
+  static const struct net_device_ops rndis_wlan_netdev_ops = {
+  	.ndo_open		= usbnet_open,
+-@@ -2679,6 +2680,7 @@
++@@ -2680,6 +2681,7 @@
+  	.ndo_validate_addr	= eth_validate_addr,
+  	.ndo_set_multicast_list	= rndis_wlan_set_multicast_list,
+  };
+@@ -88,7 +88,7 @@ without creating a headache on maintenance of the pathes.
+  
+  static int rndis_wlan_bind(struct usbnet *usbdev, struct usb_interface *intf)
+  {
+-@@ -2726,7 +2728,11 @@
++@@ -2727,7 +2729,11 @@
+  	 * rndis_host wants to avoid all OID as much as possible
+  	 * so do promisc/multicast handling in rndis_wlan.
+  	 */
+@@ -284,7 +284,7 @@ without creating a headache on maintenance of the pathes.
+  }
+  EXPORT_SYMBOL(wireless_send_event);
+  
+-@@ -901,8 +930,13 @@
++@@ -902,8 +931,13 @@
+  			return private(dev, iwr, cmd, info, handler);
+  	}
+  	/* Old driver API : call driver ioctl handler */
+@@ -300,7 +300,7 @@ without creating a headache on maintenance of the pathes.
+  
+ --- a/drivers/net/wireless/ipw2x00/ipw2100.c	2009-09-02 14:12:00.958117808 -0700
+ +++ b/drivers/net/wireless/ipw2x00/ipw2100.c	2009-09-02 14:12:01.382115761 -0700
+-@@ -6008,6 +6008,7 @@
++@@ -6091,6 +6091,7 @@
+  
+  static void ipw2100_irq_tasklet(struct ipw2100_priv *priv);
+  
+@@ -308,7 +308,7 @@ without creating a headache on maintenance of the pathes.
+  static const struct net_device_ops ipw2100_netdev_ops = {
+  	.ndo_open		= ipw2100_open,
+  	.ndo_stop		= ipw2100_close,
+-@@ -6018,6 +6019,7 @@
++@@ -6101,6 +6102,7 @@
+  	.ndo_set_mac_address	= ipw2100_set_address,
+  	.ndo_validate_addr	= eth_validate_addr,
+  };
+@@ -316,7 +316,7 @@ without creating a headache on maintenance of the pathes.
+  
+  /* Look into using netdev destructor to shutdown ieee80211? */
+  
+-@@ -6043,7 +6045,16 @@
++@@ -6126,7 +6128,16 @@
+  	priv->ieee->perfect_rssi = -20;
+  	priv->ieee->worst_rssi = -85;
+  
+@@ -335,7 +335,7 @@ without creating a headache on maintenance of the pathes.
+  	priv->wireless_data.libipw = priv->ieee;
+ --- a/drivers/net/wireless/ipw2x00/ipw2200.c	2009-11-13 11:37:43.000000000 -0800
+ +++ b/drivers/net/wireless/ipw2x00/ipw2200.c	2009-11-13 11:37:43.000000000 -0800
+-@@ -11546,6 +11546,7 @@
++@@ -11635,6 +11635,7 @@
+  	return NETDEV_TX_OK;
+  }
+  
+@@ -343,7 +343,7 @@ without creating a headache on maintenance of the pathes.
+  static const struct net_device_ops ipw_prom_netdev_ops = {
+  	.ndo_open 		= ipw_prom_open,
+  	.ndo_stop		= ipw_prom_stop,
+-@@ -11554,6 +11555,7 @@
++@@ -11643,6 +11644,7 @@
+  	.ndo_set_mac_address 	= eth_mac_addr,
+  	.ndo_validate_addr	= eth_validate_addr,
+  };
+@@ -351,7 +351,7 @@ without creating a headache on maintenance of the pathes.
+  
+  static int ipw_prom_alloc(struct ipw_priv *priv)
+  {
+-@@ -11574,7 +11576,13 @@
++@@ -11663,7 +11665,13 @@
+  	memcpy(priv->prom_net_dev->dev_addr, priv->mac_addr, ETH_ALEN);
+  
+  	priv->prom_net_dev->type = ARPHRD_IEEE80211_RADIOTAP;
+@@ -365,7 +365,7 @@ without creating a headache on maintenance of the pathes.
+  
+  	priv->prom_priv->ieee->iw_mode = IW_MODE_MONITOR;
+  	SET_NETDEV_DEV(priv->prom_net_dev, &priv->pci_dev->dev);
+-@@ -11602,6 +11610,7 @@
++@@ -11691,6 +11699,7 @@
+  
+  #endif
+  
+@@ -373,7 +373,7 @@ without creating a headache on maintenance of the pathes.
+  static const struct net_device_ops ipw_netdev_ops = {
+  	.ndo_init		= ipw_net_init,
+  	.ndo_open		= ipw_net_open,
+-@@ -11612,6 +11621,7 @@
++@@ -11701,6 +11710,7 @@
+  	.ndo_change_mtu		= libipw_change_mtu,
+  	.ndo_validate_addr	= eth_validate_addr,
+  };
+@@ -381,7 +381,7 @@ without creating a headache on maintenance of the pathes.
+  
+  static int __devinit ipw_pci_probe(struct pci_dev *pdev,
+  				   const struct pci_device_id *ent)
+-@@ -11713,7 +11723,15 @@
++@@ -11802,7 +11812,15 @@
+  	priv->ieee->perfect_rssi = -20;
+  	priv->ieee->worst_rssi = -85;
+  
+@@ -397,9 +397,22 @@ without creating a headache on maintenance of the pathes.
+  	priv->wireless_data.spy_data = &priv->ieee->spy_data;
+  	net_dev->wireless_data = &priv->wireless_data;
+  	net_dev->wireless_handlers = &ipw_wx_handler_def;
++--- a/drivers/net/wireless/ipw2x00/libipw_module.c
+++++ b/drivers/net/wireless/ipw2x00/libipw_module.c
++@@ -157,6 +157,10 @@
++ 		goto failed;
++ 	}
++ 	ieee = netdev_priv(dev);
+++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
+++	dev->hard_start_xmit = libipw_xmit;
+++	dev->change_mtu = libipw_change_mtu;
+++#endif
++ 
++ 	ieee->dev = dev;
++ 
+ --- a/drivers/net/wireless/libertas/main.c	2009-11-02 08:04:43.000000000 -0800
+ +++ b/drivers/net/wireless/libertas/main.c	2009-11-02 08:04:44.000000000 -0800
+-@@ -1109,6 +1109,7 @@
++@@ -911,6 +911,7 @@
+  	lbs_deb_leave(LBS_DEB_MAIN);
+  }
+  
+@@ -407,7 +420,7 @@ without creating a headache on maintenance of the pathes.
+  static const struct net_device_ops lbs_netdev_ops = {
+  	.ndo_open 		= lbs_dev_open,
+  	.ndo_stop		= lbs_eth_stop,
+-@@ -1119,6 +1120,7 @@
++@@ -921,6 +922,7 @@
+  	.ndo_change_mtu		= eth_change_mtu,
+  	.ndo_validate_addr	= eth_validate_addr,
+  };
+@@ -415,7 +428,7 @@ without creating a headache on maintenance of the pathes.
+  
+  /**
+   * @brief This function adds the card. it will probe the
+-@@ -1164,7 +1166,16 @@
++@@ -966,7 +968,16 @@
+  	wdev->netdev = dev;
+  	priv->dev = dev;
+  
+@@ -432,7 +445,7 @@ without creating a headache on maintenance of the pathes.
+  	dev->watchdog_timeo = 5 * HZ;
+  	dev->ethtool_ops = &lbs_ethtool_ops;
+  #ifdef	WIRELESS_EXT
+-@@ -1589,11 +1610,13 @@
++@@ -1262,11 +1273,13 @@
+  	lbs_deb_leave(LBS_DEB_MAIN);
+  }
+  
+@@ -446,7 +459,7 @@ without creating a headache on maintenance of the pathes.
+  
+  static int lbs_add_rtap(struct lbs_private *priv)
+  {
+-@@ -1614,7 +1637,13 @@
++@@ -1287,7 +1300,13 @@
+  
+  	memcpy(rtap_dev->dev_addr, priv->current_addr, ETH_ALEN);
+  	rtap_dev->type = ARPHRD_IEEE80211_RADIOTAP;
+@@ -460,17 +473,17 @@ without creating a headache on maintenance of the pathes.
+  	rtap_dev->ml_priv = priv;
+  	SET_NETDEV_DEV(rtap_dev, priv->dev->dev.parent);
+  
+---- a/drivers/net/wireless/libertas/mesh.c	2009-11-02 08:04:43.000000000 -0800
+-+++ b/drivers/net/wireless/libertas/mesh.c	2009-11-02 08:04:44.000000000 -0800
+-@@ -305,6 +316,7 @@
+- EXPORT_SYMBOL_GPL(lbs_stop_card);
+- 
++--- a/drivers/net/wireless/libertas/mesh.c
+++++ b/drivers/net/wireless/libertas/mesh.c
++@@ -318,6 +318,7 @@
++ 	return ret;
++ }
+  
+ +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
+  static const struct net_device_ops mesh_netdev_ops = {
+- 	.ndo_open		= lbs_dev_open,
++ 	.ndo_open		= lbs_mesh_dev_open,
+  	.ndo_stop 		= lbs_mesh_stop,
+-@@ -312,6 +324,7 @@
++@@ -325,6 +326,7 @@
+  	.ndo_set_mac_address	= lbs_set_mac_address,
+  	.ndo_set_multicast_list = lbs_set_multicast_list,
+  };
+@@ -478,14 +491,14 @@ without creating a headache on maintenance of the pathes.
+  
+  /**
+   * @brief This function adds mshX interface
+-@@ -335,7 +348,15 @@
++@@ -349,7 +351,15 @@
+  	mesh_dev->ml_priv = priv;
+  	priv->mesh_dev = mesh_dev;
+  
+ +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
+  	mesh_dev->netdev_ops = &mesh_netdev_ops;
+ +#else
+-+	mesh_dev->open = lbs_dev_open;
+++	mesh_dev->open = lbs_mesh_dev_open;
+ +	mesh_dev->hard_start_xmit = lbs_hard_start_xmit;
+ +	mesh_dev->stop = lbs_mesh_stop;
+ +	mesh_dev->set_mac_address = lbs_set_mac_address;
 -- 
---
-WBR, Florian
+1.6.3.3
+
