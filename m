@@ -1,32 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:46466 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754462AbZKMBtc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Nov 2009 20:49:32 -0500
-Received: by iwn8 with SMTP id 8so2294939iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Nov 2009 17:49:37 -0800 (PST)
+Received: from mail.klingt.org ([86.59.21.178]:37555 "EHLO klingt.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752477AbZK2R2Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Nov 2009 12:28:25 -0500
+Message-ID: <4B12AF38.4090609@klingt.org>
+Date: Sun, 29 Nov 2009 18:28:24 +0100
+From: Tim Blechmann <tim@klingt.org>
 MIME-Version: 1.0
-In-Reply-To: <4AFC67DF.4080608@canonical.com>
-References: <167ae39b0910071400n218d3d9ey7711b1011f290a73@mail.gmail.com>
-	<200911121717.36906.chunkeey@googlemail.com> <4AFC5A5E.1050405@canonical.com>
-	<200911122037.39145.chunkeey@googlemail.com> <4AFC67DF.4080608@canonical.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 12 Nov 2009 17:49:16 -0800
-Message-ID: <43e72e890911121749sf91ef1foe46a9d9d41421726@mail.gmail.com>
-Subject: Re: Prism54/p54pci
-To: tim.gardner@canonical.com
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	James Grossmann <cctsurf@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rt61pci bug
+References: <4AE43028.30703@klingt.org> <hcsfgm$bft$1@ger.gmane.org> 	<4B127E9E.1090008@klingt.org> <69e28c910911290859mc1da58ree7b2d3fa8dc371d@mail.gmail.com>
+In-Reply-To: <69e28c910911290859mc1da58ree7b2d3fa8dc371d@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig043904BB3525E705BB5D3F0C"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 12, 2009 at 11:54 AM, Tim Gardner <tim.gardner@canonical.com>
-> Anyway, I'm updating the Ubuntu LBM package to use
-> compat-wireless-2.6.32-rc6 which should be out by tomorrow.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig043904BB3525E705BB5D3F0C
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-rc7 was just released, and so was compat-wireless-2.6.32-rc7.
+> Could you please try a bisect between 2.6.31 and 2.6.32-rc5? That
+> should reveal the faulty commit.
 
-  Luis
+can you give me some hints, which source files, i should pay attention to=
+?
+
+thnx, tim
+
+--=20
+tim@klingt.org
+http://tim.klingt.org
+
+The first question I ask myself when something doesn't seem to be
+beautiful is why do I think it's not beautiful. And very shortly you
+discover that there is no reason.
+  John Cage.
+
+
+--------------enig043904BB3525E705BB5D3F0C
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEQEARECAAYFAksSrzgACgkQdL+4qsZfVsvU1ACNEfLfCuXAGIJXmZNI25wCzX7P
+AJ9cIAyw/vxZoCM9TFlRasUEYaUMWQ==
+=EYjB
+-----END PGP SIGNATURE-----
+
+--------------enig043904BB3525E705BB5D3F0C--
