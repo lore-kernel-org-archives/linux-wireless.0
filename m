@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:40871 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754108AbZKHQBB (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:36663 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753421AbZK3ISc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 11:01:01 -0500
-Date: Sun, 8 Nov 2009 18:00:56 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, mcgrof@gmail.com,
-	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
-Subject: Re: [PATCH 06/29] ath9k: use correct hw for tx aggregation TX
-	completion
-Message-ID: <20091108160056.GA9508@jm.kir.nu>
-References: <1257625146-17971-1-git-send-email-lrodriguez@atheros.com> <1257625146-17971-7-git-send-email-lrodriguez@atheros.com>
+	Mon, 30 Nov 2009 03:18:32 -0500
+Subject: [PATCH v2 06/11] wl1251: use __dev_alloc_skb() on RX
+To: linville@tuxdriver.com
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 30 Nov 2009 10:18:12 +0200
+Message-ID: <20091130081812.17360.61896.stgit@tikku>
+In-Reply-To: <20091130081706.17360.48084.stgit@tikku>
+References: <20091130081706.17360.48084.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1257625146-17971-7-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 07, 2009 at 03:18:43PM -0500, Luis R. Rodriguez wrote:
-> When ath9k virtual wiphys are used the sc->hw will not always represent
-> the active hw, instead we need to get it from the skb->cb private
-> driver area. This ensures the right hw is used to find a sta for
-> the TX'd skb.
+From: Kalle Valo <kalle.valo@nokia.com>
 
-> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-> @@ -267,7 +267,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
-> +	struct ieee80211_hw *hw;
->  	struct ieee80211_hdr *hdr;
-> +	struct ieee80211_tx_info *tx_info;
-> +	struct ath_tx_info_priv *tx_info_priv;
+RX is handled in a workqueue therefore allocating for GFP_ATOMIC
+is overkill and not required.
 
-> @@ -280,6 +283,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
-> +	tx_info = IEEE80211_SKB_CB(skb);
-> +	tx_info_priv = (struct ath_tx_info_priv *) tx_info->rate_driver_data[0];
-> +	hw = tx_info_priv->aphy->hw;
+Based on a patch for wl1271 by Luis R. Rodriguez.
 
-Umm.. This adds a set of new local variables, but no users for those
-are added here. Was this supposed to also change the following
-ieee80211_find_sta_by_hw() call to use the local hw variable instead of
-sc->hw?
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1251_rx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+diff --git a/drivers/net/wireless/wl12xx/wl1251_rx.c b/drivers/net/wireless/wl12xx/wl1251_rx.c
+index f84cc89..b567322 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_rx.c
++++ b/drivers/net/wireless/wl12xx/wl1251_rx.c
+@@ -126,7 +126,7 @@ static void wl1251_rx_body(struct wl1251 *wl,
+ 	if (wl->rx_current_buffer)
+ 		rx_packet_ring_addr += wl->data_path->rx_packet_ring_chunk_size;
+ 
+-	skb = dev_alloc_skb(length);
++	skb = __dev_alloc_skb(length, GFP_KERNEL);
+ 	if (!skb) {
+ 		wl1251_error("Couldn't allocate RX frame");
+ 		return;
+
