@@ -1,79 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:42529 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750939AbZLGQgn (ORCPT
+Received: from 2.mail-out.ovh.net ([91.121.26.226]:56182 "HELO
+	2.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753239AbZK3XqZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2009 11:36:43 -0500
-Received: by fxm5 with SMTP id 5so5160168fxm.28
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Dec 2009 08:36:48 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Jan Kiszka <jan.kiszka@web.de>
-Subject: Re: [RFT] ar9170: AP broadcast buffering
-Date: Mon, 7 Dec 2009 17:36:40 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200911290206.07784.chunkeey@googlemail.com> <4B1BF68D.8060907@web.de>
-In-Reply-To: <4B1BF68D.8060907@web.de>
+	Mon, 30 Nov 2009 18:46:25 -0500
+Message-ID: <4B14594E.2090307@free.fr>
+Date: Tue, 01 Dec 2009 00:46:22 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <200912071736.40929.chunkeey@googlemail.com>
+To: rt2x00 Users List <users@rt2x00.serialmonkey.com>
+CC: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [rt2x00-users] [PATCH v3 0/4] Further L2 padding fixes.
+References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1259615298-2305-1-git-send-email-gwingerde@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 06 December 2009 19:23:09 Jan Kiszka wrote:
-> Christian Lamparter wrote:
-> > This patch should fix "broadcast traffic before DTIM beacon",
-> > But there is a downside: the broadcast (e.g arp) frames
-> > might get delayed and won't make it in time.
-> > 
-> > let me know, if this patch does any good, or not...
+Gertjan van Wingerde a écrit :
+> The L2 padding fixes patch has grown a bit and now consists of 4 separate
+> patches to clean the L2 padding code up and to fix a number of bugs at the
+> same time.
 > 
-> Mmm, how is this supposed to work?
-The driver sets the PRETBTT interval and the HW will trigger
-the PRETBTT event. Which will tell the driver to update the beacon,
-which _in turn_ triggers the BCN_CFG event and the buffered
-BC frames are _released_ into the queues.
+> 	1. rt2x00: Further L2 padding fixes.
+> 	2. rt2x00: Remove SKBDESC_L2_PADDED flag.
+> 	3. rt2x00: Reorganize L2 padding inserting function.
+> 	4. rt2x00: Only remove L2 padding in received frames if there is payload.
+> 
+> ---
+> Gertjan.
 
-Now the problem is that under traffic the BC/MC frames might
-be delayed in the tx_pending queues and don't make it in time.
+Thanks Gertjan for the patches, I know that padding is a bit of
+nightware. I've testing your tree and here are the results:
 
-> I still haven't started hacking on this as well, but I read a bit
-> about DTIM.
-> One thing I think to have understood is that the DTIM interval is typically
-> larger than the beacon interval. There is even some interrupt on ar9170
-> indicating this event, it's just not enabled yet.
-Na, I _think_ that BIT is meant for the PS/station mode and
-is used to say to the fw/driver to stay alert for incoming
-broadcast/multicast data.
+1. On TX : It fails for control frames with hdrlen=10 since it will
+produce l2pad = 2 in your case, where it should be 0. In all other
+cases, it works!
 
-If this really is the case, then I'm afraid to say:
-the bit is probably for little use in this situation. 
-> Moreover, I do not yet understand how deferring multicast frames works
-> in this patch. How are they filtered out from normal frames and queued
-> until the beacon event? (But that misunderstanding might be due to the
-> fact that I haven't read the whole driver code yet.)
-ar9170 does not have a "Content After Beacon" queue like p54 or ath5k/ath9k.
-But luckily the mac80211 stack provides the necessary queuing mechanism.
-And all the driver needs to do: 
- - set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING
- - grab the buffered BC/MC frames and push them to the device.
+Solution : padding is only needed for data frames for rt28x devices, so
+I think it's better to something like rt2xqueue_padpos
+[http://git.popipo.fr/?p=rt2x00.git;a=commitdiff;h=95ddf076c13062d1026025d97ba511f880a1792d]
 
-Note:
+2. On RX : It fails for data frames with hdrlen=26 or 30. So it looks
+like it's not unpadding at all. I think your code is correct however,
+but it still depends on RXDONE_L2PAD which is not properly set
 
-That's the current situation. But maybe you'll be in for a big surprise.
-There is a special firmware & driver: "carl9170", which will add several
-useful features:
- * accurate tx status feedback
- * _CAB_ queuing in firmware
-  => this should be enough to finally enable NL80211_IFTYPE_AP / MESH.
+Solution : applies the 2 patches I just posted
+[http://git.popipo.fr/?p=rt2x00.git;a=commitdiff;h=8fee77832720708a09c50f9002edcc68dc5bd0a7]
+and
+[http://git.popipo.fr/?p=rt2x00.git;a=commitdiff;h=b8fce373e9de892113b32322a95ca5bc7da56389]
 
- * multirate retry support (minstrel)
-  => improve performance in suboptimal environments.
-
- * Real Hardware QoS support.
-   (But unfortunately with a catch)
-
-I hope it will be ready for Christmas ;-)
+or get rid of RXDONE_L2PAD all together + padpos function :-)
 
 Regards,
-	Chr
+Benoit
