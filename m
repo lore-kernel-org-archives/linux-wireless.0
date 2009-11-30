@@ -1,58 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:55929 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756103AbZKXAmb (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:36630 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753307AbZK3ISS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 19:42:31 -0500
-Date: Mon, 23 Nov 2009 18:42:36 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] b43legacy: Fix problem for PPC architecture noted in Red
- Hat Bugzilla #538523
-Message-ID: <4b0b2bfc.wTVOnoPYuzV3oG6G%Larry.Finger@lwfinger.net>
+	Mon, 30 Nov 2009 03:18:18 -0500
+Subject: [PATCH v2 01/11] wl1251: add tx queue status to debugfs
+To: linville@tuxdriver.com
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 30 Nov 2009 10:17:38 +0200
+Message-ID: <20091130081738.17360.1065.stgit@tikku>
+In-Reply-To: <20091130081706.17360.48084.stgit@tikku>
+References: <20091130081706.17360.48084.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For PPC architecture with PHY Revision < 3, a read of the register
-B43_MMIO_HWENABLED_LO will cause a CPU fault unless b43legacy_status()
-returns a value of 2 (B43legacy_STAT_STARTED); however, one finds that
-the driver is unable to associate after resuming from hibernation unless
-this routine returns 1. To satisfy both conditions, the routine is rewritten
-to return TRUE whenever b43legacy_status() returns a value < 2.
+From: Kalle Valo <kalle.valo@nokia.com>
 
-This patch fixes the second problem listed in the postings for Red Hat
-Bugzilla #538523.
+Sometimes when debugging the state is good info.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.org>
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
+ drivers/net/wireless/wl12xx/wl1251.h         |    1 +
+ drivers/net/wireless/wl12xx/wl1251_debugfs.c |   23 +++++++++++++++++++++++
+ 2 files changed, 24 insertions(+), 0 deletions(-)
 
-John,
+diff --git a/drivers/net/wireless/wl12xx/wl1251.h b/drivers/net/wireless/wl12xx/wl1251.h
+index 054533f..6301578 100644
+--- a/drivers/net/wireless/wl12xx/wl1251.h
++++ b/drivers/net/wireless/wl12xx/wl1251.h
+@@ -247,6 +247,7 @@ struct wl1251_debugfs {
+ 	struct dentry *rxpipe_tx_xfr_host_int_trig_rx_data;
+ 
+ 	struct dentry *tx_queue_len;
++	struct dentry *tx_queue_status;
+ 
+ 	struct dentry *retry_count;
+ 	struct dentry *excessive_retries;
+diff --git a/drivers/net/wireless/wl12xx/wl1251_debugfs.c b/drivers/net/wireless/wl12xx/wl1251_debugfs.c
+index a007230..0ccba57 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_debugfs.c
++++ b/drivers/net/wireless/wl12xx/wl1251_debugfs.c
+@@ -237,6 +237,27 @@ static const struct file_operations tx_queue_len_ops = {
+ 	.open = wl1251_open_file_generic,
+ };
+ 
++static ssize_t tx_queue_status_read(struct file *file, char __user *userbuf,
++				    size_t count, loff_t *ppos)
++{
++	struct wl1251 *wl = file->private_data;
++	char buf[3], status;
++	int len;
++
++	if (wl->tx_queue_stopped)
++		status = 's';
++	else
++		status = 'r';
++
++	len = scnprintf(buf, sizeof(buf), "%c\n", status);
++	return simple_read_from_buffer(userbuf, count, ppos, buf, len);
++}
++
++static const struct file_operations tx_queue_status_ops = {
++	.read = tx_queue_status_read,
++	.open = wl1251_open_file_generic,
++};
++
+ static void wl1251_debugfs_delete_files(struct wl1251 *wl)
+ {
+ 	DEBUGFS_FWSTATS_DEL(tx, internal_desc_overflow);
+@@ -331,6 +352,7 @@ static void wl1251_debugfs_delete_files(struct wl1251 *wl)
+ 	DEBUGFS_FWSTATS_DEL(rxpipe, tx_xfr_host_int_trig_rx_data);
+ 
+ 	DEBUGFS_DEL(tx_queue_len);
++	DEBUGFS_DEL(tx_queue_status);
+ 	DEBUGFS_DEL(retry_count);
+ 	DEBUGFS_DEL(excessive_retries);
+ }
+@@ -431,6 +453,7 @@ static int wl1251_debugfs_add_files(struct wl1251 *wl)
+ 	DEBUGFS_FWSTATS_ADD(rxpipe, tx_xfr_host_int_trig_rx_data);
+ 
+ 	DEBUGFS_ADD(tx_queue_len, wl->debugfs.rootdir);
++	DEBUGFS_ADD(tx_queue_status, wl->debugfs.rootdir);
+ 	DEBUGFS_ADD(retry_count, wl->debugfs.rootdir);
+ 	DEBUGFS_ADD(excessive_retries, wl->debugfs.rootdir);
+ 
 
-This is 2.6.32 material.
-
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/b43legacy/rfkill.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43legacy/rfkill.c
-+++ wireless-testing/drivers/net/wireless/b43legacy/rfkill.c
-@@ -34,6 +34,13 @@ bool b43legacy_is_hw_radio_enabled(struc
- 		      & B43legacy_MMIO_RADIO_HWENABLED_HI_MASK))
- 			return 1;
- 	} else {
-+		/* To prevent CPU fault on PPC, do not read a register
-+		 * unless the interface is started; however, on resume
-+		 * for hibernation, this routine is entered early. When
-+		 * that happens, unconditionally return TRUE.
-+		 */
-+		if (b43legacy_status(dev) < B43legacy_STAT_STARTED)
-+			return 1;
- 		if (b43legacy_read16(dev, B43legacy_MMIO_RADIO_HWENABLED_LO)
- 		    & B43legacy_MMIO_RADIO_HWENABLED_LO_MASK)
- 			return 1;
