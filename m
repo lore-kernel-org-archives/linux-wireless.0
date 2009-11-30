@@ -1,54 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:46171 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752394AbZKJSci (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:36595 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753129AbZK3IR5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 13:32:38 -0500
-Received: by ewy3 with SMTP id 3so328084ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Nov 2009 10:32:43 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH] rt2x00: Fix typo in rf programming of rt2800lib.
-Date: Tue, 10 Nov 2009 19:32:40 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-References: <1257803944-5344-1-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1257803944-5344-1-git-send-email-gwingerde@gmail.com>
+	Mon, 30 Nov 2009 03:17:57 -0500
+Subject: [PATCH v2 00/11] wl1251 WMM support and minor fixes
+To: linville@tuxdriver.com
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 30 Nov 2009 10:17:31 +0200
+Message-ID: <20091130081706.17360.48084.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200911101932.40509.IvDoorn@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 09 November 2009, Gertjan van Wingerde wrote:
-> Fix a type in rt2800_config_channel_rt3x. The second write to RF register 2 should be to RF register 3.
-> This is confirmed by the legacy Ralink code.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Hello John,
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+here are few patches for wl1251. Now there is WMM support and also some
+minor fixes. The patchset applies on top of the wl1251 power save fixes I
+sent earlier today.
 
-> ---
-> 
-> Corrected the subject of the email to state that it is a single patch.
-> 
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 24b3af4..2c91c44 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -774,7 +774,7 @@ static void rt2800_config_channel_rt3x(struct rt2x00_dev *rt2x00dev,
->  	u8 rfcsr;
->  
->  	rt2800_rfcsr_write(rt2x00dev, 2, rf->rf1);
-> -	rt2800_rfcsr_write(rt2x00dev, 2, rf->rf3);
-> +	rt2800_rfcsr_write(rt2x00dev, 3, rf->rf3);
->  
->  	rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
->  	rt2x00_set_field8(&rfcsr, RFCSR6_R, rf->rf2);
+These patches are not urgent.
 
+v2: dropped patch "wl1251: fix payload alignment"
+
+---
+
+Kalle Valo (11):
+      wl1251: add tx queue status to debugfs
+      wl1251: print a debug message when tx_queue is full
+      wl1251: fix error handling in wl1251_op_config()
+      wl1251: reduce ELP wakeup timeout
+      wl1251: simplify ELP wakeup time calculation
+      wl1251: use __dev_alloc_skb() on RX
+      wl1251: implement acx_ac_cfg to configure hardware queues
+      wl1251: implement wl1251_acx_tid_cfg()
+      wl1251: implement WMM
+      wl1251: update tx_hdr when aliging skb in tx
+      wl1251: enable WMM
+
+
+ drivers/net/wireless/wl12xx/wl1251.h         |    1 
+ drivers/net/wireless/wl12xx/wl1251_acx.c     |   69 +++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1251_acx.h     |   87 ++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1251_debugfs.c |   23 +++++++
+ drivers/net/wireless/wl12xx/wl1251_init.c    |    5 +
+ drivers/net/wireless/wl12xx/wl1251_init.h    |   47 ++++++++++++++
+ drivers/net/wireless/wl12xx/wl1251_main.c    |   50 ++++++++++++++-
+ drivers/net/wireless/wl12xx/wl1251_ps.c      |    9 +--
+ drivers/net/wireless/wl12xx/wl1251_rx.c      |    2 -
+ drivers/net/wireless/wl12xx/wl1251_tx.c      |    9 +--
+ drivers/net/wireless/wl12xx/wl1251_tx.h      |   17 +++++
+ 11 files changed, 308 insertions(+), 11 deletions(-)
 
