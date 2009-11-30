@@ -1,232 +1,322 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:40949 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757623AbZKCDH5 (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:32309 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752042AbZK3NYr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 22:07:57 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+	Mon, 30 Nov 2009 08:24:47 -0500
+Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
+	by mgw-mx06.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id nAUDOPh0023042
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Nov 2009 15:24:51 +0200
+Received: from [127.0.1.1] (essapo-nirac25272.europe.nokia.com [10.162.252.72])
+	by mgw-sa02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id nAUDOTx6000433
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Nov 2009 15:24:29 +0200
+Subject: [PATCH v2 1/3] mac80211: add U-APSD client support
 To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFT 9/9] ath9k: do not pass the entire descriptor to ath_rx_prepare()
-Date: Mon,  2 Nov 2009 22:08:01 -0500
-Message-Id: <1257217681-27180-10-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1257217681-27180-1-git-send-email-lrodriguez@atheros.com>
-References: <1257217681-27180-1-git-send-email-lrodriguez@atheros.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Mon, 30 Nov 2009 15:24:26 +0200
+Message-ID: <20091130132426.28896.22241.stgit@tikku>
+In-Reply-To: <20091130132348.28896.95317.stgit@tikku>
+References: <20091130132348.28896.95317.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Its not needed, so just pass the hardware RX status.
-We'll be simplfying ath_rx_prepare() with code we can share
-between ath9k and ath9k_htc. This will help make that code
-easier to read and manage.
+From: Kalle Valo <kalle.valo@nokia.com>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Add Unscheduled Automatic Power-Save Delivery (U-APSD) client support. The
+idea is that the data frames from the client trigger AP to send the buffered
+frames with ACs which have U-APSD enabled. This decreases latency and makes it
+possible to save even more power.
+
+Driver needs to use IEEE80211_HW_UAPSD to enable the feature. The current
+implementation assumes that firmware takes care of the wakeup and
+hardware needing IEEE80211_HW_PS_NULLFUNC_STACK is not yet supported.
+
+Tested with wl1251 and Cisco Aironet 1200 AP.
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
- drivers/net/wireless/ath/ath9k/recv.c |   70 +++++++++++++++++----------------
- 1 files changed, 36 insertions(+), 34 deletions(-)
+ include/linux/ieee80211.h  |    5 +++++
+ include/net/mac80211.h     |    6 ++++++
+ net/mac80211/cfg.c         |    7 +++++++
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/mlme.c        |   40 +++++++++++++++++++++++++++++++++++-----
+ net/mac80211/scan.c        |   18 ++++++++++++++++++
+ net/mac80211/util.c        |    2 ++
+ 7 files changed, 75 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 10decfa..b36ecb2 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -106,7 +106,7 @@ static u64 ath_extend_tsf(struct ath_softc *sc, u32 rstamp)
-  * decryption key or real decryption error. This let us keep statistics there.
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index d9724a2..0153f3f 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -120,6 +120,11 @@
+ #define IEEE80211_QOS_CTL_TID_MASK	0x000F
+ #define IEEE80211_QOS_CTL_TAG1D_MASK	0x0007
+ 
++#define IEEE80211_WMM_IE_STA_AC_VO	(1<<0)
++#define IEEE80211_WMM_IE_STA_AC_VI	(1<<1)
++#define IEEE80211_WMM_IE_STA_AC_BK	(1<<2)
++#define IEEE80211_WMM_IE_STA_AC_BE	(1<<3)
++
+ struct ieee80211_hdr {
+ 	__le16 frame_control;
+ 	__le16 duration_id;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 1d75b96..2e484bc 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -113,6 +113,7 @@ struct ieee80211_tx_queue_params {
+ 	u16 cw_min;
+ 	u16 cw_max;
+ 	u8 aifs;
++	bool uapsd;
+ };
+ 
+ /**
+@@ -928,6 +929,10 @@ enum ieee80211_tkip_key_type {
+  * @IEEE80211_HW_BEACON_FILTER:
+  *	Hardware supports dropping of irrelevant beacon frames to
+  *	avoid waking up cpu.
++ *
++ * @IEEE80211_HW_UAPSD:
++ *	Hardware supports Unscheduled Automatic Power Save Delivery
++ *	(U-APSD).
   */
- static int ath_rx_prepare(struct ieee80211_hw *hw,
--			  struct sk_buff *skb, struct ath_desc *ds,
-+			  struct sk_buff *skb, struct ath_rx_status *rxstats,
- 			  struct ieee80211_rx_status *rx_status, bool *decrypt_error,
- 			  struct ath_softc *sc)
+ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
+@@ -945,6 +950,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_DYNAMIC_PS		= 1<<12,
+ 	IEEE80211_HW_MFP_CAPABLE			= 1<<13,
+ 	IEEE80211_HW_BEACON_FILTER			= 1<<14,
++	IEEE80211_HW_UAPSD				= 1<<15,
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 93ee1fd..fd17958 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1134,6 +1134,13 @@ static int ieee80211_set_txq_params(struct wiphy *wiphy,
+ 	p.cw_max = params->cwmax;
+ 	p.cw_min = params->cwmin;
+ 	p.txop = params->txop;
++
++	/*
++	 * Setting tx queue params disables u-apsd because it's only
++	 * called in master mode.
++	 */
++	p.uapsd = false;
++
+ 	if (drv_conf_tx(local, params->queue, &p)) {
+ 		printk(KERN_DEBUG "%s: failed to set TX queue "
+ 		       "parameters for queue %d\n",
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 785df97..94eaf21 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -81,6 +81,7 @@ struct ieee80211_bss {
+ 	u8 dtim_period;
+ 
+ 	bool wmm_used;
++	bool uapsd_supported;
+ 
+ 	unsigned long last_probe_resp;
+ 
+@@ -264,6 +265,7 @@ enum ieee80211_sta_flags {
+ 	IEEE80211_STA_DISABLE_11N	= BIT(4),
+ 	IEEE80211_STA_CSA_RECEIVED	= BIT(5),
+ 	IEEE80211_STA_MFP_ENABLED	= BIT(6),
++	IEEE80211_STA_UAPSD_ENABLED	= BIT(7),
+ };
+ 
+ /* flags for MLME request */
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6dc7b5a..e13a74d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -82,6 +82,8 @@ enum rx_mgmt_action {
+ 	RX_MGMT_CFG80211_ASSOC_TO,
+ };
+ 
++#define IEEE80211_DEFAULT_UAPSD_QUEUES IEEE80211_WMM_IE_STA_AC_VO
++
+ /* utils */
+ static inline void ASSERT_MGD_MTX(struct ieee80211_if_managed *ifmgd)
  {
-@@ -121,7 +121,7 @@ static int ath_rx_prepare(struct ieee80211_hw *hw,
- 	fc = hdr->frame_control;
- 	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
+@@ -235,13 +237,14 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_mgmt *mgmt;
+-	u8 *pos;
++	u8 *pos, qos_info;
+ 	const u8 *ies, *ht_ie;
+ 	int i, len, count, rates_len, supp_rates_len;
+ 	u16 capab;
+ 	int wmm = 0;
+ 	struct ieee80211_supported_band *sband;
+ 	u32 rates = 0;
++	bool uapsd;
  
--	if (ds->ds_rxstat.rs_more) {
-+	if (rxstats->rs_more) {
- 		/*
- 		 * Frame spans multiple descriptors; this cannot happen yet
- 		 * as we don't support jumbograms. If not in monitor mode,
-@@ -130,22 +130,22 @@ static int ath_rx_prepare(struct ieee80211_hw *hw,
- 		 */
- 		if (sc->sc_ah->opmode != NL80211_IFTYPE_MONITOR)
- 			goto rx_next;
--	} else if (ds->ds_rxstat.rs_status != 0) {
--		if (ds->ds_rxstat.rs_status & ATH9K_RXERR_CRC)
-+	} else if (rxstats->rs_status != 0) {
-+		if (rxstats->rs_status & ATH9K_RXERR_CRC)
- 			rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
--		if (ds->ds_rxstat.rs_status & ATH9K_RXERR_PHY)
-+		if (rxstats->rs_status & ATH9K_RXERR_PHY)
- 			goto rx_next;
+ 	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
+ 			    sizeof(*mgmt) + 200 + wk->ie_len +
+@@ -268,6 +271,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
+ 		capab |= WLAN_CAPABILITY_PRIVACY;
+ 	if (wk->bss->wmm_used)
+ 		wmm = 1;
++	uapsd = wk->bss->uapsd_supported;
  
--		if (ds->ds_rxstat.rs_status & ATH9K_RXERR_DECRYPT) {
-+		if (rxstats->rs_status & ATH9K_RXERR_DECRYPT) {
- 			*decrypt_error = true;
--		} else if (ds->ds_rxstat.rs_status & ATH9K_RXERR_MIC) {
-+		} else if (rxstats->rs_status & ATH9K_RXERR_MIC) {
- 			if (ieee80211_is_ctl(fc))
- 				/*
- 				 * Sometimes, we get invalid
- 				 * MIC failures on valid control frames.
- 				 * Remove these mic errors.
- 				 */
--				ds->ds_rxstat.rs_status &= ~ATH9K_RXERR_MIC;
-+				rxstats->rs_status &= ~ATH9K_RXERR_MIC;
- 			else
- 				rx_status->flag |= RX_FLAG_MMIC_ERROR;
- 		}
-@@ -155,26 +155,26 @@ static int ath_rx_prepare(struct ieee80211_hw *hw,
- 		 * we also ignore the CRC error.
- 		 */
- 		if (sc->sc_ah->opmode == NL80211_IFTYPE_MONITOR) {
--			if (ds->ds_rxstat.rs_status &
-+			if (rxstats->rs_status &
- 			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC |
- 			      ATH9K_RXERR_CRC))
- 				goto rx_next;
- 		} else {
--			if (ds->ds_rxstat.rs_status &
-+			if (rxstats->rs_status &
- 			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC)) {
- 				goto rx_next;
- 			}
- 		}
+ 	/* get all rates supported by the device and the AP as
+ 	 * some APs don't like getting a superset of their rates
+@@ -368,6 +372,15 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
  	}
  
--	ratecode = ds->ds_rxstat.rs_rate;
-+	ratecode = rxstats->rs_rate;
- 
- 	if (ratecode & 0x80) {
- 		/* HT rate */
- 		rx_status->flag |= RX_FLAG_HT;
--		if (ds->ds_rxstat.rs_flags & ATH9K_RX_2040)
-+		if (rxstats->rs_flags & ATH9K_RX_2040)
- 			rx_status->flag |= RX_FLAG_40MHZ;
--		if (ds->ds_rxstat.rs_flags & ATH9K_RX_GI)
-+		if (rxstats->rs_flags & ATH9K_RX_GI)
- 			rx_status->flag |= RX_FLAG_SHORT_GI;
- 		rx_status->rate_idx = ratecode & 0x7f;
- 	} else {
-@@ -203,31 +203,31 @@ static int ath_rx_prepare(struct ieee80211_hw *hw,
- 	sta = ieee80211_find_sta(hw, hdr->addr2);
- 	if (sta) {
- 		an = (struct ath_node *) sta->drv_priv;
--		if (ds->ds_rxstat.rs_rssi != ATH9K_RSSI_BAD &&
--		   !ds->ds_rxstat.rs_moreaggr)
--			ATH_RSSI_LPF(an->last_rssi, ds->ds_rxstat.rs_rssi);
-+		if (rxstats->rs_rssi != ATH9K_RSSI_BAD &&
-+		   !rxstats->rs_moreaggr)
-+			ATH_RSSI_LPF(an->last_rssi, rxstats->rs_rssi);
- 		last_rssi = an->last_rssi;
+ 	if (wmm && (ifmgd->flags & IEEE80211_STA_WMM_ENABLED)) {
++		if (uapsd && (local->hw.flags & IEEE80211_HW_UAPSD)) {
++			/* FIXME: configure queues from debugfs */
++			qos_info = IEEE80211_DEFAULT_UAPSD_QUEUES;
++			ifmgd->flags |= IEEE80211_STA_UAPSD_ENABLED;
++		} else {
++			qos_info = 0;
++			ifmgd->flags &= ~IEEE80211_STA_UAPSD_ENABLED;
++		}
++
+ 		pos = skb_put(skb, 9);
+ 		*pos++ = WLAN_EID_VENDOR_SPECIFIC;
+ 		*pos++ = 7; /* len */
+@@ -377,7 +390,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
+ 		*pos++ = 2; /* WME */
+ 		*pos++ = 0; /* WME info */
+ 		*pos++ = 1; /* WME ver */
+-		*pos++ = 0;
++		*pos++ = qos_info; /* QoS info */
  	}
- 	rcu_read_unlock();
  
- 	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
--		ds->ds_rxstat.rs_rssi = ATH_EP_RND(last_rssi,
--					ATH_RSSI_EP_MULTIPLIER);
--	if (ds->ds_rxstat.rs_rssi < 0)
--		ds->ds_rxstat.rs_rssi = 0;
--	else if (ds->ds_rxstat.rs_rssi > 127)
--		ds->ds_rxstat.rs_rssi = 127;
-+		rxstats->rs_rssi = ATH_EP_RND(last_rssi,
-+					      ATH_RSSI_EP_MULTIPLIER);
-+	if (rxstats->rs_rssi < 0)
-+		rxstats->rs_rssi = 0;
-+	else if (rxstats->rs_rssi > 127)
-+		rxstats->rs_rssi = 127;
+ 	/* wmm support is a must to HT */
+@@ -786,7 +799,7 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 	struct ieee80211_tx_queue_params params;
+ 	size_t left;
+ 	int count;
+-	u8 *pos;
++	u8 *pos, uapsd_queues = 0;
  
- 	/* Update Beacon RSSI, this is used by ANI. */
- 	if (ieee80211_is_beacon(fc))
--		sc->sc_ah->stats.avgbrssi = ds->ds_rxstat.rs_rssi;
-+		sc->sc_ah->stats.avgbrssi = rxstats->rs_rssi;
+ 	if (!(ifmgd->flags & IEEE80211_STA_WMM_ENABLED))
+ 		return;
+@@ -796,6 +809,11 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
  
--	rx_status->mactime = ath_extend_tsf(sc, ds->ds_rxstat.rs_tstamp);
-+	rx_status->mactime = ath_extend_tsf(sc, rxstats->rs_tstamp);
- 	rx_status->band = hw->conf.channel->band;
- 	rx_status->freq = hw->conf.channel->center_freq;
- 	rx_status->noise = sc->ani.noise_floor;
--	rx_status->signal = ATH_DEFAULT_NOISE_FLOOR + ds->ds_rxstat.rs_rssi;
--	rx_status->antenna = ds->ds_rxstat.rs_antenna;
-+	rx_status->signal = ATH_DEFAULT_NOISE_FLOOR + rxstats->rs_rssi;
-+	rx_status->antenna = rxstats->rs_antenna;
+ 	if (wmm_param_len < 8 || wmm_param[5] /* version */ != 1)
+ 		return;
++
++	if (ifmgd->flags & IEEE80211_STA_UAPSD_ENABLED)
++		/* FIXME: use debugfs */
++		uapsd_queues = IEEE80211_DEFAULT_UAPSD_QUEUES;
++
+ 	count = wmm_param[6] & 0x0f;
+ 	if (count == ifmgd->wmm_last_param_set)
+ 		return;
+@@ -810,6 +828,7 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 	for (; left >= 4; left -= 4, pos += 4) {
+ 		int aci = (pos[0] >> 5) & 0x03;
+ 		int acm = (pos[0] >> 4) & 0x01;
++		bool uapsd = false;
+ 		int queue;
  
- 	/*
- 	 * Theory for reporting quality:
-@@ -251,9 +251,9 @@ static int ath_rx_prepare(struct ieee80211_hw *hw,
- 	 *
- 	 */
- 	if (conf_is_ht(&hw->conf))
--		rx_status->qual =  ds->ds_rxstat.rs_rssi * 100 / 45;
-+		rx_status->qual =  rxstats->rs_rssi * 100 / 45;
- 	else
--		rx_status->qual =  ds->ds_rxstat.rs_rssi * 100 / 35;
-+		rx_status->qual =  rxstats->rs_rssi * 100 / 35;
- 
- 	/* rssi can be more than 45 though, anything above that
- 	 * should be considered at 100% */
-@@ -658,6 +658,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 
- 	struct ath_buf *bf;
- 	struct ath_desc *ds;
-+	struct ath_rx_status *rxstats;
- 	struct sk_buff *skb = NULL, *requeue_skb;
- 	struct ieee80211_rx_status rx_status;
- 	struct ath_hw *ah = sc->sc_ah;
-@@ -749,6 +750,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 
- 		hdr = (struct ieee80211_hdr *) skb->data;
- 		hw = ath_get_virt_hw(sc, hdr);
-+		rxstats = &ds->ds_rxstat;
- 
- 		/*
- 		 * If we're asked to flush receive queue, directly
-@@ -757,14 +759,14 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 		if (flush)
- 			goto requeue;
- 
--		if (!ds->ds_rxstat.rs_datalen)
-+		if (!rxstats->rs_datalen)
- 			goto requeue;
- 
- 		/* The status portion of the descriptor could get corrupted. */
--		if (sc->rx.bufsize < ds->ds_rxstat.rs_datalen)
-+		if (sc->rx.bufsize < rxstats->rs_datalen)
- 			goto requeue;
- 
--		if (!ath_rx_prepare(hw, skb, ds,
-+		if (!ath_rx_prepare(hw, skb, rxstats,
- 				    &rx_status, &decrypt_error, sc))
- 			goto requeue;
- 
-@@ -784,7 +786,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 				 sc->rx.bufsize,
- 				 DMA_FROM_DEVICE);
- 
--		skb_put(skb, ds->ds_rxstat.rs_datalen);
-+		skb_put(skb, rxstats->rs_datalen);
- 
- 		/* see if any padding is done by the hw and remove it */
- 		hdrlen = ieee80211_get_hdrlen_from_skb(skb);
-@@ -804,7 +806,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 			skb_pull(skb, padsize);
+ 		switch (aci) {
+@@ -817,22 +836,30 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 			queue = 3;
+ 			if (acm)
+ 				local->wmm_acm |= BIT(1) | BIT(2); /* BK/- */
++			if (uapsd_queues & IEEE80211_WMM_IE_STA_AC_BK)
++				uapsd = true;
+ 			break;
+ 		case 2: /* AC_VI */
+ 			queue = 1;
+ 			if (acm)
+ 				local->wmm_acm |= BIT(4) | BIT(5); /* CL/VI */
++			if (uapsd_queues & IEEE80211_WMM_IE_STA_AC_VI)
++				uapsd = true;
+ 			break;
+ 		case 3: /* AC_VO */
+ 			queue = 0;
+ 			if (acm)
+ 				local->wmm_acm |= BIT(6) | BIT(7); /* VO/NC */
++			if (uapsd_queues & IEEE80211_WMM_IE_STA_AC_VO)
++				uapsd = true;
+ 			break;
+ 		case 0: /* AC_BE */
+ 		default:
+ 			queue = 2;
+ 			if (acm)
+ 				local->wmm_acm |= BIT(0) | BIT(3); /* BE/EE */
++			if (uapsd_queues & IEEE80211_WMM_IE_STA_AC_BE)
++				uapsd = true;
+ 			break;
  		}
  
--		keyix = ds->ds_rxstat.rs_keyix;
-+		keyix = rxstats->rs_keyix;
+@@ -840,11 +867,14 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 		params.cw_max = ecw2cw((pos[1] & 0xf0) >> 4);
+ 		params.cw_min = ecw2cw(pos[1] & 0x0f);
+ 		params.txop = get_unaligned_le16(pos + 2);
++		params.uapsd = uapsd;
++
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+ 		printk(KERN_DEBUG "%s: WMM queue=%d aci=%d acm=%d aifs=%d "
+-		       "cWmin=%d cWmax=%d txop=%d\n",
++		       "cWmin=%d cWmax=%d txop=%d uapsd=%d\n",
+ 		       wiphy_name(local->hw.wiphy), queue, aci, acm,
+-		       params.aifs, params.cw_min, params.cw_max, params.txop);
++		       params.aifs, params.cw_min, params.cw_max, params.txop,
++		       params.uapsd);
+ #endif
+ 		if (drv_conf_tx(local, queue, &params) && local->ops->conf_tx)
+ 			printk(KERN_DEBUG "%s: failed to set TX queue "
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 4cf387c..b11ae49 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -50,6 +50,23 @@ void ieee80211_rx_bss_put(struct ieee80211_local *local,
+ 	cfg80211_put_bss((struct cfg80211_bss *)bss);
+ }
  
- 		if (!(keyix == ATH9K_RXKEYIX_INVALID) && !decrypt_error) {
- 			rx_status.flag |= RX_FLAG_DECRYPTED;
-@@ -844,7 +846,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 		 */
- 		if (sc->rx.defant != ds->ds_rxstat.rs_antenna) {
- 			if (++sc->rx.rxotherant >= 3)
--				ath_setdefantenna(sc, ds->ds_rxstat.rs_antenna);
-+				ath_setdefantenna(sc, rxstats->rs_antenna);
- 		} else {
- 			sc->rx.rxotherant = 0;
++static bool is_uapsd_supported(struct ieee802_11_elems *elems)
++{
++	u8 qos_info;
++
++	if (elems->wmm_info && elems->wmm_info_len == 7
++	    && elems->wmm_info[5] == 1)
++		qos_info = elems->wmm_info[6];
++	else if (elems->wmm_param && elems->wmm_param_len == 24
++		 && elems->wmm_param[5] == 1)
++		qos_info = elems->wmm_param[6];
++	else
++		/* no valid wmm information or parameter element found */
++		return false;
++
++	return qos_info & 0x80;
++}
++
+ struct ieee80211_bss *
+ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 			  struct ieee80211_rx_status *rx_status,
+@@ -111,6 +128,7 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 	}
+ 
+ 	bss->wmm_used = elems->wmm_param || elems->wmm_info;
++	bss->uapsd_supported = is_uapsd_supported(elems);
+ 
+ 	if (!beacon)
+ 		bss->last_probe_resp = jiffies;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index d09f78b..7129b39 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -781,6 +781,8 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
+ 			break;
  		}
--- 
-1.6.5.2.143.g8cc62
+ 
++		qparam.uapsd = false;
++
+ 		drv_conf_tx(local, queue, &qparam);
+ 	}
+ }
 
