@@ -1,34 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:58408 "EHLO
-	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752758AbZKWVo4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 16:44:56 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: [PATCH v2 0/8] Assorted fixes and cleanups for rt2x00 and mac80211.
-Date: Mon, 23 Nov 2009 22:44:46 +0100
-Message-Id: <1259012694-14869-1-git-send-email-gwingerde@gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:49452 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751848AbZK3Cet (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Nov 2009 21:34:49 -0500
+Subject: Re: [RFC 1/2] wireless: add ieee80211_asmdu_to_8023s
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1259314217.12157.3.camel@debian>
+References: <1259215413-16753-1-git-send-email-yi.zhu@intel.com>
+	 <1259229943.32372.50.camel@johannes.local>
+	 <1259290376.13126.219.camel@debian>
+	 <1259313653.5428.5.camel@johannes.local>  <1259314217.12157.3.camel@debian>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 30 Nov 2009 10:34:54 +0800
+Message-ID: <1259548494.12157.19.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following patch series contains a list of fixes and cleanups for rt2x00.
-Also included is a fix for mac80211 that fixes the insufficient headroom
-bug reported by David Ellingsworth.
+On Fri, 2009-11-27 at 17:30 +0800, Zhu Yi wrote:
+> > No, davem and I optimised that away a long time ago via using
+> > netdev->needed_headroom and netdev->needed_tailroom. It even works
+> for bridges and their slave devices, iirc. 
+> 
+> I missed this. Will check it. If so, I'll add another parameter to
+> pass the extra hw tx headroom to ieee80211_asmdu_to_8023s. 
 
-v2:
-Handle review comments from Julian, Johannes and Ivo.
-Split up patch 5 of first version in 3 different parts.
+Now I see your changes to LL_RESERVED_SPACE*(). Thanks!
 
-	[PATCH v2 1/8] rt2x00: Only initialize HT on rt2800 devices that support it.
-	[PATCH v2 2/8] rt2x00: Remove unused variable frame_control from rt2x00mac_tx.
-	[PATCH v2 3/8] rt2x00: Clean up use of rt2x00_intf_is_pci.
-	[PATCH v2 4/8] rt2x00: Fix typo (lengt --> length) in rt2x00queue.c
-	[PATCH v2 5/8] rt2x00: Whitespace cleanup.
-	[PATCH v2 6/8] rt2x00: Centralize setting of extra TX headroom requested by rt2x00.
-	[PATCH v2 7/8] mac80211: Add define for TX headroom reserved by mac80211 itself.
-	[PATCH v2 8/8] rt2x00: Properly request tx headroom for alignment operations.
+-yi
 
----
-Gertjan.
