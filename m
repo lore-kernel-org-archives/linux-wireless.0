@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:60578 "EHLO bar.sig21.net"
+Received: from mga01.intel.com ([192.55.52.88]:28610 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751557AbZKJR3e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 12:29:34 -0500
-Received: from p5099b351.dip0.t-ipconnect.de ([80.153.179.81] helo=zzz.local)
-	by bar.sig21.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_SHA1:16)
-	(Exim 4.63)
-	(envelope-from <js@sig21.net>)
-	id 1N7uX9-0006Wn-BC
-	for linux-wireless@vger.kernel.org; Tue, 10 Nov 2009 18:29:39 +0100
-Received: from js by zzz.local with local (Exim 4.69)
-	(envelope-from <js@sig21.net>)
-	id 1N7uX8-0000wT-Lt
-	for linux-wireless@vger.kernel.org; Tue, 10 Nov 2009 18:29:34 +0100
-Date: Tue, 10 Nov 2009 18:29:34 +0100
-From: Johannes Stezenbach <js@sig21.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] iw: use PKG_CONFIG variable consistently
-Message-ID: <20091110172934.GA3600@sig21.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1752761AbZK3BLQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Nov 2009 20:11:16 -0500
+Subject: Re: [PATCH v2 2/2] iwmc3200wifi: rx aggregation support
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1259314800.5428.13.camel@johannes.local>
+References: <1259291917-1399-1-git-send-email-yi.zhu@intel.com>
+	 <1259291917-1399-2-git-send-email-yi.zhu@intel.com>
+	 <1259314800.5428.13.camel@johannes.local>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 30 Nov 2009 09:11:21 +0800
+Message-ID: <1259543481.12157.18.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the correct pkg-config version consistently.
-Note: For quick&dirty cross compilation I used the following in .config:
+On Fri, 2009-11-27 at 17:40 +0800, Johannes Berg wrote:
+> You did the right thing in mac80211, but not here -- if it returns an
+> error it hasn't freed 'skb', only modified it.
 
-PKG_CONFIG = false
-NLLIBNAME = libnl-1
-LIBS += -L../libnl-1.1/lib -lnl
-CFLAGS += -I../libnl-1.1/include
-CC := arm-linux-gcc
+Indeed.
 
-Signed-off-by: Johannes Stezenbach <js@sig21.net>
----
+> I think that we should have ieee80211_amsdu_to_8023s() consume it in
+> all cases, just not fill the list (and return an error I guess) when
+> it can't be decoded properly. 
 
-diff --git a/Makefile b/Makefile
-index 68bef4d..1174130 100644
---- a/Makefile
-+++ b/Makefile
-@@ -38,8 +38,8 @@ ifeq ($(NLLIBNAME),)
- $(error Cannot find development files for any supported version of libnl)
- endif
- 
--LIBS += $(shell pkg-config --libs $(NLLIBNAME))
--CFLAGS += $(shell pkg-config --cflags $(NLLIBNAME))
-+LIBS += $(shell $(PKG_CONFIG) --libs $(NLLIBNAME))
-+CFLAGS += $(shell $(PKG_CONFIG) --cflags $(NLLIBNAME))
- 
- ifeq ($(V),1)
- Q=
+Yeah, since I didn't even use it correctly myself, I couldn't expect
+others do. Besides, the nontransparent reuse of skb for the last item in
+the list (skb == rx->skb) looks dirty. I'll use RX_QUEUED in v3.
+
+Thanks,
+-yi
+
