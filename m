@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:42263 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758220AbZKDWE0 convert rfc822-to-8bit (ORCPT
+Received: from saarni.dnainternet.net ([83.102.40.136]:42157 "EHLO
+	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752861AbZK3TuI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 17:04:26 -0500
-Received: by iwn10 with SMTP id 10so5316202iwn.4
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Nov 2009 14:04:31 -0800 (PST)
+	Mon, 30 Nov 2009 14:50:08 -0500
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 2/2] rndis_wlan: copy module parameters for bcm4320a devices
+	too
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 30 Nov 2009 21:50:13 +0200
+Message-ID: <20091130195013.13062.47241.stgit@fate.lan>
+In-Reply-To: <20091130195007.13062.25776.stgit@fate.lan>
+References: <20091130195007.13062.25776.stgit@fate.lan>
 MIME-Version: 1.0
-In-Reply-To: <20091104220034.GI10555@parisc-linux.org>
-References: <43e72e890911041204n55b54f8iace79938b40baa32@mail.gmail.com>
-	<40f31dec0911041212p16cfc78eia1ab1817e425e767@mail.gmail.com>
-	<43e72e890911041330j581e7bacp4e7b83a11c1de0e8@mail.gmail.com>
-	<43e72e890911041336n7ffae0d2u135321a588f3e613@mail.gmail.com>
-	<43e72e890911041352i334e170at71a519383d48a08@mail.gmail.com>
-	<43e72e890911041352n3a398b41h8927387c228661c5@mail.gmail.com>
-	<20091104220034.GI10555@parisc-linux.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 4 Nov 2009 14:04:11 -0800
-Message-ID: <43e72e890911041404q5f491bbbw123d8761037f9c63@mail.gmail.com>
-Subject: Re: pci_set_mwi() and ath5k
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	Kyle McMartin <kyle@mcmartin.ca>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 4, 2009 at 2:00 PM, Matthew Wilcox <matthew@wil.cx> wrote:
-> On Wed, Nov 04, 2009 at 01:52:30PM -0800, Luis R. Rodriguez wrote:
->> > Even better: I just confirmation from our systems team that our legacy
->> > devices and 11n PCI devices don't support MWR so I'll remove all that
->> > cruft crap.
->>
->> I meant MWI of course.
->
-> Yes, but they don't necessarily just use cacheline size for MWI ... some
-> devices use cacheline size for setting up data structures.  Might be
-> worth just checking explicitly that they don't use the cacheline size
-> register for anything.
+rndis_wlan didn't copy module parameters for bcm4320a to private structure.
 
-Oh right -- so the typical Atheros hack for this is to check the cache
-line size, and if its 0 set it to L1_CACHE_BYTES. Then eventually read
-from PCI_CACHE_LINE_SIZE pci config to align the skb data. So what I
-was doing now is removing all this cruft and replacing it with a
-generic allocator for atheros drivers that aligns simply to the
-L1_CACHE_BYTES. Sound kosher?
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
-  Luis
+ drivers/net/wireless/rndis_wlan.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 8dd9224..305c106 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -2642,6 +2642,11 @@ static void rndis_copy_module_params(struct usbnet *usbdev)
+ 
+ static int bcm4320a_early_init(struct usbnet *usbdev)
+ {
++	/* copy module parameters for bcm4320a so that iwconfig reports txpower
++	 * and workaround parameter is copied to private structure correctly.
++	 */
++	rndis_copy_module_params(usbdev);
++
+ 	/* bcm4320a doesn't handle configuration parameters well. Try
+ 	 * set any and you get partially zeroed mac and broken device.
+ 	 */
+
