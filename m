@@ -1,80 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.102.11.253]:41171 "EHLO
-	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752153AbZKZTO5 (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:31265 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753854AbZK3KjT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 14:14:57 -0500
-From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
-Reply-To: 8an@praha12.net
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] API for setting ACK timeout
-Date: Thu, 26 Nov 2009 20:14:57 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200911261826.08576.8an@praha12.net> <1259259493.24540.5.camel@johannes.local>
-In-Reply-To: <1259259493.24540.5.camel@johannes.local>
+	Mon, 30 Nov 2009 05:39:19 -0500
+Subject: [PATCH] mac80211: remove payload alignment warning
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: johannes@sipsolutions.net
+Date: Mon, 30 Nov 2009 12:39:08 +0200
+Message-ID: <20091130103908.30420.40019.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2178116.P9MDOUYjod";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200911262015.03106.8an@praha12.net>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2178116.P9MDOUYjod
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+From: Kalle Valo <kalle.valo@nokia.com>
 
-On 26.11.2009 19:18 Johannes Berg wrote:
-> I discussed this with Alina a while back (in private, she didn't want to
-> discuss in English) and we came to the conclusion that set_coverage()
-> should be done like 802.11-2007 17.3.8.6 specifies for 5ghz, but could
-> be done for 2.4ghz as well. Thoughts? It would also allow us to actually
-> advertise that to compatible clients.
+The payload alignment warning enabled by MAC80211_DEBUG_PACKET_ALIGNMENT is
+difficult. To fix it, a firmware change is needed but in most cases that's
+very difficult. So the benefit from the warning is low and most probably
+it just creates more confusion for people who just enable all warnings
+(like it did for me).
 
-If I understand the standard correctly, it means the slottime should be
-(9 + propagation_delay), which equals (9 + distance / 300). And that's=20
-basically the same as the formula from Madwifi's athctrl I wanted to use:
-int slottime =3D 9 + (distance / 300) + ((distance % 300) ? 1 : 0);
+Remove the unaligned IP payload warning and the kconfig option. But
+leave the unlialigned packet warning, it will be enabled with
+MAC80211_VERBOSE_DEBUG.
 
-The main difference is that the coverage classes have an upper limit under=
-=20
-28km, but I don't see the point in artifically limiting maximum link distan=
-ce=20
-(30km link could be done with big enough antennas).
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ net/mac80211/Kconfig |   12 ------------
+ net/mac80211/rx.c    |   27 +++++++--------------------
+ 2 files changed, 7 insertions(+), 32 deletions(-)
 
-And I would prefer if the userspace API operated with distance rather than=
-=20
-coverage classes, because it allows the user to set it correctly without=20
-reading a thousand page document. The coverage class could be then calculat=
-ed=20
-for use in beacons as you proposed. Of course, in this case we would be=20
-constrained by the maximum coverage class in the standard.
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index a10d508..a952b7f 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -96,18 +96,6 @@ menuconfig MAC80211_DEBUG_MENU
+ 	---help---
+ 	  This option collects various mac80211 debug settings.
+ 
+-config MAC80211_DEBUG_PACKET_ALIGNMENT
+-	bool "Enable packet alignment debugging"
+-	depends on MAC80211_DEBUG_MENU
+-	---help---
+-	  This option is recommended for driver authors and strongly
+-	  discouraged for everybody else, it will trigger a warning
+-	  when a driver hands mac80211 a buffer that is aligned in
+-	  a way that will cause problems with the IP stack on some
+-	  architectures.
+-
+-	  Say N unless you're writing a mac80211 based driver.
+-
+ config MAC80211_NOINLINE
+ 	bool "Do not inline TX/RX handlers"
+ 	depends on MAC80211_DEBUG_MENU
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 57b8a0a..18a0248 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -361,7 +361,9 @@ static void ieee80211_parse_qos(struct ieee80211_rx_data *rx)
+  * boundary. In the case of regular frames, this simply means aligning the
+  * payload to a four-byte boundary (because either the IP header is directly
+  * contained, or IV/RFC1042 headers that have a length divisible by four are
+- * in front of it).
++ * in front of it).  If the payload data is not properly aligned and the
++ * architecture doesn't support efficient unaligned operations, mac80211
++ * will align the data.
+  *
+  * With A-MSDU frames, however, the payload data address must yield two modulo
+  * four because there are 14-byte 802.3 headers within the A-MSDU frames that
+@@ -375,25 +377,10 @@ static void ieee80211_parse_qos(struct ieee80211_rx_data *rx)
+  */
+ static void ieee80211_verify_alignment(struct ieee80211_rx_data *rx)
+ {
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
+-	int hdrlen;
+-
+-#ifndef CONFIG_MAC80211_DEBUG_PACKET_ALIGNMENT
+-	return;
++#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
++	WARN_ONCE((unsigned long)rx->skb->data & 1,
++		  "unaligned packet at 0x%p\n", rx->skb->data);
+ #endif
+-
+-	if (WARN_ONCE((unsigned long)rx->skb->data & 1,
+-		      "unaligned packet at 0x%p\n", rx->skb->data))
+-		return;
+-
+-	if (!ieee80211_is_data_present(hdr->frame_control))
+-		return;
+-
+-	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+-	if (rx->flags & IEEE80211_RX_AMSDU)
+-		hdrlen += ETH_HLEN;
+-	WARN_ONCE(((unsigned long)(rx->skb->data + hdrlen)) & 3,
+-		  "unaligned IP payload at 0x%p\n", rx->skb->data + hdrlen);
+ }
+ 
+ 
+@@ -1512,7 +1499,7 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+ 	if (skb) {
+ 		int align __maybe_unused;
+ 
+-#if defined(CONFIG_MAC80211_DEBUG_PACKET_ALIGNMENT) || !defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
++#ifndef CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS
+ 		/*
+ 		 * 'align' will only take the values 0 or 2 here
+ 		 * since all frames are required to be aligned
 
-Lukas Turek
-
---nextPart2178116.P9MDOUYjod
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iQIcBAABAgAGBQJLDtO3AAoJEEBjvk/UOfYwRbIP/3vHQBJtEMgPvYNNNwK1iLEw
-lZ9iOp35pzzXJu74M7F/GnKZsZC36nJKaHsyjmMbrDK1cvU/GgUALrDEIH7pM9qz
-3m1Iq60VF//HwrNynzP3i6f6yZ9tWxWTVdXibw/EZugqYhp3JZ+i3dzZDolj0OkL
-E+JyvV350o/8jamknKTKFC9n93CCtp1mKHNtqO5lY1MSl5yjKdkcnwInyu39AeTc
-9M9KsWCf6IKhRJ4H3ozU13lGLX/YxcJMjCKKalQSzfxEtYhoAGhOePQnPeo2K/6L
-p1ZwpM3jXAKI18JkZ2e+GjVdZR08OxWQqk7ioxBITo7+FszviMVqtti+uZ9+vUtQ
-aLLG06O39bz+MiFdbE6/48VAJv6hB4aWOizrTkzgCF4+NogVOTWGwqEveacPUtR+
-3qSt0+MNrKwaqSTrCmYCeC/GL95umu+IZwgLUflIRIYbm9cryhz/2PqEbGPY0jzx
-m5avpGcMzvIbXbWFAHBnkA2gziDfu8OTi2Ay0r2NpEUA0vYGEWeEY3GYLoq7RHP9
-e2CGP1rwSt0xAS4TOX8WH1Ee7R99gWnnIFly3KhzEj9WnuDT4uK5tYO9kCKifB+B
-GAdA6NdyAtp3AHE2cO8A2xLC4JUMdOqr0DlAs2X6dAce6n2aA/9sdGg20P7luKsG
-ZCvuLo4LVPYOlp4PqkKY
-=D1Oa
------END PGP SIGNATURE-----
-
---nextPart2178116.P9MDOUYjod--
