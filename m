@@ -1,60 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:59995 "EHLO mgw1.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932389AbZKRSZ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Nov 2009 13:25:58 -0500
-Date: Wed, 18 Nov 2009 19:26:02 +0100 (CET)
-From: Julia Lawall <julia@diku.dk>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	arnd@arndb.de, joe@perches.com, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [PATCH 16/16] drivers/net/wireless/rtl818x: remove exceptional & on
- function name
-Message-ID: <Pine.LNX.4.64.0911181925440.20943@ask.diku.dk>
+Received: from smtp.nokia.com ([192.100.122.230]:59353 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753462AbZK3IUU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Nov 2009 03:20:20 -0500
+Subject: [PATCH v2 11/11] wl1251: enable WMM
+To: linville@tuxdriver.com
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 30 Nov 2009 10:18:47 +0200
+Message-ID: <20091130081847.17360.19479.stgit@tikku>
+In-Reply-To: <20091130081706.17360.48084.stgit@tikku>
+References: <20091130081706.17360.48084.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+From: Kalle Valo <kalle.valo@nokia.com>
 
-In this file, function names are otherwise used as pointers without &.
+Everything is ready now and we can enable WMM in mac80211.
 
-A simplified version of the semantic patch that makes this change is as
-follows: (http://coccinelle.lip6.fr/)
-
-// <smpl>
-@r@
-identifier f;
-@@
-
-f(...) { ... }
-
-@@
-identifier r.f;
-@@
-
-- &f
-+ f
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
- drivers/net/wireless/rtl818x/rtl8180_dev.c     |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/wl12xx/wl1251_main.c |    2 ++
+ drivers/net/wireless/wl12xx/wl1251_tx.h   |    3 ---
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180_dev.c b/drivers/net/wireless/rtl818x/rtl8180_dev.c
-index 16429c4..a1a3dd1 100644
---- a/drivers/net/wireless/rtl818x/rtl8180_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180_dev.c
-@@ -548,7 +548,7 @@ static int rtl8180_start(struct ieee80211_hw *dev)
- 	rtl818x_iowrite32(priv, &priv->map->TNPDA, priv->tx_ring[1].dma);
- 	rtl818x_iowrite32(priv, &priv->map->TLPDA, priv->tx_ring[0].dma);
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index 563c84f..63511ca 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -1388,6 +1388,8 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
+ 	wl->hw->wiphy->max_scan_ssids = 1;
+ 	wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wl1251_band_2ghz;
  
--	ret = request_irq(priv->pdev->irq, &rtl8180_interrupt,
-+	ret = request_irq(priv->pdev->irq, rtl8180_interrupt,
- 			  IRQF_SHARED, KBUILD_MODNAME, dev);
- 	if (ret) {
- 		printk(KERN_ERR "%s: failed to register IRQ handler\n",
++	wl->hw->queues = 4;
++
+ 	ret = wl1251_register_hw(wl);
+ 	if (ret)
+ 		goto out;
+diff --git a/drivers/net/wireless/wl12xx/wl1251_tx.h b/drivers/net/wireless/wl12xx/wl1251_tx.h
+index b7bead8..55856c6 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_tx.h
++++ b/drivers/net/wireless/wl12xx/wl1251_tx.h
+@@ -212,9 +212,6 @@ struct tx_result {
+ 
+ static inline int wl1251_tx_get_queue(int queue)
+ {
+-	/* FIXME: use best effort until WMM is enabled */
+-	return QOS_AC_BE;
+-
+ 	switch (queue) {
+ 	case 0:
+ 		return QOS_AC_VO;
+
