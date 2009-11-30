@@ -1,305 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:60149 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757819AbZKJTKG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Nov 2009 14:10:06 -0500
-Message-ID: <4AF9BA8D.6010201@openwrt.org>
-Date: Tue, 10 Nov 2009 20:10:05 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v2 2/2] mac80211: implement support for 4-address frames for
- AP and client mode
-References: <4AF9A886.9090902@openwrt.org> <4AF9A8E1.6010104@openwrt.org>
-In-Reply-To: <4AF9A8E1.6010104@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:43687 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751503AbZK3WfZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Nov 2009 17:35:25 -0500
+Received: by fxm5 with SMTP id 5so4309247fxm.28
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Nov 2009 14:35:31 -0800 (PST)
+Subject: Re: Panic in iwl3945 driver
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1259617333.4653.91.camel@rc-desk>
+References: <1259167780.4072.2.camel@maxim-laptop>
+	 <1259280022.3991.12.camel@maxim-laptop>
+	 <1259596551.4090.0.camel@maxim-laptop>  <1259617333.4653.91.camel@rc-desk>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 01 Dec 2009 00:35:26 +0200
+Message-ID: <1259620526.6559.34.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some situations it might be useful to run a network with an
-Access Point and multiple clients, but with each client bridged
-to a network behind it. For this to work, both the client and the
-AP need to transmit 4-address frames, containing both source and
-destination MAC addresses.
-With this patch, you can configure a client to communicate using
-only 4-address frames for data traffic.
-On the AP side you can enable 4-address frames for individual
-clients by isolating them in separate AP VLANs which are configured
-in 4-address mode.
-Such an AP VLAN will be limited to one client only, and this client
-will be used as the destination for all traffic on its interface,
-regardless of the destination MAC address in the packet headers.
-The advantage of this mode compared to regular WDS mode is that it's
-easier to configure and does not require a static list of peer MAC
-addresses on any side.
+On Mon, 2009-11-30 at 13:42 -0800, reinette chatre wrote: 
+> On Mon, 2009-11-30 at 07:55 -0800, Maxim Levitsky wrote:
+> > > This is some very unpleasant problem.
+> > > The thing is that this happens very rarely, and while you use X.
+> > > I had recently few such embarrassing kernel panics (I never had any
+> > > random and rare kernel panics) and I strongly suspect them to be of same
+> > > origin.
+> > >
+> > > This one is first I captured, due to some code that I wrote recently
+> > > that saves printk buffer in predefined location in system ram that isn't
+> > > cleared on reboot in my notebook.
+> > >
+> > > I had put some NULL checks in iwl3945_rx_reply_tx, none did trigger yet,
+> > > nor I had another kernel panic.
+> 
+> Did this problem happen with your NULL checks in place? Can you perhaps
+> help here with which line the problem occurred? Any idea how to trigger
+> this?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
-v2: 
-  - minor coding style cleanups
-  - better return code when trying to add a sta to a used 4-addr vlan
-  - check interface type before setting 4-addr mode and reset the mode
-    on interface type changes
+Second one is with the NULL checks.
+It is very rare, it seems to be related to playing music, and using
+wireless at same time, although both use MSI here.
 
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -208,6 +208,9 @@ struct ieee80211_if_wds {
- 
- struct ieee80211_if_vlan {
- 	struct list_head list;
-+
-+	/* used for all tx if the VLAN is configured to 4-addr mode */
-+	struct sta_info *sta;
- };
- 
- struct mesh_stats {
-@@ -457,6 +460,8 @@ struct ieee80211_sub_if_data {
- 	int force_unicast_rateidx; /* forced TX rateidx for unicast frames */
- 	int max_ratectrl_rateidx; /* max TX rateidx for rate control */
- 
-+	bool use_4addr; /* use 4-address frames */
-+
- 	union {
- 		struct ieee80211_if_ap ap;
- 		struct ieee80211_if_wds wds;
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -36,6 +36,24 @@ static bool nl80211_type_check(enum nl80
- 	}
- }
- 
-+static bool nl80211_params_check(enum nl80211_iftype type,
-+				 struct vif_params *params)
-+{
-+	if (!nl80211_type_check(type))
-+		return false;
-+
-+	if (params->use_4addr > 0) {
-+		switch(type) {
-+		case NL80211_IFTYPE_AP_VLAN:
-+		case NL80211_IFTYPE_STATION:
-+			break;
-+		default:
-+			return false;
-+		}
-+	}
-+	return true;
-+}
-+
- static int ieee80211_add_iface(struct wiphy *wiphy, char *name,
- 			       enum nl80211_iftype type, u32 *flags,
- 			       struct vif_params *params)
-@@ -45,7 +63,7 @@ static int ieee80211_add_iface(struct wi
- 	struct ieee80211_sub_if_data *sdata;
- 	int err;
- 
--	if (!nl80211_type_check(type))
-+	if (!nl80211_params_check(type, params))
- 		return -EINVAL;
- 
- 	err = ieee80211_if_add(local, name, &dev, type, params);
-@@ -75,7 +93,7 @@ static int ieee80211_change_iface(struct
- 	if (netif_running(dev))
- 		return -EBUSY;
- 
--	if (!nl80211_type_check(type))
-+	if (!nl80211_params_check(type, params))
- 		return -EINVAL;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-@@ -89,6 +107,9 @@ static int ieee80211_change_iface(struct
- 					    params->mesh_id_len,
- 					    params->mesh_id);
- 
-+	if (params->use_4addr >= 0)
-+		sdata->use_4addr = !!params->use_4addr;
-+
- 	if (sdata->vif.type != NL80211_IFTYPE_MONITOR || !flags)
- 		return 0;
- 
-@@ -806,6 +827,13 @@ static int ieee80211_change_station(stru
- 			return -EINVAL;
- 		}
- 
-+		if (vlansdata->use_4addr) {
-+			if (vlansdata->u.vlan.sta)
-+				return -EBUSY;
-+
-+			rcu_assign_pointer(vlansdata->u.vlan.sta, sta);
-+		}
-+
- 		sta->sdata = vlansdata;
- 		ieee80211_send_layer2_update(sta);
- 	}
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -489,6 +489,9 @@ static void __sta_info_unlink(struct sta
- 	local->num_sta--;
- 	local->sta_generation++;
- 
-+	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+		rcu_assign_pointer(sdata->u.vlan.sta, NULL);
-+
- 	if (local->ops->sta_notify) {
- 		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
- 			sdata = container_of(sdata->bss,
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1046,7 +1046,10 @@ ieee80211_tx_prepare(struct ieee80211_su
- 
- 	hdr = (struct ieee80211_hdr *) skb->data;
- 
--	tx->sta = sta_info_get(local, hdr->addr1);
-+	if ((sdata->vif.type == NL80211_IFTYPE_AP_VLAN) && sdata->use_4addr)
-+		tx->sta = rcu_dereference(sdata->u.vlan.sta);
-+	if (!tx->sta)
-+		tx->sta = sta_info_get(local, hdr->addr1);
- 
- 	if (tx->sta && ieee80211_is_data_qos(hdr->frame_control) &&
- 	    (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION)) {
-@@ -1608,7 +1611,7 @@ netdev_tx_t ieee80211_subif_start_xmit(s
- 	const u8 *encaps_data;
- 	int encaps_len, skip_header_bytes;
- 	int nh_pos, h_pos;
--	struct sta_info *sta;
-+	struct sta_info *sta = NULL;
- 	u32 sta_flags = 0;
- 
- 	if (unlikely(skb->len < ETH_HLEN)) {
-@@ -1625,8 +1628,25 @@ netdev_tx_t ieee80211_subif_start_xmit(s
- 	fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_DATA);
- 
- 	switch (sdata->vif.type) {
--	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_AP_VLAN:
-+		rcu_read_lock();
-+		if (sdata->use_4addr)
-+			sta = rcu_dereference(sdata->u.vlan.sta);
-+		if (sta) {
-+			fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
-+			/* RA TA DA SA */
-+			memcpy(hdr.addr1, sta->sta.addr, ETH_ALEN);
-+			memcpy(hdr.addr2, dev->dev_addr, ETH_ALEN);
-+			memcpy(hdr.addr3, skb->data, ETH_ALEN);
-+			memcpy(hdr.addr4, skb->data + ETH_ALEN, ETH_ALEN);
-+			hdrlen = 30;
-+			sta_flags = get_sta_flags(sta);
-+		}
-+		rcu_read_unlock();
-+		if (sta)
-+			break;
-+		/* fall through */
-+	case NL80211_IFTYPE_AP:
- 		fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS);
- 		/* DA BSSID SA */
- 		memcpy(hdr.addr1, skb->data, ETH_ALEN);
-@@ -1700,12 +1720,21 @@ netdev_tx_t ieee80211_subif_start_xmit(s
- 		break;
- #endif
- 	case NL80211_IFTYPE_STATION:
--		fc |= cpu_to_le16(IEEE80211_FCTL_TODS);
--		/* BSSID SA DA */
- 		memcpy(hdr.addr1, sdata->u.mgd.bssid, ETH_ALEN);
--		memcpy(hdr.addr2, skb->data + ETH_ALEN, ETH_ALEN);
--		memcpy(hdr.addr3, skb->data, ETH_ALEN);
--		hdrlen = 24;
-+		if (sdata->use_4addr && ethertype != ETH_P_PAE) {
-+			fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
-+			/* RA TA DA SA */
-+			memcpy(hdr.addr2, dev->dev_addr, ETH_ALEN);
-+			memcpy(hdr.addr3, skb->data, ETH_ALEN);
-+			memcpy(hdr.addr4, skb->data + ETH_ALEN, ETH_ALEN);
-+			hdrlen = 30;
-+		} else {
-+			fc |= cpu_to_le16(IEEE80211_FCTL_TODS);
-+			/* BSSID SA DA */
-+			memcpy(hdr.addr2, skb->data + ETH_ALEN, ETH_ALEN);
-+			memcpy(hdr.addr3, skb->data, ETH_ALEN);
-+			hdrlen = 24;
-+		}
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		/* DA SA BSSID */
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -772,6 +772,7 @@ int ieee80211_if_change_type(struct ieee
- 		ieee80211_mandatory_rates(sdata->local,
- 			sdata->local->hw.conf.channel->band);
- 	sdata->drop_unencrypted = 0;
-+	sdata->use_4addr = 0;
- 
- 	return 0;
- }
-@@ -853,6 +854,9 @@ int ieee80211_if_add(struct ieee80211_lo
- 					    params->mesh_id_len,
- 					    params->mesh_id);
- 
-+	if (params && params->use_4addr >= 0)
-+		sdata->use_4addr = !!params->use_4addr;
-+
- 	mutex_lock(&local->iflist_mtx);
- 	list_add_tail_rcu(&sdata->list, &local->interfaces);
- 	mutex_unlock(&local->iflist_mtx);
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1237,6 +1237,13 @@ __ieee80211_data_to_8023(struct ieee8021
- {
- 	struct net_device *dev = rx->dev;
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN && !sdata->use_4addr &&
-+	    ieee80211_has_a4(hdr->frame_control))
-+		return -1;
-+	if (sdata->use_4addr && is_multicast_ether_addr(hdr->addr1))
-+		return -1;
- 
- 	return ieee80211_data_to_8023(rx->skb, dev->dev_addr, sdata->vif.type);
- }
-@@ -1590,6 +1597,7 @@ ieee80211_rx_h_data(struct ieee80211_rx_
- {
- 	struct net_device *dev = rx->dev;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	__le16 fc = hdr->frame_control;
- 	int err;
- 
-@@ -1599,6 +1607,14 @@ ieee80211_rx_h_data(struct ieee80211_rx_
- 	if (unlikely(!ieee80211_is_data_present(hdr->frame_control)))
- 		return RX_DROP_MONITOR;
- 
-+	/*
-+	 * Allow the cooked monitor interface of an AP to see 4-addr frames so
-+	 * that a 4-addr station can be detected and moved into a separate VLAN
-+	 */
-+	if (ieee80211_has_a4(hdr->frame_control) &&
-+	    sdata->vif.type == NL80211_IFTYPE_AP)
-+		return RX_DROP_MONITOR;
-+
- 	err = __ieee80211_data_to_8023(rx);
- 	if (unlikely(err))
- 		return RX_DROP_UNUSABLE;
-@@ -2039,7 +2055,7 @@ static int prepare_for_handlers(struct i
- 
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_STATION:
--		if (!bssid)
-+		if (!bssid && !sdata->use_4addr)
- 			return 0;
- 		if (!multicast &&
- 		    compare_ether_addr(sdata->dev->dev_addr, hdr->addr1) != 0) {
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -320,7 +320,9 @@ int ieee80211_data_to_8023(struct sk_buf
- 		break;
- 	case cpu_to_le16(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS):
- 		if (unlikely(iftype != NL80211_IFTYPE_WDS &&
--			     iftype != NL80211_IFTYPE_MESH_POINT))
-+			     iftype != NL80211_IFTYPE_MESH_POINT &&
-+			     iftype != NL80211_IFTYPE_AP_VLAN &&
-+			     iftype != NL80211_IFTYPE_STATION))
- 			return -1;
- 		if (iftype == NL80211_IFTYPE_MESH_POINT) {
- 			struct ieee80211s_hdr *meshdr =
+
+Now did some disassembly, and this is the results:
+
+
+......
+0x0000000000016652 <iwl3945_rx_reply_tx+242>:	callq  0x16657 <iwl3945_rx_reply_tx+247>
+0x0000000000016657 <iwl3945_rx_reply_tx+247>:	nopw   0x0(%rax,%rax,1)
+0x0000000000016660 <iwl3945_rx_reply_tx+256>:	add    $0x48,%rsp
+0x0000000000016664 <iwl3945_rx_reply_tx+260>:	pop    %rbx
+0x0000000000016665 <iwl3945_rx_reply_tx+261>:	pop    %r12
+0x0000000000016667 <iwl3945_rx_reply_tx+263>:	pop    %r13
+0x0000000000016669 <iwl3945_rx_reply_tx+265>:	pop    %r14
+0x000000000001666b <iwl3945_rx_reply_tx+267>:	pop    %r15
+0x000000000001666d <iwl3945_rx_reply_tx+269>:	leaveq 
+0x000000000001666e <iwl3945_rx_reply_tx+270>:	retq   
+0x000000000001666f <iwl3945_rx_reply_tx+271>:	nop
+
+0x0000000000016670 <iwl3945_rx_reply_tx+272>:	cmp    %edx,%r14d
+0x0000000000016673 <iwl3945_rx_reply_tx+275>:	jl     0x16603 <iwl3945_rx_reply_tx+163>
+0x0000000000016675 <iwl3945_rx_reply_tx+277>:	mov    0x40(%rdi),%rax
+0x0000000000016679 <iwl3945_rx_reply_tx+281>:	movslq %edx,%rdx
+
+
+
+/home/maxim/software/kernel/linux-2.6/include/net/mac80211.h: 487
+	memset(&info->status.ampdu_ack_len, 0,
+	       sizeof(struct ieee80211_tx_info) -
+	       offsetof(struct ieee80211_tx_info, status.ampdu_ack_len));
+
+0x000000000001667c <iwl3945_rx_reply_tx+284>:	imul   $0x98,%rdx,%rdx
+0x0000000000016683 <iwl3945_rx_reply_tx+291>:	mov    (%rdx,%rax,1),%r8
+0x0000000000016687 <iwl3945_rx_reply_tx+295>:	mov    $0x0,%rdx
+0x000000000001668e <iwl3945_rx_reply_tx+302>:	lea    0x38(%r8),%rdi
+0x0000000000016692 <iwl3945_rx_reply_tx+306>:	lea    0x4f(%r8),%rax
+
+
+
+	rate_idx = iwl3945_hwrate_to_plcp_idx(tx_resp->rate);
+
+0x0000000000016696 <iwl3945_rx_reply_tx+310>:	movb   $0x0,0x9(%rdi)        <---------- RIP
+0x000000000001669a <iwl3945_rx_reply_tx+314>:	movb   $0x0,0xc(%rdi)
+0x000000000001669e <iwl3945_rx_reply_tx+318>:	movb   $0x0,0xf(%rdi)
+0x00000000000166a2 <iwl3945_rx_reply_tx+322>:	movb   $0x0,0x12(%rdi)
+0x00000000000166a6 <iwl3945_rx_reply_tx+326>:	movb   $0x0,0x15(%rdi)
+0x00000000000166aa <iwl3945_rx_reply_tx+330>:	movq   $0x0,0x4f(%r8)
+0x00000000000166b2 <iwl3945_rx_reply_tx+338>:	movq   $0x0,0x8(%rax)
+0x00000000000166ba <iwl3945_rx_reply_tx+346>:	movq   $0x0,0x10(%rax)
+0x00000000000166c2 <iwl3945_rx_reply_tx+354>:	movb   $0x0,0x18(%rax)
+0x00000000000166c6 <iwl3945_rx_reply_tx+358>:	xor    %eax,%eax
+0x00000000000166c8 <iwl3945_rx_reply_tx+360>:	movzbl 0x3(%rsi),%ecx
+0x00000000000166cc <iwl3945_rx_reply_tx+364>:	nopl   0x0(%rax)
+0x00000000000166d0 <iwl3945_rx_reply_tx+368>:	cmp    (%rdx),%cl
+0x00000000000166d2 <iwl3945_rx_reply_tx+370>:	je     0x166e4 <iwl3945_rx_reply_tx+388>
+0x00000000000166d4 <iwl3945_rx_reply_tx+372>:	inc    %eax
+
+
+Even though addr2line seems to think that faulty instruction is outside the inlined function,
+thus looks awfully similar to memset.
+
+
+So the reason seem that, info somehow is null.
+
+info = IEEE80211_SKB_CB(txq->txb[txq->q.read_ptr].skb[0]);
+ieee80211_tx_info_clear_status(info);
+
+
+I will add checks for this now.
+
+
+Best regards,
+	Maxim Levitsky
+
+
+
