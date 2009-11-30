@@ -1,46 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:58670 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932676AbZKDWUC (ORCPT
+Received: from forward12.mail.yandex.net ([95.108.130.94]:33103 "EHLO
+	forward12.mail.yandex.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752590AbZK3Rbi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Nov 2009 17:20:02 -0500
-Date: Wed, 4 Nov 2009 17:20:07 -0500
-From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Adam Wozniak <awozniak@irobot.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: compat-wireless and minstrel
-Message-ID: <20091104222007.GB2599@bombadil.infradead.org>
-References: <4AF0D54D.4090303@irobot.com> <4AF1F653.4000905@irobot.com> <43e72e890911041350i75108dc3g454ab8577d8abacd@mail.gmail.com> <200911042318.13528.chunkeey@googlemail.com>
+	Mon, 30 Nov 2009 12:31:38 -0500
+From: =?koi8-r?B?9MjByiDrydLJzMw=?= <tkhai@yandex.ru>
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Larry Finger <larry.finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH]rtl8187:fixed kernel panic on module unload
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200911042318.13528.chunkeey@googlemail.com>
+Message-Id: <63741259601663@webmail119.yandex.ru>
+Date: Mon, 30 Nov 2009 20:21:03 +0300
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 04, 2009 at 11:18:13PM +0100, Christian Lamparter wrote:
-> On Wednesday 04 November 2009 22:50:46 Luis R. Rodriguez wrote:
-> > On Wed, Nov 4, 2009 at 1:46 PM, Adam Wozniak <awozniak@irobot.com> wrote:
-> > >
-> > > $ ls -la /lib/firmware/ar9170*
-> > > -rw-r--r-- 1 root root 83968 2009-10-17 15:55 /lib/firmware/ar9170-1.fw
-> > > -rw-r--r-- 1 root root  3508 2009-10-17 15:55 /lib/firmware/ar9170-2.fw
-> > > -rw-r--r-- 1 root root 15960 2009-10-17 15:55 /lib/firmware/ar9170.fw
-> > >
-> > > It is unclear to me which are actually used.
-> > 
-> > By default the ar9170.fw is tried first, if that fails then the others
-> > are tried. The 2-stage firmware will not be tried if your device
-> > cannot handle it but right now only the AVM Fritz devices can't handle
-> > the 2-stage firmware.
-> > 
-> > Christian should we just remove 2-stage fw support?
-> 
-> I've moved the two-stage fw into the legacy section some time ago :)
-> Maybe a add printk?
+From: Tkhai Kirill <tkhai@yandex.ru>
 
-Oh sorry didn't notice, I meant complete removal of its support on the
-driver though :)
+rtl8187: fix kernel panic on module unload (BUG in rtl8187_leds_exit())
+	Signed-off-by: Tkhai Kirill <tkhai@yandex.ru>
+---
+The function rtl8187_leds_exit must not return until all LED's works
+in device workqueue have completed or cancelled. Otherwise, we can get
+the folowing:
+	wq = create_singlethread_workqueue("phyX");
 
-  Luis
+	INIT_DELAYED_WORK(&work, work_func);
+	queue_delayed_work(wq, &work, HZ/20);
+
+	destroy_workqueue(wq);
+
+=======>kernel panic
+On current vanila driver code (when running on SMP systems), panic happens
+almost every time. My patch for version 2.6.31 (and 2.6.31.6 too):
+
+--- a/drivers/net/wireless/rtl818x/rtl8187_leds.c.orig	2009-11-26 22:26:45.000000000 +0300
++++ b/drivers/net/wireless/rtl818x/rtl8187_leds.c	2009-11-28 18:22:26.659785533 +0300
+@@ -36,9 +36,6 @@ static void led_turn_on(struct work_stru
+ 	if (priv->mode == NL80211_IFTYPE_UNSPECIFIED)
+ 		return ;
+ 
+-	/* Skip if the LED is not registered. */
+-	if (!led->dev)
+-		return;
+ 	mutex_lock(&priv->conf_mutex);
+ 	switch (led->ledpin) {
+ 	case LED_PIN_GPIO0:
+@@ -74,9 +71,6 @@ static void led_turn_off(struct work_str
+ 	if (priv->mode == NL80211_IFTYPE_UNSPECIFIED)
+ 		return ;
+ 
+-	/* Skip if the LED is not registered. */
+-	if (!led->dev)
+-		return;
+ 	mutex_lock(&priv->conf_mutex);
+ 	switch (led->ledpin) {
+ 	case LED_PIN_GPIO0:
+@@ -208,12 +202,12 @@ void rtl8187_leds_exit(struct ieee80211_
+ {
+ 	struct rtl8187_priv *priv = dev->priv;
+ 
+-	/* turn the LED off before exiting */
+-	queue_delayed_work(dev->workqueue, &priv->led_off, 0);
+-	cancel_delayed_work_sync(&priv->led_off);
+-	cancel_delayed_work_sync(&priv->led_on);
+ 	rtl8187_unregister_led(&priv->led_rx);
+ 	rtl8187_unregister_led(&priv->led_tx);
++	cancel_delayed_work_sync(&priv->led_on);
++	/* turn the LED off before exiting */
++	queue_delayed_work(dev->workqueue, &priv->led_off, 0);
++	flush_workqueue(dev->workqueue);
+ }
+ #endif /* def CONFIG_RTL8187_LED */
+ 
