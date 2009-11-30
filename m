@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3538 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752783AbZKIDAI (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:45414 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752466AbZK3RcO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 22:00:08 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	ath9k-devel@lists.ath9k.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 1/3] ath5k: don't reset mcast filter when configuring the mode
-Date: Sun,  8 Nov 2009 21:59:00 -0500
-Message-Id: <1257735542-29658-1-git-send-email-me@bobcopeland.com>
+	Mon, 30 Nov 2009 12:32:14 -0500
+Date: Mon, 30 Nov 2009 18:32:20 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 06/11] mwl8k: add 2.4GHz channels 12, 13 and 14
+Message-ID: <20091130173220.GV20214@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should not zero out the multicast hash when configuring
-the operating mode, since a zero value means all multicast
-frames will get dropped.  Also, ath5k_mode_setup() gets
-called after any reset, so the hash already set up in
-configure_filter() is lost.
-
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
 ---
- drivers/net/wireless/ath/ath5k/base.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ drivers/net/wireless/mwl8k.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 07c1e52..cb3dc89 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1146,7 +1146,6 @@ ath5k_mode_setup(struct ath5k_softc *sc)
- 	/* configure operational mode */
- 	ath5k_hw_set_opmode(ah);
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index c1ce985..cecabd6 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -243,6 +243,9 @@ static const struct ieee80211_channel mwl8k_channels[] = {
+ 	{ .center_freq = 2452, .hw_value = 9, },
+ 	{ .center_freq = 2457, .hw_value = 10, },
+ 	{ .center_freq = 2462, .hw_value = 11, },
++	{ .center_freq = 2467, .hw_value = 12, },
++	{ .center_freq = 2472, .hw_value = 13, },
++	{ .center_freq = 2484, .hw_value = 14, },
+ };
  
--	ath5k_hw_set_mcast_filter(ah, 0, 0);
- 	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "RX filter 0x%x\n", rfilt);
- }
- 
+ static const struct ieee80211_rate mwl8k_rates[] = {
 -- 
-1.6.2.5
-
-
+1.5.6.4
