@@ -1,62 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47183 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753670AbZKJAFi (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:45410 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752556AbZK3Rbz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Nov 2009 19:05:38 -0500
-Subject: Re: [PATCH v2 00/20] o11s update to latest draft
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rui Paulo <rpaulo@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
-References: <1257810418-30075-1-git-send-email-rpaulo@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/pRBVaqaUWj6ac4a3lTJ"
-Date: Tue, 10 Nov 2009 01:05:11 +0100
-Message-ID: <1257811511.29454.201.camel@johannes.local>
+	Mon, 30 Nov 2009 12:31:55 -0500
+Date: Mon, 30 Nov 2009 18:32:00 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 04/11] mwl8k: inline qos field manipulation functions
+Message-ID: <20091130173200.GT20214@mail.wantstofly.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   51 ++++++++---------------------------------
+ 1 files changed, 10 insertions(+), 41 deletions(-)
 
---=-/pRBVaqaUWj6ac4a3lTJ
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2009-11-09 at 23:46 +0000, Rui Paulo wrote:
-> Hi again,
->=20
-> Here's take two of the mesh update patch. As I already said, the followin=
-g
-> patches update the mesh code to latest draft, 3.03. They also include som=
-e
-> minor cleanups and improved debugging.
-
-I can't judge this in terms of draft compliance since I don't have that
-draft, but the code looks fine to me -- had just those few comments that
-I sent out in reply to particular patches.
-
-johannes
-
---=-/pRBVaqaUWj6ac4a3lTJ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK+K40AAoJEODzc/N7+QmaLrUP/1E9lyFPFnCy2eAlXlIlWUdf
-SvgHT3ta63RDwda9m+2Svkwho71uXJGqD/xcZXcrV0AuNEJdH/9YOwPyJ1fV7ei1
-6Cyn+fiyuGaWJbv8hfE8eOrd8x6UQ7sDtgsS+Q7oqbONqIXh6kY/td8grbChzh8/
-BZt6QlMqg4C1wj3O61ZjK3fq/nWX1zewTlygwk4YiUXRH7pTEGsLRlUkcKgehiEQ
-0yBRAX+SCpThH1YDE7PpzO0efoJhpEMTVy61Q5VYfgLf2sadFrD3Kr4kS6Eq7/XQ
-TXoaWQz7jwZV6yvIk+mITe4qrlTrGNb5cFnmk9kM4Hy6s4WC8e8Fj2GoNbujXOIL
-ON7aFbp0itJBKVXlp4dHjMBFfGfHdAbIygeOv8jOdmizjfhVQL6NDuEJTvQ03u3p
-3D843tOJzmG0qtniYZjQ4kaXUeoJwRSzDvVo2zTs6WBkKsnYn6owME02CgcoiSDM
-4rV1wKzQJEFeWSev+2SFlkSkghdLJNaF/bkJddtEaRXBtvVjycwNAD7FQmMt2Gbp
-CbpDJCM5NxdUlXxsw9Uw6xTxcJvWpjRoeBSVmP2Geaj2IoXBcoz055OE3ACxNVq/
-skSWMslvd3FFua2+EF7YYgRf43MpofFvxde1NlUMPasMQbESSdZoRaG7TiGb9bU0
-KLCzlYGVQsBK2nW9LGdf
-=NFxx
------END PGP SIGNATURE-----
-
---=-/pRBVaqaUWj6ac4a3lTJ--
-
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 9a60381..df26414 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -659,35 +659,6 @@ struct peer_capability_info {
+ 	__le16	amsdu_enabled;
+ } __attribute__((packed));
+ 
+-/* Inline functions to manipulate QoS field in data descriptor.  */
+-static inline u16 mwl8k_qos_setbit_eosp(u16 qos)
+-{
+-	u16 val_mask = 1 << 4;
+-
+-	/* End of Service Period Bit 4 */
+-	return qos | val_mask;
+-}
+-
+-static inline u16 mwl8k_qos_setbit_ack(u16 qos, u8 ack_policy)
+-{
+-	u16 val_mask = 0x3;
+-	u8	shift = 5;
+-	u16 qos_mask = ~(val_mask << shift);
+-
+-	/* Ack Policy Bit 5-6 */
+-	return (qos & qos_mask) | ((ack_policy & val_mask) << shift);
+-}
+-
+-static inline u16 mwl8k_qos_setbit_qlen(u16 qos, u8 len)
+-{
+-	u16 val_mask = 0xff;
+-	u8	shift = 8;
+-	u16 qos_mask = ~(val_mask << shift);
+-
+-	/* Queue Length Bits 8-15 */
+-	return (qos & qos_mask) | ((len & val_mask) << shift);
+-}
+-
+ /* DMA header used by firmware and hardware.  */
+ struct mwl8k_dma_data {
+ 	__le16 fwlen;
+@@ -1146,16 +1117,18 @@ static int rxq_process(struct ieee80211_hw *hw, int index, int limit)
+  * Packet transmission.
+  */
+ 
+-/* Transmit packet ACK policy */
+-#define MWL8K_TXD_ACK_POLICY_NORMAL		0
+-#define MWL8K_TXD_ACK_POLICY_BLOCKACK		3
+-
+ #define MWL8K_TXD_STATUS_OK			0x00000001
+ #define MWL8K_TXD_STATUS_OK_RETRY		0x00000002
+ #define MWL8K_TXD_STATUS_OK_MORE_RETRY		0x00000004
+ #define MWL8K_TXD_STATUS_MULTICAST_TX		0x00000008
+ #define MWL8K_TXD_STATUS_FW_OWNED		0x80000000
+ 
++#define MWL8K_QOS_QLEN_UNSPEC			0xff00
++#define MWL8K_QOS_ACK_POLICY_MASK		0x0060
++#define MWL8K_QOS_ACK_POLICY_NORMAL		0x0000
++#define MWL8K_QOS_ACK_POLICY_BLOCKACK		0x0060
++#define MWL8K_QOS_EOSP				0x0010
++
+ struct mwl8k_tx_desc {
+ 	__le32 status;
+ 	__u8 data_rate;
+@@ -1452,21 +1425,17 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 	if (ieee80211_is_mgmt(wh->frame_control) ||
+ 	    ieee80211_is_ctl(wh->frame_control)) {
+ 		txdatarate = 0;
+-		qos = mwl8k_qos_setbit_eosp(qos);
+-		/* Set Queue size to unspecified */
+-		qos = mwl8k_qos_setbit_qlen(qos, 0xff);
++		qos |= MWL8K_QOS_QLEN_UNSPEC | MWL8K_QOS_EOSP;
+ 	} else if (ieee80211_is_data(wh->frame_control)) {
+ 		txdatarate = 1;
+ 		if (is_multicast_ether_addr(wh->addr1))
+ 			txstatus |= MWL8K_TXD_STATUS_MULTICAST_TX;
+ 
+-		/* Send pkt in an aggregate if AMPDU frame.  */
++		qos &= ~MWL8K_QOS_ACK_POLICY_MASK;
+ 		if (tx_info->flags & IEEE80211_TX_CTL_AMPDU)
+-			qos = mwl8k_qos_setbit_ack(qos,
+-				MWL8K_TXD_ACK_POLICY_BLOCKACK);
++			qos |= MWL8K_QOS_ACK_POLICY_BLOCKACK;
+ 		else
+-			qos = mwl8k_qos_setbit_ack(qos,
+-				MWL8K_TXD_ACK_POLICY_NORMAL);
++			qos |= MWL8K_QOS_ACK_POLICY_NORMAL;
+ 	}
+ 
+ 	dma = pci_map_single(priv->pdev, skb->data,
+-- 
+1.5.6.4
