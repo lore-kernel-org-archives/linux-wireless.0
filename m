@@ -1,51 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48857 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753818AbZKTUsE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 15:48:04 -0500
-Subject: Re: [RFC] p54: software hot-swap eeprom image
-From: Dan Williams <dcbw@redhat.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <87y6m1aqro.fsf@purkki.valot.fi>
-References: <200911202027.13284.chunkeey@googlemail.com>
-	 <87y6m1aqro.fsf@purkki.valot.fi>
-Content-Type: text/plain
-Date: Fri, 20 Nov 2009 12:48:15 -0800
-Message-Id: <1258750095.26965.105.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from smtp.nokia.com ([192.100.105.134]:36832 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752546AbZK3IUM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Nov 2009 03:20:12 -0500
+Subject: [PATCH v2 10/11] wl1251: update tx_hdr when aliging skb in tx
+To: linville@tuxdriver.com
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 30 Nov 2009 10:18:40 +0200
+Message-ID: <20091130081840.17360.70750.stgit@tikku>
+In-Reply-To: <20091130081706.17360.48084.stgit@tikku>
+References: <20091130081706.17360.48084.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-11-20 at 22:24 +0200, Kalle Valo wrote:
-> Christian Lamparter <chunkeey@googlemail.com> writes:
-> 
-> > This (aggregated) patch adds a new sysfs file "eeprom_overwrite"
-> > which can be used to upload an customized eeprom image to the
-> > driver during normal operation.
-> >
-> > The old wlanX device will quickly vanish. And if the new EEPROM
-> > image passes all sanity checks the device will reappear.
-> >
-> > Hopefully, this proves to be an adequate solution for everyone
-> > with a bad/missing EEPROM data/chip.
-> 
-> Wasn't the concensus that request_firmware() will be used for this
-> kind of device specific data? stlc45xx had a similar sysfs interface
-> and people didn't like it. And I tend to agree with them, adding odd
-> sysfs files is not the best way to handle this.
+From: Kalle Valo <kalle.valo@nokia.com>
 
-It could be yes, but what would the trigger to upload the new firmware
-be?  A /standard/ sysfs file that you
+Before transmission when aligning the buffer to 4-byte bounday, tx_hdr
+needs to be updated. Otherwise debug logs print false data.
 
-echo "new-firmware-v345" > eeprom_write
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1251_tx.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-into that would then request_firmware("new-firmware-v345")?  I don't
-really care where read/write functionality is, I just want this stuff to
-be in one place and not have one mechanism for reading it and a few
-different ones for writing it.
-
-Dan
-
+diff --git a/drivers/net/wireless/wl12xx/wl1251_tx.c b/drivers/net/wireless/wl12xx/wl1251_tx.c
+index faa23ef..c822318 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1251_tx.c
+@@ -219,6 +219,7 @@ static int wl1251_tx_send_packet(struct wl1251 *wl, struct sk_buff *skb,
+ 			/* align the buffer on a 4-byte boundary */
+ 			skb_reserve(skb, offset);
+ 			memmove(skb->data, src, skb->len);
++			tx_hdr = (struct tx_double_buffer_desc *) skb->data;
+ 		} else {
+ 			wl1251_info("No handler, fixme!");
+ 			return -EINVAL;
 
