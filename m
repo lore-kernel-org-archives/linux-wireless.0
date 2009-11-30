@@ -1,58 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f180.google.com ([209.85.216.180]:64540 "EHLO
-	mail-px0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752611AbZKGTml convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Nov 2009 14:42:41 -0500
-Received: by pxi10 with SMTP id 10so1466730pxi.33
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Nov 2009 11:42:47 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <fd145f7d0911071102l3b7710fndb84fb738133dcb3@mail.gmail.com>
-References: <fd145f7d0911060004j55b06482tca088685d0626249@mail.gmail.com>
-	<43e72e890911060821r2703c186lbb75c40b449b2c55@mail.gmail.com>
-	<fd145f7d0911071102l3b7710fndb84fb738133dcb3@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sat, 7 Nov 2009 11:42:27 -0800
-Message-ID: <43e72e890911071142o6b0d0e9ap299e7f9b2bc21f15@mail.gmail.com>
-Subject: Re: Getting random regulatory domains on boot-up with ath9k
-To: Jeffrey Baker <jwbaker@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:42736 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752960AbZK3EWe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Nov 2009 23:22:34 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v3 2/2] iwmc3200wifi: rx aggregation support
+Date: Mon, 30 Nov 2009 12:25:57 +0800
+Message-Id: <1259555157-10866-2-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1259555157-10866-1-git-send-email-yi.zhu@intel.com>
+References: <1259555157-10866-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 7, 2009 at 11:02 AM, Jeffrey Baker <jwbaker@gmail.com> wrote:
-> On Fri, Nov 6, 2009 at 8:21 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Fri, Nov 6, 2009 at 12:04 AM, Jeffrey Baker <jwbaker@gmail.com> wrote:
->> So one way or another user intervention is required to alter current
->> regulatory solutions. For Linux though the best solution *as an end
->> user* to enable AP mode is not to alter wireless-regdb but instead to
->> report your issue. In your case you have a non-trivial regression
->> which does indeed need to be addressed.
->
-> Thanks, your email(s) explained a great number of issues.  I don't
-> have the expertise to contribute here, so I leave it in your capable
-> hands.  I would say, however, that from the _user's_ perspective, the
-> best thing is if a wifi card bought in the USA from a USA retailer
-> automagically conformed to USA regulations, even if that's an issue to
-> be taken up with the card manufacturer and not with the driver
-> authors.
+When the device receives an A-MSDU frame (indicated by flag
+IWM_RX_TICKET_AMSDU_MSK), use ieee80211_amsdu_to_8023s to convert
+it to a list of 802.3 frames and handled them to upper layer.
 
-Agreed, however how devices get programmed is a little complex than
-just a country code. So one option is to use a direct country code and
-that's it, another option is to use a world regulatory domain when you
-want to target a few countries and want to have passive scanning
-enabled -- typically business laptop SKUs. Then you have the region
-codes as your card has which is targetted for a few set of countries
-on a region, for example a european region code.
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+V2: use __ version of sk_buff_head operations
+V3: pass 0 as parameter extra_headroom to ieee80211_amsdu_to_8023s
 
-What we have learned from implementing a solution on Linux is this
-wasn't easy to manage but that we can make it simpler. At Atheros at
-least we might stop using the region codes and just stick to the world
-roaming options and direct country codes. The Linux implementation we
-have done has helped to re-evaluate current implementations and has
-helped us adapt to better more reasonable solutions.
+ drivers/net/wireless/iwmc3200wifi/rx.c |   50 ++++++++++++++++++++++++++++---
+ 1 files changed, 45 insertions(+), 5 deletions(-)
 
-These things just take time to change.
+diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
+index 72c27a3..ab2247a 100644
+--- a/drivers/net/wireless/iwmc3200wifi/rx.c
++++ b/drivers/net/wireless/iwmc3200wifi/rx.c
+@@ -1534,6 +1534,37 @@ static void classify8023(struct sk_buff *skb)
+ 	}
+ }
+ 
++static int iwm_rx_process_amsdu(struct iwm_priv *iwm, struct sk_buff *skb)
++{
++	struct wireless_dev *wdev = iwm_to_wdev(iwm);
++	struct net_device *ndev = iwm_to_ndev(iwm);
++	struct sk_buff_head list;
++	struct sk_buff *frame;
++	int ret;
++
++	IWM_HEXDUMP(iwm, DBG, RX, "A-MSDU: ", skb->data, skb->len);
++
++	__skb_queue_head_init(&list);
++	ret = ieee80211_amsdu_to_8023s(skb, &list, ndev->dev_addr,
++				       wdev->iftype, 0);
++	if (ret) {
++		IWM_ERR(iwm, "decode A-MSDU frame failed\n");
++		return -EINVAL;
++	}
++
++	while ((frame = __skb_dequeue(&list))) {
++		ndev->stats.rx_packets++;
++		ndev->stats.rx_bytes += frame->len;
++
++		if (netif_rx_ni(frame) == NET_RX_DROP) {
++			IWM_ERR(iwm, "Packet dropped\n");
++			ndev->stats.rx_dropped++;
++		}
++	}
++
++	return 0;
++}
++
+ static void iwm_rx_process_packet(struct iwm_priv *iwm,
+ 				  struct iwm_rx_packet *packet,
+ 				  struct iwm_rx_ticket_node *ticket_node)
+@@ -1548,22 +1579,31 @@ static void iwm_rx_process_packet(struct iwm_priv *iwm,
+ 	switch (le16_to_cpu(ticket_node->ticket->action)) {
+ 	case IWM_RX_TICKET_RELEASE:
+ 		IWM_DBG_RX(iwm, DBG, "RELEASE packet\n");
++
++		skb->dev = iwm_to_ndev(iwm);
++		skb->protocol = eth_type_trans(skb, ndev);
++		skb->ip_summed = CHECKSUM_NONE;
++		memset(skb->cb, 0, sizeof(skb->cb));
++
+ 		classify8023(skb);
+ 		iwm_rx_adjust_packet(iwm, packet, ticket_node);
++
++		if (le16_to_cpu(ticket_node->ticket->flags) &
++		    IWM_RX_TICKET_AMSDU_MSK) {
++			iwm_rx_process_amsdu(iwm, skb);
++			break;
++		}
++
+ 		ret = ieee80211_data_to_8023(skb, ndev->dev_addr, wdev->iftype);
+ 		if (ret < 0) {
+ 			IWM_DBG_RX(iwm, DBG, "Couldn't convert 802.11 header - "
+ 				   "%d\n", ret);
++			kfree_skb(packet->skb);
+ 			break;
+ 		}
+ 
+ 		IWM_HEXDUMP(iwm, DBG, RX, "802.3: ", skb->data, skb->len);
+ 
+-		skb->dev = iwm_to_ndev(iwm);
+-		skb->protocol = eth_type_trans(skb, ndev);
+-		skb->ip_summed = CHECKSUM_NONE;
+-		memset(skb->cb, 0, sizeof(skb->cb));
+-
+ 		ndev->stats.rx_packets++;
+ 		ndev->stats.rx_bytes += skb->len;
+ 
+-- 
+1.6.0.4
 
-  Luis
