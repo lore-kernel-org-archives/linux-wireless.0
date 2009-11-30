@@ -1,118 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:8471 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758688AbZKYMJi (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:45408 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752340AbZK3Rbq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 07:09:38 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>
-Subject: [PATCH 2/5] libertas: introduce mesh.h
-Date: Wed, 25 Nov 2009 13:09:32 +0100
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200911251309.32155.holgerschurig@gmail.com>
+	Mon, 30 Nov 2009 12:31:46 -0500
+Date: Mon, 30 Nov 2009 18:31:52 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 03/11] mwl8k: get rid of the AMSDU check in the transmit path
+Message-ID: <20091130173152.GS20214@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   11 -----------
+ 1 files changed, 0 insertions(+), 11 deletions(-)
 
---- linux-wl.orig/drivers/net/wireless/libertas/dev.h
-+++ linux-wl/drivers/net/wireless/libertas/dev.h
-@@ -6,6 +6,7 @@
- #ifndef _LBS_DEV_H_
- #define _LBS_DEV_H_
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 43b2d64..9a60381 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -678,14 +678,6 @@ static inline u16 mwl8k_qos_setbit_ack(u16 qos, u8 ack_policy)
+ 	return (qos & qos_mask) | ((ack_policy & val_mask) << shift);
+ }
  
-+#include "mesh.h"
- #include "scan.h"
- #include "assoc.h"
- 
-@@ -21,17 +22,6 @@
- 	uint16_t sp_reserved;
- };
- 
--/* Mesh statistics */
--struct lbs_mesh_stats {
--	u32	fwd_bcast_cnt;		/* Fwd: Broadcast counter */
--	u32	fwd_unicast_cnt;	/* Fwd: Unicast counter */
--	u32	fwd_drop_ttl;		/* Fwd: TTL zero */
--	u32	fwd_drop_rbt;		/* Fwd: Recently Broadcasted */
--	u32	fwd_drop_noroute; 	/* Fwd: No route to Destination */
--	u32	fwd_drop_nobuf;		/* Fwd: Run out of internal buffers */
--	u32	drop_blind;		/* Rx:  Dropped by blinding table */
--	u32	tx_failed_cnt;		/* Tx:  Failed transmissions */
--};
- 
- /** Private structure for the MV device */
- struct lbs_private {
---- /dev/null
-+++ linux-wl/drivers/net/wireless/libertas/mesh.h
-@@ -0,0 +1,32 @@
-+/**
-+  * Contains all definitions needed for the Libertas' MESH implementation.
-+  */
-+#ifndef _LBS_MESH_H_
-+#define _LBS_MESH_H_
-+
-+
-+#include <net/iw_handler.h>
-+
-+
-+/* Mesh statistics */
-+struct lbs_mesh_stats {
-+	u32	fwd_bcast_cnt;		/* Fwd: Broadcast counter */
-+	u32	fwd_unicast_cnt;	/* Fwd: Unicast counter */
-+	u32	fwd_drop_ttl;		/* Fwd: TTL zero */
-+	u32	fwd_drop_rbt;		/* Fwd: Recently Broadcasted */
-+	u32	fwd_drop_noroute; 	/* Fwd: No route to Destination */
-+	u32	fwd_drop_nobuf;		/* Fwd: Run out of internal buffers */
-+	u32	drop_blind;		/* Rx:  Dropped by blinding table */
-+	u32	tx_failed_cnt;		/* Tx:  Failed transmissions */
-+};
-+
-+
-+struct net_device;
-+
-+void lbs_persist_config_init(struct net_device *net);
-+void lbs_persist_config_remove(struct net_device *net);
-+
-+extern struct iw_handler_def mesh_handler_def;
-+
-+
-+#endif
---- linux-wl.orig/drivers/net/wireless/libertas/decl.h
-+++ linux-wl/drivers/net/wireless/libertas/decl.h
-@@ -27,11 +27,6 @@
- int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *);
- 
- 
--/* persistcfg.c */
--void lbs_persist_config_init(struct net_device *net);
--void lbs_persist_config_remove(struct net_device *net);
+-static inline u16 mwl8k_qos_setbit_amsdu(u16 qos)
+-{
+-	u16 val_mask = 1 << 7;
 -
+-	/* AMSDU present Bit 7 */
+-	return qos | val_mask;
+-}
 -
- /* main.c */
- struct lbs_private *lbs_add_card(void *card, struct device *dmdev);
- void lbs_remove_card(struct lbs_private *priv);
---- linux-wl.orig/drivers/net/wireless/libertas/wext.h
-+++ linux-wl/drivers/net/wireless/libertas/wext.h
-@@ -7,12 +7,11 @@
- void lbs_send_disconnect_notification(struct lbs_private *priv);
- void lbs_send_mic_failureevent(struct lbs_private *priv, u32 event);
- 
--extern struct iw_handler_def lbs_handler_def;
--extern struct iw_handler_def mesh_handler_def;
+ static inline u16 mwl8k_qos_setbit_qlen(u16 qos, u8 len)
+ {
+ 	u16 val_mask = 0xff;
+@@ -1475,9 +1467,6 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 		else
+ 			qos = mwl8k_qos_setbit_ack(qos,
+ 				MWL8K_TXD_ACK_POLICY_NORMAL);
 -
- struct chan_freq_power *lbs_find_cfp_by_band_and_channel(
- 	struct lbs_private *priv,
- 	u8 band,
- 	u16 channel);
+-		if (qos & IEEE80211_QOS_CONTROL_A_MSDU_PRESENT)
+-			qos = mwl8k_qos_setbit_amsdu(qos);
+ 	}
  
-+extern struct iw_handler_def lbs_handler_def;
-+
- #endif
-
+ 	dma = pci_map_single(priv->pdev, skb->data,
 -- 
-http://www.holgerschurig.de
+1.5.6.4
