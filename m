@@ -1,50 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:48713 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757410AbZKXC0I (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35218 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751217AbZK3Lv7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Nov 2009 21:26:08 -0500
-Received: by mail-yx0-f187.google.com with SMTP id 17so5308557yxe.33
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Nov 2009 18:26:15 -0800 (PST)
-Message-ID: <4B0B4405.4050605@gmail.com>
-Date: Mon, 23 Nov 2009 21:25:09 -0500
-From: Arnaud Lacombe <lacombar@gmail.com>
-MIME-Version: 1.0
-To: mcgrof@bombadil.infradead.org
-CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
-Subject: [PATCH 08/13] Add compatibility macro for register_sysctl_table()
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 30 Nov 2009 06:51:59 -0500
+Subject: Re: [RFC] API for setting ACK timeout
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joerg Pommnitz <pommnitz@yahoo.com>
+Cc: nbd@openwrt.org, linux-wireless@vger.kernel.org
+In-Reply-To: <559043.79161.qm@web51405.mail.re2.yahoo.com>
+References: <559043.79161.qm@web51405.mail.re2.yahoo.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Jd28ZPZKEK/JnQbfQKCF"
+Date: Mon, 30 Nov 2009 11:04:22 +0100
+Message-ID: <1259575462.32171.6.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The API was changed on commit 0b4d4147. register_sysctl_table() lost its
-last
-argument.
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- compat-2.6.21.h |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+--=-Jd28ZPZKEK/JnQbfQKCF
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/compat-2.6.21.h b/compat-2.6.21.h
-index c185cfb..263ebd2 100644
---- a/compat-2.6.21.h
-+++ b/compat-2.6.21.h
-@@ -7,6 +7,13 @@
- /* Compat work for 2.6.21 */
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,21))
+On Mon, 2009-11-30 at 00:39 -0800, Joerg Pommnitz wrote:
+> Felix Fietkau wrote:
+> > At some point, I will try to come up with an implementation for=20
+> > ath9k which doesn't involve such voodoo, but instead compares=20
+> > the tx timestamp of some data packets against the rx timestamp=20
+> > of ack packets.=20
+>=20
+> Would this mean, that we could get per station ACK timeouts?
+> If so, this would be very useful in an IBSS network. In such an
+> environment one might talk to nodes whose distance to the sender
+> vary over a broad range.=20
 
-+#include <linux/sysctl.h>
-+
-+#define register_sysctl_table(table)				\
-+	({							\
-+		register_sysctl_table((table), 0);		\
-+	})
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,21)) */
+Not likely that _any_ hardware supports that, it'd have to modify the
+timers all the time. I suppose some firmware _could_ support it, but
+it's a huge complexity for extremely little gain. In any case, setting
+it to the max would be sufficient for this case, give it a thought :)
 
- #endif /* LINUX_26_21_COMPAT_H */
--- 
-1.6.3.3.385.g60647.dirty
+johannes
 
+--=-Jd28ZPZKEK/JnQbfQKCF
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLE5ijAAoJEODzc/N7+Qma4ZgQAIqula/IrlTeZALF+FWqaG9J
+Kt2hPkj4o8ltomq54Y6A0iK87wD+R524xAu2+gKB03V358A2RMg9rKAny0bI+xS1
+AAZLWH6YRXLIJ87ROcCpTFjByOaTrJ0RRJOblowbHZ4jU+EoD4mLwRbjt3WuxTUX
+J5DVTSlMkyQYJves+s5M1lt4OxcSydjbgWfzgEVZrdqR1iI4oGeIa3uhP7bSKXHg
+dcDPp/fy8M2KOiT6/jXO2GOTUhDg+qnMlCMgVGXXm8KJ5aooY6zNgbAu43DZjeeU
+rfjWNpi1WXYKTFSn7vz2UFkapcYAw134ycqRnnT5GBfGrziP7KHp7g3WyW7mj0gD
+y5WaHKTw19Qd+4l9xyyQf+RvbhIOxv3s5kZOT1XrrovIlnX+OLpsgiKvPiA3fGBF
+i24s/4zgsB9/WOxK02kGIdNW+W1NaBbKCZcsWEKy1E8PhSHsiaxSfOl1/KjUIH6A
+8xOlPmzOYNNGfNfzdndWuq92DrSksCRpfD6dKFvAjMNono0j4YUtQAWzY8sx3Hyq
+3xDvo+ReWjWgt7ld2aqysEkKidN7+EEfNZfU8nbjWPk2vuBTdxWOVfYAg3gt3kDt
+HxiPSUQN9Y5I97B7suy3+/mjpKNQMsFrqQ+bHOPgR6QOpWNQLm1P9P9gXfYo6pBx
+Kbj7rHShJPMvSIMWEyze
+=V6J+
+-----END PGP SIGNATURE-----
+
+--=-Jd28ZPZKEK/JnQbfQKCF--
 
