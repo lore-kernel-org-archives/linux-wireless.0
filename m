@@ -1,101 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:10114 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932185AbZKXLxw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Nov 2009 06:53:52 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 24 Nov 2009 03:53:59 -0800
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: Fix dynamic power save for scanning.
-Date: Tue, 24 Nov 2009 17:23:46 +0530
-Message-ID: <1259063627-20033-2-git-send-email-vnatarajan@atheros.com>
-In-Reply-To: <1259063627-20033-1-git-send-email-vnatarajan@atheros.com>
-References: <1259063627-20033-1-git-send-email-vnatarajan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:62417 "EHLO
+	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752986AbZK3VJF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Nov 2009 16:09:05 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Benoit Papillault <benoit.papillault@free.fr>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH v3 1/4] rt2x00: Further L2 padding fixes.
+Date: Mon, 30 Nov 2009 22:08:15 +0100
+Message-Id: <1259615298-2305-2-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1259615298-2305-1-git-send-email-gwingerde@gmail.com>
+References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Not only ps_sdata but also IEEE80211_CONF_PS is to be considered
-before restoring PS in scan_ps_disable(). For instance, when ps_sdata
-is set but CONF_PS is not set just because the dynamic timer is still
-running, a sw scan leads to setting of CONF_PS in scan_ps_disable
-instead of starting the dynamic PS timer.
-Also for the above case, a null data frame is to be sent after
-returning to operating channel which was not happening with the
-current implementation. This patch fixes this too.
+Fix a couple of more bugs in the L2 padding code:
+1. Compute the amount of L2 padding correctly (in 3 places).
+2. Trim the skb correctly when the L2 padding has been applied.
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+Also introduce a central macro the compute the L2 padding size.
+
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 ---
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/scan.c        |   14 ++++++++++----
- 2 files changed, 11 insertions(+), 4 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00.h      |    6 ++++++
+ drivers/net/wireless/rt2x00/rt2x00queue.c |    8 +++++---
+ 2 files changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ab28942..57bef7c 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -746,6 +746,7 @@ struct ieee80211_local {
- 	unsigned int wmm_acm; /* bit field of ACM bits (BIT(802.1D tag)) */
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index dcfc8c2..6594d2f 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -113,6 +113,12 @@
+ 	(  ((unsigned long)((__skb)->data + (__header))) & 3 )
  
- 	bool pspolling;
-+	bool scan_ps_enabled;
- 	/*
- 	 * PS can only be enabled when we have exactly one managed
- 	 * interface (and monitors) in PS, this then points there.
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 4cf387c..41076e4 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -227,7 +227,8 @@ static bool ieee80211_prep_hw_scan(struct ieee80211_local *local)
- static void ieee80211_scan_ps_enable(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
--	bool ps = false;
+ /*
++ * Determine the number of L2 padding bytes required between the header and
++ * the payload.
++ */
++#define L2PAD_SIZE(__hdrlen)	(-(__hdrlen) & 3)
 +
-+	local->scan_ps_enabled = false;
++/*
+  * Constants for extra TX headroom for alignment purposes.
+  */
+ #define RT2X00_ALIGN_SIZE	4 /* Only whole frame needs alignment */
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index b8f0954..21d5876 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -181,7 +181,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
+ 	unsigned int frame_length = skb->len;
+ 	unsigned int header_align = ALIGN_SIZE(skb, 0);
+ 	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
+-	unsigned int l2pad = 4 - (payload_align - header_align);
++	unsigned int l2pad = L2PAD_SIZE(header_length);
  
- 	/* FIXME: what to do when local->pspolling is true? */
- 
-@@ -235,12 +236,13 @@ static void ieee80211_scan_ps_enable(struct ieee80211_sub_if_data *sdata)
- 	cancel_work_sync(&local->dynamic_ps_enable_work);
- 
- 	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
--		ps = true;
-+		local->scan_ps_enabled = true;
- 		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
- 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
- 	}
- 
--	if (!ps || !(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
-+	if (!(local->scan_ps_enabled) ||
-+	    !(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
+ 	if (header_align == payload_align) {
  		/*
- 		 * If power save was enabled, no need to send a nullfunc
- 		 * frame because AP knows that we are sleeping. But if the
-@@ -261,7 +263,7 @@ static void ieee80211_scan_ps_disable(struct ieee80211_sub_if_data *sdata)
- 
- 	if (!local->ps_sdata)
- 		ieee80211_send_nullfunc(local, sdata, 0);
--	else {
-+	else if (local->scan_ps_enabled) {
- 		/*
- 		 * In !IEEE80211_HW_PS_NULLFUNC_STACK case the hardware
- 		 * will send a nullfunc frame with the powersave bit set
-@@ -277,6 +279,10 @@ static void ieee80211_scan_ps_disable(struct ieee80211_sub_if_data *sdata)
- 		 */
- 		local->hw.conf.flags |= IEEE80211_CONF_PS;
- 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-+	} else {
-+		ieee80211_send_nullfunc(local, sdata, 0);
-+		mod_timer(&local->dynamic_ps_timer, jiffies +
-+			  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
+@@ -216,6 +216,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
+ 		memmove(skb->data + header_length + l2pad,
+ 			skb->data + header_length + l2pad + payload_align,
+ 			frame_length - header_length);
++		skb_trim(skb, frame_length + l2pad);
+ 		skbdesc->flags |= SKBDESC_L2_PADDED;
  	}
  }
+@@ -223,7 +224,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
+ void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int header_length)
+ {
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
+-	unsigned int l2pad = 4 - (header_length & 3);
++	unsigned int l2pad = L2PAD_SIZE(header_length);
  
+ 	if (!l2pad || (skbdesc->flags & SKBDESC_L2_PADDED))
+ 		return;
+@@ -346,7 +347,8 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
+ 	 * Header and alignment information.
+ 	 */
+ 	txdesc->header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
+-	txdesc->l2pad = ALIGN_SIZE(entry->skb, txdesc->header_length);
++	if (test_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags))
++		txdesc->l2pad = L2PAD_SIZE(txdesc->header_length);
+ 
+ 	/*
+ 	 * Check whether this frame is to be acked.
 -- 
-1.6.0.4
+1.6.5.3
 
