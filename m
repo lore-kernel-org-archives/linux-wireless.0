@@ -1,104 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:42236 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753475AbZKTRSH convert rfc822-to-8bit (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:57155 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752556AbZK3RM6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 12:18:07 -0500
-Received: by iwn8 with SMTP id 8so2683767iwn.33
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Nov 2009 09:18:13 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1258665566-4212-1-git-send-email-benoit.papillault@free.fr>
-References: <1258665566-4212-1-git-send-email-benoit.papillault@free.fr>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 20 Nov 2009 09:17:53 -0800
-Message-ID: <43e72e890911200917m47ad6a8aje23577bf734b4952@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: This patch fix RX unpadding for any received
-	frame.
-To: Benoit Papillault <benoit.papillault@free.fr>
-Cc: jmalinen@atheros.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 30 Nov 2009 12:12:58 -0500
+Date: Mon, 30 Nov 2009 18:13:04 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 07/12] mwl8k: allow more time for transmit rings to drain
+Message-ID: <20091130171304.GJ20214@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 19, 2009 at 1:19 PM, Benoit Papillault
-<benoit.papillault@free.fr> wrote:
-> From: Benoit PAPILLAULT <benoit@benoit-laptop.(none)>
->
-> It has been tested with a 802.11 frame generator and by checking the FCS field
-> of each received frame with the value reported by the Atheros hardware. This
-> patch is useful if you are trying to analyze non standard 802.11 frame going
-> over the air.
+Before issuing any firmware commands, we wait for the transmit rings
+to drain, to prevent control versus data path synchronization issues.
+In some cases, this can end up taking longer than the current hardcoded
+limit of 5 seconds, for example if the transmit rings are filled with
+packets for a host that has dropped off the air and we end up
+retransmitting every pending packet at the lowest rate a couple of
+times.
 
-Thank you for your patch! But can you please elaborate on your commit
-log entry? This just tells me that you've tested it and how its useful
-but it in no way tells me what you found was wrong and also does not
-explain how you fixed it.
+This patch changes mwl8k_tx_wait_empty() to only bail out on timeout
+expiry if there was no change in the number of packets pending in the
+transmit rings during the waiting period.  If at least one transmit
+ring entry was reclaimed while we were waiting, we are apparently still
+making progress, and we'll allow waiting for another timeout period.
 
-> Signed-off-by: Benoit PAPILLAULT <benoit@benoit-laptop.(none)>
-> ---
->  drivers/net/wireless/ath/ath9k/common.c |   19 ++++++++++++++-----
->  1 files changed, 14 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-> index 2f1e161..4a13632 100644
-> --- a/drivers/net/wireless/ath/ath9k/common.c
-> +++ b/drivers/net/wireless/ath/ath9k/common.c
-> @@ -231,26 +231,35 @@ void ath9k_cmn_rx_skb_postprocess(struct ath_common *common,
->  {
->        struct ath_hw *ah = common->ah;
->        struct ieee80211_hdr *hdr;
-> -       int hdrlen, padsize;
-> +       int hdrlen, padpos, padsize;
->        u8 keyix;
->        __le16 fc;
->
->        /* see if any padding is done by the hw and remove it */
->        hdr = (struct ieee80211_hdr *) skb->data;
->        hdrlen = ieee80211_get_hdrlen_from_skb(skb);
-> +       padpos = 24;
->        fc = hdr->frame_control;
-> +       if ((fc & cpu_to_le16(IEEE80211_FCTL_FROMDS|IEEE80211_FCTL_TODS)) ==
-> +           cpu_to_le16(IEEE80211_FCTL_FROMDS|IEEE80211_FCTL_TODS)) {
-> +         padpos += 6; /* ETH_ALEN */
-> +       }
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |  133 ++++++++++++++++++++++--------------------
+ 1 files changed, 70 insertions(+), 63 deletions(-)
 
-How about just using ETH_ALEN then?
-
-> +       if ((fc & cpu_to_le16(IEEE80211_STYPE_QOS_DATA|IEEE80211_FCTL_FTYPE)) ==
-> +           cpu_to_le16(IEEE80211_STYPE_QOS_DATA|IEEE80211_FTYPE_DATA)) {
-> +         padpos += 2;
-> +       }
->
->        /* The MAC header is padded to have 32-bit boundary if the
->         * packet payload is non-zero. The general calculation for
->         * padsize would take into account odd header lengths:
-> -        * padsize = (4 - hdrlen % 4) % 4; However, since only
-> +        * padsize = (4 - padpos % 4) % 4; However, since only
->         * even-length headers are used, padding can only be 0 or 2
->         * bytes and we can optimize this a bit. In addition, we must
->         * not try to remove padding from short control frames that do
->         * not have payload. */
-> -       padsize = hdrlen & 3;
-> -       if (padsize && hdrlen >= 24) {
-> -               memmove(skb->data + padsize, skb->data, hdrlen);
-> +       padsize = padpos & 3;
-> +       if (padsize && skb->len>=padpos+padsize+FCS_LEN) {
-> +               memmove(skb->data + padsize, skb->data, padpos);
->                skb_pull(skb, padsize);
->        }
-
-If the skb->len would have been short ieee80211_get_hdrlen_from_skb()
-would have picked up on this and 0 would have been used for hdrlen
-therefore skipping this operation. With this patch even if skb->len
-was 0 your padsize is always based on some static value. Additionally
-its unclear to me how and why you substitute
-ieee80211_get_hdrlen_from_skb() to a static 24 + something.
-
-Also the possible static values for padpos are either (24 + 2) or (24
-+ 6) right? Well these & 3 will always give true. So you are always
-padding and this changes the way this was being implemented.
-
-Unless I'm missing something.
-
-  Luis
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 2d4724b..8f7546f 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1237,99 +1237,106 @@ static inline void mwl8k_tx_start(struct mwl8k_priv *priv)
+ 	ioread32(priv->regs + MWL8K_HIU_INT_CODE);
+ }
+ 
+-struct mwl8k_txq_info {
+-	u32 fw_owned;
+-	u32 drv_owned;
+-	u32 unused;
+-	u32 len;
+-	u32 head;
+-	u32 tail;
+-};
+-
+-static int mwl8k_scan_tx_ring(struct mwl8k_priv *priv,
+-				struct mwl8k_txq_info *txinfo)
++static void mwl8k_dump_tx_rings(struct ieee80211_hw *hw)
+ {
+-	int count, desc, status;
+-	struct mwl8k_tx_queue *txq;
+-	struct mwl8k_tx_desc *tx_desc;
+-	int ndescs = 0;
++	struct mwl8k_priv *priv = hw->priv;
++	int i;
+ 
+-	memset(txinfo, 0, MWL8K_TX_QUEUES * sizeof(struct mwl8k_txq_info));
++	for (i = 0; i < MWL8K_TX_QUEUES; i++) {
++		struct mwl8k_tx_queue *txq = priv->txq + i;
++		int fw_owned = 0;
++		int drv_owned = 0;
++		int unused = 0;
++		int desc;
+ 
+-	for (count = 0; count < MWL8K_TX_QUEUES; count++) {
+-		txq = priv->txq + count;
+-		txinfo[count].len = txq->stats.len;
+-		txinfo[count].head = txq->head;
+-		txinfo[count].tail = txq->tail;
+ 		for (desc = 0; desc < MWL8K_TX_DESCS; desc++) {
+-			tx_desc = txq->txd + desc;
+-			status = le32_to_cpu(tx_desc->status);
++			struct mwl8k_tx_desc *tx_desc = txq->txd + desc;
++			u32 status;
+ 
++			status = le32_to_cpu(tx_desc->status);
+ 			if (status & MWL8K_TXD_STATUS_FW_OWNED)
+-				txinfo[count].fw_owned++;
++				fw_owned++;
+ 			else
+-				txinfo[count].drv_owned++;
++				drv_owned++;
+ 
+ 			if (tx_desc->pkt_len == 0)
+-				txinfo[count].unused++;
++				unused++;
+ 		}
+-	}
+ 
+-	return ndescs;
++		printk(KERN_ERR "%s: txq[%d] len=%d head=%d tail=%d "
++		       "fw_owned=%d drv_owned=%d unused=%d\n",
++		       wiphy_name(hw->wiphy), i,
++		       txq->stats.len, txq->head, txq->tail,
++		       fw_owned, drv_owned, unused);
++	}
+ }
+ 
+ /*
+  * Must be called with priv->fw_mutex held and tx queues stopped.
+  */
++#define MWL8K_TX_WAIT_TIMEOUT_MS	1000
++
+ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw)
+ {
+ 	struct mwl8k_priv *priv = hw->priv;
+ 	DECLARE_COMPLETION_ONSTACK(tx_wait);
+-	u32 count;
+-	unsigned long timeout;
++	int retry;
++	int rc;
+ 
+ 	might_sleep();
+ 
++	/*
++	 * The TX queues are stopped at this point, so this test
++	 * doesn't need to take ->tx_lock.
++	 */
++	if (!priv->pending_tx_pkts)
++		return 0;
++
++	retry = 0;
++	rc = 0;
++
+ 	spin_lock_bh(&priv->tx_lock);
+-	count = priv->pending_tx_pkts;
+-	if (count)
+-		priv->tx_wait = &tx_wait;
+-	spin_unlock_bh(&priv->tx_lock);
++	priv->tx_wait = &tx_wait;
++	while (!rc) {
++		int oldcount;
++		unsigned long timeout;
+ 
+-	if (count) {
+-		struct mwl8k_txq_info txinfo[MWL8K_TX_QUEUES];
+-		int index;
+-		int newcount;
++		oldcount = priv->pending_tx_pkts;
+ 
++		spin_unlock_bh(&priv->tx_lock);
+ 		timeout = wait_for_completion_timeout(&tx_wait,
+-					msecs_to_jiffies(5000));
+-		if (timeout)
+-			return 0;
+-
++			    msecs_to_jiffies(MWL8K_TX_WAIT_TIMEOUT_MS));
+ 		spin_lock_bh(&priv->tx_lock);
+-		priv->tx_wait = NULL;
+-		newcount = priv->pending_tx_pkts;
+-		mwl8k_scan_tx_ring(priv, txinfo);
+-		spin_unlock_bh(&priv->tx_lock);
+ 
+-		printk(KERN_ERR "%s(%u) TIMEDOUT:5000ms Pend:%u-->%u\n",
+-		       __func__, __LINE__, count, newcount);
++		if (timeout) {
++			WARN_ON(priv->pending_tx_pkts);
++			if (retry) {
++				printk(KERN_NOTICE "%s: tx rings drained\n",
++				       wiphy_name(hw->wiphy));
++			}
++			break;
++		}
+ 
+-		for (index = 0; index < MWL8K_TX_QUEUES; index++)
+-			printk(KERN_ERR "TXQ:%u L:%u H:%u T:%u FW:%u "
+-			       "DRV:%u U:%u\n",
+-					index,
+-					txinfo[index].len,
+-					txinfo[index].head,
+-					txinfo[index].tail,
+-					txinfo[index].fw_owned,
+-					txinfo[index].drv_owned,
+-					txinfo[index].unused);
++		if (priv->pending_tx_pkts < oldcount) {
++			printk(KERN_NOTICE "%s: timeout waiting for tx "
++			       "rings to drain (%d -> %d pkts), retrying\n",
++			       wiphy_name(hw->wiphy), oldcount,
++			       priv->pending_tx_pkts);
++			retry = 1;
++			continue;
++		}
++
++		priv->tx_wait = NULL;
++
++		printk(KERN_ERR "%s: tx rings stuck for %d ms\n",
++		       wiphy_name(hw->wiphy), MWL8K_TX_WAIT_TIMEOUT_MS);
++		mwl8k_dump_tx_rings(hw);
+ 
+-		return -ETIMEDOUT;
++		rc = -ETIMEDOUT;
+ 	}
++	spin_unlock_bh(&priv->tx_lock);
+ 
+-	return 0;
++	return rc;
+ }
+ 
+ #define MWL8K_TXD_SUCCESS(status)				\
+-- 
+1.5.6.4
