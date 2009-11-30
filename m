@@ -1,62 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:39977 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753335AbZKHTfx convert rfc822-to-8bit (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:57140 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752610AbZK3RLM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Nov 2009 14:35:53 -0500
-MIME-Version: 1.0
-In-Reply-To: <20091105071431.GA14055@elte.hu>
-References: <43e72e890911041540hd1e5f87u8d282d9c95857504@mail.gmail.com>
-	<alpine.LFD.2.01.0911041551220.31845@localhost.localdomain>
-	<20091105071431.GA14055@elte.hu>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sun, 8 Nov 2009 11:35:38 -0800
-Message-ID: <43e72e890911081135q78416ef7ua6c5991b15fb2659@mail.gmail.com>
-Subject: Re: Reverting 5d423 fixes loading of ath9k on Acer Extensa 7630EZ
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Yannick Roehlly <yannick.roehlly@free.fr>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jesse.barnes@intel.com>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"John W. Linville" <linville@tuxdriver.com>, berndl81@gmx.at,
-	Greg KH <greg@kroah.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 30 Nov 2009 12:11:12 -0500
+Date: Mon, 30 Nov 2009 18:11:18 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 01/12] mwl8k: fix MCS bitmap size in SET_RATE command
+Message-ID: <20091130171118.GD20214@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 4, 2009 at 11:14 PM, Ingo Molnar <mingo@elte.hu> wrote:
->
-> * Linus Torvalds <torvalds@linux-foundation.org> wrote:
->
->> On Wed, 4 Nov 2009, Luis R. Rodriguez wrote:
->> >
->> > Can you please consider reviewing this issue and help determine if
->> > this indeed needs to be reverted for 2.6.32 and the next 2.6.31.y.
->> >
->> > I am curious if other devices would work by reverting this as well.
->> > [ ... ] For details please feel free to check:
->> >
->> > http://bugzilla.kernel.org/show_bug.cgi?id=14402
->>
->> That same commit was the cause for
->>
->>       http://bugzilla.kernel.org/show_bug.cgi?id=13940
->>
->> and we just increased the rounding to make it go away (see commit
->> 15b812f1). But that was a hack.
->>
->> And if that didn't help the ath9k case, then we should just revert
->> entirely.
->
-> Agreed - below is the combo 15b812f1 + 5d423ccd revert. (Would be nice
-> to get the boot log of the latest post-15b812f1 kernel that Yinghai
-> asked for before we revert, in the hope of better understanding the
-> problem.)
+The MCS bitmaps in the SET_RATE command structure were of the wrong
+size, due to use of the wrong define for the array length.  Just
+hardcode the lengths as 16, and do the same for the MCS bitmaps in
+other command structures.
 
-Bernhard has confirmed the new patch fixes this issue.
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 9e64dd4..7b136e7 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -634,7 +634,6 @@ struct ewc_ht_info {
+ #define MWL8K_PEER_TYPE_ACCESSPOINT	2
+ 
+ #define MWL8K_IEEE_LEGACY_DATA_RATES	13
+-#define MWL8K_MCS_BITMAP_SIZE		16
+ 
+ struct peer_capability_info {
+ 	/* Peer type - AP vs. STA.  */
+@@ -655,7 +654,7 @@ struct peer_capability_info {
+ 	__u8	legacy_rates[MWL8K_IEEE_LEGACY_DATA_RATES];
+ 
+ 	/* HT rate table. Intersection of our rates and peer rates.  */
+-	__u8	ht_rates[MWL8K_MCS_BITMAP_SIZE];
++	__u8	ht_rates[16];
+ 	__u8	pad[16];
+ 
+ 	/* If set, interoperability mode, no proprietary extensions.  */
+@@ -2638,8 +2637,8 @@ struct mwl8k_cmd_update_rateset {
+ 	__u8	legacy_rates[MWL8K_RATE_INDEX_MAX_ARRAY];
+ 
+ 	/* Bitmap for supported MCS codes.  */
+-	__u8	mcs_set[MWL8K_IEEE_LEGACY_DATA_RATES];
+-	__u8	reserved[MWL8K_IEEE_LEGACY_DATA_RATES];
++	__u8	mcs_set[16];
++	__u8	reserved[16];
+ } __attribute__((packed));
+ 
+ static int mwl8k_update_rateset(struct ieee80211_hw *hw,
+-- 
+1.5.6.4
