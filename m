@@ -1,30 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:50955 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757503AbZKZHfS (ORCPT
+Received: from sirokuusama.dnainternet.net ([83.102.40.133]:49917 "EHLO
+	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752709AbZK3TuD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Nov 2009 02:35:18 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: PROPOSAL: cfg80211 antenna selection
-Date: Thu, 26 Nov 2009 08:35:12 +0100
-Cc: Bob Copeland <bcopeland@gmail.com>
-References: <200911250941.10929.holgerschurig@gmail.com> <b6c5339f0911250637t1b698e94o9b835951ca8fbd60@mail.gmail.com>
-In-Reply-To: <b6c5339f0911250637t1b698e94o9b835951ca8fbd60@mail.gmail.com>
+	Mon, 30 Nov 2009 14:50:03 -0500
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 1/2] rndis_wlan: move copy of module parameters to separate
+	function
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 30 Nov 2009 21:50:07 +0200
+Message-ID: <20091130195007.13062.25776.stgit@fate.lan>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200911260835.12818.holgerschurig@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> So what does a mask of 0 mean?  No antennas, or use default?
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
-Good question, default would be best.
+ drivers/net/wireless/rndis_wlan.c |   37 ++++++++++++++++++++++---------------
+ 1 files changed, 22 insertions(+), 15 deletions(-)
 
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 2ecbedb..8dd9224 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -2594,23 +2594,9 @@ end:
+ /*
+  * driver/device initialization
+  */
+-static int bcm4320a_early_init(struct usbnet *usbdev)
+-{
+-	/* bcm4320a doesn't handle configuration parameters well. Try
+-	 * set any and you get partially zeroed mac and broken device.
+-	 */
+-
+-	return 0;
+-}
+-
+-static int bcm4320b_early_init(struct usbnet *usbdev)
++static void rndis_copy_module_params(struct usbnet *usbdev)
+ {
+ 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
+-	char buf[8];
+-
+-	/* Early initialization settings, setting these won't have effect
+-	 * if called after generic_rndis_bind().
+-	 */
+ 
+ 	priv->param_country[0] = modparam_country[0];
+ 	priv->param_country[1] = modparam_country[1];
+@@ -2652,6 +2638,27 @@ static int bcm4320b_early_init(struct usbnet *usbdev)
+ 		priv->param_workaround_interval = 500;
+ 	else
+ 		priv->param_workaround_interval = modparam_workaround_interval;
++}
++
++static int bcm4320a_early_init(struct usbnet *usbdev)
++{
++	/* bcm4320a doesn't handle configuration parameters well. Try
++	 * set any and you get partially zeroed mac and broken device.
++	 */
++
++	return 0;
++}
++
++static int bcm4320b_early_init(struct usbnet *usbdev)
++{
++	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
++	char buf[8];
++
++	rndis_copy_module_params(usbdev);
++
++	/* Early initialization settings, setting these won't have effect
++	 * if called after generic_rndis_bind().
++	 */
+ 
+ 	rndis_set_config_parameter_str(usbdev, "Country", priv->param_country);
+ 	rndis_set_config_parameter_str(usbdev, "FrameBursting",
 
-But I actually like the rate idea from Luis, so we probably won't
-use a bitmask then.
-
--- 
-http://www.holgerschurig.de
