@@ -1,56 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:40930 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:50532 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756392AbZKCDH5 (ORCPT
+	with ESMTP id S1751665AbZK3QQh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Nov 2009 22:07:57 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
-Subject: [RFT 2/9] ath9k: update hw configuration for virtual wiphys
-Date: Mon,  2 Nov 2009 22:07:54 -0500
-Message-Id: <1257217681-27180-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1257217681-27180-1-git-send-email-lrodriguez@atheros.com>
-References: <1257217681-27180-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 30 Nov 2009 11:16:37 -0500
+Subject: Re: [PATCH v3 2/2] iwmc3200wifi: rx aggregation support
+From: Samuel Ortiz <samuel@sortiz.org>
+Reply-To: Samuel Ortiz <samuel@sortiz.org>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1259555157-10866-2-git-send-email-yi.zhu@intel.com>
+References: <1259555157-10866-1-git-send-email-yi.zhu@intel.com>
+	 <1259555157-10866-2-git-send-email-yi.zhu@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 30 Nov 2009 17:16:36 +0100
+Message-ID: <1259597796.2182.10.camel@caravaggio>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k supports its own virtual wiphys. The hardware code
-relies on the ieee80211_hw for the present interface but
-with recent changes introduced the common->hw was never
-updated and is required for virtual wiphys.
+Hi Yi,
 
-Cc: Jouni.Malinen <Jouni.Malinen@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/virtual.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+On Mon, 2009-11-30 at 12:25 +0800, Zhu Yi wrote:
+>  static void iwm_rx_process_packet(struct iwm_priv *iwm,
+>  				  struct iwm_rx_packet *packet,
+>  				  struct iwm_rx_ticket_node *ticket_node)
+> @@ -1548,22 +1579,31 @@ static void iwm_rx_process_packet(struct iwm_priv *iwm,
+>  	switch (le16_to_cpu(ticket_node->ticket->action)) {
+>  	case IWM_RX_TICKET_RELEASE:
+>  		IWM_DBG_RX(iwm, DBG, "RELEASE packet\n");
+> +
+> +		skb->dev = iwm_to_ndev(iwm);
+> +		skb->protocol = eth_type_trans(skb, ndev);
+> +		skb->ip_summed = CHECKSUM_NONE;
+> +		memset(skb->cb, 0, sizeof(skb->cb));
+> +
+I dont think you want to do that processing before calling
+iwm_rx_adjust_packet() and probably not even before
+ieee80211_data_to_8023(). You need 802.3 frames for it to be relevant.
+Moreover, you probably want to do it for every skb on the skb queue you
+get from the amsdu processing.
 
-diff --git a/drivers/net/wireless/ath/ath9k/virtual.c b/drivers/net/wireless/ath/ath9k/virtual.c
-index e6a50f3..7678c4a 100644
---- a/drivers/net/wireless/ath/ath9k/virtual.c
-+++ b/drivers/net/wireless/ath/ath9k/virtual.c
-@@ -298,6 +298,7 @@ static void ath9k_wiphy_unpause_channel(struct ath_softc *sc)
- void ath9k_wiphy_chan_work(struct work_struct *work)
- {
- 	struct ath_softc *sc = container_of(work, struct ath_softc, chan_work);
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_wiphy *aphy = sc->next_wiphy;
- 
- 	if (aphy == NULL)
-@@ -313,6 +314,10 @@ void ath9k_wiphy_chan_work(struct work_struct *work)
- 	/* XXX: remove me eventually */
- 	ath9k_update_ichannel(sc, aphy->hw,
- 			      &sc->sc_ah->channels[sc->chan_idx]);
-+
-+	/* sync hw configuration for hw code */
-+	common->hw = aphy->hw;
-+
- 	ath_update_chainmask(sc, sc->chan_is_ht);
- 	if (ath_set_channel(sc, aphy->hw,
- 			    &sc->sc_ah->channels[sc->chan_idx]) < 0) {
--- 
-1.6.5.2.143.g8cc62
+Cheers,
+Samuel.
+
+
+>  		classify8023(skb);
+>  		iwm_rx_adjust_packet(iwm, packet, ticket_node);
+> +
+> +		if (le16_to_cpu(ticket_node->ticket->flags) &
+> +		    IWM_RX_TICKET_AMSDU_MSK) {
+> +			iwm_rx_process_amsdu(iwm, skb);
+> +			break;
+> +		}
+> +
+>  		ret = ieee80211_data_to_8023(skb, ndev->dev_addr, wdev->iftype);
+>  		if (ret < 0) {
+>  			IWM_DBG_RX(iwm, DBG, "Couldn't convert 802.11 header - "
+>  				   "%d\n", ret);
+> +			kfree_skb(packet->skb);
+>  			break;
+>  		}
+>  
+>  		IWM_HEXDUMP(iwm, DBG, RX, "802.3: ", skb->data, skb->len);
+>  
+> -		skb->dev = iwm_to_ndev(iwm);
+> -		skb->protocol = eth_type_trans(skb, ndev);
+> -		skb->ip_summed = CHECKSUM_NONE;
+> -		memset(skb->cb, 0, sizeof(skb->cb));
+> -
+>  		ndev->stats.rx_packets++;
+>  		ndev->stats.rx_bytes += skb->len;
+>  
+
 
