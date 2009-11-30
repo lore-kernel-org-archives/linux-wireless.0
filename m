@@ -1,143 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18739 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757880AbZKZDYp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Nov 2009 22:24:45 -0500
-Subject: Re: [PATCH] mwl8k: split driver by chipset
-From: Dan Williams <dcbw@redhat.com>
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20091123110211.GS20214@mail.wantstofly.org>
-References: <1258931158.12095.33.camel@localhost.localdomain>
-	 <20091123110211.GS20214@mail.wantstofly.org>
-Content-Type: text/plain
-Date: Wed, 25 Nov 2009 19:25:03 -0800
-Message-Id: <1259205903.3956.101.camel@localhost.localdomain>
+Received: from fw.wantstofly.org ([80.101.37.227]:57144 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752610AbZK3RLj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Nov 2009 12:11:39 -0500
+Date: Mon, 30 Nov 2009 18:11:44 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 02/12] mwl8k: fix UPDATE_STADB command struct legacy_rates array length
+Message-ID: <20091130171144.GE20214@mail.wantstofly.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-11-23 at 12:02 +0100, Lennert Buytenhek wrote:
-> Hi Dan,
-> 
-> 
-> On Sun, Nov 22, 2009 at 03:05:58PM -0800, Dan Williams wrote:
-> 
-> > No functional changes, but split the code up to make it
-> > easier to add support for other Libertas softmac chipsets
-> > like the 88w8361, which has slightly different RX and TX
-> > descriptors and some slightly different commands.
-> 
-> As to RX/TX desc layout, see below.
-> 
-> 
-> > Signed-off-by: Dan Williams <dcbw@redhat.com>
-> > 
-> > ---
-> > Note: patch is large (code reshuffle) so in case it gets rejected:
-> > 
-> > http://bigw.org/~dan/mwl8k-split.patch
-> 
-> I've been thinking about splitting up mwl8k.c for a while as well
-> now, but I've resisted it so far, as I wasn't sure what the split
-> would have to look like after support for more device types would
-> be added.
-> 
-> The interface with the wireless chip is almost entirely defined
-> by the firmware running on it, and not by the actual wireless chip
-> itself.  So e.g. putting the RX desc handling in files named after
-> the chip is somewhat confusing (but I guess it's my fault for naming
-> the rxd ops like that in the first place).
+There exist 12 802.11b/g rates, but mwl8k supports two additional
+(non-standard) rates, and includes those rates in rate bitmasks and
+in its internal rate table that hardware rate indices index.
 
-True.
+Commit "mwl8k: report rate and other information for received frames"
+added one of the nonstandard rates to the mwl8k_rates table to make
+the OFDM rates in the table line up with the rate indices that are
+reported in the receive descriptor (so that we can just simply copy
+the receive descriptor rate index into ieee80211_rx_status::rate_idx)
+and bumped MWL8K_IEEE_LEGACY_DATA_RATES from 12 to 13, but this
+screwed up the UPDATE_STADB command struct layout, as it also uses
+that define, for its legacy_rates array.
 
-> This isn't just a theoretical issue: there are generally two different
-> firmware branches for the chips that mwl8k supports (AP firmware and
-> STA firmware), and the rxd format depends on which firmware you use.
-> So e.g. if you put a STA firmware image on, say, the 8366, you'll end
-> up having to use the rxd ops that are currently marked as being for
-> the 8687, and not the "8366" ones.  (I only found this out after
-> submitting that round of patches.)
-> 
-> I was wondering if we should really make the support for each chip a
-> different kernel module as you did in your patch, but then I figured
-> that this might be a good way to let the user choose whether to load
-> AP or STA firmware if we have both available, which was still one of
-> the unsolved problems.  I.e., make mwl8366_ap and mwl8366_sta, and
-> then let the user choose which one to load.  Or is there a better way
-> of doing this?
+To avoid having to convert rate indices and legacy rate bitmaps (e.g.
+ieee80211_bss_conf::basic_rates) between the 12-rate mac80211 format
+and the 14-rate mwl8k format, we'll report all 14 rates in our wiphy's
+band, but filter out the nonstandard ones e.g. in the case of the
+UPDATE_STADB command which only accepts 12 rates.
 
-Ugh.  I'd rather not have different kernel modules like this because
-that's not how every other driver works.  It's a pain from userspace
-because to switch to AP mode for whatever reason (like for connection
-sharing or whatever in NM) we'd need to know to reload the driver and
-messing with rmmod/modprobe just sucks.  Like we'd need to have a list
-of cards with this issue, and what the module names were, hardcoded into
-NM.
+In the commands that accept 14 rates (SET_AID, SET_RATE), replace the
+use of the MWL8K_RATE_INDEX_MAX_ARRAY define in the command struct by
+the constant 14, to make it clearer that these commands accept 14 rates.
 
-I'd much rather have some bit in cfg80211 that says that the card cannot
-switch modes without killing all connections and reinitializing the
-chip.  Some drivers reload firmware for stuff like this (orinoco, old
-prism54, band switches) already.  From userspace it's much more useful
-to be able to make a choice based on a flag than to reload hardcoded
-modules.
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   51 ++++++++++-------------------------------
+ 1 files changed, 13 insertions(+), 38 deletions(-)
 
-> > Note #2: I've tested firmware loading and up to GET_HW_SPEC with an
-> > 8361 card and I assume since there are no functional changes it will
-> > continue to work with 8687 and 8366.
-> 
-> You mentioned that there are slightly different commands on the 8361
-> firmware you have -- can you give some examples?
-
-I'm using the 8361 marvell driver dump from linville's kernel.org
-'marvell' tree, and also looking at the usb82 linux driver from
-Extranet.
-
-Some changes for 8361:
-
-1) 8361 has a 'u32 signature' at the start of the rx & tx descriptors
-which is set to a magic value (MRVL_PCI_DMA_SIGNATURE = 0xCAFEEFAC).
-This appears to be only for the driver's use in ensuring that the
-descriptor pool doesn't get corrupted, but it's part of the rx/tx
-descriptors and thus I assume the firmware accounts for it.
-
-2) the STA GET_HW_SPEC command is different; it ends with "caps2" and
-does not include "num_tx_desc_per_queue" or "total_rxd"
-
-3) GET_STAT has a different layout; mwl8k looks for ACK_FAILURE at index
-9, but on 8361 it's index 5; mwl8k looks for RTS_FAILURE at 12 but on
-8361 it's 4, etc.
-
-4) 8361 doesn't appear to implement the "sniffer" stuff, so I had to
-ignore the error when setting up the chip
-
-5) struct peer_capability_info is shorter on 8361; it doesn't have
-anything after 'ht_rates'
-
-6) The firmware image starts with 0x10, not 0x01.  It does however load
-and boot correctly.
-
-That's all I can find for now.
-
-8335 is a whole different beast which might actually deserve it's own
-driver based on mwl8k.  It makes more extensive use of MMIO instead of
-DMA (ex the helper firmware is written to device memory byte-at-a-time
-instead of using DMA) and the command structures are correspondingly
-different too.  Obviously it doesn't do 11n.  Might make sense to do a
-mwl8k_lib module later on, but at the moment I'll be happy to get
-8361pci working.
-
-8338 and 8382 are both USB and of course their command submission will
-be different.  We've got the usb82 sources in both Linville's 'marvell'
-tree (though I think they are incomplete there) and also the usb82
-driver the Extranet.  One step at a time though :)
-
-So maybe we don't need to split up mwl8k yet.  Supporting 8361 may not
-pollute the code too much.  8335 or USB support would probably require a
-much more extensive split.  I'll go ahead and try to graft on 8361 and
-see where I get.
-
-Dan
-
-
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 7b136e7..a72ee1f 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -184,7 +184,7 @@ struct mwl8k_priv {
+ 	/* PHY parameters */
+ 	struct ieee80211_supported_band band;
+ 	struct ieee80211_channel channels[14];
+-	struct ieee80211_rate rates[13];
++	struct ieee80211_rate rates[14];
+ 
+ 	bool radio_on;
+ 	bool radio_short_preamble;
+@@ -220,15 +220,6 @@ struct mwl8k_vif {
+ 	u8	bssid[ETH_ALEN];
+ 	u8	mac_addr[ETH_ALEN];
+ 
+-	/*
+-	 * Subset of supported legacy rates.
+-	 * Intersection of AP and STA supported rates.
+-	 */
+-	struct ieee80211_rate legacy_rates[13];
+-
+-	/* number of supported legacy rates */
+-	u8	legacy_nrates;
+-
+ 	 /* Index into station database.Returned by update_sta_db call */
+ 	u8	peer_id;
+ 
+@@ -266,6 +257,11 @@ static const struct ieee80211_rate mwl8k_rates[] = {
+ 	{ .bitrate = 360, .hw_value = 72, },
+ 	{ .bitrate = 480, .hw_value = 96, },
+ 	{ .bitrate = 540, .hw_value = 108, },
++	{ .bitrate = 720, .hw_value = 144, },
++};
++
++static const u8 mwl8k_rateids[12] = {
++	2, 4, 11, 22, 12, 18, 24, 36, 48, 72, 96, 108,
+ };
+ 
+ /* Set or get info from Firmware */
+@@ -633,8 +629,6 @@ struct ewc_ht_info {
+ /* Peer Entry flags - used to define the type of the peer node */
+ #define MWL8K_PEER_TYPE_ACCESSPOINT	2
+ 
+-#define MWL8K_IEEE_LEGACY_DATA_RATES	13
+-
+ struct peer_capability_info {
+ 	/* Peer type - AP vs. STA.  */
+ 	__u8	peer_type;
+@@ -651,7 +645,7 @@ struct peer_capability_info {
+ 	struct ewc_ht_info	ewc_info;
+ 
+ 	/* Legacy rate table. Intersection of our rates and peer rates.  */
+-	__u8	legacy_rates[MWL8K_IEEE_LEGACY_DATA_RATES];
++	__u8	legacy_rates[12];
+ 
+ 	/* HT rate table. Intersection of our rates and peer rates.  */
+ 	__u8	ht_rates[16];
+@@ -2514,9 +2508,7 @@ static int mwl8k_cmd_update_sta_db(struct ieee80211_hw *hw,
+ 	struct ieee80211_bss_conf *info = &mv_vif->bss_info;
+ 	struct mwl8k_cmd_update_sta_db *cmd;
+ 	struct peer_capability_info *peer_info;
+-	struct ieee80211_rate *bitrates = mv_vif->legacy_rates;
+ 	int rc;
+-	__u8 count, *rates;
+ 
+ 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+ 	if (cmd == NULL)
+@@ -2535,13 +2527,11 @@ static int mwl8k_cmd_update_sta_db(struct ieee80211_hw *hw,
+ 		/* Build peer_info block */
+ 		peer_info->peer_type = MWL8K_PEER_TYPE_ACCESSPOINT;
+ 		peer_info->basic_caps = cpu_to_le16(info->assoc_capability);
++		memcpy(peer_info->legacy_rates, mwl8k_rateids,
++		       sizeof(mwl8k_rateids));
+ 		peer_info->interop = 1;
+ 		peer_info->amsdu_enabled = 0;
+ 
+-		rates = peer_info->legacy_rates;
+-		for (count = 0; count < mv_vif->legacy_nrates; count++)
+-			rates[count] = bitrates[count].hw_value;
+-
+ 		rc = mwl8k_post_cmd(hw, &cmd->header);
+ 		if (rc == 0)
+ 			mv_vif->peer_id = peer_info->station_id;
+@@ -2564,8 +2554,6 @@ static int mwl8k_cmd_update_sta_db(struct ieee80211_hw *hw,
+ /*
+  * CMD_SET_AID.
+  */
+-#define MWL8K_RATE_INDEX_MAX_ARRAY			14
+-
+ #define MWL8K_FRAME_PROT_DISABLED			0x00
+ #define MWL8K_FRAME_PROT_11G				0x07
+ #define MWL8K_FRAME_PROT_11N_HT_40MHZ_ONLY		0x02
+@@ -2578,7 +2566,7 @@ struct mwl8k_cmd_update_set_aid {
+ 	 /* AP's MAC address (BSSID) */
+ 	__u8	bssid[ETH_ALEN];
+ 	__le16	protection_mode;
+-	__u8	supp_rates[MWL8K_RATE_INDEX_MAX_ARRAY];
++	__u8	supp_rates[14];
+ } __attribute__((packed));
+ 
+ static int mwl8k_cmd_set_aid(struct ieee80211_hw *hw,
+@@ -2587,8 +2575,6 @@ static int mwl8k_cmd_set_aid(struct ieee80211_hw *hw,
+ 	struct mwl8k_vif *mv_vif = MWL8K_VIF(vif);
+ 	struct ieee80211_bss_conf *info = &mv_vif->bss_info;
+ 	struct mwl8k_cmd_update_set_aid *cmd;
+-	struct ieee80211_rate *bitrates = mv_vif->legacy_rates;
+-	int count;
+ 	u16 prot_mode;
+ 	int rc;
+ 
+@@ -2620,8 +2606,7 @@ static int mwl8k_cmd_set_aid(struct ieee80211_hw *hw,
+ 	}
+ 	cmd->protection_mode = cpu_to_le16(prot_mode);
+ 
+-	for (count = 0; count < mv_vif->legacy_nrates; count++)
+-		cmd->supp_rates[count] = bitrates[count].hw_value;
++	memcpy(cmd->supp_rates, mwl8k_rateids, sizeof(mwl8k_rateids));
+ 
+ 	rc = mwl8k_post_cmd(hw, &cmd->header);
+ 	kfree(cmd);
+@@ -2634,7 +2619,7 @@ static int mwl8k_cmd_set_aid(struct ieee80211_hw *hw,
+  */
+ struct mwl8k_cmd_update_rateset {
+ 	struct	mwl8k_cmd_pkt header;
+-	__u8	legacy_rates[MWL8K_RATE_INDEX_MAX_ARRAY];
++	__u8	legacy_rates[14];
+ 
+ 	/* Bitmap for supported MCS codes.  */
+ 	__u8	mcs_set[16];
+@@ -2644,10 +2629,7 @@ struct mwl8k_cmd_update_rateset {
+ static int mwl8k_update_rateset(struct ieee80211_hw *hw,
+ 		struct ieee80211_vif *vif)
+ {
+-	struct mwl8k_vif *mv_vif = MWL8K_VIF(vif);
+ 	struct mwl8k_cmd_update_rateset *cmd;
+-	struct ieee80211_rate *bitrates = mv_vif->legacy_rates;
+-	int count;
+ 	int rc;
+ 
+ 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+@@ -2656,9 +2638,7 @@ static int mwl8k_update_rateset(struct ieee80211_hw *hw,
+ 
+ 	cmd->header.code = cpu_to_le16(MWL8K_CMD_SET_RATE);
+ 	cmd->header.length = cpu_to_le16(sizeof(*cmd));
+-
+-	for (count = 0; count < mv_vif->legacy_nrates; count++)
+-		cmd->legacy_rates[count] = bitrates[count].hw_value;
++	memcpy(cmd->legacy_rates, mwl8k_rateids, sizeof(mwl8k_rateids));
+ 
+ 	rc = mwl8k_post_cmd(hw, &cmd->header);
+ 	kfree(cmd);
+@@ -2931,11 +2911,6 @@ static int mwl8k_add_interface(struct ieee80211_hw *hw,
+ 	/* Back pointer to parent config block */
+ 	mwl8k_vif->priv = priv;
+ 
+-	/* Setup initial PHY parameters */
+-	memcpy(mwl8k_vif->legacy_rates,
+-		priv->rates, sizeof(mwl8k_vif->legacy_rates));
+-	mwl8k_vif->legacy_nrates = ARRAY_SIZE(priv->rates);
+-
+ 	/* Set Initial sequence number to zero */
+ 	mwl8k_vif->seqno = 0;
+ 
+-- 
+1.5.6.4
