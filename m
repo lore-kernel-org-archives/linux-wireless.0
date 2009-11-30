@@ -1,105 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:36539 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753615AbZKTUFF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Nov 2009 15:05:05 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from smtp.nokia.com ([192.100.122.233]:51876 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753346AbZK3ISV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Nov 2009 03:18:21 -0500
+Subject: [PATCH v2 03/11] wl1251: fix error handling in wl1251_op_config()
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Ben Cahill <ben.m.cahill@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 01/19] iwlwifi: Add iwl_write8()
-Date: Fri, 20 Nov 2009 12:04:52 -0800
-Message-Id: <1258747510-21233-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
-References: <1258747510-21233-1-git-send-email-reinette.chatre@intel.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 30 Nov 2009 10:17:52 +0200
+Message-ID: <20091130081752.17360.50112.stgit@tikku>
+In-Reply-To: <20091130081706.17360.48084.stgit@tikku>
+References: <20091130081706.17360.48084.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
+From: Kalle Valo <kalle.valo@nokia.com>
 
-To support byte writes to CSR_INT_COALESCING and CSR_INT_PERIODIC registers,
-add iwl_write8(), including debug/trace support.
+Not all return values were checked and one exit from function didn't put
+firmware sleep after the error.
 
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-devtrace.c |    1 +
- drivers/net/wireless/iwlwifi/iwl-devtrace.h |   16 ++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-io.h       |   20 ++++++++++++++++++++
- 3 files changed, 37 insertions(+), 0 deletions(-)
+ drivers/net/wireless/wl12xx/wl1251_main.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-devtrace.c b/drivers/net/wireless/iwlwifi/iwl-devtrace.c
-index 4ef5aca..e7d88d1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-devtrace.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-devtrace.c
-@@ -5,6 +5,7 @@
- #define CREATE_TRACE_POINTS
- #include "iwl-devtrace.h"
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index 0417745..24050d5 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -645,20 +645,25 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		 * through the bss_info_changed() hook.
+ 		 */
+ 		ret = wl1251_ps_set_mode(wl, STATION_POWER_SAVE_MODE);
++		if (ret < 0)
++			goto out_sleep;
+ 	} else if (!(conf->flags & IEEE80211_CONF_PS) &&
+ 		   wl->psm_requested) {
+ 		wl1251_debug(DEBUG_PSM, "psm disabled");
  
-+EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_iowrite8);
- EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ioread32);
- EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_iowrite32);
- EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_rx);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-devtrace.h b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
-index 8c71592..f2d4b01 100644
---- a/drivers/net/wireless/iwlwifi/iwl-devtrace.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
-@@ -32,6 +32,22 @@ TRACE_EVENT(iwlwifi_dev_ioread32,
- 	TP_printk("[%p] read io[%#x] = %#x", __entry->priv, __entry->offs, __entry->val)
- );
+ 		wl->psm_requested = false;
  
-+TRACE_EVENT(iwlwifi_dev_iowrite8,
-+	TP_PROTO(struct iwl_priv *priv, u32 offs, u8 val),
-+	TP_ARGS(priv, offs, val),
-+	TP_STRUCT__entry(
-+		PRIV_ENTRY
-+		__field(u32, offs)
-+		__field(u8, val)
-+	),
-+	TP_fast_assign(
-+		PRIV_ASSIGN;
-+		__entry->offs = offs;
-+		__entry->val = val;
-+	),
-+	TP_printk("[%p] write io[%#x] = %#x)", __entry->priv, __entry->offs, __entry->val)
-+);
-+
- TRACE_EVENT(iwlwifi_dev_iowrite32,
- 	TP_PROTO(struct iwl_priv *priv, u32 offs, u32 val),
- 	TP_ARGS(priv, offs, val),
-diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
-index d0a358c..e552d4c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-io.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-io.h
-@@ -62,6 +62,26 @@
-  *
-  */
+-		if (wl->psm)
++		if (wl->psm) {
+ 			ret = wl1251_ps_set_mode(wl, STATION_ACTIVE_MODE);
++			if (ret < 0)
++				goto out_sleep;
++		}
+ 	}
  
-+static inline void _iwl_write8(struct iwl_priv *priv, u32 ofs, u8 val)
-+{
-+	trace_iwlwifi_dev_iowrite8(priv, ofs, val);
-+	iowrite8(val, priv->hw_base + ofs);
-+}
-+
-+#ifdef CONFIG_IWLWIFI_DEBUG
-+static inline void __iwl_write8(const char *f, u32 l, struct iwl_priv *priv,
-+				 u32 ofs, u8 val)
-+{
-+	IWL_DEBUG_IO(priv, "write8(0x%08X, 0x%02X) - %s %d\n", ofs, val, f, l);
-+	_iwl_write8(priv, ofs, val);
-+}
-+#define iwl_write8(priv, ofs, val) \
-+	__iwl_write8(__FILE__, __LINE__, priv, ofs, val)
-+#else
-+#define iwl_write8(priv, ofs, val) _iwl_write8(priv, ofs, val)
-+#endif
-+
-+
- static inline void _iwl_write32(struct iwl_priv *priv, u32 ofs, u32 val)
- {
- 	trace_iwlwifi_dev_iowrite32(priv, ofs, val);
--- 
-1.5.6.3
+ 	if (conf->power_level != wl->power_level) {
+ 		ret = wl1251_acx_tx_power(wl, conf->power_level);
+ 		if (ret < 0)
+-			goto out;
++			goto out_sleep;
+ 
+ 		wl->power_level = conf->power_level;
+ 	}
 
