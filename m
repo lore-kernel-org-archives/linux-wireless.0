@@ -1,56 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:43338 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754508AbZLNNxj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 08:53:39 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so866167eyd.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 05:53:38 -0800 (PST)
-Message-ID: <4B26435F.5020002@gmail.com>
-Date: Mon, 14 Dec 2009 13:53:35 +0000
-From: Dave <kilroyd@googlemail.com>
-MIME-Version: 1.0
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-CC: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] orinoco: fix GFP_KERNEL in orinoco_set_key with interrupts
- disabled
-References: <200912101955.01325.arvidjaar@mail.ru> <4B213F4D.2000707@gmail.com> <200912102156.32029.arvidjaar@mail.ru>
-In-Reply-To: <200912102156.32029.arvidjaar@mail.ru>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:36573 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752302AbZLASRh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2009 13:17:37 -0500
+Subject: Re: [PATCH] mac80211: allow disabling 40MHz on 2.4GHz
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1259688582.32171.97.camel@johannes.local>
+References: <1259688582.32171.97.camel@johannes.local>
+Content-Type: text/plain
+Date: Tue, 01 Dec 2009 13:17:26 -0500
+Message-Id: <1259691446.4806.12.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrey Borzenkov wrote:
-> On Thursday 10 of December 2009 21:34:53 Dave wrote:
->> Andrey Borzenkov wrote:
->>> I had to resurrect old notebook and immediately hit this under
->>> 2.6.32:
->>>
->>> [   77.254109] WARNING: at
->>> /home/bor/src/linux-git/kernel/lockdep.c:2465 lockdep
->>> _trace_alloc+0x9a/0xa0()
->>>
->>> Until orinoco_lock can be converted from spinlock into mutex, this
->>> patch is the most simple solution.
->> Thank you Andrey. The patch is correct (though it could clean up the
->> misdirected comment 4 or 5 lines above).
-> 
-> Do you want me to resubmit with this cleanup?
-> 
->> Is it worth pushing this to stable?
-> 
-> I think yes. Sleeping under spinlock with interrupts disabled is not fun 
-> even if it is very unlikely.
+On Tue, 2009-12-01 at 18:29 +0100, Johannes Berg wrote:
+> In some situations it is required that a system be
+> configured with no support for 40 MHz channels in
+> the 2.4 GHz band. Rather than imposing any such
+> restrictions on everybody, allow configuration a
+> system like that with a module parameter. It is
+> writable at runtime but only takes effect at the
+> time of the next association.
 
-If I understand it right, we want to cc the patch to stable@kernel.org.
-So if you could take care of that comment and resubmit with cc (and
-something in the title so John can tell we'd like this in 2.6.33 as
-well), everyone's happy
+That looks like a hack to me.
 
-<festive>
-and Santa distributes the patch to all the good little kernels and
-kernelettes
-</festive>
+Maybe it should be treated like other CRDA flags?  In fact, you can find
+this in dbparse.py in the wireless-regdb sources:
 
+    # hole at bit 9. FIXME: Where is NO-HT40 defined?
+    'NO-HT40':          1<<10,
 
-Dave.
+However, there are no other references to NO-HT40 in the wireless-regdb
+or CRDA sources.  I assume it's not implemented.
+
+-- 
+Regards,
+Pavel Roskin
