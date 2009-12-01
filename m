@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from salugit.unile.it ([193.204.77.149]:44841 "EHLO salug.it"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751582AbZLVBv4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2009 20:51:56 -0500
-Received: from magooz.no-ip.org (unknown [151.95.194.34])
-	by salug.it (Postfix) with ESMTP id C94861815D
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Dec 2009 02:20:51 +0100 (CET)
-Date: Tue, 22 Dec 2009 02:21:35 +0100
-From: Luca Verdesca <magooz@salug.it>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath5k: adding LED support for AR5BXB63 cards
-Message-ID: <20091222022135.2102c465@magooz.no-ip.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:33967 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752340AbZLATHY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2009 14:07:24 -0500
+Received: by mail-ew0-f219.google.com with SMTP id 19so5276182ewy.21
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 11:07:30 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH v3 2/4] rt2x00: Remove SKBDESC_L2_PADDED flag.
+Date: Tue, 1 Dec 2009 20:07:27 +0100
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Benoit Papillault <benoit.papillault@free.fr>
+References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com> <1259615298-2305-2-git-send-email-gwingerde@gmail.com> <1259615298-2305-3-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1259615298-2305-3-git-send-email-gwingerde@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200912012007.28165.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With following patch, LED should now work with LiteOn AR5BXB63 mini
-pci-e cards.
+On Monday 30 November 2009, Gertjan van Wingerde wrote:
+> With the improved L2 padding code, this flag is no longer necessary, as the
+> rt2x00queue_remove_l2pad is capable of detecting by itself if L2 padding is
+> applied.
+> For received frames the RX descriptor flag is still being checked.
+> 
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-I hope I made no mistake.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Happy hacking!
-Magooz
+> ---
+>  drivers/net/wireless/rt2x00/rt2800pci.c   |    5 +----
+>  drivers/net/wireless/rt2x00/rt2800usb.c   |    4 +---
+>  drivers/net/wireless/rt2x00/rt2x00queue.c |    6 +-----
+>  drivers/net/wireless/rt2x00/rt2x00queue.h |    5 +----
+>  4 files changed, 4 insertions(+), 16 deletions(-)
+> 
 
 
-*** /usr/src/linux/drivers/net/wireless/ath/ath5k/led.c	2009-12-16 16:06:08.000000000 +0100
---- /home/magooz/led.c	2009-12-16 16:10:46.000000000 +0100
-***************
-*** 53,58 ****
---- 53,61 ----
-  
-  /* Devices we match on for LED config info (typically laptops) */
-  static const struct pci_device_id ath5k_led_devices[] = {
-+ 	/* LiteOn AR5BXB63 (magooz@salug.it) */
-+ 	{ PCI_SDEVICE(ATHEROS, 0x3067), ATH_LED(3, 0) },
-  	/* AR5211 */
-  	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5211), ATH_LED(0, 0) },
-  	/* HP Compaq nc6xx, nc4000, nx6000 */
