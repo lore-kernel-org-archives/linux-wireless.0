@@ -1,43 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49594 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754966AbZLHOaK (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:34812 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753217AbZLAV63 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 09:30:10 -0500
-Date: Tue, 8 Dec 2009 09:29:40 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Stephen Hemminger <shemminger@vyatta.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-hotplug@vger.kernel.org
-Subject: Re: wireless device and udev
-Message-ID: <20091208142940.GB15172@tuxdriver.com>
-References: <20091207172616.7470ed2b@nehalam>
+	Tue, 1 Dec 2009 16:58:29 -0500
+Received: by ewy19 with SMTP id 19so5458123ewy.21
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 13:58:34 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH v3 4/4] rt2x00: Only remove L2 padding in received frames if there is payload.
+Date: Tue, 1 Dec 2009 22:58:32 +0100
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Benoit Papillault <benoit.papillault@free.fr>,
+	John Linville <linville@tuxdriver.com>
+References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com> <1259615298-2305-4-git-send-email-gwingerde@gmail.com> <1259615298-2305-5-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1259615298-2305-5-git-send-email-gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091207172616.7470ed2b@nehalam>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200912012258.33123.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 07, 2009 at 05:26:16PM -0800, Stephen Hemminger wrote:
-> The default udev persistent network rules based on hardware mac id doesn't
-> work well when multiple SSID's are created on an access-point.  The command
->  iw phy phy0 interface add wlan1 type managed
+On Monday 30 November 2009, Gertjan van Wingerde wrote:
+> L2 padding will only be present when there is actual payload present.
 > 
-> is supposed to make a device name wlan1, but udev sees that it has the same
-> mac address as wlan0 and gets confused leaving the device named wlan1_rename
-> 
-> It looks like wlanX is breaking assumptions of existing udev persistent network
-> device name generation rules.  Perhaps there needs to be special case for wlanX
-> devices?
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Yes, probably so.  But what would it be?  Factoring-in SSID is clearly
-not right for the usual case (i.e. one interface on a mobile device).
-I'm not sure what else one could use as a key.
-
-What does udev do for bridge, bond, or vlan devices?  Don't those
-share MAC addresses with the underlying physical device?
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
