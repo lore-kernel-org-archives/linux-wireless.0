@@ -1,90 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60177 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751241AbZLCKzD (ORCPT
+Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:51816 "EHLO
+	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754568AbZLAVaC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2009 05:55:03 -0500
-Subject: Re: question regarding cfg80211 monitor modes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <holgerschurig@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200912031148.46934.holgerschurig@gmail.com>
-References: <200912031148.46934.holgerschurig@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Jfn0VrMFwOF9DutOGsM6"
-Date: Thu, 03 Dec 2009 11:54:42 +0100
-Message-ID: <1259837682.12843.10.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 1 Dec 2009 16:30:02 -0500
+Message-ID: <4B158ADF.7060700@gmail.com>
+Date: Tue, 01 Dec 2009 22:30:07 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Benoit PAPILLAULT <benoit.papillault@free.fr>
+CC: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [rt2x00-users] [PATCH v3 0/4] Further L2 padding fixes.
+References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com> <4B14594E.2090307@free.fr>
+In-Reply-To: <4B14594E.2090307@free.fr>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 12/01/09 00:46, Benoit PAPILLAULT wrote:
+> Gertjan van Wingerde a écrit :
+>> The L2 padding fixes patch has grown a bit and now consists of 4 separate
+>> patches to clean the L2 padding code up and to fix a number of bugs at the
+>> same time.
+>>
+>> 	1. rt2x00: Further L2 padding fixes.
+>> 	2. rt2x00: Remove SKBDESC_L2_PADDED flag.
+>> 	3. rt2x00: Reorganize L2 padding inserting function.
+>> 	4. rt2x00: Only remove L2 padding in received frames if there is payload.
+>>
+>> ---
+>> Gertjan.
+> 
+> Thanks Gertjan for the patches, I know that padding is a bit of
+> nightware. I've testing your tree and here are the results:
+> 
+> 1. On TX : It fails for control frames with hdrlen=10 since it will
+> produce l2pad = 2 in your case, where it should be 0. In all other
+> cases, it works!
+> 
 
---=-Jfn0VrMFwOF9DutOGsM6
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Hmm. That's strange, as patch 3 of the series should have handled this. Basically this patch
+checks if a frame actually has payload, and refrains from inserting l2pad and payload alignment
+in that case.
 
-On Thu, 2009-12-03 at 11:48 +0100, Holger Schurig wrote:
-> "iw wlan0 set type monitor" allows the following flags:
->=20
->                 none:     no special flags
->                 fcsfail:  show frames with FCS errors
->                 control:  show control frames
->                 otherbss: show frames from other BSSes
->                 cook:     use cooked mode
->=20
-> However, I don't know how to map them to the Libertas' firmware=20
-> flags, which has
->=20
-> Libertas (bits can be ored)
-> Data frames                   0x01  =20
-> Mgmt frames but beacons       0x02
-> Beacons                       0x04
->=20
->=20
-> So I guess that the following could be a translation table:
->=20
-> none       0x00
-> fcsfail    -ENOTSUPP
-> control    0x02 | 0x04
->=20
-> But what should "otherbss" and "cook" be?
+How did you detect this failure?
+What did you observe on the "wire", i.e. how was the frame malformed because of this?
 
-"cook" and "none" only make sense while operating in a different mode at
-the same time. For "cook" you get frames that the kernel hasn't
-consumed. For "none" you don't influence the filters due to the monitor.
-I suspect you don't support concurrent operation, so neither of those
-makes sense.
+Also, would it be possible to get some of the skb details of a frame that fails?
 
-fcsfail/plcpfail are probably not supported.
 
-=46rom what you say, "control" isn't supported either, since you were
-talking about management frames, not control frames. "otherbss" is for
-showing frames with a different BSSID, and in libertas monitor mode
-probably always enabled.
+> Solution : padding is only needed for data frames for rt28x devices, so
+> I think it's better to something like rt2xqueue_padpos
+> [http://git.popipo.fr/?p=rt2x00.git;a=commitdiff;h=95ddf076c13062d1026025d97ba511f880a1792d]
+> 
 
-I'd say don't bother with the flags at all.
+I'm still not fond of using detailed ieee 802.11 frame format knowledge to do this. I prefer
+to use standard mac80211 functions with a bit of detection on the actual skb.
 
-johannes
-
---=-Jfn0VrMFwOF9DutOGsM6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLF5jvAAoJEODzc/N7+QmacsEQAJcgUsglq754O2zbGokABzIO
-OQaztR5XeQ0bzCYg39uaKHhat9Co6i7ApIoMyxZlKu9Q+pBDaGSSEb2MVxgSxEyN
-WJ/+MSldHiqGMeP5Xhf5a8jwmWChWpBnI9NHG7p6FhD1m7XLwjXEI+U25vT8MbK1
-2irobIONtLHycg/ExnAF1fYOKqMsO7rVDQoz8R9NWPW90fyCXg1n65hizDpgEere
-287nogMnZzFnIfPczFMeUPqa63UqfLV8J2GX7XjYeXPYCNhJiForNQoyMl2A8SZu
-WFPOpq/8QeabQ4nelybH4UWZi6Q8TpLD+tBjfbqVYAOxEJq5i8sNtI63TZ0CrpW4
-lG+z3DSEJnrfolS8wXaBP2LpnpsajXB3k3jVQ4eUz8O8lzUVG6iXdvZ9Cw2YWCf7
-drDGT2DppZVcUDbLjMwpBURyY9Js652PBAwlZUuuLfzvfITPKYKiNvLUMGaS+DUj
-HMTBMVR2h4gRz4wR0FJtjP95XeBuIIXgoeHnCH7L/72h1aJbUucaaYN5tO5Gee6l
-S68QsjvqMi4N6BEp8M6nn07jgjb2qpEsjggaoPmYDxXDUPL+l5eXIedDIc/dddaA
-n3+Q//TOi1N2+fX2B1b+s/POQkN4/YBbeFIfPG9nEQGIJMqfY4cyGY6xSi134tRs
-QkOYt/qINgnxb+x3A6no
-=FDwF
------END PGP SIGNATURE-----
-
---=-Jfn0VrMFwOF9DutOGsM6--
-
+---
+Gertjan.
