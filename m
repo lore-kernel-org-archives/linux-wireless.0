@@ -1,60 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:48307 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755334AbZLBUwz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2009 15:52:55 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/3] iwlwifi: indicate uCode type when fail dump error/event log
-Date: Wed,  2 Dec 2009 12:53:00 -0800
-Message-Id: <1259787181-21303-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1259787181-21303-1-git-send-email-reinette.chatre@intel.com>
-References: <1259787181-21303-1-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:52314 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754073AbZLANYX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2009 08:24:23 -0500
+Subject: [PATCH] mac80211_hwsim: implement ampdu action
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 01 Dec 2009 14:24:24 +0100
+Message-ID: <1259673864.32171.77.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Not that we actually ever aggregate anything, but
+it could potentially be useful anyhow to simulate
+aggregation sessions.
 
-error_event_table_ptr is only set upon receipt of REPLY_ALIVE. Until
-then both event log and error log will fail. Add information to indicate
-which uCode encounter the failure case.
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+This must go in front of "mac80211: introduce flush operation"
+for that one to apply cleanly. Sorry.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index c96513b..b8377ef 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1662,7 +1662,9 @@ void iwl_dump_nic_error_log(struct iwl_priv *priv)
- 		base = le32_to_cpu(priv->card_alive.error_event_table_ptr);
+ drivers/net/wireless/mac80211_hwsim.c |   26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+--- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2009-12-01 10:51:01.000000000 +0100
++++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2009-12-01 12:39:51.000000000 +0100
+@@ -828,6 +828,31 @@ static int mac80211_hwsim_testmode_cmd(s
+ }
+ #endif
  
- 	if (!priv->cfg->ops->lib->is_valid_rtc_data_addr(base)) {
--		IWL_ERR(priv, "Not valid error log pointer 0x%08X\n", base);
-+		IWL_ERR(priv,
-+			"Not valid error log pointer 0x%08X for %s uCode\n",
-+			base, (priv->ucode_type == UCODE_INIT) ? "Init" : "RT");
- 		return;
- 	}
++static int mac80211_hwsim_ampdu_action(struct ieee80211_hw *hw,
++				       struct ieee80211_vif *vif,
++				       enum ieee80211_ampdu_mlme_action action,
++				       struct ieee80211_sta *sta, u16 tid, u16 *ssn)
++{
++	switch (action) {
++	case IEEE80211_AMPDU_TX_START:
++		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
++		break;
++	case IEEE80211_AMPDU_TX_STOP:
++		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
++		break;
++	case IEEE80211_AMPDU_TX_OPERATIONAL:
++		break;
++	case IEEE80211_AMPDU_RX_START:
++	case IEEE80211_AMPDU_RX_STOP:
++		break;
++	default:
++		return -EOPNOTSUPP;
++	}
++
++	return 0;
++}
++
++
+ static const struct ieee80211_ops mac80211_hwsim_ops =
+ {
+ 	.tx = mac80211_hwsim_tx,
+@@ -842,6 +867,7 @@ static const struct ieee80211_ops mac802
+ 	.set_tim = mac80211_hwsim_set_tim,
+ 	.conf_tx = mac80211_hwsim_conf_tx,
+ 	CFG80211_TESTMODE_CMD(mac80211_hwsim_testmode_cmd)
++	.ampdu_action = mac80211_hwsim_ampdu_action,
+ };
  
-@@ -1807,7 +1809,9 @@ void iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log)
- 		base = le32_to_cpu(priv->card_alive.log_event_table_ptr);
  
- 	if (!priv->cfg->ops->lib->is_valid_rtc_data_addr(base)) {
--		IWL_ERR(priv, "Invalid event log pointer 0x%08X\n", base);
-+		IWL_ERR(priv,
-+			"Invalid event log pointer 0x%08X for %s uCode\n",
-+			base, (priv->ucode_type == UCODE_INIT) ? "Init" : "RT");
- 		return;
- 	}
- 
--- 
-1.5.6.3
+
 
