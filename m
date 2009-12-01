@@ -1,40 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.102.11.253]:40009 "EHLO
-	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759924AbZLOR45 (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:26951 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752667AbZLAV6T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 12:56:57 -0500
-From: =?UTF-8?q?Luk=C3=A1=C5=A1=20Turek?= <8an@praha12.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	ath5k-devel@lists.ath5k.org
-Subject: [PATCH 0/5] Setting coverage class (and ACK timeout and slot time), take two
-Date: Tue, 15 Dec 2009 18:56:47 +0100
-Message-Id: <1260899813-17585-1-git-send-email-8an@praha12.net>
+	Tue, 1 Dec 2009 16:58:19 -0500
+Received: by ey-out-2122.google.com with SMTP id 4so1310525eyf.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 13:58:25 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH v3 3/4] rt2x00: Reorganize L2 padding inserting function.
+Date: Tue, 1 Dec 2009 22:58:22 +0100
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Benoit Papillault <benoit.papillault@free.fr>,
+	John Linville <linville@tuxdriver.com>
+References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com> <1259615298-2305-3-git-send-email-gwingerde@gmail.com> <1259615298-2305-4-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1259615298-2305-4-git-send-email-gwingerde@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200912012258.23283.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches implement a feature essential for long distance wireless links:
-setting ACK timeout and slot time. The API is based on a parameter called
-Coverage Class specified by the 802.11 standard.
+On Monday 30 November 2009, Gertjan van Wingerde wrote:
+> Simplify the rt2x00queue_insert_l2pad function by handling the alignment
+> operations one by one. Do not special case special circumstances.
+> Basically first perform header alignment, and then perform payload alignment
+> (if any payload does exist). This results in a properly aligned skb.
+> 
+> The end result is better readable code, with better results, as now L2 padding
+> is inserted only when a payload is actually present in the frame.
+> 
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-The first two patches add support to the kernel 802.11 stack via a new nl80211
-attribute and a mac80211 callback.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Following three patches implement the callback in ath5k driver, after some
-requisite fixes. Implementation in ath9k driver is planned.
-
-Please note the last patch outside the series is not a kernel patch, it adds
-the necessary support to userspace program iw.
-
-This is a second version of these patches, with these changes:
-
-* The coverage class is calculated from roundtrip time instead of one-way
-  delay asi specified by the standard
-
-* Calculation of slot time and ACK timeouts is based on 802.11 standard and
-  Madwifi 0.10.5.6, instead of athctrl program from Madwifi 0.9.4
-
-* Full name "coverage_class" is used everywhere for consistency
-
-Lukas Turek
