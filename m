@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:17388 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759563AbZLOKc2 (ORCPT
+Received: from mail-gx0-f212.google.com ([209.85.217.212]:57613 "EHLO
+	mail-gx0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753601AbZLAIkE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 05:32:28 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless: wext: allocate space for NULL-termination for 32byte SSIDs
-Date: Tue, 15 Dec 2009 11:30:58 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	David Miller <davem@davemloft.net>, daniel@caiaq.de,
-	linux-kernel@vger.kernel.org, dcbw@redhat.com,
-	m.hirsch@raumfeld.com, netdev@vger.kernel.org,
-	libertas-dev@lists.infradead.org, stable@kernel.org
-References: <1260650850-16163-1-git-send-email-daniel@caiaq.de> <1260871411.3692.4.camel@johannes.local> <1260871634.3692.6.camel@johannes.local>
-In-Reply-To: <1260871634.3692.6.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200912151130.59103.holgerschurig@gmail.com>
+	Tue, 1 Dec 2009 03:40:04 -0500
+Received: by mail-gx0-f212.google.com with SMTP id 4so3477390gxk.8
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 00:40:11 -0800 (PST)
+From: Arnaud Lacombe <lacombar@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: mcgrof@bombadil.infradead.org, linux-wireless@vger.kernel.org,
+	Arnaud Lacombe <lacombar@gmail.com>
+Subject: [PATCH 3/5] Add more `skb->dst' accessors
+Date: Tue,  1 Dec 2009 03:38:19 -0500
+Message-Id: <1259656701-12329-3-git-send-email-lacombar@gmail.com>
+In-Reply-To: <1259656701-12329-2-git-send-email-lacombar@gmail.com>
+References: <4B0B4405.4050605@gmail.com>
+ <1259656701-12329-1-git-send-email-lacombar@gmail.com>
+ <1259656701-12329-2-git-send-email-lacombar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> drivers/net/wireless/libertas$ grep lbs_deb_ * | grep ssid
-> |grep '%s' 
-> assoc.c:	lbs_deb_join("current SSID '%s', ssid length %u\n",
-> assoc.c:	lbs_deb_join("requested ssid '%s', ssid length %u\n",
-> assoc.c:	lbs_deb_join("ADHOC_START: SSID '%s', ssid
->               length %u\n", 
-> scan.c:		lbs_deb_wext("set_scan, essid '%s'\n",
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+---
+ compat-2.6.31.h |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
 
-All those lines are gone once my cfg80211 lands.
-
-Do you know any way to make sparse moan about them?
-
-
-BTW: the libertas firmware sometimes treat an SSID as a 
-zero-terminated string. There are some firmware commands that 
-accept just an u8[32] bytes for the SSID, but not an ssid_len, 
-e.g. in the CMD_802_11_AD_HOC_START command.
-
-You therefore can't connect to the otherwise legitimate SSID of 
-TEST\0\0\0.
-
+diff --git a/compat-2.6.31.h b/compat-2.6.31.h
+index a91e033..6b2dd5e 100644
+--- a/compat-2.6.31.h
++++ b/compat-2.6.31.h
+@@ -99,6 +99,21 @@ static inline void skb_dst_drop(struct sk_buff *skb)
+ 	skb->dst = NULL;
+ }
+ 
++static inline struct dst_entry *skb_dst(const struct sk_buff *skb)
++{
++	return (struct dst_entry *)skb->dst;
++}
++
++static inline void skb_dst_set(struct sk_buff *skb, struct dst_entry *dst)
++{
++	skb->dst = (unsigned long)dst;
++}
++
++static inline struct rtable *skb_rtable(const struct sk_buff *skb)
++{
++	return (struct rtable *)skb_dst(skb);
++}
++
+ extern int genl_register_family_with_ops(struct genl_family *family,
+ 	struct genl_ops *ops, size_t n_ops);
+ 
 -- 
-http://www.holgerschurig.de
+1.6.3.3.385.g60647.dirty
+
