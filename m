@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:34668 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753626AbZLAIkP (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:44317 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752201AbZLALoC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 03:40:15 -0500
-Received: by yxe17 with SMTP id 17so4395908yxe.33
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 00:40:22 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: mcgrof@bombadil.infradead.org, linux-wireless@vger.kernel.org,
-	Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 4/5] Add `enum nf_inet_hooks'
-Date: Tue,  1 Dec 2009 03:38:20 -0500
-Message-Id: <1259656701-12329-4-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1259656701-12329-3-git-send-email-lacombar@gmail.com>
-References: <4B0B4405.4050605@gmail.com>
- <1259656701-12329-1-git-send-email-lacombar@gmail.com>
- <1259656701-12329-2-git-send-email-lacombar@gmail.com>
- <1259656701-12329-3-git-send-email-lacombar@gmail.com>
+	Tue, 1 Dec 2009 06:44:02 -0500
+Received: by bwz27 with SMTP id 27so3332971bwz.21
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 03:44:08 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] cfg80211: add SM PS hooks
+References: <20091130153857.963079149@sipsolutions.net>
+	<20091130154300.492667106@sipsolutions.net>
+	<87pr6z6uud.fsf@purkki.valot.fi>
+	<1259659771.32171.62.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 01 Dec 2009 13:44:06 +0200
+In-Reply-To: <1259659771.32171.62.camel@johannes.local> (Johannes Berg's message of "Tue\, 01 Dec 2009 10\:29\:31 +0100")
+Message-ID: <871vje7wc9.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduced on commit 6e23ae2a by Patrick McHardy in include/linux/netfilter.h in
-order to factor common macro value used by IPv6 and IPv4 code.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- compat-2.6.25.h |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+> On Tue, 2009-12-01 at 09:01 +0200, Kalle Valo wrote:
+>> My concern here is that we will end up having, yet again, complicated
+>> user space interface for power save. The ideal situation would be that
+>> kernel would configure all this automatically and we would have a
+>> simple interface just to disable power save in cases where it doesn't
+>> work (broken APs etc).
+>
+> I'm not actually sure that there are APs broken wrt. SM PS, it seems
+> highly unlikely -- even if there are (like mac80211!!) the rate control
+> algorithm would recover the situation.
 
-diff --git a/compat-2.6.25.h b/compat-2.6.25.h
-index 5502741..fa42fd9 100644
---- a/compat-2.6.25.h
-+++ b/compat-2.6.25.h
-@@ -29,6 +29,15 @@ extern void		__dev_addr_unsync(struct dev_addr_list **to, int *to_count, struct
- 
- #define seq_file_net &init_net;
- 
-+enum nf_inet_hooks {
-+	NF_INET_PRE_ROUTING = 0,
-+	NF_INET_LOCAL_IN = 1,
-+	NF_INET_FORWARD = 2,
-+	NF_INET_LOCAL_OUT = 3,
-+	NF_INET_POST_ROUTING = 4,
-+	NF_INET_NUMHOOKS = 5
-+};
-+
- /* The patch:
-  * commit 8b5f6883683c91ad7e1af32b7ceeb604d68e2865
-  * Author: Marcin Slusarz <marcin.slusarz@gmail.com>
+Oh, that's good.
+
+> As such, I suppose it's somewhat a debugging API. On the other hand,
+> there are actual traffic throughput consequences of enabling SM PS, even
+> when in powersave. Powersave will be turned off automatically if there's
+> enough traffic, but SM PS won't. The default, automatic, means it just
+> follows powersave (dynamic SM PS if on, no SM PS if off), but I'm not
+> sure that is typically desirable.
+>
+> Of course, on the other hand, I don't see many users actually setting
+> it. An alternative could be to try to estimate traffic, but that gets
+> messy fairly quickly because the thresholds depend on the environment.
+
+I think at some point we need to start estimating the traffic somehow
+and having heuristics to dynamically change the power save settings.
+But it's a huge challenge, so it isn't coming anytime soon.
+
+> If you prefer to leave it out for now, I can probably move it to debugfs
+> until we have a more clearly defined use case,
+
+Great if you can convert it to debugfs for now. That way we have a bit
+more time to think about the power save interface. Thanks.
+
+> although if we decide that we never want it then obviously the
+> action frame handling can go away again.
+
+Yeah.
+
 -- 
-1.6.3.3.385.g60647.dirty
-
+Kalle Valo
