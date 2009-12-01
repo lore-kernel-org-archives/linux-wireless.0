@@ -1,85 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:61311 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757207AbZLKNlU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:41:20 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 03/31] wl1271: update radio and general parameters values
-Date: Fri, 11 Dec 2009 15:40:42 +0200
-Message-Id: <1260538870-32297-4-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+Received: from mga01.intel.com ([192.55.52.88]:57215 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752827AbZLAJ2k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2009 04:28:40 -0500
+Subject: Re: Panic in iwl3945 driver
+From: Zhu Yi <yi.zhu@intel.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1259620526.6559.34.camel@maxim-laptop>
+References: <1259167780.4072.2.camel@maxim-laptop>
+	 <1259280022.3991.12.camel@maxim-laptop>
+	 <1259596551.4090.0.camel@maxim-laptop>  <1259617333.4653.91.camel@rc-desk>
+	 <1259620526.6559.34.camel@maxim-laptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 01 Dec 2009 17:28:44 +0800
+Message-ID: <1259659724.12157.110.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There were some changes in the values we have to use for these settings.  This
-patches updates them.
+On Tue, 2009-12-01 at 06:35 +0800, Maxim Levitsky wrote:
+> 0x000000000001668e <iwl3945_rx_reply_tx+302>:	lea    0x38(%r8),%rdi
+> 0x0000000000016692 <iwl3945_rx_reply_tx+306>:	lea    0x4f(%r8),%rax
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |   20 ++++++++++----------
- 1 files changed, 10 insertions(+), 10 deletions(-)
+When this happened, from your previous post, r8 is 0x0 and rdi is 0x38.
+Since "info" is %rdi (see below), this means
+txq->txb[txq->q.read_ptr].skb[0], aka. r8 is 0.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 7ab45c4..1d5b73c 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -256,7 +256,7 @@ static struct conf_drv_settings default_conf = {
- 			.clk_valid_on_wakeup = 0,
- 			.dc2dcmode           = 0,
- 			.single_dual_band    = CONF_SINGLE_BAND,
--			.tx_bip_fem_autodetect = 0,
-+			.tx_bip_fem_autodetect = 1,
- 			.tx_bip_fem_manufacturer = 1,
- 			.settings = 1,
- 			.sr_state = 1,
-@@ -274,8 +274,8 @@ static struct conf_drv_settings default_conf = {
- 			.sr_sen_prn = 0,
- 		},
- 		.radioparam = {
--			.rx_trace_loss       = 10,
--			.tx_trace_loss       = 10,
-+			.rx_trace_loss       = 0x24,
-+			.tx_trace_loss       = 0x0,
- 			.rx_rssi_and_proc_compens = {
- 				0xec, 0xf6, 0x00, 0x0c, 0x18, 0xf8,
- 				0xfc, 0x00, 0x08, 0x10, 0xf0, 0xf8,
-@@ -286,13 +286,13 @@ static struct conf_drv_settings default_conf = {
- 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
- 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
- 				0x00, 0x00, 0x00 },
--			.tx_ref_pd_voltage   = 0x24e,
--			.tx_ref_power        = 0x78,
-+			.tx_ref_pd_voltage   = 0x1a9,
-+			.tx_ref_power        = 0x80,
- 			.tx_offset_db        = 0x0,
- 			.tx_rate_limits_normal = {
--				0x1e, 0x1f, 0x22, 0x24, 0x28, 0x29 },
-+				0x1d, 0x1f, 0x24, 0x28, 0x28, 0x29 },
- 			.tx_rate_limits_degraded = {
--				0x1b, 0x1c, 0x1e, 0x20, 0x24, 0x25 },
-+				0x19, 0x1f, 0x22, 0x23, 0x27, 0x28 },
- 			.tx_channel_limits_11b = {
- 				0x22, 0x50, 0x50, 0x50, 0x50, 0x50,
- 				0x50, 0x50, 0x50, 0x50, 0x22, 0x50,
-@@ -302,10 +302,10 @@ static struct conf_drv_settings default_conf = {
- 				0x50, 0x50, 0x50, 0x50, 0x20, 0x50,
- 				0x20, 0x50 },
- 			.tx_pdv_rate_offsets = {
--				0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-+				0x07, 0x08, 0x04, 0x02, 0x02, 0x00 },
- 			.tx_ibias            = {
--				0x1a, 0x1a, 0x1a, 0x1a, 0x1a, 0x27 },
--			.rx_fem_insertion_loss = 0x14,
-+				0x11, 0x11, 0x15, 0x11, 0x15, 0x0f },
-+			.rx_fem_insertion_loss = 0x0e,
- 			.tx_ref_pd_voltage_5 = {
- 				0x0190, 0x01a4, 0x01c3, 0x01d8,
- 				0x020a, 0x021c },
--- 
-1.6.3.3
+> 	rate_idx = iwl3945_hwrate_to_plcp_idx(tx_resp->rate);
+> 
+> 0x0000000000016696 <iwl3945_rx_reply_tx+310>:	movb   $0x0,0x9(%rdi)        <---------- RIP
+> 0x000000000001669a <iwl3945_rx_reply_tx+314>:	movb   $0x0,0xc(%rdi)
+> 0x000000000001669e <iwl3945_rx_reply_tx+318>:	movb   $0x0,0xf(%rdi)
+> 0x00000000000166a2 <iwl3945_rx_reply_tx+322>:	movb   $0x0,0x12(%rdi)
+> 0x00000000000166a6 <iwl3945_rx_reply_tx+326>:	movb   $0x0,0x15(%rdi)
+
+This equals to below code in ieee80211_tx_info_clear_status(). "info" is
+%rdi, which is 0x38. That matches NULL pointer dereference at 0x41 in
+your oops header.
+
+	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
+                info->status.rates[i].count = 0;
+
+I guess there is a race for txq->q.read_ptr somewhere. Haven't checked
+though.
+
+Thanks,
+-yi
 
