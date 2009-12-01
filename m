@@ -1,77 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xenotime.net ([72.52.64.118]:45433 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1756231AbZLUBvL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2009 20:51:11 -0500
-Received: from chimera.site ([96.253.169.185]) by xenotime.net for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2009 17:51:02 -0800
-Date: Sun, 20 Dec 2009 17:50:33 -0800
-From: Randy Dunlap <rdunlap@xenotime.net>
-To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Can't turn off SSB (CONFIG_SSB)?
-Message-Id: <20091220175033.36980f35.rdunlap@xenotime.net>
-In-Reply-To: <4B2ECC72.40703@redfish-solutions.com>
-References: <4B2ECC72.40703@redfish-solutions.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:41331 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753402AbZLATVf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2009 14:21:35 -0500
+Received: by ewy19 with SMTP id 19so5291420ewy.21
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 11:21:40 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Benoit Papillault <benoit.papillault@free.fr>
+Subject: Re: [PATCH 2/2] rt2x00: Fix rt2800usb RX frame format and as such L2PAD
+Date: Tue, 1 Dec 2009 20:21:38 +0100
+Cc: gwingerde@gmail.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com,
+	John Linville <linville@tuxdriver.com>
+References: <1259619690-2749-1-git-send-email-benoit.papillault@free.fr> <1259619690-2749-2-git-send-email-benoit.papillault@free.fr>
+In-Reply-To: <1259619690-2749-2-git-send-email-benoit.papillault@free.fr>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200912012021.38915.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 20 Dec 2009 17:16:34 -0800 Philip A. Prindeville wrote:
+On Monday 30 November 2009, Benoit Papillault wrote:
+> According to Ralink source code, the RX frame format is RXINFO + RXWI +
+> 802.11 frame + RXD, including various padding. Before this patch, we
+> were using RXD + RXWI + 802.11 frame, so RXD was not correct.
+> 
+> Doing this, we fix the L2PAD bit which is now correctly set on received
+> frames.
+> 
+> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
 
-> I'm building images for an EMBEDDED platform, and forcing CONFIG_SSB_POSSIBLE=n, but I'm still seeing:
-
-What $ARCH ?
-
-> *
-> * Sonics Silicon Backplane
-> *
-> Sonics Silicon Backplane support (SSB) [M/y/?] (NEW) n
-> 
-> Support for the Sonics Silicon Backplane bus.
-> You only need to enable this option, if you are
-> configuring a kernel for an embedded system with
-> this bus.
-> It will be auto-selected if needed in other
-> environments.
-> 
-> The module will be called ssb.
-> 
-> If unsure, say N.
-> 
-> Sonics Silicon Backplane support (SSB) [M/y/?] (NEW) n
-> 
-> Support for the Sonics Silicon Backplane bus.
-> You only need to enable this option, if you are
-> configuring a kernel for an embedded system with
-> this bus.
-> It will be auto-selected if needed in other
-> environments.
-> 
-> The module will be called ssb.
-> 
-> If unsure, say N.
-> 
-> Sonics Silicon Backplane support (SSB) [M/y/?] (NEW) 
-> 
-> 
-> 
-> And why does arch/x86/configs/i386_defconfig nail up CONFIG_SSB_POSSIBLE?
-
-That just means that SSB support is possible:
-
-config SSB_POSSIBLE
-	bool
-	depends on HAS_IOMEM && HAS_DMA
-	default y
-
-Shouldn't be a problem.
-
-> This is with 2.6.27.38.
-> 
-> And what are the steps to figuring out the dependency that keeps forcing it on?  Something must be doing a "select SSB" but I'm not sure what.
-
-Are you using b43 or b44 network drivers?
-
----
-~Randy
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
