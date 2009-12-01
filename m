@@ -1,66 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49842
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751896AbZL3V4W (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:34922 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752934AbZLAHBn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2009 16:56:22 -0500
-Date: Wed, 30 Dec 2009 13:56:25 -0800 (PST)
-Message-Id: <20091230.135625.193704457.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-12-30
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20091230211024.GA6706@tuxdriver.com>
-References: <20091230211024.GA6706@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 1 Dec 2009 02:01:43 -0500
+Received: by ewy19 with SMTP id 19so4605380ewy.21
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Nov 2009 23:01:48 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] cfg80211: add SM PS hooks
+References: <20091130153857.963079149@sipsolutions.net>
+	<20091130154300.492667106@sipsolutions.net>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 01 Dec 2009 09:01:46 +0200
+In-Reply-To: <20091130154300.492667106@sipsolutions.net> (Johannes Berg's message of "Mon\, 30 Nov 2009 16\:38\:58 +0100")
+Message-ID: <87pr6z6uud.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 30 Dec 2009 16:10:25 -0500
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-> I had to pull wireless-2.6 into wireless-next-2.6 in order to resolve
-> a conflict in the libertas driver.  Since wireless-next-2.6 was cloned
-> from net-next-2.6 at a point before it was reopened for 2.6.34, the
-> pull of wireless-2.6 (which is cloned from a net-2.6 from the same
-> period) brought along some non-wireless bits that were not already
-> in wireless-next-2.6.  However, I did check and made sure that those
-> bits are already present in net-next-2.6.  Anyway, my point is that
-> I don't have enough git foo to easily generate a pull request that
-> represents the actual state of affairs without rebasing or doing some
-> other messy thing.  I think/hope this is another one-time transition
-> pain with the new wireless tree management policies...
+> Add spatial multiplexing power save configuration
+> hooks to cfg80211/nl80211.
 
-All you have to do is set your origin correctly.  And then
-generate your pull requests relative to that.
+Is it really necessary to export this to user space, at least via
+nl80211? If we add this to nl80211, we have to support this almost
+forever.
 
-Your origin should be net-next-2.6   So if it's there in your
-.git/config file all you have to do is "git request-pull origin ..."
+Also how are planning to use this? What components will use the
+interface and how?
 
-If you're merging between wireless-2.6 and wireless-next-2.6
-that's perfect.  It actually saves me work.  I'll figure things
-out when I pull in your changes.
+My concern here is that we will end up having, yet again, complicated
+user space interface for power save. The ideal situation would be that
+kernel would configure all this automatically and we would have a
+simple interface just to disable power save in cases where it doesn't
+work (broken APs etc).
 
-Most of your workflow (like mine) should be:
-
-1) git fetch origin
-
-2) git request-pull origin ...
-
-If there are major net-next-2.6 conflicts to resolve (you can
-determine this via "git checkout -b merge-test origin; git pull
-master") then simply "git pull origin" into your master.
-
-Then you simply let me know you did this, and it was to resolve
-a major conflict with the net-next-2.6 origin.
-
-> So, the net of the garbled paragraph above is that despite the messy
-> report generatd by 'git request-pull' below, when you pull from
-> wireless-next-2.6 into net-next-2.6 you will only get actual wireless
-> changes!  I hope you can overlook the apparent discrepencies in the
-> report below and rely on the actual pull results instead. :-)
-
-It looks good from here so far.  I'll run some build tests and
-then push this out.  That'll take a while since I'm about to head
-out, so don't expect it for a few hours.
+-- 
+Kalle Valo
