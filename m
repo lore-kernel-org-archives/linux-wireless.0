@@ -1,173 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:50875 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762303AbZLKLmd (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:33364 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750841AbZLAHyk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 06:42:33 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 29/31] wl1271: Add support for acx_pm_config
-Date: Fri, 11 Dec 2009 13:41:20 +0200
-Message-Id: <1260531682-4695-30-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 1 Dec 2009 02:54:40 -0500
+MIME-Version: 1.0
+In-Reply-To: <43e72e890911231347k48f105dcw24dd99c1c39f034@mail.gmail.com>
+References: <4ADE2F66.1070703@gmail.com> <43e72e890911161515q64ff527cyefd7d769f3c501b@mail.gmail.com>
+	<a44ae5cd0911161641n36d3c746pb69a9cac1eba1784@mail.gmail.com>
+	<43e72e890911161708o607da2a5hefe98e92fd13ee7a@mail.gmail.com>
+	<43e72e890911191519h73bd6699if860257c049ba1a0@mail.gmail.com>
+	<43e72e890911231347k48f105dcw24dd99c1c39f034@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 30 Nov 2009 23:54:26 -0800
+Message-ID: <43e72e890911302354i1b17265ckb3aa81171a24174b@mail.gmail.com>
+Subject: Re: 2.6.32-rc5-git1 -- BUG kmalloc-8192: Poison overwritten (ath9k
+	implicated)
+To: Miles Lane <miles.lane@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Mon, Nov 23, 2009 at 1:47 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Thu, Nov 19, 2009 at 3:19 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Mon, Nov 16, 2009 at 5:08 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>> On Mon, Nov 16, 2009 at 4:41 PM, Miles Lane <miles.lane@gmail.com> wrote:
+>>>> On Mon, Nov 16, 2009 at 6:15 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>>>> On Tue, Oct 20, 2009 at 1:45 PM, Miles Lane <miles.lane@gmail.com> wrote:
+>>>>>> Let me know if you want my .config file.  I think this was triggered by
+>>>>>> suspending my laptop.
+>>>>>>
+>>>>>> BUG kmalloc-8192: Poison overwritten
+>>>>>
+>>>>> Thanks for your report Miles.
+>>>>>
+>>>>> Are you using Linus' tree? Felix wrote some patches that got rid of
+>>>>> the rate control private area which we kmalloc/kfree and at least one
+>>>>> user reported that these patches fixed a memory leak. I'm curious if
+>>>>> the same patches would resolve this issue.
+>>>>>
+>>>>> Only thing is these patches apply against wireless-testing and not
+>>>>> 2.6.32. To test them you'd have to pull wireless-testing master to
+>>>>> your tree and then apply the patches both before and after.
+>>>>>
+>>>>> Would you be up to try that?
+>>>>
+>>>> Yes, definitely.  Thanks.  I will try to accomplish this and let you
+>>>> know if I get stuck.
+>>>
+>>> OK, not sure if a merge of wireless-testing will be clean so you may
+>>> want to just clone fresh.. Anyway after you get wireless-testing bits
+>>> you'll want to apply these:
+>>>
+>>> http://patchwork.kernel.org/patch/60127/
+>>> http://patchwork.kernel.org/patch/60128/
+>>> http://patchwork.kernel.org/patch/60126/
+>>>
+>>> If you want to merge wireless-testing you can try:
+>>>
+>>> git merge git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+>>> master
+>>>
+>>> If that'd doesn't gos smooth just clone it and I think you should be
+>>> able to safely --reference your current tree for objects for Linus'
+>>> tree.
+>>
+>> Miles I see no reply from you yet so I backported the patches in
+>> question for you. Can you please try 2.6.32-rc7 and apply these
+>> patches on top:
+>>
+>> http://bombadil.infradead.org/~mcgrof/patches/ath9k/2009/11-19/70-mac80211-total-ampdu-tx-info.patch
+>> http://bombadil.infradead.org/~mcgrof/patches/ath9k/2009/11-19/71-ath9k-remove-tx_info_priv.patch
+>
+> Miles, any luck testing this?
 
-This acx configures host clock parameters in correspondence with the clock
-request line - the settling time of the clock, and whether fast wake-up is
-supported.
+Miles -- poke. The patches provided should apply on Linus' tree,
+please let us know if they fix the issue you reported.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_acx.c  |   28 ++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_acx.h  |    9 +++++++++
- drivers/net/wireless/wl12xx/wl1271_conf.h |   17 +++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_init.c |    5 +++++
- drivers/net/wireless/wl12xx/wl1271_main.c |    4 ++++
- 5 files changed, 63 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
-index 6e1d724..f674575 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
-@@ -1124,3 +1124,31 @@ out:
- 	kfree(acx);
- 	return ret;
- }
-+
-+int wl1271_acx_pm_config(struct wl1271 *wl)
-+{
-+	struct wl1271_acx_pm_config *acx = NULL;
-+	struct  conf_pm_config_settings *c = &wl->conf.pm_config;
-+	int ret = 0;
-+
-+	wl1271_debug(DEBUG_ACX, "acx pm config");
-+
-+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-+	if (!acx) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	acx->host_clk_settling_time = cpu_to_le32(c->host_clk_settling_time);
-+	acx->host_fast_wakeup_support = c->host_fast_wakeup_support;
-+
-+	ret = wl1271_cmd_configure(wl, ACX_PM_CONFIG, acx, sizeof(*acx));
-+	if (ret < 0) {
-+		wl1271_warning("acx pm config failed: %d", ret);
-+		goto out;
-+	}
-+
-+out:
-+	kfree(acx);
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
-index b6a473f..1bb63af 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
-@@ -961,6 +961,13 @@ struct wl1271_acx_arp_filter {
- 			       used. */
- } __attribute__((packed));
- 
-+struct wl1271_acx_pm_config {
-+	struct acx_header header;
-+
-+	__le32 host_clk_settling_time;
-+	u8 host_fast_wakeup_support;
-+	u8 padding[3];
-+} __attribute__ ((packed));
- 
- enum {
- 	ACX_WAKE_UP_CONDITIONS      = 0x0002,
-@@ -1025,6 +1032,7 @@ enum {
- 	DOT11_RX_DOT11_MODE         = 0x1012,
- 	DOT11_RTS_THRESHOLD         = 0x1013,
- 	DOT11_GROUP_ADDRESS_TBL     = 0x1014,
-+	ACX_PM_CONFIG               = 0x1016,
- 
- 	MAX_DOT11_IE = DOT11_GROUP_ADDRESS_TBL,
- 
-@@ -1073,5 +1081,6 @@ int wl1271_acx_smart_reflex(struct wl1271 *wl);
- int wl1271_acx_bet_enable(struct wl1271 *wl, bool enable);
- int wl1271_acx_arp_ip_filter(struct wl1271 *wl, bool enable, u8 *address,
- 			     u8 version);
-+int wl1271_acx_pm_config(struct wl1271 *wl);
- 
- #endif /* __WL1271_ACX_H__ */
-diff --git a/drivers/net/wireless/wl12xx/wl1271_conf.h b/drivers/net/wireless/wl12xx/wl1271_conf.h
-index 5d1b5b6..1993d63 100644
---- a/drivers/net/wireless/wl12xx/wl1271_conf.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_conf.h
-@@ -904,6 +904,22 @@ struct conf_itrim_settings {
- 	u32 timeout;
- };
- 
-+struct conf_pm_config_settings {
-+	/*
-+	 * Host clock settling time
-+	 *
-+	 * Range: 0 - 30000 us
-+	 */
-+	u32 host_clk_settling_time;
-+
-+	/*
-+	 * Host fast wakeup support
-+	 *
-+	 * Range: true, false
-+	 */
-+	bool host_fast_wakeup_support;
-+};
-+
- struct conf_drv_settings {
- 	struct conf_sg_settings sg;
- 	struct conf_rx_settings rx;
-@@ -911,6 +927,7 @@ struct conf_drv_settings {
- 	struct conf_conn_settings conn;
- 	struct conf_init_settings init;
- 	struct conf_itrim_settings itrim;
-+	struct conf_pm_config_settings pm_config;
- };
- 
- #endif
-diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
-index 3b4ed07..c9848ee 100644
---- a/drivers/net/wireless/wl12xx/wl1271_init.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_init.c
-@@ -303,6 +303,11 @@ int wl1271_hw_init(struct wl1271 *wl)
- 	if (ret < 0)
- 		goto out_free_memmap;
- 
-+	/* configure PM */
-+	ret = wl1271_acx_pm_config(wl);
-+	if (ret < 0)
-+		goto out_free_memmap;
-+
- 	return 0;
- 
-  out_free_memmap:
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 61d79ba..99199f7 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -321,6 +321,10 @@ static struct conf_drv_settings default_conf = {
- 	.itrim = {
- 		.enable = false,
- 		.timeout = 50000,
-+	},
-+	.pm_config = {
-+		.host_clk_settling_time = 5000,
-+		.host_fast_wakeup_support = false
- 	}
- };
- 
--- 
-1.6.3.3
-
+  Luis
