@@ -1,99 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:33967 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752314AbZLATHA (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57795 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753329AbZLAX73 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 14:07:00 -0500
-Received: by ewy19 with SMTP id 19so5276182ewy.21
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 11:07:05 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH v3 1/4] rt2x00: Further L2 padding fixes.
-Date: Tue, 1 Dec 2009 20:07:00 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Benoit Papillault <benoit.papillault@free.fr>,
-	John Linville <linville@tuxdriver.com>
-References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com> <1259615298-2305-2-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1259615298-2305-2-git-send-email-gwingerde@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200912012007.01188.IvDoorn@gmail.com>
+	Tue, 1 Dec 2009 18:59:29 -0500
+Subject: Re: [PATCH] lib80211: make crypt modules configurable by user
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Daniel Ritz <daniel.ritz@gmx.ch>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, daniel.ritz-ml@swissonline.ch
+In-Reply-To: <1259711174.13720.17.camel@MacRitz2>
+References: <1259711174.13720.17.camel@MacRitz2>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-uylhejHlExhqiMNV+O/J"
+Date: Wed, 02 Dec 2009 00:59:03 +0100
+Message-ID: <1259711943.32171.134.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 30 November 2009, Gertjan van Wingerde wrote:
-> Fix a couple of more bugs in the L2 padding code:
-> 1. Compute the amount of L2 padding correctly (in 3 places).
-> 2. Trim the skb correctly when the L2 padding has been applied.
-> 
-> Also introduce a central macro the compute the L2 padding size.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+--=-uylhejHlExhqiMNV+O/J
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00.h      |    6 ++++++
->  drivers/net/wireless/rt2x00/rt2x00queue.c |    8 +++++---
->  2 files changed, 11 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> index dcfc8c2..6594d2f 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> @@ -113,6 +113,12 @@
->  	(  ((unsigned long)((__skb)->data + (__header))) & 3 )
->  
->  /*
-> + * Determine the number of L2 padding bytes required between the header and
-> + * the payload.
-> + */
-> +#define L2PAD_SIZE(__hdrlen)	(-(__hdrlen) & 3)
-> +
-> +/*
->   * Constants for extra TX headroom for alignment purposes.
->   */
->  #define RT2X00_ALIGN_SIZE	4 /* Only whole frame needs alignment */
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> index b8f0954..21d5876 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> @@ -181,7 +181,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
->  	unsigned int frame_length = skb->len;
->  	unsigned int header_align = ALIGN_SIZE(skb, 0);
->  	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
-> -	unsigned int l2pad = 4 - (payload_align - header_align);
-> +	unsigned int l2pad = L2PAD_SIZE(header_length);
->  
->  	if (header_align == payload_align) {
->  		/*
-> @@ -216,6 +216,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
->  		memmove(skb->data + header_length + l2pad,
->  			skb->data + header_length + l2pad + payload_align,
->  			frame_length - header_length);
-> +		skb_trim(skb, frame_length + l2pad);
->  		skbdesc->flags |= SKBDESC_L2_PADDED;
->  	}
->  }
-> @@ -223,7 +224,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
->  void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int header_length)
->  {
->  	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
-> -	unsigned int l2pad = 4 - (header_length & 3);
-> +	unsigned int l2pad = L2PAD_SIZE(header_length);
->  
->  	if (!l2pad || (skbdesc->flags & SKBDESC_L2_PADDED))
->  		return;
-> @@ -346,7 +347,8 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
->  	 * Header and alignment information.
->  	 */
->  	txdesc->header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
-> -	txdesc->l2pad = ALIGN_SIZE(entry->skb, txdesc->header_length);
-> +	if (test_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags))
-> +		txdesc->l2pad = L2PAD_SIZE(txdesc->header_length);
->  
->  	/*
->  	 * Check whether this frame is to be acked.
+On Wed, 2009-12-02 at 00:46 +0100, Daniel Ritz wrote:
+> Make the crypt modules configurable by user. Normally drivers select them
+> when needed, but out-of-tree drivers can't do that. Having a minimal
+> kernel with just the things required won't select any of those modules,
+> resulting in the external driver to be close to useless (ie. it can scan
+> the networks, but cannot join a single one).
 
+So ... what makes you think anyone cares about out of tree drivers?
+
+=46rom my POV a clear NACK on this, since it makes the kernel
+configuration more complex for no useful reason.
+
+johannes
+
+--=-uylhejHlExhqiMNV+O/J
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLFa3EAAoJEODzc/N7+Qma+GUQAIMeCxyeuo/HmPLgUrqBXK83
+R64td4Ush8S1HsG9RF6Lds5D2C3Dnavkgrk5NJEH2mYHoQbgZzZDFhl1fEEwzTAs
+4odda0omGnEJX6g/nvtR6kSbGkmWJMpYlGQCTeCN4WCpwHsf6VGQzBO1I4JIAhnI
+v9SS/3Hl9JAw8cMvFIOZ/g0LT1B7VfFNgjG/oysPdtNXCvs1jcZ9odrieuacGbrs
+FjZvoy+riFPsMrX53y2/cnDegIZziHJMPE5O+cMFSetrBd5mWHkYjvIWttLVIEI7
+LjFSRGxHO8pPBpbdoA0FsSuY3Gnaed6bDFEc5MxQa04UxxdKHmiVwf1BNScc7oqR
+wmrFY7XKacObKVuLYXIfestYFGo7SqV7YaQYNG3Rjk5bF/8r8EMEgcbhN5tgqjRr
+GZNB/DxJhFMwmfPZWi8Xaf6woTgm7TPjna5I4dS3bHx62HxV3jYjgcYqLU4SkWjD
+Jpv5k+IRSg457FU5Vo2xYiFPvTJl+fVZxVHrOqHwuVXB4oEyb1i7CeL3z/A2zN+Y
+hNWb32ucl5IC+P68hZYEvnEZ8a6DUwiNew29eDqNdMHatxKduo7iKVMMFl3TqCwo
+fanuKNUiy4tNQtbHVtyj48C9ENby2KBQCE9Tng19LqTGulAh8YM2f4Rk8y2bN+Yq
+hKEaUAOuCvpIc+Kg2hOY
+=Kk7A
+-----END PGP SIGNATURE-----
+
+--=-uylhejHlExhqiMNV+O/J--
 
