@@ -1,97 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li59-9.members.linode.com ([97.107.129.9]:51075 "EHLO erley.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758807AbZLJAeJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2009 19:34:09 -0500
-Message-ID: <4B204204.6000300@erley.org>
-Date: Wed, 09 Dec 2009 19:34:12 -0500
-From: Pat Erley <pat-lkml@erley.org>
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:33967 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752314AbZLATHA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2009 14:07:00 -0500
+Received: by ewy19 with SMTP id 19so5276182ewy.21
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 11:07:05 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH v3 1/4] rt2x00: Further L2 padding fixes.
+Date: Tue, 1 Dec 2009 20:07:00 +0100
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Benoit Papillault <benoit.papillault@free.fr>,
+	John Linville <linville@tuxdriver.com>
+References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com> <1259615298-2305-2-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1259615298-2305-2-git-send-email-gwingerde@gmail.com>
 MIME-Version: 1.0
-To: Natale Vinto <ebballon@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: SIOCSIFFLAGS: Name not unique on network with b43
-References: <c6e9632c0912091546gad933ffhe8b70ee889745cb1@mail.gmail.com>
-In-Reply-To: <c6e9632c0912091546gad933ffhe8b70ee889745cb1@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200912012007.01188.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Natale Vinto wrote:
-> Hi all,
-> I'm on Kubuntu 2.6.32-rc8-wl and according to lspci I have this Broadcom card:
-> Broadcom Corporation BCM4312 802.11a/b/g (rev 02)
-> and modinfo b43:
+On Monday 30 November 2009, Gertjan van Wingerde wrote:
+> Fix a couple of more bugs in the L2 padding code:
+> 1. Compute the amount of L2 padding correctly (in 3 places).
+> 2. Trim the skb correctly when the L2 padding has been applied.
 > 
-> filename:
-> /lib/modules/2.6.32-rc8-wl/kernel/drivers/net/wireless/b43/b43.ko
-> firmware:       FW13
-> license:        GPL
-> author:         Gábor Stefanik
-> author:         Michael Buesch
-> author:         Stefano Brivio
-> author:         Martin Langer
-> description:    Broadcom B43 wireless driver
-> srcversion:     77E3E0ECBCB6EA787FE05CF
-> alias:          ssb:v4243id0812rev10*
-> alias:          ssb:v4243id0812rev0F*
-> alias:          ssb:v4243id0812rev0D*
-> alias:          ssb:v4243id0812rev0B*
-> alias:          ssb:v4243id0812rev0A*
-> alias:          ssb:v4243id0812rev09*
-> alias:          ssb:v4243id0812rev07*
-> alias:          ssb:v4243id0812rev06*
-> alias:          ssb:v4243id0812rev05*
-> depends:        ssb,mac80211,led-class,cfg80211
-> vermagic:       2.6.32-rc8-wl mod_unload modversions PENTIUMM 4KSTACKS
-> parm:           bad_frames_preempt:enable(1) / disable(0) Bad Frames
-> Preemption (int)
-> parm:           fwpostfix:Postfix for the .fw files to load. (string)
-> parm:           hwpctl:Enable hardware-side power control (default off) (int)
-> parm:           nohwcrypt:Disable hardware encryption. (int)
-> parm:           hwtkip:Enable hardware tkip. (int)
-> parm:           qos:Enable QOS support (default on) (int)
-> parm:           btcoex:Enable Bluetooth coexistence (default on) (int)
-> parm:           verbose:Log message verbosity: 0=error, 1=warn,
-> 2=info(default), 3=debug (int)
+> Also introduce a central macro the compute the L2 padding size.
 > 
-> My problem is that I would use multiple interfaces (as mentioned here
-> http://wireless.kernel.org/en/users/Drivers/b43#features ) using one
-> for AP and one for station but I always get this error while trying to
-> up the other interface:
-> SIOCSIFFLAGS: Name not unique on network
-> 
-> This is the command list that I've done:
-> 
-> service network-manager stop
-> iw phy phy0 interface add wlan1 type station (or managed)
-> ifconfig wlan1 up
-> 
-> then I used wpa_supplicant on wlan1 and all ok. But when I try to up
-> wlan0 that from iwconfig shows this:
-> wlan0     Link encap:Ethernet  HWaddr 00:1a:73:xx:xx:xx
->           BROADCAST MULTICAST  MTU:1500  Metric:1
->           RX packets:0 errors:0 dropped:0 overruns:0 frame:0
->           TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
->           collisions:0 txqueuelen:1000
->           RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
-> 
-> or when I try to use hostapd:
-> Configuration file: /etc/hostapd/hostapd.conf
-> ctrl_interface_group=0
-> ioctl[SIOCSIFFLAGS]: Name not unique on network
-> nl80211 driver initialization failed.
-> wlan0: Unable to setup interface.
-> rmdir[ctrl_interface]: No such file or directory
-> ELOOP: remaining socket: sock=5 eloop_data=0x80f0a38 user_data=(nil)
-> handler=0x80874
-> 
-> so how to have multiple interfaces (in my case one AP and one station) with b43?
-> I haven't found a solution googling
-> 
-> Best Regards
-> 
-> 
-> 
-You need to change the mac address of one of the wireless interfaces.  I don't know if multiple vifs works with b43, though, only tested with ath9k.
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Pat
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00.h      |    6 ++++++
+>  drivers/net/wireless/rt2x00/rt2x00queue.c |    8 +++++---
+>  2 files changed, 11 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+> index dcfc8c2..6594d2f 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+> @@ -113,6 +113,12 @@
+>  	(  ((unsigned long)((__skb)->data + (__header))) & 3 )
+>  
+>  /*
+> + * Determine the number of L2 padding bytes required between the header and
+> + * the payload.
+> + */
+> +#define L2PAD_SIZE(__hdrlen)	(-(__hdrlen) & 3)
+> +
+> +/*
+>   * Constants for extra TX headroom for alignment purposes.
+>   */
+>  #define RT2X00_ALIGN_SIZE	4 /* Only whole frame needs alignment */
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> index b8f0954..21d5876 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> @@ -181,7 +181,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
+>  	unsigned int frame_length = skb->len;
+>  	unsigned int header_align = ALIGN_SIZE(skb, 0);
+>  	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
+> -	unsigned int l2pad = 4 - (payload_align - header_align);
+> +	unsigned int l2pad = L2PAD_SIZE(header_length);
+>  
+>  	if (header_align == payload_align) {
+>  		/*
+> @@ -216,6 +216,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
+>  		memmove(skb->data + header_length + l2pad,
+>  			skb->data + header_length + l2pad + payload_align,
+>  			frame_length - header_length);
+> +		skb_trim(skb, frame_length + l2pad);
+>  		skbdesc->flags |= SKBDESC_L2_PADDED;
+>  	}
+>  }
+> @@ -223,7 +224,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
+>  void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int header_length)
+>  {
+>  	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
+> -	unsigned int l2pad = 4 - (header_length & 3);
+> +	unsigned int l2pad = L2PAD_SIZE(header_length);
+>  
+>  	if (!l2pad || (skbdesc->flags & SKBDESC_L2_PADDED))
+>  		return;
+> @@ -346,7 +347,8 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
+>  	 * Header and alignment information.
+>  	 */
+>  	txdesc->header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
+> -	txdesc->l2pad = ALIGN_SIZE(entry->skb, txdesc->header_length);
+> +	if (test_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags))
+> +		txdesc->l2pad = L2PAD_SIZE(txdesc->header_length);
+>  
+>  	/*
+>  	 * Check whether this frame is to be acked.
+
+
