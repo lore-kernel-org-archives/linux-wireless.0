@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:48585 "HELO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751479AbZLMNgb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Dec 2009 08:36:31 -0500
-MIME-Version: 1.0
-In-Reply-To: <1260710042.2442.340.camel@johannes.local>
-References: <5a4c581d0912120740j38a20f8eu3f616f3a477d922f@mail.gmail.com>
-	 <1260710042.2442.340.camel@johannes.local>
-Date: Sun, 13 Dec 2009 14:36:29 +0100
-Message-ID: <5a4c581d0912130536r46b13b95pcd1364ee83cd39c0@mail.gmail.com>
-Subject: Re: 2.6.32-git5+, CONFIG_WEXT_PRIV and Broadcom's driver for BCM4322
-	Wireless chips
-From: Alessandro Suardi <alessandro.suardi@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:32286 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752107AbZLADp3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Nov 2009 22:45:29 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH] iwmc3200wifi: fix NULL pointer dereference in pmkid update
+Date: Tue,  1 Dec 2009 11:48:50 +0800
+Message-Id: <1259639330-8291-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 13, 2009 at 2:14 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sat, 2009-12-12 at 16:40 +0100, Alessandro Suardi wrote:
->
->> But: what is the best option here to make CONFIG_WEXT_PRIV visible at
->>  kernel build time if only an external module should select it - but selection
->>  is not actually happening at kernel build time ?
->> Could CONFIG_WEXT_PRIV be made a separate user-selectable option ?
->
-> Your only option is selecting some other (ancient) driver that selects
-> WEXT_PRIV. We will not make that Kconfig symbol visible just because
-> Broadcom decided that they want to continue screwing their users :)
->
-> IOW -- there's no such option available to you at all. Select
-> PCMCIA_RAYCS or whatever.
+When handling IWM_CMD_PMKID_FLUSH command, the bssid and
+pmkid in pmksa are all NULL. Check it before memcpy.
 
-Thanks - you clipped the part of my message where I explain that my
- "workaround" has been to select IPW2200 :)
+Cc: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwmc3200wifi/commands.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-I'm aware of the implications of out-of-tree proprietary drivers, I just
- wanted to make sure I wasn't missing a better option than the one
- I resorted to.
+diff --git a/drivers/net/wireless/iwmc3200wifi/commands.c b/drivers/net/wireless/iwmc3200wifi/commands.c
+index bd06307..89b33fa 100644
+--- a/drivers/net/wireless/iwmc3200wifi/commands.c
++++ b/drivers/net/wireless/iwmc3200wifi/commands.c
+@@ -970,8 +970,10 @@ int iwm_send_pmkid_update(struct iwm_priv *iwm,
+ 	memset(&update, 0, sizeof(struct iwm_umac_pmkid_update));
+ 
+ 	update.command = cpu_to_le32(command);
+-	memcpy(&update.bssid, pmksa->bssid, ETH_ALEN);
+-	memcpy(&update.pmkid, pmksa->pmkid, WLAN_PMKID_LEN);
++	if (pmksa->bssid)
++		memcpy(&update.bssid, pmksa->bssid, ETH_ALEN);
++	if (pmksa->pmkid)
++		memcpy(&update.pmkid, pmksa->pmkid, WLAN_PMKID_LEN);
+ 
+ 	ret = iwm_send_wifi_if_cmd(iwm, &update,
+ 				   sizeof(struct iwm_umac_pmkid_update), 0);
+-- 
+1.6.0.4
 
-Thanks again,
-
---alessandro
-
- "There's always a siren singing you to shipwreck"
-
-   (Radiohead, "There There")
