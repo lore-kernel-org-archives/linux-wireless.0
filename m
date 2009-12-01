@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f189.google.com ([209.85.216.189]:40775 "EHLO
-	mail-px0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492AbZLISSZ convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:57868 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753573AbZLAPkh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2009 13:18:25 -0500
-Received: by pxi27 with SMTP id 27so1478583pxi.4
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2009 10:18:32 -0800 (PST)
+	Tue, 1 Dec 2009 10:40:37 -0500
+Received: by iwn1 with SMTP id 1so3142304iwn.33
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 07:40:43 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <43e72e890912090918m55d2816co9b04065e91e4d4f1@mail.gmail.com>
-References: <fd145f7d0912082203l1d7ebc50j291cc36dd65a4408@mail.gmail.com>
-	 <43e72e890912090918m55d2816co9b04065e91e4d4f1@mail.gmail.com>
-Date: Wed, 9 Dec 2009 10:13:18 -0800
-Message-ID: <fd145f7d0912091013o702d1ee2ueb41a97ae43a0f27@mail.gmail.com>
-Subject: Re: WARNING at mac80211_ieee80211_rx
-From: Jeffrey Baker <jwbaker@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <20091201084715.7996.37035.stgit@tikku>
+References: <20091201084715.7996.37035.stgit@tikku>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 1 Dec 2009 07:40:19 -0800
+Message-ID: <43e72e890912010740v445f9e7dq3452baf1bc4e935f@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: indent regulatory messages with spaces
+To: Kalle Valo <kalle.valo@iki.fi>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 9, 2009 at 9:18 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Tue, Dec 8, 2009 at 10:03 PM, Jeffrey Baker <jwbaker@gmail.com> wrote:
->> My access point with an AR9220 stopped passing traffic,
+On Tue, Dec 1, 2009 at 12:47 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> From: Kalle Valo <kalle.valo@nokia.com>
 >
-> Jeffrey, thanks for your report, can you be a little more verbose here
-> and elaborate as to what you mean by this? Do you mean that you stop
-> hostapd or that it hostapd is still running and that somehow you
-> notice it stops sending data between its associated STAs?
+> The regulatory messages in syslog look weird:
+>
+> kernel: cfg80211: Regulatory domain: US
+> kernel: ^I(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> kernel: ^I(2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2700 mBm)
+> kernel: ^I(5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+> kernel: ^I(5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+> kernel: ^I(5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+> kernel: ^I(5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+> kernel: ^I(5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
+>
+> Indent them with four spaces instead of the tab character to get prettier
+> output.
+>
 
-Yes, hostapd was still running, however stations were unable to pass
-traffic.  Actually the AP also stopped sending beacons I think,
-because the AP no longer appeared in scans.  Restarting hostapd had no
-effect.  I rebooted the machine.
+Acked: Luis R. Rodriguez <lrodriguez@atheros.com>
 
->
->> and these were
->> seen in dmesg.  I am using compat-wireless 2009-11-06.
->>
->> also at pastebin: http://pastebin.com/m527862e9
->>
->> [505869.263259] ------------[ cut here ]-----------             -
->> [505869.269520] WARNING: at
->> /root/compat-wireless-2009-11-06/net/mac80211/rx.c:2486
->
-> This would be from:
->
->        /*
->         * The same happens when we're not even started,
->         * but that's worth a warning.
->         */
->        if (WARN_ON(!local->started))
->                goto drop
->
-> So somehow the RX tasklet kicked in and ath9k RX engine was still running.
+> Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+
+Thanks been meaning to get to that, glad you scratched the itch.
+
+  Luis
