@@ -1,101 +1,312 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:58271 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750929AbZLAVf2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 16:35:28 -0500
-Date: Tue, 1 Dec 2009 13:35:32 -0800
-From: mark gross <mgross@linux.intel.com>
-To: linux-pm <linux-pm@lists.linux-foundation.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Subject: [PATCH]PM_QOS-to-use-handle-based-requests-wireless-update 4/5
-Message-ID: <20091201213532.GD19688@linux.intel.com>
-Reply-To: mgross@linux.intel.com
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:36394 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751793AbZLAAxj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Nov 2009 19:53:39 -0500
+Received: by ewy19 with SMTP id 19so4414120ewy.21
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Nov 2009 16:53:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1256687501-8636-1-git-send-email-andrey@cozybit.com>
+References: <1256687501-8636-1-git-send-email-andrey@cozybit.com>
+Date: Mon, 30 Nov 2009 16:53:44 -0800
+Message-ID: <436f52800911301653q224bacceq4a14cbbfaa5cc0e2@mail.gmail.com>
+Subject: Re: [PATCH] libertas: remove internal buffers from GSPI driver
+From: Colin McCabe <cmccabe@alumni.cmu.edu>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, dcbw@redhat.com,
+	sebatian@breakpoint.cc, libertas-dev@lists.infradead.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Updates to wireless clients to pm_qos associeated with api change to use
-handles.
+On Tue, Oct 27, 2009 at 3:51 PM, Andrey Yurovsky <andrey@cozybit.com> wrote:
+> This patch removes the internal command and data buffers that the GSPI driver
+> maintained and instead relies on the Libertas core to synchronize access
+> to the command and data ports as with the other interface drivers.
 
---mgross
+Hi all,
 
-Signed-off-by: mark gross <mgross@linux.intel.com>
+I'm glad to see you're improving stuff. Good catch with some of the
+recent bugfixes.
+
+However... it seems like you are headed for a "scheduling while
+atomic" with this patch.
+
+The original reason why if_spi_host_to_card copied the data into a
+buffer, rather than simply calling spu_write and being done with it,
+was that spu_write needed to sleep. spu_write invokes spi_sync, which
+has a big comment that says "This call may only be used from a context
+that may sleep."
+
+Unfortunately, if_spi_host_to_card is called from contexts where we
+hold a spinlock. For example, lbs_main does
+
+spin_lock_irq(&priv->driver_lock);
+if (!priv->dnld_sent && priv->tx_pending_len > 0) {
+    int ret = priv->hw_host_to_card(priv, MVMS_DAT,
+
+priv->tx_pending_buf,
+
+priv->tx_pending_len);
+...etc...
+
+Perhaps the easiest thing would be to get rid of this usage of hw_host_to_card?
+spu_write will always have to busy-wait from time to time because the
+SPU requires a delay between successive transactions. Busy-waiting
+under a spinlock, with interrupts disabled, just doesn't seem right.
+
+Also the comment in if_spi_c2h_cmd that "we need a buffer big enough
+to handle whatever people send to hw_host_to_card" should go away if
+the buffer is not used in hw_host_to_card.
+
+> This is an incremental cleanup: after removing the redundant buffers, we
+> can further improve the driver to use a threaded IRQ handler instead of
+> maintaining its own thread.  However I would like a few folks to test
+> the buffer removal first and make sure that I'm not introducing
+> regressions.
+
+Threaded IRQs, cool. I'm waiting for that patch. :)
+
+Colin
 
 
->From 64fdd9afd7d705368448548c8c3555c014fb318a Mon Sep 17 00:00:00 2001
-From: mark gross <mgross@mgross-hp8510w.(none)>
-Date: Tue, 1 Dec 2009 13:00:31 -0800
-Subject: [PATCH 4/5] PM_QOS to use handle based requests wireless update
-
----
- drivers/net/wireless/ipw2x00/ipw2100.c |   11 ++++++-----
- net/mac80211/mlme.c                    |    2 +-
- 2 files changed, 7 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index 6e2fc0c..6fe87f0 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -174,6 +174,8 @@ that only one external action is invoked at a time.
- #define DRV_DESCRIPTION	"Intel(R) PRO/Wireless 2100 Network Driver"
- #define DRV_COPYRIGHT	"Copyright(c) 2003-2006 Intel Corporation"
- 
-+struct pm_qos_request_list *ipw2100_pm_qos_req;
-+
- /* Debugging stuff */
- #ifdef CONFIG_IPW2100_DEBUG
- #define IPW2100_RX_DEBUG	/* Reception debugging */
-@@ -1708,7 +1710,7 @@ static int ipw2100_up(struct ipw2100_priv *priv, int deferred)
- 	/* the ipw2100 hardware really doesn't want power management delays
- 	 * longer than 175usec
- 	 */
--	pm_qos_update_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100", 175);
-+	pm_qos_update_request(ipw2100_pm_qos_req, 175);
- 
- 	/* If the interrupt is enabled, turn it off... */
- 	spin_lock_irqsave(&priv->low_lock, flags);
-@@ -1863,8 +1865,7 @@ static void ipw2100_down(struct ipw2100_priv *priv)
- 	ipw2100_disable_interrupts(priv);
- 	spin_unlock_irqrestore(&priv->low_lock, flags);
- 
--	pm_qos_update_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100",
--			PM_QOS_DEFAULT_VALUE);
-+	pm_qos_update_request(ipw2100_pm_qos_req, PM_QOS_DEFAULT_VALUE);
- 
- 	/* We have to signal any supplicant if we are disassociating */
- 	if (associated)
-@@ -6572,7 +6573,7 @@ static int __init ipw2100_init(void)
- 	if (ret)
- 		goto out;
- 
--	pm_qos_add_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100",
-+	ipw2100_pm_qos_req = pm_qos_add_request(PM_QOS_CPU_DMA_LATENCY,
- 			PM_QOS_DEFAULT_VALUE);
- #ifdef CONFIG_IPW2100_DEBUG
- 	ipw2100_debug_level = debug;
-@@ -6595,7 +6596,7 @@ static void __exit ipw2100_exit(void)
- 			   &driver_attr_debug_level);
- #endif
- 	pci_unregister_driver(&ipw2100_pci_driver);
--	pm_qos_remove_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100");
-+	pm_qos_remove_request(ipw2100_pm_qos_req);
- }
- 
- module_init(ipw2100_init);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index dc5049d..ed1d2dd 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -696,7 +696,7 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
- 		s32 beaconint_us;
- 
- 		if (latency < 0)
--			latency = pm_qos_requirement(PM_QOS_NETWORK_LATENCY);
-+			latency = pm_qos_request(PM_QOS_NETWORK_LATENCY);
- 
- 		beaconint_us = ieee80211_tu_to_usec(
- 					found->vif.bss_conf.beacon_int);
--- 
-1.6.3.3
-
+>
+> Tested on Blackfin BF527 with DMA disabled due to an issue with the SPI
+> host controller driver in the current bleeding-edge Blackfin kernel.  I
+> would appreciate it if someone with working DMA could test this patch
+> and provide feedback.
+>
+> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+> ---
+>  drivers/net/wireless/libertas/if_spi.c |  136 ++------------------------------
+>  1 files changed, 6 insertions(+), 130 deletions(-)
+>
+> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+> index 06df2e1..9e0096d 100644
+> --- a/drivers/net/wireless/libertas/if_spi.c
+> +++ b/drivers/net/wireless/libertas/if_spi.c
+> @@ -32,12 +32,6 @@
+>  #include "dev.h"
+>  #include "if_spi.h"
+>
+> -struct if_spi_packet {
+> -       struct list_head                list;
+> -       u16                             blen;
+> -       u8                              buffer[0] __attribute__((aligned(4)));
+> -};
+> -
+>  struct if_spi_card {
+>        struct spi_device               *spi;
+>        struct lbs_private              *priv;
+> @@ -66,33 +60,10 @@ struct if_spi_card {
+>        struct semaphore                spi_thread_terminated;
+>
+>        u8                              cmd_buffer[IF_SPI_CMD_BUF_SIZE];
+> -
+> -       /* A buffer of incoming packets from libertas core.
+> -        * Since we can't sleep in hw_host_to_card, we have to buffer
+> -        * them. */
+> -       struct list_head                cmd_packet_list;
+> -       struct list_head                data_packet_list;
+> -
+> -       /* Protects cmd_packet_list and data_packet_list */
+> -       spinlock_t                      buffer_lock;
+>  };
+>
+>  static void free_if_spi_card(struct if_spi_card *card)
+>  {
+> -       struct list_head *cursor, *next;
+> -       struct if_spi_packet *packet;
+> -
+> -       BUG_ON(card->run_thread);
+> -       list_for_each_safe(cursor, next, &card->cmd_packet_list) {
+> -               packet = container_of(cursor, struct if_spi_packet, list);
+> -               list_del(&packet->list);
+> -               kfree(packet);
+> -       }
+> -       list_for_each_safe(cursor, next, &card->data_packet_list) {
+> -               packet = container_of(cursor, struct if_spi_packet, list);
+> -               list_del(&packet->list);
+> -               kfree(packet);
+> -       }
+>        spi_set_drvdata(card->spi, NULL);
+>        kfree(card);
+>  }
+> @@ -774,40 +745,6 @@ out:
+>        return err;
+>  }
+>
+> -/* Move data or a command from the host to the card. */
+> -static void if_spi_h2c(struct if_spi_card *card,
+> -                       struct if_spi_packet *packet, int type)
+> -{
+> -       int err = 0;
+> -       u16 int_type, port_reg;
+> -
+> -       switch (type) {
+> -       case MVMS_DAT:
+> -               int_type = IF_SPI_CIC_TX_DOWNLOAD_OVER;
+> -               port_reg = IF_SPI_DATA_RDWRPORT_REG;
+> -               break;
+> -       case MVMS_CMD:
+> -               int_type = IF_SPI_CIC_CMD_DOWNLOAD_OVER;
+> -               port_reg = IF_SPI_CMD_RDWRPORT_REG;
+> -               break;
+> -       default:
+> -               lbs_pr_err("can't transfer buffer of type %d\n", type);
+> -               err = -EINVAL;
+> -               goto out;
+> -       }
+> -
+> -       /* Write the data to the card */
+> -       err = spu_write(card, port_reg, packet->buffer, packet->blen);
+> -       if (err)
+> -               goto out;
+> -
+> -out:
+> -       kfree(packet);
+> -
+> -       if (err)
+> -               lbs_pr_err("%s: error %d\n", __func__, err);
+> -}
+> -
+>  /* Inform the host about a card event */
+>  static void if_spi_e2h(struct if_spi_card *card)
+>  {
+> @@ -837,8 +774,6 @@ static int lbs_spi_thread(void *data)
+>        int err;
+>        struct if_spi_card *card = data;
+>        u16 hiStatus;
+> -       unsigned long flags;
+> -       struct if_spi_packet *packet;
+>
+>        while (1) {
+>                /* Wait to be woken up by one of two things.  First, our ISR
+> @@ -877,43 +812,9 @@ static int lbs_spi_thread(void *data)
+>                if (hiStatus & IF_SPI_HIST_CMD_DOWNLOAD_RDY ||
+>                   (card->priv->psstate != PS_STATE_FULL_POWER &&
+>                    (hiStatus & IF_SPI_HIST_TX_DOWNLOAD_RDY))) {
+> -                       /* This means two things. First of all,
+> -                        * if there was a previous command sent, the card has
+> -                        * successfully received it.
+> -                        * Secondly, it is now ready to download another
+> -                        * command.
+> -                        */
+>                        lbs_host_to_card_done(card->priv);
+> -
+> -                       /* Do we have any command packets from the host to
+> -                        * send? */
+> -                       packet = NULL;
+> -                       spin_lock_irqsave(&card->buffer_lock, flags);
+> -                       if (!list_empty(&card->cmd_packet_list)) {
+> -                               packet = (struct if_spi_packet *)(card->
+> -                                               cmd_packet_list.next);
+> -                               list_del(&packet->list);
+> -                       }
+> -                       spin_unlock_irqrestore(&card->buffer_lock, flags);
+> -
+> -                       if (packet)
+> -                               if_spi_h2c(card, packet, MVMS_CMD);
+>                }
+> -               if (hiStatus & IF_SPI_HIST_TX_DOWNLOAD_RDY) {
+> -                       /* Do we have any data packets from the host to
+> -                        * send? */
+> -                       packet = NULL;
+> -                       spin_lock_irqsave(&card->buffer_lock, flags);
+> -                       if (!list_empty(&card->data_packet_list)) {
+> -                               packet = (struct if_spi_packet *)(card->
+> -                                               data_packet_list.next);
+> -                               list_del(&packet->list);
+> -                       }
+> -                       spin_unlock_irqrestore(&card->buffer_lock, flags);
+>
+> -                       if (packet)
+> -                               if_spi_h2c(card, packet, MVMS_DAT);
+> -               }
+>                if (hiStatus & IF_SPI_HIST_CARD_EVENT)
+>                        if_spi_e2h(card);
+>
+> @@ -942,40 +843,18 @@ static int if_spi_host_to_card(struct lbs_private *priv,
+>                                u8 type, u8 *buf, u16 nb)
+>  {
+>        int err = 0;
+> -       unsigned long flags;
+>        struct if_spi_card *card = priv->card;
+> -       struct if_spi_packet *packet;
+> -       u16 blen;
+>
+>        lbs_deb_enter_args(LBS_DEB_SPI, "type %d, bytes %d", type, nb);
+>
+> -       if (nb == 0) {
+> -               lbs_pr_err("%s: invalid size requested: %d\n", __func__, nb);
+> -               err = -EINVAL;
+> -               goto out;
+> -       }
+> -       blen = ALIGN(nb, 4);
+> -       packet = kzalloc(sizeof(struct if_spi_packet) + blen, GFP_ATOMIC);
+> -       if (!packet) {
+> -               err = -ENOMEM;
+> -               goto out;
+> -       }
+> -       packet->blen = blen;
+> -       memcpy(packet->buffer, buf, nb);
+> -       memset(packet->buffer + nb, 0, blen - nb);
+> +       nb = ALIGN(nb, 4);
+>
+>        switch (type) {
+>        case MVMS_CMD:
+> -               priv->dnld_sent = DNLD_CMD_SENT;
+> -               spin_lock_irqsave(&card->buffer_lock, flags);
+> -               list_add_tail(&packet->list, &card->cmd_packet_list);
+> -               spin_unlock_irqrestore(&card->buffer_lock, flags);
+> +               err = spu_write(card, IF_SPI_CMD_RDWRPORT_REG, buf, nb);
+>                break;
+>        case MVMS_DAT:
+> -               priv->dnld_sent = DNLD_DATA_SENT;
+> -               spin_lock_irqsave(&card->buffer_lock, flags);
+> -               list_add_tail(&packet->list, &card->data_packet_list);
+> -               spin_unlock_irqrestore(&card->buffer_lock, flags);
+> +               err = spu_write(card, IF_SPI_DATA_RDWRPORT_REG, buf, nb);
+>                break;
+>        default:
+>                lbs_pr_err("can't transfer buffer of type %d", type);
+> @@ -983,9 +862,6 @@ static int if_spi_host_to_card(struct lbs_private *priv,
+>                break;
+>        }
+>
+> -       /* Wake up the spi thread */
+> -       up(&card->spi_ready);
+> -out:
+>        lbs_deb_leave_args(LBS_DEB_SPI, "err=%d", err);
+>        return err;
+>  }
+> @@ -1062,9 +938,6 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+>
+>        sema_init(&card->spi_ready, 0);
+>        sema_init(&card->spi_thread_terminated, 0);
+> -       INIT_LIST_HEAD(&card->cmd_packet_list);
+> -       INIT_LIST_HEAD(&card->data_packet_list);
+> -       spin_lock_init(&card->buffer_lock);
+>
+>        /* Initialize the SPI Interface Unit */
+>        err = spu_init(card, pdata->use_dummy_writes);
+> @@ -1141,6 +1014,9 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+>                goto terminate_thread;
+>        }
+>
+> +       /* poke the IRQ handler so that we don't miss the first interrupt */
+> +       up(&card->spi_ready);
+> +
+>        /* Start the card.
+>         * This will call register_netdev, and we'll start
+>         * getting interrupts... */
+> --
+> 1.5.6.3
+>
+>
+> _______________________________________________
+> libertas-dev mailing list
+> libertas-dev@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/libertas-dev
+>
