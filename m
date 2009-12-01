@@ -1,84 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:61313 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757265AbZLKNlV (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:32876 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752503AbZLAJ3g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:41:21 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 00/31] wl1271: patches for wk50
-Date: Fri, 11 Dec 2009 15:40:39 +0200
-Message-Id: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 1 Dec 2009 04:29:36 -0500
+Subject: Re: [PATCH 1/2] cfg80211: add SM PS hooks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <87pr6z6uud.fsf@purkki.valot.fi>
+References: <20091130153857.963079149@sipsolutions.net>
+	 <20091130154300.492667106@sipsolutions.net>
+	 <87pr6z6uud.fsf@purkki.valot.fi>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-mv8jotYY/6+4Gh5udd5o"
+Date: Tue, 01 Dec 2009 10:29:31 +0100
+Message-ID: <1259659771.32171.62.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-These are the patches that have resulted from a one-week debug and
-implementation camp with TI.  Mostly bug fixes and improvements, but also we
-now added support for a new version of the firmware.
+--=-mv8jotYY/6+4Gh5udd5o
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-With these patches, the driver should be pretty much functional, even though
-there are still a couple of known bugs.
+On Tue, 2009-12-01 at 09:01 +0200, Kalle Valo wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+>=20
+> > Add spatial multiplexing power save configuration
+> > hooks to cfg80211/nl80211.
+>=20
+> Is it really necessary to export this to user space, at least via
+> nl80211? If we add this to nl80211, we have to support this almost
+> forever.
+>=20
+> Also how are planning to use this? What components will use the
+> interface and how?
 
-In v2:
+Good questions.
 
-* use channel max_power configuration instead of hacking the tx_power to 25dBm
-* removed some lame internal bug tags
-* fixed my own email address in one of the s-o-b tags
+> My concern here is that we will end up having, yet again, complicated
+> user space interface for power save. The ideal situation would be that
+> kernel would configure all this automatically and we would have a
+> simple interface just to disable power save in cases where it doesn't
+> work (broken APs etc).
 
-Cheers,
-Luca.
+I'm not actually sure that there are APs broken wrt. SM PS, it seems
+highly unlikely -- even if there are (like mac80211!!) the rate control
+algorithm would recover the situation.
 
-Juuso Oikarinen (15):
-  wl1271: Configure smart-reflex paramter values.
-  wl1271: Remove smart reflex ACX
-  wl1271: Use slow rates for association messages
-  wl1271: Fix event acknowledging functionality
-  wl1271: prevent power save entry while not associated
-  wl1271: Implement chipset boot retry
-  wl1271: Add pre-power-on sleep
-  wl1271: Remove beacon-loss-ind from PSM entry failure handling
-  wl1271: Add rudimentary ad-hoc support
-  wl1271: Change rates configured for templates
-  wl1271: Fix supported rate management
-  wl1271: Change booleans in struct wl1271 into a flags bitmask
-  wl1271: Add support for acx_pm_config
-  wl1271: Check vif for NULL when indicating beacon-loss
-  wl1271: Prevent performing "join" before association
+As such, I suppose it's somewhat a debugging API. On the other hand,
+there are actual traffic throughput consequences of enabling SM PS, even
+when in powersave. Powersave will be turned off automatically if there's
+enough traffic, but SM PS won't. The default, automatic, means it just
+follows powersave (dynamic SM PS if on, no SM PS if off), but I'm not
+sure that is typically desirable.
 
-Luciano Coelho (16):
-  wl1271: updated radio parameters structure for newer firmwares
-  wl1271: updated general parameters structure for newer firmwares
-  wl1271: update radio and general parameters values
-  wl1271: added radio parameters configuration values newer firmwares
-  wl1271: use join command with dummy BSSID
-  wl1271: remove workaround for disconnection
-  wl1271: limit TX power to 25dBm for every channel
-  wl1271: check result code from the join command
-  wl1271: set null data template when BSSID is known
-  wl1271: use the correct macro when setting the basic rates
-  wl1271: implement dco itrim parameters setting
-  wl1271: fix one typo in the rx_rssi_and_proc_compens values
-  wl1271: add gpio_power file in debugfs to power the chip on and off
-  wl1271: upload only the first 468 bytes from the NVS file
-  wl1271: some new configuration values according to new reference
-  wl1271: use channel 1 when configuring the data path
+Of course, on the other hand, I don't see many users actually setting
+it. An alternative could be to try to estimate traffic, but that gets
+messy fairly quickly because the thresholds depend on the environment.
 
- drivers/net/wireless/wl12xx/wl1271.h         |   35 +-
- drivers/net/wireless/wl12xx/wl1271_acx.c     |  134 ++++----
- drivers/net/wireless/wl12xx/wl1271_acx.h     |   37 +-
- drivers/net/wireless/wl12xx/wl1271_boot.c    |    8 +-
- drivers/net/wireless/wl12xx/wl1271_cmd.c     |   67 +++--
- drivers/net/wireless/wl12xx/wl1271_cmd.h     |   33 ++-
- drivers/net/wireless/wl12xx/wl1271_conf.h    |  100 +++---
- drivers/net/wireless/wl12xx/wl1271_debugfs.c |   62 ++++
- drivers/net/wireless/wl12xx/wl1271_event.c   |   20 +-
- drivers/net/wireless/wl12xx/wl1271_event.h   |    2 +-
- drivers/net/wireless/wl12xx/wl1271_init.c    |   12 +-
- drivers/net/wireless/wl12xx/wl1271_main.c    |  482 ++++++++++++++++----------
- drivers/net/wireless/wl12xx/wl1271_ps.c      |   15 +-
- drivers/net/wireless/wl12xx/wl1271_tx.c      |   43 +++-
- 14 files changed, 680 insertions(+), 370 deletions(-)
+If you prefer to leave it out for now, I can probably move it to debugfs
+until we have a more clearly defined use case, although if we decide
+that we never want it then obviously the action frame handling can go
+away again.
+
+johannes
+
+--=-mv8jotYY/6+4Gh5udd5o
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLFOH4AAoJEODzc/N7+QmahT8P/jUr6MgOB9QRB8FP8Xom3HWA
+LgP6LaoK21YIVphZxN9MtqW09mTlERvk3uvg/X7LaeVyrKpXgXI5K++OdWxQN3BU
+uXIxpXjJkV8fazG8QjPI5HjT6lwn/ws+R3fCMKR5xl+hRukuWqwwKsF/1n7/0j+d
++56ljBUTssq9PiM2CNrSxIC96avSTCpqq9cOf0f8MiEyZFUouL1hwAFfPKZtrqD+
+6+/kxwFRAcipDLlqhzqqWvSye+BIfKgyuEncpOFCJ5voDGod6nIYsmjQF8tpIm+1
+Ey4UapvcQDVkw7cmbhaXDenpEWi2CvvbahaJBKvjFqs8DgBMM/jAhZdXhhIA4iSx
++AX2SgJACkpM4b7O7aNLUPGlefRYNccfV09OURG0Z5pxY6MZecajOcVclKjuLD9+
+uwMrIn5rRecJTg2EOxAiCpEXD0iIw5zJnwTuaI9t5orVISUMsiSyaE8eRbNtIIBZ
+J9XNQqvIXBwJiFXfevSkR0WipYNxiYNIyCFWn9u/t9ElcO9PbcEocHAP9jcB1G89
+1bTnmZQfOUBdA6CLBMmcJwNildecYMAg0xsmJPzzUM8gi2WqQY3WjE476K/8pNSX
+RkpLGaUy1HBN2h5i+k4LKuBJnw3rM8jhgOh2m84BOvAZcowNowueBaY3u+PsAhZR
+3sz1A9qJyN3IMxCzOPX4
+=LepO
+-----END PGP SIGNATURE-----
+
+--=-mv8jotYY/6+4Gh5udd5o--
 
