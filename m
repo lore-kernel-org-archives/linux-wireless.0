@@ -1,59 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:45209 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756192AbZLXNEx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2009 08:04:53 -0500
-Message-ID: <4B3366E0.2000403@openwrt.org>
-Date: Thu, 24 Dec 2009 14:04:32 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	=?ISO-8859-1?Q?Bj=F6rn_?= =?ISO-8859-1?Q?Smedman?=
-	<bjorn.smedman@venatech.se>,
-	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
-Subject: [PATCH] ath9k: fix missed error codes in the tx status check
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from xc.sipsolutions.net ([83.246.72.84]:48446 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753866AbZLAJYR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2009 04:24:17 -0500
+Subject: Re: python nl80211 code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <87hbsb6pot.fsf@purkki.valot.fi>
+References: <87hbsb6pot.fsf@purkki.valot.fi>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-IoO3ze+GHQVFIfG3/RWV"
+Date: Tue, 01 Dec 2009 10:23:45 +0100
+Message-ID: <1259659425.32171.54.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My previous change added in:
 
- commit 815833e7ecf0b9a017315cae6aef4d7cd9517681
-    ath9k: fix tx status reporting
+--=-IoO3ze+GHQVFIfG3/RWV
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-was not checking all possible tx error conditions. This could possibly
-lead to throughput issues due to slow rate control adaption or missed
-retransmissions of failed A-MPDU frames.
+On Tue, 2009-12-01 at 10:53 +0200, Kalle Valo wrote:
+> Hello,
+>=20
+> I want to run some tests through nl80211 and, as usual, I prefer to
+> use python for that. Are there any scripts/examples using nl80211 with
+> python available? Preferably with an open enough license.
 
-This patch adds a mask for all possible error conditions and uses it
-in the xmit ok check.
+http://git.sipsolutions.net/pynl80211.git/
 
-Cc: stable@kernel.org
-Reported-by: Björn Smedman <bjorn.smedman@venatech.se>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
+Doesn't have much of a license but was intended to be GPLv2, but there
+was only one commit from somebody other than me who'd probably relicense
+if needed.
 
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -77,6 +77,9 @@
- #define ATH9K_TXERR_XTXOP          0x08
- #define ATH9K_TXERR_TIMER_EXPIRED  0x10
- #define ATH9K_TX_ACKED		   0x20
-+#define ATH9K_TXERR_MASK						\
-+	(ATH9K_TXERR_XRETRY | ATH9K_TXERR_FILT | ATH9K_TXERR_FIFO |	\
-+	 ATH9K_TXERR_XTXOP | ATH9K_TXERR_TIMER_EXPIRED)
- 
- #define ATH9K_TX_BA                0x01
- #define ATH9K_TX_PWRMGMT           0x02
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2072,7 +2072,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 				&txq->axq_q, lastbf->list.prev);
- 
- 		txq->axq_depth--;
--		txok = !(ds->ds_txstat.ts_status & ATH9K_TXERR_FILT);
-+		txok = !(ds->ds_txstat.ts_status & ATH9K_TXERR_MASK);
- 		txq->axq_tx_inprogress = false;
- 		spin_unlock_bh(&txq->axq_lock);
- 
+johannes
+
+--=-IoO3ze+GHQVFIfG3/RWV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLFOCdAAoJEODzc/N7+QmaBMwP/j5vAn0/WpN9XTCqxaebyPoq
+4tu9jGsjiy2M8Sun/OL++IzlCfyLP4rYZhMXdVBkUbrWVsV90DI+IkSWNyDEQno2
+1f5i1pXtMGOQ9ZenLbLDjE39a+CJoANjcD4Sn3ObKqgAn01qcGsQ80ZO+BuVENJ+
+1VBtWYQH60obyas7PNmPce00E4cjH7ZYuTGHssnn0iQdcdyy5mso2aMs/fyFDe5w
+sFuh5RGtmcgoCTEbHDY8wmoe3mC5G17Q+pJ9MCXxPIq/1H22p0n++EBOhHdA9s2q
+NagZsbWuyzoXj1fyBMj0B2mIRxnGYbM/nl2mxd2hC6/maH0BAYGa12g40tkZF0v1
+38rgIKS4EPpkvQCpsl6OZGKlNM0U0FitEUt+CRc38GyR3gYrxPWIJEnVk5GyPAI2
+5pLYYL2XUICFKHgOey5y8qdgIsl4MNRbTx++zAT3IY0jw0baP+3o4p1/ZPV6Iqbu
+Q3ZdL3a0CnaJdAfY02v3CEpeINWg8GuAB0OCR33pXH6tPxEkMYXOgEFZNDeMcbPH
+wyGAI7hOFHmGlWqP6RV084vHFn5qSCunAxVG0B+uoTKnk7CiC0RkgkQD92IMMZtg
+oL5vngpkf/Ubk4BV59am+CB60F3Ax7TzgvoBQpa56HwR65fOH1hGZvsXj4lG/Wa7
+2NFIlknx0gkbQ5FH/XZy
+=IiAU
+-----END PGP SIGNATURE-----
+
+--=-IoO3ze+GHQVFIfG3/RWV--
+
