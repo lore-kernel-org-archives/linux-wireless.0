@@ -1,44 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:58272 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752216AbZLKHnM (ORCPT
+Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:50805 "EHLO
+	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752667AbZLAWJJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 02:43:12 -0500
+	Tue, 1 Dec 2009 17:09:09 -0500
+Message-ID: <4B15940A.8070304@gmail.com>
+Date: Tue, 01 Dec 2009 23:09:14 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20091208073542.GC22204@atheros-laptop>
-References: <20091208073542.GC22204@atheros-laptop>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 10 Dec 2009 23:42:59 -0800
-Message-ID: <43e72e890912102342q478593f3ge162d3b8cddd3f61@mail.gmail.com>
-Subject: Re: [PATCH] Added compat-bluetooth to compat-wireless-2.6
-To: Bala Shanmugam <sbalashanmugam@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	mcgrof@bombadil.infradead.org, linux-wireless@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Benoit Papillault <benoit.papillault@free.fr>
+Subject: Re: [PATCH v3 4/4] rt2x00: Only remove L2 padding in received frames
+ if there is payload.
+References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com> <200912012016.03145.IvDoorn@gmail.com> <4B1585BC.60700@gmail.com> <200912012257.02397.IvDoorn@gmail.com>
+In-Reply-To: <200912012257.02397.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 7, 2009 at 11:35 PM, Bala Shanmugam
-<sbalashanmugam@atheros.com> wrote:
->
-> Added compat-bluetooth to compat-wireless-2.6
->
-> Added new scripts to load and unload wireless
-> and bluetooth modules seperately.
->
-> Compat is compiled as separate kernel module as
-> both wireless and bluetooth modules require it.
->
-> Compat Bluetooth has support to compile latest bluetooth code
-> for kernel versions 2.6.27 to 2.6.31.
-> Signed-off-by: Bala Shanmugam <sbalashanmugam@atheros.com>
+On 12/01/09 22:57, Ivo van Doorn wrote:
+> On Tuesday 01 December 2009, Gertjan van Wingerde wrote:
+>> On 12/01/09 20:16, Ivo van Doorn wrote:
+>>> On Monday 30 November 2009, Gertjan van Wingerde wrote:
+>>>> L2 padding will only be present when there is actual payload present.
+>>>>
+>>>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>>>> ---
+>>>>  drivers/net/wireless/rt2x00/rt2x00dev.c |    4 +++-
+>>>>  1 files changed, 3 insertions(+), 1 deletions(-)
+>>>>
+>>>> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+>>>> index ca2bcc0..b93731b 100644
+>>>> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
+>>>> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+>>>> @@ -401,7 +401,9 @@ void rt2x00lib_rxdone(struct rt2x00_dev *rt2x00dev,
+>>>>  	    (rxdesc.flags & RX_FLAG_IV_STRIPPED))
+>>>>  		rt2x00crypto_rx_insert_iv(entry->skb, header_length,
+>>>>  					  &rxdesc);
+>>>> -	else if (rxdesc.dev_flags & RXDONE_L2PAD)
+>>>> +	else if (header_length &&
+>>>> +		 (rxdesc.size > header_length) &&
+>>>> +		 (rxdesc.dev_flags & RXDONE_L2PAD))
+>>>>  		rt2x00queue_remove_l2pad(entry->skb, header_length);
+>>>>  	else
+>>>>  		rt2x00queue_align_payload(entry->skb, header_length);
+>>>
+>>> Is there a scenario where header_lenght can be 0?
+>>> And if there is, shouldn't we have bailed-out completely already?
+>>>
+>>
+>> Actually, there is. ieee80211_get_hdrlen_from_skb returns 0 when it detects that
+>> the skb is actually shorter than it should be (according to the frame type indicated
+>> by the frame_control field).
+>> I'm using that here to check whether actually any payload is present, as a value of 0
+>> means that there isn't even a full header.
+>> We should still pass on the frame in that case, for the monitor interfaces.
+> 
+> Ok, then we should pass it to mac80211, but we better use a goto or something to
+> skip all frame manipulation (like the rt2x00crypto_rx_insert_iv and rt2x00queue_align_payload)
+> as well.
+> 
 
-Thanks a lot Bala, applied. I made a few changes now like move some of
-the compat hunks that are specific to an actual kernel change to their
-respective patches/*.patch file. I nuked the old compat files and
-updated compat.git to add all the missing items. Additionally changed
-the build process and selection for components but I'll elaborate on
-that on another e-mail.
+Good point. Can we do that as a follow-up patch?
 
-  Luis
+---
+Gertjan.
+
