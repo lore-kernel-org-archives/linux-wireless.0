@@ -1,78 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:49263 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751415AbZLUSqj (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:50766 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751320AbZLATRI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2009 13:46:39 -0500
-Received: by iwn1 with SMTP id 1so3883009iwn.33
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2009 10:46:38 -0800 (PST)
+	Tue, 1 Dec 2009 14:17:08 -0500
+Received: by ewy19 with SMTP id 19so5286899ewy.21
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 11:17:14 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Benoit Papillault <benoit.papillault@free.fr>
+Subject: Re: [PATCH 1/2] rt2x00: Disable RX aggregation for rt2800usb
+Date: Tue, 1 Dec 2009 20:17:11 +0100
+Cc: gwingerde@gmail.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com,
+	Luis Correia <luis.f.correia@gmail.com>
+References: <1259619690-2749-1-git-send-email-benoit.papillault@free.fr>
+In-Reply-To: <1259619690-2749-1-git-send-email-benoit.papillault@free.fr>
 MIME-Version: 1.0
-In-Reply-To: <20091221113602.50579359.undefined@pobox.com>
-References: <20091221113602.50579359.undefined@pobox.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 21 Dec 2009 10:46:18 -0800
-Message-ID: <43e72e890912211046h49d93cb4r49a2b3aef452b29a@mail.gmail.com>
-Subject: Re: Compat-wireless releases for 2.6.33-rc1 and 2.6.32.2
-To: Corey Wright <undefined@pobox.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200912012017.11986.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 21, 2009 at 9:36 AM, Corey Wright <undefined@pobox.com> wrote:
-> (my apologies to those with thread-aware mail user agents as this is not a
-> true reply as i'm not subscribed to linux-wireless, but copied from
-> marc.info's raw message display.)
->
->> If there are any bugs please report them
->> through linux-wireless.
->
->> I've tested ath5k on 2.6.27.41 on x86_64 and
->> send this e-mail out through it.
->
->> While at it 2.6.32.2 got released today so I just updated a release
->> for that so users can benefit from the few fixes [3], you can check
->> the ChangeLog for that on the wireless for details on the changes [4].
->
-> i tested ath5k from compat-wireless-2.6.32 on 2.6.27.41 and from
-> compat-wireless-2.6.32.2 on 2.6.27.42 and i needed this patch [1]
-> to avoid duplicate ieee80211_rx symbol in ieee80211 (from kernel) &
-> mac80211 (from compat-wireless).
->
-> [1] http://patchwork.kernel.org/patch/54569/
->
-> i see that the patch was applied to compat-wireless-2.6.33-rc1, but i
-> wonder if it should be backported to the 2.6.32.2 release.
+On Monday 30 November 2009, Benoit Papillault wrote:
+> From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+> 
+> RX aggregation is a way to receive multiple 802.11 frames in one RX buffer.
+> However, we don't know yet how to handle this case in rt2800usb_fill_rxdone
+> and this has probably no impact on RX performance as well, so we disable it
+> 
+> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+> ---
+>  drivers/net/wireless/rt2x00/rt2800usb.c |    4 +---
+>  1 files changed, 1 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index af85d18..ed31763 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -295,9 +295,7 @@ static int rt2800usb_enable_radio(struct rt2x00_dev *rt2x00dev)
+>  
+>  	rt2800_register_read(rt2x00dev, USB_DMA_CFG, &reg);
+>  	rt2x00_set_field32(&reg, USB_DMA_CFG_PHY_CLEAR, 0);
+> -	/* Don't use bulk in aggregation when working with USB 1.1 */
+> -	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_EN,
+> -			   (rt2x00dev->rx->usb_maxpacket == 512));
+> +	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_EN, 0);
+>  	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_TIMEOUT, 128);
+>  	/*
+>  	 * Total room for RX frames in kilobytes, PBF might still exceed
 
-I'll suck it in, thanks for the report.
 
-> actually, i have no personal stake in the fix as after i got it to work i
-> learned that the new release is not compatible with my older distro-provided
-> user-land (doesn't recognize it as wireless),
+Are you sure this works? I think Luis tried this 2 weeks ago and it didn't
+disable the aggregation... (Luis, please confirm that this was indeed the change you made...)
 
-Old userspace should not bust. If you find what the issue was let us
-know. AFAICT old userspace tend to look for 3 possible things to see
-if a device is a wireless device.
-
-  1) Wireless-tools requires SIOCGIWRANGE
-  2) Network manager requires SIOCGIWNAME
-  3) Linux hald < 0.5.12 used to use check the existance of
-/sys/class/net/<interface>/wireless/
-
-The only one I can think of your userspace might have an issue with is
-the last one but even then you should get this if you have
-CONFIG_WIRELESS_EXT_SYSFS=y on 2.6.27.41
-
-> which i don't feel like
-> upgrading/self-maintaining and possibly descending into dependency-hell, so
-> i'm sticking with compat-wireless-2.6.30 (compat-wireless-2.6.31-rc7 release
-> didn't seem to work as well as 2.6.30), but thought the finding might be of
-> interest to others (possibly stumbling upon this searching for
-> "compat-wireless-2.6.32 ieee80211_rx ieee80211 mac80211 duplicate symbol"
-> or something similar).
->
-> thanks for compat-wireless!
-
-Thanks for reporting your issue.
-
-  Luis
+Ivo
