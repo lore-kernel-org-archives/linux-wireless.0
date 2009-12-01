@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:63412 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751528AbZLWIfg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 03:35:36 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2009 00:35:36 -0800
-From: vasanth <vasanth@atheros.com>
-To: <greg@kroah.com>, <stable@kernel.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH 2/2] ath9k_hw: Fix AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_BB and its shift value in 0x4054
-Date: Wed, 23 Dec 2009 13:54:36 +0530
-Message-ID: <1261556676-6081-2-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1261556676-6081-1-git-send-email-vasanth@atheros.com>
-References: <1261556676-6081-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-gx0-f212.google.com ([209.85.217.212]:57613 "EHLO
+	mail-gx0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753458AbZLAIj6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2009 03:39:58 -0500
+Received: by gxk4 with SMTP id 4so3477390gxk.8
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 00:40:05 -0800 (PST)
+From: Arnaud Lacombe <lacombar@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: mcgrof@bombadil.infradead.org, linux-wireless@vger.kernel.org,
+	Arnaud Lacombe <lacombar@gmail.com>
+Subject: [PATCH 2/5] Add compatibility call for dev_get_stats()
+Date: Tue,  1 Dec 2009 03:38:18 -0500
+Message-Id: <1259656701-12329-2-git-send-email-lacombar@gmail.com>
+In-Reply-To: <1259656701-12329-1-git-send-email-lacombar@gmail.com>
+References: <4B0B4405.4050605@gmail.com>
+ <1259656701-12329-1-git-send-email-lacombar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Added on commit eeda3fd6 by Stephen Hemminger in include/linux/netdevice.h.
 
-commit c37919bfe0a5c1bee9a31701a31e05a2f8840936 upstream
-
-The bit value of AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_BB is wrong, it should
-be 0x400 and the number of bits to be right shifted is 10. Having this
-wrong value in 0x4054 sometimes affects bt quality on btcoex environment.
-
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/reg.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ compat-2.6.29.h |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index d83b77f..c0d7e65 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -969,10 +969,10 @@ enum {
- #define AR_GPIO_INPUT_EN_VAL_BT_ACTIVE_S         4
- #define AR_GPIO_INPUT_EN_VAL_RFSILENT_DEF        0x00000080
- #define AR_GPIO_INPUT_EN_VAL_RFSILENT_DEF_S      7
-+#define AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_BB      0x00000400
-+#define AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_BB_S    10
- #define AR_GPIO_INPUT_EN_VAL_BT_ACTIVE_BB        0x00001000
- #define AR_GPIO_INPUT_EN_VAL_BT_ACTIVE_BB_S      12
--#define AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_BB      0x00001000
--#define AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_BB_S    1
- #define AR_GPIO_INPUT_EN_VAL_RFSILENT_BB         0x00008000
- #define AR_GPIO_INPUT_EN_VAL_RFSILENT_BB_S       15
- #define AR_GPIO_RTC_RESET_OVERRIDE_ENABLE        0x00010000
+diff --git a/compat-2.6.29.h b/compat-2.6.29.h
+index ff97b37..cad5e6b 100644
+--- a/compat-2.6.29.h
++++ b/compat-2.6.29.h
+@@ -6,6 +6,7 @@
+ 
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
+ 
++#include <linux/netdevice.h>
+ #include <linux/skbuff.h>
+ #include <linux/usb.h>
+ 
+@@ -40,6 +41,12 @@ static inline struct sk_buff *skb_queue_prev(const struct sk_buff_head *list,
+ 	return skb->prev;
+ }
+ 
++
++static inline struct net_device_stats *dev_get_stats(struct net_device *dev)
++{
++	return dev->get_stats(dev);
++}
++
+ extern void usb_unpoison_anchored_urbs(struct usb_anchor *anchor);
+ 
+ #define DIV_ROUND_CLOSEST(x, divisor)(			\
 -- 
-1.5.5.1
+1.6.3.3.385.g60647.dirty
 
