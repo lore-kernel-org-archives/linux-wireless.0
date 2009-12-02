@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from queueout01-winn.ispmail.ntl.com ([81.103.221.31]:40338 "EHLO
-	queueout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762033AbZLQKz5 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40149 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753363AbZLBKVC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2009 05:55:57 -0500
-Message-ID: <4B2A0AE5.2080006@reactivated.net>
-Date: Thu, 17 Dec 2009 10:41:41 +0000
-From: Daniel Drake <dan@reactivated.net>
-MIME-Version: 1.0
-To: Josua Dietze <digidietze@draisberghof.de>
-CC: Stefan Seyfried <stefan.seyfried@googlemail.com>,
-	usb-storage@lists.one-eyed-alien.net, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Stefan Seyfried <seife@sphairon.com>
-Subject: Re: [usb-storage] [PATCH] move eject code from zd1211rw to  usb-storage
-References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com> <4B278191.1010009@draisberghof.de>
-In-Reply-To: <4B278191.1010009@draisberghof.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 2 Dec 2009 05:21:02 -0500
+Subject: [PATCH] b43: fix two warnings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 02 Dec 2009 11:20:36 +0100
+Message-ID: <1259749236.32171.151.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El 15/12/09 12:31, Josua Dietze escribi�:
-> Stefan Seyfried schrieb:
->
->> The USB ID claimed by zd1211rw for the fake storage device is
->> also in use by other, non-zd1211rw devices (Sphairon Homelink
->> 1202). Move the eject of these devices to where it belongs and
->> where all the needed infrastructure already exists: usb-storage.
->
->
-> We can do the eject (as other mode switches) in userspace. Previous
-> discussions pointed into that direction.
+My gcc appears to be able to see past the function
+boundary and notices that the variable 'behaviour'
+could be used uninitialised:
 
-When I originally wrote this code this wasn't as easy as you might think 
-- the virtual CD device seems to be very quirky, and utterly confused 
-Linux to the point where it didn't even create a device node. Maybe 
-linux is more flexible these days though.
+drivers/net/wireless/b43/leds.c: In function ‘b43_leds_register’:
+drivers/net/wireless/b43/leds.c:339: warning: ‘behaviour’ may be used uninitialized in this function
+drivers/net/wireless/b43/leds.c: In function ‘b43_leds_init’:
+drivers/net/wireless/b43/leds.c:262: warning: ‘behaviour’ may be used uninitialized in this function
 
-Daniel
+because b43_led_get_sprominfo() didn't initialise
+it in all cases.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/b43/leds.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+--- wireless-testing.orig/drivers/net/wireless/b43/leds.c	2009-12-02 11:15:53.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/leds.c	2009-12-02 11:16:26.000000000 +0100
+@@ -246,6 +246,7 @@ static void b43_led_get_sprominfo(struct
+ 			*behaviour = B43_LED_OFF;
+ 			break;
+ 		default:
++			*behaviour = B43_LED_OFF;
+ 			B43_WARN_ON(1);
+ 			return;
+ 		}
+
+
