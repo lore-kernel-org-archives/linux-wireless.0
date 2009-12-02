@@ -1,36 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:43751 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753057AbZL3Ulp (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:50435 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754700AbZLBRfI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2009 15:41:45 -0500
-Received: by ey-out-2122.google.com with SMTP id 25so1806596eya.19
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2009 12:41:44 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 1/6] rt2x00: use correct headroom for transmission
-Date: Wed, 30 Dec 2009 21:41:41 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Wireless list <linux-wireless@vger.kernel.org>,
-	rt2x00 users list <users@rt2x00.serialmonkey.com>,
-	Pavel Roskin <proski@gnu.org>
-References: <1262169394-11647-1-git-send-email-gwingerde@gmail.com> <1262169394-11647-2-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1262169394-11647-2-git-send-email-gwingerde@gmail.com>
+	Wed, 2 Dec 2009 12:35:08 -0500
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200912302141.42177.IvDoorn@gmail.com>
+In-Reply-To: <43e72e890911302354i1b17265ckb3aa81171a24174b@mail.gmail.com>
+References: <4ADE2F66.1070703@gmail.com> <43e72e890911161515q64ff527cyefd7d769f3c501b@mail.gmail.com>
+	<a44ae5cd0911161641n36d3c746pb69a9cac1eba1784@mail.gmail.com>
+	<43e72e890911161708o607da2a5hefe98e92fd13ee7a@mail.gmail.com>
+	<43e72e890911191519h73bd6699if860257c049ba1a0@mail.gmail.com>
+	<43e72e890911231347k48f105dcw24dd99c1c39f034@mail.gmail.com>
+	<43e72e890911302354i1b17265ckb3aa81171a24174b@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 2 Dec 2009 09:34:55 -0800
+Message-ID: <43e72e890912020934s35df08dfp28520e32b9bea2b2@mail.gmail.com>
+Subject: Re: 2.6.32-rc5-git1 -- BUG kmalloc-8192: Poison overwritten (ath9k
+	implicated)
+To: Miles Lane <miles.lane@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 30 December 2009, Gertjan van Wingerde wrote:
-> From: Pavel Roskin <proski@gnu.org>
-> 
-> Use rt2x00dev->ops->extra_tx_headroom, not rt2x00dev->hw->extra_tx_headroom
-> in the tx code, as the later may include other headroom not to be used in
-> the chipset driver.
-> 
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+On Mon, Nov 30, 2009 at 11:54 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Mon, Nov 23, 2009 at 1:47 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Thu, Nov 19, 2009 at 3:19 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>> On Mon, Nov 16, 2009 at 5:08 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>>> On Mon, Nov 16, 2009 at 4:41 PM, Miles Lane <miles.lane@gmail.com> wrote:
+>>>>> On Mon, Nov 16, 2009 at 6:15 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>>>>> On Tue, Oct 20, 2009 at 1:45 PM, Miles Lane <miles.lane@gmail.com> wrote:
+>>>>>>> Let me know if you want my .config file.  I think this was triggered by
+>>>>>>> suspending my laptop.
+>>>>>>>
+>>>>>>> BUG kmalloc-8192: Poison overwritten
+>>>>>>
+>>>>>> Thanks for your report Miles.
+>>>>>>
+>>>>>> Are you using Linus' tree? Felix wrote some patches that got rid of
+>>>>>> the rate control private area which we kmalloc/kfree and at least one
+>>>>>> user reported that these patches fixed a memory leak. I'm curious if
+>>>>>> the same patches would resolve this issue.
+>>>>>>
+>>>>>> Only thing is these patches apply against wireless-testing and not
+>>>>>> 2.6.32. To test them you'd have to pull wireless-testing master to
+>>>>>> your tree and then apply the patches both before and after.
+>>>>>>
+>>>>>> Would you be up to try that?
+>>>>>
+>>>>> Yes, definitely.  Thanks.  I will try to accomplish this and let you
+>>>>> know if I get stuck.
+>>>>
+>>>> OK, not sure if a merge of wireless-testing will be clean so you may
+>>>> want to just clone fresh.. Anyway after you get wireless-testing bits
+>>>> you'll want to apply these:
+>>>>
+>>>> http://patchwork.kernel.org/patch/60127/
+>>>> http://patchwork.kernel.org/patch/60128/
+>>>> http://patchwork.kernel.org/patch/60126/
+>>>>
+>>>> If you want to merge wireless-testing you can try:
+>>>>
+>>>> git merge git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+>>>> master
+>>>>
+>>>> If that'd doesn't gos smooth just clone it and I think you should be
+>>>> able to safely --reference your current tree for objects for Linus'
+>>>> tree.
+>>>
+>>> Miles I see no reply from you yet so I backported the patches in
+>>> question for you. Can you please try 2.6.32-rc7 and apply these
+>>> patches on top:
+>>>
+>>> http://bombadil.infradead.org/~mcgrof/patches/ath9k/2009/11-19/70-mac80211-total-ampdu-tx-info.patch
+>>> http://bombadil.infradead.org/~mcgrof/patches/ath9k/2009/11-19/71-ath9k-remove-tx_info_priv.patch
+>>
+>> Miles, any luck testing this?
+>
+> Miles -- poke. The patches provided should apply on Linus' tree,
+> please let us know if they fix the issue you reported.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Miles -- have you had a chance to test these backported patches?
+
+  Luis
