@@ -1,173 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:60543 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757872AbZLKNl5 (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:65310 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752986AbZLBO3g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:41:57 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH v2 29/31] wl1271: Add support for acx_pm_config
-Date: Fri, 11 Dec 2009 15:41:08 +0200
-Message-Id: <1260538870-32297-30-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+	Wed, 2 Dec 2009 09:29:36 -0500
+Received: by mail-bw0-f227.google.com with SMTP id 27so217224bwz.21
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2009 06:29:43 -0800 (PST)
+Message-Id: <20091202142908.338175315@gmail.com>
+References: <20091202142555.654873300@gmail.com>
+Date: Wed, 02 Dec 2009 15:25:56 +0100
+From: Holger Schurig <holgerschurig@googlemail.com>
+To: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 01/10] libertas: use priv->mesh_tlv instead of priv->mesh_fw_ver
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Both variables contained the same information (no mesh, old mesh, new mesh).
+So we can get rid of one variable.
 
-This acx configures host clock parameters in correspondence with the clock
-request line - the settling time of the clock, and whether fast wake-up is
-supported.
+Also move the mesh-version test from cmd.c into mesh.c.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_acx.c  |   28 ++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_acx.h  |    9 +++++++++
- drivers/net/wireless/wl12xx/wl1271_conf.h |   17 +++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_init.c |    5 +++++
- drivers/net/wireless/wl12xx/wl1271_main.c |    4 ++++
- 5 files changed, 63 insertions(+), 0 deletions(-)
+Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
-index 0ea1a48..0b34348 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
-@@ -1118,3 +1118,31 @@ out:
- 	kfree(acx);
- 	return ret;
- }
-+
-+int wl1271_acx_pm_config(struct wl1271 *wl)
-+{
-+	struct wl1271_acx_pm_config *acx = NULL;
-+	struct  conf_pm_config_settings *c = &wl->conf.pm_config;
-+	int ret = 0;
-+
-+	wl1271_debug(DEBUG_ACX, "acx pm config");
-+
-+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-+	if (!acx) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	acx->host_clk_settling_time = cpu_to_le32(c->host_clk_settling_time);
-+	acx->host_fast_wakeup_support = c->host_fast_wakeup_support;
-+
-+	ret = wl1271_cmd_configure(wl, ACX_PM_CONFIG, acx, sizeof(*acx));
-+	if (ret < 0) {
-+		wl1271_warning("acx pm config failed: %d", ret);
-+		goto out;
-+	}
-+
-+out:
-+	kfree(acx);
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
-index b6a473f..1bb63af 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
-@@ -961,6 +961,13 @@ struct wl1271_acx_arp_filter {
- 			       used. */
- } __attribute__((packed));
- 
-+struct wl1271_acx_pm_config {
-+	struct acx_header header;
-+
-+	__le32 host_clk_settling_time;
-+	u8 host_fast_wakeup_support;
-+	u8 padding[3];
-+} __attribute__ ((packed));
- 
- enum {
- 	ACX_WAKE_UP_CONDITIONS      = 0x0002,
-@@ -1025,6 +1032,7 @@ enum {
- 	DOT11_RX_DOT11_MODE         = 0x1012,
- 	DOT11_RTS_THRESHOLD         = 0x1013,
- 	DOT11_GROUP_ADDRESS_TBL     = 0x1014,
-+	ACX_PM_CONFIG               = 0x1016,
- 
- 	MAX_DOT11_IE = DOT11_GROUP_ADDRESS_TBL,
- 
-@@ -1073,5 +1081,6 @@ int wl1271_acx_smart_reflex(struct wl1271 *wl);
- int wl1271_acx_bet_enable(struct wl1271 *wl, bool enable);
- int wl1271_acx_arp_ip_filter(struct wl1271 *wl, bool enable, u8 *address,
- 			     u8 version);
-+int wl1271_acx_pm_config(struct wl1271 *wl);
- 
- #endif /* __WL1271_ACX_H__ */
-diff --git a/drivers/net/wireless/wl12xx/wl1271_conf.h b/drivers/net/wireless/wl12xx/wl1271_conf.h
-index 5d1b5b6..1993d63 100644
---- a/drivers/net/wireless/wl12xx/wl1271_conf.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_conf.h
-@@ -904,6 +904,22 @@ struct conf_itrim_settings {
- 	u32 timeout;
+--- linux-wl.orig/drivers/net/wireless/libertas/defs.h
++++ linux-wl/drivers/net/wireless/libertas/defs.h
+@@ -397,13 +397,6 @@ enum KEY_INFO_WPA {
+ 	KEY_INFO_WPA_ENABLED = 0x04
  };
  
-+struct conf_pm_config_settings {
-+	/*
-+	 * Host clock settling time
-+	 *
-+	 * Range: 0 - 30000 us
-+	 */
-+	u32 host_clk_settling_time;
-+
-+	/*
-+	 * Host fast wakeup support
-+	 *
-+	 * Range: true, false
-+	 */
-+	bool host_fast_wakeup_support;
-+};
-+
- struct conf_drv_settings {
- 	struct conf_sg_settings sg;
- 	struct conf_rx_settings rx;
-@@ -911,6 +927,7 @@ struct conf_drv_settings {
- 	struct conf_conn_settings conn;
- 	struct conf_init_settings init;
- 	struct conf_itrim_settings itrim;
-+	struct conf_pm_config_settings pm_config;
- };
+-/** mesh_fw_ver */
+-enum _mesh_fw_ver {
+-	MESH_NONE = 0, /* MESH is not supported */
+-	MESH_FW_OLD,   /* MESH is supported in FW V5 */
+-	MESH_FW_NEW,   /* MESH is supported in FW V10 and newer */
+-};
+-
+ /* Default values for fwt commands. */
+ #define FWT_DEFAULT_METRIC 0
+ #define FWT_DEFAULT_DIR 1
+--- linux-wl.orig/drivers/net/wireless/libertas/dev.h
++++ linux-wl/drivers/net/wireless/libertas/dev.h
+@@ -42,7 +42,6 @@ struct lbs_private {
+ 	u32 mesh_connect_status;
+ 	struct lbs_mesh_stats mstats;
+ 	int mesh_open;
+-	int mesh_fw_ver;
+ 	int mesh_autostart_enabled;
+ 	uint16_t mesh_tlv;
+ 	u8 mesh_ssid[IEEE80211_MAX_SSID_LEN + 1];
+--- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
++++ linux-wl/drivers/net/wireless/libertas/cmd.c
+@@ -143,19 +143,6 @@ int lbs_update_hw_spec(struct lbs_privat
+ 	lbs_deb_cmd("GET_HW_SPEC: hardware interface 0x%x, hardware spec 0x%04x\n",
+ 		    cmd.hwifversion, cmd.version);
  
- #endif
-diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
-index 3b4ed07..c9848ee 100644
---- a/drivers/net/wireless/wl12xx/wl1271_init.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_init.c
-@@ -303,6 +303,11 @@ int wl1271_hw_init(struct wl1271 *wl)
- 	if (ret < 0)
- 		goto out_free_memmap;
+-	/* Determine mesh_fw_ver from fwrelease and fwcapinfo */
+-	/* 5.0.16p0 9.0.0.p0 is known to NOT support any mesh */
+-	/* 5.110.22 have mesh command with 0xa3 command id */
+-	/* 10.0.0.p0 FW brings in mesh config command with different id */
+-	/* Check FW version MSB and initialize mesh_fw_ver */
+-	if (MRVL_FW_MAJOR_REV(priv->fwrelease) == MRVL_FW_V5)
+-		priv->mesh_fw_ver = MESH_FW_OLD;
+-	else if ((MRVL_FW_MAJOR_REV(priv->fwrelease) >= MRVL_FW_V10) &&
+-		(priv->fwcapinfo & MESH_CAPINFO_ENABLE_MASK))
+-		priv->mesh_fw_ver = MESH_FW_NEW;
+-	else
+-		priv->mesh_fw_ver = MESH_NONE;
+-
+ 	/* Clamp region code to 8-bit since FW spec indicates that it should
+ 	 * only ever be 8-bit, even though the field size is 16-bit.  Some firmware
+ 	 * returns non-zero high 8 bits here.
+--- linux-wl.orig/drivers/net/wireless/libertas/mesh.c
++++ linux-wl/drivers/net/wireless/libertas/mesh.c
+@@ -196,7 +196,12 @@ int lbs_init_mesh(struct lbs_private *pr
  
-+	/* configure PM */
-+	ret = wl1271_acx_pm_config(wl);
-+	if (ret < 0)
-+		goto out_free_memmap;
-+
- 	return 0;
+ 	lbs_deb_enter(LBS_DEB_MESH);
  
-  out_free_memmap:
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 90a60c1..7e6b500 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -321,6 +321,10 @@ static struct conf_drv_settings default_conf = {
- 	.itrim = {
- 		.enable = false,
- 		.timeout = 50000,
-+	},
-+	.pm_config = {
-+		.host_clk_settling_time = 5000,
-+		.host_fast_wakeup_support = false
+-	if (priv->mesh_fw_ver == MESH_FW_OLD) {
++	/* Determine mesh_fw_ver from fwrelease and fwcapinfo */
++	/* 5.0.16p0 9.0.0.p0 is known to NOT support any mesh */
++	/* 5.110.22 have mesh command with 0xa3 command id */
++	/* 10.0.0.p0 FW brings in mesh config command with different id */
++	/* Check FW version MSB and initialize mesh_fw_ver */
++	if (MRVL_FW_MAJOR_REV(priv->fwrelease) == MRVL_FW_V5) {
+ 		/* Enable mesh, if supported, and work out which TLV it uses.
+ 		   0x100 + 291 is an unofficial value used in 5.110.20.pXX
+ 		   0x100 + 37 is the official value used in 5.110.21.pXX
+@@ -218,7 +223,9 @@ int lbs_init_mesh(struct lbs_private *pr
+ 					    priv->channel))
+ 				priv->mesh_tlv = 0;
+ 		}
+-	} else if (priv->mesh_fw_ver == MESH_FW_NEW) {
++	} else
++	if ((MRVL_FW_MAJOR_REV(priv->fwrelease) >= MRVL_FW_V10) &&
++		(priv->fwcapinfo & MESH_CAPINFO_ENABLE_MASK)) {
+ 		/* 10.0.0.pXX new firmwares should succeed with TLV
+ 		 * 0x100+37; Do not invoke command with old TLV.
+ 		 */
+@@ -227,6 +234,8 @@ int lbs_init_mesh(struct lbs_private *pr
+ 				    priv->channel))
+ 			priv->mesh_tlv = 0;
  	}
- };
++
++
+ 	if (priv->mesh_tlv) {
+ 		lbs_add_mesh(priv);
  
--- 
-1.6.3.3
+@@ -416,10 +425,10 @@ struct net_device *lbs_mesh_set_dev(stru
+ 	struct net_device *dev, struct rxpd *rxpd)
+ {
+ 	if (priv->mesh_dev) {
+-		if (priv->mesh_fw_ver == MESH_FW_OLD) {
++		if (priv->mesh_tlv == TLV_TYPE_OLD_MESH_ID) {
+ 			if (rxpd->rx_control & RxPD_MESH_FRAME)
+ 				dev = priv->mesh_dev;
+-		} else if (priv->mesh_fw_ver == MESH_FW_NEW) {
++		} else if (priv->mesh_tlv == TLV_TYPE_MESH_ID) {
+ 			if (rxpd->u.bss.bss_num == MESH_IFACE_ID)
+ 				dev = priv->mesh_dev;
+ 		}
+@@ -432,9 +441,9 @@ void lbs_mesh_set_txpd(struct lbs_privat
+ 	struct net_device *dev, struct txpd *txpd)
+ {
+ 	if (dev == priv->mesh_dev) {
+-		if (priv->mesh_fw_ver == MESH_FW_OLD)
++		if (priv->mesh_tlv == TLV_TYPE_OLD_MESH_ID)
+ 			txpd->tx_control |= cpu_to_le32(TxPD_MESH_FRAME);
+-		else if (priv->mesh_fw_ver == MESH_FW_NEW)
++		else if (priv->mesh_tlv == TLV_TYPE_MESH_ID)
+ 			txpd->u.bss.bss_num = MESH_IFACE_ID;
+ 	}
+ }
+@@ -538,7 +547,7 @@ static int __lbs_mesh_config_send(struct
+ 	 * Command id is 0xac for v10 FW along with mesh interface
+ 	 * id in bits 14-13-12.
+ 	 */
+-	if (priv->mesh_fw_ver == MESH_FW_NEW)
++	if (priv->mesh_tlv == TLV_TYPE_MESH_ID)
+ 		command = CMD_MESH_CONFIG |
+ 			  (MESH_IFACE_ID << MESH_IFACE_BIT_OFFSET);
+ 
 
+-- 
+http://www.holgerschurig.de
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
