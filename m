@@ -1,113 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:63502 "EHLO
-	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755625AbZLIG6M (ORCPT
+Received: from mail-gx0-f226.google.com ([209.85.217.226]:38344 "EHLO
+	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754568AbZLBQ35 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2009 01:58:12 -0500
-Message-ID: <4B1F4A88.5000803@gmail.com>
-Date: Wed, 09 Dec 2009 07:58:16 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Wed, 2 Dec 2009 11:29:57 -0500
+Received: by gxk26 with SMTP id 26so297913gxk.1
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2009 08:30:03 -0800 (PST)
+Message-ID: <4B169608.3010902@lwfinger.net>
+Date: Wed, 02 Dec 2009 10:30:00 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Stefan Lippers-Hollmann <s.L-H@gmx.de>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Andi Kleen <andi@firstfloor.org>,
-	linux-wireless@vger.kernel.org, Tim Blechmann <tim@klingt.org>,
-	rjw@sisk.pl, IvDoorn@gmail.com, linville@tuxdriver.com
-Subject: Re: regression: rt2561 frequent "Arrived at non-free entry" errors
- in   2.6.32
-References: <20091204233202.GA13658@basil.fritz.box> <200912082339.16893.s.L-H@gmx.de> <1260312016.32227.6.camel@johannes.local> <200912090053.25798.s.L-H@gmx.de>
-In-Reply-To: <200912090053.25798.s.L-H@gmx.de>
+To: =?UTF-8?B?QW50dGkgS2FpamFubcOka2k=?= <antti@kaijanmaki.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: New rtl8187 rfkill support blocks my wlan for good.
+References: <1259756709.31590.62.camel@peura.elisa-laajakaista.fi>
+In-Reply-To: <1259756709.31590.62.camel@peura.elisa-laajakaista.fi>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/09/09 00:53, Stefan Lippers-Hollmann wrote:
-> Hi
+On 12/02/2009 06:25 AM, Antti Kaijanmäki wrote:
+> Hello,
 > 
-> On Tuesday 08 December 2009, Johannes Berg wrote:
->> On Tue, 2009-12-08 at 23:39 +0100, Stefan Lippers-Hollmann wrote:
->>
->>> Unfortunately this fails to compile for me:
->>
->> well remove the spurious opening brace? :)
+> I wanted to give a try to your compat-wireless bleeding edge drivers. I
+> have an RTL8187 based wlan chip on my laptop. After installing the
+> driver I was not able to use the WiFi anymore as the driver reports that
+> the kill switch is active no matter in what position I turn the switch
+> on the side of the laptop.
 > 
-> yes, of course - but I have to admit that I didn't look too well at the 
-> patch, after your other subthread - sorry about the noise.
+> Here's the dmesg output of the chip detection:
 > 
-
-Yeah, sorry about the compile error in the patch.
-
+> [   20.686680] phy0: Selected rate control algorithm 'minstrel'
+> [   20.687554] phy0: hwaddr 00:1b:9e:eb:77:98, RTL8187BvE V0 + rtl8225z2
+> [   20.710529] rtl8187: Customer ID is 0x04
+> [   20.710588] Registered led device: rtl8187-phy0::tx
+> [   20.710611] Registered led device: rtl8187-phy0::rx
+> [   20.711393] rtl8187: wireless switch is off
 > 
-> with the patch applied (powersaving enabled):
+> I checked the driver and found the rtl8187_rfkill.c. I added some
+> prink's to see what's happening and noticed that the physical switch did
+> affect different bit than the one tested in the current driver. This
+> change enables the correct behavior on my laptop:
 > 
-> - Downloading a larger file and therefore keeping the interface busy works 
->   now pretty well, while I did hit connection time outs before with 
->   powersaving enabled:
-> 	Fetched 89.7MB in 30s (2926kB/s)
-> 
-
-Does this mean that the "Arrived at non-free entry" messages are gone with
-power-saving enabled?
-
-> - pinging rt61pci results in rather unsteady response times (packet loss 
->   can happen, but rarely), which might be a side effect of the card trying 
->   to sleep.
-> 	# ping rt61
-> 	PING rt61 (192.168.0.71): 56 data bytes
-> 	64 bytes from 192.168.0.71: seq=0 ttl=64 time=1016.131 ms
-> 	64 bytes from 192.168.0.71: seq=1 ttl=64 time=17.574 ms
-> 	64 bytes from 192.168.0.71: seq=2 ttl=64 time=906.219 ms
-> 	64 bytes from 192.168.0.71: seq=3 ttl=64 time=1.499 ms
-> 	64 bytes from 192.168.0.71: seq=4 ttl=64 time=801.945 ms
-> 	64 bytes from 192.168.0.71: seq=5 ttl=64 time=1.498 ms
-> 	64 bytes from 192.168.0.71: seq=6 ttl=64 time=644.036 ms
-> 	^C
-> 	--- rt61 ping statistics ---
-> 	7 packets transmitted, 7 packets received, 0% packet loss
-> 	round-trip min/avg/max = 1.498/484.128/1016.131 ms
-> 
-
-My guess is that this is due to powersaving being enabled, where mac80211 and
-the device go in powersaving mode and then it takes a while before packets
-reach the device. I don't think this signifies a bug of some kind.
-
-Johannes, is this correct expected behavior of powersaving?
-
-<snip>
-
-> 
-> without the patch applied (powersaving disabled, see patch below which 
-> unfortunately disables powersaving for all rt2x00 devices, even though 
-> rt2500usb and rt73usb don't seem to be affected):
-> 
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -837,6 +837,15 @@ int rt2x00lib_probe_dev(struct rt2x00_de
->  		    BIT(NL80211_IFTYPE_WDS);
+> --- rtl8187_rfkill.c.orig	2009-12-02 14:12:34.646597569 +0200
+> +++ rtl8187_rfkill.c	2009-12-02 14:10:09.474593370 +0200
+> @@ -28,7 +28,7 @@ static bool rtl8187_is_radio_enabled(str
+>  	rtl818x_iowrite8(priv, &priv->map->GPIO0, gpio & ~0x02);
+>  	gpio = rtl818x_ioread8(priv, &priv->map->GPIO1);
 >  
->  	/*
-> +	 * Disable power saving for the time being, it breaks at least:
-> +	 * - rt61pci
-> +	 * while it isn't necessary for:
-> +	 * - rt2500usb
-> +	 * - rt73usb
-> +	 */
-> +	rt2x00dev->hw->wiphy->ps_default = false;
-> +
-> +	/*
->  	 * Let the driver probe the device to detect the capabilities.
->  	 */IEEE80211_HW_PS_NULLFUNC_STACK
->  	retval = rt2x00dev->ops->lib->probe_hw(rt2x00dev);
+> -	return gpio & 0x02;
+> +	return gpio & 0x04;
+>  }
 > 
+> 
+> I tried to contact Realtek to provide me with some specs so that I can
+> verify the register in question, but all I received was a reply with the
+> realtek's reference driver attached. I haven't got any answer to my
+> follow-up request for the specification. 
+> 
+> I looked through the reference driver but could not find anything
+> informational. I didn't have time to do a full review, though.
+> 
+> Without the specification I can't tell how this can be fixed. People
+> have reported success with the current driver, haven't they, so the bit
+> is correct for them.
+> 
+> As soon as distributions start shipping the new rtl8187 driver there are
+> people whose wlan stops working. I don't know if the killswitch with
+> rtl8187 chipsets is suppose to be only created with software but at
+> least in my laptop it didn't matter in which position the switch was
+> with older drivers, the radio worked anyway. 
+> 
+> Any thoughts how to continue with this?
 
-This can be done smarter by removing the IEEE80211_HW_SUPPORTS_PS and
-IEEE80211_HW_PS_NULLFUNC_STACK flags from the driver initialization.
-This can be done on a per driver basis.
+As wireless in Linux approaches the correct behavior with respect to
+killing wireless, there will be some cases like yours. Having the
+radio work no matter the switch position is just plain wrong. I hope
+you understand that.
 
-BTW, it is expected that rt2500usb and rt73usb are not affected by the 
-originally reported problem, as their queue handling is completely different
-from the PCI drivers.
-Do you know if they expose the same unsteady ping response time behavior?
+What laptop do you have? If the RTL8187 built in or externally
+plugged? If built in, is there a WMI driver for it? Do you have it loaded?
 
----
-Gertjan.
+Larry
+
