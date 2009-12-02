@@ -1,206 +1,251 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:40066 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753281AbZLVQza (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2009 11:55:30 -0500
-Date: Tue, 22 Dec 2009 08:55:28 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-CC: Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Subject: Re: Asus eeepc 1008HA suspend issue and mac80211 suspend corner
- case
-Message-ID: <20091222165528.GE4385@tux>
-References: <20091222022355.GA32508@bombadil.infradead.org>
- <19248.19829.293087.367661@gargle.gargle.HOWL>
- <20091222155005.GA4385@tux>
- <20091222162055.GC4385@tux>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20091222162055.GC4385@tux>
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:65310 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754608AbZLBOaM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Dec 2009 09:30:12 -0500
+Received: by mail-bw0-f227.google.com with SMTP id 27so217224bwz.21
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2009 06:30:18 -0800 (PST)
+Message-Id: <20091202142945.383166379@gmail.com>
+References: <20091202142555.654873300@gmail.com>
+Date: Wed, 02 Dec 2009 15:26:02 +0100
+From: Holger Schurig <holgerschurig@googlemail.com>
+To: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 07/10] libertas: make mesh configurable
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 22, 2009 at 08:20:55AM -0800, Luis Rodriguez wrote:
-> On Tue, Dec 22, 2009 at 07:50:05AM -0800, Luis Rodriguez wrote:
-> > On Mon, Dec 21, 2009 at 08:39:17PM -0800, Sujith Manoharan wrote:
-> > > Luis Rodriguez wrote:
-> > > > That log can be found here:
-> > > >
-> > > > http://bombadil.infradead.org/~mcgrof/logs/2.6.31-with-2.6.32-wireless/irq-disabled.txt
-> > >
-> > > Thanks for the log.
-> > > It's a bug in ath9k, related to PowerSave.
-> > >
-> > > Can you test this patch ?
-> > >
-> > > diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> > > index 3f5b887..419c382 100644
-> > > --- a/drivers/net/wireless/ath/ath9k/main.c
-> > > +++ b/drivers/net/wireless/ath/ath9k/main.c
-> > > @@ -2504,6 +2504,9 @@ static void ath9k_stop(struct ieee80211_hw *hw)
-> > >                 return; /* another wiphy still in use */
-> > >         }
-> > >
-> > > +       /* Ensure HW is awake when we try to shut it down. */
-> > > +       ath9k_ps_wakeup(sc);
-> > > +
-> > >         if (ah->btcoex_hw.enabled) {
-> > >                 ath9k_hw_btcoex_disable(ah);
-> > >                 if (ah->btcoex_hw.scheme == ATH_BTCOEX_CFG_3WIRE)
-> > > @@ -2524,8 +2527,10 @@ static void ath9k_stop(struct ieee80211_hw *hw)
-> > >         /* disable HAL and put h/w to sleep */
-> > >         ath9k_hw_disable(ah);
-> > >         ath9k_hw_configpcipowersave(ah, 1, 1);
-> > > -       ath9k_setpower(sc, ATH9K_PM_FULL_SLEEP);
-> > > +       ath9k_ps_restore(sc);
-> > >
-> > > +       /* Finally, put the chip in FULL SLEEP mode */
-> > > +       ath9k_setpower(sc, ATH9K_PM_FULL_SLEEP);
-> > >         sc->sc_flags |= SC_OP_INVALID;
-> > >
-> > >         mutex_unlock(&sc->mutex);
-> >
-> >
-> > Thanks for the patch, doesn't cure it though. Below is the log
-> > with debug=0xa00 (CONFIG | PS), you can see some successes prior to
-> > the failure.
-> 
-> Here's the new log with 0x601, with a few pm-suspend successes above.
+Mostly for the embedded people that know beforehand that they don't need
+MESH at all and want to save some bytes, but also helpful for the upcoming
+cfg80211 transition.
 
-Let me massage this a little:
+   text    data     bss     dec     hex filename
+ 114264    2308     140  116712   1c7e8 libertas.ko   with mesh
+ 105026    2000     140  107166   1a29e libertas.ko   without mesh
+ --------------------------------------------------
+  -9238    -308           -9546
 
-Here is one success:
 
-> [  249.543348] ath9k: NETWORK SLEEP -> AWAKE
-> [  249.549393] ath9k: AWAKE -> NETWORK SLEEP
-> [  249.577650] PM: Syncing filesystems ...
-> [  249.645775] ath9k: NETWORK SLEEP -> AWAKE
-> [  249.651822] ath9k: AWAKE -> NETWORK SLEEP
-> [  249.677281] done.
-> [  249.677291] PM: Preparing system for mem sleep
-> [  249.748159] ath9k: NETWORK SLEEP -> AWAKE
-> [  249.754256] ath9k: AWAKE -> NETWORK SLEEP
-> [  249.765132] ath9k: NETWORK SLEEP -> AWAKE
+Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
 
-Device is awake prior to sending Tx BA.
+---
 
-> [  249.824923] Freezing user space processes ... (elapsed 0.00 seconds) done.
-> [  249.826762] Freezing remaining freezable tasks ... (elapsed 0.00 seconds) done.
-> [  249.826830] PM: Entering mem sleep
-> [  249.826853] Suspending console(s) (use no_console_suspend to debug)
-> [  249.832057] Tx BA session stop requested for 00:22:6b:56:fd:e8 tid 0
-> [  249.832077] Stopping Tx BA session for 00:22:6b:56:fd:e8 tid 0
-> [  249.832110] Rx BA session stop requested for 00:22:6b:56:fd:e8 tid 0
-> [  249.832130] Tx BA session stop requested for 00:22:6b:56:fd:e8 tid 6
-> [  249.832141] Stopping Tx BA session for 00:22:6b:56:fd:e8 tid 6
-> [  249.832166] ath9k: Detach Interface
-> [  249.834435] ath9k: AWAKE -> FULL-SLEEP
-> [  249.834446] ath9k: Driver halt
-> [  249.858079] sd 0:0:0:0: [sda] Synchronizing SCSI cache
-> [  249.858457] sd 0:0:0:0: [sda] Stopping disk
-> [  250.781437] ath9k 0000:01:00.0: PCI INT A disabled
+v2: forget to handle mesh_wlan_get_mode()
 
-> [  251.087088] Back to C!
+I added dummy defines in mesh.h so that the code doesn't get sprinkled with
+"#ifdef CONFIG_LIBERTAS_MESH".  As wext.c gets deleted by the upcoming
+cfg80211 patch anyway, I felt free to add #ifdef's there.
 
-> [  252.038696] ath9k 0000:01:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-> [  254.521068] ath9k: Starting driver with initial channel: 2437 MHz
-> [  254.522086] ath9k: FULL-SLEEP -> AWAKE
-> [  254.533094] ath9k: ah->misc_mode 0x4
-> [  254.535214] ath9k: Attach a VIF of type: 2
-> [  254.535248] ath9k: Set channel: 2437 MHz
-> [  254.535252] ath9k: tx chmask: 1, rx chmask: 1
-> [  254.535373] ath9k: (2437 MHz) -> (2437 MHz), chanwidth: 1
-> [  254.541929] ath9k: ah->misc_mode 0x4
-> [  254.544052] ath9k: Set HW RX filter: 0x607
-> [  254.544058] ath9k: RX filter 0x0 bssid 00:22:6b:56:fd:e8 aid 0x0
-> [  254.544065] ath9k: BSS Changed PREAMBLE 1
-> [  254.544068] ath9k: BSS Changed CTS PROT 0
-> [  254.544072] ath9k: BSS Changed ASSOC 1
-> [  254.544076] ath9k: Bss Info ASSOC 1, bssid: 00:22:6b:56:fd:e8
-> [  254.546454] PM: Finishing wakeup.
-> [  254.546458] Restarting tasks ... done.
-> [  254.589051] Open BA session requested for 00:22:6b:56:fd:e8 tid 0
-> [  254.589095] activated addBA response timer on tid 0
-> [  254.615144] Rx A-MPDU request on tid 0 result 0
-> [  254.717357] switched off addBA timer for tid 0
-> [  254.717366] Aggregation is on for tid 0
-> [  254.718297] switched off addBA timer for tid 0
+Dan said that he converted mesh to new-style commands. Once this patch
+lands in mainline, the #ifdef in cmd.c also goes away.
 
-Then this is the failure suspend:
 
-> [  270.574054] ath9k: NETWORK SLEEP -> AWAKE
-> [  270.582421] ath9k: AWAKE -> NETWORK SLEEP
-> [  270.676431] ath9k: NETWORK SLEEP -> AWAKE
-> [  270.682643] ath9k: AWAKE -> NETWORK SLEEP
-> [  270.778860] ath9k: NETWORK SLEEP -> AWAKE
-> [  270.989686] ath9k: AWAKE -> NETWORK SLEEP
-> [  271.049041] ath9k: NETWORK SLEEP -> AWAKE
-> [  271.304833] PM: Syncing filesystems ... done.
-> [  271.307636] PM: Preparing system for mem sleep
-> [  271.399307] ath9k: AWAKE -> NETWORK SLEEP
+--- linux-wl.orig/drivers/net/wireless/libertas/Kconfig
++++ linux-wl/drivers/net/wireless/libertas/Kconfig
+@@ -37,3 +37,9 @@ config LIBERTAS_DEBUG
+ 	depends on LIBERTAS
+ 	---help---
+ 	  Debugging support.
++
++config LIBERTAS_MESH
++	bool "Enable mesh support"
++	depends on LIBERTAS
++	help
++	  This enables Libertas' MESH support, used by e.g. the OLPC people.
+--- linux-wl.orig/drivers/net/wireless/libertas/Makefile
++++ linux-wl/drivers/net/wireless/libertas/Makefile
+@@ -5,11 +5,11 @@ libertas-y += cmdresp.o
+ libertas-y += debugfs.o
+ libertas-y += ethtool.o
+ libertas-y += main.o
+-libertas-y += mesh.o
+ libertas-y += rx.o
+ libertas-y += scan.o
+ libertas-y += tx.o
+ libertas-y += wext.o
++libertas-$(CONFIG_LIBERTAS_MESH) += mesh.o
+ 
+ usb8xxx-objs += if_usb.o
+ libertas_cs-objs += if_cs.o
+--- linux-wl.orig/drivers/net/wireless/libertas/mesh.h
++++ linux-wl/drivers/net/wireless/libertas/mesh.h
+@@ -9,6 +9,8 @@
+ #include <net/lib80211.h>
+ 
+ 
++#ifdef CONFIG_LIBERTAS_MESH
++
+ /* Mesh statistics */
+ struct lbs_mesh_stats {
+ 	u32	fwd_bcast_cnt;		/* Fwd: Broadcast counter */
+@@ -90,5 +92,20 @@ void lbs_mesh_ethtool_get_strings(struct
+ #define lbs_mesh_connected(priv)
+ 	(priv->mesh_connect_status == LBS_CONNECTED)
+ 
++#else
++
++#define lbs_init_mesh(priv)
++#define lbs_deinit_mesh(priv)
++#define lbs_add_mesh(priv)
++#define lbs_remove_mesh(priv)
++#define lbs_mesh_set_dev(priv, dev, rxpd) (dev)
++#define lbs_mesh_set_txpd(priv, dev, txpd)
++#define lbs_mesh_config(priv, enable, chan)
++#define lbs_mesh_open(priv) (0)
++#define lbs_mesh_connected(priv) (0)
++
++#endif
++
++
+ 
+ #endif
+--- linux-wl.orig/drivers/net/wireless/libertas/dev.h
++++ linux-wl/drivers/net/wireless/libertas/dev.h
+@@ -39,12 +39,14 @@ struct lbs_private {
+ 
+ 	/* Mesh */
+ 	struct net_device *mesh_dev; /* Virtual device */
++#ifdef CONFIG_LIBERTAS_MESH
+ 	u32 mesh_connect_status;
+ 	struct lbs_mesh_stats mstats;
+ 	int mesh_open;
+ 	uint16_t mesh_tlv;
+ 	u8 mesh_ssid[IEEE80211_MAX_SSID_LEN + 1];
+ 	u8 mesh_ssid_len;
++#endif
+ 
+ 	/* Monitor mode */
+ 	struct net_device *rtap_net_dev;
+--- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
++++ linux-wl/drivers/net/wireless/libertas/cmd.c
+@@ -998,6 +998,8 @@ int lbs_prepare_and_send_command(struct 
+ 		ret = 0;
+ 		break;
+ 
++#ifdef CONFIG_LIBERTAS_MESH
++
+ 	case CMD_BT_ACCESS:
+ 		ret = lbs_cmd_bt_access(cmdptr, cmd_action, pdata_buf);
+ 		break;
+@@ -1006,6 +1008,8 @@ int lbs_prepare_and_send_command(struct 
+ 		ret = lbs_cmd_fwt_access(cmdptr, cmd_action, pdata_buf);
+ 		break;
+ 
++#endif
++
+ 	case CMD_802_11_BEACON_CTRL:
+ 		ret = lbs_cmd_bcn_ctrl(priv, cmdptr, cmd_action);
+ 		break;
+--- linux-wl.orig/drivers/net/wireless/libertas/ethtool.c
++++ linux-wl/drivers/net/wireless/libertas/ethtool.c
+@@ -114,9 +114,11 @@ const struct ethtool_ops lbs_ethtool_ops
+ 	.get_drvinfo = lbs_ethtool_get_drvinfo,
+ 	.get_eeprom =  lbs_ethtool_get_eeprom,
+ 	.get_eeprom_len = lbs_ethtool_get_eeprom_len,
++#ifdef CONFIG_LIBERTAS_MESH
+ 	.get_sset_count = lbs_mesh_ethtool_get_sset_count,
+ 	.get_ethtool_stats = lbs_mesh_ethtool_get_stats,
+ 	.get_strings = lbs_mesh_ethtool_get_strings,
++#endif
+ 	.get_wol = lbs_ethtool_get_wol,
+ 	.set_wol = lbs_ethtool_set_wol,
+ };
+--- linux-wl.orig/drivers/net/wireless/libertas/wext.c
++++ linux-wl/drivers/net/wireless/libertas/wext.c
+@@ -298,6 +298,7 @@ static int lbs_get_nick(struct net_devic
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_LIBERTAS_MESH
+ static int mesh_get_nick(struct net_device *dev, struct iw_request_info *info,
+ 			 struct iw_point *dwrq, char *extra)
+ {
+@@ -321,6 +322,7 @@ static int mesh_get_nick(struct net_devi
+ 	lbs_deb_leave(LBS_DEB_WEXT);
+ 	return 0;
+ }
++#endif
+ 
+ static int lbs_set_rts(struct net_device *dev, struct iw_request_info *info,
+ 			struct iw_param *vwrq, char *extra)
+@@ -422,6 +424,7 @@ static int lbs_get_mode(struct net_devic
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_LIBERTAS_MESH
+ static int mesh_wlan_get_mode(struct net_device *dev,
+ 		              struct iw_request_info *info, u32 * uwrq,
+ 			      char *extra)
+@@ -433,6 +436,7 @@ static int mesh_wlan_get_mode(struct net
+ 	lbs_deb_leave(LBS_DEB_WEXT);
+ 	return 0;
+ }
++#endif
+ 
+ static int lbs_get_txpow(struct net_device *dev,
+ 			  struct iw_request_info *info,
+@@ -1010,6 +1014,7 @@ out:
+ 	return ret;
+ }
+ 
++#ifdef CONFIG_LIBERTAS_MESH
+ static int lbs_mesh_set_freq(struct net_device *dev,
+ 			     struct iw_request_info *info,
+ 			     struct iw_freq *fwrq, char *extra)
+@@ -1061,6 +1066,7 @@ out:
+ 	lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
+ 	return ret;
+ }
++#endif
+ 
+ static int lbs_set_rate(struct net_device *dev, struct iw_request_info *info,
+ 		  struct iw_param *vwrq, char *extra)
+@@ -2110,6 +2116,7 @@ out:
+ 	return ret;
+ }
+ 
++#ifdef CONFIG_LIBERTAS_MESH
+ static int lbs_mesh_get_essid(struct net_device *dev,
+ 			      struct iw_request_info *info,
+ 			      struct iw_point *dwrq, char *extra)
+@@ -2163,6 +2170,7 @@ static int lbs_mesh_set_essid(struct net
+ 	lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
+ 	return ret;
+ }
++#endif
+ 
+ /**
+  *  @brief Connect to the AP or Ad-hoc Network with specific bssid
+@@ -2269,7 +2277,13 @@ static const iw_handler lbs_handler[] = 
+ 	(iw_handler) lbs_get_encodeext,/* SIOCGIWENCODEEXT */
+ 	(iw_handler) NULL,		/* SIOCSIWPMKSA */
+ };
++struct iw_handler_def lbs_handler_def = {
++	.num_standard	= ARRAY_SIZE(lbs_handler),
++	.standard	= (iw_handler *) lbs_handler,
++	.get_wireless_stats = lbs_get_wireless_stats,
++};
+ 
++#ifdef CONFIG_LIBERTAS_MESH
+ static const iw_handler mesh_wlan_handler[] = {
+ 	(iw_handler) NULL,	/* SIOCSIWCOMMIT */
+ 	(iw_handler) lbs_get_name,	/* SIOCGIWNAME */
+@@ -2327,14 +2341,10 @@ static const iw_handler mesh_wlan_handle
+ 	(iw_handler) lbs_get_encodeext,/* SIOCGIWENCODEEXT */
+ 	(iw_handler) NULL,		/* SIOCSIWPMKSA */
+ };
+-struct iw_handler_def lbs_handler_def = {
+-	.num_standard	= ARRAY_SIZE(lbs_handler),
+-	.standard	= (iw_handler *) lbs_handler,
+-	.get_wireless_stats = lbs_get_wireless_stats,
+-};
+ 
+ struct iw_handler_def mesh_handler_def = {
+ 	.num_standard	= ARRAY_SIZE(mesh_wlan_handler),
+ 	.standard	= (iw_handler *) mesh_wlan_handler,
+ 	.get_wireless_stats = lbs_get_wireless_stats,
+ };
++#endif
 
-Below the device seems to go to sleep prior to sending the Tx BA, but I could have
-sworn this happens in another successfull suspend before.
-
-> [  271.448580] Freezing user space processes ... (elapsed 0.00 seconds) done.
-> [  271.450215] Freezing remaining freezable tasks ... (elapsed 0.00 seconds) done.
-> [  271.450296] PM: Entering mem sleep
-> [  271.450321] Suspending console(s) (use no_console_suspend to debug)
-> [  271.456054] Tx BA session stop requested for 00:22:6b:56:fd:e8 tid 0
-> [  271.456073] Stopping Tx BA session for 00:22:6b:56:fd:e8 tid 0
-> [  271.456112] Rx BA session stop requested for 00:22:6b:56:fd:e8 tid 0
-> [  271.456141] ath9k: Detach Interface
-> [  271.456161] ath9k: NETWORK SLEEP -> AWAKE
-> [  271.458525] ath9k: AWAKE -> NETWORK SLEEP
-> [  271.458533] ath9k: NETWORK SLEEP -> FULL-SLEEP
-> [  271.458544] ath9k:
-> [  271.458547] ath9k: Driver halt
-> [  271.458552] FULL-SLEEP -> AWAKE
-
-And we leave it awake prior to suspend, hrm.
-
-> [  271.485081] sd 0:0:0:0: [sda] Synchronizing SCSI cache
-> [  271.485444] sd 0:0:0:0: [sda] Stopping disk
-> [  272.348209] ath9k 0000:01:00.0: PCI INT A disabled
-
-> [  272.552139] Back to C!
-
-> [  273.522696] ath9k 0000:01:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-> [  275.742070] ath9k: Starting driver with initial channel: 2437 MHz
-> [  275.891791] ath9k: timeout (100000 us) on reg 0x7000: 0xdeadbeef & 0x00000003 != 0x00000000
-> [  275.891799] ath9k: RTC stuck in MAC reset
-
-AT this point hardware is already completely unresonsive.
-
-> [  275.891803] ath9k: Chip reset failed
-> [  275.891807] ath9k: Unable to reset hardware; reset status -22 (freq 2437 MHz)
-> [  275.891827] ath9k: Attach a VIF of type: 2
-> [  275.891867] ath9k: Set channel: 2437 MHz
-> [  275.891873] ath9k: tx chmask: 1, rx chmask: 1
-> [  275.891880] ath9k: Unable to set channel
-> [  275.891894] ath9k: Set HW RX filter: 0x2707
-> [  275.891901] ath9k: RX filter 0x0 bssid 00:22:6b:56:fd:e8 aid 0x0
-> [  275.891910] ath9k: BSS Changed PREAMBLE 1
-> [  275.891915] ath9k: BSS Changed CTS PROT 0
-> [  275.891919] ath9k: BSS Changed ASSOC 1
-> [  275.891924] ath9k: Bss Info ASSOC 1, bssid: 00:22:6b:56:fd:e8
-> [  275.894481] PM: Finishing wakeup.
-> [  275.894486] Restarting tasks ... done.
-> [  276.835592] irq 18: nobody cared (try booting with the "irqpoll" option)
-> [  276.835609] Pid: 1710, comm: Xorg Not tainted 2.6.31.4-intel-menlow #14
-> [  276.835616] Call Trace:
-> [  276.835636]  [<c105ca3e>] __report_bad_irq+0x2e/0x6f
-> [  276.835646]  [<c105cb74>] note_interrupt+0xf5/0x14d
-> [  276.835656]  [<c105d0a4>] handle_fasteoi_irq+0x7d/0x9b
-> [  276.835668]  [<c10048c1>] handle_irq+0x3b/0x46
-> [  276.835677]  [<c1004103>] do_IRQ+0x41/0x95
-> [  276.835687]  [<c1003189>] common_interrupt+0x29/0x30
-> [  276.835693] handlers:
-> [  276.835698] [<f89a3d03>] (ath_isr+0x0/0x12f [ath9k])
-> [  276.835739] Disabling IRQ #18
-
-  Luis
+-- 
