@@ -1,124 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:61381 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757591AbZLKNlo (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55882 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752658AbZLBLsp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:41:44 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
+	Wed, 2 Dec 2009 06:48:45 -0500
+Message-Id: <20091202114646.771433413@sipsolutions.net>
+Date: Wed, 02 Dec 2009 12:43:43 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 16/31] wl1271: use channel 1 when configuring the data path
-Date: Fri, 11 Dec 2009 15:40:55 +0200
-Message-Id: <1260538870-32297-17-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+Subject: [PATCH 2/6] mac80211: dont try to use existing sta for AP
+References: <20091202114341.088046714@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the data path configuration, one of the parameters is the channel.  We
-have been setting it to wl->channel, which is not correct in this case.  This
-channel has nothing to do with the channel we're currently tuned to, since it
-is only used for calibration during this phase.  Hardcoded the channel to 1,
-according to the reference driver.
+Clean out some cruft that could use an already existing
+sta_info struct -- that case cannot happen. Also, there's
+a bug there -- if allocation/insertion fails then it is
+possible that we are left in a lingering state where
+mac80211 waits for the AP, cfg80211 waits for mac80211,
+but the AP has already replied. Since there's no way to
+indicate an internal error, pretend there was a timeout,
+i.e. that the AP never responded.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/wl12xx/wl1271_cmd.c  |   13 +++++++------
- drivers/net/wireless/wl12xx/wl1271_cmd.h  |    2 +-
- drivers/net/wireless/wl12xx/wl1271_init.c |    2 +-
- drivers/net/wireless/wl12xx/wl1271_main.c |    2 +-
- 4 files changed, 10 insertions(+), 9 deletions(-)
+ net/mac80211/mlme.c |   57 +++++++++++++++++++++-------------------------------
+ 1 file changed, 24 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-index ceb1ca6..20f3e67 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-@@ -505,7 +505,7 @@ int wl1271_cmd_configure(struct wl1271 *wl, u16 id, void *buf, size_t len)
- 	return 0;
- }
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-12-01 18:26:51.000000000 +0100
++++ wireless-testing/net/mac80211/mlme.c	2009-12-01 18:26:59.000000000 +0100
+@@ -75,6 +75,9 @@ enum rx_mgmt_action {
+ 	/* caller must call cfg80211_send_disassoc() */
+ 	RX_MGMT_CFG80211_DISASSOC,
  
--int wl1271_cmd_data_path(struct wl1271 *wl, u8 channel, bool enable)
-+int wl1271_cmd_data_path(struct wl1271 *wl, bool enable)
- {
- 	struct cmd_enabledisable_path *cmd;
- 	int ret;
-@@ -519,7 +519,8 @@ int wl1271_cmd_data_path(struct wl1271 *wl, u8 channel, bool enable)
- 		goto out;
++	/* caller must tell cfg80211 about internal error */
++	RX_MGMT_CFG80211_ASSOC_ERROR,
++
+ 	/* caller must call cfg80211_auth_timeout() & free work */
+ 	RX_MGMT_CFG80211_AUTH_TO,
+ 
+@@ -1479,8 +1482,8 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee
+ 	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
+ 	u8 *pos;
+ 	u32 changed = 0;
+-	int i, j;
+-	bool have_higher_than_11mbit = false, newsta = false;
++	int i, j, err;
++	bool have_higher_than_11mbit = false;
+ 	u16 ap_ht_cap_flags;
+ 
+ 	/*
+@@ -1542,30 +1545,18 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee
+ 	printk(KERN_DEBUG "%s: associated\n", sdata->name);
+ 	ifmgd->aid = aid;
+ 
+-	rcu_read_lock();
+-
+-	/* Add STA entry for the AP */
+-	sta = sta_info_get(sdata, wk->bss->cbss.bssid);
++	sta = sta_info_alloc(sdata, wk->bss->cbss.bssid, GFP_KERNEL);
+ 	if (!sta) {
+-		newsta = true;
+-
+-		rcu_read_unlock();
+-
+-		sta = sta_info_alloc(sdata, wk->bss->cbss.bssid, GFP_KERNEL);
+-		if (!sta) {
+-			printk(KERN_DEBUG "%s: failed to alloc STA entry for"
+-			       " the AP\n", sdata->name);
+-			return RX_MGMT_NONE;
+-		}
+-
+-		set_sta_flags(sta, WLAN_STA_AUTH | WLAN_STA_ASSOC |
+-				   WLAN_STA_ASSOC_AP);
+-		if (!(ifmgd->flags & IEEE80211_STA_CONTROL_PORT))
+-			set_sta_flags(sta, WLAN_STA_AUTHORIZED);
+-
+-		rcu_read_lock();
++		printk(KERN_DEBUG "%s: failed to alloc STA entry for"
++		       " the AP\n", sdata->name);
++		return RX_MGMT_CFG80211_ASSOC_ERROR;
  	}
  
--	cmd->channel = channel;
-+	/* the channel here is only used for calibration, so hardcoded to 1 */
-+	cmd->channel = 1;
++	set_sta_flags(sta, WLAN_STA_AUTH | WLAN_STA_ASSOC |
++			   WLAN_STA_ASSOC_AP);
++	if (!(ifmgd->flags & IEEE80211_STA_CONTROL_PORT))
++		set_sta_flags(sta, WLAN_STA_AUTHORIZED);
++
+ 	rates = 0;
+ 	basic_rates = 0;
+ 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+@@ -1628,18 +1619,14 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee
+ 	if (elems.wmm_param)
+ 		set_sta_flags(sta, WLAN_STA_WME);
  
- 	if (enable) {
- 		cmd_rx = CMD_ENABLE_RX;
-@@ -532,22 +533,22 @@ int wl1271_cmd_data_path(struct wl1271 *wl, u8 channel, bool enable)
- 	ret = wl1271_cmd_send(wl, cmd_rx, cmd, sizeof(*cmd), 0);
- 	if (ret < 0) {
- 		wl1271_error("rx %s cmd for channel %d failed",
--			     enable ? "start" : "stop", channel);
-+			     enable ? "start" : "stop", cmd->channel);
- 		goto out;
+-	if (newsta) {
+-		int err = sta_info_insert(sta);
+-		if (err) {
+-			printk(KERN_DEBUG "%s: failed to insert STA entry for"
+-			       " the AP (error %d)\n", sdata->name, err);
+-			rcu_read_unlock();
+-			return RX_MGMT_NONE;
+-		}
++	err = sta_info_insert(sta);
++	sta = NULL;
++	if (err) {
++		printk(KERN_DEBUG "%s: failed to insert STA entry for"
++		       " the AP (error %d)\n", sdata->name, err);
++		return RX_MGMT_CFG80211_ASSOC_ERROR;
  	}
  
- 	wl1271_debug(DEBUG_BOOT, "rx %s cmd channel %d",
--		     enable ? "start" : "stop", channel);
-+		     enable ? "start" : "stop", cmd->channel);
- 
- 	ret = wl1271_cmd_send(wl, cmd_tx, cmd, sizeof(*cmd), 0);
- 	if (ret < 0) {
- 		wl1271_error("tx %s cmd for channel %d failed",
--			     enable ? "start" : "stop", channel);
-+			     enable ? "start" : "stop", cmd->channel);
- 		return ret;
+-	rcu_read_unlock();
+-
+ 	if (elems.wmm_param)
+ 		ieee80211_sta_wmm_params(local, ifmgd, elems.wmm_param,
+ 					 elems.wmm_param_len);
+@@ -2084,6 +2071,10 @@ static void ieee80211_sta_rx_queued_mgmt
+ 	case RX_MGMT_CFG80211_DEAUTH:
+ 		cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len);
+ 		break;
++	case RX_MGMT_CFG80211_ASSOC_ERROR:
++		/* an internal error -- pretend timeout for now */
++		cfg80211_send_assoc_timeout(sdata->dev, mgmt->bssid);
++		break;
+ 	default:
+ 		WARN(1, "unexpected: %d", rma);
  	}
- 
- 	wl1271_debug(DEBUG_BOOT, "tx %s cmd channel %d",
--		     enable ? "start" : "stop", channel);
-+		     enable ? "start" : "stop", cmd->channel);
- 
- out:
- 	kfree(cmd);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-index 057f925..09fe912 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-@@ -37,7 +37,7 @@ int wl1271_cmd_join(struct wl1271 *wl);
- int wl1271_cmd_test(struct wl1271 *wl, void *buf, size_t buf_len, u8 answer);
- int wl1271_cmd_interrogate(struct wl1271 *wl, u16 id, void *buf, size_t len);
- int wl1271_cmd_configure(struct wl1271 *wl, u16 id, void *buf, size_t len);
--int wl1271_cmd_data_path(struct wl1271 *wl, u8 channel, bool enable);
-+int wl1271_cmd_data_path(struct wl1271 *wl, bool enable);
- int wl1271_cmd_ps_mode(struct wl1271 *wl, u8 ps_mode);
- int wl1271_cmd_read_memory(struct wl1271 *wl, u32 addr, void *answer,
- 			   size_t len);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
-index 39f01d8..bdd4a96 100644
---- a/drivers/net/wireless/wl12xx/wl1271_init.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_init.c
-@@ -289,7 +289,7 @@ int wl1271_hw_init(struct wl1271 *wl)
- 		goto out_free_memmap;
- 
- 	/* Enable data path */
--	ret = wl1271_cmd_data_path(wl, wl->channel, 1);
-+	ret = wl1271_cmd_data_path(wl, 1);
- 	if (ret < 0)
- 		goto out_free_memmap;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index fb22217..55a45d3 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -384,7 +384,7 @@ static int wl1271_plt_init(struct wl1271 *wl)
- 	if (ret < 0)
- 		return ret;
- 
--	ret = wl1271_cmd_data_path(wl, wl->channel, 1);
-+	ret = wl1271_cmd_data_path(wl, 1);
- 	if (ret < 0)
- 		return ret;
- 
--- 
-1.6.3.3
+
 
