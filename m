@@ -1,49 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml103.kpnxchange.com ([195.121.3.7]:58453 "EHLO
-	CPSMTPM-EML103.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753815AbZLIV5y (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:65310 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754319AbZLBO3z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2009 16:57:54 -0500
-Message-ID: <4B201D67.8000607@gmail.com>
-Date: Wed, 09 Dec 2009 22:57:59 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Alan Stern <stern@rowland.harvard.edu>
-CC: Ivo van Doorn <IvDoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	Kernel development list <linux-kernel@vger.kernel.org>
-Subject: Re: REGRESSION for RT2561/RT61 in 2.6.32
-References: <Pine.LNX.4.44L0.0912090940030.4120-100000@iolanthe.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.0912090940030.4120-100000@iolanthe.rowland.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 2 Dec 2009 09:29:55 -0500
+Received: by mail-bw0-f227.google.com with SMTP id 27so217224bwz.21
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2009 06:30:01 -0800 (PST)
+Message-Id: <20091202142912.713940419@gmail.com>
+References: <20091202142555.654873300@gmail.com>
+Date: Wed, 02 Dec 2009 15:25:57 +0100
+From: Holger Schurig <holgerschurig@googlemail.com>
+To: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 02/10] libertas: remove mesh_autostart_enabled and sync_channel
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/09/09 15:41, Alan Stern wrote:
-> On Tue, 8 Dec 2009, Gertjan van Wingerde wrote:
-> 
->> Hmm, the stack overrun seems to be generated as part of the
->> Alt-SysRq-* handling, not of any rt61pci handling.
->>
->> I noticed in the Alt-SysRq-T output that powersaving is enabled. We've
->> seen some strange behaviour on this, so could you disable that with:
->>
->> iwconfig wlan0 power off
->>
->> or run a kernel in which CONFIG_CFG80211_DEFAULT_PS is disabled.
->>
->> Maybe that will fix the problem we are seeing?
-> 
-> It did indeed!  Thank you very much.  If you need a testbed to figure 
-> out what's wrong with the power-saving code, just ask.
-> 
+mesh_autostart_enabled was nowhere set. Rumor is that this is used in the
+OLPC tree, but they never did submit their code upstream.
 
-Great!
+After removing this code, it turned out that the sync_channel stuff is now
+also unused, so get rid of that as well.
 
-Thanks for testing and confirming.
+Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
 
-I'll disable powersaving for rt2x00 for now.
 
-And then to find the bugs in there before enabling it again :-(
+--- linux-wl.orig/drivers/net/wireless/libertas/cmdresp.c
++++ linux-wl/drivers/net/wireless/libertas/cmdresp.c
+@@ -485,20 +485,8 @@ int lbs_process_event(struct lbs_private
+ 		break;
+ 
+ 	case MACREG_INT_CODE_MESH_AUTO_STARTED:
+-		/* Ignore spurious autostart events if autostart is disabled */
+-		if (!priv->mesh_autostart_enabled) {
+-			lbs_pr_info("EVENT: MESH_AUTO_STARTED (ignoring)\n");
+-			break;
+-		}
+-		lbs_pr_info("EVENT: MESH_AUTO_STARTED\n");
+-		priv->mesh_connect_status = LBS_CONNECTED;
+-		if (priv->mesh_open) {
+-			netif_carrier_on(priv->mesh_dev);
+-			if (!priv->tx_pending_len)
+-				netif_wake_queue(priv->mesh_dev);
+-		}
+-		priv->mode = IW_MODE_ADHOC;
+-		schedule_work(&priv->sync_channel);
++		/* Ignore spurious autostart events */
++		lbs_pr_info("EVENT: MESH_AUTO_STARTED (ignoring)\n");
+ 		break;
+ 
+ 	default:
+--- linux-wl.orig/drivers/net/wireless/libertas/dev.h
++++ linux-wl/drivers/net/wireless/libertas/dev.h
+@@ -42,11 +42,9 @@ struct lbs_private {
+ 	u32 mesh_connect_status;
+ 	struct lbs_mesh_stats mstats;
+ 	int mesh_open;
+-	int mesh_autostart_enabled;
+ 	uint16_t mesh_tlv;
+ 	u8 mesh_ssid[IEEE80211_MAX_SSID_LEN + 1];
+ 	u8 mesh_ssid_len;
+-	struct work_struct sync_channel;
+ 
+ 	/* Monitor mode */
+ 	struct net_device *rtap_net_dev;
+--- linux-wl.orig/drivers/net/wireless/libertas/main.c
++++ linux-wl/drivers/net/wireless/libertas/main.c
+@@ -806,18 +806,6 @@ int lbs_exit_auto_deep_sleep(struct lbs_
+ 	return 0;
+ }
+ 
+-static void lbs_sync_channel_worker(struct work_struct *work)
+-{
+-	struct lbs_private *priv = container_of(work, struct lbs_private,
+-		sync_channel);
+-
+-	lbs_deb_enter(LBS_DEB_MAIN);
+-	if (lbs_update_channel(priv))
+-		lbs_pr_info("Channel synchronization failed.");
+-	lbs_deb_leave(LBS_DEB_MAIN);
+-}
+-
+-
+ static int lbs_init_adapter(struct lbs_private *priv)
+ {
+ 	size_t bufsize;
+@@ -997,7 +985,6 @@ struct lbs_private *lbs_add_card(void *c
+ 	INIT_DELAYED_WORK(&priv->assoc_work, lbs_association_worker);
+ 	INIT_DELAYED_WORK(&priv->scan_work, lbs_scan_worker);
+ 	INIT_WORK(&priv->mcast_work, lbs_set_mcast_worker);
+-	INIT_WORK(&priv->sync_channel, lbs_sync_channel_worker);
+ 
+ 	priv->mesh_open = 0;
+ 	sprintf(priv->mesh_ssid, "mesh");
 
----
-Gertjan.
+-- 
