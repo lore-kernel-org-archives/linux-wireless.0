@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57795 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753329AbZLAX73 (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:56958 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751727AbZLBMmd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 18:59:29 -0500
-Subject: Re: [PATCH] lib80211: make crypt modules configurable by user
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Ritz <daniel.ritz@gmx.ch>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, daniel.ritz-ml@swissonline.ch
-In-Reply-To: <1259711174.13720.17.camel@MacRitz2>
-References: <1259711174.13720.17.camel@MacRitz2>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-uylhejHlExhqiMNV+O/J"
-Date: Wed, 02 Dec 2009 00:59:03 +0100
-Message-ID: <1259711943.32171.134.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 2 Dec 2009 07:42:33 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] b43: fix two warnings
+Date: Wed, 2 Dec 2009 13:42:30 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1259749236.32171.151.camel@johannes.local>
+In-Reply-To: <1259749236.32171.151.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200912021342.33239.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 02 December 2009 11:20:36 Johannes Berg wrote:
+> My gcc appears to be able to see past the function
+> boundary and notices that the variable 'behaviour'
+> could be used uninitialised:
+> 
+> drivers/net/wireless/b43/leds.c: In function ‘b43_leds_register’:
+> drivers/net/wireless/b43/leds.c:339: warning: ‘behaviour’ may be used uninitialized in this function
+> drivers/net/wireless/b43/leds.c: In function ‘b43_leds_init’:
+> drivers/net/wireless/b43/leds.c:262: warning: ‘behaviour’ may be used uninitialized in this function
+> 
+> because b43_led_get_sprominfo() didn't initialise
+> it in all cases.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
---=-uylhejHlExhqiMNV+O/J
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+ack
 
-On Wed, 2009-12-02 at 00:46 +0100, Daniel Ritz wrote:
-> Make the crypt modules configurable by user. Normally drivers select them
-> when needed, but out-of-tree drivers can't do that. Having a minimal
-> kernel with just the things required won't select any of those modules,
-> resulting in the external driver to be close to useless (ie. it can scan
-> the networks, but cannot join a single one).
 
-So ... what makes you think anyone cares about out of tree drivers?
-
-=46rom my POV a clear NACK on this, since it makes the kernel
-configuration more complex for no useful reason.
-
-johannes
-
---=-uylhejHlExhqiMNV+O/J
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLFa3EAAoJEODzc/N7+Qma+GUQAIMeCxyeuo/HmPLgUrqBXK83
-R64td4Ush8S1HsG9RF6Lds5D2C3Dnavkgrk5NJEH2mYHoQbgZzZDFhl1fEEwzTAs
-4odda0omGnEJX6g/nvtR6kSbGkmWJMpYlGQCTeCN4WCpwHsf6VGQzBO1I4JIAhnI
-v9SS/3Hl9JAw8cMvFIOZ/g0LT1B7VfFNgjG/oysPdtNXCvs1jcZ9odrieuacGbrs
-FjZvoy+riFPsMrX53y2/cnDegIZziHJMPE5O+cMFSetrBd5mWHkYjvIWttLVIEI7
-LjFSRGxHO8pPBpbdoA0FsSuY3Gnaed6bDFEc5MxQa04UxxdKHmiVwf1BNScc7oqR
-wmrFY7XKacObKVuLYXIfestYFGo7SqV7YaQYNG3Rjk5bF/8r8EMEgcbhN5tgqjRr
-GZNB/DxJhFMwmfPZWi8Xaf6woTgm7TPjna5I4dS3bHx62HxV3jYjgcYqLU4SkWjD
-Jpv5k+IRSg457FU5Vo2xYiFPvTJl+fVZxVHrOqHwuVXB4oEyb1i7CeL3z/A2zN+Y
-hNWb32ucl5IC+P68hZYEvnEZ8a6DUwiNew29eDqNdMHatxKduo7iKVMMFl3TqCwo
-fanuKNUiy4tNQtbHVtyj48C9ENby2KBQCE9Tng19LqTGulAh8YM2f4Rk8y2bN+Yq
-hKEaUAOuCvpIc+Kg2hOY
-=Kk7A
------END PGP SIGNATURE-----
-
---=-uylhejHlExhqiMNV+O/J--
-
+-- 
+Greetings, Michael.
