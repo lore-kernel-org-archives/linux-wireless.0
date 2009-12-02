@@ -1,60 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52196 "HELO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753260AbZLMNjX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Dec 2009 08:39:23 -0500
-Subject: Re: 2.6.32-git5+, CONFIG_WEXT_PRIV and Broadcom's driver for
- BCM4322  Wireless chips
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alessandro Suardi <alessandro.suardi@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <5a4c581d0912130536r46b13b95pcd1364ee83cd39c0@mail.gmail.com>
-References: <5a4c581d0912120740j38a20f8eu3f616f3a477d922f@mail.gmail.com>
-	 <1260710042.2442.340.camel@johannes.local>
-	 <5a4c581d0912130536r46b13b95pcd1364ee83cd39c0@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-V6IwLmP/ZRrPiUFbkJ4t"
-Date: Sun, 13 Dec 2009 14:39:18 +0100
-Message-ID: <1260711558.2442.341.camel@johannes.local>
+Received: from mail.gmx.net ([213.165.64.20]:42040 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755885AbZLBWiW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Dec 2009 17:38:22 -0500
+Subject: Re: [PATCH] lib80211: make crypt modules configurable by user
+From: Daniel Ritz <daniel.ritz@gmx.ch>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1259711943.32171.134.camel@johannes.local>
+References: <1259711174.13720.17.camel@MacRitz2>
+	 <1259711943.32171.134.camel@johannes.local>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 02 Dec 2009 23:38:26 +0100
+Message-ID: <1259793506.2107.57.camel@MacRitz2>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2009-12-02 at 00:59 +0100, Johannes Berg wrote:
+> On Wed, 2009-12-02 at 00:46 +0100, Daniel Ritz wrote:
+> > Make the crypt modules configurable by user. Normally drivers select them
+> > when needed, but out-of-tree drivers can't do that. Having a minimal
+> > kernel with just the things required won't select any of those modules,
+> > resulting in the external driver to be close to useless (ie. it can scan
+> > the networks, but cannot join a single one).
+> 
+> So ... what makes you think anyone cares about out of tree drivers?
 
---=-V6IwLmP/ZRrPiUFbkJ4t
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+hmm...dunno. nothing i guess :)
 
-On Sun, 2009-12-13 at 14:36 +0100, Alessandro Suardi wrote:
+> 
+> From my POV a clear NACK on this, since it makes the kernel
+> configuration more complex for no useful reason.
 
-> Thanks - you clipped the part of my message where I explain that my
->  "workaround" has been to select IPW2200 :)
+ok. but looking at it again, there are some minor problems that have
+nothing to do with out-of-tree-drivers:
+- it's possible for the user to compile-in lib80211, but not the crypt
+  modules
+- the crypt modules depend on crypto API and modules, but it's the WLAN
+  drivers that select them. duplicated selects for each driver.
 
-Ah, sorry, I actually missed that completely. IPW2200 works just as
-well, of course, RAYCS was just the first one I saw :)
+so how about the following?
+- allow the user to compile-in the crypto modules as well
+- select the dependencies in the crypt modules, not the drivers
 
-johannes
+rgds
+-daniel
 
---=-V6IwLmP/ZRrPiUFbkJ4t
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
+diff --git a/drivers/net/wireless/hostap/Kconfig b/drivers/net/wireless/hostap/Kconfig
+index c15db22..33b1080 100644
+--- a/drivers/net/wireless/hostap/Kconfig
++++ b/drivers/net/wireless/hostap/Kconfig
+@@ -2,13 +2,6 @@ config HOSTAP
+ 	tristate "IEEE 802.11 for Host AP (Prism2/2.5/3 and WEP/TKIP/CCMP)"
+ 	depends on WLAN_80211
+ 	select WIRELESS_EXT
+-	select CRYPTO
+-	select CRYPTO_ARC4
+-	select CRYPTO_ECB
+-	select CRYPTO_AES
+-	select CRYPTO_MICHAEL_MIC
+-	select CRYPTO_ECB
+-	select CRC32
+ 	select LIB80211
+ 	select LIB80211_CRYPT_WEP
+ 	select LIB80211_CRYPT_TKIP
+diff --git a/drivers/net/wireless/ipw2x00/Kconfig b/drivers/net/wireless/ipw2x00/Kconfig
+index a813138..3846b2b 100644
+--- a/drivers/net/wireless/ipw2x00/Kconfig
++++ b/drivers/net/wireless/ipw2x00/Kconfig
+@@ -152,13 +152,6 @@ config LIBIPW
+ 	tristate
+ 	depends on PCI && WLAN_80211 && CFG80211
+ 	select WIRELESS_EXT
+-	select CRYPTO
+-	select CRYPTO_ARC4
+-	select CRYPTO_ECB
+-	select CRYPTO_AES
+-	select CRYPTO_MICHAEL_MIC
+-	select CRYPTO_ECB
+-	select CRC32
+ 	select LIB80211
+ 	select LIB80211_CRYPT_WEP
+ 	select LIB80211_CRYPT_TKIP
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index abf7ca3..01b704c 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -127,13 +127,36 @@ config LIB80211
+ 	  you want this built into your kernel.
+ 
+ config LIB80211_CRYPT_WEP
+-	tristate
++	tristate "lib80211 WEP support"
++	depends on LIB80211
++	select CRYPTO
++	select CRYPTO_ARC4
++	select CRYPTO_ECB
++	select CRC32
++	help
++	  Drivers should select this themselves if needed.  Say Y if
++	  you want this built into your kernel.
+ 
+ config LIB80211_CRYPT_CCMP
+-	tristate
++	tristate "lib80211 CCMP support"
++	depends on LIB80211
++	select CRYPTO
++	select CRYPTO_AES
++	help
++	  Drivers should select this themselves if needed.  Say Y if
++	  you want this built into your kernel.
+ 
+ config LIB80211_CRYPT_TKIP
+-	tristate
++	tristate "lib80211 TKIP support"
++	depends on LIB80211
++	select CRYPTO
++	select CRYPTO_ARC4
++	select CRYPTO_ECB
++	select CRYPTO_MICHAEL_MIC
++	select CRC32
++	help
++	  Drivers should select this themselves if needed.  Say Y if
++	  you want this built into your kernel.
+ 
+ config LIB80211_DEBUG
+ 	bool "lib80211 debugging messages"
 
-iQIcBAABAgAGBQJLJO6DAAoJEODzc/N7+QmacjMP/1UXIM8oavNW6Fw8av/pRA7R
-d59u7hMulzUj/+JONE9hMoMHEItoUBFCfHoFuA94iSiaB7LVti6QUOUXTE9RX6Eu
-yEZGoCNB3oAklvDRL6Bco/8wB4s0uITLqoyljKtCXBVITpjXYm8qBrldm3R+S7ef
-qO7Y81hbEWJzbqWuYlEuViYNVSy8JExRthQzRNUKbXQQ8h0NXsHPBwEWIUfWP8MI
-Cw3iwib+23dP2Wcg4m58/TVtOCFKnpS+p6Nsr5NyTUjqtF6xEWjLCq4eDKo0UWXV
-2aG16P+51Hh1P/mZDBMut9YpvX1udzg/8Uf/rPqwZpNsmFE7qymanwRaEb7J1MTV
-/fN07upEV/lU2MiOL72VsJtFcEDS2piRJRwuS5A0uTtpuF0D9nHyUFJDsLluCal3
-lwRTa/mq2JBzcFmLvc00sRY61U+OK5ykzgofIBhAEsz03ydVWRKQH8CaKviHd1Q5
-8ZOiKTQm4Bsuw8lXN6+l2ZUefPuD9h6aynb/50NlkApTQReQQY7IMg+6UXNt1Qok
-/vnwVM63CGEh98CVCg8LhIDwWuumR9T+uJXs+PkXSpEOzaRrlb/igJ9PhOvAumsm
-Ky1WI0XXmRAp7XKvoMLKB0G1pS/n88Rfbp8+KI6LCogW7swhT8yTGst/uVkptdIt
-WsJSA5tiIij64kkeqkNa
-=ZyOQ
------END PGP SIGNATURE-----
 
---=-V6IwLmP/ZRrPiUFbkJ4t--
+
 
