@@ -1,90 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:32772 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754293AbZLGHHM (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:59173 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753830AbZLBWum convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2009 02:07:12 -0500
-Subject: Re: ssid
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bharat Bhushan <bharat.b.bhushan@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <d9360e520912062221o1f543bc9tbe3813113562a25d@mail.gmail.com>
-References: <d9360e520912062221o1f543bc9tbe3813113562a25d@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-IwVdUY/NHe7fssmNNN8H"
-Date: Mon, 07 Dec 2009 08:07:15 +0100
-Message-ID: <1260169635.13866.3.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 2 Dec 2009 17:50:42 -0500
+Received: by iwn1 with SMTP id 1so486001iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2009 14:50:48 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20091128212102.GB28915@redhat.com>
+References: <20091128212102.GB28915@redhat.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 2 Dec 2009 14:50:28 -0800
+Message-ID: <43e72e890912021450t454dc740r91ea88365779d2c6@mail.gmail.com>
+Subject: Re: [internal-ath9k-devel] RHEL5.5 (and Centos 5.5!) wireless updates
+	needs broad testing...
+To: "John W. Linville" <linville@redhat.com>
+Cc: linux-wireless@vger.kernel.org, centos@centos.org,
+	ipw3945@lists.sourceforge.net, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-IwVdUY/NHe7fssmNNN8H
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-Hi,
-
-This change happened because no driver required the SSID, and many
-drivers were using it incorrectly. I'd be happy to add it back for an
-in-kernel driver where I can see that it is needed, but _very_ reluctant
-to do it for a driver I've never seen. So please add it back in a patch
-that you use for development, finish your driver, and then when it comes
-time to post your driver upstream you can also post the relevant
-mac80211 patch. Oh also please don't develop against 2.6.29, it is
-_ancient_.
-
-johannes
-
-On Mon, 2009-12-07 at 11:51 +0530, Bharat Bhushan wrote:
-> hello gentlemen,
->=20
->                          i am trying to implement an open source mac
-> base driver with kernel base version 2.6.29, for association
-> completion my hardware requires an api with ssid to be sent. but i
-> could not find any api from mac80211.h which contain ssid element
-> except hw_scan which i cannot use as ssid should be sent before
-> association ,few days back i implement the same driver with kernel
-> version 2.6.27 and i use to get ssid in ieee80211_if_conf structure in
-> config_interface api but now this is deprecated , any particular
-> reason why this change happen, is there any other way i can get ssid
-> through any interface.
->=20
->=20
->=20
-> Any help is much appreciated.
->=20
->=20
-> Thanks
->=20
-> bharat
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
+On Sat, Nov 28, 2009 at 1:21 PM, John W. Linville <linville@redhat.com> wrote:
+> Greetings,
+>
+> RHEL5.5 is scheduled for a broad update of wireless LAN bits.
+> This includes updates to the cfg80211 and the mac80211 subsystems,
+> and the ath5k, iwl3945, iwl4965, iwl5000, rt2400pci, rt2500pci,
+> rt2500usb, rt61pci, rt73usb, rtl8180, and rtl8187 drivers, as well as
+> the addition of the iwl1000, and iwl6000 drivers and the core of the
+> rfkill subsystem.  For good measure, ath9k _may_ be added as well.
+> This represents a very large mass of code, and any extra testing is
+> most welcome.
+>
+> Preliminary RHEL5 kernels with these wireless bits are available here:
+>
+>        http://people.redhat.com/linville/kernels/rhel5/
+>
+> I have been using them with iwl4965, iwl5000, iwl6000, and ath9k
+> hardware here with very satisfactory results.  I would appreciate
+> your help testing not only on this hardware but whatever other bits
+> of the aforementioned hardware that you may have.
+>
+> If you have a wireless LAN enabled box running RHEL5 (or CentOS 5 or
+> other equivalent) then please give these kernels a try.  When you find
+> problems, please open a bug against RHEL5.5 at bugzilla.redhat.com
+> and Cc: me on the bug.  Remember, the surest way to avoid a bug in
+> RHEL5.5 is to find it before it is released, and the surest way to
+> avoid a bug in CentOS is to keep it out of RHEL... :-)
+>
+> I appreciate your help!
 
 
---=-IwVdUY/NHe7fssmNNN8H
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Thanks John, I'm keeping track of ath9k issues with regards to this kernel here:
 
------BEGIN PGP SIGNATURE-----
+http://wireless.kernel.org/en/users/Drivers/ath9k/RHEL5
 
-iQIcBAABAgAGBQJLHKmgAAoJEODzc/N7+QmayZMP/ityQ6JmCZ+qnRJQ4V4zpp3H
-dBDAlO7dqhFzRIrqkqhlyT3N+B+Gp6MPdJgvHDSKw21gY5klM1m11mmy/t0mHYnP
-EYiPyJkRGeoCj1FfHSLENLPFou7ile5cG/piLfDbM+q+AeeYWH2mrBrvsAKOEyv0
-joEgA/1zdvfHz+3NlmZRgc3bB9df46YlJsijYkAf00bAOI38gDbxEI6nVkYL4FrE
-Iur1vAwQAywJ1v27TUl8+tV3xbHNd21ml0sQwHut31Tc7rW5I7kzFDbKgMQCvTH0
-BfRN3Y8O86sHzAzj+ADZNN4MEqD3R8iHG73AXCnkxBVDFu2WgAWcLgkxaa+7VzLr
-TBrLLGpNVR44/BFrn6IZUJsauanM/fKTwyFMCfd8lOfN6bnfK+9sPD/PGKIihhTu
-zd0PFaChTU8ZnKaJyig/l+pSUAPSx02C/eVJsTfg+yRw/N7nkrijXC2k5OrSIRbK
-BFUaUsLiB0J75P3Eykwupou1fLCaO1b4gA+X3IGNN/p/J6rQnkyt0KV1uac3N6uH
-bHNxQcvB83hAFVOXiTmIVkknBRNPwbjTf4iOCL5CXDFrpY/MomCNMTDlCzdjkATW
-gRdKbgdNGz4aMqiKIbpkcJ3euJuux7iAKPucWdt/6VCrtB4b3xtOLfzXRLToekLJ
-o29itcdeRz2bbM/bLCSi
-=xVTD
------END PGP SIGNATURE-----
+If anyone else finds issues please add a link there.
 
---=-IwVdUY/NHe7fssmNNN8H--
-
+  Luis
