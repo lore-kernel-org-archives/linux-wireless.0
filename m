@@ -1,102 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41938 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755451AbZLWMV6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 07:21:58 -0500
-Message-Id: <20091223121416.544404600@sipsolutions.net>
-Date: Wed, 23 Dec 2009 13:12:05 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, stable@kernel.org,
-	562016-quiet@bugs.debian.org
-Subject: [PATCH 2.6.33 3/3] cfg80211: fix race between deauth and assoc
- response
-References: <20091223121202.581948600@sipsolutions.net>
+Received: from web4.futuron.fi ([217.149.52.4]:45899 "EHLO web4.futuron.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751821AbZLBNFG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Dec 2009 08:05:06 -0500
+Received: from [85.23.66.41] (helo=[192.168.69.231])
+	by web4.futuron.fi with esmtpsa (SSLv3:AES256-SHA:256)
+	(Exim 4.69)
+	(envelope-from <antti@kaijanmaki.net>)
+	id 1NFoGi-00076s-Qp
+	for linux-wireless@vger.kernel.org; Wed, 02 Dec 2009 14:25:16 +0200
+Subject: New rtl8187 rfkill support blocks my wlan for good.
+From: Antti =?ISO-8859-1?Q?Kaijanm=E4ki?= <antti@kaijanmaki.net>
+To: linux-wireless@vger.kernel.org
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Leae+iy4RY7yYGYPSZOt"
+Date: Wed, 02 Dec 2009 14:25:09 +0200
+Message-ID: <1259756709.31590.62.camel@peura.elisa-laajakaista.fi>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joseph Nahmias reported, in http://bugs.debian.org/562016,
-that he was getting the following warning (with some log
-around the issue):
 
-  ath0: direct probe to AP 00:11:95:77:e0:b0 (try 1)
-  ath0: direct probe responded
-  ath0: authenticate with AP 00:11:95:77:e0:b0 (try 1)
-  ath0: authenticated
-  ath0: associate with AP 00:11:95:77:e0:b0 (try 1)
-  ath0: deauthenticating from 00:11:95:77:e0:b0 by local choice (reason=3)
-  ath0: direct probe to AP 00:11:95:77:e0:b0 (try 1)
-  ath0: RX AssocResp from 00:11:95:77:e0:b0 (capab=0x421 status=0 aid=2)
-  ath0: associated
-  ------------[ cut here ]------------
-  WARNING: at net/wireless/mlme.c:97 cfg80211_send_rx_assoc+0x14d/0x152 [cfg80211]()
-  Hardware name: 7658CTO
-  ...
-  Pid: 761, comm: phy0 Not tainted 2.6.32-trunk-686 #1
-  Call Trace:
-   [<c1030a5d>] ? warn_slowpath_common+0x5e/0x8a
-   [<c1030a93>] ? warn_slowpath_null+0xa/0xc
-   [<f86cafc7>] ? cfg80211_send_rx_assoc+0x14d/0x152
-  ...
-  ath0: link becomes ready
-  ath0: deauthenticating from 00:11:95:77:e0:b0 by local choice (reason=3)
-  ath0: no IPv6 routers present
-  ath0: link is not ready
-  ath0: direct probe to AP 00:11:95:77:e0:b0 (try 1)
-  ath0: direct probe responded
-  ath0: authenticate with AP 00:11:95:77:e0:b0 (try 1)
-  ath0: authenticated
-  ath0: associate with AP 00:11:95:77:e0:b0 (try 1)
-  ath0: RX ReassocResp from 00:11:95:77:e0:b0 (capab=0x421 status=0 aid=2)
-  ath0: associated
+--=-Leae+iy4RY7yYGYPSZOt
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-It is not clear to me how the first "direct probe" here
-happens, but this seems to be a race condition, if the
-user requests to deauth after requesting assoc, but before
-the assoc response is received. In that case, it may
-happen that mac80211 tries to report the assoc success to
-cfg80211, but gets blocked on the wdev lock that is held
-because the user is requesting the deauth.
+Hello,
 
-The result is that we run into a warning. This is mostly
-harmless, but maybe cause an unexpected event to be sent
-to userspace; we'd send an assoc success event although
-userspace was no longer expecting that.
+I wanted to give a try to your compat-wireless bleeding edge drivers. I
+have an RTL8187 based wlan chip on my laptop. After installing the
+driver I was not able to use the WiFi anymore as the driver reports that
+the kill switch is active no matter in what position I turn the switch
+on the side of the laptop.
 
-To fix this, remove the warning and check whether the
-race happened and in that case abort processing.
+Here's the dmesg output of the chip detection:
 
-Reported-by: Joseph Nahmias <joe@nahmias.net>
-Cc: stable@kernel.org
-Cc: 562016-quiet@bugs.debian.org
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/mlme.c |   13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+[   20.686680] phy0: Selected rate control algorithm 'minstrel'
+[   20.687554] phy0: hwaddr 00:1b:9e:eb:77:98, RTL8187BvE V0 + rtl8225z2
+[   20.710529] rtl8187: Customer ID is 0x04
+[   20.710588] Registered led device: rtl8187-phy0::tx
+[   20.710611] Registered led device: rtl8187-phy0::rx
+[   20.711393] rtl8187: wireless switch is off
 
---- wireless-testing.orig/net/wireless/mlme.c	2009-12-22 12:11:24.000000000 +0100
-+++ wireless-testing/net/wireless/mlme.c	2009-12-22 12:26:26.000000000 +0100
-@@ -93,7 +93,18 @@ void cfg80211_send_rx_assoc(struct net_d
- 			}
- 		}
- 
--		WARN_ON(!bss);
-+		/*
-+		 * We might be coming here because the driver reported
-+		 * a successful association at the same time as the
-+		 * user requested a deauth. In that case, we will have
-+		 * removed the BSS from the auth_bsses list due to the
-+		 * deauth request when the assoc response makes it. If
-+		 * the two code paths acquire the lock the other way
-+		 * around, that's just the standard situation of a
-+		 * deauth being requested while connected.
-+		 */
-+		if (!bss)
-+			goto out;
- 	} else if (wdev->conn) {
- 		cfg80211_sme_failed_assoc(wdev);
- 		/*
+I checked the driver and found the rtl8187_rfkill.c. I added some
+prink's to see what's happening and noticed that the physical switch did
+affect different bit than the one tested in the current driver. This
+change enables the correct behavior on my laptop:
 
+--- rtl8187_rfkill.c.orig	2009-12-02 14:12:34.646597569 +0200
++++ rtl8187_rfkill.c	2009-12-02 14:10:09.474593370 +0200
+@@ -28,7 +28,7 @@ static bool rtl8187_is_radio_enabled(str
+ 	rtl818x_iowrite8(priv, &priv->map->GPIO0, gpio & ~0x02);
+ 	gpio =3D rtl818x_ioread8(priv, &priv->map->GPIO1);
+=20
+-	return gpio & 0x02;
++	return gpio & 0x04;
+ }
+
+
+I tried to contact Realtek to provide me with some specs so that I can
+verify the register in question, but all I received was a reply with the
+realtek's reference driver attached. I haven't got any answer to my
+follow-up request for the specification.=20
+
+I looked through the reference driver but could not find anything
+informational. I didn't have time to do a full review, though.
+
+Without the specification I can't tell how this can be fixed. People
+have reported success with the current driver, haven't they, so the bit
+is correct for them.
+
+As soon as distributions start shipping the new rtl8187 driver there are
+people whose wlan stops working. I don't know if the killswitch with
+rtl8187 chipsets is suppose to be only created with software but at
+least in my laptop it didn't matter in which position the switch was
+with older drivers, the radio worked anyway.=20
+
+Any thoughts how to continue with this?
+
+
+ -- Antti
+
+
+--=-Leae+iy4RY7yYGYPSZOt
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digitaalisesti allekirjoitettu viestin osa
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAksWXKAACgkQFYSsxt2pELHkPwCgoVld14vjaQZe9nu5/+ld6egA
+5o8AoMOrnPJJz9D8Ldqi1xRr0idJhLjU
+=jNp0
+-----END PGP SIGNATURE-----
+
+--=-Leae+iy4RY7yYGYPSZOt--
 
