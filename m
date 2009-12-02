@@ -1,37 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml103.kpnxchange.com ([195.121.3.7]:63612 "EHLO
-	CPSMTPM-EML103.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758665AbZLIXXi (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:65310 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754601AbZLBOaG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2009 18:23:38 -0500
-Message-ID: <4B203180.1010204@gmail.com>
-Date: Thu, 10 Dec 2009 00:23:44 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Tim Blechmann <tim@klingt.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: regression: rt2561 frequent "Arrived at non-free entry" errors
-   in 2.6.32
-References: <20091204233202.GA13658@basil.fritz.box> <4B1BB44E.90706@gmail.com> <4B1CCB81.5060104@klingt.org> <4B1D7A6B.1080606@gmail.com> <hfpa3v$5gj$1@ger.gmane.org>
-In-Reply-To: <hfpa3v$5gj$1@ger.gmane.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 2 Dec 2009 09:30:06 -0500
+Received: by mail-bw0-f227.google.com with SMTP id 27so217224bwz.21
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2009 06:30:13 -0800 (PST)
+Message-Id: <20091202142938.291148553@gmail.com>
+References: <20091202142555.654873300@gmail.com>
+Date: Wed, 02 Dec 2009 15:26:00 +0100
+From: Holger Schurig <holgerschurig@googlemail.com>
+To: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 05/10] libertas: move mesh SSID initialization into mesh.c
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/09/09 23:59, Tim Blechmann wrote:
->> I can't reproduce any boot failures with the patch applied, although for me the rt2x00
->> drivers are compiled as modules. Can you provide some more information on the boot failure
->> that you see?
-> 
-> i am pretty sure, that i am experiencing the same issue as described
-> here [1] with stack trace ...
-> 
-> [1] http://lkml.org/lkml/2009/12/8/207
-> 
+Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
 
-OK. Can you then test with powersaving disabled?
 
-Just do iwconfig wlanX power off on the interface.
+--- linux-wl.orig/drivers/net/wireless/libertas/main.c
++++ linux-wl/drivers/net/wireless/libertas/main.c
+@@ -999,10 +999,6 @@ struct lbs_private *lbs_add_card(void *c
+ 	INIT_WORK(&priv->mcast_work, lbs_set_mcast_worker);
+ 	INIT_WORK(&priv->sync_channel, lbs_sync_channel_worker);
+ 
+-	priv->mesh_open = 0;
+-	sprintf(priv->mesh_ssid, "mesh");
+-	priv->mesh_ssid_len = 4;
+-
+ 	priv->wol_criteria = 0xffffffff;
+ 	priv->wol_gpio = 0xff;
+ 
+--- linux-wl.orig/drivers/net/wireless/libertas/mesh.c
++++ linux-wl/drivers/net/wireless/libertas/mesh.c
+@@ -237,6 +237,9 @@ int lbs_init_mesh(struct lbs_private *pr
+ 
+ 
+ 	if (priv->mesh_tlv) {
++		sprintf(priv->mesh_ssid, "mesh");
++		priv->mesh_ssid_len = 4;
++
+ 		lbs_add_mesh(priv);
+ 
+ 		if (device_create_file(&dev->dev, &dev_attr_lbs_mesh))
 
----
-Gertjan.
+-- 
