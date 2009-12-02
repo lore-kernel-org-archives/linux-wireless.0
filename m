@@ -1,47 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:43273 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757723AbZLNQVu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 11:21:50 -0500
-Received: by ewy19 with SMTP id 19so3553647ewy.21
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 08:21:48 -0800 (PST)
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: David Miller <davem@davemloft.net>
-Subject: Re: Revised wireless tree management practices
-Date: Mon, 14 Dec 2009 17:18:21 +0100
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <20091209211054.GB32058@tuxdriver.com> <20091214142602.GC18945@tuxdriver.com> <20091214.071917.82036377.davem@davemloft.net>
-In-Reply-To: <20091214.071917.82036377.davem@davemloft.net>
-MIME-Version: 1.0
-Message-Id: <200912141718.21296.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Received: from mga02.intel.com ([134.134.136.20]:41619 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754383AbZLBCGI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2009 21:06:08 -0500
+Subject: Re: Panic in iwl3945 driver
+From: Zhu Yi <yi.zhu@intel.com>
+To: "Chatre, Reinette" <reinette.chatre@intel.com>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1259693544.4653.126.camel@rc-desk>
+References: <1259167780.4072.2.camel@maxim-laptop>
+	 <1259280022.3991.12.camel@maxim-laptop>
+	 <1259596551.4090.0.camel@maxim-laptop>  <1259617333.4653.91.camel@rc-desk>
+	 <1259620526.6559.34.camel@maxim-laptop> <1259659724.12157.110.camel@debian>
+	 <1259693544.4653.126.camel@rc-desk>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 02 Dec 2009 10:06:12 +0800
+Message-ID: <1259719572.12157.120.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 14 December 2009 04:19:17 pm David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Mon, 14 Dec 2009 09:26:02 -0500
+On Wed, 2009-12-02 at 02:52 +0800, Chatre, Reinette wrote:
+> I agree with your conclusion here that r8 is 0 at this point. I am
+> very
+> confused how this can be since the two lines above the ones you pasted
+> here are:
 > 
-> > On Mon, Dec 14, 2009 at 03:16:12PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> > 
-> >> Now if only somebody could come up with a way to split 'monstermerges'
-> >> for Linus tree into something more fine-grained (thousands of commits in
-> >> a single merge is too much for anyone not directly involved into current
-> >> networking developments IMHO) I would be completely satisfied. ;)
-> > 
-> > You'll have to talk to Dave about that one, although FWIW I'm not
-> > sure how to prevent that with the current "merge window" policy...
+> 0x0000000000016683 <iwl3945_rx_reply_tx+291>:»­­mov    (%rdx,%rax,1),%
+> r8
+> 0x0000000000016687 <iwl3945_rx_reply_tx+295>:»­­mov    $0x0,%rdx
 > 
-> Well, the merge window event does not exist in a vacuum.
-> 
-> Development is happening all during this time and checking the
-> subsystem trees of interest to you every week or so will do wonders to
-> your sanity. :-)
+> From the information in the post you refer to we have rdx as
+> 0xffffffffa0c85f40 and rax as 0x4f. Since r8 is initialized above from
+> these two registers ... how could it be that r8 ends up as zero? 
 
-The problem is that repeating this for every subsystem tree out there does
-indeed wonders to ones (in)sanity. :)
+Is it related? They are memory address references.
 
---
-Bartlomiej Zolnierkiewicz
+Thanks,
+-yi
+
