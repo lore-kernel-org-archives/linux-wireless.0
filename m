@@ -1,60 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.26]:40963 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753624AbZLHKzS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 05:55:18 -0500
-Received: by qw-out-2122.google.com with SMTP id 3so1078740qwe.37
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2009 02:55:24 -0800 (PST)
-References: <1260237325-8654-1-git-send-email-lrodriguez@atheros.com> <4B1DDB77.6070909@myrealbox.com> <43e72e890912072221j660f9a6dpa8cf9257db14da41@mail.gmail.com>
-Message-Id: <EB65E7CB-4E8C-4587-A563-A4F5185C5D80@gmail.com>
-From: Andy Lutomirski <amluto@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-In-Reply-To: <43e72e890912072221j660f9a6dpa8cf9257db14da41@mail.gmail.com>
-Content-Type: text/plain;
-	charset=us-ascii;
-	format=flowed;
-	delsp=yes
-Mime-Version: 1.0 (iPhone Mail 7D11)
-Subject: Re: [PATCH] iw: add HT capability parsing for scanning
-Date: Tue, 8 Dec 2009 05:54:57 -0500
-Cc: Andy Lutomirski <luto@myrealbox.com>,
-	"johannes@sipsolutions.ney" <johannes@sipsolutions.ney>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:48307 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755406AbZLBUw4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Dec 2009 15:52:56 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 3/3] iwlwifi: driver version track kernel version
+Date: Wed,  2 Dec 2009 12:53:01 -0800
+Message-Id: <1259787181-21303-4-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1259787181-21303-1-git-send-email-reinette.chatre@intel.com>
+References: <1259787181-21303-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Reinette Chatre <reinette.chatre@intel.com>
 
+The driver version number is a remnant from when there was an out-of-tree
+iwlwifi driver. Now that the driver forms part of kernel source we do not
+need a separate driver version. Instead, we now use the kernel version as
+driver version. We maintain the previous tags used to indicate which
+components the driver has been compiled with.
 
-On Dec 8, 2009, at 1:21 AM, "Luis R. Rodriguez"  
-<lrodriguez@atheros.com> wrote:
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    4 +++-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 +---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-> On Mon, Dec 7, 2009 at 8:52 PM, Andy Lutomirski <luto@myrealbox.com>  
-> wrote:
->> Luis R. Rodriguez wrote:
->>>
->>> This adds HT capability IE parsing for scanning. You will now
->>> be able to easily review what HT capabilities your AP supports
->>> with a simple iw scan.
->>>
->>
->>> +       default:
->>> +               return "Uknown";
->>> +       }
->>> +}
->>> +
->>
->> Unknown?
->
-> Could've called it "caca", but this seemed more appropriate.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 7cd8b7d..22a20c1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -63,6 +63,8 @@
+ #ifndef __iwl_core_h__
+ #define __iwl_core_h__
+ 
++#include <linux/utsrelease.h>
++
+ /************************
+  * forward declarations *
+  ************************/
+@@ -70,7 +72,7 @@ struct iwl_host_cmd;
+ struct iwl_cmd;
+ 
+ 
+-#define IWLWIFI_VERSION "1.3.27k"
++#define IWLWIFI_VERSION UTS_RELEASE "-k"
+ #define DRV_COPYRIGHT	"Copyright(c) 2003-2009 Intel Corporation"
+ #define DRV_AUTHOR     "<ilw@linux.intel.com>"
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index a63bd5e..2a28a1f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -76,11 +76,9 @@
+ #define VS
+ #endif
+ 
+-#define IWL39_VERSION "1.2.26k" VD VS
++#define DRV_VERSION  IWLWIFI_VERSION VD VS
+ #define DRV_COPYRIGHT	"Copyright(c) 2003-2009 Intel Corporation"
+ #define DRV_AUTHOR     "<ilw@linux.intel.com>"
+-#define DRV_VERSION     IWL39_VERSION
+-
+ 
+ MODULE_DESCRIPTION(DRV_DESCRIPTION);
+ MODULE_VERSION(DRV_VERSION);
+-- 
+1.5.6.3
 
-Sure, but a second "n" might be more respectful to the AP. :)
-
---Andy
-
->
->  Luis
-> ---- Content & Policy Scan by M+ Guardian ----
-> Millions of safe & clean messages delivered daily
->
->
