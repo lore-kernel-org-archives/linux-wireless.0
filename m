@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51405.mail.re2.yahoo.com ([206.190.38.184]:47763 "HELO
-	web51405.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S934215AbZLJMKQ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2009 07:10:16 -0500
-Message-ID: <500577.32161.qm@web51405.mail.re2.yahoo.com>
-Date: Thu, 10 Dec 2009 04:10:22 -0800 (PST)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: Switching channel in IBSS network doesn't work in ath9k
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:7025 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755206AbZLBE1R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Dec 2009 23:27:17 -0500
+Subject: Re: [PATCH] mac80211: allow disabling 40MHz on 2.4GHz
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1259718190.32171.146.camel@johannes.local>
+References: <1259688582.32171.97.camel@johannes.local>
+	 <1259691446.4806.12.camel@mj>  <1259692053.32171.98.camel@johannes.local>
+	 <43e72e890912011118w535781a4id4e4572df16267f4@mail.gmail.com>
+	 <1259716754.11611.6.camel@mj>  <1259718190.32171.146.camel@johannes.local>
+Content-Type: text/plain
+Date: Tue, 01 Dec 2009 23:26:55 -0500
+Message-Id: <1259728015.4088.0.camel@ct>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
-I'm using the attached patch to form an IBSS network between two ath9k nodes:
+On Wed, 2009-12-02 at 02:43 +0100, Johannes Berg wrote:
 
-IFACE=wlan0
-FREQ=5200
-ADDR=$1
-iw dev "$IFACE" ibss leave
-ip link set "$IFACE" down
-ip addr flush dev "$IFACE"
-iw dev "$IFACE" set type ibss
-ip addr add "$ADDR"/24 dev "$IFACE"
-ip link set "$IFACE" up
-iw dev "$IFACE" ibss join athtest "$FREQ" fixed-freq 02:02:6F:23:12:0A
+> And I would argue that it is -- module parameters are still discouraged,
+> that doesn't change with adding one. We currently have one in mac80211
+> to chose the rate control algorithm, but it too is a special case and
+> ought to not be required.
+> 
+> I don't see this parameter as configuration like ack timeout or 10mhz
+> channels or ... I think this parameter solves a systems integration
+> issue, not a configuration issue.
 
-This works fine the first time. If I change the FREQ value to something else, e.g. 2462 (channel 11), the nodes don't see each other. Removing and reinserting the ath9k module solves this.
-Interestingly iwconfig still shows the old frequency even if iw returned successfully.
+OK, fair enough.
 
-Am I doing something wrong or is there a bug somewhere?
-
-BTW: if you try the script, it expects an IP address as argument, e.g. "bash ibss.sh 172.16.5.1"
-
-Thanks in advance
-  Joerg
-
-P.S.: Is there a way to get an overview of the current interface configuration with iw? What is the equivalent of "iwconfig wlan0"?
-
-__________________________________________________
-Do You Yahoo!?
-Sie sind Spam leid? Yahoo! Mail verfügt über einen herausragenden Schutz gegen Massenmails. 
-http://mail.yahoo.com 
+-- 
+Regards,
+Pavel Roskin
