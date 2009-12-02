@@ -1,176 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46153 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758041AbZLIWPK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2009 17:15:10 -0500
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1NIUoW-0003D9-Hj
-	for linux-wireless@vger.kernel.org; Wed, 09 Dec 2009 17:15:16 -0500
-Received: from linville-t400.local (linville-t400.local [127.0.0.1])
-	by linville-t400.local (8.14.3/8.14.3) with ESMTP id nB9M1jjP007307
-	for <linux-wireless@vger.kernel.org>; Wed, 9 Dec 2009 17:01:45 -0500
-Received: (from linville@localhost)
-	by linville-t400.local (8.14.3/8.14.3/Submit) id nB9M1ja8007306
-	for linux-wireless@vger.kernel.org; Wed, 9 Dec 2009 17:01:45 -0500
-Date: Wed, 9 Dec 2009 17:01:45 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless: report non-zero bitrate for MCS rates
-	through wext
-Message-ID: <20091209220144.GC32058@tuxdriver.com>
-References: <1260395165-7116-1-git-send-email-linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1260395165-7116-1-git-send-email-linville@tuxdriver.com>
+Received: from mga11.intel.com ([192.55.52.93]:48307 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755334AbZLBUwz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Dec 2009 15:52:55 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/3] iwlwifi: indicate uCode type when fail dump error/event log
+Date: Wed,  2 Dec 2009 12:53:00 -0800
+Message-Id: <1259787181-21303-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1259787181-21303-1-git-send-email-reinette.chatre@intel.com>
+References: <1259787181-21303-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No testing, BTW -- I'm not near any 802.11n APs ATM.  Anyone care to
-test and give me a warm fuzzy? :-)
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-John
+error_event_table_ptr is only set upon receipt of REPLY_ALIVE. Until
+then both event log and error log will fail. Add information to indicate
+which uCode encounter the failure case.
 
-On Wed, Dec 09, 2009 at 04:46:05PM -0500, John W. Linville wrote:
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
->  net/wireless/core.h        |    2 ++
->  net/wireless/nl80211.c     |   37 ++-----------------------------------
->  net/wireless/util.c        |   33 +++++++++++++++++++++++++++++++++
->  net/wireless/wext-compat.c |    5 +----
->  4 files changed, 38 insertions(+), 39 deletions(-)
-> 
-> diff --git a/net/wireless/core.h b/net/wireless/core.h
-> index 4ef3efc..35b7121 100644
-> --- a/net/wireless/core.h
-> +++ b/net/wireless/core.h
-> @@ -378,6 +378,8 @@ int rdev_set_freq(struct cfg80211_registered_device *rdev,
->  		  struct wireless_dev *for_wdev,
->  		  int freq, enum nl80211_channel_type channel_type);
->  
-> +u16 cfg80211_calculate_bitrate(struct rate_info *rate);
-> +
->  #ifdef CONFIG_CFG80211_DEVELOPER_WARNINGS
->  #define CFG80211_DEV_WARN_ON(cond)	WARN_ON(cond)
->  #else
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index a602843..7cb0d64 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -1637,39 +1637,6 @@ static int parse_station_flags(struct genl_info *info,
->  	return 0;
->  }
->  
-> -static u16 nl80211_calculate_bitrate(struct rate_info *rate)
-> -{
-> -	int modulation, streams, bitrate;
-> -
-> -	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
-> -		return rate->legacy;
-> -
-> -	/* the formula below does only work for MCS values smaller than 32 */
-> -	if (rate->mcs >= 32)
-> -		return 0;
-> -
-> -	modulation = rate->mcs & 7;
-> -	streams = (rate->mcs >> 3) + 1;
-> -
-> -	bitrate = (rate->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) ?
-> -			13500000 : 6500000;
-> -
-> -	if (modulation < 4)
-> -		bitrate *= (modulation + 1);
-> -	else if (modulation == 4)
-> -		bitrate *= (modulation + 2);
-> -	else
-> -		bitrate *= (modulation + 3);
-> -
-> -	bitrate *= streams;
-> -
-> -	if (rate->flags & RATE_INFO_FLAGS_SHORT_GI)
-> -		bitrate = (bitrate / 9) * 10;
-> -
-> -	/* do NOT round down here */
-> -	return (bitrate + 50000) / 100000;
-> -}
-> -
->  static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
->  				int flags, struct net_device *dev,
->  				u8 *mac_addr, struct station_info *sinfo)
-> @@ -1716,8 +1683,8 @@ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
->  		if (!txrate)
->  			goto nla_put_failure;
->  
-> -		/* nl80211_calculate_bitrate will return 0 for mcs >= 32 */
-> -		bitrate = nl80211_calculate_bitrate(&sinfo->txrate);
-> +		/* cfg80211_calculate_bitrate will return 0 for mcs >= 32 */
-> +		bitrate = cfg80211_calculate_bitrate(&sinfo->txrate);
->  		if (bitrate > 0)
->  			NLA_PUT_U16(msg, NL80211_RATE_INFO_BITRATE, bitrate);
->  
-> diff --git a/net/wireless/util.c b/net/wireless/util.c
-> index 59361fd..a3c841a 100644
-> --- a/net/wireless/util.c
-> +++ b/net/wireless/util.c
-> @@ -720,3 +720,36 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
->  
->  	return err;
->  }
-> +
-> +u16 cfg80211_calculate_bitrate(struct rate_info *rate)
-> +{
-> +	int modulation, streams, bitrate;
-> +
-> +	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
-> +		return rate->legacy;
-> +
-> +	/* the formula below does only work for MCS values smaller than 32 */
-> +	if (rate->mcs >= 32)
-> +		return 0;
-> +
-> +	modulation = rate->mcs & 7;
-> +	streams = (rate->mcs >> 3) + 1;
-> +
-> +	bitrate = (rate->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) ?
-> +			13500000 : 6500000;
-> +
-> +	if (modulation < 4)
-> +		bitrate *= (modulation + 1);
-> +	else if (modulation == 4)
-> +		bitrate *= (modulation + 2);
-> +	else
-> +		bitrate *= (modulation + 3);
-> +
-> +	bitrate *= streams;
-> +
-> +	if (rate->flags & RATE_INFO_FLAGS_SHORT_GI)
-> +		bitrate = (bitrate / 9) * 10;
-> +
-> +	/* do NOT round down here */
-> +	return (bitrate + 50000) / 100000;
-> +}
-> diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-> index 54face3..4198243 100644
-> --- a/net/wireless/wext-compat.c
-> +++ b/net/wireless/wext-compat.c
-> @@ -1257,10 +1257,7 @@ int cfg80211_wext_giwrate(struct net_device *dev,
->  	if (!(sinfo.filled & STATION_INFO_TX_BITRATE))
->  		return -EOPNOTSUPP;
->  
-> -	rate->value = 0;
-> -
-> -	if (!(sinfo.txrate.flags & RATE_INFO_FLAGS_MCS))
-> -		rate->value = 100000 * sinfo.txrate.legacy;
-> +	rate->value = 100000 * cfg80211_calculate_bitrate(&sinfo.txrate);
->  
->  	return 0;
->  }
-> -- 
-> 1.6.2.5
-> 
-> 
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index c96513b..b8377ef 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1662,7 +1662,9 @@ void iwl_dump_nic_error_log(struct iwl_priv *priv)
+ 		base = le32_to_cpu(priv->card_alive.error_event_table_ptr);
+ 
+ 	if (!priv->cfg->ops->lib->is_valid_rtc_data_addr(base)) {
+-		IWL_ERR(priv, "Not valid error log pointer 0x%08X\n", base);
++		IWL_ERR(priv,
++			"Not valid error log pointer 0x%08X for %s uCode\n",
++			base, (priv->ucode_type == UCODE_INIT) ? "Init" : "RT");
+ 		return;
+ 	}
+ 
+@@ -1807,7 +1809,9 @@ void iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log)
+ 		base = le32_to_cpu(priv->card_alive.log_event_table_ptr);
+ 
+ 	if (!priv->cfg->ops->lib->is_valid_rtc_data_addr(base)) {
+-		IWL_ERR(priv, "Invalid event log pointer 0x%08X\n", base);
++		IWL_ERR(priv,
++			"Invalid event log pointer 0x%08X for %s uCode\n",
++			base, (priv->ucode_type == UCODE_INIT) ? "Init" : "RT");
+ 		return;
+ 	}
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.5.6.3
+
