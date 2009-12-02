@@ -1,50 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-72-92-88-10.phlapa.fios.verizon.net ([72.92.88.10]:56437
-	"EHLO smtp.roinet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756898AbZLDQIP (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:55066 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753135AbZLBTSM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Dec 2009 11:08:15 -0500
-Message-ID: <4B1933F5.2010408@roinet.com>
-Date: Fri, 04 Dec 2009 11:08:21 -0500
-From: David Acker <dacker@roinet.com>
+	Wed, 2 Dec 2009 14:18:12 -0500
+From: "Cahill, Ben M" <ben.m.cahill@intel.com>
+To: "Zhu, Yi" <yi.zhu@intel.com>,
+	Maxim Levitsky <maximlevitsky@gmail.com>
+CC: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
+Date: Wed, 2 Dec 2009 11:18:17 -0800
+Subject: RE: [ipw3945-devel] Panic in iwl3945 driver
+Message-ID: <02B3067C068D0549A8CCFCB17D4D318B4E603312@orsmsx502.amr.corp.intel.com>
+References: <1259167780.4072.2.camel@maxim-laptop>
+	<1259280022.3991.12.camel@maxim-laptop>
+	<1259596551.4090.0.camel@maxim-laptop>	<1259617333.4653.91.camel@rc-desk>
+	<1259620526.6559.34.camel@maxim-laptop>	<1259659724.12157.110.camel@debian>
+ <1259732550.12157.130.camel@debian>
+In-Reply-To: <1259732550.12157.130.camel@debian>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Kalle Valo <kalle.valo@iki.fi>
-CC: linux-wireless@vger.kernel.org, patrik.flykt@nokia.com
-Subject: Re: WMM classification guideline for applications?
-References: <87d42u6dnd.fsf@purkki.valot.fi> <4B19276F.5080604@roinet.com> <878wdi69u9.fsf@purkki.valot.fi>
-In-Reply-To: <878wdi69u9.fsf@purkki.valot.fi>
-Content-Type: text/plain; charset=us-ascii; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo wrote:
-> David Acker <dacker@roinet.com> writes:
->> What do think of also supporting a method 4, VLAN priority field (0-7)?
+ 
+
+>-----Original Message-----
+>From: Zhu Yi [mailto:yi.zhu@intel.com] 
+>Sent: Wednesday, December 02, 2009 12:43 AM
+>To: Maxim Levitsky
+>Cc: Chatre, Reinette; linux-wireless; iwlwifi maling list
+>Subject: Re: [ipw3945-devel] Panic in iwl3945 driver
+>
+>On Tue, 2009-12-01 at 17:28 +0800, Zhu Yi wrote:
+>> On Tue, 2009-12-01 at 06:35 +0800, Maxim Levitsky wrote:
+>> > 0x000000000001668e <iwl3945_rx_reply_tx+302>:	lea    
+>0x38(%r8),%rdi
+>> > 0x0000000000016692 <iwl3945_rx_reply_tx+306>:	lea    
+>0x4f(%r8),%rax
+>> 
+>> When this happened, from your previous post, r8 is 0x0 and 
+>rdi is 0x38.
+>> Since "info" is %rdi (see below), this means
+>> txq->txb[txq->q.read_ptr].skb[0], aka. r8 is 0.
+>> 
+>> > 	rate_idx = iwl3945_hwrate_to_plcp_idx(tx_resp->rate);
+>> > 
+>> > 0x0000000000016696 <iwl3945_rx_reply_tx+310>:	movb   
+>$0x0,0x9(%rdi)        <---------- RIP
+>> > 0x000000000001669a <iwl3945_rx_reply_tx+314>:	movb   
+>$0x0,0xc(%rdi)
+>> > 0x000000000001669e <iwl3945_rx_reply_tx+318>:	movb   
+>$0x0,0xf(%rdi)
+>> > 0x00000000000166a2 <iwl3945_rx_reply_tx+322>:	movb   
+>$0x0,0x12(%rdi)
+>> > 0x00000000000166a6 <iwl3945_rx_reply_tx+326>:	movb   
+>$0x0,0x15(%rdi)
+>> 
+>> This equals to below code in 
+>ieee80211_tx_info_clear_status(). "info" is
+>> %rdi, which is 0x38. That matches NULL pointer dereference at 0x41 in
+>> your oops header.
+>> 
+>> 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
+>>                 info->status.rates[i].count = 0;
+>> 
+>> I guess there is a race for txq->q.read_ptr somewhere. 
+>Haven't checked
+>> though.
+>
+>OK. 3945 updated write_ptr without regard to read_ptr on the Tx path.
+>This messes up our TFD on high load. The patch should fix your problem.
+
+Wow.  Could this be happening with other devices as well?
+
+-- Ben --
+
+
+>
+>Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+>
+>diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c 
+>b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+>index 994db4a..b31b34c 100644
+>--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+>+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+>@@ -548,6 +548,9 @@ static int iwl3945_tx_skb(struct iwl_priv 
+>*priv, struct sk_buff *skb)
+> 	txq = &priv->txq[txq_id];
+> 	q = &txq->q;
 > 
-> Sorry, I haven't heard about this. I don't even know how applications
-> should set this. Can you show an example, please?
-
-Sure.  A system could be setup with multiple VLANs available on its 
-outgoing port.  Imagine eth0.1, eth0.2 and eth0.7.  Each one is a 
-different VLAN with a different priority mapping setup.  The application 
-can use the high priority VLAN which should then be reflected in the 
-over the air packets using a high priority WMM queue.  If the driver 
-implements the appropriate VLAN functionality it should be able to 
-detect VLAN tagged packets and pick the appropriate WMM hardware queue. 
-  I think a driver can use vlan_get_tag to get the Tag Control 
-Information (TCI) field.  The TCI field contains a 3-bit Priority Code 
-Point (PCP) field for 8 different priorities.
-
-I am not an expert on how the kernel handles vlans, but it appears that 
-the priority field's value is set by the user space VLAN creation tools 
-through an ioctl with SET_VLAN_EGRESS_PRIORITY_CMD which calls 
-vlan_dev_set_egress_priority to map an skb priority to a vlan priority.
-vlan_dev_hard_header then uses this information to populate the vlan 
-priority field based on the skb priority field.
-
-In this case it would seem that skb priority and the vlan priority are 
-both set and there may be a non-trivial mapping between the two. 
-pkt_sched.h defines some skb priorities but also leaves many undefined. 
-  The skb->priority is also larger then the vlan priority.  If both are 
-set, which will take precedence?
--ack
+>+	if ((iwl_queue_space(q) < q->high_mark))
+>+		goto drop;
+>+
+> 	spin_lock_irqsave(&priv->lock, flags);
+> 
+> 	idx = get_cmd_index(q, q->write_ptr, 0);
+> 
+>
+>
+>---------------------------------------------------------------
+>---------------
+>Join us December 9, 2009 for the Red Hat Virtual Experience,
+>a free event focused on virtualization and cloud computing. 
+>Attend in-depth sessions from your desk. Your couch. Anywhere.
+>http://p.sf.net/sfu/redhat-sfdev2dev
+>_______________________________________________
+>Ipw3945-devel mailing list
+>Ipw3945-devel@lists.sourceforge.net
+>https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
+>
