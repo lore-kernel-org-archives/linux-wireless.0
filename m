@@ -1,82 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:34994 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751859AbZLZVot (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Dec 2009 16:44:49 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat: Backport eth_mac_addr
-Date: Sat, 26 Dec 2009 22:44:35 +0100
-Message-Id: <1261863875-2730-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1261863875-2730-1-git-send-email-hauke@hauke-m.de>
-References: <1261863875-2730-1-git-send-email-hauke@hauke-m.de>
+Received: from mga11.intel.com ([192.55.52.93]:48307 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755315AbZLBUwz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Dec 2009 15:52:55 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 1/3] iwl3945: remove duplicated event logging code
+Date: Wed,  2 Dec 2009 12:52:59 -0800
+Message-Id: <1259787181-21303-2-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1259787181-21303-1-git-send-email-reinette.chatre@intel.com>
+References: <1259787181-21303-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-eth_mac_addr is needed by net/mac80211/iface.c
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+In the process of improving uCode event logging capability, the new
+implementation was introduced without removing the existing
+implementation. The event log will be dumped to dmesg twice.
+Remove the old implementation to only log the event once upon sys
+assert or request by user.
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- compat/compat-2.6.29.c        |   24 ++++++++++++++++++++++++
- include/linux/compat-2.6.29.h |    2 ++
- 2 files changed, 26 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    9 ---------
+ 1 files changed, 0 insertions(+), 9 deletions(-)
 
-diff --git a/compat/compat-2.6.29.c b/compat/compat-2.6.29.c
-index 669ad35..ea2a991 100644
---- a/compat/compat-2.6.29.c
-+++ b/compat/compat-2.6.29.c
-@@ -13,6 +13,7 @@
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 0db9b79..a63bd5e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -1701,15 +1701,6 @@ void iwl3945_dump_nic_event_log(struct iwl_priv *priv, bool full_log)
+ 	IWL_ERR(priv, "Start IWL Event Log Dump: display last %d count\n",
+ 		  size);
  
- #include <linux/usb.h>
-+#include <linux/etherdevice.h>
- 
- /**
-  * usb_unpoison_anchored_urbs - let an anchor be used successfully again
-@@ -35,6 +36,29 @@ void usb_unpoison_anchored_urbs(struct usb_anchor *anchor)
- }
- EXPORT_SYMBOL_GPL(usb_unpoison_anchored_urbs);
- 
-+/**
-+ * eth_mac_addr - set new Ethernet hardware address
-+ * @dev: network device
-+ * @p: socket address
-+ * Change hardware address of device.
-+ *
-+ * This doesn't change hardware matching, so needs to be overridden
-+ * for most real devices.
-+ */
-+int eth_mac_addr(struct net_device *dev, void *p)
-+{
-+	struct sockaddr *addr = p;
-+
-+	if (netif_running(dev))
-+		return -EBUSY;
-+	if (!is_valid_ether_addr(addr->sa_data))
-+		return -EADDRNOTAVAIL;
-+	memcpy(dev->dev_addr, addr->sa_data, ETH_ALEN);
-+	return 0;
-+}
-+EXPORT_SYMBOL(eth_mac_addr);
-+/* Source: net/ethernet/eth.c */
-+
- 
- #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29) */
- 
-diff --git a/include/linux/compat-2.6.29.h b/include/linux/compat-2.6.29.h
-index 8a968fa..690fb93 100644
---- a/include/linux/compat-2.6.29.h
-+++ b/include/linux/compat-2.6.29.h
-@@ -55,6 +55,8 @@ extern void usb_unpoison_anchored_urbs(struct usb_anchor *anchor);
- }							\
- )
- 
-+extern int eth_mac_addr(struct net_device *dev, void *p);
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
- 
- #endif /*  LINUX_26_29_COMPAT_H */
+-	/* if uCode has wrapped back to top of log, start at the oldest entry,
+-	 * i.e the next one that uCode would fill. */
+-	if (num_wraps)
+-		iwl3945_print_event_log(priv, next_entry,
+-				    capacity - next_entry, mode);
+-
+-	/* (then/else) start at top of log */
+-	iwl3945_print_event_log(priv, 0, next_entry, mode);
+-
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 	if ((iwl_get_debug_level(priv) & IWL_DL_FW_ERRORS) || full_log) {
+ 		/* if uCode has wrapped back to top of log,
 -- 
-1.6.3.3
+1.5.6.3
 
