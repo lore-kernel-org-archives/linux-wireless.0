@@ -1,136 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41986 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:38221 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755789AbZLWMXZ (ORCPT
+	with ESMTP id S1754399AbZLCJoJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 07:23:25 -0500
-Message-Id: <20091223121617.798148880@sipsolutions.net>
-Date: Wed, 23 Dec 2009 13:15:44 +0100
+	Thu, 3 Dec 2009 04:44:09 -0500
+Subject: Re: [PATCH 32/33] input: add KEY_WIRELESS_CYCLE
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH next 15/18] mac80211/cfg80211: add station events
-References: <20091223121529.289129599@sipsolutions.net>
+To: Corentin Chary <corentin.chary@gmail.com>
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
+	linux-input@vger.kernel.org, networkmanager-list@gnome.org,
+	linux-wireless@vger.kernel.org, kde-hardware-devel@kde.org,
+	dbus@lists.freedesktop.org, hal@lists.freedesktop.org
+In-Reply-To: <71cd59b00912030122n3d94236ajfa5e55c3b5a9efcd@mail.gmail.com>
+References: <1259826317-18809-28-git-send-email-corentincj@iksaif.net>
+	 <1259826317-18809-30-git-send-email-corentincj@iksaif.net>
+	 <1259826317-18809-31-git-send-email-corentincj@iksaif.net>
+	 <1259826317-18809-32-git-send-email-corentincj@iksaif.net>
+	 <1259826317-18809-33-git-send-email-corentincj@iksaif.net>
+	 <20091203075404.GK9121@core.coreip.homeip.net>
+	 <71cd59b00912030012r2f45f474u37c494ad281230cb@mail.gmail.com>
+	 <20091203082120.GL9121@core.coreip.homeip.net>
+	 <71cd59b00912030051w6bf54abfv726f288c2eae1d33@mail.gmail.com>
+	 <20091203085717.GO9121@core.coreip.homeip.net>
+	 <71cd59b00912030122n3d94236ajfa5e55c3b5a9efcd@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Voe8s4HviLIwaKbAhdXv"
+Date: Thu, 03 Dec 2009 10:43:32 +0100
+Message-ID: <1259833412.12843.7.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When, for instance, a new IBSS peer is found, userspace
-wants to be notified. Add events for all new stations
-that mac80211 learns about.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/cfg80211.h  |   12 ++++++++++++
- net/mac80211/sta_info.c |    5 +++++
- net/wireless/mlme.c     |   10 ++++++++++
- net/wireless/nl80211.c  |   21 ++++++++++++++++++++-
- net/wireless/nl80211.h  |    4 ++++
- 5 files changed, 51 insertions(+), 1 deletion(-)
+--=-Voe8s4HviLIwaKbAhdXv
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
---- wireless-testing.orig/net/wireless/mlme.c	2009-12-23 13:11:25.000000000 +0100
-+++ wireless-testing/net/wireless/mlme.c	2009-12-23 13:11:27.000000000 +0100
-@@ -718,3 +718,13 @@ void cfg80211_remain_on_channel_expired(
- 					      channel_type, gfp);
- }
- EXPORT_SYMBOL(cfg80211_remain_on_channel_expired);
-+
-+void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
-+		      struct station_info *sinfo, gfp_t gfp)
-+{
-+	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
-+	nl80211_send_sta_event(rdev, dev, mac_addr, sinfo, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_new_sta);
---- wireless-testing.orig/net/wireless/nl80211.c	2009-12-23 13:11:25.000000000 +0100
-+++ wireless-testing/net/wireless/nl80211.c	2009-12-23 13:11:27.000000000 +0100
-@@ -1642,7 +1642,7 @@ static int parse_station_flags(struct ge
- 
- static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
- 				int flags, struct net_device *dev,
--				u8 *mac_addr, struct station_info *sinfo)
-+				const u8 *mac_addr, struct station_info *sinfo)
- {
- 	void *hdr;
- 	struct nlattr *sinfoattr, *txrate;
-@@ -5356,6 +5356,25 @@ void nl80211_send_remain_on_channel_canc
- 					  channel_type, 0, gfp);
- }
- 
-+void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
-+			    struct net_device *dev, const u8 *mac_addr,
-+			    struct station_info *sinfo, gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+
-+	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	if (nl80211_send_station(msg, 0, 0, 0, dev, mac_addr, sinfo) < 0) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-+				nl80211_mlme_mcgrp.id, gfp);
-+}
-+
- /* initialisation/exit functions */
- 
- int nl80211_init(void)
---- wireless-testing.orig/net/wireless/nl80211.h	2009-12-23 13:11:25.000000000 +0100
-+++ wireless-testing/net/wireless/nl80211.h	2009-12-23 13:11:27.000000000 +0100
-@@ -70,4 +70,8 @@ void nl80211_send_remain_on_channel_canc
- 	u64 cookie, struct ieee80211_channel *chan,
- 	enum nl80211_channel_type channel_type, gfp_t gfp);
- 
-+void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
-+			    struct net_device *dev, const u8 *mac_addr,
-+			    struct station_info *sinfo, gfp_t gfp);
-+
- #endif /* __NET_WIRELESS_NL80211_H */
---- wireless-testing.orig/include/net/cfg80211.h	2009-12-23 13:11:25.000000000 +0100
-+++ wireless-testing/include/net/cfg80211.h	2009-12-23 13:11:27.000000000 +0100
-@@ -2195,4 +2195,16 @@ void cfg80211_remain_on_channel_expired(
- 					enum nl80211_channel_type channel_type,
- 					gfp_t gfp);
- 
-+
-+/**
-+ * cfg80211_new_sta - notify userspace about station
-+ *
-+ * @dev: the netdev
-+ * @mac_addr: the station's address
-+ * @sinfo: the station information
-+ * @gfp: allocation flags
-+ */
-+void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
-+		      struct station_info *sinfo, gfp_t gfp);
-+
- #endif /* __NET_CFG80211_H */
---- wireless-testing.orig/net/mac80211/sta_info.c	2009-12-23 13:11:13.000000000 +0100
-+++ wireless-testing/net/mac80211/sta_info.c	2009-12-23 13:11:27.000000000 +0100
-@@ -359,6 +359,7 @@ int sta_info_insert(struct sta_info *sta
- {
- 	struct ieee80211_local *local = sta->local;
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	struct station_info sinfo;
- 	unsigned long flags;
- 	int err = 0;
- 
-@@ -408,6 +409,10 @@ int sta_info_insert(struct sta_info *sta
- 
- 	spin_unlock_irqrestore(&local->sta_lock, flags);
- 
-+	sinfo.filled = 0;
-+	sinfo.generation = local->sta_generation;
-+	cfg80211_new_sta(sdata->dev, sta->sta.addr, &sinfo, GFP_ATOMIC);
-+
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	/*
- 	 * Debugfs entry adding might sleep, so schedule process
+On Thu, 2009-12-03 at 10:22 +0100, Corentin Chary wrote:
 
+> >> > I understand this. I guess the question is whether people working on
+> >> > system infrastructure (dbus, Networkmanager, etc) care about having =
+such
+> >> > functionality on Linux? The reason I am asking is that we added all
+> >> > KEY_WIMAX and so on defines but I am not usre if anyone wants them.
+> >>
+> >> KEY_WIMAX may not be used a lot because there is not a lot of device
+> >> with such a key,
+> >> I think this is not the case for KEY_WIRELESS_CYCLE.
+> >>
+> >> The bad thing is that we will need to patch X11 (and Qt, for
+> >> kde/solid) to make it works.
+> >>
+> >> Maybe we should Cc dbus/network manager/solid/linux-wireless ?
+> >>
+> >
+> > That would be a good idea.
+>=20
+> Here it is.
+>=20
+> Dear system infrastructure people,
+> Do you think a KEY_WIRELESS_CYCLE key would have any application ?
+
+Not really.
+
+The naming of the key ultimately will not matter one bit, because it'll
+be misnamed on most platforms anyway, unless we want to do DMI matching
+or something to name the key. And even then, if there's a wifi key but
+no bluetooth key, users may prefer to have the wifi key act as a cycle
+key instead.
+
+Therefore, this ought to all be policy in the rfkill daemon.
+rfkill-input will be going away as soon as somebody writes a simple
+daemon that allows doing such things, I really don't see us adding
+support for a cycle key to the kernel code, and for the userspace code
+it doesn't matter since users will configure it independent of the key
+code anyway.
+
+johannes
+
+--=-Voe8s4HviLIwaKbAhdXv
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLF4hAAAoJEODzc/N7+Qma9sUQAMRJ6Izik2Ab6oPaZx6VA5sw
+su8ggWrcebIhs/Zbiy4i96BvnF0UyhCmdqmK4Le0PQjdlJ7fVMHE83kp48tfoQgt
+HYWcKr4x095rftfnTymBJcuX6nrH8X7hg2t/dR9ZmSJV2HMHRlV52KDHyf90KhEU
+FYaNgoKQAllS/83QqZ90XUMbH7tfMZB5BapQwr5uR8DTpRCRpw0juYQK3pAx5xVn
+WXmTcN4GFT9wOlayZEw2KQc63DLRDvMF8CwV0xFP8VYuFWKEoOtHZW8Zu5+I4j00
+PK/zkZpRC9NexBylJef15vy4mjUSw64y9PiRhzRZio1n9yfDm3+MYKAllatbEkAs
+EONREsQNb4YmBX589YBIK51opOjbW9YMXH2tsZdj9CUha2gwnc3oqHxgciG4hR26
+21Rj2vMblTWE0RcoIZOcgfXeLOOulckEoW4ssG0u64DqdREh49eqpNQ/n3lI6OyJ
+PBztYLJkjqlBvPA88+PDztSGyh00SHPlwzg7UiivO6hhfkVtz1r9wPgyUyVGnqz0
+Kp+Pa01bqZkuPpak4QhVT9drk4HUqw3t2uyiXCUaYbcaVLpHr0RVO8iRt6UhoGYo
+ge604Zy84n29E9AHJsgbdZzdPa+OiAn9YvDzpGYxHMQw70KtRRICHTQOTPA+ABZk
+LE7JT92EcrjP2wWZww9X
+=XC29
+-----END PGP SIGNATURE-----
+
+--=-Voe8s4HviLIwaKbAhdXv--
 
