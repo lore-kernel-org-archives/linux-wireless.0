@@ -1,85 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:54820
-	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751716AbZLPTxc (ORCPT
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:40564 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754167AbZLCNNp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2009 14:53:32 -0500
-Date: Wed, 16 Dec 2009 11:52:58 -0800
-From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Oliver Neukum <oliver@neukum.org>,
-	Josua Dietze <digidietze@draisberghof.de>,
-	Stefan Seyfried <stefan.seyfried@googlemail.com>,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
-	Stefan Seyfried <seife@sphairon.com>
-Subject: Re: [PATCH] move eject code from zd1211rw to usb-storage
-Message-ID: <20091216195258.GJ16426@one-eyed-alien.net>
-References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com> <200912151611.08576.oliver@neukum.org> <20091215180300.GF16426@one-eyed-alien.net> <200912161129.27284.oliver@neukum.org> <20091216180337.GG16426@one-eyed-alien.net> <1260993048.2179.68.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="aF3LVLvitz/VQU3c"
-In-Reply-To: <1260993048.2179.68.camel@localhost.localdomain>
+	Thu, 3 Dec 2009 08:13:45 -0500
+Received: by ewy6 with SMTP id 6so1520681ewy.29
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Dec 2009 05:13:51 -0800 (PST)
+MIME-Version: 1.0
+Date: Thu, 3 Dec 2009 15:07:28 +0200
+Message-ID: <bf87febf0912030507u1c36f6a9h7cac0efabf3d016@mail.gmail.com>
+Subject: [PATCH] ath5k: add support for Dell Vostro A860 LED
+From: Shahar Or <mightyiampresence@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath5k-devel@lists.ath5k.org, me@bobcopeland.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Shahar Or
 
---aF3LVLvitz/VQU3c
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Adds support for the WiFi activity LED on the Dell Vostro A860 laptop.
 
-On Wed, Dec 16, 2009 at 11:50:48AM -0800, Dan Williams wrote:
-> On Wed, 2009-12-16 at 10:03 -0800, Matthew Dharm wrote:
-> > On Wed, Dec 16, 2009 at 11:29:27AM +0100, Oliver Neukum wrote:
-> > > Am Dienstag, 15. Dezember 2009 19:03:00 schrieb Matthew Dharm:
-> > > > > This would break existing systems and thus introduce a regression.
-> > > > > We'd need to go through a feature removal process. For the time b=
-eing
-> > > > > I see no alternative to Seife's patch, as we cannot introduce eje=
-ction
-> > > > > code to another wireless driver and need to support these devices.
-> > > >=20
-> > > > The right answer here is neither to move the eject code nor to intr=
-oduce
-> > > > more of it.  New devices should be supported via userspace.
-> > >=20
-> > > Usually I would agree, but in this case the vendor reused IDs.
-> > > The legacy kernel space switcher and user space would race.
-> >=20
-> > So, let me see if I understand this... we have two devices that use the
-> > same IDs, and get mode-switched the same way, but need different
-> > post-switch drivers?
-> >=20
-> > If this is the case, then the only reasonable answer to is to push the
-> > modeswitch code for both into udev and out of the kernel.  It will take
->=20
-> you mean usb_modeswitch, not udev actually.
+Signed-off-by: Shahar Or
 
-That is correct; I had mis-typed.  Tho, the actual implementation is udev
-calling usb_modeswitch and/or eject.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-What, are you one of those Microsoft-bashing Linux freaks?
-					-- Customer to Greg
-User Friendly, 2/10/1999
-
---aF3LVLvitz/VQU3c
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFLKTqaHL9iwnUZqnkRAln8AJ0f+DvWRNY2JgW12rky9Xuq7ZwKrACfUcv+
-S89OrVvmBdfIVmZLZKNIRcQ=
-=H4ig
------END PGP SIGNATURE-----
-
---aF3LVLvitz/VQU3c--
+---
+--- linux-2.6.31/drivers/net/wireless/ath/ath5k/led.c.orig
+2009-12-03 14:57:20.000000000 +0200
++++ linux-2.6.31/drivers/net/wireless/ath/ath5k/led.c   2009-12-03
+14:25:30.000000000 +0200
+@@ -71,6 +71,8 @@ static const struct pci_device_id ath5k_
+        { ATH_SDEVICE(PCI_VENDOR_ID_IBM, 0x058a), ATH_LED(1, 0) },
+        /* IBM-specific AR5212 (all others) */
+        { PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5212_IBM),
+ATH_LED(0, 0) },
++       /* Dell Vostro A860 (shahar@shahar-or.co.il) */
++       { ATH_SDEVICE(PCI_VENDOR_ID_QMI, 0x0112), ATH_LED(3, 0) },
+        { }
+ };
