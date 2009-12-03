@@ -1,26 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:53444 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752947AbZLAIxD (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:48504 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751412AbZLCV6c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 03:53:03 -0500
-Received: by bwz27 with SMTP id 27so3226451bwz.21
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 00:53:08 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-Subject: python nl80211 code
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 01 Dec 2009 10:53:06 +0200
-Message-ID: <87hbsb6pot.fsf@purkki.valot.fi>
+	Thu, 3 Dec 2009 16:58:32 -0500
+Message-ID: <4B183491.6090602@gmail.com>
+Date: Thu, 03 Dec 2009 13:58:41 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Miles Lane <miles.lane@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] BUG kmalloc-8192: Poison overwritten
+References: <dd18b0c30912021427x4d1d952tcdd98bb9d816b67c@mail.gmail.com> 	<43e72e890912021516k736db118j217dc92496db8f19@mail.gmail.com> 	<4B182F79.7060103@gmail.com> <43e72e890912031345m3f5adb9nca754e33a858c923@mail.gmail.com>
+In-Reply-To: <43e72e890912031345m3f5adb9nca754e33a858c923@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 12/03/09 13:45, Luis R. Rodriguez wrote:
+> On Thu, Dec 3, 2009 at 1:36 PM, Justin P. Mattock
+> <justinmattock@gmail.com>  wrote:
+>> On 12/02/09 15:16, Luis R. Rodriguez wrote:
+>>>
+>>> On Wed, Dec 2, 2009 at 2:27 PM, Justin Mattock<justinmattock@gmail.com>
+>>>   wrote:
+>>>>
+>>>> I have no idea what this is:
+>>>> (first time I've seen this);
+>>>>
+>>>>
+>>>> [   13.055592]
+>>>> =============================================================================
+>>>> [   13.055865] BUG kmalloc-8192: Poison overwritten
+>>>> [   13.056046]
+>>>> -----------------------------------------------------------------------------
+>>>
+>>> I believe this means we write to an area in memory after we freed an skb.
+>>>
+>>>> [   13.056366] INFO: 0xffff88003290a100-0xffff88003290a143. First byte
+>>>> 0x50 instead of 0x6b
+>>>> [   13.056366] INFO: Allocated in ath_rxbuf_alloc+0x25/0x94 [ath]
+>>>> age=8898 cpu=0 pid=892
+>>>> [   13.056366] INFO: Freed in skb_release_data+0xc1/0xc6 age=99 cpu=0
+>>>> pid=0
+>>>> [   13.056366] INFO: Slab 0xffffea0000b0f9c0 objects=3 used=0
+>>>> fp=0xffff88003290c090 flags=0x4000000000004082
+>>>> [   13.056366] INFO: Object 0xffff88003290a048 @offset=8264
+>>>> fp=0xffff880032908000
+>>>> [   13.056366]
+>>>> [   13.056366] Bytes b4 0xffff88003290a038:  b9 9e fb ff 00 00 00 00
+>>>> 5a 5a 5a 5a 5a 5a 5a 5a ¹.ûÿ....ZZZZZZZZ
+>>>
+>>> Can you reproduce this? We had a similar report from Miles Lanes I
+>>> have been trying to followup on for a while now. The suggested patches
+>>> to try are:
+>>>
+>>>
+>>> http://bombadil.infradead.org/~mcgrof/patches/ath9k/2009/11-19/70-mac80211-total-ampdu-tx-info.patch
+>>>
+>>> http://bombadil.infradead.org/~mcgrof/patches/ath9k/2009/11-19/71-ath9k-remove-tx_info_priv.patch
+>>>
+>>>    Luis
+>>>
+>>
+>> as anticipated I had a feeling reproducing
+>> this would be a bit of a challeng.
+>>
+>> so far I was taking into account the actions that
+>> I did yesterday to trigger this, but nothing i.e.
+>>
+>> reboot 30 times(until fsck engages), and shutdown/start 30 times
+>> with nothing of the sort.
+>>
+>> If you have any ideas on how to reproduce this it would
+>> be greatly appreciated(don't want to throw in the patches, until
+>> I have something to go by).
+>>
+>> on the other hand I could throw in the patches, and wait and see,
+>> but would rather have more hard evidence that the patches do fix something.
+>
+> I think waiting to be able to reproduce is best, and appreciate your
+> patience on this. Maybe Miles Lanes also cannot reproduce easily and
+> that may explain why he hasn't replied.
+>
+>    Luis
+>
 
-I want to run some tests through nl80211 and, as usual, I prefer to
-use python for that. Are there any scripts/examples using nl80211 with
-python available? Preferably with an open enough license.
+probably.. What I'll do is tweak with this
+the rest of the day, if nothing then I'll go
+ahead and throw in the patches, and then go from there.
 
--- 
-Kalle Valo
+Justin P. Mattock
