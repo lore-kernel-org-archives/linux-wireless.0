@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:14016 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754570AbZLXHbQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2009 02:31:16 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH] iwlwifi: remove generated/utsrelease.h dependency
-Date: Thu, 24 Dec 2009 15:31:10 +0800
-Message-Id: <1261639870-17469-1-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:47492 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756508AbZLCTOs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Dec 2009 14:14:48 -0500
+Subject: Re: [PATCH v2 3/5] mac80211: correctly place aMPDU RX reorder code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1259864007.4653.298.camel@rc-desk>
+References: <20091125164614.427835023@sipsolutions.net>
+	 <20091125164821.184669673@sipsolutions.net>
+	 <1259864007.4653.298.camel@rc-desk>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 03 Dec 2009 20:14:49 +0100
+Message-ID: <1259867689.12843.14.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 900bb717424e5df12b1ef7ebb017be2a8915b806 uses UTS_RELEASE
-as the the in-tree iwlwifi driver version. However the inclusion
-of generated/utsrelease.h makes it a unpleasant behaviour to
-recompile the driver everytime when utsrelease.h is updated. In
-fact, the driver module is already built with the UTS_RELEASE
-information via vermagic of modinfo. Mark the in-tree driver
-with the version string "in-tree" to distinguish with those old
-out-of-tree drivers.
+On Thu, 2009-12-03 at 10:13 -0800, reinette chatre wrote:
 
-Reported-by: David Miller <davem@davemloft.net>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+> [  729.672010]  [<ffffffff812aff1b>] skb_queue_tail+0x2b/0x60
+> [  729.672010]  [<ffffffffa04b11f5>] ieee80211_release_reorder_frame+0x35/0x50 [mac80211]
+
+So Christian beat me to looking at the trace and pointed out that
+skb_queue_tail has no business here, we've intentionally not initialised
+the spinlock. The patch below should fix it. I suppose I never had
+actual reordering in my tests.
+
+johannes
+
 ---
- drivers/net/wireless/iwlwifi/iwl-core.h |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+ net/mac80211/rx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 308f679..375226b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -63,8 +63,6 @@
- #ifndef __iwl_core_h__
- #define __iwl_core_h__
+--- wireless-testing.orig/net/mac80211/rx.c	2009-12-03 20:13:44.000000000 +0100
++++ wireless-testing/net/mac80211/rx.c	2009-12-03 20:13:50.000000000 +0100
+@@ -570,7 +570,7 @@ static void ieee80211_release_reorder_fr
+ 		rate = &sband->bitrates[status->rate_idx];
+ 	tid_agg_rx->stored_mpdu_num--;
+ 	tid_agg_rx->reorder_buf[index] = NULL;
+-	skb_queue_tail(frames, skb);
++	__skb_queue_tail(frames, skb);
  
--#include <generated/utsrelease.h>
--
- /************************
-  * forward declarations *
-  ************************/
-@@ -72,7 +70,7 @@ struct iwl_host_cmd;
- struct iwl_cmd;
- 
- 
--#define IWLWIFI_VERSION UTS_RELEASE "-k"
-+#define IWLWIFI_VERSION "in-tree:"
- #define DRV_COPYRIGHT	"Copyright(c) 2003-2009 Intel Corporation"
- #define DRV_AUTHOR     "<ilw@linux.intel.com>"
- 
--- 
-1.6.3.3
+ no_frame:
+ 	tid_agg_rx->head_seq_num = seq_inc(tid_agg_rx->head_seq_num);
+
 
