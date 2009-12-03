@@ -1,199 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:47634 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752737AbZLXLYe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2009 06:24:34 -0500
-Date: Thu, 24 Dec 2009 16:54:28 +0530
-From: Bala Shanmugam <sbalashanmugam@atheros.com>
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	<mcgrof@bombadil.infradead.org>
-CC: Jothikumar Mothilal <Jothikumar.Mothilal@Atheros.com>,
-	<linux-bluetooth@vger.kernel.org>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH] compat-2.6: New targets to compile bluetooth alone
-Message-ID: <20091224112428.GA30483@atheros-laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from xc.sipsolutions.net ([83.246.72.84]:60973 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756339AbZLCSwW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Dec 2009 13:52:22 -0500
+Subject: Re: [PATCH v2 3/5] mac80211: correctly place aMPDU RX reorder code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1259864007.4653.298.camel@rc-desk>
+References: <20091125164614.427835023@sipsolutions.net>
+	 <20091125164821.184669673@sipsolutions.net>
+	 <1259864007.4653.298.camel@rc-desk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-u0cptRYj5qaiDEl6sNHj"
+Date: Thu, 03 Dec 2009 19:52:21 +0100
+Message-ID: <1259866341.12843.11.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Compiling compat-pacakage consumes more time
-as both wireless and bluetooth modules are compiled.
 
-For someone who wants to use bluetooth alone
-compiling and installing wireless modules is unnecessary
-and is time consuming.
+--=-u0cptRYj5qaiDEl6sNHj
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-New targets are declared to compile, install, uninstall, load
-and unload bluetooth modules seperately.
+On Thu, 2009-12-03 at 10:13 -0800, reinette chatre wrote:
 
-Usage is updated in README.
-Signed-off-by: Bala Shanmugam <sbalashanmugam@atheros.com>
----
- Makefile |   68 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- README   |   28 +++++++++++++++++++++++++
- 2 files changed, 93 insertions(+), 3 deletions(-)
+> I bisected a hang problem to this patch. When associating to an 11n AP
+> (tested on 5GHz), ping works fine, but trying to copy a large file
+> causes the system to freeze (keyboard lights start blinking and system
+> unresponsive. Reverting this patch I can copy large files successfully.
 
-diff --git a/Makefile b/Makefile
-index d197202..f575f5b 100644
---- a/Makefile
-+++ b/Makefile
-@@ -21,16 +21,19 @@ obj-y := compat/
- 
- obj-$(CONFIG_COMPAT_RFKILL) += net/rfkill/
- 
-+ifeq ($(BT),)
- obj-$(CONFIG_COMPAT_WIRELESS) += net/wireless/ net/mac80211/
- obj-$(CONFIG_COMPAT_WIRELESS_MODULES) += drivers/net/wireless/
- 
- obj-$(CONFIG_COMPAT_NET_USB_MODULES) += drivers/net/usb/
- 
-+obj-$(CONFIG_COMPAT_NETWORK_MODULES) += drivers/net/
-+obj-$(CONFIG_COMPAT_VAR_MODULES) +=  drivers/misc/eeprom/
-+endif
-+
- obj-$(CONFIG_COMPAT_BLUETOOTH) += net/bluetooth/
- obj-$(CONFIG_COMPAT_BLUETOOTH_MODULES) += drivers/bluetooth/
- 
--obj-$(CONFIG_COMPAT_NETWORK_MODULES) += drivers/net/
--obj-$(CONFIG_COMPAT_VAR_MODULES) +=  drivers/misc/eeprom/
- # Sorry ssb requires pcmica backport for 2.6.33 which is not done yet
- #					drivers/ssb/
- 
-@@ -56,6 +59,11 @@ modules: $(CREL_CHECK)
- 	$(MAKE) -C $(KLIB_BUILD) M=$(PWD) modules
- 	@touch $@
- 
-+bt: $(CREL_CHECK)
-+	@./scripts/check_config.sh
-+	$(MAKE) -C $(KLIB_BUILD) M=$(PWD) BT=TRUE modules
-+	@touch $@
-+
- # With the above and this we make sure we generate a new compat autoconf per
- # new relase of compat-wireless-2.6 OR when the user updates the 
- # $(COMPAT_CONFIG) file
-@@ -66,6 +74,60 @@ $(CREL_CHECK):
- 	@touch $@
- 	@md5sum $(COMPAT_CONFIG) > $(CONFIG_CHECK)
- 
-+btinstall: btuninstall bt-install-modules bt-install-scripts
-+
-+bt-install-modules: bt
-+	$(MAKE) -C $(KLIB_BUILD) M=$(PWD) $(KMODDIR_ARG) $(KMODPATH_ARG) BT=TRUE \
-+		modules_install
-+
-+bt-install-scripts:
-+	@# All the scripts we can use
-+	@# Mandrake doesn't have a depmod.d/ conf file to prefer
-+	@# the updates/ dir which is what we use so we add one for it
-+	@# (or any other distribution that doens't have this).
-+	@/sbin/depmod -ae
-+	@echo
-+	@echo "Currently detected bluetooth subsystem modules:"
-+	@echo
-+	@$(MODPROBE) -l sco
-+	@$(MODPROBE) -l l2cap
-+	@$(MODPROBE) -l hidp
-+	@$(MODPROBE) -l rfcomm
-+	@$(MODPROBE) -l bnep
-+	@$(MODPROBE) -l btusb
-+	@$(MODPROBE) -l bluetooth
-+	@echo
-+	@echo Now run:
-+	@echo
-+	@echo sudo make btunload:
-+	@echo
-+	@echo And the load the needed bluetooth modules. If unsure reboot.
-+	@echo
-+
-+btuninstall:
-+	@# New location, matches upstream
-+	@rm -rf $(KLIB)/$(KMODDIR)/net/bluetooth/
-+	@rm -rf $(KLIB)/$(KMODDIR)/drivers/bluetooth/
-+	@# Lets only remove the stuff we are sure we are providing
-+	@# on the misc directory.
-+	@/sbin/depmod -ae
-+	@echo
-+	@echo "Your old bluetooth subsystem modules were left intact:"
-+	@echo
-+	@$(MODPROBE) -l sco
-+	@$(MODPROBE) -l l2cap
-+	@$(MODPROBE) -l hidp
-+	@$(MODPROBE) -l rfcomm
-+	@$(MODPROBE) -l bnep
-+	@$(MODPROBE) -l btusb
-+	@$(MODPROBE) -l bluetooth
-+	@
-+	@echo
-+
-+btclean:
-+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) BT=TRUE clean
-+	@rm -f $(CREL_PRE)*
-+
- install: uninstall install-modules install-scripts
- 
- install-modules: modules
-@@ -293,7 +355,7 @@ wlunload:
- wlload: wlunload
- 	@./scripts/wlload.sh
- 
--.PHONY: all clean install uninstall unload load btunload btload wlunload wlload modules
-+.PHONY: all clean install uninstall unload load btunload btload wlunload wlload modules bt
- 
- endif
- 
-diff --git a/README b/README
-index 380fc5a..88b16b4 100644
---- a/README
-+++ b/README
-@@ -6,6 +6,7 @@ This is a Linux wireless compatibility package which provides the latest
- Linux wireless subsystem enhancements for kernels 2.6.25 and above.
- It is technically possible to support kernels < 2.6.25 but more
- work is required for that.
-+It also provides Linux bluetooth subsystem enhancements for kernels 2.6.27 and above.
- 
- If you'd like to keep the wireless-testing git repository local as well,
- please read out git-guide which explains how to achieve this:
-@@ -70,6 +71,24 @@ Load:
- 
- Reboot unless you know what you are doing.
- 
-+
-+Bluetooth modules can be seperately compiled and installed using below commands
-+
-+Build:
-+	make bt
-+
-+Install:
-+	sudo make btinstall
-+
-+Uninstall:
-+	sudo make btuninstall
-+
-+Load:
-+	sudo make btload
-+
-+Unload:
-+	sudo make btunload
-+
- Drivers
- -------
- 
-@@ -115,6 +134,15 @@ we provide b44 (the ethernet driverl).
- 
- The new rfkill drivers also provided and backported.
- 
-+Bluetooth drivers:
-+bluetooth
-+btusb
-+hci_uart
-+btsdio
-+btuart_cs
-+bluecard_cs
-+bfusb
-+
- Firmware:
- ---------
- 
--- 
-1.6.0.4
+Ouch. Thanks for the report/information, I'll look into it promptly.
+
+johannes
+
+--=-u0cptRYj5qaiDEl6sNHj
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLGAjhAAoJEODzc/N7+QmaaXUP/iIdUpC4jGa4xXktC0Ju6AjJ
+FDSHe8Is4q+oIzCGYBaz/dCyRSDFC/EikUoibSbiQuus0+pXdIHL1imzmpupkSlh
+XMzNO6bFGSzpgpZhTsawAc3t7WBfynMxrkw99mhT+unFx6930au+mI3Ji26Zyoin
+yhK1NFP9ADV8+lW9sjMNCylMFSpfsn0iKxJIoPQbAcxDuxnWWMDjkOZXLQiVBbxc
+2vD6ZqLN6HdjjSQQ4Ljzqhhm3MXRZTEuHdx5ErjGFaZaANpRNcdpTiGAOXfQWLNQ
+YOTdo1m7Q+JzSUYelZ/ohBnej82JLOlCRhgXRBxtFDP6Exhp16B3dV+AnAA7CE1c
+g2w9wUDw/GS1yZO26koDplSkOlAXK+IOet0Z+5777yRu2xB/dlQkXT3qQY3aquR2
+c3Mn+zxbJnkNW0XswFpm7dLgM9yv845HqcBSyjj6FChzYsJFw1h3LrQbwdEeePbM
+IO45s0lEZ8o19eeVrd+ty9woZDMq1pRBhNOmBuHcUOUaIPvefgUTLbd/0hCgbDFC
+moaIcpRP8jSE8nqpd+R8zLhAAqHWOKY+Qo/oQPnJv1H4hoxsHWMHOtaCxb3qDEpy
+PVRzVI0Wa8TyUIGsR/VpdXkoBrUE7MR2EYapC7QGwuqyXGSC2bqJ5VxDWn0WsrhT
+nXEK7WlZlVQzuaKsR3bX
+=+Sog
+-----END PGP SIGNATURE-----
+
+--=-u0cptRYj5qaiDEl6sNHj--
 
