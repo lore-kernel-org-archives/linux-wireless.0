@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54409
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757513AbZLNPXV (ORCPT
+Received: from mga10.intel.com ([192.55.52.92]:39035 "EHLO
+	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752144AbZLCKjN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 10:23:21 -0500
-Date: Mon, 14 Dec 2009 07:23:23 -0800 (PST)
-Message-Id: <20091214.072323.215080360.davem@davemloft.net>
-To: bzolnier@gmail.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: Revised wireless tree management practices
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200912141559.29282.bzolnier@gmail.com>
-References: <200912141516.12224.bzolnier@gmail.com>
-	<20091214142602.GC18945@tuxdriver.com>
-	<200912141559.29282.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 3 Dec 2009 05:39:13 -0500
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 2/4] iwmc3200wifi: Coex table command does not expect a response
+Date: Thu,  3 Dec 2009 11:40:16 +0100
+Message-Id: <3259e3798cc114c1d6da7e764ce9da739b4e88b4.1259835655.git.sameo@linux.intel.com>
+In-Reply-To: <4790a128344a09f0bdb2249c8ee831f254ca72ec.1259835655.git.sameo@linux.intel.com>
+References: <cover.1259835655.git.sameo@linux.intel.com>
+ <4790a128344a09f0bdb2249c8ee831f254ca72ec.1259835655.git.sameo@linux.intel.com>
+In-Reply-To: <cover.1259835655.git.sameo@linux.intel.com>
+References: <cover.1259835655.git.sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Mon, 14 Dec 2009 15:59:29 +0100
+When sending the wiwi coexistence priority table, we should not tell the LMAC
+that we want a response.
 
-> Hmmm, there are multiple ideas to investigate even within the current
-> "merge window" policy.  Decoupling driver trees from core changes should
-> certainly be possible (it works just fine in the storage area), some
-> architectures make heavy use of topic branches to prevent 'monstermerge'
-> issue etc.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ drivers/net/wireless/iwmc3200wifi/commands.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-I don't think seperating drivers out will help.
+diff --git a/drivers/net/wireless/iwmc3200wifi/commands.c b/drivers/net/wireless/iwmc3200wifi/commands.c
+index 6a22711..1a4b7fb 100644
+--- a/drivers/net/wireless/iwmc3200wifi/commands.c
++++ b/drivers/net/wireless/iwmc3200wifi/commands.c
+@@ -192,7 +192,7 @@ int iwm_send_prio_table(struct iwm_priv *iwm)
+ 
+ 	return iwm_send_lmac_ptrough_cmd(iwm, COEX_PRIORITY_TABLE_CMD,
+ 				&coex_table_cmd,
+-				sizeof(struct iwm_coex_prio_table_cmd), 1);
++				sizeof(struct iwm_coex_prio_table_cmd), 0);
+ }
+ 
+ int iwm_send_init_calib_cfg(struct iwm_priv *iwm, u8 calib_requested)
+-- 
+1.6.3.3
 
-I'd say every 5 or core changes we get one that ends up touching some
-API and a hand full of drivers.
-
-And this also has implications for testing.  I want the most
-active driver folks have to test their stuff against the core
-changes as well.
-
-This all happens automatically.
-
-You can always tell git tools to just give you net/ changes.
