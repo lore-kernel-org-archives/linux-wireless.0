@@ -1,79 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.108.102.1]:44847 "EHLO parez.praha12.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757344AbZLUVu5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2009 16:50:57 -0500
-From: =?UTF-8?q?Luk=C3=A1=C5=A1=20Turek?= <8an@praha12.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	lrodriguez@atheros.com, ath5k-devel@lists.ath5k.org
-Subject: [PATCH v3 3/5] ath5k: Fix functions for getting/setting slot time
-Date: Mon, 21 Dec 2009 22:50:49 +0100
-Message-Id: <1261432252-1855-4-git-send-email-8an@praha12.net>
-In-Reply-To: <1261432252-1855-1-git-send-email-8an@praha12.net>
-References: <1261432252-1855-1-git-send-email-8an@praha12.net>
+Received: from mx51.mymxserver.com ([85.199.173.110]:45751 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755976AbZLCKtV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Dec 2009 05:49:21 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id A6911148008
+	for <linux-wireless@vger.kernel.org>; Thu,  3 Dec 2009 11:49:26 +0100 (CET)
+Received: from mx51.mymxserver.com ([127.0.0.1])
+	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id ejNdkh-5o7s2 for <linux-wireless@vger.kernel.org>;
+	Thu,  3 Dec 2009 11:49:26 +0100 (CET)
+Received: from lin01.mn-solutions.de (pD95FAAA4.dip0.t-ipconnect.de [217.95.170.164])
+	by mx51.mymxserver.com (Postfix) with ESMTP id 66E78148005
+	for <linux-wireless@vger.kernel.org>; Thu,  3 Dec 2009 11:49:25 +0100 (CET)
+Received: from schurig.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id E9FC11E0010
+	for <linux-wireless@vger.kernel.org>; Thu,  3 Dec 2009 11:49:20 +0100 (CET)
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: question regarding cfg80211 monitor modes
+Date: Thu, 3 Dec 2009 11:48:46 +0100
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200912031148.46934.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Functions ath5k_hw_get_slot_time and ath5k_hw_set_slot_time were
-converting microseconds to clocks only for AR5210, although it's needed
-for all supported devices. The conversion was moved outside the
-hardware-specific branches.
+"iw wlan0 set type monitor" allows the following flags:
 
-The original code also limited minimum slot time to 9, while turbo modes
-use 6, this was fixed too.
+                none:     no special flags
+                fcsfail:  show frames with FCS errors
+                control:  show control frames
+                otherbss: show frames from other BSSes
+                cook:     use cooked mode
 
-Signed-off-by: Lukas Turek <8an@praha12.net>
----
- drivers/net/wireless/ath/ath5k/qcu.c |   20 +++++++++++++-------
- 1 files changed, 13 insertions(+), 7 deletions(-)
+However, I don't know how to map them to the Libertas' firmware 
+flags, which has
 
-diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
-index eeebb9a..e322a10 100644
---- a/drivers/net/wireless/ath/ath5k/qcu.c
-+++ b/drivers/net/wireless/ath/ath5k/qcu.c
-@@ -520,12 +520,16 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
-  */
- unsigned int ath5k_hw_get_slot_time(struct ath5k_hw *ah)
- {
-+	unsigned int slot_time_clock;
-+
- 	ATH5K_TRACE(ah->ah_sc);
-+
- 	if (ah->ah_version == AR5K_AR5210)
--		return ath5k_hw_clocktoh(ath5k_hw_reg_read(ah,
--				AR5K_SLOT_TIME) & 0xffff, ah->ah_turbo);
-+		slot_time_clock = ath5k_hw_reg_read(ah, AR5K_SLOT_TIME);
- 	else
--		return ath5k_hw_reg_read(ah, AR5K_DCU_GBL_IFS_SLOT) & 0xffff;
-+		slot_time_clock = ath5k_hw_reg_read(ah, AR5K_DCU_GBL_IFS_SLOT);
-+
-+	return ath5k_hw_clocktoh(slot_time_clock & 0xffff, ah->ah_turbo);
- }
- 
- /*
-@@ -533,15 +537,17 @@ unsigned int ath5k_hw_get_slot_time(struct ath5k_hw *ah)
-  */
- int ath5k_hw_set_slot_time(struct ath5k_hw *ah, unsigned int slot_time)
- {
-+	u32 slot_time_clock = ath5k_hw_htoclock(slot_time, ah->ah_turbo);
-+
- 	ATH5K_TRACE(ah->ah_sc);
--	if (slot_time < AR5K_SLOT_TIME_9 || slot_time > AR5K_SLOT_TIME_MAX)
-+
-+	if (slot_time < 6 || slot_time_clock > AR5K_SLOT_TIME_MAX)
- 		return -EINVAL;
- 
- 	if (ah->ah_version == AR5K_AR5210)
--		ath5k_hw_reg_write(ah, ath5k_hw_htoclock(slot_time,
--				ah->ah_turbo), AR5K_SLOT_TIME);
-+		ath5k_hw_reg_write(ah, slot_time_clock, AR5K_SLOT_TIME);
- 	else
--		ath5k_hw_reg_write(ah, slot_time, AR5K_DCU_GBL_IFS_SLOT);
-+		ath5k_hw_reg_write(ah, slot_time_clock, AR5K_DCU_GBL_IFS_SLOT);
- 
- 	return 0;
- }
+Libertas (bits can be ored)
+Data frames                   0x01   
+Mgmt frames but beacons       0x02
+Beacons                       0x04
+
+
+So I guess that the following could be a translation table:
+
+none       0x00
+fcsfail    -ENOTSUPP
+control    0x02 | 0x04
+
+But what should "otherbss" and "cook" be?
+
 -- 
-1.6.4.4
-
+http://www.holgerschurig.de
