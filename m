@@ -1,34 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 207-172-69-77.c3-0.smr-ubr3.sbo-smr.ma.static.cable.rcn.com ([207.172.69.77]:44260
-	"EHLO thaum.luto.us" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935279AbZLHE6j (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:15604 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752646AbZLCKjC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2009 23:58:39 -0500
-Message-ID: <4B1DDB77.6070909@myrealbox.com>
-Date: Mon, 07 Dec 2009 23:52:07 -0500
-From: Andy Lutomirski <luto@myrealbox.com>
-MIME-Version: 1.0
-To: lrodriguez@atheros.com
-CC: johannes@sipsolutions.ney, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iw: add HT capability parsing for scanning
-References: <1260237325-8654-1-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1260237325-8654-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 3 Dec 2009 05:39:02 -0500
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 1/4] iwmc3200wifi: Update wiwi priority table
+Date: Thu,  3 Dec 2009 11:40:15 +0100
+Message-Id: <4790a128344a09f0bdb2249c8ee831f254ca72ec.1259835655.git.sameo@linux.intel.com>
+In-Reply-To: <cover.1259835655.git.sameo@linux.intel.com>
+References: <cover.1259835655.git.sameo@linux.intel.com>
+In-Reply-To: <cover.1259835655.git.sameo@linux.intel.com>
+References: <cover.1259835655.git.sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> This adds HT capability IE parsing for scanning. You will now
-> be able to easily review what HT capabilities your AP supports
-> with a simple iw scan.
-> 
+This update follows the firmware engineers recommendations.
 
-> +	default:
-> +		return "Uknown";
-> +	}
-> +}
-> +
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ drivers/net/wireless/iwmc3200wifi/commands.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-Unknown?
+diff --git a/drivers/net/wireless/iwmc3200wifi/commands.c b/drivers/net/wireless/iwmc3200wifi/commands.c
+index bd06307..6a22711 100644
+--- a/drivers/net/wireless/iwmc3200wifi/commands.c
++++ b/drivers/net/wireless/iwmc3200wifi/commands.c
+@@ -122,18 +122,18 @@ static struct coex_event iwm_sta_xor_prio_tbl[COEX_EVENTS_NUM] =
+ static struct coex_event iwm_sta_cm_prio_tbl[COEX_EVENTS_NUM] =
+ {
+ 	{1, 1, 0, COEX_UNASSOC_IDLE_FLAGS},
+-	{4, 3, 0, COEX_UNASSOC_MANUAL_SCAN_FLAGS},
++	{4, 4, 0, COEX_UNASSOC_MANUAL_SCAN_FLAGS},
+ 	{3, 3, 0, COEX_UNASSOC_AUTO_SCAN_FLAGS},
+-	{5, 5, 0, COEX_CALIBRATION_FLAGS},
++	{6, 6, 0, COEX_CALIBRATION_FLAGS},
+ 	{3, 3, 0, COEX_PERIODIC_CALIBRATION_FLAGS},
+-	{5, 4, 0, COEX_CONNECTION_ESTAB_FLAGS},
++	{6, 5, 0, COEX_CONNECTION_ESTAB_FLAGS},
+ 	{4, 4, 0, COEX_ASSOCIATED_IDLE_FLAGS},
+ 	{4, 4, 0, COEX_ASSOC_MANUAL_SCAN_FLAGS},
+ 	{4, 4, 0, COEX_ASSOC_AUTO_SCAN_FLAGS},
+ 	{4, 4, 0, COEX_ASSOC_ACTIVE_LEVEL_FLAGS},
+ 	{1, 1, 0, COEX_RF_ON_FLAGS},
+ 	{1, 1, 0, COEX_RF_OFF_FLAGS},
+-	{6, 6, 0, COEX_STAND_ALONE_DEBUG_FLAGS},
++	{7, 7, 0, COEX_STAND_ALONE_DEBUG_FLAGS},
+ 	{5, 4, 0, COEX_IPAN_ASSOC_LEVEL_FLAGS},
+ 	{1, 1, 0, COEX_RSRVD1_FLAGS},
+ 	{1, 1, 0, COEX_RSRVD2_FLAGS}
+-- 
+1.6.3.3
 
---Andy
