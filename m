@@ -1,81 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50997 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755342AbZLCJUp (ORCPT
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:41521 "EHLO
+	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751192AbZLCMB3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2009 04:20:45 -0500
-Subject: Re: [PATCH] lib80211: make crypt modules configurable by user
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Ritz <daniel.ritz@gmx.ch>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Thu, 3 Dec 2009 07:01:29 -0500
+Received: by fxm21 with SMTP id 21so1317908fxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Dec 2009 04:01:34 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1259822699.31590.914.camel@peura.elisa-laajakaista.fi>
+References: <1259756709.31590.62.camel@peura.elisa-laajakaista.fi>
+	 <4B169608.3010902@lwfinger.net>
+	 <1259822699.31590.914.camel@peura.elisa-laajakaista.fi>
+Date: Thu, 3 Dec 2009 12:01:34 +0000
+Message-ID: <3ace41890912030401k7cb41386rc134e167a8e4bea6@mail.gmail.com>
+Subject: Re: New rtl8187 rfkill support blocks my wlan for good.
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: =?ISO-8859-1?Q?Antti_Kaijanm=E4ki?= <antti@kaijanmaki.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <1259793506.2107.57.camel@MacRitz2>
-References: <1259711174.13720.17.camel@MacRitz2>
-	 <1259711943.32171.134.camel@johannes.local>
-	 <1259793506.2107.57.camel@MacRitz2>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-uheliAjZ3SeS4eUs7DdR"
-Date: Thu, 03 Dec 2009 10:20:13 +0100
-Message-ID: <1259832013.12843.4.camel@johannes.local>
-Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2009/12/3 Antti Kaijanmäki <antti@kaijanmaki.net>:
+> It's a Toshiba Satellite Pro L300.
 
---=-uheliAjZ3SeS4eUs7DdR
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I have a Toshiba A210; the Realtek hardware is the same, but I am a
+little surprised that there is no similiarity to the mac address
+(AFAIK part of the mac address is the manufacturer's identity). In any
+case, the rkill code works here
+(up to date fedora 12 + compat-wireless from yesterday or the day before).
 
-Hi,
+> I contacted Realtek again and this morning I had data sheets for
+> RTL8187B and RTL8187L chipsets in my inbox, yay!. I didn't have time to
+> look deeply in to them just yet, but at quick glance the data sheets
+> didn't talk anything about rfkill. My fear is that the rfkill features
+> are laptop vendor specific by being implemented using the General
+> Purpose IO pins, but this speculation is still premature.
 
+Yes, I think the gpio pins are OEM-specific.
 
-Please do me a favour and explain _why_ you want to change anything
-before you do. I'm not really interested in pointless chit-chat about
-lib80211 kconfig.
+--- rtl8187_rfkill.c.orig       2009-12-02 14:12:34.646597569 +0200
++++ rtl8187_rfkill.c    2009-12-02 14:10:09.474593370 +0200
+@@ -28,7 +28,7 @@ static bool rtl8187_is_radio_enabled(str
+       rtl818x_iowrite8(priv, &priv->map->GPIO0, gpio & ~0x02);
+       gpio = rtl818x_ioread8(priv, &priv->map->GPIO1);
 
-> ok. but looking at it again, there are some minor problems that have
-> nothing to do with out-of-tree-drivers:
-> - it's possible for the user to compile-in lib80211, but not the crypt
->   modules
+-       return gpio & 0x02;
++       return gpio & 0x04;
 
-Yes, the correct solution to that inconsistency is to remove the
-lib80211 config symbol from the user's view... then it'll always be the
-same the driver is ...
+ }
 
-> - the crypt modules depend on crypto API and modules, but it's the WLAN
->   drivers that select them. duplicated selects for each driver.
+Your patch is probably wrong - all you are doing is get some random
+bits off the chip and lie to the rest of the system about being radio
+is enabled.
 
-Yes, well ...
+That leads to my next question - what *is the rest* of your system?
+Back in F11 I had a funny problem for a few days when I was trying
+out/testing the then-new rtl8187 rfkill code Larry and Herton came up
+with: I can switch off the radio and it is effective for about 1
+minute - then NetworkManager decides to turn the wireless chip back
+on. It turned out that hal (at least on F11, and also then, a few
+months ago) needed to be taught to honour the state of the rkill
+switch and be aware of it. Maybe you have the reverse problem - the
+rest of your system needs to be taught not to switch it off.
 
-> so how about the following?
-
-The following patch (snipped) was clearly not tested at all. I'll leave
-it to you to figure out why it's completely and utterly broken, but I'll
-give you a hint: it has something to do with "select".
-
-Please come back when only you have a problem to solve.
-
-johannes
-
---=-uheliAjZ3SeS4eUs7DdR
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLF4LJAAoJEODzc/N7+Qma9KUQAL/5jIWaf0hpXSRBxhIrqO8x
-UaXg9b/s7ljBObML/qwSWofoQ3locYdrp+phiRFtZYOcZ+ntRTvm9mY0dMKCaJD0
-5aEmjy4n3CrLV27iEDWIhKISkP/JNOFTvW0M64a5qCCf/EeY+pVqsnAuE2CZ8Kby
-zMHhj0nG4QYi06dRoxawJ22JX2mZC4KQKWBK2nmk+GXN539pkAfXmklxQuzNv8Yk
-fqf+8YcAkCfOOQcprEzu8qoWMucGB2qwyfPSeEA/YB0NDKpUbyJt4eRUU1/CZqFb
-RWYH7n+wE5qCzRdsjwsKaLfTrHGVuSYZFZ+cAaA32U3ANCMgJDphuXnh6F1AeFF+
-hWx2hHzHXfP0lXf8UtTVtjVFLeYC/LAvLQ6lzISLnMgumzecOoVWJePmFfbsCMK+
-EruXxw6xBiO/qfMkmnPprra2mhJRtkAQRcIInDIWL6fcMKnoz8i8nsysvzGcQX/N
-t5+8vzZCNosrKxeHZ51rK/z/fbAXmmohtMtaK63zYMRzRwzXUw6r17a5xYrnJR3c
-4+xuVdTs0jlrccSyGviyGqsmO8XULM/7TIgQtUYQdwWUTA6E1tFxIl+nK/UrihAf
-gnabDQ/2R8wWFm1BwYBpT+R10ClnzU80oh1DEF5Mwn54d30TXm5zPv7uxI3GZxrA
-xYmkDvVCu9xVjRLEmjz2
-=3UZU
------END PGP SIGNATURE-----
-
---=-uheliAjZ3SeS4eUs7DdR--
-
+As for the datasheet - no, there aren't any obvious rfkill info (or I
+haven't read carefully - Larry will correct me). Realtek doesn't seem
+to have a problem with e-mailing it to individuals, so a few of us has
+it as well; but since they don't have it available for public download
+on their web site, I assume it was sent on good faith for private
+viewing pleasure.... and the terms of (re-)distribution is probably to
+people who show interests in improving the driver. (instead of, say,
+to competitors trying to poke holes in their hardware...).
