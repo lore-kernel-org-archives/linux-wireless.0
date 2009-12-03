@@ -1,38 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52997 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753925AbZLNOAV (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60177 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751241AbZLCKzD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 09:00:21 -0500
-Date: Mon, 14 Dec 2009 08:54:01 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Marcel Holtmann <marcel@holtmann.org>
+	Thu, 3 Dec 2009 05:55:03 -0500
+Subject: Re: question regarding cfg80211 monitor modes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <holgerschurig@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] wireless: support internal statically compiled
-	regulatory database
-Message-ID: <20091214135401.GB18945@tuxdriver.com>
-References: <1260755116-3829-1-git-send-email-linville@tuxdriver.com> <1260755719.4041.1.camel@localhost.localdomain> <20091214032920.GB4743@tuxdriver.com> <1260777312.4041.13.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1260777312.4041.13.camel@localhost.localdomain>
+In-Reply-To: <200912031148.46934.holgerschurig@gmail.com>
+References: <200912031148.46934.holgerschurig@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Jfn0VrMFwOF9DutOGsM6"
+Date: Thu, 03 Dec 2009 11:54:42 +0100
+Message-ID: <1259837682.12843.10.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 14, 2009 at 08:55:12AM +0100, Marcel Holtmann wrote:
 
-> > > since it is pretty clear that people should be defaulting to CRDA, why
-> > > not make it depend on CONFIG_EMBEDDED.
+--=-Jfn0VrMFwOF9DutOGsM6
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-<snip>
+On Thu, 2009-12-03 at 11:48 +0100, Holger Schurig wrote:
+> "iw wlan0 set type monitor" allows the following flags:
+>=20
+>                 none:     no special flags
+>                 fcsfail:  show frames with FCS errors
+>                 control:  show control frames
+>                 otherbss: show frames from other BSSes
+>                 cook:     use cooked mode
+>=20
+> However, I don't know how to map them to the Libertas' firmware=20
+> flags, which has
+>=20
+> Libertas (bits can be ored)
+> Data frames                   0x01  =20
+> Mgmt frames but beacons       0x02
+> Beacons                       0x04
+>=20
+>=20
+> So I guess that the following could be a translation table:
+>=20
+> none       0x00
+> fcsfail    -ENOTSUPP
+> control    0x02 | 0x04
+>=20
+> But what should "otherbss" and "cook" be?
 
-> So my personal view on this is that it is an embedded feature and not
-> something for the general wireless people. My 2 cents.
+"cook" and "none" only make sense while operating in a different mode at
+the same time. For "cook" you get frames that the kernel hasn't
+consumed. For "none" you don't influence the filters due to the monitor.
+I suspect you don't support concurrent operation, so neither of those
+makes sense.
 
-Yeah, that's a fine suggestion.  I'll do that before merging it.
+fcsfail/plcpfail are probably not supported.
 
-Thanks,
+=46rom what you say, "control" isn't supported either, since you were
+talking about management frames, not control frames. "otherbss" is for
+showing frames with a different BSSID, and in libertas monitor mode
+probably always enabled.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I'd say don't bother with the flags at all.
+
+johannes
+
+--=-Jfn0VrMFwOF9DutOGsM6
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLF5jvAAoJEODzc/N7+QmacsEQAJcgUsglq754O2zbGokABzIO
+OQaztR5XeQ0bzCYg39uaKHhat9Co6i7ApIoMyxZlKu9Q+pBDaGSSEb2MVxgSxEyN
+WJ/+MSldHiqGMeP5Xhf5a8jwmWChWpBnI9NHG7p6FhD1m7XLwjXEI+U25vT8MbK1
+2irobIONtLHycg/ExnAF1fYOKqMsO7rVDQoz8R9NWPW90fyCXg1n65hizDpgEere
+287nogMnZzFnIfPczFMeUPqa63UqfLV8J2GX7XjYeXPYCNhJiForNQoyMl2A8SZu
+WFPOpq/8QeabQ4nelybH4UWZi6Q8TpLD+tBjfbqVYAOxEJq5i8sNtI63TZ0CrpW4
+lG+z3DSEJnrfolS8wXaBP2LpnpsajXB3k3jVQ4eUz8O8lzUVG6iXdvZ9Cw2YWCf7
+drDGT2DppZVcUDbLjMwpBURyY9Js652PBAwlZUuuLfzvfITPKYKiNvLUMGaS+DUj
+HMTBMVR2h4gRz4wR0FJtjP95XeBuIIXgoeHnCH7L/72h1aJbUucaaYN5tO5Gee6l
+S68QsjvqMi4N6BEp8M6nn07jgjb2qpEsjggaoPmYDxXDUPL+l5eXIedDIc/dddaA
+n3+Q//TOi1N2+fX2B1b+s/POQkN4/YBbeFIfPG9nEQGIJMqfY4cyGY6xSi134tRs
+QkOYt/qINgnxb+x3A6no
+=FDwF
+-----END PGP SIGNATURE-----
+
+--=-Jfn0VrMFwOF9DutOGsM6--
+
