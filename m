@@ -1,69 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:26140 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752328AbZLaNiO (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:51676 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756150AbZLCPBo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Dec 2009 08:38:14 -0500
-Subject: [RFC PATCH v5 7/7] wl1251: add U-APSD support
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kalle.valo@iki.fi>
-Cc: johannes@sipsolutions.net, a.young.jason@gmail.com
-Date: Thu, 31 Dec 2009 15:37:55 +0200
-Message-ID: <20091231133755.29899.84955.stgit@tikku>
-In-Reply-To: <20091231133626.29899.95683.stgit@tikku>
-References: <20091231133626.29899.95683.stgit@tikku>
+	Thu, 3 Dec 2009 10:01:44 -0500
+Date: Thu, 3 Dec 2009 15:01:35 +0000
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Corentin Chary <corentin.chary@gmail.com>
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	kde-hardware-devel@kde.org, dbus@lists.freedesktop.org,
+	linux-wireless@vger.kernel.org, hal@lists.freedesktop.org,
+	linux-acpi@vger.kernel.org, linux-input@vger.kernel.org,
+	networkmanager-list@gnome.org, Len Brown <lenb@kernel.org>
+Subject: Re: [PATCH 32/33] input: add KEY_WIRELESS_CYCLE
+Message-ID: <20091203150135.GB23212@srcf.ucam.org>
+References: <1259826317-18809-30-git-send-email-corentincj@iksaif.net> <1259826317-18809-31-git-send-email-corentincj@iksaif.net> <1259826317-18809-32-git-send-email-corentincj@iksaif.net> <1259826317-18809-33-git-send-email-corentincj@iksaif.net> <20091203075404.GK9121@core.coreip.homeip.net> <71cd59b00912030012r2f45f474u37c494ad281230cb@mail.gmail.com> <20091203082120.GL9121@core.coreip.homeip.net> <71cd59b00912030051w6bf54abfv726f288c2eae1d33@mail.gmail.com> <20091203085717.GO9121@core.coreip.homeip.net> <71cd59b00912030122n3d94236ajfa5e55c3b5a9efcd@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <71cd59b00912030122n3d94236ajfa5e55c3b5a9efcd@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+On Thu, Dec 03, 2009 at 10:22:16AM +0100, Corentin Chary wrote:
 
-wl1251 firmware supports U-APSD just with a simple queue configuration
-change so enable it.
+> Dear system infrastructure people,
+> Do you think a KEY_WIRELESS_CYCLE key would have any application ?
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1251_main.c |   12 +++++++++---
- 1 files changed, 9 insertions(+), 3 deletions(-)
+Not really. I've got a KEY_RFKILL patch queued, with the intended 
+semantics being for rfkill-input to just toggle all devices. If a 
+userspace rfkill daemon is running, it could use that to implement the 
+cycle policy you want. I don't think we need both.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index 4cf3545..6be50aa 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -1307,6 +1307,7 @@ static struct ieee80211_channel wl1251_channels[] = {
- static int wl1251_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 			     const struct ieee80211_tx_queue_params *params)
- {
-+	enum wl1251_acx_ps_scheme ps_scheme;
- 	struct wl1251 *wl = hw->priv;
- 	int ret;
- 
-@@ -1324,10 +1325,14 @@ static int wl1251_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 	if (ret < 0)
- 		goto out_sleep;
- 
-+	if (params->uapsd)
-+		ps_scheme = WL1251_ACX_PS_SCHEME_UPSD_TRIGGER;
-+	else
-+		ps_scheme = WL1251_ACX_PS_SCHEME_LEGACY;
-+
- 	ret = wl1251_acx_tid_cfg(wl, wl1251_tx_get_queue(queue),
- 				 CHANNEL_TYPE_EDCF,
--				 wl1251_tx_get_queue(queue),
--				 WL1251_ACX_PS_SCHEME_LEGACY,
-+				 wl1251_tx_get_queue(queue), ps_scheme,
- 				 WL1251_ACX_ACK_POLICY_LEGACY);
- 	if (ret < 0)
- 		goto out_sleep;
-@@ -1401,7 +1406,8 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
- 	wl->hw->flags = IEEE80211_HW_SIGNAL_DBM |
- 		IEEE80211_HW_NOISE_DBM |
- 		IEEE80211_HW_SUPPORTS_PS |
--		IEEE80211_HW_BEACON_FILTER;
-+		IEEE80211_HW_BEACON_FILTER |
-+		IEEE80211_HW_SUPPORTS_UAPSD;
- 
- 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
- 	wl->hw->wiphy->max_scan_ssids = 1;
-
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
