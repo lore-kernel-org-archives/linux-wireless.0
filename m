@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:58387 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751471AbZL2WA7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Dec 2009 17:00:59 -0500
-Date: Tue, 29 Dec 2009 23:00:51 +0100
-From: Jarek Poplawski <jarkao2@gmail.com>
-To: =?iso-8859-1?Q?N=E9meth_M=E1rton?= <nm127@freemail.hu>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-Subject: Re: 2.6.33-rc2: Reported regressions 2.6.31 -> 2.6.32
-Message-ID: <20091229220051.GA3185@del.dom.local>
-References: <oBElxfTZdhL.A.bx.-vhOLB@chimera>
- <4B3A5BC2.10207@gmail.com>
- <4B3A6CB1.3030305@freemail.hu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4B3A6CB1.3030305@freemail.hu>
+Received: from mga02.intel.com ([134.134.136.20]:6515 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756696AbZLCT3y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Dec 2009 14:29:54 -0500
+Subject: Re: [PATCH v2 3/5] mac80211: correctly place aMPDU RX reorder code
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1259867689.12843.14.camel@johannes.local>
+References: <20091125164614.427835023@sipsolutions.net>
+	 <20091125164821.184669673@sipsolutions.net>
+	 <1259864007.4653.298.camel@rc-desk>
+	 <1259867689.12843.14.camel@johannes.local>
+Content-Type: text/plain
+Date: Thu, 03 Dec 2009 11:30:00 -0800
+Message-Id: <1259868600.4653.300.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 29, 2009 at 09:55:13PM +0100, Németh Márton wrote:
-> Jarek Poplawski wrote:
-> > Rafael J. Wysocki wrote, On 12/29/2009 04:26 PM:
-> > 
-> > ...
-> >> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14794
-> >> Subject		: IP address assigned by DHCP is dropped after ~40 seconds
-> >> Submitter	: Márton Németh <nm127@freemail.hu>
-> >> Date		: 2009-12-13 08:59 (17 days old)
-> >>
-> > 
-> > 
-> > IMHO this bug might be considered as fixed by updating a userspace tool
-> > (KNetworkManager) - unless somebody wants to seek for the exact reason...
+Hi Johannes,
+
+On Thu, 2009-12-03 at 11:14 -0800, Johannes Berg wrote:
+> ---
+>  net/mac80211/rx.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> For me (I am the reporter) the problem was solved by upgrading a userspace
-> tool, so I think the bug filed against the kernel can be closed marking
-> that this was not really a kernel bug.
+> --- wireless-testing.orig/net/mac80211/rx.c	2009-12-03 20:13:44.000000000 +0100
+> +++ wireless-testing/net/mac80211/rx.c	2009-12-03 20:13:50.000000000 +0100
+> @@ -570,7 +570,7 @@ static void ieee80211_release_reorder_fr
+>  		rate = &sband->bitrates[status->rate_idx];
+>  	tid_agg_rx->stored_mpdu_num--;
+>  	tid_agg_rx->reorder_buf[index] = NULL;
+> -	skb_queue_tail(frames, skb);
+> +	__skb_queue_tail(frames, skb);
+>  
+>  no_frame:
+>  	tid_agg_rx->head_seq_num = seq_inc(tid_agg_rx->head_seq_num);
+> 
+> 
 
-Yes, let's hope author(s) of KNetworkManager would let us know if they
-had to change it because of the kernel error.
+Thank you very much for looking into this so promptly. This patch fixes
+the problem.
 
-Regards,
-Jarek P.
+Tested-by: Reinette Chatre <reinette.chatre@intel.com>
+
+Reinette
+
+
