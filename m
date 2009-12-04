@@ -1,96 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58403 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755216AbZLVXPa (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37761 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754585AbZLDM35 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2009 18:15:30 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 1/2] rtl8180: remove priv->mode
-Date: Tue, 22 Dec 2009 18:13:04 -0500
-Message-Id: <1261523585-20635-1-git-send-email-linville@tuxdriver.com>
+	Fri, 4 Dec 2009 07:29:57 -0500
+Subject: Re: [PATCH] mac80211: Fix bug in computing crc over dynamic IEs in
+ beacon
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	stable@kernel.org
+In-Reply-To: <1259928694-7824-1-git-send-email-vasanth@atheros.com>
+References: <1259928694-7824-1-git-send-email-vasanth@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-X+R/Cc+sgoMRyz+cgOl5"
+Date: Fri, 04 Dec 2009 13:29:58 +0100
+Message-ID: <1259929798.29974.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is only checked in add_interface, and there it is easily replaced
-with a check of priv->vif.  If that information should become necessary,
-it is available in vif->type anyway.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/rtl818x/rtl8180.h     |    1 -
- drivers/net/wireless/rtl818x/rtl8180_dev.c |   14 +++++---------
- 2 files changed, 5 insertions(+), 10 deletions(-)
+--=-X+R/Cc+sgoMRyz+cgOl5
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180.h b/drivers/net/wireless/rtl818x/rtl8180.h
-index 8721282..de3844f 100644
---- a/drivers/net/wireless/rtl818x/rtl8180.h
-+++ b/drivers/net/wireless/rtl818x/rtl8180.h
-@@ -60,7 +60,6 @@ struct rtl8180_priv {
- 	struct rtl818x_csr __iomem *map;
- 	const struct rtl818x_rf_ops *rf;
- 	struct ieee80211_vif *vif;
--	int mode;
- 
- 	/* rtl8180 driver specific */
- 	spinlock_t lock;
-diff --git a/drivers/net/wireless/rtl818x/rtl8180_dev.c b/drivers/net/wireless/rtl818x/rtl8180_dev.c
-index 8a40a14..a199fa1 100644
---- a/drivers/net/wireless/rtl818x/rtl8180_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180_dev.c
-@@ -82,8 +82,6 @@ static const struct ieee80211_channel rtl818x_channels[] = {
- };
- 
- 
--
--
- void rtl8180_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data)
- {
- 	struct rtl8180_priv *priv = dev->priv;
-@@ -615,7 +613,6 @@ static int rtl8180_start(struct ieee80211_hw *dev)
- 	reg |= RTL818X_CMD_TX_ENABLE;
- 	rtl818x_iowrite8(priv, &priv->map->CMD, reg);
- 
--	priv->mode = NL80211_IFTYPE_MONITOR;
- 	return 0;
- 
-  err_free_rings:
-@@ -633,8 +630,6 @@ static void rtl8180_stop(struct ieee80211_hw *dev)
- 	u8 reg;
- 	int i;
- 
--	priv->mode = NL80211_IFTYPE_UNSPECIFIED;
--
- 	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0);
- 
- 	reg = rtl818x_ioread8(priv, &priv->map->CMD);
-@@ -661,12 +656,14 @@ static int rtl8180_add_interface(struct ieee80211_hw *dev,
- {
- 	struct rtl8180_priv *priv = dev->priv;
- 
--	if (priv->mode != NL80211_IFTYPE_MONITOR)
--		return -EOPNOTSUPP;
-+	/*
-+	 * We only support one active interface at a time.
-+	 */
-+	if (priv->vif != NULL)
-+		return -EBUSY;
- 
- 	switch (conf->type) {
- 	case NL80211_IFTYPE_STATION:
--		priv->mode = conf->type;
- 		break;
- 	default:
- 		return -EOPNOTSUPP;
-@@ -688,7 +685,6 @@ static void rtl8180_remove_interface(struct ieee80211_hw *dev,
- 				     struct ieee80211_if_init_conf *conf)
- {
- 	struct rtl8180_priv *priv = dev->priv;
--	priv->mode = NL80211_IFTYPE_MONITOR;
- 	priv->vif = NULL;
- }
- 
--- 
-1.6.2.5
+On Fri, 2009-12-04 at 17:41 +0530, Vasanthakumar Thiagarajan wrote:
+> On a 32-bit machine, BIT() macro does not give the required
+> bit value if the bit is mroe than 31.=20
+
+For some reason I thought it did, thanks.
+
+> In ieee802_11_parse_elems_crc(),
+> BIT() is suppossed to get the bit value more than 31 (42 (id of ERP_INFO_=
+IE),
+> 37 (CHANNEL_SWITCH_IE), (42), 32 (POWER_CONSTRAINT_IE), 45 (HT_CAP_IE),
+> 61 (HT_INFO_IE)). As we do not get the required bit value for the above
+> IEs, crc over these IEs are never calculated, so any dynamic change in th=
+ese
+> IEs after the association is not really handled on 32-bit platforms.
+> This patch fixes this issue.
+
+Right. Note that this function may need to be changed/extended if we
+ever need to watch for changes in even higher IEs, but so far we don't.
+
+johannes
+
+
+--=-X+R/Cc+sgoMRyz+cgOl5
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLGQDCAAoJEODzc/N7+QmaZxkQAId1+suJSjMgYrtJgtvq2V3G
+EfHDE2dmW4pAqSqrHiyI4RbW79aGBDodEVBIHvAMO6UDv/NQ0JFsu4Qe3VLcWyG8
+g/m4+JoQj08SCktBs+pFM1qprUFArtNuqPdiuA9nB+H4fOu7KcorQ7EO+Vxbyz3Z
+3fHgEuC9zxSkOJbKPb9ZzPQ4/7qVo+MKp1dcQy+jMp66zEr3yOZxwEGblDerE858
+HXNE901jp2egGs8pG+YZoUuLolZZ/6P+TlxS7ikg65HFRnUXKWe4Ruan9AIif9ay
+cMmw1so4x59QFmqQsDyofE3ms6Qjyflr07WFi6JQHywQ2SX/77Rt83MEQ0i5vNsp
+o1RT9nx0b8blUr2W+f8HSxgDtcIqeLKDA32SfLDB1C0uQx7OyUZNIiEkhU9gPGkc
++bnrTHt6MOarArTRPl3tjoKax63GwNyGPRUhzlhjbD25PLe9N3l49hpOoPTlJlsQ
+jMS1egKcRoECWrxt5gc3LpNNavctoaPUlqR3u2E2hzz33G91Rbty8cjFCYJ8TiHw
+V3pJTXSqkrN/CefIyNtvfxQgiHrS7T6Lw8wf5LRybyUljL3pn7CbIZ6OAfeFtHi+
+19yg02YppftBx2lW8xLVqOdjYgj6TnQRATjKKpuLpsKgBctU1eF8BHWakgRdmsOP
+eYu6rd5/ZvUhUBgVS7ol
+=KOv+
+-----END PGP SIGNATURE-----
+
+--=-X+R/Cc+sgoMRyz+cgOl5--
 
