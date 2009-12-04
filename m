@@ -1,62 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml107.kpnxchange.com ([195.121.3.11]:50669 "EHLO
-	CPSMTPM-EML107.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757253AbZLNT1w (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50033 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756883AbZLDOve (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 14:27:52 -0500
-Message-ID: <4B2691B6.8020805@gmail.com>
-Date: Mon, 14 Dec 2009 20:27:50 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-CC: Ivo van Doorn <ivdoorn@gmail.com>, linville@tuxdriver.com,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	stable@kernel.org
-Subject: Re: [PATCH 2.6.33] rt2x00: Disable powersaving for rt61pci.
-References: <1260661180-2300-1-git-send-email-gwingerde@gmail.com> <200912131115.33485.IvDoorn@gmail.com> <4B250567.8050809@gmail.com> <200912131618.49312.IvDoorn@gmail.com> <4B25068E.7000201@gmail.com>
-In-Reply-To: <4B25068E.7000201@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-15
+	Fri, 4 Dec 2009 09:51:34 -0500
+Message-Id: <20091204143544.034718060@sipsolutions.net>
+Date: Fri, 04 Dec 2009 15:35:44 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: [PATCH 0/4] off-channel work
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/13/09 16:21, Gertjan van Wingerde wrote:
-> On 12/13/09 16:18, Ivo van Doorn wrote:
->> On Sunday 13 December 2009, Gertjan van Wingerde wrote:
->>> On 12/13/09 11:15, Ivo van Doorn wrote:
->>>> On Sunday 13 December 2009, Gertjan van Wingerde wrote:
->>>>> We've had many reports of rt61pci failures with powersaving enabled.
->>>>> Therefore, as a stop-gap measure, disable powersaving of the rt61pci
->>>>> until we have found a proper solution.
->>>>
->>>> This disables powersaving completely, can't we set the default powersaving
->>>> to disabled? That way for people for who it does work, it can still be enabled.
->>>>
->>>
->>> Well, when I was looking into this I came up with a number of issues in the code
->>> which makes me believe that it simply isn't working at all.
->>> One example is that the rt61pci devices rely on handling the wakeup interrupt
->>> by the driver to wake up the devices. As far as I can tell there is no handling
->>> of the wakeup interrupt in the rt61pci driver.
->>> That's why I decided to disable it all together, as I don't think it works
->>> properly for anyone (although some people may not really notice it).
->>
->> Ok, but then please disable it for _all_ rt2x00 drivers, or at least all PCI rt2x00 drivers
->> since they would have the same wakeup interrupt requirement.
->>
-> 
-> I'll see if this will be the case for all PCI rt2x00 devices and adapt for the ones that
-> need it. I didn't look into the other devices yet, and ISTR that at least rt2500pci doesn't
-> have this requirement.
-> 
+The new work stuff was just a stepping stone, now
+we can support telling an interface to go to a
+different channel than the operating channel, sit
+there for a while listening to frames (eventually
+also sending frames like public action) and then
+come back.
 
-OK. I can see that this does not apply to rt2400pci and rt2500pci. I'll leave those alone.
-I'll add the disablement to rt2800pci as well, as it follows the same scheme as rt61pci.
-
-Also, I will use the suggestion of you to just disable the default powersaving instead of
-making it completely unusable.
-
-Expect a new version any minute.
-
+johannes
 ---
-Gertjan.
+ include/linux/nl80211.h    |   36 +++++
+ include/net/cfg80211.h     |   47 +++++++
+ net/mac80211/Makefile      |    2 
+ net/mac80211/cfg.c         |   24 +++
+ net/mac80211/ieee80211_i.h |   28 ++++
+ net/mac80211/main.c        |    3 
+ net/mac80211/mlme.c        |   17 --
+ net/mac80211/offchannel.c  |  160 ++++++++++++++++++++++++++
+ net/mac80211/scan.c        |  144 -----------------------
+ net/mac80211/work.c        |  271 +++++++++++++++++++++++++++++++++++----------
+ net/wireless/chan.c        |   41 ++++--
+ net/wireless/core.h        |    3 
+ net/wireless/mlme.c        |   27 ++++
+ net/wireless/nl80211.c     |  218 ++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h     |   11 +
+ 15 files changed, 803 insertions(+), 229 deletions(-)
 
