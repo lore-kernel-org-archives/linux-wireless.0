@@ -1,72 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:26356 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S935484AbZLGRGK (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:51301 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779AbZLDFWT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2009 12:06:10 -0500
-Date: Mon, 7 Dec 2009 09:06:16 -0800
-From: mark gross <mgross@linux.intel.com>
-To: linux-pm <linux-pm@lists.linux-foundation.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, aili@codeaurora.org,
-	e1000-devel@lists.sourceforge.net, bruce.w.allan@intel.com,
-	linux-wireless@vger.kernel.org, alsa-devel@alsa-project.org,
-	tiwai@suse.de
-Subject: [PATCH]PM_QOS-to-use-handle-based-requests-cpuidle-update 2/5
-Message-ID: <20091207170616.GC5463@linux.intel.com>
-Reply-To: mgross@linux.intel.com
+	Fri, 4 Dec 2009 00:22:19 -0500
+Message-ID: <4B189C94.4080404@gmail.com>
+Date: Thu, 03 Dec 2009 21:22:28 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Miles Lane <miles.lane@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] BUG kmalloc-8192: Poison overwritten
+References: <dd18b0c30912021427x4d1d952tcdd98bb9d816b67c@mail.gmail.com> 	<43e72e890912021516k736db118j217dc92496db8f19@mail.gmail.com> 	<4B182F79.7060103@gmail.com> <43e72e890912031345m3f5adb9nca754e33a858c923@mail.gmail.com>
+In-Reply-To: <43e72e890912031345m3f5adb9nca754e33a858c923@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 12/03/09 13:45, Luis R. Rodriguez wrote:
 
 
-Signed-off-by: mark gross <mgross@linux.intel.com>
----
- drivers/acpi/processor_idle.c      |    2 +-
- drivers/cpuidle/governors/ladder.c |    2 +-
- drivers/cpuidle/governors/menu.c   |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+> I think waiting to be able to reproduce is best, and appreciate your
+> patience on this. Maybe Miles Lanes also cannot reproduce easily and
+> that may explain why he hasn't replied.
+>
+>    Luis
+>
 
-diff --git a/drivers/acpi/processor_idle.c b/drivers/acpi/processor_idle.c
-index bbd066e..1f524a2 100644
---- a/drivers/acpi/processor_idle.c
-+++ b/drivers/acpi/processor_idle.c
-@@ -696,7 +696,7 @@ static int acpi_processor_power_seq_show(struct seq_file *seq, void *offset)
- 		   "max_cstate:              C%d\n"
- 		   "maximum allowed latency: %d usec\n",
- 		   pr->power.state ? pr->power.state - pr->power.states : 0,
--		   max_cstate, pm_qos_requirement(PM_QOS_CPU_DMA_LATENCY));
-+		   max_cstate, pm_qos_request(PM_QOS_CPU_DMA_LATENCY));
- 
- 	seq_puts(seq, "states:\n");
- 
-diff --git a/drivers/cpuidle/governors/ladder.c b/drivers/cpuidle/governors/ladder.c
-index a4bec3f..5f93084 100644
---- a/drivers/cpuidle/governors/ladder.c
-+++ b/drivers/cpuidle/governors/ladder.c
-@@ -67,7 +67,7 @@ static int ladder_select_state(struct cpuidle_device *dev)
- 	struct ladder_device *ldev = &__get_cpu_var(ladder_devices);
- 	struct ladder_device_state *last_state;
- 	int last_residency, last_idx = ldev->last_state_idx;
--	int latency_req = pm_qos_requirement(PM_QOS_CPU_DMA_LATENCY);
-+	int latency_req = pm_qos_request(PM_QOS_CPU_DMA_LATENCY);
- 
- 	if (unlikely(!ldev))
- 		return 0;
-diff --git a/drivers/cpuidle/governors/menu.c b/drivers/cpuidle/governors/menu.c
-index 6810443..f75aec5 100644
---- a/drivers/cpuidle/governors/menu.c
-+++ b/drivers/cpuidle/governors/menu.c
-@@ -176,7 +176,7 @@ static void menu_update(struct cpuidle_device *dev);
- static int menu_select(struct cpuidle_device *dev)
- {
- 	struct menu_device *data = &__get_cpu_var(menu_devices);
--	int latency_req = pm_qos_requirement(PM_QOS_CPU_DMA_LATENCY);
-+	int latency_req = pm_qos_request(PM_QOS_CPU_DMA_LATENCY);
- 	int i;
- 	int multiplier;
- 
--- 
-1.6.3.3
+o.k., did some more experimenting
+but came up with something other than
+what I was hoping for(something with s2ram),
+Anyways the two patches applied clean,
+I'll just run  the system with these in,
+and if somebody comes along with more expertise
+on this I can try their advice(or if I somehow find
+a way to reproduce this).
 
+Justin P. Mattock
