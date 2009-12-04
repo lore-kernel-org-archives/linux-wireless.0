@@ -1,90 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:61376 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757783AbZLKNll (ORCPT
+Received: from lon1-post-2.mail.demon.net ([195.173.77.149]:39426 "EHLO
+	lon1-post-2.mail.demon.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932206AbZLDRFC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:41:41 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
+	Fri, 4 Dec 2009 12:05:02 -0500
+Date: Fri, 04 Dec 2009 17:04:39 +0000
+From: Darren Salt <linux@youmustbejoking.demon.co.uk>
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 15/31] wl1271: some new configuration values according to new reference
-Date: Fri, 11 Dec 2009 15:40:54 +0200
-Message-Id: <1260538870-32297-16-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+Subject: [rfkill PATCH] Move the man page to section 8
+Message-ID: <50C9E517AC%linux@youmustbejoking.demon.co.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the new reference driver, some of the firmware configuration values have
-been changed.  This patch changes them in the wl1271 driver accordingly.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_acx.h  |    4 ++--
- drivers/net/wireless/wl12xx/wl1271_main.c |   16 ++++++++--------
- 2 files changed, 10 insertions(+), 10 deletions(-)
+ Makefile             |    8 ++++----
+ rfkill.1 => rfkill.8 |    2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+ rename rfkill.1 => rfkill.8 (97%)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
-index fa5d953..dcd64b7 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
-@@ -885,8 +885,8 @@ struct acx_tx_config_options {
- 	__le16 tx_compl_threshold;   /* number of packets */
- } __attribute__ ((packed));
+diff --git a/Makefile b/Makefile
+index 71a6082..2c5fd9e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -46,13 +46,13 @@ check:
+ 	@$(NQ) ' GZIP' $<
+ 	$(Q)gzip < $< > $@
  
--#define ACX_RX_MEM_BLOCKS     64
--#define ACX_TX_MIN_MEM_BLOCKS 64
-+#define ACX_RX_MEM_BLOCKS     70
-+#define ACX_TX_MIN_MEM_BLOCKS 40
- #define ACX_TX_DESCRIPTORS    32
- #define ACX_NUM_SSID_PROFILES 1
+-install: rfkill rfkill.1.gz
++install: rfkill rfkill.8.gz
+ 	@$(NQ) ' INST rfkill'
+ 	$(Q)$(MKDIR) $(DESTDIR)$(SBINDIR)
+ 	$(Q)$(INSTALL) -m 755 -t $(DESTDIR)$(SBINDIR) rfkill
+-	@$(NQ) ' INST rfkill.1'
+-	$(Q)$(MKDIR) $(DESTDIR)$(MANDIR)/man1/
+-	$(Q)$(INSTALL) -m 644 -t $(DESTDIR)$(MANDIR)/man1/ rfkill.1.gz
++	@$(NQ) ' INST rfkill.8'
++	$(Q)$(MKDIR) $(DESTDIR)$(MANDIR)/man8/
++	$(Q)$(INSTALL) -m 644 -t $(DESTDIR)$(MANDIR)/man8/ rfkill.8.gz
  
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index b33bdcc..fb22217 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -67,10 +67,10 @@ static struct conf_drv_settings default_conf = {
- 		.ps_poll_timeout             = 15,
- 		.upsd_timeout                = 15,
- 		.rts_threshold               = 2347,
--		.rx_cca_threshold            = 0xFFEF,
--		.irq_blk_threshold           = 0,
--		.irq_pkt_threshold           = USHORT_MAX,
--		.irq_timeout                 = 5,
-+		.rx_cca_threshold            = 0,
-+		.irq_blk_threshold           = 0xFFFF,
-+		.irq_pkt_threshold           = 0,
-+		.irq_timeout                 = 600,
- 		.queue_type                  = CONF_RX_QUEUE_TYPE_LOW_PRIORITY,
- 	},
- 	.tx = {
-@@ -172,8 +172,8 @@ static struct conf_drv_settings default_conf = {
- 			}
- 		},
- 		.frag_threshold              = IEEE80211_MAX_FRAG_THRESHOLD,
--		.tx_compl_timeout            = 5,
--		.tx_compl_threshold          = 5
-+		.tx_compl_timeout            = 700,
-+		.tx_compl_threshold          = 4
- 	},
- 	.conn = {
- 		.wake_up_event               = CONF_WAKE_UP_EVENT_DTIM,
-@@ -186,12 +186,12 @@ static struct conf_drv_settings default_conf = {
- 				.rule        = CONF_BCN_RULE_PASS_ON_APPEARANCE,
- 			}
- 		},
--		.synch_fail_thold            = 5,
-+		.synch_fail_thold            = 10,
- 		.bss_lose_timeout            = 100,
- 		.beacon_rx_timeout           = 10000,
- 		.broadcast_timeout           = 20000,
- 		.rx_broadcast_in_ps          = 1,
--		.ps_poll_threshold           = 4,
-+		.ps_poll_threshold           = 20,
- 		.sig_trigger_count           = 2,
- 		.sig_trigger = {
- 			[0] = {
+ clean:
+ 	$(Q)rm -f rfkill *.o *~ *.gz version.c *-stamp
+diff --git a/rfkill.1 b/rfkill.8
+similarity index 97%
+rename from rfkill.1
+rename to rfkill.8
+index fc55be0..da06b27 100644
+--- a/rfkill.1
++++ b/rfkill.8
+@@ -1,5 +1,5 @@
+ .\"                                      Hey, EMACS: -*- nroff -*-
+-.TH RFKILL 1 "July 10, 2009"
++.TH RFKILL 8 "July 10, 2009"
+ .SH NAME
+ rfkill \- tool for enabling and disabling wireless devices
+ .SH SYNOPSIS
 -- 
-1.6.3.3
+1.6.5
 
+-- 
+| Darren Salt            | linux at youmustbejoking | nr. Ashington, | Doon
+| using Debian GNU/Linux | or ds    ,demon,co,uk    | Northumberland | Army
+| + http://wiki.debian.org/DebianEeePC/
+
+Tallulah Bankhead barged down the Nile last night as Cleopatra and sank.
