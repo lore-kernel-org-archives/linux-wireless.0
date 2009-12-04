@@ -1,48 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:62627 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752227AbZL2O5p (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56574 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752004AbZLDI0h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Dec 2009 09:57:45 -0500
-Received: by yxe17 with SMTP id 17so10096396yxe.33
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Dec 2009 06:57:44 -0800 (PST)
-From: tom.leiming@gmail.com
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linville@tuxdriver.com, Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH] ath9k: fix ito64
-Date: Tue, 29 Dec 2009 22:57:28 +0800
-Message-Id: <1262098648-5033-1-git-send-email-tom.leiming@gmail.com>
+	Fri, 4 Dec 2009 03:26:37 -0500
+Subject: [PATCH] mac80211: disallow fixing bitrates with hw rate control
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Dec 2009 09:26:38 +0100
+Message-ID: <1259915198.20064.21.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ming Lei <tom.leiming@gmail.com>
+When hw rate control is used, these parameters have
+no meaning because the hardware cannot get at them
+right now, so disallow setting them. Also clean up
+the function a bit.
 
-The unit of sizeof() is byte instead of bit, so fix it.
-The patch can fix debug output of some dma_addr_t variables.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ net/mac80211/cfg.c |   38 +++++++++++++++++++++++---------------
+ 1 file changed, 23 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index e2cef2f..1597a42 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -33,11 +33,11 @@ struct ath_node;
+--- wireless-testing.orig/net/mac80211/cfg.c	2009-12-04 09:20:44.000000000 +0100
++++ wireless-testing/net/mac80211/cfg.c	2009-12-04 09:24:28.000000000 +0100
+@@ -1397,15 +1397,25 @@ static int ieee80211_set_bitrate_mask(st
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	int i, err = -EINVAL;
++	int i;
+ 	u32 target_rate;
+ 	struct ieee80211_supported_band *sband;
  
- /* Macro to expand scalars to 64-bit objects */
++	/*
++	 * This _could_ be supported by providing a hook for
++	 * drivers for this function, but at this point it
++	 * doesn't seem worth bothering.
++	 */
++	if (local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
++		return -EOPNOTSUPP;
++
+ 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
  
--#define	ito64(x) (sizeof(x) == 8) ?			\
-+#define	ito64(x) (sizeof(x) == 1) ?			\
- 	(((unsigned long long int)(x)) & (0xff)) :	\
--	(sizeof(x) == 16) ?				\
-+	(sizeof(x) == 2) ?				\
- 	(((unsigned long long int)(x)) & 0xffff) :	\
--	((sizeof(x) == 32) ?				\
-+	((sizeof(x) == 4) ?				\
- 	 (((unsigned long long int)(x)) & 0xffffffff) : \
- 	 (unsigned long long int)(x))
+-	/* target_rate = -1, rate->fixed = 0 means auto only, so use all rates
++	/*
++	 * target_rate = -1, rate->fixed = 0 means auto only, so use all rates
+ 	 * target_rate = X, rate->fixed = 1 means only rate X
+-	 * target_rate = X, rate->fixed = 0 means all rates <= X */
++	 * target_rate = X, rate->fixed = 0 means all rates <= X
++	 */
+ 	sdata->max_ratectrl_rateidx = -1;
+ 	sdata->force_unicast_rateidx = -1;
  
--- 
-1.6.2.5
+@@ -1416,20 +1426,18 @@ static int ieee80211_set_bitrate_mask(st
+ 	else
+ 		return 0;
+ 
+-	for (i=0; i< sband->n_bitrates; i++) {
+-		struct ieee80211_rate *brate = &sband->bitrates[i];
+-		int this_rate = brate->bitrate;
+-
+-		if (target_rate == this_rate) {
+-			sdata->max_ratectrl_rateidx = i;
+-			if (mask->fixed)
+-				sdata->force_unicast_rateidx = i;
+-			err = 0;
+-			break;
+-		}
++	for (i = 0; i< sband->n_bitrates; i++) {
++		if (target_rate != sband->bitrates[i].bitrate)
++			continue;
++
++		/* requested bitrate found */
++		sdata->max_ratectrl_rateidx = i;
++		if (mask->fixed)
++			sdata->force_unicast_rateidx = i;
++		return 0;
+ 	}
+ 
+-	return err;
++	return -EINVAL;
+ }
+ 
+ struct cfg80211_ops mac80211_config_ops = {
+
 
