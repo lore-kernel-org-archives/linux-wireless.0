@@ -1,75 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.108.102.1]:58850 "EHLO parez.praha12.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752135AbZLWNzA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 08:55:00 -0500
-From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
-Reply-To: 8an@praha12.net
-To: =?utf-8?q?=E6=B5=B7=E8=97=BB=E6=95=AC=E4=B9=8B?=
-	<tkaiso@thinktube.com>
-Subject: Re: [ath5k-devel] [PATCH 4/5] ath5k: Reimplement clock rate to usec conversion
-Date: Wed, 23 Dec 2009 14:54:51 +0100
-Cc: johannes@sipsolutions.net, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-References: <4B320265.7050807@thinktube.com>
-In-Reply-To: <4B320265.7050807@thinktube.com>
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:53828 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754974AbZLDMMf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Dec 2009 07:12:35 -0500
+Received: by bwz27 with SMTP id 27so1887138bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Dec 2009 04:12:41 -0800 (PST)
+To: Jason Young <a.young.jason@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 0/2] mac80211: add U-APSD client support
+References: <16a81f890912031225g888490y2e8ff92557a322b7@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 04 Dec 2009 14:12:37 +0200
+In-Reply-To: <16a81f890912031225g888490y2e8ff92557a322b7@mail.gmail.com> (Jason Young's message of "Thu\, 3 Dec 2009 12\:25\:20 -0800")
+Message-ID: <87ocmf545m.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2283688.UGnvGS8xQI";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200912231454.57507.8an@praha12.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2283688.UGnvGS8xQI
-Content-Type: text/plain;
-  charset="iso-2022-jp"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Jason Young <a.young.jason@gmail.com> writes:
 
-On 23.12.2009 12:43 =1B$B3$At7IG7=1B(B wrote:
-> 2. still not good and unstable throughput for 2.4Ghz
-> thanks to your patch[3/5], [4/5], throughput was improved pretty much
-> but still staying around 10~15Mbps(1hop), 1Mbps~6Mbps(2hops)
-That's strange, those patches can't change anything... They modify a code t=
-hat=20
-cannot be used until patch[5/5] is applied, and even then you probably don'=
-t=20
-use it, because you didn't say you set the coverage class.
+> Hi,
 
-I think there's something wrong with your test methodology, because I don't=
-=20
-notice any difference, TCP throughput is always around 3MB/s. However I=20
-haven't tried ath5k on both ends yet.
+Hello,
 
-Have you tried setting a fixed rate (via iwconfig, it's not in iw yet)?
-Or setting a fixed antenna (there's no UI yet, you have to hardcode it, see=
-=20
-function ath5k_hw_set_antenna_mode)?
+>>> here is my proposal how to add U-APSD client support to mac80211. I also
+>>> included example driver implementation for wl1251.
+>>>
+>>> Please comment. Also I would like to get comments how U-APSD needs to be
+>>> implemented in different hardware.
+>
+> WMM Admission Control allows queues to be configured as trigger-only
+> and deliver-only via mgmt action frames. If this feature is ever
+> added to mac80211 we may need to make trigger-enabled and
+> deliver-enabled per queue configuration explicit rather than a
+> single boolean value per access category. Being as there is no way
+> to configure an access category trigger-only or deliver-only outside
+> of admission control, we don't need to worry about this problem
+> right now.
 
-Lukas Turek
+I decided to drop Admission Control for now because I didn't see any
+real use case for it. And if we would like to utilise it properly, we
+would need to have properly supported user space interface. I think we
+are not ready for that quite yet.
 
---nextPart2283688.UGnvGS8xQI
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+> We will want runtime time configuration of u-apsd because its is
+> necessary for station's 'WMM Power Save' certification. Recompiling
+> mac80211 for the various uapsd configurations is a bit heavy-handed.
+> I'd like to see debugfs support added back back for now its
+> primarily a testing issue anyway.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
+Thanks, I wasn't aware of this. Yes, adding the debugfs interface back
+makes sense now. But can you describe a bit more how you would like to
+use the debugfs interface? I would like to understand about your needs
+a bit more.
 
-iQIcBAABAgAGBQJLMiExAAoJEEBjvk/UOfYw6EYP/jwLdzAkwsfut2I9YTS03dka
-NFyDwwnpmr3k4dLu3elI+KHD5bIYeIIESM3RPhmGPSl50fl0NDEm0amu3jNW8pzA
-Wmx1LWaZojzu8jC0l3AAjoOwtOWhxIEdqvOhEmumzC7Xf1nt2xff3/VBnf0GIv6j
-obHKTFGsf4aF4LbFXh+DRWqLxjX14HtUUH0KmIx61B2zwEYxpaSSUiOh+5lPekle
-bAHzG50aGoEy1AJ0VOnTDr/vItFKP41oR+dFA9Tk+sYhC4MIkU05//CVWnURL9aH
-7S9fU/oOadXi+MsQmLGQYyjCyqyf2C9sTuR9Rvy8hVRELO/aTidjyZQxwGtSqhbS
-TcZXv0NsOOc2CapMI8X2V6f04atUIx6CuX+O1xbHbHeVOACWGOvMYOvM3wUILuTA
-ckK+nZiFjxvB1KxMxX3BGw/bybfKPRBwKXjzBAiuqjoqjJddk/+685u47xqWxTdW
-Z2ssD3bficQgoirNyGtVgt1cLXB5/AvrCOmdt/O2Nr6VfIqm7Vo973RfsLUkO6sp
-P0oE+u5c6KZf60rfW+ljCX/1L9KfCBcgJGZ1sPgsl7qI1ASq/KTdVT9VUQWBcOAc
-DsQWCOkcBKHZLGWEuBZIlsTNAk2panfBScIRlDyKvFUAXi61LtVBrZr85jzaS5DB
-uYiAdA+e4nRqKb6qiKhp
-=ahOL
------END PGP SIGNATURE-----
+I also need to find the certification test plan and read it myself.
 
---nextPart2283688.UGnvGS8xQI--
+>>> - add max SP length defines to ieee80211.h
+>
+> The bit values for IEEE80211_WMM_IE_STA_SP_XXX are not correct. The
+> Max SP Length subfield settings table in 7.3.1.17 has the least
+> significant bit listed first.
+
+Oh, I missed that entirely. And I was even thinking why the order
+looked so weird (0, 2, 1, 3), I should have checked that. Thank you
+for noticing this.
+
+>>> v2:
+>>> - remove cfg80211 changes
+>>> - rename IEEE80211_QOS_IE to IEEE80211_WMM_IE_STA in ieee80211.h
+>
+> I would rename IEEE80211_WMM_IE_STA_XXX defines to something like
+> IEEE80211_STA_QOSINFO_XXX to make it clear that bit values are used in the
+> context of the qosinfo field octet.
+
+Good point. Is IEEE80211_WMM_IE_STA_QOSINFO_AC_VO clear enough? At
+least it's long enough :)
+
+Thank you for the comments, I appreciate them.
+
+-- 
+Kalle Valo
