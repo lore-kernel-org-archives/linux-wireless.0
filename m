@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:24630 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751953AbZLCLB3 (ORCPT
+Received: from one.firstfloor.org ([213.235.205.2]:59570 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751699AbZLDXb7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2009 06:01:29 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: question regarding cfg80211 monitor modes
-Date: Thu, 3 Dec 2009 12:00:56 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>
-References: <200912031148.46934.holgerschurig@gmail.com> <1259837682.12843.10.camel@johannes.local>
-In-Reply-To: <1259837682.12843.10.camel@johannes.local>
+	Fri, 4 Dec 2009 18:31:59 -0500
+Date: Sat, 5 Dec 2009 00:32:02 +0100
+From: Andi Kleen <andi@firstfloor.org>
+To: rjw@sisk.pl, IvDoorn@gmail.com, gwingerde@gmail.com,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: regression: rt2561 frequent "Arrived at non-free entry" errors in
+	2.6.32
+Message-ID: <20091204233202.GA13658@basil.fritz.box>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200912031200.56443.holgerschurig@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I'd say don't bother with the flags at all.
+[Rafael, something for your regression list]
 
-Okay, I'll then a mask of 0x07, turning everything on. If someone 
-doesn't like beacons, he can still use
+I upgraded a system which was running 2.6.30 to 2.6.32.
+It has a 
 
-  tshark -R "!(wlan.fc.subtype == 8)"
+06:02.0 Network controller: RaLink RT2561/RT61 802.11g PCI
 
+wireless PCI card. Now regularly even under moderate traffic
+I see messages like
 
+phy0 -> rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 2.
+Please file bug report to http://rt2x00.serialmonkey.com.
 
-BTW: 
-http://wireless.kernel.org/en/users/Documentation/modes#Monitor_mode 
-doesn't say anything about the modes.
+and loss of connectivity, often until the wireless connection
+is restarted. This wasn't the case in 2.6.30, there the driver
+ran stable without any problems. The problem currently
+happens every few minutes.
 
+-Andi
 -- 
-http://www.holgerschurig.de
+ak@linux.intel.com -- Speaking for myself only.
