@@ -1,109 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:60035 "EHLO
-	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753472AbZLVXDq (ORCPT
+Received: from static-72-92-88-10.phlapa.fios.verizon.net ([72.92.88.10]:46388
+	"EHLO smtp.roinet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751683AbZLDPOt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2009 18:03:46 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 2/5] rt2x00: Fix checks for rt2800 SOC support.
-Date: Wed, 23 Dec 2009 00:03:22 +0100
-Message-Id: <1261523005-5856-3-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1261523005-5856-2-git-send-email-gwingerde@gmail.com>
-References: <1261523005-5856-1-git-send-email-gwingerde@gmail.com>
- <1261523005-5856-2-git-send-email-gwingerde@gmail.com>
+	Fri, 4 Dec 2009 10:14:49 -0500
+Message-ID: <4B19276F.5080604@roinet.com>
+Date: Fri, 04 Dec 2009 10:14:55 -0500
+From: David Acker <dacker@roinet.com>
+MIME-Version: 1.0
+To: Kalle Valo <kalle.valo@iki.fi>
+CC: linux-wireless@vger.kernel.org, patrik.flykt@nokia.com
+Subject: Re: WMM classification guideline for applications?
+References: <87d42u6dnd.fsf@purkki.valot.fi>
+In-Reply-To: <87d42u6dnd.fsf@purkki.valot.fi>
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix checking for SOC support in rt2800pci. The wrong config (an unexisting
-one) was checked.
+Kalle Valo wrote:
+> Hello,
+> 
+> me and Patrik have been pondering what's the proper way for user space
+> applications to do packet classification to get the benefits from WMM.
+> VoIP application is a good example here.
+> 
+> For the time being we have identified three different methods:
+> 
+> 1. SO_PRIORITY with values 0-7 (we used this in nokia n810)
+> 2. SO_PRIORITY with values 256-263 (used by mac80211)
+> 3. IPv4 DSCP field with values 0-7 (used by mac80211)
+> 
+> Method 1 is easy, applications need to just use setsockopt() and be
+> done with it. I don't know how widely supported values 0-7 are, but at
+> least they make sense. The problem is that priority is used only in
+> the first link, rest of the route is not able to benefit from the
+> classification.
+> 
+> Method 2 (priorities 256-263) doesn't sound very portable. I doubt if
+> any other stack or driver (even non-wifi ones) use these values.
+> Otherwise this is similar with Method 1.
+> 
+> Method 3 (IPv4 DSCP field) feels most portable to us, at least most,
+> if not all, wifi drivers should use it. And, in theory, the receiver
+> should also benefit from the classification, unless ISPs modify it of
+> course. But the standardisation for IPv4 QoS bits is a mess and I
+> don't really understand where the use of DSCP bits (as used in WMM
+> implementations) is specified. Also I was told that root privileges
+> are needed to set this and that's somewhat cumbersome from application
+> developer's point of view.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800pci.c |   18 +++++++++---------
- 1 files changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 458378c..96e0244 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -52,8 +52,8 @@
- #define CONFIG_RT2800PCI_PCI
- #endif
- 
--#ifdef CONFIG_RT2800PCI_WISOC_MODULE
--#define CONFIG_RT2800PCI_WISOC
-+#ifdef CONFIG_RT2800PCI_SOC_MODULE
-+#define CONFIG_RT2800PCI_SOC
- #endif
- 
- /*
-@@ -87,7 +87,7 @@ static void rt2800pci_mcu_status(struct rt2x00_dev *rt2x00dev, const u8 token)
- 	rt2800_register_write(rt2x00dev, H2M_MAILBOX_CID, ~0);
- }
- 
--#ifdef CONFIG_RT2800PCI_WISOC
-+#ifdef CONFIG_RT2800PCI_SOC
- static void rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
- {
- 	u32 *base_addr = (u32 *) KSEG1ADDR(0x1F040000); /* XXX for RT3052 */
-@@ -98,7 +98,7 @@ static void rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
- static inline void rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
- {
- }
--#endif /* CONFIG_RT2800PCI_WISOC */
-+#endif /* CONFIG_RT2800PCI_SOC */
- 
- #ifdef CONFIG_RT2800PCI_PCI
- static void rt2800pci_eepromregister_read(struct eeprom_93cx6 *eeprom)
-@@ -1251,7 +1251,7 @@ MODULE_DEVICE_TABLE(pci, rt2800pci_device_table);
- #endif /* CONFIG_RT2800PCI_PCI */
- MODULE_LICENSE("GPL");
- 
--#ifdef CONFIG_RT2800PCI_WISOC
-+#ifdef CONFIG_RT2800PCI_SOC
- #if defined(CONFIG_RALINK_RT288X)
- __rt2x00soc_probe(RT2880, &rt2800pci_ops);
- #elif defined(CONFIG_RALINK_RT305X)
-@@ -1269,7 +1269,7 @@ static struct platform_driver rt2800soc_driver = {
- 	.suspend	= rt2x00soc_suspend,
- 	.resume		= rt2x00soc_resume,
- };
--#endif /* CONFIG_RT2800PCI_WISOC */
-+#endif /* CONFIG_RT2800PCI_SOC */
- 
- #ifdef CONFIG_RT2800PCI_PCI
- static struct pci_driver rt2800pci_driver = {
-@@ -1286,7 +1286,7 @@ static int __init rt2800pci_init(void)
- {
- 	int ret = 0;
- 
--#ifdef CONFIG_RT2800PCI_WISOC
-+#ifdef CONFIG_RT2800PCI_SOC
- 	ret = platform_driver_register(&rt2800soc_driver);
- 	if (ret)
- 		return ret;
-@@ -1294,7 +1294,7 @@ static int __init rt2800pci_init(void)
- #ifdef CONFIG_RT2800PCI_PCI
- 	ret = pci_register_driver(&rt2800pci_driver);
- 	if (ret) {
--#ifdef CONFIG_RT2800PCI_WISOC
-+#ifdef CONFIG_RT2800PCI_SOC
- 		platform_driver_unregister(&rt2800soc_driver);
- #endif
- 		return ret;
-@@ -1309,7 +1309,7 @@ static void __exit rt2800pci_exit(void)
- #ifdef CONFIG_RT2800PCI_PCI
- 	pci_unregister_driver(&rt2800pci_driver);
- #endif
--#ifdef CONFIG_RT2800PCI_WISOC
-+#ifdef CONFIG_RT2800PCI_SOC
- 	platform_driver_unregister(&rt2800soc_driver);
- #endif
- }
--- 
-1.6.5.7
-
+What do think of also supporting a method 4, VLAN priority field (0-7)?
+-ack
