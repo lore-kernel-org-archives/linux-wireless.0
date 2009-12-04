@@ -1,35 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.102.11.253]:35422 "EHLO
-	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933926AbZLFRUV (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:35162
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757396AbZLDWZr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2009 12:20:21 -0500
-From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
-Reply-To: 8an@praha12.net
+	Fri, 4 Dec 2009 17:25:47 -0500
+Date: Fri, 04 Dec 2009 14:25:54 -0800 (PST)
+Message-Id: <20091204.142554.246408242.davem@davemloft.net>
 To: linville@tuxdriver.com
-Subject: [PATCH 0/4] Setting coverage class (and ACK timeout and slot time)
-Date: Sun, 6 Dec 2009 18:20:26 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	ath5k-devel@lists.ath5k.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200912061820.26320.8an@praha12.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chunkeey@googlemail.com,
+	reinette.chatre@intel.com
+Subject: Re: [PATCH] mac80211: fix reorder buffer release
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20091204215555.GC3595@tuxdriver.com>
+References: <20091204215555.GC3595@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches implement a feature essential for long distance wireless links: 
-setting ACK timeout and slot time. The API is based on a parameter called 
-Coverage Class specified by the 802.11 standard.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 4 Dec 2009 16:55:55 -0500
 
-The first two patches add support to the kernel 802.11 stack via a new nl80211 
-parameter and a mac80211 callback.
+> I missed this in today's pull request -- please queue it directly in
+> your tree!
 
-Following two patches implement the callback in ath5k driver. Implementation 
-in ath9k driver is planned.
-
-One additional patch outside the series adds the necessary userspace support 
-to iw.
-
-Lukas Turek
+Applied.
