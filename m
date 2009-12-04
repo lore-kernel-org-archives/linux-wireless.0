@@ -1,74 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.108.102.1]:41767 "EHLO parez.praha12.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753271AbZLUMil (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2009 07:38:41 -0500
-From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
-Reply-To: 8an@praha12.net
-To: =?utf-8?q?=E6=B5=B7=E8=97=BB=E6=95=AC=E4=B9=8B?=
-	<tkaiso@thinktube.com>
-Subject: Re: [ath5k-devel] [PATCH 4/5] ath5k: Reimplement clock rate to usec conversion
-Date: Mon, 21 Dec 2009 13:38:32 +0100
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-References: <1260899813-17585-1-git-send-email-8an@praha12.net> <1260899813-17585-5-git-send-email-8an@praha12.net> <4B2F4D3A.4050009@thinktube.com>
-In-Reply-To: <4B2F4D3A.4050009@thinktube.com>
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:53768 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751285AbZLDPY2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Dec 2009 10:24:28 -0500
+Received: by bwz27 with SMTP id 27so2029364bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Dec 2009 07:24:33 -0800 (PST)
+To: David Acker <dacker@roinet.com>
+Cc: linux-wireless@vger.kernel.org, patrik.flykt@nokia.com
+Subject: Re: WMM classification guideline for applications?
+References: <87d42u6dnd.fsf@purkki.valot.fi> <4B19276F.5080604@roinet.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 04 Dec 2009 17:24:30 +0200
+In-Reply-To: <4B19276F.5080604@roinet.com> (David Acker's message of "Fri\, 04 Dec 2009 10\:14\:55 -0500")
+Message-ID: <878wdi69u9.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1470530.u1CzKc1sMH";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200912211338.36289.8an@praha12.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1470530.u1CzKc1sMH
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+David Acker <dacker@roinet.com> writes:
 
-On 21.12.2009 11:26 =E6=B5=B7=E8=97=BB=E6=95=AC=E4=B9=8B wrote:
-> =C2=A0Didn't we have to handle CHANNEL_2GHZ case in
-> ath5k_hw_write_ofdm_timings() shown below ?
-The ath5k gives exactly the same results as original Atheros HAL:
+> Kalle Valo wrote:
+>> Hello,
+>>
+>> me and Patrik have been pondering what's the proper way for user space
+>> applications to do packet classification to get the benefits from WMM.
+>> VoIP application is a good example here.
+>>
+>> For the time being we have identified three different methods:
+>>
+>> 1. SO_PRIORITY with values 0-7 (we used this in nokia n810)
+>> 2. SO_PRIORITY with values 256-263 (used by mac80211)
+>> 3. IPv4 DSCP field with values 0-7 (used by mac80211)
 
-  #define INIT_CLOCKMHZSCALED     0x64000000
-  unsigned long clockMhzScaled =3D INIT_CLOCKMHZSCALED;
-  if (IS_CHAN_TURBO(chan)) clockMhzScaled *=3D 2;
-  coef_scaled =3D clockMhzScaled / chan->channel;
+[...]
 
-I don't know how the calculations work, they might be explained in the=20
-referenced patent, but I didn't change their semantics at all.
+> What do think of also supporting a method 4, VLAN priority field (0-7)?
 
-> =C2=A0I think we should do. then I made my own patch to hadle it and it
-> seemed =C2=A0to improve the throughput of 2.4GHz. (even still not as good=
- as
-> 5Ghz case )
-Where's the patch?
+Sorry, I haven't heard about this. I don't even know how applications
+should set this. Can you show an example, please?
 
-Lukas Turek
-
---nextPart1470530.u1CzKc1sMH
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iQIcBAABAgAGBQJLL2xMAAoJEEBjvk/UOfYwuzEQALt23tm5vZ1MzOx1Zgoi+/8E
-jKzet8+eChlPljnEvFuEml+b2rH+lpBJV7exTNjLt8Tdmch+x7Wpok0oR6CKOAx/
-FtPvIL6rhIojo1SSbX81mrBFyvYydIRYvAe+S7tQrfwVigMRMTeUb824RCNCJIDn
-PU3wM9OtyGmMUDjs1meOFesfvSqOToP7eGg2Q9v9miPNkkDEqihgUg7vDYAIt5WR
-zGDClp4IccBKlMISV3rjXQEeXbWXnTbuzE0SjWb5irKIafKFw3YcrjtidSC44a+b
-XrVOHK7sC8ScXIPOGKgH+FVurVVMMjbrEjFEYkXlg9M3vao6CUJkgWIYXu7jmuJB
-N0SGkAAry/STr9OTH3+k/0a0qWtqPCHz2gRDJ4yvoFJNylrCe53ib1R2CWhXMhPl
-6D5AjsDJ7RXFq/0skwZ1Qx3MP9SP+nxXg8rS7clg/JolsrzkX4o/hfN+zfgaAHdY
-Kya6y9rZetwYFQqr5pjgBmQa3eosHsrZ2S+rezHCyIkmkI4tASY7t4p6SvcbHMSL
-bKuICtKrAwGNYi9tLORNEEDN29YYS0CBZHv87IwCFDwwWjd41hH5w6Bn0tzio8d5
-+Zotbh5Qfr6drQItOZrz9jtcqZBcJanelccvB1r3gFvLQFoGPPnNEh8qsngTz6AD
-ZWwSx0kwEgwzRj7z38Qn
-=IGQ9
------END PGP SIGNATURE-----
-
---nextPart1470530.u1CzKc1sMH--
+-- 
+Kalle Valo
