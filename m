@@ -1,116 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55762 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753313AbZLVPVf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2009 10:21:35 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/3] compat-wireless: Add more functions into netdev oops backport
-Date: Tue, 22 Dec 2009 16:20:04 +0100
-Message-Id: <1261495204-28966-6-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1261495204-28966-1-git-send-email-hauke@hauke-m.de>
-References: <1261495204-28966-1-git-send-email-hauke@hauke-m.de>
+Received: from static-72-92-88-10.phlapa.fios.verizon.net ([72.92.88.10]:56437
+	"EHLO smtp.roinet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756898AbZLDQIP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Dec 2009 11:08:15 -0500
+Message-ID: <4B1933F5.2010408@roinet.com>
+Date: Fri, 04 Dec 2009 11:08:21 -0500
+From: David Acker <dacker@roinet.com>
+MIME-Version: 1.0
+To: Kalle Valo <kalle.valo@iki.fi>
+CC: linux-wireless@vger.kernel.org, patrik.flykt@nokia.com
+Subject: Re: WMM classification guideline for applications?
+References: <87d42u6dnd.fsf@purkki.valot.fi> <4B19276F.5080604@roinet.com> <878wdi69u9.fsf@purkki.valot.fi>
+In-Reply-To: <878wdi69u9.fsf@purkki.valot.fi>
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add netdev->poll_controller, netdev->vlan_rx_register and netdev->set_multicast_list into the netdev_ops backport code in driver atl1c, atl1e and atlx.
+Kalle Valo wrote:
+> David Acker <dacker@roinet.com> writes:
+>> What do think of also supporting a method 4, VLAN priority field (0-7)?
+> 
+> Sorry, I haven't heard about this. I don't even know how applications
+> should set this. Can you show an example, please?
 
-This is compiling, but not really tested because I do not have these devices.
+Sure.  A system could be setup with multiple VLANs available on its 
+outgoing port.  Imagine eth0.1, eth0.2 and eth0.7.  Each one is a 
+different VLAN with a different priority mapping setup.  The application 
+can use the high priority VLAN which should then be reflected in the 
+over the air packets using a high priority WMM queue.  If the driver 
+implements the appropriate VLAN functionality it should be able to 
+detect VLAN tagged packets and pick the appropriate WMM hardware queue. 
+  I think a driver can use vlan_get_tag to get the Tag Control 
+Information (TCI) field.  The TCI field contains a 3-bit Priority Code 
+Point (PCP) field for 8 different priorities.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/01-netdev.patch |   28 ++++++++++++++++++++++++----
- 1 files changed, 24 insertions(+), 4 deletions(-)
+I am not an expert on how the kernel handles vlans, but it appears that 
+the priority field's value is set by the user space VLAN creation tools 
+through an ioctl with SET_VLAN_EGRESS_PRIORITY_CMD which calls 
+vlan_dev_set_egress_priority to map an skb priority to a vlan priority.
+vlan_dev_hard_header then uses this information to populate the vlan 
+priority field based on the skb priority field.
 
-diff --git a/patches/01-netdev.patch b/patches/01-netdev.patch
-index 1ddae28..2c0aa06 100644
---- a/patches/01-netdev.patch
-+++ b/patches/01-netdev.patch
-@@ -629,7 +629,7 @@ diff -Nur a/net/bluetooth/bnep/netdev.c b/net/bluetooth/bnep/netdev.c
-  
-  static int atl1e_init_netdev(struct net_device *netdev, struct pci_dev *pdev)
-  {
--@@ -2243,7 +2245,18 @@ static int atl1e_init_netdev(struct net_
-+@@ -2243,7 +2245,23 @@ static int atl1e_init_netdev(struct net_
-  	pci_set_drvdata(pdev, netdev);
-  
-  	netdev->irq  = pdev->irq;
-@@ -644,6 +644,11 @@ diff -Nur a/net/bluetooth/bnep/netdev.c b/net/bluetooth/bnep/netdev.c
- +	netdev->set_mac_address = atl1e_set_mac_addr;
- +	netdev->do_ioctl = atl1e_ioctl;
- +	netdev->get_stats = atl1e_get_stats;
-++	netdev->set_multicast_list = atl1e_set_multi;
-++	netdev->vlan_rx_register = atl1e_vlan_rx_register;
-++#ifdef CONFIG_NET_POLL_CONTROLLER
-++	netdev->poll_controller = atl1e_netpoll;
-++#endif
- +#endif
-  
-  	netdev->watchdog_timeo = AT_TX_WATCHDOG;
-@@ -666,7 +671,7 @@ diff -Nur a/net/bluetooth/bnep/netdev.c b/net/bluetooth/bnep/netdev.c
-  
-  static int atl1c_init_netdev(struct net_device *netdev, struct pci_dev *pdev)
-  {
--@@ -2462,7 +2464,18 @@ static int atl1c_init_netdev(struct net_
-+@@ -2462,7 +2464,23 @@ static int atl1c_init_netdev(struct net_
-  	pci_set_drvdata(pdev, netdev);
-  
-  	netdev->irq  = pdev->irq;
-@@ -681,6 +686,11 @@ diff -Nur a/net/bluetooth/bnep/netdev.c b/net/bluetooth/bnep/netdev.c
- +	netdev->set_mac_address = atl1c_set_mac_addr;
- +	netdev->do_ioctl = atl1c_ioctl;
- +	netdev->get_stats = atl1c_get_stats;
-++	netdev->set_multicast_list = atl1c_set_multi;
-++	netdev->vlan_rx_register = atl1c_vlan_rx_register;
-++#ifdef CONFIG_NET_POLL_CONTROLLER
-++	netdev->poll_controller = atl1c_netpoll;
-++#endif
- +#endif
-  	netdev->watchdog_timeo = AT_TX_WATCHDOG;
-  	atl1c_set_ethtool_ops(netdev);
-@@ -703,7 +713,7 @@ diff -Nur a/net/bluetooth/bnep/netdev.c b/net/bluetooth/bnep/netdev.c
-  
-  /*
-   * atl1_probe - Device Initialization Routine
--@@ -2981,7 +2983,17 @@ static int __devinit atl1_probe(struct p
-+@@ -2981,7 +2983,22 @@ static int __devinit atl1_probe(struct p
-  	adapter->mii.phy_id_mask = 0x1f;
-  	adapter->mii.reg_num_mask = 0x1f;
-  
-@@ -717,6 +727,11 @@ diff -Nur a/net/bluetooth/bnep/netdev.c b/net/bluetooth/bnep/netdev.c
- +	netdev->tx_timeout = atlx_tx_timeout;
- +	netdev->set_mac_address = atl1_set_mac;
- +	netdev->do_ioctl = atlx_ioctl;
-++	netdev->set_multicast_list = atlx_set_multi;
-++	netdev->vlan_rx_register = atlx_vlan_rx_register;
-++#ifdef CONFIG_NET_POLL_CONTROLLER
-++	netdev->poll_controller = atl1_poll_controller;
-++#endif
- +#endif
-  	netdev->watchdog_timeo = 5 * HZ;
-  
-@@ -739,7 +754,7 @@ diff -Nur a/net/bluetooth/bnep/netdev.c b/net/bluetooth/bnep/netdev.c
-  
-  /*
-   * atl2_probe - Device Initialization Routine
--@@ -1395,7 +1397,17 @@ static int __devinit atl2_probe(struct p
-+@@ -1395,7 +1397,22 @@ static int __devinit atl2_probe(struct p
-  
-  	atl2_setup_pcicmd(pdev);
-  
-@@ -753,6 +768,11 @@ diff -Nur a/net/bluetooth/bnep/netdev.c b/net/bluetooth/bnep/netdev.c
- +	netdev->tx_timeout = atl2_tx_timeout;
- +	netdev->set_mac_address = atl2_set_mac;
- +	netdev->do_ioctl = atl2_ioctl;
-++	netdev->set_multicast_list = atl2_set_multi;
-++	netdev->vlan_rx_register = atl2_vlan_rx_register;
-++#ifdef CONFIG_NET_POLL_CONTROLLER
-++	netdev->poll_controller = atl2_poll_controller;
-++#endif
- +#endif
-  	atl2_set_ethtool_ops(netdev);
-  	netdev->watchdog_timeo = 5 * HZ;
--- 
-1.6.3.3
-
+In this case it would seem that skb priority and the vlan priority are 
+both set and there may be a non-trivial mapping between the two. 
+pkt_sched.h defines some skb priorities but also leaves many undefined. 
+  The skb->priority is also larger then the vlan priority.  If both are 
+set, which will take precedence?
+-ack
