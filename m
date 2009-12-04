@@ -1,73 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml103.kpnxchange.com ([195.121.3.7]:54271 "EHLO
-	CPSMTPM-EML103.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755368AbZLVXDt (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:42453 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756338AbZLDOCO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2009 18:03:49 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 4/5] rt2x00: convert RT2800PCI_PCI and RT2800PCI_SOC Kconfig symbols to booleans.
-Date: Wed, 23 Dec 2009 00:03:24 +0100
-Message-Id: <1261523005-5856-5-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1261523005-5856-4-git-send-email-gwingerde@gmail.com>
-References: <1261523005-5856-1-git-send-email-gwingerde@gmail.com>
- <1261523005-5856-2-git-send-email-gwingerde@gmail.com>
- <1261523005-5856-3-git-send-email-gwingerde@gmail.com>
- <1261523005-5856-4-git-send-email-gwingerde@gmail.com>
+	Fri, 4 Dec 2009 09:02:14 -0500
+Received: by bwz27 with SMTP id 27so1962162bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Dec 2009 06:02:19 -0800 (PST)
+To: linux-wireless@vger.kernel.org
+Cc: patrik.flykt@nokia.com
+Subject: WMM classification guideline for applications?
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 04 Dec 2009 16:02:14 +0200
+Message-ID: <87d42u6dnd.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no need for Kconfig symbols RT2800PCI_PCI and RT2800PCI_SOC to be
-tristates, as they are only used to check whether RT2800 PCI or SOC support
-is to be compiled in.
+Hello,
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/Kconfig     |    4 ++--
- drivers/net/wireless/rt2x00/rt2800pci.c |    8 --------
- 2 files changed, 2 insertions(+), 10 deletions(-)
+me and Patrik have been pondering what's the proper way for user space
+applications to do packet classification to get the benefits from WMM.
+VoIP application is a good example here.
 
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-index bf60689..3ca824a 100644
---- a/drivers/net/wireless/rt2x00/Kconfig
-+++ b/drivers/net/wireless/rt2x00/Kconfig
-@@ -54,12 +54,12 @@ config RT61PCI
- 	  When compiled as a module, this driver will be called rt61pci.
- 
- config RT2800PCI_PCI
--	tristate
-+	boolean
- 	depends on PCI
- 	default y
- 
- config RT2800PCI_SOC
--	tristate
-+	boolean
- 	depends on RALINK_RT288X || RALINK_RT305X
- 	default y
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 96e0244..2f9dedd 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -48,14 +48,6 @@
- #include "rt2800.h"
- #include "rt2800pci.h"
- 
--#ifdef CONFIG_RT2800PCI_PCI_MODULE
--#define CONFIG_RT2800PCI_PCI
--#endif
--
--#ifdef CONFIG_RT2800PCI_SOC_MODULE
--#define CONFIG_RT2800PCI_SOC
--#endif
--
- /*
-  * Allow hardware encryption to be disabled.
-  */
+For the time being we have identified three different methods:
+
+1. SO_PRIORITY with values 0-7 (we used this in nokia n810)
+2. SO_PRIORITY with values 256-263 (used by mac80211)
+3. IPv4 DSCP field with values 0-7 (used by mac80211)
+
+Method 1 is easy, applications need to just use setsockopt() and be
+done with it. I don't know how widely supported values 0-7 are, but at
+least they make sense. The problem is that priority is used only in
+the first link, rest of the route is not able to benefit from the
+classification.
+
+Method 2 (priorities 256-263) doesn't sound very portable. I doubt if
+any other stack or driver (even non-wifi ones) use these values.
+Otherwise this is similar with Method 1.
+
+Method 3 (IPv4 DSCP field) feels most portable to us, at least most,
+if not all, wifi drivers should use it. And, in theory, the receiver
+should also benefit from the classification, unless ISPs modify it of
+course. But the standardisation for IPv4 QoS bits is a mess and I
+don't really understand where the use of DSCP bits (as used in WMM
+implementations) is specified. Also I was told that root privileges
+are needed to set this and that's somewhat cumbersome from application
+developer's point of view.
+
+So what's the proper long term solution for this? All ideas are more
+than welcome.
+
 -- 
-1.6.5.7
-
+Kalle Valo
