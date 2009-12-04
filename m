@@ -1,57 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:15604 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752646AbZLCKjC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2009 05:39:02 -0500
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 1/4] iwmc3200wifi: Update wiwi priority table
-Date: Thu,  3 Dec 2009 11:40:15 +0100
-Message-Id: <4790a128344a09f0bdb2249c8ee831f254ca72ec.1259835655.git.sameo@linux.intel.com>
-In-Reply-To: <cover.1259835655.git.sameo@linux.intel.com>
-References: <cover.1259835655.git.sameo@linux.intel.com>
-In-Reply-To: <cover.1259835655.git.sameo@linux.intel.com>
-References: <cover.1259835655.git.sameo@linux.intel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:4305 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932409AbZLDUyp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Dec 2009 15:54:45 -0500
+Subject: Re: status of rt2870 support
+From: Dan Williams <dcbw@redhat.com>
+To: matthieu castet <castet.matthieu@free.fr>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4B196F20.2020005@free.fr>
+References: <4B196F20.2020005@free.fr>
+Content-Type: text/plain
+Date: Fri, 04 Dec 2009 12:54:57 -0800
+Message-Id: <1259960097.27022.77.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This update follows the firmware engineers recommendations.
+On Fri, 2009-12-04 at 21:20 +0100, matthieu castet wrote:
+> Hi,
+> 
+> I downloaded the compat-wireless-2009-12-03 and tried it on my d-link rt2870 usb dongle.
+> 
+> After doing a ifconfig up, I start a scaning.
+> And the scaning show weird stuff :
+> - there is lot's of "IE: Unknown". [1]
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- drivers/net/wireless/iwmc3200wifi/commands.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+Expected.  You probably want to use 'iw' instead.
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/commands.c b/drivers/net/wireless/iwmc3200wifi/commands.c
-index bd06307..6a22711 100644
---- a/drivers/net/wireless/iwmc3200wifi/commands.c
-+++ b/drivers/net/wireless/iwmc3200wifi/commands.c
-@@ -122,18 +122,18 @@ static struct coex_event iwm_sta_xor_prio_tbl[COEX_EVENTS_NUM] =
- static struct coex_event iwm_sta_cm_prio_tbl[COEX_EVENTS_NUM] =
- {
- 	{1, 1, 0, COEX_UNASSOC_IDLE_FLAGS},
--	{4, 3, 0, COEX_UNASSOC_MANUAL_SCAN_FLAGS},
-+	{4, 4, 0, COEX_UNASSOC_MANUAL_SCAN_FLAGS},
- 	{3, 3, 0, COEX_UNASSOC_AUTO_SCAN_FLAGS},
--	{5, 5, 0, COEX_CALIBRATION_FLAGS},
-+	{6, 6, 0, COEX_CALIBRATION_FLAGS},
- 	{3, 3, 0, COEX_PERIODIC_CALIBRATION_FLAGS},
--	{5, 4, 0, COEX_CONNECTION_ESTAB_FLAGS},
-+	{6, 5, 0, COEX_CONNECTION_ESTAB_FLAGS},
- 	{4, 4, 0, COEX_ASSOCIATED_IDLE_FLAGS},
- 	{4, 4, 0, COEX_ASSOC_MANUAL_SCAN_FLAGS},
- 	{4, 4, 0, COEX_ASSOC_AUTO_SCAN_FLAGS},
- 	{4, 4, 0, COEX_ASSOC_ACTIVE_LEVEL_FLAGS},
- 	{1, 1, 0, COEX_RF_ON_FLAGS},
- 	{1, 1, 0, COEX_RF_OFF_FLAGS},
--	{6, 6, 0, COEX_STAND_ALONE_DEBUG_FLAGS},
-+	{7, 7, 0, COEX_STAND_ALONE_DEBUG_FLAGS},
- 	{5, 4, 0, COEX_IPAN_ASSOC_LEVEL_FLAGS},
- 	{1, 1, 0, COEX_RSRVD1_FLAGS},
- 	{1, 1, 0, COEX_RSRVD2_FLAGS}
--- 
-1.6.3.3
+> - not all AP are showed. Even those with very good signal.
+
+Probably a bug.
+
+Dan
+
+> Is that normal ?
+> 
+> 
+> Matthieu
+> 
+> [1]
+>           Cell 03 - Address: 0E:58:1C:E3:D7:BA
+>                     Channel:10
+>                     Frequency:2.457 GHz (Channel 10)
+>                     Quality=70/70  Signal level=35 dBm  
+>                     Encryption key:off
+>                     ESSID:"FreeWifi"
+>                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 9 Mb/s
+>                               18 Mb/s; 36 Mb/s; 54 Mb/s
+>                     Bit Rates:6 Mb/s; 12 Mb/s; 24 Mb/s; 48 Mb/s
+>                     Mode:Master
+>                     Extra:tsf=000000138750bbcf
+>                     Extra: Last beacon: 200ms ago
+>                     IE: Unknown: 00084672656557696669
+>                     IE: Unknown: 010882848B961224486C
+>                     IE: Unknown: 03010A
+>                     IE: Unknown: 2A0104
+>                     IE: Unknown: 32040C183060
+>                     IE: Unknown: 2D1A6E1017FFFF000001000000000000000000000000000000000000
+>                     IE: Unknown: 3D160A070000000000000000000000000000000000000000
+>                     IE: Unknown: 3E0100
+>                     IE: Unknown: DD180050F2020101000003A4000027A4000042435E0062322F00
+>                     IE: Unknown: 7F0101
+>                     IE: Unknown: DD07000C4300000000
+>                     IE: Unknown: DD1E00904C336E1017FFFF000001000000000000000000000000000000000000
+>                     IE: Unknown: DD1A00904C340A070000000000000000000000000000000000000000
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
