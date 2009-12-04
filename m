@@ -1,75 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:54881 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934849AbZLKIcb (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:37843 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757116AbZLDTE6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 03:32:31 -0500
+	Fri, 4 Dec 2009 14:04:58 -0500
+Received: by bwz27 with SMTP id 27so2204650bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Dec 2009 11:05:03 -0800 (PST)
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 11 Dec 2009 00:32:17 -0800
-Message-ID: <43e72e890912110032q32ba456eqbc7752e36e00fa09@mail.gmail.com>
-Subject: Changes to compat-wireless for 2.6.33
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	Bala Shanmugam <sbalashanmugam@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <16a81f890912041102l7bcce84eg7a8f80ff5ff341f2@mail.gmail.com>
+References: <16a81f890912031225g888490y2e8ff92557a322b7@mail.gmail.com>
+	 <87ocmf545m.fsf@purkki.valot.fi>
+	 <16a81f890912041102l7bcce84eg7a8f80ff5ff341f2@mail.gmail.com>
+Date: Fri, 4 Dec 2009 11:05:03 -0800
+Message-ID: <16a81f890912041105y40772ee0sc5854d6354a7e90b@mail.gmail.com>
+Subject: RE: [PATCH v3 0/2] mac80211: add U-APSD client support
+From: Jason Young <a.young.jason@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Compat-wireless [1] now relies on the linux-next git tree [2] as such
-we are to add backports for the next kernel release as we move along
-with the 802.11 subsystem while a stable linux-2.6.33.y branch will be
-prepared that sticks to Linus' tree to iron out fixes for that release
-along with the standard kernel release cycle. To be clear: we used to
-keep the bleeding edge compat-wireless in synch only with the latest
-rc kernel by using wireless-testing, bleeding edge compat-wireless
-will now move along with the next kernel release and not stick to the
-latest rc kernel. The main advantage here is the possibility add
-backporting for other subsystems in one package using one single git
-tree.
+On Fri, Dec 4, 2009 at 4:12 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> Jason Young <a.young.jason@gmail.com> writes:
+>
+>> Hi,
+>
+> Hello,
+>
+>>>> here is my proposal how to add U-APSD client support to mac80211. I also
+>>>> included example driver implementation for wl1251.
+>>>>
+>>>> Please comment. Also I would like to get comments how U-APSD needs to be
+>>>> implemented in different hardware.
+>>
+>> WMM Admission Control allows queues to be configured as trigger-only
+>> and deliver-only via mgmt action frames. If this feature is ever
+>> added to mac80211 we may need to make trigger-enabled and
+>> deliver-enabled per queue configuration explicit rather than a
+>> single boolean value per access category. Being as there is no way
+>> to configure an access category trigger-only or deliver-only outside
+>> of admission control, we don't need to worry about this problem
+>> right now.
+>
+> I decided to drop Admission Control for now because I didn't see any
+> real use case for it. And if we would like to utilise it properly, we
+> would need to have properly supported user space interface. I think we
+> are not ready for that quite yet.
+>
 
-Thanks to Bala Shanmugam's patch compat-wireless now drags in the
-bluetooth subsystem as well. Since two subsystems are now being
-backported they now share a common rfkill backport module and a
-general kernel compatibility module. Future patches to compat-wireless
-then will just be for the patches/ directory and general build
-updates. As before I continue to try to push most compatibility code
-in the compat-2.6.*[ch] files while *only* things which cannot be
-backported through code is left to the patches/*.patch files. Due to
-the split to compat-wireless and compat.git please send compat patches
-against the new compat.git tree [3], you can use the linux-wireless
-mailing list for them.
+There are real use cases for WMMAC, particularly in enterprise
+environments but I don't want to get into that discussion just yet,
+first things first :) I just wanted it to be noted somewhere in the
+discussion of this proposal that U-APSD can, in theory at least, be
+configured as trigger or delivery only. Some hardware may be
+implemented to allow trigger/delivery only configuration. In such
+cases, the driver will need to update both the trigger and delivery
+state based on the uapsd boolean parameter.
 
-I welcome others to use compat.git for other compatibility needs and
-to send patches for it for more general kernel compatibility, even if
-that is for other subsystems. For now the focus on compat-wireless
-will just be 802.11 drivers and bluetooth drivers but I will likely
-extend it to include some other network drivers and would be open to
-other subsystems if someone commits to keeping them updated.
+>> We will want runtime time configuration of u-apsd because its is
+>> necessary for station's 'WMM Power Save' certification. Recompiling
+>> mac80211 for the various uapsd configurations is a bit heavy-handed.
+>> I'd like to see debugfs support added back back for now its
+>> primarily a testing issue anyway.
+>
+> Thanks, I wasn't aware of this. Yes, adding the debugfs interface back
+> makes sense now. But can you describe a bit more how you would like to
+> use the debugfs interface? I would like to understand about your needs
+> a bit more.
+>
+> I also need to find the certification test plan and read it myself.
 
-Part of the change to using linux-next meant addressing the 2.6.33
-changes already but it also meant running into some items I did not
-really care to backport like the PCMCIA changes. This meant disabling
-the ssb module, and therefore the Ethernet b44, and 802.11 b43,
-b43legacy. I also ran into some small snag with libertas so ended up
-disabling it but it seems that one can be fixed easily. All other
-drivers were kept enabled and backported. I have *not* tested the
-bluetooth drivers since the change to linux-next nor building it
-mainly due to the fact my current kernel had CONFIG_BT=y. I'll test
-that out tomorrow, but welcome your help.
+Section 2.8.1 of the "WMM Power Save Test Plan Version 1.5" describes
+the basic station requirements. Section 5 describes the station
+specific tests.
 
-Enabling 802.11 or bluetooth is pretty easy through the top level
-Makefile, should be intuitive. Perhaps using this sort of build
-process will let us use our own mconf for our own options in the near
-future -- I didn't update scripts/driver-select, that remains busted.
-I noticed Ubuntu is shipping CONFIG_BT=y on 2.6.27..2.6.32 while
-Fedora should have CONFIG_BT=m (haven't checked the kernel ranges).
-Building the compat-bluetooth stuff requires the later so if you'd
-like to take advantage of this stuff please consider a change.
+I would like to be able to set the uapsd configuration of each AC
+independently, as well as the Max SP length. Basically, the bits that
+get used in the qosinfo field during association. Because this should
+just be used for testing or until we add a real userspace API, I'm
+fine with requiring the user to manually reconnect to have new U-APSD
+configuration adopted.
 
-[1] git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6.git
-[2] git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
-[3] git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git
+>>>> - add max SP length defines to ieee80211.h
+>>
+>> The bit values for IEEE80211_WMM_IE_STA_SP_XXX are not correct. The
+>> Max SP Length subfield settings table in 7.3.1.17 has the least
+>> significant bit listed first.
+>
+> Oh, I missed that entirely. And I was even thinking why the order
+> looked so weird (0, 2, 1, 3), I should have checked that. Thank you
+> for noticing this.
+>
+>>>> v2:
+>>>> - remove cfg80211 changes
+>>>> - rename IEEE80211_QOS_IE to IEEE80211_WMM_IE_STA in ieee80211.h
+>>
+>> I would rename IEEE80211_WMM_IE_STA_XXX defines to something like
+>> IEEE80211_STA_QOSINFO_XXX to make it clear that bit values are used in the
+>> context of the qosinfo field octet.
+>
+> Good point. Is IEEE80211_WMM_IE_STA_QOSINFO_AC_VO clear enough? At
+> least it's long enough :)
 
-  Luis
+Hah, ya.
+
+> Thank you for the comments, I appreciate them.
+>
+> --
+> Kalle Valo
+>
+
+Jason Young
+DSP Group
