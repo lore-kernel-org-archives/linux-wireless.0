@@ -1,51 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:50806 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753338AbZLWTTz (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:63328 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756805AbZLDQ4p convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 14:19:55 -0500
+	Fri, 4 Dec 2009 11:56:45 -0500
+Received: by bwz27 with SMTP id 27so2115035bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Dec 2009 08:56:50 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1261595489.27798.0.camel@johannes.local>
-References: <20091222022355.GA32508@bombadil.infradead.org>
-	<20091222193010.GB30201@bombadil.infradead.org> <1261570081.25008.1.camel@johannes.local>
-	<20091223162813.GB2609@tux> <1261586828.7304.13.camel@johannes.local>
-	<20091223190840.GI2609@tux> <1261595489.27798.0.camel@johannes.local>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 23 Dec 2009 11:19:33 -0800
-Message-ID: <43e72e890912231119l79ef5a99h6b57362e38f189ed@mail.gmail.com>
-Subject: Re: mac80211 suspend corner case (was: Asus eeepc 1008HA suspend
-	issue and mac80211 suspend corner) case
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+In-Reply-To: <4B1933F5.2010408@roinet.com>
+References: <87d42u6dnd.fsf@purkki.valot.fi> <4B19276F.5080604@roinet.com>
+	 <878wdi69u9.fsf@purkki.valot.fi> <4B1933F5.2010408@roinet.com>
+Date: Fri, 4 Dec 2009 10:56:50 -0600
+Message-ID: <51058d550912040856u5d413a06n40412f8f56eb4b9@mail.gmail.com>
+Subject: Re: WMM classification guideline for applications?
+From: Greg Oliver <oliver.greg@gmail.com>
+To: David Acker <dacker@roinet.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
+	patrik.flykt@nokia.com
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 23, 2009 at 11:11 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2009-12-23 at 11:08 -0800, Luis R. Rodriguez wrote:
+On Fri, Dec 4, 2009 at 10:08 AM, David Acker <dacker@roinet.com> wrote:
+> Kalle Valo wrote:
+>>
+>> David Acker <dacker@roinet.com> writes:
+>>>
+>>> What do think of also supporting a method 4, VLAN priority field (0-7)?
+>>
+>> Sorry, I haven't heard about this. I don't even know how applications
+>> should set this. Can you show an example, please?
 >
->> So you want drivers to handle start() failures (even if its not for
->> resume) with an unregistration to mac80211?
+> Sure.  A system could be setup with multiple VLANs available on its outgoing
+> port.  Imagine eth0.1, eth0.2 and eth0.7.  Each one is a different VLAN with
+> a different priority mapping setup.  The application can use the high
+> priority VLAN which should then be reflected in the over the air packets
+> using a high priority WMM queue.  If the driver implements the appropriate
+> VLAN functionality it should be able to detect VLAN tagged packets and pick
+> the appropriate WMM hardware queue.  I think a driver can use vlan_get_tag
+> to get the Tag Control Information (TCI) field.  The TCI field contains a
+> 3-bit Priority Code Point (PCP) field for 8 different priorities.
 >
-> Not necessarily. If it's a temporary error, that's fine, of course, but
-> if the hardware is suddenly inaccessible for whatever reason then yes,
-> of course, unregistering is the only good choice no matter when it
-> happens.
+> I am not an expert on how the kernel handles vlans, but it appears that the
+> priority field's value is set by the user space VLAN creation tools through
+> an ioctl with SET_VLAN_EGRESS_PRIORITY_CMD which calls
+> vlan_dev_set_egress_priority to map an skb priority to a vlan priority.
+> vlan_dev_hard_header then uses this information to populate the vlan
+> priority field based on the skb priority field.
+>
+> In this case it would seem that skb priority and the vlan priority are both
+> set and there may be a non-trivial mapping between the two. pkt_sched.h
+> defines some skb priorities but also leaves many undefined.  The
+> skb->priority is also larger then the vlan priority.  If both are set, which
+> will take precedence?
+> -ack
 
-Reason for me suggesting for mac80211 to deal with this is drivers
-won't know if their failed start() call will have been from resume and
-we likely won't add a bool to start() callback since we already
-debated this a while back.
+I do nto mean to be negative, but how can vlan based priority mapping
+be anything but "going in reverse" by today's QoS standards?  The
+whole point of packet marking is to alleviate the "this port is better
+than that port", so traffic from any port can be made equal to that of
+another..  Port (vlan/subnet/interface, etc) agnostic...  This would
+seem like a regression to me...  All of the major router/switch
+vendors provide mappings between these techniques already for this
+reason.  Hopefully, they will not be needed much longer.
 
-I don't really care about hardware failures in other cases right now,
-and do think resume is reasonable enough to check for and handle on
-mac8021 alone. Since stop() would have stopped everything in the
-driver and is documented as such I don't see why it would be
-complicated to unregister it instead from mac80211.
-
-  Luis
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
