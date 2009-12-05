@@ -1,86 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:51732 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751253AbZLSKac (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:59846 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932923AbZLEUSN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Dec 2009 05:30:32 -0500
-Received: by bwz27 with SMTP id 27so2634802bwz.21
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Dec 2009 02:30:29 -0800 (PST)
+	Sat, 5 Dec 2009 15:18:13 -0500
+Date: Sat, 05 Dec 2009 14:18:18 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: antti@kaijanmaki.net, Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC/RFT V2] rtl8187: Modify rfkill for new models
+Message-ID: <4b1ac00a.nP75mlCdUd2PKZib%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Reply-To: andreamrl@tiscali.it
-In-Reply-To: <20091219011306.GG2512@florz.florz.dyndns.org>
-References: <20091218180205.GD2512@florz.florz.dyndns.org>
-	<4B2BC7E3.2050907@lwfinger.net> <20091218185916.GE2512@florz.florz.dyndns.org>
-	<4B2C100A.9000507@lwfinger.net> <c68f135e0912181615p7cd36bd0n7054b43f2b453599@mail.gmail.com>
-	<20091219011306.GG2512@florz.florz.dyndns.org>
-From: Andrea Merello <andreamrl@tiscali.it>
-Date: Sat, 19 Dec 2009 11:30:09 +0100
-Message-ID: <c68f135e0912190230o566b3c3dk9be3038b0602cac5@mail.gmail.com>
-Subject: Re: Power consumption of RTL8187 (driver)/recommendations for
-	low-power USB 802.11 adapter?
-To: Florian Zumbiehl <florz@florz.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, herton@mandriva.com.br,
-	htl10@users.sourceforge.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> Well, it may be interesting to do a serious analisys about how much
->> power is drained by the card when it is up and in RX, when the
->> mac80211 sends probes, and how much is related to the CPU, however,
->> because you estimated that the power drain increase is too much for
->> being directly related to the usb stuff, I think is really possible
->> that the big problem is related to beacons.
->
-> I'll play around with AP settings a bit and report back to you.
-> If you can think of any particular useful tests I could do, please
-> let me know, I'll see what I can do.
->
-> But yeah - even if the device draws more than the allowed 500 mA,
-> I hope very much that it doesn't draw anywhere close to 3 A ... ;-)
+There are different bits used to convey the setting of the rfkill
+switch to the driver. The current driver only supports one of these
+possibilities. These changes were derived from the latest version
+of the vendor driver.
 
-On the AP you might set the beacon interval lower. And also, I'm not
-sure if the rtl8187 driver configure the BSSID register so that once
-you are associated to the network the card will filter all packets
-from other APs, but in case it does not you can try to set your AP on
-a channel where no other AP are working, otherwise other APs beacons
-will be reiceved.
+This patch fixes the regression noted in Bug #14xxx.
 
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Reported-and-tested-by: Antti Kaijanmäki <antti@kaijanmaki.net>
+Tested-by: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Stable <stable@vger.org>
+---
 
-> I would assume that it's some timers you are using? As I understand it,
-> other interrupts (which cannot really be predicted) don't prevent
-> the power management code from switching the CPU into deep sleep
-> modes?!
-
-Hmm.. I think I know not enough about C3 state rules.
-I think the rtl8187 does not use timers.
-The only difference is that the interrupt is raised by the (PCI) USB
-controller, then it forwards things to the USB layer, then it calls a
-callback on the rtl8187 driver, and then it passes to the mac80211
-layer. So the problem might be not the interrupt itself but the amount
-of work to do..
-
-
-> It's only a PIII, which is too slow with frequency changes for
-> the ondemand governor, and the speedstep driver also causes other
-> yet-unresolved problems (audio stuttering) when loaded.
-> So it's not really a solution in this case, even though you are
-> right that the actual CPU cycles used would suggest that newer
-> processors should be able to stay at their minimum frequency with
-> the ondemand governor.
-
-Hmm.. Well.. I guess that effectively a USB softmac card on a slow
-computer might produce a noticeable overhead, even if I never tried
-before..
-
->> So far If you are looking for a card that make you save power, I
->> suggest you to get a fullmac one.
->
-> Any suggestions as to how to recognize those? Or even a recommendation
-> for a specific device/chipset?
-
-I know that intel ipw2200 and the older ipw2100 should be fullmac.
-Some prism, as you said are fullmac, and even some Marvell (for sure
-some PCI, I don't know about USB) are fullmac.
-
-There might be other but I don't know for sure..
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187.h
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
+@@ -23,6 +23,7 @@
+ #define RTL8187_EEPROM_TXPWR_CHAN_1	0x16	/* 3 channels */
+ #define RTL8187_EEPROM_TXPWR_CHAN_6	0x1B	/* 2 channels */
+ #define RTL8187_EEPROM_TXPWR_CHAN_4	0x3D	/* 2 channels */
++#define RTL8187_EEPROM_SELECT_GPIO	0x3B	/* Which pin has rfkill? */
+ 
+ #define RTL8187_REQT_READ	0xC0
+ #define RTL8187_REQT_WRITE	0x40
+@@ -31,6 +32,9 @@
+ 
+ #define RTL8187_MAX_RX		0x9C4
+ 
++#define RFKILL_MASK_8187_89_97	0x2
++#define RFKILL_MASK_8198	0x4
++
+ struct rtl8187_rx_info {
+ 	struct urb *urb;
+ 	struct ieee80211_hw *dev;
+@@ -122,6 +126,7 @@ struct rtl8187_priv {
+ 	u8 noise;
+ 	u8 slot_time;
+ 	u8 aifsn[4];
++	u8 rfkill_mask;
+ 	struct {
+ 		__le64 buf;
+ 		struct sk_buff_head queue;
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -1322,6 +1322,7 @@ static int __devinit rtl8187_probe(struc
+ 	struct ieee80211_channel *channel;
+ 	const char *chip_name;
+ 	u16 txpwr, reg;
++	u16 product_id = le16_to_cpu(udev->descriptor.idProduct);
+ 	int err, i;
+ 
+ 	dev = ieee80211_alloc_hw(sizeof(*priv), &rtl8187_ops);
+@@ -1481,6 +1482,15 @@ static int __devinit rtl8187_probe(struc
+ 		(*channel++).hw_value = txpwr & 0xFF;
+ 		(*channel++).hw_value = txpwr >> 8;
+ 	}
++	/* Handle the differing GPIO bit in different models */
++	priv->rfkill_mask = RFKILL_MASK_8187_89_97;
++	if (product_id == 0x8197 || product_id == 0x8198) {
++		eeprom_93cx6_read(&eeprom, RTL8187_EEPROM_SELECT_GPIO, &reg);
++		if (reg & 0xFF00)
++			priv->rfkill_mask = RFKILL_MASK_8198;
++	}
++	printk(KERN_INFO "rtl8187: rfkill mask set to %d for Product ID 0x%x",
++	       priv->rfkill_mask, product_id);
+ 
+ 	/*
+ 	 * XXX: Once this driver supports anything that requires
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
+@@ -25,10 +25,10 @@ static bool rtl8187_is_radio_enabled(str
+ 	u8 gpio;
+ 
+ 	gpio = rtl818x_ioread8(priv, &priv->map->GPIO0);
+-	rtl818x_iowrite8(priv, &priv->map->GPIO0, gpio & ~0x02);
++	rtl818x_iowrite8(priv, &priv->map->GPIO0, gpio & ~priv->rfkill_mask);
+ 	gpio = rtl818x_ioread8(priv, &priv->map->GPIO1);
+ 
+-	return gpio & 0x02;
++	return gpio & priv->rfkill_mask;
+ }
+ 
+ void rtl8187_rfkill_init(struct ieee80211_hw *hw)
