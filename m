@@ -1,246 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:60475 "EHLO
-	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754555AbZLAUkm (ORCPT
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:40659 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756899AbZLEVzU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 15:40:42 -0500
-Message-ID: <4B157F4F.8080003@gmail.com>
-Date: Tue, 01 Dec 2009 21:40:47 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Sat, 5 Dec 2009 16:55:20 -0500
+Received: by fxm5 with SMTP id 5so3659236fxm.28
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Dec 2009 13:55:25 -0800 (PST)
 MIME-Version: 1.0
-To: Benoit Papillault <benoit.papillault@free.fr>
-CC: IvDoorn@gmail.com, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 2/2] rt2x00: Fix rt2800usb RX frame format and as such
- L2PAD
-References: <1259619690-2749-1-git-send-email-benoit.papillault@free.fr> <1259619690-2749-2-git-send-email-benoit.papillault@free.fr>
-In-Reply-To: <1259619690-2749-2-git-send-email-benoit.papillault@free.fr>
+In-Reply-To: <4b1ac00a.nP75mlCdUd2PKZib%Larry.Finger@lwfinger.net>
+References: <4b1ac00a.nP75mlCdUd2PKZib%Larry.Finger@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sat, 5 Dec 2009 22:55:05 +0100
+Message-ID: <69e28c910912051355s2f13400eo1eff46c4cd6d32f4@mail.gmail.com>
+Subject: Re: [RFC/RFT V2] rtl8187: Modify rfkill for new models
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: antti@kaijanmaki.net, Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/30/09 23:21, Benoit Papillault wrote:
-> According to Ralink source code, the RX frame format is RXINFO + RXWI +
-> 802.11 frame + RXD, including various padding. Before this patch, we
-> were using RXD + RXWI + 802.11 frame, so RXD was not correct.
-> 
-> Doing this, we fix the L2PAD bit which is now correctly set on received
-> frames.
-> 
-> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
+On Sat, Dec 5, 2009 at 9:18 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> There are different bits used to convey the setting of the rfkill
+> switch to the driver. The current driver only supports one of these
+> possibilities. These changes were derived from the latest version
+> of the vendor driver.
+>
+> This patch fixes the regression noted in Bug #14xxx.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Reported-and-tested-by: Antti Kaijanmäki <antti@kaijanmaki.net>
+> Tested-by: Hin-Tak Leung <hintak.leung@gmail.com>
+> Cc: Stable <stable@vger.org>
 > ---
->  drivers/net/wireless/rt2x00/rt2800usb.c |   40 ++++++++++----
->  drivers/net/wireless/rt2x00/rt2800usb.h |   90 ++++++++++++++++++++++++-------
->  2 files changed, 98 insertions(+), 32 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index ed31763..fc8d7a7 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -571,41 +571,57 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
->  {
->  	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
->  	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
-> -	__le32 *rxd = (__le32 *)entry->skb->data;
-> +	__le32 *rxi = (__le32 *)entry->skb->data;
->  	__le32 *rxwi;
-> -	u32 rxd0;
-> +	__le32 *rxd;
-> +	u32 rxi0;
->  	u32 rxwi0;
->  	u32 rxwi1;
->  	u32 rxwi2;
->  	u32 rxwi3;
-> +	u32 rxd0;
-> +	int rx_pkt_len;
+>
+> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187.h
+> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
+> @@ -23,6 +23,7 @@
+>  #define RTL8187_EEPROM_TXPWR_CHAN_1    0x16    /* 3 channels */
+>  #define RTL8187_EEPROM_TXPWR_CHAN_6    0x1B    /* 2 channels */
+>  #define RTL8187_EEPROM_TXPWR_CHAN_4    0x3D    /* 2 channels */
+> +#define RTL8187_EEPROM_SELECT_GPIO     0x3B    /* Which pin has rfkill? */
+>
+>  #define RTL8187_REQT_READ      0xC0
+>  #define RTL8187_REQT_WRITE     0x40
+> @@ -31,6 +32,9 @@
+>
+>  #define RTL8187_MAX_RX         0x9C4
+>
+> +#define RFKILL_MASK_8187_89_97 0x2
+> +#define RFKILL_MASK_8198       0x4
 > +
-> +	/*
-> +	 * RX frame format is :
-> +	 * | RXINFO | RXWI | header | L2 pad | payload | pad | RXD | USB pad |
-> +	 *          |<------------ rx_pkt_len -------------->|
-> +	 */
-> +	rt2x00_desc_read(rxi, 0, &rxi0);
-> +	rx_pkt_len = rt2x00_get_field32(rxi0, RXINFO_W0_USB_DMA_RX_PKT_LEN);
-> +
-> +	rxwi = (__le32 *)(entry->skb->data + RXINFO_DESC_SIZE);
-> +
-> +	/*
-> +	 * FIXME : we need to check for rx_pkt_len validity
-> +	 */
-> +	rxd = (__le32 *)(entry->skb->data + RXINFO_DESC_SIZE + rx_pkt_len);
->  
->  	/*
->  	 * Copy descriptor to the skbdesc->desc buffer, making it safe from
->  	 * moving of frame data in rt2x00usb.
->  	 */
-> -	memcpy(skbdesc->desc, rxd, skbdesc->desc_len);
-> -	rxd = (__le32 *)skbdesc->desc;
-> -	rxwi = &rxd[RXINFO_DESC_SIZE / sizeof(__le32)];
-> +	memcpy(skbdesc->desc, rxi, skbdesc->desc_len);
->  
->  	/*
->  	 * It is now safe to read the descriptor on all architectures.
->  	 */
-> -	rt2x00_desc_read(rxd, 0, &rxd0);
->  	rt2x00_desc_read(rxwi, 0, &rxwi0);
->  	rt2x00_desc_read(rxwi, 1, &rxwi1);
->  	rt2x00_desc_read(rxwi, 2, &rxwi2);
->  	rt2x00_desc_read(rxwi, 3, &rxwi3);
-> +	rt2x00_desc_read(rxd, 0, &rxd0);
->  
-> -	if (rt2x00_get_field32(rxd0, RXINFO_W0_CRC_ERROR))
-> +	if (rt2x00_get_field32(rxd0, RXD_W0_CRC_ERROR))
->  		rxdesc->flags |= RX_FLAG_FAILED_FCS_CRC;
->  
->  	if (test_bit(CONFIG_SUPPORT_HW_CRYPTO, &rt2x00dev->flags)) {
->  		rxdesc->cipher = rt2x00_get_field32(rxwi0, RXWI_W0_UDF);
->  		rxdesc->cipher_status =
-> -		    rt2x00_get_field32(rxd0, RXINFO_W0_CIPHER_ERROR);
-> +		    rt2x00_get_field32(rxd0, RXD_W0_CIPHER_ERROR);
->  	}
->  
-> -	if (rt2x00_get_field32(rxd0, RXINFO_W0_DECRYPTED)) {
-> +	if (rt2x00_get_field32(rxd0, RXD_W0_DECRYPTED)) {
->  		/*
->  		 * Hardware has stripped IV/EIV data from 802.11 frame during
->  		 * decryption. Unfortunately the descriptor doesn't contain
-> @@ -620,10 +636,10 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
->  			rxdesc->flags |= RX_FLAG_MMIC_ERROR;
->  	}
->  
-> -	if (rt2x00_get_field32(rxd0, RXINFO_W0_MY_BSS))
-> +	if (rt2x00_get_field32(rxd0, RXD_W0_MY_BSS))
->  		rxdesc->dev_flags |= RXDONE_MY_BSS;
->  
-> -	if (rt2x00_get_field32(rxd0, RXINFO_W0_L2PAD)) {
-> +	if (rt2x00_get_field32(rxd0, RXD_W0_L2PAD)) {
->  		rxdesc->dev_flags |= RXDONE_L2PAD;
->  		skbdesc->flags |= SKBDESC_L2_PADDED;
->  	}
-> @@ -661,7 +677,7 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
->  	 * Remove RXWI descriptor from start of buffer.
->  	 */
->  	skb_pull(entry->skb, skbdesc->desc_len);
-> -	skb_trim(entry->skb, rxdesc->size);
-> +	skb_trim(entry->skb, rx_pkt_len - RXWI_DESC_SIZE);
->  }
->  
->  /*
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.h b/drivers/net/wireless/rt2x00/rt2800usb.h
-> index 1e4340a..d1d8ae9 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.h
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.h
-> @@ -79,6 +79,8 @@
->   */
->  #define TXINFO_DESC_SIZE		( 1 * sizeof(__le32) )
->  #define RXINFO_DESC_SIZE		( 1 * sizeof(__le32) )
-> +#define RXWI_DESC_SIZE			( 4 * sizeof(__le32) )
-> +#define RXD_DESC_SIZE			( 1 * sizeof(__le32) )
->  
->  /*
->   * TX Info structure
-> @@ -101,6 +103,54 @@
->  #define TXINFO_W0_USB_DMA_TX_BURST	FIELD32(0x80000000)
->  
->  /*
-> + * RX Info structure
-> + */
-> +
-> +/*
-> + * Word 0
-> + */
-> +
-> +#define RXINFO_W0_USB_DMA_RX_PKT_LEN	FIELD32(0x0000ffff)
-> +
-> +/*
-> + * RX WI structure
-> + */
-> +
-> +/*
-> + * Word0
-> + */
-> +#define RXWI_W0_WIRELESS_CLI_ID		FIELD32(0x000000ff)
-> +#define RXWI_W0_KEY_INDEX		FIELD32(0x00000300)
-> +#define RXWI_W0_BSSID			FIELD32(0x00001c00)
-> +#define RXWI_W0_UDF			FIELD32(0x0000e000)
-> +#define RXWI_W0_MPDU_TOTAL_BYTE_COUNT	FIELD32(0x0fff0000)
-> +#define RXWI_W0_TID			FIELD32(0xf0000000)
-> +
-> +/*
-> + * Word1
-> + */
-> +#define RXWI_W1_FRAG			FIELD32(0x0000000f)
-> +#define RXWI_W1_SEQUENCE		FIELD32(0x0000fff0)
-> +#define RXWI_W1_MCS			FIELD32(0x007f0000)
-> +#define RXWI_W1_BW			FIELD32(0x00800000)
-> +#define RXWI_W1_SHORT_GI		FIELD32(0x01000000)
-> +#define RXWI_W1_STBC			FIELD32(0x06000000)
-> +#define RXWI_W1_PHYMODE			FIELD32(0xc0000000)
-> +
-> +/*
-> + * Word2
-> + */
-> +#define RXWI_W2_RSSI0			FIELD32(0x000000ff)
-> +#define RXWI_W2_RSSI1			FIELD32(0x0000ff00)
-> +#define RXWI_W2_RSSI2			FIELD32(0x00ff0000)
-> +
-> +/*
-> + * Word3
-> + */
-> +#define RXWI_W3_SNR0			FIELD32(0x000000ff)
-> +#define RXWI_W3_SNR1			FIELD32(0x0000ff00)
-> +
-> +/*
->   * RX descriptor format for RX Ring.
->   */
->  
-> @@ -115,25 +165,25 @@
->   * AMSDU: rx with 802.3 header, not 802.11 header.
->   */
->  
-> -#define RXINFO_W0_BA			FIELD32(0x00000001)
-> -#define RXINFO_W0_DATA			FIELD32(0x00000002)
-> -#define RXINFO_W0_NULLDATA		FIELD32(0x00000004)
-> -#define RXINFO_W0_FRAG			FIELD32(0x00000008)
-> -#define RXINFO_W0_UNICAST_TO_ME		FIELD32(0x00000010)
-> -#define RXINFO_W0_MULTICAST		FIELD32(0x00000020)
-> -#define RXINFO_W0_BROADCAST		FIELD32(0x00000040)
-> -#define RXINFO_W0_MY_BSS		FIELD32(0x00000080)
-> -#define RXINFO_W0_CRC_ERROR		FIELD32(0x00000100)
-> -#define RXINFO_W0_CIPHER_ERROR		FIELD32(0x00000600)
-> -#define RXINFO_W0_AMSDU			FIELD32(0x00000800)
-> -#define RXINFO_W0_HTC			FIELD32(0x00001000)
-> -#define RXINFO_W0_RSSI			FIELD32(0x00002000)
-> -#define RXINFO_W0_L2PAD			FIELD32(0x00004000)
-> -#define RXINFO_W0_AMPDU			FIELD32(0x00008000)
-> -#define RXINFO_W0_DECRYPTED		FIELD32(0x00010000)
-> -#define RXINFO_W0_PLCP_RSSI		FIELD32(0x00020000)
-> -#define RXINFO_W0_CIPHER_ALG		FIELD32(0x00040000)
-> -#define RXINFO_W0_LAST_AMSDU		FIELD32(0x00080000)
-> -#define RXINFO_W0_PLCP_SIGNAL		FIELD32(0xfff00000)
-> +#define RXD_W0_BA			FIELD32(0x00000001)
-> +#define RXD_W0_DATA			FIELD32(0x00000002)
-> +#define RXD_W0_NULLDATA			FIELD32(0x00000004)
-> +#define RXD_W0_FRAG			FIELD32(0x00000008)
-> +#define RXD_W0_UNICAST_TO_ME		FIELD32(0x00000010)
-> +#define RXD_W0_MULTICAST		FIELD32(0x00000020)
-> +#define RXD_W0_BROADCAST		FIELD32(0x00000040)
-> +#define RXD_W0_MY_BSS			FIELD32(0x00000080)
-> +#define RXD_W0_CRC_ERROR		FIELD32(0x00000100)
-> +#define RXD_W0_CIPHER_ERROR		FIELD32(0x00000600)
-> +#define RXD_W0_AMSDU			FIELD32(0x00000800)
-> +#define RXD_W0_HTC			FIELD32(0x00001000)
-> +#define RXD_W0_RSSI			FIELD32(0x00002000)
-> +#define RXD_W0_L2PAD			FIELD32(0x00004000)
-> +#define RXD_W0_AMPDU			FIELD32(0x00008000)
-> +#define RXD_W0_DECRYPTED		FIELD32(0x00010000)
-> +#define RXD_W0_PLCP_RSSI		FIELD32(0x00020000)
-> +#define RXD_W0_CIPHER_ALG		FIELD32(0x00040000)
-> +#define RXD_W0_LAST_AMSDU		FIELD32(0x00080000)
-> +#define RXD_W0_PLCP_SIGNAL		FIELD32(0xfff00000)
->  
->  #endif /* RT2800USB_H */
+>  struct rtl8187_rx_info {
+>        struct urb *urb;
+>        struct ieee80211_hw *dev;
+> @@ -122,6 +126,7 @@ struct rtl8187_priv {
+>        u8 noise;
+>        u8 slot_time;
+>        u8 aifsn[4];
+> +       u8 rfkill_mask;
+>        struct {
+>                __le64 buf;
+>                struct sk_buff_head queue;
+> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> @@ -1322,6 +1322,7 @@ static int __devinit rtl8187_probe(struc
+>        struct ieee80211_channel *channel;
+>        const char *chip_name;
+>        u16 txpwr, reg;
+> +       u16 product_id = le16_to_cpu(udev->descriptor.idProduct);
+>        int err, i;
+>
+>        dev = ieee80211_alloc_hw(sizeof(*priv), &rtl8187_ops);
+> @@ -1481,6 +1482,15 @@ static int __devinit rtl8187_probe(struc
+>                (*channel++).hw_value = txpwr & 0xFF;
+>                (*channel++).hw_value = txpwr >> 8;
+>        }
+> +       /* Handle the differing GPIO bit in different models */
+> +       priv->rfkill_mask = RFKILL_MASK_8187_89_97;
+> +       if (product_id == 0x8197 || product_id == 0x8198) {
+> +               eeprom_93cx6_read(&eeprom, RTL8187_EEPROM_SELECT_GPIO, &reg);
+> +               if (reg & 0xFF00)
+> +                       priv->rfkill_mask = RFKILL_MASK_8198;
+> +       }
+> +       printk(KERN_INFO "rtl8187: rfkill mask set to %d for Product ID 0x%x",
+> +              priv->rfkill_mask, product_id);
 
+printk(KERN_DEBUG... ?
+
+>
+>        /*
+>         * XXX: Once this driver supports anything that requires
+> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
+> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
+> @@ -25,10 +25,10 @@ static bool rtl8187_is_radio_enabled(str
+>        u8 gpio;
+>
+>        gpio = rtl818x_ioread8(priv, &priv->map->GPIO0);
+> -       rtl818x_iowrite8(priv, &priv->map->GPIO0, gpio & ~0x02);
+> +       rtl818x_iowrite8(priv, &priv->map->GPIO0, gpio & ~priv->rfkill_mask);
+>        gpio = rtl818x_ioread8(priv, &priv->map->GPIO1);
+>
+> -       return gpio & 0x02;
+> +       return gpio & priv->rfkill_mask;
+>  }
+>
+>  void rtl8187_rfkill_init(struct ieee80211_hw *hw)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
