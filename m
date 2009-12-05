@@ -1,273 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:59193 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752743AbZL2K74 (ORCPT
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:41525 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757974AbZLETzg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Dec 2009 05:59:56 -0500
-Date: Tue, 29 Dec 2009 12:59:45 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 3/3] nl80211: New command for setting TX rate mask for rate
- control
-Message-ID: <20091229105945.GD18493@jm.kir.nu>
+	Sat, 5 Dec 2009 14:55:36 -0500
+Received: by fxm5 with SMTP id 5so3602512fxm.28
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Dec 2009 11:55:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4b1aaf22.c1/8Zgm/N0sxiN/O%Larry.Finger@lwfinger.net>
+References: <4b1aaf22.c1/8Zgm/N0sxiN/O%Larry.Finger@lwfinger.net>
+Date: Sat, 5 Dec 2009 19:55:40 +0000
+Message-ID: <3ace41890912051155q722901ffx340ee8613ca465f8@mail.gmail.com>
+Subject: Re: [RFC/RFT] rtl8187: Modify rfkill for new models
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: antti@kaijanmaki.net, Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a new NL80211_CMD_SET_TX_BITRATE_MASK command and related
-attributes to provide support for setting TX rate mask for rate
-control. This uses the existing cfg80211 set_bitrate_mask operation
-that was previously used only with WEXT compat code (SIOCSIWRATE). The
-nl80211 command allows more generic configuration of allowed rates as
-a mask instead of fixed/max rate.
+On Sat, Dec 5, 2009 at 7:06 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> There are different bits used to convey the setting of the rfkill
+> switch to the driver. The current driver only supports one of these
+> possibilities. These changes were derived from the latest version
+> of the vendor driver.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Reported-and-tested-by: Antti Kaijanmäki <antti@kaijanmaki.net>
+> Tested-by: Hin-Tak Leung <hintak.leung@gmail.com>
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+The patch looks fine - I'll have a go later. Stylistically, I don't
+think you need to copy the vendor driver though. Since you are storing
+rfkill_mask in the device structure, there is no need to have the
+variable tmp (and it is an awkful name - although, I know, it is
+temp!), because you can simply set the rfkill_mask at the beginning,
+then override it for newer models. e.g.
+I suggest you change the logic to something like this:
 
----
- include/linux/nl80211.h |   44 +++++++++++++++++++
- include/net/cfg80211.h  |    4 -
- net/wireless/nl80211.c  |  111 ++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 157 insertions(+), 2 deletions(-)
+priv->rfkill_mask = 0x02;
+if (newer product/gpio detection code) {
+     priv->rfkill_mask = 0x04;
+}
 
---- wireless-testing.orig/include/linux/nl80211.h	2009-12-29 10:50:56.000000000 +0200
-+++ wireless-testing/include/linux/nl80211.h	2009-12-29 10:56:42.000000000 +0200
-@@ -295,6 +295,10 @@
-  *	This command is also used as an event to notify when a requested
-  *	remain-on-channel duration has expired.
-  *
-+ * @NL80211_CMD_SET_TX_BITRATE_MASK: Set the mask of rates to be used in TX
-+ *	rate selection. %NL80211_ATTR_IFINDEX is used to specify the interface
-+ *	and @NL80211_ATTR_TX_RATES the set of allowed rates.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -381,6 +385,8 @@ enum nl80211_commands {
- 	NL80211_CMD_REMAIN_ON_CHANNEL,
- 	NL80211_CMD_CANCEL_REMAIN_ON_CHANNEL,
- 
-+	NL80211_CMD_SET_TX_BITRATE_MASK,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -638,6 +644,13 @@ enum nl80211_commands {
-  *
-  * @NL80211_ATTR_COOKIE: Generic 64-bit cookie to identify objects.
-  *
-+ * @NL80211_ATTR_TX_RATES: Nested set of attributes
-+ *	(enum nl80211_tx_rate_attributes) describing TX rates per band. The
-+ *	enum nl80211_band value is used as the index (nla_type() of the nested
-+ *	data. If a band is not included, it will be configured to allow all
-+ *	rates based on negotiated supported rates information. This attribute
-+ *	is used with %NL80211_CMD_SET_TX_BITRATE_MASK.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -779,6 +792,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_COOKIE,
- 
-+	NL80211_ATTR_TX_RATES,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -1478,4 +1493,33 @@ enum nl80211_key_attributes {
- 	NL80211_KEY_MAX = __NL80211_KEY_AFTER_LAST - 1
- };
- 
-+/**
-+ * enum nl80211_tx_rate_attributes - TX rate set attributes
-+ * @__NL80211_TXRATE_INVALID: invalid
-+ * @NL80211_TXRATE_LEGACY: Legacy (non-MCS) rates allowed for TX rate selection
-+ *	in an array of rates as defined in IEEE 802.11 7.3.2.2 (u8 values with
-+ *	1 = 500 kbps) but without the IE length restriction (at most
-+ *	%NL80211_MAX_SUPP_RATES in a single array).
-+ * @__NL80211_TXRATE_AFTER_LAST: internal
-+ * @NL80211_TXRATE_MAX: highest TX rate attribute
-+ */
-+enum nl80211_tx_rate_attributes {
-+	__NL80211_TXRATE_INVALID,
-+	NL80211_TXRATE_LEGACY,
-+
-+	/* keep last */
-+	__NL80211_TXRATE_AFTER_LAST,
-+	NL80211_TXRATE_MAX = __NL80211_TXRATE_AFTER_LAST - 1
-+};
-+
-+/**
-+ * enum nl80211_band - Frequency band
-+ * @NL80211_BAND_2GHZ - 2.4 GHz ISM band
-+ * @NL80211_BAND_5GHZ - around 5 GHz band (4.9 - 5.7 GHz)
-+ */
-+enum nl80211_band {
-+	NL80211_BAND_2GHZ,
-+	NL80211_BAND_5GHZ,
-+};
-+
- #endif /* __LINUX_NL80211_H */
---- wireless-testing.orig/net/wireless/nl80211.c	2009-12-29 10:50:57.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2009-12-29 10:57:37.000000000 +0200
-@@ -143,6 +143,7 @@ static struct nla_policy nl80211_policy[
- 				 .len = WLAN_PMKID_LEN },
- 	[NL80211_ATTR_DURATION] = { .type = NLA_U32 },
- 	[NL80211_ATTR_COOKIE] = { .type = NLA_U64 },
-+	[NL80211_ATTR_TX_RATES] = { .type = NLA_NESTED },
- };
- 
- /* policy for the attributes */
-@@ -572,6 +573,7 @@ static int nl80211_send_wiphy(struct sk_
- 	CMD(del_pmksa, DEL_PMKSA);
- 	CMD(flush_pmksa, FLUSH_PMKSA);
- 	CMD(remain_on_channel, REMAIN_ON_CHANNEL);
-+	CMD(set_bitrate_mask, SET_TX_BITRATE_MASK);
- 	if (dev->wiphy.flags & WIPHY_FLAG_NETNS_OK) {
- 		i++;
- 		NLA_PUT_U32(msg, i, NL80211_CMD_SET_WIPHY_NETNS);
-@@ -4423,6 +4425,109 @@ static int nl80211_cancel_remain_on_chan
- 	return err;
- }
- 
-+static u32 rateset_to_mask(struct ieee80211_supported_band *sband,
-+			   u8 *rates, u8 rates_len)
-+{
-+	u8 i;
-+	u32 mask = 0;
-+
-+	for (i = 0; i < rates_len; i++) {
-+		int rate = (rates[i] & 0x7f) * 5;
-+		int ridx;
-+		for (ridx = 0; ridx < sband->n_bitrates; ridx++) {
-+			struct ieee80211_rate *srate =
-+				&sband->bitrates[ridx];
-+			if (rate == srate->bitrate) {
-+				mask |= 1 << ridx;
-+				break;
-+			}
-+		}
-+		if (ridx == sband->n_bitrates)
-+			return 0; /* rate not found */
-+	}
-+
-+	return mask;
-+}
-+
-+static struct nla_policy
-+nl80211_txattr_policy[NL80211_TXRATE_MAX + 1] __read_mostly = {
-+	[NL80211_TXRATE_LEGACY] = { .type = NLA_BINARY,
-+				    .len = NL80211_MAX_SUPP_RATES },
-+};
-+
-+static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
-+				       struct genl_info *info)
-+{
-+	struct nlattr *tb[NL80211_TXRATE_MAX + 1];
-+	struct cfg80211_registered_device *rdev;
-+	struct cfg80211_bitrate_mask mask;
-+	int err, rem, i;
-+	struct net_device *dev;
-+	struct nlattr *tx_rates;
-+	struct ieee80211_supported_band *sband;
-+
-+	if (info->attrs[NL80211_ATTR_TX_RATES] == NULL)
-+		return -EINVAL;
-+
-+	rtnl_lock();
-+
-+	err = get_rdev_dev_by_info_ifindex(info, &rdev, &dev);
-+	if (err)
-+		goto unlock_rtnl;
-+
-+	if (!rdev->ops->set_bitrate_mask) {
-+		err = -EOPNOTSUPP;
-+		goto unlock;
-+	}
-+
-+	memset(&mask, 0, sizeof(mask));
-+	/* Default to all rates enabled */
-+	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
-+		sband = rdev->wiphy.bands[i];
-+		mask.control[i].legacy =
-+			sband ? (1 << sband->n_bitrates) - 1 : 0;
-+	}
-+
-+	/*
-+	 * The nested attribute uses enum nl80211_band as the index. This maps
-+	 * directly to the enum ieee80211_band values used in cfg80211.
-+	 */
-+	nla_for_each_nested(tx_rates, info->attrs[NL80211_ATTR_TX_RATES], rem)
-+	{
-+		enum ieee80211_band band = nla_type(tx_rates);
-+		if (band < 0 || band >= IEEE80211_NUM_BANDS) {
-+			err = -EINVAL;
-+			goto unlock;
-+		}
-+		sband = rdev->wiphy.bands[band];
-+		if (sband == NULL) {
-+			err = -EINVAL;
-+			goto unlock;
-+		}
-+		nla_parse(tb, NL80211_TXRATE_MAX, nla_data(tx_rates),
-+			  nla_len(tx_rates), nl80211_txattr_policy);
-+		if (tb[NL80211_TXRATE_LEGACY]) {
-+			mask.control[band].legacy = rateset_to_mask(
-+				sband,
-+				nla_data(tb[NL80211_TXRATE_LEGACY]),
-+				nla_len(tb[NL80211_TXRATE_LEGACY]));
-+			if (mask.control[band].legacy == 0) {
-+				err = -EINVAL;
-+				goto unlock;
-+			}
-+		}
-+	}
-+
-+	err = rdev->ops->set_bitrate_mask(&rdev->wiphy, dev, NULL, &mask);
-+
-+ unlock:
-+	dev_put(dev);
-+	cfg80211_unlock_rdev(rdev);
-+ unlock_rtnl:
-+	rtnl_unlock();
-+	return err;
-+}
-+
- static struct genl_ops nl80211_ops[] = {
- 	{
- 		.cmd = NL80211_CMD_GET_WIPHY,
-@@ -4697,6 +4802,12 @@ static struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_ADMIN_PERM,
- 	},
-+	{
-+		.cmd = NL80211_CMD_SET_TX_BITRATE_MASK,
-+		.doit = nl80211_set_tx_bitrate_mask,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+	},
- };
- 
- static struct genl_multicast_group nl80211_mlme_mcgrp = {
---- wireless-testing.orig/include/net/cfg80211.h	2009-12-29 10:54:29.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2009-12-29 10:55:52.000000000 +0200
-@@ -39,8 +39,8 @@
-  * @IEEE80211_BAND_5GHZ: around 5GHz band (4.9-5.7)
-  */
- enum ieee80211_band {
--	IEEE80211_BAND_2GHZ,
--	IEEE80211_BAND_5GHZ,
-+	IEEE80211_BAND_2GHZ = NL80211_BAND_2GHZ,
-+	IEEE80211_BAND_5GHZ = NL80211_BAND_5GHZ,
- 
- 	/* keep last */
- 	IEEE80211_NUM_BANDS
+and while you are at it, called
+0x02 RFKILL_MASK_FOR_MODEL_8187_89_97 and 0x04
+RFKILL_MASK_FOR_MODEL_8198 for clarity. Does it sound reasonable?
 
--- 
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+
+> ---
+>
+> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187.h
+> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
+> @@ -23,6 +23,7 @@
+>  #define RTL8187_EEPROM_TXPWR_CHAN_1    0x16    /* 3 channels */
+>  #define RTL8187_EEPROM_TXPWR_CHAN_6    0x1B    /* 2 channels */
+>  #define RTL8187_EEPROM_TXPWR_CHAN_4    0x3D    /* 2 channels */
+> +#define RTL8187_EEPROM_SELECT_GPIO     0x3B    /* Which pin has rfkill? */
+>
+>  #define RTL8187_REQT_READ      0xC0
+>  #define RTL8187_REQT_WRITE     0x40
+> @@ -122,6 +123,7 @@ struct rtl8187_priv {
+>        u8 noise;
+>        u8 slot_time;
+>        u8 aifsn[4];
+> +       u8 rfkill_mask;
+>        struct {
+>                __le64 buf;
+>                struct sk_buff_head queue;
+> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> @@ -1322,6 +1322,8 @@ static int __devinit rtl8187_probe(struc
+>        struct ieee80211_channel *channel;
+>        const char *chip_name;
+>        u16 txpwr, reg;
+> +       u16 product_id = le16_to_cpu(udev->descriptor.idProduct);
+> +       u16 tmp;
+>        int err, i;
+>
+>        dev = ieee80211_alloc_hw(sizeof(*priv), &rtl8187_ops);
+> @@ -1481,6 +1483,18 @@ static int __devinit rtl8187_probe(struc
+>                (*channel++).hw_value = txpwr & 0xFF;
+>                (*channel++).hw_value = txpwr >> 8;
+>        }
+> +       /* Handle the differing GPIO bit in different models */
+> +       if (product_id == 0x8197 || product_id == 0x8198) {
+> +               eeprom_93cx6_read(&eeprom, RTL8187_EEPROM_SELECT_GPIO, &tmp);
+> +               tmp &= 0xFF00;
+> +       } else
+> +               tmp = 0;
+> +       if (tmp)
+> +               priv->rfkill_mask = 0x4;
+> +       else
+> +               priv->rfkill_mask = 0x2;
+> +       printk(KERN_INFO "rtl8187: rfkill mask set to %d for Product ID 0x%x",
+> +              priv->rfkill_mask, product_id);
+>
+>        /*
+>         * XXX: Once this driver supports anything that requires
+> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
+> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
+> @@ -25,10 +25,10 @@ static bool rtl8187_is_radio_enabled(str
+>        u8 gpio;
+>
+>        gpio = rtl818x_ioread8(priv, &priv->map->GPIO0);
+> -       rtl818x_iowrite8(priv, &priv->map->GPIO0, gpio & ~0x02);
+> +       rtl818x_iowrite8(priv, &priv->map->GPIO0, gpio & ~priv->rfkill_mask);
+>        gpio = rtl818x_ioread8(priv, &priv->map->GPIO1);
+>
+> -       return gpio & 0x02;
+> +       return gpio & priv->rfkill_mask;
+>  }
+>
+>  void rtl8187_rfkill_init(struct ieee80211_hw *hw)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
