@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48844 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752263AbZLOVlZ (ORCPT
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:50316 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755132AbZLEWQU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 16:41:25 -0500
-Date: Tue, 15 Dec 2009 16:30:52 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Ivo van Doorn <ivdoorn@gmail.com>, stable@kernel.org
-Subject: Re: [PATCH v2 2.6.33] rt2x00: Disable powersaving for rt61pci and
-	rt2800pci.
-Message-ID: <20091215213052.GF8735@tuxdriver.com>
-References: <1260819235-8017-1-git-send-email-gwingerde@gmail.com> <20091215204432.GE8735@tuxdriver.com> <14add3d10912151310s6b36cc60vabbdac4afff2e4b4@mail.gmail.com>
+	Sat, 5 Dec 2009 17:16:20 -0500
+Received: by fxm5 with SMTP id 5so3668783fxm.28
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Dec 2009 14:16:25 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <14add3d10912151310s6b36cc60vabbdac4afff2e4b4@mail.gmail.com>
+In-Reply-To: <69e28c910912051355s2f13400eo1eff46c4cd6d32f4@mail.gmail.com>
+References: <4b1ac00a.nP75mlCdUd2PKZib%Larry.Finger@lwfinger.net>
+	 <69e28c910912051355s2f13400eo1eff46c4cd6d32f4@mail.gmail.com>
+Date: Sat, 5 Dec 2009 22:16:25 +0000
+Message-ID: <3ace41890912051416p59420651q6a67a7af1924a28d@mail.gmail.com>
+Subject: Re: [RFC/RFT V2] rtl8187: Modify rfkill for new models
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, antti@kaijanmaki.net,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 15, 2009 at 10:10:19PM +0100, Gertjan van Wingerde wrote:
-> On Tue, Dec 15, 2009 at 9:44 PM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > On Mon, Dec 14, 2009 at 08:33:55PM +0100, Gertjan van Wingerde wrote:
-> >> We've had many reports of rt61pci failures with powersaving enabled.
-> >> Therefore, as a stop-gap measure, disable powersaving of the rt61pci
-> >> until we have found a proper solution.
-> >> Also disable powersaving on rt2800pci as it most probably will show
-> >> the same problem.
-> >>
-> >> Cc: stable@kernel.org
-> >> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> >> ---
-> >>
-> >> John, this is an urgent fix for 2.6.33.
-> >>
-> >> v2:
-> >> - Handled feedback from Ivo:
-> >>       - Only disable powersaving by default, not permanent.
-> >>       - Also apply to rt2800pci.
-> >
-> > As posted, it will only compile on 2.6.32...
-> >
-> 
-> Me confused, as the patch was against the wireless-2.6.git tree, which
-> I thought was 2.6.33, and not 2.6.32. Please explain to which tree to
-> prepare fixes for 2.6.33.
+2009/12/5 Gábor Stefanik <netrolller.3d@gmail.com>:
+> On Sat, Dec 5, 2009 at 9:18 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-That seems rather impossible, since wireless-2.6 failed to build with
-your patch applied. :-)  Perhaps you weren't up-to-date?
+>> +       printk(KERN_INFO "rtl8187: rfkill mask set to %d for Product ID 0x%x",
+>> +              priv->rfkill_mask, product_id);
+>
+> printk(KERN_DEBUG... ?
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+While the info itself is a bit technical and only of use to
+developers, it is a device sub-type and we currently do try to
+distinguish them and tell as such... we do
+
+phy0: hwaddr ______________, RTL8187BvE V0 + rtl8225z2
+rtl8187: Customer ID is 0x04
+
+It may be appropriate to add to either. e.g.
+
+phy0: hwaddr ______________, RTL8187BvE V0 + rtl8225z2 (rfkill mask %d)
+rtl8187: Customer ID is 0x04 (rfkill mask %d)
+
+The product id isn't much use though, since it is readily available via lsusb.
