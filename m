@@ -1,80 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51815 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751117AbZLWTB5 (ORCPT
+Received: from mms2.broadcom.com ([216.31.210.18]:4668 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932619AbZLEAaN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 14:01:57 -0500
-Subject: Re: mac80211 suspend corner case (was: Asus eeepc 1008HA suspend
- issue and mac80211 suspend corner) case
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-In-Reply-To: <20091223162813.GB2609@tux>
-References: <20091222022355.GA32508@bombadil.infradead.org>
-	 <20091222193010.GB30201@bombadil.infradead.org>
-	 <1261570081.25008.1.camel@johannes.local>  <20091223162813.GB2609@tux>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-lYhv/jeqb8p3t5dteYCW"
-Date: Wed, 23 Dec 2009 17:47:08 +0100
-Message-ID: <1261586828.7304.13.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 4 Dec 2009 19:30:13 -0500
+From: "Howard Harte" <hharte@broadcom.com>
+To: =?iso-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5polish@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Greg KH" <greg@kroah.com>,
+	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>,
+	"Henry Ptasinski" <henryp@broadcom.com>
+Date: Fri, 4 Dec 2009 16:30:03 -0800
+Subject: RE: Broadcom Android bcm4329 open driver
+Message-ID: <4F34EB345A846E42B8D432EA578382CC1058921986@SJEXCHCCR01.corp.ad.broadcom.com>
+References: <43e72e890912031544j7cb8bffav1c1c7d016e740175@mail.gmail.com>
+ <14b026160912040010k5dda243bra0abd9be4e275918@mail.gmail.com>
+In-Reply-To: <14b026160912040010k5dda243bra0abd9be4e275918@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=iso-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The drivers posted to the Android GIT repository are for the Broadcom embedded WLAN/BT combo chips.  Currently, these include BCM4325 and BCM4329.  They are similar, but have slightly different drivers.  These are not WLAN NIC chips like those found in many laptops/netbooks today.  Instead, they do have their own CPU that handles the WLAN details.  The references to PCI in the driver are for the "Broadcom SDIO Stack" that has been deprecated for Linux in favor of the SD/MMC stack, and for the SPI-mode driver, which used a PCI to SPI controller card.
 
---=-lYhv/jeqb8p3t5dteYCW
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+While this driver is currently used for Android, there is nothing that precludes its use on non-Android flavors of Linux.
 
-On Wed, 2009-12-23 at 08:28 -0800, Luis R. Rodriguez wrote:
+-Howard
 
-> > Well it seems to me that if the driver determines that the hardware
-> is
-> > unreachable or not responding, it would unregister it from mac80211,
-> > which would clean up all user-visible state, obviously.
->=20
-> The drivers would not know this until it fails on the first call
-> from mac80211 which would be start().
 
-Which is why this patch may be a good way to solve that particular
-problem.
 
-> > The patch above seems ok to me, but basically papers over the
-> problem.
-> > If the start there fails, the driver will have to unregister the hw
-> > since any subsequent start will fail as well.
->=20
-> How about just having mac80211 do that for drivers where the start()
-> fails and we are resuming? I can give that a shot.
+-----Original Message-----
+From: Rafa³ Mi³ecki [mailto:zajec5polish@gmail.com] 
+Sent: Friday, December 04, 2009 12:10 AM
+To: Luis R. Rodriguez
+Cc: linux-wireless; Greg KH; Howard Harte; bcm43xx-dev; Henry Ptasinski
+Subject: Re: Broadcom Android bcm4329 open driver
 
-No way, the driver will invariably assume things are still going and
-might later unregister etc. Too much magic.
+2009/12/4 Luis R. Rodriguez <mcgrof@gmail.com>:
+> In case you haven't seen this yet, Broadcom has an open (!) driver on 
+> the Android git tree with support for SDIO/SPI for  bcm4329.
+>
+> http://tinyurl.com/broadcom-android-bcm4329
+>
+> The commit log entry dated 2009-10-29 states:
+>
+> Linux WLAN driver for BCM4329 - Low-Power 802.11n with Bluetooth(R) 
+> 2.1+ EDR and FM (Tx and Rx)
 
-johannes
+This driver was already noticed in January:
+http://lists.berlios.de/pipermail/bcm43xx-dev/2009-January/thread.html#5066
+See Thomas's response for details about driver:
+http://lists.berlios.de/pipermail/bcm43xx-dev/2009-January/005072.html
 
---=-lYhv/jeqb8p3t5dteYCW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+So that device controlled by SDIO has it's own CPU which cares of wireless. As you noticed there is also SPI but is this used anywhere except Android devices? Driver seems to check PCI buses just to find SPI.
 
------BEGIN PGP SIGNATURE-----
+--
+Rafa³
 
-iQIcBAABAgAGBQJLMkmIAAoJEODzc/N7+QmatxUP/2EHkMmAm9omk8AOwVjX2rNj
-7SSKyHsrZUNToQJSVNuY0rf2nI6/rLwbJVw4EjxOQT1DZWYfaSGjpgBcDl7l49So
-O/ZjFXIY+p52zVBb4AWVJ3WQpqa9xx3dzCPrVnpGjSP0DDwF+3h5Wexe9uojVpo0
-QROLaaDNvUw5DGNOaHfdDoZcg68wcfF3rWZInvA3S5oHsBy8H26O7GS7B6SHehA+
-mQIflkuA8zEAylOXXUS1bdJa1hYyLadD7p1HhLJllltCMn6fuLeXQY3fEQnUsDGi
-mA7okApjV2oNHjGuexvazmQR5GMFqx+y5wzQu68ley80T1b71choEgx80+m4J2zx
-h32EqQ+0JzyjwJ4kTLbYbkNDELcTI38kBaaNcMgJV9AcuJcwUzUYWQp0n/f4rId3
-glmIRkgZ8JOlolPh2D4aEArafOMYppvmiKxsCXJ23dnFM9LAPwraUVJvOO5rwNQw
-eJg4kisVSmCrL20dy0gqJ24Ot9ChNJXHVj7IJKSfpi+KdZZxPsshqAK3vNSMgwrl
-k8EleRx2vgR1QGDkpv2zjjLQSfsqvOefz26av2e6SwuGchFtSCXFlxICLQs4doKb
-8zWzzvQqzzb4YLVmXjSOpuozabYs7ZRIBxt+dH3DdVDraf5Ww3sBTVTLeaO+ZpoQ
-4w3nQx28HQpTOHt6oZ1/
-=bMkg
------END PGP SIGNATURE-----
-
---=-lYhv/jeqb8p3t5dteYCW--
 
