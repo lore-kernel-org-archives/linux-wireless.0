@@ -1,57 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45273 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932430AbZLNTP0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 14:15:26 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH] rt2x00: Fix rt2800usb detection in rt2800lib.
-Date: Mon, 14 Dec 2009 14:13:24 -0500
-Message-Id: <1260818004-22785-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1260661180-2300-1-git-send-email-gwingerde@gmail.com>
-References: <1260661180-2300-1-git-send-email-gwingerde@gmail.com>
+Received: from nbd.name ([88.198.39.176]:51051 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752028AbZLERIB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Dec 2009 12:08:01 -0500
+Message-ID: <4B1A9375.6080105@openwrt.org>
+Date: Sat, 05 Dec 2009 18:08:05 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: ath9k: fix tx status reporting
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+This patch fixes a bug in ath9k's tx status check, which
+caused mac80211 to consider regularly transmitted unicast frames
+as un-acked.
+When checking the ts_status field for errors, it needs to be masked
+with ATH9K_TXERR_FILT, because this field also contains other fields
+like ATH9K_TX_ACKED.
+Without this patch, AP mode is pretty much unusable, as hostapd
+checks the ACK status for the frames that it injects.
 
-rt2800lib incorrectly detected whether RT2800USB was enabled because
-it didn't account for a modularized RT2800USB driver.
-
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-I'm merging this version based on Randy's feedback...
 
- drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index eb1e1d0..6e13650 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -37,7 +37,7 @@
- #include <linux/module.h>
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2078,7 +2078,7 @@ static void ath_tx_processq(struct ath_s
+ 				&txq->axq_q, lastbf->list.prev);
  
- #include "rt2x00.h"
--#ifdef CONFIG_RT2800USB
-+#if defined(CONFIG_RT2800USB) || defined(CONFIG_RT2800USB_MODULE)
- #include "rt2x00usb.h"
- #endif
- #include "rt2800lib.h"
-@@ -1121,7 +1121,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 		txq->axq_depth--;
+-		txok = (ds->ds_txstat.ts_status == 0);
++		txok = !(ds->ds_txstat.ts_status & ATH9K_TXERR_FILT);
+ 		txq->axq_tx_inprogress = false;
+ 		spin_unlock_bh(&txq->axq_lock);
  
- 	if (rt2x00_intf_is_usb(rt2x00dev)) {
- 		rt2800_register_write(rt2x00dev, USB_DMA_CFG, 0x00000000);
--#ifdef CONFIG_RT2800USB
-+#if defined(CONFIG_RT2800USB) || defined(CONFIG_RT2800USB_MODULE)
- 		rt2x00usb_vendor_request_sw(rt2x00dev, USB_DEVICE_MODE, 0,
- 					    USB_MODE_RESET, REGISTER_TIMEOUT);
- #endif
--- 
-1.6.2.5
-
