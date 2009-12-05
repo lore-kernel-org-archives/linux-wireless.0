@@ -1,51 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:36815 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760553AbZLORJd (ORCPT
+Received: from straum.hexapodia.org ([64.81.70.185]:48861 "EHLO
+	straum.hexapodia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757492AbZLEA5T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 12:09:33 -0500
-Received: by mail-ew0-f219.google.com with SMTP id 19so71271ewy.21
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2009 09:09:32 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH v2.6.33] rt2x00: Fix calculation of rt2800 iveiv entry offset.
-Date: Tue, 15 Dec 2009 18:09:31 +0100
-Cc: linville@tuxdriver.com, users@rt2x00.serialmonkey.com,
-	linux-wireless@vger.kernel.org
-References: <1260829951-27139-1-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1260829951-27139-1-git-send-email-gwingerde@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200912151809.31376.IvDoorn@gmail.com>
+	Fri, 4 Dec 2009 19:57:19 -0500
+Date: Fri, 4 Dec 2009 16:57:20 -0800
+From: Andy Isaacson <adi@hexapodia.org>
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: 2.6.32: WARNING: at net/wireless/core.c:614 wdev_cleanup_work+0xd9/0x100 [cfg80211]()
+Message-ID: <20091205005720.GB24944@hexapodia.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 14 December 2009, Gertjan van Wingerde wrote:
-> Fix typo. The index should be multiplied by the entry size, not 'and'-ed.
-> 
-> Found via code-inspection.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Got this on a Dell e4300 (Core 2 Duo, Inte Pro/Wireless 5300 AGN)
+running 2.6.32 final, while doing a suspend-on-lid-close soon after
+bootup:
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+[   65.455842] ------------[ cut here ]------------
+[   65.460477] WARNING: at net/wireless/core.c:614 wdev_cleanup_work+0xd9/0x100 [cfg80211]()
+[   65.468656] Hardware name: Latitude E4300                  
+<9>[   65.474225] Modules linked in: binfmt_misc rfcomm sco bnep l2cap crc16 snd_hda_codec_intelhdmi snd_hda_codec_idt snd_hda_intel snd_hda_codec snd_hwdep snd_pcm_oss snd_mixer_oss snd_pcm snd_seq_dummy arc4 ecb snd_seq_oss snd_seq_midi iwlagn snd_rawmidi iwlcore snd_seq_midi_event snd_seq snd_timer snd_seq_device btusb snd led_class soundcore wmi mac80211 bluetooth ricoh_mmc snd_page_alloc psmouse evdev serio_raw dcdbas cfg80211 usbhid hid i915 drm_kms_helper drm i2c_algo_bit pata_acpi i2c_core intel_agp uhci_hcd[   65.520656] ---[ end trace ea0633faa6e3e0ca ]---
+[   65.649368] PM: Syncing filesystems ... done.
+[   65.685833] PM: Preparing system for mem sleep
+[   65.947589] [drm] LVDS-8: set mode 1280x800 c
+<9>[   66.011918] Freezing user space processes ... (elapsed 0.00 seconds) <9>[   66.020637] Freezing remaining freezable tasks ... (elapsed 0.00 seconds) done.[   66.028100] PM: Entering mem sleep
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-> index c5fe867..1a7eae3 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800.h
-> +++ b/drivers/net/wireless/rt2x00/rt2800.h
-> @@ -1323,7 +1323,7 @@
->  #define PAIRWISE_KEY_ENTRY(__idx) \
->  	( PAIRWISE_KEY_TABLE_BASE + ((__idx) * sizeof(struct hw_key_entry)) )
->  #define MAC_IVEIV_ENTRY(__idx) \
-> -	( MAC_IVEIV_TABLE_BASE + ((__idx) & sizeof(struct mac_iveiv_entry)) )
-> +	( MAC_IVEIV_TABLE_BASE + ((__idx) * sizeof(struct mac_iveiv_entry)) )
->  #define MAC_WCID_ATTR_ENTRY(__idx) \
->  	( MAC_WCID_ATTRIBUTE_BASE + ((__idx) * sizeof(u32)) )
->  #define SHARED_KEY_ENTRY(__idx) \
+I haven't seen this error before, so it may be a regression from .31,
+but then I have only had serial console set up for a few weeks.
 
+More serial console below, full dmesg (after a reboot) at
+http://web.hexapodia.org/~adi/tmp/e4300-dmesg-2.6.32.txt
 
+ * Setting preliminary keymap...                                                 * Speech-dispatcher configured for user sessionsps       
+ * Starting Common Unix Printing System: cupsd                                   * PulseAudio configured for per-user sessions
+ * Enabling additional executable binary formats binfmt-support                    ...done. battery state...       
+[   31.963202] [drm] TV-25: set mode NTSC 480i 0
+[   32.107680] [drm] TV-25: set mode NTSC 480i 0
+[   32.402764] [drm] TV-25: set mode NTSC 480i 0
+[   32.547450] [drm] TV-25: set mode NTSC 480i 0
+[   32.842692] [drm] TV-25: set mode NTSC 480i 0
+[   32.987478] [drm] TV-25: set mode NTSC 480i 0
+[   35.658716] [drm] TV-25: set mode NTSC 480i 0
+[   35.803263] [drm] TV-25: set mode NTSC 480i 0
+[   42.186787] wlan0: deauthenticating from 00:0b:0e:46:5c:00 by local choice (reason=3)
+[   42.194885] wlan0: direct probe to AP 00:0b:0e:46:5c:00 (try 1)
+[   42.204706] wlan0: direct probe responded
+[   42.208721] wlan0: authenticate with AP 00:0b:0e:46:5c:00 (try 1)
+[   42.217544] wlan0: authenticated
+[   42.220790] wlan0: associate with AP 00:0b:0e:46:5c:00 (try 1)
+[   42.229554] wlan0: RX AssocResp from 00:0b:0e:46:5c:00 (capab=0x421 status=0 aid=6)
+[   42.237207] wlan0: associated
+[   42.252175] cfg80211: Calling CRDA for country: US
+[   42.258795] cfg80211: Current regulatory domain updated by AP to: US
+[   42.265161]  (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[   42.272401]  (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2700 mBm)
+[   63.151613] [drm] TV-25: set mode NTSC 480i 0
+[   63.606768] [drm] TV-25: set mode NTSC 480i 0
+[   63.919543] [drm] TV-25: set mode NTSC 480i 0
+[   64.103978] [drm] TV-25: set mode NTSC 480i 0
+[   65.381220] wlan0: deauthenticating from 00:0b:0e:46:5c:00 by local choice (reason=3)
+[   65.390034] wlan0: direct probe to AP 00:0b:0e:46:5c:00 (try 1)
+[   65.396020] wlan0: deauthenticating from 00:0b:0e:46:5c:00 by local choice (reason=3)
+[   65.455842] ------------[ cut here ]------------
+[   65.460477] WARNING: at net/wireless/core.c:614 wdev_cleanup_work+0xd9/0x100 [cfg80211]()
+[   65.468656] Hardware name: Latitude E4300                  
+<9>[   65.474225] Modules linked in: binfmt_misc rfcomm sco bnep l2cap crc16 snd_hda_codec_intelhdmi snd_hda_codec_idt snd_hda_intel snd_hda_codec snd_hwdep snd_pcm_oss snd_mixer_oss snd_pcm snd_seq_dummy arc4 ecb snd_seq_oss snd_seq_midi iwlagn snd_rawmidi iwlcore snd_seq_midi_event snd_seq snd_timer snd_seq_device btusb snd led_class soundcore wmi mac80211 bluetooth ricoh_mmc snd_page_alloc psmouse evdev serio_raw dcdbas cfg80211 usbhid hid i915 drm_kms_helper drm i2c_algo_bit pata_acpi i2c_core intel_agp uhci_hcd[   65.520656] ---[ end trace ea0633faa6e3e0ca ]---
+[   65.649368] PM: Syncing filesystems ... done.
+[   65.685833] PM: Preparing system for mem sleep
+[   65.947589] [drm] LVDS-8: set mode 1280x800 c
+<9>[   66.011918] Freezing user space processes ... (elapsed 0.00 seconds) <9>[   66.020637] Freezing remaining freezable tasks ... (elapsed 0.00 seconds) done.[   66.028100] PM: Entering mem sleep
+
+-andy
