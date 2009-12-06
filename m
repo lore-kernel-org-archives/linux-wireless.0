@@ -1,77 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:53944
-	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756465AbZLPSFc (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55497 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757010AbZLFR6u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2009 13:05:32 -0500
-Date: Wed, 16 Dec 2009 10:03:37 -0800
-From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-To: Oliver Neukum <oliver@neukum.org>
-Cc: Josua Dietze <digidietze@draisberghof.de>,
-	Stefan Seyfried <stefan.seyfried@googlemail.com>,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
-	Stefan Seyfried <seife@sphairon.com>
-Subject: Re: [PATCH] move eject code from zd1211rw to usb-storage
-Message-ID: <20091216180337.GG16426@one-eyed-alien.net>
-References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com> <200912151611.08576.oliver@neukum.org> <20091215180300.GF16426@one-eyed-alien.net> <200912161129.27284.oliver@neukum.org>
+	Sun, 6 Dec 2009 12:58:50 -0500
+Subject: [PATCH] mac80211/cfg80211: add station events
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 06 Dec 2009 18:58:53 +0100
+Message-ID: <1260122333.3461.19.camel@johannes.local>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Y/WcH0a6A93yCHGr"
-In-Reply-To: <200912161129.27284.oliver@neukum.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When, for instance, a new IBSS peer is found, userspace
+wants to be notified. Add events for all new stations
+that mac80211 learns about.
 
---Y/WcH0a6A93yCHGr
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/cfg80211.h  |   12 ++++++++++++
+ net/mac80211/sta_info.c |    5 +++++
+ net/wireless/mlme.c     |   10 ++++++++++
+ net/wireless/nl80211.c  |   21 ++++++++++++++++++++-
+ net/wireless/nl80211.h  |    4 ++++
+ 5 files changed, 51 insertions(+), 1 deletion(-)
 
-On Wed, Dec 16, 2009 at 11:29:27AM +0100, Oliver Neukum wrote:
-> Am Dienstag, 15. Dezember 2009 19:03:00 schrieb Matthew Dharm:
-> > > This would break existing systems and thus introduce a regression.
-> > > We'd need to go through a feature removal process. For the time being
-> > > I see no alternative to Seife's patch, as we cannot introduce ejection
-> > > code to another wireless driver and need to support these devices.
-> >=20
-> > The right answer here is neither to move the eject code nor to introduce
-> > more of it.  New devices should be supported via userspace.
->=20
-> Usually I would agree, but in this case the vendor reused IDs.
-> The legacy kernel space switcher and user space would race.
+--- wireless-testing.orig/net/wireless/mlme.c	2009-12-06 18:29:05.000000000 +0100
++++ wireless-testing/net/wireless/mlme.c	2009-12-06 18:32:18.000000000 +0100
+@@ -707,3 +707,13 @@ void cfg80211_remain_on_channel_expired(
+ 					      channel_type, gfp);
+ }
+ EXPORT_SYMBOL(cfg80211_remain_on_channel_expired);
++
++void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
++		      struct station_info *sinfo, gfp_t gfp)
++{
++	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++
++	nl80211_send_sta_event(rdev, dev, mac_addr, sinfo, gfp);
++}
++EXPORT_SYMBOL(cfg80211_new_sta);
+--- wireless-testing.orig/net/wireless/nl80211.c	2009-12-06 18:25:13.000000000 +0100
++++ wireless-testing/net/wireless/nl80211.c	2009-12-06 18:53:19.000000000 +0100
+@@ -1675,7 +1675,7 @@ static u16 nl80211_calculate_bitrate(str
+ 
+ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+ 				int flags, struct net_device *dev,
+-				u8 *mac_addr, struct station_info *sinfo)
++				const u8 *mac_addr, struct station_info *sinfo)
+ {
+ 	void *hdr;
+ 	struct nlattr *sinfoattr, *txrate;
+@@ -5389,6 +5389,25 @@ void nl80211_send_remain_on_channel_canc
+ 					  channel_type, 0, gfp);
+ }
+ 
++void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
++			    struct net_device *dev, const u8 *mac_addr,
++			    struct station_info *sinfo, gfp_t gfp)
++{
++	struct sk_buff *msg;
++
++	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
++	if (!msg)
++		return;
++
++	if (nl80211_send_station(msg, 0, 0, 0, dev, mac_addr, sinfo) < 0) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
++				nl80211_mlme_mcgrp.id, gfp);
++}
++
+ /* initialisation/exit functions */
+ 
+ int nl80211_init(void)
+--- wireless-testing.orig/net/wireless/nl80211.h	2009-12-06 18:28:48.000000000 +0100
++++ wireless-testing/net/wireless/nl80211.h	2009-12-06 18:32:06.000000000 +0100
+@@ -70,4 +70,8 @@ void nl80211_send_remain_on_channel_canc
+ 	u64 cookie, struct ieee80211_channel *chan,
+ 	enum nl80211_channel_type channel_type, gfp_t gfp);
+ 
++void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
++			    struct net_device *dev, const u8 *mac_addr,
++			    struct station_info *sinfo, gfp_t gfp);
++
+ #endif /* __NET_WIRELESS_NL80211_H */
+--- wireless-testing.orig/include/net/cfg80211.h	2009-12-06 18:32:45.000000000 +0100
++++ wireless-testing/include/net/cfg80211.h	2009-12-06 18:33:35.000000000 +0100
+@@ -2177,4 +2177,16 @@ void cfg80211_remain_on_channel_expired(
+ 					enum nl80211_channel_type channel_type,
+ 					gfp_t gfp);
+ 
++
++/**
++ * cfg80211_new_sta - notify userspace about station
++ *
++ * @dev: the netdev
++ * @mac_addr: the station's address
++ * @sinfo: the station information
++ * @gfp: allocation flags
++ */
++void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
++		      struct station_info *sinfo, gfp_t gfp);
++
+ #endif /* __NET_CFG80211_H */
+--- wireless-testing.orig/net/mac80211/sta_info.c	2009-12-06 18:34:00.000000000 +0100
++++ wireless-testing/net/mac80211/sta_info.c	2009-12-06 18:35:59.000000000 +0100
+@@ -359,6 +359,7 @@ int sta_info_insert(struct sta_info *sta
+ {
+ 	struct ieee80211_local *local = sta->local;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct station_info sinfo;
+ 	unsigned long flags;
+ 	int err = 0;
+ 
+@@ -408,6 +409,10 @@ int sta_info_insert(struct sta_info *sta
+ 
+ 	spin_unlock_irqrestore(&local->sta_lock, flags);
+ 
++	sinfo.filled = 0;
++	sinfo.generation = local->sta_generation;
++	cfg80211_new_sta(sdata->dev, sta->sta.addr, &sinfo, GFP_ATOMIC);
++
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	/*
+ 	 * Debugfs entry adding might sleep, so schedule process
 
-So, let me see if I understand this... we have two devices that use the
-same IDs, and get mode-switched the same way, but need different
-post-switch drivers?
 
-If this is the case, then the only reasonable answer to is to push the
-modeswitch code for both into udev and out of the kernel.  It will take
-longer to support the new device that way (since we need to wait until udev
-is updated and then remove kernel support), but that's what a vendor gets
-for re-using IDs.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-What, are you one of those Microsoft-bashing Linux freaks?
-					-- Customer to Greg
-User Friendly, 2/10/1999
-
---Y/WcH0a6A93yCHGr
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFLKSD5HL9iwnUZqnkRAtaWAJ9OKenLJbBlbKKNErFlnnwks5V02wCdHHPG
-ttKHIyheEkEnXsfaQW1V+MI=
-=2Evc
------END PGP SIGNATURE-----
-
---Y/WcH0a6A93yCHGr--
