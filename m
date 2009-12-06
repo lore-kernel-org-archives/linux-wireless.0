@@ -1,100 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55960 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752937AbZLOKD4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 05:03:56 -0500
-Subject: Re: [PATCH] wireless: wext: allocate space for NULL-termination
- for 32byte SSIDs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: daniel@caiaq.de, linux-kernel@vger.kernel.org, dcbw@redhat.com,
-	m.hirsch@raumfeld.com, netdev@vger.kernel.org,
-	libertas-dev@lists.infradead.org, stable@kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20091215.014308.77044043.davem@davemloft.net>
-References: <1260650850-16163-1-git-send-email-daniel@caiaq.de>
-	 <20091215.014308.77044043.davem@davemloft.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Q0rfAH3PVOalrltMCQSk"
-Date: Tue, 15 Dec 2009 11:03:31 +0100
-Message-ID: <1260871411.3692.4.camel@johannes.local>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:45775 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932315AbZLFSfF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Dec 2009 13:35:05 -0500
+Message-ID: <4B1BF952.1000909@openwrt.org>
+Date: Sun, 06 Dec 2009 19:34:58 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: 8an@praha12.net
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	ath5k-devel@lists.ath5k.org
+Subject: Re: [PATCH 4/4] ath5k: Implement mac80211 callback set_coverage
+References: <200912061820.26320.8an@praha12.net> <200912061826.52394.8an@praha12.net>
+In-Reply-To: <200912061826.52394.8an@praha12.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Lukáš Turek wrote:
+> The callback sets slot time as specified in IEEE 802.11-2007 section
+> 17.3.8.6 (for 20MHz channels only for now) and ACK and CTS timeouts
+> using calculations taken from Madwifi's athctrl. The values are
+> persistent, they are restored after device reset.
+> 
+> Signed-off-by: Lukas Turek <8an@praha12.net>
+> ---
+> diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
+> index 64fc1eb..2383e22 100644
+> --- a/drivers/net/wireless/ath/ath5k/pcu.c
+> +++ b/drivers/net/wireless/ath/ath5k/pcu.c
+> @@ -1050,3 +1050,22 @@ int ath5k_hw_set_key_lladdr(struct ath5k_hw *ah, u16 entry, const u8 *mac)
+>  	return 0;
+>  }
+>  
+> +/**
+> + * ath5k_hw_set_coverage - Set coverage class
+> + *
+> + * @ah: The &struct ath5k_hw
+> + * @coverage_class: IEEE 802.11 coverage class
+> + *
+> + * Sets slot time, ACK timeout and CTS timeout for given coverage class.
+> + */
+> +void ath5k_hw_set_coverage(struct ath5k_hw *ah, u8 coverage_class)
+> +{
+> +	/* Calculations taken from Madwifi's athctrl */
+> +	int slot_time = 9 + 3 * coverage_class;
+> +	int ack_timeout = slot_time * 2 + 3;
+> +	int cts_timeout = ack_timeout;
+This part is wrong. The slot time can be either short or long, based on
+configuration and PHY type.
 
---=-Q0rfAH3PVOalrltMCQSk
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2009-12-15 at 01:43 -0800, David Miller wrote:
-
-> > The effect is that after a number of mode transistions (sometimes as fe=
-w
-> > as two sufficed), the kernel will oops at very strange locations, mostl=
-y
-> > in something like __kmem_alloc().
-> >=20
-> > While the root cause turned out to be an issue with the wpa-supplicant
-> > which feeds the kernel driver with garbage, this occasion pointed out a
-> > bug in the wireless wext core when SSIDs with 32 byte lengths are passe=
-d
-> > from userspace. In this case, the string is not properly NULL-terminate=
-d
-> > which causes some other part to corrupt memory.
-> >=20
-> > (In the particular case I observed, an SIOCSIWESSID was issued with
-> >  bogus data in iwp->pointer but iwp->length=3D32).
-> >=20
-> > I admitedly couldn't find where the actual corruption itself happens,
-> > but with this trivial fix, I can't reproduce the bug anymore.
-
-Well you should try harder :)
-
-> > -	/* kzalloc() ensures NULL-termination for essid_compat. */
-> > -	extra =3D kzalloc(extra_size, GFP_KERNEL);
-> > +	/* kzalloc() +1 ensures NULL-termination for essid_compat. */
-> > +	extra =3D kzalloc(extra_size + 1, GFP_KERNEL);
-
-That doesn't seem correct.
-
-If this is used in a SET, then it is purely an in-kernel thing and
-everything in the kernel is passed the length + data, and the kernel
-MUST NEVER treat the SSID as a NUL-terminated string.
-
-If this is used in a GET, then it will be filled up to 32 bytes by the
-get handler, and the trailing \0 your patch reserves will never be
-copied into userspace.
-
-Since you indicate the kernel crashed, it is likely that libertas is
-treating the buffer as a string, instead of an SSID.
-
-That doesn't, however, make your fix and more valid. Whatever code uses
-it as a string is clearly at fault, since this is a valid four-byte
-SSID: "\x00\x01\x02\x03"
-
-johannes
-
---=-Q0rfAH3PVOalrltMCQSk
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLJ17uAAoJEODzc/N7+QmakpQQAIIrYHyJcdJDdRtRLMroqt1c
-zT+e+NIdWHxFT5XRxnzLVyDuJOrmE4/xNgWmHo/gZ60PZtQhaGQO+ekJTQTNSFYK
-Il3pb5TKHR7WBGsJWj1ME14S6hswruCFCjDVgDMozXlFLYc1+QWoWkqHdanh2XaK
-mdwxi1c13cHHWPTgZT5pYtaPELjDktqHJO79NQ7JUQ8JZCPCcxvPNg97l7yZ5kKl
-AyBXbbvTuoG2KY94Lk0qgo1Mwf7Dm4fQNmIrwwFAaIpRZBidDQROTAtMaZcivSoL
-tuvIiJTtpJzxHITx5+iZuHm8HZQHQgDj/lsPeBoodPy2aGNrp/VcPwulyYzY5FU/
-JkeFTMMQEXNpFaa482EM1gyY8MKkyxUQojxU7/KDgpRrBxK1T9D1jp2ALDQfGxyA
-SKE5uVsXrfag+7kM59Q/Dw1LJjcRVSZ0rc0D47Tn/lR98E/gJjxTknUBspyYUA6R
-F0NIcZpgfoi4PdBC+b1/F2FcWN6Riy1aQ9paQcxkRSdpOVi4Mad+e+G4RrXJw6bT
-5aC4BP9337aRAMmLjjl2yZXTSqZ4mbzLS6gVkxX5v39zMeKMgIMPnz/TqlMUZpFo
-PcNjGuM7teS7s96rV4FzHgE2VuR1UKJBK8xxSWQUlD/inreh7xLYlH5CRHXf8Hwp
-V8tFvhpOwnTxU4MIy+4O
-=UhFJ
------END PGP SIGNATURE-----
-
---=-Q0rfAH3PVOalrltMCQSk--
-
+- Felix
