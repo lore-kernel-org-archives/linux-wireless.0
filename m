@@ -1,96 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:48504 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751412AbZLCV6c (ORCPT
+Received: from parez.praha12.net ([78.102.11.253]:35444 "EHLO
+	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933962AbZLFRXl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2009 16:58:32 -0500
-Message-ID: <4B183491.6090602@gmail.com>
-Date: Thu, 03 Dec 2009 13:58:41 -0800
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Sun, 6 Dec 2009 12:23:41 -0500
+From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
+Reply-To: 8an@praha12.net
+To: linville@tuxdriver.com
+Subject: [PATCH 2/4] mac80211: Add new callback set_coverage
+Date: Sun, 6 Dec 2009 18:23:45 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	ath5k-devel@lists.ath5k.org
+References: <200912061820.26320.8an@praha12.net>
+In-Reply-To: <200912061820.26320.8an@praha12.net>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Miles Lane <miles.lane@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] BUG kmalloc-8192: Poison overwritten
-References: <dd18b0c30912021427x4d1d952tcdd98bb9d816b67c@mail.gmail.com> 	<43e72e890912021516k736db118j217dc92496db8f19@mail.gmail.com> 	<4B182F79.7060103@gmail.com> <43e72e890912031345m3f5adb9nca754e33a858c923@mail.gmail.com>
-In-Reply-To: <43e72e890912031345m3f5adb9nca754e33a858c923@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200912061823.45809.8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/03/09 13:45, Luis R. Rodriguez wrote:
-> On Thu, Dec 3, 2009 at 1:36 PM, Justin P. Mattock
-> <justinmattock@gmail.com>  wrote:
->> On 12/02/09 15:16, Luis R. Rodriguez wrote:
->>>
->>> On Wed, Dec 2, 2009 at 2:27 PM, Justin Mattock<justinmattock@gmail.com>
->>>   wrote:
->>>>
->>>> I have no idea what this is:
->>>> (first time I've seen this);
->>>>
->>>>
->>>> [   13.055592]
->>>> =============================================================================
->>>> [   13.055865] BUG kmalloc-8192: Poison overwritten
->>>> [   13.056046]
->>>> -----------------------------------------------------------------------------
->>>
->>> I believe this means we write to an area in memory after we freed an skb.
->>>
->>>> [   13.056366] INFO: 0xffff88003290a100-0xffff88003290a143. First byte
->>>> 0x50 instead of 0x6b
->>>> [   13.056366] INFO: Allocated in ath_rxbuf_alloc+0x25/0x94 [ath]
->>>> age=8898 cpu=0 pid=892
->>>> [   13.056366] INFO: Freed in skb_release_data+0xc1/0xc6 age=99 cpu=0
->>>> pid=0
->>>> [   13.056366] INFO: Slab 0xffffea0000b0f9c0 objects=3 used=0
->>>> fp=0xffff88003290c090 flags=0x4000000000004082
->>>> [   13.056366] INFO: Object 0xffff88003290a048 @offset=8264
->>>> fp=0xffff880032908000
->>>> [   13.056366]
->>>> [   13.056366] Bytes b4 0xffff88003290a038:  b9 9e fb ff 00 00 00 00
->>>> 5a 5a 5a 5a 5a 5a 5a 5a ¹.ûÿ....ZZZZZZZZ
->>>
->>> Can you reproduce this? We had a similar report from Miles Lanes I
->>> have been trying to followup on for a while now. The suggested patches
->>> to try are:
->>>
->>>
->>> http://bombadil.infradead.org/~mcgrof/patches/ath9k/2009/11-19/70-mac80211-total-ampdu-tx-info.patch
->>>
->>> http://bombadil.infradead.org/~mcgrof/patches/ath9k/2009/11-19/71-ath9k-remove-tx_info_priv.patch
->>>
->>>    Luis
->>>
->>
->> as anticipated I had a feeling reproducing
->> this would be a bit of a challeng.
->>
->> so far I was taking into account the actions that
->> I did yesterday to trigger this, but nothing i.e.
->>
->> reboot 30 times(until fsck engages), and shutdown/start 30 times
->> with nothing of the sort.
->>
->> If you have any ideas on how to reproduce this it would
->> be greatly appreciated(don't want to throw in the patches, until
->> I have something to go by).
->>
->> on the other hand I could throw in the patches, and wait and see,
->> but would rather have more hard evidence that the patches do fix something.
->
-> I think waiting to be able to reproduce is best, and appreciate your
-> patience on this. Maybe Miles Lanes also cannot reproduce easily and
-> that may explain why he hasn't replied.
->
->    Luis
->
+Mac80211 callback to driver set_coverage() sets slot time and ACK timeout
+for given coverage class. The callback is optional, but it's essential for
+long distance links.
 
-probably.. What I'll do is tweak with this
-the rest of the day, if nothing then I'll go
-ahead and throw in the patches, and then go from there.
+Signed-off-by: Lukas Turek <8an@praha12.net>
+---
+ include/net/mac80211.h |    5 +++++
+ net/mac80211/cfg.c     |    6 ++++++
+ 2 files changed, 11 insertions(+), 0 deletions(-)
 
-Justin P. Mattock
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 1d75b96..2865bc6 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1477,6 +1477,10 @@ enum ieee80211_ampdu_mlme_action {
+  *	need to set wiphy->rfkill_poll to %true before registration,
+  *	and need to call wiphy_rfkill_set_hw_state() in the callback.
+  *
++ * @set_coverage: Set slot time for given coverage class as specified
++ *	in IEEE 802.11-2007 section 17.3.8.6 and modify ACK timeout
++ *	accordingly. Optional function, could be NULL.
++ *
+  * @testmode_cmd: Implement a cfg80211 test mode command.
+  */
+ struct ieee80211_ops {
+@@ -1531,6 +1535,7 @@ struct ieee80211_ops {
+ 			    struct ieee80211_sta *sta, u16 tid, u16 *ssn);
+ 
+ 	void (*rfkill_poll)(struct ieee80211_hw *hw);
++	void (*set_coverage)(struct ieee80211_hw *hw, u8 coverage_class);
+ #ifdef CONFIG_NL80211_TESTMODE
+ 	int (*testmode_cmd)(struct ieee80211_hw *hw, void *data, int len);
+ #endif
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 93ee1fd..f0ab669 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1236,6 +1236,12 @@ static int ieee80211_set_wiphy_params(struct wiphy 
+*wiphy, u32 changed)
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+ 	int err;
+ 
++	if (changed & WIPHY_PARAM_COVERAGE_CLASS) {
++		if (!local->ops->set_coverage)
++			return -EOPNOTSUPP;
++		local->ops->set_coverage(&local->hw, wiphy->coverage_class);
++	}
++
+ 	if (changed & WIPHY_PARAM_RTS_THRESHOLD) {
+ 		err = drv_set_rts_threshold(local, wiphy->rts_threshold);
+ 
+-- 
+1.6.4.4
