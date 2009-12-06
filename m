@@ -1,83 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:33364 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750841AbZLAHyk convert rfc822-to-8bit (ORCPT
+Received: from parez.praha12.net ([78.102.11.253]:45544 "EHLO
+	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757460AbZLFT2q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 02:54:40 -0500
+	Sun, 6 Dec 2009 14:28:46 -0500
+From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
+Reply-To: 8an@praha12.net
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/4] nl80211: Add new WIPHY attribute COVERAGE_CLASS
+Date: Sun, 6 Dec 2009 20:28:52 +0100
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+References: <200912061820.26320.8an@praha12.net> <200912061945.53225.8an@praha12.net> <1260125366.3461.24.camel@johannes.local>
+In-Reply-To: <1260125366.3461.24.camel@johannes.local>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890911231347k48f105dcw24dd99c1c39f034@mail.gmail.com>
-References: <4ADE2F66.1070703@gmail.com> <43e72e890911161515q64ff527cyefd7d769f3c501b@mail.gmail.com>
-	<a44ae5cd0911161641n36d3c746pb69a9cac1eba1784@mail.gmail.com>
-	<43e72e890911161708o607da2a5hefe98e92fd13ee7a@mail.gmail.com>
-	<43e72e890911191519h73bd6699if860257c049ba1a0@mail.gmail.com>
-	<43e72e890911231347k48f105dcw24dd99c1c39f034@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 30 Nov 2009 23:54:26 -0800
-Message-ID: <43e72e890911302354i1b17265ckb3aa81171a24174b@mail.gmail.com>
-Subject: Re: 2.6.32-rc5-git1 -- BUG kmalloc-8192: Poison overwritten (ath9k
-	implicated)
-To: Miles Lane <miles.lane@gmail.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed;
+  boundary="nextPart1423409.qu2SCLRpYr";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200912062028.52470.8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 23, 2009 at 1:47 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Thu, Nov 19, 2009 at 3:19 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Mon, Nov 16, 2009 at 5:08 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>> On Mon, Nov 16, 2009 at 4:41 PM, Miles Lane <miles.lane@gmail.com> wrote:
->>>> On Mon, Nov 16, 2009 at 6:15 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>>>> On Tue, Oct 20, 2009 at 1:45 PM, Miles Lane <miles.lane@gmail.com> wrote:
->>>>>> Let me know if you want my .config file.  I think this was triggered by
->>>>>> suspending my laptop.
->>>>>>
->>>>>> BUG kmalloc-8192: Poison overwritten
->>>>>
->>>>> Thanks for your report Miles.
->>>>>
->>>>> Are you using Linus' tree? Felix wrote some patches that got rid of
->>>>> the rate control private area which we kmalloc/kfree and at least one
->>>>> user reported that these patches fixed a memory leak. I'm curious if
->>>>> the same patches would resolve this issue.
->>>>>
->>>>> Only thing is these patches apply against wireless-testing and not
->>>>> 2.6.32. To test them you'd have to pull wireless-testing master to
->>>>> your tree and then apply the patches both before and after.
->>>>>
->>>>> Would you be up to try that?
->>>>
->>>> Yes, definitely.  Thanks.  I will try to accomplish this and let you
->>>> know if I get stuck.
->>>
->>> OK, not sure if a merge of wireless-testing will be clean so you may
->>> want to just clone fresh.. Anyway after you get wireless-testing bits
->>> you'll want to apply these:
->>>
->>> http://patchwork.kernel.org/patch/60127/
->>> http://patchwork.kernel.org/patch/60128/
->>> http://patchwork.kernel.org/patch/60126/
->>>
->>> If you want to merge wireless-testing you can try:
->>>
->>> git merge git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
->>> master
->>>
->>> If that'd doesn't gos smooth just clone it and I think you should be
->>> able to safely --reference your current tree for objects for Linus'
->>> tree.
->>
->> Miles I see no reply from you yet so I backported the patches in
->> question for you. Can you please try 2.6.32-rc7 and apply these
->> patches on top:
->>
->> http://bombadil.infradead.org/~mcgrof/patches/ath9k/2009/11-19/70-mac80211-total-ampdu-tx-info.patch
->> http://bombadil.infradead.org/~mcgrof/patches/ath9k/2009/11-19/71-ath9k-remove-tx_info_priv.patch
->
-> Miles, any luck testing this?
+--nextPart1423409.qu2SCLRpYr
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Miles -- poke. The patches provided should apply on Linus' tree,
-please let us know if they fix the issue you reported.
+On 6.12.2009 19:49 Johannes Berg wrote:
+> Umm, no it won't, that's only with your specific mac80211
+> implementation. Try on rndis for instance.
+I looked at the rndis driver, but it seems it could be configured via wirel=
+ess=20
+extensions only, it does not define cfg80211_ops at all, so I think it cann=
+ot=20
+be managed via nl80211 and I don't see your point there...
 
-  Luis
+Lukas Turek
+
+--nextPart1423409.qu2SCLRpYr
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iQIcBAABAgAGBQJLHAX0AAoJEEBjvk/UOfYwv3UP/32bxuO1okfcheidxg2DolEK
+FdphRPNbhweGliISHU7P4PA0fqfZ8bUy/7Xk2cuYs6APQnmk3WW//lk2+WbU89PY
+4ErZGYCuCreKGU3ClVEMTV1f3kiCDM8E0XrIGLQsWEz+o9Pen6oQatHxIvIEHGPN
+oMDpK7HqIpuwRoeh7ofjzN9pyWIIIYOfOvcXPu1rxvDWhOZgUomN7oRbk4c08DK6
+TFCLfvRXLlyMxhw+/gXVGl8j6fU03W9V1iiJ7DPx0AwKHN/sYjlmEdy4sGQlZVRz
+Jgn/beUrvcTGfsepPJyp9kGo2BEIjamsBLa6Tb55TXbfbLkFw2jYetyFVMJW+msV
+L/nJ33Qw93i83I/Yd/ciuWN81jlqDzMqWgulM8ofySqLeBbquhSL4euB4ciFeyaS
+T++zSgAc9oyHcIH+ys0HXr7WPN8ZEQlsslFlW9I/FZCZqGlqyg3fXY6HU96xqWIj
+K58VpS0Fa8komeryZfZfm+q1zgcLYjoOXVeNqk7XLQufuQK/S7BVXBqB9NFiSCcJ
+kTdRz4l1fIyvaZEQBSddyBCeHvzMK/A9GmTV/1mbmCR6Pb2u0+r7iJj5Xkwmjkij
+YUNVfD83XWld9xwNPaHZijcw0FWfpYxiNRFZV3kDuyBhGhCY9tnPAhEMolkCvFnP
+ByaZbqDxuy9CyU7lfdV0
+=VfYW
+-----END PGP SIGNATURE-----
+
+--nextPart1423409.qu2SCLRpYr--
