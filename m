@@ -1,81 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:61298 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756854AbZLKNlQ (ORCPT
+Received: from parez.praha12.net ([78.102.11.253]:56156 "EHLO
+	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755755AbZLFRYw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:41:16 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
+	Sun, 6 Dec 2009 12:24:52 -0500
+From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
+Reply-To: 8an@praha12.net
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 01/31] wl1271: updated radio parameters structure for newer firmwares
-Date: Fri, 11 Dec 2009 15:40:40 +0200
-Message-Id: <1260538870-32297-2-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+Subject: [PATCH 3/4] ath5k: Fix functions for getting/setting slot time
+Date: Sun, 6 Dec 2009 18:24:58 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	ath5k-devel@lists.ath5k.org
+References: <200912061820.26320.8an@praha12.net>
+In-Reply-To: <200912061820.26320.8an@praha12.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200912061824.58557.8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In revision 6.1.0.0.288 the radio parameters structure has changed.  This
-patch updates the driver code accordingly.
+Functions ath5k_hw_get_slot_time and ath5k_hw_set_slot_time were
+converting microseconds to clocks only for AR5210, although it's needed
+for all supported devices. The conversion was moved outside the
+hardware-specific branches.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+These functions are not called from anywhere yet, but they are needed
+for an implementation of mac80211 callback set_coverage.
+
+Signed-off-by: Lukas Turek <8an@praha12.net>
 ---
- drivers/net/wireless/wl12xx/wl1271_cmd.h |   16 ++++++++++++----
- 1 files changed, 12 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath5k/qcu.c |   21 ++++++++++++++-------
+ 1 files changed, 14 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-index b4fa4ac..de23c08 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-@@ -458,11 +458,12 @@ struct wl1271_radio_parms_cmd {
- 	/* Dynamic radio parameters */
- 	/* 2.4GHz */
- 	__le16 tx_ref_pd_voltage;
--	s8  tx_ref_power;
-+	u8  tx_ref_power;
- 	s8  tx_offset_db;
+diff --git a/drivers/net/wireless/ath/ath5k/qcu.c 
+b/drivers/net/wireless/ath/ath5k/qcu.c
+index eeebb9a..248878a 100644
+--- a/drivers/net/wireless/ath/ath5k/qcu.c
++++ b/drivers/net/wireless/ath/ath5k/qcu.c
+@@ -520,12 +520,16 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, 
+unsigned int queue)
+  */
+ unsigned int ath5k_hw_get_slot_time(struct ath5k_hw *ah)
+ {
++	unsigned int slot_time_clock;
++	
+ 	ATH5K_TRACE(ah->ah_sc);
++	
+ 	if (ah->ah_version == AR5K_AR5210)
+-		return ath5k_hw_clocktoh(ath5k_hw_reg_read(ah,
+-				AR5K_SLOT_TIME) & 0xffff, ah->ah_turbo);
++		slot_time_clock = ath5k_hw_reg_read(ah, AR5K_SLOT_TIME);
+ 	else
+-		return ath5k_hw_reg_read(ah, AR5K_DCU_GBL_IFS_SLOT) & 0xffff;
++		slot_time_clock = ath5k_hw_reg_read(ah, AR5K_DCU_GBL_IFS_SLOT);
++	
++	return ath5k_hw_clocktoh(slot_time_clock & 0xffff, ah->ah_turbo);
+ }
  
- 	s8  tx_rate_limits_normal[CONF_NUMBER_OF_RATE_GROUPS];
- 	s8  tx_rate_limits_degraded[CONF_NUMBER_OF_RATE_GROUPS];
-+	s8  tx_rate_limits_extreme[CONF_NUMBER_OF_RATE_GROUPS];
+ /*
+@@ -533,15 +537,18 @@ unsigned int ath5k_hw_get_slot_time(struct ath5k_hw *ah)
+  */
+ int ath5k_hw_set_slot_time(struct ath5k_hw *ah, unsigned int slot_time)
+ {
++	u32 slot_time_clock = ath5k_hw_htoclock(slot_time, ah->ah_turbo);
++	
+ 	ATH5K_TRACE(ah->ah_sc);
+-	if (slot_time < AR5K_SLOT_TIME_9 || slot_time > AR5K_SLOT_TIME_MAX)
++	
++	if (slot_time_clock < AR5K_SLOT_TIME_9 ||
++	    slot_time_clock > AR5K_SLOT_TIME_MAX)
+ 		return -EINVAL;
  
- 	s8  tx_channel_limits_11b[CONF_NUMBER_OF_CHANNELS_2_4];
- 	s8  tx_channel_limits_ofdm[CONF_NUMBER_OF_CHANNELS_2_4];
-@@ -471,15 +472,19 @@ struct wl1271_radio_parms_cmd {
- 	u8  tx_ibias[CONF_NUMBER_OF_RATE_GROUPS];
- 	u8  rx_fem_insertion_loss;
+ 	if (ah->ah_version == AR5K_AR5210)
+-		ath5k_hw_reg_write(ah, ath5k_hw_htoclock(slot_time,
+-				ah->ah_turbo), AR5K_SLOT_TIME);
++		ath5k_hw_reg_write(ah, slot_time_clock, AR5K_SLOT_TIME);
+ 	else
+-		ath5k_hw_reg_write(ah, slot_time, AR5K_DCU_GBL_IFS_SLOT);
++		ath5k_hw_reg_write(ah, slot_time_clock, AR5K_DCU_GBL_IFS_SLOT);
  
--	u8 padding2;
-+	u8  degraded_low_to_normal_threshold;
-+	u8  degraded_normal_to_high_threshold;
-+
-+	u8  padding1; /* our own padding, not in ref driver */
- 
- 	/* 5GHz */
- 	__le16 tx_ref_pd_voltage_5[CONF_NUMBER_OF_SUB_BANDS_5];
--	s8  tx_ref_power_5[CONF_NUMBER_OF_SUB_BANDS_5];
-+	u8  tx_ref_power_5[CONF_NUMBER_OF_SUB_BANDS_5];
- 	s8  tx_offset_db_5[CONF_NUMBER_OF_SUB_BANDS_5];
- 
- 	s8  tx_rate_limits_normal_5[CONF_NUMBER_OF_RATE_GROUPS];
- 	s8  tx_rate_limits_degraded_5[CONF_NUMBER_OF_RATE_GROUPS];
-+	s8  tx_rate_limits_extreme_5[CONF_NUMBER_OF_RATE_GROUPS];
- 
- 	s8  tx_channel_limits_ofdm_5[CONF_NUMBER_OF_CHANNELS_5];
- 	s8  tx_pdv_rate_offsets_5[CONF_NUMBER_OF_RATE_GROUPS];
-@@ -488,7 +493,10 @@ struct wl1271_radio_parms_cmd {
- 	s8  tx_ibias_5[CONF_NUMBER_OF_RATE_GROUPS];
- 	s8  rx_fem_insertion_loss_5[CONF_NUMBER_OF_SUB_BANDS_5];
- 
--	u8 padding3[2];
-+	u8  degraded_low_to_normal_threshold_5;
-+	u8  degraded_normal_to_high_threshold_5;
-+
-+	u8 padding2[2];
- } __attribute__ ((packed));
- 
- struct wl1271_cmd_cal_channel_tune {
+ 	return 0;
+ }
 -- 
-1.6.3.3
-
+1.6.4.4
