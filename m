@@ -1,64 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56531 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754053AbZLWQZq (ORCPT
+Received: from static-72-92-88-10.phlapa.fios.verizon.net ([72.92.88.10]:42592
+	"EHLO smtp.roinet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934031AbZLFSKe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 11:25:46 -0500
-Subject: Re: [RFC/T] cfg80211: fix race between deauth and assoc response
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joseph Nahmias <joe@nahmias.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	562016-quiet@bugs.debian.org
-In-Reply-To: <20091223162111.GA902@nahmias.net>
-References: <1261481565.22748.40.camel@johannes.local>
-	 <20091223162111.GA902@nahmias.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-+mxr8xECTWJTD2imHkrK"
-Date: Wed, 23 Dec 2009 17:25:23 +0100
-Message-ID: <1261585523.7304.11.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 6 Dec 2009 13:10:34 -0500
+Message-ID: <4B1BF399.1020103@roinet.com>
+Date: Sun, 06 Dec 2009 13:10:33 -0500
+From: David Acker <dacker@roinet.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
+	patrik.flykt@nokia.com
+Subject: Re: WMM classification guideline for applications?
+References: <87d42u6dnd.fsf@purkki.valot.fi> <4B19276F.5080604@roinet.com>	 <878wdi69u9.fsf@purkki.valot.fi>  <4B1933F5.2010408@roinet.com> <1260096387.3461.2.camel@johannes.local>
+In-Reply-To: <1260096387.3461.2.camel@johannes.local>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg wrote:
+> On Fri, 2009-12-04 at 11:08 -0500, David Acker wrote:
+> 
+>> I am not an expert on how the kernel handles vlans, but it appears that 
+>> the priority field's value is set by the user space VLAN creation tools 
+>> through an ioctl with SET_VLAN_EGRESS_PRIORITY_CMD which calls 
+>> vlan_dev_set_egress_priority to map an skb priority to a vlan priority.
+>> vlan_dev_hard_header then uses this information to populate the vlan 
+>> priority field based on the skb priority field.
+>>
+>> In this case it would seem that skb priority and the vlan priority are 
+>> both set and there may be a non-trivial mapping between the two. 
+> 
+> But doesn't that also mean that mac80211 can happily ignore the VLAN
+> priority in the packet, because the vlan code will have propagated it to
+> the skb->priority, if the administrator wishes to use it?
 
---=-+mxr8xECTWJTD2imHkrK
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+You are correct on rx.  The tricky part is the non-trivial mapping on 
+tx.  If mac80211 only looks at the skb->priority and assumes priority 0 
+means best effort, the code could be missing that skb->priority 0 maps 
+to vlan priority 7.  If we define that mac80211 only looks at 
+skb->priority, perhaps we should allow user space control of the mapping 
+of the skb->priority to WMM priority queue.  This could be similar to 
+the mapping capabilities in the VLAN code.  That way, an admin can make 
+sure that the skb priority is mapped to both an appropriate vlan 
+priority and an appropriate WMM priority queue.
+-ack
 
-On Wed, 2009-12-23 at 16:21 +0000, Joseph Nahmias wrote:
-> On Tue, Dec 22, 2009 at 12:32:45PM +0100, Johannes Berg wrote:
-> > I don't suppose you have a way of reproducing this issue? I know
-> this
-> > patch will remove the warning, and I'm pretty sure it's correct too,
-> but
-> > I can't really test this scenario.
->=20
-> Sorry, I've tried, but I cannot reproduce.
 
-Ok. I'm pretty sure I understand the scenario anyway, and your patch was
-part of a patchset I sent for merging today.
+__________ Information from ESET Smart Security, version of virus signature database 4663 (20091205) __________
 
-johannes
+The message was checked by ESET Smart Security.
 
---=-+mxr8xECTWJTD2imHkrK
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+http://www.eset.com
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLMkRvAAoJEODzc/N7+QmaqgYQAL4+qhaSghEiyFy0uTqCF3e3
-6vXMDxBqNh1maXxGeKL3BFBxl5vX8qamw/VNY6RvnMtzzZ3DhlRS+Hfj/FXbtUDu
-8kGKFtX97XspXEuZaWLhLzFFD8qp100Kdoz1c6qPYfcJAQi36RD8AxDda83lhaR5
-ykNoevhc2cq3xIjagmWnesMBBQOb99FTa0qv4bWm47z3jMx36FBgKo1x3BopE365
-rAwd3HFtO2xZrPQriMRQcHyyqxQZ6Bc1p2+/Uy/tosuLDeHBNwVTOt+4zmp0p1MA
-PgiDwzp7/DLSeuRa8420RSUMSTAFJYXwB9h97Wcv1zDxdbWJbAXEuTUvjZS2kup3
-0GFLDgw7th/z3XbdoIBkkMYSvw3582PdhflqgIw+uXQ7Q6HB5OwB+DPOntjCV+in
-W6R+vZN/FkjieiqUdlfyQ7qYByrEJAMXd/C82e85SGAuBG+madzM9YenY7sQy3gP
-DhURKvA9vM4RsqU3Hwsj7HrBaMj2YwYBsDbxRgiRKP+r4lQgDZc2vpLBH+iJnsyF
-WZ7vaCCw0SWTQRUaER6R5utOSgoS6tYFCg0CjnHGwc3QEQD0K5pGJfc8kFVJs1by
-j64/Xgfe+7Iy1qpbGzWquVSYzY1RVa59kiwd51Q6UDpcebsOIs5rhiRtyFg1JdJN
-1HRvZ6N9R7m+e36TG5sX
-=BoyV
------END PGP SIGNATURE-----
-
---=-+mxr8xECTWJTD2imHkrK--
 
