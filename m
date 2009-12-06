@@ -1,56 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f212.google.com ([209.85.217.212]:57613 "EHLO
-	mail-gx0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753458AbZLAIj6 (ORCPT
+Received: from mail-iw0-f197.google.com ([209.85.223.197]:38485 "EHLO
+	mail-iw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934319AbZLFVxL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 03:39:58 -0500
-Received: by gxk4 with SMTP id 4so3477390gxk.8
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 00:40:05 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: mcgrof@bombadil.infradead.org, linux-wireless@vger.kernel.org,
-	Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 2/5] Add compatibility call for dev_get_stats()
-Date: Tue,  1 Dec 2009 03:38:18 -0500
-Message-Id: <1259656701-12329-2-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1259656701-12329-1-git-send-email-lacombar@gmail.com>
-References: <4B0B4405.4050605@gmail.com>
- <1259656701-12329-1-git-send-email-lacombar@gmail.com>
+	Sun, 6 Dec 2009 16:53:11 -0500
+Received: by iwn35 with SMTP id 35so2687877iwn.4
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Dec 2009 13:53:18 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890912061349m341f95bbl89abaad8d3dec1c1@mail.gmail.com>
+References: <200912061820.26320.8an@praha12.net> <200912061829.32633.8an@praha12.net>
+	<43e72e890912061349m341f95bbl89abaad8d3dec1c1@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sun, 6 Dec 2009 13:52:58 -0800
+Message-ID: <43e72e890912061352i7c4dd2ech36cd8f99ff580256@mail.gmail.com>
+Subject: Re: [PATCH] iw: Add support for NL80211_ATTR_WIPHY_COVERAGE_CLASS
+To: 8an@praha12.net
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added on commit eeda3fd6 by Stephen Hemminger in include/linux/netdevice.h.
+On Sun, Dec 6, 2009 at 1:49 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Sun, Dec 6, 2009 at 9:29 AM, Lukáš Turek <8an@praha12.net> wrote:
+>> New nl80211 attribute NL80211_ATTR_WIPHY_COVERAGE_CLASS allows setting
+>> IEEE 802.11 coverage class, which is then used by drivers to calculate
+>> slot time and ACK timeout for long distance links.
+>>
+>> Two iw parameters are added: 'coverage' sets the coverage class
+>> directly, while 'distance' is more user-friendly, as it allows to set
+>> just the link distance and let iw do the necessary calculation itself.
+>>
+>> Signed-off-by: Lukas Turek <8an@praha12.net>
+>> ---
+>>  info.c    |    7 +++++++
+>>  nl80211.h |   15 +++++++++++++++
+>>  phy.c     |   58 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  3 files changed, 80 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/info.c b/info.c
+>> index ddff78b..3c69afc 100644
+>> --- a/info.c
+>> +++ b/info.c
+>> @@ -264,6 +264,13 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+>>                        printf("\tRTS threshold: %d\n", rts);
+>>        }
+>>
+>> +       if (tb_msg[NL80211_ATTR_WIPHY_COVERAGE_CLASS]) {
+>> +               unsigned int coverage;
+>
+> Just some quick comments.
+>
+> u8 seems more appropriate, given that you define this a u8 anyway.
+>
+>> +
+>> +               coverage = nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_COVERAGE_CLASS]);
+>> +               printf("\tCoverage class: %d (up to %dm)\n", coverage, 900 * coverage);
+>
+> printf ?
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- compat-2.6.29.h |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+Neverind, forgot this was userspace :)
 
-diff --git a/compat-2.6.29.h b/compat-2.6.29.h
-index ff97b37..cad5e6b 100644
---- a/compat-2.6.29.h
-+++ b/compat-2.6.29.h
-@@ -6,6 +6,7 @@
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
- 
-+#include <linux/netdevice.h>
- #include <linux/skbuff.h>
- #include <linux/usb.h>
- 
-@@ -40,6 +41,12 @@ static inline struct sk_buff *skb_queue_prev(const struct sk_buff_head *list,
- 	return skb->prev;
- }
- 
-+
-+static inline struct net_device_stats *dev_get_stats(struct net_device *dev)
-+{
-+	return dev->get_stats(dev);
-+}
-+
- extern void usb_unpoison_anchored_urbs(struct usb_anchor *anchor);
- 
- #define DIV_ROUND_CLOSEST(x, divisor)(			\
--- 
-1.6.3.3.385.g60647.dirty
-
+  Luis
