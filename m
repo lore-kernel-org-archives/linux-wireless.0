@@ -1,66 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:45377 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752355AbZLaOih convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:53633 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932560AbZLFJ6z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Dec 2009 09:38:37 -0500
-Received: by fxm25 with SMTP id 25so6714542fxm.21
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Dec 2009 06:38:35 -0800 (PST)
+	Sun, 6 Dec 2009 04:58:55 -0500
+Received: by fxm5 with SMTP id 5so3911074fxm.28
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Dec 2009 01:59:01 -0800 (PST)
+Date: Sun, 6 Dec 2009 10:49:07 +0100
+From: Richard Zidlicky <rz@linux-m68k.org>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: 2.6.31.[12] ath5k regression
+Message-ID: <20091206094907.GA6526@linux-m68k.org>
+References: <20090625083636.GA6323@linux-m68k.org> <20090705123105.GE2132@hash.localnet> <20091009143922.GA7848@linux-m68k.org> <20091010125824.GA18841@hash.localnet> <20091011122616.GA27105@linux-m68k.org> <20091011133010.GA21494@hash.localnet> <20091011220002.GA11603@linux-m68k.org> <20091011222142.M14763@bobcopeland.com> <20091012202316.GA8310@linux-m68k.org> <20091012235438.GA24539@hash.localnet>
 MIME-Version: 1.0
-In-Reply-To: <1262037590.16627.99.camel@localhost.localdomain>
-References: <4B38A298.7070103@googlemail.com>
-	 <1262037590.16627.99.camel@localhost.localdomain>
-Date: Thu, 31 Dec 2009 14:38:35 +0000
-Message-ID: <3ace41890912310638x4387f73bvc7ba5e00d096ead7@mail.gmail.com>
-Subject: Re: staging: No option to select rtl8192su in linux-2.6.33-rc2
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Chris Mayo <aklhfex@googlemail.com>,
-	linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091012235438.GA24539@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 28, 2009 at 9:59 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
-> Hi Chris,
->
->> If you have no other wireless drivers selected then RealTek RTL8192SU
->> does not show up in menuconfig for staging.
->>
->> rtl8192su needs the "select WIRELESS_EXT" fix for "wext: refactor"?
->>
->> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=3d23e349d807177eaf519d444677cee86b1a04cf
->>
->> as done for some in:
->> http://git.kernel.org/?p=linux/kernel/git/gregkh/staging-2.6.git;a=commitdiff;h=125b181aec7a67c71234284ecf6d9c729d05deda
->>
->>
->> Also:
->> rtl8192u, wlan-ng, wlags49_h2(?)
->
-> if staging drivers break, then please create a patch and mail it do
-> Greg. Don't bother linux-wireless with it since nobody here actually
-> cares about the staging drivers.
+Hi,
 
-"nobody cares" is not entirely true - AFAIK, code in the staging area
-is unreliable/unsuitable/"poor" code which serves the sole purpose of
-being there for scavenging and references for re-write (because there
-is no equivalent functionality, even alleged, in mainline); so people
-looking at the staging code for ideas or references is welcomed. It is
-just that there is no hints of any support or vague guarantee that any
-of it works for any fitness of purpose. i.e. patches which fix
-problems, or migrate functionality out of the staging area to
-main-line, are welcomed, but questions and request for help on
-understanding or making any of it work, are not.
+small update, it appears to work very nicely in 2.6.32. No idea what really
+caused it, or what fixed it in the end.
 
->
-> Regards
->
-> Marcel
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Richard
+
+On Mon, Oct 12, 2009 at 07:54:38PM -0400, Bob Copeland wrote:
+> On Mon, Oct 12, 2009 at 10:23:16PM +0200, Richard Zidlicky wrote:
+> > it works like in mainline and fails.
+> 
+> Huh, well it should be equivalent to your patch, so I'm stumped
+> as to why.
+> 
+> -- 
+> Bob Copeland %% www.bobcopeland.com
+> 
