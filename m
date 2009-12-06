@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:56350 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757201AbZLOVoN convert rfc822-to-8bit (ORCPT
+Received: from netrider.rowland.org ([192.131.102.5]:40378 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S934238AbZLFWMD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 16:44:13 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2009 13:44:13 -0800
-Date: Tue, 15 Dec 2009 13:44:06 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: =?utf-8?B?THVrw6HFoQ==?= Turek <8an@praha12.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [ath5k-devel] [PATCH 1/5] nl80211: Add new WIPHY attribute
- COVERAGE_CLASS
-Message-ID: <20091215214406.GB2067@tux>
-References: <1260899813-17585-1-git-send-email-8an@praha12.net>
- <20091215190051.GC2123@tux>
- <20091215190248.GE2123@tux>
- <200912152207.33024.8an@praha12.net>
+	Sun, 6 Dec 2009 17:12:03 -0500
+Date: Sun, 6 Dec 2009 17:12:09 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+cc: linux-wireless@vger.kernel.org,
+	Kernel development list <linux-kernel@vger.kernel.org>
+Subject: REGRESSION for RT2561/RT61 in 2.6.32
+Message-ID: <Pine.LNX.4.44L0.0912061705050.9883-100000@netrider.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <200912152207.33024.8an@praha12.net>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 15, 2009 at 01:07:32PM -0800, Lukáš Turek wrote:
-> On 15.12.2009 20:02 you wrote:
-> > And if your IBSS and the AP already sent the coverage class through the
-> > country IE I am not sure if we should allow overriding it.
-> Overriding the coverage class is harmless, it won't allow you to break any 
-> laws like overriding regulatory domain does.
+Sorry for the late notice; I haven't tried running new kernels on this 
+computer in a long time.
 
-I'm not concerned about how you override it, I am concerned about
-creating consistancy though and avoiding tweaks through userspace
-which can screw things. I'll address this in more details in the other
-threads.
+When I use 2.6.32 (or indeed 2.6.32-rc1), it works fine up until the 
+point where the wireless card is ifconfig'ed.  Then not long afterward 
+(a few seconds to a minute) the system hangs.
 
-  Luis
+# lspci -vv -s d.0
+00:0d.0 Network controller: RaLink RT2561/RT61 802.11g PCI
+        Subsystem: Linksys WMP54G ver 4.1
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 64, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 11
+        Region 0: Memory at cfff0000 (32-bit, non-prefetchable) [size=32K]
+        Capabilities: [40] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Kernel driver in use: rt61pci
+        Kernel modules: rt61pci
+
+While the system is hung, Alt-SysRq-keys still work but nothing else
+shows up when I type (using a VT console, not X).  However I don't know
+what debugging to do or what to look for.
+
+Under 2.6.31 everything works okay.
+
+Any help appreciated,
+
+Alan Stern
+
