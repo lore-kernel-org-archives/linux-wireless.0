@@ -1,55 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:52416 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751752AbZL1QKb convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44193 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932935AbZLFStY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Dec 2009 11:10:31 -0500
-Received: by iwn1 with SMTP id 1so7345173iwn.33
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2009 08:10:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1261988312.22470.5.camel@johannes.local>
-References: <1261970308-22926-1-git-send-email-yi.zhu@intel.com>
-	<1261988312.22470.5.camel@johannes.local>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 28 Dec 2009 08:10:10 -0800
-Message-ID: <43e72e890912280810o6a2d3f9dye562c75061e1f486@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: delete addba_resp_timer when stop Tx BA session
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Sun, 6 Dec 2009 13:49:24 -0500
+Subject: Re: [PATCH 1/4] nl80211: Add new WIPHY attribute COVERAGE_CLASS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: 8an@praha12.net
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+In-Reply-To: <200912061945.53225.8an@praha12.net>
+References: <200912061820.26320.8an@praha12.net>
+	 <200912061822.54088.8an@praha12.net>
+	 <1260122477.3461.20.camel@johannes.local>
+	 <200912061945.53225.8an@praha12.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-m2sKwjuxB4EikFoWE0zS"
+Date: Sun, 06 Dec 2009 19:49:26 +0100
+Message-ID: <1260125366.3461.24.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 28, 2009 at 12:18 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2009-12-28 at 11:18 +0800, Zhu Yi wrote:
->> We start an one shot addba_resp_timer in ieee80211_start_tx_ba_session
->> but don't delete it in __ieee80211_stop_tx_ba_session. This will cause
->> problem in suspend and resume. When suspend happens without the timer
->> deleted, the timer handler will be called immediately after resume and
->> messes up driver status.
->>
->> See http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2134
->> comment #22 for more details.
->
-> Hmm. The timer checks
->
->        if ((*state & (HT_ADDBA_REQUESTED_MSK | HT_ADDBA_RECEIVED_MSK)) !=
->                                                HT_ADDBA_REQUESTED_MSK) {
->
-> which /should/ make it a no-op in the case you mention because we tear
-> down sessions, or does that not reset their state properly?
->
-> Ok, so ___ieee80211_stop_tx_ba_session() doesn't, in fact, clear the
-> mask right away, so I think we should add HT_AGG_STATE_REQ_STOP_BA_MSK
-> to the code I quoted above?
 
-When the patch addresses the above can you cc stable if applicable.
+--=-m2sKwjuxB4EikFoWE0zS
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> In any case the del_timer_sync isn't right there and we also shouldn't
-> really use it (per Linus)
+On Sun, 2009-12-06 at 19:45 +0100, Luk=C3=A1=C5=A1 Turek wrote:
+> On 6.12.2009 19:01 Johannes Berg wrote:
+> > This patch assumes that all hardware supports this, which is not really
+> > what you want. You'll want to know if it can't be set. Yes, we assume
+> > rts/cts can be set always, but that's a _much_ safer bet.
+> If the hardware does not support it, the operation will fail with EOPNOTS=
+UPP:
+>=20
+> # iw phy0 set coverage 1
+> command failed: Operation not supported (-95)
 
-Why is that?
+Umm, no it won't, that's only with your specific mac80211
+implementation. Try on rndis for instance.
 
-  Luis
+johannes
+
+--=-m2sKwjuxB4EikFoWE0zS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLG/yyAAoJEODzc/N7+QmaFIwP/0G3EWI9SEM/+9jlpI8wtNlq
+fzSFTleeB5tw2yRdqEQZrrAAAjD4MBlOcMXXTAzIXNbyvIl2znlZYapSjNnnQNKv
+vsGsdSPmJvKukFN6CKZUrBDXehRMv84/f+k4pcPIGWm2taEkLaBgkWGq6RXDnYFB
+99PC4sp+xcEUSTXm6BlyPHLiMB1Ef22v+nLO2NKn3429Y/UUXVsjhvyq8EFm2zvg
+GC6/FX3qRN6ELtIXDzCrZCee8A4IqhQ0HgEnK8TXVFhoMDeEJsJZULAWqKL8bFGE
+sQVhRYRelxBHMk+kjvrtpQO9GYeB8FLD59mvQUcxb00dj8DenD6GpcFkfIgM8vuK
++P8WTNslF7pAWcJ5Iyblxi4gac1BrqfP5YYYg27GalHxAv9iZ4KHMlS8wHln2JHu
+SEM1Wsr1LjAPv80q7Bp4iQRWIb6ysWLAvnK7DqyVCLIZkmKqom6Ob2G2cuulCmTu
+iWzp+Cpgug6ynnbOalq9dbukkrlJDdBRNeeCZmVuvXDTVTk4LiVVnVCUQdnALTSI
+H7aNKmssDG+XIGJ+aqKhUEICOgl0EDQPITmaqSs8MQgijDfKFFXrMSAFjH6zYVWE
+AAAgRYn+og0zkgQyQ4evUt5QRn/fW7y3v1VLXwtY7WHuyYqvwI/6se1wvpfa5gcZ
+RNsiI1i5b7zg9A7S4uyD
+=xBhE
+-----END PGP SIGNATURE-----
+
+--=-m2sKwjuxB4EikFoWE0zS--
+
