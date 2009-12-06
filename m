@@ -1,347 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50048 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756922AbZLDOvs (ORCPT
+Received: from parez.praha12.net ([78.102.11.253]:33502 "EHLO
+	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932715AbZLFTcN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Dec 2009 09:51:48 -0500
-Message-Id: <20091204143703.132739050@sipsolutions.net>
-Date: Fri, 04 Dec 2009 15:35:48 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Subject: [PATCH 4/4] mac80211: make off-channel work generic
-References: <20091204143544.034718060@sipsolutions.net>
-Mime-Version: 1.0
+	Sun, 6 Dec 2009 14:32:13 -0500
+From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
+Reply-To: 8an@praha12.net
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/4] nl80211: Add new WIPHY attribute COVERAGE_CLASS
+Date: Sun, 6 Dec 2009 20:32:18 +0100
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+References: <200912061820.26320.8an@praha12.net> <1260125366.3461.24.camel@johannes.local> <200912062028.52470.8an@praha12.net>
+In-Reply-To: <200912062028.52470.8an@praha12.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart6642962.OFaqlncx3s";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200912062032.19096.8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This changes mac80211 to allow being off-channel for
-any type of work, not just the 'remain-on-channel'
-work. This also helps fast transition to a BSS on a
-different channel.
+--nextPart6642962.OFaqlncx3s
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ieee80211_i.h |    7 +-
- net/mac80211/mlme.c        |   14 ----
- net/mac80211/work.c        |  137 ++++++++++++++++++++++++++-------------------
- 3 files changed, 89 insertions(+), 69 deletions(-)
+On 6.12.2009 20:28 Luk=C3=A1=C5=A1 Turek wrote:
+> I looked at the rndis driver, but it seems it could be configured via
+> wireless extensions only, it does not define cfg80211_ops at all, so I
+> think it cannot be managed via nl80211 and I don't see your point there...
+Sorry, I looked at some older version of the driver...
 
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-12-04 14:44:51.000000000 +0100
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-12-04 14:45:02.000000000 +0100
-@@ -255,13 +255,15 @@ struct ieee80211_work {
- 				      struct sk_buff *skb);
- 
- 	struct ieee80211_channel *chan;
--	/* XXX: chan type? -- right now not really needed */
-+	enum nl80211_channel_type chan_type;
- 
- 	unsigned long timeout;
- 	enum ieee80211_work_type type;
- 
- 	u8 filter_ta[ETH_ALEN];
- 
-+	bool started;
-+
- 	union {
- 		struct {
- 			int tries;
-@@ -286,7 +288,8 @@ struct ieee80211_work {
- 			bool wmm_used, use_11n;
- 		} assoc;
- 		struct {
--			unsigned long timeout;
-+			u32 duration;
-+			bool started;
- 		} remain;
- 	};
- 
---- wireless-testing.orig/net/mac80211/work.c	2009-12-04 14:44:51.000000000 +0100
-+++ wireless-testing/net/mac80211/work.c	2009-12-04 14:47:57.000000000 +0100
-@@ -541,39 +541,22 @@ ieee80211_associate(struct ieee80211_wor
- static enum work_action __must_check
- ieee80211_remain_on_channel_timeout(struct ieee80211_work *wk)
- {
--	struct ieee80211_sub_if_data *sdata = wk->sdata;
--	struct ieee80211_local *local = sdata->local;
--
- 	/*
- 	 * First time we run, do nothing -- the generic code will
- 	 * have switched to the right channel etc.
- 	 */
--	if (wk->timeout != wk->remain.timeout) {
--		wk->timeout = wk->remain.timeout;
--		return WORK_ACT_NONE;
--	}
-+	if (!wk->remain.started) {
-+		wk->remain.started = true;
-+		wk->timeout = jiffies + msecs_to_jiffies(wk->remain.duration);
-+
-+		cfg80211_ready_on_channel(wk->sdata->dev, (u64)wk, wk->chan,
-+					  wk->chan_type, wk->remain.duration,
-+					  GFP_KERNEL);
- 
--	/*
--	 * We are done serving the remain-on-channel command; kill the work
--	 * item to allow idle state to be entered again. In addition, clear the
--	 * temporary channel information to allow operational channel to be
--	 * used.
--	 */
--	list_del(&wk->list);
--	free_work(wk);
--
--	if (local->tmp_channel) {
--		cfg80211_remain_on_channel_expired(sdata->dev, (u64)wk,
--						   local->tmp_channel,
--						   local->tmp_channel_type,
--						   GFP_KERNEL);
--
--		local->tmp_channel = NULL;
--		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
--		ieee80211_offchannel_return(local, true);
-+		return WORK_ACT_NONE;
- 	}
- 
--	return WORK_ACT_NONE;
-+	return WORK_ACT_TIMEOUT;
- }
- 
- static void ieee80211_auth_challenge(struct ieee80211_work *wk,
-@@ -799,7 +782,7 @@ static void ieee80211_work_rx_queued_mgm
- 		break;
- 	case WORK_DONE_REQUEUE:
- 		synchronize_rcu();
--		wk->timeout = jiffies; /* run again directly */
-+		wk->started = false; /* restart */
- 		mutex_lock(&local->work_mtx);
- 		list_add_tail(&wk->list, &local->work_list);
- 		mutex_unlock(&local->work_mtx);
-@@ -827,6 +810,7 @@ static void ieee80211_work_work(struct w
- 	struct ieee80211_work *wk, *tmp;
- 	LIST_HEAD(free_work);
- 	enum work_action rma;
-+	bool remain_off_channel = false;
- 
- 	if (local->scanning)
- 		return;
-@@ -847,6 +831,34 @@ static void ieee80211_work_work(struct w
- 	mutex_lock(&local->work_mtx);
- 
- 	list_for_each_entry_safe(wk, tmp, &local->work_list, list) {
-+		/* mark work as started if it's on the current off-channel */
-+		if (!wk->started && local->tmp_channel &&
-+		    wk->chan == local->tmp_channel &&
-+		    wk->chan_type == local->tmp_channel_type) {
-+			wk->started = true;
-+		}
-+
-+		if (!wk->started && !local->tmp_channel) {
-+			/*
-+			 * TODO: could optimize this by leaving the
-+			 *	 station vifs in awake mode if they
-+			 *	 happen to be on the same channel as
-+			 *	 the requested channel
-+			 */
-+			ieee80211_offchannel_stop_beaconing(local);
-+			ieee80211_offchannel_stop_station(local);
-+
-+			local->tmp_channel = wk->chan;
-+			local->tmp_channel_type = wk->chan_type;
-+			ieee80211_hw_config(local, 0);
-+			wk->started = true;
-+			wk->timeout = jiffies;
-+		}
-+
-+		/* don't try to work with items that aren't started */
-+		if (!wk->started)
-+			continue;
-+
- 		if (time_is_after_jiffies(wk->timeout)) {
- 			/*
- 			 * This work item isn't supposed to be worked on
-@@ -881,7 +893,8 @@ static void ieee80211_work_work(struct w
- 
- 		switch (rma) {
- 		case WORK_ACT_NONE:
--			/* no action required */
-+			/* might have changed the timeout */
-+			run_again(local, wk->timeout);
- 			break;
- 		case WORK_ACT_TIMEOUT:
- 			list_del_rcu(&wk->list);
-@@ -893,6 +906,24 @@ static void ieee80211_work_work(struct w
- 		}
- 	}
- 
-+	list_for_each_entry(wk, &local->work_list, list) {
-+		if (!wk->started)
-+			continue;
-+		if (wk->chan != local->tmp_channel)
-+			continue;
-+		if (wk->chan_type != local->tmp_channel_type)
-+			continue;
-+		remain_off_channel = true;
-+	}
-+
-+	if (!remain_off_channel && local->tmp_channel) {
-+		local->tmp_channel = NULL;
-+		ieee80211_hw_config(local, 0);
-+		ieee80211_offchannel_return(local, true);
-+		/* give connection some time to breathe */
-+		run_again(local, jiffies + HZ/2);
-+	}
-+
- 	if (list_empty(&local->work_list) && local->scan_req)
- 		ieee80211_queue_delayed_work(&local->hw,
- 					     &local->scan_work,
-@@ -900,6 +931,8 @@ static void ieee80211_work_work(struct w
- 
- 	mutex_unlock(&local->work_mtx);
- 
-+	ieee80211_recalc_idle(local);
-+
- 	list_for_each_entry_safe(wk, tmp, &free_work, list) {
- 		wk->done(wk, NULL);
- 		list_del(&wk->list);
-@@ -920,7 +953,7 @@ void ieee80211_add_work(struct ieee80211
- 	if (WARN_ON(!wk->done))
- 		return;
- 
--	wk->timeout = jiffies;
-+	wk->started = false;
- 
- 	local = wk->sdata->local;
- 	mutex_lock(&local->work_mtx);
-@@ -950,6 +983,8 @@ void ieee80211_work_purge(struct ieee802
- 		if (wk->sdata != sdata)
- 			continue;
- 		wk->type = IEEE80211_WORK_ABORT;
-+		wk->started = true;
-+		wk->timeout = jiffies;
- 	}
- 	mutex_unlock(&local->work_mtx);
- 
-@@ -1004,12 +1039,24 @@ ieee80211_rx_result ieee80211_work_rx_mg
- 	return RX_CONTINUE;
- }
- 
-+static enum work_done_result ieee80211_remain_done(struct ieee80211_work *wk,
-+						   struct sk_buff *skb)
-+{
-+	/*
-+	 * We are done serving the remain-on-channel command.
-+	 */
-+	cfg80211_remain_on_channel_expired(wk->sdata->dev, (u64)wk,
-+					   wk->chan, wk->chan_type,
-+					   GFP_KERNEL);
-+
-+	return WORK_DONE_DESTROY;
-+}
-+
- int ieee80211_wk_remain_on_channel(struct ieee80211_sub_if_data *sdata,
- 				   struct ieee80211_channel *chan,
- 				   enum nl80211_channel_type channel_type,
- 				   unsigned int duration, u64 *cookie)
- {
--	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_work *wk;
- 
- 	wk = kzalloc(sizeof(*wk), GFP_KERNEL);
-@@ -1018,28 +1065,16 @@ int ieee80211_wk_remain_on_channel(struc
- 
- 	wk->type = IEEE80211_WORK_REMAIN_ON_CHANNEL;
- 	wk->chan = chan;
-+	wk->chan_type = channel_type;
- 	wk->sdata = sdata;
-+	wk->done = ieee80211_remain_done;
- 
--	wk->remain.timeout = jiffies + msecs_to_jiffies(duration);
-+	wk->remain.duration = duration;
- 
- 	*cookie = (u64)wk;
- 
- 	ieee80211_add_work(wk);
- 
--	/*
--	 * TODO: could optimize this by leaving the station vifs in awake mode
--	 * if they happen to be on the same channel as the requested channel
--	 */
--	ieee80211_offchannel_stop_beaconing(local);
--	ieee80211_offchannel_stop_station(local);
--
--	sdata->local->tmp_channel = chan;
--	sdata->local->tmp_channel_type = channel_type;
--	ieee80211_hw_config(sdata->local, IEEE80211_CONF_CHANGE_CHANNEL);
--
--	cfg80211_ready_on_channel(sdata->dev, (u64)wk, chan, channel_type,
--				  duration, GFP_KERNEL);
--
- 	return 0;
- }
- 
-@@ -1053,9 +1088,8 @@ int ieee80211_wk_cancel_remain_on_channe
- 	mutex_lock(&local->work_mtx);
- 	list_for_each_entry_safe(wk, tmp, &local->work_list, list) {
- 		if ((u64)wk == cookie) {
-+			wk->timeout = jiffies;
- 			found = true;
--			list_del(&wk->list);
--			free_work(wk);
- 			break;
- 		}
- 	}
-@@ -1064,14 +1098,7 @@ int ieee80211_wk_cancel_remain_on_channe
- 	if (!found)
- 		return -ENOENT;
- 
--	if (sdata->local->tmp_channel) {
--		sdata->local->tmp_channel = NULL;
--		ieee80211_hw_config(sdata->local,
--				    IEEE80211_CONF_CHANGE_CHANNEL);
--		ieee80211_offchannel_return(sdata->local, true);
--	}
--
--	ieee80211_recalc_idle(local);
-+	ieee80211_queue_work(&local->hw, &local->work_work);
- 
- 	return 0;
- }
---- wireless-testing.orig/net/mac80211/mlme.c	2009-12-04 14:44:51.000000000 +0100
-+++ wireless-testing/net/mac80211/mlme.c	2009-12-04 14:45:02.000000000 +0100
-@@ -1097,6 +1097,8 @@ static bool ieee80211_assoc_success(stru
- 	else
- 		ieee80211_set_wmm_default(sdata);
- 
-+	local->oper_channel = wk->chan;
-+
- 	if (elems.ht_info_elem && elems.wmm_param &&
- 	    (sdata->local->hw.queues >= 4) &&
- 	    !(ifmgd->flags & IEEE80211_STA_DISABLE_11N))
-@@ -1789,15 +1791,6 @@ int ieee80211_mgd_auth(struct ieee80211_
- 	wk->sdata = sdata;
- 	wk->done = ieee80211_probe_auth_done;
- 
--	/*
--	 * XXX: if still associated need to tell AP that we're going
--	 *	to sleep and then change channel etc.
--	 *	For now switch channel here, later will be handled
--	 *	by submitting this as an off-channel work item.
--	 */
--	sdata->local->oper_channel = req->bss->channel;
--	ieee80211_hw_config(sdata->local, 0);
--
- 	ieee80211_add_work(wk);
- 	return 0;
- }
-@@ -1921,9 +1914,6 @@ int ieee80211_mgd_assoc(struct ieee80211
- 	else
- 		ifmgd->flags &= ~IEEE80211_STA_CONTROL_PORT;
- 
--	sdata->local->oper_channel = req->bss->channel;
--	ieee80211_hw_config(sdata->local, 0);
--
- 	ieee80211_add_work(wk);
- 	return 0;
- }
+Lukas Turek
 
+--nextPart6642962.OFaqlncx3s
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iQIcBAABAgAGBQJLHAbDAAoJEEBjvk/UOfYw7DMQAKYwQDYopqNmP/IwbyHN+0/4
++SNpbh8ki2icRQ53Qp9/toc93jbenaUhugL4ATjnzUTaIoan6yv4h4TX10yKv5cH
+U3nPL5O5dRdlsV8rFhIzEdTCDQBl3FqXYduiv8nzA4QbAx3wuIIq7f3jvgU/2Vo1
+RsWkEhp8xl+D+Eq1sul8d/K2Ghfcs3+bsxPiRdXdq5WuRh49UivAVs5ok1jzGgoO
+o5/gv7DajCFcfWU2iEMJ3CrfMxE01+79QYBgutrPqBo/DFQzrsNm/9tBM1S3LF20
+h9eGj+RQQFRp/Gj6hy7ZOgVs5pDQQaw3TVTQqyVUq+xK6+N4B0/5+iWsg3vg/RnE
+FSPfTKxCe/PcUyUjcp1+bUTG/pVvYB+9YZ1/OgwD2aksYbqZdPbMT0uDhSzP2Q4/
+WcxOJrd2shtsGsx14NFwR2H5a5eCm4sp8/57kxptEL3KIKq63zCErUlcmFZ/z72Z
+whJB/yEv0Osh4YiTUvclqyfGuxY1AM1zDlIE0EcmatutAk6s6x8RY6v+c/hqyhfl
+aNTuR1YzwLi+tyfwSiGBLbPqB1XaUZGCwMKQbu5JV77HfeuxV0Yyj4sFBA1ULPtJ
+D89iNT6WcYLeQ/bi1O3jMI/s8boounJh+AicZvX9PvalYQyW2zoLvucnKrStCd+W
+AZCXoBvR2vPOn/tpqwEy
+=xcdW
+-----END PGP SIGNATURE-----
+
+--nextPart6642962.OFaqlncx3s--
