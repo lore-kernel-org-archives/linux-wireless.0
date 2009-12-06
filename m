@@ -1,75 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:55410 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752062AbZLXIUF convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40559 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751610AbZLFScU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2009 03:20:05 -0500
-Received: by ewy19 with SMTP id 19so7094526ewy.21
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Dec 2009 00:20:01 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1261639870-17469-1-git-send-email-yi.zhu@intel.com>
-References: <1261639870-17469-1-git-send-email-yi.zhu@intel.com>
-Date: Thu, 24 Dec 2009 09:20:01 +0100
-Message-ID: <2d0a357f0912240020g4e0b6fa3j56426babc488a4d1@mail.gmail.com>
-Subject: Re: [PATCH] iwlwifi: remove generated/utsrelease.h dependency
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Sun, 6 Dec 2009 13:32:20 -0500
+Subject: Re: WMM classification guideline for applications?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Acker <dacker@roinet.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
+	patrik.flykt@nokia.com
+In-Reply-To: <4B1BF399.1020103@roinet.com>
+References: <87d42u6dnd.fsf@purkki.valot.fi> <4B19276F.5080604@roinet.com>
+	 <878wdi69u9.fsf@purkki.valot.fi>  <4B1933F5.2010408@roinet.com>
+	 <1260096387.3461.2.camel@johannes.local>  <4B1BF399.1020103@roinet.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-QGazNcSwMudUqY/qZOH2"
+Date: Sun, 06 Dec 2009 19:32:21 +0100
+Message-ID: <1260124341.3461.22.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Note:
-This patch is for upstream (2.6.33) and occured after having merged
-linux-kbuild tree [1] in linus-tree.
 
-- Sedat -
+--=-QGazNcSwMudUqY/qZOH2
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-[1] http://repo.or.cz/w/linux-kbuild.git
+On Sun, 2009-12-06 at 13:10 -0500, David Acker wrote:
+> Johannes Berg wrote:
+> > On Fri, 2009-12-04 at 11:08 -0500, David Acker wrote:
+> >=20
+> >> I am not an expert on how the kernel handles vlans, but it appears tha=
+t=20
+> >> the priority field's value is set by the user space VLAN creation tool=
+s=20
+> >> through an ioctl with SET_VLAN_EGRESS_PRIORITY_CMD which calls=20
+> >> vlan_dev_set_egress_priority to map an skb priority to a vlan priority=
+.
+> >> vlan_dev_hard_header then uses this information to populate the vlan=20
+> >> priority field based on the skb priority field.
+> >>
+> >> In this case it would seem that skb priority and the vlan priority are=
+=20
+> >> both set and there may be a non-trivial mapping between the two.=20
+> >=20
+> > But doesn't that also mean that mac80211 can happily ignore the VLAN
+> > priority in the packet, because the vlan code will have propagated it t=
+o
+> > the skb->priority, if the administrator wishes to use it?
+>=20
+> You are correct on rx.
 
-On Thu, Dec 24, 2009 at 8:31 AM, Zhu Yi <yi.zhu@intel.com> wrote:
-> Commit 900bb717424e5df12b1ef7ebb017be2a8915b806 uses UTS_RELEASE
-> as the the in-tree iwlwifi driver version. However the inclusion
-> of generated/utsrelease.h makes it a unpleasant behaviour to
-> recompile the driver everytime when utsrelease.h is updated. In
-> fact, the driver module is already built with the UTS_RELEASE
-> information via vermagic of modinfo. Mark the in-tree driver
-> with the version string "in-tree" to distinguish with those old
-> out-of-tree drivers.
->
-> Reported-by: David Miller <davem@davemloft.net>
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-core.h |    4 +---
->  1 files changed, 1 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-> index 308f679..375226b 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-core.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-> @@ -63,8 +63,6 @@
->  #ifndef __iwl_core_h__
->  #define __iwl_core_h__
->
-> -#include <generated/utsrelease.h>
-> -
->  /************************
->  * forward declarations *
->  ************************/
-> @@ -72,7 +70,7 @@ struct iwl_host_cmd;
->  struct iwl_cmd;
->
->
-> -#define IWLWIFI_VERSION UTS_RELEASE "-k"
-> +#define IWLWIFI_VERSION "in-tree:"
->  #define DRV_COPYRIGHT  "Copyright(c) 2003-2009 Intel Corporation"
->  #define DRV_AUTHOR     "<ilw@linux.intel.com>"
->
-> --
-> 1.6.3.3
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I don't see how RX matters at all, to mac80211?
+
+>   The tricky part is the non-trivial mapping on=20
+> tx.  If mac80211 only looks at the skb->priority and assumes priority 0=20
+> means best effort, the code could be missing that skb->priority 0 maps=20
+> to vlan priority 7.  If we define that mac80211 only looks at=20
+> skb->priority, perhaps we should allow user space control of the mapping=20
+> of the skb->priority to WMM priority queue.  This could be similar to=20
+> the mapping capabilities in the VLAN code.  That way, an admin can make=20
+> sure that the skb priority is mapped to both an appropriate vlan=20
+> priority and an appropriate WMM priority queue.
+
+I don't understand. If I TX a packet, on a specific VLAN, then it'll go
+through the VLAN code first, get 802.1q tags and then be passed to
+mac80211, which ought be be fine with just looking at the priority value
+the packet now got.
+
+johannes
+
+--=-QGazNcSwMudUqY/qZOH2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLG/ixAAoJEODzc/N7+QmaslUP/0IkQEnD/N6gaDODXpxiytb0
+tJog4iHPex53NBE7cDGqwOU4YQ2NGFw0fIfbdXBQv5VK4t9APPHwsQpO82zEWwyQ
+O5Yguf+blFENLAde+16Oi+6L3wNFu3dTtyvwcQpru+HTy6eqRACjMEwOkAjoT1Yu
+PEZN6d/WFeeisYhMhRb442DRa1Sa/Y9M0e5aMNgZSUBGEVrERa/gT2Mi3lXN62Xf
+Z0ZamD9dUvWoIY/kWgNWAJUF2eA7DfZusZdUYkM6BJvwPbMtgP+QitegmqCJpfAt
+fIeLsloDE9t0/CxrFaZYK59I/X8iC0RS78nqfuMEpM7dYzFPUwl9AdUhv8k0BLgz
+e3wAAMf33M1ROBvIYwu5dkCkd+ZwSB6EIxaAWXYEfUeOXBs/aD+4XjXjtaOEzN2F
+8VnEG02mPmxn3T3iBqCKtG/2+nGQpCmNEccIQlBpF5vZ7DwvaNniSJN94Rp8HO6+
+goCvUvnIrKmtTpGMTLmAb2CH2RuAoK9q2piaJoESm2Dgyh1164WWB9RKbD+AasyV
+IEdGE5CkSfaOY0P4mHSf0LG949XZKX97/7R71Iyvlh38y2oZXpvHVbw9PnvpXK10
+1g5OnJINjjtsQoAIJLr0oBBbInBLZV+QdA0kZrBugA6ZU6QpGVJqGCJetAztDtit
+ZcVEu/XKhFXH/pU9wL+y
+=/Qw5
+-----END PGP SIGNATURE-----
+
+--=-QGazNcSwMudUqY/qZOH2--
+
