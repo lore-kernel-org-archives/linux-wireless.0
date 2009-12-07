@@ -1,163 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.108.102.1]:44849 "EHLO parez.praha12.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757341AbZLUVu5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2009 16:50:57 -0500
-From: =?UTF-8?q?Luk=C3=A1=C5=A1=20Turek?= <8an@praha12.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	lrodriguez@atheros.com, ath5k-devel@lists.ath5k.org
-Subject: [PATCH v3 1/5] nl80211: Add new WIPHY attribute COVERAGE_CLASS
-Date: Mon, 21 Dec 2009 22:50:47 +0100
-Message-Id: <1261432252-1855-2-git-send-email-8an@praha12.net>
-In-Reply-To: <1261432252-1855-1-git-send-email-8an@praha12.net>
-References: <1261432252-1855-1-git-send-email-8an@praha12.net>
+Received: from mga05.intel.com ([192.55.52.89]:8786 "EHLO
+	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S935536AbZLGRGZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Dec 2009 12:06:25 -0500
+Date: Mon, 7 Dec 2009 09:06:30 -0800
+From: mark gross <mgross@linux.intel.com>
+To: linux-pm <linux-pm@lists.linux-foundation.org>
+Cc: lkml <linux-kernel@vger.kernel.org>, aili@codeaurora.org,
+	e1000-devel@lists.sourceforge.net, bruce.w.allan@intel.com,
+	linux-wireless@vger.kernel.org, alsa-devel@alsa-project.org,
+	tiwai@suse.de
+Subject: [PATCH]PM_QOS-to-use-handle-based-requests-wireless-update 4/5
+Message-ID: <20091207170630.GE5463@linux.intel.com>
+Reply-To: mgross@linux.intel.com
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The new attribute NL80211_ATTR_WIPHY_COVERAGE_CLASS sets IEEE 802.11
-Coverage Class, which depends on maximum distance of nodes in a
-wireless network. It's required for long distance links (more than a few
-hundred meters).
 
-The attribute is now ignored by two non-mac80211 drivers, rndis and
-iwmc3200wifi, together with WIPHY_PARAM_RETRY_SHORT and
-WIPHY_PARAM_RETRY_LONG. If it turns out to be a problem, we could split
-set_wiphy_params callback or add new capability bits.
 
-Signed-off-by: Lukas Turek <8an@praha12.net>
+Signed-off-by: mark gross <mgross@linux.intel.com>
 ---
- include/linux/nl80211.h |    4 ++++
- include/net/cfg80211.h  |    2 ++
- net/wireless/core.c     |    1 +
- net/wireless/nl80211.c  |   15 +++++++++++++++
- 4 files changed, 22 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ipw2x00/ipw2100.c |   11 ++++++-----
+ net/mac80211/mlme.c                    |    2 +-
+ 2 files changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index da8ea2e..e241ed1 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -402,6 +402,8 @@ enum nl80211_commands {
-  * @NL80211_ATTR_WIPHY_RTS_THRESHOLD: RTS threshold (TX frames with length
-  *	larger than or equal to this use RTS/CTS handshake); allowed range:
-  *	0..65536, disable with (u32)-1; dot11RTSThreshold; u32
-+ * @NL80211_ATTR_WIPHY_COVERAGE_CLASS: Coverage Class as defined by IEEE 802.11
-+ *	section 7.3.2.9; dot11CoverageClass; u8
-  *
-  * @NL80211_ATTR_IFINDEX: network interface index of the device to operate on
-  * @NL80211_ATTR_IFNAME: network interface name
-@@ -743,6 +745,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_PMKID,
- 	NL80211_ATTR_MAX_NUM_PMKIDS,
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+index 39d7b7c..0a6a653 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+@@ -174,6 +174,8 @@ that only one external action is invoked at a time.
+ #define DRV_DESCRIPTION	"Intel(R) PRO/Wireless 2100 Network Driver"
+ #define DRV_COPYRIGHT	"Copyright(c) 2003-2006 Intel Corporation"
  
-+	NL80211_ATTR_WIPHY_COVERAGE_CLASS,
++struct pm_qos_request_list *ipw2100_pm_qos_req;
 +
- 	/* add attributes here, update the policy in nl80211.c */
+ /* Debugging stuff */
+ #ifdef CONFIG_IPW2100_DEBUG
+ #define IPW2100_RX_DEBUG	/* Reception debugging */
+@@ -1739,7 +1741,7 @@ static int ipw2100_up(struct ipw2100_priv *priv, int deferred)
+ 	/* the ipw2100 hardware really doesn't want power management delays
+ 	 * longer than 175usec
+ 	 */
+-	pm_qos_update_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100", 175);
++	pm_qos_update_request(ipw2100_pm_qos_req, 175);
  
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 0884b9a..fe50c71 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -837,6 +837,7 @@ enum wiphy_params_flags {
- 	WIPHY_PARAM_RETRY_LONG		= 1 << 1,
- 	WIPHY_PARAM_FRAG_THRESHOLD	= 1 << 2,
- 	WIPHY_PARAM_RTS_THRESHOLD	= 1 << 3,
-+	WIPHY_PARAM_COVERAGE_CLASS	= 1 << 4,
- };
+ 	/* If the interrupt is enabled, turn it off... */
+ 	spin_lock_irqsave(&priv->low_lock, flags);
+@@ -1887,8 +1889,7 @@ static void ipw2100_down(struct ipw2100_priv *priv)
+ 	ipw2100_disable_interrupts(priv);
+ 	spin_unlock_irqrestore(&priv->low_lock, flags);
  
- /**
-@@ -1217,6 +1218,7 @@ struct wiphy {
- 	u8 retry_long;
- 	u32 frag_threshold;
- 	u32 rts_threshold;
-+	u8 coverage_class;
+-	pm_qos_update_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100",
+-			PM_QOS_DEFAULT_VALUE);
++	pm_qos_update_request(ipw2100_pm_qos_req, PM_QOS_DEFAULT_VALUE);
  
- 	char fw_version[ETHTOOL_BUSINFO_LEN];
- 	u32 hw_version;
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index c2a2c56..0a545bb 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -402,6 +402,7 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
- 	rdev->wiphy.retry_long = 4;
- 	rdev->wiphy.frag_threshold = (u32) -1;
- 	rdev->wiphy.rts_threshold = (u32) -1;
-+	rdev->wiphy.coverage_class = 0;
+ 	/* We have to signal any supplicant if we are disassociating */
+ 	if (associated)
+@@ -6658,7 +6659,7 @@ static int __init ipw2100_init(void)
+ 	if (ret)
+ 		goto out;
  
- 	return &rdev->wiphy;
+-	pm_qos_add_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100",
++	ipw2100_pm_qos_req = pm_qos_add_request(PM_QOS_CPU_DMA_LATENCY,
+ 			PM_QOS_DEFAULT_VALUE);
+ #ifdef CONFIG_IPW2100_DEBUG
+ 	ipw2100_debug_level = debug;
+@@ -6681,7 +6682,7 @@ static void __exit ipw2100_exit(void)
+ 			   &driver_attr_debug_level);
+ #endif
+ 	pci_unregister_driver(&ipw2100_pci_driver);
+-	pm_qos_remove_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100");
++	pm_qos_remove_request(ipw2100_pm_qos_req);
  }
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7cb0d64..ea86c28 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -69,6 +69,7 @@ static struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] __read_mostly = {
- 	[NL80211_ATTR_WIPHY_RETRY_LONG] = { .type = NLA_U8 },
- 	[NL80211_ATTR_WIPHY_FRAG_THRESHOLD] = { .type = NLA_U32 },
- 	[NL80211_ATTR_WIPHY_RTS_THRESHOLD] = { .type = NLA_U32 },
-+	[NL80211_ATTR_WIPHY_COVERAGE_CLASS] = { .type = NLA_U8 },
  
- 	[NL80211_ATTR_IFTYPE] = { .type = NLA_U32 },
- 	[NL80211_ATTR_IFINDEX] = { .type = NLA_U32 },
-@@ -442,6 +443,8 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 		    dev->wiphy.frag_threshold);
- 	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_RTS_THRESHOLD,
- 		    dev->wiphy.rts_threshold);
-+	NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_COVERAGE_CLASS,
-+		    dev->wiphy.coverage_class);
+ module_init(ipw2100_init);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6dc7b5a..b8c5caf 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -707,7 +707,7 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ 		s32 beaconint_us;
  
- 	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_SCAN_SSIDS,
- 		   dev->wiphy.max_scan_ssids);
-@@ -681,6 +684,7 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 	u32 changed;
- 	u8 retry_short = 0, retry_long = 0;
- 	u32 frag_threshold = 0, rts_threshold = 0;
-+	u8 coverage_class = 0;
+ 		if (latency < 0)
+-			latency = pm_qos_requirement(PM_QOS_NETWORK_LATENCY);
++			latency = pm_qos_request(PM_QOS_NETWORK_LATENCY);
  
- 	rtnl_lock();
- 
-@@ -803,9 +807,16 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 		changed |= WIPHY_PARAM_RTS_THRESHOLD;
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_WIPHY_COVERAGE_CLASS]) {
-+		coverage_class = nla_get_u8(
-+			info->attrs[NL80211_ATTR_WIPHY_COVERAGE_CLASS]);
-+		changed |= WIPHY_PARAM_COVERAGE_CLASS;
-+	}
-+
- 	if (changed) {
- 		u8 old_retry_short, old_retry_long;
- 		u32 old_frag_threshold, old_rts_threshold;
-+		u8 old_coverage_class;
- 
- 		if (!rdev->ops->set_wiphy_params) {
- 			result = -EOPNOTSUPP;
-@@ -816,6 +827,7 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 		old_retry_long = rdev->wiphy.retry_long;
- 		old_frag_threshold = rdev->wiphy.frag_threshold;
- 		old_rts_threshold = rdev->wiphy.rts_threshold;
-+		old_coverage_class = rdev->wiphy.coverage_class;
- 
- 		if (changed & WIPHY_PARAM_RETRY_SHORT)
- 			rdev->wiphy.retry_short = retry_short;
-@@ -825,6 +837,8 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 			rdev->wiphy.frag_threshold = frag_threshold;
- 		if (changed & WIPHY_PARAM_RTS_THRESHOLD)
- 			rdev->wiphy.rts_threshold = rts_threshold;
-+		if (changed & WIPHY_PARAM_COVERAGE_CLASS)
-+			rdev->wiphy.coverage_class = coverage_class;
- 
- 		result = rdev->ops->set_wiphy_params(&rdev->wiphy, changed);
- 		if (result) {
-@@ -832,6 +846,7 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 			rdev->wiphy.retry_long = old_retry_long;
- 			rdev->wiphy.frag_threshold = old_frag_threshold;
- 			rdev->wiphy.rts_threshold = old_rts_threshold;
-+			rdev->wiphy.coverage_class = old_coverage_class;
- 		}
- 	}
- 
+ 		beaconint_us = ieee80211_tu_to_usec(
+ 					found->vif.bss_conf.beacon_int);
 -- 
-1.6.4.4
+1.6.3.3
 
