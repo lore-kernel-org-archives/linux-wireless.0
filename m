@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:11393 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752466AbZLXAwu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 19:52:50 -0500
-Subject: Re: [PATCH] iwlwifi: Storage class should be before const qualifier
-From: Zhu Yi <yi.zhu@intel.com>
-To: Tobias Klauser <tklauser@distanz.ch>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1261574291-9384-1-git-send-email-tklauser@distanz.ch>
-References: <1261574291-9384-1-git-send-email-tklauser@distanz.ch>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 24 Dec 2009 08:52:48 +0800
-Message-ID: <1261615968.12157.854.camel@debian>
-Mime-Version: 1.0
+Received: from mail-vw0-f197.google.com ([209.85.212.197]:55241 "EHLO
+	mail-vw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752519AbZLGGVY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Dec 2009 01:21:24 -0500
+Received: by vws35 with SMTP id 35so1915868vws.4
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Dec 2009 22:21:30 -0800 (PST)
+MIME-Version: 1.0
+Date: Mon, 7 Dec 2009 11:51:30 +0530
+Message-ID: <d9360e520912062221o1f543bc9tbe3813113562a25d@mail.gmail.com>
+Subject: ssid
+From: Bharat Bhushan <bharat.b.bhushan@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-12-23 at 21:18 +0800, Tobias Klauser wrote:
-> The C99 specification states in section 6.11.5:
-> 
-> The placement of a storage-class specifier other than at the beginning
-> of the declaration specifiers in a declaration is an obsolescent
-> feature.
-> 
-> Signed-off-by: Tobias Klauser <tklauser@distanz.ch> 
+hello gentlemen,
 
-Acked-by: Zhu Yi <yi.zhu@intel.com>
+                         i am trying to implement an open source mac
+base driver with kernel base version 2.6.29, for association
+completion my hardware requires an api with ssid to be sent. but i
+could not find any api from mac80211.h which contain ssid element
+except hw_scan which i cannot use as ssid should be sent before
+association ,few days back i implement the same driver with kernel
+version 2.6.27 and i use to get ssid in ieee80211_if_conf structure in
+config_interface api but now this is deprecated , any particular
+reason why this change happen, is there any other way i can get ssid
+through any interface.
 
-Thanks,
--yi
 
+
+Any help is much appreciated.
+
+
+Thanks
+
+bharat
