@@ -1,64 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60219 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750855AbZLKNAU (ORCPT
+Received: from cpsmtpm-eml103.kpnxchange.com ([195.121.3.7]:65132 "EHLO
+	CPSMTPM-EML103.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965081AbZLGV6E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:00:20 -0500
-Subject: Re: [RFC] mac80211: disallow bridging managed/adhoc interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Markus Baier <Markus_Baier@web.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <loom.20091211T133913-639@post.gmane.org>
-References: <1258465585.3682.7.camel@johannes.local>
-	 <loom.20091211T133913-639@post.gmane.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-+ho1aeSDHsQunNvhEK8d"
-Date: Fri, 11 Dec 2009 14:00:25 +0100
-Message-ID: <1260536425.2442.199.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 7 Dec 2009 16:58:04 -0500
+Message-ID: <4B1D7A6B.1080606@gmail.com>
+Date: Mon, 07 Dec 2009 22:58:03 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Tim Blechmann <tim@klingt.org>
+CC: Andi Kleen <andi@firstfloor.org>, rjw@sisk.pl, IvDoorn@gmail.com,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: regression: rt2561 frequent "Arrived at non-free entry" errors
+ in	2.6.32
+References: <20091204233202.GA13658@basil.fritz.box> <4B1BB44E.90706@gmail.com> <4B1CCB81.5060104@klingt.org>
+In-Reply-To: <4B1CCB81.5060104@klingt.org>
+Content-Type: multipart/mixed;
+ boundary="------------090309080706070702070102"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is a multi-part message in MIME format.
+--------------090309080706070702070102
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
---=-+ho1aeSDHsQunNvhEK8d
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On 12/07/09 10:31, Tim Blechmann wrote:
+> On 12/06/2009 02:40 PM, Gertjan van Wingerde wrote:
+>> On 12/05/09 00:32, Andi Kleen wrote:
+>>> [Rafael, something for your regression list]
+>>>
+>>> I upgraded a system which was running 2.6.30 to 2.6.32.
+>>> It has a 
+>>>
+>>> 06:02.0 Network controller: RaLink RT2561/RT61 802.11g PCI
+>>>
+>>> wireless PCI card. Now regularly even under moderate traffic
+>>> I see messages like
+>>>
+>>> phy0 -> rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 2.
+>>> Please file bug report to http://rt2x00.serialmonkey.com.
+>>>
+>>> and loss of connectivity, often until the wireless connection
+>>> is restarted. This wasn't the case in 2.6.30, there the driver
+>>> ran stable without any problems. The problem currently
+>>> happens every few minutes.
+>>>
+>>
+>> Andi, Tim,
+>>
+>> Both of you have reported this problem on 2.6.32.
+>>
+>> In the past this always has occurred due to queue locking problems. This led me
+>> to audit the queue locking code, and that certainly looked suspicious to me.
+>>
+>> Would you be able to test whether the attached test patch fixes the problem for
+>> you. The patch basically applies proper queue locking to the code, although in 
+>> a very course manner. The patch is relative to 2.6.32.
+>>
+>> Note: I am not 100% sure that this is where the problem is, but at least the test
+>> patch should confirm whether I am searching in the right direction.
+> 
+> the patch didn't cleanly apply to v2.6.32 and the patched kernel didn't
+> boot ... which tree should it be applied on?
+> 
 
-On Fri, 2009-12-11 at 12:39 +0000, Markus Baier wrote:
-> Johannes Berg <johannes@...> writes:
->=20
-> > To avoid such mistakes in the future, disallow adding a
-> > wireless interface to a bridge.
->=20
-> Hello,
-> after the latest git pull my Linux AP stopt working
-> because the system is not allowed to add the wlan0
-> interface to a bridge.
+Yeah, I knew it didn't apply cleanly, as it was prepared on latest wireless-testing and
+then stripped of unnecessary things. Find an updated patch attached. This one is completely
+the same, only line numbers of where to apply changed.
 
-You're mistaken. You _can_ still bridge an AP interface, it just needs
-to be in AP mode. You should be using hostapd to control the bridging.
+I can't reproduce any boot failures with the patch applied, although for me the rt2x00
+drivers are compiled as modules. Can you provide some more information on the boot failure
+that you see?
 
-johannes
+---
+Gertjan.
 
---=-+ho1aeSDHsQunNvhEK8d
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+--------------090309080706070702070102
+Content-Type: text/plain;
+ name="2.6.32-tx_entry_not_free.diff2"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="2.6.32-tx_entry_not_free.diff2"
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLIkJmAAoJEODzc/N7+QmalQoP/27uY9GPdF/oA0tB63Mz8U5c
-LOw1AjLxTIQqugmxMQqEKJjwKO3/pTzegiUsHOzFJqHbPdRJb+YwWQsGOBuY3Ehd
-yiGYWQ6x44pG9wyrEU66eirUgn70/jjk2TR2Hvf5eyuBGiGfowxM8pzduOFV9LTB
-ehVTzuew8G2R9us0MPCciw+RrLi5Fw2yQZXpFE5WCdPc+b/+i/M8VBDgSBtxJIJM
-+rUmOd/2B1Tlwshy8hx33tNDWIHfMxNWbuO78g9sJy/gqX9dcFZhJTRseKFUVmst
-vCNVebHZk4TOTyVXoCoO8VA0C1qQfJXEISIB6B7VTz/vI88yBlMPNY5uqmfxKTsk
-Fqlm/QJ02wX96RVa0CfJcLImUJzDjKNnVkRJ8pPKu59GFmS+4NtA8frfHyn7lbkt
-YcLJLZkwpqKPKTDj5z3X2V7VRj6cK6P1F2m6d72SAIGm0ExaG4eX1ZrGhUUkXXH4
-afMygDfNLEov8snTyo7IO0SX/XbUyuu/HxVxOLROgVG/7V0s3LipM+BKx5l/6lD1
-QKtqNNBkmYLBBuXrPwArfwLtsGXfdC5TM+4sCrTGnRyzza6MVbxqdvx25urBlcc9
-9+Rwv0Bkz+lTDtD8kwm51vW8WbwSWcikYI9drBP/F4ibcivWf2TcuzGwxKrLSnxe
-3zw9q2ognek6jMr1VwE8
-=ybnV
------END PGP SIGNATURE-----
-
---=-+ho1aeSDHsQunNvhEK8d--
-
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0MngwMC9ydDI0MDBwY2kuYyBi
+L2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0MngwMC9ydDI0MDBwY2kuYwppbmRleCA3OThmNjI1
+Li43OGNiNTlkIDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9ydDJ4MDAvcnQy
+NDAwcGNpLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcnQyeDAwL3J0MjQwMHBjaS5j
+CkBAIC0xMTkzLDYgKzExOTMsOSBAQCBzdGF0aWMgdm9pZCBydDI0MDBwY2lfdHhkb25lKHN0
+cnVjdCBydDJ4MDBfZGV2ICpydDJ4MDBkZXYsCiAJc3RydWN0IHF1ZXVlX2VudHJ5ICplbnRy
+eTsKIAlzdHJ1Y3QgdHhkb25lX2VudHJ5X2Rlc2MgdHhkZXNjOwogCXUzMiB3b3JkOworCXVu
+c2lnbmVkIGxvbmcgaXJxZmxhZ3M7CisKKwlzcGluX2xvY2tfaXJxc2F2ZSgmcXVldWUtPmxv
+Y2ssIGlycWZsYWdzKTsKIAogCXdoaWxlICghcnQyeDAwcXVldWVfZW1wdHkocXVldWUpKSB7
+CiAJCWVudHJ5ID0gcnQyeDAwcXVldWVfZ2V0X2VudHJ5KHF1ZXVlLCBRX0lOREVYX0RPTkUp
+OwpAQCAtMTIyMiw2ICsxMjI1LDggQEAgc3RhdGljIHZvaWQgcnQyNDAwcGNpX3R4ZG9uZShz
+dHJ1Y3QgcnQyeDAwX2RldiAqcnQyeDAwZGV2LAogCiAJCXJ0MngwMGxpYl90eGRvbmUoZW50
+cnksICZ0eGRlc2MpOwogCX0KKworCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJnF1ZXVlLT5s
+b2NrLCBpcnFmbGFncyk7CiB9CiAKIHN0YXRpYyBpcnFyZXR1cm5fdCBydDI0MDBwY2lfaW50
+ZXJydXB0KGludCBpcnEsIHZvaWQgKmRldl9pbnN0YW5jZSkKZGlmZiAtLWdpdCBhL2RyaXZl
+cnMvbmV0L3dpcmVsZXNzL3J0MngwMC9ydDI1MDBwY2kuYyBiL2RyaXZlcnMvbmV0L3dpcmVs
+ZXNzL3J0MngwMC9ydDI1MDBwY2kuYwppbmRleCAyZTg3MmFjLi5iZjUwNmI2IDEwMDY0NAot
+LS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9ydDJ4MDAvcnQyNTAwcGNpLmMKKysrIGIvZHJp
+dmVycy9uZXQvd2lyZWxlc3MvcnQyeDAwL3J0MjUwMHBjaS5jCkBAIC0xMzMwLDYgKzEzMzAs
+OSBAQCBzdGF0aWMgdm9pZCBydDI1MDBwY2lfdHhkb25lKHN0cnVjdCBydDJ4MDBfZGV2ICpy
+dDJ4MDBkZXYsCiAJc3RydWN0IHF1ZXVlX2VudHJ5ICplbnRyeTsKIAlzdHJ1Y3QgdHhkb25l
+X2VudHJ5X2Rlc2MgdHhkZXNjOwogCXUzMiB3b3JkOworCXVuc2lnbmVkIGxvbmcgaXJxZmxh
+Z3M7CisKKwlzcGluX2xvY2tfaXJxc2F2ZSgmcXVldWUtPmxvY2ssIGlycWZsYWdzKTsKIAog
+CXdoaWxlICghcnQyeDAwcXVldWVfZW1wdHkocXVldWUpKSB7CiAJCWVudHJ5ID0gcnQyeDAw
+cXVldWVfZ2V0X2VudHJ5KHF1ZXVlLCBRX0lOREVYX0RPTkUpOwpAQCAtMTM1OSw2ICsxMzYy
+LDggQEAgc3RhdGljIHZvaWQgcnQyNTAwcGNpX3R4ZG9uZShzdHJ1Y3QgcnQyeDAwX2RldiAq
+cnQyeDAwZGV2LAogCiAJCXJ0MngwMGxpYl90eGRvbmUoZW50cnksICZ0eGRlc2MpOwogCX0K
+KworCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJnF1ZXVlLT5sb2NrLCBpcnFmbGFncyk7CiB9
+CiAKIHN0YXRpYyBpcnFyZXR1cm5fdCBydDI1MDBwY2lfaW50ZXJydXB0KGludCBpcnEsIHZv
+aWQgKmRldl9pbnN0YW5jZSkKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0
+MngwMC9ydDJ4MDBwY2kuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0MngwMC9ydDJ4MDBw
+Y2kuYwppbmRleCBjZGQ1MTU0Li5mNDM1NzdlIDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93
+aXJlbGVzcy9ydDJ4MDAvcnQyeDAwcGNpLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+cnQyeDAwL3J0MngwMHBjaS5jCkBAIC05OCw2ICs5OCw5IEBAIHZvaWQgcnQyeDAwcGNpX3J4
+ZG9uZShzdHJ1Y3QgcnQyeDAwX2RldiAqcnQyeDAwZGV2KQogCXN0cnVjdCBxdWV1ZV9lbnRy
+eSAqZW50cnk7CiAJc3RydWN0IHF1ZXVlX2VudHJ5X3ByaXZfcGNpICplbnRyeV9wcml2Owog
+CXN0cnVjdCBza2JfZnJhbWVfZGVzYyAqc2tiZGVzYzsKKwl1bnNpZ25lZCBsb25nIGlycWZs
+YWdzOworCisJc3Bpbl9sb2NrX2lycXNhdmUoJnF1ZXVlLT5sb2NrLCBpcnFmbGFncyk7CiAK
+IAl3aGlsZSAoMSkgewogCQllbnRyeSA9IHJ0MngwMHF1ZXVlX2dldF9lbnRyeShxdWV1ZSwg
+UV9JTkRFWCk7CkBAIC0xMTgsNiArMTIxLDggQEAgdm9pZCBydDJ4MDBwY2lfcnhkb25lKHN0
+cnVjdCBydDJ4MDBfZGV2ICpydDJ4MDBkZXYpCiAJCSAqLwogCQlydDJ4MDBsaWJfcnhkb25l
+KHJ0MngwMGRldiwgZW50cnkpOwogCX0KKworCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJnF1
+ZXVlLT5sb2NrLCBpcnFmbGFncyk7CiB9CiBFWFBPUlRfU1lNQk9MX0dQTChydDJ4MDBwY2lf
+cnhkb25lKTsKIApkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcnQyeDAwL3J0
+MngwMHF1ZXVlLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9ydDJ4MDAvcnQyeDAwcXVldWUu
+YwppbmRleCA1NzcwMjllLi5hMmY0ZTY2IDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJl
+bGVzcy9ydDJ4MDAvcnQyeDAwcXVldWUuYworKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9y
+dDJ4MDAvcnQyeDAwcXVldWUuYwpAQCAtNDU2LDIwICs0NTYsMjkgQEAgc3RhdGljIHZvaWQg
+cnQyeDAwcXVldWVfd3JpdGVfdHhfZGVzY3JpcHRvcihzdHJ1Y3QgcXVldWVfZW50cnkgKmVu
+dHJ5LAogaW50IHJ0MngwMHF1ZXVlX3dyaXRlX3R4X2ZyYW1lKHN0cnVjdCBkYXRhX3F1ZXVl
+ICpxdWV1ZSwgc3RydWN0IHNrX2J1ZmYgKnNrYikKIHsKIAlzdHJ1Y3QgaWVlZTgwMjExX3R4
+X2luZm8gKnR4X2luZm87Ci0Jc3RydWN0IHF1ZXVlX2VudHJ5ICplbnRyeSA9IHJ0MngwMHF1
+ZXVlX2dldF9lbnRyeShxdWV1ZSwgUV9JTkRFWCk7CisJc3RydWN0IHF1ZXVlX2VudHJ5ICpl
+bnRyeTsKIAlzdHJ1Y3QgdHhlbnRyeV9kZXNjIHR4ZGVzYzsKIAlzdHJ1Y3Qgc2tiX2ZyYW1l
+X2Rlc2MgKnNrYmRlc2M7CiAJdTggcmF0ZV9pZHgsIHJhdGVfZmxhZ3M7CisJdW5zaWduZWQg
+bG9uZyBpcnFmbGFnczsKKwlpbnQgcmV0ID0gMDsKIAotCWlmICh1bmxpa2VseShydDJ4MDBx
+dWV1ZV9mdWxsKHF1ZXVlKSkpCi0JCXJldHVybiAtRU5PQlVGUzsKKwlzcGluX2xvY2tfaXJx
+c2F2ZSgmcXVldWUtPmxvY2ssIGlycWZsYWdzKTsKKworCWVudHJ5ID0gcnQyeDAwcXVldWVf
+Z2V0X2VudHJ5KHF1ZXVlLCBRX0lOREVYKTsKKworCWlmICh1bmxpa2VseShydDJ4MDBxdWV1
+ZV9mdWxsKHF1ZXVlKSkpIHsKKwkJcmV0ID0gLUVOT0JVRlM7CisJCWdvdG8gb3V0OworCX0K
+IAogCWlmICh0ZXN0X2FuZF9zZXRfYml0KEVOVFJZX09XTkVSX0RFVklDRV9EQVRBLCAmZW50
+cnktPmZsYWdzKSkgewogCQlFUlJPUihxdWV1ZS0+cnQyeDAwZGV2LAogCQkgICAgICAiQXJy
+aXZlZCBhdCBub24tZnJlZSBlbnRyeSBpbiB0aGUgbm9uLWZ1bGwgcXVldWUgJWQuXG4iCiAJ
+CSAgICAgICJQbGVhc2UgZmlsZSBidWcgcmVwb3J0IHRvICVzLlxuIiwKIAkJICAgICAgcXVl
+dWUtPnFpZCwgRFJWX1BST0pFQ1QpOwotCQlyZXR1cm4gLUVJTlZBTDsKKwkJcmV0ID0gLUVJ
+TlZBTDsKKwkJZ290byBvdXQ7CiAJfQogCiAJLyoKQEAgLTUyOCw3ICs1MzcsOCBAQCBpbnQg
+cnQyeDAwcXVldWVfd3JpdGVfdHhfZnJhbWUoc3RydWN0IGRhdGFfcXVldWUgKnF1ZXVlLCBz
+dHJ1Y3Qgc2tfYnVmZiAqc2tiKQogCWlmICh1bmxpa2VseShxdWV1ZS0+cnQyeDAwZGV2LT5v
+cHMtPmxpYi0+d3JpdGVfdHhfZGF0YShlbnRyeSkpKSB7CiAJCWNsZWFyX2JpdChFTlRSWV9P
+V05FUl9ERVZJQ0VfREFUQSwgJmVudHJ5LT5mbGFncyk7CiAJCWVudHJ5LT5za2IgPSBOVUxM
+OwotCQlyZXR1cm4gLUVJTzsKKwkJcmV0ID0gLUVJTzsKKwkJZ290byBvdXQ7CiAJfQogCiAJ
+aWYgKHRlc3RfYml0KERSSVZFUl9SRVFVSVJFX0RNQSwgJnF1ZXVlLT5ydDJ4MDBkZXYtPmZs
+YWdzKSkKQEAgLTUzOSw2ICs1NDksOSBAQCBpbnQgcnQyeDAwcXVldWVfd3JpdGVfdHhfZnJh
+bWUoc3RydWN0IGRhdGFfcXVldWUgKnF1ZXVlLCBzdHJ1Y3Qgc2tfYnVmZiAqc2tiKQogCXJ0
+MngwMHF1ZXVlX2luZGV4X2luYyhxdWV1ZSwgUV9JTkRFWCk7CiAJcnQyeDAwcXVldWVfd3Jp
+dGVfdHhfZGVzY3JpcHRvcihlbnRyeSwgJnR4ZGVzYyk7CiAKK291dDoKKwlzcGluX3VubG9j
+a19pcnFyZXN0b3JlKCZxdWV1ZS0+bG9jaywgaXJxZmxhZ3MpOworCiAJcmV0dXJuIDA7CiB9
+CiAKQEAgLTY0Miw3ICs2NTUsNiBAQCBzdHJ1Y3QgcXVldWVfZW50cnkgKnJ0MngwMHF1ZXVl
+X2dldF9lbnRyeShzdHJ1Y3QgZGF0YV9xdWV1ZSAqcXVldWUsCiAJCQkJCSAgZW51bSBxdWV1
+ZV9pbmRleCBpbmRleCkKIHsKIAlzdHJ1Y3QgcXVldWVfZW50cnkgKmVudHJ5OwotCXVuc2ln
+bmVkIGxvbmcgaXJxZmxhZ3M7CiAKIAlpZiAodW5saWtlbHkoaW5kZXggPj0gUV9JTkRFWF9N
+QVgpKSB7CiAJCUVSUk9SKHF1ZXVlLT5ydDJ4MDBkZXYsCkBAIC02NTAsMjggKzY2MiwyMCBA
+QCBzdHJ1Y3QgcXVldWVfZW50cnkgKnJ0MngwMHF1ZXVlX2dldF9lbnRyeShzdHJ1Y3QgZGF0
+YV9xdWV1ZSAqcXVldWUsCiAJCXJldHVybiBOVUxMOwogCX0KIAotCXNwaW5fbG9ja19pcnFz
+YXZlKCZxdWV1ZS0+bG9jaywgaXJxZmxhZ3MpOwotCiAJZW50cnkgPSAmcXVldWUtPmVudHJp
+ZXNbcXVldWUtPmluZGV4W2luZGV4XV07CiAKLQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZx
+dWV1ZS0+bG9jaywgaXJxZmxhZ3MpOwotCiAJcmV0dXJuIGVudHJ5OwogfQogRVhQT1JUX1NZ
+TUJPTF9HUEwocnQyeDAwcXVldWVfZ2V0X2VudHJ5KTsKIAogdm9pZCBydDJ4MDBxdWV1ZV9p
+bmRleF9pbmMoc3RydWN0IGRhdGFfcXVldWUgKnF1ZXVlLCBlbnVtIHF1ZXVlX2luZGV4IGlu
+ZGV4KQogewotCXVuc2lnbmVkIGxvbmcgaXJxZmxhZ3M7Ci0KIAlpZiAodW5saWtlbHkoaW5k
+ZXggPj0gUV9JTkRFWF9NQVgpKSB7CiAJCUVSUk9SKHF1ZXVlLT5ydDJ4MDBkZXYsCiAJCSAg
+ICAgICJJbmRleCBjaGFuZ2Ugb24gaW52YWxpZCBpbmRleCB0eXBlICglZClcbiIsIGluZGV4
+KTsKIAkJcmV0dXJuOwogCX0KIAotCXNwaW5fbG9ja19pcnFzYXZlKCZxdWV1ZS0+bG9jaywg
+aXJxZmxhZ3MpOwotCiAJcXVldWUtPmluZGV4W2luZGV4XSsrOwogCWlmIChxdWV1ZS0+aW5k
+ZXhbaW5kZXhdID49IHF1ZXVlLT5saW1pdCkKIAkJcXVldWUtPmluZGV4W2luZGV4XSA9IDA7
+CkBAIC02ODIsOCArNjg2LDYgQEAgdm9pZCBydDJ4MDBxdWV1ZV9pbmRleF9pbmMoc3RydWN0
+IGRhdGFfcXVldWUgKnF1ZXVlLCBlbnVtIHF1ZXVlX2luZGV4IGluZGV4KQogCQlxdWV1ZS0+
+bGVuZ3RoLS07CiAJCXF1ZXVlLT5jb3VudCsrOwogCX0KLQotCXNwaW5fdW5sb2NrX2lycXJl
+c3RvcmUoJnF1ZXVlLT5sb2NrLCBpcnFmbGFncyk7CiB9CiAKIHN0YXRpYyB2b2lkIHJ0Mngw
+MHF1ZXVlX3Jlc2V0KHN0cnVjdCBkYXRhX3F1ZXVlICpxdWV1ZSkKZGlmZiAtLWdpdCBhL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL3J0MngwMC9ydDJ4MDB1c2IuYyBiL2RyaXZlcnMvbmV0L3dp
+cmVsZXNzL3J0MngwMC9ydDJ4MDB1c2IuYwppbmRleCBmMDJiNDhhLi42N2I0NjEwIDEwMDY0
+NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9ydDJ4MDAvcnQyeDAwdXNiLmMKKysrIGIv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvcnQyeDAwL3J0MngwMHVzYi5jCkBAIC0yNzAsNyArMjcw
+LDYgQEAgdm9pZCBydDJ4MDB1c2Jfa2lja190eF9xdWV1ZShzdHJ1Y3QgcnQyeDAwX2RldiAq
+cnQyeDAwZGV2LAogCQkJICAgICBjb25zdCBlbnVtIGRhdGFfcXVldWVfcWlkIHFpZCkKIHsK
+IAlzdHJ1Y3QgZGF0YV9xdWV1ZSAqcXVldWUgPSBydDJ4MDBxdWV1ZV9nZXRfcXVldWUocnQy
+eDAwZGV2LCBxaWQpOwotCXVuc2lnbmVkIGxvbmcgaXJxZmxhZ3M7CiAJdW5zaWduZWQgaW50
+IGluZGV4OwogCXVuc2lnbmVkIGludCBpbmRleF9kb25lOwogCXVuc2lnbmVkIGludCBpOwpA
+QCAtMjgxLDEwICsyODAsOCBAQCB2b2lkIHJ0MngwMHVzYl9raWNrX3R4X3F1ZXVlKHN0cnVj
+dCBydDJ4MDBfZGV2ICpydDJ4MDBkZXYsCiAJICogaXQgc2hvdWxkIG5vdCBiZSBraWNrZWQg
+ZHVyaW5nIHRoaXMgcnVuLCBzaW5jZSBpdAogCSAqIGlzIHBhcnQgb2YgYW5vdGhlciBUWCBv
+cGVyYXRpb24uCiAJICovCi0Jc3Bpbl9sb2NrX2lycXNhdmUoJnF1ZXVlLT5sb2NrLCBpcnFm
+bGFncyk7CiAJaW5kZXggPSBxdWV1ZS0+aW5kZXhbUV9JTkRFWF07CiAJaW5kZXhfZG9uZSA9
+IHF1ZXVlLT5pbmRleFtRX0lOREVYX0RPTkVdOwotCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUo
+JnF1ZXVlLT5sb2NrLCBpcnFmbGFncyk7CiAKIAkvKgogCSAqIFN0YXJ0IGZyb20gdGhlIFRY
+IGRvbmUgcG9pbnRlciwgdGhpcyBndWFyZW50ZWVzIHRoYXQgd2Ugd2lsbApkaWZmIC0tZ2l0
+IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcnQyeDAwL3J0NjFwY2kuYyBiL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL3J0MngwMC9ydDYxcGNpLmMKaW5kZXggYjIwZTNlYS4uY2NkNWU1MCAxMDA2
+NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcnQyeDAwL3J0NjFwY2kuYworKysgYi9k
+cml2ZXJzL25ldC93aXJlbGVzcy9ydDJ4MDAvcnQ2MXBjaS5jCkBAIC0yMDM3LDYgKzIwMzcs
+NyBAQCBzdGF0aWMgdm9pZCBydDYxcGNpX3R4ZG9uZShzdHJ1Y3QgcnQyeDAwX2RldiAqcnQy
+eDAwZGV2KQogCXUzMiBvbGRfcmVnOwogCWludCB0eXBlOwogCWludCBpbmRleDsKKwl1bnNp
+Z25lZCBsb25nIGlycWZsYWdzOwogCiAJLyoKIAkgKiBEdXJpbmcgZWFjaCBsb29wIHdlIHdp
+bGwgY29tcGFyZSB0aGUgZnJlc2hseSByZWFkCkBAIC0yMDc0LDEzICsyMDc1LDE3IEBAIHN0
+YXRpYyB2b2lkIHJ0NjFwY2lfdHhkb25lKHN0cnVjdCBydDJ4MDBfZGV2ICpydDJ4MDBkZXYp
+CiAJCWlmICh1bmxpa2VseShpbmRleCA+PSBxdWV1ZS0+bGltaXQpKQogCQkJY29udGludWU7
+CiAKKwkJc3Bpbl9sb2NrX2lycXNhdmUoJnF1ZXVlLT5sb2NrLCBpcnFmbGFncyk7CisKIAkJ
+ZW50cnkgPSAmcXVldWUtPmVudHJpZXNbaW5kZXhdOwogCQllbnRyeV9wcml2ID0gZW50cnkt
+PnByaXZfZGF0YTsKIAkJcnQyeDAwX2Rlc2NfcmVhZChlbnRyeV9wcml2LT5kZXNjLCAwLCAm
+d29yZCk7CiAKIAkJaWYgKHJ0MngwMF9nZXRfZmllbGQzMih3b3JkLCBUWERfVzBfT1dORVJf
+TklDKSB8fAotCQkgICAgIXJ0MngwMF9nZXRfZmllbGQzMih3b3JkLCBUWERfVzBfVkFMSUQp
+KQorCQkgICAgIXJ0MngwMF9nZXRfZmllbGQzMih3b3JkLCBUWERfVzBfVkFMSUQpKSB7CisJ
+CQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZxdWV1ZS0+bG9jaywgaXJxZmxhZ3MpOwogCQkJ
+cmV0dXJuOworCQl9CiAKIAkJZW50cnlfZG9uZSA9IHJ0MngwMHF1ZXVlX2dldF9lbnRyeShx
+dWV1ZSwgUV9JTkRFWF9ET05FKTsKIAkJd2hpbGUgKGVudHJ5ICE9IGVudHJ5X2RvbmUpIHsK
+QEAgLTIxMTYsNiArMjEyMSw4IEBAIHN0YXRpYyB2b2lkIHJ0NjFwY2lfdHhkb25lKHN0cnVj
+dCBydDJ4MDBfZGV2ICpydDJ4MDBkZXYpCiAJCXR4ZGVzYy5yZXRyeSA9IHJ0MngwMF9nZXRf
+ZmllbGQzMihyZWcsIFNUQV9DU1I0X1JFVFJZX0NPVU5UKTsKIAogCQlydDJ4MDBsaWJfdHhk
+b25lKGVudHJ5LCAmdHhkZXNjKTsKKworCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZxdWV1
+ZS0+bG9jaywgaXJxZmxhZ3MpOwogCX0KIH0KIAo=
+--------------090309080706070702070102--
