@@ -1,62 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57193 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754207AbZLKOzX (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:35843 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935036AbZLGVbd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 09:55:23 -0500
-Subject: Re: [PATCH 0/2] Add support for Sphairon Homelink 1202 USB WLAN
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Stefan Seyfried <stefan.seyfried@googlemail.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20091211144221.GA6663@tuxdriver.com>
-References: <1260282095-17042-1-git-send-email-stefan.seyfried@googlemail.com>
-	 <20091211133603.46bec686@strolchi.home.s3e.de>
-	 <20091211144221.GA6663@tuxdriver.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-V+UP4/X61yRUgfc80Zws"
-Date: Fri, 11 Dec 2009 15:55:23 +0100
-Message-ID: <1260543323.2442.287.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 7 Dec 2009 16:31:33 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so1480126fgg.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Dec 2009 13:31:39 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Subject: Re: [RFT] ar9170: AP broadcast buffering
+Date: Mon, 7 Dec 2009 22:31:32 +0100
+Cc: Jan Kiszka <jan.kiszka@web.de>, linux-wireless@vger.kernel.org
+References: <200911290206.07784.chunkeey@googlemail.com> <200912071736.40929.chunkeey@googlemail.com> <87aaxu4ke7.fsf@purkki.valot.fi>
+In-Reply-To: <87aaxu4ke7.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200912072231.32798.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday 07 December 2009 21:08:32 Kalle Valo wrote:
+> Christian Lamparter <chunkeey@googlemail.com> writes:
+> 
+> > Now the problem is that under traffic the BC/MC frames might
+> > be delayed in the tx_pending queues and don't make it in time.
+> 
+> I don't know what time constraints you refer to here, but clients
+> should stay awake until they have received a multicast/broadcast
+> message with the moredata bit disabled. So, in theory, it doesn't
+> matter even if the frames are transmitted even 20 ms after the beacon.
+> (In practise some hardware might have timers for this, I think at
+> least wl1251 had one.)
 
---=-V+UP4/X61yRUgfc80Zws
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> Of course the downside is the increased power consumption. But it's
+> still better than to not receive the multicast/broadcast frames at all :)
+That's the thing: 802.11-2007 11.2.1.5 f) says:
+"*Immediately* after every DTIM, the AP shall
+  transmit all buffered broadcast/multicast MSDUs...".
+And I cannot rule out that some Devs took this quite literally. ;-)
 
-On Fri, 2009-12-11 at 09:42 -0500, John W. Linville wrote:
+Anyway, here is a case that I've witnessed:
 
-> It strikes me as strange that you are hitting two drivers to support
-> one device.  Are you saying that your ar9170usb has the goofy storage
-> device thing using the same USB IDs that the zd1211rw devices like that
-> used?  I suppose that makes some sense given the shared heritage...
+During testing, I caught samples where MC/BC frames were delayed for
+more up to 115ms. (b_interval = 102.4ms and dtim_period = 3)
+and this is where another paragraph in 11.2.1.5 f) kicks in:
 
-Good catch -- even if ar9170 descended from zd1211 it doesn't seem
-appropriate to require two drivers for a single device.
+ "If the AP is unable to transmit all of the buffered broadcast/multicast MSDUs
+  before the TBTT following the DTIM, the AP shall indicate that it will
+  continue to deliver the broadcast/multicast MSDUs by setting the bit for AID 0
+  (zero) in the bit map control field of the TIM element of every Beacon frame,
+  until all buffered broadcast/multicast frames have been transmitted."
 
-johannes
+And if you look at the mac80211 code: ieee80211_beacon_add_tim, you can see why
+this is a problem:
 
---=-V+UP4/X61yRUgfc80Zws
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+if (bss->dtim_count == 0 && !skb_queue_empty(&bss->ps_bc_buf))
+	aid0 = 1;
 
------BEGIN PGP SIGNATURE-----
+The BC/MC bit is only set for DTIM beacons, but the MC/BC traffic _arrived_
+116ms after the DTIM beacon had aired and worse: even after the normal beacon,
+without the BC/MC flag...
 
-iQIcBAABAgAGBQJLIl1YAAoJEODzc/N7+QmahOAP+gMVkohKcqOX1DMooJri3FPu
-tUy/S4zIEM7yXA7Mi1wo+RRnxVMXT+379XuDLTmVxLgTMAr7roATSKJOqqtydwYf
-DjSTyznBADHQL66L7wzmD/y6zGE2MLRD5M9Z5Zl7GDZinP6ZYB5MbfDb1Ed6WfIC
-IMW0CK3CgRMkkOGHUP82P+VFgzssbAeyGicvdLDr5oMKOM6iNp8D9Dov7s6MOhCO
-14i+judJX/nI16BjGuYCE9emnvQ0e+TSQSnAGrZyaORVcPcMMgYIU8uyZgjfNyQw
-alEHzSSew5ZljpgdVvGpLdVh58CtUQQC6FxVuLRoCFgny5rNJoU9LUoQERqrUIou
-JBCYgr3qM3zlHzb2Cln1hOcofZlhIgBqREzSj8qUbUpYmledw5aWikPd4A8I8h7K
-wC4cK3llmMPTk/rZMJnMv3fm3ajV/SP3l4Im2FWiuC4zUykZyDoXB0Uw5JQQg3TT
-E65+EKONJlSknzFjZMERbCWtvB8XgC4hPGSPD1ox17e+mokpFK4VrPZXwhfYLduG
-ft7llGVGR/BUmdU0h4yo2OxbIjfsA0A5bz9ClEUUL7HK2/wHOcec+I9nP0xwcdW6
-Gl9tKpOR8cA58w/23Ix6pLfLR2lgR5nva/AMsg8jaFluw85zi5DXjR+CxOdO6kNi
-3XClmgyp/HdovL+A2U14
-=SJjB
------END PGP SIGNATURE-----
+Note:
+ * Unfortunately it is not unusual for ar9170 to *forget* tx_status
+   reports and then we have to wait for the _janitor_ work to _retire_
+   old frames.
 
---=-V+UP4/X61yRUgfc80Zws--
+ * the beacon (delta) data is uploaded through the command interface
+   and therefore the beacon is always right on time.
 
+Regards,	
+	Chr
