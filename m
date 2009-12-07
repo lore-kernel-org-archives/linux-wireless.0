@@ -1,92 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f198.google.com ([209.85.211.198]:48495 "EHLO
-	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753077AbZLERIx (ORCPT
+Received: from cpsmtpm-eml105.kpnxchange.com ([195.121.3.9]:50153 "EHLO
+	CPSMTPM-EML105.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965111AbZLGWDY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Dec 2009 12:08:53 -0500
-Received: by ywh36 with SMTP id 36so3110294ywh.15
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Dec 2009 09:08:59 -0800 (PST)
-Message-ID: <4B1A93A9.8080009@lwfinger.net>
-Date: Sat, 05 Dec 2009 11:08:57 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 7 Dec 2009 17:03:24 -0500
+Message-ID: <4B1D7BB1.5040709@gmail.com>
+Date: Mon, 07 Dec 2009 23:03:29 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?QW50dGkgS2FpamFubcOka2k=?= <antti@kaijanmaki.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: New rtl8187 rfkill support blocks my wlan for good.
-References: <1259756709.31590.62.camel@peura.elisa-laajakaista.fi>	 <4B169608.3010902@lwfinger.net>	 <1259822699.31590.914.camel@peura.elisa-laajakaista.fi>	 <4B198081.2090901@lwfinger.net> <1260007083.31590.935.camel@peura.elisa-laajakaista.fi>
-In-Reply-To: <1260007083.31590.935.camel@peura.elisa-laajakaista.fi>
-Content-Type: text/plain; charset=UTF-8
+To: Alan Stern <stern@rowland.harvard.edu>
+CC: Ivo van Doorn <IvDoorn@gmail.com>, linux-wireless@vger.kernel.org,
+	Kernel development list <linux-kernel@vger.kernel.org>
+Subject: Re: REGRESSION for RT2561/RT61 in 2.6.32
+References: <Pine.LNX.4.44L0.0912061705050.9883-100000@netrider.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.0912061705050.9883-100000@netrider.rowland.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/05/2009 03:58 AM, Antti Kaijanmäki wrote:
-> pe, 2009-12-04 kello 15:34 -0600, Larry Finger kirjoitti:
->> Antti,
->>
->> From our private tests, you can see my problem with making a change in
->> the rfkill handling. Most of the devices in the hands of the
->> developers do not honor the rfkill switch; however, the one that does
->> works with the current code. This code also matches the latest version
->> of the vendor drivers for the RTL8187L
->> (rtl8187L_linux_26.1038.0626.2009.release) and RTL8187B
->> (rtl8187B_linux_26.1036.0708.2008). If you have newer drivers from
->> Realtek, I would be interested in seeing them.
+On 12/06/09 23:12, Alan Stern wrote:
+> Sorry for the late notice; I haven't tried running new kernels on this 
+> computer in a long time.
 > 
-> I attached the one I received.
+> When I use 2.6.32 (or indeed 2.6.32-rc1), it works fine up until the 
+> point where the wireless card is ifconfig'ed.  Then not long afterward 
+> (a few seconds to a minute) the system hangs.
 > 
+> # lspci -vv -s d.0
+> 00:0d.0 Network controller: RaLink RT2561/RT61 802.11g PCI
+>         Subsystem: Linksys WMP54G ver 4.1
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 64, Cache Line Size: 64 bytes
+>         Interrupt: pin A routed to IRQ 11
+>         Region 0: Memory at cfff0000 (32-bit, non-prefetchable) [size=32K]
+>         Capabilities: [40] Power Management version 2
+>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+>         Kernel driver in use: rt61pci
+>         Kernel modules: rt61pci
 > 
->> To make a special case for your system, we need to be able to
->> differentiate it from all other systems. We know that the chip has the
->> same cut (RTL8187BvE V0) as Hin-Tak's, and the same vendor ID (0x04).
->> We do have devices that require parsing additional USB data to get the
->> setup properly initialized. Please send me the full output of the
->> 'lsusb -v' command for the rtl8187 device. I will get the same info
->> from Hin-Tak to see if we can differentiate your two devices.
+> While the system is hung, Alt-SysRq-keys still work but nothing else
+> shows up when I type (using a VT console, not X).  However I don't know
+> what debugging to do or what to look for.
 > 
-> See the attached lsusb_v.txt
+> Under 2.6.31 everything works okay.
 > 
-> 
-> I had now some time to look in to this. First of all I was sad to
-> discover that the specifications from Realtek have incomplete EEPROM
-> register descriptions and they are no use to figure this problem out.
-> But at least they describe the functionality so that it's easier to find
-> out what's going on with the drivers.
-> 
-> I looked through the reference driver and found out that indeed the GPIO
-> pin is different for some devices, mine included (0x8198).
-> 
-> r8187_core.c:L4359
-> 
->         if((idProduct == 0x8197) || (idProduct == 0x8198))      {
->                 priv->EEPROMSelectNewGPIO =((u8)((eprom_read(dev,EPROM_SELECT_GPIO) & 0xff00) >> 8)) ? true : false;
->                 DMESG("EPROM_SELECT_GPIO:%d", priv->EEPROMSelectNewGPIO);
->         } else {
->                 priv->EEPROMSelectNewGPIO = false;
->         }
-> 
-> 
-> 
-> Here's the begining of the RFKILL code (see, 0x2 vs. 0x4!)
-> 
-> r8187_core.c:L6258
-> 
->                         tmp1byte = read_nic_byte(dev,GPE);
->                         if(priv->EEPROMSelectNewGPIO == true)
->                                 tmp1byte &= ~BIT2;
->                         else
->                                 tmp1byte &= ~BIT1;
-> 
->                         write_nic_byte(dev,GPE,tmp1byte);
-> 
-> 
-> I would like to prepare a proper patch, but I'm afraid I do not have the
-> time right now and someone else can probably do it a lot faster. The
-> current rfkill code is now in 2.6.32 and some people are going to find
-> out that their wlan no longer is accessible because of insufficient
-> rfkill detection so this puts this somewhat higher priority.
 
-Thanks for this info. Your reference driver is indeed newer than the
-one that I had. With the info from it, I will prepare a patch for you,
-Hin-Tak, and anyone else to test. It should be ready yet today.
+Hmmm, that's odd. I haven't seen any other reports on this (on full system hangs that is).
 
-Larry
+It would be very hard to figure out what is going wrong without any form of logging of
+an oops or something. Is there any way you can find out if any oops information is present?
+
+What does Alt-SysRq-l tell us, what are the CPU's doing when the system is hung?
+
+---
+Gertjan.
