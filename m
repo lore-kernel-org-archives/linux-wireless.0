@@ -1,59 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45686 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761144AbZLKLvh (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:65290 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934893AbZLGKFt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 06:51:37 -0500
-Subject: Re: [PATCH 07/31] wl1271: fix tx power setting function
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1260531682-4695-8-git-send-email-luciano.coelho@nokia.com>
-References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
-	 <1260531682-4695-8-git-send-email-luciano.coelho@nokia.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-YLk9fEDfGUOwuTstp+bP"
-Date: Fri, 11 Dec 2009 12:51:37 +0100
-Message-ID: <1260532297.2442.126.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 7 Dec 2009 05:05:49 -0500
+Received: by ewy19 with SMTP id 19so212817ewy.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Dec 2009 02:05:55 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20091204192315.GA5786@tuxdriver.com>
+References: <bf87febf0912030507u1c36f6a9h7cac0efabf3d016@mail.gmail.com>
+	 <20091204192315.GA5786@tuxdriver.com>
+Date: Mon, 7 Dec 2009 12:05:54 +0200
+Message-ID: <bf87febf0912070205k40a7286dpbb48cfcc494203d2@mail.gmail.com>
+Subject: Re: [PATCH] ath5k: add support for Dell Vostro A860 LED
+From: Shahar Or <mightyiampresence@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	me@bobcopeland.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Adds support for the WiFi activity LED on the Dell Vostro A860 laptop.
 
---=-YLk9fEDfGUOwuTstp+bP
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 2009-12-11 at 13:40 +0200, Luciano Coelho wrote:
-> The wl1271 firmware supports maximun 25.5dBm, so the driver was returning
-> -EINVALID to anything above that.  The new mac80211 stack uses 27dBm as
-> default TX power, so we were never setting this correctly.
-
-??
-Just indicate a max of 25 in your channel registration max_power.
-cfg80211/mac80211/regulatory code will not go above that.
-
-johannes
-
---=-YLk9fEDfGUOwuTstp+bP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLIjJFAAoJEODzc/N7+Qma4coP/3rdssCJ70koc92t6I+odZ5q
-/R9/dkaJoaxhxPhMmfA9Z8NKswFD676o1sGxLPaA15qbgKF6wZpIb9r/DZqOoFmu
-wmBIdYodCfQHkFMYDsWiCRaZoPGVfwBRWaOBQ2cAWJ4bQU56SHdLd8mCFPxcLvim
-bfYNBpcbw8mYA5P/RW3/NU2yuWb26UzlqwofIy85X7mFwKTmaVoYQ/VViYZ9J6ab
-6OQD3nukOlPihDypyX4OsAAcdLy81PcGHEa2HrYrCsQyOjFwYeWyYLA9KXJdFR1h
-I2C16Q1FiCQAad3TxKnMsoih7YZANfQP4bC0fr95V4v5rECn78D8j4MgVUW73TiQ
-sK82aSXAni+Z84czNOqNnTqIq4KL4q3VjzfqOecgMp0NcJ1Tf6GZadB+SMBDqpi3
-lNFn/OnSQkNM9e7cdbCvYLQUqmdZNamSMPT3A+J0sKBJLjLo80Jo2z4zltjT+qGE
-WPsbeTqJgjx8RGyqc9Qd/ANNOwD+ZCYwzZYaNhB5BfBxfE9LN/DnMcoMQcj5oFZk
-j4RlDQLB7sYgdsm1gpRmGFFb1gUM24ON/2phQ8Jfd/Je48Aha27smYMsKgiftdpP
-sUIWoJIHisRXufHf0mqh+6J9Vk0BEb9Sip1SzGGzc4kIVN5r51vBPnmmAJgCEeB5
-4AyeCVOU9dscCYgR9xPA
-=Aymj
------END PGP SIGNATURE-----
-
---=-YLk9fEDfGUOwuTstp+bP--
-
+Signed-off-by: Shahar Or <shahar@shahar-or.co.il>
+---
+I hope this one is perfect.
+--- drivers/net/wireless/ath/ath5k/led.c.orig	2009-12-03
+14:57:20.000000000 +0200
++++ drivers/net/wireless/ath/ath5k/led.c	2009-12-03 14:25:30.000000000 +0200
+@@ -71,6 +71,8 @@
+ 	{ ATH_SDEVICE(PCI_VENDOR_ID_IBM, 0x058a), ATH_LED(1, 0) },
+ 	/* IBM-specific AR5212 (all others) */
+ 	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5212_IBM), ATH_LED(0, 0) },
++	/* Dell Vostro A860 (shahar@shahar-or.co.il) */
++	{ ATH_SDEVICE(PCI_VENDOR_ID_QMI, 0x0112), ATH_LED(3, 0) },
+ 	{ }
+ };
