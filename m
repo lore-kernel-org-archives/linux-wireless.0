@@ -1,69 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56359 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760919AbZLKTVX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 14:21:23 -0500
-Subject: Re: [PATCH 0/2] Add support for Sphairon Homelink 1202 USB WLAN
-From: Dan Williams <dcbw@redhat.com>
-To: Stefan Seyfried <stefan.seyfried@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20091211160124.4db2da76@strolchi.home.s3e.de>
-References: <1260282095-17042-1-git-send-email-stefan.seyfried@googlemail.com>
-	 <20091211133603.46bec686@strolchi.home.s3e.de>
-	 <20091211144221.GA6663@tuxdriver.com>
-	 <20091211160124.4db2da76@strolchi.home.s3e.de>
-Content-Type: text/plain
-Date: Fri, 11 Dec 2009 11:21:10 -0800
-Message-Id: <1260559270.6254.2.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from static-72-92-88-10.phlapa.fios.verizon.net ([72.92.88.10]:53534
+	"EHLO smtp.roinet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757674AbZLGBfA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Dec 2009 20:35:00 -0500
+Message-ID: <4B1C5BC3.70108@roinet.com>
+Date: Sun, 06 Dec 2009 20:34:59 -0500
+From: David Acker <dacker@roinet.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
+	patrik.flykt@nokia.com
+Subject: Re: WMM classification guideline for applications?
+References: <87d42u6dnd.fsf@purkki.valot.fi> <4B19276F.5080604@roinet.com>	 <878wdi69u9.fsf@purkki.valot.fi>  <4B1933F5.2010408@roinet.com>	 <1260096387.3461.2.camel@johannes.local>  <4B1BF399.1020103@roinet.com> <1260124341.3461.22.camel@johannes.local>
+In-Reply-To: <1260124341.3461.22.camel@johannes.local>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-12-11 at 16:01 +0100, Stefan Seyfried wrote:
-> On Fri, 11 Dec 2009 09:42:22 -0500
-> "John W. Linville" <linville@tuxdriver.com> wrote:
+Johannes Berg wrote:
+> On Sun, 2009-12-06 at 13:10 -0500, David Acker wrote:
+>> Johannes Berg wrote:
+>>> On Fri, 2009-12-04 at 11:08 -0500, David Acker wrote:
+>>>
+>>>> I am not an expert on how the kernel handles vlans, but it appears that 
+>>>> the priority field's value is set by the user space VLAN creation tools 
+>>>> through an ioctl with SET_VLAN_EGRESS_PRIORITY_CMD which calls 
+>>>> vlan_dev_set_egress_priority to map an skb priority to a vlan priority.
+>>>> vlan_dev_hard_header then uses this information to populate the vlan 
+>>>> priority field based on the skb priority field.
+>>>>
+>>>> In this case it would seem that skb priority and the vlan priority are 
+>>>> both set and there may be a non-trivial mapping between the two. 
+>>> But doesn't that also mean that mac80211 can happily ignore the VLAN
+>>> priority in the packet, because the vlan code will have propagated it to
+>>> the skb->priority, if the administrator wishes to use it?
+>> You are correct on rx.
 > 
-> > On Fri, Dec 11, 2009 at 01:36:03PM +0100, Stefan Seyfried wrote:
-> > > Is anyhting wrong with those?
-> > > Are those too trivial and "USB only" and thus better suited for direct
-> > > submission to Greg?
-> > 
-> > Trivial or not, they are wireless LAN patches and they go here.
-> 
-> That's what i guessed, too. I was just deafened by the silence ;)
-> 
-> > It strikes me as strange that you are hitting two drivers to support
-> > one device.  Are you saying that your ar9170usb has the goofy storage
-> > device thing using the same USB IDs that the zd1211rw devices like that
-> > used?  I suppose that makes some sense given the shared heritage...
-> 
-> Yes, exactly. And a different configuration (different endpoint),
-> that's why I had to touch the zd1211rw driver, even though it is
-> otherwise totally unrelated to the device.
-> 
-> The method with the reverse loop counting down from ep1 to ep0 was
-> chosen to be as sure as possible to not break the other devices that
-> are already working.
-> 
-> > We did just have a long (and possibly unresolved thread) about
-> > this type of practice (i.e. eject in the driver) not too long ago.
-> > But since zd1211rw is already doing this, maybe this patch is
-> > acceptable...?
-> 
-> Maybe a separate driver that is ejecting all those fake storage
-> devices, be it 3G modems or wireless LAN might be a good idea, but I am
-> probably not the right one to code that ;)
-> Or maybe we decide that userspace should handle it for all devices...
+> I don't see how RX matters at all, to mac80211?
+When a packet is received on a higher priority WMM queue, should it 
+reflect that in skb->priority?
 
-If the device actually changes USB IDs after the switch, then the right
-place to put this code is probably unusual_devs instead of
-touching /two/ drivers.  I'd say extract the code from zd1211rw and put
-the new code that works for both zd1211rw/ar9170 into unusual_devs.  In
-fact, people might be happier if you posted two patches, (1) move the
-code to unusual_devs unchanged, and (2) fix up the moved code to support
-the new device's behavior.
+> 
+>>   The tricky part is the non-trivial mapping on 
+>> tx.  If mac80211 only looks at the skb->priority and assumes priority 0 
+>> means best effort, the code could be missing that skb->priority 0 maps 
+>> to vlan priority 7.  If we define that mac80211 only looks at 
+>> skb->priority, perhaps we should allow user space control of the mapping 
+>> of the skb->priority to WMM priority queue.  This could be similar to 
+>> the mapping capabilities in the VLAN code.  That way, an admin can make 
+>> sure that the skb priority is mapped to both an appropriate vlan 
+>> priority and an appropriate WMM priority queue.
+> 
+> I don't understand. If I TX a packet, on a specific VLAN, then it'll go
+> through the VLAN code first, get 802.1q tags and then be passed to
+> mac80211, which ought be be fine with just looking at the priority value
+> the packet now got.
 
-Dan
+The packet will get tags which will contain the vlan priority mapped 
+from the original skb->priority.  What if the administrator wanted all 
+applications that used a specific VLAN to have high priority.  Without 
+having to change the applications, he could make the mapping of skb 
+priority 0 to go a high priority VLAN.  It would be nice if he could 
+also make skb->priority 0 go to a high priority WMM queue.  It is fine 
+to base every thing on the skb priority but it would be nice if the 
+mapping of skb priority to WMM queue was not static.  It should have a 
+user space API that is similar in functionality to the VLAN priority API.
+
+As an example, I have a system where a wireless router has multiple 
+SSIDs.  One SSID is for guests and has little or no security and is on 
+VLAN 1 with a VLAN priority of 0.  Another SSID is for system 
+configuration and has high security (802.11i) and is on VLAN 2 with a 
+VLAN priority of 7.  The VLAN tagging is handled by the router; clients 
+send normal frames.  Their applications do not require any changes.  The 
+router will give higher priority to the system configuration VLAN during 
+any queuing.  When the packets are sent, I have code (in madwifi in this 
+example) to put the packets with VLAN priority 0 in the best effort 
+queue while packets in vlan priority 7 go into the voice queue.  This 
+code also sets the skb->priority field based on the VLAN priority.  This 
+allows the queuing of the packet to the wifi0 device to reflect the 
+appropriate ordering.  The router supports meshing such that the WMM 
+queues are used for packets between the routers.  In this manner, the 
+QoS required for the higher priority VLAN is reflected through the whole 
+network, including the eventual wired destination.
+
+To support this in mac80211, it would be nice to specify the mapping of 
+skb->priority to WMM queue on a per SSID basis.  This would allow QoS to 
+be application driven or SSID driven.
+-ack
+
+
+__________ Information from ESET Smart Security, version of virus signature database 4665 (20091206) __________
+
+The message was checked by ESET Smart Security.
+
+http://www.eset.com
 
 
