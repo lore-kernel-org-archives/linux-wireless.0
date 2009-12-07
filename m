@@ -1,113 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:55931 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S936129AbZLQEF2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2009 23:05:28 -0500
-Message-Id: <20091217035658.668679326@mini.kroah.org>
-Date: Wed, 16 Dec 2009 19:56:58 -0800
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org, greg@kroah.com
-Cc: stable-review@kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless@vger.kernel.org,
-	Vivek Natarajan <vnatarajan@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [121/151] mac80211: Fix dynamic power save for scanning.
-In-Reply-To: <20091217040208.GA26571@kroah.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:51001 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935560AbZLGUqz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Dec 2009 15:46:55 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	johannes@sipsolutions.net
+Subject: [PATCH] mac80211: only bother printing highest data rate on debugfs if its set
+Date: Mon,  7 Dec 2009 15:47:01 -0500
+Message-Id: <1260218821-17809-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.32-stable review patch.  If anyone has any objections, please let us know.
+IEEE-802.11n spec says the RX highest data rate field does
+not specify the highest supported RX data rate if its not set.
+Ignore it if not set then. Refer to section 7.3.56.4
 
-------------------
-
-
-From: Vivek Natarajan <vnatarajan@atheros.com>
-
-Upstream commit: 7c3f4bbedc241ddcd3abe1f419c356e625231da1
-
-Not only ps_sdata but also IEEE80211_CONF_PS is to be considered
-before restoring PS in scan_ps_disable(). For instance, when ps_sdata
-is set but CONF_PS is not set just because the dynamic timer is still
-running, a sw scan leads to setting of CONF_PS in scan_ps_disable
-instead of restarting the dynamic PS timer.
-Also for the above case, a null data frame is to be sent after
-returning to operating channel which was not happening with the
-current implementation. This patch fixes this too.
-
-
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
-Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: johannes@sipsolutions.net
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/scan.c        |   20 ++++++++++++++++----
- 2 files changed, 17 insertions(+), 4 deletions(-)
+ include/linux/ieee80211.h  |    5 ++++-
+ net/mac80211/debugfs_sta.c |   10 ++++++++--
+ 2 files changed, 12 insertions(+), 3 deletions(-)
 
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -808,6 +808,7 @@ struct ieee80211_local {
- 	unsigned int wmm_acm; /* bit field of ACM bits (BIT(802.1D tag)) */
- 
- 	bool pspolling;
-+	bool scan_ps_enabled;
- 	/*
- 	 * PS can only be enabled when we have exactly one managed
- 	 * interface (and monitors) in PS, this then points there.
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -196,7 +196,8 @@ ieee80211_scan_rx(struct ieee80211_sub_i
- static void ieee80211_scan_ps_enable(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
--	bool ps = false;
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index d9724a2..a36b253 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -771,7 +771,10 @@ struct ieee80211_bar {
+ /**
+  * struct ieee80211_mcs_info - MCS information
+  * @rx_mask: RX mask
+- * @rx_highest: highest supported RX rate
++ * @rx_highest: highest supported RX rate. If set represents
++ *	the highest supported RX data rate in units of 1 Mbps.
++ *	If this field is 0 this value should not be used to
++ *	consider the highest RX data rate supported.
+  * @tx_params: TX parameters
+  */
+ struct ieee80211_mcs_info {
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index ab3397a..eff7fcf 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -221,8 +221,14 @@ static ssize_t sta_ht_capa_read(struct file *file, char __user *userbuf,
+ 		for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
+ 			p += scnprintf(p, sizeof(buf)+buf-p, " %.2x",
+ 					htc->mcs.rx_mask[i]);
+-		p += scnprintf(p, sizeof(buf)+buf-p, "\nMCS rx highest: %d\n",
+-				le16_to_cpu(htc->mcs.rx_highest));
 +
-+	local->scan_ps_enabled = false;
- 
- 	/* FIXME: what to do when local->pspolling is true? */
- 
-@@ -204,12 +205,13 @@ static void ieee80211_scan_ps_enable(str
- 	cancel_work_sync(&local->dynamic_ps_enable_work);
- 
- 	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
--		ps = true;
-+		local->scan_ps_enabled = true;
- 		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
- 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++		/* If not set this is meaningless */
++		if (le16_to_cpu(htc->mcs.rx_highest)) {
++			p += scnprintf(p, sizeof(buf)+buf-p,
++				       "\nMCS rx highest: %d Mbps\n",
++				       le16_to_cpu(htc->mcs.rx_highest));
++		}
++
+ 		p += scnprintf(p, sizeof(buf)+buf-p, "MCS tx params: %x\n",
+ 				htc->mcs.tx_params);
  	}
- 
--	if (!ps || !(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
-+	if (!(local->scan_ps_enabled) ||
-+	    !(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
- 		/*
- 		 * If power save was enabled, no need to send a nullfunc
- 		 * frame because AP knows that we are sleeping. But if the
-@@ -230,7 +232,7 @@ static void ieee80211_scan_ps_disable(st
- 
- 	if (!local->ps_sdata)
- 		ieee80211_send_nullfunc(local, sdata, 0);
--	else {
-+	else if (local->scan_ps_enabled) {
- 		/*
- 		 * In !IEEE80211_HW_PS_NULLFUNC_STACK case the hardware
- 		 * will send a nullfunc frame with the powersave bit set
-@@ -246,6 +248,16 @@ static void ieee80211_scan_ps_disable(st
- 		 */
- 		local->hw.conf.flags |= IEEE80211_CONF_PS;
- 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-+	} else if (local->hw.conf.dynamic_ps_timeout > 0) {
-+		/*
-+		 * If IEEE80211_CONF_PS was not set and the dynamic_ps_timer
-+		 * had been running before leaving the operating channel,
-+		 * restart the timer now and send a nullfunc frame to inform
-+		 * the AP that we are awake.
-+		 */
-+		ieee80211_send_nullfunc(local, sdata, 0);
-+		mod_timer(&local->dynamic_ps_timer, jiffies +
-+			  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
- 	}
- }
- 
-
+-- 
+1.6.3.3
 
