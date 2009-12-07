@@ -1,87 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.102.11.253]:56156 "EHLO
-	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755755AbZLFRYw (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:46864 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932577AbZLGPLF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2009 12:24:52 -0500
-From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
-Reply-To: 8an@praha12.net
-To: linville@tuxdriver.com
-Subject: [PATCH 3/4] ath5k: Fix functions for getting/setting slot time
-Date: Sun, 6 Dec 2009 18:24:58 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	ath5k-devel@lists.ath5k.org
-References: <200912061820.26320.8an@praha12.net>
-In-Reply-To: <200912061820.26320.8an@praha12.net>
+	Mon, 7 Dec 2009 10:11:05 -0500
+Received: by bwz27 with SMTP id 27so3553442bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Dec 2009 07:11:11 -0800 (PST)
+To: David Acker <dacker@roinet.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Greg Oliver <oliver.greg@gmail.com>,
+	linux-wireless@vger.kernel.org, patrik.flykt@nokia.com
+Subject: Re: WMM classification guideline for applications?
+References: <87d42u6dnd.fsf@purkki.valot.fi> <4B19276F.5080604@roinet.com>
+	<878wdi69u9.fsf@purkki.valot.fi> <4B1933F5.2010408@roinet.com>
+	<51058d550912040856u5d413a06n40412f8f56eb4b9@mail.gmail.com>
+	<1259954135.27022.6.camel@localhost.localdomain>
+	<4B196AA7.3040603@roinet.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Mon, 07 Dec 2009 17:11:07 +0200
+In-Reply-To: <4B196AA7.3040603@roinet.com> (David Acker's message of "Fri\, 04 Dec 2009 15\:01\:43 -0500")
+Message-ID: <87iqci4y5w.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200912061824.58557.8an@praha12.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Functions ath5k_hw_get_slot_time and ath5k_hw_set_slot_time were
-converting microseconds to clocks only for AR5210, although it's needed
-for all supported devices. The conversion was moved outside the
-hardware-specific branches.
+David Acker <dacker@roinet.com> writes:
 
-These functions are not called from anywhere yet, but they are needed
-for an implementation of mac80211 callback set_coverage.
+> Going with IPv4 DSCP may be a bit problematic.  See
+> http://marc.info/?l=linux-netdev&m=125875775229644&w=2 and
+> http://sourceware.org/bugzilla/show_bug.cgi?id=10789 .
 
-Signed-off-by: Lukas Turek <8an@praha12.net>
----
- drivers/net/wireless/ath/ath5k/qcu.c |   21 ++++++++++++++-------
- 1 files changed, 14 insertions(+), 7 deletions(-)
+Thanks, these are good links. 
 
-diff --git a/drivers/net/wireless/ath/ath5k/qcu.c 
-b/drivers/net/wireless/ath/ath5k/qcu.c
-index eeebb9a..248878a 100644
---- a/drivers/net/wireless/ath/ath5k/qcu.c
-+++ b/drivers/net/wireless/ath/ath5k/qcu.c
-@@ -520,12 +520,16 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, 
-unsigned int queue)
-  */
- unsigned int ath5k_hw_get_slot_time(struct ath5k_hw *ah)
- {
-+	unsigned int slot_time_clock;
-+	
- 	ATH5K_TRACE(ah->ah_sc);
-+	
- 	if (ah->ah_version == AR5K_AR5210)
--		return ath5k_hw_clocktoh(ath5k_hw_reg_read(ah,
--				AR5K_SLOT_TIME) & 0xffff, ah->ah_turbo);
-+		slot_time_clock = ath5k_hw_reg_read(ah, AR5K_SLOT_TIME);
- 	else
--		return ath5k_hw_reg_read(ah, AR5K_DCU_GBL_IFS_SLOT) & 0xffff;
-+		slot_time_clock = ath5k_hw_reg_read(ah, AR5K_DCU_GBL_IFS_SLOT);
-+	
-+	return ath5k_hw_clocktoh(slot_time_clock & 0xffff, ah->ah_turbo);
- }
- 
- /*
-@@ -533,15 +537,18 @@ unsigned int ath5k_hw_get_slot_time(struct ath5k_hw *ah)
-  */
- int ath5k_hw_set_slot_time(struct ath5k_hw *ah, unsigned int slot_time)
- {
-+	u32 slot_time_clock = ath5k_hw_htoclock(slot_time, ah->ah_turbo);
-+	
- 	ATH5K_TRACE(ah->ah_sc);
--	if (slot_time < AR5K_SLOT_TIME_9 || slot_time > AR5K_SLOT_TIME_MAX)
-+	
-+	if (slot_time_clock < AR5K_SLOT_TIME_9 ||
-+	    slot_time_clock > AR5K_SLOT_TIME_MAX)
- 		return -EINVAL;
- 
- 	if (ah->ah_version == AR5K_AR5210)
--		ath5k_hw_reg_write(ah, ath5k_hw_htoclock(slot_time,
--				ah->ah_turbo), AR5K_SLOT_TIME);
-+		ath5k_hw_reg_write(ah, slot_time_clock, AR5K_SLOT_TIME);
- 	else
--		ath5k_hw_reg_write(ah, slot_time, AR5K_DCU_GBL_IFS_SLOT);
-+		ath5k_hw_reg_write(ah, slot_time_clock, AR5K_DCU_GBL_IFS_SLOT);
- 
- 	return 0;
- }
+I don't see this as an obstacle, though. If we have issues, we'll fix
+them. This QoS support is such a mess that if we want to do this
+properly, there is no way to avoid some pain.
+
 -- 
-1.6.4.4
+Kalle Valo
