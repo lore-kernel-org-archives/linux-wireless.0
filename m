@@ -1,46 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:50873 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762210AbZLKLmc (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:44636 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965016AbZLGU5n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 06:42:32 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
+	Mon, 7 Dec 2009 15:57:43 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 08/31] wl1271: check result code from the join command
-Date: Fri, 11 Dec 2009 13:40:59 +0200
-Message-Id: <1260531682-4695-9-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	johannes@sipsolutions.net
+Subject: [PATCH v2] mac80211: only bother printing highest data rate on debugfs if its set
+Date: Mon,  7 Dec 2009 15:57:50 -0500
+Message-Id: <1260219470-16965-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were not checking the return value from the call to wl1271_cmd_join().
-Added a check to make things more reliable.
+IEEE-802.11n spec says the RX highest data rate field does
+not specify the highest supported RX data rate if its not set.
+Ignore it if not set then. Refer to section 7.3.56.4
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: johannes@sipsolutions.net
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_main.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index f6d42e6..ffd615e 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1545,7 +1545,11 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 	    memcmp(wl->bssid, bss_conf->bssid, ETH_ALEN)) {
- 			wl->rx_config |= CFG_BSSID_FILTER_EN;
- 			memcpy(wl->bssid, bss_conf->bssid, ETH_ALEN);
--			wl1271_cmd_join(wl);
-+			ret = wl1271_cmd_join(wl);
-+			if (ret < 0) {
-+				wl1271_warning("cmd join failed %d", ret);
-+				goto out_sleep;
-+			}
- 			wl->joined = true;
+Noticed I missed a \n due to the conditional print now.
+
+ include/linux/ieee80211.h  |    5 ++++-
+ net/mac80211/debugfs_sta.c |   12 ++++++++++--
+ 2 files changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index d9724a2..a36b253 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -771,7 +771,10 @@ struct ieee80211_bar {
+ /**
+  * struct ieee80211_mcs_info - MCS information
+  * @rx_mask: RX mask
+- * @rx_highest: highest supported RX rate
++ * @rx_highest: highest supported RX rate. If set represents
++ *	the highest supported RX data rate in units of 1 Mbps.
++ *	If this field is 0 this value should not be used to
++ *	consider the highest RX data rate supported.
+  * @tx_params: TX parameters
+  */
+ struct ieee80211_mcs_info {
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index ab3397a..20bffe9 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -218,11 +218,19 @@ static ssize_t sta_ht_capa_read(struct file *file, char __user *userbuf,
+ 		p += scnprintf(p, sizeof(buf)+buf-p, "ampdu factor/density: %d/%d\n",
+ 				htc->ampdu_factor, htc->ampdu_density);
+ 		p += scnprintf(p, sizeof(buf)+buf-p, "MCS mask:");
++
+ 		for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
+ 			p += scnprintf(p, sizeof(buf)+buf-p, " %.2x",
+ 					htc->mcs.rx_mask[i]);
+-		p += scnprintf(p, sizeof(buf)+buf-p, "\nMCS rx highest: %d\n",
+-				le16_to_cpu(htc->mcs.rx_highest));
++		p += scnprintf(p, sizeof(buf)+buf-p, "\n");
++
++		/* If not set this is meaningless */
++		if (le16_to_cpu(htc->mcs.rx_highest)) {
++			p += scnprintf(p, sizeof(buf)+buf-p,
++				       "MCS rx highest: %d Mbps\n",
++				       le16_to_cpu(htc->mcs.rx_highest));
++		}
++
+ 		p += scnprintf(p, sizeof(buf)+buf-p, "MCS tx params: %x\n",
+ 				htc->mcs.tx_params);
  	}
- 
 -- 
 1.6.3.3
 
