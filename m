@@ -1,152 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:65310 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752986AbZLBO3g (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:33878 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933589AbZLGTyj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2009 09:29:36 -0500
-Received: by mail-bw0-f227.google.com with SMTP id 27so217224bwz.21
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2009 06:29:43 -0800 (PST)
-Message-Id: <20091202142908.338175315@gmail.com>
-References: <20091202142555.654873300@gmail.com>
-Date: Wed, 02 Dec 2009 15:25:56 +0100
-From: Holger Schurig <holgerschurig@googlemail.com>
-To: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: [PATCH 01/10] libertas: use priv->mesh_tlv instead of priv->mesh_fw_ver
+	Mon, 7 Dec 2009 14:54:39 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	johannes@sipsolutions.net
+Subject: [PATCH] mac80211: parse the HT capabilities info through debugfs
+Date: Mon,  7 Dec 2009 14:54:45 -0500
+Message-Id: <1260215685-24385-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Both variables contained the same information (no mesh, old mesh, new mesh).
-So we can get rid of one variable.
+When debugging you want to be lazy and not have to parse
+bits yourself so let mac80211 debugfs do the parsing for you.
 
-Also move the mesh-version test from cmd.c into mesh.c.
+This is what I get against my WRT610N:
 
-Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
+root@tux:~# cat /sys/kernel/debug/ieee80211/phy0/stations/00\:22\:6b\:aa\:bb\:01/ht_capa
+ht supported
+cap: 0x000e
+	HT20/HT40
+	SM Power Save disabled
+	No RX STBC
+	Max AMSDU length: 7935 bytes
+	No DSSS/CCK HT40
+ampdu factor/density: 2/6
+MCS mask: ff ff 00 00 00 00 00 00 00 00
+MCS rx highest: 0
+MCS tx params: 0
 
---- linux-wl.orig/drivers/net/wireless/libertas/defs.h
-+++ linux-wl/drivers/net/wireless/libertas/defs.h
-@@ -397,13 +397,6 @@ enum KEY_INFO_WPA {
- 	KEY_INFO_WPA_ENABLED = 0x04
- };
- 
--/** mesh_fw_ver */
--enum _mesh_fw_ver {
--	MESH_NONE = 0, /* MESH is not supported */
--	MESH_FW_OLD,   /* MESH is supported in FW V5 */
--	MESH_FW_NEW,   /* MESH is supported in FW V10 and newer */
--};
--
- /* Default values for fwt commands. */
- #define FWT_DEFAULT_METRIC 0
- #define FWT_DEFAULT_DIR 1
---- linux-wl.orig/drivers/net/wireless/libertas/dev.h
-+++ linux-wl/drivers/net/wireless/libertas/dev.h
-@@ -42,7 +42,6 @@ struct lbs_private {
- 	u32 mesh_connect_status;
- 	struct lbs_mesh_stats mstats;
- 	int mesh_open;
--	int mesh_fw_ver;
- 	int mesh_autostart_enabled;
- 	uint16_t mesh_tlv;
- 	u8 mesh_ssid[IEEE80211_MAX_SSID_LEN + 1];
---- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
-+++ linux-wl/drivers/net/wireless/libertas/cmd.c
-@@ -143,19 +143,6 @@ int lbs_update_hw_spec(struct lbs_privat
- 	lbs_deb_cmd("GET_HW_SPEC: hardware interface 0x%x, hardware spec 0x%04x\n",
- 		    cmd.hwifversion, cmd.version);
- 
--	/* Determine mesh_fw_ver from fwrelease and fwcapinfo */
--	/* 5.0.16p0 9.0.0.p0 is known to NOT support any mesh */
--	/* 5.110.22 have mesh command with 0xa3 command id */
--	/* 10.0.0.p0 FW brings in mesh config command with different id */
--	/* Check FW version MSB and initialize mesh_fw_ver */
--	if (MRVL_FW_MAJOR_REV(priv->fwrelease) == MRVL_FW_V5)
--		priv->mesh_fw_ver = MESH_FW_OLD;
--	else if ((MRVL_FW_MAJOR_REV(priv->fwrelease) >= MRVL_FW_V10) &&
--		(priv->fwcapinfo & MESH_CAPINFO_ENABLE_MASK))
--		priv->mesh_fw_ver = MESH_FW_NEW;
--	else
--		priv->mesh_fw_ver = MESH_NONE;
--
- 	/* Clamp region code to 8-bit since FW spec indicates that it should
- 	 * only ever be 8-bit, even though the field size is 16-bit.  Some firmware
- 	 * returns non-zero high 8 bits here.
---- linux-wl.orig/drivers/net/wireless/libertas/mesh.c
-+++ linux-wl/drivers/net/wireless/libertas/mesh.c
-@@ -196,7 +196,12 @@ int lbs_init_mesh(struct lbs_private *pr
- 
- 	lbs_deb_enter(LBS_DEB_MESH);
- 
--	if (priv->mesh_fw_ver == MESH_FW_OLD) {
-+	/* Determine mesh_fw_ver from fwrelease and fwcapinfo */
-+	/* 5.0.16p0 9.0.0.p0 is known to NOT support any mesh */
-+	/* 5.110.22 have mesh command with 0xa3 command id */
-+	/* 10.0.0.p0 FW brings in mesh config command with different id */
-+	/* Check FW version MSB and initialize mesh_fw_ver */
-+	if (MRVL_FW_MAJOR_REV(priv->fwrelease) == MRVL_FW_V5) {
- 		/* Enable mesh, if supported, and work out which TLV it uses.
- 		   0x100 + 291 is an unofficial value used in 5.110.20.pXX
- 		   0x100 + 37 is the official value used in 5.110.21.pXX
-@@ -218,7 +223,9 @@ int lbs_init_mesh(struct lbs_private *pr
- 					    priv->channel))
- 				priv->mesh_tlv = 0;
- 		}
--	} else if (priv->mesh_fw_ver == MESH_FW_NEW) {
-+	} else
-+	if ((MRVL_FW_MAJOR_REV(priv->fwrelease) >= MRVL_FW_V10) &&
-+		(priv->fwcapinfo & MESH_CAPINFO_ENABLE_MASK)) {
- 		/* 10.0.0.pXX new firmwares should succeed with TLV
- 		 * 0x100+37; Do not invoke command with old TLV.
- 		 */
-@@ -227,6 +234,8 @@ int lbs_init_mesh(struct lbs_private *pr
- 				    priv->channel))
- 			priv->mesh_tlv = 0;
- 	}
-+
-+
- 	if (priv->mesh_tlv) {
- 		lbs_add_mesh(priv);
- 
-@@ -416,10 +425,10 @@ struct net_device *lbs_mesh_set_dev(stru
- 	struct net_device *dev, struct rxpd *rxpd)
+Cc: johannes@sipsolutions.net
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/debugfs_sta.c |   48 +++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 47 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index ae6a919..ab3397a 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -160,7 +160,12 @@ STA_OPS(agg_status);
+ static ssize_t sta_ht_capa_read(struct file *file, char __user *userbuf,
+ 				size_t count, loff_t *ppos)
  {
- 	if (priv->mesh_dev) {
--		if (priv->mesh_fw_ver == MESH_FW_OLD) {
-+		if (priv->mesh_tlv == TLV_TYPE_OLD_MESH_ID) {
- 			if (rxpd->rx_control & RxPD_MESH_FRAME)
- 				dev = priv->mesh_dev;
--		} else if (priv->mesh_fw_ver == MESH_FW_NEW) {
-+		} else if (priv->mesh_tlv == TLV_TYPE_MESH_ID) {
- 			if (rxpd->u.bss.bss_num == MESH_IFACE_ID)
- 				dev = priv->mesh_dev;
- 		}
-@@ -432,9 +441,9 @@ void lbs_mesh_set_txpd(struct lbs_privat
- 	struct net_device *dev, struct txpd *txpd)
- {
- 	if (dev == priv->mesh_dev) {
--		if (priv->mesh_fw_ver == MESH_FW_OLD)
-+		if (priv->mesh_tlv == TLV_TYPE_OLD_MESH_ID)
- 			txpd->tx_control |= cpu_to_le32(TxPD_MESH_FRAME);
--		else if (priv->mesh_fw_ver == MESH_FW_NEW)
-+		else if (priv->mesh_tlv == TLV_TYPE_MESH_ID)
- 			txpd->u.bss.bss_num = MESH_IFACE_ID;
- 	}
- }
-@@ -538,7 +547,7 @@ static int __lbs_mesh_config_send(struct
- 	 * Command id is 0xac for v10 FW along with mesh interface
- 	 * id in bits 14-13-12.
- 	 */
--	if (priv->mesh_fw_ver == MESH_FW_NEW)
-+	if (priv->mesh_tlv == TLV_TYPE_MESH_ID)
- 		command = CMD_MESH_CONFIG |
- 			  (MESH_IFACE_ID << MESH_IFACE_BIT_OFFSET);
- 
-
+-	char buf[200], *p = buf;
++#define PRINT_HT_CAP(_cond, _str) \
++	do { \
++	if (_cond) \
++			p += scnprintf(p, sizeof(buf)+buf-p, "\t" _str "\n"); \
++	} while (0)
++	char buf[1024], *p = buf;
+ 	int i;
+ 	struct sta_info *sta = file->private_data;
+ 	struct ieee80211_sta_ht_cap *htc = &sta->sta.ht_cap;
+@@ -169,6 +174,47 @@ static ssize_t sta_ht_capa_read(struct file *file, char __user *userbuf,
+ 			htc->ht_supported ? "" : "not ");
+ 	if (htc->ht_supported) {
+ 		p += scnprintf(p, sizeof(buf)+buf-p, "cap: %#.4x\n", htc->cap);
++
++		PRINT_HT_CAP((htc->cap & BIT(0)), "RX LDCP");
++		PRINT_HT_CAP((htc->cap & BIT(1)), "HT20/HT40");
++		PRINT_HT_CAP(!(htc->cap & BIT(1)), "HT20");
++
++		PRINT_HT_CAP(((htc->cap >> 2) & 0x3) == 0, "Static SM Power Save");
++		PRINT_HT_CAP(((htc->cap >> 2) & 0x3) == 1, "Dynamic SM Power Save");
++		PRINT_HT_CAP(((htc->cap >> 2) & 0x3) == 3, "SM Power Save disabled");
++
++		PRINT_HT_CAP((htc->cap & BIT(4)), "RX Greenfield");
++		PRINT_HT_CAP((htc->cap & BIT(5)), "RX HT20 SGI");
++		PRINT_HT_CAP((htc->cap & BIT(6)), "RX HT40 SGI");
++		PRINT_HT_CAP((htc->cap & BIT(7)), "TX STBC");
++
++		PRINT_HT_CAP(((htc->cap >> 8) & 0x3) == 0, "No RX STBC");
++		PRINT_HT_CAP(((htc->cap >> 8) & 0x3) == 1, "RX STBC 1-stream");
++		PRINT_HT_CAP(((htc->cap >> 8) & 0x3) == 2, "RX STBC 2-streams");
++		PRINT_HT_CAP(((htc->cap >> 8) & 0x3) == 3, "RX STBC 3-streams");
++
++		PRINT_HT_CAP((htc->cap & BIT(10)), "HT Delayed Block Ack");
++
++		PRINT_HT_CAP((htc->cap & BIT(11)), "Max AMSDU length: "
++			     "3839 bytes");
++		PRINT_HT_CAP(!(htc->cap & BIT(11)), "Max AMSDU length: "
++			     "7935 bytes");
++
++		/*
++		 * For beacons and probe response this would mean the BSS
++		 * does or does not allow the usage of DSSS/CCK HT40.
++		 * Otherwise it means the STA does or does not use
++		 * DSSS/CCK HT40.
++		 */
++		PRINT_HT_CAP((htc->cap & BIT(12)), "DSSS/CCK HT40");
++		PRINT_HT_CAP(!(htc->cap & BIT(12)), "No DSSS/CCK HT40");
++
++		/* BIT(13) is reserved */
++
++		PRINT_HT_CAP((htc->cap & BIT(14)), "40 MHz Intolerant");
++
++		PRINT_HT_CAP((htc->cap & BIT(15)), "L-SIG TXOP protection");
++
+ 		p += scnprintf(p, sizeof(buf)+buf-p, "ampdu factor/density: %d/%d\n",
+ 				htc->ampdu_factor, htc->ampdu_density);
+ 		p += scnprintf(p, sizeof(buf)+buf-p, "MCS mask:");
 -- 
-http://www.holgerschurig.de
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+1.6.3.3
 
--- 
