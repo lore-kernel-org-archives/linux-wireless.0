@@ -1,36 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:42437 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755386AbZLSBSC convert rfc822-to-8bit (ORCPT
+Received: from netrider.rowland.org ([192.131.102.5]:43349 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932788AbZLGCLg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2009 20:18:02 -0500
+	Sun, 6 Dec 2009 21:11:36 -0500
+Date: Sun, 6 Dec 2009 21:11:42 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Otavio Salvador <otavio@ossystems.com.br>
+cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	<linux-wireless@vger.kernel.org>,
+	Kernel development list <linux-kernel@vger.kernel.org>
+Subject: Re: REGRESSION for RT2561/RT61 in 2.6.32
+In-Reply-To: <be7a9f3d0912061422x5a0fd2f6ubd7add33472a8136@mail.gmail.com>
+Message-ID: <Pine.LNX.4.44L0.0912062111100.13023-100000@netrider.rowland.org>
 MIME-Version: 1.0
-In-Reply-To: <20091217125456.GA3860@atheros-laptop>
-References: <20091217125456.GA3860@atheros-laptop>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 18 Dec 2009 17:17:42 -0800
-Message-ID: <43e72e890912181717x26ded925w4ffd0c1fa02c42b1@mail.gmail.com>
-Subject: Re: [PATCH]compat-wireless:Fixed bluetooth modules compilation
-	issues.
-To: Bala Shanmugam <sbalashanmugam@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	mcgrof@bombadil.infradead.org,
-	Jothikumar Mothilal <Jothikumar.Mothilal@atheros.com>,
-	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 17, 2009 at 4:54 AM, Bala Shanmugam
-<sbalashanmugam@atheros.com> wrote:
-> Bluetooth modules in net/bluetooth were not compiled as
-> CONFIG macro in config.mk and Makefile are different.
->
-> Bluetooth modules has compilation issues as source code
-> is taken from linux-next.git tree.  Fixed the same.
->
->  Signed-off-by: Bala Shanmugam <sbalashanmugam@atheros.com>
+On Sun, 6 Dec 2009, Otavio Salvador wrote:
 
-Applied thanks.
+> Hello Alan,
+> 
+> On Sun, Dec 6, 2009 at 8:12 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> > When I use 2.6.32 (or indeed 2.6.32-rc1), it works fine up until the
+> > point where the wireless card is ifconfig'ed. �Then not long afterward
+> > (a few seconds to a minute) the system hangs.
+> 
+> Did you test it with 2.6.32? Since 2.6.32-rc1 many fixes has been done
+> into kernel and would be nice if you could test against current
+> kernel.
 
-  Luis
+The same thing happens with both 2.6.32-rc1 and 2.6.32.  But not with 
+2.6.31.
+
+Alan Stern
+
