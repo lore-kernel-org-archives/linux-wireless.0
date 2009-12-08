@@ -1,38 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:53633 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932560AbZLFJ6z (ORCPT
+Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:65349 "EHLO
+	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965722AbZLHVmY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2009 04:58:55 -0500
-Received: by fxm5 with SMTP id 5so3911074fxm.28
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Dec 2009 01:59:01 -0800 (PST)
-Date: Sun, 6 Dec 2009 10:49:07 +0100
-From: Richard Zidlicky <rz@linux-m68k.org>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: 2.6.31.[12] ath5k regression
-Message-ID: <20091206094907.GA6526@linux-m68k.org>
-References: <20090625083636.GA6323@linux-m68k.org> <20090705123105.GE2132@hash.localnet> <20091009143922.GA7848@linux-m68k.org> <20091010125824.GA18841@hash.localnet> <20091011122616.GA27105@linux-m68k.org> <20091011133010.GA21494@hash.localnet> <20091011220002.GA11603@linux-m68k.org> <20091011222142.M14763@bobcopeland.com> <20091012202316.GA8310@linux-m68k.org> <20091012235438.GA24539@hash.localnet>
+	Tue, 8 Dec 2009 16:42:24 -0500
+Message-ID: <4B1EC842.7040407@gmail.com>
+Date: Tue, 08 Dec 2009 22:42:26 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091012235438.GA24539@hash.localnet>
+To: Andi Kleen <andi@firstfloor.org>
+CC: Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	linux-wireless@vger.kernel.org, Tim Blechmann <tim@klingt.org>,
+	rjw@sisk.pl, IvDoorn@gmail.com, linville@tuxdriver.com
+Subject: Re: regression: rt2561 frequent "Arrived at non-free entry" errors
+ in 	2.6.32
+References: <20091204233202.GA13658@basil.fritz.box> <4B1BB44E.90706@gmail.com>	 <200912080006.28892.s.L-H@gmx.de>	 <20091208095755.GT18989@one.firstfloor.org> <14add3d10912080219u17c65cbemf6d56290a8f12efd@mail.gmail.com>
+In-Reply-To: <14add3d10912080219u17c65cbemf6d56290a8f12efd@mail.gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------070108010107060809070206"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This is a multi-part message in MIME format.
+--------------070108010107060809070206
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-small update, it appears to work very nicely in 2.6.32. No idea what really
-caused it, or what fixed it in the end.
+On 12/08/09 11:19, Gertjan van Wingerde wrote:
+> On Tue, Dec 8, 2009 at 10:57 AM, Andi Kleen <andi@firstfloor.org> wrote:
+>>> This patch doesn't seem to change this particular issue, disabling
+>>> powersaving however makes rt62pci work again.
+>>
+>> Yes confirmed here. Haven't seen it in a day or so with disabled power
+>> saving.
+>>
+>> However I haven't tried the patch with power saving enabled.
+> 
+> OK.
+> I think Stefan said that the patch didn't help for this issue.
+> 
+> However, I've got an other hunch (based on the Ralink driver). Maybe
+> we shouldn't go to sleep when still TX entries are present. I'll cook
+> up a patch tonight.
+> 
 
-Richard
+OK. Please try again with the attached patch. Basically it disables going
+to sleep when there are still unacknowledged frames in the TX queues.
+This mirrors the behavior of the Ralink provided drivers.
 
-On Mon, Oct 12, 2009 at 07:54:38PM -0400, Bob Copeland wrote:
-> On Mon, Oct 12, 2009 at 10:23:16PM +0200, Richard Zidlicky wrote:
-> > it works like in mainline and fails.
-> 
-> Huh, well it should be equivalent to your patch, so I'm stumped
-> as to why.
-> 
-> -- 
-> Bob Copeland %% www.bobcopeland.com
-> 
+---
+Gertjan.
+
+--------------070108010107060809070206
+Content-Type: text/plain;
+ name="2.6.32-powersave-fix.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="2.6.32-powersave-fix.diff"
+
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 687e17d..77b2575 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -947,9 +947,17 @@ static void rt61pci_config_ps(struct rt2x00_dev *rt2x00dev,
+ 	enum dev_state state =
+ 	    (libconf->conf->flags & IEEE80211_CONF_PS) ?
+ 		STATE_SLEEP : STATE_AWAKE;
++	struct data_queue *queue;
+ 	u32 reg;
+ 
+ 	if (state == STATE_SLEEP) {
++		/*
++		 * Don't go to sleep when the TX queues aren't empty.
++		 */
++		tx_queue_for_each(rt2x00dev, queue)
++			if (!rt2x00queue_empty(queue)) {
++				return;
++
+ 		rt2x00pci_register_read(rt2x00dev, MAC_CSR11, &reg);
+ 		rt2x00_set_field32(&reg, MAC_CSR11_DELAY_AFTER_TBCN,
+ 				   rt2x00dev->beacon_int - 10);
+
+--------------070108010107060809070206--
