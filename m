@@ -1,69 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f209.google.com ([209.85.219.209]:59002 "EHLO
-	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932411AbZLHQId (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 11:08:33 -0500
-Received: by ewy1 with SMTP id 1so2925915ewy.28
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2009 08:08:39 -0800 (PST)
-Date: Tue, 8 Dec 2009 18:08:43 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@Atheros.com>
-Subject: Re: signed vs unsigned bug in ath9k
-Message-ID: <20091208160843.GB28661@bicker>
-References: <20091207110736.GA1338@bicker> <20091207155542.GB19643@tux> <20091208082031.GA29753@bicker> <20091208144209.GC15172@tuxdriver.com>
+Received: from web23105.mail.ird.yahoo.com ([217.146.189.45]:22510 "HELO
+	web23105.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S966675AbZLHWS1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Dec 2009 17:18:27 -0500
+Message-ID: <685962.23975.qm@web23105.mail.ird.yahoo.com>
+Date: Tue, 8 Dec 2009 22:18:32 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [RFC/RFT] rtl8187: Fix 'queuing ieee80211 work while going to suspend' warning
+To: Michael Buesch <mb@bu3sch.de>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200912081341.20682.herton@mandriva.com.br>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091208144209.GC15172@tuxdriver.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 08, 2009 at 09:42:10AM -0500, John W. Linville wrote:
-> On Tue, Dec 08, 2009 at 10:20:32AM +0200, Dan Carpenter wrote:
-> > On Mon, Dec 07, 2009 at 07:55:42AM -0800, Luis R. Rodriguez wrote:
-> > > On Mon, Dec 07, 2009 at 03:07:36AM -0800, Dan Carpenter wrote:
-> > > > drivers/net/wireless/ath/ath9k/recv.c
-> > > >    205          sta = ieee80211_find_sta(sc->hw, hdr->addr2);
-> > > >    206          if (sta) {
-> > > >    207                  an = (struct ath_node *) sta->drv_priv;
-> > > >    208                  if (ds->ds_rxstat.rs_rssi != ATH9K_RSSI_BAD &&
-> > > > 
-> > > > ds->ds_rxstat.rs_rssi is a signed 8 bit so it will never be == ATH9K_RSSI_BAD.
-> > > 
-> > > ATH9K_RSSI_BAD is -128 and the minimum value for int8_t is -128 so why is it a bug?
-> > > 
-> > 
-> > It could be that someone fixed this already in the net tree?  In mainline it's still
-> > positive 128.
-> > 
-> > #define ATH9K_RSSI_BAD                  0x80
+--- On Tue, 8/12/09, Herton Ronaldo Krzesinski <herton@mandriva.com.br> wrote:
+
+
+> The problem here is not simple: we have leds code
+> triggering work and mac80211 
+> scheduling led tx work even after radio led stop on device
+> shutdown:
+> - On unregistering led device, even after mac80211 did the
+> work to turn off the 
+> led, the unregister code of led subsystem calls again
+> led_brightness_set to 
+> turn off the led, which causes the original warning without
+> suspend/resume 
+> hooks (also in leds_exit code we were scheduling work which
+> triggered more 
+> warnings).
+> - When I was testing, sometimes mac80211 on device shutdown
+> (modprobe -r) 
+> wasn't calling led stop code in the right order, so
+> sometimes after removing 
+> module the led was kept turned on (scheduling led tx code
+> after led radio off). 
+> This happens because ieee80211_tx_status can call
+> ieee80211_led_tx after 
+> mac80211 calls ieee80211_led_radio to turn the led off, and
+> as we are 
+> "emulating" a radio led (we have only one real led to
+> signal radio and tx/rx, 
+> no differentiation on hardware) we are affected by this.
 > 
-> I queued a patch to fix that for 2.6.33.
-> 
+> So besides registering the radio led, I had to add that
+> radio_on variable 
+> check on last patch, to handle these two problems. The
+> patch worked, but Larry 
+> reported a crash, I'll try to review it more and see what
+> could cause a crash 
+> on removal, may be some delayed_work related thing missing,
+> unfortunately I'm 
+> a bit busy here since then, but will try to get to it
+> soon.
 
-Grand.  Sorry for the noise.  We static checker people are all finding the same
-bugs...
+Sorry I haven't been paying too much attention due to other commitments... that sounds like race condition somewhere. Besides adding flag variables, would mutex help?
 
-I have been trying to buy enough wifi cards to download the latest git, but 
-apparently the English gentleman who generates them has been on a week
-long drinking binge.  I have been here asking about it on five days out of the 
-last seven...  :/
 
-regards,
-dan carpenter
-
-> Hth!
-> 
-> John
-> -- 
-> John W. Linville		Someday the world will need a hero, and you
-> linville@tuxdriver.com			might be all we have.  Be ready.
+      
