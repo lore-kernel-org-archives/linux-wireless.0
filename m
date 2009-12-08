@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:60643 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753028AbZLEIcZ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56699 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966427AbZLHWkn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Dec 2009 03:32:25 -0500
-Received: by ewy19 with SMTP id 19so3718567ewy.1
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Dec 2009 00:32:30 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH] rt2x00: Fix trimming of L2 padded frames.
-Date: Sat, 5 Dec 2009 09:32:27 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Benoit Papillault <benoit.papillault@free.fr>,
-	John Linville <linville@tuxdriver.com>
-References: <1259962577-25135-1-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1259962577-25135-1-git-send-email-gwingerde@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200912050932.27897.IvDoorn@gmail.com>
+	Tue, 8 Dec 2009 17:40:43 -0500
+Subject: Re: regression: rt2561 frequent "Arrived at non-free entry" errors
+ in  	2.6.32
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefan Lippers-Hollmann <s.L-H@gmx.de>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	Andi Kleen <andi@firstfloor.org>,
+	linux-wireless@vger.kernel.org, Tim Blechmann <tim@klingt.org>,
+	rjw@sisk.pl, IvDoorn@gmail.com, linville@tuxdriver.com
+In-Reply-To: <200912082339.16893.s.L-H@gmx.de>
+References: <20091204233202.GA13658@basil.fritz.box>
+	 <14add3d10912080219u17c65cbemf6d56290a8f12efd@mail.gmail.com>
+	 <4B1EC842.7040407@gmail.com>  <200912082339.16893.s.L-H@gmx.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-z5dnqBiUlFmb964lFFfZ"
+Date: Tue, 08 Dec 2009 23:40:16 +0100
+Message-ID: <1260312016.32227.6.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 04 December 2009, Gertjan van Wingerde wrote:
-> Ensure that frames without payload are properly trimmed in
-> rt2x00queue_insert_l2pad.
-> 
-> This should fix the bug reported by Benoit Papillault in:
-> http://marc.info/?l=linux-wireless&m=125974773006734&w=2
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+--=-z5dnqBiUlFmb964lFFfZ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00queue.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> index 7452fa8..3d8fb68 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> @@ -180,7 +180,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
->  	unsigned int payload_length = skb->len - header_length;
->  	unsigned int header_align = ALIGN_SIZE(skb, 0);
->  	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
-> -	unsigned int l2pad = L2PAD_SIZE(header_length);
-> +	unsigned int l2pad = payload_length ? L2PAD_SIZE(header_length) : 0;
->  
->  	/*
->  	 * Adjust the header alignment if the payload needs to be moved more
+On Tue, 2009-12-08 at 23:39 +0100, Stefan Lippers-Hollmann wrote:
 
+> Unfortunately this fails to compile for me:
+
+well remove the spurious opening brace? :)
+
+johannes
+
+--=-z5dnqBiUlFmb964lFFfZ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLHtXMAAoJEODzc/N7+QmatwUP/iYxIjaTdx9BayzTmUU/zY7E
+9MuF16wA3G3EYpuk1X4/hQwGra/jZjI/ZKM041jMIQNIanMuYQMnh9FoP+WYyFwg
+CDdBnj7hrnxjJ6h7e42mAaj1qJHCkezbsX8VZf2KcTz7b9IUGJ4NZ5GHhK0LlJdI
+te5XBoFc6PCxs5qB6yoMZ8t4vBhF76r7/lBOrWl5hy7l3+SD7KKwqXLjjnHpDC43
+HhR5CiuJdZ24fHOkoLTEyME7tE5s/d/50he/7l16DYKUpFLWAdplmPN4OZGH/zkh
+qQu8el9cxkqW5jNq5ZdtvFB+fLUox3X0/Qwo6nkaFOXiStmsqaNWXwy/055mqk0C
+eDUtj5LhiI9o5ZY9hF+za09C+yPiz/07WmDUF1fkbRy+WhZspzrbFTAJr/HcXiIJ
+PAAVho/6FGRdHPZ16xuPCVar4/IHDcYa79jZ/Ilgqkwi3GqeUsmXFfELbllGIIBr
+Wxek0Ll9QK8bMpBq/yjc5u/gWdReuuauLUfKDD+IrrXRWgTwN5+z/+iPJlCzTer/
+L+O/wVc5vHNeS4cAjprZVpNA40f5zmNyxJXQdtjzUdBzGwT6CS57xsZsCvFDFlID
+tPAWIdkBl7EkFlyhKhSJArsWr6WXPJDj3x0Tj3poB+xfO1+Fxq6gBwzX7PQKBgMt
+0ZJdCw7A6usfmymgQNuO
+=q1Mo
+-----END PGP SIGNATURE-----
+
+--=-z5dnqBiUlFmb964lFFfZ--
 
