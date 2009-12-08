@@ -1,30 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:55066
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751307AbZLXFwV (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:62501 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755310AbZLHOWB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2009 00:52:21 -0500
-Date: Wed, 23 Dec 2009 21:52:21 -0800 (PST)
-Message-Id: <20091223.215221.191412308.davem@davemloft.net>
-To: yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: iwlwifi
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1261633567.6037.1.camel@debian>
-References: <20091223.210818.02262058.davem@davemloft.net>
-	<1261633567.6037.1.camel@debian>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 8 Dec 2009 09:22:01 -0500
+From: Stefan Seyfried <stefan.seyfried@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Stefan Seyfried <seife@sphairon.com>
+Subject: [PATCH 2/2] zd1211rw: improve ejecting of fake CDROM
+Date: Tue,  8 Dec 2009 15:21:35 +0100
+Message-Id: <1260282095-17042-3-git-send-email-stefan.seyfried@googlemail.com>
+In-Reply-To: <1260282095-17042-2-git-send-email-stefan.seyfried@googlemail.com>
+References: <1260282095-17042-1-git-send-email-stefan.seyfried@googlemail.com>
+ <1260282095-17042-2-git-send-email-stefan.seyfried@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhu Yi <yi.zhu@intel.com>
-Date: Thu, 24 Dec 2009 13:46:07 +0800
+From: Stefan Seyfried <seife@sphairon.com>
 
-> I'm trying allmodconfig on wireless-testing now. It takes some time to
-> finish make. But a simple running "make M=drivers/net/wireless/" twice
-> doesn't show this issue.
-> 
+The zd1211rw always assumed that the storage device is at endpoint 1,
+but there are devices (Spairon Homelink 1202) that are at endpoint 0.
+Try both, starting with 1 to make sure to not break existing setups.
 
-It's the include of generated/utsrelease.h by iwl-core.h that causes
-the rebuild.
+Signed-off-by: Stefan Seyfried <seife@sphairon.com>
+---
+ drivers/net/wireless/zd1211rw/zd_usb.c |   14 +++++++++-----
+ 1 files changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
+index ac19ecd..4daf1c9 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -1078,11 +1078,15 @@ static int eject_installer(struct usb_interface *intf)
+ 	int r;
+ 
+ 	/* Find bulk out endpoint */
+-	endpoint = &iface_desc->endpoint[1].desc;
+-	if (usb_endpoint_dir_out(endpoint) &&
+-	    usb_endpoint_xfer_bulk(endpoint)) {
+-		bulk_out_ep = endpoint->bEndpointAddress;
+-	} else {
++	for (r = 1; r >= 0; r--) {
++		endpoint = &iface_desc->endpoint[r].desc;
++		if (usb_endpoint_dir_out(endpoint) &&
++		    usb_endpoint_xfer_bulk(endpoint)) {
++			bulk_out_ep = endpoint->bEndpointAddress;
++			break;
++		}
++	}
++	if (r == -1) {
+ 		dev_err(&udev->dev,
+ 			"zd1211rw: Could not find bulk out endpoint\n");
+ 		return -ENODEV;
+-- 
+1.6.5.3
+
