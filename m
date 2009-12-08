@@ -1,79 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:59795 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757472AbZLDUtT (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:37916 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754334AbZLHSuo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Dec 2009 15:49:19 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so692264eyd.19
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Dec 2009 12:49:24 -0800 (PST)
-To: Jason Young <a.young.jason@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3 0/2] mac80211: add U-APSD client support
-References: <16a81f890912031225g888490y2e8ff92557a322b7@mail.gmail.com>
-	<87ocmf545m.fsf@purkki.valot.fi>
-	<16a81f890912041102l7bcce84eg7a8f80ff5ff341f2@mail.gmail.com>
-	<16a81f890912041105y40772ee0sc5854d6354a7e90b@mail.gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 04 Dec 2009 22:49:22 +0200
-In-Reply-To: <16a81f890912041105y40772ee0sc5854d6354a7e90b@mail.gmail.com> (Jason Young's message of "Fri\, 4 Dec 2009 11\:05\:03 -0800")
-Message-ID: <874oo65ust.fsf@purkki.valot.fi>
+	Tue, 8 Dec 2009 13:50:44 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091208104336.3d5a7fb4@nehalam>
+References: <20091207172616.7470ed2b@nehalam> <20091208142940.GB15172@tuxdriver.com>
+	<20091208104336.3d5a7fb4@nehalam>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 8 Dec 2009 10:50:30 -0800
+Message-ID: <43e72e890912081050w265bcbc1sd1380ef52fc0799b@mail.gmail.com>
+Subject: Re: wireless device and udev
+To: Stephen Hemminger <shemminger@vyatta.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-hotplug@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jason Young <a.young.jason@gmail.com> writes:
-
-> On Fri, Dec 4, 2009 at 4:12 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
->> I decided to drop Admission Control for now because I didn't see any
->> real use case for it. And if we would like to utilise it properly, we
->> would need to have properly supported user space interface. I think we
->> are not ready for that quite yet.
->>
+On Tue, Dec 8, 2009 at 10:43 AM, Stephen Hemminger
+<shemminger@vyatta.com> wrote:
+> On Tue, 8 Dec 2009 09:29:40 -0500
+> "John W. Linville" <linville@tuxdriver.com> wrote:
 >
-> There are real use cases for WMMAC, particularly in enterprise
-> environments but I don't want to get into that discussion just yet,
-> first things first :)
-
-A very good idea, otherwise we will spending the new year's eve still
-planning about this :)
-
-Let's first get the basic functionality in and then start adding more
-features.
-
-> I just wanted it to be noted somewhere in the discussion of this
-> proposal that U-APSD can, in theory at least, be configured as
-> trigger or delivery only. Some hardware may be implemented to allow
-> trigger/delivery only configuration. In such cases, the driver will
-> need to update both the trigger and delivery state based on the
-> uapsd boolean parameter.
-
-Yes, we need to take this into account in the future.
-
->> Thanks, I wasn't aware of this. Yes, adding the debugfs interface back
->> makes sense now. But can you describe a bit more how you would like to
->> use the debugfs interface? I would like to understand about your needs
->> a bit more.
+>> On Mon, Dec 07, 2009 at 05:26:16PM -0800, Stephen Hemminger wrote:
+>> > The default udev persistent network rules based on hardware mac id doesn't
+>> > work well when multiple SSID's are created on an access-point.  The command
+>> >  iw phy phy0 interface add wlan1 type managed
+>> >
+>> > is supposed to make a device name wlan1, but udev sees that it has the same
+>> > mac address as wlan0 and gets confused leaving the device named wlan1_rename
+>> >
+>> > It looks like wlanX is breaking assumptions of existing udev persistent network
+>> > device name generation rules.  Perhaps there needs to be special case for wlanX
+>> > devices?
 >>
->> I also need to find the certification test plan and read it myself.
+>> Yes, probably so.  But what would it be?  Factoring-in SSID is clearly
+>> not right for the usual case (i.e. one interface on a mobile device).
+>> I'm not sure what else one could use as a key.
+>>
+>> What does udev do for bridge, bond, or vlan devices?  Don't those
+>> share MAC addresses with the underlying physical device?
+>>
+>> John
 >
-> Section 2.8.1 of the "WMM Power Save Test Plan Version 1.5" describes
-> the basic station requirements. Section 5 describes the station
-> specific tests.
+> At least on ubuntu/debian the name whitelist is:
+>
+>
+> # device name whitelist
+> KERNEL!="eth*|ath*|wlan*[0-9]|msh*|ra*|sta*|ctc*|lcs*|hsi*", GOTO="persistent_net_generator_end"
+>
+> So bond or bridge don't match and don't get tampered with.
+>
+> The problem is that wlan* device names are used for both hardware and virtual
+> devices.  Udev scripts can be fixed "do the right thing" but there is not sufficient
+> information for the script to decide how to attach persistent name.
+> What values from sysfs (ie attributes) should script be using?  This probably
+> means that additional attributes needed to be added to wireless device infrastructure
+> in kernel.
 
-Thanks for the pointers, I'll read them next week.
+We could likely use the new SET_NETDEV_DEVTYPE() but I have yet to see
+where this is exported. It must be there somewhere.
 
-> I would like to be able to set the uapsd configuration of each AC
-> independently, as well as the Max SP length. Basically, the bits that
-> get used in the qosinfo field during association. Because this should
-> just be used for testing or until we add a real userspace API, I'm
-> fine with requiring the user to manually reconnect to have new U-APSD
-> configuration adopted.
-
-Makes sense. I'll include this functionality in my next version of the
-patches which I hope to send early next week.
-
-Thank you again for good comments.
-
--- 
-Kalle Valo
+  Luis
