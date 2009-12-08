@@ -1,85 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:53828 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754974AbZLDMMf (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:59225 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753126AbZLHKTB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Dec 2009 07:12:35 -0500
-Received: by bwz27 with SMTP id 27so1887138bwz.21
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Dec 2009 04:12:41 -0800 (PST)
-To: Jason Young <a.young.jason@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3 0/2] mac80211: add U-APSD client support
-References: <16a81f890912031225g888490y2e8ff92557a322b7@mail.gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 04 Dec 2009 14:12:37 +0200
-In-Reply-To: <16a81f890912031225g888490y2e8ff92557a322b7@mail.gmail.com> (Jason Young's message of "Thu\, 3 Dec 2009 12\:25\:20 -0800")
-Message-ID: <87ocmf545m.fsf@purkki.valot.fi>
+	Tue, 8 Dec 2009 05:19:01 -0500
+Received: by yxe17 with SMTP id 17so4775680yxe.33
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2009 02:19:07 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091208095755.GT18989@one.firstfloor.org>
+References: <20091204233202.GA13658@basil.fritz.box> <4B1BB44E.90706@gmail.com>
+	 <200912080006.28892.s.L-H@gmx.de>
+	 <20091208095755.GT18989@one.firstfloor.org>
+Date: Tue, 8 Dec 2009 11:19:07 +0100
+Message-ID: <14add3d10912080219u17c65cbemf6d56290a8f12efd@mail.gmail.com>
+Subject: Re: regression: rt2561 frequent "Arrived at non-free entry" errors in
+	2.6.32
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Andi Kleen <andi@firstfloor.org>
+Cc: Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	linux-wireless@vger.kernel.org, Tim Blechmann <tim@klingt.org>,
+	rjw@sisk.pl, IvDoorn@gmail.com, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jason Young <a.young.jason@gmail.com> writes:
-
-> Hi,
-
-Hello,
-
->>> here is my proposal how to add U-APSD client support to mac80211. I also
->>> included example driver implementation for wl1251.
->>>
->>> Please comment. Also I would like to get comments how U-APSD needs to be
->>> implemented in different hardware.
+On Tue, Dec 8, 2009 at 10:57 AM, Andi Kleen <andi@firstfloor.org> wrote:
+>> This patch doesn't seem to change this particular issue, disabling
+>> powersaving however makes rt62pci work again.
 >
-> WMM Admission Control allows queues to be configured as trigger-only
-> and deliver-only via mgmt action frames. If this feature is ever
-> added to mac80211 we may need to make trigger-enabled and
-> deliver-enabled per queue configuration explicit rather than a
-> single boolean value per access category. Being as there is no way
-> to configure an access category trigger-only or deliver-only outside
-> of admission control, we don't need to worry about this problem
-> right now.
-
-I decided to drop Admission Control for now because I didn't see any
-real use case for it. And if we would like to utilise it properly, we
-would need to have properly supported user space interface. I think we
-are not ready for that quite yet.
-
-> We will want runtime time configuration of u-apsd because its is
-> necessary for station's 'WMM Power Save' certification. Recompiling
-> mac80211 for the various uapsd configurations is a bit heavy-handed.
-> I'd like to see debugfs support added back back for now its
-> primarily a testing issue anyway.
-
-Thanks, I wasn't aware of this. Yes, adding the debugfs interface back
-makes sense now. But can you describe a bit more how you would like to
-use the debugfs interface? I would like to understand about your needs
-a bit more.
-
-I also need to find the certification test plan and read it myself.
-
->>> - add max SP length defines to ieee80211.h
+> Yes confirmed here. Haven't seen it in a day or so with disabled power
+> saving.
 >
-> The bit values for IEEE80211_WMM_IE_STA_SP_XXX are not correct. The
-> Max SP Length subfield settings table in 7.3.1.17 has the least
-> significant bit listed first.
+> However I haven't tried the patch with power saving enabled.
 
-Oh, I missed that entirely. And I was even thinking why the order
-looked so weird (0, 2, 1, 3), I should have checked that. Thank you
-for noticing this.
+OK.
+I think Stefan said that the patch didn't help for this issue.
 
->>> v2:
->>> - remove cfg80211 changes
->>> - rename IEEE80211_QOS_IE to IEEE80211_WMM_IE_STA in ieee80211.h
->
-> I would rename IEEE80211_WMM_IE_STA_XXX defines to something like
-> IEEE80211_STA_QOSINFO_XXX to make it clear that bit values are used in the
-> context of the qosinfo field octet.
+However, I've got an other hunch (based on the Ralink driver). Maybe
+we shouldn't go to sleep when still TX entries are present. I'll cook
+up a patch tonight.
 
-Good point. Is IEEE80211_WMM_IE_STA_QOSINFO_AC_VO clear enough? At
-least it's long enough :)
-
-Thank you for the comments, I appreciate them.
-
--- 
-Kalle Valo
+---
+Gertjan.
