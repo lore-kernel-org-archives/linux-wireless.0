@@ -1,57 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:36275 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759047AbZLPQvy (ORCPT
+Received: from mail-ew0-f209.google.com ([209.85.219.209]:42763 "EHLO
+	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751329AbZLHHVH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2009 11:51:54 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: greg@kroah.com, stable@kernel.org
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 4/5] ath9k: fix tx status reporting
-Date: Wed, 16 Dec 2009 11:51:44 -0500
-Message-Id: <1260982305-32244-5-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1260982305-32244-1-git-send-email-lrodriguez@atheros.com>
-References: <1260982305-32244-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 8 Dec 2009 02:21:07 -0500
+Received: by ewy1 with SMTP id 1so2367372ewy.28
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Dec 2009 23:21:12 -0800 (PST)
+To: Jason Young <a.young.jason@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 0/2] mac80211: add U-APSD client support
+References: <16a81f890912031225g888490y2e8ff92557a322b7@mail.gmail.com>
+	<1260096442.3461.3.camel@johannes.local>
+	<87my1v3sum.fsf@purkki.valot.fi>
+	<16a81f890912071225v2a1e603cy18afdd9b652903a1@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 08 Dec 2009 09:12:49 +0200
+In-Reply-To: <16a81f890912071225v2a1e603cy18afdd9b652903a1@mail.gmail.com> (Jason Young's message of "Mon\, 7 Dec 2009 12\:25\:36 -0800")
+Message-ID: <87638i3pn2.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+Jason Young <a.young.jason@gmail.com> writes:
 
-This patch fixes a bug in ath9k's tx status check, which
-caused mac80211 to consider regularly transmitted unicast frames
-as un-acked.
+> On Mon, Dec 7, 2009 at 3:51 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
+>> Johannes Berg <johannes@sipsolutions.net> writes:
+>>
+>>>> #define IEEE80211_WMM_IE_STA_SP_ALL  (0<<5)
+>>>> #define IEEE80211_WMM_IE_STA_SP_2     (1<<5)  /* or (BIT(5)) */
+>>>> #define IEEE80211_WMM_IE_STA_SP_4     (2<<5)  /* or (BIT(6)) */
+>>>> #define IEEE80211_WMM_IE_STA_SP_6     (3<<5)  /* or (BIT(5) | BIT(6)) */
+>>>
+>>> Can somebody clarify for me which part of this stuff is WMM, and which
+>>> is "real" 802.11 QoS?
+>
+> Though this patch adds support for WMM Power Save, these defines will
+> work for WMM and "real" 802.11 QoS.
 
-When checking the ts_status field for errors, it needs to be masked
-with ATH9K_TXERR_FILT, because this field also contains other fields
-like ATH9K_TX_ACKED.
+Yes, I agree now.
 
-Without this patch, AP mode is pretty much unusable, as hostapd
-checks the ACK status for the frames that it injects.
+>> I took a quick peek of the 802.11-2007 QoS part. My observation was
+>> that the terms are the same, but that's about it. For example QoS Info
+>> field is reversed, APSD capability is advertised through beacon
+>> capability bits and naturally there are proper ids for IEs.
+>
+> The QoS info field itself is not reversed, the figure is just reversed.
 
-This is a backport of upstream commit:
+Doh, I was reading it incorrectly in "IETF mode". Thank you for
+correcting me.
 
-e8c6342d989e241513baeba4b05a04b6b1f3bc8b
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index e78bd57..4753909 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2020,7 +2020,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 		if (bf_isaggr(bf))
- 			txq->axq_aggr_depth--;
- 
--		txok = (ds->ds_txstat.ts_status == 0);
-+		txok = !(ds->ds_txstat.ts_status & ATH9K_TXERR_FILT);
- 		txq->axq_tx_inprogress = false;
- 		spin_unlock_bh(&txq->axq_lock);
- 
 -- 
-1.6.3.3
-
+Kalle Valo
