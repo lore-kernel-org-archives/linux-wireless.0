@@ -1,27 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vms173019pub.verizon.net ([206.46.173.19]:35518 "EHLO
-	vms173019pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760022AbZLJFBJ (ORCPT
+Received: from mail-ew0-f209.google.com ([209.85.219.209]:37558 "EHLO
+	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751832AbZLHHg1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2009 00:01:09 -0500
-Date: Thu, 10 Dec 2009 00:01:14 -0500 (EST)
-From: Len Brown <lenb@kernel.org>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Cc: mjg@redhat.com, marcel@holtmann.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/5] dell-laptop: fix rfkill memory leak on unload and
- failure paths
-In-reply-to: <1250690811-21203-2-git-send-email-alan-jenkins@tuffmail.co.uk>
-Message-id: <alpine.LFD.2.00.0912100001090.24891@localhost.localdomain>
-References: <4A8C0623.8030808@tuffmail.co.uk>
- <1250690811-21203-2-git-send-email-alan-jenkins@tuffmail.co.uk>
-MIME-version: 1.0
-Content-type: TEXT/PLAIN; charset=US-ASCII
+	Tue, 8 Dec 2009 02:36:27 -0500
+Received: by ewy1 with SMTP id 1so2377835ewy.28
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Dec 2009 23:36:33 -0800 (PST)
+To: Jason Andryuk <jandryuk@gmail.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: cfg80211 connect for at76c50x-usb
+References: <c4d76b3b0912071955y25c31a11m104d9c4723ef578d@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 08 Dec 2009 09:36:31 +0200
+In-Reply-To: <c4d76b3b0912071955y25c31a11m104d9c4723ef578d@mail.gmail.com> (Jason Andryuk's message of "Mon\, 7 Dec 2009 22\:55\:26 -0500")
+Message-ID: <87ws0x3ojk.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-applied
+Jason Andryuk <jandryuk@gmail.com> writes:
 
-thanks,
-Len Brown, Intel Open Source Technology Center
+Hi Jason,
 
+> I am unable to connect to my AP with at76c50x-usb.  I believe the
+> cause is at76c50x-usb and mac80211 trying to send separate auth and
+> assoc packets to an AP.  Unfortunately the packets for these commands,
+> while sent over USB to the device, are not actually transmitted.  My
+> understanding is prior to joining a network, packet transmission is
+> block.  However, there is a USB command, CMD_JOIN, for connecting to
+> wireless networks.
+
+I actually think that the problem is because of missing bssid. I
+recall that when I was, a long time ago, porting at76 to mac80211
+CMD_JOIN didn't work unless I used the correct bssid. I tried to find
+a workaround, for example all zeros or all 0xffs bssid, but no luck.
+So I had to make an ugly hack that uses CMD_SCAN if the bssid is not
+set and CMD_JOIN otherwise.
+
+If you have the time, you could test my theory by hardcoding the bssid
+for CMD_JOIN. Alternatively you could try Luciano Coelho's oper_bssid
+patches from a month back.
+
+-- 
+Kalle Valo
