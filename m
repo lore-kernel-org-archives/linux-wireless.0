@@ -1,103 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:55158 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750917AbZLVFZy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2009 00:25:54 -0500
-Subject: Re: [BISECTED] [PATCH v2 8/8] rt2x00: Properly request tx headroom
- for alignment operations.
-From: Pavel Roskin <proski@gnu.org>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Markus Baier <Markus_Baier@web.de>, linux-wireless@vger.kernel.org
-In-Reply-To: <4B2FA1CF.1010903@gmail.com>
-References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com>
-	 <1259012694-14869-2-git-send-email-gwingerde@gmail.com>
-	 <1259012694-14869-3-git-send-email-gwingerde@gmail.com>
-	 <1259012694-14869-4-git-send-email-gwingerde@gmail.com>
-	 <1259012694-14869-5-git-send-email-gwingerde@gmail.com>
-	 <1259012694-14869-6-git-send-email-gwingerde@gmail.com>
-	 <1259012694-14869-7-git-send-email-gwingerde@gmail.com>
-	 <1259012694-14869-8-git-send-email-gwingerde@gmail.com>
-	 <1259012694-14869-9-git-send-email-gwingerde@gmail.com>
-	 <loom.20091220T163829-137@post.gmane.org> <4B2E8729.7050501@gmail.com>
-	 <20091221013316.nm9belnhywwwsc0w-cebfxv@webmail.spamcop.net>
-	 <4B2FA1CF.1010903@gmail.com>
-Content-Type: text/plain
-Date: Tue, 22 Dec 2009 00:25:49 -0500
-Message-Id: <1261459549.31982.2.camel@ct>
-Mime-Version: 1.0
+Received: from perninha.conectiva.com.br ([200.140.247.100]:45730 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966166AbZLHU5u convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Dec 2009 15:57:50 -0500
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC/RFT] rtl8187: Fix 'queuing ieee80211 work while going to suspend' warning
+Date: Tue, 8 Dec 2009 18:57:49 -0200
+Cc: Michael Buesch <mb@bu3sch.de>,
+	John W Linville <linville@tuxdriver.com>,
+	"Hin-Tak Leung" <htl10@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+References: <4b1db502./oHzXA5LInBxxQjb%Larry.Finger@lwfinger.net> <200912081341.20682.herton@mandriva.com.br> <4B1EB43B.8090806@lwfinger.net>
+In-Reply-To: <4B1EB43B.8090806@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200912081857.49661.herton@mandriva.com.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Gertjan van Wingerde <gwingerde@gmail.com>:
+Em Ter 08 Dez 2009, às 18:16:59, Larry Finger escreveu:
+> On 12/08/2009 09:41 AM, Herton Ronaldo Krzesinski wrote:
+> > That's why in my last patch I added code to register the radio led, we
+> > have to go that way to fix properly the issue (also this way we turn the
+> > led on/off only when mac80211 wants it, which is the right way), so we
+> > can avoid having to place code in start/stop or creating suspend/resume
+> > hooks only because the issue.
+> 
+> I do not understand the reason for adding another LED device, nor why
+> you think it helps. When I added the LED code, I wanted to get the LED
+> to indicate that there was I/O activity, which is why I chose the TX
+> and RX LEDs. Choosing "on" as the default state when there was no
+> activity and blinking it "off" with I/O seems to give exactly the
+> right behavior. Unfortunately, the asynchronous behavior of the USB
+> operations makes it very tricky to get the shutdown right.
 
->> Perhaps non-zero headroom is not handled correctly?
->>
->
-> Hmmm, perhaps the problem is that the headroom is not a multiple of 4.
-> Can you check what happens when you set the extra_tx_headroom fixed  
-> to e.g. 20?
+It's because without registering a radio led the current behaviour is wrong 
+for some cases, the led stays on when it shouldn't. For example, if you bring 
+the interface down (ifconfig <if> down) the led stays on, when it shouldn't. 
+The led should only be active while interface is active, between start and 
+stop (or in other words, the radio is on). After mac80211 stops the device, 
+any i/o (led activity) shouldn't happen.
 
-I tried 64 and 2, and neither worked.  rt2x00dev->ops->extra_tx_headroom
-is 0 for me.  When the rt2x00dev->hw->extra_tx_headroom is 2, I observed
-invalid packets being emitted (using another interface).  The packets
-have two bytes inserted in the beginning of the frame:
+> 
+> Larry
 
-0000  00 00 1c 00 6f 48 00 00  fc de ee 13 00 00 00 00   ....oH.. ........
-0010  10 02 85 09 a0 00 b1 b7  00 00 00 00 00 00 40 00   ........ ......@.
-radiotap, 28 bytes ---------------------->
-2 extra bytes                              <--->
-correct 802.11 header                            <----
-0020  00 00 ff ff ff ff ff ff  00 d0 41 af ad 2c ff ff   ........ ..A..,..
-0030  ff ff cf 02 c0 02 00 05  77 62 65 6e 64 01 08 02   ........ wbend...
-0040  04 0b 16 0c 12 18 24 32  04 30 48 e7 f8 07 9d      ......$2 .0H.... 
-
-Here's a patch that is working for me, but I would not vouch for its
-correctness.  Signing off just in case it happens to be correct ;-)
-
-
-rt2x00: use correct headroom for transmission
-
-Use rt2x00dev->ops->extra_tx_headroom, not
-rt2x00dev->hw->extra_tx_headroom in the tx code, as the later includes
-headroom only meant for the monitor mode.
-
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 3d8fb68..0b4801a 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -104,7 +104,7 @@ void rt2x00queue_map_txskb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb)
- 	 * is also mapped to the DMA so it can be used for transfering
- 	 * additional descriptor information to the hardware.
- 	 */
--	skb_push(skb, rt2x00dev->hw->extra_tx_headroom);
-+	skb_push(skb, rt2x00dev->ops->extra_tx_headroom);
- 
- 	skbdesc->skb_dma =
- 	    dma_map_single(rt2x00dev->dev, skb->data, skb->len, DMA_TO_DEVICE);
-@@ -112,7 +112,7 @@ void rt2x00queue_map_txskb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb)
- 	/*
- 	 * Restore data pointer to original location again.
- 	 */
--	skb_pull(skb, rt2x00dev->hw->extra_tx_headroom);
-+	skb_pull(skb, rt2x00dev->ops->extra_tx_headroom);
- 
- 	skbdesc->flags |= SKBDESC_DMA_MAPPED_TX;
- }
-@@ -134,7 +134,7 @@ void rt2x00queue_unmap_skb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb)
- 		 * by the driver, but it was actually mapped to DMA.
- 		 */
- 		dma_unmap_single(rt2x00dev->dev, skbdesc->skb_dma,
--				 skb->len + rt2x00dev->hw->extra_tx_headroom,
-+				 skb->len + rt2x00dev->ops->extra_tx_headroom,
- 				 DMA_TO_DEVICE);
- 		skbdesc->flags &= ~SKBDESC_DMA_MAPPED_TX;
- 	}
-
--- 
-Regards,
-Pavel Roskin
+--
+[]'s
+Herton
