@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:60540 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757847AbZLKNl4 (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:41283 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755987AbZLHPlJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:41:56 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH v2 26/31] wl1271: Change rates configured for templates
-Date: Fri, 11 Dec 2009 15:41:05 +0200
-Message-Id: <1260538870-32297-27-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 8 Dec 2009 10:41:09 -0500
+Received: by yxe17 with SMTP id 17so4989271yxe.33
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2009 07:41:15 -0800 (PST)
+Message-ID: <4B1E7399.3010707@lwfinger.net>
+Date: Tue, 08 Dec 2009 09:41:13 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: John W Linville <linville@tuxdriver.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC/RFT] rtl8187: Fix 'queuing ieee80211 work while going to
+ suspend' warning
+References: <4b1db502./oHzXA5LInBxxQjb%Larry.Finger@lwfinger.net> <200912081202.04591.mb@bu3sch.de>
+In-Reply-To: <200912081202.04591.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On 12/08/2009 05:02 AM, Michael Buesch wrote:
+> Did you test this? I think it can't work.
+> mac80211's suspend calls stop operation before rtl8187_suspend() is run. So the
+> actual suspend operations runs without suspend flag set.
+> I think setting a flag is wrong. I also did that mistake in the broadcom driver
+> and it's wrong. IMO the LED register/unregister code must be completely removed
+> from the start/stop suspend/resume and hibernate paths. Instead the LEDs must be
+> registered at device attach phase (that's where the device is registered to mac80211).
 
-Previously a "firmware chooses" value was used for the rates of all control
-message templates set to the firmware. This resulted in a too high rate to be
-chosen to transmit those messages. Change this by configuring a fixed low rate
-for the templates.
+Yes, I did test this. Thus far, I have done 10 suspend to disk/resume
+cycles without any problems. That is not a lot of cycles, but I got
+the warning every time before this patch, and none since. In this
+section, we also have to worry about kernel panics during rmmod or
+device removal. The new changes have survived about 400 rmmod/insmod
+cycles, and 20 device removal/reinsertion tests.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+As part of the suspend/resume testing, I added printk() statements at
+the entry to the new suspend routine and the corresponding routine in
+mac80211. In my tests, the mac80211 routine was called first only one
+time. In all other cases, the call to the rtl8187 routine was logged
+first; however, I don't think that matters. The critical part is that
+the flag be set to prevent queuing another LED on/off task.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index d7b1bb3..7a73aaa 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -78,7 +78,8 @@ static struct conf_drv_settings default_conf = {
- 	.tx = {
- 		.tx_energy_detection         = 0,
- 		.rc_conf                     = {
--			.enabled_rates       = CONF_TX_RATE_MASK_UNSPECIFIED,
-+			.enabled_rates       = CONF_HW_BIT_RATE_1MBPS |
-+					       CONF_HW_BIT_RATE_2MBPS,
- 			.short_retry_limit   = 10,
- 			.long_retry_limit    = 10,
- 			.aflags              = 0
--- 
-1.6.3.3
+I will see if I can move the LED register/unregister calls as you suggest.
 
+Larry
