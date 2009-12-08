@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.vyatta.com ([76.74.103.46]:48590 "EHLO mail.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756105AbZLHSn4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 13:43:56 -0500
-Date: Tue, 8 Dec 2009 10:43:36 -0800
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-hotplug@vger.kernel.org
-Subject: Re: wireless device and udev
-Message-ID: <20091208104336.3d5a7fb4@nehalam>
-In-Reply-To: <20091208142940.GB15172@tuxdriver.com>
-References: <20091207172616.7470ed2b@nehalam>
-	<20091208142940.GB15172@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-yw0-f198.google.com ([209.85.211.198]:54768 "EHLO
+	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965979AbZLHUQ4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Dec 2009 15:16:56 -0500
+Received: by ywh36 with SMTP id 36so5772277ywh.15
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2009 12:17:03 -0800 (PST)
+Message-ID: <4B1EB43B.8090806@lwfinger.net>
+Date: Tue, 08 Dec 2009 14:16:59 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+CC: Michael Buesch <mb@bu3sch.de>,
+	John W Linville <linville@tuxdriver.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC/RFT] rtl8187: Fix 'queuing ieee80211 work while going to
+ suspend' warning
+References: <4b1db502./oHzXA5LInBxxQjb%Larry.Finger@lwfinger.net> <200912081202.04591.mb@bu3sch.de> <200912081341.20682.herton@mandriva.com.br>
+In-Reply-To: <200912081341.20682.herton@mandriva.com.br>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 8 Dec 2009 09:29:40 -0500
-"John W. Linville" <linville@tuxdriver.com> wrote:
+On 12/08/2009 09:41 AM, Herton Ronaldo Krzesinski wrote:
+> That's why in my last patch I added code to register the radio led, we have to 
+> go that way to fix properly the issue (also this way we turn the led on/off only 
+> when mac80211 wants it, which is the right way), so we can avoid having to 
+> place code in start/stop or creating suspend/resume hooks only because the 
+> issue.
 
-> On Mon, Dec 07, 2009 at 05:26:16PM -0800, Stephen Hemminger wrote:
-> > The default udev persistent network rules based on hardware mac id doesn't
-> > work well when multiple SSID's are created on an access-point.  The command
-> >  iw phy phy0 interface add wlan1 type managed
-> > 
-> > is supposed to make a device name wlan1, but udev sees that it has the same
-> > mac address as wlan0 and gets confused leaving the device named wlan1_rename
-> > 
-> > It looks like wlanX is breaking assumptions of existing udev persistent network
-> > device name generation rules.  Perhaps there needs to be special case for wlanX
-> > devices?
-> 
-> Yes, probably so.  But what would it be?  Factoring-in SSID is clearly
-> not right for the usual case (i.e. one interface on a mobile device).
-> I'm not sure what else one could use as a key.
-> 
-> What does udev do for bridge, bond, or vlan devices?  Don't those
-> share MAC addresses with the underlying physical device?
-> 
-> John
+I do not understand the reason for adding another LED device, nor why
+you think it helps. When I added the LED code, I wanted to get the LED
+to indicate that there was I/O activity, which is why I chose the TX
+and RX LEDs. Choosing "on" as the default state when there was no
+activity and blinking it "off" with I/O seems to give exactly the
+right behavior. Unfortunately, the asynchronous behavior of the USB
+operations makes it very tricky to get the shutdown right.
 
-At least on ubuntu/debian the name whitelist is:
+Larry
 
-
-# device name whitelist
-KERNEL!="eth*|ath*|wlan*[0-9]|msh*|ra*|sta*|ctc*|lcs*|hsi*", GOTO="persistent_net_generator_end"
-
-So bond or bridge don't match and don't get tampered with.
-
-The problem is that wlan* device names are used for both hardware and virtual
-devices.  Udev scripts can be fixed "do the right thing" but there is not sufficient
-information for the script to decide how to attach persistent name.
-What values from sysfs (ie attributes) should script be using?  This probably
-means that additional attributes needed to be added to wireless device infrastructure
-in kernel.
