@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:37693 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966589AbZLHWo1 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46499 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756266AbZLHUPM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 17:44:27 -0500
+	Tue, 8 Dec 2009 15:15:12 -0500
+Date: Tue, 8 Dec 2009 15:05:04 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Stephen Hemminger <shemminger@vyatta.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-hotplug@vger.kernel.org
+Subject: Re: wireless device and udev
+Message-ID: <20091208200504.GC16303@tuxdriver.com>
+References: <20091207172616.7470ed2b@nehalam> <20091208142940.GB15172@tuxdriver.com> <20091208104336.3d5a7fb4@nehalam> <20091208185222.GA16303@tuxdriver.com> <1260300551.32227.1.camel@johannes.local>
 MIME-Version: 1.0
-In-Reply-To: <20091208073542.GC22204@atheros-laptop>
-References: <20091208073542.GC22204@atheros-laptop>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 9 Dec 2009 09:44:14 +1100
-Message-ID: <646765f40912081444t64d94ac3k9bcea8b5296a9591@mail.gmail.com>
-Subject: Re: [PATCH] Added compat-bluetooth to compat-wireless-2.6
-To: Bala Shanmugam <sbalashanmugam@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	mcgrof@bombadil.infradead.org, linux-wireless@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1260300551.32227.1.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 8, 2009 at 18:35, Bala Shanmugam <sbalashanmugam@atheros.com> wrote:
->
-> Added compat-bluetooth to compat-wireless-2.6
->
-> Added new scripts to load and unload wireless
-> and bluetooth modules seperately.
->
-> Compat is compiled as separate kernel module as
-> both wireless and bluetooth modules require it.
->
-> Compat Bluetooth has support to compile latest bluetooth code
-> for kernel versions 2.6.27 to 2.6.31.
+On Tue, Dec 08, 2009 at 08:29:11PM +0100, Johannes Berg wrote:
+> On Tue, 2009-12-08 at 13:52 -0500, John W. Linville wrote:
+> 
+> > So, probably we need to map from the wlanX name to the phyY name,
+> > then determine whether or not this is the first wlanX for phyY.
+> > If not, then the name should be left alone.
+> > 
+> > Now, how do we figure out how many wlanX's belong to phyY?
+> 
+> And what's the "first" one? :)
 
-Should all this new functionality be documented in the README document?
+I suppose I was figuring that if there was only one, it was the
+first. :-)  But you're right, I suppose that could be racy...
 
-Thanks,
+> ls /sys/class/net/wlan0/device/net/
+> 
+> will give you the list of interface associated with this device.
+
+Cool...
 
 -- 
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
