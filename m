@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:63410 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750837AbZLWIfe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 03:35:34 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2009 00:35:34 -0800
-From: vasanth <vasanth@atheros.com>
-To: <greg@kroah.com>, <stable@kernel.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH 1/2] ath9k_hw: Fix possible OOB array indexing in gen_timer_index[] on 64-bit
-Date: Wed, 23 Dec 2009 13:54:35 +0530
-Message-ID: <1261556676-6081-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from qw-out-2122.google.com ([74.125.92.26]:40963 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753624AbZLHKzS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Dec 2009 05:55:18 -0500
+Received: by qw-out-2122.google.com with SMTP id 3so1078740qwe.37
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2009 02:55:24 -0800 (PST)
+References: <1260237325-8654-1-git-send-email-lrodriguez@atheros.com> <4B1DDB77.6070909@myrealbox.com> <43e72e890912072221j660f9a6dpa8cf9257db14da41@mail.gmail.com>
+Message-Id: <EB65E7CB-4E8C-4587-A563-A4F5185C5D80@gmail.com>
+From: Andy Lutomirski <amluto@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+In-Reply-To: <43e72e890912072221j660f9a6dpa8cf9257db14da41@mail.gmail.com>
+Content-Type: text/plain;
+	charset=us-ascii;
+	format=flowed;
+	delsp=yes
+Mime-Version: 1.0 (iPhone Mail 7D11)
+Subject: Re: [PATCH] iw: add HT capability parsing for scanning
+Date: Tue, 8 Dec 2009 05:54:57 -0500
+Cc: Andy Lutomirski <luto@myrealbox.com>,
+	"johannes@sipsolutions.ney" <johannes@sipsolutions.ney>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-commit c90017dd43f0cdb42134b9229761e8be02bcd524 upstream
 
-debruijn32 (0x077CB531) is used to index gen_timer_index[]
-which is an array of 32 u32. Having debruijn32 as unsigned
-long on a 64-bit platform  will result in indexing more than 32
-in gen_timer_index[] and there by causing a crash. Make it
-unsigned to fix this issue.
+On Dec 8, 2009, at 1:21 AM, "Luis R. Rodriguez"  
+<lrodriguez@atheros.com> wrote:
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> On Mon, Dec 7, 2009 at 8:52 PM, Andy Lutomirski <luto@myrealbox.com>  
+> wrote:
+>> Luis R. Rodriguez wrote:
+>>>
+>>> This adds HT capability IE parsing for scanning. You will now
+>>> be able to easily review what HT capabilities your AP supports
+>>> with a simple iw scan.
+>>>
+>>
+>>> +       default:
+>>> +               return "Uknown";
+>>> +       }
+>>> +}
+>>> +
+>>
+>> Unknown?
+>
+> Could've called it "caca", but this seemed more appropriate.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 57f1463..ff4383b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -408,7 +408,7 @@ struct ath9k_hw_version {
-  * Using de Bruijin sequence to to look up 1's index in a 32 bit number
-  * debruijn32 = 0000 0111 0111 1100 1011 0101 0011 0001
-  */
--#define debruijn32 0x077CB531UL
-+#define debruijn32 0x077CB531U
- 
- struct ath_gen_timer_configuration {
- 	u32 next_addr;
--- 
-1.5.5.1
+Sure, but a second "n" might be more respectful to the AP. :)
 
+--Andy
+
+>
+>  Luis
+> ---- Content & Policy Scan by M+ Guardian ----
+> Millions of safe & clean messages delivered daily
+>
+>
