@@ -1,168 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.102.11.253]:40031 "EHLO
-	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759970AbZLOR47 (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:45360 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756019AbZLHPlT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 12:56:59 -0500
-From: =?UTF-8?q?Luk=C3=A1=C5=A1=20Turek?= <8an@praha12.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	ath5k-devel@lists.ath5k.org
-Subject: [PATCH] iw: Add support for NL80211_ATTR_WIPHY_COVERAGE_CLASS
-Date: Tue, 15 Dec 2009 18:56:53 +0100
-Message-Id: <1260899813-17585-7-git-send-email-8an@praha12.net>
-In-Reply-To: <1260899813-17585-1-git-send-email-8an@praha12.net>
-References: <1260899813-17585-1-git-send-email-8an@praha12.net>
+	Tue, 8 Dec 2009 10:41:19 -0500
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: [RFC/RFT] rtl8187: Fix 'queuing ieee80211 work while going to suspend' warning
+Date: Tue, 8 Dec 2009 13:41:20 -0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	"Hin-Tak Leung" <htl10@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+References: <4b1db502./oHzXA5LInBxxQjb%Larry.Finger@lwfinger.net> <200912081202.04591.mb@bu3sch.de>
+In-Reply-To: <200912081202.04591.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200912081341.20682.herton@mandriva.com.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New nl80211 attribute NL80211_ATTR_WIPHY_COVERAGE_CLASS allows setting
-IEEE 802.11 coverage class, which is then used by drivers to calculate
-slot time and ACK timeout for long distance links.
+Em Ter 08 Dez 2009, às 09:02:02, Michael Buesch escreveu:
+> On Tuesday 08 December 2009 03:08:02 Larry Finger wrote:
+> > In http://marc.info/?l=linux-wireless&m=125916285209175&w=2, Michael
+> > Buesch reports a problem with rtl8187 queuing LED on/off requests after
+> > the suspend has begun. On my system this is present during a suspend
+> > to disk.
+> >
+> > This solution involves adding the power management entries to the
+> > driver to set a flag indicating that the system is suspending. When the
+> > flag is set, no LED on/off events are queued.
+> >
+> > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> > ---
+> >
+> > Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
+> > ===================================================================
+> > --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187.h
+> > +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
+> > @@ -138,6 +138,7 @@ struct rtl8187_priv {
+> >  		__le32 bits32;
+> >  	} *io_dmabuf;
+> >  	bool rfkill_off;
+> > +	bool suspending;	/* true if shutting down */
+> >  };
+> >
+> >  void rtl8187_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
+> > Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> > ===================================================================
+> > --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> > +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> > @@ -1521,6 +1521,7 @@ static int __devinit rtl8187_probe(struc
+> >  	       wiphy_name(dev->wiphy), dev->wiphy->perm_addr,
+> >  	       chip_name, priv->asic_rev, priv->rf->name, priv-
+>rfkill_mask);
+> >
+> > +	priv->suspending = 0;
+> >  #ifdef CONFIG_RTL8187_LEDS
+> >  	eeprom_93cx6_read(&eeprom, 0x3F, &reg);
+> >  	reg &= 0xFF;
+> > @@ -1539,6 +1540,38 @@ static int __devinit rtl8187_probe(struc
+> >  	return err;
+> >  }
+> >
+> > +#ifdef CONFIG_PM
+> > +static int rtl8187_suspend(struct usb_interface *intf, pm_message_t
+> > message) +{
+> > +	struct ieee80211_hw *dev = usb_get_intfdata(intf);
+> > +	struct rtl8187_priv *priv;
+> > +
+> > +	if (!dev)
+> > +		return -ENODEV;
+> > +
+> > +	priv = dev->priv;
+> > +	priv->suspending = 1;
+> > +#ifdef CONFIG_RTL8187_LEDS
+> > +	cancel_delayed_work_sync(&priv->led_off);
+> > +	cancel_delayed_work_sync(&priv->led_on);
+> > +#endif
+> > +	return 0;
+> > +}
+> > +
+> > +static int rtl8187_resume(struct usb_interface *intf)
+> > +{
+> > +	struct ieee80211_hw *dev = usb_get_intfdata(intf);
+> > +	struct rtl8187_priv *priv;
+> > +
+> > +	if (!dev)
+> > +		return -ENODEV;
+> > +
+> > +	priv = dev->priv;
+> > +	priv->suspending = 0;
+> > +	return 0;
+> > +}
+> > +#endif
+> > +
+> >  static void __devexit rtl8187_disconnect(struct usb_interface *intf)
+> >  {
+> >  	struct ieee80211_hw *dev = usb_get_intfdata(intf);
+> > @@ -1564,6 +1597,10 @@ static struct usb_driver rtl8187_driver
+> >  	.name		= KBUILD_MODNAME,
+> >  	.id_table	= rtl8187_table,
+> >  	.probe		= rtl8187_probe,
+> > +#ifdef CONFIG_PM
+> > +	.suspend	= rtl8187_suspend,
+> > +	.resume		= rtl8187_resume,
+> > +#endif
+> >  	.disconnect	= __devexit_p(rtl8187_disconnect),
+> >  };
+> >
+> > Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
+> > ===================================================================
+> > --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_leds.c
+> > +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
+> > @@ -107,6 +107,8 @@ static void rtl8187_led_brightness_set(s
+> >  	struct ieee80211_hw *hw = led->dev;
+> >  	struct rtl8187_priv *priv = hw->priv;
+> >
+> > +	if (priv->suspending)
+> > +		return;
+> >  	if (brightness == LED_OFF) {
+> >  		ieee80211_queue_delayed_work(hw, &priv->led_off, 0);
+> >  		/* The LED is off for 1/20 sec so that it just blinks. */
+> > @@ -209,11 +211,12 @@ void rtl8187_leds_exit(struct ieee80211_
+> >  	struct rtl8187_priv *priv = dev->priv;
+> >
+> >  	/* turn the LED off before exiting */
+> > -	ieee80211_queue_delayed_work(dev, &priv->led_off, 0);
+> > -	rtl8187_unregister_led(&priv->led_rx);
+> > -	rtl8187_unregister_led(&priv->led_tx);
+> > +	if (!priv->suspending)
+> > +		ieee80211_queue_delayed_work(dev, &priv->led_off, 0);
+> >  	cancel_delayed_work_sync(&priv->led_off);
+> >  	cancel_delayed_work_sync(&priv->led_on);
+> > +	rtl8187_unregister_led(&priv->led_rx);
+> > +	rtl8187_unregister_led(&priv->led_tx);
+> >  }
+> >  #endif /* def CONFIG_RTL8187_LED */
+> 
+> Did you test this? I think it can't work.
+> mac80211's suspend calls stop operation before rtl8187_suspend() is run. So
+>  the actual suspend operations runs without suspend flag set.
+> I think setting a flag is wrong. I also did that mistake in the broadcom
+>  driver and it's wrong. IMO the LED register/unregister code must be
+>  completely removed from the start/stop suspend/resume and hibernate paths.
+>  Instead the LEDs must be registered at device attach phase (that's where
+>  the device is registered to mac80211).
 
-Two iw parameters are added: 'coverage' sets the coverage class
-directly, while 'distance' is more user-friendly, as it allows to set
-just the link distance and let iw do the necessary calculation itself.
+That's why in my last patch I added code to register the radio led, we have to 
+go that way to fix properly the issue (also this way we turn the led on/off only 
+when mac80211 wants it, which is the right way), so we can avoid having to 
+place code in start/stop or creating suspend/resume hooks only because the 
+issue.
 
-Signed-off-by: Lukas Turek <8an@praha12.net>
----
- info.c    |    8 ++++++++
- nl80211.h |   15 +++++++++++++++
- phy.c     |   58 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 81 insertions(+), 0 deletions(-)
+The problem here is not simple: we have leds code triggering work and mac80211 
+scheduling led tx work even after radio led stop on device shutdown:
+- On unregistering led device, even after mac80211 did the work to turn off the 
+led, the unregister code of led subsystem calls again led_brightness_set to 
+turn off the led, which causes the original warning without suspend/resume 
+hooks (also in leds_exit code we were scheduling work which triggered more 
+warnings).
+- When I was testing, sometimes mac80211 on device shutdown (modprobe -r) 
+wasn't calling led stop code in the right order, so sometimes after removing 
+module the led was kept turned on (scheduling led tx code after led radio off). 
+This happens because ieee80211_tx_status can call ieee80211_led_tx after 
+mac80211 calls ieee80211_led_radio to turn the led off, and as we are 
+"emulating" a radio led (we have only one real led to signal radio and tx/rx, 
+no differentiation on hardware) we are affected by this.
 
-diff --git a/info.c b/info.c
-index 69af216..1a1b588 100644
---- a/info.c
-+++ b/info.c
-@@ -156,6 +156,14 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
- 			printf("\tRTS threshold: %d\n", rts);
- 	}
- 
-+	if (tb_msg[NL80211_ATTR_WIPHY_COVERAGE_CLASS]) {
-+		unsigned char coverage;
-+
-+		coverage = nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_COVERAGE_CLASS]);
-+		/* See handle_distance() for an explanation where the '450' comes from */
-+		printf("\tCoverage class: %d (up to %dm)\n", coverage, 450 * coverage);
-+	}
-+
- 	if (!tb_msg[NL80211_ATTR_SUPPORTED_IFTYPES])
- 		goto commands;
- 
-diff --git a/nl80211.h b/nl80211.h
-index 45db17f..e241ed1 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -349,6 +349,10 @@ enum nl80211_commands {
- 	NL80211_CMD_GET_SURVEY,
- 	NL80211_CMD_NEW_SURVEY_RESULTS,
- 
-+	NL80211_CMD_SET_PMKSA,
-+	NL80211_CMD_DEL_PMKSA,
-+	NL80211_CMD_FLUSH_PMKSA,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -398,6 +402,8 @@ enum nl80211_commands {
-  * @NL80211_ATTR_WIPHY_RTS_THRESHOLD: RTS threshold (TX frames with length
-  *	larger than or equal to this use RTS/CTS handshake); allowed range:
-  *	0..65536, disable with (u32)-1; dot11RTSThreshold; u32
-+ * @NL80211_ATTR_WIPHY_COVERAGE_CLASS: Coverage Class as defined by IEEE 802.11
-+ *	section 7.3.2.9; dot11CoverageClass; u8
-  *
-  * @NL80211_ATTR_IFINDEX: network interface index of the device to operate on
-  * @NL80211_ATTR_IFNAME: network interface name
-@@ -598,6 +604,10 @@ enum nl80211_commands {
-  *      the survey response for %NL80211_CMD_GET_SURVEY, nested attribute
-  *      containing info as possible, see &enum survey_info.
-  *
-+ * @NL80211_ATTR_PMKID: PMK material for PMKSA caching.
-+ * @NL80211_ATTR_MAX_NUM_PMKIDS: maximum number of PMKIDs a firmware can
-+ *	cache, a wiphy attribute.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -732,6 +742,11 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_SURVEY_INFO,
- 
-+	NL80211_ATTR_PMKID,
-+	NL80211_ATTR_MAX_NUM_PMKIDS,
-+
-+	NL80211_ATTR_WIPHY_COVERAGE_CLASS,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/phy.c b/phy.c
-index 8dd01aa..1de58a9 100644
---- a/phy.c
-+++ b/phy.c
-@@ -164,3 +164,61 @@ static int handle_netns(struct nl80211_state *state,
- COMMAND(set, netns, "<pid>",
- 	NL80211_CMD_SET_WIPHY_NETNS, 0, CIB_PHY, handle_netns,
- 	"Put this wireless device into a different network namespace");
-+
-+static int handle_coverage(struct nl80211_state *state,
-+			struct nl_cb *cb,
-+			struct nl_msg *msg,
-+			int argc, char **argv)
-+{
-+	unsigned int coverage;
-+
-+	if (argc != 1)
-+		return 1;
-+
-+	coverage = strtoul(argv[0], NULL, 10);
-+	if (coverage > 255)
-+		return 1;
-+	
-+	NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_COVERAGE_CLASS, coverage);
-+
-+	return 0;
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+COMMAND(set, coverage, "<coverage class>",
-+	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_coverage,
-+	"Set coverage class (1 for every 3 usec of air propagation time).\n"
-+	"Valid values: 0 - 255.");
-+
-+static int handle_distance(struct nl80211_state *state,
-+			struct nl_cb *cb,
-+			struct nl_msg *msg,
-+			int argc, char **argv)
-+{
-+	unsigned int distance, coverage;
-+
-+	if (argc != 1)
-+		return 1;
-+
-+	distance = strtoul(argv[0], NULL, 10);
-+	
-+	/*
-+	 * Divide double the distance by the speed of light in m/usec (300) to
-+	 * get round-trip time in microseconds and then divide the result by
-+	 * three to get coverage class as specified in IEEE 802.11-2007 table
-+	 * 7-27. Values are rounded upwards.
-+	 */
-+	coverage = (distance + 449) / 450;
-+	if (coverage > 255)
-+		return 1;
-+	
-+	NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_COVERAGE_CLASS, coverage);
-+
-+	return 0;
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+COMMAND(set, distance, "<distance>",
-+	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_distance,
-+	"Set appropriate coverage class for given link distance in meters.\n"
-+	"Valid values: 0 - 114750");
--- 
-1.6.4.4
+So besides registering the radio led, I had to add that radio_on variable 
+check on last patch, to handle these two problems. The patch worked, but Larry 
+reported a crash, I'll try to review it more and see what could cause a crash 
+on removal, may be some delayed_work related thing missing, unfortunately I'm 
+a bit busy here since then, but will try to get to it soon.
 
+--
+[]'s
+Herton
