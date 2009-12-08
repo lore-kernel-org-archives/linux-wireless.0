@@ -1,63 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44355 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751301AbZLSKb7 (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:47641 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965488AbZLHTv7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Dec 2009 05:31:59 -0500
-Subject: Re: [PATCH] ar9170: load firmware asynchronously
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890912181502u3610ac23qe2dfc09f1d337bf5@mail.gmail.com>
-References: <1261176470.14206.23.camel@johannes.local>
-	 <43e72e890912181502u3610ac23qe2dfc09f1d337bf5@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Z8uTYl8ilEqB54VAKQ3u"
-Date: Sat, 19 Dec 2009 11:31:50 +0100
-Message-ID: <1261218710.27718.0.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 8 Dec 2009 14:51:59 -0500
+MIME-Version: 1.0
+In-Reply-To: <20091208105952.3831c29b@nehalam>
+References: <20091207172616.7470ed2b@nehalam> <20091208142940.GB15172@tuxdriver.com>
+	<20091208104336.3d5a7fb4@nehalam> <43e72e890912081050w265bcbc1sd1380ef52fc0799b@mail.gmail.com>
+	<20091208105952.3831c29b@nehalam>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 8 Dec 2009 11:51:46 -0800
+Message-ID: <43e72e890912081151r11d22b77sf974fe38694308d5@mail.gmail.com>
+Subject: Re: wireless device and udev
+To: Stephen Hemminger <shemminger@vyatta.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-hotplug@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Dec 8, 2009 at 10:59 AM, Stephen Hemminger
+<shemminger@vyatta.com> wrote:
+> On Tue, 8 Dec 2009 10:50:30 -0800
+> "Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
+>
+>> On Tue, Dec 8, 2009 at 10:43 AM, Stephen Hemminger
+>> <shemminger@vyatta.com> wrote:
+>> > On Tue, 8 Dec 2009 09:29:40 -0500
+>> > "John W. Linville" <linville@tuxdriver.com> wrote:
+>> >
+>> >> On Mon, Dec 07, 2009 at 05:26:16PM -0800, Stephen Hemminger wrote:
+>> >> > The default udev persistent network rules based on hardware mac id doesn't
+>> >> > work well when multiple SSID's are created on an access-point.  The command
+>> >> >  iw phy phy0 interface add wlan1 type managed
+>> >> >
+>> >> > is supposed to make a device name wlan1, but udev sees that it has the same
+>> >> > mac address as wlan0 and gets confused leaving the device named wlan1_rename
+>> >> >
+>> >> > It looks like wlanX is breaking assumptions of existing udev persistent network
+>> >> > device name generation rules.  Perhaps there needs to be special case for wlanX
+>> >> > devices?
+>> >>
+>> >> Yes, probably so.  But what would it be?  Factoring-in SSID is clearly
+>> >> not right for the usual case (i.e. one interface on a mobile device).
+>> >> I'm not sure what else one could use as a key.
+>> >>
+>> >> What does udev do for bridge, bond, or vlan devices?  Don't those
+>> >> share MAC addresses with the underlying physical device?
+>> >>
+>> >> John
+>> >
+>> > At least on ubuntu/debian the name whitelist is:
+>> >
+>> >
+>> > # device name whitelist
+>> > KERNEL!="eth*|ath*|wlan*[0-9]|msh*|ra*|sta*|ctc*|lcs*|hsi*", GOTO="persistent_net_generator_end"
+>> >
+>> > So bond or bridge don't match and don't get tampered with.
+>> >
+>> > The problem is that wlan* device names are used for both hardware and virtual
+>> > devices.  Udev scripts can be fixed "do the right thing" but there is not sufficient
+>> > information for the script to decide how to attach persistent name.
+>> > What values from sysfs (ie attributes) should script be using?  This probably
+>> > means that additional attributes needed to be added to wireless device infrastructure
+>> > in kernel.
+>>
+>> We could likely use the new SET_NETDEV_DEVTYPE() but I have yet to see
+>> where this is exported. It must be there somewhere.
+>
+> Both devices would have same type? don't see how that would help
+>
+> Imagine a system with two Atheros cards, and 2 SSID's per card.
+> How would devices be identified by udev to assign persistent name?
 
---=-Z8uTYl8ilEqB54VAKQ3u
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Yeah sorry, I was thinking of just wlan0++ for a new wlan net device
+type, but yeah keeping them persistent would require more work.
 
-On Fri, 2009-12-18 at 15:02 -0800, Luis R. Rodriguez wrote:
-
-> Sweet -- we could also expose firmware load events if not done so
-> already and let userspace propagate such nasty warnings, I think we'd
-> need to pass the firmware expected and the driver the requested it so
-> that once the firmware is in place (I guess through inotify maybe) the
-> driver modprobe can be retried.
-
-Actually, since the driver doesn't fail loading, the _bind_ has to be
-retried. I'm not sure there's a way to trigger a re-probe though, which
-would be easiest since userspace doesn't necessarily know what to bind.
-
-johannes
-
---=-Z8uTYl8ilEqB54VAKQ3u
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLLKuPAAoJEODzc/N7+QmaVgIP/A8OZzwa6eJecfwsBpPpbQVk
-qi4wbP+/1AMMncoYBdr/ZvlS6O+30ua4Ri2uvsc2dVuBGADUoA8hdFcI3gJN9sg9
-HDbmRa8X8x9XjKZsO83h13AJyGVSRopYDGJyQikPqhNFOQ4EmqhX1osUnDL+I+xn
-1kvj4yP5wr11+WZoY44yC3l47tUDtDY1Ga00gsOtURH44WNIo9hkTGCUJqxhaHjg
-IwuPYYRaiXEFYCqX8n6iL7RgYic0L2aTcxNBZdDx/4oyNxwFtJ7Ed+x9DO8a7S1H
-TPf4wn+KroU124EUZukTMIZ6xoyWTlyNdcdcGVx0gO3WpUAV60qdeEkebe5XDjr2
-mRsbc+vUh2B9ieE3+jdm5YIFU/3r1xowsx7C6K1dIMdaCpeKqQzP0lpE7ovHwLwn
-NDrP/HqQX1Iwp3U+nraDvPsducOideA1Gew7yOd8zZOGw4lFGopmnW4bbgxz9Qbg
-XTwHbUboSHzxiUHWqyg7nFk4DnEJn4F2YvGs/hpN5gKOFgcfdK2E4ukGqvqT3eyq
-CjABzVbIT/YlKKNeCVintGNXjX2neiJvimVAZb2bC9Hnggbk6yq86H8Fp3D5a1KM
-V7VteXCc1OrKreerIWhYlBhi4ZcLhsbFa9GXfltNW8G1Bb9kC05yRVDO5aABZcrU
-4lpObK2EKqps+7bakrr7
-=EUPJ
------END PGP SIGNATURE-----
-
---=-Z8uTYl8ilEqB54VAKQ3u--
-
+  Luis
