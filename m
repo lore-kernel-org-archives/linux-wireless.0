@@ -1,75 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:41521 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751192AbZLCMB3 convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f209.google.com ([209.85.219.209]:47035 "EHLO
+	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751020AbZLHHXh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2009 07:01:29 -0500
-Received: by fxm21 with SMTP id 21so1317908fxm.1
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Dec 2009 04:01:34 -0800 (PST)
+	Tue, 8 Dec 2009 02:23:37 -0500
+Received: by ewy1 with SMTP id 1so2369075ewy.28
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Dec 2009 23:23:43 -0800 (PST)
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Jan Kiszka <jan.kiszka@web.de>, linux-wireless@vger.kernel.org
+Subject: Re: [RFT] ar9170: AP broadcast buffering
+References: <200911290206.07784.chunkeey@googlemail.com>
+	<200912071736.40929.chunkeey@googlemail.com>
+	<87aaxu4ke7.fsf@purkki.valot.fi>
+	<200912072231.32798.chunkeey@googlemail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 08 Dec 2009 09:23:39 +0200
+In-Reply-To: <200912072231.32798.chunkeey@googlemail.com> (Christian Lamparter's message of "Mon\, 7 Dec 2009 22\:31\:32 +0100")
+Message-ID: <871vj63p50.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-In-Reply-To: <1259822699.31590.914.camel@peura.elisa-laajakaista.fi>
-References: <1259756709.31590.62.camel@peura.elisa-laajakaista.fi>
-	 <4B169608.3010902@lwfinger.net>
-	 <1259822699.31590.914.camel@peura.elisa-laajakaista.fi>
-Date: Thu, 3 Dec 2009 12:01:34 +0000
-Message-ID: <3ace41890912030401k7cb41386rc134e167a8e4bea6@mail.gmail.com>
-Subject: Re: New rtl8187 rfkill support blocks my wlan for good.
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: =?ISO-8859-1?Q?Antti_Kaijanm=E4ki?= <antti@kaijanmaki.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/12/3 Antti Kaijanmäki <antti@kaijanmaki.net>:
-> It's a Toshiba Satellite Pro L300.
+Christian Lamparter <chunkeey@googlemail.com> writes:
 
-I have a Toshiba A210; the Realtek hardware is the same, but I am a
-little surprised that there is no similiarity to the mac address
-(AFAIK part of the mac address is the manufacturer's identity). In any
-case, the rkill code works here
-(up to date fedora 12 + compat-wireless from yesterday or the day before).
+> On Monday 07 December 2009 21:08:32 Kalle Valo wrote:
+>
+>> I don't know what time constraints you refer to here, but clients
+>> should stay awake until they have received a multicast/broadcast
+>> message with the moredata bit disabled. So, in theory, it doesn't
+>> matter even if the frames are transmitted even 20 ms after the beacon.
+>> (In practise some hardware might have timers for this, I think at
+>> least wl1251 had one.)
+>
+>> Of course the downside is the increased power consumption. But it's
+>> still better than to not receive the multicast/broadcast frames at
+>> all :)
+>
+> That's the thing: 802.11-2007 11.2.1.5 f) says:
+> "*Immediately* after every DTIM, the AP shall
+>   transmit all buffered broadcast/multicast MSDUs...".
+> And I cannot rule out that some Devs took this quite literally. ;-)
 
-> I contacted Realtek again and this morning I had data sheets for
-> RTL8187B and RTL8187L chipsets in my inbox, yay!. I didn't have time to
-> look deeply in to them just yet, but at quick glance the data sheets
-> didn't talk anything about rfkill. My fear is that the rfkill features
-> are laptop vendor specific by being implemented using the General
-> Purpose IO pins, but this speculation is still premature.
+Well, "immediately" is relative. If my wife says to immeaditely do
+something, it might take a week before I'll do it ;)
 
-Yes, I think the gpio pins are OEM-specific.
+> Anyway, here is a case that I've witnessed:
+>
+> During testing, I caught samples where MC/BC frames were delayed for
+> more up to 115ms. (b_interval = 102.4ms and dtim_period = 3)
 
---- rtl8187_rfkill.c.orig       2009-12-02 14:12:34.646597569 +0200
-+++ rtl8187_rfkill.c    2009-12-02 14:10:09.474593370 +0200
-@@ -28,7 +28,7 @@ static bool rtl8187_is_radio_enabled(str
-       rtl818x_iowrite8(priv, &priv->map->GPIO0, gpio & ~0x02);
-       gpio = rtl818x_ioread8(priv, &priv->map->GPIO1);
+Yeah, if the time is longer than the beacon interval then it won't
+definitely work.
 
--       return gpio & 0x02;
-+       return gpio & 0x04;
-
- }
-
-Your patch is probably wrong - all you are doing is get some random
-bits off the chip and lie to the rest of the system about being radio
-is enabled.
-
-That leads to my next question - what *is the rest* of your system?
-Back in F11 I had a funny problem for a few days when I was trying
-out/testing the then-new rtl8187 rfkill code Larry and Herton came up
-with: I can switch off the radio and it is effective for about 1
-minute - then NetworkManager decides to turn the wireless chip back
-on. It turned out that hal (at least on F11, and also then, a few
-months ago) needed to be taught to honour the state of the rkill
-switch and be aware of it. Maybe you have the reverse problem - the
-rest of your system needs to be taught not to switch it off.
-
-As for the datasheet - no, there aren't any obvious rfkill info (or I
-haven't read carefully - Larry will correct me). Realtek doesn't seem
-to have a problem with e-mailing it to individuals, so a few of us has
-it as well; but since they don't have it available for public download
-on their web site, I assume it was sent on good faith for private
-viewing pleasure.... and the terms of (re-)distribution is probably to
-people who show interests in improving the driver. (instead of, say,
-to competitors trying to poke holes in their hardware...).
+-- 
+Kalle Valo
