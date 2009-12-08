@@ -1,129 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:55437 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754740AbZLFBZY (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57011 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966610AbZLHWAi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Dec 2009 20:25:24 -0500
-Date: Sat, 05 Dec 2009 19:25:22 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: antti@kaijanmaki.net,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] rtl8187: Fix regression noted in Bug #14743 - wrong
- rfkill switch mask for some models
-Message-ID: <4b1b0802.TyTvmD6koeBpReIQ%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Tue, 8 Dec 2009 17:00:38 -0500
+Subject: Re: regression: rt2561 frequent "Arrived at non-free entry" errors
+ in 	2.6.32
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Andi Kleen <andi@firstfloor.org>,
+	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	linux-wireless@vger.kernel.org, Tim Blechmann <tim@klingt.org>,
+	rjw@sisk.pl, IvDoorn@gmail.com, linville@tuxdriver.com
+In-Reply-To: <4B1ECB84.6010009@gmail.com>
+References: <20091204233202.GA13658@basil.fritz.box>
+	 <4B1BB44E.90706@gmail.com>	 <200912080006.28892.s.L-H@gmx.de>
+	 <20091208095755.GT18989@one.firstfloor.org>
+	 <14add3d10912080219u17c65cbemf6d56290a8f12efd@mail.gmail.com>
+	 <4B1EC842.7040407@gmail.com> <1260308669.32227.2.camel@johannes.local>
+	 <4B1ECB84.6010009@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-dcbUAt0cHYsHCcEKekEc"
+Date: Tue, 08 Dec 2009 23:00:07 +0100
+Message-ID: <1260309607.32227.4.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are different bits used to convey the setting of the rfkill
-switch to the driver. The current driver only supports one of these
-possibilities. These changes were derived from the latest version
-of the vendor driver.
 
-This patch fixes the regression noted in kernel Bugzilla #14743.
+--=-dcbUAt0cHYsHCcEKekEc
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Reported-and-tested-by: Antti Kaijanmäki <antti@kaijanmaki.net>
-Tested-by: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: Stable <stable@vger.org>
----
+On Tue, 2009-12-08 at 22:56 +0100, Gertjan van Wingerde wrote:
 
-John,
+> Well, this is a test patch, to validate my theory that this is where the =
+problem is.
+> If that is confirmed, then I can start working out a proper solution.
 
-After seeing the response from DaveM regarding your last push, I expect
-problems getting this into 2.6.33; however, it is a regression from 2.6.31
-as noted in the Bug cited above.
+Well but this patch won't help you test that theory, because it'll just
+disable PS completely if there were packets pending when mac80211 asked
+you to enable PS, afaict.
 
-Thanks,
-Larry
----
+> How does mac80211 look at these things anyway. How does it expect the dri=
+ver to handle
+> the cases where mac80211 asks the driver to go to sleep because of power =
+saving, and
+> the driver can't because its queues haven't drained yet?
 
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187.h
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
-@@ -23,6 +23,7 @@
- #define RTL8187_EEPROM_TXPWR_CHAN_1	0x16	/* 3 channels */
- #define RTL8187_EEPROM_TXPWR_CHAN_6	0x1B	/* 2 channels */
- #define RTL8187_EEPROM_TXPWR_CHAN_4	0x3D	/* 2 channels */
-+#define RTL8187_EEPROM_SELECT_GPIO	0x3B
- 
- #define RTL8187_REQT_READ	0xC0
- #define RTL8187_REQT_WRITE	0x40
-@@ -31,6 +32,9 @@
- 
- #define RTL8187_MAX_RX		0x9C4
- 
-+#define RFKILL_MASK_8187_89_97	0x2
-+#define RFKILL_MASK_8198	0x4
-+
- struct rtl8187_rx_info {
- 	struct urb *urb;
- 	struct ieee80211_hw *dev;
-@@ -122,6 +126,7 @@ struct rtl8187_priv {
- 	u8 noise;
- 	u8 slot_time;
- 	u8 aifsn[4];
-+	u8 rfkill_mask;
- 	struct {
- 		__le64 buf;
- 		struct sk_buff_head queue;
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -1322,6 +1322,7 @@ static int __devinit rtl8187_probe(struc
- 	struct ieee80211_channel *channel;
- 	const char *chip_name;
- 	u16 txpwr, reg;
-+	u16 product_id = le16_to_cpu(udev->descriptor.idProduct);
- 	int err, i;
- 
- 	dev = ieee80211_alloc_hw(sizeof(*priv), &rtl8187_ops);
-@@ -1481,6 +1482,13 @@ static int __devinit rtl8187_probe(struc
- 		(*channel++).hw_value = txpwr & 0xFF;
- 		(*channel++).hw_value = txpwr >> 8;
- 	}
-+	/* Handle the differing rfkill GPIO bit in different models */
-+	priv->rfkill_mask = RFKILL_MASK_8187_89_97;
-+	if (product_id == 0x8197 || product_id == 0x8198) {
-+		eeprom_93cx6_read(&eeprom, RTL8187_EEPROM_SELECT_GPIO, &reg);
-+		if (reg & 0xFF00)
-+			priv->rfkill_mask = RFKILL_MASK_8198;
-+	}
- 
- 	/*
- 	 * XXX: Once this driver supports anything that requires
-@@ -1509,9 +1513,9 @@ static int __devinit rtl8187_probe(struc
- 	mutex_init(&priv->conf_mutex);
- 	skb_queue_head_init(&priv->b_tx_status.queue);
- 
--	printk(KERN_INFO "%s: hwaddr %pM, %s V%d + %s\n",
-+	printk(KERN_INFO "%s: hwaddr %pM, %s V%d + %s, rfkill mask %d\n",
- 	       wiphy_name(dev->wiphy), dev->wiphy->perm_addr,
--	       chip_name, priv->asic_rev, priv->rf->name);
-+	       chip_name, priv->asic_rev, priv->rf->name, priv->rfkill_mask);
- 
- #ifdef CONFIG_RTL8187_LEDS
- 	eeprom_93cx6_read(&eeprom, 0x3F, &reg);
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
-@@ -25,10 +25,10 @@ static bool rtl8187_is_radio_enabled(str
- 	u8 gpio;
- 
- 	gpio = rtl818x_ioread8(priv, &priv->map->GPIO0);
--	rtl818x_iowrite8(priv, &priv->map->GPIO0, gpio & ~0x02);
-+	rtl818x_iowrite8(priv, &priv->map->GPIO0, gpio & ~priv->rfkill_mask);
- 	gpio = rtl818x_ioread8(priv, &priv->map->GPIO1);
- 
--	return gpio & 0x02;
-+	return gpio & priv->rfkill_mask;
- }
- 
- void rtl8187_rfkill_init(struct ieee80211_hw *hw)
+mac80211 does expect you to be able to transmit while asleep. Same
+happens when PS-polling, where it actually expects you to wait for the
+response frame too. I think. I haven't looked at this in a while.
+
+johannes
+
+--=-dcbUAt0cHYsHCcEKekEc
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLHsxjAAoJEODzc/N7+QmaOO0P/RWfzg1JMXkmzgSqgu5wymWQ
+a3bU8FgpK2Zr3oZz3sf3E82OVvW74/uQJ8HBI9oHGFpU8ici7Nmi70ix6RNvKDv1
+lf8+9yYbRh9DMZ/1C6nDB4o/khJYhMK7etH+nklpz0LqcsWMY2Tk8XiplKsAEJyL
+Lga7uzFE0XOInv8N6R8cn+i1Tr9Oh9Q+aIHSvYjcwpYvYMaMYe+9Jg82cCeLV1F4
+JbsRgpli/ljjdoT1evqQMunD5p+RW5h7ta45pTtGcAqVDmS6zyek7xoHm4CeLXZy
+mstryHsGF8llDJ+eObpsIiKOkA1KhtUZol9jp2QB/+ctgBe1RnjzdH10fs/VDrMw
+i3YhMON5Y1iW7ZjPh92jxolFp2gdvauroeW2uwZI7PJRPECf90IcpLckzO3Lxdyh
+HneWnmxAdh2rQMh4ql5jOyf/IqYrLfwwbkLtgwI8degx6/2M6n2UQnVjxjSDDQWl
+W+BUi8qfytBk7r/J0yGfN/sTzzAXjirGFJUSBUOAJvyYm/nihxbUk8UTE9HyhOu6
+rDVq54a8ScWZBpFo8oKO+F2wDLHRS/Lec5oNeL9DBTRpolJEJ07O5YmlAcKenaY4
+v0irDfA/zIOT9+XcqEks4a7hqAQMoCldmmYjZiXCh+z3CQeSqBbBlY9R1toIR4W+
+e5n0vFP/qUl97+64v1Wq
+=aUJx
+-----END PGP SIGNATURE-----
+
+--=-dcbUAt0cHYsHCcEKekEc--
+
