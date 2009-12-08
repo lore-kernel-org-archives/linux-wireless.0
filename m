@@ -1,95 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58902 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750984AbZLYEw3 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:33821 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755798AbZLHO5N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2009 23:52:29 -0500
-Date: Thu, 24 Dec 2009 23:47:59 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-12-24
-Message-ID: <20091225044759.GA11186@tuxdriver.com>
-References: <20091224204722.GA678@tuxdriver.com>
- <20091224.135314.193725771.davem@davemloft.net>
+	Tue, 8 Dec 2009 09:57:13 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so221092fgg.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2009 06:57:17 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20091224.135314.193725771.davem@davemloft.net>
+In-Reply-To: <20091207215903.GC18939@tuxdriver.com>
+References: <bf87febf0912030507u1c36f6a9h7cac0efabf3d016@mail.gmail.com>
+	 <20091204192315.GA5786@tuxdriver.com>
+	 <bf87febf0912070205k40a7286dpbb48cfcc494203d2@mail.gmail.com>
+	 <20091207215903.GC18939@tuxdriver.com>
+Date: Tue, 8 Dec 2009 09:57:16 -0500
+Message-ID: <b6c5339f0912080657s7cfccd4dp6525702e609bdd5f@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: add support for Dell Vostro A860 LED
+From: Bob Copeland <me@bobcopeland.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Shahar Or <mightyiampresence@gmail.com>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 24, 2009 at 01:53:14PM -0800, David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Thu, 24 Dec 2009 15:47:22 -0500
-> 
-> > Dave,
-> > 
-> > Here is the usual first batch of pent-up wireless patches after the
-> > merge window.  It is the usual collection of various driver updates
-> > along with a dozen or so mac80211/infrastructure changes.  There is
-> > still more, but lots/most of what remains is dependent not only on this
-> > batch but also on the fixes that only recently made it into net-next-2.6
-> > (and which are not yet in wireless-next-2.6).  So, something to look
-> > forward to... :-)
-> > 
-> > Please let me know if there are problems!
-> 
-> Let me know when it builds :-)
-> 
-> awk: /home/davem/src/GIT/net-next-2.6/net/wireless/genregdb.awk: line 29: regular expression compile failed (missing operand)
-> * Ignore *
-> awk: /home/davem/src/GIT/net-next-2.6/net/wireless/genregdb.awk: line 33: regular expression compile failed (missing operand)
-> * Ignore *
-> make[2]: *** [net/wireless/regdb.c] Error 2
-> make[2]: *** Waiting for unfinished jobs....
+On Mon, Dec 7, 2009 at 4:59 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> On Mon, Dec 07, 2009 at 12:05:54PM +0200, Shahar Or wrote:
+>> Adds support for the WiFi activity LED on the Dell Vostro A860 laptop.
+>>
+>> Signed-off-by: Shahar Or <shahar@shahar-or.co.il>
+>> ---
+>> I hope this one is perfect.
 
-Hmm...well, I'm at a loss.  It certainly works here. :-)
+Thanks for the patch.  As for getting a better solution to LEDs, I
+trolled through the ACPI spec and code, and while various modules
+do set up LED pins, there doesn't seem to be a way to generally
+get that information from another module and it appears different
+between each vendor.  I am by no stretch expert in ACPI stuff
+though.
 
-Perhaps you could send me your config?  And maybe the output of
-"awk -W version"?  I suppose it is possible that I'm relying on some
-specific awk feature that isn't commonly available...?
-
-Actually, I think it has to do with the C-style comments on the
-cited lines.  Try the patch below?  If it works for you, perhaps you
-could just apply it on top of the request pull?
-
-John
-
----
-
->From 0d5105fb0d1cb949ebb54eb50c4affd33328b866 Mon Sep 17 00:00:00 2001
-From: John W. Linville <linville@tuxdriver.com>
-Date: Thu, 24 Dec 2009 23:44:51 -0500
-Subject: [PATCH] wireless: fix comments in genregdb.awk
-
-Apparently some awk versions choke on C-style comments -- who knew? :-)
-
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/wireless/genregdb.awk |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/net/wireless/genregdb.awk b/net/wireless/genregdb.awk
-index 8316cf0..3cc9e69 100644
---- a/net/wireless/genregdb.awk
-+++ b/net/wireless/genregdb.awk
-@@ -26,11 +26,11 @@ BEGIN {
- }
- 
- /^[ \t]*#/ {
--	/* Ignore */
-+	# Ignore
- }
- 
- !active && /^[ \t]*$/ {
--	/* Ignore */
-+	# Ignore
- }
- 
- !active && /country/ {
--- 
-1.6.5.2
+Luis, I've asked this before but maybe you know better now or know
+whom to ask on your side.  Atheros must have a way on Windows to
+figure out the LED pin/polarity -- do you have any idea?  Ath9k
+uses the SREV but that seems to be insufficient for ath5k judging
+by all the quirks.
 
 -- 
-John W. Linville                Someday the world will need a hero, and you
-linville@tuxdriver.com                  might be all we have.  Be ready.
+Bob Copeland %% www.bobcopeland.com
