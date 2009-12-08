@@ -1,227 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml103.kpnxchange.com ([195.121.3.7]:65132 "EHLO
-	CPSMTPM-EML103.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965081AbZLGV6E (ORCPT
+Received: from mail-yw0-f196.google.com ([209.85.211.196]:59242 "EHLO
+	mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966598AbZLHWHS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2009 16:58:04 -0500
-Message-ID: <4B1D7A6B.1080606@gmail.com>
-Date: Mon, 07 Dec 2009 22:58:03 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Tue, 8 Dec 2009 17:07:18 -0500
+Received: by ywh34 with SMTP id 34so5760480ywh.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2009 14:07:24 -0800 (PST)
+Message-ID: <4B1ECCCD.2010603@lwfinger.net>
+Date: Tue, 08 Dec 2009 16:01:49 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Tim Blechmann <tim@klingt.org>
-CC: Andi Kleen <andi@firstfloor.org>, rjw@sisk.pl, IvDoorn@gmail.com,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: regression: rt2561 frequent "Arrived at non-free entry" errors
- in	2.6.32
-References: <20091204233202.GA13658@basil.fritz.box> <4B1BB44E.90706@gmail.com> <4B1CCB81.5060104@klingt.org>
-In-Reply-To: <4B1CCB81.5060104@klingt.org>
-Content-Type: multipart/mixed;
- boundary="------------090309080706070702070102"
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+CC: htl10@users.sourceforge.net, Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: RTL8187 warnings on suspend
+References: <665313.63774.qm@web23102.mail.ird.yahoo.com> <200911270945.31125.herton@mandriva.com.br> <4B10110E.8030402@lwfinger.net> <200912011149.49427.herton@mandriva.com.br>
+In-Reply-To: <200912011149.49427.herton@mandriva.com.br>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------090309080706070702070102
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-
-On 12/07/09 10:31, Tim Blechmann wrote:
-> On 12/06/2009 02:40 PM, Gertjan van Wingerde wrote:
->> On 12/05/09 00:32, Andi Kleen wrote:
->>> [Rafael, something for your regression list]
->>>
->>> I upgraded a system which was running 2.6.30 to 2.6.32.
->>> It has a 
->>>
->>> 06:02.0 Network controller: RaLink RT2561/RT61 802.11g PCI
->>>
->>> wireless PCI card. Now regularly even under moderate traffic
->>> I see messages like
->>>
->>> phy0 -> rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 2.
->>> Please file bug report to http://rt2x00.serialmonkey.com.
->>>
->>> and loss of connectivity, often until the wireless connection
->>> is restarted. This wasn't the case in 2.6.30, there the driver
->>> ran stable without any problems. The problem currently
->>> happens every few minutes.
->>>
->>
->> Andi, Tim,
->>
->> Both of you have reported this problem on 2.6.32.
->>
->> In the past this always has occurred due to queue locking problems. This led me
->> to audit the queue locking code, and that certainly looked suspicious to me.
->>
->> Would you be able to test whether the attached test patch fixes the problem for
->> you. The patch basically applies proper queue locking to the code, although in 
->> a very course manner. The patch is relative to 2.6.32.
->>
->> Note: I am not 100% sure that this is where the problem is, but at least the test
->> patch should confirm whether I am searching in the right direction.
+On 12/01/2009 07:49 AM, Herton Ronaldo Krzesinski wrote:
+> Subject: [PATCH] rtl8187: add radio led and fix warnings on suspend
 > 
-> the patch didn't cleanly apply to v2.6.32 and the patched kernel didn't
-> boot ... which tree should it be applied on?
+> Michael Buesch reports that his rtl8187 gives warnings on suspend
+> ("queueing ieee80211 work while going to suspend" warnings), as rtl8187
+> can call ieee80211_queue_delayed_work after mac80211 is suspended.
 > 
+> This change enhances rtl8187 led code so we can avoid queuing work after
+> mac80211 is suspended: now we register a radio led and make additional
+> checks to ensure led is off/on properly as mac80211 wants.
+> 
+> Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+> ---
+>  drivers/net/wireless/rtl818x/rtl8187.h      |    1 +
+>  drivers/net/wireless/rtl818x/rtl8187_leds.c |   66 +++++++++++++++++---------
+>  drivers/net/wireless/rtl818x/rtl8187_leds.h |    2 +
+>  3 files changed, 46 insertions(+), 23 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rtl818x/rtl8187.h b/drivers/net/wireless/rtl818x/rtl8187.h
+> index bf9175a..861ab0b 100644
+> --- a/drivers/net/wireless/rtl818x/rtl8187.h
+> +++ b/drivers/net/wireless/rtl818x/rtl8187.h
+> @@ -104,6 +104,7 @@ struct rtl8187_priv {
+>  	struct delayed_work work;
+>  	struct ieee80211_hw *dev;
+>  #ifdef CONFIG_RTL8187_LEDS
+> +	struct rtl8187_led led_radio;
+>  	struct rtl8187_led led_tx;
+>  	struct rtl8187_led led_rx;
+>  	struct delayed_work led_on;
+> diff --git a/drivers/net/wireless/rtl818x/rtl8187_leds.c b/drivers/net/wireless/rtl818x/rtl8187_leds.c
+> index cf8a4a4..84fdcdb 100644
+> --- a/drivers/net/wireless/rtl818x/rtl8187_leds.c
+> +++ b/drivers/net/wireless/rtl818x/rtl8187_leds.c
+> @@ -106,18 +106,31 @@ static void rtl8187_led_brightness_set(struct led_classdev *led_dev,
+>  					       led_dev);
+>  	struct ieee80211_hw *hw = led->dev;
+>  	struct rtl8187_priv *priv = hw->priv;
+> -
+> -	if (brightness == LED_OFF) {
+> -		ieee80211_queue_delayed_work(hw, &priv->led_off, 0);
+> -		/* The LED is off for 1/20 sec so that it just blinks. */
+> -		ieee80211_queue_delayed_work(hw, &priv->led_on, HZ / 20);
+> -	} else
+> -		ieee80211_queue_delayed_work(hw, &priv->led_on, 0);
+> +	static bool radio_on;
+> +
 
-Yeah, I knew it didn't apply cleanly, as it was prepared on latest wireless-testing and
-then stripped of unnecessary things. Find an updated patch attached. This one is completely
-the same, only line numbers of where to apply changed.
+	if (!hw)
+		return;
 
-I can't reproduce any boot failures with the patch applied, although for me the rt2x00
-drivers are compiled as modules. Can you provide some more information on the boot failure
-that you see?
+> +	if (led->is_radio) {
+> +		if (brightness == LED_FULL) {
+> +			ieee80211_queue_delayed_work(hw, &priv->led_on, 0);
 
----
-Gertjan.
+After adding the above change to stop processing for any LED that has
+been deleted, the rmmod/insmod loop is running on my system. Still
+testing, the the cycle count is nearing 200. After 4-500 cycles, I'll
+try physically removing the device while active, and some of the
+suspend to disk cycles as well.
 
---------------090309080706070702070102
-Content-Type: text/plain;
- name="2.6.32-tx_entry_not_free.diff2"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="2.6.32-tx_entry_not_free.diff2"
-
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0MngwMC9ydDI0MDBwY2kuYyBi
-L2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0MngwMC9ydDI0MDBwY2kuYwppbmRleCA3OThmNjI1
-Li43OGNiNTlkIDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9ydDJ4MDAvcnQy
-NDAwcGNpLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcnQyeDAwL3J0MjQwMHBjaS5j
-CkBAIC0xMTkzLDYgKzExOTMsOSBAQCBzdGF0aWMgdm9pZCBydDI0MDBwY2lfdHhkb25lKHN0
-cnVjdCBydDJ4MDBfZGV2ICpydDJ4MDBkZXYsCiAJc3RydWN0IHF1ZXVlX2VudHJ5ICplbnRy
-eTsKIAlzdHJ1Y3QgdHhkb25lX2VudHJ5X2Rlc2MgdHhkZXNjOwogCXUzMiB3b3JkOworCXVu
-c2lnbmVkIGxvbmcgaXJxZmxhZ3M7CisKKwlzcGluX2xvY2tfaXJxc2F2ZSgmcXVldWUtPmxv
-Y2ssIGlycWZsYWdzKTsKIAogCXdoaWxlICghcnQyeDAwcXVldWVfZW1wdHkocXVldWUpKSB7
-CiAJCWVudHJ5ID0gcnQyeDAwcXVldWVfZ2V0X2VudHJ5KHF1ZXVlLCBRX0lOREVYX0RPTkUp
-OwpAQCAtMTIyMiw2ICsxMjI1LDggQEAgc3RhdGljIHZvaWQgcnQyNDAwcGNpX3R4ZG9uZShz
-dHJ1Y3QgcnQyeDAwX2RldiAqcnQyeDAwZGV2LAogCiAJCXJ0MngwMGxpYl90eGRvbmUoZW50
-cnksICZ0eGRlc2MpOwogCX0KKworCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJnF1ZXVlLT5s
-b2NrLCBpcnFmbGFncyk7CiB9CiAKIHN0YXRpYyBpcnFyZXR1cm5fdCBydDI0MDBwY2lfaW50
-ZXJydXB0KGludCBpcnEsIHZvaWQgKmRldl9pbnN0YW5jZSkKZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvbmV0L3dpcmVsZXNzL3J0MngwMC9ydDI1MDBwY2kuYyBiL2RyaXZlcnMvbmV0L3dpcmVs
-ZXNzL3J0MngwMC9ydDI1MDBwY2kuYwppbmRleCAyZTg3MmFjLi5iZjUwNmI2IDEwMDY0NAot
-LS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9ydDJ4MDAvcnQyNTAwcGNpLmMKKysrIGIvZHJp
-dmVycy9uZXQvd2lyZWxlc3MvcnQyeDAwL3J0MjUwMHBjaS5jCkBAIC0xMzMwLDYgKzEzMzAs
-OSBAQCBzdGF0aWMgdm9pZCBydDI1MDBwY2lfdHhkb25lKHN0cnVjdCBydDJ4MDBfZGV2ICpy
-dDJ4MDBkZXYsCiAJc3RydWN0IHF1ZXVlX2VudHJ5ICplbnRyeTsKIAlzdHJ1Y3QgdHhkb25l
-X2VudHJ5X2Rlc2MgdHhkZXNjOwogCXUzMiB3b3JkOworCXVuc2lnbmVkIGxvbmcgaXJxZmxh
-Z3M7CisKKwlzcGluX2xvY2tfaXJxc2F2ZSgmcXVldWUtPmxvY2ssIGlycWZsYWdzKTsKIAog
-CXdoaWxlICghcnQyeDAwcXVldWVfZW1wdHkocXVldWUpKSB7CiAJCWVudHJ5ID0gcnQyeDAw
-cXVldWVfZ2V0X2VudHJ5KHF1ZXVlLCBRX0lOREVYX0RPTkUpOwpAQCAtMTM1OSw2ICsxMzYy
-LDggQEAgc3RhdGljIHZvaWQgcnQyNTAwcGNpX3R4ZG9uZShzdHJ1Y3QgcnQyeDAwX2RldiAq
-cnQyeDAwZGV2LAogCiAJCXJ0MngwMGxpYl90eGRvbmUoZW50cnksICZ0eGRlc2MpOwogCX0K
-KworCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJnF1ZXVlLT5sb2NrLCBpcnFmbGFncyk7CiB9
-CiAKIHN0YXRpYyBpcnFyZXR1cm5fdCBydDI1MDBwY2lfaW50ZXJydXB0KGludCBpcnEsIHZv
-aWQgKmRldl9pbnN0YW5jZSkKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0
-MngwMC9ydDJ4MDBwY2kuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0MngwMC9ydDJ4MDBw
-Y2kuYwppbmRleCBjZGQ1MTU0Li5mNDM1NzdlIDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93
-aXJlbGVzcy9ydDJ4MDAvcnQyeDAwcGNpLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-cnQyeDAwL3J0MngwMHBjaS5jCkBAIC05OCw2ICs5OCw5IEBAIHZvaWQgcnQyeDAwcGNpX3J4
-ZG9uZShzdHJ1Y3QgcnQyeDAwX2RldiAqcnQyeDAwZGV2KQogCXN0cnVjdCBxdWV1ZV9lbnRy
-eSAqZW50cnk7CiAJc3RydWN0IHF1ZXVlX2VudHJ5X3ByaXZfcGNpICplbnRyeV9wcml2Owog
-CXN0cnVjdCBza2JfZnJhbWVfZGVzYyAqc2tiZGVzYzsKKwl1bnNpZ25lZCBsb25nIGlycWZs
-YWdzOworCisJc3Bpbl9sb2NrX2lycXNhdmUoJnF1ZXVlLT5sb2NrLCBpcnFmbGFncyk7CiAK
-IAl3aGlsZSAoMSkgewogCQllbnRyeSA9IHJ0MngwMHF1ZXVlX2dldF9lbnRyeShxdWV1ZSwg
-UV9JTkRFWCk7CkBAIC0xMTgsNiArMTIxLDggQEAgdm9pZCBydDJ4MDBwY2lfcnhkb25lKHN0
-cnVjdCBydDJ4MDBfZGV2ICpydDJ4MDBkZXYpCiAJCSAqLwogCQlydDJ4MDBsaWJfcnhkb25l
-KHJ0MngwMGRldiwgZW50cnkpOwogCX0KKworCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJnF1
-ZXVlLT5sb2NrLCBpcnFmbGFncyk7CiB9CiBFWFBPUlRfU1lNQk9MX0dQTChydDJ4MDBwY2lf
-cnhkb25lKTsKIApkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcnQyeDAwL3J0
-MngwMHF1ZXVlLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9ydDJ4MDAvcnQyeDAwcXVldWUu
-YwppbmRleCA1NzcwMjllLi5hMmY0ZTY2IDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJl
-bGVzcy9ydDJ4MDAvcnQyeDAwcXVldWUuYworKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9y
-dDJ4MDAvcnQyeDAwcXVldWUuYwpAQCAtNDU2LDIwICs0NTYsMjkgQEAgc3RhdGljIHZvaWQg
-cnQyeDAwcXVldWVfd3JpdGVfdHhfZGVzY3JpcHRvcihzdHJ1Y3QgcXVldWVfZW50cnkgKmVu
-dHJ5LAogaW50IHJ0MngwMHF1ZXVlX3dyaXRlX3R4X2ZyYW1lKHN0cnVjdCBkYXRhX3F1ZXVl
-ICpxdWV1ZSwgc3RydWN0IHNrX2J1ZmYgKnNrYikKIHsKIAlzdHJ1Y3QgaWVlZTgwMjExX3R4
-X2luZm8gKnR4X2luZm87Ci0Jc3RydWN0IHF1ZXVlX2VudHJ5ICplbnRyeSA9IHJ0MngwMHF1
-ZXVlX2dldF9lbnRyeShxdWV1ZSwgUV9JTkRFWCk7CisJc3RydWN0IHF1ZXVlX2VudHJ5ICpl
-bnRyeTsKIAlzdHJ1Y3QgdHhlbnRyeV9kZXNjIHR4ZGVzYzsKIAlzdHJ1Y3Qgc2tiX2ZyYW1l
-X2Rlc2MgKnNrYmRlc2M7CiAJdTggcmF0ZV9pZHgsIHJhdGVfZmxhZ3M7CisJdW5zaWduZWQg
-bG9uZyBpcnFmbGFnczsKKwlpbnQgcmV0ID0gMDsKIAotCWlmICh1bmxpa2VseShydDJ4MDBx
-dWV1ZV9mdWxsKHF1ZXVlKSkpCi0JCXJldHVybiAtRU5PQlVGUzsKKwlzcGluX2xvY2tfaXJx
-c2F2ZSgmcXVldWUtPmxvY2ssIGlycWZsYWdzKTsKKworCWVudHJ5ID0gcnQyeDAwcXVldWVf
-Z2V0X2VudHJ5KHF1ZXVlLCBRX0lOREVYKTsKKworCWlmICh1bmxpa2VseShydDJ4MDBxdWV1
-ZV9mdWxsKHF1ZXVlKSkpIHsKKwkJcmV0ID0gLUVOT0JVRlM7CisJCWdvdG8gb3V0OworCX0K
-IAogCWlmICh0ZXN0X2FuZF9zZXRfYml0KEVOVFJZX09XTkVSX0RFVklDRV9EQVRBLCAmZW50
-cnktPmZsYWdzKSkgewogCQlFUlJPUihxdWV1ZS0+cnQyeDAwZGV2LAogCQkgICAgICAiQXJy
-aXZlZCBhdCBub24tZnJlZSBlbnRyeSBpbiB0aGUgbm9uLWZ1bGwgcXVldWUgJWQuXG4iCiAJ
-CSAgICAgICJQbGVhc2UgZmlsZSBidWcgcmVwb3J0IHRvICVzLlxuIiwKIAkJICAgICAgcXVl
-dWUtPnFpZCwgRFJWX1BST0pFQ1QpOwotCQlyZXR1cm4gLUVJTlZBTDsKKwkJcmV0ID0gLUVJ
-TlZBTDsKKwkJZ290byBvdXQ7CiAJfQogCiAJLyoKQEAgLTUyOCw3ICs1MzcsOCBAQCBpbnQg
-cnQyeDAwcXVldWVfd3JpdGVfdHhfZnJhbWUoc3RydWN0IGRhdGFfcXVldWUgKnF1ZXVlLCBz
-dHJ1Y3Qgc2tfYnVmZiAqc2tiKQogCWlmICh1bmxpa2VseShxdWV1ZS0+cnQyeDAwZGV2LT5v
-cHMtPmxpYi0+d3JpdGVfdHhfZGF0YShlbnRyeSkpKSB7CiAJCWNsZWFyX2JpdChFTlRSWV9P
-V05FUl9ERVZJQ0VfREFUQSwgJmVudHJ5LT5mbGFncyk7CiAJCWVudHJ5LT5za2IgPSBOVUxM
-OwotCQlyZXR1cm4gLUVJTzsKKwkJcmV0ID0gLUVJTzsKKwkJZ290byBvdXQ7CiAJfQogCiAJ
-aWYgKHRlc3RfYml0KERSSVZFUl9SRVFVSVJFX0RNQSwgJnF1ZXVlLT5ydDJ4MDBkZXYtPmZs
-YWdzKSkKQEAgLTUzOSw2ICs1NDksOSBAQCBpbnQgcnQyeDAwcXVldWVfd3JpdGVfdHhfZnJh
-bWUoc3RydWN0IGRhdGFfcXVldWUgKnF1ZXVlLCBzdHJ1Y3Qgc2tfYnVmZiAqc2tiKQogCXJ0
-MngwMHF1ZXVlX2luZGV4X2luYyhxdWV1ZSwgUV9JTkRFWCk7CiAJcnQyeDAwcXVldWVfd3Jp
-dGVfdHhfZGVzY3JpcHRvcihlbnRyeSwgJnR4ZGVzYyk7CiAKK291dDoKKwlzcGluX3VubG9j
-a19pcnFyZXN0b3JlKCZxdWV1ZS0+bG9jaywgaXJxZmxhZ3MpOworCiAJcmV0dXJuIDA7CiB9
-CiAKQEAgLTY0Miw3ICs2NTUsNiBAQCBzdHJ1Y3QgcXVldWVfZW50cnkgKnJ0MngwMHF1ZXVl
-X2dldF9lbnRyeShzdHJ1Y3QgZGF0YV9xdWV1ZSAqcXVldWUsCiAJCQkJCSAgZW51bSBxdWV1
-ZV9pbmRleCBpbmRleCkKIHsKIAlzdHJ1Y3QgcXVldWVfZW50cnkgKmVudHJ5OwotCXVuc2ln
-bmVkIGxvbmcgaXJxZmxhZ3M7CiAKIAlpZiAodW5saWtlbHkoaW5kZXggPj0gUV9JTkRFWF9N
-QVgpKSB7CiAJCUVSUk9SKHF1ZXVlLT5ydDJ4MDBkZXYsCkBAIC02NTAsMjggKzY2MiwyMCBA
-QCBzdHJ1Y3QgcXVldWVfZW50cnkgKnJ0MngwMHF1ZXVlX2dldF9lbnRyeShzdHJ1Y3QgZGF0
-YV9xdWV1ZSAqcXVldWUsCiAJCXJldHVybiBOVUxMOwogCX0KIAotCXNwaW5fbG9ja19pcnFz
-YXZlKCZxdWV1ZS0+bG9jaywgaXJxZmxhZ3MpOwotCiAJZW50cnkgPSAmcXVldWUtPmVudHJp
-ZXNbcXVldWUtPmluZGV4W2luZGV4XV07CiAKLQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZx
-dWV1ZS0+bG9jaywgaXJxZmxhZ3MpOwotCiAJcmV0dXJuIGVudHJ5OwogfQogRVhQT1JUX1NZ
-TUJPTF9HUEwocnQyeDAwcXVldWVfZ2V0X2VudHJ5KTsKIAogdm9pZCBydDJ4MDBxdWV1ZV9p
-bmRleF9pbmMoc3RydWN0IGRhdGFfcXVldWUgKnF1ZXVlLCBlbnVtIHF1ZXVlX2luZGV4IGlu
-ZGV4KQogewotCXVuc2lnbmVkIGxvbmcgaXJxZmxhZ3M7Ci0KIAlpZiAodW5saWtlbHkoaW5k
-ZXggPj0gUV9JTkRFWF9NQVgpKSB7CiAJCUVSUk9SKHF1ZXVlLT5ydDJ4MDBkZXYsCiAJCSAg
-ICAgICJJbmRleCBjaGFuZ2Ugb24gaW52YWxpZCBpbmRleCB0eXBlICglZClcbiIsIGluZGV4
-KTsKIAkJcmV0dXJuOwogCX0KIAotCXNwaW5fbG9ja19pcnFzYXZlKCZxdWV1ZS0+bG9jaywg
-aXJxZmxhZ3MpOwotCiAJcXVldWUtPmluZGV4W2luZGV4XSsrOwogCWlmIChxdWV1ZS0+aW5k
-ZXhbaW5kZXhdID49IHF1ZXVlLT5saW1pdCkKIAkJcXVldWUtPmluZGV4W2luZGV4XSA9IDA7
-CkBAIC02ODIsOCArNjg2LDYgQEAgdm9pZCBydDJ4MDBxdWV1ZV9pbmRleF9pbmMoc3RydWN0
-IGRhdGFfcXVldWUgKnF1ZXVlLCBlbnVtIHF1ZXVlX2luZGV4IGluZGV4KQogCQlxdWV1ZS0+
-bGVuZ3RoLS07CiAJCXF1ZXVlLT5jb3VudCsrOwogCX0KLQotCXNwaW5fdW5sb2NrX2lycXJl
-c3RvcmUoJnF1ZXVlLT5sb2NrLCBpcnFmbGFncyk7CiB9CiAKIHN0YXRpYyB2b2lkIHJ0Mngw
-MHF1ZXVlX3Jlc2V0KHN0cnVjdCBkYXRhX3F1ZXVlICpxdWV1ZSkKZGlmZiAtLWdpdCBhL2Ry
-aXZlcnMvbmV0L3dpcmVsZXNzL3J0MngwMC9ydDJ4MDB1c2IuYyBiL2RyaXZlcnMvbmV0L3dp
-cmVsZXNzL3J0MngwMC9ydDJ4MDB1c2IuYwppbmRleCBmMDJiNDhhLi42N2I0NjEwIDEwMDY0
-NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9ydDJ4MDAvcnQyeDAwdXNiLmMKKysrIGIv
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvcnQyeDAwL3J0MngwMHVzYi5jCkBAIC0yNzAsNyArMjcw
-LDYgQEAgdm9pZCBydDJ4MDB1c2Jfa2lja190eF9xdWV1ZShzdHJ1Y3QgcnQyeDAwX2RldiAq
-cnQyeDAwZGV2LAogCQkJICAgICBjb25zdCBlbnVtIGRhdGFfcXVldWVfcWlkIHFpZCkKIHsK
-IAlzdHJ1Y3QgZGF0YV9xdWV1ZSAqcXVldWUgPSBydDJ4MDBxdWV1ZV9nZXRfcXVldWUocnQy
-eDAwZGV2LCBxaWQpOwotCXVuc2lnbmVkIGxvbmcgaXJxZmxhZ3M7CiAJdW5zaWduZWQgaW50
-IGluZGV4OwogCXVuc2lnbmVkIGludCBpbmRleF9kb25lOwogCXVuc2lnbmVkIGludCBpOwpA
-QCAtMjgxLDEwICsyODAsOCBAQCB2b2lkIHJ0MngwMHVzYl9raWNrX3R4X3F1ZXVlKHN0cnVj
-dCBydDJ4MDBfZGV2ICpydDJ4MDBkZXYsCiAJICogaXQgc2hvdWxkIG5vdCBiZSBraWNrZWQg
-ZHVyaW5nIHRoaXMgcnVuLCBzaW5jZSBpdAogCSAqIGlzIHBhcnQgb2YgYW5vdGhlciBUWCBv
-cGVyYXRpb24uCiAJICovCi0Jc3Bpbl9sb2NrX2lycXNhdmUoJnF1ZXVlLT5sb2NrLCBpcnFm
-bGFncyk7CiAJaW5kZXggPSBxdWV1ZS0+aW5kZXhbUV9JTkRFWF07CiAJaW5kZXhfZG9uZSA9
-IHF1ZXVlLT5pbmRleFtRX0lOREVYX0RPTkVdOwotCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUo
-JnF1ZXVlLT5sb2NrLCBpcnFmbGFncyk7CiAKIAkvKgogCSAqIFN0YXJ0IGZyb20gdGhlIFRY
-IGRvbmUgcG9pbnRlciwgdGhpcyBndWFyZW50ZWVzIHRoYXQgd2Ugd2lsbApkaWZmIC0tZ2l0
-IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcnQyeDAwL3J0NjFwY2kuYyBiL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL3J0MngwMC9ydDYxcGNpLmMKaW5kZXggYjIwZTNlYS4uY2NkNWU1MCAxMDA2
-NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcnQyeDAwL3J0NjFwY2kuYworKysgYi9k
-cml2ZXJzL25ldC93aXJlbGVzcy9ydDJ4MDAvcnQ2MXBjaS5jCkBAIC0yMDM3LDYgKzIwMzcs
-NyBAQCBzdGF0aWMgdm9pZCBydDYxcGNpX3R4ZG9uZShzdHJ1Y3QgcnQyeDAwX2RldiAqcnQy
-eDAwZGV2KQogCXUzMiBvbGRfcmVnOwogCWludCB0eXBlOwogCWludCBpbmRleDsKKwl1bnNp
-Z25lZCBsb25nIGlycWZsYWdzOwogCiAJLyoKIAkgKiBEdXJpbmcgZWFjaCBsb29wIHdlIHdp
-bGwgY29tcGFyZSB0aGUgZnJlc2hseSByZWFkCkBAIC0yMDc0LDEzICsyMDc1LDE3IEBAIHN0
-YXRpYyB2b2lkIHJ0NjFwY2lfdHhkb25lKHN0cnVjdCBydDJ4MDBfZGV2ICpydDJ4MDBkZXYp
-CiAJCWlmICh1bmxpa2VseShpbmRleCA+PSBxdWV1ZS0+bGltaXQpKQogCQkJY29udGludWU7
-CiAKKwkJc3Bpbl9sb2NrX2lycXNhdmUoJnF1ZXVlLT5sb2NrLCBpcnFmbGFncyk7CisKIAkJ
-ZW50cnkgPSAmcXVldWUtPmVudHJpZXNbaW5kZXhdOwogCQllbnRyeV9wcml2ID0gZW50cnkt
-PnByaXZfZGF0YTsKIAkJcnQyeDAwX2Rlc2NfcmVhZChlbnRyeV9wcml2LT5kZXNjLCAwLCAm
-d29yZCk7CiAKIAkJaWYgKHJ0MngwMF9nZXRfZmllbGQzMih3b3JkLCBUWERfVzBfT1dORVJf
-TklDKSB8fAotCQkgICAgIXJ0MngwMF9nZXRfZmllbGQzMih3b3JkLCBUWERfVzBfVkFMSUQp
-KQorCQkgICAgIXJ0MngwMF9nZXRfZmllbGQzMih3b3JkLCBUWERfVzBfVkFMSUQpKSB7CisJ
-CQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZxdWV1ZS0+bG9jaywgaXJxZmxhZ3MpOwogCQkJ
-cmV0dXJuOworCQl9CiAKIAkJZW50cnlfZG9uZSA9IHJ0MngwMHF1ZXVlX2dldF9lbnRyeShx
-dWV1ZSwgUV9JTkRFWF9ET05FKTsKIAkJd2hpbGUgKGVudHJ5ICE9IGVudHJ5X2RvbmUpIHsK
-QEAgLTIxMTYsNiArMjEyMSw4IEBAIHN0YXRpYyB2b2lkIHJ0NjFwY2lfdHhkb25lKHN0cnVj
-dCBydDJ4MDBfZGV2ICpydDJ4MDBkZXYpCiAJCXR4ZGVzYy5yZXRyeSA9IHJ0MngwMF9nZXRf
-ZmllbGQzMihyZWcsIFNUQV9DU1I0X1JFVFJZX0NPVU5UKTsKIAogCQlydDJ4MDBsaWJfdHhk
-b25lKGVudHJ5LCAmdHhkZXNjKTsKKworCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZxdWV1
-ZS0+bG9jaywgaXJxZmxhZ3MpOwogCX0KIH0KIAo=
---------------090309080706070702070102--
+Larry
