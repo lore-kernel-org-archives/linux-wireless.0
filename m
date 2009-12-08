@@ -1,110 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33878 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933589AbZLGTyj (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:45741 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932352AbZLHQCG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2009 14:54:39 -0500
+	Tue, 8 Dec 2009 11:02:06 -0500
+Received: by iwn1 with SMTP id 1so3835769iwn.33
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2009 08:02:13 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <b6c5339f0912080657s7cfccd4dp6525702e609bdd5f@mail.gmail.com>
+References: <bf87febf0912030507u1c36f6a9h7cac0efabf3d016@mail.gmail.com>
+	<20091204192315.GA5786@tuxdriver.com> <bf87febf0912070205k40a7286dpbb48cfcc494203d2@mail.gmail.com>
+	<20091207215903.GC18939@tuxdriver.com> <b6c5339f0912080657s7cfccd4dp6525702e609bdd5f@mail.gmail.com>
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	johannes@sipsolutions.net
-Subject: [PATCH] mac80211: parse the HT capabilities info through debugfs
-Date: Mon,  7 Dec 2009 14:54:45 -0500
-Message-Id: <1260215685-24385-1-git-send-email-lrodriguez@atheros.com>
+Date: Tue, 8 Dec 2009 08:01:52 -0800
+Message-ID: <43e72e890912080801s52607743s738ed6cdad7d154e@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: add support for Dell Vostro A860 LED
+To: Bob Copeland <me@bobcopeland.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	Shahar Or <mightyiampresence@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When debugging you want to be lazy and not have to parse
-bits yourself so let mac80211 debugfs do the parsing for you.
+On Tue, Dec 8, 2009 at 6:57 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Mon, Dec 7, 2009 at 4:59 PM, John W. Linville <linville@tuxdriver.com> wrote:
+>> On Mon, Dec 07, 2009 at 12:05:54PM +0200, Shahar Or wrote:
+>>> Adds support for the WiFi activity LED on the Dell Vostro A860 laptop.
+>>>
+>>> Signed-off-by: Shahar Or <shahar@shahar-or.co.il>
+>>> ---
+>>> I hope this one is perfect.
+>
+> Thanks for the patch.  As for getting a better solution to LEDs, I
+> trolled through the ACPI spec and code, and while various modules
+> do set up LED pins, there doesn't seem to be a way to generally
+> get that information from another module and it appears different
+> between each vendor.  I am by no stretch expert in ACPI stuff
+> though.
+>
+> Luis, I've asked this before but maybe you know better now or know
+> whom to ask on your side.  Atheros must have a way on Windows to
+> figure out the LED pin/polarity -- do you have any idea?  Ath9k
+> uses the SREV but that seems to be insufficient for ath5k judging
+> by all the quirks.
 
-This is what I get against my WRT610N:
+IIRC this is all mapped in the INF file, I thought I had released an
+INF file under the ISC license but it seems that's not the case, I can
+try to do that if it helps. Anyway, if we can move this sort of map to
+userspace it'd be neat as you'd just need a userspace file update.
+Only thing is how to do this in a generic way for all wireless drivers
+and if this is indeed useful for other drivers.
 
-root@tux:~# cat /sys/kernel/debug/ieee80211/phy0/stations/00\:22\:6b\:aa\:bb\:01/ht_capa
-ht supported
-cap: 0x000e
-	HT20/HT40
-	SM Power Save disabled
-	No RX STBC
-	Max AMSDU length: 7935 bytes
-	No DSSS/CCK HT40
-ampdu factor/density: 2/6
-MCS mask: ff ff 00 00 00 00 00 00 00 00
-MCS rx highest: 0
-MCS tx params: 0
-
-Cc: johannes@sipsolutions.net
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/debugfs_sta.c |   48 +++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 47 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index ae6a919..ab3397a 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -160,7 +160,12 @@ STA_OPS(agg_status);
- static ssize_t sta_ht_capa_read(struct file *file, char __user *userbuf,
- 				size_t count, loff_t *ppos)
- {
--	char buf[200], *p = buf;
-+#define PRINT_HT_CAP(_cond, _str) \
-+	do { \
-+	if (_cond) \
-+			p += scnprintf(p, sizeof(buf)+buf-p, "\t" _str "\n"); \
-+	} while (0)
-+	char buf[1024], *p = buf;
- 	int i;
- 	struct sta_info *sta = file->private_data;
- 	struct ieee80211_sta_ht_cap *htc = &sta->sta.ht_cap;
-@@ -169,6 +174,47 @@ static ssize_t sta_ht_capa_read(struct file *file, char __user *userbuf,
- 			htc->ht_supported ? "" : "not ");
- 	if (htc->ht_supported) {
- 		p += scnprintf(p, sizeof(buf)+buf-p, "cap: %#.4x\n", htc->cap);
-+
-+		PRINT_HT_CAP((htc->cap & BIT(0)), "RX LDCP");
-+		PRINT_HT_CAP((htc->cap & BIT(1)), "HT20/HT40");
-+		PRINT_HT_CAP(!(htc->cap & BIT(1)), "HT20");
-+
-+		PRINT_HT_CAP(((htc->cap >> 2) & 0x3) == 0, "Static SM Power Save");
-+		PRINT_HT_CAP(((htc->cap >> 2) & 0x3) == 1, "Dynamic SM Power Save");
-+		PRINT_HT_CAP(((htc->cap >> 2) & 0x3) == 3, "SM Power Save disabled");
-+
-+		PRINT_HT_CAP((htc->cap & BIT(4)), "RX Greenfield");
-+		PRINT_HT_CAP((htc->cap & BIT(5)), "RX HT20 SGI");
-+		PRINT_HT_CAP((htc->cap & BIT(6)), "RX HT40 SGI");
-+		PRINT_HT_CAP((htc->cap & BIT(7)), "TX STBC");
-+
-+		PRINT_HT_CAP(((htc->cap >> 8) & 0x3) == 0, "No RX STBC");
-+		PRINT_HT_CAP(((htc->cap >> 8) & 0x3) == 1, "RX STBC 1-stream");
-+		PRINT_HT_CAP(((htc->cap >> 8) & 0x3) == 2, "RX STBC 2-streams");
-+		PRINT_HT_CAP(((htc->cap >> 8) & 0x3) == 3, "RX STBC 3-streams");
-+
-+		PRINT_HT_CAP((htc->cap & BIT(10)), "HT Delayed Block Ack");
-+
-+		PRINT_HT_CAP((htc->cap & BIT(11)), "Max AMSDU length: "
-+			     "3839 bytes");
-+		PRINT_HT_CAP(!(htc->cap & BIT(11)), "Max AMSDU length: "
-+			     "7935 bytes");
-+
-+		/*
-+		 * For beacons and probe response this would mean the BSS
-+		 * does or does not allow the usage of DSSS/CCK HT40.
-+		 * Otherwise it means the STA does or does not use
-+		 * DSSS/CCK HT40.
-+		 */
-+		PRINT_HT_CAP((htc->cap & BIT(12)), "DSSS/CCK HT40");
-+		PRINT_HT_CAP(!(htc->cap & BIT(12)), "No DSSS/CCK HT40");
-+
-+		/* BIT(13) is reserved */
-+
-+		PRINT_HT_CAP((htc->cap & BIT(14)), "40 MHz Intolerant");
-+
-+		PRINT_HT_CAP((htc->cap & BIT(15)), "L-SIG TXOP protection");
-+
- 		p += scnprintf(p, sizeof(buf)+buf-p, "ampdu factor/density: %d/%d\n",
- 				htc->ampdu_factor, htc->ampdu_density);
- 		p += scnprintf(p, sizeof(buf)+buf-p, "MCS mask:");
--- 
-1.6.3.3
-
+  Luis
