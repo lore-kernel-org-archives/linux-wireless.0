@@ -1,107 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:63071 "EHLO
-	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750753AbZLVINj (ORCPT
+Received: from mail-gx0-f226.google.com ([209.85.217.226]:45486 "EHLO
+	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755189AbZLHOsH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2009 03:13:39 -0500
-Message-ID: <4B307FB1.5040806@gmail.com>
-Date: Tue, 22 Dec 2009 09:13:37 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Tue, 8 Dec 2009 09:48:07 -0500
 MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: Markus Baier <Markus_Baier@web.de>, linux-wireless@vger.kernel.org
-Subject: Re: [BISECTED] [PATCH v2 8/8] rt2x00: Properly request tx headroom
- for alignment operations.
-References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-2-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-3-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-4-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-5-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-6-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-7-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-8-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-9-git-send-email-gwingerde@gmail.com>	 <loom.20091220T163829-137@post.gmane.org> <4B2E8729.7050501@gmail.com>	 <20091221013316.nm9belnhywwwsc0w-cebfxv@webmail.spamcop.net>	 <4B2FA1CF.1010903@gmail.com> <1261459549.31982.2.camel@ct>
-In-Reply-To: <1261459549.31982.2.camel@ct>
+In-Reply-To: <Pine.LNX.4.44L0.0912080922160.3046-200000@iolanthe.rowland.org>
+References: <4B1D7BB1.5040709@gmail.com>
+	 <Pine.LNX.4.44L0.0912080922160.3046-200000@iolanthe.rowland.org>
+Date: Tue, 8 Dec 2009 15:48:13 +0100
+Message-ID: <14add3d10912080648w5610d533h2cf08a9d79fa48c1@mail.gmail.com>
+Subject: Re: REGRESSION for RT2561/RT61 in 2.6.32
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>, linux-wireless@vger.kernel.org,
+	Kernel development list <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/22/09 06:25, Pavel Roskin wrote:
-> Quoting Gertjan van Wingerde <gwingerde@gmail.com>:
-> 
->>> Perhaps non-zero headroom is not handled correctly?
->>>
+On Tue, Dec 8, 2009 at 3:27 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Mon, 7 Dec 2009, Gertjan van Wingerde wrote:
+>
+>> > While the system is hung, Alt-SysRq-keys still work but nothing else
+>> > shows up when I type (using a VT console, not X).  However I don't know
+>> > what debugging to do or what to look for.
+>> >
+>> > Under 2.6.31 everything works okay.
+>> >
 >>
->> Hmmm, perhaps the problem is that the headroom is not a multiple of 4.
->> Can you check what happens when you set the extra_tx_headroom fixed  
->> to e.g. 20?
-> 
-> I tried 64 and 2, and neither worked.  rt2x00dev->ops->extra_tx_headroom
-> is 0 for me.  When the rt2x00dev->hw->extra_tx_headroom is 2, I observed
-> invalid packets being emitted (using another interface).  The packets
-> have two bytes inserted in the beginning of the frame:
-> 
-> 0000  00 00 1c 00 6f 48 00 00  fc de ee 13 00 00 00 00   ....oH.. ........
-> 0010  10 02 85 09 a0 00 b1 b7  00 00 00 00 00 00 40 00   ........ ......@.
-> radiotap, 28 bytes ---------------------->
-> 2 extra bytes                              <--->
-> correct 802.11 header                            <----
-> 0020  00 00 ff ff ff ff ff ff  00 d0 41 af ad 2c ff ff   ........ ..A..,..
-> 0030  ff ff cf 02 c0 02 00 05  77 62 65 6e 64 01 08 02   ........ wbend...
-> 0040  04 0b 16 0c 12 18 24 32  04 30 48 e7 f8 07 9d      ......$2 .0H.... 
-> 
-> Here's a patch that is working for me, but I would not vouch for its
-> correctness.  Signing off just in case it happens to be correct ;-)
-> 
-> 
-> rt2x00: use correct headroom for transmission
-> 
-> Use rt2x00dev->ops->extra_tx_headroom, not
-> rt2x00dev->hw->extra_tx_headroom in the tx code, as the later includes
-> headroom only meant for the monitor mode.
-> 
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
+>> Hmmm, that's odd. I haven't seen any other reports on this (on full system hangs that is).
+>>
+>> It would be very hard to figure out what is going wrong without any form of logging of
+>> an oops or something. Is there any way you can find out if any oops information is present?
+>
+> There is no oops.  The system just stops responding to keystrokes other
+> than Alt-SysRq-*.
+>
+>> What does Alt-SysRq-l tell us, what are the CPU's doing when the system is hung?
+>
+> Unfortunately Alt-SysRq-l wasn't very helpful.  The output is below
+> (captured using a serial console), starting from when I configured the
+> wireless interface.  For thoroughness I have also attached the output
+> of Alt-SysRq-T in single-user mode, but it doesn't seem to contain
+> anything striking.
+>
+> Could the problem be connected with CONFIG_4KSTACKS (which was enabled
+> in this kernel)?
 
-Doh, that's it. Here we should indeed only take the real extra TX headroom required by
-the driver into account. Seems like I goofed up in a preparatory patch that centralized
-setting of rt2x00dev->hw->extra_tx_headroom.
+Hmm, the stack overrun seems to be generated as part of the
+Alt-SysRq-* handling, not of any rt61pci handling.
 
-Can you confirm that everything works okay with the original code and this patch applied?
+I noticed in the Alt-SysRq-T output that powersaving is enabled. We've
+seen some strange behaviour on this, so could you disable that with:
 
-In any way:
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+iwconfig wlan0 power off
 
-John, with this you can reinstate the original patch as well. Let me know if you want
-me to resubmit that one with this one included in it.
+or run a kernel in which CONFIG_CFG80211_DEFAULT_PS is disabled.
 
+Maybe that will fix the problem we are seeing?
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00queue.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> index 3d8fb68..0b4801a 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> @@ -104,7 +104,7 @@ void rt2x00queue_map_txskb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb)
->  	 * is also mapped to the DMA so it can be used for transfering
->  	 * additional descriptor information to the hardware.
->  	 */
-> -	skb_push(skb, rt2x00dev->hw->extra_tx_headroom);
-> +	skb_push(skb, rt2x00dev->ops->extra_tx_headroom);
->  
->  	skbdesc->skb_dma =
->  	    dma_map_single(rt2x00dev->dev, skb->data, skb->len, DMA_TO_DEVICE);
-> @@ -112,7 +112,7 @@ void rt2x00queue_map_txskb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb)
->  	/*
->  	 * Restore data pointer to original location again.
->  	 */
-> -	skb_pull(skb, rt2x00dev->hw->extra_tx_headroom);
-> +	skb_pull(skb, rt2x00dev->ops->extra_tx_headroom);
->  
->  	skbdesc->flags |= SKBDESC_DMA_MAPPED_TX;
->  }
-> @@ -134,7 +134,7 @@ void rt2x00queue_unmap_skb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb)
->  		 * by the driver, but it was actually mapped to DMA.
->  		 */
->  		dma_unmap_single(rt2x00dev->dev, skbdesc->skb_dma,
-> -				 skb->len + rt2x00dev->hw->extra_tx_headroom,
-> +				 skb->len + rt2x00dev->ops->extra_tx_headroom,
->  				 DMA_TO_DEVICE);
->  		skbdesc->flags &= ~SKBDESC_DMA_MAPPED_TX;
->  	}
-> 
+Other than that I have no ideas on what is happening here.
 
+---
+Gertjan.
