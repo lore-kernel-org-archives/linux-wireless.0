@@ -1,46 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:22594 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751225AbZL1DSh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Dec 2009 22:18:37 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] mac80211: delete addba_resp_timer when stop Tx BA session
-Date: Mon, 28 Dec 2009 11:18:28 +0800
-Message-Id: <1261970308-22926-1-git-send-email-yi.zhu@intel.com>
+Received: from mail-gx0-f226.google.com ([209.85.217.226]:64238 "EHLO
+	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966125AbZLHVAz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Dec 2009 16:00:55 -0500
+Received: by gxk26 with SMTP id 26so5492934gxk.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2009 13:01:02 -0800 (PST)
+Message-ID: <4B1EBE86.7000303@lwfinger.net>
+Date: Tue, 08 Dec 2009 15:00:54 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+CC: Michael Buesch <mb@bu3sch.de>,
+	John W Linville <linville@tuxdriver.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC/RFT] rtl8187: Fix 'queuing ieee80211 work while going to
+ suspend' warning
+References: <4b1db502./oHzXA5LInBxxQjb%Larry.Finger@lwfinger.net> <200912081341.20682.herton@mandriva.com.br> <4B1EB43B.8090806@lwfinger.net> <200912081857.49661.herton@mandriva.com.br>
+In-Reply-To: <200912081857.49661.herton@mandriva.com.br>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We start an one shot addba_resp_timer in ieee80211_start_tx_ba_session
-but don't delete it in __ieee80211_stop_tx_ba_session. This will cause
-problem in suspend and resume. When suspend happens without the timer
-deleted, the timer handler will be called immediately after resume and
-messes up driver status.
+On 12/08/2009 02:57 PM, Herton Ronaldo Krzesinski wrote:
+> It's because without registering a radio led the current behaviour is wrong 
+> for some cases, the led stays on when it shouldn't. For example, if you bring 
+> the interface down (ifconfig <if> down) the led stays on, when it shouldn't. 
+> The led should only be active while interface is active, between start and 
+> stop (or in other words, the radio is on). After mac80211 stops the device, 
+> any i/o (led activity) shouldn't happen.
 
-See http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2134
-comment #22 for more details.
+OK, then the turn off of the radio LED eliminates the "turn-off" that
+I put in the shutdown process.
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- net/mac80211/agg-tx.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index ceda366..d122082 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -509,6 +509,8 @@ int __ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
- 	u8 *state;
- 	int ret;
- 
-+	del_timer_sync(&sta->ampdu_mlme.tid_tx[tid]->addba_resp_timer);
-+
- 	/* check if the TID is in aggregation */
- 	state = &sta->ampdu_mlme.tid_state_tx[tid];
- 	spin_lock_bh(&sta->lock);
--- 
-1.6.3.3
-
+Larry
