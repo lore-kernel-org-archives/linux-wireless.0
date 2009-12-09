@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40173 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758514AbZLJOAL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2009 09:00:11 -0500
-Date: Thu, 10 Dec 2009 08:47:33 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org, davem@davemloft.net
-Subject: Re: Revised wireless tree management practices
-Message-ID: <20091210134733.GC11112@tuxdriver.com>
-References: <20091209211054.GB32058@tuxdriver.com> <87ljhb0x0h.fsf@purkki.valot.fi>
+Received: from mgw2.diku.dk ([130.225.96.92]:54119 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757371AbZLITZz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Dec 2009 14:25:55 -0500
+Date: Wed, 9 Dec 2009 20:25:59 +0100 (CET)
+From: Julia Lawall <julia@diku.dk>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH 11/12] net/mac80211: Correct size given to memset
+Message-ID: <Pine.LNX.4.64.0912092025240.1870@ask.diku.dk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87ljhb0x0h.fsf@purkki.valot.fi>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 10, 2009 at 03:38:38PM +0200, Kalle Valo wrote:
-> "John W. Linville" <linville@tuxdriver.com> writes:
-> 
-> > Greetings,
-> 
-> Hi,
-> 
-> > So I'm tired of a) being asked how wireless-testing is managed; and,
-> > b) having trouble explaining it.  I think it is time to move to a
-> > more conventional process for wireless patches.
-> 
-> Hopefully this also reduces your workload. There is quite a lot of
-> wireless patches floating around nowadays.
-> 
-> > More likely, it means I may have to push an occasional revert
-> > through those trees that I might have otherwise avoided.
-> 
-> Having reverts in the tree doesn't sound that bad. Even we do mistakes
-> sometimes, no need to hide them :)
-> 
-> > For now, the main change to wireless-testing will be that I will be
-> > pulling from wireless-2.6 and wireless-next-2.6 rather than reapplying
-> > most patches.  This should limit (and possibly eliminate) the confusing
-> > patch-revert-reapply-repeat practice I have been using there for a
-> > long time.  However, I still anticipate using w-t as a holding area
-> > for questionable patches.  So, at least some patches may still get
-> > the revert-reapply treatment.  I may ask Stephen to pull w-t into
-> > linux-next in order to expand testing of any such patches.
-> 
-> I have two questions:
-> 
-> What tree should I base my patches on?
-> 
-> What about testing? Which tree is best to use for testing latest and
-> greatest wireless patches?
+From: Julia Lawall <julia@diku.dk>
 
-I still see value in a tree that has a reasonably stable base and
-contains both wireless fixes and wireless features.  So, I think
-wireless-testing remains as the focal point for wireless LAN testing
-and development.  I'll just be getting patches there in a slightly
-different process.
+Memset should be given the size of the structure, not the size of the pointer.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+The semantic patch that makes this change is as follows:
+(http://coccinelle.lip6.fr/)
+
+// <smpl>
+@@
+type T;
+T *x;
+expression E;
+@@
+
+memset(x, E, sizeof(
++ *
+ x))
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ net/mac80211/mesh.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff -u -p a/net/mac80211/mesh.c b/Net/mac80211/mesh.c
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -427,7 +427,7 @@ int ieee80211_new_mesh_header(struct iee
+ 		char *addr5, char *addr6)
+ {
+ 	int aelen = 0;
+-	memset(meshhdr, 0, sizeof(meshhdr));
++	memset(meshhdr, 0, sizeof(*meshhdr));
+ 	meshhdr->ttl = sdata->u.mesh.mshcfg.dot11MeshTTL;
+ 	put_unaligned(cpu_to_le32(sdata->u.mesh.mesh_seqnum), &meshhdr->seqnum);
+ 	sdata->u.mesh.mesh_seqnum++;
