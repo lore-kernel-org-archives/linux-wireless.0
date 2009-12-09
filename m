@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:40564 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754167AbZLCNNp (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:40676 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757543AbZLITZz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2009 08:13:45 -0500
-Received: by ewy6 with SMTP id 6so1520681ewy.29
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Dec 2009 05:13:51 -0800 (PST)
+	Wed, 9 Dec 2009 14:25:55 -0500
+Date: Wed, 09 Dec 2009 13:25:56 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] b43: Remove reset after fatal DMA error
+Message-ID: <4b1ff9c4.iIvEkDMkYFL2BtFk%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Date: Thu, 3 Dec 2009 15:07:28 +0200
-Message-ID: <bf87febf0912030507u1c36f6a9h7cac0efabf3d016@mail.gmail.com>
-Subject: [PATCH] ath5k: add support for Dell Vostro A860 LED
-From: Shahar Or <mightyiampresence@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath5k-devel@lists.ath5k.org, me@bobcopeland.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shahar Or
+As shown in Kernel Bugzilla #14761, doing a controller restart after a
+fatal DMA error does not accomplish anything other than consume the CPU
+on an affected system. Accordingly, substitute a meaningful message for
+the restart.
 
-Adds support for the WiFi activity LED on the Dell Vostro A860 laptop.
-
-Signed-off-by: Shahar Or
-
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>        [2.6.32]
 ---
---- linux-2.6.31/drivers/net/wireless/ath/ath5k/led.c.orig
-2009-12-03 14:57:20.000000000 +0200
-+++ linux-2.6.31/drivers/net/wireless/ath/ath5k/led.c   2009-12-03
-14:25:30.000000000 +0200
-@@ -71,6 +71,8 @@ static const struct pci_device_id ath5k_
-        { ATH_SDEVICE(PCI_VENDOR_ID_IBM, 0x058a), ATH_LED(1, 0) },
-        /* IBM-specific AR5212 (all others) */
-        { PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5212_IBM),
-ATH_LED(0, 0) },
-+       /* Dell Vostro A860 (shahar@shahar-or.co.il) */
-+       { ATH_SDEVICE(PCI_VENDOR_ID_QMI, 0x0112), ATH_LED(3, 0) },
-        { }
- };
+
+John,
+
+If possible, this patch should be applied to 2.6.33. I made the message
+be two parts as the second will be replaced once the patch to change PIO
+from a compile-time to a run-time option is completed and tested.
+It is working here, but needs further testing. I expected the performance
+to be degraded, but it seems to be too much here.
+
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c
++++ wireless-testing/drivers/net/wireless/b43/main.c
+@@ -1784,7 +1784,10 @@ static void b43_do_interrupt_thread(stru
+ 			       dma_reason[0], dma_reason[1],
+ 			       dma_reason[2], dma_reason[3],
+ 			       dma_reason[4], dma_reason[5]);
+-			b43_controller_restart(dev, "DMA error");
++			b43err(dev->wl, "This device does not support DMA "
++			       "on your system. Please use PIO instead.\n");
++			b43err(dev->wl, "CONFIG_B43_FORCE_PIO must be set in "
++			       "your kernel configuration.\n");
+ 			return;
+ 		}
+ 		if (merged_dma_reason & B43_DMAIRQ_NONFATALMASK) {
