@@ -1,61 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39779 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761966AbZLLLam (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:46892 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751073AbZLIQ4N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Dec 2009 06:30:42 -0500
-Subject: Re: mac80211 noob question
-From: Johannes Berg <johannes@sipsolutions.net>
-To: VN <vnik5287@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <157c4da70912120329n4b6bc663ic47e95201f7569da@mail.gmail.com>
-References: <157c4da70912120218lc53633bk62fc9ee99377a231@mail.gmail.com>
-	 <1260613513.2442.319.camel@johannes.local>
-	 <157c4da70912120329n4b6bc663ic47e95201f7569da@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-9Pq5CCpLs+Vc5AkXzKkW"
-Date: Sat, 12 Dec 2009 12:30:45 +0100
-Message-ID: <1260617445.2442.332.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 9 Dec 2009 11:56:13 -0500
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] rtl8187: add radio led and fix warnings on suspend
+Date: Wed, 9 Dec 2009 14:56:13 -0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>, Michael Buesch <mb@bu3sch.de>,
+	"Hin-Tak Leung" <htl10@users.sourceforge.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <200912091456.13989.herton@mandriva.com.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michael Buesch reports that his rtl8187 gives warnings on suspend
+("queueing ieee80211 work while going to suspend" warnings), as rtl8187
+can call ieee80211_queue_delayed_work after mac80211 is suspended.
 
---=-9Pq5CCpLs+Vc5AkXzKkW
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+This change enhances rtl8187 led code so we can avoid queuing work after
+mac80211 is suspended: now we register a radio led and make additional
+checks to ensure led is off/on properly as mac80211 wants.
 
-On Sat, 2009-12-12 at 22:29 +1100, VN wrote:
-> Ah I guess I am. I just assumed that since I'm able to capture data
-> frames sent from node A to node B (w/o radiotap?), there should be
-> some way to check which ones were acknowledged by node B. Thanks for
-> your prompt response!
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+---
+ drivers/net/wireless/rtl818x/rtl8187.h      |    1 +
+ drivers/net/wireless/rtl818x/rtl8187_leds.c |   68 ++++++++++++++++++--------
+ drivers/net/wireless/rtl818x/rtl8187_leds.h |    2 +
+ 3 files changed, 50 insertions(+), 21 deletions(-)
 
-But are you capturing on A or on B? If you're capturing on A, then yes,
-you can figure out whether it was ACKed by B and A received the ACK --
-pull up a monitor interface and see the info you get from it.
-
-johannes
-
---=-9Pq5CCpLs+Vc5AkXzKkW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLI37iAAoJEODzc/N7+QmagLIQAIONUyMIUlaNpxKKRpZ3qgED
-DLSVRjGHswimlZvSs7cz+feFfhEiuivqZYbWiWRyT0Xp3Zj80QmNIG306Iip3XGn
-dSg82Ova4oSnbC3ONgOj6cirWt3gibJ8SNC8FOdNKPqEGvkDBnGRD9xf1sJkoRRI
-JaS0NUn/0huvtd/yDuCxzPOc2qkY1X5u5aaJkCvp8BG2ogxOcNaTteuEbkPw108C
-S88uTjZWbVWApG96fzGjwr/y0PA3gtnS9YwB2t8aklsvL3aWZdwlKu2qjZbsO1Nd
-wmEreu6Y5BF8PPTX3OnT3ZAT6yloolP0WlTGrkVg5pvBbZEZF96YeV695o0usTE6
-JBaRMFWyjndGmkEA0CGsOPo39oEVUBW9Z775Vm4vsF6bs2E3KTDz6r1MFFc94px/
-E8go5JBcEBttIgs7mo6LScczyFKBEDNe/Yp4oi1Lv8AajYDp/jIKoaP61FpNNjhe
-XMZSxwWbRMGxO+PQiQnK5DWDMWplOi95RZFVoZMt8gINrdk7tZ0O4k34+e8F6MfC
-uUT+1bAgcp8tsuDAWiMOA1xYvD//2olqOoPXG/QUBTIpN95e3/D3ixscoRnNUJfw
-eOAvTWsToWCLC66WY/EBh+5W+kKWELQPk8mz1EyqAOCIeVH1dk7KBdoc8vJ6P1wM
-0mwdcSjOL9SZf+x+fB4t
-=3upQ
------END PGP SIGNATURE-----
-
---=-9Pq5CCpLs+Vc5AkXzKkW--
+diff --git a/drivers/net/wireless/rtl818x/rtl8187.h b/drivers/net/wireless/rtl818x/rtl8187.h
+index b1a24de..6af0f3f 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187.h
++++ b/drivers/net/wireless/rtl818x/rtl8187.h
+@@ -108,6 +108,7 @@ struct rtl8187_priv {
+ 	struct delayed_work work;
+ 	struct ieee80211_hw *dev;
+ #ifdef CONFIG_RTL8187_LEDS
++	struct rtl8187_led led_radio;
+ 	struct rtl8187_led led_tx;
+ 	struct rtl8187_led led_rx;
+ 	struct delayed_work led_on;
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_leds.c b/drivers/net/wireless/rtl818x/rtl8187_leds.c
+index cf8a4a4..ded44c0 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_leds.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_leds.c
+@@ -105,19 +105,36 @@ static void rtl8187_led_brightness_set(struct led_classdev *led_dev,
+ 	struct rtl8187_led *led = container_of(led_dev, struct rtl8187_led,
+ 					       led_dev);
+ 	struct ieee80211_hw *hw = led->dev;
+-	struct rtl8187_priv *priv = hw->priv;
++	struct rtl8187_priv *priv;
++	static bool radio_on;
+ 
+-	if (brightness == LED_OFF) {
+-		ieee80211_queue_delayed_work(hw, &priv->led_off, 0);
+-		/* The LED is off for 1/20 sec so that it just blinks. */
+-		ieee80211_queue_delayed_work(hw, &priv->led_on, HZ / 20);
+-	} else
+-		ieee80211_queue_delayed_work(hw, &priv->led_on, 0);
++	if (!hw)
++		return;
++	priv = hw->priv;
++	if (led->is_radio) {
++		if (brightness == LED_FULL) {
++			ieee80211_queue_delayed_work(hw, &priv->led_on, 0);
++			radio_on = true;
++		} else if (radio_on) {
++			radio_on = false;
++			cancel_delayed_work_sync(&priv->led_on);
++			ieee80211_queue_delayed_work(hw, &priv->led_off, 0);
++		}
++	} else if (radio_on) {
++		if (brightness == LED_OFF) {
++			ieee80211_queue_delayed_work(hw, &priv->led_off, 0);
++			/* The LED is off for 1/20 sec - it just blinks. */
++			ieee80211_queue_delayed_work(hw, &priv->led_on,
++						     HZ / 20);
++		} else
++			ieee80211_queue_delayed_work(hw, &priv->led_on, 0);
++	}
+ }
+ 
+ static int rtl8187_register_led(struct ieee80211_hw *dev,
+ 				struct rtl8187_led *led, const char *name,
+-				const char *default_trigger, u8 ledpin)
++				const char *default_trigger, u8 ledpin,
++				bool is_radio)
+ {
+ 	int err;
+ 	struct rtl8187_priv *priv = dev->priv;
+@@ -128,6 +145,7 @@ static int rtl8187_register_led(struct ieee80211_hw *dev,
+ 		return -EINVAL;
+ 	led->dev = dev;
+ 	led->ledpin = ledpin;
++	led->is_radio = is_radio;
+ 	strncpy(led->name, name, sizeof(led->name));
+ 
+ 	led->led_dev.name = led->name;
+@@ -145,7 +163,11 @@ static int rtl8187_register_led(struct ieee80211_hw *dev,
+ 
+ static void rtl8187_unregister_led(struct rtl8187_led *led)
+ {
++	struct ieee80211_hw *hw = led->dev;
++	struct rtl8187_priv *priv = hw->priv;
++
+ 	led_classdev_unregister(&led->led_dev);
++	flush_delayed_work(&priv->led_off);
+ 	led->dev = NULL;
+ }
+ 
+@@ -183,33 +205,37 @@ void rtl8187_leds_init(struct ieee80211_hw *dev, u16 custid)
+ 	INIT_DELAYED_WORK(&priv->led_off, led_turn_off);
+ 
+ 	snprintf(name, sizeof(name),
++		 "rtl8187-%s::radio", wiphy_name(dev->wiphy));
++	err = rtl8187_register_led(dev, &priv->led_radio, name,
++			 ieee80211_get_radio_led_name(dev), ledpin, true);
++	if (err)
++		return;
++
++	snprintf(name, sizeof(name),
+ 		 "rtl8187-%s::tx", wiphy_name(dev->wiphy));
+ 	err = rtl8187_register_led(dev, &priv->led_tx, name,
+-			 ieee80211_get_tx_led_name(dev), ledpin);
++			 ieee80211_get_tx_led_name(dev), ledpin, false);
+ 	if (err)
+-		goto error;
++		goto err_tx;
++
+ 	snprintf(name, sizeof(name),
+ 		 "rtl8187-%s::rx", wiphy_name(dev->wiphy));
+ 	err = rtl8187_register_led(dev, &priv->led_rx, name,
+-			 ieee80211_get_rx_led_name(dev), ledpin);
+-	if (!err) {
+-		ieee80211_queue_delayed_work(dev, &priv->led_on, 0);
++			 ieee80211_get_rx_led_name(dev), ledpin, false);
++	if (!err)
+ 		return;
+-	}
+-	/* registration of RX LED failed - unregister TX */
++
++	/* registration of RX LED failed - unregister */
+ 	rtl8187_unregister_led(&priv->led_tx);
+-error:
+-	/* If registration of either failed, cancel delayed work */
+-	cancel_delayed_work_sync(&priv->led_off);
+-	cancel_delayed_work_sync(&priv->led_on);
++err_tx:
++	rtl8187_unregister_led(&priv->led_radio);
+ }
+ 
+ void rtl8187_leds_exit(struct ieee80211_hw *dev)
+ {
+ 	struct rtl8187_priv *priv = dev->priv;
+ 
+-	/* turn the LED off before exiting */
+-	ieee80211_queue_delayed_work(dev, &priv->led_off, 0);
++	rtl8187_unregister_led(&priv->led_radio);
+ 	rtl8187_unregister_led(&priv->led_rx);
+ 	rtl8187_unregister_led(&priv->led_tx);
+ 	cancel_delayed_work_sync(&priv->led_off);
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_leds.h b/drivers/net/wireless/rtl818x/rtl8187_leds.h
+index a033202..efe8041 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_leds.h
++++ b/drivers/net/wireless/rtl818x/rtl8187_leds.h
+@@ -47,6 +47,8 @@ struct rtl8187_led {
+ 	u8 ledpin;
+ 	/* The unique name string for this LED device. */
+ 	char name[RTL8187_LED_MAX_NAME_LEN + 1];
++	/* If the LED is radio or tx/rx */
++	bool is_radio;
+ };
+ 
+ void rtl8187_leds_init(struct ieee80211_hw *dev, u16 code);
+-- 
+1.6.5.5
 
