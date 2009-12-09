@@ -1,42 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:13079 "EHLO mga09.intel.com"
+Received: from mail.klingt.org ([86.59.21.178]:49977 "EHLO klingt.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750810AbZL1GXR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Dec 2009 01:23:17 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	stable@kernel.org
-Subject: [PATCH] iwmc3200wifi: fix array out-of-boundary access
-Date: Mon, 28 Dec 2009 14:23:11 +0800
-Message-Id: <1261981391-25481-1-git-send-email-yi.zhu@intel.com>
+	id S1758706AbZLIXtu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Dec 2009 18:49:50 -0500
+Message-ID: <4B2037A0.8080000@klingt.org>
+Date: Thu, 10 Dec 2009 00:49:52 +0100
+From: Tim Blechmann <tim@klingt.org>
+MIME-Version: 1.0
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: regression: rt2561 frequent "Arrived at non-free entry" errors
+   in 2.6.32
+References: <20091204233202.GA13658@basil.fritz.box> <4B1BB44E.90706@gmail.com> <4B1CCB81.5060104@klingt.org> <4B1D7A6B.1080606@gmail.com> <hfpa3v$5gj$1@ger.gmane.org> <4B203180.1010204@gmail.com>
+In-Reply-To: <4B203180.1010204@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig45689519A4A473C78F75E52B"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allocate priv->rx_packets[IWM_RX_ID_HASH + 1] because the max array
-index is IWM_RX_ID_HASH according to IWM_RX_ID_GET_HASH().
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig45689519A4A473C78F75E52B
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Cc: stable@kernel.org
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
-This is for .33 and stable.
+On 12/10/2009 12:23 AM, Gertjan van Wingerde wrote:
+> On 12/09/09 23:59, Tim Blechmann wrote:
+>>> I can't reproduce any boot failures with the patch applied, although =
+for me the rt2x00
+>>> drivers are compiled as modules. Can you provide some more informatio=
+n on the boot failure
+>>> that you see?
+>>
+>> i am pretty sure, that i am experiencing the same issue as described
+>> here [1] with stack trace ...
+>>
+>> [1] http://lkml.org/lkml/2009/12/8/207
+>>
+>=20
+> OK. Can you then test with powersaving disabled?
+>=20
+> Just do iwconfig wlanX power off on the interface.
 
- drivers/net/wireless/iwmc3200wifi/iwm.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+difficult, if i cannot boot a kernel ... i suspect, there are some other
+issues, unrelated to the rt61pci driver ... i haven't been able to boot
+-rc5 (a version i booted before), -rc8 and -final, one backtrace similar
+to the other mail (which appears quite unrelated), another one from
+within the yenta socket module :/ ... and sometimes the screen was
+flooded by backtraces ... i am not really fluent with the sysrq keys, so
+i cannot provide details at the moment ...
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/iwm.h b/drivers/net/wireless/iwmc3200wifi/iwm.h
-index 79ffa3b..8428111 100644
---- a/drivers/net/wireless/iwmc3200wifi/iwm.h
-+++ b/drivers/net/wireless/iwmc3200wifi/iwm.h
-@@ -268,7 +268,7 @@ struct iwm_priv {
- 
- 	struct sk_buff_head rx_list;
- 	struct list_head rx_tickets;
--	struct list_head rx_packets[IWM_RX_ID_HASH];
-+	struct list_head rx_packets[IWM_RX_ID_HASH + 1];
- 	struct workqueue_struct *rx_wq;
- 	struct work_struct rx_worker;
- 
--- 
-1.6.3.3
+disabling the powersaving at compile time didn't help, but i maybe it
+would, if i could boot a kernel :/
 
+tim
+
+--=20
+tim@klingt.org
+http://tim.klingt.org
+
+art is short - life is long
+  Jack Kerouac
+
+
+--------------enig45689519A4A473C78F75E52B
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAksgN6IACgkQdL+4qsZfVssrowCeLpKlKtBIKW9/hTg1UI5hUI9h
+AUkAn1qM9irizwiNgWTIcRta1t3tdpVj
+=YJxA
+-----END PGP SIGNATURE-----
+
+--------------enig45689519A4A473C78F75E52B--
