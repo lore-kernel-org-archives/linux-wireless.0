@@ -1,34 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:48307 "EHLO mga11.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:53044 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755272AbZLBUwz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2009 15:52:55 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/3] iwlwifi updates 12/02/2009
-Date: Wed,  2 Dec 2009 12:52:58 -0800
-Message-Id: <1259787181-21303-1-git-send-email-reinette.chatre@intel.com>
+	id S1754861AbZLILcc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Dec 2009 06:32:32 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2009 03:32:39 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19231.35710.80659.717664@gargle.gargle.HOWL>
+Date: Wed, 9 Dec 2009 17:05:26 +0530
+To: Jiri Slaby <jirislaby@gmail.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: useless ath9k commit logs
+In-Reply-To: <4B1F76F2.4090004@gmail.com>
+References: <4B1F76F2.4090004@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We include a fix to a recent feature that accidentally duplicated some
-information during printing of uCode event log. We add some more debug
-information to indicate the ucode type when an error occurs. Finally we
-remove the driver version that has been causing confusion and use the
-kernel version as driver version instead.
+Jiri Slaby wrote:
+>     ath9k: Fix bug in ANI channel handling
+> 
+>     When processing MIB interrupts, OFDM and CCK error
+>     handling routines for low RSSI values have to be invoked
+>     only when the channel mode is 11G/11B. Since HT channels
+>     will also fall under the bands 2Ghz/5Ghz, check appropriately.
 
-Reinette Chatre (1):
-  iwlwifi: driver version track kernel version
+This was a long standing bug. The original behaviour was changed
+by the commit: 38b33707a1ec77f7b4c92ae41cfe93318014f5bf (in wireless-testing).
 
-Wey-Yi Guy (2):
-  iwl3945: remove duplicated event logging code
-  iwlwifi: indicate uCode type when fail dump error/event log
+The bug was identified by code review.
+And yep, this should have been mentioned in the commit log.
+Sorry about that.
 
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    8 ++++++--
- drivers/net/wireless/iwlwifi/iwl-core.h     |    4 +++-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   13 +------------
- 3 files changed, 10 insertions(+), 15 deletions(-)
+>     ath9k: Maintain monotonicity of PER while going across different phy
+> 
+>     Monotonicity of packet error rate should be kept when moving
+>     from one phy to another (legacy to ht, ht single stream to dual,
+>     etc). Current code skips updating per for other phys.
 
+This is also a bug fix. Rate control gets bumpy when switching between
+APs operating in different modes. This was identified by internal testing.
+
+Hope this helps.
+
+Sujith
