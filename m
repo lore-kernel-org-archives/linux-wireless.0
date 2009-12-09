@@ -1,82 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:49700
-	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933213AbZLOSDQ (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:40723 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758300AbZLIWhi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 13:03:16 -0500
-Date: Tue, 15 Dec 2009 10:03:00 -0800
-From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-To: Oliver Neukum <oliver@neukum.org>
-Cc: Josua Dietze <digidietze@draisberghof.de>,
-	Stefan Seyfried <stefan.seyfried@googlemail.com>,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
-	Stefan Seyfried <seife@sphairon.com>
-Subject: Re: [PATCH] move eject code from zd1211rw to usb-storage
-Message-ID: <20091215180300.GF16426@one-eyed-alien.net>
-References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com> <4B278191.1010009@draisberghof.de> <200912151611.08576.oliver@neukum.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="0H629O+sVkh21xTi"
-In-Reply-To: <200912151611.08576.oliver@neukum.org>
+	Wed, 9 Dec 2009 17:37:38 -0500
+Received: by iwn1 with SMTP id 1so4941078iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2009 14:37:45 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1260389724-2392-1-git-send-email-linville@tuxdriver.com>
+References: <1260389724-2392-1-git-send-email-linville@tuxdriver.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 10 Dec 2009 09:37:25 +1100
+Message-ID: <646765f40912091437y22d322c6m295cff07a95c4ebe@mail.gmail.com>
+Subject: Re: [PATCH] wireless: update old static regulatory domain rules
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Dec 10, 2009 at 07:15, John W. Linville <linville@tuxdriver.com> wrote:
+> Update "US" and "JP" for current rules, and replace "EU" rules with the
+> world roaming domain (since it was only a pseudo-domain anyway).
+>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  net/wireless/reg.c |   75 +++++++++++++++++----------------------------------
+>  1 files changed, 25 insertions(+), 50 deletions(-)
+>
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index c01470e..baa898a 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -206,15 +179,17 @@ static const struct ieee80211_regdomain *static_regdom(char *alpha2)
+>                return &us_regdom;
+>        if (alpha2[0] == 'J' && alpha2[1] == 'P')
+>                return &jp_regdom;
+> +       /* Use world roaming rules for "EU", since it was a pseudo
+> +          domain anyway... */
+>        if (alpha2[0] == 'E' && alpha2[1] == 'U')
+> -               return &eu_regdom;
+> -       /* Default, as per the old rules */
+> -       return &us_regdom;
+> +               return &world_regdom;
+> +       /* Default, world roaming rules */
+> +       return &world_regdom;
+>  }
 
---0H629O+sVkh21xTi
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Is the if statement for the "EU" regdom really necessary (except as
+documentation) as we're returning &world_regdom by default?
 
-On Tue, Dec 15, 2009 at 04:11:08PM +0100, Oliver Neukum wrote:
-> Am Dienstag, 15. Dezember 2009 13:31:13 schrieb Josua Dietze:
-> > Stefan Seyfried schrieb:
-> >=20
-> > > The USB ID claimed by zd1211rw for the fake storage device is
-> > > also in use by other, non-zd1211rw devices (Sphairon Homelink
-> > > 1202). Move the eject of these devices to where it belongs and
-> > > where all the needed infrastructure already exists: usb-storage.
-> >=20
-> >=20
-> > We can do the eject (as other mode switches) in userspace. Previous=20
-> > discussions pointed into that direction.
-> >=20
-> > And there is always the question of being able to access the "fake=20
-> > CD-ROM" without hacking the kernel.
-> >=20
-> > I'd like to see these devices removed from unusual_devs.h.
->=20
-> This would break existing systems and thus introduce a regression.
-> We'd need to go through a feature removal process. For the time being
-> I see no alternative to Seife's patch, as we cannot introduce ejection
-> code to another wireless driver and need to support these devices.
+Thanks,
 
-The right answer here is neither to move the eject code nor to introduce
-more of it.  New devices should be supported via userspace.
+-- 
 
-Matt
+Julian Calaby
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-A:  The most ironic oxymoron wins ...
-DP: "Microsoft Works"
-A:  Uh, okay, you win.
-					-- A.J. & Dust Puppy
-User Friendly, 1/18/1998
-
---0H629O+sVkh21xTi
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFLJ89UHL9iwnUZqnkRAq2bAJ4iWbg2zp+JMXfran8P1HyHPCOKoACfZpFi
-OCcWRKIkW33enNpjN3qh7b0=
-=UIM0
------END PGP SIGNATURE-----
-
---0H629O+sVkh21xTi--
+Email: julian.calaby@gmail.com
+.Plan: http://sites.google.com/site/juliancalaby/
