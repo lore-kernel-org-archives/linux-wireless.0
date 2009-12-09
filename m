@@ -1,73 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:40063 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753523AbZLAXqK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 18:46:10 -0500
-Subject: [PATCH] lib80211: make crypt modules configurable by user
-From: Daniel Ritz <daniel.ritz@gmx.ch>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, daniel.ritz-ml@swissonline.ch
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 02 Dec 2009 00:46:14 +0100
-Message-ID: <1259711174.13720.17.camel@MacRitz2>
-Mime-Version: 1.0
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:65527 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751815AbZLIIcz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Dec 2009 03:32:55 -0500
+Received: by bwz27 with SMTP id 27so5012649bwz.21
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2009 00:33:01 -0800 (PST)
+To: Jason Andryuk <jandryuk@gmail.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: cfg80211 connect for at76c50x-usb
+References: <c4d76b3b0912071955y25c31a11m104d9c4723ef578d@mail.gmail.com>
+	<87ws0x3ojk.fsf@purkki.valot.fi>
+	<c4d76b3b0912081947m2ffcdb65of44f4ce10dfa00d2@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 09 Dec 2009 10:32:58 +0200
+In-Reply-To: <c4d76b3b0912081947m2ffcdb65of44f4ce10dfa00d2@mail.gmail.com> (Jason Andryuk's message of "Tue\, 8 Dec 2009 22\:47\:43 -0500")
+Message-ID: <87skbk35tx.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make the crypt modules configurable by user. Normally drivers select them
-when needed, but out-of-tree drivers can't do that. Having a minimal
-kernel with just the things required won't select any of those modules,
-resulting in the external driver to be close to useless (ie. it can scan
-the networks, but cannot join a single one).
+Jason Andryuk <jandryuk@gmail.com> writes:
 
-Signed-off-by: Daniel Ritz <daniel.ritz@gmx.ch>
----
- net/wireless/Kconfig |   23 ++++++++++++++++++-----
- 1 files changed, 18 insertions(+), 5 deletions(-)
+> Kalle,
 
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index abf7ca3..48f60ab 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -123,17 +123,30 @@ config LIB80211
- 	  This options enables a library of common routines used
- 	  by IEEE802.11 wireless LAN drivers.
- 
--	  Drivers should select this themselves if needed.  Say Y if
--	  you want this built into your kernel.
-+	  Drivers should select this themselves if needed, but for
-+	  out-of-tree drivers manually selecting it might be required.
-+	  Say Y if you want this built into your kernel.
- 
- config LIB80211_CRYPT_WEP
--	tristate
-+	tristate "lib80211 WEP support module"
-+	depends on LIB80211
-+	default m
-+	help
-+	  This adds WEP support to lib80211.
- 
- config LIB80211_CRYPT_CCMP
--	tristate
-+	tristate "lib80211 CCMP support module"
-+	depends on LIB80211
-+	default m
-+	help
-+	  This adds CCMP support to lib80211.
- 
- config LIB80211_CRYPT_TKIP
--	tristate
-+	tristate "lib80211 TKIP support module"
-+	depends on LIB80211
-+	default m
-+	help
-+	  This adds TKIP support to lib80211.
- 
- config LIB80211_DEBUG
- 	bool "lib80211 debugging messages"
+Hi Jason,
+
+> My logs do not show CMD_JOIN getting sent after executing an "iw
+> connect".  dmesg shows the three direct probe attempts being sent to
+> the device in at76_mac80211_tx, but a separate monitor interface does
+> see them transmitted.  at76_mac80211_tx_callback has urb->status == 0;
+
+Earlier I have noticed that transmission doesn't work at all with
+CMD_SCAN. I used it only to enable monitoring.
+
+> So I think the direct probes failure is halting mac80211 before it
+> gets any further.  This corresponds to the flows in Johannes's
+> mac80211 MLME diagrams.
+
+Yes, that seems to be the case here.
+
+> Hacking in the bssid, by initially setting priv->bssid and re-copying
+> on _bss_info_changed, does have CMD_JOIN get sent.  However, it
+> returns "at76_wait_completion failed: 7"  CMD_STATUS_TIME_OUT == 0x07.
+>
+> iw connect is hung too.
+>
+> It looked like priv->essid wasn't getting set, so I hacked that one in
+> too.  With the essid hack, the at76_wait_completion disappears, but
+> there is still no connection.
+
+Ok, so CMD_JOIN should work properly then.
+
+I have to admit that the firmware is weird and I have frustrutated
+with multiple times. Maybe it's now preventing probe requests and only
+allowing authentication and association requuests? If you can hack
+mac80211 to skip or ignore probe request phase, that might tell us
+more.
+
+> However, there is still nothing seen on the monitor interface and it
+> is seeing plenty of other traffic. I am trying to filter with
+> wlan.addr == <Mac Address> in wireshark for what it's worth.
+>
+> Since I am not seeing anything with the CMD_JOIN being sent, I am
+> wondering if my device has failed.
+
+Unfortunately I'm busy with other stuff and I can't test it. But if
+you can send the patches anyway, and if I find the time at some point,
+I can test it with my device.
+
 -- 
-1.6.3.3
-
-
-
+Kalle Valo
