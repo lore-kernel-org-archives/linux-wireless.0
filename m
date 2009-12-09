@@ -1,97 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:54251 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758706AbZLIXqF convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55242 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751672AbZLIVPK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2009 18:46:05 -0500
-Received: by bwz27 with SMTP id 27so5738304bwz.21
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2009 15:46:10 -0800 (PST)
-MIME-Version: 1.0
-Date: Thu, 10 Dec 2009 00:46:08 +0100
-Message-ID: <c6e9632c0912091546gad933ffhe8b70ee889745cb1@mail.gmail.com>
-Subject: SIOCSIFFLAGS: Name not unique on network with b43
-From: Natale Vinto <ebballon@gmail.com>
+	Wed, 9 Dec 2009 16:15:10 -0500
+Date: Wed, 9 Dec 2009 16:10:55 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: davem@davemloft.net
+Subject: Revised wireless tree management practices
+Message-ID: <20091209211054.GB32058@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
-I'm on Kubuntu 2.6.32-rc8-wl and according to lspci I have this Broadcom card:
-Broadcom Corporation BCM4312 802.11a/b/g (rev 02)
-and modinfo b43:
+Greetings,
 
-filename:
-/lib/modules/2.6.32-rc8-wl/kernel/drivers/net/wireless/b43/b43.ko
-firmware:       FW13
-license:        GPL
-author:         Gábor Stefanik
-author:         Michael Buesch
-author:         Stefano Brivio
-author:         Martin Langer
-description:    Broadcom B43 wireless driver
-srcversion:     77E3E0ECBCB6EA787FE05CF
-alias:          ssb:v4243id0812rev10*
-alias:          ssb:v4243id0812rev0F*
-alias:          ssb:v4243id0812rev0D*
-alias:          ssb:v4243id0812rev0B*
-alias:          ssb:v4243id0812rev0A*
-alias:          ssb:v4243id0812rev09*
-alias:          ssb:v4243id0812rev07*
-alias:          ssb:v4243id0812rev06*
-alias:          ssb:v4243id0812rev05*
-depends:        ssb,mac80211,led-class,cfg80211
-vermagic:       2.6.32-rc8-wl mod_unload modversions PENTIUMM 4KSTACKS
-parm:           bad_frames_preempt:enable(1) / disable(0) Bad Frames
-Preemption (int)
-parm:           fwpostfix:Postfix for the .fw files to load. (string)
-parm:           hwpctl:Enable hardware-side power control (default off) (int)
-parm:           nohwcrypt:Disable hardware encryption. (int)
-parm:           hwtkip:Enable hardware tkip. (int)
-parm:           qos:Enable QOS support (default on) (int)
-parm:           btcoex:Enable Bluetooth coexistence (default on) (int)
-parm:           verbose:Log message verbosity: 0=error, 1=warn,
-2=info(default), 3=debug (int)
+So I'm tired of a) being asked how wireless-testing is managed; and,
+b) having trouble explaining it.  I think it is time to move to a
+more conventional process for wireless patches.
 
-My problem is that I would use multiple interfaces (as mentioned here
-http://wireless.kernel.org/en/users/Drivers/b43#features ) using one
-for AP and one for station but I always get this error while trying to
-up the other interface:
-SIOCSIFFLAGS: Name not unique on network
+The main change I would like to make for now is to move wireless-2.6
+and wireless-next-2.6 to a default "immutable history" policy.
+By this I mean that I will strive to keep the history both clean
+and immutable in those trees.  If for some reason I can't make that
+happen and have to rebase those trees, I will make a loud and obvious
+announcement on the linux-wireless mailing list.  More likely, it
+means I may have to push an occasional revert through those trees
+that I might have otherwise avoided.
 
-This is the command list that I've done:
+One of the ramifications of this will be that I will need to be
+extra careful about what gets merged into those trees.  I have been
+pushing patches into those trees quickly after merging them into
+wireless-testing, relying on linux-next to uncover some of the problems
+a quick review might miss.  Now I will need to have higher confidence
+in a patch before pushing it to wireless-next-2.6 or (especially)
+wireless-2.6, so some patches may take longer to get there.  All of
+your usual dilligent reviews are most helpful in this regard.
 
-service network-manager stop
-iw phy phy0 interface add wlan1 type station (or managed)
-ifconfig wlan1 up
+For now, the main change to wireless-testing will be that I will be
+pulling from wireless-2.6 and wireless-next-2.6 rather than reapplying
+most patches.  This should limit (and possibly eliminate) the confusing
+patch-revert-reapply-repeat practice I have been using there for a
+long time.  However, I still anticipate using w-t as a holding area
+for questionable patches.  So, at least some patches may still get
+the revert-reapply treatment.  I may ask Stephen to pull w-t into
+linux-next in order to expand testing of any such patches.
 
-then I used wpa_supplicant on wlan1 and all ok. But when I try to up
-wlan0 that from iwconfig shows this:
-wlan0     Link encap:Ethernet  HWaddr 00:1a:73:xx:xx:xx
-          BROADCAST MULTICAST  MTU:1500  Metric:1
-          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000
-          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+One advantage to this new process is that it will enable me to more
+readily accept actual git pull requests from driver/subsystem
+maintainers.  In order for this to work, those maintainers will need to
+send separate pull requests for fixes intended for the current release
+and for features intended for the next release.  They will also need to
+maintain their trees appropriately (i.e. separate trees or separate
+branches with appropriate bases) for this to work.  If anyone is
+interested in doing this, feel free to ask more questions.
 
-or when I try to use hostapd:
-Configuration file: /etc/hostapd/hostapd.conf
-ctrl_interface_group=0
-ioctl[SIOCSIFFLAGS]: Name not unique on network
-nl80211 driver initialization failed.
-wlan0: Unable to setup interface.
-rmdir[ctrl_interface]: No such file or directory
-ELOOP: remaining socket: sock=5 eloop_data=0x80f0a38 user_data=(nil)
-handler=0x80874
+Well, there is my overview.  Anyone have questions/objections/etc?
 
-so how to have multiple interfaces (in my case one AP and one station) with b43?
-I haven't found a solution googling
+Thanks,
 
-Best Regards
+John
 
-
-
+P.S.  If you care (and most of you should not), I intend for
+wireless-2.6 and wireless-next-2.6 to pull from Linus at v2.6.33-rc1
+and then only pull from net-2.6 or net-next-2.6 (or wireless-2.6)
+if necessary for dependencies or conflict resolution.  Any
+driver/subsystem maintainers that want me to pull from them should
+consider doing something similar.
 -- 
-Natale Vinto
-http://www.gotext.org
-http://bluesman.gotext.org
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
