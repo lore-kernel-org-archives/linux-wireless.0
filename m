@@ -1,85 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50255
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752270AbZLOJnK (ORCPT
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:41166 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752832AbZLIMF3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 04:43:10 -0500
-Date: Tue, 15 Dec 2009 01:43:08 -0800 (PST)
-Message-Id: <20091215.014308.77044043.davem@davemloft.net>
-To: daniel@caiaq.de
-Cc: linux-kernel@vger.kernel.org, dcbw@redhat.com,
-	m.hirsch@raumfeld.com, netdev@vger.kernel.org,
-	libertas-dev@lists.infradead.org, stable@kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless: wext: allocate space for NULL-termination
- for 32byte SSIDs
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1260650850-16163-1-git-send-email-daniel@caiaq.de>
-References: <1260650850-16163-1-git-send-email-daniel@caiaq.de>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 9 Dec 2009 07:05:29 -0500
+Received: by fxm5 with SMTP id 5so7385067fxm.28
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2009 04:05:35 -0800 (PST)
+Message-ID: <4B1F928D.6050000@gmail.com>
+Date: Wed, 09 Dec 2009 13:05:33 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: Sujith <Sujith.Manoharan@atheros.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: useless ath9k commit logs
+References: <4B1F76F2.4090004@gmail.com> <19231.35710.80659.717664@gargle.gargle.HOWL>
+In-Reply-To: <19231.35710.80659.717664@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel Mack <daniel@caiaq.de>
-Date: Sun, 13 Dec 2009 04:47:30 +0800
+On 12/09/2009 12:35 PM, Sujith wrote:
+> This is also a bug fix. Rate control gets bumpy when switching between
+> APs operating in different modes. This was identified by internal testing.
+> 
+> Hope this helps.
 
-> We've experienced a long standing bug when quickly switching from
-> ad-hoc to managed mode on a hardware using a Libertas chipset.
+Ah, thanks, there are many of them though, these were just examples.
+Please add such a description to each changelog from now on. I think
+many kernel distro packagers will appreciate that.
 
-Can you please CC: linux-wireless for wireless patches?
-
-Thanks.
-
-> The effect is that after a number of mode transistions (sometimes as few
-> as two sufficed), the kernel will oops at very strange locations, mostly
-> in something like __kmem_alloc().
-> 
-> While the root cause turned out to be an issue with the wpa-supplicant
-> which feeds the kernel driver with garbage, this occasion pointed out a
-> bug in the wireless wext core when SSIDs with 32 byte lengths are passed
-> from userspace. In this case, the string is not properly NULL-terminated
-> which causes some other part to corrupt memory.
-> 
-> (In the particular case I observed, an SIOCSIWESSID was issued with
->  bogus data in iwp->pointer but iwp->length=32).
-> 
-> I admitedly couldn't find where the actual corruption itself happens,
-> but with this trivial fix, I can't reproduce the bug anymore.
-> 
-> Signed-off-by: Daniel Mack <daniel@caiaq.de>
-> Cc: Dan Williams <dcbw@redhat.com>
-> Cc: Michael Hirsch <m.hirsch@raumfeld.com>
-> Cc: netdev@vger.kernel.org
-> Cc: libertas-dev@lists.infradead.org
-> Cc: stable@kernel.org
-> ---
->  net/wireless/wext.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> ---
->  net/wireless/wext-core.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
-> index 5e1656b..3d8f4b0 100644
-> --- a/net/wireless/wext-core.c
-> +++ b/net/wireless/wext-core.c
-> @@ -759,8 +759,8 @@ static int ioctl_standard_iw_point(struct iw_point *iwp, unsigned int cmd,
->  		}
->  	}
->  
-> -	/* kzalloc() ensures NULL-termination for essid_compat. */
-> -	extra = kzalloc(extra_size, GFP_KERNEL);
-> +	/* kzalloc() +1 ensures NULL-termination for essid_compat. */
-> +	extra = kzalloc(extra_size + 1, GFP_KERNEL);
->  	if (!extra)
->  		return -ENOMEM;
->  
-> -- 
-> 1.6.3.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+thanks again,
+-- 
+js
