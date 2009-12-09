@@ -1,106 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:59846 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932923AbZLEUSN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Dec 2009 15:18:13 -0500
-Date: Sat, 05 Dec 2009 14:18:18 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: antti@kaijanmaki.net, Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC/RFT V2] rtl8187: Modify rfkill for new models
-Message-ID: <4b1ac00a.nP75mlCdUd2PKZib%Larry.Finger@lwfinger.net>
+Received: from nbd.name ([88.198.39.176]:48922 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751575AbZLIBsN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Dec 2009 20:48:13 -0500
+Message-ID: <4B1F01D4.6020803@openwrt.org>
+Date: Wed, 09 Dec 2009 02:48:04 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: 8an@praha12.net
+CC: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	ath5k-devel@lists.ath5k.org
+Subject: Re: [PATCH 4/4] ath5k: Implement mac80211 callback set_coverage
+References: <200912061820.26320.8an@praha12.net> <200912062123.13098.8an@praha12.net> <4B1CCF51.2040304@openwrt.org> <200912090216.09816.8an@praha12.net>
+In-Reply-To: <200912090216.09816.8an@praha12.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are different bits used to convey the setting of the rfkill
-switch to the driver. The current driver only supports one of these
-possibilities. These changes were derived from the latest version
-of the vendor driver.
+On 2009-12-09 2:15 AM, Luk·ö Turek wrote:
+> On 7.12.2009 10:48 you wrote:
+>> ACKTimeout is:  aSIFSTime + aSlotTime + aPHY-RX-START-Delay
+> 802.11a uses SIFS of 16 µs and 9 µs slot time, that's 25 µs in total. However, 
+> the athctrl calculation uses 21 µs ACK timeout for zero distance. And I know 
+> the result is correct, as we are using it on 70 links with distances varying 
+> between 100m and 8km.
+> 
+> I don't say the standard is wrong, just that the hardware might start counting 
+> at a different moment than the standard assumes.
+> 
+>> Of course, the distance settting code in iw probably also needs
+>> changing, as it needs to accomodate for aAirPropagationTime being the
+>> round trip time, not one-way.
+> Well, according to my interpretation the aAirPropagationTime is the one-way 
+> delay. I think it makes sense when we consider the reason the slots are used 
+> in CSMA/CA:
+> 
+> Station waits a random number of slots. If no other station was transmitting 
+> at the beginning of a previous slot, the station starts its own transmit. So 
+> the slot time has to be at least the time needed to switch the radio from RX 
+> to TX plus the one-way propagation delay, so that every other station can 
+> hear the medium is busy on time.
+The document also mentions this about the definition of aAirPropagationTime:
 
-This patch fixes the regression noted in Bug #14xxx.
+Twice the propagation time (in microseconds) for a signal to cross the
+maximum distance between the most distant allowable STAs that are slot
+synchronized.
+If it was only one-way instead of round trip, the ACKTimeout formula
+would not make sense, as it would only take one way into account,
+however both the data frame and the ack frame need time to reach their
+destination.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Reported-and-tested-by: Antti Kaijanm√§ki <antti@kaijanmaki.net>
-Tested-by: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: Stable <stable@vger.org>
----
+> Anyway, I think there's only one sure way to determine the correct base ACK 
+> timeout for different modes: experiment. It's easy to detect that the ACK 
+> timeout is too low - packetloss grows dramatically.
+> 
+> The main observation is this: ACK timeout does not depend on slot time!
+> In retrospect it makes sense: station waits only SIFS before sending ACK, not 
+> a single slot.
+Some hardware internally calculates the ACK timeout based on the
+configured slot time. Broadcom does it this way.
+Maybe adjusting the ACK timeout without adjusting the slot time works,
+but it'll probably interfere with CSMA.
 
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187.h
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
-@@ -23,6 +23,7 @@
- #define RTL8187_EEPROM_TXPWR_CHAN_1	0x16	/* 3 channels */
- #define RTL8187_EEPROM_TXPWR_CHAN_6	0x1B	/* 2 channels */
- #define RTL8187_EEPROM_TXPWR_CHAN_4	0x3D	/* 2 channels */
-+#define RTL8187_EEPROM_SELECT_GPIO	0x3B	/* Which pin has rfkill? */
- 
- #define RTL8187_REQT_READ	0xC0
- #define RTL8187_REQT_WRITE	0x40
-@@ -31,6 +32,9 @@
- 
- #define RTL8187_MAX_RX		0x9C4
- 
-+#define RFKILL_MASK_8187_89_97	0x2
-+#define RFKILL_MASK_8198	0x4
-+
- struct rtl8187_rx_info {
- 	struct urb *urb;
- 	struct ieee80211_hw *dev;
-@@ -122,6 +126,7 @@ struct rtl8187_priv {
- 	u8 noise;
- 	u8 slot_time;
- 	u8 aifsn[4];
-+	u8 rfkill_mask;
- 	struct {
- 		__le64 buf;
- 		struct sk_buff_head queue;
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -1322,6 +1322,7 @@ static int __devinit rtl8187_probe(struc
- 	struct ieee80211_channel *channel;
- 	const char *chip_name;
- 	u16 txpwr, reg;
-+	u16 product_id = le16_to_cpu(udev->descriptor.idProduct);
- 	int err, i;
- 
- 	dev = ieee80211_alloc_hw(sizeof(*priv), &rtl8187_ops);
-@@ -1481,6 +1482,15 @@ static int __devinit rtl8187_probe(struc
- 		(*channel++).hw_value = txpwr & 0xFF;
- 		(*channel++).hw_value = txpwr >> 8;
- 	}
-+	/* Handle the differing GPIO bit in different models */
-+	priv->rfkill_mask = RFKILL_MASK_8187_89_97;
-+	if (product_id == 0x8197 || product_id == 0x8198) {
-+		eeprom_93cx6_read(&eeprom, RTL8187_EEPROM_SELECT_GPIO, &reg);
-+		if (reg & 0xFF00)
-+			priv->rfkill_mask = RFKILL_MASK_8198;
-+	}
-+	printk(KERN_INFO "rtl8187: rfkill mask set to %d for Product ID 0x%x",
-+	       priv->rfkill_mask, product_id);
- 
- 	/*
- 	 * XXX: Once this driver supports anything that requires
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
-@@ -25,10 +25,10 @@ static bool rtl8187_is_radio_enabled(str
- 	u8 gpio;
- 
- 	gpio = rtl818x_ioread8(priv, &priv->map->GPIO0);
--	rtl818x_iowrite8(priv, &priv->map->GPIO0, gpio & ~0x02);
-+	rtl818x_iowrite8(priv, &priv->map->GPIO0, gpio & ~priv->rfkill_mask);
- 	gpio = rtl818x_ioread8(priv, &priv->map->GPIO1);
- 
--	return gpio & 0x02;
-+	return gpio & priv->rfkill_mask;
- }
- 
- void rtl8187_rfkill_init(struct ieee80211_hw *hw)
+> The measured values of minimum slot times (with AR5212 and AR5414) are these:
+> 
+> 802.11a: 21 µs
+> 802.11b: 27 µs
+> 802.11g: 19 µs
+How did you measure it?
+
+> I can't give much explanation, the difference of 6 µs between 11a and 11b 
+> might be the difference of SIFS (16µs vs. 10µs). 11g uses 10 µs SIFS too, but 
+> with additional 6 µs "signal extension", maybe that's why the value is closer 
+> to 11a than 11b. It's all just guessing, though.
+> 
+> So I propose to use 21 µs in 802.11a mode and 27 µs in 802.11b/g mode (as 
+> there might be some 802.11b clients and 6µs won't make much difference).
+> What do you think?
+I'm guessing that most hardware does have some degree of tolerance for
+timing variation. IMHO, if the standard recommends slightly higher but
+working values for the same distance, we should use that rather than
+experimentally determined limits.
+
+- Felix
