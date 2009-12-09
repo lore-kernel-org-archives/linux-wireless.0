@@ -1,62 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:33158 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753102AbZLJOx5 convert rfc822-to-8bit (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:46948 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751375AbZLIRAK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2009 09:53:57 -0500
-Received: by iwn1 with SMTP id 1so5399259iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2009 06:54:03 -0800 (PST)
+	Wed, 9 Dec 2009 12:00:10 -0500
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8187: add radio led and fix warnings on suspend
+Date: Wed, 9 Dec 2009 15:00:10 -0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>, Michael Buesch <mb@bu3sch.de>,
+	"Hin-Tak Leung" <htl10@users.sourceforge.net>
+References: <200912091456.13989.herton@mandriva.com.br>
+In-Reply-To: <200912091456.13989.herton@mandriva.com.br>
 MIME-Version: 1.0
-In-Reply-To: <20091210143754.GA2955@tuxdriver.com>
-References: <20091209211054.GB32058@tuxdriver.com> <87ljhb0x0h.fsf@purkki.valot.fi>
-	<20091210134733.GC11112@tuxdriver.com> <87ein30vt4.fsf@purkki.valot.fi>
-	<43e72e890912100631if1c17b2l597168813db4a19c@mail.gmail.com>
-	<20091210143754.GA2955@tuxdriver.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 10 Dec 2009 06:53:43 -0800
-Message-ID: <43e72e890912100653p3890705u4f88dd19026a5877@mail.gmail.com>
-Subject: Re: Revised wireless tree management practices
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
-	davem@davemloft.net
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200912091500.10818.herton@mandriva.com.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 10, 2009 at 6:37 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Thu, Dec 10, 2009 at 06:31:02AM -0800, Luis R. Rodriguez wrote:
->> On Thu, Dec 10, 2009 at 6:04 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
->> > "John W. Linville" <linville@tuxdriver.com> writes:
->> >
->> >> I still see value in a tree that has a reasonably stable base and
->> >> contains both wireless fixes and wireless features.
->> >
->> > I agree, it makes things a lot easier.
->> >
->> >> So, I think wireless-testing remains as the focal point for wireless
->> >> LAN testing and development. I'll just be getting patches there in a
->> >> slightly different process.
->> >
->> > Sounds very good. So I'll continue using wireless-testing. Thanks.
->>
->> But we use wireless-next as base though if we want to send you pull
->> requests, ay?
->
-> Yes, that is correct -- people that want to send patches (or simply
-> test) should use wireless-testing.  People that want to send pull
-> requests need to have trees based on wireless-2.6 (for fixes)
+Em Qua 09 Dez 2009, �s 14:56:13, Herton Ronaldo Krzesinski escreveu:
+> Michael Buesch reports that his rtl8187 gives warnings on suspend
+> ("queueing ieee80211 work while going to suspend" warnings), as rtl8187
+> can call ieee80211_queue_delayed_work after mac80211 is suspended.
+> 
+> This change enhances rtl8187 led code so we can avoid queuing work after
+> mac80211 is suspended: now we register a radio led and make additional
+> checks to ensure led is off/on properly as mac80211 wants.
+> 
+> Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org>
 
-Typically we have relied on you to push fixes into wireless-2.6, does
-this change a bit now in that we should try to keep better track of
-stable fixes and send them to you instead if we're doing the pull
-request method?
+Sorry, forgot to note that stable is only about 2.6.32.x, which is
+where warnings on suspend started to happen.
 
-> and/or
-> wireless-next-2.6 (for features).  If you are sending pull requests
-> and have a feature that depends on a fix then we'll have to coordinate
-> to make sure the right bits get into the right trees.
+> ---
+>  drivers/net/wireless/rtl818x/rtl8187.h      |    1 +
+>  drivers/net/wireless/rtl818x/rtl8187_leds.c |   68 ++++++++++++++++++--------
+>  drivers/net/wireless/rtl818x/rtl8187_leds.h |    2 +
+>  3 files changed, 50 insertions(+), 21 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rtl818x/rtl8187.h b/drivers/net/wireless/rtl818x/rtl8187.h
+> index b1a24de..6af0f3f 100644
+> --- a/drivers/net/wireless/rtl818x/rtl8187.h
+> +++ b/drivers/net/wireless/rtl818x/rtl8187.h
+> @@ -108,6 +108,7 @@ struct rtl8187_priv {
+>  	struct delayed_work work;
+>  	struct ieee80211_hw *dev;
+>  #ifdef CONFIG_RTL8187_LEDS
+> +	struct rtl8187_led led_radio;
+>  	struct rtl8187_led led_tx;
+>  	struct rtl8187_led led_rx;
+>  	struct delayed_work led_on;
+> diff --git a/drivers/net/wireless/rtl818x/rtl8187_leds.c b/drivers/net/wireless/rtl818x/rtl8187_leds.c
+> index cf8a4a4..ded44c0 100644
+> --- a/drivers/net/wireless/rtl818x/rtl8187_leds.c
+> +++ b/drivers/net/wireless/rtl818x/rtl8187_leds.c
+> @@ -105,19 +105,36 @@ static void rtl8187_led_brightness_set(struct led_classdev *led_dev,
+>  	struct rtl8187_led *led = container_of(led_dev, struct rtl8187_led,
+>  					       led_dev);
+>  	struct ieee80211_hw *hw = led->dev;
+> -	struct rtl8187_priv *priv = hw->priv;
+> +	struct rtl8187_priv *priv;
+> +	static bool radio_on;
+>  
+> -	if (brightness == LED_OFF) {
+> -		ieee80211_queue_delayed_work(hw, &priv->led_off, 0);
+> -		/* The LED is off for 1/20 sec so that it just blinks. */
+> -		ieee80211_queue_delayed_work(hw, &priv->led_on, HZ / 20);
+> -	} else
+> -		ieee80211_queue_delayed_work(hw, &priv->led_on, 0);
+> +	if (!hw)
+> +		return;
+> +	priv = hw->priv;
+> +	if (led->is_radio) {
+> +		if (brightness == LED_FULL) {
+> +			ieee80211_queue_delayed_work(hw, &priv->led_on, 0);
+> +			radio_on = true;
+> +		} else if (radio_on) {
+> +			radio_on = false;
+> +			cancel_delayed_work_sync(&priv->led_on);
+> +			ieee80211_queue_delayed_work(hw, &priv->led_off, 0);
+> +		}
+> +	} else if (radio_on) {
+> +		if (brightness == LED_OFF) {
+> +			ieee80211_queue_delayed_work(hw, &priv->led_off, 0);
+> +			/* The LED is off for 1/20 sec - it just blinks. */
+> +			ieee80211_queue_delayed_work(hw, &priv->led_on,
+> +						     HZ / 20);
+> +		} else
+> +			ieee80211_queue_delayed_work(hw, &priv->led_on, 0);
+> +	}
+>  }
+>  
+>  static int rtl8187_register_led(struct ieee80211_hw *dev,
+>  				struct rtl8187_led *led, const char *name,
+> -				const char *default_trigger, u8 ledpin)
+> +				const char *default_trigger, u8 ledpin,
+> +				bool is_radio)
+>  {
+>  	int err;
+>  	struct rtl8187_priv *priv = dev->priv;
+> @@ -128,6 +145,7 @@ static int rtl8187_register_led(struct ieee80211_hw *dev,
+>  		return -EINVAL;
+>  	led->dev = dev;
+>  	led->ledpin = ledpin;
+> +	led->is_radio = is_radio;
+>  	strncpy(led->name, name, sizeof(led->name));
+>  
+>  	led->led_dev.name = led->name;
+> @@ -145,7 +163,11 @@ static int rtl8187_register_led(struct ieee80211_hw *dev,
+>  
+>  static void rtl8187_unregister_led(struct rtl8187_led *led)
+>  {
+> +	struct ieee80211_hw *hw = led->dev;
+> +	struct rtl8187_priv *priv = hw->priv;
+> +
+>  	led_classdev_unregister(&led->led_dev);
+> +	flush_delayed_work(&priv->led_off);
+>  	led->dev = NULL;
+>  }
+>  
+> @@ -183,33 +205,37 @@ void rtl8187_leds_init(struct ieee80211_hw *dev, u16 custid)
+>  	INIT_DELAYED_WORK(&priv->led_off, led_turn_off);
+>  
+>  	snprintf(name, sizeof(name),
+> +		 "rtl8187-%s::radio", wiphy_name(dev->wiphy));
+> +	err = rtl8187_register_led(dev, &priv->led_radio, name,
+> +			 ieee80211_get_radio_led_name(dev), ledpin, true);
+> +	if (err)
+> +		return;
+> +
+> +	snprintf(name, sizeof(name),
+>  		 "rtl8187-%s::tx", wiphy_name(dev->wiphy));
+>  	err = rtl8187_register_led(dev, &priv->led_tx, name,
+> -			 ieee80211_get_tx_led_name(dev), ledpin);
+> +			 ieee80211_get_tx_led_name(dev), ledpin, false);
+>  	if (err)
+> -		goto error;
+> +		goto err_tx;
+> +
+>  	snprintf(name, sizeof(name),
+>  		 "rtl8187-%s::rx", wiphy_name(dev->wiphy));
+>  	err = rtl8187_register_led(dev, &priv->led_rx, name,
+> -			 ieee80211_get_rx_led_name(dev), ledpin);
+> -	if (!err) {
+> -		ieee80211_queue_delayed_work(dev, &priv->led_on, 0);
+> +			 ieee80211_get_rx_led_name(dev), ledpin, false);
+> +	if (!err)
+>  		return;
+> -	}
+> -	/* registration of RX LED failed - unregister TX */
+> +
+> +	/* registration of RX LED failed - unregister */
+>  	rtl8187_unregister_led(&priv->led_tx);
+> -error:
+> -	/* If registration of either failed, cancel delayed work */
+> -	cancel_delayed_work_sync(&priv->led_off);
+> -	cancel_delayed_work_sync(&priv->led_on);
+> +err_tx:
+> +	rtl8187_unregister_led(&priv->led_radio);
+>  }
+>  
+>  void rtl8187_leds_exit(struct ieee80211_hw *dev)
+>  {
+>  	struct rtl8187_priv *priv = dev->priv;
+>  
+> -	/* turn the LED off before exiting */
+> -	ieee80211_queue_delayed_work(dev, &priv->led_off, 0);
+> +	rtl8187_unregister_led(&priv->led_radio);
+>  	rtl8187_unregister_led(&priv->led_rx);
+>  	rtl8187_unregister_led(&priv->led_tx);
+>  	cancel_delayed_work_sync(&priv->led_off);
+> diff --git a/drivers/net/wireless/rtl818x/rtl8187_leds.h b/drivers/net/wireless/rtl818x/rtl8187_leds.h
+> index a033202..efe8041 100644
+> --- a/drivers/net/wireless/rtl818x/rtl8187_leds.h
+> +++ b/drivers/net/wireless/rtl818x/rtl8187_leds.h
+> @@ -47,6 +47,8 @@ struct rtl8187_led {
+>  	u8 ledpin;
+>  	/* The unique name string for this LED device. */
+>  	char name[RTL8187_LED_MAX_NAME_LEN + 1];
+> +	/* If the LED is radio or tx/rx */
+> +	bool is_radio;
+>  };
+>  
+>  void rtl8187_leds_init(struct ieee80211_hw *dev, u16 code);
+> 
 
-OK, got it.
-
-  Luis
+-- 
+[]'s
+Herton
