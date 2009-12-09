@@ -1,83 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30879 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756476AbZLYWMc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Dec 2009 17:12:32 -0500
-Subject: Re: Problems with ath5k and WPA2 keys
-From: Dan Williams <dcbw@redhat.com>
-To: "J.A." =?ISO-8859-1?Q?Magall=F3n?= <jamagallon@ono.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20091224105648.6b3ae67e@werewolf.home>
-References: <20091224105648.6b3ae67e@werewolf.home>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 25 Dec 2009 14:12:30 -0600
-Message-Id: <1261771950.7657.2.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:35146 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756359AbZLISlZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Dec 2009 13:41:25 -0500
+Received: by iwn1 with SMTP id 1so4776068iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2009 10:41:32 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <fd145f7d0912091036o2a38a028p686f791744de0ae3@mail.gmail.com>
+References: <fd145f7d0912082203l1d7ebc50j291cc36dd65a4408@mail.gmail.com>
+	<43e72e890912090918m55d2816co9b04065e91e4d4f1@mail.gmail.com>
+	<fd145f7d0912091013o702d1ee2ueb41a97ae43a0f27@mail.gmail.com>
+	<43e72e890912091022r151ec85awb1844b3ac9c08871@mail.gmail.com>
+	<fd145f7d0912091036o2a38a028p686f791744de0ae3@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 9 Dec 2009 10:41:12 -0800
+Message-ID: <43e72e890912091041k31207f34r59cab066cc0f34d@mail.gmail.com>
+Subject: Re: WARNING at mac80211_ieee80211_rx
+To: Jeffrey Baker <jwbaker@gmail.com>
+Cc: hostap@lists.shmoo.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-12-24 at 10:56 +0100, J.A. Magallón wrote:
-> Hi all...
-> 
-> With last 2.6.32.2 kernel, I can't connect to my home WiFi router.
-> I use WPA2+PSK mode.
-> 
-> I have discovered it's related to key length:
-> 
-> one:~# iwconfig wlan0 key s:password
-> Error for wireless request "Set Encode" (8B2A) :
->     SET failed on device wlan0 ; Invalid argument.
-> one:~# iwconfig wlan0 key s:passwor
-> Error for wireless request "Set Encode" (8B2A) :
->     SET failed on device wlan0 ; Invalid argument.
-> one:~# iwconfig wlan0 key s:passwo
-> Error for wireless request "Set Encode" (8B2A) :
->     SET failed on device wlan0 ; Invalid argument.
-> one:~# iwconfig wlan0 key s:passw
-> 
-> (this last works...)
-> 
-> So network scripts can not set my key...
+On Wed, Dec 9, 2009 at 10:36 AM, Jeffrey Baker <jwbaker@gmail.com> wrote:
+> On Wed, Dec 9, 2009 at 10:22 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Wed, Dec 9, 2009 at 10:13 AM, Jeffrey Baker <jwbaker@gmail.com> wrote:
+>>> On Wed, Dec 9, 2009 at 9:18 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>>> On Tue, Dec 8, 2009 at 10:03 PM, Jeffrey Baker <jwbaker@gmail.com> wrote:
+>>>>> My access point with an AR9220 stopped passing traffic,
+>>>>
+>>>> Jeffrey, thanks for your report, can you be a little more verbose here
+>>>> and elaborate as to what you mean by this? Do you mean that you stop
+>>>> hostapd or that it hostapd is still running and that somehow you
+>>>> notice it stops sending data between its associated STAs?
+>>>
+>>> Yes, hostapd was still running, however stations were unable to pass
+>>> traffic.  Actually the AP also stopped sending beacons I think,
+>>> because the AP no longer appeared in scans.  Restarting hostapd had no
+>>> effect.  I rebooted the machine.
+>>
+>> Well something told mac80211 it was stopped, so curious if you can
+>> provide more logs, both from hostapd and the kernel. Are you using git
+>> version of hostapd?
+>
+> No, I'm using 0.6.9-3 package from Debian.
 
-iwconfig does not do WPA.  You want wpa_supplicant if you want to make
-WPA connections, because a daemon is required to handle the rekeying and
-other WPA operations.  WPA is a lot more complex and thus you cannot
-just use command-line tools.
+Can't say I keep track of the differences of hostapd from old stable
+to now so can you try latest hostapd? I should note if using
+compat-wireless you'll be using newer drivers and hostapd from git
+will likely take advantage of any new features introduced. Can't also
+say if the 0.6.9 release you are using might have issues expected with
+using bleeding edge code so CC'ing hostap mailing list in case someone
+there does.
 
-The reason iwconfig only accepts certain key lengths is because it can
-only accept WEP keys, and WEP keys have specific key lengths.  WEP Hex
-keys can be either 10 or 26 hex characters, and WEP ASCII keys can
-either be 5 or 13 characters.  Which is why the last example above
-works; because the key is 5 ASCII characters.
+> I don't see anything in
+> daemon.log relating to hostapd other than the usual.  Here's a snippet
+> around the time in question:
+>
+> Dec  8 12:28:00 mango hostapd: wlan0: STA 04:1e:64:ec:22:eb IEEE
+> 802.11: authenticated
+> Dec  8 12:28:00 mango hostapd: wlan0: STA 04:1e:64:ec:22:eb IEEE
+> 802.11: associated (aid 1)
+> Dec  8 12:28:00 mango hostapd: wlan0: STA 04:1e:64:ec:22:eb RADIUS:
+> starting accounting session 386D440C-00000046
+> Dec  8 12:33:05 mango hostapd: wlan0: STA 04:1e:64:ec:22:eb IEEE
+> 802.11: disassociated due to inactivity
+> Dec  8 12:33:06 mango hostapd: wlan0: STA 04:1e:64:ec:22:eb IEEE
+> 802.11: deauthenticated due to inactivity
+> Dec  8 21:21:59 mango hostapd: wlan0: STA 00:1d:e0:38:18:d7 IEEE
+> 802.11: authenticated
+> Dec  8 21:21:59 mango hostapd: wlan0: STA 00:1d:e0:38:18:d7 IEEE
+> 802.11: associated (aid 1)
+> Dec  8 21:21:59 mango hostapd: wlan0: STA 00:1d:e0:38:18:d7 RADIUS:
+> starting accounting session 4B1F3304-00000000
+> Dec  8 21:46:43 mango hostapd: wlan0: STA 00:1d:e0:38:18:d7 IEEE
+> 802.11: disassociated
+> Dec  8 21:46:44 mango hostapd: wlan0: STA 00:1d:e0:38:18:d7 IEEE
+> 802.11: deauthenticated due to inactivity
+> Dec  8 22:35:26 mango hostapd: wlan0: STA 04:1e:64:ec:22:eb IEEE
+> 802.11: authenticated
+> Dec  8 22:35:26 mango hostapd: wlan0: STA 04:1e:64:ec:22:eb IEEE
+> 802.11: associated (aid 1)
+> Dec  8 22:35:26 mango hostapd: wlan0: STA 04:1e:64:ec:22:eb RADIUS:
+> starting accounting session 4B1F3304-00000001
+> Dec  8 22:48:16 mango hostapd: wlan0: STA 04:1e:64:ec:22:eb IEEE
+> 802.11: disassociated due to inactivity
+> Dec  8 22:48:17 mango hostapd: wlan0: STA 04:1e:64:ec:22:eb IEEE
+> 802.11: deauthenticated due to inactivity
+>
+> I'm not sure that this kernel stack is the definite cause of the AP
+> stopping, because now that I look in kern.log I see many instances of
+> it.  Just about one every other day, on average.
 
-But in the end, if you're using WPA, you want to use wpa_supplicant to
-set up and manage the connection, or a connection manager like
-NetworkManager.  Plain iwconfig simply does not work with WPA and never
-will.
+Can you still share the kernel log?
 
-Dan
-
-> I don't know if this is a problem in iwconfig or in the driver...
-> 
-> Any idea ? Any way to debug this ?
-> 
-> pd: hardware is Acer Aspire One 150:
-> 
-> 03:00.0 Ethernet controller: Atheros Communications Inc. AR5001 Wireless Network Adapter (rev 01)
->     Subsystem: Foxconn International, Inc. Device e008
->     Flags: bus master, fast devsel, latency 0, IRQ 18
->     Memory at 35200000 (64-bit, non-prefetchable) [size=64K]
->     Capabilities: [40] Power Management version 2
->     Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit-
->     Capabilities: [60] Express Legacy Endpoint, MSI 00
->     Capabilities: [90] MSI-X: Enable- Count=1 Masked-
->     Capabilities: [100] Advanced Error Reporting
->     Capabilities: [140] Virtual Channel <?>
->     Kernel driver in use: ath5k
->     Kernel modules: ath5k
-> 
-> TIA
-> 
-> (plz, CC me, I'm not subscribed...)
-> 
-
+  Luis
