@@ -1,346 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55748 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752899AbZLVPV2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2009 10:21:28 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat: autoconf.h moved from linux/ to generated/ with kernel 2.6.33
-Date: Tue, 22 Dec 2009 16:20:02 +0100
-Message-Id: <1261495204-28966-4-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1261495204-28966-1-git-send-email-hauke@hauke-m.de>
-References: <1261495204-28966-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:33512 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756468AbZLIDri convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Dec 2009 22:47:38 -0500
+Received: by bwz27 with SMTP id 27so4922399bwz.21
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2009 19:47:43 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <87ws0x3ojk.fsf@purkki.valot.fi>
+References: <c4d76b3b0912071955y25c31a11m104d9c4723ef578d@mail.gmail.com>
+	 <87ws0x3ojk.fsf@purkki.valot.fi>
+Date: Tue, 8 Dec 2009 22:47:43 -0500
+Message-ID: <c4d76b3b0912081947m2ffcdb65of44f4ce10dfa00d2@mail.gmail.com>
+Subject: Re: cfg80211 connect for at76c50x-usb
+From: Jason Andryuk <jandryuk@gmail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changed the headers, because autoconf.h moved from linux/ into generated/
+On Tue, Dec 8, 2009 at 2:36 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> Jason Andryuk <jandryuk@gmail.com> writes:
+>
+> Hi Jason,
+>
+>> I am unable to connect to my AP with at76c50x-usb.  I believe the
+>> cause is at76c50x-usb and mac80211 trying to send separate auth and
+>> assoc packets to an AP.  Unfortunately the packets for these commands,
+>> while sent over USB to the device, are not actually transmitted.  My
+>> understanding is prior to joining a network, packet transmission is
+>> block.  However, there is a USB command, CMD_JOIN, for connecting to
+>> wireless networks.
+>
+> I actually think that the problem is because of missing bssid. I
+> recall that when I was, a long time ago, porting at76 to mac80211
+> CMD_JOIN didn't work unless I used the correct bssid. I tried to find
+> a workaround, for example all zeros or all 0xffs bssid, but no luck.
+> So I had to make an ugly hack that uses CMD_SCAN if the bssid is not
+> set and CMD_JOIN otherwise.
+>
+> If you have the time, you could test my theory by hardcoding the bssid
+> for CMD_JOIN. Alternatively you could try Luciano Coelho's oper_bssid
+> patches from a month back.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.14.h |    3 ++-
- include/linux/compat-2.6.18.h |    3 ++-
- include/linux/compat-2.6.19.h |    2 +-
- include/linux/compat-2.6.21.h |    2 +-
- include/linux/compat-2.6.22.h |    2 +-
- include/linux/compat-2.6.23.h |    2 +-
- include/linux/compat-2.6.24.h |    3 ++-
- include/linux/compat-2.6.25.h |    2 +-
- include/linux/compat-2.6.26.h |    2 +-
- include/linux/compat-2.6.27.h |    2 +-
- include/linux/compat-2.6.28.h |    2 +-
- include/linux/compat-2.6.29.h |    2 +-
- include/linux/compat-2.6.30.h |    3 ++-
- include/linux/compat-2.6.31.h |    2 +-
- include/linux/compat-2.6.32.h |    2 +-
- include/linux/compat-2.6.33.h |    4 ++--
- include/linux/compat-2.6.h    |    6 +++++-
- 17 files changed, 26 insertions(+), 18 deletions(-)
+Kalle,
 
-diff --git a/include/linux/compat-2.6.14.h b/include/linux/compat-2.6.14.h
-index 22e7e31..c509899 100644
---- a/include/linux/compat-2.6.14.h
-+++ b/include/linux/compat-2.6.14.h
-@@ -1,12 +1,13 @@
- #ifndef LINUX_26_14_COMPAT_H
- #define LINUX_26_14_COMPAT_H
- 
--#include <linux/autoconf.h>
- #include <linux/version.h>
- 
- /* Compat work for 2.6.14 */
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,14))
- 
-+#include <linux/autoconf.h>
-+
- typedef unsigned int gfp_t;
- 
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,14)) */
-diff --git a/include/linux/compat-2.6.18.h b/include/linux/compat-2.6.18.h
-index 3245c42..ef0dd31 100644
---- a/include/linux/compat-2.6.18.h
-+++ b/include/linux/compat-2.6.18.h
-@@ -1,12 +1,13 @@
- #ifndef LINUX_26_18_COMPAT_H
- #define LINUX_26_18_COMPAT_H
- 
--#include <linux/autoconf.h>
- #include <linux/version.h>
- 
- /* Compat work for 2.6.18 */
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18))
- 
-+#include <linux/autoconf.h>
-+
- #define roundup(x, y)	((((x) + ((y) - 1)) / (y)) * (y))
- 
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)) */
-diff --git a/include/linux/compat-2.6.19.h b/include/linux/compat-2.6.19.h
-index 017044c..67f87fc 100644
---- a/include/linux/compat-2.6.19.h
-+++ b/include/linux/compat-2.6.19.h
-@@ -1,12 +1,12 @@
- #ifndef LINUX_26_19_COMPAT_H
- #define LINUX_26_19_COMPAT_H
- 
--#include <linux/autoconf.h>
- #include <linux/version.h>
- 
- /* Compat work for 2.6.19 */
- #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19))
- 
-+#include <linux/autoconf.h>
- #include <linux/slab.h>
- 
- static inline int
-diff --git a/include/linux/compat-2.6.21.h b/include/linux/compat-2.6.21.h
-index 263ebd2..25ac354 100644
---- a/include/linux/compat-2.6.21.h
-+++ b/include/linux/compat-2.6.21.h
-@@ -1,12 +1,12 @@
- #ifndef LINUX_26_21_COMPAT_H
- #define LINUX_26_21_COMPAT_H
- 
--#include <linux/autoconf.h>
- #include <linux/version.h>
- 
- /* Compat work for 2.6.21 */
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,21))
- 
-+#include <linux/autoconf.h>
- #include <linux/sysctl.h>
- 
- #define register_sysctl_table(table)				\
-diff --git a/include/linux/compat-2.6.22.h b/include/linux/compat-2.6.22.h
-index 85cd9d5..42dc805 100644
---- a/include/linux/compat-2.6.22.h
-+++ b/include/linux/compat-2.6.22.h
-@@ -1,12 +1,12 @@
- #ifndef LINUX_26_22_COMPAT_H
- #define LINUX_26_22_COMPAT_H
- 
--#include <linux/autoconf.h>
- #include <linux/version.h>
- 
- /* Compat work for 2.6.21 */
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22))
- 
-+#include <linux/autoconf.h>
- #include <linux/pci.h>
- #include <linux/skbuff.h>
- 
-diff --git a/include/linux/compat-2.6.23.h b/include/linux/compat-2.6.23.h
-index c36f90d..c73b77f 100644
---- a/include/linux/compat-2.6.23.h
-+++ b/include/linux/compat-2.6.23.h
-@@ -1,12 +1,12 @@
- #ifndef LINUX_26_23_COMPAT_H
- #define LINUX_26_23_COMPAT_H
- 
--#include <linux/autoconf.h>
- #include <linux/version.h>
- 
- /* Compat work for < 2.6.23 */
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
- 
-+#include <linux/autoconf.h>
- #include <linux/netdevice.h>
- #include <linux/sched.h>
- #include <linux/workqueue.h>
-diff --git a/include/linux/compat-2.6.24.h b/include/linux/compat-2.6.24.h
-index 43e6302..91a3b85 100644
---- a/include/linux/compat-2.6.24.h
-+++ b/include/linux/compat-2.6.24.h
-@@ -1,12 +1,13 @@
- #ifndef LINUX_26_24_COMPAT_H
- #define LINUX_26_24_COMPAT_H
- 
--#include <linux/autoconf.h>
- #include <linux/version.h>
- 
- /* Compat work for 2.6.21, 2.6.22 and 2.6.23 */
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
- 
-+#include <linux/autoconf.h>
-+
- /* Added on 2.6.24 in include/linux/types.h by Al viro on commit 142956af */
- typedef unsigned long               uintptr_t;
- 
-diff --git a/include/linux/compat-2.6.25.h b/include/linux/compat-2.6.25.h
-index 23cf487..7477cb6 100644
---- a/include/linux/compat-2.6.25.h
-+++ b/include/linux/compat-2.6.25.h
-@@ -1,12 +1,12 @@
- #ifndef LINUX_26_25_COMPAT_H
- #define LINUX_26_25_COMPAT_H
- 
--#include <linux/autoconf.h>
- #include <linux/version.h>
- 
- /* Compat work for 2.6.24 */
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25))
- 
-+#include <linux/autoconf.h>
- #include <linux/types.h>
- #include <linux/io.h>
- #include <linux/hw_random.h>
-diff --git a/include/linux/compat-2.6.26.h b/include/linux/compat-2.6.26.h
-index b7c3b05..143df3b 100644
---- a/include/linux/compat-2.6.26.h
-+++ b/include/linux/compat-2.6.26.h
-@@ -1,11 +1,11 @@
- #ifndef LINUX_26_26_COMPAT_H
- #define LINUX_26_26_COMPAT_H
- 
--#include <linux/autoconf.h>
- #include <linux/version.h>
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26))
- 
-+#include <linux/autoconf.h>
- #include <linux/device.h>
- #include <linux/list.h>
- #include <linux/kernel.h>
-diff --git a/include/linux/compat-2.6.27.h b/include/linux/compat-2.6.27.h
-index ed10a6c..f77bb7b 100644
---- a/include/linux/compat-2.6.27.h
-+++ b/include/linux/compat-2.6.27.h
-@@ -1,11 +1,11 @@
- #ifndef LINUX_26_27_COMPAT_H
- #define LINUX_26_27_COMPAT_H
- 
--#include <linux/autoconf.h>
- #include <linux/version.h>
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27))
- 
-+#include <linux/autoconf.h>
- #include <linux/list.h>
- #include <linux/pci.h>
- #include <linux/dma-mapping.h>
-diff --git a/include/linux/compat-2.6.28.h b/include/linux/compat-2.6.28.h
-index 8f90edc..700eab6 100644
---- a/include/linux/compat-2.6.28.h
-+++ b/include/linux/compat-2.6.28.h
-@@ -1,11 +1,11 @@
- #ifndef LINUX_26_28_COMPAT_H
- #define LINUX_26_28_COMPAT_H
- 
--#include <linux/autoconf.h>
- #include <linux/version.h>
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28))
- 
-+#include <linux/autoconf.h>
- #include <linux/skbuff.h>
- #include <linux/if_ether.h>
- #include <linux/usb.h>
-diff --git a/include/linux/compat-2.6.29.h b/include/linux/compat-2.6.29.h
-index cad5e6b..b3c9dc2 100644
---- a/include/linux/compat-2.6.29.h
-+++ b/include/linux/compat-2.6.29.h
-@@ -1,11 +1,11 @@
- #ifndef LINUX_26_29_COMPAT_H
- #define LINUX_26_29_COMPAT_H
- 
--#include <linux/autoconf.h>
- #include <linux/version.h>
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
- 
-+#include <linux/autoconf.h>
- #include <linux/netdevice.h>
- #include <linux/skbuff.h>
- #include <linux/usb.h>
-diff --git a/include/linux/compat-2.6.30.h b/include/linux/compat-2.6.30.h
-index 2ff1d69..f0074d8 100644
---- a/include/linux/compat-2.6.30.h
-+++ b/include/linux/compat-2.6.30.h
-@@ -1,11 +1,12 @@
- #ifndef LINUX_26_30_COMPAT_H
- #define LINUX_26_30_COMPAT_H
- 
--#include <linux/autoconf.h>
- #include <linux/version.h>
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
- 
-+#include <linux/autoconf.h>
-+
- #ifndef TP_PROTO
- #define TP_PROTO(args...)	TPPROTO(args)
- #endif
-diff --git a/include/linux/compat-2.6.31.h b/include/linux/compat-2.6.31.h
-index 27dc6a1..d51e9e2 100644
---- a/include/linux/compat-2.6.31.h
-+++ b/include/linux/compat-2.6.31.h
-@@ -1,11 +1,11 @@
- #ifndef LINUX_26_31_COMPAT_H
- #define LINUX_26_31_COMPAT_H
- 
--#include <linux/autoconf.h>
- #include <linux/version.h>
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31))
- 
-+#include <linux/autoconf.h>
- #include <linux/skbuff.h>
- #include <linux/workqueue.h>
- #include <linux/interrupt.h>
-diff --git a/include/linux/compat-2.6.32.h b/include/linux/compat-2.6.32.h
-index 727ac71..a6ed8c4 100644
---- a/include/linux/compat-2.6.32.h
-+++ b/include/linux/compat-2.6.32.h
-@@ -1,11 +1,11 @@
- #ifndef LINUX_26_32_COMPAT_H
- #define LINUX_26_32_COMPAT_H
- 
--#include <linux/autoconf.h>
- #include <linux/version.h>
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32))
- 
-+#include <linux/autoconf.h>
- #include <linux/netdevice.h>
- #include <asm/compat.h>
- #include <net/iw_handler.h>
-diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
-index 5367cd9..a453a7e 100644
---- a/include/linux/compat-2.6.33.h
-+++ b/include/linux/compat-2.6.33.h
-@@ -1,12 +1,12 @@
- #ifndef LINUX_26_33_COMPAT_H
- #define LINUX_26_33_COMPAT_H
- 
--#include <linux/autoconf.h>
- #include <linux/version.h>
--#include <linux/compat_autoconf.h>
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33))
- 
-+#include <linux/autoconf.h>
-+#include <linux/compat_autoconf.h>
- #include <linux/skbuff.h>
- #include <pcmcia/cs_types.h>
- #include <pcmcia/cistpl.h>
-diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
-index bea00c9..81224de 100644
---- a/include/linux/compat-2.6.h
-+++ b/include/linux/compat-2.6.h
-@@ -1,8 +1,12 @@
- #ifndef LINUX_26_COMPAT_H
- #define LINUX_26_COMPAT_H
- 
--#include <linux/autoconf.h>
- #include <linux/version.h>
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
-+#include <generated/autoconf.h>
-+#else
-+#include <linux/autoconf.h>
-+#endif
- #include <linux/compat_autoconf.h>
- 
- /*
--- 
-1.6.3.3
+My logs do not show CMD_JOIN getting sent after executing an "iw
+connect".  dmesg shows the three direct probe attempts being sent to
+the device in at76_mac80211_tx, but a separate monitor interface does
+see them transmitted.  at76_mac80211_tx_callback has urb->status == 0;
 
+So I think the direct probes failure is halting mac80211 before it
+gets any further.  This corresponds to the flows in Johannes's
+mac80211 MLME diagrams.
+
+Hacking in the bssid, by initially setting priv->bssid and re-copying
+on _bss_info_changed, does have CMD_JOIN get sent.  However, it
+returns "at76_wait_completion failed: 7"  CMD_STATUS_TIME_OUT == 0x07.
+
+iw connect is hung too.
+
+It looked like priv->essid wasn't getting set, so I hacked that one in
+too.  With the essid hack, the at76_wait_completion disappears, but
+there is still no connection.  However, there is still nothing seen on
+the monitor interface and it is seeing plenty of other traffic.  I am
+trying to filter with wlan.addr == <Mac Address> in wireshark for what
+it's worth.
+
+Since I am not seeing anything with the CMD_JOIN being sent, I am
+wondering if my device has failed.
+
+Jason
