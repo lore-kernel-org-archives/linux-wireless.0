@@ -1,43 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60465 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758261AbZLGTBW (ORCPT
+Received: from cpsmtpm-eml103.kpnxchange.com ([195.121.3.7]:63612 "EHLO
+	CPSMTPM-EML103.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758665AbZLIXXi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2009 14:01:22 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	johannes@sipsolutions.net
-Subject: [PATCH] mac80211: make debugfs mcs set entry reflect 16 bits
-Date: Mon,  7 Dec 2009 14:01:28 -0500
-Message-Id: <1260212488-5736-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 9 Dec 2009 18:23:38 -0500
+Message-ID: <4B203180.1010204@gmail.com>
+Date: Thu, 10 Dec 2009 00:23:44 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Tim Blechmann <tim@klingt.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: regression: rt2561 frequent "Arrived at non-free entry" errors
+   in 2.6.32
+References: <20091204233202.GA13658@basil.fritz.box> <4B1BB44E.90706@gmail.com> <4B1CCB81.5060104@klingt.org> <4B1D7A6B.1080606@gmail.com> <hfpa3v$5gj$1@ger.gmane.org>
+In-Reply-To: <hfpa3v$5gj$1@ger.gmane.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The MCS set is 16 bits so when debugging ensure the full 16 bits
-are represented. Current reading would make you think its only
-8 bits.
+On 12/09/09 23:59, Tim Blechmann wrote:
+>> I can't reproduce any boot failures with the patch applied, although for me the rt2x00
+>> drivers are compiled as modules. Can you provide some more information on the boot failure
+>> that you see?
+> 
+> i am pretty sure, that i am experiencing the same issue as described
+> here [1] with stack trace ...
+> 
+> [1] http://lkml.org/lkml/2009/12/8/207
+> 
 
-Cc: johannes@sipsolutions.net
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+OK. Can you then test with powersaving disabled?
+
+Just do iwconfig wlanX power off on the interface.
+
 ---
- net/mac80211/debugfs_sta.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 3f41608..ae6a919 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -168,7 +168,7 @@ static ssize_t sta_ht_capa_read(struct file *file, char __user *userbuf,
- 	p += scnprintf(p, sizeof(buf) + buf - p, "ht %ssupported\n",
- 			htc->ht_supported ? "" : "not ");
- 	if (htc->ht_supported) {
--		p += scnprintf(p, sizeof(buf)+buf-p, "cap: %#.2x\n", htc->cap);
-+		p += scnprintf(p, sizeof(buf)+buf-p, "cap: %#.4x\n", htc->cap);
- 		p += scnprintf(p, sizeof(buf)+buf-p, "ampdu factor/density: %d/%d\n",
- 				htc->ampdu_factor, htc->ampdu_density);
- 		p += scnprintf(p, sizeof(buf)+buf-p, "MCS mask:");
--- 
-1.6.3.3
-
+Gertjan.
