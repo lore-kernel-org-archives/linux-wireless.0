@@ -1,124 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:21985 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762628AbZLKLl5 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60622 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757167AbZLIWAK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 06:41:57 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 16/31] wl1271: use channel 1 when configuring the data path
-Date: Fri, 11 Dec 2009 13:41:07 +0200
-Message-Id: <1260531682-4695-17-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
+	Wed, 9 Dec 2009 17:00:10 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] wireless: report non-zero bitrate for MCS rates through wext
+Date: Wed,  9 Dec 2009 16:46:05 -0500
+Message-Id: <1260395165-7116-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the data path configuration, one of the parameters is the channel.  We
-have been setting it to wl->channel, which is not correct in this case.  This
-channel has nothing to do with the channel we're currently tuned to, since it
-is only used for calibration during this phase.  Hardcoded the channel to 1,
-according to the reference driver.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_cmd.c  |   13 +++++++------
- drivers/net/wireless/wl12xx/wl1271_cmd.h  |    2 +-
- drivers/net/wireless/wl12xx/wl1271_init.c |    2 +-
- drivers/net/wireless/wl12xx/wl1271_main.c |    2 +-
- 4 files changed, 10 insertions(+), 9 deletions(-)
+ net/wireless/core.h        |    2 ++
+ net/wireless/nl80211.c     |   37 ++-----------------------------------
+ net/wireless/util.c        |   33 +++++++++++++++++++++++++++++++++
+ net/wireless/wext-compat.c |    5 +----
+ 4 files changed, 38 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-index ceb1ca6..20f3e67 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-@@ -505,7 +505,7 @@ int wl1271_cmd_configure(struct wl1271 *wl, u16 id, void *buf, size_t len)
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 4ef3efc..35b7121 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -378,6 +378,8 @@ int rdev_set_freq(struct cfg80211_registered_device *rdev,
+ 		  struct wireless_dev *for_wdev,
+ 		  int freq, enum nl80211_channel_type channel_type);
+ 
++u16 cfg80211_calculate_bitrate(struct rate_info *rate);
++
+ #ifdef CONFIG_CFG80211_DEVELOPER_WARNINGS
+ #define CFG80211_DEV_WARN_ON(cond)	WARN_ON(cond)
+ #else
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a602843..7cb0d64 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1637,39 +1637,6 @@ static int parse_station_flags(struct genl_info *info,
  	return 0;
  }
  
--int wl1271_cmd_data_path(struct wl1271 *wl, u8 channel, bool enable)
-+int wl1271_cmd_data_path(struct wl1271 *wl, bool enable)
- {
- 	struct cmd_enabledisable_path *cmd;
- 	int ret;
-@@ -519,7 +519,8 @@ int wl1271_cmd_data_path(struct wl1271 *wl, u8 channel, bool enable)
- 		goto out;
- 	}
+-static u16 nl80211_calculate_bitrate(struct rate_info *rate)
+-{
+-	int modulation, streams, bitrate;
+-
+-	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
+-		return rate->legacy;
+-
+-	/* the formula below does only work for MCS values smaller than 32 */
+-	if (rate->mcs >= 32)
+-		return 0;
+-
+-	modulation = rate->mcs & 7;
+-	streams = (rate->mcs >> 3) + 1;
+-
+-	bitrate = (rate->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) ?
+-			13500000 : 6500000;
+-
+-	if (modulation < 4)
+-		bitrate *= (modulation + 1);
+-	else if (modulation == 4)
+-		bitrate *= (modulation + 2);
+-	else
+-		bitrate *= (modulation + 3);
+-
+-	bitrate *= streams;
+-
+-	if (rate->flags & RATE_INFO_FLAGS_SHORT_GI)
+-		bitrate = (bitrate / 9) * 10;
+-
+-	/* do NOT round down here */
+-	return (bitrate + 50000) / 100000;
+-}
+-
+ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+ 				int flags, struct net_device *dev,
+ 				u8 *mac_addr, struct station_info *sinfo)
+@@ -1716,8 +1683,8 @@ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+ 		if (!txrate)
+ 			goto nla_put_failure;
  
--	cmd->channel = channel;
-+	/* the channel here is only used for calibration, so hardcoded to 1 */
-+	cmd->channel = 1;
+-		/* nl80211_calculate_bitrate will return 0 for mcs >= 32 */
+-		bitrate = nl80211_calculate_bitrate(&sinfo->txrate);
++		/* cfg80211_calculate_bitrate will return 0 for mcs >= 32 */
++		bitrate = cfg80211_calculate_bitrate(&sinfo->txrate);
+ 		if (bitrate > 0)
+ 			NLA_PUT_U16(msg, NL80211_RATE_INFO_BITRATE, bitrate);
  
- 	if (enable) {
- 		cmd_rx = CMD_ENABLE_RX;
-@@ -532,22 +533,22 @@ int wl1271_cmd_data_path(struct wl1271 *wl, u8 channel, bool enable)
- 	ret = wl1271_cmd_send(wl, cmd_rx, cmd, sizeof(*cmd), 0);
- 	if (ret < 0) {
- 		wl1271_error("rx %s cmd for channel %d failed",
--			     enable ? "start" : "stop", channel);
-+			     enable ? "start" : "stop", cmd->channel);
- 		goto out;
- 	}
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 59361fd..a3c841a 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -720,3 +720,36 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
  
- 	wl1271_debug(DEBUG_BOOT, "rx %s cmd channel %d",
--		     enable ? "start" : "stop", channel);
-+		     enable ? "start" : "stop", cmd->channel);
+ 	return err;
+ }
++
++u16 cfg80211_calculate_bitrate(struct rate_info *rate)
++{
++	int modulation, streams, bitrate;
++
++	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
++		return rate->legacy;
++
++	/* the formula below does only work for MCS values smaller than 32 */
++	if (rate->mcs >= 32)
++		return 0;
++
++	modulation = rate->mcs & 7;
++	streams = (rate->mcs >> 3) + 1;
++
++	bitrate = (rate->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) ?
++			13500000 : 6500000;
++
++	if (modulation < 4)
++		bitrate *= (modulation + 1);
++	else if (modulation == 4)
++		bitrate *= (modulation + 2);
++	else
++		bitrate *= (modulation + 3);
++
++	bitrate *= streams;
++
++	if (rate->flags & RATE_INFO_FLAGS_SHORT_GI)
++		bitrate = (bitrate / 9) * 10;
++
++	/* do NOT round down here */
++	return (bitrate + 50000) / 100000;
++}
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 54face3..4198243 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -1257,10 +1257,7 @@ int cfg80211_wext_giwrate(struct net_device *dev,
+ 	if (!(sinfo.filled & STATION_INFO_TX_BITRATE))
+ 		return -EOPNOTSUPP;
  
- 	ret = wl1271_cmd_send(wl, cmd_tx, cmd, sizeof(*cmd), 0);
- 	if (ret < 0) {
- 		wl1271_error("tx %s cmd for channel %d failed",
--			     enable ? "start" : "stop", channel);
-+			     enable ? "start" : "stop", cmd->channel);
- 		return ret;
- 	}
+-	rate->value = 0;
+-
+-	if (!(sinfo.txrate.flags & RATE_INFO_FLAGS_MCS))
+-		rate->value = 100000 * sinfo.txrate.legacy;
++	rate->value = 100000 * cfg80211_calculate_bitrate(&sinfo.txrate);
  
- 	wl1271_debug(DEBUG_BOOT, "tx %s cmd channel %d",
--		     enable ? "start" : "stop", channel);
-+		     enable ? "start" : "stop", cmd->channel);
- 
- out:
- 	kfree(cmd);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-index 057f925..09fe912 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-@@ -37,7 +37,7 @@ int wl1271_cmd_join(struct wl1271 *wl);
- int wl1271_cmd_test(struct wl1271 *wl, void *buf, size_t buf_len, u8 answer);
- int wl1271_cmd_interrogate(struct wl1271 *wl, u16 id, void *buf, size_t len);
- int wl1271_cmd_configure(struct wl1271 *wl, u16 id, void *buf, size_t len);
--int wl1271_cmd_data_path(struct wl1271 *wl, u8 channel, bool enable);
-+int wl1271_cmd_data_path(struct wl1271 *wl, bool enable);
- int wl1271_cmd_ps_mode(struct wl1271 *wl, u8 ps_mode);
- int wl1271_cmd_read_memory(struct wl1271 *wl, u32 addr, void *answer,
- 			   size_t len);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
-index 39f01d8..bdd4a96 100644
---- a/drivers/net/wireless/wl12xx/wl1271_init.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_init.c
-@@ -289,7 +289,7 @@ int wl1271_hw_init(struct wl1271 *wl)
- 		goto out_free_memmap;
- 
- 	/* Enable data path */
--	ret = wl1271_cmd_data_path(wl, wl->channel, 1);
-+	ret = wl1271_cmd_data_path(wl, 1);
- 	if (ret < 0)
- 		goto out_free_memmap;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 9fb23b0..de6b550 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -384,7 +384,7 @@ static int wl1271_plt_init(struct wl1271 *wl)
- 	if (ret < 0)
- 		return ret;
- 
--	ret = wl1271_cmd_data_path(wl, wl->channel, 1);
-+	ret = wl1271_cmd_data_path(wl, 1);
- 	if (ret < 0)
- 		return ret;
- 
+ 	return 0;
+ }
 -- 
-1.6.3.3
+1.6.2.5
 
