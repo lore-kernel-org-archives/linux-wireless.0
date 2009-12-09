@@ -1,53 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:22278 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750855AbZLKNQb (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:65453 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758449AbZLIWyM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:16:31 -0500
-Message-ID: <4B22460A.9060804@nokia.com>
-Date: Fri, 11 Dec 2009 15:15:54 +0200
-From: Luciano Coelho <luciano.coelho@nokia.com>
+	Wed, 9 Dec 2009 17:54:12 -0500
+Received: by bwz27 with SMTP id 27so5713807bwz.21
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2009 14:54:18 -0800 (PST)
 MIME-Version: 1.0
-To: "Oikarinen Juuso (Nokia-D/Tampere)" <juuso.oikarinen@nokia.com>
-CC: ext Johannes Berg <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 21/31] wl1271: prevent power save entry while not associated
-References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>	 <1260531682-4695-22-git-send-email-luciano.coelho@nokia.com>	 <1260532418.2442.129.camel@johannes.local> <1260533355.2689.45.camel@wimaxnb.ntc.nokia.com>
-In-Reply-To: <1260533355.2689.45.camel@wimaxnb.ntc.nokia.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <87skbk35tx.fsf@purkki.valot.fi>
+References: <c4d76b3b0912071955y25c31a11m104d9c4723ef578d@mail.gmail.com>
+	 <87ws0x3ojk.fsf@purkki.valot.fi>
+	 <c4d76b3b0912081947m2ffcdb65of44f4ce10dfa00d2@mail.gmail.com>
+	 <87skbk35tx.fsf@purkki.valot.fi>
+Date: Wed, 9 Dec 2009 17:54:18 -0500
+Message-ID: <c4d76b3b0912091454o383ff350mce78d69565a1530c@mail.gmail.com>
+Subject: Re: cfg80211 connect for at76c50x-usb
+From: Jason Andryuk <jandryuk@gmail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oikarinen Juuso (Nokia-D/Tampere) wrote:
-> Hi,
-> 
-> Unfortunately I haven't had the time to investigate this further, but
-> for me it did happen after getting de-authenticated from an AP and
-> attempting to re-authenticate. While re-authenticating, mac80211
-> appeared to request going into power save after transmitting the
-> corresponding control messages, preventing the re-authentication from
-> succeeding.
-> 
-> My assumption is, that the dynamic power save mechanism is somehow
-> getting triggered from the control message exchange - but, as I said, I
-> cannot be sure at this point.
-> 
-> -Juuso
-> 
-> On Fri, 2009-12-11 at 12:53 +0100, ext Johannes Berg wrote:
->> On Fri, 2009-12-11 at 13:41 +0200, Luciano Coelho wrote:
->>> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
->>>
->>> The mac80211 sometimes requests power save entry while not associated - this
->>> will cause problems, so prevent it if not associated. Go to powersave once
->>> association is complete.
->> Does it? It's not supposed to, and I imagine that causing trouble with
->> other drivers too. Do you know how that happens?
+>> However, there is still nothing seen on the monitor interface and it
+>> is seeing plenty of other traffic. I am trying to filter with
+>> wlan.addr == <Mac Address> in wireshark for what it's worth.
+>>
+>> Since I am not seeing anything with the CMD_JOIN being sent, I am
+>> wondering if my device has failed.
 
-I'll keep this patch for now.  Later, if the issue with mac80211 is found and 
-fixed, we can remove the code if needed.
+A quick test under OpenBSD doesn't show any transmitted packets on the
+monitor interface either and the device doesn't connect to the AP.
+Makes me more suspicious of the device having failed.
 
--- 
-Cheers,
-Luca.
+Jason
