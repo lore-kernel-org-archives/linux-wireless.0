@@ -1,58 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:43988 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757300AbZLDVRO convert rfc822-to-8bit (ORCPT
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:38137 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751647AbZLIGDj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Dec 2009 16:17:14 -0500
-Received: by iwn1 with SMTP id 1so1887197iwn.33
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Dec 2009 13:17:20 -0800 (PST)
+	Wed, 9 Dec 2009 01:03:39 -0500
+Received: by pwj9 with SMTP id 9so2136698pwj.21
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2009 22:03:45 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <c03c5be87fe5e51ff5f1442a3d84e27a@127.0.0.1>
-References: <b0c954732ea30effda967bd97ef30597@127.0.0.1> <b6c5339f0911171411r53104fcqadb2a6f5a1240308@mail.gmail.com>
-	<2059abb0cf19e10a615a9db89742acb7@127.0.0.1> <20091118194251.GA29670@hash.localnet>
-	<43e72e890911181201g571f51a4h7f5bed55e835ca3b@mail.gmail.com>
-	<c03c5be87fe5e51ff5f1442a3d84e27a@127.0.0.1>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 4 Dec 2009 13:16:54 -0800
-Message-ID: <43e72e890912041316r3954fd27vcab8a4c425562615@mail.gmail.com>
-Subject: Re: [ath5k-devel] "iwlist scan" shows same ap twice
-To: Florian Engelhardt <flo@dotbox.org>,
-	reinette chatre <reinette.chatre@intel.com>
-Cc: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Date: Tue, 8 Dec 2009 22:03:45 -0800
+Message-ID: <fd145f7d0912082203l1d7ebc50j291cc36dd65a4408@mail.gmail.com>
+Subject: WARNING at mac80211_ieee80211_rx
+From: Jeffrey Baker <jwbaker@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 4, 2009 at 1:02 PM, Florian Engelhardt <flo@dotbox.org> wrote:
-> On Wed, 18 Nov 2009 12:01:08 -0800, "Luis R. Rodriguez" <mcgrof@gmail.com>
-> wrote:
->> On Wed, Nov 18, 2009 at 11:42 AM, Bob Copeland <me@bobcopeland.com>
-> wrote:
->>>
->>> Ok, fair enough.  We should try to figure out where the 0x5d and 0x43
->>> come from.  It could be memory corruption, for example, but 0x5d and
->>> 0x43 aren't poison values.  You may try turning on slub/slab debugging
->>> just to be sure.
->>
->> He noted he sees this with iwl drivers though., Florian, please
->> correct me if I'm wrong.
->
-> You are right. Any news on this?
->
-> i attached a new scan from the Laptop with intel chipset (iwlagn module).
-> The first Cell ist the correct access point the second cell with the same
-> ESSID doesn't exist. I don't know why iwlist scan finds this AP.
+My access point with an AR9220 stopped passing traffic, and these were
+seen in dmesg.  I am using compat-wireless 2009-11-06.
 
-Please consider burrying iwlist and iwconfig under some ditch and use iw.
+also at pastebin: http://pastebin.com/m527862e9
 
-> The
-> Problem with all this is very annoying, even unloading iwlagn, iwlcore,
-> mac80211 and cfg80211 and reloading all these modules does not help.
-
-Why are you reporting iwlagn stuff on the ath5k devel list?
-
-You also did not provide feedback on the AP, whether you asked its
-admin about its config nor if it can be rebooted.
-
- Luis
+[505869.263259] ------------[ cut here ]-----------		-
+[505869.269520] WARNING: at
+/root/compat-wireless-2009-11-06/net/mac80211/rx.c:2486
+mac80211_ieee80211_rx+0xc9/0x51a [mac80211]()
+[505869.273388] Modules linked in: bridge stp loop arc4 ath9k evdev
+ath9k_hw snd_pcsp ohci_hcd mac80211 ath snd_pcm ehci_hcd snd_timer ecb
+aes_i586 snd soundcore aes_generic cfg80211 snd_page_alloc usbcore
+geode_aes rfkill_backport via_rhine geode_rng cs5535_gpio rng_core mii
+led_class ext2 mbcache ide_gd_mod thermal_sys ide_pci_generic
+ata_generic libata scsi_mod amd74xx cs5536 ide_core
+[505869.372485] Pid: 0, comm: swapper Tainted: G        W  2.6.30-2-486 #1
+[505869.376345] Call Trace:
+[505869.380338]  [<d0bcf12f>] ? mac80211_ieee80211_rx+0xc9/0x51a [mac80211]
+[505869.384236]  [<d0bcf12f>] ? mac80211_ieee80211_rx+0xc9/0x51a [mac80211]
+[505869.388353]  [<c011e7dc>] ? warn_slowpath_common+0x5e/0x8a
+[505869.393089]  [<c011e812>] ? warn_slowpath_null+0xa/0xc
+[505869.397070]  [<d0bcf12f>] ? mac80211_ieee80211_rx+0xc9/0x51a [mac80211]
+[505869.401013]  [<d0caf4b4>] ? ath_rx_tasklet+0x739/0x780 [ath9k]
+[505869.404946]  [<c012f4c6>] ? ktime_get+0xf/0x2b
+[505869.408423]  [<c0130b80>] ? commit_creds+0x57/0xec
+[505869.412401]  [<c0130804>] ? sched_clock_tick+0x63/0x137
+[505869.415073]  [<d0cad928>] ? ath9k_tasklet+0x3f/0xa1 [ath9k]
+[505869.420072]  [<c0121e01>] ? tasklet_action+0x49/0x79
+[505869.424054]  [<c0122163>] ? __do_softirq+0x82/0x125
+[505869.427238]  [<c0122233>] ? do_softirq+0x2d/0x37
+[505869.432319]  [<c01222f6>] ? irq_exit+0x25/0x4e
+[505869.436302]  [<c0104614>] ? do_IRQ+0x53/0x63
+[505869.439044]  [<c0103609>] ? common_interrupt+0x29/0x30
+[505869.443025]  [<c01135fc>] ? native_safe_halt+0x2/0x3
+[505869.446729]  [<c0107ce7>] ? default_idle+0x3c/0x65
+[505869.452591]  [<c0102336>] ? cpu_idle+0x28/0x42
+[505869.456573]  [<c0402925>] ? start_kernel+0x291/0x294
+[505869.461386] ---[ end trace 65ec8d5e106d761d ]---
