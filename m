@@ -1,46 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:6370 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752132AbZLASwT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 13:52:19 -0500
-Subject: Re: Panic in iwl3945 driver
-From: reinette chatre <reinette.chatre@intel.com>
-To: "Zhu, Yi" <yi.zhu@intel.com>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1259659724.12157.110.camel@debian>
-References: <1259167780.4072.2.camel@maxim-laptop>
-	 <1259280022.3991.12.camel@maxim-laptop>
-	 <1259596551.4090.0.camel@maxim-laptop>  <1259617333.4653.91.camel@rc-desk>
-	 <1259620526.6559.34.camel@maxim-laptop> <1259659724.12157.110.camel@debian>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 01 Dec 2009 10:52:24 -0800
-Message-Id: <1259693544.4653.126.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:54251 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758706AbZLIXqF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Dec 2009 18:46:05 -0500
+Received: by bwz27 with SMTP id 27so5738304bwz.21
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2009 15:46:10 -0800 (PST)
+MIME-Version: 1.0
+Date: Thu, 10 Dec 2009 00:46:08 +0100
+Message-ID: <c6e9632c0912091546gad933ffhe8b70ee889745cb1@mail.gmail.com>
+Subject: SIOCSIFFLAGS: Name not unique on network with b43
+From: Natale Vinto <ebballon@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-12-01 at 01:28 -0800, Zhu, Yi wrote:
-> On Tue, 2009-12-01 at 06:35 +0800, Maxim Levitsky wrote:
-> > 0x000000000001668e <iwl3945_rx_reply_tx+302>:	lea    0x38(%r8),%rdi
-> > 0x0000000000016692 <iwl3945_rx_reply_tx+306>:	lea    0x4f(%r8),%rax
-> 
-> When this happened, from your previous post, r8 is 0x0 and rdi is 0x38.
-> Since "info" is %rdi (see below), this means
-> txq->txb[txq->q.read_ptr].skb[0], aka. r8 is 0.
+Hi all,
+I'm on Kubuntu 2.6.32-rc8-wl and according to lspci I have this Broadcom card:
+Broadcom Corporation BCM4312 802.11a/b/g (rev 02)
+and modinfo b43:
 
-I agree with your conclusion here that r8 is 0 at this point. I am very
-confused how this can be since the two lines above the ones you pasted
-here are:
+filename:
+/lib/modules/2.6.32-rc8-wl/kernel/drivers/net/wireless/b43/b43.ko
+firmware:       FW13
+license:        GPL
+author:         G�bor Stefanik
+author:         Michael Buesch
+author:         Stefano Brivio
+author:         Martin Langer
+description:    Broadcom B43 wireless driver
+srcversion:     77E3E0ECBCB6EA787FE05CF
+alias:          ssb:v4243id0812rev10*
+alias:          ssb:v4243id0812rev0F*
+alias:          ssb:v4243id0812rev0D*
+alias:          ssb:v4243id0812rev0B*
+alias:          ssb:v4243id0812rev0A*
+alias:          ssb:v4243id0812rev09*
+alias:          ssb:v4243id0812rev07*
+alias:          ssb:v4243id0812rev06*
+alias:          ssb:v4243id0812rev05*
+depends:        ssb,mac80211,led-class,cfg80211
+vermagic:       2.6.32-rc8-wl mod_unload modversions PENTIUMM 4KSTACKS
+parm:           bad_frames_preempt:enable(1) / disable(0) Bad Frames
+Preemption (int)
+parm:           fwpostfix:Postfix for the .fw files to load. (string)
+parm:           hwpctl:Enable hardware-side power control (default off) (int)
+parm:           nohwcrypt:Disable hardware encryption. (int)
+parm:           hwtkip:Enable hardware tkip. (int)
+parm:           qos:Enable QOS support (default on) (int)
+parm:           btcoex:Enable Bluetooth coexistence (default on) (int)
+parm:           verbose:Log message verbosity: 0=error, 1=warn,
+2=info(default), 3=debug (int)
 
-0x0000000000016683 <iwl3945_rx_reply_tx+291>:»­­mov    (%rdx,%rax,1),%r8
-0x0000000000016687 <iwl3945_rx_reply_tx+295>:»­­mov    $0x0,%rdx
+My problem is that I would use multiple interfaces (as mentioned here
+http://wireless.kernel.org/en/users/Drivers/b43#features ) using one
+for AP and one for station but I always get this error while trying to
+up the other interface:
+SIOCSIFFLAGS: Name not unique on network
 
->From the information in the post you refer to we have rdx as
-0xffffffffa0c85f40 and rax as 0x4f. Since r8 is initialized above from
-these two registers ... how could it be that r8 ends up as zero?
+This is the command list that I've done:
 
-Reinette
+service network-manager stop
+iw phy phy0 interface add wlan1 type station (or managed)
+ifconfig wlan1 up
+
+then I used wpa_supplicant on wlan1 and all ok. But when I try to up
+wlan0 that from iwconfig shows this:
+wlan0     Link encap:Ethernet  HWaddr 00:1a:73:xx:xx:xx
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+or when I try to use hostapd:
+Configuration file: /etc/hostapd/hostapd.conf
+ctrl_interface_group=0
+ioctl[SIOCSIFFLAGS]: Name not unique on network
+nl80211 driver initialization failed.
+wlan0: Unable to setup interface.
+rmdir[ctrl_interface]: No such file or directory
+ELOOP: remaining socket: sock=5 eloop_data=0x80f0a38 user_data=(nil)
+handler=0x80874
+
+so how to have multiple interfaces (in my case one AP and one station) with b43?
+I haven't found a solution googling
+
+Best Regards
 
 
+
+-- 
+Natale Vinto
+http://www.gotext.org
+http://bluesman.gotext.org
