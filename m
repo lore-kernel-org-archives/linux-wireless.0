@@ -1,69 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:44014 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933195AbZLRXC7 (ORCPT
+Received: from mail-ew0-f209.google.com ([209.85.219.209]:45530 "EHLO
+	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758120AbZLIWVm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2009 18:02:59 -0500
-Received: by iwn1 with SMTP id 1so2507134iwn.33
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2009 15:02:59 -0800 (PST)
+	Wed, 9 Dec 2009 17:21:42 -0500
+Received: by ewy1 with SMTP id 1so4924461ewy.28
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2009 14:21:47 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1261176470.14206.23.camel@johannes.local>
-References: <1261176470.14206.23.camel@johannes.local>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 18 Dec 2009 15:02:39 -0800
-Message-ID: <43e72e890912181502u3610ac23qe2dfc09f1d337bf5@mail.gmail.com>
-Subject: Re: [PATCH] ar9170: load firmware asynchronously
+In-Reply-To: <83a869cd0912071306y4a56953fm8248b6d030b311ae@mail.gmail.com>
+References: <83a869cd0908211513k2e14ba40k251aa8a1e7393a77@mail.gmail.com>
+	 <1250927141.23605.3.camel@johannes.local>
+	 <83a869cd0911071010g32c798c6pfecd875a1bf484e0@mail.gmail.com>
+	 <1257621757.29454.48.camel@johannes.local>
+	 <83a869cd0911161353p5ea44472s8e6f146929ff6c65@mail.gmail.com>
+	 <1258408565.32159.42.camel@johannes.local>
+	 <83a869cd0912071306y4a56953fm8248b6d030b311ae@mail.gmail.com>
+Date: Wed, 9 Dec 2009 23:21:45 +0100
+Message-ID: <83a869cd0912091421s62b704f6wae023c61cab85e92@mail.gmail.com>
+Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
+From: gregor kowski <gregor.kowski@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 18, 2009 at 2:47 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> This converts ar9170 to load firmware asynchronously
-> out of ->probe() and only register with mac80211 when
-> all firmware has been loaded successfully. If, on the
-> other hand, any firmware fails to load, it will now
-> unbind from the device.
->
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
-> This can go in now, the prereq patch went in via gregkh.
->
-> This ought to make it possible to build the driver
-> into the kernel and as long as your system boots
-> within 60 seconds it'll all just work.
->
-> This is how we need to load firmware for drivers that
-> require the firmware image to detect which features
-> to register to mac80211/cfg80211, but it's also useful
-> when no features depend on the firmware.
->
-> I've done ar9170 because I'm somewhat familiar with its
-> implementation. b43 should probably be converted to this
-> scheme since it actually has features that depend on the
-> firmware, and libertas_tf has the MAC addresss depending
-> on the firmware (well it needs the firmware to read it).
->
-> The only complication with this is that now the user is
-> mostly unaware they have a wireless device, they can only
-> find it via lsusb/lspci etc. if firmware loading fails,
-> or from kernel messages. And also manual binding in sysfs,
-> device re-plugging or module re-loading is required to
-> get the module to find the device after putting firmware
-> in place...
->
-> Still I think this is better than what we have now with
-> many drivers -- if firmware is missing you get network
-> interfaces etc. but cannot ever use them, and it's not
-> always entirely clear that is due to missing firmware.
+The patch doesn't seem to apply to new version of kernel.
+I am submitting a new one.
 
-Sweet -- we could also expose firmware load events if not done so
-already and let userspace propagate such nasty warnings, I think we'd
-need to pass the firmware expected and the driver the requested it so
-that once the firmware is in place (I guess through inotify maybe) the
-driver modprobe can be retried.
-
-  Luis
+On 12/7/09, gregor kowski <gregor.kowski@gmail.com> wrote:
+> On 11/16/09, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> On Mon, 2009-11-16 at 22:53 +0100, gregor kowski wrote:
+>>> The mac80211 tkip code won't call update_tkip_key, if rx packets
+>>> are received without KEY_FLAG_UPLOADED_TO_HARDWARE. This can happen on
+>>> first packet because the hardware key stuff is called asynchronously
+>>> with
+>>> todo workqueue.
+>>
+>>> -	ctx->initialized = 1;
+>>> +	ctx->initialized = TKIP_STATE_PHASE1_DONE;
+>>
+>> Now you just need to rename the variable holding it to "state" too...
+> Done
+>
+> Sorry for the delay
+>
+> Gregor
+>
