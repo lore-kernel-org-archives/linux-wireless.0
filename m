@@ -1,100 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:35611 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752638AbZLTVnS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2009 16:43:18 -0500
-Received: by iwn1 with SMTP id 1so3289436iwn.33
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2009 13:43:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <200912201510.51812.linux-wireless@mrs.ro>
-References: <200912201510.51812.linux-wireless@mrs.ro>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sun, 20 Dec 2009 13:42:58 -0800
-Message-ID: <43e72e890912201342w2f5916d0p2b30683ccbb5dbfe@mail.gmail.com>
-Subject: Re: Intel 4965 HT rates
-To: Valentin Manea <linux-wireless@mrs.ro>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:7260 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761875AbZLJWhV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Dec 2009 17:37:21 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/7] iwlwifi updates 12/10/2009
+Date: Thu, 10 Dec 2009 14:37:20 -0800
+Message-Id: <1260484647-5114-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 20, 2009 at 5:10 AM, Valentin Manea <linux-wireless@mrs.ro> wrote:
-> Hi,
->
->  I'm running compat-wireless-2.6.33-rc1 and iw list shows some confusing HT
-> capabilities:
->        Band 1:
->                HT capabilities: 0x082c
->                        * 20 MHz operation
->                        * SM PS disabled
->                        * 20 MHz short GI
->                        * max A-MSDU len 7935
->
-> but for 802.11a channels:
->        Band 2:
->                HT capabilities: 0x086e
->                        * 20/40 MHz operation
->                        * SM PS disabled
->                        * 20 MHz short GI
->                        * 40 MHz short GI
->                        * max A-MSDU len 7935
->
-> While I can't tell when this happened, I remember older 2.6.29 releases
-> supported HT40 for both bands.
+This series includes three fixes targeting 2.6.33:
+- "iwlwifi: power up all devices for EEPROM read" fixes a issue where
+devices are unable to be initialized on certain platforms due to too
+aggressive power savings.
+- "iwlwifi: allocated rx page accounting cleanup" fixes some accounting
+issues in the recent paged RX work
+- "iwlwifi: fix syslog message for event log dump size" fixes the problem
+where the entire debug log was not printed when requested by user
 
-How do you know? What makes you believe that was the case?
+In this series we also include support for the new mac80211 spatial
+multiplexing support. This patch is dependent on the mac80211 patches
+introducing this work ("cfg80211: add SM PS hooks" and "mac80211: enable
+spatial multiplexing powersave").
 
-> The wireless card is an Intel 4965 on a Thinkpad T61.
+We also include some debugging patches. The status and control registers
+are now also dumped when device error occurs. We also introduce continuous
+uCode event log capability where the uCode events can be monitored as they
+occur.
 
-The ht_cap that gets parsed and sent back through nl80211 is
-initialized in iwl-agn on iwl-core.c on iwlcore_init_ht_hw_capab() as
-follows
+Johannes Berg (1):
+  iwlwifi: use new mac80211 SMPS
 
-static void iwlcore_init_ht_hw_capab(const struct iwl_priv *priv,
-                              struct ieee80211_sta_ht_cap *ht_info,
-                              enum ieee80211_band band)
-{
-        ....
-        if (priv->hw_params.ht40_channel & BIT(band)) {
-                ht_info->cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-                ht_info->cap |= IEEE80211_HT_CAP_SGI_40;
-                ht_info->mcs.rx_mask[4] = 0x01;
-                max_bit_rate = MAX_BIT_RATE_40_MHZ;
-        }
-        ....
-}
+Reinette Chatre (1):
+  iwlwifi: power up all devices for EEPROM read
 
-And the priv->hw_params.ht40_channel gets initialized for 4965
-hardware on iwl4965_hw_set_hw_params():
+Wey-Yi Guy (4):
+  iwlwifi: fix syslog message for event log dump size
+  iwlwifi: log CT_CARD_DISABLED flag
+  iwlwifi: dump "Control and Status Register" when detect uCode HW/SW
+    error
+  iwlwifi: add continuous uCode event log capability
 
-static int iwl4965_hw_set_hw_params(struct iwl_priv *priv)
-{
-        ...
-        priv->hw_params.ht40_channel = BIT(IEEE80211_BAND_5GHZ);
-        ....
-}
+Zhu Yi (1):
+  iwlwifi: allocated rx page accounting cleanup
 
-iwl-5000 and iwl-6000 sets this to both bands:
+ drivers/net/wireless/iwlwifi/iwl-1000.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    1 -
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c     |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |  149 +++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c     |  126 ++++++++++++++++++-----
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-csr.h      |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-debug.h    |    2 +
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c  |   81 +++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |   41 ++++++++
+ drivers/net/wireless/iwlwifi/iwl-devtrace.c |    2 +
+ drivers/net/wireless/iwlwifi/iwl-devtrace.h |   44 ++++++++
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c   |   14 +--
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-rx.c       |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-sta.c      |    8 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   12 +--
+ 21 files changed, 436 insertions(+), 86 deletions(-)
 
-int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
-{
-        ....
-        priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
-                                        BIT(IEEE80211_BAND_5GHZ);
-        ....
-}
-
-static int iwl6000_hw_set_hw_params(struct iwl_priv *priv)
-{
-        ....
-        priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
-                                        BIT(IEEE80211_BAND_5GHZ);
-        ....
-}
-
-So it appears to be done explicitly in software, not sure if hardware
-does support HT40 on 2.4 GHz band on the 4965, Intel folks would
-though.
-
-  Luis
