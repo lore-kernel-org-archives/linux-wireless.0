@@ -1,57 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:50686 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756007AbZLHPtI convert rfc822-to-8bit (ORCPT
+Received: from mail-gx0-f212.google.com ([209.85.217.212]:36243 "EHLO
+	mail-gx0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754210AbZLJCnr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 10:49:08 -0500
-Received: by iwn1 with SMTP id 1so3826302iwn.33
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2009 07:49:15 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <EB65E7CB-4E8C-4587-A563-A4F5185C5D80@gmail.com>
-References: <1260237325-8654-1-git-send-email-lrodriguez@atheros.com>
-	<4B1DDB77.6070909@myrealbox.com> <43e72e890912072221j660f9a6dpa8cf9257db14da41@mail.gmail.com>
-	<EB65E7CB-4E8C-4587-A563-A4F5185C5D80@gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 8 Dec 2009 07:48:55 -0800
-Message-ID: <43e72e890912080748k14a4d579kc055b340278a3a3f@mail.gmail.com>
-Subject: Re: [PATCH] iw: add HT capability parsing for scanning
-To: Andy Lutomirski <amluto@gmail.com>
-Cc: Andy Lutomirski <luto@myrealbox.com>,
-	"johannes@sipsolutions.ney" <johannes@sipsolutions.ney>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 9 Dec 2009 21:43:47 -0500
+Received: by gxk4 with SMTP id 4so11880073gxk.8
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2009 18:43:53 -0800 (PST)
+From: Javier Cardona <javier@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Javier Cardona <javier@cozybit.com>,
+	Andrey Yurovsky <andrey@cozybit.com>, stable@kernel.org,
+	linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH 2/2] mac80211: Revert 'Use correct sign for mesh active path refresh'
+Date: Wed,  9 Dec 2009 18:43:01 -0800
+Message-Id: <1260412981-2982-2-git-send-email-javier@cozybit.com>
+In-Reply-To: <1260412981-2982-1-git-send-email-javier@cozybit.com>
+References: <1260412981-2982-1-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 8, 2009 at 2:54 AM, Andy Lutomirski <amluto@gmail.com> wrote:
->
->
-> On Dec 8, 2009, at 1:21 AM, "Luis R. Rodriguez" <lrodriguez@atheros.com>
-> wrote:
->
->> On Mon, Dec 7, 2009 at 8:52 PM, Andy Lutomirski <luto@myrealbox.com>
->> wrote:
->>>
->>> Luis R. Rodriguez wrote:
->>>>
->>>> This adds HT capability IE parsing for scanning. You will now
->>>> be able to easily review what HT capabilities your AP supports
->>>> with a simple iw scan.
->>>>
->>>
->>>> +       default:
->>>> +               return "Uknown";
->>>> +       }
->>>> +}
->>>> +
->>>
->>> Unknown?
->>
->> Could've called it "caca", but this seemed more appropriate.
->
-> Sure, but a second "n" might be more respectful to the AP. :)
+The patch (be48ad42a1a6b82108df722034aebd12680bca44) was actually a bug.
+Reverted it and improved the explanation of how mesh path refresh works.
 
-That is true :), thanks for the pointer, will leave it like that for
-now unless Johannes really wants a resend.
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+---
+ net/mac80211/mesh.h      |    5 +++--
+ net/mac80211/mesh_hwmp.c |    2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-  Luis
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 31e1025..85562c5 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -188,8 +188,9 @@ struct mesh_rmc {
+  */
+ #define MESH_PREQ_MIN_INT	10
+ #define MESH_DIAM_TRAVERSAL_TIME 50
+-/* Paths will be refreshed if they are closer than PATH_REFRESH_TIME to their
+- * expiration
++/* A path will be refreshed if it is used PATH_REFRESH_TIME milliseconds before
++ * timing out.  This way it will remain ACTIVE and no data frames will be
++ * unnecesarily held in the pending queue.
+  */
+ #define MESH_PATH_REFRESH_TIME			1000
+ #define MESH_MIN_DISCOVERY_TIMEOUT (2 * MESH_DIAM_TRAVERSAL_TIME)
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 9aecf02..c43fa91 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -936,7 +936,7 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
+ 	}
+ 
+ 	if (mpath->flags & MESH_PATH_ACTIVE) {
+-		if (time_after(jiffies, mpath->exp_time +
++		if (time_after(jiffies, mpath->exp_time -
+ 			msecs_to_jiffies(sdata->u.mesh.mshcfg.path_refresh_time))
+ 				&& !memcmp(sdata->dev->dev_addr, hdr->addr4,
+ 					   ETH_ALEN)
+-- 
+1.6.3.3
+
