@@ -1,77 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:47256 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757386AbZLNOYX (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:46482 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756402AbZLJROQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 09:24:23 -0500
-Received: by ewy19 with SMTP id 19so3428171ewy.21
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 06:24:21 -0800 (PST)
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Revised wireless tree management practices
-Date: Mon, 14 Dec 2009 15:16:12 +0100
-Cc: linux-wireless@vger.kernel.org, davem@davemloft.net
-References: <20091209211054.GB32058@tuxdriver.com>
-In-Reply-To: <20091209211054.GB32058@tuxdriver.com>
+	Thu, 10 Dec 2009 12:14:16 -0500
+Received: by iwn1 with SMTP id 1so5509280iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2009 09:14:23 -0800 (PST)
 MIME-Version: 1.0
-Message-Id: <200912141516.12224.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+In-Reply-To: <200912101846.40572.holgerschurig@gmail.com>
+References: <500577.32161.qm@web51405.mail.re2.yahoo.com> <200912101846.40572.holgerschurig@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 10 Dec 2009 09:14:01 -0800
+Message-ID: <43e72e890912100914m1766db5fife6563fec3807b8d@mail.gmail.com>
+Subject: Re: Switching channel in IBSS network doesn't work in ath9k
+To: Holger Schurig <holgerschurig@googlemail.com>
+Cc: Joerg Pommnitz <pommnitz@yahoo.com>, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 09 December 2009 10:10:55 pm John W. Linville wrote:
-> Greetings,
-> 
-> So I'm tired of a) being asked how wireless-testing is managed; and,
-> b) having trouble explaining it.  I think it is time to move to a
-> more conventional process for wireless patches.
-> 
-> The main change I would like to make for now is to move wireless-2.6
-> and wireless-next-2.6 to a default "immutable history" policy.
-> By this I mean that I will strive to keep the history both clean
-> and immutable in those trees.  If for some reason I can't make that
-> happen and have to rebase those trees, I will make a loud and obvious
-> announcement on the linux-wireless mailing list.  More likely, it
-> means I may have to push an occasional revert through those trees
-> that I might have otherwise avoided.
-> 
-> One of the ramifications of this will be that I will need to be
-> extra careful about what gets merged into those trees.  I have been
-> pushing patches into those trees quickly after merging them into
-> wireless-testing, relying on linux-next to uncover some of the problems
-> a quick review might miss.  Now I will need to have higher confidence
-> in a patch before pushing it to wireless-next-2.6 or (especially)
-> wireless-2.6, so some patches may take longer to get there.  All of
-> your usual dilligent reviews are most helpful in this regard.
-> 
-> For now, the main change to wireless-testing will be that I will be
-> pulling from wireless-2.6 and wireless-next-2.6 rather than reapplying
-> most patches.  This should limit (and possibly eliminate) the confusing
-> patch-revert-reapply-repeat practice I have been using there for a
-> long time.  However, I still anticipate using w-t as a holding area
-> for questionable patches.  So, at least some patches may still get
-> the revert-reapply treatment.  I may ask Stephen to pull w-t into
-> linux-next in order to expand testing of any such patches.
-> 
-> One advantage to this new process is that it will enable me to more
-> readily accept actual git pull requests from driver/subsystem
-> maintainers.  In order for this to work, those maintainers will need to
-> send separate pull requests for fixes intended for the current release
-> and for features intended for the next release.  They will also need to
-> maintain their trees appropriately (i.e. separate trees or separate
-> branches with appropriate bases) for this to work.  If anyone is
-> interested in doing this, feel free to ask more questions.
-> 
-> Well, there is my overview.  Anyone have questions/objections/etc?
+On Thu, Dec 10, 2009 at 9:46 AM, Holger Schurig
+<holgerschurig@googlemail.com> wrote:
+>> P.S.: Is there a way to get an overview of the current interface
+>>  configuration with iw? What is the equivalent of "iwconfig wlan0"?
+>
+> There's none. Currently, iw iw written almost like a direct representation
+> of cfg80211 commands. For things like "iw link", the code has added a bit of
+> magic, so that this actually sends two cfg80211 command. But in general,
+> it's a 1:1 relation.
+>
+> So, you'd need to write some "give me greatest amount of info" command newly
+> for iw.
 
-Thanks John!  This sounds great (especially w-t part) and addresses large
-part of my past concerns regarding wireless/networking trees.
+Actually I think a simple 'iw link' to do this for all interfaces
+would be good. I just haven't gotten around to it. I should be
+possible without upstream changes I believe.
 
-Now if only somebody could come up with a way to split 'monstermerges'
-for Linus tree into something more fine-grained (thousands of commits in
-a single merge is too much for anyone not directly involved into current
-networking developments IMHO) I would be completely satisfied. ;)
-
---
-Bartlomiej Zolnierkiewicz
+  Luis
