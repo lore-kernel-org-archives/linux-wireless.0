@@ -1,63 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:59022 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751172AbZLWM2L (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:56783 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752833AbZLJBMd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 07:28:11 -0500
-Received: by ewy19 with SMTP id 19so6258401ewy.21
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2009 04:28:10 -0800 (PST)
+	Wed, 9 Dec 2009 20:12:33 -0500
+Received: by bwz27 with SMTP id 27so5771403bwz.21
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2009 17:12:38 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1261061645.10356.114.camel@johannes.local>
-References: <e92712b70912170610y74eb6ae8ifd8db347cc608808@mail.gmail.com>
-	 <1261061645.10356.114.camel@johannes.local>
-Date: Wed, 23 Dec 2009 14:28:10 +0200
-Message-ID: <e92712b70912230428s7caee5eag6943a8eb6a8b7a78@mail.gmail.com>
-Subject: Re: Backoff algorithm
-From: Andrey Lukyanenko <laser.ru@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4B204204.6000300@erley.org>
+References: <c6e9632c0912091546gad933ffhe8b70ee889745cb1@mail.gmail.com>
+	 <4B204204.6000300@erley.org>
+Date: Thu, 10 Dec 2009 02:12:37 +0100
+Message-ID: <c6e9632c0912091712x6f0e0bfboc8fa2c0ad32e5b80@mail.gmail.com>
+Subject: Re: SIOCSIFFLAGS: Name not unique on network with b43
+From: Natale Vinto <ebballon@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks a lot for your help.
+Hi,
+I've changed the mac of the AP interface for example, using
+macchanger. Then I've created a managed wlan1 one but now I got:
+SIOCSIFFLAGS: Operation not supported
 
-I have found OpenFWWF project, which has open source firmware for Broadcom
-chipsets. Unfortunately it does not support CTS/RTS, AP.
-What do you mean by " influencing the value you give the hw"?
-Are you talking about direct access to registers? How can I influence.
-I have heard about tos-mac (TinyOS) which uses directly registers but it
-is for sensors. Do you mean something similar?
+while trying to up it
 
-In our group we have five ar5213 chips, I hope I can try to use it.
 
-On Thu, Dec 17, 2009 at 4:54 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2009-12-17 at 16:10 +0200, Andrey Lukyanenko wrote:
->> Hello Everyone,
+2009/12/10 Pat Erley <pat-lkml@erley.org>:
+> Natale Vinto wrote:
+>> Hi all,
+>> I'm on Kubuntu 2.6.32-rc8-wl and according to lspci I have this Broadcom card:
+>> Broadcom Corporation BCM4312 802.11a/b/g (rev 02)
+>> and modinfo b43:
 >>
->> I wanted to find implementation of backoff protocols for different platforms.
->> I tried to find it in various open-source drivers in linux-sources, madwifi and
->> stlc45xx. Everywhere I could only find some initialization of CWmax, CWmin, ...
->> but not the actual algorithm (something like, cw = min(cw<<1 + 1, cwmax) ),
->> except ath_rate sample/mistrel where the operation is used for "best
->> rate measurement"
->> as I understood.
->> Am I correct to assume that the protocol is implemented in firmwhere and there
->> is no open source driver which I could use to "play" directly with it?
+>> filename:
+>> /lib/modules/2.6.32-rc8-wl/kernel/drivers/net/wireless/b43/b43.ko
+>> firmware:       FW13
+>> license:        GPL
+>> author:         Gábor Stefanik
+>> author:         Michael Buesch
+>> author:         Stefano Brivio
+>> author:         Martin Langer
+>> description:    Broadcom B43 wireless driver
+>> srcversion:     77E3E0ECBCB6EA787FE05CF
+>> alias:          ssb:v4243id0812rev10*
+>> alias:          ssb:v4243id0812rev0F*
+>> alias:          ssb:v4243id0812rev0D*
+>> alias:          ssb:v4243id0812rev0B*
+>> alias:          ssb:v4243id0812rev0A*
+>> alias:          ssb:v4243id0812rev09*
+>> alias:          ssb:v4243id0812rev07*
+>> alias:          ssb:v4243id0812rev06*
+>> alias:          ssb:v4243id0812rev05*
+>> depends:        ssb,mac80211,led-class,cfg80211
+>> vermagic:       2.6.32-rc8-wl mod_unload modversions PENTIUMM 4KSTACKS
+>> parm:           bad_frames_preempt:enable(1) / disable(0) Bad Frames
+>> Preemption (int)
+>> parm:           fwpostfix:Postfix for the .fw files to load. (string)
+>> parm:           hwpctl:Enable hardware-side power control (default off) (int)
+>> parm:           nohwcrypt:Disable hardware encryption. (int)
+>> parm:           hwtkip:Enable hardware tkip. (int)
+>> parm:           qos:Enable QOS support (default on) (int)
+>> parm:           btcoex:Enable Bluetooth coexistence (default on) (int)
+>> parm:           verbose:Log message verbosity: 0=error, 1=warn,
+>> 2=info(default), 3=debug (int)
+>>
+>> My problem is that I would use multiple interfaces (as mentioned here
+>> http://wireless.kernel.org/en/users/Drivers/b43#features ) using one
+>> for AP and one for station but I always get this error while trying to
+>> up the other interface:
+>> SIOCSIFFLAGS: Name not unique on network
+>>
+>> This is the command list that I've done:
+>>
+>> service network-manager stop
+>> iw phy phy0 interface add wlan1 type station (or managed)
+>> ifconfig wlan1 up
+>>
+>> then I used wpa_supplicant on wlan1 and all ok. But when I try to up
+>> wlan0 that from iwconfig shows this:
+>> wlan0     Link encap:Ethernet  HWaddr 00:1a:73:xx:xx:xx
+>>           BROADCAST MULTICAST  MTU:1500  Metric:1
+>>           RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+>>           TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+>>           collisions:0 txqueuelen:1000
+>>           RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+>>
+>> or when I try to use hostapd:
+>> Configuration file: /etc/hostapd/hostapd.conf
+>> ctrl_interface_group=0
+>> ioctl[SIOCSIFFLAGS]: Name not unique on network
+>> nl80211 driver initialization failed.
+>> wlan0: Unable to setup interface.
+>> rmdir[ctrl_interface]: No such file or directory
+>> ELOOP: remaining socket: sock=5 eloop_data=0x80f0a38 user_data=(nil)
+>> handler=0x80874
+>>
+>> so how to have multiple interfaces (in my case one AP and one station) with b43?
+>> I haven't found a solution googling
+>>
+>> Best Regards
+>>
+>>
+>>
+> You need to change the mac address of one of the wireless interfaces.  I don't know if multiple vifs works with b43, though, only tested with ath9k.
 >
-> Yes, basically. It's not something you can really implement in any
-> driver anyway as it's very timing sensitive.
->
-> ar9170 even has this in hardware, afaik, although you can of course play
-> with it in b43 firmware and/or ar9170 by influencing the value you give
-> the hw.
->
-> johannes
+> Pat
 >
 
 
 
 -- 
-Best regards,
-Andrey Lukyanenko.
+Natale Vinto
+http://www.gotext.org
+http://bluesman.gotext.org
