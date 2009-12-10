@@ -1,96 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.klingt.org ([86.59.21.178]:34247 "EHLO klingt.org"
+Received: from li59-9.members.linode.com ([97.107.129.9]:51075 "EHLO erley.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934873AbZLGJc2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2009 04:32:28 -0500
-Message-ID: <4B1CCB81.5060104@klingt.org>
-Date: Mon, 07 Dec 2009 10:31:45 +0100
-From: Tim Blechmann <tim@klingt.org>
+	id S1758807AbZLJAeJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Dec 2009 19:34:09 -0500
+Message-ID: <4B204204.6000300@erley.org>
+Date: Wed, 09 Dec 2009 19:34:12 -0500
+From: Pat Erley <pat-lkml@erley.org>
 MIME-Version: 1.0
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-CC: Andi Kleen <andi@firstfloor.org>, rjw@sisk.pl, IvDoorn@gmail.com,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: regression: rt2561 frequent "Arrived at non-free entry" errors
- in	2.6.32
-References: <20091204233202.GA13658@basil.fritz.box> <4B1BB44E.90706@gmail.com>
-In-Reply-To: <4B1BB44E.90706@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigE4600044CA413AFFC818098B"
+To: Natale Vinto <ebballon@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: SIOCSIFFLAGS: Name not unique on network with b43
+References: <c6e9632c0912091546gad933ffhe8b70ee889745cb1@mail.gmail.com>
+In-Reply-To: <c6e9632c0912091546gad933ffhe8b70ee889745cb1@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigE4600044CA413AFFC818098B
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Natale Vinto wrote:
+> Hi all,
+> I'm on Kubuntu 2.6.32-rc8-wl and according to lspci I have this Broadcom card:
+> Broadcom Corporation BCM4312 802.11a/b/g (rev 02)
+> and modinfo b43:
+> 
+> filename:
+> /lib/modules/2.6.32-rc8-wl/kernel/drivers/net/wireless/b43/b43.ko
+> firmware:       FW13
+> license:        GPL
+> author:         Gábor Stefanik
+> author:         Michael Buesch
+> author:         Stefano Brivio
+> author:         Martin Langer
+> description:    Broadcom B43 wireless driver
+> srcversion:     77E3E0ECBCB6EA787FE05CF
+> alias:          ssb:v4243id0812rev10*
+> alias:          ssb:v4243id0812rev0F*
+> alias:          ssb:v4243id0812rev0D*
+> alias:          ssb:v4243id0812rev0B*
+> alias:          ssb:v4243id0812rev0A*
+> alias:          ssb:v4243id0812rev09*
+> alias:          ssb:v4243id0812rev07*
+> alias:          ssb:v4243id0812rev06*
+> alias:          ssb:v4243id0812rev05*
+> depends:        ssb,mac80211,led-class,cfg80211
+> vermagic:       2.6.32-rc8-wl mod_unload modversions PENTIUMM 4KSTACKS
+> parm:           bad_frames_preempt:enable(1) / disable(0) Bad Frames
+> Preemption (int)
+> parm:           fwpostfix:Postfix for the .fw files to load. (string)
+> parm:           hwpctl:Enable hardware-side power control (default off) (int)
+> parm:           nohwcrypt:Disable hardware encryption. (int)
+> parm:           hwtkip:Enable hardware tkip. (int)
+> parm:           qos:Enable QOS support (default on) (int)
+> parm:           btcoex:Enable Bluetooth coexistence (default on) (int)
+> parm:           verbose:Log message verbosity: 0=error, 1=warn,
+> 2=info(default), 3=debug (int)
+> 
+> My problem is that I would use multiple interfaces (as mentioned here
+> http://wireless.kernel.org/en/users/Drivers/b43#features ) using one
+> for AP and one for station but I always get this error while trying to
+> up the other interface:
+> SIOCSIFFLAGS: Name not unique on network
+> 
+> This is the command list that I've done:
+> 
+> service network-manager stop
+> iw phy phy0 interface add wlan1 type station (or managed)
+> ifconfig wlan1 up
+> 
+> then I used wpa_supplicant on wlan1 and all ok. But when I try to up
+> wlan0 that from iwconfig shows this:
+> wlan0     Link encap:Ethernet  HWaddr 00:1a:73:xx:xx:xx
+>           BROADCAST MULTICAST  MTU:1500  Metric:1
+>           RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+>           TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+>           collisions:0 txqueuelen:1000
+>           RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+> 
+> or when I try to use hostapd:
+> Configuration file: /etc/hostapd/hostapd.conf
+> ctrl_interface_group=0
+> ioctl[SIOCSIFFLAGS]: Name not unique on network
+> nl80211 driver initialization failed.
+> wlan0: Unable to setup interface.
+> rmdir[ctrl_interface]: No such file or directory
+> ELOOP: remaining socket: sock=5 eloop_data=0x80f0a38 user_data=(nil)
+> handler=0x80874
+> 
+> so how to have multiple interfaces (in my case one AP and one station) with b43?
+> I haven't found a solution googling
+> 
+> Best Regards
+> 
+> 
+> 
+You need to change the mac address of one of the wireless interfaces.  I don't know if multiple vifs works with b43, though, only tested with ath9k.
 
-On 12/06/2009 02:40 PM, Gertjan van Wingerde wrote:
-> On 12/05/09 00:32, Andi Kleen wrote:
->> [Rafael, something for your regression list]
->>
->> I upgraded a system which was running 2.6.30 to 2.6.32.
->> It has a=20
->>
->> 06:02.0 Network controller: RaLink RT2561/RT61 802.11g PCI
->>
->> wireless PCI card. Now regularly even under moderate traffic
->> I see messages like
->>
->> phy0 -> rt2x00queue_write_tx_frame: Error - Arrived at non-free entry =
-in the non-full queue 2.
->> Please file bug report to http://rt2x00.serialmonkey.com.
->>
->> and loss of connectivity, often until the wireless connection
->> is restarted. This wasn't the case in 2.6.30, there the driver
->> ran stable without any problems. The problem currently
->> happens every few minutes.
->>
->=20
-> Andi, Tim,
->=20
-> Both of you have reported this problem on 2.6.32.
->=20
-> In the past this always has occurred due to queue locking problems. Thi=
-s led me
-> to audit the queue locking code, and that certainly looked suspicious t=
-o me.
->=20
-> Would you be able to test whether the attached test patch fixes the pro=
-blem for
-> you. The patch basically applies proper queue locking to the code, alth=
-ough in=20
-> a very course manner. The patch is relative to 2.6.32.
->=20
-> Note: I am not 100% sure that this is where the problem is, but at leas=
-t the test
-> patch should confirm whether I am searching in the right direction.
-
-the patch didn't cleanly apply to v2.6.32 and the patched kernel didn't
-boot ... which tree should it be applied on?
-
-tim
-
---=20
-tim@klingt.org
-http://tim.klingt.org
-
-Im =C3=BCbrigen ist es gescheiter, sich warm zuzudecken als sich zu
-betrinken.
-  Werner Schwab
-
-
---------------enigE4600044CA413AFFC818098B
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkscy4UACgkQdL+4qsZfVsta/QCeOOTc/lP7Rz0AIywd0BfQLoey
-fsAAnAvv1KMkd05OnVbQSKJ1OQY4HToN
-=TtYp
------END PGP SIGNATURE-----
-
---------------enigE4600044CA413AFFC818098B--
+Pat
