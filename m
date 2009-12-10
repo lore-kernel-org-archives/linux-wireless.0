@@ -1,137 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55497 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757010AbZLFR6u (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2009 12:58:50 -0500
-Subject: [PATCH] mac80211/cfg80211: add station events
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 06 Dec 2009 18:58:53 +0100
-Message-ID: <1260122333.3461.19.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mx30.mail.ru ([94.100.176.44]:64908 "EHLO mx30.mail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761206AbZLJS4k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Dec 2009 13:56:40 -0500
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+To: Dave <kilroyd@googlemail.com>
+Subject: Re: [PATCH] orinoco: fix GFP_KERNEL in orinoco_set_key with interrupts disabled
+Date: Thu, 10 Dec 2009 21:55:55 +0300
+Cc: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <200912101955.01325.arvidjaar@mail.ru> <4B213F4D.2000707@gmail.com>
+In-Reply-To: <4B213F4D.2000707@gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1442864.1yZQ6tc2nb";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200912102156.32029.arvidjaar@mail.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When, for instance, a new IBSS peer is found, userspace
-wants to be notified. Add events for all new stations
-that mac80211 learns about.
+--nextPart1442864.1yZQ6tc2nb
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/cfg80211.h  |   12 ++++++++++++
- net/mac80211/sta_info.c |    5 +++++
- net/wireless/mlme.c     |   10 ++++++++++
- net/wireless/nl80211.c  |   21 ++++++++++++++++++++-
- net/wireless/nl80211.h  |    4 ++++
- 5 files changed, 51 insertions(+), 1 deletion(-)
+On Thursday 10 of December 2009 21:34:53 Dave wrote:
+> Andrey Borzenkov wrote:
+> > I had to resurrect old notebook and immediately hit this under
+> > 2.6.32:
+> >
+> > [   77.254109] WARNING: at
+> > /home/bor/src/linux-git/kernel/lockdep.c:2465 lockdep
+> > _trace_alloc+0x9a/0xa0()
+> >
+> > Until orinoco_lock can be converted from spinlock into mutex, this
+> > patch is the most simple solution.
+>=20
+> Thank you Andrey. The patch is correct (though it could clean up the
+> misdirected comment 4 or 5 lines above).
+>=20
 
---- wireless-testing.orig/net/wireless/mlme.c	2009-12-06 18:29:05.000000000 +0100
-+++ wireless-testing/net/wireless/mlme.c	2009-12-06 18:32:18.000000000 +0100
-@@ -707,3 +707,13 @@ void cfg80211_remain_on_channel_expired(
- 					      channel_type, gfp);
- }
- EXPORT_SYMBOL(cfg80211_remain_on_channel_expired);
-+
-+void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
-+		      struct station_info *sinfo, gfp_t gfp)
-+{
-+	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
-+	nl80211_send_sta_event(rdev, dev, mac_addr, sinfo, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_new_sta);
---- wireless-testing.orig/net/wireless/nl80211.c	2009-12-06 18:25:13.000000000 +0100
-+++ wireless-testing/net/wireless/nl80211.c	2009-12-06 18:53:19.000000000 +0100
-@@ -1675,7 +1675,7 @@ static u16 nl80211_calculate_bitrate(str
- 
- static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
- 				int flags, struct net_device *dev,
--				u8 *mac_addr, struct station_info *sinfo)
-+				const u8 *mac_addr, struct station_info *sinfo)
- {
- 	void *hdr;
- 	struct nlattr *sinfoattr, *txrate;
-@@ -5389,6 +5389,25 @@ void nl80211_send_remain_on_channel_canc
- 					  channel_type, 0, gfp);
- }
- 
-+void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
-+			    struct net_device *dev, const u8 *mac_addr,
-+			    struct station_info *sinfo, gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+
-+	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	if (nl80211_send_station(msg, 0, 0, 0, dev, mac_addr, sinfo) < 0) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-+				nl80211_mlme_mcgrp.id, gfp);
-+}
-+
- /* initialisation/exit functions */
- 
- int nl80211_init(void)
---- wireless-testing.orig/net/wireless/nl80211.h	2009-12-06 18:28:48.000000000 +0100
-+++ wireless-testing/net/wireless/nl80211.h	2009-12-06 18:32:06.000000000 +0100
-@@ -70,4 +70,8 @@ void nl80211_send_remain_on_channel_canc
- 	u64 cookie, struct ieee80211_channel *chan,
- 	enum nl80211_channel_type channel_type, gfp_t gfp);
- 
-+void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
-+			    struct net_device *dev, const u8 *mac_addr,
-+			    struct station_info *sinfo, gfp_t gfp);
-+
- #endif /* __NET_WIRELESS_NL80211_H */
---- wireless-testing.orig/include/net/cfg80211.h	2009-12-06 18:32:45.000000000 +0100
-+++ wireless-testing/include/net/cfg80211.h	2009-12-06 18:33:35.000000000 +0100
-@@ -2177,4 +2177,16 @@ void cfg80211_remain_on_channel_expired(
- 					enum nl80211_channel_type channel_type,
- 					gfp_t gfp);
- 
-+
-+/**
-+ * cfg80211_new_sta - notify userspace about station
-+ *
-+ * @dev: the netdev
-+ * @mac_addr: the station's address
-+ * @sinfo: the station information
-+ * @gfp: allocation flags
-+ */
-+void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
-+		      struct station_info *sinfo, gfp_t gfp);
-+
- #endif /* __NET_CFG80211_H */
---- wireless-testing.orig/net/mac80211/sta_info.c	2009-12-06 18:34:00.000000000 +0100
-+++ wireless-testing/net/mac80211/sta_info.c	2009-12-06 18:35:59.000000000 +0100
-@@ -359,6 +359,7 @@ int sta_info_insert(struct sta_info *sta
- {
- 	struct ieee80211_local *local = sta->local;
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	struct station_info sinfo;
- 	unsigned long flags;
- 	int err = 0;
- 
-@@ -408,6 +409,10 @@ int sta_info_insert(struct sta_info *sta
- 
- 	spin_unlock_irqrestore(&local->sta_lock, flags);
- 
-+	sinfo.filled = 0;
-+	sinfo.generation = local->sta_generation;
-+	cfg80211_new_sta(sdata->dev, sta->sta.addr, &sinfo, GFP_ATOMIC);
-+
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	/*
- 	 * Debugfs entry adding might sleep, so schedule process
+Do you want me to resubmit with this cleanup?
 
+> Is it worth pushing this to stable?
+>=20
 
+I think yes. Sleeping under spinlock with interrupts disabled is not fun=20
+even if it is very unlikely.
+
+--nextPart1442864.1yZQ6tc2nb
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEABECAAYFAkshRD8ACgkQR6LMutpd94y2ngCaA6qN7nMQzDNt6r0mWxCv7HTd
+0AAAniK7T87x74Us6uSOrL3Fsv/H2TVj
+=o+/T
+-----END PGP SIGNATURE-----
+
+--nextPart1442864.1yZQ6tc2nb--
