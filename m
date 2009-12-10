@@ -1,31 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:64184 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752292AbZLOPAU (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44217
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761988AbZLJW72 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 10:00:20 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 17/19] [RFC, v2] libertas: Kconfig entry for libertas+cfg80211
-Date: Tue, 15 Dec 2009 15:58:48 +0100
-Cc: Dan Williams <dcbw@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <20091022133043.185554096@mail.mn-solutions.de> <1256587966.2110.28.camel@localhost.localdomain> <200912151544.00402.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200912151544.00402.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200912151558.48844.holgerschurig@gmail.com>
+	Thu, 10 Dec 2009 17:59:28 -0500
+Date: Thu, 10 Dec 2009 14:59:35 -0800 (PST)
+Message-Id: <20091210.145935.135534027.davem@davemloft.net>
+To: reinette.chatre@intel.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: [PATCH 0/7] iwlwifi updates 12/10/2009
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1260485392.25564.6308.camel@rc-desk>
+References: <1260484647-5114-1-git-send-email-reinette.chatre@intel.com>
+	<20091210.144239.110141276.davem@davemloft.net>
+	<1260485392.25564.6308.camel@rc-desk>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> This means that STA/IBSS and Libertas' MESH cannot be active at 
-> the same time.
+From: reinette chatre <reinette.chatre@intel.com>
+Date: Thu, 10 Dec 2009 14:49:52 -0800
 
-Oh, just read the old wext.c and I was wrong.
+> Sorry that I introduced confusion now ... perhaps I should submit fixes
+> and features in separate series to prevent this in the future.
 
-This magic de-auth / ibss leave happens only if the mesh channel 
-is different from the current STA/IBSS channel.
-
--- 
-http://www.holgerschurig.de
+That sounds like a good idea to me.
