@@ -1,59 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60825 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751613AbZLXBDa (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33342 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752416AbZLJPPL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 20:03:30 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Sujith <Sujith.Manoharan@atheros.com>, stable@kernel.org
-Subject: [PATCH 3/5] ath9k: fix suspend by waking device prior to stop
-Date: Wed, 23 Dec 2009 20:03:27 -0500
-Message-Id: <1261616609-518-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1261616609-518-1-git-send-email-lrodriguez@atheros.com>
-References: <1261616609-518-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 10 Dec 2009 10:15:11 -0500
+Date: Thu, 10 Dec 2009 10:03:18 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
+	davem@davemloft.net
+Subject: Re: Revised wireless tree management practices
+Message-ID: <20091210150318.GB2955@tuxdriver.com>
+References: <20091209211054.GB32058@tuxdriver.com> <87ljhb0x0h.fsf@purkki.valot.fi> <20091210134733.GC11112@tuxdriver.com> <87ein30vt4.fsf@purkki.valot.fi> <43e72e890912100631if1c17b2l597168813db4a19c@mail.gmail.com> <20091210143754.GA2955@tuxdriver.com> <43e72e890912100653p3890705u4f88dd19026a5877@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <43e72e890912100653p3890705u4f88dd19026a5877@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith <Sujith.Manoharan@atheros.com>
+On Thu, Dec 10, 2009 at 06:53:43AM -0800, Luis R. Rodriguez wrote:
+> On Thu, Dec 10, 2009 at 6:37 AM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > On Thu, Dec 10, 2009 at 06:31:02AM -0800, Luis R. Rodriguez wrote:
+> >> On Thu, Dec 10, 2009 at 6:04 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> >> > "John W. Linville" <linville@tuxdriver.com> writes:
+> >> >
+> >> >> I still see value in a tree that has a reasonably stable base and
+> >> >> contains both wireless fixes and wireless features.
+> >> >
+> >> > I agree, it makes things a lot easier.
+> >> >
+> >> >> So, I think wireless-testing remains as the focal point for wireless
+> >> >> LAN testing and development. I'll just be getting patches there in a
+> >> >> slightly different process.
+> >> >
+> >> > Sounds very good. So I'll continue using wireless-testing. Thanks.
+> >>
+> >> But we use wireless-next as base though if we want to send you pull
+> >> requests, ay?
+> >
+> > Yes, that is correct -- people that want to send patches (or simply
+> > test) should use wireless-testing.  People that want to send pull
+> > requests need to have trees based on wireless-2.6 (for fixes)
+> 
+> Typically we have relied on you to push fixes into wireless-2.6, does
+> this change a bit now in that we should try to keep better track of
+> stable fixes and send them to you instead if we're doing the pull
+> request method?
 
-Ensure the device is awake prior to trying to tell hardware
-to stop it. Impact of not doing this is we can likely leave
-the device in an undefined state likely causing issues with
-suspend and resume. This patch ensures harware is where it
-should be prior to suspend.
+Yes.  If you want me to do git pulls then you need to separate fixes
+into a tree based on wireless-2.6.  Also, you should be conscientious
+about adding "Cc: stable@kernel.org" to commit logs as appropriate.
+The whole point of the pulls is to keep me from having to touch
+the patches.
 
-Cc: stable@kernel.org
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 3f5b887..1464ded 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2504,6 +2504,9 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 		return; /* another wiphy still in use */
- 	}
- 
-+	/* Ensure HW is awake when we try to shut it down. */
-+	ath9k_ps_wakeup(sc);
-+
- 	if (ah->btcoex_hw.enabled) {
- 		ath9k_hw_btcoex_disable(ah);
- 		if (ah->btcoex_hw.scheme == ATH_BTCOEX_CFG_3WIRE)
-@@ -2524,6 +2527,9 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 	/* disable HAL and put h/w to sleep */
- 	ath9k_hw_disable(ah);
- 	ath9k_hw_configpcipowersave(ah, 1, 1);
-+	ath9k_ps_restore(sc);
-+
-+	/* Finally, put the chip in FULL SLEEP mode */
- 	ath9k_setpower(sc, ATH9K_PM_FULL_SLEEP);
- 
- 	sc->sc_flags |= SC_OP_INVALID;
+John
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
