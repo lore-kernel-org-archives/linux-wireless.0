@@ -1,114 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f182.google.com ([209.85.211.182]:59629 "EHLO
-	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754235AbZLWRLp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 12:11:45 -0500
-Received: by ywh12 with SMTP id 12so8018916ywh.21
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2009 09:11:44 -0800 (PST)
+Received: from bu3sch.de ([62.75.166.246]:54634 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756958AbZLJRAA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Dec 2009 12:00:00 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC/RFT] b43: Allow PIO mode to be selected at module load
+Date: Thu, 10 Dec 2009 17:59:52 +0100
+Cc: John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <4b21218d.wt8w3J8GbcDHhv31%Larry.Finger@lwfinger.net>
+In-Reply-To: <4b21218d.wt8w3J8GbcDHhv31%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <bfff2faa0912190727jc7fa067gf46425d1cd443698@mail.gmail.com>
-References: <bfff2faa0912190727jc7fa067gf46425d1cd443698@mail.gmail.com>
-Date: Wed, 23 Dec 2009 12:11:44 -0500
-Message-ID: <bfff2faa0912230911w15966e9sbfbba9bd303d3314@mail.gmail.com>
-Subject: Re: modprobe fail and subsequent crash on rmmod ath9k D-Link DWA 652
-From: Russ Adams <russ.adams@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200912101759.54881.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nothing new on this just yet.
+On Thursday 10 December 2009 17:27:57 Larry Finger wrote:
+> If a user encounters the "Fatal DMA Problem" with a BCM43XX device, and
+> still wishes to use b43 as the driver, their only option is to rebuild
+> the kernel with CONFIG_B43_FORCE_PIO. This patch removes this option and
+> allows PIO mode to be selected with a load-time option for the module.
+> 
+> Once the DMA problem with the BCM4312 devices is solved, this patch will
+> likely be reverted.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> 
+> 
+> Index: wireless-testing/drivers/net/wireless/b43/Kconfig
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/b43/Kconfig
+> +++ wireless-testing/drivers/net/wireless/b43/Kconfig
+> @@ -79,10 +79,11 @@ config B43_SDIO
+>  	  If unsure, say N.
+>  
+>  # Data transfers to the device via PIO
+> -# This is only needed on PCMCIA and SDIO devices. All others can do DMA properly.
+> +# Technically, this is only needed on PCMCIA and SDIO devices; but some LP PHYs
+> +# cannot do DMA properly.
+>  config B43_PIO
+>  	bool
+> -	depends on B43 && (B43_SDIO || B43_PCMCIA || B43_FORCE_PIO)
+> +	depends on B43
+>  	select SSB_BLOCKIO
+>  	default y
 
-Tonight I will try 2.6.32-2 to see if that fixes the problem.  Does
-anyone have any debugging steps I can try?
+Just remove the kconfig entry, too. ;)
+Add the select SSB_BLOCKIO to CONFIG_B43
 
-On Sat, Dec 19, 2009 at 10:27 AM, Russ Adams <russ.adams@gmail.com> wrote:
-> Hello all,
->
-> Environment:
->
-> I'm running 2.6.32 with a set of patches provided by Arch Linux:
-> ftp://ftp.archlinux.org/other/kernel26/patch-2.6.32.1-1-ARCH.bz2.  The
-> patches appear mostly cosmetic, with some changes applied to ext4.
->
-> Hardware:
->
-> I have a D-Link DWA 652 which reports as an AR5008 in lspci -vnn.  The
-> card is functional in kernel 2.6.28. (I'm using it to post this email)
->
-> The ath9k list indicated that the problem in rmmod may be in the
-> mac80211b module.
->
-> Here's the sequence of events:
->
-> % sudo modprobe ath9k # no pertinent dmesg output
->
-> % iwconfig # wlan0 not present
-> lo        no wireless extensions.
->
-> eth0      no wireless extensions.
->
-> % sudo rmmod ath9k # not sure why it's telling me "Killed" here
-> Killed
->
-> % dmesg | less
-> ...
-> ...
-> BUG: unable to handle kernel NULL pointer dereference at 0000000c
-> IP: [<c116de6a>] kref_put+0x1a/0x60
-> *pde = 00000000
-> Oops: 0002 [#1] PREEMPT SMP
-> last sysfs file:
-> /sys/devices/LNXSYSTM:00/LNXSYBUS:00/PNP0C0A:00/power_supply/BAT0/energy_full
-> Modules linked in: ipv6 fan nls_cp437 hid_microsoft vfat fat
-> snd_seq_dummy firewire_ohci mmc_block snd_seq_oss firewire_core
-> snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss sdhci_pci
-> snd_intel8x0 radeon snd_intel8x0m crc_itu_t ttm snd_ac97_codec sdhci
-> drm_kms_helper snd_pcm drm i2c_algo_bit snd_timer intel_agp
-> snd_mixer_oss video snd ac97_bus joydev iTCO_wdt i2c_core
-> iTCO_vendor_support soundcore shpchp output dell_laptop ac battery
-> button psmouse snd_page_alloc agpgart pci_hotplug processor thermal
-> dcdbas serio_raw evdev usbhid pcspkr sg hid rtc_cmos rtc_core rtc_lib
-> ext3 jbd mbcache ath9k(-) mac80211 ath cfg80211 rfkill led_class b44
-> ssb mmc_core pcmcia ipw2100 yenta_socket rsrc_nonstatic libipw
-> uhci_hcd mii lib80211 pcmcia_core sr_mod sd_mod cdrom ehci_hcd usbcore
-> ata_piix ata_generic pata_acpi libata scsi_mod
->
-> Pid: 2089, comm: rmmod Tainted: G        W  (2.6.32-ARCH #1) Inspiron
-> 9200
-> EIP: 0060:[<c116de6a>] EFLAGS: 00010202 CPU: 0
-> EIP is at kref_put+0x1a/0x60
-> EAX: 0000000c EBX: 0000000c ECX: f70ce360 EDX: f8444410
-> ESI: f8444410 EDI: f732108c EBP: f70ce260 ESP: f559fec4
->  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-> Process rmmod (pid: 2089, ti=f559e000 task=f54edd50 task.ti=f559e000)
-> Stack:
->  f70ce260 f84ef8b0 f843814d f70cea54 f70cea54 f70cea54 f84cc40d f70cea54
-> <0> f84ef8b0 f732108c f84ef8e4 f84cc4d8 f7321000 c11832f6 f7321058 c11f631d
-> <0> f7321058 f84ef8b0 c11f6407 f84ef880 f84ef8b0 c13c4c80 c11f55eb f84ef880
-> Call Trace:
->  [<f843814d>] ? ieee80211_unregister_hw+0x5d/0xd0 [mac80211]
->  [<f84cc40d>] ? ath_detach+0x5d/0x120 [ath9k]
->  [<f84cc4d8>] ? ath_cleanup+0x8/0x30 [ath9k]
->  [<c11832f6>] ? pci_device_remove+0x16/0x40
->  [<c11f631d>] ? __device_release_driver+0x4d/0xb0
->  [<c11f6407>] ? driver_detach+0x87/0x90
->  [<c11f55eb>] ? bus_remove_driver+0x5b/0xa0
->  [<c118353b>] ? pci_unregister_driver+0x2b/0x80
->  [<f84d431c>] ? ath9k_exit+0x8/0x31 [ath9k]
->  [<c1070ef0>] ? sys_delete_module+0x190/0x240
->  [<c10c6b47>] ? remove_vma+0x37/0x50
->  [<c1025a92>] ? do_page_fault+0x102/0x300
->  [<c1003913>] ? sysenter_do_call+0x12/0x28
-> Code: 00 c7 00 01 00 00 00 0f ae f0 89 f6 c3 8d 74 26 00 83 ec 08 85
-> d2 89 1c 24 89 c3 89 74 24 04 89 d6 74 39 81 fa a0 86 0d c1 74 20 <3e>
-> ff 0b 0f 94 c2 31 c0 84 d2 74 09 89 d8 ff d6 b8 01 00 00 00
-> EIP: [<c116de6a>] kref_put+0x1a/0x60 SS:ESP 0068:f559fec4
-> CR2: 000000000000000c
-> ---[ end trace a7919e7f17c0a727 ]---
->
-> Please advise.  Thank you!
->
-> Russ Adams
->
+> @@ -137,12 +138,4 @@ config B43_DEBUG
+>  	  for production use.
+>  	  Only say Y, if you are debugging a problem in the b43 driver sourcecode.
+>  
+> -config B43_FORCE_PIO
+> -	bool "Force usage of PIO instead of DMA"
+> -	depends on B43 && B43_DEBUG
+> -	---help---
+> -	  This will disable DMA and always enable PIO instead.
+>  
+> -	  Say N!
+> -	  This is only for debugging the PIO engine code. You do
+> -	  _NOT_ want to enable this.
+> Index: wireless-testing/drivers/net/wireless/b43/Makefile
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/b43/Makefile
+> +++ wireless-testing/drivers/net/wireless/b43/Makefile
+> @@ -12,7 +12,7 @@ b43-y				+= xmit.o
+>  b43-y				+= lo.o
+>  b43-y				+= wa.o
+>  b43-y				+= dma.o
+> -b43-$(CONFIG_B43_PIO)		+= pio.o
+> +b43-y				+= pio.o
+>  b43-y				+= rfkill.o
+>  b43-$(CONFIG_B43_LEDS)		+= leds.o
+>  b43-$(CONFIG_B43_PCMCIA)	+= pcmcia.o
+> Index: wireless-testing/drivers/net/wireless/b43/b43.h
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/b43/b43.h
+> +++ wireless-testing/drivers/net/wireless/b43/b43.h
+> @@ -821,11 +821,9 @@ struct b43_wl {
+>  	/* The device LEDs. */
+>  	struct b43_leds leds;
+>  
+> -#ifdef CONFIG_B43_PIO
+>  	/* Kmalloc'ed scratch space for PIO TX/RX. Protected by wl->mutex. */
+>  	u8 pio_scratchspace[110] __attribute__((__aligned__(8)));
+>  	u8 pio_tailspace[4] __attribute__((__aligned__(8)));
+> -#endif /* CONFIG_B43_PIO */
+>  };
+>  
+>  static inline struct b43_wl *hw_to_b43_wl(struct ieee80211_hw *hw)
+> @@ -876,20 +874,9 @@ static inline void b43_write32(struct b4
+>  
+>  static inline bool b43_using_pio_transfers(struct b43_wldev *dev)
+>  {
+> -#ifdef CONFIG_B43_PIO
+>  	return dev->__using_pio_transfers;
+> -#else
+> -	return 0;
+> -#endif
+>  }
+>  
+> -#ifdef CONFIG_B43_FORCE_PIO
+> -# define B43_FORCE_PIO	1
+> -#else
+> -# define B43_FORCE_PIO	0
+> -#endif
+> -
+> -
+>  /* Message printing */
+>  void b43info(struct b43_wl *wl, const char *fmt, ...)
+>      __attribute__ ((format(printf, 2, 3)));
+> Index: wireless-testing/drivers/net/wireless/b43/main.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/b43/main.c
+> +++ wireless-testing/drivers/net/wireless/b43/main.c
+> @@ -102,6 +102,9 @@ int b43_modparam_verbose = B43_VERBOSITY
+>  module_param_named(verbose, b43_modparam_verbose, int, 0644);
+>  MODULE_PARM_DESC(verbose, "Log message verbosity: 0=error, 1=warn, 2=info(default), 3=debug");
+>  
+> +static int modparam_pio;
+> +module_param_named(pio, modparam_pio, int, 0444);
+> +MODULE_PARM_DESC(pio, "enable(1) / disable(0) PIO mode");
+>  
+>  static const struct ssb_device_id b43_ssb_tbl[] = {
+>  	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 5),
+> @@ -1786,8 +1789,8 @@ static void b43_do_interrupt_thread(stru
+>  			       dma_reason[4], dma_reason[5]);
+>  			b43err(dev->wl, "This device does not support DMA "
+>  			       "on your system. Please use PIO instead.\n");
+> -			b43err(dev->wl, "CONFIG_B43_FORCE_PIO must be set in "
+> -			       "your kernel configuration.\n");
+> +			b43err(dev->wl, "Unload the b43 module and reload "
+> +			       "with 'pio=1'\n");
+>  			return;
+>  		}
+>  		if (merged_dma_reason & B43_DMAIRQ_NONFATALMASK) {
+> @@ -4353,11 +4356,9 @@ static int b43_wireless_core_init(struct
+>  
+>  	if ((dev->dev->bus->bustype == SSB_BUSTYPE_PCMCIA) ||
+>  	    (dev->dev->bus->bustype == SSB_BUSTYPE_SDIO) ||
+> -	    B43_FORCE_PIO) {
+> -		dev->__using_pio_transfers = 1;
+> +	    dev->__using_pio_transfers) {
+
+No, check for modparam_pio here instead of __using_pio_transfers.
+
+>  		err = b43_pio_init(dev);
+>  	} else {
+> -		dev->__using_pio_transfers = 0;
+
+and don't remove that here.
+
+>  		err = b43_dma_init(dev);
+>  	}
+>  	if (err)
+> @@ -4827,6 +4828,8 @@ static int b43_one_core_attach(struct ss
+>  	wldev->wl = wl;
+>  	b43_set_status(wldev, B43_STAT_UNINIT);
+>  	wldev->bad_frames_preempt = modparam_bad_frames_preempt;
+> +	if (modparam_pio)
+> +		wldev->__using_pio_transfers = 1;
+
+And remove this hunk.
+
+>  	INIT_LIST_HEAD(&wldev->list);
+>  
+>  	err = b43_wireless_core_attach(wldev);
+
+
+
+-- 
+Greetings, Michael.
