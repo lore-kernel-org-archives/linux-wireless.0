@@ -1,73 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:65310 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752402AbZLBOaC (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:55179
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1762000AbZLJWmc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2009 09:30:02 -0500
-Received: by mail-bw0-f227.google.com with SMTP id 27so217224bwz.21
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2009 06:30:08 -0800 (PST)
-Message-Id: <20091202142934.837587096@gmail.com>
-References: <20091202142555.654873300@gmail.com>
-Date: Wed, 02 Dec 2009 15:25:59 +0100
-From: Holger Schurig <holgerschurig@googlemail.com>
-To: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: [PATCH 04/10] libertas: decouple mesh and rtap
+	Thu, 10 Dec 2009 17:42:32 -0500
+Date: Thu, 10 Dec 2009 14:42:39 -0800 (PST)
+Message-Id: <20091210.144239.110141276.davem@davemloft.net>
+To: reinette.chatre@intel.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: [PATCH 0/7] iwlwifi updates 12/10/2009
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1260484647-5114-1-git-send-email-reinette.chatre@intel.com>
+References: <1260484647-5114-1-git-send-email-reinette.chatre@intel.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While it's might be technically true that only MESH-enabled firmwares
-are also RTAP-enabled, I like to have this decoupled. 
+From: Reinette Chatre <reinette.chatre@intel.com>
+Date: Thu, 10 Dec 2009 14:37:20 -0800
 
-Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
+> In this series we also include support for the new mac80211 spatial
+> multiplexing support.
 
+No more new features for 2.6.33, sorry.
 
---- linux-wl.orig/drivers/net/wireless/libertas/main.c
-+++ linux-wl/drivers/net/wireless/libertas/main.c
-@@ -1075,6 +1075,17 @@ void lbs_remove_card(struct lbs_private 
- EXPORT_SYMBOL_GPL(lbs_remove_card);
- 
- 
-+static int lbs_rtap_supported(struct lbs_private *priv)
-+{
-+	if (MRVL_FW_MAJOR_REV(priv->fwrelease) == MRVL_FW_V5)
-+		return 1;
-+
-+	/* newer firmware use a capability mask */
-+	return ((MRVL_FW_MAJOR_REV(priv->fwrelease) >= MRVL_FW_V10) &&
-+		(priv->fwcapinfo & MESH_CAPINFO_ENABLE_MASK));
-+}
-+
-+
- int lbs_start_card(struct lbs_private *priv)
- {
- 	struct net_device *dev = priv->dev;
-@@ -1094,12 +1105,14 @@ int lbs_start_card(struct lbs_private *p
- 
- 	lbs_update_channel(priv);
- 
-+	lbs_init_mesh(priv);
-+
- 	/*
- 	 * While rtap isn't related to mesh, only mesh-enabled
- 	 * firmware implements the rtap functionality via
- 	 * CMD_802_11_MONITOR_MODE.
- 	 */
--	if (lbs_init_mesh(priv)) {
-+	if (lbs_rtap_supported(priv)) {
- 		if (device_create_file(&dev->dev, &dev_attr_lbs_rtap))
- 			lbs_pr_err("cannot register lbs_rtap attribute\n");
- 	}
-@@ -1133,7 +1146,9 @@ void lbs_stop_card(struct lbs_private *p
- 	netif_carrier_off(dev);
- 
- 	lbs_debugfs_remove_one(priv);
--	if (lbs_deinit_mesh(priv))
-+	lbs_deinit_mesh(priv);
-+
-+	if (lbs_rtap_supported(priv))
- 		device_remove_file(&dev->dev, &dev_attr_lbs_rtap);
- 
- 	/* Delete the timeout of the currently processing command */
-
--- 
+Only bug fixes at this time.
