@@ -1,53 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55020 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751583AbZL1VP3 (ORCPT
+Received: from vms173013pub.verizon.net ([206.46.173.13]:59628 "EHLO
+	vms173013pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760504AbZLJFDs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Dec 2009 16:15:29 -0500
-Date: Mon, 28 Dec 2009 16:12:58 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Luca Verdesca <magooz@salug.it>
-Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath5k: adding LED support for AR5BXB63 cards
-Message-ID: <20091228211258.GA13285@tuxdriver.com>
-References: <20091222022135.2102c465@magooz.no-ip.org> <b6c5339f0912211937o525c9117k2e6d877b3c91b858@mail.gmail.com> <20091222120245.0df11284@magooz.no-ip.org> <20091222142841.GA5663@hash.localnet> <20091222181001.5c1077b8@magooz.no-ip.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091222181001.5c1077b8@magooz.no-ip.org>
+	Thu, 10 Dec 2009 00:03:48 -0500
+Date: Thu, 10 Dec 2009 00:03:36 -0500 (EST)
+From: Len Brown <lenb@kernel.org>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>, marcel@holtmann.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 6/5] dell-laptop: remove duplicate Kconfig entry under
+ drivers/misc
+In-reply-to: <4A8C0FBA.50502@tuffmail.co.uk>
+Message-id: <alpine.LFD.2.00.0912100003330.24891@localhost.localdomain>
+References: <4A8C0623.8030808@tuffmail.co.uk>
+ <1250690811-21203-5-git-send-email-alan-jenkins@tuffmail.co.uk>
+ <20090819141322.GA15937@srcf.ucam.org> <4A8C0FBA.50502@tuffmail.co.uk>
+MIME-version: 1.0
+Content-type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 22, 2009 at 06:10:01PM +0100, Luca Verdesca wrote:
-> With following patch, LED should now work with LiteOn AR5BXB63 mini
-> pci-e cards.
-> 
-> Signed-off-by: Luca Verdesca <magooz@salug.it>
-> Acked-by: Bob Copeland <me@bobcopeland.com>
-> Cc: John Linville <linville@tuxdriver.com>
-> ---
->  home/magooz/led.c |    2 ++
->  1 file changed, 2 insertions(+)
-> 
-> --- /usr/src/linux/drivers/net/wireless/ath/ath5k/led.c	2009-12-22 16:37:42.000000000 +0100
-> +++ /home/magooz/led.c	2009-12-22 16:38:14.000000000 +0100
-> @@ -75,6 +75,8 @@ static const struct pci_device_id ath5k_
->  	{ ATH_SDEVICE(PCI_VENDOR_ID_HP, 0x0137a), ATH_LED(3, 1) },
->  	/* HP Compaq C700 (nitrousnrg@gmail.com) */
->  	{ ATH_SDEVICE(PCI_VENDOR_ID_HP, 0x0137b), ATH_LED(3, 1) },
-> +	/* LiteOn AR5BXB63 (magooz@salug.it) */
-> +	{ PCI_SDEVICE(ATHEROS, 0x3067), ATH_LED(3, 0) },
->  	/* IBM-specific AR5212 (all others) */
->  	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5212_IBM), ATH_LED(0, 0) },
->  	{ }
+applied
 
-Did you compile this?  Perhaps you meant to use ATH_SDEVICE instead?
-Of course, it still wouldn't be quite right AFAICT...
+thanks,
+Len Brown, Intel Open Source Technology Center
 
-Also, please make sure that your patch can be applied with "patch -p1".
-
-Thanks,
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
