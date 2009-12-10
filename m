@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41477 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754629AbZLTBp0 (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:64740 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758317AbZLJUuw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Dec 2009 20:45:26 -0500
-Date: Sat, 19 Dec 2009 20:36:00 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2009-12-18
-Message-ID: <20091220013600.GA3032@tuxdriver.com>
-References: <20091218211945.GC2828@tuxdriver.com>
+	Thu, 10 Dec 2009 15:50:52 -0500
+Received: by bwz27 with SMTP id 27so183968bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2009 12:50:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091218211945.GC2828@tuxdriver.com>
+In-Reply-To: <200912101603.38843.mb@bu3sch.de>
+References: <c6e9632c0912091546gad933ffhe8b70ee889745cb1@mail.gmail.com>
+	 <4B204204.6000300@erley.org>
+	 <c6e9632c0912091712x6f0e0bfboc8fa2c0ad32e5b80@mail.gmail.com>
+	 <200912101603.38843.mb@bu3sch.de>
+Date: Thu, 10 Dec 2009 21:50:57 +0100
+Message-ID: <c6e9632c0912101250n638f7046w2447d96a946f01b0@mail.gmail.com>
+Subject: Re: SIOCSIFFLAGS: Name not unique on network with b43
+From: Natale Vinto <ebballon@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 18, 2009 at 04:19:45PM -0500, John W. Linville wrote:
-> Dave,
-> 
-> Here is another big batch of fixes intended for 2.6.33.  They are mostly
-> driver fixes, along with a couple of small ones for mac80211.  I don't
-> think there is anything controverisal here.
-> 
-> Please let me know if there are problems!
-> 
-> Thanks,
-> 
-> John
-> 
-> ---
-> 
-> The following changes since commit 55639353a0035052d9ea6cfe4dde0ac7fcbb2c9f:
->   Linus Torvalds (1):
->         Linux 2.6.33-rc1
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+> So the next step is to read that error message. It tells you exactly what's
+> going on: Operation not supported
+:-)
 
-Sorry if you got two (or more) copies -- something had indigestion
-on my local machine...
+But why in the Driver page there is written that b43 works with
+multiple interfaces? This means that I can create for example two
+interfaces but I can't use both?
 
-John
+Best Regards
+
+
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Natale
