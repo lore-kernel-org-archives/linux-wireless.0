@@ -1,55 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:45929 "EHLO
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:42644 "EHLO
 	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760021AbZLOMR0 (ORCPT
+	with ESMTP id S1758514AbZLJOEg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 07:17:26 -0500
-Date: Tue, 15 Dec 2009 13:17:21 +0100
-From: Stefan Seyfried <stefan.seyfried@googlemail.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/2] Add support for Sphairon Homelink 1202 USB WLAN
-Message-ID: <20091215131721.4cfbb28c@strolchi.home.s3e.de>
-In-Reply-To: <20091211233709.29fc5312@strolchi.home.s3e.de>
-References: <1260282095-17042-1-git-send-email-stefan.seyfried@googlemail.com>
-	<20091211133603.46bec686@strolchi.home.s3e.de>
-	<20091211144221.GA6663@tuxdriver.com>
-	<20091211160124.4db2da76@strolchi.home.s3e.de>
-	<1260559270.6254.2.camel@localhost.localdomain>
-	<20091211233709.29fc5312@strolchi.home.s3e.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Thu, 10 Dec 2009 09:04:36 -0500
+Received: by bwz27 with SMTP id 27so6084807bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2009 06:04:42 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, davem@davemloft.net
+Subject: Re: Revised wireless tree management practices
+References: <20091209211054.GB32058@tuxdriver.com>
+	<87ljhb0x0h.fsf@purkki.valot.fi>
+	<20091210134733.GC11112@tuxdriver.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 10 Dec 2009 16:04:39 +0200
+In-Reply-To: <20091210134733.GC11112@tuxdriver.com> (John W. Linville's message of "Thu\, 10 Dec 2009 08\:47\:33 -0500")
+Message-ID: <87ein30vt4.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 11 Dec 2009 23:37:09 +0100
-Stefan Seyfried <stefan.seyfried@googlemail.com> wrote:
-> On Fri, 11 Dec 2009 11:21:10 -0800
-> Dan Williams <dcbw@redhat.com> wrote:
-> > place to put this code is probably unusual_devs instead of
-> > touching /two/ drivers.  I'd say extract the code from zd1211rw and put
-> > the new code that works for both zd1211rw/ar9170 into unusual_devs.  In
-> > fact, people might be happier if you posted two patches, (1) move the
-> > code to unusual_devs unchanged,
+"John W. Linville" <linville@tuxdriver.com> writes:
 
-Done. Was easier than I had expected and resulted in a nice reduction
-in lines of code, because usb storage code has all infrastructure to
-handle the device, which zd1211rw had hand-crafted.
+> I still see value in a tree that has a reasonably stable base and
+> contains both wireless fixes and wireless features.
 
-> and (2) fix up the moved code to support
-> > the new device's behavior.
+I agree, it makes things a lot easier.
 
-This was actually not necessary, because the usb-storage infrastructure
-automatically chooses the correct endpoint :-)
+> So, I think wireless-testing remains as the focal point for wireless
+> LAN testing and development. I'll just be getting patches there in a
+> slightly different process.
 
-See the mail
-Subject: [PATCH] move eject code from zd1211rw to usb-storage
-
-Thanks for review and suggestions,
-
-	Stefan
+Sounds very good. So I'll continue using wireless-testing. Thanks.
 
 -- 
-"You sure you software suspend guys haven't been hanging out with the
- IDE maintainers?"     -- Rob Landley, during one of the suspend wars
+Kalle Valo
