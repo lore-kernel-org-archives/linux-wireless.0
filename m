@@ -1,337 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41980 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755772AbZLWMXS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 07:23:18 -0500
-Message-Id: <20091223121617.358773680@sipsolutions.net>
-Date: Wed, 23 Dec 2009 13:15:42 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+Received: from mga09.intel.com ([134.134.136.24]:7260 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761890AbZLJWhV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Dec 2009 17:37:21 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH next 13/18] mac80211: support remain-on-channel command
-References: <20091223121529.289129599@sipsolutions.net>
-Mime-Version: 1.0
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/7 w-t and 2.6.33] iwlwifi: power up all devices for EEPROM read
+Date: Thu, 10 Dec 2009 14:37:22 -0800
+Message-Id: <1260484647-5114-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1260484647-5114-1-git-send-email-reinette.chatre@intel.com>
+References: <1260484647-5114-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This implements the new remain-on-channel cfg80211
-command in mac80211, extending the work interface.
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-Also change the work purge code to be able to clean
-up events properly (pretending they timed out.)
+Recent commits "iwlwifi: remove power-wasting calls to apm_ops.init()" and
+"iwlagn: power up device before initializing EEPROM" had the goal of
+reducing device power consumption from the time the module is loaded until
+the interface is brought up and the device's power saving mechanisms kick
+in. The idea is that once the module is loaded there is no need for the
+device to consume power until the interface is brought up.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+With the current solution the device is only powered up during EEPROM read,
+and then so also only if the EEPROM type is OTP. We have found that on
+certain platforms even non-OTP devices require power to be up during EEPROM
+read. On these platforms the driver never loads and the system log contains
+the following:
+
+iwlagn 0000:03:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0x080403D8
+
+We thus now power up all devices during EEPROM read.
+
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- net/mac80211/cfg.c         |   24 ++++++++
- net/mac80211/ieee80211_i.h |   15 +++++
- net/mac80211/main.c        |    3 +
- net/mac80211/mlme.c        |    3 +
- net/mac80211/offchannel.c  |    8 ++
- net/mac80211/work.c        |  134 +++++++++++++++++++++++++++++++++++++++++++--
- 6 files changed, 181 insertions(+), 6 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-csr.h    |    8 +++-----
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c |   14 +++-----------
+ 2 files changed, 6 insertions(+), 16 deletions(-)
 
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-12-23 13:11:24.000000000 +0100
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-12-23 13:11:26.000000000 +0100
-@@ -225,9 +225,11 @@ struct mesh_preq_queue {
- };
- 
- enum ieee80211_work_type {
-+	IEEE80211_WORK_ABORT,
- 	IEEE80211_WORK_DIRECT_PROBE,
- 	IEEE80211_WORK_AUTH,
- 	IEEE80211_WORK_ASSOC,
-+	IEEE80211_WORK_REMAIN_ON_CHANNEL,
- };
- 
- /**
-@@ -283,6 +285,9 @@ struct ieee80211_work {
- 			u8 supp_rates_len;
- 			bool wmm_used, use_11n;
- 		} assoc;
-+		struct {
-+			unsigned long timeout;
-+		} remain;
- 	};
- 
- 	int ie_len;
-@@ -729,6 +734,10 @@ struct ieee80211_local {
- 	enum nl80211_channel_type oper_channel_type;
- 	struct ieee80211_channel *oper_channel, *csa_channel;
- 
-+	/* Temporary remain-on-channel for off-channel operations */
-+	struct ieee80211_channel *tmp_channel;
-+	enum nl80211_channel_type tmp_channel_type;
-+
- 	/* SNMP counters */
- 	/* dot11CountersTable */
- 	u32 dot11TransmittedFragmentCount;
-@@ -1162,6 +1171,12 @@ void free_work(struct ieee80211_work *wk
- void ieee80211_work_purge(struct ieee80211_sub_if_data *sdata);
- ieee80211_rx_result ieee80211_work_rx_mgmt(struct ieee80211_sub_if_data *sdata,
- 					   struct sk_buff *skb);
-+int ieee80211_wk_remain_on_channel(struct ieee80211_sub_if_data *sdata,
-+				   struct ieee80211_channel *chan,
-+				   enum nl80211_channel_type channel_type,
-+				   unsigned int duration, u64 *cookie);
-+int ieee80211_wk_cancel_remain_on_channel(
-+	struct ieee80211_sub_if_data *sdata, u64 cookie);
- 
- #ifdef CONFIG_MAC80211_NOINLINE
- #define debug_noinline noinline
---- wireless-testing.orig/net/mac80211/mlme.c	2009-12-23 13:11:23.000000000 +0100
-+++ wireless-testing/net/mac80211/mlme.c	2009-12-23 13:11:26.000000000 +0100
-@@ -865,6 +865,9 @@ static void ieee80211_mgd_probe_ap(struc
- 	if (sdata->local->scanning)
- 		return;
- 
-+	if (sdata->local->tmp_channel)
-+		return;
-+
- 	mutex_lock(&ifmgd->mtx);
- 
- 	if (!ifmgd->associated)
---- wireless-testing.orig/net/mac80211/main.c	2009-12-23 13:11:23.000000000 +0100
-+++ wireless-testing/net/mac80211/main.c	2009-12-23 13:11:26.000000000 +0100
-@@ -107,6 +107,9 @@ int ieee80211_hw_config(struct ieee80211
- 	if (scan_chan) {
- 		chan = scan_chan;
- 		channel_type = NL80211_CHAN_NO_HT;
-+	} else if (local->tmp_channel) {
-+		chan = scan_chan = local->tmp_channel;
-+		channel_type = local->tmp_channel_type;
- 	} else {
- 		chan = local->oper_channel;
- 		channel_type = local->oper_channel_type;
---- wireless-testing.orig/net/mac80211/cfg.c	2009-12-23 13:11:23.000000000 +0100
-+++ wireless-testing/net/mac80211/cfg.c	2009-12-23 13:11:26.000000000 +0100
-@@ -1441,6 +1441,28 @@ static int ieee80211_set_bitrate_mask(st
- 	return -EINVAL;
- }
- 
-+static int ieee80211_remain_on_channel(struct wiphy *wiphy,
-+				       struct net_device *dev,
-+				       struct ieee80211_channel *chan,
-+				       enum nl80211_channel_type channel_type,
-+				       unsigned int duration,
-+				       u64 *cookie)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	return ieee80211_wk_remain_on_channel(sdata, chan, channel_type,
-+					      duration, cookie);
-+}
-+
-+static int ieee80211_cancel_remain_on_channel(struct wiphy *wiphy,
-+					      struct net_device *dev,
-+					      u64 cookie)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	return ieee80211_wk_cancel_remain_on_channel(sdata, cookie);
-+}
-+
- struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -1487,4 +1509,6 @@ struct cfg80211_ops mac80211_config_ops 
- 	CFG80211_TESTMODE_CMD(ieee80211_testmode_cmd)
- 	.set_power_mgmt = ieee80211_set_power_mgmt,
- 	.set_bitrate_mask = ieee80211_set_bitrate_mask,
-+	.remain_on_channel = ieee80211_remain_on_channel,
-+	.cancel_remain_on_channel = ieee80211_cancel_remain_on_channel,
- };
---- wireless-testing.orig/net/mac80211/offchannel.c	2009-12-23 13:11:24.000000000 +0100
-+++ wireless-testing/net/mac80211/offchannel.c	2009-12-23 13:11:26.000000000 +0100
-@@ -106,9 +106,13 @@ void ieee80211_offchannel_stop_beaconing
- 		/*
- 		 * only handle non-STA interfaces here, STA interfaces
- 		 * are handled in ieee80211_offchannel_stop_station(),
--		 * e.g., from the background scan state machine
-+		 * e.g., from the background scan state machine.
-+		 *
-+		 * In addition, do not stop monitor interface to allow it to be
-+		 * used from user space controlled off-channel operations.
- 		 */
--		if (sdata->vif.type != NL80211_IFTYPE_STATION)
-+		if (sdata->vif.type != NL80211_IFTYPE_STATION &&
-+		    sdata->vif.type != NL80211_IFTYPE_MONITOR)
- 			netif_stop_queue(sdata->dev);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
+index a7bfae0..1ec8cb4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
+@@ -77,8 +77,7 @@
+  * The MAC (uCode processor, etc.) does not need to be powered up for accessing
+  * the CSR registers.
+  *
+- * NOTE:  Newer devices using one-time-programmable (OTP) memory
+- *        require device to be awake in order to read this memory
++ * NOTE:  Device does need to be awake in order to read this memory
+  *        via CSR_EEPROM and CSR_OTP registers
+  */
+ #define CSR_BASE    (0x000)
+@@ -111,9 +110,8 @@
+ /*
+  * EEPROM and OTP (one-time-programmable) memory reads
+  *
+- * NOTE:  For (newer) devices using OTP, device must be awake, initialized via
+- *        apm_ops.init() in order to read.  Older devices (3945/4965/5000)
+- *        use EEPROM and do not require this.
++ * NOTE:  Device must be awake, initialized via apm_ops.init(),
++ *        in order to read.
+  */
+ #define CSR_EEPROM_REG          (CSR_BASE+0x02c)
+ #define CSR_EEPROM_GP           (CSR_BASE+0x030)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index 3946e5c..72f0d77 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -518,10 +518,7 @@ int iwl_eeprom_init(struct iwl_priv *priv)
  	}
- 	mutex_unlock(&local->iflist_mtx);
---- wireless-testing.orig/net/mac80211/work.c	2009-12-23 13:11:23.000000000 +0100
-+++ wireless-testing/net/mac80211/work.c	2009-12-23 13:11:26.000000000 +0100
-@@ -538,6 +538,44 @@ ieee80211_associate(struct ieee80211_wor
- 	return WORK_ACT_NONE;
- }
+ 	e = (u16 *)priv->eeprom;
  
-+static enum work_action __must_check
-+ieee80211_remain_on_channel_timeout(struct ieee80211_work *wk)
-+{
-+	struct ieee80211_sub_if_data *sdata = wk->sdata;
-+	struct ieee80211_local *local = sdata->local;
-+
-+	/*
-+	 * First time we run, do nothing -- the generic code will
-+	 * have switched to the right channel etc.
-+	 */
-+	if (wk->timeout != wk->remain.timeout) {
-+		wk->timeout = wk->remain.timeout;
-+		return WORK_ACT_NONE;
-+	}
-+
-+	/*
-+	 * We are done serving the remain-on-channel command; kill the work
-+	 * item to allow idle state to be entered again. In addition, clear the
-+	 * temporary channel information to allow operational channel to be
-+	 * used.
-+	 */
-+	list_del(&wk->list);
-+	free_work(wk);
-+
-+	if (local->tmp_channel) {
-+		cfg80211_remain_on_channel_expired(sdata->dev, (u64)wk,
-+						   local->tmp_channel,
-+						   local->tmp_channel_type,
-+						   GFP_KERNEL);
-+
-+		local->tmp_channel = NULL;
-+		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
-+		ieee80211_offchannel_return(local, true);
-+	}
-+
-+	return WORK_ACT_NONE;
-+}
-+
- static void ieee80211_auth_challenge(struct ieee80211_work *wk,
- 				     struct ieee80211_mgmt *mgmt,
- 				     size_t len)
-@@ -825,6 +863,8 @@ static void ieee80211_work_work(struct w
- 			/* nothing */
- 			rma = WORK_ACT_NONE;
- 			break;
-+		case IEEE80211_WORK_ABORT:
-+			rma = WORK_ACT_TIMEOUT;
- 		case IEEE80211_WORK_DIRECT_PROBE:
- 			rma = ieee80211_direct_probe(wk);
- 			break;
-@@ -834,6 +874,9 @@ static void ieee80211_work_work(struct w
- 		case IEEE80211_WORK_ASSOC:
- 			rma = ieee80211_associate(wk);
- 			break;
-+		case IEEE80211_WORK_REMAIN_ON_CHANNEL:
-+			rma = ieee80211_remain_on_channel_timeout(wk);
-+			break;
+-	if (priv->nvm_device_type == NVM_DEVICE_TYPE_OTP) {
+-		/* OTP reads require powered-up chip */
+-		priv->cfg->ops->lib->apm_ops.init(priv);
+-	}
++	priv->cfg->ops->lib->apm_ops.init(priv);
+ 
+ 	ret = priv->cfg->ops->lib->eeprom_ops.verify_signature(priv);
+ 	if (ret < 0) {
+@@ -570,13 +567,6 @@ int iwl_eeprom_init(struct iwl_priv *priv)
+ 			e[cache_addr / 2] = eeprom_data;
+ 			cache_addr += sizeof(u16);
  		}
- 
- 		switch (rma) {
-@@ -900,14 +943,25 @@ void ieee80211_work_init(struct ieee8021
- void ieee80211_work_purge(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_work *wk, *tmp;
-+	struct ieee80211_work *wk;
- 
- 	mutex_lock(&local->work_mtx);
--	list_for_each_entry_safe(wk, tmp, &local->work_list, list) {
-+	list_for_each_entry(wk, &local->work_list, list) {
- 		if (wk->sdata != sdata)
- 			continue;
--		list_del(&wk->list);
--		free_work(wk);
-+		wk->type = IEEE80211_WORK_ABORT;
-+	}
-+	mutex_unlock(&local->work_mtx);
-+
-+	/* run cleanups etc. */
-+	ieee80211_work_work(&local->work_work);
-+
-+	mutex_lock(&local->work_mtx);
-+	list_for_each_entry(wk, &local->work_list, list) {
-+		if (wk->sdata != sdata)
-+			continue;
-+		WARN_ON(1);
-+		break;
- 	}
- 	mutex_unlock(&local->work_mtx);
+-
+-		/*
+-		 * Now that OTP reads are complete, reset chip to save
+-		 *   power until we load uCode during "up".
+-		 */
+-		priv->cfg->ops->lib->apm_ops.stop(priv);
+-
+ 	} else {
+ 		/* eeprom is an array of 16bit values */
+ 		for (addr = 0; addr < sz; addr += sizeof(u16)) {
+@@ -603,6 +593,8 @@ done:
+ err:
+ 	if (ret)
+ 		iwl_eeprom_free(priv);
++	/* Reset chip to save power until we load uCode during "up". */
++	priv->cfg->ops->lib->apm_ops.stop(priv);
+ alloc_err:
+ 	return ret;
  }
-@@ -949,3 +1003,75 @@ ieee80211_rx_result ieee80211_work_rx_mg
- 
- 	return RX_CONTINUE;
- }
-+
-+int ieee80211_wk_remain_on_channel(struct ieee80211_sub_if_data *sdata,
-+				   struct ieee80211_channel *chan,
-+				   enum nl80211_channel_type channel_type,
-+				   unsigned int duration, u64 *cookie)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_work *wk;
-+
-+	wk = kzalloc(sizeof(*wk), GFP_KERNEL);
-+	if (!wk)
-+		return -ENOMEM;
-+
-+	wk->type = IEEE80211_WORK_REMAIN_ON_CHANNEL;
-+	wk->chan = chan;
-+	wk->sdata = sdata;
-+
-+	wk->remain.timeout = jiffies + msecs_to_jiffies(duration);
-+
-+	*cookie = (u64)wk;
-+
-+	ieee80211_add_work(wk);
-+
-+	/*
-+	 * TODO: could optimize this by leaving the station vifs in awake mode
-+	 * if they happen to be on the same channel as the requested channel
-+	 */
-+	ieee80211_offchannel_stop_beaconing(local);
-+	ieee80211_offchannel_stop_station(local);
-+
-+	sdata->local->tmp_channel = chan;
-+	sdata->local->tmp_channel_type = channel_type;
-+	ieee80211_hw_config(sdata->local, IEEE80211_CONF_CHANGE_CHANNEL);
-+
-+	cfg80211_ready_on_channel(sdata->dev, (u64)wk, chan, channel_type,
-+				  duration, GFP_KERNEL);
-+
-+	return 0;
-+}
-+
-+int ieee80211_wk_cancel_remain_on_channel(struct ieee80211_sub_if_data *sdata,
-+					  u64 cookie)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_work *wk, *tmp;
-+	bool found = false;
-+
-+	mutex_lock(&local->work_mtx);
-+	list_for_each_entry_safe(wk, tmp, &local->work_list, list) {
-+		if ((u64)wk == cookie) {
-+			found = true;
-+			list_del(&wk->list);
-+			free_work(wk);
-+			break;
-+		}
-+	}
-+	mutex_unlock(&local->work_mtx);
-+
-+	if (!found)
-+		return -ENOENT;
-+
-+	if (sdata->local->tmp_channel) {
-+		sdata->local->tmp_channel = NULL;
-+		ieee80211_hw_config(sdata->local,
-+				    IEEE80211_CONF_CHANGE_CHANNEL);
-+		ieee80211_offchannel_return(sdata->local, true);
-+	}
-+
-+	ieee80211_recalc_idle(local);
-+
-+	return 0;
-+}
-
+-- 
+1.5.6.3
 
