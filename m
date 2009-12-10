@@ -1,109 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53994 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932901AbZLQMzu (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:33158 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753102AbZLJOx5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2009 07:55:50 -0500
-Subject: [PATCH 2.6.33 v2] mac80211: fix peer HT capabilities
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1261039545.10356.94.camel@johannes.local>
-References: <1261039545.10356.94.camel@johannes.local>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 17 Dec 2009 13:55:48 +0100
-Message-ID: <1261054548.10356.108.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 10 Dec 2009 09:53:57 -0500
+Received: by iwn1 with SMTP id 1so5399259iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2009 06:54:03 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20091210143754.GA2955@tuxdriver.com>
+References: <20091209211054.GB32058@tuxdriver.com> <87ljhb0x0h.fsf@purkki.valot.fi>
+	<20091210134733.GC11112@tuxdriver.com> <87ein30vt4.fsf@purkki.valot.fi>
+	<43e72e890912100631if1c17b2l597168813db4a19c@mail.gmail.com>
+	<20091210143754.GA2955@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 10 Dec 2009 06:53:43 -0800
+Message-ID: <43e72e890912100653p3890705u4f88dd19026a5877@mail.gmail.com>
+Subject: Re: Revised wireless tree management practices
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
+	davem@davemloft.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I noticed yesterday, because Jeff had noticed
-a speed regression, cf. bug
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2138
-that the SM PS settings for peers were wrong.
-Instead of overwriting the SM PS settings with
-the local bits, we need to keep the remote bits.
+On Thu, Dec 10, 2009 at 6:37 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Thu, Dec 10, 2009 at 06:31:02AM -0800, Luis R. Rodriguez wrote:
+>> On Thu, Dec 10, 2009 at 6:04 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
+>> > "John W. Linville" <linville@tuxdriver.com> writes:
+>> >
+>> >> I still see value in a tree that has a reasonably stable base and
+>> >> contains both wireless fixes and wireless features.
+>> >
+>> > I agree, it makes things a lot easier.
+>> >
+>> >> So, I think wireless-testing remains as the focal point for wireless
+>> >> LAN testing and development. I'll just be getting patches there in a
+>> >> slightly different process.
+>> >
+>> > Sounds very good. So I'll continue using wireless-testing. Thanks.
+>>
+>> But we use wireless-next as base though if we want to send you pull
+>> requests, ay?
+>
+> Yes, that is correct -- people that want to send patches (or simply
+> test) should use wireless-testing.  People that want to send pull
+> requests need to have trees based on wireless-2.6 (for fixes)
 
-The bug was part of the original HT code from
-over two years ago, but unfortunately nobody
-noticed that it makes no sense -- we shouldn't
-be overwriting the peer's setting with our own
-but rather keep it intact when masking the peer
-capabilities with our own.
+Typically we have relied on you to push fixes into wireless-2.6, does
+this change a bit now in that we should try to keep better track of
+stable fixes and send them to you instead if we're doing the pull
+request method?
 
-While fixing that, I noticed that the masking of
-capabilities is completely useless for most of
-the bits, so also fix those other bits.
+> and/or
+> wireless-next-2.6 (for features).  If you are sending pull requests
+> and have a feature that depends on a fix then we'll have to coordinate
+> to make sure the right bits get into the right trees.
 
-Finally, I also noticed that PSMP_SUPPORT no
-longer exists in the final 802.11n version, so
-also remove that.
+OK, got it.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-v2: remove unused variable
-
- drivers/net/wireless/rt2x00/rt2800lib.c |    3 +--
- include/linux/ieee80211.h               |    2 +-
- net/mac80211/ht.c                       |   25 ++++++++++++++++++++++---
- 3 files changed, 24 insertions(+), 6 deletions(-)
-
---- wireless-testing.orig/net/mac80211/ht.c	2009-12-17 09:00:06.000000000 +0100
-+++ wireless-testing/net/mac80211/ht.c	2009-12-17 13:54:27.000000000 +0100
-@@ -34,9 +34,28 @@ void ieee80211_ht_cap_ie_to_sta_ht_cap(s
- 
- 	ht_cap->ht_supported = true;
- 
--	ht_cap->cap = le16_to_cpu(ht_cap_ie->cap_info) & sband->ht_cap.cap;
--	ht_cap->cap &= ~IEEE80211_HT_CAP_SM_PS;
--	ht_cap->cap |= sband->ht_cap.cap & IEEE80211_HT_CAP_SM_PS;
-+	/*
-+	 * The bits listed in this expression should be
-+	 * the same for the peer and us, if the station
-+	 * advertises more then we can't use those thus
-+	 * we mask them out.
-+	 */
-+	ht_cap->cap = le16_to_cpu(ht_cap_ie->cap_info) &
-+		(sband->ht_cap.cap |
-+		 ~(IEEE80211_HT_CAP_LDPC_CODING |
-+		   IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
-+		   IEEE80211_HT_CAP_GRN_FLD |
-+		   IEEE80211_HT_CAP_SGI_20 |
-+		   IEEE80211_HT_CAP_SGI_40 |
-+		   IEEE80211_HT_CAP_DSSSCCK40));
-+	/*
-+	 * The STBC bits are asymmetric -- if we don't have
-+	 * TX then mask out the peer's RX and vice versa.
-+	 */
-+	if (!(sband->ht_cap.cap & IEEE80211_HT_CAP_TX_STBC))
-+		ht_cap->cap &= ~IEEE80211_HT_CAP_RX_STBC;
-+	if (!(sband->ht_cap.cap & IEEE80211_HT_CAP_RX_STBC))
-+		ht_cap->cap &= ~IEEE80211_HT_CAP_TX_STBC;
- 
- 	ampdu_info = ht_cap_ie->ampdu_params_info;
- 	ht_cap->ampdu_factor =
---- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2800lib.c	2009-12-17 09:29:48.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/rt2x00/rt2800lib.c	2009-12-17 09:29:54.000000000 +0100
-@@ -2074,8 +2074,7 @@ int rt2800_probe_hw_mode(struct rt2x00_d
- 	    IEEE80211_HT_CAP_SGI_20 |
- 	    IEEE80211_HT_CAP_SGI_40 |
- 	    IEEE80211_HT_CAP_TX_STBC |
--	    IEEE80211_HT_CAP_RX_STBC |
--	    IEEE80211_HT_CAP_PSMP_SUPPORT;
-+	    IEEE80211_HT_CAP_RX_STBC;
- 	spec->ht.ampdu_factor = 3;
- 	spec->ht.ampdu_density = 4;
- 	spec->ht.mcs.tx_params =
---- wireless-testing.orig/include/linux/ieee80211.h	2009-12-17 09:29:33.000000000 +0100
-+++ wireless-testing/include/linux/ieee80211.h	2009-12-17 09:29:40.000000000 +0100
-@@ -837,7 +837,7 @@ struct ieee80211_ht_cap {
- #define IEEE80211_HT_CAP_DELAY_BA		0x0400
- #define IEEE80211_HT_CAP_MAX_AMSDU		0x0800
- #define IEEE80211_HT_CAP_DSSSCCK40		0x1000
--#define IEEE80211_HT_CAP_PSMP_SUPPORT		0x2000
-+#define IEEE80211_HT_CAP_RESERVED		0x2000
- #define IEEE80211_HT_CAP_40MHZ_INTOLERANT	0x4000
- #define IEEE80211_HT_CAP_LSIG_TXOP_PROT		0x8000
- 
-
-
+  Luis
