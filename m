@@ -1,109 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:50750 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751596AbZLKJKv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 04:10:51 -0500
+Received: from mail.gmx.net ([213.165.64.20]:45611 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1759215AbZLJAqH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Dec 2009 19:46:07 -0500
+From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: regression: rt2561 frequent "Arrived at non-free entry" errors in   2.6.32
+Date: Thu, 10 Dec 2009 01:46:11 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Andi Kleen <andi@firstfloor.org>,
+	linux-wireless@vger.kernel.org, Tim Blechmann <tim@klingt.org>,
+	rjw@sisk.pl, IvDoorn@gmail.com, linville@tuxdriver.com
+References: <20091204233202.GA13658@basil.fritz.box> <200912090053.25798.s.L-H@gmx.de> <4B1F4A88.5000803@gmail.com>
+In-Reply-To: <4B1F4A88.5000803@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <a8e1da0912101747l7e0e9fcbh8a7007e95e7c8509@mail.gmail.com>
-References: <a8e1da0912100127k4dcddd65gfe5ff0b1330fe63b@mail.gmail.com>
-	 <a8e1da0912100130i2e654796mf899dd27df869673@mail.gmail.com>
-	 <20091210184931.257A.A69D9226@jp.fujitsu.com>
-	 <4B217219.6040109@crca.org.au>
-	 <a8e1da0912101747l7e0e9fcbh8a7007e95e7c8509@mail.gmail.com>
-Date: Fri, 11 Dec 2009 17:10:56 +0800
-Message-ID: <a8e1da0912110110m425d8544xdcdf1f5a9ed8ab17@mail.gmail.com>
-Subject: Re: mmotm-2009-12-08-17-45 resume slowly
-From: Dave Young <hidave.darkstar@gmail.com>
-To: Nigel Cunningham <ncunningham@crca.org.au>
-Cc: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>, Zhu Yi <yi.zhu@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200912100146.12717.s.L-H@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 11, 2009 at 9:47 AM, Dave Young <hidave.darkstar@gmail.com> wrote:
-> On Fri, Dec 11, 2009 at 6:11 AM, Nigel Cunningham
-> <ncunningham@crca.org.au> wrote:
->> Dave, could you be more specific?
->>
->> Is the delay Ksaki has picked out related to your report...
->
-> I can not reproduce the wireless delay today, maybe related to
-> wireless environment?
->
->>
->> KOSAKI Motohiro wrote:
->>> (cc to netdev)
->>>
->>> Hi net-folks
->>>
->>>>> [  561.323866] mtrr: type mismatch for e0000000,10000000 old:
->>>>> write-back new: write-combining
->>>>> [ 2688.500033] No probe response from AP 00:02:2d:08:51:2b after
->>>>> 500ms, disconnecting.
->>>>> [ 2689.580376] wlan0: direct probe to AP 00:02:2d:08:51:2b (try 1)
->>>
->>> What's mean "No probe response"? Why its point waste 2000sec?
+Hi
 
-Rereading the dmesg I post, I think maybe this delay is not relevant
-because it is after "PM: Finishing wakeup."
+On Thursday 10 December 2009, Gertjan van Wingerde wrote:
+> On 12/09/09 00:53, Stefan Lippers-Hollmann wrote:
+> > Hi
+> > 
+> > On Tuesday 08 December 2009, Johannes Berg wrote:
+> >> On Tue, 2009-12-08 at 23:39 +0100, Stefan Lippers-Hollmann wrote:
+> >>
+> >>> Unfortunately this fails to compile for me:
+> >>
+> >> well remove the spurious opening brace? :)
+> > 
+> > yes, of course - but I have to admit that I didn't look too well at the 
+> > patch, after your other subthread - sorry about the noise.
+> > 
+> 
+> Yeah, sorry about the compile error in the patch.
+> 
+> > 
+> > with the patch applied (powersaving enabled):
+> > 
+> > - Downloading a larger file and therefore keeping the interface busy works 
+> >   now pretty well, while I did hit connection time outs before with 
+> >   powersaving enabled:
+> > 	Fetched 89.7MB in 30s (2926kB/s)
+> > 
+> 
+> Does this mean that the "Arrived at non-free entry" messages are gone with
+> power-saving enabled?
+[...]
 
-The brightness is so low after resume finished that I thought it as
-resume delay.
+I've never seen that message, neither does the system crash or freeze - 
+rt61pci is just almost unusable due to the packet loss and the latencies with 
+powersaving enabled (I don't see this problem in the same environment with 
+rt2500usb/ rt73usb or b43 (bcm4306, bcm4318), rtl8187b, ath5k, ar9170usb, 
+zd1211rw).
 
-
->>
->> [...]
->>
->>>>> [  225.731462] ACPI: Preparing to enter system sleep state S3
->>>>> [  225.754167] Disabling non-boot CPUs ...
->>>>> [  225.809478] CPU 1 is now offline
->>>>> [  225.809481] lockdep: fixing up alternatives.
->>>>> [  225.809487] SMP alternatives: switching to UP code
->>>>> [  225.816500] Extended CMOS year: 2000
->>>>> [  225.816500] Back to C!
->>>>> [  225.816500] Extended CMOS year: 2000
->>>>> [  225.816720] Enabling non-boot CPUs ...
->>>>> [  225.818422] lockdep: fixing up alternatives.
->>>>> [  225.818425] SMP alternatives: switching to SMP code
->>>>> [  225.822188] Booting processor 1 APIC 0x1 ip 0x6000
->>>>> [  225.818021] Initializing CPU#1
->>>>> [  225.818021] CPU: Physical Processor ID: 0
->>>>> [  225.818021] CPU: Processor Core ID: 1
->>>>> [  225.913392] CPU1: Intel(R) Core(TM)2 Duo CPU     T7250  @ 2.00GHz stepping 0d
->>>>> [  225.937046] microcode: CPU1 sig=0x6fd, pf=0x80, revision=0xa3
->>>>> [  225.937053] platform microcode: firmware: requesting intel-ucode/06-0f-0d
->>>>> [  225.937179] firmware microcode: parent microcode should not be sleeping
->>>>> [  285.940840] CPU1 is up
->>
->> ... or the 60 second delay before the CPU1 is up message?
->
-> Yes, this delay occurs every time
-
-
-Then what caused this one, any idea?
-
->
->>
->> Regards,
->>
->> Nigel
->>
->
->
->
-> --
-> Regards
-> dave
->
-
-
-
--- 
 Regards
-dave
+	Stefan Lippers-Hollmann
