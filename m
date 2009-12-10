@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37121 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758349AbZLKN6b (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:52799 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751692AbZLJNc0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:58:31 -0500
-Subject: Re: [RFC] mac80211: disallow bridging managed/adhoc interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Markus Baier <Markus_Baier@web.de>
+	Thu, 10 Dec 2009 08:32:26 -0500
+Received: by bwz27 with SMTP id 27so6061607bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2009 05:32:32 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <loom.20091211T141516-495@post.gmane.org>
-References: <1258465585.3682.7.camel@johannes.local>
-	 <loom.20091211T133913-639@post.gmane.org>
-	 <1260536425.2442.199.camel@johannes.local>
-	 <loom.20091211T141516-495@post.gmane.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-jy2N2PRsiL2R0wkaZnAS"
-Date: Fri, 11 Dec 2009 14:58:36 +0100
-Message-ID: <1260539916.2442.258.camel@johannes.local>
-Mime-Version: 1.0
+Subject: Re: [PATCH] wireless: report non-zero bitrate for MCS rates through wext
+References: <1260395165-7116-1-git-send-email-linville@tuxdriver.com>
+	<871vj32mlm.fsf@purkki.valot.fi>
+	<20091210130035.GB11112@tuxdriver.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 10 Dec 2009 15:32:30 +0200
+In-Reply-To: <20091210130035.GB11112@tuxdriver.com> (John W. Linville's message of "Thu\, 10 Dec 2009 08\:00\:36 -0500")
+Message-ID: <87skbj0xap.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+"John W. Linville" <linville@tuxdriver.com> writes:
 
---=-jy2N2PRsiL2R0wkaZnAS
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> On Thu, Dec 10, 2009 at 11:40:37AM +0200, Kalle Valo wrote:
+>> "John W. Linville" <linville@tuxdriver.com> writes:
+>> 
+>> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>> 
+>> A small description in the commit log would be nice.
 
-On Fri, 2009-12-11 at 13:18 +0000, Markus Baier wrote:
+[...]
 
-> So I will remove the wlan0 line from bridge section
-> of the gentoo net rc-script and hope that hostapd
-> will take over that task.
+> What (beyond the subject) would you put in the commit log for this one?
 
-Well you do have to configure it to do that, but that should be one line
-in the hostapd config.
+How it affects me as an user? IMHO "non-zero bitrate for MCS" doesn't
+tell that much and is a bit confusing. I would prefer something like
+this:
 
-johannes
+  wireless: report 802.11n bitrates through wext
 
---=-jy2N2PRsiL2R0wkaZnAS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+  cfg80211 reports all MCS rates (from 802.11n) as zero. Fix it by
+  moving nl80211__calculate_bitrate() to cfg80211 and using it also
+  with MCS rates.
 
------BEGIN PGP SIGNATURE-----
+But maybe I'm just weird :)
 
-iQIcBAABAgAGBQJLIlAJAAoJEODzc/N7+Qma/FgQALZyg6FZUvEtiMN2aothwZIY
-uyF+INrd71t0DL3fVdnm2r00k1GRggg4XL/JE+/yZ1gQvKCCGp+NgEhg8XvssYlS
-2oJq2v7lv/HvYKn5Ziwv8UIX/efdGdcz2N4pG7XrkcHowaKHVRreN1eBFOVWDXzh
-O5uVTQCS3Y/14w7B4yml69v9/+COoV2kXidQo8uSIWxi/7Tt11ERDXlAO2wFIk+g
-rOUnLTTUum/BU8Zvh1Tizk1ktRZpw/CLoFUlJpbPNc1aPQYiBq1mwULAtotMSiKe
-jpu9jlW/PW4oFvpqlrJvlhevN8n0ZVucoz9WckRQEZRzfW3pVGL6HJTxnFo1mkD/
-RgQuXAiVYt+NfsdojlHE70CB11NxnLXRUnmHjIDLxjRtKnKDhgAGD4EXvlsvn2EF
-reZ3Cvd4uOM8yB9+/Y9tHJzJX8fAJvhzWnS5kyvPI0mFpbcw++1XlB6RHNlHRYk/
-10CIK0dTACbaanrIspnOI9U0gIzQ1aTy4jihWf/fCdOw5U4ZUr71AnN+5YQjvUkG
-Fv7kO/yEq1O32glHeYmUeZMb7T7hqxnvlpR8R7aF+Rw//wIdPB1UUyI9Qa8zj//v
-CxIBJ3nDGNSgRLmKg8UhUoZLmaiKq5ew//uUEFTNNTcIsuIJCmN6fK2PYcyK/8rS
-CnuqM/NgI0BHB8Jb+Ins
-=ZMx+
------END PGP SIGNATURE-----
-
---=-jy2N2PRsiL2R0wkaZnAS--
-
+-- 
+Kalle Valo
