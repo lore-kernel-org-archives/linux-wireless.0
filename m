@@ -1,74 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:33512 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756468AbZLIDri convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:65286 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759055AbZLJASx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 22:47:38 -0500
-Received: by bwz27 with SMTP id 27so4922399bwz.21
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2009 19:47:43 -0800 (PST)
+	Wed, 9 Dec 2009 19:18:53 -0500
+Received: by iwn1 with SMTP id 1so4998602iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2009 16:19:00 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <87ws0x3ojk.fsf@purkki.valot.fi>
-References: <c4d76b3b0912071955y25c31a11m104d9c4723ef578d@mail.gmail.com>
-	 <87ws0x3ojk.fsf@purkki.valot.fi>
-Date: Tue, 8 Dec 2009 22:47:43 -0500
-Message-ID: <c4d76b3b0912081947m2ffcdb65of44f4ce10dfa00d2@mail.gmail.com>
-Subject: Re: cfg80211 connect for at76c50x-usb
-From: Jason Andryuk <jandryuk@gmail.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20091210000612.GA8515@tuxdriver.com>
+References: <1260389724-2392-1-git-send-email-linville@tuxdriver.com>
+	<646765f40912091437y22d322c6m295cff07a95c4ebe@mail.gmail.com>
+	<20091210000612.GA8515@tuxdriver.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 10 Dec 2009 11:18:39 +1100
+Message-ID: <646765f40912091618j5c5b886em2f323568649de8a6@mail.gmail.com>
+Subject: Re: [PATCH] wireless: update old static regulatory domain rules
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 8, 2009 at 2:36 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
-> Jason Andryuk <jandryuk@gmail.com> writes:
+On Thu, Dec 10, 2009 at 11:06, John W. Linville <linville@tuxdriver.com> wrote:
+> On Thu, Dec 10, 2009 at 09:37:25AM +1100, Julian Calaby wrote:
+>> On Thu, Dec 10, 2009 at 07:15, John W. Linville <linville@tuxdriver.com> wrote:
+>> > Update "US" and "JP" for current rules, and replace "EU" rules with the
+>> > world roaming domain (since it was only a pseudo-domain anyway).
+>> >
+>> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>> > ---
+>> >  net/wireless/reg.c |   75 +++++++++++++++++----------------------------------
+>> >  1 files changed, 25 insertions(+), 50 deletions(-)
+>> >
+>> > diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+>> > index c01470e..baa898a 100644
+>> > --- a/net/wireless/reg.c
+>> > +++ b/net/wireless/reg.c
+>> > @@ -206,15 +179,17 @@ static const struct ieee80211_regdomain *static_regdom(char *alpha2)
+>> >                return &us_regdom;
+>> >        if (alpha2[0] == 'J' && alpha2[1] == 'P')
+>> >                return &jp_regdom;
+>> > +       /* Use world roaming rules for "EU", since it was a pseudo
+>> > +          domain anyway... */
+>> >        if (alpha2[0] == 'E' && alpha2[1] == 'U')
+>> > -               return &eu_regdom;
+>> > -       /* Default, as per the old rules */
+>> > -       return &us_regdom;
+>> > +               return &world_regdom;
+>> > +       /* Default, world roaming rules */
+>> > +       return &world_regdom;
+>> >  }
+>>
+>> Is the if statement for the "EU" regdom really necessary (except as
+>> documentation) as we're returning &world_regdom by default?
 >
-> Hi Jason,
->
->> I am unable to connect to my AP with at76c50x-usb. Â I believe the
->> cause is at76c50x-usb and mac80211 trying to send separate auth and
->> assoc packets to an AP. Â Unfortunately the packets for these commands,
->> while sent over USB to the device, are not actually transmitted. Â My
->> understanding is prior to joining a network, packet transmission is
->> block. Â However, there is a USB command, CMD_JOIN, for connecting to
->> wireless networks.
->
-> I actually think that the problem is because of missing bssid. I
-> recall that when I was, a long time ago, porting at76 to mac80211
-> CMD_JOIN didn't work unless I used the correct bssid. I tried to find
-> a workaround, for example all zeros or all 0xffs bssid, but no luck.
-> So I had to make an ugly hack that uses CMD_SCAN if the bssid is not
-> set and CMD_JOIN otherwise.
->
-> If you have the time, you could test my theory by hardcoding the bssid
-> for CMD_JOIN. Alternatively you could try Luciano Coelho's oper_bssid
-> patches from a month back.
+> No, it's not necessary except as documentation.  However, I like it
+> just for that reason. :-)
 
-Kalle,
+Fair enough =)
 
-My logs do not show CMD_JOIN getting sent after executing an "iw
-connect".  dmesg shows the three direct probe attempts being sent to
-the device in at76_mac80211_tx, but a separate monitor interface does
-see them transmitted.  at76_mac80211_tx_callback has urb->status == 0;
+Thanks,
 
-So I think the direct probes failure is halting mac80211 before it
-gets any further.  This corresponds to the flows in Johannes's
-mac80211 MLME diagrams.
+-- 
 
-Hacking in the bssid, by initially setting priv->bssid and re-copying
-on _bss_info_changed, does have CMD_JOIN get sent.  However, it
-returns "at76_wait_completion failed: 7"  CMD_STATUS_TIME_OUT == 0x07.
+Julian Calaby
 
-iw connect is hung too.
-
-It looked like priv->essid wasn't getting set, so I hacked that one in
-too.  With the essid hack, the at76_wait_completion disappears, but
-there is still no connection.  However, there is still nothing seen on
-the monitor interface and it is seeing plenty of other traffic.  I am
-trying to filter with wlan.addr == <Mac Address> in wireshark for what
-it's worth.
-
-Since I am not seeing anything with the CMD_JOIN being sent, I am
-wondering if my device has failed.
-
-Jason
+Email: julian.calaby@gmail.com
+.Plan: http://sites.google.com/site/juliancalaby/
