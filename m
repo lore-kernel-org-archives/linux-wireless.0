@@ -1,241 +1,265 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:50026 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761687AbZLJXe7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2009 18:34:59 -0500
-Date: Thu, 10 Dec 2009 17:35:01 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] b43: Allow PIO mode to be selected at module load
-Message-ID: <4b2185a5.QaOUdYVRfLIFSF6B%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:57773 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761875AbZLJWhX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Dec 2009 17:37:23 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 5/7] iwlwifi: dump "Control and Status Register" when detect uCode HW/SW error
+Date: Thu, 10 Dec 2009 14:37:25 -0800
+Message-Id: <1260484647-5114-6-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1260484647-5114-1-git-send-email-reinette.chatre@intel.com>
+References: <1260484647-5114-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If userencounter the "Fatal DMA Problem" with a BCM43XX device, and
-still wish to use b43 as the driver, their only option is to rebuild
-the kernel with CONFIG_B43_FORCE_PIO. This patch removes this option and
-allows PIO mode to be selected with a load-time parameter for the module.
-Note that the configuration variable CONFIG_B43_PIO is also removed.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Once the DMA problem with the BCM4312 devices is solved, this patch will
-likely be reverted.
+When uCode HW/SW error detected, dumping important CSR (Control and Status
+Registers) values.
+Also add "csr" debugfs file to dump the current values of CSR defined in
+CSR table to syslog.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-1000.c    |    1 +
+ drivers/net/wireless/iwlwifi/iwl-5000.c    |    2 +
+ drivers/net/wireless/iwlwifi/iwl-6000.c    |    1 +
+ drivers/net/wireless/iwlwifi/iwl-core.c    |   73 ++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h    |    2 +
+ drivers/net/wireless/iwlwifi/iwl-debug.h   |    1 +
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |   25 ++++++++++
+ 7 files changed, 105 insertions(+), 0 deletions(-)
 
-John,
-
-This version implements the changes suggested by Michael Buesch.
-
-I don't know where this change should go. It is likely too large
-and invasive to be applied to 2.6.33; however, it should be
-applied to 2.6.32. Hmm? I guess that is why you get the "big money".
-:)
-
-Larry
----
-
-
-Index: wireless-testing/drivers/net/wireless/b43/Kconfig
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/Kconfig
-+++ wireless-testing/drivers/net/wireless/b43/Kconfig
-@@ -3,6 +3,7 @@ config B43
- 	depends on SSB_POSSIBLE && MAC80211 && HAS_DMA
- 	select SSB
- 	select FW_LOADER
-+	select SSB_BLOCKIO
- 	---help---
- 	  b43 is a driver for the Broadcom 43xx series wireless devices.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 59f2332..d461d36 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -105,6 +105,7 @@ static struct iwl_lib_ops iwl1000_lib = {
+ 	.load_ucode = iwl5000_load_ucode,
+ 	.dump_nic_event_log = iwl_dump_nic_event_log,
+ 	.dump_nic_error_log = iwl_dump_nic_error_log,
++	.dump_csr = iwl_dump_csr,
+ 	.init_alive_start = iwl5000_init_alive_start,
+ 	.alive_notify = iwl5000_alive_notify,
+ 	.send_tx_power = iwl5000_send_tx_power,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index e2f8615..5a277cd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -1465,6 +1465,7 @@ struct iwl_lib_ops iwl5000_lib = {
+ 	.is_valid_rtc_data_addr = iwl5000_hw_valid_rtc_data_addr,
+ 	.dump_nic_event_log = iwl_dump_nic_event_log,
+ 	.dump_nic_error_log = iwl_dump_nic_error_log,
++	.dump_csr = iwl_dump_csr,
+ 	.load_ucode = iwl5000_load_ucode,
+ 	.init_alive_start = iwl5000_init_alive_start,
+ 	.alive_notify = iwl5000_alive_notify,
+@@ -1517,6 +1518,7 @@ static struct iwl_lib_ops iwl5150_lib = {
+ 	.is_valid_rtc_data_addr = iwl5000_hw_valid_rtc_data_addr,
+ 	.dump_nic_event_log = iwl_dump_nic_event_log,
+ 	.dump_nic_error_log = iwl_dump_nic_error_log,
++	.dump_csr = iwl_dump_csr,
+ 	.load_ucode = iwl5000_load_ucode,
+ 	.init_alive_start = iwl5000_init_alive_start,
+ 	.alive_notify = iwl5000_alive_notify,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index a7ccbef..7e8880a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -215,6 +215,7 @@ static struct iwl_lib_ops iwl6000_lib = {
+ 	.load_ucode = iwl5000_load_ucode,
+ 	.dump_nic_event_log = iwl_dump_nic_event_log,
+ 	.dump_nic_error_log = iwl_dump_nic_error_log,
++	.dump_csr = iwl_dump_csr,
+ 	.init_alive_start = iwl5000_init_alive_start,
+ 	.alive_notify = iwl5000_alive_notify,
+ 	.send_tx_power = iwl5000_send_tx_power,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 574d366..47ece91 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1363,6 +1363,8 @@ void iwl_irq_handle_error(struct iwl_priv *priv)
+ 	clear_bit(STATUS_HCMD_ACTIVE, &priv->status);
  
-@@ -78,14 +79,6 @@ config B43_SDIO
+ 	priv->cfg->ops->lib->dump_nic_error_log(priv);
++	if (priv->cfg->ops->lib->dump_csr)
++		priv->cfg->ops->lib->dump_csr(priv);
+ 	priv->cfg->ops->lib->dump_nic_event_log(priv, false);
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 	if (iwl_get_debug_level(priv) & IWL_DL_FW_ERRORS)
+@@ -3191,6 +3193,77 @@ void iwl_update_stats(struct iwl_priv *priv, bool is_tx, __le16 fc, u16 len)
+ EXPORT_SYMBOL(iwl_update_stats);
+ #endif
  
- 	  If unsure, say N.
- 
--# Data transfers to the device via PIO
--# This is only needed on PCMCIA and SDIO devices. All others can do DMA properly.
--config B43_PIO
--	bool
--	depends on B43 && (B43_SDIO || B43_PCMCIA || B43_FORCE_PIO)
--	select SSB_BLOCKIO
--	default y
--
- config B43_NPHY
- 	bool "Pre IEEE 802.11n support (BROKEN)"
- 	depends on B43 && EXPERIMENTAL && BROKEN
-@@ -137,12 +130,4 @@ config B43_DEBUG
- 	  for production use.
- 	  Only say Y, if you are debugging a problem in the b43 driver sourcecode.
- 
--config B43_FORCE_PIO
--	bool "Force usage of PIO instead of DMA"
--	depends on B43 && B43_DEBUG
--	---help---
--	  This will disable DMA and always enable PIO instead.
--
--	  Say N!
--	  This is only for debugging the PIO engine code. You do
--	  _NOT_ want to enable this.
++const static char *get_csr_string(int cmd)
++{
++	switch (cmd) {
++		IWL_CMD(CSR_HW_IF_CONFIG_REG);
++		IWL_CMD(CSR_INT_COALESCING);
++		IWL_CMD(CSR_INT);
++		IWL_CMD(CSR_INT_MASK);
++		IWL_CMD(CSR_FH_INT_STATUS);
++		IWL_CMD(CSR_GPIO_IN);
++		IWL_CMD(CSR_RESET);
++		IWL_CMD(CSR_GP_CNTRL);
++		IWL_CMD(CSR_HW_REV);
++		IWL_CMD(CSR_EEPROM_REG);
++		IWL_CMD(CSR_EEPROM_GP);
++		IWL_CMD(CSR_OTP_GP_REG);
++		IWL_CMD(CSR_GIO_REG);
++		IWL_CMD(CSR_GP_UCODE_REG);
++		IWL_CMD(CSR_GP_DRIVER_REG);
++		IWL_CMD(CSR_UCODE_DRV_GP1);
++		IWL_CMD(CSR_UCODE_DRV_GP2);
++		IWL_CMD(CSR_LED_REG);
++		IWL_CMD(CSR_DRAM_INT_TBL_REG);
++		IWL_CMD(CSR_GIO_CHICKEN_BITS);
++		IWL_CMD(CSR_ANA_PLL_CFG);
++		IWL_CMD(CSR_HW_REV_WA_REG);
++		IWL_CMD(CSR_DBG_HPET_MEM_REG);
++	default:
++		return "UNKNOWN";
 +
-Index: wireless-testing/drivers/net/wireless/b43/Makefile
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/Makefile
-+++ wireless-testing/drivers/net/wireless/b43/Makefile
-@@ -12,7 +12,7 @@ b43-y				+= xmit.o
- b43-y				+= lo.o
- b43-y				+= wa.o
- b43-y				+= dma.o
--b43-$(CONFIG_B43_PIO)		+= pio.o
-+b43-y				+= pio.o
- b43-y				+= rfkill.o
- b43-$(CONFIG_B43_LEDS)		+= leds.o
- b43-$(CONFIG_B43_PCMCIA)	+= pcmcia.o
-Index: wireless-testing/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/b43.h
-+++ wireless-testing/drivers/net/wireless/b43/b43.h
-@@ -821,11 +821,9 @@ struct b43_wl {
- 	/* The device LEDs. */
- 	struct b43_leds leds;
++	}
++}
++
++void iwl_dump_csr(struct iwl_priv *priv)
++{
++	int i;
++	u32 csr_tbl[] = {
++		CSR_HW_IF_CONFIG_REG,
++		CSR_INT_COALESCING,
++		CSR_INT,
++		CSR_INT_MASK,
++		CSR_FH_INT_STATUS,
++		CSR_GPIO_IN,
++		CSR_RESET,
++		CSR_GP_CNTRL,
++		CSR_HW_REV,
++		CSR_EEPROM_REG,
++		CSR_EEPROM_GP,
++		CSR_OTP_GP_REG,
++		CSR_GIO_REG,
++		CSR_GP_UCODE_REG,
++		CSR_GP_DRIVER_REG,
++		CSR_UCODE_DRV_GP1,
++		CSR_UCODE_DRV_GP2,
++		CSR_LED_REG,
++		CSR_DRAM_INT_TBL_REG,
++		CSR_GIO_CHICKEN_BITS,
++		CSR_ANA_PLL_CFG,
++		CSR_HW_REV_WA_REG,
++		CSR_DBG_HPET_MEM_REG
++	};
++	IWL_ERR(priv, "CSR values:\n");
++	IWL_ERR(priv, "(2nd byte of CSR_INT_COALESCING is "
++		"CSR_INT_PERIODIC_REG)\n");
++	for (i = 0; i <  ARRAY_SIZE(csr_tbl); i++) {
++		IWL_ERR(priv, "  %25s: 0X%08x\n",
++			get_csr_string(csr_tbl[i]),
++			iwl_read32(priv, csr_tbl[i]));
++	}
++}
++EXPORT_SYMBOL(iwl_dump_csr);
++
+ #ifdef CONFIG_PM
  
--#ifdef CONFIG_B43_PIO
- 	/* Kmalloc'ed scratch space for PIO TX/RX. Protected by wl->mutex. */
- 	u8 pio_scratchspace[110] __attribute__((__aligned__(8)));
- 	u8 pio_tailspace[4] __attribute__((__aligned__(8)));
--#endif /* CONFIG_B43_PIO */
- };
- 
- static inline struct b43_wl *hw_to_b43_wl(struct ieee80211_hw *hw)
-@@ -876,20 +874,9 @@ static inline void b43_write32(struct b4
- 
- static inline bool b43_using_pio_transfers(struct b43_wldev *dev)
- {
--#ifdef CONFIG_B43_PIO
- 	return dev->__using_pio_transfers;
--#else
--	return 0;
--#endif
+ int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 22a20c1..d5c8b06 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -171,6 +171,7 @@ struct iwl_lib_ops {
+ 	int (*load_ucode)(struct iwl_priv *priv);
+ 	void (*dump_nic_event_log)(struct iwl_priv *priv, bool full_log);
+ 	void (*dump_nic_error_log)(struct iwl_priv *priv);
++	void (*dump_csr)(struct iwl_priv *priv);
+ 	int (*set_channel_switch)(struct iwl_priv *priv, u16 channel);
+ 	/* power management */
+ 	struct iwl_apm_ops apm_ops;
+@@ -582,6 +583,7 @@ int iwl_pci_resume(struct pci_dev *pdev);
+ ******************************************************/
+ void iwl_dump_nic_error_log(struct iwl_priv *priv);
+ void iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log);
++void iwl_dump_csr(struct iwl_priv *priv);
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ void iwl_print_rx_config_cmd(struct iwl_priv *priv);
+ #else
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index d61293a..86a6767 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -109,6 +109,7 @@ struct iwl_debugfs {
+ 		struct dentry *file_power_save_status;
+ 		struct dentry *file_clear_ucode_statistics;
+ 		struct dentry *file_clear_traffic_statistics;
++		struct dentry *file_csr;
+ 	} dbgfs_debug_files;
+ 	u32 sram_offset;
+ 	u32 sram_len;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 21e0f66..2be3549 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -1845,6 +1845,28 @@ static ssize_t iwl_dbgfs_clear_ucode_statistics_write(struct file *file,
+ 	return count;
  }
  
--#ifdef CONFIG_B43_FORCE_PIO
--# define B43_FORCE_PIO	1
--#else
--# define B43_FORCE_PIO	0
--#endif
--
--
- /* Message printing */
- void b43info(struct b43_wl *wl, const char *fmt, ...)
-     __attribute__ ((format(printf, 2, 3)));
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c
-+++ wireless-testing/drivers/net/wireless/b43/main.c
-@@ -102,6 +102,9 @@ int b43_modparam_verbose = B43_VERBOSITY
- module_param_named(verbose, b43_modparam_verbose, int, 0644);
- MODULE_PARM_DESC(verbose, "Log message verbosity: 0=error, 1=warn, 2=info(default), 3=debug");
++static ssize_t iwl_dbgfs_csr_write(struct file *file,
++					 const char __user *user_buf,
++					 size_t count, loff_t *ppos)
++{
++	struct iwl_priv *priv = file->private_data;
++	char buf[8];
++	int buf_size;
++	int csr;
++
++	memset(buf, 0, sizeof(buf));
++	buf_size = min(count, sizeof(buf) -  1);
++	if (copy_from_user(buf, user_buf, buf_size))
++		return -EFAULT;
++	if (sscanf(buf, "%d", &csr) != 1)
++		return -EFAULT;
++
++	if (priv->cfg->ops->lib->dump_csr)
++		priv->cfg->ops->lib->dump_csr(priv);
++
++	return count;
++}
++
+ DEBUGFS_READ_FILE_OPS(rx_statistics);
+ DEBUGFS_READ_FILE_OPS(tx_statistics);
+ DEBUGFS_READ_WRITE_FILE_OPS(traffic_log);
+@@ -1859,6 +1881,7 @@ DEBUGFS_READ_FILE_OPS(tx_power);
+ DEBUGFS_READ_FILE_OPS(power_save_status);
+ DEBUGFS_WRITE_FILE_OPS(clear_ucode_statistics);
+ DEBUGFS_WRITE_FILE_OPS(clear_traffic_statistics);
++DEBUGFS_WRITE_FILE_OPS(csr);
  
-+static int modparam_pio;
-+module_param_named(pio, modparam_pio, int, 0444);
-+MODULE_PARM_DESC(pio, "enable(1) / disable(0) PIO mode");
- 
- static const struct ssb_device_id b43_ssb_tbl[] = {
- 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 5),
-@@ -1786,8 +1789,8 @@ static void b43_do_interrupt_thread(stru
- 			       dma_reason[4], dma_reason[5]);
- 			b43err(dev->wl, "This device does not support DMA "
- 			       "on your system. Please use PIO instead.\n");
--			b43err(dev->wl, "CONFIG_B43_FORCE_PIO must be set in "
--			       "your kernel configuration.\n");
-+			b43err(dev->wl, "Unload the b43 module and reload "
-+			       "with 'pio=1'\n");
- 			return;
- 		}
- 		if (merged_dma_reason & B43_DMAIRQ_NONFATALMASK) {
-@@ -4353,7 +4356,7 @@ static int b43_wireless_core_init(struct
- 
- 	if ((dev->dev->bus->bustype == SSB_BUSTYPE_PCMCIA) ||
- 	    (dev->dev->bus->bustype == SSB_BUSTYPE_SDIO) ||
--	    B43_FORCE_PIO) {
-+	    modparam_pio) {
- 		dev->__using_pio_transfers = 1;
- 		err = b43_pio_init(dev);
- 	} else {
-Index: wireless-testing/drivers/net/wireless/b43/dma.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/dma.c
-+++ wireless-testing/drivers/net/wireless/b43/dma.c
-@@ -1760,7 +1760,6 @@ void b43_dma_tx_resume(struct b43_wldev
- 	b43_power_saving_ctl_bits(dev, 0);
- }
- 
--#ifdef CONFIG_B43_PIO
- static void direct_fifo_rx(struct b43_wldev *dev, enum b43_dmatype type,
- 			   u16 mmio_base, bool enable)
- {
-@@ -1794,4 +1793,3 @@ void b43_dma_direct_fifo_rx(struct b43_w
- 	mmio_base = b43_dmacontroller_base(type, engine_index);
- 	direct_fifo_rx(dev, type, mmio_base, enable);
- }
--#endif /* CONFIG_B43_PIO */
-Index: wireless-testing/drivers/net/wireless/b43/pio.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/pio.h
-+++ wireless-testing/drivers/net/wireless/b43/pio.h
-@@ -55,8 +55,6 @@
- #define B43_PIO_MAX_NR_TXPACKETS	32
- 
- 
--#ifdef CONFIG_B43_PIO
--
- struct b43_pio_txpacket {
- 	/* Pointer to the TX queue we belong to. */
- 	struct b43_pio_txqueue *queue;
-@@ -169,42 +167,4 @@ void b43_pio_rx(struct b43_pio_rxqueue *
- void b43_pio_tx_suspend(struct b43_wldev *dev);
- void b43_pio_tx_resume(struct b43_wldev *dev);
- 
--
--#else /* CONFIG_B43_PIO */
--
--
--static inline int b43_pio_init(struct b43_wldev *dev)
--{
--	return 0;
--}
--static inline void b43_pio_free(struct b43_wldev *dev)
--{
--}
--static inline void b43_pio_stop(struct b43_wldev *dev)
--{
--}
--static inline int b43_pio_tx(struct b43_wldev *dev,
--			     struct sk_buff *skb)
--{
--	return 0;
--}
--static inline void b43_pio_handle_txstatus(struct b43_wldev *dev,
--					   const struct b43_txstatus *status)
--{
--}
--static inline void b43_pio_get_tx_stats(struct b43_wldev *dev,
--					struct ieee80211_tx_queue_stats *stats)
--{
--}
--static inline void b43_pio_rx(struct b43_pio_rxqueue *q)
--{
--}
--static inline void b43_pio_tx_suspend(struct b43_wldev *dev)
--{
--}
--static inline void b43_pio_tx_resume(struct b43_wldev *dev)
--{
--}
--
--#endif /* CONFIG_B43_PIO */
- #endif /* B43_PIO_H_ */
+ /*
+  * Create the debugfs files and directories
+@@ -1909,6 +1932,7 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
+ 	DEBUGFS_ADD_FILE(power_save_status, debug, S_IRUSR);
+ 	DEBUGFS_ADD_FILE(clear_ucode_statistics, debug, S_IWUSR);
+ 	DEBUGFS_ADD_FILE(clear_traffic_statistics, debug, S_IWUSR);
++	DEBUGFS_ADD_FILE(csr, debug, S_IWUSR);
+ 	if ((priv->hw_rev & CSR_HW_REV_TYPE_MSK) != CSR_HW_REV_TYPE_3945) {
+ 		DEBUGFS_ADD_FILE(ucode_rx_stats, debug, S_IRUSR);
+ 		DEBUGFS_ADD_FILE(ucode_tx_stats, debug, S_IRUSR);
+@@ -1966,6 +1990,7 @@ void iwl_dbgfs_unregister(struct iwl_priv *priv)
+ 			file_clear_ucode_statistics);
+ 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_debug_files.
+ 			file_clear_traffic_statistics);
++	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_debug_files.file_csr);
+ 	if ((priv->hw_rev & CSR_HW_REV_TYPE_MSK) != CSR_HW_REV_TYPE_3945) {
+ 		DEBUGFS_REMOVE(priv->dbgfs->dbgfs_debug_files.
+ 			file_ucode_rx_stats);
+-- 
+1.5.6.3
+
