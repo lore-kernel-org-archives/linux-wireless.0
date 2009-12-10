@@ -1,69 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54382 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753861AbZLXU00 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2009 15:26:26 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Received: from mga09.intel.com ([134.134.136.24]:7260 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761959AbZLJWhW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Dec 2009 17:37:22 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
-Subject: [PATCH v2 2/5] mac80211: fix propagation of failed hardware reconfigurations
-Date: Thu, 24 Dec 2009 15:26:25 -0500
-Message-Id: <1261686385-12438-1-git-send-email-lrodriguez@atheros.com>
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 4/7] iwlwifi: log CT_CARD_DISABLED flag
+Date: Thu, 10 Dec 2009 14:37:24 -0800
+Message-Id: <1260484647-5114-5-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1260484647-5114-1-git-send-email-reinette.chatre@intel.com>
+References: <1260484647-5114-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 does not propagate failed hardware reconfiguration
-requests. For suspend and resume this is important due to all
-the possible issues that can come out of the suspend <-> resume
-cycle. Not propagating the error means cfg80211 will assume
-the resume for the device went through fine and mac80211 will
-continue on trying to poke at the hardware, enable timers,
-queue work, and so on for a device which is completley
-unfunctional.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-The least we can do is to propagate device start issues and
-warn when this occurs upon resume. A side effect of this patch
-is we also now propagate the start errors upon harware
-reconfigurations (non-suspend), but this should also be desirable
-anyway, there is not point in continuing to reconfigure a
-device if mac80211 was unable to start the device.
+Change name from RF_CARD_DISABLED to CT_CARD_DISABLED to match the
+indication from uCode, also log the debug message when the condition
+detected in iwl_rx_card_state_notif()
 
-For further details refer to the thread:
-
-http://marc.info/?t=126151038700001&r=1&w=2
-
-Cc: stable@kernel.org
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- net/mac80211/util.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   12 +++++++-----
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    2 +-
+ 2 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index b019725..121e0bf 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1047,7 +1047,19 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 715db21..36704b2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -689,12 +689,14 @@ static void iwl_rx_card_state_notif(struct iwl_priv *priv,
+ 	u32 flags = le32_to_cpu(pkt->u.card_state_notif.flags);
+ 	unsigned long status = priv->status;
  
- 	/* restart hardware */
- 	if (local->open_count) {
-+		/*
-+		 * Upon resume hardware can sometimes be goofy due to
-+		 * various platform / driver / bus issues, so restarting
-+		 * the device may at times not work immediately. Propagate
-+		 * the error.
-+		 */
- 		res = drv_start(local);
-+		if (res) {
-+			WARN(local->suspended, "Harware became unavailable "
-+			     "upon resume. If software is the culprit you "
-+			     "can check the trace below\n");
-+			return res;
-+		}
+-	IWL_DEBUG_RF_KILL(priv, "Card state received: HW:%s SW:%s\n",
++	IWL_DEBUG_RF_KILL(priv, "Card state received: HW:%s SW:%s CT:%s\n",
+ 			  (flags & HW_CARD_DISABLED) ? "Kill" : "On",
+-			  (flags & SW_CARD_DISABLED) ? "Kill" : "On");
++			  (flags & SW_CARD_DISABLED) ? "Kill" : "On",
++			  (flags & CT_CARD_DISABLED) ?
++			  "Reached" : "Not reached");
  
- 		ieee80211_led_radio(local, true);
+ 	if (flags & (SW_CARD_DISABLED | HW_CARD_DISABLED |
+-		     RF_CARD_DISABLED)) {
++		     CT_CARD_DISABLED)) {
+ 
+ 		iwl_write32(priv, CSR_UCODE_DRV_GP1_SET,
+ 			    CSR_UCODE_DRV_GP1_BIT_CMD_BLOCKED);
+@@ -708,10 +710,10 @@ static void iwl_rx_card_state_notif(struct iwl_priv *priv,
+ 			iwl_write_direct32(priv, HBUS_TARG_MBX_C,
+ 					HBUS_TARG_MBX_C_REG_BIT_CMD_BLOCKED);
+ 		}
+-		if (flags & RF_CARD_DISABLED)
++		if (flags & CT_CARD_DISABLED)
+ 			iwl_tt_enter_ct_kill(priv);
  	}
+-	if (!(flags & RF_CARD_DISABLED))
++	if (!(flags & CT_CARD_DISABLED))
+ 		iwl_tt_exit_ct_kill(priv);
+ 
+ 	if (flags & HW_CARD_DISABLED)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index e915075..28f3800 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -2510,7 +2510,7 @@ struct iwl_card_state_notif {
+ 
+ #define HW_CARD_DISABLED   0x01
+ #define SW_CARD_DISABLED   0x02
+-#define RF_CARD_DISABLED   0x04
++#define CT_CARD_DISABLED   0x04
+ #define RXON_CARD_DISABLED 0x10
+ 
+ struct iwl_ct_kill_config {
 -- 
-1.6.3.3
+1.5.6.3
 
