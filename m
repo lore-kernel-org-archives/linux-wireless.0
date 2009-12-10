@@ -1,67 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.102.11.253]:46242 "EHLO
-	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934232AbZLFV7e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2009 16:59:34 -0500
-From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
-Reply-To: 8an@praha12.net
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/4] nl80211: Add new WIPHY attribute COVERAGE_CLASS
-Date: Sun, 6 Dec 2009 22:59:40 +0100
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-References: <200912061820.26320.8an@praha12.net> <200912061945.53225.8an@praha12.net> <1260125366.3461.24.camel@johannes.local>
-In-Reply-To: <1260125366.3461.24.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart23346576.HN1gQd47eV";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200912062259.40177.8an@praha12.net>
+Received: from mga09.intel.com ([134.134.136.24]:5397 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762049AbZLJWtp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Dec 2009 17:49:45 -0500
+Subject: Re: [PATCH 0/7] iwlwifi updates 12/10/2009
+From: reinette chatre <reinette.chatre@intel.com>
+To: David Miller <davem@davemloft.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <20091210.144239.110141276.davem@davemloft.net>
+References: <1260484647-5114-1-git-send-email-reinette.chatre@intel.com>
+	 <20091210.144239.110141276.davem@davemloft.net>
+Content-Type: text/plain
+Date: Thu, 10 Dec 2009 14:49:52 -0800
+Message-Id: <1260485392.25564.6308.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart23346576.HN1gQd47eV
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Thu, 2009-12-10 at 14:42 -0800, David Miller wrote:
+> From: Reinette Chatre <reinette.chatre@intel.com>
+> Date: Thu, 10 Dec 2009 14:37:20 -0800
+> 
+> > In this series we also include support for the new mac80211 spatial
+> > multiplexing support.
+> 
+> No more new features for 2.6.33, sorry.
+> 
+> Only bug fixes at this time.
 
-On 6.12.2009 19:49 Johannes Berg wrote:
-> Umm, no it won't, that's only with your specific mac80211
-> implementation. Try on rndis for instance.
-So I looked at both drivers that define set_wiphy_params: rndis and=20
-iwmc3200wifi. Both ignore WIPHY_PARAM_RETRY_SHORT and WIPHY_PARAM_RETRY_LON=
-G,=20
-so WIPHY_PARAM_COVERAGE_CLASS is just another parameter they would ignore.
+Absolutely - the feature you quoted was not intended for 2.6.33 ...
+especially since the mac80211 API it relies on is not there either.
 
-Anyway, I don't mind adding set_coverage_class to cfg80211_ops if you think=
-=20
-it's the best solution. It won't change the netlink API.
+The series I posted included both fixes for 2.6.33 and features for
+2.6.34. The one you quoted is a feature for 2.6.34.
 
-Lukas Turek
+I tried to be clear in the fixes we target for 2.6.33 by clearly
+mentioning them in the commit message like so:
 
---nextPart23346576.HN1gQd47eV
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+On Thu, 2009-12-10 at 14:37 -0800, Chatre, Reinette wrote:
+> This series includes three fixes targeting 2.6.33:
+> - "iwlwifi: power up all devices for EEPROM read" fixes a issue where
+> devices are unable to be initialized on certain platforms due to too
+> aggressive power savings.
+> - "iwlwifi: allocated rx page accounting cleanup" fixes some accounting
+> issues in the recent paged RX work
+> - "iwlwifi: fix syslog message for event log dump size" fixes the problem
+> where the entire debug log was not printed when requested by user
+> 
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
+... and also annotating the Subject line of the fixes like so:
 
-iQIcBAABAgAGBQJLHClMAAoJEEBjvk/UOfYwY20QAIV+GXHX8iiXzw2C/ppiXFhq
-9C7AE1TtOHGlmTywX5sypApyYKGAwC7vv71883ZEfp1FUuto5qN5615uS3xwiE75
-NsJzU6k0JWPPW5NgAMdngRjexvDKmhrPg0ACy2gmkBYfTKkcaUKIM7Snv7yc3mdM
-enNSGjUyyoOHbmUHqeXn9/33QV/kj80IecMQPR7EQtq0zQNnpEJ4VoQIz1dFEf5g
-L9wcNo/d1i5f8rILdK9T5EYiqsmgB4fii9WFqVgqbhFbteue/WDNkLLNQg/251ry
-y78Ex7cqW/o79QfQEXKodu7xLAppomV1EvCt4fqc4Hevb3IKY0qAjXUt+nCZ99Ff
-PwdJa7/ho22AO14RlKhOK7Gb3t0+WlZ6XL3xJQT6xk2Hw0+2V2wNaLG+X54d74Pc
-X1cdiMp+MkiRaO+8UVx9N5Rp+tzkpCZ6pysvZqB5IZWITWsE+K3r8tqiNfb6TZbK
-wSOxC/Mr8zsu2mD3DiaHNZSI1UxA13pSYq5skYErl/cRvstCfYwH/s3Q7gbtm0FY
-tsa5NlCg6rAO7bQ7tJPye9Loc6bR+I/XBOw5YIIoLTY7m3fHAJms7lwMBg6FWEYu
-30luNsvpK27bLuiNlg4qdc9BJ4SzIoFK/1R086ma2xUv0tLU5zsR4p0LirDj0Ato
-aDDGm4+O1WkeCP0uX2vm
-=WGIB
------END PGP SIGNATURE-----
+[PATCH X/XX w-t and 2.6.33] iwl.....
 
---nextPart23346576.HN1gQd47eV--
+With the above I hoped to make it clear that the patch is targeting both
+wireless-testing (for 2.6.34) and 2.6.33 as a fix. Patches targeting
+2.6.34 do not have special "tags" after "PATCH". 
+
+This is the way we have been submitting patches for a long time now.
+Sorry that I introduced confusion now ... perhaps I should submit fixes
+and features in separate series to prevent this in the future.
+
+Reinette
+
+
