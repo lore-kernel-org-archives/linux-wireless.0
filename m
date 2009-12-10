@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f209.google.com ([209.85.219.209]:37558 "EHLO
-	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751832AbZLHHg1 (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:34572 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752809AbZLJNig (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 02:36:27 -0500
-Received: by ewy1 with SMTP id 1so2377835ewy.28
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Dec 2009 23:36:33 -0800 (PST)
-To: Jason Andryuk <jandryuk@gmail.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: cfg80211 connect for at76c50x-usb
-References: <c4d76b3b0912071955y25c31a11m104d9c4723ef578d@mail.gmail.com>
+	Thu, 10 Dec 2009 08:38:36 -0500
+Received: by bwz27 with SMTP id 27so6065758bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2009 05:38:41 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, davem@davemloft.net
+Subject: Re: Revised wireless tree management practices
+References: <20091209211054.GB32058@tuxdriver.com>
 From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 08 Dec 2009 09:36:31 +0200
-In-Reply-To: <c4d76b3b0912071955y25c31a11m104d9c4723ef578d@mail.gmail.com> (Jason Andryuk's message of "Mon\, 7 Dec 2009 22\:55\:26 -0500")
-Message-ID: <87ws0x3ojk.fsf@purkki.valot.fi>
+Date: Thu, 10 Dec 2009 15:38:38 +0200
+Message-ID: <87ljhb0x0h.fsf@purkki.valot.fi>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jason Andryuk <jandryuk@gmail.com> writes:
+"John W. Linville" <linville@tuxdriver.com> writes:
 
-Hi Jason,
+> Greetings,
 
-> I am unable to connect to my AP with at76c50x-usb.  I believe the
-> cause is at76c50x-usb and mac80211 trying to send separate auth and
-> assoc packets to an AP.  Unfortunately the packets for these commands,
-> while sent over USB to the device, are not actually transmitted.  My
-> understanding is prior to joining a network, packet transmission is
-> block.  However, there is a USB command, CMD_JOIN, for connecting to
-> wireless networks.
+Hi,
 
-I actually think that the problem is because of missing bssid. I
-recall that when I was, a long time ago, porting at76 to mac80211
-CMD_JOIN didn't work unless I used the correct bssid. I tried to find
-a workaround, for example all zeros or all 0xffs bssid, but no luck.
-So I had to make an ugly hack that uses CMD_SCAN if the bssid is not
-set and CMD_JOIN otherwise.
+> So I'm tired of a) being asked how wireless-testing is managed; and,
+> b) having trouble explaining it.  I think it is time to move to a
+> more conventional process for wireless patches.
 
-If you have the time, you could test my theory by hardcoding the bssid
-for CMD_JOIN. Alternatively you could try Luciano Coelho's oper_bssid
-patches from a month back.
+Hopefully this also reduces your workload. There is quite a lot of
+wireless patches floating around nowadays.
+
+> More likely, it means I may have to push an occasional revert
+> through those trees that I might have otherwise avoided.
+
+Having reverts in the tree doesn't sound that bad. Even we do mistakes
+sometimes, no need to hide them :)
+
+> For now, the main change to wireless-testing will be that I will be
+> pulling from wireless-2.6 and wireless-next-2.6 rather than reapplying
+> most patches.  This should limit (and possibly eliminate) the confusing
+> patch-revert-reapply-repeat practice I have been using there for a
+> long time.  However, I still anticipate using w-t as a holding area
+> for questionable patches.  So, at least some patches may still get
+> the revert-reapply treatment.  I may ask Stephen to pull w-t into
+> linux-next in order to expand testing of any such patches.
+
+I have two questions:
+
+What tree should I base my patches on?
+
+What about testing? Which tree is best to use for testing latest and
+greatest wireless patches?
 
 -- 
 Kalle Valo
