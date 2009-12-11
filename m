@@ -1,94 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40559 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751610AbZLFScU (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:63544 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762614AbZLKLlw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2009 13:32:20 -0500
-Subject: Re: WMM classification guideline for applications?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Acker <dacker@roinet.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
-	patrik.flykt@nokia.com
-In-Reply-To: <4B1BF399.1020103@roinet.com>
-References: <87d42u6dnd.fsf@purkki.valot.fi> <4B19276F.5080604@roinet.com>
-	 <878wdi69u9.fsf@purkki.valot.fi>  <4B1933F5.2010408@roinet.com>
-	 <1260096387.3461.2.camel@johannes.local>  <4B1BF399.1020103@roinet.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-QGazNcSwMudUqY/qZOH2"
-Date: Sun, 06 Dec 2009 19:32:21 +0100
-Message-ID: <1260124341.3461.22.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 11 Dec 2009 06:41:52 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 11/31] wl1271: implement dco itrim parameters setting
+Date: Fri, 11 Dec 2009 13:41:02 +0200
+Message-Id: <1260531682-4695-12-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
+References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Newer firmwares require the dco itrim parameters to be set during
+initialization.  This patch implements the new ACX function and calls it.
 
---=-QGazNcSwMudUqY/qZOH2
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_acx.c  |   29 +++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1271_acx.h  |   10 ++++++++++
+ drivers/net/wireless/wl12xx/wl1271_conf.h |    9 +++++++++
+ drivers/net/wireless/wl12xx/wl1271_init.c |    4 ++++
+ drivers/net/wireless/wl12xx/wl1271_main.c |    4 ++++
+ 5 files changed, 56 insertions(+), 0 deletions(-)
 
-On Sun, 2009-12-06 at 13:10 -0500, David Acker wrote:
-> Johannes Berg wrote:
-> > On Fri, 2009-12-04 at 11:08 -0500, David Acker wrote:
-> >=20
-> >> I am not an expert on how the kernel handles vlans, but it appears tha=
-t=20
-> >> the priority field's value is set by the user space VLAN creation tool=
-s=20
-> >> through an ioctl with SET_VLAN_EGRESS_PRIORITY_CMD which calls=20
-> >> vlan_dev_set_egress_priority to map an skb priority to a vlan priority=
-.
-> >> vlan_dev_hard_header then uses this information to populate the vlan=20
-> >> priority field based on the skb priority field.
-> >>
-> >> In this case it would seem that skb priority and the vlan priority are=
-=20
-> >> both set and there may be a non-trivial mapping between the two.=20
-> >=20
-> > But doesn't that also mean that mac80211 can happily ignore the VLAN
-> > priority in the packet, because the vlan code will have propagated it t=
-o
-> > the skb->priority, if the administrator wishes to use it?
->=20
-> You are correct on rx.
-
-I don't see how RX matters at all, to mac80211?
-
->   The tricky part is the non-trivial mapping on=20
-> tx.  If mac80211 only looks at the skb->priority and assumes priority 0=20
-> means best effort, the code could be missing that skb->priority 0 maps=20
-> to vlan priority 7.  If we define that mac80211 only looks at=20
-> skb->priority, perhaps we should allow user space control of the mapping=20
-> of the skb->priority to WMM priority queue.  This could be similar to=20
-> the mapping capabilities in the VLAN code.  That way, an admin can make=20
-> sure that the skb priority is mapped to both an appropriate vlan=20
-> priority and an appropriate WMM priority queue.
-
-I don't understand. If I TX a packet, on a specific VLAN, then it'll go
-through the VLAN code first, get 802.1q tags and then be passed to
-mac80211, which ought be be fine with just looking at the priority value
-the packet now got.
-
-johannes
-
---=-QGazNcSwMudUqY/qZOH2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLG/ixAAoJEODzc/N7+QmaslUP/0IkQEnD/N6gaDODXpxiytb0
-tJog4iHPex53NBE7cDGqwOU4YQ2NGFw0fIfbdXBQv5VK4t9APPHwsQpO82zEWwyQ
-O5Yguf+blFENLAde+16Oi+6L3wNFu3dTtyvwcQpru+HTy6eqRACjMEwOkAjoT1Yu
-PEZN6d/WFeeisYhMhRb442DRa1Sa/Y9M0e5aMNgZSUBGEVrERa/gT2Mi3lXN62Xf
-Z0ZamD9dUvWoIY/kWgNWAJUF2eA7DfZusZdUYkM6BJvwPbMtgP+QitegmqCJpfAt
-fIeLsloDE9t0/CxrFaZYK59I/X8iC0RS78nqfuMEpM7dYzFPUwl9AdUhv8k0BLgz
-e3wAAMf33M1ROBvIYwu5dkCkd+ZwSB6EIxaAWXYEfUeOXBs/aD+4XjXjtaOEzN2F
-8VnEG02mPmxn3T3iBqCKtG/2+nGQpCmNEccIQlBpF5vZ7DwvaNniSJN94Rp8HO6+
-goCvUvnIrKmtTpGMTLmAb2CH2RuAoK9q2piaJoESm2Dgyh1164WWB9RKbD+AasyV
-IEdGE5CkSfaOY0P4mHSf0LG949XZKX97/7R71Iyvlh38y2oZXpvHVbw9PnvpXK10
-1g5OnJINjjtsQoAIJLr0oBBbInBLZV+QdA0kZrBugA6ZU6QpGVJqGCJetAztDtit
-ZcVEu/XKhFXH/pU9wL+y
-=/Qw5
------END PGP SIGNATURE-----
-
---=-QGazNcSwMudUqY/qZOH2--
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
+index 59bb95b..1cf57b0 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
+@@ -396,6 +396,35 @@ out:
+ 	return ret;
+ }
+ 
++int wl1271_acx_dco_itrim_params(struct wl1271 *wl)
++{
++	struct acx_dco_itrim_params *dco;
++	struct conf_itrim_settings *c = &wl->conf.itrim;
++	int ret;
++
++	wl1271_debug(DEBUG_ACX, "acx dco itrim parameters");
++
++	dco = kzalloc(sizeof(*dco), GFP_KERNEL);
++	if (!dco) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	dco->enable = c->enable;
++	dco->timeout = cpu_to_le32(c->timeout);
++
++	ret = wl1271_cmd_configure(wl, ACX_SET_DCO_ITRIM_PARAMS,
++				   dco, sizeof(*dco));
++	if (ret < 0) {
++		wl1271_warning("failed to set dco itrim parameters: %d", ret);
++		goto out;
++	}
++
++out:
++	kfree(dco);
++	return ret;
++}
++
+ int wl1271_acx_beacon_filter_opt(struct wl1271 *wl, bool enable_filter)
+ {
+ 	struct acx_beacon_filter_option *beacon_filter = NULL;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
+index 2ce0a81..fa5d953 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.h
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
+@@ -434,6 +434,14 @@ struct acx_smart_reflex_config_params {
+ 	struct smart_reflex_err_table error_table[3];
+ } __attribute__ ((packed));
+ 
++struct acx_dco_itrim_params {
++	struct acx_header header;
++
++	u8 enable;
++	u8 padding[3];
++	__le32 timeout;
++} __attribute__ ((packed));
++
+ #define PTA_ANTENNA_TYPE_DEF		  (0)
+ #define PTA_BT_HP_MAXTIME_DEF		  (2000)
+ #define PTA_WLAN_HP_MAX_TIME_DEF	  (5000)
+@@ -1029,6 +1037,7 @@ enum {
+ 	ACX_SET_SMART_REFLEX_DEBUG  = 0x005A,
+ 	ACX_SET_SMART_REFLEX_STATE  = 0x005B,
+ 	ACX_SET_SMART_REFLEX_PARAMS = 0x005F,
++	ACX_SET_DCO_ITRIM_PARAMS    = 0x0061,
+ 	DOT11_RX_MSDU_LIFE_TIME     = 0x1004,
+ 	DOT11_CUR_TX_PWR            = 0x100D,
+ 	DOT11_RX_DOT11_MODE         = 0x1012,
+@@ -1056,6 +1065,7 @@ int wl1271_acx_group_address_tbl(struct wl1271 *wl, bool enable,
+ 				 void *mc_list, u32 mc_list_len);
+ int wl1271_acx_service_period_timeout(struct wl1271 *wl);
+ int wl1271_acx_rts_threshold(struct wl1271 *wl, u16 rts_threshold);
++int wl1271_acx_dco_itrim_params(struct wl1271 *wl);
+ int wl1271_acx_beacon_filter_opt(struct wl1271 *wl, bool enable_filter);
+ int wl1271_acx_beacon_filter_table(struct wl1271 *wl);
+ int wl1271_acx_conn_monit_params(struct wl1271 *wl);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_conf.h b/drivers/net/wireless/wl12xx/wl1271_conf.h
+index a4bd35b..905d428 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_conf.h
++++ b/drivers/net/wireless/wl12xx/wl1271_conf.h
+@@ -934,12 +934,21 @@ struct conf_init_settings {
+ 
+ };
+ 
++struct conf_itrim_settings {
++	/* enable dco itrim */
++	u8 enable;
++
++	/* moderation timeout in microsecs from the last TX */
++	u32 timeout;
++};
++
+ struct conf_drv_settings {
+ 	struct conf_sg_settings sg;
+ 	struct conf_rx_settings rx;
+ 	struct conf_tx_settings tx;
+ 	struct conf_conn_settings conn;
+ 	struct conf_init_settings init;
++	struct conf_itrim_settings itrim;
+ };
+ 
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
+index d72ccc6..39f01d8 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_init.c
++++ b/drivers/net/wireless/wl12xx/wl1271_init.c
+@@ -229,6 +229,10 @@ int wl1271_hw_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		goto out_free_memmap;
+ 
++	ret = wl1271_acx_dco_itrim_params(wl);
++	if (ret < 0)
++		goto out_free_memmap;
++
+ 	/* Initialize connection monitoring thresholds */
+ 	ret = wl1271_acx_conn_monit_params(wl);
+ 	if (ret < 0)
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 4b5ee41..9be9aff 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -338,6 +338,10 @@ static struct conf_drv_settings default_conf = {
+ 			.degraded_low_to_normal_threshold_5 = 0x00,
+ 			.degraded_normal_to_high_threshold_5 = 0x00
+ 		}
++	},
++	.itrim = {
++		.enable = false,
++		.timeout = 50000,
+ 	}
+ };
+ 
+-- 
+1.6.3.3
 
