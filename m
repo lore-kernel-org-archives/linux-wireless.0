@@ -1,253 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f42.google.com ([209.85.160.42]:34494 "EHLO
-	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761638AbZLKXSq (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:22728 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754391AbZLKNXk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 18:18:46 -0500
-Received: by pwj9 with SMTP id 9so881114pwj.21
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Dec 2009 15:18:53 -0800 (PST)
-Message-ID: <4B22D371.1090607@gmail.com>
-Date: Fri, 11 Dec 2009 15:19:13 -0800
-From: John Daiker <daikerjohn@gmail.com>
+	Fri, 11 Dec 2009 08:23:40 -0500
+Message-ID: <4B2247A7.7040102@nokia.com>
+Date: Fri, 11 Dec 2009 15:22:47 +0200
+From: Luciano Coelho <luciano.coelho@nokia.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43: Allow PIO mode to be selected at module load
-References: <4b2185a5.QaOUdYVRfLIFSF6B%Larry.Finger@lwfinger.net>
-In-Reply-To: <4b2185a5.QaOUdYVRfLIFSF6B%Larry.Finger@lwfinger.net>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/31] wl1271: patches for wk50
+References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com> <1260532494.2442.131.camel@johannes.local>
+In-Reply-To: <1260532494.2442.131.camel@johannes.local>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/10/2009 03:35 PM, Larry Finger wrote:
-> If userencounter the "Fatal DMA Problem" with a BCM43XX device, and
-> still wish to use b43 as the driver, their only option is to rebuild
-> the kernel with CONFIG_B43_FORCE_PIO. This patch removes this option and
-> allows PIO mode to be selected with a load-time parameter for the module.
-> Note that the configuration variable CONFIG_B43_PIO is also removed.
->
-> Once the DMA problem with the BCM4312 devices is solved, this patch will
-> likely be reverted.
->
-> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
-> ---
->
-> John,
->
-> This version implements the changes suggested by Michael Buesch.
->
-> I don't know where this change should go. It is likely too large
-> and invasive to be applied to 2.6.33; however, it should be
-> applied to 2.6.32. Hmm? I guess that is why you get the "big money".
-> :)
->
-> Larry
-> ---
->
->
-> Index: wireless-testing/drivers/net/wireless/b43/Kconfig
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/Kconfig
-> +++ wireless-testing/drivers/net/wireless/b43/Kconfig
-> @@ -3,6 +3,7 @@ config B43
->   	depends on SSB_POSSIBLE&&  MAC80211&&  HAS_DMA
->   	select SSB
->   	select FW_LOADER
-> +	select SSB_BLOCKIO
->   	---help---
->   	  b43 is a driver for the Broadcom 43xx series wireless devices.
->
-> @@ -78,14 +79,6 @@ config B43_SDIO
->
->   	  If unsure, say N.
->
-> -# Data transfers to the device via PIO
-> -# This is only needed on PCMCIA and SDIO devices. All others can do DMA properly.
-> -config B43_PIO
-> -	bool
-> -	depends on B43&&  (B43_SDIO || B43_PCMCIA || B43_FORCE_PIO)
-> -	select SSB_BLOCKIO
-> -	default y
-> -
->   config B43_NPHY
->   	bool "Pre IEEE 802.11n support (BROKEN)"
->   	depends on B43&&  EXPERIMENTAL&&  BROKEN
-> @@ -137,12 +130,4 @@ config B43_DEBUG
->   	  for production use.
->   	  Only say Y, if you are debugging a problem in the b43 driver sourcecode.
->
-> -config B43_FORCE_PIO
-> -	bool "Force usage of PIO instead of DMA"
-> -	depends on B43&&  B43_DEBUG
-> -	---help---
-> -	  This will disable DMA and always enable PIO instead.
-> -
-> -	  Say N!
-> -	  This is only for debugging the PIO engine code. You do
-> -	  _NOT_ want to enable this.
-> +
-> Index: wireless-testing/drivers/net/wireless/b43/Makefile
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/Makefile
-> +++ wireless-testing/drivers/net/wireless/b43/Makefile
-> @@ -12,7 +12,7 @@ b43-y				+= xmit.o
->   b43-y				+= lo.o
->   b43-y				+= wa.o
->   b43-y				+= dma.o
-> -b43-$(CONFIG_B43_PIO)		+= pio.o
-> +b43-y				+= pio.o
->   b43-y				+= rfkill.o
->   b43-$(CONFIG_B43_LEDS)		+= leds.o
->   b43-$(CONFIG_B43_PCMCIA)	+= pcmcia.o
-> Index: wireless-testing/drivers/net/wireless/b43/b43.h
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/b43.h
-> +++ wireless-testing/drivers/net/wireless/b43/b43.h
-> @@ -821,11 +821,9 @@ struct b43_wl {
->   	/* The device LEDs. */
->   	struct b43_leds leds;
->
-> -#ifdef CONFIG_B43_PIO
->   	/* Kmalloc'ed scratch space for PIO TX/RX. Protected by wl->mutex. */
->   	u8 pio_scratchspace[110] __attribute__((__aligned__(8)));
->   	u8 pio_tailspace[4] __attribute__((__aligned__(8)));
-> -#endif /* CONFIG_B43_PIO */
->   };
->
->   static inline struct b43_wl *hw_to_b43_wl(struct ieee80211_hw *hw)
-> @@ -876,20 +874,9 @@ static inline void b43_write32(struct b4
->
->   static inline bool b43_using_pio_transfers(struct b43_wldev *dev)
->   {
-> -#ifdef CONFIG_B43_PIO
->   	return dev->__using_pio_transfers;
-> -#else
-> -	return 0;
-> -#endif
->   }
->
-> -#ifdef CONFIG_B43_FORCE_PIO
-> -# define B43_FORCE_PIO	1
-> -#else
-> -# define B43_FORCE_PIO	0
-> -#endif
-> -
-> -
->   /* Message printing */
->   void b43info(struct b43_wl *wl, const char *fmt, ...)
->       __attribute__ ((format(printf, 2, 3)));
-> Index: wireless-testing/drivers/net/wireless/b43/main.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/main.c
-> +++ wireless-testing/drivers/net/wireless/b43/main.c
-> @@ -102,6 +102,9 @@ int b43_modparam_verbose = B43_VERBOSITY
->   module_param_named(verbose, b43_modparam_verbose, int, 0644);
->   MODULE_PARM_DESC(verbose, "Log message verbosity: 0=error, 1=warn, 2=info(default), 3=debug");
->
-> +static int modparam_pio;
-> +module_param_named(pio, modparam_pio, int, 0444);
-> +MODULE_PARM_DESC(pio, "enable(1) / disable(0) PIO mode");
->
->   static const struct ssb_device_id b43_ssb_tbl[] = {
->   	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 5),
-> @@ -1786,8 +1789,8 @@ static void b43_do_interrupt_thread(stru
->   			       dma_reason[4], dma_reason[5]);
->   			b43err(dev->wl, "This device does not support DMA "
->   			       "on your system. Please use PIO instead.\n");
-> -			b43err(dev->wl, "CONFIG_B43_FORCE_PIO must be set in "
-> -			       "your kernel configuration.\n");
-> +			b43err(dev->wl, "Unload the b43 module and reload "
-> +			       "with 'pio=1'\n");
->   			return;
->   		}
->   		if (merged_dma_reason&  B43_DMAIRQ_NONFATALMASK) {
-> @@ -4353,7 +4356,7 @@ static int b43_wireless_core_init(struct
->
->   	if ((dev->dev->bus->bustype == SSB_BUSTYPE_PCMCIA) ||
->   	    (dev->dev->bus->bustype == SSB_BUSTYPE_SDIO) ||
-> -	    B43_FORCE_PIO) {
-> +	    modparam_pio) {
->   		dev->__using_pio_transfers = 1;
->   		err = b43_pio_init(dev);
->   	} else {
-> Index: wireless-testing/drivers/net/wireless/b43/dma.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/dma.c
-> +++ wireless-testing/drivers/net/wireless/b43/dma.c
-> @@ -1760,7 +1760,6 @@ void b43_dma_tx_resume(struct b43_wldev
->   	b43_power_saving_ctl_bits(dev, 0);
->   }
->
-> -#ifdef CONFIG_B43_PIO
->   static void direct_fifo_rx(struct b43_wldev *dev, enum b43_dmatype type,
->   			   u16 mmio_base, bool enable)
->   {
-> @@ -1794,4 +1793,3 @@ void b43_dma_direct_fifo_rx(struct b43_w
->   	mmio_base = b43_dmacontroller_base(type, engine_index);
->   	direct_fifo_rx(dev, type, mmio_base, enable);
->   }
-> -#endif /* CONFIG_B43_PIO */
-> Index: wireless-testing/drivers/net/wireless/b43/pio.h
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/pio.h
-> +++ wireless-testing/drivers/net/wireless/b43/pio.h
-> @@ -55,8 +55,6 @@
->   #define B43_PIO_MAX_NR_TXPACKETS	32
->
->
-> -#ifdef CONFIG_B43_PIO
-> -
->   struct b43_pio_txpacket {
->   	/* Pointer to the TX queue we belong to. */
->   	struct b43_pio_txqueue *queue;
-> @@ -169,42 +167,4 @@ void b43_pio_rx(struct b43_pio_rxqueue *
->   void b43_pio_tx_suspend(struct b43_wldev *dev);
->   void b43_pio_tx_resume(struct b43_wldev *dev);
->
-> -
-> -#else /* CONFIG_B43_PIO */
-> -
-> -
-> -static inline int b43_pio_init(struct b43_wldev *dev)
-> -{
-> -	return 0;
-> -}
-> -static inline void b43_pio_free(struct b43_wldev *dev)
-> -{
-> -}
-> -static inline void b43_pio_stop(struct b43_wldev *dev)
-> -{
-> -}
-> -static inline int b43_pio_tx(struct b43_wldev *dev,
-> -			     struct sk_buff *skb)
-> -{
-> -	return 0;
-> -}
-> -static inline void b43_pio_handle_txstatus(struct b43_wldev *dev,
-> -					   const struct b43_txstatus *status)
-> -{
-> -}
-> -static inline void b43_pio_get_tx_stats(struct b43_wldev *dev,
-> -					struct ieee80211_tx_queue_stats *stats)
-> -{
-> -}
-> -static inline void b43_pio_rx(struct b43_pio_rxqueue *q)
-> -{
-> -}
-> -static inline void b43_pio_tx_suspend(struct b43_wldev *dev)
-> -{
-> -}
-> -static inline void b43_pio_tx_resume(struct b43_wldev *dev)
-> -{
-> -}
-> -
-> -#endif /* CONFIG_B43_PIO */
->   #endif /* B43_PIO_H_ */
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ext Johannes Berg wrote:
+> On Fri, 2009-12-11 at 13:40 +0200, Luciano Coelho wrote:
+>> Hi,
+>>
+>> These are the patches that have resulted from a one-week debug and
+>> implementation camp with TI.  Mostly bug fixes and improvements, but also we
+>> now added support for a new version of the firmware.
+>>
+>> With these patches, the driver should be pretty much functional, even though
+>> there are still a couple of known bugs.
+> 
+> I see a lot of rate stuff here -- time to set the hw rate control flag?
 
-Tested-by: John Daiker <daikerjohn@gmail.com>
+Yeah, we're use the rate control stuff from the hardware more carefully now. 
+But we're "still" using 2.6.32 internally, so it will be much easier for me to 
+wait until the 2.6.33-rc series start (and the IEEE80211_HW_HAS_RATE_CONTROL 
+gets introduced), otherwise I'll have to fork and keep maintain two separate trees.
+
+We have a plan to start cherry-picking the latest and greatest mac80211 stuff 
+from wireless-testing, but we are not doing that yet.
+
+-- 
+Cheers,
+Luca.
