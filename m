@@ -1,58 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:55964 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751530AbZL1UeO convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:61393 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757898AbZLKNl6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Dec 2009 15:34:14 -0500
-Received: by fxm25 with SMTP id 25so4827456fxm.21
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2009 12:34:12 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1261971942.6037.57.camel@debian>
-References: <E9954878DD1FB34FAE5187FB88C58A357683393C@orsmsx506.amr.corp.intel.com>
-	<1261363447.12157.624.camel@debian> <69e28c910912210552p1f63a47dw9fbabf2c26ce02e9@mail.gmail.com>
-	<1261971942.6037.57.camel@debian>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 28 Dec 2009 21:33:52 +0100
-Message-ID: <69e28c910912281233v220e9896t5686111030d5f30@mail.gmail.com>
-Subject: Re: Intel 4965 HT rates
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Valentin Manea <linux-wireless@mrs.ro>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 11 Dec 2009 08:41:58 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH v2 21/31] wl1271: prevent power save entry while not associated
+Date: Fri, 11 Dec 2009 15:41:00 +0200
+Message-Id: <1260538870-32297-22-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/12/28 Zhu Yi <yi.zhu@intel.com>:
-> On Mon, 2009-12-21 at 21:52 +0800, Gábor Stefanik wrote:
->> On Mon, Dec 21, 2009 at 3:44 AM, Zhu Yi <yi.zhu@intel.com> wrote:
->> > On Mon, 2009-12-21 at 10:33 +0800, Guy, Wey-Yi W wrote:
->> >> For 4965, 40MHz only supported in g band
->> >
->> > We don't support 40MHz channels in 2.4G band. See comments in
->> > iwl-eeprom.h:
->> >
->> >  *
->> >  * NOTE:  4965 does not support HT40 channels on 2.4 GHz.
->> >  */
->> >
->> > Thanks,
->> > -yi
->>
->> But why does the Windows driver for 4965 support it then?
->
-> Have you tested how well it is supported? The firmware people suggest to
-> disable this feature (although the hardware was originally designed to)
-> due to some internal problems.
->
-> Thanks,
-> -yi
->
->
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Doesn't the Windows driver use a completely different, thinner
-firmware (without all the regulatory hardening crap, as the driver
-itself is closed-source)?
+The mac80211 sometimes requests power save entry while not associated - this
+will cause problems, so prevent it if not associated. Go to powersave once
+association is complete.
 
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271.h      |    1 +
+ drivers/net/wireless/wl12xx/wl1271_main.c |   11 ++++++++---
+ 2 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index 4b5ddba..81e1c95 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -416,6 +416,7 @@ struct wl1271 {
+ 
+ 	/* PSM mode requested */
+ 	bool psm_requested;
++	bool associated;
+ 
+ 	/* retry counter for PSM entries */
+ 	u8 psm_entry_retry;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index d507dae..d07f035 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -978,6 +978,7 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
+ 	wl->elp = false;
+ 	wl->psm = 0;
+ 	wl->psm_entry_retry = 0;
++	wl->associated = false;
+ 	wl->tx_queue_stopped = false;
+ 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
+ 	wl->tx_blocks_available = 0;
+@@ -1191,8 +1192,6 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		wl1271_join_channel(wl, channel);
+ 
+ 	if (conf->flags & IEEE80211_CONF_PS && !wl->psm_requested) {
+-		wl1271_info("psm enabled");
+-
+ 		wl->psm_requested = true;
+ 
+ 		/*
+@@ -1200,7 +1199,10 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		 * If we're not, we'll enter it when joining an SSID,
+ 		 * through the bss_info_changed() hook.
+ 		 */
+-		ret = wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE);
++		if (wl->associated) {
++			wl1271_info("psm enabled");
++			ret = wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE);
++		}
+ 	} else if (!(conf->flags & IEEE80211_CONF_PS) &&
+ 		   wl->psm_requested) {
+ 		wl1271_info("psm disabled");
+@@ -1548,6 +1550,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (changed & BSS_CHANGED_ASSOC) {
+ 		if (bss_conf->assoc) {
+ 			wl->aid = bss_conf->aid;
++			wl->associated = true;
+ 
+ 			/*
+ 			 * with wl1271, we don't need to update the
+@@ -1572,6 +1575,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			}
+ 		} else {
+ 			/* use defaults when not associated */
++			wl->associated = false;
+ 			wl->aid = 0;
+ 		}
+ 
+@@ -1898,6 +1902,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 	wl->psm = 0;
+ 	wl->psm_requested = false;
+ 	wl->psm_entry_retry = 0;
++	wl->associated = false;
+ 	wl->tx_queue_stopped = false;
+ 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
+ 	wl->basic_rate_set = CONF_TX_RATE_MASK_BASIC;
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.6.3.3
+
