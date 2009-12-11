@@ -1,43 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:61353 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757571AbZLKNlc (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:50750 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751596AbZLKJKv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:41:32 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 10/31] wl1271: use the correct macro when setting the basic rates
-Date: Fri, 11 Dec 2009 15:40:49 +0200
-Message-Id: <1260538870-32297-11-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+	Fri, 11 Dec 2009 04:10:51 -0500
+MIME-Version: 1.0
+In-Reply-To: <a8e1da0912101747l7e0e9fcbh8a7007e95e7c8509@mail.gmail.com>
+References: <a8e1da0912100127k4dcddd65gfe5ff0b1330fe63b@mail.gmail.com>
+	 <a8e1da0912100130i2e654796mf899dd27df869673@mail.gmail.com>
+	 <20091210184931.257A.A69D9226@jp.fujitsu.com>
+	 <4B217219.6040109@crca.org.au>
+	 <a8e1da0912101747l7e0e9fcbh8a7007e95e7c8509@mail.gmail.com>
+Date: Fri, 11 Dec 2009 17:10:56 +0800
+Message-ID: <a8e1da0912110110m425d8544xdcdf1f5a9ed8ab17@mail.gmail.com>
+Subject: Re: mmotm-2009-12-08-17-45 resume slowly
+From: Dave Young <hidave.darkstar@gmail.com>
+To: Nigel Cunningham <ncunningham@crca.org.au>
+Cc: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>, Zhu Yi <yi.zhu@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were using CONF_TX_RATE_MASK_ALL when calling wl1271_acx_rate_policies()
-during init.  We should use WL1271_DEFAULT_BASIC_RATE_SET instead.  The
-values are the same, but the latter is just the correct macro to use.
+On Fri, Dec 11, 2009 at 9:47 AM, Dave Young <hidave.darkstar@gmail.com> wrote:
+> On Fri, Dec 11, 2009 at 6:11 AM, Nigel Cunningham
+> <ncunningham@crca.org.au> wrote:
+>> Dave, could you be more specific?
+>>
+>> Is the delay Ksaki has picked out related to your report...
+>
+> I can not reproduce the wireless delay today, maybe related to
+> wireless environment?
+>
+>>
+>> KOSAKI Motohiro wrote:
+>>> (cc to netdev)
+>>>
+>>> Hi net-folks
+>>>
+>>>>> [  561.323866] mtrr: type mismatch for e0000000,10000000 old:
+>>>>> write-back new: write-combining
+>>>>> [ 2688.500033] No probe response from AP 00:02:2d:08:51:2b after
+>>>>> 500ms, disconnecting.
+>>>>> [ 2689.580376] wlan0: direct probe to AP 00:02:2d:08:51:2b (try 1)
+>>>
+>>> What's mean "No probe response"? Why its point waste 2000sec?
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_init.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Rereading the dmesg I post, I think maybe this delay is not relevant
+because it is after "PM: Finishing wakeup."
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
-index 11249b4..d72ccc6 100644
---- a/drivers/net/wireless/wl12xx/wl1271_init.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_init.c
-@@ -280,7 +280,7 @@ int wl1271_hw_init(struct wl1271 *wl)
- 		goto out_free_memmap;
- 
- 	/* Configure TX rate classes */
--	ret = wl1271_acx_rate_policies(wl, CONF_TX_RATE_MASK_ALL);
-+	ret = wl1271_acx_rate_policies(wl, WL1271_DEFAULT_BASIC_RATE_SET);
- 	if (ret < 0)
- 		goto out_free_memmap;
- 
+The brightness is so low after resume finished that I thought it as
+resume delay.
+
+
+>>
+>> [...]
+>>
+>>>>> [  225.731462] ACPI: Preparing to enter system sleep state S3
+>>>>> [  225.754167] Disabling non-boot CPUs ...
+>>>>> [  225.809478] CPU 1 is now offline
+>>>>> [  225.809481] lockdep: fixing up alternatives.
+>>>>> [  225.809487] SMP alternatives: switching to UP code
+>>>>> [  225.816500] Extended CMOS year: 2000
+>>>>> [  225.816500] Back to C!
+>>>>> [  225.816500] Extended CMOS year: 2000
+>>>>> [  225.816720] Enabling non-boot CPUs ...
+>>>>> [  225.818422] lockdep: fixing up alternatives.
+>>>>> [  225.818425] SMP alternatives: switching to SMP code
+>>>>> [  225.822188] Booting processor 1 APIC 0x1 ip 0x6000
+>>>>> [  225.818021] Initializing CPU#1
+>>>>> [  225.818021] CPU: Physical Processor ID: 0
+>>>>> [  225.818021] CPU: Processor Core ID: 1
+>>>>> [  225.913392] CPU1: Intel(R) Core(TM)2 Duo CPU     T7250  @ 2.00GHz stepping 0d
+>>>>> [  225.937046] microcode: CPU1 sig=0x6fd, pf=0x80, revision=0xa3
+>>>>> [  225.937053] platform microcode: firmware: requesting intel-ucode/06-0f-0d
+>>>>> [  225.937179] firmware microcode: parent microcode should not be sleeping
+>>>>> [  285.940840] CPU1 is up
+>>
+>> ... or the 60 second delay before the CPU1 is up message?
+>
+> Yes, this delay occurs every time
+
+
+Then what caused this one, any idea?
+
+>
+>>
+>> Regards,
+>>
+>> Nigel
+>>
+>
+>
+>
+> --
+> Regards
+> dave
+>
+
+
+
 -- 
-1.6.3.3
-
+Regards
+dave
