@@ -1,90 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:13582 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756360AbZLWQ2P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 11:28:15 -0500
-Date: Wed, 23 Dec 2009 08:28:13 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Subject: Re: mac80211 suspend corner case (was: Asus eeepc 1008HA suspend
- issue and mac80211 suspend corner) case
-Message-ID: <20091223162813.GB2609@tux>
-References: <20091222022355.GA32508@bombadil.infradead.org>
- <20091222193010.GB30201@bombadil.infradead.org>
- <1261570081.25008.1.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1261570081.25008.1.camel@johannes.local>
+Received: from smtp.nokia.com ([192.100.105.134]:63479 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762362AbZLKLld (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Dec 2009 06:41:33 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 01/31] wl1271: updated radio parameters structure for newer firmwares
+Date: Fri, 11 Dec 2009 13:40:52 +0200
+Message-Id: <1260531682-4695-2-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
+References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 23, 2009 at 04:08:01AM -0800, Johannes Berg wrote:
-> On Tue, 2009-12-22 at 14:30 -0500, Luis R. Rodriguez wrote:
-> 
-> > Johannes, any preferences how to handle this? The patch below avoids
-> > the Interrupt being turned off but its not enough given that we still
-> > could be associated according to userspace. If the hardware is
-> > unresponsive maybe it is best to just let the IRQ go disabled, not
-> > sure, but its likely not what happens in all cases.
-> > 
-> > Trimming out the irrelevant parts below.
-> 
-> > http://bombadil.infradead.org/~mcgrof/logs/2.6.31-with-2.6.32-wireless
-> > /irq-disabled.txt
-> > > 
-> > > This can be fixed by something like the following:
-> > > 
-> > > diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-> > > index e6c08da..63d42fa 100644
-> > > --- a/net/mac80211/util.c
-> > > +++ b/net/mac80211/util.c
-> > > @@ -1031,7 +1031,14 @@ int ieee80211_reconfig(struct ieee80211_local
-> > *local)
-> > >  
-> > >  	/* restart hardware */
-> > >  	if (local->open_count) {
-> > > +		/*
-> > > +		 * Upon resume hardware can sometimes be goofy due to
-> > > +		 * various platform issues, so restarting the device may
-> > > +		 * at times not work immediately. Propagate the error.
-> > > +		 */
-> > >  		res = drv_start(local);
-> > > +		if (res)
-> > > +			return res;
-> > >  
-> > >  		ieee80211_led_radio(local, true);
-> > >  	}
-> > > 
-> > > But this isn't enough. And since we cannot exactly talk to hardware
-> > > we can't try to send a deassoc as harware would be unresponsive. I
-> > > also don't see us handling such cases before either on cfg80211 or
-> > > mac80211, so curious what we should do.
-> 
-> Well it seems to me that if the driver determines that the hardware is
-> unreachable or not responding, it would unregister it from mac80211,
-> which would clean up all user-visible state, obviously.
+In revision 6.1.0.0.288 the radio parameters structure has changed.  This
+patch updates the driver code accordingly.
 
-The drivers would not know this until it fails on the first call
-from mac80211 which would be start().
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_cmd.h |   16 ++++++++++++----
+ 1 files changed, 12 insertions(+), 4 deletions(-)
 
-> The patch above seems ok to me, but basically papers over the problem.
-> If the start there fails, the driver will have to unregister the hw
-> since any subsequent start will fail as well.
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
+index b4fa4ac..de23c08 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
+@@ -458,11 +458,12 @@ struct wl1271_radio_parms_cmd {
+ 	/* Dynamic radio parameters */
+ 	/* 2.4GHz */
+ 	__le16 tx_ref_pd_voltage;
+-	s8  tx_ref_power;
++	u8  tx_ref_power;
+ 	s8  tx_offset_db;
+ 
+ 	s8  tx_rate_limits_normal[CONF_NUMBER_OF_RATE_GROUPS];
+ 	s8  tx_rate_limits_degraded[CONF_NUMBER_OF_RATE_GROUPS];
++	s8  tx_rate_limits_extreme[CONF_NUMBER_OF_RATE_GROUPS];
+ 
+ 	s8  tx_channel_limits_11b[CONF_NUMBER_OF_CHANNELS_2_4];
+ 	s8  tx_channel_limits_ofdm[CONF_NUMBER_OF_CHANNELS_2_4];
+@@ -471,15 +472,19 @@ struct wl1271_radio_parms_cmd {
+ 	u8  tx_ibias[CONF_NUMBER_OF_RATE_GROUPS];
+ 	u8  rx_fem_insertion_loss;
+ 
+-	u8 padding2;
++	u8  degraded_low_to_normal_threshold;
++	u8  degraded_normal_to_high_threshold;
++
++	u8  padding1; /* our own padding, not in ref driver */
+ 
+ 	/* 5GHz */
+ 	__le16 tx_ref_pd_voltage_5[CONF_NUMBER_OF_SUB_BANDS_5];
+-	s8  tx_ref_power_5[CONF_NUMBER_OF_SUB_BANDS_5];
++	u8  tx_ref_power_5[CONF_NUMBER_OF_SUB_BANDS_5];
+ 	s8  tx_offset_db_5[CONF_NUMBER_OF_SUB_BANDS_5];
+ 
+ 	s8  tx_rate_limits_normal_5[CONF_NUMBER_OF_RATE_GROUPS];
+ 	s8  tx_rate_limits_degraded_5[CONF_NUMBER_OF_RATE_GROUPS];
++	s8  tx_rate_limits_extreme_5[CONF_NUMBER_OF_RATE_GROUPS];
+ 
+ 	s8  tx_channel_limits_ofdm_5[CONF_NUMBER_OF_CHANNELS_5];
+ 	s8  tx_pdv_rate_offsets_5[CONF_NUMBER_OF_RATE_GROUPS];
+@@ -488,7 +493,10 @@ struct wl1271_radio_parms_cmd {
+ 	s8  tx_ibias_5[CONF_NUMBER_OF_RATE_GROUPS];
+ 	s8  rx_fem_insertion_loss_5[CONF_NUMBER_OF_SUB_BANDS_5];
+ 
+-	u8 padding3[2];
++	u8  degraded_low_to_normal_threshold_5;
++	u8  degraded_normal_to_high_threshold_5;
++
++	u8 padding2[2];
+ } __attribute__ ((packed));
+ 
+ struct wl1271_cmd_cal_channel_tune {
+-- 
+1.6.3.3
 
-How about just having mac80211 do that for drivers where the start()
-fails and we are resuming? I can give that a shot.
-
-> The way I see it, it's like a USB unplug while suspended/hibernated ...
-> the driver notices that and remo
-
-I see, in this case though I'd prefer if mac80211 could do more of
-the work instead of requiring each driver to treat start() failures
-by unregistering themselves, specially since we don't inform drivers
-they are coming back from resume on start().
-
-  Luis
