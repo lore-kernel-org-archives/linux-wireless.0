@@ -1,33 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:58986 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757432AbZLFTU4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2009 14:20:56 -0500
-Message-ID: <4B1C041A.3090708@openwrt.org>
-Date: Sun, 06 Dec 2009 20:20:58 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: 8an@praha12.net
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	ath5k-devel@lists.ath5k.org
-Subject: Re: [PATCH 4/4] ath5k: Implement mac80211 callback set_coverage
-References: <200912061820.26320.8an@praha12.net> <200912061826.52394.8an@praha12.net> <4B1BF952.1000909@openwrt.org> <200912062000.26851.8an@praha12.net>
-In-Reply-To: <200912062000.26851.8an@praha12.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from smtp.nokia.com ([192.100.122.233]:61363 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757460AbZLKNlh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Dec 2009 08:41:37 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 11/31] wl1271: implement dco itrim parameters setting
+Date: Fri, 11 Dec 2009 15:40:50 +0200
+Message-Id: <1260538870-32297-12-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lukáš Turek wrote:
-> On 6.12.2009 19:34 Felix Fietkau wrote:
->> This part is wrong. The slot time can be either short or long, based on
->> configuration and PHY type.
-> I did some test, and the value returned by ath5k_hw_get_slot_time was always 
-> 9, even when connected to 802.11b-only AP. I didn't try the turbo mode, 
-> though. Unfortunately I don't know how to calculate ACK timeouts for
-> a different slot time - the formula I used is the only one in both Madwifi's 
-> and FreeBSD's athctrl.
-In 2.4 GHz, regular slot time is 20 usec, unless short slot is enabled.
-2.4 GHz with short slot and 5 GHz both use 9 usec.
+Newer firmwares require the dco itrim parameters to be set during
+initialization.  This patch implements the new ACX function and calls it.
 
-- Felix
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_acx.c  |   29 +++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1271_acx.h  |   10 ++++++++++
+ drivers/net/wireless/wl12xx/wl1271_conf.h |    9 +++++++++
+ drivers/net/wireless/wl12xx/wl1271_init.c |    4 ++++
+ drivers/net/wireless/wl12xx/wl1271_main.c |    4 ++++
+ 5 files changed, 56 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
+index 5cc89bb..a38a967 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
+@@ -390,6 +390,35 @@ out:
+ 	return ret;
+ }
+ 
++int wl1271_acx_dco_itrim_params(struct wl1271 *wl)
++{
++	struct acx_dco_itrim_params *dco;
++	struct conf_itrim_settings *c = &wl->conf.itrim;
++	int ret;
++
++	wl1271_debug(DEBUG_ACX, "acx dco itrim parameters");
++
++	dco = kzalloc(sizeof(*dco), GFP_KERNEL);
++	if (!dco) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	dco->enable = c->enable;
++	dco->timeout = cpu_to_le32(c->timeout);
++
++	ret = wl1271_cmd_configure(wl, ACX_SET_DCO_ITRIM_PARAMS,
++				   dco, sizeof(*dco));
++	if (ret < 0) {
++		wl1271_warning("failed to set dco itrim parameters: %d", ret);
++		goto out;
++	}
++
++out:
++	kfree(dco);
++	return ret;
++}
++
+ int wl1271_acx_beacon_filter_opt(struct wl1271 *wl, bool enable_filter)
+ {
+ 	struct acx_beacon_filter_option *beacon_filter = NULL;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
+index 2ce0a81..fa5d953 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.h
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
+@@ -434,6 +434,14 @@ struct acx_smart_reflex_config_params {
+ 	struct smart_reflex_err_table error_table[3];
+ } __attribute__ ((packed));
+ 
++struct acx_dco_itrim_params {
++	struct acx_header header;
++
++	u8 enable;
++	u8 padding[3];
++	__le32 timeout;
++} __attribute__ ((packed));
++
+ #define PTA_ANTENNA_TYPE_DEF		  (0)
+ #define PTA_BT_HP_MAXTIME_DEF		  (2000)
+ #define PTA_WLAN_HP_MAX_TIME_DEF	  (5000)
+@@ -1029,6 +1037,7 @@ enum {
+ 	ACX_SET_SMART_REFLEX_DEBUG  = 0x005A,
+ 	ACX_SET_SMART_REFLEX_STATE  = 0x005B,
+ 	ACX_SET_SMART_REFLEX_PARAMS = 0x005F,
++	ACX_SET_DCO_ITRIM_PARAMS    = 0x0061,
+ 	DOT11_RX_MSDU_LIFE_TIME     = 0x1004,
+ 	DOT11_CUR_TX_PWR            = 0x100D,
+ 	DOT11_RX_DOT11_MODE         = 0x1012,
+@@ -1056,6 +1065,7 @@ int wl1271_acx_group_address_tbl(struct wl1271 *wl, bool enable,
+ 				 void *mc_list, u32 mc_list_len);
+ int wl1271_acx_service_period_timeout(struct wl1271 *wl);
+ int wl1271_acx_rts_threshold(struct wl1271 *wl, u16 rts_threshold);
++int wl1271_acx_dco_itrim_params(struct wl1271 *wl);
+ int wl1271_acx_beacon_filter_opt(struct wl1271 *wl, bool enable_filter);
+ int wl1271_acx_beacon_filter_table(struct wl1271 *wl);
+ int wl1271_acx_conn_monit_params(struct wl1271 *wl);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_conf.h b/drivers/net/wireless/wl12xx/wl1271_conf.h
+index a4bd35b..905d428 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_conf.h
++++ b/drivers/net/wireless/wl12xx/wl1271_conf.h
+@@ -934,12 +934,21 @@ struct conf_init_settings {
+ 
+ };
+ 
++struct conf_itrim_settings {
++	/* enable dco itrim */
++	u8 enable;
++
++	/* moderation timeout in microsecs from the last TX */
++	u32 timeout;
++};
++
+ struct conf_drv_settings {
+ 	struct conf_sg_settings sg;
+ 	struct conf_rx_settings rx;
+ 	struct conf_tx_settings tx;
+ 	struct conf_conn_settings conn;
+ 	struct conf_init_settings init;
++	struct conf_itrim_settings itrim;
+ };
+ 
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
+index d72ccc6..39f01d8 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_init.c
++++ b/drivers/net/wireless/wl12xx/wl1271_init.c
+@@ -229,6 +229,10 @@ int wl1271_hw_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		goto out_free_memmap;
+ 
++	ret = wl1271_acx_dco_itrim_params(wl);
++	if (ret < 0)
++		goto out_free_memmap;
++
+ 	/* Initialize connection monitoring thresholds */
+ 	ret = wl1271_acx_conn_monit_params(wl);
+ 	if (ret < 0)
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 64f8623..8c44f4c 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -338,6 +338,10 @@ static struct conf_drv_settings default_conf = {
+ 			.degraded_low_to_normal_threshold_5 = 0x00,
+ 			.degraded_normal_to_high_threshold_5 = 0x00
+ 		}
++	},
++	.itrim = {
++		.enable = false,
++		.timeout = 50000,
+ 	}
+ };
+ 
+-- 
+1.6.3.3
+
