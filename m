@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50033 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756883AbZLDOve (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40522 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758236AbZLKOpO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Dec 2009 09:51:34 -0500
-Message-Id: <20091204143544.034718060@sipsolutions.net>
-Date: Fri, 04 Dec 2009 15:35:44 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Subject: [PATCH 0/4] off-channel work
-Mime-Version: 1.0
+	Fri, 11 Dec 2009 09:45:14 -0500
+Date: Fri, 11 Dec 2009 09:42:22 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stefan Seyfried <stefan.seyfried@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/2] Add support for Sphairon Homelink 1202 USB WLAN
+Message-ID: <20091211144221.GA6663@tuxdriver.com>
+References: <1260282095-17042-1-git-send-email-stefan.seyfried@googlemail.com> <20091211133603.46bec686@strolchi.home.s3e.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091211133603.46bec686@strolchi.home.s3e.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The new work stuff was just a stepping stone, now
-we can support telling an interface to go to a
-different channel than the operating channel, sit
-there for a while listening to frames (eventually
-also sending frames like public action) and then
-come back.
+On Fri, Dec 11, 2009 at 01:36:03PM +0100, Stefan Seyfried wrote:
+> On Tue,  8 Dec 2009 15:21:33 +0100
+> Stefan Seyfried <stefan.seyfried@googlemail.com> wrote:
+> 
+> > From: Stefan Seyfried <seife@sphairon.com>
+> > 
+> > The following two trivial patches add support for this device to
+> > zd1211rw (ejecting the virtual USB drive) and ar9170usb (that drives
+> > the WLAN chip inside).
+> 
+> Is anyhting wrong with those?
+> Are those too trivial and "USB only" and thus better suited for direct
+> submission to Greg?
 
-johannes
----
- include/linux/nl80211.h    |   36 +++++
- include/net/cfg80211.h     |   47 +++++++
- net/mac80211/Makefile      |    2 
- net/mac80211/cfg.c         |   24 +++
- net/mac80211/ieee80211_i.h |   28 ++++
- net/mac80211/main.c        |    3 
- net/mac80211/mlme.c        |   17 --
- net/mac80211/offchannel.c  |  160 ++++++++++++++++++++++++++
- net/mac80211/scan.c        |  144 -----------------------
- net/mac80211/work.c        |  271 +++++++++++++++++++++++++++++++++++----------
- net/wireless/chan.c        |   41 ++++--
- net/wireless/core.h        |    3 
- net/wireless/mlme.c        |   27 ++++
- net/wireless/nl80211.c     |  218 ++++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h     |   11 +
- 15 files changed, 803 insertions(+), 229 deletions(-)
+Trivial or not, they are wireless LAN patches and they go here.
 
+FWIW, you posted them in the middle of the maintainer's merge window
+for 2.6.33.  So for now only fixes are being merged.  I wasn't sure
+these qualified, although upon closer review they may.
+
+It strikes me as strange that you are hitting two drivers to support
+one device.  Are you saying that your ar9170usb has the goofy storage
+device thing using the same USB IDs that the zd1211rw devices like that
+used?  I suppose that makes some sense given the shared heritage...
+
+We did just have a long (and possibly unresolved thread) about
+this type of practice (i.e. eject in the driver) not too long ago.
+But since zd1211rw is already doing this, maybe this patch is
+acceptable...?
+
+Anyway, I have your patch.  Please be patient.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
