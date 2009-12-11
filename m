@@ -1,52 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:57215 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752827AbZLAJ2k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 04:28:40 -0500
-Subject: Re: Panic in iwl3945 driver
-From: Zhu Yi <yi.zhu@intel.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1259620526.6559.34.camel@maxim-laptop>
-References: <1259167780.4072.2.camel@maxim-laptop>
-	 <1259280022.3991.12.camel@maxim-laptop>
-	 <1259596551.4090.0.camel@maxim-laptop>  <1259617333.4653.91.camel@rc-desk>
-	 <1259620526.6559.34.camel@maxim-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 01 Dec 2009 17:28:44 +0800
-Message-ID: <1259659724.12157.110.camel@debian>
-Mime-Version: 1.0
+Received: from smtp.nokia.com ([192.100.122.233]:61318 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757339AbZLKNlW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Dec 2009 08:41:22 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 05/31] wl1271: use join command with dummy BSSID
+Date: Fri, 11 Dec 2009 15:40:44 +0200
+Message-Id: <1260538870-32297-6-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-12-01 at 06:35 +0800, Maxim Levitsky wrote:
-> 0x000000000001668e <iwl3945_rx_reply_tx+302>:	lea    0x38(%r8),%rdi
-> 0x0000000000016692 <iwl3945_rx_reply_tx+306>:	lea    0x4f(%r8),%rax
+When we need to change the channel before association, we have to send a join
+command with a valid BSSID.  With this patch we use 0baddeadbeef as the
+BSSID.  There are ongoing discussions with TI to get this done in a cleaner
+way.
 
-When this happened, from your previous post, r8 is 0x0 and rdi is 0x38.
-Since "info" is %rdi (see below), this means
-txq->txb[txq->q.read_ptr].skb[0], aka. r8 is 0.
+When we go back to idle, we issue a CMD_DISCONNECT to make sure the firmware
+stops listening to the channel and cleans things up internally.
 
-> 	rate_idx = iwl3945_hwrate_to_plcp_idx(tx_resp->rate);
-> 
-> 0x0000000000016696 <iwl3945_rx_reply_tx+310>:	movb   $0x0,0x9(%rdi)        <---------- RIP
-> 0x000000000001669a <iwl3945_rx_reply_tx+314>:	movb   $0x0,0xc(%rdi)
-> 0x000000000001669e <iwl3945_rx_reply_tx+318>:	movb   $0x0,0xf(%rdi)
-> 0x00000000000166a2 <iwl3945_rx_reply_tx+322>:	movb   $0x0,0x12(%rdi)
-> 0x00000000000166a6 <iwl3945_rx_reply_tx+326>:	movb   $0x0,0x15(%rdi)
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |   75 +++++++++++++++++++++++++----
+ 1 files changed, 65 insertions(+), 10 deletions(-)
 
-This equals to below code in ieee80211_tx_info_clear_status(). "info" is
-%rdi, which is 0x38. That matches NULL pointer dereference at 0x41 in
-your oops header.
-
-	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
-                info->status.rates[i].count = 0;
-
-I guess there is a race for txq->q.read_ptr somewhere. Haven't checked
-though.
-
-Thanks,
--yi
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index f1cb7cb..f6d42e6 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1130,6 +1130,47 @@ out:
+ }
+ #endif
+ 
++static int wl1271_join_channel(struct wl1271 *wl, int channel)
++{
++	int ret;
++	/* we need to use a dummy BSSID for now */
++	static const u8 dummy_bssid[ETH_ALEN] = { 0x0b, 0xad, 0xde,
++						  0xad, 0xbe, 0xef };
++
++	/* disable mac filter, so we hear everything */
++	wl->rx_config &= ~CFG_BSSID_FILTER_EN;
++
++	wl->channel = channel;
++	memcpy(wl->bssid, dummy_bssid, ETH_ALEN);
++
++	ret = wl1271_cmd_join(wl);
++	if (ret < 0)
++		goto out;
++
++	wl->joined = true;
++
++out:
++	return ret;
++}
++
++static int wl1271_unjoin_channel(struct wl1271 *wl)
++{
++	int ret;
++
++	/* to stop listening to a channel, we disconnect */
++	ret = wl1271_cmd_disconnect(wl);
++	if (ret < 0)
++		goto out;
++
++	wl->joined = false;
++	wl->channel = 0;
++	memset(wl->bssid, 0, ETH_ALEN);
++	wl->rx_config = WL1271_DEFAULT_RX_CONFIG;
++
++out:
++	return ret;
++}
++
+ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct wl1271 *wl = hw->priv;
+@@ -1138,10 +1179,11 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 	channel = ieee80211_frequency_to_channel(conf->channel->center_freq);
+ 
+-	wl1271_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d",
++	wl1271_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d %s",
+ 		     channel,
+ 		     conf->flags & IEEE80211_CONF_PS ? "on" : "off",
+-		     conf->power_level);
++		     conf->power_level,
++		     conf->flags & IEEE80211_CONF_IDLE ? "idle" : "in use");
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+@@ -1151,16 +1193,17 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	if (channel != wl->channel) {
+-		/*
+-		 * We assume that the stack will configure the right channel
+-		 * before associating, so we don't need to send a join
+-		 * command here.  We will join the right channel when the
+-		 * BSSID changes
+-		 */
+-		wl->channel = channel;
++	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
++		if (conf->flags & IEEE80211_CONF_IDLE && wl->joined)
++			wl1271_unjoin_channel(wl);
++		else
++			wl1271_join_channel(wl, channel);
+ 	}
+ 
++	/* if the channel changes while joined, join again */
++	if (channel != wl->channel && wl->joined)
++		wl1271_join_channel(wl, channel);
++
+ 	if (conf->flags & IEEE80211_CONF_PS && !wl->psm_requested) {
+ 		wl1271_info("psm enabled");
+ 
+@@ -1494,6 +1537,18 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
+ 
++	if ((changed & BSS_CHANGED_BSSID) &&
++	    /*
++	     * Now we know the correct bssid, so we send a new join command
++	     * and enable the BSSID filter
++	     */
++	    memcmp(wl->bssid, bss_conf->bssid, ETH_ALEN)) {
++			wl->rx_config |= CFG_BSSID_FILTER_EN;
++			memcpy(wl->bssid, bss_conf->bssid, ETH_ALEN);
++			wl1271_cmd_join(wl);
++			wl->joined = true;
++	}
++
+ 	if (changed & BSS_CHANGED_ASSOC) {
+ 		if (bss_conf->assoc) {
+ 			wl->aid = bss_conf->aid;
+-- 
+1.6.3.3
 
