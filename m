@@ -1,46 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:48849 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751373AbZLWBQq (ORCPT
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:51800 "EHLO
+	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754022AbZLKMgC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2009 20:16:46 -0500
-MIME-Version: 1.0
-In-Reply-To: <20091222175939.GF4385@tux>
-References: <20091222022355.GA32508@bombadil.infradead.org>
-	<19248.19829.293087.367661@gargle.gargle.HOWL> <20091222155005.GA4385@tux>
-	<20091222162055.GC4385@tux> <20091222165528.GE4385@tux> <20091222175939.GF4385@tux>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 22 Dec 2009 17:16:25 -0800
-Message-ID: <43e72e890912221716r64ea4542qd747302b536a3156@mail.gmail.com>
-Subject: Re: Asus eeepc 1008HA suspend issue and mac80211 suspend corner case
-To: Luis Rodriguez <Luis.Rodriguez@atheros.com>
-Cc: Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Jonathan May <jonathan.may@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 11 Dec 2009 07:36:02 -0500
+Date: Fri, 11 Dec 2009 13:36:03 +0100
+From: Stefan Seyfried <stefan.seyfried@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/2] Add support for Sphairon Homelink 1202 USB WLAN
+Message-ID: <20091211133603.46bec686@strolchi.home.s3e.de>
+In-Reply-To: <1260282095-17042-1-git-send-email-stefan.seyfried@googlemail.com>
+References: <1260282095-17042-1-git-send-email-stefan.seyfried@googlemail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-OK I have to go now but I managed to get this working without the
-issue coming up. At this point I am not sure if all of these are
-required but I cherry picked 2 patches from wireless-testing and then
-added 4, one based on sujith's suggestion.
+On Tue,  8 Dec 2009 15:21:33 +0100
+Stefan Seyfried <stefan.seyfried@googlemail.com> wrote:
 
-http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0001-mac80211-fix-resume.patch
-http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0002-mac80211-fix-WMM-AP-settings-application.patch
+> From: Stefan Seyfried <seife@sphairon.com>
+> 
+> The following two trivial patches add support for this device to
+> zd1211rw (ejecting the virtual USB drive) and ar9170usb (that drives
+> the WLAN chip inside).
 
-http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0003-ath9k-set-and-restore-ps-prior-to-stop-and-interface.patch
-http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0004-ath9k-ensure-hardware-is-awake-during-ampdu-TX-actio.patch
+Is anyhting wrong with those?
+Are those too trivial and "USB only" and thus better suited for direct
+submission to Greg?
 
-http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0005-ath9k-synch-TX-DMA-buffer-upon-TX-cancelation.patch
-http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0006-ath9k-do-not-wake-up-device-if-it-hasn-t-been-starte.patch
+Thanks,
 
-Its likely only patch 3, 4, and 6 are the only ones required. In fact
-maybe even 6 will fix it, but I just gotta go so cannot test that. I
-was able to resume about 10 times consecutively which I was unable to
-do before.
+	Stefan
+-- 
+Stefan Seyfried
 
-  Luis
+"Any ideas, John?"
+"Well, surrounding them's out."
