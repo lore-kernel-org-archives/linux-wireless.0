@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:61134 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753031AbZLNGQF (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:60600 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757976AbZLKNmH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 01:16:05 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so783422eyd.19
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Dec 2009 22:16:03 -0800 (PST)
-To: Satanand Burla <Satanand_Burla@phoenix.com>
-Cc: "ath9k-devel\@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k ps poll performance
-References: <6D80BDFB1A1FA74DA476417C24C452A10251AB5773@scl-exch2k7.phoenix.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Mon, 14 Dec 2009 08:16:00 +0200
-In-Reply-To: <6D80BDFB1A1FA74DA476417C24C452A10251AB5773@scl-exch2k7.phoenix.com> (Satanand Burla's message of "Sat\, 12 Dec 2009 14\:58\:12 -0800")
-Message-ID: <871viy13of.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 11 Dec 2009 08:42:07 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH v2 31/31] wl1271: Prevent performing "join" before association
+Date: Fri, 11 Dec 2009 15:41:10 +0200
+Message-Id: <1260538870-32297-32-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Satanand Burla <Satanand_Burla@phoenix.com> writes:
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-> for example with the same wep AP, I get around 150 to 200 Kbps
-> without enabling ps poll.
+There is a minor bug in the code causing a "join" to be performed before
+there is an intention to associate. Fix this.
 
-That's very low. What kind of test are you using here?
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> but if I enable ps poll with the above settings, I get only around
-> 20 Kbps and the packet loss is around 20 to 30%.
->
-> My question is, is this the expected speed drop when turning on ps
-> poll ? Or is this a problem with the driver that still needs to be
-> addressed ?
-
-With PS-Poll (ie. timeout is zero) you should still get in range of
-megabits per second and no packet loss. So something is wrong.
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 7e6b500..4a99738 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1223,7 +1223,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		if (conf->flags & IEEE80211_CONF_IDLE &&
+ 		    test_bit(WL1271_FLAG_JOINED, &wl->flags))
+ 			wl1271_unjoin_channel(wl);
+-		else
++		else if (!(conf->flags & IEEE80211_CONF_IDLE))
+ 			wl1271_join_channel(wl, channel);
+ 
+ 		if (conf->flags & IEEE80211_CONF_IDLE) {
 -- 
-Kalle Valo
+1.6.3.3
+
