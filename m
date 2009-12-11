@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f198.google.com ([209.85.211.198]:35344 "EHLO
-	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758506AbZLJCnh (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:63534 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762362AbZLKLlr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2009 21:43:37 -0500
-Received: by ywh36 with SMTP id 36so7298422ywh.15
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2009 18:43:44 -0800 (PST)
-From: Javier Cardona <javier@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>,
-	Andrey Yurovsky <andrey@cozybit.com>, stable@kernel.org,
-	linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH 1/2] mac80211: Fixed bug in mesh portal paths
-Date: Wed,  9 Dec 2009 18:43:00 -0800
-Message-Id: <1260412981-2982-1-git-send-email-javier@cozybit.com>
+	Fri, 11 Dec 2009 06:41:47 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 10/31] wl1271: use the correct macro when setting the basic rates
+Date: Fri, 11 Dec 2009 13:41:01 +0200
+Message-Id: <1260531682-4695-11-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
+References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Paths to mesh portals were being timed out immediately after each use in
-intermediate forwarding nodes.  mppath->exp_time is set to the expiration time
-so assigning it to jiffies was marking the path as expired.
+We were using CONF_TX_RATE_MASK_ALL when calling wl1271_acx_rate_policies()
+during init.  We should use WL1271_DEFAULT_BASIC_RATE_SET instead.  The
+values are the same, but the latter is just the correct macro to use.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
- net/mac80211/rx.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ drivers/net/wireless/wl12xx/wl1271_init.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 8b3faa8..3d88541 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1712,7 +1712,6 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 			mpp_path_add(proxied_addr, mpp_addr, sdata);
- 		} else {
- 			spin_lock_bh(&mppath->state_lock);
--			mppath->exp_time = jiffies;
- 			if (compare_ether_addr(mppath->mpp, mpp_addr) != 0)
- 				memcpy(mppath->mpp, mpp_addr, ETH_ALEN);
- 			spin_unlock_bh(&mppath->state_lock);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
+index 11249b4..d72ccc6 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_init.c
++++ b/drivers/net/wireless/wl12xx/wl1271_init.c
+@@ -280,7 +280,7 @@ int wl1271_hw_init(struct wl1271 *wl)
+ 		goto out_free_memmap;
+ 
+ 	/* Configure TX rate classes */
+-	ret = wl1271_acx_rate_policies(wl, CONF_TX_RATE_MASK_ALL);
++	ret = wl1271_acx_rate_policies(wl, WL1271_DEFAULT_BASIC_RATE_SET);
+ 	if (ret < 0)
+ 		goto out_free_memmap;
+ 
 -- 
 1.6.3.3
 
