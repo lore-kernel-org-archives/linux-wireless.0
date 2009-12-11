@@ -1,134 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([143.182.124.22]:38195 "EHLO
-	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S935517AbZLGRGS (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:63543 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762569AbZLKLlv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2009 12:06:18 -0500
-Date: Mon, 7 Dec 2009 09:06:23 -0800
-From: mark gross <mgross@linux.intel.com>
-To: linux-pm <linux-pm@lists.linux-foundation.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, aili@codeaurora.org,
-	e1000-devel@lists.sourceforge.net, bruce.w.allan@intel.com,
-	linux-wireless@vger.kernel.org, alsa-devel@alsa-project.org,
-	tiwai@suse.de
-Subject: [PATCH]PM_QOS-to-use-handle-based-requests-network-update 3/5
-Message-ID: <20091207170623.GD5463@linux.intel.com>
-Reply-To: mgross@linux.intel.com
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 11 Dec 2009 06:41:51 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 14/31] wl1271: upload only the first 468 bytes from the NVS file
+Date: Fri, 11 Dec 2009 13:41:05 +0200
+Message-Id: <1260531682-4695-15-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
+References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We were uploading the whole NVS file, but that is wrong, because the same
+file also contains the initialization values.  For the latest firmwares, we
+should upload only the initial 468 bytes from the file.
 
-
-Signed-off-by: mark gross <mgross@linux.intel.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
- drivers/net/e1000e/netdev.c |   22 ++++++++++++----------
- drivers/net/igbvf/netdev.c  |    6 ++++--
- include/linux/netdevice.h   |    4 ++++
- 3 files changed, 20 insertions(+), 12 deletions(-)
+ drivers/net/wireless/wl12xx/wl1271.h      |    1 +
+ drivers/net/wireless/wl12xx/wl1271_boot.c |    8 +++++++-
+ 2 files changed, 8 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/e1000e/netdev.c b/drivers/net/e1000e/netdev.c
-index c3105c5..939f8f9 100644
---- a/drivers/net/e1000e/netdev.c
-+++ b/drivers/net/e1000e/netdev.c
-@@ -2518,12 +2518,12 @@ static void e1000_configure_rx(struct e1000_adapter *adapter)
- 			 * excessive C-state transition latencies result in
- 			 * dropped transactions.
- 			 */
--			pm_qos_update_requirement(PM_QOS_CPU_DMA_LATENCY,
--						  adapter->netdev->name, 55);
-+			pm_qos_update_request(
-+				adapter->netdev->pm_qos_req, 55);
- 		} else {
--			pm_qos_update_requirement(PM_QOS_CPU_DMA_LATENCY,
--						  adapter->netdev->name,
--						  PM_QOS_DEFAULT_VALUE);
-+			pm_qos_update_request(
-+				adapter->netdev->pm_qos_req,
-+				PM_QOS_DEFAULT_VALUE);
- 		}
- 	}
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index 3bec6f3..8dfc9ec 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -111,6 +111,7 @@ enum {
  
-@@ -2833,8 +2833,8 @@ int e1000e_up(struct e1000_adapter *adapter)
+ #define WL1271_FW_NAME "wl1271-fw.bin"
+ #define WL1271_NVS_NAME "wl1271-nvs.bin"
++#define WL1271_NVS_LEN  468
  
- 	/* DMA latency requirement to workaround early-receive/jumbo issue */
- 	if (adapter->flags & FLAG_HAS_ERT)
--		pm_qos_add_requirement(PM_QOS_CPU_DMA_LATENCY,
--		                       adapter->netdev->name,
-+		adapter->netdev->pm_qos_req =
-+			pm_qos_add_request(PM_QOS_CPU_DMA_LATENCY,
- 				       PM_QOS_DEFAULT_VALUE);
+ /*
+  * Enable/disable 802.11a support for WL1273
+diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
+index b7c9645..e803b87 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_boot.c
++++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
+@@ -225,9 +225,15 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
+ 	if (nvs == NULL)
+ 		return -ENODEV;
  
- 	/* hardware has been reset, we need to reload some things */
-@@ -2897,9 +2897,11 @@ void e1000e_down(struct e1000_adapter *adapter)
- 	e1000_clean_tx_ring(adapter);
- 	e1000_clean_rx_ring(adapter);
- 
--	if (adapter->flags & FLAG_HAS_ERT)
--		pm_qos_remove_requirement(PM_QOS_CPU_DMA_LATENCY,
--		                          adapter->netdev->name);
-+	if (adapter->flags & FLAG_HAS_ERT) {
-+		pm_qos_remove_request(
-+			      adapter->netdev->pm_qos_req);
-+		adapter->netdev->pm_qos_req = NULL;
-+	}
- 
- 	/*
- 	 * TODO: for power management, we could drop the link and
-diff --git a/drivers/net/igbvf/netdev.c b/drivers/net/igbvf/netdev.c
-index a127620..6751da8 100644
---- a/drivers/net/igbvf/netdev.c
-+++ b/drivers/net/igbvf/netdev.c
-@@ -47,6 +47,7 @@
- #define DRV_VERSION "1.0.0-k0"
- char igbvf_driver_name[] = "igbvf";
- const char igbvf_driver_version[] = DRV_VERSION;
-+struct pm_qos_request_list *igbvf_driver_pm_qos_req;
- static const char igbvf_driver_string[] =
- 				"Intel(R) Virtual Function Network Driver";
- static const char igbvf_copyright[] = "Copyright (c) 2009 Intel Corporation.";
-@@ -2912,7 +2913,7 @@ static int __init igbvf_init_module(void)
- 	printk(KERN_INFO "%s\n", igbvf_copyright);
- 
- 	ret = pci_register_driver(&igbvf_driver);
--	pm_qos_add_requirement(PM_QOS_CPU_DMA_LATENCY, igbvf_driver_name,
-+	igbvf_driver_pm_qos_req = pm_qos_add_request(PM_QOS_CPU_DMA_LATENCY,
- 	                       PM_QOS_DEFAULT_VALUE);
- 
- 	return ret;
-@@ -2928,7 +2929,8 @@ module_init(igbvf_init_module);
- static void __exit igbvf_exit_module(void)
- {
- 	pci_unregister_driver(&igbvf_driver);
--	pm_qos_remove_requirement(PM_QOS_CPU_DMA_LATENCY, igbvf_driver_name);
-+	pm_qos_remove_request(igbvf_driver_pm_qos_req);
-+	igbvf_driver_pm_qos_req = NULL;
- }
- module_exit(igbvf_exit_module);
- 
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index daf13d3..4437eb5 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -30,6 +30,7 @@
- #include <linux/if_packet.h>
- 
- #ifdef __KERNEL__
-+#include <linux/pm_qos_params.h>
- #include <linux/timer.h>
- #include <linux/delay.h>
- #include <linux/mm.h>
-@@ -693,6 +694,9 @@ struct net_device {
- 	 * the interface.
- 	 */
- 	char			name[IFNAMSIZ];
++	if (wl->nvs_len < WL1271_NVS_LEN)
++		return -EINVAL;
 +
-+	struct pm_qos_request_list *pm_qos_req;
+ 	nvs_ptr = nvs;
+ 
+-	nvs_len = wl->nvs_len;
++	/* only the first part of the NVS needs to be uploaded */
++	nvs_len = WL1271_NVS_LEN;
 +
- 	/* device name hash chain */
- 	struct hlist_node	name_hlist;
- 	/* snmp alias */
++	/* FIXME: read init settings from the remaining part of the NVS */
+ 
+ 	/* Update the device MAC address into the nvs */
+ 	nvs[11] = wl->mac_addr[0];
 -- 
 1.6.3.3
 
