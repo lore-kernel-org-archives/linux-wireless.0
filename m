@@ -1,51 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:39426 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750805AbZLTGvi (ORCPT
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:60916 "EHLO
+	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758875AbZLKPk1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2009 01:51:38 -0500
-Received: by iwn1 with SMTP id 1so3053556iwn.33
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Dec 2009 22:51:37 -0800 (PST)
+	Fri, 11 Dec 2009 10:40:27 -0500
+Received: by fxm21 with SMTP id 21so1138015fxm.1
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Dec 2009 07:40:33 -0800 (PST)
+From: Holger Schurig <holgerschurig@googlemail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: Switching channel in IBSS network doesn't work in ath9k
+Date: Fri, 11 Dec 2009 17:39:55 +0100
+Cc: Holger Schurig <holgerschurig@googlemail.com>,
+	Joerg Pommnitz <pommnitz@yahoo.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+References: <500577.32161.qm@web51405.mail.re2.yahoo.com> <200912101846.40572.holgerschurig@gmail.com> <43e72e890912100914m1766db5fife6563fec3807b8d@mail.gmail.com>
+In-Reply-To: <43e72e890912100914m1766db5fife6563fec3807b8d@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4b2daf91.VB5IdAW/+fSDNPPV%Larry.Finger@lwfinger.net>
-References: <4b2daf91.VB5IdAW/+fSDNPPV%Larry.Finger@lwfinger.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sat, 19 Dec 2009 22:51:17 -0800
-Message-ID: <43e72e890912192251r4de4a3c3idb5e4c3723ef87aa@mail.gmail.com>
-Subject: Re: [PATCH] b43: Clear PCI configuration reg. 0x41 to avoid
-	interference with C3 processor state
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200912111739.55225.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 19, 2009 at 9:01 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> In exploring the cause of DMA errors for BCM4312 devices on Atom
-> processors, other drivers that work write to PCI configuration
-> register 0x40. The code fragment below was found in the open-code
-> portion of the Broadcom hybrid wl driver. It is also used in the
-> ipw2100 and ath9k drivers. In the latter case, it had been removed
-> and later restored to prevent fatal interrupt errors.
+> Actually I think a simple 'iw link' to do this for all interfaces
+> would be good. I just haven't gotten around to it. I should be
+> possible without upstream changes I believe.
 
-I should note 0x40 starts with vendor specific PCI config space so you
-cannot guarantee different PCI devices use 0x41 will be used the same
-for different devices. The documentation for the ath9k PCI-E devices
-used that entry for something completely different but what I did not
-do is try to very and ensure PCI devices do not use it it for the
-same. I am told though that although this is PCI vendor space some
-devices may still use similar private PCI config spaces on different
-devices which just follows a practice. At this point we now have not
-only b43, ipw and ath9k follow this but also prism54 and I think p54
-uses this. I'll note I *highly* doubt this is used for the same thing
-on all these devices and was just code copied from other Linux
-drivers. In the case of Atheros Linux drivers I know it was copied
-form Intel drivers, which is why I started questioning it all.
+Do you think that "iw link" should also show then info when the device is in 
+monitor mode (e.g. return the flags) or in IBSS mode?  And probably also 
+reporting parts of the survey data, e.g. noise floor?
 
-Anyway, if it helps, that's great :) but it cannot be concluded its
-all for the same thing unless you have proper documentation as this is
-in PCI vendor space which *can* vary depending on device and vendor.
+That would be the equivalent of a "give me the greatest amount of info 
+quickly" :-)
 
-  Luis
+-- 
+http://www.holgerschurig.de
