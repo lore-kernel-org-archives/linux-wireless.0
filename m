@@ -1,45 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1-g21.free.fr ([212.27.42.1]:43432 "EHLO smtp1-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753267AbZLCVg3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2009 16:36:29 -0500
-Message-ID: <4B182F5B.2010806@free.fr>
-Date: Thu, 03 Dec 2009 22:36:27 +0100
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
-MIME-Version: 1.0
-To: rt2x00 Users List <users@rt2x00.serialmonkey.com>
-CC: Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] [PATCH v3 0/4] Further L2 padding fixes.
-References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com>	<4B163956.1060709@free.fr>	<14add3d10912030132r251779efq10dc08768aefd8c1@mail.gmail.com> <200912031936.12557.IvDoorn@gmail.com>
-In-Reply-To: <200912031936.12557.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from xc.sipsolutions.net ([83.246.72.84]:60219 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750855AbZLKNAU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Dec 2009 08:00:20 -0500
+Subject: Re: [RFC] mac80211: disallow bridging managed/adhoc interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Markus Baier <Markus_Baier@web.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <loom.20091211T133913-639@post.gmane.org>
+References: <1258465585.3682.7.camel@johannes.local>
+	 <loom.20091211T133913-639@post.gmane.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-+ho1aeSDHsQunNvhEK8d"
+Date: Fri, 11 Dec 2009 14:00:25 +0100
+Message-ID: <1260536425.2442.199.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ivo van Doorn a écrit :
->>> * L2PAD is only present for data frame and an easy way to check for that is
->>> * to compare header_length with 24 bytes.
->>> */
->>> #define L2PAD_SIZE(__header) \
->>>      ((__header)<24 ? 0 : ((4 - ((__header)%4))%4))
->>>
->> That depends on what the purpose of the L2PAD_SIZE macro is going to
->> be. At the moment
->> the intention is to have L2PAD_SIZE compute the number of l2pad bytes
->> necessary, if a
->> payload is present. Detection on whether actually a payload is present
->> and whether the
->> outcome of this macro should be used should be at the call-sites of this macro.
-> 
-> I personally prefer the current version, I don't see a valid reason for
-> L2PAD_SIZE to depend on the header size. The caller should check if
-> the payload is present and L2 padding is required.
-> 
-> Ivo
 
-Let's move forward and fix bugs later, if any. Just for my curiosity,
-who is commiting posted patches in wireless-testing?
+--=-+ho1aeSDHsQunNvhEK8d
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Regards,
-Benoit
+On Fri, 2009-12-11 at 12:39 +0000, Markus Baier wrote:
+> Johannes Berg <johannes@...> writes:
+>=20
+> > To avoid such mistakes in the future, disallow adding a
+> > wireless interface to a bridge.
+>=20
+> Hello,
+> after the latest git pull my Linux AP stopt working
+> because the system is not allowed to add the wlan0
+> interface to a bridge.
+
+You're mistaken. You _can_ still bridge an AP interface, it just needs
+to be in AP mode. You should be using hostapd to control the bridging.
+
+johannes
+
+--=-+ho1aeSDHsQunNvhEK8d
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLIkJmAAoJEODzc/N7+QmalQoP/27uY9GPdF/oA0tB63Mz8U5c
+LOw1AjLxTIQqugmxMQqEKJjwKO3/pTzegiUsHOzFJqHbPdRJb+YwWQsGOBuY3Ehd
+yiGYWQ6x44pG9wyrEU66eirUgn70/jjk2TR2Hvf5eyuBGiGfowxM8pzduOFV9LTB
+ehVTzuew8G2R9us0MPCciw+RrLi5Fw2yQZXpFE5WCdPc+b/+i/M8VBDgSBtxJIJM
++rUmOd/2B1Tlwshy8hx33tNDWIHfMxNWbuO78g9sJy/gqX9dcFZhJTRseKFUVmst
+vCNVebHZk4TOTyVXoCoO8VA0C1qQfJXEISIB6B7VTz/vI88yBlMPNY5uqmfxKTsk
+Fqlm/QJ02wX96RVa0CfJcLImUJzDjKNnVkRJ8pPKu59GFmS+4NtA8frfHyn7lbkt
+YcLJLZkwpqKPKTDj5z3X2V7VRj6cK6P1F2m6d72SAIGm0ExaG4eX1ZrGhUUkXXH4
+afMygDfNLEov8snTyo7IO0SX/XbUyuu/HxVxOLROgVG/7V0s3LipM+BKx5l/6lD1
+QKtqNNBkmYLBBuXrPwArfwLtsGXfdC5TM+4sCrTGnRyzza6MVbxqdvx25urBlcc9
+9+Rwv0Bkz+lTDtD8kwm51vW8WbwSWcikYI9drBP/F4ibcivWf2TcuzGwxKrLSnxe
+3zw9q2ognek6jMr1VwE8
+=ybnV
+-----END PGP SIGNATURE-----
+
+--=-+ho1aeSDHsQunNvhEK8d--
+
