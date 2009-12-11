@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:49360 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755555AbZLCSn1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2009 13:43:27 -0500
-Received: by ewy2 with SMTP id 2so892708ewy.28
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Dec 2009 10:43:33 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [rt2x00-users] [PATCH v3 0/4] Further L2 padding fixes.
-Date: Thu, 3 Dec 2009 19:36:12 +0100
-Cc: Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless@vger.kernel.org
-References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com> <4B163956.1060709@free.fr> <14add3d10912030132r251779efq10dc08768aefd8c1@mail.gmail.com>
-In-Reply-To: <14add3d10912030132r251779efq10dc08768aefd8c1@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200912031936.12557.IvDoorn@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:10151 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757738AbZLKIK5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Dec 2009 03:10:57 -0500
+Subject: Re: mmotm-2009-12-08-17-45 resume slowly
+From: Zhu Yi <yi.zhu@intel.com>
+To: Dave Young <hidave.darkstar@gmail.com>
+Cc: Nigel Cunningham <ncunningham@crca.org.au>,
+	KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>
+In-Reply-To: <a8e1da0912101935g99a0902m43136a05edea938b@mail.gmail.com>
+References: <a8e1da0912100127k4dcddd65gfe5ff0b1330fe63b@mail.gmail.com>
+	 <a8e1da0912100130i2e654796mf899dd27df869673@mail.gmail.com>
+	 <20091210184931.257A.A69D9226@jp.fujitsu.com>
+	 <4B217219.6040109@crca.org.au>
+	 <a8e1da0912101747l7e0e9fcbh8a7007e95e7c8509@mail.gmail.com>
+	 <1260499048.12157.219.camel@debian>
+	 <a8e1da0912101935g99a0902m43136a05edea938b@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 11 Dec 2009 16:10:40 +0800
+Message-ID: <1260519040.12157.233.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > * L2PAD is only present for data frame and an easy way to check for that is
-> > * to compare header_length with 24 bytes.
-> > */
-> > #define L2PAD_SIZE(__header) \
-> >      ((__header)<24 ? 0 : ((4 - ((__header)%4))%4))
-> >
+On Fri, 2009-12-11 at 11:35 +0800, Dave Young wrote:
+> > Try powering off the AP before resume?
 > 
-> That depends on what the purpose of the L2PAD_SIZE macro is going to
-> be. At the moment
-> the intention is to have L2PAD_SIZE compute the number of l2pad bytes
-> necessary, if a
-> payload is present. Detection on whether actually a payload is present
-> and whether the
-> outcome of this macro should be used should be at the call-sites of this macro.
+> Unfortunately, I use public wireless resouce, so I cann't do that. 
 
-I personally prefer the current version, I don't see a valid reason for
-L2PAD_SIZE to depend on the header size. The caller should check if
-the payload is present and L2 padding is required.
+Then move the laptop away.
 
-Ivo
+Thanks,
+-yi
+
