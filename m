@@ -1,44 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:55734 "EHLO
-	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966530AbZLHV4P (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:61332 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757290AbZLKNlZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 16:56:15 -0500
-Message-ID: <4B1ECB84.6010009@gmail.com>
-Date: Tue, 08 Dec 2009 22:56:20 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Andi Kleen <andi@firstfloor.org>,
-	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
-	linux-wireless@vger.kernel.org, Tim Blechmann <tim@klingt.org>,
-	rjw@sisk.pl, IvDoorn@gmail.com, linville@tuxdriver.com
-Subject: Re: regression: rt2561 frequent "Arrived at non-free entry" errors
- in 	2.6.32
-References: <20091204233202.GA13658@basil.fritz.box>	 <4B1BB44E.90706@gmail.com>	 <200912080006.28892.s.L-H@gmx.de>	 <20091208095755.GT18989@one.firstfloor.org>	 <14add3d10912080219u17c65cbemf6d56290a8f12efd@mail.gmail.com>	 <4B1EC842.7040407@gmail.com> <1260308669.32227.2.camel@johannes.local>
-In-Reply-To: <1260308669.32227.2.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 11 Dec 2009 08:41:25 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 06/31] wl1271: remove workaround for disconnection
+Date: Fri, 11 Dec 2009 15:40:45 +0200
+Message-Id: <1260538870-32297-7-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/08/09 22:44, Johannes Berg wrote:
-> On Tue, 2009-12-08 at 22:42 +0100, Gertjan van Wingerde wrote:
-> 
->> OK. Please try again with the attached patch. Basically it disables going
->> to sleep when there are still unacknowledged frames in the TX queues.
->> This mirrors the behavior of the Ralink provided drivers.
-> 
-> Kinda looks like you forgot to actually make it go to sleep once the
-> queues are drained though?
-> 
+Now we're using a the idle information coming from mac80211 to decide when to
+disconnect.  If we have joined (ie. we're listening to a channel), whenever
+the interface goes to idle, we will issue a disconnect command.  So the
+workaround to send a disconnect command before joining is not needed anymore.
 
-Well, this is a test patch, to validate my theory that this is where the problem is.
-If that is confirmed, then I can start working out a proper solution.
-
-How does mac80211 look at these things anyway. How does it expect the driver to handle
-the cases where mac80211 asks the driver to go to sleep because of power saving, and
-the driver can't because its queues haven't drained yet?
-
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
-Gertjan.
+ drivers/net/wireless/wl12xx/wl1271_cmd.c |   15 ---------------
+ 1 files changed, 0 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+index 57c2145..ceb1ca6 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+@@ -344,19 +344,6 @@ int wl1271_cmd_join(struct wl1271 *wl)
+ 			do_cal = false;
+ 	}
+ 
+-	/* FIXME: This is a workaround, because with the current stack, we
+-	 * cannot know when we have disassociated.  So, if we have already
+-	 * joined, we disconnect before joining again. */
+-	if (wl->joined) {
+-		ret = wl1271_cmd_disconnect(wl);
+-		if (ret < 0) {
+-			wl1271_error("failed to disconnect before rejoining");
+-			goto out;
+-		}
+-
+-		wl->joined = false;
+-	}
+-
+ 	join = kzalloc(sizeof(*join), GFP_KERNEL);
+ 	if (!join) {
+ 		ret = -ENOMEM;
+@@ -421,8 +408,6 @@ int wl1271_cmd_join(struct wl1271 *wl)
+ 		goto out_free;
+ 	}
+ 
+-	wl->joined = true;
+-
+ 	/*
+ 	 * ugly hack: we should wait for JOIN_EVENT_COMPLETE_ID but to
+ 	 * simplify locking we just sleep instead, for now
+-- 
+1.6.3.3
 
