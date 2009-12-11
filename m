@@ -1,61 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.89]:24799 "EHLO
-	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754024AbZLAKUd (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:7684 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757244AbZLKPBV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 05:20:33 -0500
-Date: Tue, 1 Dec 2009 11:22:15 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iwmc3200wifi: fix NULL pointer dereference in pmkid
- update
-Message-ID: <20091201102214.GB6492@sortiz.org>
-References: <1259639330-8291-1-git-send-email-yi.zhu@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1259639330-8291-1-git-send-email-yi.zhu@intel.com>
+	Fri, 11 Dec 2009 10:01:21 -0500
+Date: Fri, 11 Dec 2009 16:01:24 +0100
+From: Stefan Seyfried <stefan.seyfried@googlemail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/2] Add support for Sphairon Homelink 1202 USB WLAN
+Message-ID: <20091211160124.4db2da76@strolchi.home.s3e.de>
+In-Reply-To: <20091211144221.GA6663@tuxdriver.com>
+References: <1260282095-17042-1-git-send-email-stefan.seyfried@googlemail.com>
+	<20091211133603.46bec686@strolchi.home.s3e.de>
+	<20091211144221.GA6663@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 01, 2009 at 11:48:50AM +0800, Zhu Yi wrote:
-> When handling IWM_CMD_PMKID_FLUSH command, the bssid and
-> pmkid in pmksa are all NULL. Check it before memcpy.
-> 
-> Cc: Samuel Ortiz <sameo@linux.intel.com>
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Acked-by: Samuel Ortiz <sameo@linux.intel.com>
+On Fri, 11 Dec 2009 09:42:22 -0500
+"John W. Linville" <linville@tuxdriver.com> wrote:
 
-Good catch, thanks Yi.
-
-Cheers,
-Samuel.
-
-> ---
->  drivers/net/wireless/iwmc3200wifi/commands.c |    6 ++++--
->  1 files changed, 4 insertions(+), 2 deletions(-)
+> On Fri, Dec 11, 2009 at 01:36:03PM +0100, Stefan Seyfried wrote:
+> > Is anyhting wrong with those?
+> > Are those too trivial and "USB only" and thus better suited for direct
+> > submission to Greg?
 > 
-> diff --git a/drivers/net/wireless/iwmc3200wifi/commands.c b/drivers/net/wireless/iwmc3200wifi/commands.c
-> index bd06307..89b33fa 100644
-> --- a/drivers/net/wireless/iwmc3200wifi/commands.c
-> +++ b/drivers/net/wireless/iwmc3200wifi/commands.c
-> @@ -970,8 +970,10 @@ int iwm_send_pmkid_update(struct iwm_priv *iwm,
->  	memset(&update, 0, sizeof(struct iwm_umac_pmkid_update));
->  
->  	update.command = cpu_to_le32(command);
-> -	memcpy(&update.bssid, pmksa->bssid, ETH_ALEN);
-> -	memcpy(&update.pmkid, pmksa->pmkid, WLAN_PMKID_LEN);
-> +	if (pmksa->bssid)
-> +		memcpy(&update.bssid, pmksa->bssid, ETH_ALEN);
-> +	if (pmksa->pmkid)
-> +		memcpy(&update.pmkid, pmksa->pmkid, WLAN_PMKID_LEN);
->  
->  	ret = iwm_send_wifi_if_cmd(iwm, &update,
->  				   sizeof(struct iwm_umac_pmkid_update), 0);
-> -- 
-> 1.6.0.4
-> 
+> Trivial or not, they are wireless LAN patches and they go here.
+
+That's what i guessed, too. I was just deafened by the silence ;)
+
+> It strikes me as strange that you are hitting two drivers to support
+> one device.  Are you saying that your ar9170usb has the goofy storage
+> device thing using the same USB IDs that the zd1211rw devices like that
+> used?  I suppose that makes some sense given the shared heritage...
+
+Yes, exactly. And a different configuration (different endpoint),
+that's why I had to touch the zd1211rw driver, even though it is
+otherwise totally unrelated to the device.
+
+The method with the reverse loop counting down from ep1 to ep0 was
+chosen to be as sure as possible to not break the other devices that
+are already working.
+
+> We did just have a long (and possibly unresolved thread) about
+> this type of practice (i.e. eject in the driver) not too long ago.
+> But since zd1211rw is already doing this, maybe this patch is
+> acceptable...?
+
+Maybe a separate driver that is ejecting all those fake storage
+devices, be it 3G modems or wireless LAN might be a good idea, but I am
+probably not the right one to code that ;)
+Or maybe we decide that userspace should handle it for all devices...
+
+> Anyway, I have your patch.  Please be patient.
+
+Thanks,
+
+	Stefan
 
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+Stefan Seyfried
+
+"Any ideas, John?"
+"Well, surrounding them's out."
