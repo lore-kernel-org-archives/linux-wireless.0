@@ -1,64 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:50888 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934058AbZLKLmh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 06:42:37 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 23/31] wl1271: Add pre-power-on sleep
-Date: Fri, 11 Dec 2009 13:41:14 +0200
-Message-Id: <1260531682-4695-24-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56359 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760919AbZLKTVX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Dec 2009 14:21:23 -0500
+Subject: Re: [PATCH 0/2] Add support for Sphairon Homelink 1202 USB WLAN
+From: Dan Williams <dcbw@redhat.com>
+To: Stefan Seyfried <stefan.seyfried@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20091211160124.4db2da76@strolchi.home.s3e.de>
+References: <1260282095-17042-1-git-send-email-stefan.seyfried@googlemail.com>
+	 <20091211133603.46bec686@strolchi.home.s3e.de>
+	 <20091211144221.GA6663@tuxdriver.com>
+	 <20091211160124.4db2da76@strolchi.home.s3e.de>
+Content-Type: text/plain
+Date: Fri, 11 Dec 2009 11:21:10 -0800
+Message-Id: <1260559270.6254.2.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Fri, 2009-12-11 at 16:01 +0100, Stefan Seyfried wrote:
+> On Fri, 11 Dec 2009 09:42:22 -0500
+> "John W. Linville" <linville@tuxdriver.com> wrote:
+> 
+> > On Fri, Dec 11, 2009 at 01:36:03PM +0100, Stefan Seyfried wrote:
+> > > Is anyhting wrong with those?
+> > > Are those too trivial and "USB only" and thus better suited for direct
+> > > submission to Greg?
+> > 
+> > Trivial or not, they are wireless LAN patches and they go here.
+> 
+> That's what i guessed, too. I was just deafened by the silence ;)
+> 
+> > It strikes me as strange that you are hitting two drivers to support
+> > one device.  Are you saying that your ar9170usb has the goofy storage
+> > device thing using the same USB IDs that the zd1211rw devices like that
+> > used?  I suppose that makes some sense given the shared heritage...
+> 
+> Yes, exactly. And a different configuration (different endpoint),
+> that's why I had to touch the zd1211rw driver, even though it is
+> otherwise totally unrelated to the device.
+> 
+> The method with the reverse loop counting down from ep1 to ep0 was
+> chosen to be as sure as possible to not break the other devices that
+> are already working.
+> 
+> > We did just have a long (and possibly unresolved thread) about
+> > this type of practice (i.e. eject in the driver) not too long ago.
+> > But since zd1211rw is already doing this, maybe this patch is
+> > acceptable...?
+> 
+> Maybe a separate driver that is ejecting all those fake storage
+> devices, be it 3G modems or wireless LAN might be a good idea, but I am
+> probably not the right one to code that ;)
+> Or maybe we decide that userspace should handle it for all devices...
 
-This patch adds a short delay before powering on the wl1271. Normally, it is
-not needed, but if the wl1271 has been powered off shortly before, for reliable
-firmware-booting this small stabilization delay is required.
+If the device actually changes USB IDs after the switch, then the right
+place to put this code is probably unusual_devs instead of
+touching /two/ drivers.  I'd say extract the code from zd1211rw and put
+the new code that works for both zd1211rw/ar9170 into unusual_devs.  In
+fact, people might be happier if you posted two patches, (1) move the
+code to unusual_devs unchanged, and (2) fix up the moved code to support
+the new device's behavior.
 
-Fixes: NB#143322 - Unable to power up WLAN: ERROR command complete timeout
+Dan
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271.h      |    4 +++-
- drivers/net/wireless/wl12xx/wl1271_main.c |    1 +
- 2 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 81e1c95..c965c4a 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -458,7 +458,9 @@ int wl1271_plt_stop(struct wl1271 *wl);
- 
- #define WL1271_TX_QUEUE_MAX_LENGTH 20
- 
--/* WL1271 needs a 200ms sleep after power on */
-+/* WL1271 needs a 200ms sleep after power on, and a 20ms sleep before power
-+   on in case is has been shut down shortly before */
-+#define WL1271_PRE_POWER_ON_SLEEP 20 /* in miliseconds */
- #define WL1271_POWER_ON_SLEEP 200 /* in miliseconds */
- 
- static inline bool wl1271_11a_enabled(void)
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 9eba54f..446fb26 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -618,6 +618,7 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
- 	struct wl1271_partition_set partition;
- 	int ret = 0;
- 
-+	msleep(WL1271_PRE_POWER_ON_SLEEP);
- 	wl1271_power_on(wl);
- 	msleep(WL1271_POWER_ON_SLEEP);
- 	wl1271_spi_reset(wl);
--- 
-1.6.3.3
 
