@@ -1,55 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:37911 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751801AbZLUOFK (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:63486 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762484AbZLKLle (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2009 09:05:10 -0500
-Received: by bwz27 with SMTP id 27so3461706bwz.21
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2009 06:05:09 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
+	Fri, 11 Dec 2009 06:41:34 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH] wl1271: add testmode support
-References: <20091221120745.18850.67739.stgit@tikku>
-	<20091221123632.18850.74951.stgit@tikku>
-	<1261400310.3733.13.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Mon, 21 Dec 2009 16:05:06 +0200
-In-Reply-To: <1261400310.3733.13.camel@johannes.local> (Johannes Berg's message of "Mon\, 21 Dec 2009 13\:58\:30 +0100")
-Message-ID: <874onkzalp.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH 05/31] wl1271: use join command with dummy BSSID
+Date: Fri, 11 Dec 2009 13:40:56 +0200
+Message-Id: <1260531682-4695-6-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
+References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+When we need to change the channel before association, we have to send a join
+command with a valid BSSID.  With this patch we use 0baddeadbeef as the
+BSSID.  There are ongoing discussions with TI to get this done in a cleaner
+way.
 
-> On Mon, 2009-12-21 at 14:36 +0200, Kalle Valo wrote:
->
->> +	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
->> +	if (!cmd)
->> +		return -ENOMEM;
->> +
->> +	/* copy the buffer to make it work with dma */
->> +	memcpy(cmd, buf, buf_len);
->
-> kmemdup() (more than once in the patch)
+When we go back to idle, we issue a CMD_DISCONNECT to make sure the firmware
+stops listening to the channel and cleans things up internally.
 
-Oh, of course I should have used that :) I'll change this.
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |   75 +++++++++++++++++++++++++----
+ 1 files changed, 65 insertions(+), 10 deletions(-)
 
->> +#ifndef __WL1271_TESTMODE_H__
->> +#define __WL1271_TESTMODE_H__
->> +
->> +#include <net/mac80211.h>
->> +
->> +int wl1271_tm_cmd(struct ieee80211_hw *hw, void *data, int len);
->> +
->> +#endif /* __WL1271_TESTMODE_H__ */
->
-> probably wouldn't bother with a file for one line ;)
-
-Yeah, you have a point. I added just for consistency.
-
-Thanks for the review.
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index f1cb7cb..f6d42e6 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1130,6 +1130,47 @@ out:
+ }
+ #endif
+ 
++static int wl1271_join_channel(struct wl1271 *wl, int channel)
++{
++	int ret;
++	/* we need to use a dummy BSSID for now */
++	static const u8 dummy_bssid[ETH_ALEN] = { 0x0b, 0xad, 0xde,
++						  0xad, 0xbe, 0xef };
++
++	/* disable mac filter, so we hear everything */
++	wl->rx_config &= ~CFG_BSSID_FILTER_EN;
++
++	wl->channel = channel;
++	memcpy(wl->bssid, dummy_bssid, ETH_ALEN);
++
++	ret = wl1271_cmd_join(wl);
++	if (ret < 0)
++		goto out;
++
++	wl->joined = true;
++
++out:
++	return ret;
++}
++
++static int wl1271_unjoin_channel(struct wl1271 *wl)
++{
++	int ret;
++
++	/* to stop listening to a channel, we disconnect */
++	ret = wl1271_cmd_disconnect(wl);
++	if (ret < 0)
++		goto out;
++
++	wl->joined = false;
++	wl->channel = 0;
++	memset(wl->bssid, 0, ETH_ALEN);
++	wl->rx_config = WL1271_DEFAULT_RX_CONFIG;
++
++out:
++	return ret;
++}
++
+ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct wl1271 *wl = hw->priv;
+@@ -1138,10 +1179,11 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 	channel = ieee80211_frequency_to_channel(conf->channel->center_freq);
+ 
+-	wl1271_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d",
++	wl1271_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d %s",
+ 		     channel,
+ 		     conf->flags & IEEE80211_CONF_PS ? "on" : "off",
+-		     conf->power_level);
++		     conf->power_level,
++		     conf->flags & IEEE80211_CONF_IDLE ? "idle" : "in use");
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+@@ -1151,16 +1193,17 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	if (channel != wl->channel) {
+-		/*
+-		 * We assume that the stack will configure the right channel
+-		 * before associating, so we don't need to send a join
+-		 * command here.  We will join the right channel when the
+-		 * BSSID changes
+-		 */
+-		wl->channel = channel;
++	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
++		if (conf->flags & IEEE80211_CONF_IDLE && wl->joined)
++			wl1271_unjoin_channel(wl);
++		else
++			wl1271_join_channel(wl, channel);
+ 	}
+ 
++	/* if the channel changes while joined, join again */
++	if (channel != wl->channel && wl->joined)
++		wl1271_join_channel(wl, channel);
++
+ 	if (conf->flags & IEEE80211_CONF_PS && !wl->psm_requested) {
+ 		wl1271_info("psm enabled");
+ 
+@@ -1494,6 +1537,18 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
+ 
++	if ((changed & BSS_CHANGED_BSSID) &&
++	    /*
++	     * Now we know the correct bssid, so we send a new join command
++	     * and enable the BSSID filter
++	     */
++	    memcmp(wl->bssid, bss_conf->bssid, ETH_ALEN)) {
++			wl->rx_config |= CFG_BSSID_FILTER_EN;
++			memcpy(wl->bssid, bss_conf->bssid, ETH_ALEN);
++			wl1271_cmd_join(wl);
++			wl->joined = true;
++	}
++
+ 	if (changed & BSS_CHANGED_ASSOC) {
+ 		if (bss_conf->assoc) {
+ 			wl->aid = bss_conf->aid;
 -- 
-Kalle Valo
+1.6.3.3
+
