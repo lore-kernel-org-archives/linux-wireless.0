@@ -1,74 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:53313 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752770AbZLTVtO (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:60302 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757591AbZLKNle (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2009 16:49:14 -0500
-Received: by iwn1 with SMTP id 1so3291202iwn.33
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2009 13:49:14 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890912201342w2f5916d0p2b30683ccbb5dbfe@mail.gmail.com>
-References: <200912201510.51812.linux-wireless@mrs.ro> <43e72e890912201342w2f5916d0p2b30683ccbb5dbfe@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sun, 20 Dec 2009 13:48:54 -0800
-Message-ID: <43e72e890912201348w429fcc16gf4d66e01653262ae@mail.gmail.com>
-Subject: Re: Intel 4965 HT rates
-To: Valentin Manea <linux-wireless@mrs.ro>
+	Fri, 11 Dec 2009 08:41:34 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH v2 14/31] wl1271: upload only the first 468 bytes from the NVS file
+Date: Fri, 11 Dec 2009 15:40:53 +0200
+Message-Id: <1260538870-32297-15-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gU3VuLCBEZWMgMjAsIDIwMDkgYXQgMTo0MiBQTSwgTHVpcyBSLiBSb2RyaWd1ZXogPG1jZ3Jv
-ZkBnbWFpbC5jb20+IHdyb3RlOgo+IE9uIFN1biwgRGVjIDIwLCAyMDA5IGF0IDU6MTAgQU0sIFZh
-bGVudGluIE1hbmVhIDxsaW51eC13aXJlbGVzc0BtcnMucm8+IHdyb3RlOgo+PiBIaSwKPj4KPj4g
-wqBJJ20gcnVubmluZyBjb21wYXQtd2lyZWxlc3MtMi42LjMzLXJjMSBhbmQgaXcgbGlzdCBzaG93
-cyBzb21lIGNvbmZ1c2luZyBIVAo+PiBjYXBhYmlsaXRpZXM6Cj4+IMKgIMKgIMKgIMKgQmFuZCAx
-Ogo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoEhUIGNhcGFiaWxpdGllczogMHgwODJjCj4+IMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiAyMCBNSHogb3BlcmF0aW9uCj4+IMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiBTTSBQUyBkaXNhYmxlZAo+PiDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogMjAgTUh6IHNob3J0IEdJCj4+IMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiBtYXggQS1NU0RVIGxlbiA3OTM1Cj4+Cj4+
-IGJ1dCBmb3IgODAyLjExYSBjaGFubmVsczoKPj4gwqAgwqAgwqAgwqBCYW5kIDI6Cj4+IMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgSFQgY2FwYWJpbGl0aWVzOiAweDA4NmUKPj4gwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDIwLzQwIE1IeiBvcGVyYXRpb24KPj4gwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIFNNIFBTIGRpc2FibGVkCj4+IMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiAyMCBNSHogc2hvcnQgR0kKPj4gwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDQwIE1IeiBzaG9ydCBHSQo+PiDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogbWF4IEEtTVNEVSBsZW4gNzkzNQo+Pgo+PiBXaGlsZSBJ
-IGNhbid0IHRlbGwgd2hlbiB0aGlzIGhhcHBlbmVkLCBJIHJlbWVtYmVyIG9sZGVyIDIuNi4yOSBy
-ZWxlYXNlcwo+PiBzdXBwb3J0ZWQgSFQ0MCBmb3IgYm90aCBiYW5kcy4KPgo+IEhvdyBkbyB5b3Ug
-a25vdz8gV2hhdCBtYWtlcyB5b3UgYmVsaWV2ZSB0aGF0IHdhcyB0aGUgY2FzZT8KPgo+PiBUaGUg
-d2lyZWxlc3MgY2FyZCBpcyBhbiBJbnRlbCA0OTY1IG9uIGEgVGhpbmtwYWQgVDYxLgo+Cj4gVGhl
-IGh0X2NhcCB0aGF0IGdldHMgcGFyc2VkIGFuZCBzZW50IGJhY2sgdGhyb3VnaCBubDgwMjExIGlz
-Cj4gaW5pdGlhbGl6ZWQgaW4gaXdsLWFnbiBvbiBpd2wtY29yZS5jIG9uIGl3bGNvcmVfaW5pdF9o
-dF9od19jYXBhYigpIGFzCj4gZm9sbG93cwo+Cj4gc3RhdGljIHZvaWQgaXdsY29yZV9pbml0X2h0
-X2h3X2NhcGFiKGNvbnN0IHN0cnVjdCBpd2xfcHJpdiAqcHJpdiwKPiDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHN0cnVjdCBpZWVlODAyMTFfc3RhX2h0X2NhcCAq
-aHRfaW5mbywKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoGVu
-dW0gaWVlZTgwMjExX2JhbmQgYmFuZCkKPiB7Cj4gwqAgwqAgwqAgwqAuLi4uCj4gwqAgwqAgwqAg
-wqBpZiAocHJpdi0+aHdfcGFyYW1zLmh0NDBfY2hhbm5lbCAmIEJJVChiYW5kKSkgewo+IMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgaHRfaW5mby0+Y2FwIHw9IElFRUU4MDIxMV9IVF9DQVBfU1VQX1dJ
-RFRIXzIwXzQwOwo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgaHRfaW5mby0+Y2FwIHw9IElFRUU4
-MDIxMV9IVF9DQVBfU0dJXzQwOwo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgaHRfaW5mby0+bWNz
-LnJ4X21hc2tbNF0gPSAweDAxOwo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgbWF4X2JpdF9yYXRl
-ID0gTUFYX0JJVF9SQVRFXzQwX01IWjsKPiDCoCDCoCDCoCDCoH0KPiDCoCDCoCDCoCDCoC4uLi4K
-PiB9Cj4KPiBBbmQgdGhlIHByaXYtPmh3X3BhcmFtcy5odDQwX2NoYW5uZWwgZ2V0cyBpbml0aWFs
-aXplZCBmb3IgNDk2NQo+IGhhcmR3YXJlIG9uIGl3bDQ5NjVfaHdfc2V0X2h3X3BhcmFtcygpOgo+
-Cj4gc3RhdGljIGludCBpd2w0OTY1X2h3X3NldF9od19wYXJhbXMoc3RydWN0IGl3bF9wcml2ICpw
-cml2KQo+IHsKPiDCoCDCoCDCoCDCoC4uLgo+IMKgIMKgIMKgIMKgcHJpdi0+aHdfcGFyYW1zLmh0
-NDBfY2hhbm5lbCA9IEJJVChJRUVFODAyMTFfQkFORF81R0haKTsKPiDCoCDCoCDCoCDCoC4uLi4K
-PiB9Cj4KPiBpd2wtNTAwMCBhbmQgaXdsLTYwMDAgc2V0cyB0aGlzIHRvIGJvdGggYmFuZHM6Cj4K
-PiBpbnQgaXdsNTAwMF9od19zZXRfaHdfcGFyYW1zKHN0cnVjdCBpd2xfcHJpdiAqcHJpdikKPiB7
-Cj4gwqAgwqAgwqAgwqAuLi4uCj4gwqAgwqAgwqAgwqBwcml2LT5od19wYXJhbXMuaHQ0MF9jaGFu
-bmVsID0gwqBCSVQoSUVFRTgwMjExX0JBTkRfMkdIWikgfAo+IMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgQklUKElFRUU4MDIxMV9CQU5E
-XzVHSFopOwo+IMKgIMKgIMKgIMKgLi4uLgo+IH0KPgo+IHN0YXRpYyBpbnQgaXdsNjAwMF9od19z
-ZXRfaHdfcGFyYW1zKHN0cnVjdCBpd2xfcHJpdiAqcHJpdikKPiB7Cj4gwqAgwqAgwqAgwqAuLi4u
-Cj4gwqAgwqAgwqAgwqBwcml2LT5od19wYXJhbXMuaHQ0MF9jaGFubmVsID0gwqBCSVQoSUVFRTgw
-MjExX0JBTkRfMkdIWikgfAo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgQklUKElFRUU4MDIxMV9CQU5EXzVHSFopOwo+IMKgIMKgIMKg
-IMKgLi4uLgo+IH0KPgo+IFNvIGl0IGFwcGVhcnMgdG8gYmUgZG9uZSBleHBsaWNpdGx5IGluIHNv
-ZnR3YXJlLCBub3Qgc3VyZSBpZiBoYXJkd2FyZQo+IGRvZXMgc3VwcG9ydCBIVDQwIG9uIDIuNCBH
-SHogYmFuZCBvbiB0aGUgNDk2NSwgSW50ZWwgZm9sa3Mgd291bGQKPiB0aG91Z2guCgpKdXN0IGNo
-ZWNrZWQgMi42LjI5IGNvZGUgYW5kIGl0cyB0aGUgc2FtZSB0aGVyZS4KCiAgTHVpcwo=
+We were uploading the whole NVS file, but that is wrong, because the same
+file also contains the initialization values.  For the latest firmwares, we
+should upload only the initial 468 bytes from the file.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271.h      |    1 +
+ drivers/net/wireless/wl12xx/wl1271_boot.c |    8 +++++++-
+ 2 files changed, 8 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index 3bec6f3..8dfc9ec 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -111,6 +111,7 @@ enum {
+ 
+ #define WL1271_FW_NAME "wl1271-fw.bin"
+ #define WL1271_NVS_NAME "wl1271-nvs.bin"
++#define WL1271_NVS_LEN  468
+ 
+ /*
+  * Enable/disable 802.11a support for WL1273
+diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
+index b7c9645..e803b87 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_boot.c
++++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
+@@ -225,9 +225,15 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
+ 	if (nvs == NULL)
+ 		return -ENODEV;
+ 
++	if (wl->nvs_len < WL1271_NVS_LEN)
++		return -EINVAL;
++
+ 	nvs_ptr = nvs;
+ 
+-	nvs_len = wl->nvs_len;
++	/* only the first part of the NVS needs to be uploaded */
++	nvs_len = WL1271_NVS_LEN;
++
++	/* FIXME: read init settings from the remaining part of the NVS */
+ 
+ 	/* Update the device MAC address into the nvs */
+ 	nvs[11] = wl->mac_addr[0];
+-- 
+1.6.3.3
+
