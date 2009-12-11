@@ -1,67 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44193 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:54788 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932935AbZLFStY (ORCPT
+	with ESMTP id S1762252AbZLKLyx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2009 13:49:24 -0500
-Subject: Re: [PATCH 1/4] nl80211: Add new WIPHY attribute COVERAGE_CLASS
+	Fri, 11 Dec 2009 06:54:53 -0500
+Subject: Re: [PATCH 00/31] wl1271: patches for wk50
 From: Johannes Berg <johannes@sipsolutions.net>
-To: 8an@praha12.net
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-In-Reply-To: <200912061945.53225.8an@praha12.net>
-References: <200912061820.26320.8an@praha12.net>
-	 <200912061822.54088.8an@praha12.net>
-	 <1260122477.3461.20.camel@johannes.local>
-	 <200912061945.53225.8an@praha12.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-m2sKwjuxB4EikFoWE0zS"
-Date: Sun, 06 Dec 2009 19:49:26 +0100
-Message-ID: <1260125366.3461.24.camel@johannes.local>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
+References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-N55ceTWo84Mb89eJ2Nkx"
+Date: Fri, 11 Dec 2009 12:54:54 +0100
+Message-ID: <1260532494.2442.131.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-m2sKwjuxB4EikFoWE0zS
+--=-N55ceTWo84Mb89eJ2Nkx
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2009-12-06 at 19:45 +0100, Luk=C3=A1=C5=A1 Turek wrote:
-> On 6.12.2009 19:01 Johannes Berg wrote:
-> > This patch assumes that all hardware supports this, which is not really
-> > what you want. You'll want to know if it can't be set. Yes, we assume
-> > rts/cts can be set always, but that's a _much_ safer bet.
-> If the hardware does not support it, the operation will fail with EOPNOTS=
-UPP:
+On Fri, 2009-12-11 at 13:40 +0200, Luciano Coelho wrote:
+> Hi,
 >=20
-> # iw phy0 set coverage 1
-> command failed: Operation not supported (-95)
+> These are the patches that have resulted from a one-week debug and
+> implementation camp with TI.  Mostly bug fixes and improvements, but also=
+ we
+> now added support for a new version of the firmware.
+>=20
+> With these patches, the driver should be pretty much functional, even tho=
+ugh
+> there are still a couple of known bugs.
 
-Umm, no it won't, that's only with your specific mac80211
-implementation. Try on rndis for instance.
+I see a lot of rate stuff here -- time to set the hw rate control flag?
 
 johannes
 
---=-m2sKwjuxB4EikFoWE0zS
+--=-N55ceTWo84Mb89eJ2Nkx
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJLG/yyAAoJEODzc/N7+QmaFIwP/0G3EWI9SEM/+9jlpI8wtNlq
-fzSFTleeB5tw2yRdqEQZrrAAAjD4MBlOcMXXTAzIXNbyvIl2znlZYapSjNnnQNKv
-vsGsdSPmJvKukFN6CKZUrBDXehRMv84/f+k4pcPIGWm2taEkLaBgkWGq6RXDnYFB
-99PC4sp+xcEUSTXm6BlyPHLiMB1Ef22v+nLO2NKn3429Y/UUXVsjhvyq8EFm2zvg
-GC6/FX3qRN6ELtIXDzCrZCee8A4IqhQ0HgEnK8TXVFhoMDeEJsJZULAWqKL8bFGE
-sQVhRYRelxBHMk+kjvrtpQO9GYeB8FLD59mvQUcxb00dj8DenD6GpcFkfIgM8vuK
-+P8WTNslF7pAWcJ5Iyblxi4gac1BrqfP5YYYg27GalHxAv9iZ4KHMlS8wHln2JHu
-SEM1Wsr1LjAPv80q7Bp4iQRWIb6ysWLAvnK7DqyVCLIZkmKqom6Ob2G2cuulCmTu
-iWzp+Cpgug6ynnbOalq9dbukkrlJDdBRNeeCZmVuvXDTVTk4LiVVnVCUQdnALTSI
-H7aNKmssDG+XIGJ+aqKhUEICOgl0EDQPITmaqSs8MQgijDfKFFXrMSAFjH6zYVWE
-AAAgRYn+og0zkgQyQ4evUt5QRn/fW7y3v1VLXwtY7WHuyYqvwI/6se1wvpfa5gcZ
-RNsiI1i5b7zg9A7S4uyD
-=xBhE
+iQIcBAABAgAGBQJLIjMHAAoJEODzc/N7+QmaSXkP/3a7m/IeBPXms+n0RFfg6Qo0
+wbf9/Se/aeqRyG7/XoNI9S7u9rddOerwL2NgltHviP0bwRvOWGfs9uwRlnYgEBt7
+zjOy/ftuPP/58XgBlci9Nm6He2qR7kb7TuRbDlP/cHMaWlsHgC4HU0Mcu7M593Ky
+gOAUPgEn2YP2bIyUmDI5a53MA3IZS+5bkhuDRryvGSCdlXLczQuNu5y3g4/8rN5L
+593oo4tPFOJ2aSyGiqdnKX4hOrYjpDQN9oZf+rfiJIRqcqDGkHF/i04akKXaC1o5
+z7OVp8owR5oT8Cu1k2y3N7GeixlhnGrLpUYDFUXrqSmotzFiFlgSI5wNaBhLlMSw
+USicufYASrejsJ9tNbeFCTJtl5ojsZEYsbWw5hnssQwkYz9pi+oV6qk5QZrZj/by
+WZtKrFBMxP5c9Ea26D3uB7EC4dWHuolnU/7cxU3NOzNrG+t6sn5RXgB9HaTou4S3
+pNMj5mOTcWzhijBeJGBVZvp8yNe6FVBgxQJykvg/BEFWl2xKKNIMwREJHh2aAhpy
+lrlN8033RIK452kQchecv1XNwBzak1lKK3Rj+mCKPRRELuq6SVYEjNKHGloVIoJt
+YH23uSbAtY4PDnSJIfcx7nEQGTdEttsECQiJxiDFe4tIIc01mJDJQfFj7u++MewO
+iLmkZBwqnzPAyywaDjtK
+=Vieu
 -----END PGP SIGNATURE-----
 
---=-m2sKwjuxB4EikFoWE0zS--
+--=-N55ceTWo84Mb89eJ2Nkx--
 
