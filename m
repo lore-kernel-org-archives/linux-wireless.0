@@ -1,33 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43853 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752991AbZLWPPb (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:61353 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757571AbZLKNlc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 10:15:31 -0500
-Date: Wed, 23 Dec 2009 10:12:30 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH][resend with linux-wireless] b43: N-PHY: clean table
-	init, check PHY rev
-Message-ID: <20091223151230.GE2811@tuxdriver.com>
-References: <b170af450912230401l7a27b981o42cdbc96e5a16b57@mail.gmail.com> <20091223145211.GB2811@tuxdriver.com> <b170af450912230710t77cc614j25f058b64c4ce51@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <b170af450912230710t77cc614j25f058b64c4ce51@mail.gmail.com>
+	Fri, 11 Dec 2009 08:41:32 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 10/31] wl1271: use the correct macro when setting the basic rates
+Date: Fri, 11 Dec 2009 15:40:49 +0200
+Message-Id: <1260538870-32297-11-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 23, 2009 at 04:10:35PM +0100, Rafał Miłecki wrote:
-> W dniu 23 grudnia 2009 15:52 użytkownik John W. Linville
+We were using CONF_TX_RATE_MASK_ALL when calling wl1271_acx_rate_policies()
+during init.  We should use WL1271_DEFAULT_BASIC_RATE_SET instead.  The
+values are the same, but the latter is just the correct macro to use.
 
-> If you decide to agree to commit this patch and you want to me resend
-> this with correct white spaces, please ping me about. For future mails
-> I'll use some native mailer.
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_init.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-I'm fine with the patch -- at least it demonstrates that something
-else is needed for rev 3+.
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
+index 11249b4..d72ccc6 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_init.c
++++ b/drivers/net/wireless/wl12xx/wl1271_init.c
+@@ -280,7 +280,7 @@ int wl1271_hw_init(struct wl1271 *wl)
+ 		goto out_free_memmap;
+ 
+ 	/* Configure TX rate classes */
+-	ret = wl1271_acx_rate_policies(wl, CONF_TX_RATE_MASK_ALL);
++	ret = wl1271_acx_rate_policies(wl, WL1271_DEFAULT_BASIC_RATE_SET);
+ 	if (ret < 0)
+ 		goto out_free_memmap;
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
