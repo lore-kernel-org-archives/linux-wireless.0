@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:61895 "HELO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756923AbZLMC2h (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:61379 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757466AbZLKNlm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Dec 2009 21:28:37 -0500
-Received: by ewy19 with SMTP id 19so2312456ewy.21
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Dec 2009 18:28:35 -0800 (PST)
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: ext Johannes Berg <johannes@sipsolutions.net>,
-	"Coelho Luciano \(Nokia-D\/Helsinki\)" <Luciano.Coelho@nokia.com>,
-	"linville\@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 21/31] wl1271: prevent power save entry while not associated
-References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
-	<1260531682-4695-22-git-send-email-luciano.coelho@nokia.com>
-	<1260532418.2442.129.camel@johannes.local>
-	<1260533355.2689.45.camel@wimaxnb.ntc.nokia.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sat, 12 Dec 2009 23:05:50 +0200
-In-Reply-To: <1260533355.2689.45.camel@wimaxnb.ntc.nokia.com> (Juuso Oikarinen's message of "Fri\, 11 Dec 2009 14\:09\:15 +0200")
-Message-ID: <87aaxn298x.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 11 Dec 2009 08:41:42 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH v2 17/31] wl1271: Configure smart-reflex paramter values.
+Date: Fri, 11 Dec 2009 15:40:56 +0200
+Message-Id: <1260538870-32297-18-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Juuso Oikarinen <juuso.oikarinen@nokia.com> writes:
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-> Unfortunately I haven't had the time to investigate this further, but
-> for me it did happen after getting de-authenticated from an AP and
-> attempting to re-authenticate. While re-authenticating, mac80211
-> appeared to request going into power save after transmitting the
-> corresponding control messages, preventing the re-authentication from
-> succeeding.
->
-> My assumption is, that the dynamic power save mechanism is somehow
-> getting triggered from the control message exchange - but, as I said, I
-> cannot be sure at this point.
+Configure correct values to be used with the smart-reflex configuration of the
+firmware.
 
-I think this was introduced when the master interface was removed.
-I'll fix this in mac80211. I have few options how to fix this and I
-need to think a bit more about this.
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 55a45d3..b0f4c6e 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -260,12 +260,12 @@ static struct conf_drv_settings default_conf = {
+ 			.tx_bip_fem_manufacturer = 1,
+ 			.settings = 1,
+ 			.sr_state = 1,
+-			.srf1 = { 0, 0, 0, 0, 0, 0, 0, 0,
+-				  0, 0, 0, 0, 0, 0, 0, 0 },
+-			.srf2 = { 0, 0, 0, 0, 0, 0, 0, 0,
+-				  0, 0, 0, 0, 0, 0, 0, 0 },
+-			.srf3 = { 0, 0, 0, 0, 0, 0, 0, 0,
+-				  0, 0, 0, 0, 0, 0, 0, 0 },
++			.srf1 = { 0x07, 0x03, 0x18, 0x10, 0x05, 0xfb, 0xf0,
++				  0xe8, 0, 0, 0, 0, 0, 0, 0, 0 },
++			.srf2 = { 0x07, 0x03, 0x18, 0x10, 0x05, 0xfb, 0xf0,
++				  0xe8, 0, 0, 0, 0, 0, 0, 0, 0 },
++			.srf3 = { 0x07, 0x03, 0x18, 0x10, 0x05, 0xfb, 0xf0,
++				  0xe8, 0, 0, 0, 0, 0, 0, 0, 0 },
+ 			.sr_debug_table = { 0, 0, 0, 0, 0, 0, 0, 0,
+ 					    0, 0, 0, 0, 0, 0, 0, 0 },
+ 			.sr_sen_n_p = 0,
 -- 
-Kalle Valo
+1.6.3.3
+
