@@ -1,41 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55005 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934071AbZLPOP3 (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:63536 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762569AbZLKLlr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2009 09:15:29 -0500
-Date: Wed, 16 Dec 2009 09:05:43 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Stefan Seyfried <stefan.seyfried@googlemail.com>
-Cc: Josua Dietze <digidietze@draisberghof.de>,
-	Matthew Dharm <mdharm-kernel@one-eyed-alien.net>,
-	Oliver Neukum <oliver@neukum.org>, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	usb-storage@lists.one-eyed-alien.net
-Subject: Re: [PATCH] move eject code from zd1211rw to usb-storage
-Message-ID: <20091216140542.GB11793@tuxdriver.com>
-References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com> <4B278191.1010009@draisberghof.de> <200912151611.08576.oliver@neukum.org> <20091215180300.GF16426@one-eyed-alien.net> <20091216114932.4bede511@strolchi.home.s3e.de> <4B28C2F7.7040207@draisberghof.de> <20091216131452.49ad183b@strolchi.home.s3e.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091216131452.49ad183b@strolchi.home.s3e.de>
+	Fri, 11 Dec 2009 06:41:47 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 06/31] wl1271: remove workaround for disconnection
+Date: Fri, 11 Dec 2009 13:40:57 +0200
+Message-Id: <1260531682-4695-7-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
+References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 16, 2009 at 01:14:52PM +0100, Stefan Seyfried wrote:
-> On Wed, 16 Dec 2009 12:22:31 +0100
-> Josua Dietze <digidietze@draisberghof.de> wrote:
-> 
-> > Stefan Seyfried schrieb:
-> > > Preferably some code that can be built actually?
-> > 
-> > If the "eject" from SCSI tools does not work, "usb_modeswitch" can 
-> > send customized bulk messages to devices.
-> 
-> for my device, eject seems to be enough, so I'll be trying to get
-> this into udev.
+Now we're using a the idle information coming from mac80211 to decide when to
+disconnect.  If we have joined (ie. we're listening to a channel), whenever
+the interface goes to idle, we will issue a disconnect command.  So the
+workaround to send a disconnect command before joining is not needed anymore.
 
-When you do that any chance you could account for zd1211rw too? :-)
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_cmd.c |   15 ---------------
+ 1 files changed, 0 insertions(+), 15 deletions(-)
 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+index 57c2145..ceb1ca6 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+@@ -344,19 +344,6 @@ int wl1271_cmd_join(struct wl1271 *wl)
+ 			do_cal = false;
+ 	}
+ 
+-	/* FIXME: This is a workaround, because with the current stack, we
+-	 * cannot know when we have disassociated.  So, if we have already
+-	 * joined, we disconnect before joining again. */
+-	if (wl->joined) {
+-		ret = wl1271_cmd_disconnect(wl);
+-		if (ret < 0) {
+-			wl1271_error("failed to disconnect before rejoining");
+-			goto out;
+-		}
+-
+-		wl->joined = false;
+-	}
+-
+ 	join = kzalloc(sizeof(*join), GFP_KERNEL);
+ 	if (!join) {
+ 		ret = -ENOMEM;
+@@ -421,8 +408,6 @@ int wl1271_cmd_join(struct wl1271 *wl)
+ 		goto out_free;
+ 	}
+ 
+-	wl->joined = true;
+-
+ 	/*
+ 	 * ugly hack: we should wait for JOIN_EVENT_COMPLETE_ID but to
+ 	 * simplify locking we just sleep instead, for now
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
