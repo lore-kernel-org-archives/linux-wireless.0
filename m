@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:46621 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750955AbZL2H2E (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:61350 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757320AbZLKNlb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Dec 2009 02:28:04 -0500
-Received: by fxm25 with SMTP id 25so5051184fxm.21
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2009 23:28:01 -0800 (PST)
-Subject: [PATCH] ath9k: Fix Kconfig depends for ATH9K_DEBUGFS
-From: Dominik Geyer <dominik.geyer@gmx.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 29 Dec 2009 08:27:57 +0100
-Message-ID: <1262071677.32610.25.camel@pc3800>
-Mime-Version: 1.0
+	Fri, 11 Dec 2009 08:41:31 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 09/31] wl1271: set null data template when BSSID is known
+Date: Fri, 11 Dec 2009 15:40:48 +0200
+Message-Id: <1260538870-32297-10-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add missing DEBUG_FS dependency for ATH9K_DEBUGFS in ath9k's Kconfig.
+The call to wl1271_cmd_build_null_data() was missing when we got associated,
+this was causing PS to fail.  This patch adds the call and now PS seems to
+work.
 
-Signed-off-by: Dominik D. Geyer <dominik.geyer@gmx.de>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index 03a1106..5774cea 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -25,7 +25,7 @@ config ATH9K
- 
- config ATH9K_DEBUGFS
- 	bool "Atheros ath9k debugging"
--	depends on ATH9K
-+	depends on ATH9K && DEBUG_FS
- 	---help---
- 	  Say Y, if you need access to ath9k's statistics for
- 	  interrupts, rate control, etc.
+ drivers/net/wireless/wl12xx/wl1271_main.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index bf1d0fd..64f8623 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1545,6 +1545,12 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	    memcmp(wl->bssid, bss_conf->bssid, ETH_ALEN)) {
+ 			wl->rx_config |= CFG_BSSID_FILTER_EN;
+ 			memcpy(wl->bssid, bss_conf->bssid, ETH_ALEN);
++			ret = wl1271_cmd_build_null_data(wl);
++			if (ret < 0) {
++				wl1271_warning("cmd buld null data failed %d",
++					       ret);
++				goto out_sleep;
++			}
+ 			ret = wl1271_cmd_join(wl);
+ 			if (ret < 0) {
+ 				wl1271_warning("cmd join failed %d", ret);
+-- 
+1.6.3.3
 
