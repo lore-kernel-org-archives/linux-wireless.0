@@ -1,261 +1,361 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33644 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933057AbZLOUK5 (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:61391 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757869AbZLKNlz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 15:10:57 -0500
-Message-Id: <20091215200739.661125708@sipsolutions.net>
-Date: Tue, 15 Dec 2009 21:06:22 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Pavel Roskin <proski@gnu.org>
-Subject: [RFC/RFT 4/5] mac80211: move control.hw_key assignment
-References: <20091215200618.253970634@sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 11 Dec 2009 08:41:55 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH v2 27/31] wl1271: Fix supported rate management
+Date: Fri, 11 Dec 2009 15:41:06 +0200
+Message-Id: <1260538870-32297-28-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When mac80211 asks a driver to encrypt a frame, it
-must assign the control.hw_key pointer for it to
-know which key to use etc. Currently, mac80211 does
-this whenever it would software-encrypt a frame.
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Change the logic of this code to assign the hw_key
-pointer when selecting the key, and later check it
-when deciding whether to encrypt the frame or let
-it be encrypted by the hardware. This allows us to
-later simply skip the encryption function since it
-no longer modifies the TX control.
+Previously, only basic rates were used for data transmission - resulting in
+reduced transfer rates. This patch takes enables the firmware to take advantage
+of the full set of data rates supported by the AP.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
 ---
- net/mac80211/tkip.c |   11 +++++-----
- net/mac80211/tx.c   |    9 ++++++++
- net/mac80211/wep.c  |   18 ++++++++--------
- net/mac80211/wpa.c  |   57 ++++++++++++++++++++--------------------------------
- 4 files changed, 46 insertions(+), 49 deletions(-)
+ drivers/net/wireless/wl12xx/wl1271.h      |    7 +++-
+ drivers/net/wireless/wl12xx/wl1271_acx.c  |   24 ++++++++---
+ drivers/net/wireless/wl12xx/wl1271_acx.h  |    5 ++-
+ drivers/net/wireless/wl12xx/wl1271_init.c |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_main.c |   59 ++++++++++++----------------
+ drivers/net/wireless/wl12xx/wl1271_tx.c   |   37 ++++++++++++++++++
+ 6 files changed, 90 insertions(+), 44 deletions(-)
 
---- wireless-testing.orig/net/mac80211/tkip.c	2009-12-15 20:42:43.000000000 +0100
-+++ wireless-testing/net/mac80211/tkip.c	2009-12-15 20:45:48.000000000 +0100
-@@ -195,11 +195,13 @@ void ieee80211_get_tkip_key(struct ieee8
- }
- EXPORT_SYMBOL(ieee80211_get_tkip_key);
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index c965c4a..9290c92 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -322,6 +322,10 @@ struct wl1271 {
+ 	enum wl1271_state state;
+ 	struct mutex mutex;
  
--/* Encrypt packet payload with TKIP using @key. @pos is a pointer to the
-+/*
-+ * Encrypt packet payload with TKIP using @key. @pos is a pointer to the
-  * beginning of the buffer containing payload. This payload must include
-- * headroom of eight octets for IV and Ext. IV and taildroom of four octets
-- * for ICV. @payload_len is the length of payload (_not_ including extra
-- * headroom and tailroom). @ta is the transmitter addresses. */
-+ * the IV/Ext.IV and space for (taildroom) four octets for ICV.
-+ * @payload_len is the length of payload (_not_ including IV/ICV length).
-+ * @ta is the transmitter addresses.
-+ */
- void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
- 				 struct ieee80211_key *key,
- 				 u8 *pos, size_t payload_len, u8 *ta)
-@@ -214,7 +216,6 @@ void ieee80211_tkip_encrypt_data(struct 
- 
- 	tkip_mixing_phase2(tk, ctx, ctx->iv16, rc4key);
- 
--	pos = ieee80211_tkip_add_iv(pos, key, key->u.tkip.tx.iv16);
- 	ieee80211_wep_encrypt_data(tfm, rc4key, 16, pos, payload_len);
- }
- 
---- wireless-testing.orig/net/mac80211/wpa.c	2009-12-15 20:42:43.000000000 +0100
-+++ wireless-testing/net/mac80211/wpa.c	2009-12-15 20:45:48.000000000 +0100
-@@ -31,8 +31,8 @@ ieee80211_tx_h_michael_mic_add(struct ie
- 	unsigned int hdrlen;
- 	struct ieee80211_hdr *hdr;
- 	struct sk_buff *skb = tx->skb;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	int authenticator;
--	int wpa_test = 0;
- 	int tail;
- 
- 	hdr = (struct ieee80211_hdr *)skb->data;
-@@ -47,16 +47,15 @@ ieee80211_tx_h_michael_mic_add(struct ie
- 	data = skb->data + hdrlen;
- 	data_len = skb->len - hdrlen;
- 
--	if ((tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) &&
-+	if (info->control.hw_key &&
- 	    !(tx->flags & IEEE80211_TX_FRAGMENTED) &&
--	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) &&
--	    !wpa_test) {
--		/* hwaccel - with no need for preallocated room for MMIC */
-+	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC)) {
-+		/* hwaccel - with no need for SW-generated MMIC */
- 		return TX_CONTINUE;
- 	}
- 
- 	tail = MICHAEL_MIC_LEN;
--	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
-+	if (!info->control.hw_key)
- 		tail += TKIP_ICV_LEN;
- 
- 	if (WARN_ON(skb_tailroom(skb) < tail ||
-@@ -147,17 +146,16 @@ static int tkip_encrypt_skb(struct ieee8
- 	int len, tail;
- 	u8 *pos;
- 
--	if ((tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) &&
--	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
--		/* hwaccel - with no need for preallocated room for IV/ICV */
--		info->control.hw_key = &tx->key->conf;
-+	if (info->control.hw_key &&
-+	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
-+		/* hwaccel - with no need for software-generated IV */
- 		return 0;
- 	}
- 
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	len = skb->len - hdrlen;
- 
--	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
-+	if (info->control.hw_key)
- 		tail = 0;
- 	else
- 		tail = TKIP_ICV_LEN;
-@@ -175,13 +173,11 @@ static int tkip_encrypt_skb(struct ieee8
- 	if (key->u.tkip.tx.iv16 == 0)
- 		key->u.tkip.tx.iv32++;
- 
--	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
--		/* hwaccel - with preallocated room for IV */
--		ieee80211_tkip_add_iv(pos, key, key->u.tkip.tx.iv16);
-+	pos = ieee80211_tkip_add_iv(pos, key, key->u.tkip.tx.iv16);
- 
--		info->control.hw_key = &tx->key->conf;
-+	/* hwaccel - with software IV */
-+	if (info->control.hw_key)
- 		return 0;
--	}
- 
- 	/* Add room for ICV */
- 	skb_put(skb, TKIP_ICV_LEN);
-@@ -363,24 +359,20 @@ static int ccmp_encrypt_skb(struct ieee8
- 	int hdrlen, len, tail;
- 	u8 *pos, *pn;
- 	int i;
--	bool skip_hw;
--
--	skip_hw = (tx->key->conf.flags & IEEE80211_KEY_FLAG_SW_MGMT) &&
--		ieee80211_is_mgmt(hdr->frame_control);
- 
--	if ((tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) &&
--	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) &&
--	    !skip_hw) {
--		/* hwaccel - with no need for preallocated room for CCMP
--		 * header or MIC fields */
--		info->control.hw_key = &tx->key->conf;
-+	if (info->control.hw_key &&
-+	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
-+		/*
-+		 * hwaccel has no need for preallocated room for CCMP
-+		 * header or MIC fields
-+		 */
- 		return 0;
- 	}
- 
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	len = skb->len - hdrlen;
- 
--	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
-+	if (info->control.hw_key)
- 		tail = 0;
- 	else
- 		tail = CCMP_MIC_LEN;
-@@ -405,11 +397,9 @@ static int ccmp_encrypt_skb(struct ieee8
- 
- 	ccmp_pn2hdr(pos, pn, key->conf.keyidx);
- 
--	if ((key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) && !skip_hw) {
--		/* hwaccel - with preallocated room for CCMP header */
--		info->control.hw_key = &tx->key->conf;
-+	/* hwaccel - with software CCMP header */
-+	if (info->control.hw_key)
- 		return 0;
--	}
- 
- 	pos += CCMP_HDR_LEN;
- 	ccmp_special_blocks(skb, pn, key->u.ccmp.tx_crypto_buf, 0);
-@@ -525,11 +515,8 @@ ieee80211_crypto_aes_cmac_encrypt(struct
- 	u8 *pn, aad[20];
- 	int i;
- 
--	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
--		/* hwaccel */
--		info->control.hw_key = &tx->key->conf;
-+	if (info->control.hw_key)
- 		return 0;
--	}
- 
- 	if (WARN_ON(skb_tailroom(skb) < sizeof(*mmie)))
- 		return TX_DROP;
---- wireless-testing.orig/net/mac80211/wep.c	2009-12-15 20:42:43.000000000 +0100
-+++ wireless-testing/net/mac80211/wep.c	2009-12-15 20:45:48.000000000 +0100
-@@ -305,20 +305,20 @@ static int wep_encrypt_skb(struct ieee80
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 
--	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
-+	if (!info->control.hw_key) {
- 		if (ieee80211_wep_encrypt(tx->local, skb, tx->key->conf.key,
- 					  tx->key->conf.keylen,
- 					  tx->key->conf.keyidx))
- 			return -1;
--	} else {
--		info->control.hw_key = &tx->key->conf;
--		if (tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) {
--			if (!ieee80211_wep_add_iv(tx->local, skb,
--						  tx->key->conf.keylen,
--						  tx->key->conf.keyidx))
--				return -1;
--		}
- 	}
++#define WL1271_FLAG_STA_RATES_CHANGED  (0)
++#define WL1271_FLAG_STA_ASSOCIATED     (1)
++	unsigned long flags;
 +
-+	if (info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) {
-+		if (!ieee80211_wep_add_iv(tx->local, skb,
-+					  tx->key->conf.keylen,
-+					  tx->key->conf.keyidx))
-+			return -1;
-+	}
-+
+ 	struct wl1271_partition_set part;
+ 
+ 	struct wl1271_chip chip;
+@@ -394,7 +398,9 @@ struct wl1271 {
+ 	u16 aid;
+ 
+ 	/* currently configured rate set */
++	u32 sta_rate_set;
+ 	u32 basic_rate_set;
++	u32 rate_set;
+ 
+ 	/* The current band */
+ 	enum ieee80211_band band;
+@@ -416,7 +422,6 @@ struct wl1271 {
+ 
+ 	/* PSM mode requested */
+ 	bool psm_requested;
+-	bool associated;
+ 
+ 	/* retry counter for PSM entries */
+ 	u8 psm_entry_retry;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
+index ea6427a..0ea1a48 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
+@@ -787,10 +787,11 @@ int wl1271_acx_statistics(struct wl1271 *wl, struct acx_statistics *stats)
  	return 0;
  }
  
---- wireless-testing.orig/net/mac80211/tx.c	2009-12-15 20:42:56.000000000 +0100
-+++ wireless-testing/net/mac80211/tx.c	2009-12-15 20:45:48.000000000 +0100
-@@ -463,6 +463,8 @@ ieee80211_tx_h_select_key(struct ieee802
- 		tx->key = NULL;
+-int wl1271_acx_rate_policies(struct wl1271 *wl, u32 enabled_rates)
++int wl1271_acx_rate_policies(struct wl1271 *wl)
+ {
+ 	struct acx_rate_policy *acx;
+ 	struct conf_tx_rate_class *c = &wl->conf.tx.rc_conf;
++	int idx = 0;
+ 	int ret = 0;
  
- 	if (tx->key) {
-+		bool skip_hw = false;
-+
- 		tx->key->tx_rx_count++;
- 		/* TODO: add threshold stuff again */
- 
-@@ -479,12 +481,19 @@ ieee80211_tx_h_select_key(struct ieee802
- 			    !ieee80211_use_mfp(hdr->frame_control, tx->sta,
- 					       tx->skb))
- 				tx->key = NULL;
-+			skip_hw = (tx->key->conf.flags &
-+						IEEE80211_KEY_FLAG_SW_MGMT) &&
-+				   ieee80211_is_mgmt(hdr->frame_control);
- 			break;
- 		case ALG_AES_CMAC:
- 			if (!ieee80211_is_mgmt(hdr->frame_control))
- 				tx->key = NULL;
- 			break;
- 		}
-+
-+		if (!skip_hw &&
-+		    tx->key->conf.flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
-+			info->control.hw_key = &tx->key->conf;
+ 	wl1271_debug(DEBUG_ACX, "acx rate policies");
+@@ -802,12 +803,21 @@ int wl1271_acx_rate_policies(struct wl1271 *wl, u32 enabled_rates)
+ 		goto out;
  	}
  
- 	return TX_CONTINUE;
-
+-	/* configure one default (one-size-fits-all) rate class */
+-	acx->rate_class_cnt = cpu_to_le32(1);
+-	acx->rate_class[0].enabled_rates = cpu_to_le32(enabled_rates);
+-	acx->rate_class[0].short_retry_limit = c->short_retry_limit;
+-	acx->rate_class[0].long_retry_limit = c->long_retry_limit;
+-	acx->rate_class[0].aflags = c->aflags;
++	/* configure one basic rate class */
++	idx = ACX_TX_BASIC_RATE;
++	acx->rate_class[idx].enabled_rates = cpu_to_le32(wl->basic_rate_set);
++	acx->rate_class[idx].short_retry_limit = c->short_retry_limit;
++	acx->rate_class[idx].long_retry_limit = c->long_retry_limit;
++	acx->rate_class[idx].aflags = c->aflags;
++
++	/* configure one AP supported rate class */
++	idx = ACX_TX_AP_FULL_RATE;
++	acx->rate_class[idx].enabled_rates = cpu_to_le32(wl->rate_set);
++	acx->rate_class[idx].short_retry_limit = c->short_retry_limit;
++	acx->rate_class[idx].long_retry_limit = c->long_retry_limit;
++	acx->rate_class[idx].aflags = c->aflags;
++
++	acx->rate_class_cnt = cpu_to_le32(ACX_TX_RATE_POLICY_CNT);
+ 
+ 	ret = wl1271_cmd_configure(wl, ACX_RATE_POLICY, acx, sizeof(*acx));
+ 	if (ret < 0) {
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
+index 6640ebf..b6a473f 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.h
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
+@@ -826,6 +826,9 @@ struct acx_rate_class {
+ 	u8 reserved;
+ };
+ 
++#define ACX_TX_BASIC_RATE      0
++#define ACX_TX_AP_FULL_RATE    1
++#define ACX_TX_RATE_POLICY_CNT 2
+ struct acx_rate_policy {
+ 	struct acx_header header;
+ 
+@@ -1058,7 +1061,7 @@ int wl1271_acx_set_preamble(struct wl1271 *wl, enum acx_preamble_type preamble);
+ int wl1271_acx_cts_protect(struct wl1271 *wl,
+ 			   enum acx_ctsprotect_type ctsprotect);
+ int wl1271_acx_statistics(struct wl1271 *wl, struct acx_statistics *stats);
+-int wl1271_acx_rate_policies(struct wl1271 *wl, u32 enabled_rates);
++int wl1271_acx_rate_policies(struct wl1271 *wl);
+ int wl1271_acx_ac_cfg(struct wl1271 *wl);
+ int wl1271_acx_tid_cfg(struct wl1271 *wl);
+ int wl1271_acx_frag_threshold(struct wl1271 *wl);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
+index c67889d..3b4ed07 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_init.c
++++ b/drivers/net/wireless/wl12xx/wl1271_init.c
+@@ -284,7 +284,7 @@ int wl1271_hw_init(struct wl1271 *wl)
+ 		goto out_free_memmap;
+ 
+ 	/* Configure TX rate classes */
+-	ret = wl1271_acx_rate_policies(wl, CONF_TX_RATE_MASK_BASIC);
++	ret = wl1271_acx_rate_policies(wl);
+ 	if (ret < 0)
+ 		goto out_free_memmap;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 7a73aaa..775b1e8 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -777,7 +777,20 @@ out:
+ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ {
+ 	struct wl1271 *wl = hw->priv;
++	struct ieee80211_conf *conf = &hw->conf;
++	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
++	struct ieee80211_sta *sta = txinfo->control.sta;
++	unsigned long flags;
+ 
++	/* peek into the rates configured in the STA entry */
++	spin_lock_irqsave(&wl->wl_lock, flags);
++	if (sta && sta->supp_rates[conf->channel->band] != wl->sta_rate_set) {
++		wl->sta_rate_set = sta->supp_rates[conf->channel->band];
++		set_bit(WL1271_FLAG_STA_RATES_CHANGED, &wl->flags);
++	}
++	spin_unlock_irqrestore(&wl->wl_lock, flags);
++
++	/* queue the packet */
+ 	skb_queue_tail(&wl->tx_queue, skb);
+ 
+ 	/*
+@@ -1004,7 +1017,6 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
+ 	wl->elp = false;
+ 	wl->psm = 0;
+ 	wl->psm_entry_retry = 0;
+-	wl->associated = false;
+ 	wl->tx_queue_stopped = false;
+ 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
+ 	wl->tx_blocks_available = 0;
+@@ -1016,6 +1028,9 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
+ 	wl->time_offset = 0;
+ 	wl->session_counter = 0;
+ 	wl->joined = false;
++	wl->rate_set = CONF_TX_RATE_MASK_BASIC;
++	wl->sta_rate_set = 0;
++	wl->flags = 0;
+ 
+ 	for (i = 0; i < NUM_TX_QUEUES; i++)
+ 		wl->tx_blocks_freed[i] = 0;
+@@ -1212,8 +1227,9 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 			wl1271_join_channel(wl, channel);
+ 
+ 		if (conf->flags & IEEE80211_CONF_IDLE) {
+-			wl->basic_rate_set = CONF_TX_RATE_MASK_BASIC;
+-			wl1271_acx_rate_policies(wl, CONF_TX_RATE_MASK_BASIC);
++			wl->rate_set = CONF_TX_RATE_MASK_BASIC;
++			wl->sta_rate_set = 0;
++			wl1271_acx_rate_policies(wl);
+ 		}
+ 	}
+ 
+@@ -1229,7 +1245,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		 * If we're not, we'll enter it when joining an SSID,
+ 		 * through the bss_info_changed() hook.
+ 		 */
+-		if (wl->associated) {
++		if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags)) {
+ 			wl1271_info("psm enabled");
+ 			ret = wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE);
+ 		}
+@@ -1522,22 +1538,6 @@ out:
+ 	return ret;
+ }
+ 
+-static u32 wl1271_enabled_rates_get(struct wl1271 *wl, u64 basic_rate_set)
+-{
+-	struct ieee80211_supported_band *band;
+-	u32 enabled_rates = 0;
+-	int bit;
+-
+-	band = wl->hw->wiphy->bands[wl->band];
+-	for (bit = 0; bit < band->n_bitrates; bit++) {
+-		if (basic_rate_set & 0x1)
+-			enabled_rates |= band->bitrates[bit].hw_value;
+-		basic_rate_set >>= 1;
+-	}
+-
+-	return enabled_rates;
+-}
+-
+ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 				       struct ieee80211_vif *vif,
+ 				       struct ieee80211_bss_conf *bss_conf,
+@@ -1616,7 +1616,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (changed & BSS_CHANGED_ASSOC) {
+ 		if (bss_conf->assoc) {
+ 			wl->aid = bss_conf->aid;
+-			wl->associated = true;
++			set_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags);
+ 
+ 			/*
+ 			 * with wl1271, we don't need to update the
+@@ -1641,7 +1641,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			}
+ 		} else {
+ 			/* use defaults when not associated */
+-			wl->associated = false;
++			clear_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags);
+ 			wl->aid = 0;
+ 		}
+ 
+@@ -1676,17 +1676,6 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
+-	if (changed & BSS_CHANGED_BASIC_RATES) {
+-		wl->basic_rate_set = wl1271_enabled_rates_get(
+-			wl, bss_conf->basic_rates);
+-
+-		ret = wl1271_acx_rate_policies(wl, wl->basic_rate_set);
+-		if (ret < 0) {
+-			wl1271_warning("Set rate policies failed %d", ret);
+-			goto out_sleep;
+-		}
+-	}
+-
+ out_sleep:
+ 	wl1271_ps_elp_sleep(wl);
+ 
+@@ -1969,14 +1958,16 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 	wl->psm = 0;
+ 	wl->psm_requested = false;
+ 	wl->psm_entry_retry = 0;
+-	wl->associated = false;
+ 	wl->tx_queue_stopped = false;
+ 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
+ 	wl->basic_rate_set = CONF_TX_RATE_MASK_BASIC;
++	wl->rate_set = CONF_TX_RATE_MASK_BASIC;
++	wl->sta_rate_set = 0;
+ 	wl->band = IEEE80211_BAND_2GHZ;
+ 	wl->vif = NULL;
+ 	wl->joined = false;
+ 	wl->gpio_power = false;
++	wl->flags = 0;
+ 
+ 	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
+ 		wl->tx_frames[i] = NULL;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
+index 00af065..75f5327 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
+@@ -121,6 +121,11 @@ static int wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ 	pad = pad - skb->len;
+ 	tx_attr |= pad << TX_HW_ATTR_OFST_LAST_WORD_PAD;
+ 
++	/* if the packets are destined for AP (have a STA entry) send them
++	   with AP rate policies, otherwise use default basic rates */
++	if (control->control.sta)
++		tx_attr |= ACX_TX_AP_FULL_RATE << TX_HW_ATTR_OFST_RATE_POLICY;
++
+ 	desc->tx_attr = cpu_to_le16(tx_attr);
+ 
+ 	wl1271_debug(DEBUG_TX, "tx_fill_hdr: pad: %d", pad);
+@@ -214,18 +219,50 @@ static int wl1271_tx_frame(struct wl1271 *wl, struct sk_buff *skb)
+ 	return ret;
+ }
+ 
++static u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set)
++{
++	struct ieee80211_supported_band *band;
++	u32 enabled_rates = 0;
++	int bit;
++
++	band = wl->hw->wiphy->bands[wl->band];
++	for (bit = 0; bit < band->n_bitrates; bit++) {
++		if (rate_set & 0x1)
++			enabled_rates |= band->bitrates[bit].hw_value;
++		rate_set >>= 1;
++	}
++
++	return enabled_rates;
++}
++
+ void wl1271_tx_work(struct work_struct *work)
+ {
+ 	struct wl1271 *wl = container_of(work, struct wl1271, tx_work);
+ 	struct sk_buff *skb;
+ 	bool woken_up = false;
++	u32 sta_rates = 0;
+ 	int ret;
+ 
++	/* check if the rates supported by the AP have changed */
++	if (unlikely(test_and_clear_bit(WL1271_FLAG_STA_RATES_CHANGED,
++					&wl->flags))) {
++		unsigned long flags;
++		spin_lock_irqsave(&wl->wl_lock, flags);
++		sta_rates = wl->sta_rate_set;
++		spin_unlock_irqrestore(&wl->wl_lock, flags);
++	}
++
+ 	mutex_lock(&wl->mutex);
+ 
+ 	if (unlikely(wl->state == WL1271_STATE_OFF))
+ 		goto out;
+ 
++	/* if rates have changed, re-configure the rate policy */
++	if (unlikely(sta_rates)) {
++		wl->rate_set = wl1271_tx_enabled_rates_get(wl, sta_rates);
++		wl1271_acx_rate_policies(wl);
++	}
++
+ 	while ((skb = skb_dequeue(&wl->tx_queue))) {
+ 		if (!woken_up) {
+ 			ret = wl1271_ps_elp_wakeup(wl, false);
+-- 
+1.6.3.3
 
