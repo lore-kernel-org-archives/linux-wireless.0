@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:52663 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935581AbZLGVF6 (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:63547 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762618AbZLKLlx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2009 16:05:58 -0500
-Received: by ewy19 with SMTP id 19so984213ewy.1
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Dec 2009 13:06:01 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1258408565.32159.42.camel@johannes.local>
-References: <83a869cd0908211513k2e14ba40k251aa8a1e7393a77@mail.gmail.com>
-	 <1250927141.23605.3.camel@johannes.local>
-	 <83a869cd0911071010g32c798c6pfecd875a1bf484e0@mail.gmail.com>
-	 <1257621757.29454.48.camel@johannes.local>
-	 <83a869cd0911161353p5ea44472s8e6f146929ff6c65@mail.gmail.com>
-	 <1258408565.32159.42.camel@johannes.local>
-Date: Mon, 7 Dec 2009 22:06:00 +0100
-Message-ID: <83a869cd0912071306y4a56953fm8248b6d030b311ae@mail.gmail.com>
-Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
-From: gregor kowski <gregor.kowski@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Fri, 11 Dec 2009 06:41:53 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: [PATCH 12/31] wl1271: fix one typo in the rx_rssi_and_proc_compens values
+Date: Fri, 11 Dec 2009 13:41:03 +0200
+Message-Id: <1260531682-4695-13-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
+References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/16/09, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2009-11-16 at 22:53 +0100, gregor kowski wrote:
->> The mac80211 tkip code won't call update_tkip_key, if rx packets
->> are received without KEY_FLAG_UPLOADED_TO_HARDWARE. This can happen on
->> first packet because the hardware key stuff is called asynchronously with
->> todo workqueue.
->
->> -	ctx->initialized = 1;
->> +	ctx->initialized = TKIP_STATE_PHASE1_DONE;
->
-> Now you just need to rename the variable holding it to "state" too...
-Done
+There was a typo in one of the values in the rx_rssi_and_proc_compens elemt
+of the Radio Parameters struct.
 
-Sorry for the delay
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Gregor
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 9be9aff..d473d86 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -278,7 +278,7 @@ static struct conf_drv_settings default_conf = {
+ 			.tx_trace_loss       = 0x0,
+ 			.rx_rssi_and_proc_compens = {
+ 				0xec, 0xf6, 0x00, 0x0c, 0x18, 0xf8,
+-				0xfc, 0x00, 0x08, 0x10, 0xf0, 0xf8,
++				0xfc, 0x00, 0x80, 0x10, 0xf0, 0xf8,
+ 				0x00, 0x0a, 0x14 },
+ 			.rx_trace_loss_5     = { 0, 0, 0, 0, 0, 0, 0 },
+ 			.tx_trace_loss_5     = { 0, 0, 0, 0, 0, 0, 0 },
+-- 
+1.6.3.3
+
