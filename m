@@ -1,39 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:58111 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751296AbZLPNGO (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:54881 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934849AbZLKIcb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2009 08:06:14 -0500
-Message-ID: <4B28DBB6.5030304@gmail.com>
-Date: Wed, 16 Dec 2009 14:08:06 +0100
-From: Roel Kluin <roel.kluin@gmail.com>
+	Fri, 11 Dec 2009 03:32:31 -0500
 MIME-Version: 1.0
-To: Samuel Ortiz <samuel.ortiz@intel.com>, Zhu Yi <yi.zhu@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: [PATCH] iwmc3200wifi: Fix test of unsigned in iwm_ntf_stop_resume_tx()
-Content-Type: text/plain; charset=ISO-8859-1
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 11 Dec 2009 00:32:17 -0800
+Message-ID: <43e72e890912110032q32ba456eqbc7752e36e00fa09@mail.gmail.com>
+Subject: Changes to compat-wireless for 2.6.33
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	Bala Shanmugam <sbalashanmugam@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-`queue' is unsigned so the test did not work.
+Compat-wireless [1] now relies on the linux-next git tree [2] as such
+we are to add backports for the next kernel release as we move along
+with the 802.11 subsystem while a stable linux-2.6.33.y branch will be
+prepared that sticks to Linus' tree to iron out fixes for that release
+along with the standard kernel release cycle. To be clear: we used to
+keep the bleeding edge compat-wireless in synch only with the latest
+rc kernel by using wireless-testing, bleeding edge compat-wireless
+will now move along with the next kernel release and not stick to the
+latest rc kernel. The main advantage here is the possibility add
+backporting for other subsystems in one package using one single git
+tree.
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
----
-Found using coccinelle: http://coccinelle.lip6.fr/
+Thanks to Bala Shanmugam's patch compat-wireless now drags in the
+bluetooth subsystem as well. Since two subsystems are now being
+backported they now share a common rfkill backport module and a
+general kernel compatibility module. Future patches to compat-wireless
+then will just be for the patches/ directory and general build
+updates. As before I continue to try to push most compatibility code
+in the compat-2.6.*[ch] files while *only* things which cannot be
+backported through code is left to the patches/*.patch files. Due to
+the split to compat-wireless and compat.git please send compat patches
+against the new compat.git tree [3], you can use the linux-wireless
+mailing list for them.
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
-index 1c57c1f..9ac72e4 100644
---- a/drivers/net/wireless/iwmc3200wifi/rx.c
-+++ b/drivers/net/wireless/iwmc3200wifi/rx.c
-@@ -1128,7 +1128,7 @@ static int iwm_ntf_stop_resume_tx(struct iwm_priv *iwm, u8 *buf,
- 			struct iwm_tx_queue *txq;
- 			u16 queue = iwm_tid_to_queue(bit);
- 
--			if (queue < 0)
-+			if (queue == -EINVAL)
- 				continue;
- 
- 			txq = &iwm->txq[queue];
+I welcome others to use compat.git for other compatibility needs and
+to send patches for it for more general kernel compatibility, even if
+that is for other subsystems. For now the focus on compat-wireless
+will just be 802.11 drivers and bluetooth drivers but I will likely
+extend it to include some other network drivers and would be open to
+other subsystems if someone commits to keeping them updated.
+
+Part of the change to using linux-next meant addressing the 2.6.33
+changes already but it also meant running into some items I did not
+really care to backport like the PCMCIA changes. This meant disabling
+the ssb module, and therefore the Ethernet b44, and 802.11 b43,
+b43legacy. I also ran into some small snag with libertas so ended up
+disabling it but it seems that one can be fixed easily. All other
+drivers were kept enabled and backported. I have *not* tested the
+bluetooth drivers since the change to linux-next nor building it
+mainly due to the fact my current kernel had CONFIG_BT=y. I'll test
+that out tomorrow, but welcome your help.
+
+Enabling 802.11 or bluetooth is pretty easy through the top level
+Makefile, should be intuitive. Perhaps using this sort of build
+process will let us use our own mconf for our own options in the near
+future -- I didn't update scripts/driver-select, that remains busted.
+I noticed Ubuntu is shipping CONFIG_BT=y on 2.6.27..2.6.32 while
+Fedora should have CONFIG_BT=m (haven't checked the kernel ranges).
+Building the compat-bluetooth stuff requires the later so if you'd
+like to take advantage of this stuff please consider a change.
+
+[1] git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6.git
+[2] git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+[3] git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git
+
+  Luis
