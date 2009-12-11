@@ -1,36 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39693 "HELO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932196AbZLMCYg (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:59856 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751557AbZLKI7F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Dec 2009 21:24:36 -0500
-Date: Sat, 12 Dec 2009 20:22:32 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8180: Remove usage of deprecated 'qual'
-Message-ID: <20091213012232.GA12937@tuxdriver.com>
-References: <4b242f9e.4JOejhV35R7ixmmP%Larry.Finger@lwfinger.net>
+	Fri, 11 Dec 2009 03:59:05 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4b242f9e.4JOejhV35R7ixmmP%Larry.Finger@lwfinger.net>
+In-Reply-To: <1260519040.12157.233.camel@debian>
+References: <a8e1da0912100127k4dcddd65gfe5ff0b1330fe63b@mail.gmail.com>
+	 <a8e1da0912100130i2e654796mf899dd27df869673@mail.gmail.com>
+	 <20091210184931.257A.A69D9226@jp.fujitsu.com>
+	 <4B217219.6040109@crca.org.au>
+	 <a8e1da0912101747l7e0e9fcbh8a7007e95e7c8509@mail.gmail.com>
+	 <1260499048.12157.219.camel@debian>
+	 <a8e1da0912101935g99a0902m43136a05edea938b@mail.gmail.com>
+	 <1260519040.12157.233.camel@debian>
+Date: Fri, 11 Dec 2009 16:59:10 +0800
+Message-ID: <a8e1da0912110059q19613f0ak25383436253e25a7@mail.gmail.com>
+Subject: Re: mmotm-2009-12-08-17-45 resume slowly
+From: Dave Young <hidave.darkstar@gmail.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Nigel Cunningham <ncunningham@crca.org.au>,
+	KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 12, 2009 at 06:04:46PM -0600, Larry Finger wrote:
-> When building rtl8180, the following warning occurs:
-> 
->   CC [M]  drivers/net/wireless/rtl818x/rtl8180_dev.o
-> drivers/net/wireless/rtl818x/rtl8180_dev.c: In function ‘rtl8180_handle_rx’:
-> drivers/net/wireless/rtl818x/rtl8180_dev.c:135: warning: ‘qual’ is deprecated
->     (declared at include/net/mac80211.h:562)
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+On Fri, Dec 11, 2009 at 4:10 PM, Zhu Yi <yi.zhu@intel.com> wrote:
+> On Fri, 2009-12-11 at 11:35 +0800, Dave Young wrote:
+>> > Try powering off the AP before resume?
+>>
+>> Unfortunately, I use public wireless resouce, so I cann't do that.
+>
+> Then move the laptop away.
 
-FWIW, I think Johannes has a hunk like this in his patch to finally
-remove qual.
+Tried, still can not produce.
 
-John
+>
+> Thanks,
+> -yi
+>
+>
+
+
+
 -- 
-John W. Linville                Someday the world will need a hero, and you
-linville@tuxdriver.com                  might be all we have.  Be ready.
+Regards
+dave
