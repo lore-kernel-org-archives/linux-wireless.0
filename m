@@ -1,83 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:41438 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756715AbZLUQRf convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:29707 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756906AbZLKMJI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2009 11:17:35 -0500
-Received: by fg-out-1718.google.com with SMTP id 22so2133796fge.1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2009 08:17:34 -0800 (PST)
-Subject: Re: o11s: Modularize Path Selection Protocol etc.
-Mime-Version: 1.0 (Apple Message framework v1077)
-Content-Type: text/plain; charset=us-ascii
-From: Rui Paulo <rpaulo@gmail.com>
-In-Reply-To: <4B2F9930.8070401@cosetrain.com>
-Date: Mon, 21 Dec 2009 16:17:29 +0000
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <7057634E-E560-413E-9FB2-163F5311E054@gmail.com>
-References: <4B2F9930.8070401@cosetrain.com>
-To: Florian Sesser <flomaillist@cosetrain.com>
+	Fri, 11 Dec 2009 07:09:08 -0500
+Subject: Re: [PATCH 21/31] wl1271: prevent power save entry while not
+ associated
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "Coelho Luciano (Nokia-D/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1260532418.2442.129.camel@johannes.local>
+References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
+	 <1260531682-4695-22-git-send-email-luciano.coelho@nokia.com>
+	 <1260532418.2442.129.camel@johannes.local>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 11 Dec 2009 14:09:15 +0200
+Message-ID: <1260533355.2689.45.camel@wimaxnb.ntc.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 Dec 2009, at 15:50, Florian Sesser wrote:
+Hi,
 
-> Hi mesh folks!
-> 
-> For my diploma thesis, I want to add a P2P routing protocoll to the
-> pre-80211s software in the linux kernel. For details, see my previous
-> mails. [1],[2]
-> 
-> In struct ieee80211_if_mesh, the current code reads
-> 
-> net/mac80211/ieee80211_i.h
->>        u8 mesh_id[IEEE80211_MAX_MESH_ID_LEN];
->>        size_t mesh_id_len;
->>        /* Active Path Selection Protocol Identifier */
->>        u8 mesh_pp_id;
->>        /* Active Path Selection Metric Identifier */
->>        u8 mesh_pm_id;
->>        /* Congestion Control Mode Identifier */
->>        u8 mesh_cc_id;
->>        /* Synchronization Protocol Identifier */
->>        u8 mesh_sp_id;
->>        /* Authentication Protocol Identifier */
->>        u8 mesh_auth_id;
-> 
-> which is what I at first wanted to work with.
-> 
-> In my last patch [2], I introduced some new 32 bit struct members,
-> because, if I am not mistaken, these IDs should include a vendor
-> specific OUI, which enables a user to combine a path selection protocol
-> of vendor A with a path selection metric of vendor B.
+Unfortunately I haven't had the time to investigate this further, but
+for me it did happen after getting de-authenticated from an AP and
+attempting to re-authenticate. While re-authenticating, mac80211
+appeared to request going into power save after transmitting the
+corresponding control messages, preventing the re-authentication from
+succeeding.
 
-This has changed quite a bit on the latest 802.11s draft standards. If you want to use your own routing protocol and to be 802.11s compliant, you need to set the path selection protocol ID to 255 and append a vendor specific information element to the management frame.
+My assumption is, that the dynamic power save mechanism is somehow
+getting triggered from the control message exchange - but, as I said, I
+cannot be sure at this point.
 
-> 
-> So.. am I erring here?
-> 
-> If yes, I would introduce a new 24 bit value for the OUI, which will be
-> combined with all the above u8's before going over the wire (into the
-> air of course)
-> ...if no, I would replace those values by 32 bit ones, possibly even
-> braking ABI compatibility.
-> 
-> What do you think?
-> Do you maybe have a better suggestion?
-> 
-> Thank you very much for your input!
-> 
-> 
-> Florian
-> 
-> [1] http://marc.info/?l=linux-wireless&m=122600107811517&w=2
-> [2] http://marc.info/?l=linux-wireless&m=123300309207545&w=2
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Juuso
 
---
-Rui Paulo
+On Fri, 2009-12-11 at 12:53 +0100, ext Johannes Berg wrote:
+> On Fri, 2009-12-11 at 13:41 +0200, Luciano Coelho wrote:
+> > From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> > 
+> > The mac80211 sometimes requests power save entry while not associated - this
+> > will cause problems, so prevent it if not associated. Go to powersave once
+> > association is complete.
+> 
+> Does it? It's not supposed to, and I imagine that causing trouble with
+> other drivers too. Do you know how that happens?
+> 
+> johannes
+
 
