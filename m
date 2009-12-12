@@ -1,405 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:59183 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752739AbZL2K7n (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39779 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761966AbZLLLam (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Dec 2009 05:59:43 -0500
-Date: Tue, 29 Dec 2009 12:59:32 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 2/3] cfg80211/mac80211: Use more generic bitrate mask for
- rate control
-Message-ID: <20091229105932.GC18493@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 12 Dec 2009 06:30:42 -0500
+Subject: Re: mac80211 noob question
+From: Johannes Berg <johannes@sipsolutions.net>
+To: VN <vnik5287@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <157c4da70912120329n4b6bc663ic47e95201f7569da@mail.gmail.com>
+References: <157c4da70912120218lc53633bk62fc9ee99377a231@mail.gmail.com>
+	 <1260613513.2442.319.camel@johannes.local>
+	 <157c4da70912120329n4b6bc663ic47e95201f7569da@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-9Pq5CCpLs+Vc5AkXzKkW"
+Date: Sat, 12 Dec 2009 12:30:45 +0100
+Message-ID: <1260617445.2442.332.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Extend struct cfg80211_bitrate_mask to actually use a bitfield mask
-instead of just a single fixed or maximum rate index. This change
-itself does not modify the behavior (except for debugfs files), but it
-prepares cfg80211 and mac80211 for a new nl80211 command for setting
-which rates can be used in TX rate control.
 
-Since frames are now going through the rate control algorithm
-unconditionally, the internal IEEE80211_TX_INTFL_RCALGO flag can now
-be removed. The RC implementations can use the rate_idx_mask value top
-optimize their behavior if only a single rate is enabled.
+--=-9Pq5CCpLs+Vc5AkXzKkW
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The old max_rate_idx in struct ieee80211_tx_rate_control is maintained
-(but commented as deprecated) for backwards compatibility with existing
-RC implementations. Once these implementations have been updated to
-use the more generic rate_idx_mask, the max_rate_idx value can be
-removed.
+On Sat, 2009-12-12 at 22:29 +1100, VN wrote:
+> Ah I guess I am. I just assumed that since I'm able to capture data
+> frames sent from node A to node B (w/o radiotap?), there should be
+> some way to check which ones were acknowledged by node B. Thanks for
+> your prompt response!
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+But are you capturing on A or on B? If you're capturing on A, then yes,
+you can figure out whether it was ACKed by B and A received the ACK --
+pull up a monitor interface and see the info you get from it.
 
----
- include/net/cfg80211.h        |   13 ++-----------
- include/net/mac80211.h        |    8 ++++----
- net/mac80211/cfg.c            |   32 +++-----------------------------
- net/mac80211/debugfs_netdev.c |   22 ++++++++++++----------
- net/mac80211/ieee80211_i.h    |    4 ++--
- net/mac80211/iface.c          |    8 ++++++--
- net/mac80211/rate.c           |   28 ++++++++++++++++------------
- net/mac80211/rate.h           |    5 +----
- net/mac80211/tx.c             |   12 ++++++++++--
- net/wireless/wext-compat.c    |   34 ++++++++++++++++++++++++++++++----
- 10 files changed, 86 insertions(+), 80 deletions(-)
+johannes
 
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-12-29 10:50:57.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-12-29 10:54:29.000000000 +0200
-@@ -494,8 +494,8 @@ struct ieee80211_sub_if_data {
- 	 */
- 	struct ieee80211_if_ap *bss;
- 
--	int force_unicast_rateidx; /* forced TX rateidx for unicast frames */
--	int max_ratectrl_rateidx; /* max TX rateidx for rate control */
-+	/* bitmap of allowed (non-MCS) rate indexes for rate control */
-+	u32 rc_rateidx_mask[IEEE80211_NUM_BANDS];
- 
- 	union {
- 		struct ieee80211_if_ap ap;
---- wireless-testing.orig/include/net/cfg80211.h	2009-12-29 10:50:57.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2009-12-29 10:54:29.000000000 +0200
-@@ -856,20 +856,11 @@ enum tx_power_setting {
-  * cfg80211_bitrate_mask - masks for bitrate control
-  */
- struct cfg80211_bitrate_mask {
--/*
-- * As discussed in Berlin, this struct really
-- * should look like this:
--
- 	struct {
- 		u32 legacy;
--		u8 mcs[IEEE80211_HT_MCS_MASK_LEN];
-+		/* TODO: add support for masking MCS rates; e.g.: */
-+		/* u8 mcs[IEEE80211_HT_MCS_MASK_LEN]; */
- 	} control[IEEE80211_NUM_BANDS];
--
-- * Since we can always fix in-kernel users, let's keep
-- * it simpler for now:
-- */
--	u32 fixed;   /* fixed bitrate, 0 == not fixed */
--	u32 maxrate; /* in kbps, 0 == no limit */
- };
- /**
-  * struct cfg80211_pmksa - PMK Security Association
---- wireless-testing.orig/include/net/mac80211.h	2009-12-29 10:53:59.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2009-12-29 10:54:29.000000000 +0200
-@@ -255,9 +255,6 @@ struct ieee80211_bss_conf {
-  * @IEEE80211_TX_CTL_RATE_CTRL_PROBE: internal to mac80211, can be
-  *	set by rate control algorithms to indicate probe rate, will
-  *	be cleared for fragmented frames (except on the last fragment)
-- * @IEEE80211_TX_INTFL_RCALGO: mac80211 internal flag, do not test or
-- *	set this flag in the driver; indicates that the rate control
-- *	algorithm was used and should be notified of TX status
-  * @IEEE80211_TX_INTFL_NEED_TXPROCESSING: completely internal to mac80211,
-  *	used to indicate that a pending frame requires TX processing before
-  *	it can be sent out.
-@@ -287,7 +284,6 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_STAT_AMPDU			= BIT(10),
- 	IEEE80211_TX_STAT_AMPDU_NO_BACK		= BIT(11),
- 	IEEE80211_TX_CTL_RATE_CTRL_PROBE	= BIT(12),
--	IEEE80211_TX_INTFL_RCALGO		= BIT(13),
- 	IEEE80211_TX_INTFL_NEED_TXPROCESSING	= BIT(14),
- 	IEEE80211_TX_INTFL_RETRIED		= BIT(15),
- 	IEEE80211_TX_INTFL_DONT_ENCRYPT		= BIT(16),
-@@ -2292,6 +2288,9 @@ enum rate_control_changed {
-  * @short_preamble: whether mac80211 will request short-preamble transmission
-  *	if the selected rate supports it
-  * @max_rate_idx: user-requested maximum rate (not MCS for now)
-+ *	(deprecated; this will be removed once drivers get updated to use
-+ *	rate_idx_mask)
-+ * @rate_idx_mask: user-requested rate mask (not MCS for now)
-  * @skb: the skb that will be transmitted, the control information in it needs
-  *	to be filled in
-  * @ap: whether this frame is sent out in AP mode
-@@ -2304,6 +2303,7 @@ struct ieee80211_tx_rate_control {
- 	struct ieee80211_tx_rate reported_rate;
- 	bool rts, short_preamble;
- 	u8 max_rate_idx;
-+	u32 rate_idx_mask;
- 	bool ap;
- };
- 
---- wireless-testing.orig/net/mac80211/debugfs_netdev.c	2009-12-29 10:50:57.000000000 +0200
-+++ wireless-testing/net/mac80211/debugfs_netdev.c	2009-12-29 10:54:29.000000000 +0200
-@@ -127,8 +127,10 @@ __IEEE80211_IF_FILE(name, ieee80211_if_w
- 
- /* common attributes */
- IEEE80211_IF_FILE(drop_unencrypted, drop_unencrypted, DEC);
--IEEE80211_IF_FILE(force_unicast_rateidx, force_unicast_rateidx, DEC);
--IEEE80211_IF_FILE(max_ratectrl_rateidx, max_ratectrl_rateidx, DEC);
-+IEEE80211_IF_FILE(rc_rateidx_mask_2ghz, rc_rateidx_mask[IEEE80211_BAND_2GHZ],
-+		  HEX);
-+IEEE80211_IF_FILE(rc_rateidx_mask_5ghz, rc_rateidx_mask[IEEE80211_BAND_5GHZ],
-+		  HEX);
- 
- /* STA attributes */
- IEEE80211_IF_FILE(bssid, u.mgd.bssid, MAC);
-@@ -264,8 +266,8 @@ IEEE80211_IF_FILE(dot11MeshHWMPRootMode,
- static void add_sta_files(struct ieee80211_sub_if_data *sdata)
- {
- 	DEBUGFS_ADD(drop_unencrypted, sta);
--	DEBUGFS_ADD(force_unicast_rateidx, sta);
--	DEBUGFS_ADD(max_ratectrl_rateidx, sta);
-+	DEBUGFS_ADD(rc_rateidx_mask_2ghz, sta);
-+	DEBUGFS_ADD(rc_rateidx_mask_5ghz, sta);
- 
- 	DEBUGFS_ADD(bssid, sta);
- 	DEBUGFS_ADD(aid, sta);
-@@ -275,8 +277,8 @@ static void add_sta_files(struct ieee802
- static void add_ap_files(struct ieee80211_sub_if_data *sdata)
- {
- 	DEBUGFS_ADD(drop_unencrypted, ap);
--	DEBUGFS_ADD(force_unicast_rateidx, ap);
--	DEBUGFS_ADD(max_ratectrl_rateidx, ap);
-+	DEBUGFS_ADD(rc_rateidx_mask_2ghz, ap);
-+	DEBUGFS_ADD(rc_rateidx_mask_5ghz, ap);
- 
- 	DEBUGFS_ADD(num_sta_ps, ap);
- 	DEBUGFS_ADD(dtim_count, ap);
-@@ -286,8 +288,8 @@ static void add_ap_files(struct ieee8021
- static void add_wds_files(struct ieee80211_sub_if_data *sdata)
- {
- 	DEBUGFS_ADD(drop_unencrypted, wds);
--	DEBUGFS_ADD(force_unicast_rateidx, wds);
--	DEBUGFS_ADD(max_ratectrl_rateidx, wds);
-+	DEBUGFS_ADD(rc_rateidx_mask_2ghz, wds);
-+	DEBUGFS_ADD(rc_rateidx_mask_5ghz, wds);
- 
- 	DEBUGFS_ADD(peer, wds);
- }
-@@ -295,8 +297,8 @@ static void add_wds_files(struct ieee802
- static void add_vlan_files(struct ieee80211_sub_if_data *sdata)
- {
- 	DEBUGFS_ADD(drop_unencrypted, vlan);
--	DEBUGFS_ADD(force_unicast_rateidx, vlan);
--	DEBUGFS_ADD(max_ratectrl_rateidx, vlan);
-+	DEBUGFS_ADD(rc_rateidx_mask_2ghz, vlan);
-+	DEBUGFS_ADD(rc_rateidx_mask_5ghz, vlan);
- }
- 
- static void add_monitor_files(struct ieee80211_sub_if_data *sdata)
---- wireless-testing.orig/net/mac80211/iface.c	2009-12-29 10:50:57.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2009-12-29 10:54:29.000000000 +0200
-@@ -820,8 +820,12 @@ int ieee80211_if_add(struct ieee80211_lo
- 
- 	INIT_LIST_HEAD(&sdata->key_list);
- 
--	sdata->force_unicast_rateidx = -1;
--	sdata->max_ratectrl_rateidx = -1;
-+	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
-+		struct ieee80211_supported_band *sband;
-+		sband = local->hw.wiphy->bands[i];
-+		sdata->rc_rateidx_mask[i] =
-+			sband ? (1 << sband->n_bitrates) - 1 : 0;
-+	}
- 
- 	/* setup type-dependent data */
- 	ieee80211_setup_sdata(sdata, type);
---- wireless-testing.orig/net/mac80211/rate.c	2009-12-29 10:53:59.000000000 +0200
-+++ wireless-testing/net/mac80211/rate.c	2009-12-29 10:54:29.000000000 +0200
-@@ -257,7 +257,8 @@ void rate_control_get_rate(struct ieee80
- 	void *priv_sta = NULL;
- 	struct ieee80211_sta *ista = NULL;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(txrc->skb);
--	int i;
-+	int i, j;
-+	u32 mask;
- 
- 	if (sta) {
- 		ista = &sta->sta;
-@@ -270,23 +271,26 @@ void rate_control_get_rate(struct ieee80
- 		info->control.rates[i].count = 1;
- 	}
- 
--	if (sta && sdata->force_unicast_rateidx > -1) {
--		info->control.rates[0].idx = sdata->force_unicast_rateidx;
--	} else {
--		ref->ops->get_rate(ref->priv, ista, priv_sta, txrc);
--		info->flags |= IEEE80211_TX_INTFL_RCALGO;
--	}
-+	ref->ops->get_rate(ref->priv, ista, priv_sta, txrc);
- 
- 	/*
--	 * try to enforce the maximum rate the user wanted
-+	 * try to enforce the rateidx mask the user wanted
- 	 */
--	if (sdata->max_ratectrl_rateidx > -1)
-+	mask = sdata->rc_rateidx_mask[info->band];
-+	if (mask != (1 << txrc->sband->n_bitrates) - 1) {
-+		if (sta)
-+			mask &= sta->sta.supp_rates[info->band];
- 		for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
- 			if (info->control.rates[i].flags & IEEE80211_TX_RC_MCS)
- 				continue;
--			info->control.rates[i].idx =
--				min_t(s8, info->control.rates[i].idx,
--				      sdata->max_ratectrl_rateidx);
-+			for (j = info->control.rates[i].idx;
-+			     j < txrc->sband->n_bitrates; j++) {
-+				if (mask & (1 << j)) {
-+					info->control.rates[i].idx = j;
-+					break;
-+				}
-+			}
-+		}
- 	}
- 
- 	BUG_ON(info->control.rates[0].idx < 0);
---- wireless-testing.orig/net/mac80211/tx.c	2009-12-29 10:53:59.000000000 +0200
-+++ wireless-testing/net/mac80211/tx.c	2009-12-29 10:54:29.000000000 +0200
-@@ -519,7 +519,11 @@ ieee80211_tx_h_rate_ctrl(struct ieee8021
- 	txrc.bss_conf = &tx->sdata->vif.bss_conf;
- 	txrc.skb = tx->skb;
- 	txrc.reported_rate.idx = -1;
--	txrc.max_rate_idx = tx->sdata->max_ratectrl_rateidx;
-+	txrc.rate_idx_mask = tx->sdata->rc_rateidx_mask[tx->channel->band];
-+	if (txrc.rate_idx_mask == (1 << sband->n_bitrates) - 1)
-+		txrc.max_rate_idx = -1;
-+	else
-+		txrc.max_rate_idx = fls(txrc.rate_idx_mask) - 1;
- 	txrc.ap = tx->sdata->vif.type == NL80211_IFTYPE_AP;
- 
- 	/* set up RTS protection if desired */
-@@ -2178,7 +2182,11 @@ struct sk_buff *ieee80211_beacon_get_tim
- 	txrc.bss_conf = &sdata->vif.bss_conf;
- 	txrc.skb = skb;
- 	txrc.reported_rate.idx = -1;
--	txrc.max_rate_idx = sdata->max_ratectrl_rateidx;
-+	txrc.rate_idx_mask = sdata->rc_rateidx_mask[band];
-+	if (txrc.rate_idx_mask == (1 << sband->n_bitrates) - 1)
-+		txrc.max_rate_idx = -1;
-+	else
-+		txrc.max_rate_idx = fls(txrc.rate_idx_mask) - 1;
- 	txrc.ap = true;
- 	rate_control_get_rate(sdata, NULL, &txrc);
- 
---- wireless-testing.orig/net/wireless/wext-compat.c	2009-12-29 10:49:34.000000000 +0200
-+++ wireless-testing/net/wireless/wext-compat.c	2009-12-29 10:54:29.000000000 +0200
-@@ -1204,21 +1204,47 @@ int cfg80211_wext_siwrate(struct net_dev
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
- 	struct cfg80211_bitrate_mask mask;
-+	u32 fixed, maxrate;
-+	struct ieee80211_supported_band *sband;
-+	int band, ridx;
-+	bool match = false;
- 
- 	if (!rdev->ops->set_bitrate_mask)
- 		return -EOPNOTSUPP;
- 
--	mask.fixed = 0;
--	mask.maxrate = 0;
-+	memset(&mask, 0, sizeof(mask));
-+	fixed = 0;
-+	maxrate = 0;
- 
- 	if (rate->value < 0) {
- 		/* nothing */
- 	} else if (rate->fixed) {
--		mask.fixed = rate->value / 1000; /* kbps */
-+		fixed = rate->value / 100000;
- 	} else {
--		mask.maxrate = rate->value / 1000; /* kbps */
-+		maxrate = rate->value / 100000;
- 	}
- 
-+	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
-+		sband = wdev->wiphy->bands[band];
-+		if (sband == NULL)
-+			continue;
-+		for (ridx = 0; ridx < sband->n_bitrates; ridx++) {
-+			struct ieee80211_rate *srate = &sband->bitrates[ridx];
-+			if (fixed == srate->bitrate) {
-+				mask.control[band].legacy = 1 << ridx;
-+				match = true;
-+				break;
-+			}
-+			if (srate->bitrate <= maxrate) {
-+				mask.control[band].legacy |= 1 << ridx;
-+				match = true;
-+			}
-+		}
-+	}
-+
-+	if (!match)
-+		return -EINVAL;
-+
- 	return rdev->ops->set_bitrate_mask(wdev->wiphy, dev, NULL, &mask);
- }
- EXPORT_SYMBOL_GPL(cfg80211_wext_siwrate);
---- wireless-testing.orig/net/mac80211/rate.h	2009-12-29 10:49:34.000000000 +0200
-+++ wireless-testing/net/mac80211/rate.h	2009-12-29 10:54:29.000000000 +0200
-@@ -44,10 +44,7 @@ static inline void rate_control_tx_statu
- 	struct rate_control_ref *ref = local->rate_ctrl;
- 	struct ieee80211_sta *ista = &sta->sta;
- 	void *priv_sta = sta->rate_ctrl_priv;
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--
--	if (likely(info->flags & IEEE80211_TX_INTFL_RCALGO))
--		ref->ops->tx_status(ref->priv, sband, ista, priv_sta, skb);
-+	ref->ops->tx_status(ref->priv, sband, ista, priv_sta, skb);
- }
- 
- 
---- wireless-testing.orig/net/mac80211/cfg.c	2009-12-29 10:50:57.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2009-12-29 10:54:29.000000000 +0200
-@@ -1399,8 +1399,6 @@ static int ieee80211_set_bitrate_mask(st
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	int i;
--	u32 target_rate;
--	struct ieee80211_supported_band *sband;
- 
- 	/*
- 	 * This _could_ be supported by providing a hook for
-@@ -1410,35 +1408,11 @@ static int ieee80211_set_bitrate_mask(st
- 	if (local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
- 		return -EOPNOTSUPP;
- 
--	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
- 
--	/*
--	 * target_rate = -1, rate->fixed = 0 means auto only, so use all rates
--	 * target_rate = X, rate->fixed = 1 means only rate X
--	 * target_rate = X, rate->fixed = 0 means all rates <= X
--	 */
--	sdata->max_ratectrl_rateidx = -1;
--	sdata->force_unicast_rateidx = -1;
--
--	if (mask->fixed)
--		target_rate = mask->fixed / 100;
--	else if (mask->maxrate)
--		target_rate = mask->maxrate / 100;
--	else
--		return 0;
--
--	for (i = 0; i< sband->n_bitrates; i++) {
--		if (target_rate != sband->bitrates[i].bitrate)
--			continue;
--
--		/* requested bitrate found */
--		sdata->max_ratectrl_rateidx = i;
--		if (mask->fixed)
--			sdata->force_unicast_rateidx = i;
--		return 0;
--	}
-+	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
-+		sdata->rc_rateidx_mask[i] = mask->control[i].legacy;
- 
--	return -EINVAL;
-+	return 0;
- }
- 
- static int ieee80211_remain_on_channel(struct wiphy *wiphy,
+--=-9Pq5CCpLs+Vc5AkXzKkW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
--- 
+-----BEGIN PGP SIGNATURE-----
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+iQIcBAABAgAGBQJLI37iAAoJEODzc/N7+QmagLIQAIONUyMIUlaNpxKKRpZ3qgED
+DLSVRjGHswimlZvSs7cz+feFfhEiuivqZYbWiWRyT0Xp3Zj80QmNIG306Iip3XGn
+dSg82Ova4oSnbC3ONgOj6cirWt3gibJ8SNC8FOdNKPqEGvkDBnGRD9xf1sJkoRRI
+JaS0NUn/0huvtd/yDuCxzPOc2qkY1X5u5aaJkCvp8BG2ogxOcNaTteuEbkPw108C
+S88uTjZWbVWApG96fzGjwr/y0PA3gtnS9YwB2t8aklsvL3aWZdwlKu2qjZbsO1Nd
+wmEreu6Y5BF8PPTX3OnT3ZAT6yloolP0WlTGrkVg5pvBbZEZF96YeV695o0usTE6
+JBaRMFWyjndGmkEA0CGsOPo39oEVUBW9Z775Vm4vsF6bs2E3KTDz6r1MFFc94px/
+E8go5JBcEBttIgs7mo6LScczyFKBEDNe/Yp4oi1Lv8AajYDp/jIKoaP61FpNNjhe
+XMZSxwWbRMGxO+PQiQnK5DWDMWplOi95RZFVoZMt8gINrdk7tZ0O4k34+e8F6MfC
+uUT+1bAgcp8tsuDAWiMOA1xYvD//2olqOoPXG/QUBTIpN95e3/D3ixscoRnNUJfw
+eOAvTWsToWCLC66WY/EBh+5W+kKWELQPk8mz1EyqAOCIeVH1dk7KBdoc8vJ6P1wM
+0mwdcSjOL9SZf+x+fB4t
+=3upQ
+-----END PGP SIGNATURE-----
+
+--=-9Pq5CCpLs+Vc5AkXzKkW--
+
