@@ -1,155 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:65310 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754604AbZLBOaJ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54547 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761468AbZLLKZJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2009 09:30:09 -0500
-Received: by mail-bw0-f227.google.com with SMTP id 27so217224bwz.21
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2009 06:30:15 -0800 (PST)
-Message-Id: <20091202142942.015170962@gmail.com>
-References: <20091202142555.654873300@gmail.com>
-Date: Wed, 02 Dec 2009 15:26:01 +0100
-From: Holger Schurig <holgerschurig@googlemail.com>
-To: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: [PATCH 06/10] libertas: add access functions for mesh open/connect status
+	Sat, 12 Dec 2009 05:25:09 -0500
+Subject: Re: mac80211 noob question
+From: Johannes Berg <johannes@sipsolutions.net>
+To: VN <vnik5287@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <157c4da70912120218lc53633bk62fc9ee99377a231@mail.gmail.com>
+References: <157c4da70912120218lc53633bk62fc9ee99377a231@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-bLsUJPawexXE3z72IP1J"
+Date: Sat, 12 Dec 2009 11:25:13 +0100
+Message-ID: <1260613513.2442.319.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
 
----
-v2: define was in two lines
+--=-bLsUJPawexXE3z72IP1J
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Sat, 2009-12-12 at 21:18 +1100, VN wrote:
+> Hi list,
+> I've recently started hacking mac80211/ath5k in order to implement my
+> idea of cooperative relaying. I had a good look at the mac80211 code
+> and couldn't find anything that deals with ACKing... or is it done in
+> firmware and some flag is set to indicate that the frame has been
+> acknowledged? What I'm trying to achieve right now is to receive a
+> data frame while in monitor mode (e.g. ieee80211_rx_start_monitor())
+> and then check if it has been acknowledged by the destination node.
+> would be very grateful for any tips!
 
----
- drivers/net/wireless/libertas/cmd.c  |    2 +-
- drivers/net/wireless/libertas/main.c |    5 ++---
- drivers/net/wireless/libertas/mesh.c |    3 ++-
- drivers/net/wireless/libertas/mesh.h |    6 ++++++
- drivers/net/wireless/libertas/scan.c |    2 +-
- drivers/net/wireless/libertas/tx.c   |    2 +-
- drivers/net/wireless/libertas/wext.c |    6 +++---
- 7 files changed, 16 insertions(+), 10 deletions(-)
+I think you're confused? If you receive a frame, your own hardware will
+have sent the ACK. If you TX a frame, you will see it on the monitor
+iface with the radiotap ack flag set or clear, see hostapd for example
+code.
 
---- linux-wl.orig/drivers/net/wireless/libertas/main.c
-+++ linux-wl/drivers/net/wireless/libertas/main.c
-@@ -123,7 +123,7 @@ static ssize_t lbs_rtap_set(struct devic
- 		if (priv->monitormode == monitor_mode)
- 			return strlen(buf);
- 		if (!priv->monitormode) {
--			if (priv->infra_open || priv->mesh_open)
-+			if (priv->infra_open || lbs_mesh_open(priv))
- 				return -EBUSY;
- 			if (priv->mode == IW_MODE_INFRA)
- 				lbs_cmd_80211_deauthenticate(priv,
-@@ -619,7 +619,7 @@ static int lbs_thread(void *data)
- 				if (priv->connect_status == LBS_CONNECTED)
- 					netif_wake_queue(priv->dev);
- 				if (priv->mesh_dev &&
--				    priv->mesh_connect_status == LBS_CONNECTED)
-+				    lbs_mesh_connected(priv))
- 					netif_wake_queue(priv->mesh_dev);
- 			}
- 		}
-@@ -833,7 +833,6 @@ static int lbs_init_adapter(struct lbs_p
- 	memset(priv->current_addr, 0xff, ETH_ALEN);
- 
- 	priv->connect_status = LBS_DISCONNECTED;
--	priv->mesh_connect_status = LBS_DISCONNECTED;
- 	priv->secinfo.auth_mode = IW_AUTH_ALG_OPEN_SYSTEM;
- 	priv->mode = IW_MODE_INFRA;
- 	priv->channel = DEFAULT_AD_HOC_CHANNEL;
---- linux-wl.orig/drivers/net/wireless/libertas/mesh.c
-+++ linux-wl/drivers/net/wireless/libertas/mesh.c
-@@ -1,4 +1,3 @@
--#include <linux/moduleparam.h>
- #include <linux/delay.h>
- #include <linux/etherdevice.h>
- #include <linux/netdevice.h>
-@@ -196,6 +195,8 @@ int lbs_init_mesh(struct lbs_private *pr
- 
- 	lbs_deb_enter(LBS_DEB_MESH);
- 
-+	priv->mesh_connect_status = LBS_DISCONNECTED;
-+
- 	/* Determine mesh_fw_ver from fwrelease and fwcapinfo */
- 	/* 5.0.16p0 9.0.0.p0 is known to NOT support any mesh */
- 	/* 5.110.22 have mesh command with 0xa3 command id */
---- linux-wl.orig/drivers/net/wireless/libertas/mesh.h
-+++ linux-wl/drivers/net/wireless/libertas/mesh.h
-@@ -84,4 +84,10 @@ void lbs_mesh_ethtool_get_strings(struct
- 	uint32_t stringset, uint8_t *s);
- 
- 
-+/* Accessors */
-+
-+#define lbs_mesh_open(priv) (priv->mesh_open)
-+#define lbs_mesh_connected(priv) (priv->mesh_connect_status == LBS_CONNECTED)
-+
-+
- #endif
---- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
-+++ linux-wl/drivers/net/wireless/libertas/cmd.c
-@@ -1304,7 +1304,7 @@ int lbs_execute_next_command(struct lbs_
- 		if ((priv->psmode != LBS802_11POWERMODECAM) &&
- 		    (priv->psstate == PS_STATE_FULL_POWER) &&
- 		    ((priv->connect_status == LBS_CONNECTED) ||
--		    (priv->mesh_connect_status == LBS_CONNECTED))) {
-+		    lbs_mesh_connected(priv))) {
- 			if (priv->secinfo.WPAenabled ||
- 			    priv->secinfo.WPA2enabled) {
- 				/* check for valid WPA group keys */
---- linux-wl.orig/drivers/net/wireless/libertas/scan.c
-+++ linux-wl/drivers/net/wireless/libertas/scan.c
-@@ -640,7 +640,7 @@ out:
- 		if (!priv->tx_pending_len)
- 			netif_wake_queue(priv->dev);
- 	}
--	if (priv->mesh_dev && (priv->mesh_connect_status == LBS_CONNECTED)) {
-+	if (priv->mesh_dev && lbs_mesh_connected(priv)) {
- 		netif_carrier_on(priv->mesh_dev);
- 		if (!priv->tx_pending_len)
- 			netif_wake_queue(priv->mesh_dev);
---- linux-wl.orig/drivers/net/wireless/libertas/tx.c
-+++ linux-wl/drivers/net/wireless/libertas/tx.c
-@@ -198,7 +198,7 @@ void lbs_send_tx_feedback(struct lbs_pri
- 	if (priv->connect_status == LBS_CONNECTED)
- 		netif_wake_queue(priv->dev);
- 
--	if (priv->mesh_dev && (priv->mesh_connect_status == LBS_CONNECTED))
-+	if (priv->mesh_dev && lbs_mesh_connected(priv))
- 		netif_wake_queue(priv->mesh_dev);
- }
- EXPORT_SYMBOL_GPL(lbs_send_tx_feedback);
---- linux-wl.orig/drivers/net/wireless/libertas/wext.c
-+++ linux-wl/drivers/net/wireless/libertas/wext.c
-@@ -192,7 +192,7 @@ static void copy_active_data_rates(struc
- 	lbs_deb_enter(LBS_DEB_WEXT);
- 
- 	if ((priv->connect_status != LBS_CONNECTED) &&
--		(priv->mesh_connect_status != LBS_CONNECTED))
-+		!lbs_mesh_connected(priv))
- 		memcpy(rates, lbs_bg_rates, MAX_RATES);
- 	else
- 		memcpy(rates, priv->curbssparams.rates, MAX_RATES);
-@@ -307,7 +307,7 @@ static int mesh_get_nick(struct net_devi
- 
- 	/* Use nickname to indicate that mesh is on */
- 
--	if (priv->mesh_connect_status == LBS_CONNECTED) {
-+	if (lbs_mesh_connected(priv)) {
- 		strncpy(extra, "Mesh", 12);
- 		extra[12] = '\0';
- 		dwrq->length = strlen(extra);
-@@ -863,7 +863,7 @@ static struct iw_statistics *lbs_get_wir
- 
- 	/* If we're not associated, all quality values are meaningless */
- 	if ((priv->connect_status != LBS_CONNECTED) &&
--	    (priv->mesh_connect_status != LBS_CONNECTED))
-+	    !lbs_mesh_connected(priv))
- 		goto out;
- 
- 	/* Quality by RSSI */
+johannes
 
--- 
+--=-bLsUJPawexXE3z72IP1J
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLI2+GAAoJEODzc/N7+Qma5VEQAIYcKhJaYJz3URiTuvr5NSMc
+kUvCJXNH/xZ5tihgf2S/odu1p84WT4HIxODGHO65YUYgb6q0wqh8CigjUDWV18+p
+rq12qs6h8TuNrFW7YRtjs84TYzXkMBMFhpAx+VtmzAkx3YDklptVgwNrwJuOuMJr
+rWFWHaRufGK6oMpM8QMaeoG3aoDPK3pMlDFrzJ1KdjN7PzHowxZLSIfNNl9rlv9K
+KOe+dPCk25BheHrYOC98+mI2BBcfV+wOas4u3X8IudeguXqxlEZZGfjcf5hnwB1R
+AL47L50tSdure+7TvSFbYr9YgfVT6odec/EAj/dkXpoqTA7H3/Jw9ce3tiMqTA3C
+i0TPJirvkW9Npnhj5dt5jvS1QaAY+NFa4NHp+m5fUD3DkMz200mcDiqXcNV06lbd
+ASAph/3IYWOMqySs1jCWHBJQf0lWgKCofk+x0/DHJ9m9ErcmxtnJVw2YXqlouo17
+k1epdTIpi/rDhzdK4WBWky2+G7W0ZC5zr/tq/9IQRIm0ZLHAf2j71+4SiteVuhaj
+RVgDM1OF/dft9JxPsGlNnBDVKjWHcLvnEx7nSVjrv8UYFOHmpO9mOkDfH/pN3PV4
+wbL1ZoFWUS3Tqt/iz9mlLRnPRXmANeJNgp2d7XCLBNHNghM+dxIW1+lfALLoO5Bo
+lZ1RH/n7tfm/z2wA/pn5
+=Fsq7
+-----END PGP SIGNATURE-----
+
+--=-bLsUJPawexXE3z72IP1J--
+
