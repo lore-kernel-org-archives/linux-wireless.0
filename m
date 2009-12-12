@@ -1,104 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:61393 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757898AbZLKNl6 (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:48768 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754702AbZLLKSc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:41:58 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH v2 21/31] wl1271: prevent power save entry while not associated
-Date: Fri, 11 Dec 2009 15:41:00 +0200
-Message-Id: <1260538870-32297-22-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+	Sat, 12 Dec 2009 05:18:32 -0500
+Received: by ewy19 with SMTP id 19so1850588ewy.21
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Dec 2009 02:18:38 -0800 (PST)
+MIME-Version: 1.0
+Date: Sat, 12 Dec 2009 21:18:38 +1100
+Message-ID: <157c4da70912120218lc53633bk62fc9ee99377a231@mail.gmail.com>
+Subject: mac80211 noob question
+From: VN <vnik5287@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-
-The mac80211 sometimes requests power save entry while not associated - this
-will cause problems, so prevent it if not associated. Go to powersave once
-association is complete.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271.h      |    1 +
- drivers/net/wireless/wl12xx/wl1271_main.c |   11 ++++++++---
- 2 files changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 4b5ddba..81e1c95 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -416,6 +416,7 @@ struct wl1271 {
- 
- 	/* PSM mode requested */
- 	bool psm_requested;
-+	bool associated;
- 
- 	/* retry counter for PSM entries */
- 	u8 psm_entry_retry;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index d507dae..d07f035 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -978,6 +978,7 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
- 	wl->elp = false;
- 	wl->psm = 0;
- 	wl->psm_entry_retry = 0;
-+	wl->associated = false;
- 	wl->tx_queue_stopped = false;
- 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
- 	wl->tx_blocks_available = 0;
-@@ -1191,8 +1192,6 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 		wl1271_join_channel(wl, channel);
- 
- 	if (conf->flags & IEEE80211_CONF_PS && !wl->psm_requested) {
--		wl1271_info("psm enabled");
--
- 		wl->psm_requested = true;
- 
- 		/*
-@@ -1200,7 +1199,10 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 		 * If we're not, we'll enter it when joining an SSID,
- 		 * through the bss_info_changed() hook.
- 		 */
--		ret = wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE);
-+		if (wl->associated) {
-+			wl1271_info("psm enabled");
-+			ret = wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE);
-+		}
- 	} else if (!(conf->flags & IEEE80211_CONF_PS) &&
- 		   wl->psm_requested) {
- 		wl1271_info("psm disabled");
-@@ -1548,6 +1550,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & BSS_CHANGED_ASSOC) {
- 		if (bss_conf->assoc) {
- 			wl->aid = bss_conf->aid;
-+			wl->associated = true;
- 
- 			/*
- 			 * with wl1271, we don't need to update the
-@@ -1572,6 +1575,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 			}
- 		} else {
- 			/* use defaults when not associated */
-+			wl->associated = false;
- 			wl->aid = 0;
- 		}
- 
-@@ -1898,6 +1902,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	wl->psm = 0;
- 	wl->psm_requested = false;
- 	wl->psm_entry_retry = 0;
-+	wl->associated = false;
- 	wl->tx_queue_stopped = false;
- 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
- 	wl->basic_rate_set = CONF_TX_RATE_MASK_BASIC;
--- 
-1.6.3.3
-
+Hi list,
+I've recently started hacking mac80211/ath5k in order to implement my
+idea of cooperative relaying. I had a good look at the mac80211 code
+and couldn't find anything that deals with ACKing... or is it done in
+firmware and some flag is set to indicate that the frame has been
+acknowledged? What I'm trying to achieve right now is to receive a
+data frame while in monitor mode (e.g. ieee80211_rx_start_monitor())
+and then check if it has been acknowledged by the destination node.
+would be very grateful for any tips!
