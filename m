@@ -1,50 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:63125 "EHLO
-	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752519AbZL3Kgw (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39309 "HELO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1759856AbZLMBKX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2009 05:36:52 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Wireless list <linux-wireless@vger.kernel.org>,
-	rt2x00 users list <users@rt2x00.serialmonkey.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 5/6] rt2x00: Fix LED configuration setting for rt2800.
-Date: Wed, 30 Dec 2009 11:36:33 +0100
-Message-Id: <1262169394-11647-6-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1262169394-11647-5-git-send-email-gwingerde@gmail.com>
-References: <1262169394-11647-1-git-send-email-gwingerde@gmail.com>
- <1262169394-11647-2-git-send-email-gwingerde@gmail.com>
- <1262169394-11647-3-git-send-email-gwingerde@gmail.com>
- <1262169394-11647-4-git-send-email-gwingerde@gmail.com>
- <1262169394-11647-5-git-send-email-gwingerde@gmail.com>
+	Sat, 12 Dec 2009 20:10:23 -0500
+Subject: [PATCH] mac80211: remove requeue from work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 12 Dec 2009 16:29:43 +0100
+Message-ID: <1260631783.2442.335.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rt2800_blink_set uses an illegal value to set the LED_CFG_G_LED_MODE
-field of the LED_CFG register. This field is only 2 bits large, so
-should be initialized with value that fits. Use default value from
-the vendor driver.
+There's no need to be requeueing the work struct
+since we check for the scan after removing items
+due to possible timeouts.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ net/mac80211/work.c |   18 ------------------
+ 1 file changed, 18 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 9a02589..ca700a4 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -358,7 +358,7 @@ static int rt2800_blink_set(struct led_classdev *led_cdev,
- 	rt2x00_set_field32(&reg, LED_CFG_OFF_PERIOD, *delay_off);
- 	rt2x00_set_field32(&reg, LED_CFG_SLOW_BLINK_PERIOD, 3);
- 	rt2x00_set_field32(&reg, LED_CFG_R_LED_MODE, 3);
--	rt2x00_set_field32(&reg, LED_CFG_G_LED_MODE, 12);
-+	rt2x00_set_field32(&reg, LED_CFG_G_LED_MODE, 3);
- 	rt2x00_set_field32(&reg, LED_CFG_Y_LED_MODE, 3);
- 	rt2x00_set_field32(&reg, LED_CFG_LED_POLAR, 1);
- 	rt2800_register_write(led->rt2x00dev, LED_CFG, reg);
--- 
-1.6.6
+--- wireless-testing.orig/net/mac80211/work.c	2009-12-12 16:29:08.000000000 +0100
++++ wireless-testing/net/mac80211/work.c	2009-12-12 16:29:11.000000000 +0100
+@@ -435,12 +435,6 @@ ieee80211_direct_probe(struct ieee80211_
+ 		 */
+ 		ieee80211_remove_auth_bss(local, wk);
+ 
+-		/*
+-		 * We might have a pending scan which had no chance to run yet
+-		 * due to work needing to be done. Hence, queue the STAs work
+-		 * again for that.
+-		 */
+-		ieee80211_queue_work(&local->hw, &local->work_work);
+ 		return WORK_ACT_TIMEOUT;
+ 	}
+ 
+@@ -478,12 +472,6 @@ ieee80211_authenticate(struct ieee80211_
+ 		 */
+ 		ieee80211_remove_auth_bss(local, wk);
+ 
+-		/*
+-		 * We might have a pending scan which had no chance to run yet
+-		 * due to work needing to be done. Hence, queue the STAs work
+-		 * again for that.
+-		 */
+-		ieee80211_queue_work(&local->hw, &local->work_work);
+ 		return WORK_ACT_TIMEOUT;
+ 	}
+ 
+@@ -519,12 +507,6 @@ ieee80211_associate(struct ieee80211_wor
+ 		if (wk->assoc.bss)
+ 			cfg80211_unlink_bss(local->hw.wiphy, wk->assoc.bss);
+ 
+-		/*
+-		 * We might have a pending scan which had no chance to run yet
+-		 * due to work needing to be done. Hence, queue the STAs work
+-		 * again for that.
+-		 */
+-		ieee80211_queue_work(&local->hw, &local->work_work);
+ 		return WORK_ACT_TIMEOUT;
+ 	}
+ 
+
 
