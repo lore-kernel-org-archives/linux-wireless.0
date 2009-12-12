@@ -1,164 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59045 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932133AbZLPGgm (ORCPT
+Received: from scl-exch2k.phoenix.com ([134.122.225.253]:9276 "HELO
+	scl-exch2k.phoenix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S933484AbZLMBfN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2009 01:36:42 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, ic.felix@gmail.com,
-	=?utf-8?q?Luk=C3=A1=C5=A1=20Turek?= <8an@praha12.net>
-Subject: [PATCH] iw: add country IE parsing support for scanning
-Date: Wed, 16 Dec 2009 01:36:38 -0500
-Message-Id: <1260945398-301-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 12 Dec 2009 20:35:13 -0500
+From: Satanand Burla <Satanand_Burla@phoenix.com>
+To: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Sat, 12 Dec 2009 14:58:12 -0800
+Subject: ath9k ps poll performance 
+Message-ID: <6D80BDFB1A1FA74DA476417C24C452A10251AB5773@scl-exch2k7.phoenix.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Screenshot:
+Hi, 
+        I have AR9285 card on  a netbook and I am using the latest compat-wirless drivers from   http://wireless.kernel.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
 
-BSS 00:0b:85:aa:bb:cc (on wlan11)
-        TSF: 488777932855 usec (5d, 15:46:17)
-        freq: 5320
-        beacon interval: 100
-        capability: ESS (0x0001)
-        signal: -74.00 dBm
-        last seen: 1730 ms ago
-        SSID: Foobar
-        Supported rates: 6.0* 9.0 12.0* 18.0 24.0* 36.0 48.0 54.0
-        Country: US     Environment: Indoor/Outdoor
-        Country IE triplets:
-                Channels [36 - 48]
-                Channels [52 - 64]
-                Channels [149 - 165]
+        I am trying to use  PS POLL on the ath9k driver,  So I applied  this  
+        http://kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2009-12-08/ath9k-ps-enable.patch 
+       patch from here on top of latest compat-wireless. 
+           
+        I have tried to use only pspoll without mac80211's dynamic_ps_timeout by setting the dynamic_ps_timeout to 0. 
 
-I haven't found any regclasses while scanning at work.
-We can likely start using the info here:
+         using 
+                    iwconfig wlan0 power timeout 0
+                    iwconfig wlan0 power on.
 
-http://wireless.kernel.org/en/developers/Documentation/ChannelList
+          I do not have any connection problems with this setup (as reported by others http://bugzilla.kernel.org/show_bug.cgi?id=14267) but  I find that the performance is very slow. 
 
-to process this info more.
+          for example with the same  wep AP, I get around 150 to 200 Kbps without enabling ps poll. but if I enable ps poll with the above settings, I get only around 20 Kbps and the packet loss is around 20 to 30%. 
 
-Cc: ic.felix@gmail.com
-Cc: Lukáš Turek <8an@praha12.net>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- scan.c |   87 +++++++++++++++++++++++++++++++++++++++++++++++++++------------
- 1 files changed, 70 insertions(+), 17 deletions(-)
+          My question is, is this the expected speed drop when turning on ps poll ? Or is this a problem with the driver that still needs to be addressed ?
+            
+           I did enable ATH_DBG_PS and the ps poll sequence seems to going well ( detecting aid in tim,  sending ps poll frame, picking buffered frames , going back to sleep). 
 
-diff --git a/scan.c b/scan.c
-index d37ae7c..142eedb 100644
---- a/scan.c
-+++ b/scan.c
-@@ -35,6 +35,23 @@ struct scan_params {
- 	enum print_ie_type type;
- };
+           I have also verified that the following patchset is already applied on the latest compat-wireless that I am trying. Unfortunately I am stuck with a 2.6.27 kernel and cannot test the latest wireless testing tree. 
+           
+             http://kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2009-12-08/for-2.6.32/
  
-+#define IEEE80211_COUNTRY_EXTENSION_ID 201
-+
-+struct ieee80211_country_ie_triplet {
-+	union {
-+		struct {
-+			__u8 first_channel;
-+			__u8 num_channels;
-+			__s8 max_power;
-+		} __attribute__ ((packed)) chans;
-+		struct {
-+			__u8 reg_extension_id;
-+			__u8 reg_class;
-+			__u8 coverage_class;
-+		} __attribute__ ((packed)) ext;
-+	};
-+} __attribute__ ((packed));
-+
- static int handle_scan(struct nl80211_state *state,
- 		       struct nl_cb *cb,
- 		       struct nl_msg *msg,
-@@ -142,29 +159,65 @@ static void print_ds(const uint8_t type, uint8_t len, const uint8_t *data)
- 	printf(" channel %d\n", data[0]);
- }
- 
--static void print_country(const uint8_t type, uint8_t len, const uint8_t *data)
-+static const char *country_env_str(char environment)
- {
--	int i;
--
--	printf(" %.*s", 2, data);
--	switch (data[2]) {
-+	switch (environment) {
- 	case 'I':
--		printf(" (indoor)");
--		break;
-+		return "Indoor only";
- 	case 'O':
--		printf(" (outdoor)");
--		break;
-+		return "Outdoor only";
- 	case ' ':
--		printf(" (in/outdoor)");
--		break;
-+		return "Indoor/Outdoor";
- 	default:
--		printf(" (invalid environment)");
--		break;
-+		return "bogus";
- 	}
--	printf(", data:");
--	for(i=0; i<len-3; i++)
--		printf(" %.02x", data[i + 3]);
--	printf("\n");
-+}
-+
-+static void print_country(const uint8_t type, uint8_t len, const uint8_t *data)
-+{
-+	printf(" %.*s", 2, data);
-+
-+	printf("\tEnvironment: %s\n", country_env_str(data[2]));
-+
-+	data += 3;
-+	len -= 3;
-+
-+	if (len < 3) {
-+		printf("\t\tNo country IE triplets present\n");
-+		return;
-+	}
-+
-+	printf("\tCountry IE triplets:\n");
-+
-+	while (len >= 3) {
-+		int end_channel;
-+		struct ieee80211_country_ie_triplet *triplet =
-+			(struct ieee80211_country_ie_triplet *) data;
-+
-+		if (triplet->ext.reg_extension_id >= IEEE80211_COUNTRY_EXTENSION_ID) {
-+			printf("\t\tExtension ID: %d Regulatory Class: %d Coverage class: %d\n",
-+			       triplet->ext.reg_extension_id,
-+			       triplet->ext.reg_class,
-+			       triplet->ext.coverage_class);
-+
-+			data += 3;
-+			len -= 3;
-+			continue;
-+		}
-+
-+		/* 2 GHz */
-+		if (triplet->chans.first_channel <= 14)
-+			end_channel = triplet->chans.first_channel + triplet->chans.num_channels;
-+		else
-+			end_channel =  triplet->chans.first_channel + (4 * (triplet->chans.num_channels - 1));
-+
-+		printf("\t\tChannels [%d - %d]\n", triplet->chans.first_channel, end_channel);
-+
-+		data += 3;
-+		len -= 3;
-+	}
-+
-+	return;
- }
- 
- static void print_powerconstraint(const uint8_t type, uint8_t len, const uint8_t *data)
--- 
-1.6.3.3
 
+           Any help will be highly appreciated.
+
+            
+           Here is the lspci -vv of my ath9k card Please let me know if any other information is needed.
+
+
+     05:00.0 Network controller: Atheros Communications Inc. Device 002b (rev 01)
+    Subsystem: Askey Computer Corp. Device 7167
+    Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+    Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR+ <PERR- INTx-
+    Latency: 0, Cache Line Size: 32 bytes
+    Interrupt: pin A routed to IRQ 16
+    Region 0: Memory at f0100000 (64-bit, non-prefetchable) [size=64K]
+    Capabilities: [40] Power Management version 3
+        Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
+        Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+    Capabilities: [50] Message Signalled Interrupts: Mask- 64bit- Count=1/1 Enable-
+        Address: 00000000  Data: 0000
+    Capabilities: [60] Express (v2) Legacy Endpoint, MSI 00
+        DevCap:    MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
+            ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+        DevCtl:    Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+            RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
+            MaxPayload 128 bytes, MaxReadReq 512 bytes
+        DevSta:    CorrErr+ UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- TransPend-
+        LnkCap:    Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <512ns, L1 <64us
+            ClockPM- Suprise- LLActRep- BwNot-
+        LnkCtl:    ASPM L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
+            ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+        LnkSta:    Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+        DevCap2: Completion Timeout: Not Supported, TimeoutDis+
+        DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
+        LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
+             Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+             Compliance De-emphasis: -6dB
+        LnkSta2: Current De-emphasis Level: -6dB
+    Kernel driver in use: ath9k
+
+Regards,
+Satanand
