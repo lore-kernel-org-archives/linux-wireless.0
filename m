@@ -1,72 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:26534 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751873AbZLRRTr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2009 12:19:47 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2009 09:19:47 -0800
-Date: Fri, 18 Dec 2009 09:19:45 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Shahar Or <mightyiampresence@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: add support for Dell Vostro A860
- LED
-Message-ID: <20091218171945.GE6231@tux>
-References: <20091204192315.GA5786@tuxdriver.com>
- <bf87febf0912070205k40a7286dpbb48cfcc494203d2@mail.gmail.com>
- <20091207215903.GC18939@tuxdriver.com>
- <b6c5339f0912080657s7cfccd4dp6525702e609bdd5f@mail.gmail.com>
- <43e72e890912080801s52607743s738ed6cdad7d154e@mail.gmail.com>
- <20091208160659.GG15172@tuxdriver.com>
- <43e72e890912080830v40ff214co178fb17c38439e70@mail.gmail.com>
- <bf87febf0912180342w134d92eblc24f326cfa751b08@mail.gmail.com>
- <43e72e890912180737s382c24c5q8720f1e3138fefb@mail.gmail.com>
- <bf87febf0912180903x168462ffw6c9faeac0cd1596c@mail.gmail.com>
+Received: from web51401.mail.re2.yahoo.com ([206.190.38.180]:23594 "HELO
+	web51401.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1760847AbZLLJkV convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Dec 2009 04:40:21 -0500
+Message-ID: <56469.79651.qm@web51401.mail.re2.yahoo.com>
+References: <500577.32161.qm@web51405.mail.re2.yahoo.com> <200912101846.40572.holgerschurig@gmail.com>  <43e72e890912100914m1766db5fife6563fec3807b8d@mail.gmail.com>  <200912111739.55225.holgerschurig@gmail.com> <43e72e890912110841k2a49ec19w9e29ad66a9165030@mail.gmail.com>
+Date: Sat, 12 Dec 2009 01:40:28 -0800 (PST)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: AW: Switching channel in IBSS network doesn't work in ath9k
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890912110841k2a49ec19w9e29ad66a9165030@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <bf87febf0912180903x168462ffw6c9faeac0cd1596c@mail.gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 18, 2009 at 09:03:26AM -0800, Shahar Or wrote:
-> On Fri, Dec 18, 2009 at 5:37 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
-> >> If we have all the IDs from the INF file, then why do we need this in
-> >> userspace? Is the list growing?
-> >
-> > No, but for other newer hardware/drivers it can likely grow, so my
-> > comment was more of a generic driver approach to this.
+The iw feature was a side note. What about the channel switch? Can you
+reproduce this? Is this supposed to work?
+
+ -- 
+Regards 
+Joerg 
+
+
+
+
+----- Ursprüngliche Mail ----
+> Von: Luis R. Rodriguez <mcgrof@gmail.com>
+> An: Holger Schurig <holgerschurig@googlemail.com>
+> CC: Joerg Pommnitz <pommnitz@yahoo.com>; ath9k-devel@lists.ath9k.org; linux-wireless@vger.kernel.org
+> Gesendet: Freitag, den 11. Dezember 2009, 17:41:48 Uhr
+> Betreff: Re: Switching channel in IBSS network doesn't work in ath9k
 > 
-> Is this a linux-wireless thing
+> On Fri, Dec 11, 2009 at 8:39 AM, Holger Schurig
+> wrote:
+> >> Actually I think a simple 'iw link' to do this for all interfaces
+> >> would be good. I just haven't gotten around to it. I should be
+> >> possible without upstream changes I believe.
+> >
+> > Do you think that "iw link" should also show then info when the device is in
+> > monitor mode (e.g. return the flags) or in IBSS mode?  And probably also
+> > reporting parts of the survey data, e.g. noise floor?
+> >
+> > That would be the equivalent of a "give me the greatest amount of info
+> > quickly" :-)
+> 
+> I do but johill is the maintainer, see what he thinks :)
+> 
+>   Luis
 
-You mean my suggestion? It depends, I personally am not aware of
-upstream drivers keeping tabs on knobs in userspace currently
-but I do think things like configs are used to tweak, for example
-Oracle db stuff. configs can technically also be used to expose
-knobs for example for non-generic device configuration stuff
-for example but as far as I can tell no one has really used it
-yet for this. It does' mean its not possible. The other question
-is where do we stuff this in userspace and if it really makes
-sense to start following that practice. For GPIO pin mapping,
-perhaps given the number of patches I see for it but since its
-the only thing I see a good use of perhaps its not worth it.
-The kernel should always use default sensible values but since
-this is more of database thing it makes sence to start thinking
-istead of userspace for a better solution. Examples of moving
-large dbs to userspace could be the preference on USB side to
-not keep the USB vendor/device IDs names in the kernel, and also
-the regulatory database stuff.
 
-> or do other areas of linux keep some
-> data in userspace?
-
-I gave a few examples, not sure what else the kernel keeps in
-userspace for data which is generic like that. Moving PCI device
-vendor/device names might be good example.
-
-  Luis
+__________________________________________________
+Do You Yahoo!?
+Sie sind Spam leid? Yahoo! Mail verfügt über einen herausragenden Schutz gegen Massenmails. 
+http://mail.yahoo.com 
