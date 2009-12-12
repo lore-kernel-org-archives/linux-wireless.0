@@ -1,69 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:65286 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759055AbZLJASx convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:40115 "HELO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752886AbZLMCwm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2009 19:18:53 -0500
-Received: by iwn1 with SMTP id 1so4998602iwn.33
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2009 16:19:00 -0800 (PST)
+	Sat, 12 Dec 2009 21:52:42 -0500
+Received: by fxm5 with SMTP id 5so2375414fxm.28
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Dec 2009 18:52:41 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20091210000612.GA8515@tuxdriver.com>
-References: <1260389724-2392-1-git-send-email-linville@tuxdriver.com>
-	<646765f40912091437y22d322c6m295cff07a95c4ebe@mail.gmail.com>
-	<20091210000612.GA8515@tuxdriver.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 10 Dec 2009 11:18:39 +1100
-Message-ID: <646765f40912091618j5c5b886em2f323568649de8a6@mail.gmail.com>
-Subject: Re: [PATCH] wireless: update old static regulatory domain rules
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@gmail.com
+Date: Sat, 12 Dec 2009 16:40:34 +0100
+Message-ID: <5a4c581d0912120740j38a20f8eu3f616f3a477d922f@mail.gmail.com>
+Subject: 2.6.32-git5+, CONFIG_WEXT_PRIV and Broadcom's driver for BCM4322
+	Wireless chips
+From: Alessandro Suardi <alessandro.suardi@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 10, 2009 at 11:06, John W. Linville <linville@tuxdriver.com> wrote:
-> On Thu, Dec 10, 2009 at 09:37:25AM +1100, Julian Calaby wrote:
->> On Thu, Dec 10, 2009 at 07:15, John W. Linville <linville@tuxdriver.com> wrote:
->> > Update "US" and "JP" for current rules, and replace "EU" rules with the
->> > world roaming domain (since it was only a pseudo-domain anyway).
->> >
->> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
->> > ---
->> >  net/wireless/reg.c |   75 +++++++++++++++++----------------------------------
->> >  1 files changed, 25 insertions(+), 50 deletions(-)
->> >
->> > diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->> > index c01470e..baa898a 100644
->> > --- a/net/wireless/reg.c
->> > +++ b/net/wireless/reg.c
->> > @@ -206,15 +179,17 @@ static const struct ieee80211_regdomain *static_regdom(char *alpha2)
->> >                return &us_regdom;
->> >        if (alpha2[0] == 'J' && alpha2[1] == 'P')
->> >                return &jp_regdom;
->> > +       /* Use world roaming rules for "EU", since it was a pseudo
->> > +          domain anyway... */
->> >        if (alpha2[0] == 'E' && alpha2[1] == 'U')
->> > -               return &eu_regdom;
->> > -       /* Default, as per the old rules */
->> > -       return &us_regdom;
->> > +               return &world_regdom;
->> > +       /* Default, world roaming rules */
->> > +       return &world_regdom;
->> >  }
->>
->> Is the if statement for the "EU" regdom really necessary (except as
->> documentation) as we're returning &world_regdom by default?
->
-> No, it's not necessary except as documentation.  However, I like it
-> just for that reason. :-)
+Hi all,
 
-Fair enough =)
+ I use Broadcom's out-of-tree driver which is the only one that works with
+ my Dell E6400's onboard BCM4322 wireless chip - driver here
+
+ http://www.broadcom.com/support/802.11/linux_sta.php
+
+ and the driver stopped building somewhere between 2.6.32-git1 and -git5,
+ as CONFIG_WIRELESS_EXT is now replaced by CONFIG_CFG80211_WEXT,
+ but also as struct iw_handler_def (in <net/iw_handler.h>) has a few fields
+ referenced by the driver that are now conditioned by CONFIG_WEXT_PRIV.
+
+CONFIG_WEXT_PRIV isn't directly selectable during kernel config, but is
+ rather picked up by wireless drivers via SELECT keywords in the Kconfig
+ files - and this is my issue.
+
+At the moment, after replacing all CONFIG_WIRELESS_EXT occurrences
+ with CONFIG_CFG80211_WEXT in the Broadcom driver sources, I worked
+ around the CONFIG_WEXT_PRIV issue by picking ipw2200 as a module
+ in my kernel config - and ipw2200 is select'ing CONFIG_WEXT_PRIV; not
+ an optimal solution, but this way my kernel has now support for a feature
+ I do need later on when building the out-of-tree Broadcom module.
+
+After rebooting into 2.6.32-git9 I successfully built the patched driver which
+ loads fine and connects to my AP as usual - so the workaround seems ok.
+
+
+But: what is the best option here to make CONFIG_WEXT_PRIV visible at
+ kernel build time if only an external module should select it - but selection
+ is not actually happening at kernel build time ?
+Could CONFIG_WEXT_PRIV be made a separate user-selectable option ?
+
 
 Thanks,
 
--- 
+--alessandro
 
-Julian Calaby
+ "There's always a siren singing you to shipwreck"
 
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
+   (Radiohead, "There There")
