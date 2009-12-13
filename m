@@ -1,71 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:61317 "EHLO
-	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752543AbZLUQ06 (ORCPT
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:48585 "HELO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751479AbZLMNgb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2009 11:26:58 -0500
-Message-ID: <4B2FA1CF.1010903@gmail.com>
-Date: Mon, 21 Dec 2009 17:26:55 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Sun, 13 Dec 2009 08:36:31 -0500
 MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: Markus Baier <Markus_Baier@web.de>, linux-wireless@vger.kernel.org
-Subject: Re: [BISECTED] [PATCH v2 8/8] rt2x00: Properly request tx headroom
- for alignment operations.
-References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com>	<1259012694-14869-2-git-send-email-gwingerde@gmail.com>	<1259012694-14869-3-git-send-email-gwingerde@gmail.com>	<1259012694-14869-4-git-send-email-gwingerde@gmail.com>	<1259012694-14869-5-git-send-email-gwingerde@gmail.com>	<1259012694-14869-6-git-send-email-gwingerde@gmail.com>	<1259012694-14869-7-git-send-email-gwingerde@gmail.com>	<1259012694-14869-8-git-send-email-gwingerde@gmail.com>	<1259012694-14869-9-git-send-email-gwingerde@gmail.com>	<loom.20091220T163829-137@post.gmane.org> <4B2E8729.7050501@gmail.com> <20091221013316.nm9belnhywwwsc0w-cebfxv@webmail.spamcop.net>
-In-Reply-To: <20091221013316.nm9belnhywwwsc0w-cebfxv@webmail.spamcop.net>
+In-Reply-To: <1260710042.2442.340.camel@johannes.local>
+References: <5a4c581d0912120740j38a20f8eu3f616f3a477d922f@mail.gmail.com>
+	 <1260710042.2442.340.camel@johannes.local>
+Date: Sun, 13 Dec 2009 14:36:29 +0100
+Message-ID: <5a4c581d0912130536r46b13b95pcd1364ee83cd39c0@mail.gmail.com>
+Subject: Re: 2.6.32-git5+, CONFIG_WEXT_PRIV and Broadcom's driver for BCM4322
+	Wireless chips
+From: Alessandro Suardi <alessandro.suardi@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/21/09 07:33, Pavel Roskin wrote:
-> Quoting Gertjan van Wingerde <gwingerde@gmail.com>:
-> 
->> On 12/20/09 16:42, Markus Baier wrote:
->>> After my latest git pull to the kernel version 2.6.33-rc1-wl
->>> no client was able to connect to my hostapd (v0.6.9) AP.
->>> I found a lot of the following entries in the syslog:
->>>
->>> wlan0: STA xx:xx:xx:xx:xx:xx
->>> IEEE 802.11: did not acknowledge authentication response
-> 
-> I'm also having problems with rt2x00 support the current
-> wireless-testing, but in the station mode.  The device is using rt61pci
-> driver.  Association to an AP with WEP fails.
-> 
-> [  147.930019] wlan2: direct probe to AP 00:11:6b:28:0b:92 (try 1)
-> [  148.130010] wlan2: direct probe to AP 00:11:6b:28:0b:92 (try 2)
-> [  148.330009] wlan2: direct probe to AP 00:11:6b:28:0b:92 (try 3)
-> [  148.530008] wlan2: direct probe to AP 00:11:6b:28:0b:92 timed out
-> [  152.942516] wlan2: direct probe to AP 00:11:6b:28:0b:92 (try 1)
-> [  153.142512] wlan2: direct probe to AP 00:11:6b:28:0b:92 (try 2)
-> [  153.340011] wlan2: direct probe to AP 00:11:6b:28:0b:92 (try 3)
-> [  153.540008] wlan2: direct probe to AP 00:11:6b:28:0b:92 timed out
-> 
-> It worked fine with wireless-testing when it was 2.6.32 based.
-> 
->>> After I removed the lines below in rt2x00dev.c:
-> 
-> That "patch" is helping me too!  The association is working now.
-> 
->> That is very strange as this patch was meant to send TX statuses of
->> frames
->> towards monitor interfaces (which is what hostapd is using).
-> 
-> I'm not using monitor mode.  I only have one vif in the station mode.
-> 
-> My debugging shows that the headroom is 0 with the "patch".  Without it,
-> the headroom is 17 (13 from IEEE80211_TX_STATUS_HEADROOM plus 4 from
-> RT2X00_ALIGN_SIZE).
-> 
-> Perhaps non-zero headroom is not handled correctly?
-> 
+On Sun, Dec 13, 2009 at 2:14 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sat, 2009-12-12 at 16:40 +0100, Alessandro Suardi wrote:
+>
+>> But: what is the best option here to make CONFIG_WEXT_PRIV visible at
+>>  kernel build time if only an external module should select it - but selection
+>>  is not actually happening at kernel build time ?
+>> Could CONFIG_WEXT_PRIV be made a separate user-selectable option ?
+>
+> Your only option is selecting some other (ancient) driver that selects
+> WEXT_PRIV. We will not make that Kconfig symbol visible just because
+> Broadcom decided that they want to continue screwing their users :)
+>
+> IOW -- there's no such option available to you at all. Select
+> PCMCIA_RAYCS or whatever.
 
-Hmmm, perhaps the problem is that the headroom is not a multiple of 4.
-Can you check what happens when you set the extra_tx_headroom fixed to e.g. 20?
+Thanks - you clipped the part of my message where I explain that my
+ "workaround" has been to select IPW2200 :)
 
-The driver should be able to handle this, but maybe there is something wrong
-with the alignment.
+I'm aware of the implications of out-of-tree proprietary drivers, I just
+ wanted to make sure I wasn't missing a better option than the one
+ I resorted to.
 
----
-Gertjan.
+Thanks again,
+
+--alessandro
+
+ "There's always a siren singing you to shipwreck"
+
+   (Radiohead, "There There")
