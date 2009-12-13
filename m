@@ -1,48 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50511 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751823AbZLJNAW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2009 08:00:22 -0500
-Date: Thu, 10 Dec 2009 07:58:48 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	linux-wireless@vger.kernel.org,
-	Andrey Yurovsky <andrey@cozybit.com>, stable@kernel.org,
-	johannes@sipsolutions.net
-Subject: Re: [PATCH 1/2] mac80211: Fixed bug in mesh portal paths
-Message-ID: <20091210125848.GA11112@tuxdriver.com>
-References: <1260412981-2982-1-git-send-email-javier@cozybit.com> <43e72e890912092220k4525d40bn680afece3e8cbb52@mail.gmail.com>
+Received: from mgw2.diku.dk ([130.225.96.92]:39108 "HELO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752587AbZLMLmK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Dec 2009 06:42:10 -0500
+Date: Sun, 13 Dec 2009 12:42:07 +0100 (CET)
+From: Julia Lawall <julia@diku.dk>
+To: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: [PATCH 5/9] drivers/net/wireless: Correct code taking the size of
+ a pointer
+Message-ID: <Pine.LNX.4.64.0912131241470.24267@ask.diku.dk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <43e72e890912092220k4525d40bn680afece3e8cbb52@mail.gmail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 09, 2009 at 10:20:03PM -0800, Luis R. Rodriguez wrote:
-> On Wed, Dec 9, 2009 at 6:43 PM, Javier Cardona <javier@cozybit.com> wrote:
-> > Paths to mesh portals were being timed out immediately after each use in
-> > intermediate forwarding nodes.  mppath->exp_time is set to the expiration time
-> > so assigning it to jiffies was marking the path as expired.
-> >
-> > Signed-off-by: Javier Cardona <javier@cozybit.com>
-> > Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
-> 
-> Is Cc: stable@kernel.org required or does actually CC'ing
-> stable@kernel.org in the patch suffice? If the patch has the CC
-> embedded on the commit log I thought stable team would be notified
-> upon a merge of the patch. Please correct me if I'm wrong.
-> 
-> Would like to verify as I'm going to be a stable whore now.
+From: Julia Lawall <julia@diku.dk>
 
-AIUI either is acceptable.  But adding the Cc line in the commit log
-aids the stable team in automating their process.
+sizeof(iv16) and sizeof(iv32) are the sizes of pointers.  Change them to
+the size of the copied data.
 
-In any case, sending stuff to stable@kernel.org is highly recommended
-(within their guidelines, of course).
+A simplified version of the semantic patch that finds this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+// <smpl>
+@@
+expression *x;
+expression f;
+type T;
+@@
+
+*f(...,(T)x,...)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c        |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index eb1e1d0..1e74732 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2140,8 +2140,8 @@ static void rt2800_get_tkip_seq(struct ieee80211_hw *hw, u8 hw_key_idx,
+ 	rt2800_register_multiread(rt2x00dev, offset,
+ 				      &iveiv_entry, sizeof(iveiv_entry));
+ 
+-	memcpy(&iveiv_entry.iv[0], iv16, sizeof(iv16));
+-	memcpy(&iveiv_entry.iv[4], iv32, sizeof(iv32));
++	memcpy(&iveiv_entry.iv[0], iv16, sizeof(*iv16));
++	memcpy(&iveiv_entry.iv[4], iv32, sizeof(*iv32));
+ }
+ 
+ static int rt2800_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
