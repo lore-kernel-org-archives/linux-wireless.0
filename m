@@ -1,110 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:60496 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757833AbZLKNly (ORCPT
+Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:50136 "HELO
+	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751361AbZLMPVx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:41:54 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH v2 25/31] wl1271: Add rudimentary ad-hoc support
-Date: Fri, 11 Dec 2009 15:41:04 +0200
-Message-Id: <1260538870-32297-26-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+	Sun, 13 Dec 2009 10:21:53 -0500
+Message-ID: <4B25068E.7000201@gmail.com>
+Date: Sun, 13 Dec 2009 16:21:50 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: linville@tuxdriver.com, users@rt2x00.serialmonkey.com,
+	linux-wireless@vger.kernel.org, stable@kernel.org
+Subject: Re: [PATCH 2.6.33] rt2x00: Disable powersaving for rt61pci.
+References: <1260661180-2300-1-git-send-email-gwingerde@gmail.com> <200912131115.33485.IvDoorn@gmail.com> <4B250567.8050809@gmail.com> <200912131618.49312.IvDoorn@gmail.com>
+In-Reply-To: <200912131618.49312.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On 12/13/09 16:18, Ivo van Doorn wrote:
+> On Sunday 13 December 2009, Gertjan van Wingerde wrote:
+>> On 12/13/09 11:15, Ivo van Doorn wrote:
+>>> On Sunday 13 December 2009, Gertjan van Wingerde wrote:
+>>>> We've had many reports of rt61pci failures with powersaving enabled.
+>>>> Therefore, as a stop-gap measure, disable powersaving of the rt61pci
+>>>> until we have found a proper solution.
+>>>
+>>> This disables powersaving completely, can't we set the default powersaving
+>>> to disabled? That way for people for who it does work, it can still be enabled.
+>>>
+>>
+>> Well, when I was looking into this I came up with a number of issues in the code
+>> which makes me believe that it simply isn't working at all.
+>> One example is that the rt61pci devices rely on handling the wakeup interrupt
+>> by the driver to wake up the devices. As far as I can tell there is no handling
+>> of the wakeup interrupt in the rt61pci driver.
+>> That's why I decided to disable it all together, as I don't think it works
+>> properly for anyone (although some people may not really notice it).
+> 
+> Ok, but then please disable it for _all_ rt2x00 drivers, or at least all PCI rt2x00 drivers
+> since they would have the same wakeup interrupt requirement.
+> 
 
-This patch adds rudimentary a-hoc support for the driver. It will allow
-setting up ad-hoc, and for other devices to scan and join. The beacon and probe
-response template setting is slightly dirty, and need to be properly
-implemented with support from mac80211. Also, the SSID is not configured to the
-firmware - the FW will not be able to respond to probe requests autonomously.
+I'll see if this will be the case for all PCI rt2x00 devices and adapt for the ones that
+need it. I didn't look into the other devices yet, and ISTR that at least rt2500pci doesn't
+have this requirement.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_main.c |   45 +++++++++++++++++++++++++++-
- 1 files changed, 43 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 0520b38..d7b1bb3 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1139,11 +1139,15 @@ out:
- 
- static int wl1271_join_channel(struct wl1271 *wl, int channel)
- {
--	int ret;
-+	int ret = 0;
- 	/* we need to use a dummy BSSID for now */
- 	static const u8 dummy_bssid[ETH_ALEN] = { 0x0b, 0xad, 0xde,
- 						  0xad, 0xbe, 0xef };
- 
-+	/* the dummy join is not required for ad-hoc */
-+	if (wl->bss_type == BSS_TYPE_IBSS)
-+		goto out;
-+
- 	/* disable mac filter, so we hear everything */
- 	wl->rx_config &= ~CFG_BSSID_FILTER_EN;
- 
-@@ -1572,6 +1576,42 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 			wl->joined = true;
- 	}
- 
-+	if (wl->bss_type == BSS_TYPE_IBSS) {
-+		/* FIXME: This implements rudimentary ad-hoc support -
-+		   proper templates are on the wish list and notification
-+		   on when they change. This patch will update the templates
-+		   on every call to this function. Also, the firmware will not
-+		   answer to probe-requests as it does not have the proper
-+		   SSID set in the JOIN command. The probe-response template
-+		   is set nevertheless, as the FW will ASSERT without it */
-+		struct sk_buff *beacon = ieee80211_beacon_get(hw, vif);
-+
-+		if (beacon) {
-+			struct ieee80211_hdr *hdr;
-+			ret = wl1271_cmd_template_set(wl, CMD_TEMPL_BEACON,
-+						      beacon->data,
-+						      beacon->len);
-+
-+			if (ret < 0) {
-+				dev_kfree_skb(beacon);
-+				goto out_sleep;
-+			}
-+
-+			hdr = (struct ieee80211_hdr *) beacon->data;
-+			hdr->frame_control = cpu_to_le16(
-+				IEEE80211_FTYPE_MGMT |
-+				IEEE80211_STYPE_PROBE_RESP);
-+
-+			ret = wl1271_cmd_template_set(wl,
-+						      CMD_TEMPL_PROBE_RESPONSE,
-+						      beacon->data,
-+						      beacon->len);
-+			dev_kfree_skb(beacon);
-+			if (ret < 0)
-+				goto out_sleep;
-+		}
-+	}
-+
- 	if (changed & BSS_CHANGED_ASSOC) {
- 		if (bss_conf->assoc) {
- 			wl->aid = bss_conf->aid;
-@@ -1857,7 +1897,8 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
- 		IEEE80211_HW_BEACON_FILTER |
- 		IEEE80211_HW_SUPPORTS_PS;
- 
--	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
-+	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
-+		BIT(NL80211_IFTYPE_ADHOC);
- 	wl->hw->wiphy->max_scan_ssids = 1;
- 	wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wl1271_band_2ghz;
- 
--- 
-1.6.3.3
+Gertjan.
 
