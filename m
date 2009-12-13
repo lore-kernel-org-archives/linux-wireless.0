@@ -1,67 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:7684 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757244AbZLKPBV (ORCPT
+Received: from rcsinet12.oracle.com ([148.87.113.124]:51642 "HELO
+	rcsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750713AbZLMDy7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 10:01:21 -0500
-Date: Fri, 11 Dec 2009 16:01:24 +0100
-From: Stefan Seyfried <stefan.seyfried@googlemail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/2] Add support for Sphairon Homelink 1202 USB WLAN
-Message-ID: <20091211160124.4db2da76@strolchi.home.s3e.de>
-In-Reply-To: <20091211144221.GA6663@tuxdriver.com>
-References: <1260282095-17042-1-git-send-email-stefan.seyfried@googlemail.com>
-	<20091211133603.46bec686@strolchi.home.s3e.de>
-	<20091211144221.GA6663@tuxdriver.com>
+	Sat, 12 Dec 2009 22:54:59 -0500
+Date: Sat, 12 Dec 2009 19:54:36 -0800
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: linville@tuxdriver.com, users@rt2x00.serialmonkey.com,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 2.6.33] rt2x00: Fix rt2800usb detection in rt2800lib.
+Message-Id: <20091212195436.62bb66d8.randy.dunlap@oracle.com>
+In-Reply-To: <1260661180-2300-1-git-send-email-gwingerde@gmail.com>
+References: <1260661180-2300-1-git-send-email-gwingerde@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 11 Dec 2009 09:42:22 -0500
-"John W. Linville" <linville@tuxdriver.com> wrote:
+On Sun, 13 Dec 2009 00:39:39 +0100 Gertjan van Wingerde wrote:
 
-> On Fri, Dec 11, 2009 at 01:36:03PM +0100, Stefan Seyfried wrote:
-> > Is anyhting wrong with those?
-> > Are those too trivial and "USB only" and thus better suited for direct
-> > submission to Greg?
+> rt2800lib incorrectly detected whether RT2800USB was enabled because
+> it didn't account for a modularized RT2800USB driver.
 > 
-> Trivial or not, they are wireless LAN patches and they go here.
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> ---
+> 
+> John, this one is a fix for 2.6.33.
+> 
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index eb1e1d0..bdc3286 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -33,6 +33,10 @@
+>  	Abstract: rt2800 generic device routines.
+>   */
+>  
+> +#ifdef CONFIG_RT2800USB_MODULE
+> +#define CONFIG_RT2800USB
+> +#endif
+> +
 
-That's what i guessed, too. I was just deafened by the silence ;)
+The idiom that I am familiar with (and is the common one afaik)
+is to use:
 
-> It strikes me as strange that you are hitting two drivers to support
-> one device.  Are you saying that your ar9170usb has the goofy storage
-> device thing using the same USB IDs that the zd1211rw devices like that
-> used?  I suppose that makes some sense given the shared heritage...
+#if defined(CONFIG_RT2800USB) || defined(CONFIG_RT2800USB_MODULE)
 
-Yes, exactly. And a different configuration (different endpoint),
-that's why I had to touch the zd1211rw driver, even though it is
-otherwise totally unrelated to the device.
+Besides, it's not nice to muck with kconfig symbols outside of Kconfig files.
 
-The method with the reverse loop counting down from ep1 to ep0 was
-chosen to be as sure as possible to not break the other devices that
-are already working.
 
-> We did just have a long (and possibly unresolved thread) about
-> this type of practice (i.e. eject in the driver) not too long ago.
-> But since zd1211rw is already doing this, maybe this patch is
-> acceptable...?
+>  #include <linux/kernel.h>
+>  #include <linux/module.h>
 
-Maybe a separate driver that is ejecting all those fake storage
-devices, be it 3G modems or wireless LAN might be a good idea, but I am
-probably not the right one to code that ;)
-Or maybe we decide that userspace should handle it for all devices...
 
-> Anyway, I have your patch.  Please be patient.
-
-Thanks,
-
-	Stefan
-
--- 
-Stefan Seyfried
-
-"Any ideas, John?"
-"Well, surrounding them's out."
+---
+~Randy
