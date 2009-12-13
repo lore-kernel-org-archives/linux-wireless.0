@@ -1,99 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:48789
-	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757496AbZLOR6e (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:52058 "HELO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S934983AbZLMCCU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 12:58:34 -0500
-Date: Tue, 15 Dec 2009 09:58:15 -0800
-From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-To: Josua Dietze <digidietze@draisberghof.de>
-Cc: Stefan Seyfried <stefan.seyfried@googlemail.com>,
-	usb-storage@lists.one-eyed-alien.net, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Stefan Seyfried <seife@sphairon.com>
-Subject: Re: [usb-storage] [PATCH] move eject code from zd1211rw to usb-storage
-Message-ID: <20091215175815.GE16426@one-eyed-alien.net>
-References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com> <4B278191.1010009@draisberghof.de> <20091215150137.46bd9817@strolchi.home.s3e.de> <4B27A443.6040908@draisberghof.de>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="lc9FT7cWel8HagAv"
-In-Reply-To: <4B27A443.6040908@draisberghof.de>
+	Sat, 12 Dec 2009 21:02:20 -0500
+Received: from hrndva-omtalb.mail.rr.com ([10.128.143.54])
+          by hrndva-qmta04.mail.rr.com with ESMTP
+          id <20091213005110392.RVXI22884@hrndva-qmta04.mail.rr.com>
+          for <linux-wireless@vger.kernel.org>;
+          Sun, 13 Dec 2009 00:51:10 +0000
+Date: Sat, 12 Dec 2009 18:04:46 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] rtl8180: Remove usage of deprecated 'qual'
+Message-ID: <4b242f9e.4JOejhV35R7ixmmP%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When building rtl8180, the following warning occurs:
 
---lc9FT7cWel8HagAv
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+  CC [M]  drivers/net/wireless/rtl818x/rtl8180_dev.o
+drivers/net/wireless/rtl818x/rtl8180_dev.c: In function ‘rtl8180_handle_rx’:
+drivers/net/wireless/rtl818x/rtl8180_dev.c:135: warning: ‘qual’ is deprecated
+    (declared at include/net/mac80211.h:562)
 
-On Tue, Dec 15, 2009 at 03:59:15PM +0100, Josua Dietze wrote:
-> The more basic arguments that prevailed at the last time such an=20
-> "eject" command was being considered for inclusion into usb-storage=20
-> were:
->=20
-> 1. Userspace can obviously react a lot quicker than kernel space to=20
-> new or changed devices popping up.
->=20
-> 2. Userspace works with older kernels immediately.
->=20
-> > That's a fundamental difference in opinions, and I fear I'm not the one
-> > who is going to decice how this will be handled ;)
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-I hate to say this, but I really consider this discussion to be closed.
-Nobody has introduced a new argument in quite some time.  This material,
-where possible, belongs in userspace.
+John,
 
-The primary reason userspace may *not* be apropriate is if the device needs
-a non-standard eject command.  Some devices need something very *close* to
-an eject, but not quite an eject.  Or, they have some goofy timing
-restriction which makes the startup time for udev too long, or somesuch.
+This patch has very low priority.
 
-> Neither am I. But the number of known mode-switching USB devices is=20
-> now at around 50. New ones are arriving by the month or even week.
->=20
-> A decision to handle *all of them* in usb-storage would lead to the=20
-> disadvantages pointed out.
+Larry
+---
 
-The rate at which these devices are arriving makes this more than a
-"disadvantage", it makes it practically impossible for management at the
-kernel level.
-
-> A decision to handle just *some of them* can hardly be made=20
-> plausible if there are no immediate technical reasons.
-
-The current decision is that all new devices, whenever possible, are to be
-handled in userspace.  Old devices currently handled by the kernel will be
-removed on an "as we get around to it" schedule.
-
-> Oh, and in most cases (including your suggestion) there *are*=20
-> already two drivers necessary to make these devices work,=20
-> independent of where the switching is happening ...
-
-This is true.  However, drivers such as usb-serial support dynamic addition
-of IDs, so no kernel change is necessary.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-You were using cheat codes too.  You guys suck.
-					-- Greg to General Studebaker
-User Friendly, 12/16/1997
-
---lc9FT7cWel8HagAv
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFLJ843HL9iwnUZqnkRArhdAJ9QjQJRG/rVvQmRuy4y+OQpWmgGGQCfY5HX
-end06fbM/ULaPqfqFrirNl8=
-=maNk
------END PGP SIGNATURE-----
-
---lc9FT7cWel8HagAv--
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8180_dev.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
+@@ -132,7 +132,6 @@ static void rtl8180_handle_rx(struct iee
+ 
+ 			rx_status.antenna = (flags2 >> 15) & 1;
+ 			/* TODO: improve signal/rssi reporting */
+-			rx_status.qual = flags2 & 0xFF;
+ 			rx_status.signal = (flags2 >> 8) & 0x7F;
+ 			/* XXX: is this correct? */
+ 			rx_status.rate_idx = (flags >> 20) & 0xF;
