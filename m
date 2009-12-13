@@ -1,84 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:65349 "EHLO
-	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965722AbZLHVmY (ORCPT
+Received: from mail-out.m-online.net ([212.18.0.10]:43055 "HELO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751030AbZLMMzb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 16:42:24 -0500
-Message-ID: <4B1EC842.7040407@gmail.com>
-Date: Tue, 08 Dec 2009 22:42:26 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Sun, 13 Dec 2009 07:55:31 -0500
+From: Andreas Schwab <schwab@linux-m68k.org>
+To: Julia Lawall <julia@diku.dk>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 5/9] drivers/net/wireless: Correct code taking the size of a pointer
+References: <Pine.LNX.4.64.0912131241470.24267@ask.diku.dk>
+Date: Sun, 13 Dec 2009 13:55:26 +0100
+In-Reply-To: <Pine.LNX.4.64.0912131241470.24267@ask.diku.dk> (Julia Lawall's
+	message of "Sun, 13 Dec 2009 12:42:07 +0100 (CET)")
+Message-ID: <m2iqcbt4n5.fsf@igel.home>
 MIME-Version: 1.0
-To: Andi Kleen <andi@firstfloor.org>
-CC: Stefan Lippers-Hollmann <s.L-H@gmx.de>,
-	linux-wireless@vger.kernel.org, Tim Blechmann <tim@klingt.org>,
-	rjw@sisk.pl, IvDoorn@gmail.com, linville@tuxdriver.com
-Subject: Re: regression: rt2561 frequent "Arrived at non-free entry" errors
- in 	2.6.32
-References: <20091204233202.GA13658@basil.fritz.box> <4B1BB44E.90706@gmail.com>	 <200912080006.28892.s.L-H@gmx.de>	 <20091208095755.GT18989@one.firstfloor.org> <14add3d10912080219u17c65cbemf6d56290a8f12efd@mail.gmail.com>
-In-Reply-To: <14add3d10912080219u17c65cbemf6d56290a8f12efd@mail.gmail.com>
-Content-Type: multipart/mixed;
- boundary="------------070108010107060809070206"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------070108010107060809070206
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Julia Lawall <julia@diku.dk> writes:
 
-On 12/08/09 11:19, Gertjan van Wingerde wrote:
-> On Tue, Dec 8, 2009 at 10:57 AM, Andi Kleen <andi@firstfloor.org> wrote:
->>> This patch doesn't seem to change this particular issue, disabling
->>> powersaving however makes rt62pci work again.
->>
->> Yes confirmed here. Haven't seen it in a day or so with disabled power
->> saving.
->>
->> However I haven't tried the patch with power saving enabled.
-> 
-> OK.
-> I think Stefan said that the patch didn't help for this issue.
-> 
-> However, I've got an other hunch (based on the Ralink driver). Maybe
-> we shouldn't go to sleep when still TX entries are present. I'll cook
-> up a patch tonight.
-> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index eb1e1d0..1e74732 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -2140,8 +2140,8 @@ static void rt2800_get_tkip_seq(struct ieee80211_hw *hw, u8 hw_key_idx,
+>  	rt2800_register_multiread(rt2x00dev, offset,
+>  				      &iveiv_entry, sizeof(iveiv_entry));
+>  
+> -	memcpy(&iveiv_entry.iv[0], iv16, sizeof(iv16));
+> -	memcpy(&iveiv_entry.iv[4], iv32, sizeof(iv32));
+> +	memcpy(&iveiv_entry.iv[0], iv16, sizeof(*iv16));
+> +	memcpy(&iveiv_entry.iv[4], iv32, sizeof(*iv32));
 
-OK. Please try again with the attached patch. Basically it disables going
-to sleep when there are still unacknowledged frames in the TX queues.
-This mirrors the behavior of the Ralink provided drivers.
+That still looks pretty bogus, the memcpy calls are overwriting the
+values written by the previous rt2800_register_multiread call.  Most
+likely the first two arguments need to be swapped.
 
----
-Gertjan.
+Andreas.
 
---------------070108010107060809070206
-Content-Type: text/plain;
- name="2.6.32-powersave-fix.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="2.6.32-powersave-fix.diff"
-
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 687e17d..77b2575 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -947,9 +947,17 @@ static void rt61pci_config_ps(struct rt2x00_dev *rt2x00dev,
- 	enum dev_state state =
- 	    (libconf->conf->flags & IEEE80211_CONF_PS) ?
- 		STATE_SLEEP : STATE_AWAKE;
-+	struct data_queue *queue;
- 	u32 reg;
- 
- 	if (state == STATE_SLEEP) {
-+		/*
-+		 * Don't go to sleep when the TX queues aren't empty.
-+		 */
-+		tx_queue_for_each(rt2x00dev, queue)
-+			if (!rt2x00queue_empty(queue)) {
-+				return;
-+
- 		rt2x00pci_register_read(rt2x00dev, MAC_CSR11, &reg);
- 		rt2x00_set_field32(&reg, MAC_CSR11_DELAY_AFTER_TBCN,
- 				   rt2x00dev->beacon_int - 10);
-
---------------070108010107060809070206--
+-- 
+Andreas Schwab, schwab@linux-m68k.org
+GPG Key fingerprint = 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
+"And now for something completely different."
