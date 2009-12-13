@@ -1,40 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:34758 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755551AbZLCOrF convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52196 "HELO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753260AbZLMNjX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2009 09:47:05 -0500
-Received: by iwn1 with SMTP id 1so920885iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Dec 2009 06:47:12 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <200912031200.56443.holgerschurig@gmail.com>
-References: <200912031148.46934.holgerschurig@gmail.com> <1259837682.12843.10.camel@johannes.local>
-	<200912031200.56443.holgerschurig@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 3 Dec 2009 06:46:51 -0800
-Message-ID: <43e72e890912030646x458068acw814788cce20ea173@mail.gmail.com>
-Subject: Re: question regarding cfg80211 monitor modes
-To: Holger Schurig <holgerschurig@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 13 Dec 2009 08:39:23 -0500
+Subject: Re: 2.6.32-git5+, CONFIG_WEXT_PRIV and Broadcom's driver for
+ BCM4322  Wireless chips
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alessandro Suardi <alessandro.suardi@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <5a4c581d0912130536r46b13b95pcd1364ee83cd39c0@mail.gmail.com>
+References: <5a4c581d0912120740j38a20f8eu3f616f3a477d922f@mail.gmail.com>
+	 <1260710042.2442.340.camel@johannes.local>
+	 <5a4c581d0912130536r46b13b95pcd1364ee83cd39c0@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-V6IwLmP/ZRrPiUFbkJ4t"
+Date: Sun, 13 Dec 2009 14:39:18 +0100
+Message-ID: <1260711558.2442.341.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 3, 2009 at 3:00 AM, Holger Schurig <holgerschurig@gmail.com> wrote:
->> I'd say don't bother with the flags at all.
->
-> Okay, I'll then a mask of 0x07, turning everything on. If someone
-> doesn't like beacons, he can still use
->
->  tshark -R "!(wlan.fc.subtype == 8)"
->
->
->
-> BTW:
-> http://wireless.kernel.org/en/users/Documentation/modes#Monitor_mode
-> doesn't say anything about the modes.
 
-The modes or the flags? iw does document the flags.
+--=-V6IwLmP/ZRrPiUFbkJ4t
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Sun, 2009-12-13 at 14:36 +0100, Alessandro Suardi wrote:
+
+> Thanks - you clipped the part of my message where I explain that my
+>  "workaround" has been to select IPW2200 :)
+
+Ah, sorry, I actually missed that completely. IPW2200 works just as
+well, of course, RAYCS was just the first one I saw :)
+
+johannes
+
+--=-V6IwLmP/ZRrPiUFbkJ4t
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLJO6DAAoJEODzc/N7+QmacjMP/1UXIM8oavNW6Fw8av/pRA7R
+d59u7hMulzUj/+JONE9hMoMHEItoUBFCfHoFuA94iSiaB7LVti6QUOUXTE9RX6Eu
+yEZGoCNB3oAklvDRL6Bco/8wB4s0uITLqoyljKtCXBVITpjXYm8qBrldm3R+S7ef
+qO7Y81hbEWJzbqWuYlEuViYNVSy8JExRthQzRNUKbXQQ8h0NXsHPBwEWIUfWP8MI
+Cw3iwib+23dP2Wcg4m58/TVtOCFKnpS+p6Nsr5NyTUjqtF6xEWjLCq4eDKo0UWXV
+2aG16P+51Hh1P/mZDBMut9YpvX1udzg/8Uf/rPqwZpNsmFE7qymanwRaEb7J1MTV
+/fN07upEV/lU2MiOL72VsJtFcEDS2piRJRwuS5A0uTtpuF0D9nHyUFJDsLluCal3
+lwRTa/mq2JBzcFmLvc00sRY61U+OK5ykzgofIBhAEsz03ydVWRKQH8CaKviHd1Q5
+8ZOiKTQm4Bsuw8lXN6+l2ZUefPuD9h6aynb/50NlkApTQReQQY7IMg+6UXNt1Qok
+/vnwVM63CGEh98CVCg8LhIDwWuumR9T+uJXs+PkXSpEOzaRrlb/igJ9PhOvAumsm
+Ky1WI0XXmRAp7XKvoMLKB0G1pS/n88Rfbp8+KI6LCogW7swhT8yTGst/uVkptdIt
+WsJSA5tiIij64kkeqkNa
+=ZyOQ
+-----END PGP SIGNATURE-----
+
+--=-V6IwLmP/ZRrPiUFbkJ4t--
+
