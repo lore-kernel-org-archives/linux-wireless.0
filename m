@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f197.google.com ([209.85.223.197]:56603 "EHLO
-	mail-iw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757683AbZLFVtf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2009 16:49:35 -0500
-Received: by iwn35 with SMTP id 35so2686828iwn.4
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Dec 2009 13:49:42 -0800 (PST)
+Received: from mgw2.diku.dk ([130.225.96.92]:35986 "HELO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753744AbZLMQIf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Dec 2009 11:08:35 -0500
+Date: Sun, 13 Dec 2009 17:08:33 +0100 (CET)
+From: Julia Lawall <julia@diku.dk>
+To: Andreas Schwab <schwab@linux-m68k.org>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 5/9] drivers/net/wireless: Correct code taking the size
+ of a pointer
+In-Reply-To: <m2iqcbt4n5.fsf@igel.home>
+Message-ID: <Pine.LNX.4.64.0912131707470.27767@ask.diku.dk>
+References: <Pine.LNX.4.64.0912131241470.24267@ask.diku.dk> <m2iqcbt4n5.fsf@igel.home>
 MIME-Version: 1.0
-In-Reply-To: <200912061829.32633.8an@praha12.net>
-References: <200912061820.26320.8an@praha12.net> <200912061829.32633.8an@praha12.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sun, 6 Dec 2009 13:49:22 -0800
-Message-ID: <43e72e890912061349m341f95bbl89abaad8d3dec1c1@mail.gmail.com>
-Subject: Re: [PATCH] iw: Add support for NL80211_ATTR_WIPHY_COVERAGE_CLASS
-To: 8an@praha12.net
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 6, 2009 at 9:29 AM, Lukáš Turek <8an@praha12.net> wrote:
-> New nl80211 attribute NL80211_ATTR_WIPHY_COVERAGE_CLASS allows setting
-> IEEE 802.11 coverage class, which is then used by drivers to calculate
-> slot time and ACK timeout for long distance links.
->
-> Two iw parameters are added: 'coverage' sets the coverage class
-> directly, while 'distance' is more user-friendly, as it allows to set
-> just the link distance and let iw do the necessary calculation itself.
->
-> Signed-off-by: Lukas Turek <8an@praha12.net>
-> ---
->  info.c    |    7 +++++++
->  nl80211.h |   15 +++++++++++++++
->  phy.c     |   58 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 80 insertions(+), 0 deletions(-)
->
-> diff --git a/info.c b/info.c
-> index ddff78b..3c69afc 100644
-> --- a/info.c
-> +++ b/info.c
-> @@ -264,6 +264,13 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
->                        printf("\tRTS threshold: %d\n", rts);
->        }
->
-> +       if (tb_msg[NL80211_ATTR_WIPHY_COVERAGE_CLASS]) {
-> +               unsigned int coverage;
+I have submitted the suggested patch, but I am not sure whether it is 
+correct.  Will the memcpy for iv16 be picking up the right two bytes?
 
-Just some quick comments.
+julia
 
-u8 seems more appropriate, given that you define this a u8 anyway.
 
-> +
-> +               coverage = nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_COVERAGE_CLASS]);
-> +               printf("\tCoverage class: %d (up to %dm)\n", coverage, 900 * coverage);
+On Sun, 13 Dec 2009, Andreas Schwab wrote:
 
-printf ?
-
-  Luis
+> Julia Lawall <julia@diku.dk> writes:
+> 
+> > diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> > index eb1e1d0..1e74732 100644
+> > --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> > +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> > @@ -2140,8 +2140,8 @@ static void rt2800_get_tkip_seq(struct ieee80211_hw *hw, u8 hw_key_idx,
+> >  	rt2800_register_multiread(rt2x00dev, offset,
+> >  				      &iveiv_entry, sizeof(iveiv_entry));
+> >  
+> > -	memcpy(&iveiv_entry.iv[0], iv16, sizeof(iv16));
+> > -	memcpy(&iveiv_entry.iv[4], iv32, sizeof(iv32));
+> > +	memcpy(&iveiv_entry.iv[0], iv16, sizeof(*iv16));
+> > +	memcpy(&iveiv_entry.iv[4], iv32, sizeof(*iv32));
+> 
+> That still looks pretty bogus, the memcpy calls are overwriting the
+> values written by the previous rt2800_register_multiread call.  Most
+> likely the first two arguments need to be swapped.
+> 
+> Andreas.
+> 
+> -- 
+> Andreas Schwab, schwab@linux-m68k.org
+> GPG Key fingerprint = 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
+> "And now for something completely different."
+> 
