@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:58501 "EHLO
-	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757419AbZLDVg3 (ORCPT
+Received: from 30.mail-out.ovh.net ([213.186.62.213]:52763 "HELO
+	30.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753492AbZLMPpL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Dec 2009 16:36:29 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Benoit Papillault <benoit.papillault@free.fr>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH] rt2x00: Fix trimming of L2 padded frames.
-Date: Fri,  4 Dec 2009 22:36:17 +0100
-Message-Id: <1259962577-25135-1-git-send-email-gwingerde@gmail.com>
+	Sun, 13 Dec 2009 10:45:11 -0500
+Message-ID: <4B250C01.4050400@free.fr>
+Date: Sun, 13 Dec 2009 16:45:05 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+MIME-Version: 1.0
+To: rt2x00 Users List <users@rt2x00.serialmonkey.com>
+CC: Ivo van Doorn <ivdoorn@gmail.com>, stable@kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [rt2x00-users] [PATCH 2.6.33] rt2x00: Disable powersaving for
+ rt61pci.
+References: <1260661180-2300-1-git-send-email-gwingerde@gmail.com>	<200912131115.33485.IvDoorn@gmail.com> <4B250567.8050809@gmail.com>	<200912131618.49312.IvDoorn@gmail.com> <4B25068E.7000201@gmail.com>
+In-Reply-To: <4B25068E.7000201@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ensure that frames without payload are properly trimmed in
-rt2x00queue_insert_l2pad.
+Gertjan van Wingerde a écrit :
+> On 12/13/09 16:18, Ivo van Doorn wrote:
+>> On Sunday 13 December 2009, Gertjan van Wingerde wrote:
+>>> On 12/13/09 11:15, Ivo van Doorn wrote:
+>>>> On Sunday 13 December 2009, Gertjan van Wingerde wrote:
+>>>>> We've had many reports of rt61pci failures with powersaving enabled.
+>>>>> Therefore, as a stop-gap measure, disable powersaving of the rt61pci
+>>>>> until we have found a proper solution.
+>>>> This disables powersaving completely, can't we set the default powersaving
+>>>> to disabled? That way for people for who it does work, it can still be enabled.
+>>>>
+>>> Well, when I was looking into this I came up with a number of issues in the code
+>>> which makes me believe that it simply isn't working at all.
+>>> One example is that the rt61pci devices rely on handling the wakeup interrupt
+>>> by the driver to wake up the devices. As far as I can tell there is no handling
+>>> of the wakeup interrupt in the rt61pci driver.
+>>> That's why I decided to disable it all together, as I don't think it works
+>>> properly for anyone (although some people may not really notice it).
+>> Ok, but then please disable it for _all_ rt2x00 drivers, or at least all PCI rt2x00 drivers
+>> since they would have the same wakeup interrupt requirement.
+>>
+> 
+> I'll see if this will be the case for all PCI rt2x00 devices and adapt for the ones that
+> need it. I didn't look into the other devices yet, and ISTR that at least rt2500pci doesn't
+> have this requirement.
+> 
+> ---
+> Gertjan.
 
-This should fix the bug reported by Benoit Papillault in:
-http://marc.info/?l=linux-wireless&m=125974773006734&w=2
+If the same mecanism is used by rt2800usb, that would explain why power save is
+not working as well on my rt2870 USB device. Is there a way to start the device
+with power save disabled at startup (so it can be reenabled later to debug it).
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 7452fa8..3d8fb68 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -180,7 +180,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
- 	unsigned int payload_length = skb->len - header_length;
- 	unsigned int header_align = ALIGN_SIZE(skb, 0);
- 	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
--	unsigned int l2pad = L2PAD_SIZE(header_length);
-+	unsigned int l2pad = payload_length ? L2PAD_SIZE(header_length) : 0;
- 
- 	/*
- 	 * Adjust the header alignment if the payload needs to be moved more
--- 
-1.6.5.3
-
+Regards,
+Benoit
