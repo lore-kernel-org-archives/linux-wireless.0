@@ -1,68 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:5397 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762049AbZLJWtp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2009 17:49:45 -0500
-Subject: Re: [PATCH 0/7] iwlwifi updates 12/10/2009
-From: reinette chatre <reinette.chatre@intel.com>
-To: David Miller <davem@davemloft.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <20091210.144239.110141276.davem@davemloft.net>
-References: <1260484647-5114-1-git-send-email-reinette.chatre@intel.com>
-	 <20091210.144239.110141276.davem@davemloft.net>
-Content-Type: text/plain
-Date: Thu, 10 Dec 2009 14:49:52 -0800
-Message-Id: <1260485392.25564.6308.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mgw2.diku.dk ([130.225.96.92]:38841 "HELO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753248AbZLMNKd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Dec 2009 08:10:33 -0500
+Date: Sun, 13 Dec 2009 14:10:30 +0100 (CET)
+From: Julia Lawall <julia@diku.dk>
+To: Andreas Schwab <schwab@linux-m68k.org>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 5/9] drivers/net/wireless: Correct code taking the size
+ of a pointer
+In-Reply-To: <m2iqcbt4n5.fsf@igel.home>
+Message-ID: <Pine.LNX.4.64.0912131409590.24267@ask.diku.dk>
+References: <Pine.LNX.4.64.0912131241470.24267@ask.diku.dk> <m2iqcbt4n5.fsf@igel.home>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-12-10 at 14:42 -0800, David Miller wrote:
-> From: Reinette Chatre <reinette.chatre@intel.com>
-> Date: Thu, 10 Dec 2009 14:37:20 -0800
+On Sun, 13 Dec 2009, Andreas Schwab wrote:
+
+> Julia Lawall <julia@diku.dk> writes:
 > 
-> > In this series we also include support for the new mac80211 spatial
-> > multiplexing support.
+> > diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> > index eb1e1d0..1e74732 100644
+> > --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> > +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> > @@ -2140,8 +2140,8 @@ static void rt2800_get_tkip_seq(struct ieee80211_hw *hw, u8 hw_key_idx,
+> >  	rt2800_register_multiread(rt2x00dev, offset,
+> >  				      &iveiv_entry, sizeof(iveiv_entry));
+> >  
+> > -	memcpy(&iveiv_entry.iv[0], iv16, sizeof(iv16));
+> > -	memcpy(&iveiv_entry.iv[4], iv32, sizeof(iv32));
+> > +	memcpy(&iveiv_entry.iv[0], iv16, sizeof(*iv16));
+> > +	memcpy(&iveiv_entry.iv[4], iv32, sizeof(*iv32));
 > 
-> No more new features for 2.6.33, sorry.
-> 
-> Only bug fixes at this time.
+> That still looks pretty bogus, the memcpy calls are overwriting the
+> values written by the previous rt2800_register_multiread call.  Most
+> likely the first two arguments need to be swapped.
 
-Absolutely - the feature you quoted was not intended for 2.6.33 ...
-especially since the mac80211 API it relies on is not there either.
+OK, I will look at it and try again.
 
-The series I posted included both fixes for 2.6.33 and features for
-2.6.34. The one you quoted is a feature for 2.6.34.
-
-I tried to be clear in the fixes we target for 2.6.33 by clearly
-mentioning them in the commit message like so:
-
-On Thu, 2009-12-10 at 14:37 -0800, Chatre, Reinette wrote:
-> This series includes three fixes targeting 2.6.33:
-> - "iwlwifi: power up all devices for EEPROM read" fixes a issue where
-> devices are unable to be initialized on certain platforms due to too
-> aggressive power savings.
-> - "iwlwifi: allocated rx page accounting cleanup" fixes some accounting
-> issues in the recent paged RX work
-> - "iwlwifi: fix syslog message for event log dump size" fixes the problem
-> where the entire debug log was not printed when requested by user
-> 
-
-... and also annotating the Subject line of the fixes like so:
-
-[PATCH X/XX w-t and 2.6.33] iwl.....
-
-With the above I hoped to make it clear that the patch is targeting both
-wireless-testing (for 2.6.34) and 2.6.33 as a fix. Patches targeting
-2.6.34 do not have special "tags" after "PATCH". 
-
-This is the way we have been submitting patches for a long time now.
-Sorry that I introduced confusion now ... perhaps I should submit fixes
-and features in separate series to prevent this in the future.
-
-Reinette
-
-
+Thanks,
+julia
