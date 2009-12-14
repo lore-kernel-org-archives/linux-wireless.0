@@ -1,81 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f197.google.com ([209.85.212.197]:64951 "EHLO
-	mail-vw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755661AbZLCJWK (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:63993 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752260AbZLNPBX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2009 04:22:10 -0500
+	Mon, 14 Dec 2009 10:01:23 -0500
+Received: by ey-out-2122.google.com with SMTP id d26so881855eyd.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 07:01:22 -0800 (PST)
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Revised wireless tree management practices
+Date: Mon, 14 Dec 2009 15:59:29 +0100
+Cc: linux-wireless@vger.kernel.org, davem@davemloft.net
+References: <20091209211054.GB32058@tuxdriver.com> <200912141516.12224.bzolnier@gmail.com> <20091214142602.GC18945@tuxdriver.com>
+In-Reply-To: <20091214142602.GC18945@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <20091203085717.GO9121@core.coreip.homeip.net>
-References: <1259826317-18809-28-git-send-email-corentincj@iksaif.net>
-	 <1259826317-18809-30-git-send-email-corentincj@iksaif.net>
-	 <1259826317-18809-31-git-send-email-corentincj@iksaif.net>
-	 <1259826317-18809-32-git-send-email-corentincj@iksaif.net>
-	 <1259826317-18809-33-git-send-email-corentincj@iksaif.net>
-	 <20091203075404.GK9121@core.coreip.homeip.net>
-	 <71cd59b00912030012r2f45f474u37c494ad281230cb@mail.gmail.com>
-	 <20091203082120.GL9121@core.coreip.homeip.net>
-	 <71cd59b00912030051w6bf54abfv726f288c2eae1d33@mail.gmail.com>
-	 <20091203085717.GO9121@core.coreip.homeip.net>
-Date: Thu, 3 Dec 2009 10:22:16 +0100
-Message-ID: <71cd59b00912030122n3d94236ajfa5e55c3b5a9efcd@mail.gmail.com>
-Subject: Re: [PATCH 32/33] input: add KEY_WIRELESS_CYCLE
-From: Corentin Chary <corentin.chary@gmail.com>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
-	linux-input@vger.kernel.org, networkmanager-list@gnome.org,
-	linux-wireless@vger.kernel.org, kde-hardware-devel@kde.org,
-	dbus@lists.freedesktop.org, hal@lists.freedesktop.org
-Content-Type: text/plain; charset=ISO-8859-1
+Message-Id: <200912141559.29282.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 3, 2009 at 9:57 AM, Dmitry Torokhov
-<dmitry.torokhov@gmail.com> wrote:
-> On Thu, Dec 03, 2009 at 09:51:59AM +0100, Corentin Chary wrote:
->> On Thu, Dec 3, 2009 at 9:21 AM, Dmitry Torokhov
->> <dmitry.torokhov@gmail.com> wrote:
->> > On Thu, Dec 03, 2009 at 09:12:52AM +0100, Corentin Chary wrote:
->> >> On Thu, Dec 3, 2009 at 8:54 AM, Dmitry Torokhov
->> >> <dmitry.torokhov@gmail.com> wrote:
->> >> > On Thu, Dec 03, 2009 at 08:45:16AM +0100, Corentin Chary wrote:
->> >> >> This keycode could be used in a lot of platform specific drivers.
->> >> >> For example, on Asus laptops, Fn+F2 allow to cycle trought wireless
->> >> >> drivers (bt/wl: off/off, on/off, off/on, on/on).
->> >> >>
->> >> >> Currently, these key are mapped to KEY_WLAN, and KEY_BLUETOOTH/KEY_WIMAX
->> >> >> are rarely used.
->> >> >>
->> >> >
->> >> > Is there any application support for such cycling? IOW does anyone cares
->> >> > to do such cycling?
->> >>
->> >> On Asus laptops (both asus and eeepc) the Fn+F2 key cycle
->> >> (bluetooth/wlan: on/on, on/off, off/on, off/off) on windows.
->> >> On Linux, it only produces a KEY_WLAN keycode.
->> >>
->> >
->> > I understand this. I guess the question is whether people working on
->> > system infrastructure (dbus, Networkmanager, etc) care about having such
->> > functionality on Linux? The reason I am asking is that we added all
->> > KEY_WIMAX and so on defines but I am not usre if anyone wants them.
->>
->> KEY_WIMAX may not be used a lot because there is not a lot of device
->> with such a key,
->> I think this is not the case for KEY_WIRELESS_CYCLE.
->>
->> The bad thing is that we will need to patch X11 (and Qt, for
->> kde/solid) to make it works.
->>
->> Maybe we should Cc dbus/network manager/solid/linux-wireless ?
->>
->
-> That would be a good idea.
+On Monday 14 December 2009 03:26:02 pm John W. Linville wrote:
+> On Mon, Dec 14, 2009 at 03:16:12PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> 
+> > Now if only somebody could come up with a way to split 'monstermerges'
+> > for Linus tree into something more fine-grained (thousands of commits in
+> > a single merge is too much for anyone not directly involved into current
+> > networking developments IMHO) I would be completely satisfied. ;)
+> 
+> You'll have to talk to Dave about that one, although FWIW I'm not
 
-Here it is.
+Yep, it was directed at him (since he was on cc: already).
 
-Dear system infrastructure people,
-Do you think a KEY_WIRELESS_CYCLE key would have any application ?
+> sure how to prevent that with the current "merge window" policy...
 
--- 
-Corentin Chary
-http://xf.iksaif.net
+Hmmm, there are multiple ideas to investigate even within the current
+"merge window" policy.  Decoupling driver trees from core changes should
+certainly be possible (it works just fine in the storage area), some
+architectures make heavy use of topic branches to prevent 'monstermerge'
+issue etc.
+
+Anyway this is just some food for thought for Dave once he finds some
+time away from his usual more high-priority activities.. ;)
+
+--
+Bartlomiej Zolnierkiewicz
