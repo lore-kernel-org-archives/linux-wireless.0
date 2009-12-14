@@ -1,76 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.102.11.253]:35444 "EHLO
-	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933962AbZLFRXl (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38527
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932496AbZLNTXC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2009 12:23:41 -0500
-From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
-Reply-To: 8an@praha12.net
-To: linville@tuxdriver.com
-Subject: [PATCH 2/4] mac80211: Add new callback set_coverage
-Date: Sun, 6 Dec 2009 18:23:45 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	ath5k-devel@lists.ath5k.org
-References: <200912061820.26320.8an@praha12.net>
-In-Reply-To: <200912061820.26320.8an@praha12.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200912061823.45809.8an@praha12.net>
+	Mon, 14 Dec 2009 14:23:02 -0500
+Date: Mon, 14 Dec 2009 11:23:04 -0800 (PST)
+Message-Id: <20091214.112304.26981627.davem@davemloft.net>
+To: bzolnier@gmail.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: Revised wireless tree management practices
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <200912142016.00169.bzolnier@gmail.com>
+References: <200912141924.47370.bzolnier@gmail.com>
+	<20091214.104124.98693961.davem@davemloft.net>
+	<200912142016.00169.bzolnier@gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mac80211 callback to driver set_coverage() sets slot time and ACK timeout
-for given coverage class. The callback is optional, but it's essential for
-long distance links.
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date: Mon, 14 Dec 2009 20:16:00 +0100
 
-Signed-off-by: Lukas Turek <8an@praha12.net>
----
- include/net/mac80211.h |    5 +++++
- net/mac80211/cfg.c     |    6 ++++++
- 2 files changed, 11 insertions(+), 0 deletions(-)
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date: Mon, 14 Dec 2009 20:16:00 +0100
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 1d75b96..2865bc6 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1477,6 +1477,10 @@ enum ieee80211_ampdu_mlme_action {
-  *	need to set wiphy->rfkill_poll to %true before registration,
-  *	and need to call wiphy_rfkill_set_hw_state() in the callback.
-  *
-+ * @set_coverage: Set slot time for given coverage class as specified
-+ *	in IEEE 802.11-2007 section 17.3.8.6 and modify ACK timeout
-+ *	accordingly. Optional function, could be NULL.
-+ *
-  * @testmode_cmd: Implement a cfg80211 test mode command.
-  */
- struct ieee80211_ops {
-@@ -1531,6 +1535,7 @@ struct ieee80211_ops {
- 			    struct ieee80211_sta *sta, u16 tid, u16 *ssn);
- 
- 	void (*rfkill_poll)(struct ieee80211_hw *hw);
-+	void (*set_coverage)(struct ieee80211_hw *hw, u8 coverage_class);
- #ifdef CONFIG_NL80211_TESTMODE
- 	int (*testmode_cmd)(struct ieee80211_hw *hw, void *data, int len);
- #endif
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 93ee1fd..f0ab669 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1236,6 +1236,12 @@ static int ieee80211_set_wiphy_params(struct wiphy 
-*wiphy, u32 changed)
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	int err;
- 
-+	if (changed & WIPHY_PARAM_COVERAGE_CLASS) {
-+		if (!local->ops->set_coverage)
-+			return -EOPNOTSUPP;
-+		local->ops->set_coverage(&local->hw, wiphy->coverage_class);
-+	}
-+
- 	if (changed & WIPHY_PARAM_RTS_THRESHOLD) {
- 		err = drv_set_rts_threshold(local, wiphy->rts_threshold);
- 
--- 
-1.6.4.4
+> On Monday 14 December 2009 07:41:24 pm David Miller wrote:
+>> That's not true.  I use "gitk -- net/mac80211" all the time and it's
+>> helped me find bugs.  Or try "gitk -- include/tcp* net/ipv4/tcp*" to
+>> hunt down TCP regressions, etc.
+> 
+> It helps but with more complex ones you're back to guesswork and applying
+> by hand fixes for already fixed ages ago in-the-middle regressions.
+
+Examples?
+
+> commit d7fc02c7bae7b1cf69269992cf880a43a350cdaa
+> Merge: ee1262d 28b4d5c
+> Author: Linus Torvalds <torvalds@linux-foundation.org>
+> Date:   Tue Dec 8 07:55:01 2009 -0800
+> 
+>     Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next-2.6
+> 
+>     * git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next-2.6: (1815 commits)
+> 
+> with completely insane amount of changes:
+> 
+>  1396 files changed, 113877 insertions(+), 71108 deletions(-)
+> 
+> You may say that I should be following the development as it happens but such
+> strict requirement is not present in any other kernel subsystem tree.
+
+About 1400 is drivers/net and about 500 is net
+
+It's going to be a lot of changes no matter how I or John split it
+up.
+
+And guess what's just-as if not even more important?  A unified tree
+makes things easier for me.  So unless you plan on applying 100
+patches a day for me and doing all the cross merges, that's how I plan
+to keep doing things :-)
