@@ -1,43 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:36939 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755186AbZLWN2y (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:56638 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755229AbZLNVeg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 08:28:54 -0500
-Received: by ewy19 with SMTP id 19so6315200ewy.21
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2009 05:28:53 -0800 (PST)
+	Mon, 14 Dec 2009 16:34:36 -0500
+Received: by ey-out-2122.google.com with SMTP id d26so973149eyd.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 13:34:34 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH v2 2.6.33] rt2x00: Disable powersaving for rt61pci and rt2800pci.
+Date: Mon, 14 Dec 2009 22:34:31 +0100
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com, stable@kernel.org
+References: <1260819235-8017-1-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1260819235-8017-1-git-send-email-gwingerde@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1261573448.7304.0.camel@johannes.local>
-References: <e92712b70912170610y74eb6ae8ifd8db347cc608808@mail.gmail.com>
-	 <1261061645.10356.114.camel@johannes.local>
-	 <e92712b70912230428s7caee5eag6943a8eb6a8b7a78@mail.gmail.com>
-	 <1261571890.3512.0.camel@johannes.local>
-	 <e92712b70912230454y3da0f49ame84957a136b674bf@mail.gmail.com>
-	 <1261573448.7304.0.camel@johannes.local>
-Date: Wed, 23 Dec 2009 15:28:53 +0200
-Message-ID: <e92712b70912230528r6cdd8f95j4df9db9ff6b02e66@mail.gmail.com>
-Subject: Re: Backoff algorithm
-From: Andrey Lukyanenko <laser.ru@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200912142234.32204.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Well both b43 and ar9170 have open firmware. I don't know how to solve
-> your problem, and I'm not interested in it either -- I'm just trying to
-> give you pointers that may help. However, if you only have the hw you
-> do, then I don't know at all.
+On Monday 14 December 2009, Gertjan van Wingerde wrote:
+> We've had many reports of rt61pci failures with powersaving enabled.
+> Therefore, as a stop-gap measure, disable powersaving of the rt61pci
+> until we have found a proper solution.
+> Also disable powersaving on rt2800pci as it most probably will show
+> the same problem.
+> 
+> Cc: stable@kernel.org
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Yes, your are right. Acctually I already checked the source code of ar9170-fw
-(I forgot about it, as I did not find what I was interested in it) and b43_4.5.
-The second was a part of OpenFWWF project. The backoff code in b43 is
-in few asm functions (right now easiest for me way to change, only need to
-buy hw).
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Thanks a lot, I am really appreciate your help.
+> ---
+> 
+> John, this is an urgent fix for 2.6.33.
+> 
+> v2:
+> - Handled feedback from Ivo:
+> 	- Only disable powersaving by default, not permanent.
+> 	- Also apply to rt2800pci.
+> 
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    6 ++++++
+>  drivers/net/wireless/rt2x00/rt61pci.c   |    5 +++++
+>  2 files changed, 11 insertions(+), 0 deletions(-)
+> 
 
 
--- 
-Best regards,
-Andrey Lukyanenko.
+
