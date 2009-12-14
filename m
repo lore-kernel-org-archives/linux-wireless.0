@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:21503 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750917AbZLVEW7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2009 23:22:59 -0500
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:48044 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932362AbZLNS0L (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Dec 2009 13:26:11 -0500
+Received: by ewy19 with SMTP id 19so3685938ewy.21
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 10:26:09 -0800 (PST)
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: David Miller <davem@davemloft.net>
+Subject: Re: Revised wireless tree management practices
+Date: Mon, 14 Dec 2009 19:24:47 +0100
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <200912141559.29282.bzolnier@gmail.com> <200912141720.11465.bzolnier@gmail.com> <20091214.100345.57458443.davem@davemloft.net>
+In-Reply-To: <20091214.100345.57458443.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19248.19829.293087.367661@gargle.gargle.HOWL>
-Date: Tue, 22 Dec 2009 10:09:17 +0530
-To: Luis Rodriguez <lrodriguez@atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Subject: Asus eeepc 1008HA suspend issue and mac80211 suspend corner case
-In-Reply-To: <20091222022355.GA32508@bombadil.infradead.org>
-References: <20091222022355.GA32508@bombadil.infradead.org>
+Message-Id: <200912141924.47370.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis Rodriguez wrote:
-> That log can be found here:
+On Monday 14 December 2009 07:03:45 pm David Miller wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Date: Mon, 14 Dec 2009 17:20:11 +0100
 > 
-> http://bombadil.infradead.org/~mcgrof/logs/2.6.31-with-2.6.32-wireless/irq-disabled.txt
+> > Well, in theory all maintainers should be testing -next kernels
+> > so nothing should change also in this regard.
+> 
+> You conveniently did not quote and respond to my comments showing that
+> you can ask git tools to seperate out the changesets for you, regardless
+> of what subsystem maintainers decide to do.
+> 
+> Power is in your hands, really. :-)
 
-Thanks for the log.
-It's a bug in ath9k, related to PowerSave.
+That is simply untrue from Linus' kernel point of view.
 
-Can you test this patch ?
+Each networking merge contains multiple sub-merges from wireless tree
+(at random points in networking tree history) which in turn may contain
+multiple sub-merges from Johannes (at random points in wireless tree
+history) and wireless driver sub-projects so unless you are a hardcore
+networking/wireless developer it is practically impossible to make
+a sense out of it in a reasonable time.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 3f5b887..419c382 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2504,6 +2504,9 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 		return; /* another wiphy still in use */
- 	}
- 
-+	/* Ensure HW is awake when we try to shut it down. */
-+	ath9k_ps_wakeup(sc);
-+
- 	if (ah->btcoex_hw.enabled) {
- 		ath9k_hw_btcoex_disable(ah);
- 		if (ah->btcoex_hw.scheme == ATH_BTCOEX_CFG_3WIRE)
-@@ -2524,8 +2527,10 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 	/* disable HAL and put h/w to sleep */
- 	ath9k_hw_disable(ah);
- 	ath9k_hw_configpcipowersave(ah, 1, 1);
--	ath9k_setpower(sc, ATH9K_PM_FULL_SLEEP);
-+	ath9k_ps_restore(sc);
- 
-+	/* Finally, put the chip in FULL SLEEP mode */
-+	ath9k_setpower(sc, ATH9K_PM_FULL_SLEEP);
- 	sc->sc_flags |= SC_OP_INVALID;
- 
- 	mutex_unlock(&sc->mutex);
-
+--
+Bartlomiej Zolnierkiewicz
