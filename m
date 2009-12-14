@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:30696 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750940AbZLWCMu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2009 21:12:50 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Dec 2009 18:12:50 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:38193 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754440AbZLNDp7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Dec 2009 22:45:59 -0500
+Received: by bwz27 with SMTP id 27so1741074bwz.21
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Dec 2009 19:45:57 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19249.32885.877602.60242@gargle.gargle.HOWL>
-Date: Wed, 23 Dec 2009 07:59:09 +0530
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Asus eeepc 1008HA suspend issue and mac80211 suspend corner case
-In-Reply-To: <20091222175939.GF4385@tux>
-References: <20091222022355.GA32508@bombadil.infradead.org>
-	<19248.19829.293087.367661@gargle.gargle.HOWL>
-	<20091222155005.GA4385@tux>
-	<20091222162055.GC4385@tux>
-	<20091222165528.GE4385@tux>
-	<20091222175939.GF4385@tux>
+In-Reply-To: <c4d76b3b0912091454o383ff350mce78d69565a1530c@mail.gmail.com>
+References: <c4d76b3b0912071955y25c31a11m104d9c4723ef578d@mail.gmail.com>
+	 <87ws0x3ojk.fsf@purkki.valot.fi>
+	 <c4d76b3b0912081947m2ffcdb65of44f4ce10dfa00d2@mail.gmail.com>
+	 <87skbk35tx.fsf@purkki.valot.fi>
+	 <c4d76b3b0912091454o383ff350mce78d69565a1530c@mail.gmail.com>
+Date: Sun, 13 Dec 2009 22:45:57 -0500
+Message-ID: <c4d76b3b0912131945q64a6bc83r89c0bb851e962c98@mail.gmail.com>
+Subject: Re: cfg80211 connect for at76c50x-usb
+From: Jason Andryuk <jandryuk@gmail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis Rodriguez wrote:
-> I just tried adding the PM stuff over ath9k_remove_interface and I still get the
-> issue. The patch is below.
+On Wed, Dec 9, 2009 at 5:54 PM, Jason Andryuk <jandryuk@gmail.com> wrote:
+> A quick test under OpenBSD doesn't show any transmitted packets on the
+> monitor interface either and the device doesn't connect to the AP.
+> Makes me more suspicious of the device having failed.
 
-The HW is not accessed in ->remove_interface(), so this patch is not necessary.
+Going back to 2.6.31 and using the staging driver still works.
 
-Sujith
+I am not sure it matters, but the previous hack attempt did not set
+the WEP key.  I also noticed a couple of differences with CMD_STARTUP
+between at76_usb and at76c50x-usb.  I have not fully investigated the
+differences at this time, but I plan to do so as time permits.
+
+Jason
