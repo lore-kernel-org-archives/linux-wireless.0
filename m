@@ -1,60 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f209.google.com ([209.85.219.209]:48941 "EHLO
-	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754862AbZLHIfO (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:17859 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932480AbZLNTRv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 03:35:14 -0500
-Received: by ewy1 with SMTP id 1so2422991ewy.28
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2009 00:35:20 -0800 (PST)
-Date: Tue, 8 Dec 2009 10:20:32 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@Atheros.com>
-Subject: Re: signed vs unsigned bug in ath9k
-Message-ID: <20091208082031.GA29753@bicker>
-References: <20091207110736.GA1338@bicker> <20091207155542.GB19643@tux>
+	Mon, 14 Dec 2009 14:17:51 -0500
+Received: by ey-out-2122.google.com with SMTP id d26so940907eyd.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 11:17:49 -0800 (PST)
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: David Miller <davem@davemloft.net>
+Subject: Re: Revised wireless tree management practices
+Date: Mon, 14 Dec 2009 20:16:00 +0100
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <200912141720.11465.bzolnier@gmail.com> <200912141924.47370.bzolnier@gmail.com> <20091214.104124.98693961.davem@davemloft.net>
+In-Reply-To: <20091214.104124.98693961.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091207155542.GB19643@tux>
+Message-Id: <200912142016.00169.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 07, 2009 at 07:55:42AM -0800, Luis R. Rodriguez wrote:
-> On Mon, Dec 07, 2009 at 03:07:36AM -0800, Dan Carpenter wrote:
-> > drivers/net/wireless/ath/ath9k/recv.c
-> >    205          sta = ieee80211_find_sta(sc->hw, hdr->addr2);
-> >    206          if (sta) {
-> >    207                  an = (struct ath_node *) sta->drv_priv;
-> >    208                  if (ds->ds_rxstat.rs_rssi != ATH9K_RSSI_BAD &&
+On Monday 14 December 2009 07:41:24 pm David Miller wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Date: Mon, 14 Dec 2009 19:24:47 +0100
+> 
+> > On Monday 14 December 2009 07:03:45 pm David Miller wrote:
+> >> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> >> Date: Mon, 14 Dec 2009 17:20:11 +0100
+> >> 
+> >> > Well, in theory all maintainers should be testing -next kernels
+> >> > so nothing should change also in this regard.
+> >> 
+> >> You conveniently did not quote and respond to my comments showing that
+> >> you can ask git tools to seperate out the changesets for you, regardless
+> >> of what subsystem maintainers decide to do.
+> >> 
+> >> Power is in your hands, really. :-)
 > > 
-> > ds->ds_rxstat.rs_rssi is a signed 8 bit so it will never be == ATH9K_RSSI_BAD.
-> 
-> ATH9K_RSSI_BAD is -128 and the minimum value for int8_t is -128 so why is it a bug?
-> 
-
-It could be that someone fixed this already in the net tree?  In mainline it's still
-positive 128.
-
-#define ATH9K_RSSI_BAD                  0x80
-
-regards,
-dan carpenter
-
-> >    209                     !ds->ds_rxstat.rs_moreaggr)
-> >    210                          ATH_RSSI_LPF(an->last_rssi, ds->ds_rxstat.rs_rssi);
-> >    211                  last_rssi = an->last_rssi;
-> >    212          }
+> > That is simply untrue from Linus' kernel point of view.
 > > 
-> > I would normally just change the declaration to unsigned but it looks like
-> > someone may have chosen to have it signed on purpose.
+> > Each networking merge contains multiple sub-merges from wireless tree
+> > (at random points in networking tree history) which in turn may contain
+> > multiple sub-merges from Johannes (at random points in wireless tree
+> > history) and wireless driver sub-projects so unless you are a hardcore
+> > networking/wireless developer it is practically impossible to make
+> > a sense out of it in a reasonable time.
 > 
-> Yeah it comes from hardware.
-> 
->   Luis
+> That's not true.  I use "gitk -- net/mac80211" all the time and it's
+> helped me find bugs.  Or try "gitk -- include/tcp* net/ipv4/tcp*" to
+> hunt down TCP regressions, etc.
+
+It helps but with more complex ones you're back to guesswork and applying
+by hand fixes for already fixed ages ago in-the-middle regressions.
+
+However that's not the main point here.
+
+With almost all other major trees I'm able to stay more-or-less informed on
+what is being merged to Linus tree and follow the development thanks to well
+fine-grained pull requests (up to few hundred commit in one go, very often
+accompanied by combined diff).
+
+The networking is unfortunate exception with thousands of commits in one go,
+i.e. for 2.6.33 "merge window" it was 1815 (!) commits:
+
+commit d7fc02c7bae7b1cf69269992cf880a43a350cdaa
+Merge: ee1262d 28b4d5c
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Tue Dec 8 07:55:01 2009 -0800
+
+    Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next-2.6
+
+    * git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next-2.6: (1815 commits)
+
+with completely insane amount of changes:
+
+ 1396 files changed, 113877 insertions(+), 71108 deletions(-)
+
+You may say that I should be following the development as it happens but such
+strict requirement is not present in any other kernel subsystem tree.
+
+--
+Bartlomiej Zolnierkiewicz
