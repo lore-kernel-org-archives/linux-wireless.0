@@ -1,117 +1,243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36586 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402AbZLQIpu (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43554 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752555AbZLNBuA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2009 03:45:50 -0500
-Subject: [PATCH 2.6.33] mac80211: fix peer HT capabilities
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 17 Dec 2009 09:45:45 +0100
-Message-ID: <1261039545.10356.94.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 13 Dec 2009 20:50:00 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2/2] wireless: remove CONFIG_WIRELESS_OLD_REGULATORY
+Date: Sun, 13 Dec 2009 20:45:16 -0500
+Message-Id: <1260755116-3829-2-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1260755116-3829-1-git-send-email-linville@tuxdriver.com>
+References: <1260755116-3829-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I noticed yesterday, because Jeff had noticed
-a speed regression, cf. bug
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2138
-that the SM PS settings for peers were wrong.
-Instead of overwriting the SM PS settings with
-the local bits, we need to keep the remote bits.
+This is no longer needed with the availability of
+CONFIG_CFG80211_INTERNAL_REGDB.
 
-The bug was part of the original HT code from
-over two years ago, but unfortunately nobody
-noticed that it makes no sense -- we shouldn't
-be overwriting the peer's setting with our own
-but rather keep it intact when masking the peer
-capabilities with our own.
-
-While fixing that, I noticed that the masking of
-capabilities is completely useless for most of
-the bits, so also fix those other bits.
-
-Finally, I also noticed that PSMP_SUPPORT no
-longer exists in the final 802.11n version, so
-also remove that.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
-Even though this was introduced a long time ago, it didn't really matter
-until now. In 2.6.33, iwlwifi might use dynamic SM PS so we'd be getting
-the wrong data for peers from then on.
+ Documentation/feature-removal-schedule.txt |   21 -------
+ net/wireless/Kconfig                       |   15 -----
+ net/wireless/nl80211.c                     |    6 --
+ net/wireless/reg.c                         |   89 +---------------------------
+ 4 files changed, 2 insertions(+), 129 deletions(-)
 
- drivers/net/wireless/rt2x00/rt2800lib.c |    3 +--
- include/linux/ieee80211.h               |    2 +-
- net/mac80211/ht.c                       |   26 +++++++++++++++++++++++---
- 3 files changed, 25 insertions(+), 6 deletions(-)
-
---- wireless-testing.orig/net/mac80211/ht.c	2009-12-17 09:00:06.000000000 +0100
-+++ wireless-testing/net/mac80211/ht.c	2009-12-17 09:39:56.000000000 +0100
-@@ -24,6 +24,7 @@ void ieee80211_ht_cap_ie_to_sta_ht_cap(s
+diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
+index bc693ff..0b5a765 100644
+--- a/Documentation/feature-removal-schedule.txt
++++ b/Documentation/feature-removal-schedule.txt
+@@ -73,27 +73,6 @@ Who:	Luis R. Rodriguez <lrodriguez@atheros.com>
+ 
+ ---------------------------
+ 
+-What:	CONFIG_WIRELESS_OLD_REGULATORY - old static regulatory information
+-When:	March 2010 / desktop catchup
+-
+-Why:	The old regulatory infrastructure has been replaced with a new one
+-	which does not require statically defined regulatory domains. We do
+-	not want to keep static regulatory domains in the kernel due to the
+-	the dynamic nature of regulatory law and localization. We kept around
+-	the old static definitions for the regulatory domains of:
+-
+-		* US
+-		* JP
+-		* EU
+-
+-	and used by default the US when CONFIG_WIRELESS_OLD_REGULATORY was
+-	set. We will remove this option once the standard Linux desktop catches
+-	up with the new userspace APIs we have implemented.
+-
+-Who:	Luis R. Rodriguez <lrodriguez@atheros.com>
+-
+----------------------------
+-
+ What:	dev->power.power_state
+ When:	July 2007
+ Why:	Broken design for runtime control over driver power states, confusing
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index f146803..e63d505 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -94,21 +94,6 @@ config CFG80211_DEBUGFS
+ 
+ 	  If unsure, say N.
+ 
+-config WIRELESS_OLD_REGULATORY
+-	bool "Old wireless static regulatory definitions"
+-	default n
+-	depends on CFG80211
+-	---help---
+-	  This option enables the old static regulatory information
+-	  and uses it within the new framework. This option is available
+-	  for historical reasons and it is advised to leave it off.
+-
+-	  For details see:
+-
+-	  http://wireless.kernel.org/en/developers/Regulatory
+-
+-	  Say N and if you say Y, please tell us why. The default is N.
+-
+ config CFG80211_INTERNAL_REGDB
+ 	bool "use statically compiled regulatory rules database"
+ 	default n
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a602843..931077e 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2583,12 +2583,6 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
+ 
+-#ifdef CONFIG_WIRELESS_OLD_REGULATORY
+-	/* We ignore world regdom requests with the old regdom setup */
+-	if (is_world_regdom(data))
+-		return -EINVAL;
+-#endif
+-
+ 	r = regulatory_hint_user(data);
+ 
+ 	return r;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index dc13c3f..87ea60d 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -129,78 +129,6 @@ static char *ieee80211_regdom = "00";
+ module_param(ieee80211_regdom, charp, 0444);
+ MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
+ 
+-#ifdef CONFIG_WIRELESS_OLD_REGULATORY
+-/*
+- * We assume 40 MHz bandwidth for the old regulatory work.
+- * We make emphasis we are using the exact same frequencies
+- * as before
+- */
+-
+-static const struct ieee80211_regdomain us_regdom = {
+-	.n_reg_rules = 6,
+-	.alpha2 =  "US",
+-	.reg_rules = {
+-		/* IEEE 802.11b/g, channels 1..11 */
+-		REG_RULE(2412-10, 2462+10, 40, 6, 27, 0),
+-		/* IEEE 802.11a, channel 36..48 */
+-		REG_RULE(5180-10, 5240+10, 40, 6, 17, 0),
+-		/* IEEE 802.11a, channels 48..64 */
+-		REG_RULE(5260-10, 5320+10, 40, 6, 20, NL80211_RRF_DFS),
+-		/* IEEE 802.11a, channels 100..124 */
+-		REG_RULE(5500-10, 5590+10, 40, 6, 20, NL80211_RRF_DFS),
+-		/* IEEE 802.11a, channels 132..144 */
+-		REG_RULE(5660-10, 5700+10, 40, 6, 20, NL80211_RRF_DFS),
+-		/* IEEE 802.11a, channels 149..165, outdoor */
+-		REG_RULE(5745-10, 5825+10, 40, 6, 30, 0),
+-	}
+-};
+-
+-static const struct ieee80211_regdomain jp_regdom = {
+-	.n_reg_rules = 6,
+-	.alpha2 =  "JP",
+-	.reg_rules = {
+-		/* IEEE 802.11b/g, channels 1..11 */
+-		REG_RULE(2412-10, 2462+10, 40, 6, 20, 0),
+-		/* IEEE 802.11b/g, channels 12..13 */
+-		REG_RULE(2467-10, 2472+10, 20, 6, 20, 0),
+-		/* IEEE 802.11b/g, channel 14 */
+-		REG_RULE(2484-10, 2484+10, 20, 6, 20, NL80211_RRF_NO_OFDM),
+-		/* IEEE 802.11a, channels 36..48 */
+-		REG_RULE(5180-10, 5240+10, 40, 6, 20, 0),
+-		/* IEEE 802.11a, channels 52..64 */
+-		REG_RULE(5260-10, 5320+10, 40, 6, 20, NL80211_RRF_DFS),
+-		/* IEEE 802.11a, channels 100..144 */
+-		REG_RULE(5500-10, 5700+10, 40, 6, 23, NL80211_RRF_DFS),
+-	}
+-};
+-
+-static const struct ieee80211_regdomain *static_regdom(char *alpha2)
+-{
+-	if (alpha2[0] == 'U' && alpha2[1] == 'S')
+-		return &us_regdom;
+-	if (alpha2[0] == 'J' && alpha2[1] == 'P')
+-		return &jp_regdom;
+-	/* Use world roaming rules for "EU", since it was a pseudo
+-	   domain anyway... */
+-	if (alpha2[0] == 'E' && alpha2[1] == 'U')
+-		return &world_regdom;
+-	/* Default, world roaming rules */
+-	return &world_regdom;
+-}
+-
+-static bool is_old_static_regdom(const struct ieee80211_regdomain *rd)
+-{
+-	if (rd == &us_regdom || rd == &jp_regdom || rd == &world_regdom)
+-		return true;
+-	return false;
+-}
+-#else
+-static inline bool is_old_static_regdom(const struct ieee80211_regdomain *rd)
+-{
+-	return false;
+-}
+-#endif
+-
+ static void reset_regdomains(void)
  {
- 	u8 ampdu_info, tx_mcs_set_cap;
- 	int i, max_tx_streams;
-+	u16 tmp_cap;
+ 	/* avoid freeing static information or freeing something twice */
+@@ -210,8 +138,6 @@ static void reset_regdomains(void)
+ 		cfg80211_world_regdom = NULL;
+ 	if (cfg80211_regdomain == &world_regdom)
+ 		cfg80211_regdomain = NULL;
+-	if (is_old_static_regdom(cfg80211_regdomain))
+-		cfg80211_regdomain = NULL;
  
- 	BUG_ON(!ht_cap);
+ 	kfree(cfg80211_regdomain);
+ 	kfree(cfg80211_world_regdom);
+@@ -1490,8 +1416,6 @@ static int ignore_request(struct wiphy *wiphy,
+ 		return REG_INTERSECT;
+ 	case NL80211_REGDOM_SET_BY_DRIVER:
+ 		if (last_request->initiator == NL80211_REGDOM_SET_BY_CORE) {
+-			if (is_old_static_regdom(cfg80211_regdomain))
+-				return 0;
+ 			if (regdom_changes(pending_request->alpha2))
+ 				return 0;
+ 			return -EALREADY;
+@@ -1528,8 +1452,7 @@ static int ignore_request(struct wiphy *wiphy,
+ 				return -EAGAIN;
+ 		}
  
-@@ -34,9 +35,28 @@ void ieee80211_ht_cap_ie_to_sta_ht_cap(s
+-		if (!is_old_static_regdom(cfg80211_regdomain) &&
+-		    !regdom_changes(pending_request->alpha2))
++		if (!regdom_changes(pending_request->alpha2))
+ 			return -EALREADY;
  
- 	ht_cap->ht_supported = true;
+ 		return 0;
+@@ -2111,8 +2034,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 		 * If someone else asked us to change the rd lets only bother
+ 		 * checking if the alpha2 changes if CRDA was already called
+ 		 */
+-		if (!is_old_static_regdom(cfg80211_regdomain) &&
+-		    !regdom_changes(rd->alpha2))
++		if (!regdom_changes(rd->alpha2))
+ 			return -EINVAL;
+ 	}
  
--	ht_cap->cap = le16_to_cpu(ht_cap_ie->cap_info) & sband->ht_cap.cap;
--	ht_cap->cap &= ~IEEE80211_HT_CAP_SM_PS;
--	ht_cap->cap |= sband->ht_cap.cap & IEEE80211_HT_CAP_SM_PS;
-+	/*
-+	 * The bits listed in this expression should be
-+	 * the same for the peer and us, if the station
-+	 * advertises more then we can't use those thus
-+	 * we mask them out.
-+	 */
-+	ht_cap->cap = le16_to_cpu(ht_cap_ie->cap_info) &
-+		(sband->ht_cap.cap |
-+		 ~(IEEE80211_HT_CAP_LDPC_CODING |
-+		   IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
-+		   IEEE80211_HT_CAP_GRN_FLD |
-+		   IEEE80211_HT_CAP_SGI_20 |
-+		   IEEE80211_HT_CAP_SGI_40 |
-+		   IEEE80211_HT_CAP_DSSSCCK40));
-+	/*
-+	 * The STBC bits are asymmetric -- if we don't have
-+	 * TX then mask out the peer's RX and vice versa.
-+	 */
-+	if (!(sband->ht_cap.cap & IEEE80211_HT_CAP_TX_STBC))
-+		ht_cap->cap &= ~IEEE80211_HT_CAP_RX_STBC;
-+	if (!(sband->ht_cap.cap & IEEE80211_HT_CAP_RX_STBC))
-+		ht_cap->cap &= ~IEEE80211_HT_CAP_TX_STBC;
+@@ -2311,15 +2233,8 @@ int regulatory_init(void)
+ 	spin_lock_init(&reg_requests_lock);
+ 	spin_lock_init(&reg_pending_beacons_lock);
  
- 	ampdu_info = ht_cap_ie->ampdu_params_info;
- 	ht_cap->ampdu_factor =
---- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2800lib.c	2009-12-17 09:29:48.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/rt2x00/rt2800lib.c	2009-12-17 09:29:54.000000000 +0100
-@@ -2074,8 +2074,7 @@ int rt2800_probe_hw_mode(struct rt2x00_d
- 	    IEEE80211_HT_CAP_SGI_20 |
- 	    IEEE80211_HT_CAP_SGI_40 |
- 	    IEEE80211_HT_CAP_TX_STBC |
--	    IEEE80211_HT_CAP_RX_STBC |
--	    IEEE80211_HT_CAP_PSMP_SUPPORT;
-+	    IEEE80211_HT_CAP_RX_STBC;
- 	spec->ht.ampdu_factor = 3;
- 	spec->ht.ampdu_density = 4;
- 	spec->ht.mcs.tx_params =
---- wireless-testing.orig/include/linux/ieee80211.h	2009-12-17 09:29:33.000000000 +0100
-+++ wireless-testing/include/linux/ieee80211.h	2009-12-17 09:29:40.000000000 +0100
-@@ -837,7 +837,7 @@ struct ieee80211_ht_cap {
- #define IEEE80211_HT_CAP_DELAY_BA		0x0400
- #define IEEE80211_HT_CAP_MAX_AMSDU		0x0800
- #define IEEE80211_HT_CAP_DSSSCCK40		0x1000
--#define IEEE80211_HT_CAP_PSMP_SUPPORT		0x2000
-+#define IEEE80211_HT_CAP_RESERVED		0x2000
- #define IEEE80211_HT_CAP_40MHZ_INTOLERANT	0x4000
- #define IEEE80211_HT_CAP_LSIG_TXOP_PROT		0x8000
+-#ifdef CONFIG_WIRELESS_OLD_REGULATORY
+-	cfg80211_regdomain = static_regdom(ieee80211_regdom);
+-
+-	printk(KERN_INFO "cfg80211: Using static regulatory domain info\n");
+-	print_regdomain_info(cfg80211_regdomain);
+-#else
+ 	cfg80211_regdomain = cfg80211_world_regdom;
  
-
+-#endif
+ 	/* We always try to get an update for the static regdomain */
+ 	err = regulatory_hint_core(cfg80211_regdomain->alpha2);
+ 	if (err) {
+-- 
+1.6.5.2
 
