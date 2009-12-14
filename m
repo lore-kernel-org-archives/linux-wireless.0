@@ -1,53 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:29707 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756906AbZLKMJI (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:61134 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753031AbZLNGQF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 07:09:08 -0500
-Subject: Re: [PATCH 21/31] wl1271: prevent power save entry while not
- associated
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "Coelho Luciano (Nokia-D/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1260532418.2442.129.camel@johannes.local>
-References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
-	 <1260531682-4695-22-git-send-email-luciano.coelho@nokia.com>
-	 <1260532418.2442.129.camel@johannes.local>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 11 Dec 2009 14:09:15 +0200
-Message-ID: <1260533355.2689.45.camel@wimaxnb.ntc.nokia.com>
-Mime-Version: 1.0
+	Mon, 14 Dec 2009 01:16:05 -0500
+Received: by ey-out-2122.google.com with SMTP id d26so783422eyd.19
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Dec 2009 22:16:03 -0800 (PST)
+To: Satanand Burla <Satanand_Burla@phoenix.com>
+Cc: "ath9k-devel\@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k ps poll performance
+References: <6D80BDFB1A1FA74DA476417C24C452A10251AB5773@scl-exch2k7.phoenix.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Mon, 14 Dec 2009 08:16:00 +0200
+In-Reply-To: <6D80BDFB1A1FA74DA476417C24C452A10251AB5773@scl-exch2k7.phoenix.com> (Satanand Burla's message of "Sat\, 12 Dec 2009 14\:58\:12 -0800")
+Message-ID: <871viy13of.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Satanand Burla <Satanand_Burla@phoenix.com> writes:
 
-Unfortunately I haven't had the time to investigate this further, but
-for me it did happen after getting de-authenticated from an AP and
-attempting to re-authenticate. While re-authenticating, mac80211
-appeared to request going into power save after transmitting the
-corresponding control messages, preventing the re-authentication from
-succeeding.
+> for example with the same wep AP, I get around 150 to 200 Kbps
+> without enabling ps poll.
 
-My assumption is, that the dynamic power save mechanism is somehow
-getting triggered from the control message exchange - but, as I said, I
-cannot be sure at this point.
+That's very low. What kind of test are you using here?
 
--Juuso
+> but if I enable ps poll with the above settings, I get only around
+> 20 Kbps and the packet loss is around 20 to 30%.
+>
+> My question is, is this the expected speed drop when turning on ps
+> poll ? Or is this a problem with the driver that still needs to be
+> addressed ?
 
-On Fri, 2009-12-11 at 12:53 +0100, ext Johannes Berg wrote:
-> On Fri, 2009-12-11 at 13:41 +0200, Luciano Coelho wrote:
-> > From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> > 
-> > The mac80211 sometimes requests power save entry while not associated - this
-> > will cause problems, so prevent it if not associated. Go to powersave once
-> > association is complete.
-> 
-> Does it? It's not supposed to, and I imagine that causing trouble with
-> other drivers too. Do you know how that happens?
-> 
-> johannes
+With PS-Poll (ie. timeout is zero) you should still get in range of
+megabits per second and no packet loss. So something is wrong.
 
-
+-- 
+Kalle Valo
