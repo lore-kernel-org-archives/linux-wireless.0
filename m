@@ -1,37 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:53558 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750925AbZLKMQP (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:58525 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757444AbZLNO7O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 07:16:15 -0500
-Message-ID: <4B223804.9040107@nokia.com>
-Date: Fri, 11 Dec 2009 14:16:04 +0200
-From: Luciano Coelho <luciano.coelho@nokia.com>
+	Mon, 14 Dec 2009 09:59:14 -0500
+Received: by iwn1 with SMTP id 1so196739iwn.33
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 06:59:13 -0800 (PST)
 MIME-Version: 1.0
-To: ext Johannes Berg <johannes@sipsolutions.net>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 07/31] wl1271: fix tx power setting function
-References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>	 <1260531682-4695-8-git-send-email-luciano.coelho@nokia.com> <1260532297.2442.126.camel@johannes.local>
-In-Reply-To: <1260532297.2442.126.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <43e72e890912140658xa88e8feq9589b29448d5d7e4@mail.gmail.com>
+References: <19238.1248.439940.601526@gargle.gargle.HOWL> <43e72e890912140658xa88e8feq9589b29448d5d7e4@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 14 Dec 2009 06:58:53 -0800
+Message-ID: <43e72e890912140658x3a12d554ta904ed63a0d1c75b@mail.gmail.com>
+Subject: Re: [PATCH 1/6] ath9k: Fix bug in assigning sequence number
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ext Johannes Berg wrote:
-> On Fri, 2009-12-11 at 13:40 +0200, Luciano Coelho wrote:
->> The wl1271 firmware supports maximun 25.5dBm, so the driver was returning
->> -EINVALID to anything above that.  The new mac80211 stack uses 27dBm as
->> default TX power, so we were never setting this correctly.
-> 
-> ??
-> Just indicate a max of 25 in your channel registration max_power.
-> cfg80211/mac80211/regulatory code will not go above that.
+On Mon, Dec 14, 2009 at 6:58 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Mon, Dec 14, 2009 at 1:26 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+>> The internal, driver-specific maintenance of sequence
+>> numbers is applicable only for HT frames.
+>>
+>> Also, remove comments that are not relevant anymore.
+>>
+>> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+>
+> Is this cc: stable?
 
-Oh? I missed this configuration possibility.  I'll fix this and send v2 soon.
+Also what bug does this fix, the commit log in no way explains any of this.
 
-So, John, please wait for my patchset v2 ;)
-
--- 
-Cheers,
-Luca.
+  Luis
