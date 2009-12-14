@@ -1,453 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39309 "HELO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1759860AbZLMBKZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Dec 2009 20:10:25 -0500
-Subject: [PATCH 1/4 v2] mac80211: Generalize off-channel operation helpers
- from scan code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	Jouni Malinen <jouni.malinen@atheros.com>
-In-Reply-To: <20091204143702.661741216@sipsolutions.net>
-References: <20091204143544.034718060@sipsolutions.net>
-	 <20091204143702.661741216@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 12 Dec 2009 16:28:21 +0100
-Message-ID: <1260631701.2442.334.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:23181 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754289AbZLNJ3M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Dec 2009 04:29:12 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 01:29:12 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19238.1557.201259.642604@gargle.gargle.HOWL>
+Date: Mon, 14 Dec 2009 15:02:05 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/6] ath9k: Stop ANI when doing a reset
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jouni Malinen <jouni.malinen@atheros.com>
+The MIB counters are disabled when doing a reset,
+disable ANI to handle this case.
 
-The off-channel operations for going into power save mode (station
-mode) or stop beaconing (AP/IBSS) are not limited to scanning. Move
-these into a separate file and allow them to be used for other
-purposes, too.
-
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: stable@kernel.org
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
-v2: rebase over Vivek's PS fix
+ drivers/net/wireless/ath/ath9k/main.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
- net/mac80211/Makefile      |    2 
- net/mac80211/ieee80211_i.h |    8 +-
- net/mac80211/offchannel.c  |  164 +++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/scan.c        |  156 +-----------------------------------------
- 4 files changed, 178 insertions(+), 152 deletions(-)
-
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ wireless-testing/net/mac80211/offchannel.c	2009-12-12 16:25:04.000000000 +0100
-@@ -0,0 +1,164 @@
-+/*
-+ * Off-channel operation helpers
-+ *
-+ * Copyright 2003, Jouni Malinen <jkmaline@cc.hut.fi>
-+ * Copyright 2004, Instant802 Networks, Inc.
-+ * Copyright 2005, Devicescape Software, Inc.
-+ * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-+ * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
-+ * Copyright 2009	Johannes Berg <johannes@sipsolutions.net>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+#include <net/mac80211.h>
-+#include "ieee80211_i.h"
-+
-+/*
-+ * inform AP that we will go to sleep so that it will buffer the frames
-+ * while we scan
-+ */
-+static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+
-+	local->offchannel_ps_enabled = false;
-+
-+	/* FIXME: what to do when local->pspolling is true? */
-+
-+	del_timer_sync(&local->dynamic_ps_timer);
-+	cancel_work_sync(&local->dynamic_ps_enable_work);
-+
-+	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
-+		local->offchannel_ps_enabled = true;
-+		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
-+		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-+	}
-+
-+	if (!(local->offchannel_ps_enabled) ||
-+	    !(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
-+		/*
-+		 * If power save was enabled, no need to send a nullfunc
-+		 * frame because AP knows that we are sleeping. But if the
-+		 * hardware is creating the nullfunc frame for power save
-+		 * status (ie. IEEE80211_HW_PS_NULLFUNC_STACK is not
-+		 * enabled) and power save was enabled, the firmware just
-+		 * sent a null frame with power save disabled. So we need
-+		 * to send a new nullfunc frame to inform the AP that we
-+		 * are again sleeping.
-+		 */
-+		ieee80211_send_nullfunc(local, sdata, 1);
-+}
-+
-+/* inform AP that we are awake again, unless power save is enabled */
-+static void ieee80211_offchannel_ps_disable(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+
-+	if (!local->ps_sdata)
-+		ieee80211_send_nullfunc(local, sdata, 0);
-+	else if (local->offchannel_ps_enabled) {
-+		/*
-+		 * In !IEEE80211_HW_PS_NULLFUNC_STACK case the hardware
-+		 * will send a nullfunc frame with the powersave bit set
-+		 * even though the AP already knows that we are sleeping.
-+		 * This could be avoided by sending a null frame with power
-+		 * save bit disabled before enabling the power save, but
-+		 * this doesn't gain anything.
-+		 *
-+		 * When IEEE80211_HW_PS_NULLFUNC_STACK is enabled, no need
-+		 * to send a nullfunc frame because AP already knows that
-+		 * we are sleeping, let's just enable power save mode in
-+		 * hardware.
-+		 */
-+		local->hw.conf.flags |= IEEE80211_CONF_PS;
-+		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-+	} else if (local->hw.conf.dynamic_ps_timeout > 0) {
-+		/*
-+		 * If IEEE80211_CONF_PS was not set and the dynamic_ps_timer
-+		 * had been running before leaving the operating channel,
-+		 * restart the timer now and send a nullfunc frame to inform
-+		 * the AP that we are awake.
-+		 */
-+		ieee80211_send_nullfunc(local, sdata, 0);
-+		mod_timer(&local->dynamic_ps_timer, jiffies +
-+			  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
-+	}
-+}
-+
-+void ieee80211_offchannel_stop_beaconing(struct ieee80211_local *local)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	mutex_lock(&local->iflist_mtx);
-+	list_for_each_entry(sdata, &local->interfaces, list) {
-+		if (!ieee80211_sdata_running(sdata))
-+			continue;
-+
-+		/* disable beaconing */
-+		if (sdata->vif.type == NL80211_IFTYPE_AP ||
-+		    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
-+		    sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
-+			ieee80211_bss_info_change_notify(
-+				sdata, BSS_CHANGED_BEACON_ENABLED);
-+
-+		/*
-+		 * only handle non-STA interfaces here, STA interfaces
-+		 * are handled in ieee80211_offchannel_stop_station(),
-+		 * e.g., from the background scan state machine
-+		 */
-+		if (sdata->vif.type != NL80211_IFTYPE_STATION)
-+			netif_stop_queue(sdata->dev);
-+	}
-+	mutex_unlock(&local->iflist_mtx);
-+}
-+
-+void ieee80211_offchannel_stop_station(struct ieee80211_local *local)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	/*
-+	 * notify the AP about us leaving the channel and stop all STA interfaces
-+	 */
-+	mutex_lock(&local->iflist_mtx);
-+	list_for_each_entry(sdata, &local->interfaces, list) {
-+		if (!ieee80211_sdata_running(sdata))
-+			continue;
-+
-+		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
-+			netif_stop_queue(sdata->dev);
-+			if (sdata->u.mgd.associated)
-+				ieee80211_offchannel_ps_enable(sdata);
-+		}
-+	}
-+	mutex_unlock(&local->iflist_mtx);
-+}
-+
-+void ieee80211_offchannel_return(struct ieee80211_local *local,
-+				 bool enable_beaconing)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	mutex_lock(&local->iflist_mtx);
-+	list_for_each_entry(sdata, &local->interfaces, list) {
-+		if (!ieee80211_sdata_running(sdata))
-+			continue;
-+
-+		/* Tell AP we're back */
-+		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
-+			if (sdata->u.mgd.associated)
-+				ieee80211_offchannel_ps_disable(sdata);
-+			netif_wake_queue(sdata->dev);
-+		}
-+
-+		/* re-enable beaconing */
-+		if (enable_beaconing &&
-+		    (sdata->vif.type == NL80211_IFTYPE_AP ||
-+		     sdata->vif.type == NL80211_IFTYPE_ADHOC ||
-+		     sdata->vif.type == NL80211_IFTYPE_MESH_POINT))
-+			ieee80211_bss_info_change_notify(
-+				sdata, BSS_CHANGED_BEACON_ENABLED);
-+	}
-+	mutex_unlock(&local->iflist_mtx);
-+}
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-12-12 16:22:03.000000000 +0100
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-12-12 16:25:10.000000000 +0100
-@@ -786,7 +786,7 @@ struct ieee80211_local {
- 	unsigned int wmm_acm; /* bit field of ACM bits (BIT(802.1D tag)) */
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index c487434..9e68c1a 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1973,6 +1973,9 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	struct ieee80211_hw *hw = sc->hw;
+ 	int r;
  
- 	bool pspolling;
--	bool scan_ps_enabled;
-+	bool offchannel_ps_enabled;
- 	/*
- 	 * PS can only be enabled when we have exactly one managed
- 	 * interface (and monitors) in PS, this then points there.
-@@ -981,6 +981,12 @@ ieee80211_rx_bss_get(struct ieee80211_lo
- void ieee80211_rx_bss_put(struct ieee80211_local *local,
- 			  struct ieee80211_bss *bss);
- 
-+/* off-channel helpers */
-+void ieee80211_offchannel_stop_beaconing(struct ieee80211_local *local);
-+void ieee80211_offchannel_stop_station(struct ieee80211_local *local);
-+void ieee80211_offchannel_return(struct ieee80211_local *local,
-+				 bool enable_beaconing);
++	/* Stop ANI */
++	del_timer_sync(&common->ani.timer);
 +
- /* interface handling */
- int ieee80211_iface_init(void);
- void ieee80211_iface_exit(void);
---- wireless-testing.orig/net/mac80211/scan.c	2009-12-12 16:22:03.000000000 +0100
-+++ wireless-testing/net/mac80211/scan.c	2009-12-12 16:26:07.000000000 +0100
-@@ -227,82 +227,9 @@ static bool ieee80211_prep_hw_scan(struc
- 	return true;
+ 	ath9k_hw_set_interrupts(ah, 0);
+ 	ath_drain_all_txq(sc, retry_tx);
+ 	ath_stoprecv(sc);
+@@ -2014,6 +2017,9 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 		}
+ 	}
+ 
++	/* Start ANI */
++	ath_start_ani(common);
++
+ 	return r;
  }
  
--/*
-- * inform AP that we will go to sleep so that it will buffer the frames
-- * while we scan
-- */
--static void ieee80211_scan_ps_enable(struct ieee80211_sub_if_data *sdata)
--{
--	struct ieee80211_local *local = sdata->local;
--
--	local->scan_ps_enabled = false;
--
--	/* FIXME: what to do when local->pspolling is true? */
--
--	del_timer_sync(&local->dynamic_ps_timer);
--	cancel_work_sync(&local->dynamic_ps_enable_work);
--
--	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
--		local->scan_ps_enabled = true;
--		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
--		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
--	}
--
--	if (!(local->scan_ps_enabled) ||
--	    !(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
--		/*
--		 * If power save was enabled, no need to send a nullfunc
--		 * frame because AP knows that we are sleeping. But if the
--		 * hardware is creating the nullfunc frame for power save
--		 * status (ie. IEEE80211_HW_PS_NULLFUNC_STACK is not
--		 * enabled) and power save was enabled, the firmware just
--		 * sent a null frame with power save disabled. So we need
--		 * to send a new nullfunc frame to inform the AP that we
--		 * are again sleeping.
--		 */
--		ieee80211_send_nullfunc(local, sdata, 1);
--}
--
--/* inform AP that we are awake again, unless power save is enabled */
--static void ieee80211_scan_ps_disable(struct ieee80211_sub_if_data *sdata)
--{
--	struct ieee80211_local *local = sdata->local;
--
--	if (!local->ps_sdata)
--		ieee80211_send_nullfunc(local, sdata, 0);
--	else if (local->scan_ps_enabled) {
--		/*
--		 * In !IEEE80211_HW_PS_NULLFUNC_STACK case the hardware
--		 * will send a nullfunc frame with the powersave bit set
--		 * even though the AP already knows that we are sleeping.
--		 * This could be avoided by sending a null frame with power
--		 * save bit disabled before enabling the power save, but
--		 * this doesn't gain anything.
--		 *
--		 * When IEEE80211_HW_PS_NULLFUNC_STACK is enabled, no need
--		 * to send a nullfunc frame because AP already knows that
--		 * we are sleeping, let's just enable power save mode in
--		 * hardware.
--		 */
--		local->hw.conf.flags |= IEEE80211_CONF_PS;
--		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
--	} else if (local->hw.conf.dynamic_ps_timeout > 0) {
--		/*
--		 * If IEEE80211_CONF_PS was not set and the dynamic_ps_timer
--		 * had been running before leaving the operating channel,
--		 * restart the timer now and send a nullfunc frame to inform
--		 * the AP that we are awake.
--		 */
--		ieee80211_send_nullfunc(local, sdata, 0);
--		mod_timer(&local->dynamic_ps_timer, jiffies +
--			  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
--	}
--}
--
- void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
--	struct ieee80211_sub_if_data *sdata;
- 	bool was_hw_scan;
- 
- 	mutex_lock(&local->scan_mtx);
-@@ -351,28 +278,7 @@ void ieee80211_scan_completed(struct iee
- 
- 	drv_sw_scan_complete(local);
- 
--	mutex_lock(&local->iflist_mtx);
--	list_for_each_entry(sdata, &local->interfaces, list) {
--		if (!ieee80211_sdata_running(sdata))
--			continue;
--
--		/* Tell AP we're back */
--		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
--			if (sdata->u.mgd.associated) {
--				ieee80211_scan_ps_disable(sdata);
--				netif_wake_queue(sdata->dev);
--			}
--		} else
--			netif_wake_queue(sdata->dev);
--
--		/* re-enable beaconing */
--		if (sdata->vif.type == NL80211_IFTYPE_AP ||
--		    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
--		    sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
--			ieee80211_bss_info_change_notify(
--				sdata, BSS_CHANGED_BEACON_ENABLED);
--	}
--	mutex_unlock(&local->iflist_mtx);
-+	ieee80211_offchannel_return(local, true);
- 
-  done:
- 	ieee80211_recalc_idle(local);
-@@ -384,8 +290,6 @@ EXPORT_SYMBOL(ieee80211_scan_completed);
- 
- static int ieee80211_start_sw_scan(struct ieee80211_local *local)
- {
--	struct ieee80211_sub_if_data *sdata;
--
- 	/*
- 	 * Hardware/driver doesn't support hw_scan, so use software
- 	 * scanning instead. First send a nullfunc frame with power save
-@@ -401,26 +305,7 @@ static int ieee80211_start_sw_scan(struc
- 	 */
- 	drv_sw_scan_start(local);
- 
--	mutex_lock(&local->iflist_mtx);
--	list_for_each_entry(sdata, &local->interfaces, list) {
--		if (!ieee80211_sdata_running(sdata))
--			continue;
--
--		/* disable beaconing */
--		if (sdata->vif.type == NL80211_IFTYPE_AP ||
--		    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
--		    sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
--			ieee80211_bss_info_change_notify(
--				sdata, BSS_CHANGED_BEACON_ENABLED);
--
--		/*
--		 * only handle non-STA interfaces here, STA interfaces
--		 * are handled in the scan state machine
--		 */
--		if (sdata->vif.type != NL80211_IFTYPE_STATION)
--			netif_stop_queue(sdata->dev);
--	}
--	mutex_unlock(&local->iflist_mtx);
-+	ieee80211_offchannel_stop_beaconing(local);
- 
- 	local->next_scan_state = SCAN_DECISION;
- 	local->scan_channel_idx = 0;
-@@ -568,23 +453,7 @@ static int ieee80211_scan_state_decision
- static void ieee80211_scan_state_leave_oper_channel(struct ieee80211_local *local,
- 						    unsigned long *next_delay)
- {
--	struct ieee80211_sub_if_data *sdata;
--
--	/*
--	 * notify the AP about us leaving the channel and stop all STA interfaces
--	 */
--	mutex_lock(&local->iflist_mtx);
--	list_for_each_entry(sdata, &local->interfaces, list) {
--		if (!ieee80211_sdata_running(sdata))
--			continue;
--
--		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
--			netif_stop_queue(sdata->dev);
--			if (sdata->u.mgd.associated)
--				ieee80211_scan_ps_enable(sdata);
--		}
--	}
--	mutex_unlock(&local->iflist_mtx);
-+	ieee80211_offchannel_stop_station(local);
- 
- 	__set_bit(SCAN_OFF_CHANNEL, &local->scanning);
- 
-@@ -604,28 +473,15 @@ static void ieee80211_scan_state_leave_o
- static void ieee80211_scan_state_enter_oper_channel(struct ieee80211_local *local,
- 						    unsigned long *next_delay)
- {
--	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
--
- 	/* switch back to the operating channel */
- 	local->scan_channel = NULL;
- 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
- 
- 	/*
--	 * notify the AP about us being back and restart all STA interfaces
-+	 * Only re-enable station mode interface now; beaconing will be
-+	 * re-enabled once the full scan has been completed.
- 	 */
--	mutex_lock(&local->iflist_mtx);
--	list_for_each_entry(sdata, &local->interfaces, list) {
--		if (!ieee80211_sdata_running(sdata))
--			continue;
--
--		/* Tell AP we're back */
--		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
--			if (sdata->u.mgd.associated)
--				ieee80211_scan_ps_disable(sdata);
--			netif_wake_queue(sdata->dev);
--		}
--	}
--	mutex_unlock(&local->iflist_mtx);
-+	ieee80211_offchannel_return(local, false);
- 
- 	__clear_bit(SCAN_OFF_CHANNEL, &local->scanning);
- 
---- wireless-testing.orig/net/mac80211/Makefile	2009-12-12 16:21:58.000000000 +0100
-+++ wireless-testing/net/mac80211/Makefile	2009-12-12 16:23:57.000000000 +0100
-@@ -6,7 +6,7 @@ mac80211-y := \
- 	sta_info.o \
- 	wep.o \
- 	wpa.o \
--	scan.o \
-+	scan.o offchannel.o \
- 	ht.o agg-tx.o agg-rx.o \
- 	ibss.o \
- 	mlme.o work.o \
-
+-- 
+1.6.5.6
 
