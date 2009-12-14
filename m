@@ -1,163 +1,436 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55751 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753460AbZLVPVa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2009 10:21:30 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/3] compat-wireless: activate usbnet for kernel > 2.6.28
-Date: Tue, 22 Dec 2009 16:20:03 +0100
-Message-Id: <1261495204-28966-5-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1261495204-28966-1-git-send-email-hauke@hauke-m.de>
-References: <1261495204-28966-1-git-send-email-hauke@hauke-m.de>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43553 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752168AbZLNBt7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Dec 2009 20:49:59 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/2] wireless: support internal statically compiled regulatory database
+Date: Sun, 13 Dec 2009 20:45:15 -0500
+Message-Id: <1260755116-3829-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Activate CONFIG_COMPAT_NET_USB_MODULES if the normal wireless system is build.
-For kernel <= 2.6.28 usb_autopm_put_interface_async and usb_autopm_get_interface_async needs to be backported.
-The new functions are used since commit 69ee472f2706371ca639de49b06df91615c07d8d in linux mainline.
+This patch provides infrastructure for machine translation of the
+regulatory rules database used by CRDA into a C data structure.
+It includes code for searching that database as an alternative
+to dynamic regulatory rules updates via CRDA.  Most people should
+use CRDA instead of this infrastructure, but it provides a better
+alternative than the WIRELESS_OLD_REGULATORY infrastructure (which
+can now be removed).
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- config.mk                               |   15 ++++++--
- patches/18-rename-usb-net-symbols.patch |   58 +++++++++++++++++++++++++++++++
- patches/99-change-makefiles.patch       |    8 ++--
- 3 files changed, 74 insertions(+), 7 deletions(-)
- create mode 100644 patches/18-rename-usb-net-symbols.patch
+ Documentation/networking/regulatory.txt |   24 ++++++
+ net/wireless/.gitignore                 |    1 +
+ net/wireless/Kconfig                    |   16 ++++
+ net/wireless/Makefile                   |    6 ++
+ net/wireless/db.txt                     |   17 +++++
+ net/wireless/genregdb.awk               |  118 ++++++++++++++++++++++++++++++
+ net/wireless/reg.c                      |  120 ++++++++++++++++++++++++------
+ net/wireless/regdb.h                    |    7 ++
+ 8 files changed, 285 insertions(+), 24 deletions(-)
+ create mode 100644 net/wireless/.gitignore
+ create mode 100644 net/wireless/db.txt
+ create mode 100644 net/wireless/genregdb.awk
+ create mode 100644 net/wireless/regdb.h
 
-diff --git a/config.mk b/config.mk
-index 873660d..3972e7a 100644
---- a/config.mk
-+++ b/config.mk
-@@ -30,6 +30,7 @@ else
- # 2.6.27. But -- we could just disable those drivers from kernels
- # older than 2.6.27
-  CONFIG_COMPAT_NETWORK_MODULES=m
-+ CONFIG_COMPAT_NET_USB_MODULES=m
- endif
- 
- ifeq ($(CONFIG_BT),y)
-@@ -338,9 +339,17 @@ CONFIG_ZD1211RW=m
- # is only wireless RNDIS chip known to date.
- # Note: this depends on CONFIG_USB_NET_RNDIS_HOST and CONFIG_USB_NET_CDCETHER
- # it also requires new RNDIS_HOST and CDC_ETHER modules which we add
--CONFIG_USB_NET_RNDIS_HOST=m
--CONFIG_USB_NET_RNDIS_WLAN=m
--CONFIG_USB_NET_CDCETHER=m
-+ifdef CONFIG_COMPAT_KERNEL_29
-+CONFIG_USB_COMPAT_USBNET=n
-+CONFIG_USB_NET_COMPAT_RNDIS_HOST=n
-+CONFIG_USB_NET_COMPAT_RNDIS_WLAN=n
-+CONFIG_USB_NET_COMPAT_CDCETHER=n
-+else
-+CONFIG_USB_COMPAT_USBNET=m
-+CONFIG_USB_NET_COMPAT_RNDIS_HOST=m
-+CONFIG_USB_NET_COMPAT_RNDIS_WLAN=m
-+CONFIG_USB_NET_COMPAT_CDCETHER=m
-+endif
- 
- 
- CONFIG_P54_USB=m
-diff --git a/patches/18-rename-usb-net-symbols.patch b/patches/18-rename-usb-net-symbols.patch
-new file mode 100644
-index 0000000..d8f6ca3
---- /dev/null
-+++ b/patches/18-rename-usb-net-symbols.patch
-@@ -0,0 +1,58 @@
-+Rename config names for usbnet to deactivate them also if activated in
-+the main kernel configuration. This is needed because
-+usb_autopm_put_interface_async and usb_autopm_get_interface_async are
-+not backported to kernel 2.6.28 and earlier.
-+Remove this patch if these symbols are backported.
+diff --git a/Documentation/networking/regulatory.txt b/Documentation/networking/regulatory.txt
+index ee31369..9551622 100644
+--- a/Documentation/networking/regulatory.txt
++++ b/Documentation/networking/regulatory.txt
+@@ -188,3 +188,27 @@ Then in some part of your code after your wiphy has been registered:
+ 		       &mydriver_jp_regdom.reg_rules[i],
+ 		       sizeof(struct ieee80211_reg_rule));
+ 	regulatory_struct_hint(rd);
 +
-+diff --git a/drivers/net/usb/Makefile b/drivers/net/usb/Makefile
-+index e17afb7..ddea3ae 100644
-+--- a/drivers/net/usb/Makefile
-++++ b/drivers/net/usb/Makefile
-+@@ -8,18 +8,18 @@ obj-$(CONFIG_USB_PEGASUS)	+= pegasus.o
-+ obj-$(CONFIG_USB_RTL8150)	+= rtl8150.o
-+ obj-$(CONFIG_USB_HSO)		+= hso.o
-+ obj-$(CONFIG_USB_NET_AX8817X)	+= asix.o
-+-obj-$(CONFIG_USB_NET_CDCETHER)	+= cdc_ether.o
-++obj-$(CONFIG_USB_NET_COMPAT_CDCETHER)	+= cdc_ether.o
-+ obj-$(CONFIG_USB_NET_CDC_EEM)	+= cdc_eem.o
-+ obj-$(CONFIG_USB_NET_DM9601)	+= dm9601.o
-+ obj-$(CONFIG_USB_NET_SMSC95XX)	+= smsc95xx.o
-+ obj-$(CONFIG_USB_NET_GL620A)	+= gl620a.o
-+ obj-$(CONFIG_USB_NET_NET1080)	+= net1080.o
-+ obj-$(CONFIG_USB_NET_PLUSB)	+= plusb.o
-+-obj-$(CONFIG_USB_NET_RNDIS_HOST)	+= rndis_host.o
-++obj-$(CONFIG_USB_NET_COMPAT_RNDIS_HOST)	+= rndis_host.o
-+ obj-$(CONFIG_USB_NET_CDC_SUBSET)	+= cdc_subset.o
-+ obj-$(CONFIG_USB_NET_ZAURUS)	+= zaurus.o
-+ obj-$(CONFIG_USB_NET_MCS7830)	+= mcs7830.o
-+-obj-$(CONFIG_USB_USBNET)	+= usbnet.o
-++obj-$(CONFIG_USB_COMPAT_USBNET)	+= usbnet.o
-+ obj-$(CONFIG_USB_NET_INT51X1)	+= int51x1.o
-+ obj-$(CONFIG_USB_CDC_PHONET)	+= cdc-phonet.o
-+ 
-+diff --git a/drivers/net/usb/cdc_ether.c b/drivers/net/usb/cdc_ether.c
-+index 21e183a..65c385f 100644
-+--- a/drivers/net/usb/cdc_ether.c
-++++ b/drivers/net/usb/cdc_ether.c
-+@@ -33,7 +33,7 @@
-+ #include <linux/usb/usbnet.h>
-+ 
-+ 
-+-#if defined(CONFIG_USB_NET_RNDIS_HOST) || defined(CONFIG_USB_NET_RNDIS_HOST_MODULE)
-++#if defined(CONFIG_USB_NET_COMPAT_RNDIS_HOST) || defined(CONFIG_USB_NET_COMPAT_RNDIS_HOST_MODULE)
-+ 
-+ static int is_rndis(struct usb_interface_descriptor *desc)
-+ {
-+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-+index 5d4ce4d..d4e48bd 100644
-+--- a/drivers/net/wireless/Makefile
-++++ b/drivers/net/wireless/Makefile
-+@@ -29,7 +29,7 @@ obj-$(CONFIG_RTL8187)		+= rtl818x/
-+ obj-$(CONFIG_PCMCIA_RAYCS)	+= ray_cs.o
-+ obj-$(CONFIG_PCMCIA_WL3501)	+= wl3501_cs.o
-+ 
-+-obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
-++obj-$(CONFIG_USB_NET_COMPAT_RNDIS_WLAN)	+= rndis_wlan.o
-+ 
-+ obj-$(CONFIG_USB_ZD1201)	+= zd1201.o
-+ obj-$(CONFIG_LIBERTAS)		+= libertas/
-diff --git a/patches/99-change-makefiles.patch b/patches/99-change-makefiles.patch
-index 3185040..c0752dc 100644
---- a/patches/99-change-makefiles.patch
-+++ b/patches/99-change-makefiles.patch
-@@ -23,18 +23,18 @@ only the wireless stuff.
- -obj-$(CONFIG_USB_RTL8150)	+= rtl8150.o
- -obj-$(CONFIG_USB_HSO)		+= hso.o
- -obj-$(CONFIG_USB_NET_AX8817X)	+= asix.o
-- obj-$(CONFIG_USB_NET_CDCETHER)	+= cdc_ether.o
-+ obj-$(CONFIG_USB_NET_COMPAT_CDCETHER)	+= cdc_ether.o
- -obj-$(CONFIG_USB_NET_CDC_EEM)	+= cdc_eem.o
- -obj-$(CONFIG_USB_NET_DM9601)	+= dm9601.o
- -obj-$(CONFIG_USB_NET_SMSC95XX)	+= smsc95xx.o
- -obj-$(CONFIG_USB_NET_GL620A)	+= gl620a.o
- -obj-$(CONFIG_USB_NET_NET1080)	+= net1080.o
- -obj-$(CONFIG_USB_NET_PLUSB)	+= plusb.o
-- obj-$(CONFIG_USB_NET_RNDIS_HOST)	+= rndis_host.o
-+ obj-$(CONFIG_USB_NET_COMPAT_RNDIS_HOST)	+= rndis_host.o
- -obj-$(CONFIG_USB_NET_CDC_SUBSET)	+= cdc_subset.o
- -obj-$(CONFIG_USB_NET_ZAURUS)	+= zaurus.o
- -obj-$(CONFIG_USB_NET_MCS7830)	+= mcs7830.o
-- obj-$(CONFIG_USB_USBNET)	+= usbnet.o
-+ obj-$(CONFIG_USB_COMPAT_USBNET)	+= usbnet.o
- -obj-$(CONFIG_USB_NET_INT51X1)	+= int51x1.o
- -obj-$(CONFIG_USB_CDC_PHONET)	+= cdc-phonet.o
-  
-@@ -68,7 +68,7 @@ only the wireless stuff.
- -obj-$(CONFIG_PCMCIA_RAYCS)	+= ray_cs.o
- -obj-$(CONFIG_PCMCIA_WL3501)	+= wl3501_cs.o
- -
-- obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
-+ obj-$(CONFIG_USB_NET_COMPAT_RNDIS_WLAN)	+= rndis_wlan.o
-  
- -obj-$(CONFIG_USB_ZD1201)	+= zd1201.o
-  obj-$(CONFIG_LIBERTAS)		+= libertas/
++Statically compiled regulatory database
++---------------------------------------
++
++In most situations the userland solution using CRDA as described
++above is the preferred solution.  However in some cases a set of
++rules built into the kernel itself may be desirable.  To account
++for this situation, a configuration option has been provided
++(i.e. CONFIG_CFG80211_INTERNAL_REGDB).  With this option enabled,
++the wireless database information contained in net/wireless/db.txt is
++used to generate a data structure encoded in net/wireless/regdb.c.
++That option also enables code in net/wireless/reg.c which queries
++the data in regdb.c as an alternative to using CRDA.
++
++The file net/wireless/db.txt should be kept up-to-date with the db.txt
++file available in the git repository here:
++
++    git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
++
++Again, most users in most situations should be using the CRDA package
++provided with their distribution, and in most other situations users
++should be building and using CRDA on their own rather than using
++this option.  If you are not absolutely sure that you should be using
++CONFIG_CFG80211_INTERNAL_REGDB then _DO_NOT_USE_IT_.
+diff --git a/net/wireless/.gitignore b/net/wireless/.gitignore
+new file mode 100644
+index 0000000..c33451b
+--- /dev/null
++++ b/net/wireless/.gitignore
+@@ -0,0 +1 @@
++regdb.c
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index 90e93a5..f146803 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -109,6 +109,22 @@ config WIRELESS_OLD_REGULATORY
+ 
+ 	  Say N and if you say Y, please tell us why. The default is N.
+ 
++config CFG80211_INTERNAL_REGDB
++	bool "use statically compiled regulatory rules database"
++	default n
++	depends on CFG80211
++	---help---
++	  This option generates an internal data structure representing
++	  the wireless regulatory rules described in net/wireless/db.txt
++	  and includes code to query that database.  This is an alternative
++	  to using CRDA for defining regulatory rules for the kernel.
++
++	  For details see:
++
++	  http://wireless.kernel.org/en/developers/Regulatory
++
++	  Most distributions have a CRDA package.  So if unsure, say N.
++
+ config CFG80211_WEXT
+ 	bool "cfg80211 wireless extensions compatibility"
+ 	depends on CFG80211
+diff --git a/net/wireless/Makefile b/net/wireless/Makefile
+index f07c8dc..a75752e 100644
+--- a/net/wireless/Makefile
++++ b/net/wireless/Makefile
+@@ -13,5 +13,11 @@ cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o
+ cfg80211-y += mlme.o ibss.o sme.o chan.o ethtool.o
+ cfg80211-$(CONFIG_CFG80211_DEBUGFS) += debugfs.o
+ cfg80211-$(CONFIG_CFG80211_WEXT) += wext-compat.o wext-sme.o
++cfg80211-$(CONFIG_CFG80211_INTERNAL_REGDB) += regdb.o
+ 
+ ccflags-y += -D__CHECK_ENDIAN__
++
++$(obj)/regdb.c: $(src)/db.txt $(src)/genregdb.awk
++	@$(AWK) -f $(src)/genregdb.awk < $< > $@
++
++clean-files := regdb.c
+diff --git a/net/wireless/db.txt b/net/wireless/db.txt
+new file mode 100644
+index 0000000..a2fc3a0
+--- /dev/null
++++ b/net/wireless/db.txt
+@@ -0,0 +1,17 @@
++#
++# This file is a placeholder to prevent accidental build breakage if someone
++# enables CONFIG_CFG80211_INTERNAL_REGDB.  Almost no one actually needs to
++# enable that build option.
++#
++# You should be using CRDA instead.  It is even better if you use the CRDA
++# package provided by your distribution, since they will probably keep it
++# up-to-date on your behalf.
++#
++# If you _really_ intend to use CONFIG_CFG80211_INTERNAL_REGDB then you will
++# need to replace this file with one containing appropriately formatted
++# regulatory rules that cover the regulatory domains you will be using.  Your
++# best option is to extract the db.txt file from the wireless-regdb git
++# repository:
++#
++#   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
++#
+diff --git a/net/wireless/genregdb.awk b/net/wireless/genregdb.awk
+new file mode 100644
+index 0000000..8316cf0
+--- /dev/null
++++ b/net/wireless/genregdb.awk
+@@ -0,0 +1,118 @@
++#!/usr/bin/awk -f
++#
++# genregdb.awk -- generate regdb.c from db.txt
++#
++# Actually, it reads from stdin (presumed to be db.txt) and writes
++# to stdout (presumed to be regdb.c), but close enough...
++#
++# Copyright 2009 John W. Linville <linville@tuxdriver.com>
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License version 2 as
++# published by the Free Software Foundation.
++#
++
++BEGIN {
++	active = 0
++	rules = 0;
++	print "/*"
++	print " * DO NOT EDIT -- file generated from data in db.txt"
++	print " */"
++	print ""
++	print "#include <linux/nl80211.h>"
++	print "#include <net/cfg80211.h>"
++	print ""
++	regdb = "const struct ieee80211_regdomain *reg_regdb[] = {\n"
++}
++
++/^[ \t]*#/ {
++	/* Ignore */
++}
++
++!active && /^[ \t]*$/ {
++	/* Ignore */
++}
++
++!active && /country/ {
++	country=$2
++	sub(/:/, "", country)
++	printf "static const struct ieee80211_regdomain regdom_%s = {\n", country
++	printf "\t.alpha2 = \"%s\",\n", country
++	printf "\t.reg_rules = {\n"
++	active = 1
++	regdb = regdb "\t&regdom_" country ",\n"
++}
++
++active && /^[ \t]*\(/ {
++	start = $1
++	sub(/\(/, "", start)
++	end = $3
++	bw = $5
++	sub(/\),/, "", bw)
++	gain = $6
++	sub(/\(/, "", gain)
++	sub(/,/, "", gain)
++	power = $7
++	sub(/\)/, "", power)
++	sub(/,/, "", power)
++	# power might be in mW...
++	units = $8
++	sub(/\)/, "", units)
++	sub(/,/, "", units)
++	if (units == "mW") {
++		if (power == 100) {
++			power = 20
++		} else if (power == 200) {
++			power = 23
++		} else if (power == 500) {
++			power = 27
++		} else if (power == 1000) {
++			power = 30
++		} else {
++			print "Unknown power value in database!"
++		}
++	}
++	flagstr = ""
++	for (i=8; i<=NF; i++)
++		flagstr = flagstr $i
++	split(flagstr, flagarray, ",")
++	flags = ""
++	for (arg in flagarray) {
++		if (flagarray[arg] == "NO-OFDM") {
++			flags = flags "\n\t\t\tNL80211_RRF_NO_OFDM | "
++		} else if (flagarray[arg] == "NO-CCK") {
++			flags = flags "\n\t\t\tNL80211_RRF_NO_CCK | "
++		} else if (flagarray[arg] == "NO-INDOOR") {
++			flags = flags "\n\t\t\tNL80211_RRF_NO_INDOOR | "
++		} else if (flagarray[arg] == "NO-OUTDOOR") {
++			flags = flags "\n\t\t\tNL80211_RRF_NO_OUTDOOR | "
++		} else if (flagarray[arg] == "DFS") {
++			flags = flags "\n\t\t\tNL80211_RRF_DFS | "
++		} else if (flagarray[arg] == "PTP-ONLY") {
++			flags = flags "\n\t\t\tNL80211_RRF_PTP_ONLY | "
++		} else if (flagarray[arg] == "PTMP-ONLY") {
++			flags = flags "\n\t\t\tNL80211_RRF_PTMP_ONLY | "
++		} else if (flagarray[arg] == "PASSIVE-SCAN") {
++			flags = flags "\n\t\t\tNL80211_RRF_PASSIVE_SCAN | "
++		} else if (flagarray[arg] == "NO-IBSS") {
++			flags = flags "\n\t\t\tNL80211_RRF_NO_IBSS | "
++		}
++	}
++	flags = flags "0"
++	printf "\t\tREG_RULE(%d, %d, %d, %d, %d, %s),\n", start, end, bw, gain, power, flags
++	rules++
++}
++
++active && /^[ \t]*$/ {
++	active = 0
++	printf "\t},\n"
++	printf "\t.n_reg_rules = %d\n", rules
++	printf "};\n\n"
++	rules = 0;
++}
++
++END {
++	print regdb "};"
++	print ""
++	print "int reg_regdb_size = ARRAY_SIZE(reg_regdb);"
++}
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index baa898a..dc13c3f 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -40,6 +40,7 @@
+ #include <net/cfg80211.h>
+ #include "core.h"
+ #include "reg.h"
++#include "regdb.h"
+ #include "nl80211.h"
+ 
+ /* Receipt of information from last regulatory request */
+@@ -335,6 +336,98 @@ static bool country_ie_integrity_changes(u32 checksum)
+ 	return false;
+ }
+ 
++static int reg_copy_regd(const struct ieee80211_regdomain **dst_regd,
++			 const struct ieee80211_regdomain *src_regd)
++{
++	struct ieee80211_regdomain *regd;
++	int size_of_regd = 0;
++	unsigned int i;
++
++	size_of_regd = sizeof(struct ieee80211_regdomain) +
++	  ((src_regd->n_reg_rules + 1) * sizeof(struct ieee80211_reg_rule));
++
++	regd = kzalloc(size_of_regd, GFP_KERNEL);
++	if (!regd)
++		return -ENOMEM;
++
++	memcpy(regd, src_regd, sizeof(struct ieee80211_regdomain));
++
++	for (i = 0; i < src_regd->n_reg_rules; i++)
++		memcpy(&regd->reg_rules[i], &src_regd->reg_rules[i],
++			sizeof(struct ieee80211_reg_rule));
++
++	*dst_regd = regd;
++	return 0;
++}
++
++#ifdef CONFIG_CFG80211_INTERNAL_REGDB
++struct reg_regdb_search_request {
++	char alpha2[2];
++	struct list_head list;
++};
++
++static LIST_HEAD(reg_regdb_search_list);
++static DEFINE_SPINLOCK(reg_regdb_search_lock);
++
++static void reg_regdb_search(struct work_struct *work)
++{
++	struct reg_regdb_search_request *request;
++	const struct ieee80211_regdomain *curdom, *regdom;
++	int i, r;
++
++	spin_lock(&reg_regdb_search_lock);
++	while (!list_empty(&reg_regdb_search_list)) {
++		request = list_first_entry(&reg_regdb_search_list,
++					   struct reg_regdb_search_request,
++					   list);
++		list_del(&request->list);
++
++		for (i=0; i<reg_regdb_size; i++) {
++			curdom = reg_regdb[i];
++
++			if (!memcmp(request->alpha2, curdom->alpha2, 2)) {
++				r = reg_copy_regd(&regdom, curdom);
++				if (r)
++					break;
++				spin_unlock(&reg_regdb_search_lock);
++				mutex_lock(&cfg80211_mutex);
++				set_regdom(regdom);
++				mutex_unlock(&cfg80211_mutex);
++				spin_lock(&reg_regdb_search_lock);
++				break;
++			}
++		}
++
++		kfree(request);
++	}
++	spin_unlock(&reg_regdb_search_lock);
++}
++
++static DECLARE_WORK(reg_regdb_work, reg_regdb_search);
++
++static void reg_regdb_query(const char *alpha2)
++{
++	struct reg_regdb_search_request *request;
++
++	if (!alpha2)
++		return;
++
++	request = kzalloc(sizeof(struct reg_regdb_search_request), GFP_KERNEL);
++	if (!request)
++		return;
++
++	memcpy(request->alpha2, alpha2, 2);
++
++	spin_lock(&reg_regdb_search_lock);
++	list_add_tail(&request->list, &reg_regdb_search_list);
++	spin_unlock(&reg_regdb_search_lock);
++
++	schedule_work(&reg_regdb_work);
++}
++#else
++static inline void reg_regdb_query(const char *alpha2) {}
++#endif /* CONFIG_CFG80211_INTERNAL_REGDB */
++
+ /*
+  * This lets us keep regulatory code which is updated on a regulatory
+  * basis in userspace.
+@@ -354,6 +447,9 @@ static int call_crda(const char *alpha2)
+ 		printk(KERN_INFO "cfg80211: Calling CRDA to update world "
+ 			"regulatory domain\n");
+ 
++	/* query internal regulatory database (if it exists) */
++	reg_regdb_query(alpha2);
++
+ 	country_env[8] = alpha2[0];
+ 	country_env[9] = alpha2[1];
+ 
+@@ -1342,30 +1438,6 @@ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
+ }
+ EXPORT_SYMBOL(wiphy_apply_custom_regulatory);
+ 
+-static int reg_copy_regd(const struct ieee80211_regdomain **dst_regd,
+-			 const struct ieee80211_regdomain *src_regd)
+-{
+-	struct ieee80211_regdomain *regd;
+-	int size_of_regd = 0;
+-	unsigned int i;
+-
+-	size_of_regd = sizeof(struct ieee80211_regdomain) +
+-	  ((src_regd->n_reg_rules + 1) * sizeof(struct ieee80211_reg_rule));
+-
+-	regd = kzalloc(size_of_regd, GFP_KERNEL);
+-	if (!regd)
+-		return -ENOMEM;
+-
+-	memcpy(regd, src_regd, sizeof(struct ieee80211_regdomain));
+-
+-	for (i = 0; i < src_regd->n_reg_rules; i++)
+-		memcpy(&regd->reg_rules[i], &src_regd->reg_rules[i],
+-			sizeof(struct ieee80211_reg_rule));
+-
+-	*dst_regd = regd;
+-	return 0;
+-}
+-
+ /*
+  * Return value which can be used by ignore_request() to indicate
+  * it has been determined we should intersect two regulatory domains
+diff --git a/net/wireless/regdb.h b/net/wireless/regdb.h
+new file mode 100644
+index 0000000..818222c
+--- /dev/null
++++ b/net/wireless/regdb.h
+@@ -0,0 +1,7 @@
++#ifndef __REGDB_H__
++#define __REGDB_H__
++
++extern const struct ieee80211_regdomain *reg_regdb[];
++extern int reg_regdb_size;
++
++#endif /* __REGDB_H__ */
 -- 
-1.6.3.3
+1.6.5.2
 
