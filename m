@@ -1,70 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:31698 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:23157 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752037AbZLWCgS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2009 21:36:18 -0500
+	id S1754217AbZLNJYL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Dec 2009 04:24:11 -0500
 Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Dec 2009 18:36:18 -0800
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 01:24:11 -0800
 From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19249.34294.19925.963051@gargle.gargle.HOWL>
-Date: Wed, 23 Dec 2009 08:22:38 +0530
-To: Luis Rodriguez <lrodriguez@atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Asus eeepc 1008HA suspend issue and mac80211 suspend corner case
-In-Reply-To: <43e72e890912221716r64ea4542qd747302b536a3156@mail.gmail.com>
-References: <20091222022355.GA32508@bombadil.infradead.org>
-	<19248.19829.293087.367661@gargle.gargle.HOWL>
-	<20091222155005.GA4385@tux>
-	<20091222162055.GC4385@tux>
-	<20091222165528.GE4385@tux>
-	<20091222175939.GF4385@tux>
-	<43e72e890912221716r64ea4542qd747302b536a3156@mail.gmail.com>
+Message-ID: <19238.1248.439940.601526@gargle.gargle.HOWL>
+Date: Mon, 14 Dec 2009 14:56:56 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/6] ath9k: Fix bug in assigning sequence number
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis Rodriguez wrote:
-> OK I have to go now but I managed to get this working without the
-> issue coming up. At this point I am not sure if all of these are
-> required but I cherry picked 2 patches from wireless-testing and then
-> added 4, one based on sujith's suggestion.
-> 
-> http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0001-mac80211-fix-resume.patch
-> http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0002-mac80211-fix-WMM-AP-settings-application.patch
-> 
-> http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0003-ath9k-set-and-restore-ps-prior-to-stop-and-interface.patch
-> http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0004-ath9k-ensure-hardware-is-awake-during-ampdu-TX-actio.patch
-> 
-> http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0005-ath9k-synch-TX-DMA-buffer-upon-TX-cancelation.patch
-> http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0006-ath9k-do-not-wake-up-device-if-it-hasn-t-been-starte.patch
-> 
-> Its likely only patch 3, 4, and 6 are the only ones required. In fact
-> maybe even 6 will fix it, but I just gotta go so cannot test that. I
-> was able to resume about 10 times consecutively which I was unable to
-> do before.
+The internal, driver-specific maintenance of sequence
+numbers is applicable only for HT frames.
 
-Probably lucky. :)
-None of the above patches address the issue of allowing configuration requests
-after the chip has been shut down.
+Also, remove comments that are not relevant anymore.
 
-Can you try this on top of the earlier one I sent out ?
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |   13 +++----------
+ 1 files changed, 3 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 419c382..7fdcc6b 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2673,6 +2673,11 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 2a11cc5..c56f4ac 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1414,17 +1414,9 @@ static void assign_aggr_tid_seqno(struct sk_buff *skb,
+ 	 * For HT capable stations, we save tidno for later use.
+ 	 * We also override seqno set by upper layer with the one
+ 	 * in tx aggregation state.
+-	 *
+-	 * If fragmentation is on, the sequence number is
+-	 * not overridden, since it has been
+-	 * incremented by the fragmentation routine.
+-	 *
+-	 * FIXME: check if the fragmentation threshold exceeds
+-	 * IEEE80211 max.
+ 	 */
+ 	tid = ATH_AN_2_TID(an, bf->bf_tidno);
+-	hdr->seq_ctrl = cpu_to_le16(tid->seq_next <<
+-			IEEE80211_SEQ_SEQ_SHIFT);
++	hdr->seq_ctrl = cpu_to_le16(tid->seq_next << IEEE80211_SEQ_SEQ_SHIFT);
+ 	bf->bf_seqno = tid->seq_next;
+ 	INCR(tid->seq_next, IEEE80211_SEQ_MAX);
+ }
+@@ -1636,7 +1628,8 @@ static int ath_tx_setup_buffer(struct ieee80211_hw *hw, struct ath_buf *bf,
+ 		bf->bf_keyix = ATH9K_TXKEYIX_INVALID;
+ 	}
  
- 	mutex_lock(&sc->mutex);
+-	if (ieee80211_is_data_qos(fc) && (sc->sc_flags & SC_OP_TXAGGR))
++	if (ieee80211_is_data_qos(fc) && bf_isht(bf) &&
++	    (sc->sc_flags & SC_OP_TXAGGR))
+ 		assign_aggr_tid_seqno(skb, bf);
  
-+	if (sc->sc_flags & SC_OP_INVALID) {
-+		mutex_unlock(&sc->mutex);
-+		return 0;
-+	}
-+
- 	/*
- 	 * Leave this as the first check because we need to turn on the
- 	 * radio if it was disabled before prior to processing the rest
+ 	bf->bf_mpdu = skb;
+-- 
+1.6.5.6
 
