@@ -1,33 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:33634 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756750AbZLNLBv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 06:01:51 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 03:01:51 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
-Message-ID: <19238.7116.226902.466841@gargle.gargle.HOWL>
-Date: Mon, 14 Dec 2009 16:34:44 +0530
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-To: Kalle Valo <kalle.valo@iki.fi>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/6] ath9k: Stop ANI when doing a reset
-In-Reply-To: <87pr6hzwpf.fsf@purkki.valot.fi>
-References: <19238.1557.201259.642604@gargle.gargle.HOWL>
-	<87pr6hzwpf.fsf@purkki.valot.fi>
+Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:49600 "EHLO
+	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752217AbZLNWck (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Dec 2009 17:32:40 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: linville@tuxdriver.com, users@rt2x00.serialmonkey.com,
+	linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH v2.6.33] rt2x00: Fix calculation of rt2800 iveiv entry offset.
+Date: Mon, 14 Dec 2009 23:32:31 +0100
+Message-Id: <1260829951-27139-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo wrote:
-> The visible change to the user is good to explain. Was there packet
-> loss, did the kernel crash or what?
+Fix typo. The index should be multiplied by the entry size, not 'and'-ed.
 
-Sub-optimal performance would be the visible impact.
+Found via code-inspection.
 
-Updated patch will follow momentarily.
-Thanks for the review.
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Sujith
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index c5fe867..1a7eae3 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -1323,7 +1323,7 @@
+ #define PAIRWISE_KEY_ENTRY(__idx) \
+ 	( PAIRWISE_KEY_TABLE_BASE + ((__idx) * sizeof(struct hw_key_entry)) )
+ #define MAC_IVEIV_ENTRY(__idx) \
+-	( MAC_IVEIV_TABLE_BASE + ((__idx) & sizeof(struct mac_iveiv_entry)) )
++	( MAC_IVEIV_TABLE_BASE + ((__idx) * sizeof(struct mac_iveiv_entry)) )
+ #define MAC_WCID_ATTR_ENTRY(__idx) \
+ 	( MAC_WCID_ATTRIBUTE_BASE + ((__idx) * sizeof(u32)) )
+ #define SHARED_KEY_ENTRY(__idx) \
+-- 
+1.6.5.5
+
