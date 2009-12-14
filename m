@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:59570 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751699AbZLDXb7 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45273 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932430AbZLNTP0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Dec 2009 18:31:59 -0500
-Date: Sat, 5 Dec 2009 00:32:02 +0100
-From: Andi Kleen <andi@firstfloor.org>
-To: rjw@sisk.pl, IvDoorn@gmail.com, gwingerde@gmail.com,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: regression: rt2561 frequent "Arrived at non-free entry" errors in
-	2.6.32
-Message-ID: <20091204233202.GA13658@basil.fritz.box>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 14 Dec 2009 14:15:26 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH] rt2x00: Fix rt2800usb detection in rt2800lib.
+Date: Mon, 14 Dec 2009 14:13:24 -0500
+Message-Id: <1260818004-22785-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1260661180-2300-1-git-send-email-gwingerde@gmail.com>
+References: <1260661180-2300-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[Rafael, something for your regression list]
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 
-I upgraded a system which was running 2.6.30 to 2.6.32.
-It has a 
+rt2800lib incorrectly detected whether RT2800USB was enabled because
+it didn't account for a modularized RT2800USB driver.
 
-06:02.0 Network controller: RaLink RT2561/RT61 802.11g PCI
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+I'm merging this version based on Randy's feedback...
 
-wireless PCI card. Now regularly even under moderate traffic
-I see messages like
+ drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-phy0 -> rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 2.
-Please file bug report to http://rt2x00.serialmonkey.com.
-
-and loss of connectivity, often until the wireless connection
-is restarted. This wasn't the case in 2.6.30, there the driver
-ran stable without any problems. The problem currently
-happens every few minutes.
-
--Andi
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index eb1e1d0..6e13650 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -37,7 +37,7 @@
+ #include <linux/module.h>
+ 
+ #include "rt2x00.h"
+-#ifdef CONFIG_RT2800USB
++#if defined(CONFIG_RT2800USB) || defined(CONFIG_RT2800USB_MODULE)
+ #include "rt2x00usb.h"
+ #endif
+ #include "rt2800lib.h"
+@@ -1121,7 +1121,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 
+ 	if (rt2x00_intf_is_usb(rt2x00dev)) {
+ 		rt2800_register_write(rt2x00dev, USB_DMA_CFG, 0x00000000);
+-#ifdef CONFIG_RT2800USB
++#if defined(CONFIG_RT2800USB) || defined(CONFIG_RT2800USB_MODULE)
+ 		rt2x00usb_vendor_request_sw(rt2x00dev, USB_DEVICE_MODE, 0,
+ 					    USB_MODE_RESET, REGISTER_TIMEOUT);
+ #endif
 -- 
-ak@linux.intel.com -- Speaking for myself only.
+1.6.2.5
+
