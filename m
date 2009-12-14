@@ -1,25 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n20.bullet.mail.ukl.yahoo.com ([87.248.110.137]:34623 "HELO
-	n20.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753338AbZLWTOp convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 14:14:45 -0500
-Message-ID: <240098.63153.qm@web29215.mail.ird.yahoo.com>
-Date: Wed, 23 Dec 2009 11:14:43 -0800 (PST)
-From: Le Trifole <letrifole@yahoo.com>
-Subject: Incomplete page load
-To: linux-wireless@vger.kernel.org
+Received: from mail.atheros.com ([12.36.123.2]:33638 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756753AbZLNLCD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Dec 2009 06:02:03 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 03:02:03 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19238.7128.326339.839066@gargle.gargle.HOWL>
+Date: Mon, 14 Dec 2009 16:34:56 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/6 v2] ath9k: Stop ANI when doing a reset
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Good morning,
-it's the first time i write on this list. I'm meeting with a strange problem (it's the first time i use linux). I use both LAN and wireless, i can connect but the when I load a webpage (doesn't matter ubuntu or mandriva, lan or wifi) dwnload just a few kb and then it stops....so i can chat but i can't surf the web....
+The MIB counters are disabled when doing a chip reset.
+Since ANI depends on the MIB registers for its operation, relying
+on the contents of said registers during HW reset results in sub-optimal
+performance.
 
-I'm new to linux but i'd like to use it and hope smeone can help me with th=
-is problem. thanks in advance
+Cc: stable@kernel.org
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+v2: Updated commit log.
 
+ drivers/net/wireless/ath/ath9k/main.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-      
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index c487434..9e68c1a 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1973,6 +1973,9 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	struct ieee80211_hw *hw = sc->hw;
+ 	int r;
+ 
++	/* Stop ANI */
++	del_timer_sync(&common->ani.timer);
++
+ 	ath9k_hw_set_interrupts(ah, 0);
+ 	ath_drain_all_txq(sc, retry_tx);
+ 	ath_stoprecv(sc);
+@@ -2014,6 +2017,9 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 		}
+ 	}
+ 
++	/* Start ANI */
++	ath_start_ani(common);
++
+ 	return r;
+ }
+ 
+-- 
+1.6.5.6
 
