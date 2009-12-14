@@ -1,55 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:37954 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756060AbZLTVyE (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53000 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756576AbZLNOAX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2009 16:54:04 -0500
-Received: by iwn1 with SMTP id 1so3292515iwn.33
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2009 13:54:02 -0800 (PST)
+	Mon, 14 Dec 2009 09:00:23 -0500
+Date: Mon, 14 Dec 2009 08:52:30 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>
+Subject: Re: Revised wireless tree management practices
+Message-ID: <20091214135229.GA18945@tuxdriver.com>
+References: <87ljhb0x0h.fsf@purkki.valot.fi> <20091210134733.GC11112@tuxdriver.com> <87ein30vt4.fsf@purkki.valot.fi> <43e72e890912100631if1c17b2l597168813db4a19c@mail.gmail.com> <20091210143754.GA2955@tuxdriver.com> <43e72e890912100653p3890705u4f88dd19026a5877@mail.gmail.com> <20091210150318.GB2955@tuxdriver.com> <43e72e890912100814u45a58c47j5dfd66769f8170b@mail.gmail.com> <20091210162517.GD2955@tuxdriver.com> <4B263063.4030000@nokia.com>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890912192251r4de4a3c3idb5e4c3723ef87aa@mail.gmail.com>
-References: <4b2daf91.VB5IdAW/+fSDNPPV%Larry.Finger@lwfinger.net>
-	<43e72e890912192251r4de4a3c3idb5e4c3723ef87aa@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sun, 20 Dec 2009 13:53:42 -0800
-Message-ID: <43e72e890912201353t491b7d97of1520e7995c0ef5b@mail.gmail.com>
-Subject: Re: [PATCH] b43: Clear PCI configuration reg. 0x41 to avoid
-	interference with C3 processor state
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4B263063.4030000@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 19, 2009 at 10:51 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Sat, Dec 19, 2009 at 9:01 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->> In exploring the cause of DMA errors for BCM4312 devices on Atom
->> processors, other drivers that work write to PCI configuration
->> register 0x40. The code fragment below was found in the open-code
->> portion of the Broadcom hybrid wl driver. It is also used in the
->> ipw2100 and ath9k drivers. In the latter case, it had been removed
->> and later restored to prevent fatal interrupt errors.
+On Mon, Dec 14, 2009 at 02:32:35PM +0200, Luciano Coelho wrote:
+> ext John W. Linville wrote:
+>> On Thu, Dec 10, 2009 at 08:14:34AM -0800, Luis R. Rodriguez wrote:
+>>> On Thu, Dec 10, 2009 at 7:03 AM, John W. Linville
+>>> <linville@tuxdriver.com> wrote:
+>>
+>>>> Yes.  If you want me to do git pulls then you need to separate fixes
+>>>> into a tree based on wireless-2.6.  Also, you should be conscientious
+>>>> about adding "Cc: stable@kernel.org" to commit logs as appropriate.
+>>>> The whole point of the pulls is to keep me from having to touch
+>>>> the patches.
+>>> OK last question, is if we do take up the pull request method for
+>>> ath9k at Atheros we still have people sending patches from the
+>>> community so who would pick those up. Is it easier for you if we do so
+>>> and then get them to you through our pull request? How about the
+>>> stable fixes? Reason I ask if you pick some of these up it just means
+>>> we need to rebase and I do prefer to keep a clean tree myself as well,
+>>> although not required at all.
+>>
+>> In the generic case, the driver/subsystem maintainer and I should
+>> negotiate that in advance -- either way might be acceptable and either
+>> way might call for special cases for individual patches.
+>>
+>> So, feel free to propose how you would like to do it for ath9k in
+>> another thread or a private email.  But in general I would think that
+>> letting "outsider" (for lack of a better term) patches flow through
+>> a driver/subsystem maintainer tree would be acceptable.  After all,
+>> that implies a higher level of domain-specific review.
 >
-> I should note 0x40 starts with vendor specific PCI config space so you
-> cannot guarantee different PCI devices use 0x41 will be used the same
-> for different devices. The documentation for the ath9k PCI-E devices
-> used that entry for something completely different but what I did not
-> do is try to very and ensure PCI devices do not use it it for the
-> same. I am told though that although this is PCI vendor space some
-> devices may still use similar private PCI config spaces on different
-> devices which just follows a practice. At this point we now have not
-> only b43, ipw and ath9k follow this but also prism54 and I think p54
-> uses this. I'll note I *highly* doubt this is used for the same thing
-> on all these devices and was just code copied from other Linux
-> drivers. In the case of Atheros Linux drivers I know it was copied
-> form Intel drivers, which is why I started questioning it all.
+> This is cool! I might consider sending pull-reqs for the wl1271 driver as 
+> well, so I don't send these patchbombs every now and then. ;) The 
+> advantage of this is that we can have a review round before the patches 
+> actually go in.  So we as the driver/subsystem maintainers can decide 
+> when the patches are ready to go to wireless-next-2.6.
 >
-> Anyway, if it helps, that's great :) but it cannot be concluded its
-> all for the same thing unless you have proper documentation as this is
-> in PCI vendor space which *can* vary depending on device and vendor.
+> Now it's my turn to ask a question... What happens in the case when there 
+> is an API change, say, in mac80211 that requires changes in a few 
+> different drivers? Those changes are usually done in a single patch that 
+> changes both the API and the affected drivers in one go.  In this case we 
+> will end up having to rebase our own trees.
+>
+> How is this done in higher levels, for instance when something that 
+> changed in the net subsystem requires changes in the wireless 
+> "sub-subsystem"?
 
-Larry, does this actually fix something or is this code purely speculative?
+Well, git is really good at merges.  So in general things will "just
+work".  In cases where you _need_ a patch that has been merged in my
+tree you can just pull from me (possibly resolving merge conflicts)
+and then continue from there.  But in many/most cases you can just not
+worry about those things and I'll reserve conflicts in my tree instead.
+Note that the above is true for driver-specific changes as well.
+So for example if I were to merge a fix for iwlwifi, the iwlwifi tree
+could either simply ignore the fix in their tree or pull from me to
+get the fix before applying any following patches.
 
-  Luis
+I would ask that before pulling from me you make sure that I have
+pulled your latest round of preceding changes.  That way when you pull
+from me it is a "fast forward" for your tree, and your pull requests
+to me do not include many/any "pull from wireless-2.6" merge entries.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
