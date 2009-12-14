@@ -1,58 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f211.google.com ([209.85.217.211]:36099 "EHLO
-	mail-gx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753615AbZLTWXx (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52446
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755783AbZLNMk0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2009 17:23:53 -0500
-Received: by gxk3 with SMTP id 3so3468084gxk.1
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2009 14:23:52 -0800 (PST)
-Message-ID: <4B2EA3F4.8040108@lwfinger.net>
-Date: Sun, 20 Dec 2009 16:23:48 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
-	bcm43xx-dev@lists.berlios.de,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH] b43: Clear PCI configuration reg. 0x41 to avoid 	interference
- with C3 processor state
-References: <4b2daf91.VB5IdAW/+fSDNPPV%Larry.Finger@lwfinger.net> 	<43e72e890912192251r4de4a3c3idb5e4c3723ef87aa@mail.gmail.com> <43e72e890912201353t491b7d97of1520e7995c0ef5b@mail.gmail.com>
-In-Reply-To: <43e72e890912201353t491b7d97of1520e7995c0ef5b@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 14 Dec 2009 07:40:26 -0500
+Date: Mon, 14 Dec 2009 04:40:27 -0800 (PST)
+Message-Id: <20091214.044027.35344301.davem@davemloft.net>
+To: luciano.coelho@nokia.com
+Cc: linville@tuxdriver.com, mcgrof@gmail.com, kalle.valo@iki.fi,
+	linux-wireless@vger.kernel.org
+Subject: Re: Revised wireless tree management practices
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <4B263063.4030000@nokia.com>
+References: <43e72e890912100814u45a58c47j5dfd66769f8170b@mail.gmail.com>
+	<20091210162517.GD2955@tuxdriver.com>
+	<4B263063.4030000@nokia.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/20/2009 03:53 PM, Luis R. Rodriguez wrote:
->> I should note 0x40 starts with vendor specific PCI config space so you
->> cannot guarantee different PCI devices use 0x41 will be used the same
->> for different devices. The documentation for the ath9k PCI-E devices
->> used that entry for something completely different but what I did not
->> do is try to very and ensure PCI devices do not use it it for the
->> same. I am told though that although this is PCI vendor space some
->> devices may still use similar private PCI config spaces on different
->> devices which just follows a practice. At this point we now have not
->> only b43, ipw and ath9k follow this but also prism54 and I think p54
->> uses this. I'll note I *highly* doubt this is used for the same thing
->> on all these devices and was just code copied from other Linux
->> drivers. In the case of Atheros Linux drivers I know it was copied
->> form Intel drivers, which is why I started questioning it all.
->>
->> Anyway, if it helps, that's great :) but it cannot be concluded its
->> all for the same thing unless you have proper documentation as this is
->> in PCI vendor space which *can* vary depending on device and vendor.
-> 
-> Larry, does this actually fix something or is this code purely speculative?
+From: Luciano Coelho <luciano.coelho@nokia.com>
+Date: Mon, 14 Dec 2009 14:32:35 +0200
 
-I got on this idea because I logged all PCI configuration read/write
-values and discovered that the Broadcom wl driver did a read/write on
-this location. A later examination of the open-source part of that
-driver showed that they copied it from ipw2100. If anyone knows the
-layout of the private area of the configuration space, they should;
-however, they may be just propagating the code as you say.
+> Now it's my turn to ask a question... What happens in the case when
+> there is an API change, say, in mac80211 that requires changes in a
+> few different drivers? Those changes are usually done in a single
+> patch that changes both the API and the affected drivers in one go.
+> In this case we will end up having to rebase our own trees.
 
-This change does not fix the DMA error problem with Atom processors in
-Netbooks. We have had one report of DMA errors in a Core Duo system -
-AFAIK, the only non-Atom processor with the problem. That user has not
-tested this patch.
+No you won't need to rebase, that's the last thing you should do.
 
-Larry
+When there is a conflict to resolve or a situation like the one you
+describe, you simply pull John's tree into your's.
