@@ -1,46 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:57202 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758999AbZLOBan (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43268 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757846AbZLNQsi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 20:30:43 -0500
-Received: by ewy19 with SMTP id 19so16219ewy.21
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 17:30:42 -0800 (PST)
-From: Kadianakis George <desnacked@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Function name collisions with mac80211
-Date: Tue, 15 Dec 2009 03:25:50 +0200
-Message-ID: <873a3dm3j5.fsf@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 14 Dec 2009 11:48:38 -0500
+Subject: Re: Ethernet bridging with wireless
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <Pine.LNX.4.44L0.0912141131190.2685-100000@iolanthe.rowland.org>
+References: <Pine.LNX.4.44L0.0912141131190.2685-100000@iolanthe.rowland.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Fd/JxOe8e8AFna+IpWp2"
+Date: Mon, 14 Dec 2009 17:48:35 +0100
+Message-ID: <1260809315.2442.408.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greetings,
 
-a function name collision issue spawned off a Gentoo bug [1].
+--=-Fd/JxOe8e8AFna+IpWp2
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Basically, functions in the rtl8187se staging driver collide with functions in the
-mac80211 source not allowing kernel compilation with both
-CONFIG_RTL8187SE and CONFIG_MAC80211 set.
+On Mon, 2009-12-14 at 11:35 -0500, Alan Stern wrote:
+> I just tried to set up ethernet bridging between the wireless interface
+> and the wired ethernet interface on my laptop machine.  It didn't work. =20
+> As far as I could tell from the tcpdump output, the wireless stack
+> doesn't want to transmit packets with a foreign link-layer source
+> address.
+>=20
+> Is there any way around this restriction?  Or must I resort to IP=20
+> forwarding instead?
 
-Changes that cause this issue are: 
-a) commit 103bf9f7d35849bce52ad412e4da5063b0716969: 
-   mac80211: remove ieee80211_rx namespace hack
-Where ieee80211_rx() starts getting exported instead of __ieee80211_rx() which used to get exported.
-b) commit c6e43bc83fd0f156eeb64bc2fa47323fdff16ba8
-   Staging: rtl8187se/ieee80211: remove superfluous ieee80211_* defines
-Where #define ieee80211_wake_queue ieee80211_wake_queue_rtl
-and #define ieee80211_stop_queue ieee80211_stop_queue_rtl
-get removed effectively exposing the collision with the mac80211
-functions of the same names.
+There's no standard way around this restriction, the on-air packets are
+required to be transmitted with the correct TA (transmitter address) [1]
+which also must be the SA (sender address) in the regular frame format,
+since the DA (destination address) and RA (receiver address) must be
+present and the format only has three addresses. In recent kernels (what
+will be 2.6.33), we have added code to disallow such configurations
+since they cannot work.
 
-The collisions are not restricted to the rtl8187se driver, like the
-following example:
-c) commit 5d9baea95f45bddcecab050de1af2ef678e85339
-   Staging: rtl8192su: make private ieee80211 stack really private
-Had the exact same effect as b) to the rtl8192su driver.
-d) A quick grep of the three functions in Gentoo bug report shows many
-instances of them in the drivers/staging directory.
+However, if you control both the AP and and the station (e.g. laptop),
+and your AP and station both run mac80211, then you can use the
+four-address hack that Felix has been developing. It will then use the
+standardised four-address frame format that normally cannot be used
+between a station and an AP to transfer different TA/SA. I'm not sure if
+he has documentation on this yet.
 
-[1]: http://bugs.gentoo.org/show_bug.cgi?id=296920
+There's also ebtables NAT, but I have no idea if/how that works.
+
+johannes
+
+[1] otherwise the ACK mechanism cannot work
+
+--=-Fd/JxOe8e8AFna+IpWp2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLJmxfAAoJEODzc/N7+QmajFwP/RSoEn7sr1G1AM9OZmgInRLC
+OcnfW2siw835PPk4F6Aniz25iQj0fSGQEyF6kDTILTBQ2uMj5TOMUWfhFl3UDWSn
+sOPYosI4bpYSkOvclO1qMbTFvWl6YXpikNoL/fQWZMPlxjfD7T/Vhk3+gyH6VX16
+Xu3K0Rq8SDzUk9luGChuZi+n84O52ZbPzGQGh62e5cDzjRgR+fT6FjWPYo5aeVIh
+hY9Bz35yEzC4Y4Pf1v8OcFItRZRLhbO0w5iF44ExaWqNMXEq7eYLFRqV5tqmUq1g
+lNy/VbRtSfE/9odOopUbln8XoEhrHfZR9NjXqjavjyCu8ghSg1tWnCgIAwWF854u
+CfZG0FcPjqDSF/DpLXzzizuruzBPYDan6i0uxITIL2mTQuwz8adbUaFVM8IDXIbO
+PqA5O8KJzTqBRcMBvLR6ZRtMQggb9UIJRSH6MDcLcjeXly7ChGuY7/HgI4g0DK1T
+GbpBsVJ3uCg75hfA0mCbTsyRc25K0ucSEJ0YmrFm6anpjTr7YZH1fmXlbJmWE5UL
+52IdiSgDS2lAdrLCGXpgzj03n8RX7wl9pHutbCPV6zQq7bIrP5LHPhl2qvmdTVT/
+hKndFbLtnluDFr6maJ6d0wATJIPDU1dJaCvWSe5KyVUvwBVEsbXu4OmLgqsy0bzq
+ihWh4iKkphSPo/pO1Yu1
+=1JVO
+-----END PGP SIGNATURE-----
+
+--=-Fd/JxOe8e8AFna+IpWp2--
+
