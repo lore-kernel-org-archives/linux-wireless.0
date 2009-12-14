@@ -1,61 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:65009 "EHLO c60.cesmail.net"
+Received: from mga09.intel.com ([134.134.136.24]:58878 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755137AbZLBBTr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 20:19:47 -0500
-Subject: Re: [PATCH] mac80211: allow disabling 40MHz on 2.4GHz
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890912011118w535781a4id4e4572df16267f4@mail.gmail.com>
-References: <1259688582.32171.97.camel@johannes.local>
-	 <1259691446.4806.12.camel@mj>  <1259692053.32171.98.camel@johannes.local>
-	 <43e72e890912011118w535781a4id4e4572df16267f4@mail.gmail.com>
-Content-Type: text/plain
-Date: Tue, 01 Dec 2009 20:19:14 -0500
-Message-Id: <1259716754.11611.6.camel@mj>
-Mime-Version: 1.0
+	id S932600AbZLNWMU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Dec 2009 17:12:20 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 4/6] iwlwifi: initialize spinlock before use
+Date: Mon, 14 Dec 2009 14:12:11 -0800
+Message-Id: <1260828733-22726-5-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1260828733-22726-1-git-send-email-reinette.chatre@intel.com>
+References: <1260828733-22726-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-12-01 at 11:18 -0800, Luis R. Rodriguez wrote:
-> >> That looks like a hack to me.
-> >>
-> >> Maybe it should be treated like other CRDA flags?  In fact, you can find
-> >> this in dbparse.py in the wireless-regdb sources:
-> >>
-> >>     # hole at bit 9. FIXME: Where is NO-HT40 defined?
-> >>     'NO-HT40':          1<<10,
-> >>
-> >> However, there are no other references to NO-HT40 in the wireless-regdb
-> >> or CRDA sources.  I assume it's not implemented.
-> >
-> > It's not a regulatory requirement, it's a coexistence requirement.
-> 
-> To extend this text a little more, me and Johannes had reviewed usage
-> of a NO-HT40 flag for regulatory purposes a while back. It was used
-> mainly on the old Atheros HAL regulatory code and upon a lot of review
-> even with our own regulatory folks determined that in fact there was
-> no specific rules about disallowing 40 MHz, but that when this was
-> disallowed it can be implied by the frequency range not fitting a 40
-> MHz channel. This is currently computed dynamically now on cfg80211
-> and its results are outputed through the file:
-> 
-> /sys/kernel/debug/ieee80211/phy0/ht40allow_map
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-OK, good to know.
+Recent powersaving work resulted in power management ops being called
+during EEPROM initialization. The lock used by these functions is not
+initialized at this time. Ensure lock is initialized before it is used.
 
-Anyway, I think that using module parameters for any configuration
-creates a bad precedent.  Disabling HT40 in the 2.4GHz band is a "fine
-tuning" compared to other settings.  But there may be many other such
-"knobs" (e.g. ACK timeout), and if they all are controlled by mac80211
-parameters, it would be a maintenance nightmare.
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-If module parameters are discourages for the drivers, mac80211 should be
-held to the same standard.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 715db21..1c9866d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3173,7 +3173,6 @@ static int iwl_init_drv(struct iwl_priv *priv)
+ 
+ 	priv->ibss_beacon = NULL;
+ 
+-	spin_lock_init(&priv->lock);
+ 	spin_lock_init(&priv->sta_lock);
+ 	spin_lock_init(&priv->hcmd_lock);
+ 
+@@ -3361,10 +3360,11 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		(unsigned long long) pci_resource_len(pdev, 0));
+ 	IWL_DEBUG_INFO(priv, "pci_resource_base = %p\n", priv->hw_base);
+ 
+-	/* this spin lock will be used in apm_ops.init and EEPROM access
++	/* these spin locks will be used in apm_ops.init and EEPROM access
+ 	 * we should init now
+ 	 */
+ 	spin_lock_init(&priv->reg_lock);
++	spin_lock_init(&priv->lock);
+ 	iwl_hw_detect(priv);
+ 	IWL_INFO(priv, "Detected Intel Wireless WiFi Link %s REV=0x%X\n",
+ 		priv->cfg->name, priv->hw_rev);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index c322d6c..96b23f4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3863,7 +3863,6 @@ static int iwl3945_init_drv(struct iwl_priv *priv)
+ 	priv->retry_rate = 1;
+ 	priv->ibss_beacon = NULL;
+ 
+-	spin_lock_init(&priv->lock);
+ 	spin_lock_init(&priv->sta_lock);
+ 	spin_lock_init(&priv->hcmd_lock);
+ 
+@@ -4055,10 +4054,11 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	 * PCI Tx retries from interfering with C3 CPU state */
+ 	pci_write_config_byte(pdev, 0x41, 0x00);
+ 
+-	/* this spin lock will be used in apm_ops.init and EEPROM access
++	/* these spin locks will be used in apm_ops.init and EEPROM access
+ 	 * we should init now
+ 	 */
+ 	spin_lock_init(&priv->reg_lock);
++	spin_lock_init(&priv->lock);
+ 
+ 	/***********************
+ 	 * 4. Read EEPROM
 -- 
-Regards,
-Pavel Roskin
+1.5.6.3
+
