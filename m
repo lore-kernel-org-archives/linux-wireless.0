@@ -1,96 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xenotime.net ([72.52.64.118]:54400 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1757050AbZLUTLH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2009 14:11:07 -0500
-Received: from chimera.site ([96.253.169.185]) by xenotime.net for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2009 11:11:05 -0800
-Date: Mon, 21 Dec 2009 11:11:05 -0800
-From: Randy Dunlap <rdunlap@xenotime.net>
-To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Can't turn off SSB (CONFIG_SSB)?
-Message-Id: <20091221111105.81da940b.rdunlap@xenotime.net>
-In-Reply-To: <4B2FC725.400@redfish-solutions.com>
-References: <4B2ECC72.40703@redfish-solutions.com>
-	<20091221080928.cc7c19ee.rdunlap@xenotime.net>
-	<4B2FBEEA.5010002@redfish-solutions.com>
-	<200912211945.25602.mb@bu3sch.de>
-	<4B2FC725.400@redfish-solutions.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga09.intel.com ([134.134.136.24]:13894 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932963AbZLNWMU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Dec 2009 17:12:20 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>, stable@kernel.org
+Subject: [PATCH 6/6] iwlwifi: fix 40MHz operation setting on cards that do not allow it
+Date: Mon, 14 Dec 2009 14:12:13 -0800
+Message-Id: <1260828733-22726-7-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1260828733-22726-1-git-send-email-reinette.chatre@intel.com>
+References: <1260828733-22726-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 21 Dec 2009 11:06:13 -0800 Philip A. Prindeville wrote:
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-> On 12/21/2009 10:45 AM, Michael Buesch wrote:
-> > On Monday 21 December 2009 19:31:06 Philip A. Prindeville wrote:
-> >> Here's what we have.
-> > 
-> > # CONFIG_SSB is not set
-> > 
-> 
-> Ok, here's what's happening.
-> 
-> We have a "canned" config that we copy over, per platform.
-> 
-> I'm showing diffs of that config with what results (i.e. what's left in the linux-2.6.27.38 directory after running "make silentoldconfig" and "make prepare1"):
-> 
-> --- target/device/via-c7/linux.config   2009-12-21 10:55:55.000000000 -0800
-> +++ build_i586/linux-2.6.27.38-astlinux/.config 2009-12-21 11:02:34.000000000 -0800
-> @@ -1,7 +1,7 @@
->  #
->  # Automatically generated make config: don't edit
->  # Linux kernel version: 2.6.27.38
-> -# Tue Nov 10 16:50:01 2009
-> +# Mon Dec 21 11:02:34 2009
->  #
->  # CONFIG_64BIT is not set
->  CONFIG_X86_32=y
-> @@ -1446,8 +1446,16 @@
->  #
->  # Sonics Silicon Backplane
->  #
-> -CONFIG_SSB_POSSIBLE=n
-> -CONFIG_SSB=n
-> +CONFIG_SSB_POSSIBLE=y
-> +CONFIG_SSB=m
-> +CONFIG_SSB_SPROM=y
-> +CONFIG_SSB_PCIHOST_POSSIBLE=y
-> +CONFIG_SSB_PCIHOST=y
-> +# CONFIG_SSB_B43_PCI_BRIDGE is not set
-> +# CONFIG_SSB_SILENT is not set
-> +# CONFIG_SSB_DEBUG is not set
-> +CONFIG_SSB_DRIVER_PCICORE_POSSIBLE=y
-> +CONFIG_SSB_DRIVER_PCICORE=y
-> 
->  #
->  # Multifunction device drivers
-> @@ -1621,6 +1629,8 @@
->  # CONFIG_USB_DYNAMIC_MINORS is not set
->  # CONFIG_USB_SUSPEND is not set
->  # CONFIG_USB_OTG is not set
-> +# CONFIG_USB_OTG_WHITELIST is not set
-> +# CONFIG_USB_OTG_BLACKLIST_HUB is not set
->  # CONFIG_USB_MON is not set
-> 
->  #
-> @@ -1955,7 +1965,7 @@
->  CONFIG_DEBUG_FS=y
->  # CONFIG_HEADERS_CHECK is not set
->  # CONFIG_DEBUG_KERNEL is not set
-> -CONFIG_DEBUG_BUGVERBOSE=y
-> +# CONFIG_DEBUG_BUGVERBOSE is not set
->  CONFIG_DEBUG_MEMORY_INIT=y
->  # CONFIG_LATENCYTOP is not set
->  CONFIG_SYSCTL_SYSCALL_CHECK=y
-> 
-> 
-> as you can see, a bunch of things are getting "turned on" that we explicitly turned off.
+Some devices have 40MHz operation disabled entirely. Ensure that driver do
+not enable 40MHz operation if a channel does not allow this.
 
-Your custom config seems to enable B44, which selects SSB.
-Can you disable B44?
+This fixes http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2135
 
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+CC: stable@kernel.org
 ---
-~Randy
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index 08ad6e4..4a30969 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -749,7 +749,8 @@ static int iwl_mod_ht40_chan_info(struct iwl_priv *priv,
+ 	ch_info->ht40_eeprom = *eeprom_ch;
+ 	ch_info->ht40_max_power_avg = eeprom_ch->max_power_avg;
+ 	ch_info->ht40_flags = eeprom_ch->flags;
+-	ch_info->ht40_extension_channel &= ~clear_ht40_extension_channel;
++	if (eeprom_ch->flags & EEPROM_CHANNEL_VALID)
++		ch_info->ht40_extension_channel &= ~clear_ht40_extension_channel;
+ 
+ 	return 0;
+ }
+-- 
+1.5.6.3
+
