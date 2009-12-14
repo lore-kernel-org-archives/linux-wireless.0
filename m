@@ -1,67 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37697 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756201AbZLHT3k (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:47256 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757386AbZLNOYX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 14:29:40 -0500
-Subject: Re: wireless device and udev
-From: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 14 Dec 2009 09:24:23 -0500
+Received: by ewy19 with SMTP id 19so3428171ewy.21
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 06:24:21 -0800 (PST)
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Stephen Hemminger <shemminger@vyatta.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-hotplug@vger.kernel.org
-In-Reply-To: <20091208185222.GA16303@tuxdriver.com>
-References: <20091207172616.7470ed2b@nehalam>
-	 <20091208142940.GB15172@tuxdriver.com> <20091208104336.3d5a7fb4@nehalam>
-	 <20091208185222.GA16303@tuxdriver.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-p6jEQ7MvDg3Czo5URP7I"
-Date: Tue, 08 Dec 2009 20:29:11 +0100
-Message-ID: <1260300551.32227.1.camel@johannes.local>
-Mime-Version: 1.0
+Subject: Re: Revised wireless tree management practices
+Date: Mon, 14 Dec 2009 15:16:12 +0100
+Cc: linux-wireless@vger.kernel.org, davem@davemloft.net
+References: <20091209211054.GB32058@tuxdriver.com>
+In-Reply-To: <20091209211054.GB32058@tuxdriver.com>
+MIME-Version: 1.0
+Message-Id: <200912141516.12224.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 09 December 2009 10:10:55 pm John W. Linville wrote:
+> Greetings,
+> 
+> So I'm tired of a) being asked how wireless-testing is managed; and,
+> b) having trouble explaining it.  I think it is time to move to a
+> more conventional process for wireless patches.
+> 
+> The main change I would like to make for now is to move wireless-2.6
+> and wireless-next-2.6 to a default "immutable history" policy.
+> By this I mean that I will strive to keep the history both clean
+> and immutable in those trees.  If for some reason I can't make that
+> happen and have to rebase those trees, I will make a loud and obvious
+> announcement on the linux-wireless mailing list.  More likely, it
+> means I may have to push an occasional revert through those trees
+> that I might have otherwise avoided.
+> 
+> One of the ramifications of this will be that I will need to be
+> extra careful about what gets merged into those trees.  I have been
+> pushing patches into those trees quickly after merging them into
+> wireless-testing, relying on linux-next to uncover some of the problems
+> a quick review might miss.  Now I will need to have higher confidence
+> in a patch before pushing it to wireless-next-2.6 or (especially)
+> wireless-2.6, so some patches may take longer to get there.  All of
+> your usual dilligent reviews are most helpful in this regard.
+> 
+> For now, the main change to wireless-testing will be that I will be
+> pulling from wireless-2.6 and wireless-next-2.6 rather than reapplying
+> most patches.  This should limit (and possibly eliminate) the confusing
+> patch-revert-reapply-repeat practice I have been using there for a
+> long time.  However, I still anticipate using w-t as a holding area
+> for questionable patches.  So, at least some patches may still get
+> the revert-reapply treatment.  I may ask Stephen to pull w-t into
+> linux-next in order to expand testing of any such patches.
+> 
+> One advantage to this new process is that it will enable me to more
+> readily accept actual git pull requests from driver/subsystem
+> maintainers.  In order for this to work, those maintainers will need to
+> send separate pull requests for fixes intended for the current release
+> and for features intended for the next release.  They will also need to
+> maintain their trees appropriately (i.e. separate trees or separate
+> branches with appropriate bases) for this to work.  If anyone is
+> interested in doing this, feel free to ask more questions.
+> 
+> Well, there is my overview.  Anyone have questions/objections/etc?
 
---=-p6jEQ7MvDg3Czo5URP7I
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Thanks John!  This sounds great (especially w-t part) and addresses large
+part of my past concerns regarding wireless/networking trees.
 
-On Tue, 2009-12-08 at 13:52 -0500, John W. Linville wrote:
+Now if only somebody could come up with a way to split 'monstermerges'
+for Linus tree into something more fine-grained (thousands of commits in
+a single merge is too much for anyone not directly involved into current
+networking developments IMHO) I would be completely satisfied. ;)
 
-> So, probably we need to map from the wlanX name to the phyY name,
-> then determine whether or not this is the first wlanX for phyY.
-> If not, then the name should be left alone.
->=20
-> Now, how do we figure out how many wlanX's belong to phyY?
-
-And what's the "first" one? :)
-
-ls /sys/class/net/wlan0/device/net/
-
-will give you the list of interface associated with this device.
-
-johannes
-
---=-p6jEQ7MvDg3Czo5URP7I
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLHqkDAAoJEODzc/N7+QmaI4EQAMVMb01v8sbI/pkeTlgDpnqA
-x0xrX32My+/6K46saNazBp+cMsbJogOazOyXYNKKuVdZ6RpKSJGqaCLbr5zjdzB4
-jYq5XQKYj/u3VZ5u562YudPK01yJrSXb0DDMHcv4bd6IzEWwgUCRaG5YtyN+PuDb
-LvaXeuMQYdLCM28xncyL8LAH1UbSJqOmo4hfVDCtUAE+JtGwkYAZ/cyW5cTnvMhx
-GdYaO6ls3qGyO9fDxT/PjXiaq4r3npv6esmz4qFYIU9ETh8HwGfLdu5TUTRHx1Ci
-t7hAJSD+4O5mI02EhzuFi1zAJpnZF1UM8WYtZ3Go6GIK6fRKAgwJLdPOOdDVbIjT
-gfY4SkMzuKq8g9Zp4snqOqm+2QAN9DOolBziPHCcwlGfHWMC9uWgQxcw6zdVYv8e
-02x+Qu25IA7ATt0vOMZRCegRTdDdXFk8NJgCgy5eXRQD92Oijb9NOYM2M5ZpyFGR
-ifCg0OQTgCSQXd9qgsAqF0WGNSqZUmpGddquKLyvcLP/Ux3TlsTOrFXCMRjX18uL
-/PjC3stmgdqDrp/0QzcsyP0UDQhFSa6xLxXdFEXK9JCdDq9B5xwCGWabtgK2ZFG/
-KYJAUoKFT5p3B9lGn/ic2Hh3K4MO41AuEnS1C01U1RBGvAt0b5IetqigOkiIz69I
-SAXCqVnRhsF7Dxxa9qLj
-=9jSp
------END PGP SIGNATURE-----
-
---=-p6jEQ7MvDg3Czo5URP7I--
-
+--
+Bartlomiej Zolnierkiewicz
