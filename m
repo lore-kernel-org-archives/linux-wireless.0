@@ -1,71 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:19026 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750906AbZLBFmZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2009 00:42:25 -0500
-Subject: Re: Panic in iwl3945 driver
-From: Zhu Yi <yi.zhu@intel.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1259659724.12157.110.camel@debian>
-References: <1259167780.4072.2.camel@maxim-laptop>
-	 <1259280022.3991.12.camel@maxim-laptop>
-	 <1259596551.4090.0.camel@maxim-laptop>  <1259617333.4653.91.camel@rc-desk>
-	 <1259620526.6559.34.camel@maxim-laptop> <1259659724.12157.110.camel@debian>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 02 Dec 2009 13:42:30 +0800
-Message-ID: <1259732550.12157.130.camel@debian>
-Mime-Version: 1.0
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:56359 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755585AbZLNTnq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Dec 2009 14:43:46 -0500
+Received: by ewy19 with SMTP id 19so3764991ewy.21
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 11:43:43 -0800 (PST)
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: David Miller <davem@davemloft.net>
+Subject: Re: Revised wireless tree management practices
+Date: Mon, 14 Dec 2009 20:42:13 +0100
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <200912141924.47370.bzolnier@gmail.com> <200912142016.00169.bzolnier@gmail.com> <20091214.112304.26981627.davem@davemloft.net>
+In-Reply-To: <20091214.112304.26981627.davem@davemloft.net>
+MIME-Version: 1.0
+Message-Id: <200912142042.13251.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-12-01 at 17:28 +0800, Zhu Yi wrote:
-> On Tue, 2009-12-01 at 06:35 +0800, Maxim Levitsky wrote:
-> > 0x000000000001668e <iwl3945_rx_reply_tx+302>:	lea    0x38(%r8),%rdi
-> > 0x0000000000016692 <iwl3945_rx_reply_tx+306>:	lea    0x4f(%r8),%rax
+On Monday 14 December 2009 08:23:04 pm David Miller wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Date: Mon, 14 Dec 2009 20:16:00 +0100
 > 
-> When this happened, from your previous post, r8 is 0x0 and rdi is 0x38.
-> Since "info" is %rdi (see below), this means
-> txq->txb[txq->q.read_ptr].skb[0], aka. r8 is 0.
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Date: Mon, 14 Dec 2009 20:16:00 +0100
 > 
-> > 	rate_idx = iwl3945_hwrate_to_plcp_idx(tx_resp->rate);
+> > On Monday 14 December 2009 07:41:24 pm David Miller wrote:
+> >> That's not true.  I use "gitk -- net/mac80211" all the time and it's
+> >> helped me find bugs.  Or try "gitk -- include/tcp* net/ipv4/tcp*" to
+> >> hunt down TCP regressions, etc.
 > > 
-> > 0x0000000000016696 <iwl3945_rx_reply_tx+310>:	movb   $0x0,0x9(%rdi)        <---------- RIP
-> > 0x000000000001669a <iwl3945_rx_reply_tx+314>:	movb   $0x0,0xc(%rdi)
-> > 0x000000000001669e <iwl3945_rx_reply_tx+318>:	movb   $0x0,0xf(%rdi)
-> > 0x00000000000166a2 <iwl3945_rx_reply_tx+322>:	movb   $0x0,0x12(%rdi)
-> > 0x00000000000166a6 <iwl3945_rx_reply_tx+326>:	movb   $0x0,0x15(%rdi)
+> > It helps but with more complex ones you're back to guesswork and applying
+> > by hand fixes for already fixed ages ago in-the-middle regressions.
 > 
-> This equals to below code in ieee80211_tx_info_clear_status(). "info" is
-> %rdi, which is 0x38. That matches NULL pointer dereference at 0x41 in
-> your oops header.
+> Examples?
 > 
-> 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
->                 info->status.rates[i].count = 0;
+> > commit d7fc02c7bae7b1cf69269992cf880a43a350cdaa
+> > Merge: ee1262d 28b4d5c
+> > Author: Linus Torvalds <torvalds@linux-foundation.org>
+> > Date:   Tue Dec 8 07:55:01 2009 -0800
+> > 
+> >     Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next-2.6
+> > 
+> >     * git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next-2.6: (1815 commits)
+> > 
+> > with completely insane amount of changes:
+> > 
+> >  1396 files changed, 113877 insertions(+), 71108 deletions(-)
+> > 
+> > You may say that I should be following the development as it happens but such
+> > strict requirement is not present in any other kernel subsystem tree.
 > 
-> I guess there is a race for txq->q.read_ptr somewhere. Haven't checked
-> though.
+> About 1400 is drivers/net and about 500 is net
+> 
+> It's going to be a lot of changes no matter how I or John split it
+> up.
 
-OK. 3945 updated write_ptr without regard to read_ptr on the Tx path.
-This messes up our TFD on high load. The patch should fix your problem.
+The problem is not the total number of changes but their amount in one go.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+> And guess what's just-as if not even more important?  A unified tree
+> makes things easier for me.  So unless you plan on applying 100
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 994db4a..b31b34c 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -548,6 +548,9 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	txq = &priv->txq[txq_id];
- 	q = &txq->q;
- 
-+	if ((iwl_queue_space(q) < q->high_mark))
-+		goto drop;
-+
- 	spin_lock_irqsave(&priv->lock, flags);
- 
- 	idx = get_cmd_index(q, q->write_ptr, 0);
- 
+[ 100 patches a day?  The math doesn't add up...? ]
 
+> patches a day for me and doing all the cross merges, that's how I plan
+> to keep doing things :-)
+
+Oh, feel free to do what works best for you. :)
+
+However looking at "Top non-author signoffs in 2.6.31" [1]:
+
+David S. Miller     964 10.1%
+Ingo Molnar         948 9.9%
+Greg Kroah-Hartman  582 6.1%
+...
+
+it seems that there are people able to do large upstream merges in much
+more transparent and reviewer-friendly way so it is not like there exists
+some real physical barrier for not even trying to do things better..
+
+[1] http://lwn.net/Articles/348445/
+--
+Bartlomiej Zolnierkiewicz
