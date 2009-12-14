@@ -1,66 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:37916 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754334AbZLHSuo convert rfc822-to-8bit (ORCPT
+Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:62967 "EHLO
+	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932625AbZLNVL0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 13:50:44 -0500
+	Mon, 14 Dec 2009 16:11:26 -0500
+Message-ID: <4B2690E0.6050604@gmail.com>
+Date: Mon, 14 Dec 2009 20:24:16 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20091208104336.3d5a7fb4@nehalam>
-References: <20091207172616.7470ed2b@nehalam> <20091208142940.GB15172@tuxdriver.com>
-	<20091208104336.3d5a7fb4@nehalam>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 8 Dec 2009 10:50:30 -0800
-Message-ID: <43e72e890912081050w265bcbc1sd1380ef52fc0799b@mail.gmail.com>
-Subject: Re: wireless device and udev
-To: Stephen Hemminger <shemminger@vyatta.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-hotplug@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH] rt2x00: Fix rt2800usb detection in rt2800lib.
+References: <1260661180-2300-1-git-send-email-gwingerde@gmail.com> <1260818004-22785-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1260818004-22785-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 8, 2009 at 10:43 AM, Stephen Hemminger
-<shemminger@vyatta.com> wrote:
-> On Tue, 8 Dec 2009 09:29:40 -0500
-> "John W. Linville" <linville@tuxdriver.com> wrote:
->
->> On Mon, Dec 07, 2009 at 05:26:16PM -0800, Stephen Hemminger wrote:
->> > The default udev persistent network rules based on hardware mac id doesn't
->> > work well when multiple SSID's are created on an access-point.  The command
->> >  iw phy phy0 interface add wlan1 type managed
->> >
->> > is supposed to make a device name wlan1, but udev sees that it has the same
->> > mac address as wlan0 and gets confused leaving the device named wlan1_rename
->> >
->> > It looks like wlanX is breaking assumptions of existing udev persistent network
->> > device name generation rules.  Perhaps there needs to be special case for wlanX
->> > devices?
->>
->> Yes, probably so.  But what would it be?  Factoring-in SSID is clearly
->> not right for the usual case (i.e. one interface on a mobile device).
->> I'm not sure what else one could use as a key.
->>
->> What does udev do for bridge, bond, or vlan devices?  Don't those
->> share MAC addresses with the underlying physical device?
->>
->> John
->
-> At least on ubuntu/debian the name whitelist is:
->
->
-> # device name whitelist
-> KERNEL!="eth*|ath*|wlan*[0-9]|msh*|ra*|sta*|ctc*|lcs*|hsi*", GOTO="persistent_net_generator_end"
->
-> So bond or bridge don't match and don't get tampered with.
->
-> The problem is that wlan* device names are used for both hardware and virtual
-> devices.  Udev scripts can be fixed "do the right thing" but there is not sufficient
-> information for the script to decide how to attach persistent name.
-> What values from sysfs (ie attributes) should script be using?  This probably
-> means that additional attributes needed to be added to wireless device infrastructure
-> in kernel.
+On 12/14/09 20:13, John W. Linville wrote:
+> From: Gertjan van Wingerde <gwingerde@gmail.com>
+> 
+> rt2800lib incorrectly detected whether RT2800USB was enabled because
+> it didn't account for a modularized RT2800USB driver.
+> 
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+> ---
+> I'm merging this version based on Randy's feedback...
+> 
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index eb1e1d0..6e13650 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -37,7 +37,7 @@
+>  #include <linux/module.h>
+>  
+>  #include "rt2x00.h"
+> -#ifdef CONFIG_RT2800USB
+> +#if defined(CONFIG_RT2800USB) || defined(CONFIG_RT2800USB_MODULE)
+>  #include "rt2x00usb.h"
+>  #endif
+>  #include "rt2800lib.h"
+> @@ -1121,7 +1121,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+>  
+>  	if (rt2x00_intf_is_usb(rt2x00dev)) {
+>  		rt2800_register_write(rt2x00dev, USB_DMA_CFG, 0x00000000);
+> -#ifdef CONFIG_RT2800USB
+> +#if defined(CONFIG_RT2800USB) || defined(CONFIG_RT2800USB_MODULE)
+>  		rt2x00usb_vendor_request_sw(rt2x00dev, USB_DEVICE_MODE, 0,
+>  					    USB_MODE_RESET, REGISTER_TIMEOUT);
+>  #endif
 
-We could likely use the new SET_NETDEV_DEVTYPE() but I have yet to see
-where this is exported. It must be there somewhere.
+Thanks, looks good to me.
 
-  Luis
+---
+Gertjan.
