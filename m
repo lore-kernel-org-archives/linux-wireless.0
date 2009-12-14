@@ -1,51 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu0-omc2-s22.blu0.hotmail.com ([65.55.111.97]:13069 "EHLO
-	blu0-omc2-s22.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751613AbZLWXTp convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 18:19:45 -0500
-Message-ID: <BLU113-W1995E3EABF85A087B10688BE800@phx.gbl>
-From: Mike Marchywka <marchywka@hotmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [OT?] anyone have bluetooth "mouse" drivers for a Storm or other
- phone?
-Date: Wed, 23 Dec 2009 18:19:44 -0500
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:34336 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932250AbZLNRpM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Dec 2009 12:45:12 -0500
 MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 14 Dec 2009 09:44:50 -0800
+Message-ID: <43e72e890912140944j1d07caeaq10bddb1d4be9dd7d@mail.gmail.com>
+Subject: Compat-wireless for 2.6.32
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2.6.32 went out last week, based on this release we now have a
+compat-wireless release [1]. You can find the wireless specific
+ChangeLog at orbit [2]. This package enables usage of the 2.6.32
+wireless subsystem on older kernels. For more information please refer
+to its upstream wiki [3]. If you find any issues with wireless on this
+package please report them [4] ASAP.
 
-I didn't want to show up on a new list and start posting a bunch of OT junk but
-this just came up and is arguably a "wireless" device requiring a driver( and it
-is the holidays so maybe people have more time for stuff like this). Has anyone
-tried to use a Storm of other phone as a mouse for a desktop or laptop with
-a bluetooth interface? I was suggesting using the accelerometer to detect motion
-but I think the respondent here was talking about using touch screen, 
+  Luis
 
-http://supportforums.blackberry.com/t5/Java-Development/anyone-tried-to-use-Storm-as-a-bluetooth-mouse-is-18mG/td-p/405013
-
-
-Thanks.
-
-
-
-
-note new address
-Mike Marchywka
-1975 Village Round
-Marietta GA 30064
-415-264-8477 (w)<- use this
-404-788-1216 (C)<- leave message
-989-348-4796 (P)<- emergency only
-marchywka@hotmail.com
-Note: If I am asking for free stuff, I normally use for hobby/non-profit
-information but may use in investment forums, public and private.
-Please indicate any concerns if applicable.
-
-
-
- 		 	   		  
-_________________________________________________________________
-Hotmail: Powerful Free email with security by Microsoft.
-http://clk.atdmt.com/GBL/go/171222986/direct/01/
+[1] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.32/compat-wireless-2.6.32.tar.bz2
+[2] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.32/ChangeLog-2.6.32-wireless
+[3] http://wireless.kernel.org/en/users/Download/stable
+[4] http://wireless.kernel.org/en/users/Documentation/Reporting_bugs
