@@ -1,24 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:62501 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755169AbZLHOV7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 09:21:59 -0500
-From: Stefan Seyfried <stefan.seyfried@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Stefan Seyfried <seife@sphairon.com>
-Subject: [PATCH 0/2] Add support for Sphairon Homelink 1202 USB WLAN
-Date: Tue,  8 Dec 2009 15:21:33 +0100
-Message-Id: <1260282095-17042-1-git-send-email-stefan.seyfried@googlemail.com>
+Received: from 007.netroom.de ([194.0.247.207]:10915 "EHLO 007.netroom.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760404AbZLOO7Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Dec 2009 09:59:24 -0500
+Message-ID: <4B27A443.6040908@draisberghof.de>
+Date: Tue, 15 Dec 2009 15:59:15 +0100
+From: Josua Dietze <digidietze@draisberghof.de>
+MIME-Version: 1.0
+To: Stefan Seyfried <stefan.seyfried@googlemail.com>
+CC: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+	Stefan Seyfried <seife@sphairon.com>
+Subject: Re: [PATCH] move eject code from zd1211rw to usb-storage
+References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com>	<4B278191.1010009@draisberghof.de> <20091215150137.46bd9817@strolchi.home.s3e.de>
+In-Reply-To: <20091215150137.46bd9817@strolchi.home.s3e.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stefan Seyfried <seife@sphairon.com>
+Stefan Seyfried schrieb:
+ > But given that there is already an "option_zero_cd" parameter in
 
-The following two trivial patches add support for this device to
-zd1211rw (ejecting the virtual USB drive) and ar9170usb (that drives
-the WLAN chip inside).
+> usb-storage, it should be easy to massage this into a general "do not
+> eject virtual installer media" flag so that people are still able to
+> get the windows driver files off their devices should they need to do
+> so.
+> 
+>> I'd like to see these devices removed from unusual_devs.h.
+> 
+> I'd like them to work with one driver, not two (one in kernel and one
+> in userspace).
 
-Best regards,
 
-	Stefan Seyfried
+The more basic arguments that prevailed at the last time such an 
+"eject" command was being considered for inclusion into usb-storage 
+were:
+
+1. Userspace can obviously react a lot quicker than kernel space to 
+new or changed devices popping up.
+
+2. Userspace works with older kernels immediately.
+
+> That's a fundamental difference in opinions, and I fear I'm not the one
+> who is going to decice how this will be handled ;)
+
+
+Neither am I. But the number of known mode-switching USB devices is 
+now at around 50. New ones are arriving by the month or even week.
+
+A decision to handle *all of them* in usb-storage would lead to the 
+disadvantages pointed out.
+
+A decision to handle just *some of them* can hardly be made 
+plausible if there are no immediate technical reasons.
+
+Oh, and in most cases (including your suggestion) there *are* 
+already two drivers necessary to make these devices work, 
+independent of where the switching is happening ...
+
+> Have fun,
+
+You too!
+
+Josh
+-- 
+Man is the only creature on earth enabled to take a
+warm meal while flying!                      Loriot
