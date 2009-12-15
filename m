@@ -1,83 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:17859 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932480AbZLNTRv (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50198 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933240AbZLOSH3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 14:17:51 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so940907eyd.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 11:17:49 -0800 (PST)
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: David Miller <davem@davemloft.net>
-Subject: Re: Revised wireless tree management practices
-Date: Mon, 14 Dec 2009 20:16:00 +0100
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <200912141720.11465.bzolnier@gmail.com> <200912141924.47370.bzolnier@gmail.com> <20091214.104124.98693961.davem@davemloft.net>
-In-Reply-To: <20091214.104124.98693961.davem@davemloft.net>
-MIME-Version: 1.0
-Message-Id: <200912142016.00169.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+	Tue, 15 Dec 2009 13:07:29 -0500
+Subject: Re: [PATCH 2/5] mac80211: Add new callback set_coverage_class
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?UTF-8?Q?Luk=C3=A1=C5=A1?= Turek <8an@praha12.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+In-Reply-To: <1260899813-17585-3-git-send-email-8an@praha12.net>
+References: <1260899813-17585-1-git-send-email-8an@praha12.net>
+	 <1260899813-17585-3-git-send-email-8an@praha12.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-krd/pGzQTwRvBRX9gtJG"
+Date: Tue, 15 Dec 2009 19:07:20 +0100
+Message-ID: <1260900440.10356.56.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 14 December 2009 07:41:24 pm David Miller wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Date: Mon, 14 Dec 2009 19:24:47 +0100
-> 
-> > On Monday 14 December 2009 07:03:45 pm David Miller wrote:
-> >> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> >> Date: Mon, 14 Dec 2009 17:20:11 +0100
-> >> 
-> >> > Well, in theory all maintainers should be testing -next kernels
-> >> > so nothing should change also in this regard.
-> >> 
-> >> You conveniently did not quote and respond to my comments showing that
-> >> you can ask git tools to seperate out the changesets for you, regardless
-> >> of what subsystem maintainers decide to do.
-> >> 
-> >> Power is in your hands, really. :-)
-> > 
-> > That is simply untrue from Linus' kernel point of view.
-> > 
-> > Each networking merge contains multiple sub-merges from wireless tree
-> > (at random points in networking tree history) which in turn may contain
-> > multiple sub-merges from Johannes (at random points in wireless tree
-> > history) and wireless driver sub-projects so unless you are a hardcore
-> > networking/wireless developer it is practically impossible to make
-> > a sense out of it in a reasonable time.
-> 
-> That's not true.  I use "gitk -- net/mac80211" all the time and it's
-> helped me find bugs.  Or try "gitk -- include/tcp* net/ipv4/tcp*" to
-> hunt down TCP regressions, etc.
 
-It helps but with more complex ones you're back to guesswork and applying
-by hand fixes for already fixed ages ago in-the-middle regressions.
+--=-krd/pGzQTwRvBRX9gtJG
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-However that's not the main point here.
 
-With almost all other major trees I'm able to stay more-or-less informed on
-what is being merged to Linus tree and follow the development thanks to well
-fine-grained pull requests (up to few hundred commit in one go, very often
-accompanied by combined diff).
+> +	if (changed & WIPHY_PARAM_COVERAGE_CLASS) {
+> +		if (!local->ops->set_coverage_class)
+> +			return -EOPNOTSUPP;
+> +		local->ops->set_coverage_class(&local->hw,
+> +					       wiphy->coverage_class);
+> +	}
 
-The networking is unfortunate exception with thousands of commits in one go,
-i.e. for 2.6.33 "merge window" it was 1815 (!) commits:
+You should have a drv_ inline wrapper, tracer and a might_sleep() in
+that.
 
-commit d7fc02c7bae7b1cf69269992cf880a43a350cdaa
-Merge: ee1262d 28b4d5c
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Tue Dec 8 07:55:01 2009 -0800
+johannes
 
-    Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next-2.6
+--=-krd/pGzQTwRvBRX9gtJG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-    * git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next-2.6: (1815 commits)
+-----BEGIN PGP SIGNATURE-----
 
-with completely insane amount of changes:
+iQIcBAABAgAGBQJLJ9BUAAoJEODzc/N7+QmadP0QAKaYWxzxUsgBmmjqFjVNivpV
+DpqN6qBsdJXJBlz7q9SlgtzY+RtLekMye3QktejKgrSYTau0dOEyYRaV5U/TYjyI
+4bXfO7BGDOOl8MQLEOKJh5SADdaLH6wyafwV31ptz2i/1Vgtps5hUoTD9IY6T5vV
+/RyMHePPBjzcFXU8ujuG63fHcTjqoQLhTakhDkvtzmp2udJSwXrrKb94uOrjt8u6
+SXrvF93rQMd2Ec+QJ61puzFe+KXlpudjGPlLlT8WSbWIgt9WhMRTDTa4I8B+rCTn
+nBuk9FhQWviSCSaDOSoZayL2Cs/Wx1PAIaLlhMj9BOatymAKPwcOCYLiiB0BbofA
+aS0EnyM2Nl/LuMGgMVco+TU5l/U0hiuNDTIRLwtYOCc9qSUu8sBmYsMUu4iA1mIA
+amDZltd+3BV+IOp02uAhabuAivA1OwTMBez7g6a4RRmQex7Muy8hIffcJ8V3KqOl
+OHsInBxnIk7oOHNSSaJb+AZdqHuxR9vgsXwG93y5BskCfHZBNlQA7txm4/1xfmX1
+n3uaN3R3I9/fhmmoDTk3YCEybUuV628WyfwGOENzo9Ql4lNJM1NagL9HAh87m90s
+usNZW0LjKWy6275OULmoumBHnHw2rYAqs7hLKxFhLBDtwEodQIbmKkYD0V8YpLuS
+70HGv9a/McmlOOgwsugt
+=poH0
+-----END PGP SIGNATURE-----
 
- 1396 files changed, 113877 insertions(+), 71108 deletions(-)
+--=-krd/pGzQTwRvBRX9gtJG--
 
-You may say that I should be following the development as it happens but such
-strict requirement is not present in any other kernel subsystem tree.
-
---
-Bartlomiej Zolnierkiewicz
