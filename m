@@ -1,38 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36360 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756180AbZLYQpa (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:56587 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760247AbZLOOBn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Dec 2009 11:45:30 -0500
-Date: Fri, 25 Dec 2009 11:38:01 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-12-24
-Message-ID: <20091225163801.GA4481@tuxdriver.com>
-References: <20091224204722.GA678@tuxdriver.com> <20091224.135314.193725771.davem@davemloft.net> <20091225044759.GA11186@tuxdriver.com> <20091225005142.ixwgpr0dcg4cc48w-cebfxv@webmail.spamcop.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091225005142.ixwgpr0dcg4cc48w-cebfxv@webmail.spamcop.net>
+	Tue, 15 Dec 2009 09:01:43 -0500
+Date: Tue, 15 Dec 2009 15:01:37 +0100
+From: Stefan Seyfried <stefan.seyfried@googlemail.com>
+To: Josua Dietze <digidietze@draisberghof.de>
+Cc: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+	Stefan Seyfried <seife@sphairon.com>
+Subject: Re: [PATCH] move eject code from zd1211rw to usb-storage
+Message-ID: <20091215150137.46bd9817@strolchi.home.s3e.de>
+In-Reply-To: <4B278191.1010009@draisberghof.de>
+References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com>
+	<4B278191.1010009@draisberghof.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 25, 2009 at 12:51:42AM -0500, Pavel Roskin wrote:
-> Quoting "John W. Linville" <linville@tuxdriver.com>:
->
->> Hmm...well, I'm at a loss.  It certainly works here. :-)
->
-> You may want to see this discussion in LKML:
-> http://thread.gmane.org/gmane.linux.kernel/928654/
->
-> The error messages look differently though.  Anyway, genregdb.awk  
-> appears to require gawk.
+Hi,
 
-Perhaps, but not intentionally.  Hopefully the patch I posted is
-sufficient to get things working for non-gawk users...?
+On Tue, 15 Dec 2009 13:31:13 +0100
+Josua Dietze <digidietze@draisberghof.de> wrote:
 
-John
+> Stefan Seyfried schrieb:
+> 
+> > The USB ID claimed by zd1211rw for the fake storage device is
+> > also in use by other, non-zd1211rw devices (Sphairon Homelink
+> > 1202). Move the eject of these devices to where it belongs and
+> > where all the needed infrastructure already exists: usb-storage.
+> 
+> We can do the eject (as other mode switches) in userspace. Previous 
+> discussions pointed into that direction.
+
+Well, the zd1211rw already did that, I wanted to fix that up and was
+told to do it in usb-storage instead (which, looking at the diffstat,
+seems like a good idea).
+
+> And there is always the question of being able to access the "fake 
+> CD-ROM" without hacking the kernel.
+
+I was thinking that I would be able to achieve that by echoing an
+appropriate quirk into /sys/module/usb-storage/parameters/quirks,
+however, I could not get it to *not* eject the device.
+But given that there is already an "option_zero_cd" parameter in
+usb-storage, it should be easy to massage this into a general "do not
+eject virtual installer media" flag so that people are still able to
+get the windows driver files off their devices should they need to do
+so.
+
+> I'd like to see these devices removed from unusual_devs.h.
+
+I'd like them to work with one driver, not two (one in kernel and one
+in userspace).
+
+That's a fundamental difference in opinions, and I fear I'm not the one
+who is going to decice how this will be handled ;)
+
+Have fun,
+
+	Stefan
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Stefan Seyfried
+
+"Any ideas, John?"
+"Well, surrounding them's out."
