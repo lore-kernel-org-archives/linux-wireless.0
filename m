@@ -1,30 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:34336 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932250AbZLNRpM (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:61660 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750753AbZLOPIP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 12:45:12 -0500
+	Tue, 15 Dec 2009 10:08:15 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 17/19] [RFC, v2] libertas: Kconfig entry for libertas+cfg80211
+Date: Tue, 15 Dec 2009 16:06:46 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Dan Williams <dcbw@redhat.com>
+References: <20091022133043.185554096@mail.mn-solutions.de> <200912151544.00402.hs4233@mail.mn-solutions.de> <1260888730.10356.9.camel@johannes.local>
+In-Reply-To: <1260888730.10356.9.camel@johannes.local>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 14 Dec 2009 09:44:50 -0800
-Message-ID: <43e72e890912140944j1d07caeaq10bddb1d4be9dd7d@mail.gmail.com>
-Subject: Compat-wireless for 2.6.32
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200912151606.46549.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.32 went out last week, based on this release we now have a
-compat-wireless release [1]. You can find the wireless specific
-ChangeLog at orbit [2]. This package enables usage of the 2.6.32
-wireless subsystem on older kernels. For more information please refer
-to its upstream wiki [3]. If you find any issues with wireless on this
-package please report them [4] ASAP.
+> I'd rather have new mesh commands. Right now, mesh
+> joining/leaving is implicit with interface up/down after you
+> set mesh parameters, but that's not very flexible.
 
-  Luis
+The mesh of Libertas' seems to be very different from "other" 
+meshes, do you really want new nl80211 commands that seems 
+almost proprietary?
 
-[1] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.32/compat-wireless-2.6.32.tar.bz2
-[2] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.32/ChangeLog-2.6.32-wireless
-[3] http://wireless.kernel.org/en/users/Download/stable
-[4] http://wireless.kernel.org/en/users/Documentation/Reporting_bugs
+For example, "iw dev wlan0 set mesh_param" gives me lots of 
+parameters, but none of them is a SSID. And many of those 
+parameters don't seem to have an equivalent of Libertas' mesh.
+
+-- 
+http://www.holgerschurig.de
