@@ -1,69 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:50805 "EHLO
-	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752667AbZLAWJJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 17:09:09 -0500
-Message-ID: <4B15940A.8070304@gmail.com>
-Date: Tue, 01 Dec 2009 23:09:14 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:53755 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750742AbZLOFBx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Dec 2009 00:01:53 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 21:01:53 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-To: Ivo van Doorn <ivdoorn@gmail.com>
-CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Benoit Papillault <benoit.papillault@free.fr>
-Subject: Re: [PATCH v3 4/4] rt2x00: Only remove L2 padding in received frames
- if there is payload.
-References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com> <200912012016.03145.IvDoorn@gmail.com> <4B1585BC.60700@gmail.com> <200912012257.02397.IvDoorn@gmail.com>
-In-Reply-To: <200912012257.02397.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19239.6382.946135.302792@gargle.gargle.HOWL>
+Date: Tue, 15 Dec 2009 10:34:46 +0530
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/6] ath9k: Fix bug in assigning sequence number
+In-Reply-To: <43e72e890912140658x3a12d554ta904ed63a0d1c75b@mail.gmail.com>
+References: <19238.1248.439940.601526@gargle.gargle.HOWL>
+	<43e72e890912140658xa88e8feq9589b29448d5d7e4@mail.gmail.com>
+	<43e72e890912140658x3a12d554ta904ed63a0d1c75b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/01/09 22:57, Ivo van Doorn wrote:
-> On Tuesday 01 December 2009, Gertjan van Wingerde wrote:
->> On 12/01/09 20:16, Ivo van Doorn wrote:
->>> On Monday 30 November 2009, Gertjan van Wingerde wrote:
->>>> L2 padding will only be present when there is actual payload present.
->>>>
->>>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
->>>> ---
->>>>  drivers/net/wireless/rt2x00/rt2x00dev.c |    4 +++-
->>>>  1 files changed, 3 insertions(+), 1 deletions(-)
->>>>
->>>> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
->>>> index ca2bcc0..b93731b 100644
->>>> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
->>>> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
->>>> @@ -401,7 +401,9 @@ void rt2x00lib_rxdone(struct rt2x00_dev *rt2x00dev,
->>>>  	    (rxdesc.flags & RX_FLAG_IV_STRIPPED))
->>>>  		rt2x00crypto_rx_insert_iv(entry->skb, header_length,
->>>>  					  &rxdesc);
->>>> -	else if (rxdesc.dev_flags & RXDONE_L2PAD)
->>>> +	else if (header_length &&
->>>> +		 (rxdesc.size > header_length) &&
->>>> +		 (rxdesc.dev_flags & RXDONE_L2PAD))
->>>>  		rt2x00queue_remove_l2pad(entry->skb, header_length);
->>>>  	else
->>>>  		rt2x00queue_align_payload(entry->skb, header_length);
->>>
->>> Is there a scenario where header_lenght can be 0?
->>> And if there is, shouldn't we have bailed-out completely already?
->>>
->>
->> Actually, there is. ieee80211_get_hdrlen_from_skb returns 0 when it detects that
->> the skb is actually shorter than it should be (according to the frame type indicated
->> by the frame_control field).
->> I'm using that here to check whether actually any payload is present, as a value of 0
->> means that there isn't even a full header.
->> We should still pass on the frame in that case, for the monitor interfaces.
+Luis R. Rodriguez wrote:
+> On Mon, Dec 14, 2009 at 6:58 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > On Mon, Dec 14, 2009 at 1:26 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> >> The internal, driver-specific maintenance of sequence
+> >> numbers is applicable only for HT frames.
+> >>
+> >> Also, remove comments that are not relevant anymore.
+> >>
+> >> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> >
+> > Is this cc: stable?
 > 
-> Ok, then we should pass it to mac80211, but we better use a goto or something to
-> skip all frame manipulation (like the rt2x00crypto_rx_insert_iv and rt2x00queue_align_payload)
-> as well.
-> 
+> Also what bug does this fix, the commit log in no way explains any of this.
 
-Good point. Can we do that as a follow-up patch?
+The patch just removes redundant maintenance of sequence numbers in the code.
 
----
-Gertjan.
-
+Sujith
