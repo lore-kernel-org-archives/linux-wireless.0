@@ -1,86 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55880 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752446AbZLBLsN (ORCPT
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:46213 "EHLO
+	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754300AbZLOPvt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2009 06:48:13 -0500
-Message-Id: <20091202114646.607546955@sipsolutions.net>
-Date: Wed, 02 Dec 2009 12:43:42 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+	Tue, 15 Dec 2009 10:51:49 -0500
+Received: by fxm21 with SMTP id 21so2273fxm.21
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2009 07:51:47 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Gerhard van Gorkum <gerhard7@gmail.com>
+Subject: Re: p54: unknown rssi calibration data packing
+Date: Tue, 15 Dec 2009 16:51:39 +0100
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/6] cfg80211: avoid sending spurious deauth to userspace
-References: <20091202114341.088046714@sipsolutions.net>
-Mime-Version: 1.0
+References: <1260875438.8291.8.camel@linus1.gentoo.dynalias.org>
+In-Reply-To: <1260875438.8291.8.camel@linus1.gentoo.dynalias.org>
+MIME-Version: 1.0
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_MC7JLuOQCqmff0T"
+Message-Id: <200912151651.40220.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Before
-  commit ca9034592823e8179511e48a78731f95bfdd766c
-  Author: Holger Schurig <hs4233@mail.mn-solutions.de>
-  Date:   Tue Oct 13 13:45:28 2009 +0200
+--Boundary-00=_MC7JLuOQCqmff0T
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
 
-      cfg80211: remove warning in deauth case
+On Tuesday 15 December 2009 12:10:38 Gerhard van Gorkum wrote:
+> Hello,
+> 
+> I have 3 Dell 1450 Wireless USB adapters, and 2 of them give me issues
+> with 'unknown rssi calibration data packing'.  Should I just report it
+> here?
+yes.
 
-we assumed that drivers never give us spurious deauth
-frames because they filter them out based on the auth
-state they keep track of. This turned out to be racy,
-because userspace might deauth while the AP is also
-sending a deauth frame, so the warning was removed.
+Do you know the hardware revisions of all three devices?
+(Usually, this is written on the sticker at the bottom).
+A lsusb -v of all three would be nice as well.
 
-However, in that case we should not tell userspace
-about the AP's frame if it requested deauth "first",
-where "first" means it came to cfg80211 first.
+> phy2: p54 detected a LM87 firmware
+> phy2: unknown rssi calibration data packing  type:(1908) len:14.
+> rssical:00 00 8f 09 87 00 71 fe 78 14 81 00 7c fe        ......q.x...|.
+> phy2: please report this issue.
+> phy2: hwaddr 00:14:a5:95:5e:78, MAC:isl3892 RF:Xbow
+Gee! No wonder the drivers complains: They put an extra 2 NULL bytes header
+before the calibration data. I've no idea why, but I can give you a workaround
+(see attached patch) to fix the issue (for now).
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/mlme.c |   11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+> phy3: p54 detected a LM87 firmware
+> phy3: unknown rssi calibration data packing  type:(1908) len:14.
+> rssical:00 00 8f 09 85 00 76 fe 78 14 81 00 7c fe        ......v.x...|.
+> phy3: please report this issue.
+> phy3: hwaddr 00:14:a5:d0:0a:1a, MAC:isl3892 RF:Xbow
+Interesting: Same problem, but different 2.4GHz data.
+maybe you got 2 different (preproduction)-revisions? 
 
---- wireless-testing.orig/net/wireless/mlme.c	2009-12-01 18:26:53.000000000 +0100
-+++ wireless-testing/net/wireless/mlme.c	2009-12-01 18:26:59.000000000 +0100
-@@ -137,22 +137,23 @@ void __cfg80211_send_deauth(struct net_d
- 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)buf;
- 	const u8 *bssid = mgmt->bssid;
+Regards,
+	Chr
+
+--Boundary-00=_MC7JLuOQCqmff0T
+Content-Type: text/x-patch;
+  charset="iso-8859-15";
+  name="p54-eeprom-wa-for-special-dell-1450usb-rssical.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="p54-eeprom-wa-for-special-dell-1450usb-rssical.diff"
+
+diff --git a/drivers/net/wireless/p54/eeprom.c b/drivers/net/wireless/p54/eeprom.c
+index 8e3818f..8497c96 100644
+--- a/drivers/net/wireless/p54/eeprom.c
++++ b/drivers/net/wireless/p54/eeprom.c
+@@ -417,6 +417,17 @@ static void p54_parse_rssical(struct ieee80211_hw *dev, void *data, int len,
+ 	int num_entries = (type == PDR_RSSI_LINEAR_APPROXIMATION) ? 1 : 2;
  	int i;
-+	bool found = false;
  
- 	ASSERT_WDEV_LOCK(wdev);
- 
--	nl80211_send_deauth(rdev, dev, buf, len, GFP_KERNEL);
--
- 	if (wdev->current_bss &&
- 	    memcmp(wdev->current_bss->pub.bssid, bssid, ETH_ALEN) == 0) {
- 		cfg80211_unhold_bss(wdev->current_bss);
- 		cfg80211_put_bss(&wdev->current_bss->pub);
- 		wdev->current_bss = NULL;
-+		found = true;
- 	} else for (i = 0; i < MAX_AUTH_BSSES; i++) {
- 		if (wdev->auth_bsses[i] &&
- 		    memcmp(wdev->auth_bsses[i]->pub.bssid, bssid, ETH_ALEN) == 0) {
- 			cfg80211_unhold_bss(wdev->auth_bsses[i]);
- 			cfg80211_put_bss(&wdev->auth_bsses[i]->pub);
- 			wdev->auth_bsses[i] = NULL;
-+			found = true;
- 			break;
- 		}
- 		if (wdev->authtry_bsses[i] &&
-@@ -160,10 +161,16 @@ void __cfg80211_send_deauth(struct net_d
- 			cfg80211_unhold_bss(wdev->authtry_bsses[i]);
- 			cfg80211_put_bss(&wdev->authtry_bsses[i]->pub);
- 			wdev->authtry_bsses[i] = NULL;
-+			found = true;
- 			break;
- 		}
- 	}
- 
-+	if (!found)
-+		return;
++	/*
++	 * Workaround for _some_ Dell 1450 Wireless USB adapters revisions
++	 *
++	 * For no apparent reason Dell decided to add an extra 2-byte NULL
++	 * array at the beginning of the rssi calibration parameter table.
++	 */
++	if (len == 14) {
++		data += 2;
++		len -= 2;
++	}
 +
-+	nl80211_send_deauth(rdev, dev, buf, len, GFP_KERNEL);
-+
- 	if (wdev->sme_state == CFG80211_SME_CONNECTED) {
- 		u16 reason_code;
- 		bool from_ap;
+ 	if (len != (entry_size * num_entries)) {
+ 		printk(KERN_ERR "%s: unknown rssi calibration data packing "
+ 				 " type:(%x) len:%d.\n",
 
-
+--Boundary-00=_MC7JLuOQCqmff0T--
