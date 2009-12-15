@@ -1,70 +1,261 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33915 "HELO
+Received: from xc.sipsolutions.net ([83.246.72.84]:33644 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753261AbZLMNKv (ORCPT
+	with ESMTP id S933057AbZLOUK5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Dec 2009 08:10:51 -0500
-Subject: Re: [PATCH] rtl8180: Remove usage of deprecated 'qual'
+	Tue, 15 Dec 2009 15:10:57 -0500
+Message-Id: <20091215200739.661125708@sipsolutions.net>
+Date: Tue, 15 Dec 2009 21:06:22 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20091213012232.GA12937@tuxdriver.com>
-References: <4b242f9e.4JOejhV35R7ixmmP%Larry.Finger@lwfinger.net>
-	 <20091213012232.GA12937@tuxdriver.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-kboGyy/fZrZKutdLoVl3"
-Date: Sun, 13 Dec 2009 14:10:39 +0100
-Message-ID: <1260709839.2442.337.camel@johannes.local>
+To: linux-wireless@vger.kernel.org
+Cc: Pavel Roskin <proski@gnu.org>
+Subject: [RFC/RFT 4/5] mac80211: move control.hw_key assignment
+References: <20091215200618.253970634@sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When mac80211 asks a driver to encrypt a frame, it
+must assign the control.hw_key pointer for it to
+know which key to use etc. Currently, mac80211 does
+this whenever it would software-encrypt a frame.
 
---=-kboGyy/fZrZKutdLoVl3
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Change the logic of this code to assign the hw_key
+pointer when selecting the key, and later check it
+when deciding whether to encrypt the frame or let
+it be encrypted by the hardware. This allows us to
+later simply skip the encryption function since it
+no longer modifies the TX control.
 
-On Sat, 2009-12-12 at 20:22 -0500, John W. Linville wrote:
-> On Sat, Dec 12, 2009 at 06:04:46PM -0600, Larry Finger wrote:
-> > When building rtl8180, the following warning occurs:
-> >=20
-> >   CC [M]  drivers/net/wireless/rtl818x/rtl8180_dev.o
-> > drivers/net/wireless/rtl818x/rtl8180_dev.c: In function =E2=80=98rtl818=
-0_handle_rx=E2=80=99:
-> > drivers/net/wireless/rtl818x/rtl8180_dev.c:135: warning: =E2=80=98qual=
-=E2=80=99 is deprecated
-> >     (declared at include/net/mac80211.h:562)
-> >=20
-> > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->=20
-> FWIW, I think Johannes has a hunk like this in his patch to finally
-> remove qual.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/tkip.c |   11 +++++-----
+ net/mac80211/tx.c   |    9 ++++++++
+ net/mac80211/wep.c  |   18 ++++++++--------
+ net/mac80211/wpa.c  |   57 ++++++++++++++++++++--------------------------------
+ 4 files changed, 46 insertions(+), 49 deletions(-)
 
-I do, but feel free to take Larry's patch first and then ignore the hunk
-in mine.
+--- wireless-testing.orig/net/mac80211/tkip.c	2009-12-15 20:42:43.000000000 +0100
++++ wireless-testing/net/mac80211/tkip.c	2009-12-15 20:45:48.000000000 +0100
+@@ -195,11 +195,13 @@ void ieee80211_get_tkip_key(struct ieee8
+ }
+ EXPORT_SYMBOL(ieee80211_get_tkip_key);
+ 
+-/* Encrypt packet payload with TKIP using @key. @pos is a pointer to the
++/*
++ * Encrypt packet payload with TKIP using @key. @pos is a pointer to the
+  * beginning of the buffer containing payload. This payload must include
+- * headroom of eight octets for IV and Ext. IV and taildroom of four octets
+- * for ICV. @payload_len is the length of payload (_not_ including extra
+- * headroom and tailroom). @ta is the transmitter addresses. */
++ * the IV/Ext.IV and space for (taildroom) four octets for ICV.
++ * @payload_len is the length of payload (_not_ including IV/ICV length).
++ * @ta is the transmitter addresses.
++ */
+ void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
+ 				 struct ieee80211_key *key,
+ 				 u8 *pos, size_t payload_len, u8 *ta)
+@@ -214,7 +216,6 @@ void ieee80211_tkip_encrypt_data(struct 
+ 
+ 	tkip_mixing_phase2(tk, ctx, ctx->iv16, rc4key);
+ 
+-	pos = ieee80211_tkip_add_iv(pos, key, key->u.tkip.tx.iv16);
+ 	ieee80211_wep_encrypt_data(tfm, rc4key, 16, pos, payload_len);
+ }
+ 
+--- wireless-testing.orig/net/mac80211/wpa.c	2009-12-15 20:42:43.000000000 +0100
++++ wireless-testing/net/mac80211/wpa.c	2009-12-15 20:45:48.000000000 +0100
+@@ -31,8 +31,8 @@ ieee80211_tx_h_michael_mic_add(struct ie
+ 	unsigned int hdrlen;
+ 	struct ieee80211_hdr *hdr;
+ 	struct sk_buff *skb = tx->skb;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	int authenticator;
+-	int wpa_test = 0;
+ 	int tail;
+ 
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+@@ -47,16 +47,15 @@ ieee80211_tx_h_michael_mic_add(struct ie
+ 	data = skb->data + hdrlen;
+ 	data_len = skb->len - hdrlen;
+ 
+-	if ((tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) &&
++	if (info->control.hw_key &&
+ 	    !(tx->flags & IEEE80211_TX_FRAGMENTED) &&
+-	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) &&
+-	    !wpa_test) {
+-		/* hwaccel - with no need for preallocated room for MMIC */
++	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC)) {
++		/* hwaccel - with no need for SW-generated MMIC */
+ 		return TX_CONTINUE;
+ 	}
+ 
+ 	tail = MICHAEL_MIC_LEN;
+-	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
++	if (!info->control.hw_key)
+ 		tail += TKIP_ICV_LEN;
+ 
+ 	if (WARN_ON(skb_tailroom(skb) < tail ||
+@@ -147,17 +146,16 @@ static int tkip_encrypt_skb(struct ieee8
+ 	int len, tail;
+ 	u8 *pos;
+ 
+-	if ((tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) &&
+-	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
+-		/* hwaccel - with no need for preallocated room for IV/ICV */
+-		info->control.hw_key = &tx->key->conf;
++	if (info->control.hw_key &&
++	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
++		/* hwaccel - with no need for software-generated IV */
+ 		return 0;
+ 	}
+ 
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	len = skb->len - hdrlen;
+ 
+-	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
++	if (info->control.hw_key)
+ 		tail = 0;
+ 	else
+ 		tail = TKIP_ICV_LEN;
+@@ -175,13 +173,11 @@ static int tkip_encrypt_skb(struct ieee8
+ 	if (key->u.tkip.tx.iv16 == 0)
+ 		key->u.tkip.tx.iv32++;
+ 
+-	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
+-		/* hwaccel - with preallocated room for IV */
+-		ieee80211_tkip_add_iv(pos, key, key->u.tkip.tx.iv16);
++	pos = ieee80211_tkip_add_iv(pos, key, key->u.tkip.tx.iv16);
+ 
+-		info->control.hw_key = &tx->key->conf;
++	/* hwaccel - with software IV */
++	if (info->control.hw_key)
+ 		return 0;
+-	}
+ 
+ 	/* Add room for ICV */
+ 	skb_put(skb, TKIP_ICV_LEN);
+@@ -363,24 +359,20 @@ static int ccmp_encrypt_skb(struct ieee8
+ 	int hdrlen, len, tail;
+ 	u8 *pos, *pn;
+ 	int i;
+-	bool skip_hw;
+-
+-	skip_hw = (tx->key->conf.flags & IEEE80211_KEY_FLAG_SW_MGMT) &&
+-		ieee80211_is_mgmt(hdr->frame_control);
+ 
+-	if ((tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) &&
+-	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) &&
+-	    !skip_hw) {
+-		/* hwaccel - with no need for preallocated room for CCMP
+-		 * header or MIC fields */
+-		info->control.hw_key = &tx->key->conf;
++	if (info->control.hw_key &&
++	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
++		/*
++		 * hwaccel has no need for preallocated room for CCMP
++		 * header or MIC fields
++		 */
+ 		return 0;
+ 	}
+ 
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	len = skb->len - hdrlen;
+ 
+-	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
++	if (info->control.hw_key)
+ 		tail = 0;
+ 	else
+ 		tail = CCMP_MIC_LEN;
+@@ -405,11 +397,9 @@ static int ccmp_encrypt_skb(struct ieee8
+ 
+ 	ccmp_pn2hdr(pos, pn, key->conf.keyidx);
+ 
+-	if ((key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) && !skip_hw) {
+-		/* hwaccel - with preallocated room for CCMP header */
+-		info->control.hw_key = &tx->key->conf;
++	/* hwaccel - with software CCMP header */
++	if (info->control.hw_key)
+ 		return 0;
+-	}
+ 
+ 	pos += CCMP_HDR_LEN;
+ 	ccmp_special_blocks(skb, pn, key->u.ccmp.tx_crypto_buf, 0);
+@@ -525,11 +515,8 @@ ieee80211_crypto_aes_cmac_encrypt(struct
+ 	u8 *pn, aad[20];
+ 	int i;
+ 
+-	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
+-		/* hwaccel */
+-		info->control.hw_key = &tx->key->conf;
++	if (info->control.hw_key)
+ 		return 0;
+-	}
+ 
+ 	if (WARN_ON(skb_tailroom(skb) < sizeof(*mmie)))
+ 		return TX_DROP;
+--- wireless-testing.orig/net/mac80211/wep.c	2009-12-15 20:42:43.000000000 +0100
++++ wireless-testing/net/mac80211/wep.c	2009-12-15 20:45:48.000000000 +0100
+@@ -305,20 +305,20 @@ static int wep_encrypt_skb(struct ieee80
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 
+-	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
++	if (!info->control.hw_key) {
+ 		if (ieee80211_wep_encrypt(tx->local, skb, tx->key->conf.key,
+ 					  tx->key->conf.keylen,
+ 					  tx->key->conf.keyidx))
+ 			return -1;
+-	} else {
+-		info->control.hw_key = &tx->key->conf;
+-		if (tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) {
+-			if (!ieee80211_wep_add_iv(tx->local, skb,
+-						  tx->key->conf.keylen,
+-						  tx->key->conf.keyidx))
+-				return -1;
+-		}
+ 	}
++
++	if (info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) {
++		if (!ieee80211_wep_add_iv(tx->local, skb,
++					  tx->key->conf.keylen,
++					  tx->key->conf.keyidx))
++			return -1;
++	}
++
+ 	return 0;
+ }
+ 
+--- wireless-testing.orig/net/mac80211/tx.c	2009-12-15 20:42:56.000000000 +0100
++++ wireless-testing/net/mac80211/tx.c	2009-12-15 20:45:48.000000000 +0100
+@@ -463,6 +463,8 @@ ieee80211_tx_h_select_key(struct ieee802
+ 		tx->key = NULL;
+ 
+ 	if (tx->key) {
++		bool skip_hw = false;
++
+ 		tx->key->tx_rx_count++;
+ 		/* TODO: add threshold stuff again */
+ 
+@@ -479,12 +481,19 @@ ieee80211_tx_h_select_key(struct ieee802
+ 			    !ieee80211_use_mfp(hdr->frame_control, tx->sta,
+ 					       tx->skb))
+ 				tx->key = NULL;
++			skip_hw = (tx->key->conf.flags &
++						IEEE80211_KEY_FLAG_SW_MGMT) &&
++				   ieee80211_is_mgmt(hdr->frame_control);
+ 			break;
+ 		case ALG_AES_CMAC:
+ 			if (!ieee80211_is_mgmt(hdr->frame_control))
+ 				tx->key = NULL;
+ 			break;
+ 		}
++
++		if (!skip_hw &&
++		    tx->key->conf.flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
++			info->control.hw_key = &tx->key->conf;
+ 	}
+ 
+ 	return TX_CONTINUE;
 
-johannes
-
---=-kboGyy/fZrZKutdLoVl3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLJOfLAAoJEODzc/N7+Qma0BEQAK7foU33QFn5ZF5YNyO6yO5g
-fU3kDhJ5h7NDPRaEEIUY7QEYHMWhzcNVI5o+BCZ6hlMuSt23y7BmMZ+ev+8b4qds
-m1EVuzlojnWCb8eeGR3xjMI2ES2u+auqjW4+ewH6ru65HtivOJijveLbbiTBb6d9
-tslZIfdsvOBUEJiXZXq5wVqVOXKUVqRB7TIBWdGuuc+qJ9emUWdB1W5oRBxj4c4j
-ho05puBV7vWmyLcMvwMyb5cHzrc8FggaGKB/kBo+eJ2yG4+yGhl7EY9k7Q/f1pm2
-h5k+E7EN+yd1UDjcwHFZCLlCqkkzD+SI3MCK1jGB6ImsHp4SlPocjZ4PtzQFniw0
-6R6VLvezv1Cy6TiJX+DhDnYLjdtL5D6feM9SEDeu+0iNEUY1Q5/l1oLOCfpgYwMq
-/+nIReO5sChyIUYq7Kr5EIFjXdJYckBd3HpqnHXS0JmRbmzMA86SWvHdwHmskDJj
-Kv/OmyPpdylNL9WRTrGx34BIMKuzOrj9DalOapUV39NgcvgHOwHa+pfthURYS7IK
-3n6y3ymsa5KqX3UaNddj3iQYWkA0Y3306/yXNapLpLOQIkIxaCUlcpUs/I3AUhXQ
-kilsYaCDavPD976WZ3XLL81u+UHO3PPuqjbVDg4P9F1ZgvaicxkNzqpxK0mgeUuQ
-pRZ2XoKzw9pHyDRBJlDR
-=yiUp
------END PGP SIGNATURE-----
-
---=-kboGyy/fZrZKutdLoVl3--
 
