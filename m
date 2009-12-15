@@ -1,284 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:42986 "EHLO mail.atheros.com"
+Received: from nbd.name ([88.198.39.176]:52559 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761383AbZLPLCk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2009 06:02:40 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Dec 2009 03:02:40 -0800
-Date: Wed, 16 Dec 2009 16:32:33 +0530
-From: Bala Shanmugam <sbalashanmugam@atheros.com>
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	<mcgrof@bombadil.infradead.org>
-CC: Jothikumar Mothilal <Jothikumar.Mothilal@Atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] compat-wireless: Fixed bluetooth modules compilation issues
-Message-ID: <20091216110233.GA1771@atheros-laptop>
+	id S932845AbZLOWsz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Dec 2009 17:48:55 -0500
+Message-ID: <4B28124C.10206@openwrt.org>
+Date: Tue, 15 Dec 2009 23:48:44 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: =?UTF-8?B?THVrw6HFoSBUdXJlaw==?= <8an@praha12.net>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [ath5k-devel] [PATCH 1/5] nl80211: Add new WIPHY attribute COVERAGE_CLASS
+References: <1260899813-17585-1-git-send-email-8an@praha12.net>	<1260899813-17585-2-git-send-email-8an@praha12.net>	<20091215190051.GC2123@tux> <200912152156.48074.8an@praha12.net> <20091215215855.GC2067@tux>
+In-Reply-To: <20091215215855.GC2067@tux>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 2009-12-15 10:58 PM, Luis R. Rodriguez wrote:
+> On Tue, Dec 15, 2009 at 12:56:42PM -0800, Lukáš Turek wrote:
+>> On 15.12.2009 20:00 you wrote:
+>> > Does setting the coverage class make sense for all modes of operation?
+>> > If not it'd be good to catch those early and avoid setting them and also
+>> > properly document them.
+>>
+>> The coverage class is a physical device parameter, not interface parameter, so 
+>> it's independent on whether the interface is AP or STA, there could even be 
+>> multiple interfaces on one physical device.
+> 
+> I don't see how this makes sense. Are you saying if we have multiple interfaces
+> you must restrict the slot_time, ack_timeout and CTS timeout all to the same
+> values for all of them?
+We could advertise this as a per-BSS parameter and let mac80211 send the
+maximum of the coverage class values of all BSS interfaces to the
+driver. That would allow stations connected to AP interfaces with
+(bss_coverage_class < driver_coverage_class) to use more aggressive
+timings than the AP is using. I'm not sure there's much to be gained
+from this, though - especially with 11n.
 
->From 6861ae1d8f44a9327fe5c7ccd8bfa83e69ceca51 Mon Sep 17 00:00:00 2001
-From: Bala Shanmugam <sbalashanmugam@atheros.com>
-Date: Tue, 15 Dec 2009 18:13:49 +0530
-Subject: [PATCH] Fixed bluetooth modules compilation issues.
+>> It's the same as RTS threshold, 
+>> for example.
+> I'd argue the same for it. We haven't yet really supported connecting to
+> multiple APs but this may change in the future. And say you wanted to support
+> an AP with one RTS threshold and connect to an AP at the same time with another
+> RTS threshold I think this should be possible.
+It's not the same as the RTS threshold, as the RTS threshold is
+evaluated per-packet.
 
- Signed-off-by: Bala Shanmugam <sbalashanmugam@atheros.com>
+>> This part is not implemented yet, I wanted to do the low level setting first, 
+> I'd say expose it through debugfs first then instead of adding proper APIs
+> for userspace. If the country IE is the way to pass this information alog to
+> STAs there would be no need to tweak this on the user end. If you're an AP
+> though you are likely going to want to change this though so I see, for example
+> hostapd wanting to set this through nl80211. It also seems reasonable for IBSS
+> but IBSS won't send country IEs unless I guess we use wpa_supplicant and somehow
+> leverage the IE generation from hostapd.
+I'm not sure merging the debugfs variant first is particularly useful.
+Let's just define the API for setting the coverage class values and
+merge an implementation that allows the user to override the effective
+coverage class values for every interface mode. We can then sort out the
+remaining implementation issues later.
+I don't think merging a debugfs based setting would be a good idea. I'd
+prefer starting to implement this setting for more drivers including
+non-ath ones sooner rather than later.
 
----
- Makefile                   |    2 +-
- patches/16-bluetooth.patch |  195 ++++++++++++++++++++++++++++++++++++++++++++
- scripts/admin-update.sh    |    9 +-
- 3 files changed, 200 insertions(+), 6 deletions(-)
-
-diff --git a/Makefile b/Makefile
-index 66790f2..ddaa656 100644
---- a/Makefile
-+++ b/Makefile
-@@ -28,7 +28,7 @@ obj-$(CONFIG_COMPAT_WIRELESS_MODULES) += drivers/net/wireless/
- 
- obj-$(CONFIG_COMPAT_NET_USB_MODULES) += drivers/net/usb/
- 
--obj-$(CONFIG_COMPAT_BT) += net/bluetooth/
-+obj-$(CONFIG_COMPAT_BLUETOOTH) += net/bluetooth/
- obj-$(CONFIG_COMPAT_BLUETOOTH_MODULES) += drivers/bluetooth/
- 
- obj-$(CONFIG_COMPAT_NETWORK_MODULES) += drivers/net/
-diff --git a/patches/16-bluetooth.patch b/patches/16-bluetooth.patch
-index 32529a0..47e9d0e 100644
---- a/patches/16-bluetooth.patch
-+++ b/patches/16-bluetooth.patch
-@@ -446,3 +446,198 @@ diff -Nur a/net/bluetooth/rfcomm/tty.c b/net/bluetooth/rfcomm/tty.c
-  {
-  	struct sock *sk = sock->sk;
-  	int err = 0;
-+diff -Nur orig_bt/net/bluetooth/af_bluetooth.c mod_bt/net/bluetooth/af_bluetooth.c
-+--- orig_bt/net/bluetooth/af_bluetooth.c	2009-12-15 16:40:20.000000000 +0530
-++++ mod_bt/net/bluetooth/af_bluetooth.c	2009-12-15 16:46:50.000000000 +0530
-+@@ -126,8 +126,12 @@
-+ }
-+ EXPORT_SYMBOL(bt_sock_unregister);
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+ static int bt_sock_create(struct net *net, struct socket *sock, int proto,
-+			  int kern)
-++#else
-++static int bt_sock_create(struct net *net, struct socket *sock, int proto)
-++#endif
-+ {
-+	int err;
-+
-+@@ -145,7 +149,11 @@
-+	read_lock(&bt_proto_lock);
-+
-+	if (bt_proto[proto] && try_module_get(bt_proto[proto]->owner)) {
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+		err = bt_proto[proto]->create(net, sock, proto, kern);
-++#else
-++		err = bt_proto[proto]->create(net, sock, proto);
-++#endif
-+		bt_sock_reclassify_lock(sock, proto);
-+		module_put(bt_proto[proto]->owner);
-+	}
-+@@ -258,7 +266,11 @@
-+	skb_reset_transport_header(skb);
-+	err = skb_copy_datagram_iovec(skb, 0, msg->msg_iov, copied);
-+	if (err == 0)
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+		sock_recv_ts_and_drops(msg, sk, skb);
-++#else
-++	  sock_recv_timestamp(msg, sk, skb);
-++#endif
-+
-+	skb_free_datagram(sk, skb);
-+
-+diff -Nur orig_bt/net/bluetooth/bnep/sock.c mod_bt/net/bluetooth/bnep/sock.c
-+--- orig_bt/net/bluetooth/bnep/sock.c	2009-12-15 16:40:59.000000000 +0530
-++++ mod_bt/net/bluetooth/bnep/sock.c	2009-12-15 16:48:19.000000000 +0530
-+@@ -195,8 +195,12 @@
-+	.obj_size	= sizeof(struct bt_sock)
-+ };
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+ static int bnep_sock_create(struct net *net, struct socket *sock, int protocol,
-+			    int kern)
-++#else
-++static int bnep_sock_create(struct net *net, struct socket *sock, int protocol)
-++#endif
-+ {
-+	struct sock *sk;
-+
-+diff -Nur orig_bt/net/bluetooth/cmtp/sock.c mod_bt/net/bluetooth/cmtp/sock.c
-+--- orig_bt/net/bluetooth/cmtp/sock.c	2009-12-15 16:41:29.000000000 +0530
-++++ mod_bt/net/bluetooth/cmtp/sock.c	2009-12-15 16:48:31.000000000 +0530
-+@@ -190,8 +190,12 @@
-+	.obj_size	= sizeof(struct bt_sock)
-+ };
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+ static int cmtp_sock_create(struct net *net, struct socket *sock, int protocol,
-+			    int kern)
-++#else
-++static int cmtp_sock_create(struct net *net, struct socket *sock, int protocol)
-++#endif
-+ {
-+	struct sock *sk;
-+
-+diff -Nur orig_bt/net/bluetooth/hci_sock.c mod_bt/net/bluetooth/hci_sock.c
-+--- orig_bt/net/bluetooth/hci_sock.c	2009-12-15 16:40:20.000000000 +0530
-++++ mod_bt/net/bluetooth/hci_sock.c	2009-12-15 16:47:47.000000000 +0530
-+@@ -630,8 +630,12 @@
-+	.obj_size	= sizeof(struct hci_pinfo)
-+ };
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+ static int hci_sock_create(struct net *net, struct socket *sock, int protocol,
-+			   int kern)
-++#else
-++static int hci_sock_create(struct net *net, struct socket *sock, int protocol)
-++#endif
-+ {
-+	struct sock *sk;
-+
-+diff -Nur orig_bt/net/bluetooth/hidp/core.c mod_bt/net/bluetooth/hidp/core.c
-+--- orig_bt/net/bluetooth/hidp/core.c	2009-12-15 16:41:45.000000000 +0530
-++++ mod_bt/net/bluetooth/hidp/core.c	2009-12-15 16:48:45.000000000 +0530
-+@@ -280,12 +280,14 @@
-+	return hidp_queue_report(session, buf, rsize);
-+ }
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
-+ static int hidp_output_raw_report(struct hid_device *hid, unsigned char *data, size_t count)
-+ {
-+	if (hidp_queue_report(hid->driver_data, data, count))
-+		return -ENOMEM;
-+	return count;
-+ }
-++#endif
-+
-+ static void hidp_idle_timeout(unsigned long arg)
-+ {
-+diff -Nur orig_bt/net/bluetooth/hidp/sock.c mod_bt/net/bluetooth/hidp/sock.c
-+--- orig_bt/net/bluetooth/hidp/sock.c	2009-12-15 16:41:45.000000000 +0530
-++++ mod_bt/net/bluetooth/hidp/sock.c	2009-12-15 16:48:51.000000000 +0530
-+@@ -241,8 +241,12 @@
-+	.obj_size	= sizeof(struct bt_sock)
-+ };
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+ static int hidp_sock_create(struct net *net, struct socket *sock, int protocol,
-+			    int kern)
-++#else
-++static int hidp_sock_create(struct net *net, struct socket *sock, int protocol)
-++#endif
-+ {
-+	struct sock *sk;
-+
-+diff -Nur orig_bt/net/bluetooth/l2cap.c mod_bt/net/bluetooth/l2cap.c
-+--- orig_bt/net/bluetooth/l2cap.c	2009-12-15 16:40:20.000000000 +0530
-++++ mod_bt/net/bluetooth/l2cap.c	2009-12-15 16:46:56.000000000 +0530
-+@@ -822,8 +822,12 @@
-+	return sk;
-+ }
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+ static int l2cap_sock_create(struct net *net, struct socket *sock, int protocol,
-+			     int kern)
-++#else
-++static int l2cap_sock_create(struct net *net, struct socket *sock, int protocol)
-++#endif
-+ {
-+	struct sock *sk;
-+
-+@@ -835,7 +839,11 @@
-+			sock->type != SOCK_DGRAM && sock->type != SOCK_RAW)
-+		return -ESOCKTNOSUPPORT;
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+	if (sock->type == SOCK_RAW && !kern && !capable(CAP_NET_RAW))
-++#else
-++	if (sock->type == SOCK_RAW && !capable(CAP_NET_RAW))
-++#endif
-+		return -EPERM;
-+
-+	sock->ops = &l2cap_sock_ops;
-+diff -Nur orig_bt/net/bluetooth/rfcomm/sock.c mod_bt/net/bluetooth/rfcomm/sock.c
-+--- orig_bt/net/bluetooth/rfcomm/sock.c	2009-12-15 16:42:14.000000000 +0530
-++++ mod_bt/net/bluetooth/rfcomm/sock.c	2009-12-15 16:49:07.000000000 +0530
-+@@ -323,8 +323,13 @@
-+	return sk;
-+ }
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+ static int rfcomm_sock_create(struct net *net, struct socket *sock,
-+			      int protocol, int kern)
-++#else
-++static int rfcomm_sock_create(struct net *net, struct socket *sock,
-++			      int protocol)
-++#endif
-+ {
-+	struct sock *sk;
-+
-+@@ -704,7 +709,11 @@
-+		copied += chunk;
-+		size   -= chunk;
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+		sock_recv_ts_and_drops(msg, sk, skb);
-++#else
-++		sock_recv_timestamp(msg, sk, skb);
-++#endif
-+
-+		if (!(flags & MSG_PEEK)) {
-+			atomic_sub(chunk, &sk->sk_rmem_alloc);
-+diff -Nur orig_bt/net/bluetooth/sco.c mod_bt/net/bluetooth/sco.c
-+--- orig_bt/net/bluetooth/sco.c	2009-12-15 16:40:20.000000000 +0530
-++++ mod_bt/net/bluetooth/sco.c	2009-12-15 16:47:04.000000000 +0530
-+@@ -430,8 +430,12 @@
-+	return sk;
-+ }
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+ static int sco_sock_create(struct net *net, struct socket *sock, int protocol,
-+			   int kern)
-++#else
-++static int sco_sock_create(struct net *net, struct socket *sock, int protocol)
-++#endif
-+ {
-+	struct sock *sk;
-+
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index 78652d2..500fe07 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -15,8 +15,7 @@
- # 
- # for example
- #
--GIT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git"
--GIT_BT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/holtmann/bluetooth-testing.git"
-+GIT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"
- GIT_COMPAT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git"
- 
- INCLUDE_NET_BT="hci_core.h l2cap.h bluetooth.h rfcomm.h hci.h"
-@@ -48,12 +47,12 @@ UNDERLINE="\033[02m"
- NET_DIRS="wireless mac80211 rfkill"
- # User exported this variable
- if [ -z $GIT_TREE ]; then
--	GIT_TREE="/home/$USER/wireless-testing/"
-+	GIT_TREE="/home/$USER/linux-next/"
- 	if [ ! -d $GIT_TREE ]; then
--		echo "Please tell me where your wireless-testing git tree is."
-+		echo "Please tell me where your linux-next git tree is."
- 		echo "You can do this by exporting its location as follows:"
- 		echo
--		echo "  export GIT_TREE=/home/$USER/wireless-testing/"
-+		echo "  export GIT_TREE=/home/$USER/linux-next/"
- 		echo
- 		echo "If you do not have one you can clone the repository:"
- 		echo "  git-clone $GIT_URL"
--- 
-1.6.0.4
-
+- Felix
