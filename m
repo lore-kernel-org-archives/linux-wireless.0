@@ -1,26 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:10555 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752191AbZLYBqj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2009 20:46:39 -0500
-From: "Zhu, Yi" <yi.zhu@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 25 Dec 2009 09:46:26 +0800
-Subject: RE: [PATCH] iwlwifi: remove generated/utsrelease.h dependency
-Message-ID: <DA586906BA1FFC4384FCFD6429ECE860302D216F@shzsmsx502.ccr.corp.intel.com>
-References: <1261639870-17469-1-git-send-email-yi.zhu@intel.com>
- <43e72e890912232343u79e6c3c9l1f45ef593b0ee73@mail.gmail.com>
-In-Reply-To: <43e72e890912232343u79e6c3c9l1f45ef593b0ee73@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from buzzloop.caiaq.de ([212.112.241.133]:42581 "EHLO
+	buzzloop.caiaq.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759657AbZLOKUs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Dec 2009 05:20:48 -0500
+Date: Tue, 15 Dec 2009 18:20:35 +0800
+From: Daniel Mack <daniel@caiaq.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org,
+	dcbw@redhat.com, m.hirsch@raumfeld.com, netdev@vger.kernel.org,
+	libertas-dev@lists.infradead.org, stable@kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless: wext: allocate space for NULL-termination
+ for 32byte SSIDs
+Message-ID: <20091215102035.GJ28375@buzzloop.caiaq.de>
+References: <1260650850-16163-1-git-send-email-daniel@caiaq.de>
+ <20091215.014308.77044043.davem@davemloft.net>
+ <1260871411.3692.4.camel@johannes.local>
+ <1260871634.3692.6.camel@johannes.local>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1260871634.3692.6.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbTogTHVpcyBSLiBSb2RyaWd1ZXogW21haWx0bzptY2dyb2ZAZ21haWwuY29tXSANCg0KPiBX
-aHkgaXMgYSB2ZXJzaW9uIGV2ZW4gbmVlZGVkPw0KDQpUaGUgcmVhc29uIGlzIHdlIHdhbnQgdG8g
-Z2V0IHRoZSBkcml2ZXIgY29uZmlnIG9wdGlvbnMgZWFzaWx5IGZyb20gYSBidWcgcmVwb3J0LiBG
-b3INCmV4YW1wbGUsIENPTkZJR19JV0xXSUZJX0RFQlVHLCBTUEVDVFJVTV9NRUFTVVJFTUVOVCwg
-ZXRjLiBTb21ldGltZXMgdGhleQ0KYXJlIG5vdCB2ZXJ5IGVhc3kgdG8gdGVsbCBmb3IgYW4gT1NE
-IHByb3ZpZGVkIGRyaXZlci4NCg0KVGhhbmtzLA0KLXlpDQo=
+On Tue, Dec 15, 2009 at 11:07:14AM +0100, Johannes Berg wrote:
+> On Tue, 2009-12-15 at 11:03 +0100, Johannes Berg wrote:
+> 
+> > Since you indicate the kernel crashed, it is likely that libertas is
+> > treating the buffer as a string, instead of an SSID.
+
+Ok, I dodn't know that - thanks for pointing it out. In my setup here,
+SSIDs are always valid alphanumeric strings, and I was mislead by the
+comment that mentions the NULL-termination.
+
+> drivers/net/wireless/libertas$ grep lbs_deb_ * | grep ssid|grep '%s'
+> assoc.c:	lbs_deb_join("current SSID '%s', ssid length %u\n",
+> assoc.c:	lbs_deb_join("requested ssid '%s', ssid length %u\n",
+> assoc.c:	lbs_deb_join("ADHOC_START: SSID '%s', ssid length %u\n",
+> scan.c:		lbs_deb_wext("set_scan, essid '%s'\n",
+
+Those macros are stubbed out as nops in my setup, so they can
+unfortunately not be the reason. I'll dig deeper :)
+
+Thanks,
+Daniel
