@@ -1,91 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f182.google.com ([209.85.211.182]:54201 "EHLO
-	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933704AbZLOVKX convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56252 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752287AbZLOBpW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 16:10:23 -0500
-Received: by ywh12 with SMTP id 12so359221ywh.21
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2009 13:10:22 -0800 (PST)
+	Mon, 14 Dec 2009 20:45:22 -0500
+Date: Mon, 14 Dec 2009 20:42:07 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kadianakis George <desnacked@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Function name collisions with mac80211
+Message-ID: <20091215014207.GA6028@tuxdriver.com>
+References: <873a3dm3j5.fsf@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20091215204432.GE8735@tuxdriver.com>
-References: <1260819235-8017-1-git-send-email-gwingerde@gmail.com>
-	 <20091215204432.GE8735@tuxdriver.com>
-Date: Tue, 15 Dec 2009 22:10:19 +0100
-Message-ID: <14add3d10912151310s6b36cc60vabbdac4afff2e4b4@mail.gmail.com>
-Subject: Re: [PATCH v2 2.6.33] rt2x00: Disable powersaving for rt61pci and
-	rt2800pci.
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Ivo van Doorn <ivdoorn@gmail.com>, stable@kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <873a3dm3j5.fsf@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 15, 2009 at 9:44 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Mon, Dec 14, 2009 at 08:33:55PM +0100, Gertjan van Wingerde wrote:
->> We've had many reports of rt61pci failures with powersaving enabled.
->> Therefore, as a stop-gap measure, disable powersaving of the rt61pci
->> until we have found a proper solution.
->> Also disable powersaving on rt2800pci as it most probably will show
->> the same problem.
->>
->> Cc: stable@kernel.org
->> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
->> ---
->>
->> John, this is an urgent fix for 2.6.33.
->>
->> v2:
->> - Handled feedback from Ivo:
->>       - Only disable powersaving by default, not permanent.
->>       - Also apply to rt2800pci.
->
-> As posted, it will only compile on 2.6.32...
->
+On Tue, Dec 15, 2009 at 03:25:50AM +0200, Kadianakis George wrote:
+> Greetings,
+> 
+> a function name collision issue spawned off a Gentoo bug [1].
+> 
+> Basically, functions in the rtl8187se staging driver collide with functions in the
+> mac80211 source not allowing kernel compilation with both
+> CONFIG_RTL8187SE and CONFIG_MAC80211 set.
+> 
+> Changes that cause this issue are: 
+> a) commit 103bf9f7d35849bce52ad412e4da5063b0716969: 
+>    mac80211: remove ieee80211_rx namespace hack
+> Where ieee80211_rx() starts getting exported instead of __ieee80211_rx() which used to get exported.
+> b) commit c6e43bc83fd0f156eeb64bc2fa47323fdff16ba8
+>    Staging: rtl8187se/ieee80211: remove superfluous ieee80211_* defines
+> Where #define ieee80211_wake_queue ieee80211_wake_queue_rtl
+> and #define ieee80211_stop_queue ieee80211_stop_queue_rtl
+> get removed effectively exposing the collision with the mac80211
+> functions of the same names.
+> 
+> The collisions are not restricted to the rtl8187se driver, like the
+> following example:
+> c) commit 5d9baea95f45bddcecab050de1af2ef678e85339
+>    Staging: rtl8192su: make private ieee80211 stack really private
+> Had the exact same effect as b) to the rtl8192su driver.
+> d) A quick grep of the three functions in Gentoo bug report shows many
+> instances of them in the drivers/staging directory.
+> 
+> [1]: http://bugs.gentoo.org/show_bug.cgi?id=296920
 
-Me confused, as the patch was against the wireless-2.6.git tree, which
-I thought was 2.6.33, and not 2.6.32. Please explain to which tree to
-prepare fixes for 2.6.33.
+I suggest you change the function names in drivers/staging.
 
-> This is what I'm merging:
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index a199f85..6bf6c0f 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -2022,6 +2022,12 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
->        u16 eeprom;
->
->        /*
-> +        * Disable powersaving as default on PCI devices.
-> +        */
-> +       if (rt2x00_intf_is_pci(rt2x00dev))
-> +               rt2x00dev->hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
-> +
-> +       /*
->         * Initialize all hw fields.
->         */
->        rt2x00dev->hw->flags =
-> diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-> index 687e17d..0ca5893 100644
-> --- a/drivers/net/wireless/rt2x00/rt61pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt61pci.c
-> @@ -2539,6 +2539,11 @@ static int rt61pci_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
->        unsigned int i;
->
->        /*
-> +        * Disable powersaving as default.
-> +        */
-> +       rt2x00dev->hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
-> +
-> +       /*
->         * Initialize all hw fields.
->         */
->        rt2x00dev->hw->flags =
-
-Looks good to me.
-
----
-Gertjan.
+Joh
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
