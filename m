@@ -1,56 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:63550 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762611AbZLKLly (ORCPT
+Received: from mail-gx0-f211.google.com ([209.85.217.211]:55157 "EHLO
+	mail-gx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759037AbZLOCzx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 06:41:54 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 17/31] wl1271: Configure smart-reflex paramter values.
-Date: Fri, 11 Dec 2009 13:41:08 +0200
-Message-Id: <1260531682-4695-18-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
+	Mon, 14 Dec 2009 21:55:53 -0500
+Received: by gxk3 with SMTP id 3so5294142gxk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 18:55:53 -0800 (PST)
+Message-ID: <4B26F985.7010906@lwfinger.net>
+Date: Mon, 14 Dec 2009 20:50:45 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Ahmad Yasser <ahmad.xcoder@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Does the RTL8187 mac80211 drivers support master/ap mode?
+References: <loom.20091215T030930-675@post.gmane.org> <4B26F38B.6080406@lwfinger.net> <loom.20091215T033724-246@post.gmane.org>
+In-Reply-To: <loom.20091215T033724-246@post.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On 12/14/2009 08:38 PM, Ahmad Yasser wrote:
+> Larry Finger <Larry.Finger@...> writes:
+>>
+>> It does not work in master/ap mode. It is on my list, but it will
+>> certainly not be in 2.6.33, which is feature frozen. It may not even
+>> make it for 2.6.34.
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@...
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
+> 
+> Oh, sad to hear so.. :/
+> 
+> So is there any other solution to using hostapd with it, or
+> I just have to wait for the driver to gain support for it?
 
-Configure correct values to be used with the smart-reflex configuration of the
-firmware.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index de6b550..b02dfcd 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -260,12 +260,12 @@ static struct conf_drv_settings default_conf = {
- 			.tx_bip_fem_manufacturer = 1,
- 			.settings = 1,
- 			.sr_state = 1,
--			.srf1 = { 0, 0, 0, 0, 0, 0, 0, 0,
--				  0, 0, 0, 0, 0, 0, 0, 0 },
--			.srf2 = { 0, 0, 0, 0, 0, 0, 0, 0,
--				  0, 0, 0, 0, 0, 0, 0, 0 },
--			.srf3 = { 0, 0, 0, 0, 0, 0, 0, 0,
--				  0, 0, 0, 0, 0, 0, 0, 0 },
-+			.srf1 = { 0x07, 0x03, 0x18, 0x10, 0x05, 0xfb, 0xf0,
-+				  0xe8, 0, 0, 0, 0, 0, 0, 0, 0 },
-+			.srf2 = { 0x07, 0x03, 0x18, 0x10, 0x05, 0xfb, 0xf0,
-+				  0xe8, 0, 0, 0, 0, 0, 0, 0, 0 },
-+			.srf3 = { 0x07, 0x03, 0x18, 0x10, 0x05, 0xfb, 0xf0,
-+				  0xe8, 0, 0, 0, 0, 0, 0, 0, 0 },
- 			.sr_debug_table = { 0, 0, 0, 0, 0, 0, 0, 0,
- 					    0, 0, 0, 0, 0, 0, 0, 0 },
- 			.sr_sen_n_p = 0,
--- 
-1.6.3.3
-
+It cannot handle generating beacons. You can figure out the answer
+from there.
