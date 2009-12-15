@@ -1,52 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41621 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762760AbZLQBGX (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:55035 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758143AbZLOCZU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2009 20:06:23 -0500
-Date: Wed, 16 Dec 2009 20:01:15 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Daniel Mack <daniel@caiaq.de>
-Cc: Dan Williams <dcbw@redhat.com>, linux-kernel@vger.kernel.org,
-	Holger Schurig <holgerschurig@gmail.com>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Michael Hirsch <m.hirsch@raumfeld.com>, netdev@vger.kernel.org,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	stable@kernel.org
-Subject: Re: [PATCH] Libertas: fix buffer overflow in lbs_get_essid()
-Message-ID: <20091217010114.GA2913@tuxdriver.com>
-References: <1260936778-2096-1-git-send-email-daniel@caiaq.de>
- <1260982667.2179.9.camel@localhost.localdomain>
- <20091216231508.GX28375@buzzloop.caiaq.de>
+	Mon, 14 Dec 2009 21:25:20 -0500
+Received: by yxe17 with SMTP id 17so3252732yxe.33
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 18:25:18 -0800 (PST)
+Message-ID: <4B26F38B.6080406@lwfinger.net>
+Date: Mon, 14 Dec 2009 20:25:15 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20091216231508.GX28375@buzzloop.caiaq.de>
+To: Ahmad Yasser <ahmad.xcoder@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Does the RTL8187 mac80211 drivers support master/ap mode?
+References: <loom.20091215T030930-675@post.gmane.org>
+In-Reply-To: <loom.20091215T030930-675@post.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 17, 2009 at 07:15:08AM +0800, Daniel Mack wrote:
-> On Wed, Dec 16, 2009 at 08:57:47AM -0800, Dan Williams wrote:
-> > On Wed, 2009-12-16 at 05:12 +0100, Daniel Mack wrote:
-> > > The libertas driver copies the SSID buffer back to the wireless core and
-> > > appends a trailing NULL character for termination. This is
-> > > 
-> > > a) unnecessary because the buffer is allocated with kzalloc and is hence
-> > >    already NULLed when this function is called, and
-> > > 
-> > > b) for priv->curbssparams.ssid_len == 32, it writes back one byte too
-> > >    much which causes memory corruptions.
-> > > 
-> > > Fix this by removing the extra write.
-> > 
-> > Acked-by: Dan Williams <dcbw@redhat.com>
-> 
-> Thanks, everyone. Who will care to pick an queue this one?
+On 12/14/2009 08:10 PM, Ahmad Yasser wrote:
+> Hi,
+> I've been trying to use hostapd with my Wireless USB Dongle which has 
+> an RTL8187L chipset, but it doesnt work at all, so I wanted to know, does
+> the RTL8187 drivers support master/ap mode or is it not yet implemented?
+> And if not yet, would they be implemented by 2.6.33?
 
-Is there some reason it wouldn't be me?
-
-John
--- 
-John W. Linville                Someday the world will need a hero, and you
-linville@tuxdriver.com                  might be all we have.  Be ready.
+It does not work in master/ap mode. It is on my list, but it will
+certainly not be in 2.6.33, which is feature frozen. It may not even
+make it for 2.6.34.
