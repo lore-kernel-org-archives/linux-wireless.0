@@ -1,62 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38527
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932496AbZLNTXC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 14:23:02 -0500
-Date: Mon, 14 Dec 2009 11:23:04 -0800 (PST)
-Message-Id: <20091214.112304.26981627.davem@davemloft.net>
-To: bzolnier@gmail.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: Revised wireless tree management practices
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200912142016.00169.bzolnier@gmail.com>
-References: <200912141924.47370.bzolnier@gmail.com>
-	<20091214.104124.98693961.davem@davemloft.net>
-	<200912142016.00169.bzolnier@gmail.com>
+Received: from lo.gmane.org ([80.91.229.12]:43980 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752030AbZLOCjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Dec 2009 21:39:17 -0500
+Received: from list by lo.gmane.org with local (Exim 4.50)
+	id 1NKNJj-000228-8x
+	for linux-wireless@vger.kernel.org; Tue, 15 Dec 2009 03:39:15 +0100
+Received: from host-41-196-160-190.static.link.com.eg ([host-41-196-160-190.static.link.com.eg])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2009 03:39:15 +0100
+Received: from ahmad.xcoder by host-41-196-160-190.static.link.com.eg with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2009 03:39:15 +0100
+To: linux-wireless@vger.kernel.org
+From: Ahmad Yasser <ahmad.xcoder@gmail.com>
+Subject: Re: Does the RTL8187 mac80211 drivers support master/ap mode?
+Date: Tue, 15 Dec 2009 02:38:51 +0000 (UTC)
+Message-ID: <loom.20091215T033724-246@post.gmane.org>
+References: <loom.20091215T030930-675@post.gmane.org> <4B26F38B.6080406@lwfinger.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Mon, 14 Dec 2009 20:16:00 +0100
-
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Mon, 14 Dec 2009 20:16:00 +0100
-
-> On Monday 14 December 2009 07:41:24 pm David Miller wrote:
->> That's not true.  I use "gitk -- net/mac80211" all the time and it's
->> helped me find bugs.  Or try "gitk -- include/tcp* net/ipv4/tcp*" to
->> hunt down TCP regressions, etc.
+Larry Finger <Larry.Finger@...> writes:
 > 
-> It helps but with more complex ones you're back to guesswork and applying
-> by hand fixes for already fixed ages ago in-the-middle regressions.
-
-Examples?
-
-> commit d7fc02c7bae7b1cf69269992cf880a43a350cdaa
-> Merge: ee1262d 28b4d5c
-> Author: Linus Torvalds <torvalds@linux-foundation.org>
-> Date:   Tue Dec 8 07:55:01 2009 -0800
+> It does not work in master/ap mode. It is on my list, but it will
+> certainly not be in 2.6.33, which is feature frozen. It may not even
+> make it for 2.6.34.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@...
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
->     Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next-2.6
 > 
->     * git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next-2.6: (1815 commits)
-> 
-> with completely insane amount of changes:
-> 
->  1396 files changed, 113877 insertions(+), 71108 deletions(-)
-> 
-> You may say that I should be following the development as it happens but such
-> strict requirement is not present in any other kernel subsystem tree.
 
-About 1400 is drivers/net and about 500 is net
+Oh, sad to hear so.. :/
 
-It's going to be a lot of changes no matter how I or John split it
-up.
+So is there any other solution to using hostapd with it, or
+I just have to wait for the driver to gain support for it?
 
-And guess what's just-as if not even more important?  A unified tree
-makes things easier for me.  So unless you plan on applying 100
-patches a day for me and doing all the cross merges, that's how I plan
-to keep doing things :-)
