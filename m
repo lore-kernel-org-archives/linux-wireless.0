@@ -1,85 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f226.google.com ([209.85.217.226]:38344 "EHLO
-	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754568AbZLBQ35 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57982 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761089AbZLOVZm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2009 11:29:57 -0500
-Received: by gxk26 with SMTP id 26so297913gxk.1
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2009 08:30:03 -0800 (PST)
-Message-ID: <4B169608.3010902@lwfinger.net>
-Date: Wed, 02 Dec 2009 10:30:00 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?QW50dGkgS2FpamFubcOka2k=?= <antti@kaijanmaki.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: New rtl8187 rfkill support blocks my wlan for good.
-References: <1259756709.31590.62.camel@peura.elisa-laajakaista.fi>
-In-Reply-To: <1259756709.31590.62.camel@peura.elisa-laajakaista.fi>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 15 Dec 2009 16:25:42 -0500
+Subject: Re: [ath5k-devel] [PATCH 2/5] mac80211: Add new callback
+ set_coverage_class
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: =?UTF-8?Q?Luk=C3=A1=C5=A1?= Turek <8an@praha12.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20091215181149.GA2123@tux>
+References: <1260899813-17585-1-git-send-email-8an@praha12.net>
+	 <1260899813-17585-3-git-send-email-8an@praha12.net>
+	 <20091215181149.GA2123@tux>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-2n62eK+2+HxQIfDQfU34"
+Date: Tue, 15 Dec 2009 22:25:30 +0100
+Message-ID: <1260912330.10356.57.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/02/2009 06:25 AM, Antti Kaijanmäki wrote:
-> Hello,
-> 
-> I wanted to give a try to your compat-wireless bleeding edge drivers. I
-> have an RTL8187 based wlan chip on my laptop. After installing the
-> driver I was not able to use the WiFi anymore as the driver reports that
-> the kill switch is active no matter in what position I turn the switch
-> on the side of the laptop.
-> 
-> Here's the dmesg output of the chip detection:
-> 
-> [   20.686680] phy0: Selected rate control algorithm 'minstrel'
-> [   20.687554] phy0: hwaddr 00:1b:9e:eb:77:98, RTL8187BvE V0 + rtl8225z2
-> [   20.710529] rtl8187: Customer ID is 0x04
-> [   20.710588] Registered led device: rtl8187-phy0::tx
-> [   20.710611] Registered led device: rtl8187-phy0::rx
-> [   20.711393] rtl8187: wireless switch is off
-> 
-> I checked the driver and found the rtl8187_rfkill.c. I added some
-> prink's to see what's happening and noticed that the physical switch did
-> affect different bit than the one tested in the current driver. This
-> change enables the correct behavior on my laptop:
-> 
-> --- rtl8187_rfkill.c.orig	2009-12-02 14:12:34.646597569 +0200
-> +++ rtl8187_rfkill.c	2009-12-02 14:10:09.474593370 +0200
-> @@ -28,7 +28,7 @@ static bool rtl8187_is_radio_enabled(str
->  	rtl818x_iowrite8(priv, &priv->map->GPIO0, gpio & ~0x02);
->  	gpio = rtl818x_ioread8(priv, &priv->map->GPIO1);
->  
-> -	return gpio & 0x02;
-> +	return gpio & 0x04;
->  }
-> 
-> 
-> I tried to contact Realtek to provide me with some specs so that I can
-> verify the register in question, but all I received was a reply with the
-> realtek's reference driver attached. I haven't got any answer to my
-> follow-up request for the specification. 
-> 
-> I looked through the reference driver but could not find anything
-> informational. I didn't have time to do a full review, though.
-> 
-> Without the specification I can't tell how this can be fixed. People
-> have reported success with the current driver, haven't they, so the bit
-> is correct for them.
-> 
-> As soon as distributions start shipping the new rtl8187 driver there are
-> people whose wlan stops working. I don't know if the killswitch with
-> rtl8187 chipsets is suppose to be only created with software but at
-> least in my laptop it didn't matter in which position the switch was
-> with older drivers, the radio worked anyway. 
-> 
-> Any thoughts how to continue with this?
 
-As wireless in Linux approaches the correct behavior with respect to
-killing wireless, there will be some cases like yours. Having the
-radio work no matter the switch position is just plain wrong. I hope
-you understand that.
+--=-2n62eK+2+HxQIfDQfU34
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-What laptop do you have? If the RTL8187 built in or externally
-plugged? If built in, is there a WMI driver for it? Do you have it loaded?
+On Tue, 2009-12-15 at 10:11 -0800, Luis R. Rodriguez wrote:
 
-Larry
+> > +       if (changed & WIPHY_PARAM_COVERAGE_CLASS) {
+> > +               if (!local->ops->set_coverage_class)
+> > +                       return -EOPNOTSUPP;
+>=20
+> Hm, it seems best to just add the capability bit that way userspace
+> can stuff what it wishes and the kernel will only set what is supported.
+> As is now this would lead to -EOPNOTSUPP but we'd have no way of knowing
+> from userspace what failed.
+
+I think if it cares, userspace should just be careful to only change one
+thing at a time.
+
+johannes
+
+--=-2n62eK+2+HxQIfDQfU34
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLJ/7GAAoJEODzc/N7+QmakiwQAMMnyacnpvGN+OafwOWOr7Dr
+vXTgs3OEW5S0HyNImuS72rgP6RJCLo3QM5lPYFbPJ4Bto5/Pm81e3nWVW9YkMl0/
+zwUDGCfCHekdrC9GGWPTT6YTPajNZMe7l/FlbX5TCLkaGMiWzOkimcGnNJHx2PlJ
+AvfE+mUK8snCOFJF0N/tf9EoSW4UwGZOtm/u7CVygQ9/PJ2L3zQxMbGxBZgXxw1V
+JBkJXbaNRM1oB1+3nFIgtsiFj6WRS3ckiqR9epRLSI7l8H9GSa1wt5gmDU4vNRiA
+0NOTxAHqoSl+aLmMl3Eqb1dV6x90sELSe/btt35RN7lNSGkSgGrPdpc2UCAaMWcx
+oQ0cxx0NlyfSsjGkqPdahW1N+3MITFreYDgDrAPZoMiTmTUqoWMViqyWeMdmfqdQ
+FLxk4+BlJp47FReoAj+iIpxPpNv70qxS+kMmojZCTuJMyLoqSp/0Hke1RRG0/+E5
+HbMbt28CC3r13VOWBw3oV478TINycLNzc4eBscjhpJGW2oaFw52LccA/0ywK3Z9S
+wa3ikve1cA8T6jcSEiu1Z8/6OOMYGAH8L43KFFEn5V1ouOhXwHe+mlFC/fyJ/NY8
+wHnPfzEL7cb9USKhkQs4JFlXOhm+Lotu2MyeDDtVYIIHLf1fJVPchxqGDpnoI18c
+JAziX5eQuzKwogi954IG
+=iZZd
+-----END PGP SIGNATURE-----
+
+--=-2n62eK+2+HxQIfDQfU34--
 
