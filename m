@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mrs.ro ([109.74.194.28]:58596 "EHLO mrs.ro"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754109AbZLTNiT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2009 08:38:19 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by mrs.ro (Postfix) with ESMTP id 4F0FA7BF9
-	for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2009 15:10:57 +0200 (EET)
-Received: from mrs.ro ([127.0.0.1])
-	by localhost (mail.mrs.ro [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id mwI1Bn1RVGHu for <linux-wireless@vger.kernel.org>;
-	Sun, 20 Dec 2009 15:10:56 +0200 (EET)
-Received: from nero.localnet (a88-112-30-248.elisa-laajakaista.fi [88.112.30.248])
-	by mrs.ro (Postfix) with ESMTP id 64B367BED
-	for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2009 15:10:55 +0200 (EET)
-From: Valentin Manea <linux-wireless@mrs.ro>
-To: linux-wireless@vger.kernel.org
-Subject: Intel 4965 HT rates
-Date: Sun, 20 Dec 2009 15:10:51 +0200
+Received: from parez.praha12.net ([78.102.11.253]:54115 "EHLO
+	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933675AbZLOVHe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Dec 2009 16:07:34 -0500
+From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
+Reply-To: 8an@praha12.net
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [ath5k-devel] [PATCH 1/5] nl80211: Add new WIPHY attribute COVERAGE_CLASS
+Date: Tue, 15 Dec 2009 22:07:32 +0100
+Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+References: <1260899813-17585-1-git-send-email-8an@praha12.net> <20091215190051.GC2123@tux> <20091215190248.GE2123@tux>
+In-Reply-To: <20091215190248.GE2123@tux>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200912201510.51812.linux-wireless@mrs.ro>
+Content-Type: multipart/signed;
+  boundary="nextPart42040953.p68eGmbDD9";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200912152207.33024.8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+--nextPart42040953.p68eGmbDD9
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-  I'm running compat-wireless-2.6.33-rc1 and iw list shows some confusing HT 
-capabilities:
-        Band 1:            
-                HT capabilities: 0x082c
-                        * 20 MHz operation
-                        * SM PS disabled  
-                        * 20 MHz short GI 
-                        * max A-MSDU len 7935
+On 15.12.2009 20:02 you wrote:
+> And if your IBSS and the AP already sent the coverage class through the
+> country IE I am not sure if we should allow overriding it.
+Overriding the coverage class is harmless, it won't allow you to break any=
+=20
+laws like overriding regulatory domain does.
 
-but for 802.11a channels:
-        Band 2:                                                               
-                HT capabilities: 0x086e                                       
-                        * 20/40 MHz operation                                 
-                        * SM PS disabled                                      
-                        * 20 MHz short GI                                     
-                        * 40 MHz short GI                                     
-                        * max A-MSDU len 7935
+Lukas Turek
 
-While I can't tell when this happened, I remember older 2.6.29 releases 
-supported HT40 for both bands.
-The wireless card is an Intel 4965 on a Thinkpad T61.
+--nextPart42040953.p68eGmbDD9
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
 
-Regards,
-Valentin
+iQIcBAABAgAGBQJLJ/qUAAoJEEBjvk/UOfYwON0P/2q+GNcXsyXlqhgUyodgWFuj
+523TArSQJXQi05aqnYGiG22fLNVOKKurBTqJNcivBTfCFyz9g8SE3jD9Eg3Eb+up
+7xfCDuZ+H37a00kR/SoDyEWWxRgR2RRe07/DE+hsbNtixMrX5jDDdSG8Mz+MV1th
+TLnbc8jgYN9x9TDi3UNlalU+YzlCw4X4XVhRN/OWYecPvcjlyLGh5IY87SMzt08j
+ltlkCK2YxCsLP79vJIF8dQrpDN97KerCP6L2Bpq84WHkePuYDymVr0DhSw4nWt3v
+hPBs7UDUJtUFgczEp/SUXnrhQtR8tLI+sUoC9Lgy+1OoxP4rEJUlJzz7Y99IFC1V
+uysRVuqhSAj26J2mJWwcF+0x7TjSB/RTzTwtAi/TKA2zsQE4tTu2+rDp/3P/o4oi
+qU14WgEkXuRvetQlXQJ2bFQ07UsTxT3LG3klvcpiYjoY903VwIdCJB+54VIdHRSG
+2PSgIzOoykYWNI9O+E5L4z3f2i6HnBUQgjCaEX9hirrBLbH5S76DCKUqvBr066Jk
+l9z9umVomZnCyopKKqMeReSd88ZmQ0BUP0BFtgiiw9GFHc2W1C9HTvKHj5TGbnRy
+xGk1z9eMk0h8mwkxTB4Onk58h8SOThpJmaJA8WjIkRgKNgqWlXUv89O2z9m+VpYW
+mFKWm/TEJu/PCBEv1BX3
+=e7ql
+-----END PGP SIGNATURE-----
 
+--nextPart42040953.p68eGmbDD9--
