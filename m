@@ -1,243 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:60545 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757894AbZLKNl5 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37252 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759678AbZLOKbt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:41:57 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH v2 22/31] wl1271: Implement chipset boot retry
-Date: Fri, 11 Dec 2009 15:41:01 +0200
-Message-Id: <1260538870-32297-23-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 15 Dec 2009 05:31:49 -0500
+Subject: Re: [PATCH] wireless: wext: allocate space for NULL-termination
+ for 32byte SSIDs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Daniel Mack <daniel@caiaq.de>
+Cc: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org,
+	dcbw@redhat.com, m.hirsch@raumfeld.com, netdev@vger.kernel.org,
+	libertas-dev@lists.infradead.org, stable@kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20091215102035.GJ28375@buzzloop.caiaq.de>
+References: <1260650850-16163-1-git-send-email-daniel@caiaq.de>
+	 <20091215.014308.77044043.davem@davemloft.net>
+	 <1260871411.3692.4.camel@johannes.local>
+	 <1260871634.3692.6.camel@johannes.local>
+	 <20091215102035.GJ28375@buzzloop.caiaq.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-MTUIoK4uGX41ZSlBruir"
+Date: Tue, 15 Dec 2009 11:31:23 +0100
+Message-ID: <1260873083.3692.8.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-The wl1271 has a hardware bug which causes it to randomly (very infrequently)
-to fail powering up properly. This patch implements retry for the chipset boot
-sequence, to work around the hardware problem.
+--=-MTUIoK4uGX41ZSlBruir
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |  130 +++++++++++++++++------------
- 1 files changed, 77 insertions(+), 53 deletions(-)
+On Tue, 2009-12-15 at 18:20 +0800, Daniel Mack wrote:
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index d07f035..0795bf3 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -47,6 +47,8 @@
- #include "wl1271_cmd.h"
- #include "wl1271_boot.h"
- 
-+#define WL1271_BOOT_RETRIES 3
-+
- static struct conf_drv_settings default_conf = {
- 	.sg = {
- 		.per_threshold               = 7500,
-@@ -645,7 +647,7 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
- 
- 		ret = wl1271_setup(wl);
- 		if (ret < 0)
--			goto out_power_off;
-+			goto out;
- 		break;
- 	case CHIP_ID_1271_PG20:
- 		wl1271_debug(DEBUG_BOOT, "chip id 0x%x (1271 PG20)",
-@@ -653,38 +655,34 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
- 
- 		ret = wl1271_setup(wl);
- 		if (ret < 0)
--			goto out_power_off;
-+			goto out;
- 		break;
- 	default:
--		wl1271_error("unsupported chip id: 0x%x", wl->chip.id);
-+		wl1271_warning("unsupported chip id: 0x%x", wl->chip.id);
- 		ret = -ENODEV;
--		goto out_power_off;
-+		goto out;
- 	}
- 
- 	if (wl->fw == NULL) {
- 		ret = wl1271_fetch_firmware(wl);
- 		if (ret < 0)
--			goto out_power_off;
-+			goto out;
- 	}
- 
- 	/* No NVS from netlink, try to get it from the filesystem */
- 	if (wl->nvs == NULL) {
- 		ret = wl1271_fetch_nvs(wl);
- 		if (ret < 0)
--			goto out_power_off;
-+			goto out;
- 	}
- 
--	goto out;
--
--out_power_off:
--	wl1271_power_off(wl);
--
- out:
- 	return ret;
- }
- 
- int wl1271_plt_start(struct wl1271 *wl)
- {
-+	int retries = WL1271_BOOT_RETRIES;
- 	int ret;
- 
- 	mutex_lock(&wl->mutex);
-@@ -698,35 +696,48 @@ int wl1271_plt_start(struct wl1271 *wl)
- 		goto out;
- 	}
- 
--	wl->state = WL1271_STATE_PLT;
--
--	ret = wl1271_chip_wakeup(wl);
--	if (ret < 0)
--		goto out;
--
--	ret = wl1271_boot(wl);
--	if (ret < 0)
--		goto out_power_off;
--
--	wl1271_notice("firmware booted in PLT mode (%s)", wl->chip.fw_ver);
-+	while (retries) {
-+		retries--;
-+		ret = wl1271_chip_wakeup(wl);
-+		if (ret < 0)
-+			goto power_off;
- 
--	ret = wl1271_plt_init(wl);
--	if (ret < 0)
--		goto out_irq_disable;
-+		ret = wl1271_boot(wl);
-+		if (ret < 0)
-+			goto power_off;
- 
--	/* Make sure power saving is disabled */
--	ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_CAM);
--	if (ret < 0)
--		goto out_irq_disable;
-+		ret = wl1271_plt_init(wl);
-+		if (ret < 0)
-+			goto irq_disable;
- 
--	goto out;
-+		/* Make sure power saving is disabled */
-+		ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_CAM);
-+		if (ret < 0)
-+			goto irq_disable;
- 
--out_irq_disable:
--	wl1271_disable_interrupts(wl);
-+		wl->state = WL1271_STATE_PLT;
-+		wl1271_notice("firmware booted in PLT mode (%s)",
-+			      wl->chip.fw_ver);
-+		goto out;
- 
--out_power_off:
--	wl1271_power_off(wl);
-+irq_disable:
-+		wl1271_disable_interrupts(wl);
-+		mutex_unlock(&wl->mutex);
-+		/* Unlocking the mutex in the middle of handling is
-+		   inherently unsafe. In this case we deem it safe to do,
-+		   because we need to let any possibly pending IRQ out of
-+		   the system (and while we are WL1271_STATE_OFF the IRQ
-+		   work function will not do anything.) Also, any other
-+		   possible concurrent operations will fail due to the
-+		   current state, hence the wl1271 struct should be safe. */
-+		cancel_work_sync(&wl->irq_work);
-+		mutex_lock(&wl->mutex);
-+power_off:
-+		wl1271_power_off(wl);
-+	}
- 
-+	wl1271_error("firmware boot in PLT mode failed despite %d retries",
-+		     WL1271_BOOT_RETRIES);
- out:
- 	mutex_unlock(&wl->mutex);
- 
-@@ -882,6 +893,7 @@ static struct notifier_block wl1271_dev_notifier = {
- static int wl1271_op_start(struct ieee80211_hw *hw)
- {
- 	struct wl1271 *wl = hw->priv;
-+	int retries = WL1271_BOOT_RETRIES;
- 	int ret = 0;
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 start");
-@@ -895,30 +907,42 @@ static int wl1271_op_start(struct ieee80211_hw *hw)
- 		goto out;
- 	}
- 
--	ret = wl1271_chip_wakeup(wl);
--	if (ret < 0)
--		goto out;
--
--	ret = wl1271_boot(wl);
--	if (ret < 0)
--		goto out_power_off;
--
--	ret = wl1271_hw_init(wl);
--	if (ret < 0)
--		goto out_irq_disable;
--
--	wl->state = WL1271_STATE_ON;
-+	while (retries) {
-+		retries--;
-+		ret = wl1271_chip_wakeup(wl);
-+		if (ret < 0)
-+			goto power_off;
- 
--	wl1271_info("firmware booted (%s)", wl->chip.fw_ver);
-+		ret = wl1271_boot(wl);
-+		if (ret < 0)
-+			goto power_off;
- 
--	goto out;
-+		ret = wl1271_hw_init(wl);
-+		if (ret < 0)
-+			goto irq_disable;
- 
--out_irq_disable:
--	wl1271_disable_interrupts(wl);
-+		wl->state = WL1271_STATE_ON;
-+		wl1271_info("firmware booted (%s)", wl->chip.fw_ver);
-+		goto out;
- 
--out_power_off:
--	wl1271_power_off(wl);
-+irq_disable:
-+		wl1271_disable_interrupts(wl);
-+		mutex_unlock(&wl->mutex);
-+		/* Unlocking the mutex in the middle of handling is
-+		   inherently unsafe. In this case we deem it safe to do,
-+		   because we need to let any possibly pending IRQ out of
-+		   the system (and while we are WL1271_STATE_OFF the IRQ
-+		   work function will not do anything.) Also, any other
-+		   possible concurrent operations will fail due to the
-+		   current state, hence the wl1271 struct should be safe. */
-+		cancel_work_sync(&wl->irq_work);
-+		mutex_lock(&wl->mutex);
-+power_off:
-+		wl1271_power_off(wl);
-+	}
- 
-+	wl1271_error("firmware boot failed despite %d retries",
-+		     WL1271_BOOT_RETRIES);
- out:
- 	mutex_unlock(&wl->mutex);
- 
--- 
-1.6.3.3
+> > > Since you indicate the kernel crashed, it is likely that libertas is
+> > > treating the buffer as a string, instead of an SSID.
+>=20
+> Ok, I dodn't know that - thanks for pointing it out. In my setup here,
+> SSIDs are always valid alphanumeric strings, and I was mislead by the
+> comment that mentions the NULL-termination.
+
+Yeah ... that's an unfortunate historic mistake in wireless extensions
+that we try to fix up there. It cannot always be successfully fixed up,
+but the NUL-termination is nothing that anything but this code should be
+worried about or rely on.
+
+> > drivers/net/wireless/libertas$ grep lbs_deb_ * | grep ssid|grep '%s'
+> > assoc.c:	lbs_deb_join("current SSID '%s', ssid length %u\n",
+> > assoc.c:	lbs_deb_join("requested ssid '%s', ssid length %u\n",
+> > assoc.c:	lbs_deb_join("ADHOC_START: SSID '%s', ssid length %u\n",
+> > scan.c:		lbs_deb_wext("set_scan, essid '%s'\n",
+>=20
+> Those macros are stubbed out as nops in my setup, so they can
+> unfortunately not be the reason. I'll dig deeper :)
+
+Well, the stack trace ought to help.
+
+johannes
+
+--=-MTUIoK4uGX41ZSlBruir
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLJ2V3AAoJEODzc/N7+Qmad3gQAJ1FPGr7txGCvsafXohdRLlh
+7h7VnJQ21rmpB/g8KuKumBdUwh5ALEHmYNq5LMIbAGEzX7e7qOB5Dmhbh9BHWEzI
+Rs+rxA4kDom3fKx96P+O/6Nd4LCcVLql+tGcVZZMdEhDWJUFUcFfcEY793hDwcub
+LylfhXxRfcbIT5Kd2I9R6gqh3w7RT7ak6QP42lzab8L4s6vpAzudr7YImqAJMnOA
+Y3XjAFeqyxovu2EwiUIcyFDJGO805cbD16QsZiN3HwjNMya/VCZPe+TIDSPU3uOX
+IgsYdkyqgwsrOEsXj4drfiNBB68IGHLMej8dPoENLDHv1eoYafPgNEMHh3dQppE0
+WMfgGz6EB8pQMWgLMHlLP2TFS7q0cBZJU2GPjdMNxi5bIY54NrU+TyxCjs09iolB
+TptMCsdzq/M89+x9H2mqlo8jti63UxuU5uLahywngWWMCOvdlVpSVFmnOmxf6EJu
+4zrd3p2UpjI+xXqPAKVMVHJHdcl08Lz6xVZT3MVMkzJITUCyO/PWk06GzTMQA8+5
+D0U7KkXJBOGdqrGWh4Fxi9EjXB6TPt5CjUu5vGBXfODtODjEPhC7otwEV2pzxePI
+uYZwg78VNnx3F6Dw0YLRHC/QxUkUBFj/btV1belk2LSGAQ9J5DwUibG0ffvWZdJM
+sinj7IxKO+iEcbH7H2KD
+=rYi1
+-----END PGP SIGNATURE-----
+
+--=-MTUIoK4uGX41ZSlBruir--
 
