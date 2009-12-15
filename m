@@ -1,58 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51401.mail.re2.yahoo.com ([206.190.38.180]:23594 "HELO
-	web51401.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1760847AbZLLJkV convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Dec 2009 04:40:21 -0500
-Message-ID: <56469.79651.qm@web51401.mail.re2.yahoo.com>
-References: <500577.32161.qm@web51405.mail.re2.yahoo.com> <200912101846.40572.holgerschurig@gmail.com>  <43e72e890912100914m1766db5fife6563fec3807b8d@mail.gmail.com>  <200912111739.55225.holgerschurig@gmail.com> <43e72e890912110841k2a49ec19w9e29ad66a9165030@mail.gmail.com>
-Date: Sat, 12 Dec 2009 01:40:28 -0800 (PST)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: AW: Switching channel in IBSS network doesn't work in ath9k
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890912110841k2a49ec19w9e29ad66a9165030@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:57991 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761246AbZLOV65 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Dec 2009 16:58:57 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2009 13:58:57 -0800
+Date: Tue, 15 Dec 2009 13:58:55 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: =?utf-8?B?THVrw6HFoQ==?= Turek <8an@praha12.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath5k-devel] [PATCH 1/5] nl80211: Add new WIPHY attribute
+ COVERAGE_CLASS
+Message-ID: <20091215215855.GC2067@tux>
+References: <1260899813-17585-1-git-send-email-8an@praha12.net>
+ <1260899813-17585-2-git-send-email-8an@praha12.net>
+ <20091215190051.GC2123@tux>
+ <200912152156.48074.8an@praha12.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <200912152156.48074.8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The iw feature was a side note. What about the channel switch? Can you
-reproduce this? Is this supposed to work?
+On Tue, Dec 15, 2009 at 12:56:42PM -0800, LukÃ¡Å¡ Turek wrote:
+> On 15.12.2009 20:00 you wrote:
+> > Does setting the coverage class make sense for all modes of operation?
+> > If not it'd be good to catch those early and avoid setting them and also
+> > properly document them.
+>
+> The coverage class is a physical device parameter, not interface parameter, so 
+> it's independent on whether the interface is AP or STA, there could even be 
+> multiple interfaces on one physical device.
 
- -- 
-Regards 
-Joerg 
+I don't see how this makes sense. Are you saying if we have multiple interfaces
+you must restrict the slot_time, ack_timeout and CTS timeout all to the same
+values for all of them?
 
+A hardware configuration can be just that -- hardware configuration but if
+if such hardware knob can change depending on the BSS I don't see why this
+wouldn't be a BSS parameter, specially if the AP/IBSS can send this out through
+an information element.
 
+> It's the same as RTS threshold, 
+> for example.
 
+I'd argue the same for it. We haven't yet really supported connecting to
+multiple APs but this may change in the future. And say you wanted to support
+an AP with one RTS threshold and connect to an AP at the same time with another
+RTS threshold I think this should be possible.
 
------ Ursprüngliche Mail ----
-> Von: Luis R. Rodriguez <mcgrof@gmail.com>
-> An: Holger Schurig <holgerschurig@googlemail.com>
-> CC: Joerg Pommnitz <pommnitz@yahoo.com>; ath9k-devel@lists.ath9k.org; linux-wireless@vger.kernel.org
-> Gesendet: Freitag, den 11. Dezember 2009, 17:41:48 Uhr
-> Betreff: Re: Switching channel in IBSS network doesn't work in ath9k
-> 
-> On Fri, Dec 11, 2009 at 8:39 AM, Holger Schurig
-> wrote:
-> >> Actually I think a simple 'iw link' to do this for all interfaces
-> >> would be good. I just haven't gotten around to it. I should be
-> >> possible without upstream changes I believe.
-> >
-> > Do you think that "iw link" should also show then info when the device is in
-> > monitor mode (e.g. return the flags) or in IBSS mode?  And probably also
-> > reporting parts of the survey data, e.g. noise floor?
-> >
-> > That would be the equivalent of a "give me the greatest amount of info
-> > quickly" :-)
-> 
-> I do but johill is the maintainer, see what he thinks :)
-> 
->   Luis
+> And it has to be a physical device parameter, because in the end 
+> it just sets some hardware registers.
 
+It can certainly be pegged onto the ath_hw or ath5k_hw but it doesn't
+mean it can't be a per BSS setting.
 
-__________________________________________________
-Do You Yahoo!?
-Sie sind Spam leid? Yahoo! Mail verfügt über einen herausragenden Schutz gegen Massenmails. 
-http://mail.yahoo.com 
+> > The AP seems to pass the coverage class on country IE, so I guess
+> > this means we can support this for AP mode and IBSS and only through the
+> > country IE for STA. Mind you that would mean hostapd would need to kick
+> > the coverage class as well and some new code on cfg80211 reg.c
+> > country_ie_2_rd() to parse it.
+>
+> This part is not implemented yet, I wanted to do the low level setting first, 
+
+I'd say expose it through debugfs first then instead of adding proper APIs
+for userspace. If the country IE is the way to pass this information alog to
+STAs there would be no need to tweak this on the user end. If you're an AP
+though you are likely going to want to change this though so I see, for example
+hostapd wanting to set this through nl80211. It also seems reasonable for IBSS
+but IBSS won't send country IEs unless I guess we use wpa_supplicant and somehow
+leverage the IE generation from hostapd.
+
+> as the regulatory stuff is quite complex.
+
+Hehe yeah, I skipped it :)
+
+I haven't even read this part of the IEEE docs but I did read enough to know the
+coverage_class is defined and set ont he country IE. This part at least is defined
+on include/linux/ieee80211.h:
+
+struct ieee80211_country_ie_triplet {
+        union {
+                struct {
+                        u8 first_channel;
+                        u8 num_channels;
+                        s8 max_power;
+                } __attribute__ ((packed)) chans;
+                struct {
+                        u8 reg_extension_id;
+                        u8 reg_class;
+                        u8 coverage_class;
+                } __attribute__ ((packed)) ext;
+        };
+} __attribute__ ((packed));
+
+Parsing the Country IE is also already done for you, all that would need to
+be done is to allow parsing the triplets when class first_channel >
+IEEE80211_COUNTRY_EXTENSION_ID, and then we can get the coverage class.
+
+But -- like I said, I really didn't read this section, not sure how the reg_class
+fits into this. Not sure if this helps:
+
+http://wireless.kernel.org/en/developers/Documentation/ChannelList
+
+> It's still usable for long distance 
+> point-to-point links (that are now impossible with in-kernel drivers). 
+
+Sure, I'm not saying I don't see value into adding this upstream, what
+seems pointless is to start allowing mucking with settings when we haven't
+been doing the same for other hw configurable parameters through a well
+defined userspace API.
+
+If we want to expose this through debugfs though that's different, go for it.
+
+> Hostapd would then use the same API.
+
+Well hostapd would use it for AP mode, sure and that makes sense. Can't say
+it makes sense to let users configure through a well defined userspace API
+if the AP instead can juse use the country IE and we can enable debugfs for
+experimenting.
+
+  Luis
