@@ -1,87 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rain.florz.de ([62.216.164.86]:45347 "EHLO
-	rain.florz.dyndns.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755386AbZLSBNR (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:45643 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759599AbZLOLKr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2009 20:13:17 -0500
-Date: Sat, 19 Dec 2009 02:13:06 +0100
-From: Florian Zumbiehl <florz@florz.de>
-To: Andrea Merello <andreamrl@tiscali.it>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, herton@mandriva.com.br,
-	htl10@users.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: Power consumption of RTL8187 (driver)/recommendations for
-	low-power USB 802.11 adapter?
-Message-ID: <20091219011306.GG2512@florz.florz.dyndns.org>
-References: <20091218180205.GD2512@florz.florz.dyndns.org> <4B2BC7E3.2050907@lwfinger.net> <20091218185916.GE2512@florz.florz.dyndns.org> <4B2C100A.9000507@lwfinger.net> <c68f135e0912181615p7cd36bd0n7054b43f2b453599@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c68f135e0912181615p7cd36bd0n7054b43f2b453599@mail.gmail.com>
+	Tue, 15 Dec 2009 06:10:47 -0500
+Received: by ewy19 with SMTP id 19so346774ewy.21
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2009 03:10:41 -0800 (PST)
+Subject: p54: unknown rssi calibration data packing
+From: Gerhard van Gorkum <gerhard7@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Tue, 15 Dec 2009 12:10:38 +0100
+Message-Id: <1260875438.8291.8.camel@linus1.gentoo.dynalias.org>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hello,
 
-[...]
-> As someone told before this management traffic is for examples beacons.
+  I have 3 Dell 1450 Wireless USB adapters, and 2 of them give me issues
+with 'unknown rssi calibration data packing'.  Should I just report it
+here?
 
-IC - I hadn't thought that softmac really meant basically "radio only" =:-)
 
-> Probably your prism2 card was a so called "fullmac" card. That menas
-> that all this management stuff can be done on the wifi card without
-> generating load on the host CPU.
+usb 2-2: new full speed USB device using uhci_hcd and address 4
+usb 2-2: not running at top speed; connect to a high speed hub
+usb 2-2: configuration #1 chosen from 1 choice
+usb 2-2: reset full speed USB device using uhci_hcd and address 4
+usb 2-2: firmware: requesting isl3887usb
+phy2: p54 detected a LM87 firmware
+p54: rx_mtu reduced from 3240 to 2384
+phy2: FW rev 2.13.24.0 - Softmac protocol 5.9
+phy2: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
+phy2: unknown rssi calibration data packing  type:(1908) len:14.
+rssical:00 00 8f 09 87 00 71 fe 78 14 81 00 7c fe        ......q.x...|.
+phy2: please report this issue.
+phy2: hwaddr 00:14:a5:95:5e:78, MAC:isl3892 RF:Xbow
+phy2: Selected rate control algorithm 'minstrel'
+Registered led device: p54-phy2::assoc
+Registered led device: p54-phy2::tx
+Registered led device: p54-phy2::rx
+Registered led device: p54-phy2::radio
+usb 2-2: is registered as 'phy2'
+udev: renamed network interface wlan0 to wlan3
+usb 2-2: USB disconnect, address 4
+usb 2-2: new full speed USB device using uhci_hcd and address 5
+usb 2-2: not running at top speed; connect to a high speed hub
+usb 2-2: configuration #1 chosen from 1 choice
+usb 2-2: reset full speed USB device using uhci_hcd and address 5
+usb 2-2: firmware: requesting isl3887usb
+phy3: p54 detected a LM87 firmware
+p54: rx_mtu reduced from 3240 to 2384
+phy3: FW rev 2.13.24.0 - Softmac protocol 5.9
+phy3: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
+phy3: unknown rssi calibration data packing  type:(1908) len:14.
+rssical:00 00 8f 09 85 00 76 fe 78 14 81 00 7c fe        ......v.x...|.
+phy3: please report this issue.
+phy3: hwaddr 00:14:a5:d0:0a:1a, MAC:isl3892 RF:Xbow
+phy3: Selected rate control algorithm 'minstrel'
+Registered led device: p54-phy3::assoc
+Registered led device: p54-phy3::tx
+Registered led device: p54-phy3::rx
+Registered led device: p54-phy3::radio
+usb 2-2: is registered as 'phy3'
+udev: renamed network interface wlan0 to wlan1
+usb 2-2: USB disconnect, address 5
 
-Yeah, it is.
 
-> One thing I can say is that the ieee 802.11 protocol allows certains
-> power save functionalities but, provided that mac80211 / rtl8187
-> driver support it (and I'm really not sure), this will probably only
-> reduces power consumption on the USB, not on the host processor.
 
-That certainly would be nice, too, but it seems that most of the power
-consumption really comes from the host processor. I guess I should
-measure the current going through the USB connetion ...
-
-> Well, it may be interesting to do a serious analisys about how much
-> power is drained by the card when it is up and in RX, when the
-> mac80211 sends probes, and how much is related to the CPU, however,
-> because you estimated that the power drain increase is too much for
-> being directly related to the usb stuff, I think is really possible
-> that the big problem is related to beacons.
-
-I'll play around with AP settings a bit and report back to you.
-If you can think of any particular useful tests I could do, please
-let me know, I'll see what I can do.
-
-But yeah - even if the device draws more than the allowed 500 mA,
-I hope very much that it doesn't draw anywhere close to 3 A ... ;-)
-
-[...]
-> This means that, IMHO, there is no way to avoid the CPU work on
-> rtl8187 when you are connected to a network (unless the network AP is
-> yours and you reduce beacon interval as someone suggested). Maybe you
-> can force some powersave mode on the CPU, by scaling the cpu clock
-> frequency, avoiding taht some "ondemand" policy can rise the clock
-> when the CPU is loaded (I doubt beacons processing is enough to
-> trigger this), but If you tracked down that interrupts are the causes
-> of the CPU don't entering C3 state, I _think_ you can't do much..
-
-I would assume that it's some timers you are using? As I understand it,
-other interrupts (which cannot really be predicted) don't prevent
-the power management code from switching the CPU into deep sleep
-modes?!
-
-It's only a PIII, which is too slow with frequency changes for
-the ondemand governor, and the speedstep driver also causes other
-yet-unresolved problems (audio stuttering) when loaded.
-So it's not really a solution in this case, even though you are
-right that the actual CPU cycles used would suggest that newer
-processors should be able to stay at their minimum frequency with
-the ondemand governor.
-
-> So far If you are looking for a card that make you save power, I
-> suggest you to get a fullmac one.
-
-Any suggestions as to how to recognize those? Or even a recommendation
-for a specific device/chipset?
-
-Florian
