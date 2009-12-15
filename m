@@ -1,41 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:35461 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750919AbZLVDhy (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:36815 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760553AbZLORJd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2009 22:37:54 -0500
-Received: by yxe17 with SMTP id 17so5507954yxe.33
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2009 19:37:52 -0800 (PST)
+	Tue, 15 Dec 2009 12:09:33 -0500
+Received: by mail-ew0-f219.google.com with SMTP id 19so71271ewy.21
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2009 09:09:32 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH v2.6.33] rt2x00: Fix calculation of rt2800 iveiv entry offset.
+Date: Tue, 15 Dec 2009 18:09:31 +0100
+Cc: linville@tuxdriver.com, users@rt2x00.serialmonkey.com,
+	linux-wireless@vger.kernel.org
+References: <1260829951-27139-1-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1260829951-27139-1-git-send-email-gwingerde@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20091222022135.2102c465@magooz.no-ip.org>
-References: <20091222022135.2102c465@magooz.no-ip.org>
-Date: Mon, 21 Dec 2009 22:37:51 -0500
-Message-ID: <b6c5339f0912211937o525c9117k2e6d877b3c91b858@mail.gmail.com>
-Subject: Re: [PATCH] ath5k: adding LED support for AR5BXB63 cards
-From: Bob Copeland <me@bobcopeland.com>
-To: Luca Verdesca <magooz@salug.it>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200912151809.31376.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 21, 2009 at 8:21 PM, Luca Verdesca <magooz@salug.it> wrote:
-> With following patch, LED should now work with LiteOn AR5BXB63 mini
-> pci-e cards.
->
-> I hope I made no mistake.
->
-> Happy hacking!
-> Magooz
+On Monday 14 December 2009, Gertjan van Wingerde wrote:
+> Fix typo. The index should be multiplied by the entry size, not 'and'-ed.
+> 
+> Found via code-inspection.
+> 
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Would you mind re-spinning a patch using the subvendor instead of the
-Atheros device ID?  For all I know, all of the AR5BXB63s are the same,
-but just in case let's stick with subvendor until we know for sure.
-You can get the proper numbers by running lspci -vnn as root, and look
-at the other stanzas for examples.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Thanks!
--Bob
+> ---
+>  drivers/net/wireless/rt2x00/rt2800.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+> index c5fe867..1a7eae3 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800.h
+> +++ b/drivers/net/wireless/rt2x00/rt2800.h
+> @@ -1323,7 +1323,7 @@
+>  #define PAIRWISE_KEY_ENTRY(__idx) \
+>  	( PAIRWISE_KEY_TABLE_BASE + ((__idx) * sizeof(struct hw_key_entry)) )
+>  #define MAC_IVEIV_ENTRY(__idx) \
+> -	( MAC_IVEIV_TABLE_BASE + ((__idx) & sizeof(struct mac_iveiv_entry)) )
+> +	( MAC_IVEIV_TABLE_BASE + ((__idx) * sizeof(struct mac_iveiv_entry)) )
+>  #define MAC_WCID_ATTR_ENTRY(__idx) \
+>  	( MAC_WCID_ATTRIBUTE_BASE + ((__idx) * sizeof(u32)) )
+>  #define SHARED_KEY_ENTRY(__idx) \
 
--- 
-Bob Copeland %% www.bobcopeland.com
+
