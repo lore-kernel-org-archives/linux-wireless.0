@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42188 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754372AbZLHOpJ (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:38560 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755299AbZLOTAx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 09:45:09 -0500
-Date: Tue, 8 Dec 2009 09:42:10 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Carpenter <error27@gmail.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@Atheros.com>
-Subject: Re: signed vs unsigned bug in ath9k
-Message-ID: <20091208144209.GC15172@tuxdriver.com>
-References: <20091207110736.GA1338@bicker> <20091207155542.GB19643@tux> <20091208082031.GA29753@bicker>
+	Tue, 15 Dec 2009 14:00:53 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2009 11:00:53 -0800
+Date: Tue, 15 Dec 2009 11:00:51 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: =?utf-8?B?THVrw6HFoQ==?= Turek <8an@praha12.net>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath5k-devel] [PATCH 1/5] nl80211: Add new WIPHY attribute
+ COVERAGE_CLASS
+Message-ID: <20091215190051.GC2123@tux>
+References: <1260899813-17585-1-git-send-email-8an@praha12.net>
+ <1260899813-17585-2-git-send-email-8an@praha12.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091208082031.GA29753@bicker>
+Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1260899813-17585-2-git-send-email-8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 08, 2009 at 10:20:32AM +0200, Dan Carpenter wrote:
-> On Mon, Dec 07, 2009 at 07:55:42AM -0800, Luis R. Rodriguez wrote:
-> > On Mon, Dec 07, 2009 at 03:07:36AM -0800, Dan Carpenter wrote:
-> > > drivers/net/wireless/ath/ath9k/recv.c
-> > >    205          sta = ieee80211_find_sta(sc->hw, hdr->addr2);
-> > >    206          if (sta) {
-> > >    207                  an = (struct ath_node *) sta->drv_priv;
-> > >    208                  if (ds->ds_rxstat.rs_rssi != ATH9K_RSSI_BAD &&
-> > > 
-> > > ds->ds_rxstat.rs_rssi is a signed 8 bit so it will never be == ATH9K_RSSI_BAD.
-> > 
-> > ATH9K_RSSI_BAD is -128 and the minimum value for int8_t is -128 so why is it a bug?
-> > 
+On Tue, Dec 15, 2009 at 09:56:48AM -0800, Lukáš Turek wrote:
+> The new attribute NL80211_ATTR_WIPHY_COVERAGE_CLASS sets IEEE 802.11
+> Coverage Class, which depends on maximum distance of nodes in a
+> wireless network. It's required for long distance links (more than a few
+> hundred meters).
 > 
-> It could be that someone fixed this already in the net tree?  In mainline it's still
-> positive 128.
+> The attribute is now ignored by two non-mac80211 drivers, rndis and
+> iwmc3200wifi, together with WIPHY_PARAM_RETRY_SHORT and
+> WIPHY_PARAM_RETRY_LONG. If it turns out to be a problem, we could split
+> set_wiphy_params callback or add new capability bits.
 > 
-> #define ATH9K_RSSI_BAD                  0x80
+> Signed-off-by: Lukas Turek <8an@praha12.net>
+> @@ -803,9 +807,16 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+>                 changed |= WIPHY_PARAM_RTS_THRESHOLD;
+>         }
+> 
+> +       if (info->attrs[NL80211_ATTR_WIPHY_COVERAGE_CLASS]) {
+> +               coverage_class = nla_get_u8(
+> +                       info->attrs[NL80211_ATTR_WIPHY_COVERAGE_CLASS]);
+> +               changed |= WIPHY_PARAM_COVERAGE_CLASS;
+> +       }
+> +
 
-I queued a patch to fix that for 2.6.33.
+Does setting the coverage class make sense for all modes of operation?
 
-Hth!
+If not it'd be good to catch those early and avoid setting them and also
+properly document them.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+The AP seems to pass the coverage class on country IE, so I guess
+this means we can support this for AP mode and IBSS and only through the
+country IE for STA. Mind you that would mean hostapd would need to kick
+the coverage class as well and some new code on cfg80211 reg.c
+country_ie_2_rd() to parse it.
+
+Doesn't seem to make sense to set this for monitor interfaces.
+
+  Luis
