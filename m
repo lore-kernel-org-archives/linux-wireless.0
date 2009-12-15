@@ -1,67 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:49764 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753806AbZLVQDe convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55960 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752937AbZLOKD4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2009 11:03:34 -0500
-Received: by iwn1 with SMTP id 1so4516687iwn.33
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Dec 2009 08:03:34 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1261495204-28966-4-git-send-email-hauke@hauke-m.de>
-References: <1261495204-28966-1-git-send-email-hauke@hauke-m.de>
-	<1261495204-28966-4-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 22 Dec 2009 08:03:14 -0800
-Message-ID: <43e72e890912220803w3665563aob918a6486f3fc546@mail.gmail.com>
-Subject: Re: [PATCH 2/2] compat: autoconf.h moved from linux/ to generated/
-	with kernel 2.6.33
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 15 Dec 2009 05:03:56 -0500
+Subject: Re: [PATCH] wireless: wext: allocate space for NULL-termination
+ for 32byte SSIDs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: daniel@caiaq.de, linux-kernel@vger.kernel.org, dcbw@redhat.com,
+	m.hirsch@raumfeld.com, netdev@vger.kernel.org,
+	libertas-dev@lists.infradead.org, stable@kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20091215.014308.77044043.davem@davemloft.net>
+References: <1260650850-16163-1-git-send-email-daniel@caiaq.de>
+	 <20091215.014308.77044043.davem@davemloft.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Q0rfAH3PVOalrltMCQSk"
+Date: Tue, 15 Dec 2009 11:03:31 +0100
+Message-ID: <1260871411.3692.4.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 22, 2009 at 7:20 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> Changed the headers, because autoconf.h moved from linux/ into generated/
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  include/linux/compat-2.6.14.h |    3 ++-
->  include/linux/compat-2.6.18.h |    3 ++-
->  include/linux/compat-2.6.19.h |    2 +-
->  include/linux/compat-2.6.21.h |    2 +-
->  include/linux/compat-2.6.22.h |    2 +-
->  include/linux/compat-2.6.23.h |    2 +-
->  include/linux/compat-2.6.24.h |    3 ++-
->  include/linux/compat-2.6.25.h |    2 +-
->  include/linux/compat-2.6.26.h |    2 +-
->  include/linux/compat-2.6.27.h |    2 +-
->  include/linux/compat-2.6.28.h |    2 +-
->  include/linux/compat-2.6.29.h |    2 +-
->  include/linux/compat-2.6.30.h |    3 ++-
->  include/linux/compat-2.6.31.h |    2 +-
->  include/linux/compat-2.6.32.h |    2 +-
->  include/linux/compat-2.6.33.h |    4 ++--
->  include/linux/compat-2.6.h    |    6 +++++-
->  17 files changed, 26 insertions(+), 18 deletions(-)
->
-> diff --git a/include/linux/compat-2.6.14.h b/include/linux/compat-2.6.14.h
-> index 22e7e31..c509899 100644
-> --- a/include/linux/compat-2.6.14.h
-> +++ b/include/linux/compat-2.6.14.h
-> @@ -1,12 +1,13 @@
->  #ifndef LINUX_26_14_COMPAT_H
->  #define LINUX_26_14_COMPAT_H
->
-> -#include <linux/autoconf.h>
->  #include <linux/version.h>
->
->  /* Compat work for 2.6.14 */
->  #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,14))
->
-> +#include <linux/autoconf.h>
-> +
 
-Would it not suffice if we just handle this on compat.h?
+--=-Q0rfAH3PVOalrltMCQSk
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Tue, 2009-12-15 at 01:43 -0800, David Miller wrote:
+
+> > The effect is that after a number of mode transistions (sometimes as fe=
+w
+> > as two sufficed), the kernel will oops at very strange locations, mostl=
+y
+> > in something like __kmem_alloc().
+> >=20
+> > While the root cause turned out to be an issue with the wpa-supplicant
+> > which feeds the kernel driver with garbage, this occasion pointed out a
+> > bug in the wireless wext core when SSIDs with 32 byte lengths are passe=
+d
+> > from userspace. In this case, the string is not properly NULL-terminate=
+d
+> > which causes some other part to corrupt memory.
+> >=20
+> > (In the particular case I observed, an SIOCSIWESSID was issued with
+> >  bogus data in iwp->pointer but iwp->length=3D32).
+> >=20
+> > I admitedly couldn't find where the actual corruption itself happens,
+> > but with this trivial fix, I can't reproduce the bug anymore.
+
+Well you should try harder :)
+
+> > -	/* kzalloc() ensures NULL-termination for essid_compat. */
+> > -	extra =3D kzalloc(extra_size, GFP_KERNEL);
+> > +	/* kzalloc() +1 ensures NULL-termination for essid_compat. */
+> > +	extra =3D kzalloc(extra_size + 1, GFP_KERNEL);
+
+That doesn't seem correct.
+
+If this is used in a SET, then it is purely an in-kernel thing and
+everything in the kernel is passed the length + data, and the kernel
+MUST NEVER treat the SSID as a NUL-terminated string.
+
+If this is used in a GET, then it will be filled up to 32 bytes by the
+get handler, and the trailing \0 your patch reserves will never be
+copied into userspace.
+
+Since you indicate the kernel crashed, it is likely that libertas is
+treating the buffer as a string, instead of an SSID.
+
+That doesn't, however, make your fix and more valid. Whatever code uses
+it as a string is clearly at fault, since this is a valid four-byte
+SSID: "\x00\x01\x02\x03"
+
+johannes
+
+--=-Q0rfAH3PVOalrltMCQSk
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLJ17uAAoJEODzc/N7+QmakpQQAIIrYHyJcdJDdRtRLMroqt1c
+zT+e+NIdWHxFT5XRxnzLVyDuJOrmE4/xNgWmHo/gZ60PZtQhaGQO+ekJTQTNSFYK
+Il3pb5TKHR7WBGsJWj1ME14S6hswruCFCjDVgDMozXlFLYc1+QWoWkqHdanh2XaK
+mdwxi1c13cHHWPTgZT5pYtaPELjDktqHJO79NQ7JUQ8JZCPCcxvPNg97l7yZ5kKl
+AyBXbbvTuoG2KY94Lk0qgo1Mwf7Dm4fQNmIrwwFAaIpRZBidDQROTAtMaZcivSoL
+tuvIiJTtpJzxHITx5+iZuHm8HZQHQgDj/lsPeBoodPy2aGNrp/VcPwulyYzY5FU/
+JkeFTMMQEXNpFaa482EM1gyY8MKkyxUQojxU7/KDgpRrBxK1T9D1jp2ALDQfGxyA
+SKE5uVsXrfag+7kM59Q/Dw1LJjcRVSZ0rc0D47Tn/lR98E/gJjxTknUBspyYUA6R
+F0NIcZpgfoi4PdBC+b1/F2FcWN6Riy1aQ9paQcxkRSdpOVi4Mad+e+G4RrXJw6bT
+5aC4BP9337aRAMmLjjl2yZXTSqZ4mbzLS6gVkxX5v39zMeKMgIMPnz/TqlMUZpFo
+PcNjGuM7teS7s96rV4FzHgE2VuR1UKJBK8xxSWQUlD/inreh7xLYlH5CRHXf8Hwp
+V8tFvhpOwnTxU4MIy+4O
+=UhFJ
+-----END PGP SIGNATURE-----
+
+--=-Q0rfAH3PVOalrltMCQSk--
+
