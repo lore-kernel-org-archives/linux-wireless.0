@@ -1,48 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:33821 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755798AbZLHO5N (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:36815 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754610AbZLORJ1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 09:57:13 -0500
-Received: by fg-out-1718.google.com with SMTP id 16so221092fgg.1
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2009 06:57:17 -0800 (PST)
+	Tue, 15 Dec 2009 12:09:27 -0500
+Received: by ewy19 with SMTP id 19so71271ewy.21
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2009 09:09:26 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 5/9] drivers/net/wireless: Correct code taking the size of a pointer
+Date: Tue, 15 Dec 2009 18:09:22 +0100
+Cc: Julia Lawall <julia@diku.dk>,
+	Andreas Schwab <schwab@linux-m68k.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <Pine.LNX.4.64.0912131241470.24267@ask.diku.dk> <Pine.LNX.4.64.0912131706390.27767@ask.diku.dk> <4B26B71D.1080903@gmail.com>
+In-Reply-To: <4B26B71D.1080903@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20091207215903.GC18939@tuxdriver.com>
-References: <bf87febf0912030507u1c36f6a9h7cac0efabf3d016@mail.gmail.com>
-	 <20091204192315.GA5786@tuxdriver.com>
-	 <bf87febf0912070205k40a7286dpbb48cfcc494203d2@mail.gmail.com>
-	 <20091207215903.GC18939@tuxdriver.com>
-Date: Tue, 8 Dec 2009 09:57:16 -0500
-Message-ID: <b6c5339f0912080657s7cfccd4dp6525702e609bdd5f@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: add support for Dell Vostro A860 LED
-From: Bob Copeland <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Shahar Or <mightyiampresence@gmail.com>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200912151809.23132.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 7, 2009 at 4:59 PM, John W. Linville <linville@tuxdriver.com> wrote:
-> On Mon, Dec 07, 2009 at 12:05:54PM +0200, Shahar Or wrote:
->> Adds support for the WiFi activity LED on the Dell Vostro A860 laptop.
->>
->> Signed-off-by: Shahar Or <shahar@shahar-or.co.il>
->> ---
->> I hope this one is perfect.
+On Monday 14 December 2009, Gertjan van Wingerde wrote:
+> On 12/13/09 17:07, Julia Lawall wrote:
+> > From: Julia Lawall <julia@diku.dk>
+> > 
+> > sizeof(iv16) and sizeof(iv32) are the sizes of pointers.  Change them to
+> > the size of the copied data.
+> > 
+> > Furthermore, iveiv_entry is a local structure that has just been
+> > initialized and is not visible outside this function.  Thus, there would
+> > seem to be no point to copy data into it.  The order of the arguments is
+> > thus changed to copy the data into the parameters, which are provided as
+> > pointers, suggesting in this case that they should be used to return values.
+> > 
+> > A simplified version of the semantic patch that finds the first problem is as
+> > follows: (http://coccinelle.lip6.fr/)
+> > 
+> > // <smpl>
+> > @@
+> > expression *x;
+> > expression f;
+> > type T;
+> > @@
+> > 
+> > *f(...,(T)x,...)
+> > // </smpl>
+> > 
+> > Signed-off-by: Julia Lawall <julia@diku.dk>
+> 
+> This is certainly better than the original code.
+> 
+> Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Thanks for the patch.  As for getting a better solution to LEDs, I
-trolled through the ACPI spec and code, and while various modules
-do set up LED pins, there doesn't seem to be a way to generally
-get that information from another module and it appears different
-between each vendor.  I am by no stretch expert in ACPI stuff
-though.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Luis, I've asked this before but maybe you know better now or know
-whom to ask on your side.  Atheros must have a way on Windows to
-figure out the LED pin/polarity -- do you have any idea?  Ath9k
-uses the SREV but that seems to be insufficient for ath5k judging
-by all the quirks.
+> > 
+> > ---
+> >  drivers/net/wireless/rt2x00/rt2800lib.c        |    4 ++--
+> >  1 files changed, 2 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> > index eb1e1d0..f52b82e 100644
+> > --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> > +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> > @@ -2140,8 +2140,8 @@ static void rt2800_get_tkip_seq(struct ieee80211_hw *hw, u8 hw_key_idx,
+> >  	rt2800_register_multiread(rt2x00dev, offset,
+> >  				      &iveiv_entry, sizeof(iveiv_entry));
+> >  
+> > -	memcpy(&iveiv_entry.iv[0], iv16, sizeof(iv16));
+> > -	memcpy(&iveiv_entry.iv[4], iv32, sizeof(iv32));
+> > +	memcpy(iv16, &iveiv_entry.iv[0], sizeof(*iv16));
+> > +	memcpy(iv32, &iveiv_entry.iv[4], sizeof(*iv32));
+> >  }
+> >  
+> >  static int rt2800_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+> > 
+> 
+> 
 
--- 
-Bob Copeland %% www.bobcopeland.com
+
