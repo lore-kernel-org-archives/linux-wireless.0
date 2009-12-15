@@ -1,90 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44695 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933647AbZLFK5O (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49470 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755590AbZLOVp3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2009 05:57:14 -0500
-Subject: Re: WMM classification guideline for applications?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org, patrik.flykt@nokia.com
-In-Reply-To: <87d42u6dnd.fsf@purkki.valot.fi>
-References: <87d42u6dnd.fsf@purkki.valot.fi>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-tWjO+ww43LtD0ZaTZqD5"
-Date: Sun, 06 Dec 2009 11:57:17 +0100
-Message-ID: <1260097037.3461.10.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 15 Dec 2009 16:45:29 -0500
+Date: Tue, 15 Dec 2009 16:42:54 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Ivo van Doorn <ivdoorn@gmail.com>, stable@kernel.org
+Subject: Re: [PATCH v2 2.6.33] rt2x00: Disable powersaving for rt61pci and
+	rt2800pci.
+Message-ID: <20091215214254.GG8735@tuxdriver.com>
+References: <1260819235-8017-1-git-send-email-gwingerde@gmail.com> <20091215204432.GE8735@tuxdriver.com> <14add3d10912151310s6b36cc60vabbdac4afff2e4b4@mail.gmail.com> <20091215213052.GF8735@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20091215213052.GF8735@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Dec 15, 2009 at 04:30:52PM -0500, John W. Linville wrote:
+> On Tue, Dec 15, 2009 at 10:10:19PM +0100, Gertjan van Wingerde wrote:
+> > On Tue, Dec 15, 2009 at 9:44 PM, John W. Linville
+> > <linville@tuxdriver.com> wrote:
+> > > On Mon, Dec 14, 2009 at 08:33:55PM +0100, Gertjan van Wingerde wrote:
+> > >> We've had many reports of rt61pci failures with powersaving enabled.
+> > >> Therefore, as a stop-gap measure, disable powersaving of the rt61pci
+> > >> until we have found a proper solution.
+> > >> Also disable powersaving on rt2800pci as it most probably will show
+> > >> the same problem.
+> > >>
+> > >> Cc: stable@kernel.org
+> > >> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> > >> ---
+> > >>
+> > >> John, this is an urgent fix for 2.6.33.
+> > >>
+> > >> v2:
+> > >> - Handled feedback from Ivo:
+> > >>       - Only disable powersaving by default, not permanent.
+> > >>       - Also apply to rt2800pci.
+> > >
+> > > As posted, it will only compile on 2.6.32...
+> > >
+> > 
+> > Me confused, as the patch was against the wireless-2.6.git tree, which
+> > I thought was 2.6.33, and not 2.6.32. Please explain to which tree to
+> > prepare fixes for 2.6.33.
+> 
+> That seems rather impossible, since wireless-2.6 failed to build with
+> your patch applied. :-)  Perhaps you weren't up-to-date?
 
---=-tWjO+ww43LtD0ZaTZqD5
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+For reference:
 
-On Fri, 2009-12-04 at 16:02 +0200, Kalle Valo wrote:
+commit 5be83de54c16944dea9c16c6a5a53c1fa75ed304
+Author: Johannes Berg <johannes@sipsolutions.net>
+Date:   Thu Nov 19 00:56:28 2009 +0100
 
-> Method 3 (IPv4 DSCP field) feels most portable to us, at least most,
-> if not all, wifi drivers should use it. And, in theory, the receiver
-> should also benefit from the classification, unless ISPs modify it of
-> course. But the standardisation for IPv4 QoS bits is a mess and I
-> don't really understand where the use of DSCP bits (as used in WMM
-> implementations) is specified.=20
+    cfg80211: convert bools into flags
+    
+    We've accumulated a number of options for wiphys
+    which make more sense as flags as we keep adding
+    more. Convert the existing ones.
+    
+    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-http://tools.ietf.org/rfc/rfc2474.txt ?
-
-> Also I was told that root privileges
-> are needed to set this and that's somewhat cumbersome from application
-> developer's point of view.
-
-I don't see that IP_TOS, which will end up setting IP TOS/DSCP, requires
-any elevated privileges:
-
-        case IP_TOS:    /* This sets both TOS and Precedence */
-                if (sk->sk_type =3D=3D SOCK_STREAM) {
-                        val &=3D ~3;
-                        val |=3D inet->tos & 3;=20
-                }
-                if (inet->tos !=3D val) {
-                        inet->tos =3D val;
-                        sk->sk_priority =3D rt_tos2priority(val);
-                        sk_dst_reset(sk);
-                }
-                break;
-
-whereas, for instance:
-
-        case IP_IPSEC_POLICY:
-        case IP_XFRM_POLICY:
-                err =3D -EPERM;
-                if (!capable(CAP_NET_ADMIN))
-                        break;
-
-In any case, I think this topic would benefit of cross-posting to
-netdev :)
-
-johannes
-
---=-tWjO+ww43LtD0ZaTZqD5
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLG44KAAoJEODzc/N7+Qmar00P/0X0hylY7eKmhQ4A9MUHj0Gb
-XljxLjk2XAJ0AirrzaAjxWtXA+IAyKKnvA4jRK6+6+ricdUYOxzzm5yBvwnEZaWo
-SVLRQ3AHmBrMvEdKxPINPsUOyx2K0dahtEMeDGeT6VyJK4DOf5mudvI97nArTeao
-OZz5/VH5jY1bxNUzhFFhEzwoFzaf+N0TryvKaltFu4RGwy2zSo5d9/CN2+KhNGVO
-cr8j56Y+Sk8YqI1WqKbzsMl4VcJuh1IRS/Mg7bscMyZqwVCvfrflr/si/VW7w35f
-ceCyIc2eBjgOC7V4qiE3QfEUXGOBXDS3Zns47byX0b+5gKauTS686M6YNtHVUlDF
-2GBwHoTfI8hWY5X6xtthPsHMVajXW6Msxbya+2EiG+FYBmAfZOvqSnc86DppWpgj
-IcWzOAYmjUWNXBOhY6bPgsFNNR/xsQE9fvFADX/sQx0yVlTYB2CbcsiFxD4tyd5x
-VCXjmmTPDpSYJ7IewOeC16Vc7b8B6FZvXoWsJ0BgmDr6tWghrUFVgN9B0AjuvibF
-OJAgXxXabaAyKTNMztamdDD+ONf5DNLLMgzRaGJWYU2EQZtP50Twe57HQHFVkaMo
-2T+IOKo3uZVvbgDY2Njl+2ZLr2IvjHgH1RJ3C/b535hnvxsZLODrLceZsPbwpZRU
-gh1uXXeRsK7gcOGLl5Yv
-=1q23
------END PGP SIGNATURE-----
-
---=-tWjO+ww43LtD0ZaTZqD5--
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
