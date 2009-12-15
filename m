@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet12.oracle.com ([148.87.113.124]:51642 "HELO
-	rcsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750713AbZLMDy7 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48844 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752263AbZLOVlZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Dec 2009 22:54:59 -0500
-Date: Sat, 12 Dec 2009 19:54:36 -0800
-From: Randy Dunlap <randy.dunlap@oracle.com>
+	Tue, 15 Dec 2009 16:41:25 -0500
+Date: Tue, 15 Dec 2009 16:30:52 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
 To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: linville@tuxdriver.com, users@rt2x00.serialmonkey.com,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 2.6.33] rt2x00: Fix rt2800usb detection in rt2800lib.
-Message-Id: <20091212195436.62bb66d8.randy.dunlap@oracle.com>
-In-Reply-To: <1260661180-2300-1-git-send-email-gwingerde@gmail.com>
-References: <1260661180-2300-1-git-send-email-gwingerde@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Ivo van Doorn <ivdoorn@gmail.com>, stable@kernel.org
+Subject: Re: [PATCH v2 2.6.33] rt2x00: Disable powersaving for rt61pci and
+	rt2800pci.
+Message-ID: <20091215213052.GF8735@tuxdriver.com>
+References: <1260819235-8017-1-git-send-email-gwingerde@gmail.com> <20091215204432.GE8735@tuxdriver.com> <14add3d10912151310s6b36cc60vabbdac4afff2e4b4@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <14add3d10912151310s6b36cc60vabbdac4afff2e4b4@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 13 Dec 2009 00:39:39 +0100 Gertjan van Wingerde wrote:
-
-> rt2800lib incorrectly detected whether RT2800USB was enabled because
-> it didn't account for a modularized RT2800USB driver.
+On Tue, Dec 15, 2009 at 10:10:19PM +0100, Gertjan van Wingerde wrote:
+> On Tue, Dec 15, 2009 at 9:44 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > On Mon, Dec 14, 2009 at 08:33:55PM +0100, Gertjan van Wingerde wrote:
+> >> We've had many reports of rt61pci failures with powersaving enabled.
+> >> Therefore, as a stop-gap measure, disable powersaving of the rt61pci
+> >> until we have found a proper solution.
+> >> Also disable powersaving on rt2800pci as it most probably will show
+> >> the same problem.
+> >>
+> >> Cc: stable@kernel.org
+> >> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> >> ---
+> >>
+> >> John, this is an urgent fix for 2.6.33.
+> >>
+> >> v2:
+> >> - Handled feedback from Ivo:
+> >>       - Only disable powersaving by default, not permanent.
+> >>       - Also apply to rt2800pci.
+> >
+> > As posted, it will only compile on 2.6.32...
+> >
 > 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> ---
-> 
-> John, this one is a fix for 2.6.33.
-> 
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++++
->  1 files changed, 4 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index eb1e1d0..bdc3286 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -33,6 +33,10 @@
->  	Abstract: rt2800 generic device routines.
->   */
->  
-> +#ifdef CONFIG_RT2800USB_MODULE
-> +#define CONFIG_RT2800USB
-> +#endif
-> +
+> Me confused, as the patch was against the wireless-2.6.git tree, which
+> I thought was 2.6.33, and not 2.6.32. Please explain to which tree to
+> prepare fixes for 2.6.33.
 
-The idiom that I am familiar with (and is the common one afaik)
-is to use:
+That seems rather impossible, since wireless-2.6 failed to build with
+your patch applied. :-)  Perhaps you weren't up-to-date?
 
-#if defined(CONFIG_RT2800USB) || defined(CONFIG_RT2800USB_MODULE)
-
-Besides, it's not nice to muck with kconfig symbols outside of Kconfig files.
-
-
->  #include <linux/kernel.h>
->  #include <linux/module.h>
-
-
----
-~Randy
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
