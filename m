@@ -1,42 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:51301 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750779AbZLDFWT (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60435 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756073AbZLOOwX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Dec 2009 00:22:19 -0500
-Message-ID: <4B189C94.4080404@gmail.com>
-Date: Thu, 03 Dec 2009 21:22:28 -0800
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Miles Lane <miles.lane@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] BUG kmalloc-8192: Poison overwritten
-References: <dd18b0c30912021427x4d1d952tcdd98bb9d816b67c@mail.gmail.com> 	<43e72e890912021516k736db118j217dc92496db8f19@mail.gmail.com> 	<4B182F79.7060103@gmail.com> <43e72e890912031345m3f5adb9nca754e33a858c923@mail.gmail.com>
-In-Reply-To: <43e72e890912031345m3f5adb9nca754e33a858c923@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 15 Dec 2009 09:52:23 -0500
+Subject: Re: [PATCH 17/19] [RFC, v2] libertas: Kconfig entry for
+ libertas+cfg80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <200912151544.00402.hs4233@mail.mn-solutions.de>
+References: <20091022133043.185554096@mail.mn-solutions.de>
+	 <200910260859.39002.hs4233@mail.mn-solutions.de>
+	 <1256587966.2110.28.camel@localhost.localdomain>
+	 <200912151544.00402.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-I02DeofbcoabrC6P4lrt"
+Date: Tue, 15 Dec 2009 15:52:10 +0100
+Message-ID: <1260888730.10356.9.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/03/09 13:45, Luis R. Rodriguez wrote:
 
+--=-I02DeofbcoabrC6P4lrt
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> I think waiting to be able to reproduce is best, and appreciate your
-> patience on this. Maybe Miles Lanes also cannot reproduce easily and
-> that may explain why he hasn't replied.
->
->    Luis
->
+On Tue, 2009-12-15 at 15:44 +0100, Holger Schurig wrote:
 
-o.k., did some more experimenting
-but came up with something other than
-what I was hoping for(something with s2ram),
-Anyways the two patches applied clean,
-I'll just run  the system with these in,
-and if somebody comes along with more expertise
-on this I can try their advice(or if I somehow find
-a way to reproduce this).
+> Nothing of this is really a WEXT-only, so I'd rather get rid of=20
+> WEXT completely, even for mesh. However, I need to abduct or=20
+> re-use the cfg80211 ibss commands for this, but I guess that's=20
+> not a problem.
+>=20
+>=20
+> Dan, Johannes, does this make sense?
 
-Justin P. Mattock
+I'd rather have new mesh commands. Right now, mesh joining/leaving is
+implicit with interface up/down after you set mesh parameters, but
+that's not very flexible.
+
+johannes
+
+--=-I02DeofbcoabrC6P4lrt
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLJ6KWAAoJEODzc/N7+Qma0ZAQAM8Gxqg8DZBc0fkMHq0EtIUW
+Sz62bkvgrc372SQP23HFT0DWXERdVo+9n75S22xU8LPO7/Ia46OSP60nGanqbePs
+3WYZQvh3HY34Rv4mXUBFTsv4Jzuz0z8gcCdI9IBR8TNMql6KNY9YYS0hl3hBBaFA
+01431mSlFJhCjFQ3/XXLvgU3xO2eGlQO0V2YJZRq1EjI/UYK/TE9zgAmyFFvUyZO
+HNJwl01VF603vVkmjs3AFauuPmFtf88BFBvoCCIc/Kj54mactokLS6e0NFqclVf1
+H9HCjhm7WQhG+My7R9mOa0njpwM7/0s+2Q+C2UT/tSSE3V+F7+nSPOv3Gdbl8ztB
+AyAoHDGxUKV51ZdY2enSuWr4PtDunxujYhZpPElAHZf3L9UMw+NNrMqR/2t4EfYd
+7f7i2LUVP3aPmQK3VO47KxfUkaXAUFCPWXvpuU5/8PiBjSP7fyYnzt7rPpL4rnxD
+We8fftorks+7HU1jo8UrhXY2SgFrVrhGHe87E1nIj4Y9aRrNFOdimHVPRhcEkAar
+/re1fvC8+0bL36Vylcycl+lH3yY7U7vGShbc/a7d5Gmh8iEF+XPOQO3dzpAvIwUq
+r+oy4Gpc+GcdpYJyKr/V31pIoQKxb5pYwFI3hWIfDWJ07ZiLYAkuykvRoGluj+ab
+u3YN2yEpOdDytKgsbvuB
+=GgpX
+-----END PGP SIGNATURE-----
+
+--=-I02DeofbcoabrC6P4lrt--
+
