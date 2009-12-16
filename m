@@ -1,61 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:63373 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752903AbZLaTCF (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:36303 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760027AbZLPQv6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Dec 2009 14:02:05 -0500
-Received: by fxm25 with SMTP id 25so6875054fxm.21
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Dec 2009 11:02:02 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC] mac80211: fix AMPDU_TX_START ssn
-Date: Thu, 31 Dec 2009 20:01:54 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200912312001.54300.chunkeey@googlemail.com>
+	Wed, 16 Dec 2009 11:51:58 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: greg@kroah.com, stable@kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Kyungwan Nam <kyungwan.nam@atheros.com>,
+	Bennyam Malavazi <bennyam.malavazi@atheros.com>,
+	Stephen Chen <stephen.chen@atheros.com>,
+	Shan Palanisamy <shan.palanisamy@atheros.com>,
+	Paul Shaw <paul.shaw@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH 3/5] ath9k: Fix maximum tx fifo settings for single stream devices
+Date: Wed, 16 Dec 2009 11:51:43 -0500
+Message-Id: <1260982305-32244-4-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1260982305-32244-1-git-send-email-lrodriguez@atheros.com>
+References: <1260982305-32244-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The start_seq_num is taken from the station's tid_seq[tid].
-(agg-tx.c / line 304). This would be fine, but there is a
-small pitfall that we know too well: tid_seq is meant
-to produce the sequence, which can be insert into an
-IEEE 802.11 frame sequence_control field without
-the 4 bit left shift (which is usually necessary to
-accommodate for frame fragmenting).
+Atheros single stream AR9285 and AR9271 have half the PCU TX FIFO
+buffer size of that of dual stream devices. Dual stream devices
+have a max PCU TX FIFO size of 8 KB while single stream devices
+have 4 KB. Single stream devices have an issue though and require
+hardware only to use half of the amount of its capable PCU TX FIFO
+size, 2 KB and this requires a change in software.
 
-So tid_seq is _increased_ in 0x10 steps, but some of
-the code in agg-tx.c doesn't know about that, e.g:
+Technically a change would not have been required (except for frame
+burst considerations of 128 bytes) if these devices would have been
+able to use the full 4 KB of the PCU TX FIFO size but our systems
+engineers recommend 2 KB to be used only. We enforce this through
+software by reducing the max frame triggger level to 2 KB.
 
-ieee80211_send_addba_request: (line 91)
-	mgmt->u.action.u.addba_req.start_seq_num =
-		cpu_to_le16(start_seq_num << 4);
+Fixing the max frame trigger level should then have a few benefits:
 
-Now, ADDBA recipient certainly gets a wrong BA starting
-point and may decide to drop some of the incoming 
-aggregated frames, since it might think that they
-were already too old.
+  * The PER will now be adjusted as designed for underruns when the
+    max trigger level is reached. This should help alleviate the
+    bus as the rate control algorithm chooses a slower rate which
+    should ensure frames are transmitted properly under high system
+    bus load.
+
+  * The poll we use on our TX queues should now trigger and work
+    as designed for single stream devices. The hardware passes
+    data from each TX queue on the PCU TX FIFO queue respecting each
+    queue's priority. The new trigger level ensures this seeding of
+    the PCU TX FIFO queue occurs as designed which could mean avoiding
+    false resets and actually reseting hw correctly when a TX queue
+    is indeed stuck.
+
+  * Some undocumented / unsupported behaviour could have been triggered
+    when the max trigger level level was being set to 4 KB on single
+    stream devices. Its not clear what this issue was to me yet.
+
+This is a backport of upstream commit:
+
+f4709fdf683e1ed37b321c258b614ebe39752bf3
+
+Cc: Kyungwan Nam <kyungwan.nam@atheros.com>
+Cc: Bennyam Malavazi <bennyam.malavazi@atheros.com>
+Cc: Stephen Chen <stephen.chen@atheros.com>
+Cc: Shan Palanisamy <shan.palanisamy@atheros.com>
+Cc: Paul Shaw <paul.shaw@atheros.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-Hmm, I'm not sure what to do with the debug_sta.c
-counters? Obviously, they are now >> 4 as well,
-but on the other hand just like the tid_rx side
-always was...
+ drivers/net/wireless/ath/ath9k/hw.c  |   11 ++++++++++-
+ drivers/net/wireless/ath/ath9k/hw.h  |    1 +
+ drivers/net/wireless/ath/ath9k/mac.c |    4 ++--
+ 3 files changed, 13 insertions(+), 3 deletions(-)
 
-Note: By the looks of it: iwlagn/ath9k are probably
-unaffected, but carl9170 was: so no need for stable. 
----
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index ceda366..5aa8f4a 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -301,7 +301,7 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid)
- 	 * call back right away, it must see that the flow has begun */
- 	*state |= HT_ADDBA_REQUESTED_MSK;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index ca7694c..c7aa05a 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -937,6 +937,11 @@ int ath9k_hw_init(struct ath_hw *ah)
+ 	DPRINTF(ah->ah_sc, ATH_DBG_RESET, "serialize_regmode is %d\n",
+ 		ah->config.serialize_regmode);
  
--	start_seq_num = sta->tid_seq[tid];
-+	start_seq_num = sta->tid_seq[tid] >> 4;
++	if (AR_SREV_9285(ah) || AR_SREV_9271(ah))
++		ah->config.max_txtrig_level = MAX_TX_FIFO_THRESHOLD >> 1;
++	else
++		ah->config.max_txtrig_level = MAX_TX_FIFO_THRESHOLD;
++
+ 	if (!ath9k_hw_macversion_supported(ah->hw_version.macVersion)) {
+ 		DPRINTF(ah->ah_sc, ATH_DBG_FATAL,
+ 			"Mac Chip Rev 0x%02x.%x is not supported by "
+@@ -3670,7 +3675,11 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 		pCap->keycache_size = AR_KEYTABLE_SIZE;
  
- 	ret = drv_ampdu_action(local, sdata, IEEE80211_AMPDU_TX_START,
- 			       pubsta, tid, &start_seq_num);
+ 	pCap->hw_caps |= ATH9K_HW_CAP_FASTCC;
+-	pCap->tx_triglevel_max = MAX_TX_FIFO_THRESHOLD;
++
++	if (AR_SREV_9285(ah) || AR_SREV_9271(ah))
++		pCap->tx_triglevel_max = MAX_TX_FIFO_THRESHOLD >> 1;
++	else
++		pCap->tx_triglevel_max = MAX_TX_FIFO_THRESHOLD;
+ 
+ 	if (AR_SREV_9285_10_OR_LATER(ah))
+ 		pCap->num_gpio_pins = AR9285_NUM_GPIO;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index b892345..57f1463 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -218,6 +218,7 @@ struct ath9k_ops_config {
+ #define AR_SPUR_FEEQ_BOUND_HT20 10
+ 	int spurmode;
+ 	u16 spurchans[AR_EEPROM_MODAL_SPURS][2];
++	u8 max_txtrig_level;
+ };
+ 
+ enum ath9k_int {
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 561a40e..d4d9d82 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -70,7 +70,7 @@ bool ath9k_hw_updatetxtriglevel(struct ath_hw *ah, bool bIncTrigLevel)
+ 	u32 txcfg, curLevel, newLevel;
+ 	enum ath9k_int omask;
+ 
+-	if (ah->tx_trig_level >= MAX_TX_FIFO_THRESHOLD)
++	if (ah->tx_trig_level >= ah->config.max_txtrig_level)
+ 		return false;
+ 
+ 	omask = ath9k_hw_set_interrupts(ah, ah->mask_reg & ~ATH9K_INT_GLOBAL);
+@@ -79,7 +79,7 @@ bool ath9k_hw_updatetxtriglevel(struct ath_hw *ah, bool bIncTrigLevel)
+ 	curLevel = MS(txcfg, AR_FTRIG);
+ 	newLevel = curLevel;
+ 	if (bIncTrigLevel) {
+-		if (curLevel < MAX_TX_FIFO_THRESHOLD)
++		if (curLevel < ah->config.max_txtrig_level)
+ 			newLevel++;
+ 	} else if (curLevel > MIN_TX_FIFO_THRESHOLD)
+ 		newLevel--;
+-- 
+1.6.3.3
+
