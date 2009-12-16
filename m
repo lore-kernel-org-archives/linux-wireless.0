@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:53755 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750742AbZLOFBx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 00:01:53 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 21:01:53 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19239.6382.946135.302792@gargle.gargle.HOWL>
-Date: Tue, 15 Dec 2009 10:34:46 +0530
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/6] ath9k: Fix bug in assigning sequence number
-In-Reply-To: <43e72e890912140658x3a12d554ta904ed63a0d1c75b@mail.gmail.com>
-References: <19238.1248.439940.601526@gargle.gargle.HOWL>
-	<43e72e890912140658xa88e8feq9589b29448d5d7e4@mail.gmail.com>
-	<43e72e890912140658x3a12d554ta904ed63a0d1c75b@mail.gmail.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:36233 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757869AbZLPQvr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2009 11:51:47 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: greg@kroah.com, stable@kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 0/5] stable-2.6.32: few ath9k fixes/mac80211 which missed CC'ing stable
+Date: Wed, 16 Dec 2009 11:51:40 -0500
+Message-Id: <1260982305-32244-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Mon, Dec 14, 2009 at 6:58 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > On Mon, Dec 14, 2009 at 1:26 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
-> >> The internal, driver-specific maintenance of sequence
-> >> numbers is applicable only for HT frames.
-> >>
-> >> Also, remove comments that are not relevant anymore.
-> >>
-> >> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-> >
-> > Is this cc: stable?
-> 
-> Also what bug does this fix, the commit log in no way explains any of this.
+Greg, here's a few patches which are stable fixes for which we missed
+to CC stable on. They are all upstream on Linus' tree now. A few required
+some backport work so I took the time to do this for you.
 
-The patch just removes redundant maintenance of sequence numbers in the code.
+Felix Fietkau (1):
+  ath9k: fix tx status reporting
 
-Sujith
+Luis R. Rodriguez (2):
+  ath9k: fix processing of TX PS null data frames
+  ath9k: Fix maximum tx fifo settings for single stream devices
+
+Sujith (1):
+  ath9k: Fix TX hang poll routine
+
+Vivek Natarajan (1):
+  mac80211: Fix dynamic power save for scanning.
+
+ drivers/net/wireless/ath/ath9k/ath9k.h |    3 +++
+ drivers/net/wireless/ath/ath9k/hw.c    |   11 ++++++++++-
+ drivers/net/wireless/ath/ath9k/hw.h    |    1 +
+ drivers/net/wireless/ath/ath9k/mac.c   |    6 ++++--
+ drivers/net/wireless/ath/ath9k/mac.h   |    1 +
+ drivers/net/wireless/ath/ath9k/main.c  |    9 ++++++++-
+ drivers/net/wireless/ath/ath9k/xmit.c  |   20 +++++++++++++++++++-
+ net/mac80211/ieee80211_i.h             |    1 +
+ net/mac80211/scan.c                    |   20 ++++++++++++++++----
+ 9 files changed, 63 insertions(+), 9 deletions(-)
+
