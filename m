@@ -1,76 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45354 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752863AbZLXMnu (ORCPT
+Received: from buzzloop.caiaq.de ([212.112.241.133]:49317 "EHLO
+	buzzloop.caiaq.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759393AbZLPESO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2009 07:43:50 -0500
-Subject: Re: mac80211 suspend corner case (was: Asus eeepc 1008HA suspend
- issue and mac80211 suspend corner) case
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-In-Reply-To: <43e72e890912231119l79ef5a99h6b57362e38f189ed@mail.gmail.com>
-References: <20091222022355.GA32508@bombadil.infradead.org>
-	 <20091222193010.GB30201@bombadil.infradead.org>
-	 <1261570081.25008.1.camel@johannes.local>  <20091223162813.GB2609@tux>
-	 <1261586828.7304.13.camel@johannes.local>  <20091223190840.GI2609@tux>
-	 <1261595489.27798.0.camel@johannes.local>
-	 <43e72e890912231119l79ef5a99h6b57362e38f189ed@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7Xx8YxSCwBCDcmqMglhX"
-Date: Thu, 24 Dec 2009 13:43:46 +0100
-Message-ID: <1261658626.28729.9.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 15 Dec 2009 23:18:14 -0500
+Date: Wed, 16 Dec 2009 12:18:06 +0800
+From: Daniel Mack <daniel@caiaq.de>
+To: linux-kernel@vger.kernel.org
+Cc: Dan Williams <dcbw@redhat.com>,
+	Holger Schurig <holgerschurig@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Michael Hirsch <m.hirsch@raumfeld.com>, netdev@vger.kernel.org,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	stable@kernel.org
+Subject: Re: [PATCH] Libertas: fix buffer overflow in lbs_get_essid()
+Message-ID: <20091216041805.GO28375@buzzloop.caiaq.de>
+References: <1260936778-2096-1-git-send-email-daniel@caiaq.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1260936778-2096-1-git-send-email-daniel@caiaq.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+(Sorry, had a typo in the linux-wireless list address, corrected now).
 
---=-7Xx8YxSCwBCDcmqMglhX
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2009-12-23 at 11:19 -0800, Luis R. Rodriguez wrote:
-
-> Reason for me suggesting for mac80211 to deal with this is drivers
-> won't know if their failed start() call will have been from resume and
-> we likely won't add a bool to start() callback since we already
-> debated this a while back.
->=20
-> I don't really care about hardware failures in other cases right now,
-
-Which is the problem.
-
-If your hardware suddenly fails, _regardless_ of when, you need to
-unregister from mac80211 since otherwise you'll get loads of callbacks
-to failed hardware.
-
-Resume really isn't as special as you'd like to believe.
-
-johannes
-
---=-7Xx8YxSCwBCDcmqMglhX
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLM2H+AAoJEODzc/N7+QmaOMgQAK65YV3/1j1lc+sfe8eJUMrI
-5/UeUH+mF9g41wZEkfJpyqWccivibOguiioxdUP5gUseLLdaFrBwWjFhIGlkkZ/A
-KqXSq+4AI1U/iucCnOfEGEMyvuij5zqPdb15FLKAFwD2VbC9edR0GQ4XMkm6DGvu
-0FzuJyPrJ1urvsi8qB6LIAa6ukpUmGt2t0WFhrSZdJwOv7uRCvTyybQbB7HfbbEb
-4YKPNZmEbKWqfYrVb0xw31Orj41fX8Hjvyg1FV/Lfezbk+zF03eCbiHeQTboK8p6
-zkPz9Omm39gdtddIc3AIT+ZiOgSzlGEOkmHnk3V4DYgZz4KXkpHEiB2pqHZsMrd+
-wvmOLne9YZHcRyikW4O9CJQWm8GQYbyAB86baxIUxGXyMGJioGjkWOBW5YjbIt2B
-l2S5oBALcaBvNUlBu0L7uQRt+qQ/1cF8km8DxQZ4c2ieedElgMQcxCIHftNzZqPo
-hUS5Gx77jqYPDBNgjUnm/F65evWdH8onn97HJqWsW47y6C4yQjoQ7w1QcPxydP96
-YrRIoDThE/nlkVFG5bspeZMjrzBL0Mu/XbPcXxxTRzwRj3r9IUMemRkagkhq5Vma
-Hbf8d4bbbUVSiHbB61E/ieD0+7oUdKcs57gCTAxcD1Quz2/gngYe+HRlx2cZCRzg
-W2CBeDlPshyVfvBmT/PX
-=2Jmf
------END PGP SIGNATURE-----
-
---=-7Xx8YxSCwBCDcmqMglhX--
-
+On Wed, Dec 16, 2009 at 05:12:58AM +0100, Daniel Mack wrote:
+> 
+> The libertas driver copies the SSID buffer back to the wireless core and
+> appends a trailing NULL character for termination. This is
+> 
+> a) unnecessary because the buffer is allocated with kzalloc and is hence
+>    already NULLed when this function is called, and
+> 
+> b) for priv->curbssparams.ssid_len == 32, it writes back one byte too
+>    much which causes memory corruptions.
+> 
+> Fix this by removing the extra write.
+> 
+> Signed-off-by: Daniel Mack <daniel@caiaq.de>
+> Cc: Dan Williams <dcbw@redhat.com>
+> Cc: Holger Schurig <holgerschurig@gmail.com>
+> Cc: John W. Linville <linville@tuxdriver.com>
+> Cc: Stephen Hemminger <shemminger@vyatta.com>
+> Cc: Maithili Hinge <maithili@marvell.com>
+> Cc: Kiran Divekar <dkiran@marvell.com>
+> Cc: Michael Hirsch <m.hirsch@raumfeld.com>
+> Cc: netdev@vger.kernel.org
+> Cc: libertas-dev@lists.infradead.org
+> Cc: linux-wireless@lists.infradead.org
+> Cc: stable@kernel.org
+> ---
+>  drivers/net/wireless/libertas/wext.c |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
+> index be837a0..01c738b 100644
+> --- a/drivers/net/wireless/libertas/wext.c
+> +++ b/drivers/net/wireless/libertas/wext.c
+> @@ -1953,10 +1953,8 @@ static int lbs_get_essid(struct net_device *dev, struct iw_request_info *info,
+>  	if (priv->connect_status == LBS_CONNECTED) {
+>  		memcpy(extra, priv->curbssparams.ssid,
+>  		       priv->curbssparams.ssid_len);
+> -		extra[priv->curbssparams.ssid_len] = '\0';
+>  	} else {
+>  		memset(extra, 0, 32);
+> -		extra[priv->curbssparams.ssid_len] = '\0';
+>  	}
+>  	/*
+>  	 * If none, we may want to get the one that was set
+> -- 
+> 1.6.3.3
+> 
