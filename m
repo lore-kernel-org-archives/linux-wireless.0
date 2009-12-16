@@ -1,46 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:45583 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751288AbZLWSlA convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:59045 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932133AbZLPGgm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 13:41:00 -0500
-Received: by ewy19 with SMTP id 19so6631397ewy.21
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2009 10:40:59 -0800 (PST)
+	Wed, 16 Dec 2009 01:36:42 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, ic.felix@gmail.com,
+	=?utf-8?q?Luk=C3=A1=C5=A1=20Turek?= <8an@praha12.net>
+Subject: [PATCH] iw: add country IE parsing support for scanning
+Date: Wed, 16 Dec 2009 01:36:38 -0500
+Message-Id: <1260945398-301-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <200912231926.17206.mb@bu3sch.de>
-References: <b170af450912230401l7a27b981o42cdbc96e5a16b57@mail.gmail.com>
-	 <4B325F27.4020506@lwfinger.net> <200912231926.17206.mb@bu3sch.de>
-Date: Wed, 23 Dec 2009 19:40:59 +0100
-Message-ID: <b170af450912231040h4b18614dw26a4f2f403e7048b@mail.gmail.com>
-Subject: Re: [PATCH][resend with linux-wireless] b43: N-PHY: clean table init,
-	check PHY rev
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/12/23 Michael Buesch <mb@bu3sch.de>:
-> On Wednesday 23 December 2009 19:19:19 Larry Finger wrote:
->> ACK for the relocation of the tables.
->
-> Well, the _tables_ aren't actually relocated with that patch. The tables
-> are already in the tables_nphy.c file. You just relocate the functions that upload
-> the tables.
+Screenshot:
 
-Yeah, I believe we all meant "table init relocation" :)
+BSS 00:0b:85:aa:bb:cc (on wlan11)
+        TSF: 488777932855 usec (5d, 15:46:17)
+        freq: 5320
+        beacon interval: 100
+        capability: ESS (0x0001)
+        signal: -74.00 dBm
+        last seen: 1730 ms ago
+        SSID: Foobar
+        Supported rates: 6.0* 9.0 12.0* 18.0 24.0* 36.0 48.0 54.0
+        Country: US     Environment: Indoor/Outdoor
+        Country IE triplets:
+                Channels [36 - 48]
+                Channels [52 - 64]
+                Channels [149 - 165]
 
+I haven't found any regclasses while scanning at work.
+We can likely start using the info here:
 
-> So if you want to relocate the upload-functions, the question arises whether
-> the tables should be made static.
+http://wireless.kernel.org/en/developers/Documentation/ChannelList
 
-Good catch, thanks. Didn't think about that. I'll post new version.
+to process this info more.
 
+Cc: ic.felix@gmail.com
+Cc: Lukáš Turek <8an@praha12.net>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ scan.c |   87 +++++++++++++++++++++++++++++++++++++++++++++++++++------------
+ 1 files changed, 70 insertions(+), 17 deletions(-)
 
-Thank you guys for help, talk :)
-
+diff --git a/scan.c b/scan.c
+index d37ae7c..142eedb 100644
+--- a/scan.c
++++ b/scan.c
+@@ -35,6 +35,23 @@ struct scan_params {
+ 	enum print_ie_type type;
+ };
+ 
++#define IEEE80211_COUNTRY_EXTENSION_ID 201
++
++struct ieee80211_country_ie_triplet {
++	union {
++		struct {
++			__u8 first_channel;
++			__u8 num_channels;
++			__s8 max_power;
++		} __attribute__ ((packed)) chans;
++		struct {
++			__u8 reg_extension_id;
++			__u8 reg_class;
++			__u8 coverage_class;
++		} __attribute__ ((packed)) ext;
++	};
++} __attribute__ ((packed));
++
+ static int handle_scan(struct nl80211_state *state,
+ 		       struct nl_cb *cb,
+ 		       struct nl_msg *msg,
+@@ -142,29 +159,65 @@ static void print_ds(const uint8_t type, uint8_t len, const uint8_t *data)
+ 	printf(" channel %d\n", data[0]);
+ }
+ 
+-static void print_country(const uint8_t type, uint8_t len, const uint8_t *data)
++static const char *country_env_str(char environment)
+ {
+-	int i;
+-
+-	printf(" %.*s", 2, data);
+-	switch (data[2]) {
++	switch (environment) {
+ 	case 'I':
+-		printf(" (indoor)");
+-		break;
++		return "Indoor only";
+ 	case 'O':
+-		printf(" (outdoor)");
+-		break;
++		return "Outdoor only";
+ 	case ' ':
+-		printf(" (in/outdoor)");
+-		break;
++		return "Indoor/Outdoor";
+ 	default:
+-		printf(" (invalid environment)");
+-		break;
++		return "bogus";
+ 	}
+-	printf(", data:");
+-	for(i=0; i<len-3; i++)
+-		printf(" %.02x", data[i + 3]);
+-	printf("\n");
++}
++
++static void print_country(const uint8_t type, uint8_t len, const uint8_t *data)
++{
++	printf(" %.*s", 2, data);
++
++	printf("\tEnvironment: %s\n", country_env_str(data[2]));
++
++	data += 3;
++	len -= 3;
++
++	if (len < 3) {
++		printf("\t\tNo country IE triplets present\n");
++		return;
++	}
++
++	printf("\tCountry IE triplets:\n");
++
++	while (len >= 3) {
++		int end_channel;
++		struct ieee80211_country_ie_triplet *triplet =
++			(struct ieee80211_country_ie_triplet *) data;
++
++		if (triplet->ext.reg_extension_id >= IEEE80211_COUNTRY_EXTENSION_ID) {
++			printf("\t\tExtension ID: %d Regulatory Class: %d Coverage class: %d\n",
++			       triplet->ext.reg_extension_id,
++			       triplet->ext.reg_class,
++			       triplet->ext.coverage_class);
++
++			data += 3;
++			len -= 3;
++			continue;
++		}
++
++		/* 2 GHz */
++		if (triplet->chans.first_channel <= 14)
++			end_channel = triplet->chans.first_channel + triplet->chans.num_channels;
++		else
++			end_channel =  triplet->chans.first_channel + (4 * (triplet->chans.num_channels - 1));
++
++		printf("\t\tChannels [%d - %d]\n", triplet->chans.first_channel, end_channel);
++
++		data += 3;
++		len -= 3;
++	}
++
++	return;
+ }
+ 
+ static void print_powerconstraint(const uint8_t type, uint8_t len, const uint8_t *data)
 -- 
-Rafał
+1.6.3.3
+
