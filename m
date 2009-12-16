@@ -1,66 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45495 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756354AbZLUDL7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2009 22:11:59 -0500
-Date: Sun, 20 Dec 2009 22:07:38 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2009-12-18
-Message-ID: <20091221030738.GA2398@tuxdriver.com>
-References: <20091218211945.GC2828@tuxdriver.com>
- <20091220.001736.189688434.davem@davemloft.net>
- <20091220133800.GA4700@tuxdriver.com>
- <20091220.182910.226760127.davem@davemloft.net>
+Received: from 007.netroom.de ([194.0.247.207]:2228 "EHLO 007.netroom.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762065AbZLPLWq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2009 06:22:46 -0500
+Message-ID: <4B28C2F7.7040207@draisberghof.de>
+Date: Wed, 16 Dec 2009 12:22:31 +0100
+From: Josua Dietze <digidietze@draisberghof.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20091220.182910.226760127.davem@davemloft.net>
+To: Stefan Seyfried <stefan.seyfried@googlemail.com>
+CC: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>,
+	Oliver Neukum <oliver@neukum.org>, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net
+Subject: Re: [PATCH] move eject code from zd1211rw to usb-storage
+References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com>	<4B278191.1010009@draisberghof.de>	<200912151611.08576.oliver@neukum.org>	<20091215180300.GF16426@one-eyed-alien.net> <20091216114932.4bede511@strolchi.home.s3e.de>
+In-Reply-To: <20091216114932.4bede511@strolchi.home.s3e.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 20, 2009 at 06:29:10PM -0800, David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Sun, 20 Dec 2009 08:38:00 -0500
-> 
-> > On Sun, Dec 20, 2009 at 12:17:36AM -0800, David Miller wrote:
-> >> From: "John W. Linville" <linville@tuxdriver.com>
-> >> Date: Fri, 18 Dec 2009 16:19:45 -0500
-> >> 
-> >> > Please let me know if there are problems!
-> >> 
-> >> Your tree is based upon Linus's not net-2.6
-> >> so when I pulled I got a lot of unrelated
-> >> commits.
-> >> 
-> >> Please fix this, thanks.
-> > 
-> > It's based on 2.6.33-rc1.  Are you not going to pull that into net-2.6?
-> 
-> Why in the world should I?  There are no conflicts to resolve
-> that I know of.
-> 
-> And if there are no conflicts to resolve, pulling in Linus's
-> tree just makes future pulls into his tree more ugly.
-> 
-> This is pretty standard practice, but in any event you shouldn't ever
-> care.
-> 
-> You should simply always work against net-2.6, there is no reason to
-> work against any other tree.
-> 
-> This is a pretty fundamental thing, I don't know why you based against
-> Linus's tree instead of net-2.6.  Now you have to rebase already :-/
+Stefan Seyfried schrieb:
 
-My mistake!  For some reason I just thought that pulling from -rc1 was
-your normal practice -- now I can't figure what gave me that idea...
+> On Tue, 15 Dec 2009 10:03:00 -0800
+> Matthew Dharm <mdharm-kernel@one-eyed-alien.net> wrote:
+>> The right answer here is neither to move the eject code nor to introduce
+>> more of it.  New devices should be supported via userspace.
+> 
+> Can somebody point me to the "userspace" that is meant here?
+> Preferably some code that can be built actually?
 
-Anyway, might as well have one more rebase now.  I'll straighten-out
-my trees tomorrow morning and resubmit.
 
-John
+If the "eject" from SCSI tools does not work, "usb_modeswitch" can 
+send customized bulk messages to devices.
+
+http://www.draisberghof.de/usb_modeswitch/
+
+
+Josh
 -- 
-John W. Linville                Someday the world will need a hero, and you
-linville@tuxdriver.com                  might be all we have.  Be ready.
+Man is the only creature on earth enabled to take a
+warm meal while flying!                      Loriot
