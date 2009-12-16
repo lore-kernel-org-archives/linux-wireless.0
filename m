@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out002.kontent.com ([81.88.40.216]:47263 "EHLO
-	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762098AbZLPLW7 (ORCPT
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:58111 "EHLO
+	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751296AbZLPNGO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2009 06:22:59 -0500
-From: Oliver Neukum <oliver@neukum.org>
-To: Stefan Seyfried <stefan.seyfried@googlemail.com>
-Subject: Re: [PATCH] move eject code from zd1211rw to usb-storage
-Date: Wed, 16 Dec 2009 12:23:16 +0100
-Cc: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>,
-	Josua Dietze <digidietze@draisberghof.de>,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
-References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com> <20091215180300.GF16426@one-eyed-alien.net> <20091216114932.4bede511@strolchi.home.s3e.de>
-In-Reply-To: <20091216114932.4bede511@strolchi.home.s3e.de>
+	Wed, 16 Dec 2009 08:06:14 -0500
+Message-ID: <4B28DBB6.5030304@gmail.com>
+Date: Wed, 16 Dec 2009 14:08:06 +0100
+From: Roel Kluin <roel.kluin@gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200912161223.16403.oliver@neukum.org>
+To: Samuel Ortiz <samuel.ortiz@intel.com>, Zhu Yi <yi.zhu@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: [PATCH] iwmc3200wifi: Fix test of unsigned in iwm_ntf_stop_resume_tx()
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch, 16. Dezember 2009 11:49:32 schrieb Stefan Seyfried:
-> On Tue, 15 Dec 2009 10:03:00 -0800
-> Matthew Dharm <mdharm-kernel@one-eyed-alien.net> wrote:
-> > The right answer here is neither to move the eject code nor to introduce
-> > more of it.  New devices should be supported via userspace.
-> 
-> Can somebody point me to the "userspace" that is meant here?
-> Preferably some code that can be built actually?
+`queue' is unsigned so the test did not work.
 
-Sure:
-http://www.draisberghof.de/usb_modeswitch/
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+Found using coccinelle: http://coccinelle.lip6.fr/
 
-	HTH
-		Oliver
+diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
+index 1c57c1f..9ac72e4 100644
+--- a/drivers/net/wireless/iwmc3200wifi/rx.c
++++ b/drivers/net/wireless/iwmc3200wifi/rx.c
+@@ -1128,7 +1128,7 @@ static int iwm_ntf_stop_resume_tx(struct iwm_priv *iwm, u8 *buf,
+ 			struct iwm_tx_queue *txq;
+ 			u16 queue = iwm_tid_to_queue(bit);
+ 
+-			if (queue < 0)
++			if (queue == -EINVAL)
+ 				continue;
+ 
+ 			txq = &iwm->txq[queue];
