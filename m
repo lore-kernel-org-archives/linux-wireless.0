@@ -1,78 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43268 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757846AbZLNQsi (ORCPT
+Received: from smtp-out002.kontent.com ([81.88.40.216]:47263 "EHLO
+	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762098AbZLPLW7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 11:48:38 -0500
-Subject: Re: Ethernet bridging with wireless
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <Pine.LNX.4.44L0.0912141131190.2685-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.0912141131190.2685-100000@iolanthe.rowland.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Fd/JxOe8e8AFna+IpWp2"
-Date: Mon, 14 Dec 2009 17:48:35 +0100
-Message-ID: <1260809315.2442.408.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 16 Dec 2009 06:22:59 -0500
+From: Oliver Neukum <oliver@neukum.org>
+To: Stefan Seyfried <stefan.seyfried@googlemail.com>
+Subject: Re: [PATCH] move eject code from zd1211rw to usb-storage
+Date: Wed, 16 Dec 2009 12:23:16 +0100
+Cc: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>,
+	Josua Dietze <digidietze@draisberghof.de>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com> <20091215180300.GF16426@one-eyed-alien.net> <20091216114932.4bede511@strolchi.home.s3e.de>
+In-Reply-To: <20091216114932.4bede511@strolchi.home.s3e.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200912161223.16403.oliver@neukum.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Am Mittwoch, 16. Dezember 2009 11:49:32 schrieb Stefan Seyfried:
+> On Tue, 15 Dec 2009 10:03:00 -0800
+> Matthew Dharm <mdharm-kernel@one-eyed-alien.net> wrote:
+> > The right answer here is neither to move the eject code nor to introduce
+> > more of it.  New devices should be supported via userspace.
+> 
+> Can somebody point me to the "userspace" that is meant here?
+> Preferably some code that can be built actually?
 
---=-Fd/JxOe8e8AFna+IpWp2
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Sure:
+http://www.draisberghof.de/usb_modeswitch/
 
-On Mon, 2009-12-14 at 11:35 -0500, Alan Stern wrote:
-> I just tried to set up ethernet bridging between the wireless interface
-> and the wired ethernet interface on my laptop machine.  It didn't work. =20
-> As far as I could tell from the tcpdump output, the wireless stack
-> doesn't want to transmit packets with a foreign link-layer source
-> address.
->=20
-> Is there any way around this restriction?  Or must I resort to IP=20
-> forwarding instead?
-
-There's no standard way around this restriction, the on-air packets are
-required to be transmitted with the correct TA (transmitter address) [1]
-which also must be the SA (sender address) in the regular frame format,
-since the DA (destination address) and RA (receiver address) must be
-present and the format only has three addresses. In recent kernels (what
-will be 2.6.33), we have added code to disallow such configurations
-since they cannot work.
-
-However, if you control both the AP and and the station (e.g. laptop),
-and your AP and station both run mac80211, then you can use the
-four-address hack that Felix has been developing. It will then use the
-standardised four-address frame format that normally cannot be used
-between a station and an AP to transfer different TA/SA. I'm not sure if
-he has documentation on this yet.
-
-There's also ebtables NAT, but I have no idea if/how that works.
-
-johannes
-
-[1] otherwise the ACK mechanism cannot work
-
---=-Fd/JxOe8e8AFna+IpWp2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLJmxfAAoJEODzc/N7+QmajFwP/RSoEn7sr1G1AM9OZmgInRLC
-OcnfW2siw835PPk4F6Aniz25iQj0fSGQEyF6kDTILTBQ2uMj5TOMUWfhFl3UDWSn
-sOPYosI4bpYSkOvclO1qMbTFvWl6YXpikNoL/fQWZMPlxjfD7T/Vhk3+gyH6VX16
-Xu3K0Rq8SDzUk9luGChuZi+n84O52ZbPzGQGh62e5cDzjRgR+fT6FjWPYo5aeVIh
-hY9Bz35yEzC4Y4Pf1v8OcFItRZRLhbO0w5iF44ExaWqNMXEq7eYLFRqV5tqmUq1g
-lNy/VbRtSfE/9odOopUbln8XoEhrHfZR9NjXqjavjyCu8ghSg1tWnCgIAwWF854u
-CfZG0FcPjqDSF/DpLXzzizuruzBPYDan6i0uxITIL2mTQuwz8adbUaFVM8IDXIbO
-PqA5O8KJzTqBRcMBvLR6ZRtMQggb9UIJRSH6MDcLcjeXly7ChGuY7/HgI4g0DK1T
-GbpBsVJ3uCg75hfA0mCbTsyRc25K0ucSEJ0YmrFm6anpjTr7YZH1fmXlbJmWE5UL
-52IdiSgDS2lAdrLCGXpgzj03n8RX7wl9pHutbCPV6zQq7bIrP5LHPhl2qvmdTVT/
-hKndFbLtnluDFr6maJ6d0wATJIPDU1dJaCvWSe5KyVUvwBVEsbXu4OmLgqsy0bzq
-ihWh4iKkphSPo/pO1Yu1
-=1JVO
------END PGP SIGNATURE-----
-
---=-Fd/JxOe8e8AFna+IpWp2--
-
+	HTH
+		Oliver
