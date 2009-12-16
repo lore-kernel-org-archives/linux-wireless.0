@@ -1,40 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:46482 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756402AbZLJROQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2009 12:14:16 -0500
-Received: by iwn1 with SMTP id 1so5509280iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2009 09:14:23 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <200912101846.40572.holgerschurig@gmail.com>
-References: <500577.32161.qm@web51405.mail.re2.yahoo.com> <200912101846.40572.holgerschurig@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 10 Dec 2009 09:14:01 -0800
-Message-ID: <43e72e890912100914m1766db5fife6563fec3807b8d@mail.gmail.com>
-Subject: Re: Switching channel in IBSS network doesn't work in ath9k
-To: Holger Schurig <holgerschurig@googlemail.com>
-Cc: Joerg Pommnitz <pommnitz@yahoo.com>, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:6677 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752109AbZLPQsV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2009 11:48:21 -0500
+Subject: Re: [PATCH] move eject code from zd1211rw to usb-storage
+From: Dan Williams <dcbw@redhat.com>
+To: Stefan Seyfried <stefan.seyfried@googlemail.com>
+Cc: Josua Dietze <digidietze@draisberghof.de>,
+	Matthew Dharm <mdharm-kernel@one-eyed-alien.net>,
+	Oliver Neukum <oliver@neukum.org>, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net
+In-Reply-To: <20091216131452.49ad183b@strolchi.home.s3e.de>
+References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com>
+	 <4B278191.1010009@draisberghof.de> <200912151611.08576.oliver@neukum.org>
+	 <20091215180300.GF16426@one-eyed-alien.net>
+	 <20091216114932.4bede511@strolchi.home.s3e.de>
+	 <4B28C2F7.7040207@draisberghof.de>
+	 <20091216131452.49ad183b@strolchi.home.s3e.de>
+Content-Type: text/plain
+Date: Wed, 16 Dec 2009 08:47:17 -0800
+Message-Id: <1260982037.2179.5.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 10, 2009 at 9:46 AM, Holger Schurig
-<holgerschurig@googlemail.com> wrote:
->> P.S.: Is there a way to get an overview of the current interface
->>  configuration with iw? What is the equivalent of "iwconfig wlan0"?
->
-> There's none. Currently, iw iw written almost like a direct representation
-> of cfg80211 commands. For things like "iw link", the code has added a bit of
-> magic, so that this actually sends two cfg80211 command. But in general,
-> it's a 1:1 relation.
->
-> So, you'd need to write some "give me greatest amount of info" command newly
-> for iw.
+On Wed, 2009-12-16 at 13:14 +0100, Stefan Seyfried wrote:
+> On Wed, 16 Dec 2009 12:22:31 +0100
+> Josua Dietze <digidietze@draisberghof.de> wrote:
+> 
+> > Stefan Seyfried schrieb:
+> > > Preferably some code that can be built actually?
+> > 
+> > If the "eject" from SCSI tools does not work, "usb_modeswitch" can 
+> > send customized bulk messages to devices.
+> 
+> for my device, eject seems to be enough, so I'll be trying to get
+> this into udev.
+> 
+> > http://www.draisberghof.de/usb_modeswitch/
+> 
+> Unfortunately it cannot be built with current libusb and once you
+> compile it without warnings turned off (which is the default!), you
+> probably don't want to run it anymore ;)
 
-Actually I think a simple 'iw link' to do this for all interfaces
-would be good. I just haven't gotten around to it. I should be
-possible without upstream changes I believe.
+At this point, however, usb_modeswitch is the correct place to put eject
+code for all devices.  I wouldn't put this code into udev; I'd put it
+into usb_modeswitch instead, since usb_modeswitch is (a) the de-facto
+standard, (b) has the most users, and (c) has the most devices.  Yes, it
+has problems, but at this point we should fix those problems instead of
+creating 5 different eject tools.
 
-  Luis
+Dan
+
+
