@@ -1,72 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:40951 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752191AbZLXUiY (ORCPT
+Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:49666
+	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1762929AbZLPTNR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2009 15:38:24 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
-Subject: [PATCH v3 2/5] mac80211: fix propagation of failed hardware reconfigurations
-Date: Thu, 24 Dec 2009 15:38:22 -0500
-Message-Id: <1261687102-19563-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 16 Dec 2009 14:13:17 -0500
+Date: Wed, 16 Dec 2009 11:12:50 -0800
+From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Stefan Seyfried <stefan.seyfried@googlemail.com>,
+	Josua Dietze <digidietze@draisberghof.de>,
+	Oliver Neukum <oliver@neukum.org>, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net
+Subject: Re: [PATCH] move eject code from zd1211rw to usb-storage
+Message-ID: <20091216191250.GH16426@one-eyed-alien.net>
+References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com> <4B278191.1010009@draisberghof.de> <200912151611.08576.oliver@neukum.org> <20091215180300.GF16426@one-eyed-alien.net> <20091216114932.4bede511@strolchi.home.s3e.de> <4B28C2F7.7040207@draisberghof.de> <20091216131452.49ad183b@strolchi.home.s3e.de> <1260982037.2179.5.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="4ndw/alBWmZEhfcZ"
+In-Reply-To: <1260982037.2179.5.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 does not propagate failed hardware reconfiguration
-requests. For suspend and resume this is important due to all
-the possible issues that can come out of the suspend <-> resume
-cycle. Not propagating the error means cfg80211 will assume
-the resume for the device went through fine and mac80211 will
-continue on trying to poke at the hardware, enable timers,
-queue work, and so on for a device which is completley
-unfunctional.
 
-The least we can do is to propagate device start issues and
-warn when this occurs upon resume. A side effect of this patch
-is we also now propagate the start errors upon harware
-reconfigurations (non-suspend), but this should also be desirable
-anyway, there is not point in continuing to reconfigure a
-device if mac80211 was unable to start the device.
+--4ndw/alBWmZEhfcZ
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-For further details refer to the thread:
+On Wed, Dec 16, 2009 at 08:47:17AM -0800, Dan Williams wrote:
+> On Wed, 2009-12-16 at 13:14 +0100, Stefan Seyfried wrote:
+> > On Wed, 16 Dec 2009 12:22:31 +0100
+> > Josua Dietze <digidietze@draisberghof.de> wrote:
+> >=20
+> > > Stefan Seyfried schrieb:
+> > > > Preferably some code that can be built actually?
+> > >=20
+> > > If the "eject" from SCSI tools does not work, "usb_modeswitch" can=20
+> > > send customized bulk messages to devices.
+> >=20
+> > for my device, eject seems to be enough, so I'll be trying to get
+> > this into udev.
+> >=20
+> > > http://www.draisberghof.de/usb_modeswitch/
+> >=20
+> > Unfortunately it cannot be built with current libusb and once you
+> > compile it without warnings turned off (which is the default!), you
+> > probably don't want to run it anymore ;)
+>=20
+> At this point, however, usb_modeswitch is the correct place to put eject
+> code for all devices.  I wouldn't put this code into udev; I'd put it
+> into usb_modeswitch instead, since usb_modeswitch is (a) the de-facto
+> standard, (b) has the most users, and (c) has the most devices.  Yes, it
+> has problems, but at this point we should fix those problems instead of
+> creating 5 different eject tools.
 
-http://marc.info/?t=126151038700001&r=1&w=2
+udev just calls either usb_modeswitch or eject at the hotplug event.  So,
+you always need an update to the udev database, regardless.
 
-Cc: stable@kernel.org
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+The choice between using usb_modeswitch or eject is really one of "does the
+standard eject work properly" or not.  If not, add the code to
+usb_modeswitch.  Tho, if the usb_modeswitch maintainers want to carry
+around a duplicate set of 'eject' code, that's really up to them.
 
-This should make more sense for the warning.
+Matt
 
- net/mac80211/util.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index b019725..227b428 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1047,7 +1047,19 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 
- 	/* restart hardware */
- 	if (local->open_count) {
-+		/*
-+		 * Upon resume hardware can sometimes be goofy due to
-+		 * various platform / driver / bus issues, so restarting
-+		 * the device may at times not work immediately. Propagate
-+		 * the error.
-+		 */
- 		res = drv_start(local);
-+		if (res) {
-+			WARN(local->suspended, "Harware became unavailable "
-+			     "upon resume. This is could be a software issue"
-+			     "prior to suspend or a harware issue\n");
-+			return res;
-+		}
- 
- 		ieee80211_led_radio(local, true);
- 	}
--- 
-1.6.3.3
+Would you mind not using our Web server? We're trying to have a game of=20
+Quake here.
+					-- Greg
+User Friendly, 5/11/1998
 
+--4ndw/alBWmZEhfcZ
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQFLKTExHL9iwnUZqnkRAhVIAKCvZxA7Yu3ptFqeAtFwR/NU910bwgCfSetb
+Hx+wGUr6qwBpUL97M3CtIhA=
+=BQc/
+-----END PGP SIGNATURE-----
+
+--4ndw/alBWmZEhfcZ--
