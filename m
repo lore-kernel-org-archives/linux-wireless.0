@@ -1,62 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:49073 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752664AbZL2KoM (ORCPT
+Received: from smtp-out002.kontent.com ([81.88.40.216]:42320 "EHLO
+	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755288AbZLPK3N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Dec 2009 05:44:12 -0500
-Date: Tue, 29 Dec 2009 12:43:58 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: No need to include WEXT headers here
-Message-ID: <20091229104358.GA16996@jm.kir.nu>
+	Wed, 16 Dec 2009 05:29:13 -0500
+From: Oliver Neukum <oliver@neukum.org>
+To: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
+Subject: Re: [PATCH] move eject code from zd1211rw to usb-storage
+Date: Wed, 16 Dec 2009 11:29:27 +0100
+Cc: Josua Dietze <digidietze@draisberghof.de>,
+	Stefan Seyfried <stefan.seyfried@googlemail.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+	Stefan Seyfried <seife@sphairon.com>
+References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com> <200912151611.08576.oliver@neukum.org> <20091215180300.GF16426@one-eyed-alien.net>
+In-Reply-To: <20091215180300.GF16426@one-eyed-alien.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <200912161129.27284.oliver@neukum.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the forgotten linux/wireless.h inclusion from mac80211.
+Am Dienstag, 15. Dezember 2009 19:03:00 schrieb Matthew Dharm:
+> > This would break existing systems and thus introduce a regression.
+> > We'd need to go through a feature removal process. For the time being
+> > I see no alternative to Seife's patch, as we cannot introduce ejection
+> > code to another wireless driver and need to support these devices.
+> 
+> The right answer here is neither to move the eject code nor to introduce
+> more of it.  New devices should be supported via userspace.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+Usually I would agree, but in this case the vendor reused IDs.
+The legacy kernel space switcher and user space would race.
 
----
- net/mac80211/main.c |    1 -
- net/mac80211/scan.c |    1 -
- net/mac80211/util.c |    1 -
- 3 files changed, 3 deletions(-)
-
---- wireless-testing.orig/net/mac80211/main.c	2009-12-29 10:50:57.000000000 +0200
-+++ wireless-testing/net/mac80211/main.c	2009-12-29 10:52:32.000000000 +0200
-@@ -17,7 +17,6 @@
- #include <linux/skbuff.h>
- #include <linux/etherdevice.h>
- #include <linux/if_arp.h>
--#include <linux/wireless.h>
- #include <linux/rtnetlink.h>
- #include <linux/bitmap.h>
- #include <linux/pm_qos_params.h>
---- wireless-testing.orig/net/mac80211/scan.c	2009-12-29 10:50:57.000000000 +0200
-+++ wireless-testing/net/mac80211/scan.c	2009-12-29 10:52:32.000000000 +0200
-@@ -12,7 +12,6 @@
-  * published by the Free Software Foundation.
-  */
- 
--#include <linux/wireless.h>
- #include <linux/if_arp.h>
- #include <linux/rtnetlink.h>
- #include <net/mac80211.h>
---- wireless-testing.orig/net/mac80211/util.c	2009-12-29 10:50:57.000000000 +0200
-+++ wireless-testing/net/mac80211/util.c	2009-12-29 10:52:32.000000000 +0200
-@@ -18,7 +18,6 @@
- #include <linux/skbuff.h>
- #include <linux/etherdevice.h>
- #include <linux/if_arp.h>
--#include <linux/wireless.h>
- #include <linux/bitmap.h>
- #include <linux/crc32.h>
- #include <net/net_namespace.h>
-
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+	Regards
+		Oliver
