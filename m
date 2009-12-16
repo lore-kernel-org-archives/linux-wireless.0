@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:37217 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752364AbZLJObP (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55005 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934071AbZLPOP3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2009 09:31:15 -0500
-Received: by iwn1 with SMTP id 1so5383616iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2009 06:31:22 -0800 (PST)
+	Wed, 16 Dec 2009 09:15:29 -0500
+Date: Wed, 16 Dec 2009 09:05:43 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stefan Seyfried <stefan.seyfried@googlemail.com>
+Cc: Josua Dietze <digidietze@draisberghof.de>,
+	Matthew Dharm <mdharm-kernel@one-eyed-alien.net>,
+	Oliver Neukum <oliver@neukum.org>, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net
+Subject: Re: [PATCH] move eject code from zd1211rw to usb-storage
+Message-ID: <20091216140542.GB11793@tuxdriver.com>
+References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com> <4B278191.1010009@draisberghof.de> <200912151611.08576.oliver@neukum.org> <20091215180300.GF16426@one-eyed-alien.net> <20091216114932.4bede511@strolchi.home.s3e.de> <4B28C2F7.7040207@draisberghof.de> <20091216131452.49ad183b@strolchi.home.s3e.de>
 MIME-Version: 1.0
-In-Reply-To: <87ein30vt4.fsf@purkki.valot.fi>
-References: <20091209211054.GB32058@tuxdriver.com> <87ljhb0x0h.fsf@purkki.valot.fi>
-	<20091210134733.GC11112@tuxdriver.com> <87ein30vt4.fsf@purkki.valot.fi>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 10 Dec 2009 06:31:02 -0800
-Message-ID: <43e72e890912100631if1c17b2l597168813db4a19c@mail.gmail.com>
-Subject: Re: Revised wireless tree management practices
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, davem@davemloft.net
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091216131452.49ad183b@strolchi.home.s3e.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 10, 2009 at 6:04 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
-> "John W. Linville" <linville@tuxdriver.com> writes:
->
->> I still see value in a tree that has a reasonably stable base and
->> contains both wireless fixes and wireless features.
->
-> I agree, it makes things a lot easier.
->
->> So, I think wireless-testing remains as the focal point for wireless
->> LAN testing and development. I'll just be getting patches there in a
->> slightly different process.
->
-> Sounds very good. So I'll continue using wireless-testing. Thanks.
+On Wed, Dec 16, 2009 at 01:14:52PM +0100, Stefan Seyfried wrote:
+> On Wed, 16 Dec 2009 12:22:31 +0100
+> Josua Dietze <digidietze@draisberghof.de> wrote:
+> 
+> > Stefan Seyfried schrieb:
+> > > Preferably some code that can be built actually?
+> > 
+> > If the "eject" from SCSI tools does not work, "usb_modeswitch" can 
+> > send customized bulk messages to devices.
+> 
+> for my device, eject seems to be enough, so I'll be trying to get
+> this into udev.
 
-But we use wireless-next as base though if we want to send you pull
-requests, ay?
+When you do that any chance you could account for zd1211rw too? :-)
 
-  Luis
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
