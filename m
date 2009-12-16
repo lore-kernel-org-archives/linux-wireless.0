@@ -1,62 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:45611 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1759215AbZLJAqH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2009 19:46:07 -0500
-From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: regression: rt2561 frequent "Arrived at non-free entry" errors in   2.6.32
-Date: Thu, 10 Dec 2009 01:46:11 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Andi Kleen <andi@firstfloor.org>,
-	linux-wireless@vger.kernel.org, Tim Blechmann <tim@klingt.org>,
-	rjw@sisk.pl, IvDoorn@gmail.com, linville@tuxdriver.com
-References: <20091204233202.GA13658@basil.fritz.box> <200912090053.25798.s.L-H@gmx.de> <4B1F4A88.5000803@gmail.com>
-In-Reply-To: <4B1F4A88.5000803@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <200912100146.12717.s.L-H@gmx.de>
+Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:53944
+	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756465AbZLPSFc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2009 13:05:32 -0500
+Date: Wed, 16 Dec 2009 10:03:37 -0800
+From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
+To: Oliver Neukum <oliver@neukum.org>
+Cc: Josua Dietze <digidietze@draisberghof.de>,
+	Stefan Seyfried <stefan.seyfried@googlemail.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+	Stefan Seyfried <seife@sphairon.com>
+Subject: Re: [PATCH] move eject code from zd1211rw to usb-storage
+Message-ID: <20091216180337.GG16426@one-eyed-alien.net>
+References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com> <200912151611.08576.oliver@neukum.org> <20091215180300.GF16426@one-eyed-alien.net> <200912161129.27284.oliver@neukum.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Y/WcH0a6A93yCHGr"
+In-Reply-To: <200912161129.27284.oliver@neukum.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
 
-On Thursday 10 December 2009, Gertjan van Wingerde wrote:
-> On 12/09/09 00:53, Stefan Lippers-Hollmann wrote:
-> > Hi
-> > 
-> > On Tuesday 08 December 2009, Johannes Berg wrote:
-> >> On Tue, 2009-12-08 at 23:39 +0100, Stefan Lippers-Hollmann wrote:
-> >>
-> >>> Unfortunately this fails to compile for me:
-> >>
-> >> well remove the spurious opening brace? :)
-> > 
-> > yes, of course - but I have to admit that I didn't look too well at the 
-> > patch, after your other subthread - sorry about the noise.
-> > 
-> 
-> Yeah, sorry about the compile error in the patch.
-> 
-> > 
-> > with the patch applied (powersaving enabled):
-> > 
-> > - Downloading a larger file and therefore keeping the interface busy works 
-> >   now pretty well, while I did hit connection time outs before with 
-> >   powersaving enabled:
-> > 	Fetched 89.7MB in 30s (2926kB/s)
-> > 
-> 
-> Does this mean that the "Arrived at non-free entry" messages are gone with
-> power-saving enabled?
-[...]
+--Y/WcH0a6A93yCHGr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I've never seen that message, neither does the system crash or freeze - 
-rt61pci is just almost unusable due to the packet loss and the latencies with 
-powersaving enabled (I don't see this problem in the same environment with 
-rt2500usb/ rt73usb or b43 (bcm4306, bcm4318), rtl8187b, ath5k, ar9170usb, 
-zd1211rw).
+On Wed, Dec 16, 2009 at 11:29:27AM +0100, Oliver Neukum wrote:
+> Am Dienstag, 15. Dezember 2009 19:03:00 schrieb Matthew Dharm:
+> > > This would break existing systems and thus introduce a regression.
+> > > We'd need to go through a feature removal process. For the time being
+> > > I see no alternative to Seife's patch, as we cannot introduce ejection
+> > > code to another wireless driver and need to support these devices.
+> >=20
+> > The right answer here is neither to move the eject code nor to introduce
+> > more of it.  New devices should be supported via userspace.
+>=20
+> Usually I would agree, but in this case the vendor reused IDs.
+> The legacy kernel space switcher and user space would race.
 
-Regards
-	Stefan Lippers-Hollmann
+So, let me see if I understand this... we have two devices that use the
+same IDs, and get mode-switched the same way, but need different
+post-switch drivers?
+
+If this is the case, then the only reasonable answer to is to push the
+modeswitch code for both into udev and out of the kernel.  It will take
+longer to support the new device that way (since we need to wait until udev
+is updated and then remove kernel support), but that's what a vendor gets
+for re-using IDs.
+
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+What, are you one of those Microsoft-bashing Linux freaks?
+					-- Customer to Greg
+User Friendly, 2/10/1999
+
+--Y/WcH0a6A93yCHGr
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQFLKSD5HL9iwnUZqnkRAtaWAJ9OKenLJbBlbKKNErFlnnwks5V02wCdHHPG
+ttKHIyheEkEnXsfaQW1V+MI=
+=2Evc
+-----END PGP SIGNATURE-----
+
+--Y/WcH0a6A93yCHGr--
