@@ -1,123 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:5341 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753016AbZLBTlK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2009 14:41:10 -0500
-Subject: RE: [ipw3945-devel] Panic in iwl3945 driver
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-To: "Cahill, Ben M" <ben.m.cahill@intel.com>
-Cc: "Zhu, Yi" <yi.zhu@intel.com>,
-	Maxim Levitsky <maximlevitsky@gmail.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <02B3067C068D0549A8CCFCB17D4D318B4E603312@orsmsx502.amr.corp.intel.com>
-References: <1259167780.4072.2.camel@maxim-laptop>
-	 <1259280022.3991.12.camel@maxim-laptop>
-	 <1259596551.4090.0.camel@maxim-laptop>	<1259617333.4653.91.camel@rc-desk>
-	 <1259620526.6559.34.camel@maxim-laptop>	<1259659724.12157.110.camel@debian>
-	 <1259732550.12157.130.camel@debian>
-	 <02B3067C068D0549A8CCFCB17D4D318B4E603312@orsmsx502.amr.corp.intel.com>
-Content-Type: text/plain
-Date: Wed, 02 Dec 2009 11:40:38 -0800
-Message-Id: <1259782838.19509.2.camel@abhi-desktop>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41621 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762760AbZLQBGX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2009 20:06:23 -0500
+Date: Wed, 16 Dec 2009 20:01:15 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Daniel Mack <daniel@caiaq.de>
+Cc: Dan Williams <dcbw@redhat.com>, linux-kernel@vger.kernel.org,
+	Holger Schurig <holgerschurig@gmail.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Michael Hirsch <m.hirsch@raumfeld.com>, netdev@vger.kernel.org,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	stable@kernel.org
+Subject: Re: [PATCH] Libertas: fix buffer overflow in lbs_get_essid()
+Message-ID: <20091217010114.GA2913@tuxdriver.com>
+References: <1260936778-2096-1-git-send-email-daniel@caiaq.de>
+ <1260982667.2179.9.camel@localhost.localdomain>
+ <20091216231508.GX28375@buzzloop.caiaq.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20091216231508.GX28375@buzzloop.caiaq.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-12-02 at 11:18 -0800, Cahill, Ben M wrote:
-> 
-> >-----Original Message-----
-> >From: Zhu Yi [mailto:yi.zhu@intel.com] 
-> >Sent: Wednesday, December 02, 2009 12:43 AM
-> >To: Maxim Levitsky
-> >Cc: Chatre, Reinette; linux-wireless; iwlwifi maling list
-> >Subject: Re: [ipw3945-devel] Panic in iwl3945 driver
-> >
-> >On Tue, 2009-12-01 at 17:28 +0800, Zhu Yi wrote:
-> >> On Tue, 2009-12-01 at 06:35 +0800, Maxim Levitsky wrote:
-> >> > 0x000000000001668e <iwl3945_rx_reply_tx+302>:	lea    
-> >0x38(%r8),%rdi
-> >> > 0x0000000000016692 <iwl3945_rx_reply_tx+306>:	lea    
-> >0x4f(%r8),%rax
-> >> 
-> >> When this happened, from your previous post, r8 is 0x0 and 
-> >rdi is 0x38.
-> >> Since "info" is %rdi (see below), this means
-> >> txq->txb[txq->q.read_ptr].skb[0], aka. r8 is 0.
-> >> 
-> >> > 	rate_idx = iwl3945_hwrate_to_plcp_idx(tx_resp->rate);
-> >> > 
-> >> > 0x0000000000016696 <iwl3945_rx_reply_tx+310>:	movb   
-> >$0x0,0x9(%rdi)        <---------- RIP
-> >> > 0x000000000001669a <iwl3945_rx_reply_tx+314>:	movb   
-> >$0x0,0xc(%rdi)
-> >> > 0x000000000001669e <iwl3945_rx_reply_tx+318>:	movb   
-> >$0x0,0xf(%rdi)
-> >> > 0x00000000000166a2 <iwl3945_rx_reply_tx+322>:	movb   
-> >$0x0,0x12(%rdi)
-> >> > 0x00000000000166a6 <iwl3945_rx_reply_tx+326>:	movb   
-> >$0x0,0x15(%rdi)
-> >> 
-> >> This equals to below code in 
-> >ieee80211_tx_info_clear_status(). "info" is
-> >> %rdi, which is 0x38. That matches NULL pointer dereference at 0x41 in
-> >> your oops header.
-> >> 
-> >> 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
-> >>                 info->status.rates[i].count = 0;
-> >> 
-> >> I guess there is a race for txq->q.read_ptr somewhere. 
-> >Haven't checked
-> >> though.
-> >
-> >OK. 3945 updated write_ptr without regard to read_ptr on the Tx path.
-> >This messes up our TFD on high load. The patch should fix your problem.
-> 
-> Wow.  Could this be happening with other devices as well?
-> 
-
-We do check this on other devices.
-
-Abhijeet
-
-> -- Ben --
-> 
-> 
-> >
-> >Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-> >
-> >diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c 
-> >b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> >index 994db4a..b31b34c 100644
-> >--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> >+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> >@@ -548,6 +548,9 @@ static int iwl3945_tx_skb(struct iwl_priv 
-> >*priv, struct sk_buff *skb)
-> > 	txq = &priv->txq[txq_id];
-> > 	q = &txq->q;
+On Thu, Dec 17, 2009 at 07:15:08AM +0800, Daniel Mack wrote:
+> On Wed, Dec 16, 2009 at 08:57:47AM -0800, Dan Williams wrote:
+> > On Wed, 2009-12-16 at 05:12 +0100, Daniel Mack wrote:
+> > > The libertas driver copies the SSID buffer back to the wireless core and
+> > > appends a trailing NULL character for termination. This is
+> > > 
+> > > a) unnecessary because the buffer is allocated with kzalloc and is hence
+> > >    already NULLed when this function is called, and
+> > > 
+> > > b) for priv->curbssparams.ssid_len == 32, it writes back one byte too
+> > >    much which causes memory corruptions.
+> > > 
+> > > Fix this by removing the extra write.
 > > 
-> >+	if ((iwl_queue_space(q) < q->high_mark))
-> >+		goto drop;
-> >+
-> > 	spin_lock_irqsave(&priv->lock, flags);
-> > 
-> > 	idx = get_cmd_index(q, q->write_ptr, 0);
-> > 
-> >
-> >
-> >---------------------------------------------------------------
-> >---------------
-> >Join us December 9, 2009 for the Red Hat Virtual Experience,
-> >a free event focused on virtualization and cloud computing. 
-> >Attend in-depth sessions from your desk. Your couch. Anywhere.
-> >http://p.sf.net/sfu/redhat-sfdev2dev
-> >_______________________________________________
-> >Ipw3945-devel mailing list
-> >Ipw3945-devel@lists.sourceforge.net
-> >https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
-> >--
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Acked-by: Dan Williams <dcbw@redhat.com>
+> 
+> Thanks, everyone. Who will care to pick an queue this one?
 
+Is there some reason it wouldn't be me?
+
+John
+-- 
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
