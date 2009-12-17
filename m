@@ -1,281 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:19627 "EHLO mail.atheros.com"
+Received: from kroah.org ([198.145.64.141]:55901 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759531AbZLQMzD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2009 07:55:03 -0500
-Date: Thu, 17 Dec 2009 18:24:56 +0530
-From: Bala Shanmugam <sbalashanmugam@atheros.com>
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	<mcgrof@bombadil.infradead.org>
-CC: Jothikumar Mothilal <Jothikumar.Mothilal@Atheros.com>,
-	<linux-bluetooth@vger.kernel.org>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH]compat-wireless:Fixed bluetooth modules compilation issues.
-Message-ID: <20091217125456.GA3860@atheros-laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	id S936150AbZLQEFY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2009 23:05:24 -0500
+Message-Id: <20091217035658.407255478@mini.kroah.org>
+Date: Wed, 16 Dec 2009 19:56:56 -0800
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org, greg@kroah.com
+Cc: stable-review@kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Kyungwan Nam <kyungwan.nam@atheros.com>,
+	Bennyam Malavazi <bennyam.malavazi@atheros.com>,
+	Stephen Chen <stephen.chen@atheros.com>,
+	Shan Palanisamy <shan.palanisamy@atheros.com>,
+	Paul Shaw <paul.shaw@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [119/151] ath9k: Fix maximum tx fifo settings for single stream devices
+In-Reply-To: <20091217040208.GA26571@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bluetooth modules in net/bluetooth were not compiled as
-CONFIG macro in config.mk and Makefile are different.
+2.6.32-stable review patch.  If anyone has any objections, please let us know.
 
-Bluetooth modules has compilation issues as source code 
-is taken from linux-next.git tree.  Fixed the same.
+------------------
 
- Signed-off-by: Bala Shanmugam <sbalashanmugam@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 
+This is a backport of upstream commit: f4709fdf683e1ed37b321c258b614ebe39752bf3
+
+Atheros single stream AR9285 and AR9271 have half the PCU TX FIFO
+buffer size of that of dual stream devices. Dual stream devices
+have a max PCU TX FIFO size of 8 KB while single stream devices
+have 4 KB. Single stream devices have an issue though and require
+hardware only to use half of the amount of its capable PCU TX FIFO
+size, 2 KB and this requires a change in software.
+
+Technically a change would not have been required (except for frame
+burst considerations of 128 bytes) if these devices would have been
+able to use the full 4 KB of the PCU TX FIFO size but our systems
+engineers recommend 2 KB to be used only. We enforce this through
+software by reducing the max frame triggger level to 2 KB.
+
+Fixing the max frame trigger level should then have a few benefits:
+
+  * The PER will now be adjusted as designed for underruns when the
+    max trigger level is reached. This should help alleviate the
+    bus as the rate control algorithm chooses a slower rate which
+    should ensure frames are transmitted properly under high system
+    bus load.
+
+  * The poll we use on our TX queues should now trigger and work
+    as designed for single stream devices. The hardware passes
+    data from each TX queue on the PCU TX FIFO queue respecting each
+    queue's priority. The new trigger level ensures this seeding of
+    the PCU TX FIFO queue occurs as designed which could mean avoiding
+    false resets and actually reseting hw correctly when a TX queue
+    is indeed stuck.
+
+  * Some undocumented / unsupported behaviour could have been triggered
+    when the max trigger level level was being set to 4 KB on single
+    stream devices. Its not clear what this issue was to me yet.
+
+Cc: Kyungwan Nam <kyungwan.nam@atheros.com>
+Cc: Bennyam Malavazi <bennyam.malavazi@atheros.com>
+Cc: Stephen Chen <stephen.chen@atheros.com>
+Cc: Shan Palanisamy <shan.palanisamy@atheros.com>
+Cc: Paul Shaw <paul.shaw@atheros.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 ---
- Makefile                   |    2 +-
- patches/16-bluetooth.patch |  195 ++++++++++++++++++++++++++++++++++++++++++++
- scripts/admin-update.sh    |    9 +-
- 3 files changed, 200 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c  |   11 ++++++++++-
+ drivers/net/wireless/ath/ath9k/hw.h  |    1 +
+ drivers/net/wireless/ath/ath9k/mac.c |    4 ++--
+ 3 files changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index 66790f2..ddaa656 100644
---- a/Makefile
-+++ b/Makefile
-@@ -28,7 +28,7 @@ obj-$(CONFIG_COMPAT_WIRELESS_MODULES) += drivers/net/wireless/
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -937,6 +937,11 @@ int ath9k_hw_init(struct ath_hw *ah)
+ 	DPRINTF(ah->ah_sc, ATH_DBG_RESET, "serialize_regmode is %d\n",
+ 		ah->config.serialize_regmode);
  
- obj-$(CONFIG_COMPAT_NET_USB_MODULES) += drivers/net/usb/
++	if (AR_SREV_9285(ah) || AR_SREV_9271(ah))
++		ah->config.max_txtrig_level = MAX_TX_FIFO_THRESHOLD >> 1;
++	else
++		ah->config.max_txtrig_level = MAX_TX_FIFO_THRESHOLD;
++
+ 	if (!ath9k_hw_macversion_supported(ah->hw_version.macVersion)) {
+ 		DPRINTF(ah->ah_sc, ATH_DBG_FATAL,
+ 			"Mac Chip Rev 0x%02x.%x is not supported by "
+@@ -3670,7 +3675,11 @@ void ath9k_hw_fill_cap_info(struct ath_h
+ 		pCap->keycache_size = AR_KEYTABLE_SIZE;
  
--obj-$(CONFIG_COMPAT_BT) += net/bluetooth/
-+obj-$(CONFIG_COMPAT_BLUETOOTH) += net/bluetooth/
- obj-$(CONFIG_COMPAT_BLUETOOTH_MODULES) += drivers/bluetooth/
+ 	pCap->hw_caps |= ATH9K_HW_CAP_FASTCC;
+-	pCap->tx_triglevel_max = MAX_TX_FIFO_THRESHOLD;
++
++	if (AR_SREV_9285(ah) || AR_SREV_9271(ah))
++		pCap->tx_triglevel_max = MAX_TX_FIFO_THRESHOLD >> 1;
++	else
++		pCap->tx_triglevel_max = MAX_TX_FIFO_THRESHOLD;
  
- obj-$(CONFIG_COMPAT_NETWORK_MODULES) += drivers/net/
-diff --git a/patches/16-bluetooth.patch b/patches/16-bluetooth.patch
-index 32529a0..47e9d0e 100644
---- a/patches/16-bluetooth.patch
-+++ b/patches/16-bluetooth.patch
-@@ -446,3 +446,198 @@ diff -Nur a/net/bluetooth/rfcomm/tty.c b/net/bluetooth/rfcomm/tty.c
-  {
-  	struct sock *sk = sock->sk;
-  	int err = 0;
-+diff -Nur orig_bt/net/bluetooth/af_bluetooth.c mod_bt/net/bluetooth/af_bluetooth.c
-+--- orig_bt/net/bluetooth/af_bluetooth.c	2009-12-15 16:40:20.000000000 +0530
-++++ mod_bt/net/bluetooth/af_bluetooth.c	2009-12-15 16:46:50.000000000 +0530
-+@@ -126,8 +126,12 @@
-+ }
-+ EXPORT_SYMBOL(bt_sock_unregister);
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+ static int bt_sock_create(struct net *net, struct socket *sock, int proto,
-+			  int kern)
-++#else
-++static int bt_sock_create(struct net *net, struct socket *sock, int proto)
-++#endif
-+ {
-+	int err;
-+
-+@@ -145,7 +149,11 @@
-+	read_lock(&bt_proto_lock);
-+
-+	if (bt_proto[proto] && try_module_get(bt_proto[proto]->owner)) {
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+		err = bt_proto[proto]->create(net, sock, proto, kern);
-++#else
-++		err = bt_proto[proto]->create(net, sock, proto);
-++#endif
-+		bt_sock_reclassify_lock(sock, proto);
-+		module_put(bt_proto[proto]->owner);
-+	}
-+@@ -258,7 +266,11 @@
-+	skb_reset_transport_header(skb);
-+	err = skb_copy_datagram_iovec(skb, 0, msg->msg_iov, copied);
-+	if (err == 0)
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+		sock_recv_ts_and_drops(msg, sk, skb);
-++#else
-++	  sock_recv_timestamp(msg, sk, skb);
-++#endif
-+
-+	skb_free_datagram(sk, skb);
-+
-+diff -Nur orig_bt/net/bluetooth/bnep/sock.c mod_bt/net/bluetooth/bnep/sock.c
-+--- orig_bt/net/bluetooth/bnep/sock.c	2009-12-15 16:40:59.000000000 +0530
-++++ mod_bt/net/bluetooth/bnep/sock.c	2009-12-15 16:48:19.000000000 +0530
-+@@ -195,8 +195,12 @@
-+	.obj_size	= sizeof(struct bt_sock)
-+ };
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+ static int bnep_sock_create(struct net *net, struct socket *sock, int protocol,
-+			    int kern)
-++#else
-++static int bnep_sock_create(struct net *net, struct socket *sock, int protocol)
-++#endif
-+ {
-+	struct sock *sk;
-+
-+diff -Nur orig_bt/net/bluetooth/cmtp/sock.c mod_bt/net/bluetooth/cmtp/sock.c
-+--- orig_bt/net/bluetooth/cmtp/sock.c	2009-12-15 16:41:29.000000000 +0530
-++++ mod_bt/net/bluetooth/cmtp/sock.c	2009-12-15 16:48:31.000000000 +0530
-+@@ -190,8 +190,12 @@
-+	.obj_size	= sizeof(struct bt_sock)
-+ };
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+ static int cmtp_sock_create(struct net *net, struct socket *sock, int protocol,
-+			    int kern)
-++#else
-++static int cmtp_sock_create(struct net *net, struct socket *sock, int protocol)
-++#endif
-+ {
-+	struct sock *sk;
-+
-+diff -Nur orig_bt/net/bluetooth/hci_sock.c mod_bt/net/bluetooth/hci_sock.c
-+--- orig_bt/net/bluetooth/hci_sock.c	2009-12-15 16:40:20.000000000 +0530
-++++ mod_bt/net/bluetooth/hci_sock.c	2009-12-15 16:47:47.000000000 +0530
-+@@ -630,8 +630,12 @@
-+	.obj_size	= sizeof(struct hci_pinfo)
-+ };
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+ static int hci_sock_create(struct net *net, struct socket *sock, int protocol,
-+			   int kern)
-++#else
-++static int hci_sock_create(struct net *net, struct socket *sock, int protocol)
-++#endif
-+ {
-+	struct sock *sk;
-+
-+diff -Nur orig_bt/net/bluetooth/hidp/core.c mod_bt/net/bluetooth/hidp/core.c
-+--- orig_bt/net/bluetooth/hidp/core.c	2009-12-15 16:41:45.000000000 +0530
-++++ mod_bt/net/bluetooth/hidp/core.c	2009-12-15 16:48:45.000000000 +0530
-+@@ -280,12 +280,14 @@
-+	return hidp_queue_report(session, buf, rsize);
-+ }
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
-+ static int hidp_output_raw_report(struct hid_device *hid, unsigned char *data, size_t count)
-+ {
-+	if (hidp_queue_report(hid->driver_data, data, count))
-+		return -ENOMEM;
-+	return count;
-+ }
-++#endif
-+
-+ static void hidp_idle_timeout(unsigned long arg)
-+ {
-+diff -Nur orig_bt/net/bluetooth/hidp/sock.c mod_bt/net/bluetooth/hidp/sock.c
-+--- orig_bt/net/bluetooth/hidp/sock.c	2009-12-15 16:41:45.000000000 +0530
-++++ mod_bt/net/bluetooth/hidp/sock.c	2009-12-15 16:48:51.000000000 +0530
-+@@ -241,8 +241,12 @@
-+	.obj_size	= sizeof(struct bt_sock)
-+ };
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+ static int hidp_sock_create(struct net *net, struct socket *sock, int protocol,
-+			    int kern)
-++#else
-++static int hidp_sock_create(struct net *net, struct socket *sock, int protocol)
-++#endif
-+ {
-+	struct sock *sk;
-+
-+diff -Nur orig_bt/net/bluetooth/l2cap.c mod_bt/net/bluetooth/l2cap.c
-+--- orig_bt/net/bluetooth/l2cap.c	2009-12-15 16:40:20.000000000 +0530
-++++ mod_bt/net/bluetooth/l2cap.c	2009-12-15 16:46:56.000000000 +0530
-+@@ -822,8 +822,12 @@
-+	return sk;
-+ }
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+ static int l2cap_sock_create(struct net *net, struct socket *sock, int protocol,
-+			     int kern)
-++#else
-++static int l2cap_sock_create(struct net *net, struct socket *sock, int protocol)
-++#endif
-+ {
-+	struct sock *sk;
-+
-+@@ -835,7 +839,11 @@
-+			sock->type != SOCK_DGRAM && sock->type != SOCK_RAW)
-+		return -ESOCKTNOSUPPORT;
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+	if (sock->type == SOCK_RAW && !kern && !capable(CAP_NET_RAW))
-++#else
-++	if (sock->type == SOCK_RAW && !capable(CAP_NET_RAW))
-++#endif
-+		return -EPERM;
-+
-+	sock->ops = &l2cap_sock_ops;
-+diff -Nur orig_bt/net/bluetooth/rfcomm/sock.c mod_bt/net/bluetooth/rfcomm/sock.c
-+--- orig_bt/net/bluetooth/rfcomm/sock.c	2009-12-15 16:42:14.000000000 +0530
-++++ mod_bt/net/bluetooth/rfcomm/sock.c	2009-12-15 16:49:07.000000000 +0530
-+@@ -323,8 +323,13 @@
-+	return sk;
-+ }
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+ static int rfcomm_sock_create(struct net *net, struct socket *sock,
-+			      int protocol, int kern)
-++#else
-++static int rfcomm_sock_create(struct net *net, struct socket *sock,
-++			      int protocol)
-++#endif
-+ {
-+	struct sock *sk;
-+
-+@@ -704,7 +709,11 @@
-+		copied += chunk;
-+		size   -= chunk;
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+		sock_recv_ts_and_drops(msg, sk, skb);
-++#else
-++		sock_recv_timestamp(msg, sk, skb);
-++#endif
-+
-+		if (!(flags & MSG_PEEK)) {
-+			atomic_sub(chunk, &sk->sk_rmem_alloc);
-+diff -Nur orig_bt/net/bluetooth/sco.c mod_bt/net/bluetooth/sco.c
-+--- orig_bt/net/bluetooth/sco.c	2009-12-15 16:40:20.000000000 +0530
-++++ mod_bt/net/bluetooth/sco.c	2009-12-15 16:47:04.000000000 +0530
-+@@ -430,8 +430,12 @@
-+	return sk;
-+ }
-+
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-+ static int sco_sock_create(struct net *net, struct socket *sock, int protocol,
-+			   int kern)
-++#else
-++static int sco_sock_create(struct net *net, struct socket *sock, int protocol)
-++#endif
-+ {
-+	struct sock *sk;
-+
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index 78652d2..500fe07 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -15,8 +15,7 @@
- # 
- # for example
- #
--GIT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git"
--GIT_BT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/holtmann/bluetooth-testing.git"
-+GIT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"
- GIT_COMPAT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git"
+ 	if (AR_SREV_9285_10_OR_LATER(ah))
+ 		pCap->num_gpio_pins = AR9285_NUM_GPIO;
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -218,6 +218,7 @@ struct ath9k_ops_config {
+ #define AR_SPUR_FEEQ_BOUND_HT20 10
+ 	int spurmode;
+ 	u16 spurchans[AR_EEPROM_MODAL_SPURS][2];
++	u8 max_txtrig_level;
+ };
  
- INCLUDE_NET_BT="hci_core.h l2cap.h bluetooth.h rfcomm.h hci.h"
-@@ -48,12 +47,12 @@ UNDERLINE="\033[02m"
- NET_DIRS="wireless mac80211 rfkill"
- # User exported this variable
- if [ -z $GIT_TREE ]; then
--	GIT_TREE="/home/$USER/wireless-testing/"
-+	GIT_TREE="/home/$USER/linux-next/"
- 	if [ ! -d $GIT_TREE ]; then
--		echo "Please tell me where your wireless-testing git tree is."
-+		echo "Please tell me where your linux-next git tree is."
- 		echo "You can do this by exporting its location as follows:"
- 		echo
--		echo "  export GIT_TREE=/home/$USER/wireless-testing/"
-+		echo "  export GIT_TREE=/home/$USER/linux-next/"
- 		echo
- 		echo "If you do not have one you can clone the repository:"
- 		echo "  git-clone $GIT_URL"
--- 
-1.6.0.4
+ enum ath9k_int {
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -70,7 +70,7 @@ bool ath9k_hw_updatetxtriglevel(struct a
+ 	u32 txcfg, curLevel, newLevel;
+ 	enum ath9k_int omask;
+ 
+-	if (ah->tx_trig_level >= MAX_TX_FIFO_THRESHOLD)
++	if (ah->tx_trig_level >= ah->config.max_txtrig_level)
+ 		return false;
+ 
+ 	omask = ath9k_hw_set_interrupts(ah, ah->mask_reg & ~ATH9K_INT_GLOBAL);
+@@ -79,7 +79,7 @@ bool ath9k_hw_updatetxtriglevel(struct a
+ 	curLevel = MS(txcfg, AR_FTRIG);
+ 	newLevel = curLevel;
+ 	if (bIncTrigLevel) {
+-		if (curLevel < MAX_TX_FIFO_THRESHOLD)
++		if (curLevel < ah->config.max_txtrig_level)
+ 			newLevel++;
+ 	} else if (curLevel > MIN_TX_FIFO_THRESHOLD)
+ 		newLevel--;
+
 
