@@ -1,40 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f211.google.com ([209.85.217.211]:59155 "EHLO
-	mail-gx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751046AbZLRX2R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2009 18:28:17 -0500
-Received: by gxk3 with SMTP id 3so2529382gxk.1
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2009 15:28:16 -0800 (PST)
-Message-ID: <4B2C100A.9000507@lwfinger.net>
-Date: Fri, 18 Dec 2009 17:28:10 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Florian Zumbiehl <florz@florz.de>
-CC: andreamrl@tiscali.it, herton@mandriva.com.br,
-	htl10@users.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: Power consumption of RTL8187 (driver)/recommendations for	low-power
- USB 802.11 adapter?
-References: <20091218180205.GD2512@florz.florz.dyndns.org> <4B2BC7E3.2050907@lwfinger.net> <20091218185916.GE2512@florz.florz.dyndns.org>
-In-Reply-To: <20091218185916.GE2512@florz.florz.dyndns.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from kroah.org ([198.145.64.141]:55885 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935547AbZLQEFS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2009 23:05:18 -0500
+Message-Id: <20091217035658.141592007@mini.kroah.org>
+Date: Wed, 16 Dec 2009 19:56:54 -0800
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org, greg@kroah.com
+Cc: stable-review@kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless@vger.kernel.org,
+	Sujith <Sujith.Manoharan@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [117/151] ath9k: Fix TX hang poll routine
+In-Reply-To: <20091217040208.GA26571@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/18/2009 12:59 PM, Florian Zumbiehl wrote:
-> 
-> Well, yeah, I meant "payload I care about", of course :-)
-> 
-> For comparison, if I plug in and configure my prism2 card to connect
-> to the same AP, power consumption goes up by ~ 2 Watts while idling.
-> Given that it seems to be possible to build a wifi interface (plus driver)
-> that does manage to stay connected on a budget of ~ 2 Watts, I would hope
-> that there is such a thing for USB, too. b-only would be fine, too - it's
-> USB 1.1 only, anyhow.
+2.6.32-stable review patch.  If anyone has any objections, please let us know.
 
-I have no idea what the relative power consumption is for USB and PCI.
-Certainly, a PCI card can assume a cleaner power source - the USB is
-going to have to do heavier regulation.
+------------------
 
-One other thing to try is to turn off the LED. Unset
-CONFIG_MAC80211_LEDS in your .config. That should save some power.
+
+From: Sujith <Sujith.Manoharan@atheros.com>
+
+This is a backport of upstream commit: 332c556633b8c5fb4e890b1783122f2315526590
+
+When TX is hung, the chip is reset. Ensure that
+the chip is awake by using the PS wrappers.
+
+
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2065,7 +2065,9 @@ static void ath_tx_complete_poll_work(st
+ 
+ 	if (needreset) {
+ 		DPRINTF(sc, ATH_DBG_RESET, "tx hung, resetting the chip\n");
++		ath9k_ps_wakeup(sc);
+ 		ath_reset(sc, false);
++		ath9k_ps_restore(sc);
+ 	}
+ 
+ 	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work,
+
+
