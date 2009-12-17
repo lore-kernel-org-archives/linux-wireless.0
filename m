@@ -1,48 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:54757 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750841AbZLAIjb (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53994 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932901AbZLQMzu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 03:39:31 -0500
-Received: by yxe17 with SMTP id 17so4395588yxe.33
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 00:39:38 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: mcgrof@bombadil.infradead.org, linux-wireless@vger.kernel.org,
-	Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 1/5] Add posix SHUT_RD/SHUT_WR/SHUT_RDWR macros
-Date: Tue,  1 Dec 2009 03:38:17 -0500
-Message-Id: <1259656701-12329-1-git-send-email-lacombar@gmail.com>
-In-Reply-To: <4B0B4405.4050605@gmail.com>
-References: <4B0B4405.4050605@gmail.com>
+	Thu, 17 Dec 2009 07:55:50 -0500
+Subject: [PATCH 2.6.33 v2] mac80211: fix peer HT capabilities
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1261039545.10356.94.camel@johannes.local>
+References: <1261039545.10356.94.camel@johannes.local>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 17 Dec 2009 13:55:48 +0100
+Message-ID: <1261054548.10356.108.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added on commit 91cf45f0 by Trond Myklebust in include/linux/net.h.
+I noticed yesterday, because Jeff had noticed
+a speed regression, cf. bug
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2138
+that the SM PS settings for peers were wrong.
+Instead of overwriting the SM PS settings with
+the local bits, we need to keep the remote bits.
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+The bug was part of the original HT code from
+over two years ago, but unfortunately nobody
+noticed that it makes no sense -- we shouldn't
+be overwriting the peer's setting with our own
+but rather keep it intact when masking the peer
+capabilities with our own.
+
+While fixing that, I noticed that the masking of
+capabilities is completely useless for most of
+the bits, so also fix those other bits.
+
+Finally, I also noticed that PSMP_SUPPORT no
+longer exists in the final 802.11n version, so
+also remove that.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- compat-2.6.24.h |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+v2: remove unused variable
 
-diff --git a/compat-2.6.24.h b/compat-2.6.24.h
-index d8f7c2c..68d33c7 100644
---- a/compat-2.6.24.h
-+++ b/compat-2.6.24.h
-@@ -10,6 +10,13 @@
- /* Added on 2.6.24 in include/linux/types.h by Al viro on commit 142956af */
- typedef unsigned long               uintptr_t;
+ drivers/net/wireless/rt2x00/rt2800lib.c |    3 +--
+ include/linux/ieee80211.h               |    2 +-
+ net/mac80211/ht.c                       |   25 ++++++++++++++++++++++---
+ 3 files changed, 24 insertions(+), 6 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/ht.c	2009-12-17 09:00:06.000000000 +0100
++++ wireless-testing/net/mac80211/ht.c	2009-12-17 13:54:27.000000000 +0100
+@@ -34,9 +34,28 @@ void ieee80211_ht_cap_ie_to_sta_ht_cap(s
  
-+/* From include/linux/net.h */
-+enum sock_shutdown_cmd {
-+	SHUT_RD		= 0,
-+	SHUT_WR		= 1,
-+	SHUT_RDWR	= 2,
-+};
-+
- #if (LINUX_VERSION_CODE == KERNEL_VERSION(2,6,23)) /* Local check */
- /* Added as of 2.6.24 in include/linux/skbuff.h.
-  *
--- 
-1.6.3.3.385.g60647.dirty
+ 	ht_cap->ht_supported = true;
+ 
+-	ht_cap->cap = le16_to_cpu(ht_cap_ie->cap_info) & sband->ht_cap.cap;
+-	ht_cap->cap &= ~IEEE80211_HT_CAP_SM_PS;
+-	ht_cap->cap |= sband->ht_cap.cap & IEEE80211_HT_CAP_SM_PS;
++	/*
++	 * The bits listed in this expression should be
++	 * the same for the peer and us, if the station
++	 * advertises more then we can't use those thus
++	 * we mask them out.
++	 */
++	ht_cap->cap = le16_to_cpu(ht_cap_ie->cap_info) &
++		(sband->ht_cap.cap |
++		 ~(IEEE80211_HT_CAP_LDPC_CODING |
++		   IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
++		   IEEE80211_HT_CAP_GRN_FLD |
++		   IEEE80211_HT_CAP_SGI_20 |
++		   IEEE80211_HT_CAP_SGI_40 |
++		   IEEE80211_HT_CAP_DSSSCCK40));
++	/*
++	 * The STBC bits are asymmetric -- if we don't have
++	 * TX then mask out the peer's RX and vice versa.
++	 */
++	if (!(sband->ht_cap.cap & IEEE80211_HT_CAP_TX_STBC))
++		ht_cap->cap &= ~IEEE80211_HT_CAP_RX_STBC;
++	if (!(sband->ht_cap.cap & IEEE80211_HT_CAP_RX_STBC))
++		ht_cap->cap &= ~IEEE80211_HT_CAP_TX_STBC;
+ 
+ 	ampdu_info = ht_cap_ie->ampdu_params_info;
+ 	ht_cap->ampdu_factor =
+--- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2800lib.c	2009-12-17 09:29:48.000000000 +0100
++++ wireless-testing/drivers/net/wireless/rt2x00/rt2800lib.c	2009-12-17 09:29:54.000000000 +0100
+@@ -2074,8 +2074,7 @@ int rt2800_probe_hw_mode(struct rt2x00_d
+ 	    IEEE80211_HT_CAP_SGI_20 |
+ 	    IEEE80211_HT_CAP_SGI_40 |
+ 	    IEEE80211_HT_CAP_TX_STBC |
+-	    IEEE80211_HT_CAP_RX_STBC |
+-	    IEEE80211_HT_CAP_PSMP_SUPPORT;
++	    IEEE80211_HT_CAP_RX_STBC;
+ 	spec->ht.ampdu_factor = 3;
+ 	spec->ht.ampdu_density = 4;
+ 	spec->ht.mcs.tx_params =
+--- wireless-testing.orig/include/linux/ieee80211.h	2009-12-17 09:29:33.000000000 +0100
++++ wireless-testing/include/linux/ieee80211.h	2009-12-17 09:29:40.000000000 +0100
+@@ -837,7 +837,7 @@ struct ieee80211_ht_cap {
+ #define IEEE80211_HT_CAP_DELAY_BA		0x0400
+ #define IEEE80211_HT_CAP_MAX_AMSDU		0x0800
+ #define IEEE80211_HT_CAP_DSSSCCK40		0x1000
+-#define IEEE80211_HT_CAP_PSMP_SUPPORT		0x2000
++#define IEEE80211_HT_CAP_RESERVED		0x2000
+ #define IEEE80211_HT_CAP_40MHZ_INTOLERANT	0x4000
+ #define IEEE80211_HT_CAP_LSIG_TXOP_PROT		0x8000
+ 
+
 
