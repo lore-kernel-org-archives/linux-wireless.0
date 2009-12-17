@@ -1,125 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:53804 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752553AbZLATNo (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35307 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936336AbZLQPRi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 14:13:44 -0500
-Received: by ewy19 with SMTP id 19so5283449ewy.21
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 11:13:50 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH v3 3/4] rt2x00: Reorganize L2 padding inserting function.
-Date: Tue, 1 Dec 2009 20:13:47 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Benoit Papillault <benoit.papillault@free.fr>
-References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com> <1259615298-2305-3-git-send-email-gwingerde@gmail.com> <1259615298-2305-4-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1259615298-2305-4-git-send-email-gwingerde@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200912012013.47692.IvDoorn@gmail.com>
+	Thu, 17 Dec 2009 10:17:38 -0500
+Subject: [PATCH 2.6.33] mac80211: fix WMM AP settings application
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 17 Dec 2009 16:16:53 +0100
+Message-ID: <1261063014.10356.120.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 30 November 2009, Gertjan van Wingerde wrote:
-> Simplify the rt2x00queue_insert_l2pad function by handling the alignment
-> operations one by one. Do not special case special circumstances.
-> Basically first perform header alignment, and then perform payload alignment
-> (if any payload does exist). This results in a properly aligned skb.
-> 
-> The end result is better readable code, with better results, as now L2 padding
-> is inserted only when a payload is actually present in the frame.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> ---
->  drivers/net/wireless/rt2x00/rt2x00queue.c |   60 +++++++++++++----------------
->  1 files changed, 27 insertions(+), 33 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> index 719f4ae..7452fa8 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> @@ -177,45 +177,38 @@ void rt2x00queue_align_payload(struct sk_buff *skb, unsigned int header_length)
->  
->  void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
->  {
-> -	unsigned int frame_length = skb->len;
-> +	unsigned int payload_length = skb->len - header_length;
->  	unsigned int header_align = ALIGN_SIZE(skb, 0);
->  	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
->  	unsigned int l2pad = L2PAD_SIZE(header_length);
->  
-> -	if (header_align == payload_align) {
-> -		/*
-> -		 * Both header and payload must be moved the same
-> -		 * amount of bytes to align them properly. This means
-> -		 * we don't use the L2 padding but just move the entire
-> -		 * frame.
-> -		 */
-> -		rt2x00queue_align_frame(skb);
-> -	} else if (!payload_align) {
-> -		/*
-> -		 * Simple L2 padding, only the header needs to be moved,
-> -		 * the payload is already properly aligned.
-> -		 */
-> -		skb_push(skb, header_align);
-> -		memmove(skb->data, skb->data + header_align, header_length);
-> -	} else {
-> -		/*
-> -		 *
-> -		 * Complicated L2 padding, both header and payload need
-> -		 * to be moved. By default we only move to the start
-> -		 * of the buffer, so our header alignment needs to be
-> -		 * increased if there is not enough room for the header
-> -		 * to be moved.
-> -		 */
-> -		if (payload_align > header_align)
-> -			header_align += 4;
-> +	/*
-> +	 * Adjust the header alignment if the payload needs to be moved more
-> +	 * than the header.
-> +	 */
-> +	if (payload_align > header_align)
-> +		header_align += 4;
-> +
-> +	/* There is nothing to do if no alignment is needed */
-> +	if (!header_align)
-> +		return;
->  
-> -		skb_push(skb, header_align);
-> -		memmove(skb->data, skb->data + header_align, header_length);
-> +	/* Reserve the amount of space needed in front of the frame */
-> +	skb_push(skb, header_align);
-> +
-> +	/*
-> +	 * Move the header.
-> +	 */
-> +	memmove(skb->data, skb->data + header_align, header_length);
-> +
-> +	/* Move the payload, if present and if required */
-> +	if (payload_length && payload_align)
->  		memmove(skb->data + header_length + l2pad,
->  			skb->data + header_length + l2pad + payload_align,
-> -			frame_length - header_length);
-> -		skb_trim(skb, frame_length + l2pad);
-> -	}
-> +			payload_length);
-> +
-> +	/* Trim the skb to the correct size */
-> +	skb_trim(skb, header_length + l2pad + payload_length);
->  }
->  
->  void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int header_length)
-> @@ -343,7 +336,8 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
->  	 * Header and alignment information.
->  	 */
->  	txdesc->header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
-> -	if (test_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags))
-> +	if (test_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags) &&
-> +	    (entry->skb->len > txdesc->header_length))
->  		txdesc->l2pad = L2PAD_SIZE(txdesc->header_length);
+My
+  commit 77fdaa12cea26c204cc12c312fe40bc0f3dcdfd8
+  Author: Johannes Berg <johannes@sipsolutions.net>
+  Date:   Tue Jul 7 03:45:17 2009 +0200
 
-This check is a bit unclear, are you not simply checking for ieee80211_is_data() or
-ieee80211_is_data_present()?
+      mac80211: rework MLME for multiple authentications
 
-Ivo
+inadvertedly broke WMM because it removed, along with
+a bunch of other now useless initialisations, the line
+initialising sdata->u.mgd.wmm_last_param_set to -1
+which would make it adopt any WMM parameter set. If,
+as is usually the case, the AP uses WMM parameter set
+sequence number zero, we'd never update it until the
+AP changes the sequence number.
+
+Add the missing initialisation back to get the WMM
+settings from the AP applied locally.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: stable@kernel.org [2.6.31+]
+---
+ net/mac80211/mlme.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-12-17 15:34:32.000000000 +0100
++++ wireless-testing/net/mac80211/mlme.c	2009-12-17 15:51:18.000000000 +0100
+@@ -695,6 +695,14 @@ static void ieee80211_set_associated(str
+ 	sdata->u.mgd.flags &= ~(IEEE80211_STA_CONNECTION_POLL |
+ 				IEEE80211_STA_BEACON_POLL);
+ 
++	/*
++	 * Always handle WMM once after association regardless
++	 * of the first value the AP uses. Setting -1 here has
++	 * that effect because the AP values is an unsigned
++	 * 4-bit value.
++	 */
++	sdata->u.mgd.wmm_last_param_set = -1;
++
+ 	ieee80211_led_assoc(local, 1);
+ 
+ 	sdata->vif.bss_conf.assoc = 1;
+
+
