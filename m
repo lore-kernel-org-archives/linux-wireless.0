@@ -1,51 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:6515 "EHLO mga02.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:19494 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756696AbZLCT3y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2009 14:29:54 -0500
-Subject: Re: [PATCH v2 3/5] mac80211: correctly place aMPDU RX reorder code
-From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1259867689.12843.14.camel@johannes.local>
-References: <20091125164614.427835023@sipsolutions.net>
-	 <20091125164821.184669673@sipsolutions.net>
-	 <1259864007.4653.298.camel@rc-desk>
-	 <1259867689.12843.14.camel@johannes.local>
-Content-Type: text/plain
-Date: Thu, 03 Dec 2009 11:30:00 -0800
-Message-Id: <1259868600.4653.300.camel@rc-desk>
-Mime-Version: 1.0
+	id S1753424AbZLQMmb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Dec 2009 07:42:31 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 17 Dec 2009 04:42:31 -0800
+Date: Thu, 17 Dec 2009 18:12:25 +0530
+From: Bala Shanmugam <sbalashanmugam@atheros.com>
+To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	<mcgrof@bombadil.infradead.org>
+CC: Jothikumar Mothilal <Jothikumar.Mothilal@Atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [RFC]compat-wireless: modules declared as PHONY target in Makefile
+Message-ID: <20091217124225.GA3068@atheros-laptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+When a particular file alone is modified in compat package, it is not compiled with make.
+To compile the modified file compat package needs to be cleaned up and all files need to be compiled.
+This is because all files are compiled in modules target, and file by name modules is not generated.
+So this target will be considered up-to-date once compiled.
 
-On Thu, 2009-12-03 at 11:14 -0800, Johannes Berg wrote:
-> ---
->  net/mac80211/rx.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> --- wireless-testing.orig/net/mac80211/rx.c	2009-12-03 20:13:44.000000000 +0100
-> +++ wireless-testing/net/mac80211/rx.c	2009-12-03 20:13:50.000000000 +0100
-> @@ -570,7 +570,7 @@ static void ieee80211_release_reorder_fr
->  		rate = &sband->bitrates[status->rate_idx];
->  	tid_agg_rx->stored_mpdu_num--;
->  	tid_agg_rx->reorder_buf[index] = NULL;
-> -	skb_queue_tail(frames, skb);
-> +	__skb_queue_tail(frames, skb);
->  
->  no_frame:
->  	tid_agg_rx->head_seq_num = seq_inc(tid_agg_rx->head_seq_num);
-> 
-> 
+modules target is declared as PHONY target to avoid this problem.
 
-Thank you very much for looking into this so promptly. This patch fixes
-the problem.
+I feel config.mk need not be included when KERNELRELEASE is not NULL as
+it degrades the performance and doesn't make any difference.  Please comment.
 
-Tested-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Bala Shanmugam <sbalashanmugam@atheros.com>
+---
+ Makefile |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-Reinette
-
+diff --git a/Makefile b/Makefile
+index 66790f2..85fb9fe 100644
+--- a/Makefile
++++ b/Makefile
+@@ -15,8 +15,6 @@ DESTDIR?=
+ 
+ ifneq ($(KERNELRELEASE),)
+ 
+-include $(M)/$(COMPAT_CONFIG)
+-
+ NOSTDINC_FLAGS := -I$(M)/include/ -include $(M)/include/linux/compat-2.6.h $(CFLAGS)
+ 
+ obj-y := compat/
+@@ -295,7 +293,7 @@ wlunload:
+ wlload: wlunload
+ 	@./scripts/wlload.sh
+ 
+-.PHONY: all clean install uninstall unload load btunload btload wlunload wlload
++.PHONY: all clean install uninstall unload load btunload btload wlunload wlload modules
+ 
+ endif
+ 
+-- 
+1.6.0.4
 
