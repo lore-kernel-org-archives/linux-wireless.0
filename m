@@ -1,145 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:61318 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757339AbZLKNlW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:41:22 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 05/31] wl1271: use join command with dummy BSSID
-Date: Fri, 11 Dec 2009 15:40:44 +0200
-Message-Id: <1260538870-32297-6-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+Received: from 007.netroom.de ([194.0.247.207]:13393 "EHLO 007.netroom.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1764742AbZLQNdM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Dec 2009 08:33:12 -0500
+Message-ID: <4B2A3312.104@draisberghof.de>
+Date: Thu, 17 Dec 2009 14:33:06 +0100
+From: Josua Dietze <digidietze@draisberghof.de>
+MIME-Version: 1.0
+To: Oliver Neukum <oliver@neukum.org>
+CC: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>,
+	Dan Williams <dcbw@redhat.com>,
+	Stefan Seyfried <stefan.seyfried@googlemail.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+	Stefan Seyfried <seife@sphairon.com>
+Subject: Re: [PATCH] move eject code from zd1211rw to usb-storage
+References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com> <1260993048.2179.68.camel@localhost.localdomain> <20091216195258.GJ16426@one-eyed-alien.net> <200912171402.42168.oliver@neukum.org>
+In-Reply-To: <200912171402.42168.oliver@neukum.org>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we need to change the channel before association, we have to send a join
-command with a valid BSSID.  With this patch we use 0baddeadbeef as the
-BSSID.  There are ongoing discussions with TI to get this done in a cleaner
-way.
+Oliver Neukum schrieb:
 
-When we go back to idle, we issue a CMD_DISCONNECT to make sure the firmware
-stops listening to the channel and cleans things up internally.
+> Am Mittwoch, 16. Dezember 2009 20:52:58 schrieb Matthew Dharm:
+>>>> If this is the case, then the only reasonable answer to is to push the
+>>>> modeswitch code for both into udev and out of the kernel.  It will take
+>>> you mean usb_modeswitch, not udev actually.
+>> That is correct; I had mis-typed.  Tho, the actual implementation is udev
+>> calling usb_modeswitch and/or eject.
+> 
+> Can storage tell the devices apart so that it knows which ones to leave
+> to the kernel solution and which devices to accept so that udev can
+> issue an eject command?
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |   75 +++++++++++++++++++++++++----
- 1 files changed, 65 insertions(+), 10 deletions(-)
+If you are thinking about the two specific devices at hand there is 
+no need to tell them apart. Same IDs on plugin, same switching 
+procedure, different IDs on return, different drivers take care.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index f1cb7cb..f6d42e6 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1130,6 +1130,47 @@ out:
- }
- #endif
- 
-+static int wl1271_join_channel(struct wl1271 *wl, int channel)
-+{
-+	int ret;
-+	/* we need to use a dummy BSSID for now */
-+	static const u8 dummy_bssid[ETH_ALEN] = { 0x0b, 0xad, 0xde,
-+						  0xad, 0xbe, 0xef };
-+
-+	/* disable mac filter, so we hear everything */
-+	wl->rx_config &= ~CFG_BSSID_FILTER_EN;
-+
-+	wl->channel = channel;
-+	memcpy(wl->bssid, dummy_bssid, ETH_ALEN);
-+
-+	ret = wl1271_cmd_join(wl);
-+	if (ret < 0)
-+		goto out;
-+
-+	wl->joined = true;
-+
-+out:
-+	return ret;
-+}
-+
-+static int wl1271_unjoin_channel(struct wl1271 *wl)
-+{
-+	int ret;
-+
-+	/* to stop listening to a channel, we disconnect */
-+	ret = wl1271_cmd_disconnect(wl);
-+	if (ret < 0)
-+		goto out;
-+
-+	wl->joined = false;
-+	wl->channel = 0;
-+	memset(wl->bssid, 0, ETH_ALEN);
-+	wl->rx_config = WL1271_DEFAULT_RX_CONFIG;
-+
-+out:
-+	return ret;
-+}
-+
- static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- {
- 	struct wl1271 *wl = hw->priv;
-@@ -1138,10 +1179,11 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	channel = ieee80211_frequency_to_channel(conf->channel->center_freq);
- 
--	wl1271_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d",
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d %s",
- 		     channel,
- 		     conf->flags & IEEE80211_CONF_PS ? "on" : "off",
--		     conf->power_level);
-+		     conf->power_level,
-+		     conf->flags & IEEE80211_CONF_IDLE ? "idle" : "in use");
- 
- 	mutex_lock(&wl->mutex);
- 
-@@ -1151,16 +1193,17 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 	if (ret < 0)
- 		goto out;
- 
--	if (channel != wl->channel) {
--		/*
--		 * We assume that the stack will configure the right channel
--		 * before associating, so we don't need to send a join
--		 * command here.  We will join the right channel when the
--		 * BSSID changes
--		 */
--		wl->channel = channel;
-+	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
-+		if (conf->flags & IEEE80211_CONF_IDLE && wl->joined)
-+			wl1271_unjoin_channel(wl);
-+		else
-+			wl1271_join_channel(wl, channel);
- 	}
- 
-+	/* if the channel changes while joined, join again */
-+	if (channel != wl->channel && wl->joined)
-+		wl1271_join_channel(wl, channel);
-+
- 	if (conf->flags & IEEE80211_CONF_PS && !wl->psm_requested) {
- 		wl1271_info("psm enabled");
- 
-@@ -1494,6 +1537,18 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 	if (ret < 0)
- 		goto out;
- 
-+	if ((changed & BSS_CHANGED_BSSID) &&
-+	    /*
-+	     * Now we know the correct bssid, so we send a new join command
-+	     * and enable the BSSID filter
-+	     */
-+	    memcmp(wl->bssid, bss_conf->bssid, ETH_ALEN)) {
-+			wl->rx_config |= CFG_BSSID_FILTER_EN;
-+			memcpy(wl->bssid, bss_conf->bssid, ETH_ALEN);
-+			wl1271_cmd_join(wl);
-+			wl->joined = true;
-+	}
-+
- 	if (changed & BSS_CHANGED_ASSOC) {
- 		if (bss_conf->assoc) {
- 			wl->aid = bss_conf->aid;
--- 
-1.6.3.3
+If you are thinking generally, there is already a case when:
+same IDs on plugin, different switching procedures.
+See "option_ms.c"; the solution was to check for SCSI ID strings and 
+only act if there's a match. I filed this patch to enable userspace 
+handling for a different device with the same IDs.
 
+This is also the way usb_modeswitch (via wrapping script) is 
+handling ambiguities right now.
+(BTW, the next version has no more compiler warnings. No big deal.)
+
+
+Cheers,
+Josua
