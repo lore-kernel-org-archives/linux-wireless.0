@@ -1,55 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:30004 "EHLO mail.atheros.com"
+Received: from kroah.org ([198.145.64.141]:55891 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751947AbZLWCDH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2009 21:03:07 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Dec 2009 18:03:07 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19249.32300.243423.92179@gargle.gargle.HOWL>
-Date: Wed, 23 Dec 2009 07:49:24 +0530
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Asus eeepc 1008HA suspend issue and mac80211 suspend corner case
-In-Reply-To: <20091222165528.GE4385@tux>
-References: <20091222022355.GA32508@bombadil.infradead.org>
-	<19248.19829.293087.367661@gargle.gargle.HOWL>
-	<20091222155005.GA4385@tux>
-	<20091222162055.GC4385@tux>
-	<20091222165528.GE4385@tux>
+	id S936129AbZLQEFV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2009 23:05:21 -0500
+Message-Id: <20091217035658.273685245@mini.kroah.org>
+Date: Wed, 16 Dec 2009 19:56:55 -0800
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org, greg@kroah.com
+Cc: stable-review@kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Vivek Natarajan <Vivek.Natarajan@atheros.com>
+Subject: [118/151] ath9k: fix processing of TX PS null data frames
+In-Reply-To: <20091217040208.GA26571@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Trimming CC List)
+2.6.32-stable review patch.  If anyone has any objections, please let us know.
 
-Luis Rodriguez wrote:
-> > Here's the new log with 0x601, with a few pm-suspend successes above.
+------------------
 
-The only issue here is a call to wakeup the chip comes
-after the ->stop() callback. And that happens here:
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 
-> > [  271.448580] Freezing user space processes ... (elapsed 0.00 seconds) done.
-> > [  271.450215] Freezing remaining freezable tasks ... (elapsed 0.00 seconds) done.
-> > [  271.450296] PM: Entering mem sleep
-> > [  271.450321] Suspending console(s) (use no_console_suspend to debug)
-> > [  271.456054] Tx BA session stop requested for 00:22:6b:56:fd:e8 tid 0
-> > [  271.456073] Stopping Tx BA session for 00:22:6b:56:fd:e8 tid 0
-> > [  271.456112] Rx BA session stop requested for 00:22:6b:56:fd:e8 tid 0
-> > [  271.456141] ath9k: Detach Interface
-> > [  271.456161] ath9k: NETWORK SLEEP -> AWAKE
-> > [  271.458525] ath9k: AWAKE -> NETWORK SLEEP
-> > [  271.458533] ath9k: NETWORK SLEEP -> FULL-SLEEP
-> > [  271.458544] ath9k:
-> > [  271.458547] ath9k: Driver halt
-> > [  271.458552] FULL-SLEEP -> AWAKE
+This is a backport of upstream commit: e7824a50662f7f79b1a739f705b4d906c31cf221
 
-The actual issue then lies in the callsite, probably mac80211 - having stopped
-the driver (during suspend), any notifications/calls to the driver are invalid.
+When mac80211 was telling us to go into Powersave we listened
+and immediately turned RX off. This meant hardware would not
+see the ACKs from the AP we're associated with and hardware
+we'd end up retransmiting the null data frame in a loop
+helplessly.
 
-But strange that I am not able to reproduce this.
-What distribution are you using ? Also, the version of NM ?
+Fix this by keeping track of the transmitted nullfunc frames
+and only when we are sure the AP has sent back an ACK do we
+go ahead and shut RX off.
 
-Sujith
+
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Vivek Natarajan <Vivek.Natarajan@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    3 +++
+ drivers/net/wireless/ath/ath9k/mac.c   |    2 ++
+ drivers/net/wireless/ath/ath9k/mac.h   |    1 +
+ drivers/net/wireless/ath/ath9k/main.c  |    9 ++++++++-
+ drivers/net/wireless/ath/ath9k/xmit.c  |   16 ++++++++++++++++
+ 5 files changed, 30 insertions(+), 1 deletion(-)
+
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -139,6 +139,7 @@ struct ath_buf {
+ 	dma_addr_t bf_daddr;		/* physical addr of desc */
+ 	dma_addr_t bf_buf_addr;		/* physical addr of data buffer */
+ 	bool bf_stale;
++	bool bf_isnullfunc;
+ 	u16 bf_flags;
+ 	struct ath_buf_state bf_state;
+ 	dma_addr_t bf_dmacontext;
+@@ -524,6 +525,8 @@ struct ath_led {
+ #define SC_OP_BEACON_SYNC       BIT(19)
+ #define SC_OP_BTCOEX_ENABLED    BIT(20)
+ #define SC_OP_BT_PRIORITY_DETECTED BIT(21)
++#define SC_OP_NULLFUNC_COMPLETED   BIT(22)
++#define SC_OP_PS_ENABLED	BIT(23)
+ 
+ struct ath_bus_ops {
+ 	void		(*read_cachesize)(struct ath_softc *sc, int *csz);
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -222,6 +222,8 @@ int ath9k_hw_txprocdesc(struct ath_hw *a
+ 	ds->ds_txstat.ts_status = 0;
+ 	ds->ds_txstat.ts_flags = 0;
+ 
++	if (ads->ds_txstatus1 & AR_FrmXmitOK)
++		ds->ds_txstat.ts_status |= ATH9K_TX_ACKED;
+ 	if (ads->ds_txstatus1 & AR_ExcessiveRetries)
+ 		ds->ds_txstat.ts_status |= ATH9K_TXERR_XRETRY;
+ 	if (ads->ds_txstatus1 & AR_Filtered)
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -76,6 +76,7 @@
+ #define ATH9K_TXERR_FIFO           0x04
+ #define ATH9K_TXERR_XTXOP          0x08
+ #define ATH9K_TXERR_TIMER_EXPIRED  0x10
++#define ATH9K_TX_ACKED		   0x20
+ 
+ #define ATH9K_TX_BA                0x01
+ #define ATH9K_TX_PWRMGMT           0x02
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2327,6 +2327,7 @@ static int ath9k_config(struct ieee80211
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_PS) {
+ 		if (conf->flags & IEEE80211_CONF_PS) {
++			sc->sc_flags |= SC_OP_PS_ENABLED;
+ 			if (!(ah->caps.hw_caps &
+ 			      ATH9K_HW_CAP_AUTOSLEEP)) {
+ 				if ((sc->imask & ATH9K_INT_TIM_TIMER) == 0) {
+@@ -2334,11 +2335,17 @@ static int ath9k_config(struct ieee80211
+ 					ath9k_hw_set_interrupts(sc->sc_ah,
+ 							sc->imask);
+ 				}
+-				ath9k_hw_setrxabort(sc->sc_ah, 1);
+ 			}
+ 			sc->ps_enabled = true;
++			if ((sc->sc_flags & SC_OP_NULLFUNC_COMPLETED)) {
++				sc->sc_flags &= ~SC_OP_NULLFUNC_COMPLETED;
++				sc->ps_enabled = true;
++				ath9k_hw_setrxabort(sc->sc_ah, 1);
++			}
+ 		} else {
+ 			sc->ps_enabled = false;
++			sc->sc_flags &= ~(SC_OP_PS_ENABLED |
++					  SC_OP_NULLFUNC_COMPLETED);
+ 			ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_AWAKE);
+ 			if (!(ah->caps.hw_caps &
+ 			      ATH9K_HW_CAP_AUTOSLEEP)) {
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1592,6 +1592,13 @@ static int ath_tx_setup_buffer(struct ie
+ 	}
+ 
+ 	bf->bf_buf_addr = bf->bf_dmacontext;
++
++	if (ieee80211_is_nullfunc(fc) && ieee80211_has_pm(fc)) {
++		bf->bf_isnullfunc = true;
++		sc->sc_flags &= ~SC_OP_NULLFUNC_COMPLETED;
++	} else
++		bf->bf_isnullfunc = false;
++
+ 	return 0;
+ }
+ 
+@@ -1989,6 +1996,15 @@ static void ath_tx_processq(struct ath_s
+ 		if (ds == txq->axq_gatingds)
+ 			txq->axq_gatingds = NULL;
+ 
++		if (bf->bf_isnullfunc &&
++		    (ds->ds_txstat.ts_status & ATH9K_TX_ACKED)) {
++			if ((sc->sc_flags & SC_OP_PS_ENABLED)) {
++				sc->ps_enabled = true;
++				ath9k_hw_setrxabort(sc->sc_ah, 1);
++			} else
++				sc->sc_flags |= SC_OP_NULLFUNC_COMPLETED;
++		}
++
+ 		/*
+ 		 * Remove ath_buf's of the same transmit unit from txq,
+ 		 * however leave the last descriptor back as the holding
+
+
