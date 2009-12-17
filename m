@@ -1,33 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:38097 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752041AbZLCXoj (ORCPT
+Received: from smtp-out002.kontent.com ([81.88.40.216]:51085 "EHLO
+	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757110AbZLQNC2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2009 18:44:39 -0500
-Received: by iwn1 with SMTP id 1so1295542iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Dec 2009 15:44:46 -0800 (PST)
+	Thu, 17 Dec 2009 08:02:28 -0500
+From: Oliver Neukum <oliver@neukum.org>
+To: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
+Subject: Re: [PATCH] move eject code from zd1211rw to usb-storage
+Date: Thu, 17 Dec 2009 14:02:41 +0100
+Cc: Dan Williams <dcbw@redhat.com>,
+	Josua Dietze <digidietze@draisberghof.de>,
+	Stefan Seyfried <stefan.seyfried@googlemail.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+	Stefan Seyfried <seife@sphairon.com>
+References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com> <1260993048.2179.68.camel@localhost.localdomain> <20091216195258.GJ16426@one-eyed-alien.net>
+In-Reply-To: <20091216195258.GJ16426@one-eyed-alien.net>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 3 Dec 2009 15:44:26 -0800
-Message-ID: <43e72e890912031544j7cb8bffav1c1c7d016e740175@mail.gmail.com>
-Subject: Broadcom Android bcm4329 open driver
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Greg KH <greg@kroah.com>, Henry Ptasinski <henryp@broadcom.com>,
-	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Howard M. Harte" <hharte@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <200912171402.42168.oliver@neukum.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case you haven't seen this yet, Broadcom has an open (!) driver on
-the Android git tree with support for SDIO/SPI for  bcm4329.
+Am Mittwoch, 16. Dezember 2009 20:52:58 schrieb Matthew Dharm:
+> > > If this is the case, then the only reasonable answer to is to push the
+> > > modeswitch code for both into udev and out of the kernel.  It will take
+> > 
+> > you mean usb_modeswitch, not udev actually.
+> 
+> That is correct; I had mis-typed.  Tho, the actual implementation is udev
+> calling usb_modeswitch and/or eject.
 
-http://tinyurl.com/broadcom-android-bcm4329
+Can storage tell the devices apart so that it knows which ones to leave
+to the kernel solution and which devices to accept so that udev can
+issue an eject command?
 
-The commit log entry dated 2009-10-29 states:
-
-Linux WLAN driver for BCM4329 - Low-Power 802.11n with Bluetooth(R)
-2.1+ EDR and FM (Tx and Rx)
-
-  Luis
+	Regards
+		Oliver
