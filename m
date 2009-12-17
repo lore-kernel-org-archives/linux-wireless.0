@@ -1,57 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:46166 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751253AbZLSKTa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Dec 2009 05:19:30 -0500
-Received: by bwz27 with SMTP id 27so2632032bwz.21
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Dec 2009 02:19:29 -0800 (PST)
-MIME-Version: 1.0
-Reply-To: andreamrl@tiscali.it
-In-Reply-To: <20091219003746.GF2512@florz.florz.dyndns.org>
-References: <20091218180205.GD2512@florz.florz.dyndns.org>
-	<4B2BC7E3.2050907@lwfinger.net> <20091218185916.GE2512@florz.florz.dyndns.org>
-	<4B2C100A.9000507@lwfinger.net> <20091219003746.GF2512@florz.florz.dyndns.org>
-From: Andrea Merello <andreamrl@tiscali.it>
-Date: Sat, 19 Dec 2009 11:19:09 +0100
-Message-ID: <c68f135e0912190219y70371149s605ed4756e02c9d2@mail.gmail.com>
-Subject: Re: Power consumption of RTL8187 (driver)/recommendations for
-	low-power USB 802.11 adapter?
-To: Florian Zumbiehl <florz@florz.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, herton@mandriva.com.br,
-	htl10@users.sourceforge.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:11987 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763686AbZLQBUy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Dec 2009 20:20:54 -0500
+Subject: Re: [PATCH] iwmc3200wifi: Fix test of unsigned in
+ iwm_ntf_stop_resume_tx()
+From: Zhu Yi <yi.zhu@intel.com>
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: Pavel Roskin <proski@gnu.org>,
+	"Ortiz, Samuel" <samuel.ortiz@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <4B290462.7070401@gmail.com>
+References: <4B28DBB6.5030304@gmail.com> <1260975195.2965.3.camel@ct>
+	 <4B290462.7070401@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 17 Dec 2009 09:20:51 +0800
+Message-ID: <1261012851.12157.551.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Yeah - plus, the chip, according to realtek's website, wants 3.3 and
-> 1.something V. If they are using a linear regulator for that - there must
-> be a reason for that low price, after all ... ;-)
+On Thu, 2009-12-17 at 00:01 +0800, Roel Kluin wrote:
+> `queue' was unsigned so the test did not work.
+> 
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+> ---
+> Found using coccinelle: http://coccinelle.lip6.fr/
+> 
+> >> -			if (queue < 0)
+> >> +			if (queue == -EINVAL)
+> > 
+> > I think it's ugly.  iwm_tid_to_queue() should return int if it's allowed
+> > to return error codes.
+> 
+> Ok, how about:
+> 
+>  drivers/net/wireless/iwmc3200wifi/iwm.h    |    2 +-
+>  drivers/net/wireless/iwmc3200wifi/netdev.c |    2 +-
+>  drivers/net/wireless/iwmc3200wifi/rx.c     |    2 +-
+>  3 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwmc3200wifi/iwm.h b/drivers/net/wireless/iwmc3200wifi/iwm.h
+> index 5a26bb0..79ffa3b 100644
+> --- a/drivers/net/wireless/iwmc3200wifi/iwm.h
+> +++ b/drivers/net/wireless/iwmc3200wifi/iwm.h
+> @@ -349,7 +349,7 @@ int iwm_up(struct iwm_priv *iwm);
+>  int iwm_down(struct iwm_priv *iwm);
+>  
+>  /* TX API */
+> -u16 iwm_tid_to_queue(u16 tid);
+> +int iwm_tid_to_queue(u16 tid);
+>  void iwm_tx_credit_inc(struct iwm_priv *iwm, int id, int total_freed_pages);
+>  void iwm_tx_worker(struct work_struct *work);
+>  int iwm_xmit_frame(struct sk_buff *skb, struct net_device *netdev);
+> diff --git a/drivers/net/wireless/iwmc3200wifi/netdev.c b/drivers/net/wireless/iwmc3200wifi/netdev.c
+> index e4f0f87..c4c0d23 100644
+> --- a/drivers/net/wireless/iwmc3200wifi/netdev.c
+> +++ b/drivers/net/wireless/iwmc3200wifi/netdev.c
+> @@ -76,7 +76,7 @@ static int iwm_stop(struct net_device *ndev)
+>   */
+>  static const u16 iwm_1d_to_queue[8] = { 1, 0, 0, 1, 2, 2, 3, 3 };
+>  
+> -u16 iwm_tid_to_queue(u16 tid)
+> +int iwm_tid_to_queue(u16 tid)
+>  {
+>  	if (tid > IWM_UMAC_TID_NR - 2)
+>  		return -EINVAL;
+> diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
+> index 1c57c1f..6d6ed74 100644
+> --- a/drivers/net/wireless/iwmc3200wifi/rx.c
+> +++ b/drivers/net/wireless/iwmc3200wifi/rx.c
+> @@ -1126,7 +1126,7 @@ static int iwm_ntf_stop_resume_tx(struct iwm_priv *iwm, u8 *buf,
+>  
+>  		if (!stop) {
+>  			struct iwm_tx_queue *txq;
+> -			u16 queue = iwm_tid_to_queue(bit);
+> +			int queue = iwm_tid_to_queue(bit);
+>  
+>  			if (queue < 0)
+>  				continue;
 
-Hmm they are using at least one switching DC/DC..
+Good catch. Thanks both for the fix.
 
-On my rtl8187L there is a relatively big inductor and a big, probably
-schottky, diode on the PCB near to two little ICs (well one is
-certainly an IC, the other could be even a couple of transistors in a
-single package.. I don't know).
+Acked-by: Zhu Yi <yi.zhu@intel.com>
 
-On one of two coil pin the 3.3V is present. So it should be the
-switching DC/DC for the 3.3.
+Thanks,
+-yi
 
-On one of the two ICS (the little one, that i'm not sure what is it
-really) there is present both 3.3V and 1.8V so it could be the
-regulator for 1.8V
-
-There are a couple of little inductors or ferrite bead in apparently
-0803 or similar package but they looks like they are used as filters
-and I can't see any other diode, so the little ic _might_ be a linear
-used for 1.8V.
-
-Unfortunately I couldn't find the marking code on the net about it..
-it is a sot23-5 marked ajp22
-
-Oh And there is another of those ajp22 on another PCB place...I did
-some measurement on it, but I didn't find anything that convinced me
-about what is it..
-
-Andrea
