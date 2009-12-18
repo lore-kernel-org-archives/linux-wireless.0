@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:63993 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752260AbZLNPBX (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:44014 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933195AbZLRXC7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 10:01:23 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so881855eyd.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 07:01:22 -0800 (PST)
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Revised wireless tree management practices
-Date: Mon, 14 Dec 2009 15:59:29 +0100
-Cc: linux-wireless@vger.kernel.org, davem@davemloft.net
-References: <20091209211054.GB32058@tuxdriver.com> <200912141516.12224.bzolnier@gmail.com> <20091214142602.GC18945@tuxdriver.com>
-In-Reply-To: <20091214142602.GC18945@tuxdriver.com>
+	Fri, 18 Dec 2009 18:02:59 -0500
+Received: by iwn1 with SMTP id 1so2507134iwn.33
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2009 15:02:59 -0800 (PST)
 MIME-Version: 1.0
-Message-Id: <200912141559.29282.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+In-Reply-To: <1261176470.14206.23.camel@johannes.local>
+References: <1261176470.14206.23.camel@johannes.local>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 18 Dec 2009 15:02:39 -0800
+Message-ID: <43e72e890912181502u3610ac23qe2dfc09f1d337bf5@mail.gmail.com>
+Subject: Re: [PATCH] ar9170: load firmware asynchronously
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 14 December 2009 03:26:02 pm John W. Linville wrote:
-> On Mon, Dec 14, 2009 at 03:16:12PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> 
-> > Now if only somebody could come up with a way to split 'monstermerges'
-> > for Linus tree into something more fine-grained (thousands of commits in
-> > a single merge is too much for anyone not directly involved into current
-> > networking developments IMHO) I would be completely satisfied. ;)
-> 
-> You'll have to talk to Dave about that one, although FWIW I'm not
+On Fri, Dec 18, 2009 at 2:47 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> This converts ar9170 to load firmware asynchronously
+> out of ->probe() and only register with mac80211 when
+> all firmware has been loaded successfully. If, on the
+> other hand, any firmware fails to load, it will now
+> unbind from the device.
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> This can go in now, the prereq patch went in via gregkh.
+>
+> This ought to make it possible to build the driver
+> into the kernel and as long as your system boots
+> within 60 seconds it'll all just work.
+>
+> This is how we need to load firmware for drivers that
+> require the firmware image to detect which features
+> to register to mac80211/cfg80211, but it's also useful
+> when no features depend on the firmware.
+>
+> I've done ar9170 because I'm somewhat familiar with its
+> implementation. b43 should probably be converted to this
+> scheme since it actually has features that depend on the
+> firmware, and libertas_tf has the MAC addresss depending
+> on the firmware (well it needs the firmware to read it).
+>
+> The only complication with this is that now the user is
+> mostly unaware they have a wireless device, they can only
+> find it via lsusb/lspci etc. if firmware loading fails,
+> or from kernel messages. And also manual binding in sysfs,
+> device re-plugging or module re-loading is required to
+> get the module to find the device after putting firmware
+> in place...
+>
+> Still I think this is better than what we have now with
+> many drivers -- if firmware is missing you get network
+> interfaces etc. but cannot ever use them, and it's not
+> always entirely clear that is due to missing firmware.
 
-Yep, it was directed at him (since he was on cc: already).
+Sweet -- we could also expose firmware load events if not done so
+already and let userspace propagate such nasty warnings, I think we'd
+need to pass the firmware expected and the driver the requested it so
+that once the firmware is in place (I guess through inotify maybe) the
+driver modprobe can be retried.
 
-> sure how to prevent that with the current "merge window" policy...
-
-Hmmm, there are multiple ideas to investigate even within the current
-"merge window" policy.  Decoupling driver trees from core changes should
-certainly be possible (it works just fine in the storage area), some
-architectures make heavy use of topic branches to prevent 'monstermerge'
-issue etc.
-
-Anyway this is just some food for thought for Dave once he finds some
-time away from his usual more high-priority activities.. ;)
-
---
-Bartlomiej Zolnierkiewicz
+  Luis
