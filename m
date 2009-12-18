@@ -1,41 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:51168 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757464AbZLFT2u (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:46734 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752216AbZLRKfU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2009 14:28:50 -0500
-Received: by ewy19 with SMTP id 19so4804642ewy.1
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Dec 2009 11:28:56 -0800 (PST)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH] orinoco: remove spare KERN_DEBUG
-Date: Sun,  6 Dec 2009 19:28:47 +0000
-Message-Id: <1260127727-29276-1-git-send-email-kilroyd@googlemail.com>
+	Fri, 18 Dec 2009 05:35:20 -0500
+Date: Fri, 18 Dec 2009 11:36:49 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Holger Schurig <holgerschurig@gmail.com>
+Subject: [PATCH] libertas: Remove carrier signaling from the scan code
+Message-ID: <20091218103649.GA3568@sortiz.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A KERN_DEBUG didn't get removed when transitioning from printk to
-pr_debug
+    
+There is no reason to signal a carrier off when doing a 802.11 scan.
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+Cc: Dan Williams <dcbw@redhat.com>
+Cc: Holger Schurig <holgerschurig@gmail.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- drivers/net/wireless/orinoco/hermes_dld.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/libertas/scan.c |   22 ++++++++--------------
+ 1 files changed, 8 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/orinoco/hermes_dld.c b/drivers/net/wireless/orinoco/hermes_dld.c
-index a3eefe1..6d5660d 100644
---- a/drivers/net/wireless/orinoco/hermes_dld.c
-+++ b/drivers/net/wireless/orinoco/hermes_dld.c
-@@ -427,7 +427,7 @@ int hermesi_program_init(hermes_t *hw, u32 offset)
- 	if (err)
- 		return err;
+diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
+index c6a6c04..b0b1c78 100644
+--- a/drivers/net/wireless/libertas/scan.c
++++ b/drivers/net/wireless/libertas/scan.c
+@@ -567,11 +567,8 @@ int lbs_scan_networks(struct lbs_private *priv, int full_scan)
+ 	chan_count = lbs_scan_create_channel_list(priv, chan_list);
  
--	pr_debug(KERN_DEBUG PFX "Enabling volatile, EP 0x%08x\n", offset);
-+	pr_debug(PFX "Enabling volatile, EP 0x%08x\n", offset);
- 	err = hermes_doicmd_wait(hw,
- 				 HERMES_PROGRAM_ENABLE_VOLATILE,
- 				 offset & 0xFFFFu,
+ 	netif_stop_queue(priv->dev);
+-	netif_carrier_off(priv->dev);
+-	if (priv->mesh_dev) {
++	if (priv->mesh_dev)
+ 		netif_stop_queue(priv->mesh_dev);
+-		netif_carrier_off(priv->mesh_dev);
+-	}
+ 
+ 	/* Prepare to continue an interrupted scan */
+ 	lbs_deb_scan("chan_count %d, scan_channel %d\n",
+@@ -635,16 +632,13 @@ out2:
+ 	priv->scan_channel = 0;
+ 
+ out:
+-	if (priv->connect_status == LBS_CONNECTED) {
+-		netif_carrier_on(priv->dev);
+-		if (!priv->tx_pending_len)
+-			netif_wake_queue(priv->dev);
+-	}
+-	if (priv->mesh_dev && (priv->mesh_connect_status == LBS_CONNECTED)) {
+-		netif_carrier_on(priv->mesh_dev);
+-		if (!priv->tx_pending_len)
+-			netif_wake_queue(priv->mesh_dev);
+-	}
++	if (priv->connect_status == LBS_CONNECTED && !priv->tx_pending_len)
++		netif_wake_queue(priv->dev);
++
++	if (priv->mesh_dev && (priv->mesh_connect_status == LBS_CONNECTED) &&
++	    !priv->tx_pending_len)
++		netif_wake_queue(priv->mesh_dev);
++
+ 	kfree(chan_list);
+ 
+ 	lbs_deb_leave_args(LBS_DEB_SCAN, "ret %d", ret);
 -- 
-1.6.4.4
+1.6.3.3
 
+Intel Open Source Technology Centre
+http://oss.intel.com/
