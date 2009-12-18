@@ -1,60 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:62859 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934664AbZLGUZb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2009 15:25:31 -0500
-Received: by bwz27 with SMTP id 27so3877689bwz.21
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Dec 2009 12:25:36 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87my1v3sum.fsf@purkki.valot.fi>
-References: <16a81f890912031225g888490y2e8ff92557a322b7@mail.gmail.com>
-	 <1260096442.3461.3.camel@johannes.local>
-	 <87my1v3sum.fsf@purkki.valot.fi>
-Date: Mon, 7 Dec 2009 12:25:36 -0800
-Message-ID: <16a81f890912071225v2a1e603cy18afdd9b652903a1@mail.gmail.com>
-Subject: Re: [PATCH v3 0/2] mac80211: add U-APSD client support
-From: Jason Young <a.young.jason@gmail.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from gate.crashing.org ([63.228.1.57]:48628 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932859AbZLRWJw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Dec 2009 17:09:52 -0500
+Subject: Re: [PATCH v2] ps3_gelic_wireless: Fix build failure due to
+ missing WEXT_PRIV
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Geoff Levand <geoffrey.levand@am.sony.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
+	Hamish Guthrie <Hamish.Guthrie@sonycom.com>
+In-Reply-To: <4B2BC8E6.9090007@am.sony.com>
+References: <1261115574.2173.18.camel@pasglop>
+	 <20091218085547.fb8bdaf5.randy.dunlap@oracle.com>
+	 <4B2BC8E6.9090007@am.sony.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 19 Dec 2009 09:09:36 +1100
+Message-ID: <1261174176.2173.67.camel@pasglop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 7, 2009 at 3:51 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
->
->> On Thu, 2009-12-03 at 12:25 -0800, Jason Young wrote:
->>
->>> The bit values for IEEE80211_WMM_IE_STA_SP_XXX are not correct.  The Max SP
->>> Length subfield settings table in 7.3.1.17 has the least significant bit listed
->>> first.
->>>
->>> #define IEEE80211_WMM_IE_STA_SP_ALL  (0<<5)
->>> #define IEEE80211_WMM_IE_STA_SP_2     (1<<5)  /* or (BIT(5)) */
->>> #define IEEE80211_WMM_IE_STA_SP_4     (2<<5)  /* or (BIT(6)) */
->>> #define IEEE80211_WMM_IE_STA_SP_6     (3<<5)  /* or (BIT(5) | BIT(6)) */
->>
->> Can somebody clarify for me which part of this stuff is WMM, and which
->> is "real" 802.11 QoS?
+On Fri, 2009-12-18 at 10:24 -0800, Geoff Levand wrote:
+> From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> 
+> The option to support the old style PSK interface in the PS3
+> GELIC wireless drivers requires CONFIG_WEXT_PRIV to be set
+> 
+> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Signed-off-by: Geoff Levand <geoffrey.levand@am.sony.com>
+> ---
+> v2: Added 'depends on WLAN'.
+> 
+> Please send to Linus asap (or I can put it in powerpc.git) as it's
+> breaking one of my test build configs :-)
+> 
+> Just as a note, I asked Hamish to work to remove this option.
+> No distros use it anymore, so we don't need it.
 
-Though this patch adds support for WMM Power Save, these defines will
-work for WMM and "real" 802.11 QoS.
+Geoff, the depends on WLAN should be on config GELIC_WIRELESS
 
-> I took a quick peek of the 802.11-2007 QoS part. My observation was
-> that the terms are the same, but that's about it. For example QoS Info
-> field is reversed, APSD capability is advertised through beacon
-> capability bits and naturally there are proper ids for IEs.
+Cheers,
+Ben.
 
-The QoS info field itself is not reversed, the figure is just reversed.
+> -Geoff
+> ---
+>  drivers/net/Kconfig |    2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> --- a/drivers/net/Kconfig
+> +++ b/drivers/net/Kconfig
+> @@ -2357,7 +2357,9 @@ config GELIC_WIRELESS
+>  
+>  config GELIC_WIRELESS_OLD_PSK_INTERFACE
+>         bool "PS3 Wireless private PSK interface (OBSOLETE)"
+> +       depends on WLAN
+>         depends on GELIC_WIRELESS
+> +       select WEXT_PRIV
+>         help
+>            This option retains the obsolete private interface to pass
+>            the PSK from user space programs to the driver.  The PSK
 
-> So they are very similar but the frame handling has to be more or less
-> rewritten for 802.11 QoS.
->
-> BTW, are there clients which support 802.11 QoS? Should we consider
-> adding it to mac80211, for example? Thoughts?
-> --
-> Kalle Valo
->
 
-Jason Young
