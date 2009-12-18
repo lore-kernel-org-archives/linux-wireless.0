@@ -1,78 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57011 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966610AbZLHWAi (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:62501 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932078AbZLRPho (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 17:00:38 -0500
-Subject: Re: regression: rt2561 frequent "Arrived at non-free entry" errors
- in 	2.6.32
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Andi Kleen <andi@firstfloor.org>,
-	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
-	linux-wireless@vger.kernel.org, Tim Blechmann <tim@klingt.org>,
-	rjw@sisk.pl, IvDoorn@gmail.com, linville@tuxdriver.com
-In-Reply-To: <4B1ECB84.6010009@gmail.com>
-References: <20091204233202.GA13658@basil.fritz.box>
-	 <4B1BB44E.90706@gmail.com>	 <200912080006.28892.s.L-H@gmx.de>
-	 <20091208095755.GT18989@one.firstfloor.org>
-	 <14add3d10912080219u17c65cbemf6d56290a8f12efd@mail.gmail.com>
-	 <4B1EC842.7040407@gmail.com> <1260308669.32227.2.camel@johannes.local>
-	 <4B1ECB84.6010009@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-dcbUAt0cHYsHCcEKekEc"
-Date: Tue, 08 Dec 2009 23:00:07 +0100
-Message-ID: <1260309607.32227.4.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 18 Dec 2009 10:37:44 -0500
+Received: by iwn1 with SMTP id 1so2230273iwn.33
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2009 07:37:44 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <bf87febf0912180342w134d92eblc24f326cfa751b08@mail.gmail.com>
+References: <bf87febf0912030507u1c36f6a9h7cac0efabf3d016@mail.gmail.com>
+	<20091204192315.GA5786@tuxdriver.com> <bf87febf0912070205k40a7286dpbb48cfcc494203d2@mail.gmail.com>
+	<20091207215903.GC18939@tuxdriver.com> <b6c5339f0912080657s7cfccd4dp6525702e609bdd5f@mail.gmail.com>
+	<43e72e890912080801s52607743s738ed6cdad7d154e@mail.gmail.com>
+	<20091208160659.GG15172@tuxdriver.com> <43e72e890912080830v40ff214co178fb17c38439e70@mail.gmail.com>
+	<bf87febf0912180342w134d92eblc24f326cfa751b08@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 18 Dec 2009 07:37:24 -0800
+Message-ID: <43e72e890912180737s382c24c5q8720f1e3138fefb@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: add support for Dell Vostro A860 LED
+To: Shahar Or <mightyiampresence@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Dec 18, 2009 at 3:42 AM, Shahar Or <mightyiampresence@gmail.com> wrote:
+> On Tue, Dec 8, 2009 at 6:30 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>>>> IIRC this is all mapped in the INF file, I thought I had released an
+>>>> INF file under the ISC license but it seems that's not the case, I can
+>>>> try to do that if it helps. Anyway, if we can move this sort of map to
+>>>> userspace it'd be neat as you'd just need a userspace file update.
+>>>> Only thing is how to do this in a generic way for all wireless drivers
+>>>> and if this is indeed useful for other drivers.
+>>>
+>>> Export something through sysfs and use a udev rule?
+>>
+>> True. Is sysfs the preferred fs nowadays, what about configfs? Or
+>> maybe even udev rule --> nl80211 ?
+>
+> If we have all the IDs from the INF file, then why do we need this in
+> userspace? Is the list growing?
 
---=-dcbUAt0cHYsHCcEKekEc
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+No, but for other newer hardware/drivers it can likely grow, so my
+comment was more of a generic driver approach to this.
 
-On Tue, 2009-12-08 at 22:56 +0100, Gertjan van Wingerde wrote:
-
-> Well, this is a test patch, to validate my theory that this is where the =
-problem is.
-> If that is confirmed, then I can start working out a proper solution.
-
-Well but this patch won't help you test that theory, because it'll just
-disable PS completely if there were packets pending when mac80211 asked
-you to enable PS, afaict.
-
-> How does mac80211 look at these things anyway. How does it expect the dri=
-ver to handle
-> the cases where mac80211 asks the driver to go to sleep because of power =
-saving, and
-> the driver can't because its queues haven't drained yet?
-
-mac80211 does expect you to be able to transmit while asleep. Same
-happens when PS-polling, where it actually expects you to wait for the
-response frame too. I think. I haven't looked at this in a while.
-
-johannes
-
---=-dcbUAt0cHYsHCcEKekEc
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLHsxjAAoJEODzc/N7+QmaOO0P/RWfzg1JMXkmzgSqgu5wymWQ
-a3bU8FgpK2Zr3oZz3sf3E82OVvW74/uQJ8HBI9oHGFpU8ici7Nmi70ix6RNvKDv1
-lf8+9yYbRh9DMZ/1C6nDB4o/khJYhMK7etH+nklpz0LqcsWMY2Tk8XiplKsAEJyL
-Lga7uzFE0XOInv8N6R8cn+i1Tr9Oh9Q+aIHSvYjcwpYvYMaMYe+9Jg82cCeLV1F4
-JbsRgpli/ljjdoT1evqQMunD5p+RW5h7ta45pTtGcAqVDmS6zyek7xoHm4CeLXZy
-mstryHsGF8llDJ+eObpsIiKOkA1KhtUZol9jp2QB/+ctgBe1RnjzdH10fs/VDrMw
-i3YhMON5Y1iW7ZjPh92jxolFp2gdvauroeW2uwZI7PJRPECf90IcpLckzO3Lxdyh
-HneWnmxAdh2rQMh4ql5jOyf/IqYrLfwwbkLtgwI8degx6/2M6n2UQnVjxjSDDQWl
-W+BUi8qfytBk7r/J0yGfN/sTzzAXjirGFJUSBUOAJvyYm/nihxbUk8UTE9HyhOu6
-rDVq54a8ScWZBpFo8oKO+F2wDLHRS/Lec5oNeL9DBTRpolJEJ07O5YmlAcKenaY4
-v0irDfA/zIOT9+XcqEks4a7hqAQMoCldmmYjZiXCh+z3CQeSqBbBlY9R1toIR4W+
-e5n0vFP/qUl97+64v1Wq
-=aUJx
------END PGP SIGNATURE-----
-
---=-dcbUAt0cHYsHCcEKekEc--
-
+  Luis
