@@ -1,41 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:44138 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751975AbZL2CAt (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52490 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751176AbZLRLvr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Dec 2009 21:00:49 -0500
-Date: Mon, 28 Dec 2009 21:00:48 -0500
-From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
-To: Huaxu Wan <huaxu.wan@linux.intel.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Compat-wireless-2.6: Updated to fix bluetooth patch
-	error
-Message-ID: <20091229020048.GF30201@bombadil.infradead.org>
-References: <20091225092225.GA11049@owl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091225092225.GA11049@owl>
+	Fri, 18 Dec 2009 06:51:47 -0500
+Subject: Re: [PATCH] mac80211: remove remaining qual code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1259748910.32171.150.camel@johannes.local>
+References: <1259748910.32171.150.camel@johannes.local>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-RsIXCgrXBv6duaKpzPnt"
+Date: Fri, 18 Dec 2009 12:51:35 +0100
+Message-ID: <1261137095.23178.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 25, 2009 at 05:22:25PM +0800, Huaxu Wan wrote:
-> 
-> Compat-wireless-2.6: Updated to fix bluetooth patch error
-> 
-> Keep the patch in step with the linux-next tree after the following
-> patch merged.
-> 
->     commit 971beb83aeb2a309175682cf5683d64fd4591841
->     Author: Roel Kluin <roel.kluin@gmail.com>
->     Date:   Mon Dec 7 14:23:21 2009 +0100
-> 
->         Bluetooth: Fix PTR_ERR return of wrong pointer in hidp_setup_hid()
-> 
->         Return the PTR_ERR of the correct pointer.
->  
-> Signed-off-by: Huaxu Wan <huaxu.wan@linux.intel.com>
 
-Great thanks!
+--=-RsIXCgrXBv6duaKpzPnt
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Wed, 2009-12-02 at 11:15 +0100, Johannes Berg wrote:
+> This removes the remaining users of the rx status
+> 'qual' field and the field itself.
+
+can we get that on track for .33, so that we don't have lots of
+deprecation warnings in that kernel?
+
+Alternatively, remove the deprecated annotation for .33?
+
+johannes
+
+--=-RsIXCgrXBv6duaKpzPnt
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLK2zDAAoJEODzc/N7+QmaPfQP/2xWJ3KctA4Tn9yXQSatE1Rl
+6gdLQqNIwRakxM3EosdiTkACdEhW2/ncKExGu8IAlhXfOztB9HxwJC7CeDgap/1G
+EKvWoa6unU9S7O8c5pRBUwBeDUfv2gxKGLbOT7KAVzIcifhC0TtMwe8wTRDc5VPo
+xtrG5KPID66p4+tn6vihislavgrcWyo0YPZbAIGmzD36qOTsh9PnFWOywk0vSXu4
+uHRsCNqo7WFUN+Q9poAbmmz8uv0jUZi2juDepcDpZGushJDPdbiavrZx48pFf48s
+F3QYqgyd/A9AY1CEZQw06cfVYoKHDlLh4+KiRM7PCPFqWmMKUYJZ8YMUjNpVcKaN
+JUXNYGsff6PeJzCHQqOLz6MeiQhRNTriWj4Fwj3ueSTwpJrBREs8xKcCtoafxO+S
+DqEdv9Eb4GF6GuzXLLkmTTOgJ3+PBzVmPr5eQLcAH7zKe1bdY9Ytki6bCPN80ABM
+5QKSlvomJ8VfhcMPhkc9ipQHyCEx5MWMoaZmRPU0skRrNIPPI5FX7vG8HUPlLRdq
+wNNm1Vu6FVP7b/OtRNMoWwSjWEItpPZf6OXCHG/+c/jf5AQ2TgNDnHPX31/1HyTm
+ZRdXNHr9GiFiEHN8G+xXf2A4+qjxvTJ/yuZ2eU8eEvNr5J+LVzLXSVUezpgaVYeY
+FZiS+hz93vMtqyETQ1wE
+=9PA6
+-----END PGP SIGNATURE-----
+
+--=-RsIXCgrXBv6duaKpzPnt--
+
