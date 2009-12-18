@@ -1,74 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:35375 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965955AbZLHUHH (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44831 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932255AbZLRSas (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 15:07:07 -0500
-Subject: Re: wireless device and udev
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Stephen Hemminger <shemminger@vyatta.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-hotplug@vger.kernel.org
-In-Reply-To: <43e72e890912081050w265bcbc1sd1380ef52fc0799b@mail.gmail.com>
-References: <20091207172616.7470ed2b@nehalam>
-	 <20091208142940.GB15172@tuxdriver.com>  <20091208104336.3d5a7fb4@nehalam>
-	 <43e72e890912081050w265bcbc1sd1380ef52fc0799b@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Dec 2009 21:07:08 +0100
-Message-ID: <1260302828.2901.17.camel@violet>
+	Fri, 18 Dec 2009 13:30:48 -0500
+Subject: Re: [PATCH v2] ps3_gelic_wireless: Fix build failure due to
+ missing WEXT_PRIV
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Geoff Levand <geoffrey.levand@am.sony.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
+	Hamish Guthrie <Hamish.Guthrie@sonycom.com>
+In-Reply-To: <4B2BC8E6.9090007@am.sony.com>
+References: <1261115574.2173.18.camel@pasglop>
+	 <20091218085547.fb8bdaf5.randy.dunlap@oracle.com>
+	 <4B2BC8E6.9090007@am.sony.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-fPnoSaeSXGA91qGIZ54b"
+Date: Fri, 18 Dec 2009 19:30:36 +0100
+Message-ID: <1261161036.14206.3.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
 
-> >> > The default udev persistent network rules based on hardware mac id doesn't
-> >> > work well when multiple SSID's are created on an access-point.  The command
-> >> >  iw phy phy0 interface add wlan1 type managed
-> >> >
-> >> > is supposed to make a device name wlan1, but udev sees that it has the same
-> >> > mac address as wlan0 and gets confused leaving the device named wlan1_rename
-> >> >
-> >> > It looks like wlanX is breaking assumptions of existing udev persistent network
-> >> > device name generation rules.  Perhaps there needs to be special case for wlanX
-> >> > devices?
-> >>
-> >> Yes, probably so.  But what would it be?  Factoring-in SSID is clearly
-> >> not right for the usual case (i.e. one interface on a mobile device).
-> >> I'm not sure what else one could use as a key.
-> >>
-> >> What does udev do for bridge, bond, or vlan devices?  Don't those
-> >> share MAC addresses with the underlying physical device?
-> >>
-> >> John
-> >
-> > At least on ubuntu/debian the name whitelist is:
-> >
-> >
-> > # device name whitelist
-> > KERNEL!="eth*|ath*|wlan*[0-9]|msh*|ra*|sta*|ctc*|lcs*|hsi*", GOTO="persistent_net_generator_end"
-> >
-> > So bond or bridge don't match and don't get tampered with.
-> >
-> > The problem is that wlan* device names are used for both hardware and virtual
-> > devices.  Udev scripts can be fixed "do the right thing" but there is not sufficient
-> > information for the script to decide how to attach persistent name.
-> > What values from sysfs (ie attributes) should script be using?  This probably
-> > means that additional attributes needed to be added to wireless device infrastructure
-> > in kernel.
-> 
-> We could likely use the new SET_NETDEV_DEVTYPE() but I have yet to see
-> where this is exported. It must be there somewhere.
+--=-fPnoSaeSXGA91qGIZ54b
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-they are part of the uevent the kernel sends. It will have the DEVTYPE
-value there. However this has to be exactly the hardware type and in
-both cases it will be "wlan" and has to be. The analogy that works here
-is similar to partitions and disks in the storage world. We have just
-different kinds of network interfaces.
+On Fri, 2009-12-18 at 10:24 -0800, Geoff Levand wrote:
+> From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>=20
+> The option to support the old style PSK interface in the PS3
+> GELIC wireless drivers requires CONFIG_WEXT_PRIV to be set
+>=20
+> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Signed-off-by: Geoff Levand <geoffrey.levand@am.sony.com>
+> ---
+> v2: Added 'depends on WLAN'.
 
-Regards
+Won't you want 'depends on WLAN' for GELIC_WIRELESS instead of here?
 
-Marcel
+johannes
 
+--=-fPnoSaeSXGA91qGIZ54b
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLK8pIAAoJEODzc/N7+Qma+toP/iarWy2EipzMYswHGNrgA3h1
+RdMr4Gy93ESxqWEpKPxZaFwbAsdmr7z9zIhQxhkz//Fzz/scu6DvgGaV8sqsZQqQ
+uVlZivy7TOdVuzXs6ocjZKV144Waq3VNdQwmJ9AXemfOFTTIZbA3RYXS+oSe1SEa
+jINun2K+XnNp8oPcHJayoo5BMu8ou8hBr+hXonVB8srj7dTAfGHkwyjkwaMgGvI0
+u5Ksw1TNzMlo75xENOWzmi9bsc9jIeCSpHg9BWS0zdTjDObkJYJLEerWEZf5w2kd
+C+T4NM04BU1eainx30sIcqGqMq2R3KDQwx3DI+FrGhDu6VJI3/y6Eu3d3YfUlqGk
+bn5ZLbwpNYccI4LA7k/cFcX8gz/IV1kYXAc+g3hGKZQCMcQbWgSfQXDJb3/jGTsT
+R5IWwIg0oEoCY5ZIFrqcBTne/n7snWnxrdjXi+DQN0YGufzD8+mkJQDJV8jPw+Dy
+8h1W9u8IzFAt86rHdC8zp7vSbO9D4gv3havsxgk7Z+j9l0SiIT0Yxh18dCvG85yy
+vNcmJw4sMSEYl8VLEfgLj0a8XA7MU/xXYllU5Eo3Ts2Ac7PhhyczedvV0GA52asP
+uUdgFMNwe9CB3BNmk4NSs9m+krTkndgw6Lffmw0SdE6wMNJiECg72bneU1wlyIbr
+Svww/5qZVwiAB7gOviVC
+=jbIL
+-----END PGP SIGNATURE-----
+
+--=-fPnoSaeSXGA91qGIZ54b--
 
