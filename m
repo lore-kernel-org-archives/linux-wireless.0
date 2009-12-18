@@ -1,89 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:25881 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752249AbZL3Mm4 (ORCPT
+Received: from va3ehsobe005.messaging.microsoft.com ([216.32.180.15]:55452
+	"EHLO VA3EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932367AbZLRTU3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2009 07:42:56 -0500
-Subject: [PATCH] mac80211: fix a warning related to pointer conversion to u64
-	cookie
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kalle.valo@iki.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Kalle Valo <kalle.valo@nokia.com>
-Date: Wed, 30 Dec 2009 14:42:20 +0200
-Message-ID: <20091230124220.31895.74821.stgit@tikku>
+	Fri, 18 Dec 2009 14:20:29 -0500
+Message-ID: <4B2BD5C4.6050001@am.sony.com>
+Date: Fri, 18 Dec 2009 11:19:32 -0800
+From: Geoff Levand <geoffrey.levand@am.sony.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: [PATCH v3] ps3_gelic_wireless: Fix build failure due to missing WEXT_PRIV
+References: <1261115574.2173.18.camel@pasglop>
+In-Reply-To: <1261115574.2173.18.camel@pasglop>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
 
-On a 32 bit system (in this case an omap 3430 system) gcc warned about
-pointer conversion:
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-net/mac80211/work.c: In function 'ieee80211_remain_on_channel_timeout':
-net/mac80211/work.c:534: warning: cast from pointer to integer of different size
-net/mac80211/work.c: In function 'ieee80211_remain_done':
-net/mac80211/work.c:1030: warning: cast from pointer to integer of different size
-net/mac80211/work.c: In function 'ieee80211_wk_remain_on_channel':
-net/mac80211/work.c:1056: warning: cast from pointer to integer of different size
-net/mac80211/work.c: In function 'ieee80211_wk_cancel_remain_on_channel':
-net/mac80211/work.c:1072: warning: cast from pointer to integer of different size
+The option to support the old style PSK interface in the PS3
+GELIC wireless drivers requires CONFIG_WEXT_PRIV to be set
 
-Fix it by casting the pointers to unsigned long instead. This makes the
-compiler happy again.
-
-Compile-tested only.
-
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Signed-off-by: Geoff Levand <geoffrey.levand@am.sony.com>
 ---
- net/mac80211/work.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+v2: Added 'depends on WLAN'.
+v3: Moved 'depends on WLAN' to GELIC_WIRELESS.
 
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index ea89ed7..5ba7599 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -531,9 +531,9 @@ ieee80211_remain_on_channel_timeout(struct ieee80211_work *wk)
- 		wk->remain.started = true;
- 		wk->timeout = jiffies + msecs_to_jiffies(wk->remain.duration);
+Please send to Linus asap (or I can put it in powerpc.git) as it's
+breaking one of my test build configs :-)
+
+---
+ drivers/net/Kconfig |    2 ++
+ 1 file changed, 2 insertions(+)
+
+--- a/drivers/net/Kconfig
++++ b/drivers/net/Kconfig
+@@ -2346,6 +2346,7 @@ config GELIC_NET
  
--		cfg80211_ready_on_channel(wk->sdata->dev, (u64)wk, wk->chan,
--					  wk->chan_type, wk->remain.duration,
--					  GFP_KERNEL);
-+		cfg80211_ready_on_channel(wk->sdata->dev, (unsigned long) wk,
-+					  wk->chan, wk->chan_type,
-+					  wk->remain.duration, GFP_KERNEL);
- 
- 		return WORK_ACT_NONE;
- 	}
-@@ -1027,7 +1027,7 @@ static enum work_done_result ieee80211_remain_done(struct ieee80211_work *wk,
- 	/*
- 	 * We are done serving the remain-on-channel command.
- 	 */
--	cfg80211_remain_on_channel_expired(wk->sdata->dev, (u64)wk,
-+	cfg80211_remain_on_channel_expired(wk->sdata->dev, (unsigned long) wk,
- 					   wk->chan, wk->chan_type,
- 					   GFP_KERNEL);
- 
-@@ -1053,7 +1053,7 @@ int ieee80211_wk_remain_on_channel(struct ieee80211_sub_if_data *sdata,
- 
- 	wk->remain.duration = duration;
- 
--	*cookie = (u64)wk;
-+	*cookie = (unsigned long) wk;
- 
- 	ieee80211_add_work(wk);
- 
-@@ -1069,7 +1069,7 @@ int ieee80211_wk_cancel_remain_on_channel(struct ieee80211_sub_if_data *sdata,
- 
- 	mutex_lock(&local->work_mtx);
- 	list_for_each_entry_safe(wk, tmp, &local->work_list, list) {
--		if ((u64)wk == cookie) {
-+		if ((unsigned long) wk == cookie) {
- 			wk->timeout = jiffies;
- 			found = true;
- 			break;
+ config GELIC_WIRELESS
+ 	bool "PS3 Wireless support"
++	depends on WLAN
+ 	depends on GELIC_NET
+ 	select WIRELESS_EXT
+ 	help
+@@ -2358,6 +2359,7 @@ config GELIC_WIRELESS
+ config GELIC_WIRELESS_OLD_PSK_INTERFACE
+        bool "PS3 Wireless private PSK interface (OBSOLETE)"
+        depends on GELIC_WIRELESS
++       select WEXT_PRIV
+        help
+           This option retains the obsolete private interface to pass
+           the PSK from user space programs to the driver.  The PSK
 
