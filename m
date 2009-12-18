@@ -1,64 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:63543 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762569AbZLKLlv (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:26576 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932078AbZLRRUm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 06:41:51 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 14/31] wl1271: upload only the first 468 bytes from the NVS file
-Date: Fri, 11 Dec 2009 13:41:05 +0200
-Message-Id: <1260531682-4695-15-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
+	Fri, 18 Dec 2009 12:20:42 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2009 09:20:42 -0800
+Date: Fri, 18 Dec 2009 09:20:40 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: =?utf-8?B?THVrw6HFoQ==?= Turek <8an@praha12.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath5k-devel] [PATCH 1/5] nl80211: Add new WIPHY attribute
+ COVERAGE_CLASS
+Message-ID: <20091218172040.GF6231@tux>
+References: <1260899813-17585-1-git-send-email-8an@praha12.net>
+ <200912152352.45977.8an@praha12.net>
+ <43e72e890912160030p3bbca486x817d3454fa9ebd62@mail.gmail.com>
+ <200912181733.52413.8an@praha12.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <200912181733.52413.8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were uploading the whole NVS file, but that is wrong, because the same
-file also contains the initialization values.  For the latest firmwares, we
-should upload only the initial 468 bytes from the file.
+On Fri, Dec 18, 2009 at 08:33:52AM -0800, Lukáš Turek wrote:
+> On 16.12.2009 09:30 you wrote:
+> > Thanks a lot for your work on this!
+> I thank you too for the comments, but, what do I have to do to get an ACK, 
+> besides the trivial fixes like the drv_ wrapper and moving the ah_coverage 
+> setting?
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271.h      |    1 +
- drivers/net/wireless/wl12xx/wl1271_boot.c |    8 +++++++-
- 2 files changed, 8 insertions(+), 1 deletions(-)
+Resend and add v2 to the patch prefix "--subject-prefix="PATCH v2" IIRC
+on git format-patch.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 3bec6f3..8dfc9ec 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -111,6 +111,7 @@ enum {
- 
- #define WL1271_FW_NAME "wl1271-fw.bin"
- #define WL1271_NVS_NAME "wl1271-nvs.bin"
-+#define WL1271_NVS_LEN  468
- 
- /*
-  * Enable/disable 802.11a support for WL1273
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
-index b7c9645..e803b87 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
-@@ -225,9 +225,15 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
- 	if (nvs == NULL)
- 		return -ENODEV;
- 
-+	if (wl->nvs_len < WL1271_NVS_LEN)
-+		return -EINVAL;
-+
- 	nvs_ptr = nvs;
- 
--	nvs_len = wl->nvs_len;
-+	/* only the first part of the NVS needs to be uploaded */
-+	nvs_len = WL1271_NVS_LEN;
-+
-+	/* FIXME: read init settings from the remaining part of the NVS */
- 
- 	/* Update the device MAC address into the nvs */
- 	nvs[11] = wl->mac_addr[0];
--- 
-1.6.3.3
-
+  Luis
