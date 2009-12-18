@@ -1,75 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:48307 "EHLO mga11.intel.com"
+Received: from parez.praha12.net ([78.108.102.1]:44635 "EHLO parez.praha12.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755406AbZLBUw4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2009 15:52:56 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 3/3] iwlwifi: driver version track kernel version
-Date: Wed,  2 Dec 2009 12:53:01 -0800
-Message-Id: <1259787181-21303-4-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1259787181-21303-1-git-send-email-reinette.chatre@intel.com>
-References: <1259787181-21303-1-git-send-email-reinette.chatre@intel.com>
+	id S1754521AbZLRQjh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Dec 2009 11:39:37 -0500
+From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
+Reply-To: 8an@praha12.net
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [ath5k-devel] [PATCH 1/5] nl80211: Add new WIPHY attribute  COVERAGE_CLASS
+Date: Fri, 18 Dec 2009 17:33:52 +0100
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <1260899813-17585-1-git-send-email-8an@praha12.net> <200912152352.45977.8an@praha12.net> <43e72e890912160030p3bbca486x817d3454fa9ebd62@mail.gmail.com>
+In-Reply-To: <43e72e890912160030p3bbca486x817d3454fa9ebd62@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1497787.Iz1dm4g5Cf";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200912181733.52413.8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+--nextPart1497787.Iz1dm4g5Cf
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-The driver version number is a remnant from when there was an out-of-tree
-iwlwifi driver. Now that the driver forms part of kernel source we do not
-need a separate driver version. Instead, we now use the kernel version as
-driver version. We maintain the previous tags used to indicate which
-components the driver has been compiled with.
+On 16.12.2009 09:30 you wrote:
+> Thanks a lot for your work on this!
+I thank you too for the comments, but, what do I have to do to get an ACK,=
+=20
+besides the trivial fixes like the drv_ wrapper and moving the ah_coverage=
+=20
+setting?
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.h     |    4 +++-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 +---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+Lukas Turek
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 7cd8b7d..22a20c1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -63,6 +63,8 @@
- #ifndef __iwl_core_h__
- #define __iwl_core_h__
- 
-+#include <linux/utsrelease.h>
-+
- /************************
-  * forward declarations *
-  ************************/
-@@ -70,7 +72,7 @@ struct iwl_host_cmd;
- struct iwl_cmd;
- 
- 
--#define IWLWIFI_VERSION "1.3.27k"
-+#define IWLWIFI_VERSION UTS_RELEASE "-k"
- #define DRV_COPYRIGHT	"Copyright(c) 2003-2009 Intel Corporation"
- #define DRV_AUTHOR     "<ilw@linux.intel.com>"
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index a63bd5e..2a28a1f 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -76,11 +76,9 @@
- #define VS
- #endif
- 
--#define IWL39_VERSION "1.2.26k" VD VS
-+#define DRV_VERSION  IWLWIFI_VERSION VD VS
- #define DRV_COPYRIGHT	"Copyright(c) 2003-2009 Intel Corporation"
- #define DRV_AUTHOR     "<ilw@linux.intel.com>"
--#define DRV_VERSION     IWL39_VERSION
--
- 
- MODULE_DESCRIPTION(DRV_DESCRIPTION);
- MODULE_VERSION(DRV_VERSION);
--- 
-1.5.6.3
+--nextPart1497787.Iz1dm4g5Cf
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iQIcBAABAgAGBQJLK67wAAoJEEBjvk/UOfYw994P/A7tsUK+0106N3Y24R15EAP1
+BN4lnHG4hVsb2joqzUvxlNITVJ1aoD6KZt7nfYmimRsNMveldgHS8TcVk/n2bZia
+meryWXHOl7aLfv1WzByeRNCPkhcD9kbulXhlA/MYYCZyUFX/J08kmG2FGLrAYm/g
+X/hCN6+EjFb2bNB5QBstc1MOe7zuXn0Fp3167SqdkIndIfFU12xMV6WToKGTEID5
+AmPtFx1wbxkeagdwOel+i1cvAyNqbTIXOZlO8QDD0fq415WhRafV6OaTTPflH0Pu
+yaT1bjiiv2k9wBDH07vk2VOYDifKPSx/waxyca2L9CLiq5fa3D0Bj2JkNEZu681R
+CBhYwFbwK2vDNAT/miDeOKfHBNvYZEbPMXFOR894BJfpLKshElSmNF4rqkEYru8s
+2+nlHH38WW7zgJMtVkmsFPyarotMb+JQZ3Yl2uAgEWZQgvra+IeEtzkxauEso4dG
+N2mo2IwMmkh/WvJWq/c5b+7vQ7p97bvZO7MBT6BKBwZFTJaenp0I9vBcRxPd+fnl
+c96rBMSiTeud3jCf4fzXgz0TEEy8k4iAO2LXj6AnZEdD1/Ob3HDBFZmHFhCg8OYw
+olQV0zZcEAt1LS1XV4vVgGXak2xUn0q0BtkkblLO4pH6kOQWrWo3NaSmKB50xaIF
+Fxy403cV3kLIB+xL2F2V
+=891c
+-----END PGP SIGNATURE-----
+
+--nextPart1497787.Iz1dm4g5Cf--
