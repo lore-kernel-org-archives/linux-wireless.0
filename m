@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:50766 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751320AbZLATRI (ORCPT
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:35116 "EHLO
+	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751308AbZLSPcQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 14:17:08 -0500
-Received: by ewy19 with SMTP id 19so5286899ewy.21
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 11:17:14 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Benoit Papillault <benoit.papillault@free.fr>
-Subject: Re: [PATCH 1/2] rt2x00: Disable RX aggregation for rt2800usb
-Date: Tue, 1 Dec 2009 20:17:11 +0100
-Cc: gwingerde@gmail.com, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com,
-	Luis Correia <luis.f.correia@gmail.com>
-References: <1259619690-2749-1-git-send-email-benoit.papillault@free.fr>
-In-Reply-To: <1259619690-2749-1-git-send-email-benoit.papillault@free.fr>
+	Sat, 19 Dec 2009 10:32:16 -0500
+Received: by fxm21 with SMTP id 21so3610987fxm.21
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Dec 2009 07:32:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200912012017.11986.IvDoorn@gmail.com>
+In-Reply-To: <c68f135e0912190230o566b3c3dk9be3038b0602cac5@mail.gmail.com>
+References: <20091218180205.GD2512@florz.florz.dyndns.org>
+	 <4B2BC7E3.2050907@lwfinger.net>
+	 <20091218185916.GE2512@florz.florz.dyndns.org>
+	 <4B2C100A.9000507@lwfinger.net>
+	 <c68f135e0912181615p7cd36bd0n7054b43f2b453599@mail.gmail.com>
+	 <20091219011306.GG2512@florz.florz.dyndns.org>
+	 <c68f135e0912190230o566b3c3dk9be3038b0602cac5@mail.gmail.com>
+Date: Sat, 19 Dec 2009 15:32:14 +0000
+Message-ID: <3ace41890912190732p3e049e20ob7c63d9329352cdc@mail.gmail.com>
+Subject: Re: Power consumption of RTL8187 (driver)/recommendations for
+	low-power USB 802.11 adapter?
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: andreamrl@tiscali.it
+Cc: Florian Zumbiehl <florz@florz.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	herton@mandriva.com.br, htl10@users.sourceforge.net,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 30 November 2009, Benoit Papillault wrote:
-> From: Benoit PAPILLAULT <benoit.papillault@free.fr>
-> 
-> RX aggregation is a way to receive multiple 802.11 frames in one RX buffer.
-> However, we don't know yet how to handle this case in rt2800usb_fill_rxdone
-> and this has probably no impact on RX performance as well, so we disable it
-> 
-> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
-> ---
->  drivers/net/wireless/rt2x00/rt2800usb.c |    4 +---
->  1 files changed, 1 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index af85d18..ed31763 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -295,9 +295,7 @@ static int rt2800usb_enable_radio(struct rt2x00_dev *rt2x00dev)
->  
->  	rt2800_register_read(rt2x00dev, USB_DMA_CFG, &reg);
->  	rt2x00_set_field32(&reg, USB_DMA_CFG_PHY_CLEAR, 0);
-> -	/* Don't use bulk in aggregation when working with USB 1.1 */
-> -	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_EN,
-> -			   (rt2x00dev->rx->usb_maxpacket == 512));
-> +	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_EN, 0);
->  	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_TIMEOUT, 128);
->  	/*
->  	 * Total room for RX frames in kilobytes, PBF might still exceed
+On Sat, Dec 19, 2009 at 10:30 AM, Andrea Merello <andreamrl@tiscali.it> wrote:
 
+> Hmm.. Well.. I guess that effectively a USB softmac card on a slow
+> computer might produce a noticeable overhead, even if I never tried
+> before..
 
-Are you sure this works? I think Luis tried this 2 weeks ago and it didn't
-disable the aggregation... (Luis, please confirm that this was indeed the change you made...)
-
-Ivo
+Oh, I have an old machine with a celeron 366Mhz, where I run a zd1211
+with the vendor driver as AP.... throughput to a USB disk sharing a
+hub something like 430kB/s but can be over 70kB to the the local
+non-USB hard disk. (some of the difference in speed is obviously just
+data bandwidth contention). There are significant overhead at the USB
+level, I think; but in any case, the CPU probably can't sleep because
+the USB sub-system is always doing something, if even just for
+processing beacons.
