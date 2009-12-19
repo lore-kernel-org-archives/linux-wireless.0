@@ -1,91 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:37600 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751700AbZLUEWV (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44355 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751301AbZLSKb7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2009 23:22:21 -0500
-Message-ID: <4B2EF7FB.1080901@redfish-solutions.com>
-Date: Sun, 20 Dec 2009 20:22:19 -0800
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-MIME-Version: 1.0
-To: Randy Dunlap <rdunlap@xenotime.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Can't turn off SSB (CONFIG_SSB)?
-References: <4B2ECC72.40703@redfish-solutions.com> <20091220175033.36980f35.rdunlap@xenotime.net>
-In-Reply-To: <20091220175033.36980f35.rdunlap@xenotime.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 19 Dec 2009 05:31:59 -0500
+Subject: Re: [PATCH] ar9170: load firmware asynchronously
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890912181502u3610ac23qe2dfc09f1d337bf5@mail.gmail.com>
+References: <1261176470.14206.23.camel@johannes.local>
+	 <43e72e890912181502u3610ac23qe2dfc09f1d337bf5@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Z8uTYl8ilEqB54VAKQ3u"
+Date: Sat, 19 Dec 2009 11:31:50 +0100
+Message-ID: <1261218710.27718.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/20/2009 05:50 PM, Randy Dunlap wrote:
-> On Sun, 20 Dec 2009 17:16:34 -0800 Philip A. Prindeville wrote:
-> 
->> I'm building images for an EMBEDDED platform, and forcing CONFIG_SSB_POSSIBLE=n, but I'm still seeing:
-> 
-> What $ARCH ?
 
-i586.
+--=-Z8uTYl8ilEqB54VAKQ3u
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Fri, 2009-12-18 at 15:02 -0800, Luis R. Rodriguez wrote:
 
-> 
->> *
->> * Sonics Silicon Backplane
->> *
->> Sonics Silicon Backplane support (SSB) [M/y/?] (NEW) n
->>
->> Support for the Sonics Silicon Backplane bus.
->> You only need to enable this option, if you are
->> configuring a kernel for an embedded system with
->> this bus.
->> It will be auto-selected if needed in other
->> environments.
->>
->> The module will be called ssb.
->>
->> If unsure, say N.
->>
->> Sonics Silicon Backplane support (SSB) [M/y/?] (NEW) n
->>
->> Support for the Sonics Silicon Backplane bus.
->> You only need to enable this option, if you are
->> configuring a kernel for an embedded system with
->> this bus.
->> It will be auto-selected if needed in other
->> environments.
->>
->> The module will be called ssb.
->>
->> If unsure, say N.
->>
->> Sonics Silicon Backplane support (SSB) [M/y/?] (NEW) 
->>
->>
->>
->> And why does arch/x86/configs/i386_defconfig nail up CONFIG_SSB_POSSIBLE?
-> 
-> That just means that SSB support is possible:
-> 
-> config SSB_POSSIBLE
-> 	bool
-> 	depends on HAS_IOMEM && HAS_DMA
-> 	default y
-> 
-> Shouldn't be a problem.
-> 
->> This is with 2.6.27.38.
->>
->> And what are the steps to figuring out the dependency that keeps forcing it on?  Something must be doing a "select SSB" but I'm not sure what.
-> 
-> Are you using b43 or b44 network drivers?
+> Sweet -- we could also expose firmware load events if not done so
+> already and let userspace propagate such nasty warnings, I think we'd
+> need to pass the firmware expected and the driver the requested it so
+> that once the firmware is in place (I guess through inotify maybe) the
+> driver modprobe can be retried.
 
-Neither.
+Actually, since the driver doesn't fail loading, the _bind_ has to be
+retried. I'm not sure there's a way to trigger a re-probe though, which
+would be easiest since userspace doesn't necessarily know what to bind.
 
-I can attach the .config we're using, if you want...
+johannes
 
--Philip
+--=-Z8uTYl8ilEqB54VAKQ3u
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
 
+iQIcBAABAgAGBQJLLKuPAAoJEODzc/N7+QmaVgIP/A8OZzwa6eJecfwsBpPpbQVk
+qi4wbP+/1AMMncoYBdr/ZvlS6O+30ua4Ri2uvsc2dVuBGADUoA8hdFcI3gJN9sg9
+HDbmRa8X8x9XjKZsO83h13AJyGVSRopYDGJyQikPqhNFOQ4EmqhX1osUnDL+I+xn
+1kvj4yP5wr11+WZoY44yC3l47tUDtDY1Ga00gsOtURH44WNIo9hkTGCUJqxhaHjg
+IwuPYYRaiXEFYCqX8n6iL7RgYic0L2aTcxNBZdDx/4oyNxwFtJ7Ed+x9DO8a7S1H
+TPf4wn+KroU124EUZukTMIZ6xoyWTlyNdcdcGVx0gO3WpUAV60qdeEkebe5XDjr2
+mRsbc+vUh2B9ieE3+jdm5YIFU/3r1xowsx7C6K1dIMdaCpeKqQzP0lpE7ovHwLwn
+NDrP/HqQX1Iwp3U+nraDvPsducOideA1Gew7yOd8zZOGw4lFGopmnW4bbgxz9Qbg
+XTwHbUboSHzxiUHWqyg7nFk4DnEJn4F2YvGs/hpN5gKOFgcfdK2E4ukGqvqT3eyq
+CjABzVbIT/YlKKNeCVintGNXjX2neiJvimVAZb2bC9Hnggbk6yq86H8Fp3D5a1KM
+V7VteXCc1OrKreerIWhYlBhi4ZcLhsbFa9GXfltNW8G1Bb9kC05yRVDO5aABZcrU
+4lpObK2EKqps+7bakrr7
+=EUPJ
+-----END PGP SIGNATURE-----
 
-> ---
-> ~Randy
+--=-Z8uTYl8ilEqB54VAKQ3u--
 
