@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:26576 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932078AbZLRRUm convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f192.google.com ([209.85.212.192]:40247 "EHLO
+	mail-vw0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750750AbZLSFDo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2009 12:20:42 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2009 09:20:42 -0800
-Date: Fri, 18 Dec 2009 09:20:40 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: =?utf-8?B?THVrw6HFoQ==?= Turek <8an@praha12.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath5k-devel] [PATCH 1/5] nl80211: Add new WIPHY attribute
- COVERAGE_CLASS
-Message-ID: <20091218172040.GF6231@tux>
-References: <1260899813-17585-1-git-send-email-8an@praha12.net>
- <200912152352.45977.8an@praha12.net>
- <43e72e890912160030p3bbca486x817d3454fa9ebd62@mail.gmail.com>
- <200912181733.52413.8an@praha12.net>
+	Sat, 19 Dec 2009 00:03:44 -0500
+Received: by vws30 with SMTP id 30so1218322vws.33
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2009 21:03:43 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <200912181733.52413.8an@praha12.net>
+In-Reply-To: <20091218200753.30718.qmail@stuge.se>
+References: <20091216172356.15849.qmail@stuge.se> <20091216174112.GD11461@tux>
+	 <20091216222157.28840.qmail@stuge.se> <20091216234308.GA425@tux>
+	 <20091218115708.14617.qmail@stuge.se> <20091218161854.GA6231@tux>
+	 <20091218200753.30718.qmail@stuge.se>
+Date: Sat, 19 Dec 2009 10:33:43 +0530
+Message-ID: <8e92b4100912182103n5e3402echbedb85ab62f28e57@mail.gmail.com>
+Subject: Re: [ath9k-devel] No probe response from AP after 500ms,
+	disconnecting.
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 18, 2009 at 08:33:52AM -0800, Lukáš Turek wrote:
-> On 16.12.2009 09:30 you wrote:
-> > Thanks a lot for your work on this!
-> I thank you too for the comments, but, what do I have to do to get an ACK, 
-> besides the trivial fixes like the drv_ wrapper and moving the ah_coverage 
-> setting?
+On Sat, Dec 19, 2009 at 1:37 AM, Peter Stuge <peter@stuge.se> wrote:
 
-Resend and add v2 to the patch prefix "--subject-prefix="PATCH v2" IIRC
-on git format-patch.
+> So what could give us more information? If the debug output is not
+> enough I'm happy to sprinkle printks over the driver in strategic
+> places, but I need some hints on where to do it.
+>
+> What is the general operation of the driver? (I have some experience
+> with writing Linux drivers so feel free to get technical.) RX
+> descriptors and DMA? Is beacon reception special in any way from
+> reception of other packets? Would it be useful to try monitor mode
+> with PM enabled?
 
-  Luis
+If the issue is specific to AR5416 and power save, then the TIM_TIMER
+interrupt might be causing the trouble. You can check whether any
+ATH9K_INT_TIM_TIMER interrupt is received in the ath_isr when the
+disconnection happens.
+This is the hw timer used by the chip to wakeup for  every beacon listen
+interval.
+
+Vivek.
