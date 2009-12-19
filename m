@@ -1,158 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:59176 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752736AbZL2K7a (ORCPT
+Received: from rain.florz.de ([62.216.164.86]:34754 "EHLO
+	rain.florz.dyndns.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751507AbZLSSoT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Dec 2009 05:59:30 -0500
-Date: Tue, 29 Dec 2009 12:59:19 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 1/3] mac80211: Select lowest rate based on basic rate set
- in AP mode
-Message-ID: <20091229105919.GB18493@jm.kir.nu>
+	Sat, 19 Dec 2009 13:44:19 -0500
+Date: Sat, 19 Dec 2009 19:44:01 +0100
+From: Florian Zumbiehl <florz@florz.de>
+To: Andrea Merello <andreamrl@tiscali.it>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, herton@mandriva.com.br,
+	htl10@users.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: Re: Power consumption of RTL8187 (driver)/recommendations for
+	low-power USB 802.11 adapter?
+Message-ID: <20091219184401.GH2512@florz.florz.dyndns.org>
+References: <20091218180205.GD2512@florz.florz.dyndns.org> <4B2BC7E3.2050907@lwfinger.net> <20091218185916.GE2512@florz.florz.dyndns.org> <4B2C100A.9000507@lwfinger.net> <c68f135e0912181615p7cd36bd0n7054b43f2b453599@mail.gmail.com> <20091219011306.GG2512@florz.florz.dyndns.org> <c68f135e0912190230o566b3c3dk9be3038b0602cac5@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c68f135e0912190230o566b3c3dk9be3038b0602cac5@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the basic rate set is configured to not include the lowest rate
-(e.g., basic rate set = 6, 12, 24 Mbps in IEEE 802.11g mode), the AP
-should not send out broadcast frames at 1 Mbps. This type of
-configuration can be used to optimize channel usage in cases where
-there is no need for backwards compatibility with IEEE 802.11b-only
-devices.
+Hi,
 
-In AP mode, mac80211 was unconditionally using the lowest rate for
-Beacon frames and similarly, with all rate control algorithms that use
-rate_control_send_low(), the lowest rate ended up being used for all
-broadcast frames (and all unicast frames that are sent before
-association). Change this to take into account the basic rate
-configuration in AP mode, i.e., use the lowest rate in the basic rate
-set instead of the lowest supported rate when selecting the rate.
+> > I'll play around with AP settings a bit and report back to you.
+> > If you can think of any particular useful tests I could do, please
+> > let me know, I'll see what I can do.
+> >
+> > But yeah - even if the device draws more than the allowed 500 mA,
+> > I hope very much that it doesn't draw anywhere close to 3 A ... ;-)
+> 
+> On the AP you might set the beacon interval lower. And also, I'm not
+> sure if the rtl8187 driver configure the BSSID register so that once
+> you are associated to the network the card will filter all packets
+> from other APs, but in case it does not you can try to set your AP on
+> a channel where no other AP are working, otherwise other APs beacons
+> will be reiceved.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+I did some tests now, with some interesting results:
 
----
- include/net/mac80211.h |    2 ++
- net/mac80211/rate.c    |   25 +++++++++++++++++++++++++
- net/mac80211/tx.c      |   24 +++++++++++++-----------
- 3 files changed, 40 insertions(+), 11 deletions(-)
+                                time spent in C0 / C2 / C3 [%] --\
+     additional power consumption relative to (1) [W] --\        |
+                                                        |        |
+(1) No USB devices connected ...................:      0.0   ? /  ? / 98
+(2) USB memory stick, idle .....................:      3.8   2 / 98 /  0
+(3) RTL8187, interface down ....................:      3.8   2 / 98 /  0
+(4) RTL8187, interface up, 100 ms beacons ......:     15.6  48 / 52 /  0
+(5) RTL8187, interface up, 1 s beacons .........: 6.0-15.6  29 / 71 /  0
 
---- wireless-testing.orig/net/mac80211/rate.c	2009-12-29 10:49:34.000000000 +0200
-+++ wireless-testing/net/mac80211/rate.c	2009-12-29 10:53:59.000000000 +0200
-@@ -207,6 +207,27 @@ static bool rc_no_data_or_no_ack(struct 
- 	return ((info->flags & IEEE80211_TX_CTL_NO_ACK) || !ieee80211_is_data(fc));
- }
- 
-+static void rc_send_low_broadcast(s8 *idx, u32 basic_rates, u8 max_rate_idx)
-+{
-+	u8 i;
-+
-+	if (basic_rates == 0)
-+		return; /* assume basic rates unknown and accept rate */
-+	if (*idx < 0)
-+		return;
-+	if (basic_rates & (1 << *idx))
-+		return; /* selected rate is a basic rate */
-+
-+	for (i = *idx + 1; i <= max_rate_idx; i++) {
-+		if (basic_rates & (1 << i)) {
-+			*idx = i;
-+			return;
-+		}
-+	}
-+
-+	/* could not find a basic rate; use original selection */
-+}
-+
- bool rate_control_send_low(struct ieee80211_sta *sta,
- 			   void *priv_sta,
- 			   struct ieee80211_tx_rate_control *txrc)
-@@ -218,6 +239,10 @@ bool rate_control_send_low(struct ieee80
- 		info->control.rates[0].count =
- 			(info->flags & IEEE80211_TX_CTL_NO_ACK) ?
- 			1 : txrc->hw->max_rate_tries;
-+		if (!sta && txrc->ap)
-+			rc_send_low_broadcast(&info->control.rates[0].idx,
-+					      txrc->bss_conf->basic_rates,
-+					      txrc->sband->n_bitrates);
- 		return true;
- 	}
- 	return false;
---- wireless-testing.orig/net/mac80211/tx.c	2009-12-29 10:50:57.000000000 +0200
-+++ wireless-testing/net/mac80211/tx.c	2009-12-29 10:53:59.000000000 +0200
-@@ -520,6 +520,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee8021
- 	txrc.skb = tx->skb;
- 	txrc.reported_rate.idx = -1;
- 	txrc.max_rate_idx = tx->sdata->max_ratectrl_rateidx;
-+	txrc.ap = tx->sdata->vif.type == NL80211_IFTYPE_AP;
- 
- 	/* set up RTS protection if desired */
- 	if (len > tx->local->hw.wiphy->rts_threshold) {
-@@ -2060,6 +2061,7 @@ struct sk_buff *ieee80211_beacon_get_tim
- 	struct beacon_data *beacon;
- 	struct ieee80211_supported_band *sband;
- 	enum ieee80211_band band = local->hw.conf.channel->band;
-+	struct ieee80211_tx_rate_control txrc;
- 
- 	sband = local->hw.wiphy->bands[band];
- 
-@@ -2167,21 +2169,21 @@ struct sk_buff *ieee80211_beacon_get_tim
- 	info = IEEE80211_SKB_CB(skb);
- 
- 	info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
-+	info->flags |= IEEE80211_TX_CTL_NO_ACK;
- 	info->band = band;
--	/*
--	 * XXX: For now, always use the lowest rate
--	 */
--	info->control.rates[0].idx = 0;
--	info->control.rates[0].count = 1;
--	info->control.rates[1].idx = -1;
--	info->control.rates[2].idx = -1;
--	info->control.rates[3].idx = -1;
--	info->control.rates[4].idx = -1;
--	BUILD_BUG_ON(IEEE80211_TX_MAX_RATES != 5);
-+
-+	memset(&txrc, 0, sizeof(txrc));
-+	txrc.hw = hw;
-+	txrc.sband = sband;
-+	txrc.bss_conf = &sdata->vif.bss_conf;
-+	txrc.skb = skb;
-+	txrc.reported_rate.idx = -1;
-+	txrc.max_rate_idx = sdata->max_ratectrl_rateidx;
-+	txrc.ap = true;
-+	rate_control_get_rate(sdata, NULL, &txrc);
- 
- 	info->control.vif = vif;
- 
--	info->flags |= IEEE80211_TX_CTL_NO_ACK;
- 	info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
- 	info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
-  out:
---- wireless-testing.orig/include/net/mac80211.h	2009-12-29 10:50:57.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2009-12-29 10:53:59.000000000 +0200
-@@ -2294,6 +2294,7 @@ enum rate_control_changed {
-  * @max_rate_idx: user-requested maximum rate (not MCS for now)
-  * @skb: the skb that will be transmitted, the control information in it needs
-  *	to be filled in
-+ * @ap: whether this frame is sent out in AP mode
-  */
- struct ieee80211_tx_rate_control {
- 	struct ieee80211_hw *hw;
-@@ -2303,6 +2304,7 @@ struct ieee80211_tx_rate_control {
- 	struct ieee80211_tx_rate reported_rate;
- 	bool rts, short_preamble;
- 	u8 max_rate_idx;
-+	bool ap;
- };
- 
- struct rate_control_ops {
+In test setup (5) the current into the laptop is fluctuating so heavily
+that I don't have a clue what the average is. But apparently, it's low
+enough to keep the fan off - with 100 ms beacons, the fan turns on
+regularly.
 
--- 
+The time spent in the different C states was measured with powertop, the
+power consumption was measured using a DMM.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+So, a base load of 3.8 W seems to be caused by any connected usb device
+preventing C3 and some 250 ms polling done by uhci_hcd, plus a bit for
+the device itself. According to
+http://www.mail-archive.com/linux-usb-users@lists.sourceforge.net/msg19354.html
+(why aren't there any message IDs on any of those archive sites, BTW?)
+that's the expected behaviour.
+
+What I don't quite understand, though, is, why the CPU stays in C0 for
+so long when the wifi interface is up. If I let some CPU intensive
+application run in parallel, its performance isn't reduced very much
+by the RTL8187 being active. Also, top doesn't show anyone to be
+consuming those 48 % of the cycles (powertop and top being at the
+top with < 1 % ...).
+
+> > I would assume that it's some timers you are using? As I understand it,
+> > other interrupts (which cannot really be predicted) don't prevent
+> > the power management code from switching the CPU into deep sleep
+> > modes?!
+> 
+> Hmm.. I think I know not enough about C3 state rules.
+> I think the rtl8187 does not use timers.
+> The only difference is that the interrupt is raised by the (PCI) USB
+> controller, then it forwards things to the USB layer, then it calls a
+> callback on the rtl8187 driver, and then it passes to the mac80211
+> layer. So the problem might be not the interrupt itself but the amount
+> of work to do..
+
+But that shouldn't need anywhere close to 350 million cycles per second,
+should it? ;-)
+
+> > Any suggestions as to how to recognize those? Or even a recommendation
+> > for a specific device/chipset?
+> 
+> I know that intel ipw2200 and the older ipw2100 should be fullmac.
+
+But there aren't any USB devices with those, are there?
+
+Anyhow, I guess I'll stay with the cardbus prism card, for the USB
+host controller being active already needs twice as much power as
+the whole card needs.
+
+Florian
