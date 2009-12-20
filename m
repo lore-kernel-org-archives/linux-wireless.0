@@ -1,67 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:65310 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754528AbZLBO36 (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:53313 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752770AbZLTVtO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2009 09:29:58 -0500
-Received: by mail-bw0-f227.google.com with SMTP id 27so217224bwz.21
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2009 06:30:05 -0800 (PST)
-Message-Id: <20091202142931.307135635@gmail.com>
-References: <20091202142555.654873300@gmail.com>
-Date: Wed, 02 Dec 2009 15:25:58 +0100
-From: Holger Schurig <holgerschurig@googlemail.com>
-To: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: [PATCH 03/10] libertas: move mesh-related definitions into mesh.h
+	Sun, 20 Dec 2009 16:49:14 -0500
+Received: by iwn1 with SMTP id 1so3291202iwn.33
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2009 13:49:14 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890912201342w2f5916d0p2b30683ccbb5dbfe@mail.gmail.com>
+References: <200912201510.51812.linux-wireless@mrs.ro> <43e72e890912201342w2f5916d0p2b30683ccbb5dbfe@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sun, 20 Dec 2009 13:48:54 -0800
+Message-ID: <43e72e890912201348w429fcc16gf4d66e01653262ae@mail.gmail.com>
+Subject: Re: Intel 4965 HT rates
+To: Valentin Manea <linux-wireless@mrs.ro>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
-
-
---- linux-wl.orig/drivers/net/wireless/libertas/cmd.h
-+++ linux-wl/drivers/net/wireless/libertas/cmd.h
-@@ -110,18 +110,6 @@ int lbs_set_snmp_mib(struct lbs_private 
- int lbs_get_snmp_mib(struct lbs_private *priv, u32 oid, u16 *out_val);
- 
- 
--/* Mesh related */
--
--int lbs_mesh_access(struct lbs_private *priv, uint16_t cmd_action,
--		    struct cmd_ds_mesh_access *cmd);
--
--int lbs_mesh_config_send(struct lbs_private *priv,
--			 struct cmd_ds_mesh_config *cmd,
--			 uint16_t action, uint16_t type);
--
--int lbs_mesh_config(struct lbs_private *priv, uint16_t enable, uint16_t chan);
--
--
- /* Commands only used in wext.c, assoc. and scan.c */
- 
- int lbs_set_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
---- linux-wl.orig/drivers/net/wireless/libertas/mesh.h
-+++ linux-wl/drivers/net/wireless/libertas/mesh.h
-@@ -46,11 +46,20 @@ void lbs_mesh_set_txpd(struct lbs_privat
- /* Command handling */
- 
- struct cmd_ds_command;
-+struct cmd_ds_mesh_access;
-+struct cmd_ds_mesh_config;
- 
- int lbs_cmd_bt_access(struct cmd_ds_command *cmd,
- 	u16 cmd_action, void *pdata_buf);
- int lbs_cmd_fwt_access(struct cmd_ds_command *cmd,
- 	u16 cmd_action, void *pdata_buf);
-+int lbs_mesh_access(struct lbs_private *priv, uint16_t cmd_action,
-+		    struct cmd_ds_mesh_access *cmd);
-+int lbs_mesh_config_send(struct lbs_private *priv,
-+			 struct cmd_ds_mesh_config *cmd,
-+			 uint16_t action, uint16_t type);
-+int lbs_mesh_config(struct lbs_private *priv, uint16_t enable, uint16_t chan);
-+
- 
- 
- /* Persistent configuration */
-
--- 
+T24gU3VuLCBEZWMgMjAsIDIwMDkgYXQgMTo0MiBQTSwgTHVpcyBSLiBSb2RyaWd1ZXogPG1jZ3Jv
+ZkBnbWFpbC5jb20+IHdyb3RlOgo+IE9uIFN1biwgRGVjIDIwLCAyMDA5IGF0IDU6MTAgQU0sIFZh
+bGVudGluIE1hbmVhIDxsaW51eC13aXJlbGVzc0BtcnMucm8+IHdyb3RlOgo+PiBIaSwKPj4KPj4g
+wqBJJ20gcnVubmluZyBjb21wYXQtd2lyZWxlc3MtMi42LjMzLXJjMSBhbmQgaXcgbGlzdCBzaG93
+cyBzb21lIGNvbmZ1c2luZyBIVAo+PiBjYXBhYmlsaXRpZXM6Cj4+IMKgIMKgIMKgIMKgQmFuZCAx
+Ogo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoEhUIGNhcGFiaWxpdGllczogMHgwODJjCj4+IMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiAyMCBNSHogb3BlcmF0aW9uCj4+IMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiBTTSBQUyBkaXNhYmxlZAo+PiDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogMjAgTUh6IHNob3J0IEdJCj4+IMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiBtYXggQS1NU0RVIGxlbiA3OTM1Cj4+Cj4+
+IGJ1dCBmb3IgODAyLjExYSBjaGFubmVsczoKPj4gwqAgwqAgwqAgwqBCYW5kIDI6Cj4+IMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgSFQgY2FwYWJpbGl0aWVzOiAweDA4NmUKPj4gwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDIwLzQwIE1IeiBvcGVyYXRpb24KPj4gwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIFNNIFBTIGRpc2FibGVkCj4+IMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiAyMCBNSHogc2hvcnQgR0kKPj4gwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDQwIE1IeiBzaG9ydCBHSQo+PiDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogbWF4IEEtTVNEVSBsZW4gNzkzNQo+Pgo+PiBXaGlsZSBJ
+IGNhbid0IHRlbGwgd2hlbiB0aGlzIGhhcHBlbmVkLCBJIHJlbWVtYmVyIG9sZGVyIDIuNi4yOSBy
+ZWxlYXNlcwo+PiBzdXBwb3J0ZWQgSFQ0MCBmb3IgYm90aCBiYW5kcy4KPgo+IEhvdyBkbyB5b3Ug
+a25vdz8gV2hhdCBtYWtlcyB5b3UgYmVsaWV2ZSB0aGF0IHdhcyB0aGUgY2FzZT8KPgo+PiBUaGUg
+d2lyZWxlc3MgY2FyZCBpcyBhbiBJbnRlbCA0OTY1IG9uIGEgVGhpbmtwYWQgVDYxLgo+Cj4gVGhl
+IGh0X2NhcCB0aGF0IGdldHMgcGFyc2VkIGFuZCBzZW50IGJhY2sgdGhyb3VnaCBubDgwMjExIGlz
+Cj4gaW5pdGlhbGl6ZWQgaW4gaXdsLWFnbiBvbiBpd2wtY29yZS5jIG9uIGl3bGNvcmVfaW5pdF9o
+dF9od19jYXBhYigpIGFzCj4gZm9sbG93cwo+Cj4gc3RhdGljIHZvaWQgaXdsY29yZV9pbml0X2h0
+X2h3X2NhcGFiKGNvbnN0IHN0cnVjdCBpd2xfcHJpdiAqcHJpdiwKPiDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHN0cnVjdCBpZWVlODAyMTFfc3RhX2h0X2NhcCAq
+aHRfaW5mbywKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoGVu
+dW0gaWVlZTgwMjExX2JhbmQgYmFuZCkKPiB7Cj4gwqAgwqAgwqAgwqAuLi4uCj4gwqAgwqAgwqAg
+wqBpZiAocHJpdi0+aHdfcGFyYW1zLmh0NDBfY2hhbm5lbCAmIEJJVChiYW5kKSkgewo+IMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgaHRfaW5mby0+Y2FwIHw9IElFRUU4MDIxMV9IVF9DQVBfU1VQX1dJ
+RFRIXzIwXzQwOwo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgaHRfaW5mby0+Y2FwIHw9IElFRUU4
+MDIxMV9IVF9DQVBfU0dJXzQwOwo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgaHRfaW5mby0+bWNz
+LnJ4X21hc2tbNF0gPSAweDAxOwo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgbWF4X2JpdF9yYXRl
+ID0gTUFYX0JJVF9SQVRFXzQwX01IWjsKPiDCoCDCoCDCoCDCoH0KPiDCoCDCoCDCoCDCoC4uLi4K
+PiB9Cj4KPiBBbmQgdGhlIHByaXYtPmh3X3BhcmFtcy5odDQwX2NoYW5uZWwgZ2V0cyBpbml0aWFs
+aXplZCBmb3IgNDk2NQo+IGhhcmR3YXJlIG9uIGl3bDQ5NjVfaHdfc2V0X2h3X3BhcmFtcygpOgo+
+Cj4gc3RhdGljIGludCBpd2w0OTY1X2h3X3NldF9od19wYXJhbXMoc3RydWN0IGl3bF9wcml2ICpw
+cml2KQo+IHsKPiDCoCDCoCDCoCDCoC4uLgo+IMKgIMKgIMKgIMKgcHJpdi0+aHdfcGFyYW1zLmh0
+NDBfY2hhbm5lbCA9IEJJVChJRUVFODAyMTFfQkFORF81R0haKTsKPiDCoCDCoCDCoCDCoC4uLi4K
+PiB9Cj4KPiBpd2wtNTAwMCBhbmQgaXdsLTYwMDAgc2V0cyB0aGlzIHRvIGJvdGggYmFuZHM6Cj4K
+PiBpbnQgaXdsNTAwMF9od19zZXRfaHdfcGFyYW1zKHN0cnVjdCBpd2xfcHJpdiAqcHJpdikKPiB7
+Cj4gwqAgwqAgwqAgwqAuLi4uCj4gwqAgwqAgwqAgwqBwcml2LT5od19wYXJhbXMuaHQ0MF9jaGFu
+bmVsID0gwqBCSVQoSUVFRTgwMjExX0JBTkRfMkdIWikgfAo+IMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgQklUKElFRUU4MDIxMV9CQU5E
+XzVHSFopOwo+IMKgIMKgIMKgIMKgLi4uLgo+IH0KPgo+IHN0YXRpYyBpbnQgaXdsNjAwMF9od19z
+ZXRfaHdfcGFyYW1zKHN0cnVjdCBpd2xfcHJpdiAqcHJpdikKPiB7Cj4gwqAgwqAgwqAgwqAuLi4u
+Cj4gwqAgwqAgwqAgwqBwcml2LT5od19wYXJhbXMuaHQ0MF9jaGFubmVsID0gwqBCSVQoSUVFRTgw
+MjExX0JBTkRfMkdIWikgfAo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgQklUKElFRUU4MDIxMV9CQU5EXzVHSFopOwo+IMKgIMKgIMKg
+IMKgLi4uLgo+IH0KPgo+IFNvIGl0IGFwcGVhcnMgdG8gYmUgZG9uZSBleHBsaWNpdGx5IGluIHNv
+ZnR3YXJlLCBub3Qgc3VyZSBpZiBoYXJkd2FyZQo+IGRvZXMgc3VwcG9ydCBIVDQwIG9uIDIuNCBH
+SHogYmFuZCBvbiB0aGUgNDk2NSwgSW50ZWwgZm9sa3Mgd291bGQKPiB0aG91Z2guCgpKdXN0IGNo
+ZWNrZWQgMi42LjI5IGNvZGUgYW5kIGl0cyB0aGUgc2FtZSB0aGVyZS4KCiAgTHVpcwo=
