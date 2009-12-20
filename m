@@ -1,110 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:22071 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756700AbZLKLmJ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52013 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754792AbZLTNp0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 06:42:09 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 25/31] wl1271: Add rudimentary ad-hoc support
-Date: Fri, 11 Dec 2009 13:41:16 +0200
-Message-Id: <1260531682-4695-26-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
+	Sun, 20 Dec 2009 08:45:26 -0500
+Date: Sun, 20 Dec 2009 08:38:00 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-12-18
+Message-ID: <20091220133800.GA4700@tuxdriver.com>
+References: <20091218211945.GC2828@tuxdriver.com> <20091220.001736.189688434.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091220.001736.189688434.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Sun, Dec 20, 2009 at 12:17:36AM -0800, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Fri, 18 Dec 2009 16:19:45 -0500
+> 
+> > Please let me know if there are problems!
+> 
+> Your tree is based upon Linus's not net-2.6
+> so when I pulled I got a lot of unrelated
+> commits.
+> 
+> Please fix this, thanks.
 
-This patch adds rudimentary a-hoc support for the driver. It will allow
-setting up ad-hoc, and for other devices to scan and join. The beacon and probe
-response template setting is slightly dirty, and need to be properly
-implemented with support from mac80211. Also, the SSID is not configured to the
-firmware - the FW will not be able to respond to probe requests autonomously.
+It's based on 2.6.33-rc1.  Are you not going to pull that into net-2.6?
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |   45 +++++++++++++++++++++++++++-
- 1 files changed, 43 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 446fb26..8d090e4 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1139,11 +1139,15 @@ out:
- 
- static int wl1271_join_channel(struct wl1271 *wl, int channel)
- {
--	int ret;
-+	int ret = 0;
- 	/* we need to use a dummy BSSID for now */
- 	static const u8 dummy_bssid[ETH_ALEN] = { 0x0b, 0xad, 0xde,
- 						  0xad, 0xbe, 0xef };
- 
-+	/* the dummy join is not required for ad-hoc */
-+	if (wl->bss_type == BSS_TYPE_IBSS)
-+		goto out;
-+
- 	/* disable mac filter, so we hear everything */
- 	wl->rx_config &= ~CFG_BSSID_FILTER_EN;
- 
-@@ -1572,6 +1576,42 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 			wl->joined = true;
- 	}
- 
-+	if (wl->bss_type == BSS_TYPE_IBSS) {
-+		/* FIXME: This implements rudimentary ad-hoc support -
-+		   proper templates are on the wish list and notification
-+		   on when they change. This patch will update the templates
-+		   on every call to this function. Also, the firmware will not
-+		   answer to probe-requests as it does not have the proper
-+		   SSID set in the JOIN command. The probe-response template
-+		   is set nevertheless, as the FW will ASSERT without it */
-+		struct sk_buff *beacon = ieee80211_beacon_get(hw, vif);
-+
-+		if (beacon) {
-+			struct ieee80211_hdr *hdr;
-+			ret = wl1271_cmd_template_set(wl, CMD_TEMPL_BEACON,
-+						      beacon->data,
-+						      beacon->len);
-+
-+			if (ret < 0) {
-+				dev_kfree_skb(beacon);
-+				goto out_sleep;
-+			}
-+
-+			hdr = (struct ieee80211_hdr *) beacon->data;
-+			hdr->frame_control = cpu_to_le16(
-+				IEEE80211_FTYPE_MGMT |
-+				IEEE80211_STYPE_PROBE_RESP);
-+
-+			ret = wl1271_cmd_template_set(wl,
-+						      CMD_TEMPL_PROBE_RESPONSE,
-+						      beacon->data,
-+						      beacon->len);
-+			dev_kfree_skb(beacon);
-+			if (ret < 0)
-+				goto out_sleep;
-+		}
-+	}
-+
- 	if (changed & BSS_CHANGED_ASSOC) {
- 		if (bss_conf->assoc) {
- 			wl->aid = bss_conf->aid;
-@@ -1857,7 +1897,8 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
- 		IEEE80211_HW_BEACON_FILTER |
- 		IEEE80211_HW_SUPPORTS_PS;
- 
--	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
-+	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
-+		BIT(NL80211_IFTYPE_ADHOC);
- 	wl->hw->wiphy->max_scan_ssids = 1;
- 	wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wl1271_band_2ghz;
- 
+John
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
