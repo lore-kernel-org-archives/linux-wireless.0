@@ -1,47 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:38841 "HELO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753248AbZLMNKd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Dec 2009 08:10:33 -0500
-Date: Sun, 13 Dec 2009 14:10:30 +0100 (CET)
-From: Julia Lawall <julia@diku.dk>
-To: Andreas Schwab <schwab@linux-m68k.org>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 5/9] drivers/net/wireless: Correct code taking the size
- of a pointer
-In-Reply-To: <m2iqcbt4n5.fsf@igel.home>
-Message-ID: <Pine.LNX.4.64.0912131409590.24267@ask.diku.dk>
-References: <Pine.LNX.4.64.0912131241470.24267@ask.diku.dk> <m2iqcbt4n5.fsf@igel.home>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45495 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756354AbZLUDL7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Dec 2009 22:11:59 -0500
+Date: Sun, 20 Dec 2009 22:07:38 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-12-18
+Message-ID: <20091221030738.GA2398@tuxdriver.com>
+References: <20091218211945.GC2828@tuxdriver.com>
+ <20091220.001736.189688434.davem@davemloft.net>
+ <20091220133800.GA4700@tuxdriver.com>
+ <20091220.182910.226760127.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20091220.182910.226760127.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 13 Dec 2009, Andreas Schwab wrote:
-
-> Julia Lawall <julia@diku.dk> writes:
+On Sun, Dec 20, 2009 at 06:29:10PM -0800, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Sun, 20 Dec 2009 08:38:00 -0500
 > 
-> > diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> > index eb1e1d0..1e74732 100644
-> > --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> > +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> > @@ -2140,8 +2140,8 @@ static void rt2800_get_tkip_seq(struct ieee80211_hw *hw, u8 hw_key_idx,
-> >  	rt2800_register_multiread(rt2x00dev, offset,
-> >  				      &iveiv_entry, sizeof(iveiv_entry));
-> >  
-> > -	memcpy(&iveiv_entry.iv[0], iv16, sizeof(iv16));
-> > -	memcpy(&iveiv_entry.iv[4], iv32, sizeof(iv32));
-> > +	memcpy(&iveiv_entry.iv[0], iv16, sizeof(*iv16));
-> > +	memcpy(&iveiv_entry.iv[4], iv32, sizeof(*iv32));
+> > On Sun, Dec 20, 2009 at 12:17:36AM -0800, David Miller wrote:
+> >> From: "John W. Linville" <linville@tuxdriver.com>
+> >> Date: Fri, 18 Dec 2009 16:19:45 -0500
+> >> 
+> >> > Please let me know if there are problems!
+> >> 
+> >> Your tree is based upon Linus's not net-2.6
+> >> so when I pulled I got a lot of unrelated
+> >> commits.
+> >> 
+> >> Please fix this, thanks.
+> > 
+> > It's based on 2.6.33-rc1.  Are you not going to pull that into net-2.6?
 > 
-> That still looks pretty bogus, the memcpy calls are overwriting the
-> values written by the previous rt2800_register_multiread call.  Most
-> likely the first two arguments need to be swapped.
+> Why in the world should I?  There are no conflicts to resolve
+> that I know of.
+> 
+> And if there are no conflicts to resolve, pulling in Linus's
+> tree just makes future pulls into his tree more ugly.
+> 
+> This is pretty standard practice, but in any event you shouldn't ever
+> care.
+> 
+> You should simply always work against net-2.6, there is no reason to
+> work against any other tree.
+> 
+> This is a pretty fundamental thing, I don't know why you based against
+> Linus's tree instead of net-2.6.  Now you have to rebase already :-/
 
-OK, I will look at it and try again.
+My mistake!  For some reason I just thought that pulling from -rc1 was
+your normal practice -- now I can't figure what gave me that idea...
 
-Thanks,
-julia
+Anyway, might as well have one more rebase now.  I'll straighten-out
+my trees tomorrow morning and resubmit.
+
+John
+-- 
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
