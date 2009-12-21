@@ -1,75 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml105.kpnxchange.com ([195.121.3.9]:58984 "EHLO
-	CPSMTPM-EML105.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752641AbZLNTkE (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46742
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751345AbZLUC3K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 14:40:04 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>, stable@kernel.org
-Subject: [PATCH v2 2.6.33] rt2x00: Disable powersaving for rt61pci and rt2800pci.
-Date: Mon, 14 Dec 2009 20:33:55 +0100
-Message-Id: <1260819235-8017-1-git-send-email-gwingerde@gmail.com>
+	Sun, 20 Dec 2009 21:29:10 -0500
+Date: Sun, 20 Dec 2009 18:29:10 -0800 (PST)
+Message-Id: <20091220.182910.226760127.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-12-18
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20091220133800.GA4700@tuxdriver.com>
+References: <20091218211945.GC2828@tuxdriver.com>
+	<20091220.001736.189688434.davem@davemloft.net>
+	<20091220133800.GA4700@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We've had many reports of rt61pci failures with powersaving enabled.
-Therefore, as a stop-gap measure, disable powersaving of the rt61pci
-until we have found a proper solution.
-Also disable powersaving on rt2800pci as it most probably will show
-the same problem.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Sun, 20 Dec 2009 08:38:00 -0500
 
-Cc: stable@kernel.org
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
+> On Sun, Dec 20, 2009 at 12:17:36AM -0800, David Miller wrote:
+>> From: "John W. Linville" <linville@tuxdriver.com>
+>> Date: Fri, 18 Dec 2009 16:19:45 -0500
+>> 
+>> > Please let me know if there are problems!
+>> 
+>> Your tree is based upon Linus's not net-2.6
+>> so when I pulled I got a lot of unrelated
+>> commits.
+>> 
+>> Please fix this, thanks.
+> 
+> It's based on 2.6.33-rc1.  Are you not going to pull that into net-2.6?
 
-John, this is an urgent fix for 2.6.33.
+Why in the world should I?  There are no conflicts to resolve
+that I know of.
 
-v2:
-- Handled feedback from Ivo:
-	- Only disable powersaving by default, not permanent.
-	- Also apply to rt2800pci.
+And if there are no conflicts to resolve, pulling in Linus's
+tree just makes future pulls into his tree more ugly.
 
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    6 ++++++
- drivers/net/wireless/rt2x00/rt61pci.c   |    5 +++++
- 2 files changed, 11 insertions(+), 0 deletions(-)
+This is pretty standard practice, but in any event you shouldn't ever
+care.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 6e13650..fa197ac 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2022,6 +2022,12 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	u16 eeprom;
- 
- 	/*
-+	 * Disable powersaving as default on PCI devices.
-+	 */
-+	if (rt2x00_intf_is_pci(rt2x00dev))
-+		rt2x00dev->hw->wiphy->ps_default = false;
-+
-+	/*
- 	 * Initialize all hw fields.
- 	 */
- 	rt2x00dev->hw->flags =
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 687e17d..9440a4d 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2539,6 +2539,11 @@ static int rt61pci_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	unsigned int i;
- 
- 	/*
-+	 * Disable powersaving as default.
-+	 */
-+	rt2x00dev->hw->wiphy->ps_default = false;
-+
-+	/*
- 	 * Initialize all hw fields.
- 	 */
- 	rt2x00dev->hw->flags =
--- 
-1.6.5.5
+You should simply always work against net-2.6, there is no reason to
+work against any other tree.
+
+This is a pretty fundamental thing, I don't know why you based against
+Linus's tree instead of net-2.6.  Now you have to rebase already :-/
 
