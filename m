@@ -1,61 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:19494 "EHLO mail.atheros.com"
+Received: from parez.praha12.net ([78.108.102.1]:40972 "EHLO parez.praha12.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753424AbZLQMmb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2009 07:42:31 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 17 Dec 2009 04:42:31 -0800
-Date: Thu, 17 Dec 2009 18:12:25 +0530
-From: Bala Shanmugam <sbalashanmugam@atheros.com>
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	<mcgrof@bombadil.infradead.org>
-CC: Jothikumar Mothilal <Jothikumar.Mothilal@Atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [RFC]compat-wireless: modules declared as PHONY target in Makefile
-Message-ID: <20091217124225.GA3068@atheros-laptop>
+	id S1752138AbZLUMkw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2009 07:40:52 -0500
+From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
+Reply-To: 8an@praha12.net
+To: =?utf-8?q?=E6=B5=B7=E8=97=BB=E6=95=AC=E4=B9=8B?=
+	<tkaiso@thinktube.com>
+Subject: Re: [ath5k-devel] [PATCH 4/5] ath5k: Reimplement clock rate to usec conversion
+Date: Mon, 21 Dec 2009 13:40:51 +0100
+Cc: johannes@sipsolutions.net, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+References: <1260899813-17585-1-git-send-email-8an@praha12.net> <4B2F4D3A.4050009@thinktube.com> <4B2F50DD.60701@thinktube.com>
+In-Reply-To: <4B2F50DD.60701@thinktube.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: multipart/signed;
+  boundary="nextPart1784697.ZiIMJaiOzK";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200912211340.51229.8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a particular file alone is modified in compat package, it is not compiled with make.
-To compile the modified file compat package needs to be cleaned up and all files need to be compiled.
-This is because all files are compiled in modules target, and file by name modules is not generated.
-So this target will be considered up-to-date once compiled.
+--nextPart1784697.ZiIMJaiOzK
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-modules target is declared as PHONY target to avoid this problem.
+On 21.12.2009 11:41 =E6=B5=B7=E8=97=BB=E6=95=AC=E4=B9=8B wrote:
+> =C2=A0In ath5k_hw_write_ofdm_timings(), =C2=A0comment says
+> =C2=A0 =C2=A0 =C2=A0 "ALGO: coef =3D (5 * clock * carrier_freq) / 2) ",
+> =C2=A0but current code is
+> =C2=A0 =C2=A0 =C2=A0 "coef_scaled =3D ((5 * (clock << 24)) / 2) / channel=
+=2D>center_freq;"
+>
+> =C2=A0Did they match each other ?
+> =C2=A0I am wondering the the comment is wrong, but I am not sure that eit=
+her
+> is wrong.
+Good point, it seems the comment is wrong. The calculation would overflow=20
+32-bit integer if there was a multiplication instead of a division.
 
-I feel config.mk need not be included when KERNELRELEASE is not NULL as
-it degrades the performance and doesn't make any difference.  Please comment.
+Lukas Turek
 
-Signed-off-by: Bala Shanmugam <sbalashanmugam@atheros.com>
----
- Makefile |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+--nextPart1784697.ZiIMJaiOzK
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-diff --git a/Makefile b/Makefile
-index 66790f2..85fb9fe 100644
---- a/Makefile
-+++ b/Makefile
-@@ -15,8 +15,6 @@ DESTDIR?=
- 
- ifneq ($(KERNELRELEASE),)
- 
--include $(M)/$(COMPAT_CONFIG)
--
- NOSTDINC_FLAGS := -I$(M)/include/ -include $(M)/include/linux/compat-2.6.h $(CFLAGS)
- 
- obj-y := compat/
-@@ -295,7 +293,7 @@ wlunload:
- wlload: wlunload
- 	@./scripts/wlload.sh
- 
--.PHONY: all clean install uninstall unload load btunload btload wlunload wlload
-+.PHONY: all clean install uninstall unload load btunload btload wlunload wlload modules
- 
- endif
- 
--- 
-1.6.0.4
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
 
+iQIcBAABAgAGBQJLL2zTAAoJEEBjvk/UOfYwpMwP/1Bc7AZy9Vl+DFRySpIgVozj
+xhMrXlJGn4R0aCiHpsys9Eo/3c2zuS5X8X6qLMz7q7EMs6xWRhKGt4i7uKRWtntE
+oAHD6nfPqUIL6foiqwsHCZBew1+Iap+kcZW6axgWMFZpkSReU4/ca7xzOujorK8y
+nn2+QmR2u6UO6k+lEnN3z6GQ+W1y+it2uCKSApL1MQsJAJ0wltT8QJPQlQR8JhUz
+vkAaUSg6pAx0aBBXAwPrk8oe4ZeFmyAY4ShMS6HaWKc86dRcZiZXSJHcx4Q/kRJN
+PQ86FUgp8qObDmfQEEJKELcRKxgkbZE4CPpnnmUVWFun5S0YuTbZuFNhtYJHfaOw
+84uuYNbBw1jg8XIUAC5iG/igMDNbpovS7QPheT25S9/eM8KV3anwknpkug0PcuZ5
+DItXSmiGkfaskfmt3NHxGZZ3Qf2nVtg2+wnU1Qwm+07MCHpJacBw+oUlICOGXxbJ
+m/37sctbqYqRR4JOiaePd/gf+H4VFG+TOH5oCvQS6PtWTgIl/6BzUBfOUHyI1l3O
+WPSno4Td7rGRFMTgSYgWkDGOOf2Abm430RXd7HeTOq7SlSPpeaqFFJsbKqEhtoh8
+l5x+rOeIGhVexNV2b6lG3Mk8o+yUHpjhVuOlw5LN5j7tO8RvJR1qBgOA1Nfq6Nj0
+pdyvDDM2mDOPsNcjTVBj
+=m4Ee
+-----END PGP SIGNATURE-----
+
+--nextPart1784697.ZiIMJaiOzK--
