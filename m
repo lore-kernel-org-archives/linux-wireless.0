@@ -1,93 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:23158 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751150AbZLNJYK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 04:24:10 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 01:24:10 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail.cosetrain.com ([88.198.146.2]:60401 "EHLO
+	mail.cosetrain.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756646AbZLUP6u (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2009 10:58:50 -0500
+Received: from localhost (mail.localhost [127.0.1.2])
+	by mail.cosetrain.com (Postfix) with ESMTP id 487258EE5A
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2009 16:50:09 +0100 (CET)
+Received: from mail.cosetrain.com ([88.198.146.2])
+	by localhost (mail.cosetrain.com [127.0.1.2]) (amavisd-new, port 10024)
+	with ESMTP id Xdi+sVUdZPaR for <linux-wireless@vger.kernel.org>;
+	Mon, 21 Dec 2009 16:50:09 +0100 (CET)
+Received: from [192.168.42.20] (ppp-93-104-97-24.dynamic.mnet-online.de [93.104.97.24])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.cosetrain.com (Postfix) with ESMTPSA id 099AC8EE56
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2009 16:50:08 +0100 (CET)
+Message-ID: <4B2F9930.8070401@cosetrain.com>
+Date: Mon, 21 Dec 2009 16:50:08 +0100
+From: Florian Sesser <flomaillist@cosetrain.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19238.1252.530915.570397@gargle.gargle.HOWL>
-Date: Mon, 14 Dec 2009 14:57:00 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/6] ath9k: Clarify Interrupt mitigation
+To: linux-wireless@vger.kernel.org
+Subject: o11s: Modularize Path Selection Protocol etc.
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k currently supports only RX interrupt
-mitigation.
+Hi mesh folks!
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |   10 +++++-----
- drivers/net/wireless/ath/ath9k/hw.h |    2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
+For my diploma thesis, I want to add a P2P routing protocoll to the
+pre-80211s software in the linux kernel. For details, see my previous
+mails. [1],[2]
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 2ec61f0..3068535 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -392,7 +392,7 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
- 		ah->config.spurchans[i][1] = AR_NO_SPUR;
- 	}
- 
--	ah->config.intr_mitigation = true;
-+	ah->config.rx_intr_mitigation = true;
- 
- 	/*
- 	 * We need this for PCI devices only (Cardbus, PCI, miniPCI)
-@@ -1184,7 +1184,7 @@ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
- 		AR_IMR_RXORN |
- 		AR_IMR_BCNMISC;
- 
--	if (ah->config.intr_mitigation)
-+	if (ah->config.rx_intr_mitigation)
- 		ah->mask_reg |= AR_IMR_RXINTM | AR_IMR_RXMINTR;
- 	else
- 		ah->mask_reg |= AR_IMR_RXOK;
-@@ -2121,7 +2121,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 
- 	REG_WRITE(ah, AR_OBS, 8);
- 
--	if (ah->config.intr_mitigation) {
-+	if (ah->config.rx_intr_mitigation) {
- 		REG_RMW_FIELD(ah, AR_RIMT, AR_RIMT_LAST, 500);
- 		REG_RMW_FIELD(ah, AR_RIMT, AR_RIMT_FIRST, 2000);
- 	}
-@@ -2781,7 +2781,7 @@ bool ath9k_hw_getisr(struct ath_hw *ah, enum ath9k_int *masked)
- 
- 		*masked = isr & ATH9K_INT_COMMON;
- 
--		if (ah->config.intr_mitigation) {
-+		if (ah->config.rx_intr_mitigation) {
- 			if (isr & (AR_ISR_RXMINTR | AR_ISR_RXINTM))
- 				*masked |= ATH9K_INT_RX;
- 		}
-@@ -2914,7 +2914,7 @@ enum ath9k_int ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
- 	}
- 	if (ints & ATH9K_INT_RX) {
- 		mask |= AR_IMR_RXERR;
--		if (ah->config.intr_mitigation)
-+		if (ah->config.rx_intr_mitigation)
- 			mask |= AR_IMR_RXMINTR | AR_IMR_RXINTM;
- 		else
- 			mask |= AR_IMR_RXOK | AR_IMR_RXDESC;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index e2b0c73..8849450 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -212,7 +212,7 @@ struct ath9k_ops_config {
- 	u32 cck_trig_low;
- 	u32 enable_ani;
- 	int serialize_regmode;
--	bool intr_mitigation;
-+	bool rx_intr_mitigation;
- #define SPUR_DISABLE        	0
- #define SPUR_ENABLE_IOCTL   	1
- #define SPUR_ENABLE_EEPROM  	2
--- 
-1.6.5.6
+In struct ieee80211_if_mesh, the current code reads
+
+net/mac80211/ieee80211_i.h
+>         u8 mesh_id[IEEE80211_MAX_MESH_ID_LEN];
+>         size_t mesh_id_len;
+>         /* Active Path Selection Protocol Identifier */
+>         u8 mesh_pp_id;
+>         /* Active Path Selection Metric Identifier */
+>         u8 mesh_pm_id;
+>         /* Congestion Control Mode Identifier */
+>         u8 mesh_cc_id;
+>         /* Synchronization Protocol Identifier */
+>         u8 mesh_sp_id;
+>         /* Authentication Protocol Identifier */
+>         u8 mesh_auth_id;
+
+which is what I at first wanted to work with.
+
+In my last patch [2], I introduced some new 32 bit struct members,
+because, if I am not mistaken, these IDs should include a vendor
+specific OUI, which enables a user to combine a path selection protocol
+of vendor A with a path selection metric of vendor B.
+
+So.. am I erring here?
+
+If yes, I would introduce a new 24 bit value for the OUI, which will be
+combined with all the above u8's before going over the wire (into the
+air of course)
+...if no, I would replace those values by 32 bit ones, possibly even
+braking ABI compatibility.
+
+What do you think?
+Do you maybe have a better suggestion?
+
+Thank you very much for your input!
+
+
+Florian
+
+[1] http://marc.info/?l=linux-wireless&m=122600107811517&w=2
+[2] http://marc.info/?l=linux-wireless&m=123300309207545&w=2
+
 
