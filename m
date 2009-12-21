@@ -1,34 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([143.182.124.22]:54399 "EHLO
-	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750748AbZLCKis (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47551 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755115AbZLUTA2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2009 05:38:48 -0500
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 0/4] iwmc3200wifi updates for 2.6.33
-Date: Thu,  3 Dec 2009 11:40:14 +0100
-Message-Id: <cover.1259835655.git.sameo@linux.intel.com>
+	Mon, 21 Dec 2009 14:00:28 -0500
+Date: Mon, 21 Dec 2009 13:59:22 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+Cc: Holger Schurig <holgerschurig@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Can't turn off SSB (CONFIG_SSB)?
+Message-ID: <20091221185922.GD4979@tuxdriver.com>
+References: <4B2ECC72.40703@redfish-solutions.com> <200912210924.16481.holgerschurig@gmail.com> <4B2FC3A4.9080804@redfish-solutions.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4B2FC3A4.9080804@redfish-solutions.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Mon, Dec 21, 2009 at 10:51:16AM -0800, Philip A. Prindeville wrote:
+> On 12/21/2009 12:24 AM, Holger Schurig wrote:
+> >> And what are the steps to figuring out the dependency that
+> >> keeps forcing it on?  Something must be doing a "select SSB"
+> >> but I'm not sure what.  
+> > 
+> > "make xconfig", and then turn on "Options -> Show Debug Info".
+> > 
+> > Then you see the reverse dep.
+> > 
+> > 
+> > Another thing would be "find -name Kconfig |xargs grep 
+> > SSB_POSSIBLE" and then carefully check those files.
+> 
+> Well, as I mentioned, arch/x86/configs/i386_defconfig contains:
+> 
+> CONFIG_SSB_POSSIBLE=y
+> 
+> which I've not been able to understand why.  There are lots of x86 configurations where this might *not* be possible, in embedded platforms in particular.
 
-Here is the last iwmc3200wifi update for 2.6.33, so all following 4 patches
-are targeted at your wireless-testing tree.
-This patchset aims at correctly enabling the iwmc3200 wimax-wifi (a.k.a. wiwi)
-coexistence.
+config SSB_POSSIBLE
+        bool
+        depends on HAS_IOMEM && HAS_DMA
+        default y
 
-Samuel Ortiz (4):
-  iwmc3200wifi: Update wiwi priority table
-  iwmc3200wifi: Coex table command does not expect a response
-  iwmc3200wifi: Add wifi-wimax coexistence mode as a module parameter
-  iwmc3200wifi: Enable wimax core through module parameter
+What x86 configurations don't have IOMEM or DMA?  And what difference
+does it make if SSB_POSSIBLE is defined if it doesn't build any code?
 
- drivers/net/wireless/iwmc3200wifi/commands.c |   22 +++++++++++++---------
- drivers/net/wireless/iwmc3200wifi/iwm.h      |    1 -
- drivers/net/wireless/iwmc3200wifi/main.c     |    8 +++++---
- 3 files changed, 18 insertions(+), 13 deletions(-)
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
