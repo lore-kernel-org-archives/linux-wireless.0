@@ -1,60 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33342 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752416AbZLJPPL (ORCPT
+Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:61317 "EHLO
+	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752543AbZLUQ06 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2009 10:15:11 -0500
-Date: Thu, 10 Dec 2009 10:03:18 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
-	davem@davemloft.net
-Subject: Re: Revised wireless tree management practices
-Message-ID: <20091210150318.GB2955@tuxdriver.com>
-References: <20091209211054.GB32058@tuxdriver.com> <87ljhb0x0h.fsf@purkki.valot.fi> <20091210134733.GC11112@tuxdriver.com> <87ein30vt4.fsf@purkki.valot.fi> <43e72e890912100631if1c17b2l597168813db4a19c@mail.gmail.com> <20091210143754.GA2955@tuxdriver.com> <43e72e890912100653p3890705u4f88dd19026a5877@mail.gmail.com>
+	Mon, 21 Dec 2009 11:26:58 -0500
+Message-ID: <4B2FA1CF.1010903@gmail.com>
+Date: Mon, 21 Dec 2009 17:26:55 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <43e72e890912100653p3890705u4f88dd19026a5877@mail.gmail.com>
+To: Pavel Roskin <proski@gnu.org>
+CC: Markus Baier <Markus_Baier@web.de>, linux-wireless@vger.kernel.org
+Subject: Re: [BISECTED] [PATCH v2 8/8] rt2x00: Properly request tx headroom
+ for alignment operations.
+References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com>	<1259012694-14869-2-git-send-email-gwingerde@gmail.com>	<1259012694-14869-3-git-send-email-gwingerde@gmail.com>	<1259012694-14869-4-git-send-email-gwingerde@gmail.com>	<1259012694-14869-5-git-send-email-gwingerde@gmail.com>	<1259012694-14869-6-git-send-email-gwingerde@gmail.com>	<1259012694-14869-7-git-send-email-gwingerde@gmail.com>	<1259012694-14869-8-git-send-email-gwingerde@gmail.com>	<1259012694-14869-9-git-send-email-gwingerde@gmail.com>	<loom.20091220T163829-137@post.gmane.org> <4B2E8729.7050501@gmail.com> <20091221013316.nm9belnhywwwsc0w-cebfxv@webmail.spamcop.net>
+In-Reply-To: <20091221013316.nm9belnhywwwsc0w-cebfxv@webmail.spamcop.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 10, 2009 at 06:53:43AM -0800, Luis R. Rodriguez wrote:
-> On Thu, Dec 10, 2009 at 6:37 AM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > On Thu, Dec 10, 2009 at 06:31:02AM -0800, Luis R. Rodriguez wrote:
-> >> On Thu, Dec 10, 2009 at 6:04 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
-> >> > "John W. Linville" <linville@tuxdriver.com> writes:
-> >> >
-> >> >> I still see value in a tree that has a reasonably stable base and
-> >> >> contains both wireless fixes and wireless features.
-> >> >
-> >> > I agree, it makes things a lot easier.
-> >> >
-> >> >> So, I think wireless-testing remains as the focal point for wireless
-> >> >> LAN testing and development. I'll just be getting patches there in a
-> >> >> slightly different process.
-> >> >
-> >> > Sounds very good. So I'll continue using wireless-testing. Thanks.
-> >>
-> >> But we use wireless-next as base though if we want to send you pull
-> >> requests, ay?
-> >
-> > Yes, that is correct -- people that want to send patches (or simply
-> > test) should use wireless-testing.  People that want to send pull
-> > requests need to have trees based on wireless-2.6 (for fixes)
+On 12/21/09 07:33, Pavel Roskin wrote:
+> Quoting Gertjan van Wingerde <gwingerde@gmail.com>:
 > 
-> Typically we have relied on you to push fixes into wireless-2.6, does
-> this change a bit now in that we should try to keep better track of
-> stable fixes and send them to you instead if we're doing the pull
-> request method?
+>> On 12/20/09 16:42, Markus Baier wrote:
+>>> After my latest git pull to the kernel version 2.6.33-rc1-wl
+>>> no client was able to connect to my hostapd (v0.6.9) AP.
+>>> I found a lot of the following entries in the syslog:
+>>>
+>>> wlan0: STA xx:xx:xx:xx:xx:xx
+>>> IEEE 802.11: did not acknowledge authentication response
+> 
+> I'm also having problems with rt2x00 support the current
+> wireless-testing, but in the station mode.  The device is using rt61pci
+> driver.  Association to an AP with WEP fails.
+> 
+> [  147.930019] wlan2: direct probe to AP 00:11:6b:28:0b:92 (try 1)
+> [  148.130010] wlan2: direct probe to AP 00:11:6b:28:0b:92 (try 2)
+> [  148.330009] wlan2: direct probe to AP 00:11:6b:28:0b:92 (try 3)
+> [  148.530008] wlan2: direct probe to AP 00:11:6b:28:0b:92 timed out
+> [  152.942516] wlan2: direct probe to AP 00:11:6b:28:0b:92 (try 1)
+> [  153.142512] wlan2: direct probe to AP 00:11:6b:28:0b:92 (try 2)
+> [  153.340011] wlan2: direct probe to AP 00:11:6b:28:0b:92 (try 3)
+> [  153.540008] wlan2: direct probe to AP 00:11:6b:28:0b:92 timed out
+> 
+> It worked fine with wireless-testing when it was 2.6.32 based.
+> 
+>>> After I removed the lines below in rt2x00dev.c:
+> 
+> That "patch" is helping me too!  The association is working now.
+> 
+>> That is very strange as this patch was meant to send TX statuses of
+>> frames
+>> towards monitor interfaces (which is what hostapd is using).
+> 
+> I'm not using monitor mode.  I only have one vif in the station mode.
+> 
+> My debugging shows that the headroom is 0 with the "patch".  Without it,
+> the headroom is 17 (13 from IEEE80211_TX_STATUS_HEADROOM plus 4 from
+> RT2X00_ALIGN_SIZE).
+> 
+> Perhaps non-zero headroom is not handled correctly?
+> 
 
-Yes.  If you want me to do git pulls then you need to separate fixes
-into a tree based on wireless-2.6.  Also, you should be conscientious
-about adding "Cc: stable@kernel.org" to commit logs as appropriate.
-The whole point of the pulls is to keep me from having to touch
-the patches.
+Hmmm, perhaps the problem is that the headroom is not a multiple of 4.
+Can you check what happens when you set the extra_tx_headroom fixed to e.g. 20?
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+The driver should be able to handle this, but maybe there is something wrong
+with the alignment.
+
+---
+Gertjan.
