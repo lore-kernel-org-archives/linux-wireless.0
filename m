@@ -1,67 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60435 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756073AbZLOOwX (ORCPT
+Received: from mail-fx0-f215.google.com ([209.85.220.215]:34711 "EHLO
+	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752155AbZLUNwu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 09:52:23 -0500
-Subject: Re: [PATCH 17/19] [RFC, v2] libertas: Kconfig entry for
- libertas+cfg80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <200912151544.00402.hs4233@mail.mn-solutions.de>
-References: <20091022133043.185554096@mail.mn-solutions.de>
-	 <200910260859.39002.hs4233@mail.mn-solutions.de>
-	 <1256587966.2110.28.camel@localhost.localdomain>
-	 <200912151544.00402.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-I02DeofbcoabrC6P4lrt"
-Date: Tue, 15 Dec 2009 15:52:10 +0100
-Message-ID: <1260888730.10356.9.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 21 Dec 2009 08:52:50 -0500
+Received: by fxm7 with SMTP id 7so4873362fxm.29
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2009 05:52:49 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1261363447.12157.624.camel@debian>
+References: <E9954878DD1FB34FAE5187FB88C58A357683393C@orsmsx506.amr.corp.intel.com>
+	<1261363447.12157.624.camel@debian>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 21 Dec 2009 14:52:29 +0100
+Message-ID: <69e28c910912210552p1f63a47dw9fbabf2c26ce02e9@mail.gmail.com>
+Subject: Re: Intel 4965 HT rates
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	Valentin Manea <linux-wireless@mrs.ro>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-I02DeofbcoabrC6P4lrt
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2009-12-15 at 15:44 +0100, Holger Schurig wrote:
-
-> Nothing of this is really a WEXT-only, so I'd rather get rid of=20
-> WEXT completely, even for mesh. However, I need to abduct or=20
-> re-use the cfg80211 ibss commands for this, but I guess that's=20
-> not a problem.
->=20
->=20
-> Dan, Johannes, does this make sense?
-
-I'd rather have new mesh commands. Right now, mesh joining/leaving is
-implicit with interface up/down after you set mesh parameters, but
-that's not very flexible.
-
-johannes
-
---=-I02DeofbcoabrC6P4lrt
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLJ6KWAAoJEODzc/N7+Qma0ZAQAM8Gxqg8DZBc0fkMHq0EtIUW
-Sz62bkvgrc372SQP23HFT0DWXERdVo+9n75S22xU8LPO7/Ia46OSP60nGanqbePs
-3WYZQvh3HY34Rv4mXUBFTsv4Jzuz0z8gcCdI9IBR8TNMql6KNY9YYS0hl3hBBaFA
-01431mSlFJhCjFQ3/XXLvgU3xO2eGlQO0V2YJZRq1EjI/UYK/TE9zgAmyFFvUyZO
-HNJwl01VF603vVkmjs3AFauuPmFtf88BFBvoCCIc/Kj54mactokLS6e0NFqclVf1
-H9HCjhm7WQhG+My7R9mOa0njpwM7/0s+2Q+C2UT/tSSE3V+F7+nSPOv3Gdbl8ztB
-AyAoHDGxUKV51ZdY2enSuWr4PtDunxujYhZpPElAHZf3L9UMw+NNrMqR/2t4EfYd
-7f7i2LUVP3aPmQK3VO47KxfUkaXAUFCPWXvpuU5/8PiBjSP7fyYnzt7rPpL4rnxD
-We8fftorks+7HU1jo8UrhXY2SgFrVrhGHe87E1nIj4Y9aRrNFOdimHVPRhcEkAar
-/re1fvC8+0bL36Vylcycl+lH3yY7U7vGShbc/a7d5Gmh8iEF+XPOQO3dzpAvIwUq
-r+oy4Gpc+GcdpYJyKr/V31pIoQKxb5pYwFI3hWIfDWJ07ZiLYAkuykvRoGluj+ab
-u3YN2yEpOdDytKgsbvuB
-=GgpX
------END PGP SIGNATURE-----
-
---=-I02DeofbcoabrC6P4lrt--
-
+T24gTW9uLCBEZWMgMjEsIDIwMDkgYXQgMzo0NCBBTSwgWmh1IFlpIDx5aS56aHVAaW50ZWwuY29t
+PiB3cm90ZToKPiBPbiBNb24sIDIwMDktMTItMjEgYXQgMTA6MzMgKzA4MDAsIEd1eSwgV2V5LVlp
+IFcgd3JvdGU6Cj4+IEZvciA0OTY1LCA0ME1IeiBvbmx5IHN1cHBvcnRlZCBpbiBnIGJhbmQKPgo+
+IFdlIGRvbid0IHN1cHBvcnQgNDBNSHogY2hhbm5lbHMgaW4gMi40RyBiYW5kLiBTZWUgY29tbWVu
+dHMgaW4KPiBpd2wtZWVwcm9tLmg6Cj4KPiDCoCoKPiDCoCogTk9URTogwqA0OTY1IGRvZXMgbm90
+IHN1cHBvcnQgSFQ0MCBjaGFubmVscyBvbiAyLjQgR0h6Lgo+IMKgKi8KPgo+IFRoYW5rcywKPiAt
+eWkKCkJ1dCB3aHkgZG9lcyB0aGUgV2luZG93cyBkcml2ZXIgZm9yIDQ5NjUgc3VwcG9ydCBpdCB0
+aGVuPwoKPgo+PiDCoC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tCj4+IEZyb206IMKgIMKgIMKg
+IMKgIFZhbGVudGluIE1hbmVhIFttYWlsdG86bGludXgtd2lyZWxlc3NAbXJzLnJvXQo+PiBTZW50
+OiBTdW5kYXksIERlY2VtYmVyIDIwLCAyMDA5IDA1OjM4IEFNIFBhY2lmaWMgU3RhbmRhcmQgVGlt
+ZQo+PiBUbzogwqAgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnCj4+IFN1YmplY3Q6IMKg
+IMKgIMKgSW50ZWwgNDk2NSBIVCByYXRlcwo+Pgo+PiBIaSwKPj4KPj4gwqAgSSdtIHJ1bm5pbmcg
+Y29tcGF0LXdpcmVsZXNzLTIuNi4zMy1yYzEgYW5kIGl3IGxpc3Qgc2hvd3Mgc29tZSBjb25mdXNp
+bmcgSFQKPj4gY2FwYWJpbGl0aWVzOgo+PiDCoCDCoCDCoCDCoCBCYW5kIDE6Cj4+IMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIEhUIGNhcGFiaWxpdGllczogMHgwODJjCj4+IMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgICogMjAgTUh6IG9wZXJhdGlvbgo+PiDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAqIFNNIFBTIGRpc2FibGVkCj4+IMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgICogMjAgTUh6IHNob3J0IEdJCj4+IMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgICogbWF4IEEtTVNEVSBsZW4gNzkzNQo+Pgo+PiBidXQgZm9y
+IDgwMi4xMWEgY2hhbm5lbHM6Cj4+IMKgIMKgIMKgIMKgIEJhbmQgMjoKPj4gwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgSFQgY2FwYWJpbGl0aWVzOiAweDA4NmUKPj4gwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgKiAyMC80MCBNSHogb3BlcmF0aW9uCj4+IMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgICogU00gUFMgZGlzYWJsZWQKPj4gwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgKiAyMCBNSHogc2hvcnQgR0kKPj4gwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgKiA0MCBNSHogc2hvcnQgR0kKPj4gwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgKiBtYXggQS1NU0RVIGxlbiA3OTM1Cj4+Cj4+IFdoaWxlIEkg
+Y2FuJ3QgdGVsbCB3aGVuIHRoaXMgaGFwcGVuZWQsIEkgcmVtZW1iZXIgb2xkZXIgMi42LjI5IHJl
+bGVhc2VzCj4+IHN1cHBvcnRlZCBIVDQwIGZvciBib3RoIGJhbmRzLgo+PiBUaGUgd2lyZWxlc3Mg
+Y2FyZCBpcyBhbiBJbnRlbCA0OTY1IG9uIGEgVGhpbmtwYWQgVDYxLgo+Pgo+Pgo+PiBSZWdhcmRz
+LAo+PiBWYWxlbnRpbgo+Pgo+PiAtLQo+PiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDog
+c2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtd2lyZWxlc3MiIGluCj4+IHRoZSBib2R5
+IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnCj4+IE1vcmUgbWFqb3Jk
+b21vIGluZm8gYXQgwqBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwK
+Pj4gTu+/ve+/ve+/ve+/ve+/vXLvv73vv71577+977+977+9Yu+/vVjvv73vv73Hp3bvv71e77+9
+Kd66ey5u77+9K++/ve+/ve+/ve+/vXvvv73vv70q3pXvv70s77+9e2F577+9IMqH2pnvv70saiDv
+v73vv71m77+977+977+9aO+/ve+/ve+/vXrvv70g77+9d++/ve+/ve+/vSDvv73vv73vv71qOit2
+77+977+977+9d++/vWrvv71t77+977+977+977+9IO+/ve+/ve+/ve+/vXpaK++/ve+/ve+/ve+/
+ve+/vd2iaiLvv73vv70h77+9aQo+Cj4KPiAtLQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBs
+aXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC13aXJlbGVzcyIgaW4KPiB0aGUg
+Ym9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZwo+IE1vcmUgbWFq
+b3Jkb21vIGluZm8gYXQgwqBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0
+bWwKPgoKCgotLSAKVmlzdGE6IFtWXWlydXNlcywgW0ldbnRydWRlcnMsIFtTXXB5d2FyZSwgW1Rd
+cm9qYW5zIGFuZCBbQV1kd2FyZS4gOi0pCg==
