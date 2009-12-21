@@ -1,77 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45382 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752069AbZLPI4F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2009 03:56:05 -0500
-Subject: Re: [PATCH] wireless: wext: allocate space for NULL-termination
- for 32byte SSIDs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Mack <daniel@caiaq.de>
-Cc: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org,
-	dcbw@redhat.com, m.hirsch@raumfeld.com, netdev@vger.kernel.org,
-	libertas-dev@lists.infradead.org, stable@kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20091216035844.GN28375@buzzloop.caiaq.de>
-References: <1260650850-16163-1-git-send-email-daniel@caiaq.de>
-	 <20091215.014308.77044043.davem@davemloft.net>
-	 <1260871411.3692.4.camel@johannes.local>
-	 <20091216035844.GN28375@buzzloop.caiaq.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-L/Dl6eEgTCZxlb0x32KY"
-Date: Wed, 16 Dec 2009 09:20:33 +0100
-Message-ID: <1260951633.10356.61.camel@johannes.local>
-Mime-Version: 1.0
+Received: from blu0-omc2-s34.blu0.hotmail.com ([65.55.111.109]:17416 "EHLO
+	blu0-omc2-s34.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751436AbZLUMzV convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2009 07:55:21 -0500
+Message-ID: <BLU113-W7635FBD7855C5257B07E4BE820@phx.gbl>
+From: Mike Marchywka <marchywka@hotmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: I need a card that works reasonably easily with Debain- reccs?
+Date: Mon, 21 Dec 2009 07:49:08 -0500
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-L/Dl6eEgTCZxlb0x32KY
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Hi, 
+I gave up on windoze after all the apps became too bloated to tolerate
+and it didn't seem I should need 1Gbyte to post on a forum without
+the browser tying up my disk on VM for minutes on each character I 
+typed. Debian has worked much better but I can't get my current
+wireless card to work well through ndiswrapper. I'm getting inconsistent
+results but can download via windozeon another machine and get fast
+xfer over eth0. I'm going out to buy a new card, what should I get?
 
-On Wed, 2009-12-16 at 11:58 +0800, Daniel Mack wrote:
-
-> > If this is used in a GET, then it will be filled up to 32 bytes by the
-> > get handler, and the trailing \0 your patch reserves will never be
-> > copied into userspace.
->=20
-> The problem is the GET case. The libertas driver copies ssid_len
-> characters here and appends a trailing \0, which my patch caught now and
-> which caused memory corruption in before.
->=20
-> From what I've seen, libertas _does_ treat the extra data correctly
-> at all places, I checked it several times now. (Btw, the %s format
-> string you pointed out all use print_ssid() to properly escape all
-> non-printable characters, so they're rules out, too).
-
-Oh, ok, print_ssid() is correct of course, it gets the length.
-
-> I'll send a patch to fix the flaw in libertas.
 
 Thanks.
 
-johannes
 
---=-L/Dl6eEgTCZxlb0x32KY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJLKJhNAAoJEODzc/N7+QmahVwP/jMVe1Xgd0dEbJLXx/u1bOVA
-rBEUz7YVaCaS9DSS7jhb1l3FmPmnQJ1vtryfOikdSCBAVOUyOH2AQAQkkCyZvxPm
-Fvf7nNqsQ+mKiazZT8I/q8TG8Ht3BMmTsw08IW2qrY6L6FtGvKa7u6hVYxwuYTmW
-hzasJKwAhh6y5bpMATQGeByVPWU5VHSOXdmTCEHUJvwx5va4pIJtCiEfoxmJbH62
-4Qkz3dN0TxjvROHg2ADaHTSuD4IMOUtLB9/o2yJ0OQRFWCSoexq942zFRk87m3rv
-hCyXdjuMZGUH01F4CdRLarpIJU9KdScM38yeMt8DiuR2kQYEqaMl12plQElc1RoV
-CNNQorYfNPyOuzS9yGlwx71bIiO/U8aaeXE7ncq60/yE49BzGN61kPJRUvdVkBCO
-4mV54R+KdoRXKwW38FGc3yWIDfKDRjImKVvGCzexEW9CXoyPQj//a3Afd7U8CzxN
-XBeT2OrmEf1qpkbsJc/amYlQWZeQSKSOy+lD+MA2CtClhIzt+MCm6f3OnPpHjSoy
-g9cQAWqyzygZslxcZiidTmYoymRMoTls91uOr++bd2hAXA5G09M5fWdmPE1YQgl9
-lM/PfLN+NQo1g/osG29e7xliRqOhrXsTCzeKaMsGWPgYeEGGokXK0fnrph+4bquE
-v/CC73TaeITP7aiYuYAH
-=SGfL
------END PGP SIGNATURE-----
+note new address
+Mike Marchywka
+1975 Village Round
+Marietta GA 30064
+415-264-8477 (w)<- use this
+404-788-1216 (C)<- leave message
+989-348-4796 (P)<- emergency only
+marchywka@hotmail.com
+Note: If I am asking for free stuff, I normally use for hobby/non-profit
+information but may use in investment forums, public and private.
+Please indicate any concerns if applicable.
 
---=-L/Dl6eEgTCZxlb0x32KY--
 
+
+ 		 	   		  
+_________________________________________________________________
+Hotmail: Free, trusted and rich email service.
+http://clk.atdmt.com/GBL/go/171222984/direct/01/
