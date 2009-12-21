@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:49321 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750951AbZLUBQh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2009 20:16:37 -0500
-Received: from [192.168.10.7] (builder.redfish-solutions.com [192.168.10.7])
-	(authenticated bits=0)
-	by mail.redfish-solutions.com (8.14.3/8.14.3) with ESMTP id nBL1GZLS014438
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2009 18:16:36 -0700
-Message-ID: <4B2ECC72.40703@redfish-solutions.com>
-Date: Sun, 20 Dec 2009 17:16:34 -0800
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: Can't turn off SSB (CONFIG_SSB)?
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from xenotime.net ([72.52.64.118]:51813 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1756177AbZLUTDa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2009 14:03:30 -0500
+Received: from chimera.site ([96.253.169.185]) by xenotime.net for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2009 11:03:25 -0800
+Date: Mon, 21 Dec 2009 11:03:25 -0800
+From: Randy Dunlap <rdunlap@xenotime.net>
+To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+Cc: Holger Schurig <holgerschurig@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Can't turn off SSB (CONFIG_SSB)?
+Message-Id: <20091221110325.95cfcc92.rdunlap@xenotime.net>
+In-Reply-To: <4B2FC3A4.9080804@redfish-solutions.com>
+References: <4B2ECC72.40703@redfish-solutions.com>
+	<200912210924.16481.holgerschurig@gmail.com>
+	<4B2FC3A4.9080804@redfish-solutions.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm building images for an EMBEDDED platform, and forcing CONFIG_SSB_POSSIBLE=n, but I'm still seeing:
+On Mon, 21 Dec 2009 10:51:16 -0800 Philip A. Prindeville wrote:
 
-*
-* Sonics Silicon Backplane
-*
-Sonics Silicon Backplane support (SSB) [M/y/?] (NEW) n
+> On 12/21/2009 12:24 AM, Holger Schurig wrote:
+> >> And what are the steps to figuring out the dependency that
+> >> keeps forcing it on?  Something must be doing a "select SSB"
+> >> but I'm not sure what.  
+> > 
+> > "make xconfig", and then turn on "Options -> Show Debug Info".
+> > 
+> > Then you see the reverse dep.
+> > 
+> > 
+> > Another thing would be "find -name Kconfig |xargs grep 
+> > SSB_POSSIBLE" and then carefully check those files.
+> 
+> Well, as I mentioned, arch/x86/configs/i386_defconfig contains:
+> 
+> CONFIG_SSB_POSSIBLE=y
 
-Support for the Sonics Silicon Backplane bus.
-You only need to enable this option, if you are
-configuring a kernel for an embedded system with
-this bus.
-It will be auto-selected if needed in other
-environments.
+That is =y iff:
 
-The module will be called ssb.
+config SSB_POSSIBLE
+	bool
+	depends on HAS_IOMEM && HAS_DMA
+	default y
 
-If unsure, say N.
+HAS_IOMEM=y and HAS_DMA=y.  Aren't those both =y on your platform?
 
-Sonics Silicon Backplane support (SSB) [M/y/?] (NEW) n
-
-Support for the Sonics Silicon Backplane bus.
-You only need to enable this option, if you are
-configuring a kernel for an embedded system with
-this bus.
-It will be auto-selected if needed in other
-environments.
-
-The module will be called ssb.
-
-If unsure, say N.
-
-Sonics Silicon Backplane support (SSB) [M/y/?] (NEW) 
+Other than being set, it shouldn't be hurting anything.
 
 
-
-And why does arch/x86/configs/i386_defconfig nail up CONFIG_SSB_POSSIBLE?
-
-This is with 2.6.27.38.
-
-And what are the steps to figuring out the dependency that keeps forcing it on?  Something must be doing a "select SSB" but I'm not sure what.
+> which I've not been able to understand why.  There are lots of x86 configurations where this might *not* be possible, in embedded platforms in particular.
 
 
-
+---
+~Randy
