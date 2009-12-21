@@ -1,40 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:51800 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754022AbZLKMgC (ORCPT
+Received: from mail-gx0-f211.google.com ([209.85.217.211]:62832 "EHLO
+	mail-gx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752380AbZLUPIJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 07:36:02 -0500
-Date: Fri, 11 Dec 2009 13:36:03 +0100
-From: Stefan Seyfried <stefan.seyfried@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/2] Add support for Sphairon Homelink 1202 USB WLAN
-Message-ID: <20091211133603.46bec686@strolchi.home.s3e.de>
-In-Reply-To: <1260282095-17042-1-git-send-email-stefan.seyfried@googlemail.com>
-References: <1260282095-17042-1-git-send-email-stefan.seyfried@googlemail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 21 Dec 2009 10:08:09 -0500
+Received: by gxk3 with SMTP id 3so3949204gxk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2009 07:08:08 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <200912211340.51229.8an@praha12.net>
+References: <1260899813-17585-1-git-send-email-8an@praha12.net>
+	 <4B2F4D3A.4050009@thinktube.com> <4B2F50DD.60701@thinktube.com>
+	 <200912211340.51229.8an@praha12.net>
+Date: Mon, 21 Dec 2009 10:08:08 -0500
+Message-ID: <b6c5339f0912210708wa538055s74a7054eef0e77b6@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 4/5] ath5k: Reimplement clock rate to usec
+	conversion
+From: Bob Copeland <me@bobcopeland.com>
+To: 8an@praha12.net
+Cc: =?Big5?B?rvzEprdxpKc=?= <tkaiso@thinktube.com>,
+	johannes@sipsolutions.net, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue,  8 Dec 2009 15:21:33 +0100
-Stefan Seyfried <stefan.seyfried@googlemail.com> wrote:
+2009/12/21 Lukáš Turek <8an@praha12.net>:
+> On 21.12.2009 11:41 海藻敬之 wrote:
+>>  In ath5k_hw_write_ofdm_timings(),  comment says
+>>       "ALGO: coef = (5 * clock * carrier_freq) / 2) ",
+>>  but current code is
+>>       "coef_scaled = ((5 * (clock << 24)) / 2) / channel->center_freq;"
+>>
+>>  Did they match each other ?
+>>  I am wondering the the comment is wrong, but I am not sure that either
+>> is wrong.
+> Good point, it seems the comment is wrong. The calculation would overflow
+> 32-bit integer if there was a multiplication instead of a division.
+>
+> Lukas Turek
 
-> From: Stefan Seyfried <seife@sphairon.com>
-> 
-> The following two trivial patches add support for this device to
-> zd1211rw (ejecting the virtual USB drive) and ar9170usb (that drives
-> the WLAN chip inside).
+The original comment was:
 
-Is anyhting wrong with those?
-Are those too trivial and "USB only" and thus better suited for direct
-submission to Greg?
+/*
+ * ALGO -> coef = 1e8/fcarrier*fclock/40;
+ * scaled coef to provide precision for this floating calculation
+ */
+coef_scaled = clockMhzScaled / chan->channel;
 
-Thanks,
+So dividing by the carrier frequency sounds like the right thing,
+I guess the comment is wrong.
 
-	Stefan
+I reviewed the patch, looks fine to me.  The ATH hal uses a lookup
+table to keep it inline but I don't think we have a convenient
+index available to do the same.
+
+I'll see what I can find about the pilot tracking to see if that
+makes sense here.
+
 -- 
-Stefan Seyfried
-
-"Any ideas, John?"
-"Well, surrounding them's out."
+Bob Copeland %% www.bobcopeland.com
