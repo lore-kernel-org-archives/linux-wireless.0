@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:33664 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751121AbZL0Idk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Dec 2009 03:33:40 -0500
-Received: by ewy19 with SMTP id 19so1051475ewy.21
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Dec 2009 00:33:39 -0800 (PST)
-To: Dan Carpenter <error27@gmail.com>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [patch] wl1271_cmd.c:  cleanup char => u8
-References: <20091223132319.GC17923@bicker>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 27 Dec 2009 10:33:36 +0200
-In-Reply-To: <20091223132319.GC17923@bicker> (Dan Carpenter's message of "Wed\, 23 Dec 2009 15\:23\:19 +0200")
-Message-ID: <87ljgoyfxb.fsf@purkki.valot.fi>
+Received: from mga14.intel.com ([143.182.124.37]:21730 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754127AbZLUCdJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Dec 2009 21:33:09 -0500
+From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+To: 'Valentin Manea' <linux-wireless@mrs.ro>,
+	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>
+Date: Sun, 20 Dec 2009 18:33:05 -0800
+Subject: RE: Intel 4965 HT rates
+Message-ID: <E9954878DD1FB34FAE5187FB88C58A357683393C@orsmsx506.amr.corp.intel.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <error27@gmail.com> writes:
-
-> This is just a clean up and doesn't make a functional difference. It
-> keeps the lint checkers happy.
-
-Thanks, looks good.
-
-The "wl1271_cmd.c:" prefix is a bit ugly, though. John, if possible,
-can you change that to "wl1271:" before you apply the patch, please?
-
-> Signed-off-by: Dan Carpenter <error27@gmail.com>
-
-Luciano is on vacation right now (the lucky ba^H^Hguy), so I'll act as
-a backup:
-
-Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
-
--- 
-Kalle Valo
+Rm9yIDQ5NjUsIDQwTUh6IG9ubHkgc3VwcG9ydGVkIGluIGcgYmFuZA0KDQ1TZW50IGJ5IEdvb2Qg
+TWVzc2FnaW5nICh3d3cuZ29vZC5jb20pDQoNCg0KIC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
+DQpGcm9tOiAJVmFsZW50aW4gTWFuZWEgW21haWx0bzpsaW51eC13aXJlbGVzc0BtcnMucm9dDQpT
+ZW50OglTdW5kYXksIERlY2VtYmVyIDIwLCAyMDA5IDA1OjM4IEFNIFBhY2lmaWMgU3RhbmRhcmQg
+VGltZQ0KVG86CWxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDoJSW50ZWwg
+NDk2NSBIVCByYXRlcw0KDQpIaSwNCg0KICBJJ20gcnVubmluZyBjb21wYXQtd2lyZWxlc3MtMi42
+LjMzLXJjMSBhbmQgaXcgbGlzdCBzaG93cyBzb21lIGNvbmZ1c2luZyBIVCANCmNhcGFiaWxpdGll
+czoNCiAgICAgICAgQmFuZCAxOiAgICAgICAgICAgIA0KICAgICAgICAgICAgICAgIEhUIGNhcGFi
+aWxpdGllczogMHgwODJjDQogICAgICAgICAgICAgICAgICAgICAgICAqIDIwIE1IeiBvcGVyYXRp
+b24NCiAgICAgICAgICAgICAgICAgICAgICAgICogU00gUFMgZGlzYWJsZWQgIA0KICAgICAgICAg
+ICAgICAgICAgICAgICAgKiAyMCBNSHogc2hvcnQgR0kgDQogICAgICAgICAgICAgICAgICAgICAg
+ICAqIG1heCBBLU1TRFUgbGVuIDc5MzUNCg0KYnV0IGZvciA4MDIuMTFhIGNoYW5uZWxzOg0KICAg
+ICAgICBCYW5kIDI6ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgDQogICAgICAgICAgICAgICAgSFQgY2FwYWJpbGl0aWVzOiAweDA4
+NmUgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICANCiAgICAgICAgICAgICAg
+ICAgICAgICAgICogMjAvNDAgTUh6IG9wZXJhdGlvbiAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgIA0KICAgICAgICAgICAgICAgICAgICAgICAgKiBTTSBQUyBkaXNhYmxlZCAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgDQogICAgICAgICAgICAgICAgICAgICAgICAq
+IDIwIE1IeiBzaG9ydCBHSSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICANCiAg
+ICAgICAgICAgICAgICAgICAgICAgICogNDAgTUh6IHNob3J0IEdJICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgIA0KICAgICAgICAgICAgICAgICAgICAgICAgKiBtYXggQS1NU0RV
+IGxlbiA3OTM1DQoNCldoaWxlIEkgY2FuJ3QgdGVsbCB3aGVuIHRoaXMgaGFwcGVuZWQsIEkgcmVt
+ZW1iZXIgb2xkZXIgMi42LjI5IHJlbGVhc2VzIA0Kc3VwcG9ydGVkIEhUNDAgZm9yIGJvdGggYmFu
+ZHMuDQpUaGUgd2lyZWxlc3MgY2FyZCBpcyBhbiBJbnRlbCA0OTY1IG9uIGEgVGhpbmtwYWQgVDYx
+Lg0KDQoNClJlZ2FyZHMsDQpWYWxlbnRpbg0KDQotLQ0KVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlz
+IGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXdpcmVsZXNzIiBpbg0KdGhl
+IGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCk1vcmUgbWFq
+b3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRt
+bA0K
