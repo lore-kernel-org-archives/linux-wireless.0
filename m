@@ -1,76 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from buzzloop.caiaq.de ([212.112.241.133]:49317 "EHLO
-	buzzloop.caiaq.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759393AbZLPESO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 23:18:14 -0500
-Date: Wed, 16 Dec 2009 12:18:06 +0800
-From: Daniel Mack <daniel@caiaq.de>
-To: linux-kernel@vger.kernel.org
-Cc: Dan Williams <dcbw@redhat.com>,
-	Holger Schurig <holgerschurig@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	Maithili Hinge <maithili@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Michael Hirsch <m.hirsch@raumfeld.com>, netdev@vger.kernel.org,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	stable@kernel.org
-Subject: Re: [PATCH] Libertas: fix buffer overflow in lbs_get_essid()
-Message-ID: <20091216041805.GO28375@buzzloop.caiaq.de>
-References: <1260936778-2096-1-git-send-email-daniel@caiaq.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1260936778-2096-1-git-send-email-daniel@caiaq.de>
+Received: from xenotime.net ([72.52.64.118]:54400 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1757050AbZLUTLH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2009 14:11:07 -0500
+Received: from chimera.site ([96.253.169.185]) by xenotime.net for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2009 11:11:05 -0800
+Date: Mon, 21 Dec 2009 11:11:05 -0800
+From: Randy Dunlap <rdunlap@xenotime.net>
+To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Can't turn off SSB (CONFIG_SSB)?
+Message-Id: <20091221111105.81da940b.rdunlap@xenotime.net>
+In-Reply-To: <4B2FC725.400@redfish-solutions.com>
+References: <4B2ECC72.40703@redfish-solutions.com>
+	<20091221080928.cc7c19ee.rdunlap@xenotime.net>
+	<4B2FBEEA.5010002@redfish-solutions.com>
+	<200912211945.25602.mb@bu3sch.de>
+	<4B2FC725.400@redfish-solutions.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Sorry, had a typo in the linux-wireless list address, corrected now).
+On Mon, 21 Dec 2009 11:06:13 -0800 Philip A. Prindeville wrote:
 
-On Wed, Dec 16, 2009 at 05:12:58AM +0100, Daniel Mack wrote:
+> On 12/21/2009 10:45 AM, Michael Buesch wrote:
+> > On Monday 21 December 2009 19:31:06 Philip A. Prindeville wrote:
+> >> Here's what we have.
+> > 
+> > # CONFIG_SSB is not set
+> > 
 > 
-> The libertas driver copies the SSID buffer back to the wireless core and
-> appends a trailing NULL character for termination. This is
+> Ok, here's what's happening.
 > 
-> a) unnecessary because the buffer is allocated with kzalloc and is hence
->    already NULLed when this function is called, and
+> We have a "canned" config that we copy over, per platform.
 > 
-> b) for priv->curbssparams.ssid_len == 32, it writes back one byte too
->    much which causes memory corruptions.
+> I'm showing diffs of that config with what results (i.e. what's left in the linux-2.6.27.38 directory after running "make silentoldconfig" and "make prepare1"):
 > 
-> Fix this by removing the extra write.
+> --- target/device/via-c7/linux.config   2009-12-21 10:55:55.000000000 -0800
+> +++ build_i586/linux-2.6.27.38-astlinux/.config 2009-12-21 11:02:34.000000000 -0800
+> @@ -1,7 +1,7 @@
+>  #
+>  # Automatically generated make config: don't edit
+>  # Linux kernel version: 2.6.27.38
+> -# Tue Nov 10 16:50:01 2009
+> +# Mon Dec 21 11:02:34 2009
+>  #
+>  # CONFIG_64BIT is not set
+>  CONFIG_X86_32=y
+> @@ -1446,8 +1446,16 @@
+>  #
+>  # Sonics Silicon Backplane
+>  #
+> -CONFIG_SSB_POSSIBLE=n
+> -CONFIG_SSB=n
+> +CONFIG_SSB_POSSIBLE=y
+> +CONFIG_SSB=m
+> +CONFIG_SSB_SPROM=y
+> +CONFIG_SSB_PCIHOST_POSSIBLE=y
+> +CONFIG_SSB_PCIHOST=y
+> +# CONFIG_SSB_B43_PCI_BRIDGE is not set
+> +# CONFIG_SSB_SILENT is not set
+> +# CONFIG_SSB_DEBUG is not set
+> +CONFIG_SSB_DRIVER_PCICORE_POSSIBLE=y
+> +CONFIG_SSB_DRIVER_PCICORE=y
 > 
-> Signed-off-by: Daniel Mack <daniel@caiaq.de>
-> Cc: Dan Williams <dcbw@redhat.com>
-> Cc: Holger Schurig <holgerschurig@gmail.com>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Cc: Stephen Hemminger <shemminger@vyatta.com>
-> Cc: Maithili Hinge <maithili@marvell.com>
-> Cc: Kiran Divekar <dkiran@marvell.com>
-> Cc: Michael Hirsch <m.hirsch@raumfeld.com>
-> Cc: netdev@vger.kernel.org
-> Cc: libertas-dev@lists.infradead.org
-> Cc: linux-wireless@lists.infradead.org
-> Cc: stable@kernel.org
-> ---
->  drivers/net/wireless/libertas/wext.c |    2 --
->  1 files changed, 0 insertions(+), 2 deletions(-)
+>  #
+>  # Multifunction device drivers
+> @@ -1621,6 +1629,8 @@
+>  # CONFIG_USB_DYNAMIC_MINORS is not set
+>  # CONFIG_USB_SUSPEND is not set
+>  # CONFIG_USB_OTG is not set
+> +# CONFIG_USB_OTG_WHITELIST is not set
+> +# CONFIG_USB_OTG_BLACKLIST_HUB is not set
+>  # CONFIG_USB_MON is not set
 > 
-> diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-> index be837a0..01c738b 100644
-> --- a/drivers/net/wireless/libertas/wext.c
-> +++ b/drivers/net/wireless/libertas/wext.c
-> @@ -1953,10 +1953,8 @@ static int lbs_get_essid(struct net_device *dev, struct iw_request_info *info,
->  	if (priv->connect_status == LBS_CONNECTED) {
->  		memcpy(extra, priv->curbssparams.ssid,
->  		       priv->curbssparams.ssid_len);
-> -		extra[priv->curbssparams.ssid_len] = '\0';
->  	} else {
->  		memset(extra, 0, 32);
-> -		extra[priv->curbssparams.ssid_len] = '\0';
->  	}
->  	/*
->  	 * If none, we may want to get the one that was set
-> -- 
-> 1.6.3.3
+>  #
+> @@ -1955,7 +1965,7 @@
+>  CONFIG_DEBUG_FS=y
+>  # CONFIG_HEADERS_CHECK is not set
+>  # CONFIG_DEBUG_KERNEL is not set
+> -CONFIG_DEBUG_BUGVERBOSE=y
+> +# CONFIG_DEBUG_BUGVERBOSE is not set
+>  CONFIG_DEBUG_MEMORY_INIT=y
+>  # CONFIG_LATENCYTOP is not set
+>  CONFIG_SYSCTL_SYSCALL_CHECK=y
 > 
+> 
+> as you can see, a bunch of things are getting "turned on" that we explicitly turned off.
+
+Your custom config seems to enable B44, which selects SSB.
+Can you disable B44?
+
+---
+~Randy
