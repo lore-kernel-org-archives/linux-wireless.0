@@ -1,46 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:60600 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757976AbZLKNmH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:42:07 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH v2 31/31] wl1271: Prevent performing "join" before association
-Date: Fri, 11 Dec 2009 15:41:10 +0200
-Message-Id: <1260538870-32297-32-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+Received: from bu3sch.de ([62.75.166.246]:51982 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757061AbZLUTJn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2009 14:09:43 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+Subject: Re: Can't turn off SSB (CONFIG_SSB)?
+Date: Mon, 21 Dec 2009 20:09:39 +0100
+Cc: Randy Dunlap <rdunlap@xenotime.net>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <4B2ECC72.40703@redfish-solutions.com> <200912211945.25602.mb@bu3sch.de> <4B2FC725.400@redfish-solutions.com>
+In-Reply-To: <4B2FC725.400@redfish-solutions.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200912212009.41152.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Monday 21 December 2009 20:06:13 Philip A. Prindeville wrote:
+> On 12/21/2009 10:45 AM, Michael Buesch wrote:
+> > On Monday 21 December 2009 19:31:06 Philip A. Prindeville wrote:
+> >> Here's what we have.
+> > 
+> > # CONFIG_SSB is not set
+> > 
+> 
+> Ok, here's what's happening.
+> 
+> We have a "canned" config that we copy over, per platform.
+> 
+> I'm showing diffs of that config with what results (i.e. what's left in the linux-2.6.27.38 directory after running "make silentoldconfig" and "make prepare1"):
+> 
+> --- target/device/via-c7/linux.config   2009-12-21 10:55:55.000000000 -0800
+> +++ build_i586/linux-2.6.27.38-astlinux/.config 2009-12-21 11:02:34.000000000 -0800
+> @@ -1,7 +1,7 @@
+>  #
+>  # Automatically generated make config: don't edit
+>  # Linux kernel version: 2.6.27.38
+> -# Tue Nov 10 16:50:01 2009
+> +# Mon Dec 21 11:02:34 2009
+>  #
+>  # CONFIG_64BIT is not set
+>  CONFIG_X86_32=y
+> @@ -1446,8 +1446,16 @@
+>  #
+>  # Sonics Silicon Backplane
+>  #
+> -CONFIG_SSB_POSSIBLE=n
+> -CONFIG_SSB=n
+> +CONFIG_SSB_POSSIBLE=y
+> +CONFIG_SSB=m
+> +CONFIG_SSB_SPROM=y
+> +CONFIG_SSB_PCIHOST_POSSIBLE=y
+> +CONFIG_SSB_PCIHOST=y
+> +# CONFIG_SSB_B43_PCI_BRIDGE is not set
+> +# CONFIG_SSB_SILENT is not set
+> +# CONFIG_SSB_DEBUG is not set
+> +CONFIG_SSB_DRIVER_PCICORE_POSSIBLE=y
+> +CONFIG_SSB_DRIVER_PCICORE=y
+> 
+>  #
+>  # Multifunction device drivers
+> @@ -1621,6 +1629,8 @@
+>  # CONFIG_USB_DYNAMIC_MINORS is not set
+>  # CONFIG_USB_SUSPEND is not set
+>  # CONFIG_USB_OTG is not set
+> +# CONFIG_USB_OTG_WHITELIST is not set
+> +# CONFIG_USB_OTG_BLACKLIST_HUB is not set
+>  # CONFIG_USB_MON is not set
+> 
+>  #
+> @@ -1955,7 +1965,7 @@
+>  CONFIG_DEBUG_FS=y
+>  # CONFIG_HEADERS_CHECK is not set
+>  # CONFIG_DEBUG_KERNEL is not set
+> -CONFIG_DEBUG_BUGVERBOSE=y
+> +# CONFIG_DEBUG_BUGVERBOSE is not set
+>  CONFIG_DEBUG_MEMORY_INIT=y
+>  # CONFIG_LATENCYTOP is not set
+>  CONFIG_SYSCTL_SYSCALL_CHECK=y
+> 
+> 
+> as you can see, a bunch of things are getting "turned on" that we explicitly turned off.
+> 
+> -Philip
+> 
+> 
+> 
 
-There is a minor bug in the code causing a "join" to be performed before
-there is an intention to associate. Fix this.
+That is expected, because you have
+CONFIG_B44=m
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 7e6b500..4a99738 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1223,7 +1223,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 		if (conf->flags & IEEE80211_CONF_IDLE &&
- 		    test_bit(WL1271_FLAG_JOINED, &wl->flags))
- 			wl1271_unjoin_channel(wl);
--		else
-+		else if (!(conf->flags & IEEE80211_CONF_IDLE))
- 			wl1271_join_channel(wl, channel);
- 
- 		if (conf->flags & IEEE80211_CONF_IDLE) {
 -- 
-1.6.3.3
-
+Greetings, Michael.
