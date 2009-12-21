@@ -1,98 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58273 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751302AbZL1ISq (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:55845 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756995AbZLUTGS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Dec 2009 03:18:46 -0500
-Subject: Re: [PATCH] mac80211: delete addba_resp_timer when stop Tx BA
- session
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1261970308-22926-1-git-send-email-yi.zhu@intel.com>
-References: <1261970308-22926-1-git-send-email-yi.zhu@intel.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-NZC4z03glyI969nKtO6Y"
-Date: Mon, 28 Dec 2009 09:18:32 +0100
-Message-ID: <1261988312.22470.5.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 21 Dec 2009 14:06:18 -0500
+Message-ID: <4B2FC725.400@redfish-solutions.com>
+Date: Mon, 21 Dec 2009 11:06:13 -0800
+From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: Randy Dunlap <rdunlap@xenotime.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Can't turn off SSB (CONFIG_SSB)?
+References: <4B2ECC72.40703@redfish-solutions.com> <20091221080928.cc7c19ee.rdunlap@xenotime.net> <4B2FBEEA.5010002@redfish-solutions.com> <200912211945.25602.mb@bu3sch.de>
+In-Reply-To: <200912211945.25602.mb@bu3sch.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 12/21/2009 10:45 AM, Michael Buesch wrote:
+> On Monday 21 December 2009 19:31:06 Philip A. Prindeville wrote:
+>> Here's what we have.
+> 
+> # CONFIG_SSB is not set
+> 
 
---=-NZC4z03glyI969nKtO6Y
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Ok, here's what's happening.
 
-On Mon, 2009-12-28 at 11:18 +0800, Zhu Yi wrote:
-> We start an one shot addba_resp_timer in ieee80211_start_tx_ba_session
-> but don't delete it in __ieee80211_stop_tx_ba_session. This will cause
-> problem in suspend and resume. When suspend happens without the timer
-> deleted, the timer handler will be called immediately after resume and
-> messes up driver status.
->=20
-> See http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=3D2134
-> comment #22 for more details.
+We have a "canned" config that we copy over, per platform.
 
-Hmm. The timer checks
+I'm showing diffs of that config with what results (i.e. what's left in the linux-2.6.27.38 directory after running "make silentoldconfig" and "make prepare1"):
 
-        if ((*state & (HT_ADDBA_REQUESTED_MSK | HT_ADDBA_RECEIVED_MSK)) !=
-=3D
-                                                HT_ADDBA_REQUESTED_MSK) {
+--- target/device/via-c7/linux.config   2009-12-21 10:55:55.000000000 -0800
++++ build_i586/linux-2.6.27.38-astlinux/.config 2009-12-21 11:02:34.000000000 -0800
+@@ -1,7 +1,7 @@
+ #
+ # Automatically generated make config: don't edit
+ # Linux kernel version: 2.6.27.38
+-# Tue Nov 10 16:50:01 2009
++# Mon Dec 21 11:02:34 2009
+ #
+ # CONFIG_64BIT is not set
+ CONFIG_X86_32=y
+@@ -1446,8 +1446,16 @@
+ #
+ # Sonics Silicon Backplane
+ #
+-CONFIG_SSB_POSSIBLE=n
+-CONFIG_SSB=n
++CONFIG_SSB_POSSIBLE=y
++CONFIG_SSB=m
++CONFIG_SSB_SPROM=y
++CONFIG_SSB_PCIHOST_POSSIBLE=y
++CONFIG_SSB_PCIHOST=y
++# CONFIG_SSB_B43_PCI_BRIDGE is not set
++# CONFIG_SSB_SILENT is not set
++# CONFIG_SSB_DEBUG is not set
++CONFIG_SSB_DRIVER_PCICORE_POSSIBLE=y
++CONFIG_SSB_DRIVER_PCICORE=y
 
-which /should/ make it a no-op in the case you mention because we tear
-down sessions, or does that not reset their state properly?
+ #
+ # Multifunction device drivers
+@@ -1621,6 +1629,8 @@
+ # CONFIG_USB_DYNAMIC_MINORS is not set
+ # CONFIG_USB_SUSPEND is not set
+ # CONFIG_USB_OTG is not set
++# CONFIG_USB_OTG_WHITELIST is not set
++# CONFIG_USB_OTG_BLACKLIST_HUB is not set
+ # CONFIG_USB_MON is not set
 
-Ok, so ___ieee80211_stop_tx_ba_session() doesn't, in fact, clear the
-mask right away, so I think we should add HT_AGG_STATE_REQ_STOP_BA_MSK
-to the code I quoted above?
-
-In any case the del_timer_sync isn't right there and we also shouldn't
-really use it (per Linus)
-
-johannes
-
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-> ---
->  net/mac80211/agg-tx.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
->=20
-> diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-> index ceda366..d122082 100644
-> --- a/net/mac80211/agg-tx.c
-> +++ b/net/mac80211/agg-tx.c
-> @@ -509,6 +509,8 @@ int __ieee80211_stop_tx_ba_session(struct sta_info
-> *sta, u16 tid,
->  	u8 *state;
->  	int ret;
-> =20
-> +	del_timer_sync(&sta->ampdu_mlme.tid_tx[tid]->addba_resp_timer);
-> +
->  	/* check if the TID is in aggregation */
->  	state =3D &sta->ampdu_mlme.tid_state_tx[tid];
->  	spin_lock_bh(&sta->lock);
+ #
+@@ -1955,7 +1965,7 @@
+ CONFIG_DEBUG_FS=y
+ # CONFIG_HEADERS_CHECK is not set
+ # CONFIG_DEBUG_KERNEL is not set
+-CONFIG_DEBUG_BUGVERBOSE=y
++# CONFIG_DEBUG_BUGVERBOSE is not set
+ CONFIG_DEBUG_MEMORY_INIT=y
+ # CONFIG_LATENCYTOP is not set
+ CONFIG_SYSCTL_SYSCALL_CHECK=y
 
 
---=-NZC4z03glyI969nKtO6Y
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+as you can see, a bunch of things are getting "turned on" that we explicitly turned off.
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLOGnUAAoJEODzc/N7+Qma+tgP/iAybfnUvhQdNRCCm5/eoCqJ
-4XboFHCN/Ac2MrSNJ7jsKA1NumbniPa4gVizjqLvKNpZSdEsl6dhFPtOoTloipiX
-13Aabtrf3//5PcjmAiLmsVsD/vFze/bBAXNqT38H6ST2ByHtLgIDjJ0NMntZJWk3
-/TqIKYtgBBkYJ7A4v7eZpTi+79llXAFmlhlhhB3yEkeI3Oyy2oSAFjlxNyG4fzDW
-t+tgVE3sfqpkcHILZDO85hjJ7q1UcXFf+HDnrXHlgH7gIQr480ZTJnatf36M3RSV
-cGCO1UE/UGegHa5ajDzM1yThqaheB4ojBkNlE5ssFShr5e9/LxXgvAyTX55kX1/C
-5ZjBwkMjvZ/+l7MZfFZvYALiGhR9uuJvaGXudHe8iE3VlP6135nFonvKwswdY0lq
-Em/wAjfcmQA8bGJ3VmJ+1T7/Jqe0wLDKh78d93fbRljW/5k54irhol89XiPmpObD
-6xWnAtMx0Xwrfyb8XsFU9peybMM3TzMHI7C6Q3c/TIQmwrTVbF1pyYy7V6kTdCEk
-xbOgmEnz4wux9fxiR7YBZYmj+NkWqy2+bRrDur08MOI0uJs80xkZ1fFrSEwxJs+e
-y+rwFCKhKWt3C65MSMwPlMHulabGFhgDUSJ9wAvZbmtwlFKb32B6PVetpoj9z0QS
-Po2SzJC8naovFm6LVyZQ
-=1Kcg
------END PGP SIGNATURE-----
-
---=-NZC4z03glyI969nKtO6Y--
+-Philip
 
