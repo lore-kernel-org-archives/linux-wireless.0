@@ -1,114 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:23183 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751501AbZLNJ3r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 04:29:47 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 01:29:47 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-fx0-f215.google.com ([209.85.220.215]:56678 "EHLO
+	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751063AbZLUOOq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2009 09:14:46 -0500
+Received: by fxm7 with SMTP id 7so4897554fxm.29
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2009 06:14:45 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19238.1592.398805.805381@gargle.gargle.HOWL>
-Date: Mon, 14 Dec 2009 15:02:40 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/6] ath9k: Remove ANI lock
+In-Reply-To: <BLU113-W7635FBD7855C5257B07E4BE820@phx.gbl>
+References: <BLU113-W7635FBD7855C5257B07E4BE820@phx.gbl>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 21 Dec 2009 15:14:25 +0100
+Message-ID: <69e28c910912210614v31edf6cej9abeddb17ab130d@mail.gmail.com>
+Subject: Re: I need a card that works reasonably easily with Debain- reccs?
+To: Mike Marchywka <marchywka@hotmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cancel/restart the ANI timer directly.
-With this patch, the ANI lock can be removed.
+Ndiswrapper is not supported in any way, and is probably not the best
+way to get your card to work.
+What card do you have currently?
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
- drivers/net/wireless/ath/ath9k/main.c  |   19 ++++---------------
- 2 files changed, 4 insertions(+), 16 deletions(-)
+Peace,
+Gábor
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index e2cef2f..9f1f523 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -453,7 +453,6 @@ struct ath_softc {
- 	int irq;
- 	spinlock_t sc_resetlock;
- 	spinlock_t sc_serial_rw;
--	spinlock_t ani_lock;
- 	spinlock_t sc_pm_lock;
- 	struct mutex mutex;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 9e68c1a..310ad5a 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -363,14 +363,6 @@ static void ath_ani_calibrate(unsigned long data)
- 	short_cal_interval = (ah->opmode == NL80211_IFTYPE_AP) ?
- 		ATH_AP_SHORT_CALINTERVAL : ATH_STA_SHORT_CALINTERVAL;
- 
--	/*
--	* don't calibrate when we're scanning.
--	* we are most likely not on our home channel.
--	*/
--	spin_lock(&sc->ani_lock);
--	if (sc->sc_flags & SC_OP_SCANNING)
--		goto set_timer;
--
- 	/* Only calibrate if awake */
- 	if (sc->sc_ah->power_mode != ATH9K_PM_AWAKE)
- 		goto set_timer;
-@@ -437,7 +429,6 @@ static void ath_ani_calibrate(unsigned long data)
- 	ath9k_ps_restore(sc);
- 
- set_timer:
--	spin_unlock(&sc->ani_lock);
- 	/*
- 	* Set timer interval based on previous results.
- 	* The interval must be the shortest necessary to satisfy ANI,
-@@ -1610,7 +1601,6 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	spin_lock_init(&sc->wiphy_lock);
- 	spin_lock_init(&sc->sc_resetlock);
- 	spin_lock_init(&sc->sc_serial_rw);
--	spin_lock_init(&sc->ani_lock);
- 	spin_lock_init(&sc->sc_pm_lock);
- 	mutex_init(&sc->mutex);
- 	tasklet_init(&sc->intr_tq, ath9k_tasklet, (unsigned long)sc);
-@@ -3119,6 +3109,7 @@ static void ath9k_sw_scan_start(struct ieee80211_hw *hw)
- {
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 
- 	mutex_lock(&sc->mutex);
- 	if (ath9k_wiphy_scanning(sc)) {
-@@ -3134,10 +3125,8 @@ static void ath9k_sw_scan_start(struct ieee80211_hw *hw)
- 
- 	aphy->state = ATH_WIPHY_SCAN;
- 	ath9k_wiphy_pause_all_forced(sc, aphy);
--
--	spin_lock_bh(&sc->ani_lock);
- 	sc->sc_flags |= SC_OP_SCANNING;
--	spin_unlock_bh(&sc->ani_lock);
-+	del_timer_sync(&common->ani.timer);
- 	mutex_unlock(&sc->mutex);
- }
- 
-@@ -3145,13 +3134,13 @@ static void ath9k_sw_scan_complete(struct ieee80211_hw *hw)
- {
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 
- 	mutex_lock(&sc->mutex);
--	spin_lock_bh(&sc->ani_lock);
- 	aphy->state = ATH_WIPHY_ACTIVE;
- 	sc->sc_flags &= ~SC_OP_SCANNING;
- 	sc->sc_flags |= SC_OP_FULL_RESET;
--	spin_unlock_bh(&sc->ani_lock);
-+	ath_start_ani(common);
- 	ath_beacon_config(sc, NULL);
- 	mutex_unlock(&sc->mutex);
- }
+On Mon, Dec 21, 2009 at 1:49 PM, Mike Marchywka <marchywka@hotmail.com> wrote:
+>
+> Hi,
+> I gave up on windoze after all the apps became too bloated to tolerate
+> and it didn't seem I should need 1Gbyte to post on a forum without
+> the browser tying up my disk on VM for minutes on each character I
+> typed. Debian has worked much better but I can't get my current
+> wireless card to work well through ndiswrapper. I'm getting inconsistent
+> results but can download via windozeon another machine and get fast
+> xfer over eth0. I'm going out to buy a new card, what should I get?
+>
+>
+> Thanks.
+>
+>
+>
+>
+> note new address
+> Mike Marchywka
+> 1975 Village Round
+> Marietta GA 30064
+> 415-264-8477 (w)<- use this
+> 404-788-1216 (C)<- leave message
+> 989-348-4796 (P)<- emergency only
+> marchywka@hotmail.com
+> Note: If I am asking for free stuff, I normally use for hobby/non-profit
+> information but may use in investment forums, public and private.
+> Please indicate any concerns if applicable.
+>
+>
+>
+>
+> _________________________________________________________________
+> Hotmail: Free, trusted and rich email service.
+> http://clk.atdmt.com/GBL/go/171222984/direct/01/--
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
 -- 
-1.6.5.6
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
