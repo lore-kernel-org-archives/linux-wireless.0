@@ -1,62 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:51816 "EHLO
-	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754568AbZLAVaC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 16:30:02 -0500
-Message-ID: <4B158ADF.7060700@gmail.com>
-Date: Tue, 01 Dec 2009 22:30:07 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-CC: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [rt2x00-users] [PATCH v3 0/4] Further L2 padding fixes.
-References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com> <4B14594E.2090307@free.fr>
-In-Reply-To: <4B14594E.2090307@free.fr>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from parez.praha12.net ([78.108.102.1]:44847 "EHLO parez.praha12.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757344AbZLUVu5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2009 16:50:57 -0500
+From: =?UTF-8?q?Luk=C3=A1=C5=A1=20Turek?= <8an@praha12.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	lrodriguez@atheros.com, ath5k-devel@lists.ath5k.org
+Subject: [PATCH v3 3/5] ath5k: Fix functions for getting/setting slot time
+Date: Mon, 21 Dec 2009 22:50:49 +0100
+Message-Id: <1261432252-1855-4-git-send-email-8an@praha12.net>
+In-Reply-To: <1261432252-1855-1-git-send-email-8an@praha12.net>
+References: <1261432252-1855-1-git-send-email-8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/01/09 00:46, Benoit PAPILLAULT wrote:
-> Gertjan van Wingerde a écrit :
->> The L2 padding fixes patch has grown a bit and now consists of 4 separate
->> patches to clean the L2 padding code up and to fix a number of bugs at the
->> same time.
->>
->> 	1. rt2x00: Further L2 padding fixes.
->> 	2. rt2x00: Remove SKBDESC_L2_PADDED flag.
->> 	3. rt2x00: Reorganize L2 padding inserting function.
->> 	4. rt2x00: Only remove L2 padding in received frames if there is payload.
->>
->> ---
->> Gertjan.
-> 
-> Thanks Gertjan for the patches, I know that padding is a bit of
-> nightware. I've testing your tree and here are the results:
-> 
-> 1. On TX : It fails for control frames with hdrlen=10 since it will
-> produce l2pad = 2 in your case, where it should be 0. In all other
-> cases, it works!
-> 
+Functions ath5k_hw_get_slot_time and ath5k_hw_set_slot_time were
+converting microseconds to clocks only for AR5210, although it's needed
+for all supported devices. The conversion was moved outside the
+hardware-specific branches.
 
-Hmm. That's strange, as patch 3 of the series should have handled this. Basically this patch
-checks if a frame actually has payload, and refrains from inserting l2pad and payload alignment
-in that case.
+The original code also limited minimum slot time to 9, while turbo modes
+use 6, this was fixed too.
 
-How did you detect this failure?
-What did you observe on the "wire", i.e. how was the frame malformed because of this?
-
-Also, would it be possible to get some of the skb details of a frame that fails?
-
-
-> Solution : padding is only needed for data frames for rt28x devices, so
-> I think it's better to something like rt2xqueue_padpos
-> [http://git.popipo.fr/?p=rt2x00.git;a=commitdiff;h=95ddf076c13062d1026025d97ba511f880a1792d]
-> 
-
-I'm still not fond of using detailed ieee 802.11 frame format knowledge to do this. I prefer
-to use standard mac80211 functions with a bit of detection on the actual skb.
-
+Signed-off-by: Lukas Turek <8an@praha12.net>
 ---
-Gertjan.
+ drivers/net/wireless/ath/ath5k/qcu.c |   20 +++++++++++++-------
+ 1 files changed, 13 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
+index eeebb9a..e322a10 100644
+--- a/drivers/net/wireless/ath/ath5k/qcu.c
++++ b/drivers/net/wireless/ath/ath5k/qcu.c
+@@ -520,12 +520,16 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
+  */
+ unsigned int ath5k_hw_get_slot_time(struct ath5k_hw *ah)
+ {
++	unsigned int slot_time_clock;
++
+ 	ATH5K_TRACE(ah->ah_sc);
++
+ 	if (ah->ah_version == AR5K_AR5210)
+-		return ath5k_hw_clocktoh(ath5k_hw_reg_read(ah,
+-				AR5K_SLOT_TIME) & 0xffff, ah->ah_turbo);
++		slot_time_clock = ath5k_hw_reg_read(ah, AR5K_SLOT_TIME);
+ 	else
+-		return ath5k_hw_reg_read(ah, AR5K_DCU_GBL_IFS_SLOT) & 0xffff;
++		slot_time_clock = ath5k_hw_reg_read(ah, AR5K_DCU_GBL_IFS_SLOT);
++
++	return ath5k_hw_clocktoh(slot_time_clock & 0xffff, ah->ah_turbo);
+ }
+ 
+ /*
+@@ -533,15 +537,17 @@ unsigned int ath5k_hw_get_slot_time(struct ath5k_hw *ah)
+  */
+ int ath5k_hw_set_slot_time(struct ath5k_hw *ah, unsigned int slot_time)
+ {
++	u32 slot_time_clock = ath5k_hw_htoclock(slot_time, ah->ah_turbo);
++
+ 	ATH5K_TRACE(ah->ah_sc);
+-	if (slot_time < AR5K_SLOT_TIME_9 || slot_time > AR5K_SLOT_TIME_MAX)
++
++	if (slot_time < 6 || slot_time_clock > AR5K_SLOT_TIME_MAX)
+ 		return -EINVAL;
+ 
+ 	if (ah->ah_version == AR5K_AR5210)
+-		ath5k_hw_reg_write(ah, ath5k_hw_htoclock(slot_time,
+-				ah->ah_turbo), AR5K_SLOT_TIME);
++		ath5k_hw_reg_write(ah, slot_time_clock, AR5K_SLOT_TIME);
+ 	else
+-		ath5k_hw_reg_write(ah, slot_time, AR5K_DCU_GBL_IFS_SLOT);
++		ath5k_hw_reg_write(ah, slot_time_clock, AR5K_DCU_GBL_IFS_SLOT);
+ 
+ 	return 0;
+ }
+-- 
+1.6.4.4
+
