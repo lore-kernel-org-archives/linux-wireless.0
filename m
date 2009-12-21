@@ -1,56 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:58091 "EHLO
-	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752048AbZL2Prh (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45370
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751895AbZLUUOc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Dec 2009 10:47:37 -0500
-Message-ID: <4B3A2497.1030506@gmail.com>
-Date: Tue, 29 Dec 2009 16:47:35 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: 2.6.33-rc2: Reported regressions 2.6.31 -> 2.6.32
-References: <oBElxfTZdhL.A.bx.-vhOLB@chimera>
-In-Reply-To: <oBElxfTZdhL.A.bx.-vhOLB@chimera>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 21 Dec 2009 15:14:32 -0500
+Date: Mon, 21 Dec 2009 12:14:34 -0800 (PST)
+Message-Id: <20091221.121434.226793640.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-12-21
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20091221191626.GE4979@tuxdriver.com>
+References: <20091218211945.GC2828@tuxdriver.com>
+	<20091221191626.GE4979@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rafael,
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 21 Dec 2009 14:16:27 -0500
 
-On 12/29/09 16:26, Rafael J. Wysocki wrote:
+> Here is another big batch of fixes intended for 2.6.33.  They are mostly
+> driver fixes, along with a couple of small ones for mac80211.  I don't
+> think there is anything controverisal here.
 > 
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14896
-> Subject		: REGRESSION for RT2561/RT61 in 2.6.32, related to power saving
-> Submitter	: Alan Stern <stern@rowland.harvard.edu>
-> Date		: 2009-12-06 22:12 (24 days old)
-> References	: http://marc.info/?l=linux-kernel&m=126013756829691&w=4
-> Handled-By	: Gertjan van Wingerde <gwingerde@gmail.com>
+> Please let me know if there are problems!
 > 
 
-This one is fixed via a patch that is queued to be merged into 2.6.33. Is submitted
-for stable as well.
-See http://marc.info/?l=linux-wireless&m=126090994909576&w=2
-
-> 
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14731
-> Subject		: rt61pci regression
-> Submitter	: tim blechmann <tim@klingt.org>
-> Date		: 2009-12-04 09:33 (26 days old)
-> 
-
-I believe this problem to be the same as the previous one, and the fix indicated above
-should fix this as well.
-Note however that the submitter had presumably unrelated issues that caused him not to 
-be able to validate the workaround of disabling powersaving.
-
----
-Gertjan.
-
+Pulled, thanks John.  I'll push it back out after my build
+checks complete.
