@@ -1,53 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:49572 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932125AbZLKMt5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 07:49:57 -0500
-Received: from list by lo.gmane.org with local (Exim 4.50)
-	id 1NJ4wd-000203-48
-	for linux-wireless@vger.kernel.org; Fri, 11 Dec 2009 13:50:03 +0100
-Received: from p4FF0D4EA.dip.t-dialin.net ([79.240.212.234])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Dec 2009 13:50:03 +0100
-Received: from Markus_Baier by p4FF0D4EA.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Dec 2009 13:50:03 +0100
-To: linux-wireless@vger.kernel.org
-From: Markus Baier <Markus_Baier@web.de>
-Subject: Re: [RFC] mac80211: disallow bridging managed/adhoc interfaces
-Date: Fri, 11 Dec 2009 12:39:47 +0000 (UTC)
-Message-ID: <loom.20091211T133913-639@post.gmane.org>
-References: <1258465585.3682.7.camel@johannes.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-fx0-f215.google.com ([209.85.220.215]:36578 "EHLO
+	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750948AbZLUPFA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2009 10:05:00 -0500
+Received: by fxm7 with SMTP id 7so4958882fxm.29
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2009 07:04:58 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <BLU113-W10113EE534A08128E43979BE820@phx.gbl>
+References: <BLU113-W7635FBD7855C5257B07E4BE820@phx.gbl> <69e28c910912210614v31edf6cej9abeddb17ab130d@mail.gmail.com>
+	<BLU113-W10113EE534A08128E43979BE820@phx.gbl>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 21 Dec 2009 16:04:38 +0100
+Message-ID: <69e28c910912210704m316c285et6e03baaafa85567c@mail.gmail.com>
+Subject: Re: I need a card that works reasonably easily with Debain- reccs?
+To: Mike Marchywka <marchywka@hotmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@...> writes:
+On Mon, Dec 21, 2009 at 3:51 PM, Mike Marchywka <marchywka@hotmail.com> wrote:
+>
+>
+>
+> Thanks.
+> As near as I can tell from the driver files it should be a netgear WG311v3
+> 802.11g. May be a card mismatch but I'd have to pull machine apart to check.
 
-> To avoid such mistakes in the future, disallow adding a
-> wireless interface to a bridge.
+The WG311v3 is a Marvell chipset, with no native driver.
 
-Hello,
-after the latest git pull my Linux AP stopt working
-because the system is not allowed to add the wlan0
-interface to a bridge.
-I bisected the problem and ended up here.
+>
+> Are there known issues with ndiswrapper or I shouldn't even ask here? LOL.
 
-So my question is, what is the right way to go after
-this patch, to bridge the wireless with the wired
-network interface on the AP, if bridging of the wlan
-interface isn't allowed anymore?
+Apart from the fact that you are introducing an undebuggable binary
+blob into the kernel, there are no problems... :-)
 
-Routing isn't an option here, because the two interfaces
-should form one common boadcast domain.
+>
+> If there are known easy/difficult cards on a faq/list somewhere I thought that
+> would help as driver support seems to be a big issue.
+>
+>
+>
+>
+>
+>
+>
+> ----------------------------------------
+>> From: netrolller.3d@gmail.com
+>> Date: Mon, 21 Dec 2009 15:14:25 +0100
+>> Subject: Re: I need a card that works reasonably easily with Debain- reccs?
+>> To: marchywka@hotmail.com
+>> CC: linux-wireless@vger.kernel.org
+>>
+>> Ndiswrapper is not supported in any way, and is probably not the best
+>> way to get your card to work.
+>> What card do you have currently?
+>>
+>> Peace,
+>> Gábor
+>>
+>> On Mon, Dec 21, 2009 at 1:49 PM, Mike Marchywka  wrote:
+>>>
+>>> Hi,
+>>> I gave up on windoze after all the apps became too bloated to tolerate
+>>> and it didn't seem I should need 1Gbyte to post on a forum without
+>>> the browser tying up my disk on VM for minutes on each character I
+>>> typed. Debian has worked much better but I can't get my current
+>>> wireless card to work well through ndiswrapper. I'm getting inconsistent
+>>> results but can download via windozeon another machine and get fast
+>>> xfer over eth0. I'm going out to buy a new card, what should I get?
+>>>
+>>>
+>>> Thanks.
+>>>
+>>>
+>>>
+>>>
+>>> note new address
+>>> Mike Marchywka
+>>> 1975 Village Round
+>>> Marietta GA 30064
+>>> 415-264-8477 (w)<- use this
+>>> 404-788-1216 (C)<- leave message
+>>> 989-348-4796 (P)<- emergency only
+>>> marchywka@hotmail.com
+>>> Note: If I am asking for free stuff, I normally use for hobby/non-profit
+>>> information but may use in investment forums, public and private.
+>>> Please indicate any concerns if applicable.
+>>>
+>>>
+>>>
+>>>
+>>> _________________________________________________________________
+>>> Hotmail: Free, trusted and rich email service.
+>>> http://clk.atdmt.com/GBL/go/171222984/direct/01/--
+>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+>>
+>>
+>> --
+>> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>
+> _________________________________________________________________
+> Your E-mail and More On-the-Go. Get Windows Live Hotmail Free.
+> http://clk.atdmt.com/GBL/go/171222985/direct/01/
 
-It have worked fine all the time and the hostapd
-documantaion at the linuxwireless.org 
-(http://linuxwireless.org/en/users/Documentation/hostapd#Configuring_hostapd)
-describes how to bridge both interfaces on the AP, too.
 
-And from now on all that should be wrong?
-Sorry, I am confused.
 
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
