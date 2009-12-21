@@ -1,211 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:43614 "EHLO lo.gmane.org"
+Received: from parez.praha12.net ([78.108.102.1]:41767 "EHLO parez.praha12.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757944AbZLET3B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Dec 2009 14:29:01 -0500
-Received: from list by lo.gmane.org with local (Exim 4.50)
-	id 1NH0JX-0007xp-Ji
-	for linux-wireless@vger.kernel.org; Sat, 05 Dec 2009 20:29:07 +0100
-Received: from 85-127-90-163.dynamic.xdsl-line.inode.at ([85.127.90.163])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Dec 2009 20:29:07 +0100
-Received: from tim by 85-127-90-163.dynamic.xdsl-line.inode.at with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Dec 2009 20:29:07 +0100
-To: linux-wireless@vger.kernel.org
-From: Tim Blechmann <tim@klingt.org>
-Subject: Re: rt61pci bug
-Date: Sat, 05 Dec 2009 20:28:38 +0100
-Message-ID: <hfec9b$kdo$1@ger.gmane.org>
-References: <4AE43028.30703@klingt.org> <hcsfgm$bft$1@ger.gmane.org> 	<4B127E9E.1090008@klingt.org> <69e28c910911290859mc1da58ree7b2d3fa8dc371d@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig0459A5309527B20E31275642"
-In-Reply-To: <69e28c910911290859mc1da58ree7b2d3fa8dc371d@mail.gmail.com>
+	id S1753271AbZLUMil (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2009 07:38:41 -0500
+From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
+Reply-To: 8an@praha12.net
+To: =?utf-8?q?=E6=B5=B7=E8=97=BB=E6=95=AC=E4=B9=8B?=
+	<tkaiso@thinktube.com>
+Subject: Re: [ath5k-devel] [PATCH 4/5] ath5k: Reimplement clock rate to usec conversion
+Date: Mon, 21 Dec 2009 13:38:32 +0100
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+References: <1260899813-17585-1-git-send-email-8an@praha12.net> <1260899813-17585-5-git-send-email-8an@praha12.net> <4B2F4D3A.4050009@thinktube.com>
+In-Reply-To: <4B2F4D3A.4050009@thinktube.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1470530.u1CzKc1sMH";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200912211338.36289.8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig0459A5309527B20E31275642
-Content-Type: text/plain; charset=UTF-8
+--nextPart1470530.u1CzKc1sMH
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On 11/29/2009 05:59 PM, G=C3=A1bor Stefanik wrote:
-> On Sun, Nov 29, 2009 at 3:01 PM, Tim Blechmann <tim-xpEK/MU0Hawdnm+yROf=
-E0A@public.gmane.org> wrote:
->> On 11/04/2009 07:00 PM, Tim Blechmann wrote:
->>>> running the rt61pci module on 2.6.31.5 works fine, but using the rec=
-ent
->>>> linus/master (2.6.32-rc5) results in this:
->>>
->>> same issue with 2.6.32-rc5 ... new bootlog with more debugging info
->>> attached ...
->>
->> i was still able to reproduce this issue with 2.6.32-rc8 ... it would
->> be nice, if someone could have a look into this issue before 2.6.32 is=
+On 21.12.2009 11:26 =E6=B5=B7=E8=97=BB=E6=95=AC=E4=B9=8B wrote:
+> =C2=A0Didn't we have to handle CHANNEL_2GHZ case in
+> ath5k_hw_write_ofdm_timings() shown below ?
+The ath5k gives exactly the same results as original Atheros HAL:
 
->> released ...
->>
->> dmesg from 2.6.32-rc8:
->> [   10.249098] rt61pci 0000:06:00.0: PCI INT A -> GSI 16 (level, low) =
--> IRQ 16
->> [   10.257182] phy0 -> rt61pci_validate_eeprom: EEPROM recovery - NIC:=
- 0xff80
->> [   10.257184] phy0 -> rt61pci_validate_eeprom: EEPROM recovery - Led:=
- 0xe0ff
->> [   10.257187] phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: =
-0302, rf: 0003, rev: 0002561c.
->> [   10.351794] Registered led device: rt61pci-phy0::radio
->> [   10.351839] Registered led device: rt61pci-phy0::assoc
->> [   14.342046] rt61pci 0000:06:00.0: firmware: requesting rt2561.bin
->> [   14.395533] phy0 -> rt2x00lib_request_firmware: Info - Firmware det=
-ected - version: 0.8.
->> [   14.421238] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 0=
- - CWmin: 3, CWmax: 4, Aifs: 2, TXop: 102.
->> [   14.421245] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 1=
- - CWmin: 4, CWmax: 5, Aifs: 2, TXop: 188.
->> [   14.421252] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 2=
- - CWmin: 5, CWmax: 10, Aifs: 3, TXop: 0.
->> [   14.421258] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 3=
- - CWmin: 5, CWmax: 10, Aifs: 7, TXop: 0.
->> [  273.404685] phy0 -> rt2x00queue_write_tx_frame: Error - Arrived at =
-non-free entry in the non-full queue 2.
->> [  273.404687] Please file bug report to http://rt2x00.serialmonkey.co=
-m.
->> [  282.143549] wlan0: no IPv6 routers present
->> [  357.304908] phy0 -> rt61pci_txdone: Warning - TX status report miss=
-ed for entry 2
->> [  357.333806] phy0 -> rt61pci_txdone: Warning - TX status report miss=
-ed for entry 9
->> [  360.172776] phy0 -> rt2x00queue_write_tx_frame: Error - Arrived at =
-non-free entry in the non-full queue 2.
->> [  360.172778] Please file bug report to http://rt2x00.serialmonkey.co=
-m.
->> [  360.172782] phy0 -> rt2x00mac_tx_rts_cts: Warning - Failed to send =
-RTS/CTS frame.
->> [  383.880010] No probe response from AP 00:24:fe:09:94:18 after 500ms=
-, disconnecting.
->> [  383.880026] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 0=
- - CWmin: 2, CWmax: 3, Aifs: 2, TXop: 47.
->> [  383.880034] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 1=
- - CWmin: 3, CWmax: 4, Aifs: 2, TXop: 94.
->> [  383.880042] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 2=
- - CWmin: 4, CWmax: 10, Aifs: 3, TXop: 0.
->> [  383.880050] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 3=
- - CWmin: 4, CWmax: 10, Aifs: 7, TXop: 0.
->> [  385.220460] wlan0: direct probe to AP 00:24:fe:09:94:18 (try 1)
->> [  385.421337] wlan0: direct probe to AP 00:24:fe:09:94:18 (try 2)
->> [  385.621304] wlan0: direct probe to AP 00:24:fe:09:94:18 (try 3)
->> [  385.821264] wlan0: direct probe to AP 00:24:fe:09:94:18 timed out
->>
->>
->> lspci -vvv:
->>
->> 06:00.0 Network controller: RaLink RT2561/RT61 rev B 802.11g
->>        Subsystem: D-Link System Inc Device 3c09
->>        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- Par=
-Err- Stepping- SERR+ FastB2B- DisINTx-
->>        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dslow >TAbort=
-- <TAbort- <MAbort- >SERR- <PERR- INTx-
->>        Latency: 64, Cache Line Size: 64 bytes
->>        Interrupt: pin A routed to IRQ 16
->>        Region 0: Memory at fb6f8000 (32-bit, non-prefetchable) [size=3D=
-32K]
->>        Capabilities: [40] Power Management version 2
->>                Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA PME(D0-,D1=
--,D2-,D3hot-,D3cold-)
->>                Status: D0 PME-Enable- DSel=3D0 DScale=3D0 PME-
->>        Kernel driver in use: rt61pci
->>        Kernel modules: rt61pci
->>
->> thanks, tim
->=20
-> Could you please try a bisect between 2.6.31 and 2.6.32-rc5? That
-> should reveal the faulty commit.
->=20
->>
->> --
->> tim@klingt.org
->> http://tim.klingt.org
->>
->> Happiness is a byproduct of function, purpose, and conflict; those who=
+  #define INIT_CLOCKMHZSCALED     0x64000000
+  unsigned long clockMhzScaled =3D INIT_CLOCKMHZSCALED;
+  if (IS_CHAN_TURBO(chan)) clockMhzScaled *=3D 2;
+  coef_scaled =3D clockMhzScaled / chan->channel;
 
->> seek happiness for itself seek victory without war.
->>  William S. Burroughs
+I don't know how the calculations work, they might be explained in the=20
+referenced patent, but I didn't change their semantics at all.
 
-btw, on v2.6.31.6-rt19, i get the following messages continuously:
+> =C2=A0I think we should do. then I made my own patch to hadle it and it
+> seemed =C2=A0to improve the throughput of 2.4GHz. (even still not as good=
+ as
+> 5Ghz case )
+Where's the patch?
 
-[35097.254691] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 15
-[35097.352620] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 21
-[35097.400820] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 11
-[35097.682924] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 17
-[35098.050321] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 5
-[35098.203187] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 23
-[35098.390729] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 15
-[35098.572894] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 15
-[35098.735895] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 19
-[35099.069564] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 7
-[35099.407685] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 9
-[35099.408726] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 13
-[35099.417144] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 17
-[35099.420996] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 21
-[35099.518701] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 23
-[35100.012178] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 11
-[35101.354838] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 15
-[35101.448263] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 7
-[35101.498144] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 13
-[35102.168253] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 9
-[35102.548745] phy0 -> rt61pci_txdone: Warning - TX status report missed =
-for entry 9
+Lukas Turek
 
-what does this tell me? i am not able to get any network connection
-with any 2.6.32-rc build, with (and without) the previously posted
-error messages
-
-tim
-
---=20
-tim@klingt.org
-http://tim.klingt.org
-
-Who need fossil fuel when the sun ain't goin' nowhere
-  Amiri Baraka
-
-
---------------enig0459A5309527B20E31275642
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+--nextPart1470530.u1CzKc1sMH
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+Version: GnuPG v2.0.11 (GNU/Linux)
 
-iEYEARECAAYFAksatGYACgkQdL+4qsZfVssLVwCfbdoH4iVJLzhVTcaOa4pPGdE7
-pDQAnjssmYPRpY1GMPr6nsxTptmrtYWl
-=Z4Y3
+iQIcBAABAgAGBQJLL2xMAAoJEEBjvk/UOfYwuzEQALt23tm5vZ1MzOx1Zgoi+/8E
+jKzet8+eChlPljnEvFuEml+b2rH+lpBJV7exTNjLt8Tdmch+x7Wpok0oR6CKOAx/
+FtPvIL6rhIojo1SSbX81mrBFyvYydIRYvAe+S7tQrfwVigMRMTeUb824RCNCJIDn
+PU3wM9OtyGmMUDjs1meOFesfvSqOToP7eGg2Q9v9miPNkkDEqihgUg7vDYAIt5WR
+zGDClp4IccBKlMISV3rjXQEeXbWXnTbuzE0SjWb5irKIafKFw3YcrjtidSC44a+b
+XrVOHK7sC8ScXIPOGKgH+FVurVVMMjbrEjFEYkXlg9M3vao6CUJkgWIYXu7jmuJB
+N0SGkAAry/STr9OTH3+k/0a0qWtqPCHz2gRDJ4yvoFJNylrCe53ib1R2CWhXMhPl
+6D5AjsDJ7RXFq/0skwZ1Qx3MP9SP+nxXg8rS7clg/JolsrzkX4o/hfN+zfgaAHdY
+Kya6y9rZetwYFQqr5pjgBmQa3eosHsrZ2S+rezHCyIkmkI4tASY7t4p6SvcbHMSL
+bKuICtKrAwGNYi9tLORNEEDN29YYS0CBZHv87IwCFDwwWjd41hH5w6Bn0tzio8d5
++Zotbh5Qfr6drQItOZrz9jtcqZBcJanelccvB1r3gFvLQFoGPPnNEh8qsngTz6AD
+ZWwSx0kwEgwzRj7z38Qn
+=IGQ9
 -----END PGP SIGNATURE-----
 
---------------enig0459A5309527B20E31275642--
-
+--nextPart1470530.u1CzKc1sMH--
