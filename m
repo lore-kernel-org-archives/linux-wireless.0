@@ -1,40 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:49907 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751184AbZLKQmC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 11:42:02 -0500
-Received: by iwn1 with SMTP id 1so554807iwn.33
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Dec 2009 08:42:08 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <200912111739.55225.holgerschurig@gmail.com>
-References: <500577.32161.qm@web51405.mail.re2.yahoo.com> <200912101846.40572.holgerschurig@gmail.com>
-	<43e72e890912100914m1766db5fife6563fec3807b8d@mail.gmail.com>
-	<200912111739.55225.holgerschurig@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 11 Dec 2009 08:41:48 -0800
-Message-ID: <43e72e890912110841k2a49ec19w9e29ad66a9165030@mail.gmail.com>
-Subject: Re: Switching channel in IBSS network doesn't work in ath9k
-To: Holger Schurig <holgerschurig@googlemail.com>
-Cc: Joerg Pommnitz <pommnitz@yahoo.com>, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from parez.praha12.net ([78.108.102.1]:44846 "EHLO parez.praha12.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757326AbZLUVu4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2009 16:50:56 -0500
+From: =?UTF-8?q?Luk=C3=A1=C5=A1=20Turek?= <8an@praha12.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	lrodriguez@atheros.com, ath5k-devel@lists.ath5k.org
+Subject: [PATCH v3 0/5] Setting coverage class (and ACK timeout and slot time), take two
+Date: Mon, 21 Dec 2009 22:50:46 +0100
+Message-Id: <1261432252-1855-1-git-send-email-8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 11, 2009 at 8:39 AM, Holger Schurig
-<holgerschurig@googlemail.com> wrote:
->> Actually I think a simple 'iw link' to do this for all interfaces
->> would be good. I just haven't gotten around to it. I should be
->> possible without upstream changes I believe.
->
-> Do you think that "iw link" should also show then info when the device is in
-> monitor mode (e.g. return the flags) or in IBSS mode?  And probably also
-> reporting parts of the survey data, e.g. noise floor?
->
-> That would be the equivalent of a "give me the greatest amount of info
-> quickly" :-)
+These patches implement a feature essential for long distance wireless links:
+setting ACK timeout and slot time. The API is based on a parameter called
+Coverage Class specified by the 802.11 standard.
 
-I do but johill is the maintainer, see what he thinks :)
+The first two patches add support to the kernel 802.11 stack via a new nl80211
+attribute and a mac80211 callback.
 
-  Luis
+Following three patches implement the callback in ath5k driver, after some
+requisite fixes. Implementation in ath9k driver is planned.
+
+Please note the last patch outside the series is not a kernel patch, it adds
+the necessary support to userspace program iw.
+
+This is a third version of these patches, with following minor changes:
+* mac80211: add drv_ wrapper for mac80211 callback including tracer
+* ath5k: move setting ah_coverage_class to ath5k_hw_set_coverage_class()
+
+Lukas Turek
