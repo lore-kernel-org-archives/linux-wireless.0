@@ -1,52 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:56638 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755229AbZLNVeg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 16:34:36 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so973149eyd.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 13:34:34 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH v2 2.6.33] rt2x00: Disable powersaving for rt61pci and rt2800pci.
-Date: Mon, 14 Dec 2009 22:34:31 +0100
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com, stable@kernel.org
-References: <1260819235-8017-1-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1260819235-8017-1-git-send-email-gwingerde@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200912142234.32204.IvDoorn@gmail.com>
+Received: from parez.praha12.net ([78.108.102.1]:44855 "EHLO parez.praha12.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757326AbZLUVu6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2009 16:50:58 -0500
+From: =?UTF-8?q?Luk=C3=A1=C5=A1=20Turek?= <8an@praha12.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	lrodriguez@atheros.com, ath5k-devel@lists.ath5k.org
+Subject: [PATCH v3 5/5] ath5k: Implement mac80211 callback set_coverage_class
+Date: Mon, 21 Dec 2009 22:50:51 +0100
+Message-Id: <1261432252-1855-6-git-send-email-8an@praha12.net>
+In-Reply-To: <1261432252-1855-1-git-send-email-8an@praha12.net>
+References: <1261432252-1855-1-git-send-email-8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 14 December 2009, Gertjan van Wingerde wrote:
-> We've had many reports of rt61pci failures with powersaving enabled.
-> Therefore, as a stop-gap measure, disable powersaving of the rt61pci
-> until we have found a proper solution.
-> Also disable powersaving on rt2800pci as it most probably will show
-> the same problem.
-> 
-> Cc: stable@kernel.org
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+The callback sets slot time as specified in IEEE 802.11-2007 section
+17.3.8.6 (for 20MHz channels only for now) and raises ACK and CTS
+timeouts accordingly. The values are persistent, they are restored after
+device reset.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Lukas Turek <8an@praha12.net>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h |    2 +
+ drivers/net/wireless/ath/ath5k/base.c  |   22 ++++++++++++
+ drivers/net/wireless/ath/ath5k/pcu.c   |   57 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath5k/reset.c |    4 ++
+ 4 files changed, 85 insertions(+), 0 deletions(-)
 
-> ---
-> 
-> John, this is an urgent fix for 2.6.33.
-> 
-> v2:
-> - Handled feedback from Ivo:
-> 	- Only disable powersaving by default, not permanent.
-> 	- Also apply to rt2800pci.
-> 
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |    6 ++++++
->  drivers/net/wireless/rt2x00/rt61pci.c   |    5 +++++
->  2 files changed, 11 insertions(+), 0 deletions(-)
-> 
-
-
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index ae311d2..66bcb50 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1063,6 +1063,7 @@ struct ath5k_hw {
+ 	u32			ah_cw_min;
+ 	u32			ah_cw_max;
+ 	u32			ah_limit_tx_retries;
++	u8			ah_coverage_class;
+ 
+ 	/* Antenna Control */
+ 	u32			ah_ant_ctl[AR5K_EEPROM_N_MODES][AR5K_ANT_MAX];
+@@ -1200,6 +1201,7 @@ extern bool ath5k_eeprom_is_hb63(struct ath5k_hw *ah);
+ 
+ /* Protocol Control Unit Functions */
+ extern int ath5k_hw_set_opmode(struct ath5k_hw *ah);
++extern void ath5k_hw_set_coverage_class(struct ath5k_hw *ah, u8 coverage_class);
+ /* BSSID Functions */
+ extern int ath5k_hw_set_lladdr(struct ath5k_hw *ah, const u8 *mac);
+ extern void ath5k_hw_set_associd(struct ath5k_hw *ah);
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index a4c086f..2826cbc 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -254,6 +254,8 @@ static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
+ 		u32 changes);
+ static void ath5k_sw_scan_start(struct ieee80211_hw *hw);
+ static void ath5k_sw_scan_complete(struct ieee80211_hw *hw);
++static void ath5k_set_coverage_class(struct ieee80211_hw *hw,
++		u8 coverage_class);
+ 
+ static const struct ieee80211_ops ath5k_hw_ops = {
+ 	.tx 		= ath5k_tx,
+@@ -274,6 +276,7 @@ static const struct ieee80211_ops ath5k_hw_ops = {
+ 	.bss_info_changed = ath5k_bss_info_changed,
+ 	.sw_scan_start	= ath5k_sw_scan_start,
+ 	.sw_scan_complete = ath5k_sw_scan_complete,
++	.set_coverage_class = ath5k_set_coverage_class,
+ };
+ 
+ /*
+@@ -3274,3 +3277,22 @@ static void ath5k_sw_scan_complete(struct ieee80211_hw *hw)
+ 	ath5k_hw_set_ledstate(sc->ah, sc->assoc ?
+ 		AR5K_LED_ASSOC : AR5K_LED_INIT);
+ }
++
++/**
++ * ath5k_set_coverage_class - Set IEEE 802.11 coverage class
++ *
++ * @hw: struct ieee80211_hw pointer
++ * @coverage_class: IEEE 802.11 coverage class number
++ *
++ * Mac80211 callback. Sets slot time, ACK timeout and CTS timeout for given
++ * coverage class. The values are persistent, they are restored after device
++ * reset.
++ */
++static void ath5k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
++{
++	struct ath5k_softc *sc = hw->priv;
++
++	mutex_lock(&sc->lock);
++	ath5k_hw_set_coverage_class(sc->ah, coverage_class);
++	mutex_unlock(&sc->lock);
++}
+diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
+index b601ff9..aefe84f 100644
+--- a/drivers/net/wireless/ath/ath5k/pcu.c
++++ b/drivers/net/wireless/ath/ath5k/pcu.c
+@@ -286,6 +286,42 @@ unsigned int ath5k_hw_get_clockrate(struct ath5k_hw *ah)
+ }
+ 
+ /**
++ * ath5k_hw_get_default_slottime - Get the default slot time for current mode
++ *
++ * @ah: The &struct ath5k_hw
++ */
++unsigned int ath5k_hw_get_default_slottime(struct ath5k_hw *ah)
++{
++	struct ieee80211_channel *channel = ah->ah_current_channel;
++
++	if (channel->hw_value & CHANNEL_TURBO)
++		return 6; /* both turbo modes */
++
++	if (channel->hw_value & CHANNEL_CCK)
++		return 20; /* 802.11b */
++
++	return 9; /* 802.11 a/g */
++}
++
++/**
++ * ath5k_hw_get_default_sifs - Get the default SIFS for current mode
++ *
++ * @ah: The &struct ath5k_hw
++ */
++unsigned int ath5k_hw_get_default_sifs(struct ath5k_hw *ah)
++{
++	struct ieee80211_channel *channel = ah->ah_current_channel;
++
++	if (channel->hw_value & CHANNEL_TURBO)
++		return 8; /* both turbo modes */
++
++	if (channel->hw_value & CHANNEL_5GHZ)
++		return 16; /* 802.11a */
++
++	return 10; /* 802.11 b/g */
++}
++
++/**
+  * ath5k_hw_set_lladdr - Set station id
+  *
+  * @ah: The &struct ath5k_hw
+@@ -1094,3 +1130,24 @@ int ath5k_hw_set_key_lladdr(struct ath5k_hw *ah, u16 entry, const u8 *mac)
+ 	return 0;
+ }
+ 
++/**
++ * ath5k_hw_set_coverage_class - Set IEEE 802.11 coverage class
++ *
++ * @ah: The &struct ath5k_hw
++ * @coverage_class: IEEE 802.11 coverage class number
++ *
++ * Sets slot time, ACK timeout and CTS timeout for given coverage class.
++ */
++void ath5k_hw_set_coverage_class(struct ath5k_hw *ah, u8 coverage_class)
++{
++	/* As defined by IEEE 802.11-2007 17.3.8.6 */
++	int slot_time = ath5k_hw_get_default_slottime(ah) + 3 * coverage_class;
++	int ack_timeout = ath5k_hw_get_default_sifs(ah) + slot_time;
++	int cts_timeout = ack_timeout;
++
++	ath5k_hw_set_slot_time(ah, slot_time);
++	ath5k_hw_set_ack_timeout(ah, ack_timeout);
++	ath5k_hw_set_cts_timeout(ah, cts_timeout);
++
++	ah->ah_coverage_class = coverage_class;
++}
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index 299b33a..6690923 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -1316,6 +1316,10 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 	/* Restore antenna mode */
+ 	ath5k_hw_set_antenna_mode(ah, ah->ah_ant_mode);
+ 
++	/* Restore slot time and ACK timeouts */
++	if (ah->ah_coverage_class > 0)
++		ath5k_hw_set_coverage_class(ah, ah->ah_coverage_class);
++
+ 	/*
+ 	 * Configure QCUs/DCUs
+ 	 */
+-- 
+1.6.4.4
 
