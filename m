@@ -1,124 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:53672 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934047AbZLFSQa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2009 13:16:30 -0500
-Message-ID: <4B1BF4FF.2040707@web.de>
-Date: Sun, 06 Dec 2009 19:16:31 +0100
-From: Jan Kiszka <jan.kiszka@web.de>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 2/5] ar9170: improve network latency
-References: <200911290052.51819.chunkeey@googlemail.com>
-In-Reply-To: <200911290052.51819.chunkeey@googlemail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigE34110A77B4E95B1E2C8C9C5"
+Received: from lo.gmane.org ([80.91.229.12]:43946 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750937AbZLVK4R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Dec 2009 05:56:17 -0500
+Received: from list by lo.gmane.org with local (Exim 4.50)
+	id 1NN2PP-0006fX-A2
+	for linux-wireless@vger.kernel.org; Tue, 22 Dec 2009 11:56:07 +0100
+Received: from p4FF0CDDD.dip.t-dialin.net ([79.240.205.221])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Dec 2009 11:56:07 +0100
+Received: from Markus_Baier by p4FF0CDDD.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Dec 2009 11:56:07 +0100
+To: linux-wireless@vger.kernel.org
+From: Markus Baier <Markus_Baier@web.de>
+Subject: Re: [BISECTED] [PATCH v2 8/8] rt2x00: Properly request tx headroom for alignment operations.
+Date: Tue, 22 Dec 2009 10:55:27 +0000 (UTC)
+Message-ID: <loom.20091222T114501-773@post.gmane.org>
+References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-2-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-3-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-4-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-5-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-6-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-7-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-8-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-9-git-send-email-gwingerde@gmail.com>	 <loom.20091220T163829-137@post.gmane.org> <4B2E8729.7050501@gmail.com>	 <20091221013316.nm9belnhywwwsc0w-cebfxv@webmail.spamcop.net>	 <4B2FA1CF.1010903@gmail.com> <1261459549.31982.2.camel@ct> <4B307FB1.5040806@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigE34110A77B4E95B1E2C8C9C5
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Gertjan van Wingerde <gwingerde@...> writes:
 
-Christian Lamparter wrote:
-> AR9170 has the bad habit of choking when traffic builds up.
-> Tests have shown that this can partially be attributed to
-> a huge buildup of backlogged frames.
->=20
-> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
-> ---
-> low priority.
+> Can you confirm that everything works okay with the original code
+> and this patch applied?
 
-I disagree about this classification. :)
+I restored the original patch from 2.6.33-rc1-wl
+and applied the patch from Pavel Roskin.
+Now it works. Thanks!
 
-I'm running your series for two days now on my ar9170-based AP, and
-obviously this patch improved the "chokiness" under suboptimal reception
-conditions greatly. No regressions noticed so far. Please merge.
-
-Thanks a lot,
-Jan
-
-> ---
-> diff --git a/drivers/net/wireless/ath/ar9170/ar9170.h b/drivers/net/wir=
-eless/ath/ar9170/ar9170.h
-> index d95a7d4..44c54b8 100644
-> --- a/drivers/net/wireless/ath/ar9170/ar9170.h
-> +++ b/drivers/net/wireless/ath/ar9170/ar9170.h
-> @@ -152,6 +152,8 @@ struct ar9170_sta_tid {
-> =20
->  #define AR9170_NUM_TX_STATUS		128
->  #define AR9170_NUM_TX_AGG_MAX		30
-> +#define AR9170_NUM_TX_LIMIT_HARD       AR9170_TXQ_DEPTH
-> +#define AR9170_NUM_TX_LIMIT_SOFT       (AR9170_TXQ_DEPTH - 10)
-> =20
->  struct ar9170 {
->  	struct ieee80211_hw *hw;
-> diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wirel=
-ess/ath/ar9170/main.c
-> index cbf59b1..3cec2f1 100644
-> --- a/drivers/net/wireless/ath/ar9170/main.c
-> +++ b/drivers/net/wireless/ath/ar9170/main.c
-> @@ -430,7 +430,7 @@ void ar9170_tx_callback(struct ar9170 *ar, struct s=
-k_buff *skb)
->  	spin_lock_irqsave(&ar->tx_stats_lock, flags);
->  	ar->tx_stats[queue].len--;
-> =20
-> -	if (skb_queue_empty(&ar->tx_pending[queue])) {
-> +	if (ar->tx_stats[queue].len < AR9170_NUM_TX_LIMIT_SOFT) {
->  #ifdef AR9170_QUEUE_STOP_DEBUG
->  		printk(KERN_DEBUG "%s: wake queue %d\n",
->  		       wiphy_name(ar->hw->wiphy), queue);
-> @@ -1716,6 +1716,21 @@ static void ar9170_tx(struct ar9170 *ar)
-> =20
->  	for (i =3D 0; i < __AR9170_NUM_TXQ; i++) {
->  		spin_lock_irqsave(&ar->tx_stats_lock, flags);
-> +		frames =3D min(ar->tx_stats[i].limit - ar->tx_stats[i].len,
-> +			     skb_queue_len(&ar->tx_pending[i]));
-> +
-> +		if (remaining_space < frames) {
-> +#ifdef AR9170_QUEUE_DEBUG
-> +			printk(KERN_DEBUG "%s: tx quota reached queue:%d, "
-> +			       "remaining slots:%d, needed:%d\n",
-> +			       wiphy_name(ar->hw->wiphy), i, remaining_space,
-> +			       frames);
-> +#endif /* AR9170_QUEUE_DEBUG */
-> +			frames =3D remaining_space;
-> +		}
-> +
-> +		ar->tx_stats[i].len +=3D frames;
-> +		ar->tx_stats[i].count +=3D frames;
->  		if (ar->tx_stats[i].len >=3D ar->tx_stats[i].limit) {
->  #ifdef AR9170_QUEUE_DEBUG
->  			printk(KERN_DEBUG "%s: queue %d full\n",
-> @@ -1733,25 +1748,8 @@ static void ar9170_tx(struct ar9170 *ar)
->  			__ar9170_dump_txstats(ar);
->  #endif /* AR9170_QUEUE_STOP_DEBUG */
->  			ieee80211_stop_queue(ar->hw, i);
-> -			spin_unlock_irqrestore(&ar->tx_stats_lock, flags);
-> -			continue;
-> -		}
-> -
-> -		frames =3D min(ar->tx_stats[i].limit - ar->tx_stats[i].len,
-> -			     skb_queue_len(&ar->tx_pending[i]));
+Regards
+Markus
 
 
---------------enigE34110A77B4E95B1E2C8C9C5
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
-
-iEYEARECAAYFAksb9QIACgkQitSsb3rl5xR8dACguDMfImyUNfaxAS4KfQ2+3EmO
-kbsAoNRuas7KgMPP7Ct6sR4+79FwMWxB
-=cbVZ
------END PGP SIGNATURE-----
-
---------------enigE34110A77B4E95B1E2C8C9C5--
