@@ -1,171 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foo.birdnet.se ([213.88.146.6]:43374 "HELO foo.birdnet.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751971AbZLRUH5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2009 15:07:57 -0500
-Message-ID: <20091218200753.30718.qmail@stuge.se>
-Date: Fri, 18 Dec 2009 21:07:53 +0100
-From: Peter Stuge <peter@stuge.se>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: Re: [ath9k-devel] No probe response from AP after 500ms,
-	disconnecting.
-References: <20091216172356.15849.qmail@stuge.se> <20091216174112.GD11461@tux> <20091216222157.28840.qmail@stuge.se> <20091216234308.GA425@tux> <20091218115708.14617.qmail@stuge.se> <20091218161854.GA6231@tux>
+Received: from bombadil.infradead.org ([18.85.46.34]:46009 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752333AbZLVTaN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Dec 2009 14:30:13 -0500
+Date: Tue, 22 Dec 2009 14:30:10 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Subject: Re: mac80211 suspend corner case (was: Asus eeepc 1008HA suspend
+	issue and mac80211 suspend corner) case
+Message-ID: <20091222193010.GB30201@bombadil.infradead.org>
+References: <20091222022355.GA32508@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091218161854.GA6231@tux>
+In-Reply-To: <20091222022355.GA32508@bombadil.infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+Starting a 3rd thread based on my original post to focus on the
+corner case of the driver start() op failing.
 
-Thanks for the reply!
+Johannes, any preferences how to handle this? The patch below avoids
+the Interrupt being turned off but its not enough given that we still
+could be associated according to userspace. If the hardware is
+unresponsive maybe it is best to just let the IRQ go disabled, not
+sure, but its likely not what happens in all cases.
 
+Trimming out the irrelevant parts below.
 
-Luis R. Rodriguez wrote:
-> This seems like your old comments from an old e-mail, but I guess
-> you include them since you now include linux-wireless.
-
-Yeah, I tried to summarize previous and new findings for new readers.
-
-
-> > Manually disabling power management for the interface (iwconfig eth1
-> > power off) makes it much more stable but I've still seen the error
-> > twice. The first time after about a day and then again after a few
-> > hours. I've been running with power management off since then, a
-> > couple of days, so far without seeing the problem again.
+On Mon, Dec 21, 2009 at 09:23:55PM -0500, Luis R. Rodriguez wrote:
+> I'm testing ath9k on an Asus eeepc 1008HA on a 2.6.32.2 kernel
+> and ran into a suspend corner case issue which we do not handle
+> yet. From what I've debugged so far it appears to me ath9k is
+> doing everything it should to suspend. mac80211 drivers don't
+> really do much on suspend except listen to mac80211. In the
+> suspend case the mac80211 first stops TX, flushes out all packets,
+> tears down aggregation, removes peers (if STA this would be your
+> AP), removes all interfaces and finally call the mac80211 driver
+> stop() callback for the driver. The driver is expected to have
+> completed the stop() successfully, it shall not fail. It should
+> be noted we never disassociate from the AP, this is left to
+> userspace to figure out if it wants to do this prior to suspend.
+> Network manger does this, for example. If you run the supplicant
+> manually though and if your AP does not kick you off you could
+> end up suspending and resumeing and still have a valid auth/assoc
+> to the AP.
 > 
-> Neat.
-
-Well, I am in no way convinced that the problem is gone just because
-I haven't seen it for a few days. I haven't rebooted this machine
-since the last issues, only unloaded/reloaded the ath modules after
-each patch/compile cycle, that might matter too..
-
-
-> > I have applied these 6 patches posted by Sujith this week:
-> > 
-> > ath9k: Fix bug in assigning sequence number
-> > ath9k: Clarify Interrupt mitigation
-> > ath9k: Stop ANI when doing a reset
-> > ath9k: Remove ANI lock
-> > ath9k: Fix TX poll routine
-> > ath9k: Fix TX queue draining
-
-..
-> > I applied the above 6 patches from Sujith. It's difficult to know if
-> > I got the ones you mean without a more specific description. :)
-> > 
-> > The patches posted by you to linux-wireless@ on 2009-12-16 are
-> > included in my wireless-testing/master kernel already:
-> > 
-> > ath9k: Fix TX hang poll routine
-..
-> > ath9k: fix processing of TX PS null data frames
-..
-> > ath9k: Fix maximum tx fifo settings for single stream devices
-..
-> > ath9k: fix tx status reporting
-..
-> > mac80211: Fix dynamic power save for scanning.
+> Upon resume mac80211 first calls the mac80211 start() driver callback,
+> then re-add the interfaces, then the peers (your AP), etc. The corner
+> case I just ran into was that the mac80211 driver start() callback
+> *can* fail if your bus is screwy. You would likely see other sorts
+> of errors when this sort of thing happens but I'm not and when we
+> try to start() on ath9k we fail as the harware is completely
+> unresponsive. What ends up happening then currently is the driver
+> will enable interrupts and obviously though since we cannot even
+> reset the hardware these interrupts will have gone unhandled and
+> the interrupt gets disabled by the kernel. I reproduced this on
+> vanilla 2.6.32.2 but I only did get full ath9k debug logs when
+> testing against 2.6.31 with 2.6.32.2 wireless bits. That log can
+> be found here:
 > 
-> So these would apply to stable, but wireless-testing should have had
-> these already.
-
-Right; "are included in my wireless-testing/master kernel already"..
-
-
-> > So far I have not seen the issue with PM off and 6 above patches
-> > applied, that is what I am running with right now and I'll let you
-> > know what happens. (With PM on the issue is still frequent.)
+> http://bombadil.infradead.org/~mcgrof/logs/2.6.31-with-2.6.32-wireless/irq-disabled.txt
 > 
-> OK so far this narrows down to a specific AR5416 issue with PM on
-> by default only.
-
-I'm not sure about "by default". The kernel I am running has the
-workaround committed which disables PM by default. If I manually
-enable PM I will quickly see the issue.
-
-
-> They are different hardware, newer hardware families (>= AR9280)
-> are single chip and quite a few changes went into them, so thinking
-> of them as equal would be wrong.
-
-Right, no, they are certainly not equal. But parts of them are - or
-maybe more importantly, parts of the driver are.
-
-
-> They certain share a lot but for example the radios are completely
-> different.
-
-Yeah - I imagine there were some changes when the radios went onto
-the same chip.
-
-I don't know if this problem lies closer to RF or Linux. Can we
-narrow it down somehow?
-
-
-> Now sure, the issue can be the similar but it doesn't mean that it
-> is not fixed for some chipsets, ignoring that would be unfair for
-> those users of the newer harware families.
-
-Oh yes - I didn't mean that progressive patches should be blocked in
-any way, but just to keep an open mind until the issue is completely
-solved. :)
-
-
-> > > Try sucking in Sujith's recent posted patches, although none of
-> > > those are PS fixes,
-> > 
-> > Did I get the right ones?
+> This can be fixed by something like the following:
 > 
-> Those are indeed needed but Sujith posted some new patch fixes but
-> not related to PS. Some of these fixes are to be merged in the next
-> next 2.6.32.y so might as well go ahead and apply then if using stable
-> or even wireless-testing. So no, you mised them. Here they are:
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> index e6c08da..63d42fa 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -1031,7 +1031,14 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+>  
+>  	/* restart hardware */
+>  	if (local->open_count) {
+> +		/*
+> +		 * Upon resume hardware can sometimes be goofy due to
+> +		 * various platform issues, so restarting the device may
+> +		 * at times not work immediately. Propagate the error.
+> +		 */
+>  		res = drv_start(local);
+> +		if (res)
+> +			return res;
+>  
+>  		ieee80211_led_radio(local, true);
+>  	}
 > 
-> http://marc.info/?l=linux-wireless&r=3&b=200912&w=2
-> 
-> Patchwork has them in git am'able form:
-> 
-> http://patchwork.kernel.org/project/linux-wireless/list/
-
-The latest patches from Sujith are dated 2009-12-14 and are the ANI,
-TX queue, TX hang, etc patches that I listed above saying that I had
-applied them. They are in my running driver.
-
-
-> > > and you can also follow the instructions I gave Justin to help
-> > > debug things.
-> > 
-> > I tried to do that already. The debug log I attached didn't have too
-> > much info leading up to the disconnect though. Feel free to get the
-> > longer one.
-> > 
-> > Is there anything else can I do?
-> 
-> Try with the above, although I doubt they will help AR5416.
-
-So what could give us more information? If the debug output is not
-enough I'm happy to sprinkle printks over the driver in strategic
-places, but I need some hints on where to do it.
-
-What is the general operation of the driver? (I have some experience
-with writing Linux drivers so feel free to get technical.) RX
-descriptors and DMA? Is beacon reception special in any way from
-reception of other packets? Would it be useful to try monitor mode
-with PM enabled?
-
-I am continuously using low TX and moderate RX bandwidth (internet
-radio over a TCP VPN) - would it be helpful to load the card with
-exclusively unidirectional transfers such as UDP, to see if the
-problem becomes more or less frequent?
-
-Although the issue can be seen as missing beacons maybe it is a
-general problem with RX that is only visible in the log when the time
-comes to expect a beacon?
-
-
-Where to look further?
-
-
-//Peter
+> But this isn't enough. And since we cannot exactly talk to hardware
+> we can't try to send a deassoc as harware would be unresponsive. I
+> also don't see us handling such cases before either on cfg80211 or
+> mac80211, so curious what we should do. Doing the above is not enough
+> since userspace will still believe it will be associated if it left
+> the device in an associated state. If you end up killing userspace
+> and restarting you'll end up with crawling into cfg80211/mac80211
+> warnings due to the unexpected state we left things in. This is
+> currently busted on 2.6.32.2 and I don't see an obvious fix, hoping
+> others might.
