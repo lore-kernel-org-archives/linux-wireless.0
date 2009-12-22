@@ -1,67 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.102.11.253]:58407 "EHLO
-	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760707AbZLOVX3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 16:23:29 -0500
-From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
-Reply-To: 8an@praha12.net
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [ath5k-devel] [PATCH 2/5] mac80211: Add new callback set_coverage_class
-Date: Tue, 15 Dec 2009 22:23:27 +0100
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <1260899813-17585-1-git-send-email-8an@praha12.net> <1260899813-17585-3-git-send-email-8an@praha12.net> <20091215181149.GA2123@tux>
-In-Reply-To: <20091215181149.GA2123@tux>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart4064958.qUFVbbNJoy";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200912152223.27562.8an@praha12.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55730 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751283AbZLVPVX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Dec 2009 10:21:23 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/3] compat-wireless: Activate ssb and libertas
+Date: Tue, 22 Dec 2009 16:20:01 +0100
+Message-Id: <1261495204-28966-3-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1261495204-28966-1-git-send-email-hauke@hauke-m.de>
+References: <1261495204-28966-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart4064958.qUFVbbNJoy
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Pcmcia is backported now. So activate ssb and libertas again.
 
-On 15.12.2009 19:11 Luis R. Rodriguez wrote:
-> Hm, it seems best to just add the capability bit that way userspace
-> can stuff what it wishes and the kernel will only set what is supported.
-> As is now this would lead to -EOPNOTSUPP but we'd have no way of knowing
-> from userspace what failed.
-I could add the capability bit, but I don't understand you completely - do =
-you=20
-mean the kernel should just ignore unsupported attributes and leave the=20
-checks to userspace?
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ Makefile                          |    4 +---
+ config.mk                         |    2 +-
+ patches/99-change-makefiles.patch |   13 +++++--------
+ scripts/admin-update.sh           |    8 ++++----
+ 4 files changed, 11 insertions(+), 16 deletions(-)
 
-Lukas Turek
+diff --git a/Makefile b/Makefile
+index d197202..0e352d7 100644
+--- a/Makefile
++++ b/Makefile
+@@ -30,9 +30,7 @@ obj-$(CONFIG_COMPAT_BLUETOOTH) += net/bluetooth/
+ obj-$(CONFIG_COMPAT_BLUETOOTH_MODULES) += drivers/bluetooth/
+ 
+ obj-$(CONFIG_COMPAT_NETWORK_MODULES) += drivers/net/
+-obj-$(CONFIG_COMPAT_VAR_MODULES) +=  drivers/misc/eeprom/
+-# Sorry ssb requires pcmica backport for 2.6.33 which is not done yet
+-#					drivers/ssb/
++obj-$(CONFIG_COMPAT_VAR_MODULES) +=  drivers/ssb/ drivers/misc/eeprom/
+ 
+ else
+ 
+diff --git a/config.mk b/config.mk
+index 726130f..873660d 100644
+--- a/config.mk
++++ b/config.mk
+@@ -45,7 +45,7 @@ endif
+ # as I suspect all users of this package want 802.11e (WME) and
+ # 802.11n (HT) support.
+ ifneq ($(wildcard $(KLIB_BUILD)/Makefile),)
+-COMPAT_LATEST_VERSION = 32
++COMPAT_LATEST_VERSION = 33
+ KERNEL_SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
+ COMPAT_VERSIONS := $(shell I=$(COMPAT_LATEST_VERSION); while [ "$$I" -gt $(KERNEL_SUBLEVEL) ]; do echo $$I; I=$$(($$I - 1)); done)
+ $(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_$(ver)=y))
+diff --git a/patches/99-change-makefiles.patch b/patches/99-change-makefiles.patch
+index 35beaa8..3185040 100644
+--- a/patches/99-change-makefiles.patch
++++ b/patches/99-change-makefiles.patch
+@@ -40,7 +40,7 @@ only the wireless stuff.
+  
+ --- a/drivers/net/wireless/Makefile	2009-12-10 22:57:15.000000000 -0800
+ +++ b/drivers/net/wireless/Makefile	2009-12-10 22:57:16.000000000 -0800
+-@@ -5,36 +5,14 @@
++@@ -5,33 +5,16 @@
+  obj-$(CONFIG_IPW2100) += ipw2x00/
+  obj-$(CONFIG_IPW2200) += ipw2x00/
+  
+@@ -58,8 +58,8 @@ only the wireless stuff.
+ -obj-$(CONFIG_PRISM54)		+= prism54/
+ -
+ -obj-$(CONFIG_HOSTAP)		+= hostap/
+--obj-$(CONFIG_B43)		+= b43/
+--obj-$(CONFIG_B43LEGACY)		+= b43legacy/
++ obj-$(CONFIG_B43)		+= b43/
++ obj-$(CONFIG_B43LEGACY)		+= b43legacy/
+  obj-$(CONFIG_ZD1211RW)		+= zd1211rw/
+  obj-$(CONFIG_RTL8180)		+= rtl818x/
+  obj-$(CONFIG_RTL8187)		+= rtl818x/
+@@ -71,12 +71,9 @@ only the wireless stuff.
+  obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
+  
+ -obj-$(CONFIG_USB_ZD1201)	+= zd1201.o
+--obj-$(CONFIG_LIBERTAS)		+= libertas/
+--
+--obj-$(CONFIG_LIBERTAS_THINFIRM)	+= libertas_tf/
+- 
+- obj-$(CONFIG_ADM8211)	+= adm8211.o
++ obj-$(CONFIG_LIBERTAS)		+= libertas/
+  
++ obj-$(CONFIG_LIBERTAS_THINFIRM)	+= libertas_tf/
+ --- a/net/wireless/Makefile	2009-10-06 13:00:59.000000000 -0400
+ +++ b/net/wireless/Makefile	2009-10-06 13:00:59.000000000 -0400
+ @@ -4,11 +4,6 @@
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 500fe07..9f0278b 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -98,9 +98,9 @@ DRIVERS="$DRIVERS drivers/net/wireless/wl12xx"
+ DRIVERS="$DRIVERS drivers/net/wireless/iwmc3200wifi"
+ 
+ # Ethernet drivers
+-DRIVERS="$DRIVERS drivers/net/atl1c/"
+-DRIVERS="$DRIVERS drivers/net/atl1e/"
+-DRIVERS="$DRIVERS drivers/net/atlx/"
++DRIVERS="$DRIVERS drivers/net/atl1c"
++DRIVERS="$DRIVERS drivers/net/atl1e"
++DRIVERS="$DRIVERS drivers/net/atlx"
+ 
+ # Bluetooth drivers
+ DRIVERS_BT="drivers/bluetooth"
+@@ -203,7 +203,7 @@ DIR="drivers/net"
+ echo > $DIR/Makefile
+ cp $GIT_TREE/$DIR/b44.[ch] $DIR
+ # Not yet
+-#echo "obj-\$(CONFIG_B44) += b44.o" >> $DIR/Makefile
++echo "obj-\$(CONFIG_B44) += b44.o" >> $DIR/Makefile
+ echo "obj-\$(CONFIG_ATL1) += atlx/" >> $DIR/Makefile
+ echo "obj-\$(CONFIG_ATL2) += atlx/" >> $DIR/Makefile
+ echo "obj-\$(CONFIG_ATL1E) += atl1e/" >> $DIR/Makefile
+-- 
+1.6.3.3
 
---nextPart4064958.qUFVbbNJoy
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iQIcBAABAgAGBQJLJ/5PAAoJEEBjvk/UOfYwIG0P/Ao+XlveIfrmUP305VEqOtGz
-xW+Q256o6yHa4rXfXVrwlcSb14E8vlR2BeKQpxmS5IjiKbLoJ0TMhtJ2/4JrgkFz
-g+3ak+4KbHFPlABpkZiY0vs2SofkE5NLBILKr8TJu1sO+sKTWbq/BK+LP1PlSO3T
-mw6uUijdN/cTpCRtAwkrY26VcaWYmsZYOg/xHiWCgO/gfbDdFwKCy6EqMLXTLMqJ
-bYkpD8CFkqjVGVMJOnN2GVkOTkt2dHxDrxv69PfOmb9Rb7nbOYn/JVZePgmmAhZg
-qfKhRwjw5DbH95/ZBFAwI60tlE950vk85tMkQ8GCAJzzrQHIa7jW9jA12EyzbDM+
-PZd7zrM4yA+Tbb4AznhYvug9RR2Elg9sqYnBC1SGOzB5W23S+cJ4hXlMjYOqucbb
-LxNxUSQIW/7dhK1IviAnpsViPrNjAjEo4Yk4HITcH/Hp2fe8s/PP/lFpri7xJWVn
-ttCiE8nVpi0Jb4XGNGcQNiM4kq0nWhXKlBP4+BWV/drggDeiiEifSOGzxRBf/osK
-AEE8crBTxEPQiS+GsMWzLK4tlINfyrqgLQs85xlBcLsSBL6TspR7uyK6PvyDQcxt
-NPYiKlBBr+781VtL1urB6mg/0nW2e9oorFzSKKTBvOfFKwt7Jjnz9nSwQPtq25uI
-IRmE5V/GkM+cPy9L7aFn
-=gTnX
------END PGP SIGNATURE-----
-
---nextPart4064958.qUFVbbNJoy--
