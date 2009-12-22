@@ -1,41 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:56958 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751727AbZLBMmd convert rfc822-to-8bit (ORCPT
+Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:63071 "EHLO
+	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750753AbZLVINj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2009 07:42:33 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] b43: fix two warnings
-Date: Wed, 2 Dec 2009 13:42:30 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1259749236.32171.151.camel@johannes.local>
-In-Reply-To: <1259749236.32171.151.camel@johannes.local>
+	Tue, 22 Dec 2009 03:13:39 -0500
+Message-ID: <4B307FB1.5040806@gmail.com>
+Date: Tue, 22 Dec 2009 09:13:37 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200912021342.33239.mb@bu3sch.de>
+To: Pavel Roskin <proski@gnu.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: Markus Baier <Markus_Baier@web.de>, linux-wireless@vger.kernel.org
+Subject: Re: [BISECTED] [PATCH v2 8/8] rt2x00: Properly request tx headroom
+ for alignment operations.
+References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-2-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-3-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-4-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-5-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-6-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-7-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-8-git-send-email-gwingerde@gmail.com>	 <1259012694-14869-9-git-send-email-gwingerde@gmail.com>	 <loom.20091220T163829-137@post.gmane.org> <4B2E8729.7050501@gmail.com>	 <20091221013316.nm9belnhywwwsc0w-cebfxv@webmail.spamcop.net>	 <4B2FA1CF.1010903@gmail.com> <1261459549.31982.2.camel@ct>
+In-Reply-To: <1261459549.31982.2.camel@ct>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 02 December 2009 11:20:36 Johannes Berg wrote:
-> My gcc appears to be able to see past the function
-> boundary and notices that the variable 'behaviour'
-> could be used uninitialised:
+On 12/22/09 06:25, Pavel Roskin wrote:
+> Quoting Gertjan van Wingerde <gwingerde@gmail.com>:
 > 
-> drivers/net/wireless/b43/leds.c: In function ‘b43_leds_register’:
-> drivers/net/wireless/b43/leds.c:339: warning: ‘behaviour’ may be used uninitialized in this function
-> drivers/net/wireless/b43/leds.c: In function ‘b43_leds_init’:
-> drivers/net/wireless/b43/leds.c:262: warning: ‘behaviour’ may be used uninitialized in this function
+>>> Perhaps non-zero headroom is not handled correctly?
+>>>
+>>
+>> Hmmm, perhaps the problem is that the headroom is not a multiple of 4.
+>> Can you check what happens when you set the extra_tx_headroom fixed  
+>> to e.g. 20?
 > 
-> because b43_led_get_sprominfo() didn't initialise
-> it in all cases.
+> I tried 64 and 2, and neither worked.  rt2x00dev->ops->extra_tx_headroom
+> is 0 for me.  When the rt2x00dev->hw->extra_tx_headroom is 2, I observed
+> invalid packets being emitted (using another interface).  The packets
+> have two bytes inserted in the beginning of the frame:
 > 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> 0000  00 00 1c 00 6f 48 00 00  fc de ee 13 00 00 00 00   ....oH.. ........
+> 0010  10 02 85 09 a0 00 b1 b7  00 00 00 00 00 00 40 00   ........ ......@.
+> radiotap, 28 bytes ---------------------->
+> 2 extra bytes                              <--->
+> correct 802.11 header                            <----
+> 0020  00 00 ff ff ff ff ff ff  00 d0 41 af ad 2c ff ff   ........ ..A..,..
+> 0030  ff ff cf 02 c0 02 00 05  77 62 65 6e 64 01 08 02   ........ wbend...
+> 0040  04 0b 16 0c 12 18 24 32  04 30 48 e7 f8 07 9d      ......$2 .0H.... 
+> 
+> Here's a patch that is working for me, but I would not vouch for its
+> correctness.  Signing off just in case it happens to be correct ;-)
+> 
+> 
+> rt2x00: use correct headroom for transmission
+> 
+> Use rt2x00dev->ops->extra_tx_headroom, not
+> rt2x00dev->hw->extra_tx_headroom in the tx code, as the later includes
+> headroom only meant for the monitor mode.
+> 
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
 
-ack
+Doh, that's it. Here we should indeed only take the real extra TX headroom required by
+the driver into account. Seems like I goofed up in a preparatory patch that centralized
+setting of rt2x00dev->hw->extra_tx_headroom.
+
+Can you confirm that everything works okay with the original code and this patch applied?
+
+In any way:
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+
+John, with this you can reinstate the original patch as well. Let me know if you want
+me to resubmit that one with this one included in it.
 
 
--- 
-Greetings, Michael.
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00queue.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> index 3d8fb68..0b4801a 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> @@ -104,7 +104,7 @@ void rt2x00queue_map_txskb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb)
+>  	 * is also mapped to the DMA so it can be used for transfering
+>  	 * additional descriptor information to the hardware.
+>  	 */
+> -	skb_push(skb, rt2x00dev->hw->extra_tx_headroom);
+> +	skb_push(skb, rt2x00dev->ops->extra_tx_headroom);
+>  
+>  	skbdesc->skb_dma =
+>  	    dma_map_single(rt2x00dev->dev, skb->data, skb->len, DMA_TO_DEVICE);
+> @@ -112,7 +112,7 @@ void rt2x00queue_map_txskb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb)
+>  	/*
+>  	 * Restore data pointer to original location again.
+>  	 */
+> -	skb_pull(skb, rt2x00dev->hw->extra_tx_headroom);
+> +	skb_pull(skb, rt2x00dev->ops->extra_tx_headroom);
+>  
+>  	skbdesc->flags |= SKBDESC_DMA_MAPPED_TX;
+>  }
+> @@ -134,7 +134,7 @@ void rt2x00queue_unmap_skb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb)
+>  		 * by the driver, but it was actually mapped to DMA.
+>  		 */
+>  		dma_unmap_single(rt2x00dev->dev, skbdesc->skb_dma,
+> -				 skb->len + rt2x00dev->hw->extra_tx_headroom,
+> +				 skb->len + rt2x00dev->ops->extra_tx_headroom,
+>  				 DMA_TO_DEVICE);
+>  		skbdesc->flags &= ~SKBDESC_DMA_MAPPED_TX;
+>  	}
+> 
+
