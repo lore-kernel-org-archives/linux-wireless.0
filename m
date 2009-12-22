@@ -1,86 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.102.11.253]:59843 "EHLO
-	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761123AbZLOVfI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 16:35:08 -0500
-From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
-Reply-To: 8an@praha12.net
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [ath5k-devel] [PATCH 5/5] ath5k: Implement mac80211 callback set_coverage_class
-Date: Tue, 15 Dec 2009 22:35:01 +0100
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <1260899813-17585-1-git-send-email-8an@praha12.net> <1260899813-17585-6-git-send-email-8an@praha12.net> <20091215185016.GB2123@tux>
-In-Reply-To: <20091215185016.GB2123@tux>
+Received: from mx39.mail.ru ([94.100.176.53]:64692 "EHLO mx39.mail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750935AbZLVSi4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Dec 2009 13:38:56 -0500
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+To: Dave <kilroyd@googlemail.com>
+Subject: Re: [PATCH v2] 2.6.33: orinoco: fix GFP_KERNEL in orinoco_set_key with interrupts disabled
+Date: Tue, 22 Dec 2009 21:38:44 +0300
+Cc: orinoco-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, stable@kernel.org
+References: <200912101955.01325.arvidjaar@mail.ru> <200912102156.32029.arvidjaar@mail.ru> <4B26435F.5020002@gmail.com>
+In-Reply-To: <4B26435F.5020002@gmail.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed;
-  boundary="nextPart23360816.Kqs5amPV6y";
+  boundary="nextPart1774596.UUH7hSPU4e";
   protocol="application/pgp-signature";
   micalg=pgp-sha1
-Message-Id: <200912152235.01490.8an@praha12.net>
+Message-Id: <200912222138.50257.arvidjaar@mail.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart23360816.Kqs5amPV6y
-Content-Type: text/plain;
-  charset="utf-8"
+--nextPart1774596.UUH7hSPU4e
+Content-Type: multipart/mixed;
+  boundary="Boundary-01=_1IRML0WLRXUDkL2"
+Content-Transfer-Encoding: 7bit
+
+
+--Boundary-01=_1IRML0WLRXUDkL2
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline
 
-On 15.12.2009 19:50 you wrote:
-> Can you move this last line setting the sc->ah->ah_coverage_class
-> to ath5k_hw_set_coverage_class() instead?
-ath5k_hw_set_coverage_class() is also called after interface reset:
-ath5k_hw_set_coverage_class(ah, ah->ah_coverage_class);
+On Monday 14 of December 2009 16:53:35 Dave wrote:
+> If I understand it right, we want to cc the patch to
+>  stable@kernel.org. So if you could take care of that comment and
+>  resubmit with cc (and something in the title so John can tell we'd
+>  like this in 2.6.33 as well), everyone's happy
+>=20
 
-So it would be quite strange if it set the value again...
-But I see your point, and don't see a better solution.
+New version attached.
 
-> Also -- if an ath_hw_set_coverage_class(common, coverage_class) can be
-> defined on drivers/net/wireless/ath/hw.c along with:
->
-> ath_hw_set_slot_time(common, slot_time),
-> ath_hw_set_ack_timeout(common, ack_timeout);
-> ath_hw_set_cts_timeout(common, cts_timeout);
-Unfortunately the functions are really hardware specific, they write a=20
-register that even differs between chip versions, and also depend on chip=20
-clock rate.
+--Boundary-01=_1IRML0WLRXUDkL2
+Content-Type: message/rfc822;
+  name="orinoco_set_key-atomic"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+	filename="orinoco_set_key-atomic"
 
-It would be possible to move ath_hw_set_coverage_class() to ath to share th=
-e=20
-calculation, but that would require exporting six functions from the module=
-s.
+Subject: [PATCH] 2.6.33: orinoco: fix GFP_KERNEL in orinoco_set_key with interrupts disabled
+From: Andrey Borzenkov <arvidjaar@mail.ru>
 
-> Wonder if ar9170 can support setting these too.
-It seems it supports setting slot time, but I don't see a register with ACK=
-=20
-timeout, which is required too.
+orinoco_set_key is called from two places both with interrupts disabled
+(under orinoco_lock). Use GFP_ATOMIC instead of GFP_KERNEL. Fixes following
+warning:
 
-Lukas Turek
+[   77.254109] WARNING: at /home/bor/src/linux-git/kernel/lockdep.c:2465 lockdep_trace_alloc+0x9a/0xa0()
+[   77.254109] Hardware name: PORTEGE 4000
+[   77.254109] Modules linked in: af_packet irnet ppp_generic slhc ircomm_tty ircomm binfmt_misc dm_mirror dm_region_hash dm_log dm_round_robin dm_multipath dm_mod loop nvram toshiba cryptomgr aead pcompress crypto_blkcipher michael_mic crypto_hash crypto_algapi orinoco_cs orinoco cfg80211 smsc_ircc2 pcmcia irda toshiba_acpi yenta_socket video i2c_ali1535 backlight rsrc_nonstatic ali_agp pcmcia_core psmouse output crc_ccitt i2c_core alim1535_wdt rfkill sg evdev ohci_hcd agpgart usbcore pata_ali libata reiserfs [last unloaded: scsi_wait_scan]
+[   77.254109] Pid: 2296, comm: wpa_supplicant Not tainted 2.6.32-1avb #1
+[   77.254109] Call Trace:
+[   77.254109]  [<c011f0ad>] warn_slowpath_common+0x6d/0xa0
+[   77.254109]  [<c014206a>] ? lockdep_trace_alloc+0x9a/0xa0
+[   77.254109]  [<c014206a>] ? lockdep_trace_alloc+0x9a/0xa0
+[   77.254109]  [<c011f0f5>] warn_slowpath_null+0x15/0x20
+[   77.254109]  [<c014206a>] lockdep_trace_alloc+0x9a/0xa0
+[   77.254109]  [<c018d296>] __kmalloc+0x36/0x130
+[   77.254109]  [<dffcb6a8>] ? orinoco_set_key+0x48/0x1c0 [orinoco]
+[   77.254109]  [<dffcb6a8>] orinoco_set_key+0x48/0x1c0 [orinoco]
+[   77.254109]  [<dffcb9fc>] orinoco_ioctl_set_encodeext+0x1dc/0x2d0 [orinoco]
+[   77.254109]  [<c035b117>] ioctl_standard_call+0x207/0x3b0
+[   77.254109]  [<dffcb820>] ? orinoco_ioctl_set_encodeext+0x0/0x2d0 [orinoco]
+[   77.254109]  [<c0307f1f>] ? rtnl_lock+0xf/0x20
+[   77.254109]  [<c0307f1f>] ? rtnl_lock+0xf/0x20
+[   77.254109]  [<c02fb115>] ? __dev_get_by_name+0x85/0xb0
+[   77.254109]  [<c035b616>] wext_handle_ioctl+0x176/0x200
+[   77.254109]  [<dffcb820>] ? orinoco_ioctl_set_encodeext+0x0/0x2d0 [orinoco]
+[   77.254109]  [<c030020f>] dev_ioctl+0x6af/0x730
+[   77.254109]  [<c02eec65>] ? move_addr_to_kernel+0x55/0x60
+[   77.254109]  [<c02eed59>] ? sys_sendto+0xe9/0x130
+[   77.254109]  [<c02ed77e>] sock_ioctl+0x7e/0x250
+[   77.254109]  [<c02ed700>] ? sock_ioctl+0x0/0x250
+[   77.254109]  [<c019cf4c>] vfs_ioctl+0x1c/0x70
+[   77.254109]  [<c019d1fa>] do_vfs_ioctl+0x6a/0x590
+[   77.254109]  [<c0178e50>] ? might_fault+0x90/0xa0
+[   77.254109]  [<c0178e0a>] ? might_fault+0x4a/0xa0
+[   77.254109]  [<c02ef90e>] ? sys_socketcall+0x17e/0x280
+[   77.254109]  [<c019d759>] sys_ioctl+0x39/0x60
+[   77.254109]  [<c0102e3b>] sysenter_do_call+0x12/0x32
+[   77.254109] ---[ end trace 95ef563548d21efd ]---
 
---nextPart23360816.Kqs5amPV6y
+Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
+
+---
+
+ drivers/net/wireless/orinoco/wext.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+
+diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
+index 7698fdd..31ca241 100644
+--- a/drivers/net/wireless/orinoco/wext.c
++++ b/drivers/net/wireless/orinoco/wext.c
+@@ -23,7 +23,7 @@
+ #define MAX_RID_LEN 1024
+ 
+ /* Helper routine to record keys
+- * Do not call from interrupt context */
++ * It is called under orinoco_lock so it may not sleep */
+ static int orinoco_set_key(struct orinoco_private *priv, int index,
+ 			   enum orinoco_alg alg, const u8 *key, int key_len,
+ 			   const u8 *seq, int seq_len)
+@@ -32,14 +32,14 @@ static int orinoco_set_key(struct orinoco_private *priv, int index,
+ 	kzfree(priv->keys[index].seq);
+ 
+ 	if (key_len) {
+-		priv->keys[index].key = kzalloc(key_len, GFP_KERNEL);
++		priv->keys[index].key = kzalloc(key_len, GFP_ATOMIC);
+ 		if (!priv->keys[index].key)
+ 			goto nomem;
+ 	} else
+ 		priv->keys[index].key = NULL;
+ 
+ 	if (seq_len) {
+-		priv->keys[index].seq = kzalloc(seq_len, GFP_KERNEL);
++		priv->keys[index].seq = kzalloc(seq_len, GFP_ATOMIC);
+ 		if (!priv->keys[index].seq)
+ 			goto free_key;
+ 	} else
+
+--Boundary-01=_1IRML0WLRXUDkL2--
+
+--nextPart1774596.UUH7hSPU4e
 Content-Type: application/pgp-signature; name=signature.asc 
 Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-iQIcBAABAgAGBQJLKAEFAAoJEEBjvk/UOfYwXisP/3FVVre593fd0sTnK4Vn1BuL
-Ndc//6m2l9j5ZK17PBAuyjIdmE4mCX2CbhXFUdY3NRM0Ffj0jPOmyBnT/jMSJ2Z7
-cP6gctI6EOwroAEYTxwbU70u9a4xrQFiSE2hnSgpurkfMdL/pBG9jeEohAhmmphf
-X7EKSq7ieaPG+aoQ9pItXSOY3U2aAopNmaBe2fDFcQysf/GMwnUMeVr82CRZ+YtU
-DI4x9DIJ+7SFyfoO8c6Iqa+ZUbnxuSkptrIdvNO2plcmlLrbXftpnfXO8tk9NEfe
-ZtncFWSBEzWPbxYzLX4dUpPoI8Vm56jOhGoY+6KjWRo3IiBti1/QFpP5p0Stfab3
-IHL9jU+yW+NBVBw23HFgo2qLzQCjRMmTr2ARKumun6Oq51vCq/fwr6MVFpzNycOq
-Ew1xYOAGMhDLwLCNnuwsyccks15KDBtIKz1eVXwol5V7fGYytIQRhw9vfRGiA/Bt
-r9SLseYZBPJXBk9hGJ8piksb/QcAWj3vlZsudxx6vwfD3/3iIkpN0Mataf3hc9qE
-IC8rdz2pFgDI29ojWNiHvqbf+k3kCmeEND1k9yoJD10Bk2l+OB2iZWX9q02iXiLV
-NDStl210GraxseUhzKEsICS+2ku7dcta8USyhxPRHRMbbS7SkGBiIMtez3yVPd6b
-4pfg4QbE3+XQwlVA1SlJ
-=I0AK
+iEYEABECAAYFAksxEjUACgkQR6LMutpd94xkkgCgyy7+JB7X2OrBXhOcO8ypSYOF
+xisAn34CAm+IpGAQrUo6E9ERGR3hyDlu
+=1UoG
 -----END PGP SIGNATURE-----
 
---nextPart23360816.Kqs5amPV6y--
+--nextPart1774596.UUH7hSPU4e--
