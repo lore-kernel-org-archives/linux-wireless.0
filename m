@@ -1,90 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39459 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761814AbZLPIUM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2009 03:20:12 -0500
-Subject: Re: [PATCH] wireless: wext: allocate space for NULL-termination
- for 32byte SSIDs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Albert Cahalan <acahalan@gmail.com>
-Cc: Holger Schurig <holgerschurig@gmail.com>, m.hirsch@raumfeld.com,
-	libertas-dev@lists.infradead.org, dcbw@redhat.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@kernel.org, daniel@caiaq.de,
-	David Miller <davem@davemloft.net>
-In-Reply-To: <787b0d920912152254r4bd3e1e2l14fbe7c1fdf42e60@mail.gmail.com>
-References: <1260650850-16163-1-git-send-email-daniel@caiaq.de>
-	 <1260871411.3692.4.camel@johannes.local>
-	 <1260871634.3692.6.camel@johannes.local>
-	 <200912151130.59103.holgerschurig@gmail.com>
-	 <1260873307.3692.10.camel@johannes.local>
-	 <787b0d920912152254r4bd3e1e2l14fbe7c1fdf42e60@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-AWs3j+QQv84YxKojPtJP"
-Date: Wed, 16 Dec 2009 09:19:37 +0100
-Message-ID: <1260951577.10356.60.camel@johannes.local>
-Mime-Version: 1.0
+Received: from parez.praha12.net ([78.108.102.1]:53775 "EHLO parez.praha12.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751554AbZLVQIN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Dec 2009 11:08:13 -0500
+From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
+Reply-To: 8an@praha12.net
+To: =?utf-8?q?=E6=B5=B7=E8=97=BB=E6=95=AC=E4=B9=8B?=
+	<tkaiso@thinktube.com>
+Subject: Re: [ath5k-devel] [PATCH 4/5] ath5k: Reimplement clock rate to usec conversion
+Date: Tue, 22 Dec 2009 17:08:05 +0100
+Cc: johannes@sipsolutions.net, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+References: <1260899813-17585-1-git-send-email-8an@praha12.net> <200912211338.36289.8an@praha12.net> <4B301FE9.2020702@thinktube.com>
+In-Reply-To: <4B301FE9.2020702@thinktube.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1547116.HlY7Wt2tTT";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200912221708.09535.8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-AWs3j+QQv84YxKojPtJP
-Content-Type: text/plain; charset="UTF-8"
+--nextPart1547116.HlY7Wt2tTT
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Wed, 2009-12-16 at 01:54 -0500, Albert Cahalan wrote:
+On 22.12.2009 02:24 =E6=B5=B7=E8=97=BB=E6=95=AC=E4=B9=8B wrote:
+> Does original Atheros HAL calls the function just for 5GHz
+> or calls for both 2GHz and 5 GHz.?
+=46or both, too, the condition used is IS_CHAN_OFDM(chan).
 
-> >> You therefore can't connect to the otherwise legitimate SSID of
-> >> TEST\0\0\0.
-> >
-> > Ick! I guess your cfg80211 IBSS join handler needs to check for that
-> > then and refuse such an SSID.
->=20
-> No, pad the SSID out to 32 bytes and let the firmware try.
+> --- reset.c_org 2009-12-17 17:01:29.000000000 +0900
+> +++ reset.c 2009-12-22 09:51:16.000000000 +0900
+> @@ -64,7 +64,14 @@
+> * we scale coef by shifting clock value by 24 for
+> * better precision since we use integers */
+> /* TODO: Half/quarter rate */
+> - clock =3D (channel->hw_value & CHANNEL_TURBO) ? 80 : 40;
+> + if (channel->hw_value & CHANNEL_2GHZ)
+> + clock =3D 44; /* here, we do not have to worry about CCK */
 
-No, if we _know_ the firmware will try to connect to "TEST" instead of
-"TEST\0\0\0" then refusing it is the right thing to do.
+If it really improved your throughput, there might be something on it, but =
+I=20
+still don't think we should change it like that without really understandin=
+g=20
+the algorithm. According to my interpretation the calculation should depend=
+=20
+on channel width (20MHz in normal mode, 40MHz in turbo mode, same for 802.1=
+1g=20
+and 802.11a), not on MAC chip clocks. At least some Atheros chipsets have=20
+separate radio chip with its own 40 MHz crystal.
 
-> First of all, isn't TEST\0\0\0 simply the wrong length anyway?
-> (that is, a length other than 32 is nonsense AFAIK)
+I looked at ath9k source, and it uses the same calculation as FreeBSD HAL,=
+=20
+including the 0x64000000 constant. Is there anyone with access to Atheros=20
+documentation who could explain the algorithm at last?
 
-No.
+Lukas Turek
 
-> Second of all, even if that is valid, the firmware probably handles
-> at least one SSID that starts with TEST and has some number
-> of NUL bytes on the end. Since you can't tell what that would be
-> with a particular firmware version, you might as well just let the
-> firmware try. The worst case failure here is that there is more than
-> one SSID of this form and you connect to the wrong one. If you
-> have a problem with this kind of trouble then you need ethernet.
-
-No. An SSID is a uniquely defined, 1-32 byte long byte bit pattern. It
-doesn't treat \0 special in any way as your comments suggest. If the
-firmware stops matching at \0, the firmware is broken and shouldn't be
-given a choice.
-
-johannes
-
---=-AWs3j+QQv84YxKojPtJP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+--nextPart1547116.HlY7Wt2tTT
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
 
-iQIcBAABAgAGBQJLKJgVAAoJEODzc/N7+Qma3M0P/2NCMTTZEzeTn2WlVgS22Pde
-GeiyL5P00X5pTOeKMFYWz8dZ27w+VeBRUrKFiFDgfNLqo8KqH0PIvFK0sIbkltls
-tc9rXE8GJF6egxB3gVmiaH3iO9YSESStfTrZGVcSzuWa7ugA06TSxf4oOMZRa2as
-r2+TCLEJg4eG8fD5OZJ417/j7jZiiI3oI69haE82EGcwtHTMDpsmWdHDxzzEZLDy
-VES+vzKQDKW7+W3xmhylrNCxQekGOa94PJcdUSUvviH8ILtgIBH1vRI367hAO24W
-gimMQBd/TQ5adI3vYuOoxiXWVOxzyUvdkmAwCTHV6xiYtS8/f8h6xc842Ws6E1lQ
-rpta4peQ8B2IP0Ligz6RByXfnjKaPMS0Ud4Ucd74ThxPfmZ4hhcP96yhJu23+oHV
-XbuLqchIY2sSUx7Xm+cJMDO6Zf9kXCwoi0qI5mSMzWt/fXTP6r/zIP8SI82OOsna
-VVfKgnK9COSBUWUqhW4GP/MDfGqAfppjMcNJbebegJ1agiaZ3TNUdhyuF6fcNTV/
-LcM4dvbaHEua42KtKmmoZfQ7z4yQ0awgXTaCGWfSEpbIcGN7UzteKMEtzWG74QfA
-0zQGLPpYV987mt2ELCTI4UelM75IeBux/dvdnA9BG+fEEl0dGWZTptRFDeO1wy1p
-jhiSayHpbXcpBf/2Zgv3
-=CQvN
+iQIcBAABAgAGBQJLMO7pAAoJEEBjvk/UOfYwGHcP/RaMws1ZV1tGKVrhwm84J2pM
+X0SJzRNLsR5N1ytafGiX7uA8mtbCsZKc3JQig+tTej9VRXqhh7HQt20GuU7yuUoq
+I4/UN0Qh41+961y7bdkDGnmlEjmMWb0nQcTmn221MTKT0klcBUy4Fz44SZemCTUf
+TPutbDq0afY1MHRdVYt282PDS7une4KfF/RmhGpUXY+HKjo9s/d2w8zagHk+qKvT
+LEZTWz6Fc3UF5sGuP22BltQ216oar6/aihDc9h0dz346kr8DU0zTFk4zd8JFyNFB
+vwFoqhqLN/wfkAYjfhgU5z7tVIrwPKRIAL6Gfr/5yQGpMesfa11CVnx4dNxyWocn
+XrAjRuWQz9I3V8M+2aAya5odFrbei74+tpQrF3YHJ2+MqhAf3Fga1qI79DhABoJY
++O6H03l0sAmT72IaLsDdCs0dZBvjhOd7QEq2BD/7XlC+HzEok6rYazWx/YDy7eJH
+q44+yVI03h3Cl1BSafHlUSov+7rmTv00MMf3rONg9zKl/WKK4D35Nk8pbuxO1WAa
+uSQpVS4yTVTfJ1V8pVtbMgKDl8ZB+mbz49Gla9yiC01z9NcgZ0Cqfh5OYTXdJHXs
+BSFNYi2ZOzbTciBOgsb1oF/aPUNYfb2QBQIfoTc8we/Zz5RjyiyMp9hKFYqNPeel
+sUcmHIZe0AbCvsrq3LcM
+=mEiI
 -----END PGP SIGNATURE-----
 
---=-AWs3j+QQv84YxKojPtJP--
-
+--nextPart1547116.HlY7Wt2tTT--
