@@ -1,61 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2-g21.free.fr ([212.27.42.2]:48199 "EHLO smtp2-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754455AbZLDUUu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Dec 2009 15:20:50 -0500
-Received: from smtp2-g21.free.fr (localhost [127.0.0.1])
-	by smtp2-g21.free.fr (Postfix) with ESMTP id 0AA464B00E6
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Dec 2009 21:20:51 +0100 (CET)
-Received: from [192.168.1.189] (cac94-1-81-57-151-96.fbx.proxad.net [81.57.151.96])
-	by smtp2-g21.free.fr (Postfix) with ESMTP id 16A644B00FD
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Dec 2009 21:20:49 +0100 (CET)
-Message-ID: <4B196F20.2020005@free.fr>
-Date: Fri, 04 Dec 2009 21:20:48 +0100
-From: matthieu castet <castet.matthieu@free.fr>
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:49764 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753806AbZLVQDe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Dec 2009 11:03:34 -0500
+Received: by iwn1 with SMTP id 1so4516687iwn.33
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Dec 2009 08:03:34 -0800 (PST)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: status of rt2870 support
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1261495204-28966-4-git-send-email-hauke@hauke-m.de>
+References: <1261495204-28966-1-git-send-email-hauke@hauke-m.de>
+	<1261495204-28966-4-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 22 Dec 2009 08:03:14 -0800
+Message-ID: <43e72e890912220803w3665563aob918a6486f3fc546@mail.gmail.com>
+Subject: Re: [PATCH 2/2] compat: autoconf.h moved from linux/ to generated/
+	with kernel 2.6.33
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Dec 22, 2009 at 7:20 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> Changed the headers, because autoconf.h moved from linux/ into generated/
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  include/linux/compat-2.6.14.h |    3 ++-
+>  include/linux/compat-2.6.18.h |    3 ++-
+>  include/linux/compat-2.6.19.h |    2 +-
+>  include/linux/compat-2.6.21.h |    2 +-
+>  include/linux/compat-2.6.22.h |    2 +-
+>  include/linux/compat-2.6.23.h |    2 +-
+>  include/linux/compat-2.6.24.h |    3 ++-
+>  include/linux/compat-2.6.25.h |    2 +-
+>  include/linux/compat-2.6.26.h |    2 +-
+>  include/linux/compat-2.6.27.h |    2 +-
+>  include/linux/compat-2.6.28.h |    2 +-
+>  include/linux/compat-2.6.29.h |    2 +-
+>  include/linux/compat-2.6.30.h |    3 ++-
+>  include/linux/compat-2.6.31.h |    2 +-
+>  include/linux/compat-2.6.32.h |    2 +-
+>  include/linux/compat-2.6.33.h |    4 ++--
+>  include/linux/compat-2.6.h    |    6 +++++-
+>  17 files changed, 26 insertions(+), 18 deletions(-)
+>
+> diff --git a/include/linux/compat-2.6.14.h b/include/linux/compat-2.6.14.h
+> index 22e7e31..c509899 100644
+> --- a/include/linux/compat-2.6.14.h
+> +++ b/include/linux/compat-2.6.14.h
+> @@ -1,12 +1,13 @@
+>  #ifndef LINUX_26_14_COMPAT_H
+>  #define LINUX_26_14_COMPAT_H
+>
+> -#include <linux/autoconf.h>
+>  #include <linux/version.h>
+>
+>  /* Compat work for 2.6.14 */
+>  #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,14))
+>
+> +#include <linux/autoconf.h>
+> +
 
-I downloaded the compat-wireless-2009-12-03 and tried it on my d-link rt2870 usb dongle.
+Would it not suffice if we just handle this on compat.h?
 
-After doing a ifconfig up, I start a scaning.
-And the scaning show weird stuff :
-- there is lot's of "IE: Unknown". [1]
-- not all AP are showed. Even those with very good signal.
-
-Is that normal ?
-
-
-Matthieu
-
-[1]
-          Cell 03 - Address: 0E:58:1C:E3:D7:BA
-                    Channel:10
-                    Frequency:2.457 GHz (Channel 10)
-                    Quality=70/70  Signal level=35 dBm  
-                    Encryption key:off
-                    ESSID:"FreeWifi"
-                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 9 Mb/s
-                              18 Mb/s; 36 Mb/s; 54 Mb/s
-                    Bit Rates:6 Mb/s; 12 Mb/s; 24 Mb/s; 48 Mb/s
-                    Mode:Master
-                    Extra:tsf=000000138750bbcf
-                    Extra: Last beacon: 200ms ago
-                    IE: Unknown: 00084672656557696669
-                    IE: Unknown: 010882848B961224486C
-                    IE: Unknown: 03010A
-                    IE: Unknown: 2A0104
-                    IE: Unknown: 32040C183060
-                    IE: Unknown: 2D1A6E1017FFFF000001000000000000000000000000000000000000
-                    IE: Unknown: 3D160A070000000000000000000000000000000000000000
-                    IE: Unknown: 3E0100
-                    IE: Unknown: DD180050F2020101000003A4000027A4000042435E0062322F00
-                    IE: Unknown: 7F0101
-                    IE: Unknown: DD07000C4300000000
-                    IE: Unknown: DD1E00904C336E1017FFFF000001000000000000000000000000000000000000
-                    IE: Unknown: DD1A00904C340A070000000000000000000000000000000000000000
+  Luis
