@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2533 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752640AbZLVDbn (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47507 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751141AbZLVOab (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2009 22:31:43 -0500
-Date: Mon, 21 Dec 2009 22:28:48 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Luk???? Turek <8an@praha12.net>
-Cc: ???????????? <tkaiso@thinktube.com>, johannes@sipsolutions.net,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Subject: Re: [ath5k-devel] [PATCH 4/5] ath5k: Reimplement clock rate to
-	usec  conversion
-Message-ID: <20091222032848.GA4146@hash.localnet>
-References: <1260899813-17585-1-git-send-email-8an@praha12.net> <200912211340.51229.8an@praha12.net> <b6c5339f0912210708wa538055s74a7054eef0e77b6@mail.gmail.com> <200912211628.39169.8an@praha12.net>
+	Tue, 22 Dec 2009 09:30:31 -0500
+Date: Tue, 22 Dec 2009 09:18:58 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Luca Verdesca <magooz@salug.it>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath5k: adding LED support for AR5BXB63 cards
+Message-ID: <20091222141858.GA4825@tuxdriver.com>
+References: <20091222022135.2102c465@magooz.no-ip.org> <b6c5339f0912211937o525c9117k2e6d877b3c91b858@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200912211628.39169.8an@praha12.net>
+In-Reply-To: <b6c5339f0912211937o525c9117k2e6d877b3c91b858@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 21, 2009 at 04:28:35PM +0100, Luk???? Turek wrote:
-> On 21.12.2009 16:08 Bob Copeland wrote:
-> If performance mattered, we could store the mode index somwhere. But it 
-> doesn't, the conversion is only needed when setting ACK timeout and slot 
-> time - which is, for most users, never done and defaults from initvals.c are 
-> used instead.
+On Mon, Dec 21, 2009 at 10:37:51PM -0500, Bob Copeland wrote:
+> On Mon, Dec 21, 2009 at 8:21 PM, Luca Verdesca <magooz@salug.it> wrote:
+> > With following patch, LED should now work with LiteOn AR5BXB63 mini
+> > pci-e cards.
+> >
+> > I hope I made no mistake.
+> >
+> > Happy hacking!
+> > Magooz
+> 
+> Would you mind re-spinning a patch using the subvendor instead of the
+> Atheros device ID?  For all I know, all of the AR5BXB63s are the same,
+> but just in case let's stick with subvendor until we know for sure.
+> You can get the proper numbers by running lspci -vnn as root, and look
+> at the other stanzas for examples.
 
-Agreed.  Feel free to add my
+Please also take note of the following guidelines for posting patches:
 
-Acked-by: Bob Copeland <me@bobcopeland.com>
+	http://www.linux-mips.org/wiki/The_perfect_patch
 
-to that patch.
-
+John
 -- 
-Bob Copeland %% www.bobcopeland.com
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
