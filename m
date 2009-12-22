@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:59225 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753126AbZLHKTB (ORCPT
+Received: from mail.cosetrain.com ([88.198.146.2]:55039 "EHLO
+	mail.cosetrain.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752712AbZLVLzw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 05:19:01 -0500
-Received: by yxe17 with SMTP id 17so4775680yxe.33
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2009 02:19:07 -0800 (PST)
+	Tue, 22 Dec 2009 06:55:52 -0500
+Message-ID: <4B30B3C3.7040602@cosetrain.com>
+Date: Tue, 22 Dec 2009 12:55:47 +0100
+From: Florian Sesser <flomaillist@cosetrain.com>
 MIME-Version: 1.0
-In-Reply-To: <20091208095755.GT18989@one.firstfloor.org>
-References: <20091204233202.GA13658@basil.fritz.box> <4B1BB44E.90706@gmail.com>
-	 <200912080006.28892.s.L-H@gmx.de>
-	 <20091208095755.GT18989@one.firstfloor.org>
-Date: Tue, 8 Dec 2009 11:19:07 +0100
-Message-ID: <14add3d10912080219u17c65cbemf6d56290a8f12efd@mail.gmail.com>
-Subject: Re: regression: rt2561 frequent "Arrived at non-free entry" errors in
-	2.6.32
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Stefan Lippers-Hollmann <s.L-H@gmx.de>,
-	linux-wireless@vger.kernel.org, Tim Blechmann <tim@klingt.org>,
-	rjw@sisk.pl, IvDoorn@gmail.com, linville@tuxdriver.com
+To: Rui Paulo <rpaulo@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: o11s: Modularize Path Selection Protocol etc.
+References: <4B2F9930.8070401@cosetrain.com> <7057634E-E560-413E-9FB2-163F5311E054@gmail.com>
+In-Reply-To: <7057634E-E560-413E-9FB2-163F5311E054@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 8, 2009 at 10:57 AM, Andi Kleen <andi@firstfloor.org> wrote:
->> This patch doesn't seem to change this particular issue, disabling
->> powersaving however makes rt62pci work again.
->
-> Yes confirmed here. Haven't seen it in a day or so with disabled power
-> saving.
->
-> However I haven't tried the patch with power saving enabled.
+Hi Rui!
 
-OK.
-I think Stefan said that the patch didn't help for this issue.
+Thanks for your prompt reply. I will dig into the new draft ASAP.
 
-However, I've got an other hunch (based on the Ralink driver). Maybe
-we shouldn't go to sleep when still TX entries are present. I'll cook
-up a patch tonight.
+(It is propably rude to ask for an up to date draft on this list? I
+would, of course, discreetly profit from having it handy shortly...)
 
----
-Gertjan.
+Greetings!
+
+Florian
+
+Me:
+>> [...]
+>> In my last patch [2], I introduced some new 32 bit struct
+>> members, because, if I am not mistaken, these IDs should include a
+>> vendor specific OUI, which enables a user to combine a path
+>> selection protocol of vendor A with a path selection metric of
+>> vendor B.
+
+Rui:
+> This has changed quite a bit on the latest 802.11s draft standards.
+> If you want to use your own routing protocol and to be 802.11s
+> compliant, you need to set the path selection protocol ID to 255 and
+> append a vendor specific information element to the management frame.
+> [...]
+> Rui Paulo
