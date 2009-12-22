@@ -1,40 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:33357 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751788AbZLLLkl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Dec 2009 06:40:41 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so504144eyd.19
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Dec 2009 03:40:47 -0800 (PST)
-From: Vitalik Nikolyenko <vnik5287@gmail.com>
-In-Reply-To: <1260617445.2442.332.camel@johannes.local>
-Mime-Version: 1.0 (iPhone Mail 7A400)
-References: <157c4da70912120218lc53633bk62fc9ee99377a231@mail.gmail.com>
-	<1260613513.2442.319.camel@johannes.local> <157c4da70912120329n4b6bc663ic47e95201f7569da@mail.gmail.com>
-	<1260617445.2442.332.camel@johannes.local>
-Date: Sat, 12 Dec 2009 22:40:38 +1100
-Message-ID: <-3945137922086923095@unknownmsgid>
-Subject: Re: mac80211 noob question
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55719 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750948AbZLVPVT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Dec 2009 10:21:19 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 0/5] compat: Build fixes for compat-wireless
+Date: Tue, 22 Dec 2009 16:19:59 +0100
+Message-Id: <1261495204-28966-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry for not being very clear. I'm capturing on C and just want to
-check if B acked A's frame (if that's possible)
+Some fixes for compat.git and compat-wireless.git
+Build test for kernel 2.6.27 to 2.6.33 was successfull.
+For kernel 2.6.25 and 2.6.26 debugfs_remove_recursive is still missing.
 
-On Dec 12, 2009, at 10:30 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
+PS: The last compat-wireless package at 
+http://wireless.kernel.org/download/compat-wireless-2.6/ is 2009-12-11.
 
-> On Sat, 2009-12-12 at 22:29 +1100, VN wrote:
->> Ah I guess I am. I just assumed that since I'm able to capture data
->> frames sent from node A to node B (w/o radiotap?), there should be
->> some way to check which ones were acknowledged by node B. Thanks for
->> your prompt response!
->
-> But are you capturing on A or on B? If you're capturing on A, then
-> yes,
-> you can figure out whether it was ACKed by B and A received the ACK --
-> pull up a monitor interface and see the info you get from it.
->
-> johannes
+--
+Hauke
+
+---
+Hauke Mehrtens (2):
+  compat: Backport pcmcia from 2.6.33
+  compat: autoconf.h moved from linux/ to generated/ with kernel 2.6.33
+
+ compat/Makefile               |    1 +
+ compat/compat-2.6.33.c        |  130 +++++++++++++++++++++++++++++++++++++++++
+ include/linux/compat-2.6.14.h |    3 +-
+ include/linux/compat-2.6.18.h |    3 +-
+ include/linux/compat-2.6.19.h |    2 +-
+ include/linux/compat-2.6.21.h |    2 +-
+ include/linux/compat-2.6.22.h |    2 +-
+ include/linux/compat-2.6.23.h |    2 +-
+ include/linux/compat-2.6.24.h |    3 +-
+ include/linux/compat-2.6.25.h |    2 +-
+ include/linux/compat-2.6.26.h |    2 +-
+ include/linux/compat-2.6.27.h |    2 +-
+ include/linux/compat-2.6.28.h |    2 +-
+ include/linux/compat-2.6.29.h |    2 +-
+ include/linux/compat-2.6.30.h |    3 +-
+ include/linux/compat-2.6.31.h |    2 +-
+ include/linux/compat-2.6.32.h |    2 +-
+ include/linux/compat-2.6.33.h |   25 +++++++-
+ include/linux/compat-2.6.h    |    6 ++-
+
+
+Hauke Mehrtens (3):
+  compat-wireless: Activate ssb and libertas
+  compat-wireless: activate usbnet for kernel > 2.6.28
+  compat-wireless: Add more functions into netdev oops backport
+
+ Makefile                                |    4 +--
+ config.mk                               |   17 +++++++--
+ patches/01-netdev.patch                 |   28 +++++++++++++--
+ patches/18-rename-usb-net-symbols.patch |   58 +++++++++++++++++++++++++++++++
+ patches/99-change-makefiles.patch       |   21 +++++------
+ scripts/admin-update.sh                 |    8 ++--
+ 6 files changed, 109 insertions(+), 27 deletions(-)
+ create mode 100644 patches/18-rename-usb-net-symbols.patch
+
