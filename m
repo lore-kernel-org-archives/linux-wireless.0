@@ -1,75 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:46734 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752216AbZLRKfU (ORCPT
+Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:49621 "EHLO
+	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755352AbZLVXDs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2009 05:35:20 -0500
-Date: Fri, 18 Dec 2009 11:36:49 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Holger Schurig <holgerschurig@gmail.com>
-Subject: [PATCH] libertas: Remove carrier signaling from the scan code
-Message-ID: <20091218103649.GA3568@sortiz.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 22 Dec 2009 18:03:48 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 3/5] rt2x00: Let rt2800lib check CONFIG_RT2X00_LIB_USB instead of CONFIG_RT2800USB
+Date: Wed, 23 Dec 2009 00:03:23 +0100
+Message-Id: <1261523005-5856-4-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1261523005-5856-3-git-send-email-gwingerde@gmail.com>
+References: <1261523005-5856-1-git-send-email-gwingerde@gmail.com>
+ <1261523005-5856-2-git-send-email-gwingerde@gmail.com>
+ <1261523005-5856-3-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-    
-There is no reason to signal a carrier off when doing a 802.11 scan.
+rt2800lib currently checks whether RT2800USB is enabled in the configuration.
+Strictly speaking this is not necessary, it only needs to know whether the
+generic rt2x00usb library functions are available. Therefore check for
+RT2X00_LIB_USB instead.
 
-Cc: Dan Williams <dcbw@redhat.com>
-Cc: Holger Schurig <holgerschurig@gmail.com>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 ---
- drivers/net/wireless/libertas/scan.c |   22 ++++++++--------------
- 1 files changed, 8 insertions(+), 14 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
-index c6a6c04..b0b1c78 100644
---- a/drivers/net/wireless/libertas/scan.c
-+++ b/drivers/net/wireless/libertas/scan.c
-@@ -567,11 +567,8 @@ int lbs_scan_networks(struct lbs_private *priv, int full_scan)
- 	chan_count = lbs_scan_create_channel_list(priv, chan_list);
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 27bf887..a654551 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -37,7 +37,7 @@
+ #include <linux/module.h>
  
- 	netif_stop_queue(priv->dev);
--	netif_carrier_off(priv->dev);
--	if (priv->mesh_dev) {
-+	if (priv->mesh_dev)
- 		netif_stop_queue(priv->mesh_dev);
--		netif_carrier_off(priv->mesh_dev);
--	}
+ #include "rt2x00.h"
+-#if defined(CONFIG_RT2800USB) || defined(CONFIG_RT2800USB_MODULE)
++#if defined(CONFIG_RT2X00_LIB_USB) || defined(CONFIG_RT2X00_LIB_USB_MODULE)
+ #include "rt2x00usb.h"
+ #endif
+ #include "rt2800lib.h"
+@@ -1121,7 +1121,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
  
- 	/* Prepare to continue an interrupted scan */
- 	lbs_deb_scan("chan_count %d, scan_channel %d\n",
-@@ -635,16 +632,13 @@ out2:
- 	priv->scan_channel = 0;
- 
- out:
--	if (priv->connect_status == LBS_CONNECTED) {
--		netif_carrier_on(priv->dev);
--		if (!priv->tx_pending_len)
--			netif_wake_queue(priv->dev);
--	}
--	if (priv->mesh_dev && (priv->mesh_connect_status == LBS_CONNECTED)) {
--		netif_carrier_on(priv->mesh_dev);
--		if (!priv->tx_pending_len)
--			netif_wake_queue(priv->mesh_dev);
--	}
-+	if (priv->connect_status == LBS_CONNECTED && !priv->tx_pending_len)
-+		netif_wake_queue(priv->dev);
-+
-+	if (priv->mesh_dev && (priv->mesh_connect_status == LBS_CONNECTED) &&
-+	    !priv->tx_pending_len)
-+		netif_wake_queue(priv->mesh_dev);
-+
- 	kfree(chan_list);
- 
- 	lbs_deb_leave_args(LBS_DEB_SCAN, "ret %d", ret);
+ 	if (rt2x00_intf_is_usb(rt2x00dev)) {
+ 		rt2800_register_write(rt2x00dev, USB_DMA_CFG, 0x00000000);
+-#if defined(CONFIG_RT2800USB) || defined(CONFIG_RT2800USB_MODULE)
++#if defined(CONFIG_RT2X00_LIB_USB) || defined(CONFIG_RT2X00_LIB_USB_MODULE)
+ 		rt2x00usb_vendor_request_sw(rt2x00dev, USB_DEVICE_MODE, 0,
+ 					    USB_MODE_RESET, REGISTER_TIMEOUT);
+ #endif
 -- 
-1.6.3.3
+1.6.5.7
 
-Intel Open Source Technology Centre
-http://oss.intel.com/
