@@ -1,58 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:56899 "EHLO
-	TX2EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932443AbZLRSYv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2009 13:24:51 -0500
-Message-ID: <4B2BC8E6.9090007@am.sony.com>
-Date: Fri, 18 Dec 2009 10:24:38 -0800
-From: Geoff Levand <geoffrey.levand@am.sony.com>
+Received: from c60.cesmail.net ([216.154.195.49]:13312 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751070AbZLVPDy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Dec 2009 10:03:54 -0500
+Message-ID: <20091222100353.afqlt5tog0o0cw4w-cebfxv@webmail.spamcop.net>
+Date: Tue, 22 Dec 2009 10:03:53 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Markus Baier <Markus_Baier@web.de>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [BISECTED] [PATCH v2 8/8] rt2x00: Properly request tx headroom
+	for alignment operations.
+References: <1259012694-14869-1-git-send-email-gwingerde@gmail.com>
+	<1259012694-14869-2-git-send-email-gwingerde@gmail.com>
+	<1259012694-14869-3-git-send-email-gwingerde@gmail.com>
+	<1259012694-14869-4-git-send-email-gwingerde@gmail.com>
+	<1259012694-14869-5-git-send-email-gwingerde@gmail.com>
+	<1259012694-14869-6-git-send-email-gwingerde@gmail.com>
+	<1259012694-14869-7-git-send-email-gwingerde@gmail.com>
+	<1259012694-14869-8-git-send-email-gwingerde@gmail.com>
+	<1259012694-14869-9-git-send-email-gwingerde@gmail.com>
+	<loom.20091220T163829-137@post.gmane.org> <4B2E8729.7050501@gmail.com>
+	<20091221013316.nm9belnhywwwsc0w-cebfxv@webmail.spamcop.net>
+	<4B2FA1CF.1010903@gmail.com> <1261459549.31982.2.camel@ct>
+	<4B307FB1.5040806@gmail.com>
+In-Reply-To: <4B307FB1.5040806@gmail.com>
 MIME-Version: 1.0
-To: Randy Dunlap <randy.dunlap@oracle.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
-	Hamish Guthrie <Hamish.Guthrie@sonycom.com>
-Subject: [PATCH v2] ps3_gelic_wireless: Fix build failure due to missing WEXT_PRIV
-References: <1261115574.2173.18.camel@pasglop> <20091218085547.fb8bdaf5.randy.dunlap@oracle.com>
-In-Reply-To: <20091218085547.fb8bdaf5.randy.dunlap@oracle.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Quoting Gertjan van Wingerde <gwingerde@gmail.com>:
 
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Doh, that's it. Here we should indeed only take the real extra TX   
+> headroom required by
+> the driver into account. Seems like I goofed up in a preparatory   
+> patch that centralized
+> setting of rt2x00dev->hw->extra_tx_headroom.
+>
+> Can you confirm that everything works okay with the original code   
+> and this patch applied?
 
-The option to support the old style PSK interface in the PS3
-GELIC wireless drivers requires CONFIG_WEXT_PRIV to be set
+The managed mode is working fine for me.
 
-Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Signed-off-by: Geoff Levand <geoffrey.levand@am.sony.com>
----
-v2: Added 'depends on WLAN'.
+I think it would be a good idea to test all modes and make sure that  
+the patch for adding extra headroom does what it should (in addition  
+to not breaking things).
 
-Please send to Linus asap (or I can put it in powerpc.git) as it's
-breaking one of my test build configs :-)
-
-Just as a note, I asked Hamish to work to remove this option.
-No distros use it anymore, so we don't need it.
-
--Geoff
----
- drivers/net/Kconfig |    2 ++
- 1 file changed, 2 insertions(+)
-
---- a/drivers/net/Kconfig
-+++ b/drivers/net/Kconfig
-@@ -2357,7 +2357,9 @@ config GELIC_WIRELESS
- 
- config GELIC_WIRELESS_OLD_PSK_INTERFACE
-        bool "PS3 Wireless private PSK interface (OBSOLETE)"
-+       depends on WLAN
-        depends on GELIC_WIRELESS
-+       select WEXT_PRIV
-        help
-           This option retains the obsolete private interface to pass
-           the PSK from user space programs to the driver.  The PSK
-
+-- 
+Regards,
+Pavel Roskin
