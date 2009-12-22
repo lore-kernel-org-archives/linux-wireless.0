@@ -1,64 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42263 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757322AbZLDWAJ (ORCPT
+Received: from Cpsmtpm-eml106.kpnxchange.com ([195.121.3.10]:61782 "EHLO
+	CPSMTPM-EML106.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751565AbZLVXDo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Dec 2009 17:00:09 -0500
-Date: Fri, 4 Dec 2009 16:55:55 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, chunkeey@googlemail.com,
-	reinette.chatre@intel.com
-Subject: [PATCH] mac80211: fix reorder buffer release
-Message-ID: <20091204215555.GC3595@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 22 Dec 2009 18:03:44 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 1/5] rt2x00: Add USB ID for Linksys WUSB 600N rev 2.
+Date: Wed, 23 Dec 2009 00:03:21 +0100
+Message-Id: <1261523005-5856-2-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1261523005-5856-1-git-send-email-gwingerde@gmail.com>
+References: <1261523005-5856-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+This is a rt2870 based device.
 
-My patch "mac80211: correctly place aMPDU RX reorder code"
-uses an skb queue for MPDUs that were released from the
-buffer. I intentially didn't initialise and use the skb
-queue's spinlock, but in this place forgot that the code
-variant that doesn't touch the spinlock is needed.
-
-Thanks to Christian Lamparter for quickly spotting the
-bug in the backtrace Reinette reported.
-
-Reported-by: Reinette Chatre <reinette.chatre@intel.com>
-Bug-identified-by: Christian Lamparter <chunkeey@googlemail.com>
-Tested-by: Reinette Chatre <reinette.chatre@intel.com>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 ---
-Dave,
+ drivers/net/wireless/rt2x00/rt2800usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-I missed this in today's pull request -- please queue it directly in
-your tree!
-
-Thanks,
-
-John
-
- net/mac80211/rx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- wireless-testing.orig/net/mac80211/rx.c	2009-12-03 20:18:21.000000000 +0100
-+++ wireless-testing/net/mac80211/rx.c	2009-12-03 20:42:50.000000000 +0100
-@@ -570,7 +570,7 @@ static void ieee80211_release_reorder_fr
- 		rate = &sband->bitrates[status->rate_idx];
- 	tid_agg_rx->stored_mpdu_num--;
- 	tid_agg_rx->reorder_buf[index] = NULL;
--	skb_queue_tail(frames, skb);
-+	__skb_queue_tail(frames, skb);
- 
- no_frame:
- 	tid_agg_rx->head_seq_num = seq_inc(tid_agg_rx->head_seq_num);
-
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 40295b4..aff984b 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -933,6 +933,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x1737, 0x0070), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x1737, 0x0071), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x1737, 0x0077), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x1737, 0x0079), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Logitec */
+ 	{ USB_DEVICE(0x0789, 0x0162), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0789, 0x0163), USB_DEVICE_DATA(&rt2800usb_ops) },
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.5.7
+
