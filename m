@@ -1,67 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f215.google.com ([209.85.220.215]:34711 "EHLO
-	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752155AbZLUNwu (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:38468 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755109AbZLWMyX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2009 08:52:50 -0500
-Received: by fxm7 with SMTP id 7so4873362fxm.29
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2009 05:52:49 -0800 (PST)
+	Wed, 23 Dec 2009 07:54:23 -0500
+Received: by ewy19 with SMTP id 19so6282005ewy.21
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2009 04:54:22 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1261363447.12157.624.camel@debian>
-References: <E9954878DD1FB34FAE5187FB88C58A357683393C@orsmsx506.amr.corp.intel.com>
-	<1261363447.12157.624.camel@debian>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 21 Dec 2009 14:52:29 +0100
-Message-ID: <69e28c910912210552p1f63a47dw9fbabf2c26ce02e9@mail.gmail.com>
-Subject: Re: Intel 4965 HT rates
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Valentin Manea <linux-wireless@mrs.ro>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1261571890.3512.0.camel@johannes.local>
+References: <e92712b70912170610y74eb6ae8ifd8db347cc608808@mail.gmail.com>
+	 <1261061645.10356.114.camel@johannes.local>
+	 <e92712b70912230428s7caee5eag6943a8eb6a8b7a78@mail.gmail.com>
+	 <1261571890.3512.0.camel@johannes.local>
+Date: Wed, 23 Dec 2009 14:54:21 +0200
+Message-ID: <e92712b70912230454y3da0f49ame84957a136b674bf@mail.gmail.com>
+Subject: Re: Backoff algorithm
+From: Andrey Lukyanenko <laser.ru@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCBEZWMgMjEsIDIwMDkgYXQgMzo0NCBBTSwgWmh1IFlpIDx5aS56aHVAaW50ZWwuY29t
-PiB3cm90ZToKPiBPbiBNb24sIDIwMDktMTItMjEgYXQgMTA6MzMgKzA4MDAsIEd1eSwgV2V5LVlp
-IFcgd3JvdGU6Cj4+IEZvciA0OTY1LCA0ME1IeiBvbmx5IHN1cHBvcnRlZCBpbiBnIGJhbmQKPgo+
-IFdlIGRvbid0IHN1cHBvcnQgNDBNSHogY2hhbm5lbHMgaW4gMi40RyBiYW5kLiBTZWUgY29tbWVu
-dHMgaW4KPiBpd2wtZWVwcm9tLmg6Cj4KPiDCoCoKPiDCoCogTk9URTogwqA0OTY1IGRvZXMgbm90
-IHN1cHBvcnQgSFQ0MCBjaGFubmVscyBvbiAyLjQgR0h6Lgo+IMKgKi8KPgo+IFRoYW5rcywKPiAt
-eWkKCkJ1dCB3aHkgZG9lcyB0aGUgV2luZG93cyBkcml2ZXIgZm9yIDQ5NjUgc3VwcG9ydCBpdCB0
-aGVuPwoKPgo+PiDCoC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tCj4+IEZyb206IMKgIMKgIMKg
-IMKgIFZhbGVudGluIE1hbmVhIFttYWlsdG86bGludXgtd2lyZWxlc3NAbXJzLnJvXQo+PiBTZW50
-OiBTdW5kYXksIERlY2VtYmVyIDIwLCAyMDA5IDA1OjM4IEFNIFBhY2lmaWMgU3RhbmRhcmQgVGlt
-ZQo+PiBUbzogwqAgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnCj4+IFN1YmplY3Q6IMKg
-IMKgIMKgSW50ZWwgNDk2NSBIVCByYXRlcwo+Pgo+PiBIaSwKPj4KPj4gwqAgSSdtIHJ1bm5pbmcg
-Y29tcGF0LXdpcmVsZXNzLTIuNi4zMy1yYzEgYW5kIGl3IGxpc3Qgc2hvd3Mgc29tZSBjb25mdXNp
-bmcgSFQKPj4gY2FwYWJpbGl0aWVzOgo+PiDCoCDCoCDCoCDCoCBCYW5kIDE6Cj4+IMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIEhUIGNhcGFiaWxpdGllczogMHgwODJjCj4+IMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgICogMjAgTUh6IG9wZXJhdGlvbgo+PiDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAqIFNNIFBTIGRpc2FibGVkCj4+IMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgICogMjAgTUh6IHNob3J0IEdJCj4+IMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgICogbWF4IEEtTVNEVSBsZW4gNzkzNQo+Pgo+PiBidXQgZm9y
-IDgwMi4xMWEgY2hhbm5lbHM6Cj4+IMKgIMKgIMKgIMKgIEJhbmQgMjoKPj4gwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgSFQgY2FwYWJpbGl0aWVzOiAweDA4NmUKPj4gwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgKiAyMC80MCBNSHogb3BlcmF0aW9uCj4+IMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgICogU00gUFMgZGlzYWJsZWQKPj4gwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgKiAyMCBNSHogc2hvcnQgR0kKPj4gwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgKiA0MCBNSHogc2hvcnQgR0kKPj4gwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgKiBtYXggQS1NU0RVIGxlbiA3OTM1Cj4+Cj4+IFdoaWxlIEkg
-Y2FuJ3QgdGVsbCB3aGVuIHRoaXMgaGFwcGVuZWQsIEkgcmVtZW1iZXIgb2xkZXIgMi42LjI5IHJl
-bGVhc2VzCj4+IHN1cHBvcnRlZCBIVDQwIGZvciBib3RoIGJhbmRzLgo+PiBUaGUgd2lyZWxlc3Mg
-Y2FyZCBpcyBhbiBJbnRlbCA0OTY1IG9uIGEgVGhpbmtwYWQgVDYxLgo+Pgo+Pgo+PiBSZWdhcmRz
-LAo+PiBWYWxlbnRpbgo+Pgo+PiAtLQo+PiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDog
-c2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtd2lyZWxlc3MiIGluCj4+IHRoZSBib2R5
-IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnCj4+IE1vcmUgbWFqb3Jk
-b21vIGluZm8gYXQgwqBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwK
-Pj4gTu+/ve+/ve+/ve+/ve+/vXLvv73vv71577+977+977+9Yu+/vVjvv73vv73Hp3bvv71e77+9
-Kd66ey5u77+9K++/ve+/ve+/ve+/vXvvv73vv70q3pXvv70s77+9e2F577+9IMqH2pnvv70saiDv
-v73vv71m77+977+977+9aO+/ve+/ve+/vXrvv70g77+9d++/ve+/ve+/vSDvv73vv73vv71qOit2
-77+977+977+9d++/vWrvv71t77+977+977+977+9IO+/ve+/ve+/ve+/vXpaK++/ve+/ve+/ve+/
-ve+/vd2iaiLvv73vv70h77+9aQo+Cj4KPiAtLQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBs
-aXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC13aXJlbGVzcyIgaW4KPiB0aGUg
-Ym9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZwo+IE1vcmUgbWFq
-b3Jkb21vIGluZm8gYXQgwqBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0
-bWwKPgoKCgotLSAKVmlzdGE6IFtWXWlydXNlcywgW0ldbnRydWRlcnMsIFtTXXB5d2FyZSwgW1Rd
-cm9qYW5zIGFuZCBbQV1kd2FyZS4gOi0pCg==
+> Umm, I don't think you understood what I said. I only mentioned ar9170
+> and broadcom devices...
+
+Yes, I understood that you only meant ar9170 and b43. But what do you mean
+by " influencing the value you give the hw"?
+Firmware is not open source, afaik. How can I influence the values?
+
+What I said about OpenFWWF and tos-mac are just some recent findings
+about existing implementations of backoff scheme.
+
+-- 
+Best regards,
+Andrey Lukyanenko.
