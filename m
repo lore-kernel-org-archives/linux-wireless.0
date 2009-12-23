@@ -1,44 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:39530 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750997AbZL1I5W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Dec 2009 03:57:22 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH V2] mac80211: quit addba_resp_timer if Tx BA session is torn down
-Date: Mon, 28 Dec 2009 16:57:15 +0800
-Message-Id: <1261990635-29016-1-git-send-email-yi.zhu@intel.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48730 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752429AbZLWPAd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Dec 2009 10:00:33 -0500
+Date: Wed, 23 Dec 2009 09:52:11 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH][resend with linux-wireless] b43: N-PHY: clean table
+	init, check PHY rev
+Message-ID: <20091223145211.GB2811@tuxdriver.com>
+References: <b170af450912230401l7a27b981o42cdbc96e5a16b57@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <b170af450912230401l7a27b981o42cdbc96e5a16b57@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make addba_resp_timer aware the HT_AGG_STATE_REQ_STOP_BA_MSK mask
-so that when ___ieee80211_stop_tx_ba_session() is issued the timer
-will quit. Otherwise when suspend happens before the timer expired,
-the timer handler will be called immediately after resume and
-messes up driver status.
+On Wed, Dec 23, 2009 at 01:01:58PM +0100, Rafał Miłecki wrote:
+> It's just compilation-tested as I don't own N-PHY device yet (should receive
+> one for Christmas). Of course I enabled N-PHY in Kconfig.
+> 
+> I already sent this to bcm43xx-dev but didn't get any review. Michael told
+> me to send it to you John and to linux-wireless. Is there anyone how could
+> review/ack my patch?
+> 
+> 
+> From 6800722c2fda0e302d7c759a5f2a993503b6581a Mon Sep 17 00:00:00 2001
+> From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+> Date: Tue, 22 Dec 2009 02:27:21 +0100
+> Subject: [PATCH] b43: N-PHY: clean table init, check PHY rev
+> MIME-Version: 1.0
+> Content-Type: text/plain; charset=UTF-8
+> Content-Transfer-Encoding: 8bit
+> 
+> Move table init to tables_nphy.c, detect newer PHY which use different init
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+> drivers/net/wireless/b43/phy_n.c       |   43 ++++------------------------
+> drivers/net/wireless/b43/tables_nphy.c |   48
+> ++++++++++++++++++++++++++++++++
+> drivers/net/wireless/b43/tables_nphy.h |    4 ++-
+> 3 files changed, 58 insertions(+), 37 deletions(-)
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- net/mac80211/agg-tx.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Well, the patch is fairly clearly whitespace-damaged.  Perhaps that
+is a product of how you forwarded it to linux-wireless?
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index ceda366..a57bd73 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -179,7 +179,8 @@ static void sta_addba_resp_timer_expired(unsigned long data)
- 
- 	/* check if the TID waits for addBA response */
- 	spin_lock_bh(&sta->lock);
--	if ((*state & (HT_ADDBA_REQUESTED_MSK | HT_ADDBA_RECEIVED_MSK)) !=
-+	if ((*state & (HT_ADDBA_REQUESTED_MSK | HT_ADDBA_RECEIVED_MSK |
-+		       HT_AGG_STATE_REQ_STOP_BA_MSK)) !=
- 						HT_ADDBA_REQUESTED_MSK) {
- 		spin_unlock_bh(&sta->lock);
- 		*state = HT_AGG_STATE_IDLE;
+Other than that, it looks like you are mostly just moving code around.
+That's fine, but there doesn't seem to be a lot of point in it
+unless the rev 3+ stuff is coming soon?  It probably doesn't harm
+much either way...
+
+John
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
