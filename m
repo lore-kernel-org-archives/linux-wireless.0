@@ -1,45 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:51482 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751139AbZL1BmR (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:50405 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753779AbZLWIQR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Dec 2009 20:42:17 -0500
-Subject: Re: [PATCH] libertas: Remove carrier signaling from the scan code
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Samuel Ortiz <sameo@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Holger Schurig <holgerschurig@gmail.com>
-In-Reply-To: <1261212074.23392.10.camel@localhost.localdomain>
-References: <20091218103649.GA3568@sortiz.org>
-	 <1261212074.23392.10.camel@localhost.localdomain>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 27 Dec 2009 17:41:33 -0800
-Message-ID: <1261964494.16627.92.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Wed, 23 Dec 2009 03:16:17 -0500
+Received: by mail-ew0-f219.google.com with SMTP id 19so6063598ewy.21
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2009 00:16:16 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 4/5] rt2x00: convert RT2800PCI_PCI and RT2800PCI_SOC Kconfig symbols to booleans.
+Date: Wed, 23 Dec 2009 09:16:14 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <1261523005-5856-1-git-send-email-gwingerde@gmail.com> <1261523005-5856-4-git-send-email-gwingerde@gmail.com> <1261523005-5856-5-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1261523005-5856-5-git-send-email-gwingerde@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200912230916.14521.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
-
-> > There is no reason to signal a carrier off when doing a 802.11 scan.
-> > 
-> > Cc: Dan Williams <dcbw@redhat.com>
-> > Cc: Holger Schurig <holgerschurig@gmail.com>
-> > Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+On Wednesday 23 December 2009, Gertjan van Wingerde wrote:
+> There is no need for Kconfig symbols RT2800PCI_PCI and RT2800PCI_SOC to be
+> tristates, as they are only used to check whether RT2800 PCI or SOC support
+> is to be compiled in.
 > 
-> Acked-by: Dan Williams <dcbw@redhat.com>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-can we get this driver merged since no wireless driver should play with
-carrier on/off settings during scanning.
-
-I would actually go that far that we should fix it in 2.6.33 and also
-backport it to -stable.
-
-Regards
-
-Marcel
-
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
