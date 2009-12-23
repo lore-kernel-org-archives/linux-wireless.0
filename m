@@ -1,195 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:46948 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751375AbZLIRAK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2009 12:00:10 -0500
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8187: add radio led and fix warnings on suspend
-Date: Wed, 9 Dec 2009 15:00:10 -0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>, Michael Buesch <mb@bu3sch.de>,
-	"Hin-Tak Leung" <htl10@users.sourceforge.net>
-References: <200912091456.13989.herton@mandriva.com.br>
-In-Reply-To: <200912091456.13989.herton@mandriva.com.br>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200912091500.10818.herton@mandriva.com.br>
+Received: from mx2.zhaw.ch ([160.85.104.51]:61872 "EHLO mx2.zhaw.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755912AbZLWNSN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Dec 2009 08:18:13 -0500
+From: Tobias Klauser <tklauser@distanz.ch>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Tobias Klauser <tklauser@distanz.ch>
+Subject: [PATCH] iwlwifi: Storage class should be before const qualifier
+Date: Wed, 23 Dec 2009 14:18:11 +0100
+Message-Id: <1261574291-9384-1-git-send-email-tklauser@distanz.ch>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Qua 09 Dez 2009, às 14:56:13, Herton Ronaldo Krzesinski escreveu:
-> Michael Buesch reports that his rtl8187 gives warnings on suspend
-> ("queueing ieee80211 work while going to suspend" warnings), as rtl8187
-> can call ieee80211_queue_delayed_work after mac80211 is suspended.
-> 
-> This change enhances rtl8187 led code so we can avoid queuing work after
-> mac80211 is suspended: now we register a radio led and make additional
-> checks to ensure led is off/on properly as mac80211 wants.
-> 
-> Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org>
+The C99 specification states in section 6.11.5:
 
-Sorry, forgot to note that stable is only about 2.6.32.x, which is
-where warnings on suspend started to happen.
+The placement of a storage-class specifier other than at the beginning
+of the declaration specifiers in a declaration is an obsolescent
+feature.
 
-> ---
->  drivers/net/wireless/rtl818x/rtl8187.h      |    1 +
->  drivers/net/wireless/rtl818x/rtl8187_leds.c |   68 ++++++++++++++++++--------
->  drivers/net/wireless/rtl818x/rtl8187_leds.h |    2 +
->  3 files changed, 50 insertions(+), 21 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187.h b/drivers/net/wireless/rtl818x/rtl8187.h
-> index b1a24de..6af0f3f 100644
-> --- a/drivers/net/wireless/rtl818x/rtl8187.h
-> +++ b/drivers/net/wireless/rtl818x/rtl8187.h
-> @@ -108,6 +108,7 @@ struct rtl8187_priv {
->  	struct delayed_work work;
->  	struct ieee80211_hw *dev;
->  #ifdef CONFIG_RTL8187_LEDS
-> +	struct rtl8187_led led_radio;
->  	struct rtl8187_led led_tx;
->  	struct rtl8187_led led_rx;
->  	struct delayed_work led_on;
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187_leds.c b/drivers/net/wireless/rtl818x/rtl8187_leds.c
-> index cf8a4a4..ded44c0 100644
-> --- a/drivers/net/wireless/rtl818x/rtl8187_leds.c
-> +++ b/drivers/net/wireless/rtl818x/rtl8187_leds.c
-> @@ -105,19 +105,36 @@ static void rtl8187_led_brightness_set(struct led_classdev *led_dev,
->  	struct rtl8187_led *led = container_of(led_dev, struct rtl8187_led,
->  					       led_dev);
->  	struct ieee80211_hw *hw = led->dev;
-> -	struct rtl8187_priv *priv = hw->priv;
-> +	struct rtl8187_priv *priv;
-> +	static bool radio_on;
->  
-> -	if (brightness == LED_OFF) {
-> -		ieee80211_queue_delayed_work(hw, &priv->led_off, 0);
-> -		/* The LED is off for 1/20 sec so that it just blinks. */
-> -		ieee80211_queue_delayed_work(hw, &priv->led_on, HZ / 20);
-> -	} else
-> -		ieee80211_queue_delayed_work(hw, &priv->led_on, 0);
-> +	if (!hw)
-> +		return;
-> +	priv = hw->priv;
-> +	if (led->is_radio) {
-> +		if (brightness == LED_FULL) {
-> +			ieee80211_queue_delayed_work(hw, &priv->led_on, 0);
-> +			radio_on = true;
-> +		} else if (radio_on) {
-> +			radio_on = false;
-> +			cancel_delayed_work_sync(&priv->led_on);
-> +			ieee80211_queue_delayed_work(hw, &priv->led_off, 0);
-> +		}
-> +	} else if (radio_on) {
-> +		if (brightness == LED_OFF) {
-> +			ieee80211_queue_delayed_work(hw, &priv->led_off, 0);
-> +			/* The LED is off for 1/20 sec - it just blinks. */
-> +			ieee80211_queue_delayed_work(hw, &priv->led_on,
-> +						     HZ / 20);
-> +		} else
-> +			ieee80211_queue_delayed_work(hw, &priv->led_on, 0);
-> +	}
->  }
->  
->  static int rtl8187_register_led(struct ieee80211_hw *dev,
->  				struct rtl8187_led *led, const char *name,
-> -				const char *default_trigger, u8 ledpin)
-> +				const char *default_trigger, u8 ledpin,
-> +				bool is_radio)
->  {
->  	int err;
->  	struct rtl8187_priv *priv = dev->priv;
-> @@ -128,6 +145,7 @@ static int rtl8187_register_led(struct ieee80211_hw *dev,
->  		return -EINVAL;
->  	led->dev = dev;
->  	led->ledpin = ledpin;
-> +	led->is_radio = is_radio;
->  	strncpy(led->name, name, sizeof(led->name));
->  
->  	led->led_dev.name = led->name;
-> @@ -145,7 +163,11 @@ static int rtl8187_register_led(struct ieee80211_hw *dev,
->  
->  static void rtl8187_unregister_led(struct rtl8187_led *led)
->  {
-> +	struct ieee80211_hw *hw = led->dev;
-> +	struct rtl8187_priv *priv = hw->priv;
-> +
->  	led_classdev_unregister(&led->led_dev);
-> +	flush_delayed_work(&priv->led_off);
->  	led->dev = NULL;
->  }
->  
-> @@ -183,33 +205,37 @@ void rtl8187_leds_init(struct ieee80211_hw *dev, u16 custid)
->  	INIT_DELAYED_WORK(&priv->led_off, led_turn_off);
->  
->  	snprintf(name, sizeof(name),
-> +		 "rtl8187-%s::radio", wiphy_name(dev->wiphy));
-> +	err = rtl8187_register_led(dev, &priv->led_radio, name,
-> +			 ieee80211_get_radio_led_name(dev), ledpin, true);
-> +	if (err)
-> +		return;
-> +
-> +	snprintf(name, sizeof(name),
->  		 "rtl8187-%s::tx", wiphy_name(dev->wiphy));
->  	err = rtl8187_register_led(dev, &priv->led_tx, name,
-> -			 ieee80211_get_tx_led_name(dev), ledpin);
-> +			 ieee80211_get_tx_led_name(dev), ledpin, false);
->  	if (err)
-> -		goto error;
-> +		goto err_tx;
-> +
->  	snprintf(name, sizeof(name),
->  		 "rtl8187-%s::rx", wiphy_name(dev->wiphy));
->  	err = rtl8187_register_led(dev, &priv->led_rx, name,
-> -			 ieee80211_get_rx_led_name(dev), ledpin);
-> -	if (!err) {
-> -		ieee80211_queue_delayed_work(dev, &priv->led_on, 0);
-> +			 ieee80211_get_rx_led_name(dev), ledpin, false);
-> +	if (!err)
->  		return;
-> -	}
-> -	/* registration of RX LED failed - unregister TX */
-> +
-> +	/* registration of RX LED failed - unregister */
->  	rtl8187_unregister_led(&priv->led_tx);
-> -error:
-> -	/* If registration of either failed, cancel delayed work */
-> -	cancel_delayed_work_sync(&priv->led_off);
-> -	cancel_delayed_work_sync(&priv->led_on);
-> +err_tx:
-> +	rtl8187_unregister_led(&priv->led_radio);
->  }
->  
->  void rtl8187_leds_exit(struct ieee80211_hw *dev)
->  {
->  	struct rtl8187_priv *priv = dev->priv;
->  
-> -	/* turn the LED off before exiting */
-> -	ieee80211_queue_delayed_work(dev, &priv->led_off, 0);
-> +	rtl8187_unregister_led(&priv->led_radio);
->  	rtl8187_unregister_led(&priv->led_rx);
->  	rtl8187_unregister_led(&priv->led_tx);
->  	cancel_delayed_work_sync(&priv->led_off);
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187_leds.h b/drivers/net/wireless/rtl818x/rtl8187_leds.h
-> index a033202..efe8041 100644
-> --- a/drivers/net/wireless/rtl818x/rtl8187_leds.h
-> +++ b/drivers/net/wireless/rtl818x/rtl8187_leds.h
-> @@ -47,6 +47,8 @@ struct rtl8187_led {
->  	u8 ledpin;
->  	/* The unique name string for this LED device. */
->  	char name[RTL8187_LED_MAX_NAME_LEN + 1];
-> +	/* If the LED is radio or tx/rx */
-> +	bool is_radio;
->  };
->  
->  void rtl8187_leds_init(struct ieee80211_hw *dev, u16 code);
-> 
+Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index fe511cb..b93e491 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -150,7 +150,7 @@ static s32 expected_tpt_mimo3_40MHz[4][IWL_RATE_COUNT] = {
+ };
+ 
+ /* mbps, mcs */
+-const static struct iwl_rate_mcs_info iwl_rate_mcs[IWL_RATE_COUNT] = {
++static const struct iwl_rate_mcs_info iwl_rate_mcs[IWL_RATE_COUNT] = {
+ 	{  "1", "BPSK DSSS"},
+ 	{  "2", "QPSK DSSS"},
+ 	{"5.5", "BPSK CCK"},
 -- 
-[]'s
-Herton
+1.6.3.3
+
