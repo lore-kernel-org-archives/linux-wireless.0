@@ -1,50 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:62501 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932078AbZLRPho (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2009 10:37:44 -0500
-Received: by iwn1 with SMTP id 1so2230273iwn.33
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2009 07:37:44 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <bf87febf0912180342w134d92eblc24f326cfa751b08@mail.gmail.com>
-References: <bf87febf0912030507u1c36f6a9h7cac0efabf3d016@mail.gmail.com>
-	<20091204192315.GA5786@tuxdriver.com> <bf87febf0912070205k40a7286dpbb48cfcc494203d2@mail.gmail.com>
-	<20091207215903.GC18939@tuxdriver.com> <b6c5339f0912080657s7cfccd4dp6525702e609bdd5f@mail.gmail.com>
-	<43e72e890912080801s52607743s738ed6cdad7d154e@mail.gmail.com>
-	<20091208160659.GG15172@tuxdriver.com> <43e72e890912080830v40ff214co178fb17c38439e70@mail.gmail.com>
-	<bf87febf0912180342w134d92eblc24f326cfa751b08@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 18 Dec 2009 07:37:24 -0800
-Message-ID: <43e72e890912180737s382c24c5q8720f1e3138fefb@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: add support for Dell Vostro A860 LED
-To: Shahar Or <mightyiampresence@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:35885 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751159AbZLWAx1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Dec 2009 19:53:27 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat: autoconf.h moved from linux/ to generated/ with kernel 2.6.33
+Date: Wed, 23 Dec 2009 01:53:06 +0100
+Message-Id: <1261529586-434-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <43e72e890912220803w3665563aob918a6486f3fc546@mail.gmail.com>
+References: <43e72e890912220803w3665563aob918a6486f3fc546@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 18, 2009 at 3:42 AM, Shahar Or <mightyiampresence@gmail.com> wrote:
-> On Tue, Dec 8, 2009 at 6:30 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->>>> IIRC this is all mapped in the INF file, I thought I had released an
->>>> INF file under the ISC license but it seems that's not the case, I can
->>>> try to do that if it helps. Anyway, if we can move this sort of map to
->>>> userspace it'd be neat as you'd just need a userspace file update.
->>>> Only thing is how to do this in a generic way for all wireless drivers
->>>> and if this is indeed useful for other drivers.
->>>
->>> Export something through sysfs and use a udev rule?
->>
->> True. Is sysfs the preferred fs nowadays, what about configfs? Or
->> maybe even udev rule --> nl80211 ?
->
-> If we have all the IDs from the INF file, then why do we need this in
-> userspace? Is the list growing?
+Changed the headers, because autoconf.h moved from linux/ into generated/
 
-No, but for other newer hardware/drivers it can likely grow, so my
-comment was more of a generic driver approach to this.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-  Luis
+v2:
+ - remove linux/autoconf.h from compat-2.6.XX.h. It is already included by compat-2.6.h
+---
+ include/linux/compat-2.6.14.h |    1 -
+ include/linux/compat-2.6.18.h |    1 -
+ include/linux/compat-2.6.19.h |    1 -
+ include/linux/compat-2.6.21.h |    1 -
+ include/linux/compat-2.6.22.h |    1 -
+ include/linux/compat-2.6.23.h |    1 -
+ include/linux/compat-2.6.24.h |    1 -
+ include/linux/compat-2.6.25.h |    1 -
+ include/linux/compat-2.6.26.h |    1 -
+ include/linux/compat-2.6.27.h |    1 -
+ include/linux/compat-2.6.28.h |    1 -
+ include/linux/compat-2.6.29.h |    1 -
+ include/linux/compat-2.6.30.h |    1 -
+ include/linux/compat-2.6.31.h |    1 -
+ include/linux/compat-2.6.32.h |    1 -
+ include/linux/compat-2.6.33.h |    2 --
+ include/linux/compat-2.6.h    |    6 +++++-
+ 17 files changed, 5 insertions(+), 18 deletions(-)
+
+diff --git a/include/linux/compat-2.6.14.h b/include/linux/compat-2.6.14.h
+index 22e7e31..1f19f7f 100644
+--- a/include/linux/compat-2.6.14.h
++++ b/include/linux/compat-2.6.14.h
+@@ -1,7 +1,6 @@
+ #ifndef LINUX_26_14_COMPAT_H
+ #define LINUX_26_14_COMPAT_H
+ 
+-#include <linux/autoconf.h>
+ #include <linux/version.h>
+ 
+ /* Compat work for 2.6.14 */
+diff --git a/include/linux/compat-2.6.18.h b/include/linux/compat-2.6.18.h
+index 3245c42..5e0182b 100644
+--- a/include/linux/compat-2.6.18.h
++++ b/include/linux/compat-2.6.18.h
+@@ -1,7 +1,6 @@
+ #ifndef LINUX_26_18_COMPAT_H
+ #define LINUX_26_18_COMPAT_H
+ 
+-#include <linux/autoconf.h>
+ #include <linux/version.h>
+ 
+ /* Compat work for 2.6.18 */
+diff --git a/include/linux/compat-2.6.19.h b/include/linux/compat-2.6.19.h
+index 017044c..1e648c0 100644
+--- a/include/linux/compat-2.6.19.h
++++ b/include/linux/compat-2.6.19.h
+@@ -1,7 +1,6 @@
+ #ifndef LINUX_26_19_COMPAT_H
+ #define LINUX_26_19_COMPAT_H
+ 
+-#include <linux/autoconf.h>
+ #include <linux/version.h>
+ 
+ /* Compat work for 2.6.19 */
+diff --git a/include/linux/compat-2.6.21.h b/include/linux/compat-2.6.21.h
+index 263ebd2..89ed6d9 100644
+--- a/include/linux/compat-2.6.21.h
++++ b/include/linux/compat-2.6.21.h
+@@ -1,7 +1,6 @@
+ #ifndef LINUX_26_21_COMPAT_H
+ #define LINUX_26_21_COMPAT_H
+ 
+-#include <linux/autoconf.h>
+ #include <linux/version.h>
+ 
+ /* Compat work for 2.6.21 */
+diff --git a/include/linux/compat-2.6.22.h b/include/linux/compat-2.6.22.h
+index 85cd9d5..7ca1b18 100644
+--- a/include/linux/compat-2.6.22.h
++++ b/include/linux/compat-2.6.22.h
+@@ -1,7 +1,6 @@
+ #ifndef LINUX_26_22_COMPAT_H
+ #define LINUX_26_22_COMPAT_H
+ 
+-#include <linux/autoconf.h>
+ #include <linux/version.h>
+ 
+ /* Compat work for 2.6.21 */
+diff --git a/include/linux/compat-2.6.23.h b/include/linux/compat-2.6.23.h
+index c36f90d..0b791b0 100644
+--- a/include/linux/compat-2.6.23.h
++++ b/include/linux/compat-2.6.23.h
+@@ -1,7 +1,6 @@
+ #ifndef LINUX_26_23_COMPAT_H
+ #define LINUX_26_23_COMPAT_H
+ 
+-#include <linux/autoconf.h>
+ #include <linux/version.h>
+ 
+ /* Compat work for < 2.6.23 */
+diff --git a/include/linux/compat-2.6.24.h b/include/linux/compat-2.6.24.h
+index 43e6302..58655f6 100644
+--- a/include/linux/compat-2.6.24.h
++++ b/include/linux/compat-2.6.24.h
+@@ -1,7 +1,6 @@
+ #ifndef LINUX_26_24_COMPAT_H
+ #define LINUX_26_24_COMPAT_H
+ 
+-#include <linux/autoconf.h>
+ #include <linux/version.h>
+ 
+ /* Compat work for 2.6.21, 2.6.22 and 2.6.23 */
+diff --git a/include/linux/compat-2.6.25.h b/include/linux/compat-2.6.25.h
+index 23cf487..c645d39 100644
+--- a/include/linux/compat-2.6.25.h
++++ b/include/linux/compat-2.6.25.h
+@@ -1,7 +1,6 @@
+ #ifndef LINUX_26_25_COMPAT_H
+ #define LINUX_26_25_COMPAT_H
+ 
+-#include <linux/autoconf.h>
+ #include <linux/version.h>
+ 
+ /* Compat work for 2.6.24 */
+diff --git a/include/linux/compat-2.6.26.h b/include/linux/compat-2.6.26.h
+index b7c3b05..af653a9 100644
+--- a/include/linux/compat-2.6.26.h
++++ b/include/linux/compat-2.6.26.h
+@@ -1,7 +1,6 @@
+ #ifndef LINUX_26_26_COMPAT_H
+ #define LINUX_26_26_COMPAT_H
+ 
+-#include <linux/autoconf.h>
+ #include <linux/version.h>
+ 
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26))
+diff --git a/include/linux/compat-2.6.27.h b/include/linux/compat-2.6.27.h
+index ed10a6c..64531a6 100644
+--- a/include/linux/compat-2.6.27.h
++++ b/include/linux/compat-2.6.27.h
+@@ -1,7 +1,6 @@
+ #ifndef LINUX_26_27_COMPAT_H
+ #define LINUX_26_27_COMPAT_H
+ 
+-#include <linux/autoconf.h>
+ #include <linux/version.h>
+ 
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27))
+diff --git a/include/linux/compat-2.6.28.h b/include/linux/compat-2.6.28.h
+index 8f90edc..9cd4ae8 100644
+--- a/include/linux/compat-2.6.28.h
++++ b/include/linux/compat-2.6.28.h
+@@ -1,7 +1,6 @@
+ #ifndef LINUX_26_28_COMPAT_H
+ #define LINUX_26_28_COMPAT_H
+ 
+-#include <linux/autoconf.h>
+ #include <linux/version.h>
+ 
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28))
+diff --git a/include/linux/compat-2.6.29.h b/include/linux/compat-2.6.29.h
+index cad5e6b..8a968fa 100644
+--- a/include/linux/compat-2.6.29.h
++++ b/include/linux/compat-2.6.29.h
+@@ -1,7 +1,6 @@
+ #ifndef LINUX_26_29_COMPAT_H
+ #define LINUX_26_29_COMPAT_H
+ 
+-#include <linux/autoconf.h>
+ #include <linux/version.h>
+ 
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
+diff --git a/include/linux/compat-2.6.30.h b/include/linux/compat-2.6.30.h
+index 2ff1d69..f997d86 100644
+--- a/include/linux/compat-2.6.30.h
++++ b/include/linux/compat-2.6.30.h
+@@ -1,7 +1,6 @@
+ #ifndef LINUX_26_30_COMPAT_H
+ #define LINUX_26_30_COMPAT_H
+ 
+-#include <linux/autoconf.h>
+ #include <linux/version.h>
+ 
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
+diff --git a/include/linux/compat-2.6.31.h b/include/linux/compat-2.6.31.h
+index 27dc6a1..54ddefd 100644
+--- a/include/linux/compat-2.6.31.h
++++ b/include/linux/compat-2.6.31.h
+@@ -1,7 +1,6 @@
+ #ifndef LINUX_26_31_COMPAT_H
+ #define LINUX_26_31_COMPAT_H
+ 
+-#include <linux/autoconf.h>
+ #include <linux/version.h>
+ 
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31))
+diff --git a/include/linux/compat-2.6.32.h b/include/linux/compat-2.6.32.h
+index 727ac71..c3e4dbe 100644
+--- a/include/linux/compat-2.6.32.h
++++ b/include/linux/compat-2.6.32.h
+@@ -1,7 +1,6 @@
+ #ifndef LINUX_26_32_COMPAT_H
+ #define LINUX_26_32_COMPAT_H
+ 
+-#include <linux/autoconf.h>
+ #include <linux/version.h>
+ 
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32))
+diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
+index 5367cd9..9bb0dbb 100644
+--- a/include/linux/compat-2.6.33.h
++++ b/include/linux/compat-2.6.33.h
+@@ -1,9 +1,7 @@
+ #ifndef LINUX_26_33_COMPAT_H
+ #define LINUX_26_33_COMPAT_H
+ 
+-#include <linux/autoconf.h>
+ #include <linux/version.h>
+-#include <linux/compat_autoconf.h>
+ 
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33))
+ 
+diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
+index bea00c9..81224de 100644
+--- a/include/linux/compat-2.6.h
++++ b/include/linux/compat-2.6.h
+@@ -1,8 +1,12 @@
+ #ifndef LINUX_26_COMPAT_H
+ #define LINUX_26_COMPAT_H
+ 
+-#include <linux/autoconf.h>
+ #include <linux/version.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
++#endif
+ #include <linux/compat_autoconf.h>
+ 
+ /*
+-- 
+1.6.3.3
+
