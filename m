@@ -1,30 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:34812 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753217AbZLAV63 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 16:58:29 -0500
-Received: by ewy19 with SMTP id 19so5458123ewy.21
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 13:58:34 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH v3 4/4] rt2x00: Only remove L2 padding in received frames if there is payload.
-Date: Tue, 1 Dec 2009 22:58:32 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Benoit Papillault <benoit.papillault@free.fr>,
-	John Linville <linville@tuxdriver.com>
-References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com> <1259615298-2305-4-git-send-email-gwingerde@gmail.com> <1259615298-2305-5-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1259615298-2305-5-git-send-email-gwingerde@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200912012258.33123.IvDoorn@gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:9062 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753554AbZLWWUF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Dec 2009 17:20:05 -0500
+Subject: Re: Incomplete page load
+From: Pavel Roskin <proski@gnu.org>
+To: Le Trifole <letrifole@yahoo.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <240098.63153.qm@web29215.mail.ird.yahoo.com>
+References: <240098.63153.qm@web29215.mail.ird.yahoo.com>
+Content-Type: text/plain
+Date: Wed, 23 Dec 2009 17:20:01 -0500
+Message-Id: <1261606801.12810.3.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 30 November 2009, Gertjan van Wingerde wrote:
-> L2 padding will only be present when there is actual payload present.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+On Wed, 2009-12-23 at 11:14 -0800, Le Trifole wrote:
+> Good morning,
+> it's the first time i write on this list. I'm meeting with a strange
+> problem (it's the first time i use linux). I use both LAN and
+> wireless, i can connect but the when I load a webpage (doesn't matter
+> ubuntu or mandriva, lan or wifi) dwnload just a few kb and then it
+> stops....so i can chat but i can't surf the web....
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+If it doesn't matter whether it's LAN or WiFi, perhaps linux-wireless
+shouldn't be the place to ask such questions.
+
+> I'm new to linux but i'd like to use it and hope smeone can help me with th=
+> is problem. thanks in advance
+
+I suggest that you check this document:
+http://www.catb.org/~esr/faqs/smart-questions.html
+
+I think you are better off using a less technical forum.
+
+-- 
+Regards,
+Pavel Roskin
