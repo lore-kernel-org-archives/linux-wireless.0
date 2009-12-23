@@ -1,77 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:38882 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752610AbZLRXQX (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41938 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755451AbZLWMV6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2009 18:16:23 -0500
-Received: by iwn1 with SMTP id 1so2512897iwn.33
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2009 15:16:23 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1261177735.4041.107.camel@localhost.localdomain>
-References: <1261176470.14206.23.camel@johannes.local> <43e72e890912181502u3610ac23qe2dfc09f1d337bf5@mail.gmail.com>
-	<1261177735.4041.107.camel@localhost.localdomain>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 18 Dec 2009 15:16:03 -0800
-Message-ID: <43e72e890912181516t2a779ec3l5778225a61ba455c@mail.gmail.com>
-Subject: Re: [PATCH] ar9170: load firmware asynchronously
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 23 Dec 2009 07:21:58 -0500
+Message-Id: <20091223121416.544404600@sipsolutions.net>
+Date: Wed, 23 Dec 2009 13:12:05 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, stable@kernel.org,
+	562016-quiet@bugs.debian.org
+Subject: [PATCH 2.6.33 3/3] cfg80211: fix race between deauth and assoc
+ response
+References: <20091223121202.581948600@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 18, 2009 at 3:08 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
-> Hi Luis,
->
->> > This converts ar9170 to load firmware asynchronously
->> > out of ->probe() and only register with mac80211 when
->> > all firmware has been loaded successfully. If, on the
->> > other hand, any firmware fails to load, it will now
->> > unbind from the device.
->> >
->> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->> > ---
->> > This can go in now, the prereq patch went in via gregkh.
->> >
->> > This ought to make it possible to build the driver
->> > into the kernel and as long as your system boots
->> > within 60 seconds it'll all just work.
->> >
->> > This is how we need to load firmware for drivers that
->> > require the firmware image to detect which features
->> > to register to mac80211/cfg80211, but it's also useful
->> > when no features depend on the firmware.
->> >
->> > I've done ar9170 because I'm somewhat familiar with its
->> > implementation. b43 should probably be converted to this
->> > scheme since it actually has features that depend on the
->> > firmware, and libertas_tf has the MAC addresss depending
->> > on the firmware (well it needs the firmware to read it).
->> >
->> > The only complication with this is that now the user is
->> > mostly unaware they have a wireless device, they can only
->> > find it via lsusb/lspci etc. if firmware loading fails,
->> > or from kernel messages. And also manual binding in sysfs,
->> > device re-plugging or module re-loading is required to
->> > get the module to find the device after putting firmware
->> > in place...
->> >
->> > Still I think this is better than what we have now with
->> > many drivers -- if firmware is missing you get network
->> > interfaces etc. but cannot ever use them, and it's not
->> > always entirely clear that is due to missing firmware.
->>
->> Sweet -- we could also expose firmware load events if not done so
->> already and let userspace propagate such nasty warnings, I think we'd
->> need to pass the firmware expected and the driver the requested it so
->> that once the firmware is in place (I guess through inotify maybe) the
->> driver modprobe can be retried.
->
-> actually PackageKit should be doing something like this already. It
-> might need to be adapted a bit, but the basics should be there.
+Joseph Nahmias reported, in http://bugs.debian.org/562016,
+that he was getting the following warning (with some log
+around the issue):
 
-Wow, I'm impressed. Thanks for the heads up.
+  ath0: direct probe to AP 00:11:95:77:e0:b0 (try 1)
+  ath0: direct probe responded
+  ath0: authenticate with AP 00:11:95:77:e0:b0 (try 1)
+  ath0: authenticated
+  ath0: associate with AP 00:11:95:77:e0:b0 (try 1)
+  ath0: deauthenticating from 00:11:95:77:e0:b0 by local choice (reason=3)
+  ath0: direct probe to AP 00:11:95:77:e0:b0 (try 1)
+  ath0: RX AssocResp from 00:11:95:77:e0:b0 (capab=0x421 status=0 aid=2)
+  ath0: associated
+  ------------[ cut here ]------------
+  WARNING: at net/wireless/mlme.c:97 cfg80211_send_rx_assoc+0x14d/0x152 [cfg80211]()
+  Hardware name: 7658CTO
+  ...
+  Pid: 761, comm: phy0 Not tainted 2.6.32-trunk-686 #1
+  Call Trace:
+   [<c1030a5d>] ? warn_slowpath_common+0x5e/0x8a
+   [<c1030a93>] ? warn_slowpath_null+0xa/0xc
+   [<f86cafc7>] ? cfg80211_send_rx_assoc+0x14d/0x152
+  ...
+  ath0: link becomes ready
+  ath0: deauthenticating from 00:11:95:77:e0:b0 by local choice (reason=3)
+  ath0: no IPv6 routers present
+  ath0: link is not ready
+  ath0: direct probe to AP 00:11:95:77:e0:b0 (try 1)
+  ath0: direct probe responded
+  ath0: authenticate with AP 00:11:95:77:e0:b0 (try 1)
+  ath0: authenticated
+  ath0: associate with AP 00:11:95:77:e0:b0 (try 1)
+  ath0: RX ReassocResp from 00:11:95:77:e0:b0 (capab=0x421 status=0 aid=2)
+  ath0: associated
 
-  Luis
+It is not clear to me how the first "direct probe" here
+happens, but this seems to be a race condition, if the
+user requests to deauth after requesting assoc, but before
+the assoc response is received. In that case, it may
+happen that mac80211 tries to report the assoc success to
+cfg80211, but gets blocked on the wdev lock that is held
+because the user is requesting the deauth.
+
+The result is that we run into a warning. This is mostly
+harmless, but maybe cause an unexpected event to be sent
+to userspace; we'd send an assoc success event although
+userspace was no longer expecting that.
+
+To fix this, remove the warning and check whether the
+race happened and in that case abort processing.
+
+Reported-by: Joseph Nahmias <joe@nahmias.net>
+Cc: stable@kernel.org
+Cc: 562016-quiet@bugs.debian.org
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/mlme.c |   13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+--- wireless-testing.orig/net/wireless/mlme.c	2009-12-22 12:11:24.000000000 +0100
++++ wireless-testing/net/wireless/mlme.c	2009-12-22 12:26:26.000000000 +0100
+@@ -93,7 +93,18 @@ void cfg80211_send_rx_assoc(struct net_d
+ 			}
+ 		}
+ 
+-		WARN_ON(!bss);
++		/*
++		 * We might be coming here because the driver reported
++		 * a successful association at the same time as the
++		 * user requested a deauth. In that case, we will have
++		 * removed the BSS from the auth_bsses list due to the
++		 * deauth request when the assoc response makes it. If
++		 * the two code paths acquire the lock the other way
++		 * around, that's just the standard situation of a
++		 * deauth being requested while connected.
++		 */
++		if (!bss)
++			goto out;
+ 	} else if (wdev->conn) {
+ 		cfg80211_sme_failed_assoc(wdev);
+ 		/*
+
+
