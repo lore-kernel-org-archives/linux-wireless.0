@@ -1,37 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:50405 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752860AbZLWIPx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 03:15:53 -0500
-Received: by mail-ew0-f219.google.com with SMTP id 19so6063598ewy.21
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2009 00:15:52 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 2/5] rt2x00: Fix checks for rt2800 SOC support.
-Date: Wed, 23 Dec 2009 09:15:50 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <1261523005-5856-1-git-send-email-gwingerde@gmail.com> <1261523005-5856-2-git-send-email-gwingerde@gmail.com> <1261523005-5856-3-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1261523005-5856-3-git-send-email-gwingerde@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:63410 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750837AbZLWIfe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Dec 2009 03:35:34 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2009 00:35:34 -0800
+From: vasanth <vasanth@atheros.com>
+To: <greg@kroah.com>, <stable@kernel.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH 1/2] ath9k_hw: Fix possible OOB array indexing in gen_timer_index[] on 64-bit
+Date: Wed, 23 Dec 2009 13:54:35 +0530
+Message-ID: <1261556676-6081-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200912230915.50975.IvDoorn@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 23 December 2009, Gertjan van Wingerde wrote:
-> Fix checking for SOC support in rt2800pci. The wrong config (an unexisting
-> one) was checked.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+commit c90017dd43f0cdb42134b9229761e8be02bcd524 upstream
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800pci.c |   18 +++++++++---------
->  1 files changed, 9 insertions(+), 9 deletions(-)
+debruijn32 (0x077CB531) is used to index gen_timer_index[]
+which is an array of 32 u32. Having debruijn32 as unsigned
+long on a 64-bit platform  will result in indexing more than 32
+in gen_timer_index[] and there by causing a crash. Make it
+unsigned to fix this issue.
 
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 57f1463..ff4383b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -408,7 +408,7 @@ struct ath9k_hw_version {
+  * Using de Bruijin sequence to to look up 1's index in a 32 bit number
+  * debruijn32 = 0000 0111 0111 1100 1011 0101 0011 0001
+  */
+-#define debruijn32 0x077CB531UL
++#define debruijn32 0x077CB531U
+ 
+ struct ath_gen_timer_configuration {
+ 	u32 next_addr;
+-- 
+1.5.5.1
 
