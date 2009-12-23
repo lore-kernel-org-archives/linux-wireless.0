@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:45775 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932315AbZLFSfF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2009 13:35:05 -0500
-Message-ID: <4B1BF952.1000909@openwrt.org>
-Date: Sun, 06 Dec 2009 19:34:58 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:48849 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751373AbZLWBQq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Dec 2009 20:16:46 -0500
 MIME-Version: 1.0
-To: 8an@praha12.net
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	ath5k-devel@lists.ath5k.org
-Subject: Re: [PATCH 4/4] ath5k: Implement mac80211 callback set_coverage
-References: <200912061820.26320.8an@praha12.net> <200912061826.52394.8an@praha12.net>
-In-Reply-To: <200912061826.52394.8an@praha12.net>
+In-Reply-To: <20091222175939.GF4385@tux>
+References: <20091222022355.GA32508@bombadil.infradead.org>
+	<19248.19829.293087.367661@gargle.gargle.HOWL> <20091222155005.GA4385@tux>
+	<20091222162055.GC4385@tux> <20091222165528.GE4385@tux> <20091222175939.GF4385@tux>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 22 Dec 2009 17:16:25 -0800
+Message-ID: <43e72e890912221716r64ea4542qd747302b536a3156@mail.gmail.com>
+Subject: Re: Asus eeepc 1008HA suspend issue and mac80211 suspend corner case
+To: Luis Rodriguez <Luis.Rodriguez@atheros.com>
+Cc: Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	Jonathan May <jonathan.may@atheros.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lukáš Turek wrote:
-> The callback sets slot time as specified in IEEE 802.11-2007 section
-> 17.3.8.6 (for 20MHz channels only for now) and ACK and CTS timeouts
-> using calculations taken from Madwifi's athctrl. The values are
-> persistent, they are restored after device reset.
-> 
-> Signed-off-by: Lukas Turek <8an@praha12.net>
-> ---
-> diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
-> index 64fc1eb..2383e22 100644
-> --- a/drivers/net/wireless/ath/ath5k/pcu.c
-> +++ b/drivers/net/wireless/ath/ath5k/pcu.c
-> @@ -1050,3 +1050,22 @@ int ath5k_hw_set_key_lladdr(struct ath5k_hw *ah, u16 entry, const u8 *mac)
->  	return 0;
->  }
->  
-> +/**
-> + * ath5k_hw_set_coverage - Set coverage class
-> + *
-> + * @ah: The &struct ath5k_hw
-> + * @coverage_class: IEEE 802.11 coverage class
-> + *
-> + * Sets slot time, ACK timeout and CTS timeout for given coverage class.
-> + */
-> +void ath5k_hw_set_coverage(struct ath5k_hw *ah, u8 coverage_class)
-> +{
-> +	/* Calculations taken from Madwifi's athctrl */
-> +	int slot_time = 9 + 3 * coverage_class;
-> +	int ack_timeout = slot_time * 2 + 3;
-> +	int cts_timeout = ack_timeout;
-This part is wrong. The slot time can be either short or long, based on
-configuration and PHY type.
+OK I have to go now but I managed to get this working without the
+issue coming up. At this point I am not sure if all of these are
+required but I cherry picked 2 patches from wireless-testing and then
+added 4, one based on sujith's suggestion.
 
-- Felix
+http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0001-mac80211-fix-resume.patch
+http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0002-mac80211-fix-WMM-AP-settings-application.patch
+
+http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0003-ath9k-set-and-restore-ps-prior-to-stop-and-interface.patch
+http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0004-ath9k-ensure-hardware-is-awake-during-ampdu-TX-actio.patch
+
+http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0005-ath9k-synch-TX-DMA-buffer-upon-TX-cancelation.patch
+http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0006-ath9k-do-not-wake-up-device-if-it-hasn-t-been-starte.patch
+
+Its likely only patch 3, 4, and 6 are the only ones required. In fact
+maybe even 6 will fix it, but I just gotta go so cannot test that. I
+was able to resume about 10 times consecutively which I was unable to
+do before.
+
+  Luis
