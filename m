@@ -1,73 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52314 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754073AbZLANYX (ORCPT
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:42784 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753582AbZLWNXk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 08:24:23 -0500
-Subject: [PATCH] mac80211_hwsim: implement ampdu action
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 01 Dec 2009 14:24:24 +0100
-Message-ID: <1259673864.32171.77.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 23 Dec 2009 08:23:40 -0500
+Received: by iwn1 with SMTP id 1so5105438iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2009 05:23:40 -0800 (PST)
+Date: Wed, 23 Dec 2009 15:23:19 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [patch] wl1271_cmd.c:  cleanup char => u8
+Message-ID: <20091223132319.GC17923@bicker>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Not that we actually ever aggregate anything, but
-it could potentially be useful anyhow to simulate
-aggregation sessions.
+This is just a clean up and doesn't make a functional difference.  It keeps the
+lint checkers happy.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-This must go in front of "mac80211: introduce flush operation"
-for that one to apply cleanly. Sorry.
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
- drivers/net/wireless/mac80211_hwsim.c |   26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
-
---- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2009-12-01 10:51:01.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2009-12-01 12:39:51.000000000 +0100
-@@ -828,6 +828,31 @@ static int mac80211_hwsim_testmode_cmd(s
+--- orig/drivers/net/wireless/wl12xx/wl1271_cmd.c	2009-12-22 22:59:58.000000000 +0200
++++ devel/drivers/net/wireless/wl12xx/wl1271_cmd.c	2009-12-22 23:00:29.000000000 +0200
+@@ -777,7 +777,7 @@ out:
+ 	return ret;
  }
- #endif
  
-+static int mac80211_hwsim_ampdu_action(struct ieee80211_hw *hw,
-+				       struct ieee80211_vif *vif,
-+				       enum ieee80211_ampdu_mlme_action action,
-+				       struct ieee80211_sta *sta, u16 tid, u16 *ssn)
-+{
-+	switch (action) {
-+	case IEEE80211_AMPDU_TX_START:
-+		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
-+		break;
-+	case IEEE80211_AMPDU_TX_STOP:
-+		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
-+		break;
-+	case IEEE80211_AMPDU_TX_OPERATIONAL:
-+		break;
-+	case IEEE80211_AMPDU_RX_START:
-+	case IEEE80211_AMPDU_RX_STOP:
-+		break;
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+
-+	return 0;
-+}
-+
-+
- static const struct ieee80211_ops mac80211_hwsim_ops =
+-static int wl1271_build_basic_rates(char *rates, u8 band)
++static int wl1271_build_basic_rates(u8 *rates, u8 band)
  {
- 	.tx = mac80211_hwsim_tx,
-@@ -842,6 +867,7 @@ static const struct ieee80211_ops mac802
- 	.set_tim = mac80211_hwsim_set_tim,
- 	.conf_tx = mac80211_hwsim_conf_tx,
- 	CFG80211_TESTMODE_CMD(mac80211_hwsim_testmode_cmd)
-+	.ampdu_action = mac80211_hwsim_ampdu_action,
- };
+ 	u8 index = 0;
  
+@@ -804,7 +804,7 @@ static int wl1271_build_basic_rates(char
+ 	return index;
+ }
  
-
-
+-static int wl1271_build_extended_rates(char *rates, u8 band)
++static int wl1271_build_extended_rates(u8 *rates, u8 band)
+ {
+ 	u8 index = 0;
+ 
