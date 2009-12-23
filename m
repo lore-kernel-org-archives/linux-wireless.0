@@ -1,65 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f184.google.com ([209.85.222.184]:33260 "EHLO
-	mail-pz0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752115AbZLCEPE (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58509 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750986AbZLWOdn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2009 23:15:04 -0500
-Received: by pzk14 with SMTP id 14so923738pzk.23
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2009 20:15:11 -0800 (PST)
-From: John Daiker <daikerjohn@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: samuel.ortiz@intel.com, yi.zhu@intel.com,
-	John Daiker <daikerjohn@gmail.com>
-Subject: [PATCH] Remove double semicolons
-Date: Wed,  2 Dec 2009 20:14:29 -0800
-Message-Id: <1259813669-29946-1-git-send-email-daikerjohn@gmail.com>
+	Wed, 23 Dec 2009 09:33:43 -0500
+Subject: [PATCH] cfg80211: fix error path in cfg80211_wext_siwscan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Carpenter <error27@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <20091223132937.GG17923@bicker>
+References: <20091223132937.GG17923@bicker>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 23 Dec 2009 15:33:35 +0100
+Message-ID: <1261578815.7304.7.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patches eliminates a few double semicolons in the IWMC3200 driver.
+If there's an invalid channel or SSID, the code leaks
+the scan request. Always free the scan request, unless
+it was successfully given to the driver.
 
-Signed-off-by: John Daiker <daikerjohn@gmail.com>
+Reported-by: Dan Carpenter <error27@gmail.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/iwmc3200wifi/rx.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+I kinda prefer this, thoughts?
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
-index 72c27a3..5e3cf5e 100644
---- a/drivers/net/wireless/iwmc3200wifi/rx.c
-+++ b/drivers/net/wireless/iwmc3200wifi/rx.c
-@@ -874,28 +874,28 @@ static int iwm_mlme_mgt_frame(struct iwm_priv *iwm, u8 *buf,
- 		    le16_to_cpu(mgt_frame->len));
+ net/wireless/scan.c |   13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
+
+--- wireless-testing.orig/net/wireless/scan.c	2009-12-23 15:27:20.000000000 +0100
++++ wireless-testing/net/wireless/scan.c	2009-12-23 15:32:52.000000000 +0100
+@@ -601,7 +601,7 @@ int cfg80211_wext_siwscan(struct net_dev
+ 	struct cfg80211_registered_device *rdev;
+ 	struct wiphy *wiphy;
+ 	struct iw_scan_req *wreq = NULL;
+-	struct cfg80211_scan_request *creq;
++	struct cfg80211_scan_request *creq = NULL;
+ 	int i, err, n_channels = 0;
+ 	enum ieee80211_band band;
  
- 	if (ieee80211_is_assoc_req(mgt->frame_control)) {
--		ie = mgt->u.assoc_req.variable;;
-+		ie = mgt->u.assoc_req.variable;
- 		iwm->req_ie_len =
- 				le16_to_cpu(mgt_frame->len) - (ie - (u8 *)mgt);
- 		kfree(iwm->req_ie);
- 		iwm->req_ie = kmemdup(mgt->u.assoc_req.variable,
- 				      iwm->req_ie_len, GFP_KERNEL);
- 	} else if (ieee80211_is_reassoc_req(mgt->frame_control)) {
--		ie = mgt->u.reassoc_req.variable;;
-+		ie = mgt->u.reassoc_req.variable;
- 		iwm->req_ie_len =
- 				le16_to_cpu(mgt_frame->len) - (ie - (u8 *)mgt);
- 		kfree(iwm->req_ie);
- 		iwm->req_ie = kmemdup(mgt->u.reassoc_req.variable,
- 				      iwm->req_ie_len, GFP_KERNEL);
- 	} else if (ieee80211_is_assoc_resp(mgt->frame_control)) {
--		ie = mgt->u.assoc_resp.variable;;
-+		ie = mgt->u.assoc_resp.variable;
- 		iwm->resp_ie_len =
- 				le16_to_cpu(mgt_frame->len) - (ie - (u8 *)mgt);
- 		kfree(iwm->resp_ie);
- 		iwm->resp_ie = kmemdup(mgt->u.assoc_resp.variable,
- 				       iwm->resp_ie_len, GFP_KERNEL);
- 	} else if (ieee80211_is_reassoc_resp(mgt->frame_control)) {
--		ie = mgt->u.reassoc_resp.variable;;
-+		ie = mgt->u.reassoc_resp.variable;
- 		iwm->resp_ie_len =
- 				le16_to_cpu(mgt_frame->len) - (ie - (u8 *)mgt);
- 		kfree(iwm->resp_ie);
--- 
-1.6.3.3
+@@ -694,8 +694,10 @@ int cfg80211_wext_siwscan(struct net_dev
+ 	/* translate "Scan for SSID" request */
+ 	if (wreq) {
+ 		if (wrqu->data.flags & IW_SCAN_THIS_ESSID) {
+-			if (wreq->essid_len > IEEE80211_MAX_SSID_LEN)
+-				return -EINVAL;
++			if (wreq->essid_len > IEEE80211_MAX_SSID_LEN) {
++				err = -EINVAL;
++				goto out;
++			}
+ 			memcpy(creq->ssids[0].ssid, wreq->essid, wreq->essid_len);
+ 			creq->ssids[0].ssid_len = wreq->essid_len;
+ 		}
+@@ -707,12 +709,15 @@ int cfg80211_wext_siwscan(struct net_dev
+ 	err = rdev->ops->scan(wiphy, dev, creq);
+ 	if (err) {
+ 		rdev->scan_req = NULL;
+-		kfree(creq);
++		/* creq will be freed below */
+ 	} else {
+ 		nl80211_send_scan_start(rdev, dev);
++		/* creq now owned by driver */
++		creq = NULL;
+ 		dev_hold(dev);
+ 	}
+  out:
++	kfree(creq);
+ 	cfg80211_unlock_rdev(rdev);
+ 	return err;
+ }
+
 
