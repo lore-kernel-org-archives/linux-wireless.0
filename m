@@ -1,47 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:61350 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757320AbZLKNlb (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:50405 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753167AbZLWIQH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:41:31 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 09/31] wl1271: set null data template when BSSID is known
-Date: Fri, 11 Dec 2009 15:40:48 +0200
-Message-Id: <1260538870-32297-10-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260538870-32297-1-git-send-email-luciano.coelho@nokia.com>
+	Wed, 23 Dec 2009 03:16:07 -0500
+Received: by mail-ew0-f219.google.com with SMTP id 19so6063598ewy.21
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2009 00:16:07 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 3/5] rt2x00: Let rt2800lib check CONFIG_RT2X00_LIB_USB instead of CONFIG_RT2800USB
+Date: Wed, 23 Dec 2009 09:16:05 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <1261523005-5856-1-git-send-email-gwingerde@gmail.com> <1261523005-5856-3-git-send-email-gwingerde@gmail.com> <1261523005-5856-4-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1261523005-5856-4-git-send-email-gwingerde@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200912230916.05557.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The call to wl1271_cmd_build_null_data() was missing when we got associated,
-this was causing PS to fail.  This patch adds the call and now PS seems to
-work.
+On Wednesday 23 December 2009, Gertjan van Wingerde wrote:
+> rt2800lib currently checks whether RT2800USB is enabled in the configuration.
+> Strictly speaking this is not necessary, it only needs to know whether the
+> generic rt2x00usb library functions are available. Therefore check for
+> RT2X00_LIB_USB instead.
+> 
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index bf1d0fd..64f8623 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1545,6 +1545,12 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 	    memcmp(wl->bssid, bss_conf->bssid, ETH_ALEN)) {
- 			wl->rx_config |= CFG_BSSID_FILTER_EN;
- 			memcpy(wl->bssid, bss_conf->bssid, ETH_ALEN);
-+			ret = wl1271_cmd_build_null_data(wl);
-+			if (ret < 0) {
-+				wl1271_warning("cmd buld null data failed %d",
-+					       ret);
-+				goto out_sleep;
-+			}
- 			ret = wl1271_cmd_join(wl);
- 			if (ret < 0) {
- 				wl1271_warning("cmd join failed %d", ret);
--- 
-1.6.3.3
-
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
