@@ -1,51 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:63717 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751320AbZLATP7 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51815 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751117AbZLWTB5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 14:15:59 -0500
-Received: by ewy19 with SMTP id 19so5285756ewy.21
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 11:16:05 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH v3 4/4] rt2x00: Only remove L2 padding in received frames if there is payload.
-Date: Tue, 1 Dec 2009 20:16:02 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Benoit Papillault <benoit.papillault@free.fr>
-References: <1259615298-2305-1-git-send-email-gwingerde@gmail.com> <1259615298-2305-4-git-send-email-gwingerde@gmail.com> <1259615298-2305-5-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1259615298-2305-5-git-send-email-gwingerde@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200912012016.03145.IvDoorn@gmail.com>
+	Wed, 23 Dec 2009 14:01:57 -0500
+Subject: Re: mac80211 suspend corner case (was: Asus eeepc 1008HA suspend
+ issue and mac80211 suspend corner) case
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+In-Reply-To: <20091223162813.GB2609@tux>
+References: <20091222022355.GA32508@bombadil.infradead.org>
+	 <20091222193010.GB30201@bombadil.infradead.org>
+	 <1261570081.25008.1.camel@johannes.local>  <20091223162813.GB2609@tux>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-lYhv/jeqb8p3t5dteYCW"
+Date: Wed, 23 Dec 2009 17:47:08 +0100
+Message-ID: <1261586828.7304.13.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 30 November 2009, Gertjan van Wingerde wrote:
-> L2 padding will only be present when there is actual payload present.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> ---
->  drivers/net/wireless/rt2x00/rt2x00dev.c |    4 +++-
->  1 files changed, 3 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> index ca2bcc0..b93731b 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -401,7 +401,9 @@ void rt2x00lib_rxdone(struct rt2x00_dev *rt2x00dev,
->  	    (rxdesc.flags & RX_FLAG_IV_STRIPPED))
->  		rt2x00crypto_rx_insert_iv(entry->skb, header_length,
->  					  &rxdesc);
-> -	else if (rxdesc.dev_flags & RXDONE_L2PAD)
-> +	else if (header_length &&
-> +		 (rxdesc.size > header_length) &&
-> +		 (rxdesc.dev_flags & RXDONE_L2PAD))
->  		rt2x00queue_remove_l2pad(entry->skb, header_length);
->  	else
->  		rt2x00queue_align_payload(entry->skb, header_length);
 
-Is there a scenario where header_lenght can be 0?
-And if there is, shouldn't we have bailed-out completely already?
+--=-lYhv/jeqb8p3t5dteYCW
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Ivo
+On Wed, 2009-12-23 at 08:28 -0800, Luis R. Rodriguez wrote:
+
+> > Well it seems to me that if the driver determines that the hardware
+> is
+> > unreachable or not responding, it would unregister it from mac80211,
+> > which would clean up all user-visible state, obviously.
+>=20
+> The drivers would not know this until it fails on the first call
+> from mac80211 which would be start().
+
+Which is why this patch may be a good way to solve that particular
+problem.
+
+> > The patch above seems ok to me, but basically papers over the
+> problem.
+> > If the start there fails, the driver will have to unregister the hw
+> > since any subsequent start will fail as well.
+>=20
+> How about just having mac80211 do that for drivers where the start()
+> fails and we are resuming? I can give that a shot.
+
+No way, the driver will invariably assume things are still going and
+might later unregister etc. Too much magic.
+
+johannes
+
+--=-lYhv/jeqb8p3t5dteYCW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLMkmIAAoJEODzc/N7+QmatxUP/2EHkMmAm9omk8AOwVjX2rNj
+7SSKyHsrZUNToQJSVNuY0rf2nI6/rLwbJVw4EjxOQT1DZWYfaSGjpgBcDl7l49So
+O/ZjFXIY+p52zVBb4AWVJ3WQpqa9xx3dzCPrVnpGjSP0DDwF+3h5Wexe9uojVpo0
+QROLaaDNvUw5DGNOaHfdDoZcg68wcfF3rWZInvA3S5oHsBy8H26O7GS7B6SHehA+
+mQIflkuA8zEAylOXXUS1bdJa1hYyLadD7p1HhLJllltCMn6fuLeXQY3fEQnUsDGi
+mA7okApjV2oNHjGuexvazmQR5GMFqx+y5wzQu68ley80T1b71choEgx80+m4J2zx
+h32EqQ+0JzyjwJ4kTLbYbkNDELcTI38kBaaNcMgJV9AcuJcwUzUYWQp0n/f4rId3
+glmIRkgZ8JOlolPh2D4aEArafOMYppvmiKxsCXJ23dnFM9LAPwraUVJvOO5rwNQw
+eJg4kisVSmCrL20dy0gqJ24Ot9ChNJXHVj7IJKSfpi+KdZZxPsshqAK3vNSMgwrl
+k8EleRx2vgR1QGDkpv2zjjLQSfsqvOefz26av2e6SwuGchFtSCXFlxICLQs4doKb
+8zWzzvQqzzb4YLVmXjSOpuozabYs7ZRIBxt+dH3DdVDraf5Ww3sBTVTLeaO+ZpoQ
+4w3nQx28HQpTOHt6oZ1/
+=bMkg
+-----END PGP SIGNATURE-----
+
+--=-lYhv/jeqb8p3t5dteYCW--
+
