@@ -1,49 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:50893 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934815AbZLKLmj (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:59022 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751172AbZLWM2L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 06:42:39 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 26/31] wl1271: Change rates configured for templates
-Date: Fri, 11 Dec 2009 13:41:17 +0200
-Message-Id: <1260531682-4695-27-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
-References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com>
+	Wed, 23 Dec 2009 07:28:11 -0500
+Received: by ewy19 with SMTP id 19so6258401ewy.21
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2009 04:28:10 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1261061645.10356.114.camel@johannes.local>
+References: <e92712b70912170610y74eb6ae8ifd8db347cc608808@mail.gmail.com>
+	 <1261061645.10356.114.camel@johannes.local>
+Date: Wed, 23 Dec 2009 14:28:10 +0200
+Message-ID: <e92712b70912230428s7caee5eag6943a8eb6a8b7a78@mail.gmail.com>
+Subject: Re: Backoff algorithm
+From: Andrey Lukyanenko <laser.ru@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Thanks a lot for your help.
 
-Previously a "firmware chooses" value was used for the rates of all control
-message templates set to the firmware. This resulted in a too high rate to be
-chosen to transmit those messages. Change this by configuring a fixed low rate
-for the templates.
+I have found OpenFWWF project, which has open source firmware for Broadcom
+chipsets. Unfortunately it does not support CTS/RTS, AP.
+What do you mean by " influencing the value you give the hw"?
+Are you talking about direct access to registers? How can I influence.
+I have heard about tos-mac (TinyOS) which uses directly registers but it
+is for sensors. Do you mean something similar?
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+In our group we have five ar5213 chips, I hope I can try to use it.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 8d090e4..a428fd2 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -78,7 +78,8 @@ static struct conf_drv_settings default_conf = {
- 	.tx = {
- 		.tx_energy_detection         = 0,
- 		.rc_conf                     = {
--			.enabled_rates       = CONF_TX_RATE_MASK_UNSPECIFIED,
-+			.enabled_rates       = CONF_HW_BIT_RATE_1MBPS |
-+					       CONF_HW_BIT_RATE_2MBPS,
- 			.short_retry_limit   = 10,
- 			.long_retry_limit    = 10,
- 			.aflags              = 0
+On Thu, Dec 17, 2009 at 4:54 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2009-12-17 at 16:10 +0200, Andrey Lukyanenko wrote:
+>> Hello Everyone,
+>>
+>> I wanted to find implementation of backoff protocols for different platforms.
+>> I tried to find it in various open-source drivers in linux-sources, madwifi and
+>> stlc45xx. Everywhere I could only find some initialization of CWmax, CWmin, ...
+>> but not the actual algorithm (something like, cw = min(cw<<1 + 1, cwmax) ),
+>> except ath_rate sample/mistrel where the operation is used for "best
+>> rate measurement"
+>> as I understood.
+>> Am I correct to assume that the protocol is implemented in firmwhere and there
+>> is no open source driver which I could use to "play" directly with it?
+>
+> Yes, basically. It's not something you can really implement in any
+> driver anyway as it's very timing sensitive.
+>
+> ar9170 even has this in hardware, afaik, although you can of course play
+> with it in b43 firmware and/or ar9170 by influencing the value you give
+> the hw.
+>
+> johannes
+>
+
+
+
 -- 
-1.6.3.3
-
+Best regards,
+Andrey Lukyanenko.
