@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:51994 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754120AbZLANSD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 08:18:03 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: cfg80211: questions regarding cfg80211_ibss_joined()
-Date: Tue, 1 Dec 2009 14:17:34 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>
-References: <200912011347.38068.holgerschurig@gmail.com> <1259672064.32171.76.camel@johannes.local>
-In-Reply-To: <1259672064.32171.76.camel@johannes.local>
+Received: from mail.atheros.com ([12.36.123.2]:37367 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751942AbZLWEiB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Dec 2009 23:38:01 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Dec 2009 20:38:01 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200912011417.34706.holgerschurig@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19249.41596.778604.908714@gargle.gargle.HOWL>
+Date: Wed, 23 Dec 2009 10:24:20 +0530
+To: Luis Rodriguez <lrodriguez@atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Asus eeepc 1008HA suspend issue and mac80211 suspend corner case
+In-Reply-To: <43e72e890912221854s5f06a0d2jcfffb1cc8d857347@mail.gmail.com>
+References: <20091222022355.GA32508@bombadil.infradead.org>
+	<19248.19829.293087.367661@gargle.gargle.HOWL>
+	<20091222155005.GA4385@tux>
+	<20091222162055.GC4385@tux>
+	<20091222165528.GE4385@tux>
+	<20091222175939.GF4385@tux>
+	<43e72e890912221716r64ea4542qd747302b536a3156@mail.gmail.com>
+	<19249.34294.19925.963051@gargle.gargle.HOWL>
+	<43e72e890912221854s5f06a0d2jcfffb1cc8d857347@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Are you running into the WARN_ON(!bss)?
+Luis Rodriguez wrote:
+> Did you see the last one? It turns out its the only config option
+> passed by mac8021 I've seen so far so my commit log should change.
 
-No, I didn't get a bug, warning nor any output.
+Right, that patch should work.
+So the one I sent out and this one fixes the issue ?
 
-
-In the mean-time I found that this was because I didn't provide 
-any IE (I just submitted NULL & 0 to cfg80211_inform_bss).
-
-Now I make a fake-IE with just WLAN_EID_SSID, and now I get 
-some "iw event" output:
-
-# iw event
-wlan0 (phy #0): IBSS 02:2a:ea:f0:a5:ef joined
-
-
-
-
-> >    need to fake some beacon data. Correct?  Which IEs should 
-> >    I add?
-> 
-> As close to what your firmware is generating as you can get ...
-
-Okay, will fire up wireshark :-)
-
-
--- 
-http://www.holgerschurig.de
+Sujith
