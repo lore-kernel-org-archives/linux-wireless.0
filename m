@@ -1,24 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41930 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:41990 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751799AbZLWMVe (ORCPT
+	with ESMTP id S1755831AbZLWMXd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 07:21:34 -0500
-Message-Id: <20091223121202.581948600@sipsolutions.net>
-Date: Wed, 23 Dec 2009 13:12:02 +0100
+	Wed, 23 Dec 2009 07:23:33 -0500
+Message-Id: <20091223121618.244808080@sipsolutions.net>
+Date: Wed, 23 Dec 2009 13:15:46 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2.6.33 0/3] wireless fixes
+Subject: [PATCH next 17/18] mac80211: remove requeue from work
+References: <20091223121529.289129599@sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+There's no need to be requeueing the work struct
+since we check for the scan after removing items
+due to possible timeouts.
 
-Here are a few wireless fixes. I've sent all these
-before, but these are now rebased over the current
-wireless-testing tree.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/work.c |   18 ------------------
+ 1 file changed, 18 deletions(-)
 
-johannes
+--- wireless-testing.orig/net/mac80211/work.c	2009-12-23 13:11:26.000000000 +0100
++++ wireless-testing/net/mac80211/work.c	2009-12-23 13:11:30.000000000 +0100
+@@ -435,12 +435,6 @@ ieee80211_direct_probe(struct ieee80211_
+ 		 */
+ 		ieee80211_remove_auth_bss(local, wk);
+ 
+-		/*
+-		 * We might have a pending scan which had no chance to run yet
+-		 * due to work needing to be done. Hence, queue the STAs work
+-		 * again for that.
+-		 */
+-		ieee80211_queue_work(&local->hw, &local->work_work);
+ 		return WORK_ACT_TIMEOUT;
+ 	}
+ 
+@@ -478,12 +472,6 @@ ieee80211_authenticate(struct ieee80211_
+ 		 */
+ 		ieee80211_remove_auth_bss(local, wk);
+ 
+-		/*
+-		 * We might have a pending scan which had no chance to run yet
+-		 * due to work needing to be done. Hence, queue the STAs work
+-		 * again for that.
+-		 */
+-		ieee80211_queue_work(&local->hw, &local->work_work);
+ 		return WORK_ACT_TIMEOUT;
+ 	}
+ 
+@@ -519,12 +507,6 @@ ieee80211_associate(struct ieee80211_wor
+ 		if (wk->assoc.bss)
+ 			cfg80211_unlink_bss(local->hw.wiphy, wk->assoc.bss);
+ 
+-		/*
+-		 * We might have a pending scan which had no chance to run yet
+-		 * due to work needing to be done. Hence, queue the STAs work
+-		 * again for that.
+-		 */
+-		ieee80211_queue_work(&local->hw, &local->work_work);
+ 		return WORK_ACT_TIMEOUT;
+ 	}
+ 
+
 
