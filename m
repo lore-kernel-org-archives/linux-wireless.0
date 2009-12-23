@@ -1,184 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.102.11.253]:40030 "EHLO
-	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759979AbZLOR47 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57072 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754621AbZLWMIH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 12:56:59 -0500
-From: =?UTF-8?q?Luk=C3=A1=C5=A1=20Turek?= <8an@praha12.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	ath5k-devel@lists.ath5k.org
-Subject: [PATCH 5/5] ath5k: Implement mac80211 callback set_coverage_class
-Date: Tue, 15 Dec 2009 18:56:52 +0100
-Message-Id: <1260899813-17585-6-git-send-email-8an@praha12.net>
-In-Reply-To: <1260899813-17585-1-git-send-email-8an@praha12.net>
-References: <1260899813-17585-1-git-send-email-8an@praha12.net>
+	Wed, 23 Dec 2009 07:08:07 -0500
+Subject: Re: mac80211 suspend corner case (was: Asus eeepc 1008HA suspend
+ issue and mac80211 suspend corner) case
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+In-Reply-To: <20091222193010.GB30201@bombadil.infradead.org>
+References: <20091222022355.GA32508@bombadil.infradead.org>
+	 <20091222193010.GB30201@bombadil.infradead.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-FEv9z7puJCo6c8GZp+WE"
+Date: Wed, 23 Dec 2009 13:08:01 +0100
+Message-ID: <1261570081.25008.1.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The callback sets slot time as specified in IEEE 802.11-2007 section
-17.3.8.6 (for 20MHz channels only for now) and raises ACK and CTS
-timeouts accordingly. The values are persistent, they are restored after
-device reset.
 
-Signed-off-by: Lukas Turek <8an@praha12.net>
----
- drivers/net/wireless/ath/ath5k/ath5k.h |    2 +
- drivers/net/wireless/ath/ath5k/base.c  |   23 +++++++++++++
- drivers/net/wireless/ath/ath5k/pcu.c   |   55 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath5k/reset.c |    4 ++
- 4 files changed, 84 insertions(+), 0 deletions(-)
+--=-FEv9z7puJCo6c8GZp+WE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index ae311d2..66bcb50 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1063,6 +1063,7 @@ struct ath5k_hw {
- 	u32			ah_cw_min;
- 	u32			ah_cw_max;
- 	u32			ah_limit_tx_retries;
-+	u8			ah_coverage_class;
- 
- 	/* Antenna Control */
- 	u32			ah_ant_ctl[AR5K_EEPROM_N_MODES][AR5K_ANT_MAX];
-@@ -1200,6 +1201,7 @@ extern bool ath5k_eeprom_is_hb63(struct ath5k_hw *ah);
- 
- /* Protocol Control Unit Functions */
- extern int ath5k_hw_set_opmode(struct ath5k_hw *ah);
-+extern void ath5k_hw_set_coverage_class(struct ath5k_hw *ah, u8 coverage_class);
- /* BSSID Functions */
- extern int ath5k_hw_set_lladdr(struct ath5k_hw *ah, const u8 *mac);
- extern void ath5k_hw_set_associd(struct ath5k_hw *ah);
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index a4c086f..203622e 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -254,6 +254,8 @@ static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
- 		u32 changes);
- static void ath5k_sw_scan_start(struct ieee80211_hw *hw);
- static void ath5k_sw_scan_complete(struct ieee80211_hw *hw);
-+static void ath5k_set_coverage_class(struct ieee80211_hw *hw,
-+		u8 coverage_class);
- 
- static const struct ieee80211_ops ath5k_hw_ops = {
- 	.tx 		= ath5k_tx,
-@@ -274,6 +276,7 @@ static const struct ieee80211_ops ath5k_hw_ops = {
- 	.bss_info_changed = ath5k_bss_info_changed,
- 	.sw_scan_start	= ath5k_sw_scan_start,
- 	.sw_scan_complete = ath5k_sw_scan_complete,
-+	.set_coverage_class = ath5k_set_coverage_class,
- };
- 
- /*
-@@ -3274,3 +3277,23 @@ static void ath5k_sw_scan_complete(struct ieee80211_hw *hw)
- 	ath5k_hw_set_ledstate(sc->ah, sc->assoc ?
- 		AR5K_LED_ASSOC : AR5K_LED_INIT);
- }
-+
-+/**
-+ * ath5k_set_coverage_class - Set IEEE 802.11 coverage class
-+ *
-+ * @hw: struct ieee80211_hw pointer
-+ * @coverage_class: IEEE 802.11 coverage class number
-+ *
-+ * Mac80211 callback. Sets slot time, ACK timeout and CTS timeout for given
-+ * coverage class. The values are persistent, they are restored after device
-+ * reset.
-+ */
-+static void ath5k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
-+{
-+	struct ath5k_softc *sc = hw->priv;
-+
-+	mutex_lock(&sc->lock);
-+	ath5k_hw_set_coverage_class(sc->ah, coverage_class);
-+	sc->ah->ah_coverage_class = coverage_class;
-+	mutex_unlock(&sc->lock);
-+}
-diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
-index 8c72845..88ad112 100644
---- a/drivers/net/wireless/ath/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath/ath5k/pcu.c
-@@ -286,6 +286,42 @@ unsigned int ath5k_hw_get_clockrate(struct ath5k_hw *ah)
- }
- 
- /**
-+ * ath5k_hw_get_default_slottime - Get the default slot time for current mode
-+ *
-+ * @ah: The &struct ath5k_hw
-+ */
-+unsigned int ath5k_hw_get_default_slottime(struct ath5k_hw *ah)
-+{
-+	struct ieee80211_channel *channel = ah->ah_current_channel;
-+
-+	if (channel->hw_value & CHANNEL_TURBO)
-+		return 6; /* both turbo modes */
-+
-+	if (channel->hw_value & CHANNEL_CCK)
-+		return 20; /* 802.11b */
-+
-+	return 9; /* 802.11 a/g */
-+}
-+
-+/**
-+ * ath5k_hw_get_default_sifs - Get the default SIFS for current mode
-+ *
-+ * @ah: The &struct ath5k_hw
-+ */
-+unsigned int ath5k_hw_get_default_sifs(struct ath5k_hw *ah)
-+{
-+	struct ieee80211_channel *channel = ah->ah_current_channel;
-+
-+	if (channel->hw_value & CHANNEL_TURBO)
-+		return 8; /* both turbo modes */
-+
-+	if (channel->hw_value & CHANNEL_5GHZ)
-+		return 16; /* 802.11a */
-+
-+	return 10; /* 802.11 b/g */
-+}
-+
-+/**
-  * ath5k_hw_set_lladdr - Set station id
-  *
-  * @ah: The &struct ath5k_hw
-@@ -1094,3 +1130,22 @@ int ath5k_hw_set_key_lladdr(struct ath5k_hw *ah, u16 entry, const u8 *mac)
- 	return 0;
- }
- 
-+/**
-+ * ath5k_hw_set_coverage_class - Set IEEE 802.11 coverage class
-+ *
-+ * @ah: The &struct ath5k_hw
-+ * @coverage_class: IEEE 802.11 coverage class number
-+ *
-+ * Sets slot time, ACK timeout and CTS timeout for given coverage class.
-+ */
-+void ath5k_hw_set_coverage_class(struct ath5k_hw *ah, u8 coverage_class)
-+{
-+	/* As defined by IEEE 802.11-2007 17.3.8.6 */
-+	int slot_time = ath5k_hw_get_default_slottime(ah) + 3 * coverage_class;
-+	int ack_timeout = ath5k_hw_get_default_sifs(ah) + slot_time;
-+	int cts_timeout = ack_timeout;
-+
-+	ath5k_hw_set_slot_time(ah, slot_time);
-+	ath5k_hw_set_ack_timeout(ah, ack_timeout);
-+	ath5k_hw_set_cts_timeout(ah, cts_timeout);
-+}
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index f1dc4c8..ec3b357 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -1316,6 +1316,10 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 	/* Restore antenna mode */
- 	ath5k_hw_set_antenna_mode(ah, ah->ah_ant_mode);
- 
-+	/* Restore slot time and ACK timeouts */
-+	if (ah->ah_coverage_class > 0)
-+		ath5k_hw_set_coverage_class(ah, ah->ah_coverage_class);
-+
- 	/*
- 	 * Configure QCUs/DCUs
- 	 */
--- 
-1.6.4.4
+On Tue, 2009-12-22 at 14:30 -0500, Luis R. Rodriguez wrote:
+
+> Johannes, any preferences how to handle this? The patch below avoids
+> the Interrupt being turned off but its not enough given that we still
+> could be associated according to userspace. If the hardware is
+> unresponsive maybe it is best to just let the IRQ go disabled, not
+> sure, but its likely not what happens in all cases.
+>=20
+> Trimming out the irrelevant parts below.
+
+> http://bombadil.infradead.org/~mcgrof/logs/2.6.31-with-2.6.32-wireless
+> /irq-disabled.txt
+> >=20
+> > This can be fixed by something like the following:
+> >=20
+> > diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> > index e6c08da..63d42fa 100644
+> > --- a/net/mac80211/util.c
+> > +++ b/net/mac80211/util.c
+> > @@ -1031,7 +1031,14 @@ int ieee80211_reconfig(struct ieee80211_local
+> *local)
+> > =20
+> >  	/* restart hardware */
+> >  	if (local->open_count) {
+> > +		/*
+> > +		 * Upon resume hardware can sometimes be goofy due to
+> > +		 * various platform issues, so restarting the device may
+> > +		 * at times not work immediately. Propagate the error.
+> > +		 */
+> >  		res =3D drv_start(local);
+> > +		if (res)
+> > +			return res;
+> > =20
+> >  		ieee80211_led_radio(local, true);
+> >  	}
+> >=20
+> > But this isn't enough. And since we cannot exactly talk to hardware
+> > we can't try to send a deassoc as harware would be unresponsive. I
+> > also don't see us handling such cases before either on cfg80211 or
+> > mac80211, so curious what we should do.
+
+Well it seems to me that if the driver determines that the hardware is
+unreachable or not responding, it would unregister it from mac80211,
+which would clean up all user-visible state, obviously.
+
+The patch above seems ok to me, but basically papers over the problem.
+If the start there fails, the driver will have to unregister the hw
+since any subsequent start will fail as well.
+
+The way I see it, it's like a USB unplug while suspended/hibernated ...
+the driver notices that and remo
+
+johannes=20
+
+--=-FEv9z7puJCo6c8GZp+WE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLMggdAAoJEODzc/N7+QmaO3MP/2+7AXly+arQb2eaIT1oNuul
+xUOAbS6QBOhpMmIUIy5IcHqDuxHOdDk69+BR6cJPjA+7U0FrAAGDnx8ynVCCc4gv
+075gPswYj/CphdXBZAajGb57tGhtFqjndsXHfRD1mgDjH797cjR0Ra5uU4uTr8UY
+ae9BHLhswq3uM+TY5lsOqx6sMAGMdmMjkbDrGxVMD30Sj/7E+FxYs9Mz4HRffZ2v
+37hFDphbplusG18fIY6FqUrLv82Dm82tIzTyYCIokSiwWaOMx+LUQo0BDZZh9IgU
+2bZ2QXXaLqt1Upxjr9oiks9u8hrOU+W2KTrbPItWPfUzH807m5edvqiFXGVE1kcL
+oEGOr98Seuh4x90kTwKxxkg+pmjX/puH3pHq7yn92nidhYpOVzY5rS3nRcmM/5mk
+oXrQLOfVUi7xK+Nerf/8F022+tWEM1Int4kIvZhAMnBuwjuQioEj74gOApeY57Tj
+ga9Da2KAa7sDakUdIXOKiv3yaZuXhEoAfftp3twPu0p6XOMI4VbVBiIfIbfEPrcB
+jW/l5DpbApnU5Lw3Gmfq220+qEEvCGyDlELOxq6NDcPDteH8Av7Fpqwe1IyM5soD
+gm7XaTJGjrWc8G7N9o/AnlHxUBv/OOO4Fw7k0NJ14nQsZYaPawwGpuJtx7PkwQ7x
+bMzFQiaPrQcsmk+0jRwI
+=QczI
+-----END PGP SIGNATURE-----
+
+--=-FEv9z7puJCo6c8GZp+WE--
 
