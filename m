@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:22728 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754391AbZLKNXk (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:50405 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751409AbZLWIPd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:23:40 -0500
-Message-ID: <4B2247A7.7040102@nokia.com>
-Date: Fri, 11 Dec 2009 15:22:47 +0200
-From: Luciano Coelho <luciano.coelho@nokia.com>
+	Wed, 23 Dec 2009 03:15:33 -0500
+Received: by ewy19 with SMTP id 19so6063598ewy.21
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2009 00:15:32 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 1/5] rt2x00: Add USB ID for Linksys WUSB 600N rev 2.
+Date: Wed, 23 Dec 2009 09:15:28 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <1261523005-5856-1-git-send-email-gwingerde@gmail.com> <1261523005-5856-2-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1261523005-5856-2-git-send-email-gwingerde@gmail.com>
 MIME-Version: 1.0
-To: ext Johannes Berg <johannes@sipsolutions.net>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/31] wl1271: patches for wk50
-References: <1260531682-4695-1-git-send-email-luciano.coelho@nokia.com> <1260532494.2442.131.camel@johannes.local>
-In-Reply-To: <1260532494.2442.131.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200912230915.29101.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ext Johannes Berg wrote:
-> On Fri, 2009-12-11 at 13:40 +0200, Luciano Coelho wrote:
->> Hi,
->>
->> These are the patches that have resulted from a one-week debug and
->> implementation camp with TI.  Mostly bug fixes and improvements, but also we
->> now added support for a new version of the firmware.
->>
->> With these patches, the driver should be pretty much functional, even though
->> there are still a couple of known bugs.
+On Wednesday 23 December 2009, Gertjan van Wingerde wrote:
+> This is a rt2870 based device.
 > 
-> I see a lot of rate stuff here -- time to set the hw rate control flag?
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Yeah, we're use the rate control stuff from the hardware more carefully now. 
-But we're "still" using 2.6.32 internally, so it will be much easier for me to 
-wait until the 2.6.33-rc series start (and the IEEE80211_HW_HAS_RATE_CONTROL 
-gets introduced), otherwise I'll have to fork and keep maintain two separate trees.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-We have a plan to start cherry-picking the latest and greatest mac80211 stuff 
-from wireless-testing, but we are not doing that yet.
+> ---
+>  drivers/net/wireless/rt2x00/rt2800usb.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index 40295b4..aff984b 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -933,6 +933,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+>  	{ USB_DEVICE(0x1737, 0x0070), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x1737, 0x0071), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x1737, 0x0077), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x1737, 0x0079), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Logitec */
+>  	{ USB_DEVICE(0x0789, 0x0162), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x0789, 0x0163), USB_DEVICE_DATA(&rt2800usb_ops) },
 
--- 
-Cheers,
-Luca.
+
