@@ -1,77 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41255 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:56531 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753290AbZLALY5 (ORCPT
+	with ESMTP id S1754053AbZLWQZq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 06:24:57 -0500
-Subject: Re: python nl80211 code
+	Wed, 23 Dec 2009 11:25:46 -0500
+Subject: Re: [RFC/T] cfg80211: fix race between deauth and assoc response
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <87638r6l4i.fsf@purkki.valot.fi>
-References: <87hbsb6pot.fsf@purkki.valot.fi>
-	 <1259659425.32171.54.camel@johannes.local> <87638r6l4i.fsf@purkki.valot.fi>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-vF8pHK3dKQ4+/KqRh7FR"
-Date: Tue, 01 Dec 2009 12:24:59 +0100
-Message-ID: <1259666699.32171.72.camel@johannes.local>
+To: Joseph Nahmias <joe@nahmias.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	562016-quiet@bugs.debian.org
+In-Reply-To: <20091223162111.GA902@nahmias.net>
+References: <1261481565.22748.40.camel@johannes.local>
+	 <20091223162111.GA902@nahmias.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-+mxr8xECTWJTD2imHkrK"
+Date: Wed, 23 Dec 2009 17:25:23 +0100
+Message-ID: <1261585523.7304.11.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-vF8pHK3dKQ4+/KqRh7FR
+--=-+mxr8xECTWJTD2imHkrK
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2009-12-01 at 12:31 +0200, Kalle Valo wrote:
-
-> Thanks. This looks interesting but doesn't compile right now:
+On Wed, 2009-12-23 at 16:21 +0000, Joseph Nahmias wrote:
+> On Tue, Dec 22, 2009 at 12:32:45PM +0100, Johannes Berg wrote:
+> > I don't suppose you have a way of reproducing this issue? I know
+> this
+> > patch will remove the warning, and I'm pretty sure it's correct too,
+> but
+> > I can't really test this scenario.
 >=20
-> $ make
-> Checking netlink numbers:
-> check.r5cOZHc/check.c: In function 'main':
-> check.r5cOZHc/check.c:63: error: lvalue required as left operand of
-> assignment
-> check.r5cOZHc/check.c:78: error: 'NL80211_CHAN_MAX' undeclared (first
-> use in this function)
-> check.r5cOZHc/check.c:78: error: (Each undeclared identifier is
-> reported only once
-> check.r5cOZHc/check.c:78: error: for each function it appears in.)
-> check.r5cOZHc/check.c:80: error: lvalue required as left operand of
-> assignment
-> check.r5cOZHc/check.c:86: error: 'NL80211_RATE_MAX' undeclared (first
-> use in this function)
-> [...]
->=20
-> The parsing of nl80211 seems to fail. If I find some time, I try to
-> look at it.
+> Sorry, I've tried, but I cannot reproduce.
 
-Oh, that's not surprising, it's over two years old and after I started
-writing the C tool (iw) I never maintained the comments in nl80211.h
-that this tried to parse.
+Ok. I'm pretty sure I understand the scenario anyway, and your patch was
+part of a patchset I sent for merging today.
 
 johannes
 
---=-vF8pHK3dKQ4+/KqRh7FR
+--=-+mxr8xECTWJTD2imHkrK
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJLFP0HAAoJEODzc/N7+Qman2YP/Rk5+IZEXDgw2O2XO+nVqdUW
-3bPKbsIEqZk0pruOhEYQercxEwqeP4FaXmwV+IKSczwem2/ANhkvOzHaLHcuT++R
-UrXBjWRMM+M8MF98RsyYntaaEblkQBKCUO5IZ3/KLNGMA8PwmwKfqFGp8hSWavFn
-u9VNx52gbZmkY1j+36M9HaOJgFeQ4z1Ss/t47mo9Hlb06Uy9IugSU0s+97tGN/fB
-CTtSKYkbLpdThFJvudUAvj5BUajqxJhjEfgkQHIhkSg1ln7fcK839YEK06eRXAPw
-MvKxi1t4nMV2pNyBQ8Te2CO0pKGmLcNfxuPlevowZjevIOIC3mgYQwyBrnG+yRmB
-NbYZWAieSWuqGBDpYNiUEE9GRnjp/RRTSASxZH/kJayU/RkOZauObBLZEmZxOuWb
-skwzWKPlchvg7u7odwyVaqmvYitNyo7BAwnZOsv00t0fDv7K32p3jhxzshGt/t25
-1GxSKde7Pqlp0SQgpFcYEbuZBxPSBtMzRIU8X4iM8BmgGJ5jRSl2Ak8EvFGjJ1yk
-v7JAbmCviaNGOPf5O2c6IeRi5TIVY6ib4+naGgyssG7GzUxV7njFZMDYLW1fSj2y
-x3pfumDqgtq4Yk4r3ZNVEy3q7Tmz4vA0ooW/b290cIf96A/lymiJxGEvv7chwODX
-UWC7+wfFtvluHRcrb/yo
-=OA2z
+iQIcBAABAgAGBQJLMkRvAAoJEODzc/N7+QmaqgYQAL4+qhaSghEiyFy0uTqCF3e3
+6vXMDxBqNh1maXxGeKL3BFBxl5vX8qamw/VNY6RvnMtzzZ3DhlRS+Hfj/FXbtUDu
+8kGKFtX97XspXEuZaWLhLzFFD8qp100Kdoz1c6qPYfcJAQi36RD8AxDda83lhaR5
+ykNoevhc2cq3xIjagmWnesMBBQOb99FTa0qv4bWm47z3jMx36FBgKo1x3BopE365
+rAwd3HFtO2xZrPQriMRQcHyyqxQZ6Bc1p2+/Uy/tosuLDeHBNwVTOt+4zmp0p1MA
+PgiDwzp7/DLSeuRa8420RSUMSTAFJYXwB9h97Wcv1zDxdbWJbAXEuTUvjZS2kup3
+0GFLDgw7th/z3XbdoIBkkMYSvw3582PdhflqgIw+uXQ7Q6HB5OwB+DPOntjCV+in
+W6R+vZN/FkjieiqUdlfyQ7qYByrEJAMXd/C82e85SGAuBG+madzM9YenY7sQy3gP
+DhURKvA9vM4RsqU3Hwsj7HrBaMj2YwYBsDbxRgiRKP+r4lQgDZc2vpLBH+iJnsyF
+WZ7vaCCw0SWTQRUaER6R5utOSgoS6tYFCg0CjnHGwc3QEQD0K5pGJfc8kFVJs1by
+j64/Xgfe+7Iy1qpbGzWquVSYzY1RVa59kiwd51Q6UDpcebsOIs5rhiRtyFg1JdJN
+1HRvZ6N9R7m+e36TG5sX
+=BoyV
 -----END PGP SIGNATURE-----
 
---=-vF8pHK3dKQ4+/KqRh7FR--
+--=-+mxr8xECTWJTD2imHkrK--
 
