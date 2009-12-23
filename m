@@ -1,215 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55736 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751075AbZLVPVZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2009 10:21:25 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat: Backport pcmcia from 2.6.33
-Date: Tue, 22 Dec 2009 16:20:00 +0100
-Message-Id: <1261495204-28966-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1261495204-28966-1-git-send-email-hauke@hauke-m.de>
-References: <1261495204-28966-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:55588 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752850AbZLWCzQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Dec 2009 21:55:16 -0500
+Received: by iwn1 with SMTP id 1so4872195iwn.33
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Dec 2009 18:55:15 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <19249.34294.19925.963051@gargle.gargle.HOWL>
+References: <20091222022355.GA32508@bombadil.infradead.org>
+	<19248.19829.293087.367661@gargle.gargle.HOWL> <20091222155005.GA4385@tux>
+	<20091222162055.GC4385@tux> <20091222165528.GE4385@tux> <20091222175939.GF4385@tux>
+	<43e72e890912221716r64ea4542qd747302b536a3156@mail.gmail.com>
+	<19249.34294.19925.963051@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 22 Dec 2009 18:54:53 -0800
+Message-ID: <43e72e890912221854s5f06a0d2jcfffb1cc8d857347@mail.gmail.com>
+Subject: Re: Asus eeepc 1008HA suspend issue and mac80211 suspend corner case
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This backports the pcmcia_loop_tuple function and change the signature
-of pcmcia_request_window and pcmcia_map_mem_page as needed for older
-kernels.
+On Tue, Dec 22, 2009 at 6:52 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> Luis Rodriguez wrote:
+>> OK I have to go now but I managed to get this working without the
+>> issue coming up. At this point I am not sure if all of these are
+>> required but I cherry picked 2 patches from wireless-testing and then
+>> added 4, one based on sujith's suggestion.
+>>
+>> http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0001-mac80211-fix-resume.patch
+>> http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0002-mac80211-fix-WMM-AP-settings-application.patch
+>>
+>> http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0003-ath9k-set-and-restore-ps-prior-to-stop-and-interface.patch
+>> http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0004-ath9k-ensure-hardware-is-awake-during-ampdu-TX-actio.patch
+>>
+>> http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0005-ath9k-synch-TX-DMA-buffer-upon-TX-cancelation.patch
+>> http://bombadil.infradead.org/~mcgrof/patches/pm-stuff/0006-ath9k-do-not-wake-up-device-if-it-hasn-t-been-starte.patch
+>>
+>> Its likely only patch 3, 4, and 6 are the only ones required. In fact
+>> maybe even 6 will fix it, but I just gotta go so cannot test that. I
+>> was able to resume about 10 times consecutively which I was unable to
+>> do before.
+>
+> Probably lucky. :)
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/Makefile               |    1 +
- compat/compat-2.6.33.c        |  130 +++++++++++++++++++++++++++++++++++++++++
- include/linux/compat-2.6.33.h |   21 +++++++
- 3 files changed, 152 insertions(+), 0 deletions(-)
- create mode 100644 compat/compat-2.6.33.c
+Not really, I noticed the interrupts were being set and full sleep->
+awake was going on right after ath9k_stop() so I looked for who could
+have called that and it was mac80211 calling the config, disabling PS.
 
-diff --git a/compat/Makefile b/compat/Makefile
-index 20d80e2..fd2f99f 100644
---- a/compat/Makefile
-+++ b/compat/Makefile
-@@ -19,3 +19,4 @@ compat-$(CONFIG_COMPAT_KERNEL_29) += compat-2.6.29.o
- compat-$(CONFIG_COMPAT_KERNEL_30) += compat-2.6.30.o
- compat-$(CONFIG_COMPAT_KERNEL_31) += compat-2.6.31.o
- compat-$(CONFIG_COMPAT_KERNEL_32) += compat-2.6.32.o
-+compat-$(CONFIG_COMPAT_KERNEL_33) += compat-2.6.33.o
-diff --git a/compat/compat-2.6.33.c b/compat/compat-2.6.33.c
-new file mode 100644
-index 0000000..052c609
---- /dev/null
-+++ b/compat/compat-2.6.33.c
-@@ -0,0 +1,130 @@
-+/*
-+ * Copyright 2009	Hauke Mehrtens <hauke@hauke-m.de>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * Compatibility file for Linux wireless for kernels 2.6.33.
-+ */
-+
-+#include <linux/compat.h>
-+
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33))
-+
-+
-+/**
-+ * pccard_loop_tuple() - loop over tuples in the CIS
-+ * @s:		the struct pcmcia_socket where the card is inserted
-+ * @function:	the device function we loop for
-+ * @code:	which CIS code shall we look for?
-+ * @parse:	buffer where the tuple shall be parsed (or NULL, if no parse)
-+ * @priv_data:	private data to be passed to the loop_tuple function.
-+ * @loop_tuple:	function to call for each CIS entry of type @function. IT
-+ *		gets passed the raw tuple, the paresed tuple (if @parse is
-+ *		set) and @priv_data.
-+ *
-+ * pccard_loop_tuple() loops over all CIS entries of type @function, and
-+ * calls the @loop_tuple function for each entry. If the call to @loop_tuple
-+ * returns 0, the loop exits. Returns 0 on success or errorcode otherwise.
-+ */
-+int pccard_loop_tuple(struct pcmcia_socket *s, unsigned int function,
-+		      cisdata_t code, cisparse_t *parse, void *priv_data,
-+		      int (*loop_tuple) (tuple_t *tuple,
-+					 cisparse_t *parse,
-+					 void *priv_data))
-+{
-+	tuple_t tuple;
-+	cisdata_t *buf;
-+	int ret;
-+
-+	buf = kzalloc(256, GFP_KERNEL);
-+	if (buf == NULL) {
-+		dev_printk(KERN_WARNING, &s->dev, "no memory to read tuple\n");
-+		return -ENOMEM;
-+	}
-+
-+	tuple.TupleData = buf;
-+	tuple.TupleDataMax = 255;
-+	tuple.TupleOffset = 0;
-+	tuple.DesiredTuple = code;
-+	tuple.Attributes = 0;
-+
-+	ret = pccard_get_first_tuple(s, function, &tuple);
-+	while (!ret) {
-+		if (pccard_get_tuple_data(s, &tuple))
-+			goto next_entry;
-+
-+		if (parse)
-+			if (pcmcia_parse_tuple(&tuple, parse))
-+				goto next_entry;
-+
-+		ret = loop_tuple(&tuple, parse, priv_data);
-+		if (!ret)
-+			break;
-+
-+next_entry:
-+		ret = pccard_get_next_tuple(s, function, &tuple);
-+	}
-+
-+	kfree(buf);
-+	return ret;
-+}
-+EXPORT_SYMBOL(pccard_loop_tuple);
-+/* Source: drivers/pcmcia/cistpl.c */
-+
-+
-+struct pcmcia_loop_mem {
-+	struct pcmcia_device *p_dev;
-+	void *priv_data;
-+	int (*loop_tuple) (struct pcmcia_device *p_dev,
-+			   tuple_t *tuple,
-+			   void *priv_data);
-+};
-+
-+/**
-+ * pcmcia_do_loop_tuple() - internal helper for pcmcia_loop_config()
-+ *
-+ * pcmcia_do_loop_tuple() is the internal callback for the call from
-+ * pcmcia_loop_tuple() to pccard_loop_tuple(). Data is transferred
-+ * by a struct pcmcia_cfg_mem.
-+ */
-+static int pcmcia_do_loop_tuple(tuple_t *tuple, cisparse_t *parse, void *priv)
-+{
-+	struct pcmcia_loop_mem *loop = priv;
-+
-+	return loop->loop_tuple(loop->p_dev, tuple, loop->priv_data);
-+};
-+
-+/**
-+ * pcmcia_loop_tuple() - loop over tuples in the CIS
-+ * @p_dev:	the struct pcmcia_device which we need to loop for.
-+ * @code:	which CIS code shall we look for?
-+ * @priv_data:	private data to be passed to the loop_tuple function.
-+ * @loop_tuple:	function to call for each CIS entry of type @function. IT
-+ *		gets passed the raw tuple and @priv_data.
-+ *
-+ * pcmcia_loop_tuple() loops over all CIS entries of type @function, and
-+ * calls the @loop_tuple function for each entry. If the call to @loop_tuple
-+ * returns 0, the loop exits. Returns 0 on success or errorcode otherwise.
-+ */
-+int pcmcia_loop_tuple(struct pcmcia_device *p_dev, cisdata_t code,
-+		      int (*loop_tuple) (struct pcmcia_device *p_dev,
-+					 tuple_t *tuple,
-+					 void *priv_data),
-+		      void *priv_data)
-+{
-+	struct pcmcia_loop_mem loop = {
-+		.p_dev = p_dev,
-+		.loop_tuple = loop_tuple,
-+		.priv_data = priv_data};
-+
-+	return pccard_loop_tuple(p_dev->socket, p_dev->func, code, NULL,
-+				 &loop, pcmcia_do_loop_tuple);
-+}
-+EXPORT_SYMBOL(pcmcia_loop_tuple);
-+/* Source: drivers/pcmcia/pcmcia_resource.c */
-+
-+
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33)) */
-+
-diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
-index 0942baf..5367cd9 100644
---- a/include/linux/compat-2.6.33.h
-+++ b/include/linux/compat-2.6.33.h
-@@ -8,6 +8,9 @@
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33))
- 
- #include <linux/skbuff.h>
-+#include <pcmcia/cs_types.h>
-+#include <pcmcia/cistpl.h>
-+#include <pcmcia/ds.h>
- 
- #define IFF_DONT_BRIDGE 0x800		/* disallow bridging this ether dev */
- /* source: include/linux/if.h */
-@@ -28,6 +31,24 @@ static inline struct sk_buff *netdev_alloc_skb_ip_align(struct net_device *dev,
- 	return skb;
- }
- 
-+#define pcmcia_request_window(a, b, c) pcmcia_request_window(&a, b, c)
-+
-+#define pcmcia_map_mem_page(a, b, c) pcmcia_map_mem_page(b, c)
-+
-+/* loop over CIS entries */
-+int pcmcia_loop_tuple(struct pcmcia_device *p_dev, cisdata_t code,
-+		      int (*loop_tuple) (struct pcmcia_device *p_dev,
-+					 tuple_t *tuple,
-+					 void *priv_data),
-+		      void *priv_data);
-+
-+/* loop over CIS entries */
-+int pccard_loop_tuple(struct pcmcia_socket *s, unsigned int function,
-+		      cisdata_t code, cisparse_t *parse, void *priv_data,
-+		      int (*loop_tuple) (tuple_t *tuple,
-+					 cisparse_t *parse,
-+					 void *priv_data));
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33)) */
- 
- #endif /* LINUX_26_33_COMPAT_H */
--- 
-1.6.3.3
+> None of the above patches address the issue of allowing configuration requests
+> after the chip has been shut down.
 
+Did you see the last one? It turns out its the only config option
+passed by mac8021 I've seen so far so my commit log should change.
+
+> Can you try this on top of the earlier one I sent out ?
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index 419c382..7fdcc6b 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -2673,6 +2673,11 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+>
+>        mutex_lock(&sc->mutex);
+>
+> +       if (sc->sc_flags & SC_OP_INVALID) {
+> +               mutex_unlock(&sc->mutex);
+> +               return 0;
+> +       }
+> +
+>        /*
+>         * Leave this as the first check because we need to turn on the
+>         * radio if it was disabled before prior to processing the rest
+
+That ones busts the resume.
+
+  Luis
