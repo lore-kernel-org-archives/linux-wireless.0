@@ -1,29 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44217
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761988AbZLJW72 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2009 17:59:28 -0500
-Date: Thu, 10 Dec 2009 14:59:35 -0800 (PST)
-Message-Id: <20091210.145935.135534027.davem@davemloft.net>
-To: reinette.chatre@intel.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [PATCH 0/7] iwlwifi updates 12/10/2009
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1260485392.25564.6308.camel@rc-desk>
-References: <1260484647-5114-1-git-send-email-reinette.chatre@intel.com>
-	<20091210.144239.110141276.davem@davemloft.net>
-	<1260485392.25564.6308.camel@rc-desk>
+Received: from c60.cesmail.net ([216.154.195.49]:64421 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751470AbZLWW6R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Dec 2009 17:58:17 -0500
+Subject: Re: 2.6.33.rc1-git3 - regression in rt61pci driver
+From: Pavel Roskin <proski@gnu.org>
+To: Chris Clayton <chris2553@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <c6b1100b0912231448v759eac55kfb3dd1e6d6186c73@mail.gmail.com>
+References: <c6b1100b0912231448v759eac55kfb3dd1e6d6186c73@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 23 Dec 2009 17:58:12 -0500
+Message-Id: <1261609092.2774.4.camel@mj>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: reinette chatre <reinette.chatre@intel.com>
-Date: Thu, 10 Dec 2009 14:49:52 -0800
+On Wed, 2009-12-23 at 22:48 +0000, Chris Clayton wrote:
+> Hi,
+> 
+> I'm not subscribed, so please cc me on any reply.
+> 
+> I've built and installed today's -git kernel
+> (v2.6.33-rc1-225-gc9f937e) and find that my (rt61pci) wireless card no
+> longer works. All the usual drivers are loaded when I insert the card.
+> The card works fine with 2.6.32.2 (as long as I disable power saving).
+> 
+> The symptoms are that:
+> 
+> 1. The file /proc/net/wireless never appears
+> 
+> 2. iwconfig gives "wlan0     no wireless extensions."
 
-> Sorry that I introduced confusion now ... perhaps I should submit fixes
-> and features in separate series to prevent this in the future.
+Have a closer look at your .config file.  I guess CONFIG_CFG80211_WEXT
+is not defined there.  It's needed to make cfg80211 capable devices
+support wireless extensions.
 
-That sounds like a good idea to me.
+You can try using iw to configure your card.  That's the new utility.
+
+[dropping cc to LKML, it's a purely wireless issue]
+
+-- 
+Regards,
+Pavel Roskin
