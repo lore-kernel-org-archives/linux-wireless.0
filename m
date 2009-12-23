@@ -1,187 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:46892 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751073AbZLIQ4N (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:45583 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751288AbZLWSlA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2009 11:56:13 -0500
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtl8187: add radio led and fix warnings on suspend
-Date: Wed, 9 Dec 2009 14:56:13 -0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>, Michael Buesch <mb@bu3sch.de>,
-	"Hin-Tak Leung" <htl10@users.sourceforge.net>
+	Wed, 23 Dec 2009 13:41:00 -0500
+Received: by ewy19 with SMTP id 19so6631397ewy.21
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2009 10:40:59 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200912091456.13989.herton@mandriva.com.br>
+In-Reply-To: <200912231926.17206.mb@bu3sch.de>
+References: <b170af450912230401l7a27b981o42cdbc96e5a16b57@mail.gmail.com>
+	 <4B325F27.4020506@lwfinger.net> <200912231926.17206.mb@bu3sch.de>
+Date: Wed, 23 Dec 2009 19:40:59 +0100
+Message-ID: <b170af450912231040h4b18614dw26a4f2f403e7048b@mail.gmail.com>
+Subject: Re: [PATCH][resend with linux-wireless] b43: N-PHY: clean table init,
+	check PHY rev
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch reports that his rtl8187 gives warnings on suspend
-("queueing ieee80211 work while going to suspend" warnings), as rtl8187
-can call ieee80211_queue_delayed_work after mac80211 is suspended.
+2009/12/23 Michael Buesch <mb@bu3sch.de>:
+> On Wednesday 23 December 2009 19:19:19 Larry Finger wrote:
+>> ACK for the relocation of the tables.
+>
+> Well, the _tables_ aren't actually relocated with that patch. The tables
+> are already in the tables_nphy.c file. You just relocate the functions that upload
+> the tables.
 
-This change enhances rtl8187 led code so we can avoid queuing work after
-mac80211 is suspended: now we register a radio led and make additional
-checks to ensure led is off/on properly as mac80211 wants.
+Yeah, I believe we all meant "table init relocation" :)
 
-Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
----
- drivers/net/wireless/rtl818x/rtl8187.h      |    1 +
- drivers/net/wireless/rtl818x/rtl8187_leds.c |   68 ++++++++++++++++++--------
- drivers/net/wireless/rtl818x/rtl8187_leds.h |    2 +
- 3 files changed, 50 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8187.h b/drivers/net/wireless/rtl818x/rtl8187.h
-index b1a24de..6af0f3f 100644
---- a/drivers/net/wireless/rtl818x/rtl8187.h
-+++ b/drivers/net/wireless/rtl818x/rtl8187.h
-@@ -108,6 +108,7 @@ struct rtl8187_priv {
- 	struct delayed_work work;
- 	struct ieee80211_hw *dev;
- #ifdef CONFIG_RTL8187_LEDS
-+	struct rtl8187_led led_radio;
- 	struct rtl8187_led led_tx;
- 	struct rtl8187_led led_rx;
- 	struct delayed_work led_on;
-diff --git a/drivers/net/wireless/rtl818x/rtl8187_leds.c b/drivers/net/wireless/rtl818x/rtl8187_leds.c
-index cf8a4a4..ded44c0 100644
---- a/drivers/net/wireless/rtl818x/rtl8187_leds.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187_leds.c
-@@ -105,19 +105,36 @@ static void rtl8187_led_brightness_set(struct led_classdev *led_dev,
- 	struct rtl8187_led *led = container_of(led_dev, struct rtl8187_led,
- 					       led_dev);
- 	struct ieee80211_hw *hw = led->dev;
--	struct rtl8187_priv *priv = hw->priv;
-+	struct rtl8187_priv *priv;
-+	static bool radio_on;
- 
--	if (brightness == LED_OFF) {
--		ieee80211_queue_delayed_work(hw, &priv->led_off, 0);
--		/* The LED is off for 1/20 sec so that it just blinks. */
--		ieee80211_queue_delayed_work(hw, &priv->led_on, HZ / 20);
--	} else
--		ieee80211_queue_delayed_work(hw, &priv->led_on, 0);
-+	if (!hw)
-+		return;
-+	priv = hw->priv;
-+	if (led->is_radio) {
-+		if (brightness == LED_FULL) {
-+			ieee80211_queue_delayed_work(hw, &priv->led_on, 0);
-+			radio_on = true;
-+		} else if (radio_on) {
-+			radio_on = false;
-+			cancel_delayed_work_sync(&priv->led_on);
-+			ieee80211_queue_delayed_work(hw, &priv->led_off, 0);
-+		}
-+	} else if (radio_on) {
-+		if (brightness == LED_OFF) {
-+			ieee80211_queue_delayed_work(hw, &priv->led_off, 0);
-+			/* The LED is off for 1/20 sec - it just blinks. */
-+			ieee80211_queue_delayed_work(hw, &priv->led_on,
-+						     HZ / 20);
-+		} else
-+			ieee80211_queue_delayed_work(hw, &priv->led_on, 0);
-+	}
- }
- 
- static int rtl8187_register_led(struct ieee80211_hw *dev,
- 				struct rtl8187_led *led, const char *name,
--				const char *default_trigger, u8 ledpin)
-+				const char *default_trigger, u8 ledpin,
-+				bool is_radio)
- {
- 	int err;
- 	struct rtl8187_priv *priv = dev->priv;
-@@ -128,6 +145,7 @@ static int rtl8187_register_led(struct ieee80211_hw *dev,
- 		return -EINVAL;
- 	led->dev = dev;
- 	led->ledpin = ledpin;
-+	led->is_radio = is_radio;
- 	strncpy(led->name, name, sizeof(led->name));
- 
- 	led->led_dev.name = led->name;
-@@ -145,7 +163,11 @@ static int rtl8187_register_led(struct ieee80211_hw *dev,
- 
- static void rtl8187_unregister_led(struct rtl8187_led *led)
- {
-+	struct ieee80211_hw *hw = led->dev;
-+	struct rtl8187_priv *priv = hw->priv;
-+
- 	led_classdev_unregister(&led->led_dev);
-+	flush_delayed_work(&priv->led_off);
- 	led->dev = NULL;
- }
- 
-@@ -183,33 +205,37 @@ void rtl8187_leds_init(struct ieee80211_hw *dev, u16 custid)
- 	INIT_DELAYED_WORK(&priv->led_off, led_turn_off);
- 
- 	snprintf(name, sizeof(name),
-+		 "rtl8187-%s::radio", wiphy_name(dev->wiphy));
-+	err = rtl8187_register_led(dev, &priv->led_radio, name,
-+			 ieee80211_get_radio_led_name(dev), ledpin, true);
-+	if (err)
-+		return;
-+
-+	snprintf(name, sizeof(name),
- 		 "rtl8187-%s::tx", wiphy_name(dev->wiphy));
- 	err = rtl8187_register_led(dev, &priv->led_tx, name,
--			 ieee80211_get_tx_led_name(dev), ledpin);
-+			 ieee80211_get_tx_led_name(dev), ledpin, false);
- 	if (err)
--		goto error;
-+		goto err_tx;
-+
- 	snprintf(name, sizeof(name),
- 		 "rtl8187-%s::rx", wiphy_name(dev->wiphy));
- 	err = rtl8187_register_led(dev, &priv->led_rx, name,
--			 ieee80211_get_rx_led_name(dev), ledpin);
--	if (!err) {
--		ieee80211_queue_delayed_work(dev, &priv->led_on, 0);
-+			 ieee80211_get_rx_led_name(dev), ledpin, false);
-+	if (!err)
- 		return;
--	}
--	/* registration of RX LED failed - unregister TX */
-+
-+	/* registration of RX LED failed - unregister */
- 	rtl8187_unregister_led(&priv->led_tx);
--error:
--	/* If registration of either failed, cancel delayed work */
--	cancel_delayed_work_sync(&priv->led_off);
--	cancel_delayed_work_sync(&priv->led_on);
-+err_tx:
-+	rtl8187_unregister_led(&priv->led_radio);
- }
- 
- void rtl8187_leds_exit(struct ieee80211_hw *dev)
- {
- 	struct rtl8187_priv *priv = dev->priv;
- 
--	/* turn the LED off before exiting */
--	ieee80211_queue_delayed_work(dev, &priv->led_off, 0);
-+	rtl8187_unregister_led(&priv->led_radio);
- 	rtl8187_unregister_led(&priv->led_rx);
- 	rtl8187_unregister_led(&priv->led_tx);
- 	cancel_delayed_work_sync(&priv->led_off);
-diff --git a/drivers/net/wireless/rtl818x/rtl8187_leds.h b/drivers/net/wireless/rtl818x/rtl8187_leds.h
-index a033202..efe8041 100644
---- a/drivers/net/wireless/rtl818x/rtl8187_leds.h
-+++ b/drivers/net/wireless/rtl818x/rtl8187_leds.h
-@@ -47,6 +47,8 @@ struct rtl8187_led {
- 	u8 ledpin;
- 	/* The unique name string for this LED device. */
- 	char name[RTL8187_LED_MAX_NAME_LEN + 1];
-+	/* If the LED is radio or tx/rx */
-+	bool is_radio;
- };
- 
- void rtl8187_leds_init(struct ieee80211_hw *dev, u16 code);
+> So if you want to relocate the upload-functions, the question arises whether
+> the tables should be made static.
+
+Good catch, thanks. Didn't think about that. I'll post new version.
+
+
+Thank you guys for help, talk :)
+
 -- 
-1.6.5.5
-
+Rafał
