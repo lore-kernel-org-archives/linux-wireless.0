@@ -1,154 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:55891 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S936129AbZLQEFV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2009 23:05:21 -0500
-Message-Id: <20091217035658.273685245@mini.kroah.org>
-Date: Wed, 16 Dec 2009 19:56:55 -0800
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org, greg@kroah.com
-Cc: stable-review@kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Vivek Natarajan <Vivek.Natarajan@atheros.com>
-Subject: [118/151] ath9k: fix processing of TX PS null data frames
-In-Reply-To: <20091217040208.GA26571@kroah.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:41986 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755789AbZLWMXZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Dec 2009 07:23:25 -0500
+Message-Id: <20091223121617.798148880@sipsolutions.net>
+Date: Wed, 23 Dec 2009 13:15:44 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH next 15/18] mac80211/cfg80211: add station events
+References: <20091223121529.289129599@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.32-stable review patch.  If anyone has any objections, please let us know.
+When, for instance, a new IBSS peer is found, userspace
+wants to be notified. Add events for all new stations
+that mac80211 learns about.
 
-------------------
-
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-
-This is a backport of upstream commit: e7824a50662f7f79b1a739f705b4d906c31cf221
-
-When mac80211 was telling us to go into Powersave we listened
-and immediately turned RX off. This meant hardware would not
-see the ACKs from the AP we're associated with and hardware
-we'd end up retransmiting the null data frame in a loop
-helplessly.
-
-Fix this by keeping track of the transmitted nullfunc frames
-and only when we are sure the AP has sent back an ACK do we
-go ahead and shut RX off.
-
-
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Signed-off-by: Vivek Natarajan <Vivek.Natarajan@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    3 +++
- drivers/net/wireless/ath/ath9k/mac.c   |    2 ++
- drivers/net/wireless/ath/ath9k/mac.h   |    1 +
- drivers/net/wireless/ath/ath9k/main.c  |    9 ++++++++-
- drivers/net/wireless/ath/ath9k/xmit.c  |   16 ++++++++++++++++
- 5 files changed, 30 insertions(+), 1 deletion(-)
+ include/net/cfg80211.h  |   12 ++++++++++++
+ net/mac80211/sta_info.c |    5 +++++
+ net/wireless/mlme.c     |   10 ++++++++++
+ net/wireless/nl80211.c  |   21 ++++++++++++++++++++-
+ net/wireless/nl80211.h  |    4 ++++
+ 5 files changed, 51 insertions(+), 1 deletion(-)
 
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -139,6 +139,7 @@ struct ath_buf {
- 	dma_addr_t bf_daddr;		/* physical addr of desc */
- 	dma_addr_t bf_buf_addr;		/* physical addr of data buffer */
- 	bool bf_stale;
-+	bool bf_isnullfunc;
- 	u16 bf_flags;
- 	struct ath_buf_state bf_state;
- 	dma_addr_t bf_dmacontext;
-@@ -524,6 +525,8 @@ struct ath_led {
- #define SC_OP_BEACON_SYNC       BIT(19)
- #define SC_OP_BTCOEX_ENABLED    BIT(20)
- #define SC_OP_BT_PRIORITY_DETECTED BIT(21)
-+#define SC_OP_NULLFUNC_COMPLETED   BIT(22)
-+#define SC_OP_PS_ENABLED	BIT(23)
- 
- struct ath_bus_ops {
- 	void		(*read_cachesize)(struct ath_softc *sc, int *csz);
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -222,6 +222,8 @@ int ath9k_hw_txprocdesc(struct ath_hw *a
- 	ds->ds_txstat.ts_status = 0;
- 	ds->ds_txstat.ts_flags = 0;
- 
-+	if (ads->ds_txstatus1 & AR_FrmXmitOK)
-+		ds->ds_txstat.ts_status |= ATH9K_TX_ACKED;
- 	if (ads->ds_txstatus1 & AR_ExcessiveRetries)
- 		ds->ds_txstat.ts_status |= ATH9K_TXERR_XRETRY;
- 	if (ads->ds_txstatus1 & AR_Filtered)
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -76,6 +76,7 @@
- #define ATH9K_TXERR_FIFO           0x04
- #define ATH9K_TXERR_XTXOP          0x08
- #define ATH9K_TXERR_TIMER_EXPIRED  0x10
-+#define ATH9K_TX_ACKED		   0x20
- 
- #define ATH9K_TX_BA                0x01
- #define ATH9K_TX_PWRMGMT           0x02
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2327,6 +2327,7 @@ static int ath9k_config(struct ieee80211
- 
- 	if (changed & IEEE80211_CONF_CHANGE_PS) {
- 		if (conf->flags & IEEE80211_CONF_PS) {
-+			sc->sc_flags |= SC_OP_PS_ENABLED;
- 			if (!(ah->caps.hw_caps &
- 			      ATH9K_HW_CAP_AUTOSLEEP)) {
- 				if ((sc->imask & ATH9K_INT_TIM_TIMER) == 0) {
-@@ -2334,11 +2335,17 @@ static int ath9k_config(struct ieee80211
- 					ath9k_hw_set_interrupts(sc->sc_ah,
- 							sc->imask);
- 				}
--				ath9k_hw_setrxabort(sc->sc_ah, 1);
- 			}
- 			sc->ps_enabled = true;
-+			if ((sc->sc_flags & SC_OP_NULLFUNC_COMPLETED)) {
-+				sc->sc_flags &= ~SC_OP_NULLFUNC_COMPLETED;
-+				sc->ps_enabled = true;
-+				ath9k_hw_setrxabort(sc->sc_ah, 1);
-+			}
- 		} else {
- 			sc->ps_enabled = false;
-+			sc->sc_flags &= ~(SC_OP_PS_ENABLED |
-+					  SC_OP_NULLFUNC_COMPLETED);
- 			ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_AWAKE);
- 			if (!(ah->caps.hw_caps &
- 			      ATH9K_HW_CAP_AUTOSLEEP)) {
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1592,6 +1592,13 @@ static int ath_tx_setup_buffer(struct ie
- 	}
- 
- 	bf->bf_buf_addr = bf->bf_dmacontext;
+--- wireless-testing.orig/net/wireless/mlme.c	2009-12-23 13:11:25.000000000 +0100
++++ wireless-testing/net/wireless/mlme.c	2009-12-23 13:11:27.000000000 +0100
+@@ -718,3 +718,13 @@ void cfg80211_remain_on_channel_expired(
+ 					      channel_type, gfp);
+ }
+ EXPORT_SYMBOL(cfg80211_remain_on_channel_expired);
 +
-+	if (ieee80211_is_nullfunc(fc) && ieee80211_has_pm(fc)) {
-+		bf->bf_isnullfunc = true;
-+		sc->sc_flags &= ~SC_OP_NULLFUNC_COMPLETED;
-+	} else
-+		bf->bf_isnullfunc = false;
++void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
++		      struct station_info *sinfo, gfp_t gfp)
++{
++	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
 +
- 	return 0;
++	nl80211_send_sta_event(rdev, dev, mac_addr, sinfo, gfp);
++}
++EXPORT_SYMBOL(cfg80211_new_sta);
+--- wireless-testing.orig/net/wireless/nl80211.c	2009-12-23 13:11:25.000000000 +0100
++++ wireless-testing/net/wireless/nl80211.c	2009-12-23 13:11:27.000000000 +0100
+@@ -1642,7 +1642,7 @@ static int parse_station_flags(struct ge
+ 
+ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+ 				int flags, struct net_device *dev,
+-				u8 *mac_addr, struct station_info *sinfo)
++				const u8 *mac_addr, struct station_info *sinfo)
+ {
+ 	void *hdr;
+ 	struct nlattr *sinfoattr, *txrate;
+@@ -5356,6 +5356,25 @@ void nl80211_send_remain_on_channel_canc
+ 					  channel_type, 0, gfp);
  }
  
-@@ -1989,6 +1996,15 @@ static void ath_tx_processq(struct ath_s
- 		if (ds == txq->axq_gatingds)
- 			txq->axq_gatingds = NULL;
- 
-+		if (bf->bf_isnullfunc &&
-+		    (ds->ds_txstat.ts_status & ATH9K_TX_ACKED)) {
-+			if ((sc->sc_flags & SC_OP_PS_ENABLED)) {
-+				sc->ps_enabled = true;
-+				ath9k_hw_setrxabort(sc->sc_ah, 1);
-+			} else
-+				sc->sc_flags |= SC_OP_NULLFUNC_COMPLETED;
-+		}
++void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
++			    struct net_device *dev, const u8 *mac_addr,
++			    struct station_info *sinfo, gfp_t gfp)
++{
++	struct sk_buff *msg;
 +
- 		/*
- 		 * Remove ath_buf's of the same transmit unit from txq,
- 		 * however leave the last descriptor back as the holding
++	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
++	if (!msg)
++		return;
++
++	if (nl80211_send_station(msg, 0, 0, 0, dev, mac_addr, sinfo) < 0) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
++				nl80211_mlme_mcgrp.id, gfp);
++}
++
+ /* initialisation/exit functions */
+ 
+ int nl80211_init(void)
+--- wireless-testing.orig/net/wireless/nl80211.h	2009-12-23 13:11:25.000000000 +0100
++++ wireless-testing/net/wireless/nl80211.h	2009-12-23 13:11:27.000000000 +0100
+@@ -70,4 +70,8 @@ void nl80211_send_remain_on_channel_canc
+ 	u64 cookie, struct ieee80211_channel *chan,
+ 	enum nl80211_channel_type channel_type, gfp_t gfp);
+ 
++void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
++			    struct net_device *dev, const u8 *mac_addr,
++			    struct station_info *sinfo, gfp_t gfp);
++
+ #endif /* __NET_WIRELESS_NL80211_H */
+--- wireless-testing.orig/include/net/cfg80211.h	2009-12-23 13:11:25.000000000 +0100
++++ wireless-testing/include/net/cfg80211.h	2009-12-23 13:11:27.000000000 +0100
+@@ -2195,4 +2195,16 @@ void cfg80211_remain_on_channel_expired(
+ 					enum nl80211_channel_type channel_type,
+ 					gfp_t gfp);
+ 
++
++/**
++ * cfg80211_new_sta - notify userspace about station
++ *
++ * @dev: the netdev
++ * @mac_addr: the station's address
++ * @sinfo: the station information
++ * @gfp: allocation flags
++ */
++void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
++		      struct station_info *sinfo, gfp_t gfp);
++
+ #endif /* __NET_CFG80211_H */
+--- wireless-testing.orig/net/mac80211/sta_info.c	2009-12-23 13:11:13.000000000 +0100
++++ wireless-testing/net/mac80211/sta_info.c	2009-12-23 13:11:27.000000000 +0100
+@@ -359,6 +359,7 @@ int sta_info_insert(struct sta_info *sta
+ {
+ 	struct ieee80211_local *local = sta->local;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct station_info sinfo;
+ 	unsigned long flags;
+ 	int err = 0;
+ 
+@@ -408,6 +409,10 @@ int sta_info_insert(struct sta_info *sta
+ 
+ 	spin_unlock_irqrestore(&local->sta_lock, flags);
+ 
++	sinfo.filled = 0;
++	sinfo.generation = local->sta_generation;
++	cfg80211_new_sta(sdata->dev, sta->sta.addr, &sinfo, GFP_ATOMIC);
++
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	/*
+ 	 * Debugfs entry adding might sleep, so schedule process
 
 
