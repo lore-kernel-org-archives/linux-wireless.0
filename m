@@ -1,66 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.102.11.253]:34569 "EHLO
-	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932758AbZLFSpr (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33202 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752415AbZLWTLc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2009 13:45:47 -0500
-From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
-Reply-To: 8an@praha12.net
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/4] nl80211: Add new WIPHY attribute COVERAGE_CLASS
-Date: Sun, 6 Dec 2009 19:45:49 +0100
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-References: <200912061820.26320.8an@praha12.net> <200912061822.54088.8an@praha12.net> <1260122477.3461.20.camel@johannes.local>
-In-Reply-To: <1260122477.3461.20.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3673864.I0TTtrovd1";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200912061945.53225.8an@praha12.net>
+	Wed, 23 Dec 2009 14:11:32 -0500
+Subject: Re: mac80211 suspend corner case (was: Asus eeepc 1008HA suspend
+ issue and mac80211 suspend corner) case
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+In-Reply-To: <20091223190840.GI2609@tux>
+References: <20091222022355.GA32508@bombadil.infradead.org>
+	 <20091222193010.GB30201@bombadil.infradead.org>
+	 <1261570081.25008.1.camel@johannes.local> <20091223162813.GB2609@tux>
+	 <1261586828.7304.13.camel@johannes.local>  <20091223190840.GI2609@tux>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-NHjkRrkRgTDekm1uhOE3"
+Date: Wed, 23 Dec 2009 20:11:29 +0100
+Message-ID: <1261595489.27798.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3673864.I0TTtrovd1
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
-On 6.12.2009 19:01 Johannes Berg wrote:
-> This patch assumes that all hardware supports this, which is not really
-> what you want. You'll want to know if it can't be set. Yes, we assume
-> rts/cts can be set always, but that's a _much_ safer bet.
-If the hardware does not support it, the operation will fail with EOPNOTSUPP:
+--=-NHjkRrkRgTDekm1uhOE3
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-# iw phy0 set coverage 1
-command failed: Operation not supported (-95)
+On Wed, 2009-12-23 at 11:08 -0800, Luis R. Rodriguez wrote:
 
-Or is there a better solution?
+> So you want drivers to handle start() failures (even if its not for
+> resume) with an unregistration to mac80211?
 
-Lukas Turek
+Not necessarily. If it's a temporary error, that's fine, of course, but
+if the hardware is suddenly inaccessible for whatever reason then yes,
+of course, unregistering is the only good choice no matter when it
+happens.
 
---nextPart3673864.I0TTtrovd1
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+johannes
+
+--=-NHjkRrkRgTDekm1uhOE3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
 
-iQIcBAABAgAGBQJLG/vhAAoJEEBjvk/UOfYwoqYP/0pfaj8F+p41SkasT24nKcYe
-G75LZ73EzvleeyUBM6M0iicR3n1T+XHbMfowYzIkXdL43EHWSYnn1y9wf6+oQp2X
-Gv/FjUykPgTfH8cLpRk74p98AF2PhxxGw/uxNCoGPKpjo5eQ/s3RIxB2jMoTFo7l
-x1xLprOwQZewLRQIJojdPk1gbukmE0dVIHHPv7kqC6asQ4dkzOeTe3NFR3mtO7iZ
-fEdgUxg150hDRfogFtUHnV/eTZQHBkiaY7cvhv1uXpktQU1DKlaZjW7Imr27wtdw
-iU0u0D3exz8UjKsxFZ5zaG1yT1lDeap3Hg6pVdFOQDdnUZX9pDLPh+LLkE3x2wMn
-cCLCtT3YmnswbHNP4tb6JSkF3pYE8bRtDgrt3eAE2pCkAfngBeC13n1GGS0LXNxv
-aBHBXYU0cDuyyRrziz0bp90yeNQRHkEo1aHMx0nXGn/RUkPzrAl1yPfOXIuKnpGX
-C1QKloY4uhP2QQ1BOIgUTyVv1gVw5z3cwcICfQMy4vXEX10PlddDqQhDDR+94x3h
-EqdzukD7zNqgpSqnDAq3EcNWsmCak8scc8Sm3qEOwvsTZnLPcC36G5wh7MKNZxS6
-H0YiSPfovscbXpuB14Udwc1EGRxEuNwyyaSYLsam6ZfgFIdPlYaXY388Iycyf8Pz
-2MqVsGFvYjd2gAtk1o8J
-=BthJ
+iQIcBAABAgAGBQJLMmtcAAoJEODzc/N7+QmaslYP/2Yqd0Br00j0+ghZCj571DFK
+NRBrmWPLm3GadH7ZXFBG7PBtSkzZzbwHbP6xNp4Js21CR6ZWMX0WSLV0exFf6UMZ
+CUYVQpiiU1bGfDIxTGXtwgTPE5/Vt3gTVZkONZ2Ii5FTxxygsrKk4SloCo54y+4y
+7GYJwXhy92dX/3ZqPw1uCwp8NClowbFzNFKLjvmRNDSSQY5Hm9Y9HQTqqOVI6aN5
+/nfREiqIbjRgY1rucpX2Cf8ol/jpcvUXvz/5KP8PlJlCBs71MpkKBr2Kx9/C1iOh
+unTAwR9QpIb7yWZxjKwaogDAWWOWvMrPpW2XMuFfqx66InPPjtnX2W6lHqp+RUml
+nZpztCrw5RzUeL+gQuQZfhVsFN1c1uagl8qfsGEaJnO6iOEr4dZWFOnW0ehUxkLg
+k0+IVdY/M2lxoZJ9qUOTPO9SuVdFw7CjdkGKuJniDmXoP6uewmGw0BYlWi6Prpnb
+diEKO/dA9XwBxwTzKt/PaUivo/akjQcJFhXgWuiGd4RLQm1nKyIv6wDxMYW0d9yn
+LxQzS8qrxXSktej2m25fHJm5Fg+BeWx+yo6rZckWN2Gbz80V6hVa40DJYzIvJtbs
+UMZrObXnU+7i7xbF6ZiUuFrR4BaP/xqbJF8igMXhr7FIw3fwjVWdyH06lxmXkBeX
+VVjdd6uU5VDNTk9/srVe
+=Iljo
 -----END PGP SIGNATURE-----
 
---nextPart3673864.I0TTtrovd1--
+--=-NHjkRrkRgTDekm1uhOE3--
+
