@@ -1,63 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:47160 "EHLO
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:62337 "EHLO
 	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754569AbZLNULd (ORCPT
+	with ESMTP id S1756144AbZLWPKh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 15:11:33 -0500
-Received: by ewy19 with SMTP id 19so3793895ewy.21
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 12:11:32 -0800 (PST)
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: David Miller <davem@davemloft.net>
-Subject: Re: Revised wireless tree management practices
-Date: Mon, 14 Dec 2009 21:09:38 +0100
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <200912142016.00169.bzolnier@gmail.com> <200912142042.13251.bzolnier@gmail.com> <20091214.114652.243547684.davem@davemloft.net>
-In-Reply-To: <20091214.114652.243547684.davem@davemloft.net>
+	Wed, 23 Dec 2009 10:10:37 -0500
+Received: by ewy19 with SMTP id 19so6418865ewy.21
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2009 07:10:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200912142109.38697.bzolnier@gmail.com>
+In-Reply-To: <20091223145211.GB2811@tuxdriver.com>
+References: <b170af450912230401l7a27b981o42cdbc96e5a16b57@mail.gmail.com>
+	 <20091223145211.GB2811@tuxdriver.com>
+Date: Wed, 23 Dec 2009 16:10:35 +0100
+Message-ID: <b170af450912230710t77cc614j25f058b64c4ce51@mail.gmail.com>
+Subject: Re: [PATCH][resend with linux-wireless] b43: N-PHY: clean table init,
+	check PHY rev
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 14 December 2009 08:46:52 pm David Miller wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Date: Mon, 14 Dec 2009 20:42:13 +0100
-> 
-> > However looking at "Top non-author signoffs in 2.6.31" [1]:
-> > 
-> > David S. Miller     964 10.1%
-> > Ingo Molnar         948 9.9%
-> > Greg Kroah-Hartman  582 6.1%
-> > ...
-> > 
-> > it seems that there are people able to do large upstream merges in much
-> > more transparent and reviewer-friendly way so it is not like there exists
-> > some real physical barrier for not even trying to do things better..
-> 
-> Greg (USB, staging) and Ingo (scheduler, perf, tracing, x86) each work
-> in several disconnected areas, and have you seen the size of the
+W dniu 23 grudnia 2009 15:52 użytkownik John W. Linville
+<linville@tuxdriver.com> napisał:
+> On Wed, Dec 23, 2009 at 01:01:58PM +0100, Rafał Miłecki wrote:
+>> It's just compilation-tested as I don't own N-PHY device yet (should receive
+>> one for Christmas). Of course I enabled N-PHY in Kconfig.
+>>
+>> I already sent this to bcm43xx-dev but didn't get any review. Michael told
+>> me to send it to you John and to linux-wireless. Is there anyone how could
+>> review/ack my patch?
+>>
+>>
+>> From 6800722c2fda0e302d7c759a5f2a993503b6581a Mon Sep 17 00:00:00 2001
+>> From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+>> Date: Tue, 22 Dec 2009 02:27:21 +0100
+>> Subject: [PATCH] b43: N-PHY: clean table init, check PHY rev
+>> MIME-Version: 1.0
+>> Content-Type: text/plain; charset=UTF-8
+>> Content-Transfer-Encoding: 8bit
+>>
+>> Move table init to tables_nphy.c, detect newer PHY which use different init
+>>
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>> drivers/net/wireless/b43/phy_n.c       |   43 ++++------------------------
+>> drivers/net/wireless/b43/tables_nphy.c |   48
+>> ++++++++++++++++++++++++++++++++
+>> drivers/net/wireless/b43/tables_nphy.h |    4 ++-
+>> 3 files changed, 58 insertions(+), 37 deletions(-)
+>
+> Well, the patch is fairly clearly whitespace-damaged.  Perhaps that
+> is a product of how you forwarded it to linux-wireless?
 
-I would risk saying that in Ingo's case those areas are frequently more
-inter-connected than i.e. wireless driver changes and core networking ones...
+I created a new mail, no forwarding. I guess this is GMail issue,
+afraid I'll have to install some native mail client.
 
-> staging tree merges? :-)
 
-..and yes, I did take a look at 2.6.33 staging merge before writing my mail.
+> Other than that, it looks like you are mostly just moving code around.
+> That's fine, but there doesn't seem to be a lot of point in it
+> unless the rev 3+ stuff is coming soon?  It probably doesn't harm
+> much either way...
 
-I think that it was too big personally but it was still only 235 commits:
+I believe I've moved code to it's correct place. That is what file
+name /says/ (tables_nphy.c) and what is done for LP-PHY. I don't know
+yet what revision will be my device. But at least for training I want
+to implement b43_nphy_rev3plus_table_init(...) (next one patch maybe).
 
-commit 0e2f7b837600979d5b6f174a6ff695b85942e985
-Merge: f58df54 032fec3
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Fri Dec 11 15:25:56 2009 -0800
+If you decide to agree to commit this patch and you want to me resend
+this with correct white spaces, please ping me about. For future mails
+I'll use some native mailer.
 
-    Merge git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-2.6
-
-    * git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-2.6: (235 commits)
-
-1815 networking commits means almost 8x more and while LOC amount for staging
-is much higher, networking changes affect 2x more files.
-
---
-Bartlomiej Zolnierkiewicz
+-- 
+Rafał
