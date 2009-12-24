@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:57918 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932453AbZLGK7T convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60826 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752466AbZLXBDa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2009 05:59:19 -0500
-Received: by bwz27 with SMTP id 27so3364415bwz.21
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Dec 2009 02:59:25 -0800 (PST)
-To: 8an@praha12.net
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	ath5k-devel@lists.ath5k.org
-Subject: Re: [PATCH 2/4] mac80211: Add new callback set_coverage
-References: <200912061820.26320.8an@praha12.net>
-	<200912061823.45809.8an@praha12.net>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Mon, 07 Dec 2009 12:59:22 +0200
-In-Reply-To: <200912061823.45809.8an@praha12.net> (=?iso-8859-15?Q?=22Luk?=
- =?iso-8859-15?Q?=E1=A8?= Turek"'s message of "Sun\, 6 Dec 2009 18\:23\:45
- +0100")
-Message-ID: <87r5r73v91.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+	Wed, 23 Dec 2009 20:03:30 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
+Subject: [PATCH 4/5] ath9k: wake hardware for interface IBSS/AP/Mesh removal
+Date: Wed, 23 Dec 2009 20:03:28 -0500
+Message-Id: <1261616609-518-5-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1261616609-518-1-git-send-email-lrodriguez@atheros.com>
+References: <1261616609-518-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luká¨ Turek <8an@praha12.net> writes:
+When we remove a IBSS/AP/Mesh interface we stop DMA
+but to do this we should ensure hardware is on. Awaken
+the device prior to these calls. This should ensure
+DMA is stopped upon suspend and plain device removal.
 
-> Mac80211 callback to driver set_coverage() sets slot time and ACK timeout
-> for given coverage class. The callback is optional, but it's essential for
-> long distance links.
+Cc: stable@kernel.org
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-[...]
-
-> + * @set_coverage: Set slot time for given coverage class as specified
-> + *	in IEEE 802.11-2007 section 17.3.8.6 and modify ACK timeout
-> + *	accordingly. Optional function, could be NULL.
-> + *
-
-Please document if the callback can sleep or not. Preferably the
-former.
-
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 1464ded..9a4d9b9 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2643,8 +2643,10 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
+ 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_AP) ||
+ 	    (sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC) ||
+ 	    (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT)) {
++		ath9k_ps_wakeup(sc);
+ 		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
+ 		ath_beacon_return(sc, avp);
++		ath9k_ps_restore(sc);
+ 	}
+ 
+ 	sc->sc_flags &= ~SC_OP_BEACONS;
 -- 
-Kalle Valo
+1.6.3.3
+
