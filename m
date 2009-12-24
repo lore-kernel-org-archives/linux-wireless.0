@@ -1,37 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49378
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751341AbZL3Dxe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Dec 2009 22:53:34 -0500
-Date: Tue, 29 Dec 2009 19:53:36 -0800 (PST)
-Message-Id: <20091229.195336.193710512.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2009-12-29
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20091229211223.GA6104@tuxdriver.com>
-References: <20091229211223.GA6104@tuxdriver.com>
+Received: from mga09.intel.com ([134.134.136.24]:24963 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751792AbZLXFqK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Dec 2009 00:46:10 -0500
+Subject: Re: iwlwifi
+From: Zhu Yi <yi.zhu@intel.com>
+To: David Miller <davem@davemloft.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20091223.210818.02262058.davem@davemloft.net>
+References: <20091223.210818.02262058.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Dec 2009 13:46:07 +0800
+Message-ID: <1261633567.6037.1.camel@debian>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 29 Dec 2009 16:12:23 -0500
+On Thu, 2009-12-24 at 13:08 +0800, David Miller wrote:
+> 
+> Someone please expediently fix whatever it is that makes the iwlwifi
+> drivers rebuild every single time I type make.
+> 
+> It's a real intense pain when I have an 'allmodconfig' tree for build
+> validations, I pull some unrelated changed into the tree, and I see
+> iwlwifi rebuild no matter what.
+> 
+> This is not sane behavior. 
 
-> Dave,
-> 
-> Here is a somewhat large batch of fixes intended for 2.6.33.  Most of
-> them are simple, straightforward, and small.  There is one from Johannes
-> that removes a lot of code, but the code it removes is unused and the
-> patch quiets a lot of build SPAM.
-> 
-> This also includes the revert of a b43 patch that is causing some
-> problems for people.  It does some (apparently unnecessary) alignment
-> checking that causes some allocations to fail.
-> 
-> Please let me know if there are problems!
+I'm trying allmodconfig on wireless-testing now. It takes some time to
+finish make. But a simple running "make M=drivers/net/wireless/" twice
+doesn't show this issue.
 
-Pulled, thanks a lot John.
+Thanks,
+-yi
+
