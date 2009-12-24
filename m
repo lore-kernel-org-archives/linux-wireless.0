@@ -1,48 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:65310 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754601AbZLBOaG (ORCPT
+Received: from mail-pz0-f171.google.com ([209.85.222.171]:43572 "EHLO
+	mail-pz0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751574AbZLXDun (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2009 09:30:06 -0500
-Received: by mail-bw0-f227.google.com with SMTP id 27so217224bwz.21
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2009 06:30:13 -0800 (PST)
-Message-Id: <20091202142938.291148553@gmail.com>
-References: <20091202142555.654873300@gmail.com>
-Date: Wed, 02 Dec 2009 15:26:00 +0100
-From: Holger Schurig <holgerschurig@googlemail.com>
-To: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: [PATCH 05/10] libertas: move mesh SSID initialization into mesh.c
+	Wed, 23 Dec 2009 22:50:43 -0500
+Received: by pzk1 with SMTP id 1so978931pzk.33
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2009 19:50:43 -0800 (PST)
+MIME-Version: 1.0
+Date: Thu, 24 Dec 2009 11:50:42 +0800
+Message-ID: <d82e647a0912231950p6493a11du4432a47e9e15ceb0@mail.gmail.com>
+Subject: [QUESTION] AP : how to support multi virtual SSID over one wlan
+	interface
+From: Ming Lei <tom.leiming@gmail.com>
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
+Hi All,
+
+        Does mac80211 support to create multi virtual SSID over one
+physical wlan interface
+when working at AP mode?   If it does, how to do it?
 
 
---- linux-wl.orig/drivers/net/wireless/libertas/main.c
-+++ linux-wl/drivers/net/wireless/libertas/main.c
-@@ -999,10 +999,6 @@ struct lbs_private *lbs_add_card(void *c
- 	INIT_WORK(&priv->mcast_work, lbs_set_mcast_worker);
- 	INIT_WORK(&priv->sync_channel, lbs_sync_channel_worker);
- 
--	priv->mesh_open = 0;
--	sprintf(priv->mesh_ssid, "mesh");
--	priv->mesh_ssid_len = 4;
--
- 	priv->wol_criteria = 0xffffffff;
- 	priv->wol_gpio = 0xff;
- 
---- linux-wl.orig/drivers/net/wireless/libertas/mesh.c
-+++ linux-wl/drivers/net/wireless/libertas/mesh.c
-@@ -237,6 +237,9 @@ int lbs_init_mesh(struct lbs_private *pr
- 
- 
- 	if (priv->mesh_tlv) {
-+		sprintf(priv->mesh_ssid, "mesh");
-+		priv->mesh_ssid_len = 4;
-+
- 		lbs_add_mesh(priv);
- 
- 		if (device_create_file(&dev->dev, &dev_attr_lbs_mesh))
+Thanks
 
 -- 
+Lei Ming
