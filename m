@@ -1,89 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:37596 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751918AbZLaNh6 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53741
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754055AbZLXGav (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Dec 2009 08:37:58 -0500
-Subject: [RFC PATCH v5 4/7] mac80211: check uapsd state for dynamic power save
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kalle.valo@iki.fi>
-Cc: johannes@sipsolutions.net, a.young.jason@gmail.com
-Date: Thu, 31 Dec 2009 15:37:35 +0200
-Message-ID: <20091231133735.29899.85614.stgit@tikku>
-In-Reply-To: <20091231133626.29899.95683.stgit@tikku>
-References: <20091231133626.29899.95683.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 24 Dec 2009 01:30:51 -0500
+Date: Wed, 23 Dec 2009 22:30:53 -0800 (PST)
+Message-Id: <20091223.223053.52203554.davem@davemloft.net>
+To: yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwlwifi
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1261635896.6037.26.camel@debian>
+References: <1261633567.6037.1.camel@debian>
+	<20091223.215221.191412308.davem@davemloft.net>
+	<1261635896.6037.26.camel@debian>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+From: Zhu Yi <yi.zhu@intel.com>
+Date: Thu, 24 Dec 2009 14:24:56 +0800
 
-To make U-APSD client mode effective, we must not wake up from dynamic power
-save when transmitting frames. So if dynamic power save is enabled, it needs
-check the queue the transmitted packet is in and decide if we need to wake
-up or not.
+> Thanks. It was first introduced by below commit. And was later changed
+> to use generated/utsrelease.h. I'm wondering if we should really use
+> linux/utsrelease.h (or linux/version.h) or remove the kernel version
+> totally from the driver version (driver compile tag can be remained).
+> Any suggestions?
 
-In a perfect world, where all packets would have correct QoS tags, U-APSD
-enabled queues should not trigger wakeup from power save. But in the real
-world, where very few packets have correct QoS tags, this won't work. For
-example, if only voip class has U-APSD enabled and we send a packet in voip
-class, but the packets we receive are in best effort class, we would receive
-the packets with the legacy power save method. And that would increase
-latencies too much from a voip application point of view.
-
-The workaround is to enable U-APSD for all qeueus and still use dynamic ps
-wakeup for all other queues except voip. That way we can still save power
-with a voip application and not sacrifice latency. Normal traffic (in
-background, best effort or video class) would still trigger wakeup from
-dynamic power save.
-
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
- net/mac80211/tx.c |   25 +++++++++++++++++++++++++
- 1 files changed, 25 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 32bbbc2..a782f4c 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -184,6 +184,7 @@ static ieee80211_tx_result debug_noinline
- ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
- {
- 	struct ieee80211_local *local = tx->local;
-+	struct ieee80211_if_managed *ifmgd;
- 
- 	/* driver doesn't support power save */
- 	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS))
-@@ -208,6 +209,30 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
- 	if (local->quiescing)
- 		return TX_CONTINUE;
- 
-+	/* dynamic ps is supported only in managed mode */
-+	if (tx->sdata->vif.type != NL80211_IFTYPE_STATION)
-+		return TX_CONTINUE;
-+
-+	ifmgd = &tx->sdata->u.mgd;
-+
-+	/*
-+	 * Don't wakeup from power save if u-apsd is enabled, voip ac has
-+	 * u-apsd enabled and the frame is in voip class. This effectively
-+	 * means that even if all access categories have u-apsd enabled, in
-+	 * practise u-apsd is only used with the voip ac. This is a
-+	 * workaround for the case when received voip class packets do not
-+	 * have correct qos tag for some reason, due the network or the
-+	 * peer application.
-+	 *
-+	 * Note: local->uapsd_queues access is racy here. If the value is
-+	 * changed via debugfs, user needs to reassociate manually to have
-+	 * everything in sync.
-+	 */
-+	if ((ifmgd->flags & IEEE80211_STA_UAPSD_ENABLED)
-+	    && (local->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VO)
-+	    && skb_get_queue_mapping(tx->skb) == 0)
-+		return TX_CONTINUE;
-+
- 	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
- 		ieee80211_stop_queues_by_reason(&local->hw,
- 						IEEE80211_QUEUE_STOP_REASON_PS);
-
+Remove the dependency, every time you type make the build number
+increases and this will force your driver to rebuild.
