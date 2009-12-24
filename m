@@ -1,64 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:44941 "EHLO
-	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932368AbZLHQab convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45354 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752863AbZLXMnu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 11:30:31 -0500
-Received: by iwn1 with SMTP id 1so3856189iwn.33
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Dec 2009 08:30:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20091208160659.GG15172@tuxdriver.com>
-References: <bf87febf0912030507u1c36f6a9h7cac0efabf3d016@mail.gmail.com>
-	<20091204192315.GA5786@tuxdriver.com> <bf87febf0912070205k40a7286dpbb48cfcc494203d2@mail.gmail.com>
-	<20091207215903.GC18939@tuxdriver.com> <b6c5339f0912080657s7cfccd4dp6525702e609bdd5f@mail.gmail.com>
-	<43e72e890912080801s52607743s738ed6cdad7d154e@mail.gmail.com>
-	<20091208160659.GG15172@tuxdriver.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 8 Dec 2009 08:30:17 -0800
-Message-ID: <43e72e890912080830v40ff214co178fb17c38439e70@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: add support for Dell Vostro A860 LED
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org,
-	Shahar Or <mightyiampresence@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 24 Dec 2009 07:43:50 -0500
+Subject: Re: mac80211 suspend corner case (was: Asus eeepc 1008HA suspend
+ issue and mac80211 suspend corner) case
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+In-Reply-To: <43e72e890912231119l79ef5a99h6b57362e38f189ed@mail.gmail.com>
+References: <20091222022355.GA32508@bombadil.infradead.org>
+	 <20091222193010.GB30201@bombadil.infradead.org>
+	 <1261570081.25008.1.camel@johannes.local>  <20091223162813.GB2609@tux>
+	 <1261586828.7304.13.camel@johannes.local>  <20091223190840.GI2609@tux>
+	 <1261595489.27798.0.camel@johannes.local>
+	 <43e72e890912231119l79ef5a99h6b57362e38f189ed@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7Xx8YxSCwBCDcmqMglhX"
+Date: Thu, 24 Dec 2009 13:43:46 +0100
+Message-ID: <1261658626.28729.9.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 8, 2009 at 8:06 AM, John W. Linville <linville@tuxdriver.com> wrote:
-> On Tue, Dec 08, 2009 at 08:01:52AM -0800, Luis R. Rodriguez wrote:
->> On Tue, Dec 8, 2009 at 6:57 AM, Bob Copeland <me@bobcopeland.com> wrote:
->> > On Mon, Dec 7, 2009 at 4:59 PM, John W. Linville <linville@tuxdriver.com> wrote:
->> >> On Mon, Dec 07, 2009 at 12:05:54PM +0200, Shahar Or wrote:
->> >>> Adds support for the WiFi activity LED on the Dell Vostro A860 laptop.
->> >>>
->> >>> Signed-off-by: Shahar Or <shahar@shahar-or.co.il>
->> >>> ---
->> >>> I hope this one is perfect.
->> >
->> > Thanks for the patch.  As for getting a better solution to LEDs, I
->> > trolled through the ACPI spec and code, and while various modules
->> > do set up LED pins, there doesn't seem to be a way to generally
->> > get that information from another module and it appears different
->> > between each vendor.  I am by no stretch expert in ACPI stuff
->> > though.
->> >
->> > Luis, I've asked this before but maybe you know better now or know
->> > whom to ask on your side.  Atheros must have a way on Windows to
->> > figure out the LED pin/polarity -- do you have any idea?  Ath9k
->> > uses the SREV but that seems to be insufficient for ath5k judging
->> > by all the quirks.
->>
->> IIRC this is all mapped in the INF file, I thought I had released an
->> INF file under the ISC license but it seems that's not the case, I can
->> try to do that if it helps. Anyway, if we can move this sort of map to
->> userspace it'd be neat as you'd just need a userspace file update.
->> Only thing is how to do this in a generic way for all wireless drivers
->> and if this is indeed useful for other drivers.
->
-> Export something through sysfs and use a udev rule?
 
-True. Is sysfs the preferred fs nowadays, what about configfs? Or
-maybe even udev rule --> nl80211 ?
+--=-7Xx8YxSCwBCDcmqMglhX
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Wed, 2009-12-23 at 11:19 -0800, Luis R. Rodriguez wrote:
+
+> Reason for me suggesting for mac80211 to deal with this is drivers
+> won't know if their failed start() call will have been from resume and
+> we likely won't add a bool to start() callback since we already
+> debated this a while back.
+>=20
+> I don't really care about hardware failures in other cases right now,
+
+Which is the problem.
+
+If your hardware suddenly fails, _regardless_ of when, you need to
+unregister from mac80211 since otherwise you'll get loads of callbacks
+to failed hardware.
+
+Resume really isn't as special as you'd like to believe.
+
+johannes
+
+--=-7Xx8YxSCwBCDcmqMglhX
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLM2H+AAoJEODzc/N7+QmaOMgQAK65YV3/1j1lc+sfe8eJUMrI
+5/UeUH+mF9g41wZEkfJpyqWccivibOguiioxdUP5gUseLLdaFrBwWjFhIGlkkZ/A
+KqXSq+4AI1U/iucCnOfEGEMyvuij5zqPdb15FLKAFwD2VbC9edR0GQ4XMkm6DGvu
+0FzuJyPrJ1urvsi8qB6LIAa6ukpUmGt2t0WFhrSZdJwOv7uRCvTyybQbB7HfbbEb
+4YKPNZmEbKWqfYrVb0xw31Orj41fX8Hjvyg1FV/Lfezbk+zF03eCbiHeQTboK8p6
+zkPz9Omm39gdtddIc3AIT+ZiOgSzlGEOkmHnk3V4DYgZz4KXkpHEiB2pqHZsMrd+
+wvmOLne9YZHcRyikW4O9CJQWm8GQYbyAB86baxIUxGXyMGJioGjkWOBW5YjbIt2B
+l2S5oBALcaBvNUlBu0L7uQRt+qQ/1cF8km8DxQZ4c2ieedElgMQcxCIHftNzZqPo
+hUS5Gx77jqYPDBNgjUnm/F65evWdH8onn97HJqWsW47y6C4yQjoQ7w1QcPxydP96
+YrRIoDThE/nlkVFG5bspeZMjrzBL0Mu/XbPcXxxTRzwRj3r9IUMemRkagkhq5Vma
+Hbf8d4bbbUVSiHbB61E/ieD0+7oUdKcs57gCTAxcD1Quz2/gngYe+HRlx2cZCRzg
+W2CBeDlPshyVfvBmT/PX
+=2Jmf
+-----END PGP SIGNATURE-----
+
+--=-7Xx8YxSCwBCDcmqMglhX--
+
