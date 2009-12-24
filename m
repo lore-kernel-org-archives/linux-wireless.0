@@ -1,61 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:62967 "EHLO
-	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932625AbZLNVL0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 16:11:26 -0500
-Message-ID: <4B2690E0.6050604@gmail.com>
-Date: Mon, 14 Dec 2009 20:24:16 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH] rt2x00: Fix rt2800usb detection in rt2800lib.
-References: <1260661180-2300-1-git-send-email-gwingerde@gmail.com> <1260818004-22785-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1260818004-22785-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:11393 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752466AbZLXAwu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Dec 2009 19:52:50 -0500
+Subject: Re: [PATCH] iwlwifi: Storage class should be before const qualifier
+From: Zhu Yi <yi.zhu@intel.com>
+To: Tobias Klauser <tklauser@distanz.ch>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1261574291-9384-1-git-send-email-tklauser@distanz.ch>
+References: <1261574291-9384-1-git-send-email-tklauser@distanz.ch>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Dec 2009 08:52:48 +0800
+Message-ID: <1261615968.12157.854.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/14/09 20:13, John W. Linville wrote:
-> From: Gertjan van Wingerde <gwingerde@gmail.com>
+On Wed, 2009-12-23 at 21:18 +0800, Tobias Klauser wrote:
+> The C99 specification states in section 6.11.5:
 > 
-> rt2800lib incorrectly detected whether RT2800USB was enabled because
-> it didn't account for a modularized RT2800USB driver.
+> The placement of a storage-class specifier other than at the beginning
+> of the declaration specifiers in a declaration is an obsolescent
+> feature.
 > 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-> ---
-> I'm merging this version based on Randy's feedback...
-> 
->  drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index eb1e1d0..6e13650 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -37,7 +37,7 @@
->  #include <linux/module.h>
->  
->  #include "rt2x00.h"
-> -#ifdef CONFIG_RT2800USB
-> +#if defined(CONFIG_RT2800USB) || defined(CONFIG_RT2800USB_MODULE)
->  #include "rt2x00usb.h"
->  #endif
->  #include "rt2800lib.h"
-> @@ -1121,7 +1121,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
->  
->  	if (rt2x00_intf_is_usb(rt2x00dev)) {
->  		rt2800_register_write(rt2x00dev, USB_DMA_CFG, 0x00000000);
-> -#ifdef CONFIG_RT2800USB
-> +#if defined(CONFIG_RT2800USB) || defined(CONFIG_RT2800USB_MODULE)
->  		rt2x00usb_vendor_request_sw(rt2x00dev, USB_DEVICE_MODE, 0,
->  					    USB_MODE_RESET, REGISTER_TIMEOUT);
->  #endif
+> Signed-off-by: Tobias Klauser <tklauser@distanz.ch> 
 
-Thanks, looks good to me.
+Acked-by: Zhu Yi <yi.zhu@intel.com>
 
----
-Gertjan.
+Thanks,
+-yi
+
