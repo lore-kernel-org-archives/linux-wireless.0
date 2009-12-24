@@ -1,72 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.102.11.253]:40010 "EHLO
-	parez.praha12.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759894AbZLOR45 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 12:56:57 -0500
-From: =?UTF-8?q?Luk=C3=A1=C5=A1=20Turek?= <8an@praha12.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	ath5k-devel@lists.ath5k.org
-Subject: [PATCH 2/5] mac80211: Add new callback set_coverage_class
-Date: Tue, 15 Dec 2009 18:56:49 +0100
-Message-Id: <1260899813-17585-3-git-send-email-8an@praha12.net>
-In-Reply-To: <1260899813-17585-1-git-send-email-8an@praha12.net>
-References: <1260899813-17585-1-git-send-email-8an@praha12.net>
+Received: from smtp14.ono.com ([62.42.230.176]:19076 "EHLO resmaa14.ono.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751430AbZLXKCW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Dec 2009 05:02:22 -0500
+Received: from werewolf.home (83.138.217.78) by resmaa14.ono.com (8.5.113) (authenticated as jamagallon)
+        id 4AE71A750073ECA9 for linux-wireless@vger.kernel.org; Thu, 24 Dec 2009 10:43:57 +0100
+Date: Thu, 24 Dec 2009 10:56:48 +0100
+From: "J.A. =?UTF-8?B?TWFnYWxsw7Nu?=" <jamagallon@ono.com>
+To: linux-wireless@vger.kernel.org
+Subject: Problems with ath5k and WPA2 keys
+Message-ID: <20091224105648.6b3ae67e@werewolf.home>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mac80211 callback to driver set_coverage_class() sets slot time and ACK
-timeout for given IEEE 802.11 coverage class. The callback is optional,
-but it's essential for long distance links.
+Hi all...
 
-Signed-off-by: Lukas Turek <8an@praha12.net>
----
- include/net/mac80211.h |    5 +++++
- net/mac80211/cfg.c     |    7 +++++++
- 2 files changed, 12 insertions(+), 0 deletions(-)
+With last 2.6.32.2 kernel, I can't connect to my home WiFi router.
+I use WPA2+PSK mode.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 2aff490..786e1d6 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1483,6 +1483,10 @@ enum ieee80211_ampdu_mlme_action {
-  *	need to set wiphy->rfkill_poll to %true before registration,
-  *	and need to call wiphy_rfkill_set_hw_state() in the callback.
-  *
-+ * @set_coverage_class: Set slot time for given coverage class as specified
-+ *	in IEEE 802.11-2007 section 17.3.8.6 and modify ACK timeout
-+ *	accordingly. This callback is not required and may sleep.
-+ *
-  * @testmode_cmd: Implement a cfg80211 test mode command.
-  */
- struct ieee80211_ops {
-@@ -1537,6 +1541,7 @@ struct ieee80211_ops {
- 			    struct ieee80211_sta *sta, u16 tid, u16 *ssn);
- 
- 	void (*rfkill_poll)(struct ieee80211_hw *hw);
-+	void (*set_coverage_class)(struct ieee80211_hw *hw, u8 coverage_class);
- #ifdef CONFIG_NL80211_TESTMODE
- 	int (*testmode_cmd)(struct ieee80211_hw *hw, void *data, int len);
- #endif
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 6dc3579..c5537ae 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1237,6 +1237,13 @@ static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	int err;
- 
-+	if (changed & WIPHY_PARAM_COVERAGE_CLASS) {
-+		if (!local->ops->set_coverage_class)
-+			return -EOPNOTSUPP;
-+		local->ops->set_coverage_class(&local->hw,
-+					       wiphy->coverage_class);
-+	}
-+
- 	if (changed & WIPHY_PARAM_RTS_THRESHOLD) {
- 		err = drv_set_rts_threshold(local, wiphy->rts_threshold);
- 
+I have discovered it's related to key length:
+
+one:~# iwconfig wlan0 key s:password
+Error for wireless request "Set Encode" (8B2A) :
+    SET failed on device wlan0 ; Invalid argument.
+one:~# iwconfig wlan0 key s:passwor
+Error for wireless request "Set Encode" (8B2A) :
+    SET failed on device wlan0 ; Invalid argument.
+one:~# iwconfig wlan0 key s:passwo
+Error for wireless request "Set Encode" (8B2A) :
+    SET failed on device wlan0 ; Invalid argument.
+one:~# iwconfig wlan0 key s:passw
+
+(this last works...)
+
+So network scripts can not set my key...
+
+I don't know if this is a problem in iwconfig or in the driver...
+
+Any idea ? Any way to debug this ?
+
+pd: hardware is Acer Aspire One 150:
+
+03:00.0 Ethernet controller: Atheros Communications Inc. AR5001 Wireless Network Adapter (rev 01)
+    Subsystem: Foxconn International, Inc. Device e008
+    Flags: bus master, fast devsel, latency 0, IRQ 18
+    Memory at 35200000 (64-bit, non-prefetchable) [size=64K]
+    Capabilities: [40] Power Management version 2
+    Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit-
+    Capabilities: [60] Express Legacy Endpoint, MSI 00
+    Capabilities: [90] MSI-X: Enable- Count=1 Masked-
+    Capabilities: [100] Advanced Error Reporting
+    Capabilities: [140] Virtual Channel <?>
+    Kernel driver in use: ath5k
+    Kernel modules: ath5k
+
+TIA
+
+(plz, CC me, I'm not subscribed...)
+
 -- 
-1.6.4.4
-
+J.A. Magallon <jamagallon()ono!com>     \               Software is like sex:
+                                         \         It's better when it's free
+Mandriva Linux release 2010.0 (Cooker) for x86_64
+Linux 2.6.29.3-desktop-1mnb (gcc 4.3.2 (GCC) #1 Wed May
