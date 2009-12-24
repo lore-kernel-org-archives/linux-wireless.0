@@ -1,63 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f211.google.com ([209.85.217.211]:36792 "EHLO
-	mail-gx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932420AbZLRSUW (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60825 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751613AbZLXBDa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2009 13:20:22 -0500
-Received: by gxk3 with SMTP id 3so2287479gxk.1
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2009 10:20:21 -0800 (PST)
-Message-ID: <4B2BC7E3.2050907@lwfinger.net>
-Date: Fri, 18 Dec 2009 12:20:19 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Florian Zumbiehl <florz@florz.de>
-CC: flamingice@sourmilk.net, andreamrl@tiscali.it,
-	herton@mandriva.com.br, htl10@users.sourceforge.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: Power consumption of RTL8187 (driver)/recommendations for	low-power
- USB 802.11 adapter?
-References: <20091218180205.GD2512@florz.florz.dyndns.org>
-In-Reply-To: <20091218180205.GD2512@florz.florz.dyndns.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 23 Dec 2009 20:03:30 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Sujith <Sujith.Manoharan@atheros.com>, stable@kernel.org
+Subject: [PATCH 3/5] ath9k: fix suspend by waking device prior to stop
+Date: Wed, 23 Dec 2009 20:03:27 -0500
+Message-Id: <1261616609-518-4-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1261616609-518-1-git-send-email-lrodriguez@atheros.com>
+References: <1261616609-518-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/18/2009 12:02 PM, Florian Zumbiehl wrote:
-> Hi,
-> 
-> I'm not really sure whom to write to, so ... I'm writing to all of you, for
-> now ;-)
-> 
-> I just bought a USB wireless stick with an RTL8187B inside. The idea was to
-> use it with my laptop. In principle, it works just fine ... if it didn't
-> cause the computer to triple its idle power consumption from some
-> 7.5 to ~ 22.5 Watts.
-> 
-> I don't have a clue (yet) where exactly all that power goes to, and how
-> much of it is actually being used by the stick itself (it's getting pretty
-> warm, too - maybe you have a clue what to expect there?). But apparently,
-> quite a bit of that increased power consumption is due to the CPU entering
-> ACPI sleep states for a much smaller proportion of time, and not entering
-> the highest sleep state at all anymore (which otherwise makes up around
-> 98 % of the time) due to some polling/high-frequency interrupt of the
-> driver. After all, even the most inefficient voltage regulator can't
-> make 15 W from USB's max. 2.5 W (I hope ...).
+From: Sujith <Sujith.Manoharan@atheros.com>
 
-My RTL8187B does get quite warm. The 'lsusb -v' output says that the
-device can draw up to 500 mA or the maximum 2.5 W, but it does seem
-warmer than that.
+Ensure the device is awake prior to trying to tell hardware
+to stop it. Impact of not doing this is we can likely leave
+the device in an undefined state likely causing issues with
+suspend and resume. This patch ensures harware is where it
+should be prior to suspend.
 
-> Now, the obvious question is: Is there anything one could do about that?
+Cc: stable@kernel.org
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-AFAIK, the rtl8187 driver is not running any polling loops. It will
-interrupt the machine whenever it receives something or whenever data
-needs to be transmitted. You could cut the frequency by changing the
-beacon interval to 2 s. It is probably now set at 0.1 s.
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 3f5b887..1464ded 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2504,6 +2504,9 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 		return; /* another wiphy still in use */
+ 	}
+ 
++	/* Ensure HW is awake when we try to shut it down. */
++	ath9k_ps_wakeup(sc);
++
+ 	if (ah->btcoex_hw.enabled) {
+ 		ath9k_hw_btcoex_disable(ah);
+ 		if (ah->btcoex_hw.scheme == ATH_BTCOEX_CFG_3WIRE)
+@@ -2524,6 +2527,9 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 	/* disable HAL and put h/w to sleep */
+ 	ath9k_hw_disable(ah);
+ 	ath9k_hw_configpcipowersave(ah, 1, 1);
++	ath9k_ps_restore(sc);
++
++	/* Finally, put the chip in FULL SLEEP mode */
+ 	ath9k_setpower(sc, ATH9K_PM_FULL_SLEEP);
+ 
+ 	sc->sc_flags |= SC_OP_INVALID;
+-- 
+1.6.3.3
 
-> And if not, or possibly even if: Any recommendation for a power-efficient
-> USB 802.11 adapter - in particular something that does not cause
-> CPU wakeups all the time when there is no actual network traffic?
-
-Not all network traffic is data.
-
-Larry
