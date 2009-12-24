@@ -1,65 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f171.google.com ([209.85.223.171]:62333 "EHLO
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:43913 "EHLO
 	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751870AbZLATSd convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1753442AbZLXLsh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 14:18:33 -0500
-Received: by iwn1 with SMTP id 1so3313483iwn.33
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 11:18:40 -0800 (PST)
+	Thu, 24 Dec 2009 06:48:37 -0500
+Received: by iwn1 with SMTP id 1so5724607iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Dec 2009 03:48:37 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1259692053.32171.98.camel@johannes.local>
-References: <1259688582.32171.97.camel@johannes.local> <1259691446.4806.12.camel@mj>
-	<1259692053.32171.98.camel@johannes.local>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 1 Dec 2009 11:18:20 -0800
-Message-ID: <43e72e890912011118w535781a4id4e4572df16267f4@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: allow disabling 40MHz on 2.4GHz
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Pavel Roskin <proski@gnu.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <BLU113-W211E9D9EFD5458887F8CFFBE820@phx.gbl>
+References: <BLU113-W7635FBD7855C5257B07E4BE820@phx.gbl> <69e28c910912210614v31edf6cej9abeddb17ab130d@mail.gmail.com>
+	<BLU113-W10113EE534A08128E43979BE820@phx.gbl> <4B2F9534.8020908@lwfinger.net>
+	<BLU113-W211E9D9EFD5458887F8CFFBE820@phx.gbl>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 24 Dec 2009 22:48:17 +1100
+Message-ID: <646765f40912240348s64747772la4f80a945ab935d7@mail.gmail.com>
+Subject: Re: I need a card that works reasonably easily with Debain- reccs?
+To: Mike Marchywka <marchywka@hotmail.com>
+Cc: larry.finger@lwfinger.net, netrolller.3d@gmail.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 1, 2009 at 10:27 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2009-12-01 at 13:17 -0500, Pavel Roskin wrote:
->> On Tue, 2009-12-01 at 18:29 +0100, Johannes Berg wrote:
->> > In some situations it is required that a system be
->> > configured with no support for 40 MHz channels in
->> > the 2.4 GHz band. Rather than imposing any such
->> > restrictions on everybody, allow configuration a
->> > system like that with a module parameter. It is
->> > writable at runtime but only takes effect at the
->> > time of the next association.
->>
->> That looks like a hack to me.
->>
->> Maybe it should be treated like other CRDA flags?  In fact, you can find
->> this in dbparse.py in the wireless-regdb sources:
->>
->>     # hole at bit 9. FIXME: Where is NO-HT40 defined?
->>     'NO-HT40':          1<<10,
->>
->> However, there are no other references to NO-HT40 in the wireless-regdb
->> or CRDA sources.  I assume it's not implemented.
+On Tue, Dec 22, 2009 at 09:29, Mike Marchywka <marchywka@hotmail.com> wrote:
 >
-> It's not a regulatory requirement, it's a coexistence requirement.
+>
+>
+> This is the info for the card,
+> 04:06.0 Ethernet controller [0200]: Marvell Technology Group Ltd. 88w8335 [Libertas] 802.11b/g Wireless [11ab:1faa] (rev 03)
 
-To extend this text a little more, me and Johannes had reviewed usage
-of a NO-HT40 flag for regulatory purposes a while back. It was used
-mainly on the old Atheros HAL regulatory code and upon a lot of review
-even with our own regulatory folks determined that in fact there was
-no specific rules about disallowing 40 MHz, but that when this was
-disallowed it can be implied by the frequency range not fitting a 40
-MHz channel. This is currently computed dynamically now on cfg80211
-and its results are outputed through the file:
+Oh yes, the WG311 v3
 
-/sys/kernel/debug/ieee80211/phy0/ht40allow_map
+I have grappled with one of these cards in the past. There's been a
+couple of efforts (one on my part) to get a working open source driver
+off the ground, however none have (yet) borne fruit.
 
-Countries that do not allow HT40 were working on allowing it anyway so
-as of now I don't think there are countries that disallow it unless
-its implied by the frequency ranges allowed.
+Essentially, your only option is to either use a very specific kernel
+version and Marvell's official open source driver, or write your own
+from the bits and pieces of the others around.
 
-  Luis
+The Marvell driver can be found here: *note the version number*.
+http://git.infradead.org/users/dwmw2/marvell-db64660-2.6.12.6.git
+
+The (non-working) remains of one of the efforts can be found here:
+http://git.infradead.org/mrv8k-2.6.git
+
+If you're interested, I can dig up the other bits and pieces I have
+and send them to you. (None of these actually work, and the mrv8k
+driver is the most complete.)
+
+Also, the hardware may be similar enough to the Marvell TopDog
+hardware supported by the in-tree mwl8k driver that it can be used as
+a base.
+
+Personally, my solution to the issue of there being no drivers for
+this card was to try (and succeed) in making another wireless card I
+have work.
+
+> but now that you have me going I would like to find a driver for this too,
+>
+> 04:07.0 Communication controller [0780]: Conexant Systems, Inc. HSF 56k Data/Fax Modem [14f1:2f20]
+
+You'll have to ask elsewhere for info on that, it doesn't seem to be a
+wireless card =)
+
+However, it does seem to be a PCI 56k Modem, which causes the big red
+warning lights to flash: it's likely to be a "winmodem" which means
+that it's a very *very* dumb card containing a trumped up DAC and ADC
+and the absolute minimum hardware to talk on a POTS line. In terms of
+drivers, this means that almost all the meat of a modem is implemented
+in software, so the driver needs to handle most of the conversion from
+data to be sent to the tones to send out on the POTS line *in
+software*. There are a couple of winmodem drivers floating around out
+there, but, as I understand it, there is no standard for these
+devices, so every brand (and possibly model) works differently.
+
+Hopefully you have one of the better supported cards.
+
+Good Luck!
+
+Thanks,
+
+-- 
+
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+.Plan: http://sites.google.com/site/juliancalaby/
