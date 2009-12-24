@@ -1,147 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:24766 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758075AbZLIWZA (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60821 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751341AbZLXBDa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2009 17:25:00 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so1772648eyd.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2009 14:25:05 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <83a869cd0912091421s62b704f6wae023c61cab85e92@mail.gmail.com>
-References: <83a869cd0908211513k2e14ba40k251aa8a1e7393a77@mail.gmail.com>
-	 <1250927141.23605.3.camel@johannes.local>
-	 <83a869cd0911071010g32c798c6pfecd875a1bf484e0@mail.gmail.com>
-	 <1257621757.29454.48.camel@johannes.local>
-	 <83a869cd0911161353p5ea44472s8e6f146929ff6c65@mail.gmail.com>
-	 <1258408565.32159.42.camel@johannes.local>
-	 <83a869cd0912071306y4a56953fm8248b6d030b311ae@mail.gmail.com>
-	 <83a869cd0912091421s62b704f6wae023c61cab85e92@mail.gmail.com>
-Date: Wed, 9 Dec 2009 23:25:05 +0100
-Message-ID: <83a869cd0912091425h4c1f2815m71c9b4fa6f0954df@mail.gmail.com>
-Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
-From: gregor kowski <gregor.kowski@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 23 Dec 2009 20:03:30 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
+	johannes@sipsolutions.net
+Subject: [PATCH 2/5] mac80211: fix propagation of failed hardware reconfigurations
+Date: Wed, 23 Dec 2009 20:03:26 -0500
+Message-Id: <1261616609-518-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1261616609-518-1-git-send-email-lrodriguez@atheros.com>
+References: <1261616609-518-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mac80211 tkip code won't call update_tkip_key, if rx packets
-are received without KEY_FLAG_UPLOADED_TO_HARDWARE. This can happen on
-first packet because the hardware key stuff is called asynchronously with
-todo workqueue.
+mac80211 does not propagate failed hardware reconfiguration
+requests. For suspend and resume this is important due to all
+the possible issues that can come out of the suspend <-> resume
+cycle. Not propagating the error means cfg80211 will assume
+the resume for the device went through fine and mac80211 will
+continue on trying to poke at the hardware, enable timers,
+queue work, and so on for a device which is completley
+unfunctional.
 
-This patch workaround that by tracking if we sent the key to the driver.
+The least we can do is to propagate device start issues and
+warn when this occurs upon resume. A side effect of this patch
+is we also now propagate the start errors upon harware
+reconfigurations (non-suspend), but this should also be desirable
+anyway, there is not point in continuing to reconfigure a
+device if mac80211 was unable to start the device.
 
-Signed-off-by: Gregor Kowski <gregor.kowski@gmail.com>
+For further details refer to the thread:
 
-Index: linux-2.6/net/mac80211/tkip.c
-===================================================================
---- linux-2.6.orig/net/mac80211/tkip.c	2009-12-08 20:37:41.000000000 +0000
-+++ linux-2.6/net/mac80211/tkip.c	2009-12-08 20:42:23.000000000 +0000
-@@ -100,7 +100,7 @@
- 		p1k[3] += tkipS(p1k[2] ^ get_unaligned_le16(tk + 12 + j));
- 		p1k[4] += tkipS(p1k[3] ^ get_unaligned_le16(tk + 0 + j)) + i;
+http://marc.info/?t=126151038700001&r=1&w=2
+
+Cc: stable@kernel.org
+Cc: johannes@sipsolutions.net
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/util.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index b019725..57c2c39 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1047,7 +1047,19 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 
+ 	/* restart hardware */
+ 	if (local->open_count) {
++		/*
++		 * Upon resume hardware can sometimes be goofy due to
++		 * various platform / driver / bus issues, so restarting
++		 * the device may at times not work immediately. Propagate
++		 * the error.
++		 */
+ 		res = drv_start(local);
++		if (res) {
++			WARN(local->suspended, "Harware became unavailable "
++			     "upon resume likely due to a bug on mac80211, "
++			     "your driver or a bus issue\n");
++			return res;
++		}
+ 
+ 		ieee80211_led_radio(local, true);
  	}
--	ctx->initialized = 1;
-+	ctx->state = TKIP_STATE_PHASE1_DONE;
- }
+-- 
+1.6.3.3
 
- static void tkip_mixing_phase2(const u8 *tk, struct tkip_ctx *ctx,
-@@ -183,7 +183,7 @@
- 	/* Update the p1k only when the iv16 in the packet wraps around, this
- 	 * might occur after the wrap around of iv16 in the key in case of
- 	 * fragmented packets. */
--	if (iv16 == 0 || !ctx->initialized)
-+	if (iv16 == 0 || ctx->state == TKIP_STATE_NOT_INIT)
- 		tkip_mixing_phase1(tk, ctx, hdr->addr2, iv32);
-
- 	if (type == IEEE80211_TKIP_P1_KEY) {
-@@ -209,7 +209,7 @@
- 	const u8 *tk = &key->conf.key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
-
- 	/* Calculate per-packet key */
--	if (ctx->iv16 == 0 || !ctx->initialized)
-+	if (ctx->iv16 == 0 || ctx->state == TKIP_STATE_NOT_INIT)
- 		tkip_mixing_phase1(tk, ctx, ta, ctx->iv32);
-
- 	tkip_mixing_phase2(tk, ctx, ctx->iv16, rc4key);
-@@ -259,7 +259,7 @@
- 	if ((keyid >> 6) != key->conf.keyidx)
- 		return TKIP_DECRYPT_INVALID_KEYIDX;
-
--	if (key->u.tkip.rx[queue].initialized &&
-+	if (key->u.tkip.rx[queue].state != TKIP_STATE_NOT_INIT &&
- 	    (iv32 < key->u.tkip.rx[queue].iv32 ||
- 	     (iv32 == key->u.tkip.rx[queue].iv32 &&
- 	      iv16 <= key->u.tkip.rx[queue].iv16))) {
-@@ -275,11 +275,11 @@
-
- 	if (only_iv) {
- 		res = TKIP_DECRYPT_OK;
--		key->u.tkip.rx[queue].initialized = 1;
-+		key->u.tkip.rx[queue].state = TKIP_STATE_PHASE1_HW_UPLOADED;
- 		goto done;
- 	}
-
--	if (!key->u.tkip.rx[queue].initialized ||
-+	if (key->u.tkip.rx[queue].state == TKIP_STATE_NOT_INIT ||
- 	    key->u.tkip.rx[queue].iv32 != iv32) {
- 		/* IV16 wrapped around - perform TKIP phase 1 */
- 		tkip_mixing_phase1(tk, &key->u.tkip.rx[queue], ta, iv32);
-@@ -299,18 +299,20 @@
- 			printk("\n");
- 		}
- #endif
--		if (key->local->ops->update_tkip_key &&
--			key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
--			static const u8 bcast[ETH_ALEN] =
--				{0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
--			const u8 *sta_addr = key->sta->sta.addr;
--
--			if (is_multicast_ether_addr(ra))
--				sta_addr = bcast;
--
--			drv_update_tkip_key(key->local, &key->conf, sta_addr,
--					    iv32, key->u.tkip.rx[queue].p1k);
--		}
-+	}
-+	if (key->local->ops->update_tkip_key &&
-+	    key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
-+	    key->u.tkip.rx[queue].state != TKIP_STATE_PHASE1_HW_UPLOADED) {
-+		static const u8 bcast[ETH_ALEN] =
-+		{0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-+		const u8 *sta_addr = key->sta->sta.addr;
-+
-+		if (is_multicast_ether_addr(ra))
-+			sta_addr = bcast;
-+
-+		drv_update_tkip_key(key->local, &key->conf, sta_addr,
-+				iv32, key->u.tkip.rx[queue].p1k);
-+		key->u.tkip.rx[queue].state = TKIP_STATE_PHASE1_HW_UPLOADED;
- 	}
-
- 	tkip_mixing_phase2(tk, &key->u.tkip.rx[queue], iv16, rc4key);
-Index: linux-2.6/net/mac80211/key.h
-===================================================================
---- linux-2.6.orig/net/mac80211/key.h	2009-12-08 20:37:41.000000000 +0000
-+++ linux-2.6/net/mac80211/key.h	2009-12-08 20:39:23.000000000 +0000
-@@ -59,11 +59,17 @@
- 	KEY_FLAG_TODO_DEFMGMTKEY	= BIT(6),
- };
-
-+enum ieee80211_internal_tkip_state {
-+	TKIP_STATE_NOT_INIT,
-+	TKIP_STATE_PHASE1_DONE,
-+	TKIP_STATE_PHASE1_HW_UPLOADED,
-+};
-+
- struct tkip_ctx {
- 	u32 iv32;
- 	u16 iv16;
- 	u16 p1k[5];
--	int initialized;
-+	enum ieee80211_internal_tkip_state state;
- };
-
- struct ieee80211_key {
