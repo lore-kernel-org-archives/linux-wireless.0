@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:56844 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753815AbZLIKHm (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:63833 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751900AbZLYJUp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2009 05:07:42 -0500
-Received: by fxm5 with SMTP id 5so7267421fxm.28
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Dec 2009 02:07:48 -0800 (PST)
-Message-ID: <4B1F76F2.4090004@gmail.com>
-Date: Wed, 09 Dec 2009 11:07:46 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
+	Fri, 25 Dec 2009 04:20:45 -0500
+Date: Fri, 25 Dec 2009 17:22:25 +0800
+From: Huaxu Wan <huaxu.wan@linux.intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] Compat-wireless-2.6: Updated to fix bluetooth patch error
+Message-ID: <20091225092225.GA11049@owl>
 MIME-Version: 1.0
-To: Sujith <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: useless ath9k commit logs
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sujith and Vasanthakumar,
 
-could I ask you to ever explain why your ath9k patches are needed? Your
-commit logs often describe the change, but not why you are doing that
-(e.g. what exact issue it fixes). This is hard for us to decide whether
-it should be backported to distro kernels or not.
+Compat-wireless-2.6: Updated to fix bluetooth patch error
 
-For example
-    ath9k: Fix bug in ANI channel handling
+Keep the patch in step with the linux-next tree after the following
+patch merged.
 
-    When processing MIB interrupts, OFDM and CCK error
-    handling routines for low RSSI values have to be invoked
-    only when the channel mode is 11G/11B. Since HT channels
-    will also fall under the bands 2Ghz/5Ghz, check appropriately.
-or
-    ath9k: Maintain monotonicity of PER while going across different phy
+    commit 971beb83aeb2a309175682cf5683d64fd4591841
+    Author: Roel Kluin <roel.kluin@gmail.com>
+    Date:   Mon Dec 7 14:23:21 2009 +0100
 
-    Monotonicity of packet error rate should be kept when moving
-    from one phy to another (legacy to ht, ht single stream to dual,
-    etc). Current code skips updating per for other phys.
+        Bluetooth: Fix PTR_ERR return of wrong pointer in hidp_setup_hid()
 
-I don't know from that, what bug, under what circumstanses these fix. If
-any -- e.g. a theoretical issue.
+        Return the PTR_ERR of the correct pointer.
+ 
+Signed-off-by: Huaxu Wan <huaxu.wan@linux.intel.com>
 
-thanks,
+---
+ patches/16-bluetooth.patch |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/patches/16-bluetooth.patch b/patches/16-bluetooth.patch
+index 7382856..3a79f84 100644
+--- a/patches/16-bluetooth.patch
++++ b/patches/16-bluetooth.patch
+@@ -200,7 +200,7 @@ diff -Nur a/net/bluetooth/hci_sysfs.c b/net/bluetooth/hci_sysfs.c
+ +#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
+  	hid = hid_allocate_device();
+  	if (IS_ERR(hid))
+- 		return PTR_ERR(session->hid);
++ 		return PTR_ERR(hid);
+ +#endif
+  
+  	session->hid = hid;
 -- 
-js
+1.6.3.3
