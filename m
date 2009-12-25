@@ -1,50 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:52799 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751692AbZLJNc0 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36360 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756180AbZLYQpa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2009 08:32:26 -0500
-Received: by bwz27 with SMTP id 27so6061607bwz.21
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Dec 2009 05:32:32 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless: report non-zero bitrate for MCS rates through wext
-References: <1260395165-7116-1-git-send-email-linville@tuxdriver.com>
-	<871vj32mlm.fsf@purkki.valot.fi>
-	<20091210130035.GB11112@tuxdriver.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 10 Dec 2009 15:32:30 +0200
-In-Reply-To: <20091210130035.GB11112@tuxdriver.com> (John W. Linville's message of "Thu\, 10 Dec 2009 08\:00\:36 -0500")
-Message-ID: <87skbj0xap.fsf@purkki.valot.fi>
+	Fri, 25 Dec 2009 11:45:30 -0500
+Date: Fri, 25 Dec 2009 11:38:01 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2009-12-24
+Message-ID: <20091225163801.GA4481@tuxdriver.com>
+References: <20091224204722.GA678@tuxdriver.com> <20091224.135314.193725771.davem@davemloft.net> <20091225044759.GA11186@tuxdriver.com> <20091225005142.ixwgpr0dcg4cc48w-cebfxv@webmail.spamcop.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091225005142.ixwgpr0dcg4cc48w-cebfxv@webmail.spamcop.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"John W. Linville" <linville@tuxdriver.com> writes:
+On Fri, Dec 25, 2009 at 12:51:42AM -0500, Pavel Roskin wrote:
+> Quoting "John W. Linville" <linville@tuxdriver.com>:
+>
+>> Hmm...well, I'm at a loss.  It certainly works here. :-)
+>
+> You may want to see this discussion in LKML:
+> http://thread.gmane.org/gmane.linux.kernel/928654/
+>
+> The error messages look differently though.  Anyway, genregdb.awk  
+> appears to require gawk.
 
-> On Thu, Dec 10, 2009 at 11:40:37AM +0200, Kalle Valo wrote:
->> "John W. Linville" <linville@tuxdriver.com> writes:
->> 
->> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
->> 
->> A small description in the commit log would be nice.
+Perhaps, but not intentionally.  Hopefully the patch I posted is
+sufficient to get things working for non-gawk users...?
 
-[...]
-
-> What (beyond the subject) would you put in the commit log for this one?
-
-How it affects me as an user? IMHO "non-zero bitrate for MCS" doesn't
-tell that much and is a bit confusing. I would prefer something like
-this:
-
-  wireless: report 802.11n bitrates through wext
-
-  cfg80211 reports all MCS rates (from 802.11n) as zero. Fix it by
-  moving nl80211__calculate_bitrate() to cfg80211 and using it also
-  with MCS rates.
-
-But maybe I'm just weird :)
-
+John
 -- 
-Kalle Valo
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
