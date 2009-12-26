@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out003.kontent.com ([81.88.40.217]:53270 "EHLO
-	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751213AbZLOPKx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 10:10:53 -0500
-From: Oliver Neukum <oliver@neukum.org>
-To: Josua Dietze <digidietze@draisberghof.de>
-Subject: Re: [PATCH] move eject code from zd1211rw to usb-storage
-Date: Tue, 15 Dec 2009 16:11:08 +0100
-Cc: Stefan Seyfried <stefan.seyfried@googlemail.com>,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
-	Stefan Seyfried <seife@sphairon.com>
-References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com> <4B278191.1010009@draisberghof.de>
-In-Reply-To: <4B278191.1010009@draisberghof.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <200912151611.08576.oliver@neukum.org>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:34993 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751797AbZLZVot (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Dec 2009 16:44:49 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat: backport kfifo for libertas
+Date: Sat, 26 Dec 2009 22:44:34 +0100
+Message-Id: <1261863875-2730-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag, 15. Dezember 2009 13:31:13 schrieb Josua Dietze:
-> Stefan Seyfried schrieb:
-> 
-> > The USB ID claimed by zd1211rw for the fake storage device is
-> > also in use by other, non-zd1211rw devices (Sphairon Homelink
-> > 1202). Move the eject of these devices to where it belongs and
-> > where all the needed infrastructure already exists: usb-storage.
-> 
-> 
-> We can do the eject (as other mode switches) in userspace. Previous 
-> discussions pointed into that direction.
-> 
-> And there is always the question of being able to access the "fake 
-> CD-ROM" without hacking the kernel.
-> 
-> I'd like to see these devices removed from unusual_devs.h.
+Second part of the kfifo backport.
 
-This would break existing systems and thus introduce a regression.
-We'd need to go through a feature removal process. For the time being
-I see no alternative to Seife's patch, as we cannot introduce ejection
-code to another wireless driver and need to support these devices.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-2.6.33.h |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-	Regards
-		Oliver
+diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
+index 9bb0dbb..8123914 100644
+--- a/include/linux/compat-2.6.33.h
++++ b/include/linux/compat-2.6.33.h
+@@ -9,6 +9,7 @@
+ #include <pcmcia/cs_types.h>
+ #include <pcmcia/cistpl.h>
+ #include <pcmcia/ds.h>
++#include <linux/kfifo.h>
+ 
+ #define IFF_DONT_BRIDGE 0x800		/* disallow bridging this ether dev */
+ /* source: include/linux/if.h */
+@@ -47,6 +48,13 @@ int pccard_loop_tuple(struct pcmcia_socket *s, unsigned int function,
+ 					 cisparse_t *parse,
+ 					 void *priv_data));
+ 
++/* Backport for kfifo
++ * kfifo_alloc and kfifo_free must be backported manually 
++ */
++#define kfifo_in(a, b, c) __kfifo_put(*a, b, c)
++#define kfifo_out(a, b, c) __kfifo_get(*a, b, c)
++#define kfifo_len(a) __kfifo_len(*a)
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33)) */
+ 
+ #endif /* LINUX_26_33_COMPAT_H */
+-- 
+1.6.3.3
+
