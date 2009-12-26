@@ -1,73 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:13894 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932715AbZLNWMS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 17:12:18 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/6] iwlwifi fixes for 2.6.33
-Date: Mon, 14 Dec 2009 14:12:07 -0800
-Message-Id: <1260828733-22726-1-git-send-email-reinette.chatre@intel.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:35029 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753137AbZLZVqJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Dec 2009 16:46:09 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat-wireless: Backport net_device_ops set_mac_address
+Date: Sat, 26 Dec 2009 22:46:00 +0100
+Message-Id: <1261863960-2789-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1261863960-2789-1-git-send-email-hauke@hauke-m.de>
+References: <1261863960-2789-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+Adds ieee80211_change_mac and eth_mac_addr into the backport code for net_device_ops
 
-This is an initial effort to (1) reduce confusion in patch submission, and
-(2) start working towards separate submissions to wireless-2.6 and
-wireless-next-2.6. This series includes fixes targeting 2.6.33 and is based
-on wireless-2.6. All of these fixes are needed in 2.6.34 also.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/01-netdev.patch |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-These fixes include two patches that address problems when using the driver
-on big-endian systems.
-
-For 3945 we disable power save support since it has been found to trigger
-uCode problems and have also been found to drop associations. Also for 3945
-we include a fix to a panic that was reported on linux-wireless mailing
-list (http://thread.gmane.org/gmane.linux.kernel.wireless.general/43568).
-
-We include a fix where recent power saving work used a spinlock before it
-was initialized. We also include a fix to the problem where cards not
-supporting 40MHz are unable to associate to APs that do.
-
-All fixes except the spinlock fix is needed in 2.6.32 also. Not all of the
-fixes apply there though and should be rebased after they have been merged
-into 2.6.33.
-
-These patches are also available from branch wireless-2.6 in
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
-Please let me know what needs to be changed to help make the submission
-process work better for you.
-
-Johannes Berg (2):
-  iwlwifi: fix EEPROM/OTP reading endian annotations and a bug
-  iwlwifi: fix more eeprom endian bugs
-
-Reinette Chatre (3):
-  iwl3945: disable power save
-  iwlwifi: initialize spinlock before use
-  iwlwifi: fix 40MHz operation setting on cards that do not allow it
-
-Zhu Yi (1):
-  iwl3945: fix panic in iwl3945 driver
-
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    2 ++
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-5000-hw.h  |   14 +++++++++-----
- drivers/net/wireless/iwlwifi/iwl-5000.c     |    7 ++++---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.c   |   23 +++++++++++++----------
- drivers/net/wireless/iwlwifi/iwl-eeprom.h   |    4 ++--
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   15 ++++++++++-----
- 9 files changed, 44 insertions(+), 29 deletions(-)
-
-
-Thank you
-
-Reinette
+diff --git a/patches/01-netdev.patch b/patches/01-netdev.patch
+index 2c0aa06..5f849e0 100644
+--- a/patches/01-netdev.patch
++++ b/patches/01-netdev.patch
+@@ -110,7 +110,7 @@ without creating a headache on maintenance of the pathes.
+  static const struct net_device_ops ieee80211_dataif_ops = {
+  	.ndo_open		= ieee80211_open,
+  	.ndo_stop		= ieee80211_stop,
+-@@ -663,11 +664,22 @@
++@@ -663,11 +664,23 @@
+  	.ndo_change_mtu 	= ieee80211_change_mtu,
+  	.ndo_set_mac_address 	= eth_mac_addr,
+  };
+@@ -125,6 +125,7 @@ without creating a headache on maintenance of the pathes.
+ +	dev->hard_start_xmit = ieee80211_subif_start_xmit;
+ +	dev->set_multicast_list = ieee80211_set_multicast_list;
+ +	dev->change_mtu = ieee80211_change_mtu;
+++	dev->set_mac_address = ieee80211_change_mac;
+ +	dev->open = ieee80211_open;
+ +	dev->stop = ieee80211_stop;
+ +	/* we will validate the address ourselves in ->open */
+@@ -133,7 +134,7 @@ without creating a headache on maintenance of the pathes.
+  	dev->destructor = free_netdev;
+  }
+  
+-@@ -682,7 +694,11 @@
++@@ -682,7 +694,12 @@
+  
+  	/* and set some type-dependent values */
+  	sdata->vif.type = type;
+@@ -141,6 +142,7 @@ without creating a headache on maintenance of the pathes.
+  	sdata->dev->netdev_ops = &ieee80211_dataif_ops;
+ +#else
+ +	sdata->dev->hard_start_xmit = ieee80211_subif_start_xmit;
+++	sdata->dev->set_mac_address = eth_mac_addr;
+ +#endif
+  	sdata->wdev.iftype = type;
+  
+-- 
+1.6.3.3
 
