@@ -1,84 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f182.google.com ([209.85.211.182]:55154 "EHLO
-	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756078AbZLWOrD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 09:47:03 -0500
-Date: Wed, 23 Dec 2009 16:46:05 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] cfg80211: fix error path in cfg80211_wext_siwscan
-Message-ID: <20091223144605.GA23721@bicker>
-References: <20091223132937.GG17923@bicker> <1261578815.7304.7.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1261578815.7304.7.camel@johannes.local>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:34994 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751859AbZLZVot (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Dec 2009 16:44:49 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat: Backport eth_mac_addr
+Date: Sat, 26 Dec 2009 22:44:35 +0100
+Message-Id: <1261863875-2730-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1261863875-2730-1-git-send-email-hauke@hauke-m.de>
+References: <1261863875-2730-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 23, 2009 at 03:33:35PM +0100, Johannes Berg wrote:
-> If there's an invalid channel or SSID, the code leaks
-> the scan request. Always free the scan request, unless
-> it was successfully given to the driver.
-> 
-> Reported-by: Dan Carpenter <error27@gmail.com>
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
-> I kinda prefer this, thoughts?
-> 
+eth_mac_addr is needed by net/mac80211/iface.c
 
-Looks good.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ compat/compat-2.6.29.c        |   24 ++++++++++++++++++++++++
+ include/linux/compat-2.6.29.h |    2 ++
+ 2 files changed, 26 insertions(+), 0 deletions(-)
 
-Acked-by: Dan Carpenter <error27@gmail.com>
+diff --git a/compat/compat-2.6.29.c b/compat/compat-2.6.29.c
+index 669ad35..ea2a991 100644
+--- a/compat/compat-2.6.29.c
++++ b/compat/compat-2.6.29.c
+@@ -13,6 +13,7 @@
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
+ 
+ #include <linux/usb.h>
++#include <linux/etherdevice.h>
+ 
+ /**
+  * usb_unpoison_anchored_urbs - let an anchor be used successfully again
+@@ -35,6 +36,29 @@ void usb_unpoison_anchored_urbs(struct usb_anchor *anchor)
+ }
+ EXPORT_SYMBOL_GPL(usb_unpoison_anchored_urbs);
+ 
++/**
++ * eth_mac_addr - set new Ethernet hardware address
++ * @dev: network device
++ * @p: socket address
++ * Change hardware address of device.
++ *
++ * This doesn't change hardware matching, so needs to be overridden
++ * for most real devices.
++ */
++int eth_mac_addr(struct net_device *dev, void *p)
++{
++	struct sockaddr *addr = p;
++
++	if (netif_running(dev))
++		return -EBUSY;
++	if (!is_valid_ether_addr(addr->sa_data))
++		return -EADDRNOTAVAIL;
++	memcpy(dev->dev_addr, addr->sa_data, ETH_ALEN);
++	return 0;
++}
++EXPORT_SYMBOL(eth_mac_addr);
++/* Source: net/ethernet/eth.c */
++
+ 
+ #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29) */
+ 
+diff --git a/include/linux/compat-2.6.29.h b/include/linux/compat-2.6.29.h
+index 8a968fa..690fb93 100644
+--- a/include/linux/compat-2.6.29.h
++++ b/include/linux/compat-2.6.29.h
+@@ -55,6 +55,8 @@ extern void usb_unpoison_anchored_urbs(struct usb_anchor *anchor);
+ }							\
+ )
+ 
++extern int eth_mac_addr(struct net_device *dev, void *p);
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
+ 
+ #endif /*  LINUX_26_29_COMPAT_H */
+-- 
+1.6.3.3
 
-regards,
-dan carpenter
-
->  net/wireless/scan.c |   13 +++++++++----
->  1 file changed, 9 insertions(+), 4 deletions(-)
-> 
-> --- wireless-testing.orig/net/wireless/scan.c	2009-12-23 15:27:20.000000000 +0100
-> +++ wireless-testing/net/wireless/scan.c	2009-12-23 15:32:52.000000000 +0100
-> @@ -601,7 +601,7 @@ int cfg80211_wext_siwscan(struct net_dev
->  	struct cfg80211_registered_device *rdev;
->  	struct wiphy *wiphy;
->  	struct iw_scan_req *wreq = NULL;
-> -	struct cfg80211_scan_request *creq;
-> +	struct cfg80211_scan_request *creq = NULL;
->  	int i, err, n_channels = 0;
->  	enum ieee80211_band band;
->  
-> @@ -694,8 +694,10 @@ int cfg80211_wext_siwscan(struct net_dev
->  	/* translate "Scan for SSID" request */
->  	if (wreq) {
->  		if (wrqu->data.flags & IW_SCAN_THIS_ESSID) {
-> -			if (wreq->essid_len > IEEE80211_MAX_SSID_LEN)
-> -				return -EINVAL;
-> +			if (wreq->essid_len > IEEE80211_MAX_SSID_LEN) {
-> +				err = -EINVAL;
-> +				goto out;
-> +			}
->  			memcpy(creq->ssids[0].ssid, wreq->essid, wreq->essid_len);
->  			creq->ssids[0].ssid_len = wreq->essid_len;
->  		}
-> @@ -707,12 +709,15 @@ int cfg80211_wext_siwscan(struct net_dev
->  	err = rdev->ops->scan(wiphy, dev, creq);
->  	if (err) {
->  		rdev->scan_req = NULL;
-> -		kfree(creq);
-> +		/* creq will be freed below */
->  	} else {
->  		nl80211_send_scan_start(rdev, dev);
-> +		/* creq now owned by driver */
-> +		creq = NULL;
->  		dev_hold(dev);
->  	}
->   out:
-> +	kfree(creq);
->  	cfg80211_unlock_rdev(rdev);
->  	return err;
->  }
-> 
