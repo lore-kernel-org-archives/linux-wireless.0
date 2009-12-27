@@ -1,38 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:3209 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752167AbZLWRaF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 12:30:05 -0500
-Subject: Re: modprobe fail and subsequent crash on rmmod ath9k D-Link DWA
- 652
-From: Pavel Roskin <proski@gnu.org>
-To: Russ Adams <russ.adams@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <bfff2faa0912230911w15966e9sbfbba9bd303d3314@mail.gmail.com>
-References: <bfff2faa0912190727jc7fa067gf46425d1cd443698@mail.gmail.com>
-	 <bfff2faa0912230911w15966e9sbfbba9bd303d3314@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 23 Dec 2009 12:30:00 -0500
-Message-Id: <1261589400.7538.4.camel@mj>
-Mime-Version: 1.0
+Received: from ey-out-2122.google.com ([74.125.78.27]:8083 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751126AbZL0I20 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Dec 2009 03:28:26 -0500
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] wl1251: timeout one too soon in wl1251_boot_run_firmware()
+References: <4B3664AF.6090302@gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sun, 27 Dec 2009 10:28:21 +0200
+In-Reply-To: <4B3664AF.6090302@gmail.com> (Roel Kluin's message of "Sat\, 26 Dec 2009 20\:31\:59 +0100")
+Message-ID: <87pr60yg62.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-12-23 at 12:11 -0500, Russ Adams wrote:
-> Nothing new on this just yet.
-> 
-> Tonight I will try 2.6.32-2 to see if that fixes the problem.  Does
-> anyone have any debugging steps I can try?
+Roel Kluin <roel.kluin@gmail.com> writes:
 
-Remember, I asked you to show the debug messages after the ath9k module
-is loaded.  If it's loaded on startup, you can blacklist it and then
-load manually with modprobe.
+> `loop' reaches INIT_LOOP + 1 after the loop. so if ACX_INTR_INIT_COMPLETE
+> occurs in the last iteration the write occurs but also the error out as if a
+> timeout occurred. This is probably very unlikely to ever occur.
 
-It seems to me that something fails during the initialization, which
-causes a crash at the unload time.  But since ath9k is working properly
-for most of us, it's hard to figure out what is failing and how to model
-the problem on functioning hardware.
+Thank you for fixing this.
+
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+
+Acked-by: Kalle Valo <kalle.valo@nokia.com>
+
+I think John can take this. As Roel mentioned, this is nothing
+critical and, if needed, can wait until 2.6.34.
 
 -- 
-Regards,
-Pavel Roskin
+Kalle Valo
