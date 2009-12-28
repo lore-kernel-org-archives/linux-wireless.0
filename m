@@ -1,67 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33202 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752415AbZLWTLc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2009 14:11:32 -0500
-Subject: Re: mac80211 suspend corner case (was: Asus eeepc 1008HA suspend
- issue and mac80211 suspend corner) case
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-In-Reply-To: <20091223190840.GI2609@tux>
-References: <20091222022355.GA32508@bombadil.infradead.org>
-	 <20091222193010.GB30201@bombadil.infradead.org>
-	 <1261570081.25008.1.camel@johannes.local> <20091223162813.GB2609@tux>
-	 <1261586828.7304.13.camel@johannes.local>  <20091223190840.GI2609@tux>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-NHjkRrkRgTDekm1uhOE3"
-Date: Wed, 23 Dec 2009 20:11:29 +0100
-Message-ID: <1261595489.27798.0.camel@johannes.local>
+Received: from mga11.intel.com ([192.55.52.93]:51195 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750995AbZL1Dpo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Dec 2009 22:45:44 -0500
+Subject: Re: Intel 4965 HT rates
+From: Zhu Yi <yi.zhu@intel.com>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	Valentin Manea <linux-wireless@mrs.ro>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <69e28c910912210552p1f63a47dw9fbabf2c26ce02e9@mail.gmail.com>
+References: <E9954878DD1FB34FAE5187FB88C58A357683393C@orsmsx506.amr.corp.intel.com>
+	 <1261363447.12157.624.camel@debian>
+	 <69e28c910912210552p1f63a47dw9fbabf2c26ce02e9@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 28 Dec 2009 11:45:42 +0800
+Message-ID: <1261971942.6037.57.camel@debian>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2009-12-21 at 21:52 +0800, Gábor Stefanik wrote:
+> On Mon, Dec 21, 2009 at 3:44 AM, Zhu Yi <yi.zhu@intel.com> wrote:
+> > On Mon, 2009-12-21 at 10:33 +0800, Guy, Wey-Yi W wrote:
+> >> For 4965, 40MHz only supported in g band
+> >
+> > We don't support 40MHz channels in 2.4G band. See comments in
+> > iwl-eeprom.h:
+> >
+> >  *
+> >  * NOTE:  4965 does not support HT40 channels on 2.4 GHz.
+> >  */
+> >
+> > Thanks,
+> > -yi
+> 
+> But why does the Windows driver for 4965 support it then? 
 
---=-NHjkRrkRgTDekm1uhOE3
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Have you tested how well it is supported? The firmware people suggest to
+disable this feature (although the hardware was originally designed to)
+due to some internal problems.
 
-On Wed, 2009-12-23 at 11:08 -0800, Luis R. Rodriguez wrote:
-
-> So you want drivers to handle start() failures (even if its not for
-> resume) with an unregistration to mac80211?
-
-Not necessarily. If it's a temporary error, that's fine, of course, but
-if the hardware is suddenly inaccessible for whatever reason then yes,
-of course, unregistering is the only good choice no matter when it
-happens.
-
-johannes
-
---=-NHjkRrkRgTDekm1uhOE3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLMmtcAAoJEODzc/N7+QmaslYP/2Yqd0Br00j0+ghZCj571DFK
-NRBrmWPLm3GadH7ZXFBG7PBtSkzZzbwHbP6xNp4Js21CR6ZWMX0WSLV0exFf6UMZ
-CUYVQpiiU1bGfDIxTGXtwgTPE5/Vt3gTVZkONZ2Ii5FTxxygsrKk4SloCo54y+4y
-7GYJwXhy92dX/3ZqPw1uCwp8NClowbFzNFKLjvmRNDSSQY5Hm9Y9HQTqqOVI6aN5
-/nfREiqIbjRgY1rucpX2Cf8ol/jpcvUXvz/5KP8PlJlCBs71MpkKBr2Kx9/C1iOh
-unTAwR9QpIb7yWZxjKwaogDAWWOWvMrPpW2XMuFfqx66InPPjtnX2W6lHqp+RUml
-nZpztCrw5RzUeL+gQuQZfhVsFN1c1uagl8qfsGEaJnO6iOEr4dZWFOnW0ehUxkLg
-k0+IVdY/M2lxoZJ9qUOTPO9SuVdFw7CjdkGKuJniDmXoP6uewmGw0BYlWi6Prpnb
-diEKO/dA9XwBxwTzKt/PaUivo/akjQcJFhXgWuiGd4RLQm1nKyIv6wDxMYW0d9yn
-LxQzS8qrxXSktej2m25fHJm5Fg+BeWx+yo6rZckWN2Gbz80V6hVa40DJYzIvJtbs
-UMZrObXnU+7i7xbF6ZiUuFrR4BaP/xqbJF8igMXhr7FIw3fwjVWdyH06lxmXkBeX
-VVjdd6uU5VDNTk9/srVe
-=Iljo
------END PGP SIGNATURE-----
-
---=-NHjkRrkRgTDekm1uhOE3--
+Thanks,
+-yi
 
