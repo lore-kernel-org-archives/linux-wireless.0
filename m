@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f211.google.com ([209.85.217.211]:55157 "EHLO
-	mail-gx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759037AbZLOCzx (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:39511 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751007AbZL1Qqs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 21:55:53 -0500
-Received: by gxk3 with SMTP id 3so5294142gxk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 18:55:53 -0800 (PST)
-Message-ID: <4B26F985.7010906@lwfinger.net>
-Date: Mon, 14 Dec 2009 20:50:45 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 28 Dec 2009 11:46:48 -0500
+Received: by ewy19 with SMTP id 19so1950769ewy.21
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2009 08:46:46 -0800 (PST)
 MIME-Version: 1.0
-To: Ahmad Yasser <ahmad.xcoder@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Does the RTL8187 mac80211 drivers support master/ap mode?
-References: <loom.20091215T030930-675@post.gmane.org> <4B26F38B.6080406@lwfinger.net> <loom.20091215T033724-246@post.gmane.org>
-In-Reply-To: <loom.20091215T033724-246@post.gmane.org>
+In-Reply-To: <83a869cd0912091425h4c1f2815m71c9b4fa6f0954df@mail.gmail.com>
+References: <83a869cd0908211513k2e14ba40k251aa8a1e7393a77@mail.gmail.com>
+	 <1250927141.23605.3.camel@johannes.local>
+	 <83a869cd0911071010g32c798c6pfecd875a1bf484e0@mail.gmail.com>
+	 <1257621757.29454.48.camel@johannes.local>
+	 <83a869cd0911161353p5ea44472s8e6f146929ff6c65@mail.gmail.com>
+	 <1258408565.32159.42.camel@johannes.local>
+	 <83a869cd0912071306y4a56953fm8248b6d030b311ae@mail.gmail.com>
+	 <83a869cd0912091421s62b704f6wae023c61cab85e92@mail.gmail.com>
+	 <83a869cd0912091425h4c1f2815m71c9b4fa6f0954df@mail.gmail.com>
+Date: Mon, 28 Dec 2009 17:46:46 +0100
+Message-ID: <83a869cd0912280846r5caccfc8s764148f8939be469@mail.gmail.com>
+Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
+From: gregor kowski <gregor.kowski@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/14/2009 08:38 PM, Ahmad Yasser wrote:
-> Larry Finger <Larry.Finger@...> writes:
->>
->> It does not work in master/ap mode. It is on my list, but it will
->> certainly not be in 2.6.33, which is feature frozen. It may not even
->> make it for 2.6.34.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@...
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
-> 
-> Oh, sad to hear so.. :/
-> 
-> So is there any other solution to using hostapd with it, or
-> I just have to wait for the driver to gain support for it?
+Hi,
 
-It cannot handle generating beacons. You can figure out the answer
-from there.
+On 12/9/09, gregor kowski <gregor.kowski@gmail.com> wrote:
+> The mac80211 tkip code won't call update_tkip_key, if rx packets
+> are received without KEY_FLAG_UPLOADED_TO_HARDWARE. This can happen on
+> first packet because the hardware key stuff is called asynchronously with
+> todo workqueue.
+>
+> This patch workaround that by tracking if we sent the key to the driver.
+>
+What's the status of this patch ?
+
+Regards,
+
+Gregor
