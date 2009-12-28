@@ -1,54 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46742
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751345AbZLUC3K (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2009 21:29:10 -0500
-Date: Sun, 20 Dec 2009 18:29:10 -0800 (PST)
-Message-Id: <20091220.182910.226760127.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2009-12-18
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20091220133800.GA4700@tuxdriver.com>
-References: <20091218211945.GC2828@tuxdriver.com>
-	<20091220.001736.189688434.davem@davemloft.net>
-	<20091220133800.GA4700@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail.atheros.com ([12.36.123.2]:52496 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750913AbZL1Frg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Dec 2009 00:47:36 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 27 Dec 2009 21:47:36 -0800
+Date: Mon, 28 Dec 2009 11:17:28 +0530
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2.6.33 0/3] wireless fixes
+Message-ID: <20091228054727.GA1973@senthil-lnx.users.atheros.com>
+References: <20091223121202.581948600@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20091223121202.581948600@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Sun, 20 Dec 2009 08:38:00 -0500
-
-> On Sun, Dec 20, 2009 at 12:17:36AM -0800, David Miller wrote:
->> From: "John W. Linville" <linville@tuxdriver.com>
->> Date: Fri, 18 Dec 2009 16:19:45 -0500
->> 
->> > Please let me know if there are problems!
->> 
->> Your tree is based upon Linus's not net-2.6
->> so when I pulled I got a lot of unrelated
->> commits.
->> 
->> Please fix this, thanks.
+On Wed, Dec 23, 2009 at 05:42:02PM +0530, Johannes Berg wrote:
+> Hi,
 > 
-> It's based on 2.6.33-rc1.  Are you not going to pull that into net-2.6?
-
-Why in the world should I?  There are no conflicts to resolve
-that I know of.
-
-And if there are no conflicts to resolve, pulling in Linus's
-tree just makes future pulls into his tree more ugly.
-
-This is pretty standard practice, but in any event you shouldn't ever
-care.
-
-You should simply always work against net-2.6, there is no reason to
-work against any other tree.
-
-This is a pretty fundamental thing, I don't know why you based against
-Linus's tree instead of net-2.6.  Now you have to rebase already :-/
-
+> Here are a few wireless fixes. I've sent all these
+> before, but these are now rebased over the current
+> wireless-testing tree.
+1/3 of this series is already present in wireless-testing.git
+> 
+> johannes
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
