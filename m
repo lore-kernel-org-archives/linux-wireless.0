@@ -1,33 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from parez.praha12.net ([78.108.102.1]:44846 "EHLO parez.praha12.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757326AbZLUVu4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2009 16:50:56 -0500
-From: =?UTF-8?q?Luk=C3=A1=C5=A1=20Turek?= <8an@praha12.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	lrodriguez@atheros.com, ath5k-devel@lists.ath5k.org
-Subject: [PATCH v3 0/5] Setting coverage class (and ACK timeout and slot time), take two
-Date: Mon, 21 Dec 2009 22:50:46 +0100
-Message-Id: <1261432252-1855-1-git-send-email-8an@praha12.net>
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:52416 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751752AbZL1QKb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Dec 2009 11:10:31 -0500
+Received: by iwn1 with SMTP id 1so7345173iwn.33
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2009 08:10:30 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1261988312.22470.5.camel@johannes.local>
+References: <1261970308-22926-1-git-send-email-yi.zhu@intel.com>
+	<1261988312.22470.5.camel@johannes.local>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 28 Dec 2009 08:10:10 -0800
+Message-ID: <43e72e890912280810o6a2d3f9dye562c75061e1f486@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: delete addba_resp_timer when stop Tx BA session
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches implement a feature essential for long distance wireless links:
-setting ACK timeout and slot time. The API is based on a parameter called
-Coverage Class specified by the 802.11 standard.
+On Mon, Dec 28, 2009 at 12:18 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2009-12-28 at 11:18 +0800, Zhu Yi wrote:
+>> We start an one shot addba_resp_timer in ieee80211_start_tx_ba_session
+>> but don't delete it in __ieee80211_stop_tx_ba_session. This will cause
+>> problem in suspend and resume. When suspend happens without the timer
+>> deleted, the timer handler will be called immediately after resume and
+>> messes up driver status.
+>>
+>> See http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2134
+>> comment #22 for more details.
+>
+> Hmm. The timer checks
+>
+>        if ((*state & (HT_ADDBA_REQUESTED_MSK | HT_ADDBA_RECEIVED_MSK)) !=
+>                                                HT_ADDBA_REQUESTED_MSK) {
+>
+> which /should/ make it a no-op in the case you mention because we tear
+> down sessions, or does that not reset their state properly?
+>
+> Ok, so ___ieee80211_stop_tx_ba_session() doesn't, in fact, clear the
+> mask right away, so I think we should add HT_AGG_STATE_REQ_STOP_BA_MSK
+> to the code I quoted above?
 
-The first two patches add support to the kernel 802.11 stack via a new nl80211
-attribute and a mac80211 callback.
+When the patch addresses the above can you cc stable if applicable.
 
-Following three patches implement the callback in ath5k driver, after some
-requisite fixes. Implementation in ath9k driver is planned.
+> In any case the del_timer_sync isn't right there and we also shouldn't
+> really use it (per Linus)
 
-Please note the last patch outside the series is not a kernel patch, it adds
-the necessary support to userspace program iw.
+Why is that?
 
-This is a third version of these patches, with following minor changes:
-* mac80211: add drv_ wrapper for mac80211 callback including tracer
-* ath5k: move setting ah_coverage_class to ath5k_hw_set_coverage_class()
-
-Lukas Turek
+  Luis
