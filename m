@@ -1,44 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46499 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55020 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756266AbZLHUPM (ORCPT
+	with ESMTP id S1751583AbZL1VP3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 15:15:12 -0500
-Date: Tue, 8 Dec 2009 15:05:04 -0500
+	Mon, 28 Dec 2009 16:15:29 -0500
+Date: Mon, 28 Dec 2009 16:12:58 -0500
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Stephen Hemminger <shemminger@vyatta.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-hotplug@vger.kernel.org
-Subject: Re: wireless device and udev
-Message-ID: <20091208200504.GC16303@tuxdriver.com>
-References: <20091207172616.7470ed2b@nehalam> <20091208142940.GB15172@tuxdriver.com> <20091208104336.3d5a7fb4@nehalam> <20091208185222.GA16303@tuxdriver.com> <1260300551.32227.1.camel@johannes.local>
+To: Luca Verdesca <magooz@salug.it>
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath5k: adding LED support for AR5BXB63 cards
+Message-ID: <20091228211258.GA13285@tuxdriver.com>
+References: <20091222022135.2102c465@magooz.no-ip.org> <b6c5339f0912211937o525c9117k2e6d877b3c91b858@mail.gmail.com> <20091222120245.0df11284@magooz.no-ip.org> <20091222142841.GA5663@hash.localnet> <20091222181001.5c1077b8@magooz.no-ip.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1260300551.32227.1.camel@johannes.local>
+In-Reply-To: <20091222181001.5c1077b8@magooz.no-ip.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 08, 2009 at 08:29:11PM +0100, Johannes Berg wrote:
-> On Tue, 2009-12-08 at 13:52 -0500, John W. Linville wrote:
+On Tue, Dec 22, 2009 at 06:10:01PM +0100, Luca Verdesca wrote:
+> With following patch, LED should now work with LiteOn AR5BXB63 mini
+> pci-e cards.
 > 
-> > So, probably we need to map from the wlanX name to the phyY name,
-> > then determine whether or not this is the first wlanX for phyY.
-> > If not, then the name should be left alone.
-> > 
-> > Now, how do we figure out how many wlanX's belong to phyY?
+> Signed-off-by: Luca Verdesca <magooz@salug.it>
+> Acked-by: Bob Copeland <me@bobcopeland.com>
+> Cc: John Linville <linville@tuxdriver.com>
+> ---
+>  home/magooz/led.c |    2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> And what's the "first" one? :)
+> --- /usr/src/linux/drivers/net/wireless/ath/ath5k/led.c	2009-12-22 16:37:42.000000000 +0100
+> +++ /home/magooz/led.c	2009-12-22 16:38:14.000000000 +0100
+> @@ -75,6 +75,8 @@ static const struct pci_device_id ath5k_
+>  	{ ATH_SDEVICE(PCI_VENDOR_ID_HP, 0x0137a), ATH_LED(3, 1) },
+>  	/* HP Compaq C700 (nitrousnrg@gmail.com) */
+>  	{ ATH_SDEVICE(PCI_VENDOR_ID_HP, 0x0137b), ATH_LED(3, 1) },
+> +	/* LiteOn AR5BXB63 (magooz@salug.it) */
+> +	{ PCI_SDEVICE(ATHEROS, 0x3067), ATH_LED(3, 0) },
+>  	/* IBM-specific AR5212 (all others) */
+>  	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5212_IBM), ATH_LED(0, 0) },
+>  	{ }
 
-I suppose I was figuring that if there was only one, it was the
-first. :-)  But you're right, I suppose that could be racy...
+Did you compile this?  Perhaps you meant to use ATH_SDEVICE instead?
+Of course, it still wouldn't be quite right AFAICT...
 
-> ls /sys/class/net/wlan0/device/net/
-> 
-> will give you the list of interface associated with this device.
+Also, please make sure that your patch can be applied with "patch -p1".
 
-Cool...
+Thanks,
 
+John
 -- 
 John W. Linville		Someday the world will need a hero, and you
 linville@tuxdriver.com			might be all we have.  Be ready.
