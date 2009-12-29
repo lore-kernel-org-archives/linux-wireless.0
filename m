@@ -1,65 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59394 "HELO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752643AbZLMNOG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Dec 2009 08:14:06 -0500
-Subject: Re: 2.6.32-git5+, CONFIG_WEXT_PRIV and Broadcom's driver for
- BCM4322  Wireless chips
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alessandro Suardi <alessandro.suardi@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <5a4c581d0912120740j38a20f8eu3f616f3a477d922f@mail.gmail.com>
-References: <5a4c581d0912120740j38a20f8eu3f616f3a477d922f@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-wkhPQRTd0KRkgvOFmC/2"
-Date: Sun, 13 Dec 2009 14:14:02 +0100
-Message-ID: <1260710042.2442.340.camel@johannes.local>
-Mime-Version: 1.0
+Received: from ogre.sisk.pl ([217.79.144.158]:40761 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752953AbZL2WPC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Dec 2009 17:15:02 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: 2.6.33-rc2: Reported regressions 2.6.31 -> 2.6.32
+Date: Tue, 29 Dec 2009 23:15:31 +0100
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+References: <oBElxfTZdhL.A.bx.-vhOLB@chimera> <4B3A2497.1030506@gmail.com>
+In-Reply-To: <4B3A2497.1030506@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200912292315.31679.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday 29 December 2009, Gertjan van Wingerde wrote:
+> Hi Rafael,
+> 
+> On 12/29/09 16:26, Rafael J. Wysocki wrote:
+> > 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14896
+> > Subject		: REGRESSION for RT2561/RT61 in 2.6.32, related to power saving
+> > Submitter	: Alan Stern <stern@rowland.harvard.edu>
+> > Date		: 2009-12-06 22:12 (24 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=126013756829691&w=4
+> > Handled-By	: Gertjan van Wingerde <gwingerde@gmail.com>
+> > 
+> 
+> This one is fixed via a patch that is queued to be merged into 2.6.33. Is submitted
+> for stable as well.
+> See http://marc.info/?l=linux-wireless&m=126090994909576&w=2
 
---=-wkhPQRTd0KRkgvOFmC/2
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+OK, bug entry updated accordingly.
 
-On Sat, 2009-12-12 at 16:40 +0100, Alessandro Suardi wrote:
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14731
+> > Subject		: rt61pci regression
+> > Submitter	: tim blechmann <tim@klingt.org>
+> > Date		: 2009-12-04 09:33 (26 days old)
+> > 
+> 
+> I believe this problem to be the same as the previous one, and the fix indicated above
+> should fix this as well.
+> Note however that the submitter had presumably unrelated issues that caused him not to 
+> be able to validate the workaround of disabling powersaving.
 
-> But: what is the best option here to make CONFIG_WEXT_PRIV visible at
->  kernel build time if only an external module should select it - but sele=
-ction
->  is not actually happening at kernel build time ?
-> Could CONFIG_WEXT_PRIV be made a separate user-selectable option ?
+Closed as a duplicate of bug #14896.
 
-Your only option is selecting some other (ancient) driver that selects
-WEXT_PRIV. We will not make that Kconfig symbol visible just because
-Broadcom decided that they want to continue screwing their users :)
-
-IOW -- there's no such option available to you at all. Select
-PCMCIA_RAYCS or whatever.
-
-johannes
-
---=-wkhPQRTd0KRkgvOFmC/2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLJOiVAAoJEODzc/N7+QmaxOIP/1O6lcOyXLU5T/jq8NDqD7At
-3Txb995jr84fEviZ28rE6WpclvatmXB9TGXOYiQrbVRCPEZtwGA87+KRRZezKc8M
-RZn+xNaUE0UOyBUzb+9Ubd83msnqFhzZ3X9HFPSOV5NfbAyH2gbqjXke+rOUqvjO
-80fbwjMhy5yf3klTN3UyI9/oTyXEfHkzZq1X45cJL283aFyYL1NLzawSD4yCTfHw
-ZBqP1ZTDb/ewAf+dV+KHRf2iSU0G77+5KmOfKII1WFcv3Mb0SYWmQ0xuU0zZWNkK
-LdSnpkXi0r7GgJvGAkJwReV9yaWbY8OOWdVwp3Hk0U7c6COggfGbX8PHvKD76V+M
-YuzLdMO5XHpkiZ/gKt7J88iWHeogGrxsBvpxWt103/fTVNvoKQOo021PiiOB7pKL
-40mX6HyLNbuV8f/TNulwUZ/l37NkxvMEE9rpcrKLU6DcHiZho2crvfI2XIWPaMOx
-VI/HBK7mh29nP58m0jgQeDE2fF3MTqadTVapgX+YY1jsPbxgjpgNG4MtLtXdmrW8
-3CB55GeIZ9d0GaxOoTH61Ry+xm2u/tLz/Zh95pyvQxey3gnhpDT6v7MCxDyJhy1J
-8Ctm73cmtIbokSW251A5xX+Z3HAUBW+yIts2hTpneVLm3F3rvC0qCFWa60UxmX90
-qVD2WXkpISCNaR4+FU8l
-=7LY+
------END PGP SIGNATURE-----
-
---=-wkhPQRTd0KRkgvOFmC/2--
-
+Rafael
