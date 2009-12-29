@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:35006 "EHLO mail.atheros.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:40303 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752716AbZLWDb1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2009 22:31:27 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Dec 2009 19:31:27 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+	id S1751667AbZL2UqJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Dec 2009 15:46:09 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Greg KH <gregkh@suse.de>
+Subject: Re: 2.6.33-rc2: Reported regressions from 2.6.32
+Date: Tue, 29 Dec 2009 21:46:35 +0100
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Adrian Bunk <bunk@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+References: <LptzGUUXbTK.A.MSF.ymhOLB@chimera> <b170af450912291200r73a56d55n5e9a68043a503907@mail.gmail.com>
+In-Reply-To: <b170af450912291200r73a56d55n5e9a68043a503907@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19249.37602.503319.979981@gargle.gargle.HOWL>
-Date: Wed, 23 Dec 2009 09:17:46 +0530
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Asus eeepc 1008HA suspend issue and mac80211 suspend corner case
-In-Reply-To: <43e72e890912221840g7840cfafj559b1919e4dd5f19@mail.gmail.com>
-References: <20091222022355.GA32508@bombadil.infradead.org>
-	<19248.19829.293087.367661@gargle.gargle.HOWL>
-	<20091222155005.GA4385@tux>
-	<20091222162055.GC4385@tux>
-	<20091222165528.GE4385@tux>
-	<20091222175939.GF4385@tux>
-	<19249.32885.877602.60242@gargle.gargle.HOWL>
-	<43e72e890912221840g7840cfafj559b1919e4dd5f19@mail.gmail.com>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200912292146.35119.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Tue, Dec 22, 2009 at 6:29 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
-> > Luis Rodriguez wrote:
-> >> I just tried adding the PM stuff over ath9k_remove_interface and I still get the
-> >> issue. The patch is below.
-> >
-> > The HW is not accessed in ->remove_interface(), so this patch is not necessary.
+On Tuesday 29 December 2009, Rafał Miłecki wrote:
+> 2009/12/29 Rafael J. Wysocki <rjw@sisk.pl>:
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=14910
+> > Subject         : Stable version 2.6.32.2 broke my KMS Radeon setup
+> > Submitter       : Ruud Linders <kernelml@xs4all.nl>
+> > Date            : 2009-12-20 12:02 (10 days old)
+> > References      : http://marc.info/?l=linux-kernel&m=126131105608871&w=4
 > 
-> How about when remove_interface calls ath9k_hw_stoptxdma() ?
+> Has patch (I think it was even submitted to Linus).
 
-Yep, that is correct - but it should not affect here since we are in managed
-mode.
+This is a -stable only issue in fact, so I'm not going to track it from now on.
+
+Please watch the next -stable announcement from Greg and remind him about this
+issue if the patch isn't there.
+
+Rafael
