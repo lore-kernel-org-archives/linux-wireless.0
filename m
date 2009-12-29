@@ -1,37 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42602 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752809AbZLJNPL (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:44133 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751417AbZL2CA3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2009 08:15:11 -0500
-Date: Thu, 10 Dec 2009 08:00:36 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kalle.valo@iki.fi>
+	Mon, 28 Dec 2009 21:00:29 -0500
+Date: Mon, 28 Dec 2009 21:00:28 -0500
+From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+To: Peter Svensson <petersv@psv.nu>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless: report non-zero bitrate for MCS rates
-	through wext
-Message-ID: <20091210130035.GB11112@tuxdriver.com>
-References: <1260395165-7116-1-git-send-email-linville@tuxdriver.com> <871vj32mlm.fsf@purkki.valot.fi>
+Subject: Re: Compat-wireless bleeding-edge daily builds broken since
+	2009-12-11
+Message-ID: <20091229020027.GE30201@bombadil.infradead.org>
+References: <Pine.LNX.4.64.0912261245080.5112@cheetah.psv.nu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <871vj32mlm.fsf@purkki.valot.fi>
+In-Reply-To: <Pine.LNX.4.64.0912261245080.5112@cheetah.psv.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 10, 2009 at 11:40:37AM +0200, Kalle Valo wrote:
-> "John W. Linville" <linville@tuxdriver.com> writes:
+On Sat, Dec 26, 2009 at 12:50:23PM +0100, Peter Svensson wrote:
+> Hi,
 > 
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> The bleeding edge nightly snapshopts in 
+>   http://wireless.kernel.org/download/compat-wireless-2.6/
+> are not updated since the compat-bluetooth were introduced (I think) on 
+> 2009-12-11. 
 > 
-> A small description in the commit log would be nice.
-> 
-> And I don't have any 11n APs right now, so I can't test it either :(
+> When built from the git sources the driver works very nicely, and much 
+> more stable than the last drop on 2009-12-11.
 
-I found a spot to test it myself, seems fine.
+This will be fixed soon, just need to re-instate access to the box.
 
-What (beyond the subject) would you put in the commit log for this one?
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
