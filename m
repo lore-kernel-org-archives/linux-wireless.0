@@ -1,41 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f197.google.com ([209.85.223.197]:62964 "EHLO
-	mail-iw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932965AbZLHGVc convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:58387 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751471AbZL2WA7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2009 01:21:32 -0500
-Received: by iwn35 with SMTP id 35so3663188iwn.4
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Dec 2009 22:21:39 -0800 (PST)
+	Tue, 29 Dec 2009 17:00:59 -0500
+Date: Tue, 29 Dec 2009 23:00:51 +0100
+From: Jarek Poplawski <jarkao2@gmail.com>
+To: =?iso-8859-1?Q?N=E9meth_M=E1rton?= <nm127@freemail.hu>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Subject: Re: 2.6.33-rc2: Reported regressions 2.6.31 -> 2.6.32
+Message-ID: <20091229220051.GA3185@del.dom.local>
+References: <oBElxfTZdhL.A.bx.-vhOLB@chimera>
+ <4B3A5BC2.10207@gmail.com>
+ <4B3A6CB1.3030305@freemail.hu>
 MIME-Version: 1.0
-In-Reply-To: <4B1DDB77.6070909@myrealbox.com>
-References: <1260237325-8654-1-git-send-email-lrodriguez@atheros.com>
-	<4B1DDB77.6070909@myrealbox.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 7 Dec 2009 22:21:19 -0800
-Message-ID: <43e72e890912072221j660f9a6dpa8cf9257db14da41@mail.gmail.com>
-Subject: Re: [PATCH] iw: add HT capability parsing for scanning
-To: Andy Lutomirski <luto@myrealbox.com>
-Cc: johannes@sipsolutions.ney, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4B3A6CB1.3030305@freemail.hu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 7, 2009 at 8:52 PM, Andy Lutomirski <luto@myrealbox.com> wrote:
-> Luis R. Rodriguez wrote:
->>
->> This adds HT capability IE parsing for scanning. You will now
->> be able to easily review what HT capabilities your AP supports
->> with a simple iw scan.
->>
->
->> +       default:
->> +               return "Uknown";
->> +       }
->> +}
->> +
->
-> Unknown?
+On Tue, Dec 29, 2009 at 09:55:13PM +0100, N�meth M�rton wrote:
+> Jarek Poplawski wrote:
+> > Rafael J. Wysocki wrote, On 12/29/2009 04:26 PM:
+> > 
+> > ...
+> >> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14794
+> >> Subject		: IP address assigned by DHCP is dropped after ~40 seconds
+> >> Submitter	: M�rton N�meth <nm127@freemail.hu>
+> >> Date		: 2009-12-13 08:59 (17 days old)
+> >>
+> > 
+> > 
+> > IMHO this bug might be considered as fixed by updating a userspace tool
+> > (KNetworkManager) - unless somebody wants to seek for the exact reason...
+> 
+> For me (I am the reporter) the problem was solved by upgrading a userspace
+> tool, so I think the bug filed against the kernel can be closed marking
+> that this was not really a kernel bug.
 
-Could've called it "caca", but this seemed more appropriate.
+Yes, let's hope author(s) of KNetworkManager would let us know if they
+had to change it because of the kernel error.
 
-  Luis
+Regards,
+Jarek P.
