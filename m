@@ -1,55 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:23181 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754289AbZLNJ3M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 04:29:12 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Dec 2009 01:29:12 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:44138 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751975AbZL2CAt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Dec 2009 21:00:49 -0500
+Date: Mon, 28 Dec 2009 21:00:48 -0500
+From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+To: Huaxu Wan <huaxu.wan@linux.intel.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Compat-wireless-2.6: Updated to fix bluetooth patch
+	error
+Message-ID: <20091229020048.GF30201@bombadil.infradead.org>
+References: <20091225092225.GA11049@owl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19238.1557.201259.642604@gargle.gargle.HOWL>
-Date: Mon, 14 Dec 2009 15:02:05 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/6] ath9k: Stop ANI when doing a reset
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091225092225.GA11049@owl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The MIB counters are disabled when doing a reset,
-disable ANI to handle this case.
+On Fri, Dec 25, 2009 at 05:22:25PM +0800, Huaxu Wan wrote:
+> 
+> Compat-wireless-2.6: Updated to fix bluetooth patch error
+> 
+> Keep the patch in step with the linux-next tree after the following
+> patch merged.
+> 
+>     commit 971beb83aeb2a309175682cf5683d64fd4591841
+>     Author: Roel Kluin <roel.kluin@gmail.com>
+>     Date:   Mon Dec 7 14:23:21 2009 +0100
+> 
+>         Bluetooth: Fix PTR_ERR return of wrong pointer in hidp_setup_hid()
+> 
+>         Return the PTR_ERR of the correct pointer.
+>  
+> Signed-off-by: Huaxu Wan <huaxu.wan@linux.intel.com>
 
-Cc: stable@kernel.org
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Great thanks!
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index c487434..9e68c1a 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1973,6 +1973,9 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 	struct ieee80211_hw *hw = sc->hw;
- 	int r;
- 
-+	/* Stop ANI */
-+	del_timer_sync(&common->ani.timer);
-+
- 	ath9k_hw_set_interrupts(ah, 0);
- 	ath_drain_all_txq(sc, retry_tx);
- 	ath_stoprecv(sc);
-@@ -2014,6 +2017,9 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 		}
- 	}
- 
-+	/* Start ANI */
-+	ath_start_ani(common);
-+
- 	return r;
- }
- 
--- 
-1.6.5.6
-
+  Luis
