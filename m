@@ -1,74 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:32555 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753425AbZLAMHF (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:59176 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752736AbZL2K7a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 07:07:05 -0500
-Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
-	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id nB1C74vc011327
-	for <linux-wireless@vger.kernel.org>; Tue, 1 Dec 2009 14:07:09 +0200
-Received: from [127.0.1.1] (essapo-nirac253175.europe.nokia.com [10.162.253.175])
-	by mgw-da01.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id nB1C6lep010060
-	for <linux-wireless@vger.kernel.org>; Tue, 1 Dec 2009 14:06:48 +0200
-Subject: [PATCH v3 2/2] wl1251: add U-APSD support
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 01 Dec 2009 14:06:42 +0200
-Message-ID: <20091201120642.4264.24605.stgit@tikku>
-In-Reply-To: <20091201120508.4264.25010.stgit@tikku>
-References: <20091201120508.4264.25010.stgit@tikku>
+	Tue, 29 Dec 2009 05:59:30 -0500
+Date: Tue, 29 Dec 2009 12:59:19 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [PATCH 1/3] mac80211: Select lowest rate based on basic rate set
+ in AP mode
+Message-ID: <20091229105919.GB18493@jm.kir.nu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+If the basic rate set is configured to not include the lowest rate
+(e.g., basic rate set = 6, 12, 24 Mbps in IEEE 802.11g mode), the AP
+should not send out broadcast frames at 1 Mbps. This type of
+configuration can be used to optimize channel usage in cases where
+there is no need for backwards compatibility with IEEE 802.11b-only
+devices.
 
-wl1251 firmware supports U-APSD just with a simple queue configuration
-change so enable it.
+In AP mode, mac80211 was unconditionally using the lowest rate for
+Beacon frames and similarly, with all rate control algorithms that use
+rate_control_send_low(), the lowest rate ended up being used for all
+broadcast frames (and all unicast frames that are sent before
+association). Change this to take into account the basic rate
+configuration in AP mode, i.e., use the lowest rate in the basic rate
+set instead of the lowest supported rate when selecting the rate.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+
 ---
- drivers/net/wireless/wl12xx/wl1251_main.c |   12 +++++++++---
- 1 files changed, 9 insertions(+), 3 deletions(-)
+ include/net/mac80211.h |    2 ++
+ net/mac80211/rate.c    |   25 +++++++++++++++++++++++++
+ net/mac80211/tx.c      |   24 +++++++++++++-----------
+ 3 files changed, 40 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index 6aeffbe..f35c012 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -1282,6 +1282,7 @@ static struct ieee80211_channel wl1251_channels[] = {
- static int wl1251_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 			     const struct ieee80211_tx_queue_params *params)
- {
-+	enum wl1251_acx_ps_scheme ps_scheme;
- 	struct wl1251 *wl = hw->priv;
- 	int ret;
+--- wireless-testing.orig/net/mac80211/rate.c	2009-12-29 10:49:34.000000000 +0200
++++ wireless-testing/net/mac80211/rate.c	2009-12-29 10:53:59.000000000 +0200
+@@ -207,6 +207,27 @@ static bool rc_no_data_or_no_ack(struct 
+ 	return ((info->flags & IEEE80211_TX_CTL_NO_ACK) || !ieee80211_is_data(fc));
+ }
  
-@@ -1299,10 +1300,14 @@ static int wl1251_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 	if (ret < 0)
- 		goto out_sleep;
- 
-+	if (params->uapsd)
-+		ps_scheme = WL1251_ACX_PS_SCHEME_UPSD_TRIGGER;
-+	else
-+		ps_scheme = WL1251_ACX_PS_SCHEME_LEGACY;
++static void rc_send_low_broadcast(s8 *idx, u32 basic_rates, u8 max_rate_idx)
++{
++	u8 i;
 +
- 	ret = wl1251_acx_tid_cfg(wl, wl1251_tx_get_queue(queue),
- 				 CHANNEL_TYPE_EDCF,
--				 wl1251_tx_get_queue(queue),
--				 WL1251_ACX_PS_SCHEME_LEGACY,
-+				 wl1251_tx_get_queue(queue), ps_scheme,
- 				 WL1251_ACX_ACK_POLICY_LEGACY);
- 	if (ret < 0)
- 		goto out_sleep;
-@@ -1376,7 +1381,8 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
- 	wl->hw->flags = IEEE80211_HW_SIGNAL_DBM |
- 		IEEE80211_HW_NOISE_DBM |
- 		IEEE80211_HW_SUPPORTS_PS |
--		IEEE80211_HW_BEACON_FILTER;
-+		IEEE80211_HW_BEACON_FILTER |
-+		IEEE80211_HW_UAPSD;
++	if (basic_rates == 0)
++		return; /* assume basic rates unknown and accept rate */
++	if (*idx < 0)
++		return;
++	if (basic_rates & (1 << *idx))
++		return; /* selected rate is a basic rate */
++
++	for (i = *idx + 1; i <= max_rate_idx; i++) {
++		if (basic_rates & (1 << i)) {
++			*idx = i;
++			return;
++		}
++	}
++
++	/* could not find a basic rate; use original selection */
++}
++
+ bool rate_control_send_low(struct ieee80211_sta *sta,
+ 			   void *priv_sta,
+ 			   struct ieee80211_tx_rate_control *txrc)
+@@ -218,6 +239,10 @@ bool rate_control_send_low(struct ieee80
+ 		info->control.rates[0].count =
+ 			(info->flags & IEEE80211_TX_CTL_NO_ACK) ?
+ 			1 : txrc->hw->max_rate_tries;
++		if (!sta && txrc->ap)
++			rc_send_low_broadcast(&info->control.rates[0].idx,
++					      txrc->bss_conf->basic_rates,
++					      txrc->sband->n_bitrates);
+ 		return true;
+ 	}
+ 	return false;
+--- wireless-testing.orig/net/mac80211/tx.c	2009-12-29 10:50:57.000000000 +0200
++++ wireless-testing/net/mac80211/tx.c	2009-12-29 10:53:59.000000000 +0200
+@@ -520,6 +520,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee8021
+ 	txrc.skb = tx->skb;
+ 	txrc.reported_rate.idx = -1;
+ 	txrc.max_rate_idx = tx->sdata->max_ratectrl_rateidx;
++	txrc.ap = tx->sdata->vif.type == NL80211_IFTYPE_AP;
  
- 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
- 	wl->hw->wiphy->max_scan_ssids = 1;
+ 	/* set up RTS protection if desired */
+ 	if (len > tx->local->hw.wiphy->rts_threshold) {
+@@ -2060,6 +2061,7 @@ struct sk_buff *ieee80211_beacon_get_tim
+ 	struct beacon_data *beacon;
+ 	struct ieee80211_supported_band *sband;
+ 	enum ieee80211_band band = local->hw.conf.channel->band;
++	struct ieee80211_tx_rate_control txrc;
+ 
+ 	sband = local->hw.wiphy->bands[band];
+ 
+@@ -2167,21 +2169,21 @@ struct sk_buff *ieee80211_beacon_get_tim
+ 	info = IEEE80211_SKB_CB(skb);
+ 
+ 	info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
++	info->flags |= IEEE80211_TX_CTL_NO_ACK;
+ 	info->band = band;
+-	/*
+-	 * XXX: For now, always use the lowest rate
+-	 */
+-	info->control.rates[0].idx = 0;
+-	info->control.rates[0].count = 1;
+-	info->control.rates[1].idx = -1;
+-	info->control.rates[2].idx = -1;
+-	info->control.rates[3].idx = -1;
+-	info->control.rates[4].idx = -1;
+-	BUILD_BUG_ON(IEEE80211_TX_MAX_RATES != 5);
++
++	memset(&txrc, 0, sizeof(txrc));
++	txrc.hw = hw;
++	txrc.sband = sband;
++	txrc.bss_conf = &sdata->vif.bss_conf;
++	txrc.skb = skb;
++	txrc.reported_rate.idx = -1;
++	txrc.max_rate_idx = sdata->max_ratectrl_rateidx;
++	txrc.ap = true;
++	rate_control_get_rate(sdata, NULL, &txrc);
+ 
+ 	info->control.vif = vif;
+ 
+-	info->flags |= IEEE80211_TX_CTL_NO_ACK;
+ 	info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+ 	info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
+  out:
+--- wireless-testing.orig/include/net/mac80211.h	2009-12-29 10:50:57.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2009-12-29 10:53:59.000000000 +0200
+@@ -2294,6 +2294,7 @@ enum rate_control_changed {
+  * @max_rate_idx: user-requested maximum rate (not MCS for now)
+  * @skb: the skb that will be transmitted, the control information in it needs
+  *	to be filled in
++ * @ap: whether this frame is sent out in AP mode
+  */
+ struct ieee80211_tx_rate_control {
+ 	struct ieee80211_hw *hw;
+@@ -2303,6 +2304,7 @@ struct ieee80211_tx_rate_control {
+ 	struct ieee80211_tx_rate reported_rate;
+ 	bool rts, short_preamble;
+ 	u8 max_rate_idx;
++	bool ap;
+ };
+ 
+ struct rate_control_ops {
 
+-- 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
