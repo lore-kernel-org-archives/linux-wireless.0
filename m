@@ -1,39 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:47612 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752279AbZLKNTF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2009 08:19:05 -0500
-Received: from list by lo.gmane.org with local (Exim 4.50)
-	id 1NJ5Oo-0005Aq-8P
-	for linux-wireless@vger.kernel.org; Fri, 11 Dec 2009 14:19:10 +0100
-Received: from p4FF0D4EA.dip.t-dialin.net ([79.240.212.234])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Dec 2009 14:19:10 +0100
-Received: from Markus_Baier by p4FF0D4EA.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Dec 2009 14:19:10 +0100
-To: linux-wireless@vger.kernel.org
-From: Markus Baier <Markus_Baier@web.de>
-Subject: Re: [RFC] mac80211: disallow bridging managed/adhoc interfaces
-Date: Fri, 11 Dec 2009 13:18:44 +0000 (UTC)
-Message-ID: <loom.20091211T141516-495@post.gmane.org>
-References: <1258465585.3682.7.camel@johannes.local>  <loom.20091211T133913-639@post.gmane.org> <1260536425.2442.199.camel@johannes.local>
-Mime-Version: 1.0
+Received: from bombadil.infradead.org ([18.85.46.34]:44117 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751653AbZL2B7i (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Dec 2009 20:59:38 -0500
+Date: Mon, 28 Dec 2009 20:59:36 -0500
+From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: lrodriguez@atheros.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/5] compat: Build fixes for compat-wireless
+Message-ID: <20091229015936.GC30201@bombadil.infradead.org>
+References: <1261495204-28966-1-git-send-email-hauke@hauke-m.de>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1261495204-28966-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, thanks for the fast reply
+On Tue, Dec 22, 2009 at 04:19:59PM +0100, Hauke Mehrtens wrote:
+> Some fixes for compat.git and compat-wireless.git
+> Build test for kernel 2.6.27 to 2.6.33 was successfull.
+> For kernel 2.6.25 and 2.6.26 debugfs_remove_recursive is still missing.
 
-Ok, that is my fault.
-At the moment I bridge the interfaces at boot time
-before the start of the hostapd daemon.
+Applied, thanks.
 
-So I will remove the wlan0 line from bridge section
-of the gentoo net rc-script and hope that hostapd
-will take over that task.
+> PS: The last compat-wireless package at 
+> http://wireless.kernel.org/download/compat-wireless-2.6/ is 2009-12-11.
 
-Tanks,
-Markus
+Yeah, sorry about that I locked myself out of wireless.kernel.org, will fix that
+soon. Been lazy during the holidays.
 
+  Luis
