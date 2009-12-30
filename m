@@ -1,54 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:27377 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932972AbZLNWMY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2009 17:12:24 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/2] iwlwifi updates for 2.6.34
-Date: Mon, 14 Dec 2009 14:12:19 -0800
-Message-Id: <1260828741-22749-1-git-send-email-reinette.chatre@intel.com>
+Received: from Cpsmtpm-eml108.kpnxchange.com ([195.121.3.12]:65239 "EHLO
+	CPSMTPM-EML108.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752495AbZL3Kgw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Dec 2009 05:36:52 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Wireless list <linux-wireless@vger.kernel.org>,
+	rt2x00 users list <users@rt2x00.serialmonkey.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 3/6] rt2x00: RF3052 is a valid RF chipset for USB devices as well.
+Date: Wed, 30 Dec 2009 11:36:31 +0100
+Message-Id: <1262169394-11647-4-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1262169394-11647-3-git-send-email-gwingerde@gmail.com>
+References: <1262169394-11647-1-git-send-email-gwingerde@gmail.com>
+ <1262169394-11647-2-git-send-email-gwingerde@gmail.com>
+ <1262169394-11647-3-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+The RF3052 chipset is now also being integrated onto USB devices, so
+allow the RF chipset and don't treat it as PCI/SOC only.
 
-This is an initial effort to (1) reduce confusion in patch submission, and
-(2) start working towards separate submissions to wireless-2.6 and
-wireless-next-2.6. This series includes features targeting 2.6.34
-and is based on wireless-next-2.6. The fixes we submit for 2.6.33 are all
-needed in 2.6.34 also, but they are submitted separately since they are
-based on wireless-2.6. Please let me know if you need the fixes submitted
-against another repo than wireless-2.6 to help with their inclusion
-into 2.6.34 or wireless-testing.
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-Included is the addition of ability to view uCode event log via debugfs. An
-error message that can be encountered in normal operation is removed.
-
-These patches are also available from branch wireless-next-2.6 in
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
-Please let me know what needs to be changed to help make the submission
-process work better for you.
-
-Wey-Yi Guy (2):
-  iwlwifi: on-screen event log dump
-  iwlwifi: remove extra error msg on sensitivity calibration
-
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    3 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c      |  104 ++++++++++++++++++--------
- drivers/net/wireless/iwlwifi/iwl-calib.c    |    7 +--
- drivers/net/wireless/iwlwifi/iwl-core.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.h     |    6 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c  |   24 ++++++-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |  101 ++++++++++++++++++--------
- 7 files changed, 172 insertions(+), 75 deletions(-)
-
-Thank you
-
-Reinette
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 8ff7db8..bcb7e17 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1862,7 +1862,8 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	    !rt2x00_rf(rt2x00dev, RF3020) &&
+ 	    !rt2x00_rf(rt2x00dev, RF2020) &&
+ 	    !rt2x00_rf(rt2x00dev, RF3021) &&
+-	    !rt2x00_rf(rt2x00dev, RF3022)) {
++	    !rt2x00_rf(rt2x00dev, RF3022) &&
++	    !rt2x00_rf(rt2x00dev, RF3052)) {
+ 		ERROR(rt2x00dev, "Invalid RF chipset detected.\n");
+ 		return -ENODEV;
+ 	}
+@@ -2047,7 +2048,7 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 
+ 	if (rt2x00_rf(rt2x00dev, RF2820) ||
+ 	    rt2x00_rf(rt2x00dev, RF2720) ||
+-	    (rt2x00_intf_is_pci(rt2x00dev) && rt2x00_rf(rt2x00dev, RF3052))) {
++	    rt2x00_rf(rt2x00dev, RF3052)) {
+ 		spec->num_channels = 14;
+ 		spec->channels = rf_vals;
+ 	} else if (rt2x00_rf(rt2x00dev, RF2850) || rt2x00_rf(rt2x00dev, RF2750)) {
+-- 
+1.6.6
 
