@@ -1,38 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out002.kontent.com ([81.88.40.216]:42320 "EHLO
-	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755288AbZLPK3N (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:47480 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752893AbZL3NyQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2009 05:29:13 -0500
-From: Oliver Neukum <oliver@neukum.org>
-To: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-Subject: Re: [PATCH] move eject code from zd1211rw to usb-storage
-Date: Wed, 16 Dec 2009 11:29:27 +0100
-Cc: Josua Dietze <digidietze@draisberghof.de>,
-	Stefan Seyfried <stefan.seyfried@googlemail.com>,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
-	Stefan Seyfried <seife@sphairon.com>
-References: <1260878800-14691-1-git-send-email-stefan.seyfried@googlemail.com> <200912151611.08576.oliver@neukum.org> <20091215180300.GF16426@one-eyed-alien.net>
-In-Reply-To: <20091215180300.GF16426@one-eyed-alien.net>
+	Wed, 30 Dec 2009 08:54:16 -0500
+Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
+	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id nBUDsAXX029614
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2009 15:54:13 +0200
+Subject: [PATCH] mac80211: fix ieee80211_change_mac() to use struct sockaddr
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: Kalle Valo <kalle.valo@nokia.com>
+Date: Wed, 30 Dec 2009 15:54:03 +0200
+Message-ID: <20091230135403.30935.72535.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <200912161129.27284.oliver@neukum.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag, 15. Dezember 2009 19:03:00 schrieb Matthew Dharm:
-> > This would break existing systems and thus introduce a regression.
-> > We'd need to go through a feature removal process. For the time being
-> > I see no alternative to Seife's patch, as we cannot introduce ejection
-> > code to another wireless driver and need to support these devices.
-> 
-> The right answer here is neither to move the eject code nor to introduce
-> more of it.  New devices should be supported via userspace.
+From: Kalle Valo <kalle.valo@nokia.com>
 
-Usually I would agree, but in this case the vendor reused IDs.
-The legacy kernel space switcher and user space would race.
+Setting the mac address from user space was buggy. For example, when
+executing this command:
 
-	Regards
-		Oliver
+ip link set wlan0 address 00:1f:df:88:cd:55
+
+mac80211 used the address 01:00:00:1f:df:88 instead. It was shifted two
+bytes.
+
+The reason was that the addr (type of void *) provided to
+ieee80211_change_mac() is actually of type struct sockaddr, not just the
+mac address array. Also the call to eth_mac_addr() expects the address to
+be struct sockaddr.
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ net/mac80211/iface.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 00a1f4c..7218966 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -63,15 +63,16 @@ static int ieee80211_change_mtu(struct net_device *dev, int new_mtu)
+ static int ieee80211_change_mac(struct net_device *dev, void *addr)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct sockaddr *sa = addr;
+ 	int ret;
+ 
+ 	if (ieee80211_sdata_running(sdata))
+ 		return -EBUSY;
+ 
+-	ret = eth_mac_addr(dev, addr);
++	ret = eth_mac_addr(dev, sa);
+ 
+ 	if (ret == 0)
+-		memcpy(sdata->vif.addr, addr, ETH_ALEN);
++		memcpy(sdata->vif.addr, sa->sa_data, ETH_ALEN);
+ 
+ 	return ret;
+ }
+
