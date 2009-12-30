@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from salugit.unile.it ([193.204.77.149]:51212 "EHLO salug.it"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754151AbZLVRJW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Dec 2009 12:09:22 -0500
-Date: Tue, 22 Dec 2009 18:10:01 +0100
-From: Luca Verdesca <magooz@salug.it>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] ath5k: adding LED support for AR5BXB63 cards
-Message-ID: <20091222181001.5c1077b8@magooz.no-ip.org>
-In-Reply-To: <20091222142841.GA5663@hash.localnet>
-References: <20091222022135.2102c465@magooz.no-ip.org>
-	<b6c5339f0912211937o525c9117k2e6d877b3c91b858@mail.gmail.com>
-	<20091222120245.0df11284@magooz.no-ip.org>
-	<20091222142841.GA5663@hash.localnet>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:63125 "EHLO
+	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752519AbZL3Kgw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Dec 2009 05:36:52 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Wireless list <linux-wireless@vger.kernel.org>,
+	rt2x00 users list <users@rt2x00.serialmonkey.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 5/6] rt2x00: Fix LED configuration setting for rt2800.
+Date: Wed, 30 Dec 2009 11:36:33 +0100
+Message-Id: <1262169394-11647-6-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1262169394-11647-5-git-send-email-gwingerde@gmail.com>
+References: <1262169394-11647-1-git-send-email-gwingerde@gmail.com>
+ <1262169394-11647-2-git-send-email-gwingerde@gmail.com>
+ <1262169394-11647-3-git-send-email-gwingerde@gmail.com>
+ <1262169394-11647-4-git-send-email-gwingerde@gmail.com>
+ <1262169394-11647-5-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With following patch, LED should now work with LiteOn AR5BXB63 mini
-pci-e cards.
+rt2800_blink_set uses an illegal value to set the LED_CFG_G_LED_MODE
+field of the LED_CFG register. This field is only 2 bits large, so
+should be initialized with value that fits. Use default value from
+the vendor driver.
 
-Signed-off-by: Luca Verdesca <magooz@salug.it>
-Acked-by: Bob Copeland <me@bobcopeland.com>
-Cc: John Linville <linville@tuxdriver.com>
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 ---
- home/magooz/led.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
---- /usr/src/linux/drivers/net/wireless/ath/ath5k/led.c	2009-12-22 16:37:42.000000000 +0100
-+++ /home/magooz/led.c	2009-12-22 16:38:14.000000000 +0100
-@@ -75,6 +75,8 @@ static const struct pci_device_id ath5k_
- 	{ ATH_SDEVICE(PCI_VENDOR_ID_HP, 0x0137a), ATH_LED(3, 1) },
- 	/* HP Compaq C700 (nitrousnrg@gmail.com) */
- 	{ ATH_SDEVICE(PCI_VENDOR_ID_HP, 0x0137b), ATH_LED(3, 1) },
-+	/* LiteOn AR5BXB63 (magooz@salug.it) */
-+	{ PCI_SDEVICE(ATHEROS, 0x3067), ATH_LED(3, 0) },
- 	/* IBM-specific AR5212 (all others) */
- 	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5212_IBM), ATH_LED(0, 0) },
- 	{ }
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 9a02589..ca700a4 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -358,7 +358,7 @@ static int rt2800_blink_set(struct led_classdev *led_cdev,
+ 	rt2x00_set_field32(&reg, LED_CFG_OFF_PERIOD, *delay_off);
+ 	rt2x00_set_field32(&reg, LED_CFG_SLOW_BLINK_PERIOD, 3);
+ 	rt2x00_set_field32(&reg, LED_CFG_R_LED_MODE, 3);
+-	rt2x00_set_field32(&reg, LED_CFG_G_LED_MODE, 12);
++	rt2x00_set_field32(&reg, LED_CFG_G_LED_MODE, 3);
+ 	rt2x00_set_field32(&reg, LED_CFG_Y_LED_MODE, 3);
+ 	rt2x00_set_field32(&reg, LED_CFG_LED_POLAR, 1);
+ 	rt2800_register_write(led->rt2x00dev, LED_CFG, reg);
+-- 
+1.6.6
+
