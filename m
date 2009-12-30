@@ -1,107 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:17918 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754806AbZKQQtQ (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49378
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751341AbZL3Dxe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Nov 2009 11:49:16 -0500
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 08/16] wl1251: Add acx command to set tbtt and dtim period
+	Tue, 29 Dec 2009 22:53:34 -0500
+Date: Tue, 29 Dec 2009 19:53:36 -0800 (PST)
+Message-Id: <20091229.195336.193710512.davem@davemloft.net>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Nov 2009 18:49:08 +0200
-Message-ID: <20091117164907.2236.41929.stgit@tikku>
-In-Reply-To: <20091117164614.2236.8543.stgit@tikku>
-References: <20091117164614.2236.8543.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-12-29
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20091229211223.GA6104@tuxdriver.com>
+References: <20091229211223.GA6104@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vidhya Govindan <vidhya.govindan@nokia.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 29 Dec 2009 16:12:23 -0500
 
-The dtim period obtained from the mac80211 is not set to the firmware.
-This patch implements the acx command to set correct tbtt and dtim value
-to the firmware.
+> Dave,
+> 
+> Here is a somewhat large batch of fixes intended for 2.6.33.  Most of
+> them are simple, straightforward, and small.  There is one from Johannes
+> that removes a lot of code, but the code it removes is unused and the
+> patch quiets a lot of build SPAM.
+> 
+> This also includes the revert of a b43 patch that is causing some
+> problems for people.  It does some (apparently unnecessary) alignment
+> checking that causes some allocations to fail.
+> 
+> Please let me know if there are problems!
 
-Signed-off-by: Vidhya Govindan <vidhya.govindan@nokia.com>
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
-Reviewed-by: Janne Ylalehto <janne.ylalehto@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
-
- drivers/net/wireless/wl12xx/wl1251_acx.c |   28 ++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1251_acx.h |   18 ++++++++++++++++++
- 2 files changed, 46 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1251_acx.c b/drivers/net/wireless/wl12xx/wl1251_acx.c
-index 50633e0..acfa086 100644
---- a/drivers/net/wireless/wl12xx/wl1251_acx.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_acx.c
-@@ -948,3 +948,31 @@ out:
- 	kfree(mem_conf);
- 	return ret;
- }
-+
-+int wl1251_acx_wr_tbtt_and_dtim(struct wl1251 *wl, u16 tbtt, u8 dtim)
-+{
-+	struct wl1251_acx_wr_tbtt_and_dtim *acx;
-+	int ret;
-+
-+	wl1251_debug(DEBUG_ACX, "acx tbtt and dtim");
-+
-+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-+	if (!acx) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	acx->tbtt = tbtt;
-+	acx->dtim = dtim;
-+
-+	ret = wl1251_cmd_configure(wl, ACX_WR_TBTT_AND_DTIM,
-+				   acx, sizeof(*acx));
-+	if (ret < 0) {
-+		wl1251_warning("failed to set tbtt and dtim: %d", ret);
-+		goto out;
-+	}
-+
-+out:
-+	kfree(acx);
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/wl12xx/wl1251_acx.h b/drivers/net/wireless/wl12xx/wl1251_acx.h
-index ce1c995..44a4b04 100644
---- a/drivers/net/wireless/wl12xx/wl1251_acx.h
-+++ b/drivers/net/wireless/wl12xx/wl1251_acx.h
-@@ -1149,6 +1149,23 @@ struct wl1251_acx_mem_map {
- 	u32 num_rx_mem_blocks;
- } __attribute__ ((packed));
- 
-+
-+struct wl1251_acx_wr_tbtt_and_dtim {
-+
-+	struct acx_header header;
-+
-+	/* Time in TUs between two consecutive beacons */
-+	u16 tbtt;
-+
-+	/*
-+	 * DTIM period
-+	 * For BSS: Number of TBTTs in a DTIM period (range: 1-10)
-+	 * For IBSS: value shall be set to 1
-+	*/
-+	u8  dtim;
-+	u8  padding;
-+} __attribute__ ((packed));
-+
- /*************************************************************************
- 
-     Host Interrupt Register (WiLink -> Host)
-@@ -1304,5 +1321,6 @@ int wl1251_acx_statistics(struct wl1251 *wl, struct acx_statistics *stats);
- int wl1251_acx_tsf_info(struct wl1251 *wl, u64 *mactime);
- int wl1251_acx_rate_policies(struct wl1251 *wl);
- int wl1251_acx_mem_cfg(struct wl1251 *wl);
-+int wl1251_acx_wr_tbtt_and_dtim(struct wl1251 *wl, u16 tbtt, u8 dtim);
- 
- #endif /* __WL1251_ACX_H__ */
-
+Pulled, thanks a lot John.
