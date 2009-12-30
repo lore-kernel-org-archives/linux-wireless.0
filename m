@@ -1,45 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:35116 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751308AbZLSPcQ (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:54067 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752847AbZL3UmQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Dec 2009 10:32:16 -0500
-Received: by fxm21 with SMTP id 21so3610987fxm.21
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Dec 2009 07:32:14 -0800 (PST)
+	Wed, 30 Dec 2009 15:42:16 -0500
+Received: by mail-ew0-f219.google.com with SMTP id 19so4058353ewy.21
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2009 12:42:15 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 4/6] rt2x00: Unify rt2800 WPDMA ready waiting functions.
+Date: Wed, 30 Dec 2009 21:42:13 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Wireless list <linux-wireless@vger.kernel.org>,
+	rt2x00 users list <users@rt2x00.serialmonkey.com>
+References: <1262169394-11647-1-git-send-email-gwingerde@gmail.com> <1262169394-11647-4-git-send-email-gwingerde@gmail.com> <1262169394-11647-5-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1262169394-11647-5-git-send-email-gwingerde@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <c68f135e0912190230o566b3c3dk9be3038b0602cac5@mail.gmail.com>
-References: <20091218180205.GD2512@florz.florz.dyndns.org>
-	 <4B2BC7E3.2050907@lwfinger.net>
-	 <20091218185916.GE2512@florz.florz.dyndns.org>
-	 <4B2C100A.9000507@lwfinger.net>
-	 <c68f135e0912181615p7cd36bd0n7054b43f2b453599@mail.gmail.com>
-	 <20091219011306.GG2512@florz.florz.dyndns.org>
-	 <c68f135e0912190230o566b3c3dk9be3038b0602cac5@mail.gmail.com>
-Date: Sat, 19 Dec 2009 15:32:14 +0000
-Message-ID: <3ace41890912190732p3e049e20ob7c63d9329352cdc@mail.gmail.com>
-Subject: Re: Power consumption of RTL8187 (driver)/recommendations for
-	low-power USB 802.11 adapter?
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: andreamrl@tiscali.it
-Cc: Florian Zumbiehl <florz@florz.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	herton@mandriva.com.br, htl10@users.sourceforge.net,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200912302142.13734.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 19, 2009 at 10:30 AM, Andrea Merello <andreamrl@tiscali.it> wrote:
+On Wednesday 30 December 2009, Gertjan van Wingerde wrote:
+> The rt2800pci_wait_wpdma_ready and rt2800usb_wait_wpdma_ready functions are
+> exactly the same, so unify them into rt200lib.
+> 
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-> Hmm.. Well.. I guess that effectively a USB softmac card on a slow
-> computer might produce a noticeable overhead, even if I never tried
-> before..
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Oh, I have an old machine with a celeron 366Mhz, where I run a zd1211
-with the vendor driver as AP.... throughput to a USB disk sharing a
-hub something like 430kB/s but can be over 70kB to the the local
-non-USB hard disk. (some of the difference in speed is obviously just
-data bandwidth contention). There are significant overhead at the USB
-level, I think; but in any case, the CPU probably can't sleep because
-the USB sub-system is always doing something, if even just for
-processing beacons.
+
