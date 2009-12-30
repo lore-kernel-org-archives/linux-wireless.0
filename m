@@ -1,178 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:54634 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756958AbZLJRAA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2009 12:00:00 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC/RFT] b43: Allow PIO mode to be selected at module load
-Date: Thu, 10 Dec 2009 17:59:52 +0100
-Cc: John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <4b21218d.wt8w3J8GbcDHhv31%Larry.Finger@lwfinger.net>
-In-Reply-To: <4b21218d.wt8w3J8GbcDHhv31%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200912101759.54881.mb@bu3sch.de>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49842
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751896AbZL3V4W (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Dec 2009 16:56:22 -0500
+Date: Wed, 30 Dec 2009 13:56:25 -0800 (PST)
+Message-Id: <20091230.135625.193704457.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2009-12-30
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20091230211024.GA6706@tuxdriver.com>
+References: <20091230211024.GA6706@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 10 December 2009 17:27:57 Larry Finger wrote:
-> If a user encounters the "Fatal DMA Problem" with a BCM43XX device, and
-> still wishes to use b43 as the driver, their only option is to rebuild
-> the kernel with CONFIG_B43_FORCE_PIO. This patch removes this option and
-> allows PIO mode to be selected with a load-time option for the module.
-> 
-> Once the DMA problem with the BCM4312 devices is solved, this patch will
-> likely be reverted.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> 
-> Index: wireless-testing/drivers/net/wireless/b43/Kconfig
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/Kconfig
-> +++ wireless-testing/drivers/net/wireless/b43/Kconfig
-> @@ -79,10 +79,11 @@ config B43_SDIO
->  	  If unsure, say N.
->  
->  # Data transfers to the device via PIO
-> -# This is only needed on PCMCIA and SDIO devices. All others can do DMA properly.
-> +# Technically, this is only needed on PCMCIA and SDIO devices; but some LP PHYs
-> +# cannot do DMA properly.
->  config B43_PIO
->  	bool
-> -	depends on B43 && (B43_SDIO || B43_PCMCIA || B43_FORCE_PIO)
-> +	depends on B43
->  	select SSB_BLOCKIO
->  	default y
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 30 Dec 2009 16:10:25 -0500
 
-Just remove the kconfig entry, too. ;)
-Add the select SSB_BLOCKIO to CONFIG_B43
+> I had to pull wireless-2.6 into wireless-next-2.6 in order to resolve
+> a conflict in the libertas driver.  Since wireless-next-2.6 was cloned
+> from net-next-2.6 at a point before it was reopened for 2.6.34, the
+> pull of wireless-2.6 (which is cloned from a net-2.6 from the same
+> period) brought along some non-wireless bits that were not already
+> in wireless-next-2.6.  However, I did check and made sure that those
+> bits are already present in net-next-2.6.  Anyway, my point is that
+> I don't have enough git foo to easily generate a pull request that
+> represents the actual state of affairs without rebasing or doing some
+> other messy thing.  I think/hope this is another one-time transition
+> pain with the new wireless tree management policies...
 
-> @@ -137,12 +138,4 @@ config B43_DEBUG
->  	  for production use.
->  	  Only say Y, if you are debugging a problem in the b43 driver sourcecode.
->  
-> -config B43_FORCE_PIO
-> -	bool "Force usage of PIO instead of DMA"
-> -	depends on B43 && B43_DEBUG
-> -	---help---
-> -	  This will disable DMA and always enable PIO instead.
->  
-> -	  Say N!
-> -	  This is only for debugging the PIO engine code. You do
-> -	  _NOT_ want to enable this.
-> Index: wireless-testing/drivers/net/wireless/b43/Makefile
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/Makefile
-> +++ wireless-testing/drivers/net/wireless/b43/Makefile
-> @@ -12,7 +12,7 @@ b43-y				+= xmit.o
->  b43-y				+= lo.o
->  b43-y				+= wa.o
->  b43-y				+= dma.o
-> -b43-$(CONFIG_B43_PIO)		+= pio.o
-> +b43-y				+= pio.o
->  b43-y				+= rfkill.o
->  b43-$(CONFIG_B43_LEDS)		+= leds.o
->  b43-$(CONFIG_B43_PCMCIA)	+= pcmcia.o
-> Index: wireless-testing/drivers/net/wireless/b43/b43.h
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/b43.h
-> +++ wireless-testing/drivers/net/wireless/b43/b43.h
-> @@ -821,11 +821,9 @@ struct b43_wl {
->  	/* The device LEDs. */
->  	struct b43_leds leds;
->  
-> -#ifdef CONFIG_B43_PIO
->  	/* Kmalloc'ed scratch space for PIO TX/RX. Protected by wl->mutex. */
->  	u8 pio_scratchspace[110] __attribute__((__aligned__(8)));
->  	u8 pio_tailspace[4] __attribute__((__aligned__(8)));
-> -#endif /* CONFIG_B43_PIO */
->  };
->  
->  static inline struct b43_wl *hw_to_b43_wl(struct ieee80211_hw *hw)
-> @@ -876,20 +874,9 @@ static inline void b43_write32(struct b4
->  
->  static inline bool b43_using_pio_transfers(struct b43_wldev *dev)
->  {
-> -#ifdef CONFIG_B43_PIO
->  	return dev->__using_pio_transfers;
-> -#else
-> -	return 0;
-> -#endif
->  }
->  
-> -#ifdef CONFIG_B43_FORCE_PIO
-> -# define B43_FORCE_PIO	1
-> -#else
-> -# define B43_FORCE_PIO	0
-> -#endif
-> -
-> -
->  /* Message printing */
->  void b43info(struct b43_wl *wl, const char *fmt, ...)
->      __attribute__ ((format(printf, 2, 3)));
-> Index: wireless-testing/drivers/net/wireless/b43/main.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/main.c
-> +++ wireless-testing/drivers/net/wireless/b43/main.c
-> @@ -102,6 +102,9 @@ int b43_modparam_verbose = B43_VERBOSITY
->  module_param_named(verbose, b43_modparam_verbose, int, 0644);
->  MODULE_PARM_DESC(verbose, "Log message verbosity: 0=error, 1=warn, 2=info(default), 3=debug");
->  
-> +static int modparam_pio;
-> +module_param_named(pio, modparam_pio, int, 0444);
-> +MODULE_PARM_DESC(pio, "enable(1) / disable(0) PIO mode");
->  
->  static const struct ssb_device_id b43_ssb_tbl[] = {
->  	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 5),
-> @@ -1786,8 +1789,8 @@ static void b43_do_interrupt_thread(stru
->  			       dma_reason[4], dma_reason[5]);
->  			b43err(dev->wl, "This device does not support DMA "
->  			       "on your system. Please use PIO instead.\n");
-> -			b43err(dev->wl, "CONFIG_B43_FORCE_PIO must be set in "
-> -			       "your kernel configuration.\n");
-> +			b43err(dev->wl, "Unload the b43 module and reload "
-> +			       "with 'pio=1'\n");
->  			return;
->  		}
->  		if (merged_dma_reason & B43_DMAIRQ_NONFATALMASK) {
-> @@ -4353,11 +4356,9 @@ static int b43_wireless_core_init(struct
->  
->  	if ((dev->dev->bus->bustype == SSB_BUSTYPE_PCMCIA) ||
->  	    (dev->dev->bus->bustype == SSB_BUSTYPE_SDIO) ||
-> -	    B43_FORCE_PIO) {
-> -		dev->__using_pio_transfers = 1;
-> +	    dev->__using_pio_transfers) {
+All you have to do is set your origin correctly.  And then
+generate your pull requests relative to that.
 
-No, check for modparam_pio here instead of __using_pio_transfers.
+Your origin should be net-next-2.6   So if it's there in your
+.git/config file all you have to do is "git request-pull origin ..."
 
->  		err = b43_pio_init(dev);
->  	} else {
-> -		dev->__using_pio_transfers = 0;
+If you're merging between wireless-2.6 and wireless-next-2.6
+that's perfect.  It actually saves me work.  I'll figure things
+out when I pull in your changes.
 
-and don't remove that here.
+Most of your workflow (like mine) should be:
 
->  		err = b43_dma_init(dev);
->  	}
->  	if (err)
-> @@ -4827,6 +4828,8 @@ static int b43_one_core_attach(struct ss
->  	wldev->wl = wl;
->  	b43_set_status(wldev, B43_STAT_UNINIT);
->  	wldev->bad_frames_preempt = modparam_bad_frames_preempt;
-> +	if (modparam_pio)
-> +		wldev->__using_pio_transfers = 1;
+1) git fetch origin
 
-And remove this hunk.
+2) git request-pull origin ...
 
->  	INIT_LIST_HEAD(&wldev->list);
->  
->  	err = b43_wireless_core_attach(wldev);
+If there are major net-next-2.6 conflicts to resolve (you can
+determine this via "git checkout -b merge-test origin; git pull
+master") then simply "git pull origin" into your master.
 
+Then you simply let me know you did this, and it was to resolve
+a major conflict with the net-next-2.6 origin.
 
+> So, the net of the garbled paragraph above is that despite the messy
+> report generatd by 'git request-pull' below, when you pull from
+> wireless-next-2.6 into net-next-2.6 you will only get actual wireless
+> changes!  I hope you can overlook the apparent discrepencies in the
+> report below and rely on the actual pull results instead. :-)
 
--- 
-Greetings, Michael.
+It looks good from here so far.  I'll run some build tests and
+then push this out.  That'll take a while since I'm about to head
+out, so don't expect it for a few hours.
