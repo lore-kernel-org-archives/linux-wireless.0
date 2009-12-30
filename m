@@ -1,70 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:39525 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933106AbZLPGy2 (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:55765 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752486AbZL3St0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2009 01:54:28 -0500
+	Wed, 30 Dec 2009 13:49:26 -0500
+Received: by yxe17 with SMTP id 17so11031878yxe.33
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2009 10:49:25 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1260873307.3692.10.camel@johannes.local>
-References: <1260650850-16163-1-git-send-email-daniel@caiaq.de>
-	 <1260871411.3692.4.camel@johannes.local>
-	 <1260871634.3692.6.camel@johannes.local>
-	 <200912151130.59103.holgerschurig@gmail.com>
-	 <1260873307.3692.10.camel@johannes.local>
-Date: Wed, 16 Dec 2009 01:54:26 -0500
-Message-ID: <787b0d920912152254r4bd3e1e2l14fbe7c1fdf42e60@mail.gmail.com>
-Subject: Re: [PATCH] wireless: wext: allocate space for NULL-termination for
-	32byte SSIDs
-From: Albert Cahalan <acahalan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Holger Schurig <holgerschurig@gmail.com>, m.hirsch@raumfeld.com,
-	libertas-dev@lists.infradead.org, dcbw@redhat.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@kernel.org, daniel@caiaq.de,
-	David Miller <davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <c775b4470912300642o2457d712m20dfb48c4c3508df@mail.gmail.com>
+References: <c775b4470912300642o2457d712m20dfb48c4c3508df@mail.gmail.com>
+Date: Wed, 30 Dec 2009 13:49:25 -0500
+Message-ID: <b6c5339f0912301049r773e083do6afd182eb7ad993c@mail.gmail.com>
+Subject: Re: [ath5k-devel] var/log/messages filling quickly
+From: Bob Copeland <me@bobcopeland.com>
+To: =?UTF-8?Q?Lucian_=C8=98andor?= <lucisandor@gmail.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 15, 2009 at 5:35 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2009-12-15 at 11:30 +0100, Holger Schurig wrote:
->> > drivers/net/wireless/libertas$ grep lbs_deb_ * | grep ssid
->> > |grep '%s'
->> > assoc.c:    lbs_deb_join("current SSID '%s', ssid length %u\n",
->> > assoc.c:    lbs_deb_join("requested ssid '%s', ssid length %u\n",
->> > assoc.c:    lbs_deb_join("ADHOC_START: SSID '%s', ssid
->> >               length %u\n",
->> > scan.c:             lbs_deb_wext("set_scan, essid '%s'\n",
->>
->> All those lines are gone once my cfg80211 lands.
->>
->> Do you know any way to make sparse moan about them?
+On Wed, Dec 30, 2009 at 9:42 AM, Lucian Șandor <lucisandor@gmail.com> wrote:
+> Hi all,
+> I run an Ad-hoc network, using a SuSE 11.2 computer, kernel 2.6.32-5.5
+> from SuSE (probably modifed by them.) If I turn off all the other
+> computers in the network, the ath5k/kernel combination writes 20 times
+> per second to the system log /var/log/messages:
 >
-> Sorry, no, I don't think that's even possible unless you play dirty with
-> tricks like __iomem uses for instance but that'd require a lot of
-> casting in otherwise valid uses.
->
->> BTW: the libertas firmware sometimes treat an SSID as a
->> zero-terminated string. There are some firmware commands that
->> accept just an u8[32] bytes for the SSID, but not an ssid_len,
->> e.g. in the CMD_802_11_AD_HOC_START command.
->>
->> You therefore can't connect to the otherwise legitimate SSID of
->> TEST\0\0\0.
->
-> Ick! I guess your cfg80211 IBSS join handler needs to check for that
-> then and refuse such an SSID.
+> Dec 28 14:10:31 battlecruiser kernel: [  929.933020] wlan0: No active
+> IBSS STAs - trying to scan for other IBSS networks with same SSID
+> (merge)
 
-No, pad the SSID out to 32 bytes and let the firmware try.
+Turn off CONFIG_MAC80211_IBSS_DEBUG in the kernel config
+(or ask SuSE to do the same).  You can't turn it off at
+runtime, but you could turn off kernel debug messages in
+syslogd.
 
-First of all, isn't TEST\0\0\0 simply the wrong length anyway?
-(that is, a length other than 32 is nonsense AFAIK)
+However, this is only supposed to happen every 30s if I
+read the code right.  Maybe someone on linux-wireless
+knows how this can happen?
 
-Second of all, even if that is valid, the firmware probably handles
-at least one SSID that starts with TEST and has some number
-of NUL bytes on the end. Since you can't tell what that would be
-with a particular firmware version, you might as well just let the
-firmware try. The worst case failure here is that there is more than
-one SSID of this form and you connect to the wrong one. If you
-have a problem with this kind of trouble then you need ethernet.
+-- 
+Bob Copeland %% www.bobcopeland.com
