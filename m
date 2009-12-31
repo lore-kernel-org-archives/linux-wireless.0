@@ -1,41 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f215.google.com ([209.85.219.215]:43904 "EHLO
-	mail-ew0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750999AbZLAULH (ORCPT
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:63373 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752903AbZLaTCF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2009 15:11:07 -0500
-Received: by ewy7 with SMTP id 7so6240028ewy.28
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Dec 2009 12:11:13 -0800 (PST)
-Message-ID: <4B15785C.30603@lwfinger.net>
-Date: Tue, 01 Dec 2009 14:11:08 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 31 Dec 2009 14:02:05 -0500
+Received: by fxm25 with SMTP id 25so6875054fxm.21
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Dec 2009 11:02:02 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC] mac80211: fix AMPDU_TX_START ssn
+Date: Thu, 31 Dec 2009 20:01:54 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-CC: htl10@users.sourceforge.net, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: RTL8187 warnings on suspend
-References: <665313.63774.qm@web23102.mail.ird.yahoo.com> <200911270945.31125.herton@mandriva.com.br> <4B10110E.8030402@lwfinger.net> <200912011149.49427.herton@mandriva.com.br>
-In-Reply-To: <200912011149.49427.herton@mandriva.com.br>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <200912312001.54300.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/01/2009 07:49 AM, Herton Ronaldo Krzesinski wrote:
-> Michael Buesch reports that his rtl8187 gives warnings on suspend
-> ("queueing ieee80211 work while going to suspend" warnings), as rtl8187
-> can call ieee80211_queue_delayed_work after mac80211 is suspended.
-> 
-> This change enhances rtl8187 led code so we can avoid queuing work after
-> mac80211 is suspended: now we register a radio led and make additional
-> checks to ensure led is off/on properly as mac80211 wants.
-> 
-> Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-> ---
+The start_seq_num is taken from the station's tid_seq[tid].
+(agg-tx.c / line 304). This would be fine, but there is a
+small pitfall that we know too well: tid_seq is meant
+to produce the sequence, which can be insert into an
+IEEE 802.11 frame sequence_control field without
+the 4 bit left shift (which is usually necessary to
+accommodate for frame fragmenting).
 
-NACK. After a few minutes of a rmmod/insmod infinite loop, I go a kernel
-oops. I did not capture any of the details.
+So tid_seq is _increased_ in 0x10 steps, but some of
+the code in agg-tx.c doesn't know about that, e.g:
 
-Larry
+ieee80211_send_addba_request: (line 91)
+	mgmt->u.action.u.addba_req.start_seq_num =
+		cpu_to_le16(start_seq_num << 4);
 
+Now, ADDBA recipient certainly gets a wrong BA starting
+point and may decide to drop some of the incoming 
+aggregated frames, since it might think that they
+were already too old.
+---
+Hmm, I'm not sure what to do with the debug_sta.c
+counters? Obviously, they are now >> 4 as well,
+but on the other hand just like the tid_rx side
+always was...
 
-
+Note: By the looks of it: iwlagn/ath9k are probably
+unaffected, but carl9170 was: so no need for stable. 
+---
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index ceda366..5aa8f4a 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -301,7 +301,7 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid)
+ 	 * call back right away, it must see that the flow has begun */
+ 	*state |= HT_ADDBA_REQUESTED_MSK;
+ 
+-	start_seq_num = sta->tid_seq[tid];
++	start_seq_num = sta->tid_seq[tid] >> 4;
+ 
+ 	ret = drv_ampdu_action(local, sdata, IEEE80211_AMPDU_TX_START,
+ 			       pubsta, tid, &start_seq_num);
