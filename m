@@ -1,15 +1,15 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:37598 "EHLO
+Received: from smtp.nokia.com ([192.100.122.233]:37597 "EHLO
 	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752217AbZLaNiA (ORCPT
+	with ESMTP id S1752106AbZLaNh6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Dec 2009 08:38:00 -0500
-Subject: [RFC PATCH v5 5/7] ieee80211: add struct ieee80211_hdr_qos
+	Thu, 31 Dec 2009 08:37:58 -0500
+Subject: [RFC PATCH v5 3/7] mac80211: create tx handler for dynamic ps
 To: linux-wireless@vger.kernel.org
 From: Kalle Valo <kalle.valo@iki.fi>
 Cc: johannes@sipsolutions.net, a.young.jason@gmail.com
-Date: Thu, 31 Dec 2009 15:37:41 +0200
-Message-ID: <20091231133741.29899.5256.stgit@tikku>
+Date: Thu, 31 Dec 2009 15:37:28 +0200
+Message-ID: <20091231133728.29899.80509.stgit@tikku>
 In-Reply-To: <20091231133626.29899.95683.stgit@tikku>
 References: <20091231133626.29899.95683.stgit@tikku>
 MIME-Version: 1.0
@@ -19,32 +19,131 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Kalle Valo <kalle.valo@nokia.com>
 
-The header can be used to create qos nullfunc frames, for example.
+Currently dynamic ps check is in ieee80211_xmit(), but it's cleaner
+to have a separate tx handler for this. Also this is a prerequisite for
+U-APSD client mode which needs to know the queue frame is in.
+
+Also need_dynamic_ps() function is embedded to the tx handler.
+
+No functional changes expect that the code is run in a later phase than
+originally.
 
 Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
- include/linux/ieee80211.h |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+ net/mac80211/tx.c |   81 +++++++++++++++++++++++++++--------------------------
+ 1 files changed, 41 insertions(+), 40 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 27eb5dc..57859c4 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -147,6 +147,16 @@ struct ieee80211_hdr {
- 	u8 addr4[6];
- } __attribute__ ((packed));
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 7bba49d..32bbbc2 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -180,6 +180,46 @@ static int inline is_ieee80211_device(struct ieee80211_local *local,
+ }
  
-+struct ieee80211_qos_hdr {
-+	__le16 frame_control;
-+	__le16 duration_id;
-+	u8 addr1[6];
-+	u8 addr2[6];
-+	u8 addr3[6];
-+	__le16 seq_ctrl;
-+	__le16 qos_ctrl;
-+} __attribute__ ((packed));
+ /* tx handlers */
++static ieee80211_tx_result debug_noinline
++ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
++{
++	struct ieee80211_local *local = tx->local;
 +
- /**
-  * ieee80211_has_tods - check if IEEE80211_FCTL_TODS is set
-  * @fc: frame control bytes in little-endian byteorder
++	/* driver doesn't support power save */
++	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS))
++		return TX_CONTINUE;
++
++	/* hardware does dynamic power save */
++	if (local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS)
++		return TX_CONTINUE;
++
++	/* dynamic power save disabled */
++	if (local->hw.conf.dynamic_ps_timeout <= 0)
++		return TX_CONTINUE;
++
++	/* we are scanning, don't enable power save */
++	if (local->scanning)
++		return TX_CONTINUE;
++
++	if (!local->ps_sdata)
++		return TX_CONTINUE;
++
++	/* No point if we're going to suspend */
++	if (local->quiescing)
++		return TX_CONTINUE;
++
++	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
++		ieee80211_stop_queues_by_reason(&local->hw,
++						IEEE80211_QUEUE_STOP_REASON_PS);
++		ieee80211_queue_work(&local->hw,
++				     &local->dynamic_ps_disable_work);
++	}
++
++	mod_timer(&local->dynamic_ps_timer, jiffies +
++		  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
++
++	return TX_CONTINUE;
++}
+ 
+ static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
+@@ -1215,6 +1255,7 @@ static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
+ 			goto txh_done;	\
+ 	} while (0)
+ 
++	CALL_TXH(ieee80211_tx_h_dynamic_ps);
+ 	CALL_TXH(ieee80211_tx_h_check_assoc);
+ 	CALL_TXH(ieee80211_tx_h_ps_buf);
+ 	CALL_TXH(ieee80211_tx_h_select_key);
+@@ -1397,34 +1438,6 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
+ 	return 0;
+ }
+ 
+-static bool need_dynamic_ps(struct ieee80211_local *local)
+-{
+-	/* driver doesn't support power save */
+-	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS))
+-		return false;
+-
+-	/* hardware does dynamic power save */
+-	if (local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS)
+-		return false;
+-
+-	/* dynamic power save disabled */
+-	if (local->hw.conf.dynamic_ps_timeout <= 0)
+-		return false;
+-
+-	/* we are scanning, don't enable power save */
+-	if (local->scanning)
+-		return false;
+-
+-	if (!local->ps_sdata)
+-		return false;
+-
+-	/* No point if we're going to suspend */
+-	if (local->quiescing)
+-		return false;
+-
+-	return true;
+-}
+-
+ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
+ 			   struct sk_buff *skb)
+ {
+@@ -1435,18 +1448,6 @@ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
+ 	int headroom;
+ 	bool may_encrypt;
+ 
+-	if (need_dynamic_ps(local)) {
+-		if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+-			ieee80211_stop_queues_by_reason(&local->hw,
+-					IEEE80211_QUEUE_STOP_REASON_PS);
+-			ieee80211_queue_work(&local->hw,
+-					&local->dynamic_ps_disable_work);
+-		}
+-
+-		mod_timer(&local->dynamic_ps_timer, jiffies +
+-		        msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
+-	}
+-
+ 	rcu_read_lock();
+ 
+ 	if (unlikely(sdata->vif.type == NL80211_IFTYPE_MONITOR)) {
 
