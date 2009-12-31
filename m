@@ -1,57 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:45751 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755976AbZLCKtV (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:37596 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751918AbZLaNh6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2009 05:49:21 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id A6911148008
-	for <linux-wireless@vger.kernel.org>; Thu,  3 Dec 2009 11:49:26 +0100 (CET)
-Received: from mx51.mymxserver.com ([127.0.0.1])
-	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id ejNdkh-5o7s2 for <linux-wireless@vger.kernel.org>;
-	Thu,  3 Dec 2009 11:49:26 +0100 (CET)
-Received: from lin01.mn-solutions.de (pD95FAAA4.dip0.t-ipconnect.de [217.95.170.164])
-	by mx51.mymxserver.com (Postfix) with ESMTP id 66E78148005
-	for <linux-wireless@vger.kernel.org>; Thu,  3 Dec 2009 11:49:25 +0100 (CET)
-Received: from schurig.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id E9FC11E0010
-	for <linux-wireless@vger.kernel.org>; Thu,  3 Dec 2009 11:49:20 +0100 (CET)
-From: Holger Schurig <holgerschurig@gmail.com>
+	Thu, 31 Dec 2009 08:37:58 -0500
+Subject: [RFC PATCH v5 4/7] mac80211: check uapsd state for dynamic power save
 To: linux-wireless@vger.kernel.org
-Subject: question regarding cfg80211 monitor modes
-Date: Thu, 3 Dec 2009 11:48:46 +0100
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: johannes@sipsolutions.net, a.young.jason@gmail.com
+Date: Thu, 31 Dec 2009 15:37:35 +0200
+Message-ID: <20091231133735.29899.85614.stgit@tikku>
+In-Reply-To: <20091231133626.29899.95683.stgit@tikku>
+References: <20091231133626.29899.95683.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200912031148.46934.holgerschurig@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"iw wlan0 set type monitor" allows the following flags:
+From: Kalle Valo <kalle.valo@nokia.com>
 
-                none:     no special flags
-                fcsfail:  show frames with FCS errors
-                control:  show control frames
-                otherbss: show frames from other BSSes
-                cook:     use cooked mode
+To make U-APSD client mode effective, we must not wake up from dynamic power
+save when transmitting frames. So if dynamic power save is enabled, it needs
+check the queue the transmitted packet is in and decide if we need to wake
+up or not.
 
-However, I don't know how to map them to the Libertas' firmware 
-flags, which has
+In a perfect world, where all packets would have correct QoS tags, U-APSD
+enabled queues should not trigger wakeup from power save. But in the real
+world, where very few packets have correct QoS tags, this won't work. For
+example, if only voip class has U-APSD enabled and we send a packet in voip
+class, but the packets we receive are in best effort class, we would receive
+the packets with the legacy power save method. And that would increase
+latencies too much from a voip application point of view.
 
-Libertas (bits can be ored)
-Data frames                   0x01   
-Mgmt frames but beacons       0x02
-Beacons                       0x04
+The workaround is to enable U-APSD for all qeueus and still use dynamic ps
+wakeup for all other queues except voip. That way we can still save power
+with a voip application and not sacrifice latency. Normal traffic (in
+background, best effort or video class) would still trigger wakeup from
+dynamic power save.
 
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ net/mac80211/tx.c |   25 +++++++++++++++++++++++++
+ 1 files changed, 25 insertions(+), 0 deletions(-)
 
-So I guess that the following could be a translation table:
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 32bbbc2..a782f4c 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -184,6 +184,7 @@ static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
+ {
+ 	struct ieee80211_local *local = tx->local;
++	struct ieee80211_if_managed *ifmgd;
+ 
+ 	/* driver doesn't support power save */
+ 	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS))
+@@ -208,6 +209,30 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
+ 	if (local->quiescing)
+ 		return TX_CONTINUE;
+ 
++	/* dynamic ps is supported only in managed mode */
++	if (tx->sdata->vif.type != NL80211_IFTYPE_STATION)
++		return TX_CONTINUE;
++
++	ifmgd = &tx->sdata->u.mgd;
++
++	/*
++	 * Don't wakeup from power save if u-apsd is enabled, voip ac has
++	 * u-apsd enabled and the frame is in voip class. This effectively
++	 * means that even if all access categories have u-apsd enabled, in
++	 * practise u-apsd is only used with the voip ac. This is a
++	 * workaround for the case when received voip class packets do not
++	 * have correct qos tag for some reason, due the network or the
++	 * peer application.
++	 *
++	 * Note: local->uapsd_queues access is racy here. If the value is
++	 * changed via debugfs, user needs to reassociate manually to have
++	 * everything in sync.
++	 */
++	if ((ifmgd->flags & IEEE80211_STA_UAPSD_ENABLED)
++	    && (local->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VO)
++	    && skb_get_queue_mapping(tx->skb) == 0)
++		return TX_CONTINUE;
++
+ 	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+ 		ieee80211_stop_queues_by_reason(&local->hw,
+ 						IEEE80211_QUEUE_STOP_REASON_PS);
 
-none       0x00
-fcsfail    -ENOTSUPP
-control    0x02 | 0x04
-
-But what should "otherbss" and "cook" be?
-
--- 
-http://www.holgerschurig.de
