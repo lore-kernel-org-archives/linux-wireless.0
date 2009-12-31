@@ -1,56 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from buzzloop.caiaq.de ([212.112.241.133]:56873 "EHLO
-	buzzloop.caiaq.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754133AbZLPD6y (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:37598 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752217AbZLaNiA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2009 22:58:54 -0500
-Date: Wed, 16 Dec 2009 11:58:44 +0800
-From: Daniel Mack <daniel@caiaq.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org,
-	dcbw@redhat.com, m.hirsch@raumfeld.com, netdev@vger.kernel.org,
-	libertas-dev@lists.infradead.org, stable@kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless: wext: allocate space for NULL-termination
- for 32byte SSIDs
-Message-ID: <20091216035844.GN28375@buzzloop.caiaq.de>
-References: <1260650850-16163-1-git-send-email-daniel@caiaq.de>
- <20091215.014308.77044043.davem@davemloft.net>
- <1260871411.3692.4.camel@johannes.local>
+	Thu, 31 Dec 2009 08:38:00 -0500
+Subject: [RFC PATCH v5 5/7] ieee80211: add struct ieee80211_hdr_qos
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: johannes@sipsolutions.net, a.young.jason@gmail.com
+Date: Thu, 31 Dec 2009 15:37:41 +0200
+Message-ID: <20091231133741.29899.5256.stgit@tikku>
+In-Reply-To: <20091231133626.29899.95683.stgit@tikku>
+References: <20091231133626.29899.95683.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1260871411.3692.4.camel@johannes.local>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 15, 2009 at 11:03:31AM +0100, Johannes Berg wrote:
-> 
-> > > -	/* kzalloc() ensures NULL-termination for essid_compat. */
-> > > -	extra = kzalloc(extra_size, GFP_KERNEL);
-> > > +	/* kzalloc() +1 ensures NULL-termination for essid_compat. */
-> > > +	extra = kzalloc(extra_size + 1, GFP_KERNEL);
-> 
-> That doesn't seem correct.
-> 
-> If this is used in a SET, then it is purely an in-kernel thing and
-> everything in the kernel is passed the length + data, and the kernel
-> MUST NEVER treat the SSID as a NUL-terminated string.
-> 
-> If this is used in a GET, then it will be filled up to 32 bytes by the
-> get handler, and the trailing \0 your patch reserves will never be
-> copied into userspace.
+From: Kalle Valo <kalle.valo@nokia.com>
 
-The problem is the GET case. The libertas driver copies ssid_len
-characters here and appends a trailing \0, which my patch caught now and
-which caused memory corruption in before.
+The header can be used to create qos nullfunc frames, for example.
 
->From what I've seen, libertas _does_ treat the extra data correctly
-at all places, I checked it several times now. (Btw, the %s format
-string you pointed out all use print_ssid() to properly escape all
-non-printable characters, so they're rules out, too).
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ include/linux/ieee80211.h |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-I'll send a patch to fix the flaw in libertas.
-
-Thanks,
-Daniel
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 27eb5dc..57859c4 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -147,6 +147,16 @@ struct ieee80211_hdr {
+ 	u8 addr4[6];
+ } __attribute__ ((packed));
+ 
++struct ieee80211_qos_hdr {
++	__le16 frame_control;
++	__le16 duration_id;
++	u8 addr1[6];
++	u8 addr2[6];
++	u8 addr3[6];
++	__le16 seq_ctrl;
++	__le16 qos_ctrl;
++} __attribute__ ((packed));
++
+ /**
+  * ieee80211_has_tods - check if IEEE80211_FCTL_TODS is set
+  * @fc: frame control bytes in little-endian byteorder
 
