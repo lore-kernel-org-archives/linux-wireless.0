@@ -1,89 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:58838 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751264Ab0ALMse (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:18117 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751316Ab0AANkl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2010 07:48:34 -0500
-Date: Tue, 12 Jan 2010 13:48:32 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 08/17] mwl8k: add 5 GHz band channels and rates
-Message-ID: <20100112124832.GX1735@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 1 Jan 2010 08:40:41 -0500
+MIME-Version: 1.0
+In-Reply-To: <4B2FEE46.5030700@unsolicited.net>
+References: <4B2FEE46.5030700@unsolicited.net>
+Date: Fri, 1 Jan 2010 14:40:38 +0100
+Message-ID: <8db1092f1001010540l15c8f671y1f6a4a4417eb450b@mail.gmail.com>
+Subject: Re: 2.6.33-rc1 - Weird hard hangs when rendering 'some' web-sites in
+	Firefox
+From: Maciej Rutecki <maciej.rutecki@gmail.com>
+To: David <david@unsolicited.net>
+Cc: linux-kernel@vger.kernel.org,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   41 +++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 41 insertions(+), 0 deletions(-)
+2009/12/21 David <david@unsolicited.net>:
+> I'm still not sure whether what I'm seeing here is latent hardware
+> problems, but, as a heads up :-
+>
+>    2.6.32, 2.6.32.2 (and previous kernels) - All OK
+>    2.6.33-rc1 - Machine seems fine, until :-
+>
+> I browse to particular sites (one of which is an internet banking site,
+> so no heavy flash etc.). My machine will (completely and repeatably)
+> hang solid. Nothing showing with netconsole, sshd dead, sysrq dead ...
+> reset button time.
+>
+> .config, bootup dmesg, and lspci -vvv attached for interest (userspace
+> is Ubuntu 9.10).
+>
+> May have time to bisect, but not 'till the holidays.
+>
+> Cheers
+> David
+>
+>
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index a17111f..13dded4 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -144,6 +144,9 @@ struct mwl8k_priv {
- 	struct ieee80211_supported_band band_24;
- 	struct ieee80211_channel channels_24[14];
- 	struct ieee80211_rate rates_24[14];
-+	struct ieee80211_supported_band band_50;
-+	struct ieee80211_channel channels_50[4];
-+	struct ieee80211_rate rates_50[9];
- 
- 	/* firmware access */
- 	struct mutex fw_mutex;
-@@ -252,6 +255,25 @@ static const struct ieee80211_rate mwl8k_rates_24[] = {
- 	{ .bitrate = 720, .hw_value = 144, },
- };
- 
-+static const struct ieee80211_channel mwl8k_channels_50[] = {
-+	{ .center_freq = 5180, .hw_value = 36, },
-+	{ .center_freq = 5200, .hw_value = 40, },
-+	{ .center_freq = 5220, .hw_value = 44, },
-+	{ .center_freq = 5240, .hw_value = 48, },
-+};
-+
-+static const struct ieee80211_rate mwl8k_rates_50[] = {
-+	{ .bitrate = 60, .hw_value = 12, },
-+	{ .bitrate = 90, .hw_value = 18, },
-+	{ .bitrate = 120, .hw_value = 24, },
-+	{ .bitrate = 180, .hw_value = 36, },
-+	{ .bitrate = 240, .hw_value = 48, },
-+	{ .bitrate = 360, .hw_value = 72, },
-+	{ .bitrate = 480, .hw_value = 96, },
-+	{ .bitrate = 540, .hw_value = 108, },
-+	{ .bitrate = 720, .hw_value = 144, },
-+};
-+
- /* Set or get info from Firmware */
- #define MWL8K_CMD_SET			0x0001
- #define MWL8K_CMD_GET			0x0000
-@@ -1579,6 +1601,25 @@ static void mwl8k_setup_2ghz_band(struct ieee80211_hw *hw)
- 	hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &priv->band_24;
- }
- 
-+static void mwl8k_setup_5ghz_band(struct ieee80211_hw *hw)
-+{
-+	struct mwl8k_priv *priv = hw->priv;
-+
-+	BUILD_BUG_ON(sizeof(priv->channels_50) != sizeof(mwl8k_channels_50));
-+	memcpy(priv->channels_50, mwl8k_channels_50, sizeof(mwl8k_channels_50));
-+
-+	BUILD_BUG_ON(sizeof(priv->rates_50) != sizeof(mwl8k_rates_50));
-+	memcpy(priv->rates_50, mwl8k_rates_50, sizeof(mwl8k_rates_50));
-+
-+	priv->band_50.band = IEEE80211_BAND_5GHZ;
-+	priv->band_50.channels = priv->channels_50;
-+	priv->band_50.n_channels = ARRAY_SIZE(mwl8k_channels_50);
-+	priv->band_50.bitrates = priv->rates_50;
-+	priv->band_50.n_bitrates = ARRAY_SIZE(mwl8k_rates_50);
-+
-+	hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &priv->band_50;
-+}
-+
- /*
-  * CMD_GET_HW_SPEC (STA version).
-  */
+I can confirm this. Probably it's related only to wireless
+connections, wired seems be OK. My device is:
+08:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG
+[Golan] Network Connection (rev 02)
+
+Regards
 -- 
-1.5.6.4
+Maciej Rutecki
+http://www.maciek.unixy.pl
