@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:51785 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754099Ab0AQWqH convert rfc822-to-8bit (ORCPT
+Received: from ns01.unsolicited.net ([69.10.132.115]:2838 "EHLO
+	ns01.unsolicited.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751330Ab0AAOvM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2010 17:46:07 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: Re: [PATCH 1/4] b43: N-PHY: add writing one element tables
-Date: Sun, 17 Jan 2010 23:45:52 +0100
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-References: <op.u6o7s9rq9lhzdc@linux-g0th.site>
-In-Reply-To: <op.u6o7s9rq9lhzdc@linux-g0th.site>
+	Fri, 1 Jan 2010 09:51:12 -0500
+Message-ID: <4B3E0B9D.6080104@unsolicited.net>
+Date: Fri, 01 Jan 2010 14:50:05 +0000
+From: David <david@unsolicited.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201001172345.54110.mb@bu3sch.de>
+To: Maciej Rutecki <maciej.rutecki@gmail.com>
+CC: linux-kernel@vger.kernel.org,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: 2.6.33-rc1 - Weird hard hangs when rendering 'some' web-sites
+ in 	Firefox
+References: <4B2FEE46.5030700@unsolicited.net>	 <8db1092f1001010540l15c8f671y1f6a4a4417eb450b@mail.gmail.com>	 <4B3E0061.4000003@unsolicited.net> <8db1092f1001010619j66f8b494g86efdd8ddcc3e5e7@mail.gmail.com>
+In-Reply-To: <8db1092f1001010619j66f8b494g86efdd8ddcc3e5e7@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 17 January 2010 23:37:50 Rafał Miłecki wrote:
-> @@ -1895,14 +1880,12 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
->   			b43_phy_write(dev, B43_NPHY_IQLOCAL_CMDNNUM, tmp);
-> 
->   			if (type == 1 || type == 3 || type == 4) {
-> -				/* TODO: Read an N PHY Table with ID 15,
-> -					length 1, offset 69 + core,
-> -					width 16, and data pointer buffer */
-> +				b43_ntab_write(dev, B43_NTAB16(15, 69 + core),
-> +						buffer[0]);
->   				diq_start = buffer[0];
->   				buffer[0] = 0;
-> -				/* TODO: Write an N PHY Table with ID 15,
-> -					length 1, offset 69 + core, width 16,
-> -					and data of 0 */
-> +				b43_ntab_write(dev, B43_NTAB16(15, 69 + core),
-> +						0);
->   			}
-> 
->   			b43_phy_write(dev, B43_NPHY_IQLOCAL_CMD, cmd);
+Maciej Rutecki wrote:
+> 2010/1/1 David <david@unsolicited.net>:
+>
+>   
+>> Mine is a wired connection, so it seems unconnected with that. I've
+>> replaced the motherboard here and have had no further problems. There is
+>> now a configuration difference though as I've had to disable radeon kms
+>> (with radeon.modeset=0) for the new on-board graphics.
+>>
+>> My guess is that this is radeon related, and I'm going to set-up the old
+>> motherboard in a spare case & see what I can work out.
+>>
+>>     
+>
+> I'm not sure. I don't use radeon hardware, only Intel:
+> cat /boot/config-2.6.33-rc2 | grep -i radeon
+> # CONFIG_DRM_RADEON is not set
+> # CONFIG_FB_RADEON is not set
+>
+> cat /boot/config-2.6.33-rc2 | grep -i kms
+> CONFIG_DRM_KMS_HELPER=m
+> # CONFIG_DRM_I915_KMS is not set
+>
+>   
+The mystery deepens :-) Maybe these are separate issues?
 
-What is this supposed to do? It writes a value to a table entry and immediately
-clobbers the entry with 0. This doesn't make any sense.
+David
 
--- 
-Greetings, Michael.
