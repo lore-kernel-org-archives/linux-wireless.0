@@ -1,67 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33023 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753341Ab0A0JST (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2010 04:18:19 -0500
-Subject: Re: [PATCH] rtl8187: Add callback for get_tsf
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
-	John W Linville <linville@tuxdriver.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4B5F8891.4000204@lwfinger.net>
-References: <4b5f7e98.WueiIRrKwMIrtoob%Larry.Finger@lwfinger.net>
-	 <3ace41891001261617w54e8c08dm5d317f7c2b17cba4@mail.gmail.com>
-	 <4B5F8891.4000204@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-4sFgDpC2wE8Vqv4HmZQE"
-Date: Wed, 27 Jan 2010 10:17:59 +0100
-Message-ID: <1264583879.25642.13.camel@johannes.local>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:42336 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752023Ab0AAQXT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jan 2010 11:23:19 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 5/5] compat-wireless: small fixes to admin-update.sh
+Date: Fri,  1 Jan 2010 17:21:12 +0100
+Message-Id: <1262362872-10251-6-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1262362872-10251-1-git-send-email-hauke@hauke-m.de>
+References: <1262362872-10251-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-4sFgDpC2wE8Vqv4HmZQE
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ scripts/admin-update.sh |   17 +++++++++++------
+ 1 files changed, 11 insertions(+), 6 deletions(-)
 
-On Tue, 2010-01-26 at 18:28 -0600, Larry Finger wrote:
-
-> > Presumably this new api is needed and used by some userland tools (iw
-> > or other QoS-related tool?).
->=20
->  From include/net/mac80211.h: "It is currently used for IBSS mode BSSID m=
-erging=20
-> and debugging". Implementation of this callback is voluntary.
-
-In fact, if you give mac80211 TSF timestamps with each packet, it will
-never be used other than from the debugfs file.
-
-johannes
-
---=-4sFgDpC2wE8Vqv4HmZQE
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLYATCAAoJEODzc/N7+QmaBKEP/0LE5+mAXUyd3c6GJMFIOuAr
-eWD5MAoCoG2S0rASlqWVBJ04OO659bB8KWmkmR6MpiMimTVpgToUvI/NyYsMVx36
-9kBlYIeT5JKWg6uFhfcvHHpTgtEBPTbYp+0edFmXl+El9+xoHTsVkEeFOVgKiYd7
-6B1c8izLGc9MyieRGvaZT3GmcLyqwA0FNxNYkdTjHHHT/esjr9xgu+hShKi5Dm0I
-R2FWvuLOTbeJzZpEUieBz8s0gwnsYJwlykrPDJlcThNh3qhfDdlFPYBmOhykndTs
-eQTJvKV87itq6QriHUWrBdlWAMddHRLvu72kDkyH/R4CI8hPUmwa2aif5KfoUJWz
-G/qRV6BRufQ0oCrmDM1FmOV0fC8P3kop4fNbP2lkArRJzl54tUHSMzBV3xBDgLIw
-JjAa1oCgJNI5YXl3viM+yFt5DQ3Bu61VftTMmHvdvw/2a5b6Fav5o2EUnkQ74AAl
-4J8ZL/kRTG77u4xHicCuJ/TMg4OcVjwqIHRUbe09mSWZpRao3zw8y0pNXkU8K9OS
-PVdV//HtnYuhqfWDaO7lwiE2NbPGNwXS6k1vV6PDafljouYLFZlhnrUY1OP7WwMk
-phm18ybgXYiVLQObjKDzYx9e/C+sFZ0cYxQSYT72aBsXmn2QVRvKtSFHYWCOPsgp
-uD3yFM4Lmyi+TuJeH+m8
-=VVx1
------END PGP SIGNATURE-----
-
---=-4sFgDpC2wE8Vqv4HmZQE--
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 7c63202..ddc64da 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -59,13 +59,13 @@ if [ -z $GIT_TREE ]; then
+ 		exit 1
+ 	fi
+ else
+-	echo "You said to use git tree at: $GIT_TREE for wireless"
++	echo "You said to use git tree at: $GIT_TREE for linux-next"
+ fi
+ 
+ if [ -z $GIT_COMPAT_TREE ]; then
+ 	GIT_COMPAT_TREE="/home/$USER/compat/"
+ 	if [ ! -d $GIT_COMPAT_TREE ]; then
+-		echo "Please tell me where your bluetooth-testing git tree is."
++		echo "Please tell me where your compat git tree is."
+ 		echo "You can do this by exporting its location as follows:"
+ 		echo
+ 		echo "  export GIT_COMPAT_TREE=/home/$USER/compat/"
+@@ -75,7 +75,7 @@ if [ -z $GIT_COMPAT_TREE ]; then
+ 		exit 1
+ 	fi
+ else
+-	echo "You said to use git tree at: $GIT_COMPAT_TREE for bluetooth"
++	echo "You said to use git tree at: $GIT_COMPAT_TREE for compat"
+ fi
+ 
+ # Drivers that have their own directory
+@@ -98,9 +98,9 @@ DRIVERS="$DRIVERS drivers/net/wireless/wl12xx"
+ DRIVERS="$DRIVERS drivers/net/wireless/iwmc3200wifi"
+ 
+ # Ethernet drivers
+-DRIVERS="$DRIVERS drivers/net/atl1c/"
+-DRIVERS="$DRIVERS drivers/net/atl1e/"
+-DRIVERS="$DRIVERS drivers/net/atlx/"
++DRIVERS="$DRIVERS drivers/net/atl1c"
++DRIVERS="$DRIVERS drivers/net/atl1e"
++DRIVERS="$DRIVERS drivers/net/atlx"
+ 
+ # Bluetooth drivers
+ DRIVERS_BT="drivers/bluetooth"
+@@ -306,6 +306,11 @@ if [ -d ./.git ]; then
+ 		echo $MASTER_TAG > $DIR/master-tag
+ 		echo -e "This is a ${RED}bleeding edge${NORMAL} compat-wireless release based on: ${PURPLE}$MASTER_TAG${NORMAL}"
+ 		;;
++	"linux-next.git") # The linux-next integration testing tree
++		MASTER_TAG=$(git tag -l| grep next | tail -1)
++		echo $MASTER_TAG > $DIR/master-tag
++		echo -e "This is a ${RED}bleeding edge${NORMAL} compat-wireless release based on: ${PURPLE}$MASTER_TAG${NORMAL}"
++		;;
+ 	"linux-2.6-allstable.git") # HPA's all stable tree
+ 		echo -e "This is a ${GREEN}stable${NORMAL} compat-wireless release based on: ${PURPLE}$(git describe --abbrev=0)${NORMAL}"
+ 		;;
+-- 
+1.6.3.3
 
