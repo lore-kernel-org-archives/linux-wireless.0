@@ -1,35 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:50077 "EHLO
-	TX2EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755946Ab0A1RgG (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:48734 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751500Ab0AAOTs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2010 12:36:06 -0500
-Message-ID: <4B61C907.4010408@am.sony.com>
-Date: Thu, 28 Jan 2010 09:27:35 -0800
-From: Geoff Levand <geoffrey.levand@am.sony.com>
+	Fri, 1 Jan 2010 09:19:48 -0500
 MIME-Version: 1.0
-To: Hamish Guthrie <hamish.guthrie@sonycom.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"cbe-oss-dev@ozlabs.org" <cbe-oss-dev@ozlabs.org>
-Subject: Re: [PATCH 2/2] ps3_gelic_wireless: fix directed ssid scan
-References: <1264679650-14201-1-git-send-email-hamish.guthrie@sonycom.com> <1264679650-14201-3-git-send-email-hamish.guthrie@sonycom.com>
-In-Reply-To: <1264679650-14201-3-git-send-email-hamish.guthrie@sonycom.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <4B3E0061.4000003@unsolicited.net>
+References: <4B2FEE46.5030700@unsolicited.net>
+	 <8db1092f1001010540l15c8f671y1f6a4a4417eb450b@mail.gmail.com>
+	 <4B3E0061.4000003@unsolicited.net>
+Date: Fri, 1 Jan 2010 15:19:46 +0100
+Message-ID: <8db1092f1001010619j66f8b494g86efdd8ddcc3e5e7@mail.gmail.com>
+Subject: Re: 2.6.33-rc1 - Weird hard hangs when rendering 'some' web-sites in
+	Firefox
+From: Maciej Rutecki <maciej.rutecki@gmail.com>
+To: David <david@unsolicited.net>
+Cc: linux-kernel@vger.kernel.org,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/28/2010 03:54 AM, Hamish Guthrie wrote:
-> If the association worker requests a directed ssid scan and a bss list
-> already exists, the directed scan is not done. This patch corrects this
-> and cleans up a few typos and debug messages.
-> 
-> Signed-off-by: Hamish Guthrie <hamish.guthrie@sonycom.com>
-> ---
->  drivers/net/ps3_gelic_wireless.c |   15 +++++++++------
->  1 files changed, 9 insertions(+), 6 deletions(-)
+2010/1/1 David <david@unsolicited.net>:
 
-Looks good.
+>>
+>
+> Mine is a wired connection, so it seems unconnected with that. I've
+> replaced the motherboard here and have had no further problems. There is
+> now a configuration difference though as I've had to disable radeon kms
+> (with radeon.modeset=0) for the new on-board graphics.
+>
+> My guess is that this is radeon related, and I'm going to set-up the old
+> motherboard in a spare case & see what I can work out.
+>
 
-Acked-by: Geoff Levand <geoffrey.levand@am.sony.com>
+I'm not sure. I don't use radeon hardware, only Intel:
+cat /boot/config-2.6.33-rc2 | grep -i radeon
+# CONFIG_DRM_RADEON is not set
+# CONFIG_FB_RADEON is not set
 
+cat /boot/config-2.6.33-rc2 | grep -i kms
+CONFIG_DRM_KMS_HELPER=m
+# CONFIG_DRM_I915_KMS is not set
+
+Regards
+
+
+-- 
+Maciej Rutecki
+http://www.maciek.unixy.pl
