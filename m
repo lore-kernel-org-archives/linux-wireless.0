@@ -1,110 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:58533 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755910Ab0AFPpE (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:10719 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751934Ab0AAQH6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 10:45:04 -0500
-Received: by ewy19 with SMTP id 19so9730788ewy.21
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 07:45:01 -0800 (PST)
-Content-Type: multipart/mixed; boundary=----------oTg6YMNLehz3DxsGhumOH0
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Subject: Re: [PATCH 1/5] b43: N-PHY: implement b43_nphy_stay_carrier_search
- and it's calls
-References: <op.u54a5ufy9lhzdc@linux-g0th.site>
-Date: Wed, 06 Jan 2010 16:46:19 +0100
+	Fri, 1 Jan 2010 11:07:58 -0500
 MIME-Version: 1.0
-From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <op.u54bfhwo9lhzdc@linux-g0th.site>
-In-Reply-To: <op.u54a5ufy9lhzdc@linux-g0th.site>
+In-Reply-To: <4B3E0B9D.6080104@unsolicited.net>
+References: <4B2FEE46.5030700@unsolicited.net>
+	 <8db1092f1001010540l15c8f671y1f6a4a4417eb450b@mail.gmail.com>
+	 <4B3E0061.4000003@unsolicited.net>
+	 <8db1092f1001010619j66f8b494g86efdd8ddcc3e5e7@mail.gmail.com>
+	 <4B3E0B9D.6080104@unsolicited.net>
+Date: Fri, 1 Jan 2010 17:07:56 +0100
+Message-ID: <8db1092f1001010807i4d2e7c66kf707f6eecb8c9c5d@mail.gmail.com>
+Subject: Re: 2.6.33-rc1 - Weird hard hangs when rendering 'some' web-sites in
+	Firefox
+From: Maciej Rutecki <maciej.rutecki@gmail.com>
+To: David <david@unsolicited.net>
+Cc: linux-kernel@vger.kernel.org,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------------oTg6YMNLehz3DxsGhumOH0
-Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
-Content-Transfer-Encoding: Quoted-Printable
+2010/1/1 David <david@unsolicited.net>:
 
-Dnia 06-01-2010 o 16:40:32 Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> na=
-pisa=C5=82(a):
+> The mystery deepens :-) Maybe these are separate issues?
 
-> b43: N-PHY: implement b43_nphy_stay_carrier_search and it's calls
+Maybe. I observed big activity LED light from wireless card, when system hangs.
 
-Attaching patch (only inline-posted before).
-
--- =
-
-Rafa=C5=82
-------------oTg6YMNLehz3DxsGhumOH0
-Content-Disposition: attachment; filename*0="0001-b43-N-PHY-implement-b43_nphy_stay_c";
- filename*1="arrier_search-and.patch"
-Content-Type: application/octet-stream; name*0="0001-b43-N-PHY-implement-b43_nphy_stay_c";
- name*1="arrier_search-and.patch"
-Content-Transfer-Encoding: Base64
-
-RnJvbSBlYzU5OTAwNzQ2NGJiODIyMGM2MDVhZjUwMGI3MjQ3OTdkNTRhYmE4IE1v
-biBTZXAgMTcgMDA6MDA6MDAgMjAwMQpGcm9tOiA9P1VURi04P3E/UmFmYT1DNT04
-Mj0yME1pPUM1PTgyZWNraT89IDx6YWplYzVAZ21haWwuY29tPgpEYXRlOiBXZWQs
-IDYgSmFuIDIwMTAgMTU6MjA6MjAgKzAxMDAKU3ViamVjdDogW1BBVENIIDEvNV0g
-YjQzOiBOLVBIWTogaW1wbGVtZW50IGI0M19ucGh5X3N0YXlfY2Fycmllcl9zZWFy
-Y2ggYW5kIGl0J3MgY2FsbHMKTUlNRS1WZXJzaW9uOiAxLjAKQ29udGVudC1UeXBl
-OiB0ZXh0L3BsYWluOyBjaGFyc2V0PVVURi04CkNvbnRlbnQtVHJhbnNmZXItRW5j
-b2Rpbmc6IDhiaXQKClNpZ25lZC1vZmYtYnk6IFJhZmHFgiBNacWCZWNraSA8emFq
-ZWM1QGdtYWlsLmNvbT4KLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9iNDMvcGh5
-X24uYyB8ICAgNTcgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysKIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2I0My9waHlfbi5oIHwgICAgMyArKwog
-MiBmaWxlcyBjaGFuZ2VkLCA2MCBpbnNlcnRpb25zKCspLCAwIGRlbGV0aW9ucygt
-KQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2I0My9waHlfbi5j
-IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYjQzL3BoeV9uLmMKaW5kZXggY2ViNDI5
-YS4uNDBkN2I3MyAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYjQz
-L3BoeV9uLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYjQzL3BoeV9uLmMK
-QEAgLTM0OCw2ICszNDgsNjMgQEAgc3RhdGljIHZvaWQgYjQzX25waHlfcmVzZXRf
-Y2NhKHN0cnVjdCBiNDNfd2xkZXYgKmRldikKIAliNDNfcGh5X3dyaXRlKGRldiwg
-QjQzX05QSFlfQkJDRkcsIGJiY2ZnICYgfkI0M19OUEhZX0JCQ0ZHX1JTVENDQSk7
-CiB9CiAKK3N0YXRpYyB2b2lkIGI0M19ucGh5X3dyaXRlX2NsaXBfZGV0ZWN0aW9u
-KHN0cnVjdCBiNDNfd2xkZXYgKmRldiwgdTE2ICp2YWxzKQoreworCWI0M19waHlf
-d3JpdGUoZGV2LCBCNDNfTlBIWV9DMV9DTElQMVRIUkVTLCB2YWxzWzBdKTsKKwli
-NDNfcGh5X3dyaXRlKGRldiwgQjQzX05QSFlfQzJfQ0xJUDFUSFJFUywgdmFsc1sx
-XSk7Cit9CisKK3N0YXRpYyB2b2lkIGI0M19ucGh5X3JlYWRfY2xpcF9kZXRlY3Rp
-b24oc3RydWN0IGI0M193bGRldiAqZGV2LCB1MTYgKnZhbHMpCit7CisJdmFsc1sw
-XSA9IGI0M19waHlfcmVhZChkZXYsIEI0M19OUEhZX0MxX0NMSVAxVEhSRVMpOwor
-CXZhbHNbMV0gPSBiNDNfcGh5X3JlYWQoZGV2LCBCNDNfTlBIWV9DMl9DTElQMVRI
-UkVTKTsKK30KKworc3RhdGljIHUxNiBiNDNfbnBoeV9jbGFzc2lmaWVyKHN0cnVj
-dCBiNDNfd2xkZXYgKmRldiwgdTE2IG1hc2ssIHUxNiB2YWwpCit7CisJdTE2IHRt
-cDsKKwlib29sIHN1c3BlbmRlZCA9IGZhbHNlOworCisJaWYgKGRldi0+ZGV2LT5p
-ZC5yZXZpc2lvbiA9PSAxNiAmJiBkZXYtPm1hY19zdXNwZW5kZWQgPT0gMCkgewor
-CQliNDNfbWFjX3N1c3BlbmQoZGV2KTsKKwkJc3VzcGVuZGVkID0gdHJ1ZTsKKwl9
-CisKKwl0bXAgPSBiNDNfcGh5X3JlYWQoZGV2LCBCNDNfTlBIWV9DTEFTU0NUTCk7
-CisJdG1wICY9IChCNDNfTlBIWV9DTEFTU0NUTF9DQ0tFTiB8IEI0M19OUEhZX0NM
-QVNTQ1RMX09GRE1FTiB8CisJCUI0M19OUEhZX0NMQVNTQ1RMX1dBSVRFREVOKTsK
-Kwl0bXAgJj0gfm1hc2s7CisJdG1wIHw9ICh2YWwgJiBtYXNrKTsKKwliNDNfcGh5
-X21hc2tzZXQoZGV2LCBCNDNfTlBIWV9DTEFTU0NUTCwgMHhGRkY4LCB0bXApOwor
-CisJaWYgKHN1c3BlbmRlZCkKKwkJYjQzX21hY19lbmFibGUoZGV2KTsKKworCXJl
-dHVybiB0bXA7Cit9CisKK3N0YXRpYyB2b2lkIGI0M19ucGh5X3N0YXlfY2Fycmll
-cl9zZWFyY2goc3RydWN0IGI0M193bGRldiAqZGV2LCBib29sIGVuYWJsZSkKK3sK
-KwlzdHJ1Y3QgYjQzX3BoeSAqcGh5ID0gJmRldi0+cGh5OworCXN0cnVjdCBiNDNf
-cGh5X24gKm5waHkgPSBwaHktPm47CisKKwlpZiAoZW5hYmxlKSB7CisJCXUxNiBj
-bGlwW10gPSB7IDB4RkZGRiwgMHhGRkZGIH07CisJCWlmIChucGh5LT5kZWFmX2Nv
-dW50KysgPT0gMCkgeworCQkJbnBoeS0+Y2xhc3NpZmllcl9zdGF0ZSA9IGI0M19u
-cGh5X2NsYXNzaWZpZXIoZGV2LCAwLCAwKTsKKwkJCWI0M19ucGh5X2NsYXNzaWZp
-ZXIoZGV2LCAweDcsIDApOworCQkJYjQzX25waHlfcmVhZF9jbGlwX2RldGVjdGlv
-bihkZXYsIG5waHktPmNsaXBfc3RhdGUpOworCQkJYjQzX25waHlfd3JpdGVfY2xp
-cF9kZXRlY3Rpb24oZGV2LCBjbGlwKTsKKwkJfQorCQliNDNfbnBoeV9yZXNldF9j
-Y2EoZGV2KTsKKwl9IGVsc2UgeworCQlpZiAoLS1ucGh5LT5kZWFmX2NvdW50ICE9
-IDApIHsKKwkJCWI0M19ucGh5X2NsYXNzaWZpZXIoZGV2LCAweDcsIG5waHktPmNs
-YXNzaWZpZXJfc3RhdGUpOworCQkJYjQzX25waHlfd3JpdGVfY2xpcF9kZXRlY3Rp
-b24oZGV2LCBucGh5LT5jbGlwX3N0YXRlKTsKKwkJfQorCX0KK30KKwogZW51bSBi
-NDNfbnBoeV9yZl9zZXF1ZW5jZSB7CiAJQjQzX1JGU0VRX1JYMlRYLAogCUI0M19S
-RlNFUV9UWDJSWCwKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2I0
-My9waHlfbi5oIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYjQzL3BoeV9uLmgKaW5k
-ZXggZTVlNDAyYS4uNmFiMDdmYyAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvYjQzL3BoeV9uLmgKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYjQz
-L3BoeV9uLmgKQEAgLTkzMiw2ICs5MzIsOSBAQCBzdHJ1Y3QgYjQzX3BoeV9uIHsK
-IAl1MzIgZGVhZl9jb3VudDsKIAlib29sIG11dGU7CiAKKwl1MTYgY2xhc3NpZmll
-cl9zdGF0ZTsKKwl1MTYgY2xpcF9zdGF0ZVsyXTsKKwogCXU4IGlxY2FsX2NoYW5z
-cGVjXzJHOwogCXU4IHJzc2ljYWxfY2hhbnNwZWNfMkc7CiAKLS0gCjEuNi40LjIK
-Cg==
-
-------------oTg6YMNLehz3DxsGhumOH0--
-
+Regards
+-- 
+Maciej Rutecki
+http://www.maciek.unixy.pl
