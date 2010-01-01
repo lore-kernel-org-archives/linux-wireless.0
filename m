@@ -1,90 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55243 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752550Ab0AJNlI (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:27853 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751953Ab0AAXHF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jan 2010 08:41:08 -0500
-Subject: Re: [PATCH] mac80211: flush workqueue before calling driver
- ->stop() method
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Lennert Buytenhek <buytenh@wantstofly.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <201001101435.26235.mb@bu3sch.de>
-References: <20100110130752.GG1735@mail.wantstofly.org>
-	 <201001101435.26235.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-wwzVHT1GJjvstFFdKJvN"
-Date: Sun, 10 Jan 2010 14:40:39 +0100
-Message-ID: <1263130839.7773.16.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 1 Jan 2010 18:07:05 -0500
+Received: by ey-out-2122.google.com with SMTP id 25so2167564eya.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jan 2010 15:07:04 -0800 (PST)
+MIME-Version: 1.0
+Date: Sat, 2 Jan 2010 00:07:03 +0100
+Message-ID: <91f186a81001011507h48c1b887u323fe43dd4c8fdb1@mail.gmail.com>
+Subject: libnl, bug question, and lib query
+From: =?UTF-8?Q?Carl_F=C3=BCrstenberg?= <azatoth@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I'll start this up with three different question, hope that's not a
+problem instead of sending three different mails.
 
---=-wwzVHT1GJjvstFFdKJvN
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+First I wonder if I should, in a production environment using the
+nl80211, stick to use libnl 1.* or should I use use the git 2.0?
 
-On Sun, 2010-01-10 at 14:35 +0100, Michael Buesch wrote:
-> On Sunday 10 January 2010 14:07:53 Lennert Buytenhek wrote:
-> > Since commit "mwl8k: handle station database update for AP's sta
-> entry
-> > via ->sta_notify()", mwl8k every now and then gets a command timeout
-> > when ifconfig'ing a STA interface down.  This turns out to be due to
-> > mwl8k_stop() being called while the work queue item that was
-> scheduled
-> > by mwl8k_sta_notify() to remove the STA entry for the associated AP
-> is
-> > still queued, and the former disables interrupts so that when the
-> > latter eventually runs, a command completion interrupt is never
-> seen.
-> >=20
-> > Fix this by changing ieee80211_stop_device() so that the workqueue
-> is
-> > flushed before drv_stop() is called, instead of doing it the other
-> way
-> > around as is done now.  (As ->stop() is allowed to sleep, there
-> isn't
-> > any reason for drivers to queue work from within it.)
->=20
-> This smells like we should either:
-> o Add an assertion that checks whether the driver queued work although
-> it was forbidden.
-> or
-> o Call flush_workqueue twice. Once before and once after drv_stop.
+Second I have noticed a problem regarding reg set/get which I can't
+pin down where it goes wrong (reboot resolves the issue). Following is
+how I can reproduce it. Notice all the nonsense input I used. I don't
+know what exactly triggers it, but the "set DU seems to be a good
+candidate"
+wlan:/home/test# iw reg set US
+wlan:/home/test# iw reg get
+country US:
+	(2402 - 2472 @ 40), (3, 27)
+	(5170 - 5250 @ 40), (3, 17)
+	(5250 - 5330 @ 40), (3, 20), DFS
+	(5490 - 5600 @ 40), (3, 20), DFS
+	(5650 - 5710 @ 40), (3, 20), DFS
+	(5735 - 5835 @ 40), (3, 30)
+wlan:/home/test# iw reg set CH
+wlan:/home/test# iw reg get
+country CH:
+	(2402 - 2482 @ 40), (N/A, 20)
+	(5170 - 5250 @ 40), (N/A, 20)
+	(5250 - 5330 @ 40), (N/A, 20), DFS
+	(5490 - 5710 @ 40), (N/A, 27), DFS
+wlan:/home/test#  iw reg set DU
+wlan:/home/test# iw reg get
+country CH:
+	(2402 - 2482 @ 40), (N/A, 20)
+	(5170 - 5250 @ 40), (N/A, 20)
+	(5250 - 5330 @ 40), (N/A, 20), DFS
+	(5490 - 5710 @ 40), (N/A, 27), DFS
+wlan:/home/test# iw reg set WO
+wlan:/home/test# iw reg get
+country CH:
+	(2402 - 2482 @ 40), (N/A, 20)
+	(5170 - 5250 @ 40), (N/A, 20)
+	(5250 - 5330 @ 40), (N/A, 20), DFS
+	(5490 - 5710 @ 40), (N/A, 27), DFS
+wlan:/home/test# iw reg set W
+not a valid ISO/IEC 3166-1 alpha2
+Special non-alpha2 usable entries:
+	00	World Regulatory domain
+wlan:/home/test# iw reg set 00
+wlan:/home/test# iw reg set W
+not a valid ISO/IEC 3166-1 alpha2
+Special non-alpha2 usable entries:
+	00	World Regulatory domain
+wlan:/home/test# iw reg get
+country CH:
+	(2402 - 2482 @ 40), (N/A, 20)
+	(5170 - 5250 @ 40), (N/A, 20)
+	(5250 - 5330 @ 40), (N/A, 20), DFS
+	(5490 - 5710 @ 40), (N/A, 27), DFS
+wlan:/home/test# iw reg set 00
+wlan:/home/test# iw --debug reg set 00
+-- Debug: Received Message:
+--------------------------   BEGIN NETLINK MESSAGE ---------------------------
+  [HEADER] 16 octets
+    .nlmsg_len = 36
+    .nlmsg_type = 2 <ERROR>
+    .nlmsg_flags = 0 <>
+    .nlmsg_seq = 1262372471
+    .nlmsg_pid = 11999
+  [ERRORMSG] 20 octets
+    .error = 0 "Success"
+  [ORIGINAL MESSAGE] 16 octets
+    .nlmsg_len = 16
+    .nlmsg_type = 17 <0x11>
+    .nlmsg_flags = 5 <REQUEST,ACK>
+    .nlmsg_seq = 1262372471
+    .nlmsg_pid = 11999
+---------------------------  END NETLINK MESSAGE   ---------------------------
 
-I don't think we need to do either.
 
-See, it's not strictly forbidden to queue work, there's just no
-guarantee when it will be executed. But since the driver is already
-stopped, what kind of guarantee should it get anyway? And destroying the
-workqueue will flush it anyway, if this is part of the unregistration
-procedure. So, the driver would be stupid to queue work there that did
-anything to the hw, but if it has some work that's purely software state
-it shouldn't matter at all.
 
-johannes
-
---=-wwzVHT1GJjvstFFdKJvN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLSdjUAAoJEODzc/N7+Qma4uAP/AgTu55rKOodpFNjtASEH4B/
-XcCq+mX/bvj7FE1ycl2Dl4uADMSJ50Inkx/a3TpCiYiUrV26wZ1ObD3RKgm6N2yI
-8P2jaMOZGNApAIztQfLpc3p9yhoRuirutHNmewzQ5yxfK0ZgDXT7EBFMvwxrHUg2
-KBLYQujRk9bLegug6O8Zb5tmkHS9Pd8WWLdITk0DqEgmlBxMFhRy3G8UAYpIg4Ox
-r4xmt55qfwBDsK4W5BBBVrQdRapUsratcDaa6yq6Yyeli649frJaKHxresBWLKw+
-Jptmaek1tE4CD6IqDHmn5WDcz5T9+Fe0Ex+6WTgw8n1qQinIzJ5S1AIu7LkuRaom
-Bo0wUcbBhCop3Vg/sFSpeoE4Lw+NaJ/1lFytw0iFtLI6QCHrkf144Y06neybkjco
-M8qSHkQi6WAmP2V5YtqpJjjOr1mn1DatFX4L6dua8X0l7BxPPnmRex2KuQrTPxSi
-RBYoii1xRKbMsOFGl1tp+abvB5GuWwqJTOQTTnKZ6/+6r2ZX37Cx8SByyBQv5Zrn
-lOjAzUfDUl7BtX7CMEP8vru472eNIehFIkzk8a3zdFnR3NFi0QkPN9iJ/PCrhtSu
-y2AqC+5y99DArAuFRHx9ClGnfPMvo9MmjaGNC6jH7yECfTccvGDsndssuuXzt9Eq
-cIcaCB5ZTAuxbmppdh2U
-=zU1X
------END PGP SIGNATURE-----
-
---=-wwzVHT1GJjvstFFdKJvN--
-
+Lastly I wonder if there is any plans to extract all relevant parts of
+iw to some sort of libiw? Would be helpful for us :)
+-- 
+/Carl Fürstenberg <azatoth@gmail.com>
