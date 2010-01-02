@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:59035 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754968Ab0AVWXL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 17:23:11 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 14/17] iwlwifi: fix sparse warning
-Date: Fri, 22 Jan 2010 14:22:55 -0800
-Message-Id: <1264198978-5915-15-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1264198978-5915-1-git-send-email-reinette.chatre@intel.com>
-References: <1264198978-5915-1-git-send-email-reinette.chatre@intel.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:38380 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752755Ab0ABQe2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Jan 2010 11:34:28 -0500
+Subject: Re: regression: crash from 'ls /sys/modules/wl1251_spi/notes'
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: =?ISO-8859-1?Q?Am=E9rico?= Wang <xiyou.wangcong@gmail.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-omap@vger.kernel.org,
+	Helge Deller <deller@gmx.de>, rusty@rustcorp.com.au,
+	akpm@linux-foundation.org, roland@redhat.com,
+	dave@hiauly1.hia.nrc.ca, Parisc List <linux-parisc@vger.kernel.org>
+In-Reply-To: <2375c9f90912311908r667966e1m919430c40cd9c571@mail.gmail.com>
+References: <87k4w4wux9.fsf@purkki.valot.fi>
+	 <1262188157.2749.21.camel@mulgrave.site>
+	 <2375c9f90912311908r667966e1m919430c40cd9c571@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 02 Jan 2010 10:34:22 -0600
+Message-Id: <1262450062.2741.4.camel@mulgrave.site>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+On Fri, 2010-01-01 at 11:08 +0800, Américo Wang wrote:
+> This patch looks fine for me, except that I don't think it's necessary
+> to introduce an inline function for that...
 
-sparse correctly warns about symbol not
-being static, make static to shut it up.
+Actually, I really think we do.  The whole reason we got into this mess
+in the first place is that it wasn't obvious from the code that if we
+altered the loadability of sections, there were a ton of dependent
+places we also had to update.  Putting all that knowledge into a single
+inline makes the same mistake impossible to make because there's now
+only one place to go to adjust the loadability of sections, and it
+automatically takes care of all the dependencies.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> Reviewed-by: WANG Cong <xiyou.wangcong@gmail.com>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 6ea2238..5537369 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -705,7 +705,7 @@ static void iwl_print_cont_event_trace(struct iwl_priv *priv, u32 base,
- 	spin_unlock_irqrestore(&priv->reg_lock, reg_flags);
- }
- 
--void iwl_continuous_event_trace(struct iwl_priv *priv)
-+static void iwl_continuous_event_trace(struct iwl_priv *priv)
- {
- 	u32 capacity;   /* event log capacity in # entries */
- 	u32 base;       /* SRAM byte address of event log header */
--- 
-1.6.3.3
+Thanks,
+
+James
+
 
