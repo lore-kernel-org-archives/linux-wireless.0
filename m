@@ -1,51 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:27744 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751916Ab0AZLv6 (ORCPT
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:43211 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752764Ab0ABQoU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2010 06:51:58 -0500
-To: Patrick McHardy <kaber@trash.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Network QoS support in applications
-References: <87k4v5nuej.fsf@purkki.valot.fi> <4B5ED254.7010104@trash.net>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 26 Jan 2010 13:51:55 +0200
-In-Reply-To: <4B5ED254.7010104@trash.net> (Patrick McHardy's message of "Tue\, 26 Jan 2010 12\:30\:28 +0100")
-Message-ID: <877hr5nkx0.fsf@purkki.valot.fi>
+	Sat, 2 Jan 2010 11:44:20 -0500
+Received: by fxm25 with SMTP id 25so7713022fxm.21
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Jan 2010 08:44:19 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b170af451001020840i4bb5e752gcf960e632ae3e7c0@mail.gmail.com>
+References: <op.u5wyi5dd9lhzdc@linux-g0th.site> <69e28c911001020826q575f65fbp6b48232e83392dcb@mail.gmail.com>
+	<b170af451001020840i4bb5e752gcf960e632ae3e7c0@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sat, 2 Jan 2010 17:43:59 +0100
+Message-ID: <69e28c911001020843n42e588beraa99ea18474b1e0@mail.gmail.com>
+Subject: Re: [PATCH] b43: Add new SSB's core id for BCM4328
+To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patrick McHardy <kaber@trash.net> writes:
-
->> Solution 2: SO_PRIORITY with values 256-263
+2010/1/2 Rafa³ Mi³ecki <zajec5@gmail.com>:
+> W dniu 2 stycznia 2010 17:26 u¿ytkownik Gábor Stefanik
+> <netrolller.3d@gmail.com> napisa³:
+>> 2010/1/2 Rafa³ Mi³ecki <zajec5@gmail.com>:
+>>> Finally I've possibility to test my Christmas-gift N-PHY :) b43 didn't
+>>> really "notice" it, so I needed to write this little patch. Now b43 at least
+>>> look for firmware for my card.
+>>>
+>>> Does this patch look OK?
+>>>
+>>> This time I post from Opera mail so I hope white-spaces will be fine.
+>>>
+>>> From 9b3ea4f29b038f732aba737323e2f89b275ce1ab Mon Sep 17 00:00:00 2001
+>>> From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+>>> Date: Sat, 2 Jan 2010 16:58:16 +0100
+>>> Subject: [PATCH] b43: Add new SSB's core id for BCM4328
+>>> MIME-Version: 1.0
+>>> Content-Type: text/plain; charset=UTF-8
+>>> Content-Transfer-Encoding: 8bit
+>>>
+>>> Following line shows my BCM4328 detected on SSB. We didn't include 0x0C rev.
+>>> ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0C, vendor 0x4243)
+>>>
+>>> Signed-off-by: Rafa³ Mi³ecki <zajec5@gmail.com>
+>>> ---
+>>>  drivers/net/wireless/b43/main.c |    1 +
+>>>  1 files changed, 1 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/b43/main.c
+>>> b/drivers/net/wireless/b43/main.c
+>>> index 098dda1..3aa45b8 100644
+>>> --- a/drivers/net/wireless/b43/main.c
+>>> +++ b/drivers/net/wireless/b43/main.c
+>>> @@ -110,6 +110,7 @@ static const struct ssb_device_id b43_ssb_tbl[] = {
+>>>        SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 9),
+>>>        SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 10),
+>>>        SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 11),
+>>> +       SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 12),
+>>
+>> Rev.14 is also missing (which AFAIK is used by some LP cards).
 >
-> You can actually encode any class handle in SO_PRIORITY, all classful
-> qdiscs support classification based on this.
+> Thanks, I'll post patch for that as well. Is adding this 0x0C (==13)
+> fine in this form? Or maybe we should use ifdef CONFIG_B43_NPHY for
+> some reason?
 
-But what values should I use in an application? There seems to n+1
-different ways to do it, but they all would be specific to my own
-setup.
+I would say it's OK this way (BTW 0x0C == 12); we also didn't put
+rev.15 under CONFIG_B43_PHY_LP.
 
-I'm after a universal solution, so that there is no need to modify
-applications every time. I would assume that we have a set of rules
-for this. If not, we definitely need one.
+(BTW I'm planning to rename CONFIG_B43_NPHY to CONFIG_B43_PHY_N in
+preparation for further PHY types, as well as the ability to only
+build certain PHYs as needed if EMBEDDED is set - a kernel for an
+LP-PHY SoC might save some space by not building G-PHY code.)
 
-Let's take a bittorrent client as an example. The traffic it generates
-is not important and it doesn't matter if bittorrent packets have
-lower priority compared to other streams. What SO_PRIORITY value
-should all bittorrent clients to use to mark their packets as low
-priority (for example background class from IEEE 802.1d Annex G).
+>
+> --
+> Rafa³
+>
 
-Another example is a VoIP application. The packets need to have as low
-delay as possible, so they need to be prioritised very high (for
-example voice class from 802.1d). What value should such application
-use?
 
-Or should applications use something else than SO_PRIORITY?
-
-Any help is greatly welcomed here :)
 
 -- 
-Kalle Valo
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
