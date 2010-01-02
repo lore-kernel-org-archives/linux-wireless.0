@@ -1,87 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51407.mail.re2.yahoo.com ([206.190.38.186]:39698 "HELO
-	web51407.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S932104Ab0ARQUc convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jan 2010 11:20:32 -0500
-Message-ID: <860907.56395.qm@web51407.mail.re2.yahoo.com>
-Date: Mon, 18 Jan 2010 08:20:31 -0800 (PST)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: Re: "iwconfig wlan0 rate auto" fails on latest wireless-testing with ath9k
-To: linux-wireless@vger.kernel.org
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:56740 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752764Ab0ABQzI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Jan 2010 11:55:08 -0500
+Received: by ewy19 with SMTP id 19so5985870ewy.21
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Jan 2010 08:55:06 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4B3F78ED.4090101@lwfinger.net>
+References: <op.u5wyi5dd9lhzdc@linux-g0th.site> <4B3F78ED.4090101@lwfinger.net>
+Date: Sat, 2 Jan 2010 17:55:06 +0100
+Message-ID: <b170af451001020855v3892909o134636ad1c8f5586@mail.gmail.com>
+Subject: Re: [PATCH] b43: Add new SSB's core id for BCM4328
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Can somebody confirm this problem?
+W dniu 2 stycznia 2010 17:48 u≈ºytkownik Larry Finger
+<Larry.Finger@lwfinger.net> napisa≈Ç:
+> Your tabs have been converted to spaces.
+>
+> Most of my patches are sent using the mail command; however, I can send them
+> with Thunderbird using the following steps:
 
- -- 
-Regards 
-Joerg 
-
-
-
-
------ Urspr¸ngliche Mail ----
-> Von: Joerg Pommnitz <pommnitz@yahoo.com>
-> An: linux-wireless@vger.kernel.org
-> Gesendet: Donnerstag, den 14. Januar 2010, 13:39:17 Uhr
-> Betreff: "iwconfig wlan0 rate auto" fails on latest wireless-testing with ath9k
-> 
-> Hello all,
-> if I set a fixed data rate with iwconfig I can't get out anymore.
-> Trying to switch back to automatic rate control gives an error message:
-> 
-> Script started on Thu Jan 14 13:18:14 2010
-> root@ath9k-0-007:~# iwconfigwlan0
-> Warning: Driver for device wlan0 has been compiled with version 22
-> of Wireless Extension, while this program supports up to version 20.
-> Some things may be broken...
-> 
-> wlan0     IEEE 802.11abgn  ESSID:"athtest5200"  
->           Mode:Ad-Hoc  Frequency:5.2 GHz  Cell: 02:02:6F:23:12:0B  
->           Tx-Power=20 dBm  
->           Retry limit:7   RTSthr:off   Fragment thr:off
->           Encryption key:off
->           Power Management:off
->           
-> root@ath9k-0-007:~# iwconfigwlan0 rate 6M
-> root@ath9k-0-007:~# iwconfigwlan0
-> Warning: Driver for device wlan0 has been compiled with version 22
-> of Wireless Extension, while this program supports up to version 20.
-> Some things may be broken...
-> 
-> wlan0     IEEE 802.11abgn  ESSID:"athtest5200"  
->           Mode:Ad-Hoc  Frequency:5.2 GHz  Cell: 02:02:6F:23:12:0B  
->           Tx-Power=20 dBm  
->           Retry limit:7   RTSthr:off   Fragment thr:off
->           Encryption key:off
->           Power Management:off
->           
-> root@ath9k-0-007:~# iwconfigwlan0 rate auto
-> Error for wireless request "Set Bit Rate" (8B20) :
->     SET failed on device wlan0 ; Invalid argument.
-> root@ath9k-0-007:~# 
-> Script done on Thu Jan 14 13:18:56 2010
-> 
-> Funny thing is, not even "rmmodath9k mac80211" is enough to get out of
-> the fixed data rate.
-> 
-> Any ideas? And, BTW. will there be a way to set the data rate with iw?
-> 
-> -- 
-> Regards 
-> Joerg 
-> 
-> __________________________________________________
-> Do You Yahoo!?
-> Sie sind Spam leid? Yahoo! Mail verf¸gt ¸ber einen herausragenden Schutz gegen 
-> Massenmails. 
-> http://mail.yahoo.com
+Oh great :| I guess I'll just try mail command.
 
 
-__________________________________________________
-Do You Yahoo!?
-Sie sind Spam leid? Yahoo! Mail verf¸gt ¸ber einen herausragenden Schutz gegen Massenmails. 
-http://mail.yahoo.com 
+> I'm not sure how far you have gotten with the code, but I have been working with
+> a new driver with version 5.10.56.46. There are a lot of changes from the
+> 4.174... that was previously reverse-engineered.
+
+I don't have anything more than posted patches.
+
+What do you suggest about writing next (real) parts? Is that worth
+effort basing code on current RE docs? Maybe some parts only, that
+didn't change? Or should I just wait for update (is anyone working on
+it)?
+
+
+> To answer your question in a later E-mail. You do not need to conditionalize the
+> core revision entry. If the N PHY code is not turned on, the driver will get an
+> unsupported PHY message and fail later in an acceptable error.
+
+One more confirmation :) Thanks.
+
+
+-- 
+Rafa≈Ç
