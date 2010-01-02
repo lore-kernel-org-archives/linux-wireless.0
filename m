@@ -1,61 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:35025 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754818Ab0AQXVp convert rfc822-to-8bit (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:19683 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750938Ab0ABQkH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2010 18:21:45 -0500
-Received: by mail-fx0-f225.google.com with SMTP id 25so627454fxm.21
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jan 2010 15:21:45 -0800 (PST)
-Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 18 Jan 2010 00:21:49 +0100
-Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Subject: [PATCH 5/5 V2] b43: N-PHY: silence warnings, add missing call
+	Sat, 2 Jan 2010 11:40:07 -0500
+Received: by ey-out-2122.google.com with SMTP id 25so2260698eya.19
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Jan 2010 08:40:06 -0800 (PST)
 MIME-Version: 1.0
-From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <op.u6o9unx49lhzdc@linux-g0th.site>
+In-Reply-To: <69e28c911001020826q575f65fbp6b48232e83392dcb@mail.gmail.com>
+References: <op.u5wyi5dd9lhzdc@linux-g0th.site>
+	 <69e28c911001020826q575f65fbp6b48232e83392dcb@mail.gmail.com>
+Date: Sat, 2 Jan 2010 17:40:06 +0100
+Message-ID: <b170af451001020840i4bb5e752gcf960e632ae3e7c0@mail.gmail.com>
+Subject: Re: [PATCH] b43: Add new SSB's core id for BCM4328
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-New patch I didn't include earlier.
----
-  drivers/net/wireless/b43/phy_n.c |    6 +++---
-  1 files changed, 3 insertions(+), 3 deletions(-)
+W dniu 2 stycznia 2010 17:26 użytkownik Gábor Stefanik
+<netrolller.3d@gmail.com> napisał:
+> 2010/1/2 Rafał Miłecki <zajec5@gmail.com>:
+>> Finally I've possibility to test my Christmas-gift N-PHY :) b43 didn't
+>> really "notice" it, so I needed to write this little patch. Now b43 at least
+>> look for firmware for my card.
+>>
+>> Does this patch look OK?
+>>
+>> This time I post from Opera mail so I hope white-spaces will be fine.
+>>
+>> From 9b3ea4f29b038f732aba737323e2f89b275ce1ab Mon Sep 17 00:00:00 2001
+>> From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+>> Date: Sat, 2 Jan 2010 16:58:16 +0100
+>> Subject: [PATCH] b43: Add new SSB's core id for BCM4328
+>> MIME-Version: 1.0
+>> Content-Type: text/plain; charset=UTF-8
+>> Content-Transfer-Encoding: 8bit
+>>
+>> Following line shows my BCM4328 detected on SSB. We didn't include 0x0C rev.
+>> ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0C, vendor 0x4243)
+>>
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>>  drivers/net/wireless/b43/main.c |    1 +
+>>  1 files changed, 1 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/b43/main.c
+>> b/drivers/net/wireless/b43/main.c
+>> index 098dda1..3aa45b8 100644
+>> --- a/drivers/net/wireless/b43/main.c
+>> +++ b/drivers/net/wireless/b43/main.c
+>> @@ -110,6 +110,7 @@ static const struct ssb_device_id b43_ssb_tbl[] = {
+>>        SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 9),
+>>        SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 10),
+>>        SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 11),
+>> +       SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 12),
+>
+> Rev.14 is also missing (which AFAIK is used by some LP cards).
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 2356d84..3a3cc2f 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -1624,7 +1624,7 @@ static void b43_nphy_tx_cal_phy_setup(struct b43_wldev *dev)
-  		b43_phy_write(dev, B43_NPHY_AFECTL_OVER, tmp | 0x0600);
+Thanks, I'll post patch for that as well. Is adding this 0x0C (==13)
+fine in this form? Or maybe we should use ifdef CONFIG_B43_NPHY for
+some reason?
 
-  		regs[4] = b43_phy_read(dev, B43_NPHY_BBCFG);
--		b43_phy_mask(dev, B43_NPHY_BBCFG, ~B43_NPHY_BBCFG_RSTRX);
-+		b43_phy_mask(dev, B43_NPHY_BBCFG, (u16)~B43_NPHY_BBCFG_RSTRX);
-
-  		tmp = b43_ntab_read(dev, B43_NTAB16(8, 3));
-  		regs[5] = tmp;
-@@ -1970,7 +1970,7 @@ static int b43_nphy_rev2_cal_rx_iq(struct b43_wldev *dev,
-  	u16 lna[3] = { 3, 3, 1 };
-  	u16 hpf1[3] = { 7, 2, 0 };
-  	u16 hpf2[3] = { 2, 0, 0 };
--	u32 power[3];
-+	u32 power[3] = { };
-  	u16 gain_save[2];
-  	u16 cal_gain[2];
-  	struct nphy_iqcal_params cal_params[2];
-@@ -2077,7 +2077,7 @@ static int b43_nphy_rev2_cal_rx_iq(struct b43_wldev *dev,
-  					(cur_lna << 2));
-  			/* TODO:Call N PHY RF Ctrl Override with 0x400, tmp[0],
-  				3, 0 as arguments */
--			/* TODO: Call N PHY Force RF Seq with 2 as argument */
-+			b43_nphy_force_rf_sequence(dev, B43_RFSEQ_RESET2RX);
-  			b43_nphy_stop_playback(dev);
-
-  			if (playtone) {
 -- 
-1.6.4.2
-
+Rafał
