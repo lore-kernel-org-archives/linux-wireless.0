@@ -1,100 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:57076 "EHLO mga11.intel.com"
+Received: from bu3sch.de ([62.75.166.246]:48891 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755050Ab0AVWXL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 17:23:11 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 12/17] iwlwifi: reorder device setup
-Date: Fri, 22 Jan 2010 14:22:53 -0800
-Message-Id: <1264198978-5915-13-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1264198978-5915-1-git-send-email-reinette.chatre@intel.com>
-References: <1264198978-5915-1-git-send-email-reinette.chatre@intel.com>
+	id S1751086Ab0ABRoF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Jan 2010 12:44:05 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: Re: [PATCH] b43: N-PHY: clean table init, check PHY rev (V2)
+Date: Sat, 2 Jan 2010 18:43:55 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+References: <op.u5wyyryj9lhzdc@linux-g0th.site>
+In-Reply-To: <op.u5wyyryj9lhzdc@linux-g0th.site>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <201001021843.57583.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+On Saturday 02 January 2010 17:33:53 Rafał Miłecki wrote:
+> --- a/drivers/net/wireless/b43/tables_nphy.h
+> +++ b/drivers/net/wireless/b43/tables_nphy.h
 
-It is better to first notify cfg80211 about the hw
-rfkill state (so the rfkill device that will be
-registered won't have the wrong state while being
-registered), and the power/tt variable init can
-(and probably should) also be done first.
+> -extern const u8 b43_ntab_adjustpower0[];
+> +static const u8 b43_ntab_adjustpower0[];
 
-Also rename iwl_setup_mac to
-iwl_mac_setup_register to better describe what it
-really does.
+Are you serious? o.O
+Come on... You can do better ;)
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |   28 ++++++++++++++++------------
- 1 files changed, 16 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 537837b..6ea2238 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2608,7 +2608,7 @@ void iwl_post_associate(struct iwl_priv *priv)
-  * Not a mac80211 entry point function, but it fits in with all the
-  * other mac80211 functions grouped here.
-  */
--static int iwl_setup_mac(struct iwl_priv *priv)
-+static int iwl_mac_setup_register(struct iwl_priv *priv)
- {
- 	int ret;
- 	struct ieee80211_hw *hw = priv->hw;
-@@ -3621,9 +3621,9 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	iwl_setup_deferred_work(priv);
- 	iwl_setup_rx_handlers(priv);
- 
--	/**********************************
--	 * 8. Setup and register mac80211
--	 **********************************/
-+	/*********************************************
-+	 * 8. Enable interrupts and read RFKILL state
-+	 *********************************************/
- 
- 	/* enable interrupts if needed: hw bug w/a */
- 	pci_read_config_word(priv->pci_dev, PCI_COMMAND, &pci_cmd);
-@@ -3634,14 +3634,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	iwl_enable_interrupts(priv);
- 
--	err = iwl_setup_mac(priv);
--	if (err)
--		goto out_remove_sysfs;
--
--	err = iwl_dbgfs_register(priv, DRV_NAME);
--	if (err)
--		IWL_ERR(priv, "failed to create debugfs files. Ignoring error: %d\n", err);
--
- 	/* If platform's RF_KILL switch is NOT set to KILL */
- 	if (iwl_read32(priv, CSR_GP_CNTRL) & CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
- 		clear_bit(STATUS_RF_KILL_HW, &priv->status);
-@@ -3653,6 +3645,18 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	iwl_power_initialize(priv);
- 	iwl_tt_initialize(priv);
-+
-+	/**************************************************
-+	 * 9. Setup and register with mac80211 and debugfs
-+	 **************************************************/
-+	err = iwl_mac_setup_register(priv);
-+	if (err)
-+		goto out_remove_sysfs;
-+
-+	err = iwl_dbgfs_register(priv, DRV_NAME);
-+	if (err)
-+		IWL_ERR(priv, "failed to create debugfs files. Ignoring error: %d\n", err);
-+
- 	return 0;
- 
-  out_remove_sysfs:
 -- 
-1.6.3.3
-
+Greetings, Michael.
