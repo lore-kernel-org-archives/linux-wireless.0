@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f197.google.com ([209.85.223.197]:49757 "EHLO
-	mail-iw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751090Ab0AKQDi (ORCPT
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:54409 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751361Ab0ABOK6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jan 2010 11:03:38 -0500
-Received: by iwn35 with SMTP id 35so14856093iwn.4
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2010 08:03:38 -0800 (PST)
+	Sat, 2 Jan 2010 09:10:58 -0500
+Received: by fxm25 with SMTP id 25so7654862fxm.21
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Jan 2010 06:10:57 -0800 (PST)
+Date: Sat, 2 Jan 2010 16:09:57 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, yi.zhu@intel.com
+Subject: re: iwmc3200wifi: fix array out-of-boundary access
+Message-ID: <20100102140957.GB5076@bicker>
 MIME-Version: 1.0
-In-Reply-To: <4B4ABB54.7030600@openwrt.org>
-References: <4B4ABB54.7030600@openwrt.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 11 Jan 2010 08:03:18 -0800
-Message-ID: <43e72e891001110803x6ecd3dc4m267dd809d640a522@mail.gmail.com>
-Subject: Re: mac80211: fix queue selection for data frames on monitor
-	interfaces
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 10, 2010 at 9:47 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> When ieee80211_monitor_select_queue encounters data frames, it selects
-> the WMM AC based on skb->priority and assumes that skb->priority
-> contains a valid 802.1d tag. However this assumption is incorrect, since
-> ieee80211_select_queue has not been called at this point.
-> If skb->priority > 7, an array overrun occurs, which could lead to
-> invalid values, resulting in crashes in the tx path.
-> Fix this by setting skb->priority based on the 802.11 header for QoS
-> frames and using the default AC for all non-QoS frames.
->
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+It don't think 6c853da3f30c93 is right.  That's the patch 
+titled "iwmc3200wifi: fix array out-of-boundary access"
 
-Its unclear whether or not this is a stable fix. It fixes a crash but
-does this depend on a patch added recently which is not in stable yet?
+	Allocate priv->rx_packets[IWM_RX_ID_HASH + 1] because the max array
+	index is IWM_RX_ID_HASH according to IWM_RX_ID_GET_HASH().
 
-  Luis
+In 2.6.33-rc2 IWM_RX_ID_GET_HASH() doesn't go as high as IWM_RX_ID_HASH 
+and I don't see any array out-of-bounds.
+
+#define IWM_RX_ID_GET_HASH(id) ((id) % IWM_RX_ID_HASH)
+
+All the other code has the same assumptions.
+
+Cscope tag: IWM_RX_ID_HASH
+   #   line  filename / context / line
+   1    175  drivers/net/wireless/iwmc3200wifi/iwm.h <<GLOBAL>>
+             #define IWM_RX_ID_HASH 0xff
+   2    271  drivers/net/wireless/iwmc3200wifi/iwm.h <<GLOBAL>>
+             struct list_head rx_packets[IWM_RX_ID_HASH];
+   3    292  drivers/net/wireless/iwmc3200wifi/debugfs.c <<iwm_debugfs_rx_ticket_read>>
+             for (i = 0; i < IWM_RX_ID_HASH; i++) {
+   4    176  drivers/net/wireless/iwmc3200wifi/iwm.h <<IWM_RX_ID_GET_HASH>>
+             #define IWM_RX_ID_GET_HASH(id) ((id) % IWM_RX_ID_HASH)
+   5    279  drivers/net/wireless/iwmc3200wifi/main.c <<iwm_priv_init>>
+             for (i = 0; i < IWM_RX_ID_HASH; i++)
+   6    396  drivers/net/wireless/iwmc3200wifi/rx.c <<iwm_rx_free>>
+             for (i = 0; i < IWM_RX_ID_HASH; i++) {
+
+regards,
+dan carpenter
