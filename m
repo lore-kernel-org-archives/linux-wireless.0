@@ -1,42 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:36566 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751751Ab0ASTvh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2010 14:51:37 -0500
-Message-ID: <4B560D44.4080500@openwrt.org>
-Date: Tue, 19 Jan 2010 20:51:32 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:46762 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753011Ab0ACVRK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Jan 2010 16:17:10 -0500
+Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
+	by emh06-2.mail.saunalahti.fi (Postfix) with SMTP id C1D09C7BE6
+	for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2010 23:07:44 +0200 (EET)
+Received: from [127.0.1.1] (a91-155-131-184.elisa-laajakaista.fi [91.155.131.184])
+	by emh04.mail.saunalahti.fi (Postfix) with ESMTP id AFA4A41BEC
+	for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2010 23:07:43 +0200 (EET)
+Subject: [PATCH 3/9] wl1251: get PS Poll and Nullfunc templates from mac80211
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sun, 03 Jan 2010 23:07:43 +0200
+Message-ID: <20100103210743.29287.15568.stgit@tikku>
+In-Reply-To: <20100103210552.29287.20384.stgit@tikku>
+References: <20100103210552.29287.20384.stgit@tikku>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath9k: fix beacon slot/buffer leak
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When cleaning up beacon buffers and slots, ath9k currently checks if
-sc->ah->opmode is set to a beacon related mode before cleaning up
-buffers.
-An unfortunate ordering of interface up/down commands can lead to
-sc->ah->opmode being set to monitor mode, while there are AP interfaces
-present on the same wiphy.
-Always cleaning up beacon buffers if present fixes this issue.
+From: Kalle Valo <kalle.valo@nokia.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Now that mac80211 creates templates for PS Poll and Nullfunc frames, use
+them instead of creating our own.
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1471,10 +1471,10 @@ static void ath9k_remove_interface(struc
- 	    (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT)) {
- 		ath9k_ps_wakeup(sc);
- 		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
--		ath_beacon_return(sc, avp);
- 		ath9k_ps_restore(sc);
- 	}
+ drivers/net/wireless/wl12xx/wl1251_main.c |   58 ++++++++---------------------
+ 1 files changed, 16 insertions(+), 42 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index 4e373f3..6cce864 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -563,45 +563,6 @@ static void wl1251_op_remove_interface(struct ieee80211_hw *hw,
+ 	mutex_unlock(&wl->mutex);
+ }
  
-+	ath_beacon_return(sc, avp);
- 	sc->sc_flags &= ~SC_OP_BEACONS;
+-static int wl1251_build_null_data(struct wl1251 *wl)
+-{
+-	struct wl12xx_null_data_template template;
+-
+-	if (!is_zero_ether_addr(wl->bssid)) {
+-		memcpy(template.header.da, wl->bssid, ETH_ALEN);
+-		memcpy(template.header.bssid, wl->bssid, ETH_ALEN);
+-	} else {
+-		memset(template.header.da, 0xff, ETH_ALEN);
+-		memset(template.header.bssid, 0xff, ETH_ALEN);
+-	}
+-
+-	memcpy(template.header.sa, wl->mac_addr, ETH_ALEN);
+-	template.header.frame_ctl = cpu_to_le16(IEEE80211_FTYPE_DATA |
+-						IEEE80211_STYPE_NULLFUNC |
+-						IEEE80211_FCTL_TODS);
+-
+-	return wl1251_cmd_template_set(wl, CMD_NULL_DATA, &template,
+-				       sizeof(template));
+-
+-}
+-
+-static int wl1251_build_ps_poll(struct wl1251 *wl, u16 aid)
+-{
+-	struct wl12xx_ps_poll_template template;
+-
+-	memcpy(template.bssid, wl->bssid, ETH_ALEN);
+-	memcpy(template.ta, wl->mac_addr, ETH_ALEN);
+-
+-	/* aid in PS-Poll has its two MSBs each set to 1 */
+-	template.aid = cpu_to_le16(1 << 15 | 1 << 14 | aid);
+-
+-	template.fc = cpu_to_le16(IEEE80211_FTYPE_CTL | IEEE80211_STYPE_PSPOLL);
+-
+-	return wl1251_cmd_template_set(wl, CMD_PS_POLL, &template,
+-				       sizeof(template));
+-
+-}
+-
+ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct wl1251 *wl = hw->priv;
+@@ -1101,7 +1062,7 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
+ {
+ 	enum wl1251_cmd_ps_mode mode;
+ 	struct wl1251 *wl = hw->priv;
+-	struct sk_buff *beacon;
++	struct sk_buff *beacon, *skb;
+ 	int ret;
  
- 	for (i = 0; i < ARRAY_SIZE(sc->beacon.bslot); i++) {
+ 	wl1251_debug(DEBUG_MAC80211, "mac80211 bss info changed");
+@@ -1115,7 +1076,13 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (changed & BSS_CHANGED_BSSID) {
+ 		memcpy(wl->bssid, bss_conf->bssid, ETH_ALEN);
+ 
+-		ret = wl1251_build_null_data(wl);
++		skb = ieee80211_nullfunc_get(wl->hw, wl->vif);
++		if (!skb)
++			goto out_sleep;
++
++		ret = wl1251_cmd_template_set(wl, CMD_NULL_DATA,
++					      skb->data, skb->len);
++		dev_kfree_skb(skb);
+ 		if (ret < 0)
+ 			goto out;
+ 
+@@ -1136,7 +1103,14 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
+ 							  wl->dtim_period);
+ 			wl->aid = bss_conf->aid;
+ 
+-			ret = wl1251_build_ps_poll(wl, wl->aid);
++			skb = ieee80211_pspoll_get(wl->hw, wl->vif);
++			if (!skb)
++				goto out_sleep;
++
++			ret = wl1251_cmd_template_set(wl, CMD_PS_POLL,
++						      skb->data,
++						      skb->len);
++			dev_kfree_skb(skb);
+ 			if (ret < 0)
+ 				goto out_sleep;
+ 
 
