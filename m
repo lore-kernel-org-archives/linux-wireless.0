@@ -1,65 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:43763 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751877Ab0AXVHj (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:46763 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752853Ab0ACVRK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jan 2010 16:07:39 -0500
-Message-ID: <4B5CB687.3060106@redfish-solutions.com>
-Date: Sun, 24 Jan 2010 13:07:19 -0800
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+	Sun, 3 Jan 2010 16:17:10 -0500
+Received: from saunalahti-vams (vs3-11.mail.saunalahti.fi [62.142.5.95])
+	by emh06-2.mail.saunalahti.fi (Postfix) with SMTP id C3494C7E1C
+	for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2010 23:08:09 +0200 (EET)
+Received: from [127.0.1.1] (a91-155-131-184.elisa-laajakaista.fi [91.155.131.184])
+	by emh07.mail.saunalahti.fi (Postfix) with ESMTP id ABC161C6390
+	for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2010 23:08:08 +0200 (EET)
+Subject: [PATCH 7/9] wl1251: get probe request template from mac80211
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sun, 03 Jan 2010 23:08:08 +0200
+Message-ID: <20100103210808.29287.67190.stgit@tikku>
+In-Reply-To: <20100103210552.29287.20384.stgit@tikku>
+References: <20100103210552.29287.20384.stgit@tikku>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Kalle Valo <kalle.valo@iki.fi>, Pavel Roskin <proski@gnu.org>,
-	Markus Baier <markus_baier@web.de>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Starting hostapd causes kernel panic
-References: <loom.20100122T205326-794@post.gmane.org>	 <1264193623.2593.17.camel@johannes.local> <1264196526.3040.3.camel@mj>	 <3ef14e53bb12298507dbaec4bb0b98d3.squirrel@secure.sipsolutions.net>	 <1264197963.9056.0.camel@mj> <1264251576.2593.30.camel@johannes.local>	 <4B5B6FCA.2070900@redfish-solutions.com> <87aaw4oxh0.fsf@purkki.valot.fi>	 <4B5C0173.9080100@redfish-solutions.com> <1264333341.23766.25.camel@johannes.local>
-In-Reply-To: <1264333341.23766.25.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/24/2010 03:42 AM, Johannes Berg wrote:
-> On Sun, 2010-01-24 at 00:14 -0800, Philip A. Prindeville wrote:
->> On 01/23/2010 09:58 PM, Kalle Valo wrote:
->>> "Philip A. Prindeville" <philipp_subx@redfish-solutions.com> writes:
->>>
->>>>>> Whatever you prefer.  Either way, the panic is fixed now!
->>>>>>     
->>>>> Great, and sorry about that! I'll send a patch to insert the else too.
->>>>>
->>>>> johannes
->>>>>   
->>>>
->>>> Did you send that patch? I'd like to apply it. Please copy me when
->>>> you send it out.
->>>
->>> Johannes was busy and I sent the patch instead. It's here:
->>>
->>> http://marc.info/?l=linux-wireless&m=126427124317427&w=2
->>>
->>
->> I just applied it to compat-wireless-2010-01-20 and ran it on an AR5413 but it still panics:
->>
->>
->> BUG: unable to handle kernel NULL pointer dereference at 0000019f
->> IP: [<e0993e7f>] :mac80211:invoke_tx_handlers+0x5be/0xe6a
->> *pde = 00000000
->> Oops: 0000 [#1] PREEMPT
-> 
->> Pid: 1652, comm: hostapd Tainted: P          (2.6.27.42-astlinux #1)
->> EIP: 0060:[<e0993e7f>] EFLAGS: 00010246 CPU: 0
->> EIP is at invoke_tx_handlers+0x5be/0xe6a [mac80211]
-> 
-> Are you sure you reloaded the modules etc. correctly? Kinda looks like
-> the same issue. Otherwise can you send me in private your mac80211.ko
-> and hostapd config file?
-> 
-> johannes
+From: Kalle Valo <kalle.valo@nokia.com>
 
+Instead of creating the template in driver, get it from mac80211 instead.
+Thanks to this, three functions can be now removed.
 
-Just to be sure I applied all of the correct patches, can you please send me the list again?
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1251_main.c |   86 ++++-------------------------
+ 1 files changed, 12 insertions(+), 74 deletions(-)
 
-Kalle mentioned there being more than one.
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index e038707..1db9722 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -831,82 +831,11 @@ out:
+ 	return ret;
+ }
+ 
+-static int wl1251_build_basic_rates(char *rates)
+-{
+-	u8 index = 0;
+-
+-	rates[index++] = IEEE80211_BASIC_RATE_MASK | IEEE80211_CCK_RATE_1MB;
+-	rates[index++] = IEEE80211_BASIC_RATE_MASK | IEEE80211_CCK_RATE_2MB;
+-	rates[index++] = IEEE80211_BASIC_RATE_MASK | IEEE80211_CCK_RATE_5MB;
+-	rates[index++] = IEEE80211_BASIC_RATE_MASK | IEEE80211_CCK_RATE_11MB;
+-
+-	return index;
+-}
+-
+-static int wl1251_build_extended_rates(char *rates)
+-{
+-	u8 index = 0;
+-
+-	rates[index++] = IEEE80211_OFDM_RATE_6MB;
+-	rates[index++] = IEEE80211_OFDM_RATE_9MB;
+-	rates[index++] = IEEE80211_OFDM_RATE_12MB;
+-	rates[index++] = IEEE80211_OFDM_RATE_18MB;
+-	rates[index++] = IEEE80211_OFDM_RATE_24MB;
+-	rates[index++] = IEEE80211_OFDM_RATE_36MB;
+-	rates[index++] = IEEE80211_OFDM_RATE_48MB;
+-	rates[index++] = IEEE80211_OFDM_RATE_54MB;
+-
+-	return index;
+-}
+-
+-
+-static int wl1251_build_probe_req(struct wl1251 *wl, u8 *ssid, size_t ssid_len)
+-{
+-	struct wl12xx_probe_req_template template;
+-	struct wl12xx_ie_rates *rates;
+-	char *ptr;
+-	u16 size;
+-
+-	ptr = (char *)&template;
+-	size = sizeof(struct ieee80211_header);
+-
+-	memset(template.header.da, 0xff, ETH_ALEN);
+-	memset(template.header.bssid, 0xff, ETH_ALEN);
+-	memcpy(template.header.sa, wl->mac_addr, ETH_ALEN);
+-	template.header.frame_ctl = cpu_to_le16(IEEE80211_STYPE_PROBE_REQ);
+-
+-	/* IEs */
+-	/* SSID */
+-	template.ssid.header.id = WLAN_EID_SSID;
+-	template.ssid.header.len = ssid_len;
+-	if (ssid_len && ssid)
+-		memcpy(template.ssid.ssid, ssid, ssid_len);
+-	size += sizeof(struct wl12xx_ie_header) + ssid_len;
+-	ptr += size;
+-
+-	/* Basic Rates */
+-	rates = (struct wl12xx_ie_rates *)ptr;
+-	rates->header.id = WLAN_EID_SUPP_RATES;
+-	rates->header.len = wl1251_build_basic_rates(rates->rates);
+-	size += sizeof(struct wl12xx_ie_header) + rates->header.len;
+-	ptr += sizeof(struct wl12xx_ie_header) + rates->header.len;
+-
+-	/* Extended rates */
+-	rates = (struct wl12xx_ie_rates *)ptr;
+-	rates->header.id = WLAN_EID_EXT_SUPP_RATES;
+-	rates->header.len = wl1251_build_extended_rates(rates->rates);
+-	size += sizeof(struct wl12xx_ie_header) + rates->header.len;
+-
+-	wl1251_dump(DEBUG_SCAN, "PROBE REQ: ", &template, size);
+-
+-	return wl1251_cmd_template_set(wl, CMD_PROBE_REQ, &template,
+-				      size);
+-}
+-
+ static int wl1251_op_hw_scan(struct ieee80211_hw *hw,
+ 			     struct cfg80211_scan_request *req)
+ {
+ 	struct wl1251 *wl = hw->priv;
++	struct sk_buff *skb;
+ 	size_t ssid_len = 0;
+ 	u8 *ssid = NULL;
+ 	int ret;
+@@ -930,9 +859,18 @@ static int wl1251_op_hw_scan(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	ret = wl1251_build_probe_req(wl, ssid, ssid_len);
++	skb = ieee80211_probereq_get(wl->hw, wl->vif, ssid, ssid_len,
++				     req->ie, req->ie_len);
++	if (!skb) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	ret = wl1251_cmd_template_set(wl, CMD_PROBE_REQ, skb->data,
++				      skb->len);
++	dev_kfree_skb(skb);
+ 	if (ret < 0)
+-		wl1251_error("probe request template build failed");
++		goto out_sleep;
+ 
+ 	ret = wl1251_cmd_trigger_scan_to(wl, 0);
+ 	if (ret < 0)
 
-Thanks.
