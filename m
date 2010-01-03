@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:48734 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751500Ab0AAOTs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2010 09:19:48 -0500
-MIME-Version: 1.0
-In-Reply-To: <4B3E0061.4000003@unsolicited.net>
-References: <4B2FEE46.5030700@unsolicited.net>
-	 <8db1092f1001010540l15c8f671y1f6a4a4417eb450b@mail.gmail.com>
-	 <4B3E0061.4000003@unsolicited.net>
-Date: Fri, 1 Jan 2010 15:19:46 +0100
-Message-ID: <8db1092f1001010619j66f8b494g86efdd8ddcc3e5e7@mail.gmail.com>
-Subject: Re: 2.6.33-rc1 - Weird hard hangs when rendering 'some' web-sites in
-	Firefox
-From: Maciej Rutecki <maciej.rutecki@gmail.com>
-To: David <david@unsolicited.net>
-Cc: linux-kernel@vger.kernel.org,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from smtp1-g21.free.fr ([212.27.42.1]:45527 "EHLO smtp1-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751014Ab0ACJUZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Jan 2010 04:20:25 -0500
+From: Benoit Papillault <benoit.papillault@free.fr>
+To: dsd@gentoo.org, kune@deine-taler.de
+Cc: linux-wireless@vger.kernel.org, zd1211-devs@lists.sourceforge.net,
+	Benoit Papillault <benoit.papillault@free.fr>
+Subject: [PATCH] zd1211rw: Fix multicast filtering.
+Date: Sun,  3 Jan 2010 10:20:01 +0100
+Message-Id: <1262510401-22037-1-git-send-email-benoit.papillault@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/1/1 David <david@unsolicited.net>:
+If multicast parameter (as returned by zd_op_prepare_multicast) has
+changed, no bit in changed_flags is set. To handle this situation, we do
+not return if changed_flags is 0. If we do so, we will have some issue
+with IPv6 which uses multicast for link layer address resolution.
 
->>
->
-> Mine is a wired connection, so it seems unconnected with that. I've
-> replaced the motherboard here and have had no further problems. There is
-> now a configuration difference though as I've had to disable radeon kms
-> (with radeon.modeset=0) for the new on-board graphics.
->
-> My guess is that this is radeon related, and I'm going to set-up the old
-> motherboard in a spare case & see what I can work out.
->
+Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+---
+ drivers/net/wireless/zd1211rw/zd_mac.c |   13 +++++++------
+ 1 files changed, 7 insertions(+), 6 deletions(-)
 
-I'm not sure. I don't use radeon hardware, only Intel:
-cat /boot/config-2.6.33-rc2 | grep -i radeon
-# CONFIG_DRM_RADEON is not set
-# CONFIG_FB_RADEON is not set
-
-cat /boot/config-2.6.33-rc2 | grep -i kms
-CONFIG_DRM_KMS_HELPER=m
-# CONFIG_DRM_I915_KMS is not set
-
-Regards
-
-
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index 5313313..9cb6cbc 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -1005,12 +1005,13 @@ static void zd_op_configure_filter(struct ieee80211_hw *hw,
+ 	changed_flags &= SUPPORTED_FIF_FLAGS;
+ 	*new_flags &= SUPPORTED_FIF_FLAGS;
+ 
+-	/* changed_flags is always populated but this driver
+-	 * doesn't support all FIF flags so its possible we don't
+-	 * need to do anything */
+-	if (!changed_flags)
+-		return;
+-
++	/*
++	 * If multicast parameter (as returned by zd_op_prepare_multicast)
++	 * has changed, no bit in changed_flags is set. To handle this
++	 * situation, we do not return if changed_flags is 0. If we do so,
++	 * we will have some issue with IPv6 which uses multicast for link
++	 * layer address resolution.
++	 */
+ 	if (*new_flags & (FIF_PROMISC_IN_BSS | FIF_ALLMULTI))
+ 		zd_mc_add_all(&hash);
+ 
 -- 
-Maciej Rutecki
-http://www.maciek.unixy.pl
+1.6.3.3
+
