@@ -1,236 +1,337 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:35709 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753515Ab0AQXVS convert rfc822-to-8bit (ORCPT
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:56185 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753074Ab0ACVRz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2010 18:21:18 -0500
-Received: by fxm25 with SMTP id 25so627467fxm.21
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jan 2010 15:21:15 -0800 (PST)
-Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 18 Jan 2010 00:21:21 +0100
-Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Subject: [PATCH 2/5 V2] b43: N-PHY: implement and add multi-dimensional table
- writing
+	Sun, 3 Jan 2010 16:17:55 -0500
+Received: from saunalahti-vams (vs3-11.mail.saunalahti.fi [62.142.5.95])
+	by emh05-2.mail.saunalahti.fi (Postfix) with SMTP id 89C6D8BA1E
+	for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2010 23:08:03 +0200 (EET)
+Received: from [127.0.1.1] (a91-155-131-184.elisa-laajakaista.fi [91.155.131.184])
+	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id 6A28C27D8B
+	for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2010 23:08:02 +0200 (EET)
+Subject: [PATCH 6/9] wl1251: cleanup scanning code
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sun, 03 Jan 2010 23:08:02 +0200
+Message-ID: <20100103210802.29287.58028.stgit@tikku>
+In-Reply-To: <20100103210552.29287.20384.stgit@tikku>
+References: <20100103210552.29287.20384.stgit@tikku>
 MIME-Version: 1.0
-From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <op.u6o9tvst9lhzdc@linux-g0th.site>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+
+The current scanning code wasn't following the preferred style. Move code
+related to scan and trigger scan to commans to wl1251_cmd.c. Because
+there's now less code in wl1251_hw_scan(), the function can be now
+merged with wl1251_op_hw_scan().
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
-V2: updated to apply without fuzz
----
-  drivers/net/wireless/b43/phy_n.c       |   58 ++++++++++++++------------------
-  drivers/net/wireless/b43/tables_nphy.c |   40 ++++++++++++++++++++++
-  drivers/net/wireless/b43/tables_nphy.h |    2 +
-  3 files changed, 67 insertions(+), 33 deletions(-)
+ drivers/net/wireless/wl12xx/wl1251_cmd.c  |   82 +++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1251_cmd.h  |   17 +++-
+ drivers/net/wireless/wl12xx/wl1251_main.c |  125 ++++++-----------------------
+ 3 files changed, 117 insertions(+), 107 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 16f1f9b..6b200e5 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -1699,8 +1699,7 @@ static void b43_nphy_restore_cal(struct b43_wldev *dev)
-  		loft = &nphy->cal_cache.txcal_coeffs_5G[5];
-  	}
-
--	/* TODO: Write an N PHY table with ID 15, length 4, offset 80,
--		width 16, and data from table */
-+	b43_ntab_write_bulk(dev, B43_NTAB16(15, 80), 4, table);
-
-  	for (i = 0; i < 4; i++) {
-  		if (dev->phy.rev >= 3)
-@@ -1709,12 +1708,9 @@ static void b43_nphy_restore_cal(struct b43_wldev *dev)
-  			coef[i] = 0;
-  	}
-
--	/* TODO: Write an N PHY table with ID 15, length 4, offset 88,
--		width 16, and data from coef */
--	/* TODO: Write an N PHY table with ID 15, length 2, offset 85,
--		width 16 and data from loft */
--	/* TODO: Write an N PHY table with ID 15, length 2, offset 93,
--		width 16 and data from loft */
-+	b43_ntab_write_bulk(dev, B43_NTAB16(15, 88), 4, coef);
-+	b43_ntab_write_bulk(dev, B43_NTAB16(15, 85), 2, loft);
-+	b43_ntab_write_bulk(dev, B43_NTAB16(15, 93), 2, loft);
-
-  	if (dev->phy.rev < 2)
-  		b43_nphy_tx_iq_workaround(dev);
-@@ -1782,8 +1778,8 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
-  		b43_nphy_iq_cal_gain_params(dev, i, target, &params[i]);
-  		gain[i] = params[i].cal_gain;
-  	}
--	/* TODO: Write an N PHY Table with ID 7, length 2, offset 0x110,
--		width 16, and data pointer gain */
+diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.c b/drivers/net/wireless/wl12xx/wl1251_cmd.c
+index 770f260..fcbfbd7 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1251_cmd.c
+@@ -410,3 +410,85 @@ out:
+ 	kfree(cmd);
+ 	return ret;
+ }
 +
-+	b43_ntab_write_bulk(dev, B43_NTAB16(7, 0x110), 2, gain);
-
-  	b43_nphy_tx_cal_radio_setup(dev);
-  	b43_nphy_tx_cal_phy_setup(dev);
-@@ -1833,8 +1829,7 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
-  			}
-  		}
-
--		/* TODO: Write an N PHY Table with ID 15, length from above,
--			offset 64, width 16, and the data pointer from above */
-+		b43_ntab_write_bulk(dev, B43_NTAB16(15, 64), length, table);
-
-  		if (full) {
-  			if (dev->phy.rev >= 3)
-@@ -1902,9 +1897,8 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
-  			/* TODO: Read an N PHY Table with ID 15,
-  				length table_length, offset 96, width 16,
-  				and data pointer buffer */
--			/* TODO: Write an N PHY Table with ID 15,
--				length table_length, offset 64, width 16,
--				and data pointer buffer */
-+			b43_ntab_write_bulk(dev, B43_NTAB16(15, 64), length,
-+						buffer);
-
-  			if (type == 1 || type == 3 || type == 4)
-  				buffer[0] = diq_start;
-@@ -1916,8 +1910,7 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
-  		last = (dev->phy.rev < 3) ? 6 : 7;
-
-  		if (!mphase || nphy->mphase_cal_phase_id == last) {
--			/* TODO: Write an N PHY Table with ID 15, length 4,
--				offset 96, width 16, and data pointer buffer */
-+			b43_ntab_write_bulk(dev, B43_NTAB16(15, 96), 4, buffer);
-  			/* TODO: Read an N PHY Table with ID 15, length 4,
-  				offset 80, width 16, and data pointer buffer */
-  			if (dev->phy.rev < 3) {
-@@ -1926,14 +1919,14 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
-  				buffer[2] = 0;
-  				buffer[3] = 0;
-  			}
--			/* TODO: Write an N PHY Table with ID 15, length 4,
--				offset 88, width 16, and data pointer buffer */
--			/* TODO: Read an N PHY Table with ID 15, length 2,
--				offset 101, width 16, and data pointer buffer*/
--			/* TODO: Write an N PHY Table with ID 15, length 2,
--				offset 85, width 16, and data pointer buffer */
--			/* TODO: Write an N PHY Table with ID 15, length 2,
--				offset 93, width 16, and data pointer buffer */
-+			b43_ntab_write_bulk(dev, B43_NTAB16(15, 88), 4,
-+						buffer);
-+			b43_ntab_write_bulk(dev, B43_NTAB16(15, 101), 2,
-+						buffer);
-+			b43_ntab_write_bulk(dev, B43_NTAB16(15, 85), 2,
-+						buffer);
-+			b43_ntab_write_bulk(dev, B43_NTAB16(15, 93), 2,
-+						buffer);
-  			length = 11;
-  			if (dev->phy.rev < 3)
-  				length -= 2;
-@@ -1957,8 +1950,7 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
-  	}
-
-  	b43_nphy_tx_cal_phy_cleanup(dev);
--	/* TODO: Write an N PHY Table with ID 7, length 2, offset 0x110,
--		width 16, and data from save */
-+	b43_ntab_write_bulk(dev, B43_NTAB16(7, 0x110), 2, save);
-
-  	if (dev->phy.rev < 2 && (!mphase || nphy->mphase_cal_phase_id == last))
-  		b43_nphy_tx_iq_workaround(dev);
-@@ -2008,8 +2000,7 @@ static int b43_nphy_rev2_cal_rx_iq(struct b43_wldev *dev,
-  		b43_nphy_iq_cal_gain_params(dev, i, target, &cal_params[i]);
-  		cal_gain[i] = cal_params[i].cal_gain;
-  	}
--	/* TODO: Write an N PHY Table with ID 7, length 2, offset 0x110,
--		width 16, and data from cal_gain */
-+	b43_ntab_write_bulk(dev, B43_NTAB16(7, 0x110), 2, cal_gain);
-
-  	for (i = 0; i < 2; i++) {
-  		if (i == 0) {
-@@ -2147,8 +2138,7 @@ static int b43_nphy_rev2_cal_rx_iq(struct b43_wldev *dev,
-
-  	/* TODO: Call N PHY RF Ctrl Override with 0x400, 0, 3, 1 as arguments*/
-  	b43_nphy_force_rf_sequence(dev, B43_RFSEQ_RESET2RX);
--	/* TODO: Write an N PHY Table with ID 7, length 2, offset 0x110,
--		width 16, and data from gain_save */
-+	b43_ntab_write_bulk(dev, B43_NTAB16(7, 0x110), 2, gain_save);
-
-  	b43_nphy_stay_in_carrier_search(dev, 0);
-
-@@ -2290,8 +2280,10 @@ int b43_phy_initn(struct b43_wldev *dev)
-  	if (phy->rev >= 3) {
-  		/* TODO */
-  	} else {
--		/* TODO Write an N PHY table with ID 26, length 128, offset 192, width 32, and the data from Rev 2 TX Power Control Table */
--		/* TODO Write an N PHY table with ID 27, length 128, offset 192, width 32, and the data from Rev 2 TX Power Control Table */
-+		b43_ntab_write_bulk(dev, B43_NTAB32(26, 192), 128,
-+					b43_ntab_tx_gain_rev0_1_2);
-+		b43_ntab_write_bulk(dev, B43_NTAB32(27, 192), 128,
-+					b43_ntab_tx_gain_rev0_1_2);
-  	}
-
-  	if (nphy->phyrxchain != 3)
-diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
-index 7dff853..fc08be0 100644
---- a/drivers/net/wireless/b43/tables_nphy.c
-+++ b/drivers/net/wireless/b43/tables_nphy.c
-@@ -2952,6 +2952,46 @@ void b43_ntab_write(struct b43_wldev *dev, u32 offset, u32 value)
-  	assert_ntab_array_sizes();
-  }
-
-+void b43_ntab_write_bulk(struct b43_wldev *dev, u32 offset,
-+			  unsigned int nr_elements, const void *_data)
++int wl1251_cmd_scan(struct wl1251 *wl, u8 *ssid, size_t ssid_len,
++		    unsigned int n_channels, unsigned int n_probes)
 +{
-+	u32 type, value;
-+	const u8 *data = _data;
-+	unsigned int i;
++	struct wl1251_cmd_scan *cmd;
++	int i, ret = 0;
 +
-+	type = offset & B43_NTAB_TYPEMASK;
-+	offset &= ~B43_NTAB_TYPEMASK;
-+	B43_WARN_ON(offset > 0xFFFF);
++	wl1251_debug(DEBUG_CMD, "cmd scan");
 +
-+	b43_phy_write(dev, B43_NPHY_TABLE_ADDR, offset);
++	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
++	if (!cmd)
++		return -ENOMEM;
 +
-+	for (i = 0; i < nr_elements; i++) {
-+		switch (type) {
-+		case B43_NTAB_8BIT:
-+			value = *data;
-+			data++;
-+			B43_WARN_ON(value & ~0xFF);
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, value);
-+			break;
-+		case B43_NTAB_16BIT:
-+			value = *((u16 *)data);
-+			data += 2;
-+			B43_WARN_ON(value & ~0xFFFF);
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, value);
-+			break;
-+		case B43_NTAB_32BIT:
-+			value = *((u32 *)data);
-+			data += 4;
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATAHI, value >> 16);
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATALO,
-+					value & 0xFFFF);
-+			break;
-+		default:
-+			B43_WARN_ON(1);
-+		}
++	cmd->params.rx_config_options = cpu_to_le32(CFG_RX_ALL_GOOD);
++	cmd->params.rx_filter_options = cpu_to_le32(CFG_RX_PRSP_EN |
++						    CFG_RX_MGMT_EN |
++						    CFG_RX_BCN_EN);
++	cmd->params.scan_options = 0;
++	cmd->params.num_channels = n_channels;
++	cmd->params.num_probe_requests = n_probes;
++	cmd->params.tx_rate = cpu_to_le16(1 << 1); /* 2 Mbps */
++	cmd->params.tid_trigger = 0;
++
++	for (i = 0; i < n_channels; i++) {
++		cmd->channels[i].min_duration =
++			cpu_to_le32(WL1251_SCAN_MIN_DURATION);
++		cmd->channels[i].max_duration =
++			cpu_to_le32(WL1251_SCAN_MAX_DURATION);
++		memset(&cmd->channels[i].bssid_lsb, 0xff, 4);
++		memset(&cmd->channels[i].bssid_msb, 0xff, 2);
++		cmd->channels[i].early_termination = 0;
++		cmd->channels[i].tx_power_att = 0;
++		cmd->channels[i].channel = i + 1;
 +	}
++
++	cmd->params.ssid_len = ssid_len;
++	if (ssid)
++		memcpy(cmd->params.ssid, ssid, ssid_len);
++
++	ret = wl1251_cmd_send(wl, CMD_SCAN, cmd, sizeof(*cmd));
++	if (ret < 0) {
++		wl1251_error("cmd scan failed: %d", ret);
++		goto out;
++	}
++
++	wl1251_mem_read(wl, wl->cmd_box_addr, cmd, sizeof(*cmd));
++
++	if (cmd->header.status != CMD_STATUS_SUCCESS) {
++		wl1251_error("cmd scan status wasn't success: %d",
++			     cmd->header.status);
++		ret = -EIO;
++		goto out;
++	}
++
++out:
++	kfree(cmd);
++	return ret;
 +}
 +
-  #define ntab_upload(dev, offset, data) do { \
-  		unsigned int i;						\
-  		for (i = 0; i < (offset##_SIZE); i++)			\
-diff --git a/drivers/net/wireless/b43/tables_nphy.h b/drivers/net/wireless/b43/tables_nphy.h
-index 51636d0..d5605df 100644
---- a/drivers/net/wireless/b43/tables_nphy.h
-+++ b/drivers/net/wireless/b43/tables_nphy.h
-@@ -143,6 +143,8 @@ b43_nphy_get_chantabent(struct b43_wldev *dev, u8 channel);
-  #define B43_NTAB_TX_IQLO_CAL_CMDS_FULLCAL_REV3		12
-
-  void b43_ntab_write(struct b43_wldev *dev, u32 offset, u32 value);
-+void b43_ntab_write_bulk(struct b43_wldev *dev, u32 offset,
-+			  unsigned int nr_elements, const void *_data);
-
-  void b43_nphy_rev0_1_2_tables_init(struct b43_wldev *dev);
-  void b43_nphy_rev3plus_tables_init(struct b43_wldev *dev);
--- 
-1.6.4.2
++int wl1251_cmd_trigger_scan_to(struct wl1251 *wl, u32 timeout)
++{
++	struct wl1251_cmd_trigger_scan_to *cmd;
++	int ret;
++
++	wl1251_debug(DEBUG_CMD, "cmd trigger scan to");
++
++	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
++	if (!cmd)
++		return -ENOMEM;
++
++	cmd->timeout = timeout;
++
++	ret = wl1251_cmd_send(wl, CMD_SCAN, cmd, sizeof(*cmd));
++	if (ret < 0) {
++		wl1251_error("cmd trigger scan to failed: %d", ret);
++		goto out;
++	}
++
++out:
++	kfree(cmd);
++	return ret;
++}
+diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.h b/drivers/net/wireless/wl12xx/wl1251_cmd.h
+index dff798a..63ae319 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_cmd.h
++++ b/drivers/net/wireless/wl12xx/wl1251_cmd.h
+@@ -43,6 +43,9 @@ int wl1251_cmd_read_memory(struct wl1251 *wl, u32 addr, void *answer,
+ 			   size_t len);
+ int wl1251_cmd_template_set(struct wl1251 *wl, u16 cmd_id,
+ 			    void *buf, size_t buf_len);
++int wl1251_cmd_scan(struct wl1251 *wl, u8 *ssid, size_t ssid_len,
++		    unsigned int n_channels, unsigned int n_probes);
++int wl1251_cmd_trigger_scan_to(struct wl1251 *wl, u32 timeout);
+ 
+ /* unit ms */
+ #define WL1251_COMMAND_TIMEOUT 2000
+@@ -163,8 +166,10 @@ struct cmd_read_write_memory {
+ #define CMDMBOX_HEADER_LEN 4
+ #define CMDMBOX_INFO_ELEM_HEADER_LEN 4
+ 
++#define WL1251_SCAN_MIN_DURATION 30000
++#define WL1251_SCAN_MAX_DURATION 60000
+ 
+-struct basic_scan_parameters {
++struct wl1251_scan_parameters {
+ 	u32 rx_config_options;
+ 	u32 rx_filter_options;
+ 
+@@ -189,11 +194,11 @@ struct basic_scan_parameters {
+ 
+ 	u8 tid_trigger;
+ 	u8 ssid_len;
+-	u32 ssid[8];
++	u8 ssid[32];
+ 
+ } __attribute__ ((packed));
+ 
+-struct basic_scan_channel_parameters {
++struct wl1251_scan_ch_parameters {
+ 	u32 min_duration; /* in TU */
+ 	u32 max_duration; /* in TU */
+ 	u32 bssid_lsb;
+@@ -213,11 +218,11 @@ struct basic_scan_channel_parameters {
+ /* SCAN parameters */
+ #define SCAN_MAX_NUM_OF_CHANNELS 16
+ 
+-struct cmd_scan {
++struct wl1251_cmd_scan {
+ 	struct wl1251_cmd_header header;
+ 
+-	struct basic_scan_parameters params;
+-	struct basic_scan_channel_parameters channels[SCAN_MAX_NUM_OF_CHANNELS];
++	struct wl1251_scan_parameters params;
++	struct wl1251_scan_ch_parameters channels[SCAN_MAX_NUM_OF_CHANNELS];
+ } __attribute__ ((packed));
+ 
+ enum {
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index 6cce864..e038707 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -903,111 +903,13 @@ static int wl1251_build_probe_req(struct wl1251 *wl, u8 *ssid, size_t ssid_len)
+ 				      size);
+ }
+ 
+-static int wl1251_hw_scan(struct wl1251 *wl, u8 *ssid, size_t len,
+-			  u8 active_scan, u8 high_prio, u8 num_channels,
+-			  u8 probe_requests)
+-{
+-	struct wl1251_cmd_trigger_scan_to *trigger = NULL;
+-	struct cmd_scan *params = NULL;
+-	int i, ret;
+-	u16 scan_options = 0;
+-
+-	if (wl->scanning)
+-		return -EINVAL;
+-
+-	params = kzalloc(sizeof(*params), GFP_KERNEL);
+-	if (!params)
+-		return -ENOMEM;
+-
+-	params->params.rx_config_options = cpu_to_le32(CFG_RX_ALL_GOOD);
+-	params->params.rx_filter_options =
+-		cpu_to_le32(CFG_RX_PRSP_EN | CFG_RX_MGMT_EN | CFG_RX_BCN_EN);
+-
+-	/* High priority scan */
+-	if (!active_scan)
+-		scan_options |= SCAN_PASSIVE;
+-	if (high_prio)
+-		scan_options |= SCAN_PRIORITY_HIGH;
+-	params->params.scan_options = scan_options;
+-
+-	params->params.num_channels = num_channels;
+-	params->params.num_probe_requests = probe_requests;
+-	params->params.tx_rate = cpu_to_le16(1 << 1); /* 2 Mbps */
+-	params->params.tid_trigger = 0;
+-
+-	for (i = 0; i < num_channels; i++) {
+-		params->channels[i].min_duration = cpu_to_le32(30000);
+-		params->channels[i].max_duration = cpu_to_le32(60000);
+-		memset(&params->channels[i].bssid_lsb, 0xff, 4);
+-		memset(&params->channels[i].bssid_msb, 0xff, 2);
+-		params->channels[i].early_termination = 0;
+-		params->channels[i].tx_power_att = 0;
+-		params->channels[i].channel = i + 1;
+-		memset(params->channels[i].pad, 0, 3);
+-	}
+-
+-	for (i = num_channels; i < SCAN_MAX_NUM_OF_CHANNELS; i++)
+-		memset(&params->channels[i], 0,
+-		       sizeof(struct basic_scan_channel_parameters));
+-
+-	if (len && ssid) {
+-		params->params.ssid_len = len;
+-		memcpy(params->params.ssid, ssid, len);
+-	} else {
+-		params->params.ssid_len = 0;
+-		memset(params->params.ssid, 0, 32);
+-	}
+-
+-	ret = wl1251_build_probe_req(wl, ssid, len);
+-	if (ret < 0) {
+-		wl1251_error("PROBE request template failed");
+-		goto out;
+-	}
+-
+-	trigger = kzalloc(sizeof(*trigger), GFP_KERNEL);
+-	if (!trigger)
+-		goto out;
+-
+-	trigger->timeout = 0;
+-
+-	ret = wl1251_cmd_send(wl, CMD_TRIGGER_SCAN_TO, trigger,
+-			      sizeof(*trigger));
+-	if (ret < 0) {
+-		wl1251_error("trigger scan to failed for hw scan");
+-		goto out;
+-	}
+-
+-	wl1251_dump(DEBUG_SCAN, "SCAN: ", params, sizeof(*params));
+-
+-	wl->scanning = true;
+-
+-	ret = wl1251_cmd_send(wl, CMD_SCAN, params, sizeof(*params));
+-	if (ret < 0)
+-		wl1251_error("SCAN failed");
+-
+-	wl1251_mem_read(wl, wl->cmd_box_addr, params, sizeof(*params));
+-
+-	if (params->header.status != CMD_STATUS_SUCCESS) {
+-		wl1251_error("TEST command answer error: %d",
+-			     params->header.status);
+-		wl->scanning = false;
+-		ret = -EIO;
+-		goto out;
+-	}
+-
+-out:
+-	kfree(params);
+-	return ret;
+-
+-}
+-
+ static int wl1251_op_hw_scan(struct ieee80211_hw *hw,
+ 			     struct cfg80211_scan_request *req)
+ {
+ 	struct wl1251 *wl = hw->priv;
+-	int ret;
+-	u8 *ssid = NULL;
+ 	size_t ssid_len = 0;
++	u8 *ssid = NULL;
++	int ret;
+ 
+ 	wl1251_debug(DEBUG_MAC80211, "mac80211 hw scan");
+ 
+@@ -1018,12 +920,33 @@ static int wl1251_op_hw_scan(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&wl->mutex);
+ 
++	if (wl->scanning) {
++		wl1251_debug(DEBUG_SCAN, "scan already in progress");
++		ret = -EINVAL;
++		goto out;
++	}
++
+ 	ret = wl1251_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	ret = wl1251_hw_scan(hw->priv, ssid, ssid_len, 1, 0, 13, 3);
++	ret = wl1251_build_probe_req(wl, ssid, ssid_len);
++	if (ret < 0)
++		wl1251_error("probe request template build failed");
++
++	ret = wl1251_cmd_trigger_scan_to(wl, 0);
++	if (ret < 0)
++		goto out_sleep;
++
++	wl->scanning = true;
+ 
++	ret = wl1251_cmd_scan(wl, ssid, ssid_len, 13, 3);
++	if (ret < 0) {
++		wl->scanning = false;
++		goto out_sleep;
++	}
++
++out_sleep:
+ 	wl1251_ps_elp_sleep(wl);
+ 
+ out:
 
