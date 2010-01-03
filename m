@@ -1,800 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:62939 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932139Ab0AOVnz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2010 16:43:55 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 9/9] iwlwifi: update copyright year to 2010
-Date: Fri, 15 Jan 2010 13:43:41 -0800
-Message-Id: <1263591821-14867-10-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1263591821-14867-1-git-send-email-reinette.chatre@intel.com>
-References: <1263591821-14867-1-git-send-email-reinette.chatre@intel.com>
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:52458 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752750Ab0ACVQZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Jan 2010 16:16:25 -0500
+Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
+	by emh03-2.mail.saunalahti.fi (Postfix) with SMTP id 8B46DEB6BC
+	for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2010 23:07:38 +0200 (EET)
+Received: from [127.0.1.1] (a91-155-131-184.elisa-laajakaista.fi [91.155.131.184])
+	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id 7349727D8B
+	for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2010 23:07:37 +0200 (EET)
+Subject: [PATCH 2/9] mac80211: use PS Poll and Nullfunc templates when sending
+	such frames
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sun, 03 Jan 2010 23:07:37 +0200
+Message-ID: <20100103210737.29287.86904.stgit@tikku>
+In-Reply-To: <20100103210552.29287.20384.stgit@tikku>
+References: <20100103210552.29287.20384.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+From: Kalle Valo <kalle.valo@nokia.com>
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+To avoid duplicate code, use ieee80211_[pspoll|nullfunc]_get() to get
+templates for PS Poll and Nullfunc frames in mlme.c.
+
+Compile-tested only.
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-1000.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-fh.h  |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-3945-hw.h  |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-3945-led.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-led.h |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h  |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-5000-hw.h  |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-5000.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-6000-hw.h  |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-6000.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-led.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-led.h  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.h   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-calib.c    |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-calib.h    |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-commands.h |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-core.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.h     |    6 +++---
- drivers/net/wireless/iwlwifi/iwl-csr.h      |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-debug.h    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.c   |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-eeprom.h   |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-fh.h       |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-hcmd.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-helpers.h  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-io.h       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-led.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-led.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-power.c    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-power.h    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-prph.h     |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-rx.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-scan.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-spectrum.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-spectrum.h |    2 +-
- drivers/net/wireless/iwlwifi/iwl-sta.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-sta.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-tx.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 ++--
- 47 files changed, 63 insertions(+), 63 deletions(-)
+ net/mac80211/mlme.c |   48 +++++++++---------------------------------------
+ 1 files changed, 9 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 506429f..d5c6edb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2008-2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2008 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-fh.h b/drivers/net/wireless/iwlwifi/iwl-3945-fh.h
-index 08ce259..042f6bc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-fh.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-fh.h
-@@ -5,7 +5,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,7 +30,7 @@
-  *
-  * BSD LICENSE
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
-index 6fd10d4..3a876a8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
-@@ -5,7 +5,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,7 +30,7 @@
-  *
-  * BSD LICENSE
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-led.c b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-index a871d09..abe2b73 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-led.h b/drivers/net/wireless/iwlwifi/iwl-3945-led.h
-index 5a1033c..ce990ad 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-led.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-led.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-index d4b4988..47909f9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 28ffe4c..6472910 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index 3ec2fe3..db4137d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-index c606366..67ef562 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-@@ -5,7 +5,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,7 +30,7 @@
-  *
-  * BSD LICENSE
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index cee368d..dde0504 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000-hw.h b/drivers/net/wireless/iwlwifi/iwl-5000-hw.h
-index bc056e9..714e032 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000-hw.h
-@@ -5,7 +5,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2007 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2007 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,7 +30,7 @@
-  *
-  * BSD LICENSE
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 14ef211..a7cbf4c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2007 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2007 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000-hw.h b/drivers/net/wireless/iwlwifi/iwl-6000-hw.h
-index 9018577..ddba399 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000-hw.h
-@@ -5,7 +5,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2007 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2007 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,7 +30,7 @@
-  *
-  * BSD LICENSE
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index c5f244f..4dab7f1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2008-2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2008 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-led.c b/drivers/net/wireless/iwlwifi/iwl-agn-led.c
-index 3bccba2..1a24946 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-led.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-led.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-led.h b/drivers/net/wireless/iwlwifi/iwl-agn-led.h
-index ab55f92..a594e4f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-led.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-led.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index b93e491..6aebced 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-index affc0c5..2f0094a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index eaa309d..8db8623 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * Portions of this file are derived from the ipw3945 project, as well
-  * as portions of the ieee80211 subsystem header files.
-diff --git a/drivers/net/wireless/iwlwifi/iwl-calib.c b/drivers/net/wireless/iwlwifi/iwl-calib.c
-index dc61906..845831a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-calib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-calib.c
-@@ -5,7 +5,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2008 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2008 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,7 +30,7 @@
-  *
-  * BSD LICENSE
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-diff --git a/drivers/net/wireless/iwlwifi/iwl-calib.h b/drivers/net/wireless/iwlwifi/iwl-calib.h
-index b6cef98..2b7b1df 100644
---- a/drivers/net/wireless/iwlwifi/iwl-calib.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-calib.h
-@@ -5,7 +5,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2008 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2008 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,7 +30,7 @@
-  *
-  * BSD LICENSE
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 8dc34a3..cee5fb2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -5,7 +5,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,7 +30,7 @@
-  *
-  * BSD LICENSE
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 21bbd00..0c83ee4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2,7 +2,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2008 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2008 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 666b0e0..785331a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -5,7 +5,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2008 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2008 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,7 +30,7 @@
-  *
-  * BSD LICENSE
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -71,7 +71,7 @@ struct iwl_cmd;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 72920ee..7f771c0 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -249,30 +249,15 @@ static void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
+ void ieee80211_send_pspoll(struct ieee80211_local *local,
+ 			   struct ieee80211_sub_if_data *sdata)
+ {
+-	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct ieee80211_pspoll *pspoll;
+ 	struct sk_buff *skb;
+-	u16 fc;
  
+-	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*pspoll));
+-	if (!skb) {
+-		printk(KERN_DEBUG "%s: failed to allocate buffer for "
+-		       "pspoll frame\n", sdata->name);
++	skb = ieee80211_pspoll_get(&local->hw, &sdata->vif);
++	if (!skb)
+ 		return;
+-	}
+-	skb_reserve(skb, local->hw.extra_tx_headroom);
+-
+-	pspoll = (struct ieee80211_pspoll *) skb_put(skb, sizeof(*pspoll));
+-	memset(pspoll, 0, sizeof(*pspoll));
+-	fc = IEEE80211_FTYPE_CTL | IEEE80211_STYPE_PSPOLL | IEEE80211_FCTL_PM;
+-	pspoll->frame_control = cpu_to_le16(fc);
+-	pspoll->aid = cpu_to_le16(ifmgd->aid);
  
- #define IWLWIFI_VERSION "in-tree:"
--#define DRV_COPYRIGHT	"Copyright(c) 2003-2009 Intel Corporation"
-+#define DRV_COPYRIGHT	"Copyright(c) 2003-2010 Intel Corporation"
- #define DRV_AUTHOR     "<ilw@linux.intel.com>"
+-	/* aid in PS-Poll has its two MSBs each set to 1 */
+-	pspoll->aid |= cpu_to_le16(1 << 15 | 1 << 14);
+-
+-	memcpy(pspoll->bssid, ifmgd->bssid, ETH_ALEN);
+-	memcpy(pspoll->ta, sdata->vif.addr, ETH_ALEN);
++	pspoll = (struct ieee80211_pspoll *) skb->data;
++	pspoll->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
  
- #define IWL_PCI_DEVICE(dev, subdev, cfg) \
-diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
-index 1ec8cb4..1e00720 100644
---- a/drivers/net/wireless/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
-@@ -5,7 +5,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,7 +30,7 @@
-  *
-  * BSD LICENSE
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index 1d1e655..0facaca 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * Portions of this file are derived from the ipw3945 project.
-  *
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 38e2f9f..af00ad2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -2,7 +2,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2008 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2008 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 400545a..2c2a725 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-index 4a30969..fd37152 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-@@ -5,7 +5,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2008 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2008 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,7 +30,7 @@
-  *
-  * BSD LICENSE
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index 0cd9c02..4e1ba82 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -5,7 +5,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2008 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2008 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,7 +30,7 @@
-  *
-  * BSD LICENSE
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
-index 1342cf4..113c366 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
-@@ -5,7 +5,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,7 +30,7 @@
-  *
-  * BSD LICENSE
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-diff --git a/drivers/net/wireless/iwlwifi/iwl-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-index 87d684e..86783c2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-@@ -2,7 +2,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2008 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2008 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-helpers.h b/drivers/net/wireless/iwlwifi/iwl-helpers.h
-index bd0b12e..45af5bb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-helpers.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-helpers.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * Portions of this file are derived from the ipw3945 project, as well
-  * as portions of the ieee80211 subsystem header files.
-diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
-index e552d4c..c719baf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-io.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-io.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * Portions of this file are derived from the ipw3945 project.
-  *
-diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
-index 46c7a95..a6f9c91 100644
---- a/drivers/net/wireless/iwlwifi/iwl-led.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-led.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-led.h b/drivers/net/wireless/iwlwifi/iwl-led.h
-index f47f053..49a70ba 100644
---- a/drivers/net/wireless/iwlwifi/iwl-led.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-led.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
-index 8ccc0bb..8599444 100644
---- a/drivers/net/wireless/iwlwifi/iwl-power.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-power.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2007 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2007 - 2010 Intel Corporation. All rights reserved.
-  *
-  * Portions of this file are derived from the ipw3945 project, as well
-  * as portions of the ieee80211 subsystem header files.
-diff --git a/drivers/net/wireless/iwlwifi/iwl-power.h b/drivers/net/wireless/iwlwifi/iwl-power.h
-index 310c32e..5db91c1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-power.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-power.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2007 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2007 - 2010 Intel Corporation. All rights reserved.
-  *
-  * Portions of this file are derived from the ipw3945 project, as well
-  * as portions of the ieee80211 subsystem header files.
-diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
-index 6d95832..d2d2a91 100644
---- a/drivers/net/wireless/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
-@@ -5,7 +5,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,7 +30,7 @@
-  *
-  * BSD LICENSE
-  *
-- * Copyright(c) 2005 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2005 - 2010 Intel Corporation. All rights reserved.
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 07bdba9..eb45f8b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * Portions of this file are derived from the ipw3945 project, as well
-  * as portions of the ieee80211 subsystem header files.
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index fa1c89b..ceb91f9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -2,7 +2,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2008 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2008 - 2010 Intel Corporation. All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/iwlwifi/iwl-spectrum.c b/drivers/net/wireless/iwlwifi/iwl-spectrum.c
-index 1ea5cd3..da166d1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-spectrum.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-spectrum.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * Portions of this file are derived from the ipw3945 project, as well
-  * as portions of the ieee80211 subsystem header files.
-diff --git a/drivers/net/wireless/iwlwifi/iwl-spectrum.h b/drivers/net/wireless/iwlwifi/iwl-spectrum.h
-index a77c1e6..af6babe 100644
---- a/drivers/net/wireless/iwlwifi/iwl-spectrum.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-spectrum.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * Portions of this file are derived from the ieee80211 subsystem header files.
-  *
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index cde09a8..8afa39b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * Portions of this file are derived from the ipw3945 project, as well
-  * as portions of the ieee80211 subsystem header files.
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
-index 8d052de..8c6850d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * Portions of this file are derived from the ipw3945 project, as well
-  * as portions of the ieee80211 subsystem header files.
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 87ce2bd..d365d13 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * Portions of this file are derived from the ipw3945 project, as well
-  * as portions of the ieee80211 subsystem header files.
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 8bbcc54..c46f988 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-  *
-  * Portions of this file are derived from the ipw3945 project, as well
-  * as portions of the ieee80211 subsystem header files.
-@@ -77,7 +77,7 @@
- #endif
+ 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+ 	ieee80211_tx_skb(sdata, skb);
+@@ -283,30 +268,15 @@ void ieee80211_send_nullfunc(struct ieee80211_local *local,
+ 			     int powersave)
+ {
+ 	struct sk_buff *skb;
+-	struct ieee80211_hdr *nullfunc;
+-	__le16 fc;
++	struct ieee80211_hdr_3addr *nullfunc;
  
- #define DRV_VERSION  IWLWIFI_VERSION VD VS
--#define DRV_COPYRIGHT	"Copyright(c) 2003-2009 Intel Corporation"
-+#define DRV_COPYRIGHT	"Copyright(c) 2003-2010 Intel Corporation"
- #define DRV_AUTHOR     "<ilw@linux.intel.com>"
+-	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION))
++	skb = ieee80211_nullfunc_get(&local->hw, &sdata->vif);
++	if (!skb)
+ 		return;
  
- MODULE_DESCRIPTION(DRV_DESCRIPTION);
--- 
-1.6.3.3
+-	skb = dev_alloc_skb(local->hw.extra_tx_headroom + 24);
+-	if (!skb) {
+-		printk(KERN_DEBUG "%s: failed to allocate buffer for nullfunc "
+-		       "frame\n", sdata->name);
+-		return;
+-	}
+-	skb_reserve(skb, local->hw.extra_tx_headroom);
+-
+-	nullfunc = (struct ieee80211_hdr *) skb_put(skb, 24);
+-	memset(nullfunc, 0, 24);
+-	fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_NULLFUNC |
+-			 IEEE80211_FCTL_TODS);
++	nullfunc = (struct ieee80211_hdr_3addr *) skb->data;
+ 	if (powersave)
+-		fc |= cpu_to_le16(IEEE80211_FCTL_PM);
+-	nullfunc->frame_control = fc;
+-	memcpy(nullfunc->addr1, sdata->u.mgd.bssid, ETH_ALEN);
+-	memcpy(nullfunc->addr2, sdata->vif.addr, ETH_ALEN);
+-	memcpy(nullfunc->addr3, sdata->u.mgd.bssid, ETH_ALEN);
++		nullfunc->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
+ 
+ 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+ 	ieee80211_tx_skb(sdata, skb);
 
