@@ -1,42 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:49108 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753172Ab0ADQhj (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:41699 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753098Ab0ACVSi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2010 11:37:39 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
-Subject: [PATCH] cfg80211: fix syntax error on user regulatory hints
-Date: Mon,  4 Jan 2010 11:37:39 -0500
-Message-Id: <1262623059-6216-1-git-send-email-lrodriguez@atheros.com>
+	Sun, 3 Jan 2010 16:18:38 -0500
+Received: from saunalahti-vams (vs3-11.mail.saunalahti.fi [62.142.5.95])
+	by emh07-2.mail.saunalahti.fi (Postfix) with SMTP id 0A02E18D0B3
+	for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2010 23:08:16 +0200 (EET)
+Received: from [127.0.1.1] (a91-155-131-184.elisa-laajakaista.fi [91.155.131.184])
+	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id EA68F27D92
+	for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2010 23:08:14 +0200 (EET)
+Subject: [PATCH 8/9] wl1251: use mac80211 provided channel parameters in
+	scanning
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sun, 03 Jan 2010 23:08:14 +0200
+Message-ID: <20100103210814.29287.10294.stgit@tikku>
+In-Reply-To: <20100103210552.29287.20384.stgit@tikku>
+References: <20100103210552.29287.20384.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a syntax error when setting up the user regulatory
-hint. This change yields the same exact binary object though
-so it ends up just being a syntax typo fix, fortunately.
+From: Kalle Valo <kalle.valo@nokia.com>
 
-Cc: stable@kernel.org
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+The number of channels to be used in scan was hard coded in wl1251. The
+proper way is to use the channels array provided by mac80211.
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
- net/wireless/reg.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/wl12xx/wl1251_cmd.c  |    3 ++-
+ drivers/net/wireless/wl12xx/wl1251_cmd.h  |    5 +++++
+ drivers/net/wireless/wl12xx/wl1251_main.c |    3 ++-
+ 3 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 87ea60d..80930bb 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1685,7 +1685,7 @@ int regulatory_hint_user(const char *alpha2)
- 	request->wiphy_idx = WIPHY_IDX_STALE;
- 	request->alpha2[0] = alpha2[0];
- 	request->alpha2[1] = alpha2[1];
--	request->initiator = NL80211_REGDOM_SET_BY_USER,
-+	request->initiator = NL80211_REGDOM_SET_BY_USER;
+diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.c b/drivers/net/wireless/wl12xx/wl1251_cmd.c
+index fcbfbd7..0320b47 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1251_cmd.c
+@@ -412,6 +412,7 @@ out:
+ }
  
- 	queue_regulatory_request(request);
+ int wl1251_cmd_scan(struct wl1251 *wl, u8 *ssid, size_t ssid_len,
++		    struct ieee80211_channel *channels[],
+ 		    unsigned int n_channels, unsigned int n_probes)
+ {
+ 	struct wl1251_cmd_scan *cmd;
+@@ -442,7 +443,7 @@ int wl1251_cmd_scan(struct wl1251 *wl, u8 *ssid, size_t ssid_len,
+ 		memset(&cmd->channels[i].bssid_msb, 0xff, 2);
+ 		cmd->channels[i].early_termination = 0;
+ 		cmd->channels[i].tx_power_att = 0;
+-		cmd->channels[i].channel = i + 1;
++		cmd->channels[i].channel = channels[i]->hw_value;
+ 	}
  
--- 
-1.6.3.3
+ 	cmd->params.ssid_len = ssid_len;
+diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.h b/drivers/net/wireless/wl12xx/wl1251_cmd.h
+index 63ae319..4ad67ca 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_cmd.h
++++ b/drivers/net/wireless/wl12xx/wl1251_cmd.h
+@@ -27,6 +27,8 @@
+ 
+ #include "wl1251.h"
+ 
++#include <net/cfg80211.h>
++
+ struct acx_header;
+ 
+ int wl1251_cmd_send(struct wl1251 *wl, u16 type, void *buf, size_t buf_len);
+@@ -44,6 +46,7 @@ int wl1251_cmd_read_memory(struct wl1251 *wl, u32 addr, void *answer,
+ int wl1251_cmd_template_set(struct wl1251 *wl, u16 cmd_id,
+ 			    void *buf, size_t buf_len);
+ int wl1251_cmd_scan(struct wl1251 *wl, u8 *ssid, size_t ssid_len,
++		    struct ieee80211_channel *channels[],
+ 		    unsigned int n_channels, unsigned int n_probes);
+ int wl1251_cmd_trigger_scan_to(struct wl1251 *wl, u32 timeout);
+ 
+@@ -169,6 +172,8 @@ struct cmd_read_write_memory {
+ #define WL1251_SCAN_MIN_DURATION 30000
+ #define WL1251_SCAN_MAX_DURATION 60000
+ 
++#define WL1251_SCAN_NUM_PROBES 3
++
+ struct wl1251_scan_parameters {
+ 	u32 rx_config_options;
+ 	u32 rx_filter_options;
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index 1db9722..4728983 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -878,7 +878,8 @@ static int wl1251_op_hw_scan(struct ieee80211_hw *hw,
+ 
+ 	wl->scanning = true;
+ 
+-	ret = wl1251_cmd_scan(wl, ssid, ssid_len, 13, 3);
++	ret = wl1251_cmd_scan(wl, ssid, ssid_len, req->channels,
++			      req->n_channels, WL1251_SCAN_NUM_PROBES);
+ 	if (ret < 0) {
+ 		wl->scanning = false;
+ 		goto out_sleep;
 
