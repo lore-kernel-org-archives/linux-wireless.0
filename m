@@ -1,59 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.irobot.com ([206.83.81.187]:48327 "EHLO smtp1.irobot.com"
+Received: from mail.atheros.com ([12.36.123.2]:29284 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755023Ab0AUUIW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 15:08:22 -0500
-Message-ID: <4B58B432.5050200@irobot.com>
-Date: Thu, 21 Jan 2010 12:08:18 -0800
-From: Adam Wozniak <awozniak@irobot.com>
+	id S1750881Ab0ACGEj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Jan 2010 01:04:39 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sat, 02 Jan 2010 22:04:39 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Subject: Re: FYI - new compat-wireless based on 2.6.33-rc4
-References: <43e72e891001201213x6a2c203dl7121f2dde6d61fb9@mail.gmail.com> 	<4B5897C8.2080006@irobot.com> <43e72e891001211012y4f4c8721t7eb9e0eea0221820@mail.gmail.com>
-In-Reply-To: <43e72e891001211012y4f4c8721t7eb9e0eea0221820@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="iso-2022-jp"
+Message-ID: <19264.14181.214609.819450@gargle.gargle.HOWL>
+Date: Sun, 3 Jan 2010 11:51:25 +0530
+To: Bob Copeland <me@bobcopeland.com>
+CC: <lucisandor@gmail.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath5k-devel] var/log/messages filling quickly
+In-Reply-To: <b6c5339f0912301049r773e083do6afd182eb7ad993c@mail.gmail.com>
+References: <c775b4470912300642o2457d712m20dfb48c4c3508df@mail.gmail.com>
+	<b6c5339f0912301049r773e083do6afd182eb7ad993c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis --
+Bob Copeland wrote:
+> On Wed, Dec 30, 2009 at 9:42 AM, Lucian  andor <lucisandor@gmail.com> wrote:
+> > Hi all,
+> > I run an Ad-hoc network, using a SuSE 11.2 computer, kernel 2.6.32-5.5
+> > from SuSE (probably modifed by them.) If I turn off all the other
+> > computers in the network, the ath5k/kernel combination writes 20 times
+> > per second to the system log /var/log/messages:
+> >
+> > Dec 28 14:10:31 battlecruiser kernel: [  929.933020] wlan0: No active
+> > IBSS STAs - trying to scan for other IBSS networks with same SSID
+> > (merge)
+> 
+> Turn off CONFIG_MAC80211_IBSS_DEBUG in the kernel config
+> (or ask SuSE to do the same).  You can't turn it off at
+> runtime, but you could turn off kernel debug messages in
+> syslogd.
+> 
+> However, this is only supposed to happen every 30s if I
+> read the code right.  Maybe someone on linux-wireless
+> knows how this can happen?
 
-I also seem to be having issues with firmware loading.  Any clues would 
-be helpful.
+This patch (in Linus' tree) apparently didn't make it to 2.6.32.
 
-I have a Gumstix Overo Fire with a built in libertas_sdio, and an ar9170usb
+commit 450aae3d7b60a970f266349a837dfb30a539198b
+Author: Sujith <Sujith.Manoharan@atheros.com>
+Date:   Mon Nov 2 12:33:23 2009 +0530
 
-It finds the libertas firmware just fine, but not the ar9170 firmware.
+    mac80211: Fix IBSS merge
 
-I'm using a 2.6.29 kernel.  This worked fine with 
-compat-wireless-2009-11-17.  All the firmware files are in /lib/firmware.
+    Currently, in IBSS mode, a single creator would go into
+    a loop trying to merge/scan. This happens because the IBSS timer is
+    rearmed on finishing a scan and the subsequent
+    timer invocation requests another scan immediately.
 
-Here's some dmesg output:
+    This patch fixes this issue by checking if we have just completed
+    a scan run trying to merge with other IBSS networks.
 
-[   18.834564] lib80211: common routines for IEEE802.11 drivers
-[   18.834564] lib80211_crypt: registered algorithm 'NULL'
-[   18.951324] libertas_sdio: Libertas SDIO driver
-[   18.951354] libertas_sdio: Copyright Pierre Ossman
-[   18.974456] libertas_sdio mmc1:0001:1: firmware: requesting 
-sd8686_helper.bin
-[   21.569885] Generic kernel compatibility enabled based on linux-next 
-next-20100113
-[   21.583374] libertas_sdio mmc1:0001:1: firmware: requesting sd8686.bin
-[   21.845703] cfg80211: Calling CRDA to update world regulatory domain
-[   22.728393] ar9170usb 2-2.4:1.0: usb_probe_interface
-[   22.728424] ar9170usb 2-2.4:1.0: usb_probe_interface - got id
-[   22.818023] usb 2-2.4: reset high speed USB device using ehci-omap 
-and address 3
-[   23.028930] libertas: 00:19:88:21:57:9e, fw 9.70.3p24, cap 0x00000303
-[   23.044372] eth0 (libertas_sdio): not using net_device_ops yet
-[   23.091583] libertas: PREP_CMD: command 0x00a3 failed: 2
-[   23.107025] libertas: PREP_CMD: command 0x00a3 failed: 2
-[   23.107238] libertas: eth0: Marvell WLAN 802.11 adapter
-[   23.973846] usb 2-2.4: firmware: requesting ar9170.fw
-[   83.974090] usb 2-2.4: ar9170.fw firmware file not found, trying old 
-firmware...
-[   83.981536] usb 2-2.4: firmware: requesting ar9170-1.fw
-[  143.982055] usb 2-2.4: file with init values not found.
-[  143.987365] ar9170usb: probe of 2-2.4:1.0 failed with error -2
+    Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
+
+Sujith
