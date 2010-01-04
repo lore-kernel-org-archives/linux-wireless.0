@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:56724 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752192Ab0AOCAw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2010 21:00:52 -0500
-Message-ID: <4B4FCC50.2020206@openwrt.org>
-Date: Fri, 15 Jan 2010 03:00:48 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2 1/3] mac80211: force use_short_slot=true for 5GHz
-References: <4B4FC46B.6000705@openwrt.org>
-In-Reply-To: <4B4FC46B.6000705@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from fw.wantstofly.org ([80.101.37.227]:52808 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753695Ab0ADU4U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jan 2010 15:56:20 -0500
+Date: Mon, 4 Jan 2010 21:56:19 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 10/14] mwl8k: add support for 88w8363 in STA mode
+Message-ID: <20100104205619.GJ1735@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Normally 5GHz does not have a concept of long vs short slot time,
-however the slot time that it ends up using is the same as for 2.4 GHZ
-and use_short_slot == true
-Because of that, it makes more sense to force use_short_slot = true
-whenever 5 GHz is being used, so that this particular check does not
-have to be in every single driver that uses this flag.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
 ---
-v2: sorry, forgot one chunk of the patch
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -670,6 +670,8 @@ static u32 ieee80211_handle_bss_capabili
- 	}
+ drivers/net/wireless/mwl8k.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index fac8864..5f4f26e 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -3346,11 +3346,17 @@ static void mwl8k_finalize_join_worker(struct work_struct *work)
+ }
  
- 	use_short_slot = !!(capab & WLAN_CAPABILITY_SHORT_SLOT_TIME);
-+	if (sdata->local->hw.conf.channel->band == IEEE80211_BAND_5GHZ)
-+		use_short_slot = true;
+ enum {
+-	MWL8687 = 0,
++	MWL8363 = 0,
++	MWL8687,
+ 	MWL8366,
+ };
  
- 	if (use_protection != bss_conf->use_cts_prot) {
- 		bss_conf->use_cts_prot = use_protection;
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1087,6 +1087,13 @@ static int ieee80211_change_bss(struct w
- 			params->use_short_preamble;
- 		changed |= BSS_CHANGED_ERP_PREAMBLE;
- 	}
-+
-+	if (!sdata->vif.bss_conf.use_short_slot &&
-+	    sdata->local->hw.conf.channel->band == IEEE80211_BAND_5GHZ) {
-+		sdata->vif.bss_conf.use_short_slot = true;
-+		changed |= BSS_CHANGED_ERP_SLOT;
-+	}
-+
- 	if (params->use_short_slot_time >= 0) {
- 		sdata->vif.bss_conf.use_short_slot =
- 			params->use_short_slot_time;
+ static struct mwl8k_device_info mwl8k_info_tbl[] __devinitdata = {
++	[MWL8363] = {
++		.part_name	= "88w8363",
++		.helper_image	= "mwl8k/helper_8363.fw",
++		.fw_image	= "mwl8k/fmimage_8363.fw",
++	},
+ 	[MWL8687] = {
+ 		.part_name	= "88w8687",
+ 		.helper_image	= "mwl8k/helper_8687.fw",
+@@ -3365,6 +3371,8 @@ static struct mwl8k_device_info mwl8k_info_tbl[] __devinitdata = {
+ };
+ 
+ static DEFINE_PCI_DEVICE_TABLE(mwl8k_pci_id_table) = {
++	{ PCI_VDEVICE(MARVELL, 0x2a0c), .driver_data = MWL8363, },
++	{ PCI_VDEVICE(MARVELL, 0x2a24), .driver_data = MWL8363, },
+ 	{ PCI_VDEVICE(MARVELL, 0x2a2b), .driver_data = MWL8687, },
+ 	{ PCI_VDEVICE(MARVELL, 0x2a30), .driver_data = MWL8687, },
+ 	{ PCI_VDEVICE(MARVELL, 0x2a40), .driver_data = MWL8366, },
+-- 
+1.5.6.4
