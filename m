@@ -1,85 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:43211 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752764Ab0ABQoU convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43325 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752260Ab0ADPkl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jan 2010 11:44:20 -0500
-Received: by fxm25 with SMTP id 25so7713022fxm.21
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Jan 2010 08:44:19 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <b170af451001020840i4bb5e752gcf960e632ae3e7c0@mail.gmail.com>
-References: <op.u5wyi5dd9lhzdc@linux-g0th.site> <69e28c911001020826q575f65fbp6b48232e83392dcb@mail.gmail.com>
-	<b170af451001020840i4bb5e752gcf960e632ae3e7c0@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sat, 2 Jan 2010 17:43:59 +0100
-Message-ID: <69e28c911001020843n42e588beraa99ea18474b1e0@mail.gmail.com>
-Subject: Re: [PATCH] b43: Add new SSB's core id for BCM4328
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-2
+	Mon, 4 Jan 2010 10:40:41 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, joshuacov@googlemail.com,
+	stephenbeahm@comcast.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
+	David Quan <david.quan@atheros.com>
+Subject: [PATCH] ath5k: Fix eeprom checksum check for custom sized eeproms
+Date: Mon,  4 Jan 2010 10:40:39 -0500
+Message-Id: <1262619639-21426-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/1/2 Rafa³ Mi³ecki <zajec5@gmail.com>:
-> W dniu 2 stycznia 2010 17:26 u¿ytkownik Gábor Stefanik
-> <netrolller.3d@gmail.com> napisa³:
->> 2010/1/2 Rafa³ Mi³ecki <zajec5@gmail.com>:
->>> Finally I've possibility to test my Christmas-gift N-PHY :) b43 didn't
->>> really "notice" it, so I needed to write this little patch. Now b43 at least
->>> look for firmware for my card.
->>>
->>> Does this patch look OK?
->>>
->>> This time I post from Opera mail so I hope white-spaces will be fine.
->>>
->>> From 9b3ea4f29b038f732aba737323e2f89b275ce1ab Mon Sep 17 00:00:00 2001
->>> From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
->>> Date: Sat, 2 Jan 2010 16:58:16 +0100
->>> Subject: [PATCH] b43: Add new SSB's core id for BCM4328
->>> MIME-Version: 1.0
->>> Content-Type: text/plain; charset=UTF-8
->>> Content-Transfer-Encoding: 8bit
->>>
->>> Following line shows my BCM4328 detected on SSB. We didn't include 0x0C rev.
->>> ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0C, vendor 0x4243)
->>>
->>> Signed-off-by: Rafa³ Mi³ecki <zajec5@gmail.com>
->>> ---
->>>  drivers/net/wireless/b43/main.c |    1 +
->>>  1 files changed, 1 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/b43/main.c
->>> b/drivers/net/wireless/b43/main.c
->>> index 098dda1..3aa45b8 100644
->>> --- a/drivers/net/wireless/b43/main.c
->>> +++ b/drivers/net/wireless/b43/main.c
->>> @@ -110,6 +110,7 @@ static const struct ssb_device_id b43_ssb_tbl[] = {
->>>        SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 9),
->>>        SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 10),
->>>        SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 11),
->>> +       SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 12),
->>
->> Rev.14 is also missing (which AFAIK is used by some LP cards).
->
-> Thanks, I'll post patch for that as well. Is adding this 0x0C (==13)
-> fine in this form? Or maybe we should use ifdef CONFIG_B43_NPHY for
-> some reason?
+Commit 8bf3d79bc401ca417ccf9fc076d3295d1a71dbf5 enabled EEPROM
+checksum checks to avoid bogus bug reports but failed to address
+updating the code to consider devices with custom EEPROM sizes.
+Devices with custom sized EEPROMs have the upper limit size stuffed
+in the EEPROM. Use this as the upper limit instead of the static
+default size. In case of a checksum error also provide back the
+max size and whether or not this was the default size or a custom
+one. If the EEPROM is busted we add a failsafe check to ensure
+we don't loop forever or try to read bogus areas of hardware.
 
-I would say it's OK this way (BTW 0x0C == 12); we also didn't put
-rev.15 under CONFIG_B43_PHY_LP.
+This closes bug 14874
 
-(BTW I'm planning to rename CONFIG_B43_NPHY to CONFIG_B43_PHY_N in
-preparation for further PHY types, as well as the ability to only
-build certain PHYs as needed if EMBEDDED is set - a kernel for an
-LP-PHY SoC might save some space by not building G-PHY code.)
+http://bugzilla.kernel.org/show_bug.cgi?id=14874
 
->
-> --
-> Rafa³
->
+Cc: stable@kernel.org
+Cc: David Quan <david.quan@atheros.com>
+Cc: Stephen Beahm <stephenbeahm@comcast.net>
+Reported-by: Joshua Covington <joshuacov@googlemail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
+This should apply on >= 2.6.32.2 cleanly. This is not applicable to
+older kernels.
 
+ drivers/net/wireless/ath/ath5k/eeprom.c |   32 ++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath5k/eeprom.h |    8 +++++++
+ 2 files changed, 37 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
+index 5d1c867..6a3f4da 100644
+--- a/drivers/net/wireless/ath/ath5k/eeprom.c
++++ b/drivers/net/wireless/ath/ath5k/eeprom.c
+@@ -97,7 +97,7 @@ ath5k_eeprom_init_header(struct ath5k_hw *ah)
+ 	struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
+ 	int ret;
+ 	u16 val;
+-	u32 cksum, offset;
++	u32 cksum, offset, eep_max = AR5K_EEPROM_INFO_MAX;
+ 
+ 	/*
+ 	 * Read values from EEPROM and store them in the capability structure
+@@ -116,12 +116,38 @@ ath5k_eeprom_init_header(struct ath5k_hw *ah)
+ 	 * Validate the checksum of the EEPROM date. There are some
+ 	 * devices with invalid EEPROMs.
+ 	 */
+-	for (cksum = 0, offset = 0; offset < AR5K_EEPROM_INFO_MAX; offset++) {
++	AR5K_EEPROM_READ(AR5K_EEPROM_SIZE_UPPER, val);
++	if (val) {
++		eep_max = (val & AR5K_EEPROM_SIZE_UPPER_MASK) <<
++			   AR5K_EEPROM_SIZE_ENDLOC_SHIFT;
++		AR5K_EEPROM_READ(AR5K_EEPROM_SIZE_LOWER, val);
++		eep_max = (eep_max | val) - AR5K_EEPROM_INFO_BASE;
++
++		/*
++		 * Fail safe check to prevent stupid loops due
++		 * to busted EEPROMs. XXX: This value is likely too
++		 * big still, waiting on a better value.
++		 */
++		if (eep_max > (3 * AR5K_EEPROM_INFO_MAX)) {
++			ATH5K_ERR(ah->ah_sc, "Invalid max custom EEPROM size: "
++				  "%d (0x%04x) max expected: %d (0x%04x)\n",
++				  eep_max, eep_max,
++				  3 * AR5K_EEPROM_INFO_MAX,
++				  3 * AR5K_EEPROM_INFO_MAX);
++			return -EIO;
++		}
++	}
++
++	for (cksum = 0, offset = 0; offset < eep_max; offset++) {
+ 		AR5K_EEPROM_READ(AR5K_EEPROM_INFO(offset), val);
+ 		cksum ^= val;
+ 	}
+ 	if (cksum != AR5K_EEPROM_INFO_CKSUM) {
+-		ATH5K_ERR(ah->ah_sc, "Invalid EEPROM checksum 0x%04x\n", cksum);
++		ATH5K_ERR(ah->ah_sc, "Invalid EEPROM "
++			  "checksum: 0x%04x eep_max: 0x%04x (%s)\n",
++			  cksum, eep_max,
++			  eep_max == AR5K_EEPROM_INFO_MAX ?
++				"default size" : "custom size");
+ 		return -EIO;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/eeprom.h b/drivers/net/wireless/ath/ath5k/eeprom.h
+index 0123f35..473a483 100644
+--- a/drivers/net/wireless/ath/ath5k/eeprom.h
++++ b/drivers/net/wireless/ath/ath5k/eeprom.h
+@@ -37,6 +37,14 @@
+ #define AR5K_EEPROM_RFKILL_POLARITY_S	1
+ 
+ #define AR5K_EEPROM_REG_DOMAIN		0x00bf	/* EEPROM regdom */
++
++/* FLASH(EEPROM) Defines for AR531X chips */
++#define AR5K_EEPROM_SIZE_LOWER		0x1b /* size info -- lower */
++#define AR5K_EEPROM_SIZE_UPPER		0x1c /* size info -- upper */
++#define AR5K_EEPROM_SIZE_UPPER_MASK	0xfff0
++#define AR5K_EEPROM_SIZE_UPPER_SHIFT	4
++#define AR5K_EEPROM_SIZE_ENDLOC_SHIFT	12
++
+ #define AR5K_EEPROM_CHECKSUM		0x00c0	/* EEPROM checksum */
+ #define AR5K_EEPROM_INFO_BASE		0x00c0	/* EEPROM header */
+ #define AR5K_EEPROM_INFO_MAX		(0x400 - AR5K_EEPROM_INFO_BASE)
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.6.3.3
+
