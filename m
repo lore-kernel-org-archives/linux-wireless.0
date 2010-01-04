@@ -1,122 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:37645 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751242Ab0AQMD1 convert rfc822-to-8bit (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:52800 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754035Ab0ADUzX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2010 07:03:27 -0500
-Received: by fxm25 with SMTP id 25so298468fxm.21
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jan 2010 04:03:25 -0800 (PST)
-Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
-Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Sun, 17 Jan 2010 13:03:28 +0100
-Subject: [PATCH 1/7] b43: N-PHY: implement RX PHY cleanup and setup
-MIME-Version: 1.0
-From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <op.u6oefxwh9lhzdc@linux-g0th.site>
+	Mon, 4 Jan 2010 15:55:23 -0500
+Date: Mon, 4 Jan 2010 21:55:21 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 06/14] mwl8k: remove mwl8k_vif::bssid, which is now useless
+Message-ID: <20100104205521.GF1735@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
 ---
-  drivers/net/wireless/b43/phy_n.c |   82 ++++++++++++++++++++++++++++++++++++++
-  1 files changed, 82 insertions(+), 0 deletions(-)
+ drivers/net/wireless/mwl8k.c |   19 +++++--------------
+ 1 files changed, 5 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 4a817e3..4a1853b 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -579,6 +579,88 @@ static void b43_nphy_calc_rx_iq_comp(struct b43_wldev *dev, u8 mask)
-  	b43_nphy_rx_iq_coeffs(dev, true, &new);
-  }
-
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/RxCalPhyCleanup */
-+static void b43_nphy_rx_cal_phy_cleanup(struct b43_wldev *dev, u8 core)
-+{
-+	u16 *regs = dev->phy.n->tx_rx_cal_phy_saveregs;
-+
-+	b43_phy_write(dev, B43_NPHY_RFSEQCA, regs[0]);
-+	if (core == 0) {
-+		b43_phy_write(dev, B43_NPHY_AFECTL_C1, regs[1]);
-+		b43_phy_write(dev, B43_NPHY_AFECTL_OVER1, regs[2]);
-+	} else {
-+		b43_phy_write(dev, B43_NPHY_AFECTL_C2, regs[1]);
-+		b43_phy_write(dev, B43_NPHY_AFECTL_OVER, regs[2]);
-+	}
-+	b43_phy_write(dev, B43_NPHY_RFCTL_INTC1, regs[3]);
-+	b43_phy_write(dev, B43_NPHY_RFCTL_INTC2, regs[4]);
-+	b43_phy_write(dev, B43_NPHY_RFCTL_RSSIO1, regs[5]);
-+	b43_phy_write(dev, B43_NPHY_RFCTL_RSSIO2, regs[6]);
-+	b43_phy_write(dev, B43_NPHY_TXF_40CO_B1S1, regs[7]);
-+	b43_phy_write(dev, B43_NPHY_RFCTL_OVER, regs[8]);
-+	b43_phy_write(dev, B43_NPHY_PAPD_EN0, regs[9]);
-+	b43_phy_write(dev, B43_NPHY_PAPD_EN1, regs[10]);
-+}
-+
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/RxCalPhySetup */
-+static void b43_nphy_rx_cal_phy_setup(struct b43_wldev *dev, u8 core)
-+{
-+	u8 rxval, txval;
-+	u16 *regs = dev->phy.n->tx_rx_cal_phy_saveregs;
-+
-+	regs[0] = b43_phy_read(dev, B43_NPHY_RFSEQCA);
-+	if (core == 0) {
-+		regs[1] = b43_phy_read(dev, B43_NPHY_AFECTL_C1);
-+		regs[2] = b43_phy_read(dev, B43_NPHY_AFECTL_OVER1);
-+	} else {
-+		regs[1] = b43_phy_read(dev, B43_NPHY_AFECTL_C2);
-+		regs[2] = b43_phy_read(dev, B43_NPHY_AFECTL_OVER);
-+	}
-+	regs[3] = b43_phy_read(dev, B43_NPHY_RFCTL_INTC1);
-+	regs[4] = b43_phy_read(dev, B43_NPHY_RFCTL_INTC2);
-+	regs[5] = b43_phy_read(dev, B43_NPHY_RFCTL_RSSIO1);
-+	regs[6] = b43_phy_read(dev, B43_NPHY_RFCTL_RSSIO2);
-+	regs[7] = b43_phy_read(dev, B43_NPHY_TXF_40CO_B1S1);
-+	regs[8] = b43_phy_read(dev, B43_NPHY_RFCTL_OVER);
-+	regs[9] = b43_phy_read(dev, B43_NPHY_PAPD_EN0);
-+	regs[10] = b43_phy_read(dev, B43_NPHY_PAPD_EN1);
-+
-+	b43_phy_mask(dev, B43_NPHY_PAPD_EN0, ~0x0001);
-+	b43_phy_mask(dev, B43_NPHY_PAPD_EN1, ~0x0001);
-+
-+	b43_phy_maskset(dev, B43_NPHY_RFSEQCA, (u16)~B43_NPHY_RFSEQCA_RXDIS,
-+			((1 - core) << B43_NPHY_RFSEQCA_RXDIS_SHIFT));
-+	b43_phy_maskset(dev, B43_NPHY_RFSEQCA, ~B43_NPHY_RFSEQCA_TXEN,
-+			((1 - core) << B43_NPHY_RFSEQCA_TXEN_SHIFT));
-+	b43_phy_maskset(dev, B43_NPHY_RFSEQCA, ~B43_NPHY_RFSEQCA_RXEN,
-+			(core << B43_NPHY_RFSEQCA_RXEN_SHIFT));
-+	b43_phy_maskset(dev, B43_NPHY_RFSEQCA, ~B43_NPHY_RFSEQCA_TXDIS,
-+			(core << B43_NPHY_RFSEQCA_TXDIS_SHIFT));
-+
-+	if (core == 0) {
-+		b43_phy_mask(dev, B43_NPHY_AFECTL_C1, ~0x0007);
-+		b43_phy_set(dev, B43_NPHY_AFECTL_OVER1, 0x0007);
-+	} else {
-+		b43_phy_mask(dev, B43_NPHY_AFECTL_C2, ~0x0007);
-+		b43_phy_set(dev, B43_NPHY_AFECTL_OVER, 0x0007);
-+	}
-+
-+	/* TODO: Call N PHY RF Ctrl Intc Override with 2, 0, 3 as arguments */
-+	/* TODO: Call N PHY RF Intc Override with 8, 0, 3, 0 as arguments */
-+	/* TODO: Call N PHY RF Seq with 0 as argument */
-+
-+	if (core == 0) {
-+		rxval = 1;
-+		txval = 8;
-+	} else {
-+		rxval = 4;
-+		txval = 2;
-+	}
-+
-+	/* TODO: Call N PHY RF Ctrl Intc Override with 1, rxval, (core + 1) */
-+	/* TODO: Call N PHY RF Ctrl Intc Override with 1, txval, (2 - core) */
-+}
-+
-  /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/TxIqWar */
-  static void b43_nphy_tx_iq_workaround(struct b43_wldev *dev)
-  {
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index f43270f..ab12c44 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -211,9 +211,6 @@ struct mwl8k_vif {
+ 	/* Local MAC address.  */
+ 	u8 mac_addr[ETH_ALEN];
+ 
+-	/* BSSID of AP.  */
+-	u8 bssid[ETH_ALEN];
+-
+ 	/* Index into station database. Returned by UPDATE_STADB.  */
+ 	u8	peer_id;
+ 
+@@ -2001,7 +1998,7 @@ struct mwl8k_cmd_set_post_scan {
+ } __attribute__((packed));
+ 
+ static int
+-mwl8k_cmd_set_post_scan(struct ieee80211_hw *hw, __u8 *mac)
++mwl8k_cmd_set_post_scan(struct ieee80211_hw *hw, const __u8 *mac)
+ {
+ 	struct mwl8k_cmd_set_post_scan *cmd;
+ 	int rc;
+@@ -2077,7 +2074,6 @@ struct mwl8k_cmd_update_set_aid {
+ static int
+ mwl8k_cmd_set_aid(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ {
+-	struct mwl8k_vif *mv_vif = MWL8K_VIF(vif);
+ 	struct mwl8k_cmd_update_set_aid *cmd;
+ 	u16 prot_mode;
+ 	int rc;
+@@ -2090,7 +2086,7 @@ mwl8k_cmd_set_aid(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	cmd->header.length = cpu_to_le16(sizeof(*cmd));
+ 	cmd->aid = cpu_to_le16(vif->bss_conf.aid);
+ 
+-	memcpy(cmd->bssid, mv_vif->bssid, ETH_ALEN);
++	memcpy(cmd->bssid, vif->bss_conf.bssid, ETH_ALEN);
+ 
+ 	if (vif->bss_conf.use_cts_prot) {
+ 		prot_mode = MWL8K_FRAME_PROT_11G;
+@@ -2945,7 +2941,6 @@ static void mwl8k_bss_info_changed(struct ieee80211_hw *hw,
+ 				   u32 changed)
+ {
+ 	struct mwl8k_priv *priv = hw->priv;
+-	struct mwl8k_vif *mwl8k_vif = MWL8K_VIF(vif);
+ 	int rc;
+ 
+ 	if ((changed & BSS_CHANGED_ASSOC) == 0)
+@@ -2958,8 +2953,6 @@ static void mwl8k_bss_info_changed(struct ieee80211_hw *hw,
+ 		return;
+ 
+ 	if (vif->bss_conf.assoc) {
+-		memcpy(mwl8k_vif->bssid, vif->bss_conf.bssid, ETH_ALEN);
+-
+ 		/* Install rates */
+ 		rc = mwl8k_cmd_set_rate(hw, vif);
+ 		if (rc)
+@@ -2991,10 +2984,8 @@ static void mwl8k_bss_info_changed(struct ieee80211_hw *hw,
+ 		 * Finalize the join.  Tell rx handler to process
+ 		 * next beacon from our BSSID.
+ 		 */
+-		memcpy(priv->capture_bssid, mwl8k_vif->bssid, ETH_ALEN);
++		memcpy(priv->capture_bssid, vif->bss_conf.bssid, ETH_ALEN);
+ 		priv->capture_beacon = true;
+-	} else {
+-		memset(mwl8k_vif->bssid, 0, ETH_ALEN);
+ 	}
+ 
+ out:
+@@ -3099,7 +3090,7 @@ static void mwl8k_configure_filter(struct ieee80211_hw *hw,
+ 			 */
+ 			mwl8k_cmd_set_pre_scan(hw);
+ 		} else {
+-			u8 *bssid;
++			const u8 *bssid;
+ 
+ 			/*
+ 			 * Enable the BSS filter.
+@@ -3111,7 +3102,7 @@ static void mwl8k_configure_filter(struct ieee80211_hw *hw,
+ 			 */
+ 			bssid = "\x01\x00\x00\x00\x00\x00";
+ 			if (priv->vif != NULL)
+-				bssid = MWL8K_VIF(priv->vif)->bssid;
++				bssid = priv->vif->bss_conf.bssid;
+ 
+ 			mwl8k_cmd_set_post_scan(hw, bssid);
+ 		}
 -- 
-1.6.4.2
-
+1.5.6.4
