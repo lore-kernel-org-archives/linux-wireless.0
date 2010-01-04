@@ -1,70 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f190.google.com ([209.85.222.190]:62447 "EHLO
-	mail-pz0-f190.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754770Ab0ASRjV (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:52798 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753962Ab0ADUzO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2010 12:39:21 -0500
-Received: by pzk28 with SMTP id 28so134246pzk.4
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2010 09:39:21 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1263762351.28067.21.camel@johannes.local>
-References: <4B536B05.6070301@openwrt.org> <1263758236.28067.11.camel@johannes.local>
-	<1263758423.28067.12.camel@johannes.local> <4B536F21.1090509@openwrt.org>
-	<1263759278.28067.13.camel@johannes.local> <4B5371C3.6060504@openwrt.org>
-	<1263761294.28067.14.camel@johannes.local> <4B537A94.9070807@openwrt.org>
-	<1263762351.28067.21.camel@johannes.local>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 19 Jan 2010 09:39:01 -0800
-Message-ID: <43e72e891001190939t38c07b31r7c64908bb485f03@mail.gmail.com>
-Subject: Re: [PATCH 1/2] cfg80211: add a callback for querying the operating
-	frequency and export it through nl80211
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 4 Jan 2010 15:55:14 -0500
+Date: Mon, 4 Jan 2010 21:55:12 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 05/14] mwl8k: handle station database update for AP's sta entry via ->sta_notify()
+Message-ID: <20100104205512.GE1735@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 17, 2010 at 1:05 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2010-01-17 at 22:01 +0100, Felix Fietkau wrote:
->
->> > But like I said, you already have that information in the relevant
->> > cases. hostapd you can just look in the config file for it...
->
->> Nope, hostapd can deviate from the config, e.g. in the HT40 case.
->> It'll
->> switch primary and secondary channel, if necessary, or switch from
->> HT40
->> to HT20 entirely if there are overlapping BSSs. And what about STA
->> mode?
->> The channel won't be in the config in that case.
->
-> In STA and IBSS modes you already have the information from the BSS
-> info.
->
-> The channel type might be more interesting, but even then
->
->> > The problem with this is that not all drivers will be able to
->> support
->> > it, and that you will be exporting stale information say in the case
->> > where we're not connected at all.
->> If we document the exported channel for the netdev as 'last configured
->> channel', it should be fine, IMHO.
->
-> I really don't think we should do that. And it will not be possible to
-> ever have iwm/rndis/orinoco etc. export such information.
->
-> In any case I have a feeling you're trying to use the kernel as a
-> database for something you already know, just don't have quite as
-> readily available as you'd like.
+Inserting and removing a hardware station database entry for the AP
+when we are in managed mode is currently done in ->bss_info_changed().
 
-So a good use case is when we do automatic channel selection for AP
-mode of operation. We currently don't support that on hostapd but
-eventually we could and IMHO should. How we go about it remains to be
-seen but querying the actual channel used by an 802.11 device is
-useful in those cases. You can get that information by looking at
-hostapd logs but that seems overkill.
+To prepare for adding AP mode support, implement the ->sta_notify()
+driver method, and let that handle inserting and removing the hardware
+station database entry for our AP instead.
 
-  Luis
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   82 +++++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 73 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 9fb62e9..f43270f 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -185,6 +185,10 @@ struct mwl8k_priv {
+ 	bool sniffer_enabled;
+ 	bool wmm_enabled;
+ 
++	struct work_struct sta_notify_worker;
++	spinlock_t sta_notify_list_lock;
++	struct list_head sta_notify_list;
++
+ 	/* XXX need to convert this to handle multiple interfaces */
+ 	bool capture_beacon;
+ 	u8 capture_bssid[ETH_ALEN];
+@@ -2641,7 +2645,7 @@ struct mwl8k_cmd_update_stadb {
+ } __attribute__((packed));
+ 
+ static int mwl8k_cmd_update_stadb(struct ieee80211_hw *hw,
+-		struct ieee80211_vif *vif, __u32 action)
++		struct ieee80211_vif *vif, __u32 action, u8 *addr)
+ {
+ 	struct mwl8k_vif *mv_vif = MWL8K_VIF(vif);
+ 	struct mwl8k_cmd_update_stadb *cmd;
+@@ -2657,7 +2661,7 @@ static int mwl8k_cmd_update_stadb(struct ieee80211_hw *hw,
+ 
+ 	cmd->action = cpu_to_le32(action);
+ 	peer_info = &cmd->peer_info;
+-	memcpy(cmd->peer_addr, mv_vif->bssid, ETH_ALEN);
++	memcpy(cmd->peer_addr, addr, ETH_ALEN);
+ 
+ 	switch (action) {
+ 	case MWL8K_STA_DB_ADD_ENTRY:
+@@ -2978,12 +2982,6 @@ static void mwl8k_bss_info_changed(struct ieee80211_hw *hw,
+ 		if (rc)
+ 			goto out;
+ 
+-		/* Update peer rate info */
+-		rc = mwl8k_cmd_update_stadb(hw, vif,
+-				MWL8K_STA_DB_MODIFY_ENTRY);
+-		if (rc)
+-			goto out;
+-
+ 		/* Set AID */
+ 		rc = mwl8k_cmd_set_aid(hw, vif);
+ 		if (rc)
+@@ -2996,7 +2994,6 @@ static void mwl8k_bss_info_changed(struct ieee80211_hw *hw,
+ 		memcpy(priv->capture_bssid, mwl8k_vif->bssid, ETH_ALEN);
+ 		priv->capture_beacon = true;
+ 	} else {
+-		rc = mwl8k_cmd_update_stadb(hw, vif, MWL8K_STA_DB_DEL_ENTRY);
+ 		memset(mwl8k_vif->bssid, 0, ETH_ALEN);
+ 	}
+ 
+@@ -3144,6 +3141,67 @@ static int mwl8k_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+ 	return mwl8k_cmd_set_rts_threshold(hw, MWL8K_CMD_SET, value);
+ }
+ 
++struct mwl8k_sta_notify_item
++{
++	struct list_head list;
++	struct ieee80211_vif *vif;
++	enum sta_notify_cmd cmd;
++	u8 addr[ETH_ALEN];
++};
++
++static void mwl8k_sta_notify_worker(struct work_struct *work)
++{
++	struct mwl8k_priv *priv =
++		container_of(work, struct mwl8k_priv, sta_notify_worker);
++
++	spin_lock_bh(&priv->sta_notify_list_lock);
++	while (!list_empty(&priv->sta_notify_list)) {
++		struct mwl8k_sta_notify_item *s;
++		int action;
++
++		s = list_entry(priv->sta_notify_list.next,
++			       struct mwl8k_sta_notify_item, list);
++		list_del(&s->list);
++
++		spin_unlock_bh(&priv->sta_notify_list_lock);
++
++		if (s->cmd == STA_NOTIFY_ADD)
++			action = MWL8K_STA_DB_MODIFY_ENTRY;
++		else
++			action = MWL8K_STA_DB_DEL_ENTRY;
++		mwl8k_cmd_update_stadb(priv->hw, s->vif, action, s->addr);
++
++		kfree(s);
++
++		spin_lock_bh(&priv->sta_notify_list_lock);
++	}
++	spin_unlock_bh(&priv->sta_notify_list_lock);
++}
++
++static void
++mwl8k_sta_notify(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++		 enum sta_notify_cmd cmd, struct ieee80211_sta *sta)
++{
++	struct mwl8k_priv *priv = hw->priv;
++	struct mwl8k_sta_notify_item *s;
++
++	if (cmd != STA_NOTIFY_ADD && cmd != STA_NOTIFY_REMOVE)
++		return;
++
++	s = kmalloc(sizeof(*s), GFP_ATOMIC);
++	if (s != NULL) {
++		s->vif = vif;
++		s->cmd = cmd;
++		memcpy(s->addr, sta->addr, ETH_ALEN);
++
++		spin_lock(&priv->sta_notify_list_lock);
++		list_add_tail(&s->list, &priv->sta_notify_list);
++		spin_unlock(&priv->sta_notify_list_lock);
++
++		ieee80211_queue_work(hw, &priv->sta_notify_worker);
++	}
++}
++
+ static int mwl8k_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 			 const struct ieee80211_tx_queue_params *params)
+ {
+@@ -3203,6 +3261,7 @@ static const struct ieee80211_ops mwl8k_ops = {
+ 	.prepare_multicast	= mwl8k_prepare_multicast,
+ 	.configure_filter	= mwl8k_configure_filter,
+ 	.set_rts_threshold	= mwl8k_set_rts_threshold,
++	.sta_notify		= mwl8k_sta_notify,
+ 	.conf_tx		= mwl8k_conf_tx,
+ 	.get_tx_stats		= mwl8k_get_tx_stats,
+ 	.get_stats		= mwl8k_get_stats,
+@@ -3406,6 +3465,11 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
+ 	priv->radio_on = 0;
+ 	priv->radio_short_preamble = 0;
+ 
++	/* Station database handling */
++	INIT_WORK(&priv->sta_notify_worker, mwl8k_sta_notify_worker);
++	spin_lock_init(&priv->sta_notify_list_lock);
++	INIT_LIST_HEAD(&priv->sta_notify_list);
++
+ 	/* Finalize join worker */
+ 	INIT_WORK(&priv->finalize_join_worker, mwl8k_finalize_join_worker);
+ 
+-- 
+1.5.6.4
