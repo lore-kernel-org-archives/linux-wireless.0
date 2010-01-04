@@ -1,122 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43325 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752260Ab0ADPkl (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:52792 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751125Ab0ADUyL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2010 10:40:41 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, joshuacov@googlemail.com,
-	stephenbeahm@comcast.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
-	David Quan <david.quan@atheros.com>
-Subject: [PATCH] ath5k: Fix eeprom checksum check for custom sized eeproms
-Date: Mon,  4 Jan 2010 10:40:39 -0500
-Message-Id: <1262619639-21426-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 4 Jan 2010 15:54:11 -0500
+Date: Mon, 4 Jan 2010 21:54:08 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 02/14] mwl8k: prevent freeing free IRQ if ieee80211_register_hw() fails
+Message-ID: <20100104205408.GB1735@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 8bf3d79bc401ca417ccf9fc076d3295d1a71dbf5 enabled EEPROM
-checksum checks to avoid bogus bug reports but failed to address
-updating the code to consider devices with custom EEPROM sizes.
-Devices with custom sized EEPROMs have the upper limit size stuffed
-in the EEPROM. Use this as the upper limit instead of the static
-default size. In case of a checksum error also provide back the
-max size and whether or not this was the default size or a custom
-one. If the EEPROM is busted we add a failsafe check to ensure
-we don't loop forever or try to read bogus areas of hardware.
-
-This closes bug 14874
-
-http://bugzilla.kernel.org/show_bug.cgi?id=14874
-
-Cc: stable@kernel.org
-Cc: David Quan <david.quan@atheros.com>
-Cc: Stephen Beahm <stephenbeahm@comcast.net>
-Reported-by: Joshua Covington <joshuacov@googlemail.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
 ---
+ drivers/net/wireless/mwl8k.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-This should apply on >= 2.6.32.2 cleanly. This is not applicable to
-older kernels.
-
- drivers/net/wireless/ath/ath5k/eeprom.c |   32 ++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath5k/eeprom.h |    8 +++++++
- 2 files changed, 37 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
-index 5d1c867..6a3f4da 100644
---- a/drivers/net/wireless/ath/ath5k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath5k/eeprom.c
-@@ -97,7 +97,7 @@ ath5k_eeprom_init_header(struct ath5k_hw *ah)
- 	struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
- 	int ret;
- 	u16 val;
--	u32 cksum, offset;
-+	u32 cksum, offset, eep_max = AR5K_EEPROM_INFO_MAX;
- 
- 	/*
- 	 * Read values from EEPROM and store them in the capability structure
-@@ -116,12 +116,38 @@ ath5k_eeprom_init_header(struct ath5k_hw *ah)
- 	 * Validate the checksum of the EEPROM date. There are some
- 	 * devices with invalid EEPROMs.
- 	 */
--	for (cksum = 0, offset = 0; offset < AR5K_EEPROM_INFO_MAX; offset++) {
-+	AR5K_EEPROM_READ(AR5K_EEPROM_SIZE_UPPER, val);
-+	if (val) {
-+		eep_max = (val & AR5K_EEPROM_SIZE_UPPER_MASK) <<
-+			   AR5K_EEPROM_SIZE_ENDLOC_SHIFT;
-+		AR5K_EEPROM_READ(AR5K_EEPROM_SIZE_LOWER, val);
-+		eep_max = (eep_max | val) - AR5K_EEPROM_INFO_BASE;
-+
-+		/*
-+		 * Fail safe check to prevent stupid loops due
-+		 * to busted EEPROMs. XXX: This value is likely too
-+		 * big still, waiting on a better value.
-+		 */
-+		if (eep_max > (3 * AR5K_EEPROM_INFO_MAX)) {
-+			ATH5K_ERR(ah->ah_sc, "Invalid max custom EEPROM size: "
-+				  "%d (0x%04x) max expected: %d (0x%04x)\n",
-+				  eep_max, eep_max,
-+				  3 * AR5K_EEPROM_INFO_MAX,
-+				  3 * AR5K_EEPROM_INFO_MAX);
-+			return -EIO;
-+		}
-+	}
-+
-+	for (cksum = 0, offset = 0; offset < eep_max; offset++) {
- 		AR5K_EEPROM_READ(AR5K_EEPROM_INFO(offset), val);
- 		cksum ^= val;
- 	}
- 	if (cksum != AR5K_EEPROM_INFO_CKSUM) {
--		ATH5K_ERR(ah->ah_sc, "Invalid EEPROM checksum 0x%04x\n", cksum);
-+		ATH5K_ERR(ah->ah_sc, "Invalid EEPROM "
-+			  "checksum: 0x%04x eep_max: 0x%04x (%s)\n",
-+			  cksum, eep_max,
-+			  eep_max == AR5K_EEPROM_INFO_MAX ?
-+				"default size" : "custom size");
- 		return -EIO;
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index d3a7916..418880e 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -3503,7 +3503,7 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
+ 	if (rc) {
+ 		printk(KERN_ERR "%s: Cannot register device\n",
+ 		       wiphy_name(hw->wiphy));
+-		goto err_free_irq;
++		goto err_free_queues;
  	}
  
-diff --git a/drivers/net/wireless/ath/ath5k/eeprom.h b/drivers/net/wireless/ath/ath5k/eeprom.h
-index 0123f35..473a483 100644
---- a/drivers/net/wireless/ath/ath5k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath5k/eeprom.h
-@@ -37,6 +37,14 @@
- #define AR5K_EEPROM_RFKILL_POLARITY_S	1
- 
- #define AR5K_EEPROM_REG_DOMAIN		0x00bf	/* EEPROM regdom */
-+
-+/* FLASH(EEPROM) Defines for AR531X chips */
-+#define AR5K_EEPROM_SIZE_LOWER		0x1b /* size info -- lower */
-+#define AR5K_EEPROM_SIZE_UPPER		0x1c /* size info -- upper */
-+#define AR5K_EEPROM_SIZE_UPPER_MASK	0xfff0
-+#define AR5K_EEPROM_SIZE_UPPER_SHIFT	4
-+#define AR5K_EEPROM_SIZE_ENDLOC_SHIFT	12
-+
- #define AR5K_EEPROM_CHECKSUM		0x00c0	/* EEPROM checksum */
- #define AR5K_EEPROM_INFO_BASE		0x00c0	/* EEPROM header */
- #define AR5K_EEPROM_INFO_MAX		(0x400 - AR5K_EEPROM_INFO_BASE)
+ 	printk(KERN_INFO "%s: %s v%d, %pM, %s firmware %u.%u.%u.%u\n",
 -- 
-1.6.3.3
-
+1.5.6.4
