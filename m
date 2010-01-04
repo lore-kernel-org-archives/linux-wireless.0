@@ -1,33 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li59-9.members.linode.com ([97.107.129.9]:37720 "EHLO erley.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756637Ab0ANPtx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2010 10:49:53 -0500
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:50619 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752457Ab0ADSJY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jan 2010 13:09:24 -0500
+Received: by ewy19 with SMTP id 19so7563818ewy.21
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Jan 2010 10:09:23 -0800 (PST)
 MIME-Version: 1.0
-Date: Thu, 14 Jan 2010 10:41:57 -0500
-From: <pat-lkml@erley.org>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<bcm43xx-dev@lists.berlios.de>
-Subject: Re: [PATCH 2/2] b43: N-PHY: follow kernel coding style for struct
- declaration
-In-Reply-To: <op.u6iu99ct9lhzdc@linux-g0th.site>
-References: <op.u6iu99ct9lhzdc@linux-g0th.site>
-Message-ID: <153c561ea0284f839de2cd27768bddf9@127.0.0.1>
+In-Reply-To: <1262619639-21426-1-git-send-email-lrodriguez@atheros.com>
+References: <1262619639-21426-1-git-send-email-lrodriguez@atheros.com>
+Date: Mon, 4 Jan 2010 20:09:22 +0200
+Message-ID: <40f31dec1001041009r87f677l9c777535c1a057f@mail.gmail.com>
+Subject: Re: [PATCH] ath5k: Fix eeprom checksum check for custom sized eeproms
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	joshuacov@googlemail.com, stephenbeahm@comcast.net,
+	stable@kernel.org, David Quan <david.quan@atheros.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 14 Jan 2010 13:21:35 +0100, Rafał Miłecki <zajec5@gmail.com>
-wrote:
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
->   drivers/net/wireless/b43/phy_common.c |   14 ++++++++++++++
->   drivers/net/wireless/b43/phy_common.h |    1 +
->   drivers/net/wireless/b43/phy_lp.c     |   17 ++---------------
->   3 files changed, 17 insertions(+), 15 deletions(-)
-> 
-<snip>
+2010/1/4 Luis R. Rodriguez <lrodriguez@atheros.com>:
+>
+> +
+> +/* FLASH(EEPROM) Defines for AR531X chips */
+> +#define AR5K_EEPROM_SIZE_LOWER         0x1b /* size info -- lower */
+> +#define AR5K_EEPROM_SIZE_UPPER         0x1c /* size info -- upper */
+> +#define AR5K_EEPROM_SIZE_UPPER_MASK    0xfff0
+> +#define AR5K_EEPROM_SIZE_UPPER_SHIFT   4
+> +#define AR5K_EEPROM_SIZE_ENDLOC_SHIFT  12
+> +
 
-Wrong patch attached?  I got the MSB patch again on this one.
+AR531X chips are SoCs, are you sure this comment is correct ?
+
+In the docs this marks the end of EAR section (and the end of
+checksum) for EEPROMs larger than 16k
+valid values for checksum end are 0x00000C0 to 0x0080000
+
+Also to calculate EEPROM size (stored on the first 4 bits of 0x1c) you
+do this according to the docs
+2 ^ (EEPROM size + 9) and valid values are from 1 to 11 (11 = 1MB)
+
+There is also an EEPROM size indicator on PCICFG but it seems it's
+only for older chips.
+
+A value of 0 on 0x1c means we have a 2k EEPROM and an end location 0x0000400.
+
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
