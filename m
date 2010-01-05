@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f171.google.com ([209.85.222.171]:53061 "EHLO
-	mail-pz0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754951Ab0AOVWw (ORCPT
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:55255 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753214Ab0AEXtS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2010 16:22:52 -0500
-Received: by pzk1 with SMTP id 1so1259725pzk.33
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jan 2010 13:22:51 -0800 (PST)
+	Tue, 5 Jan 2010 18:49:18 -0500
+Received: by fxm25 with SMTP id 25so10318594fxm.21
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2010 15:49:17 -0800 (PST)
 MIME-Version: 1.0
-Date: Fri, 15 Jan 2010 13:22:51 -0800
-Message-ID: <fd145f7d1001151322y6e0b2a74hb4c9971db8fe435c@mail.gmail.com>
-Subject: compat-wireless 2010-01-13 fails to build
-From: Jeffrey Baker <jwbaker@gmail.com>
-To: linux-wireless@vger.kernel.org
+In-Reply-To: <4B43C496.4040609@gmail.com>
+References: <4B43C496.4040609@gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Wed, 6 Jan 2010 00:48:57 +0100
+Message-ID: <69e28c911001051548ke40422ao49cb3ad2a141a33a@mail.gmail.com>
+Subject: Re: b43: must set qos=0 on to connect
+To: John Daiker <daikerjohn@gmail.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-/root/compat-wireless-2010-01-13/net/wireless/nl80211.c:17:50: error:
-missing ')' in expression
-make[5]: *** [/root/compat-wireless-2010-01-13/net/wireless/nl80211.o] Error 1
-make[4]: *** [/root/compat-wireless-2010-01-13/net/wireless] Error 2
-make[3]: *** [_module_/root/compat-wireless-2010-01-13] Error 2
-make[2]: *** [sub-make] Error 2
-make[1]: *** [all] Error 2
-make[1]: Leaving directory `/usr/src/linux-headers-2.6.30-2-486'
-make: *** [modules] Error 2
+On Wed, Jan 6, 2010 at 12:00 AM, John Daiker <daikerjohn@gmail.com> wrote:
+> I have a BCM4312 rev 01 (14e4:4315) card in my HP Mini netbook.  I am having
+> troubles connecting to any WEP secured AP.
+>
+> I know the trick about having to load with pio=1 for the device to stay
+> happy (and forget about using DMA), so no issues there, I hope.
+>
+> With qos=1 (by default, IIRC), I am unable to establish a connection with
+> said WEP connection, and notice many 'PHY transmission error' messages in my
+> dmesg output.
+>
+> With qos=1, I can successfully connect to my WEP connection without issue,
+> and without any error messages or warnings.
+>
+> I have a BCM4318 rev 02 (14e4:4318) in a desktop that works with
+> enabled/disabled qos not matter what.  Also, a RT2500-based card works fine
+> on the connection as well.
+>
+> Both card are using the 478.104 firmware.
+>
+> Please advise what steps I should take to further debug this issue.
+>
+> Thanks,
+> John Daiker
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-# uname -a
-Linux mango 2.6.30-2-486 #1 Sat Sep 26 00:03:46 UTC 2009 i586 GNU/Linux
-# gcc-4.3 -v
-Using built-in specs.
-Target: i486-linux-gnu
-Configured with: ../src/configure -v --with-pkgversion='Debian
-4.3.4-6' --with-bugurl=file:///usr/share/doc/gcc-4.3/README.Bugs
---enable-languages=c,c++,fortran,objc,obj-c++ --prefix=/usr
---enable-shared --enable-multiarch --enable-linker-build-id
---with-system-zlib --libexecdir=/usr/lib --without-included-gettext
---enable-threads=posix --enable-nls
---with-gxx-include-dir=/usr/include/c++/4.3 --program-suffix=-4.3
---enable-clocale=gnu --enable-libstdcxx-debug --enable-objc-gc
---enable-mpfr --enable-targets=all --with-tune=generic
---enable-checking=release --build=i486-linux-gnu --host=i486-linux-gnu
---target=i486-linux-gnu
-Thread model: posix
-gcc version 4.3.4 (Debian 4.3.4-6)
+Hi!
 
-Full build log is here: http://pastebin.com/m6ee0f005
+Is this the new 4312 (BCM94312HMGB AKA 575920-001), with integrated
+Bluetooth? I haven't seen this issue on my machines with a regular
+4312, so it is probably related to the DMA error, or maybe it is
+specific to the new 4312. If you can, please check whether the actual
+model number printed on the card is the new one.
 
--jwb
+Thanks,
+Gábor
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
