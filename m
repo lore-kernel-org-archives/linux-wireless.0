@@ -1,52 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1-g21.free.fr ([212.27.42.1]:45527 "EHLO smtp1-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751014Ab0ACJUZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jan 2010 04:20:25 -0500
-From: Benoit Papillault <benoit.papillault@free.fr>
-To: dsd@gentoo.org, kune@deine-taler.de
-Cc: linux-wireless@vger.kernel.org, zd1211-devs@lists.sourceforge.net,
-	Benoit Papillault <benoit.papillault@free.fr>
-Subject: [PATCH] zd1211rw: Fix multicast filtering.
-Date: Sun,  3 Jan 2010 10:20:01 +0100
-Message-Id: <1262510401-22037-1-git-send-email-benoit.papillault@free.fr>
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:35395 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752395Ab0AESQ3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jan 2010 13:16:29 -0500
+Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
+	by emh03-2.mail.saunalahti.fi (Postfix) with SMTP id B2FB2EBB2B
+	for <linux-wireless@vger.kernel.org>; Tue,  5 Jan 2010 20:16:27 +0200 (EET)
+Received: from [127.0.1.1] (a91-155-131-184.elisa-laajakaista.fi [91.155.131.184])
+	by emh06.mail.saunalahti.fi (Postfix) with ESMTP id 95228E51BD
+	for <linux-wireless@vger.kernel.org>; Tue,  5 Jan 2010 20:16:26 +0200 (EET)
+Subject: [PATCH v2 2/9] mac80211: use PS Poll and Nullfunc templates when
+	sending such frames
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 05 Jan 2010 20:16:26 +0200
+Message-ID: <20100105181626.27418.85228.stgit@tikku>
+In-Reply-To: <20100105181522.27418.97100.stgit@tikku>
+References: <20100105181522.27418.97100.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If multicast parameter (as returned by zd_op_prepare_multicast) has
-changed, no bit in changed_flags is set. To handle this situation, we do
-not return if changed_flags is 0. If we do so, we will have some issue
-with IPv6 which uses multicast for link layer address resolution.
+From: Kalle Valo <kalle.valo@nokia.com>
 
-Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+To avoid duplicate code, use ieee80211_[pspoll|nullfunc]_get() to get
+templates for PS Poll and Nullfunc frames in mlme.c.
+
+Compile-tested only.
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
- drivers/net/wireless/zd1211rw/zd_mac.c |   13 +++++++------
- 1 files changed, 7 insertions(+), 6 deletions(-)
+ net/mac80211/mlme.c |   48 +++++++++---------------------------------------
+ 1 files changed, 9 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index 5313313..9cb6cbc 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -1005,12 +1005,13 @@ static void zd_op_configure_filter(struct ieee80211_hw *hw,
- 	changed_flags &= SUPPORTED_FIF_FLAGS;
- 	*new_flags &= SUPPORTED_FIF_FLAGS;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 72920ee..7f771c0 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -249,30 +249,15 @@ static void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
+ void ieee80211_send_pspoll(struct ieee80211_local *local,
+ 			   struct ieee80211_sub_if_data *sdata)
+ {
+-	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct ieee80211_pspoll *pspoll;
+ 	struct sk_buff *skb;
+-	u16 fc;
  
--	/* changed_flags is always populated but this driver
--	 * doesn't support all FIF flags so its possible we don't
--	 * need to do anything */
--	if (!changed_flags)
--		return;
+-	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*pspoll));
+-	if (!skb) {
+-		printk(KERN_DEBUG "%s: failed to allocate buffer for "
+-		       "pspoll frame\n", sdata->name);
++	skb = ieee80211_pspoll_get(&local->hw, &sdata->vif);
++	if (!skb)
+ 		return;
+-	}
+-	skb_reserve(skb, local->hw.extra_tx_headroom);
 -
-+	/*
-+	 * If multicast parameter (as returned by zd_op_prepare_multicast)
-+	 * has changed, no bit in changed_flags is set. To handle this
-+	 * situation, we do not return if changed_flags is 0. If we do so,
-+	 * we will have some issue with IPv6 which uses multicast for link
-+	 * layer address resolution.
-+	 */
- 	if (*new_flags & (FIF_PROMISC_IN_BSS | FIF_ALLMULTI))
- 		zd_mc_add_all(&hash);
+-	pspoll = (struct ieee80211_pspoll *) skb_put(skb, sizeof(*pspoll));
+-	memset(pspoll, 0, sizeof(*pspoll));
+-	fc = IEEE80211_FTYPE_CTL | IEEE80211_STYPE_PSPOLL | IEEE80211_FCTL_PM;
+-	pspoll->frame_control = cpu_to_le16(fc);
+-	pspoll->aid = cpu_to_le16(ifmgd->aid);
  
--- 
-1.6.3.3
+-	/* aid in PS-Poll has its two MSBs each set to 1 */
+-	pspoll->aid |= cpu_to_le16(1 << 15 | 1 << 14);
+-
+-	memcpy(pspoll->bssid, ifmgd->bssid, ETH_ALEN);
+-	memcpy(pspoll->ta, sdata->vif.addr, ETH_ALEN);
++	pspoll = (struct ieee80211_pspoll *) skb->data;
++	pspoll->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
+ 
+ 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+ 	ieee80211_tx_skb(sdata, skb);
+@@ -283,30 +268,15 @@ void ieee80211_send_nullfunc(struct ieee80211_local *local,
+ 			     int powersave)
+ {
+ 	struct sk_buff *skb;
+-	struct ieee80211_hdr *nullfunc;
+-	__le16 fc;
++	struct ieee80211_hdr_3addr *nullfunc;
+ 
+-	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION))
++	skb = ieee80211_nullfunc_get(&local->hw, &sdata->vif);
++	if (!skb)
+ 		return;
+ 
+-	skb = dev_alloc_skb(local->hw.extra_tx_headroom + 24);
+-	if (!skb) {
+-		printk(KERN_DEBUG "%s: failed to allocate buffer for nullfunc "
+-		       "frame\n", sdata->name);
+-		return;
+-	}
+-	skb_reserve(skb, local->hw.extra_tx_headroom);
+-
+-	nullfunc = (struct ieee80211_hdr *) skb_put(skb, 24);
+-	memset(nullfunc, 0, 24);
+-	fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_NULLFUNC |
+-			 IEEE80211_FCTL_TODS);
++	nullfunc = (struct ieee80211_hdr_3addr *) skb->data;
+ 	if (powersave)
+-		fc |= cpu_to_le16(IEEE80211_FCTL_PM);
+-	nullfunc->frame_control = fc;
+-	memcpy(nullfunc->addr1, sdata->u.mgd.bssid, ETH_ALEN);
+-	memcpy(nullfunc->addr2, sdata->vif.addr, ETH_ALEN);
+-	memcpy(nullfunc->addr3, sdata->u.mgd.bssid, ETH_ALEN);
++		nullfunc->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
+ 
+ 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+ 	ieee80211_tx_skb(sdata, skb);
 
