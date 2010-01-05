@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:33483 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752399Ab0AYNZw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 08:25:52 -0500
-Message-ID: <4B5D9BDC.8030307@openwrt.org>
-Date: Mon, 25 Jan 2010 14:25:48 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:59646 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751002Ab0AEMec convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jan 2010 07:34:32 -0500
+Received: by bwz27 with SMTP id 27so9864446bwz.21
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2010 04:34:30 -0800 (PST)
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"bcm43xx-dev\@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
+	"Michael Buesch" <mb@bu3sch.de>
+Subject: Re: [PATCH] b43: N-PHY: update part of init code to current specs
+References: <op.u50y2cd29lhzdc@linux-g0th.site>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 05 Jan 2010 14:34:27 +0200
+In-Reply-To: <op.u50y2cd29lhzdc@linux-g0th.site> (=?utf-8?Q?=22Rafa=C5=82?=
+ =?utf-8?Q?_Mi=C5=82ecki=22's?= message of "Mon\, 04 Jan 2010 21\:26\:27
+ +0100")
+Message-ID: <87iqbgvigc.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: wait for beacon before associating
-References: <1264423044.23766.39.camel@johannes.local>
-In-Reply-To: <1264423044.23766.39.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-01-25 1:37 PM, Johannes Berg wrote:
-> This patch makes mac80211 wait for a beacon
-> before associating to have proper information
-> from it, in particular the DTIM period. It
-> also makes it not probe the AP if it already
-> has a probe response, so that only one of
-> probing and waiting for beacon can be done,
-> one of them must have been received to know
-> about the BSS.
-> 
-> Note that I don't think this helps the
-> synchronisation issue Kalle pointed out since
-> we do not tell the driver about the bssid, in
-> fact in this patch I explicitly open up the
-> filters to receive the beacon.
-> 
-> The default timeout is 112.5% of the beacon
-> interval, so a single lost beacon could cause
-> the association to fail, I'm not sure if that
-> is desirable or if the default timeout should
-> be longer.
-I think if this is required only for powersave, it would be nice if it
-would only wait for the beacon if either powersave is actually enabled,
-or user space requests it.
-I'd like to avoid making the assoc process more unreliable for noisy
-environments in cases where it isn't necessary to do so.
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-- Felix
+> Michael said many times he prefers smaller patches posted more
+> frequently. So there this go.
+>
+> However if you think it's too small, just let me know please.
+
+I always post very small patches and I have never been flamed about
+that. And reviewing is so much easier with small logical patches. So
+don't worry about your patches being too small.
+
+-- 
+Kalle Valo
