@@ -1,73 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:2080 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751408Ab0A1WGu (ORCPT
+Received: from mail-iw0-f194.google.com ([209.85.223.194]:46521 "EHLO
+	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751770Ab0AEQOP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2010 17:06:50 -0500
-Message-ID: <4B620A72.7050202@gmail.com>
-Date: Thu, 28 Jan 2010 23:06:42 +0100
-From: Till Kamppeter <till.kamppeter@gmail.com>
+	Tue, 5 Jan 2010 11:14:15 -0500
+Received: by iwn32 with SMTP id 32so895827iwn.33
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2010 08:14:14 -0800 (PST)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
-	lsb-discuss@lists.linux-foundation.org
-Subject: Re: Linux wireless GSoC 2010 project ideas
-References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com>
-In-Reply-To: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1262683554.20098.10.camel@johannes.local>
+References: <1262622502-27698-1-git-send-email-lrodriguez@atheros.com>
+	<1262683554.20098.10.camel@johannes.local>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 5 Jan 2010 08:13:52 -0800
+Message-ID: <43e72e891001050813n5f5cd0bfp7e703902d3979158@mail.gmail.com>
+Subject: Re: [RFC] cfg80211: add regulatory hint disconnect support
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Great to hear from you.
+On Tue, Jan 5, 2010 at 1:25 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2010-01-04 at 11:28 -0500, Luis R. Rodriguez wrote:
+>
+>> +/**
+>> + * regulatory_hint_disconnect - informs all devices have been
+>> disconneted
+>
+> disconnected
+>
+>> + *
+>> + * Regulotory rules can be enhanced further upon scanning and upon
+>
+> Regulatory
+>
+>> + * connection to an AP. These rules become stale if we disconnect
+>> + * and go to another country, whether or not we suspend and resume.
+>> + * If we suspend, go to another country and resume we'll
+>> automatically
+>> + * get disconnected shortly after resuming and things will be reset
+>> as well.
+>> + * This routine is a helper to restore regulatory settings to how
+>> they were
+>> + * prior to our first connect attempt. This includes ignoring country
+>> IE and
+>> + * beacon regulatory hints. The ieee80211_regdom module parameter
+>> will always
+>> + * be respected but if a user had set the regulatory domain that will
+>> take
+>> + * precedence.
+>> + *
+>> + * Must be called from process context and hold the cfg80211_mutex.
+>> + */
+>
+> However, I don't quite understand why we need this function. We already
+> tell cfg80211 about disconnect events or requests, can't it call some
+> regulatory update when either of those two happen?
 
-I will apply again for the LF entering as a mentoring organization and I 
-will add your projects to the list of proposed projects for the LF 
-application.
+Sure, hence the RFC, can you point me to those events?
 
-    Till
-
-P. S.: Do you know someone with knowledge in data compression? I will 
-run a project at OpenPrinting which is about data compression.
-
-
-Luis R. Rodriguez wrote:
-> Google has confirmed it will have a Google Summer of Code for 2010
-> [1]. Last year we had a few projects suggested (4) and accepted (3)
-> under the Linux Foundation sponsoring organization umbrella [2].
-> Unfortunately out of the three projects that were approved only one
-> completed successfully, that of the adding AP support to Network
-> Manger. I haven't seen specific updates to the progress of that but I
-> do know some patches were indeed submitted to help with this effort.
-> Perhaps the student can elaborate more.
-> 
-> The other projects that did not pass are up as suggestion for this
-> year again, but am hoping there are more. If you do have a project
-> idea please just go ahead and add your idea to the list of possible
-> projects [3]; you don't have to fill out a full page for it for now
-> but the more details you can add the better. If the Linux Foundation
-> does give us a few slots I recommend we be a little more strict about
-> acceptance criteria since our failure rate was pretty high (2/3) and
-> it would be better to see other projects get accepted if we do not
-> have the confidence our projects will be completed. One possibility to
-> help with the success rate of our projects might be to narrow the
-> scope down a little more. I think the testing and GeoClue project
-> might have been a little too ambitious and although we did have pretty
-> excited students we saw no progress at all.
-> 
-> If you have ideas for projects just feel free to add to the wiki. We
-> should strive to get all project ideas finalized by the middle of
-> February, latest the end of February. Hopefully towards the end of
-> February we can see who would be willing to mentor each project.
-> Google plans on starting to accept would-be-mentor organization
-> applications on  March 8th so we'll need our ideas finalized well
-> before that so we can send them as suggestions to the Linux Foundation
-> to see if we can get a few good project candidates accepted.
-> 
-> [1] http://groups.google.com/group/google-summer-of-code-discuss/browse_thread/thread/d839c0b02ac15b3f
-> [2] http://wireless.kernel.org/en/developers/GSoC/2009
-> [3] http://wireless.kernel.org/en/developers/GSoC/2010
-> 
->   Luis
-> 
-
+  Luis
