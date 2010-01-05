@@ -1,30 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f201.google.com ([209.85.222.201]:50404 "EHLO
-	mail-pz0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754601Ab0AUWVf convert rfc822-to-8bit (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:37471 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750789Ab0AESgk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 17:21:35 -0500
-MIME-Version: 1.0
-In-Reply-To: <4B58C997.2060904@irobot.com>
-References: <43e72e891001201213x6a2c203dl7121f2dde6d61fb9@mail.gmail.com>
-	<4B5897C8.2080006@irobot.com> <43e72e891001211012y4f4c8721t7eb9e0eea0221820@mail.gmail.com>
-	<4B58B432.5050200@irobot.com> <43e72e891001211217t17ffed80i2d5bc6f923b56210@mail.gmail.com>
-	<4B58C622.2090004@irobot.com> <4B58C997.2060904@irobot.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 21 Jan 2010 14:21:14 -0800
-Message-ID: <43e72e891001211421l6c861f59mcaad3c5e39950b49@mail.gmail.com>
-Subject: Re: FYI - new compat-wireless based on 2.6.33-rc4
-To: Adam Wozniak <awozniak@irobot.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 5 Jan 2010 13:36:40 -0500
+Date: Tue, 5 Jan 2010 19:36:39 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2.6.33] mac80211: fix skb buffering issue
+Message-ID: <20100105183639.GT1735@mail.wantstofly.org>
+References: <1262710858.28653.5.camel@johannes.local> <20100105171603.GX6361@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100105171603.GX6361@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 21, 2010 at 1:39 PM, Adam Wozniak <awozniak@irobot.com> wrote:
-> Ok, I see what's going on now.  The openembedded recipe I'm working with
-> didn't copy the udev stuff.
+On Tue, Jan 05, 2010 at 12:16:03PM -0500, John W. Linville wrote:
 
-OK so not our fault? You just had to update your install target?
+> > Since I removed the master netdev, we've been
+> > keeping internal queues only, and even before
+> > that we never told the networking stack above
+> > the virtual interfaces about congestion. This
+> > means that packets are queued in mac80211 and
+> > the upper layers never know, possibly leading
+> > to memory exhaustion and other problems.
+> > 
+> > This patch makes all interfaces multiqueue and
+> > uses ndo_select_queue to put the packets into
+> > queues per AC. Additionally, when the driver
+> > stops a queue, we now stop all corresponding
+> > queues for the virtual interfaces as well.
+> > 
+> > The injection case will use VO by default for
+> > non-data frames, and BE for data frames, but
+> > downgrade any data frames according to ACM. It
+> > needs to be fleshed out in the future to allow
+> > chosing the queue/AC in radiotap.
+> > 
+> > Reported-by: Lennert Buytenhek <buytenh@marvell.com>
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> > Cc: stable@kernel.org [2.6.32]
+> > ---
+> > I know it's late, and large, but still would be good to have in .33
+> > since the issue is fairly serious.
+> 
+> Obviously I'd like to see some testing.  Lennert, does this patch
+> resolve the issues you raised?
 
-  Luis
+I got an earlier version of this patch from Johannes and tested that,
+and that seemed to work as intended.  I'll re-try with this version
+of the patch, and I'll ask to have some QA done on it as well.
+
+(FWIW, I think that the approach taken by this patch is the right way
+to go.)
