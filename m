@@ -1,103 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:62665 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755050Ab0ASTkQ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51550 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752821Ab0AEJ0K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2010 14:40:16 -0500
-Received: by yxe17 with SMTP id 17so5350592yxe.33
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2010 11:40:14 -0800 (PST)
-Message-Id: <AFBB72C4-DA31-4E0B-8410-E1399E802817@gmail.com>
-From: Eric Volker <evolker@gmail.com>
-To: Jouni Malinen <j@w1.fi>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20100119171116.GA16616@jm.kir.nu>
-Content-Type: text/plain;
-	charset=us-ascii;
-	format=flowed;
-	delsp=yes
-Mime-Version: 1.0 (iPhone Mail 7D11)
-Subject: Re: eapol_version=1 required for OS X clients?
-Date: Tue, 19 Jan 2010 13:39:55 -0600
-References: <1263876237.2619.1.camel@fwdell4550> <20100119171116.GA16616@jm.kir.nu>
+	Tue, 5 Jan 2010 04:26:10 -0500
+Subject: Re: [RFC] cfg80211: add regulatory hint disconnect support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1262622502-27698-1-git-send-email-lrodriguez@atheros.com>
+References: <1262622502-27698-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-v0xtDePwll6hHIqbntU3"
+Date: Tue, 05 Jan 2010 10:25:54 +0100
+Message-ID: <1262683554.20098.10.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for the informative response. Please see below for more...
 
-On Jan 19, 2010, at 11:11 AM, Jouni Malinen <j@w1.fi> wrote:
+--=-v0xtDePwll6hHIqbntU3
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> On Mon, Jan 18, 2010 at 10:43:56PM -0600, Eric Volker wrote:
->
->> Is EAP version 1 secure?
->
-> It is not EAP version; it is EAPOL version.. In practice, there is no
-> difference in how hostapd behaves as far as version 1 and 2 are
-> concerned apart from the value in the header.
+On Mon, 2010-01-04 at 11:28 -0500, Luis R. Rodriguez wrote:
 
-Thanks for clarifying that.
+> +/**
+> + * regulatory_hint_disconnect - informs all devices have been
+> disconneted
 
->
->> In light of this issue, why is version 2 default? Is there any way to
->> negotiate the version level? Which version do off-the-shelf consumer
->> routers use?
->
-> hostapd is implemented based on 802.1X-2004 and version 2 and as such,
-> version number 2 is the correct value to use. I would expect
-> off-the-shelf consumer products use a mix of both version 1 and 2. I
-> haven't checked this lately, but version 2 started showing up years  
-> ago
-> in many devices.
->
-> IEEE 802.1X-2004 (and already the earlier -2001 version) described
-> version negotiation mechanism for EAPOL. There are some  
-> implementations
-> that did not do this correctly and had problems when -2004 was
-> introduced (over fixe years ago!).
->
->> Based on the comments in hostapd.conf, EAP only seems to be used for
->> 802.1X authentication. I'm using WPA/WPA2 (wpa=3) Personal
->> authentication, so why does the EAP version matter?
->
-> Because it is not "EAP version", but "EAPOL version" and
-> WPA/WPA2-Personal uses EAPOL frames.
->
->> Why is an OS as recent as Snow Leopard (10.6) using a protocol  
->> version
->> that the hostapd.conf comments imply is outdated?
->
-> It would be fine to use protocol version 1, but the real question here
-> is why does it not implement IEEE 802.1X version negotiation  
-> correctly..
-> Anyway, I do not think I've seen this with OS X tests myself (both  
-> 10.4
-> and 10.6), but do not remember details.. In other words, this could be
-> an issue in a component (just the driver?) and not the generic
-> supplicant in the OS.
-Is it possible that I set something incorrectly in hostapd.conf that  
-is causing interaction problems between OS X and EAPOL v2? I played  
-with several options before finding a combination that would work.  
-Perhaps it would be best to start with a clean hostapd.conf or even a  
-clean install of Ubuntu. I did try three different OS X clients with  
-different hardware, and they all failed to connect with EAPOL v2.
+disconnected
 
-Here is the link that prompted me to try v1:
+> + *
+> + * Regulotory rules can be enhanced further upon scanning and upon
 
-http://list.voyage.hk/pipermail/voyage-linux/2006-March/000748.html
+Regulatory
 
-That user specified EAP, not EAPOL but I think he may have been  
-confused, as I was.
+> + * connection to an AP. These rules become stale if we disconnect
+> + * and go to another country, whether or not we suspend and resume.
+> + * If we suspend, go to another country and resume we'll
+> automatically
+> + * get disconnected shortly after resuming and things will be reset
+> as well.
+> + * This routine is a helper to restore regulatory settings to how
+> they were
+> + * prior to our first connect attempt. This includes ignoring country
+> IE and
+> + * beacon regulatory hints. The ieee80211_regdom module parameter
+> will always
+> + * be respected but if a user had set the regulatory domain that will
+> take
+> + * precedence.
+> + *
+> + * Must be called from process context and hold the cfg80211_mutex.
+> + */
 
-I don't know if it's related, but I'm also experiencing an issue where  
-the AP stops working after an undetermined period of time. It stops  
-beaconing and previously associated clients can no longer connect.  
-I'll save that issue for a new email.
+However, I don't quite understand why we need this function. We already
+tell cfg80211 about disconnect events or requests, can't it call some
+regulatory update when either of those two happen?
 
-Thanks,
+johannes
 
-Eric Volker
+--=-v0xtDePwll6hHIqbntU3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
 
->
-> -- 
-> Jouni Malinen                                            PGP id  
-> EFC895FA
+iQIcBAABAgAGBQJLQwWfAAoJEODzc/N7+QmaAa4P/jTtErzaY/clrgWRLOZBri/B
+VKe4B6gWUOmoqFoNYnsORyBYh7IWOLlsr9ZQdz+fGQcCesiDv2FgDhzZhaaZ4WtD
+eUaWX+9US+q5Y2+ijxHWNnh+DMXcNVPqEFwUUscZkSsgUfv3rmLd5pYjTQFb4LLV
+fjForaTTayShQIrFmr3JkRxvQmi3cR78UX84AJdtuJsFOJiTKxJSBqzc64D/Zrkt
+eyN5yctLCUtmHFMgizCtM9yOwElNy6x56bMxJevzFqhrshIAnkFqJ4DQUI60LQTa
+xbyu6Rz9xc1rMjMylyIfK0kdE9oAy9BsyORyMAcQM69yHI/FjiE1cz+f4T0gclIQ
+eVDTgCKZ+tPxih9LTPMLL5tJ0S98IObP27nXCdNr/V3UurcZkzEGkwK31GrP2P+l
+la8Zx8PF8mNHEArRGJN24pjO96fvyFGx9gE/FXIzLkUb3Enp2em1n699t+d2Td8e
+pOzR8HTyxKd8xnCw45TuRRKFvup+MaMdjrAB13djlZEIg1hogapXYbfgzO+BRDpV
+QpALYH1ijRFk6El21Mkd8rD/EYiEOPDeck+iIP9KDM5cLa4tnCXT/GJ77DdWfo+4
+pmrK3o4tN2mAxMEKpufN7XI4/btuuIwAZU7qoToENJU0rx4zgfHtb1LXbS88JXUW
+4YSqOwQS5JdV8c5K2gAz
+=IpKU
+-----END PGP SIGNATURE-----
+
+--=-v0xtDePwll6hHIqbntU3--
+
