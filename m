@@ -1,71 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f209.google.com ([209.85.219.209]:61739 "EHLO
-	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751430Ab0AKW1T convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53346 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751963Ab0AEQQK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jan 2010 17:27:19 -0500
-Received: by ewy1 with SMTP id 1so3810395ewy.28
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2010 14:27:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <201001112313.26197.mb@bu3sch.de>
-References: <op.u6b70wtk9lhzdc@linux-g0th.site>
-	 <201001102338.28721.mb@bu3sch.de>
-	 <b170af451001111313r6bc6905fg722fcd42d7f2681a@mail.gmail.com>
-	 <201001112313.26197.mb@bu3sch.de>
-Date: Mon, 11 Jan 2010 23:27:18 +0100
-Message-ID: <b170af451001111427u25861f2bla4062a7b0aea19ec@mail.gmail.com>
-Subject: Re: [PATCH 3/6] b43: N-PHY: add RSSI calculation for PHY rev < 3
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 5 Jan 2010 11:16:10 -0500
+Subject: Re: [RFC] cfg80211: add regulatory hint disconnect support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e891001050814t359807d9y2d7181df9790244c@mail.gmail.com>
+References: <1262622502-27698-1-git-send-email-lrodriguez@atheros.com>
+	 <1262683554.20098.10.camel@johannes.local>
+	 <43e72e891001050813n5f5cd0bfp7e703902d3979158@mail.gmail.com>
+	 <43e72e891001050814t359807d9y2d7181df9790244c@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/OYLqdnsRmRbeS5D2h6l"
+Date: Tue, 05 Jan 2010 17:16:02 +0100
+Message-ID: <1262708162.28653.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 11 stycznia 2010 23:13 użytkownik Michael Buesch <mb@bu3sch.de> napisał:
-> On Monday 11 January 2010 22:13:31 Rafał Miłecki wrote:
->> 2010/1/10 Michael Buesch <mb@bu3sch.de>:
->> > On Sunday 10 January 2010 23:13:34 Rafał Miłecki wrote:
->> >> +     s32 results_min[4];
->> >> +     u8 vcm_final[4];
->> >> +     s32 results[4][4];
->> >> +     s32 miniq[4][2];
->> >> +     memset(results_min, 0, sizeof(s32) * 4);
->> >> +     memset(vcm_final, 0, sizeof(u8) * 4);
->> >> +     memset(results, 0, sizeof(s32) * 4 * 4);
->> >> +     memset(miniq, 0, sizeof(s32) * 4 * 2);
->> >
->> > Just initialize the variables to zero instead of doing a memset:
->> >
->> > +       s32 results_min[4] = { 0, };
->> > +       u8 vcm_final[4] = { 0, };
->> > +       s32 results[4][4] = { 0, };
->> > +       s32 miniq[4][2] = { 0, };
->>
->> Nice trick, thanks :) Just for two-dimensional arrays I'll have to hack it to:
->> s32 results[4][4] = { { 0, }, { 0, }, { 0, }, { 0, } };
->> I believe.
->
-> No I don't think so.
-> It's C standard that uninitialized elements on automatic variables are initialized
-> to zero, _if_ at least one element is initialized to something.
-> So if you init one element to 0, all others will be 0, too.
-> I think that should also work for multidimensional arrays. So my example
-> s32 results[4][4] = { 0, };
-> should do the right thing. Am I wrong?
 
-Whoops, I should have explained what I mean. I am not sure what CFLAGS
-"make" picks for compiled but I get:
+--=-/OYLqdnsRmRbeS5D2h6l
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-  CC [M]  drivers/net/wireless/b43/phy_n.o
-drivers/net/wireless/b43/phy_n.c: In function ‘b43_nphy_rev2_rssi_cal’:
-drivers/net/wireless/b43/phy_n.c:887: warning: missing braces around initializer
-drivers/net/wireless/b43/phy_n.c:887: warning: (near initialization
-for ‘results[0]’)
+On Tue, 2010-01-05 at 08:14 -0800, Luis R. Rodriguez wrote:
+> On Tue, Jan 5, 2010 at 8:13 AM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+> > On Tue, Jan 5, 2010 at 1:25 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> >>
+> >> However, I don't quite understand why we need this function. We
+> already
+> >> tell cfg80211 about disconnect events or requests, can't it call
+> some
+> >> regulatory update when either of those two happen?
+> >
+> > Sure, hence the RFC, can you point me to those events?
+>=20
+> You mean the netlink ones we send to userspace?
 
-for s32 results[4][4] = { 0, };
+I mean the functions we call, like rx_deauth() etc.
 
--- 
-Rafał
+johannes
+
+--=-/OYLqdnsRmRbeS5D2h6l
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLQ2W+AAoJEODzc/N7+Qma7ZoQAMYeJbpfae9DnTYRzdxT1HQL
+8yvIixmtwAwB37O/Te33NYSzcetq0/AgL5xBNJLcC+37bgzIwsjV6QDa6/Vl92J2
+9A3nZjtRrO3MdGII+O/8pQb9SvoaF0ATc4LFRvtKuy0lLyPol/HvFk+XPW3Q9bDL
+TXVtF5ZkUSnw/TCI22BI1yfMJOMhSH6P0FSm+BZsu5CFhSOWYl8Ip2IIFFejNn6T
+DtdSsR4M/umKrBTzxrF+hNsPSWe9S849mxUPNypppkAqplpkiS5/UU4F/Rjrxkaj
+jKxSYzD19VAn6g3fI70YlkcDVyqMQ+ohZdGnMe2mzkRVPCE1A/aBNJdL5lRm4j66
+rRHrOgvdYHWTw1Vn8lslbmm4Fat2HZvAzqGVf0NWAu3STzRo743265DXmhBXbN+M
+rW4GiSsTK4Li/wrFKfbhIeAwZCnDQFcd+tYWu23vIlTm6fNqVle+oWp2ks0jE+Ac
+iyoA0R9WT8qse/omoaAj6DNjgsrgpO8i5OVIu2xZrWYj7jDk1QJ/LvJCdbtyG5Z0
+PxmPRZU/lewhHdszes1nXEbLNJBo/emdUXntVk4Dk/G2WsFH071f5xVBnOIi4eJ1
+KoaktZEkyRBaB0NhUW0SnnZN5EQX5pSBa+h6jgs3j/g+EjY/4hT8MHoLgxhvrKUq
+XPycobxhF1UM1KmhDLx2
+=PfeN
+-----END PGP SIGNATURE-----
+
+--=-/OYLqdnsRmRbeS5D2h6l--
+
