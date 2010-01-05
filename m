@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:43663 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932458Ab0AFSSl convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57160 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751086Ab0AEJWf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 13:18:41 -0500
-Received: by ewy19 with SMTP id 19so9891975ewy.21
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 10:18:39 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <43e72e891001060926s320bf403ya2edf2601ced5125@mail.gmail.com>
-References: <op.u54a59c89lhzdc@linux-g0th.site>
-	 <43e72e891001060926s320bf403ya2edf2601ced5125@mail.gmail.com>
-Date: Wed, 6 Jan 2010 19:18:39 +0100
-Message-ID: <b170af451001061018x6ff2404ajbdbb3cb96ceaf7f2@mail.gmail.com>
-Subject: Re: [PATCH 2/5] b43: N-PHY: b43_nphy_get_tx_gains
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 5 Jan 2010 04:22:35 -0500
+Subject: Re: [PATCH 0/9] mac80211: templates for drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20100103210552.29287.20384.stgit@tikku>
+References: <20100103210552.29287.20384.stgit@tikku>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ByiA0iLn+b/3OOfAUXVp"
+Date: Tue, 05 Jan 2010 10:22:18 +0100
+Message-ID: <1262683338.20098.8.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 6 stycznia 2010 18:26 użytkownik Luis R. Rodriguez
-<mcgrof@gmail.com> napisał:
-> 2010/1/6 Rafał Miłecki <zajec5@gmail.com>:
->> b43: N-PHY: b43_nphy_get_tx_gains
->>
->>
->> From 5c96b3de80f7d044c42808e8123ae3f50916d6fc Mon Sep 17 00:00:00 2001
->> From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
->> Date: Wed, 6 Jan 2010 15:25:14 +0100
->> Subject: [PATCH 2/5] b43: N-PHY: b43_nphy_get_tx_gains
->> MIME-Version: 1.0
->> Content-Type: text/plain; charset=UTF-8
->> Content-Transfer-Encoding: 8bit
->
-> Dude what is up with this e-mail data on your patches in the commit log?
 
-That is way of encoding non-ASCII chars in mail header. You can find
-info about this in RFC. That is "=?UTF-8?B?" prefix and base 64
-encoded text.
+--=-ByiA0iLn+b/3OOfAUXVp
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-That was generated with git (git format-patch -5) and it understood by
-git (git am ...).
+On Sun, 2010-01-03 at 23:07 +0200, Kalle Valo wrote:
+> Hello,
+>=20
+> there has been talk of creating templates in mac80211 for drivers and
+> here's what I have been thinking. I have also included wl1251 usage as
+> an example. Please comment.
 
--- 
-Rafał
+Except for the minor comments posted inline this looks fine to me.
+
+johannes
+
+--=-ByiA0iLn+b/3OOfAUXVp
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLQwTHAAoJEODzc/N7+QmalyoP/0vH9AjGRrNsAPWYB64cn1cM
+ZyUD/FlWXSWnI9edp+FxvtbPWqEUmr7rjByXJQgEKeHe/c8VIQZpCbbfU459bvnN
+tZiQZWg19g9mC2ch661diuSrkFqPJeFoRJS7eJrrIy9FflxSPvG87+rhGAY4c4ah
+I4eNlsAaYsopu+F6t426wC6Hbd4B0rHoiUZI+CbZ6B5SRT8dO8cQOKUM3ZT0L5to
+t2GEbdNJlFpwauNZthh1wR94LJmPn+dt885z9uyOXIHHY9PoAB7kFAeuWAdwJJpf
+AdNEJBbyK473InKpwEjr1vP4nnIE2Oyq7ECUaMHEUuxS/noNgODAASX9qHdsdXkN
+zpRG/un5qdCXXbOCyrGHh2m2qFMAcG4lkRjVEcwHnlhluDoRBpUQQhjWA/zu/rwy
+IiKoz1pfLckS6XyVrQly00Uq6zqG8BtPahamWpkdCK5WUlNpu4BZj/b44G+Lv4Jc
+YPmm4OnPeB2vN4PTxyu/aRcMm4dBpypSYqfvgAamQcUJzaKQLACdEVdJ/9xlhXOF
+5XK3N/dfXII04PNEBcFDUpREDQpTC9h/jAtkbdWiv92VQFo1GYjiCC9gNDLWoN6Y
+Dxwt+yVejUhD+PntmgcYwFZGpGw2ZnBW6y3Q3yNo0mkxXhjbwieSc1Q32IB/6zTl
+nnbca0XWnXoDhECcLYr5
+=BoH5
+-----END PGP SIGNATURE-----
+
+--=-ByiA0iLn+b/3OOfAUXVp--
+
