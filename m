@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:36778 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753090Ab0AUWPQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 17:15:16 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Bob Copeland <me@bobcopeland.com>
-Subject: Re: [PATCH 0/2] ath5k AP mode fixes
-Date: Thu, 21 Jan 2010 23:15:21 +0100
-Cc: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-References: <1264049464-12292-1-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1264049464-12292-1-git-send-email-me@bobcopeland.com>
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:44294 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752821Ab0AEKRK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jan 2010 05:17:10 -0500
+Received: by bwz27 with SMTP id 27so9797167bwz.21
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2010 02:17:09 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/9] mac80211: templates for drivers
+References: <20100103210552.29287.20384.stgit@tikku>
+	<1262683338.20098.8.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 05 Jan 2010 12:17:06 +0200
+In-Reply-To: <1262683338.20098.8.camel@johannes.local> (Johannes Berg's message of "Tue\, 05 Jan 2010 10\:22\:18 +0100")
+Message-ID: <87zl4svot9.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201001212315.21908.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 21 January 2010 05:51:02 Bob Copeland wrote:
-> Here are a couple of fixes to ath5k AP mode that have been
-> kicking around for a bit.
-> 
-> The sleep clock is disabled by legacy HAL for AP mode and at
-> least one person had beaconing issues as a result of our not
-> also doing so.
-> 
-> Although we decided 'fix setup for CAB queue' was not ideal,
-> there's no alternative at the moment and the current setup is
-> causing problems for people, so IMO we should just take this
-> patch as-is for now.
-> 
-> Bob Copeland (2):
->   ath5k: dont use external sleep clock in AP mode
->   ath5k: fix setup for CAB queue
+Johannes Berg <johannes@sipsolutions.net> writes:
 
+> On Sun, 2010-01-03 at 23:07 +0200, Kalle Valo wrote:
+>> Hello,
+>> 
+>> there has been talk of creating templates in mac80211 for drivers and
+>> here's what I have been thinking. I have also included wl1251 usage as
+>> an example. Please comment.
+>
+> Except for the minor comments posted inline this looks fine to me.
 
-Thanks a lot for these, Bob. I'll test them on my AP.
-
-Important: Please also add CC:stable to the patches to make
-sure they reach the endusers for 2.6.32.x.
-2.6.32.x currently is unusable in AP mode, so these patches
-are pretty important fixes (if they actually fix the issues.
-But I assume that for now ;) )
+Thank you for the review. I'll send v2 later today.
 
 -- 
-Greetings, Michael.
+Kalle Valo
