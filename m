@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:27741 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752374Ab0AYOBN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 09:01:13 -0500
-Subject: Re: [PATCH] ath9k: fix eeprom INI values override for 2GHz-only
- cards
-From: Pavel Roskin <proski@gnu.org>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, jorge@dti2.net,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <4B5B4832.2020800@openwrt.org>
-References: <4B5B4832.2020800@openwrt.org>
-Content-Type: text/plain
-Date: Mon, 25 Jan 2010 09:00:56 -0500
-Message-Id: <1264428056.2868.2.camel@mj>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36655 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754713Ab0AERa3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jan 2010 12:30:29 -0500
+Date: Tue, 5 Jan 2010 12:16:03 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Lennert Buytenhek <buytenh@wantstofly.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2.6.33] mac80211: fix skb buffering issue
+Message-ID: <20100105171603.GX6361@tuxdriver.com>
+References: <1262710858.28653.5.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1262710858.28653.5.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-01-23 at 20:04 +0100, Felix Fietkau wrote:
-> Among other changes, this commit:
+On Tue, Jan 05, 2010 at 06:00:58PM +0100, Johannes Berg wrote:
+> Since I removed the master netdev, we've been
+> keeping internal queues only, and even before
+> that we never told the networking stack above
+> the virtual interfaces about congestion. This
+> means that packets are queued in mac80211 and
+> the upper layers never know, possibly leading
+> to memory exhaustion and other problems.
 > 
->    commit 06d0f0663e11cab4ec5f2c143a118d71a12fbbe9
->    Author: Sujith <Sujith.Manoharan@atheros.com>
->    Date:   Thu Feb 12 10:06:45 2009 +0530
+> This patch makes all interfaces multiqueue and
+> uses ndo_select_queue to put the packets into
+> queues per AC. Additionally, when the driver
+> stops a queue, we now stop all corresponding
+> queues for the virtual interfaces as well.
 > 
->    ath9k: Enable Fractional N mode
+> The injection case will use VO by default for
+> non-data frames, and BE for data frames, but
+> downgrade any data frames according to ACM. It
+> needs to be fleshed out in the future to allow
+> chosing the queue/AC in radiotap.
 > 
-> changed the hw attach code to fix up initialization values only for
-> dual band devices, however the commit message did not give a reason as
-> to why this would be useful or necessary.
-> 
-> According to tests by Jorge Boncompte, this breaks at least some 
-> 2GHz-only cards, so the code should be changed back to the
-> unconditional INI fixup.
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> Reported-by: Jorge Boncompte <jorge@dti2.net>
-> Cc: stable@kernel.org
+> Reported-by: Lennert Buytenhek <buytenh@marvell.com>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Cc: stable@kernel.org [2.6.32]
+> ---
+> I know it's late, and large, but still would be good to have in .33
+> since the issue is fairly serious.
 
-Tested-by: Pavel Roskin <proski@gnu.org>
+Obviously I'd like to see some testing.  Lennert, does this patch
+resolve the issues you raised?
 
-Tested on Ubiquiti SR71-15 and Ubiquiti SR71-12.
-
+John
 -- 
-Regards,
-Pavel Roskin
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
