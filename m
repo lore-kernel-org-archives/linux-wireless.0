@@ -1,72 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43460 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752777Ab0AURvl (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:35676 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754561Ab0AESFn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 12:51:41 -0500
-Subject: Re: [PATCH] mac80211: Add HT IE to IBSS beacons and probe
- responses.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Cc: austinxxh-linux@yahoo.com, linux-wireless@vger.kernel.org
-In-Reply-To: <4B588FE8.9000705@free.fr>
-References: <856792.42713.qm@web55307.mail.re4.yahoo.com>
-	 <4B578BAB.9010608@free.fr> <1264065257.11396.32.camel@johannes.local>
-	 <4B588FE8.9000705@free.fr>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-9chSiCXSXNTyjZw47hkY"
-Date: Thu, 21 Jan 2010 18:51:33 +0100
-Message-ID: <1264096293.11396.61.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 5 Jan 2010 13:05:43 -0500
+Date: Tue, 5 Jan 2010 19:45:12 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/3] mac80211: Select lowest rate based on basic rate
+ set in AP mode
+Message-ID: <20100105174512.GA12811@jm.kir.nu>
+References: <20091229105919.GB18493@jm.kir.nu>
+ <1262683770.20098.12.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1262683770.20098.12.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jan 05, 2010 at 10:29:30AM +0100, Johannes Berg wrote:
+> On Tue, 2009-12-29 at 12:59 +0200, Jouni Malinen wrote:
+> > +	if (basic_rates & (1 << *idx))
+> > +		return; /* selected rate is a basic rate */
+> > +
+> > +	for (i = *idx + 1; i <= max_rate_idx; i++) {
+> 
+> Starting at *idx+1 only works because it's always 0 or something?
 
---=-9chSiCXSXNTyjZw47hkY
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+i = *idx case is covered above and this loop is just run if the selected
+rate was not a basic rate. And yes, we only pick the lowest rate
+currently.
 
-On Thu, 2010-01-21 at 18:33 +0100, Benoit PAPILLAULT wrote:
+> Wouldn't you want to go down from max_rate and find the highest basic
+> rate or so?
 
-> There are things :
-> - HT Capabilities IE : this should be the hardware capabilities of the=20
-> sender, be it a member of a HT IBSS or not.
+That would change behavior in potentially harmful ways, i.e., we could
+end up picking up too high a rate and some of the associated STAs might
+not be close enough to receive the frames. This is really something that
+requires much more care and should be done by the rate control algorithm
+itself (e.g., check that all associated STAs are currently using a rate
+higher than whatever we could pick for multicast/broadcast).
 
-I wouldn't advertise that though when the IBSS we want is not HT. Less
-confusion that way.
+The goal of this new code is to just enforce the must-use-basic-rate
+policy for multicast/broadcast frames. Picking the lowest available
+options sounds like the safest bet here.
 
-> - HT Information IE : this should be the BSS information, shared by all=20
-> members of the HT IBSS I think.
+> Other than that seems fine to me, except I'm not sure I like the
+> "txrc.ap" thing much, but it's probably a reasonable choice to make at
+> this point (but consider mesh, IBSS?)
 
-So we even need to adopt it, maybe?
+Cannot really say that I would like it much either, but I did not even
+want to think about IBSS rules for basic rates, never mind mesh ;-).
+This can obviously be changed in the future once it is clear that we
+are configuring the basic_rates value properly for other modes.
 
-> BTW, currently, there is no way with iw for the user to tell mac82011 to=20
-> join/create a non-HT, HT20, HT40+ or HT40- IBSS. Maybe we should update=20
-> iw first as a requirement for HT IBSS?
-
-Indeed, we need nl80211/cfg80211 changes.
-
-johannes
-
---=-9chSiCXSXNTyjZw47hkY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLWJQiAAoJEODzc/N7+QmaBnkP/3/K8cnnD3iaOmoxj6HVgc/R
-WS7btP49QAzk+7vm2rjaE15cqy6QHqWm8Y5kczEynRFyNBphnK+Egs4lfZy34H8q
-g6l24e6teQAasiyJAlacs0LhUCNJq4XONleIJZavTV7/7pomiHxbX/RD6KMMIi/z
-W6Gujj6Ecz+gisQ9dS7MQY+2YEx1FWMaawUFoX1A/isYPtN7ELJd9gpCMAsDnP5E
-KtMC87WjBYDtKNC9jT4l+vsgtrHvNglLHAi+F+ZVpsG9qDpg0MzGph2tjj8Bj/7X
-4FbApInGWxnVA4kS77Ss9mAiUa++OIbf0BpTs+TWV+fxu3bBtTmqNB3NLOXlgqrc
-6mYVNN49c1IcuRnkKjl4FLd3NbwNUCD0wNSPRnUKMEX/cpg+aTdvCu8Q9nRRUlkc
-gKPASsSGHbGnAWa5KaIouGMry1TS3vc9WWaEIckemNjRpwRy9WrnVgXWBMBoGf+e
-N1cLwCliRe3V51Rt5tRHhphh8oMuvha22pjfPtCjDUWqIlYGlnjoQfVfahMNvf6g
-dfvzHOiKpNmAvBJY64WV5BAAeCXAo/LhlpBlViimMk+mUSDw0CJEpgs2Cv/qFUJM
-9h60vt/AJ5X+YseqgQvE8dfigGDyTXoLvherDCKyJuOvwY37nUPFfJSU/voOeQSF
-ZGKjawp0zXeSuKvt6Bh9
-=H7uY
------END PGP SIGNATURE-----
-
---=-9chSiCXSXNTyjZw47hkY--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
