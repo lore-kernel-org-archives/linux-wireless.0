@@ -1,34 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1024 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751018Ab0AIGdj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jan 2010 01:33:39 -0500
-Subject: [PATCH] net/mac80211/mlme.c: Remove unnecessary semicolons
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 08 Jan 2010 22:33:38 -0800
-Message-ID: <1263018818.20926.6.camel@Joe-Laptop.home>
-Mime-Version: 1.0
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:58533 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755910Ab0AFPpE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jan 2010 10:45:04 -0500
+Received: by ewy19 with SMTP id 19so9730788ewy.21
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 07:45:01 -0800 (PST)
+Content-Type: multipart/mixed; boundary=----------oTg6YMNLehz3DxsGhumOH0
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Subject: Re: [PATCH 1/5] b43: N-PHY: implement b43_nphy_stay_carrier_search
+ and it's calls
+References: <op.u54a5ufy9lhzdc@linux-g0th.site>
+Date: Wed, 06 Jan 2010 16:46:19 +0100
+MIME-Version: 1.0
+From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <op.u54bfhwo9lhzdc@linux-g0th.site>
+In-Reply-To: <op.u54a5ufy9lhzdc@linux-g0th.site>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Joe Perches <joe@perches.com>
+------------oTg6YMNLehz3DxsGhumOH0
+Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
+Content-Transfer-Encoding: Quoted-Printable
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 72920ee..d0cc701 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1774,7 +1774,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 	if (!wk)
- 		return -ENOMEM;
- 
--	memcpy(wk->filter_ta, req->bss->bssid, ETH_ALEN);;
-+	memcpy(wk->filter_ta, req->bss->bssid, ETH_ALEN);
- 
- 	if (req->ie && req->ie_len) {
- 		memcpy(wk->ie, req->ie, req->ie_len);
+Dnia 06-01-2010 o 16:40:32 Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> na=
+pisa=C5=82(a):
 
+> b43: N-PHY: implement b43_nphy_stay_carrier_search and it's calls
+
+Attaching patch (only inline-posted before).
+
+-- =
+
+Rafa=C5=82
+------------oTg6YMNLehz3DxsGhumOH0
+Content-Disposition: attachment; filename*0="0001-b43-N-PHY-implement-b43_nphy_stay_c";
+ filename*1="arrier_search-and.patch"
+Content-Type: application/octet-stream; name*0="0001-b43-N-PHY-implement-b43_nphy_stay_c";
+ name*1="arrier_search-and.patch"
+Content-Transfer-Encoding: Base64
+
+RnJvbSBlYzU5OTAwNzQ2NGJiODIyMGM2MDVhZjUwMGI3MjQ3OTdkNTRhYmE4IE1v
+biBTZXAgMTcgMDA6MDA6MDAgMjAwMQpGcm9tOiA9P1VURi04P3E/UmFmYT1DNT04
+Mj0yME1pPUM1PTgyZWNraT89IDx6YWplYzVAZ21haWwuY29tPgpEYXRlOiBXZWQs
+IDYgSmFuIDIwMTAgMTU6MjA6MjAgKzAxMDAKU3ViamVjdDogW1BBVENIIDEvNV0g
+YjQzOiBOLVBIWTogaW1wbGVtZW50IGI0M19ucGh5X3N0YXlfY2Fycmllcl9zZWFy
+Y2ggYW5kIGl0J3MgY2FsbHMKTUlNRS1WZXJzaW9uOiAxLjAKQ29udGVudC1UeXBl
+OiB0ZXh0L3BsYWluOyBjaGFyc2V0PVVURi04CkNvbnRlbnQtVHJhbnNmZXItRW5j
+b2Rpbmc6IDhiaXQKClNpZ25lZC1vZmYtYnk6IFJhZmHFgiBNacWCZWNraSA8emFq
+ZWM1QGdtYWlsLmNvbT4KLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9iNDMvcGh5
+X24uYyB8ICAgNTcgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysKIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2I0My9waHlfbi5oIHwgICAgMyArKwog
+MiBmaWxlcyBjaGFuZ2VkLCA2MCBpbnNlcnRpb25zKCspLCAwIGRlbGV0aW9ucygt
+KQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2I0My9waHlfbi5j
+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYjQzL3BoeV9uLmMKaW5kZXggY2ViNDI5
+YS4uNDBkN2I3MyAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYjQz
+L3BoeV9uLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYjQzL3BoeV9uLmMK
+QEAgLTM0OCw2ICszNDgsNjMgQEAgc3RhdGljIHZvaWQgYjQzX25waHlfcmVzZXRf
+Y2NhKHN0cnVjdCBiNDNfd2xkZXYgKmRldikKIAliNDNfcGh5X3dyaXRlKGRldiwg
+QjQzX05QSFlfQkJDRkcsIGJiY2ZnICYgfkI0M19OUEhZX0JCQ0ZHX1JTVENDQSk7
+CiB9CiAKK3N0YXRpYyB2b2lkIGI0M19ucGh5X3dyaXRlX2NsaXBfZGV0ZWN0aW9u
+KHN0cnVjdCBiNDNfd2xkZXYgKmRldiwgdTE2ICp2YWxzKQoreworCWI0M19waHlf
+d3JpdGUoZGV2LCBCNDNfTlBIWV9DMV9DTElQMVRIUkVTLCB2YWxzWzBdKTsKKwli
+NDNfcGh5X3dyaXRlKGRldiwgQjQzX05QSFlfQzJfQ0xJUDFUSFJFUywgdmFsc1sx
+XSk7Cit9CisKK3N0YXRpYyB2b2lkIGI0M19ucGh5X3JlYWRfY2xpcF9kZXRlY3Rp
+b24oc3RydWN0IGI0M193bGRldiAqZGV2LCB1MTYgKnZhbHMpCit7CisJdmFsc1sw
+XSA9IGI0M19waHlfcmVhZChkZXYsIEI0M19OUEhZX0MxX0NMSVAxVEhSRVMpOwor
+CXZhbHNbMV0gPSBiNDNfcGh5X3JlYWQoZGV2LCBCNDNfTlBIWV9DMl9DTElQMVRI
+UkVTKTsKK30KKworc3RhdGljIHUxNiBiNDNfbnBoeV9jbGFzc2lmaWVyKHN0cnVj
+dCBiNDNfd2xkZXYgKmRldiwgdTE2IG1hc2ssIHUxNiB2YWwpCit7CisJdTE2IHRt
+cDsKKwlib29sIHN1c3BlbmRlZCA9IGZhbHNlOworCisJaWYgKGRldi0+ZGV2LT5p
+ZC5yZXZpc2lvbiA9PSAxNiAmJiBkZXYtPm1hY19zdXNwZW5kZWQgPT0gMCkgewor
+CQliNDNfbWFjX3N1c3BlbmQoZGV2KTsKKwkJc3VzcGVuZGVkID0gdHJ1ZTsKKwl9
+CisKKwl0bXAgPSBiNDNfcGh5X3JlYWQoZGV2LCBCNDNfTlBIWV9DTEFTU0NUTCk7
+CisJdG1wICY9IChCNDNfTlBIWV9DTEFTU0NUTF9DQ0tFTiB8IEI0M19OUEhZX0NM
+QVNTQ1RMX09GRE1FTiB8CisJCUI0M19OUEhZX0NMQVNTQ1RMX1dBSVRFREVOKTsK
+Kwl0bXAgJj0gfm1hc2s7CisJdG1wIHw9ICh2YWwgJiBtYXNrKTsKKwliNDNfcGh5
+X21hc2tzZXQoZGV2LCBCNDNfTlBIWV9DTEFTU0NUTCwgMHhGRkY4LCB0bXApOwor
+CisJaWYgKHN1c3BlbmRlZCkKKwkJYjQzX21hY19lbmFibGUoZGV2KTsKKworCXJl
+dHVybiB0bXA7Cit9CisKK3N0YXRpYyB2b2lkIGI0M19ucGh5X3N0YXlfY2Fycmll
+cl9zZWFyY2goc3RydWN0IGI0M193bGRldiAqZGV2LCBib29sIGVuYWJsZSkKK3sK
+KwlzdHJ1Y3QgYjQzX3BoeSAqcGh5ID0gJmRldi0+cGh5OworCXN0cnVjdCBiNDNf
+cGh5X24gKm5waHkgPSBwaHktPm47CisKKwlpZiAoZW5hYmxlKSB7CisJCXUxNiBj
+bGlwW10gPSB7IDB4RkZGRiwgMHhGRkZGIH07CisJCWlmIChucGh5LT5kZWFmX2Nv
+dW50KysgPT0gMCkgeworCQkJbnBoeS0+Y2xhc3NpZmllcl9zdGF0ZSA9IGI0M19u
+cGh5X2NsYXNzaWZpZXIoZGV2LCAwLCAwKTsKKwkJCWI0M19ucGh5X2NsYXNzaWZp
+ZXIoZGV2LCAweDcsIDApOworCQkJYjQzX25waHlfcmVhZF9jbGlwX2RldGVjdGlv
+bihkZXYsIG5waHktPmNsaXBfc3RhdGUpOworCQkJYjQzX25waHlfd3JpdGVfY2xp
+cF9kZXRlY3Rpb24oZGV2LCBjbGlwKTsKKwkJfQorCQliNDNfbnBoeV9yZXNldF9j
+Y2EoZGV2KTsKKwl9IGVsc2UgeworCQlpZiAoLS1ucGh5LT5kZWFmX2NvdW50ICE9
+IDApIHsKKwkJCWI0M19ucGh5X2NsYXNzaWZpZXIoZGV2LCAweDcsIG5waHktPmNs
+YXNzaWZpZXJfc3RhdGUpOworCQkJYjQzX25waHlfd3JpdGVfY2xpcF9kZXRlY3Rp
+b24oZGV2LCBucGh5LT5jbGlwX3N0YXRlKTsKKwkJfQorCX0KK30KKwogZW51bSBi
+NDNfbnBoeV9yZl9zZXF1ZW5jZSB7CiAJQjQzX1JGU0VRX1JYMlRYLAogCUI0M19S
+RlNFUV9UWDJSWCwKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2I0
+My9waHlfbi5oIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYjQzL3BoeV9uLmgKaW5k
+ZXggZTVlNDAyYS4uNmFiMDdmYyAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvYjQzL3BoeV9uLmgKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYjQz
+L3BoeV9uLmgKQEAgLTkzMiw2ICs5MzIsOSBAQCBzdHJ1Y3QgYjQzX3BoeV9uIHsK
+IAl1MzIgZGVhZl9jb3VudDsKIAlib29sIG11dGU7CiAKKwl1MTYgY2xhc3NpZmll
+cl9zdGF0ZTsKKwl1MTYgY2xpcF9zdGF0ZVsyXTsKKwogCXU4IGlxY2FsX2NoYW5z
+cGVjXzJHOwogCXU4IHJzc2ljYWxfY2hhbnNwZWNfMkc7CiAKLS0gCjEuNi40LjIK
+Cg==
+
+------------oTg6YMNLehz3DxsGhumOH0--
 
