@@ -1,68 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml107.kpnxchange.com ([195.121.3.11]:59720 "EHLO
-	CPSMTPM-EML107.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932622Ab0AFTHu (ORCPT
+Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:51785 "EHLO
+	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756511Ab0AFWw5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 14:07:50 -0500
-Message-ID: <4B44DF84.80206@gmail.com>
-Date: Wed, 06 Jan 2010 20:07:48 +0100
+	Wed, 6 Jan 2010 17:52:57 -0500
 From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Jiri Slaby <jslaby@suse.cz>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] NET: wireless, fix memory leak
-References: <1262795743-15009-1-git-send-email-jslaby@suse.cz> <1262795743-15009-2-git-send-email-jslaby@suse.cz>
-In-Reply-To: <1262795743-15009-2-git-send-email-jslaby@suse.cz>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2.6.33 5/8] rt2x00: Reorganize L2 padding inserting function.
+Date: Wed,  6 Jan 2010 23:52:46 +0100
+Message-Id: <1262818369-16820-6-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1262818369-16820-5-git-send-email-gwingerde@gmail.com>
+References: <1262818369-16820-1-git-send-email-gwingerde@gmail.com>
+ <1262818369-16820-2-git-send-email-gwingerde@gmail.com>
+ <1262818369-16820-3-git-send-email-gwingerde@gmail.com>
+ <1262818369-16820-4-git-send-email-gwingerde@gmail.com>
+ <1262818369-16820-5-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/06/10 17:35, Jiri Slaby wrote:
-> Stanse found a memory leak in cfg80211_wext_siwscan. creq is not
-> freed/assigned on all paths. Fix that.
-> 
-> Signed-off-by: Jiri Slaby <jslaby@suse.cz>
-> ---
->  net/wireless/scan.c |    7 +++++--
->  1 files changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-> index 9c50c85..3003d13 100644
-> --- a/net/wireless/scan.c
-> +++ b/net/wireless/scan.c
-> @@ -685,7 +685,7 @@ int cfg80211_wext_siwscan(struct net_device *dev,
->  	/* No channels found? */
->  	if (!i) {
->  		err = -EINVAL;
-> -		goto out;
-> +		goto out_free;
->  	}
->  
->  	/* Set real number of channels specified in creq->channels[] */
-> @@ -696,7 +696,7 @@ int cfg80211_wext_siwscan(struct net_device *dev,
->  		if (wrqu->data.flags & IW_SCAN_THIS_ESSID) {
->  			if (wreq->essid_len > IEEE80211_MAX_SSID_LEN) {
->  				err = -EINVAL;
-> -				goto out;
-> +				goto out_free;
->  			}
->  			memcpy(creq->ssids[0].ssid, wreq->essid, wreq->essid_len);
->  			creq->ssids[0].ssid_len = wreq->essid_len;
-> @@ -717,6 +717,9 @@ int cfg80211_wext_siwscan(struct net_device *dev,
->   out:
->  	cfg80211_unlock_rdev(rdev);
->  	return err;
-> +out_free:
-> +	kfree(creq);
-> +	goto out;
->  }
->  EXPORT_SYMBOL_GPL(cfg80211_wext_siwscan);
->  
+Simplify the rt2x00queue_insert_l2pad function by handling the alignment
+operations one by one. Do not special case special circumstances.
+Basically first perform header alignment, and then perform payload alignment
+(if any payload does exist). This results in a properly aligned skb.
 
-This last part looks a bit strange. Why don't you put out_free label before out label,
-and let it continue after the kfree, instead of jumping back to the out label.
+The end result is better readable code, with better results, as now L2 padding
+is inserted only when a payload is actually present in the frame.
 
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Acked-by: Ivo van Doorn <ivdoorn@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
-Gertjan.
+ drivers/net/wireless/rt2x00/rt2x00queue.c |   60 +++++++++++++----------------
+ 1 files changed, 27 insertions(+), 33 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index 6952ae2..8f6dc8b 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -177,45 +177,38 @@ void rt2x00queue_align_payload(struct sk_buff *skb, unsigned int header_length)
+ 
+ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
+ {
+-	unsigned int frame_length = skb->len;
++	unsigned int payload_length = skb->len - header_length;
+ 	unsigned int header_align = ALIGN_SIZE(skb, 0);
+ 	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
+ 	unsigned int l2pad = L2PAD_SIZE(header_length);
+ 
+-	if (header_align == payload_align) {
+-		/*
+-		 * Both header and payload must be moved the same
+-		 * amount of bytes to align them properly. This means
+-		 * we don't use the L2 padding but just move the entire
+-		 * frame.
+-		 */
+-		rt2x00queue_align_frame(skb);
+-	} else if (!payload_align) {
+-		/*
+-		 * Simple L2 padding, only the header needs to be moved,
+-		 * the payload is already properly aligned.
+-		 */
+-		skb_push(skb, header_align);
+-		memmove(skb->data, skb->data + header_align, header_length);
+-	} else {
+-		/*
+-		 *
+-		 * Complicated L2 padding, both header and payload need
+-		 * to be moved. By default we only move to the start
+-		 * of the buffer, so our header alignment needs to be
+-		 * increased if there is not enough room for the header
+-		 * to be moved.
+-		 */
+-		if (payload_align > header_align)
+-			header_align += 4;
++	/*
++	 * Adjust the header alignment if the payload needs to be moved more
++	 * than the header.
++	 */
++	if (payload_align > header_align)
++		header_align += 4;
++
++	/* There is nothing to do if no alignment is needed */
++	if (!header_align)
++		return;
+ 
+-		skb_push(skb, header_align);
+-		memmove(skb->data, skb->data + header_align, header_length);
++	/* Reserve the amount of space needed in front of the frame */
++	skb_push(skb, header_align);
++
++	/*
++	 * Move the header.
++	 */
++	memmove(skb->data, skb->data + header_align, header_length);
++
++	/* Move the payload, if present and if required */
++	if (payload_length && payload_align)
+ 		memmove(skb->data + header_length + l2pad,
+ 			skb->data + header_length + l2pad + payload_align,
+-			frame_length - header_length);
+-		skb_trim(skb, frame_length + l2pad);
+-	}
++			payload_length);
++
++	/* Trim the skb to the correct size */
++	skb_trim(skb, header_length + l2pad + payload_length);
+ }
+ 
+ void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int header_length)
+@@ -343,7 +336,8 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
+ 	 * Header and alignment information.
+ 	 */
+ 	txdesc->header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
+-	if (test_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags))
++	if (test_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags) &&
++	    (entry->skb->len > txdesc->header_length))
+ 		txdesc->l2pad = L2PAD_SIZE(txdesc->header_length);
+ 
+ 	/*
+-- 
+1.6.6
 
