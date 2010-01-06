@@ -1,44 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:9927 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756809Ab0ANPrJ convert rfc822-to-8bit (ORCPT
+Received: from smtp.mujha-vel.cz ([81.30.225.246]:47610 "EHLO
+	smtp.mujha-vel.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932407Ab0AFRf6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2010 10:47:09 -0500
-Received: by ey-out-2122.google.com with SMTP id 4so417741eyf.5
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jan 2010 07:47:07 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20100114153944.GA3700@dhcp-lab-161.englab.brq.redhat.com>
-References: <op.u6iu99ct9lhzdc@linux-g0th.site>
-	 <20100114153944.GA3700@dhcp-lab-161.englab.brq.redhat.com>
-Date: Thu, 14 Jan 2010 16:47:06 +0100
-Message-ID: <b170af451001140747q2f7a4f3j4e8645b3f49f79eb@mail.gmail.com>
-Subject: Re: [PATCH 2/2] b43: N-PHY: follow kernel coding style for struct
-	declaration
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 6 Jan 2010 12:35:58 -0500
+From: Jiri Slaby <jslaby@suse.cz>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] NET: wireless, fix memory leak
+Date: Wed,  6 Jan 2010 17:35:43 +0100
+Message-Id: <1262795743-15009-2-git-send-email-jslaby@suse.cz>
+In-Reply-To: <1262795743-15009-1-git-send-email-jslaby@suse.cz>
+References: <1262795743-15009-1-git-send-email-jslaby@suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 14 stycznia 2010 16:39 użytkownik Stanislaw Gruszka
-<sgruszka@redhat.com> napisał:
-> Hi
->
-> On Thu, Jan 14, 2010 at 01:21:35PM +0100, Rafał Miłecki wrote:
->>
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> ---
->>  drivers/net/wireless/b43/phy_common.c |   14 ++++++++++++++
->>  drivers/net/wireless/b43/phy_common.h |    1 +
->>  drivers/net/wireless/b43/phy_lp.c     |   17 ++---------------
->>  3 files changed, 17 insertions(+), 15 deletions(-)
->
-> Your second patch is the same as first one.
+Stanse found a memory leak in cfg80211_wext_siwscan. creq is not
+freed/assigned on all paths. Fix that.
 
-Whoops, thanks :)
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+---
+ net/wireless/scan.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 9c50c85..3003d13 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -685,7 +685,7 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+ 	/* No channels found? */
+ 	if (!i) {
+ 		err = -EINVAL;
+-		goto out;
++		goto out_free;
+ 	}
+ 
+ 	/* Set real number of channels specified in creq->channels[] */
+@@ -696,7 +696,7 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+ 		if (wrqu->data.flags & IW_SCAN_THIS_ESSID) {
+ 			if (wreq->essid_len > IEEE80211_MAX_SSID_LEN) {
+ 				err = -EINVAL;
+-				goto out;
++				goto out_free;
+ 			}
+ 			memcpy(creq->ssids[0].ssid, wreq->essid, wreq->essid_len);
+ 			creq->ssids[0].ssid_len = wreq->essid_len;
+@@ -717,6 +717,9 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+  out:
+ 	cfg80211_unlock_rdev(rdev);
+ 	return err;
++out_free:
++	kfree(creq);
++	goto out;
+ }
+ EXPORT_SYMBOL_GPL(cfg80211_wext_siwscan);
+ 
 -- 
-Rafał
+1.6.5.7
+
