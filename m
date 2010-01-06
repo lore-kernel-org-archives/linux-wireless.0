@@ -1,76 +1,374 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f188.google.com ([209.85.210.188]:46885 "EHLO
-	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751595Ab0AGTbR (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38185 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755736Ab0AFOZc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2010 14:31:17 -0500
-Received: by yxe26 with SMTP id 26so17990863yxe.4
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2010 11:31:15 -0800 (PST)
-Message-ID: <4B46367F.2020306@lwfinger.net>
-Date: Thu, 07 Jan 2010 13:31:11 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: tim.gardner@canonical.com
-CC: mb@bu3sch.de, stefano.brivio@polimi.it,
-	linux-wireless@vger.kernel.org,
-	Martin Pitt <martin.pitt@canonical.com>
-Subject: Re: [PATCH] b43: Declare all possible firmware files.
-References: <20100107183517.A322FF88D8@sepang.rtg.net> <4B463088.1020000@lwfinger.net> <4B4633CE.30906@canonical.com>
-In-Reply-To: <4B4633CE.30906@canonical.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 6 Jan 2010 09:25:32 -0500
+Subject: Re: [PATCH] cfg80211: Store IEs from both Beacon and Probe
+ Response frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20100106141924.GA18680@jm.kir.nu>
+References: <20100106141924.GA18680@jm.kir.nu>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-TNlWlgRIpQKFsoKZ2Blj"
+Date: Wed, 06 Jan 2010 15:25:11 +0100
+Message-ID: <1262787911.9268.111.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/07/2010 01:19 PM, Tim Gardner wrote:
-> Larry Finger wrote:
->> On 01/07/2010 12:35 PM, Tim Gardner wrote:
->>> The following changes since commit 2c1f1895ef2aa8f0e5497893eff71304aef332e1:
->>>   Linus Torvalds (1):
->>>         Merge branch 'drm-linus' of git://git.kernel.org/.../airlied/drm-2.6
->>>
->>> are available in the git repository at:
->>>
->>>   git://kernel.ubuntu.com/rtg/linux-2.6 b43
->>>
->>> Tim Gardner (1):
->>>       b43: Declare all possible firmware files.
->>>
->>>  drivers/net/wireless/b43/main.c |   34 ++++++++++++++++++++++++++++++++--
->>>  1 files changed, 32 insertions(+), 2 deletions(-)
->>>
->>> >From def1157eaeb397f0afab25b91db8bab3fcb8816c Mon Sep 17 00:00:00 2001
->>> From: Tim Gardner <tim.gardner@canonical.com>
->>> Date: Thu, 7 Jan 2010 11:10:38 -0700
->>> Subject: [PATCH] b43: Declare all possible firmware files.
->>>
->>> BugLink: http://bugs.launchpad.net/bugs/488636
->>>
->>> Enhances module information with the names of the firmware files
->>> that could be used by this driver. This helps tools like Jockey to
->>> correctly detect and/or install the firmware files relevant to
->>> this driver.
->>>
->>> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
->>> ---
->>
->> How does Jockey do the firmware installation? I'm not familiar with this tool.
->>
->> Larry
->>
-> 
-> Jockey is the codename for the Ubuntu Hardware Manager tool developed
-> and maintained by Martin Pitt. Its primary purpose is to assist with the
-> installation of not-completely open source components. Examples include
-> nVidia and Broadcom 'wl'. In this case, I believe jockey offers a choice
-> of b43 or wl (if the PCI IDs overlap).
-> 
-> Cc'ing Martin.
 
-Assuming that Jockey does not violate Broadcom's copyright on these firmware
-files, this approach is going to get a bit messy. There are two new kinds of
-devices that are currently undergoing reverse engineering. Once code is
-available for them, the number of firmware files will be increased by quite a
-bit. My current /lib/firmware/b43 has 93 files in it. Having that many
-MODULE_FIRMWARE macros seems wrong.
+--=-TNlWlgRIpQKFsoKZ2Blj
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Larry
+On Wed, 2010-01-06 at 16:19 +0200, Jouni Malinen wrote:
+> Store information elements from Beacon and Probe Response frames in
+> separate buffers to allow both sets to be made available through
+> nl80211. This allows user space applications to get access to IEs from
+> Beacon frames even if we have received Probe Response frames from the
+> BSS. Previously, the IEs from Probe Response frames would have
+> overridden the IEs from Beacon frames.
+>=20
+> This feature is of somewhat limited use since most protocols include
+> the same (or extended) information in Probe Response frames. However,
+> there are couple of exceptions where the IEs from Beacon frames could
+> be of some use: TIM IE is only included in Beacon frames (and it would
+> be needed to figure out the DTIM period used in the BSS) and at least
+> some implementations of Wireless Provisioning Services seem to include
+> the full IE only in Beacon frames).
+>=20
+> The new BSS attribute for scan results is added to allow both the IE
+> sets to be delivered. This is done in a way that maintains the
+> previously used behavior for applications that are not aware of the
+> new NL80211_BSS_BEACON_IES attribute.
+>=20
+> Signed-off-by: Jouni Malinen <j@w1.fi>
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+>=20
+> ---
+>  include/linux/nl80211.h |   10 +++-
+>  include/net/cfg80211.h  |   12 ++++
+>  net/wireless/core.h     |    3 -
+>  net/wireless/nl80211.c  |    4 +
+>  net/wireless/scan.c     |  120
+> ++++++++++++++++++++++++++++++++++++------------
+>  5 files changed, 116 insertions(+), 33 deletions(-)
+>=20
+> --- uml.orig/include/linux/nl80211.h	2010-01-06 14:50:20.000000000
+> +0200
+> +++ uml/include/linux/nl80211.h	2010-01-06 16:03:25.000000000 +0200
+> @@ -1399,13 +1399,20 @@ enum nl80211_channel_type {
+>   * @NL80211_BSS_BEACON_INTERVAL: beacon interval of the (I)BSS (u16)
+>   * @NL80211_BSS_CAPABILITY: capability field (CPU order, u16)
+>   * @NL80211_BSS_INFORMATION_ELEMENTS: binary attribute containing the
+> - *	raw information elements from the probe response/beacon (bin)
+> + *	raw information elements from the probe response/beacon (bin);
+> + *	if the %NL80211_BSS_BEACON_IES attribute is present, the IEs here
+> are
+> + *	from a Probe Response frame; otherwise they are from a Beacon
+> frame.
+> + *	However, if the driver does not indicate the source of the IEs,
+> these
+> + *	IEs may be from either frame subtype.
+>   * @NL80211_BSS_SIGNAL_MBM: signal strength of probe response/beacon
+>   *	in mBm (100 * dBm) (s32)
+>   * @NL80211_BSS_SIGNAL_UNSPEC: signal strength of the probe
+> response/beacon
+>   *	in unspecified units, scaled to 0..100 (u8)
+>   * @NL80211_BSS_STATUS: status, if this BSS is "used"
+>   * @NL80211_BSS_SEEN_MS_AGO: age of this BSS entry in ms
+> + * @NL80211_BSS_BEACON_IES: binary attribute containing the raw
+> information
+> + *	elements from a Beacon frame (bin); not present if no Beacon frame
+> has
+> + *	yet been received
+>   * @__NL80211_BSS_AFTER_LAST: internal
+>   * @NL80211_BSS_MAX: highest BSS attribute
+>   */
+> @@ -1421,6 +1428,7 @@ enum nl80211_bss {
+>  	NL80211_BSS_SIGNAL_UNSPEC,
+>  	NL80211_BSS_STATUS,
+>  	NL80211_BSS_SEEN_MS_AGO,
+> +	NL80211_BSS_BEACON_IES,
+> =20
+>  	/* keep last */
+>  	__NL80211_BSS_AFTER_LAST,
+> --- uml.orig/include/net/cfg80211.h	2010-01-06 14:47:50.000000000
+> +0200
+> +++ uml/include/net/cfg80211.h	2010-01-06 14:49:50.000000000 +0200
+> @@ -626,8 +626,14 @@ enum cfg80211_signal_type {
+>   * @beacon_interval: the beacon interval as from the frame
+>   * @capability: the capability field in host byte order
+>   * @information_elements: the information elements (Note that there
+> - *	is no guarantee that these are well-formed!)
+> + *	is no guarantee that these are well-formed!); this is a pointer to
+> + *	either the beacon_ies or proberesp_ies depending on whether Probe
+> + *	Response frame has been received
+>   * @len_information_elements: total length of the information
+> elements
+> + * @beacon_ies: the information elements from the last Beacon frame
+> + * @len_beacon_ies: total length of the beacon_ies
+> + * @proberesp_ies: the information elements from the last Probe
+> Response frame
+> + * @len_proberesp_ies: total length of the proberesp_ies
+>   * @signal: signal strength value (type depends on the wiphy's
+> signal_type)
+>   * @free_priv: function pointer to free private data
+>   * @priv: private area for driver use, has at least wiphy->bss_priv_s
+> ize bytes
+> @@ -641,6 +647,10 @@ struct cfg80211_bss {
+>  	u16 capability;
+>  	u8 *information_elements;
+>  	size_t len_information_elements;
+> +	u8 *beacon_ies;
+> +	size_t len_beacon_ies;
+> +	u8 *proberesp_ies;
+> +	size_t len_proberesp_ies;
+> =20
+>  	s32 signal;
+> =20
+> --- uml.orig/net/wireless/core.h	2010-01-06 14:55:19.000000000 +0200
+> +++ uml/net/wireless/core.h	2010-01-06 14:55:37.000000000 +0200
+> @@ -111,7 +111,8 @@ struct cfg80211_internal_bss {
+>  	unsigned long ts;
+>  	struct kref ref;
+>  	atomic_t hold;
+> -	bool ies_allocated;
+> +	bool beacon_ies_allocated;
+> +	bool proberesp_ies_allocated;
+> =20
+>  	/* must be last because of priv member */
+>  	struct cfg80211_bss pub;
+> --- uml.orig/net/wireless/nl80211.c	2010-01-06 14:47:11.000000000
+> +0200
+> +++ uml/net/wireless/nl80211.c	2010-01-06 15:07:19.000000000 +0200
+> @@ -3151,6 +3151,10 @@ static int nl80211_send_bss(struct sk_bu
+>  		NLA_PUT(msg, NL80211_BSS_INFORMATION_ELEMENTS,
+>  			res->len_information_elements,
+>  			res->information_elements);
+> +	if (res->beacon_ies && res->len_beacon_ies &&
+> +	    res->beacon_ies !=3D res->information_elements)
+> +		NLA_PUT(msg, NL80211_BSS_BEACON_IES,
+> +			res->len_beacon_ies, res->beacon_ies);
+>  	if (res->tsf)
+>  		NLA_PUT_U64(msg, NL80211_BSS_TSF, res->tsf);
+>  	if (res->beacon_interval)
+> --- uml.orig/net/wireless/scan.c	2010-01-06 14:46:47.000000000 +0200
+> +++ uml/net/wireless/scan.c	2010-01-06 15:34:30.000000000 +0200
+> @@ -100,8 +100,10 @@ static void bss_release(struct kref *ref
+>  	if (bss->pub.free_priv)
+>  		bss->pub.free_priv(&bss->pub);
+> =20
+> -	if (bss->ies_allocated)
+> -		kfree(bss->pub.information_elements);
+> +	if (bss->beacon_ies_allocated)
+> +		kfree(bss->pub.beacon_ies);
+> +	if (bss->proberesp_ies_allocated)
+> +		kfree(bss->pub.proberesp_ies);
+> =20
+>  	BUG_ON(atomic_read(&bss->hold));
+> =20
+> @@ -375,8 +377,7 @@ rb_find_bss(struct cfg80211_registered_d
+> =20
+>  static struct cfg80211_internal_bss *
+>  cfg80211_bss_update(struct cfg80211_registered_device *dev,
+> -		    struct cfg80211_internal_bss *res,
+> -		    bool overwrite)
+> +		    struct cfg80211_internal_bss *res)
+>  {
+>  	struct cfg80211_internal_bss *found =3D NULL;
+>  	const u8 *meshid, *meshcfg;
+> @@ -418,28 +419,64 @@ cfg80211_bss_update(struct cfg80211_regi
+>  		found->pub.capability =3D res->pub.capability;
+>  		found->ts =3D res->ts;
+> =20
+> -		/* overwrite IEs */
+> -		if (overwrite) {
+> +		/* Update IEs */
+> +		if (res->pub.proberesp_ies) {
+>  			size_t used =3D dev->wiphy.bss_priv_size + sizeof(*res);
+> -			size_t ielen =3D res->pub.len_information_elements;
+> +			size_t ielen =3D res->pub.len_proberesp_ies;
+> =20
+> -			if (!found->ies_allocated && ksize(found) >=3D used + ielen) {
+> -				memcpy(found->pub.information_elements,
+> -				       res->pub.information_elements, ielen);
+> -				found->pub.len_information_elements =3D ielen;
+> +			if (found->pub.proberesp_ies &&
+> +			    !found->proberesp_ies_allocated &&
+> +			    ksize(found) >=3D used + ielen) {
+> +				memcpy(found->pub.proberesp_ies,
+> +				       res->pub.proberesp_ies, ielen);
+> +				found->pub.len_proberesp_ies =3D ielen;
+>  			} else {
+> -				u8 *ies =3D found->pub.information_elements;
+> +				u8 *ies =3D found->pub.proberesp_ies;
+> =20
+> -				if (found->ies_allocated)
+> +				if (found->proberesp_ies_allocated)
+>  					ies =3D krealloc(ies, ielen, GFP_ATOMIC);
+>  				else
+>  					ies =3D kmalloc(ielen, GFP_ATOMIC);
+> =20
+>  				if (ies) {
+> -					memcpy(ies, res->pub.information_elements, ielen);
+> -					found->ies_allocated =3D true;
+> -					found->pub.information_elements =3D ies;
+> -					found->pub.len_information_elements =3D ielen;
+> +					memcpy(ies, res->pub.proberesp_ies,
+> +					       ielen);
+> +					found->proberesp_ies_allocated =3D true;
+> +					found->pub.proberesp_ies =3D ies;
+> +					found->pub.len_proberesp_ies =3D ielen;
+> +				}
+> +			}
+> +
+> +			/* Override possible earlier Beacon frame IEs */
+> +			found->pub.information_elements =3D
+> +				found->pub.proberesp_ies;
+> +			found->pub.len_information_elements =3D
+> +				found->pub.len_proberesp_ies;
+> +		}
+> +		if (res->pub.beacon_ies) {
+> +			size_t used =3D dev->wiphy.bss_priv_size + sizeof(*res);
+> +			size_t ielen =3D res->pub.len_beacon_ies;
+> +
+> +			if (found->pub.beacon_ies &&
+> +			    !found->beacon_ies_allocated &&
+> +			    ksize(found) >=3D used + ielen) {
+> +				memcpy(found->pub.beacon_ies,
+> +				       res->pub.beacon_ies, ielen);
+> +				found->pub.len_beacon_ies =3D ielen;
+> +			} else {
+> +				u8 *ies =3D found->pub.beacon_ies;
+> +
+> +				if (found->beacon_ies_allocated)
+> +					ies =3D krealloc(ies, ielen, GFP_ATOMIC);
+> +				else
+> +					ies =3D kmalloc(ielen, GFP_ATOMIC);
+> +
+> +				if (ies) {
+> +					memcpy(ies, res->pub.beacon_ies,
+> +					       ielen);
+> +					found->beacon_ies_allocated =3D true;
+> +					found->pub.beacon_ies =3D ies;
+> +					found->pub.len_beacon_ies =3D ielen;
+>  				}
+>  			}
+>  		}
+> @@ -489,14 +526,26 @@ cfg80211_inform_bss(struct wiphy *wiphy,
+>  	res->pub.tsf =3D timestamp;
+>  	res->pub.beacon_interval =3D beacon_interval;
+>  	res->pub.capability =3D capability;
+> -	/* point to after the private area */
+> -	res->pub.information_elements =3D (u8 *)res + sizeof(*res) + privsz;
+> -	memcpy(res->pub.information_elements, ie, ielen);
+> -	res->pub.len_information_elements =3D ielen;
+> +	/*
+> +	 * Since we do not know here whether the IEs are from a Beacon or
+> Probe
+> +	 * Response frame, we need to pick one of the options and only use
+> it
+> +	 * with the driver that does not provide the full Beacon/Probe
+> Response
+> +	 * frame. Use Beacon frame pointer to avoid indicating that this
+> should
+> +	 * override the information_elements pointer should we have received
+> an
+> +	 * earlier indication of Probe Response data.
+> +	 *
+> +	 * The initial buffer for the IEs is allocated with the BSS entry
+> and
+> +	 * is located after the private area.
+> +	 */
+> +	res->pub.beacon_ies =3D (u8 *)res + sizeof(*res) + privsz;
+> +	memcpy(res->pub.beacon_ies, ie, ielen);
+> +	res->pub.len_beacon_ies =3D ielen;
+> +	res->pub.information_elements =3D res->pub.beacon_ies;
+> +	res->pub.len_information_elements =3D res->pub.len_beacon_ies;
+> =20
+>  	kref_init(&res->ref);
+> =20
+> -	res =3D cfg80211_bss_update(wiphy_to_dev(wiphy), res, 0);
+> +	res =3D cfg80211_bss_update(wiphy_to_dev(wiphy), res);
+>  	if (!res)
+>  		return NULL;
+> =20
+> @@ -517,7 +566,6 @@ cfg80211_inform_bss_frame(struct wiphy *
+>  	struct cfg80211_internal_bss *res;
+>  	size_t ielen =3D len - offsetof(struct ieee80211_mgmt,
+>  				      u.probe_resp.variable);
+> -	bool overwrite;
+>  	size_t privsz =3D wiphy->bss_priv_size;
+> =20
+>  	if (WARN_ON(wiphy->signal_type =3D=3D NL80211_BSS_SIGNAL_UNSPEC &&
+> @@ -538,16 +586,28 @@ cfg80211_inform_bss_frame(struct wiphy *
+>  	res->pub.tsf =3D le64_to_cpu(mgmt->u.probe_resp.timestamp);
+>  	res->pub.beacon_interval =3D
+> le16_to_cpu(mgmt->u.probe_resp.beacon_int);
+>  	res->pub.capability =3D le16_to_cpu(mgmt->u.probe_resp.capab_info);
+> -	/* point to after the private area */
+> -	res->pub.information_elements =3D (u8 *)res + sizeof(*res) + privsz;
+> -	memcpy(res->pub.information_elements, mgmt->u.probe_resp.variable,
+> ielen);
+> -	res->pub.len_information_elements =3D ielen;
+> +	/*
+> +	 * The initial buffer for the IEs is allocated with the BSS entry
+> and
+> +	 * is located after the private area.
+> +	 */
+> +	if (ieee80211_is_probe_resp(mgmt->frame_control)) {
+> +		res->pub.proberesp_ies =3D (u8 *) res + sizeof(*res) + privsz;
+> +		memcpy(res->pub.proberesp_ies, mgmt->u.probe_resp.variable,
+> +		       ielen);
+> +		res->pub.len_proberesp_ies =3D ielen;
+> +		res->pub.information_elements =3D res->pub.proberesp_ies;
+> +		res->pub.len_information_elements =3D res->pub.len_proberesp_ies;
+> +	} else {
+> +		res->pub.beacon_ies =3D (u8 *) res + sizeof(*res) + privsz;
+> +		memcpy(res->pub.beacon_ies, mgmt->u.beacon.variable, ielen);
+> +		res->pub.len_beacon_ies =3D ielen;
+> +		res->pub.information_elements =3D res->pub.beacon_ies;
+> +		res->pub.len_information_elements =3D res->pub.len_beacon_ies;
+> +	}
+> =20
+>  	kref_init(&res->ref);
+> =20
+> -	overwrite =3D ieee80211_is_probe_resp(mgmt->frame_control);
+> -
+> -	res =3D cfg80211_bss_update(wiphy_to_dev(wiphy), res, overwrite);
+> +	res =3D cfg80211_bss_update(wiphy_to_dev(wiphy), res);
+>  	if (!res)
+>  		return NULL;
+> =20
+>=20
+
+
+--=-TNlWlgRIpQKFsoKZ2Blj
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLRJ1DAAoJEODzc/N7+QmaSO8QAMGBb1FqMPk8HIg1oxCJlZCq
+fuGwc4eZR/iDr1Zhxg4gmQEkVCUHUUAW/1pS1Lq6m0feIiOWkKNvT0SkmP4Drqbv
+AkHZIyAlEZl9cCQS7KG8P20nQeJdEcKseM8sHR6FSK4x/U8+StUI6leEUxd14AlS
+reGMv4Ews+BaceiCSlKY+ITloAL6Gz3C2Gync8RxxR0sfZJ/7XLlR4iIP01VD/bm
+FvCMZCgk9wyeorEAA7GjmYqpiagNBFSzxC2rWzF18u0XPSB5k4q9Ph7M9iR3aBOz
+cUDJmygy0s9gQa+ea9XLVPk06Fy4ayVLuwgccW6XVT+nKSB9QxTdTIGpsn2QnXIo
+4h5e/9Oy7cqQB4jGrRx0xtkd0SusmlVPLKWnD83JBE+XhGdxxM12BdwZ9SGcPjF7
+87GjP38H1rswvvSqp5rR5Znwa2ytMjUGCKgT7EJUaq+icz7soaiKTtxUsGaM8rIx
+9XTUN1vC42rqCc2cIZuIvlCdckLxjy3aNLUA9AnUaBErazi28P2BPawumu50fy7o
+SVvWYWp/Ma9PT/h6pHsk4JOcuV8WFt6Jvmo4EzAfckH3N6mToe9UkIOfUta8Cvy4
+sAWnH0RnDon/xgrj0kmPu0uxE/pQPTPH/qD4q57XVh0PybVUAiOMXuVWbMmYMpte
+SGTDi+DS9PHODg4RwHJn
+=WyxH
+-----END PGP SIGNATURE-----
+
+--=-TNlWlgRIpQKFsoKZ2Blj--
+
