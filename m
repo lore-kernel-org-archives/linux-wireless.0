@@ -1,81 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web55301.mail.re4.yahoo.com ([206.190.58.180]:32216 "HELO
-	web55301.mail.re4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754675Ab0AZQbj convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2010 11:31:39 -0500
-Message-ID: <796923.61885.qm@web55301.mail.re4.yahoo.com>
-Date: Tue, 26 Jan 2010 08:31:38 -0800 (PST)
-From: X Xiao <austinxxh-linux@yahoo.com>
-Reply-To: austinxxh-linux@yahoo.com
-Subject: Re: Building of compat-wireless-old in 2.6.25 BSP kernel for PowerPC           architecture
-To: linux-wireless@vger.kernel.org, PAN Sunny S K <sunnypan@ust.hk>
-In-Reply-To: <51523.143.89.144.207.1264488274.squirrel@sqmail.ust.hk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:51142 "EHLO
+	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932373Ab0AFWw7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jan 2010 17:52:59 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Benoit Papillault <benoit.papillault@free.fr>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2.6.33 7/8] rt2x00: Fix rt2800usb RX frame format and as such L2PAD
+Date: Wed,  6 Jan 2010 23:52:48 +0100
+Message-Id: <1262818369-16820-8-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1262818369-16820-7-git-send-email-gwingerde@gmail.com>
+References: <1262818369-16820-1-git-send-email-gwingerde@gmail.com>
+ <1262818369-16820-2-git-send-email-gwingerde@gmail.com>
+ <1262818369-16820-3-git-send-email-gwingerde@gmail.com>
+ <1262818369-16820-4-git-send-email-gwingerde@gmail.com>
+ <1262818369-16820-5-git-send-email-gwingerde@gmail.com>
+ <1262818369-16820-6-git-send-email-gwingerde@gmail.com>
+ <1262818369-16820-7-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I would recommend you upgrade your kernel to a newer version, where compat-wireless works better with. 83xx is well supported by newer kernels.
-xxiao
+From: Benoit Papillault <benoit.papillault@free.fr>
 
---- On Tue, 1/26/10, PAN Sunny S K <sunnypan@ust.hk> wrote:
+According to Ralink source code, the RX frame format is RXINFO + RXWI +
+802.11 frame + RXD, including various padding. Before this patch, we
+were using RXD + RXWI + 802.11 frame, so RXD was not correct.
 
-> From: PAN Sunny S K <sunnypan@ust.hk>
-> Subject: Building of compat-wireless-old in 2.6.25 BSP kernel for PowerPC           architecture
-> To: linux-wireless@vger.kernel.org
-> Date: Tuesday, January 26, 2010, 12:44 AM
-> Dear Sir,
-> 
-> My name is Sunny, I'm from the MTrec group in Hong Kong
-> University of
-> Science and Technology. We are currently developing a
-> network device which
-> will utilize the wireless technology. As part of the
-> development, we are
-> examining different reference design from various
-> companies. Currently
-> we've received a MPC8377EWLAN from Freescale which we will
-> need to port
-> our application onto. Our application deployment on other
-> device are
-> currently based on 802.11abg Atheros card with Madwifi
-> driver. Starting
-> with this MPC8377EWLAN, we would like to trial with a new
-> Atheros AR9160
-> 802.11bgn card. Since the chipset is not supported by
-> Madwifi, and the
-> driver provided by Freescale is proprietary and has problem
-> with
-> wlanconfig list scan result, we try to build our own driver
-> instead of
-> relying on Freescale.
-> The MPC8377EWLAN is using a PowerPC architecture MPC8377
-> CPU and the
-> firmware is built by using Freescale's LTIB, the kernel
-> came with the LTIB
-> is 2.6.25 which is slightly different from the mainstream
-> 2.6.25 kernel.
-> However, when I try to integrate the compat-wireless-old
-> source into the
-> LTIB's 2.6.25 kernel, error comes up in socket.c and many
-> other networking
-> source.
-> Therefore, I'd like to seek for some advice of whether the
-> compat-wireless-old could be compiled with linux kernels
-> that is compiled
-> with BSP like LTIB. And how can I solve the building
-> problem between the
-> compat-wireless-old and the 2.6.25 kernel?
-> 
-> Thanks in advance.
-> 
-> Best regards,
-> Sunny Pan
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Doing this, we fix the L2PAD bit which is now correctly set on received
+frames.
+
+Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+Acked-by: Ivo van Doorn <ivdoorn@gmail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |   38 +++++++++----
+ drivers/net/wireless/rt2x00/rt2800usb.h |   90 ++++++++++++++++++++++++-------
+ 2 files changed, 97 insertions(+), 31 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index c146c48..e41aa19 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -573,41 +573,57 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+-	__le32 *rxd = (__le32 *)entry->skb->data;
++	__le32 *rxi = (__le32 *)entry->skb->data;
+ 	__le32 *rxwi;
+-	u32 rxd0;
++	__le32 *rxd;
++	u32 rxi0;
+ 	u32 rxwi0;
+ 	u32 rxwi1;
+ 	u32 rxwi2;
+ 	u32 rxwi3;
++	u32 rxd0;
++	int rx_pkt_len;
++
++	/*
++	 * RX frame format is :
++	 * | RXINFO | RXWI | header | L2 pad | payload | pad | RXD | USB pad |
++	 *          |<------------ rx_pkt_len -------------->|
++	 */
++	rt2x00_desc_read(rxi, 0, &rxi0);
++	rx_pkt_len = rt2x00_get_field32(rxi0, RXINFO_W0_USB_DMA_RX_PKT_LEN);
++
++	rxwi = (__le32 *)(entry->skb->data + RXINFO_DESC_SIZE);
++
++	/*
++	 * FIXME : we need to check for rx_pkt_len validity
++	 */
++	rxd = (__le32 *)(entry->skb->data + RXINFO_DESC_SIZE + rx_pkt_len);
+ 
+ 	/*
+ 	 * Copy descriptor to the skbdesc->desc buffer, making it safe from
+ 	 * moving of frame data in rt2x00usb.
+ 	 */
+-	memcpy(skbdesc->desc, rxd, skbdesc->desc_len);
+-	rxd = (__le32 *)skbdesc->desc;
+-	rxwi = &rxd[RXINFO_DESC_SIZE / sizeof(__le32)];
++	memcpy(skbdesc->desc, rxi, skbdesc->desc_len);
+ 
+ 	/*
+ 	 * It is now safe to read the descriptor on all architectures.
+ 	 */
+-	rt2x00_desc_read(rxd, 0, &rxd0);
+ 	rt2x00_desc_read(rxwi, 0, &rxwi0);
+ 	rt2x00_desc_read(rxwi, 1, &rxwi1);
+ 	rt2x00_desc_read(rxwi, 2, &rxwi2);
+ 	rt2x00_desc_read(rxwi, 3, &rxwi3);
++	rt2x00_desc_read(rxd, 0, &rxd0);
+ 
+-	if (rt2x00_get_field32(rxd0, RXINFO_W0_CRC_ERROR))
++	if (rt2x00_get_field32(rxd0, RXD_W0_CRC_ERROR))
+ 		rxdesc->flags |= RX_FLAG_FAILED_FCS_CRC;
+ 
+ 	if (test_bit(CONFIG_SUPPORT_HW_CRYPTO, &rt2x00dev->flags)) {
+ 		rxdesc->cipher = rt2x00_get_field32(rxwi0, RXWI_W0_UDF);
+ 		rxdesc->cipher_status =
+-		    rt2x00_get_field32(rxd0, RXINFO_W0_CIPHER_ERROR);
++		    rt2x00_get_field32(rxd0, RXD_W0_CIPHER_ERROR);
+ 	}
+ 
+-	if (rt2x00_get_field32(rxd0, RXINFO_W0_DECRYPTED)) {
++	if (rt2x00_get_field32(rxd0, RXD_W0_DECRYPTED)) {
+ 		/*
+ 		 * Hardware has stripped IV/EIV data from 802.11 frame during
+ 		 * decryption. Unfortunately the descriptor doesn't contain
+@@ -622,10 +638,10 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
+ 			rxdesc->flags |= RX_FLAG_MMIC_ERROR;
+ 	}
+ 
+-	if (rt2x00_get_field32(rxd0, RXINFO_W0_MY_BSS))
++	if (rt2x00_get_field32(rxd0, RXD_W0_MY_BSS))
+ 		rxdesc->dev_flags |= RXDONE_MY_BSS;
+ 
+-	if (rt2x00_get_field32(rxd0, RXINFO_W0_L2PAD))
++	if (rt2x00_get_field32(rxd0, RXD_W0_L2PAD))
+ 		rxdesc->dev_flags |= RXDONE_L2PAD;
+ 
+ 	if (rt2x00_get_field32(rxwi1, RXWI_W1_SHORT_GI))
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.h b/drivers/net/wireless/rt2x00/rt2800usb.h
+index 1e4340a..d1d8ae9 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.h
++++ b/drivers/net/wireless/rt2x00/rt2800usb.h
+@@ -79,6 +79,8 @@
+  */
+ #define TXINFO_DESC_SIZE		( 1 * sizeof(__le32) )
+ #define RXINFO_DESC_SIZE		( 1 * sizeof(__le32) )
++#define RXWI_DESC_SIZE			( 4 * sizeof(__le32) )
++#define RXD_DESC_SIZE			( 1 * sizeof(__le32) )
+ 
+ /*
+  * TX Info structure
+@@ -101,6 +103,54 @@
+ #define TXINFO_W0_USB_DMA_TX_BURST	FIELD32(0x80000000)
+ 
+ /*
++ * RX Info structure
++ */
++
++/*
++ * Word 0
++ */
++
++#define RXINFO_W0_USB_DMA_RX_PKT_LEN	FIELD32(0x0000ffff)
++
++/*
++ * RX WI structure
++ */
++
++/*
++ * Word0
++ */
++#define RXWI_W0_WIRELESS_CLI_ID		FIELD32(0x000000ff)
++#define RXWI_W0_KEY_INDEX		FIELD32(0x00000300)
++#define RXWI_W0_BSSID			FIELD32(0x00001c00)
++#define RXWI_W0_UDF			FIELD32(0x0000e000)
++#define RXWI_W0_MPDU_TOTAL_BYTE_COUNT	FIELD32(0x0fff0000)
++#define RXWI_W0_TID			FIELD32(0xf0000000)
++
++/*
++ * Word1
++ */
++#define RXWI_W1_FRAG			FIELD32(0x0000000f)
++#define RXWI_W1_SEQUENCE		FIELD32(0x0000fff0)
++#define RXWI_W1_MCS			FIELD32(0x007f0000)
++#define RXWI_W1_BW			FIELD32(0x00800000)
++#define RXWI_W1_SHORT_GI		FIELD32(0x01000000)
++#define RXWI_W1_STBC			FIELD32(0x06000000)
++#define RXWI_W1_PHYMODE			FIELD32(0xc0000000)
++
++/*
++ * Word2
++ */
++#define RXWI_W2_RSSI0			FIELD32(0x000000ff)
++#define RXWI_W2_RSSI1			FIELD32(0x0000ff00)
++#define RXWI_W2_RSSI2			FIELD32(0x00ff0000)
++
++/*
++ * Word3
++ */
++#define RXWI_W3_SNR0			FIELD32(0x000000ff)
++#define RXWI_W3_SNR1			FIELD32(0x0000ff00)
++
++/*
+  * RX descriptor format for RX Ring.
+  */
+ 
+@@ -115,25 +165,25 @@
+  * AMSDU: rx with 802.3 header, not 802.11 header.
+  */
+ 
+-#define RXINFO_W0_BA			FIELD32(0x00000001)
+-#define RXINFO_W0_DATA			FIELD32(0x00000002)
+-#define RXINFO_W0_NULLDATA		FIELD32(0x00000004)
+-#define RXINFO_W0_FRAG			FIELD32(0x00000008)
+-#define RXINFO_W0_UNICAST_TO_ME		FIELD32(0x00000010)
+-#define RXINFO_W0_MULTICAST		FIELD32(0x00000020)
+-#define RXINFO_W0_BROADCAST		FIELD32(0x00000040)
+-#define RXINFO_W0_MY_BSS		FIELD32(0x00000080)
+-#define RXINFO_W0_CRC_ERROR		FIELD32(0x00000100)
+-#define RXINFO_W0_CIPHER_ERROR		FIELD32(0x00000600)
+-#define RXINFO_W0_AMSDU			FIELD32(0x00000800)
+-#define RXINFO_W0_HTC			FIELD32(0x00001000)
+-#define RXINFO_W0_RSSI			FIELD32(0x00002000)
+-#define RXINFO_W0_L2PAD			FIELD32(0x00004000)
+-#define RXINFO_W0_AMPDU			FIELD32(0x00008000)
+-#define RXINFO_W0_DECRYPTED		FIELD32(0x00010000)
+-#define RXINFO_W0_PLCP_RSSI		FIELD32(0x00020000)
+-#define RXINFO_W0_CIPHER_ALG		FIELD32(0x00040000)
+-#define RXINFO_W0_LAST_AMSDU		FIELD32(0x00080000)
+-#define RXINFO_W0_PLCP_SIGNAL		FIELD32(0xfff00000)
++#define RXD_W0_BA			FIELD32(0x00000001)
++#define RXD_W0_DATA			FIELD32(0x00000002)
++#define RXD_W0_NULLDATA			FIELD32(0x00000004)
++#define RXD_W0_FRAG			FIELD32(0x00000008)
++#define RXD_W0_UNICAST_TO_ME		FIELD32(0x00000010)
++#define RXD_W0_MULTICAST		FIELD32(0x00000020)
++#define RXD_W0_BROADCAST		FIELD32(0x00000040)
++#define RXD_W0_MY_BSS			FIELD32(0x00000080)
++#define RXD_W0_CRC_ERROR		FIELD32(0x00000100)
++#define RXD_W0_CIPHER_ERROR		FIELD32(0x00000600)
++#define RXD_W0_AMSDU			FIELD32(0x00000800)
++#define RXD_W0_HTC			FIELD32(0x00001000)
++#define RXD_W0_RSSI			FIELD32(0x00002000)
++#define RXD_W0_L2PAD			FIELD32(0x00004000)
++#define RXD_W0_AMPDU			FIELD32(0x00008000)
++#define RXD_W0_DECRYPTED		FIELD32(0x00010000)
++#define RXD_W0_PLCP_RSSI		FIELD32(0x00020000)
++#define RXD_W0_CIPHER_ALG		FIELD32(0x00040000)
++#define RXD_W0_LAST_AMSDU		FIELD32(0x00080000)
++#define RXD_W0_PLCP_SIGNAL		FIELD32(0xfff00000)
+ 
+ #endif /* RT2800USB_H */
+-- 
+1.6.6
+
