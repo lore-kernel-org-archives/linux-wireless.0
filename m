@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.getmail.no ([84.208.15.66]:40421 "EHLO
-	get-mta-out02.get.basefarm.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754282Ab0AYTWK (ORCPT
+Received: from mail-iw0-f194.google.com ([209.85.223.194]:62269 "EHLO
+	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756325Ab0AFWjA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 14:22:10 -0500
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1
-Received: from smtp.getmail.no ([10.5.16.4]) by get-mta-out02.get.basefarm.net
- (Sun Java(tm) System Messaging Server 7.0-0.04 64bit (built Jun 20 2008))
- with ESMTP id <0KWT0069HHSVCHA0@get-mta-out02.get.basefarm.net> for
- linux-wireless@vger.kernel.org; Mon, 25 Jan 2010 20:22:07 +0100 (MET)
-Received: from [192.168.1.10] ([84.208.235.192])
- by get-mta-in01.get.basefarm.net
- (Sun Java(tm) System Messaging Server 7.0-0.04 64bit (built Jun 20 2008))
- with ESMTPA id <0KWT001T1HSU3L20@get-mta-in01.get.basefarm.net> for
- linux-wireless@vger.kernel.org; Mon, 25 Jan 2010 20:22:07 +0100 (MET)
-Message-id: <4B5DEF5E.8050502@bzz.no>
-Date: Mon, 25 Jan 2010 20:22:06 +0100
-From: "John S. Skogtvedt" <jss@bzz.no>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Bug: 2.6.32 ath5k, unable to connect to AP on channel 13
-References: <4B5CB7AB.7010105@bzz.no>
- <b6c5339f1001250951u548e6a16raf661464660ec577@mail.gmail.com>
-In-reply-to: <b6c5339f1001250951u548e6a16raf661464660ec577@mail.gmail.com>
+	Wed, 6 Jan 2010 17:39:00 -0500
+Received: by iwn32 with SMTP id 32so1927608iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 14:39:00 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <43e72e891001061427l70a6711dg6e96d93679ccc17e@mail.gmail.com>
+References: <1262362872-10251-1-git-send-email-hauke@hauke-m.de>
+	<43e72e891001061427l70a6711dg6e96d93679ccc17e@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 6 Jan 2010 14:38:40 -0800
+Message-ID: <43e72e891001061438x750597d8h658ffd2925180e6b@mail.gmail.com>
+Subject: Re: [PATCH 0/5] compat-wireless: Activate ssb and libertas, refresh
+	script
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland skrev:
-> On Sun, Jan 24, 2010 at 4:12 PM, John S. Skogtvedt <jss@bzz.no> wrote:
->> Hello,
->>
->> As the subject says, using ath5k on 2.6.32 I am not able to connect to
->> an AP on channel 13 (i.e. wpa_supplicant doesn't find the AP and thus
->> fails to associate). I'm in Norway, and the card is bought in Norway.
-> 
->> dmesg output:
->> [    7.205952] cfg80211: Using static regulatory domain info
->> [    7.205956] cfg80211: Regulatory domain: US
->> [    7.206243] cfg80211: Calling CRDA for country: US
-> 
-> Well, there's your problem, AFAICT.  You have
-> CONFIG_WIRELESS_OLD_REGULATORY=y?  And ieee80211_regdom=EU doesn't work?
-> 
+On Wed, Jan 6, 2010 at 2:27 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Fri, Jan 1, 2010 at 8:21 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>> The first two patches were already send some time ago, but not applied,
+>> the second patch was applied partly. Patch 3 adds an refresh option to
+>> admin-update.sh and it was used in patch 4. The last patch fixes some
+>> small problems in admin-update.sh
+>
+> All applied. I really liked the quilt patch, thanks so much, I didn't
+> know quilt could do that, that's awesome. It will certainly help with
+> keeping compat-wireless up to date as that is the most frequent thing
+> we have to do.
 
-Yes, CONFIG_WIRELESS_OLD_REGULATORY=y. And neither ieee80211_regdom=EU
-or ieee80211_regdom=NO works.
+Hm, that quilt trick didn't work for me. I get:
+
+Refresh backport patch: patches.orig/01-netdev.patch
+Patch 01-netdev.patch is applied
+File series fully applied, ends at patch 06-header-changes.patch
+Refreshing patches.orig/01-netdev.patch failed, update it
+use quilt edit [filename] to apply the failed part manually
+use quilt refresh after the files are corrected and rerun this script
