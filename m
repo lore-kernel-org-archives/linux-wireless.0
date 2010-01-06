@@ -1,42 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:14643 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756150Ab0ATHcq (ORCPT
+Received: from mail-iw0-f194.google.com ([209.85.223.194]:65332 "EHLO
+	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932410Ab0AFR03 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2010 02:32:46 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] cfg80211: add a callback for querying the operating frequency and export it through nl80211
-Date: Wed, 20 Jan 2010 08:32:48 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Felix Fietkau <nbd@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <4B536B05.6070301@openwrt.org> <4B537A94.9070807@openwrt.org> <1263762351.28067.21.camel@johannes.local>
-In-Reply-To: <1263762351.28067.21.camel@johannes.local>
+	Wed, 6 Jan 2010 12:26:29 -0500
+Received: by iwn32 with SMTP id 32so1725337iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 09:26:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <201001200832.48698.holgerschurig@gmail.com>
+In-Reply-To: <op.u54a59c89lhzdc@linux-g0th.site>
+References: <op.u54a59c89lhzdc@linux-g0th.site>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 6 Jan 2010 09:26:08 -0800
+Message-ID: <43e72e891001060926s320bf403ya2edf2601ced5125@mail.gmail.com>
+Subject: Re: [PATCH 2/5] b43: N-PHY: b43_nphy_get_tx_gains
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> In any case I have a feeling you're trying to use the kernel as
-> a database for something you already know, just don't have
-> quite as readily available as you'd like.
+2010/1/6 Rafał Miłecki <zajec5@gmail.com>:
+> b43: N-PHY: b43_nphy_get_tx_gains
+>
+>
+> From 5c96b3de80f7d044c42808e8123ae3f50916d6fc Mon Sep 17 00:00:00 2001
+> From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+> Date: Wed, 6 Jan 2010 15:25:14 +0100
+> Subject: [PATCH 2/5] b43: N-PHY: b43_nphy_get_tx_gains
+> MIME-Version: 1.0
+> Content-Type: text/plain; charset=UTF-8
+> Content-Transfer-Encoding: 8bit
 
-I have a device where the current channel is shown to user-space, 
-e.g. the operator. We used that to find out on what channel the
-current AP is. Or, when the channel is constantly changing, that 
-the system is still searching for a matching access-point.
+Dude what is up with this e-mail data on your patches in the commit log?
 
-I know that for both things there are other ways to query the 
-same information, but it's convenient nethertheless.
-
-
-But one thing for which is no other way is to see the actual 
-channel-changes due to the search for a new AP. If such a thing 
-would be important (it isn't for me), maybe a nl80211 broadcast 
-would be better than, thought.
-
--- 
-http://www.holgerschurig.de
+  Luis
