@@ -1,45 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:5214 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752422Ab0AQQpE convert rfc822-to-8bit (ORCPT
+Received: from mbox1.netikka.net ([213.250.81.202]:48060 "EHLO
+	mbox1.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756434Ab0AFXTI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2010 11:45:04 -0500
-Received: by fg-out-1718.google.com with SMTP id 22so292020fge.1
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jan 2010 08:45:02 -0800 (PST)
+	Wed, 6 Jan 2010 18:19:08 -0500
+Message-ID: <4B451A68.5020102@mandriva.org>
+Date: Thu, 07 Jan 2010 01:19:04 +0200
+From: Thomas Backlund <tmb@mandriva.org>
 MIME-Version: 1.0
-In-Reply-To: <201001171741.02945.mb@bu3sch.de>
-References: <op.u6oef6cl9lhzdc@linux-g0th.site> <69e28c911001170837u4ea715ddn4a8e2001f6c1acc3@mail.gmail.com>
-	<201001171741.02945.mb@bu3sch.de>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 17 Jan 2010 17:44:42 +0100
-Message-ID: <69e28c911001170844m2dd5beb9j6ebca9292f41f7ce@mail.gmail.com>
-Subject: Re: [PATCH 2/7] b43: N-PHY: implement TX PHY cleanup and setup
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Felix Fietkau <nbd@openwrt.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: [PATCH 2.6.33] mac80211: fix skb buffering issue
+References: <1262710858.28653.5.camel@johannes.local>	 <4B450004.9050601@mandriva.org> <1262814684.4437.0.camel@johannes.local> <4B4508A5.8050501@openwrt.org> <4B45110E.9010603@mandriva.org>
+In-Reply-To: <4B45110E.9010603@mandriva.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 17, 2010 at 5:41 PM, Michael Buesch <mb@bu3sch.de> wrote:
-> On Sunday 17 January 2010 17:37:29 Gábor Stefanik wrote:
->> While you are at it, why aren't you programming these table writes?
->> The table handling functions are AFAIK already in place...
+On 07.01.2010 00:39, Thomas Backlund wrote:
+> On 07.01.2010 00:03, Felix Fietkau wrote:
+>> On 2010-01-06 10:51 PM, Johannes Berg wrote:
+>>> On Wed, 2010-01-06 at 23:26 +0200, Thomas Backlund wrote:
+>>>
+>>>> With this patch applied to 2.6.33-rc3 kernel crashes at boot...
+>>>>
+>>>> I have a iwl4965 connecting to a wpa2-psk encrypted network, arch is
+>>>> x86_64, distro Mandriva Linux and the kernel has preempt enabled.
+>>>>
+>>>> Am I only missing some patches, or did I hit a real bug ?
+>>>
+>>> It'd help if you said what crashes and how since nobody else seems to be
+>>> having that particular problem with this patch.
+>> I have an idea.
+>> The patch adds the following chunk of code:
+>>> + if (!sta&& ra&& !is_multicast_ether_addr(ra)) {
+>>> + sta = sta_info_get(sdata, ra);
+>>> + if (sta)
+>>> + sta_flags = get_sta_flags(sta);
+>> In wireless-testing, sta_info_get takes sdata as first argument, in
+>> 2.6.33-rc3 it expects a pointer to local. This should have emitted a
+>> compiler warning... I saw the same thing when applying the patch to an
+>> older compat-wireless snapshot.
+>>
 >
-> Because we like small patches.
-> Please do _not_ increase the patchsize.
-
-They do not increase patch size - table reads/writes are one-line (in
-fact, they are shorter than the placeholder comments in place of
-them).
-
+> Oh so it did (unfortunately the kernel build does not honour LC_ALL=C
+> anymore, so the warning is in swedish):
 >
-> --
-> Greetings, Michael.
+>> net/mac80211/wme.c: I funktion "ieee80211_select_queue":
+>> net/mac80211/wme.c:99: varning: skickar argument 1 till "sta_info_get"
+>> fr?n inkompatibel pekartyp
+>> net/mac80211/sta_info.h:408: anm: "struct ieee80211_local *"
+>> f?rv?ntades men argumentet har typ "struct ieee80211_sub_if_data *"
 >
 
+As I cant get it from any log, and dont have a camera available right 
+now, I just wrote some lines to paper wich confirms the breakage in the 
+above build error...
+
+The trace shows:
+
+RIP: sta_info_get
+ieee80211_select_queue
+ieee80211_netdev_select_queue
+...
+
+Now I assume this will work ok when wireless-testing gets merged into 
+main, but as this one is also tagged for stable 2.6.32, there is some 
+more fixes needed to be queued for stable...
+
+--
+Thomas
 
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
