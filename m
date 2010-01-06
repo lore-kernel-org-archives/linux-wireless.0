@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 30.mail-out.ovh.net ([213.186.62.213]:55032 "HELO
-	30.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751865Ab0AURdh (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:45372 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756481Ab0AFWpI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 12:33:37 -0500
-Message-ID: <4B588FE8.9000705@free.fr>
-Date: Thu, 21 Jan 2010 18:33:28 +0100
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+	Wed, 6 Jan 2010 17:45:08 -0500
+Received: by ewy19 with SMTP id 19so10165191ewy.21
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 14:45:06 -0800 (PST)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: austinxxh-linux@yahoo.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Add HT IE to IBSS beacons and probe responses.
-References: <856792.42713.qm@web55307.mail.re4.yahoo.com>	 <4B578BAB.9010608@free.fr> <1264065257.11396.32.camel@johannes.local>
-In-Reply-To: <1264065257.11396.32.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <69e28c911001061435v4b840588p3ead478672ba311@mail.gmail.com>
+References: <op.u54a5ufy9lhzdc@linux-g0th.site>
+	 <201001061650.52062.mb@bu3sch.de>
+	 <b170af451001061211y51b3ca6do11fb24fbb1193c51@mail.gmail.com>
+	 <op.u54ppc2h9lhzdc@linux-g0th.site>
+	 <69e28c911001061435v4b840588p3ead478672ba311@mail.gmail.com>
+Date: Wed, 6 Jan 2010 23:45:06 +0100
+Message-ID: <b170af451001061445k56872cd1hbae81a59e421da73@mail.gmail.com>
+Subject: Re: [PATCH 1/5] b43: N-PHY: implement b43_nphy_stay_in_carrier_search
+	and it's calls (V2)
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg a écrit :
-> On Thu, 2010-01-21 at 00:03 +0100, Benoit PAPILLAULT wrote:
->   
->>    
->> Humm... same question for me. What's wrong in the patch? form? content? 
->> frame format? commit message?
->>     
+W dniu 6 stycznia 2010 23:35 użytkownik Gábor Stefanik
+<netrolller.3d@gmail.com> napisał:
+> 2010/1/6 Rafał Miłecki <zajec5@gmail.com>:
+>> V2: fix typo in deaf_count counting, improve b43_mac_[sr] calls,
+>>    rename function. Thanks Michael!
+>>
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>>  drivers/net/wireless/b43/phy_n.c |   58
+>> ++++++++++++++++++++++++++++++++++++++
+>>  drivers/net/wireless/b43/phy_n.h |    3 ++
+>>  2 files changed, 61 insertions(+), 0 deletions(-)
+>>
+>> <snip>
 >
-> Well shouldn't you only advertise HT if the user or somebody actually
-> asked to join an HT IBSS and you configured the right channel type?
->
-> johannes
->   
-There are things :
-- HT Capabilities IE : this should be the hardware capabilities of the 
-sender, be it a member of a HT IBSS or not.
-- HT Information IE : this should be the BSS information, shared by all 
-members of the HT IBSS I think.
+> Typo in title (it's vs. its)
 
-BTW, currently, there is no way with iw for the user to tell mac82011 to 
-join/create a non-HT, HT20, HT40+ or HT40- IBSS. Maybe we should update 
-iw first as a requirement for HT IBSS?
+My gramma is far from perfect, thanks.
 
-Regards,
-Benoit
-
+-- 
+Rafał
