@@ -1,38 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li59-9.members.linode.com ([97.107.129.9]:48053 "EHLO erley.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751780Ab0AVUXT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 15:23:19 -0500
-MIME-Version: 1.0
-Date: Fri, 22 Jan 2010 15:23:16 -0500
-From: <pat-lkml@erley.org>
-To: Markus Baier <Markus_Baier@web.de>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: Re: Starting hostapd causes kernel panic
-In-Reply-To: <loom.20100122T205326-794@post.gmane.org>
-References: <loom.20100122T205326-794@post.gmane.org>
-Message-ID: <eba66e02dda0a3ec904374a80ea9a1e9@127.0.0.1>
-Content-Type: text/plain; charset=UTF-8
+Received: from Cpsmtpm-eml108.kpnxchange.com ([195.121.3.12]:53135 "EHLO
+	CPSMTPM-EML108.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756494Ab0AFWw4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jan 2010 17:52:56 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2.6.33 3/8] rt2x00: Further L2 padding fixes.
+Date: Wed,  6 Jan 2010 23:52:44 +0100
+Message-Id: <1262818369-16820-4-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1262818369-16820-3-git-send-email-gwingerde@gmail.com>
+References: <1262818369-16820-1-git-send-email-gwingerde@gmail.com>
+ <1262818369-16820-2-git-send-email-gwingerde@gmail.com>
+ <1262818369-16820-3-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 22 Jan 2010 20:14:36 +0000 (UTC), Markus Baier
-<Markus_Baier@web.de> wrote:
-> After the latest git pull from wireless-testing
-> master-2010-01-14 to master-2010-01-19
-> the start of hostapd causes kernel panic.
-> 
-> Tested with wireless-testing master-2010-01-19
-> and hostapd 0.6.9 / 0.7.0
-> 
-> 
-> ---------------------------------------------
-<SNIP>
+Fix a couple of more bugs in the L2 padding code:
+1. Compute the amount of L2 padding correctly (in 3 places).
+2. Trim the skb correctly when the L2 padding has been applied.
 
-I'm seeing this with git-tip of hostapd as well (using ath9k 
-instead of rt61pci).  I hadn't caught a full trace, so I 
-hadn't reported it yet.  On my system, it doesnt' fail until 
-something actively scans and we receive the probe.  I can't 
-provide more info than that yet, though.
+Also introduce a central macro the compute the L2 padding size.
 
-Pat Erley
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Acked-by: Ivo van Doorn <ivdoorn@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h      |    6 ++++++
+ drivers/net/wireless/rt2x00/rt2x00queue.c |    8 +++++---
+ 2 files changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index dcfc8c2..4c5a482 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -104,6 +104,12 @@
+ #define GET_DURATION_RES(__size, __rate)(((__size) * 8 * 10) % (__rate))
+ 
+ /*
++ * Determine the number of L2 padding bytes required between the header and
++ * the payload.
++ */
++#define L2PAD_SIZE(__hdrlen)	(-(__hdrlen) & 3)
++
++/*
+  * Determine the alignment requirement,
+  * to make sure the 802.11 payload is padded to a 4-byte boundrary
+  * we must determine the address of the payload and calculate the
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index 37a9d20..d648f76 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -181,7 +181,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
+ 	unsigned int frame_length = skb->len;
+ 	unsigned int header_align = ALIGN_SIZE(skb, 0);
+ 	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
+-	unsigned int l2pad = 4 - (payload_align - header_align);
++	unsigned int l2pad = L2PAD_SIZE(header_length);
+ 
+ 	if (header_align == payload_align) {
+ 		/*
+@@ -216,6 +216,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
+ 		memmove(skb->data + header_length + l2pad,
+ 			skb->data + header_length + l2pad + payload_align,
+ 			frame_length - header_length);
++		skb_trim(skb, frame_length + l2pad);
+ 		skbdesc->flags |= SKBDESC_L2_PADDED;
+ 	}
+ }
+@@ -223,7 +224,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
+ void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int header_length)
+ {
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
+-	unsigned int l2pad = 4 - (header_length & 3);
++	unsigned int l2pad = L2PAD_SIZE(header_length);
+ 
+ 	if (!l2pad || (skbdesc->flags & SKBDESC_L2_PADDED))
+ 		return;
+@@ -346,7 +347,8 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
+ 	 * Header and alignment information.
+ 	 */
+ 	txdesc->header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
+-	txdesc->l2pad = ALIGN_SIZE(entry->skb, txdesc->header_length);
++	if (test_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags))
++		txdesc->l2pad = L2PAD_SIZE(txdesc->header_length);
+ 
+ 	/*
+ 	 * Check whether this frame is to be acked.
+-- 
+1.6.6
+
