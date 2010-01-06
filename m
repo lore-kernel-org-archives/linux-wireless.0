@@ -1,68 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33739 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751290Ab0AKWU4 (ORCPT
+Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:51136 "EHLO
+	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756510Ab0AFWw5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jan 2010 17:20:56 -0500
-Subject: Re: [PATCH 3/6] b43: N-PHY: add RSSI calculation for PHY rev < 3
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	bcm43xx-dev@lists.berlios.de,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Wed, 6 Jan 2010 17:52:57 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Alban Browaeys <prahal@yahoo.com>,
 	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <201001112313.26197.mb@bu3sch.de>
-References: <op.u6b70wtk9lhzdc@linux-g0th.site>
-	 <201001102338.28721.mb@bu3sch.de>
-	 <b170af451001111313r6bc6905fg722fcd42d7f2681a@mail.gmail.com>
-	 <201001112313.26197.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-8UTs8hiQh1R7olw4pAn+"
-Date: Mon, 11 Jan 2010 23:19:52 +0100
-Message-ID: <1263248392.29743.13.camel@johannes.local>
-Mime-Version: 1.0
+Subject: [PATCH 2.6.33 2/8] rt2x00 : trim the skb after having the l2pad removed.
+Date: Wed,  6 Jan 2010 23:52:43 +0100
+Message-Id: <1262818369-16820-3-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1262818369-16820-2-git-send-email-gwingerde@gmail.com>
+References: <1262818369-16820-1-git-send-email-gwingerde@gmail.com>
+ <1262818369-16820-2-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Alban Browaeys <prahal@yahoo.com>
 
---=-8UTs8hiQh1R7olw4pAn+
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Otherwise we end up truncating the skb before removing the l2pad
+thus we might have the truncated part become garbage while getting
+it back in remove_l2pad.
+For the same issue: remove the skb_trim from the rt2800 fill_rxdone
+(it is done after l2pad removal in rt2x00lib_rxdone).
 
-On Mon, 2010-01-11 at 23:13 +0100, Michael Buesch wrote:
+Signed-off-by: Alban Browaeys <prahal@yahoo.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Acked-by: Ivo van Doorn <ivdoorn@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/rt2x00/rt2800pci.c |    1 -
+ drivers/net/wireless/rt2x00/rt2800usb.c |    1 -
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    6 +++---
+ 3 files changed, 3 insertions(+), 5 deletions(-)
 
-> No I don't think so.
-> It's C standard that uninitialized elements on automatic variables are
-> initialized
-> to zero, _if_ at least one element is initialized to something.
-> So if you init one element to 0, all others will be 0, too.
-
-AFAIK, you don't even have to init anything, since otherwise not
-mentioned fields will be set to 0. Hence, just =3D {} is sufficient for
-arrays and will hopefully compile to the same code as an explicit
-memset().
-
-johannes
-
---=-8UTs8hiQh1R7olw4pAn+
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLS6QEAAoJEODzc/N7+QmaRUMP/johEtSLm/t/G2vfPlFxzhq4
-j9MPNm9yLw4e8zWXeAtDmy66povNRt2X1XoU7ZAssFOHPbmWhaocEt/F2jXDkhW/
-56TgciG6XNqcCJE5DcFLcPg118qRov3MlQwywqsSKz9PI9NuorgmrG+b7oy1rxrG
-fPfeoXZofrYtV6Ginav5lAfr5DskU5vIzdhfowp4shrOC5wNbJ++ETFXgYX+aHB9
-T49Qay7cVrKyvCC5rUVBsgLEA5Ar3htkbs+HQ8nadgFoXcjf8BvidI3pt+l/In3B
-b2xaDPGirB+C+y2ZqbmSLWmRiZQs+V0c4D2cCt3Fkechm9/8xiyqguaji4W2+94i
-hJNBwXMA7qfXKZkJ7hHAjpyOrQwswSDg0gfleaafrUVN9gs31y6bXiBLettEMMQZ
-3LWO8nbskzuWYhDuj1hYhASu4ljr1jA4M9ezXIJLwuhYFOXQNiUKIJwr9KgKHk1E
-HSpOs6+65kB0loGFobXo/SoP8AzuF8fC1A+V1ruL4T/VOomKPeMh5zK/Vl6Ee++8
-DNaW3FRroAxkxmGbNXtEeB2gqHO9ShEtZizjwk8j+as4bsWXUQp9yrG9jOYpT4We
-z3KEeF8k9h1ai6HEfdwCFyrGvfdEzsbQZGaLGmvnPXIVGFEP1t8FBEqz0j/25+ji
-howqABpGybhETpXT11mk
-=sCWA
------END PGP SIGNATURE-----
-
---=-8UTs8hiQh1R7olw4pAn+--
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index dfc886f..6fcb2bb 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -927,7 +927,6 @@ static void rt2800pci_fill_rxdone(struct queue_entry *entry,
+ 	 * Remove TXWI descriptor from start of buffer.
+ 	 */
+ 	skb_pull(entry->skb, RXWI_DESC_SIZE);
+-	skb_trim(entry->skb, rxdesc->size);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index ab95346..352a734 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -663,7 +663,6 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
+ 	 * Remove RXWI descriptor from start of buffer.
+ 	 */
+ 	skb_pull(entry->skb, skbdesc->desc_len);
+-	skb_trim(entry->skb, rxdesc->size);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 265e66d..ca2bcc0 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -385,9 +385,6 @@ void rt2x00lib_rxdone(struct rt2x00_dev *rt2x00dev,
+ 	memset(&rxdesc, 0, sizeof(rxdesc));
+ 	rt2x00dev->ops->lib->fill_rxdone(entry, &rxdesc);
+ 
+-	/* Trim buffer to correct size */
+-	skb_trim(entry->skb, rxdesc.size);
+-
+ 	/*
+ 	 * The data behind the ieee80211 header must be
+ 	 * aligned on a 4 byte boundary.
+@@ -409,6 +406,9 @@ void rt2x00lib_rxdone(struct rt2x00_dev *rt2x00dev,
+ 	else
+ 		rt2x00queue_align_payload(entry->skb, header_length);
+ 
++	/* Trim buffer to correct size */
++	skb_trim(entry->skb, rxdesc.size);
++
+ 	/*
+ 	 * Check if the frame was received using HT. In that case,
+ 	 * the rate is the MCS index and should be passed to mac80211
+-- 
+1.6.6
 
