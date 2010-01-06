@@ -1,57 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:53461 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758529Ab0AOWvB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2010 17:51:01 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: Ath5k on 2.6.32 suddenly fails
-Date: Fri, 15 Jan 2010 23:50:06 +0100
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bob Copeland <me@bobcopeland.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <201001101152.34316.mb@bu3sch.de> <201001152340.40127.mb@bu3sch.de> <43e72e891001151447u39ad494ah6861926db0c50907@mail.gmail.com>
-In-Reply-To: <43e72e891001151447u39ad494ah6861926db0c50907@mail.gmail.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46835 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753674Ab0AFBAa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jan 2010 20:00:30 -0500
+Date: Tue, 5 Jan 2010 19:58:12 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: rossi.f@inwind.it, linux-wireless@vger.kernel.org
+Subject: Re: problem with 2.6.33-rc2 tagging
+Message-ID: <20100106005812.GA6361@tuxdriver.com>
+References: <201001060021.41202.rossi.f@inwind.it> <20100105.155539.138677861.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201001152350.06930.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100105.155539.138677861.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 15 January 2010 23:47:00 Luis R. Rodriguez wrote:
-> I wonder if a possible failure here might be that the box gets under
-> load and some DMA allocation actually gives back less memory than what
-> was requested., hrm, but even then we'd still tell hardware it has the
-> whole desired length we intended...
+On Tue, Jan 05, 2010 at 03:55:39PM -0800, David Miller wrote:
+> From: Fabio Rossi <rossi.f@inwind.it>
+> Date: Wed, 6 Jan 2010 00:21:41 +0100
 > 
-> Not sure... I haven't reviewed this code in ages.
+> > it seems that the current wireless.git misses a tag for the 2.6.33-rc2 kernel.
 > 
-> > However, it had different failure symptoms this time.
-> > Last time it failed, the AP was completely dead. No beacons, etc..
-> > This time it was still beaconing, but auth failed:
-> 
-> Can you reproduce? Do you know if anything particular happened at this time?
+> This happens in my net-2.6 tree too, when we pull in upstream
+> we just pull in the origin's master branch and not all of the
+> tags.
 
-No, there was nothing special happening. I was just sending the previous mail
-and a few seconds later I noticed that wpa_supplicant lost connection
-and failed to gain a new authentication.
+He's probably talking about wireless-testing.  I just updated the tags -- thanks!
 
-> > Trying to associate with 00:1d:0f:b9:df:2d (SSID='quimby-net' freq=2472 MHz)
-> > Authentication with 00:1d:0f:b9:df:2d timed out.
-> >
-> > A machine reboot was _not_ needed this time to revive the card.
-> > Module unload cycle was enough to bring it back to life.
-> >
-> > I'm really unsure what's going on and if these two failures are related
-> > to each other. Probably not...
-> 
-> Anyway you can burp your box sooner (replace the PCI connector) to
-> rule that out?
-
-Yes, I'm going to replace the extender over the weekend.
-
+John
 -- 
-Greetings, Michael.
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
