@@ -1,85 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:58846 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753020Ab0ALMtm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2010 07:49:42 -0500
-Date: Tue, 12 Jan 2010 13:49:41 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 12/17] mwl8k: use firmware capability field to decide which bands to register
-Message-ID: <20100112124941.GB1735@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from nbd.name ([88.198.39.176]:49748 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932704Ab0AFWD1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jan 2010 17:03:27 -0500
+Message-ID: <4B4508A5.8050501@openwrt.org>
+Date: Wed, 06 Jan 2010 23:03:17 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Thomas Backlund <tmb@mandriva.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2.6.33] mac80211: fix skb buffering issue
+References: <1262710858.28653.5.camel@johannes.local>	 <4B450004.9050601@mandriva.org> <1262814684.4437.0.camel@johannes.local>
+In-Reply-To: <1262814684.4437.0.camel@johannes.local>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make the decision about whether to register the 2.4 and 5 GHz bands
-with mac80211 by looking at the capability field in GET_HW_SPEC (STA
-firmware only for now).  This enables 5 GHz STA operation.
+On 2010-01-06 10:51 PM, Johannes Berg wrote:
+> On Wed, 2010-01-06 at 23:26 +0200, Thomas Backlund wrote:
+> 
+>> With this patch applied to 2.6.33-rc3 kernel crashes at boot...
+>> 
+>> I have a iwl4965 connecting to a wpa2-psk encrypted network, arch is 
+>> x86_64, distro Mandriva Linux and the kernel has preempt enabled.
+>> 
+>> Am I only missing some patches, or did I hit a real bug ?
+> 
+> It'd help if you said what crashes and how since nobody else seems to be
+> having that particular problem with this patch.
+I have an idea.
+The patch adds the following chunk of code:
+> +	if (!sta && ra && !is_multicast_ether_addr(ra)) {
+> +		sta = sta_info_get(sdata, ra);
+> +		if (sta)
+> +			sta_flags = get_sta_flags(sta);
+In wireless-testing, sta_info_get takes sdata as first argument, in
+2.6.33-rc3 it expects a pointer to local. This should have emitted a
+compiler warning... I saw the same thing when applying the patch to an
+older compat-wireless snapshot.
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   31 +++++++++++++++++++++++++------
- 1 files changed, 25 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 6e8c126..382ef43 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -1666,11 +1666,14 @@ struct mwl8k_cmd_get_hw_spec_sta {
- #define MWL8K_CAP_DELAY_BA		0x00003000
- #define MWL8K_CAP_MIMO			0x00000200
- #define MWL8K_CAP_40MHZ			0x00000100
-+#define MWL8K_CAP_BAND_MASK		0x00000007
-+#define MWL8K_CAP_5GHZ			0x00000004
-+#define MWL8K_CAP_2GHZ4			0x00000001
- 
--static void mwl8k_set_ht_caps(struct ieee80211_hw *hw, u32 cap)
-+static void
-+mwl8k_set_ht_caps(struct ieee80211_hw *hw,
-+		  struct ieee80211_supported_band *band, u32 cap)
- {
--	struct mwl8k_priv *priv = hw->priv;
--	struct ieee80211_supported_band *band = &priv->band_24;
- 	int rx_streams;
- 	int tx_streams;
- 
-@@ -1716,6 +1719,24 @@ static void mwl8k_set_ht_caps(struct ieee80211_hw *hw, u32 cap)
- 	}
- }
- 
-+static void
-+mwl8k_set_caps(struct ieee80211_hw *hw, u32 caps)
-+{
-+	struct mwl8k_priv *priv = hw->priv;
-+
-+	if ((caps & MWL8K_CAP_2GHZ4) || !(caps & MWL8K_CAP_BAND_MASK)) {
-+		mwl8k_setup_2ghz_band(hw);
-+		if (caps & MWL8K_CAP_MIMO)
-+			mwl8k_set_ht_caps(hw, &priv->band_24, caps);
-+	}
-+
-+	if (caps & MWL8K_CAP_5GHZ) {
-+		mwl8k_setup_5ghz_band(hw);
-+		if (caps & MWL8K_CAP_MIMO)
-+			mwl8k_set_ht_caps(hw, &priv->band_50, caps);
-+	}
-+}
-+
- static int mwl8k_cmd_get_hw_spec_sta(struct ieee80211_hw *hw)
- {
- 	struct mwl8k_priv *priv = hw->priv;
-@@ -1746,9 +1767,7 @@ static int mwl8k_cmd_get_hw_spec_sta(struct ieee80211_hw *hw)
- 		priv->num_mcaddrs = le16_to_cpu(cmd->num_mcaddrs);
- 		priv->fw_rev = le32_to_cpu(cmd->fw_rev);
- 		priv->hw_rev = cmd->hw_rev;
--		mwl8k_setup_2ghz_band(hw);
--		if (cmd->caps & cpu_to_le32(MWL8K_CAP_MIMO))
--			mwl8k_set_ht_caps(hw, le32_to_cpu(cmd->caps));
-+		mwl8k_set_caps(hw, le32_to_cpu(cmd->caps));
- 	}
- 
- 	kfree(cmd);
--- 
-1.5.6.4
+- Felix
