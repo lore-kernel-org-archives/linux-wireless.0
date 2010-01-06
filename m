@@ -1,93 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:58836 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752433Ab0ALMsS (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:51436 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932232Ab0AFUxS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2010 07:48:18 -0500
-Date: Tue, 12 Jan 2010 13:48:17 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 07/17] mwl8k: move responsibility for initialising wiphy bands to GET_HW_SPEC
-Message-ID: <20100112124817.GW1735@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 6 Jan 2010 15:53:18 -0500
+Received: by ewy19 with SMTP id 19so10051961ewy.21
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 12:53:17 -0800 (PST)
+Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Michael Buesch" <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de
+Subject: [PATCH 1/5] b43: N-PHY: implement b43_nphy_stay_in_carrier_search and
+ it's calls (V2)
+References: <op.u54a5ufy9lhzdc@linux-g0th.site>
+ <201001061650.52062.mb@bu3sch.de>
+ <b170af451001061211y51b3ca6do11fb24fbb1193c51@mail.gmail.com>
+Date: Wed, 06 Jan 2010 21:54:38 +0100
+MIME-Version: 1.0
+From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <op.u54ppc2h9lhzdc@linux-g0th.site>
+In-Reply-To: <b170af451001061211y51b3ca6do11fb24fbb1193c51@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So that we can make 2.4 GHz and 5 GHz band registration conditional
-on the capability bitmask returned by the firmware.
+V2: fix typo in deaf_count counting, improve b43_mac_[sr] calls,
+     rename function. Thanks Michael!
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/mwl8k.c |   35 ++++++++++++++++++++++++-----------
- 1 files changed, 24 insertions(+), 11 deletions(-)
+  drivers/net/wireless/b43/phy_n.c |   58 ++++++++++++++++++++++++++++++++++++++
+  drivers/net/wireless/b43/phy_n.h |    3 ++
+  2 files changed, 61 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 37cbfbf..a17111f 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -1558,6 +1558,28 @@ static int mwl8k_post_cmd(struct ieee80211_hw *hw, struct mwl8k_cmd_pkt *cmd)
- }
- 
- /*
-+ * Setup code shared between STA and AP firmware images.
-+ */
-+static void mwl8k_setup_2ghz_band(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index ceb429a..5252c0f 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -348,6 +348,64 @@ static void b43_nphy_reset_cca(struct b43_wldev *dev)
+  	b43_phy_write(dev, B43_NPHY_BBCFG, bbcfg & ~B43_NPHY_BBCFG_RSTCCA);
+  }
+
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/clip-detection */
++static void b43_nphy_write_clip_detection(struct b43_wldev *dev, u16 *clip_st)
 +{
-+	struct mwl8k_priv *priv = hw->priv;
-+
-+	BUILD_BUG_ON(sizeof(priv->channels_24) != sizeof(mwl8k_channels_24));
-+	memcpy(priv->channels_24, mwl8k_channels_24, sizeof(mwl8k_channels_24));
-+
-+	BUILD_BUG_ON(sizeof(priv->rates_24) != sizeof(mwl8k_rates_24));
-+	memcpy(priv->rates_24, mwl8k_rates_24, sizeof(mwl8k_rates_24));
-+
-+	priv->band_24.band = IEEE80211_BAND_2GHZ;
-+	priv->band_24.channels = priv->channels_24;
-+	priv->band_24.n_channels = ARRAY_SIZE(mwl8k_channels_24);
-+	priv->band_24.bitrates = priv->rates_24;
-+	priv->band_24.n_bitrates = ARRAY_SIZE(mwl8k_rates_24);
-+
-+	hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &priv->band_24;
++	b43_phy_write(dev, B43_NPHY_C1_CLIP1THRES, clip_st[0]);
++	b43_phy_write(dev, B43_NPHY_C2_CLIP1THRES, clip_st[1]);
 +}
 +
-+/*
-  * CMD_GET_HW_SPEC (STA version).
-  */
- struct mwl8k_cmd_get_hw_spec_sta {
-@@ -1671,6 +1693,7 @@ static int mwl8k_cmd_get_hw_spec_sta(struct ieee80211_hw *hw)
- 		priv->num_mcaddrs = le16_to_cpu(cmd->num_mcaddrs);
- 		priv->fw_rev = le32_to_cpu(cmd->fw_rev);
- 		priv->hw_rev = cmd->hw_rev;
-+		mwl8k_setup_2ghz_band(hw);
- 		if (cmd->caps & cpu_to_le32(MWL8K_CAP_MIMO))
- 			mwl8k_set_ht_caps(hw, le32_to_cpu(cmd->caps));
- 	}
-@@ -1726,6 +1749,7 @@ static int mwl8k_cmd_get_hw_spec_ap(struct ieee80211_hw *hw)
- 		priv->num_mcaddrs = le16_to_cpu(cmd->num_mcaddrs);
- 		priv->fw_rev = le32_to_cpu(cmd->fw_rev);
- 		priv->hw_rev = cmd->hw_rev;
-+		mwl8k_setup_2ghz_band(hw);
- 
- 		off = le32_to_cpu(cmd->wcbbase0) & 0xffff;
- 		iowrite32(cpu_to_le32(priv->txq[0].txd_dma), priv->sram + off);
-@@ -3853,17 +3877,6 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
- 	priv->pending_tx_pkts = 0;
- 
- 
--	memcpy(priv->channels_24, mwl8k_channels_24, sizeof(mwl8k_channels_24));
--	priv->band_24.band = IEEE80211_BAND_2GHZ;
--	priv->band_24.channels = priv->channels_24;
--	priv->band_24.n_channels = ARRAY_SIZE(mwl8k_channels_24);
--	priv->band_24.bitrates = priv->rates_24;
--	priv->band_24.n_bitrates = ARRAY_SIZE(mwl8k_rates_24);
--	hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &priv->band_24;
--
--	BUILD_BUG_ON(sizeof(priv->rates_24) != sizeof(mwl8k_rates_24));
--	memcpy(priv->rates_24, mwl8k_rates_24, sizeof(mwl8k_rates_24));
--
- 	/*
- 	 * Extra headroom is the size of the required DMA header
- 	 * minus the size of the smallest 802.11 frame (CTS frame).
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/clip-detection */
++static void b43_nphy_read_clip_detection(struct b43_wldev *dev, u16 *clip_st)
++{
++	clip_st[0] = b43_phy_read(dev, B43_NPHY_C1_CLIP1THRES);
++	clip_st[1] = b43_phy_read(dev, B43_NPHY_C2_CLIP1THRES);
++}
++
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/classifier */
++static u16 b43_nphy_classifier(struct b43_wldev *dev, u16 mask, u16 val)
++{
++	u16 tmp;
++
++	if (dev->dev->id.revision == 16)
++		b43_mac_suspend(dev);
++
++	tmp = b43_phy_read(dev, B43_NPHY_CLASSCTL);
++	tmp &= (B43_NPHY_CLASSCTL_CCKEN | B43_NPHY_CLASSCTL_OFDMEN |
++		B43_NPHY_CLASSCTL_WAITEDEN);
++	tmp &= ~mask;
++	tmp |= (val & mask);
++	b43_phy_maskset(dev, B43_NPHY_CLASSCTL, 0xFFF8, tmp);
++
++	if (dev->dev->id.revision == 16)
++		b43_mac_enable(dev);
++
++	return tmp;
++}
++
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/carriersearch */
++static void b43_nphy_stay_in_carrier_search(struct b43_wldev *dev, bool enable)
++{
++	struct b43_phy *phy = &dev->phy;
++	struct b43_phy_n *nphy = phy->n;
++
++	if (enable) {
++		u16 clip[] = { 0xFFFF, 0xFFFF };
++		if (nphy->deaf_count++ == 0) {
++			nphy->classifier_state = b43_nphy_classifier(dev, 0, 0);
++			b43_nphy_classifier(dev, 0x7, 0);
++			b43_nphy_read_clip_detection(dev, nphy->clip_state);
++			b43_nphy_write_clip_detection(dev, clip);
++		}
++		b43_nphy_reset_cca(dev);
++	} else {
++		if (--nphy->deaf_count == 0) {
++			b43_nphy_classifier(dev, 0x7, nphy->classifier_state);
++			b43_nphy_write_clip_detection(dev, nphy->clip_state);
++		}
++	}
++}
++
+  enum b43_nphy_rf_sequence {
+  	B43_RFSEQ_RX2TX,
+  	B43_RFSEQ_TX2RX,
+diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
+index e5e402a..6ab07fc 100644
+--- a/drivers/net/wireless/b43/phy_n.h
++++ b/drivers/net/wireless/b43/phy_n.h
+@@ -932,6 +932,9 @@ struct b43_phy_n {
+  	u32 deaf_count;
+  	bool mute;
+
++	u16 classifier_state;
++	u16 clip_state[2];
++
+  	u8 iqcal_chanspec_2G;
+  	u8 rssical_chanspec_2G;
+
 -- 
-1.5.6.4
+1.6.4.2
+
