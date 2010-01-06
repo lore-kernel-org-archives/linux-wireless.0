@@ -1,152 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:37001 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752956Ab0AHRcT (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:40480 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755758Ab0AFPHI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jan 2010 12:32:19 -0500
-Date: Fri, 8 Jan 2010 18:32:18 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 11/11] mwl8k: move receive processing to tasklet
-Message-ID: <20100108173218.GE1735@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 6 Jan 2010 10:07:08 -0500
+Received: by ewy19 with SMTP id 19so9690170ewy.21
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 07:07:06 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <op.u5w2vyof9lhzdc@linux-g0th.site>
+References: <op.u5w2vyof9lhzdc@linux-g0th.site>
+Date: Wed, 6 Jan 2010 16:07:05 +0100
+Message-ID: <b170af451001060707j3db4d8b6tec92f9c737ba40df@mail.gmail.com>
+Subject: Re: [PATCH] b43: N-PHY: clean table init, check PHY rev (V3)
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
+	Michael Buesch <mb@bu3sch.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Like how TX reclaim is done in a tasklet, move receive processing
-to tasklet context as well.  This can have nice benefits for CPU
-utilisation and throughput, especially at 3-stream rates.
+W dniu 2 stycznia 2010 18:58 użytkownik Rafał Miłecki
+<zajec5@gmail.com> napisał:
+> Hopefully with Michaels's mysterious suggestion applied :)
+>
+> From 3d54059593785a820789c5af99ca1373eaf6b2c7 Mon Sep 17 00:00:00 2001
+> From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+> Date: Sat, 2 Jan 2010 18:50:25 +0100
+> Subject: [PATCH] b43: N-PHY: clean table init, check PHY rev (V3)
+> MIME-Version: 1.0
+> Content-Type: text/plain; charset=UTF-8
+> Content-Transfer-Encoding: 8bit
+>
+> Move table init to tables_nphy.c, detect newer PHY which use different init.
+> We don't init newer PHYs yet but this at least shows what more is needed.
+>
+> V2: Make some functions and tables static
+> V3: Just drop static table declarations from header
 
-(Use the same CLEAR_SEL trick as the TX reclaim tasklet does, to
-avoid having to touch the interrupt mask registers.)
+John, I've sent some N-PHY patches which were *not* generated on top
+of this one. So all of them have lines offset issue when applying on
+top of this.
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   47 +++++++++++++++++++++++++++++++++---------
- 1 files changed, 37 insertions(+), 10 deletions(-)
+Please ignore this patch, apply all the rest of my N-PHY patches. I'll
+resend this one in some patchset later (with corrected line offset
+hunk).
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 3f55aa0..13b0e32 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -204,6 +204,9 @@ struct mwl8k_priv {
- 
- 	/* Tasklet to perform TX reclaim.  */
- 	struct tasklet_struct poll_tx_task;
-+
-+	/* Tasklet to perform RX.  */
-+	struct tasklet_struct poll_rx_task;
- };
- 
- /* Per interface specific private data */
-@@ -2971,14 +2974,14 @@ static irqreturn_t mwl8k_interrupt(int irq, void *dev_id)
- 		tasklet_schedule(&priv->poll_tx_task);
- 	}
- 
--	if (status)
--		iowrite32(~status, priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS);
--
- 	if (status & MWL8K_A2H_INT_RX_READY) {
--		while (rxq_process(hw, 0, 1))
--			rxq_refill(hw, 0, 1);
-+		status &= ~MWL8K_A2H_INT_RX_READY;
-+		tasklet_schedule(&priv->poll_rx_task);
- 	}
- 
-+	if (status)
-+		iowrite32(~status, priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS);
-+
- 	if (status & MWL8K_A2H_INT_OPC_DONE) {
- 		if (priv->hostcmd_wait != NULL)
- 			complete(priv->hostcmd_wait);
-@@ -3022,6 +3025,24 @@ static void mwl8k_tx_poll(unsigned long data)
- 	}
- }
- 
-+static void mwl8k_rx_poll(unsigned long data)
-+{
-+	struct ieee80211_hw *hw = (struct ieee80211_hw *)data;
-+	struct mwl8k_priv *priv = hw->priv;
-+	int limit;
-+
-+	limit = 32;
-+	limit -= rxq_process(hw, 0, limit);
-+	limit -= rxq_refill(hw, 0, limit);
-+
-+	if (limit) {
-+		writel(~MWL8K_A2H_INT_RX_READY,
-+		       priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS);
-+	} else {
-+		tasklet_schedule(&priv->poll_rx_task);
-+	}
-+}
-+
- 
- /*
-  * Core driver operations.
-@@ -3057,8 +3078,9 @@ static int mwl8k_start(struct ieee80211_hw *hw)
- 		return -EIO;
- 	}
- 
--	/* Enable tx reclaim tasklet */
-+	/* Enable TX reclaim and RX tasklets.  */
- 	tasklet_enable(&priv->poll_tx_task);
-+	tasklet_enable(&priv->poll_rx_task);
- 
- 	/* Enable interrupts */
- 	iowrite32(MWL8K_A2H_EVENTS, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
-@@ -3092,6 +3114,7 @@ static int mwl8k_start(struct ieee80211_hw *hw)
- 		iowrite32(0, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
- 		free_irq(priv->pdev->irq, hw);
- 		tasklet_disable(&priv->poll_tx_task);
-+		tasklet_disable(&priv->poll_rx_task);
- 	}
- 
- 	return rc;
-@@ -3115,8 +3138,9 @@ static void mwl8k_stop(struct ieee80211_hw *hw)
- 	if (priv->beacon_skb != NULL)
- 		dev_kfree_skb(priv->beacon_skb);
- 
--	/* Stop tx reclaim tasklet */
-+	/* Stop TX reclaim and RX tasklets.  */
- 	tasklet_disable(&priv->poll_tx_task);
-+	tasklet_disable(&priv->poll_rx_task);
- 
- 	/* Return all skbs to mac80211 */
- 	for (i = 0; i < MWL8K_TX_QUEUES; i++)
-@@ -3873,9 +3897,11 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
- 	/* Finalize join worker */
- 	INIT_WORK(&priv->finalize_join_worker, mwl8k_finalize_join_worker);
- 
--	/* TX reclaim tasklet */
-+	/* TX reclaim and RX tasklets.  */
- 	tasklet_init(&priv->poll_tx_task, mwl8k_tx_poll, (unsigned long)hw);
- 	tasklet_disable(&priv->poll_tx_task);
-+	tasklet_init(&priv->poll_rx_task, mwl8k_rx_poll, (unsigned long)hw);
-+	tasklet_disable(&priv->poll_rx_task);
- 
- 	/* Power management cookie */
- 	priv->cookie = pci_alloc_consistent(priv->pdev, 4, &priv->cookie_dma);
-@@ -3904,7 +3930,7 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
- 
- 	iowrite32(0, priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS);
- 	iowrite32(0, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
--	iowrite32(MWL8K_A2H_INT_TX_DONE,
-+	iowrite32(MWL8K_A2H_INT_TX_DONE | MWL8K_A2H_INT_RX_READY,
- 		  priv->regs + MWL8K_HIU_A2H_INTERRUPT_CLEAR_SEL);
- 	iowrite32(0xffffffff, priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS_MASK);
- 
-@@ -4032,8 +4058,9 @@ static void __devexit mwl8k_remove(struct pci_dev *pdev)
- 
- 	ieee80211_unregister_hw(hw);
- 
--	/* Remove tx reclaim tasklet */
-+	/* Remove TX reclaim and RX tasklets.  */
- 	tasklet_kill(&priv->poll_tx_task);
-+	tasklet_kill(&priv->poll_rx_task);
- 
- 	/* Stop hardware */
- 	mwl8k_hw_reset(priv);
 -- 
-1.5.6.4
+Rafał
