@@ -1,35 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx-del1-1.globallogic.com ([202.174.92.25]:42880 "EHLO
-	emailsecurity-del1-1.globallogic.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753430Ab0AUKIL (ORCPT
+Received: from mbox1.netikka.net ([213.250.81.202]:52648 "EHLO
+	mbox1.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756432Ab0AFWjN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 05:08:11 -0500
-Received: from emailsecurity-del1-1.globallogic.com (127.0.0.1) by emailsecurity-del1-1.globallogic.com (MlfMTA v3.2r9) id hb0jom0171ss for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2010 15:38:05 +0530 (envelope-from <andrit@ukr.net>)
-Message-ID: <4B58277A.5030308@ukr.net>
-Date: Thu, 21 Jan 2010 12:07:54 +0200
-From: Andriy Tkachuk <andrit@ukr.net>
+	Wed, 6 Jan 2010 17:39:13 -0500
+Message-ID: <4B45110E.9010603@mandriva.org>
+Date: Thu, 07 Jan 2010 00:39:10 +0200
+From: Thomas Backlund <tmb@mandriva.org>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] mac80211: Account HT Control field in Data frame hdrlen
- according to 802.11n-2009
-References: <4B56EF1A.4050503@ukr.net> <43e72e891001201008w29da1feka88b6859d7feb91a@mail.gmail.com>
-In-Reply-To: <43e72e891001201008w29da1feka88b6859d7feb91a@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2.6.33] mac80211: fix skb buffering issue
+References: <1262710858.28653.5.camel@johannes.local>	 <4B450004.9050601@mandriva.org> <1262814684.4437.0.camel@johannes.local> <4B4508A5.8050501@openwrt.org>
+In-Reply-To: <4B4508A5.8050501@openwrt.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-01-20 20:08, Luis R. Rodriguez wrote:
-> Very nice, thanks for the fuller commit log. Hm, the question I also
-> wanted to address was whether or not this is a stable fix to go for
-> 2.6.32 and 2.6.33, I suppose we'd have to look at all callers of
-> ieee80211_hdrlen() but this seems like a stable fix to me.
+On 07.01.2010 00:03, Felix Fietkau wrote:
+> On 2010-01-06 10:51 PM, Johannes Berg wrote:
+>> On Wed, 2010-01-06 at 23:26 +0200, Thomas Backlund wrote:
+>>
+>>> With this patch applied to 2.6.33-rc3 kernel crashes at boot...
+>>>
+>>> I have a iwl4965 connecting to a wpa2-psk encrypted network, arch is
+>>> x86_64, distro Mandriva Linux and the kernel has preempt enabled.
+>>>
+>>> Am I only missing some patches, or did I hit a real bug ?
+>>
+>> It'd help if you said what crashes and how since nobody else seems to be
+>> having that particular problem with this patch.
+> I have an idea.
+> The patch adds the following chunk of code:
+>> +	if (!sta&&  ra&&  !is_multicast_ether_addr(ra)) {
+>> +		sta = sta_info_get(sdata, ra);
+>> +		if (sta)
+>> +			sta_flags = get_sta_flags(sta);
+> In wireless-testing, sta_info_get takes sdata as first argument, in
+> 2.6.33-rc3 it expects a pointer to local. This should have emitted a
+> compiler warning... I saw the same thing when applying the patch to an
+> older compat-wireless snapshot.
+>
 
-As I already said, I would rather classify this change as a feature then
-a fix, so I would advise to give the code more time for breaking-in
-starting from the current branch and not put the stable at an odd risk
-(which seem to be the minor one, though).
+Oh so it did (unfortunately the kernel build does not honour LC_ALL=C 
+anymore, so the warning is in swedish):
 
-Regards,
-    Andriy
+> net/mac80211/wme.c: I funktion "ieee80211_select_queue":
+> net/mac80211/wme.c:99: varning: skickar argument 1 till "sta_info_get" fr?n inkompatibel pekartyp
+> net/mac80211/sta_info.h:408: anm: "struct ieee80211_local *" f?rv?ntades men argumentet har typ "struct ieee80211_sub_if_data *"
+
+--
+Thomas
