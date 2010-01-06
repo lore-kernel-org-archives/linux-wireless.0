@@ -1,68 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55138 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754632Ab0AQUsS (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:43663 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932458Ab0AFSSl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2010 15:48:18 -0500
-Subject: Re: [PATCH 1/2] cfg80211: add a callback for querying the
- operating frequency and export it through nl80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <4B5371C3.6060504@openwrt.org>
-References: <4B536B05.6070301@openwrt.org>
-	 <1263758236.28067.11.camel@johannes.local>
-	 <1263758423.28067.12.camel@johannes.local>  <4B536F21.1090509@openwrt.org>
-	 <1263759278.28067.13.camel@johannes.local>  <4B5371C3.6060504@openwrt.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Q1Smksuq+tti1CIYZmO0"
-Date: Sun, 17 Jan 2010 21:48:14 +0100
-Message-ID: <1263761294.28067.14.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 6 Jan 2010 13:18:41 -0500
+Received: by ewy19 with SMTP id 19so9891975ewy.21
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 10:18:39 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <43e72e891001060926s320bf403ya2edf2601ced5125@mail.gmail.com>
+References: <op.u54a59c89lhzdc@linux-g0th.site>
+	 <43e72e891001060926s320bf403ya2edf2601ced5125@mail.gmail.com>
+Date: Wed, 6 Jan 2010 19:18:39 +0100
+Message-ID: <b170af451001061018x6ff2404ajbdbb3cb96ceaf7f2@mail.gmail.com>
+Subject: Re: [PATCH 2/5] b43: N-PHY: b43_nphy_get_tx_gains
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+W dniu 6 stycznia 2010 18:26 użytkownik Luis R. Rodriguez
+<mcgrof@gmail.com> napisał:
+> 2010/1/6 Rafał Miłecki <zajec5@gmail.com>:
+>> b43: N-PHY: b43_nphy_get_tx_gains
+>>
+>>
+>> From 5c96b3de80f7d044c42808e8123ae3f50916d6fc Mon Sep 17 00:00:00 2001
+>> From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+>> Date: Wed, 6 Jan 2010 15:25:14 +0100
+>> Subject: [PATCH 2/5] b43: N-PHY: b43_nphy_get_tx_gains
+>> MIME-Version: 1.0
+>> Content-Type: text/plain; charset=UTF-8
+>> Content-Transfer-Encoding: 8bit
+>
+> Dude what is up with this e-mail data on your patches in the commit log?
 
---=-Q1Smksuq+tti1CIYZmO0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+That is way of encoding non-ASCII chars in mail header. You can find
+info about this in RFC. That is "=?UTF-8?B?" prefix and base 64
+encoded text.
 
-On Sun, 2010-01-17 at 21:23 +0100, Felix Fietkau wrote:
+That was generated with git (git format-patch -5) and it understood by
+git (git am ...).
 
-> I want to be able to have some status info without having to go
-> through
-> hostapd or wpa_supplicant to get it. Currently the channel is exported
-> by wext, but not nl80211, so I want to fix that.
-
-But like I said, you already have that information in the relevant
-cases. hostapd you can just look in the config file for it...
-
-The problem with this is that not all drivers will be able to support
-it, and that you will be exporting stale information say in the case
-where we're not connected at all.
-
-johannes
-
---=-Q1Smksuq+tti1CIYZmO0
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLU3eKAAoJEODzc/N7+QmaQukQANRBxokdOFgZasJq4+nAc6ZZ
-+lxwVPTkZJXEZQsPyAQy64JNhsXUijJoNefbcO4ugstJTos9qVZLFdc60upK2yRL
-4ip8jFeOK0KM0fJnUa1LI7dtE9mJwED6ApNIV5UWIhJuXRM3Cch1S+6MEtkWXR3E
-m3Vui10FsK3HEdDnvGkIqjMWBnSleQe7+md2CxwkKTYPvMsVrwvCYiUMncFnO6+r
-BRAOOKwDiFA8Og+ZXoqPfmZ/jPEbrVlBKLAdR13UB9Ps0RSbC3qNuYe4sZXqsgCM
-DYHV0bAplr814cOcHErV2tOUQftd+mwklp2sknkemYPxbZxm3U27ARFmk0H0RFL3
-4871tLrZyKo7zP62xmWi0CTX3h+JCw/ZryWfmV1teqfDWwcW8TUuVCW9lDZAoO7J
-1Hzlx7XPZSxkdRjtz9OvRQSe5ktXYVgZKzSjChxEcx7l2bg2Fl1rBMwAnG/0AQOa
-XRiDqgnFUVaFj2/TqlvgCRFuZXyxFvgl2RJr+gvZ+CwoN8/56FNCKuE1aPvThqyK
-ssu8kIqXcW4Fcc6jsXBdKpOOIsPECJsaahZkceEXVTlEp/Boin6AMIEo47kLrqfs
-R3TwP+Sj1qKjNFfcVT9rTlvV42jzVRocdqxcu4kgbz/uKld54VQIFGRs6ddBc+HK
-p3+WTW2C8drOUiwVl13C
-=SOO1
------END PGP SIGNATURE-----
-
---=-Q1Smksuq+tti1CIYZmO0--
-
+-- 
+Rafał
