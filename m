@@ -1,73 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:44887 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750979Ab0ALInb (ORCPT
+Received: from smtp.mujha-vel.cz ([81.30.225.246]:47629 "EHLO
+	smtp.mujha-vel.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932451Ab0AFRgG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2010 03:43:31 -0500
-Subject: [PATCH PATCH v6 6/7] wl1251: create qos null data template
+	Wed, 6 Jan 2010 12:36:06 -0500
+From: Jiri Slaby <jslaby@suse.cz>
 To: linville@tuxdriver.com
-From: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	a.young.jason@gmail.com
-Date: Tue, 12 Jan 2010 10:43:07 +0200
-Message-ID: <20100112084307.27492.16781.stgit@tikku>
-In-Reply-To: <20100112084059.27492.86738.stgit@tikku>
-References: <20100112084059.27492.86738.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/2] net: wireless, fix lock imbalance
+Date: Wed,  6 Jan 2010 17:35:42 +0100
+Message-Id: <1262795743-15009-1-git-send-email-jslaby@suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+One fail path in cfg80211_wext_siwscan omits to unlock rdev->mtx.
+Fix that.
 
-The qos null data template is needed for U-APSD.
+Trigerrable by "Scan for SSID" with long enough SSID (> 32).
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
 ---
- drivers/net/wireless/wl12xx/wl1251_main.c |   25 +++++++++++++++++++++++++
- 1 files changed, 25 insertions(+), 0 deletions(-)
+ net/wireless/scan.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index 4e373f3..4cf3545 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -585,6 +585,27 @@ static int wl1251_build_null_data(struct wl1251 *wl)
- 
- }
- 
-+static int wl1251_build_qos_null_data(struct wl1251 *wl)
-+{
-+	struct ieee80211_qos_hdr template;
-+
-+	memset(&template, 0, sizeof(template));
-+
-+	memcpy(template.addr1, wl->bssid, ETH_ALEN);
-+	memcpy(template.addr2, wl->mac_addr, ETH_ALEN);
-+	memcpy(template.addr3, wl->bssid, ETH_ALEN);
-+
-+	template.frame_control = cpu_to_le16(IEEE80211_FTYPE_DATA |
-+					     IEEE80211_STYPE_QOS_NULLFUNC |
-+					     IEEE80211_FCTL_TODS);
-+
-+	/* FIXME: not sure what priority to use here */
-+	template.qos_ctrl = cpu_to_le16(0);
-+
-+	return wl1251_cmd_template_set(wl, CMD_QOS_NULL_DATA, &template,
-+				       sizeof(template));
-+}
-+
- static int wl1251_build_ps_poll(struct wl1251 *wl, u16 aid)
- {
- 	struct wl12xx_ps_poll_template template;
-@@ -1119,6 +1140,10 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
- 		if (ret < 0)
- 			goto out;
- 
-+		ret = wl1251_build_qos_null_data(wl);
-+		if (ret < 0)
-+			goto out;
-+
- 		if (wl->bss_type != BSS_TYPE_IBSS) {
- 			ret = wl1251_join(wl, wl->bss_type, wl->channel,
- 					  wl->beacon_int, wl->dtim_period);
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 12dfa62..9c50c85 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -694,8 +694,10 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+ 	/* translate "Scan for SSID" request */
+ 	if (wreq) {
+ 		if (wrqu->data.flags & IW_SCAN_THIS_ESSID) {
+-			if (wreq->essid_len > IEEE80211_MAX_SSID_LEN)
+-				return -EINVAL;
++			if (wreq->essid_len > IEEE80211_MAX_SSID_LEN) {
++				err = -EINVAL;
++				goto out;
++			}
+ 			memcpy(creq->ssids[0].ssid, wreq->essid, wreq->essid_len);
+ 			creq->ssids[0].ssid_len = wreq->essid_len;
+ 		}
+-- 
+1.6.5.7
 
