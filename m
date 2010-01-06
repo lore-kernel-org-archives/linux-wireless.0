@@ -1,105 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:36824 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755059Ab0AUXgp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 18:36:45 -0500
-Message-ID: <4B58E507.9000101@openwrt.org>
-Date: Fri, 22 Jan 2010 00:36:39 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from fg-out-1718.google.com ([72.14.220.157]:52148 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754681Ab0AFAeZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jan 2010 19:34:25 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so6896443fgg.1
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2010 16:34:24 -0800 (PST)
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: fix rx data handling for non-data frames on multiple
- vifs
+In-Reply-To: <4B43D513.3030300@gmail.com>
+References: <4B43C496.4040609@gmail.com> <69e28c911001051548ke40422ao49cb3ad2a141a33a@mail.gmail.com>
+	<4B43D513.3030300@gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Wed, 6 Jan 2010 01:34:03 +0100
+Message-ID: <69e28c911001051634m464b3c48r941e202ec533920f@mail.gmail.com>
+Subject: Re: b43: must set qos=0 on to connect
+To: John Daiker <daikerjohn@gmail.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The loop that passes non-data frames to all relevant vifs inside the
-__ieee80211_rx_handle_packet keeps a pointer to the previous sdata to
-avoid having to make unnecessary copies of the frame it's handling.
-This led to a bug that caused it to apply the ieee80211_rx_data state
-to the wrong interface, thereby either missing the rx.sta pointer or
-having it assigned where it shouldn't be.
-This breaks (among other things) aggregation on some vifs, as action
-frame exchages are dropped to the cooked monitor interface due to
-rx->sta being NULL.
-Fix this by restructuring the loop so that it prepares the rx data just
-before making the skb copy and calling the rx handlers.
+2010/1/6 John Daiker <daikerjohn@gmail.com>:
+> On 01/05/2010 03:48 PM, Gábor Stefanik wrote:
+>>
+>> On Wed, Jan 6, 2010 at 12:00 AM, John Daiker<daikerjohn@gmail.com>  wrote:
+>>>
+>>> I have a BCM4312 rev 01 (14e4:4315) card in my HP Mini netbook.  I am
+>>> having
+>>> troubles connecting to any WEP secured AP.
+>>>
+>>> I know the trick about having to load with pio=1 for the device to stay
+>>> happy (and forget about using DMA), so no issues there, I hope.
+>>>
+>>> With qos=1 (by default, IIRC), I am unable to establish a connection with
+>>> said WEP connection, and notice many 'PHY transmission error' messages in
+>>> my
+>>> dmesg output.
+>>>
+>>> With qos=1, I can successfully connect to my WEP connection without
+>>> issue,
+>>> and without any error messages or warnings.
+>>>
+>>> I have a BCM4318 rev 02 (14e4:4318) in a desktop that works with
+>>> enabled/disabled qos not matter what.  Also, a RT2500-based card works
+>>> fine
+>>> on the connection as well.
+>>>
+>>> Both card are using the 478.104 firmware.
+>>>
+>>> Please advise what steps I should take to further debug this issue.
+>>>
+>>> Thanks,
+>>> John Daiker
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>>> in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+>> Hi!
+>>
+>> Is this the new 4312 (BCM94312HMGB AKA 575920-001), with integrated
+>> Bluetooth? I haven't seen this issue on my machines with a regular
+>> 4312, so it is probably related to the DMA error, or maybe it is
+>> specific to the new 4312. If you can, please check whether the actual
+>> model number printed on the card is the new one.
+>>
+>> Thanks,
+>> Gábor
+>>
+>
+> Gábor,
+>
+> I just pulled the card, and it's not the chip you mention.  It's a
+> "BCM94312HMG"  (Notice that it doesn't have the "B" at the end.  I would
+> assume that indicates the Bluetooth integration.)
+>
+> I've taken few photos of the front and back of the card.  Let me know if you
+> want to see them... I can post 'em on my website or flickr for your viewing
+> pleasure.
+>
+> Thanks,
+> John Daiker
+>
 
-Cc: stable@kernel.org
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2348,22 +2348,6 @@ static void __ieee80211_rx_handle_packet
- 			    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
- 				continue;
- 
--			rx.sta = sta_info_get(sdata, hdr->addr2);
--
--			rx.flags |= IEEE80211_RX_RA_MATCH;
--			prepares = prepare_for_handlers(sdata, &rx, hdr);
--
--			if (!prepares)
--				continue;
--
--			if (status->flag & RX_FLAG_MMIC_ERROR) {
--				rx.sdata = sdata;
--				if (rx.flags & IEEE80211_RX_RA_MATCH)
--					ieee80211_rx_michael_mic_report(hdr,
--									&rx);
--				continue;
--			}
--
- 			/*
- 			 * frame is destined for this interface, but if it's
- 			 * not also for the previous one we handle that after
-@@ -2375,6 +2359,22 @@ static void __ieee80211_rx_handle_packet
- 				continue;
- 			}
- 
-+			rx.sta = sta_info_get(prev, hdr->addr2);
-+
-+			rx.flags |= IEEE80211_RX_RA_MATCH;
-+			prepares = prepare_for_handlers(prev, &rx, hdr);
-+
-+			if (!prepares)
-+				goto next;
-+
-+			if (status->flag & RX_FLAG_MMIC_ERROR) {
-+				rx.sdata = prev;
-+				if (rx.flags & IEEE80211_RX_RA_MATCH)
-+					ieee80211_rx_michael_mic_report(hdr,
-+									&rx);
-+				goto next;
-+			}
-+
- 			/*
- 			 * frame was destined for the previous interface
- 			 * so invoke RX handlers for it
-@@ -2387,11 +2387,22 @@ static void __ieee80211_rx_handle_packet
- 					       "multicast frame for %s\n",
- 					       wiphy_name(local->hw.wiphy),
- 					       prev->name);
--				continue;
-+				goto next;
- 			}
- 			ieee80211_invoke_rx_handlers(prev, &rx, skb_new, rate);
-+next:
- 			prev = sdata;
- 		}
-+
-+		if (prev) {
-+			rx.sta = sta_info_get(prev, hdr->addr2);
-+
-+			rx.flags |= IEEE80211_RX_RA_MATCH;
-+			prepares = prepare_for_handlers(prev, &rx, hdr);
-+
-+			if (!prepares)
-+				prev = NULL;
-+		}
- 	}
- 	if (prev)
- 		ieee80211_invoke_rx_handlers(prev, &rx, skb, rate);
+Weird... I also have a 94312HMG, and it doesn't show this error (at
+least not in DMA mode).
+
+Maybe this is a PIO-specific issue... I'll try to test that.
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
