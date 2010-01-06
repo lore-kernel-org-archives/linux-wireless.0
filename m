@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:9305 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753590Ab0AGGvA (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55329 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932392Ab0AFUA1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2010 01:51:00 -0500
-Received: by ey-out-2122.google.com with SMTP id 22so857946eye.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 22:50:58 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: fix a few work bugs
-References: <1262788258.9268.113.camel@johannes.local>
-	<87aawrusi8.fsf@purkki.valot.fi>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 07 Jan 2010 08:50:56 +0200
-In-Reply-To: <87aawrusi8.fsf@purkki.valot.fi> (Kalle Valo's message of "Wed\, 06 Jan 2010 18\:07\:11 +0200")
-Message-ID: <87637ev25r.fsf@purkki.valot.fi>
+	Wed, 6 Jan 2010 15:00:27 -0500
+Date: Wed, 6 Jan 2010 14:55:03 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jiri Slaby <jslaby@suse.cz>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] net: wireless, fix lock imbalance
+Message-ID: <20100106195503.GB2870@tuxdriver.com>
+References: <1262795743-15009-1-git-send-email-jslaby@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1262795743-15009-1-git-send-email-jslaby@suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kalle.valo@iki.fi> writes:
+On Wed, Jan 06, 2010 at 05:35:42PM +0100, Jiri Slaby wrote:
+> One fail path in cfg80211_wext_siwscan omits to unlock rdev->mtx.
+> Fix that.
+> 
+> Trigerrable by "Scan for SSID" with long enough SSID (> 32).
+> 
+> Signed-off-by: Jiri Slaby <jslaby@suse.cz>
 
-> Johannes Berg <johannes@sipsolutions.net> writes:
->
->> Kalle and Lennert reported problems with the new work
->> code, and at least Kalle's problem I was able to trace
->> to a missing jiffies initialisation.
->>
->> I also ran into a problem where occasionally I couldn't
->> connect, which seems fixed with kicking the work items
->> after scanning.
+Both this and the next one are already fixed in wireless-2.6...
 
-[...]
+commit 65486c8b30498dd274eea2c542696f22b63fe5b8
+Author: Johannes Berg <johannes@sipsolutions.net>
+Date:   Wed Dec 23 15:33:35 2009 +0100
 
-> Because I'm currently travelling, I have tested this only once. Will
-> test more when I get back home.
-
-I have now tested this by rebooting few times and I didn't notice any
-problems. So the patch seems to really help.
-
+    cfg80211: fix error path in cfg80211_wext_siwscan
+    
+    If there's an invalid channel or SSID, the code leaks
+    the scan request. Always free the scan request, unless
+    it was successfully given to the driver.
+    
+    Reported-by: Dan Carpenter <error27@gmail.com>
+    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+    Acked-by: Dan Carpenter <error27@gmail.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
 -- 
-Kalle Valo
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
