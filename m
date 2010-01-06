@@ -1,40 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:37110 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750920Ab0AKWYC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jan 2010 17:24:02 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 3/6] b43: N-PHY: add RSSI calculation for PHY rev < 3
-Date: Mon, 11 Jan 2010 23:23:58 +0100
-Cc: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	bcm43xx-dev@lists.berlios.de,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <op.u6b70wtk9lhzdc@linux-g0th.site> <201001112313.26197.mb@bu3sch.de> <1263248392.29743.13.camel@johannes.local>
-In-Reply-To: <1263248392.29743.13.camel@johannes.local>
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:44926 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755963Ab0AFTlx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jan 2010 14:41:53 -0500
+Received: by ewy19 with SMTP id 19so9978589ewy.21
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 11:41:52 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201001112323.58399.mb@bu3sch.de>
+In-Reply-To: <201001062036.55758.mb@bu3sch.de>
+References: <op.u54a59c89lhzdc@linux-g0th.site>
+	 <201001061922.58203.mb@bu3sch.de>
+	 <b170af451001061129n59357edehc1f2328fb10846f6@mail.gmail.com>
+	 <201001062036.55758.mb@bu3sch.de>
+Date: Wed, 6 Jan 2010 20:41:52 +0100
+Message-ID: <b170af451001061141l171682aft1130489bd8b7edf5@mail.gmail.com>
+Subject: Re: [PATCH 2/5] b43: N-PHY: b43_nphy_get_tx_gains
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 11 January 2010 23:19:52 Johannes Berg wrote:
-> On Mon, 2010-01-11 at 23:13 +0100, Michael Buesch wrote:
-> 
-> > No I don't think so.
-> > It's C standard that uninitialized elements on automatic variables are
-> > initialized
-> > to zero, _if_ at least one element is initialized to something.
-> > So if you init one element to 0, all others will be 0, too.
-> 
-> AFAIK, you don't even have to init anything, since otherwise not
-> mentioned fields will be set to 0. Hence, just = {} is sufficient for
-> arrays and will hopefully compile to the same code as an explicit
-> memset().
+W dniu 6 stycznia 2010 20:36 użytkownik Michael Buesch <mb@bu3sch.de> napisał:
+> On Wednesday 06 January 2010 20:29:36 Rafał Miłecki wrote:
+>> > You may read Documentation/SubmittingPatches and format your future
+>> > patches according to that.
+>>
+>> Well, that's really poor joke :| Manually creating .orig files, using
+>> "diff -up" and so dropping local commits "strategy"...? Er, I don't
+>> think I'll use this one.
+>
+> Nobody said you need to fix your internal workflow. Why would anybody care
+> _how_ you generate your patches?
+> You could manually type them into your cellphone with T9. If that it results
+> in a properly formated patch in the end, nobody would complain.
 
-Oh, nice. You are right, indeed. I didn't know that.
+Good one! ;)
+
+
+> So yes, reading other people's patches probably is a good idea to start with.
+>
+> In general only put stuff into the mail that you want to show up in the commit
+> message. (If you want to have additional stuff that doesn't show up in the commit
+> message, you can use the "---" delimiter. But that's documented elsewhere so
+> I don't have to explain that here...)
+
+I started composing that mail before got real idea of patches. I was
+still thinking I need some magic headers "diff" tool generates. Hope I
+totally understand this now and won't cause more problems to you guys
+:)
 
 -- 
-Greetings, Michael.
+Rafał
