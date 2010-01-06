@@ -1,70 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53107 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755599Ab0AMOxZ (ORCPT
+Received: from mail-yw0-f176.google.com ([209.85.211.176]:35277 "EHLO
+	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755625Ab0AFW7Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2010 09:53:25 -0500
-Subject: Re: [PATCH] cfg80211/mac80211: Add TX/RX commands for Action frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Jouni Malinen <jouni.malinen@atheros.com>,
+	Wed, 6 Jan 2010 17:59:25 -0500
+Received: by ywh6 with SMTP id 6so17923699ywh.4
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 14:59:24 -0800 (PST)
+Message-ID: <4B4515CA.7050902@lwfinger.net>
+Date: Wed, 06 Jan 2010 16:59:22 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?ISO-8859-2?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20100113113000.GA20835@jm.kir.nu>
-References: <20100113101126.GA12548@jm.kir.nu>
-	 <1263377951.5093.326.camel@johannes.local>
-	 <20100113113000.GA20835@jm.kir.nu>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7EGK4fl7jcBLCofL77wx"
-Date: Wed, 13 Jan 2010 15:53:12 +0100
-Message-ID: <1263394392.5515.272.camel@johannes.local>
-Mime-Version: 1.0
+	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH 1/5] b43: N-PHY: implement b43_nphy_stay_in_carrier_search
+ 	and it's calls (V2)
+References: <op.u54a5ufy9lhzdc@linux-g0th.site> <201001061650.52062.mb@bu3sch.de> 	<b170af451001061211y51b3ca6do11fb24fbb1193c51@mail.gmail.com> 	<op.u54ppc2h9lhzdc@linux-g0th.site> <69e28c911001061435v4b840588p3ead478672ba311@mail.gmail.com> 	<b170af451001061445k56872cd1hbae81a59e421da73@mail.gmail.com> <69e28c911001061449v3f58ce1vc4bfefcdbaf81fa2@mail.gmail.com>
+In-Reply-To: <69e28c911001061449v3f58ce1vc4bfefcdbaf81fa2@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 01/06/2010 04:49 PM, Gábor Stefanik wrote:
+> 2010/1/6 Rafa³ Mi³ecki <zajec5@gmail.com>:
+>> W dniu 6 stycznia 2010 23:35 u¿ytkownik Gábor Stefanik
+>> <netrolller.3d@gmail.com> napisa³:
+>>> 2010/1/6 Rafa³ Mi³ecki <zajec5@gmail.com>:
+>>>> V2: fix typo in deaf_count counting, improve b43_mac_[sr] calls,
+>>>>    rename function. Thanks Michael!
+>>>>
+>>>> Signed-off-by: Rafa³ Mi³ecki <zajec5@gmail.com>
+>>>> ---
+>>>>  drivers/net/wireless/b43/phy_n.c |   58
+>>>> ++++++++++++++++++++++++++++++++++++++
+>>>>  drivers/net/wireless/b43/phy_n.h |    3 ++
+>>>>  2 files changed, 61 insertions(+), 0 deletions(-)
+>>>>
+>>>> <snip>
+>>>
+>>> Typo in title (it's vs. its)
+>>
+>> My gramma is far from perfect, thanks.
+> 
+> I've yet to see a perfect grandmother... :-)
 
---=-7EGK4fl7jcBLCofL77wx
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+My wife thinks she is perfect!
 
-On Wed, 2010-01-13 at 13:30 +0200, Jouni Malinen wrote:
-
-> Assuming the later change in mac80211 is to start rejecting Action
-> frames for which there is no known internal handler or register user
-> space handler, the applications using this without the new
-> registration mechanism would indeed need to be updated.
-
-But we definitely want that, and it's trivial, so why not actually start
-rejecting unknown frames?
-
-<snip extensibility discussion>
-
-So which ones do we need now? Could we start with code to reject unkonwn
-ones, registering what we currently need (since there's a reason you
-wrote this patch), and then extend as it becomes necessary, for instance
-for vendor frames etc?
-
-johannes
-
---=-7EGK4fl7jcBLCofL77wx
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLTd5UAAoJEODzc/N7+QmaZE8P/1YTJTtZwX4Q+6i8BSGe3tW+
-Won+y0aQQRd8tB2f0c7TYe8ijJXs3xCE8T+IJa11spkFFLUC1C9EXa5/iY5iniGV
-T3la8FlWtTTStZAu7X2/DkWMdUKoKUfXXyKmIi4mY5BS/0UPg6ZUCI0reVzFc/N5
-D49Pf7Hj4S4Am4yaf1RN2VI8W6IZH42NyWZNrIKjfI0PTEtSvBD5mcrq+Vq2gIPT
-Mqvb9kZBsOXtlfp16sJpoH1idxb4CWvLVTzOd2jg/w0nGmv2oKT2M9eOVSpdsnKt
-B8GFi6Qsi4CjrX5vkGUCf80i6QlxKTNFfTpHKBGGvIcZ2P7V7MN2OqmT9TJvfSPH
-g9AyJ19MAEZ2DD/FA115eaQfrRk26B7NKSTGGAz1zsSZQhKOFE/zFv1Y589eIj1V
-DppsfGWnTeSMkTI0MjQaXN6PPjdj8lUM8iv9nzt10jVCza+dik+SIhtI7iettEuJ
-P5j6gHyyNyU2d+qLb6HFOksY3ufVvrxFmg30FbbClDuTjt/Qs9NSuwG4FeY2u+Yi
-r1czXIJN/gP472E4pFFn+USXjnkhEd7Kp3XiQI78D/+UAjGjrhMVy7twkbImvwnv
-ZbPjvS4NTIvzqtlHzQ3eMx/7n77kZuSMTH8qxkrfE8cAEOpNAVbnjTpk7cb0q460
-3WSEP9Ca/bFoogBrubE+
-=nb48
------END PGP SIGNATURE-----
-
---=-7EGK4fl7jcBLCofL77wx--
-
+Larry
