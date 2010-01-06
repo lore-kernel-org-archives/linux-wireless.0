@@ -1,74 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59321 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753556Ab0A0TN4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2010 14:13:56 -0500
-Subject: Re: [PATCH] mac80211: wait for beacon before enabling powersave
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"kalle.valo@iki.fi" <kalle.valo@iki.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"j@w1.fi" <j@w1.fi>,
-	"buytenh@wantstofly.org" <buytenh@wantstofly.org>
-In-Reply-To: <1264616062.8619.22.camel@wwguy-ubuntu>
-References: <1264511993.25642.9.camel@johannes.local>
-	 <43e72e891001271001r2cc39da4ka00a3eef06f6e139@mail.gmail.com>
-	 <1264615477.8619.20.camel@wwguy-ubuntu>
-	 <43e72e891001271014j667221bqa11d56f3a68f6099@mail.gmail.com>
-	 <1264616062.8619.22.camel@wwguy-ubuntu>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-E4Dv4BIrlVRG5oaDIi5/"
-Date: Wed, 27 Jan 2010 20:13:47 +0100
-Message-ID: <1264619627.25642.25.camel@johannes.local>
+Received: from mga01.intel.com ([192.55.52.88]:44416 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751154Ab0AFAIQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jan 2010 19:08:16 -0500
+Subject: Re: [PATCH] iwlwifi: remove IWLWIFI_VERSION
+From: reinette chatre <reinette.chatre@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <1262728499-31006-1-git-send-email-linville@tuxdriver.com>
+References: <DA586906BA1FFC4384FCFD6429ECE860302D216F@shzsmsx502.ccr.corp.intel.com>
+	 <1262728499-31006-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain
+Date: Tue, 05 Jan 2010 16:08:15 -0800
+Message-Id: <1262736495.11849.305.camel@rc-desk>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi John,
 
---=-E4Dv4BIrlVRG5oaDIi5/
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On Tue, 2010-01-05 at 13:54 -0800, John W. Linville wrote:
+> Also remove the MODULE_VERSION macros using IWLWIFI_VERSION.  Those
+> places using IWLWIFI_VERSION at runtime are modified to use
+> init_utsname()->release instead.
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> How about this as a compromise?
 
-On Wed, 2010-01-27 at 10:14 -0800, Guy, Wey-Yi wrote:
+Thank you for looking at this.
 
-> > > It will be nice to see a respective solution for stable since this
-> > > impact power save which is very important for certain platform.
-> >=20
-> > Well how about your patch for stable then?
-> >=20
-> if ok with you and Johannes, I will like to see it happen, the only
-> issue is, my patch only address iwlwifi but not mwl8k.
+I do think it is valuable for a user to see the parameters the module
+was compiled with when running "modinfo". I thus would like the
+MODULE_VERSION to stay. Including the kernel version number at runtime
+seems fine. The version number display may be a bit strange when a user
+did not compile with any of the options since the version number will
+then end with "-".
 
-It might be possible to port this patch to stable by changing the way we
-determine whether or not we received a beacon already -- it currently
-relies on Jouni's cfg80211 change (look for beacon_ies) but that could
-be changed, for instance to use the dtim_period in the BSS struct as a
-flag.
+Reinette
 
-johannes
-
---=-E4Dv4BIrlVRG5oaDIi5/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLYJBnAAoJEODzc/N7+QmaKg8P/jjKqchMOlL2C1pwjAM55FFX
-HfaZgO9DaEZlVJ4yn9XfnR2EvTAikFdTgUCyq7zemuewLGO4xmHeZ7/AQaam/bH2
-gUPKDppjlzLAd7/HEwGsqtDtHP4onncYmw0ZUhOQqjoSfZH4Qu2gXsn7Rz5JNyHn
-gb6tjryd9KLZjDx0buyMLEQw/QbqSQHRKZSq8ZNPHedZfqnfZSYtqnwHEmNSoexM
-uYhewsWaATqvbkY8P34g7E7TuAefPB12SFqgCBV1yhCqztULCgKSQ6TpiMuOOv9i
-1EFQFW1pMP7m+YJHoaBhynab1ME0ziocKHeGtQjSkwj4eJHWZaMZEAbGpsvV1IKl
-B+tRysfTb8aYRa+iQ7PggXnwanaf3uqqRARdr8cQhMZS6acxoFY8nnJ9lBNie7z6
-j7Qq6ayyofNrs23tuWntnkaHo8tG6ftq1jupmcf/QuOvT2UC8SJ3P0K6PsRgx/Ec
-r1dvKTN6gDO0OSSs217u7ZpOiTyAx/fl99fxLnpEpYWKBoFWYi6kyuURwmID24S+
-7YiE79mdEYvZTgU1sk3ycMCLePsDUWpIADvJX9S3LxrMu472Dw+ZYk+nllXyMNbz
-IHE7zNKgar1OHVBqobdPpy7i/9ONlh9yHtEEScrldIxll2oG3owTeG2jGltIgUyM
-jEsE3QdjL/Hs75d1MwUG
-=FZYq
------END PGP SIGNATURE-----
-
---=-E4Dv4BIrlVRG5oaDIi5/--
 
