@@ -1,187 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43342 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751413Ab0ATKLv (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:34832 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755407Ab0AFPjM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2010 05:11:51 -0500
-Subject: [PATCH v2] mac80211: pass station instead of address to
- update_tkip_key
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <646765f41001190606w389a7702ja5891fa60458c24a@mail.gmail.com>
-References: <1263907302.12555.27.camel@johannes.local>
-	 <646765f41001190606w389a7702ja5891fa60458c24a@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 20 Jan 2010 11:11:46 +0100
-Message-ID: <1263982306.14538.0.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 6 Jan 2010 10:39:12 -0500
+Received: by ewy19 with SMTP id 19so9724743ewy.21
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 07:39:11 -0800 (PST)
+Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
+Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 06 Jan 2010 16:40:32 +0100
+Subject: [PATCH 1/5] b43: N-PHY: implement b43_nphy_stay_carrier_search and
+ it's calls
+MIME-Version: 1.0
+From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <op.u54a5ufy9lhzdc@linux-g0th.site>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211: pass station instead of address to update_tkip_key
+b43: N-PHY: implement b43_nphy_stay_carrier_search and it's calls
 
-When a TKIP key is updated, we should pass the station
-pointer instead of just the address, since drivers can
-use that to store their own data.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+ From ec599007464bb8220c605af500b724797d54aba8 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Date: Wed, 6 Jan 2010 15:20:20 +0100
+Subject: [PATCH 1/5] b43: N-PHY: implement b43_nphy_stay_carrier_search and it's calls
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
-v2: * compile-test and fixes, thanks Julian
+  drivers/net/wireless/b43/phy_n.c |   57 ++++++++++++++++++++++++++++++++++++++
+  drivers/net/wireless/b43/phy_n.h |    3 ++
+  2 files changed, 60 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 9c5c7c9..2a3f048 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -844,8 +844,9 @@ static void rx_tkip_phase1_write(struct b43_wldev *dev, u8 index, u32 iv32,
- }
- 
- static void b43_op_update_tkip_key(struct ieee80211_hw *hw,
--			struct ieee80211_key_conf *keyconf, const u8 *addr,
--			u32 iv32, u16 *phase1key)
-+				   struct ieee80211_key_conf *keyconf,
-+				   struct ieee80211_sta *sta,
-+				   u32 iv32, u16 *phase1key)
- {
- 	struct b43_wl *wl = hw_to_b43_wl(hw);
- 	struct b43_wldev *dev;
-@@ -863,7 +864,10 @@ static void b43_op_update_tkip_key(struct ieee80211_hw *hw,
- 	keymac_write(dev, index, NULL);	/* First zero out mac to avoid race */
- 
- 	rx_tkip_phase1_write(dev, index, iv32, phase1key);
--	keymac_write(dev, index, addr);
-+	/* only pairwise TKIP keys are supported right now */
-+	if (WARN_ON(!sta))
-+		goto out_unlock;
-+	keymac_write(dev, index, sta->addr);
- 
- out_unlock:
- 	mutex_unlock(&wl->mutex);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 417fa9b..3724fb2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2833,14 +2833,17 @@ void iwl_config_ap(struct iwl_priv *priv)
- }
- 
- static void iwl_mac_update_tkip_key(struct ieee80211_hw *hw,
--			struct ieee80211_key_conf *keyconf, const u8 *addr,
-+			struct ieee80211_key_conf *keyconf,
-+			struct ieee80211_sta *sta,
- 			u32 iv32, u16 *phase1key)
- {
- 
- 	struct iwl_priv *priv = hw->priv;
- 	IWL_DEBUG_MAC80211(priv, "enter\n");
- 
--	iwl_update_tkip_key(priv, keyconf, addr, iv32, phase1key);
-+	iwl_update_tkip_key(priv, keyconf,
-+			    sta ? sta->addr : iwl_bcast_addr,
-+			    iv32, phase1key);
- 
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- }
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index c90047d..3126191 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1610,8 +1610,9 @@ struct ieee80211_ops {
- 		       struct ieee80211_vif *vif, struct ieee80211_sta *sta,
- 		       struct ieee80211_key_conf *key);
- 	void (*update_tkip_key)(struct ieee80211_hw *hw,
--			struct ieee80211_key_conf *conf, const u8 *address,
--			u32 iv32, u16 *phase1key);
-+				struct ieee80211_key_conf *conf,
-+				struct ieee80211_sta *sta,
-+				u32 iv32, u16 *phase1key);
- 	int (*hw_scan)(struct ieee80211_hw *hw,
- 		       struct cfg80211_scan_request *req);
- 	void (*sw_scan_start)(struct ieee80211_hw *hw);
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index de91d39..6eeb0c6 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -138,15 +138,20 @@ static inline int drv_set_key(struct ieee80211_local *local,
- 
- static inline void drv_update_tkip_key(struct ieee80211_local *local,
- 				       struct ieee80211_key_conf *conf,
--				       const u8 *address, u32 iv32,
-+				       struct sta_info *sta, u32 iv32,
- 				       u16 *phase1key)
- {
-+	struct ieee80211_sta *ista = NULL;
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index ceb429a..40d7b73 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -348,6 +348,63 @@ static void b43_nphy_reset_cca(struct b43_wldev *dev)
+  	b43_phy_write(dev, B43_NPHY_BBCFG, bbcfg & ~B43_NPHY_BBCFG_RSTCCA);
+  }
+
++static void b43_nphy_write_clip_detection(struct b43_wldev *dev, u16 *vals)
++{
++	b43_phy_write(dev, B43_NPHY_C1_CLIP1THRES, vals[0]);
++	b43_phy_write(dev, B43_NPHY_C2_CLIP1THRES, vals[1]);
++}
 +
- 	might_sleep();
- 
-+	if (sta)
-+		ista = &sta->sta;
++static void b43_nphy_read_clip_detection(struct b43_wldev *dev, u16 *vals)
++{
++	vals[0] = b43_phy_read(dev, B43_NPHY_C1_CLIP1THRES);
++	vals[1] = b43_phy_read(dev, B43_NPHY_C2_CLIP1THRES);
++}
 +
- 	if (local->ops->update_tkip_key)
--		local->ops->update_tkip_key(&local->hw, conf, address,
-+		local->ops->update_tkip_key(&local->hw, conf, ista,
- 					    iv32, phase1key);
--	trace_drv_update_tkip_key(local, conf, address, iv32);
-+	trace_drv_update_tkip_key(local, conf, ista, iv32);
- }
- 
- static inline int drv_hw_scan(struct ieee80211_local *local,
-diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
-index 0ea2581..bce0924 100644
---- a/net/mac80211/driver-trace.h
-+++ b/net/mac80211/driver-trace.h
-@@ -332,25 +332,25 @@ TRACE_EVENT(drv_set_key,
- TRACE_EVENT(drv_update_tkip_key,
- 	TP_PROTO(struct ieee80211_local *local,
- 		 struct ieee80211_key_conf *conf,
--		 const u8 *address, u32 iv32),
-+		 struct ieee80211_sta *sta, u32 iv32),
- 
--	TP_ARGS(local, conf, address, iv32),
-+	TP_ARGS(local, conf, sta, iv32),
- 
- 	TP_STRUCT__entry(
- 		LOCAL_ENTRY
--		__array(u8, addr, 6)
-+		STA_ENTRY
- 		__field(u32, iv32)
- 	),
- 
- 	TP_fast_assign(
- 		LOCAL_ASSIGN;
--		memcpy(__entry->addr, address, 6);
-+		STA_ASSIGN;
- 		__entry->iv32 = iv32;
- 	),
- 
- 	TP_printk(
--		LOCAL_PR_FMT " addr:%pM iv32:%#x",
--		LOCAL_PR_ARG, __entry->addr, __entry->iv32
-+		LOCAL_PR_FMT STA_PR_FMT " iv32:%#x",
-+		LOCAL_PR_ARG,STA_PR_ARG, __entry->iv32
- 	)
- );
- 
-diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-index b73454a..41e5d28 100644
---- a/net/mac80211/tkip.c
-+++ b/net/mac80211/tkip.c
-@@ -303,14 +303,7 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
- 	if (key->local->ops->update_tkip_key &&
- 	    key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
- 	    key->u.tkip.rx[queue].state != TKIP_STATE_PHASE1_HW_UPLOADED) {
--		static const u8 bcast[ETH_ALEN] =
--		{0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
--		const u8 *sta_addr = key->sta->sta.addr;
--
--		if (is_multicast_ether_addr(ra))
--			sta_addr = bcast;
--
--		drv_update_tkip_key(key->local, &key->conf, sta_addr,
-+		drv_update_tkip_key(key->local, &key->conf, key->sta,
- 				iv32, key->u.tkip.rx[queue].p1k);
- 		key->u.tkip.rx[queue].state = TKIP_STATE_PHASE1_HW_UPLOADED;
- 	}
++static u16 b43_nphy_classifier(struct b43_wldev *dev, u16 mask, u16 val)
++{
++	u16 tmp;
++	bool suspended = false;
++
++	if (dev->dev->id.revision == 16 && dev->mac_suspended == 0) {
++		b43_mac_suspend(dev);
++		suspended = true;
++	}
++
++	tmp = b43_phy_read(dev, B43_NPHY_CLASSCTL);
++	tmp &= (B43_NPHY_CLASSCTL_CCKEN | B43_NPHY_CLASSCTL_OFDMEN |
++		B43_NPHY_CLASSCTL_WAITEDEN);
++	tmp &= ~mask;
++	tmp |= (val & mask);
++	b43_phy_maskset(dev, B43_NPHY_CLASSCTL, 0xFFF8, tmp);
++
++	if (suspended)
++		b43_mac_enable(dev);
++
++	return tmp;
++}
++
++static void b43_nphy_stay_carrier_search(struct b43_wldev *dev, bool enable)
++{
++	struct b43_phy *phy = &dev->phy;
++	struct b43_phy_n *nphy = phy->n;
++
++	if (enable) {
++		u16 clip[] = { 0xFFFF, 0xFFFF };
++		if (nphy->deaf_count++ == 0) {
++			nphy->classifier_state = b43_nphy_classifier(dev, 0, 0);
++			b43_nphy_classifier(dev, 0x7, 0);
++			b43_nphy_read_clip_detection(dev, nphy->clip_state);
++			b43_nphy_write_clip_detection(dev, clip);
++		}
++		b43_nphy_reset_cca(dev);
++	} else {
++		if (--nphy->deaf_count != 0) {
++			b43_nphy_classifier(dev, 0x7, nphy->classifier_state);
++			b43_nphy_write_clip_detection(dev, nphy->clip_state);
++		}
++	}
++}
++
+  enum b43_nphy_rf_sequence {
+  	B43_RFSEQ_RX2TX,
+  	B43_RFSEQ_TX2RX,
+diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
+index e5e402a..6ab07fc 100644
+--- a/drivers/net/wireless/b43/phy_n.h
++++ b/drivers/net/wireless/b43/phy_n.h
+@@ -932,6 +932,9 @@ struct b43_phy_n {
+  	u32 deaf_count;
+  	bool mute;
 
++	u16 classifier_state;
++	u16 clip_state[2];
++
+  	u8 iqcal_chanspec_2G;
+  	u8 rssical_chanspec_2G;
 
+-- 
+1.6.4.2
