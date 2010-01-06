@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:60561 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750709Ab0AKCjB (ORCPT
+Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:51127 "EHLO
+	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756491Ab0AFWwy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jan 2010 21:39:01 -0500
-Received: by yxe17 with SMTP id 17so19946858yxe.33
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Jan 2010 18:39:00 -0800 (PST)
-Message-ID: <4B4A8F3D.6010200@lwfinger.net>
-Date: Sun, 10 Jan 2010 20:38:53 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 2/6] b43: N-PHY: add RSSI functions: poll and set 2055
- vcm
-References: <op.u6b70ig59lhzdc@linux-g0th.site> <201001102332.22954.mb@bu3sch.de>
-In-Reply-To: <201001102332.22954.mb@bu3sch.de>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 6 Jan 2010 17:52:54 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 2.6.33 0/8] rt2x00: Cherry picked fixes for 2.6.33.
+Date: Wed,  6 Jan 2010 23:52:41 +0100
+Message-Id: <1262818369-16820-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/10/2010 04:32 PM, Michael Buesch wrote:
-> On Sunday 10 January 2010 23:13:20 Rafał Miłecki wrote:
->> +		buf[0] += (s8)(((s[0] & 0x3F) << 2) >> 2);
->> +		buf[1] += (s8)((((s[0] >> 8) & 0x3F) << 2) >> 2);
->> +		buf[2] += (s8)(((s[1] & 0x3F) << 2) >> 2);
->> +		buf[3] += (s8)((((s[1] >> 8) & 0x3F) << 2) >> 2);
-> 
-> I suggest buf[3] += (s8)((((s[1] >> 8) & 0x3F) << 2) >> 2) << 2) >> 2) << 2) >> 2) << 2) >> 2) << 2) >> 2) << 2) >> 2) << 2) >> 2)
-> ;)
-> No, seriously, why shift left and then shift right? Is this a translation error?
-> I _guess_ it's some mistranslation of the sign extension going on.
-> Or alternatively a compiler going insane on sign extension.
-> 
-> The question is: Do we want these integers to be signextended or not?
-> 
-> What we currently do is this:
-> buf[3] += (s8)((s[1] >> 8) & 0x3F);
-> 
-> which will always result in a positive 8bit integer, as far as I can see.
-> Which smells fishy.
+John,
 
-Yes, my fault. The specs are now corrected so that these statements are
+Here is a set of fixes for rt2x00 for 2.6.33. All of these are already present
+in wireless-next-2.6, and I've cherry-picked them to get rt2800 in a usable
+state in 2.6.33.
 
-((s8)((s[1] >> 8) & 0x3F) << 2) >> 2
+The series can also be pulled from:
+	git://git.gwingerde.nl/rt2x00-2.6.git
 
-I think that is right.
+P.S. Once these enter mainline, I'll submit a similar set of patches to stable
+to fix 2.6.32 as well. Unfortunately these patches don't apply directly on 
+2.6.32.
 
-Larry
+Alban Browaeys (2):
+  rt2x00 : modify padding location.
+  rt2x00 : trim the skb after having the l2pad removed.
+
+Benoit Papillault (1):
+  rt2x00: Fix rt2800usb RX frame format and as such L2PAD
+
+Gertjan van Wingerde (5):
+  rt2x00: Further L2 padding fixes.
+  rt2x00: Remove SKBDESC_L2_PADDED flag.
+  rt2x00: Reorganize L2 padding inserting function.
+  rt2x00: Only remove L2 padding in received frames if there is
+    payload.
+  rt2x00: Fix trimming of L2 padded frames.
+
+ drivers/net/wireless/rt2x00/rt2800pci.c   |    6 +--
+ drivers/net/wireless/rt2x00/rt2800usb.c   |   41 +++++++++-----
+ drivers/net/wireless/rt2x00/rt2800usb.h   |   90 ++++++++++++++++++++++------
+ drivers/net/wireless/rt2x00/rt2x00.h      |    6 ++
+ drivers/net/wireless/rt2x00/rt2x00dev.c   |   10 ++-
+ drivers/net/wireless/rt2x00/rt2x00queue.c |   70 ++++++++++------------
+ drivers/net/wireless/rt2x00/rt2x00queue.h |    5 +-
+ 7 files changed, 142 insertions(+), 86 deletions(-)
+
