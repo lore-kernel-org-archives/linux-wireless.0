@@ -1,65 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f220.google.com ([209.85.220.220]:36200 "EHLO
-	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754284Ab0AZO1e (ORCPT
+Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:64005 "EHLO
+	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756501Ab0AFWw4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2010 09:27:34 -0500
-To: Dunc <dunc@lemonia.org>
-Cc: David Miller <davem@davemloft.net>, kaber@trash.net,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Network QoS support in applications
-References: <877hr5nkx0.fsf@purkki.valot.fi>
-	<20100126.041610.226004766.davem@davemloft.net>
-	<87wrz5m3cd.fsf@purkki.valot.fi>
-	<20100126.050645.184040277.davem@davemloft.net>
-	<87my01m0zm.fsf@purkki.valot.fi> <4B5EF5DF.2070005@lemonia.org>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 26 Jan 2010 16:27:29 +0200
-In-Reply-To: <4B5EF5DF.2070005@lemonia.org> (dunc@lemonia.org's message of "Tue\, 26 Jan 2010 14\:02\:07 +0000")
-Message-ID: <87iqaplz5a.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 6 Jan 2010 17:52:56 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2.6.33 4/8] rt2x00: Remove SKBDESC_L2_PADDED flag.
+Date: Wed,  6 Jan 2010 23:52:45 +0100
+Message-Id: <1262818369-16820-5-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1262818369-16820-4-git-send-email-gwingerde@gmail.com>
+References: <1262818369-16820-1-git-send-email-gwingerde@gmail.com>
+ <1262818369-16820-2-git-send-email-gwingerde@gmail.com>
+ <1262818369-16820-3-git-send-email-gwingerde@gmail.com>
+ <1262818369-16820-4-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dunc <dunc@lemonia.org> writes:
+With the improved L2 padding code, this flag is no longer necessary, as the
+rt2x00queue_remove_l2pad is capable of detecting by itself if L2 padding is
+applied.
+For received frames the RX descriptor flag is still being checked.
 
-> If applications set the QoS values, the who's to stop someone (for
-> example) writing a bittorrent client that marks all packets for the
-> highest priority as if they were VoIP or something?
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Acked-by: Ivo van Doorn <ivdoorn@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/rt2x00/rt2800pci.c   |    5 +----
+ drivers/net/wireless/rt2x00/rt2800usb.c   |    4 +---
+ drivers/net/wireless/rt2x00/rt2x00queue.c |    6 +-----
+ drivers/net/wireless/rt2x00/rt2x00queue.h |    5 +----
+ 4 files changed, 4 insertions(+), 16 deletions(-)
 
-Nobody. That would a bug in the application which should be fixed.
-Badly behaving applications can disrupt the network, with or without
-QoS support. So no need to blame QoS for this.
-
-And if the network doesn't want to trust applications, it's free to do
-so. Nothing prevents that. And based on the discussion so far, the
-networks already ignore QoS classifations coming from other network
-realms.
-
-> At this point all the good work done in the applications is useless
-> and the network admin is going to have to not trust the QoS values
-> and then attempt to classify traffic by themselves, so it was all a
-> waste of time.
-
-Because of one badly behaving application? I think that's a bit
-extreme. If QoS API brings benefits to the user (for example in this
-case bittorrent giving bandwith to more important streams), most
-probably applications try to get it right.
-
-> It's probably better to just always leave it up to the network devices IMHO.
-
-If we are happy with the current situation, sure, no need to do
-anything. But if we want to improve network services, we need to start
-to do something about this.
-
-I want to emphasise that we shouldn't look at this just from the core
-network point of view, but with a broader look. We have now different
-network technologies and devices where Linux is used. We should not
-just look at this from a point where a Linux workstation (or router)
-is connected with a fast access to Internet. For example, I want to
-have my ssh terminal connection higher priority compared to emails
-downloading background on a slow cellular network.
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 6fcb2bb..458378c 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -835,7 +835,6 @@ static void rt2800pci_fill_rxdone(struct queue_entry *entry,
+ 				  struct rxdone_entry_desc *rxdesc)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+-	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+ 	struct queue_entry_priv_pci *entry_priv = entry->priv_data;
+ 	__le32 *rxd = entry_priv->desc;
+ 	__le32 *rxwi = (__le32 *)entry->skb->data;
+@@ -883,10 +882,8 @@ static void rt2800pci_fill_rxdone(struct queue_entry *entry,
+ 	if (rt2x00_get_field32(rxd3, RXD_W3_MY_BSS))
+ 		rxdesc->dev_flags |= RXDONE_MY_BSS;
+ 
+-	if (rt2x00_get_field32(rxd3, RXD_W3_L2PAD)) {
++	if (rt2x00_get_field32(rxd3, RXD_W3_L2PAD))
+ 		rxdesc->dev_flags |= RXDONE_L2PAD;
+-		skbdesc->flags |= SKBDESC_L2_PADDED;
+-	}
+ 
+ 	if (rt2x00_get_field32(rxwi1, RXWI_W1_SHORT_GI))
+ 		rxdesc->flags |= RX_FLAG_SHORT_GI;
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 352a734..c146c48 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -625,10 +625,8 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
+ 	if (rt2x00_get_field32(rxd0, RXINFO_W0_MY_BSS))
+ 		rxdesc->dev_flags |= RXDONE_MY_BSS;
+ 
+-	if (rt2x00_get_field32(rxd0, RXINFO_W0_L2PAD)) {
++	if (rt2x00_get_field32(rxd0, RXINFO_W0_L2PAD))
+ 		rxdesc->dev_flags |= RXDONE_L2PAD;
+-		skbdesc->flags |= SKBDESC_L2_PADDED;
+-	}
+ 
+ 	if (rt2x00_get_field32(rxwi1, RXWI_W1_SHORT_GI))
+ 		rxdesc->flags |= RX_FLAG_SHORT_GI;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index d648f76..6952ae2 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -177,7 +177,6 @@ void rt2x00queue_align_payload(struct sk_buff *skb, unsigned int header_length)
+ 
+ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
+ {
+-	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
+ 	unsigned int frame_length = skb->len;
+ 	unsigned int header_align = ALIGN_SIZE(skb, 0);
+ 	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
+@@ -198,7 +197,6 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
+ 		 */
+ 		skb_push(skb, header_align);
+ 		memmove(skb->data, skb->data + header_align, header_length);
+-		skbdesc->flags |= SKBDESC_L2_PADDED;
+ 	} else {
+ 		/*
+ 		 *
+@@ -217,16 +215,14 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
+ 			skb->data + header_length + l2pad + payload_align,
+ 			frame_length - header_length);
+ 		skb_trim(skb, frame_length + l2pad);
+-		skbdesc->flags |= SKBDESC_L2_PADDED;
+ 	}
+ }
+ 
+ void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int header_length)
+ {
+-	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
+ 	unsigned int l2pad = L2PAD_SIZE(header_length);
+ 
+-	if (!l2pad || (skbdesc->flags & SKBDESC_L2_PADDED))
++	if (!l2pad)
+ 		return;
+ 
+ 	memmove(skb->data + l2pad, skb->data, header_length);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+index 70775e5..c1e482b 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.h
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+@@ -92,8 +92,6 @@ enum data_queue_qid {
+  * @SKBDESC_DMA_MAPPED_TX: &skb_dma field has been mapped for TX
+  * @SKBDESC_IV_STRIPPED: Frame contained a IV/EIV provided by
+  *	mac80211 but was stripped for processing by the driver.
+- * @SKBDESC_L2_PADDED: Payload has been padded for 4-byte alignment,
+- *	the padded bytes are located between header and payload.
+  * @SKBDESC_NOT_MAC80211: Frame didn't originate from mac80211,
+  *	don't try to pass it back.
+  */
+@@ -101,8 +99,7 @@ enum skb_frame_desc_flags {
+ 	SKBDESC_DMA_MAPPED_RX = 1 << 0,
+ 	SKBDESC_DMA_MAPPED_TX = 1 << 1,
+ 	SKBDESC_IV_STRIPPED = 1 << 2,
+-	SKBDESC_L2_PADDED = 1 << 3,
+-	SKBDESC_NOT_MAC80211 = 1 << 4,
++	SKBDESC_NOT_MAC80211 = 1 << 3,
+ };
+ 
+ /**
 -- 
-Kalle Valo
+1.6.6
+
