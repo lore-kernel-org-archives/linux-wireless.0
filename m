@@ -1,70 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48922 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751748Ab0A3Q0q (ORCPT
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:45288 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755514Ab0AFWtp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2010 11:26:46 -0500
-Subject: Re: Multiple SSID on same phy
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Greg Oliver <oliver.greg@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <51058d551001300822p7ab564e4jedd6faad380dabc@mail.gmail.com>
-References: <20100129122718.73a6c877@nehalam>
-	 <1264866128.3546.185.camel@johannes.local>
-	 <51058d551001300751r4a509e90i521c946dfe9dec4@mail.gmail.com>
-	 <1264867217.3546.186.camel@johannes.local>
-	 <51058d551001300814y66d1d589uae15fa50086593b8@mail.gmail.com>
-	 <1264868231.3546.188.camel@johannes.local>
-	 <51058d551001300822p7ab564e4jedd6faad380dabc@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-MD1/LYts1iQK0KFiotYo"
-Date: Sat, 30 Jan 2010 17:26:43 +0100
-Message-ID: <1264868803.3546.189.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 6 Jan 2010 17:49:45 -0500
+Received: by fxm25 with SMTP id 25so11210276fxm.21
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 14:49:44 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <b170af451001061445k56872cd1hbae81a59e421da73@mail.gmail.com>
+References: <op.u54a5ufy9lhzdc@linux-g0th.site> <201001061650.52062.mb@bu3sch.de>
+	<b170af451001061211y51b3ca6do11fb24fbb1193c51@mail.gmail.com>
+	<op.u54ppc2h9lhzdc@linux-g0th.site> <69e28c911001061435v4b840588p3ead478672ba311@mail.gmail.com>
+	<b170af451001061445k56872cd1hbae81a59e421da73@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Wed, 6 Jan 2010 23:49:21 +0100
+Message-ID: <69e28c911001061449v3f58ce1vc4bfefcdbaf81fa2@mail.gmail.com>
+Subject: Re: [PATCH 1/5] b43: N-PHY: implement b43_nphy_stay_in_carrier_search
+	and it's calls (V2)
+To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2010/1/6 Rafa³ Mi³ecki <zajec5@gmail.com>:
+> W dniu 6 stycznia 2010 23:35 u¿ytkownik Gábor Stefanik
+> <netrolller.3d@gmail.com> napisa³:
+>> 2010/1/6 Rafa³ Mi³ecki <zajec5@gmail.com>:
+>>> V2: fix typo in deaf_count counting, improve b43_mac_[sr] calls,
+>>>    rename function. Thanks Michael!
+>>>
+>>> Signed-off-by: Rafa³ Mi³ecki <zajec5@gmail.com>
+>>> ---
+>>>  drivers/net/wireless/b43/phy_n.c |   58
+>>> ++++++++++++++++++++++++++++++++++++++
+>>>  drivers/net/wireless/b43/phy_n.h |    3 ++
+>>>  2 files changed, 61 insertions(+), 0 deletions(-)
+>>>
+>>> <snip>
+>>
+>> Typo in title (it's vs. its)
+>
+> My gramma is far from perfect, thanks.
 
---=-MD1/LYts1iQK0KFiotYo
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I've yet to see a perfect grandmother... :-)
 
-On Sat, 2010-01-30 at 10:22 -0600, Greg Oliver wrote:
+>
+> --
+> Rafa³
+>
 
-> > I don't think I can parse that. In any case, a possible use case would
-> > for instance be a protected company network, along with an unprotected,
-> > internet-only guest network.
->=20
->=20
-> Hmmm, I would put the odds at that happening about 100,000:1 (if not more=
-)
->=20
-> Yes, I know it is feasible, but HIGHLY unlikely.
 
-It's not. openwrt for example has that as a default configuration. Even
-fonera does.
 
-johannes
-
---=-MD1/LYts1iQK0KFiotYo
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLZF2/AAoJEODzc/N7+Qma/y8QAL8vEbffM0YAD5aw9L5x/5Ei
-9h61WHE749Q2xtyw/0LjscyVBy54JGM2Y5d182nhQrZeLo9JeHATbd4ShUQzvYNp
-K/u3XSI5Kp/XVgVHFKsi0I7UhCeCW01WgMRdVbuPzyKEOnxpmXk7SckcEggKJUQF
-rnpMExgJBO5Klqs+08ZS+ZLHxMdYOqiQUPccdvVlNO0mzABPAt8ZKmastouNQfSg
-9hFNFM4EB4ET1pFyC7HaqW1G31G5bfo30zRP6bpzWM65YUVoA4/TJq1Bkrw4uOJU
-ICErYHu2ZjxUl1ZtH6Loiq4v0Fm5uXi4TJLXabK1EM5ZXERg5KUQyDgGe4V7RX9j
-QOx82ch/SgRQVQHBxvbyq/BZX8SNXwSayAX7EqAXvIMNoL3FQ3Ka1O4hRjguQ15q
-mYdzX+FPkAi/e4DokJJNjl8ZxsExzHc1+ILMEDcETPQjHjJ3+2we5GRZqSpY5d1W
-O7XpCW0g5uoWRITK5fBbOHq8pbpV2PEH/Oz8FqRsshhzOX0sG+ZnaQnnfNr0XDqX
-I/ZpjKCEGzWtnu1NTJtrqtYFLcOfITgbh3v0uAon/DhFryj1RwbcHbXbkzz5+39a
-RAbJUmdhHYqMdR+c4aXmPy+9bVCSimW+NgC1QWoXBWuPabTNLebYO905mdXVWu26
-stlf4D4wDxzumJF115JJ
-=Ct71
------END PGP SIGNATURE-----
-
---=-MD1/LYts1iQK0KFiotYo--
-
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
