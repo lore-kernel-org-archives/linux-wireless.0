@@ -1,48 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:46309 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753434Ab0AYSxY convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39547 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752432Ab0AGWY7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 13:53:24 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH 2/4] b43: make cordic common (LP-PHY and N-PHY need it)
-Date: Mon, 25 Jan 2010 19:53:19 +0100
-Cc: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <1264442401-6364-1-git-send-email-zajec5@gmail.com> <b170af451001251035t23f3978cga52258722ea29770@mail.gmail.com> <b170af451001251036m8b33f3er9f0a363a03ea21cb@mail.gmail.com>
-In-Reply-To: <b170af451001251036m8b33f3er9f0a363a03ea21cb@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201001251953.21692.mb@bu3sch.de>
+	Thu, 7 Jan 2010 17:24:59 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 0/4] cfg80211: few country IE parse fixes
+Date: Thu,  7 Jan 2010 17:24:53 -0500
+Message-Id: <1262903097-2129-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 25 January 2010 19:36:27 Rafał Miłecki wrote:
-> W dniu 25 stycznia 2010 19:35 użytkownik Rafał Miłecki
-> <zajec5@gmail.com> napisał:
-> > 2010/1/25 Michael Buesch <mb@bu3sch.de>:
-> >> On Monday 25 January 2010 18:59:59 Rafał Miłecki wrote:
-> >>> +/* Complex number using 2 32-bit signed integers */
-> >>> +typedef struct { s32 i, q; } b43_c32;
-> >>
-> >> No typedef. ever.
-> >
-> > Well, I just copied (Gabor's?) code here. But of course I can fix this
-> > by the way, no problem :)
+John, this series has a few country IE fixes some of which
+Benoit reported. The fix I made goes in with an enhancement
+which reduces the number of rules created if the AP is stupid
+and sends congigious channels, never making use of the number
+of channels in the triplets.
 
-Yeah, I saw that. We can fix it while we're at it. ;)
+I've tested this against an AP issuing these country IE
+triplets below:
 
-> > Just read about typedef in Linux Kernel Coding Style, didn't know
-> > about this earlier. Thanks for pointing.
-> 
-> Is this OK to fix this in separated patch? Or should I modify this set
-> of patches?
+[1]
+[2]
+[36]
+[40]
 
-Well, as you touch any reference to the typedef anyway (you renamed it),
-you can just put the keyword "struct" in front of the references and no separate patch is needed.
-It won't even grow your current patch in the number of changed lines.
+[1]
+[2-4]
+[5-12]
+[36]
+[40-44]
 
--- 
-Greetings, Michael.
+[1-4]
+[5-7]
+[36-44]
+[48-64]
+
+[36-36]
+[40-40]
+[44-44]
+[48-48]
+[52-52]
+[56-56]
+[60-60]
+[64-64]
+[100-100]
+[104-104]
+[108-108]
+[112-112]
+[116-116]
+[120-120]
+[124-124]
+[128-128]
+[132-132]
+[136-136]
+[140-140]
+
+All these country IEs now only produce two triplets on regulatory rules.
+
+I generated these with hostapd using a debug patch for country IEs:
+
+http://bombadil.infradead.org/~mcgrof/patches/hostapd/enable-11d-debugging.patch
+
+Luis R. Rodriguez (4):
+  cfg80211: add debug print when we drop a bogus country IE
+  cfg80211: fix 2 GHz subband calculation for country IEs
+  cfg80211: process the max power on a country IE
+  cfg80211: Fix country IE parsing for single channel triplets
+
+ net/wireless/reg.c |  235 ++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 files changed, 227 insertions(+), 8 deletions(-)
+
