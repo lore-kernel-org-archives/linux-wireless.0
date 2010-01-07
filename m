@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:41334 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753033Ab0AQW71 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39551 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752604Ab0AGWZB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2010 17:59:27 -0500
-Received: by ewy19 with SMTP id 19so2782634ewy.21
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jan 2010 14:59:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <201001172345.54110.mb@bu3sch.de>
-References: <op.u6o7s9rq9lhzdc@linux-g0th.site>
-	 <201001172345.54110.mb@bu3sch.de>
-Date: Sun, 17 Jan 2010 23:59:25 +0100
-Message-ID: <b170af451001171459s781bf60ao48a2bc937de50bb6@mail.gmail.com>
-Subject: Re: [PATCH 1/4] b43: N-PHY: add writing one element tables
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 7 Jan 2010 17:25:01 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/4] cfg80211: add debug print when we drop a bogus country IE
+Date: Thu,  7 Jan 2010 17:24:54 -0500
+Message-Id: <1262903097-2129-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1262903097-2129-1-git-send-email-lrodriguez@atheros.com>
+References: <1262903097-2129-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VyBkbml1IDE3IHN0eWN6bmlhIDIwMTAgMjM6NDUgdcW8eXRrb3duaWsgTWljaGFlbCBCdWVzY2gg
-PG1iQGJ1M3NjaC5kZT4gbmFwaXNhxYI6Cj4gT24gU3VuZGF5IDE3IEphbnVhcnkgMjAxMCAyMzoz
-Nzo1MCBSYWZhxYIgTWnFgmVja2kgd3JvdGU6Cj4+IEBAIC0xODk1LDE0ICsxODgwLDEyIEBAIHN0
-YXRpYyBpbnQgYjQzX25waHlfY2FsX3R4X2lxX2xvKHN0cnVjdCBiNDNfd2xkZXYgKmRldiwKPj4g
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgYjQzX3BoeV93cml0ZShkZXYsIEI0M19O
-UEhZX0lRTE9DQUxfQ01ETk5VTSwgdG1wKTsKPj4KPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgaWYgKHR5cGUgPT0gMSB8fCB0eXBlID09IDMgfHwgdHlwZSA9PSA0KSB7Cj4+IC0g
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgLyogVE9ETzogUmVhZCBh
-biBOIFBIWSBUYWJsZSB3aXRoIElEIDE1LAo+PiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGxlbmd0aCAxLCBvZmZzZXQgNjkgKyBjb3JlLAo+
-PiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IHdpZHRoIDE2LCBhbmQgZGF0YSBwb2ludGVyIGJ1ZmZlciAqLwo+PiArIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGI0M19udGFiX3dyaXRlKGRldiwgQjQzX05UQUIx
-NigxNSwgNjkgKyBjb3JlKSwKPj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBidWZmZXJbMF0pOwo+PiDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBkaXFfc3RhcnQgPSBidWZmZXJbMF07
-Cj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGJ1ZmZlclsw
-XSA9IDA7Cj4+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgLyog
-VE9ETzogV3JpdGUgYW4gTiBQSFkgVGFibGUgd2l0aCBJRCAxNSwKPj4gLSDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBsZW5ndGggMSwgb2Zmc2V0
-IDY5ICsgY29yZSwgd2lkdGggMTYsCj4+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgYW5kIGRhdGEgb2YgMCAqLwo+PiArIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGI0M19udGFiX3dyaXRlKGRldiwgQjQzX05U
-QUIxNigxNSwgNjkgKyBjb3JlKSwKPj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAwKTsKPj4gwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgfQo+Pgo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCBiNDNfcGh5X3dyaXRlKGRldiwgQjQzX05QSFlfSVFMT0NBTF9DTUQsIGNtZCk7Cj4KPiBXaGF0
-IGlzIHRoaXMgc3VwcG9zZWQgdG8gZG8/IEl0IHdyaXRlcyBhIHZhbHVlIHRvIGEgdGFibGUgZW50
-cnkgYW5kIGltbWVkaWF0ZWx5Cj4gY2xvYmJlcnMgdGhlIGVudHJ5IHdpdGggMC4gVGhpcyBkb2Vz
-bid0IG1ha2UgYW55IHNlbnNlLgoKWWFpa3MsIHlvdSdyZSBncmVhdCBhdCBwYXRjaGVzIHJldmll
-d2luZy4gVGhhbmtzIG9uY2UgbW9yZS4KCkZvciBleHBsYW5hdGlvbiBvZiBteSBzdHVwaWQgbWlz
-dGFrZSBwbGVhc2UgY29tcGFyZSByZW1vdmVkIGNvbW1lbnQgdG8KYWRkZWQgY29kZS4uLgoKLS0g
-ClJhZmHFggo=
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index f79d661..389247c 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1806,8 +1806,10 @@ void regulatory_hint_11d(struct wiphy *wiphy,
+ 		goto out;
+ 
+ 	rd = country_ie_2_rd(country_ie, country_ie_len, &checksum);
+-	if (!rd)
++	if (!rd) {
++		REG_DBG_PRINT("cfg80211: Ignoring bogus country IE\n");
+ 		goto out;
++	}
+ 
+ 	/*
+ 	 * This will not happen right now but we leave it here for the
+-- 
+1.6.3.3
+
