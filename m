@@ -1,52 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:35312 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754243Ab0ALR6D convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f188.google.com ([209.85.210.188]:57333 "EHLO
+	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753876Ab0AGUnG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2010 12:58:03 -0500
-Received: by yxe17 with SMTP id 17so21608241yxe.33
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jan 2010 09:58:02 -0800 (PST)
+	Thu, 7 Jan 2010 15:43:06 -0500
+Message-ID: <4B464774.8020007@gmail.com>
+Date: Thu, 07 Jan 2010 12:43:32 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890912230933h3eac574ya7b6b359a32524cb@mail.gmail.com>
-References: <bfff2faa0912190727jc7fa067gf46425d1cd443698@mail.gmail.com>
-	 <bfff2faa0912230911w15966e9sbfbba9bd303d3314@mail.gmail.com>
-	 <1261589400.7538.4.camel@mj>
-	 <43e72e890912230933h3eac574ya7b6b359a32524cb@mail.gmail.com>
-Date: Tue, 12 Jan 2010 12:58:02 -0500
-Message-ID: <bfff2faa1001120958m6f6a771pdbd5e8c628f6b06f@mail.gmail.com>
-Subject: Re: modprobe fail and subsequent crash on rmmod ath9k D-Link DWA 652
-From: Russ Adams <russ.adams@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [bisected] sys_paccept: disable paccept() causes my macbook	pro
+ to have an annoying whining sound
+References: <dd18b0c31001062216m316163f4t992c000eca0f76d@mail.gmail.com> <20100107125433.GB13603@tuxdriver.com> <4B460188.1050504@gmail.com> <20100107203752.GA31726@tuxdriver.com>
+In-Reply-To: <20100107203752.GA31726@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Apologies on the delay here.  I will make a priority to compile a
-vanilla kernel this week and do suggested debugging steps against it.
-
-On Wed, Dec 23, 2009 at 12:33 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Wed, Dec 23, 2009 at 9:30 AM, Pavel Roskin <proski@gnu.org> wrote:
->> On Wed, 2009-12-23 at 12:11 -0500, Russ Adams wrote:
->>> Nothing new on this just yet.
+On 01/07/10 12:37, John W. Linville wrote:
+> On Thu, Jan 07, 2010 at 07:45:12AM -0800, Justin P. Mattock wrote:
+>> On 01/07/10 04:54, John W. Linville wrote:
+>>> On Wed, Jan 06, 2010 at 10:16:27PM -0800, Justin Mattock wrote:
+>>>> for a while I've been hearing this odd
+>>>> annoying sound coming from my macbook pro
+>>>> when the system is idle(no internet use tv/radio/web etc...)
+>>>> as soon as I do anything(radio,web) the noise disappears.
+>>>>
+>>>> here is a  url where they are experiencing the same issue:
+>>>> https://help.ubuntu.com/community/MacBook1-1/Hardy
+>>>> (down under whining noise);
+>>>>
+>>>> here is is the result of my bisect:
+>>>>
+>>>> 2d4c8266774188cda7f7e612e6dfb8ad12c579d5 is the first bad commit
+>>>> commit 2d4c8266774188cda7f7e612e6dfb8ad12c579d5
+>>>> Author: Michael Kerrisk<mtk.manpages@googlemail.com>
+>>>> Date:   Mon Sep 22 13:57:49 2008 -0700
+>>>>
+>>>>      sys_paccept: disable paccept() until API design is resolved
 >>>
->>> Tonight I will try 2.6.32-2 to see if that fixes the problem.  Does
->>> anyone have any debugging steps I can try?
+>>> Any particular reason you sent this to linux-wireless??
+>>>
 >>
->> Remember, I asked you to show the debug messages after the ath9k module
->> is loaded.  If it's loaded on startup, you can blacklist it and then
->> load manually with modprobe.
 >>
->> It seems to me that something fails during the initialization, which
->> causes a crash at the unload time.  But since ath9k is working properly
->> for most of us, it's hard to figure out what is failing and how to model
->> the problem on functioning hardware.
+>> because the bisect had resulted in
+>> something with wireless, so I figured
+>> it was the next best thing todo.
 >
-> Also, please see:
+> Well, if you say so. :-)  But, I'm not sure I see the connection
+> between sys_paccept and wireless...?
 >
-> http://wireless.kernel.org/en/users/Documentation/Reporting_bugs
->
-> specifically the parts about the latest stable kernels.
->
->  Luis
->
+> John
+
+
+yeah.. my bad..
+I got too CC happy with this one.
+
+I think andi is right by saying this
+is a power management issue.
+
+Justin P. Mattock
