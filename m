@@ -1,139 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:49853 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753371Ab0AHSEd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jan 2010 13:04:33 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>, stable@kernel.org
-Subject: [PATCH 1/2] iwlwifi: fix iwl_queue_used bug when read_ptr == write_ptr
-Date: Fri,  8 Jan 2010 10:04:30 -0800
-Message-Id: <1262973871-2483-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1262973871-2483-1-git-send-email-reinette.chatre@intel.com>
-References: <1262973871-2483-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-yx0-f188.google.com ([209.85.210.188]:63962 "EHLO
+	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752745Ab0AGPnS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2010 10:43:18 -0500
+Message-ID: <4B460132.3010706@gmail.com>
+Date: Thu, 07 Jan 2010 07:43:46 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: Andi Kleen <andi@firstfloor.org>
+CC: linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [bisected] sys_paccept: disable paccept() causes my macbook pro
+ to  have an annoying whining sound
+References: <dd18b0c31001062216m316163f4t992c000eca0f76d@mail.gmail.com> <873a2ixmwy.fsf@basil.nowhere.org>
+In-Reply-To: <873a2ixmwy.fsf@basil.nowhere.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhu Yi <yi.zhu@intel.com>
+On 01/07/10 01:51, Andi Kleen wrote:
+> Justin Mattock<justinmattock@gmail.com>  writes:
+>
+>> for a while I've been hearing this odd
+>> annoying sound coming from my macbook pro
+>> when the system is idle(no internet use tv/radio/web etc...)
+>> as soon as I do anything(radio,web) the noise disappears.
+>>
+>> here is a  url where they are experiencing the same issue:
+>> https://help.ubuntu.com/community/MacBook1-1/Hardy
+>> (down under whining noise);
+>>
+>> here is is the result of my bisect:
+>
+> It's very unlikely that this patch causes power management issues.
+> I would suggest you double check the bisect.
+>
+> -Andi
+>
 
-When txq read_ptr equals to write_ptr, iwl_queue_used should
-always return false. Because there is no used TFD in this case.
+I can try again..
 
-This is a complementary fix to the fix already included in commit "iwl3945:
-fix panic in iwl3945 driver". Both fixes are needed to address the panic
-below.
+As for the power management
+I didn't think so.. sounds more
+like vibration of a solder joint/capacitor
 
-This problem was discussed on linux-wireless in
-http://thread.gmane.org/gmane.linux.kernel.wireless.general/43568
-
-<1>[ 7290.414172] IP: [<ffffffffa0dd53a1>] iwl3945_rx_reply_tx+0xc1/0x450 [iwl3945]
-<4>[ 7290.414205] PGD 0
-<1>[ 7290.414214] Thread overran stack, or stack corrupted
-<0>[ 7290.414229] Oops: 0002 [#1] PREEMPT SMP
-<0>[ 7290.414246] last sysfs file: /sys/devices/platform/coretemp.1/temp1_input
-<4>[ 7290.414265] CPU 0
-<4>[ 7290.414274] Modules linked in: af_packet nfsd usb_storage usb_libusual cpufreq_powersave exportfs cpufreq_conservative iwl3945 nfs cpufreq_userspace snd_hda_codec_realtek acpi_cpufreq uvcvideo lockd iwlcore snd_hda_intel joydev coretemp nfs_acl videodev snd_hda_codec mac80211 v4l1_compat snd_hwdep sbp2 v4l2_compat_ioctl32 uhci_hcd psmouse auth_rpcgss ohci1394 cfg80211 ehci_hcd video ieee1394 snd_pcm serio_raw battery ac nvidia(P) usbcore output sunrpc evdev lirc_ene0100 snd_page_alloc rfkill tg3 libphy fuse lzo lzo_decompress lzo_compress
-<6>[ 7290.414486] Pid: 0, comm: swapper Tainted: P           2.6.32-rc8-wl #213 Aspire 5720
-<6>[ 7290.414507] RIP: 0010:[<ffffffffa0dd53a1>]  [<ffffffffa0dd53a1>] iwl3945_rx_reply_tx+0xc1/0x450 [iwl3945]
-<6>[ 7290.414541] RSP: 0018:ffff880002203d60  EFLAGS: 00010246
-<6>[ 7290.414557] RAX: 000000000000004f RBX: ffff880064c11600 RCX: 0000000000000013
-<6>[ 7290.414576] RDX: ffffffffa0ddcf20 RSI: ffff8800512b7008 RDI: 0000000000000038
-<6>[ 7290.414596] RBP: ffff880002203dd0 R08: 0000000000000000 R09: 0000000000000100
-<6>[ 7290.414616] R10: 0000000000000001 R11: 0000000000000000 R12: 00000000000000a0
-<6>[ 7290.414635] R13: 0000000000000002 R14: 0000000000000013 R15: 0000000000020201
-<6>[ 7290.414655] FS:  0000000000000000(0000) GS:ffff880002200000(0000) knlGS:0000000000000000
-<6>[ 7290.414677] CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-<6>[ 7290.414693] CR2: 0000000000000041 CR3: 0000000001001000 CR4: 00000000000006f0
-<6>[ 7290.414712] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-<6>[ 7290.414732] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-<4>[ 7290.414752] Process swapper (pid: 0, threadinfo ffffffff81524000, task ffffffff81528b60)
-<0>[ 7290.414772] Stack:
-<4>[ 7290.414780]  ffff880002203da0 0000000000000046 0000000000000000 0000000000000046
-<4>[ 7290.414804] <0> 0000000000000282 0000000000000282 0000000000000282 ffff880064c12010
-<4>[ 7290.414830] <0> ffff880002203db0 ffff880064c11600 ffff880064c12e50 ffff8800512b7000
-<0>[ 7290.414858] Call Trace:
-<0>[ 7290.414867]  <IRQ>
-<4>[ 7290.414884]  [<ffffffffa0dc8c47>] iwl3945_irq_tasklet+0x657/0x1740 [iwl3945]
-<4>[ 7290.414910]  [<ffffffff8138fc60>] ? _spin_unlock+0x30/0x60
-<4>[ 7290.414931]  [<ffffffff81049a21>] tasklet_action+0x101/0x110
-<4>[ 7290.414950]  [<ffffffff8104a3d0>] __do_softirq+0xc0/0x160
-<4>[ 7290.414968]  [<ffffffff8100d01c>] call_softirq+0x1c/0x30
-<4>[ 7290.414986]  [<ffffffff8100eff5>] do_softirq+0x75/0xb0
-<4>[ 7290.415003]  [<ffffffff81049ee5>] irq_exit+0x95/0xa0
-<4>[ 7290.415020]  [<ffffffff8100e547>] do_IRQ+0x77/0xf0
-<4>[ 7290.415038]  [<ffffffff8100c7d3>] ret_from_intr+0x0/0xf
-<0>[ 7290.415052]  <EOI>
-<4>[ 7290.415067]  [<ffffffff81234efa>] ? acpi_idle_enter_bm+0x270/0x2a5
-<4>[ 7290.415087]  [<ffffffff81234f04>] ? acpi_idle_enter_bm+0x27a/0x2a5
-<4>[ 7290.415107]  [<ffffffff81234efa>] ? acpi_idle_enter_bm+0x270/0x2a5
-<4>[ 7290.415130]  [<ffffffff812c11f3>] ? cpuidle_idle_call+0x93/0xf0
-<4>[ 7290.415149]  [<ffffffff8100b0d7>] ? cpu_idle+0xa7/0x110
-<4>[ 7290.415168]  [<ffffffff8137b3d5>] ? rest_init+0x75/0x80
-<4>[ 7290.415187]  [<ffffffff8158cd0a>] ? start_kernel+0x3a7/0x3b3
-<4>[ 7290.415206]  [<ffffffff8158c315>] ? x86_64_start_reservations+0x125/0x129
-<4>[ 7290.415227]  [<ffffffff8158c3fd>] ? x86_64_start_kernel+0xe4/0xeb
-<0>[ 7290.415243] Code: 00 41 39 ce 0f 8d e8 01 00 00 48 8b 47 40 48 63 d2 48 69 d2 98 00 00 00 4c 8b 04 02 48 c7 c2 20 cf dd a0 49 8d 78 38 49 8d 40 4f <c6> 47 09 00 c6 47 0c 00 c6 47 0f 00 c6 47 12 00 c6 47 15 00 49
-<1>[ 7290.415382] RIP  [<ffffffffa0dd53a1>] iwl3945_rx_reply_tx+0xc1/0x450 [iwl3945]
-<4>[ 7290.415410]  RSP <ffff880002203d60>
-<0>[ 7290.415421] CR2: 0000000000000041
-<4>[ 7290.415436] ---[ end trace ec46807277caa515 ]---
-<0>[ 7290.415450] Kernel panic - not syncing: Fatal exception in interrupt
-<4>[ 7290.415468] Pid: 0, comm: swapper Tainted: P      D    2.6.32-rc8-wl #213
-<4>[ 7290.415486] Call Trace:
-<4>[ 7290.415495]  <IRQ>  [<ffffffff8138c040>] panic+0x7d/0x13a
-<4>[ 7290.415519]  [<ffffffff8101071a>] oops_end+0xda/0xe0
-<4>[ 7290.415538]  [<ffffffff8102e1ea>] no_context+0xea/0x250
-<4>[ 7290.415557]  [<ffffffff81038991>] ? select_task_rq_fair+0x511/0x780
-<4>[ 7290.415578]  [<ffffffff8102e475>] __bad_area_nosemaphore+0x125/0x1e0
-<4>[ 7290.415597]  [<ffffffff81038d0c>] ? __enqueue_entity+0x7c/0x80
-<4>[ 7290.415616]  [<ffffffff81039201>] ? enqueue_task_fair+0x111/0x150
-<4>[ 7290.415636]  [<ffffffff8102e53e>] bad_area_nosemaphore+0xe/0x10
-<4>[ 7290.415656]  [<ffffffff8102e8fa>] do_page_fault+0x26a/0x320
-<4>[ 7290.415674]  [<ffffffff813905df>] page_fault+0x1f/0x30
-<4>[ 7290.415697]  [<ffffffffa0dd53a1>] ? iwl3945_rx_reply_tx+0xc1/0x450 [iwl3945]
-<4>[ 7290.415723]  [<ffffffffa0dc8c47>] iwl3945_irq_tasklet+0x657/0x1740 [iwl3945]
-<4>[ 7290.415746]  [<ffffffff8138fc60>] ? _spin_unlock+0x30/0x60
-<4>[ 7290.415764]  [<ffffffff81049a21>] tasklet_action+0x101/0x110
-<4>[ 7290.415783]  [<ffffffff8104a3d0>] __do_softirq+0xc0/0x160
-<4>[ 7290.415801]  [<ffffffff8100d01c>] call_softirq+0x1c/0x30
-<4>[ 7290.415818]  [<ffffffff8100eff5>] do_softirq+0x75/0xb0
-<4>[ 7290.415835]  [<ffffffff81049ee5>] irq_exit+0x95/0xa0
-<4>[ 7290.415852]  [<ffffffff8100e547>] do_IRQ+0x77/0xf0
-<4>[ 7290.415869]  [<ffffffff8100c7d3>] ret_from_intr+0x0/0xf
-<4>[ 7290.415883]  <EOI>  [<ffffffff81234efa>] ? acpi_idle_enter_bm+0x270/0x2a5
-<4>[ 7290.415911]  [<ffffffff81234f04>] ? acpi_idle_enter_bm+0x27a/0x2a5
-<4>[ 7290.415931]  [<ffffffff81234efa>] ? acpi_idle_enter_bm+0x270/0x2a5
-<4>[ 7290.415952]  [<ffffffff812c11f3>] ? cpuidle_idle_call+0x93/0xf0
-<4>[ 7290.415971]  [<ffffffff8100b0d7>] ? cpu_idle+0xa7/0x110
-<4>[ 7290.415989]  [<ffffffff8137b3d5>] ? rest_init+0x75/0x80
-<4>[ 7290.416007]  [<ffffffff8158cd0a>] ? start_kernel+0x3a7/0x3b3
-<4>[ 7290.416026]  [<ffffffff8158c315>] ? x86_64_start_reservations+0x125/0x129
-<4>[ 7290.416047]  [<ffffffff8158c3fd>] ? x86_64_start_kernel+0xe4/0xeb
-
-Reported-by: Maxim Levitsky <maximlevitsky@gmail.com>
-Tested-by: Maxim Levitsky <maximlevitsky@gmail.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-CC: stable@kernel.org
----
- drivers/net/wireless/iwlwifi/iwl-dev.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 165d1f6..3822cf5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -711,7 +711,7 @@ extern void iwl_txq_ctx_stop(struct iwl_priv *priv);
- extern int iwl_queue_space(const struct iwl_queue *q);
- static inline int iwl_queue_used(const struct iwl_queue *q, int i)
- {
--	return q->write_ptr > q->read_ptr ?
-+	return q->write_ptr >= q->read_ptr ?
- 		(i >= q->read_ptr && i < q->write_ptr) :
- 		!(i < q->read_ptr && i >= q->write_ptr);
- }
--- 
-1.5.6.3
-
+Justin P. Mattock
