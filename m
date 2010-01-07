@@ -1,38 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:12438 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753947Ab0AVAxO (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39558 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752822Ab0AGWZE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 19:53:14 -0500
-Received: by ey-out-2122.google.com with SMTP id 22so1855eye.5
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2010 16:53:13 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 0/5] b43: more N-PHY stuff
-Date: Fri, 22 Jan 2010 01:53:11 +0100
-Message-Id: <1264121596-9616-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 7 Jan 2010 17:25:04 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 2/4] cfg80211: fix 2 GHz subband calculation for country IEs
+Date: Thu,  7 Jan 2010 17:24:55 -0500
+Message-Id: <1262903097-2129-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1262903097-2129-1-git-send-email-lrodriguez@atheros.com>
+References: <1262903097-2129-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John, I hope to have patch submission fixed, please let me know if there
-is anything wrong still.
+Country IEs triplets are getting an extra channel with
+the current count. This does not affect regulatory because
+we always took the intersection between what the AP gave
+and what CRDA believed is correct.
 
-Rafał Miłecki (5):
-  b43: check band width
-  b43: N-PHY: implement overriding RF control
-  b43: N-PHY: add running samples
-  b43: N-PHY: add setting power amplifier filters
-  b43: N-PHY: add TX tone
+This however does fix processing some Country IEs with multiple
+sequential 2 GHz triplets. Since our parser and the spec mandates
+all channels be monitonically increasing we would drop the IE after
+noticing the second triplet begins on a channel already processed.
+APs that send these type of country IEs seems rare though.
 
- drivers/net/wireless/b43/main.c        |    6 +
- drivers/net/wireless/b43/phy_common.h  |    3 +
- drivers/net/wireless/b43/phy_n.c       |  253 ++++++++++++++++++++++++++++++--
- drivers/net/wireless/b43/tables_nphy.c |   61 ++++++++
- drivers/net/wireless/b43/tables_nphy.h |   22 +++
- 5 files changed, 330 insertions(+), 15 deletions(-)
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 389247c..7223a7a 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -555,7 +555,7 @@ static struct ieee80211_regdomain *country_ie_2_rd(
+ 		/* 2 GHz */
+ 		if (triplet->chans.first_channel <= 14)
+ 			end_channel = triplet->chans.first_channel +
+-				triplet->chans.num_channels;
++				triplet->chans.num_channels - 1;
+ 		else
+ 			/*
+ 			 * 5 GHz -- For example in country IEs if the first
+@@ -655,7 +655,7 @@ static struct ieee80211_regdomain *country_ie_2_rd(
+ 		/* 2 GHz */
+ 		if (triplet->chans.first_channel <= 14)
+ 			end_channel = triplet->chans.first_channel +
+-				triplet->chans.num_channels;
++				triplet->chans.num_channels -1;
+ 		else
+ 			end_channel =  triplet->chans.first_channel +
+ 				(4 * (triplet->chans.num_channels - 1));
+-- 
+1.6.3.3
 
