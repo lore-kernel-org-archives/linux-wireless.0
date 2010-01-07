@@ -1,60 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:20654 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754582Ab0A2TyM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2010 14:54:12 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 12/12] iwlwifi: iwl_power_update_mode always hold mutex
-Date: Fri, 29 Jan 2010 11:54:02 -0800
-Message-Id: <1264794842-8046-13-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1264794842-8046-1-git-send-email-reinette.chatre@intel.com>
-References: <1264794842-8046-1-git-send-email-reinette.chatre@intel.com>
+Received: from fw.wantstofly.org ([80.101.37.227]:39180 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752266Ab0AGOBp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2010 09:01:45 -0500
+Date: Thu, 7 Jan 2010 15:01:42 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: mac80211: fix queue selection for packets injected via monitor interface
+Message-ID: <20100107140137.GA32125@mail.wantstofly.org>
+References: <1262710858.28653.5.camel@johannes.local>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1262710858.28653.5.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+Commit 'mac80211: fix skb buffering issue' added an ->ndo_select_queue()
+for monitor interfaces which can end up dereferencing ieee802_1d_to_ac[]
+beyond the end of the array for injected data packets (as skb->priority
+isn't guaranteed to be zero or within [0:7]), which then triggers the
+WARN_ON in net/core/dev.c:dev_cap_txqueue().  Fix this by always setting
+the priority to zero on injected data frames.
 
-iwl_power_update_mode expects to be called with mutex held, for example to
-protect priv->vif. Only one caller currently does not do this, fix this.
-Also, add a comment to iwl_power_update_mode to indicate this requirement.
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+--
+We have seen some crashing with crypto enabled with the multiqueue
+patch due to this issue, so some fix along these lines is fairly
+important.
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index c20dddd..2f34662 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -699,6 +699,7 @@ static u16 ieee80211_monitor_select_queue(struct net_device *dev,
+ 		return ieee802_1d_to_ac[skb->priority];
+ 	}
+ 
++	skb->priority = 0;
+ 	return ieee80211_downgrade_queue(local, skb);
+ }
+ 
 ---
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |    2 ++
- drivers/net/wireless/iwlwifi/iwl-power.c   |    2 +-
- 2 files changed, 3 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 5c8377b..d134301 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -815,7 +815,9 @@ static ssize_t iwl_dbgfs_sleep_level_override_write(struct file *file,
- 
- 	priv->power_data.debug_sleep_level_override = value;
- 
-+	mutex_lock(&priv->mutex);
- 	iwl_power_update_mode(priv, true);
-+	mutex_unlock(&priv->mutex);
- 
- 	return count;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
-index 232dd18..1a1a9f0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-power.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-power.c
-@@ -303,7 +303,7 @@ static int iwl_set_power(struct iwl_priv *priv, struct iwl_powertable_cmd *cmd)
- 				sizeof(struct iwl_powertable_cmd), cmd);
- }
- 
--
-+/* priv->mutex must be held */
- int iwl_power_update_mode(struct iwl_priv *priv, bool force)
- {
- 	int ret = 0;
--- 
-1.6.3.3
-
