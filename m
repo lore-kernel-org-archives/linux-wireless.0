@@ -1,110 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:24858 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752331Ab0AUVKT convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39948 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751706Ab0AGNLk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 16:10:19 -0500
-Received: by fg-out-1718.google.com with SMTP id 16so77313fgg.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2010 13:10:17 -0800 (PST)
+	Thu, 7 Jan 2010 08:11:40 -0500
+Date: Thu, 7 Jan 2010 07:54:33 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Justin Mattock <justinmattock@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [bisected] sys_paccept: disable paccept() causes my macbook
+	pro to have an annoying whining sound
+Message-ID: <20100107125433.GB13603@tuxdriver.com>
+References: <dd18b0c31001062216m316163f4t992c000eca0f76d@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1264058284.5089.13.camel@debian>
-References: <E9954878DD1FB34FAE5187FB88C58A357683393C@orsmsx506.amr.corp.intel.com>
-	<1261363447.12157.624.camel@debian> <69e28c910912210552p1f63a47dw9fbabf2c26ce02e9@mail.gmail.com>
-	<1264058284.5089.13.camel@debian>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 21 Jan 2010 22:09:57 +0100
-Message-ID: <69e28c911001211309h34883daewd557b574a456d359@mail.gmail.com>
-Subject: Re: Intel 4965 HT rates
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Valentin Manea <linux-wireless@mrs.ro>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <dd18b0c31001062216m316163f4t992c000eca0f76d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/1/21 Zhu Yi <yi.zhu@intel.com>:
-> On Mon, 2009-12-21 at 05:52 -0800, Gábor Stefanik wrote:
->> On Mon, Dec 21, 2009 at 3:44 AM, Zhu Yi <yi.zhu@intel.com> wrote:
->> > On Mon, 2009-12-21 at 10:33 +0800, Guy, Wey-Yi W wrote:
->> >> For 4965, 40MHz only supported in g band
->> >
->> > We don't support 40MHz channels in 2.4G band. See comments in
->> > iwl-eeprom.h:
->> >
->> >  *
->> >  * NOTE:  4965 does not support HT40 channels on 2.4 GHz.
->> >  */
->> But why does the Windows driver for 4965 support it then?
->
-> Can you dump your 4965 eeprom and see if the channels in band 6 (2.4GHz
-> 40MHz channel band) are valid? You can use modparam "debug=1" and grep
-> 'HT40' in dmesg. If the flag is 0x0, the channel is marked as invalid by
-> EEPROM. The Linux driver simply excludes the HT40 channel in this case.
->
-> Thanks,
-> -yi
+On Wed, Jan 06, 2010 at 10:16:27PM -0800, Justin Mattock wrote:
+> for a while I've been hearing this odd
+> annoying sound coming from my macbook pro
+> when the system is idle(no internet use tv/radio/web etc...)
+> as soon as I do anything(radio,web) the noise disappears.
+> 
+> here is a  url where they are experiencing the same issue:
+> https://help.ubuntu.com/community/MacBook1-1/Hardy
+> (down under whining noise);
+> 
+> here is is the result of my bisect:
+> 
+> 2d4c8266774188cda7f7e612e6dfb8ad12c579d5 is the first bad commit
+> commit 2d4c8266774188cda7f7e612e6dfb8ad12c579d5
+> Author: Michael Kerrisk <mtk.manpages@googlemail.com>
+> Date:   Mon Sep 22 13:57:49 2008 -0700
+> 
+>     sys_paccept: disable paccept() until API design is resolved
 
-Unfortunately I have exchanged my 4965 for an 5300 (it failed
-recently, and a 5300 was the replacement), so I can no longer provide
-a dump. However, others can probably produce one, and if needed, I can
-buy another 4965 to see if it still does 2.4GHz HT40 in Windos.
-
->
->> >>  -----Original Message-----
->> >> From:         Valentin Manea [mailto:linux-wireless@mrs.ro]
->> >> Sent: Sunday, December 20, 2009 05:38 AM Pacific Standard Time
->> >> To:   linux-wireless@vger.kernel.org
->> >> Subject:      Intel 4965 HT rates
->> >>
->> >> Hi,
->> >>
->> >>   I'm running compat-wireless-2.6.33-rc1 and iw list shows some confusing HT
->> >> capabilities:
->> >>         Band 1:
->> >>                 HT capabilities: 0x082c
->> >>                         * 20 MHz operation
->> >>                         * SM PS disabled
->> >>                         * 20 MHz short GI
->> >>                         * max A-MSDU len 7935
->> >>
->> >> but for 802.11a channels:
->> >>         Band 2:
->> >>                 HT capabilities: 0x086e
->> >>                         * 20/40 MHz operation
->> >>                         * SM PS disabled
->> >>                         * 20 MHz short GI
->> >>                         * 40 MHz short GI
->> >>                         * max A-MSDU len 7935
->> >>
->> >> While I can't tell when this happened, I remember older 2.6.29 releases
->> >> supported HT40 for both bands.
->> >> The wireless card is an Intel 4965 on a Thinkpad T61.
->> >>
->> >>
->> >> Regards,
->> >> Valentin
->> >>
->> >> --
->> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> >> the body of a message to majordomo@vger.kernel.org
->> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> >> N�����r��y���b�X��ǧv�^�)޺{.n�+����{��*ޕ�,�{ay� ʇڙ�,j ��f���h���z� �w��� ���j:+v���w�j�m���� ����zZ+�����ݢj"��!�i
->> >
->> >
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> >
->>
->>
->>
->
->
->
-
-
+Any particular reason you sent this to linux-wireless??
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
