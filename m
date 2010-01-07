@@ -1,54 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:50619 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752457Ab0ADSJY convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f194.google.com ([209.85.223.194]:63399 "EHLO
+	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751280Ab0AGPns convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2010 13:09:24 -0500
-Received: by ewy19 with SMTP id 19so7563818ewy.21
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Jan 2010 10:09:23 -0800 (PST)
+	Thu, 7 Jan 2010 10:43:48 -0500
+Received: by iwn32 with SMTP id 32so2405488iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2010 07:43:47 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1262619639-21426-1-git-send-email-lrodriguez@atheros.com>
-References: <1262619639-21426-1-git-send-email-lrodriguez@atheros.com>
-Date: Mon, 4 Jan 2010 20:09:22 +0200
-Message-ID: <40f31dec1001041009r87f677l9c777535c1a057f@mail.gmail.com>
-Subject: Re: [PATCH] ath5k: Fix eeprom checksum check for custom sized eeproms
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	joshuacov@googlemail.com, stephenbeahm@comcast.net,
-	stable@kernel.org, David Quan <david.quan@atheros.com>
+In-Reply-To: <4B458BBC.6040200@free.fr>
+References: <4B3DBB6B.4010107@free.fr> <43e72e891001011524r190950c8pdfc89e765afb205d@mail.gmail.com>
+	<4B3F1010.3070906@free.fr> <43e72e891001021004r2c9cf855p52b007a88123bba7@mail.gmail.com>
+	<43e72e891001061739t5ded13e7u6b16c73f1b26b246@mail.gmail.com>
+	<4B458BBC.6040200@free.fr>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 7 Jan 2010 07:43:26 -0800
+Message-ID: <43e72e891001070743q5f16a1e7y94e1c3b0c0bbcbb6@mail.gmail.com>
+Subject: Re: Issue connecting to an HT40 AP that sends a Country IE
+To: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/1/4 Luis R. Rodriguez <lrodriguez@atheros.com>:
+On Wed, Jan 6, 2010 at 11:22 PM, Benoit PAPILLAULT
+<benoit.papillault@free.fr> wrote:
+> Luis R. Rodriguez a écrit :
+>>
+>> On Sat, Jan 2, 2010 at 10:04 AM, Luis R. Rodriguez <mcgrof@gmail.com>
+>> wrote:
+>>
+>>>
+>>> The issue should  be that a frequency rule is being created for each
+>>> channel and although 40 MHz is being specified as max bandwidth
+>>> logistically only 20 MHz fits into that frequency rule. So what the
+>>> intersection needs to learn is how to merge rules or at least
+>>> understand them together. It may be easier to parse insaneIEs like the
+>>> ones your AP generates and re-generate one with actual ranges with
+>>> contiguity channels merged. And then use that one for the
+>>> intersection.
+>>>
+>>
+>> I have a patch in mind now for this, can you please apply this patch
+>> on iw, scan and send me the output of the scan for your AP?
+>>
+>>  Luis
+>>
 >
-> +
-> +/* FLASH(EEPROM) Defines for AR531X chips */
-> +#define AR5K_EEPROM_SIZE_LOWER         0x1b /* size info -- lower */
-> +#define AR5K_EEPROM_SIZE_UPPER         0x1c /* size info -- upper */
-> +#define AR5K_EEPROM_SIZE_UPPER_MASK    0xfff0
-> +#define AR5K_EEPROM_SIZE_UPPER_SHIFT   4
-> +#define AR5K_EEPROM_SIZE_ENDLOC_SHIFT  12
-> +
+> Here is the result for the said AP :
+>
+> BSS 00:15:6d:e8:88:84 (on wlan0)
+>       TSF: 627428313658 usec (7d, 06:17:08)
+>       freq: 5180
+>       beacon interval: 100
+>       capability: ESS Privacy ShortSlotTime (0x0411)
+>       signal: -76.00 dBm
+>       last seen: 7604 ms ago
+>       SSID: BEN_nsm5
+>       Supported rates: 6.0* 9.0 12.0* 18.0 24.0* 36.0 48.0 54.0
+>       DS Parameter set: channel 36
+>       Country: FR     Environment: Indoor only
+>       Country IE triplets:
+>               Channels [36 - 36]
+>               Channels [40 - 40]
+>               Channels [44 - 44]
+>               Channels [48 - 48]
+>               Channels [52 - 52]
+>               Channels [56 - 56]
+>               Channels [60 - 60]
+>               Channels [64 - 64]
+>               Channels [100 - 100]
+>               Channels [104 - 104]
+>               Channels [108 - 108]
+>               Channels [112 - 112]
+>               Channels [116 - 116]
+>               Channels [120 - 120]
+>               Channels [124 - 124]
+>               Channels [128 - 128]
+>               Channels [132 - 132]
+>               Channels [136 - 136]
+>               Channels [140 - 140]
+>       Power constraint: 0 dB
+>       RSN:     * Version: 1
+>                * Group cipher: CCMP
+>                * Pairwise ciphers: CCMP
+>                * Authentication suites: PSK
+>                * Capabilities: (0x0000)
+>       WMM:     * Parameter version 1
+>                * u-APSD
+>                * BE: CW 15-1023, AIFSN 3
+>                * BK: CW 15-1023, AIFSN 7
+>                * VI: CW 7-15, AIFSN 2, TXOP 3008 usec
+>                * VO: acm CW 3-7, AIFSN 2, TXOP 1504 usec
+>       HT capabilities:
+>               Capabilities: 0x4e
+>                       HT20/HT40
+>                       SM Power Save disabled
+>                       RX HT40 SGI
+>                       No RX STBC
+>                       Max AMSDU length: 7935 bytes
+>                       No DSSS/CCK HT40
+>               Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
+>               Minimum RX AMPDU time spacing: 1/2 usec (0x02)
+>               HT RX MCS rate indexes supported: 0-15
+>               HT TX MCS rate indexes are undefined
+>
+> iw version 0.9.18-11-g89ea706-dirty
+>
+> As a quick patch, I have commented 2 lines "bw_flags =
+> IEEE80211_CHAN_NO_HT40" in net/wireless/reg.c
+>
+> I'll try to do a patch for the kernel that does the following action :
+> - parse the max_power field
 
-AR531X chips are SoCs, are you sure this comment is correct ?
+I have this already in my queue
 
-In the docs this marks the end of EAR section (and the end of
-checksum) for EEPROMs larger than 16k
-valid values for checksum end are 0x00000C0 to 0x0080000
+> - merge rules if the max_power field is the same for both rules
 
-Also to calculate EEPROM size (stored on the first 4 bits of 0x1c) you
-do this according to the docs
-2 ^ (EEPROM size + 9) and valid values are from 1 to 11 (11 = 1MB)
+I also have this but I wanted to test it against your AP's IE, which
+is why I asked for this output.
 
-There is also an EEPROM size indicator on PCICFG but it seems it's
-only for older chips.
+> - use max_bandwidth_khz as a capability feature (ie it could be larger than
+>  end_freq - start_freq)
 
-A value of 0 on 0x1c means we have a 2k EEPROM and an end location 0x0000400.
+Not sure I get this.
 
+> - when trying to enable HT40, we might obey 2 reg rules (if they have not
+> been merge). In this case, we should intersect rules again.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+My patch merges contiguous country IE subbands. I guess I'll post as
+RFC for now.
+
+> Does this logic is fine?
+
+Yeah you certainly found an issue, unfortunately my patch for the
+subband fix is too big for it to be considered for stable and I cannot
+think of a smaller way to resolve it.
+
+  Luis
