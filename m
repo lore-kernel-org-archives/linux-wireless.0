@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f173.google.com ([209.85.223.173]:59672 "EHLO
-	mail-iw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752534Ab0AaTIS (ORCPT
+Received: from mbox2.netikka.net ([213.250.81.203]:53825 "EHLO
+	mbox2.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751818Ab0AGKlW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2010 14:08:18 -0500
-Received: by iwn3 with SMTP id 3so3659760iwn.23
-        for <linux-wireless@vger.kernel.org>; Sun, 31 Jan 2010 11:08:18 -0800 (PST)
-Message-ID: <4B65D51F.1090903@lwfinger.net>
-Date: Sun, 31 Jan 2010 13:08:15 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 7 Jan 2010 05:41:22 -0500
+Message-ID: <4B45BA4F.7000206@mandriva.org>
+Date: Thu, 07 Jan 2010 12:41:19 +0200
+From: Thomas Backlund <tmb@mandriva.org>
 MIME-Version: 1.0
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Regression in b43 with BCM4311/2
-References: <4B64A2F2.6060608@lwfinger.net>	 <1264887027.3546.207.camel@johannes.local>  <4B64AAEB.9020806@lwfinger.net> <1264888699.3546.208.camel@johannes.local>
-In-Reply-To: <1264888699.3546.208.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+CC: Felix Fietkau <nbd@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2.6.33] mac80211: fix skb buffering issue
+References: <1262710858.28653.5.camel@johannes.local>	 <4B450004.9050601@mandriva.org> <1262814684.4437.0.camel@johannes.local>	 <4B4508A5.8050501@openwrt.org> <4B45110E.9010603@mandriva.org>	 <4B451A68.5020102@mandriva.org> <1262847445.3414.0.camel@johannes.local>
+In-Reply-To: <1262847445.3414.0.camel@johannes.local>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+On 07.01.2010 08:57, Johannes Berg wrote:
+> On Thu, 2010-01-07 at 01:19 +0200, Thomas Backlund wrote:
+>
+>>>> net/mac80211/wme.c: I funktion "ieee80211_select_queue":
+>>>> net/mac80211/wme.c:99: varning: skickar argument 1 till
+>> "sta_info_get"
+>>>> fr?n inkompatibel pekartyp
+>>>> net/mac80211/sta_info.h:408: anm: "struct ieee80211_local *"
+>>>> f?rv?ntades men argumentet har typ "struct ieee80211_sub_if_data *"
+>>>
+>>
+>> As I cant get it from any log, and dont have a camera available right
+>> now, I just wrote some lines to paper wich confirms the breakage in
+>> the
+>> above build error...
+>>
+>> The trace shows:
+>>
+>> RIP: sta_info_get
+>
+> Well as the message tells you, sta_info_get needs a local argument in
+> your tree, rather than 'sdata', so you can just do 'sdata->local'
+> there ...... It doesn't need any particular fixups, just a bit of merge
+> resolving ...
+>
 
-I finally sorted this out. The patch in question (c7ab5ef) is the bad one, but
-not the basic response rate part.
+Yeah,
+that was it...
 
-Going back to the code that worked, I discovered that the routines
-b43_short_slot_timing_enable/disable() were never called. Once the new code
-touched the shared memory location 0x0010, the transmit performance dropped way
-off. If I let the new code adjust the Interframe Slot time in MMIO space, but
-not the shared memory location, the transmit rate in my BCM4311/2 went from a
-maximum of 18 to 22 Mb/s. This problem did not affect the 0x4315 device as the
-memory was changed only for G PHYs. I think that should be for 2GHz, and have
-made that adjustment. I have not yet tested that with the LP PHY. Once I do, I
-will post a patch for comment and testing.
+Now it works as intended!
 
-Thanks for helping me understand the basic response rates.
+Thanks!
 
-Larry
+--
+Thomas
