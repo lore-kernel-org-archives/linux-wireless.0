@@ -1,56 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:61562 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752330Ab0AWIX0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jan 2010 03:23:26 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so490496eyd.19
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2010 00:23:25 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: wey-yi.w.guy@intel.com, linux-wireless@vger.kernel.org, j@w1.fi
-Subject: Re: [PATCH v3 1/1] mac80211: tell driver when dtim change detected
-References: <1264109996-15995-1-git-send-email-wey-yi.w.guy@intel.com>
-	<1264186981.2593.10.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sat, 23 Jan 2010 10:23:22 +0200
-In-Reply-To: <1264186981.2593.10.camel@johannes.local> (Johannes Berg's message of "Fri\, 22 Jan 2010 20\:03\:01 +0100")
-Message-ID: <87y6jpp6v9.fsf@purkki.valot.fi>
+Received: from cantor2.suse.de ([195.135.220.15]:50760 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753138Ab0AGSKZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2010 13:10:25 -0500
+Date: Thu, 7 Jan 2010 10:09:42 -0800
+From: Greg KH <gregkh@suse.de>
+To: Alexander Huemer <alexander.huemer@sbg.ac.at>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: Re: removal of strip driver from the linux kernel
+Message-ID: <20100107180942.GA17642@suse.de>
+References: <4B45E5B1.2040901@sbg.ac.at>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4B45E5B1.2040901@sbg.ac.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Thu, Jan 07, 2010 at 02:46:25PM +0100, Alexander Huemer wrote:
+> hi,
+> 
+> i read in your blog that the driver "strip" for the metricom radios is
+> going to be removed from the linux kernel.
+> as you suggested, i am "speaking up" now, because i am using the driver.
+> the driver should not be removed and could even be improved, actually
+> in a very significant way.
+> the current version (1.3) does not work for the last hardware revision
+> of the radios which were the ones circulated in larger quantities.
+> that may be the reason why the driver does (or did) have a quite small
+> user base.
+> these radios are available on eBay from time to time, very cheap.
+> the difference in the hardware is mostly a different length of the
+> hardware address.
+> 
+> there is already a patch and documentation from alex belitis [1] for
+> that, for linux-2.4.1.  i also found a different patch [2] that might
+> be of interest, for 2.5.46.
 
-> However, I think it's indicative of a bigger problem. I gave it some
-> thought, and came to the conclusion that it previously didn't happen
-> because we always won the race. Let me explain.
+Are you able to refresh these patches for the latest kernel version and
+send them to me so that we can help bring the code up-to-date?
 
-One more reason why need to receive the beacon is synchronisation to
-the beacon for power save. For example wl1251 and wl1271 want to
-receive one beacon for synchronisation purposes before some of the
-commands are executed. It would be really nice if mac80211 would take
-care of that.
+> since the driver is quite small and the starmode concept is quite
+> unique in wireless networking, i am planning to do some academic work
+> on the concept during an OS and networking class at the university of
+> salzburg.
+> i am not (yet) an experienced kernel programmer and because of that
+> have problems porting the patch from alex belitis to the current
+> kernel versions. who could help me with this ?
 
-> First, we could go back to the original behaviour if we have just one
-> virtual interface. 
+What problems are you having?
 
-I think this is good to have. Just to keep it simple for devices like
-wl1251 and wl1271.
+> the git log lists a lot people plumbing on strip.c, so i am unsure
+> whom to contact.
 
-> But that still leaves us with the race, we might do all three frame
-> exchanges within a beacon interval and still miss the beacon, we
-> just tend to not do that and get a beacon.
->
-> The other solution I see is that we add a new step before or after the
-> direct probe step, which would just be "wait for a beacon". This would
-> ensure we have both probe and beacon information always ready. It would
-> also ensure we have both probe and beacon info for our new userspace
-> reporting of that.
+The linux-wireless mailing list (on the CC:), and the driverdevel list
+are the best ones.
 
-I like this. If only the bssid would be provided to the driver before
-the association process, both wl1251 and wl1271 would not have to
-worry about firmware beacon synchronisation.
+Anyone want to help out here?
 
--- 
-Kalle Valo
+> [1] http://phobos.illtel.denver.co.us/~abelits/metricom/
+> [2] http://www.stillhq.com/linux/patches/2.5.46/cli_sti_removal-001
+
+thanks,
+
+greg k-h
