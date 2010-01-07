@@ -1,67 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.getmail.no ([84.208.15.66]:43713 "EHLO
-	get-mta-out02.get.basefarm.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750893Ab0AYT0j (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39516 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750781Ab0AGWYz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 14:26:39 -0500
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1
-Received: from smtp.getmail.no ([10.5.16.4]) by get-mta-out02.get.basefarm.net
- (Sun Java(tm) System Messaging Server 7.0-0.04 64bit (built Jun 20 2008))
- with ESMTP id <0KWT006HPI0ECHA0@get-mta-out02.get.basefarm.net> for
- linux-wireless@vger.kernel.org; Mon, 25 Jan 2010 20:26:38 +0100 (MET)
-Received: from [192.168.1.10] ([84.208.235.192])
- by get-mta-in02.get.basefarm.net
- (Sun Java(tm) System Messaging Server 7.0-0.04 64bit (built Jun 20 2008))
- with ESMTPA id <0KWT00MSZI0CQM30@get-mta-in02.get.basefarm.net> for
- linux-wireless@vger.kernel.org; Mon, 25 Jan 2010 20:26:38 +0100 (MET)
-Message-id: <4B5DF06C.60000@bzz.no>
-Date: Mon, 25 Jan 2010 20:26:36 +0100
-From: "John S. Skogtvedt" <jss@bzz.no>
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Bug: 2.6.32 ath5k, unable to connect to AP on channel 13
-References: <4B5CB7AB.7010105@bzz.no>
- <b6c5339f1001250951u548e6a16raf661464660ec577@mail.gmail.com>
- <69e28c911001251030p79f00ea1j23f95b5e2f8571a3@mail.gmail.com>
-In-reply-to: <69e28c911001251030p79f00ea1j23f95b5e2f8571a3@mail.gmail.com>
+	Thu, 7 Jan 2010 17:24:55 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] hostapd: add country IE debugging options
+Date: Thu,  7 Jan 2010 17:24:49 -0500
+Message-Id: <1262903089-1958-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gábor Stefanik skrev:
-> On Mon, Jan 25, 2010 at 6:51 PM, Bob Copeland <me@bobcopeland.com> wrote:
->> On Sun, Jan 24, 2010 at 4:12 PM, John S. Skogtvedt <jss@bzz.no> wrote:
->>> Hello,
->>>
->>> As the subject says, using ath5k on 2.6.32 I am not able to connect to
->>> an AP on channel 13 (i.e. wpa_supplicant doesn't find the AP and thus
->>> fails to associate). I'm in Norway, and the card is bought in Norway.
->>> dmesg output:
->>> [    7.205952] cfg80211: Using static regulatory domain info
->>> [    7.205956] cfg80211: Regulatory domain: US
->>> [    7.206243] cfg80211: Calling CRDA for country: US
->> Well, there's your problem, AFAICT.  You have
->> CONFIG_WIRELESS_OLD_REGULATORY=y?  And ieee80211_regdom=EU doesn't work?
->>
->>> [    7.887265] ath: EEPROM regdomain: 0x80d0
->>> [    7.887267] ath: EEPROM indicates we should expect a country code
->>> [    7.887270] ath: doing EEPROM country->regdmn map search
->>> [    7.887272] ath: country maps to regdmn code: 0x37
->>> [    7.887275] ath: Country alpha2 being used: DK
->>> [    7.887277] ath: Regpair used: 0x37
->>> [    8.288352] ath5k phy0: Atheros AR2414 chip found (MAC: 0x79, PHY: 0x45)
->>> [    8.288607] cfg80211: Calling CRDA for country: DK
->> Denmark, which should allow the channels in question.
-> 
-> However, does the DK regdomain really get set? Is CRDA installed?
-> 
+If you want to debug parsing of country IEs on your
+client you can enable the CONFIG_COUNTRY_DBG and then
+select the desired triplet. We add four tests cases you
+can use.
 
-Thank you, with CRDA installed it does work.
-(Debian doesn't currently package it, but I found a source package in
-the RFP bug report:
-http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=536502
-)
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
-However, shouldn't it work without CRDA with
-CONFIG_WIRELESS_OLD_REGULATORY=y and ieee80211_regdom=EU?
+Jouni, not sure if this is useful to you but it certainly
+helped me debug country IE stuff.
+
+ hostapd/Makefile |    4 ++
+ src/ap/beacon.c  |   96 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 98 insertions(+), 2 deletions(-)
+
+diff --git a/hostapd/Makefile b/hostapd/Makefile
+index d94ceb9..87b0dcc 100644
+--- a/hostapd/Makefile
++++ b/hostapd/Makefile
+@@ -157,6 +157,10 @@ ifdef CONFIG_IEEE80211N
+ CFLAGS += -DCONFIG_IEEE80211N
+ endif
+ 
++ifdef CONFIG_COUNTRY_DBG
++CFLAGS += -DCONFIG_COUNTRY_DBG
++endif
++
+ include ../src/drivers/drivers.mak
+ OBJS += $(DRV_AP_OBJS)
+ CFLAGS += $(DRV_AP_CFLAGS)
+diff --git a/src/ap/beacon.c b/src/ap/beacon.c
+index dbb6926..b35a46a 100644
+--- a/src/ap/beacon.c
++++ b/src/ap/beacon.c
+@@ -98,6 +98,81 @@ static u8 * hostapd_eid_erp_info(struct hostapd_data *hapd, u8 *eid)
+ 	return eid;
+ }
+ 
++#ifdef CONFIG_COUNTRY_DBG
++struct triplet_chan {
++	u8 first_channel;
++	u8 num_channels;
++	s8 max_power;
++} __attribute__ ((packed));
++
++struct triplet_band {
++	u8 num_triplets;
++	struct triplet_chan triplets[];
++} __attribute__ ((packed));
++
++#define TRIPLET(_start, _num_chan, _power) \
++{ \
++	.first_channel = _start, \
++	.num_channels = _num_chan, \
++	.max_power = _power, \
++}
++
++static const struct triplet_band triplet_01 = {
++	.num_triplets = 4,
++	.triplets = {
++		TRIPLET(1, 1, 20),
++		TRIPLET(2, 1, 20),
++		TRIPLET(36, 1, 20),
++		TRIPLET(40, 1, 20),
++	}
++};
++
++static const struct triplet_band triplet_02 = {
++	.num_triplets = 5,
++	.triplets = {
++		TRIPLET(1, 1, 20), /* [1] */
++		TRIPLET(2, 3, 20), /* [2-4] */
++		TRIPLET(5, 8, 20), /* [5-12] */
++		TRIPLET(36, 1, 20), /* [36] */
++		TRIPLET(40, 2, 20), /* [40-44] */
++	}
++};
++
++static const struct triplet_band triplet_03 = {
++	.num_triplets = 4,
++	.triplets = {
++		TRIPLET(1, 4, 20), /* [1-4] */
++		TRIPLET(5, 3, 20), /* [5-7] 2432-2452 */
++		TRIPLET(36, 3, 20), /* [36-44] 5170-5230 */
++		TRIPLET(48, 5, 20), /* [48-64] 5230-5330 */
++	}
++};
++
++static const struct triplet_band triplet_04 = {
++	.num_triplets = 19,
++	.triplets = {
++		TRIPLET(36, 1, 20),
++		TRIPLET(40, 1, 20),
++		TRIPLET(44, 1, 20),
++		TRIPLET(48, 1, 20),
++		TRIPLET(52, 1, 20),
++		TRIPLET(56, 1, 20),
++		TRIPLET(60, 1, 20),
++		TRIPLET(64, 1, 20),
++		TRIPLET(100, 1, 20),
++		TRIPLET(104, 1, 20),
++		TRIPLET(108, 1, 20),
++		TRIPLET(112, 1, 20),
++		TRIPLET(116, 1, 20),
++		TRIPLET(120, 1, 20),
++		TRIPLET(124, 1, 20),
++		TRIPLET(128, 1, 20),
++		TRIPLET(132, 1, 20),
++		TRIPLET(136, 1, 20),
++		TRIPLET(140, 1, 20),
++	}
++};
++#else
+ 
+ static u8 * hostapd_eid_country_add(u8 *pos, u8 *end, int chan_spacing,
+ 				    struct hostapd_channel_data *start,
+@@ -115,7 +190,7 @@ static u8 * hostapd_eid_country_add(u8 *pos, u8 *end, int chan_spacing,
+ 
+ 	return pos;
+ }
+-
++#endif
+ 
+ static u8 * hostapd_eid_country(struct hostapd_data *hapd, u8 *eid,
+ 				int max_len)
+@@ -124,7 +199,11 @@ static u8 * hostapd_eid_country(struct hostapd_data *hapd, u8 *eid,
+ 	u8 *end = eid + max_len;
+ 	int i;
+ 	struct hostapd_hw_modes *mode;
++#ifndef CONFIG_COUNTRY_DBG
+ 	struct hostapd_channel_data *start, *prev;
++#else
++	const struct triplet_band *triplet_band = &triplet_03;
++#endif
+ 	int chan_spacing = 1;
+ 
+ 	if (!hapd->iconf->ieee80211d || max_len < 6 ||
+@@ -140,6 +219,18 @@ static u8 * hostapd_eid_country(struct hostapd_data *hapd, u8 *eid,
+ 	if (mode->mode == HOSTAPD_MODE_IEEE80211A)
+ 		chan_spacing = 4;
+ 
++#if CONFIG_COUNTRY_DBG
++	for (i=0; i < triplet_band->num_triplets; i++) {
++		const struct triplet_chan *triplet = &triplet_band->triplets[i];
++
++		if (end - pos < 3)
++			break;
++
++		*pos++ = triplet->first_channel;
++		*pos++ = triplet->num_channels;
++		*pos++ = triplet->max_power;
++	}
++#else
+ 	start = prev = NULL;
+ 	for (i = 0; i < mode->num_channels; i++) {
+ 		struct hostapd_channel_data *chan = &mode->channels[i];
+@@ -166,11 +257,12 @@ static u8 * hostapd_eid_country(struct hostapd_data *hapd, u8 *eid,
+ 		pos = hostapd_eid_country_add(pos, end, chan_spacing,
+ 					      start, prev);
+ 	}
++#endif
+ 
+ 	if ((pos - eid) & 1) {
+ 		if (end - pos < 1)
+ 			return eid;
+-		*pos++ = 0; /* pad for 16-bit alignment */
++		*pos++ = 0; /* pad for divisibility by 2 */
+ 	}
+ 
+ 	eid[1] = (pos - eid) - 2;
+-- 
+1.6.3.3
 
