@@ -1,48 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:3844 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752642Ab0A3QWK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2010 11:22:10 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so573585fgg.1
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Jan 2010 08:22:08 -0800 (PST)
+Received: from cantor2.suse.de ([195.135.220.15]:46215 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752692Ab0AGQCw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2010 11:02:52 -0500
+Date: Thu, 7 Jan 2010 07:58:00 -0800
+From: Greg KH <gregkh@suse.de>
+To: Jan Engelhardt <jengelh@medozas.de>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Commit v2.6.31.10~7 breaks compilation
+Message-ID: <20100107155800.GA15885@suse.de>
+References: <alpine.LSU.2.01.1001071518030.24304@obet.zrqbmnf.qr>
 MIME-Version: 1.0
-In-Reply-To: <1264868231.3546.188.camel@johannes.local>
-References: <20100129122718.73a6c877@nehalam>
-	 <1264866128.3546.185.camel@johannes.local>
-	 <51058d551001300751r4a509e90i521c946dfe9dec4@mail.gmail.com>
-	 <1264867217.3546.186.camel@johannes.local>
-	 <51058d551001300814y66d1d589uae15fa50086593b8@mail.gmail.com>
-	 <1264868231.3546.188.camel@johannes.local>
-Date: Sat, 30 Jan 2010 10:22:08 -0600
-Message-ID: <51058d551001300822p7ab564e4jedd6faad380dabc@mail.gmail.com>
-Subject: Re: Multiple SSID on same phy
-From: Greg Oliver <oliver.greg@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LSU.2.01.1001071518030.24304@obet.zrqbmnf.qr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 30, 2010 at 10:17 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sat, 2010-01-30 at 10:14 -0600, Greg Oliver wrote:
->> On Sat, Jan 30, 2010 at 10:00 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > I suggest you go public with your reply so you can be flamed and taught
->> > wrong appropriately.
->>
->> Sorry - this gmail inefficiency sometimes gets me...
->>
->> BUT, please enlighten me when any of the 3 use cases would be
->> beneficial to anyone not trying to (or "inefficiently migrating") hack
->> into a network would occur.
->
-> I don't think I can parse that. In any case, a possible use case would
-> for instance be a protected company network, along with an unprotected,
-> internet-only guest network.
+On Thu, Jan 07, 2010 at 03:19:57PM +0100, Jan Engelhardt wrote:
+> Hey guys,
+> 
+> 
+> just wanting to let you know that v2.6.31.10~7 is not appropriate for 
+> 2.6.31, as there is no "ps_default" field in struct wiphy,
+> and thus compilation of the module fails.
 
+2.6.31.11 has now been released to fix this problem.
 
-Hmmm, I would put the odds at that happening about 100,000:1 (if not more)
+thanks,
 
-Yes, I know it is feasible, but HIGHLY unlikely.
+greg k-h
