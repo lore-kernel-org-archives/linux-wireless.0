@@ -1,77 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42917 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752485Ab0A2UcN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2010 15:32:13 -0500
-From: <shanyu.zhao@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Shanyu Zhao <shanyu.zhao@intel.com>
-Subject: [PATCH 1/1] cfg80211: wext: fix cfg80211's SIOCSIWAP function
-Date: Fri, 29 Jan 2010 12:32:06 -0800
-Message-Id: <1264797126-6064-1-git-send-email-shanyu.zhao@intel.com>
+Received: from ey-out-2122.google.com ([74.125.78.25]:32312 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750786Ab0AGUOD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2010 15:14:03 -0500
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <8db1092f1001071136o20ac7e19nb102c7afde8c21e7@mail.gmail.com>
+References: <8db1092f1001071136o20ac7e19nb102c7afde8c21e7@mail.gmail.com>
+Date: Thu, 7 Jan 2010 21:14:01 +0100
+Message-ID: <2d0a357f1001071214m6780def8md80c056161d0aa79@mail.gmail.com>
+Subject: Re: [2.6.33-rc3] [WMI?] [RFKILL?] [WIRELESS?] hang: BUG: Unable to
+	handle kernel NULL pointer dereference at 00000008
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Maciej Rutecki <maciej.rutecki@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	carlos@strangeworlds.co.uk,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>, ilw@linux.intel.com,
+	len.brown@intel.com, Anisse Astier <anisse@astier.eu>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shanyu Zhao <shanyu.zhao@intel.com>
+Hi,
 
-The cfg80211's SIOCSIWAP function is broken, the reason is we cannot
-get the correct bss with previously set ssid. Need to clear it by
-setting ssid_len to 0 in cfg80211_mgd_wext_siwap() and fix other
-places accordingly.
+seems like the ACPI/hp-wmi bug, nothing to do with linux-wireless.
 
-Cc: stable@kernel.org
+I have already reported this bug (again) [1] and unfortunately it has
+re-entered upstream.
+A single new patch was sent by Anisse [2].
+This patch is waiting in linux-acpi-2.6/test [3].
 
-Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
----
-v2: Adding Cc to stable@kernel.org
----
- net/wireless/sme.c      |    9 +++++++--
- net/wireless/wext-sme.c |    3 ++-
- 2 files changed, 9 insertions(+), 3 deletions(-)
+Don't ask me why it has not been included in 2.6.33-rc3.
+For some HP-notebook users it is a CRITICAL bug.
 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 745c37e..51c3cdb 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -779,10 +779,15 @@ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
- 			wdev->conn->auto_auth = false;
- 		}
- 
--		memcpy(wdev->ssid, connect->ssid, connect->ssid_len);
-+		/* make sure it can connect if only bssid is provided */
- 		wdev->ssid_len = connect->ssid_len;
--		wdev->conn->params.ssid = wdev->ssid;
- 		wdev->conn->params.ssid_len = connect->ssid_len;
-+		if (connect->ssid_len) {
-+			memcpy(wdev->ssid, connect->ssid, connect->ssid_len);
-+			wdev->conn->params.ssid = wdev->ssid;
-+		}
-+		else
-+			wdev->conn->params.ssid = NULL;
- 
- 		/* see if we have the bss already */
- 		bss = cfg80211_get_conn_bss(wdev);
-diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
-index 5615a88..eede356 100644
---- a/net/wireless/wext-sme.c
-+++ b/net/wireless/wext-sme.c
-@@ -34,7 +34,7 @@ int cfg80211_mgd_wext_connect(struct cfg80211_registered_device *rdev,
- 			wdev->wext.connect.privacy = true;
- 	}
- 
--	if (!wdev->wext.connect.ssid_len)
-+	if (!wdev->wext.connect.ssid_len && !wdev->wext.connect.bssid)
- 		return 0;
- 
- 	if (wdev->wext.keys) {
-@@ -280,6 +280,7 @@ int cfg80211_mgd_wext_siwap(struct net_device *dev,
- 	if (bssid) {
- 		memcpy(wdev->wext.bssid, bssid, ETH_ALEN);
- 		wdev->wext.connect.bssid = wdev->wext.bssid;
-+		wdev->wext.connect.ssid_len = 0;
- 	} else
- 		wdev->wext.connect.bssid = NULL;
- 
--- 
-1.6.0.4
+Kind Regards,
+- Sedat -
 
+[1] http://marc.info/?t=126227644600001&r=1&w=2
+[2] http://marc.info/?t=126215864800004&r=1&w=2
+[3] http://git.kernel.org/?p=linux/kernel/git/lenb/linux-acpi-2.6.git;a=commit;h=c9c041fcb1a4d69ed4791f00b57554eeb341d148
+
+On Thu, Jan 7, 2010 at 8:36 PM, Maciej Rutecki <maciej.rutecki@gmail.com> wrote:
+> Last known good: 2.6.33-rc2
+> Affected: 2.6.33-rc3
+>
+> Description:
+>
+> 1. When wireless button enabled system hangs on:
+> http://unixy.pl/maciek/download/kernel/2.6.33-rc3/DSC_0038.JPG
+>
+> 2. When disable bluetooth and wireless button, I got a bug:
+> http://unixy.pl/maciek/download/kernel/2.6.33-rc3/DSC_0039.JPG
+>
+> 3. When reboot I have message:
+> http://unixy.pl/maciek/download/kernel/2.6.33-rc3/DSC_0040.JPG
+>
+> Config:
+> http://unixy.pl/maciek/download/kernel/2.6.33-rc3/config-2.6.33-rc3
+>
+> Regards
+>
+> --
+> Maciej Rutecki
+> http://www.maciek.unixy.pl
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
