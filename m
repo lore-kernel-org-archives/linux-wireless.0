@@ -1,80 +1,328 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34126 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751804Ab0A3RPc (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39555 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752745Ab0AGWZC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2010 12:15:32 -0500
-Subject: Re: Multiple SSID on same phy
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Greg Oliver <oliver.greg@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4B6465F4.1080901@openwrt.org>
-References: <20100129122718.73a6c877@nehalam>
-	 <1264866128.3546.185.camel@johannes.local>
-	 <51058d551001300751r4a509e90i521c946dfe9dec4@mail.gmail.com>
-	 <1264867217.3546.186.camel@johannes.local>
-	 <51058d551001300814y66d1d589uae15fa50086593b8@mail.gmail.com>
-	 <1264868231.3546.188.camel@johannes.local>
-	 <51058d551001300822p7ab564e4jedd6faad380dabc@mail.gmail.com>
-	 <1264868803.3546.189.camel@johannes.local>  <4B6465F4.1080901@openwrt.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Ih51bXuNE+9T+M50f5rp"
-Date: Sat, 30 Jan 2010 18:15:29 +0100
-Message-ID: <1264871729.3546.197.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 7 Jan 2010 17:25:02 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 4/4] cfg80211: Fix country IE parsing for single channel triplets
+Date: Thu,  7 Jan 2010 17:24:57 -0500
+Message-Id: <1262903097-2129-5-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1262903097-2129-1-git-send-email-lrodriguez@atheros.com>
+References: <1262903097-2129-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This enhances the way we parse country IEs to minimize
+the number of regulatory rules that we create. It also fixes
+our current implementation which treated country IE triplets
+with only one channel as one independed regulatory rule even
+though adjecent rules were also being provided.
 
---=-Ih51bXuNE+9T+M50f5rp
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Without this patch APs which send country IE information with
+a channel triplet for each individual channel will force cfg80211
+to deny HT40 operation as a regulatory rule would have been created
+independently for each channel and as such configured only for
+20 MHz operation.
 
-On Sat, 2010-01-30 at 18:01 +0100, Felix Fietkau wrote:
-> On 2010-01-30 5:26 PM, Johannes Berg wrote:
-> > On Sat, 2010-01-30 at 10:22 -0600, Greg Oliver wrote:
-> >=20
-> >> > I don't think I can parse that. In any case, a possible use case wou=
-ld
-> >> > for instance be a protected company network, along with an unprotect=
-ed,
-> >> > internet-only guest network.
-> >>=20
-> >>=20
-> >> Hmmm, I would put the odds at that happening about 100,000:1 (if not m=
-ore)
-> >>=20
-> >> Yes, I know it is feasible, but HIGHLY unlikely.
-> >=20
-> > It's not. openwrt for example has that as a default configuration. Even
-> > fonera does.
-> OpenWrt doesn't even bring up wifi in the default config. It has a one
-> configured AP mode interface per PHY, which is disabled by default ;)
+Although 802.11n APs which send country IEs triplets in this fassion
+are likely rare Benoit reports this against the Ubiquity NanoStation M5,
+with Country "FR" and HT40 enabled.
 
-Oh, whatever, but it's a pretty standard setup for it anyway.
+Since we now have a helper which parses the triplets in intermediate
+steps we now take care extra care to process padding.
 
-johannes
+Reported-by: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |  225 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 221 insertions(+), 4 deletions(-)
 
---=-Ih51bXuNE+9T+M50f5rp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLZGktAAoJEODzc/N7+QmaFHYQANOnnqL/IbnkNtoOiF7cp79S
-PDqnmnUxMt2xOmFwSCrl7/qJ4WjU8mLGMQfxVT609n10vmmuQ6IIMoZ6qaUVgI8t
-lPbUAWXkckXbJsKVPN349P3T1yi9XKRwR6ehE9h/OQIl/jUcVUdLfO1xmhJBRUUl
-To5tbH8as6/heyO7H3L9YTzaqo/hZWDI6eCPfZL52pdDv0sQrK9ldkcM/wXc+L2Y
-+F6CMvvyOIL6Gw8NVYQbsTLsCeK7NWQgZDXu8EPawX6QrfRlZC3P4VIp4UWFrTBY
-hdt3Y6+AVd0EgCq8Mn0o3w6YLVSrXu7V4P0Hin5C4nc5N79Vr/EZIR0K11F/Rw0l
-6PLkqJUG/yflaIjRPFqJV6mHbw9i9IfvjJqmgMFyAJSdmrUd+VAaUubwzJgX4ocA
-4Mc6JolPWWBR62kxAKIIG257rgv1JEAer/Jqq6UzCWwqXBv13NsBzMwK1z6z0B4g
-ivbedZlVj88ulCoQNgYSJ+WvnlhoVqhdlQJMY5SqVP4SS0Yr8kjFnZd65bvRfXpG
-I7+AVaS5NUPP3bMIsbsqn4abrOgMX7dkICKoBb3D5KzvB4mXgWL9oSbJkywEMo//
-cHnrwoqHGO5H7CLmEGc7ymPi1y5GS8PwKhoVqGH3j+9ZNLMOUKDT+dJp5C3PfCDO
-Z1xpHu5bVSrmD63a7eTb
-=V4oP
------END PGP SIGNATURE-----
-
---=-Ih51bXuNE+9T+M50f5rp--
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 1695d62..f0859ea 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -485,6 +485,178 @@ static bool freq_in_rule_band(const struct ieee80211_freq_range *freq_range,
+ }
+ 
+ /*
++ * Some APs may send a country IE triplet for each channel they
++ * support and while this is completely overkill and silly we still
++ * need to support it. We avoid making a single rule for each channel
++ * though and to help us with this we use this helper to find the
++ * actual subband end channel. These type of country IE triplet
++ * scenerios are handled then, all yielding two regulaotry rules from
++ * parsing a country IE:
++ *
++ * [1]
++ * [2]
++ * [36]
++ * [40]
++ *
++ * [1]
++ * [2-4]
++ * [5-12]
++ * [36]
++ * [40-44]
++ *
++ * [1-4]
++ * [5-7]
++ * [36-44]
++ * [48-64]
++ *
++ * [36-36]
++ * [40-40]
++ * [44-44]
++ * [48-48]
++ * [52-52]
++ * [56-56]
++ * [60-60]
++ * [64-64]
++ * [100-100]
++ * [104-104]
++ * [108-108]
++ * [112-112]
++ * [116-116]
++ * [120-120]
++ * [124-124]
++ * [128-128]
++ * [132-132]
++ * [136-136]
++ * [140-140]
++ *
++ * Returns 0 if the IE has been found to be invalid in the middle
++ * somewhere.
++ */
++static int max_subband_chan(int orig_cur_chan,
++			    int orig_end_channel,
++			    s8 orig_max_power,
++			    u8 **country_ie,
++			    u8 *country_ie_len)
++{
++	u8 *triplets_start = *country_ie;
++	u8 len_at_triplet = *country_ie_len;
++	int end_subband_chan = orig_end_channel;
++	enum ieee80211_band band;
++
++	/*
++	 * We'll deal with padding for the caller unless
++	 * its not immediate and we don't process any channels
++	 */
++	if (*country_ie_len == 1) {
++		*country_ie += 1;
++		*country_ie_len -= 1;
++		return orig_end_channel;
++	}
++
++	/* Move to the next triplet and then start search */
++	*country_ie += 3;
++	*country_ie_len -= 3;
++
++	if (orig_cur_chan <= 14)
++		band = IEEE80211_BAND_2GHZ;
++	else
++		band = IEEE80211_BAND_5GHZ;
++
++	while (*country_ie_len >= 3) {
++		int end_channel = 0;
++		struct ieee80211_country_ie_triplet *triplet =
++			(struct ieee80211_country_ie_triplet *) *country_ie;
++		int cur_channel = 0, next_expected_chan;
++		enum ieee80211_band next_band = IEEE80211_BAND_2GHZ;
++
++		/* means last triplet is completely unrelated to this one */
++		if (triplet->ext.reg_extension_id >=
++				IEEE80211_COUNTRY_EXTENSION_ID) {
++			*country_ie -= 3;
++			*country_ie_len += 3;
++			break;
++		}
++
++		if (triplet->chans.first_channel == 0) {
++			*country_ie += 1;
++			*country_ie_len -= 1;
++			if (*country_ie_len != 0)
++				return 0;
++			break;
++		}
++
++		/* Monitonically increasing channel order */
++		if (triplet->chans.first_channel <= end_subband_chan)
++			return 0;
++
++		/* 2 GHz */
++		if (triplet->chans.first_channel <= 14) {
++			end_channel = triplet->chans.first_channel +
++				triplet->chans.num_channels - 1;
++		}
++		else {
++			end_channel =  triplet->chans.first_channel +
++				(4 * (triplet->chans.num_channels - 1));
++			next_band = IEEE80211_BAND_5GHZ;
++		}
++
++		if (band != next_band) {
++			*country_ie -= 3;
++			*country_ie_len += 3;
++			break;
++		}
++
++		if (orig_max_power != triplet->chans.max_power) {
++			*country_ie -= 3;
++			*country_ie_len += 3;
++			break;
++		}
++
++		cur_channel = triplet->chans.first_channel;
++
++		/* The key is finding the right next expected channel */
++		if (band == IEEE80211_BAND_2GHZ)
++			next_expected_chan = end_subband_chan + 1;
++		 else
++			next_expected_chan = end_subband_chan + 4;
++
++		if (cur_channel != next_expected_chan) {
++			*country_ie -= 3;
++			*country_ie_len += 3;
++			break;
++		}
++
++		end_subband_chan = end_channel;
++
++		/* Move to the next one */
++		*country_ie += 3;
++		*country_ie_len -= 3;
++
++		/*
++		 * Padding needs to be dealt with if we processed
++		 * some channels.
++		 */
++		if (*country_ie_len == 1) {
++			*country_ie += 1;
++			*country_ie_len -= 1;
++			break;
++		}
++
++		/* If seen, the IE is invalid */
++		if (*country_ie_len == 2)
++			return 0;
++	}
++
++	if (end_subband_chan == orig_end_channel) {
++		*country_ie = triplets_start;
++		*country_ie_len = len_at_triplet;
++		return orig_end_channel;
++	}
++
++	return end_subband_chan;
++}
++
++/*
+  * Converts a country IE to a regulatory domain. A regulatory domain
+  * structure has a lot of information which the IE doesn't yet have,
+  * so for the other values we use upper max values as we will intersect
+@@ -552,6 +724,19 @@ static struct ieee80211_regdomain *country_ie_2_rd(
+ 			continue;
+ 		}
+ 
++		/*
++		 * APs can add padding to make length divisible
++		 * by two, required by the spec.
++		 */
++		if (triplet->chans.first_channel == 0) {
++			country_ie++;
++			country_ie_len--;
++			/* This is expected to be at the very end only */
++			if (country_ie_len != 0)
++				return NULL;
++			break;
++		}
++
+ 		/* 2 GHz */
+ 		if (triplet->chans.first_channel <= 14)
+ 			end_channel = triplet->chans.first_channel +
+@@ -570,6 +755,20 @@ static struct ieee80211_regdomain *country_ie_2_rd(
+ 				(4 * (triplet->chans.num_channels - 1));
+ 
+ 		cur_channel = triplet->chans.first_channel;
++
++		/*
++		 * Enhancement for APs that send a triplet for every channel
++		 * or for whatever reason sends triplets with multiple channels
++		 * separated when in fact they should be together.
++		 */
++		end_channel = max_subband_chan(cur_channel,
++					       end_channel,
++					       triplet->chans.max_power,
++					       &country_ie,
++					       &country_ie_len);
++		if (!end_channel)
++			return NULL;
++
+ 		cur_sub_max_channel = end_channel;
+ 
+ 		/* Basic sanity check */
+@@ -600,10 +799,13 @@ static struct ieee80211_regdomain *country_ie_2_rd(
+ 
+ 		last_sub_max_channel = cur_sub_max_channel;
+ 
+-		country_ie += 3;
+-		country_ie_len -= 3;
+ 		num_rules++;
+ 
++		if (country_ie_len >= 3) {
++			country_ie += 3;
++			country_ie_len -= 3;
++		}
++
+ 		/*
+ 		 * Note: this is not a IEEE requirement but
+ 		 * simply a memory requirement
+@@ -646,6 +848,12 @@ static struct ieee80211_regdomain *country_ie_2_rd(
+ 			continue;
+ 		}
+ 
++		if (triplet->chans.first_channel == 0) {
++			country_ie++;
++			country_ie_len--;
++			break;
++		}
++
+ 		reg_rule = &rd->reg_rules[i];
+ 		freq_range = &reg_rule->freq_range;
+ 		power_rule = &reg_rule->power_rule;
+@@ -660,6 +868,12 @@ static struct ieee80211_regdomain *country_ie_2_rd(
+ 			end_channel =  triplet->chans.first_channel +
+ 				(4 * (triplet->chans.num_channels - 1));
+ 
++		end_channel = max_subband_chan(triplet->chans.first_channel,
++					       end_channel,
++					       triplet->chans.max_power,
++					       &country_ie,
++					       &country_ie_len);
++
+ 		/*
+ 		 * The +10 is since the regulatory domain expects
+ 		 * the actual band edge, not the center of freq for
+@@ -682,10 +896,13 @@ static struct ieee80211_regdomain *country_ie_2_rd(
+ 		power_rule->max_antenna_gain = DBI_TO_MBI(100);
+ 		power_rule->max_eirp = DBM_TO_MBM(triplet->chans.max_power);
+ 
+-		country_ie += 3;
+-		country_ie_len -= 3;
+ 		i++;
+ 
++		if (country_ie_len >= 3) {
++			country_ie += 3;
++			country_ie_len -= 3;
++		}
++
+ 		BUG_ON(i > NL80211_MAX_SUPP_REG_RULES);
+ 	}
+ 
+-- 
+1.6.3.3
 
