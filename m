@@ -1,82 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:59035 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755004Ab0AVWXK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 17:23:10 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 09/17] iwlwifi: bit field description for BT Config command
-Date: Fri, 22 Jan 2010 14:22:50 -0800
-Message-Id: <1264198978-5915-10-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1264198978-5915-1-git-send-email-reinette.chatre@intel.com>
-References: <1264198978-5915-1-git-send-email-reinette.chatre@intel.com>
+Received: from fw.wantstofly.org ([80.101.37.227]:35879 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750783Ab0AGPrG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2010 10:47:06 -0500
+Date: Thu, 7 Jan 2010 16:47:02 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: mac80211: fix queue selection for packets injected via monitor interface
+Message-ID: <20100107154702.GN1735@mail.wantstofly.org>
+References: <1262710858.28653.5.camel@johannes.local> <20100107140137.GA32125@mail.wantstofly.org> <43e72e891001070745i334b7515kf78a95d12b981b95@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <43e72e891001070745i334b7515kf78a95d12b981b95@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Thu, Jan 07, 2010 at 07:45:14AM -0800, Luis R. Rodriguez wrote:
 
-Give better bit filed define and description for flag parameter
-in REPLY_BT_CONFIG command:
+> > Commit 'mac80211: fix skb buffering issue' added an ->ndo_select_queue()
+> > for monitor interfaces which can end up dereferencing ieee802_1d_to_ac[]
+> > beyond the end of the array for injected data packets (as skb->priority
+> > isn't guaranteed to be zero or within [0:7]), which then triggers the
+> > WARN_ON in net/core/dev.c:dev_cap_txqueue().  Fix this by always setting
+> > the priority to zero on injected data frames.
+> >
+> > Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+> 
+> The other patches are for stable as well, so this should be for stable too?
 
-flags:
- bit 0 - 1: BT channel announcement enabled
-         0: disable
- bit 1 - 1: priority of BT device enabled
-         0: disable
- bit 2 - 1: BT 2 wire support enabled
-         0: disable
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-commands.h |   15 ++++++++++++---
- drivers/net/wireless/iwlwifi/iwl-core.c     |    2 +-
- 2 files changed, 13 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 8823d18..ce53894 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -2247,10 +2247,19 @@ struct iwl_link_quality_cmd {
- 	__le32 reserved2;
- } __attribute__ ((packed));
- 
-+/*
-+ * BT configuration enable flags:
-+ *   bit 0 - 1: BT channel announcement enabled
-+ *           0: disable
-+ *   bit 1 - 1: priority of BT device enabled
-+ *           0: disable
-+ *   bit 2 - 1: BT 2 wire support enabled
-+ *           0: disable
-+ */
- #define BT_COEX_DISABLE (0x0)
--#define BT_COEX_MODE_2W (0x1)
--#define BT_COEX_MODE_3W (0x2)
--#define BT_COEX_MODE_4W (0x3)
-+#define BT_ENABLE_CHANNEL_ANNOUNCE BIT(0)
-+#define BT_ENABLE_PRIORITY	   BIT(1)
-+#define BT_ENABLE_2_WIRE	   BIT(2)
- 
- #define BT_LEAD_TIME_MIN (0x0)
- #define BT_LEAD_TIME_DEF (0x1E)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 645bc13..d625aa8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1977,7 +1977,7 @@ EXPORT_SYMBOL(iwl_isr_legacy);
- int iwl_send_bt_config(struct iwl_priv *priv)
- {
- 	struct iwl_bt_cmd bt_cmd = {
--		.flags = BT_COEX_MODE_4W,
-+		.flags = BT_ENABLE_CHANNEL_ANNOUNCE | BT_ENABLE_PRIORITY,
- 		.lead_time = BT_LEAD_TIME_DEF,
- 		.max_kill = BT_MAX_KILL_DEF,
- 		.kill_ack_mask = 0,
--- 
-1.6.3.3
-
+Yep.  Actually, it should probably just be folded into Johannes' patch
+as it is queued for stable, I think.
