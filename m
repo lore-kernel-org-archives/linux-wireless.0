@@ -1,130 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36010 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754505Ab0AEWA1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2010 17:00:27 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] iwlwifi: remove IWLWIFI_VERSION
-Date: Tue,  5 Jan 2010 16:54:59 -0500
-Message-Id: <1262728499-31006-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <DA586906BA1FFC4384FCFD6429ECE860302D216F@shzsmsx502.ccr.corp.intel.com>
-References: <DA586906BA1FFC4384FCFD6429ECE860302D216F@shzsmsx502.ccr.corp.intel.com>
+Received: from mail.tpi.com ([70.99.223.143]:2173 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753867Ab0AGTmv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2010 14:42:51 -0500
+Message-ID: <4B463953.1030806@canonical.com>
+Date: Thu, 07 Jan 2010 12:43:15 -0700
+From: Tim Gardner <tim.gardner@canonical.com>
+Reply-To: tim.gardner@canonical.com
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Martin Pitt <martin.pitt@canonical.com>
+CC: mb@bu3sch.de, stefano.brivio@polimi.it,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] b43: Declare all possible firmware files.
+References: <20100107183517.A322FF88D8@sepang.rtg.net> <4B463088.1020000@lwfinger.net> <4B4633CE.30906@canonical.com> <4B46367F.2020306@lwfinger.net>
+In-Reply-To: <4B46367F.2020306@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also remove the MODULE_VERSION macros using IWLWIFI_VERSION.  Those
-places using IWLWIFI_VERSION at runtime are modified to use
-init_utsname()->release instead.
+Larry Finger wrote:
+> On 01/07/2010 01:19 PM, Tim Gardner wrote:
+>> Larry Finger wrote:
+>>> On 01/07/2010 12:35 PM, Tim Gardner wrote:
+>>>> The following changes since commit 2c1f1895ef2aa8f0e5497893eff71304aef332e1:
+>>>>   Linus Torvalds (1):
+>>>>         Merge branch 'drm-linus' of git://git.kernel.org/.../airlied/drm-2.6
+>>>>
+>>>> are available in the git repository at:
+>>>>
+>>>>   git://kernel.ubuntu.com/rtg/linux-2.6 b43
+>>>>
+>>>> Tim Gardner (1):
+>>>>       b43: Declare all possible firmware files.
+>>>>
+>>>>  drivers/net/wireless/b43/main.c |   34 ++++++++++++++++++++++++++++++++--
+>>>>  1 files changed, 32 insertions(+), 2 deletions(-)
+>>>>
+>>>> >From def1157eaeb397f0afab25b91db8bab3fcb8816c Mon Sep 17 00:00:00 2001
+>>>> From: Tim Gardner <tim.gardner@canonical.com>
+>>>> Date: Thu, 7 Jan 2010 11:10:38 -0700
+>>>> Subject: [PATCH] b43: Declare all possible firmware files.
+>>>>
+>>>> BugLink: http://bugs.launchpad.net/bugs/488636
+>>>>
+>>>> Enhances module information with the names of the firmware files
+>>>> that could be used by this driver. This helps tools like Jockey to
+>>>> correctly detect and/or install the firmware files relevant to
+>>>> this driver.
+>>>>
+>>>> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+>>>> ---
+>>> How does Jockey do the firmware installation? I'm not familiar with this tool.
+>>>
+>>> Larry
+>>>
+>> Jockey is the codename for the Ubuntu Hardware Manager tool developed
+>> and maintained by Martin Pitt. Its primary purpose is to assist with the
+>> installation of not-completely open source components. Examples include
+>> nVidia and Broadcom 'wl'. In this case, I believe jockey offers a choice
+>> of b43 or wl (if the PCI IDs overlap).
+>>
+>> Cc'ing Martin.
+> 
+> Assuming that Jockey does not violate Broadcom's copyright on these firmware
+> files, this approach is going to get a bit messy. There are two new kinds of
+> devices that are currently undergoing reverse engineering. Once code is
+> available for them, the number of firmware files will be increased by quite a
+> bit. My current /lib/firmware/b43 has 93 files in it. Having that many
+> MODULE_FIRMWARE macros seems wrong.
+> 
+> Larry
+> 
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-How about this as a compromise?
+AFAIK Jockey only needs to be able to tell if _any_ of the firmware
+files have been installed and could therefore make an install decision
+based on just one firmware file name.
 
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    7 ++++---
- drivers/net/wireless/iwlwifi/iwl-core.c     |    1 -
- drivers/net/wireless/iwlwifi/iwl-core.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    7 ++++---
- 4 files changed, 8 insertions(+), 8 deletions(-)
+Martin - if thats the case, then we need only list one firmware file in
+the modinfo, correct?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 771b03c..f5522f0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -40,6 +40,7 @@
- #include <linux/firmware.h>
- #include <linux/etherdevice.h>
- #include <linux/if_arp.h>
-+#include <linux/utsname.h>
- 
- #include <net/mac80211.h>
- 
-@@ -79,11 +80,10 @@
- #define VS
- #endif
- 
--#define DRV_VERSION     IWLWIFI_VERSION VD VS
-+#define DRV_VERSION     VD VS
- 
- 
- MODULE_DESCRIPTION(DRV_DESCRIPTION);
--MODULE_VERSION(DRV_VERSION);
- MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
- MODULE_LICENSE("GPL");
- MODULE_ALIAS("iwl4965");
-@@ -3884,7 +3884,8 @@ static int __init iwl_init(void)
- {
- 
- 	int ret;
--	printk(KERN_INFO DRV_NAME ": " DRV_DESCRIPTION ", " DRV_VERSION "\n");
-+	printk(KERN_INFO DRV_NAME ": " DRV_DESCRIPTION ", %s-" DRV_VERSION "\n",
-+		init_utsname()->release);
- 	printk(KERN_INFO DRV_NAME ": " DRV_COPYRIGHT "\n");
- 
- 	ret = iwlagn_rate_control_register();
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 14f4829..756c49a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -43,7 +43,6 @@
- 
- 
- MODULE_DESCRIPTION("iwl core");
--MODULE_VERSION(IWLWIFI_VERSION);
- MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
- MODULE_LICENSE("GPL");
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 1728f96..106651b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -72,7 +72,6 @@ struct iwl_host_cmd;
- struct iwl_cmd;
- 
- 
--#define IWLWIFI_VERSION UTS_RELEASE "-k"
- #define DRV_COPYRIGHT	"Copyright(c) 2003-2009 Intel Corporation"
- #define DRV_AUTHOR     "<ilw@linux.intel.com>"
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 10b0aa8..8b5ffff 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -40,6 +40,7 @@
- #include <linux/firmware.h>
- #include <linux/etherdevice.h>
- #include <linux/if_arp.h>
-+#include <linux/utsname.h>
- 
- #include <net/ieee80211_radiotap.h>
- #include <net/mac80211.h>
-@@ -76,12 +77,11 @@
- #define VS
- #endif
- 
--#define DRV_VERSION  IWLWIFI_VERSION VD VS
-+#define DRV_VERSION  VD VS
- #define DRV_COPYRIGHT	"Copyright(c) 2003-2009 Intel Corporation"
- #define DRV_AUTHOR     "<ilw@linux.intel.com>"
- 
- MODULE_DESCRIPTION(DRV_DESCRIPTION);
--MODULE_VERSION(DRV_VERSION);
- MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
- MODULE_LICENSE("GPL");
- 
-@@ -4279,7 +4279,8 @@ static int __init iwl3945_init(void)
- {
- 
- 	int ret;
--	printk(KERN_INFO DRV_NAME ": " DRV_DESCRIPTION ", " DRV_VERSION "\n");
-+	printk(KERN_INFO DRV_NAME ": " DRV_DESCRIPTION ", %s-" DRV_VERSION "\n",
-+		init_utsname()->release);
- 	printk(KERN_INFO DRV_NAME ": " DRV_COPYRIGHT "\n");
- 
- 	ret = iwl3945_rate_control_register();
+rtg
 -- 
-1.6.2.5
-
+Tim Gardner tim.gardner@canonical.com
