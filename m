@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:55886 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751387Ab0AKBvw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jan 2010 20:51:52 -0500
-Subject: Re: [PATCH] iwl-debugfs.c: remove unnecessary casts of void *
-From: Zhu Yi <yi.zhu@intel.com>
-To: H Hartley Sweeten <hartleys@visionengravers.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-In-Reply-To: <201001081614.10343.hartleys@visionengravers.com>
-References: <201001081614.10343.hartleys@visionengravers.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:37921 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752804Ab0AHSBJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jan 2010 13:01:09 -0500
+Subject: [PATCH] mac80211: fix return from ieee80211_assoc_success
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 11 Jan 2010 09:51:50 +0800
-Message-ID: <1263174710.15653.242.camel@debian>
+Date: Fri, 08 Jan 2010 19:01:07 +0100
+Message-ID: <1262973667.32112.1.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-01-09 at 07:14 +0800, H Hartley Sweeten wrote:
-> iwl-debugfs.c: remove unnecessary casts of void *
-> 
-> void pointers do not need to be cast to other pointer types.
-> 
-> Signed-off-by: H Hartley Sweeten <hsweeten@visionengravers.com>
-> Cc: Zhu Yi <yi.zhu@intel.com>
-> Cc: Reinette Chatre <reinette.chatre@intel.com>
-> Cc: John W. Linville <linville@tuxdriver.com>
+sparse pointed out that I made a mistake converting
+the return value of ieee80211_assoc_success to bool,
+this place should return false instead of one of the
+enum values (which would be true).
 
-Acked-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/mlme.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
--yi
+--- wireless-testing.orig/net/mac80211/mlme.c	2010-01-08 18:24:44.000000000 +0100
++++ wireless-testing/net/mac80211/mlme.c	2010-01-08 18:24:53.000000000 +0100
+@@ -1096,7 +1096,7 @@ static bool ieee80211_assoc_success(stru
+ 	if (err) {
+ 		printk(KERN_DEBUG "%s: failed to insert STA entry for"
+ 		       " the AP (error %d)\n", sdata->name, err);
+-		return RX_MGMT_CFG80211_ASSOC_ERROR;
++		return false;
+ 	}
+ 
+ 	if (elems.wmm_param)
+
 
