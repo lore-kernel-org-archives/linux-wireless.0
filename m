@@ -1,43 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:35890 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751637Ab0AXLwe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jan 2010 06:52:34 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: hwtkip hangs on b43
-Date: Sun, 24 Jan 2010 12:52:30 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, kecsa@kutfo.hit.bme.hu,
-	linux-wireless@vger.kernel.org
-References: <Pine.LNX.4.44.1001230942190.16120-100000@kutfo.hit.bme.hu> <201001241245.17176.mb@bu3sch.de> <1264333672.23766.26.camel@johannes.local>
-In-Reply-To: <1264333672.23766.26.camel@johannes.local>
+Received: from mail-iw0-f194.google.com ([209.85.223.194]:52873 "EHLO
+	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750746Ab0AHFWq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jan 2010 00:22:46 -0500
+Received: by iwn32 with SMTP id 32so2894815iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2010 21:22:46 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201001241252.32209.mb@bu3sch.de>
+In-Reply-To: <19270.48449.16627.61097@gargle.gargle.HOWL>
+References: <19270.48449.16627.61097@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 7 Jan 2010 21:22:26 -0800
+Message-ID: <43e72e891001072122v169dd2bcyea5566ce3c9d1bb8@mail.gmail.com>
+Subject: Re: [PATCH 5/7] ath9k: Fix queue handling
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 24 January 2010 12:47:52 Johannes Berg wrote:
-> On Sun, 2010-01-24 at 12:45 +0100, Michael Buesch wrote:
-> > On Sunday 24 January 2010 12:32:50 Johannes Berg wrote:
-> > > > >>> We can just remove the lock and add a comment explaining why it is not locked...
-> > > 
-> > > Mind you, it won't work on SDIO hardware since the callback cannot
-> > > sleep, contrary to what Kalle documented :(
-> > 
-> > I don't understand. Why wouldn't SDIO be allowed to sleep?
-> 
-> Because this is called within the RX path code which does
-> rcu_read_lock() around it.
+On Thu, Jan 7, 2010 at 9:06 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> The TX queues have to be stopped during an
+> internal reset. Not handling this would result
+> in packet loss - fix this.
+>
+> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 
-Ok, I see. I can live with that, because tkip hwcrypto defaults to off.
+Cc stable?
 
-> Really, somebody just needs to go and add key TODO in mac80211 to pick
-> up phase1 key changes and update them in the driver, that gets rid of
-> all the locking and atomic problems.
-
-Too bad I don't understand all that tkip key handling stuff. :)
-
--- 
-Greetings, Michael.
+  Luis
