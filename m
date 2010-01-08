@@ -1,67 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.216.174]:41952 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750929Ab0ALRSX (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:37001 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752956Ab0AHRcT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2010 12:18:23 -0500
-Received: by pxi4 with SMTP id 4so4738592pxi.33
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jan 2010 09:18:23 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <995709e41001120914n17cfdb56k664c2b42afe448f6@mail.gmail.com>
-References: <995709e41001091103t43738262ibb2c4e0c4beab26d@mail.gmail.com>
-	<995709e41001120217r1b6b276ek70658a1142744142@mail.gmail.com>
-	<4B4C8320.8060801@free.fr> <995709e41001120724j7a6627b1g5d90df8fb658ceaa@mail.gmail.com>
-	<43e72e891001120846x453e4052oa93675b86fe4a86d@mail.gmail.com>
-	<995709e41001120914n17cfdb56k664c2b42afe448f6@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 12 Jan 2010 09:18:03 -0800
-Message-ID: <43e72e891001120918v70c3be7nd3d3819f0e8b0cd0@mail.gmail.com>
-Subject: Re: [ath9k-devel] [Moblin Dev] Wireless is keep on disconnecting
-To: Jaswinder Singh Rajput <jaswindermobile@gmail.com>
-Cc: dev@moblin.org, alainswb <alainswb@free.fr>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	ath9k-devel@lists.ath9k.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 8 Jan 2010 12:32:19 -0500
+Date: Fri, 8 Jan 2010 18:32:18 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 11/11] mwl8k: move receive processing to tasklet
+Message-ID: <20100108173218.GE1735@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 12, 2010 at 9:14 AM, Jaswinder Singh Rajput
-<jaswindermobile@gmail.com> wrote:
-> Hello Luis,
->
-> On Tue, Jan 12, 2010 at 10:16 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> On Tue, Jan 12, 2010 at 7:24 AM, Jaswinder Singh Rajput
->> <jaswindermobile@gmail.com> wrote:
->>
->>>> I keep on getting "Network Lost" message on moblin 2.1 when I transfer
->>>> some big file. I am trying to understand Is it a feature or a Bug.
->>>>
->>>> My other machines are working great with Wireless even Windows XP
->>>> running on Netbook never did this to me.
->>
->> Your report lacks a lot of information, its unclear what Moblin 2.1 is
->> using for its kernel for those who are not following moblin
->> development on a regular basis, and if its anything older than 2.6.32
->> its old and I recommend upgrading. May want to try to upgrade your
->> kernel or upgrade to a stable release of compat-wireless snapshot for
->> example:
->>
->> http://wireless.kernel.org/en/users/Download/stable
->>
->
-> I am attaching dmesg on Acer Aspire One D250 Netbook.
->
-> I am going to build latest git kernel and with latest wireless kernel
-> on it and let you know the status.
+Like how TX reclaim is done in a tasklet, move receive processing
+to tasklet context as well.  This can have nice benefits for CPU
+utilisation and throughput, especially at 3-stream rates.
 
-latest wireless kernel is not a good idea if you are considering using
-wireless-testing unless your are up to deal with a bleeding edge
-kernel which may not yet be completely stable. Stick to stable if you
-want stable.
+(Use the same CLEAR_SEL trick as the TX reclaim tasklet does, to
+avoid having to touch the interrupt mask registers.)
 
-  Luis
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   47 +++++++++++++++++++++++++++++++++---------
+ 1 files changed, 37 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 3f55aa0..13b0e32 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -204,6 +204,9 @@ struct mwl8k_priv {
+ 
+ 	/* Tasklet to perform TX reclaim.  */
+ 	struct tasklet_struct poll_tx_task;
++
++	/* Tasklet to perform RX.  */
++	struct tasklet_struct poll_rx_task;
+ };
+ 
+ /* Per interface specific private data */
+@@ -2971,14 +2974,14 @@ static irqreturn_t mwl8k_interrupt(int irq, void *dev_id)
+ 		tasklet_schedule(&priv->poll_tx_task);
+ 	}
+ 
+-	if (status)
+-		iowrite32(~status, priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS);
+-
+ 	if (status & MWL8K_A2H_INT_RX_READY) {
+-		while (rxq_process(hw, 0, 1))
+-			rxq_refill(hw, 0, 1);
++		status &= ~MWL8K_A2H_INT_RX_READY;
++		tasklet_schedule(&priv->poll_rx_task);
+ 	}
+ 
++	if (status)
++		iowrite32(~status, priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS);
++
+ 	if (status & MWL8K_A2H_INT_OPC_DONE) {
+ 		if (priv->hostcmd_wait != NULL)
+ 			complete(priv->hostcmd_wait);
+@@ -3022,6 +3025,24 @@ static void mwl8k_tx_poll(unsigned long data)
+ 	}
+ }
+ 
++static void mwl8k_rx_poll(unsigned long data)
++{
++	struct ieee80211_hw *hw = (struct ieee80211_hw *)data;
++	struct mwl8k_priv *priv = hw->priv;
++	int limit;
++
++	limit = 32;
++	limit -= rxq_process(hw, 0, limit);
++	limit -= rxq_refill(hw, 0, limit);
++
++	if (limit) {
++		writel(~MWL8K_A2H_INT_RX_READY,
++		       priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS);
++	} else {
++		tasklet_schedule(&priv->poll_rx_task);
++	}
++}
++
+ 
+ /*
+  * Core driver operations.
+@@ -3057,8 +3078,9 @@ static int mwl8k_start(struct ieee80211_hw *hw)
+ 		return -EIO;
+ 	}
+ 
+-	/* Enable tx reclaim tasklet */
++	/* Enable TX reclaim and RX tasklets.  */
+ 	tasklet_enable(&priv->poll_tx_task);
++	tasklet_enable(&priv->poll_rx_task);
+ 
+ 	/* Enable interrupts */
+ 	iowrite32(MWL8K_A2H_EVENTS, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
+@@ -3092,6 +3114,7 @@ static int mwl8k_start(struct ieee80211_hw *hw)
+ 		iowrite32(0, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
+ 		free_irq(priv->pdev->irq, hw);
+ 		tasklet_disable(&priv->poll_tx_task);
++		tasklet_disable(&priv->poll_rx_task);
+ 	}
+ 
+ 	return rc;
+@@ -3115,8 +3138,9 @@ static void mwl8k_stop(struct ieee80211_hw *hw)
+ 	if (priv->beacon_skb != NULL)
+ 		dev_kfree_skb(priv->beacon_skb);
+ 
+-	/* Stop tx reclaim tasklet */
++	/* Stop TX reclaim and RX tasklets.  */
+ 	tasklet_disable(&priv->poll_tx_task);
++	tasklet_disable(&priv->poll_rx_task);
+ 
+ 	/* Return all skbs to mac80211 */
+ 	for (i = 0; i < MWL8K_TX_QUEUES; i++)
+@@ -3873,9 +3897,11 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
+ 	/* Finalize join worker */
+ 	INIT_WORK(&priv->finalize_join_worker, mwl8k_finalize_join_worker);
+ 
+-	/* TX reclaim tasklet */
++	/* TX reclaim and RX tasklets.  */
+ 	tasklet_init(&priv->poll_tx_task, mwl8k_tx_poll, (unsigned long)hw);
+ 	tasklet_disable(&priv->poll_tx_task);
++	tasklet_init(&priv->poll_rx_task, mwl8k_rx_poll, (unsigned long)hw);
++	tasklet_disable(&priv->poll_rx_task);
+ 
+ 	/* Power management cookie */
+ 	priv->cookie = pci_alloc_consistent(priv->pdev, 4, &priv->cookie_dma);
+@@ -3904,7 +3930,7 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
+ 
+ 	iowrite32(0, priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS);
+ 	iowrite32(0, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
+-	iowrite32(MWL8K_A2H_INT_TX_DONE,
++	iowrite32(MWL8K_A2H_INT_TX_DONE | MWL8K_A2H_INT_RX_READY,
+ 		  priv->regs + MWL8K_HIU_A2H_INTERRUPT_CLEAR_SEL);
+ 	iowrite32(0xffffffff, priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS_MASK);
+ 
+@@ -4032,8 +4058,9 @@ static void __devexit mwl8k_remove(struct pci_dev *pdev)
+ 
+ 	ieee80211_unregister_hw(hw);
+ 
+-	/* Remove tx reclaim tasklet */
++	/* Remove TX reclaim and RX tasklets.  */
+ 	tasklet_kill(&priv->poll_tx_task);
++	tasklet_kill(&priv->poll_rx_task);
+ 
+ 	/* Stop hardware */
+ 	mwl8k_hw_reset(priv);
+-- 
+1.5.6.4
