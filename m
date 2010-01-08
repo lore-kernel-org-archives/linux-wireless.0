@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:56839 "EHLO mga01.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:29219 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751068Ab0AMSsH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2010 13:48:07 -0500
-Subject: Re: [PATCH v2] cfg80211: fix channel setting for wext
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e891001131004s1eab8bf2jdf94bdd4b2d59281@mail.gmail.com>
-References: <1263405850-10180-1-git-send-email-abhijeet.kolekar@intel.com>
-	 <43e72e891001131004s1eab8bf2jdf94bdd4b2d59281@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 13 Jan 2010 10:47:21 -0800
-Message-ID: <1263408441.10649.6.camel@abhi-desktop>
-Mime-Version: 1.0
+	id S1753456Ab0AHSEp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jan 2010 13:04:45 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>, Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 4/4] iwlwifi: fix bug in tx byte count table
+Date: Fri,  8 Jan 2010 10:04:44 -0800
+Message-Id: <1262973884-2551-5-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1262973884-2551-1-git-send-email-reinette.chatre@intel.com>
+References: <1262973884-2551-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-01-13 at 10:04 -0800, Luis R. Rodriguez wrote:
-> On Wed, Jan 13, 2010 at 10:04 AM, Abhijeet Kolekar
-> <abhijeet.kolekar@intel.com> wrote:
-> > Patch fixes the bug at
-> > http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2139
-> >
-> > Currently we cannot set the channel using wext extension
-> > if we have already associated and disconnected. As
-> > cfg80211_mgd_wext_siwfreq will not switch the channel if ssid is set.
-> > This fixes it by clearing the ssid.
-> > Following is the sequence which it tries to fix.
-> > modprobe iwlagn
-> > iwconfig wlan0 essid ""
-> > ifconfig wlan0 down
-> > iwconfig wlan0 chan X
-> >
-> > wext is marked as deprecate.If we use nl80211 we can easily play with
-> > setting the channel.
-> >
-> > Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-> > Acked-by: Samuel Ortiz <sameo@linux.intel.com>
-> 
-> Is this a stable fix as well?
-> 
-Yes it can be a candidate for stable. I will resubmit.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Thanks
-Abhijeet
->   Luis
+When setting invalid byte count in txq byte count table, read pointer
+should be used instead of write pointer.
 
+Reported-by: Guo, Chaohong <chaohong.guo@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index ec6b276..c3f8ec0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -781,7 +781,7 @@ void iwl5000_txq_update_byte_cnt_tbl(struct iwl_priv *priv,
+ 
+ 	scd_bc_tbl[txq_id].tfd_offset[write_ptr] = bc_ent;
+ 
+-	if (txq->q.write_ptr < TFD_QUEUE_SIZE_BC_DUP)
++	if (write_ptr < TFD_QUEUE_SIZE_BC_DUP)
+ 		scd_bc_tbl[txq_id].
+ 			tfd_offset[TFD_QUEUE_SIZE_MAX + write_ptr] = bc_ent;
+ }
+@@ -800,12 +800,12 @@ void iwl5000_txq_inval_byte_cnt_tbl(struct iwl_priv *priv,
+ 	if (txq_id != IWL_CMD_QUEUE_NUM)
+ 		sta_id = txq->cmd[read_ptr]->cmd.tx.sta_id;
+ 
+-	bc_ent =  cpu_to_le16(1 | (sta_id << 12));
++	bc_ent = cpu_to_le16(1 | (sta_id << 12));
+ 	scd_bc_tbl[txq_id].tfd_offset[read_ptr] = bc_ent;
+ 
+-	if (txq->q.write_ptr < TFD_QUEUE_SIZE_BC_DUP)
++	if (read_ptr < TFD_QUEUE_SIZE_BC_DUP)
+ 		scd_bc_tbl[txq_id].
+-			tfd_offset[TFD_QUEUE_SIZE_MAX + read_ptr] =  bc_ent;
++			tfd_offset[TFD_QUEUE_SIZE_MAX + read_ptr] = bc_ent;
+ }
+ 
+ static int iwl5000_tx_queue_set_q2ratid(struct iwl_priv *priv, u16 ra_tid,
+-- 
+1.5.6.3
 
