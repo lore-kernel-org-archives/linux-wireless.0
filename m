@@ -1,83 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f188.google.com ([209.85.222.188]:54072 "EHLO
-	mail-pz0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751957Ab0ANHVh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2010 02:21:37 -0500
+Received: from mail.gmx.net ([213.165.64.20]:45320 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753945Ab0AHUfq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jan 2010 15:35:46 -0500
+Message-ID: <4B479721.4030007@gmx.net>
+Date: Fri, 08 Jan 2010 21:35:45 +0100
+From: Rainer Koschnick <arkay@gmx.net>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 13 Jan 2010 23:21:15 -0800
-Message-ID: <43e72e891001132321qccde01cnd7002d1f94bee1c0@mail.gmail.com>
-Subject: Compat / compat-wireless / bluetooth for 2.6.33-rc4 and 2.6.32.3
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Sujith <Sujith.Manoharan@atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k driver in kernel 2.6.33 problems
+References: <4B46730E.7000105@gmx.net> <19270.46317.374569.436426@gargle.gargle.HOWL>
+In-Reply-To: <19270.46317.374569.436426@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 2.6.33-rc4 and 2.6.32.3 kernels came out a few days ago, along
-with it comes the respective 2.6.33-rc4 [1] and 2.6.32.3 [2]
-compat-wireless releases [3]. As noted previously the
-compat-wireless-2.6.33 releases now also have bluetooth backported for
-kernels >= 2.6.27.
+On 01/08/10 05:30, Sujith wrote:
+> Rainer Koschnick wrote:
+>> Hi,
+>>
+>> I've been trying to use the last couple of 2.6.33 RCs up to rc3-git2 and
+>> am experiencing connection issues with the ath9k driver.  It used to be
+>> broken for me in kernel 2.6.31 (haven't tried earlier), then was
+>> rock-solid in 2.6.32 and now it's broken again.  I can connect to my
+>> 300mbit router--which is in the same room--without problems, but after a
+>> while the connection breaks.
+> 
+> You could build the driver with CONFIG_ATH_DEBUG=y and CONFIG_ATH9K_DEBUGFS=y
+> and post the log, along with the contents of 'rcstat' and 'interrupt' debugfs files.
+> 
+> See: http://wireless.kernel.org/en/users/Drivers/ath9k/debug
+> 
+> Sujith
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-A few release notes:
+Hi,
 
- * compat.git - generic kernel compatibility package. This is
-currently used on bleeding edge compat-wireless and the 2.6.33
-compat-wireless releases. Other external drivers are welcomed to take
-advantage of this though.
-  - gets pm-qos for kernels down to 2.6.23
-  - gets the new 2.6.33 firmware_class backported for older kernels
-which allows usage of
-    drivers with thew new request_firmware_nowait(). Users of this for
-802.11 right now are ar9170.
-    This actually goes only compile tested, please let me know if this worked.
+I have uploaded the requested information to my server, it's rather big
+so I don't want to post it here.
 
-  * compat-wireless-2.6.32.3:
-    - now goes all the way down to 2.6.23 for ath5k and ath9k, should
-be easy to test/enable others
-    - gets pm-qos backport as well
+http://arkay.de/temp/ath9k_debug.tar.bz
 
-  * compat-wireless-2.6.33-rc4:
-    - The new debugfs_remove_recursive(), added as of 2.6.26 but used
-on 802.11 only until
-      2.6.32-rc4 on both mac80211 and cfg80211 cannot be backported as
-it relies on two
-      static variables on fs/debugfs/inode.c, to enable backporting
-for older kernels than
-      2.6.26 we'll need to relabel CONFIG_CFG80211_DEBUGFS and
-CONFIG_MAC80211_DEBUGFS
-      and disable them for older kernels.
+Since the messages file is around 1GB I have extracted a couple of time
+ranges.  First I had a disconnect (messages.reconnect... dhcpcd
+complained at 20:47:24) , then later the network connection just hang
+for a minute or two.  I was transferring a big file from a LAN server,
+must have happened somewhere around 21:08 or 09 (messages.hang).  The
+transfer just hang... neither the web nor ping worked.
 
-Due to the new multiqueue patch we only support kernels >= 2.6.27 on
-bleeding edge compat-wireless. This patch is due to go into stable
-down to 2.6.32 so both next releases 2.6.32.4 and 2.6.32-rc5 are
-expected to have this and as such will have backporting disabled for
-older kernels as well until we figure out how to properly backport
-this.
+I still have the messages file saved should anything be missing, I have
+now turned debugging off since I don't have that much space on my
+notebook :)
 
-The compat-wireless 2.6.32.3 release causes this harmless warning on
-older kernels < 2.6.24, it can safely be ingored, I see no way of
-avoiding it.
+Thanks,
+Rainer
 
-  CC [M]  /home/mcgrof/devel/compat-wireless-2.6/net/rfkill/input.o
-In file included from
-/home/mcgrof/devel/compat-wireless-2.6/net/rfkill/input.c:16:
-include/linux/input.h:933:1: warning: "BIT" redefined
-In file included from include/asm-i386/cpufeature.h:11,
-                 from include/asm/cpufeature.h:10,
-                 from include/asm/alternative.h:43,
-                 from include/asm/atomic.h:4,
-                 from
-/home/mcgrof/devel/compat-wireless-2.6/include/net/compat-2.6.24.h:11,
-                 from
-/home/mcgrof/devel/compat-wireless-2.6/include/net/compat.h:15,
-                 from <command-line>:0:
-
- Luis
-
-[1] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.33/compat-wireless-2.6.33-rc4.tar.bz2
-[2] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.32/compat-wireless-2.6.32.3.tar.bz2
-[3] http://wireless.kernel.org/en/users/Download/stable
