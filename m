@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55511 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753031Ab0AGUiA (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:58359 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752783Ab0AHR2f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2010 15:38:00 -0500
-Date: Thu, 7 Jan 2010 15:37:53 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [bisected] sys_paccept: disable paccept() causes my macbook	pro to have an annoying whining sound
-Message-ID: <20100107203752.GA31726@tuxdriver.com>
-References: <dd18b0c31001062216m316163f4t992c000eca0f76d@mail.gmail.com> <20100107125433.GB13603@tuxdriver.com> <4B460188.1050504@gmail.com>
+	Fri, 8 Jan 2010 12:28:35 -0500
+Date: Fri, 8 Jan 2010 18:28:34 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 03/11] mwl8k: bump the transmit wait timeout to 5 seconds
+Message-ID: <20100108172830.GW1735@mail.wantstofly.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4B460188.1050504@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 07, 2010 at 07:45:12AM -0800, Justin P. Mattock wrote:
-> On 01/07/10 04:54, John W. Linville wrote:
-> >On Wed, Jan 06, 2010 at 10:16:27PM -0800, Justin Mattock wrote:
-> >>for a while I've been hearing this odd
-> >>annoying sound coming from my macbook pro
-> >>when the system is idle(no internet use tv/radio/web etc...)
-> >>as soon as I do anything(radio,web) the noise disappears.
-> >>
-> >>here is a  url where they are experiencing the same issue:
-> >>https://help.ubuntu.com/community/MacBook1-1/Hardy
-> >>(down under whining noise);
-> >>
-> >>here is is the result of my bisect:
-> >>
-> >>2d4c8266774188cda7f7e612e6dfb8ad12c579d5 is the first bad commit
-> >>commit 2d4c8266774188cda7f7e612e6dfb8ad12c579d5
-> >>Author: Michael Kerrisk<mtk.manpages@googlemail.com>
-> >>Date:   Mon Sep 22 13:57:49 2008 -0700
-> >>
-> >>     sys_paccept: disable paccept() until API design is resolved
-> >
-> >Any particular reason you sent this to linux-wireless??
-> >
-> 
-> 
-> because the bisect had resulted in
-> something with wireless, so I figured
-> it was the next best thing todo.
+While it is reasonable to expect that at least one transmit ring entry
+will be processed per second while we are waiting for the transmit
+rings to drain, the firmware can end up doing batching of transmit ring
+status writeback, which means that the transmit rings can appear stuck
+for more than a second at a time.
 
-Well, if you say so. :-)  But, I'm not sure I see the connection
-between sys_paccept and wireless...?
+Bump the TX drain wait timeout up from 1 to 5 seconds to account for
+this.
 
-John
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 3f5fdb6..8f5f7c9 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1173,7 +1173,7 @@ static void mwl8k_dump_tx_rings(struct ieee80211_hw *hw)
+ /*
+  * Must be called with priv->fw_mutex held and tx queues stopped.
+  */
+-#define MWL8K_TX_WAIT_TIMEOUT_MS	1000
++#define MWL8K_TX_WAIT_TIMEOUT_MS	5000
+ 
+ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw)
+ {
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.6.4
