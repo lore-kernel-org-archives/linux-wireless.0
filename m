@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:18117 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751316Ab0AANkl convert rfc822-to-8bit (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:57579 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752368Ab0AHNPX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2010 08:40:41 -0500
+	Fri, 8 Jan 2010 08:15:23 -0500
+Date: Fri, 8 Jan 2010 15:14:51 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/4] cfg80211: fix 2 GHz subband calculation for
+ country IEs
+Message-ID: <20100108131451.GA18758@jm.kir.nu>
+References: <1262903097-2129-1-git-send-email-lrodriguez@atheros.com>
+ <1262903097-2129-3-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <4B2FEE46.5030700@unsolicited.net>
-References: <4B2FEE46.5030700@unsolicited.net>
-Date: Fri, 1 Jan 2010 14:40:38 +0100
-Message-ID: <8db1092f1001010540l15c8f671y1f6a4a4417eb450b@mail.gmail.com>
-Subject: Re: 2.6.33-rc1 - Weird hard hangs when rendering 'some' web-sites in
-	Firefox
-From: Maciej Rutecki <maciej.rutecki@gmail.com>
-To: David <david@unsolicited.net>
-Cc: linux-kernel@vger.kernel.org,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1262903097-2129-3-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/12/21 David <david@unsolicited.net>:
-> I'm still not sure whether what I'm seeing here is latent hardware
-> problems, but, as a heads up :-
->
->    2.6.32, 2.6.32.2 (and previous kernels) - All OK
->    2.6.33-rc1 - Machine seems fine, until :-
->
-> I browse to particular sites (one of which is an internet banking site,
-> so no heavy flash etc.). My machine will (completely and repeatably)
-> hang solid. Nothing showing with netconsole, sshd dead, sysrq dead ...
-> reset button time.
->
-> .config, bootup dmesg, and lspci -vvv attached for interest (userspace
-> is Ubuntu 9.10).
->
-> May have time to bisect, but not 'till the holidays.
->
-> Cheers
-> David
->
->
+On Thu, Jan 07, 2010 at 05:24:55PM -0500, Luis R. Rodriguez wrote:
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -555,7 +555,7 @@ static struct ieee80211_regdomain *country_ie_2_rd(
+>  		/* 2 GHz */
+>  		if (triplet->chans.first_channel <= 14)
 
-I can confirm this. Probably it's related only to wireless
-connections, wired seems be OK. My device is:
-08:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG
-[Golan] Network Connection (rev 02)
+By the way, that looks completely bogus.. Channel number cannot be used
+to figure out whether this is 2.4 GHz or 5 GHz band (e.g., channel 8 is
+used in both). This really should be based on the band the frame with
+the Country IE was received.
 
-Regards
+>  			end_channel = triplet->chans.first_channel +
+> -				triplet->chans.num_channels;
+> +				triplet->chans.num_channels - 1;
+
+Could be reasonable to verify that num_channels is not 0.. Based on a
+quick look, I did not notice places where negative end_channel value
+would trigger bad problems, but it would be safer to validate that the
+received information is valid before using it.
+
 -- 
-Maciej Rutecki
-http://www.maciek.unixy.pl
+Jouni Malinen                                            PGP id EFC895FA
