@@ -1,70 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54471 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755455Ab0AMV3N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2010 16:29:13 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat-wireless: missing ksize export
-Date: Wed, 13 Jan 2010 22:29:04 +0100
-Message-Id: <1263418145-30380-1-git-send-email-hauke@hauke-m.de>
+Received: from nbd.name ([88.198.39.176]:42628 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753292Ab0AHRLA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jan 2010 12:11:00 -0500
+Message-ID: <4B476722.4040508@openwrt.org>
+Date: Fri, 08 Jan 2010 18:10:58 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 2/3] mac80211: allow station updates on ap interfaces for
+ vlan stations
+References: <4B476612.4090509@openwrt.org>
+In-Reply-To: <4B476612.4090509@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ksize is used two times now in net/wireless/scan.c
-This changes the check into false, if the kernel does not export ksize.
+Since the per-vif station changes, sta_info_get on the ap sdata no 
+longer returns entries for stations on ap vlans. This causes issues 
+with hostapd, which currently always passes the ap interface name to 
+nl80211 calls. This patch provides bug compatibility with the earlier 
+versions until hostapd is fixed.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- patches/02-ksize.patch |   29 +++++++++++++++++++++++------
- 1 files changed, 23 insertions(+), 6 deletions(-)
-
-diff --git a/patches/02-ksize.patch b/patches/02-ksize.patch
-index 013c0b4..726fa2b 100644
---- a/patches/02-ksize.patch
-+++ b/patches/02-ksize.patch
-@@ -12,16 +12,33 @@ of the situation.
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -119,6 +119,27 @@ struct sta_info *sta_info_get(struct iee
+ 	return sta;
+ }
  
- --- a/net/wireless/scan.c
- +++ b/net/wireless/scan.c
--@@ -423,7 +423,12 @@ cfg80211_bss_update(struct cfg80211_regi
-+@@ -424,9 +424,14 @@ cfg80211_bss_update(struct cfg80211_regi
-  			size_t used = dev->wiphy.bss_priv_size + sizeof(*res);
-- 			size_t ielen = res->pub.len_information_elements;
-+ 			size_t ielen = res->pub.len_proberesp_ies;
-  
- +#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,28)
- +			if (0) {
- +				used = 0; /* just to shut up the compiler */
- +#else
-- 			if (!found->ies_allocated && ksize(found) >= used + ielen) {
-+ 			if (found->pub.proberesp_ies &&
-+ 			    !found->proberesp_ies_allocated &&
-+ 			    ksize(found) >= used + ielen) {
- +#endif
-- 				memcpy(found->pub.information_elements,
-- 				       res->pub.information_elements, ielen);
-- 				found->pub.len_information_elements = ielen;
-+ 				memcpy(found->pub.proberesp_ies,
-+ 				       res->pub.proberesp_ies, ielen);
-+ 				found->pub.len_proberesp_ies = ielen;
-+@@ -457,9 +462,14 @@ cfg80211_bss_update(struct cfg80211_regi
-+ 			size_t used = dev->wiphy.bss_priv_size + sizeof(*res);
-+ 			size_t ielen = res->pub.len_beacon_ies;
-+ 
-++#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,28)
-++			if (0) {
-++				used = 0; /* just to shut up the compiler */
-++#else
-+ 			if (found->pub.beacon_ies &&
-+ 			    !found->beacon_ies_allocated &&
-+ 			    ksize(found) >= used + ielen) {
-++#endif
-+ 				memcpy(found->pub.beacon_ies,
-+ 				       res->pub.beacon_ies, ielen);
-+ 				found->pub.len_beacon_ies = ielen;
--- 
-1.6.3.3
-
++/*
++ * Get sta info either from the specified interface
++ * or from one of its vlans
++ */
++struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
++				  const u8 *addr)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta;
++
++	sta = rcu_dereference(local->sta_hash[STA_HASH(addr)]);
++	while (sta) {
++		if ((sta->sdata == sdata ||
++		     sta->sdata->bss == sdata->bss) &&
++		    memcmp(sta->sta.addr, addr, ETH_ALEN) == 0)
++			break;
++		sta = rcu_dereference(sta->hnext);
++	}
++	return sta;
++}
++
+ struct sta_info *sta_info_get_by_idx(struct ieee80211_sub_if_data *sdata,
+ 				     int idx)
+ {
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -408,6 +408,9 @@ static inline u32 get_sta_flags(struct s
+ struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
+ 			      const u8 *addr);
+ 
++struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
++				  const u8 *addr);
++
+ static inline
+ void for_each_sta_info_type_check(struct ieee80211_local *local,
+ 				  const u8 *addr,
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -148,7 +148,7 @@ static int ieee80211_add_key(struct wiph
+ 	rcu_read_lock();
+ 
+ 	if (mac_addr) {
+-		sta = sta_info_get(sdata, mac_addr);
++		sta = sta_info_get_bss(sdata, mac_addr);
+ 		if (!sta) {
+ 			ieee80211_key_free(key);
+ 			err = -ENOENT;
+@@ -179,7 +179,7 @@ static int ieee80211_del_key(struct wiph
+ 	if (mac_addr) {
+ 		ret = -ENOENT;
+ 
+-		sta = sta_info_get(sdata, mac_addr);
++		sta = sta_info_get_bss(sdata, mac_addr);
+ 		if (!sta)
+ 			goto out_unlock;
+ 
+@@ -226,7 +226,7 @@ static int ieee80211_get_key(struct wiph
+ 	rcu_read_lock();
+ 
+ 	if (mac_addr) {
+-		sta = sta_info_get(sdata, mac_addr);
++		sta = sta_info_get_bss(sdata, mac_addr);
+ 		if (!sta)
+ 			goto out;
+ 
+@@ -419,7 +419,7 @@ static int ieee80211_get_station(struct 
+ 
+ 	rcu_read_lock();
+ 
+-	sta = sta_info_get(sdata, mac);
++	sta = sta_info_get_bss(sdata, mac);
+ 	if (sta) {
+ 		ret = 0;
+ 		sta_set_sinfo(sta, sinfo);
+@@ -775,7 +775,7 @@ static int ieee80211_del_station(struct 
+ 	if (mac) {
+ 		rcu_read_lock();
+ 
+-		sta = sta_info_get(sdata, mac);
++		sta = sta_info_get_bss(sdata, mac);
+ 		if (!sta) {
+ 			rcu_read_unlock();
+ 			return -ENOENT;
+@@ -803,7 +803,7 @@ static int ieee80211_change_station(stru
+ 
+ 	rcu_read_lock();
+ 
+-	sta = sta_info_get(sdata, mac);
++	sta = sta_info_get_bss(sdata, mac);
+ 	if (!sta) {
+ 		rcu_read_unlock();
+ 		return -ENOENT;
