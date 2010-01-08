@@ -1,69 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55446 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754002Ab0AYPyi (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:36996 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752916Ab0AHRbs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 10:54:38 -0500
-Subject: Re: [PATCH] mac80211: fix sw crypto
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Jochen Friedrich <jochen@scram.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1264432868.6336.3.camel@maxim-laptop>
-References: <1264415776.23766.34.camel@johannes.local>
-	 <1264432868.6336.3.camel@maxim-laptop>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ZwEGD2Mm/+UH+uelqcqs"
-Date: Mon, 25 Jan 2010 16:54:32 +0100
-Message-ID: <1264434872.23766.42.camel@johannes.local>
+	Fri, 8 Jan 2010 12:31:48 -0500
+Date: Fri, 8 Jan 2010 18:31:47 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 09/11] mwl8k: allow limiting the amount of transmit reclaim done
+Message-ID: <20100108173147.GC1735@mail.wantstofly.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add a limit argument to mwl8k_txq_reclaim(), to allow limiting the
+number of packets that it will reclaim, and make it return the number
+of packets that it reclaimed.
 
---=-ZwEGD2Mm/+UH+uelqcqs
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   22 +++++++++++++---------
+ 1 files changed, 13 insertions(+), 9 deletions(-)
 
-On Mon, 2010-01-25 at 17:21 +0200, Maxim Levitsky wrote:
-
-> > Obviously, that broke software crypto. Maxim
-> > said so specifically, and Jochen probably uses
-> > some cipher that iwl3945 doesn't support in
-> > hardware, which might also explain that Maxim
-> > reports that even hw crypto is broken.
-> This patch works for me. Thanks.
-
-Thanks for testing.
-
-> What chipers does iwl3945 support?
-> I use CCMP, and I also know that software encryption is used by default.
-
-I don't know off-hand, but I'm pretty sure it doesn't do TKIP, or at
-least the driver doesn't.
-
-johannes
-
---=-ZwEGD2Mm/+UH+uelqcqs
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLXb60AAoJEODzc/N7+QmacRkP/3LvG+NK5s45wTfXv8GruSv/
-B7CgLZzpwdwLL+LnrABoUEoDuvJe0j0ht7lhYwo9uc1H4a+8tH6MOJByhNaXqI7G
-8eQy/57L09OgbPpm2WMmpDjYQm0cos073YtiJbj9g1A4PelW5aNX9DEzwxX1BQoC
-MKIcn/p3g+RRWRSGlFOpK8lYXsn7olkakj/ukcTkqFq4DYq7ilBhFIwp2dv9TdWz
-BCTZ5GzZ2bksMpqxIeIyi3kR9kY5KMCIxGlhLx9D3oUqNIcn3RuiJS/XSpoP3NVY
-Sarmoo9DmVUgwX0vgKOm7kbxkzUo0ifkta1U5pOir1/xgGQBL2IQwQ50Lws05Rkn
-F/Z5a6/BJQUaKgKnVSxnJK6GDmCfTXYUdrytjrTkjD1Iwh81np4wuygSEV2ejrB6
-HodWGWg8J3s5nk2whTcMVLzMupe8N0H1VmYTxfi/oWTxDREwTLElHka81DDptGAq
-QF66++UXAeLnncJNPOGn4lIXqVY2BTL0Mp06AIAbFTSZQjdbgJ6PCFNbA8ElV/HQ
-sffK1omw/MgT7rf9JxuLwQzTSYNawfdR+22Biu19dOONhv3IX0eLTOcuru1OHbny
-BOk/N0lf3OyFSPxme2BmK+7rsRgyW4OpZTtNguVN/5kVikjJByMRfKT8ustFnjEn
-ZbAVeoWyRgRy2xNx3h6E
-=5Ivm
------END PGP SIGNATURE-----
-
---=-ZwEGD2Mm/+UH+uelqcqs--
-
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 759c94f..6598efc 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1249,13 +1249,15 @@ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw)
+ 		     MWL8K_TXD_STATUS_OK_RETRY |		\
+ 		     MWL8K_TXD_STATUS_OK_MORE_RETRY))
+ 
+-static void mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int force)
++static int
++mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
+ {
+ 	struct mwl8k_priv *priv = hw->priv;
+ 	struct mwl8k_tx_queue *txq = priv->txq + index;
+-	int wake = 0;
++	int processed;
+ 
+-	while (txq->stats.len > 0) {
++	processed = 0;
++	while (txq->stats.len > 0 && limit--) {
+ 		int tx;
+ 		struct mwl8k_tx_desc *tx_desc;
+ 		unsigned long addr;
+@@ -1302,11 +1304,13 @@ static void mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int force)
+ 
+ 		ieee80211_tx_status_irqsafe(hw, skb);
+ 
+-		wake = 1;
++		processed++;
+ 	}
+ 
+-	if (wake && priv->radio_on && !mutex_is_locked(&priv->fw_mutex))
++	if (processed && priv->radio_on && !mutex_is_locked(&priv->fw_mutex))
+ 		ieee80211_wake_queue(hw, index);
++
++	return processed;
+ }
+ 
+ /* must be called only when the card's transmit is completely halted */
+@@ -1315,7 +1319,7 @@ static void mwl8k_txq_deinit(struct ieee80211_hw *hw, int index)
+ 	struct mwl8k_priv *priv = hw->priv;
+ 	struct mwl8k_tx_queue *txq = priv->txq + index;
+ 
+-	mwl8k_txq_reclaim(hw, index, 1);
++	mwl8k_txq_reclaim(hw, index, INT_MAX, 1);
+ 
+ 	kfree(txq->skb);
+ 	txq->skb = NULL;
+@@ -3084,7 +3088,7 @@ static void mwl8k_stop(struct ieee80211_hw *hw)
+ 
+ 	/* Return all skbs to mac80211 */
+ 	for (i = 0; i < MWL8K_TX_QUEUES; i++)
+-		mwl8k_txq_reclaim(hw, i, 1);
++		mwl8k_txq_reclaim(hw, i, INT_MAX, 1);
+ }
+ 
+ static int mwl8k_add_interface(struct ieee80211_hw *hw,
+@@ -3647,7 +3651,7 @@ static void mwl8k_tx_reclaim_handler(unsigned long data)
+ 
+ 	spin_lock_bh(&priv->tx_lock);
+ 	for (i = 0; i < MWL8K_TX_QUEUES; i++)
+-		mwl8k_txq_reclaim(hw, i, 0);
++		mwl8k_txq_reclaim(hw, i, INT_MAX, 0);
+ 
+ 	if (priv->tx_wait != NULL && !priv->pending_tx_pkts) {
+ 		complete(priv->tx_wait);
+@@ -4021,7 +4025,7 @@ static void __devexit mwl8k_remove(struct pci_dev *pdev)
+ 
+ 	/* Return all skbs to mac80211 */
+ 	for (i = 0; i < MWL8K_TX_QUEUES; i++)
+-		mwl8k_txq_reclaim(hw, i, 1);
++		mwl8k_txq_reclaim(hw, i, INT_MAX, 1);
+ 
+ 	for (i = 0; i < MWL8K_TX_QUEUES; i++)
+ 		mwl8k_txq_deinit(hw, i);
+-- 
+1.5.6.4
