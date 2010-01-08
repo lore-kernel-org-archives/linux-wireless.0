@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:32782 "EHLO c60.cesmail.net"
+Received: from mga09.intel.com ([134.134.136.24]:29219 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752168Ab0AZH2i convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2010 02:28:38 -0500
-Message-ID: <20100126022837.t3t01o2w0gow8sow-cebfxv@webmail.spamcop.net>
-Date: Tue, 26 Jan 2010 02:28:37 -0500
-From: Pavel Roskin <proski@gnu.org>
-To: PAN Sunny S K <sunnypan@ust.hk>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Building of compat-wireless-old in 2.6.25 BSP kernel for
-	PowerPC architecture
-References: In-Reply-To:
-	<51523.143.89.144.207.1264488274.squirrel@sqmail.ust.hk>
-In-Reply-To: <51523.143.89.144.207.1264488274.squirrel@sqmail.ust.hk>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+	id S1753015Ab0AHSEo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jan 2010 13:04:44 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/4] iwlwifi updates for 2.6.34
+Date: Fri,  8 Jan 2010 10:04:40 -0800
+Message-Id: <1262973884-2551-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting PAN Sunny S K <sunnypan@ust.hk>:
+These are a few cleanups targeting 2.6.34. Driver will now return
+"unsupported" if receiving IEEE80211_AMPDU_TX_OPERATIONAL from mac80211.
+The statistics data structure is updated to use a field previously marked
+as "reserved". An obsolete host command is removed. This series also
+includes a fix to use correct information when updating byte count table.
 
-> Our application deployment on other device are
-> currently based on 802.11abg Atheros card with Madwifi driver. Starting
-> with this MPC8377EWLAN, we would like to trial with a new Atheros AR9160
-> 802.11bgn card. Since the chipset is not supported by Madwifi
+Wey-Yi Guy (4):
+  iwlwifi: add IEEE80211_AMPDU_TX_OPERATIONAL
+  iwlwifi: ucode statistics data structure update
+  iwlwifi: remove obsoleted host command
+  iwlwifi: fix bug in tx byte count table
 
-Please check your facts.  MadWifi trunk supports AR9160 just fine,  
-albeit without 802.11n support.  If it doesn't work for you, please  
-report it to the MadWifi mailing list.
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |    8 ++++----
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    3 +++
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    7 +++----
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    3 +++
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c     |    1 -
+ 5 files changed, 13 insertions(+), 9 deletions(-)
 
-> The MPC8377EWLAN is using a PowerPC architecture MPC8377 CPU and the
-> firmware is built by using Freescale's LTIB, the kernel came with the LTIB
-> is 2.6.25 which is slightly different from the mainstream 2.6.25 kernel.
-> However, when I try to integrate the compat-wireless-old source into the
-> LTIB's 2.6.25 kernel, error comes up in socket.c and many other networking
-> source.
+These patches are also available from wireless-next-2.6 branch on
+git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-Reports about errors without exact error messages are useless most of  
-the time.  One error message should be enough.
+I had some problems compiling wireless-next-2.6 as I ran into the problem
+described in http://patchwork.kernel.org/patch/68463/ . I assume that the
+"CONFIG_KPROBES=n" relies on patch "[PATCH] x86: compile insn.c and inat.c
+only for KPROBES", which is not present in wireless-next-2.6. I am using
+gawk. For testing I manually applied this patch and disabled kprobes to be
+able to build.
 
-> Therefore, I'd like to seek for some advice of whether the
-> compat-wireless-old could be compiled with linux kernels that is compiled
-> with BSP like LTIB. And how can I solve the building problem between the
-> compat-wireless-old and the 2.6.25 kernel?
+Thank you
 
-You didn't describe the problem enough for somebody else to reproduce  
-it and identify it as being the same problem as the one you are  
-experiencing.
+Reinette
 
--- 
-Regards,
-Pavel Roskin
+
