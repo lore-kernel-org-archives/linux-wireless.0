@@ -1,107 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:19004 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750758Ab0AZAvS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 19:51:18 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so1074880eyd.19
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2010 16:51:17 -0800 (PST)
+Received: from nbd.name ([88.198.39.176]:48920 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752929Ab0AHRGk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jan 2010 12:06:40 -0500
+Message-ID: <4B476612.4090509@openwrt.org>
+Date: Fri, 08 Jan 2010 18:06:26 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <20100125162835.6619e3f4.akpm@linux-foundation.org>
-References: <bug-15089-10286@http.bugzilla.kernel.org/>
-	 <20100125162835.6619e3f4.akpm@linux-foundation.org>
-Date: Tue, 26 Jan 2010 01:51:16 +0100
-Message-ID: <2cf430a61001251651w169cb968pb81998e5f7b0b8b7@mail.gmail.com>
-Subject: Re: [Bugme-new] [Bug 15089] New: Fail to get ethernet IP-adress
-From: Krister Svanlund <krister.svanlund@gmail.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org,
-	linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	bugzilla-daemon@bugzilla.kernel.org,
-	bugme-daemon@bugzilla.kernel.org
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 1/3] mac80211: use nullfunc frames for 4-addr sta detection
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No sorry, I'm currently not capable to recompile my kernel. I hope
-someone else with a similar problem comes along.
+To detect incoming 4-addr stations, hostapd needs to receive a 4-addr 
+data frame from the remote station, so that it can create the AP VLAN 
+for it. With this patch, the mlme code emits a 4-addr nullfunc frame 
+immediately after assoc. On the AP side it also drops 4-addr nullfunc 
+frames to the cooked monitor mode interface, if the interface hasn't 
+been fully set up to receive 4-addr data frames yet.
 
-On Tue, Jan 26, 2010 at 1:28 AM, Andrew Morton
-<akpm@linux-foundation.org> wrote:
->
->
-> (switched to email.  Please respond via emailed reply-to-all, not via the
-> bugzilla web interface).
->
->
->
-> On Tue, 19 Jan 2010 14:35:03 GMT
-> bugzilla-daemon@bugzilla.kernel.org wrote:
->
->> http://bugzilla.kernel.org/show_bug.cgi?id=15089
->
-> 2.6.32.2 -> 2.6.32.3 regression.  Hence the regression is probably in
-> 2.6.33-rc.
->
-> Looking through the changelog I'd be suspecting
->
->
-> : commit 3815270b3107d31c8b7bd69461f0bb3c350ee25c
-> : Author: Gertjan van Wingerde <gwingerde@gmail.com>
-> : Date:   Mon Dec 14 20:33:55 2009 +0100
-> :
-> :     rt2x00: Disable powersaving for rt61pci and rt2800pci.
-> :
-> :     commit 93b6bd26b74efe46b4579592560f9f1cb7b61994 upstream.
->
-> Mainly because I didn't spot any other change to that driver.
->
->
-> Krister, are you able to apply this reversion patch to 2.6.32.3 and see
-> if it helps?
->
-> Thanks.
->
->
->  drivers/net/wireless/rt2x00/rt2800lib.c |    6 ------
->  drivers/net/wireless/rt2x00/rt61pci.c   |    5 -----
->  2 files changed, 11 deletions(-)
->
-> diff -puN drivers/net/wireless/rt2x00/rt2800lib.c~revert-1 drivers/net/wireless/rt2x00/rt2800lib.c
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c~revert-1
-> +++ a/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -2037,12 +2037,6 @@ int rt2800_probe_hw_mode(struct rt2x00_d
->        u16 eeprom;
->
->        /*
-> -        * Disable powersaving as default on PCI devices.
-> -        */
-> -       if (rt2x00_intf_is_pci(rt2x00dev))
-> -               rt2x00dev->hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
-> -
-> -       /*
->         * Initialize all hw fields.
->         */
->        rt2x00dev->hw->flags =
-> diff -puN drivers/net/wireless/rt2x00/rt61pci.c~revert-1 drivers/net/wireless/rt2x00/rt61pci.c
-> --- a/drivers/net/wireless/rt2x00/rt61pci.c~revert-1
-> +++ a/drivers/net/wireless/rt2x00/rt61pci.c
-> @@ -2535,11 +2535,6 @@ static int rt61pci_probe_hw_mode(struct
->        unsigned int i;
->
->        /*
-> -        * Disable powersaving as default.
-> -        */
-> -       rt2x00dev->hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
-> -
-> -       /*
->         * Initialize all hw fields.
->         */
->        rt2x00dev->hw->flags =
-> _
->
->
->
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+
+---
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -312,6 +312,38 @@ void ieee80211_send_nullfunc(struct ieee
+ 	ieee80211_tx_skb(sdata, skb);
+ }
+ 
++static void ieee80211_send_4addr_nullfunc(struct ieee80211_local *local,
++					  struct ieee80211_sub_if_data *sdata)
++{
++	struct sk_buff *skb;
++	struct ieee80211_hdr *nullfunc;
++	__le16 fc;
++
++	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION))
++		return;
++
++	skb = dev_alloc_skb(local->hw.extra_tx_headroom + 30);
++	if (!skb) {
++		printk(KERN_DEBUG "%s: failed to allocate buffer for 4addr "
++		       "nullfunc frame\n", sdata->name);
++		return;
++	}
++	skb_reserve(skb, local->hw.extra_tx_headroom);
++
++	nullfunc = (struct ieee80211_hdr *) skb_put(skb, 30);
++	memset(nullfunc, 0, 30);
++	fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_NULLFUNC |
++			 IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
++	nullfunc->frame_control = fc;
++	memcpy(nullfunc->addr1, sdata->u.mgd.bssid, ETH_ALEN);
++	memcpy(nullfunc->addr2, sdata->vif.addr, ETH_ALEN);
++	memcpy(nullfunc->addr3, sdata->u.mgd.bssid, ETH_ALEN);
++	memcpy(nullfunc->addr4, sdata->vif.addr, ETH_ALEN);
++
++	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
++	ieee80211_tx_skb(sdata, skb);
++}
++
+ /* spectrum management related things */
+ static void ieee80211_chswitch_work(struct work_struct *work)
+ {
+@@ -1120,6 +1152,13 @@ static bool ieee80211_assoc_success(stru
+ 	ieee80211_set_associated(sdata, cbss, changed);
+ 
+ 	/*
++	 * If we're using 4-addr mode, let the AP know that we're
++	 * doing so, so that it can create the STA VLAN on its side
++	 */
++	if (ifmgd->use_4addr)
++		ieee80211_send_4addr_nullfunc(local, sdata);
++
++	/*
+ 	 * Start timer to probe the connection to the AP now.
+ 	 * Also start the timer that will detect beacon loss.
+ 	 */
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1111,6 +1111,18 @@ ieee80211_rx_h_sta_process(struct ieee80
+ 	if (ieee80211_is_nullfunc(hdr->frame_control) ||
+ 	    ieee80211_is_qos_nullfunc(hdr->frame_control)) {
+ 		I802_DEBUG_INC(rx->local->rx_handlers_drop_nullfunc);
++
++		/*
++		 * If we receive a 4-addr nullfunc frame from a STA
++		 * that was not moved to a 4-addr STA vlan yet, drop
++		 * the frame to the monitor interface, to make sure
++		 * that hostapd sees it
++		 */
++		if (ieee80211_has_a4(hdr->frame_control) &&
++		    (rx->sdata->vif.type == NL80211_IFTYPE_AP ||
++		     (rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
++		      !rx->sdata->u.vlan.sta)))
++			return RX_DROP_MONITOR;
+ 		/*
+ 		 * Update counter and free packet here to avoid
+ 		 * counting this as a dropped packed.
+
