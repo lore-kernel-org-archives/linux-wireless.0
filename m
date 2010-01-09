@@ -1,189 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39516 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750781Ab0AGWYz (ORCPT
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:37494 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751589Ab0AIM70 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2010 17:24:55 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] hostapd: add country IE debugging options
-Date: Thu,  7 Jan 2010 17:24:49 -0500
-Message-Id: <1262903089-1958-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 9 Jan 2010 07:59:26 -0500
+Received: by fxm25 with SMTP id 25so13340575fxm.21
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Jan 2010 04:59:25 -0800 (PST)
+Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Sat, 09 Jan 2010 14:00:51 +0100
+Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Subject: [PATCH 1/4] b43: N-PHY: correct CCA resets
+MIME-Version: 1.0
+From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <op.u59nroc09lhzdc@linux-g0th.site>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If you want to debug parsing of country IEs on your
-client you can enable the CONFIG_COUNTRY_DBG and then
-select the desired triplet. We add four tests cases you
-can use.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
+  drivers/net/wireless/b43/phy_n.c |   35 +++++++++++++++++++++++++++++++----
+  1 files changed, 31 insertions(+), 4 deletions(-)
 
-Jouni, not sure if this is useful to you but it certainly
-helped me debug country IE stuff.
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index c4c39de..5cd4b1a 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -314,11 +314,34 @@ static void b43_nphy_workarounds(struct b43_wldev *dev)
+  	b43_phy_write(dev, B43_NPHY_PHASETR_B2, 0x20);
+  }
 
- hostapd/Makefile |    4 ++
- src/ap/beacon.c  |   96 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 98 insertions(+), 2 deletions(-)
-
-diff --git a/hostapd/Makefile b/hostapd/Makefile
-index d94ceb9..87b0dcc 100644
---- a/hostapd/Makefile
-+++ b/hostapd/Makefile
-@@ -157,6 +157,10 @@ ifdef CONFIG_IEEE80211N
- CFLAGS += -DCONFIG_IEEE80211N
- endif
- 
-+ifdef CONFIG_COUNTRY_DBG
-+CFLAGS += -DCONFIG_COUNTRY_DBG
-+endif
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/BmacPhyClkFgc */
++void b43_nphy_bmac_clock_fgc(struct b43_wldev *dev, bool force)
++{
++	u32 tmslow;
 +
- include ../src/drivers/drivers.mak
- OBJS += $(DRV_AP_OBJS)
- CFLAGS += $(DRV_AP_CFLAGS)
-diff --git a/src/ap/beacon.c b/src/ap/beacon.c
-index dbb6926..b35a46a 100644
---- a/src/ap/beacon.c
-+++ b/src/ap/beacon.c
-@@ -98,6 +98,81 @@ static u8 * hostapd_eid_erp_info(struct hostapd_data *hapd, u8 *eid)
- 	return eid;
- }
- 
-+#ifdef CONFIG_COUNTRY_DBG
-+struct triplet_chan {
-+	u8 first_channel;
-+	u8 num_channels;
-+	s8 max_power;
-+} __attribute__ ((packed));
++	if (dev->phy.type != B43_PHYTYPE_N)
++		return;
 +
-+struct triplet_band {
-+	u8 num_triplets;
-+	struct triplet_chan triplets[];
-+} __attribute__ ((packed));
-+
-+#define TRIPLET(_start, _num_chan, _power) \
-+{ \
-+	.first_channel = _start, \
-+	.num_channels = _num_chan, \
-+	.max_power = _power, \
++	tmslow = ssb_read32(dev->dev, SSB_TMSLOW);
++	if (force)
++		tmslow |= SSB_TMSLOW_FGC;
++	else
++		tmslow &= ~SSB_TMSLOW_FGC;
++	ssb_write32(dev->dev, SSB_TMSLOW, tmslow);
 +}
 +
-+static const struct triplet_band triplet_01 = {
-+	.num_triplets = 4,
-+	.triplets = {
-+		TRIPLET(1, 1, 20),
-+		TRIPLET(2, 1, 20),
-+		TRIPLET(36, 1, 20),
-+		TRIPLET(40, 1, 20),
-+	}
-+};
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/CCA */
+  static void b43_nphy_reset_cca(struct b43_wldev *dev)
+  {
+-	u16 bbcfg = b43_phy_read(dev, B43_NPHY_BBCFG);
++	u16 bbcfg;
 +
-+static const struct triplet_band triplet_02 = {
-+	.num_triplets = 5,
-+	.triplets = {
-+		TRIPLET(1, 1, 20), /* [1] */
-+		TRIPLET(2, 3, 20), /* [2-4] */
-+		TRIPLET(5, 8, 20), /* [5-12] */
-+		TRIPLET(36, 1, 20), /* [36] */
-+		TRIPLET(40, 2, 20), /* [40-44] */
-+	}
-+};
++	b43_nphy_bmac_clock_fgc(dev, 1);
++	bbcfg = b43_phy_read(dev, B43_NPHY_BBCFG);
+  	b43_phy_write(dev, B43_NPHY_BBCFG, bbcfg | B43_NPHY_BBCFG_RSTCCA);
++	udelay(1);
+  	b43_phy_write(dev, B43_NPHY_BBCFG, bbcfg & ~B43_NPHY_BBCFG_RSTCCA);
++	b43_nphy_bmac_clock_fgc(dev, 0);
++	//TODO: N PHY Force RF Seq with argument 2
+  }
+
+  /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/clip-detection */
+@@ -631,9 +654,13 @@ int b43_phy_initn(struct b43_wldev *dev)
+
+  	b43_nphy_workarounds(dev);
+
+-	//TODO N PHY BMAC Clock FGC with argument 1
+-	b43_nphy_reset_cca(dev);
+-	//TODO N PHY BMAC Clock FGC with argument 0
++	/* Reset CCA, in init code it differs from standard way a little */
++	b43_nphy_bmac_clock_fgc(dev, 1);
++	tmp = b43_phy_read(dev, B43_NPHY_BBCFG);
++	b43_phy_write(dev, B43_NPHY_BBCFG, tmp | B43_NPHY_BBCFG_RSTCCA);
++	b43_phy_write(dev, B43_NPHY_BBCFG, tmp & ~B43_NPHY_BBCFG_RSTCCA);
++	b43_nphy_bmac_clock_fgc(dev, 0);
 +
-+static const struct triplet_band triplet_03 = {
-+	.num_triplets = 4,
-+	.triplets = {
-+		TRIPLET(1, 4, 20), /* [1-4] */
-+		TRIPLET(5, 3, 20), /* [5-7] 2432-2452 */
-+		TRIPLET(36, 3, 20), /* [36-44] 5170-5230 */
-+		TRIPLET(48, 5, 20), /* [48-64] 5230-5330 */
-+	}
-+};
-+
-+static const struct triplet_band triplet_04 = {
-+	.num_triplets = 19,
-+	.triplets = {
-+		TRIPLET(36, 1, 20),
-+		TRIPLET(40, 1, 20),
-+		TRIPLET(44, 1, 20),
-+		TRIPLET(48, 1, 20),
-+		TRIPLET(52, 1, 20),
-+		TRIPLET(56, 1, 20),
-+		TRIPLET(60, 1, 20),
-+		TRIPLET(64, 1, 20),
-+		TRIPLET(100, 1, 20),
-+		TRIPLET(104, 1, 20),
-+		TRIPLET(108, 1, 20),
-+		TRIPLET(112, 1, 20),
-+		TRIPLET(116, 1, 20),
-+		TRIPLET(120, 1, 20),
-+		TRIPLET(124, 1, 20),
-+		TRIPLET(128, 1, 20),
-+		TRIPLET(132, 1, 20),
-+		TRIPLET(136, 1, 20),
-+		TRIPLET(140, 1, 20),
-+	}
-+};
-+#else
- 
- static u8 * hostapd_eid_country_add(u8 *pos, u8 *end, int chan_spacing,
- 				    struct hostapd_channel_data *start,
-@@ -115,7 +190,7 @@ static u8 * hostapd_eid_country_add(u8 *pos, u8 *end, int chan_spacing,
- 
- 	return pos;
- }
--
-+#endif
- 
- static u8 * hostapd_eid_country(struct hostapd_data *hapd, u8 *eid,
- 				int max_len)
-@@ -124,7 +199,11 @@ static u8 * hostapd_eid_country(struct hostapd_data *hapd, u8 *eid,
- 	u8 *end = eid + max_len;
- 	int i;
- 	struct hostapd_hw_modes *mode;
-+#ifndef CONFIG_COUNTRY_DBG
- 	struct hostapd_channel_data *start, *prev;
-+#else
-+	const struct triplet_band *triplet_band = &triplet_03;
-+#endif
- 	int chan_spacing = 1;
- 
- 	if (!hapd->iconf->ieee80211d || max_len < 6 ||
-@@ -140,6 +219,18 @@ static u8 * hostapd_eid_country(struct hostapd_data *hapd, u8 *eid,
- 	if (mode->mode == HOSTAPD_MODE_IEEE80211A)
- 		chan_spacing = 4;
- 
-+#if CONFIG_COUNTRY_DBG
-+	for (i=0; i < triplet_band->num_triplets; i++) {
-+		const struct triplet_chan *triplet = &triplet_band->triplets[i];
-+
-+		if (end - pos < 3)
-+			break;
-+
-+		*pos++ = triplet->first_channel;
-+		*pos++ = triplet->num_channels;
-+		*pos++ = triplet->max_power;
-+	}
-+#else
- 	start = prev = NULL;
- 	for (i = 0; i < mode->num_channels; i++) {
- 		struct hostapd_channel_data *chan = &mode->channels[i];
-@@ -166,11 +257,12 @@ static u8 * hostapd_eid_country(struct hostapd_data *hapd, u8 *eid,
- 		pos = hostapd_eid_country_add(pos, end, chan_spacing,
- 					      start, prev);
- 	}
-+#endif
- 
- 	if ((pos - eid) & 1) {
- 		if (end - pos < 1)
- 			return eid;
--		*pos++ = 0; /* pad for 16-bit alignment */
-+		*pos++ = 0; /* pad for divisibility by 2 */
- 	}
- 
- 	eid[1] = (pos - eid) - 2;
+  	//TODO N PHY MAC PHY Clock Set with argument 1
+  	//TODO Disable PA Override
+  	b43_nphy_force_rf_sequence(dev, B43_RFSEQ_RX2TX);
 -- 
-1.6.3.3
+1.6.4.2
 
