@@ -1,138 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 27.mail-out.ovh.net ([91.121.30.210]:50038 "HELO
-	27.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751342Ab0AAJH7 (ORCPT
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:60192 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751484Ab0AIImZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2010 04:07:59 -0500
-Message-ID: <4B3DBB6B.4010107@free.fr>
-Date: Fri, 01 Jan 2010 10:07:55 +0100
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+	Sat, 9 Jan 2010 03:42:25 -0500
+Received: by ewy6 with SMTP id 6so19724043ewy.29
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Jan 2010 00:42:23 -0800 (PST)
+Date: Sat, 9 Jan 2010 11:41:48 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: [patch] iwlwifi: silence buffer overflow warning
+Message-ID: <20100109084147.GB7840@bicker>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Issue connecting to an HT40 AP that sends a Country IE
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Smatch (and presumably other static checkers) complain that MAX_TID_COUNT is 
+past the end of the array.  In the resulting discussion, Zhu Yi pointed out
+that this value is not used in real life and the assignment was only there to
+silence a gcc warning.
 
-I'd like to report an issue I have when trying to connect a laptop
-running ath9k to a 802.11n AP in HT40 mode. What happens is that the
-laptop cannot associate if the AP is running in HT40 mode. Association
-is OK if the AP is running in HT20 mode. Here is an excerpt from syslog :
+If there were a bug in the surrounding code and the value were used, the 
+WARN_ON(!qc) would print a warning before the crash.
 
-[  577.166241] wlan0: associate with AP 00:15:6d:e8:88:84 (try 1)
-[  577.167448] wlan0: RX AssocResp from 00:15:6d:e8:88:84 (capab=0x411 
-status=10 aid=257)
-[  577.167451] wlan0: AP denied association (code=10)
-[  577.167460] wlan0: deauthenticating from 00:15:6d:e8:88:84 by local
-choice (reason=3)
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-What's wrong is that the Associate Request (built by
-ieee80211_send_assoc) does not set the bit in HT Capabilities IE saying
-: "The station supports both HT20 & HT40".
-
-Looking into the code, it appears that both (flags &
-IEEE80211_CHAN_NO_HT40PLUS) and (flags & IEEE80211_CHAN_NO_HT40MINUS)
-are true, thus disabling the IEEE80211_HT_CAP_SUP_WIDTH_20_40 which is
-the culprit mentioned above.
-
-Digging further down, both flags are set in reg.c by :
-    if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(40))
-        bw_flags = IEEE80211_CHAN_NO_HT40;
-
-Indeed, at this stage, max_bandwidth_khz is 20 MHz only... Looking up in
-my syslog, I found this :
-
-[  506.036923] cfg80211: Received country IE:
-[  506.036927] cfg80211: Regulatory domain: FR
-[  506.036928]     (start_freq - end_freq @ bandwidth),
-(max_antenna_gain, max_eirp)
-[  506.036931]     (5170000 KHz - 5190000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-[  506.036933]     (5190000 KHz - 5210000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-[  506.036936]     (5210000 KHz - 5230000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-[  506.036938]     (5230000 KHz - 5250000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-[  506.036940]     (5250000 KHz - 5270000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-[  506.036943]     (5270000 KHz - 5290000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-[  506.036945]     (5290000 KHz - 5310000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-[  506.036948]     (5310000 KHz - 5330000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-[  506.036950]     (5490000 KHz - 5510000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-[  506.036952]     (5510000 KHz - 5530000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-[  506.036955]     (5530000 KHz - 5550000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-[  506.036957]     (5550000 KHz - 5570000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-[  506.036959]     (5570000 KHz - 5590000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-[  506.036962]     (5590000 KHz - 5610000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-[  506.036964]     (5610000 KHz - 5630000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-[  506.036966]     (5630000 KHz - 5650000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-[  506.036969]     (5650000 KHz - 5670000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-[  506.036971]     (5670000 KHz - 5690000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-[  506.036974]     (5690000 KHz - 5710000 KHz @ 40000 KHz), (10000 mBi,
-10000 mBm)
-
-[  506.036975] cfg80211: CRDA thinks this should applied:
-[  506.036976] cfg80211: Regulatory domain: FR
-[  506.036978]     (start_freq - end_freq @ bandwidth),
-(max_antenna_gain, max_eirp)
-[  506.036980]     (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-[  506.036982]     (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-[  506.036984]     (5250000 KHz - 5330000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-[  506.036987]     (5490000 KHz - 5710000 KHz @ 40000 KHz), (N/A, 2700 mBm)
-
-[  506.036988] cfg80211: We intersect both of these and get:
-[  506.037005] cfg80211: Regulatory domain: 98
-[  506.037006]     (start_freq - end_freq @ bandwidth),
-(max_antenna_gain, max_eirp)
-[  506.037008]     (5170000 KHz - 5190000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-[  506.037011]     (5190000 KHz - 5210000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-[  506.037013]     (5210000 KHz - 5230000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-[  506.037015]     (5230000 KHz - 5250000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-[  506.037017]     (5250000 KHz - 5270000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-[  506.037019]     (5270000 KHz - 5290000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-[  506.037021]     (5290000 KHz - 5310000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-[  506.037024]     (5310000 KHz - 5330000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-[  506.037026]     (5490000 KHz - 5510000 KHz @ 20000 KHz), (N/A, 2700 mBm)
-[  506.037028]     (5510000 KHz - 5530000 KHz @ 20000 KHz), (N/A, 2700 mBm)
-[  506.037030]     (5530000 KHz - 5550000 KHz @ 20000 KHz), (N/A, 2700 mBm)
-[  506.037032]     (5550000 KHz - 5570000 KHz @ 20000 KHz), (N/A, 2700 mBm)
-[  506.037035]     (5570000 KHz - 5590000 KHz @ 20000 KHz), (N/A, 2700 mBm)
-[  506.037037]     (5590000 KHz - 5610000 KHz @ 20000 KHz), (N/A, 2700 mBm)
-[  506.037039]     (5610000 KHz - 5630000 KHz @ 20000 KHz), (N/A, 2700 mBm)
-[  506.037041]     (5630000 KHz - 5650000 KHz @ 20000 KHz), (N/A, 2700 mBm)
-[  506.037043]     (5650000 KHz - 5670000 KHz @ 20000 KHz), (N/A, 2700 mBm)
-[  506.037045]     (5670000 KHz - 5690000 KHz @ 20000 KHz), (N/A, 2700 mBm)
-[  506.037047]     (5690000 KHz - 5710000 KHz @ 20000 KHz), (N/A, 2700 mBm)
-
-So, at this stage, max_bandwidth_khz is indeed 20 MHz!
-
-What's the real meaning of max_bandwidth_khz? If this is just the
-difference between the upper/lower frequency of each channels, then it's
-useless. If it is a capability features saying 40 MHz channel wide are
-allowed, then it should be left to 40 MHz even if upper/lower
-frequencies are only 20 MHz apart (since the ability to use 40 MHz
-depends on the list of all frequencies, not a single frequency).
-
-I did a quick patch commenting the lines setting IEEE80211_CHAN_NO_HT40
-and it works. But it'd like to know how it is expected to work in this case.
-
-Regards,
-Benoit
-PS: in Country IE, TxPower field is not parsed as well ...
-
+--- orig/drivers/net/wireless/iwlwifi/iwl-4965.c	2010-01-03 11:02:42.000000000 +0300
++++ devel/drivers/net/wireless/iwlwifi/iwl-4965.c	2010-01-06 00:27:00.000000000 +0300
+@@ -1961,7 +1961,7 @@ static void iwl4965_rx_reply_tx(struct i
+ 	struct ieee80211_tx_info *info;
+ 	struct iwl4965_tx_resp *tx_resp = (void *)&pkt->u.raw[0];
+ 	u32  status = le32_to_cpu(tx_resp->u.status);
+-	int tid = MAX_TID_COUNT;
++	int uninitialized_var(tid);
+ 	int sta_id;
+ 	int freed;
+ 	u8 *qc = NULL;
