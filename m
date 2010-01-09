@@ -1,69 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:38908 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755891Ab0AFQHP (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34735 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751018Ab0AIIqJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 11:07:15 -0500
-Received: by ewy19 with SMTP id 19so9754602ewy.21
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 08:07:14 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: fix a few work bugs
-References: <1262788258.9268.113.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 06 Jan 2010 18:07:11 +0200
-In-Reply-To: <1262788258.9268.113.camel@johannes.local> (Johannes Berg's message of "Wed\, 06 Jan 2010 15\:30\:58 +0100")
-Message-ID: <87aawrusi8.fsf@purkki.valot.fi>
+	Sat, 9 Jan 2010 03:46:09 -0500
+Date: Sat, 9 Jan 2010 10:45:21 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/4] cfg80211: fix 2 GHz subband calculation for
+ country IEs
+Message-ID: <20100109084521.GA6190@jm.kir.nu>
+References: <1262903097-2129-1-git-send-email-lrodriguez@atheros.com>
+ <1262903097-2129-3-git-send-email-lrodriguez@atheros.com>
+ <20100108131451.GA18758@jm.kir.nu>
+ <43e72e891001081341j1c24b7c4i6f5bb636d8ccc81b@mail.gmail.com>
+ <20100108232009.GA4840@jm.kir.nu>
+ <43e72e891001081628s47474cadl5473432411162f0f@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e891001081628s47474cadl5473432411162f0f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Fri, Jan 08, 2010 at 04:28:17PM -0800, Luis R. Rodriguez wrote:
 
-> Kalle and Lennert reported problems with the new work
-> code, and at least Kalle's problem I was able to trace
-> to a missing jiffies initialisation.
->
-> I also ran into a problem where occasionally I couldn't
-> connect, which seems fixed with kicking the work items
-> after scanning.
->
-> Finally, also add some sanity checking code to verify
-> that we're not adding work items while an interface is
-> down -- that case could lead to something similar to
-> what Lennert was seeing.
->
-> There still seems to be a race condition that we're
-> trying to figure out separately.
+> Heh alright, I'll change this to match the rx'd band first but that
+> change is a bit big for stable so we'll have to deal with how we have
+> it now for stable. I'll submit the changes for wireless-testing. Now
+> last question -- although I haven't seen APs send country IEs for two
+> bands in case we do, how do you want to treat those channels?
 
-This seems to help with my problem, it associated quickly:
+What exactly do you mean with sending two bands? By using the Regulatory
+Extension Identifier? I didn't think we support it.. In general, I would
+not bother doing anything special until someone can show that such an AP
+exist.
 
-Jan  6 18:05:36 tikku kernel: [  153.527515] wlan0: direct probe
-responded
-Jan  6 18:05:36 tikku kernel: [  153.536061] wlan0: authenticate with
-00:1e:ab:10:e0:c2 (try 1)
-Jan  6 18:05:36 tikku kernel: [  153.537910] wlan0: authenticated
-Jan  6 18:05:36 tikku kernel: [  153.537924] phy0: device now idle
-Jan  6 18:05:36 tikku kernel: [  153.538563] wlan0: associate with
-00:1e:ab:10:e0:c2 (try 1)
-Jan  6 18:05:36 tikku kernel: [  153.538578] phy0: device no longer
-idle - working
-Jan  6 18:05:36 tikku kernel: [  153.578808] wlan0: RX AssocResp from
-00:1e:ab:10:e0:c2 (capab=0x11 status=0 aid=1)
-Jan  6 18:05:36 tikku kernel: [  153.578814] wlan0: associated
+> Does hostapd send just one band or two bands on the country IE?
 
-
-Because I'm currently travelling, I have tested this only once. Will
-test more when I get back home.
-
-Thanks for the patch.
-
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
-Tested-by: Kalle Valo <kalle.valo@iki.fi>
+Only one; it does not support Regulatory Extension Identifier and I
+don't really see any point in advertising more than the current band.
 
 -- 
-Kalle Valo
+Jouni Malinen                                            PGP id EFC895FA
