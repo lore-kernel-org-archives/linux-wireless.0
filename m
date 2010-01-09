@@ -1,66 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42470 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754620Ab0AQUOl (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:2747 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754382Ab0AIDmN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2010 15:14:41 -0500
-Subject: Re: [PATCH 1/2] cfg80211: add a callback for querying the
- operating frequency and export it through nl80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <4B536F21.1090509@openwrt.org>
-References: <4B536B05.6070301@openwrt.org>
-	 <1263758236.28067.11.camel@johannes.local>
-	 <1263758423.28067.12.camel@johannes.local>  <4B536F21.1090509@openwrt.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-+eAMdHrraPVFUmh87i4Y"
-Date: Sun, 17 Jan 2010 21:14:38 +0100
-Message-ID: <1263759278.28067.13.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 8 Jan 2010 22:42:13 -0500
+Date: Fri, 8 Jan 2010 22:41:32 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Fabio Rossi <rossi.f@inwind.it>
+Cc: linux-wireless@vger.kernel.org,
+	Arnd Hannemann <hannemann@nets.rwth-aachen.de>,
+	ath5k-devel@lists.ath5k.org
+Subject: Re: ath5k: 2.6.32-rc6 "no further txbuf available, dropping packet"
+Message-ID: <20100109034132.GA18279@hash.localnet>
+References: <4AF99EF9.4040408@nets.rwth-aachen.de> <b6c5339f0911102013k20d927d3mc021d25bf6703303@mail.gmail.com> <201001082334.16066.rossi.f@inwind.it>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201001082334.16066.rossi.f@inwind.it>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Jan 08, 2010 at 11:34:16PM +0100, Fabio Rossi wrote:
+> Hi Bob,
+> I have tried your patch as I get many errors as in subject when I transfer 
+> huge files (I'm using as a test a 1GB file). With the patch I have the same 
+> errors.
+> 
+> I'm using wireless-testing.git (v2.6.33-rc2-47131-gc72a18c) in managed mode 
+> (no AP).
 
---=-+eAMdHrraPVFUmh87i4Y
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Ok, well the patch only will affect AP mode -- it addresses a bug where
+multicast AP frames are queued but not always processed.  I wonder if your
+workload is just filling up the queues and then the queues are awakened
+prematurely.  There's a check in ath5k_tx_processq to only re-enable the
+queue when there are 40 tx buffers left, but there are a few other paths
+that re-enable the queues -- also accounting on txbuf_len could theoretically
+get broken.
 
-On Sun, 2010-01-17 at 21:12 +0100, Felix Fietkau wrote:
+Maybe a printk in ath5k_tx_queue of sc->txbuf_len caN show how many buffers
+are typically available when entering?
 
-> > If you have an IBSS or managed mode then you know from the BSS info
-> what
-> > channel you should be on... APs are completely userspace controlled
-> > anyway, so are monitors.
-> I was thinking about scanning, but then again, that's not handled by
-> my patch series either. I'll simplify it and make it per-netdev.
-
-But scanning isn't really interesting, it might be firmware controlled
-or whatever. What do you need the whole thing for? Why export the
-channel at all?
-
-johannes
-
---=-+eAMdHrraPVFUmh87i4Y
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLU2+nAAoJEODzc/N7+QmaK3UP/0/lZvNKC+AasJhhvsUJlb1L
-K82LUaFm15OnH7kjIeZcUuLMruGgMSQVn22HwdsXOH+bDY/sYsBo+jalBf4fv1bt
-b0XR9RJHWDY4Ng4vZHmKHR/9Ic8CmzNywSqyg++rq8KHRhLkwl8hqQN4AhJ3Er0F
-l2Aw1D3HCt+1D8P4lFtNacOlcBy9ZvLhLQjJTNeU0g6GMoHRO4DCbDRsOJLSGmjw
-KjiLnmC5Hc+02NYbBJ27BCL7sTkquRfb+Kp6NKQ/KnMVrjf6xHeaBCrLMNxvjZ5O
-9qCJme5OO5AQDejcgHcNbMcEijgyG2rExYQVJdbXL4Q/PXUlmzP3I3YXIlyNLhVD
-+ad5HVOknksbamAnFn8zFnS5LXO1Pv35O2McK/NBQwAJktKVlVa0yke9bllOmqap
-7+Dswf0lI3wy8T+xXu8Ci7kqcGhdEcej7TX/ba6oEwgpDuVOEnzZWbwNEqGt8XkG
-0iFQXX0rAPEih21ArT/8cSfYK+gfgBDeMD5amL0sDxFpr20OZDUvi0knT9vha58R
-zceTBAmym/Jc4VKYUKCLmzYvMPTRjo5VWd8Gp+XI7PwQsKogEiBaZBHtDF58ZNzP
-wg6GOWULZLbeIJnZkA/qnRgyfd8dz47NjBerOpajNZdwksp5qjz+bYl8Bn64mDx5
-zgcjwSYNqqs8Pv9FdAbE
-=afO+
------END PGP SIGNATURE-----
-
---=-+eAMdHrraPVFUmh87i4Y--
+-- 
+Bob Copeland %% www.bobcopeland.com
 
