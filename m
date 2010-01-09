@@ -1,182 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:35709 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754558Ab0AQXVc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2010 18:21:32 -0500
-Received: by mail-fx0-f225.google.com with SMTP id 25so627467fxm.21
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jan 2010 15:21:32 -0800 (PST)
-Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 18 Jan 2010 00:21:35 +0100
-Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Subject: [PATCH 4/5 V2] b43: N-PHY: implement and add multi-dimensional table
- reading
+Received: from mail.tpi.com ([70.99.223.143]:3178 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753558Ab0AIBT2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jan 2010 20:19:28 -0500
+Message-ID: <4B47D98F.1000703@canonical.com>
+Date: Fri, 08 Jan 2010 19:19:11 -0600
+From: Tim Gardner <tim.gardner@canonical.com>
+Reply-To: tim.gardner@canonical.com
 MIME-Version: 1.0
-From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <op.u6o9t9t19lhzdc@linux-g0th.site>
+To: Michael Buesch <mb@bu3sch.de>
+CC: Martin Pitt <martin.pitt@ubuntu.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	stefano.brivio@polimi.it, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] b43: Declare all possible firmware files.
+References: <20100107183517.A322FF88D8@sepang.rtg.net> <4B463953.1030806@canonical.com> <20100108173248.GB2546@piware.de> <201001082006.02121.mb@bu3sch.de>
+In-Reply-To: <201001082006.02121.mb@bu3sch.de>
+Content-Type: multipart/mixed;
+ boundary="------------090206060000030507030102"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: updated to apply without offset
----
-  drivers/net/wireless/b43/phy_n.c       |   30 ++++++++++-----------------
-  drivers/net/wireless/b43/tables_nphy.c |   35 ++++++++++++++++++++++++++++++++
-  drivers/net/wireless/b43/tables_nphy.h |    2 +
-  3 files changed, 48 insertions(+), 19 deletions(-)
+This is a multi-part message in MIME format.
+--------------090206060000030507030102
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 6398656..2356d84 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -829,8 +829,7 @@ static void b43_nphy_tx_pwr_ctrl_coef_setup(struct b43_wldev *dev)
-  	if (nphy->hang_avoid)
-  		b43_nphy_stay_in_carrier_search(dev, true);
+Michael Buesch wrote:
+> On Friday 08 January 2010 18:32:48 Martin Pitt wrote:
+>> Tim Gardner [2010-01-07 12:43 -0700]:
+>>> AFAIK Jockey only needs to be able to tell if _any_ of the firmware
+>>> files have been installed and could therefore make an install decision
+>>> based on just one firmware file name.
+>> Correct.
+>>
+>>> Martin - if thats the case, then we need only list one firmware file in
+>>> the modinfo, correct?
+>> Right. If that's not practical to fix on the kernel side for some
+>> reason, we could also put in a quirk into the Broadcom handler in
+>> update-notifier. (Right now it just listens for FIRMWARE subsystem
+>> uevents and checksc if the value of it exists as a file).
+>>
+>> This was originally introduced for the DVB-T driver firmware packages,
+>> but if we could make it work for b43 as well, this would be nice.
+> 
+> I think it would be OK to list all the ucodeX.fw files, but listing all
+> these initvals files seems overkill to me.
+> If you still need all initval filenames, you could theoretically ask b43-fwcutter.
+> That would just need a new fwcutter commandline option, as far as I can see.
+> 
+> As you can see, we currently only export the b43 specific firmware ID in MODULE_FIRMWARE().
+> That is a unique identifier for a whole set of firmware files. b43-fwcutter also
+> knows about that firmware ID.
+> 
+> (While we're at it, I think the FW-id that b43 announces should be updated. Because
+> I think the firmware with the currently announced ID does not support all LP devices.)
+> 
 
--	/* TODO: Read an N PHY Table with ID 15, length 7, offset 80,
--		width 16, and data pointer buffer */
-+	b43_ntab_read_bulk(dev, B43_NTAB16(15, 80), 7, buffer);
+How about the attached version that only includes the ucode files ?
 
-  	for (i = 0; i < 2; i++) {
-  		tmp = ((buffer[i * 2] & 0x3FF) << 10) |
-@@ -1507,8 +1506,7 @@ static struct nphy_txgains b43_nphy_get_tx_gains(struct b43_wldev *dev)
+rtg
 
-  		if (nphy->hang_avoid)
-  			b43_nphy_stay_in_carrier_search(dev, true);
--		/* TODO: Read an N PHY Table with ID 7, length 2,
--			offset 0x110, width 16, and curr_gain */
-+		b43_ntab_read_bulk(dev, B43_NTAB16(7, 0x110), 2, curr_gain);
-  		if (nphy->hang_avoid)
-  			b43_nphy_stay_in_carrier_search(dev, false);
-
-@@ -1768,8 +1766,7 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
-  		nphy->hang_avoid = 0;
-  	}
-
--	/* TODO: Read an N PHY Table with ID 7, length 2, offset 0x110,
--		width 16, and data pointer save */
-+	b43_ntab_read_bulk(dev, B43_NTAB16(7, 0x110), 2, save);
-
-  	for (i = 0; i < 2; i++) {
-  		b43_nphy_iq_cal_gain_params(dev, i, target, &params[i]);
-@@ -1890,9 +1887,8 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
-  				udelay(10);
-  			}
-
--			/* TODO: Read an N PHY Table with ID 15,
--				length table_length, offset 96, width 16,
--				and data pointer buffer */
-+			b43_ntab_read_bulk(dev, B43_NTAB16(15, 96), length,
-+						buffer);
-  			b43_ntab_write_bulk(dev, B43_NTAB16(15, 64), length,
-  						buffer);
-
-@@ -1907,8 +1903,7 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
-
-  		if (!mphase || nphy->mphase_cal_phase_id == last) {
-  			b43_ntab_write_bulk(dev, B43_NTAB16(15, 96), 4, buffer);
--			/* TODO: Read an N PHY Table with ID 15, length 4,
--				offset 80, width 16, and data pointer buffer */
-+			b43_ntab_read_bulk(dev, B43_NTAB16(15, 80), 4, buffer);
-  			if (dev->phy.rev < 3) {
-  				buffer[0] = 0;
-  				buffer[1] = 0;
-@@ -1926,9 +1921,8 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
-  			length = 11;
-  			if (dev->phy.rev < 3)
-  				length -= 2;
--			/* TODO: Read an N PHY Table with ID 15, length length,
--				offset 96, width 16, and data pointer
--				nphy->txiqlocal_bestc */
-+			b43_ntab_read_bulk(dev, B43_NTAB16(15, 96), length,
-+						nphy->txiqlocal_bestc);
-  			nphy->txiqlocal_coeffsvalid = true;
-  			/* TODO: Set nphy->txiqlocal_chanspec to
-  				the current channel */
-@@ -1936,9 +1930,8 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
-  			length = 11;
-  			if (dev->phy.rev < 3)
-  				length -= 2;
--			/* TODO: Read an N PHY Table with ID 5, length length,
--				offset 96, width 16, and data pointer
--				nphy->mphase_txcal_bestcoeffs */
-+			b43_ntab_read_bulk(dev, B43_NTAB16(15, 96), length,
-+						nphy->mphase_txcal_bestcoeffs);
-  		}
-
-  		b43_nphy_stop_playback(dev);
-@@ -1990,8 +1983,7 @@ static int b43_nphy_rev2_cal_rx_iq(struct b43_wldev *dev,
-
-  	if (dev->phy.rev < 2)
-  		;/* TODO: Call N PHY Reapply TX Cal Coeffs */
--	/* TODO: Read an N PHY Table with ID 7, length 2, offset 0x110,
--		width 16, and data gain_save */
-+	b43_ntab_read_bulk(dev, B43_NTAB16(7, 0x110), 2, gain_save);
-  	for (i = 0; i < 2; i++) {
-  		b43_nphy_iq_cal_gain_params(dev, i, target, &cal_params[i]);
-  		cal_gain[i] = cal_params[i].cal_gain;
-diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
-index b8aed45..b8c9fc6 100644
---- a/drivers/net/wireless/b43/tables_nphy.c
-+++ b/drivers/net/wireless/b43/tables_nphy.c
-@@ -2950,6 +2950,41 @@ u32 b43_ntab_read(struct b43_wldev *dev, u32 offset)
-  	return value;
-  }
-
-+void b43_ntab_read_bulk(struct b43_wldev *dev, u32 offset,
-+			 unsigned int nr_elements, void *_data)
-+{
-+	u32 type;
-+	u8 *data = _data;
-+	unsigned int i;
-+
-+	type = offset & B43_NTAB_TYPEMASK;
-+	offset &= ~B43_NTAB_TYPEMASK;
-+	B43_WARN_ON(offset > 0xFFFF);
-+
-+	b43_phy_write(dev, B43_NPHY_TABLE_ADDR, offset);
-+
-+	for (i = 0; i < nr_elements; i++) {
-+		switch (type) {
-+		case B43_NTAB_8BIT:
-+			*data = b43_phy_read(dev, B43_NPHY_TABLE_DATALO) & 0xFF;
-+			data++;
-+			break;
-+		case B43_NTAB_16BIT:
-+			*((u16 *)data) = b43_phy_read(dev, B43_NPHY_TABLE_DATALO);
-+			data += 2;
-+			break;
-+		case B43_NTAB_32BIT:
-+			*((u32 *)data) = b43_phy_read(dev, B43_NPHY_TABLE_DATAHI);
-+			*((u32 *)data) <<= 16;
-+			*((u32 *)data) |= b43_phy_read(dev, B43_NPHY_TABLE_DATALO);
-+			data += 4;
-+			break;
-+		default:
-+			B43_WARN_ON(1);
-+		}
-+	}
-+}
-+
-  void b43_ntab_write(struct b43_wldev *dev, u32 offset, u32 value)
-  {
-  	u32 type;
-diff --git a/drivers/net/wireless/b43/tables_nphy.h b/drivers/net/wireless/b43/tables_nphy.h
-index 64e990a..6bbef89 100644
---- a/drivers/net/wireless/b43/tables_nphy.h
-+++ b/drivers/net/wireless/b43/tables_nphy.h
-@@ -143,6 +143,8 @@ b43_nphy_get_chantabent(struct b43_wldev *dev, u8 channel);
-  #define B43_NTAB_TX_IQLO_CAL_CMDS_FULLCAL_REV3		12
-
-  u32 b43_ntab_read(struct b43_wldev *dev, u32 offset);
-+void b43_ntab_read_bulk(struct b43_wldev *dev, u32 offset,
-+			 unsigned int nr_elements, void *_data);
-  void b43_ntab_write(struct b43_wldev *dev, u32 offset, u32 value);
-  void b43_ntab_write_bulk(struct b43_wldev *dev, u32 offset,
-  			  unsigned int nr_elements, const void *_data);
 -- 
-1.6.4.2
+Tim Gardner tim.gardner@canonical.com
 
+--------------090206060000030507030102
+Content-Type: text/x-patch;
+ name="0001-b43-Declare-at-least-one-real-firmware-file-using-MO.patch"
+Content-Transfer-Encoding: 8bit
+Content-Disposition: inline;
+ filename*0="0001-b43-Declare-at-least-one-real-firmware-file-using-MO.pa";
+ filename*1="tch"
+
+>From dc32dddb47b8b8e2f62c77ab64a681c1f150bf7e Mon Sep 17 00:00:00 2001
+From: Tim Gardner <tim.gardner@canonical.com>
+Date: Thu, 7 Jan 2010 11:10:38 -0700
+Subject: [PATCH] b43: Declare at least one real firmware file using MODULE_FIRMWARE.
+
+BugLink: http://bugs.launchpad.net/bugs/488636
+
+Enhances module information with the names of the firmware files
+that could be used by this driver. This helps tools like Jockey to
+correctly detect and/or install the firmware files relevant to
+this driver.
+
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+---
+ drivers/net/wireless/b43/main.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 4c41cfe..5745075 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -67,7 +67,12 @@ MODULE_AUTHOR("Gábor Stefanik");
+ MODULE_LICENSE("GPL");
+ 
+ MODULE_FIRMWARE(B43_SUPPORTED_FIRMWARE_ID);
+-
++MODULE_FIRMWARE("b43/ucode11.fw");
++MODULE_FIRMWARE("b43/ucode13.fw");
++MODULE_FIRMWARE("b43/ucode14.fw");
++MODULE_FIRMWARE("b43/ucode15.fw");
++MODULE_FIRMWARE("b43/ucode5.fw");
++MODULE_FIRMWARE("b43/ucode9.fw");
+ 
+ static int modparam_bad_frames_preempt;
+ module_param_named(bad_frames_preempt, modparam_bad_frames_preempt, int, 0444);
+-- 
+1.6.3.3
+
+
+--------------090206060000030507030102--
