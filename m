@@ -1,146 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:47957 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932783Ab0AFUzw convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:37494 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752613Ab0AIM7j convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 15:55:52 -0500
-Received: by ewy19 with SMTP id 19so10054623ewy.21
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 12:55:50 -0800 (PST)
+	Sat, 9 Jan 2010 07:59:39 -0500
+Received: by mail-fx0-f225.google.com with SMTP id 25so13340575fxm.21
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Jan 2010 04:59:38 -0800 (PST)
 Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
 To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"John W. Linville" <linville@tuxdriver.com>
+Date: Sat, 09 Jan 2010 14:01:06 +0100
 Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Subject: [PATCH 2/5] b43: N-PHY: add b43_nphy_get_tx_gains (V2)
-References: <op.u54a59c89lhzdc@linux-g0th.site>
- <43e72e891001060926s320bf403ya2edf2601ced5125@mail.gmail.com>
- <b170af451001061018x6ff2404ajbdbb3cb96ceaf7f2@mail.gmail.com>
-Date: Wed, 06 Jan 2010 21:57:12 +0100
+Subject: [PATCH 2/4] b43: N-PHY: add b43_nphy_pa_override
 MIME-Version: 1.0
 From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <op.u54ptmwm9lhzdc@linux-g0th.site>
-In-Reply-To: <b170af451001061018x6ff2404ajbdbb3cb96ceaf7f2@mail.gmail.com>
+Message-ID: <op.u59nr4cg9lhzdc@linux-g0th.site>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-V2: adjust to renamed function, fill index array
 
 Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
-  drivers/net/wireless/b43/phy_n.c |   81 ++++++++++++++++++++++++++++++++++++++
-  drivers/net/wireless/b43/phy_n.h |    1 +
-  2 files changed, 82 insertions(+), 0 deletions(-)
+  drivers/net/wireless/b43/phy_n.c |   40 ++++++++++++++++++++++++++++++++++++-
+  drivers/net/wireless/b43/phy_n.h |    3 ++
+  2 files changed, 41 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 5252c0f..3663386 100644
+index 5cd4b1a..739973e 100644
 --- a/drivers/net/wireless/b43/phy_n.c
 +++ b/drivers/net/wireless/b43/phy_n.c
-@@ -30,6 +30,8 @@
-  #include "tables_nphy.h"
-
-
-+struct nphy_txgains { u16 txgm[2]; u16 pga[2]; u16 pad[2]; u16 ipa[2]; };
-+
-  void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
-  {//TODO
-  }
-@@ -406,6 +408,85 @@ static void b43_nphy_stay_in_carrier_search(struct b43_wldev *dev, bool enable)
-  	}
+@@ -330,6 +330,40 @@ void b43_nphy_bmac_clock_fgc(struct b43_wldev *dev, bool force)
+  	ssb_write32(dev->dev, SSB_TMSLOW, tmslow);
   }
 
-+static struct nphy_txgains b43_nphy_get_tx_gains(struct b43_wldev *dev)
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/PA%20override */
++static void b43_nphy_pa_override(struct b43_wldev *dev, bool enable)
 +{
 +	struct b43_phy_n *nphy = dev->phy.n;
++	enum ieee80211_band band;
++	u16 tmp;
 +
-+	u16 curr_gain[2];
-+	struct nphy_txgains target;
-+	u32 *table = NULL;
-+
-+	if (nphy->txpwrctrl == 0) {
-+		int i;
-+
-+		if (nphy->hang_avoid)
-+			b43_nphy_stay_in_carrier_search(dev, true);
-+		//TODO: Read an N PHY Table with ID 7, length 2, offset 0x110, width 16, and curr_gain
-+		if (nphy->hang_avoid)
-+			b43_nphy_stay_in_carrier_search(dev, false);
-+
-+		for (i = 0; i < 2; ++i) {
-+			if (dev->phy.rev >= 3) {
-+				target.ipa[i] = curr_gain[i] & 0x000F;
-+				target.pad[i] = (curr_gain[i] & 0x00F0) >> 4;
-+				target.pga[i] = (curr_gain[i] & 0x0F00) >> 8;
-+				target.txgm[i] = (curr_gain[i] & 0x7000) >> 12;
-+			} else {
-+				target.ipa[i] = curr_gain[i] & 0x0003;
-+				target.pad[i] = (curr_gain[i] & 0x000C) >> 2;
-+				target.pga[i] = (curr_gain[i] & 0x0070) >> 4;
-+				target.txgm[i] = (curr_gain[i] & 0x0380) >> 7;
-+			}
++	if (!enable) {
++		nphy->rfctrl_intc1_save = b43_phy_read(dev,
++						       B43_NPHY_RFCTL_INTC1);
++		nphy->rfctrl_intc2_save = b43_phy_read(dev,
++						       B43_NPHY_RFCTL_INTC2);
++		band = b43_current_band(dev->wl);
++		if (dev->phy.rev >= 3) {
++			if (band == IEEE80211_BAND_5GHZ)
++				tmp = 0x600;
++			else
++				tmp = 0x480;
++		} else {
++			if (band == IEEE80211_BAND_5GHZ)
++				tmp = 0x180;
++			else
++				tmp = 0x120;
 +		}
++		b43_phy_write(dev, B43_NPHY_RFCTL_INTC1, tmp);
++		b43_phy_write(dev, B43_NPHY_RFCTL_INTC2, tmp);
 +	} else {
-+		int i;
-+		u16 index[2];
-+		index[0] = (b43_phy_read(dev, B43_NPHY_C1_TXPCTL_STAT) &
-+			B43_NPHY_TXPCTL_STAT_BIDX) >>
-+			B43_NPHY_TXPCTL_STAT_BIDX_SHIFT;
-+		index[1] = (b43_phy_read(dev, B43_NPHY_C2_TXPCTL_STAT) &
-+			B43_NPHY_TXPCTL_STAT_BIDX) >>
-+			B43_NPHY_TXPCTL_STAT_BIDX_SHIFT;
-+
-+		for (i = 0; i < 2; ++i) {
-+			if (dev->phy.rev >= 3) {
-+				enum ieee80211_band band =
-+					b43_current_band(dev->wl);
-+
-+				if ((nphy->ipa2g_on && band == IEEE80211_BAND_2GHZ) ||
-+				    (nphy->ipa5g_on && band == IEEE80211_BAND_5GHZ)) {
-+					table = NULL; //FIXME: = output of N PHY Get IPA GainTbl
-+				} else {
-+					if (band == IEEE80211_BAND_5GHZ) {
-+						if (dev->phy.rev == 3)
-+							table = NULL; //FIXME: N PHY TX Power Control - TX Gain Table Rev >= 3 (5 GHz)
-+						else if (dev->phy.rev == 4)
-+							table = NULL; //FIXME: N PHY TX Power Control - TX Gain Table Rev 4 (5 GHz)
-+						else
-+							table = NULL; //FIXME: N PHY TX Power Control - TX Gain Table Rev 5 (5 GHz)
-+					} else {
-+						table = NULL; //FIXME: N PHY TX Power Control - TX Gain Table Rev >= 3 (2.4 GHz)
-+					}
-+				}
-+
-+				target.ipa[i] = (table[index[i]] >> 16) & 0xF;
-+				target.pad[i] = (table[index[i]] >> 20) & 0xF;
-+				target.pga[i] = (table[index[i]] >> 24) & 0xF;
-+				target.txgm[i] = (table[index[i]] >> 28) & 0xF;
-+			} else {
-+				table = NULL; //FIXME: N PHY TX Power Control - TX Gain Table Rev <= 2
-+
-+				target.ipa[i] = (table[index[i]] >> 16) & 0x3;
-+				target.pad[i] = (table[index[i]] >> 18) & 0x3;
-+				target.pga[i] = (table[index[i]] >> 20) & 0x7;
-+				target.txgm[i] = (table[index[i]] >> 23) & 0x7;
-+			}
-+		}
++		b43_phy_write(dev, B43_NPHY_RFCTL_INTC1,
++				nphy->rfctrl_intc1_save);
++		b43_phy_write(dev, B43_NPHY_RFCTL_INTC2,
++				nphy->rfctrl_intc2_save);
 +	}
-+
-+	return target;
 +}
 +
-  enum b43_nphy_rf_sequence {
-  	B43_RFSEQ_RX2TX,
-  	B43_RFSEQ_TX2RX,
+  /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/CCA */
+  static void b43_nphy_reset_cca(struct b43_wldev *dev)
+  {
+@@ -662,10 +696,12 @@ int b43_phy_initn(struct b43_wldev *dev)
+  	b43_nphy_bmac_clock_fgc(dev, 0);
+
+  	//TODO N PHY MAC PHY Clock Set with argument 1
+-	//TODO Disable PA Override
++
++	b43_nphy_pa_override(dev, false);
+  	b43_nphy_force_rf_sequence(dev, B43_RFSEQ_RX2TX);
+  	b43_nphy_force_rf_sequence(dev, B43_RFSEQ_RESET2RX);
+-	//TODO Turn on PA override
++	b43_nphy_pa_override(dev, true);
++
+  	//TODO N PHY Classifier with arguments 0 and 0
+  	//TODO N PHY Det Clip with 0 and the clip array as arguments
+  	tx_pwr_state = nphy->txpwrctrl;
 diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
-index 6ab07fc..e63c371 100644
+index f90e905..6bb9476 100644
 --- a/drivers/net/wireless/b43/phy_n.h
 +++ b/drivers/net/wireless/b43/phy_n.h
-@@ -930,6 +930,7 @@ struct b43_phy_n {
-  	u8 phyrxchain;
-  	u8 mphase_cal_phase_id;
-  	u32 deaf_count;
-+	bool hang_avoid;
+@@ -936,6 +936,9 @@ struct b43_phy_n {
+  	bool hang_avoid;
   	bool mute;
 
++	u16 rfctrl_intc1_save;
++	u16 rfctrl_intc2_save;
++
   	u16 classifier_state;
+  	u16 clip_state[2];
+
 -- 
 1.6.4.2
 
