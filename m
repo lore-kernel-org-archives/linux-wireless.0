@@ -1,32 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 30.mail-out.ovh.net ([213.186.62.213]:42075 "HELO
-	30.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753846Ab0ARVvP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jan 2010 16:51:15 -0500
-Message-ID: <4B54D7CC.4080404@free.fr>
-Date: Mon, 18 Jan 2010 22:51:08 +0100
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
-MIME-Version: 1.0
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: "iwconfig wlan0 rate auto" fails on latest wireless-testing with
- ath9k
-References: <860907.56395.qm@web51407.mail.re2.yahoo.com>
-In-Reply-To: <860907.56395.qm@web51407.mail.re2.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail.perches.com ([173.55.12.10]:1024 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751018Ab0AIGdj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jan 2010 01:33:39 -0500
+Subject: [PATCH] net/mac80211/mlme.c: Remove unnecessary semicolons
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 08 Jan 2010 22:33:38 -0800
+Message-ID: <1263018818.20926.6.camel@Joe-Laptop.home>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joerg Pommnitz a écrit :
-> Can somebody confirm this problem?
->
->  -- 
-> Regards 
-> Joerg 
->
->   
-I confirm! :-)
+Signed-off-by: Joe Perches <joe@perches.com>
 
-Regards,
-Benoit
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 72920ee..d0cc701 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1774,7 +1774,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ 	if (!wk)
+ 		return -ENOMEM;
+ 
+-	memcpy(wk->filter_ta, req->bss->bssid, ETH_ALEN);;
++	memcpy(wk->filter_ta, req->bss->bssid, ETH_ALEN);
+ 
+ 	if (req->ie && req->ie_len) {
+ 		memcpy(wk->ie, req->ie, req->ie_len);
+
+
