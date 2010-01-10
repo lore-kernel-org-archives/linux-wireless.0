@@ -1,51 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.211.176]:35277 "EHLO
-	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755625Ab0AFW7Z (ORCPT
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:39669 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753963Ab0AJWLx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 17:59:25 -0500
-Received: by ywh6 with SMTP id 6so17923699ywh.4
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 14:59:24 -0800 (PST)
-Message-ID: <4B4515CA.7050902@lwfinger.net>
-Date: Wed, 06 Jan 2010 16:59:22 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 10 Jan 2010 17:11:53 -0500
+Received: by mail-ew0-f214.google.com with SMTP id 6so21225297ewy.29
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Jan 2010 14:11:50 -0800 (PST)
+Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Sun, 10 Jan 2010 23:13:20 +0100
+Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Subject: [PATCH 2/6] b43: N-PHY: add RSSI functions: poll and set 2055 vcm
 MIME-Version: 1.0
-To: =?ISO-8859-2?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH 1/5] b43: N-PHY: implement b43_nphy_stay_in_carrier_search
- 	and it's calls (V2)
-References: <op.u54a5ufy9lhzdc@linux-g0th.site> <201001061650.52062.mb@bu3sch.de> 	<b170af451001061211y51b3ca6do11fb24fbb1193c51@mail.gmail.com> 	<op.u54ppc2h9lhzdc@linux-g0th.site> <69e28c911001061435v4b840588p3ead478672ba311@mail.gmail.com> 	<b170af451001061445k56872cd1hbae81a59e421da73@mail.gmail.com> <69e28c911001061449v3f58ce1vc4bfefcdbaf81fa2@mail.gmail.com>
-In-Reply-To: <69e28c911001061449v3f58ce1vc4bfefcdbaf81fa2@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-2
+From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <op.u6b70ig59lhzdc@linux-g0th.site>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/06/2010 04:49 PM, G·bor Stefanik wrote:
-> 2010/1/6 Rafa≥ Mi≥ecki <zajec5@gmail.com>:
->> W dniu 6 stycznia 2010 23:35 uøytkownik G·bor Stefanik
->> <netrolller.3d@gmail.com> napisa≥:
->>> 2010/1/6 Rafa≥ Mi≥ecki <zajec5@gmail.com>:
->>>> V2: fix typo in deaf_count counting, improve b43_mac_[sr] calls,
->>>>    rename function. Thanks Michael!
->>>>
->>>> Signed-off-by: Rafa≥ Mi≥ecki <zajec5@gmail.com>
->>>> ---
->>>>  drivers/net/wireless/b43/phy_n.c |   58
->>>> ++++++++++++++++++++++++++++++++++++++
->>>>  drivers/net/wireless/b43/phy_n.h |    3 ++
->>>>  2 files changed, 61 insertions(+), 0 deletions(-)
->>>>
->>>> <snip>
->>>
->>> Typo in title (it's vs. its)
->>
->> My gramma is far from perfect, thanks.
-> 
-> I've yet to see a perfect grandmother... :-)
 
-My wife thinks she is perfect!
+Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
+---
+  drivers/net/wireless/b43/phy_n.c |   96 ++++++++++++++++++++++++++++++++++++++
+  1 files changed, 96 insertions(+), 0 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index a44fca1..d7e408b 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -711,6 +711,102 @@ static void b43_nphy_rssi_select(struct b43_wldev *dev, u8 code, u8 type)
+  	}
+  }
+
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/SetRssi2055Vcm */
++static void b43_nphy_set_rssi_2055_vcm(struct b43_wldev *dev, u8 type, u8 *buf)
++{
++	int i;
++	for (i = 0; i < 2; i++) {
++		if (type == 2) {
++			if (i == 0) {
++				b43_radio_maskset(dev, B2055_C1_B0NB_RSSIVCM,
++						  0xFC, buf[0]);
++				b43_radio_maskset(dev, B2055_C1_RX_BB_RSSICTL5,
++						  0xFC, buf[1]);
++			} else {
++				b43_radio_maskset(dev, B2055_C2_B0NB_RSSIVCM,
++						  0xFC, buf[2 * i]);
++				b43_radio_maskset(dev, B2055_C2_RX_BB_RSSICTL5,
++						  0xFC, buf[2 * i + 1]);
++			}
++		} else {
++			if (i == 0)
++				b43_radio_maskset(dev, B2055_C1_RX_BB_RSSICTL5,
++						  0xF3, buf[0] << 2);
++			else
++				b43_radio_maskset(dev, B2055_C2_RX_BB_RSSICTL5,
++						  0xF3, buf[2 * i + 1] << 2);
++		}
++	}
++}
++
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/PollRssi */
++static int b43_nphy_poll_rssi(struct b43_wldev *dev, u8 type, s32 *buf,
++				u8 nsamp)
++{
++	int i;
++	int out;
++	u16 save_regs_phy[9];
++	u16 s[2];
++
++	if (dev->phy.rev >= 3) {
++		save_regs_phy[0] = b43_phy_read(dev,
++						B43_NPHY_RFCTL_LUT_TRSW_UP1);
++		save_regs_phy[1] = b43_phy_read(dev,
++						B43_NPHY_RFCTL_LUT_TRSW_UP2);
++		save_regs_phy[2] = b43_phy_read(dev, B43_NPHY_AFECTL_C1);
++		save_regs_phy[3] = b43_phy_read(dev, B43_NPHY_AFECTL_C2);
++		save_regs_phy[4] = b43_phy_read(dev, B43_NPHY_AFECTL_OVER1);
++		save_regs_phy[5] = b43_phy_read(dev, B43_NPHY_AFECTL_OVER);
++		save_regs_phy[6] = b43_phy_read(dev, B43_NPHY_TXF_40CO_B1S0);
++		save_regs_phy[7] = b43_phy_read(dev, B43_NPHY_TXF_40CO_B32S1);
++	}
++
++	b43_nphy_rssi_select(dev, 5, type);
++
++	if (dev->phy.rev < 2) {
++		save_regs_phy[8] = b43_phy_read(dev, B43_NPHY_GPIO_SEL);
++		b43_phy_write(dev, B43_NPHY_GPIO_SEL, 5);
++	}
++
++	for (i = 0; i < 4; i++)
++		buf[i] = 0;
++
++	for (i = 0; i < nsamp; i++) {
++		if (dev->phy.rev < 2) {
++			s[0] = b43_phy_read(dev, B43_NPHY_GPIO_LOOUT);
++			s[1] = b43_phy_read(dev, B43_NPHY_GPIO_HIOUT);
++		} else {
++			s[0] = b43_phy_read(dev, B43_NPHY_RSSI1);
++			s[1] = b43_phy_read(dev, B43_NPHY_RSSI2);
++		}
++
++		buf[0] += (s8)(((s[0] & 0x3F) << 2) >> 2);
++		buf[1] += (s8)((((s[0] >> 8) & 0x3F) << 2) >> 2);
++		buf[2] += (s8)(((s[1] & 0x3F) << 2) >> 2);
++		buf[3] += (s8)((((s[1] >> 8) & 0x3F) << 2) >> 2);
++	}
++	out = (buf[0] & 0xFF) << 24 | (buf[1] & 0xFF) << 16 |
++		(buf[2] & 0xFF) << 8 | (buf[3] & 0xFF);
++
++	if (dev->phy.rev < 2)
++		b43_phy_write(dev, B43_NPHY_GPIO_SEL, save_regs_phy[8]);
++
++	if (dev->phy.rev >= 3) {
++		b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_UP1,
++				save_regs_phy[0]);
++		b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_UP2,
++				save_regs_phy[1]);
++		b43_phy_write(dev, B43_NPHY_AFECTL_C1, save_regs_phy[2]);
++		b43_phy_write(dev, B43_NPHY_AFECTL_C2, save_regs_phy[3]);
++		b43_phy_write(dev, B43_NPHY_AFECTL_OVER1, save_regs_phy[4]);
++		b43_phy_write(dev, B43_NPHY_AFECTL_OVER, save_regs_phy[5]);
++		b43_phy_write(dev, B43_NPHY_TXF_40CO_B1S0, save_regs_phy[6]);
++		b43_phy_write(dev, B43_NPHY_TXF_40CO_B32S1, save_regs_phy[7]);
++	}
++
++	return out;
++}
++
+  /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/RSSICal */
+  static void b43_nphy_rev2_rssi_cal(struct b43_wldev *dev, u8 type)
+  {
+-- 
+1.6.4.2
+
