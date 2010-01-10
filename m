@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:4892 "EHLO mga11.intel.com"
+Received: from bu3sch.de ([62.75.166.246]:46858 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932079Ab0AaFYb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2010 00:24:31 -0500
-From: "Zhao, Shanyu" <shanyu.zhao@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Date: Sat, 30 Jan 2010 21:24:22 -0800
-Subject: RE: [PATCH 1/1 v3] cfg80211: wext: fix cfg80211's SIOCSIWAP function
-Message-ID: <380B2771CDD78E46856E6B788D9F199750162F62@orsmsx503.amr.corp.intel.com>
-References: <1264801649-4985-1-git-send-email-shanyu.zhao@intel.com>
-	 <1264840545.3546.179.camel@johannes.local>
- <1264841037.3546.183.camel@johannes.local>
-In-Reply-To: <1264841037.3546.183.camel@johannes.local>
-Content-Type: text/plain; charset="utf-8"
+	id S1750702Ab0AJWc2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Jan 2010 17:32:28 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH 2/6] b43: N-PHY: add RSSI functions: poll and set 2055 vcm
+Date: Sun, 10 Jan 2010 23:32:21 +0100
+Cc: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <op.u6b70ig59lhzdc@linux-g0th.site>
+In-Reply-To: <op.u6b70ig59lhzdc@linux-g0th.site>
 MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <201001102332.22954.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WWVzLCB0aGF0J3MgZXhhY3RseSB3aGF0IEkgdHJpZWQgdG8gZG8uIEZyb20gd2hhdCBJIHJlYWQg
-ZnJvbSB0aGUgbWFuIHBhZ2Ugb2YgaXdjb25maWcsIEkgdGhvdWdodCBpd2NvbmZpZyB3bGFueCBh
-cCA8bWFjPiBzaG91bGQgYmUgZW5vdWdoIHRvIGNvbm5lY3QgdG8gYW4gYXAgd2l0aG91dCBzcGVj
-aWZ5aW5nIHRoZSBlc3NpZC4gTWF5YmUgSSBkaWRuJ3QgdW5kZXJzdGFuZCB0aGUgY29ycmVjdCB1
-c2FnZSBvZiBpd2NvbmZpZy4NCg0KSG93ZXZlciwgb25lIG9mIG91ciB0ZXN0IGNhc2VzIGZhaWxl
-ZCBiZWNhdXNlIG9mIHRoaXM6DQpTdGVwcyB0byBSZXByb2R1Y2U6IA0KMS4gc2V0IHVwIHRoZSBT
-U0lEIG5hbWUgd2l0aCBPcGVuL05vbmUgaW4gQVANCjIuIHJlbG9hZCB0aGUgZHJpdmVyDQozLiBp
-bnRlcmZhY2UgdXANCjQuIHNlbmQgdGhlIGNvbW1hbmQgJ2l3Y29uZmlnIHdsYW4wIGFwIDxNQUMg
-YWRkcmVzcyBvZiB0aGUgQVA+DQoNCkV4cGVjdGVkIFJlc3VsdHM6DQp0aGUgYXNzb2NpYXRpb24g
-aXMgZXN0YWJsaXNoZWQgc3VjY2Vzc2Z1bGx5Lg0KDQpUaGFua3MsDQpTaGFueXUNCg0KLS0tLS1P
-cmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpvaGFubmVzIEJlcmcgW21haWx0bzpqb2hhbm5l
-c0BzaXBzb2x1dGlvbnMubmV0XSANClNlbnQ6IFNhdHVyZGF5LCBKYW51YXJ5IDMwLCAyMDEwIDEy
-OjQ0IEFNDQpUbzogWmhhbywgU2hhbnl1DQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwu
-b3JnOyBsaW52aWxsZUB0dXhkcml2ZXIuY29tDQpTdWJqZWN0OiBSZTogW1BBVENIIDEvMSB2M10g
-Y2ZnODAyMTE6IHdleHQ6IGZpeCBjZmc4MDIxMSdzIFNJT0NTSVdBUCBmdW5jdGlvbg0KDQpPbiBT
-YXQsIDIwMTAtMDEtMzAgYXQgMDk6MzUgKzAxMDAsIEpvaGFubmVzIEJlcmcgd3JvdGU6DQoNCj4g
-PiAgCQl3ZGV2LT5jb25uLT5wYXJhbXMuc3NpZF9sZW4gPSBjb25uZWN0LT5zc2lkX2xlbjsNCj4g
-PiArCQlpZiAoY29ubmVjdC0+c3NpZF9sZW4pIHsNCj4gPiArCQkJbWVtY3B5KHdkZXYtPnNzaWQs
-IGNvbm5lY3QtPnNzaWQsIGNvbm5lY3QtPnNzaWRfbGVuKTsNCj4gPiArCQkJd2Rldi0+Y29ubi0+
-cGFyYW1zLnNzaWQgPSB3ZGV2LT5zc2lkOw0KPiA+ICsJCX0NCj4gPiArCQllbHNlDQo+ID4gKwkJ
-CXdkZXYtPmNvbm4tPnBhcmFtcy5zc2lkID0gTlVMTDsNCj4gDQo+IEkgZG9uJ3QgdGhpbmsgSSB1
-bmRlcnN0YW5kIHRoaXMuIFRoZSB3ZGV2LT5jb25uLT5wYXJhbXMgYXJlIGluaXRpYWxpc2VkDQo+
-IGZyb20gImNvbm5lY3QiLCBhbmQgbm93IHlvdSdyZSBjb3B5aW5nIHRoZSBkYXRhIGJhY2sgYWdh
-aW4/IFRoYXQncyBub3QNCj4gbWFraW5nIHNlbnNlIHRvIG1lLg0KDQpIbW0sIHNvIHNldHRpbmcg
-dGhlIHNzaWQgdG8gTlVMTCB3b3VsZCBtYWtlIGl0IGltcG9zc2libGUgdG8gY29ubmVjdCB0bw0K
-YW55IG5ldHdvcmssIG5vPw0KDQpJIGRvbid0IHRoaW5rIEkgdW5kZXJzdGFuZCB3aGF0IHlvdSB3
-YW50IHRvIGFjaGlldmUuIEFyZSB5b3UsIGJ5IGFueQ0KY2hhbmNlLCB0cnlpbmcgdG8gZ2V0IGl0
-IHRvIGNvbm5lY3QgdG8gYW4gQVAgd2l0aG91dCBldmVyIHNwZWNpZnlpbmcgYW4NClNTSUQ/IFRo
-YXQgY2FuJ3QgcmVhbGx5IGJlIHN1cHBvcnRlZCAobm9yIGV2ZXIgd2FzIGJ5IG1hYzgwMjExKS4N
-Cg0Kam9oYW5uZXMNCg==
+On Sunday 10 January 2010 23:13:20 Rafał Miłecki wrote:
+> +		buf[0] += (s8)(((s[0] & 0x3F) << 2) >> 2);
+> +		buf[1] += (s8)((((s[0] >> 8) & 0x3F) << 2) >> 2);
+> +		buf[2] += (s8)(((s[1] & 0x3F) << 2) >> 2);
+> +		buf[3] += (s8)((((s[1] >> 8) & 0x3F) << 2) >> 2);
+
+I suggest buf[3] += (s8)((((s[1] >> 8) & 0x3F) << 2) >> 2) << 2) >> 2) << 2) >> 2) << 2) >> 2) << 2) >> 2) << 2) >> 2) << 2) >> 2)
+;)
+No, seriously, why shift left and then shift right? Is this a translation error?
+I _guess_ it's some mistranslation of the sign extension going on.
+Or alternatively a compiler going insane on sign extension.
+
+The question is: Do we want these integers to be signextended or not?
+
+What we currently do is this:
+buf[3] += (s8)((s[1] >> 8) & 0x3F);
+
+which will always result in a positive 8bit integer, as far as I can see.
+Which smells fishy.
+
+-- 
+Greetings, Michael.
