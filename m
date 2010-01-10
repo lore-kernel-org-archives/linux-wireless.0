@@ -1,73 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:12867 "EHLO mga02.intel.com"
+Received: from bu3sch.de ([62.75.166.246]:48918 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753568Ab0A0TDL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2010 14:03:11 -0500
-Subject: Re: [PATCH] mac80211: wait for beacon before enabling powersave
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"kalle.valo@iki.fi" <kalle.valo@iki.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"j@w1.fi" <j@w1.fi>,
-	"buytenh@wantstofly.org" <buytenh@wantstofly.org>
-In-Reply-To: <43e72e891001271025s27bbe25cs3c999a885551a4e7@mail.gmail.com>
-References: <1264511993.25642.9.camel@johannes.local>
-	 <43e72e891001271001r2cc39da4ka00a3eef06f6e139@mail.gmail.com>
-	 <1264615477.8619.20.camel@wwguy-ubuntu>
-	 <43e72e891001271014j667221bqa11d56f3a68f6099@mail.gmail.com>
-	 <1264616062.8619.22.camel@wwguy-ubuntu>
-	 <43e72e891001271025s27bbe25cs3c999a885551a4e7@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 27 Jan 2010 10:59:41 -0800
-Message-Id: <1264618781.8619.31.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	id S1752925Ab0AJNno (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Jan 2010 08:43:44 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: flush workqueue before calling driver ->stop() method
+Date: Sun, 10 Jan 2010 14:43:36 +0100
+Cc: Lennert Buytenhek <buytenh@wantstofly.org>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+References: <20100110130752.GG1735@mail.wantstofly.org> <201001101435.26235.mb@bu3sch.de> <1263130839.7773.16.camel@johannes.local>
+In-Reply-To: <1263130839.7773.16.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <201001101443.38872.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-01-27 at 10:25 -0800, Luis R. Rodriguez wrote:
-> On Wed, Jan 27, 2010 at 10:14 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> > On Wed, 2010-01-27 at 10:14 -0800, Luis R. Rodriguez wrote:
-> >> On Wed, Jan 27, 2010 at 10:04 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> >> > On Wed, 2010-01-27 at 10:01 -0800, Luis R. Rodriguez wrote:
-> >> >> On Tue, Jan 26, 2010 at 5:19 AM, Johannes Berg
-> >> >> <johannes@sipsolutions.net> wrote:
-> >> >> > Because DTIM information is required for powersave
-> >> >> > but is only conveyed in beacons, wait for a beacon
-> >> >> > before enabling powersave, and change the way the
-> >> >> > information is conveyed to the driver accordingly.
-> >> >> >
-> >> >> > mwl8k doesn't currently seem to implement PS but
-> >> >> > requires the DTIM period in a different way; after
-> >> >> > talking to Lennert we agreed to just have mwl8k do
-> >> >> > the parsing itself in the finalize_join work.
-> >> >>
-> >> >> Not sure if this is merged yet. If not it might be good to add to the
-> >> >> commit log a brief about the impact of the fix for distribution
-> >> >> purposes looking to cherry pick some fixes that may cure some issues.
-> >> >>
-> >> >> The impact of this fix is that the DTIM settings of > 1 would now be
-> >> >> respected in the odd situation a beacon would not be received prior to
-> >> >> association. Ensuring we use a higher DTIM would mean saving more
-> >> >> power as it would mean we can sleep longer.
-> >> >>
-> >> >> This is not propagated to stable but if it turns out this can enhance
-> >> >> power save since DTIM might usually be > 1 and the race may be more
-> >> >> common than we expected we may need a respective stable solution.
-> >> >>
-> >> >
-> >> > It will be nice to see a respective solution for stable since this
-> >> > impact power save which is very important for certain platform.
-> >>
-> >> Well how about your patch for stable then?
-> >>
-> > if ok with you and Johannes, I will like to see it happen, the only
-> > issue is, my patch only address iwlwifi but not mwl8k.
-> 
-> Oh, what was the issue with your patch and mwl8k?
-> 
-the patch will call drv_config() and ieee80211_recal_ps()
-mwl8k driver did not implement PS function, but do require dtim for
-another reason
+On Sunday 10 January 2010 14:40:39 Johannes Berg wrote:
+> See, it's not strictly forbidden to queue work, there's just no
 
+Ok, well. Lennert's mail sounded different to me.
+
+-- 
+Greetings, Michael.
