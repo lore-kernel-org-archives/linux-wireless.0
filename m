@@ -1,65 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f220.google.com ([209.85.220.220]:34611 "EHLO
-	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753060Ab0A3QOe (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39336 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751439Ab0AJL60 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2010 11:14:34 -0500
-Received: by fxm20 with SMTP id 20so2865048fxm.21
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Jan 2010 08:14:33 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1264867217.3546.186.camel@johannes.local>
-References: <20100129122718.73a6c877@nehalam>
-	 <1264866128.3546.185.camel@johannes.local>
-	 <51058d551001300751r4a509e90i521c946dfe9dec4@mail.gmail.com>
-	 <1264867217.3546.186.camel@johannes.local>
-Date: Sat, 30 Jan 2010 10:14:32 -0600
-Message-ID: <51058d551001300814y66d1d589uae15fa50086593b8@mail.gmail.com>
-Subject: Re: Multiple SSID on same phy
-From: Greg Oliver <oliver.greg@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 10 Jan 2010 06:58:26 -0500
+Subject: Re: kernel panic with b43 and hostap on mips
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4B490DF9.10802@hauke-m.de>
+References: <4B490DF9.10802@hauke-m.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SkoAC6IPoBuoo37SZWDl"
+Date: Sun, 10 Jan 2010 12:58:21 +0100
+Message-ID: <1263124701.7773.4.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 30, 2010 at 10:00 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> I suggest you go public with your reply so you can be flamed and taught
-> wrong appropriately.
 
-Sorry - this gmail inefficiency sometimes gets me...
+--=-SkoAC6IPoBuoo37SZWDl
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-BUT, please enlighten me when any of the 3 use cases would be
-beneficial to anyone not trying to (or "inefficiently migrating") hack
-into a network would occur.
+On Sun, 2010-01-10 at 00:15 +0100, Hauke Mehrtens wrote:
 
--Greg
+> I am using compat-wireless of 2010-01-07 and mac80211: fix netdev=20
+> queues, mac80211: fix a few work bugs and mac80211: fix endian error
+> by Johannes.
 
-> On Sat, 2010-01-30 at 09:51 -0600, Greg Oliver wrote:
->> On Sat, Jan 30, 2010 at 9:42 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Fri, 2010-01-29 at 12:27 -0800, Stephen Hemminger wrote:
->> >> What are the restrictions (on ath9k) for multiple SSID with hostap
->> >> on same physical device. Should/will the following work:
->> >>
->> >> 1. Duplicate SSID's (different channels)
->> >
->> > Not really/well, wouldn't go there right now.
->> >
->> >> 2. Same channel but different SSID
->> >
->> > Yes.
->> >
->> >> 3. Duplicate SSID, same channel, but different encryption method
->> >
->> > "Duplicate SSID"? If you mean the same SSID and different encryption, I
->> > don't think that's supported. If you just meant two SSIDs with different
->> > encryption, that's doable by using two (B)SSIDs.
->> >
->>
->> There's no really honest use case for any of the examples presented.
->> "They" must want a head start on the next hackers conference..
->>
->
->
->
+> ra    : 80198884 dev_queue_xmit+0x1b8/0x418
+
+Could be the bug Lennert also found?
+
+johannes
+
+--=-SkoAC6IPoBuoo37SZWDl
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLScDZAAoJEODzc/N7+QmaJbsQALMMvjRomUv+Ssbh7Gl0nDKR
+DrKV/6QVf86n1Rw8f8YmKQfQ9edEIfMcCgj5M49pxaSXRc88+NAOWr5wVpCIx749
+92nqk+jlIvgRXo+8HE7qfQ2U9u5XcAeCD4JjkwFF0IQEmjOvUwttkhtHXOk5OSvs
+2/3cy3bROJGA+WgNj12CSm2mpP2DaZhUT0Nf3oWrd6Nc+8t4uXVWyHhZ19p+2b69
+qzNiljrsbAcfv5WJ+4oBi/RUKf5EVkL/uctsy2g2A7VDoCG9CQsMTKVAcTXKQMdx
+sEIFbw8ndc/ygizaxC+W3PlkKrptSyEaYOuVzonvk5S0W3eBRFkh5vYjcGJ7KmVE
+VD5AeDDdiGEIZmi1lGWp7Iw+lBcShuzc0DmXTDf0OgAAe6VIzVflMDvUv15NIbw+
+8ZQ1IPIUfSm6mCD5Jgo+/0x5N2v7rJ3gSb7ee8BzQtDmfAgxN65X/iaNICYpoFol
+asljHMQltLIuiWbw7I60dpgpI1bz0sxO6/tutqYKRcNTRZbjj+Urd2ZHviGG3q2G
+E6H+anwNkXRAMkajvuUB8sz+sjawU9VAHg0HP+ITKvTFD6FCAsMonkCxO69GmtMz
+tOyGqE+OHrb2zNP0oFLeyqLDqFm2dtlYqNqSfW2/UAGKeQROz6QBZguhrYIuuREr
+ApaVvLLmKpXPua0Vg8yu
+=TKPO
+-----END PGP SIGNATURE-----
+
+--=-SkoAC6IPoBuoo37SZWDl--
+
