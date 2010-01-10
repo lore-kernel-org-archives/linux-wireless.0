@@ -1,353 +1,234 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:46318 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750793Ab0ASMFB convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:39669 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753948Ab0AJWLj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2010 07:05:01 -0500
-Received: by bwz19 with SMTP id 19so2599412bwz.28
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2010 04:04:59 -0800 (PST)
+	Sun, 10 Jan 2010 17:11:39 -0500
+Received: by ewy6 with SMTP id 6so21225297ewy.29
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Jan 2010 14:11:38 -0800 (PST)
+Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Sun, 10 Jan 2010 23:13:07 +0100
+Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Subject: [PATCH 1/6] b43: N-PHY: add RSSI functions: scale offset, select (rev
+ < 3), restore cal
 MIME-Version: 1.0
-In-Reply-To: <c988e1dc1001180938m24365028p63f611e7e9446663@mail.gmail.com>
-References: <933379711001180712v7e6c0a3fx923123af900d90c7@mail.gmail.com>
-	<933379711001180815r284ff41au733cadb40a7606fe@mail.gmail.com>
-	<c988e1dc1001180938m24365028p63f611e7e9446663@mail.gmail.com>
-From: Giuseppe Fontana <gfontana13@gmail.com>
-Date: Tue, 19 Jan 2010 13:04:39 +0100
-Message-ID: <933379711001190404q1232d2f5i899e7b6347357f23@mail.gmail.com>
-Subject: Re: Broadcom BCM4318 AirForceOne issue - Ubuntu 9.10 on Acer Aspire
-	5024wlmi
-To: linux-wireless@vger.kernel.org, Shang Wu <shang@ubuntu.com>
-Content-Type: text/plain; charset=ISO-8859-1
+From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <op.u6b7z2yo9lhzdc@linux-g0th.site>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yes, I installed b43-fwcutter to extract the adapter firmware, as
-suggested in linux-wireless page.
-I did other experiments and I have an update: the issue is only with
-ad-hoc networks.
-Moreover yesterday I successufully connected to a Windows ad-hoc
-network using Network Manager (that is able to force BSSID address to
-grant access to the same cell of the ad-hoc network) following these
-steps:
 
-1. I created an ad-hoc network (essid "SkyNet") under WinXPPro, to
-share my Internet connection via wireless. To   achieve this result I
-manually set 192.168.0.1 IP address and 255.255.255.0 netmask. I also
-selected connection sharing option under the adapter connected to the
-internet.
- 2. Connected to the ad-hoc network using my Nokia E52 phone. The
-phone and WinXPPro successfully created the network and negotiated IP
-addresses via DHCP (note that after connection the phone can access
-internet and navigate)
-3. At this point, I connected Ubuntu to the ad-hoc network via Network
-Manager. dhcpclient founds an active network and connection happens :)
-(Note that I later I discovered that I can achieve the same result
-skipping step 2 and manually setting a 192.168.0.x address in Ubuntu
-via Network Manager profile).
+Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
+---
+  drivers/net/wireless/b43/phy_n.c |  157 +++++++++++++++++++++++++++++++++++++-
+  drivers/net/wireless/b43/phy_n.h |   10 +++
+  2 files changed, 166 insertions(+), 1 deletions(-)
 
-However I still have a problem: even if the connection is established,
-I cannot ping the 192.168.0.1 address and the Ubunbtu laptop can't use
-the shared internet connection. Here is the syslog printed during the
-connection (with dhcp negotiation):
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index c2c2602..a44fca1 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -590,6 +590,127 @@ static void b43_nphy_bphy_init(struct b43_wldev *dev)
+  	b43_phy_write(dev, B43_PHY_N_BMODE(0x38), 0x668);
+  }
 
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) starting connection 'Auto SkyNet'
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  (wlan0):
-device state change: 3 -> 4 (reason 0)
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Stage 1 of 5 (Device Prepare) scheduled...
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Stage 1 of 5 (Device Prepare) started...
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Stage 2 of 5 (Device Configure) scheduled...
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Stage 1 of 5 (Device Prepare) complete.
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Stage 2 of 5 (Device Configure) starting...
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  (wlan0):
-device state change: 4 -> 5 (reason 0)
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0/wireless): connection 'Auto SkyNet' requires no security.  No
-secrets needed.
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Config: added
-'ssid' value 'SkyNet'
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Config: added
-'mode' value '1'
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Config: added
-'key_mgmt' value 'NONE'
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Stage 2 of 5 (Device Configure) complete.
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Config: set
-interface ap_scan to 2
-Jan 18 22:30:23 giuseppe-laptop wpa_supplicant[1120]: Trying to
-associate with SSID 'SkyNet'
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  (wlan0):
-supplicant connection state:  inactive -> scanning
-Jan 18 22:30:23 giuseppe-laptop kernel: [ 7513.592066] b43-phy0:
-Loading firmware version 410.2160 (2007-05-26 15:32:10)
-Jan 18 22:30:23 giuseppe-laptop wpa_supplicant[1120]: Association
-request to the driver failed
-Jan 18 22:30:23 giuseppe-laptop kernel: [ 7513.632433] Registered led
-device: b43-phy0::tx
-Jan 18 22:30:23 giuseppe-laptop kernel: [ 7513.632456] Registered led
-device: b43-phy0::rx
-Jan 18 22:30:23 giuseppe-laptop kernel: [ 7513.632478] Registered led
-device: b43-phy0::radio
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  (wlan0):
-supplicant connection state:  scanning -> associating
-Jan 18 22:30:23 giuseppe-laptop kernel: [ 7513.656215] wlan0: Selected
-IBSS BSSID 02:1d:e0:02:63:15 based on configured SSID
-Jan 18 22:30:23 giuseppe-laptop wpa_supplicant[1120]: Associated with
-02:1d:e0:02:63:15
-Jan 18 22:30:23 giuseppe-laptop wpa_supplicant[1120]:
-CTRL-EVENT-CONNECTED - Connection to 02:1d:e0:02:63:15 completed
-(auth) [id=0 id_str=]
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  (wlan0):
-supplicant connection state:  associating -> associated
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  (wlan0):
-supplicant connection state:  associated -> completed
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0/wireless) Stage 2 of 5 (Device Configure) successful.
-Connected to wireless network 'SkyNet'.
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Stage 3 of 5 (IP Configure Start) scheduled.
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Stage 3 of 5 (IP Configure Start) started...
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  (wlan0):
-device state change: 5 -> 7 (reason 0)
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Beginning DHCP transaction (timeout in 45 seconds)
-Jan 18 22:30:23 giuseppe-laptop dhclient: Internet Systems Consortium
-DHCP Client V3.1.2
-Jan 18 22:30:23 giuseppe-laptop dhclient: Copyright 2004-2008 Internet
-Systems Consortium.
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  dhclient
-started with pid 2096
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Stage 4 of 5 (IP6 Configure Get) scheduled...
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Stage 3 of 5 (IP Configure Start) complete.
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Stage 4 of 5 (IP6 Configure Get) started...
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Stage 4 of 5 (IP6 Configure Get) complete.
-Jan 18 22:30:23 giuseppe-laptop dhclient: All rights reserved.
-Jan 18 22:30:23 giuseppe-laptop dhclient: For info, please visit
-http://www.isc.org/sw/dhcp/
-Jan 18 22:30:23 giuseppe-laptop dhclient:
-Jan 18 22:30:23 giuseppe-laptop NetworkManager: <info>  DHCP: device
-wlan0 state changed (null) -> preinit
-Jan 18 22:30:23 giuseppe-laptop dhclient: Listening on
-LPF/wlan0/00:14:a4:49:c7:fc
-Jan 18 22:30:23 giuseppe-laptop dhclient: Sending on
-LPF/wlan0/00:14:a4:49:c7:fc
-Jan 18 22:30:23 giuseppe-laptop dhclient: Sending on   Socket/fallback
-Jan 18 22:30:25 giuseppe-laptop dhclient: DHCPDISCOVER on wlan0 to
-255.255.255.255 port 67 interval 8
-Jan 18 22:30:25 giuseppe-laptop avahi-daemon[852]: Registering new
-address record for fe80::214:a4ff:fe49:c7fc on wlan0.*.
-Jan 18 22:30:25 giuseppe-laptop dhclient: DHCPOFFER of 192.168.0.99
-from 192.168.0.1
-Jan 18 22:30:25 giuseppe-laptop dhclient: DHCPREQUEST of 192.168.0.99
-on wlan0 to 255.255.255.255 port 67
-Jan 18 22:30:26 giuseppe-laptop dhclient: DHCPACK of 192.168.0.99 from
-192.168.0.1
-Jan 18 22:30:26 giuseppe-laptop NetworkManager: <info>  DHCP: device
-wlan0 state changed preinit -> bound
-Jan 18 22:30:26 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Stage 4 of 5 (IP4 Configure Get) scheduled...
-Jan 18 22:30:26 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Stage 4 of 5 (IP4 Configure Get) started...
-Jan 18 22:30:26 giuseppe-laptop NetworkManager: <info>    address 192.168.0.99
-Jan 18 22:30:26 giuseppe-laptop NetworkManager: <info>    prefix 24
-(255.255.255.0)
-Jan 18 22:30:26 giuseppe-laptop NetworkManager: <info>    gateway 192.168.0.1
-Jan 18 22:30:26 giuseppe-laptop NetworkManager: <info>    nameserver
-'192.168.0.1'
-Jan 18 22:30:26 giuseppe-laptop NetworkManager: <info>    domain name
-'mshome.net'
-Jan 18 22:30:26 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Stage 5 of 5 (IP Configure Commit) scheduled...
-Jan 18 22:30:26 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Stage 4 of 5 (IP4 Configure Get) complete.
-Jan 18 22:30:26 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Stage 5 of 5 (IP Configure Commit) started...
-Jan 18 22:30:26 giuseppe-laptop avahi-daemon[852]: Joining mDNS
-multicast group on interface wlan0.IPv4 with address 192.168.0.99.
-Jan 18 22:30:26 giuseppe-laptop avahi-daemon[852]: New relevant
-interface wlan0.IPv4 for mDNS.
-Jan 18 22:30:26 giuseppe-laptop avahi-daemon[852]: Registering new
-address record for 192.168.0.99 on wlan0.IPv4.
-Jan 18 22:30:26 giuseppe-laptop dhclient: bound to 192.168.0.99 --
-renewal in 245 seconds.
-Jan 18 22:30:27 giuseppe-laptop NetworkManager: <info>  (wlan0):
-device state change: 7 -> 8 (reason 0)
-Jan 18 22:30:27 giuseppe-laptop NetworkManager: <info>  Policy set
-'Auto SkyNet' (wlan0) as default for routing and DNS.
-Jan 18 22:30:27 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) successful, device activated.
-Jan 18 22:30:27 giuseppe-laptop NetworkManager: <info>  Activation
-(wlan0) Stage 5 of 5 (IP Configure Commit) complete.
-Jan 18 22:30:34 giuseppe-laptop kernel: [ 7523.992034] wlan0: no IPv6
-routers present
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/ScaleOffsetRssi */
++static void b43_nphy_scale_offset_rssi(struct b43_wldev *dev, u16 scale,
++				       s8 offset, u8 core, u8 rail, u8 type)
++{
++	u16 tmp;
++	bool core1or5 = (core == 1) || (core == 5);
++	bool core2or5 = (core == 2) || (core == 5);
++
++	offset = clamp_val(offset, -32, 31);
++	tmp = ((scale & 0x3F) << 8) | (offset & 0x3F);
++
++	if (core1or5 && (rail == 0) && (type == 2))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_0I_RSSI_Z, tmp);
++	if (core1or5 && (rail == 1) && (type == 2))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_0Q_RSSI_Z, tmp);
++	if (core2or5 && (rail == 0) && (type == 2))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_1I_RSSI_Z, tmp);
++	if (core2or5 && (rail == 1) && (type == 2))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_1Q_RSSI_Z, tmp);
++	if (core1or5 && (rail == 0) && (type == 0))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_0I_RSSI_X, tmp);
++	if (core1or5 && (rail == 1) && (type == 0))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_0Q_RSSI_X, tmp);
++	if (core2or5 && (rail == 0) && (type == 0))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_1I_RSSI_X, tmp);
++	if (core2or5 && (rail == 1) && (type == 0))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_1Q_RSSI_X, tmp);
++	if (core1or5 && (rail == 0) && (type == 1))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_0I_RSSI_Y, tmp);
++	if (core1or5 && (rail == 1) && (type == 1))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_0Q_RSSI_Y, tmp);
++	if (core2or5 && (rail == 0) && (type == 1))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_1I_RSSI_Y, tmp);
++	if (core2or5 && (rail == 1) && (type == 1))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_1Q_RSSI_Y, tmp);
++	if (core1or5 && (rail == 0) && (type == 6))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_0I_TBD, tmp);
++	if (core1or5 && (rail == 1) && (type == 6))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_0Q_TBD, tmp);
++	if (core2or5 && (rail == 0) && (type == 6))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_1I_TBD, tmp);
++	if (core2or5 && (rail == 1) && (type == 6))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_1Q_TBD, tmp);
++	if (core1or5 && (rail == 0) && (type == 3))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_0I_PWRDET, tmp);
++	if (core1or5 && (rail == 1) && (type == 3))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_0Q_PWRDET, tmp);
++	if (core2or5 && (rail == 0) && (type == 3))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_1I_PWRDET, tmp);
++	if (core2or5 && (rail == 1) && (type == 3))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_1Q_PWRDET, tmp);
++	if (core1or5 && (type == 4))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_0I_TSSI, tmp);
++	if (core2or5 && (type == 4))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_1I_TSSI, tmp);
++	if (core1or5 && (type == 5))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_0Q_TSSI, tmp);
++	if (core2or5 && (type == 5))
++		b43_phy_write(dev, B43_NPHY_RSSIMC_1Q_TSSI, tmp);
++}
++
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/RSSISel */
++static void b43_nphy_rssi_select(struct b43_wldev *dev, u8 code, u8 type)
++{
++	u16 val;
++
++	if (dev->phy.rev >= 3) {
++		/* TODO */
++	} else {
++		if (type < 3)
++			val = 0;
++		else if (type == 6)
++			val = 1;
++		else if (type == 3)
++			val = 2;
++		else
++			val = 3;
++
++		val = (val << 12) | (val << 14);
++		b43_phy_maskset(dev, B43_NPHY_AFECTL_C1, 0x0FFF, val);
++		b43_phy_maskset(dev, B43_NPHY_AFECTL_C2, 0x0FFF, val);
++
++		if (type < 3) {
++			b43_phy_maskset(dev, B43_NPHY_RFCTL_RSSIO1, 0xFFCF,
++					(type + 1) << 4);
++			b43_phy_maskset(dev, B43_NPHY_RFCTL_RSSIO2, 0xFFCF,
++					(type + 1) << 4);
++		}
++
++		/* TODO use some definitions */
++		if (code == 0) {
++			b43_phy_maskset(dev, B43_NPHY_AFECTL_OVER, 0xCFFF, 0);
++			if (type < 3) {
++				b43_phy_maskset(dev, B43_NPHY_RFCTL_CMD,
++						0xFEC7, 0);
++				b43_phy_maskset(dev, B43_NPHY_RFCTL_OVER,
++						0xEFDC, 0);
++				b43_phy_maskset(dev, B43_NPHY_RFCTL_CMD,
++						0xFFFE, 0);
++				udelay(20);
++				b43_phy_maskset(dev, B43_NPHY_RFCTL_OVER,
++						0xFFFE, 0);
++			}
++		} else {
++			b43_phy_maskset(dev, B43_NPHY_AFECTL_OVER, 0xCFFF,
++					0x3000);
++			if (type < 3) {
++				b43_phy_maskset(dev, B43_NPHY_RFCTL_CMD,
++						0xFEC7, 0x0180);
++				b43_phy_maskset(dev, B43_NPHY_RFCTL_OVER,
++						0xEFDC, (code << 1 | 0x1021));
++				b43_phy_maskset(dev, B43_NPHY_RFCTL_CMD,
++						0xFFFE, 0x0001);
++				udelay(20);
++				b43_phy_maskset(dev, B43_NPHY_RFCTL_OVER,
++						0xFFFE, 0);
++			}
++		}
++	}
++}
++
+  /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/RSSICal */
+  static void b43_nphy_rev2_rssi_cal(struct b43_wldev *dev, u8 type)
+  {
+@@ -623,7 +744,41 @@ static void b43_nphy_rssi_cal(struct b43_wldev *dev)
+   */
+  static void b43_nphy_restore_rssi_cal(struct b43_wldev *dev)
+  {
+-	//TODO
++	struct b43_phy_n *nphy = dev->phy.n;
++
++	u16 *rssical_radio_regs = NULL;
++	u16 *rssical_phy_regs = NULL;
++
++	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
++		if (!nphy->rssical_chanspec_2G)
++			return;
++		rssical_radio_regs = nphy->rssical_cache.rssical_radio_regs_2G;
++		rssical_phy_regs = nphy->rssical_cache.rssical_phy_regs_2G;
++	} else {
++		if (!nphy->rssical_chanspec_5G)
++			return;
++		rssical_radio_regs = nphy->rssical_cache.rssical_radio_regs_5G;
++		rssical_phy_regs = nphy->rssical_cache.rssical_phy_regs_5G;
++	}
++
++	/* TODO use some definitions */
++	b43_radio_maskset(dev, 0x602B, 0xE3, rssical_radio_regs[0]);
++	b43_radio_maskset(dev, 0x702B, 0xE3, rssical_radio_regs[1]);
++
++	b43_phy_write(dev, B43_NPHY_RSSIMC_0I_RSSI_Z, rssical_phy_regs[0]);
++	b43_phy_write(dev, B43_NPHY_RSSIMC_0Q_RSSI_Z, rssical_phy_regs[1]);
++	b43_phy_write(dev, B43_NPHY_RSSIMC_1I_RSSI_Z, rssical_phy_regs[2]);
++	b43_phy_write(dev, B43_NPHY_RSSIMC_1Q_RSSI_Z, rssical_phy_regs[3]);
++
++	b43_phy_write(dev, B43_NPHY_RSSIMC_0I_RSSI_X, rssical_phy_regs[4]);
++	b43_phy_write(dev, B43_NPHY_RSSIMC_0Q_RSSI_X, rssical_phy_regs[5]);
++	b43_phy_write(dev, B43_NPHY_RSSIMC_1I_RSSI_X, rssical_phy_regs[6]);
++	b43_phy_write(dev, B43_NPHY_RSSIMC_1Q_RSSI_X, rssical_phy_regs[7]);
++
++	b43_phy_write(dev, B43_NPHY_RSSIMC_0I_RSSI_Y, rssical_phy_regs[8]);
++	b43_phy_write(dev, B43_NPHY_RSSIMC_0Q_RSSI_Y, rssical_phy_regs[9]);
++	b43_phy_write(dev, B43_NPHY_RSSIMC_1I_RSSI_Y, rssical_phy_regs[10]);
++	b43_phy_write(dev, B43_NPHY_RSSIMC_1Q_RSSI_Y, rssical_phy_regs[11]);
+  }
 
+  /* Init N-PHY
+diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
+index 6bb9476..ca1fd11 100644
+--- a/drivers/net/wireless/b43/phy_n.h
++++ b/drivers/net/wireless/b43/phy_n.h
+@@ -924,6 +924,14 @@
 
+  struct b43_wldev;
 
-2010/1/18 Shang Wu <shang@ubuntu.com>:
-> In 9.04, it used to be installing the package†b43-fwcutter. Is the package
-> installed on your system? Can you also pastebin the syslog?
-> Thanks,
->
-> On Mon, Jan 18, 2010 at 11:15 AM, Giuseppe Fontana <gfontana13@gmail.com>
-> wrote:
->>
->> Hi! I installed Ubuntu 9.10 on my Acer 5024wlmi and followed Linux
->> wireless instructions to enable my Broadcom AirForceOne BCM4318 wifi
->> card. Now the wireless adapter is on (laptop front led also is on), I
->> can see wifi networks but connection fails (even with a simple ad-hoc
->> open wifi network!). I tried with Network Manager/WICD/Wifi Radar and
->> also using terminal lfconfig/lwconfig commands without success. It
->> seems that my wifi card cannot ping access points: for example see
->> this log from WICD connection session:
->>
->> -2010/01/16 22:51:15 :: Connecting to wireless network Winx
->> -2010/01/16 22:51:15 :: ping -q -w 3 -c 1 192.168.0.1
->> -2010/01/16 22:51:17 :: iwconfig wlan0
->> -2010/01/16 22:51:18 :: Connection Failed: Failed to ping the access
->> point!
->>
->> Here there are some useful data about my laptop/Ubuntu configuration.
->> Hope you can help!
->>
->>
->> ------------------------------------------------------------------------------------------------------------------------------------------
->> Laptop model >> Acer Aspire 5024wlmi laptop
->> giuseppe@giuseppe-laptop:~$ lsb_release -d >> Description:††† Ubuntu 9.10
->> giuseppe@giuseppe-laptop:~$ uname -mr >> 2.6.31-17-generic i686
->>
->> ------------------------------------------------------------------------------------------------------------------------------------------
->> giuseppe@giuseppe-laptop:~$ sudo lspci | grep 'Broadcom'
->> 06:05.0 Network controller: Broadcom Corporation BCM4318 [AirForce One
->> 54g] 802.11g Wireless LAN Controller (rev 02)
->>
->> ------------------------------------------------------------------------------------------------------------------------------------------
->> giuseppe@giuseppe-laptop:~$ sudo iwconfig wlan0
->> wlan0†††† IEEE 802.11bg† ESSID:""
->> ††††††††† Mode:Managed† Frequency:2.462 GHz† Access Point: Not-Associated
->> ††††††††† Tx-Power=20 dBm
->> ††††††††† Retry† long limit:7†† RTS thr:off†† Fragment thr:off
->> ††††††††† Encryption key:off
->> ††††††††† Power Management:off
->> ††††††††† Link Quality:0† Signal level:0† Noise level:0
->> ††††††††† Rx invalid nwid:0† Rx invalid crypt:0† Rx invalid frag:0
->> ††††††††† Tx excessive retries:0† Invalid misc:0†† Missed beacon:0
->>
->>
->> ------------------------------------------------------------------------------------------------------------------------------------------
->> giuseppe@giuseppe-laptop:~$ sudo lsmod | grep "b43"
->> b43†††††††††††††††††† 122168† 0
->> mac80211††††††††††††† 181140† 1 b43
->> cfg80211†††††††††††††† 93052† 2 b43,mac80211
->> led_class†††††††††††††† 4096† 3 acer_wmi,b43,sdhci
->> ssb††††††††††††††††††† 35364† 1 b43
->>
->> ------------------------------------------------------------------------------------------------------------------------------------------
->> giuseppe@giuseppe-laptop:~$ dmesg | grep b43
->> [††† 2.717660] b43-pci-bridge 0000:06:05.0: PCI INT A -> GSI 21
->> (level, low) -> IRQ 21
->> [†† 14.884317] b43-phy0: Broadcom 4318 WLAN found (core revision 9)
->> [†† 16.516094] b43 ssb0:0: firmware: requesting b43/ucode5.fw
->> [†† 16.739725] b43 ssb0:0: firmware: requesting b43/pcm5.fw
->> [†† 16.745578] b43 ssb0:0: firmware: requesting b43/b0g0initvals5.fw
->> [†† 16.751202] b43 ssb0:0: firmware: requesting b43/b0g0bsinitvals5.fw
->> [...]
->> [ 4300.736074] b43-phy0: Loading firmware version 410.2160 (2007-05-26
->> 15:32:10)
->> [ 4300.776488] Registered led device: b43-phy0::tx
->> [ 4300.776531] Registered led device: b43-phy0::rx
->> [ 4300.776575] Registered led device: b43-phy0::radio
->>
->> ------------------------------------------------------------------------------------------------------------------------------------------
->> giuseppe@giuseppe-laptop:~$ sudo lshw -C network
->> † *-network:0
->> †††††† description: Network controller
->> †††††† product: BCM4318 [AirForce One 54g] 802.11g Wireless LAN Controller
->> †††††† vendor: Broadcom Corporation
->> †††††† physical id: 5
->> †††††† bus info: pci@0000:06:05.0
->> †††††† version: 02
->> †††††† width: 32 bits
->> †††††† clock: 33MHz
->> †††††† capabilities: bus_master
->> †††††† configuration: driver=b43-pci-bridge latency=64
->> †††††† resources: irq:21 memory:c0204000-c0205fff
->> † *-network:1
->> †††††† description: Ethernet interface
->> †††††† product: RTL-8169 Gigabit Ethernet
->> †††††† vendor: Realtek Semiconductor Co., Ltd.
->> †††††† physical id: 7
->> †††††† bus info: pci@0000:06:07.0
->> †††††† logical name: eth0
->> †††††† version: 10
->> †††††† serial: 00:0a:e4:e8:a2:87
->> †††††† size: 1GB/s
->> †††††† capacity: 1GB/s
->> †††††† width: 32 bits
->> †††††† clock: 66MHz
->> †††††† capabilities: pm bus_master cap_list rom ethernet physical tp
->> mii 10bt 10bt-fd 100bt 100bt-fd 1000bt 1000bt-fd autonegotiation
->> †††††† configuration: autonegotiation=on broadcast=yes driver=r8169
->> driverversion=2.3LK-NAPI duplex=full ip=192.168.0.242 latency=64
->> link=yes maxlatency=64 mingnt=32 multicast=yes port=MII speed=1GB/s
->> †††††† resources: irq:23 ioport:a000(size=256)
->> memory:c0209400-c02094ff memory:44000000-4401ffff(prefetchable)
->> † *-network
->> †††††† description: Wireless interface
->> †††††† physical id: 1
->> †††††† logical name: wlan0
->> †††††† serial: 00:14:a4:49:c7:fc
->> †††††† capabilities: ethernet physical wireless
->> †††††† configuration: broadcast=yes multicast=yes wireless=IEEE 802.11bg
->>
->> ------------------------------------------------------------------------------------------------------------------------------------------
->> giuseppe@giuseppe-laptop:~$ sudo iwlist scan
->> (...)
->> wlan0†††† Scan completed :
->> ††††††††† Cell 01 - Address: 02:1D:E0:00:08:5A
->> ††††††††††††††††††† Channel:11
->> ††††††††††††††††††† Frequency:2.462 GHz (Channel 11)
->> ††††††††††††††††††† Quality=62/70† Signal level=-48 dBm
->> ††††††††††††††††††† Encryption key:off
->> ††††††††††††††††††† ESSID:"Winx"
->> ††††††††††††††††††† Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s
->> ††††††††††††††††††† Bit Rates:6 Mb/s; 9 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s
->> ††††††††††††††††††††††††††††† 36 Mb/s; 48 Mb/s; 54 Mb/s
->> ††††††††††††††††††† Mode:Ad-Hoc
->> ††††††††††††††††††† Extra:tsf=00000001035383eb
->> ††††††††††††††††††† Extra: Last beacon: 272ms ago
->> ††††††††††††††††††† IE: Unknown: 000457696E78
->> ††††††††††††††††††† IE: Unknown: 010482840B16
->> ††††††††††††††††††† IE: Unknown: 03010B
->> ††††††††††††††††††† IE: Unknown: 06020000
->> ††††††††††††††††††† IE: Unknown: 2A0100
->> ††††††††††††††††††† IE: Unknown: 32080C1218243048606C
->> ††††††††††††††††††† IE: Unknown: DD070giuseppe@giuseppe-laptop:~$ sudo
->> iwlist scan050F202000100
->>
->> ------------------------------------------------------------------------------------------------------------------------------------------
->> giuseppe@giuseppe-laptop:~$ sudo /etc/init.d/networking restart
->> †* Reconfiguring network interfaces...
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
->> in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at †http://vger.kernel.org/majordomo-info.html
->
->
->
-> --
-> Shang Wu
-> ----------------------------------------------------------------
-> Key ID: 4B2BCA02
-> Fingerprint: 4832 D5D0 D124 CE1D FD07 †167A 3E93 FF44 4B2B CA02
->
++struct b43_phy_n_rssical_cache {
++	u16 rssical_radio_regs_2G[2];
++	u16 rssical_phy_regs_2G[12];
++
++	u16 rssical_radio_regs_5G[2];
++	u16 rssical_phy_regs_5G[12];
++};
++
+  struct b43_phy_n {
+  	u8 txpwrctrl;
+  	u8 cal_orig_pwr_idx[2];
+@@ -948,6 +956,8 @@ struct b43_phy_n {
+  	u8 iqcal_chanspec_5G;
+  	u8 rssical_chanspec_5G;
+
++	struct b43_phy_n_rssical_cache rssical_cache;
++
+  	bool crsminpwr_adjusted;
+  	bool noisevars_adjusted;
+
+-- 
+1.6.4.2
+
