@@ -1,58 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:37762 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753960Ab0ANS1t (ORCPT
+Received: from mail.elliptictech.com ([209.217.122.41]:52743 "EHLO
+	emergent.ellipticsemi.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751292Ab0AKWRl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2010 13:27:49 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3] cfg80211: Ingore country IEs with a zero set of number of channels
-Date: Thu, 14 Jan 2010 13:27:46 -0500
-Message-Id: <1263493666-16641-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 11 Jan 2010 17:17:41 -0500
+Date: Mon, 11 Jan 2010 16:47:10 -0500
+From: Nick Bowler <nbowler@elliptictech.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Adrian Bunk <bunk@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Subject: Re: 2.6.33-rc3-git3: Reported regressions from 2.6.32
+Message-ID: <20100111214603.GA4335@emergent.ellipticsemi.com>
+References: <wnS54-l8PVO.A.TlF.oMlSLB@chimera>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <wnS54-l8PVO.A.TlF.oMlSLB@chimera>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previous to this and the last patch, titled,
+On 23:27 Sun 10 Jan     , Rafael J. Wysocki wrote:
+> This message contains a list of some regressions from 2.6.32, for which there
+> are no fixes in the mainline I know of.  If any of them have been fixed already,
+> please let me know.
+> 
+> If you know of any other unresolved regressions from 2.6.32, please let me know
+> either and I'll add them to the list.  Also, please let me know if any of the
+> entries below are invalid.
 
-"cfg80211: Fix 2 GHz subband calculation for country IEs"
+Here are two that I don't see in the list:
 
-we would end up treating these IEs as single channel units. These are in
-fact just bogus IE triplets so ignore the entire IE if these are found.
+ * LVDS downclocking breaks on G45/thinkpad T500
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
-
-v3 Removes an extra tab on the second hunk.. sorry about that.
-
- net/wireless/reg.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index f0859ea..5b03ca7 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -585,6 +585,9 @@ static int max_subband_chan(int orig_cur_chan,
- 			break;
- 		}
+     LKML: http://lkml.org/lkml/2009/12/26/40
+     FDO:  http://bugs.freedesktop.org/show_bug.cgi?id=25809
  
-+		if (triplet->chans.num_channels == 0)
-+			return 0;
-+
- 		/* Monitonically increasing channel order */
- 		if (triplet->chans.first_channel <= end_subband_chan)
- 			return 0;
-@@ -737,6 +740,9 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 			break;
- 		}
- 
-+		if (triplet->chans.num_channels == 0)
-+			return NULL;
-+
- 		/* 2 GHz */
- 		if (triplet->chans.first_channel <= 14)
- 			end_channel = triplet->chans.first_channel +
+ * Receive failure in et131x (Alan Cox sent me a patch for this but
+                              it's not in mainline yet)
+
+     LKML: http://lkml.org/lkml/2009/12/29/210
+
 -- 
-1.6.3.3
-
+Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
