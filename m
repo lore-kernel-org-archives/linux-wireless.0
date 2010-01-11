@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:42140 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754245Ab0AVVAP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 16:00:15 -0500
-Received: from list by lo.gmane.org with local (Exim 4.50)
-	id 1NYQbx-0001Az-KB
-	for linux-wireless@vger.kernel.org; Fri, 22 Jan 2010 22:00:09 +0100
-Received: from p4FF0DD95.dip.t-dialin.net ([79.240.221.149])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2010 22:00:09 +0100
-Received: from Markus_Baier by p4FF0DD95.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2010 22:00:09 +0100
-To: linux-wireless@vger.kernel.org
-From: Markus Baier <Markus_Baier@web.de>
-Subject: Re: Starting hostapd causes kernel panic
-Date: Fri, 22 Jan 2010 20:59:47 +0000 (UTC)
-Message-ID: <loom.20100122T215904-83@post.gmane.org>
-References: <loom.20100122T205326-794@post.gmane.org> <eba66e02dda0a3ec904374a80ea9a1e9@127.0.0.1>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:63614 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751850Ab0AKMt5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jan 2010 07:49:57 -0500
+MIME-Version: 1.0
+In-Reply-To: <nzLqtSp97aP.A.RGB.hglSLB@chimera>
+References: <nzLqtSp97aP.A.RGB.hglSLB@chimera>
+Date: Mon, 11 Jan 2010 13:49:54 +0100
+Message-ID: <b170af451001110449w134af1f9we804205a5febcaca@mail.gmail.com>
+Subject: Re: 2.6.33-rc3-git3: Reported regressions 2.6.31 -> 2.6.32
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- <pat-lkml@...> writes:
+2010/1/10 Rafael J. Wysocki <rjw@sisk.pl>:
+> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=14747
+> Subject         : bisected 2.6.32 regression: synaptics touchpad doesn't work
+> Submitter       : François Valenduc <francois.valenduc@tvcablenet.be>
+> Date            : 2009-12-06 11:16 (36 days old)
 
-> On my system, it doesnt' fail until 
-> something actively scans and we receive the probe.
+Not sure if this is hackish or not, but some patch exists.
 
-I thinks its the same here.
-
-That would explain the following behavior.
-If I started the hostapd deamon in the cellar,
-where I can access the console server to capture the trace,
-I was able to start the service and the panic appeared
-when I stopped the hostap deamon.
-
-When I start it at the upper flor where the AP can
-receive many WLAN stations the kernel panic appears instantly
-after the start of the deamon.
-
+-- 
+Rafał
