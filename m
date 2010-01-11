@@ -1,55 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41165 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755781Ab0A3A66 (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:36074 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751090Ab0AKWO2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2010 19:58:58 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/2] cfg80211: avoid flushing the global workqueue for core reg hints
-Date: Fri, 29 Jan 2010 19:58:56 -0500
-Message-Id: <1264813137-4478-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1264813137-4478-1-git-send-email-lrodriguez@atheros.com>
-References: <1264813137-4478-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 11 Jan 2010 17:14:28 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: Re: [PATCH 3/6] b43: N-PHY: add RSSI calculation for PHY rev < 3
+Date: Mon, 11 Jan 2010 23:13:25 +0100
+Cc: bcm43xx-dev@lists.berlios.de,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <op.u6b70wtk9lhzdc@linux-g0th.site> <201001102338.28721.mb@bu3sch.de> <b170af451001111313r6bc6905fg722fcd42d7f2681a@mail.gmail.com>
+In-Reply-To: <b170af451001111313r6bc6905fg722fcd42d7f2681a@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <201001112313.26197.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When cfg80211 starts it will send a core regulatory hint. This is
-sent to the global workqueue but we force processing of it by
-flushing the global workqueue. The flushing was done since
-cfg80211 needs last_request to always be populated.
+On Monday 11 January 2010 22:13:31 Rafał Miłecki wrote:
+> 2010/1/10 Michael Buesch <mb@bu3sch.de>:
+> > On Sunday 10 January 2010 23:13:34 Rafał Miłecki wrote:
+> >> +     s32 results_min[4];
+> >> +     u8 vcm_final[4];
+> >> +     s32 results[4][4];
+> >> +     s32 miniq[4][2];
+> >> +     memset(results_min, 0, sizeof(s32) * 4);
+> >> +     memset(vcm_final, 0, sizeof(u8) * 4);
+> >> +     memset(results, 0, sizeof(s32) * 4 * 4);
+> >> +     memset(miniq, 0, sizeof(s32) * 4 * 2);
+> >
+> > Just initialize the variables to zero instead of doing a memset:
+> >
+> > +       s32 results_min[4] = { 0, };
+> > +       u8 vcm_final[4] = { 0, };
+> > +       s32 results[4][4] = { 0, };
+> > +       s32 miniq[4][2] = { 0, };
+> 
+> Nice trick, thanks :) Just for two-dimensional arrays I'll have to hack it to:
+> s32 results[4][4] = { { 0, }, { 0, }, { 0, }, { 0, } };
+> I believe.
 
-Avoid flushing the global workqueue by processing the work
-required immediately instead of putting it into a linked
-list and processing it after the flush.
+No I don't think so.
+It's C standard that uninitialized elements on automatic variables are initialized
+to zero, _if_ at least one element is initialized to something.
+So if you init one element to 0, all others will be 0, too.
+I think that should also work for multidimensional arrays. So my example
+s32 results[4][4] = { 0, };
+should do the right thing. Am I wrong?
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+Here's a test-program:
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 5f8071d..5dcda28 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1920,14 +1920,12 @@ static int regulatory_hint_core(const char *alpha2)
- 	request->alpha2[1] = alpha2[1];
- 	request->initiator = NL80211_REGDOM_SET_BY_CORE;
- 
--	queue_regulatory_request(request);
--
- 	/*
- 	 * This ensures last_request is populated once modules
- 	 * come swinging in and calling regulatory hints and
- 	 * wiphy_apply_custom_regulatory().
- 	 */
--	flush_scheduled_work();
-+	reg_process_hint(request);
- 
- 	return 0;
- }
+
+mb@maggie:~$ cat t.c
+#include <stdio.h>
+#include <stdint.h>
+
+int main(void)
+{
+        int i, j;
+        int32_t results[4][4]
+#ifdef INIT_IT
+= { 0, };
+#else
+;
+#endif
+
+        for (i = 0; i < 4; i++)
+                for (j = 0; j < 4; j++)
+                        printf("%d\n", results[i][j]);
+
+}
+mb@maggie:~$ gcc -o t t.c
+mb@maggie:~$ ./t
+0
+0
+0
+1
+-1077483840
+0
+0
+0
+-1077483824
+268436224
+268536212
+0
+-1077483776
+268436888
+268353524
+0
+mb@maggie:~$ gcc -D INIT_IT -o t t.c
+mb@maggie:~$ ./t
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+
 -- 
-1.6.3.3
-
+Greetings, Michael.
