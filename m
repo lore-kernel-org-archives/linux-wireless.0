@@ -1,56 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.irobot.com ([206.83.81.187]:55781 "EHLO smtp1.irobot.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753162Ab0AUSWQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 13:22:16 -0500
-Message-ID: <4B5897C8.2080006@irobot.com>
-Date: Thu, 21 Jan 2010 10:07:04 -0800
-From: Adam Wozniak <awozniak@irobot.com>
+Received: from mail-ew0-f209.google.com ([209.85.219.209]:49566 "EHLO
+	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751551Ab0AKVSR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jan 2010 16:18:17 -0500
+Received: by ewy1 with SMTP id 1so3724154ewy.28
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2010 13:18:15 -0800 (PST)
+Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
+Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 11 Jan 2010 22:18:13 +0100
+Subject: [PATCH 2/6 V2] b43: N-PHY: add RSSI functions: poll and set 2055 vcm
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Subject: Re: FYI - new compat-wireless based on 2.6.33-rc4
-References: <43e72e891001201213x6a2c203dl7121f2dde6d61fb9@mail.gmail.com>
-In-Reply-To: <43e72e891001201213x6a2c203dl7121f2dde6d61fb9@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <op.u6dz4mz09lhzdc@linux-g0th.site>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-compat-wireless-2010-01-20.tar.bz2 does not compile cleanly on ARM 
-architectures.
-Commenting out line 9 of compat-2.6.32.h (#include <asm/compat.h>) fixes 
-the issue.
-There is no arch/arm/include/asm/compat.h
-I suspect there are several other architectures which have similar issues.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+  drivers/net/wireless/b43/phy_n.c |   96 ++++++++++++++++++++++++++++++++++++++
+  1 files changed, 96 insertions(+), 0 deletions(-)
 
-Luis R. Rodriguez wrote:
-> The compat_firmware_class was having some issues which should now be
-> hopefully addressed:
->
->   * Use a different subsystem name for sysfs registration, now compat_firmware
->   * The new subsystem name change required a new udev rule to be added
->
-> The new compat-wireless for 2.6.33-rc4 has been pushed out with the
-> new changes. Unfortunately 2.6.33-rc5 hasn't been pushed out yet so I
-> just overwrote the old rc4 package (next time I'll just add an extra
-> extra version when this happens). The new sha1sum for this release is:
->
-> c007d7c8649d6149f415ea87dc7a34d4ee808766  compat-wireless-2.6.33-rc4.tar.bz2
->
-> Just kicked out a bleeding edge release with the same fixes:
->
-> 65bb3cd6565f1788a2c63bfe8ccfdd8dfc1fb368  compat-wireless-2010-01-20.tar.bz2
->
-> Please let us know if there are any issues. I should note that the new
-> compat_firmware_class will be used *every time* compat-wireless is
-> used firmware needs to be uploaded, not just for the new
-> request_firmware_nowait().
->
->   Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->   
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index a44fca1..214cf54 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -711,6 +711,102 @@ static void b43_nphy_rssi_select(struct b43_wldev *dev, u8 code, u8 type)
+  	}
+  }
+
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/SetRssi2055Vcm */
++static void b43_nphy_set_rssi_2055_vcm(struct b43_wldev *dev, u8 type, u8 *buf)
++{
++	int i;
++	for (i = 0; i < 2; i++) {
++		if (type == 2) {
++			if (i == 0) {
++				b43_radio_maskset(dev, B2055_C1_B0NB_RSSIVCM,
++						  0xFC, buf[0]);
++				b43_radio_maskset(dev, B2055_C1_RX_BB_RSSICTL5,
++						  0xFC, buf[1]);
++			} else {
++				b43_radio_maskset(dev, B2055_C2_B0NB_RSSIVCM,
++						  0xFC, buf[2 * i]);
++				b43_radio_maskset(dev, B2055_C2_RX_BB_RSSICTL5,
++						  0xFC, buf[2 * i + 1]);
++			}
++		} else {
++			if (i == 0)
++				b43_radio_maskset(dev, B2055_C1_RX_BB_RSSICTL5,
++						  0xF3, buf[0] << 2);
++			else
++				b43_radio_maskset(dev, B2055_C2_RX_BB_RSSICTL5,
++						  0xF3, buf[2 * i + 1] << 2);
++		}
++	}
++}
++
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/PollRssi */
++static int b43_nphy_poll_rssi(struct b43_wldev *dev, u8 type, s32 *buf,
++				u8 nsamp)
++{
++	int i;
++	int out;
++	u16 save_regs_phy[9];
++	u16 s[2];
++
++	if (dev->phy.rev >= 3) {
++		save_regs_phy[0] = b43_phy_read(dev,
++						B43_NPHY_RFCTL_LUT_TRSW_UP1);
++		save_regs_phy[1] = b43_phy_read(dev,
++						B43_NPHY_RFCTL_LUT_TRSW_UP2);
++		save_regs_phy[2] = b43_phy_read(dev, B43_NPHY_AFECTL_C1);
++		save_regs_phy[3] = b43_phy_read(dev, B43_NPHY_AFECTL_C2);
++		save_regs_phy[4] = b43_phy_read(dev, B43_NPHY_AFECTL_OVER1);
++		save_regs_phy[5] = b43_phy_read(dev, B43_NPHY_AFECTL_OVER);
++		save_regs_phy[6] = b43_phy_read(dev, B43_NPHY_TXF_40CO_B1S0);
++		save_regs_phy[7] = b43_phy_read(dev, B43_NPHY_TXF_40CO_B32S1);
++	}
++
++	b43_nphy_rssi_select(dev, 5, type);
++
++	if (dev->phy.rev < 2) {
++		save_regs_phy[8] = b43_phy_read(dev, B43_NPHY_GPIO_SEL);
++		b43_phy_write(dev, B43_NPHY_GPIO_SEL, 5);
++	}
++
++	for (i = 0; i < 4; i++)
++		buf[i] = 0;
++
++	for (i = 0; i < nsamp; i++) {
++		if (dev->phy.rev < 2) {
++			s[0] = b43_phy_read(dev, B43_NPHY_GPIO_LOOUT);
++			s[1] = b43_phy_read(dev, B43_NPHY_GPIO_HIOUT);
++		} else {
++			s[0] = b43_phy_read(dev, B43_NPHY_RSSI1);
++			s[1] = b43_phy_read(dev, B43_NPHY_RSSI2);
++		}
++
++		buf[0] += ((s8)((s[0] & 0x3F) << 2)) >> 2;
++		buf[1] += ((s8)(((s[0] >> 8) & 0x3F) << 2)) >> 2;
++		buf[2] += ((s8)((s[1] & 0x3F) << 2)) >> 2;
++		buf[3] += ((s8)(((s[1] >> 8) & 0x3F) << 2)) >> 2;
++	}
++	out = (buf[0] & 0xFF) << 24 | (buf[1] & 0xFF) << 16 |
++		(buf[2] & 0xFF) << 8 | (buf[3] & 0xFF);
++
++	if (dev->phy.rev < 2)
++		b43_phy_write(dev, B43_NPHY_GPIO_SEL, save_regs_phy[8]);
++
++	if (dev->phy.rev >= 3) {
++		b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_UP1,
++				save_regs_phy[0]);
++		b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_UP2,
++				save_regs_phy[1]);
++		b43_phy_write(dev, B43_NPHY_AFECTL_C1, save_regs_phy[2]);
++		b43_phy_write(dev, B43_NPHY_AFECTL_C2, save_regs_phy[3]);
++		b43_phy_write(dev, B43_NPHY_AFECTL_OVER1, save_regs_phy[4]);
++		b43_phy_write(dev, B43_NPHY_AFECTL_OVER, save_regs_phy[5]);
++		b43_phy_write(dev, B43_NPHY_TXF_40CO_B1S0, save_regs_phy[6]);
++		b43_phy_write(dev, B43_NPHY_TXF_40CO_B32S1, save_regs_phy[7]);
++	}
++
++	return out;
++}
++
+  /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/RSSICal */
+  static void b43_nphy_rev2_rssi_cal(struct b43_wldev *dev, u8 type)
+  {
+-- 
+1.6.4.2
 
