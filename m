@@ -1,63 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53397 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753647Ab0AVU2u (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 15:28:50 -0500
-Subject: Re: Starting hostapd causes kernel panic
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Markus Baier <Markus_Baier@web.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <loom.20100122T205326-794@post.gmane.org>
-References: <loom.20100122T205326-794@post.gmane.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ZAYZFSn9WQdUfKVYCsLU"
-Date: Fri, 22 Jan 2010 21:28:46 +0100
-Message-ID: <1264192127.2593.15.camel@johannes.local>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:53760 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751035Ab0AKFrP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jan 2010 00:47:15 -0500
+Message-ID: <4B4ABB54.7030600@openwrt.org>
+Date: Mon, 11 Jan 2010 06:47:00 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: mac80211: fix queue selection for data frames on monitor interfaces
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When ieee80211_monitor_select_queue encounters data frames, it selects
+the WMM AC based on skb->priority and assumes that skb->priority
+contains a valid 802.1d tag. However this assumption is incorrect, since
+ieee80211_select_queue has not been called at this point.
+If skb->priority > 7, an array overrun occurs, which could lead to
+invalid values, resulting in crashes in the tx path.
+Fix this by setting skb->priority based on the 802.11 header for QoS
+frames and using the default AC for all non-QoS frames.
 
---=-ZAYZFSn9WQdUfKVYCsLU
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -685,6 +685,7 @@ static u16 ieee80211_monitor_select_queu
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_radiotap_header *rtap = (void *)skb->data;
++	u8 *p;
 
-On Fri, 2010-01-22 at 20:14 +0000, Markus Baier wrote:
-> After the latest git pull from wireless-testing
-> master-2010-01-14 to master-2010-01-19
-> the start of hostapd causes kernel panic.
->=20
-> Tested with wireless-testing master-2010-01-19
-> and hostapd 0.6.9 / 0.7.0
+ 	if (local->hw.queues < 4)
+ 		return 0;
+@@ -695,11 +696,14 @@ static u16 ieee80211_monitor_select_queu
 
-> EIP: [<c126afc9>] invoke_tx_handlers+0x909/0xf40 SS:ESP 0068:f6c07b34
+ 	hdr = (void *)((u8 *)skb->data + le16_to_cpu(rtap->it_len));
 
-Would you compile with CONFIG_MAC80211_NOINLINE (may need to enable
-CONFIG_MAC80211_DEBUG_MENU) and give me the stack trace then? But maybe
-I can reproduce it this way.
+-	if (!ieee80211_is_data(hdr->frame_control)) {
++	if (!ieee80211_is_data_qos(hdr->frame_control)) {
+ 		skb->priority = 7;
+ 		return ieee802_1d_to_ac[skb->priority];
+ 	}
 
-johannes
-
---=-ZAYZFSn9WQdUfKVYCsLU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLWgp7AAoJEODzc/N7+QmaYUEP/RJr8k+2SLUrEB4wckXhr9R4
-mKN1pDCYZZ9xrz04SAzXZA2JpC9O3JeeUA8n32NOG7wi2lpLaizDMDe1oEghiz91
-raugEMHUj2Gzxno9gyNEbHStAWLHVD0ylCHlX++akzeDMZnJA4lQUZHIvwNhz2+w
-3JyKAnqWsXy+ejCECe5w8RbhTkf36y97H0hCtoAGrVAH6ONyB/h+9RfeCktDmh1o
-1DOwuIXuWGnqHExu6OW/ZYRbHNeYeGwDbK43Xj1lBp+Ipcfx676DxkNstvFlnxZE
-DfNwVNE2BW2gGwFw78+5gK/GSmnWBNXoI2OlxqoDM9EAOSqQbJHPYNyqfTNa0pOC
-zSZgH7pfHJqXd61IDGAHbG4kGWPSKydlEBZxh8Nn7esn5bfCFNopDj5aYYyweZS8
-XnzsreDKekWwxsQvB9+fFPqTklbUwXoyYsfJsWYYD4YrsHMKSDoPyz5+aNRTmCKT
-K2a3LNz4yLyS4qAYkDXZBbvho+UZ524/Ua17rP1l4Uxz3qx1nAQVqMsz1OjwQX9y
-/gNXrF4XIZfyzbg/32IaJnsojSF1dI+c2a+esOuY6FfWUHoTKMOrnLp6Uaa7MUZh
-qTTtLWiuq3c+YJOxmko9Y8Pl3EuHPSb7mNSYt/KZkuzMGtGTD2H9RWK49aUEGnK6
-8/mK9x7PZx5AyILTStjO
-=ldRU
------END PGP SIGNATURE-----
-
---=-ZAYZFSn9WQdUfKVYCsLU--
++	p = ieee80211_get_qos_ctl(hdr);
++	skb->priority = *p & IEEE80211_QOS_CTL_TAG1D_MASK;
++
+ 	return ieee80211_downgrade_queue(local, skb);
+ }
 
