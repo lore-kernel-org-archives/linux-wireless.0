@@ -1,32 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:48158 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752533Ab0AWTAJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jan 2010 14:00:09 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: hwtkip hangs on b43
-Date: Sat, 23 Jan 2010 20:00:04 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, kecsa@kutfo.hit.bme.hu,
-	linux-wireless@vger.kernel.org
-References: <Pine.LNX.4.44.1001230942190.16120-100000@kutfo.hit.bme.hu> <201001231919.32466.mb@bu3sch.de> <1264272828.23766.6.camel@johannes.local>
-In-Reply-To: <1264272828.23766.6.camel@johannes.local>
+Received: from mail-iw0-f197.google.com ([209.85.223.197]:49757 "EHLO
+	mail-iw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751090Ab0AKQDi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jan 2010 11:03:38 -0500
+Received: by iwn35 with SMTP id 35so14856093iwn.4
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2010 08:03:38 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201001232000.07229.mb@bu3sch.de>
+In-Reply-To: <4B4ABB54.7030600@openwrt.org>
+References: <4B4ABB54.7030600@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 11 Jan 2010 08:03:18 -0800
+Message-ID: <43e72e891001110803x6ecd3dc4m267dd809d640a522@mail.gmail.com>
+Subject: Re: mac80211: fix queue selection for data frames on monitor
+	interfaces
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 23 January 2010 19:53:48 Johannes Berg wrote:
-> Actually you can't, because you can't acquire the mutex here since we're
-> in an atomic section. So relying on it being already locked is probably
-> safer. However, you can't actually sleep anyway...
+On Sun, Jan 10, 2010 at 9:47 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> When ieee80211_monitor_select_queue encounters data frames, it selects
+> the WMM AC based on skb->priority and assumes that skb->priority
+> contains a valid 802.1d tag. However this assumption is incorrect, since
+> ieee80211_select_queue has not been called at this point.
+> If skb->priority > 7, an array overrun occurs, which could lead to
+> invalid values, resulting in crashes in the tx path.
+> Fix this by setting skb->priority based on the 802.11 header for QoS
+> frames and using the default AC for all non-QoS frames.
+>
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-I'm OK with removing the lock from the callback, if it is guaranteed that
-the callback is only called on behalf of a RX call.
+Its unclear whether or not this is a stable fix. It fixes a crash but
+does this depend on a patch added recently which is not in stable yet?
 
-We can just remove the lock and add a comment explaining why it is not locked...
-
--- 
-Greetings, Michael.
+  Luis
