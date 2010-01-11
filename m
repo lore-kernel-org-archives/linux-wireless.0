@@ -1,125 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:46762 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753011Ab0ACVRK (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55650 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752847Ab0AKOAW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jan 2010 16:17:10 -0500
-Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
-	by emh06-2.mail.saunalahti.fi (Postfix) with SMTP id C1D09C7BE6
-	for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2010 23:07:44 +0200 (EET)
-Received: from [127.0.1.1] (a91-155-131-184.elisa-laajakaista.fi [91.155.131.184])
-	by emh04.mail.saunalahti.fi (Postfix) with ESMTP id AFA4A41BEC
-	for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2010 23:07:43 +0200 (EET)
-Subject: [PATCH 3/9] wl1251: get PS Poll and Nullfunc templates from mac80211
+	Mon, 11 Jan 2010 09:00:22 -0500
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1NUKod-0007Yu-1A
+	for linux-wireless@vger.kernel.org; Mon, 11 Jan 2010 09:00:19 -0500
+Received: from linville-t400.local (linville-t400.local [127.0.0.1])
+	by linville-t400.local (8.14.3/8.14.3) with ESMTP id o0BDvgug008758
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2010 08:57:42 -0500
+Received: (from linville@localhost)
+	by linville-t400.local (8.14.3/8.14.3/Submit) id o0BDvf1U008756
+	for linux-wireless@vger.kernel.org; Mon, 11 Jan 2010 08:57:41 -0500
+Date: Mon, 11 Jan 2010 08:57:41 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 03 Jan 2010 23:07:43 +0200
-Message-ID: <20100103210743.29287.15568.stgit@tikku>
-In-Reply-To: <20100103210552.29287.20384.stgit@tikku>
-References: <20100103210552.29287.20384.stgit@tikku>
+Subject: Call For Proposal: Linux Wireless Summit(s) 2010
+Message-ID: <20100111135741.GB3223@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+Already starting to get emails, so I guess it is about that time
+again... :-)
 
-Now that mac80211 creates templates for PS Poll and Nullfunc frames, use
-them instead of creating our own.
+Does anyone have any legitimate proposals for Linux wireless summit
+meetings for 2010?  What you propose is up to you, but I (personally)
+would prefer to have something near in time and space to a larger
+event.  Alternatively, a small wireless-specific event with a serious
+sponsor could be nice.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1251_main.c |   58 ++++++++---------------------
- 1 files changed, 16 insertions(+), 42 deletions(-)
+In 2009 there were two meetings, one in Europe (i.e. Berlin) and one
+in North America (i.e. Portland).  This actually turned-out quite
+well IMHO, but I don't really want to organize two meetings again
+this year myself.  OTOH, my last contact with the LinuxCon organizers
+suggested that we could have space with them in the Boston area in
+the Fall (September?).  So I will view that as our default option
+(especially for North America).
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index 4e373f3..6cce864 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -563,45 +563,6 @@ static void wl1251_op_remove_interface(struct ieee80211_hw *hw,
- 	mutex_unlock(&wl->mutex);
- }
- 
--static int wl1251_build_null_data(struct wl1251 *wl)
--{
--	struct wl12xx_null_data_template template;
--
--	if (!is_zero_ether_addr(wl->bssid)) {
--		memcpy(template.header.da, wl->bssid, ETH_ALEN);
--		memcpy(template.header.bssid, wl->bssid, ETH_ALEN);
--	} else {
--		memset(template.header.da, 0xff, ETH_ALEN);
--		memset(template.header.bssid, 0xff, ETH_ALEN);
--	}
--
--	memcpy(template.header.sa, wl->mac_addr, ETH_ALEN);
--	template.header.frame_ctl = cpu_to_le16(IEEE80211_FTYPE_DATA |
--						IEEE80211_STYPE_NULLFUNC |
--						IEEE80211_FCTL_TODS);
--
--	return wl1251_cmd_template_set(wl, CMD_NULL_DATA, &template,
--				       sizeof(template));
--
--}
--
--static int wl1251_build_ps_poll(struct wl1251 *wl, u16 aid)
--{
--	struct wl12xx_ps_poll_template template;
--
--	memcpy(template.bssid, wl->bssid, ETH_ALEN);
--	memcpy(template.ta, wl->mac_addr, ETH_ALEN);
--
--	/* aid in PS-Poll has its two MSBs each set to 1 */
--	template.aid = cpu_to_le16(1 << 15 | 1 << 14 | aid);
--
--	template.fc = cpu_to_le16(IEEE80211_FTYPE_CTL | IEEE80211_STYPE_PSPOLL);
--
--	return wl1251_cmd_template_set(wl, CMD_PS_POLL, &template,
--				       sizeof(template));
--
--}
--
- static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
- {
- 	struct wl1251 *wl = hw->priv;
-@@ -1101,7 +1062,7 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
- {
- 	enum wl1251_cmd_ps_mode mode;
- 	struct wl1251 *wl = hw->priv;
--	struct sk_buff *beacon;
-+	struct sk_buff *beacon, *skb;
- 	int ret;
- 
- 	wl1251_debug(DEBUG_MAC80211, "mac80211 bss info changed");
-@@ -1115,7 +1076,13 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & BSS_CHANGED_BSSID) {
- 		memcpy(wl->bssid, bss_conf->bssid, ETH_ALEN);
- 
--		ret = wl1251_build_null_data(wl);
-+		skb = ieee80211_nullfunc_get(wl->hw, wl->vif);
-+		if (!skb)
-+			goto out_sleep;
-+
-+		ret = wl1251_cmd_template_set(wl, CMD_NULL_DATA,
-+					      skb->data, skb->len);
-+		dev_kfree_skb(skb);
- 		if (ret < 0)
- 			goto out;
- 
-@@ -1136,7 +1103,14 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
- 							  wl->dtim_period);
- 			wl->aid = bss_conf->aid;
- 
--			ret = wl1251_build_ps_poll(wl, wl->aid);
-+			skb = ieee80211_pspoll_get(wl->hw, wl->vif);
-+			if (!skb)
-+				goto out_sleep;
-+
-+			ret = wl1251_cmd_template_set(wl, CMD_PS_POLL,
-+						      skb->data,
-+						      skb->len);
-+			dev_kfree_skb(skb);
- 			if (ret < 0)
- 				goto out_sleep;
- 
+So, anyone else want to make a proposal?
 
+Thanks,
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
