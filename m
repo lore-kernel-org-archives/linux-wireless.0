@@ -1,84 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f190.google.com ([209.85.222.190]:43358 "EHLO
-	mail-pz0-f190.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752028Ab0AWRUU (ORCPT
+Received: from mail-ew0-f209.google.com ([209.85.219.209]:51152 "EHLO
+	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752875Ab0AKWnD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jan 2010 12:20:20 -0500
-Received: by pzk28 with SMTP id 28so795922pzk.4
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2010 09:20:19 -0800 (PST)
-Message-ID: <4B5B2FCF.2000005@lwfinger.net>
-Date: Sat, 23 Jan 2010 11:20:15 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 11 Jan 2010 17:43:03 -0500
+Received: by ewy1 with SMTP id 1so3831241ewy.28
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2010 14:43:01 -0800 (PST)
 MIME-Version: 1.0
-To: kecsa@kutfo.hit.bme.hu
-CC: linux-wireless@vger.kernel.org
-Subject: Re: hwtkip hangs on b43
-References: <Pine.LNX.4.44.1001230942190.16120-100000@kutfo.hit.bme.hu>
-In-Reply-To: <Pine.LNX.4.44.1001230942190.16120-100000@kutfo.hit.bme.hu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <201001112342.08099.mb@bu3sch.de>
+References: <op.u6b70wtk9lhzdc@linux-g0th.site>
+	 <201001112313.26197.mb@bu3sch.de>
+	 <b170af451001111427u25861f2bla4062a7b0aea19ec@mail.gmail.com>
+	 <201001112342.08099.mb@bu3sch.de>
+Date: Mon, 11 Jan 2010 23:43:00 +0100
+Message-ID: <b170af451001111443g2c504ea4v63e54d9ad6e0b418@mail.gmail.com>
+Subject: Re: [PATCH 3/6] b43: N-PHY: add RSSI calculation for PHY rev < 3
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/23/2010 02:46 AM, kecsa@kutfo.hit.bme.hu wrote:
-> Hi,
+W dniu 11 stycznia 2010 23:42 użytkownik Michael Buesch <mb@bu3sch.de> napisał:
+> On Monday 11 January 2010 23:27:18 Rafał Miłecki wrote:
+>> Whoops, I should have explained what I mean. I am not sure what CFLAGS
+>> "make" picks for compiled but I get:
+>>
+>>   CC [M]  drivers/net/wireless/b43/phy_n.o
+>> drivers/net/wireless/b43/phy_n.c: In function ‘b43_nphy_rev2_rssi_cal’:
+>> drivers/net/wireless/b43/phy_n.c:887: warning: missing braces around initializer
+>> drivers/net/wireless/b43/phy_n.c:887: warning: (near initialization
+>> for ‘results[0]’)
+>>
+>> for s32 results[4][4] = { 0, };
+>>
 >
-> when I load b43 with hwtkip=1 system hangs after
-> ' b43-phy0 debug: Using hardware based encryption for keyidx: 0, mac:...'
-> throwing the below BUG.
->
-> This is a non-SMP non-preemtive kernel.  It looks like we are entering
-> b43_op_update_tkip_key() already holding the wl->mutex. We lock mutex in
-> b43_interrupt_thread_handler().
->
-> This problem is present in stable and also in compat-wireless-2010-01-22
-> shapshot if I haven't missed something. As a quick and dirty fix I have
-> removed wl->mutex lock/unlock from b43_op_update_tkip_key(). Box survived
-> one day (until now) and a ~3GB file transfer over WLAN using hwtkip in
-> this way.
+> But does this work?
+> s32 results[4][4] = { };
 
-Your analysis seem to be correct. I tested with the following patch, which tests 
-to see if the mutex is locked on entry. If not, it logs a message, locks the 
-mutex and sets a flag to indicate that the mutex should be unlocked on exit. 
-This patch is not SMP-safe, but is merely for testing. The printk statement has 
-not triggered after about 1 hour of testing. I'll give it a bit more testing 
-before a final patch is submitted.
+Yes, this compiles fine, and I believe it works fine :)
 
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c
-+++ wireless-testing/drivers/net/wireless/b43/main.c
-@@ -850,11 +850,16 @@ static void b43_op_update_tkip_key(struc
-  	struct b43_wl *wl = hw_to_b43_wl(hw);
-  	struct b43_wldev *dev;
-  	int index = keyconf->hw_key_idx;
-+	bool locked_here = 0;
-
-  	if (B43_WARN_ON(!modparam_hwtkip))
-  		return;
-
--	mutex_lock(&wl->mutex);
-+	if (!mutex_is_locked(&wl->mutex)) {
-+		printk(KERN_DEBUG "b43: mutex not locked in %s\n", __func__);
-+		mutex_lock(&wl->mutex);
-+		locked_here = 1;
-+	}
-
-  	dev = wl->current_dev;
-  	if (!dev || b43_status(dev) < B43_STAT_INITIALIZED)
-@@ -866,7 +871,8 @@ static void b43_op_update_tkip_key(struc
-  	keymac_write(dev, index, addr);
-
-  out_unlock:
--	mutex_unlock(&wl->mutex);
-+	if (locked_here)
-+		mutex_unlock(&wl->mutex);
-  }
-
-  static void do_key_write(struct b43_wldev *dev,
-
-==================================================
-
-
-Larry
-
-
+-- 
+Rafał
