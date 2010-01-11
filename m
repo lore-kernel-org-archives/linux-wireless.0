@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f209.google.com ([209.85.219.209]:63835 "EHLO
-	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754369Ab0AMNiZ convert rfc822-to-8bit (ORCPT
+Received: from ogre.sisk.pl ([217.79.144.158]:34954 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753578Ab0AKTzm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2010 08:38:25 -0500
-Received: by ewy1 with SMTP id 1so517375ewy.28
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2010 05:38:24 -0800 (PST)
+	Mon, 11 Jan 2010 14:55:42 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: Re: 2.6.33-rc3-git3: Reported regressions 2.6.31 -> 2.6.32
+Date: Mon, 11 Jan 2010 20:56:18 +0100
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+References: <nzLqtSp97aP.A.RGB.hglSLB@chimera> <b170af451001110449w134af1f9we804205a5febcaca@mail.gmail.com>
+In-Reply-To: <b170af451001110449w134af1f9we804205a5febcaca@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4B4DCB39.7030801@lwfinger.net>
-References: <op.u6fp66hl9lhzdc@linux-g0th.site> <4B4DCB39.7030801@lwfinger.net>
-Date: Wed, 13 Jan 2010 14:38:22 +0100
-Message-ID: <b170af451001130538q79d431a6vd0eed9628356a40b@mail.gmail.com>
-Subject: Re: [PATCH 3/3] b43: N-PHY: add RX IQ calculation for rev < 3
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201001112056.19042.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 13 stycznia 2010 14:31 użytkownik Larry Finger
-<Larry.Finger@lwfinger.net> napisał:
-> On 01/12/2010 01:38 PM, Rafał Miłecki wrote:
->>
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> ---
->>
->> Uh, bigger one. This patch causes false warning:
->> drivers/net/wireless/b43/phy_n.c: In function ‘b43_nphy_rev2_cal_rx_iq’:
->> drivers/net/wireless/b43/phy_n.c:627: warning: large integer implicitly truncated to unsigned type
->>
->> That's for:
->> b43_phy_maskset(dev, B43_NPHY_RFSEQCA, ~B43_NPHY_RFSEQCA_RXDIS, ((1 - i) << B43_NPHY_RFSEQCA_RXDIS_SHIFT));
->>
->> It's inside loop i=0,1. I tried casting i on (u8) but this didn't help. Can we leave this? Or can sb share some trick to avoid this warning?
->
-> It is ~B43_NPHY_RFSEQCA_RXDIS, not i, that causes the warning. Change the
-> statement to
->
-> b43_phy_maskset(dev, B43_NPHY_RFSEQCA, (u16)(~B43_NPHY_RFSEQCA_RXDIS),
->               ((1 - i) << B43_NPHY_RFSEQCA_RXDIS_SHIFT));
+On Monday 11 January 2010, Rafał Miłecki wrote:
+> 2010/1/10 Rafael J. Wysocki <rjw@sisk.pl>:
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=14747
+> > Subject         : bisected 2.6.32 regression: synaptics touchpad doesn't work
+> > Submitter       : François Valenduc <francois.valenduc@tvcablenet.be>
+> > Date            : 2009-12-06 11:16 (36 days old)
+> 
+> Not sure if this is hackish or not, but some patch exists.
 
-Yeah, Michael already pointed that :)
+Thanks, updated.
 
--- 
-Rafał
+Well, I guess the hackish is rather inevitable in this particular case ...
+
+Rafael
