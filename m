@@ -1,69 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55114 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752857Ab0AaVU6 (ORCPT
+Received: from mail-ew0-f209.google.com ([209.85.219.209]:35747 "EHLO
+	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752340Ab0AKXXy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2010 16:20:58 -0500
-Subject: Re: Linux wireless GSoC 2010 project ideas
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Witold Sowa <witold.sowa@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Till Kamppeter <till.kamppeter@gmail.com>,
-	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
-	lsb-discuss@lists.linux-foundation.org
-In-Reply-To: <4B65F024.3080505@gmail.com>
-References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com>
-	 <4B65F024.3080505@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-oD+xiGd3dZEqWzQC59TN"
-Date: Sun, 31 Jan 2010 22:20:54 +0100
-Message-ID: <1264972854.3597.17.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 11 Jan 2010 18:23:54 -0500
+Received: by ewy1 with SMTP id 1so3879284ewy.28
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2010 15:23:53 -0800 (PST)
+Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
+Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 12 Jan 2010 00:23:50 +0100
+Subject: [PATCH 3/6 V3] b43: N-PHY: add RSSI calculation for PHY rev < 3
+MIME-Version: 1.0
+From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <op.u6d5x0fk9lhzdc@linux-g0th.site>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-oD+xiGd3dZEqWzQC59TN
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com
+---
+  drivers/net/wireless/b43/phy_n.c |  155 +++++++++++++++++++++++++++++++++++++-
+  1 files changed, 154 insertions(+), 1 deletions(-)
 
-On Sun, 2010-01-31 at 22:03 +0100, Witold Sowa wrote:
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 214cf54..fbee776 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -810,7 +810,160 @@ static int b43_nphy_poll_rssi(struct b43_wldev *dev, u8 type, s32 *buf,
+  /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/RSSICal */
+  static void b43_nphy_rev2_rssi_cal(struct b43_wldev *dev, u8 type)
+  {
+-	//TODO
++	int i, j;
++	u8 state[4];
++	u8 code, val;
++	u16 class, override;
++	u8 regs_save_radio[2];
++	u16 regs_save_phy[2];
++	s8 offset[4];
++
++	u16 clip_state[2];
++	u16 clip_off[2] = { 0xFFFF, 0xFFFF };
++	s32 results_min[4] = { };
++	u8 vcm_final[4] = { };
++	s32 results[4][4] = { };
++	s32 miniq[4][2] = { };
++
++	if (type == 2) {
++		code = 0;
++		val = 6;
++	} else if (type < 2) {
++		code = 25;
++		val = 4;
++	} else {
++		B43_WARN_ON(1);
++		return;
++	}
++
++	class = b43_nphy_classifier(dev, 0, 0);
++	b43_nphy_classifier(dev, 7, 4);
++	b43_nphy_read_clip_detection(dev, clip_state);
++	b43_nphy_write_clip_detection(dev, clip_off);
++
++	if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ)
++		override = 0x140;
++	else
++		override = 0x110;
++
++	regs_save_phy[0] = b43_phy_read(dev, B43_NPHY_RFCTL_INTC1);
++	regs_save_radio[0] = b43_radio_read16(dev, B2055_C1_PD_RXTX);
++	b43_phy_write(dev, B43_NPHY_RFCTL_INTC1, override);
++	b43_radio_write16(dev, B2055_C1_PD_RXTX, val);
++
++	regs_save_phy[1] = b43_phy_read(dev, B43_NPHY_RFCTL_INTC2);
++	regs_save_radio[1] = b43_radio_read16(dev, B2055_C2_PD_RXTX);
++	b43_phy_write(dev, B43_NPHY_RFCTL_INTC2, override);
++	b43_radio_write16(dev, B2055_C2_PD_RXTX, val);
++
++	state[0] = b43_radio_read16(dev, B2055_C1_PD_RSSIMISC) & 0x07;
++	state[1] = b43_radio_read16(dev, B2055_C2_PD_RSSIMISC) & 0x07;
++	b43_radio_mask(dev, B2055_C1_PD_RSSIMISC, 0xF8);
++	b43_radio_mask(dev, B2055_C2_PD_RSSIMISC, 0xF8);
++	state[2] = b43_radio_read16(dev, B2055_C1_SP_RSSI) & 0x07;
++	state[3] = b43_radio_read16(dev, B2055_C2_SP_RSSI) & 0x07;
++
++	b43_nphy_rssi_select(dev, 5, type);
++	b43_nphy_scale_offset_rssi(dev, 0, 0, 5, 0, type);
++	b43_nphy_scale_offset_rssi(dev, 0, 0, 5, 1, type);
++
++	for (i = 0; i < 4; i++) {
++		u8 tmp[4];
++		for (j = 0; j < 4; j++)
++			tmp[j] = i;
++		if (type != 1)
++			b43_nphy_set_rssi_2055_vcm(dev, type, tmp);
++		b43_nphy_poll_rssi(dev, type, results[i], 8);
++		if (type < 2)
++			for (j = 0; j < 2; j++)
++				miniq[i][j] = min(results[i][2 * j],
++						results[i][2 * j + 1]);
++	}
++
++	for (i = 0; i < 4; i++) {
++		s32 mind = 40;
++		u8 minvcm = 0;
++		s32 minpoll = 249;
++		s32 curr;
++		for (j = 0; j < 4; j++) {
++			if (type == 2)
++				curr = abs(results[j][i]);
++			else
++				curr = abs(miniq[j][i / 2] - code * 8);
++
++			if (curr < mind) {
++				mind = curr;
++				minvcm = j;
++			}
++
++			if (results[j][i] < minpoll)
++				minpoll = results[j][i];
++		}
++		results_min[i] = minpoll;
++		vcm_final[i] = minvcm;
++	}
++
++	if (type != 1)
++		b43_nphy_set_rssi_2055_vcm(dev, type, vcm_final);
++
++	for (i = 0; i < 4; i++) {
++		offset[i] = (code * 8) - results[vcm_final[i]][i];
++
++		if (offset[i] < 0)
++			offset[i] = -((abs(offset[i]) + 4) / 8);
++		else
++			offset[i] = (offset[i] + 4) / 8;
++
++		if (results_min[i] == 248)
++			offset[i] = code - 32;
++
++		if (i % 2 == 0)
++			b43_nphy_scale_offset_rssi(dev, 0, offset[i], 1, 0,
++							type);
++		else
++			b43_nphy_scale_offset_rssi(dev, 0, offset[i], 2, 1,
++							type);
++	}
++
++	b43_radio_maskset(dev, B2055_C1_PD_RSSIMISC, 0xF8, state[0]);
++	b43_radio_maskset(dev, B2055_C1_PD_RSSIMISC, 0xF8, state[1]);
++
++	switch (state[2]) {
++	case 1:
++		b43_nphy_rssi_select(dev, 1, 2);
++		break;
++	case 4:
++		b43_nphy_rssi_select(dev, 1, 0);
++		break;
++	case 2:
++		b43_nphy_rssi_select(dev, 1, 1);
++		break;
++	default:
++		b43_nphy_rssi_select(dev, 1, 1);
++		break;
++	}
++
++	switch (state[3]) {
++	case 1:
++		b43_nphy_rssi_select(dev, 2, 2);
++		break;
++	case 4:
++		b43_nphy_rssi_select(dev, 2, 0);
++		break;
++	default:
++		b43_nphy_rssi_select(dev, 2, 1);
++		break;
++	}
++
++	b43_nphy_rssi_select(dev, 0, type);
++
++	b43_phy_write(dev, B43_NPHY_RFCTL_INTC1, regs_save_phy[0]);
++	b43_radio_write16(dev, B2055_C1_PD_RXTX, regs_save_radio[0]);
++	b43_phy_write(dev, B43_NPHY_RFCTL_INTC2, regs_save_phy[1]);
++	b43_radio_write16(dev, B2055_C2_PD_RXTX, regs_save_radio[1]);
++
++	b43_nphy_classifier(dev, 7, class);
++	b43_nphy_write_clip_detection(dev, clip_state);
+  }
 
-> Some time ago johill asked me if I would be interested in hacking on
-> adding WPS support to NetworkManager. Well, I would but I don't know
-> when I'll find some time for that. I don't know how much of work would
-> it require, but it possibly could be a topic of one of GSoC 2010
-> projects. I have no idea know if anybody would be willing to be a mentor
-> for such a project.
-
-Sounds like a good project to me, but I don't think I'd be a good mentor
-for since I'm not familiar with the NM codebase at all. As for how much
-work it would require, I think the basic client-side functionality could
-possibly be "too simple" for you, WPS has a lot of additional
-functionality (e.g. WPS support for the AP side).
-
-johannes
-
---=-oD+xiGd3dZEqWzQC59TN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLZfQyAAoJEODzc/N7+QmaHTsP/3W0ssLmXIpggt3H05N7Pcby
-P7hcXbhjVw58KytRS13XhB6x+VAP9noLtJ08tKnA1VdD3ngajO2yxF9wIDs52az7
-rtrQg7fU8BxOK6Dkl5wbxuz16RSKeiO0R/+hIi0t5A85EuS1UFNJdS/cADNyTgws
-7vjHLh3E5wNy49F+le01rBYpEUUa8PtFVvqOBKGOiz3mefSK8E29nGl0m8jDnfyY
-Sb0ITWXzzcJS4XANbyTJlMXQGufmYesDOZzilkHv+G8mn6wOfATB+j1l8FUaNMn0
-OVkYwnriwLy7/1kH0r/owDrlkrJeIYV6WxlJuEqnEDnDImFFtwT8+RB2GzLJ1j4r
-KD1yHU/ZQEf/NOvU8gS+lp/haWhBAZhIXYSJIRlHrEpK0VDAlxryCEHV6wCAe6bY
-gYFTHos2Zkt+MgxdMhkPzAIQHnhQ3q0ng7EQGCBQmf6+Nwd62F1Zgz4FfHidQdSE
-H8zag1l1ISVfBURhGM+G0l/g2xYn1UPVfxpRs7Fc1IVCoV/nUGQhFX5HnQMq7Abv
-Jcyw0ofHYYHHoLbEOgVfLEXHCe7cPA5nDQWlQfXWQ26OZs3nSkXsqp6xopR1raDB
-mMoGGl/65DYBAqoGVZIVgGzRje/uTG8dwA745tgxjuYT2iojxSm8OQ377gVlJri1
-7kT//sjPgpemhl+gS0Mu
-=QGpC
------END PGP SIGNATURE-----
-
---=-oD+xiGd3dZEqWzQC59TN--
+  /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/RSSICalRev3 */
+-- 
+1.6.4.2
 
