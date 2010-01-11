@@ -1,80 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56954 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753799Ab0AaTxR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2010 14:53:17 -0500
-Subject: Re: Regression in b43 with BCM4311/2
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from bu3sch.de ([62.75.166.246]:48084 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752927Ab0AKKJH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jan 2010 05:09:07 -0500
+From: Michael Buesch <mb@bu3sch.de>
 To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4B65D51F.1090903@lwfinger.net>
-References: <4B64A2F2.6060608@lwfinger.net>
-	 <1264887027.3546.207.camel@johannes.local> <4B64AAEB.9020806@lwfinger.net>
-	 <1264888699.3546.208.camel@johannes.local> <4B65D51F.1090903@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-EFDHrPs9WcCzYWUG6gev"
-Date: Sun, 31 Jan 2010 20:53:14 +0100
-Message-ID: <1264967594.3597.6.camel@johannes.local>
-Mime-Version: 1.0
+Subject: Re: [PATCH 2/6] b43: N-PHY: add RSSI functions: poll and set 2055 vcm
+Date: Mon, 11 Jan 2010 11:08:19 +0100
+Cc: bcm43xx-dev@lists.berlios.de,
+	=?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <op.u6b70ig59lhzdc@linux-g0th.site> <201001102332.22954.mb@bu3sch.de> <4B4A8F3D.6010200@lwfinger.net>
+In-Reply-To: <4B4A8F3D.6010200@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <201001111108.21701.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday 11 January 2010 03:38:53 Larry Finger wrote:
+> Yes, my fault. The specs are now corrected so that these statements are
+> 
+> ((s8)((s[1] >> 8) & 0x3F) << 2) >> 2
+> 
+> I think that is right.
 
---=-EFDHrPs9WcCzYWUG6gev
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+No it is not.
 
-Larry,
+You need to do this:
+(s8)(((s[1] >> 8) & 0x3F) << 2) >> 2
 
-> I finally sorted this out. The patch in question (c7ab5ef) is the bad one=
-, but
-> not the basic response rate part.
->=20
-> Going back to the code that worked, I discovered that the routines
-> b43_short_slot_timing_enable/disable() were never called. Once the new co=
-de
-> touched the shared memory location 0x0010, the transmit performance dropp=
-ed way
-> off. If I let the new code adjust the Interframe Slot time in MMIO space,=
- but
-> not the shared memory location, the transmit rate in my BCM4311/2 went fr=
-om a
-> maximum of 18 to 22 Mb/s. This problem did not affect the 0x4315 device a=
-s the
-> memory was changed only for G PHYs. I think that should be for 2GHz, and =
-have
-> made that adjustment. I have not yet tested that with the LP PHY. Once I =
-do, I
-> will post a patch for comment and testing.
+Alternatively add another pair of parenthesis to make it clearer:
 
-Cool, thanks for looking into it and the detailed analysis!
+((s8)(((s[1] >> 8) & 0x3F) << 2)) >> 2
 
-> Thanks for helping me understand the basic response rates.
+This basically shifts left unsigned and then shifts right _arithmetically_.
+In your example, the compiler will optimize both shifts away (it may actually
+also optimize the shifts in my case, but the sign extension will persist.
 
-Any time.
+Just try it and you'll see:
 
-johannes
+mb@homer:~$ cat t.c
+#include <stdio.h>
+#include <stdint.h>
 
---=-EFDHrPs9WcCzYWUG6gev
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+int main()
+{
+        int8_t s0;
+        int8_t s1;
+        uint8_t u;
 
------BEGIN PGP SIGNATURE-----
+        u = 0x3D;
 
-iQIcBAABAgAGBQJLZd+nAAoJEODzc/N7+QmaJZ4QANLWKq11qVmQR2VqnRtmbone
-mDlYD6N+k56caSZrSASXEr0GfS4BA4umRcMeAxNLrUUQnkv1ZMwYmANSUo2YohIm
-RrcShKCaVdwk7rqF+UyF+TqU0NOqxZelVQnWhUQ9EcQrB6fphs8NO9/HAZGRwWm1
-02EzhtroGdCPFJG+50X/iuh6L/rb07rv9qr3xsiFWMEOOqy+MZu1rtABMjG4GwE6
-nWH6nwH1qz6xYEMC8YyGK9OJ7fXDn8CNKUmE2RYbP+z9JGQFb/BXwOm6OH7Krehc
-nNdEvWjp+2b/uOTyVx/3yfbBmVpqn4lqQCaLCNbtDxn4MISI85M58S16uMnjQa+G
-tWrAzk5aosX5dAp4c6C/Ta/+W/M5nSoZVPycx51ZjT+UJxm42PXj10M43qyk54JQ
-TEGKobZk/iuuffVgfqoK8Se4gDfeylwFQrcDcZ0IB+tFDCaiTxlZva9MtE1rxA6M
-GXnxqBtOvDGxjueBQFe60O/5aO6brJyxVEMzRylX+y9jBC3twOp1BFBZ+exPPTgc
-bnG7bfYdBm3mt9KBwWeu4lQX7QKZrWy+lCWTvw8aAG/pKOWBwMgqyFoWf65rVOuh
-F+DRZZcrpWaaBQC3566Fj5tWUR1Y7DjnImz/YmZJegchKyvmibNCyshgHtSUG8t6
-55TtXSNq2o5BA4nyXEB+
-=eQLF
------END PGP SIGNATURE-----
+        s0 = ((int8_t)(u & 0x3F) << 2) >> 2;
+        s1 = ((int8_t)((u & 0x3F) << 2)) >> 2;
 
---=-EFDHrPs9WcCzYWUG6gev--
+        printf("%d %d\n", s0, s1);
+}
+mb@homer:~$ gcc -o t t.c
+mb@homer:~$ ./t
+61 -3
 
+
+-- 
+Greetings, Michael.
