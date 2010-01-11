@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns01.unsolicited.net ([69.10.132.115]:4201 "EHLO
-	ns01.unsolicited.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751875Ab0AAT7g (ORCPT
+Received: from iolanthe.rowland.org ([192.131.102.54]:46351 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753502Ab0AKPqr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2010 14:59:36 -0500
-Message-ID: <4B3E53E1.7050104@unsolicited.net>
-Date: Fri, 01 Jan 2010 19:58:25 +0000
-From: David <david@unsolicited.net>
+	Mon, 11 Jan 2010 10:46:47 -0500
+Date: Mon, 11 Jan 2010 10:46:46 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	Kernel development list <linux-kernel@vger.kernel.org>
+Subject: Re: REGRESSION for RT2561/RT61 in 2.6.33
+In-Reply-To: <1263222695.29743.1.camel@johannes.local>
+Message-ID: <Pine.LNX.4.44L0.1001111045240.2873-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-To: Maciej Rutecki <maciej.rutecki@gmail.com>
-CC: linux-kernel@vger.kernel.org,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: 2.6.33-rc1 - Weird hard hangs when rendering 'some' web-sites
- in 	Firefox
-References: <4B2FEE46.5030700@unsolicited.net> <8db1092f1001010540l15c8f671y1f6a4a4417eb450b@mail.gmail.com> <4B3E0061.4000003@unsolicited.net>
-In-Reply-To: <4B3E0061.4000003@unsolicited.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David wrote:
-> Mine is a wired connection, so it seems unconnected with that. I've
-> replaced the motherboard here and have had no further problems. There is
-> now a configuration difference though as I've had to disable radeon kms
-> (with radeon.modeset=0) for the new on-board graphics.
->
-> My guess is that this is radeon related, and I'm going to set-up the old
-> motherboard in a spare case & see what I can work out.
->   
-I've just done some testing with the old motherboard, and I can
-regularly hang the system solid while browsing. Applying
-radeon.modeset=0 seems to stabilise it completely (at the cost of not
-being able to use compiz).
+On Mon, 11 Jan 2010, Johannes Berg wrote:
 
-So my issue is indeed radeon (using a discrete X300 (RV370) card).
+> Alan,
+> 
+> > The card doesn't work.  Although the firmware load appears to
+> > succeed, "iwconfig wlan0" says no wireless extensions present.
+> 
+> You need to set CONFIG_CFG80211_WEXT (it is default y).
+> 
+> > The only clue I can offer is that "rmmod rt61pci" hangs in 
+> > wiphy_unregister() during the wait_event() loop near the start,
+> > because 
+> > rdev->opencount is equal to -1.  This suggests a refcounting imbalance
+> > 
+> > of some sort.
+> 
+> Good point, that's a bug that will go away with CONFIG_CFG80211_WEXT,
+> I'll send a fix.
 
-Cheers
-David
+Many thanks.  I'll test the patch and the config option tonight and
+report back tomorrow.
 
+Alan Stern
 
