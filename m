@@ -1,51 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:53350 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755113Ab0AZXpa (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.216.174]:59197 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752479Ab0ALVrt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2010 18:45:30 -0500
-Date: Tue, 26 Jan 2010 17:45:28 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] rtl8187: Add callback for get_tsf
-Message-ID: <4b5f7e98.WueiIRrKwMIrtoob%Larry.Finger@lwfinger.net>
+	Tue, 12 Jan 2010 16:47:49 -0500
+Received: by pxi4 with SMTP id 4so4948138pxi.33
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jan 2010 13:47:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4B4CCB56.2080609@spectraaccess.net>
+References: <995709e41001091103t43738262ibb2c4e0c4beab26d@mail.gmail.com>
+	<995709e41001120724j7a6627b1g5d90df8fb658ceaa@mail.gmail.com>
+	<43e72e891001120846x453e4052oa93675b86fe4a86d@mail.gmail.com>
+	<995709e41001120914n17cfdb56k664c2b42afe448f6@mail.gmail.com>
+	<995709e41001120915h1a156606m837717ffd584fa3e@mail.gmail.com>
+	<20100112180438.GA17003@infradead.org> <20100112183047.GI17243@tux>
+	<20100112183202.GA21982@infradead.org> <20100112183735.GL17243@tux>
+	<4B4CCB56.2080609@spectraaccess.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 12 Jan 2010 13:47:28 -0800
+Message-ID: <43e72e891001121347r35248eb2k3969166163507183@mail.gmail.com>
+Subject: Re: [ath9k-devel] [Moblin Dev] Wireless is keep on disconnecting
+To: Bret Clark <bac522@spectraaccess.net>
+Cc: "dev@moblin.org" <dev@moblin.org>, alainswb <alainswb@free.fr>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Jaswinder Singh Rajput <jaswindermobile@gmail.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+On Tue, Jan 12, 2010 at 11:19 AM, Bret Clark <bac522@spectraaccess.net> wrote:
+>
+> There is only one.  And most rcs weren't bootable on my laptop, so I
+> couldn't bisect it.
+>
+>
+> Well what I mean is have you tried, say 2.6.32.3 by any chance?
+>
+>   Luis
+>
+> I've had a very similar issue myself and I did try kernel 2.6.32.3 with the
+> latest driver date 12-11. On the AP at work, which is a Linksys WRP400 the
+> driver works great, but at my house on my Netgear WGR614v6, the wireless is
+> pretty much unusable and exhibits the same symptoms the original poster has.
 
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -1265,6 +1265,14 @@ static int rtl8187_conf_tx(struct ieee80
- 	return 0;
- }
- 
-+static u64 rtl8187_get_tsf(struct ieee80211_hw *dev)
-+{
-+	struct rtl8187_priv *priv = dev->priv;
-+
-+	return rtl818x_ioread32(priv, &priv->map->TSFT[0]) |
-+	       (u64)(rtl818x_ioread32(priv, &priv->map->TSFT[1])) << 32;
-+}
-+
- static const struct ieee80211_ops rtl8187_ops = {
- 	.tx			= rtl8187_tx,
- 	.start			= rtl8187_start,
-@@ -1276,7 +1284,8 @@ static const struct ieee80211_ops rtl818
- 	.prepare_multicast	= rtl8187_prepare_multicast,
- 	.configure_filter	= rtl8187_configure_filter,
- 	.conf_tx		= rtl8187_conf_tx,
--	.rfkill_poll		= rtl8187_rfkill_poll
-+	.rfkill_poll		= rtl8187_rfkill_poll,
-+	.get_tsf		= rtl8187_get_tsf
- };
- 
- static void rtl8187_eeprom_register_read(struct eeprom_93cx6 *eeprom)
+Your description lacks a lot of information to in any way help you.
+Note the original post on this thread was about ath9k, Christoph then
+mentioned issues with an Intel card. Please ensure to read:
+
+http://wireless.kernel.org/en/users/Documentation/Reporting_bugs
+
+Reporting issues with more details would likely help developers assist
+you with your issues.
+
+  Luis
