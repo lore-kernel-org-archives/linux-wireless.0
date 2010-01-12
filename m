@@ -1,48 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f188.google.com ([209.85.210.188]:63962 "EHLO
-	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752745Ab0AGPnS (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60397 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753803Ab0ALSEk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2010 10:43:18 -0500
-Message-ID: <4B460132.3010706@gmail.com>
-Date: Thu, 07 Jan 2010 07:43:46 -0800
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Tue, 12 Jan 2010 13:04:40 -0500
+Date: Tue, 12 Jan 2010 13:04:38 -0500
+From: Christoph Hellwig <hch@infradead.org>
+To: Jaswinder Singh Rajput <jaswindermobile@gmail.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	alainswb <alainswb@free.fr>, dev@moblin.org,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [Moblin Dev] Wireless is keep on disconnecting
+Message-ID: <20100112180438.GA17003@infradead.org>
+References: <995709e41001091103t43738262ibb2c4e0c4beab26d@mail.gmail.com> <995709e41001120217r1b6b276ek70658a1142744142@mail.gmail.com> <4B4C8320.8060801@free.fr> <995709e41001120724j7a6627b1g5d90df8fb658ceaa@mail.gmail.com> <43e72e891001120846x453e4052oa93675b86fe4a86d@mail.gmail.com> <995709e41001120914n17cfdb56k664c2b42afe448f6@mail.gmail.com> <995709e41001120915h1a156606m837717ffd584fa3e@mail.gmail.com>
 MIME-Version: 1.0
-To: Andi Kleen <andi@firstfloor.org>
-CC: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [bisected] sys_paccept: disable paccept() causes my macbook pro
- to  have an annoying whining sound
-References: <dd18b0c31001062216m316163f4t992c000eca0f76d@mail.gmail.com> <873a2ixmwy.fsf@basil.nowhere.org>
-In-Reply-To: <873a2ixmwy.fsf@basil.nowhere.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <995709e41001120915h1a156606m837717ffd584fa3e@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/07/10 01:51, Andi Kleen wrote:
-> Justin Mattock<justinmattock@gmail.com>  writes:
->
->> for a while I've been hearing this odd
->> annoying sound coming from my macbook pro
->> when the system is idle(no internet use tv/radio/web etc...)
->> as soon as I do anything(radio,web) the noise disappears.
->>
->> here is a  url where they are experiencing the same issue:
->> https://help.ubuntu.com/community/MacBook1-1/Hardy
->> (down under whining noise);
->>
->> here is is the result of my bisect:
->
-> It's very unlikely that this patch causes power management issues.
-> I would suggest you double check the bisect.
->
-> -Andi
->
+On Tue, Jan 12, 2010 at 10:45:29PM +0530, Jaswinder Singh Rajput wrote:
+> Sorry here is dmesg.
 
-I can try again..
+FYI: since 2.6.32 I also see very frequent disconnects with the no probe
+response messages.  This is with an Intel 5100 card, and can be better
+or worse depending on the AP.  On my home one it makes the kernel
+completely unusable.
 
-As for the power management
-I didn't think so.. sounds more
-like vibration of a solder joint/capacitor
-
-Justin P. Mattock
