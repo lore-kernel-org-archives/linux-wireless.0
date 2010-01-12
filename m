@@ -1,79 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50459 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752232Ab0A3V6V (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:58830 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753228Ab0ALMrt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2010 16:58:21 -0500
-Subject: Re: Regression in b43 with BCM4311/2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4B64AAEB.9020806@lwfinger.net>
-References: <4B64A2F2.6060608@lwfinger.net>
-	 <1264887027.3546.207.camel@johannes.local>  <4B64AAEB.9020806@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-xG4S9b80XZcqUnL0ihOC"
-Date: Sat, 30 Jan 2010 22:58:19 +0100
-Message-ID: <1264888699.3546.208.camel@johannes.local>
+	Tue, 12 Jan 2010 07:47:49 -0500
+Date: Tue, 12 Jan 2010 13:47:47 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 04/17] mwl8k: simplify sequence number assignment
+Message-ID: <20100112124747.GT1735@mail.wantstofly.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+By storing the sequence counter in << 4 format, like other drivers do.
 
---=-xG4S9b80XZcqUnL0ihOC
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-On Sat, 2010-01-30 at 15:55 -0600, Larry Finger wrote:
-> On 01/30/2010 03:30 PM, Johannes Berg wrote:
-
-> My AP returns the following in the scan output:
->=20
-> Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 18 Mb/s
->           24 Mb/s; 36 Mb/s; 54 Mb/s
-> Bit Rates:6 Mb/s; 9 Mb/s; 12 Mb/s; 48 Mb/s
->=20
-> I don't see any * markings.
-
-Check with iw, instead of iwlist, I think?
-
-> >> Is b43 missing something needed to set the basic_rates member of struc=
-t
-> >> ieee80211_bxx_conf to a more reasonable value when b43_op_bss_info_cha=
-nged() is
-> >> entered? I think it should be 0xFFF, not 0xF. I have tested with the l=
-arger
-> >> value and found that this change did not improve transmit rates.
-> >=20
-> > So you're saying it doesn't help anyway?
->=20
-> Yes, it does not help. Since my previous message, I have also tested the =
-short
-> slot logic. Inverting the test made no difference.
-
-Strange. can the patch be reverted as a whole and then it's ok again?
-
-johannes
-
---=-xG4S9b80XZcqUnL0ihOC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLZKt3AAoJEODzc/N7+QmaqmwP/jEaoWW8GlSnvpQTX5OxITHA
-qdHJiAZQ7nFyowAFVbcYP25k7gc5bHcRob+0depAb4sYUgH69Jn1rFJLrgVq6lha
-e5gmQwYHTKmO9DINGB/uUYf93d6RbXmHyf2dMxsOePsD0EJmhnGvYBf8B7eCiHh1
-+KdBPIAFpYz3KWaex0kJ9fo8koZ3GM/Gnw8HwjHEN1Ic51MxaVRuk4xcNeCpWBxG
-quefCciMiwcQgD7pOAIXpmbiQpuBrsoz2yjyK52sRyU3vvHPAk+rAa2MhfkhW0qq
-anFtPPY3kP34+JfOs41AH2wJVRaXPMwDAAZo6yerWzD6ClF7nG86n2Q1iJfEJJnb
-TQmcKeFks323twTCKIUowg/7P4PVAmSjgvyHSTAaBAf6mS/y5Wa9h9BHPaqnJQw4
-f1huSDus8eCdvjbvaQLGhNINTZIi7vOocQaieu1+O8h4TQeTId+8YNXlOCCP/iFH
-UiPtgUqGw/ULnoGxNNjtBIn1MWR91Rt87CRp+BOnsuPJwXNSB4Ab1F0httFeuYjy
-U/csBJ1YyLLuDxdB2a220A47q0ZyTKmyxhDVl8OuLniSOioZ6DEmRb4ZhL8ij5I8
-VpXhxe/YACcZpBk92o2NFYBDNeiaILYffys3FZXwVOrmhJBX9o4ALkifRfzW8zO9
-aHSla6qo/9zKHTou4ny8
-=GI+B
------END PGP SIGNATURE-----
-
---=-xG4S9b80XZcqUnL0ihOC--
-
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 67ee3da..7d165be 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1355,11 +1355,9 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 	mwl8k_vif = MWL8K_VIF(tx_info->control.vif);
+ 
+ 	if (tx_info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
+-		u16 seqno = mwl8k_vif->seqno;
+-
+ 		wh->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
+-		wh->seq_ctrl |= cpu_to_le16(seqno << 4);
+-		mwl8k_vif->seqno = seqno++ % 4096;
++		wh->seq_ctrl |= cpu_to_le16(mwl8k_vif->seqno);
++		mwl8k_vif->seqno += 0x10;
+ 	}
+ 
+ 	/* Setup firmware control bit fields for each frame type.  */
+-- 
+1.5.6.4
