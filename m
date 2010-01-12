@@ -1,53 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:39561 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932204Ab0AOOgw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2010 09:36:52 -0500
-Received: by bwz27 with SMTP id 27so605753bwz.21
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jan 2010 06:36:50 -0800 (PST)
-To: "tom.leiming\@gmail.com" <tom.leiming@gmail.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes\@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: fix memory leak in ieee80211_send_probe_req
-References: <1263563061-3825-1-git-send-email-tom.leiming@gmail.com>
-	<87fx67qwmg.fsf@nokia.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 15 Jan 2010 16:36:44 +0200
-In-Reply-To: <87fx67qwmg.fsf@nokia.com> (Kalle Valo's message of "Fri\, 15 Jan 2010 16\:19\:03 +0200")
-Message-ID: <87my0fsadf.fsf@purkki.valot.fi>
+Received: from nbd.name ([88.198.39.176]:44241 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754214Ab0ALDDO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jan 2010 22:03:14 -0500
+Message-ID: <4B4BE661.5050506@openwrt.org>
+Date: Tue, 12 Jan 2010 04:02:57 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: mac80211: fix queue selection for data frames on monitor interfaces
+References: <4B4ABB54.7030600@openwrt.org> <43e72e891001110803x6ecd3dc4m267dd809d640a522@mail.gmail.com>
+In-Reply-To: <43e72e891001110803x6ecd3dc4m267dd809d640a522@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kalle.valo@iki.fi> writes:
-
-> "ext tom.leiming@gmail.com" <tom.leiming@gmail.com> writes:
->
->> From: Ming Lei <tom.leiming@gmail.com>
+On 2010-01-11 5:03 PM, Luis R. Rodriguez wrote:
+> On Sun, Jan 10, 2010 at 9:47 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> When ieee80211_monitor_select_queue encounters data frames, it selects
+>> the WMM AC based on skb->priority and assumes that skb->priority
+>> contains a valid 802.1d tag. However this assumption is incorrect, since
+>> ieee80211_select_queue has not been called at this point.
+>> If skb->priority > 7, an array overrun occurs, which could lead to
+>> invalid values, resulting in crashes in the tx path.
+>> Fix this by setting skb->priority based on the 802.11 header for QoS
+>> frames and using the default AC for all non-QoS frames.
 >>
->> This patch fixes memory leak in ieee80211_send_probe_req, which
->> is introduced in 7c12ce8b854df346388ea56d684784e3484012cf:
->>
->> 	mac80211: use Probe Request template when sending a direct scan
->
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> 
+> Its unclear whether or not this is a stable fix. It fixes a crash but
+> does this depend on a patch added recently which is not in stable yet?
+It depends on the pile of tx queue fixes, and the crash doesn't exist
+without those.
 
-[...]
-
->> @@ -1028,6 +1028,7 @@ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
->>  
->>  	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
->>  	ieee80211_tx_skb(sdata, skb);
->> +	kfree(buf);
->
-> Better to use dev_kfree_skb() here.
-
-I don't know what I was thinking when I sent the previous email  :)
-
-After second look, this looks good.
-
-Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
-
--- 
-Kalle Valo
+- Felix
