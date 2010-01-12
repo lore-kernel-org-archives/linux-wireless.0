@@ -1,133 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:35025 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932082Ab0AQXVQ convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:35475 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754054Ab0ALXXF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2010 18:21:16 -0500
-Received: by fxm25 with SMTP id 25so627454fxm.21
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jan 2010 15:21:13 -0800 (PST)
-Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 18 Jan 2010 00:21:17 +0100
-Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Subject: [PATCH 1/5 V2] b43: N-PHY: add writing one element tables
-MIME-Version: 1.0
-From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <op.u6o9toms9lhzdc@linux-g0th.site>
+	Tue, 12 Jan 2010 18:23:05 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Kalle Valo <kalle.valo@nokia.com>
+Subject: [PATCH] wl1271: remove unused flags
+Date: Tue, 12 Jan 2010 18:23:04 -0500
+Message-Id: <1263338584-27132-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+These are unused and as with a previous patch 5ef5da for wl1251
+this removes some other unused flags. the IRQ_MASK specifically
+conflicts with include/pcmcia/cs.h when using compat-wireless.
+
+Cc: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-V2: don't write instead of reading ;/ Thanks Michael
----
-  drivers/net/wireless/b43/phy_n.c |   40 ++++++++++++-------------------------
-  1 files changed, 13 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 141d4ed..16f1f9b 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -808,8 +808,7 @@ static void b43_nphy_stop_playback(struct b43_wldev *dev)
+Test compiled with all wl12xx config options enabled.
 
-  	if (nphy->bb_mult_save & 0x80000000) {
-  		tmp = nphy->bb_mult_save & 0xFFFF;
--		/* TODO: Write an N PHY Table with ID 15, length 1, offset 87,
--			width 16 and data from tmp */
-+		b43_ntab_write(dev, B43_NTAB16(15, 87), tmp);
-  		nphy->bb_mult_save = 0;
-  	}
+ drivers/net/wireless/wl12xx/wl1271_reg.h |   99 ------------------------------
+ 1 files changed, 0 insertions(+), 99 deletions(-)
 
-@@ -1486,13 +1485,11 @@ static void b43_nphy_update_tx_cal_ladder(struct b43_wldev *dev, u16 core)
-  	for (i = 0; i < 18; i++) {
-  		scale = (ladder_lo[i].percent * tmp) / 100;
-  		entry = ((scale & 0xFF) << 8) | ladder_lo[i].g_env;
--		/* TODO: Write an N PHY Table with ID 15, length 1,
--			offset i, width 16, and data entry */
-+		b43_ntab_write(dev, B43_NTAB16(15, i), entry);
-
-  		scale = (ladder_iq[i].percent * tmp) / 100;
-  		entry = ((scale & 0xFF) << 8) | ladder_iq[i].g_env;
--		/* TODO: Write an N PHY Table with ID 15, length 1,
--			offset i + 32, width 16, and data entry */
-+		b43_ntab_write(dev, B43_NTAB16(15, i + 32), entry);
-  	}
-  }
-
-@@ -1590,10 +1587,8 @@ static void b43_nphy_tx_cal_phy_cleanup(struct b43_wldev *dev)
-  		b43_phy_write(dev, B43_NPHY_AFECTL_OVER1, regs[2]);
-  		b43_phy_write(dev, B43_NPHY_AFECTL_OVER, regs[3]);
-  		b43_phy_write(dev, B43_NPHY_BBCFG, regs[4]);
--		/* TODO: Write an N PHY Table with ID 8, length 1, offset 3,
--			width 16, and data from regs[5] */
--		/* TODO: Write an N PHY Table with ID 8, length 1, offset 19,
--			width 16, and data from regs[6] */
-+		b43_ntab_write(dev, B43_NTAB16(8, 3), regs[5]);
-+		b43_ntab_write(dev, B43_NTAB16(8, 19), regs[6]);
-  		b43_phy_write(dev, B43_NPHY_RFCTL_INTC1, regs[7]);
-  		b43_phy_write(dev, B43_NPHY_RFCTL_INTC2, regs[8]);
-  		b43_phy_write(dev, B43_NPHY_PAPD_EN0, regs[9]);
-@@ -1603,10 +1598,8 @@ static void b43_nphy_tx_cal_phy_cleanup(struct b43_wldev *dev)
-  		b43_phy_maskset(dev, B43_NPHY_AFECTL_C1, 0x0FFF, regs[0]);
-  		b43_phy_maskset(dev, B43_NPHY_AFECTL_C2, 0x0FFF, regs[1]);
-  		b43_phy_write(dev, B43_NPHY_AFECTL_OVER, regs[2]);
--		/* TODO: Write an N PHY Table with ID 8, length 1, offset 2,
--			width 16, and data from regs[3] */
--		/* TODO: Write an N PHY Table with ID 8, length 1, offset 18,
--			width 16, and data from regs[4] */
-+		b43_ntab_write(dev, B43_NTAB16(8, 2), regs[3]);
-+		b43_ntab_write(dev, B43_NTAB16(8, 18), regs[4]);
-  		b43_phy_write(dev, B43_NPHY_RFCTL_INTC1, regs[5]);
-  		b43_phy_write(dev, B43_NPHY_RFCTL_INTC2, regs[6]);
-  	}
-@@ -1638,15 +1631,11 @@ static void b43_nphy_tx_cal_phy_setup(struct b43_wldev *dev)
-  		/* TODO: Read an N PHY Table with ID 8, length 1, offset 3,
-  			width 16, and data pointing to tmp */
-  		regs[5] = tmp;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_reg.h b/drivers/net/wireless/wl12xx/wl1271_reg.h
+index 1f23738..9909607 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_reg.h
++++ b/drivers/net/wireless/wl12xx/wl1271_reg.h
+@@ -62,73 +62,10 @@
+ #define WL1271_SLV_REG_DATA            (REGISTERS_BASE + 0x0008)
+ #define WL1271_SLV_REG_ADATA           (REGISTERS_BASE + 0x000c)
+ #define WL1271_SLV_MEM_DATA            (REGISTERS_BASE + 0x0018)
+-/*
+- * Interrupt registers.
+- * 64 bit interrupt sources registers ws ced.
+- * sme interupts were removed and new ones were added.
+- * Order was changed.
+- */
+-#define FIQ_MASK                       (REGISTERS_BASE + 0x0400)
+-#define FIQ_MASK_L                     (REGISTERS_BASE + 0x0400)
+-#define FIQ_MASK_H                     (REGISTERS_BASE + 0x0404)
+-#define FIQ_MASK_SET                   (REGISTERS_BASE + 0x0408)
+-#define FIQ_MASK_SET_L                 (REGISTERS_BASE + 0x0408)
+-#define FIQ_MASK_SET_H                 (REGISTERS_BASE + 0x040C)
+-#define FIQ_MASK_CLR                   (REGISTERS_BASE + 0x0410)
+-#define FIQ_MASK_CLR_L                 (REGISTERS_BASE + 0x0410)
+-#define FIQ_MASK_CLR_H                 (REGISTERS_BASE + 0x0414)
+-#define IRQ_MASK                       (REGISTERS_BASE + 0x0418)
+-#define IRQ_MASK_L                     (REGISTERS_BASE + 0x0418)
+-#define IRQ_MASK_H                     (REGISTERS_BASE + 0x041C)
+-#define IRQ_MASK_SET                   (REGISTERS_BASE + 0x0420)
+-#define IRQ_MASK_SET_L                 (REGISTERS_BASE + 0x0420)
+-#define IRQ_MASK_SET_H                 (REGISTERS_BASE + 0x0424)
+-#define IRQ_MASK_CLR                   (REGISTERS_BASE + 0x0428)
+-#define IRQ_MASK_CLR_L                 (REGISTERS_BASE + 0x0428)
+-#define IRQ_MASK_CLR_H                 (REGISTERS_BASE + 0x042C)
+-#define ECPU_MASK                      (REGISTERS_BASE + 0x0448)
+-#define FIQ_STS_L                      (REGISTERS_BASE + 0x044C)
+-#define FIQ_STS_H                      (REGISTERS_BASE + 0x0450)
+-#define IRQ_STS_L                      (REGISTERS_BASE + 0x0454)
+-#define IRQ_STS_H                      (REGISTERS_BASE + 0x0458)
+-#define INT_STS_ND                     (REGISTERS_BASE + 0x0464)
+-#define INT_STS_RAW_L                  (REGISTERS_BASE + 0x0464)
+-#define INT_STS_RAW_H                  (REGISTERS_BASE + 0x0468)
+-#define INT_STS_CLR                    (REGISTERS_BASE + 0x04B4)
+-#define INT_STS_CLR_L                  (REGISTERS_BASE + 0x04B4)
+-#define INT_STS_CLR_H                  (REGISTERS_BASE + 0x04B8)
+-#define INT_ACK                        (REGISTERS_BASE + 0x046C)
+-#define INT_ACK_L                      (REGISTERS_BASE + 0x046C)
+-#define INT_ACK_H                      (REGISTERS_BASE + 0x0470)
+-#define INT_TRIG                       (REGISTERS_BASE + 0x0474)
+-#define INT_TRIG_L                     (REGISTERS_BASE + 0x0474)
+-#define INT_TRIG_H                     (REGISTERS_BASE + 0x0478)
+-#define HOST_STS_L                     (REGISTERS_BASE + 0x045C)
+-#define HOST_STS_H                     (REGISTERS_BASE + 0x0460)
+-#define HOST_MASK                      (REGISTERS_BASE + 0x0430)
+-#define HOST_MASK_L                    (REGISTERS_BASE + 0x0430)
+-#define HOST_MASK_H                    (REGISTERS_BASE + 0x0434)
+-#define HOST_MASK_SET                  (REGISTERS_BASE + 0x0438)
+-#define HOST_MASK_SET_L                (REGISTERS_BASE + 0x0438)
+-#define HOST_MASK_SET_H                (REGISTERS_BASE + 0x043C)
+-#define HOST_MASK_CLR                  (REGISTERS_BASE + 0x0440)
+-#define HOST_MASK_CLR_L                (REGISTERS_BASE + 0x0440)
+-#define HOST_MASK_CLR_H                (REGISTERS_BASE + 0x0444)
+ 
+ #define ACX_REG_INTERRUPT_TRIG         (REGISTERS_BASE + 0x0474)
+ #define ACX_REG_INTERRUPT_TRIG_H       (REGISTERS_BASE + 0x0478)
+ 
+-/* Host Interrupts*/
+-#define HINT_MASK                      (REGISTERS_BASE + 0x0494)
+-#define HINT_MASK_SET                  (REGISTERS_BASE + 0x0498)
+-#define HINT_MASK_CLR                  (REGISTERS_BASE + 0x049C)
+-#define HINT_STS_ND_MASKED             (REGISTERS_BASE + 0x04A0)
+-/*1150 spec calls this HINT_STS_RAW*/
+-#define HINT_STS_ND		       (REGISTERS_BASE + 0x04B0)
+-#define HINT_STS_CLR                   (REGISTERS_BASE + 0x04A4)
+-#define HINT_ACK                       (REGISTERS_BASE + 0x04A8)
+-#define HINT_TRIG                      (REGISTERS_BASE + 0x04AC)
 -
--		/* TODO: Write an N PHY Table with ID 8, length 1, offset 3,
--			width 16, and data 0 */
-+		b43_ntab_write(dev, B43_NTAB16(8, 3), 0);
-  		/* TODO: Read an N PHY Table with ID 8, length 1, offset 19,
-  			width 16, and data pointing to tmp */
-  		regs[6] = tmp;
+ /*=============================================
+   Host Interrupt Mask Register - 32bit (RW)
+   ------------------------------------------
+@@ -433,16 +370,6 @@
+ 
+ 
+ /*===============================================
+-  Phy regs
+- ===============================================*/
+-#define ACX_PHY_ADDR_REG                SBB_ADDR
+-#define ACX_PHY_DATA_REG                SBB_DATA
+-#define ACX_PHY_CTRL_REG                SBB_CTL
+-#define ACX_PHY_REG_WR_MASK             0x00000001ul
+-#define ACX_PHY_REG_RD_MASK             0x00000002ul
 -
--		/* TODO: Write an N PHY Table with ID 8, length 1, offset 19,
--			width 16, and data 0 */
-+		b43_ntab_write(dev, B43_NTAB16(8, 19), 0);
-  		regs[7] = b43_phy_read(dev, B43_NPHY_RFCTL_INTC1);
-  		regs[8] = b43_phy_read(dev, B43_NPHY_RFCTL_INTC2);
-
-@@ -1668,14 +1657,12 @@ static void b43_nphy_tx_cal_phy_setup(struct b43_wldev *dev)
-  			width 16, and data pointing to tmp */
-  		regs[3] = tmp;
-  		tmp |= 0x2000;
--		/* TODO: Write an N PHY Table with ID 8, length 1, offset 2,
--			width 16, and data pointer tmp */
-+		b43_ntab_write(dev, B43_NTAB16(8, 2), tmp);
-  		/* TODO: Read an N PHY Table with ID 8, length 1, offset 18,
-  			width 16, and data pointer tmp */
-  		regs[4] = tmp;
-  		tmp |= 0x2000;
--		/* TODO: Write an N PHY Table with ID 8, length 1, offset 18,
--			width 16, and data pointer tmp */
-+		b43_ntab_write(dev, B43_NTAB16(8, 18), tmp);
-  		regs[5] = b43_phy_read(dev, B43_NPHY_RFCTL_INTC1);
-  		regs[6] = b43_phy_read(dev, B43_NPHY_RFCTL_INTC2);
-  		if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ)
-@@ -1900,9 +1887,8 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
-  					width 16, and data pointer buffer */
-  				diq_start = buffer[0];
-  				buffer[0] = 0;
--				/* TODO: Write an N PHY Table with ID 15,
--					length 1, offset 69 + core, width 16,
--					and data of 0 */
-+				b43_ntab_write(dev, B43_NTAB16(15, 69 + core),
-+						0);
-  			}
-
-  			b43_phy_write(dev, B43_NPHY_IQLOCAL_CMD, cmd);
+-
+-/*===============================================
+  EEPROM Read/Write Request 32bit RW
+  ------------------------------------------
+  1 EE_READ - EEPROM Read Request 1 - Setting this bit
+@@ -511,28 +438,6 @@
+ #define ACX_CONT_WIND_MIN_MASK   0x0000007f
+ #define ACX_CONT_WIND_MAX        0x03ff0000
+ 
+-/*
+- * Indirect slave register/memory registers
+- * ----------------------------------------
+- */
+-#define HW_SLAVE_REG_ADDR_REG		0x00000004
+-#define HW_SLAVE_REG_DATA_REG		0x00000008
+-#define HW_SLAVE_REG_CTRL_REG		0x0000000c
+-
+-#define SLAVE_AUTO_INC				0x00010000
+-#define SLAVE_NO_AUTO_INC			0x00000000
+-#define SLAVE_HOST_LITTLE_ENDIAN	0x00000000
+-
+-#define HW_SLAVE_MEM_ADDR_REG		SLV_MEM_ADDR
+-#define HW_SLAVE_MEM_DATA_REG		SLV_MEM_DATA
+-#define HW_SLAVE_MEM_CTRL_REG		SLV_MEM_CTL
+-#define HW_SLAVE_MEM_ENDIAN_REG		SLV_END_CTL
+-
+-#define HW_FUNC_EVENT_INT_EN		0x8000
+-#define HW_FUNC_EVENT_MASK_REG		0x00000034
+-
+-#define ACX_MAC_TIMESTAMP_REG	(MAC_TIMESTAMP)
+-
+ /*===============================================
+   HI_CFG Interface Configuration Register Values
+   ------------------------------------------
+@@ -647,10 +552,6 @@ b12-b0 - Supported Rate indicator bits as defined below.
+ ******************************************************************************/
+ 
+ 
+-#define TNETW1251_CHIP_ID_PG1_0         0x07010101
+-#define TNETW1251_CHIP_ID_PG1_1         0x07020101
+-#define TNETW1251_CHIP_ID_PG1_2	        0x07030101
+-
+ /*************************************************************************
+ 
+     Interrupt Trigger Register (Host -> WiLink)
 -- 
-1.6.4.2
+1.6.3.3
 
