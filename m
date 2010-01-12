@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.211.176]:63820 "EHLO
-	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750904Ab0AFFax (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 00:30:53 -0500
-Received: by ywh6 with SMTP id 6so17165694ywh.4
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2010 21:30:52 -0800 (PST)
-Message-ID: <4B442008.2040207@lwfinger.net>
-Date: Tue, 05 Jan 2010 23:30:48 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:45058 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752952Ab0ALWqh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jan 2010 17:46:37 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat-wireless: remove device_type in usbnet.c
+Date: Tue, 12 Jan 2010 23:46:27 +0100
+Message-Id: <1263336387-30707-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1263336387-30707-1-git-send-email-hauke@hauke-m.de>
+References: <1263336387-30707-1-git-send-email-hauke@hauke-m.de>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2.6.33] mac80211: fix skb buffering issue
-References: <1262710858.28653.5.camel@johannes.local>
-In-Reply-To: <1262710858.28653.5.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/05/2010 11:00 AM, Johannes Berg wrote:
-> Since I removed the master netdev, we've been
-> keeping internal queues only, and even before
---snip--
+This fixes compile warning
+drivers/net/usb/usbnet.c:1279: warning: ‘wlan_type’ defined but not used
+drivers/net/usb/usbnet.c:1283: warning: ‘wwan_type’ defined but not used
 
-> Reported-by: Lennert Buytenhek <buytenh@marvell.com>
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> Cc: stable@kernel.org [2.6.32]
-> ---
-> I know it's late, and large, but still would be good to have in .33
-> since the issue is fairly serious.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/14-device-type.patch |   20 ++++++++++++++++++++
+ 1 files changed, 20 insertions(+), 0 deletions(-)
 
-I'm not sure this is ready for prime time. After I installed it, my b43 was
-never able to reconnect after any kind of disconnect. The log is uninformative:
+diff --git a/patches/14-device-type.patch b/patches/14-device-type.patch
+index fdd7b23..5c4f4d7 100644
+--- a/patches/14-device-type.patch
++++ b/patches/14-device-type.patch
+@@ -34,3 +34,23 @@ compile warning.
+  
+  int bnep_add_connection(struct bnep_connadd_req *req, struct socket *sock)
+  {
++--- a/drivers/net/usb/usbnet.c
+++++ b/drivers/net/usb/usbnet.c
++@@ -1276,13 +1276,17 @@ static const struct net_device_ops usbne
++ 
++ // precondition: never called in_interrupt
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32))
++ static struct device_type wlan_type = {
++ 	.name	= "wlan",
++ };
+++#endif
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32))
++ static struct device_type wwan_type = {
++ 	.name	= "wwan",
++ };
+++#endif
++ 
++ int
++ usbnet_probe (struct usb_interface *udev, const struct usb_device_id *prod)
+-- 
+1.6.3.3
 
-===========================================
-b43-phy0 debug: Wireless interface started
-b43-phy0 debug: Adding Interface type 2
-wlan0: direct probe to 00:14:bf:85:49:fa (try 1)
-wlan0: direct probe responded
-wlan0: authenticate with 00:14:bf:85:49:fa (try 1)
-wlan0: authenticated
-wlan0: associate with 00:14:bf:85:49:fa (try 1)
-wlan0: RX AssocResp from 00:14:bf:85:49:fa (capab=0x411 status=0 aid=1)
-wlan0: associated
-b43-phy0 debug: Using hardware based encryption for keyidx: 0, mac:
-00:14:bf:85:49:fa
-b43-phy0 debug: Disabling hardware based encryption for keyidx: 0, mac:
-00:14:bf:85:49:fa
-wlan0: deauthenticating from 00:14:bf:85:49:fa by local choice (reason=3)
-===========================================
-
-Reauthentication fails with a pop-up to reenter the WPA2 secret as I'm using
-NetworkManager. I can only reconnect if b43 (and mac80211) are unloaded and
-reloaded. I pulled the patch and confirmed that proper behavior is returned.
-
-Larry
