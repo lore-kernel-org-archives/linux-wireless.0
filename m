@@ -1,59 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39558 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752822Ab0AGWZE (ORCPT
+Received: from mail-pz0-f171.google.com ([209.85.222.171]:46429 "EHLO
+	mail-pz0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754770Ab0ALXvy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2010 17:25:04 -0500
+	Tue, 12 Jan 2010 18:51:54 -0500
+Received: by pzk1 with SMTP id 1so6670630pzk.33
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jan 2010 15:51:52 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1263336387-30707-1-git-send-email-hauke@hauke-m.de>
+References: <1263336387-30707-1-git-send-email-hauke@hauke-m.de>
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 2/4] cfg80211: fix 2 GHz subband calculation for country IEs
-Date: Thu,  7 Jan 2010 17:24:55 -0500
-Message-Id: <1262903097-2129-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1262903097-2129-1-git-send-email-lrodriguez@atheros.com>
-References: <1262903097-2129-1-git-send-email-lrodriguez@atheros.com>
+Date: Tue, 12 Jan 2010 15:51:32 -0800
+Message-ID: <43e72e891001121551u1d5ccf18h76ff70f3eda5d238@mail.gmail.com>
+Subject: Re: [PATCH 1/2] compat-wireless: Backport netdev_ops select_queue
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Country IEs triplets are getting an extra channel with
-the current count. This does not affect regulatory because
-we always took the intersection between what the AP gave
-and what CRDA believed is correct.
+On Tue, Jan 12, 2010 at 2:46 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> eth_mac_addr was added to dataif, but it should be monitor
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-This however does fix processing some Country IEs with multiple
-sequential 2 GHz triplets. Since our parser and the spec mandates
-all channels be monitonically increasing we would drop the IE after
-noticing the second triplet begins on a channel already processed.
-APs that send these type of country IEs seems rare though.
+Both applied, thanks.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 389247c..7223a7a 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -555,7 +555,7 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 		/* 2 GHz */
- 		if (triplet->chans.first_channel <= 14)
- 			end_channel = triplet->chans.first_channel +
--				triplet->chans.num_channels;
-+				triplet->chans.num_channels - 1;
- 		else
- 			/*
- 			 * 5 GHz -- For example in country IEs if the first
-@@ -655,7 +655,7 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 		/* 2 GHz */
- 		if (triplet->chans.first_channel <= 14)
- 			end_channel = triplet->chans.first_channel +
--				triplet->chans.num_channels;
-+				triplet->chans.num_channels -1;
- 		else
- 			end_channel =  triplet->chans.first_channel +
- 				(4 * (triplet->chans.num_channels - 1));
--- 
-1.6.3.3
-
+  Luis
