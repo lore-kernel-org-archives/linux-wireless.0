@@ -1,80 +1,265 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:64952 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753799Ab0AWROi convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f209.google.com ([209.85.219.209]:56343 "EHLO
+	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754790Ab0ALTi7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jan 2010 12:14:38 -0500
-Received: by ewy26 with SMTP id 26so476879ewy.28
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2010 09:14:36 -0800 (PST)
-To: "Paul \"TBBle\" Hampson" <Paul.Hampson@Pobox.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: NULL dereference on wireless-testing/head
-References: <297c1a111001222341gad6b26eh8a410a73a2d9a3dc@mail.gmail.com>
-	<87tyudp6bm.fsf@purkki.valot.fi>
-	<loom.20100123T103349-999@post.gmane.org>
-	<87my05oxpn.fsf@purkki.valot.fi>
-	<297c1a111001230427o451b5810p40aefc2ad8b27ec0@mail.gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sat, 23 Jan 2010 19:14:34 +0200
-In-Reply-To: <297c1a111001230427o451b5810p40aefc2ad8b27ec0@mail.gmail.com> (Paul Hampson's message of "Sat\, 23 Jan 2010 23\:27\:54 +1100")
-Message-ID: <87iqaspwud.fsf@purkki.valot.fi>
+	Tue, 12 Jan 2010 14:38:59 -0500
+Received: by ewy1 with SMTP id 1so5081590ewy.28
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jan 2010 11:38:57 -0800 (PST)
+Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
+Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 3/3] b43: N-PHY: add RX IQ calculation for rev < 3
+Date: Tue, 12 Jan 2010 20:38:56 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <op.u6fp66hl9lhzdc@linux-g0th.site>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Paul,
 
-please keep linux-wireless in CC so that everyone see.
+Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
+---
 
-"Paul \"TBBle\" Hampson" <Paul.Hampson@Pobox.com> writes:
+Uh, bigger one. This patch causes false warning:
+drivers/net/wireless/b43/phy_n.c: In function ‚Äòb43_nphy_rev2_cal_rx_iq‚Äô:
+drivers/net/wireless/b43/phy_n.c:627: warning: large integer implicitly truncated to unsigned type
 
->> commit 813d76694043d00b59475baa1fbfaf54a2eb7fad
->> Author: Johannes Berg <johannes@sipsolutions.net>
->> Date: † Sun Jan 17 01:47:58 2010 +0100
->>
->> † †mac80211: move control.hw_key assignment
->>
->> Paul, can you double check that you are really running a version of
->> mac80211 that contains the patch above? Just in case there was a
->> problem with module installation, or something like that.
->
-> That's the patch I bisected to and reverted to fix the problem.
+That's for:
+b43_phy_maskset(dev, B43_NPHY_RFSEQCA, ~B43_NPHY_RFSEQCA_RXDIS, ((1 - i) << B43_NPHY_RFSEQCA_RXDIS_SHIFT));
 
-Sorry, it's obviously not my day today :) I meant this patch:
+It's inside loop i=0,1. I tried casting i on (u8) but this didn't help. Can we leave this? Or can sb share some trick to avoid this warning?
 
-commit f12553ebe045a8a40ab33fa500fb57d10706e226
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Fri Jan 22 22:07:59 2010 +0100
+---
+  drivers/net/wireless/b43/phy_n.c |  194 +++++++++++++++++++++++++++++++++++++-
+  drivers/net/wireless/b43/phy_n.h |    1 +
+  2 files changed, 194 insertions(+), 1 deletions(-)
 
-    mac80211: add missing key check
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index ea1af25..82c53b9 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -568,6 +568,198 @@ static void b43_nphy_tx_iq_workaround(struct b43_wldev *dev)
+  	b43_shm_write16(dev, B43_SHM_SHARED, 0x0706, array[3]);
+  }
 
->> After that, please enable CONFIG_MAC80211_NOINLINE and send the stack
->> trace here.
->
->> http://www.spinics.net/lists/linux-wireless/msg45719.html
->
->> Including instructions how to debug with gdb.
->
-> I didn't see anything about GDB in that thread, but I'll rebuild
-> another test with CONFIG_MAC_80211_NOINLINE and see what its stack
-> trace looks like.
-
-Here's an example from Pavel how to use gdb:
-
-http://www.spinics.net/lists/linux-wireless/msg45728.html
-
-> That thread does appear to be the same problem I'm seeing, and the
-> patch in http://www.spinics.net/lists/linux-wireless/msg45723.html
-> had been applied, because that was one of the revert conflicts I hit
-> when reverting g813d766.
-
-Yes, I'm pretty sure you are seeing the same problem as Pavel above
-(crashes at line 550 in tx.c). Johannes outlined the fix here:
-
-http://www.spinics.net/lists/linux-wireless/msg45731.html
-
-But I haven't seen that patch yet on the list.
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/CalRxIqRev2 */
++static int b43_nphy_rev2_cal_rx_iq(struct b43_wldev *dev,
++			struct nphy_txgains target, u8 type, bool debug)
++{
++	struct b43_phy_n *nphy = dev->phy.n;
++	int i, j, index;
++	u8 rfctl[2];
++	u8 afectl_core;
++	u16 tmp[6];
++	u16 cur_hpf1, cur_hpf2, cur_lna;
++	u32 real, imag;
++	enum ieee80211_band band;
++
++	u8 use;
++	u16 cur_hpf;
++	u16 lna[3] = { 3, 3, 1 };
++	u16 hpf1[3] = { 7, 2, 0 };
++	u16 hpf2[3] = { 2, 0, 0 };
++	u32 power[3];
++	u16 gain_save[2];
++	u16 cal_gain[2];
++	struct nphy_iqcal_params cal_params[2];
++	struct nphy_iq_est est;
++	int ret = 0;
++	bool playtone = true;
++	int desired = 13;
++
++	b43_nphy_stay_in_carrier_search(dev, 1);
++
++	if (dev->phy.rev < 2)
++		;//TODO: Call N PHY Reapply TX Cal Coeffs
++	//TODO: Read an N PHY Table with ID 7, length 2, offset 0x110, width 16, and data gain_save
++	for (i = 0; i < 2; i++) {
++		b43_nphy_iq_cal_gain_params(dev, i, target, &cal_params[i]);
++		cal_gain[i] = cal_params[i].cal_gain;
++	}
++	//TODO: Write an N PHY Table with ID 7, length 2, offset 0x110, width 16, and data from cal_gain
++
++	for (i = 0; i < 2; i++) {
++		if (i == 0) {
++			rfctl[0] = B43_NPHY_RFCTL_INTC1;
++			rfctl[1] = B43_NPHY_RFCTL_INTC2;
++			afectl_core = B43_NPHY_AFECTL_C1;
++		} else {
++			rfctl[0] = B43_NPHY_RFCTL_INTC2;
++			rfctl[1] = B43_NPHY_RFCTL_INTC1;
++			afectl_core = B43_NPHY_AFECTL_C2;
++		}
++
++		tmp[1] = b43_phy_read(dev, B43_NPHY_RFSEQCA);
++		tmp[2] = b43_phy_read(dev, afectl_core);
++		tmp[3] = b43_phy_read(dev, B43_NPHY_AFECTL_OVER);
++		tmp[4] = b43_phy_read(dev, rfctl[0]);
++		tmp[5] = b43_phy_read(dev, rfctl[1]);
++
++		b43_phy_maskset(dev, B43_NPHY_RFSEQCA, ~B43_NPHY_RFSEQCA_RXDIS,
++				((1 - i) << B43_NPHY_RFSEQCA_RXDIS_SHIFT));
++		b43_phy_maskset(dev, B43_NPHY_RFSEQCA, ~B43_NPHY_RFSEQCA_TXEN,
++				(1 - i));
++		b43_phy_set(dev, afectl_core, 0x0006);
++		b43_phy_set(dev, B43_NPHY_AFECTL_OVER, 0x0006);
++
++		band = b43_current_band(dev->wl);
++
++		if (nphy->rxcalparams & 0xFF000000) {
++			if (band == IEEE80211_BAND_5GHZ)
++				b43_phy_write(dev, rfctl[0], 0x140);
++			else
++				b43_phy_write(dev, rfctl[0], 0x110);
++		} else {
++			if (band == IEEE80211_BAND_5GHZ)
++				b43_phy_write(dev, rfctl[0], 0x180);
++			else
++				b43_phy_write(dev, rfctl[0], 0x120);
++		}
++
++		if (band == IEEE80211_BAND_5GHZ)
++			b43_phy_write(dev, rfctl[1], 0x148);
++		else
++			b43_phy_write(dev, rfctl[1], 0x114);
++
++		if (nphy->rxcalparams & 0x10000) {
++			b43_radio_maskset(dev, B2055_C1_GENSPARE2, 0xFC,
++					(i + 1));
++			b43_radio_maskset(dev, B2055_C2_GENSPARE2, 0xFC,
++					(2 - i));
++		}
++
++		for (j = 0; i < 4; j++) {
++			if (j < 3) {
++				cur_lna = lna[j];
++				cur_hpf1 = hpf1[j];
++				cur_hpf2 = hpf2[j];
++			} else {
++				if (power[1] > 10000) {
++					use = 1;
++					cur_hpf = cur_hpf1;
++					index = 2;
++				} else {
++					if (power[0] > 10000) {
++						use = 1;
++						cur_hpf = cur_hpf1;
++						index = 1;
++					} else {
++						index = 0;
++						use = 2;
++						cur_hpf = cur_hpf2;
++					}
++				}
++				cur_lna = lna[index];
++				cur_hpf1 = hpf1[index];
++				cur_hpf2 = hpf2[index];
++				cur_hpf += desired - hweight32(power[index]);
++				cur_hpf = clamp_val(cur_hpf, 0, 10);
++				if (use == 1)
++					cur_hpf1 = cur_hpf;
++				else
++					cur_hpf2 = cur_hpf;
++			}
++
++			tmp[0] = ((cur_hpf2 << 8) | (cur_hpf1 << 4) |
++					(cur_lna << 2));
++			//TODO: Call N PHY RF Ctrl Override with 0x400, tmp[0], 3, 0 as arguments
++			//TODO: Call N PHY Force RF Seq with 2 as argument
++			//TODO: Call N PHT Stop Playback
++
++			if (playtone) {
++				//TODO: Call N PHY TX Tone with 4000, (nphy_rxcalparams & 0xffff), 0, 0 as arguments and save result as ret
++				playtone = false;
++			} else {
++				//TODO: Call N PHY Run Samples with 160, 0xFFFF, 0, 0, 0 as arguments
++			}
++
++			if (ret == 0) {
++				if (j < 3) {
++					b43_nphy_rx_iq_est(dev, &est, 1024, 32,
++									false);
++					if (i == 0) {
++						real = est.i0_pwr;
++						imag = est.q0_pwr;
++					} else {
++						real = est.i1_pwr;
++						imag = est.q1_pwr;
++					}
++					power[i] = ((real + imag) / 1024) + 1;
++				} else {
++					//TODO: Call N PHY Calc RX IQ Comp with (1 << i) as argument
++				}
++				//TODO: Call N PHY Stop Playback
++			}
++
++			if (ret != 0)
++				break;
++		}
++
++		b43_radio_mask(dev, B2055_C1_GENSPARE2, 0xFC);
++		b43_radio_mask(dev, B2055_C2_GENSPARE2, 0xFC);
++		b43_phy_write(dev, rfctl[1], tmp[5]);
++		b43_phy_write(dev, rfctl[0], tmp[4]);
++		b43_phy_write(dev, B43_NPHY_AFECTL_OVER, tmp[3]);
++		b43_phy_write(dev, afectl_core, tmp[2]);
++		b43_phy_write(dev, B43_NPHY_RFSEQCA, tmp[1]);
++
++		if (ret != 0)
++			break;
++	}
++
++	//TODO: Call N PHY RF Ctrl Override with 0x400, 0, 3, 1 as arguments
++	//TODO: Call N PHY Force RF Seq with 2 as argument
++	//TODO: Write an N PHY Table with ID 7, length 2, offset 0x110, width 16, and data from gain_save
++
++	b43_nphy_stay_in_carrier_search(dev, 0);
++
++	return ret;
++}
++
++static int b43_nphy_rev3_cal_rx_iq(struct b43_wldev *dev,
++			struct nphy_txgains target, u8 type, bool debug)
++{
++	return -1;
++}
++
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/CalRxIq */
++static int b43_nphy_cal_rx_iq(struct b43_wldev *dev,
++			struct nphy_txgains target, u8 type, bool debug)
++{
++	if (dev->phy.rev >= 3)
++		return b43_nphy_rev3_cal_rx_iq(dev, target, type, debug);
++	else
++		return b43_nphy_rev2_cal_rx_iq(dev, target, type, debug);
++}
++
+  /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/TxLpFbw */
+  static void b43_nphy_tx_lp_fbw(struct b43_wldev *dev)
+  {
+@@ -1400,7 +1592,7 @@ int b43_phy_initn(struct b43_wldev *dev)
+  					target = b43_nphy_get_tx_gains(dev);
+  				}
+  				/* TODO: If the output of N PHY Cal TX Iqlo with target, 1 0 as arguments is 0
+-					If the output of N PHY Cal RX Iqlo with target, 2 0 as arguments is 0
++					if (b43_nphy_cal_rx_iq(dev, target, 2, 0) == 0)
+  						Call N PHY Save Cal */
+  			} else if (nphy->mphase_cal_phase_id == 0) {
+  				//TODO N PHY Periodic Calibration with argument 3
+diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
+index 491ff88..ab54b0f 100644
+--- a/drivers/net/wireless/b43/phy_n.h
++++ b/drivers/net/wireless/b43/phy_n.h
+@@ -973,6 +973,7 @@ struct b43_phy_n {
+  	u8 antsel_type;
+  	u16 papd_epsilon_offset[2];
+  	u32 deaf_count;
++	u32 rxcalparams;
+  	bool hang_avoid;
+  	bool mute;
 
 -- 
-Kalle Valo
+1.6.4.2
+
