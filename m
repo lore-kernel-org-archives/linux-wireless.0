@@ -1,187 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:53886 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754428Ab0AQWZg (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:58851 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751243Ab0ALMuP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2010 17:25:36 -0500
-Received: by bwz19 with SMTP id 19so1157599bwz.28
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jan 2010 14:25:34 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] p54pci: move tx cleanup into tasklet
-Date: Sun, 17 Jan 2010 23:19:25 +0100
-Cc: John W Linville <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201001172319.25737.chunkeey@googlemail.com>
+	Tue, 12 Jan 2010 07:50:15 -0500
+Date: Tue, 12 Jan 2010 13:50:14 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 14/17] mwl8k: prepare for posting per-vif firmware commands
+Message-ID: <20100112125014.GD1735@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch moves the tx cleanup routines out of the critical
-interrupt context and into the (previously known as rx) tasklet.
+One of the bytes in the mwl8k firmware command header is the 'macid'
+byte, which for per-vif commands indicates which of the BSSes this
+command is intended for.  (For commands that are not per-vif commands,
+this byte can just be 0.)
 
-The main goal of this operation is to remove the extensive
-usage of spin_lock_irqsaves in the generic p54common library.
+This patch adds mwl8k_post_pervif_cmd(), which will take the macid
+assigned to this interface (to be done in ->add_interface()), copy it
+into the command packet macid field, and post the command as usual.
 
-The next step would be to modify p54usb to do the
-rx processing inside a tasklet (just like usbnet).
-
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
 ---
-diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
-index 7446373..a227c3d 100644
---- a/drivers/net/wireless/p54/p54pci.c
-+++ b/drivers/net/wireless/p54/p54pci.c
-@@ -226,25 +226,26 @@ static void p54p_check_rx_ring(struct ieee80211_hw *dev, u32 *index,
- 	p54p_refill_rx_ring(dev, ring_index, ring, ring_limit, rx_buf);
- }
+ drivers/net/wireless/mwl8k.c |   17 ++++++++++++++++-
+ 1 files changed, 16 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index ee7d8a6..ea39ef6 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -214,6 +214,9 @@ struct mwl8k_vif {
+ 	struct list_head list;
+ 	struct ieee80211_vif *vif;
  
--/* caller must hold priv->lock */
- static void p54p_check_tx_ring(struct ieee80211_hw *dev, u32 *index,
- 	int ring_index, struct p54p_desc *ring, u32 ring_limit,
--	void **tx_buf)
-+	struct sk_buff **tx_buf)
- {
-+	unsigned long flags;
- 	struct p54p_priv *priv = dev->priv;
- 	struct p54p_ring_control *ring_control = priv->ring_control;
- 	struct p54p_desc *desc;
-+	struct sk_buff *skb;
- 	u32 idx, i;
- 
- 	i = (*index) % ring_limit;
- 	(*index) = idx = le32_to_cpu(ring_control->device_idx[1]);
- 	idx %= ring_limit;
- 
-+	spin_lock_irqsave(&priv->lock, flags);
- 	while (i != idx) {
- 		desc = &ring[i];
--		if (tx_buf[i])
--			if (FREE_AFTER_TX((struct sk_buff *) tx_buf[i]))
--				p54_free_skb(dev, tx_buf[i]);
++	/* Firmware macid for this vif.  */
++	int macid;
 +
-+		skb = tx_buf[i];
- 		tx_buf[i] = NULL;
- 
- 		pci_unmap_single(priv->pdev, le32_to_cpu(desc->host_addr),
-@@ -255,17 +256,32 @@ static void p54p_check_tx_ring(struct ieee80211_hw *dev, u32 *index,
- 		desc->len = 0;
- 		desc->flags = 0;
- 
-+		if (skb && FREE_AFTER_TX(skb)) {
-+			spin_unlock_irqrestore(&priv->lock, flags);
-+			p54_free_skb(dev, skb);
-+			spin_lock_irqsave(&priv->lock, flags);
-+		}
-+
- 		i++;
- 		i %= ring_limit;
- 	}
-+	spin_unlock_irqrestore(&priv->lock, flags);
- }
- 
--static void p54p_rx_tasklet(unsigned long dev_id)
-+static void p54p_tasklet(unsigned long dev_id)
- {
- 	struct ieee80211_hw *dev = (struct ieee80211_hw *)dev_id;
- 	struct p54p_priv *priv = dev->priv;
- 	struct p54p_ring_control *ring_control = priv->ring_control;
- 
-+	p54p_check_tx_ring(dev, &priv->tx_idx_mgmt, 3, ring_control->tx_mgmt,
-+			   ARRAY_SIZE(ring_control->tx_mgmt),
-+			   priv->tx_buf_mgmt);
-+
-+	p54p_check_tx_ring(dev, &priv->tx_idx_data, 1, ring_control->tx_data,
-+			   ARRAY_SIZE(ring_control->tx_data),
-+			   priv->tx_buf_data);
-+
- 	p54p_check_rx_ring(dev, &priv->rx_idx_mgmt, 2, ring_control->rx_mgmt,
- 		ARRAY_SIZE(ring_control->rx_mgmt), priv->rx_buf_mgmt);
- 
-@@ -280,38 +296,24 @@ static irqreturn_t p54p_interrupt(int irq, void *dev_id)
- {
- 	struct ieee80211_hw *dev = dev_id;
- 	struct p54p_priv *priv = dev->priv;
--	struct p54p_ring_control *ring_control = priv->ring_control;
- 	__le32 reg;
- 
- 	spin_lock(&priv->lock);
- 	reg = P54P_READ(int_ident);
- 	if (unlikely(reg == cpu_to_le32(0xFFFFFFFF))) {
--		spin_unlock(&priv->lock);
--		return IRQ_HANDLED;
-+		goto out;
- 	}
--
- 	P54P_WRITE(int_ack, reg);
- 
- 	reg &= P54P_READ(int_enable);
- 
--	if (reg & cpu_to_le32(ISL38XX_INT_IDENT_UPDATE)) {
--		p54p_check_tx_ring(dev, &priv->tx_idx_mgmt,
--				   3, ring_control->tx_mgmt,
--				   ARRAY_SIZE(ring_control->tx_mgmt),
--				   priv->tx_buf_mgmt);
--
--		p54p_check_tx_ring(dev, &priv->tx_idx_data,
--				   1, ring_control->tx_data,
--				   ARRAY_SIZE(ring_control->tx_data),
--				   priv->tx_buf_data);
--
--		tasklet_schedule(&priv->rx_tasklet);
--
--	} else if (reg & cpu_to_le32(ISL38XX_INT_IDENT_INIT))
-+	if (reg & cpu_to_le32(ISL38XX_INT_IDENT_UPDATE))
-+		tasklet_schedule(&priv->tasklet);
-+	else if (reg & cpu_to_le32(ISL38XX_INT_IDENT_INIT))
- 		complete(&priv->boot_comp);
- 
-+out:
- 	spin_unlock(&priv->lock);
--
- 	return reg ? IRQ_HANDLED : IRQ_NONE;
- }
- 
-@@ -360,7 +362,7 @@ static void p54p_stop(struct ieee80211_hw *dev)
- 	unsigned int i;
- 	struct p54p_desc *desc;
- 
--	tasklet_kill(&priv->rx_tasklet);
-+	tasklet_kill(&priv->tasklet);
- 
- 	P54P_WRITE(int_enable, cpu_to_le32(0));
- 	P54P_READ(int_enable);
-@@ -551,7 +553,7 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
- 	priv->common.tx = p54p_tx;
- 
- 	spin_lock_init(&priv->lock);
--	tasklet_init(&priv->rx_tasklet, p54p_rx_tasklet, (unsigned long)dev);
-+	tasklet_init(&priv->tasklet, p54p_tasklet, (unsigned long)dev);
- 
- 	err = request_firmware(&priv->firmware, "isl3886pci",
- 			       &priv->pdev->dev);
-diff --git a/drivers/net/wireless/p54/p54pci.h b/drivers/net/wireless/p54/p54pci.h
-index fbb6839..2feead6 100644
---- a/drivers/net/wireless/p54/p54pci.h
-+++ b/drivers/net/wireless/p54/p54pci.h
-@@ -92,7 +92,7 @@ struct p54p_priv {
- 	struct p54_common common;
- 	struct pci_dev *pdev;
- 	struct p54p_csr __iomem *map;
--	struct tasklet_struct rx_tasklet;
-+	struct tasklet_struct tasklet;
- 	const struct firmware *firmware;
- 	spinlock_t lock;
- 	struct p54p_ring_control *ring_control;
-@@ -101,8 +101,8 @@ struct p54p_priv {
- 	u32 rx_idx_mgmt, tx_idx_mgmt;
- 	struct sk_buff *rx_buf_data[8];
- 	struct sk_buff *rx_buf_mgmt[4];
--	void *tx_buf_data[32];
--	void *tx_buf_mgmt[4];
-+	struct sk_buff *tx_buf_data[32];
-+	struct sk_buff *tx_buf_mgmt[4];
- 	struct completion boot_comp;
+ 	/* Non AMPDU sequence number assigned by driver.  */
+ 	u16 seqno;
  };
+@@ -419,7 +422,8 @@ static int mwl8k_request_firmware(struct mwl8k_priv *priv)
+ struct mwl8k_cmd_pkt {
+ 	__le16	code;
+ 	__le16	length;
+-	__le16	seq_num;
++	__u8	seq_num;
++	__u8	macid;
+ 	__le16	result;
+ 	char	payload[0];
+ } __attribute__((packed));
+@@ -477,6 +481,7 @@ static int mwl8k_load_fw_image(struct mwl8k_priv *priv,
  
+ 	cmd->code = cpu_to_le16(MWL8K_CMD_CODE_DNLD);
+ 	cmd->seq_num = 0;
++	cmd->macid = 0;
+ 	cmd->result = 0;
+ 
+ 	done = 0;
+@@ -1595,6 +1600,15 @@ static int mwl8k_post_cmd(struct ieee80211_hw *hw, struct mwl8k_cmd_pkt *cmd)
+ 	return rc;
+ }
+ 
++static int mwl8k_post_pervif_cmd(struct ieee80211_hw *hw,
++				 struct ieee80211_vif *vif,
++				 struct mwl8k_cmd_pkt *cmd)
++{
++	if (vif != NULL)
++		cmd->macid = MWL8K_VIF(vif)->macid;
++	return mwl8k_post_cmd(hw, cmd);
++}
++
+ /*
+  * Setup code shared between STA and AP firmware images.
+  */
+@@ -3283,6 +3297,7 @@ static int mwl8k_add_interface(struct ieee80211_hw *hw,
+ 	mwl8k_vif = MWL8K_VIF(vif);
+ 	memset(mwl8k_vif, 0, sizeof(*mwl8k_vif));
+ 	mwl8k_vif->vif = vif;
++	mwl8k_vif->macid = 0;
+ 	mwl8k_vif->seqno = 0;
+ 
+ 	list_add_tail(&mwl8k_vif->list, &priv->vif_list);
+-- 
+1.5.6.4
