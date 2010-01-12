@@ -1,83 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:40376 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755175Ab0AERU3 (ORCPT
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:52499 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753533Ab0ALQvu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2010 12:20:29 -0500
-Date: Tue, 5 Jan 2010 18:20:27 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
-	Sasidhar Subramaniam <Sasidhar.Subramaniam@atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@atheros.com>
-Subject: Re: infinite transmit buffering issue in 2.6.32 mac80211
-Message-ID: <20100105172027.GS1735@mail.wantstofly.org>
-References: <20100105083803.GP1735@mail.wantstofly.org> <43e72e891001050901v2d07ddd9m16789b200f096ef8@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e891001050901v2d07ddd9m16789b200f096ef8@mail.gmail.com>
+	Tue, 12 Jan 2010 11:51:50 -0500
+Received: by pwj9 with SMTP id 9so2209507pwj.21
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jan 2010 08:51:50 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4B4C622F.1050602@openwrt.org>
+References: <4B4ABB54.7030600@openwrt.org> <20100112093733.GA2548@mail.wantstofly.org>
+	<4B4C622F.1050602@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 12 Jan 2010 08:51:30 -0800
+Message-ID: <43e72e891001120851m335dc605wbbc81c6cd5b7a792@mail.gmail.com>
+Subject: Re: mac80211: fix queue selection for data frames on monitor
+	interfaces
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Lennert Buytenhek <buytenh@wantstofly.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+On Tue, Jan 12, 2010 at 3:51 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2010-01-12 10:37 AM, Lennert Buytenhek wrote:
+>> On Mon, Jan 11, 2010 at 06:47:00AM +0100, Felix Fietkau wrote:
+>>
+>>> When ieee80211_monitor_select_queue encounters data frames, it selects
+>>> the WMM AC based on skb->priority and assumes that skb->priority
+>>> contains a valid 802.1d tag. However this assumption is incorrect, since
+>>> ieee80211_select_queue has not been called at this point.
+>>> If skb->priority > 7, an array overrun occurs, which could lead to
+>>> invalid values, resulting in crashes in the tx path.
+>>
+>> What you describe here was already reported and fixed:
+>>
+>>       http://marc.info/?l=linux-wireless&m=126287290723244&w=2
+>>       http://git.kernel.org/?p=linux/kernel/git/linville/wireless-2.6.git;a=commit;h=045cfb71a3901005bf6dcedae98cecb3360a0bfc
+>>
+>> Your commit message could at least acknowledge this.  I.e. write
+>> that the existing fix doesn't handle QoS data frames in the optimal
+>> way, and then mention this:
+> Sorry, when I wrote and posted the patch, I hadn't seen your previous
+> fix yet, because I was apparently looking at the wrong tree and had not
+> noticed your submission yet.
+> It only cleanly applied to a tree without your change, but it seems that
+> John fixed it up and replaced your fix with it anyway.
 
+John, did the new changes by Felix get marked for stable too? From
+what I gather they apply on top of each other and are stable material.
 
-On Tue, Jan 05, 2010 at 09:01:23AM -0800, Luis R. Rodriguez wrote:
-
-> > Routing from a wired interface to wireless, and flooding the wired
-> > interface with traffic to be routed, say with a traffic generator (for
-> > performance testing) can trigger OOM and cripple the box in seconds,
-> > but I think (but haven't verified) that even just simple non-forwarded
-> > bulk TCP upload should be able to trigger OOM as well on sufficiently
-> > constrained machines.
-> 
-> Don't traffic generators typically cripple boxes though?
-
-The way that the traffic generators I have access to will try to
-establish wired routing performance is by determining the maximum
-loss-free forwarding rate that a certain setup can handle, i.e. the
-maximum data rate at which there is 0% packet loss.  This tends to
-be done by binary search -- transmitting data at 1000 Mb/s, 500 Mb/s,
-250 Mb/s, 125 Mb/s, etc until there is no packet loss anymore, and
-then increasing the transmit rate again, etc.
-
-All hardware of course has its performance limits.  If you stress it
-beyond those limits, it should simply drop packets, and while it is
-probably acceptable that it will become temporarily unresponsive during
-the test, it should not crash or go OOM like 2.6.32 will happily do.
-
-
-> How about with plain iperf pusing 1gbit/s over the ethernet and
-> routing out via the wireless interface?
-
-It won't manage to keep up.  But before 2.6.32, at most 1000 packets
-would accumulate in the wmaster0 qdisc, and any packets after that
-would be dropped in net/sched/sch_generic.c:pfifo_fast_enqueue().  As
-of 2.6.32, it will keep queuing packets in mac80211 ad infinitum.
-
-
-> > The only way I see to solve all of these issues cleanly is to convert
-> > the AP/STA/etc subinterfaces to be multiqueue interfaces, with the same
-> > number of transmit queues as the hardware has, so that there are
-> > independently stoppable/resumable virtual output queues all the way
-> > from userland to the actual hardware, and then to stop/resume those
-> > queues in response to the hardware DMA queues filling up and draining.
-> 
-> How does this resolve the main OOM issues you are seeing though? I
-> don't see the link yet.
-
-Once you stop the queues on the devices via netif_stop_queue (or one
-of the subqueue variants), the qdisc attached to the netdev will take
-over and start queueing packets that are handed to netif_queue_xmit().
-
-The default qdisc is pfifo_fast, and its default limit is 1000, so any
-packets that we're trying to queue beyond the 1000th will be dropped
-by pfifo_fast -- i.e. the in-stack queueing that will kick in once you
-stop the netdev queue is limited to 1000 packets.  (Which is probably
-OK for gigabit but _way_ too many for typical wireless data rates --
-but that's an issue for another day.)
-
-
-cheers,
-Lennert
+  Luis
