@@ -1,35 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:42312 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753976Ab0AVXHq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 18:07:46 -0500
-Message-ID: <4B5A2FA2.5000603@redfish-solutions.com>
-Date: Fri, 22 Jan 2010 15:07:14 -0800
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	Peter Svensson <petersv@psv.nu>, linux-wireless@vger.kernel.org
-Subject: Re: Compat-wireless bleeding-edge daily builds broken since  2009-12-11
-References: <Pine.LNX.4.64.0912261245080.5112@cheetah.psv.nu>	 <20091229020027.GE30201@bombadil.infradead.org>	 <4B59FC5E.1020802@redfish-solutions.com>	 <43e72e891001221153w5c4c4bc6g63883b5012d384b7@mail.gmail.com>	 <4B5A20C3.6020304@redfish-solutions.com> <1264198240.9056.4.camel@mj>
-In-Reply-To: <1264198240.9056.4.camel@mj>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:61473 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753322Ab0ALWVn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jan 2010 17:21:43 -0500
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Subject: [PATCH] mac80211: fix channel setting for wext
+Date: Tue, 12 Jan 2010 14:28:47 -0800
+Message-Id: <1263335327-9257-1-git-send-email-abhijeet.kolekar@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/22/2010 02:10 PM, Pavel Roskin wrote:
-> On Fri, 2010-01-22 at 14:03 -0800, Philip A. Prindeville wrote:
->> Call Trace:
->>  [<d09cb62e>] ieee80211_tx_prepare+0x2ed/0x327 [mac80211]
-> 
-> I assume it's the hostapd bug that was fixed minutes ago.  Alternatively
-> (but less likely), it's a bug in WEP, also fixed today.  Please see the
-> current mailing list archives.
-> 
-> You may want to enable CONFIG_MAC80211_DEBUG_MENU and
-> CONFIG_MAC80211_NOINLINE to get more reasonable backtraces.
+Patch fixes the bug at
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2139
 
-"Fixed minutes ago"?  I thought that Markus's last message was stating it was still broken...
+Currently we cannot set the channel using wext extension
+if we have already associated and disconnected. As
+cfg80211_mgd_wext_siwfreq will not switch the channel if ssid is set.
+This fixes it by clearing the ssid.
+Following is the sequence which it tries to fix.
+modprobe iwlagn
+iwconfig wlan0 essid ""
+ifconfig wlan0 down
+iwconfig wlan0 chan X
+
+wext is marked as deprecate.If we use nl80211 we can easily play with
+setting the channel.
+
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Acked-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+v2: Added Samuel's Comments
+
+ net/wireless/sme.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 2333d78..dc0fc49 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -655,6 +655,7 @@ void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
+ 	memset(&wrqu, 0, sizeof(wrqu));
+ 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+ 	wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
++	wdev->wext.connect.ssid_len = 0;
+ #endif
+ }
+ 
+-- 
+1.6.3.3
 
