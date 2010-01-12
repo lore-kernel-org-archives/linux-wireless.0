@@ -1,46 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f198.google.com ([209.85.211.198]:47110 "EHLO
-	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754489Ab0A0Q0r (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:58836 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752433Ab0ALMsS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2010 11:26:47 -0500
-Received: by ywh36 with SMTP id 36so44668ywh.15
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2010 08:26:45 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <b2cc26e41001270818hfa9a533le4aa45a5f2f62eb8@mail.gmail.com>
-References: <87k4v5nuej.fsf@purkki.valot.fi>
-	 <b2cc26e41001270818hfa9a533le4aa45a5f2f62eb8@mail.gmail.com>
-Date: Wed, 27 Jan 2010 10:26:44 -0600
-Message-ID: <51058d551001270826s19776cebl38cf86765f7395eb@mail.gmail.com>
-Subject: Re: Network QoS support in applications
-From: Greg Oliver <oliver.greg@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-To: unlisted-recipients:; (no To-header on input)
+	Tue, 12 Jan 2010 07:48:18 -0500
+Date: Tue, 12 Jan 2010 13:48:17 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 07/17] mwl8k: move responsibility for initialising wiphy bands to GET_HW_SPEC
+Message-ID: <20100112124817.GW1735@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 27, 2010 at 10:18 AM, Olaf van der Spek
-<olafvdspek@gmail.com> wrote:
-> On Tue, Jan 26, 2010 at 9:27 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
->> I would like to clear up all this by and I'm willing to write a
->> document for application developers about network QoS. But I need help
->> to understand what's the proper way to mark different QoS
->> prioritities.
-Yep, and I would have to disagree that the linux tools are not in use.
- A large portion (if not most) of the SMB/SME market uses appliances
-that are based on the linux networking stack (when they are not using
-the msoft competitor - if it exists).  Most of these also allow QoS
-and traffic shaping out of the box..  Don't forget about the majority
-of all of the wireless routers you write software for too :)  Most of
-them use some form/combination of QoS/queues for prioritization as
-well...
+So that we can make 2.4 GHz and 5 GHz band registration conditional
+on the capability bitmask returned by the firmware.
 
-I do not think it is a matter of education, but rather "what do I
-gain" from developers.  A lot of apps already mark packets, but in the
-end, they must be trusted by the network.  I know I do not want/will
-not allow any device that is not physically secure as well as
-software-wise to pass packets without re-classification on my
-networks...
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   35 ++++++++++++++++++++++++-----------
+ 1 files changed, 24 insertions(+), 11 deletions(-)
 
--Greg
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 37cbfbf..a17111f 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1558,6 +1558,28 @@ static int mwl8k_post_cmd(struct ieee80211_hw *hw, struct mwl8k_cmd_pkt *cmd)
+ }
+ 
+ /*
++ * Setup code shared between STA and AP firmware images.
++ */
++static void mwl8k_setup_2ghz_band(struct ieee80211_hw *hw)
++{
++	struct mwl8k_priv *priv = hw->priv;
++
++	BUILD_BUG_ON(sizeof(priv->channels_24) != sizeof(mwl8k_channels_24));
++	memcpy(priv->channels_24, mwl8k_channels_24, sizeof(mwl8k_channels_24));
++
++	BUILD_BUG_ON(sizeof(priv->rates_24) != sizeof(mwl8k_rates_24));
++	memcpy(priv->rates_24, mwl8k_rates_24, sizeof(mwl8k_rates_24));
++
++	priv->band_24.band = IEEE80211_BAND_2GHZ;
++	priv->band_24.channels = priv->channels_24;
++	priv->band_24.n_channels = ARRAY_SIZE(mwl8k_channels_24);
++	priv->band_24.bitrates = priv->rates_24;
++	priv->band_24.n_bitrates = ARRAY_SIZE(mwl8k_rates_24);
++
++	hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &priv->band_24;
++}
++
++/*
+  * CMD_GET_HW_SPEC (STA version).
+  */
+ struct mwl8k_cmd_get_hw_spec_sta {
+@@ -1671,6 +1693,7 @@ static int mwl8k_cmd_get_hw_spec_sta(struct ieee80211_hw *hw)
+ 		priv->num_mcaddrs = le16_to_cpu(cmd->num_mcaddrs);
+ 		priv->fw_rev = le32_to_cpu(cmd->fw_rev);
+ 		priv->hw_rev = cmd->hw_rev;
++		mwl8k_setup_2ghz_band(hw);
+ 		if (cmd->caps & cpu_to_le32(MWL8K_CAP_MIMO))
+ 			mwl8k_set_ht_caps(hw, le32_to_cpu(cmd->caps));
+ 	}
+@@ -1726,6 +1749,7 @@ static int mwl8k_cmd_get_hw_spec_ap(struct ieee80211_hw *hw)
+ 		priv->num_mcaddrs = le16_to_cpu(cmd->num_mcaddrs);
+ 		priv->fw_rev = le32_to_cpu(cmd->fw_rev);
+ 		priv->hw_rev = cmd->hw_rev;
++		mwl8k_setup_2ghz_band(hw);
+ 
+ 		off = le32_to_cpu(cmd->wcbbase0) & 0xffff;
+ 		iowrite32(cpu_to_le32(priv->txq[0].txd_dma), priv->sram + off);
+@@ -3853,17 +3877,6 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
+ 	priv->pending_tx_pkts = 0;
+ 
+ 
+-	memcpy(priv->channels_24, mwl8k_channels_24, sizeof(mwl8k_channels_24));
+-	priv->band_24.band = IEEE80211_BAND_2GHZ;
+-	priv->band_24.channels = priv->channels_24;
+-	priv->band_24.n_channels = ARRAY_SIZE(mwl8k_channels_24);
+-	priv->band_24.bitrates = priv->rates_24;
+-	priv->band_24.n_bitrates = ARRAY_SIZE(mwl8k_rates_24);
+-	hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &priv->band_24;
+-
+-	BUILD_BUG_ON(sizeof(priv->rates_24) != sizeof(mwl8k_rates_24));
+-	memcpy(priv->rates_24, mwl8k_rates_24, sizeof(mwl8k_rates_24));
+-
+ 	/*
+ 	 * Extra headroom is the size of the required DMA header
+ 	 * minus the size of the smallest 802.11 frame (CTS frame).
+-- 
+1.5.6.4
