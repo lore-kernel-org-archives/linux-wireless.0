@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45575 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753659Ab0AYWai (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:48063 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754220Ab0ALQfF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 17:30:38 -0500
-Date: Mon, 25 Jan 2010 17:19:35 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/4] b43: make cordic common (LP-PHY and N-PHY need it)
-Message-ID: <20100125221935.GC14699@tuxdriver.com>
-References: <1264442401-6364-1-git-send-email-zajec5@gmail.com> <b170af451001251035t23f3978cga52258722ea29770@mail.gmail.com> <b170af451001251036m8b33f3er9f0a363a03ea21cb@mail.gmail.com> <201001251953.21692.mb@bu3sch.de>
+	Tue, 12 Jan 2010 11:35:05 -0500
+Received: by yxe17 with SMTP id 17so21524730yxe.33
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jan 2010 08:35:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <201001251953.21692.mb@bu3sch.de>
+In-Reply-To: <201001120119.38062.rossi.f@inwind.it>
+References: <4AF99EF9.4040408@nets.rwth-aachen.de>
+	 <201001082334.16066.rossi.f@inwind.it>
+	 <20100109034132.GA18279@hash.localnet>
+	 <201001120119.38062.rossi.f@inwind.it>
+Date: Tue, 12 Jan 2010 11:35:04 -0500
+Message-ID: <b6c5339f1001120835p381b440fgc2b30369737e104c@mail.gmail.com>
+Subject: Re: ath5k: 2.6.32-rc6 "no further txbuf available, dropping packet"
+From: Bob Copeland <me@bobcopeland.com>
+To: Fabio Rossi <rossi.f@inwind.it>
+Cc: linux-wireless@vger.kernel.org,
+	Arnd Hannemann <hannemann@nets.rwth-aachen.de>,
+	ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 25, 2010 at 07:53:19PM +0100, Michael Buesch wrote:
-> On Monday 25 January 2010 19:36:27 Rafał Miłecki wrote:
-> > W dniu 25 stycznia 2010 19:35 użytkownik Rafał Miłecki
-> > <zajec5@gmail.com> napisał:
-> > > 2010/1/25 Michael Buesch <mb@bu3sch.de>:
-> > >> On Monday 25 January 2010 18:59:59 Rafał Miłecki wrote:
-> > >>> +/* Complex number using 2 32-bit signed integers */
-> > >>> +typedef struct { s32 i, q; } b43_c32;
-> > >>
-> > >> No typedef. ever.
-> > >
-> > > Well, I just copied (Gabor's?) code here. But of course I can fix this
-> > > by the way, no problem :)
-> 
-> Yeah, I saw that. We can fix it while we're at it. ;)
-> 
-> > > Just read about typedef in Linux Kernel Coding Style, didn't know
-> > > about this earlier. Thanks for pointing.
-> > 
-> > Is this OK to fix this in separated patch? Or should I modify this set
-> > of patches?
-> 
-> Well, as you touch any reference to the typedef anyway (you renamed it),
-> you can just put the keyword "struct" in front of the references and no separate patch is needed.
-> It won't even grow your current patch in the number of changed lines.
+On Mon, Jan 11, 2010 at 7:19 PM, Fabio Rossi <rossi.f@inwind.it> wrote:
+> I put a printk debug statement in ath5k_tx_queue() to see how sc->txbuf_len
+> changes. The maximum number of buffers is 200 as defined by ATH_TXBUF. During
+> the file transfer, sometimes, sc>txbuf_len decreases up to 1, then it changes
+> to 41 and starts again to decrease up to 1, again 41 and so on for a few
+> seconds. When the buffer number is 0 I can see the "no further txbuf available,
+> dropping packet" message.
 
-I took care of these modifications to the original patch...
+Ok, well then at least we know that it is working :)  Do you get any ill effects
+besides the log spam?  If so then there could be an issue with starvation of the
+processing tasklet.  Or maybe we should look at changing the limits
+for better flow.
 
-John
+We could also stop the queues a packet earlier, I guess.
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Bob Copeland %% www.bobcopeland.com
