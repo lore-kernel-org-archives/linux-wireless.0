@@ -1,78 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:60068 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752172Ab0A2L06 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2010 06:26:58 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 29 Jan 2010 03:26:58 -0800
-Date: Fri, 29 Jan 2010 16:56:51 +0530
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: Handle full sleep in ps_restore.
-Message-ID: <20100129112651.GA1862@user-laptop>
+Received: from smtp.nokia.com ([192.100.122.233]:44848 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753156Ab0ALInF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jan 2010 03:43:05 -0500
+Subject: [PATCH PATCH v6 0/7] mac80211 client U-APSD support
+To: linville@tuxdriver.com
+From: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	a.young.jason@gmail.com
+Date: Tue, 12 Jan 2010 10:42:23 +0200
+Message-ID: <20100112084059.27492.86738.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IDLE PS (Full Sleep) doesn't work when ifconfig up
-is done during Idle unassociated state.
-Fix this by restoring FULL SLEEP in ps_restore if CONF_IDLE
-is set.
+Hello,
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+here is my proposal how to add U-APSD client support to mac80211. I
+also included example driver implementation for wl1251.
+
+Patches should be ready now.
+
+v6:
+o store max SP length value in unconverted format and shift is just
+  before use (suggested by Johannes)
+
+v5:
+o rename IEEE80211_HW_UAPSD to IEEE80211_HW_SUPPORTS_UAPSD
+o U-APSD queue and max SP length configuration debugfs interface
+  (requested by Jason)
+o dynamic ps support for U-APSD
+o by default enable U-APSD in all queues
+o back to RFC state due to new code
+o add a warning if both PS_NULLFUNC_STACK and U-APSD are enabled
+o wl1251: set qos null data template
+o more defines to ieee80211.h
+
+v4:
+o use IEEE80211_WMM_IE_STA_QOSINFO prefix in ieee80211.h (Jason Young)
+o fix VI and BK qosinfo values in ieee80211.h (Jason Young)
+o add IEEE80211_WMM_IE_AP_QOSINFO_UAPSD
+
+v3:
+o remove unnecessary debugfs interface, people can recompile mac80211
+  in case they want to try enable more queues
+o add max SP length defines to ieee80211.h
+o removed unnecessary code comments
+
+v2:
+o remove cfg80211 changes
+o rename IEEE80211_QOS_IE to IEEE80211_WMM_IE_STA in ieee80211.h
+
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/main.c  |    8 ++++++--
- 2 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index bdbcc70..3f8a7e7 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -480,6 +480,7 @@ struct ath_softc {
- 	u8 nbcnvifs;
- 	u16 nvifs;
- 	bool ps_enabled;
-+	bool ps_idle;
- 	unsigned long ps_usecount;
- 	enum ath9k_int imask;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 99c4dda..4bb25ab 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -143,8 +143,10 @@ void ath9k_ps_restore(struct ath_softc *sc)
- 	if (--sc->ps_usecount != 0)
- 		goto unlock;
- 
--	if (sc->ps_enabled &&
--	    !(sc->ps_flags & (PS_WAIT_FOR_BEACON |
-+	if (sc->ps_idle)
-+		ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_FULL_SLEEP);
-+	else if (sc->ps_enabled &&
-+		 !(sc->ps_flags & (PS_WAIT_FOR_BEACON |
- 			      PS_WAIT_FOR_CAB |
- 			      PS_WAIT_FOR_PSPOLL_DATA |
- 			      PS_WAIT_FOR_TX_ACK)))
-@@ -1528,6 +1530,7 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 		spin_unlock_bh(&sc->wiphy_lock);
- 
- 		if (enable_radio) {
-+			sc->ps_idle = false;
- 			ath_radio_enable(sc, hw);
- 			ath_print(common, ATH_DBG_CONFIG,
- 				  "not-idle: enabling radio\n");
-@@ -1635,6 +1638,7 @@ skip_chan_change:
- 
- 	if (disable_radio) {
- 		ath_print(common, ATH_DBG_CONFIG, "idle: disabling radio\n");
-+		sc->ps_idle = true;
- 		ath_radio_disable(sc, hw);
- 	}
- 
--- 
-1.6.6.1
+Kalle Valo (7):
+      mac80211: add U-APSD client support
+      mac80211: add debugfs interface for U-APSD queue configuration
+      mac80211: create tx handler for dynamic ps
+      mac80211: check uapsd state for dynamic power save
+      ieee80211: add struct ieee80211_hdr_qos
+      wl1251: create qos null data template
+      wl1251: add U-APSD support
+
+
+ drivers/net/wireless/wl12xx/wl1251_main.c |   37 +++++++++-
+ include/linux/ieee80211.h                 |   28 ++++++++
+ include/net/mac80211.h                    |    7 ++
+ net/mac80211/cfg.c                        |    7 ++
+ net/mac80211/debugfs.c                    |   94 ++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h                |   27 +++++++
+ net/mac80211/main.c                       |    6 ++
+ net/mac80211/mlme.c                       |   31 ++++++++
+ net/mac80211/scan.c                       |   18 +++++
+ net/mac80211/tx.c                         |  106 ++++++++++++++++++-----------
+ net/mac80211/util.c                       |    2 +
+ net/mac80211/work.c                       |   12 +++
+ 12 files changed, 326 insertions(+), 49 deletions(-)
 
