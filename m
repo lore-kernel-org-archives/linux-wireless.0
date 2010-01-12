@@ -1,57 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:46945 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754306Ab0AETIG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2010 14:08:06 -0500
-Message-ID: <4B438E08.9080307@openwrt.org>
-Date: Tue, 05 Jan 2010 20:07:52 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2.6.33] mac80211: fix skb buffering issue
-References: <1262710858.28653.5.camel@johannes.local> <20100105171603.GX6361@tuxdriver.com>
-In-Reply-To: <20100105171603.GX6361@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from fw.wantstofly.org ([80.101.37.227]:58825 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751912Ab0ALMrd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jan 2010 07:47:33 -0500
+Date: Tue, 12 Jan 2010 13:47:32 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 02/17] mwl8k: remove (mostly) write-only variable priv->current_channel
+Message-ID: <20100112124732.GR1735@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-01-05 6:16 PM, John W. Linville wrote:
-> On Tue, Jan 05, 2010 at 06:00:58PM +0100, Johannes Berg wrote:
->> Since I removed the master netdev, we've been
->> keeping internal queues only, and even before
->> that we never told the networking stack above
->> the virtual interfaces about congestion. This
->> means that packets are queued in mac80211 and
->> the upper layers never know, possibly leading
->> to memory exhaustion and other problems.
->> 
->> This patch makes all interfaces multiqueue and
->> uses ndo_select_queue to put the packets into
->> queues per AC. Additionally, when the driver
->> stops a queue, we now stop all corresponding
->> queues for the virtual interfaces as well.
->> 
->> The injection case will use VO by default for
->> non-data frames, and BE for data frames, but
->> downgrade any data frames according to ACM. It
->> needs to be fleshed out in the future to allow
->> chosing the queue/AC in radiotap.
->> 
->> Reported-by: Lennert Buytenhek <buytenh@marvell.com>
->> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->> Cc: stable@kernel.org [2.6.32]
->> ---
->> I know it's late, and large, but still would be good to have in .33
->> since the issue is fairly serious.
-> 
-> Obviously I'd like to see some testing.  Lennert, does this patch
-> resolve the issues you raised?
-I tested this patch on embedded hardware, and it makes a huge difference
-there. It fixes some serious TCP throughput drops and latency spikes
-that I observed with ath9k earlier.
-I think this should be merged ASAP.
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |    8 +-------
+ 1 files changed, 1 insertions(+), 7 deletions(-)
 
-- Felix
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 01cabab..f2c4524 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -156,8 +156,6 @@ struct mwl8k_priv {
+ 
+ 	struct ieee80211_vif *vif;
+ 
+-	struct ieee80211_channel *current_channel;
+-
+ 	/* power management status cookie from firmware */
+ 	u32 *cookie;
+ 	dma_addr_t cookie_dma;
+@@ -3050,7 +3048,7 @@ static int mwl8k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	int index = skb_get_queue_mapping(skb);
+ 	int rc;
+ 
+-	if (priv->current_channel == NULL) {
++	if (!priv->radio_on) {
+ 		printk(KERN_DEBUG "%s: dropped TX frame since radio "
+ 		       "disabled\n", wiphy_name(hw->wiphy));
+ 		dev_kfree_skb(skb);
+@@ -3182,7 +3180,6 @@ static int mwl8k_add_interface(struct ieee80211_hw *hw,
+ 	mwl8k_vif->seqno = 0;
+ 
+ 	priv->vif = vif;
+-	priv->current_channel = NULL;
+ 
+ 	return 0;
+ }
+@@ -3208,7 +3205,6 @@ static int mwl8k_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 	if (conf->flags & IEEE80211_CONF_IDLE) {
+ 		mwl8k_cmd_radio_disable(hw);
+-		priv->current_channel = NULL;
+ 		return 0;
+ 	}
+ 
+@@ -3224,8 +3220,6 @@ static int mwl8k_config(struct ieee80211_hw *hw, u32 changed)
+ 	if (rc)
+ 		goto out;
+ 
+-	priv->current_channel = conf->channel;
+-
+ 	if (conf->power_level > 18)
+ 		conf->power_level = 18;
+ 	rc = mwl8k_cmd_rf_tx_power(hw, conf->power_level);
+-- 
+1.5.6.4
