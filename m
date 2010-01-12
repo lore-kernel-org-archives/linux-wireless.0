@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f188.google.com ([209.85.210.188]:45899 "EHLO
-	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932517Ab0AFSQ6 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56517 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754059Ab0ALScE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 13:16:58 -0500
-Received: by yxe26 with SMTP id 26so16884340yxe.4
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 10:16:56 -0800 (PST)
-Message-ID: <4B44D396.3050106@lwfinger.net>
-Date: Wed, 06 Jan 2010 12:16:54 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 12 Jan 2010 13:32:04 -0500
+Date: Tue, 12 Jan 2010 13:32:02 -0500
+From: Christoph Hellwig <hch@infradead.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Jaswinder Singh Rajput <jaswindermobile@gmail.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	alainswb <alainswb@free.fr>, "dev@moblin.org" <dev@moblin.org>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [Moblin Dev] Wireless is keep on disconnecting
+Message-ID: <20100112183202.GA21982@infradead.org>
+References: <995709e41001091103t43738262ibb2c4e0c4beab26d@mail.gmail.com> <995709e41001120217r1b6b276ek70658a1142744142@mail.gmail.com> <4B4C8320.8060801@free.fr> <995709e41001120724j7a6627b1g5d90df8fb658ceaa@mail.gmail.com> <43e72e891001120846x453e4052oa93675b86fe4a86d@mail.gmail.com> <995709e41001120914n17cfdb56k664c2b42afe448f6@mail.gmail.com> <995709e41001120915h1a156606m837717ffd584fa3e@mail.gmail.com> <20100112180438.GA17003@infradead.org> <20100112183047.GI17243@tux>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2.6.33] mac80211: fix skb buffering issue
-References: <1262710858.28653.5.camel@johannes.local>	 <4B442008.2040207@lwfinger.net> <1262775946.9268.109.camel@johannes.local>
-In-Reply-To: <1262775946.9268.109.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100112183047.GI17243@tux>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/06/2010 05:05 AM, Johannes Berg wrote:
-> On Tue, 2010-01-05 at 23:30 -0600, Larry Finger wrote:
+On Tue, Jan 12, 2010 at 10:30:47AM -0800, Luis R. Rodriguez wrote:
+> > FYI: since 2.6.32 I also see very frequent disconnects with the no probe
+> > response messages.  This is with an Intel 5100 card, and can be better
+> > or worse depending on the AP.  On my home one it makes the kernel
+> > completely unusable.
 > 
->> Reauthentication fails with a pop-up to reenter the WPA2 secret as I'm
->> using NetworkManager. I can only reconnect if b43 (and mac80211) are
->> unloaded and reloaded. I pulled the patch and confirmed that proper
->> behavior is returned.
-> 
-> Ouch.
-> 
-> I can't seem to reproduce this with hwsim, but it never touches the
-> queues.
-> 
-> I think it may be because I forgot about
-> 53623f1a09c7a7d23b74f0f7d93dba0ebde1006b ...
-> 
-> The patch below is certainly needed, but I'm not entirely sure it'll fix
-> your issue, can you give it a try please?
-> 
-> johannes
-> 
+> Which exact 2.6.32 release?
 
-This patch seems to fix the problem. I've been running for 5 hours with it, and
-no interruption.
-
-Thanks,
-
-Larry
+There is only one.  And most rcs weren't bootable on my laptop, so I
+couldn't bisect it.
 
