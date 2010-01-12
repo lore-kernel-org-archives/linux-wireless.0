@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:61548 "EHLO
-	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756492Ab0AFWwy (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:47750 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751810Ab0ALWT1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 17:52:54 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Alban Browaeys <prahal@yahoo.com>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	Tue, 12 Jan 2010 17:19:27 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH 3/3] b43: N-PHY: add RX IQ calculation for rev < 3
+Date: Tue, 12 Jan 2010 23:19:23 +0100
+Cc: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2.6.33 1/8] rt2x00 : modify padding location.
-Date: Wed,  6 Jan 2010 23:52:42 +0100
-Message-Id: <1262818369-16820-2-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1262818369-16820-1-git-send-email-gwingerde@gmail.com>
-References: <1262818369-16820-1-git-send-email-gwingerde@gmail.com>
+References: <op.u6fp66hl9lhzdc@linux-g0th.site>
+In-Reply-To: <op.u6fp66hl9lhzdc@linux-g0th.site>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <201001122319.23626.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alban Browaeys <prahal@yahoo.com>
+On Tuesday 12 January 2010 20:38:56 Rafał Miłecki wrote:
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+> 
+> Uh, bigger one. This patch causes false warning:
+> drivers/net/wireless/b43/phy_n.c: In function ‘b43_nphy_rev2_cal_rx_iq’:
+> drivers/net/wireless/b43/phy_n.c:627: warning: large integer implicitly truncated to unsigned type
+> 
+> That's for:
 
-The padding is to be added between header and payload for the only header need
-padding case.
+I think the warning is caused by
 
-Signed-off-by: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Signed-off-by: Alban Browaeys <prahal@yahoo.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Acked-by: Ivo van Doorn <ivdoorn@gmail.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+		b43_phy_maskset(dev, B43_NPHY_RFSEQCA,
+	THIS>>>>>   ~B43_NPHY_RFSEQCA_RXDIS,
+		((1 - i) << B43_NPHY_RFSEQCA_RXDIS_SHIFT));
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 9915a09..37a9d20 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -197,7 +197,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
- 		 * the payload is already properly aligned.
- 		 */
- 		skb_push(skb, header_align);
--		memmove(skb->data, skb->data + header_align, frame_length);
-+		memmove(skb->data, skb->data + header_align, header_length);
- 		skbdesc->flags |= SKBDESC_L2_PADDED;
- 	} else {
- 		/*
+Well, I think the warning is pretty much bogus, but I think it can be worked around
+by doing
+	(u16)~B43_NPHY_RFSEQCA_RXDIS
+
+
 -- 
-1.6.6
-
+Greetings, Michael.
