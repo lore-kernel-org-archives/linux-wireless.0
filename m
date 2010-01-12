@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:47407 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755562Ab0A1QMu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2010 11:12:50 -0500
-Received: by ewy19 with SMTP id 19so914345ewy.21
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jan 2010 08:12:48 -0800 (PST)
+Received: from nbd.name ([88.198.39.176]:33124 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753126Ab0ALDI2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jan 2010 22:08:28 -0500
+Message-ID: <4B4BE7AA.4060808@openwrt.org>
+Date: Tue, 12 Jan 2010 04:08:26 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <774870.89795.qm@web51401.mail.re2.yahoo.com>
-References: <774870.89795.qm@web51401.mail.re2.yahoo.com>
-From: rootkit85@yahoo.it
-Date: Thu, 28 Jan 2010 17:12:28 +0100
-Message-ID: <40101cc31001280812v19e78ad7m3cf04a7ff1851ce0@mail.gmail.com>
-Subject: Re: [ath9k-devel] Significiant performance differences between ath5k
-	and ath9k in 802.11a
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: fix WMM AC default for non-QoS data frames
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 28, 2010 at 4:13 PM, Joerg Pommnitz <pommnitz@yahoo.com> wrote:
-> Hello all,
-> I have a strange performance problem with ath9k. I have two otherwise identical systems with an ath5k-supported card in system ATH5K and an ath9k supported card in system ATH9K.
-> Doing an UDP iperf run were ATH5K is the client/sender and ATH9K is the server/receiver I easily get data rates of 31MBit/s (tx data rate on the sender is manually set to 54 MBit/s).
-> Running the same test with ATH9K as client/sender and ATH5K as server/receiver gives maximum data rates of about 22MBit/s, about 30% less.
->
-> Doing the test against another ath9k system (e.g. ATH9K ==> ATH9K2) gives
-> the same max data rate of only 22 MBit/s, so the problem seems to be the
-> ath9k driver or the hardware. Can anybody confirm these problems? Is this
-> a known limitation? Any buttons to push to get things going faster?
->
-> Details:
-> the ath5k card is a AR2413 based design (Compex WLM54AG), the ath9k card
-> is a AR9220 (Compex WLM200NX 6A). The systems are connected in IBSS mode
-> on channel 40 (5200MHz).
-> The kernel version is wireless-testing as of January, 26. The kernel is
-> slightly patched to enable IBSS in 802.11a (we are allowed to do this).
->
-> Can anybody shed some light on this strange issue? Luis?
->
-> --
-> Regards
->       Joerg
->
-> __________________________________________________
-> Do You Yahoo!?
-> Sie sind Spam leid? Yahoo! Mail verfügt über einen herausragenden Schutz gegen Massenmails.
-> http://mail.yahoo.com
-> _______________________________________________
-> ath9k-devel mailing list
-> ath9k-devel@lists.ath9k.org
-> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
->
+The WMM AC selection added to the monitor mode selection function 
+accidentally assigns non-QoS data frames to the same AC as mgmt frames 
+(VO). This is not serious, but should be fixed anyway. This patch 
+assigns them to the BE AC instead.
 
-Can you try in AP-client mode? I think you'll get more throughput so.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -696,10 +696,14 @@ static u16 ieee80211_monitor_select_queu
+ 
+ 	hdr = (void *)((u8 *)skb->data + le16_to_cpu(rtap->it_len));
+ 
+-	if (!ieee80211_is_data_qos(hdr->frame_control)) {
++	if (!ieee80211_is_data(hdr->frame_control)) {
+ 		skb->priority = 7;
+ 		return ieee802_1d_to_ac[skb->priority];
+ 	}
++	if (!ieee80211_is_data_qos(hdr->frame_control)) {
++		skb->priority = 0;
++		return ieee802_1d_to_ac[skb->priority];
++	}
+ 
+ 	p = ieee80211_get_qos_ctl(hdr);
+ 	skb->priority = *p & IEEE80211_QOS_CTL_TAG1D_MASK;
