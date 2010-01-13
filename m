@@ -1,264 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f182.google.com ([209.85.216.182]:45634 "EHLO
-	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755670Ab0A0SBU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2010 13:01:20 -0500
-Received: by pxi12 with SMTP id 12so4581082pxi.33
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2010 10:01:20 -0800 (PST)
+Received: from mail.atheros.com ([12.36.123.2]:14320 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932109Ab0AMQJp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jan 2010 11:09:45 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2010 08:09:45 -0800
+Date: Wed, 13 Jan 2010 08:09:42 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Jaswinder Singh Rajput <jaswindermobile@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"arjan@linux.intel.com" <arjan@linux.intel.com>,
+	"Li, Yan" <yan.i.li@intel.com>, "dev@moblin.org" <dev@moblin.org>,
+	alainswb <alainswb@free.fr>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
+Subject: Re: [ath9k-devel] [Moblin Dev] Wireless is keep on disconnecting
+Message-ID: <20100113160942.GB15698@tux>
+References: <995709e41001091103t43738262ibb2c4e0c4beab26d@mail.gmail.com>
+ <995709e41001120217r1b6b276ek70658a1142744142@mail.gmail.com>
+ <4B4C8320.8060801@free.fr>
+ <995709e41001120724j7a6627b1g5d90df8fb658ceaa@mail.gmail.com>
+ <43e72e891001120846x453e4052oa93675b86fe4a86d@mail.gmail.com>
+ <995709e41001120914n17cfdb56k664c2b42afe448f6@mail.gmail.com>
+ <43e72e891001120918v70c3be7nd3d3819f0e8b0cd0@mail.gmail.com>
+ <995709e41001122307g2d0e9546g2b3680a6cb0a345d@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1264511993.25642.9.camel@johannes.local>
-References: <1264511993.25642.9.camel@johannes.local>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 27 Jan 2010 10:01:00 -0800
-Message-ID: <43e72e891001271001r2cc39da4ka00a3eef06f6e139@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: wait for beacon before enabling powersave
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, kalle.valo@iki.fi,
-	linux-wireless@vger.kernel.org, j@w1.fi, buytenh@wantstofly.org,
-	wey-yi.w.guy@intel.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <995709e41001122307g2d0e9546g2b3680a6cb0a345d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCBKYW4gMjYsIDIwMTAgYXQgNToxOSBBTSwgSm9oYW5uZXMgQmVyZwo8am9oYW5uZXNA
-c2lwc29sdXRpb25zLm5ldD4gd3JvdGU6Cj4gQmVjYXVzZSBEVElNIGluZm9ybWF0aW9uIGlzIHJl
-cXVpcmVkIGZvciBwb3dlcnNhdmUKPiBidXQgaXMgb25seSBjb252ZXllZCBpbiBiZWFjb25zLCB3
-YWl0IGZvciBhIGJlYWNvbgo+IGJlZm9yZSBlbmFibGluZyBwb3dlcnNhdmUsIGFuZCBjaGFuZ2Ug
-dGhlIHdheSB0aGUKPiBpbmZvcm1hdGlvbiBpcyBjb252ZXllZCB0byB0aGUgZHJpdmVyIGFjY29y
-ZGluZ2x5Lgo+Cj4gbXdsOGsgZG9lc24ndCBjdXJyZW50bHkgc2VlbSB0byBpbXBsZW1lbnQgUFMg
-YnV0Cj4gcmVxdWlyZXMgdGhlIERUSU0gcGVyaW9kIGluIGEgZGlmZmVyZW50IHdheTsgYWZ0ZXIK
-PiB0YWxraW5nIHRvIExlbm5lcnQgd2UgYWdyZWVkIHRvIGp1c3QgaGF2ZSBtd2w4ayBkbwo+IHRo
-ZSBwYXJzaW5nIGl0c2VsZiBpbiB0aGUgZmluYWxpemVfam9pbiB3b3JrLgoKTm90IHN1cmUgaWYg
-dGhpcyBpcyBtZXJnZWQgeWV0LiBJZiBub3QgaXQgbWlnaHQgYmUgZ29vZCB0byBhZGQgdG8gdGhl
-CmNvbW1pdCBsb2cgYSBicmllZiBhYm91dCB0aGUgaW1wYWN0IG9mIHRoZSBmaXggZm9yIGRpc3Ry
-aWJ1dGlvbgpwdXJwb3NlcyBsb29raW5nIHRvIGNoZXJyeSBwaWNrIHNvbWUgZml4ZXMgdGhhdCBt
-YXkgY3VyZSBzb21lIGlzc3Vlcy4KClRoZSBpbXBhY3Qgb2YgdGhpcyBmaXggaXMgdGhhdCB0aGUg
-RFRJTSBzZXR0aW5ncyBvZiA+IDEgd291bGQgbm93IGJlCnJlc3BlY3RlZCBpbiB0aGUgb2RkIHNp
-dHVhdGlvbiBhIGJlYWNvbiB3b3VsZCBub3QgYmUgcmVjZWl2ZWQgcHJpb3IgdG8KYXNzb2NpYXRp
-b24uIEVuc3VyaW5nIHdlIHVzZSBhIGhpZ2hlciBEVElNIHdvdWxkIG1lYW4gc2F2aW5nIG1vcmUK
-cG93ZXIgYXMgaXQgd291bGQgbWVhbiB3ZSBjYW4gc2xlZXAgbG9uZ2VyLgoKVGhpcyBpcyBub3Qg
-cHJvcGFnYXRlZCB0byBzdGFibGUgYnV0IGlmIGl0IHR1cm5zIG91dCB0aGlzIGNhbiBlbmhhbmNl
-CnBvd2VyIHNhdmUgc2luY2UgRFRJTSBtaWdodCB1c3VhbGx5IGJlID4gMSBhbmQgdGhlIHJhY2Ug
-bWF5IGJlIG1vcmUKY29tbW9uIHRoYW4gd2UgZXhwZWN0ZWQgd2UgbWF5IG5lZWQgYSByZXNwZWN0
-aXZlIHN0YWJsZSBzb2x1dGlvbi4KCiAgTHVpcwoKPiBTaWduZWQtb2ZmLWJ5OiBKb2hhbm5lcyBC
-ZXJnIDxqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0Pgo+IC0tLQo+IFRoZSBtd2w4ayBwYXJ0IHJl
-cXVpcmVzIHRoZSBjZmc4MDIxMSBjaGFuZ2UuCj4KPiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3
-bHdpZmkvaXdsLXBvd2VyLmMgwqB8IMKgIMKgMiArLQo+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-bXdsOGsuYyDCoCDCoCDCoCDCoCDCoCDCoCDCoHwgwqAgMTQgKysrKysrKysrLS0tLS0KPiDCoGRy
-aXZlcnMvbmV0L3dpcmVsZXNzL3dsMTJ4eC93bDEyNTEuaCDCoCDCoCDCoHwgwqAgwqAzIC0tLQo+
-IMKgZHJpdmVycy9uZXQvd2lyZWxlc3Mvd2wxMnh4L3dsMTI1MV9tYWluLmMgfCDCoCAyNSArKysr
-KysrLS0tLS0tLS0tLS0tLS0tLS0tCj4gwqBpbmNsdWRlL25ldC9tYWM4MDIxMS5oIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgfCDCoCDCoDcgKysrKysrLQo+IMKgbmV0L21hYzgwMjExL21s
-bWUuYyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKgIDI3ICsrKysrKysrKysr
-KysrKysrKysrKysrKy0tLQo+IMKgbmV0L21hYzgwMjExL3NjYW4uYyDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCB8IMKgIMKgNCAtLS0tCj4gwqA3IGZpbGVzIGNoYW5nZWQsIDQ3IGlu
-c2VydGlvbnMoKyksIDM1IGRlbGV0aW9ucygtKQo+Cj4gLS0tIHdpcmVsZXNzLXRlc3Rpbmcub3Jp
-Zy9pbmNsdWRlL25ldC9tYWM4MDIxMS5oIMKgIMKgIMKgIMKgMjAxMC0wMS0yNiAwOTozNTozNS4w
-MDAwMDAwMDAgKzAxMDAKPiArKysgd2lyZWxlc3MtdGVzdGluZy9pbmNsdWRlL25ldC9tYWM4MDIx
-MS5oIMKgIMKgIDIwMTAtMDEtMjYgMDk6MzU6NTAuMDAwMDAwMDAwICswMTAwCj4gQEAgLTE4Niw3
-ICsxODYsOCBAQCBlbnVtIGllZWU4MDIxMV9ic3NfY2hhbmdlIHsKPiDCoCogQHVzZV9zaG9ydF9z
-bG90OiB1c2Ugc2hvcnQgc2xvdCB0aW1lIChvbmx5IHJlbGV2YW50IGZvciBFUlApOwo+IMKgKiDC
-oCDCoCBpZiB0aGUgaGFyZHdhcmUgY2Fubm90IGhhbmRsZSB0aGlzIGl0IG11c3Qgc2V0IHRoZQo+
-IMKgKiDCoCDCoCBJRUVFODAyMTFfSFdfMkdIWl9TSE9SVF9TTE9UX0lOQ0FQQUJMRSBoYXJkd2Fy
-ZSBmbGFnCj4gLSAqIEBkdGltX3BlcmlvZDogbnVtIG9mIGJlYWNvbnMgYmVmb3JlIHRoZSBuZXh0
-IERUSU0sIGZvciBQU00KPiArICogQGR0aW1fcGVyaW9kOiBudW0gb2YgYmVhY29ucyBiZWZvcmUg
-dGhlIG5leHQgRFRJTSwgZm9yIGJlYWNvbmluZywKPiArICogwqAgwqAgbm90IHZhbGlkIGluIHN0
-YXRpb24gbW9kZSAoY2YuIGh3IGNvbmYgcHNfZHRpbV9wZXJpb2QpCj4gwqAqIEB0aW1lc3RhbXA6
-IGJlYWNvbiB0aW1lc3RhbXAKPiDCoCogQGJlYWNvbl9pbnQ6IGJlYWNvbiBpbnRlcnZhbAo+IMKg
-KiBAYXNzb2NfY2FwYWJpbGl0eTogY2FwYWJpbGl0aWVzIHRha2VuIGZyb20gYXNzb2MgcmVzcAo+
-IEBAIC02NTIsNiArNjUzLDkgQEAgZW51bSBpZWVlODAyMTFfc21wc19tb2RlIHsKPiDCoCogwqAg
-wqAgdmFsdWUgd2lsbCBiZSBvbmx5IGFjaGlldmFibGUgYmV0d2VlbiBEVElNIGZyYW1lcywgdGhl
-IGhhcmR3YXJlCj4gwqAqIMKgIMKgIG5lZWRzIHRvIGNoZWNrIGZvciB0aGUgbXVsdGljYXN0IHRy
-YWZmaWMgYml0IGluIERUSU0gYmVhY29ucy4KPiDCoCogwqAgwqAgVGhpcyB2YXJpYWJsZSBpcyB2
-YWxpZCBvbmx5IHdoZW4gdGhlIENPTkZfUFMgZmxhZyBpcyBzZXQuCj4gKyAqIEBwc19kdGltX3Bl
-cmlvZDogVGhlIERUSU0gcGVyaW9kIG9mIHRoZSBBUCB3ZSdyZSBjb25uZWN0ZWQgdG8sIGZvciB1
-c2UKPiArICogwqAgwqAgaW4gcG93ZXIgc2F2aW5nLiBQb3dlciBzYXZpbmcgd2lsbCBub3QgYmUg
-ZW5hYmxlZCB1bnRpbCBhIGJlYWNvbgo+ICsgKiDCoCDCoCBoYXMgYmVlbiByZWNlaXZlZCBhbmQg
-dGhlIERUSU0gcGVyaW9kIGlzIGtub3duLgo+IMKgKiBAZHluYW1pY19wc190aW1lb3V0OiBUaGUg
-ZHluYW1pYyBwb3dlcnNhdmUgdGltZW91dCAoaW4gbXMpLCBzZWUgdGhlCj4gwqAqIMKgIMKgIHBv
-d2Vyc2F2ZSBkb2N1bWVudGF0aW9uIGJlbG93LiBUaGlzIHZhcmlhYmxlIGlzIHZhbGlkIG9ubHkg
-d2hlbgo+IMKgKiDCoCDCoCB0aGUgQ09ORl9QUyBmbGFnIGlzIHNldC4KPiBAQCAtNjc4LDYgKzY4
-Miw3IEBAIHN0cnVjdCBpZWVlODAyMTFfY29uZiB7Cj4gwqAgwqAgwqAgwqBpbnQgbWF4X3NsZWVw
-X3BlcmlvZDsKPgo+IMKgIMKgIMKgIMKgdTE2IGxpc3Rlbl9pbnRlcnZhbDsKPiArIMKgIMKgIMKg
-IHU4IHBzX2R0aW1fcGVyaW9kOwo+Cj4gwqAgwqAgwqAgwqB1OCBsb25nX2ZyYW1lX21heF90eF9j
-b3VudCwgc2hvcnRfZnJhbWVfbWF4X3R4X2NvdW50Owo+Cj4gLS0tIHdpcmVsZXNzLXRlc3Rpbmcu
-b3JpZy9uZXQvbWFjODAyMTEvbWxtZS5jIMKgIDIwMTAtMDEtMjYgMDk6MzU6MzUuMDAwMDAwMDAw
-ICswMTAwCj4gKysrIHdpcmVsZXNzLXRlc3RpbmcvbmV0L21hYzgwMjExL21sbWUuYyDCoCDCoCDC
-oCDCoDIwMTAtMDEtMjYgMDk6MzU6NTAuMDAwMDAwMDAwICswMTAwCj4gQEAgLTQ4MCw2ICs0ODAs
-NyBAQCB2b2lkIGllZWU4MDIxMV9yZWNhbGNfcHMoc3RydWN0IGllZWU4MDIxCj4KPiDCoCDCoCDC
-oCDCoGlmIChjb3VudCA9PSAxICYmIGZvdW5kLT51Lm1nZC5wb3dlcnNhdmUgJiYKPiDCoCDCoCDC
-oCDCoCDCoCDCoGZvdW5kLT51Lm1nZC5hc3NvY2lhdGVkICYmCj4gKyDCoCDCoCDCoCDCoCDCoCBm
-b3VuZC0+dS5tZ2QuYXNzb2NpYXRlZC0+YmVhY29uX2llcyAmJgo+IMKgIMKgIMKgIMKgIMKgIMKg
-IShmb3VuZC0+dS5tZ2QuZmxhZ3MgJiAoSUVFRTgwMjExX1NUQV9CRUFDT05fUE9MTCB8Cj4gwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBJRUVFODAy
-MTFfU1RBX0NPTk5FQ1RJT05fUE9MTCkpKSB7Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBzMzIg
-YmVhY29uaW50X3VzOwo+IEBAIC00OTMsMTQgKzQ5NCwyMiBAQCB2b2lkIGllZWU4MDIxMV9yZWNh
-bGNfcHMoc3RydWN0IGllZWU4MDIxCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBpZiAoYmVhY29u
-aW50X3VzID4gbGF0ZW5jeSkgewo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-bG9jYWwtPnBzX3NkYXRhID0gTlVMTDsKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoH0gZWxzZSB7
-Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB1OCBkdGltcGVyID0gZm91bmQt
-PnZpZi5ic3NfY29uZi5kdGltX3BlcmlvZDsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIHN0cnVjdCBpZWVlODAyMTFfYnNzICpic3M7Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqBpbnQgbWF4c2xwID0gMTsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIHU4IGR0aW1wZXI7Cj4KPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIGlmIChkdGltcGVyID4gMSkKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IGJzcyA9ICh2b2lkICopZm91bmQtPnUubWdkLmFzc29jaWF0ZWQtPnByaXY7Cj4gKyDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBkdGltcGVyID0gYnNzLT5kdGltX3BlcmlvZDsKPiAr
-Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAvKiBJZiB0aGUgVElNIElFIGlz
-IGludmFsaWQsIHByZXRlbmQgdGhlIHZhbHVlIGlzIDEgKi8KPiArIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIGlmICghZHRpbXBlcikKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIGR0aW1wZXIgPSAxOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgZWxzZSBpZiAoZHRpbXBlciA+IDEpCj4gwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBtYXhzbHAgPSBtaW5fdChpbnQsIGR0aW1wZXIs
-Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBsYXRlbmN5IC8gYmVhY29uaW50X3VzKTsKPgo+IMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgbG9jYWwtPmh3LmNvbmYubWF4X3NsZWVwX3Bl
-cmlvZCA9IG1heHNscDsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGxvY2Fs
-LT5ody5jb25mLnBzX2R0aW1fcGVyaW9kID0gZHRpbXBlcjsKPiDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoGxvY2FsLT5wc19zZGF0YSA9IGZvdW5kOwo+IMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgfQo+IMKgIMKgIMKgIMKgfSBlbHNlIHsKPiBAQCAtNjk4LDcgKzcwNyw2IEBAIHN0
-YXRpYyB2b2lkIGllZWU4MDIxMV9zZXRfYXNzb2NpYXRlZChzdHIKPiDCoCDCoCDCoCDCoC8qIHNl
-dCB0aW1pbmcgaW5mb3JtYXRpb24gKi8KPiDCoCDCoCDCoCDCoHNkYXRhLT52aWYuYnNzX2NvbmYu
-YmVhY29uX2ludCA9IGNic3MtPmJlYWNvbl9pbnRlcnZhbDsKPiDCoCDCoCDCoCDCoHNkYXRhLT52
-aWYuYnNzX2NvbmYudGltZXN0YW1wID0gY2Jzcy0+dHNmOwo+IC0gwqAgwqAgwqAgc2RhdGEtPnZp
-Zi5ic3NfY29uZi5kdGltX3BlcmlvZCA9IGJzcy0+ZHRpbV9wZXJpb2Q7Cj4KPiDCoCDCoCDCoCDC
-oGJzc19pbmZvX2NoYW5nZWQgfD0gQlNTX0NIQU5HRURfQkVBQ09OX0lOVDsKPiDCoCDCoCDCoCDC
-oGJzc19pbmZvX2NoYW5nZWQgfD0gaWVlZTgwMjExX2hhbmRsZV9ic3NfY2FwYWJpbGl0eShzZGF0
-YSwKPiBAQCAtMTE2NCw2ICsxMTcyLDEzIEBAIHN0YXRpYyB2b2lkIGllZWU4MDIxMV9yeF9ic3Nf
-aW5mbyhzdHJ1Y3QKPiDCoCDCoCDCoCDCoGludCBmcmVxOwo+IMKgIMKgIMKgIMKgc3RydWN0IGll
-ZWU4MDIxMV9ic3MgKmJzczsKPiDCoCDCoCDCoCDCoHN0cnVjdCBpZWVlODAyMTFfY2hhbm5lbCAq
-Y2hhbm5lbDsKPiArIMKgIMKgIMKgIGJvb2wgbmVlZF9wcyA9IGZhbHNlOwo+ICsKPiArIMKgIMKg
-IMKgIGlmIChzZGF0YS0+dS5tZ2QuYXNzb2NpYXRlZCkgewo+ICsgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgYnNzID0gKHZvaWQgKilzZGF0YS0+dS5tZ2QuYXNzb2NpYXRlZC0+cHJpdjsKPiArIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIC8qIG5vdCBwcmV2aW91c2x5IHNldCBzbyB3ZSBtYXkgbmVlZCB0byBy
-ZWNhbGMgKi8KPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIG5lZWRfcHMgPSAhYnNzLT5kdGltX3Bl
-cmlvZDsKPiArIMKgIMKgIMKgIH0KPgo+IMKgIMKgIMKgIMKgaWYgKGVsZW1zLT5kc19wYXJhbXMg
-JiYgZWxlbXMtPmRzX3BhcmFtc19sZW4gPT0gMSkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoGZy
-ZXEgPSBpZWVlODAyMTFfY2hhbm5lbF90b19mcmVxdWVuY3koZWxlbXMtPmRzX3BhcmFtc1swXSk7
-Cj4gQEAgLTExODMsNiArMTE5OCwxMiBAQCBzdGF0aWMgdm9pZCBpZWVlODAyMTFfcnhfYnNzX2lu
-Zm8oc3RydWN0Cj4gwqAgwqAgwqAgwqBpZiAoIXNkYXRhLT51Lm1nZC5hc3NvY2lhdGVkKQo+IMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgcmV0dXJuOwo+Cj4gKyDCoCDCoCDCoCBpZiAobmVlZF9wcykg
-ewo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgbXV0ZXhfbG9jaygmbG9jYWwtPmlmbGlzdF9tdHgp
-Owo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWVlZTgwMjExX3JlY2FsY19wcyhsb2NhbCwgLTEp
-Owo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgbXV0ZXhfdW5sb2NrKCZsb2NhbC0+aWZsaXN0X210
-eCk7Cj4gKyDCoCDCoCDCoCB9Cj4gKwo+IMKgIMKgIMKgIMKgaWYgKGVsZW1zLT5jaF9zd2l0Y2hf
-ZWxlbSAmJiAoZWxlbXMtPmNoX3N3aXRjaF9lbGVtX2xlbiA9PSAzKSAmJgo+IMKgIMKgIMKgIMKg
-IMKgIMKgKG1lbWNtcChtZ210LT5ic3NpZCwgc2RhdGEtPnUubWdkLmFzc29jaWF0ZWQtPmJzc2lk
-LAo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgRVRIX0FMRU4pID09IDApKSB7Cj4gLS0tIHdp
-cmVsZXNzLXRlc3Rpbmcub3JpZy9uZXQvbWFjODAyMTEvc2Nhbi5jIMKgIDIwMTAtMDEtMjYgMDk6
-MzU6MzUuMDAwMDAwMDAwICswMTAwCj4gKysrIHdpcmVsZXNzLXRlc3RpbmcvbmV0L21hYzgwMjEx
-L3NjYW4uYyDCoCDCoCDCoCDCoDIwMTAtMDEtMjYgMDk6MzU6NTAuMDAwMDAwMDAwICswMTAwCj4g
-QEAgLTExMSwxMCArMTExLDYgQEAgaWVlZTgwMjExX2Jzc19pbmZvX3VwZGF0ZShzdHJ1Y3QgaWVl
-ZTgwMgo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgYnNzLT5kdGltX3BlcmlvZCA9IHRpbV9pZS0+
-ZHRpbV9wZXJpb2Q7Cj4gwqAgwqAgwqAgwqB9Cj4KPiAtIMKgIMKgIMKgIC8qIHNldCBkZWZhdWx0
-IHZhbHVlIGZvciBidWdneSBBUC9ubyBUSU0gZWxlbWVudCAqLwo+IC0gwqAgwqAgwqAgaWYgKGJz
-cy0+ZHRpbV9wZXJpb2QgPT0gMCkKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGJzcy0+ZHRpbV9w
-ZXJpb2QgPSAxOwo+IC0KPiDCoCDCoCDCoCDCoGJzcy0+c3VwcF9yYXRlc19sZW4gPSAwOwo+IMKg
-IMKgIMKgIMKgaWYgKGVsZW1zLT5zdXBwX3JhdGVzKSB7Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqBjbGVuID0gSUVFRTgwMjExX01BWF9TVVBQX1JBVEVTIC0gYnNzLT5zdXBwX3JhdGVzX2xlbjsK
-PiAtLS0gd2lyZWxlc3MtdGVzdGluZy5vcmlnL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkv
-aXdsLXBvd2VyLmMgwqAgwqAgwqAyMDEwLTAxLTI2IDA5OjM1OjM1LjAwMDAwMDAwMCArMDEwMAo+
-ICsrKyB3aXJlbGVzcy10ZXN0aW5nL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLXBv
-d2VyLmMgwqAgMjAxMC0wMS0yNiAwOTozNTo1MC4wMDAwMDAwMDAgKzAxMDAKPiBAQCAtMzE5LDcg
-KzMxOSw3IEBAIGludCBpd2xfcG93ZXJfdXBkYXRlX21vZGUoc3RydWN0IGl3bF9wcmkKPiDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHByaXYtPmNoYWluX25vaXNlX2RhdGEuc3Rh
-dGUgPT0gSVdMX0NIQUlOX05PSVNFX0FMSVZFOwo+Cj4gwqAgwqAgwqAgwqBpZiAocHJpdi0+dmlm
-KQo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgZHRpbXBlciA9IHByaXYtPnZpZi0+YnNzX2NvbmYu
-ZHRpbV9wZXJpb2Q7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBkdGltcGVyID0gcHJpdi0+aHct
-PmNvbmYucHNfZHRpbV9wZXJpb2Q7Cj4gwqAgwqAgwqAgwqBlbHNlCj4gwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqBkdGltcGVyID0gMTsKPgo+IC0tLSB3aXJlbGVzcy10ZXN0aW5nLm9yaWcvZHJpdmVy
-cy9uZXQvd2lyZWxlc3Mvd2wxMnh4L3dsMTI1MS5oIMKgMjAxMC0wMS0yNiAwOTozNTozNS4wMDAw
-MDAwMDAgKzAxMDAKPiArKysgd2lyZWxlc3MtdGVzdGluZy9kcml2ZXJzL25ldC93aXJlbGVzcy93
-bDEyeHgvd2wxMjUxLmggwqAgwqAgwqAgMjAxMC0wMS0yNiAwOTozNTo1MC4wMDAwMDAwMDAgKzAx
-MDAKPiBAQCAtMzQxLDkgKzM0MSw2IEBAIHN0cnVjdCB3bDEyNTEgewo+IMKgIMKgIMKgIMKgLyog
-QXJlIHdlIGN1cnJlbnRseSBzY2FubmluZyAqLwo+IMKgIMKgIMKgIMKgYm9vbCBzY2FubmluZzsK
-Pgo+IC0gwqAgwqAgwqAgLyogT3VyIGFzc29jaWF0aW9uIElEICovCj4gLSDCoCDCoCDCoCB1MTYg
-YWlkOwo+IC0KPiDCoCDCoCDCoCDCoC8qIERlZmF1bHQga2V5IChmb3IgV0VQKSAqLwo+IMKgIMKg
-IMKgIMKgdTMyIGRlZmF1bHRfa2V5Owo+Cj4gLS0tIHdpcmVsZXNzLXRlc3Rpbmcub3JpZy9kcml2
-ZXJzL25ldC93aXJlbGVzcy93bDEyeHgvd2wxMjUxX21haW4uYyDCoCDCoCAyMDEwLTAxLTI2IDA5
-OjM1OjM1LjAwMDAwMDAwMCArMDEwMAo+ICsrKyB3aXJlbGVzcy10ZXN0aW5nL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL3dsMTJ4eC93bDEyNTFfbWFpbi5jIMKgMjAxMC0wMS0yNiAwOTozNTo1MC4wMDAw
-MDAwMDAgKzAxMDAKPiBAQCAtNjE3LDEwICs2MTcsMTMgQEAgc3RhdGljIGludCB3bDEyNTFfb3Bf
-Y29uZmlnKHN0cnVjdCBpZWVlOAo+Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqB3bC0+cHNtX3Jl
-cXVlc3RlZCA9IHRydWU7Cj4KPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHdsLT5kdGltX3Blcmlv
-ZCA9IGNvbmYtPnBzX2R0aW1fcGVyaW9kOwo+ICsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHJl
-dCA9IHdsMTI1MV9hY3hfd3JfdGJ0dF9hbmRfZHRpbSh3bCwgd2wtPmJlYWNvbl9pbnQsCj4gKyDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCB3bC0+ZHRpbV9wZXJpb2QpOwo+ICsKPiDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoC8qCj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogV2UgZW50ZXIgUFNNIG9ubHkgaWYg
-d2UncmUgYWxyZWFkeSBhc3NvY2lhdGVkLgo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIElm
-IHdlJ3JlIG5vdCwgd2UnbGwgZW50ZXIgaXQgd2hlbiBqb2luaW5nIGFuIFNTSUQsCj4gLSDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCogdGhyb3VnaCB0aGUgYnNzX2luZm9fY2hhbmdlZCgpIGhvb2su
-Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogbWFjODAyMTEgZW5hYmxlcyBQU00gb25seSBp
-ZiB3ZSdyZSBhbHJlYWR5IGFzc29jaWF0ZWQuCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgKi8K
-PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHJldCA9IHdsMTI1MV9wc19zZXRfbW9kZSh3bCwgU1RB
-VElPTl9QT1dFUl9TQVZFX01PREUpOwo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgaWYgKHJldCA8
-IDApCj4gQEAgLTk0Myw3ICs5NDYsNiBAQCBzdGF0aWMgdm9pZCB3bDEyNTFfb3BfYnNzX2luZm9f
-Y2hhbmdlZChzCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgc3RydWN0IGllZWU4MDIxMV9ic3NfY29uZiAqYnNzX2NvbmYsCj4gwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgdTMyIGNo
-YW5nZWQpCj4gwqB7Cj4gLSDCoCDCoCDCoCBlbnVtIHdsMTI1MV9jbWRfcHNfbW9kZSBtb2RlOwo+
-IMKgIMKgIMKgIMKgc3RydWN0IHdsMTI1MSAqd2wgPSBody0+cHJpdjsKPiDCoCDCoCDCoCDCoHN0
-cnVjdCBza19idWZmICpiZWFjb24sICpza2I7Cj4gwqAgwqAgwqAgwqBpbnQgcmV0Owo+IEBAIC05
-ODQsMTEgKzk4Niw2IEBAIHN0YXRpYyB2b2lkIHdsMTI1MV9vcF9ic3NfaW5mb19jaGFuZ2VkKHMK
-PiDCoCDCoCDCoCDCoGlmIChjaGFuZ2VkICYgQlNTX0NIQU5HRURfQVNTT0MpIHsKPiDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoGlmIChic3NfY29uZi0+YXNzb2MpIHsKPiDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoHdsLT5iZWFjb25faW50ID0gYnNzX2NvbmYtPmJlYWNvbl9pbnQ7
-Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB3bC0+ZHRpbV9wZXJpb2QgPSBi
-c3NfY29uZi0+ZHRpbV9wZXJpb2Q7Cj4gLQo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgcmV0ID0gd2wxMjUxX2FjeF93cl90YnR0X2FuZF9kdGltKHdsLCB3bC0+YmVhY29uX2lu
-dCwKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHdsLT5kdGltX3BlcmlvZCk7Cj4gLSDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB3bC0+YWlkID0gYnNzX2NvbmYtPmFpZDsK
-Pgo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgc2tiID0gaWVlZTgwMjExX3Bz
-cG9sbF9nZXQod2wtPmh3LCB3bC0+dmlmKTsKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoGlmICghc2tiKQo+IEBAIC0xMDAxLDE3ICs5OTgsOSBAQCBzdGF0aWMgdm9pZCB3bDEy
-NTFfb3BfYnNzX2luZm9fY2hhbmdlZChzCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqBpZiAocmV0IDwgMCkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoGdvdG8gb3V0X3NsZWVwOwo+Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCByZXQgPSB3bDEyNTFfYWN4X2FpZCh3bCwgd2wtPmFpZCk7Cj4gKyDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCByZXQgPSB3bDEyNTFfYWN4X2FpZCh3bCwgYnNzX2NvbmYt
-PmFpZCk7Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBpZiAocmV0IDwgMCkK
-PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoGdvdG8gb3V0
-X3NsZWVwOwo+IC0KPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIC8qIElmIHdl
-IHdhbnQgdG8gZ28gaW4gUFNNIGJ1dCB3ZSdyZSBub3QgdGhlcmUgeWV0ICovCj4gLSDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBpZiAod2wtPnBzbV9yZXF1ZXN0ZWQgJiYgIXdsLT5w
-c20pIHsKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIG1v
-ZGUgPSBTVEFUSU9OX1BPV0VSX1NBVkVfTU9ERTsKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIHJldCA9IHdsMTI1MV9wc19zZXRfbW9kZSh3bCwgbW9kZSk7
-Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBpZiAocmV0
-IDwgMCkKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIGdvdG8gb3V0X3NsZWVwOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgfQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgfSBlbHNlIHsKPiDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoC8qIHVzZSBkZWZhdWx0cyB3aGVuIG5vdCBhc3NvY2lhdGVk
-ICovCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqB3bC0+YmVhY29uX2ludCA9
-IFdMMTI1MV9ERUZBVUxUX0JFQUNPTl9JTlQ7Cj4gLS0tIHdpcmVsZXNzLXRlc3Rpbmcub3JpZy9k
-cml2ZXJzL25ldC93aXJlbGVzcy9td2w4ay5jIMKgMjAxMC0wMS0yNiAwOTozNTo0MS4wMDAwMDAw
-MDAgKzAxMDAKPiArKysgd2lyZWxlc3MtdGVzdGluZy9kcml2ZXJzL25ldC93aXJlbGVzcy9td2w4
-ay5jIMKgIMKgIMKgIDIwMTAtMDEtMjYgMDk6MzU6NTYuMDAwMDAwMDAwICswMTAwCj4gQEAgLTM4
-ODEsMTIgKzM4ODEsMTYgQEAgc3RhdGljIHZvaWQgbXdsOGtfZmluYWxpemVfam9pbl93b3JrZXIo
-cwo+IMKgIMKgIMKgIMKgc3RydWN0IG13bDhrX3ByaXYgKnByaXYgPQo+IMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgY29udGFpbmVyX29mKHdvcmssIHN0cnVjdCBtd2w4a19wcml2LCBmaW5hbGl6ZV9q
-b2luX3dvcmtlcik7Cj4gwqAgwqAgwqAgwqBzdHJ1Y3Qgc2tfYnVmZiAqc2tiID0gcHJpdi0+YmVh
-Y29uX3NrYjsKPiAtIMKgIMKgIMKgIHN0cnVjdCBtd2w4a192aWYgKm13bDhrX3ZpZjsKPiArIMKg
-IMKgIMKgIHN0cnVjdCBpZWVlODAyMTFfbWdtdCAqbWdtdCA9ICh2b2lkICopc2tiLT5kYXRhOwo+
-ICsgwqAgwqAgwqAgaW50IGxlbiA9IHNrYi0+bGVuIC0gb2Zmc2V0b2Yoc3RydWN0IGllZWU4MDIx
-MV9tZ210LCB1LmJlYWNvbi52YXJpYWJsZSk7Cj4gKyDCoCDCoCDCoCBjb25zdCB1OCAqdGltID0g
-Y2ZnODAyMTFfZmluZF9pZShXTEFOX0VJRF9USU0sCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoG1nbXQtPnUuYmVhY29uLnZhcmlh
-YmxlLCBsZW4pOwo+ICsgwqAgwqAgwqAgaW50IGR0aW1fcGVyaW9kID0gMTsKPgo+IC0gwqAgwqAg
-wqAgbXdsOGtfdmlmID0gbXdsOGtfZmlyc3RfdmlmKHByaXYpOwo+IC0gwqAgwqAgwqAgaWYgKG13
-bDhrX3ZpZiAhPSBOVUxMKQo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgbXdsOGtfY21kX2ZpbmFs
-aXplX2pvaW4ocHJpdi0+aHcsIHNrYi0+ZGF0YSwgc2tiLT5sZW4sCj4gLSDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBtd2w4a192aWYtPnZp
-Zi0+YnNzX2NvbmYuZHRpbV9wZXJpb2QpOwo+ICsgwqAgwqAgwqAgaWYgKHRpbSAmJiB0aW1bMV0g
-Pj0gMikKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGR0aW1fcGVyaW9kID0gdGltWzNdOwo+ICsK
-PiArIMKgIMKgIMKgIG13bDhrX2NtZF9maW5hbGl6ZV9qb2luKHByaXYtPmh3LCBza2ItPmRhdGEs
-IHNrYi0+bGVuLCBkdGltX3BlcmlvZCk7Cj4KPiDCoCDCoCDCoCDCoGRldl9rZnJlZV9za2Ioc2ti
-KTsKPiDCoCDCoCDCoCDCoHByaXYtPmJlYWNvbl9za2IgPSBOVUxMOwo+Cj4KPiAtLQo+IFRvIHVu
-c3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51
-eC13aXJlbGVzcyIgaW4KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIu
-a2VybmVsLm9yZwo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgwqBodHRwOi8vdmdlci5rZXJuZWwu
-b3JnL21ham9yZG9tby1pbmZvLmh0bWwKPgo=
+On Tue, Jan 12, 2010 at 11:07:45PM -0800, Jaswinder Singh Rajput wrote:
+> Hello Luis,
+> 
+> On Tue, Jan 12, 2010 at 10:48 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+> > On Tue, Jan 12, 2010 at 9:14 AM, Jaswinder Singh Rajput
+> > <jaswindermobile@gmail.com> wrote:
+> >> Hello Luis,
+> >>
+> >> On Tue, Jan 12, 2010 at 10:16 PM, Luis R. Rodriguez
+> >> <lrodriguez@atheros.com> wrote:
+> >>> On Tue, Jan 12, 2010 at 7:24 AM, Jaswinder Singh Rajput
+> >>> <jaswindermobile@gmail.com> wrote:
+> >>>
+> >>>>> I keep on getting "Network Lost" message on moblin 2.1 when I transfer
+> >>>>> some big file. I am trying to understand Is it a feature or a Bug.
+> >>>>>
+> >>>>> My other machines are working great with Wireless even Windows XP
+> >>>>> running on Netbook never did this to me.
+> >>>
+> >>> Your report lacks a lot of information, its unclear what Moblin 2.1 is
+> >>> using for its kernel for those who are not following moblin
+> >>> development on a regular basis, and if its anything older than 2.6.32
+> >>> its old and I recommend upgrading. May want to try to upgrade your
+> >>> kernel or upgrade to a stable release of compat-wireless snapshot for
+> >>> example:
+> >>>
+> >>> http://wireless.kernel.org/en/users/Download/stable
+> >>>
+> >>
+> >> I am attaching dmesg on Acer Aspire One D250 Netbook.
+> >>
+> >> I am going to build latest git kernel and with latest wireless kernel
+> >> on it and let you know the status.
+> >
+> > latest wireless kernel is not a good idea if you are considering using
+> > wireless-testing unless your are up to deal with a bleeding edge
+> > kernel which may not yet be completely stable. Stick to stable if you
+> > want stable.
+> >
+> 
+> I have old kernel git tree (2.6.32-rc7 ac50e9507 , Tue Nov 17 09:42:35
+> 2009) sitting on my box I tested with it.
+> I have tested it for long time and I am attaching the dmesg, I never
+> got Network Lost message with :
+> commit ac50e950784cae1c26ad9e09ebd8f8c706131eb3
+> Merge: 5743695... 6c06f07...
+> Author: Linus Torvalds <torvalds@linux-foundation.org>
+> Date:   Tue Nov 17 09:42:35 2009 -0800
+> 
+> Here is my test with iperf, even though iperf client does not work so
+> I used iperf server and get speed of approx 19 Mbits/sec. Now my issue
+> is why speed is soo slow ?
+> 
+> [jaswinder@jaswinder-desktop iperf-2.0.4]$ ./configure CXX=g++-4.3
+> CC=gcc-4.3 --prefix=/home/jaswinder
+> 
+> [jaswinder@jaswinder-desktop iperf-2.0.4]$ iperf -c 192.168.1.220
+> connect failed: No route to host
+> write1 failed: Broken pipe
+> write2 failed: Broken pipe
+> ------------------------------------------------------------
+> Client connecting to 192.168.1.220, TCP port 5001
+> TCP window size: 16.0 KByte (default)
+> ------------------------------------------------------------
+> [  3] local 0.0.0.0 port 38243 connected with 192.168.1.220 port 5001
+> [ ID] Interval       Transfer     Bandwidth
+> [  3]  0.0- 0.0 sec  0.00 Bytes  0.00 bits/sec
+> [jaswinder@jaswinder-desktop iperf-2.0.4]$ iperf -s
+> ------------------------------------------------------------
+> Server listening on TCP port 5001
+> TCP window size: 85.3 KByte (default)
+> ------------------------------------------------------------
+> [  4] local 192.168.1.2 port 5001 connected with 192.168.1.220 port 48659
+> [ ID] Interval       Transfer     Bandwidth
+> [  4]  0.0-10.3 sec  23.1 MBytes  18.9 Mbits/sec
+> [  5] local 192.168.1.2 port 5001 connected with 192.168.1.220 port 48660
+> [ ID] Interval       Transfer     Bandwidth
+> [  5]  0.0-10.2 sec  24.0 MBytes  19.7 Mbits/sec
+> [  4] local 192.168.1.2 port 5001 connected with 192.168.1.220 port 39090
+> [ ID] Interval       Transfer     Bandwidth
+> [  4]  0.0-120.2 sec    286 MBytes  19.9 Mbits/sec
+> 
+> I will also test with wireless-testing tree and let you know the results.
+
+I recommend to use latest stable, use wireless-testing if you feel comfortable
+with dealing with issues. your 2.6.32-rc7 is old, I recommend a stable release,
+there have been quite a large number of fixes that have gone into the 2.6.32
+stable series already.
+
+  Luis
