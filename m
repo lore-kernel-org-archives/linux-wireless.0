@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:29219 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753456Ab0AHSEp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jan 2010 13:04:45 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>, Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 4/4] iwlwifi: fix bug in tx byte count table
-Date: Fri,  8 Jan 2010 10:04:44 -0800
-Message-Id: <1262973884-2551-5-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1262973884-2551-1-git-send-email-reinette.chatre@intel.com>
-References: <1262973884-2551-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:57236 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755342Ab0AMOun (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jan 2010 09:50:43 -0500
+Received: by bwz27 with SMTP id 27so1989235bwz.21
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2010 06:50:41 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	a.young.jason@gmail.com
+Subject: Re: [PATCH PATCH v6 1/7] mac80211: add U-APSD client support
+References: <20100112084059.27492.86738.stgit@tikku>
+	<20100112084231.27492.77457.stgit@tikku>
+	<1263292276.3583.15.camel@johannes.local>
+	<87hbqrtw1h.fsf@purkki.valot.fi>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 13 Jan 2010 16:50:38 +0200
+In-Reply-To: <87hbqrtw1h.fsf@purkki.valot.fi> (Kalle Valo's message of "Tue\, 12 Jan 2010 13\:14\:18 +0200")
+Message-ID: <87zl4irrcx.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Kalle Valo <kalle.valo@iki.fi> writes:
 
-When setting invalid byte count in txq byte count table, read pointer
-should be used instead of write pointer.
+>> I think a little more detail would be good here, for example adding that
+>> it must support staying awake with just the frame triggering it, and
+>> that it won't be asked to wake up by mac80211?
+>
+> Good point. I was planning to improve power save documentation, I do
+> that in this patchset and I'll also add more documentation about
+> U-APSD. That should help to understand this more.
+>
+>> Or will it, actually? We've had that discussion with PS-poll so ...
+>
+> Yes, HW must stay awake until end of service period. I'll write more
+> documentation to clear up all this.
 
-Reported-by: Guo, Chaohong <chaohong.guo@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-5000.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+I see that John already applied the patches to wireless-testing. I'll
+create a separate patch which adds more documentation.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index ec6b276..c3f8ec0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -781,7 +781,7 @@ void iwl5000_txq_update_byte_cnt_tbl(struct iwl_priv *priv,
- 
- 	scd_bc_tbl[txq_id].tfd_offset[write_ptr] = bc_ent;
- 
--	if (txq->q.write_ptr < TFD_QUEUE_SIZE_BC_DUP)
-+	if (write_ptr < TFD_QUEUE_SIZE_BC_DUP)
- 		scd_bc_tbl[txq_id].
- 			tfd_offset[TFD_QUEUE_SIZE_MAX + write_ptr] = bc_ent;
- }
-@@ -800,12 +800,12 @@ void iwl5000_txq_inval_byte_cnt_tbl(struct iwl_priv *priv,
- 	if (txq_id != IWL_CMD_QUEUE_NUM)
- 		sta_id = txq->cmd[read_ptr]->cmd.tx.sta_id;
- 
--	bc_ent =  cpu_to_le16(1 | (sta_id << 12));
-+	bc_ent = cpu_to_le16(1 | (sta_id << 12));
- 	scd_bc_tbl[txq_id].tfd_offset[read_ptr] = bc_ent;
- 
--	if (txq->q.write_ptr < TFD_QUEUE_SIZE_BC_DUP)
-+	if (read_ptr < TFD_QUEUE_SIZE_BC_DUP)
- 		scd_bc_tbl[txq_id].
--			tfd_offset[TFD_QUEUE_SIZE_MAX + read_ptr] =  bc_ent;
-+			tfd_offset[TFD_QUEUE_SIZE_MAX + read_ptr] = bc_ent;
- }
- 
- static int iwl5000_tx_queue_set_q2ratid(struct iwl_priv *priv, u16 ra_tid,
 -- 
-1.5.6.3
-
+Kalle Valo
