@@ -1,61 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:45400 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754033Ab0AaVD2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2010 16:03:28 -0500
-Message-ID: <4B65F024.3080505@gmail.com>
-Date: Sun, 31 Jan 2010 22:03:32 +0100
-From: Witold Sowa <witold.sowa@gmail.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Till Kamppeter <till.kamppeter@gmail.com>,
-	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
-	lsb-discuss@lists.linux-foundation.org
-Subject: Re: Linux wireless GSoC 2010 project ideas
-References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com>
-In-Reply-To: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54472 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755495Ab0AMV3N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jan 2010 16:29:13 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat-wireless: fix constant name
+Date: Wed, 13 Jan 2010 22:29:05 +0100
+Message-Id: <1263418145-30380-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1263418145-30380-1-git-send-email-hauke@hauke-m.de>
+References: <1263418145-30380-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez pisze:
-> Google has confirmed it will have a Google Summer of Code for 2010
-> [1]. Last year we had a few projects suggested (4) and accepted (3)
-> under the Linux Foundation sponsoring organization umbrella [2].
-> Unfortunately out of the three projects that were approved only one
-> completed successfully, that of the adding AP support to Network
-> Manger. I haven't seen specific updates to the progress of that but I
-> do know some patches were indeed submitted to help with this effort.
-> Perhaps the student can elaborate more.
-> 
-Hi Luis,
 
-I didn't know that I was _the_only_one_ student who completed his
-project. My project goal was to add support for AP mode to
-NetworkManages with use of wpa_supplicant's newly developed AP mode.
-When the GSoC started, it turned out that adding AP mode to NM doesn't
-need too much effort or at least a lot less that I could put during
-three months of work. As the result, I focused on development of new
-DBus API for wpa_supplicant. We have designed it together with Dan
-Williams (he designed it with my little help, actually) and I
-implemented it. The new API is present in wpa_supplicant since 0.7.0
-development version and we are still working on it.
-I've implemented the new API support for NetworkManager, but Dan didn't
-apply it (yet). Since the API has changed lately, we will need alter
-NetworkManager too. I'm going to do this when the API will reach more or
-less stable state. AP mode for NetworkManager is dependent on new
-wpa_supplicnt DBus API, so the NM AP mode patches won't be applied
-before the new API support implementation patches. The NM changes won't
-land earlier then in 0.8.1 version for sure.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/03-rfkill.patch |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Some time ago johill asked me if I would be interested in hacking on
-adding WPS support to NetworkManager. Well, I would but I don't know
-when I'll find some time for that. I don't know how much of work would
-it require, but it possibly could be a topic of one of GSoC 2010
-projects. I have no idea know if anybody would be willing to be a mentor
-for such a project.
+diff --git a/patches/03-rfkill.patch b/patches/03-rfkill.patch
+index ac44545..8df6fde 100644
+--- a/patches/03-rfkill.patch
++++ b/patches/03-rfkill.patch
+@@ -179,7 +179,7 @@ This would do the policing from within mac80211.
+  };
+  
+ -#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+-+#if defined(CONFIG_RFKILL_BACKPORT) || defined(CONFIG_RFKILL_MODULE_BACKPORT)
+++#if defined(CONFIG_RFKILL_BACKPORT) || defined(CONFIG_RFKILL_BACKPORT_MODULE)
+  /**
+   * rfkill_alloc - allocate rfkill structure
+   * @name: name of the struct -- the string is not copied internally
+-- 
+1.6.3.3
 
-Regards,
-Witek.
