@@ -1,57 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:45468 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753910Ab0AYTVb convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:47822 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752185Ab0AMO0W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 14:21:31 -0500
-Received: by bwz27 with SMTP id 27so2975061bwz.21
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2010 11:21:30 -0800 (PST)
+	Wed, 13 Jan 2010 09:26:22 -0500
+Received: by fxm25 with SMTP id 25so213914fxm.21
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2010 06:26:20 -0800 (PST)
+Message-ID: <4B4DD808.5080506@lwfinger.net>
+Date: Wed, 13 Jan 2010 08:26:16 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <4B5DE859.6080409@lwfinger.net>
-References: <4B5CD1FF.4090209@twilightblue.net> <b6c5339f1001250939r6d136927q51bba86f7102d826@mail.gmail.com>
-	<4B5DE859.6080409@lwfinger.net>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 25 Jan 2010 20:21:09 +0100
-Message-ID: <69e28c911001251121i61be9c0bhed43648a12db42f6@mail.gmail.com>
-Subject: Re: Bug: 2.6.32 ath5k, associating with WEP128 AP is unreliable
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	Don Darling <darling.don@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Subject: Re: [PATCH 3/3] b43: N-PHY: add RX IQ calculation for rev < 3
+References: <op.u6fp66hl9lhzdc@linux-g0th.site> <4B4DCB39.7030801@lwfinger.net> <b170af451001130538q79d431a6vd0eed9628356a40b@mail.gmail.com>
+In-Reply-To: <b170af451001130538q79d431a6vd0eed9628356a40b@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 25, 2010 at 7:52 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 01/25/2010 11:39 AM, Bob Copeland wrote:
->>
->> On Sun, Jan 24, 2010 at 6:04 PM, Don Darling<darling.don@gmail.com>
->> �wrote:
+On 01/13/2010 07:38 AM, Rafał Miłecki wrote:
+> W dniu 13 stycznia 2010 14:31 użytkownik Larry Finger
+> <Larry.Finger@lwfinger.net> napisał:
+>> On 01/12/2010 01:38 PM, Rafał Miłecki wrote:
 >>>
->>> I'm assuming this issue is related to the ath5k driver itself -- the
->>> network
->>> I'm using is only WEP128, and doesn't need wpa_supplicant.
+>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>>> ---
+>>>
+>>> Uh, bigger one. This patch causes false warning:
+>>> drivers/net/wireless/b43/phy_n.c: In function ‘b43_nphy_rev2_cal_rx_iq’:
+>>> drivers/net/wireless/b43/phy_n.c:627: warning: large integer implicitly truncated to unsigned type
+>>>
+>>> That's for:
+>>> b43_phy_maskset(dev, B43_NPHY_RFSEQCA, ~B43_NPHY_RFSEQCA_RXDIS, ((1 - i) << B43_NPHY_RFSEQCA_RXDIS_SHIFT));
+>>>
+>>> It's inside loop i=0,1. I tried casting i on (u8) but this didn't help. Can we leave this? Or can sb share some trick to avoid this warning?
 >>
->> Huh, I didn't think any mac80211 driver supported WEP 128. �Are you sure
->> you
->> weren't using madwifi before? �Or maybe WEP 104?
->
-> For the record, WEP104 and WEP128 are the same thing. The smaller number
-> makes it explicit that the 24-bit IV is transmitted in the open. The same
-> thing applies to WEP40 and WEP64.
->
-> Larry
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at �http://vger.kernel.org/majordomo-info.html
->
+>> It is ~B43_NPHY_RFSEQCA_RXDIS, not i, that causes the warning. Change the
+>> statement to
+>>
+>> b43_phy_maskset(dev, B43_NPHY_RFSEQCA, (u16)(~B43_NPHY_RFSEQCA_RXDIS),
+>>               ((1 - i) << B43_NPHY_RFSEQCA_RXDIS_SHIFT));
+> 
+> Yeah, Michael already pointed that :)
 
-Only one problem there is another, nonstandard WEP type where the
-actual key is 128-bit, and this is also sometimes referred to as
-WEP128 (with the same metric as WEP64, this one would be WEP152). Same
-goes for "WEP228/WEP256/WEP280".
+For some reason, I lost my feed from linux-wireless. I found Michael's message
+in the archives.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+If I have not responded to any of your private messages, please send them again.
+I'm not sure if the mail stoppage is general. There is no traffic from other
+lists as well.
+
+Larry
