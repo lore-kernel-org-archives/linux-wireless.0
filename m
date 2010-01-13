@@ -1,67 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36321 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752920Ab0AYSgu (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:57537 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753473Ab0AMNbl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 13:36:50 -0500
-Subject: Re: [PATCH v3 1/1] mac80211: tell driver when dtim change detected
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, wey-yi.w.guy@intel.com,
-	linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>
-In-Reply-To: <20100125183224.GA19528@jm.kir.nu>
-References: <1264109996-15995-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1264186981.2593.10.camel@johannes.local>
-	 <43e72e891001221120i79c6525bo4852cb5a6c7a37@mail.gmail.com>
-	 <1264189560.2593.14.camel@johannes.local>
-	 <43e72e891001221544j1b1bd67ao8dfcf4d0dd12dd81@mail.gmail.com>
-	 <20100125183224.GA19528@jm.kir.nu>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-PNnA5pJyFYGacS0a++ji"
-Date: Mon, 25 Jan 2010 19:36:44 +0100
-Message-ID: <1264444604.23766.55.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 13 Jan 2010 08:31:41 -0500
+Received: by yxe17 with SMTP id 17so22526301yxe.33
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2010 05:31:41 -0800 (PST)
+Message-ID: <4B4DCB39.7030801@lwfinger.net>
+Date: Wed, 13 Jan 2010 07:31:37 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Subject: Re: [PATCH 3/3] b43: N-PHY: add RX IQ calculation for rev < 3
+References: <op.u6fp66hl9lhzdc@linux-g0th.site>
+In-Reply-To: <op.u6fp66hl9lhzdc@linux-g0th.site>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 01/12/2010 01:38 PM, Rafał Miłecki wrote:
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+> 
+> Uh, bigger one. This patch causes false warning:
+> drivers/net/wireless/b43/phy_n.c: In function ‘b43_nphy_rev2_cal_rx_iq’:
+> drivers/net/wireless/b43/phy_n.c:627: warning: large integer implicitly truncated to unsigned type
+> 
+> That's for:
+> b43_phy_maskset(dev, B43_NPHY_RFSEQCA, ~B43_NPHY_RFSEQCA_RXDIS, ((1 - i) << B43_NPHY_RFSEQCA_RXDIS_SHIFT));
+> 
+> It's inside loop i=0,1. I tried casting i on (u8) but this didn't help. Can we leave this? Or can sb share some trick to avoid this warning?
 
---=-PNnA5pJyFYGacS0a++ji
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+It is ~B43_NPHY_RFSEQCA_RXDIS, not i, that causes the warning. Change the
+statement to
 
-On Mon, 2010-01-25 at 10:32 -0800, Jouni Malinen wrote:
+b43_phy_maskset(dev, B43_NPHY_RFSEQCA, (u16)(~B43_NPHY_RFSEQCA_RXDIS),
+               ((1 - i) << B43_NPHY_RFSEQCA_RXDIS_SHIFT));
 
-> Anyway, that is just asking for
-> problems due to the way a specific timestamps are defined to be used for
-> the beacons that are followed by buffered multicast/broadcast frames.
+Larry
 
-That's actually an interesting point -- does anyone implement that
-properly, or is that just a side note in the standard nobody even reads?
-We certainly don't in mac80211 since we don't have that level of
-synchronisation between the TSF and the beacon get function.
-
-johannes
-
-
---=-PNnA5pJyFYGacS0a++ji
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLXeS5AAoJEODzc/N7+QmaMWkQAKokVhiIhIGYfG05JhmSz/cj
-Hmv1iVdISoe+KTSNbXBejpd7xbMRQlw2F75Y8nsnxANig5OoznsifPUC5XVaXdd2
-7G8uiuLDuqAoMCPnVl2ZmbCCBm63ihF66dk0jBvE3JuUblNF5GoBfs4L3XBMMAtJ
-FcFUpn/haAP9iKvxJf/x4t51aimSze9VPHzxPUgnEUmkkZ2lB4/Ctb7kcxS7EPzN
-RXGd0E+Y7gN95seUuG28CdhtG/15ZLs6KM1Afg0q69DPXVPPzp7kWENf+w0Pna8R
-ycLvlmThbe6Tpmk9z7cX/DStROJmLXYyJl/l+t2jZs+EqLayRO9o81EnoK+4GTcg
-3y6tFRo+nKACbkdcLUl9oda1hqxjCnNwU3f6twyJnpSAY7BB8NoElrymmG6wX4mR
-c76oG/maLlcdVPEG13S7NCBNEA4RmNm4/fMRRtl7CkYZV+ur7Cxb7soT4hrLsCuT
-cPlriBuI23ccFDx34Ae7Q34oxtUbWVb3Hy7Lz0XTOo6FEkd436rtPe7LzTdkL5GM
-Pah8ub2jhHY193KTtNz0ilfOyiNxatisp5Y3AmCrlCoqZgfctRTAEX/zWu8wv6jq
-YyOE8W7F26J4tdYCsnPfVpK2tIKdemlZAcBbBlgT8FKrYM5LLtSa6KicGHhCSVp8
-veBYrQOvZ5f2GmdVecft
-=4e+u
------END PGP SIGNATURE-----
-
---=-PNnA5pJyFYGacS0a++ji--
 
