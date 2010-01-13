@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:64047 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1749667Ab0AZWmD (ORCPT
+Received: from mail-ew0-f209.google.com ([209.85.219.209]:63835 "EHLO
+	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754369Ab0AMNiZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2010 17:42:03 -0500
-Date: Tue, 26 Jan 2010 16:42:02 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>, zajec5@gmail.com
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] b43: N PHY: Fix compilation after removal of typdef
- b43_c32
-Message-ID: <4b5f6fba.foXrkAD8gU11wYBv%Larry.Finger@lwfinger.net>
+	Wed, 13 Jan 2010 08:38:25 -0500
+Received: by ewy1 with SMTP id 1so517375ewy.28
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2010 05:38:24 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4B4DCB39.7030801@lwfinger.net>
+References: <op.u6fp66hl9lhzdc@linux-g0th.site> <4B4DCB39.7030801@lwfinger.net>
+Date: Wed, 13 Jan 2010 14:38:22 +0100
+Message-ID: <b170af451001130538q79d431a6vd0eed9628356a40b@mail.gmail.com>
+Subject: Re: [PATCH 3/3] b43: N-PHY: add RX IQ calculation for rev < 3
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the conversion between typedef and struct, two places that needed a "struct"
-were missed.
+W dniu 13 stycznia 2010 14:31 użytkownik Larry Finger
+<Larry.Finger@lwfinger.net> napisał:
+> On 01/12/2010 01:38 PM, Rafał Miłecki wrote:
+>>
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>>
+>> Uh, bigger one. This patch causes false warning:
+>> drivers/net/wireless/b43/phy_n.c: In function ‘b43_nphy_rev2_cal_rx_iq’:
+>> drivers/net/wireless/b43/phy_n.c:627: warning: large integer implicitly truncated to unsigned type
+>>
+>> That's for:
+>> b43_phy_maskset(dev, B43_NPHY_RFSEQCA, ~B43_NPHY_RFSEQCA_RXDIS, ((1 - i) << B43_NPHY_RFSEQCA_RXDIS_SHIFT));
+>>
+>> It's inside loop i=0,1. I tried casting i on (u8) but this didn't help. Can we leave this? Or can sb share some trick to avoid this warning?
+>
+> It is ~B43_NPHY_RFSEQCA_RXDIS, not i, that causes the warning. Change the
+> statement to
+>
+> b43_phy_maskset(dev, B43_NPHY_RFSEQCA, (u16)(~B43_NPHY_RFSEQCA_RXDIS),
+>               ((1 - i) << B43_NPHY_RFSEQCA_RXDIS_SHIFT));
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Yeah, Michael already pointed that :)
 
-John,
-
-Without these, compilation fails.
-
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/b43/phy_n.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/phy_n.c
-+++ wireless-testing/drivers/net/wireless/b43/phy_n.c
-@@ -822,7 +822,7 @@ static u16 b43_nphy_gen_load_samples(str
- {
- 	int i;
- 	u16 bw, len, rot, angle;
--	b43_c32 *samples;
-+	struct b43_c32 *samples;
- 
- 
- 	bw = (dev->phy.is_40mhz) ? 40 : 20;
-@@ -840,7 +840,7 @@ static u16 b43_nphy_gen_load_samples(str
- 		len = bw << 1;
- 	}
- 
--	samples = kzalloc(len * sizeof(b43_c32), GFP_KERNEL);
-+	samples = kzalloc(len * sizeof(struct b43_c32), GFP_KERNEL);
- 	rot = (((freq * 36) / bw) << 16) / 100;
- 	angle = 0;
- 
+-- 
+Rafał
