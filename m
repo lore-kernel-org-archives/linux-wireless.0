@@ -1,72 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:29219 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753071Ab0AHSEo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jan 2010 13:04:44 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>, Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/4] iwlwifi: ucode statistics data structure update
-Date: Fri,  8 Jan 2010 10:04:42 -0800
-Message-Id: <1262973884-2551-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1262973884-2551-1-git-send-email-reinette.chatre@intel.com>
-References: <1262973884-2551-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:37326 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751945Ab0AMXyY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jan 2010 18:54:24 -0500
+Received: by mail-fx0-f225.google.com with SMTP id 25so801959fxm.21
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2010 15:54:24 -0800 (PST)
+Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
+Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 14 Jan 2010 00:54:20 +0100
+Subject: [PATCH 2/3 v2] b43: N-PHY: add b43_nphy_iq_cal_gain_params
+MIME-Version: 1.0
+From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <op.u6hwouhx9lhzdc@linux-g0th.site>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Update data structure to match latest statistics report from uCode.
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-commands.h |    6 +++---
- drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    3 +++
- 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 28f3800..6bfc63f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -2984,7 +2984,7 @@ struct statistics_rx_ht_phy {
- 	__le32 agg_crc32_good;
- 	__le32 agg_mpdu_cnt;
- 	__le32 agg_cnt;
--	__le32 reserved2;
-+	__le32 unsupport_mcs;
- } __attribute__ ((packed));
- 
- #define INTERFERENCE_DATA_AVAILABLE      cpu_to_le32(1)
-@@ -3087,8 +3087,8 @@ struct statistics_div {
- } __attribute__ ((packed));
- 
- struct statistics_general {
--	__le32 temperature;
--	__le32 temperature_m;
-+	__le32 temperature;   /* radio temperature */
-+	__le32 temperature_m; /* for 5000 and up, this is radio voltage */
- 	struct statistics_dbg dbg;
- 	__le32 sleep_time;
- 	__le32 slots_out;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index ee5aed1..510bad9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -1387,6 +1387,9 @@ static ssize_t iwl_dbgfs_ucode_rx_stats_read(struct file *file,
- 			 accum_ht->agg_mpdu_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos, "agg_cnt:\t\t%u\t\t\t%u\n",
- 			 le32_to_cpu(ht->agg_cnt), accum_ht->agg_cnt);
-+	pos += scnprintf(buf + pos, bufsz - pos, "unsupport_mcs:\t\t%u\t\t\t%u\n",
-+			 le32_to_cpu(ht->unsupport_mcs),
-+			 accum_ht->unsupport_mcs);
- 
- 	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
- 	kfree(buf);
+V2: Update to apply after changes in 1/3
+
+---
+  drivers/net/wireless/b43/phy_n.c       |   47 ++++++++++++++++++++++++++++++++
+  drivers/net/wireless/b43/tables_nphy.c |   25 +++++++++++++++++
+  drivers/net/wireless/b43/tables_nphy.h |    1 +
+  3 files changed, 73 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index db10a9f..101ef39 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -32,6 +32,15 @@
+
+  struct nphy_txgains { u16 txgm[2]; u16 pga[2]; u16 pad[2]; u16 ipa[2]; };
+
++struct nphy_iqcal_params {
++	u16 txgm;
++	u16 pga;
++	u16 pad;
++	u16 ipa;
++	u16 cal_gain;
++	u16 ncorr[5];
++};
++
+  struct nphy_iq_est {
+  	s32 iq0_prod;
+  	u32 i0_pwr;
+@@ -519,6 +528,44 @@ static void b43_nphy_rx_iq_est(struct b43_wldev *dev, struct nphy_iq_est *est,
+  	memset(est, 0, sizeof(*est));
+  }
+
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/IqCalGainParams */
++static void b43_nphy_iq_cal_gain_params(struct b43_wldev *dev, u16 core,
++					struct nphy_txgains target,
++					struct nphy_iqcal_params *params)
++{
++	int i, j, indx;
++	u16 gain;
++
++	if (dev->phy.rev >= 3) {
++		params->txgm = target.txgm[core];
++		params->pga = target.pga[core];
++		params->pad = target.pad[core];
++		params->ipa = target.ipa[core];
++		params->cal_gain = (params->txgm << 12) | (params->pga << 8) |
++					(params->pad << 4) | (params->ipa);
++		for (j = 0; j < 5; j++)
++			params->ncorr[j] = 0x79;
++	} else {
++		gain = (target.pad[core]) | (target.pga[core] << 4) |
++			(target.txgm[core] << 8);
++
++		indx = (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ) ?
++			1 : 0;
++		for (i = 0; i < 9; i++)
++			if (tbl_iqcal_gainparams[indx][i][0] == gain)
++				break;
++		i = min(i, 8);
++
++		params->txgm = tbl_iqcal_gainparams[indx][i][1];
++		params->pga = tbl_iqcal_gainparams[indx][i][2];
++		params->pad = tbl_iqcal_gainparams[indx][i][3];
++		params->cal_gain = (params->txgm << 7) | (params->pga << 4) |
++					(params->pad << 2);
++		for (j = 0; j < 4; j++)
++			params->ncorr[j] = tbl_iqcal_gainparams[indx][i][4 + j];
++	}
++}
++
+  /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/TxIqWar */
+  static void b43_nphy_tx_iq_workaround(struct b43_wldev *dev)
+  {
+diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
+index 3779f1d..de8a609 100644
+--- a/drivers/net/wireless/b43/tables_nphy.c
++++ b/drivers/net/wireless/b43/tables_nphy.c
+@@ -2721,6 +2721,31 @@ const u32 txpwrctrl_tx_gain_ipa_5g[] = {
+  	0x70f70021, 0x70f70020, 0x70f70020, 0x70f7001f,
+  };
+
++const u16 tbl_iqcal_gainparams[2][9][8] = {
++	{
++		{ 0x000, 0, 0, 2, 0x69, 0x69, 0x69, 0x69 },
++		{ 0x700, 7, 0, 0, 0x69, 0x69, 0x69, 0x69 },
++		{ 0x710, 7, 1, 0, 0x68, 0x68, 0x68, 0x68 },
++		{ 0x720, 7, 2, 0, 0x67, 0x67, 0x67, 0x67 },
++		{ 0x730, 7, 3, 0, 0x66, 0x66, 0x66, 0x66 },
++		{ 0x740, 7, 4, 0, 0x65, 0x65, 0x65, 0x65 },
++		{ 0x741, 7, 4, 1, 0x65, 0x65, 0x65, 0x65 },
++		{ 0x742, 7, 4, 2, 0x65, 0x65, 0x65, 0x65 },
++		{ 0x743, 7, 4, 3, 0x65, 0x65, 0x65, 0x65 }
++	},
++	{
++		{ 0x000, 7, 0, 0, 0x79, 0x79, 0x79, 0x79 },
++		{ 0x700, 7, 0, 0, 0x79, 0x79, 0x79, 0x79 },
++		{ 0x710, 7, 1, 0, 0x79, 0x79, 0x79, 0x79 },
++		{ 0x720, 7, 2, 0, 0x78, 0x78, 0x78, 0x78 },
++		{ 0x730, 7, 3, 0, 0x78, 0x78, 0x78, 0x78 },
++		{ 0x740, 7, 4, 0, 0x78, 0x78, 0x78, 0x78 },
++		{ 0x741, 7, 4, 1, 0x78, 0x78, 0x78, 0x78 },
++		{ 0x742, 7, 4, 2, 0x78, 0x78, 0x78, 0x78 },
++		{ 0x743, 7, 4, 3, 0x78, 0x78, 0x78, 0x78 }
++	}
++};
++
+  static inline void assert_ntab_array_sizes(void)
+  {
+  #undef check
+diff --git a/drivers/net/wireless/b43/tables_nphy.h b/drivers/net/wireless/b43/tables_nphy.h
+index 62b1745..86c394c 100644
+--- a/drivers/net/wireless/b43/tables_nphy.h
++++ b/drivers/net/wireless/b43/tables_nphy.h
+@@ -141,5 +141,6 @@ extern const u32 txpwrctrl_tx_gain_ipa[];
+  extern const u32 txpwrctrl_tx_gain_ipa_rev5[];
+  extern const u32 txpwrctrl_tx_gain_ipa_rev6[];
+  extern const u32 txpwrctrl_tx_gain_ipa_5g[];
++extern const u16 tbl_iqcal_gainparams[2][9][8];
+
+  #endif /* B43_TABLES_NPHY_H_ */
 -- 
-1.5.6.3
+1.6.4.2
 
