@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:49850 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932167Ab0ANPqp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2010 10:46:45 -0500
-Received: by fxm25 with SMTP id 25so178468fxm.21
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jan 2010 07:46:44 -0800 (PST)
-Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
-Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/2 resend] b43: N-PHY: follow kernel coding style for struct
- declaration
-Date: Thu, 14 Jan 2010 16:46:42 +0100
-MIME-Version: 1.0
-From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <op.u6i4r4ge9lhzdc@linux-g0th.site>
+Received: from mga11.intel.com ([192.55.52.93]:52195 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754950Ab0AMR4v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jan 2010 12:56:51 -0500
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Subject: [PATCH v2] cfg80211: fix channel setting for wext
+Date: Wed, 13 Jan 2010 10:04:10 -0800
+Message-Id: <1263405850-10180-1-git-send-email-abhijeet.kolekar@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Patch fixes the bug at
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2139
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Currently we cannot set the channel using wext extension
+if we have already associated and disconnected. As
+cfg80211_mgd_wext_siwfreq will not switch the channel if ssid is set.
+This fixes it by clearing the ssid.
+Following is the sequence which it tries to fix.
+modprobe iwlagn
+iwconfig wlan0 essid ""
+ifconfig wlan0 down
+iwconfig wlan0 chan X
+
+wext is marked as deprecate.If we use nl80211 we can easily play with
+setting the channel.
+
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Acked-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
+v2: Changed mac80211 to cfg80211
 
-Whoops, wrong patch attached previously
+ net/wireless/sme.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
----
-  drivers/net/wireless/b43/phy_n.c |    7 ++++++-
-  1 files changed, 6 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index d0a0ce9..fbdabfe 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -30,7 +30,12 @@
-  #include "tables_nphy.h"
-
-
--struct nphy_txgains { u16 txgm[2]; u16 pga[2]; u16 pad[2]; u16 ipa[2]; };
-+struct nphy_txgains {
-+	u16 txgm[2];
-+	u16 pga[2];
-+	u16 pad[2];
-+	u16 ipa[2];
-+};
-
-  struct nphy_iqcal_params {
-  	u16 txgm;
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 2333d78..dc0fc49 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -655,6 +655,7 @@ void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
+ 	memset(&wrqu, 0, sizeof(wrqu));
+ 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+ 	wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
++	wdev->wext.connect.ssid_len = 0;
+ #endif
+ }
+ 
 -- 
-1.6.4.2
+1.6.3.3
 
