@@ -1,32 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:49619 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751221Ab0AKObr (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:51364 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753384Ab0AMIkL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jan 2010 09:31:47 -0500
-Received: by mail-yx0-f187.google.com with SMTP id 17so20297377yxe.33
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2010 06:31:47 -0800 (PST)
-Message-ID: <4B4B364B.7010902@lwfinger.net>
-Date: Mon, 11 Jan 2010 08:31:39 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 13 Jan 2010 03:40:11 -0500
+Received: by bwz27 with SMTP id 27so1751448bwz.21
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2010 00:40:08 -0800 (PST)
+To: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: fix channel setting for wext
+References: <1263335327-9257-1-git-send-email-abhijeet.kolekar@intel.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 13 Jan 2010 10:40:05 +0200
+In-Reply-To: <1263335327-9257-1-git-send-email-abhijeet.kolekar@intel.com> (Abhijeet Kolekar's message of "Tue\, 12 Jan 2010 14\:28\:47 -0800")
+Message-ID: <878wc2tn2y.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-To: drago01 <drago01@gmail.com>
-CC: Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	mhilzinger@linuxnewmedia.de, Greg Kroah-Hartman <gregkh@suse.de>
-Subject: Re: System freezes with rt2860/2870
-References: <4B4B2B71.10909@lwfinger.net> <f6ca9fed1001110603w2b9ddffcp840f243a9cce57a3@mail.gmail.com>
-In-Reply-To: <f6ca9fed1001110603w2b9ddffcp840f243a9cce57a3@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/11/2010 08:03 AM, drago01 wrote:
-> 
-> rt2860/2870 are the legacy drivers in stagging; the rt2x00 maintainers
-> aren't the right people to complain to ;)
+Abhijeet Kolekar <abhijeet.kolekar@intel.com> writes:
 
-Sorry.
+> Patch fixes the bug at
+> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2139
+>
+> Currently we cannot set the channel using wext extension
+> if we have already associated and disconnected. As
+> cfg80211_mgd_wext_siwfreq will not switch the channel if ssid is set.
+> This fixes it by clearing the ssid.
 
-Larry
+[...]
+
+>  net/wireless/sme.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+
+This patch is not for mac80211, but cfg80211. So please use
+"cfg80211:" prefix in the title.
+
+-- 
+Kalle Valo
