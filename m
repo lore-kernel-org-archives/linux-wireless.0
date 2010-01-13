@@ -1,43 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:47440 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752644Ab0AWSu3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jan 2010 13:50:29 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: hwtkip hangs on b43
-Date: Sat, 23 Jan 2010 19:47:16 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>, kecsa@kutfo.hit.bme.hu,
+Received: from xc.sipsolutions.net ([83.246.72.84]:53107 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755599Ab0AMOxZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jan 2010 09:53:25 -0500
+Subject: Re: [PATCH] cfg80211/mac80211: Add TX/RX commands for Action frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-References: <Pine.LNX.4.44.1001230942190.16120-100000@kutfo.hit.bme.hu> <201001231919.32466.mb@bu3sch.de> <4B5B412B.7080502@lwfinger.net>
-In-Reply-To: <4B5B412B.7080502@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201001231947.18426.mb@bu3sch.de>
+In-Reply-To: <20100113113000.GA20835@jm.kir.nu>
+References: <20100113101126.GA12548@jm.kir.nu>
+	 <1263377951.5093.326.camel@johannes.local>
+	 <20100113113000.GA20835@jm.kir.nu>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7EGK4fl7jcBLCofL77wx"
+Date: Wed, 13 Jan 2010 15:53:12 +0100
+Message-ID: <1263394392.5515.272.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 23 January 2010 19:34:19 Larry Finger wrote:
-> On 01/23/2010 12:19 PM, Michael Buesch wrote:
-> > On Saturday 23 January 2010 18:47:42 Johannes Berg wrote:
-> >>
-> >> I think this might be because update_tkip_key is called from within the
-> >> RX path, so it's probably not even safe to use mutexes to start with?
-> >
-> > Well, if mac80211 does a callback into the driver on behalf of a driver call,
-> > that is broken design. It would break for all locks, not just mutexes.
-> > We should probably switch back to ieee80211_rx_irqsafe to workaround these
-> > circular locking problems.
-> 
-> Michael, I'll let you fix this. I do confirm that the mutex is locked when the 
-> update_tkip_key callback is invoked.
-> 
-> Was this problem introduced with the switch to interrupt threads? If so, then 
-> the fix needs to be applied to 2.6.32 and 2.6.33.
 
-Well, not really. It was a separate patch that converted ieee80211_rx_irqsafe
-to ieee80211_rx and a later patch changed that to ieee80211_rx_ni.
+--=-7EGK4fl7jcBLCofL77wx
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Greetings, Michael.
+On Wed, 2010-01-13 at 13:30 +0200, Jouni Malinen wrote:
+
+> Assuming the later change in mac80211 is to start rejecting Action
+> frames for which there is no known internal handler or register user
+> space handler, the applications using this without the new
+> registration mechanism would indeed need to be updated.
+
+But we definitely want that, and it's trivial, so why not actually start
+rejecting unknown frames?
+
+<snip extensibility discussion>
+
+So which ones do we need now? Could we start with code to reject unkonwn
+ones, registering what we currently need (since there's a reason you
+wrote this patch), and then extend as it becomes necessary, for instance
+for vendor frames etc?
+
+johannes
+
+--=-7EGK4fl7jcBLCofL77wx
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLTd5UAAoJEODzc/N7+QmaZE8P/1YTJTtZwX4Q+6i8BSGe3tW+
+Won+y0aQQRd8tB2f0c7TYe8ijJXs3xCE8T+IJa11spkFFLUC1C9EXa5/iY5iniGV
+T3la8FlWtTTStZAu7X2/DkWMdUKoKUfXXyKmIi4mY5BS/0UPg6ZUCI0reVzFc/N5
+D49Pf7Hj4S4Am4yaf1RN2VI8W6IZH42NyWZNrIKjfI0PTEtSvBD5mcrq+Vq2gIPT
+Mqvb9kZBsOXtlfp16sJpoH1idxb4CWvLVTzOd2jg/w0nGmv2oKT2M9eOVSpdsnKt
+B8GFi6Qsi4CjrX5vkGUCf80i6QlxKTNFfTpHKBGGvIcZ2P7V7MN2OqmT9TJvfSPH
+g9AyJ19MAEZ2DD/FA115eaQfrRk26B7NKSTGGAz1zsSZQhKOFE/zFv1Y589eIj1V
+DppsfGWnTeSMkTI0MjQaXN6PPjdj8lUM8iv9nzt10jVCza+dik+SIhtI7iettEuJ
+P5j6gHyyNyU2d+qLb6HFOksY3ufVvrxFmg30FbbClDuTjt/Qs9NSuwG4FeY2u+Yi
+r1czXIJN/gP472E4pFFn+USXjnkhEd7Kp3XiQI78D/+UAjGjrhMVy7twkbImvwnv
+ZbPjvS4NTIvzqtlHzQ3eMx/7n77kZuSMTH8qxkrfE8cAEOpNAVbnjTpk7cb0q460
+3WSEP9Ca/bFoogBrubE+
+=nb48
+-----END PGP SIGNATURE-----
+
+--=-7EGK4fl7jcBLCofL77wx--
+
