@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:58123 "EHLO vs166246.vserver.de"
+Received: from mga11.intel.com ([192.55.52.93]:55355 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750783Ab0AKAxV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jan 2010 19:53:21 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 2/6] b43: N-PHY: add RSSI functions: poll and set 2055 vcm
-Date: Mon, 11 Jan 2010 01:53:08 +0100
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <op.u6b70ig59lhzdc@linux-g0th.site> <201001102332.22954.mb@bu3sch.de> <4B4A7084.8010309@lwfinger.net>
-In-Reply-To: <4B4A7084.8010309@lwfinger.net>
-MIME-Version: 1.0
-Message-Id: <201001110153.09503.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="utf-8"
+	id S932087Ab0AMVP4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jan 2010 16:15:56 -0500
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	stable@kernel.org
+Subject: [PATCH v3] cfg80211: fix channel setting for wext
+Date: Wed, 13 Jan 2010 13:23:14 -0800
+Message-Id: <1263417794-13021-1-git-send-email-abhijeet.kolekar@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 11 January 2010 01:27:48 Larry Finger wrote:
-> On 01/10/2010 04:32 PM, Michael Buesch wrote:
-> > On Sunday 10 January 2010 23:13:20 Rafał Miłecki wrote:
-> >> +		buf[0] += (s8)(((s[0] & 0x3F) << 2) >> 2);
-> >> +		buf[1] += (s8)((((s[0] >> 8) & 0x3F) << 2) >> 2);
-> >> +		buf[2] += (s8)(((s[1] & 0x3F) << 2) >> 2);
-> >> +		buf[3] += (s8)((((s[1] >> 8) & 0x3F) << 2) >> 2);
-> > 
-> > I suggest buf[3] += (s8)((((s[1] >> 8) & 0x3F) << 2) >> 2) << 2) >> 2) << 2) >> 2) << 2) >> 2) << 2) >> 2) << 2) >> 2) << 2) >> 2)
-> > ;)
-> > No, seriously, why shift left and then shift right? Is this a translation error?
-> > I _guess_ it's some mistranslation of the sign extension going on.
-> > Or alternatively a compiler going insane on sign extension.
-> > 
-> > The question is: Do we want these integers to be signextended or not?
-> > 
-> > What we currently do is this:
-> > buf[3] += (s8)((s[1] >> 8) & 0x3F);
-> > 
-> > which will always result in a positive 8bit integer, as far as I can see.
-> > Which smells fishy.
-> 
-> We do want sign extension of the signed 6-bit quantities into an 8-bit word. The
-> translation is correct. Do you know of a better way to extend the signs?
+Patch fixes the bug at
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2139
 
-Well, I think you got the parenthesis and cast wrong then.
-I think what we want is the following:
+Currently we cannot set the channel using wext extension
+if we have already associated and disconnected. As
+cfg80211_mgd_wext_siwfreq will not switch the channel if ssid is set.
+This fixes it by clearing the ssid.
+Following is the sequence which it tries to fix.
+modprobe iwlagn
+iwconfig wlan0 essid ""
+ifconfig wlan0 down
+iwconfig wlan0 chan X
 
-+		buf[3] += (s8)(((s[1] >> 8) & 0x3F) << 2) >> 2;
+wext is marked as deprecate.If we use nl80211 we can easily play with
+setting the channel.
 
-The code is different and the specs, too.
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Acked-by: Samuel Ortiz <sameo@linux.intel.com>
+cc: stable@kernel.org
+---
+v2: Changed mac80211 to cfg80211
+v3: Added stable as cc. 
+John Please take this patch for 2.6.33
+ net/wireless/sme.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 2333d78..dc0fc49 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -655,6 +655,7 @@ void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
+ 	memset(&wrqu, 0, sizeof(wrqu));
+ 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+ 	wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
++	wdev->wext.connect.ssid_len = 0;
+ #endif
+ }
+ 
 -- 
-Greetings, Michael.
+1.6.3.3
+
