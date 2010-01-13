@@ -1,110 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:52800 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754035Ab0ADUzX (ORCPT
+Received: from lider.pardus.org.tr ([193.140.100.216]:46707 "EHLO
+	lider.pardus.org.tr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932125Ab0AMRCe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2010 15:55:23 -0500
-Date: Mon, 4 Jan 2010 21:55:21 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 06/14] mwl8k: remove mwl8k_vif::bssid, which is now useless
-Message-ID: <20100104205521.GF1735@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 13 Jan 2010 12:02:34 -0500
+Received: from [192.168.1.2] (unknown [88.249.178.198])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	(Authenticated sender: ozan)
+	by lider.pardus.org.tr (Postfix) with ESMTPSA id 664F7A7AB53
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2010 18:53:54 +0200 (EET)
+Message-ID: <4B4DFCA8.6020006@pardus.org.tr>
+Date: Wed, 13 Jan 2010 19:02:32 +0200
+From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>
+MIME-Version: 1.0
+To: Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Some remarks about compat-wireless KBuild system
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   19 +++++--------------
- 1 files changed, 5 insertions(+), 14 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index f43270f..ab12c44 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -211,9 +211,6 @@ struct mwl8k_vif {
- 	/* Local MAC address.  */
- 	u8 mac_addr[ETH_ALEN];
+Current compat-wireless build system has some inconveniences for distribution packaging:
+
+
+- In Makefile, KLIB is set to /lib/modules/$(uname -r) which avoids compiling the stack
+against a non-running kernel. In several other external kernel drivers this can be bypassed
+by giving KERNELRELEASE=something to "make" but it's not working for compat-wireless.
+
+- In gen_compat_autoconf.sh and config.mk there are two calls to $(MAKE) for determining KERNEL_SUBLEVEL:
+
+(gen_compat_autoconf.sh) -> SUBLEVEL=$(make -C $KLIB_BUILD kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
+(config.mk) -> KERNEL_SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
+
+The problem with that calls is that they're executing make in $KLIB_BUILD for version parsing which creates
+temporary .tmp files in that directory causing sandboxed builds fail.
+
+KERNELRELEASE=something should also allow bypassing those make calls with something like below:
+
+if KERNELRELEASE is set
+ SUBLEVEL=$(echo "@KERNELRELEASE@" | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
+
+
+- It's impossible to install the modules under a DESTDIR/BUILD_ROOT. KMODPATH_ARG in Makefile
+can be used for this purpose but it's not set until the following condition is met:
+
+ifneq ($(origin KLIB), undefined)
+KMODPATH_ARG:=  "INSTALL_MOD_PATH=$(KLIB)"
+
+I couldn't figure out the evaluation of the expression and simplified it in the following way in my package:
+
+Index: compat-wireless-2010-01-06/Makefile
+===================================================================
+--- compat-wireless-2010-01-06.orig/Makefile
++++ compat-wireless-2010-01-06/Makefile
+@@ -1,10 +1,6 @@
+ export KMODDIR?=       updates
+ KMODDIR_ARG:=   "INSTALL_MOD_DIR=$(KMODDIR)"
+-ifneq ($(origin KLIB), undefined)
+-KMODPATH_ARG:=  "INSTALL_MOD_PATH=$(KLIB)"
+-else
+-export KLIB:=          /lib/modules/$(shell uname -r)
+-endif
++export KLIB:=          /lib/modules/$(shell uname -r)
+ export KLIB_BUILD ?=	$(KLIB)/build
+ # Sometimes not available in the path
+ MODPROBE := /sbin/modprobe
+@@ -12,6 +8,7 @@ MADWIFI=$(shell $(MODPROBE) -l ath_pci)
+ OLD_IWL=$(shell $(MODPROBE) -l iwl4965)
  
--	/* BSSID of AP.  */
--	u8 bssid[ETH_ALEN];
--
- 	/* Index into station database. Returned by UPDATE_STADB.  */
- 	u8	peer_id;
+ DESTDIR?=
++KMODPATH_ARG:=  "INSTALL_MOD_PATH=$(DESTDIR)"
  
-@@ -2001,7 +1998,7 @@ struct mwl8k_cmd_set_post_scan {
- } __attribute__((packed));
+ ifneq ($(KERNELRELEASE),)
+
+
+This way calling 
+
+make DESTDIR=/path/to/buildroot install
+
+works correctly.
+
+
+I may be misusing the kbuild system but just wanted to share these in case there's anything to be done
+in upstream,
+
+Thanks!
+Ozan Caglayan
  
- static int
--mwl8k_cmd_set_post_scan(struct ieee80211_hw *hw, __u8 *mac)
-+mwl8k_cmd_set_post_scan(struct ieee80211_hw *hw, const __u8 *mac)
- {
- 	struct mwl8k_cmd_set_post_scan *cmd;
- 	int rc;
-@@ -2077,7 +2074,6 @@ struct mwl8k_cmd_update_set_aid {
- static int
- mwl8k_cmd_set_aid(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- {
--	struct mwl8k_vif *mv_vif = MWL8K_VIF(vif);
- 	struct mwl8k_cmd_update_set_aid *cmd;
- 	u16 prot_mode;
- 	int rc;
-@@ -2090,7 +2086,7 @@ mwl8k_cmd_set_aid(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 	cmd->header.length = cpu_to_le16(sizeof(*cmd));
- 	cmd->aid = cpu_to_le16(vif->bss_conf.aid);
- 
--	memcpy(cmd->bssid, mv_vif->bssid, ETH_ALEN);
-+	memcpy(cmd->bssid, vif->bss_conf.bssid, ETH_ALEN);
- 
- 	if (vif->bss_conf.use_cts_prot) {
- 		prot_mode = MWL8K_FRAME_PROT_11G;
-@@ -2945,7 +2941,6 @@ static void mwl8k_bss_info_changed(struct ieee80211_hw *hw,
- 				   u32 changed)
- {
- 	struct mwl8k_priv *priv = hw->priv;
--	struct mwl8k_vif *mwl8k_vif = MWL8K_VIF(vif);
- 	int rc;
- 
- 	if ((changed & BSS_CHANGED_ASSOC) == 0)
-@@ -2958,8 +2953,6 @@ static void mwl8k_bss_info_changed(struct ieee80211_hw *hw,
- 		return;
- 
- 	if (vif->bss_conf.assoc) {
--		memcpy(mwl8k_vif->bssid, vif->bss_conf.bssid, ETH_ALEN);
--
- 		/* Install rates */
- 		rc = mwl8k_cmd_set_rate(hw, vif);
- 		if (rc)
-@@ -2991,10 +2984,8 @@ static void mwl8k_bss_info_changed(struct ieee80211_hw *hw,
- 		 * Finalize the join.  Tell rx handler to process
- 		 * next beacon from our BSSID.
- 		 */
--		memcpy(priv->capture_bssid, mwl8k_vif->bssid, ETH_ALEN);
-+		memcpy(priv->capture_bssid, vif->bss_conf.bssid, ETH_ALEN);
- 		priv->capture_beacon = true;
--	} else {
--		memset(mwl8k_vif->bssid, 0, ETH_ALEN);
- 	}
- 
- out:
-@@ -3099,7 +3090,7 @@ static void mwl8k_configure_filter(struct ieee80211_hw *hw,
- 			 */
- 			mwl8k_cmd_set_pre_scan(hw);
- 		} else {
--			u8 *bssid;
-+			const u8 *bssid;
- 
- 			/*
- 			 * Enable the BSS filter.
-@@ -3111,7 +3102,7 @@ static void mwl8k_configure_filter(struct ieee80211_hw *hw,
- 			 */
- 			bssid = "\x01\x00\x00\x00\x00\x00";
- 			if (priv->vif != NULL)
--				bssid = MWL8K_VIF(priv->vif)->bssid;
-+				bssid = priv->vif->bss_conf.bssid;
- 
- 			mwl8k_cmd_set_post_scan(hw, bssid);
- 		}
--- 
-1.5.6.4
+
