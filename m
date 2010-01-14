@@ -1,58 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f42.google.com ([209.85.160.42]:48955 "EHLO
-	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754446Ab0A1Pha (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2010 10:37:30 -0500
-Received: by pwi21 with SMTP id 21so550163pwi.21
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jan 2010 07:37:29 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:4550 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753886Ab0ANPmC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jan 2010 10:42:02 -0500
+Date: Thu, 14 Jan 2010 16:39:45 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Subject: Re: [PATCH 2/2] b43: N-PHY: follow kernel coding style for struct
+	declaration
+Message-ID: <20100114153944.GA3700@dhcp-lab-161.englab.brq.redhat.com>
+References: <op.u6iu99ct9lhzdc@linux-g0th.site>
 MIME-Version: 1.0
-In-Reply-To: <201001281528.37342.holgerschurig@gmail.com>
-References: <8bf247761001280439u59a9b6ch1128d42a83116594@mail.gmail.com>
-	 <8bf247761001280607i2b90f73j96e3afd02fb6da29@mail.gmail.com>
-	 <201001281528.37342.holgerschurig@gmail.com>
-Date: Thu, 28 Jan 2010 21:07:29 +0530
-Message-ID: <8bf247761001280737v135c8fbfj7a5e1b7eea881d5c@mail.gmail.com>
-Subject: Re: scan does not work
-From: Sriram V <vshrirama@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <op.u6iu99ct9lhzdc@linux-g0th.site>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi
 
-How do i check if the communication between the host and libertas is proper?
+On Thu, Jan 14, 2010 at 01:21:35PM +0100, Rafał Miłecki wrote:
+>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+>  drivers/net/wireless/b43/phy_common.c |   14 ++++++++++++++
+>  drivers/net/wireless/b43/phy_common.h |    1 +
+>  drivers/net/wireless/b43/phy_lp.c     |   17 ++---------------
+>  3 files changed, 17 insertions(+), 15 deletions(-)
 
-Is there any way i can do it?
+Your second patch is the same as first one.
 
-
-Sometimes, i find that the loading of firmware fails with -110
-(timeout) return value. what i do is rmmod the driver and do a insmod
-again and it works!.
-
-Regards,
-sriram
-
-On Thu, Jan 28, 2010 at 7:58 PM, Holger Schurig <holgerschurig@gmail.com> wrote:
->> libertas cmd: DNLD_CMD: command 0x0006, seq 9, size 63
->
-> That is the scan command.
->
->> libertas cmd: CMD_RESP: response 0x8006, seq 9, size 11
->
-> And that the scan response. As I can see from the size (11
-> bytes), it doesn't contain any results. The same happens with
-> the other scan-responses:
->
->> libertas cmd: CMD_RESP: response 0x8006, seq 10, size 11
->> libertas cmd: CMD_RESP: response 0x8006, seq 11, size 11
->> libertas cmd: CMD_RESP: response 0x8006, seq 12, size 11
->> libertas cmd: CMD_RESP: response 0x8006, seq 13, size 11
->> libertas cmd: CMD_RESP: response 0x8006, seq 14, size 11
->
-> I'd suggest you check your antenna.
->
-> --
-> http://www.holgerschurig.de
->
+Stanislaw
