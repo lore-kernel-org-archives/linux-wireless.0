@@ -1,90 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:50434 "EHLO ds10.nbd.name"
+Received: from li59-9.members.linode.com ([97.107.129.9]:37720 "EHLO erley.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754310Ab0AQUIw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2010 15:08:52 -0500
-Message-ID: <4B536E52.2050709@openwrt.org>
-Date: Sun, 17 Jan 2010 21:08:50 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1756637Ab0ANPtx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jan 2010 10:49:53 -0500
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath9k: fix RTS/CTS handling
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Thu, 14 Jan 2010 10:41:57 -0500
+From: <pat-lkml@erley.org>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<bcm43xx-dev@lists.berlios.de>
+Subject: Re: [PATCH 2/2] b43: N-PHY: follow kernel coding style for struct
+ declaration
+In-Reply-To: <op.u6iu99ct9lhzdc@linux-g0th.site>
+References: <op.u6iu99ct9lhzdc@linux-g0th.site>
+Message-ID: <153c561ea0284f839de2cd27768bddf9@127.0.0.1>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Tx DMA descriptor has two kinds of flags that select RTS/CTS usage.
-The first one (global for the frame) selects whether RTS/CTS or
-CTS-to-self should be used, the second one enables RTS/CTS or
-CTS-to-self usage for an individual multi-rate-retry entry.
-Previously the code preparing the descriptor only enabled the global 
-flag, if the first MRR series selected the local one.
-Fix this by enabling the global flag if any of the MRR entries need it.
-With this patch, rate control can properly select the use of RTS/CTS
-for all MRR entries except the first one, which is the default behavior.
+On Thu, 14 Jan 2010 13:21:35 +0100, Rafał Miłecki <zajec5@gmail.com>
+wrote:
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+>   drivers/net/wireless/b43/phy_common.c |   14 ++++++++++++++
+>   drivers/net/wireless/b43/phy_common.h |    1 +
+>   drivers/net/wireless/b43/phy_lp.c     |   17 ++---------------
+>   3 files changed, 17 insertions(+), 15 deletions(-)
+> 
+<snip>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1498,26 +1498,6 @@ static void ath_buf_set_rate(struct ath_
- 	if (sc->sc_flags & SC_OP_PREAMBLE_SHORT)
- 		ctsrate |= rate->hw_value_short;
- 
--	/*
--	 * ATH9K_TXDESC_RTSENA and ATH9K_TXDESC_CTSENA are mutually exclusive.
--	 * Check the first rate in the series to decide whether RTS/CTS
--	 * or CTS-to-self has to be used.
--	 */
--	if (rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT)
--		flags = ATH9K_TXDESC_CTSENA;
--	else if (rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS)
--		flags = ATH9K_TXDESC_RTSENA;
--
--	/* FIXME: Handle aggregation protection */
--	if (sc->config.ath_aggr_prot &&
--	    (!bf_isaggr(bf) || (bf_isaggr(bf) && bf->bf_al < 8192))) {
--		flags = ATH9K_TXDESC_RTSENA;
--	}
--
--	/* For AR5416 - RTS cannot be followed by a frame larger than 8K */
--	if (bf_isaggr(bf) && (bf->bf_al > sc->sc_ah->caps.rts_aggr_limit))
--		flags &= ~(ATH9K_TXDESC_RTSENA);
--
- 	for (i = 0; i < 4; i++) {
- 		bool is_40, is_sgi, is_sp;
- 		int phy;
-@@ -1529,8 +1509,15 @@ static void ath_buf_set_rate(struct ath_
- 		series[i].Tries = rates[i].count;
- 		series[i].ChSel = common->tx_chainmask;
- 
--		if (rates[i].flags & IEEE80211_TX_RC_USE_RTS_CTS)
-+		if ((sc->config.ath_aggr_prot && bf_isaggr(bf)) ||
-+		    (rates[i].flags & IEEE80211_TX_RC_USE_RTS_CTS)) {
- 			series[i].RateFlags |= ATH9K_RATESERIES_RTS_CTS;
-+			flags |= ATH9K_TXDESC_RTSENA;
-+		} else if (rates[i].flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
-+			series[i].RateFlags |= ATH9K_RATESERIES_RTS_CTS;
-+			flags |= ATH9K_TXDESC_CTSENA;
-+		}
-+
- 		if (rates[i].flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
- 			series[i].RateFlags |= ATH9K_RATESERIES_2040;
- 		if (rates[i].flags & IEEE80211_TX_RC_SHORT_GI)
-@@ -1568,6 +1555,14 @@ static void ath_buf_set_rate(struct ath_
- 			phy, rate->bitrate * 100, bf->bf_frmlen, rix, is_sp);
- 	}
- 
-+	/* For AR5416 - RTS cannot be followed by a frame larger than 8K */
-+	if (bf_isaggr(bf) && (bf->bf_al > sc->sc_ah->caps.rts_aggr_limit))
-+		flags &= ~ATH9K_TXDESC_RTSENA;
-+
-+	/* ATH9K_TXDESC_RTSENA and ATH9K_TXDESC_CTSENA are mutually exclusive. */
-+	if (flags & ATH9K_TXDESC_RTSENA)
-+		flags &= ~ATH9K_TXDESC_CTSENA;
-+
- 	/* set dur_update_en for l-sig computation except for PS-Poll frames */
- 	ath9k_hw_set11n_ratescenario(sc->sc_ah, bf->bf_desc,
- 				     bf->bf_lastbf->bf_desc,
+Wrong patch attached?  I got the MSB patch again on this one.
