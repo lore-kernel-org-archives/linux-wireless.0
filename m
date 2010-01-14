@@ -1,55 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:51286 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757347Ab0ANR1x (ORCPT
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:45949 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752712Ab0ANXJQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2010 12:27:53 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2] cfg80211: Ingore country IEs with a zero set of number of channels
-Date: Thu, 14 Jan 2010 12:27:51 -0500
-Message-Id: <1263490071-6487-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 14 Jan 2010 18:09:16 -0500
+Received: by pwj9 with SMTP id 9so432966pwj.21
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jan 2010 15:09:16 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <op.u6jn12l09lhzdc@linux-g0th.site>
+References: <op.u6jn12l09lhzdc@linux-g0th.site>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 14 Jan 2010 15:08:55 -0800
+Message-ID: <43e72e891001141508ndec9aeak46412482b2486054@mail.gmail.com>
+Subject: Re: [PATCH 3/6] b43: N-PHY: add update TX cal ladder
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previous to this and the last patch, titled,
+2010/1/14 Rafał Miłecki <zajec5@gmail.com>:
 
-"cfg80211: Fix 2 GHz subband calculation for country IEs"
+It'd be nice if your patches had a good description of what this is, I
+see most of these patches are one-liners with no description at all.
 
-we would end up treating these IEs as single channel units. These are in
-fact just bogus IE triplets so ignore the entire IE if these are found.
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index f0859ea..5b03ca7 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -585,6 +585,9 @@ static int max_subband_chan(int orig_cur_chan,
- 			break;
- 		}
- 
-+		if (triplet->chans.num_channels == 0)
-+			return 0;
-+
- 		/* Monitonically increasing channel order */
- 		if (triplet->chans.first_channel <= end_subband_chan)
- 			return 0;
-@@ -737,6 +740,9 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 			break;
- 		}
- 
-+		if (triplet->chans.num_channels == 0)
-+				return NULL;
-+
- 		/* 2 GHz */
- 		if (triplet->chans.first_channel <= 14)
- 			end_channel = triplet->chans.first_channel +
--- 
-1.6.3.3
-
+  Luis
