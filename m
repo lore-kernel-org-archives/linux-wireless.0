@@ -1,77 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54207 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752011Ab0AWSxw (ORCPT
+Received: from mail-pz0-f188.google.com ([209.85.222.188]:54072 "EHLO
+	mail-pz0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751957Ab0ANHVh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jan 2010 13:53:52 -0500
-Subject: Re: hwtkip hangs on b43
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, kecsa@kutfo.hit.bme.hu,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <201001231919.32466.mb@bu3sch.de>
-References: <Pine.LNX.4.44.1001230942190.16120-100000@kutfo.hit.bme.hu>
-	 <4B5B2FCF.2000005@lwfinger.net> <1264268862.23766.0.camel@johannes.local>
-	 <201001231919.32466.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-RHZofO1DUM0CdkN97JBn"
-Date: Sat, 23 Jan 2010 19:53:48 +0100
-Message-ID: <1264272828.23766.6.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 14 Jan 2010 02:21:37 -0500
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 13 Jan 2010 23:21:15 -0800
+Message-ID: <43e72e891001132321qccde01cnd7002d1f94bee1c0@mail.gmail.com>
+Subject: Compat / compat-wireless / bluetooth for 2.6.33-rc4 and 2.6.32.3
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The 2.6.33-rc4 and 2.6.32.3 kernels came out a few days ago, along
+with it comes the respective 2.6.33-rc4 [1] and 2.6.32.3 [2]
+compat-wireless releases [3]. As noted previously the
+compat-wireless-2.6.33 releases now also have bluetooth backported for
+kernels >= 2.6.27.
 
---=-RHZofO1DUM0CdkN97JBn
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+A few release notes:
 
-On Sat, 2010-01-23 at 19:19 +0100, Michael Buesch wrote:
+ * compat.git - generic kernel compatibility package. This is
+currently used on bleeding edge compat-wireless and the 2.6.33
+compat-wireless releases. Other external drivers are welcomed to take
+advantage of this though.
+  - gets pm-qos for kernels down to 2.6.23
+  - gets the new 2.6.33 firmware_class backported for older kernels
+which allows usage of
+    drivers with thew new request_firmware_nowait(). Users of this for
+802.11 right now are ar9170.
+    This actually goes only compile tested, please let me know if this worked.
 
-> > > -	mutex_lock(&wl->mutex);
-> > > +	if (!mutex_is_locked(&wl->mutex)) {
-> >=20
-> > I think this might be because update_tkip_key is called from within the
-> > RX path, so it's probably not even safe to use mutexes to start with?
->=20
-> Well, if mac80211 does a callback into the driver on behalf of a driver c=
-all,
-> that is broken design. It would break for all locks, not just mutexes.
+  * compat-wireless-2.6.32.3:
+    - now goes all the way down to 2.6.23 for ath5k and ath9k, should
+be easy to test/enable others
+    - gets pm-qos backport as well
 
-Yes, but
+  * compat-wireless-2.6.33-rc4:
+    - The new debugfs_remove_recursive(), added as of 2.6.26 but used
+on 802.11 only until
+      2.6.32-rc4 on both mac80211 and cfg80211 cannot be backported as
+it relies on two
+      static variables on fs/debugfs/inode.c, to enable backporting
+for older kernels than
+      2.6.26 we'll need to relabel CONFIG_CFG80211_DEBUGFS and
+CONFIG_MAC80211_DEBUGFS
+      and disable them for older kernels.
 
-> We should probably switch back to ieee80211_rx_irqsafe to workaround thes=
-e
-> circular locking problems.
+Due to the new multiqueue patch we only support kernels >= 2.6.27 on
+bleeding edge compat-wireless. This patch is due to go into stable
+down to 2.6.32 so both next releases 2.6.32.4 and 2.6.32-rc5 are
+expected to have this and as such will have backporting disabled for
+older kernels as well until we figure out how to properly backport
+this.
 
-Actually you can't, because you can't acquire the mutex here since we're
-in an atomic section. So relying on it being already locked is probably
-safer. However, you can't actually sleep anyway...
+The compat-wireless 2.6.32.3 release causes this harmless warning on
+older kernels < 2.6.24, it can safely be ingored, I see no way of
+avoiding it.
 
-the proper fix would be to delay the call in mac80211 to a work.
+  CC [M]  /home/mcgrof/devel/compat-wireless-2.6/net/rfkill/input.o
+In file included from
+/home/mcgrof/devel/compat-wireless-2.6/net/rfkill/input.c:16:
+include/linux/input.h:933:1: warning: "BIT" redefined
+In file included from include/asm-i386/cpufeature.h:11,
+                 from include/asm/cpufeature.h:10,
+                 from include/asm/alternative.h:43,
+                 from include/asm/atomic.h:4,
+                 from
+/home/mcgrof/devel/compat-wireless-2.6/include/net/compat-2.6.24.h:11,
+                 from
+/home/mcgrof/devel/compat-wireless-2.6/include/net/compat.h:15,
+                 from <command-line>:0:
 
-johannes
+ Luis
 
-
---=-RHZofO1DUM0CdkN97JBn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLW0W4AAoJEODzc/N7+Qma9r4P/3u4ZH1S33UGi/Ox/tEGaV12
-cVnKyDmehZNYjDzv3pBQs0LqhVeI9LPE/EmF6GWRjbRG6LWLxsOvgbQJ464hiJ4g
-QGuBWDAEXJ4JNI1yfwx2Egy4l5spg0buzkaqhZrVMww4/yutFWyhqcQoc66HK1qn
-jKA9RWnwBxeiO9ZIYzcrUWklxItD+YoBcyIx0sjoGDZHR5qJDAYWA8ORye/TI0rV
-cQl+cQs0G0sjbw5dBaliPZYCfrDMuXKzwzrMg04QFbRI2GjewtH+WI9Q0j+GHNvP
-BLzU+EewLBW161ZuNYAsnx9gCmV0gGRNHfSA23k2J/LI6RS8j+HTU1OkARN+1xGq
-MozvUL9xK/RqzZQI0vXBqpCqiBNp++UV3VX95P3vuYrsK70eUe47kTInQsX6kOjk
-A9hE6o1tVZv7bUMn5AOMi8g4RiSIIZoGR/jUVK2k4f4dVC5zHhOP3vuezvWmXbWo
-LgMc51PgBCCvBOZCNtu5WQ7N+/5T//yeWotkaUwBnEfmyCbxjh0QAi4gh/iEDlpl
-ZO8aMsRo1LkNUg7f3VZIXcd6HikLyNSwT0U9MS9f3n112EEfcihjyz0lYugji1vR
-KUo23Wuk5bhtt6MnX/y+feQxV5cK4XxPLMV8uq5HHzpeQsQgEB3KGvf5lJWcZi8Y
-j9dMxZ352xBX0JirzcJ7
-=jvuK
------END PGP SIGNATURE-----
-
---=-RHZofO1DUM0CdkN97JBn--
-
+[1] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.33/compat-wireless-2.6.33-rc4.tar.bz2
+[2] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.32/compat-wireless-2.6.32.3.tar.bz2
+[3] http://wireless.kernel.org/en/users/Download/stable
