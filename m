@@ -1,46 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35842 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751263Ab0AaKbT (ORCPT
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:59022 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752613Ab0ANMVm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2010 05:31:19 -0500
-Subject: RE: [PATCH 1/1 v3] cfg80211: wext: fix cfg80211's SIOCSIWAP
- function
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Zhao, Shanyu" <shanyu.zhao@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-In-Reply-To: <380B2771CDD78E46856E6B788D9F199750162F62@orsmsx503.amr.corp.intel.com>
-References: <1264801649-4985-1-git-send-email-shanyu.zhao@intel.com>
-	 <1264840545.3546.179.camel@johannes.local>
-	 <1264841037.3546.183.camel@johannes.local>
-	 <380B2771CDD78E46856E6B788D9F199750162F62@orsmsx503.amr.corp.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 31 Jan 2010 11:31:12 +0100
-Message-ID: <1264933872.3597.5.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 14 Jan 2010 07:21:42 -0500
+Received: by fxm25 with SMTP id 25so408721fxm.21
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jan 2010 04:21:40 -0800 (PST)
+Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
+Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 14 Jan 2010 13:21:35 +0100
+Subject: [PATCH 2/2] b43: N-PHY: follow kernel coding style for struct
+ declaration
+MIME-Version: 1.0
+From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <op.u6iu99ct9lhzdc@linux-g0th.site>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-01-30 at 21:24 -0800, Zhao, Shanyu wrote:
-> Yes, that's exactly what I tried to do. From what I read from the man
-> page of iwconfig, I thought iwconfig wlanx ap <mac> should be enough
-> to connect to an ap without specifying the essid. Maybe I didn't
-> understand the correct usage of iwconfig.
-> 
-> However, one of our test cases failed because of this:
-> Steps to Reproduce: 
-> 1. set up the SSID name with Open/None in AP
-> 2. reload the driver
-> 3. interface up
-> 4. send the command 'iwconfig wlan0 ap <MAC address of the AP>
-> 
-> Expected Results:
-> the association is established successfully.
 
-Fun, so you ran into one of the few things we don't (want to) support.
-And to be honest, I don't think there's a good reason to support it; for
-example this would never connect to a hidden SSID network.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+  drivers/net/wireless/b43/phy_common.c |   14 ++++++++++++++
+  drivers/net/wireless/b43/phy_common.h |    1 +
+  drivers/net/wireless/b43/phy_lp.c     |   17 ++---------------
+  3 files changed, 17 insertions(+), 15 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
+index 75b26e1..1389ab2 100644
+--- a/drivers/net/wireless/b43/phy_common.c
++++ b/drivers/net/wireless/b43/phy_common.c
+@@ -421,3 +421,17 @@ void b43_phyop_switch_analog_generic(struct b43_wldev *dev, bool on)
+  {
+  	b43_write16(dev, B43_MMIO_PHY0, on ? 0 : 0xF4);
+  }
++
++/* Find the position of the most significant bit */
++u8 phy_nbits(s32 val)
++{
++	u32 tmp = abs(val);
++	u8 nbits = 0;
++
++	while (tmp != 0) {
++		nbits++;
++		tmp >>= 1;
++	}
++
++	return nbits;
++}
+diff --git a/drivers/net/wireless/b43/phy_common.h b/drivers/net/wireless/b43/phy_common.h
+index 9edd4e8..332ba4c 100644
+--- a/drivers/net/wireless/b43/phy_common.h
++++ b/drivers/net/wireless/b43/phy_common.h
+@@ -418,5 +418,6 @@ int b43_phy_shm_tssi_read(struct b43_wldev *dev, u16 shm_offset);
+   */
+  void b43_phyop_switch_analog_generic(struct b43_wldev *dev, bool on);
+
++u8 phy_nbits(s32 val);
+
+  #endif /* LINUX_B43_PHY_COMMON_H_ */
+diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+index c4e9c5c..7ad9215 100644
+--- a/drivers/net/wireless/b43/phy_lp.c
++++ b/drivers/net/wireless/b43/phy_lp.c
+@@ -1593,19 +1593,6 @@ static const struct lpphy_rx_iq_comp lpphy_rev2plus_iq_comp = {
+  	.c0 = 0,
+  };
+
+-static u8 lpphy_nbits(s32 val)
+-{
+-	u32 tmp = abs(val);
+-	u8 nbits = 0;
+-
+-	while (tmp != 0) {
+-		nbits++;
+-		tmp >>= 1;
+-	}
+-
+-	return nbits;
+-}
+-
+  static int lpphy_calc_rx_iq_comp(struct b43_wldev *dev, u16 samples)
+  {
+  	struct lpphy_iq_est iq_est;
+@@ -1632,8 +1619,8 @@ static int lpphy_calc_rx_iq_comp(struct b43_wldev *dev, u16 samples)
+  		goto out;
+  	}
+
+-	prod_msb = lpphy_nbits(prod);
+-	q_msb = lpphy_nbits(qpwr);
++	prod_msb = phy_nbits(prod);
++	q_msb = phy_nbits(qpwr);
+  	tmp1 = prod_msb - 20;
+
+  	if (tmp1 >= 0) {
+-- 
+1.6.4.2
 
