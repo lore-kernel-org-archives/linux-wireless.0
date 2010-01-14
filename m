@@ -1,76 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.211.176]:46904 "EHLO
-	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932067Ab0AFAMO (ORCPT
+Received: from mail-ew0-f209.google.com ([209.85.219.209]:45966 "EHLO
+	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932384Ab0ANXw4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2010 19:12:14 -0500
-Received: by ywh6 with SMTP id 6so16960781ywh.4
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2010 16:12:14 -0800 (PST)
-Message-ID: <4B43D513.3030300@gmail.com>
-Date: Tue, 05 Jan 2010 16:10:59 -0800
-From: John Daiker <daikerjohn@gmail.com>
+	Thu, 14 Jan 2010 18:52:56 -0500
+Received: by ewy1 with SMTP id 1so151222ewy.28
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jan 2010 15:52:55 -0800 (PST)
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: Re: b43: must set qos=0 on to connect
-References: <4B43C496.4040609@gmail.com> <69e28c911001051548ke40422ao49cb3ad2a141a33a@mail.gmail.com>
-In-Reply-To: <69e28c911001051548ke40422ao49cb3ad2a141a33a@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <43e72e891001141544n75de8362ke1756882ed1c2391@mail.gmail.com>
+References: <op.u6jn12l09lhzdc@linux-g0th.site>
+	 <43e72e891001141508ndec9aeak46412482b2486054@mail.gmail.com>
+	 <b170af451001141513p6452cf52q6d97477a38e83f34@mail.gmail.com>
+	 <43e72e891001141544n75de8362ke1756882ed1c2391@mail.gmail.com>
+Date: Fri, 15 Jan 2010 00:52:54 +0100
+Message-ID: <b170af451001141552k227a8125nf4926adbfd6d3c8f@mail.gmail.com>
+Subject: Re: [PATCH 3/6] b43: N-PHY: add update TX cal ladder
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/05/2010 03:48 PM, G�bor Stefanik wrote:
-> On Wed, Jan 6, 2010 at 12:00 AM, John Daiker<daikerjohn@gmail.com>  wrote:
->> I have a BCM4312 rev 01 (14e4:4315) card in my HP Mini netbook.  I am having
->> troubles connecting to any WEP secured AP.
+W dniu 15 stycznia 2010 00:44 użytkownik Luis R. Rodriguez
+<mcgrof@gmail.com> napisał:
+> 2010/1/14 Rafał Miłecki <zajec5@gmail.com>:
+>> W dniu 15 stycznia 2010 00:08 użytkownik Luis R. Rodriguez
+>> <mcgrof@gmail.com> napisał:
+>>> It'd be nice if your patches had a good description of what this is, I
+>>> see most of these patches are one-liners with no description at all.
 >>
->> I know the trick about having to load with pio=1 for the device to stay
->> happy (and forget about using DMA), so no issues there, I hope.
+>> That's right, because I just implement function by function using
+>> specs. I guess that's how implementing driver from RE specs look like.
 >>
->> With qos=1 (by default, IIRC), I am unable to establish a connection with
->> said WEP connection, and notice many 'PHY transmission error' messages in my
->> dmesg output.
+>> Maybe I could use descriptions instead of function names so we would get
+>> calculate TX IQ LO
+>> instead of
+>> b43_nphy_cal_tx_iq_lo
+>> but not sure if that makes much more sense.
 >>
->> With qos=1, I can successfully connect to my WEP connection without issue,
->> and without any error messages or warnings.
->>
->> I have a BCM4318 rev 02 (14e4:4318) in a desktop that works with
->> enabled/disabled qos not matter what.  Also, a RT2500-based card works fine
->> on the connection as well.
->>
->> Both card are using the 478.104 firmware.
->>
->> Please advise what steps I should take to further debug this issue.
->>
->> Thanks,
->> John Daiker
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
+>> Do you have some better suggestion? I'm open for comments, changes :)
 >
-> Hi!
+> I'm talking about the text on the commit log after the "Subject", the
+> subject in this case being:
 >
-> Is this the new 4312 (BCM94312HMGB AKA 575920-001), with integrated
-> Bluetooth? I haven't seen this issue on my machines with a regular
-> 4312, so it is probably related to the DMA error, or maybe it is
-> specific to the new 4312. If you can, please check whether the actual
-> model number printed on the card is the new one.
+> "b43: N-PHY: add update TX cal ladder"
 >
-> Thanks,
-> G�bor
->
+> Doesn't the spec talk or even speculate to some degree what this thing is?
 
-G�bor,
+Well, AFAIK all we know about function is:
+http://bcm-v4.sipsolutions.net/802.11/PHY/N/UpdateTxCalLadder
 
-I just pulled the card, and it's not the chip you mention.  It's a 
-"BCM94312HMG"  (Notice that it doesn't have the "B" at the end.  I would 
-assume that indicates the Bluetooth integration.)
+It updates something on wireless card writing table 15. It's hard to
+understand what it really does, especially if you don't yet have
+contexts calling this function.
 
-I've taken few photos of the front and back of the card.  Let me know if 
-you want to see them... I can post 'em on my website or flickr for your 
-viewing pleasure.
+P.S.
+Also John's comment:
+<linville> "calculate TX IQ LO" -- I like that better
 
-Thanks,
-John Daiker
+So definitely I will avoid putting just function names. However as I
+said, I don't think I will be able to be more descriptive :/
+
+-- 
+Rafał
