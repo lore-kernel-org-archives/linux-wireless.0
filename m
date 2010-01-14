@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:35013 "EHLO mga11.intel.com"
+Received: from smtp1-g21.free.fr ([212.27.42.1]:45751 "EHLO smtp1-g21.free.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752029Ab0A2TyK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2010 14:54:10 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
+	id S932111Ab0ANWUo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jan 2010 17:20:44 -0500
+From: Benoit Papillault <benoit.papillault@free.fr>
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 05/12] iwlwifi: update sensitivity calibration data for 5x00 series
-Date: Fri, 29 Jan 2010 11:53:55 -0800
-Message-Id: <1264794842-8046-6-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1264794842-8046-1-git-send-email-reinette.chatre@intel.com>
-References: <1264794842-8046-1-git-send-email-reinette.chatre@intel.com>
+	Benoit Papillault <benoit.papillault@free.fr>
+Subject: [PATCH] mac80211: Fixed netif_tx_wake_all_queues in IBSS mode
+Date: Thu, 14 Jan 2010 23:20:31 +0100
+Message-Id: <1263507631-12933-1-git-send-email-benoit.papillault@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+When ieee80211_offchannel_return is called, it needs to re-enabled TX
+queues that have been stopped in ieee80211_offchannel_stop_beaconing or
+ieee80211_offchannel_stop_station. It happens if we are doing a scan with an
+IBSS interface. In this case, the interface stopped transmitting.
 
-Update sensitivity range values for 5x00 series
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
 ---
- drivers/net/wireless/iwlwifi/iwl-5000.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/offchannel.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 6027e2a..6bb433a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -263,8 +263,8 @@ static struct iwl_sensitivity_ranges iwl5000_sensitivity = {
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 1facfeb..c36b191 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -153,9 +153,11 @@ void ieee80211_offchannel_return(struct ieee80211_local *local,
+ 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 			if (sdata->u.mgd.associated)
+ 				ieee80211_offchannel_ps_disable(sdata);
+-			netif_tx_wake_all_queues(sdata->dev);
+ 		}
  
- 	.auto_corr_max_ofdm = 120,
- 	.auto_corr_max_ofdm_mrc = 210,
--	.auto_corr_max_ofdm_x1 = 155,
--	.auto_corr_max_ofdm_mrc_x1 = 290,
-+	.auto_corr_max_ofdm_x1 = 120,
-+	.auto_corr_max_ofdm_mrc_x1 = 240,
- 
- 	.auto_corr_min_cck = 125,
- 	.auto_corr_max_cck = 200,
++		if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
++			netif_tx_wake_all_queues(sdata->dev);
++
+ 		/* re-enable beaconing */
+ 		if (enable_beaconing &&
+ 		    (sdata->vif.type == NL80211_IFTYPE_AP ||
 -- 
 1.6.3.3
 
