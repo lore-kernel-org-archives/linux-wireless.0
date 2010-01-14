@@ -1,111 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from faui03.informatik.uni-erlangen.de ([131.188.30.103]:37847 "EHLO
-	faui03.informatik.uni-erlangen.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753809Ab0AMOJq (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:9927 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756809Ab0ANPrJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2010 09:09:46 -0500
-Date: Wed, 13 Jan 2010 14:59:37 +0100
-From: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
-To: linux-kernel@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless@vger.kernel.org
-Cc: siccegge@stud.informatik.uni-erlangen.de,
-	Reinhard.Tartler@informatik.uni-erlangen.de
-Subject: [PATCH] obsolete in kernel source (B43_LEGACY_RFKILL)
-Message-ID: <20100113135937.GA5588@stud.informatik.uni-erlangen.de>
+	Thu, 14 Jan 2010 10:47:09 -0500
+Received: by ey-out-2122.google.com with SMTP id 4so417741eyf.5
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jan 2010 07:47:07 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="4SFOXa2GPu3tIq4H"
+In-Reply-To: <20100114153944.GA3700@dhcp-lab-161.englab.brq.redhat.com>
+References: <op.u6iu99ct9lhzdc@linux-g0th.site>
+	 <20100114153944.GA3700@dhcp-lab-161.englab.brq.redhat.com>
+Date: Thu, 14 Jan 2010 16:47:06 +0100
+Message-ID: <b170af451001140747q2f7a4f3j4e8645b3f49f79eb@mail.gmail.com>
+Subject: Re: [PATCH 2/2] b43: N-PHY: follow kernel coding style for struct
+	declaration
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+W dniu 14 stycznia 2010 16:39 użytkownik Stanislaw Gruszka
+<sgruszka@redhat.com> napisał:
+> Hi
+>
+> On Thu, Jan 14, 2010 at 01:21:35PM +0100, Rafał Miłecki wrote:
+>>
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>>  drivers/net/wireless/b43/phy_common.c |   14 ++++++++++++++
+>>  drivers/net/wireless/b43/phy_common.h |    1 +
+>>  drivers/net/wireless/b43/phy_lp.c     |   17 ++---------------
+>>  3 files changed, 17 insertions(+), 15 deletions(-)
+>
+> Your second patch is the same as first one.
 
---4SFOXa2GPu3tIq4H
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Whoops, thanks :)
 
-Hi all!
-
-	As part of the VAMOS[0] research project at the University of
-Erlangen we're checking referential integrity between kernel KConfig
-options and in-code Conditional blocks.
-
-	While the config option B43_LEGACY_RFKILL was dropped when the
-driver's rfkill facility was ported to cfg80211 in [2] it is still
-referenced for debug output in [1] probably we just want to get rid of
-it.
-
-	Please keep me informed of this patch getting confirmed /
-merged so we can keep track of it.
-
-Regards
-
-	Christoph Egger
-
-[0] http://vamos1.informatik.uni-erlangen.de/
-[1] ./drivers/net/wireless/b43legacy/main.c
-[2] f41f3f373dd72344c65d801d6381fe83ef3a2c54
-
---4SFOXa2GPu3tIq4H
-Content-Type: text/x-diff; charset=us-ascii
-Content-Disposition: attachment; filename="0001-Remove-config-option-B43_LEGACY_RFKILL-completely.patch"
-
->From 9e0756f23bdfcb7f34c8d6f896a5a32cd2abc06e Mon Sep 17 00:00:00 2001
-From: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
-Date: Wed, 13 Jan 2010 14:36:24 +0100
-Subject: [PATCH] Remove config option B43_LEGACY_RFKILL completely
-
-In f41f3f373dd72344c65d801d6381fe83ef3a2c54 the B43 driver was ported
-to use the cfg80211 API for rfkill and consequently the config option
-was dropped (RFKILL is now unconditionally enabled).
-
-However in the Kernel Info the feature is still checked and reported
-missing. This patch just removes the conditional and the relevant code
-blocks while still reporting that feature unconditionally would be
-another option (it's always there).
-
-Signed-off-by: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
----
- drivers/net/wireless/b43legacy/main.c |    9 +++------
- 1 files changed, 3 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
-index 4a905b6..9a0f819 100644
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -3960,7 +3960,7 @@ static struct ssb_driver b43legacy_ssb_driver = {
- 
- static void b43legacy_print_driverinfo(void)
- {
--	const char *feat_pci = "", *feat_leds = "", *feat_rfkill = "",
-+	const char *feat_pci = "", *feat_leds = "",
- 		   *feat_pio = "", *feat_dma = "";
- 
- #ifdef CONFIG_B43LEGACY_PCI_AUTOSELECT
-@@ -3969,9 +3969,6 @@ static void b43legacy_print_driverinfo(void)
- #ifdef CONFIG_B43LEGACY_LEDS
- 	feat_leds = "L";
- #endif
--#ifdef CONFIG_B43LEGACY_RFKILL
--	feat_rfkill = "R";
--#endif
- #ifdef CONFIG_B43LEGACY_PIO
- 	feat_pio = "I";
- #endif
-@@ -3979,9 +3976,9 @@ static void b43legacy_print_driverinfo(void)
- 	feat_dma = "D";
- #endif
- 	printk(KERN_INFO "Broadcom 43xx-legacy driver loaded "
--	       "[ Features: %s%s%s%s%s, Firmware-ID: "
-+	       "[ Features: %s%s%s%s, Firmware-ID: "
- 	       B43legacy_SUPPORTED_FIRMWARE_ID " ]\n",
--	       feat_pci, feat_leds, feat_rfkill, feat_pio, feat_dma);
-+	       feat_pci, feat_leds, feat_pio, feat_dma);
- }
- 
- static int __init b43legacy_init(void)
 -- 
-1.6.3.3
-
-
---4SFOXa2GPu3tIq4H--
+Rafał
