@@ -1,54 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:65124 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754277Ab0A3TSX (ORCPT
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:62654 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932161Ab0ANWnX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2010 14:18:23 -0500
-Received: by fg-out-1718.google.com with SMTP id l26so1263655fgb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Jan 2010 11:18:21 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
+	Thu, 14 Jan 2010 17:43:23 -0500
+Received: by mail-fx0-f225.google.com with SMTP id 25so56513fxm.21
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jan 2010 14:43:22 -0800 (PST)
+Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"John W. Linville" <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 3/5] b43: N-PHY: fix Cal TX IQ LO for newer PHYs
-Date: Sat, 30 Jan 2010 20:18:05 +0100
-Message-Id: <1264879087-14326-3-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1264879087-14326-1-git-send-email-zajec5@gmail.com>
-References: <1264879087-14326-1-git-send-email-zajec5@gmail.com>
+Date: Thu, 14 Jan 2010 23:43:21 +0100
+Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Subject: [PATCH 5/6] b43: N-PHY: correct condition blocks in init
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <op.u6jn2jfp9lhzdc@linux-g0th.site>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+
 Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/b43/phy_n.c |   12 +++++++++++-
- 1 files changed, 11 insertions(+), 1 deletions(-)
+  drivers/net/wireless/b43/phy_n.c |   16 +++++++++-------
+  1 files changed, 9 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 690aaad..cf107c5 100644
+index d5a2dc8..356b89f 100644
 --- a/drivers/net/wireless/b43/phy_n.c
 +++ b/drivers/net/wireless/b43/phy_n.c
-@@ -2229,7 +2229,17 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
- 		(dev->phy.rev == 5 && nphy->ipa2g_on &&
- 		b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ);
- 	if (phy6or5x) {
--		/* TODO */
-+		if (dev->phy.is_40mhz) {
-+			b43_ntab_write_bulk(dev, B43_NTAB16(15, 0), 18,
-+					tbl_tx_iqlo_cal_loft_ladder_40);
-+			b43_ntab_write_bulk(dev, B43_NTAB16(15, 32), 18,
-+					tbl_tx_iqlo_cal_iqimb_ladder_40);
-+		} else {
-+			b43_ntab_write_bulk(dev, B43_NTAB16(15, 0), 18,
-+					tbl_tx_iqlo_cal_loft_ladder_20);
-+			b43_ntab_write_bulk(dev, B43_NTAB16(15, 32), 18,
-+					tbl_tx_iqlo_cal_iqimb_ladder_20);
-+		}
- 	}
- 
- 	b43_phy_write(dev, B43_NPHY_IQLOCAL_CMDGCTL, 0x8AA9);
+@@ -1842,17 +1842,19 @@ int b43_phy_initn(struct b43_wldev *dev)
+  					//TODO N PHY Pre Calibrate TX Gain
+  					target = b43_nphy_get_tx_gains(dev);
+  				}
+-				/* TODO: If the output of N PHY Cal TX Iqlo with target, 1 0 as arguments is 0
+-					if (b43_nphy_cal_rx_iq(dev, target, 2, 0) == 0)
+-						Call N PHY Save Cal */
+-			} else if (nphy->mphase_cal_phase_id == 0) {
+-				//TODO N PHY Periodic Calibration with argument 3
+  			}
+-		} else {
+-			b43_nphy_restore_cal(dev);
+  		}
+  	}
+
++	/* TODO: If the output of N PHY Cal TX Iqlo with target, 1 0 as arguments is 0 {
++		if (b43_nphy_cal_rx_iq(dev, target, 2, 0) == 0)
++			Call N PHY Save Cal
++		else if (nphy->mphase_cal_phase_id == 0)
++			//TODO: N PHY Periodic Calibration with argument 3
++	} else {
++		b43_nphy_restore_cal(dev);
++	} */
++
+  	b43_nphy_tx_pwr_ctrl_coef_setup(dev);
+  	//TODO N PHY TX Power Control Enable with argument tx_pwr_state
+  	b43_phy_write(dev, B43_NPHY_TXMACIF_HOLDOFF, 0x0015);
 -- 
 1.6.4.2
 
