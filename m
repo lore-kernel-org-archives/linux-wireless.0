@@ -1,70 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lon1-post-3.mail.demon.net ([195.173.77.150]:35756 "EHLO
-	lon1-post-3.mail.demon.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751079Ab0AYXBO (ORCPT
+Received: from mail-pz0-f171.google.com ([209.85.222.171]:55205 "EHLO
+	mail-pz0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932195Ab0ANVr5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 18:01:14 -0500
-Date: Mon, 25 Jan 2010 22:57:02 +0000
-From: Darren Salt <linux@youmustbejoking.demon.co.uk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] Tweak version handling to allow vendor-specific suffixes without patching.
-Message-ID: <50E4CCD2A8%linux@youmustbejoking.demon.co.uk>
-In-Reply-To: <50E4CB7318%linux@youmustbejoking.demon.co.uk>
-References: <1264458811-21411-1-git-send-email-linux@youmustbejoking.demon.co.uk>
- <50E4CB7318%linux@youmustbejoking.demon.co.uk>
+	Thu, 14 Jan 2010 16:47:57 -0500
+Received: by pzk1 with SMTP id 1so126465pzk.33
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jan 2010 13:47:57 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <995709e41001141227n31cab7aeuae0e5a974fa1afdd@mail.gmail.com>
+References: <995709e41001091103t43738262ibb2c4e0c4beab26d@mail.gmail.com>
+	 <995709e41001120217r1b6b276ek70658a1142744142@mail.gmail.com>
+	 <4B4C8320.8060801@free.fr>
+	 <995709e41001120724j7a6627b1g5d90df8fb658ceaa@mail.gmail.com>
+	 <43e72e891001120846x453e4052oa93675b86fe4a86d@mail.gmail.com>
+	 <995709e41001120914n17cfdb56k664c2b42afe448f6@mail.gmail.com>
+	 <43e72e891001120918v70c3be7nd3d3819f0e8b0cd0@mail.gmail.com>
+	 <995709e41001122307g2d0e9546g2b3680a6cb0a345d@mail.gmail.com>
+	 <b6c5339f1001140815v5c6dfdc7j62f7d71623490216@mail.gmail.com>
+	 <995709e41001141227n31cab7aeuae0e5a974fa1afdd@mail.gmail.com>
+Date: Thu, 14 Jan 2010 16:47:56 -0500
+Message-ID: <b6c5339f1001141347k381bb06alb43648d33039ace2@mail.gmail.com>
+Subject: Re: [ath9k-devel] [Moblin Dev] Wireless is keep on disconnecting
+From: Bob Copeland <me@bobcopeland.com>
+To: Jaswinder Singh Rajput <jaswindermobile@gmail.com>
+Cc: davem@davemloft.net, "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	arjan@linux.intel.com, "Li, Yan" <yan.i.li@intel.com>,
+	dev@moblin.org, alainswb <alainswb@free.fr>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	ath9k-devel@lists.ath9k.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This overrides the "git describe" suffix for when the packaging is in git.
+On Thu, Jan 14, 2010 at 3:27 PM, Jaswinder Singh Rajput
+<jaswindermobile@gmail.com> wrote:
+> I run these tests on Wireless A/G.
+>
+> Can you please let me know what are the overheads for this performance
+> degradation.
 
----
- Makefile   |    4 ++++
- version.sh |   11 ++++++++++-
- 2 files changed, 14 insertions(+), 1 deletions(-)
+802.11 MAC, plus IP headers, etc.  E.g. in the MAC, a single packet
+transmission includes the DCF interfame space, physical layer headers,
+an exponential backoff term, plus the time for an ACK from the recipient.
 
-diff --git a/Makefile b/Makefile
-index 2c5fd9e..8d6c700 100644
---- a/Makefile
-+++ b/Makefile
-@@ -29,7 +29,11 @@ VERSION_OBJS := $(filter-out version.o, $(OBJS))
- version.c: version.sh $(patsubst %.o,%.c,$(VERSION_OBJS)) rfkill.h Makefile
-\
- 		$(wildcard .git/index .git/refs/tags)
- 	@$(NQ) ' GEN ' $@
-+ifeq (,$(VERSION_SUFFIX))
- 	$(Q)./version.sh $@
-+else
-+	$(Q)./version.sh --suffix "$(VERSION_SUFFIX)" $@
-+endif
- 
- %.o: %.c rfkill.h
- 	@$(NQ) ' CC  ' $@
-diff --git a/version.sh b/version.sh
-index 957684b..28b579a 100755
---- a/version.sh
-+++ b/version.sh
-@@ -1,9 +1,18 @@
- #!/bin/sh
- 
- VERSION="0.3"
-+
-+SUFFIX=
-+if test "x$1" = x--suffix; then
-+	shift
-+	SUFFIX="-$1"
-+	shift
-+fi
- OUT="$1"
- 
--if head=`git rev-parse --verify HEAD 2>/dev/null`; then
-+if test "x$SUFFIX" != 'x'; then
-+	v="$VERSION$SUFFIX"
-+elif head=`git rev-parse --verify HEAD 2>/dev/null`; then
- 	git update-index --refresh --unmerged > /dev/null
- 	descr=$(git describe 2>/dev/null || echo "v$VERSION")
- 
+You can get more exact info from the 802.11 spec, but it is something
+like (from memory) 34 us for DIFS, another 20 us or so for PLCP,
+between 0 and 135 us for backoff term, then 4 us per OFDM symbol,
+which for 1500 byte packet at 54 mbps works out to ~224 us.
+
+So, that's ~413 us to send 1500*8 bits, or an actual rate of 29 Mbps
+not counting the ACK.  It goes down from there with retransmissions
+and the rest.
+
 -- 
-1.6.5
+Bob Copeland %% www.bobcopeland.com
