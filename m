@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:33028 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754102Ab0A0G7t (ORCPT
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:64651 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757515Ab0ANXoo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2010 01:59:49 -0500
-To: Henning Rogge <henning.rogge@fkie.fraunhofer.de>
-Cc: David Miller <davem@davemloft.net>, kaber@trash.net,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Network QoS support in applications
-References: <87k4v5nuej.fsf@purkki.valot.fi>
-	<20100126.041610.226004766.davem@davemloft.net>
-	<87wrz5m3cd.fsf@purkki.valot.fi>
-	<201001261407.04947.henning.rogge@fkie.fraunhofer.de>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 27 Jan 2010 08:59:43 +0200
-In-Reply-To: <201001261407.04947.henning.rogge@fkie.fraunhofer.de> (Henning Rogge's message of "Tue\, 26 Jan 2010 14\:06\:59 +0100")
-Message-ID: <878wbkm3s0.fsf@purkki.valot.fi>
+	Thu, 14 Jan 2010 18:44:44 -0500
+Received: by pwj9 with SMTP id 9so453109pwj.21
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jan 2010 15:44:43 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b170af451001141513p6452cf52q6d97477a38e83f34@mail.gmail.com>
+References: <op.u6jn12l09lhzdc@linux-g0th.site> <43e72e891001141508ndec9aeak46412482b2486054@mail.gmail.com>
+	<b170af451001141513p6452cf52q6d97477a38e83f34@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 14 Jan 2010 15:44:23 -0800
+Message-ID: <43e72e891001141544n75de8362ke1756882ed1c2391@mail.gmail.com>
+Subject: Re: [PATCH 3/6] b43: N-PHY: add update TX cal ladder
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Henning Rogge <henning.rogge@fkie.fraunhofer.de> writes:
-
-> On Tue January 26 2010 13:56:50 Kalle Valo wrote:
->> So the idea is that the three left most bits (Class Selector
->> Codepoints from DiffServ RFC 2474) would contain these values from
->> IEEE 802.1d-2004 Annex G:
->> 
->> 0 best effort
->> 1 background
->> 2 (spare)
->> 3 excellent effort
->> 4 controlled load
->> 5 video
->> 6 voice
->> 7 network control
->> 
->> What do people think of this?
+2010/1/14 Rafał Miłecki <zajec5@gmail.com>:
+> W dniu 15 stycznia 2010 00:08 użytkownik Luis R. Rodriguez
+> <mcgrof@gmail.com> napisał:
+>> It'd be nice if your patches had a good description of what this is, I
+>> see most of these patches are one-liners with no description at all.
 >
-> The IETF is discussing about a traffic priority below "best effort"
-> for bulk traffic at the moment. Something you use to fill up links
-> if your can but drop it if you are not sure. So it might be a good
-> idea to make "best efford" not zero.
+> That's right, because I just implement function by function using
+> specs. I guess that's how implementing driver from RE specs look like.
+>
+> Maybe I could use descriptions instead of function names so we would get
+> calculate TX IQ LO
+> instead of
+> b43_nphy_cal_tx_iq_lo
+> but not sure if that makes much more sense.
+>
+> Do you have some better suggestion? I'm open for comments, changes :)
 
-I think 802.1d used zero for best effort to get it as the default. If
-no class is set, the field will be zero and best effort is used.
+I'm talking about the text on the commit log after the "Subject", the
+subject in this case being:
 
--- 
-Kalle Valo
+"b43: N-PHY: add update TX cal ladder"
+
+Doesn't the spec talk or even speculate to some degree what this thing is?
+
+  Luis
