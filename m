@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:9071 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753070Ab0AHSEp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jan 2010 13:04:45 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/4] iwlwifi: add IEEE80211_AMPDU_TX_OPERATIONAL
-Date: Fri,  8 Jan 2010 10:04:41 -0800
-Message-Id: <1262973884-2551-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1262973884-2551-1-git-send-email-reinette.chatre@intel.com>
-References: <1262973884-2551-1-git-send-email-reinette.chatre@intel.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:41803 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751411Ab0ANCSR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jan 2010 21:18:17 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: greg@kroah.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	mcgrof@gmail.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] firmware_class: remove base.h header inclusion
+Date: Wed, 13 Jan 2010 21:18:15 -0500
+Message-Id: <1263435495-10966-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+base.h is used by base drivers for sharing internal structures.
+Turns out firmware_class does not depend on it at all so remove it.
 
-mac80211 do not check the return code now, what if mac80211 does start
-using the return code? IEEE80211_AMPDU_TX_OPERATIONAL is a valid action,
-just iwlwifi driver do not need to take any action for it; so instead of
-return "-EINVAL", it is a good program practice to return "-EOPNOTSUPP"
-to make sure mac80211 will not get wrong impression.
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 771b03c..c780633 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2955,6 +2955,9 @@ static int iwl_mac_ampdu_action(struct ieee80211_hw *hw,
- 			return 0;
- 		else
- 			return ret;
-+	case IEEE80211_AMPDU_TX_OPERATIONAL:
-+		/* do nothing */
-+		return -EOPNOTSUPP;
- 	default:
- 		IWL_DEBUG_HT(priv, "unknown\n");
- 		return -EINVAL;
+Spotted this while backporting firmware_class in compat.git.
+Phew, firmware_class can be backported.
+
+ drivers/base/firmware_class.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+index a950241..8b1cfed 100644
+--- a/drivers/base/firmware_class.c
++++ b/drivers/base/firmware_class.c
+@@ -19,7 +19,6 @@
+ #include <linux/kthread.h>
+ #include <linux/highmem.h>
+ #include <linux/firmware.h>
+-#include "base.h"
+ 
+ #define to_dev(obj) container_of(obj, struct device, kobj)
+ 
 -- 
-1.5.6.3
+1.6.3.3
 
