@@ -1,45 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f173.google.com ([209.85.216.173]:46526 "EHLO
-	mail-px0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753099Ab0AMSLS (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:37762 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753960Ab0ANS1t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2010 13:11:18 -0500
-Received: by pxi3 with SMTP id 3so16717597pxi.16
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2010 10:11:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1263405850-10180-1-git-send-email-abhijeet.kolekar@intel.com>
-References: <1263405850-10180-1-git-send-email-abhijeet.kolekar@intel.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 13 Jan 2010 10:04:06 -0800
-Message-ID: <43e72e891001131004s1eab8bf2jdf94bdd4b2d59281@mail.gmail.com>
-Subject: Re: [PATCH v2] cfg80211: fix channel setting for wext
-To: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 14 Jan 2010 13:27:49 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3] cfg80211: Ingore country IEs with a zero set of number of channels
+Date: Thu, 14 Jan 2010 13:27:46 -0500
+Message-Id: <1263493666-16641-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 13, 2010 at 10:04 AM, Abhijeet Kolekar
-<abhijeet.kolekar@intel.com> wrote:
-> Patch fixes the bug at
-> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2139
->
-> Currently we cannot set the channel using wext extension
-> if we have already associated and disconnected. As
-> cfg80211_mgd_wext_siwfreq will not switch the channel if ssid is set.
-> This fixes it by clearing the ssid.
-> Following is the sequence which it tries to fix.
-> modprobe iwlagn
-> iwconfig wlan0 essid ""
-> ifconfig wlan0 down
-> iwconfig wlan0 chan X
->
-> wext is marked as deprecate.If we use nl80211 we can easily play with
-> setting the channel.
->
-> Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-> Acked-by: Samuel Ortiz <sameo@linux.intel.com>
+Previous to this and the last patch, titled,
 
-Is this a stable fix as well?
+"cfg80211: Fix 2 GHz subband calculation for country IEs"
 
-  Luis
+we would end up treating these IEs as single channel units. These are in
+fact just bogus IE triplets so ignore the entire IE if these are found.
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+
+v3 Removes an extra tab on the second hunk.. sorry about that.
+
+ net/wireless/reg.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index f0859ea..5b03ca7 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -585,6 +585,9 @@ static int max_subband_chan(int orig_cur_chan,
+ 			break;
+ 		}
+ 
++		if (triplet->chans.num_channels == 0)
++			return 0;
++
+ 		/* Monitonically increasing channel order */
+ 		if (triplet->chans.first_channel <= end_subband_chan)
+ 			return 0;
+@@ -737,6 +740,9 @@ static struct ieee80211_regdomain *country_ie_2_rd(
+ 			break;
+ 		}
+ 
++		if (triplet->chans.num_channels == 0)
++			return NULL;
++
+ 		/* 2 GHz */
+ 		if (triplet->chans.first_channel <= 14)
+ 			end_channel = triplet->chans.first_channel +
+-- 
+1.6.3.3
+
