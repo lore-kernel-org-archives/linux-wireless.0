@@ -1,31 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f42.google.com ([209.85.160.42]:43881 "EHLO
-	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751261Ab0AUTxb (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:36153 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754646Ab0ANXGR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 14:53:31 -0500
+	Thu, 14 Jan 2010 18:06:17 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH 1/2] b43: make finding the most significant bit common function
+Date: Fri, 15 Jan 2010 00:06:07 +0100
+Cc: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <op.u6iu91z39lhzdc@linux-g0th.site>
+In-Reply-To: <op.u6iu91z39lhzdc@linux-g0th.site>
 MIME-Version: 1.0
-In-Reply-To: <1264102368-8918-1-git-send-email-hauke@hauke-m.de>
-References: <43e72e891001211012y4f4c8721t7eb9e0eea0221820@mail.gmail.com>
-	<1264102368-8918-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 21 Jan 2010 11:53:11 -0800
-Message-ID: <43e72e891001211153u5e2e6618rbf3158286f0bd075@mail.gmail.com>
-Subject: Re: [PATCH] compat: fix build on arm
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	awozniak@irobot.com, mcgrof@infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <201001150006.08621.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 21, 2010 at 11:32 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> ARM does not provided the include file asm/compat.h. Use linux/compat.h
-> instead, it includes asm/compat.h if needed.
-> This patch is from OpenWRT:
-> https://dev.openwrt.org/browser/trunk/package/mac80211/patches/020-fix_compat_h.patch?rev=19063
->
+On Thursday 14 January 2010 13:21:27 Rafał Miłecki wrote:
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+>   drivers/net/wireless/b43/phy_common.c |   14 ++++++++++++++
+>   drivers/net/wireless/b43/phy_common.h |    1 +
+>   drivers/net/wireless/b43/phy_lp.c     |   17 ++---------------
+>   3 files changed, 17 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
+> index 75b26e1..1389ab2 100644
+> --- a/drivers/net/wireless/b43/phy_common.c
+> +++ b/drivers/net/wireless/b43/phy_common.c
+> @@ -421,3 +421,17 @@ void b43_phyop_switch_analog_generic(struct b43_wldev *dev, bool on)
+>   {
+>   	b43_write16(dev, B43_MMIO_PHY0, on ? 0 : 0xF4);
+>   }
+> +
+> +/* Find the position of the most significant bit */
+> +u8 phy_nbits(s32 val)
+> +{
+> +	u32 tmp = abs(val);
+> +	u8 nbits = 0;
+> +
+> +	while (tmp != 0) {
+> +		nbits++;
+> +		tmp >>= 1;
+> +	}
+> +
+> +	return nbits;
+> +}
 
-Thanks applied.
+We already have fls() in bitops.h
+I think the following call would be equivalent:
 
-  Luis
+x = fls(abs(val));
+
+So we don't need our own implementation in phy_common.c.
+Just use the standard funcs.
+
+-- 
+Greetings, Michael.
