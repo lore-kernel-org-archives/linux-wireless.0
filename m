@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:59451 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751429Ab0AGJv6 (ORCPT
+Received: from lider.pardus.org.tr ([193.140.100.216]:45572 "EHLO
+	lider.pardus.org.tr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756880Ab0ANREs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2010 04:51:58 -0500
-To: Justin Mattock <justinmattock@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [bisected] sys_paccept: disable paccept() causes my macbook pro to  have an annoying whining sound
-From: Andi Kleen <andi@firstfloor.org>
-References: <dd18b0c31001062216m316163f4t992c000eca0f76d@mail.gmail.com>
-Date: Thu, 07 Jan 2010 10:51:57 +0100
-In-Reply-To: <dd18b0c31001062216m316163f4t992c000eca0f76d@mail.gmail.com> (Justin Mattock's message of "Wed, 6 Jan 2010 22:16:27 -0800")
-Message-ID: <873a2ixmwy.fsf@basil.nowhere.org>
+	Thu, 14 Jan 2010 12:04:48 -0500
+Message-ID: <4B4F4EB1.7020300@pardus.org.tr>
+Date: Thu, 14 Jan 2010 19:04:49 +0200
+From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+CC: Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: Some remarks about compat-wireless KBuild system
+References: <4B4DFCA8.6020006@pardus.org.tr> <3ace41891001131903g38f4da27w6f469e6121eaf668@mail.gmail.com>
+In-Reply-To: <3ace41891001131903g38f4da27w6f469e6121eaf668@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Justin Mattock <justinmattock@gmail.com> writes:
+Hin-Tak Leung wrote:
+> On Wed, Jan 13, 2010 at 5:02 PM, Ozan Çağlayan <ozan@pardus.org.tr> wrote:
+>> Hi,
+>>
+>> Current compat-wireless build system has some inconveniences for distribution packaging:
+>>
+>>
+>> - In Makefile, KLIB is set to /lib/modules/$(uname -r) which avoids compiling the stack
+>> against a non-running kernel. In several other external kernel drivers this can be bypassed
+>> by giving KERNELRELEASE=something to "make" but it's not working for compat-wireless.
+> 
+> Did you not read README (or the instruction in the README not working
+> any more)?
+> 
+> compat-wireless can be used with a non-running kernel, and the
+> instruction is in the top-level README. (I contributed part of it, the
+> part on the non-running kernel which has just been distro-installed,
+> e.g. to build and install compat-wireless during a routine upgrade
+> which installs a new kernel but before a reboot to it).
 
-> for a while I've been hearing this odd
-> annoying sound coming from my macbook pro
-> when the system is idle(no internet use tv/radio/web etc...)
-> as soon as I do anything(radio,web) the noise disappears.
->
-> here is a  url where they are experiencing the same issue:
-> https://help.ubuntu.com/community/MacBook1-1/Hardy
-> (down under whining noise);
->
-> here is is the result of my bisect:
+Hi,
 
-It's very unlikely that this patch causes power management issues.
-I would suggest you double check the bisect.
+actually yes I've read it many times to not miss anything about packaging but I didn't see that part.
+The instructions are still correct and building against a non-running kernel and installing to a different
+directory works without problem.
 
--Andi
-
--- 
-ak@linux.intel.com -- Speaking for myself only.
+sorry for the inconvenience, thanks!
+Ozan Caglayan
