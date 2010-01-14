@@ -1,42 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:35343 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752011Ab0AWSce convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f194.google.com ([209.85.223.194]:56761 "EHLO
+	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757638Ab0ANU1V convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jan 2010 13:32:34 -0500
-Received: by yxe17 with SMTP id 17so1843387yxe.33
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2010 10:32:33 -0800 (PST)
+	Thu, 14 Jan 2010 15:27:21 -0500
+Received: by iwn32 with SMTP id 32so35810iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jan 2010 12:27:19 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20100123134005.GA11322@progeny.tock>
-References: <20100123105111.GA24790@progeny.tock>
-	 <fe54d8c01001230418u3de7f4ccuc4fbfdecc7c76ebf@mail.gmail.com>
-	 <20100123134005.GA11322@progeny.tock>
-Date: Sat, 23 Jan 2010 13:32:32 -0500
-Message-ID: <b6c5339f1001231032r155b380av93563a6febeeae2b@mail.gmail.com>
-Subject: Re: ath5k phy0: unsupported jumbo
-From: Bob Copeland <me@bobcopeland.com>
-To: Jonathan Nieder <jrnieder@gmail.com>
-Cc: Kacper <kacper@kacper.se>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <b6c5339f1001140815v5c6dfdc7j62f7d71623490216@mail.gmail.com>
+References: <995709e41001091103t43738262ibb2c4e0c4beab26d@mail.gmail.com>
+	 <995709e41001120217r1b6b276ek70658a1142744142@mail.gmail.com>
+	 <4B4C8320.8060801@free.fr>
+	 <995709e41001120724j7a6627b1g5d90df8fb658ceaa@mail.gmail.com>
+	 <43e72e891001120846x453e4052oa93675b86fe4a86d@mail.gmail.com>
+	 <995709e41001120914n17cfdb56k664c2b42afe448f6@mail.gmail.com>
+	 <43e72e891001120918v70c3be7nd3d3819f0e8b0cd0@mail.gmail.com>
+	 <995709e41001122307g2d0e9546g2b3680a6cb0a345d@mail.gmail.com>
+	 <b6c5339f1001140815v5c6dfdc7j62f7d71623490216@mail.gmail.com>
+Date: Fri, 15 Jan 2010 01:57:19 +0530
+Message-ID: <995709e41001141227n31cab7aeuae0e5a974fa1afdd@mail.gmail.com>
+Subject: Re: [ath9k-devel] [Moblin Dev] Wireless is keep on disconnecting
+From: Jaswinder Singh Rajput <jaswindermobile@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>, davem@davemloft.net
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	arjan@linux.intel.com, "Li, Yan" <yan.i.li@intel.com>,
+	dev@moblin.org, alainswb <alainswb@free.fr>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	ath9k-devel@lists.ath9k.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 23, 2010 at 8:40 AM, Jonathan Nieder <jrnieder@gmail.com> wrote:
-> So it looks like we receive some strange packets that haven’t been
-> explained yet.  It might be worth looking at a few --- sounds kind of
-> interesting.
+Hello bob,
+
+On Thu, Jan 14, 2010 at 9:45 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Wed, Jan 13, 2010 at 2:07 AM, Jaswinder Singh Rajput
+> <jaswindermobile@gmail.com> wrote:
+>> Here is my test with iperf, even though iperf client does not work so
+>> I used iperf server and get speed of approx 19 Mbits/sec. Now my issue
+>> is why speed is soo slow ?
 >
-> Am I understanding correctly?  This is a hardware bug or undocumented
-> hardware feature then, right?
->
-> It might be nice to add some user-oriented explanation too, but for
-> now, how about this comment?
+> Is your AP n-capable?  You won't get much above 20 Mbps TCP throughput
+> in 802.11a/g at 54 Mbits rates due to various overheads.
 >
 
-That's ok with me.  I'd also be fine with removing the log spam.  I think
-ultimately it represents some kind of driver issue, I'm just not sure what,
-exactly, yet.  I recently added more debugging to a kernel on a system of
-mine that produces it more often -- I'll see what it turns up.
+I run these tests on Wireless A/G.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Can you please let me know what are the overheads for this performance
+degradation.
+
+As I shown in my last message, I am getting 15 Mbps.
+
+Thanks,
+--
+JSR
