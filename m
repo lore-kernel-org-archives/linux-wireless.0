@@ -1,83 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:37030 "EHLO ds10.nbd.name"
+Received: from nbd.name ([88.198.39.176]:39730 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751264Ab0AOBfA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2010 20:35:00 -0500
-Message-ID: <4B4FC642.5010702@openwrt.org>
-Date: Fri, 15 Jan 2010 02:34:58 +0100
+	id S1751566Ab0AOB1Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jan 2010 20:27:25 -0500
+Message-ID: <4B4FC46B.6000705@openwrt.org>
+Date: Fri, 15 Jan 2010 02:27:07 +0100
 From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
 To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+CC: Johannes Berg <johannes@sipsolutions.net>,
 	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 3/3] ath9k: implement coverage class support
-References: <4B4FC46B.6000705@openwrt.org> <4B4FC5F4.9090506@openwrt.org>
-In-Reply-To: <4B4FC5F4.9090506@openwrt.org>
+Subject: [PATCH 1/3] mac80211: force use_short_slot=true for 5GHz
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Normally 5GHz does not have a concept of long vs short slot time,
+however the slot time that it ends up using is the same as for 2.4 GHZ
+and use_short_slot == true
+Because of that, it makes more sense to force use_short_slot = true
+whenever 5 GHz is being used, so that this particular check does not
+have to be in every single driver that uses this flag.
+
 Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1211,6 +1211,7 @@ void ath9k_hw_init_global_settings(struc
- {
- 	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
- 	int acktimeout;
-+	int slottime;
- 	int sifstime;
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -670,6 +670,8 @@ static u32 ieee80211_handle_bss_capabili
+ 	}
 
- 	ath_print(ath9k_hw_common(ah), ATH_DBG_RESET, "ah->misc_mode 0x%x\n",
-@@ -1225,8 +1226,10 @@ void ath9k_hw_init_global_settings(struc
- 	else
- 		sifstime = 10;
+ 	use_short_slot = !!(capab & WLAN_CAPABILITY_SHORT_SLOT_TIME);
++	if (sdata->local->hw.conf.channel->band == IEEE80211_BAND_5GHZ)
++		use_short_slot = true;
 
--	acktimeout = ah->slottime + sifstime;
--	ath9k_hw_setslottime(ah, ah->slottime);
-+	/* As defined by IEEE 802.11-2007 17.3.8.6 */
-+	slottime = ah->slottime + 3 * ah->coverage_class;
-+	acktimeout = slottime + sifstime;
-+	ath9k_hw_setslottime(ah, slottime);
- 	ath9k_hw_set_ack_timeout(ah, acktimeout);
- 	ath9k_hw_set_cts_timeout(ah, acktimeout);
- 	if (ah->globaltxtimeout != (u32) -1)
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -551,6 +551,7 @@ struct ath_hw {
- 	u32 *bank6Temp;
-
- 	int16_t txpower_indexoffset;
-+	int coverage_class;
- 	u32 beacon_interval;
- 	u32 slottime;
- 	u32 globaltxtimeout;
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2015,6 +2015,18 @@ static void ath9k_sw_scan_complete(struc
- 	mutex_unlock(&sc->mutex);
- }
-
-+static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8
-coverage_class)
-+{
-+	struct ath_wiphy *aphy = hw->priv;
-+	struct ath_softc *sc = aphy->sc;
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	mutex_lock(&sc->mutex);
-+	ah->coverage_class = coverage_class;
-+	ath9k_hw_init_global_settings(ah);
-+	mutex_unlock(&sc->mutex);
-+}
-+
- struct ieee80211_ops ath9k_ops = {
- 	.tx 		    = ath9k_tx,
- 	.start 		    = ath9k_start,
-@@ -2034,4 +2046,5 @@ struct ieee80211_ops ath9k_ops = {
- 	.sw_scan_start      = ath9k_sw_scan_start,
- 	.sw_scan_complete   = ath9k_sw_scan_complete,
- 	.rfkill_poll        = ath9k_rfkill_poll_state,
-+	.set_coverage_class = ath9k_set_coverage_class,
- };
-
+ 	if (use_protection != bss_conf->use_cts_prot) {
+ 		bss_conf->use_cts_prot = use_protection;
