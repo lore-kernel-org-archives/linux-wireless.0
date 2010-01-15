@@ -1,70 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f190.google.com ([209.85.222.190]:39058 "EHLO
-	mail-pz0-f190.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751932Ab0AVTx0 convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:58121 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753273Ab0AOT7Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 14:53:26 -0500
-Received: by pzk28 with SMTP id 28so325404pzk.4
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2010 11:53:25 -0800 (PST)
+	Fri, 15 Jan 2010 14:59:24 -0500
+Received: by bwz27 with SMTP id 27so913793bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jan 2010 11:59:23 -0800 (PST)
+Message-ID: <4B50C916.7090303@lwfinger.net>
+Date: Fri, 15 Jan 2010 13:59:18 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <4B59FC5E.1020802@redfish-solutions.com>
-References: <Pine.LNX.4.64.0912261245080.5112@cheetah.psv.nu>
-	<20091229020027.GE30201@bombadil.infradead.org> <4B59FC5E.1020802@redfish-solutions.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 22 Jan 2010 11:53:05 -0800
-Message-ID: <43e72e891001221153w5c4c4bc6g63883b5012d384b7@mail.gmail.com>
-Subject: Re: Compat-wireless bleeding-edge daily builds broken since
-	2009-12-11
-To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	Peter Svensson <petersv@psv.nu>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Jochen Friedrich <jochen@scram.de>,
+	Daniel Schmitt <daniel@schmitt-united.de>
+CC: OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: PHY Transmission error and radio turned off with b43legacy
+References: <51ab59276e22ee681f29560ebac67004.squirrel@unimail.uni-dortmund.de> <4B505B94.3020509@scram.de>
+In-Reply-To: <4B505B94.3020509@scram.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 22, 2010 at 11:28 AM, Philip A. Prindeville
-<philipp_subx@redfish-solutions.com> wrote:
-> On 12/28/2009 06:00 PM, Luis R. Rodriguez wrote:
->> On Sat, Dec 26, 2009 at 12:50:23PM +0100, Peter Svensson wrote:
->>
->>> Hi,
->>>
->>> The bleeding edge nightly snapshopts in
->>>   http://wireless.kernel.org/download/compat-wireless-2.6/
->>> are not updated since the compat-bluetooth were introduced (I think) on
->>> 2009-12-11.
->>>
->>> When built from the git sources the driver works very nicely, and much
->>> more stable than the last drop on 2009-12-11.
->>>
->> This will be fixed soon, just need to re-instate access to the box.
->>
->>   Luis
->>
->
->
-> Is this the issue I'm seeing?  Has it been fixed yet?
+On 01/15/2010 06:12 AM, Jochen Friedrich wrote:
+> Daniel Schmitt wrote:
+> 
+>> hostapd doesn't continue to work after controller is restarted.
+>> I also have the problem that the wlan0-interface shall not be upped with
+>> "ifconfig wlan0 0.0.0.0 up" before starting hostapd, otherwise no beacons
+>> will be send. The interface must be down before starting hostapd.
+>> If I terminate a not daemonized hostapd with CTRL+C and restart if
+>> without
+>> rmmod+modprobe b43legacy, no beacons are sent, too. And I cannot connect
+>> the AP.
+>> This happens with the bleeding-edge wireless drivers 2009-11-13.
+> 
+> I noticed the same on MN700 hardware running OpenWrt bleeding edge. The
+> init scripts enable and disable wlan0 once before starting hostapd.
+> Here, beacons are still being sent, but hostapd is unable to transmit
+> any packet. When reloading b43legacy and starting hostapd manually it
+> works, but only once.
+> 
+> The attached patch resolves the problem for me.
 
-Well so I now have access to the box but the box got a face lift and
-during that time I didn't want to clone linux-next on it. While all
-that happened in the background I just started making bleeding edge
-compat-wireless releases on orbit-lab.org along with updating the
-symlink to point to the latest dated release.
+Daniel: Does this patch fix your problem as well?
 
-wireless.kernel.org upgrade has now completed but I think I prefer to
-continue doing the bleeding edge compat-wireless updates on
-orbit-lab.org as I have full access there and can soon start doing
-compile tests for each kernel as I have unlimited disk space (or so I
-like to believe). I see it useful to still have the bleeding edge
-tarball on wireless.kernel.org though due to the URL name, etc, but I
-can just scp it over. I haven't gotten to that yet.
+Has this problem been reported in the kernel bugzilla? If so, what is the number?
 
-For now use:
+How far back does this problem go? From the date of your compat-wireless
+package, it seems that 2.6.32 would be affected. How about 2.6.31?
 
-http://www.orbit-lab.org/kernel/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
+I have tested the patch on my system where it does no harm. I do not run that
+system as an AP and had not seen the problem.
 
-for bleeding edge
+As soon as I have the answers to these questions, I will push the patch to
+wireless testing.
 
-Seems my cronjobs aren't kicking off yet, will debug that today too.
+Thanks for resolving this issue.
 
-  Luis
+Larry
