@@ -1,189 +1,280 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:62654 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932151Ab0ANWnQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2010 17:43:16 -0500
-Received: by mail-fx0-f225.google.com with SMTP id 25so56513fxm.21
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jan 2010 14:43:15 -0800 (PST)
-Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 14 Jan 2010 23:43:14 +0100
-Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Subject: [PATCH 4/6] b43: N-PHY: TX power control coeff setup
-MIME-Version: 1.0
-From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <op.u6jn2cb19lhzdc@linux-g0th.site>
+Received: from mga11.intel.com ([192.55.52.93]:62939 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932139Ab0AOVnw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jan 2010 16:43:52 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 7/9] iwlwifi: display flowhandler register when sw error or on-demand
+Date: Fri, 15 Jan 2010 13:43:39 -0800
+Message-Id: <1263591821-14867-8-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1263591821-14867-1-git-send-email-reinette.chatre@intel.com>
+References: <1263591821-14867-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Flowhandler handle the communication between driver and uCode, when any
+uCode error happen, we also like to know what is the status of the
+flowhandler; it can help to debug flowhandler related problem.
+
+Also adding debugfs file to dump current value of flowhandler registers.
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
-  drivers/net/wireless/b43/b43.h         |    3 +
-  drivers/net/wireless/b43/phy_n.c       |   68 +++++++++++++++++++++++++++++++-
-  drivers/net/wireless/b43/tables_nphy.c |   35 ++++++++++++++++
-  drivers/net/wireless/b43/tables_nphy.h |    1 +
-  4 files changed, 106 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-1000.c    |    1 +
+ drivers/net/wireless/iwlwifi/iwl-5000.c    |    1 +
+ drivers/net/wireless/iwlwifi/iwl-6000.c    |    1 +
+ drivers/net/wireless/iwlwifi/iwl-core.c    |   65 ++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h    |    2 +
+ drivers/net/wireless/iwlwifi/iwl-debug.h   |    1 +
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |   24 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-fh.h      |   19 ++++++++
+ 8 files changed, 114 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index d5c67a6..964ddd4 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -260,6 +260,9 @@ enum {
-  #define B43_SHM_SH_NPHY_TXIQW1		0x0702
-  #define B43_SHM_SH_NPHY_TXIQW2		0x0704
-  #define B43_SHM_SH_NPHY_TXIQW3		0x0706
-+/* SHM_SHARED tx pwr ctrl */
-+#define B43_SHM_SH_NPHY_TXPWR_INDX0	0x0708
-+#define B43_SHM_SH_NPHY_TXPWR_INDX1	0x070E
-
-  /* SHM_SCRATCH offsets */
-  #define B43_SHM_SC_MINCONT		0x0003	/* Minimum contention window */
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 67717c1..d5a2dc8 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -709,6 +709,72 @@ static void b43_nphy_update_tx_cal_ladder(struct b43_wldev *dev, u16 core)
-  	}
-  }
-
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/TxPwrCtrlCoefSetup */
-+static void b43_nphy_tx_pwr_ctrl_coef_setup(struct b43_wldev *dev)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 0db1fda..506429f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -106,6 +106,7 @@ static struct iwl_lib_ops iwl1000_lib = {
+ 	.dump_nic_event_log = iwl_dump_nic_event_log,
+ 	.dump_nic_error_log = iwl_dump_nic_error_log,
+ 	.dump_csr = iwl_dump_csr,
++	.dump_fh = iwl_dump_fh,
+ 	.init_alive_start = iwl5000_init_alive_start,
+ 	.alive_notify = iwl5000_alive_notify,
+ 	.send_tx_power = iwl5000_send_tx_power,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index c3f8ec0..14ef211 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -1467,6 +1467,7 @@ struct iwl_lib_ops iwl5000_lib = {
+ 	.dump_nic_event_log = iwl_dump_nic_event_log,
+ 	.dump_nic_error_log = iwl_dump_nic_error_log,
+ 	.dump_csr = iwl_dump_csr,
++	.dump_fh = iwl_dump_fh,
+ 	.load_ucode = iwl5000_load_ucode,
+ 	.init_alive_start = iwl5000_init_alive_start,
+ 	.alive_notify = iwl5000_alive_notify,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index a5a0ed4..c5f244f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -216,6 +216,7 @@ static struct iwl_lib_ops iwl6000_lib = {
+ 	.dump_nic_event_log = iwl_dump_nic_event_log,
+ 	.dump_nic_error_log = iwl_dump_nic_error_log,
+ 	.dump_csr = iwl_dump_csr,
++	.dump_fh = iwl_dump_fh,
+ 	.init_alive_start = iwl5000_init_alive_start,
+ 	.alive_notify = iwl5000_alive_notify,
+ 	.send_tx_power = iwl5000_send_tx_power,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 2323073..21bbd00 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1353,6 +1353,8 @@ void iwl_irq_handle_error(struct iwl_priv *priv)
+ 	priv->cfg->ops->lib->dump_nic_error_log(priv);
+ 	if (priv->cfg->ops->lib->dump_csr)
+ 		priv->cfg->ops->lib->dump_csr(priv);
++	if (priv->cfg->ops->lib->dump_fh)
++		priv->cfg->ops->lib->dump_fh(priv, NULL, false);
+ 	priv->cfg->ops->lib->dump_nic_event_log(priv, false, NULL, false);
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 	if (iwl_get_debug_level(priv) & IWL_DL_FW_ERRORS)
+@@ -3273,6 +3275,69 @@ void iwl_dump_csr(struct iwl_priv *priv)
+ }
+ EXPORT_SYMBOL(iwl_dump_csr);
+ 
++const static char *get_fh_string(int cmd)
 +{
-+	struct b43_phy_n *nphy = dev->phy.n;
-+	int i, j;
-+	u32 tmp;
-+	u32 cur_real, cur_imag, real_part, imag_part;
++	switch (cmd) {
++		IWL_CMD(FH_RSCSR_CHNL0_STTS_WPTR_REG);
++		IWL_CMD(FH_RSCSR_CHNL0_RBDCB_BASE_REG);
++		IWL_CMD(FH_RSCSR_CHNL0_WPTR);
++		IWL_CMD(FH_MEM_RCSR_CHNL0_CONFIG_REG);
++		IWL_CMD(FH_MEM_RSSR_SHARED_CTRL_REG);
++		IWL_CMD(FH_MEM_RSSR_RX_STATUS_REG);
++		IWL_CMD(FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV);
++		IWL_CMD(FH_TSSR_TX_STATUS_REG);
++		IWL_CMD(FH_TSSR_TX_ERROR_REG);
++	default:
++		return "UNKNOWN";
 +
-+	u16 buffer[7];
-+
-+	if (nphy->hang_avoid)
-+		b43_nphy_stay_in_carrier_search(dev, true);
-+
-+	//TODO: Read an N PHY Table with ID 15, length 7, offset 80, width 16, and data pointer buffer
-+	
-+	for (i = 0; i < 2; i++) {
-+		tmp = ((buffer[i * 2] & 0x3FF) << 10) |
-+			(buffer[i * 2 + 1] & 0x3FF);
-+		b43_phy_write(dev, B43_NPHY_TABLE_ADDR,
-+				(((i + 26) << 10) | 320));
-+		for (j = 0; j < 128; j++) {
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATAHI,
-+					((tmp >> 16) & 0xFFFF));
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATALO,
-+					(tmp & 0xFFFF));
-+		}
 +	}
-+
-+	for (i = 0; i < 2; i++) {
-+		tmp = buffer[5 + i];
-+		real_part = (tmp >> 8) & 0xFF;
-+		imag_part = (tmp & 0xFF);
-+		b43_phy_write(dev, B43_NPHY_TABLE_ADDR,
-+				(((i + 26) << 10) | 448));
-+
-+		if (dev->phy.rev >= 3) {
-+			cur_real = real_part;
-+			cur_imag = imag_part;
-+			tmp = ((cur_real & 0xFF) << 8) | (cur_imag & 0xFF);
-+		}
-+
-+		for (j = 0; j < 128; j++) {
-+			if (dev->phy.rev < 3) {
-+				cur_real = (real_part * loscale[j] + 128) >> 8;
-+				cur_imag = (imag_part * loscale[j] + 128) >> 8;
-+				tmp = ((cur_real & 0xFF) << 8) |
-+					(cur_imag & 0xFF);
-+			}
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATAHI,
-+					((tmp >> 16) & 0xFFFF));
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATALO,
-+					(tmp & 0xFFFF));
-+		}
-+	}
-+
-+	if (dev->phy.rev >= 3) {
-+		b43_shm_write16(dev, B43_SHM_SHARED,
-+				B43_SHM_SH_NPHY_TXPWR_INDX0, 0xFFFF);
-+		b43_shm_write16(dev, B43_SHM_SHARED,
-+				B43_SHM_SH_NPHY_TXPWR_INDX1, 0xFFFF);
-+	}
-+
-+	if (nphy->hang_avoid)
-+		b43_nphy_stay_in_carrier_search(dev, false);
 +}
 +
-  /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/CalRxIqRev2 */
-  static int b43_nphy_rev2_cal_rx_iq(struct b43_wldev *dev,
-  			struct nphy_txgains target, u8 type, bool debug)
-@@ -1787,7 +1853,7 @@ int b43_phy_initn(struct b43_wldev *dev)
-  		}
-  	}
-
--	//TODO N PHY TX Power Control Coef Setup
-+	b43_nphy_tx_pwr_ctrl_coef_setup(dev);
-  	//TODO N PHY TX Power Control Enable with argument tx_pwr_state
-  	b43_phy_write(dev, B43_NPHY_TXMACIF_HOLDOFF, 0x0015);
-  	b43_phy_write(dev, B43_NPHY_TXMACDELAY, 0x0320);
-diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
-index 4816b70..d9291cf 100644
---- a/drivers/net/wireless/b43/tables_nphy.c
-+++ b/drivers/net/wireless/b43/tables_nphy.c
-@@ -2788,6 +2788,41 @@ const struct nphy_txiqcal_ladder ladder_iq[] = {
-  	{ 100, 7 }
-  };
-
-+const u16 loscale[] = {
-+	256, 256, 271, 271,
-+	287, 256, 256, 271,
-+	271, 287, 287, 304,
-+	304, 256, 256, 271,
-+	271, 287, 287, 304,
-+	304, 322, 322, 341,
-+	341, 362, 362, 383,
-+	383, 256, 256, 271,
-+	271, 287, 287, 304,
-+	304, 322, 322, 256,
-+	256, 271, 271, 287,
-+	287, 304, 304, 322,
-+	322, 341, 341, 362,
-+	362, 256, 256, 271,
-+	271, 287, 287, 304,
-+	304, 322, 322, 256,
-+	256, 271, 271, 287,
-+	287, 304, 304, 322,
-+	322, 341, 341, 362,
-+	362, 256, 256, 271,
-+	271, 287, 287, 304,
-+	304, 322, 322, 341,
-+	341, 362, 362, 383,
-+	383, 406, 406, 430,
-+	430, 455, 455, 482,
-+	482, 511, 511, 541,
-+	541, 573, 573, 607,
-+	607, 643, 643, 681,
-+	681, 722, 722, 764,
-+	764, 810, 810, 858,
-+	858, 908, 908, 962,
-+	962, 1019, 1019, 256
-+};
++int iwl_dump_fh(struct iwl_priv *priv, char **buf, bool display)
++{
++	int i;
++#ifdef CONFIG_IWLWIFI_DEBUG
++	int pos = 0;
++	size_t bufsz = 0;
++#endif
++	u32 fh_tbl[] = {
++		FH_RSCSR_CHNL0_STTS_WPTR_REG,
++		FH_RSCSR_CHNL0_RBDCB_BASE_REG,
++		FH_RSCSR_CHNL0_WPTR,
++		FH_MEM_RCSR_CHNL0_CONFIG_REG,
++		FH_MEM_RSSR_SHARED_CTRL_REG,
++		FH_MEM_RSSR_RX_STATUS_REG,
++		FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV,
++		FH_TSSR_TX_STATUS_REG,
++		FH_TSSR_TX_ERROR_REG
++	};
++#ifdef CONFIG_IWLWIFI_DEBUG
++	if (display) {
++		bufsz = ARRAY_SIZE(fh_tbl) * 48 + 40;
++		*buf = kmalloc(bufsz, GFP_KERNEL);
++		if (!*buf)
++			return -ENOMEM;
++		pos += scnprintf(*buf + pos, bufsz - pos,
++				"FH register values:\n");
++		for (i = 0; i < ARRAY_SIZE(fh_tbl); i++) {
++			pos += scnprintf(*buf + pos, bufsz - pos,
++				"  %34s: 0X%08x\n",
++				get_fh_string(fh_tbl[i]),
++				iwl_read_direct32(priv, fh_tbl[i]));
++		}
++		return pos;
++	}
++#endif
++	IWL_ERR(priv, "FH register values:\n");
++	for (i = 0; i <  ARRAY_SIZE(fh_tbl); i++) {
++		IWL_ERR(priv, "  %34s: 0X%08x\n",
++			get_fh_string(fh_tbl[i]),
++			iwl_read_direct32(priv, fh_tbl[i]));
++	}
++	return 0;
++}
++EXPORT_SYMBOL(iwl_dump_fh);
 +
-  static inline void assert_ntab_array_sizes(void)
-  {
-  #undef check
-diff --git a/drivers/net/wireless/b43/tables_nphy.h b/drivers/net/wireless/b43/tables_nphy.h
-index b5e0e4b..4a3d666 100644
---- a/drivers/net/wireless/b43/tables_nphy.h
-+++ b/drivers/net/wireless/b43/tables_nphy.h
-@@ -148,5 +148,6 @@ extern const u32 txpwrctrl_tx_gain_ipa_5g[];
-  extern const u16 tbl_iqcal_gainparams[2][9][8];
-  extern const struct nphy_txiqcal_ladder ladder_lo[];
-  extern const struct nphy_txiqcal_ladder ladder_iq[];
-+extern const u16 loscale[];
-
-  #endif /* B43_TABLES_NPHY_H_ */
+ #ifdef CONFIG_PM
+ 
+ int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 8deb83b..666b0e0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -171,6 +171,7 @@ struct iwl_lib_ops {
+ 				  bool full_log, char **buf, bool display);
+ 	void (*dump_nic_error_log)(struct iwl_priv *priv);
+ 	void (*dump_csr)(struct iwl_priv *priv);
++	int (*dump_fh)(struct iwl_priv *priv, char **buf, bool display);
+ 	int (*set_channel_switch)(struct iwl_priv *priv, u16 channel);
+ 	/* power management */
+ 	struct iwl_apm_ops apm_ops;
+@@ -582,6 +583,7 @@ void iwl_dump_nic_error_log(struct iwl_priv *priv);
+ int iwl_dump_nic_event_log(struct iwl_priv *priv,
+ 			   bool full_log, char **buf, bool display);
+ void iwl_dump_csr(struct iwl_priv *priv);
++int iwl_dump_fh(struct iwl_priv *priv, char **buf, bool display);
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ void iwl_print_rx_config_cmd(struct iwl_priv *priv);
+ #else
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index 58e0462..1d1e655 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -111,6 +111,7 @@ struct iwl_debugfs {
+ 		struct dentry *file_clear_traffic_statistics;
+ 		struct dentry *file_csr;
+ 		struct dentry *file_ucode_tracing;
++		struct dentry *file_fh_reg;
+ 	} dbgfs_debug_files;
+ 	u32 sram_offset;
+ 	u32 sram_len;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index a7ca06d..a3d461f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -2151,6 +2151,27 @@ static ssize_t iwl_dbgfs_ucode_tracing_write(struct file *file,
+ 	return count;
+ }
+ 
++static ssize_t iwl_dbgfs_fh_reg_read(struct file *file,
++					 char __user *user_buf,
++					 size_t count, loff_t *ppos)
++{
++	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
++	char *buf;
++	int pos = 0;
++	ssize_t ret = -EFAULT;
++
++	if (priv->cfg->ops->lib->dump_fh) {
++		ret = pos = priv->cfg->ops->lib->dump_fh(priv, &buf, true);
++		if (buf) {
++			ret = simple_read_from_buffer(user_buf,
++						      count, ppos, buf, pos);
++			kfree(buf);
++		}
++	}
++
++	return ret;
++}
++
+ DEBUGFS_READ_FILE_OPS(rx_statistics);
+ DEBUGFS_READ_FILE_OPS(tx_statistics);
+ DEBUGFS_READ_WRITE_FILE_OPS(traffic_log);
+@@ -2167,6 +2188,7 @@ DEBUGFS_WRITE_FILE_OPS(clear_ucode_statistics);
+ DEBUGFS_WRITE_FILE_OPS(clear_traffic_statistics);
+ DEBUGFS_WRITE_FILE_OPS(csr);
+ DEBUGFS_READ_WRITE_FILE_OPS(ucode_tracing);
++DEBUGFS_READ_FILE_OPS(fh_reg);
+ 
+ /*
+  * Create the debugfs files and directories
+@@ -2218,6 +2240,7 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
+ 	DEBUGFS_ADD_FILE(clear_ucode_statistics, debug, S_IWUSR);
+ 	DEBUGFS_ADD_FILE(clear_traffic_statistics, debug, S_IWUSR);
+ 	DEBUGFS_ADD_FILE(csr, debug, S_IWUSR);
++	DEBUGFS_ADD_FILE(fh_reg, debug, S_IRUSR);
+ 	if ((priv->hw_rev & CSR_HW_REV_TYPE_MSK) != CSR_HW_REV_TYPE_3945) {
+ 		DEBUGFS_ADD_FILE(ucode_rx_stats, debug, S_IRUSR);
+ 		DEBUGFS_ADD_FILE(ucode_tx_stats, debug, S_IRUSR);
+@@ -2277,6 +2300,7 @@ void iwl_dbgfs_unregister(struct iwl_priv *priv)
+ 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_debug_files.
+ 			file_clear_traffic_statistics);
+ 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_debug_files.file_csr);
++	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_debug_files.file_fh_reg);
+ 	if ((priv->hw_rev & CSR_HW_REV_TYPE_MSK) != CSR_HW_REV_TYPE_3945) {
+ 		DEBUGFS_REMOVE(priv->dbgfs->dbgfs_debug_files.
+ 			file_ucode_rx_stats);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
+index 65fa8a6..1342cf4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fh.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
+@@ -379,6 +379,25 @@
+ 
+ #define FH_TSSR_TX_STATUS_REG		(FH_TSSR_LOWER_BOUND + 0x010)
+ 
++/**
++ * Bit fields for TSSR(Tx Shared Status & Control) error status register:
++ * 31:  Indicates an address error when accessed to internal memory
++ *	uCode/driver must write "1" in order to clear this flag
++ * 30:  Indicates that Host did not send the expected number of dwords to FH
++ *	uCode/driver must write "1" in order to clear this flag
++ * 16-9:Each status bit is for one channel. Indicates that an (Error) ActDMA
++ *	command was received from the scheduler while the TRB was already full
++ *	with previous command
++ *	uCode/driver must write "1" in order to clear this flag
++ * 7-0: Each status bit indicates a channel's TxCredit error. When an error
++ *	bit is set, it indicates that the FH has received a full indication
++ *	from the RTC TxFIFO and the current value of the TxCredit counter was
++ *	not equal to zero. This mean that the credit mechanism was not
++ *	synchronized to the TxFIFO status
++ *	uCode/driver must write "1" in order to clear this flag
++ */
++#define FH_TSSR_TX_ERROR_REG		(FH_TSSR_LOWER_BOUND + 0x018)
++
+ #define FH_TSSR_TX_STATUS_REG_BIT_BUFS_EMPTY(_chnl) ((1 << (_chnl)) << 24)
+ #define FH_TSSR_TX_STATUS_REG_BIT_NO_PEND_REQ(_chnl) ((1 << (_chnl)) << 16)
+ 
 -- 
-1.6.4.2
+1.6.3.3
 
