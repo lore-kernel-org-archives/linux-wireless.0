@@ -1,49 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns01.unsolicited.net ([69.10.132.115]:2838 "EHLO
-	ns01.unsolicited.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330Ab0AAOvM (ORCPT
+Received: from mail-px0-f182.google.com ([209.85.216.182]:47494 "EHLO
+	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757976Ab0AOVly (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2010 09:51:12 -0500
-Message-ID: <4B3E0B9D.6080104@unsolicited.net>
-Date: Fri, 01 Jan 2010 14:50:05 +0000
-From: David <david@unsolicited.net>
+	Fri, 15 Jan 2010 16:41:54 -0500
+Received: by pxi12 with SMTP id 12so1160826pxi.33
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jan 2010 13:41:54 -0800 (PST)
 MIME-Version: 1.0
-To: Maciej Rutecki <maciej.rutecki@gmail.com>
-CC: linux-kernel@vger.kernel.org,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: 2.6.33-rc1 - Weird hard hangs when rendering 'some' web-sites
- in 	Firefox
-References: <4B2FEE46.5030700@unsolicited.net>	 <8db1092f1001010540l15c8f671y1f6a4a4417eb450b@mail.gmail.com>	 <4B3E0061.4000003@unsolicited.net> <8db1092f1001010619j66f8b494g86efdd8ddcc3e5e7@mail.gmail.com>
-In-Reply-To: <8db1092f1001010619j66f8b494g86efdd8ddcc3e5e7@mail.gmail.com>
+In-Reply-To: <fd145f7d1001151338y53c9d9a5h63b05d4ebf94b242@mail.gmail.com>
+References: <fd145f7d1001151322y6e0b2a74hb4c9971db8fe435c@mail.gmail.com>
+	<fd145f7d1001151338y53c9d9a5h63b05d4ebf94b242@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 15 Jan 2010 13:41:34 -0800
+Message-ID: <43e72e891001151341j2702fdc3s4ddd13ff6128b2b7@mail.gmail.com>
+Subject: Re: compat-wireless 2010-01-13 fails to build
+To: Jeffrey Baker <jwbaker@gmail.com>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maciej Rutecki wrote:
-> 2010/1/1 David <david@unsolicited.net>:
+On Fri, Jan 15, 2010 at 1:38 PM, Jeffrey Baker <jwbaker@gmail.com> wrote:
+> On Fri, Jan 15, 2010 at 1:22 PM, Jeffrey Baker <jwbaker@gmail.com> wrote:
+>> /root/compat-wireless-2010-01-13/net/wireless/nl80211.c:17:50: error:
+>> missing ')' in expression
 >
->   
->> Mine is a wired connection, so it seems unconnected with that. I've
->> replaced the motherboard here and have had no further problems. There is
->> now a configuration difference though as I've had to disable radeon kms
->> (with radeon.modeset=0) for the new on-board graphics.
->>
->> My guess is that this is radeon related, and I'm going to set-up the old
->> motherboard in a spare case & see what I can work out.
->>
->>     
->
-> I'm not sure. I don't use radeon hardware, only Intel:
-> cat /boot/config-2.6.33-rc2 | grep -i radeon
-> # CONFIG_DRM_RADEON is not set
-> # CONFIG_FB_RADEON is not set
->
-> cat /boot/config-2.6.33-rc2 | grep -i kms
-> CONFIG_DRM_KMS_HELPER=m
-> # CONFIG_DRM_I915_KMS is not set
->
->   
-The mystery deepens :-) Maybe these are separate issues?
+> 2010-01-06, on the other hand, builds fine.
+> --
 
-David
+Try today's release, I just kicked one out.
 
+  Luis
