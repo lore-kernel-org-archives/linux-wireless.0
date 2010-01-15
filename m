@@ -1,49 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.211.176]:55489 "EHLO
-	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932131Ab0AYVNq convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f171.google.com ([209.85.222.171]:47617 "EHLO
+	mail-pz0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758191Ab0AOWrV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 16:13:46 -0500
-Received: by ywh6 with SMTP id 6so3486584ywh.4
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2010 13:13:42 -0800 (PST)
+	Fri, 15 Jan 2010 17:47:21 -0500
+Received: by pzk1 with SMTP id 1so1325117pzk.33
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jan 2010 14:47:20 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <69e28c911001251121i61be9c0bhed43648a12db42f6@mail.gmail.com>
-References: <4B5CD1FF.4090209@twilightblue.net>
-	 <b6c5339f1001250939r6d136927q51bba86f7102d826@mail.gmail.com>
-	 <4B5DE859.6080409@lwfinger.net>
-	 <69e28c911001251121i61be9c0bhed43648a12db42f6@mail.gmail.com>
-Date: Mon, 25 Jan 2010 16:13:41 -0500
-Message-ID: <b6c5339f1001251313u369c571dq5cee9ffa65fcf457@mail.gmail.com>
-Subject: Re: Bug: 2.6.32 ath5k, associating with WEP128 AP is unreliable
-From: Bob Copeland <me@bobcopeland.com>
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Don Darling <darling.don@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <201001152340.40127.mb@bu3sch.de>
+References: <201001101152.34316.mb@bu3sch.de> <201001112336.50125.mb@bu3sch.de>
+	<201001152330.00470.mb@bu3sch.de> <201001152340.40127.mb@bu3sch.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 15 Jan 2010 14:47:00 -0800
+Message-ID: <43e72e891001151447u39ad494ah6861926db0c50907@mail.gmail.com>
+Subject: Re: Ath5k on 2.6.32 suddenly fails
+To: Michael Buesch <mb@bu3sch.de>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Bob Copeland <me@bobcopeland.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/1/25 G�bor Stefanik <netrolller.3d@gmail.com>:
-> On Mon, Jan 25, 2010 at 7:52 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->> For the record, WEP104 and WEP128 are the same thing. The smaller number
->> makes it explicit that the 24-bit IV is transmitted in the open. The same
->> thing applies to WEP40 and WEP64.
+On Fri, Jan 15, 2010 at 2:40 PM, Michael Buesch <mb@bu3sch.de> wrote:
+> On Friday 15 January 2010 23:29:59 Michael Buesch wrote:
+>> On Monday 11 January 2010 23:36:49 Michael Buesch wrote:
+>> > I currently have one and a half days of uptime. I think I'll first
+>> > continue running .32 to check whether it happens again or if this was just
+>> > some random hardware burp.
+>> > I think it should be likely to trigger again within one or two days, if this is a bug.
+>>
+>> mb@quimby:~$ uptime
+>>  23:23:34 up 5 days, 11:49,  1 user,  load average: 0.00, 0.00, 0.00
+>>
+>> So, it didn't trigger, yet.
+>> I think I will assume for now that we had a hardware burp and this
+>> is not caused by a software bug. The AP is used a lot and it currently
+>> is rock-stable on 2.6.32.
+>>
+>> The card is a minipci connected through a minipci->pci converter card.
+>> I know that the converter does not have high quality contact pins, so I
+>> currently blame the converter card for flipping a bit.
+>> I think I'll replace it by something better soon.
+>>
+>> So let's close this, unless I come back to you guys with new results.
 >>
 >
-> Only one problem there is another, nonstandard WEP type where the
-> actual key is 128-bit, and this is also sometimes referred to as
-> WEP128 (with the same metric as WEP64, this one would be WEP152). Same
-> goes for "WEP228/WEP256/WEP280".
+> Argh, so exactly one minute after sending this mail the AP died. -.-
+>
+> There also are a bunch of jumbo messages in dmesg, but they are probably unrelated:
+>
+> [177589.693544] ath5k phy0: unsupported jumbo
+> [264620.683114] ath5k phy0: unsupported jumbo
+> [276726.009197] ath5k phy0: unsupported jumbo
+> [348619.483527] ath5k phy0: unsupported jumbo
+> [349918.090802] ath5k phy0: unsupported jumbo
+> [438574.817309] ath5k phy0: unsupported jumbo
+> [457967.099642] ath5k phy0: unsupported jumbo
 
-Yea, I think ath hw supports that too:
+So these would be seen when hardware detects a frame was received on
+which and the payload is larger than what we programmed hardware for
+DMA for.
 
-#define AR5K_KEYTABLE_TYPE_40		0x00000000
-#define AR5K_KEYTABLE_TYPE_104		0x00000001
-#define AR5K_KEYTABLE_TYPE_128		0x00000003
+I wonder if a possible failure here might be that the box gets under
+load and some DMA allocation actually gives back less memory than what
+was requested., hrm, but even then we'd still tell hardware it has the
+whole desired length we intended...
 
-at least that's what I assumed it meant.  But there's no way to set it
-from mac80211 (nor should there be).
+Not sure... I haven't reviewed this code in ages.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+> However, it had different failure symptoms this time.
+> Last time it failed, the AP was completely dead. No beacons, etc..
+> This time it was still beaconing, but auth failed:
+
+Can you reproduce? Do you know if anything particular happened at this time?
+
+> Trying to associate with 00:1d:0f:b9:df:2d (SSID='quimby-net' freq=2472 MHz)
+> Authentication with 00:1d:0f:b9:df:2d timed out.
+>
+> A machine reboot was _not_ needed this time to revive the card.
+> Module unload cycle was enough to bring it back to life.
+>
+> I'm really unsure what's going on and if these two failures are related
+> to each other. Probably not...
+
+Anyway you can burp your box sooner (replace the PCI connector) to
+rule that out?
+
+  Luis
