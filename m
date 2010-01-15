@@ -1,37 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f171.google.com ([209.85.222.171]:38206 "EHLO
-	mail-pz0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750695Ab0ANRZF (ORCPT
+Received: from mail-gx0-f224.google.com ([209.85.217.224]:57949 "EHLO
+	mail-gx0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751160Ab0AOAOS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2010 12:25:05 -0500
-Received: by pzk1 with SMTP id 1so8470903pzk.33
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jan 2010 09:25:04 -0800 (PST)
+	Thu, 14 Jan 2010 19:14:18 -0500
+Received: by gxk24 with SMTP id 24so53393gxk.1
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jan 2010 16:14:17 -0800 (PST)
+Message-ID: <4B4FB34D.7020003@lwfinger.net>
+Date: Thu, 14 Jan 2010 18:14:05 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1263489795-3515-1-git-send-email-lrodriguez@atheros.com>
-References: <1263489795-3515-1-git-send-email-lrodriguez@atheros.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 14 Jan 2010 09:24:44 -0800
-Message-ID: <43e72e891001140924s193c9e05gecb571318bdef7e0@mail.gmail.com>
-Subject: Re: [PATCH] cfg80211: Ingore country IEs with a zero set of number of
-	channels
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Subject: Re: [PATCH 3/6] b43: N-PHY: add update TX cal ladder
+References: <op.u6jn12l09lhzdc@linux-g0th.site> <43e72e891001141508ndec9aeak46412482b2486054@mail.gmail.com> 	<b170af451001141513p6452cf52q6d97477a38e83f34@mail.gmail.com> 	<43e72e891001141544n75de8362ke1756882ed1c2391@mail.gmail.com> 	<b170af451001141552k227a8125nf4926adbfd6d3c8f@mail.gmail.com> <43e72e891001141559n43ce0eecm2894da7fd1409408@mail.gmail.com>
+In-Reply-To: <43e72e891001141559n43ce0eecm2894da7fd1409408@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 14, 2010 at 9:23 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> Previous to this and the last patch, titled,
->
-> "cfg80211: Fix 2 GHz subband calculation for country IEs"
->
-> we would end up treating these IEs as single channel units. These are in
-> fact just bogus IE triplets so ignore the entire IE if these are found.
->
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+On 01/14/2010 05:59 PM, Luis R. Rodriguez wrote:
+> 2010/1/14 Rafał Miłecki <zajec5@gmail.com>:
+>>
+>> So definitely I will avoid putting just function names. However as I
+>> said, I don't think I will be able to be more descriptive :/
+> 
+> Heh well I had to try :)
 
-Just noticed this needs to be done in a second place too, will resend with that.
+Unfortunately, there are no comments in MIPS binary code. Without them, there is
+very little more than the function names available.
 
-  Luis
+Larry
