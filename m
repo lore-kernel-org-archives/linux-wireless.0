@@ -1,53 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:61473 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753322Ab0ALWVn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2010 17:21:43 -0500
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Subject: [PATCH] mac80211: fix channel setting for wext
-Date: Tue, 12 Jan 2010 14:28:47 -0800
-Message-Id: <1263335327-9257-1-git-send-email-abhijeet.kolekar@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:50120 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752950Ab0AOKtv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jan 2010 05:49:51 -0500
+Subject: Re: [PATCH] mac80211: check that ieee80211_set_power_mgmt only
+ handles STA interfaces.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benoit Papillault <benoit.papillault@free.fr>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1263516497-17332-1-git-send-email-benoit.papillault@free.fr>
+References: <1263516497-17332-1-git-send-email-benoit.papillault@free.fr>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ea/8idZPNezVaDCgOVqg"
+Date: Fri, 15 Jan 2010 11:17:48 +0100
+Message-ID: <1263550668.18341.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch fixes the bug at
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2139
 
-Currently we cannot set the channel using wext extension
-if we have already associated and disconnected. As
-cfg80211_mgd_wext_siwfreq will not switch the channel if ssid is set.
-This fixes it by clearing the ssid.
-Following is the sequence which it tries to fix.
-modprobe iwlagn
-iwconfig wlan0 essid ""
-ifconfig wlan0 down
-iwconfig wlan0 chan X
+--=-ea/8idZPNezVaDCgOVqg
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-wext is marked as deprecate.If we use nl80211 we can easily play with
-setting the channel.
+On Fri, 2010-01-15 at 01:48 +0100, Benoit Papillault wrote:
+> ieee80211_set_power_mgmt is meant for STA interfaces only. Moreover,
+> since sdata->u.mgd.mtx is only initialized for STA interfaces, using
+> this code for any other type of interface (like IBSS) will result in a
+> oops.
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Acked-by: Samuel Ortiz <sameo@linux.intel.com>
----
-v2: Added Samuel's Comments
+Odd that nobody else ever saw a problem, is everybody running cards that
+don't do power management?
 
- net/wireless/sme.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> index 8286df5..c9de4e3 100644
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -1382,6 +1382,9 @@ static int ieee80211_set_power_mgmt(struct wiphy
+> *wiphy, struct net_device *dev,
+>  	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
+>  	struct ieee80211_conf *conf =3D &local->hw.conf;
+> =20
+> +	if (sdata->vif.type !=3D NL80211_IFTYPE_STATION)
+> +		return 0;
 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 2333d78..dc0fc49 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -655,6 +655,7 @@ void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
- 	memset(&wrqu, 0, sizeof(wrqu));
- 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
- 	wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
-+	wdev->wext.connect.ssid_len = 0;
- #endif
- }
- 
--- 
-1.6.3.3
+You want -EOPNOTSUPP here, and cc stable.
+
+johannes
+
+--=-ea/8idZPNezVaDCgOVqg
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLUEDHAAoJEODzc/N7+Qma6MgP/0rJcRY5P9XYchomUgilsvFo
+i8mG8UZihmFdDUkMaOn7YgDDlEKidFOkqfSAR06FUA+ecsd0KwRsw3zP9QPwpyNs
+MFHq15AgsREGijt9jM13rpLCwaBWDnAH+br6/TwkKZoulR4q4yEln5DvOnRPvk9Z
+Nu8f9LNX1jzJUWJ5Ro0l4TyC1FxfnqwUclTykrgmxHbSNi/N9yR+Qs3XqFrn/f6l
+Km2PRLoj2fvddqDGgtwK9DsEAjngdmHDEEbyQ56wqWkSK9b0JapGZQ+OXTbpKB+q
+3OKhpU08hDYhaigg18E/Xw2R9Sq8p/msIWftaeBp6VESrHOIK0zTYZJ7AusmD84+
+VeouqICuRTJwXcstL/krE2PH/E/0O5aQKhTPLjbtSu6NWPJXPGh2SFlQvvb7JicB
+Hm/Dgwlzq8FS34zMH8XXIZXAWZJoNlCfU/OzShNYquIwfNXzVtznu1obviUnq1FF
+wFFsbzFRG3UQ6ZOIjJpTZ2oznvN1osOShGEUgZqKrrAZzNo5QTOr5b7mPucc84g6
+1uHEsykl69sMwKOpM3ySD4eiuPwsKjpkcFXr+Fd/TqJUsbw6JN9FTOpzmBi5D+fC
+qOueoFwdubp4DMs2ADCO7Hz3QzfGR6mrtmzrqkqmPe03CZ9Rx4DlX7C2Po4o+MLO
+Pg8TS+9A2xQuw0YCoTtg
+=8YMi
+-----END PGP SIGNATURE-----
+
+--=-ea/8idZPNezVaDCgOVqg--
 
