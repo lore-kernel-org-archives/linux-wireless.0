@@ -1,28 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f182.google.com ([209.85.216.182]:55237 "EHLO
-	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755500Ab0ATBWz (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:42201 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757602Ab0AOOTU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2010 20:22:55 -0500
-Received: by pxi12 with SMTP id 12so5117402pxi.33
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2010 17:22:55 -0800 (PST)
+	Fri, 15 Jan 2010 09:19:20 -0500
+From: Kalle Valo <kalle.valo@iki.fi>
+To: "tom.leiming\@gmail.com" <tom.leiming@gmail.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes\@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: fix memory leak in ieee80211_send_probe_req
+References: <1263563061-3825-1-git-send-email-tom.leiming@gmail.com>
+Date: Fri, 15 Jan 2010 16:19:03 +0200
+In-Reply-To: <1263563061-3825-1-git-send-email-tom.leiming@gmail.com> (ext
+	tom's message of "Fri, 15 Jan 2010 14:44:21 +0100")
+Message-ID: <87fx67qwmg.fsf@nokia.com>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 19 Jan 2010 17:22:35 -0800
-Message-ID: <43e72e891001191722t380b1789yd7c0b05add077a4e@mail.gmail.com>
-Subject: Sigma capable testing?
-To: Jeff Zheng <Jeff.Zheng@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	wifi-test-devel@lists.sourceforge.net
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I was curious if wifi-test code:
+"ext tom.leiming@gmail.com" <tom.leiming@gmail.com> writes:
 
-http://wireless.kernel.org/en/developers/Testing/wifi-test
+> From: Ming Lei <tom.leiming@gmail.com>
+>
+> This patch fixes memory leak in ieee80211_send_probe_req, which
+> is introduced in 7c12ce8b854df346388ea56d684784e3484012cf:
+>
+> 	mac80211: use Probe Request template when sending a direct scan
 
-is capable of sigma testing, being considered for WFA certification
-and/or there are plans for it.
 
-  Luis
+Sorry, I introduced this bug. Thank you finding this.
+
+> The patch is against the latest wireless-test tree.
+
+You should add comments like this after the "---" line.
+
+> @@ -1028,6 +1028,7 @@ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+>  
+>  	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+>  	ieee80211_tx_skb(sdata, skb);
+> +	kfree(buf);
+
+Better to use dev_kfree_skb() here.
+
+Can you resend, please?
+
+-- 
+Kalle Valo
