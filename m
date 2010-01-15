@@ -1,110 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f42.google.com ([209.85.160.42]:40549 "EHLO
-	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751248Ab0AGGQ2 (ORCPT
+Received: from mail-pz0-f171.google.com ([209.85.222.171]:53061 "EHLO
+	mail-pz0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754951Ab0AOVWw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2010 01:16:28 -0500
+	Fri, 15 Jan 2010 16:22:52 -0500
+Received: by pzk1 with SMTP id 1so1259725pzk.33
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jan 2010 13:22:51 -0800 (PST)
 MIME-Version: 1.0
-Date: Wed, 6 Jan 2010 22:16:27 -0800
-Message-ID: <dd18b0c31001062216m316163f4t992c000eca0f76d@mail.gmail.com>
-Subject: [bisected] sys_paccept: disable paccept() causes my macbook pro to
-	have an annoying whining sound
-From: Justin Mattock <justinmattock@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Fri, 15 Jan 2010 13:22:51 -0800
+Message-ID: <fd145f7d1001151322y6e0b2a74hb4c9971db8fe435c@mail.gmail.com>
+Subject: compat-wireless 2010-01-13 fails to build
+From: Jeffrey Baker <jwbaker@gmail.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-for a while I've been hearing this odd
-annoying sound coming from my macbook pro
-when the system is idle(no internet use tv/radio/web etc...)
-as soon as I do anything(radio,web) the noise disappears.
+/root/compat-wireless-2010-01-13/net/wireless/nl80211.c:17:50: error:
+missing ')' in expression
+make[5]: *** [/root/compat-wireless-2010-01-13/net/wireless/nl80211.o] Error 1
+make[4]: *** [/root/compat-wireless-2010-01-13/net/wireless] Error 2
+make[3]: *** [_module_/root/compat-wireless-2010-01-13] Error 2
+make[2]: *** [sub-make] Error 2
+make[1]: *** [all] Error 2
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.30-2-486'
+make: *** [modules] Error 2
 
-here is a  url where they are experiencing the same issue:
-https://help.ubuntu.com/community/MacBook1-1/Hardy
-(down under whining noise);
+# uname -a
+Linux mango 2.6.30-2-486 #1 Sat Sep 26 00:03:46 UTC 2009 i586 GNU/Linux
+# gcc-4.3 -v
+Using built-in specs.
+Target: i486-linux-gnu
+Configured with: ../src/configure -v --with-pkgversion='Debian
+4.3.4-6' --with-bugurl=file:///usr/share/doc/gcc-4.3/README.Bugs
+--enable-languages=c,c++,fortran,objc,obj-c++ --prefix=/usr
+--enable-shared --enable-multiarch --enable-linker-build-id
+--with-system-zlib --libexecdir=/usr/lib --without-included-gettext
+--enable-threads=posix --enable-nls
+--with-gxx-include-dir=/usr/include/c++/4.3 --program-suffix=-4.3
+--enable-clocale=gnu --enable-libstdcxx-debug --enable-objc-gc
+--enable-mpfr --enable-targets=all --with-tune=generic
+--enable-checking=release --build=i486-linux-gnu --host=i486-linux-gnu
+--target=i486-linux-gnu
+Thread model: posix
+gcc version 4.3.4 (Debian 4.3.4-6)
 
-here is is the result of my bisect:
+Full build log is here: http://pastebin.com/m6ee0f005
 
-2d4c8266774188cda7f7e612e6dfb8ad12c579d5 is the first bad commit
-commit 2d4c8266774188cda7f7e612e6dfb8ad12c579d5
-Author: Michael Kerrisk <mtk.manpages@googlemail.com>
-Date:   Mon Sep 22 13:57:49 2008 -0700
-
-    sys_paccept: disable paccept() until API design is resolved
-
-    The reasons for disabling paccept() are as follows:
-
-    * The API is more complex than needed.  There is AFAICS no demonstrated
-      use case that the sigset argument of this syscall serves that couldn't
-      equally be served by the use of pselect/ppoll/epoll_pwait + traditional
-      accept().  Roland seems to concur with this opinion
-      (http://thread.gmane.org/gmane.linux.kernel/723953/focus=732255).  I
-      have (more than once) asked Ulrich to explain otherwise
-      (http://thread.gmane.org/gmane.linux.kernel/723952/focus=731018), but he
-      does not respond, so one is left to assume that he doesn't know of such
-      a case.
-
-    * The use of a sigset argument is not consistent with other I/O APIs
-      that can block on a single file descriptor (e.g., read(), recv(),
-      connect()).
-
-    * The behavior of paccept() when interrupted by a signal is IMO strange:
-      the kernel restarts the system call if SA_RESTART was set for the
-      handler.  I think that it should not do this -- that it should behave
-      consistently with paccept()/ppoll()/epoll_pwait(), which never restart,
-      regardless of SA_RESTART.  The reasoning here is that the very purpose
-      of paccept() is to wait for a connection or a signal, and that
-      restarting in the latter case is probably never useful.  (Note: Roland
-      disagrees on this point, believing that rather paccept() should be
-      consistent with accept() in its behavior wrt EINTR
-      (http://thread.gmane.org/gmane.linux.kernel/723953/focus=732255).)
-
-    I believe that instead, a simpler API, consistent with Ulrich's other
-    recent additions, is preferable:
-
-    accept4(int fd, struct sockaddr *sa, socklen_t *salen, ind flags);
-
-    (This simpler API was originally proposed by Ulrich:
-    http://thread.gmane.org/gmane.linux.network/92072)
-
-    If this simpler API is added, then if we later decide that the sigset
-    argument really is required, then a suitable bit in 'flags' could be added
-    to indicate the presence of the sigset argument.
-
-    At this point, I am hoping we either will get a counter-argument from
-    Ulrich about why we really do need paccept()'s sigset argument, or that he
-    will resubmit the original accept4() patch.
-
-    Signed-off-by: Michael Kerrisk <mtk.manpages@gmail.com>
-    Cc: David Miller <davem@davemloft.net>
-    Cc: Davide Libenzi <davidel@xmailserver.org>
-    Cc: Alan Cox <alan@redhat.com>
-    Cc: Ulrich Drepper <drepper@redhat.com>
-    Cc: Jakub Jelinek <jakub@redhat.com>
-    Cc: Roland McGrath <roland@redhat.com>
-    Cc: Oleg Nesterov <oleg@tv-sign.ru>
-    Cc: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-    Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-
-:040000 040000 075d833177c2ee952fa0003bd490d50cb16926ec
-d5a2bc1dbca03d3c21e3740cddb6164de6df9cda M	net
-
-
-I think I was pretty straight forward with it. i.g. a good kernel
-no sound bad kernel whining sound.
-
-Now looking into sys_paccept seems it's been removed
-in place for accept4.
-I went to go revert that manually but there's too much
-that has changed in net/socket.c
-
-what/how is the best way to really find out if
-accept4/sys_paccept is where this noise is coming
-from on my machine(reverting is a mess)?
-
-
--- 
-Justin P. Mattock
+-jwb
