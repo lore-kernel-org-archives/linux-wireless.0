@@ -1,43 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:39148 "EHLO vs166246.vserver.de"
+Received: from nbd.name ([88.198.39.176]:37030 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754187Ab0AWLdJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jan 2010 06:33:09 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH 0/5] b43: more N-PHY stuff
-Date: Sat, 23 Jan 2010 12:33:00 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	=?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	davem@davemloft.net, Stefano Brivio <stefano.brivio@polimi.it>
-References: <1264121596-9616-1-git-send-email-zajec5@gmail.com> <20100123011618.GA16135@tuxdriver.com> <1264217811.10468.46.camel@macbook.infradead.org>
-In-Reply-To: <1264217811.10468.46.camel@macbook.infradead.org>
+	id S1751264Ab0AOBfA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jan 2010 20:35:00 -0500
+Message-ID: <4B4FC642.5010702@openwrt.org>
+Date: Fri, 15 Jan 2010 02:34:58 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201001231233.02501.mb@bu3sch.de>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 3/3] ath9k: implement coverage class support
+References: <4B4FC46B.6000705@openwrt.org> <4B4FC5F4.9090506@openwrt.org>
+In-Reply-To: <4B4FC5F4.9090506@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 23 January 2010 04:36:50 David Woodhouse wrote:
-> On Fri, 2010-01-22 at 20:16 -0500, John W. Linville wrote:
-> > On Fri, Jan 22, 2010 at 11:33:40PM +0100, Michael Buesch wrote:
-> > 
-> > > So while we are at it, I'd really like to migrate away from the berlios list.
-> > > It's really just annoying. Does somebody have a good reliable mailinglist service
-> > > we could migrate to? Does vger offer lists to driver projects?
-> > 
-> > Probably -- I think davem is the person to ask?  Infradead is probably
-> > another option (dwmw2).
-> 
-> Yeah, pick one and either of us can set up a new list at the drop of a
-> hat. Strictly speaking I suspect it should be postmaster@vger rather
-> than just davem, but the effect is much the same most of the time.
-> 
-> Can you provide a list of existing subscribers?
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1211,6 +1211,7 @@ void ath9k_hw_init_global_settings(struc
+ {
+ 	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
+ 	int acktimeout;
++	int slottime;
+ 	int sifstime;
 
-I think Stefano has access to our berlios mailman.
+ 	ath_print(ath9k_hw_common(ah), ATH_DBG_RESET, "ah->misc_mode 0x%x\n",
+@@ -1225,8 +1226,10 @@ void ath9k_hw_init_global_settings(struc
+ 	else
+ 		sifstime = 10;
 
--- 
-Greetings, Michael.
+-	acktimeout = ah->slottime + sifstime;
+-	ath9k_hw_setslottime(ah, ah->slottime);
++	/* As defined by IEEE 802.11-2007 17.3.8.6 */
++	slottime = ah->slottime + 3 * ah->coverage_class;
++	acktimeout = slottime + sifstime;
++	ath9k_hw_setslottime(ah, slottime);
+ 	ath9k_hw_set_ack_timeout(ah, acktimeout);
+ 	ath9k_hw_set_cts_timeout(ah, acktimeout);
+ 	if (ah->globaltxtimeout != (u32) -1)
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -551,6 +551,7 @@ struct ath_hw {
+ 	u32 *bank6Temp;
+
+ 	int16_t txpower_indexoffset;
++	int coverage_class;
+ 	u32 beacon_interval;
+ 	u32 slottime;
+ 	u32 globaltxtimeout;
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2015,6 +2015,18 @@ static void ath9k_sw_scan_complete(struc
+ 	mutex_unlock(&sc->mutex);
+ }
+
++static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8
+coverage_class)
++{
++	struct ath_wiphy *aphy = hw->priv;
++	struct ath_softc *sc = aphy->sc;
++	struct ath_hw *ah = sc->sc_ah;
++
++	mutex_lock(&sc->mutex);
++	ah->coverage_class = coverage_class;
++	ath9k_hw_init_global_settings(ah);
++	mutex_unlock(&sc->mutex);
++}
++
+ struct ieee80211_ops ath9k_ops = {
+ 	.tx 		    = ath9k_tx,
+ 	.start 		    = ath9k_start,
+@@ -2034,4 +2046,5 @@ struct ieee80211_ops ath9k_ops = {
+ 	.sw_scan_start      = ath9k_sw_scan_start,
+ 	.sw_scan_complete   = ath9k_sw_scan_complete,
+ 	.rfkill_poll        = ath9k_rfkill_poll_state,
++	.set_coverage_class = ath9k_set_coverage_class,
+ };
+
