@@ -1,235 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:55399 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755055Ab0AQWhx convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:46195 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751423Ab0AOOxR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2010 17:37:53 -0500
-Received: by mail-fx0-f225.google.com with SMTP id 25so609289fxm.21
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jan 2010 14:37:52 -0800 (PST)
-Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Sun, 17 Jan 2010 23:37:55 +0100
-Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Subject: [PATCH 2/4] b43: N-PHY: implement and add multi-dimensional table
- writing
+	Fri, 15 Jan 2010 09:53:17 -0500
+Received: by bwz27 with SMTP id 27so623291bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jan 2010 06:53:15 -0800 (PST)
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes\@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: fix memory leak in ieee80211_send_probe_req
+References: <1263563061-3825-1-git-send-email-tom.leiming@gmail.com>
+	<87fx67qwmg.fsf@nokia.com>
+	<d82e647a1001150636j67d08be6yec310750ccc73ded@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 15 Jan 2010 16:53:13 +0200
+In-Reply-To: <d82e647a1001150636j67d08be6yec310750ccc73ded@mail.gmail.com> (Ming Lei's message of "Fri\, 15 Jan 2010 22\:36\:44 +0800")
+Message-ID: <87iqb3s9ly.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <op.u6o7thcn9lhzdc@linux-g0th.site>
+Content-Type: text/plain; charset=iso-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Ming Lei <tom.leiming@gmail.com> writes:
 
-Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
----
-  drivers/net/wireless/b43/phy_n.c       |   58 ++++++++++++++------------------
-  drivers/net/wireless/b43/tables_nphy.c |   40 ++++++++++++++++++++++
-  drivers/net/wireless/b43/tables_nphy.h |    2 +
-  3 files changed, 67 insertions(+), 33 deletions(-)
+>>> † † † IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+>>> † † † ieee80211_tx_skb(sdata, skb);
+>>> + † † kfree(buf);
+>>
+>> Better to use dev_kfree_skb() here.
+>
+> Why is dev_kfree_skb better?
+> It is 'buf' allocated in ieee80211_send_probe_req to be freed, not skb.
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 31eba7d..6fd48d0 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -1697,8 +1697,7 @@ static void b43_nphy_restore_cal(struct b43_wldev *dev)
-  		loft = &nphy->cal_cache.txcal_coeffs_5G[5];
-  	}
+Yes, I misread your patch first. Please forget that comment :)
 
--	/* TODO: Write an N PHY table with ID 15, length 4, offset 80,
--		width 16, and data from table */
-+	b43_ntab_write_bulk(dev, B43_NTAB16(15, 80), 4, table);
-
-  	for (i = 0; i < 4; i++) {
-  		if (dev->phy.rev >= 3)
-@@ -1707,12 +1706,9 @@ static void b43_nphy_restore_cal(struct b43_wldev *dev)
-  			coef[i] = 0;
-  	}
-
--	/* TODO: Write an N PHY table with ID 15, length 4, offset 88,
--		width 16, and data from coef */
--	/* TODO: Write an N PHY table with ID 15, length 2, offset 85,
--		width 16 and data from loft */
--	/* TODO: Write an N PHY table with ID 15, length 2, offset 93,
--		width 16 and data from loft */
-+	b43_ntab_write_bulk(dev, B43_NTAB16(15, 88), 4, coef);
-+	b43_ntab_write_bulk(dev, B43_NTAB16(15, 85), 2, loft);
-+	b43_ntab_write_bulk(dev, B43_NTAB16(15, 93), 2, loft);
-
-  	if (dev->phy.rev < 2)
-  		b43_nphy_tx_iq_workaround(dev);
-@@ -1780,8 +1776,8 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
-  		b43_nphy_iq_cal_gain_params(dev, i, target, &params[i]);
-  		gain[i] = params[i].cal_gain;
-  	}
--	/* TODO: Write an N PHY Table with ID 7, length 2, offset 0x110,
--		width 16, and data pointer gain */
-+
-+	b43_ntab_write_bulk(dev, B43_NTAB16(7, 0x110), 2, gain);
-
-  	b43_nphy_tx_cal_radio_setup(dev);
-  	b43_nphy_tx_cal_phy_setup(dev);
-@@ -1831,8 +1827,7 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
-  			}
-  		}
-
--		/* TODO: Write an N PHY Table with ID 15, length from above,
--			offset 64, width 16, and the data pointer from above */
-+		b43_ntab_write_bulk(dev, B43_NTAB16(15, 64), length, table);
-
-  		if (full) {
-  			if (dev->phy.rev >= 3)
-@@ -1899,9 +1894,8 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
-  			/* TODO: Read an N PHY Table with ID 15,
-  				length table_length, offset 96, width 16,
-  				and data pointer buffer */
--			/* TODO: Write an N PHY Table with ID 15,
--				length table_length, offset 64, width 16,
--				and data pointer buffer */
-+			b43_ntab_write_bulk(dev, B43_NTAB16(15, 64), length,
-+						buffer);
-
-  			if (type == 1 || type == 3 || type == 4)
-  				buffer[0] = diq_start;
-@@ -1913,8 +1907,7 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
-  		last = (dev->phy.rev < 3) ? 6 : 7;
-
-  		if (!mphase || nphy->mphase_cal_phase_id == last) {
--			/* TODO: Write an N PHY Table with ID 15, length 4,
--				offset 96, width 16, and data pointer buffer */
-+			b43_ntab_write_bulk(dev, B43_NTAB16(15, 96), 4, buffer);
-  			/* TODO: Read an N PHY Table with ID 15, length 4,
-  				offset 80, width 16, and data pointer buffer */
-  			if (dev->phy.rev < 3) {
-@@ -1923,14 +1916,14 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
-  				buffer[2] = 0;
-  				buffer[3] = 0;
-  			}
--			/* TODO: Write an N PHY Table with ID 15, length 4,
--				offset 88, width 16, and data pointer buffer */
--			/* TODO: Read an N PHY Table with ID 15, length 2,
--				offset 101, width 16, and data pointer buffer*/
--			/* TODO: Write an N PHY Table with ID 15, length 2,
--				offset 85, width 16, and data pointer buffer */
--			/* TODO: Write an N PHY Table with ID 15, length 2,
--				offset 93, width 16, and data pointer buffer */
-+			b43_ntab_write_bulk(dev, B43_NTAB16(15, 88), 4,
-+						buffer);
-+			b43_ntab_write_bulk(dev, B43_NTAB16(15, 101), 2,
-+						buffer);
-+			b43_ntab_write_bulk(dev, B43_NTAB16(15, 85), 2,
-+						buffer);
-+			b43_ntab_write_bulk(dev, B43_NTAB16(15, 93), 2,
-+						buffer);
-  			length = 11;
-  			if (dev->phy.rev < 3)
-  				length -= 2;
-@@ -1954,8 +1947,7 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
-  	}
-
-  	b43_nphy_tx_cal_phy_cleanup(dev);
--	/* TODO: Write an N PHY Table with ID 7, length 2, offset 0x110,
--		width 16, and data from save */
-+	b43_ntab_write_bulk(dev, B43_NTAB16(7, 0x110), 2, save);
-
-  	if (dev->phy.rev < 2 && (!mphase || nphy->mphase_cal_phase_id == last))
-  		b43_nphy_tx_iq_workaround(dev);
-@@ -2005,8 +1997,7 @@ static int b43_nphy_rev2_cal_rx_iq(struct b43_wldev *dev,
-  		b43_nphy_iq_cal_gain_params(dev, i, target, &cal_params[i]);
-  		cal_gain[i] = cal_params[i].cal_gain;
-  	}
--	/* TODO: Write an N PHY Table with ID 7, length 2, offset 0x110,
--		width 16, and data from cal_gain */
-+	b43_ntab_write_bulk(dev, B43_NTAB16(7, 0x110), 2, cal_gain);
-
-  	for (i = 0; i < 2; i++) {
-  		if (i == 0) {
-@@ -2144,8 +2135,7 @@ static int b43_nphy_rev2_cal_rx_iq(struct b43_wldev *dev,
-
-  	/* TODO: Call N PHY RF Ctrl Override with 0x400, 0, 3, 1 as arguments*/
-  	b43_nphy_force_rf_sequence(dev, B43_RFSEQ_RESET2RX);
--	/* TODO: Write an N PHY Table with ID 7, length 2, offset 0x110,
--		width 16, and data from gain_save */
-+	b43_ntab_write_bulk(dev, B43_NTAB16(7, 0x110), 2, gain_save);
-
-  	b43_nphy_stay_in_carrier_search(dev, 0);
-
-@@ -2287,8 +2277,10 @@ int b43_phy_initn(struct b43_wldev *dev)
-  	if (phy->rev >= 3) {
-  		/* TODO */
-  	} else {
--		/* TODO Write an N PHY table with ID 26, length 128, offset 192, width 32, and the data from Rev 2 TX Power Control Table */
--		/* TODO Write an N PHY table with ID 27, length 128, offset 192, width 32, and the data from Rev 2 TX Power Control Table */
-+		b43_ntab_write_bulk(dev, B43_NTAB32(26, 192), 128,
-+					b43_ntab_tx_gain_rev0_1_2);
-+		b43_ntab_write_bulk(dev, B43_NTAB32(27, 192), 128,
-+					b43_ntab_tx_gain_rev0_1_2);
-  	}
-
-  	if (nphy->phyrxchain != 3)
-diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
-index 7dff853..fc08be0 100644
---- a/drivers/net/wireless/b43/tables_nphy.c
-+++ b/drivers/net/wireless/b43/tables_nphy.c
-@@ -2952,6 +2952,46 @@ void b43_ntab_write(struct b43_wldev *dev, u32 offset, u32 value)
-  	assert_ntab_array_sizes();
-  }
-
-+void b43_ntab_write_bulk(struct b43_wldev *dev, u32 offset,
-+			  unsigned int nr_elements, const void *_data)
-+{
-+	u32 type, value;
-+	const u8 *data = _data;
-+	unsigned int i;
-+
-+	type = offset & B43_NTAB_TYPEMASK;
-+	offset &= ~B43_NTAB_TYPEMASK;
-+	B43_WARN_ON(offset > 0xFFFF);
-+
-+	b43_phy_write(dev, B43_NPHY_TABLE_ADDR, offset);
-+
-+	for (i = 0; i < nr_elements; i++) {
-+		switch (type) {
-+		case B43_NTAB_8BIT:
-+			value = *data;
-+			data++;
-+			B43_WARN_ON(value & ~0xFF);
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, value);
-+			break;
-+		case B43_NTAB_16BIT:
-+			value = *((u16 *)data);
-+			data += 2;
-+			B43_WARN_ON(value & ~0xFFFF);
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, value);
-+			break;
-+		case B43_NTAB_32BIT:
-+			value = *((u32 *)data);
-+			data += 4;
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATAHI, value >> 16);
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATALO,
-+					value & 0xFFFF);
-+			break;
-+		default:
-+			B43_WARN_ON(1);
-+		}
-+	}
-+}
-+
-  #define ntab_upload(dev, offset, data) do { \
-  		unsigned int i;						\
-  		for (i = 0; i < (offset##_SIZE); i++)			\
-diff --git a/drivers/net/wireless/b43/tables_nphy.h b/drivers/net/wireless/b43/tables_nphy.h
-index 51636d0..d5605df 100644
---- a/drivers/net/wireless/b43/tables_nphy.h
-+++ b/drivers/net/wireless/b43/tables_nphy.h
-@@ -143,6 +143,8 @@ b43_nphy_get_chantabent(struct b43_wldev *dev, u8 channel);
-  #define B43_NTAB_TX_IQLO_CAL_CMDS_FULLCAL_REV3		12
-
-  void b43_ntab_write(struct b43_wldev *dev, u32 offset, u32 value);
-+void b43_ntab_write_bulk(struct b43_wldev *dev, u32 offset,
-+			  unsigned int nr_elements, const void *_data);
-
-  void b43_nphy_rev0_1_2_tables_init(struct b43_wldev *dev);
-  void b43_nphy_rev3plus_tables_init(struct b43_wldev *dev);
 -- 
-1.6.4.2
-
+Kalle Valo
