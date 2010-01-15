@@ -1,75 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36231 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754631Ab0ASR7c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2010 12:59:32 -0500
-Subject: Re: [PATCH 1/1] update rfkill.h from kernel 2.6.33
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Tomas Winkler <tomas.winkler@intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e891001190957u3ccc12ey955e6d15b33eba13@mail.gmail.com>
-References: <1263884721-11008-1-git-send-email-tomas.winkler@intel.com>
-	 <43e72e891001190953r122625d3pf805c318e9662340@mail.gmail.com>
-	 <1263923722.25138.2.camel@johannes.local>
-	 <43e72e891001190957u3ccc12ey955e6d15b33eba13@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-YP10bMtTvrITnhmpt89C"
-Date: Tue, 19 Jan 2010 18:59:28 +0100
-Message-ID: <1263923968.28066.2.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail0.scram.de ([78.47.204.202]:46611 "EHLO mail.scram.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757300Ab0AOMbG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jan 2010 07:31:06 -0500
+Message-ID: <4B505B94.3020509@scram.de>
+Date: Fri, 15 Jan 2010 13:12:04 +0100
+From: Jochen Friedrich <jochen@scram.de>
+MIME-Version: 1.0
+To: Daniel Schmitt <daniel@schmitt-united.de>
+CC: OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: PHY Transmission error and radio turned off with b43legacy
+References: <51ab59276e22ee681f29560ebac67004.squirrel@unimail.uni-dortmund.de>
+In-Reply-To: <51ab59276e22ee681f29560ebac67004.squirrel@unimail.uni-dortmund.de>
+Content-Type: multipart/mixed;
+ boundary="------------040800050600090409080307"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is a multi-part message in MIME format.
+--------------040800050600090409080307
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
---=-YP10bMtTvrITnhmpt89C
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Daniel Schmitt wrote:
 
-On Tue, 2010-01-19 at 09:57 -0800, Luis R. Rodriguez wrote:
-> On Tue, Jan 19, 2010 at 9:55 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Tue, 2010-01-19 at 09:53 -0800, Luis R. Rodriguez wrote:
-> >> On Mon, Jan 18, 2010 at 11:05 PM, Tomas Winkler
-> >> <tomas.winkler@intel.com> wrote:
-> >> > 1. add FM radio type
-> >> > 2. update rfkill_type docs
-> >> >
-> >> > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> >>
-> >> Why is this being pushed for 2.6.33 at this point?
-> >
-> > ??? Have you read the patch?
->=20
-> So this is updating linux-next to get 2.6.33 rfkill stuff? How did
-> that happen?
+> hostapd doesn't continue to work after controller is restarted.
+> I also have the problem that the wlan0-interface shall not be upped with
+> "ifconfig wlan0 0.0.0.0 up" before starting hostapd, otherwise no beacons
+> will be send. The interface must be down before starting hostapd.
+> If I terminate a not daemonized hostapd with CTRL+C and restart if without
+> rmmod+modprobe b43legacy, no beacons are sent, too. And I cannot connect
+> the AP.
+> This happens with the bleeding-edge wireless drivers 2009-11-13.
 
-You still haven't read it? :)
+I noticed the same on MN700 hardware running OpenWrt bleeding edge. The init scripts enable and 
+disable wlan0 once before starting hostapd. Here, beacons are still being sent, but hostapd is 
+unable to transmit any packet. When reloading b43legacy and starting hostapd manually it works, but 
+only once.
 
-It's for rfkill userspace.
+The attached patch resolves the problem for me.
 
-johannes
+Thanks,
+Jochen
 
---=-YP10bMtTvrITnhmpt89C
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+--------------040800050600090409080307
+Content-Type: text/x-patch;
+ name="011-b43legacy_queues.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="011-b43legacy_queues.patch"
 
------BEGIN PGP SIGNATURE-----
+--- compat-wireless-2010-01-11/drivers/net/wireless/b43legacy/main.c.orig	2010-01-14 12:14:39.000000000 +0100
++++ compat-wireless-2010-01-11/drivers/net/wireless/b43legacy/main.c	2010-01-14 12:14:52.000000000 +0100
+@@ -2921,6 +2921,7 @@
+ 		goto out;
+ 	}
+ 	/* We are ready to run. */
++	ieee80211_wake_queues(dev->wl->hw);
+ 	b43legacy_set_status(dev, B43legacy_STAT_STARTED);
+ 
+ 	/* Start data flow (TX/RX) */
 
-iQIcBAABAgAGBQJLVfL8AAoJEODzc/N7+QmaAcMP/R5wMS/9/LXoTT8scZmBgACk
-iDhm3MoQDKHKpGoxnvNTqpjSFJxUrrFrLr8IKaiCiJVl5h3aOY+R92IVi3EaDEsa
-rAy9E7wpHU1D8ASJFMJmdlMlPjyd5jHugaMPzApEP85YiuOdbh52woyQPwsk7cyo
-gnXNuRWESRuPT5NbSmxya8YExbNs/xhpuA7NsX3xpHgL+XdNGLATS4ISAlwbhkLP
-p8owUQovs3oXn7oBTCtKK3zxFyfTMNbmzn3YIZYuipfZX1gFVBsc7vlEd+yi8N9t
-7ZPzXtaRRVqDNyY18L/pMZaQTWIMBvJqBXd5AAaxYZAuhgZJAOmOTtIezDx03qsO
-ktDbKhrQL03t3qAkvzZMzg0JLxOAhVJF6l9rbiPeH6UV2CYEAqqPj4Nnms0z9xdq
-2ZTgdrEhD8QQIO9sMy5Q1V4+LoQ4TZhsGaI0/Dsp6STrXY0a0O3je55NJkBBm/Y8
-0vbkMk9jKGID/E2R1fysMgLOZZuIlTdy4ypLiQ0MlWeMQWXUPYLlR/ojkZgDFrpM
-16HeubVYYhPphM8dJpzjY0+dxJeCHut6NBEHX9SV7CIy7jReUz0GoPc1/IImdDij
-SHQ9J4cZiqMQ8RYCHw9St5CnEC5/fzM5MUSY42E9f1F1qGEW5JcJrJ8HvrydOWFs
-ZZdNW1SzidoNixnSSSTu
-=dZhE
------END PGP SIGNATURE-----
-
---=-YP10bMtTvrITnhmpt89C--
-
+--------------040800050600090409080307--
