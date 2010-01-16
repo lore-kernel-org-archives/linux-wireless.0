@@ -1,69 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f182.google.com ([209.85.216.182]:49907 "EHLO
-	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753982Ab0A0S0C (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:2877 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752315Ab0APTh0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2010 13:26:02 -0500
-Received: by pxi12 with SMTP id 12so4599381pxi.33
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2010 10:26:02 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1264616062.8619.22.camel@wwguy-ubuntu>
-References: <1264511993.25642.9.camel@johannes.local> <43e72e891001271001r2cc39da4ka00a3eef06f6e139@mail.gmail.com>
-	<1264615477.8619.20.camel@wwguy-ubuntu> <43e72e891001271014j667221bqa11d56f3a68f6099@mail.gmail.com>
-	<1264616062.8619.22.camel@wwguy-ubuntu>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 27 Jan 2010 10:25:42 -0800
-Message-ID: <43e72e891001271025s27bbe25cs3c999a885551a4e7@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: wait for beacon before enabling powersave
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"kalle.valo@iki.fi" <kalle.valo@iki.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"j@w1.fi" <j@w1.fi>,
-	"buytenh@wantstofly.org" <buytenh@wantstofly.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 16 Jan 2010 14:37:26 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 0/2] PID controller fixes
+Date: Sat, 16 Jan 2010 14:36:51 -0500
+Message-Id: <1263670613-10864-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 27, 2010 at 10:14 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> On Wed, 2010-01-27 at 10:14 -0800, Luis R. Rodriguez wrote:
->> On Wed, Jan 27, 2010 at 10:04 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
->> > On Wed, 2010-01-27 at 10:01 -0800, Luis R. Rodriguez wrote:
->> >> On Tue, Jan 26, 2010 at 5:19 AM, Johannes Berg
->> >> <johannes@sipsolutions.net> wrote:
->> >> > Because DTIM information is required for powersave
->> >> > but is only conveyed in beacons, wait for a beacon
->> >> > before enabling powersave, and change the way the
->> >> > information is conveyed to the driver accordingly.
->> >> >
->> >> > mwl8k doesn't currently seem to implement PS but
->> >> > requires the DTIM period in a different way; after
->> >> > talking to Lennert we agreed to just have mwl8k do
->> >> > the parsing itself in the finalize_join work.
->> >>
->> >> Not sure if this is merged yet. If not it might be good to add to the
->> >> commit log a brief about the impact of the fix for distribution
->> >> purposes looking to cherry pick some fixes that may cure some issues.
->> >>
->> >> The impact of this fix is that the DTIM settings of > 1 would now be
->> >> respected in the odd situation a beacon would not be received prior to
->> >> association. Ensuring we use a higher DTIM would mean saving more
->> >> power as it would mean we can sleep longer.
->> >>
->> >> This is not propagated to stable but if it turns out this can enhance
->> >> power save since DTIM might usually be > 1 and the race may be more
->> >> common than we expected we may need a respective stable solution.
->> >>
->> >
->> > It will be nice to see a respective solution for stable since this
->> > impact power save which is very important for certain platform.
->>
->> Well how about your patch for stable then?
->>
-> if ok with you and Johannes, I will like to see it happen, the only
-> issue is, my patch only address iwlwifi but not mwl8k.
+Here are two fixes to the PID rc.  The first one improves PID
+performance by quite a bit on my test setup, and seems correct,
+but I am not an expert on the algo so comments welcome.  The
+other is just a minor cleanup.  With the change, Minstrel is
+still a bit better in my tests.
 
-Oh, what was the issue with your patch and mwl8k?
+Bob Copeland (2):
+  mac80211: fix sign error in pid controller
+  mac80211: pid: replace open-coded msecs_to_jiffies
 
-  Luis
+ net/mac80211/rc80211_pid_algo.c |   10 +++-------
+ 1 files changed, 3 insertions(+), 7 deletions(-)
+
+
