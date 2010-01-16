@@ -1,112 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:49853 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752458Ab0AHSEc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jan 2010 13:04:32 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from mail.deathmatch.net ([72.66.92.28]:2901 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750922Ab0APThj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Jan 2010 14:37:39 -0500
+From: Bob Copeland <me@bobcopeland.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/2] iwlwifi: disable tx on beacon update notification
-Date: Fri,  8 Jan 2010 10:04:31 -0800
-Message-Id: <1262973871-2483-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1262973871-2483-1-git-send-email-reinette.chatre@intel.com>
-References: <1262973871-2483-1-git-send-email-reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
+	stefano.brivio@polimi.it, mattias.nissler@gmx.de
+Subject: [PATCH 1/2] mac80211: fix sign error in pid controller
+Date: Sat, 16 Jan 2010 14:36:52 -0500
+Message-Id: <1263670613-10864-2-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1263670613-10864-1-git-send-email-me@bobcopeland.com>
+References: <1263670613-10864-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+While testing the pid rate controller in mac80211_hwsim, I noticed
+that once the controller reached 54 Mbit rates, it would fail to
+lower the rate when necessary.  The debug log shows:
 
-On beacon change update notification from mac we are not disabling
-the tx in adhoc mode. Mac sends BSS_CHANGED_BEACON_ENABLED when
-station leaves IBSS. Driver should indicate uCode to not to send
-anything on receiving this notification.
+1945 186786 pf_sample 50 3534 3577 50
 
-Functionality to indicate uCode is duplicated across
-two notifications so created a common function called iwl_set_no_assoc.
+My interpretation is that the fixed point scaling of the target
+error value (pf) is incorrect: the error value of 50 compared to
+a target of 14 case should result in a scaling value of
+(14-50) = -36 * 256 or -9216, but instead it is (14 * 256)-50, or
+3534.
 
-Fix the issue at
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2133.
+Correct this by doing fixed point scaling after subtraction.
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Tested-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Cc: stefano.brivio@polimi.it
+Cc: mattias.nissler@gmx.de
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |   45 +++++++++++++++++-------------
- 1 files changed, 25 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 574d366..5461f10 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2344,6 +2344,21 @@ static void iwl_ht_conf(struct iwl_priv *priv,
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- }
+Mattias / Stefano, please advise if I missed something.
+
+ net/mac80211/rc80211_pid_algo.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/rc80211_pid_algo.c b/net/mac80211/rc80211_pid_algo.c
+index 699d3ed..29bc4c5 100644
+--- a/net/mac80211/rc80211_pid_algo.c
++++ b/net/mac80211/rc80211_pid_algo.c
+@@ -190,7 +190,7 @@ static void rate_control_pid_sample(struct rc_pid_info *pinfo,
+ 	rate_control_pid_normalize(pinfo, sband->n_bitrates);
  
-+static inline void iwl_set_no_assoc(struct iwl_priv *priv)
-+{
-+	priv->assoc_id = 0;
-+	iwl_led_disassociate(priv);
-+	/*
-+	 * inform the ucode that there is no longer an
-+	 * association and that no more packets should be
-+	 * sent
-+	 */
-+	priv->staging_rxon.filter_flags &=
-+		~RXON_FILTER_ASSOC_MSK;
-+	priv->staging_rxon.assoc_id = 0;
-+	iwlcore_commit_rxon(priv);
-+}
-+
- #define IWL_DELAY_NEXT_SCAN_AFTER_ASSOC (HZ*6)
- void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 			  struct ieee80211_vif *vif,
-@@ -2475,20 +2490,8 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 					IWL_DELAY_NEXT_SCAN_AFTER_ASSOC;
- 			if (!iwl_is_rfkill(priv))
- 				priv->cfg->ops->lib->post_associate(priv);
--		} else {
--			priv->assoc_id = 0;
--			iwl_led_disassociate(priv);
--
--			/*
--			 * inform the ucode that there is no longer an
--			 * association and that no more packets should be
--			 * send
--			 */
--			priv->staging_rxon.filter_flags &=
--				~RXON_FILTER_ASSOC_MSK;
--			priv->staging_rxon.assoc_id = 0;
--			iwlcore_commit_rxon(priv);
--		}
-+		} else
-+			iwl_set_no_assoc(priv);
- 	}
+ 	/* Compute the proportional, integral and derivative errors. */
+-	err_prop = (pinfo->target << RC_PID_ARITH_SHIFT) - pf;
++	err_prop = (pinfo->target - pf) << RC_PID_ARITH_SHIFT;
  
- 	if (changes && iwl_is_associated(priv) && priv->assoc_id) {
-@@ -2503,12 +2506,14 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 		}
- 	}
- 
--	if ((changes & BSS_CHANGED_BEACON_ENABLED) &&
--	    vif->bss_conf.enable_beacon) {
--		memcpy(priv->staging_rxon.bssid_addr,
--		       bss_conf->bssid, ETH_ALEN);
--		memcpy(priv->bssid, bss_conf->bssid, ETH_ALEN);
--		iwlcore_config_ap(priv);
-+	if (changes & BSS_CHANGED_BEACON_ENABLED) {
-+		if (vif->bss_conf.enable_beacon) {
-+			memcpy(priv->staging_rxon.bssid_addr,
-+			       bss_conf->bssid, ETH_ALEN);
-+			memcpy(priv->bssid, bss_conf->bssid, ETH_ALEN);
-+			iwlcore_config_ap(priv);
-+		} else
-+			iwl_set_no_assoc(priv);
- 	}
- 
- 	mutex_unlock(&priv->mutex);
+ 	err_avg = spinfo->err_avg_sc >> pinfo->smoothing_shift;
+ 	spinfo->err_avg_sc = spinfo->err_avg_sc - err_avg + err_prop;
 -- 
-1.5.6.3
+1.6.3.3
+
 
