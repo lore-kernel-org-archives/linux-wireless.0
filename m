@@ -1,98 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:37494 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752994Ab0AINAK convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54770 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752262Ab0APVHK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jan 2010 08:00:10 -0500
-Received: by mail-fx0-f225.google.com with SMTP id 25so13340575fxm.21
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Jan 2010 05:00:09 -0800 (PST)
-Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Sat, 09 Jan 2010 14:01:37 +0100
-Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Subject: [PATCH 4/4] b43: N-PHY: some comments, function definion fix, missing
- calls
-MIME-Version: 1.0
-From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <op.u59nszh39lhzdc@linux-g0th.site>
+	Sat, 16 Jan 2010 16:07:10 -0500
+Subject: Re: [PATCH] cfg80211/mac80211: Add TX/RX commands for Action frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20100113113000.GA20835@jm.kir.nu>
+References: <20100113101126.GA12548@jm.kir.nu>
+	 <1263377951.5093.326.camel@johannes.local>
+	 <20100113113000.GA20835@jm.kir.nu>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ZH15dikC9ahJBRmrI3LR"
+Date: Sat, 16 Jan 2010 22:06:59 +0100
+Message-ID: <1263676020.14317.5.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-  drivers/net/wireless/b43/phy_n.c |   19 ++++++++++++++-----
-  1 files changed, 14 insertions(+), 5 deletions(-)
+--=-ZH15dikC9ahJBRmrI3LR
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 6452cb3..c2c2602 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -315,7 +315,7 @@ static void b43_nphy_workarounds(struct b43_wldev *dev)
-  }
+On Wed, 2010-01-13 at 13:30 +0200, Jouni Malinen wrote:
 
-  /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/BmacPhyClkFgc */
--void b43_nphy_bmac_clock_fgc(struct b43_wldev *dev, bool force)
-+static void b43_nphy_bmac_clock_fgc(struct b43_wldev *dev, bool force)
-  {
-  	u32 tmslow;
+> One problem with the registration mechanism is that it may not be
+> obvious at this point what exactly we want to export into user space
+> in
+> the future and what gets handled inside the kernel. One obvious place
+> would be to do register to process all Action frames of a specific
+> category, but that may not be enough since it is possible that some
+> categories will be handled both in kernel and in applications.
+>=20
+> The mechanism for specifying which Action frames are handled will
+> likely
+> need to be quite extensible.. This would require at least one
+> attribute
+> for specifying the Category value. Then based on the Category value,
+> we
+> may need to be able to specify the Action Value as an option
+> attribute.
+> In addition, the vendor specific Action and Public Action fields would
+> need to get OUI as another optional attribute. With vendor specific
+> values, we may even need yet another optional attribute to specify the
+> subtype of the vendor specific information since some protocols may be
+> handled in kernel and some in applications (i.e., more than one
+> application for the same vendor OUI).
 
-@@ -454,6 +454,7 @@ static void b43_nphy_stay_in_carrier_search(struct b43_wldev *dev, bool enable)
-  	}
-  }
+Ok let me recap what we have
+ 1) regular action frames -- by category and maybe action subclass
+ 2) vendor action frames -- category + OUI + vendor-specific stuff
+ 3) public action (this is a category, can't find a vendor-subclass?)
 
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/GetTxGain */
-  static struct nphy_txgains b43_nphy_get_tx_gains(struct b43_wldev *dev)
-  {
-  	struct b43_phy_n *nphy = dev->phy.n;
-@@ -589,17 +590,22 @@ static void b43_nphy_bphy_init(struct b43_wldev *dev)
-  	b43_phy_write(dev, B43_PHY_N_BMODE(0x38), 0x668);
-  }
+In all these cases, it would appear to be very easy to handle by just
+using the first N bytes. Case 1) would have 1 or two bytes, case 2)
+would be 4 or more bytes and case 3) seems like it could be done with 2
+or more bytes ...
 
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/RSSICal */
-  static void b43_nphy_rev2_rssi_cal(struct b43_wldev *dev, u8 type)
-  {
-  	//TODO
-  }
+I've gone ahead and implemented that, will follow up with patches once I
+give them some basic testing.
 
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/RSSICalRev3 */
-  static void b43_nphy_rev3_rssi_cal(struct b43_wldev *dev)
-  {
-  	//TODO
-  }
+johannes
 
--/* RSSI Calibration */
-+/*
-+ * RSSI Calibration
-+ * http://bcm-v4.sipsolutions.net/802.11/PHY/N/RSSICal
-+ */
-  static void b43_nphy_rssi_cal(struct b43_wldev *dev)
-  {
-  	if (dev->phy.rev >= 3) {
-@@ -611,7 +617,10 @@ static void b43_nphy_rssi_cal(struct b43_wldev *dev)
-  	}
-  }
+--=-ZH15dikC9ahJBRmrI3LR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
--/* Restore RSSI Calibration */
-+/*
-+ * Restore RSSI Calibration
-+ * http://bcm-v4.sipsolutions.net/802.11/PHY/N/RestoreRssiCal
-+ */
-  static void b43_nphy_restore_rssi_cal(struct b43_wldev *dev)
-  {
-  	//TODO
-@@ -720,8 +729,8 @@ int b43_phy_initn(struct b43_wldev *dev)
-  	b43_nphy_force_rf_sequence(dev, B43_RFSEQ_RESET2RX);
-  	b43_nphy_pa_override(dev, true);
+-----BEGIN PGP SIGNATURE-----
 
--	//TODO N PHY Classifier with arguments 0 and 0
--	//TODO N PHY Det Clip with 0 and the clip array as arguments
-+	b43_nphy_classifier(dev, 0, 0);
-+	b43_nphy_read_clip_detection(dev, clip);
-  	tx_pwr_state = nphy->txpwrctrl;
-  	//TODO N PHY TX power control with argument 0 (turning off power control)
-  	//TODO Fix the TX Power Settings
--- 
-1.6.4.2
+iQIcBAABAgAGBQJLUipvAAoJEODzc/N7+QmaZrsQAJaMF5h4oipR0pfl5EAjZipc
+5RiM837e6bVgd9elNL3SHBVVpebUgWCnHr1BAgelPrgB5KpJa8WuFixUHOMed5k8
+BVTrmJecelW+O5k8NrL29gWnRLe6yvnP2tvDFmbW4NVvsXqR4SHJVKGddoIldtBg
+EDI3EX59k/++NKcL5xh5SlyEW0cQWurUquRCJAxivfaNj+9xYehDaYX3GymYZzqd
+GKseM0/DtMvYyfNijAjRiISxDAPxLIO8ocgZYRBT5T8ZyUSD7yjUIMKj97300GkK
+uJwpV9X7Ft4qA5xYZGNUzXTWpCGnXwavTRJc56KiPBIiTnY6Ht+DfpNF8orK6ee8
+B2QBay+MsSu4yXiMs9TURVZOalFW9YylycO1B5wO4HgPYdKiF4x2akeqWGHHt6bG
+bfLB98ztrMRqBqLeg+qluDuXNvEyapgcJKEvGHaHR1e2N65//DZRvJsQYeZIZ4vQ
+MpPh0qERjrPTlgb/evvX7wZHDNJWDpiEKB9umb6cYLiYktlhDlZN/JfXRcBONN8O
++SenCCH2n+fVrB2A61dtz26/u06CHXc7zd2rFQvPRiZGVOya+eItmmMKkXyu3XkT
+3jcZNzmzXjWDCgtlDAEPuIEhGFGeijUpj9YrBHmEuozdy0t+N7vOMY79mcNFq/74
+Mw1tddAW8NbDLHSGzct0
+=7CcM
+-----END PGP SIGNATURE-----
+
+--=-ZH15dikC9ahJBRmrI3LR--
 
