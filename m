@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:49853 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752656Ab0AHSEc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jan 2010 13:04:32 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/2] iwlwifi fixes for 2.6.33
-Date: Fri,  8 Jan 2010 10:04:29 -0800
-Message-Id: <1262973871-2483-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:41334 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753033Ab0AQW71 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jan 2010 17:59:27 -0500
+Received: by ewy19 with SMTP id 19so2782634ewy.21
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Jan 2010 14:59:26 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <201001172345.54110.mb@bu3sch.de>
+References: <op.u6o7s9rq9lhzdc@linux-g0th.site>
+	 <201001172345.54110.mb@bu3sch.de>
+Date: Sun, 17 Jan 2010 23:59:25 +0100
+Message-ID: <b170af451001171459s781bf60ao48a2bc937de50bb6@mail.gmail.com>
+Subject: Re: [PATCH 1/4] b43: N-PHY: add writing one element tables
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Two fixes are included. The first problem being fixed is to stop data
-transmission when mac80211 indicates that station left IBSS. The second fix
-is a companion fix to the one already included as "iwl3945: fix panic in
-iwl3945 driver" that also addresses the panic. With this patch the panic is
-addressed and we still need to figure out why bad data arrives from device.
-This patch also targets stable.
-
-Abhijeet Kolekar (1):
-  iwlwifi: disable tx on beacon update notification
-
-Zhu Yi (1):
-  iwlwifi: fix iwl_queue_used bug when read_ptr == write_ptr
-
- drivers/net/wireless/iwlwifi/iwl-core.c |   45 +++++++++++++++++-------------
- drivers/net/wireless/iwlwifi/iwl-dev.h  |    2 +-
- 2 files changed, 26 insertions(+), 21 deletions(-)
-
-These patches are also available from wireless-2.6 branch on
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
-I had some problems compiling wireless-2.6 as I ran into the problem
-described in http://patchwork.kernel.org/patch/68463/ . I assume that the
-"CONFIG_KPROBES=n" relies on patch "[PATCH] x86: compile insn.c and inat.c
-only for KPROBES", which is not present in wireless-2.6. I am using
-gawk. For testing I manually applied this patch and disabled kprobes to be
-able to build.
-
-Thank you
-
-Reinette
-
-
-
+VyBkbml1IDE3IHN0eWN6bmlhIDIwMTAgMjM6NDUgdcW8eXRrb3duaWsgTWljaGFlbCBCdWVzY2gg
+PG1iQGJ1M3NjaC5kZT4gbmFwaXNhxYI6Cj4gT24gU3VuZGF5IDE3IEphbnVhcnkgMjAxMCAyMzoz
+Nzo1MCBSYWZhxYIgTWnFgmVja2kgd3JvdGU6Cj4+IEBAIC0xODk1LDE0ICsxODgwLDEyIEBAIHN0
+YXRpYyBpbnQgYjQzX25waHlfY2FsX3R4X2lxX2xvKHN0cnVjdCBiNDNfd2xkZXYgKmRldiwKPj4g
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgYjQzX3BoeV93cml0ZShkZXYsIEI0M19O
+UEhZX0lRTE9DQUxfQ01ETk5VTSwgdG1wKTsKPj4KPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgaWYgKHR5cGUgPT0gMSB8fCB0eXBlID09IDMgfHwgdHlwZSA9PSA0KSB7Cj4+IC0g
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgLyogVE9ETzogUmVhZCBh
+biBOIFBIWSBUYWJsZSB3aXRoIElEIDE1LAo+PiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGxlbmd0aCAxLCBvZmZzZXQgNjkgKyBjb3JlLAo+
+PiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IHdpZHRoIDE2LCBhbmQgZGF0YSBwb2ludGVyIGJ1ZmZlciAqLwo+PiArIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGI0M19udGFiX3dyaXRlKGRldiwgQjQzX05UQUIx
+NigxNSwgNjkgKyBjb3JlKSwKPj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBidWZmZXJbMF0pOwo+PiDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBkaXFfc3RhcnQgPSBidWZmZXJbMF07
+Cj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGJ1ZmZlclsw
+XSA9IDA7Cj4+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgLyog
+VE9ETzogV3JpdGUgYW4gTiBQSFkgVGFibGUgd2l0aCBJRCAxNSwKPj4gLSDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBsZW5ndGggMSwgb2Zmc2V0
+IDY5ICsgY29yZSwgd2lkdGggMTYsCj4+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgYW5kIGRhdGEgb2YgMCAqLwo+PiArIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGI0M19udGFiX3dyaXRlKGRldiwgQjQzX05U
+QUIxNigxNSwgNjkgKyBjb3JlKSwKPj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAwKTsKPj4gwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgfQo+Pgo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCBiNDNfcGh5X3dyaXRlKGRldiwgQjQzX05QSFlfSVFMT0NBTF9DTUQsIGNtZCk7Cj4KPiBXaGF0
+IGlzIHRoaXMgc3VwcG9zZWQgdG8gZG8/IEl0IHdyaXRlcyBhIHZhbHVlIHRvIGEgdGFibGUgZW50
+cnkgYW5kIGltbWVkaWF0ZWx5Cj4gY2xvYmJlcnMgdGhlIGVudHJ5IHdpdGggMC4gVGhpcyBkb2Vz
+bid0IG1ha2UgYW55IHNlbnNlLgoKWWFpa3MsIHlvdSdyZSBncmVhdCBhdCBwYXRjaGVzIHJldmll
+d2luZy4gVGhhbmtzIG9uY2UgbW9yZS4KCkZvciBleHBsYW5hdGlvbiBvZiBteSBzdHVwaWQgbWlz
+dGFrZSBwbGVhc2UgY29tcGFyZSByZW1vdmVkIGNvbW1lbnQgdG8KYWRkZWQgY29kZS4uLgoKLS0g
+ClJhZmHFggo=
