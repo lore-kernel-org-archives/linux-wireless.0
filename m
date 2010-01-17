@@ -1,73 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f172.google.com ([209.85.222.172]:43144 "EHLO
-	mail-pz0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755138Ab0AUURn convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:37645 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751930Ab0AQMDp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 15:17:43 -0500
+	Sun, 17 Jan 2010 07:03:45 -0500
+Received: by mail-fx0-f225.google.com with SMTP id 25so298468fxm.21
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Jan 2010 04:03:45 -0800 (PST)
+Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Sun, 17 Jan 2010 13:03:48 +0100
+Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Subject: [PATCH 4/7] b43: N-PHY: implement stopping playback
 MIME-Version: 1.0
-In-Reply-To: <4B58B432.5050200@irobot.com>
-References: <43e72e891001201213x6a2c203dl7121f2dde6d61fb9@mail.gmail.com>
-	<4B5897C8.2080006@irobot.com> <43e72e891001211012y4f4c8721t7eb9e0eea0221820@mail.gmail.com>
-	<4B58B432.5050200@irobot.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 21 Jan 2010 12:17:23 -0800
-Message-ID: <43e72e891001211217t17ffed80i2d5bc6f923b56210@mail.gmail.com>
-Subject: Re: FYI - new compat-wireless based on 2.6.33-rc4
-To: Adam Wozniak <awozniak@irobot.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <op.u6oegmpb9lhzdc@linux-g0th.site>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 21, 2010 at 12:08 PM, Adam Wozniak <awozniak@irobot.com> wrote:
-> Luis --
->
-> I also
 
-BTW Haukes posted a fix for the compile build against ARM. Try that.
-That patch applies to compat.git but you should be able to mangle it
-to apply to compat-wireless easily too.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+  drivers/net/wireless/b43/phy_n.c |   34 +++++++++++++++++++++++++++++++---
+  drivers/net/wireless/b43/phy_n.h |    1 +
+  2 files changed, 32 insertions(+), 3 deletions(-)
 
-> seem to be having issues with firmware loading.  Any clues would be
-> helpful.
->
-> I have a Gumstix Overo Fire with a built in libertas_sdio, and an ar9170usb
->
-> It finds the libertas firmware just fine, but not the ar9170 firmware.
->
-> I'm using a 2.6.29 kernel.  This worked fine with
-> compat-wireless-2009-11-17.  All the firmware files are in /lib/firmware.
->
-> Here's some dmesg output:
->
-> [   18.834564] lib80211: common routines for IEEE802.11 drivers
-> [   18.834564] lib80211_crypt: registered algorithm 'NULL'
-> [   18.951324] libertas_sdio: Libertas SDIO driver
-> [   18.951354] libertas_sdio: Copyright Pierre Ossman
-> [   18.974456] libertas_sdio mmc1:0001:1: firmware: requesting
-> sd8686_helper.bin
-> [   21.569885] Generic kernel compatibility enabled based on linux-next
-> next-20100113
-> [   21.583374] libertas_sdio mmc1:0001:1: firmware: requesting sd8686.bin
-> [   21.845703] cfg80211: Calling CRDA to update world regulatory domain
-> [   22.728393] ar9170usb 2-2.4:1.0: usb_probe_interface
-> [   22.728424] ar9170usb 2-2.4:1.0: usb_probe_interface - got id
-> [   22.818023] usb 2-2.4: reset high speed USB device using ehci-omap and
-> address 3
-> [   23.028930] libertas: 00:19:88:21:57:9e, fw 9.70.3p24, cap 0x00000303
-> [   23.044372] eth0 (libertas_sdio): not using net_device_ops yet
-> [   23.091583] libertas: PREP_CMD: command 0x00a3 failed: 2
-> [   23.107025] libertas: PREP_CMD: command 0x00a3 failed: 2
-> [   23.107238] libertas: eth0: Marvell WLAN 802.11 adapter
-> [   23.973846] usb 2-2.4: firmware: requesting ar9170.fw
-> [   83.974090] usb 2-2.4: ar9170.fw firmware file not found, trying old
-> firmware...
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 582d6b0..c6d3d5a 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -749,6 +749,34 @@ static void b43_nphy_stay_in_carrier_search(struct b43_wldev *dev, bool enable)
+  	}
+  }
 
-OK so it failed here, you may want to try to debug udev stuff now
-then, what distribution do you have? Where are your udev rules put?
-Where is the original udev rule for firmware for your box?
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/stop-playback */
++static void b43_nphy_stop_playback(struct b43_wldev *dev)
++{
++	struct b43_phy_n *nphy = dev->phy.n;
++	u16 tmp;
++
++	if (nphy->hang_avoid)
++		b43_nphy_stay_in_carrier_search(dev, 1);
++
++	tmp = b43_phy_read(dev, B43_NPHY_SAMP_STAT);
++	if (tmp & 0x1)
++		b43_phy_set(dev, B43_NPHY_SAMP_CMD, B43_NPHY_SAMP_CMD_STOP);
++	else if (tmp & 0x2)
++		b43_phy_mask(dev, B43_NPHY_IQLOCAL_CMDGCTL, (u16)~0x8000);
++
++	b43_phy_mask(dev, B43_NPHY_SAMP_CMD, ~0x0004);
++
++	if (nphy->bb_mult_save & 0x80000000) {
++		tmp = nphy->bb_mult_save & 0xFFFF;
++		/* TODO: Write an N PHY Table with ID 15, length 1, offset 87,
++			width 16 and data from tmp */
++		nphy->bb_mult_save = 0;
++	}
++
++	if (nphy->hang_avoid)
++		b43_nphy_stay_in_carrier_search(dev, 0);
++}
++
+  /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/TxPwrCtrlCoefSetup */
+  static void b43_nphy_tx_pwr_ctrl_coef_setup(struct b43_wldev *dev)
+  {
+@@ -1906,7 +1934,7 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
+  				nphy->mphase_txcal_bestcoeffs */
+  		}
 
-You can debug udev stuff by using 'udevadm monitor'
+-		/* TODO: Call N PHY Stop Playback */
++		b43_nphy_stop_playback(dev);
+  		b43_phy_write(dev, B43_NPHY_IQLOCAL_CMDGCTL, 0);
+  	}
 
-  Luis
+@@ -2053,7 +2081,7 @@ static int b43_nphy_rev2_cal_rx_iq(struct b43_wldev *dev,
+  			/* TODO:Call N PHY RF Ctrl Override with 0x400, tmp[0],
+  				3, 0 as arguments */
+  			/* TODO: Call N PHY Force RF Seq with 2 as argument */
+-			/* TODO: Call N PHT Stop Playback */
++			b43_nphy_stop_playback(dev);
+
+  			if (playtone) {
+  				/* TODO: Call N PHY TX Tone with 4000,
+@@ -2080,7 +2108,7 @@ static int b43_nphy_rev2_cal_rx_iq(struct b43_wldev *dev,
+  				} else {
+  					b43_nphy_calc_rx_iq_comp(dev, 1 << i);
+  				}
+-				/* TODO: Call N PHY Stop Playback */
++				b43_nphy_stop_playback(dev);
+  			}
+
+  			if (ret != 0)
+diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
+index ae00e3f..d6c92a8 100644
+--- a/drivers/net/wireless/b43/phy_n.h
++++ b/drivers/net/wireless/b43/phy_n.h
+@@ -974,6 +974,7 @@ struct b43_phy_n {
+  	bool mute;
+  	u16 papd_epsilon_offset[2];
+  	s32 preamble_override;
++	u32 bb_mult_save;
+
+  	u8 mphase_cal_phase_id;
+  	u16 mphase_txcal_cmdidx;
+-- 
+1.6.4.2
+
