@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55803 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752459Ab0AQAtN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jan 2010 19:49:13 -0500
-Message-Id: <20100117004825.024885439@sipsolutions.net>
-Date: Sun, 17 Jan 2010 01:47:57 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/5] mac80211: remove useless setting of
- IEEE80211_TX_INTFL_DONT_ENCRYPT
-References: <20100117004754.624627000@sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:58218 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751755Ab0AQVDp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jan 2010 16:03:45 -0500
+Message-ID: <4B537B30.1060303@openwrt.org>
+Date: Sun, 17 Jan 2010 22:03:44 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 1/2] cfg80211: add a callback for querying the operating
+ frequency and export it through nl80211
+References: <4B536B05.6070301@openwrt.org>	 <1263758236.28067.11.camel@johannes.local>	 <1263758423.28067.12.camel@johannes.local>  <4B536F21.1090509@openwrt.org>	 <1263759278.28067.13.camel@johannes.local>  <4B5371C3.6060504@openwrt.org> <1263761294.28067.14.camel@johannes.local> <4B537A94.9070807@openwrt.org>
+In-Reply-To: <4B537A94.9070807@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's no value in setting a flag that will
-never be checked after this point, this seems
-to be legacy code -- I think previously the
-flag was used to check whether to encrypt the
-frame or not. Now, however, the flag need not
-be set, and setting it actually interferes if
-the frame will be processed again later.
+On 2010-01-17 10:01 PM, Felix Fietkau wrote:
+> On 2010-01-17 9:48 PM, Johannes Berg wrote:
+>> On Sun, 2010-01-17 at 21:23 +0100, Felix Fietkau wrote:
+>> 
+>>> I want to be able to have some status info without having to go
+>>> through
+>>> hostapd or wpa_supplicant to get it. Currently the channel is exported
+>>> by wext, but not nl80211, so I want to fix that.
+>> 
+>> But like I said, you already have that information in the relevant
+>> cases. hostapd you can just look in the config file for it...
+> Nope, hostapd can deviate from the config, e.g. in the HT40 case. It'll
+> switch primary and secondary channel, if necessary, or switch from HT40
+> to HT20 entirely if there are overlapping BSSs. And what about STA mode?
+> The channel won't be in the config in that case.
+Sorry, overlooked the part about STA mode in the last email, but for AP
+mode it's still valid, IMHO.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/tx.c |    3 ---
- 1 file changed, 3 deletions(-)
-
---- wireless-testing.orig/net/mac80211/tx.c	2010-01-16 20:18:50.000000000 +0100
-+++ wireless-testing/net/mac80211/tx.c	2010-01-16 20:19:05.000000000 +0100
-@@ -553,9 +553,6 @@ ieee80211_tx_h_select_key(struct ieee802
- 		}
- 	}
- 
--	if (!tx->key || !(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
--		info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
--
- 	return TX_CONTINUE;
- }
- 
-
-
+- Felix
