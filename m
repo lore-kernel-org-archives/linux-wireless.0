@@ -1,49 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:47604 "EHLO mga09.intel.com"
+Received: from bu3sch.de ([62.75.166.246]:37240 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752400Ab0AUU74 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 15:59:56 -0500
-Subject: Re: [stable] [PATCH 2.6.{32, 31}] iwlwifi: power up all devices
- for EEPROM read
-From: reinette chatre <reinette.chatre@intel.com>
-To: Greg KH <greg@kroah.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"stable@kernel.org" <stable@kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20100121205138.GC14716@kroah.com>
-References: <1264076545-12223-1-git-send-email-sgruszka@redhat.com>
-	 <20100121205138.GC14716@kroah.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 21 Jan 2010 12:59:55 -0800
-Message-ID: <1264107595.21458.181.camel@rchatre-DESK>
-Mime-Version: 1.0
+	id S1752911Ab0AQQlL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jan 2010 11:41:11 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH 2/7] b43: N-PHY: implement TX PHY cleanup and setup
+Date: Sun, 17 Jan 2010 17:41:00 +0100
+Cc: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	=?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <op.u6oef6cl9lhzdc@linux-g0th.site> <69e28c911001170837u4ea715ddn4a8e2001f6c1acc3@mail.gmail.com>
+In-Reply-To: <69e28c911001170837u4ea715ddn4a8e2001f6c1acc3@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <201001171741.02945.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Greg,
+On Sunday 17 January 2010 17:37:29 Gábor Stefanik wrote:
+> While you are at it, why aren't you programming these table writes?
+> The table handling functions are AFAIK already in place...
 
-On Thu, 2010-01-21 at 12:51 -0800, Greg KH wrote:
-> On Thu, Jan 21, 2010 at 01:22:25PM +0100, Stanislaw Gruszka wrote:
-> > commit f8701fe3aec24fcfb0dfa19aab47904611f96daf upstream
-> > 
-> > On 2.6.31 and 2.6.32 iwl3945 crash during kdump, I discovered
-> > above upstream commit fix that.
-> > 
-> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> > ---
-> > I tested patch on 2.6.32 with iwl3945 - it fix kdump, and on 2.6.31
-> > with iwl5300 - no regression notice.
-> 
-> Thanks for the backport, I've queued this up now.
+Because we like small patches.
+Please do _not_ increase the patchsize.
 
-This backport is on top of patches that are not present in 2.6.31 or
-2.6.32. Please see the message I sent in response to the original post.
-Could we please finish that discussion first before looking into merging
-this patch?
-
-Thank you
-
-Reinette
-
-
+-- 
+Greetings, Michael.
