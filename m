@@ -1,72 +1,235 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39614 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752669Ab0A3IoC (ORCPT
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:55399 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755055Ab0AQWhx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2010 03:44:02 -0500
-Subject: Re: [PATCH 1/1 v3] cfg80211: wext: fix cfg80211's SIOCSIWAP
- function
-From: Johannes Berg <johannes@sipsolutions.net>
-To: shanyu.zhao@intel.com
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <1264840545.3546.179.camel@johannes.local>
-References: <1264801649-4985-1-git-send-email-shanyu.zhao@intel.com>
-	 <1264840545.3546.179.camel@johannes.local>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-PtciPfpMNlp/O2OVhXnB"
-Date: Sat, 30 Jan 2010 09:43:57 +0100
-Message-ID: <1264841037.3546.183.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 17 Jan 2010 17:37:53 -0500
+Received: by mail-fx0-f225.google.com with SMTP id 25so609289fxm.21
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Jan 2010 14:37:52 -0800 (PST)
+Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Sun, 17 Jan 2010 23:37:55 +0100
+Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Subject: [PATCH 2/4] b43: N-PHY: implement and add multi-dimensional table
+ writing
+MIME-Version: 1.0
+From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <op.u6o7thcn9lhzdc@linux-g0th.site>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-PtciPfpMNlp/O2OVhXnB
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+  drivers/net/wireless/b43/phy_n.c       |   58 ++++++++++++++------------------
+  drivers/net/wireless/b43/tables_nphy.c |   40 ++++++++++++++++++++++
+  drivers/net/wireless/b43/tables_nphy.h |    2 +
+  3 files changed, 67 insertions(+), 33 deletions(-)
 
-On Sat, 2010-01-30 at 09:35 +0100, Johannes Berg wrote:
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 31eba7d..6fd48d0 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -1697,8 +1697,7 @@ static void b43_nphy_restore_cal(struct b43_wldev *dev)
+  		loft = &nphy->cal_cache.txcal_coeffs_5G[5];
+  	}
 
-> >  		wdev->conn->params.ssid_len =3D connect->ssid_len;
-> > +		if (connect->ssid_len) {
-> > +			memcpy(wdev->ssid, connect->ssid, connect->ssid_len);
-> > +			wdev->conn->params.ssid =3D wdev->ssid;
-> > +		}
-> > +		else
-> > +			wdev->conn->params.ssid =3D NULL;
->=20
-> I don't think I understand this. The wdev->conn->params are initialised
-> from "connect", and now you're copying the data back again? That's not
-> making sense to me.
+-	/* TODO: Write an N PHY table with ID 15, length 4, offset 80,
+-		width 16, and data from table */
++	b43_ntab_write_bulk(dev, B43_NTAB16(15, 80), 4, table);
 
-Hmm, so setting the ssid to NULL would make it impossible to connect to
-any network, no?
+  	for (i = 0; i < 4; i++) {
+  		if (dev->phy.rev >= 3)
+@@ -1707,12 +1706,9 @@ static void b43_nphy_restore_cal(struct b43_wldev *dev)
+  			coef[i] = 0;
+  	}
 
-I don't think I understand what you want to achieve. Are you, by any
-chance, trying to get it to connect to an AP without ever specifying an
-SSID? That can't really be supported (nor ever was by mac80211).
+-	/* TODO: Write an N PHY table with ID 15, length 4, offset 88,
+-		width 16, and data from coef */
+-	/* TODO: Write an N PHY table with ID 15, length 2, offset 85,
+-		width 16 and data from loft */
+-	/* TODO: Write an N PHY table with ID 15, length 2, offset 93,
+-		width 16 and data from loft */
++	b43_ntab_write_bulk(dev, B43_NTAB16(15, 88), 4, coef);
++	b43_ntab_write_bulk(dev, B43_NTAB16(15, 85), 2, loft);
++	b43_ntab_write_bulk(dev, B43_NTAB16(15, 93), 2, loft);
 
-johannes
+  	if (dev->phy.rev < 2)
+  		b43_nphy_tx_iq_workaround(dev);
+@@ -1780,8 +1776,8 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
+  		b43_nphy_iq_cal_gain_params(dev, i, target, &params[i]);
+  		gain[i] = params[i].cal_gain;
+  	}
+-	/* TODO: Write an N PHY Table with ID 7, length 2, offset 0x110,
+-		width 16, and data pointer gain */
++
++	b43_ntab_write_bulk(dev, B43_NTAB16(7, 0x110), 2, gain);
 
---=-PtciPfpMNlp/O2OVhXnB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+  	b43_nphy_tx_cal_radio_setup(dev);
+  	b43_nphy_tx_cal_phy_setup(dev);
+@@ -1831,8 +1827,7 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
+  			}
+  		}
 
------BEGIN PGP SIGNATURE-----
+-		/* TODO: Write an N PHY Table with ID 15, length from above,
+-			offset 64, width 16, and the data pointer from above */
++		b43_ntab_write_bulk(dev, B43_NTAB16(15, 64), length, table);
 
-iQIcBAABAgAGBQJLY/FGAAoJEODzc/N7+QmaJBwP/27qYLz5x0IUR2bgFrA2bpiJ
-4Sjkn/wdO3Z+bHfjb9GAFzZIOTQLhNnHMci2auSHoArY5ITngns57W5R/BN9WBmH
-9rsei1y58ikS9J9xp6P3+8SEVNAXBVvOcgu0J45K+82zELEbPp3hNN7xCNsMgrCI
-GQBcDxAn/3LkdOp6Yk6x1uHwyN2pCkNEeE2jEs/WymVPzxtYGoiPbUg1Lb/xTLNQ
-Eo4ZnlT4UAX/i7F1ogjMZCggs0SOl2lIW4njNGqUPTtPBGrNORdjPS2BN2DpatpE
-jEKMmOP5VSW+A87Er6MKWiMSogUYF4v6YOdDJIXoPv6TYK7e1FE05ovmdc3CM7Qs
-Oj7Hsan96+mL8Q6zYqF94i0bNZXCpkZyi7s7Nh9lEXJisu5FFm93e/x3ywwJ0o1H
-2CTJiFzC0CHeQC4ICxSVfxXWPPIlRWyAOsAXPsBjZJ7JoI9WDqoXQ2PGmrbPhIDu
-URdPtXzJQytUBdRukgIJ78IANFtAQiqNhljwMsvYDMJzJR74dMsr/V0rlRsbEjR4
-gKs+CXIMIH2wQ1YvAisARBG7f6LrI6ytp7EcU48CVfUVfjEbmgnKkDtTKsxzv4r0
-op7U7lc0gZbUS2IaEbxuit5ZzJ1t99HbMVT81tLkwn8ayduF2C9/x5ImkCnAZwdr
-oLhGErOKmkcA0FPtG8jx
-=K6p+
------END PGP SIGNATURE-----
+  		if (full) {
+  			if (dev->phy.rev >= 3)
+@@ -1899,9 +1894,8 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
+  			/* TODO: Read an N PHY Table with ID 15,
+  				length table_length, offset 96, width 16,
+  				and data pointer buffer */
+-			/* TODO: Write an N PHY Table with ID 15,
+-				length table_length, offset 64, width 16,
+-				and data pointer buffer */
++			b43_ntab_write_bulk(dev, B43_NTAB16(15, 64), length,
++						buffer);
 
---=-PtciPfpMNlp/O2OVhXnB--
+  			if (type == 1 || type == 3 || type == 4)
+  				buffer[0] = diq_start;
+@@ -1913,8 +1907,7 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
+  		last = (dev->phy.rev < 3) ? 6 : 7;
+
+  		if (!mphase || nphy->mphase_cal_phase_id == last) {
+-			/* TODO: Write an N PHY Table with ID 15, length 4,
+-				offset 96, width 16, and data pointer buffer */
++			b43_ntab_write_bulk(dev, B43_NTAB16(15, 96), 4, buffer);
+  			/* TODO: Read an N PHY Table with ID 15, length 4,
+  				offset 80, width 16, and data pointer buffer */
+  			if (dev->phy.rev < 3) {
+@@ -1923,14 +1916,14 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
+  				buffer[2] = 0;
+  				buffer[3] = 0;
+  			}
+-			/* TODO: Write an N PHY Table with ID 15, length 4,
+-				offset 88, width 16, and data pointer buffer */
+-			/* TODO: Read an N PHY Table with ID 15, length 2,
+-				offset 101, width 16, and data pointer buffer*/
+-			/* TODO: Write an N PHY Table with ID 15, length 2,
+-				offset 85, width 16, and data pointer buffer */
+-			/* TODO: Write an N PHY Table with ID 15, length 2,
+-				offset 93, width 16, and data pointer buffer */
++			b43_ntab_write_bulk(dev, B43_NTAB16(15, 88), 4,
++						buffer);
++			b43_ntab_write_bulk(dev, B43_NTAB16(15, 101), 2,
++						buffer);
++			b43_ntab_write_bulk(dev, B43_NTAB16(15, 85), 2,
++						buffer);
++			b43_ntab_write_bulk(dev, B43_NTAB16(15, 93), 2,
++						buffer);
+  			length = 11;
+  			if (dev->phy.rev < 3)
+  				length -= 2;
+@@ -1954,8 +1947,7 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
+  	}
+
+  	b43_nphy_tx_cal_phy_cleanup(dev);
+-	/* TODO: Write an N PHY Table with ID 7, length 2, offset 0x110,
+-		width 16, and data from save */
++	b43_ntab_write_bulk(dev, B43_NTAB16(7, 0x110), 2, save);
+
+  	if (dev->phy.rev < 2 && (!mphase || nphy->mphase_cal_phase_id == last))
+  		b43_nphy_tx_iq_workaround(dev);
+@@ -2005,8 +1997,7 @@ static int b43_nphy_rev2_cal_rx_iq(struct b43_wldev *dev,
+  		b43_nphy_iq_cal_gain_params(dev, i, target, &cal_params[i]);
+  		cal_gain[i] = cal_params[i].cal_gain;
+  	}
+-	/* TODO: Write an N PHY Table with ID 7, length 2, offset 0x110,
+-		width 16, and data from cal_gain */
++	b43_ntab_write_bulk(dev, B43_NTAB16(7, 0x110), 2, cal_gain);
+
+  	for (i = 0; i < 2; i++) {
+  		if (i == 0) {
+@@ -2144,8 +2135,7 @@ static int b43_nphy_rev2_cal_rx_iq(struct b43_wldev *dev,
+
+  	/* TODO: Call N PHY RF Ctrl Override with 0x400, 0, 3, 1 as arguments*/
+  	b43_nphy_force_rf_sequence(dev, B43_RFSEQ_RESET2RX);
+-	/* TODO: Write an N PHY Table with ID 7, length 2, offset 0x110,
+-		width 16, and data from gain_save */
++	b43_ntab_write_bulk(dev, B43_NTAB16(7, 0x110), 2, gain_save);
+
+  	b43_nphy_stay_in_carrier_search(dev, 0);
+
+@@ -2287,8 +2277,10 @@ int b43_phy_initn(struct b43_wldev *dev)
+  	if (phy->rev >= 3) {
+  		/* TODO */
+  	} else {
+-		/* TODO Write an N PHY table with ID 26, length 128, offset 192, width 32, and the data from Rev 2 TX Power Control Table */
+-		/* TODO Write an N PHY table with ID 27, length 128, offset 192, width 32, and the data from Rev 2 TX Power Control Table */
++		b43_ntab_write_bulk(dev, B43_NTAB32(26, 192), 128,
++					b43_ntab_tx_gain_rev0_1_2);
++		b43_ntab_write_bulk(dev, B43_NTAB32(27, 192), 128,
++					b43_ntab_tx_gain_rev0_1_2);
+  	}
+
+  	if (nphy->phyrxchain != 3)
+diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
+index 7dff853..fc08be0 100644
+--- a/drivers/net/wireless/b43/tables_nphy.c
++++ b/drivers/net/wireless/b43/tables_nphy.c
+@@ -2952,6 +2952,46 @@ void b43_ntab_write(struct b43_wldev *dev, u32 offset, u32 value)
+  	assert_ntab_array_sizes();
+  }
+
++void b43_ntab_write_bulk(struct b43_wldev *dev, u32 offset,
++			  unsigned int nr_elements, const void *_data)
++{
++	u32 type, value;
++	const u8 *data = _data;
++	unsigned int i;
++
++	type = offset & B43_NTAB_TYPEMASK;
++	offset &= ~B43_NTAB_TYPEMASK;
++	B43_WARN_ON(offset > 0xFFFF);
++
++	b43_phy_write(dev, B43_NPHY_TABLE_ADDR, offset);
++
++	for (i = 0; i < nr_elements; i++) {
++		switch (type) {
++		case B43_NTAB_8BIT:
++			value = *data;
++			data++;
++			B43_WARN_ON(value & ~0xFF);
++			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, value);
++			break;
++		case B43_NTAB_16BIT:
++			value = *((u16 *)data);
++			data += 2;
++			B43_WARN_ON(value & ~0xFFFF);
++			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, value);
++			break;
++		case B43_NTAB_32BIT:
++			value = *((u32 *)data);
++			data += 4;
++			b43_phy_write(dev, B43_NPHY_TABLE_DATAHI, value >> 16);
++			b43_phy_write(dev, B43_NPHY_TABLE_DATALO,
++					value & 0xFFFF);
++			break;
++		default:
++			B43_WARN_ON(1);
++		}
++	}
++}
++
+  #define ntab_upload(dev, offset, data) do { \
+  		unsigned int i;						\
+  		for (i = 0; i < (offset##_SIZE); i++)			\
+diff --git a/drivers/net/wireless/b43/tables_nphy.h b/drivers/net/wireless/b43/tables_nphy.h
+index 51636d0..d5605df 100644
+--- a/drivers/net/wireless/b43/tables_nphy.h
++++ b/drivers/net/wireless/b43/tables_nphy.h
+@@ -143,6 +143,8 @@ b43_nphy_get_chantabent(struct b43_wldev *dev, u8 channel);
+  #define B43_NTAB_TX_IQLO_CAL_CMDS_FULLCAL_REV3		12
+
+  void b43_ntab_write(struct b43_wldev *dev, u32 offset, u32 value);
++void b43_ntab_write_bulk(struct b43_wldev *dev, u32 offset,
++			  unsigned int nr_elements, const void *_data);
+
+  void b43_nphy_rev0_1_2_tables_init(struct b43_wldev *dev);
+  void b43_nphy_rev3plus_tables_init(struct b43_wldev *dev);
+-- 
+1.6.4.2
 
