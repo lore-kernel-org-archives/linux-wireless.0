@@ -1,39 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:45698 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752736Ab0A0A2F (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55138 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754632Ab0AQUsS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2010 19:28:05 -0500
-Received: by yxe17 with SMTP id 17so4167205yxe.33
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2010 16:28:04 -0800 (PST)
-Message-ID: <4B5F8891.4000204@lwfinger.net>
-Date: Tue, 26 Jan 2010 18:28:01 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-CC: John W Linville <linville@tuxdriver.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8187: Add callback for get_tsf
-References: <4b5f7e98.WueiIRrKwMIrtoob%Larry.Finger@lwfinger.net> <3ace41891001261617w54e8c08dm5d317f7c2b17cba4@mail.gmail.com>
-In-Reply-To: <3ace41891001261617w54e8c08dm5d317f7c2b17cba4@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sun, 17 Jan 2010 15:48:18 -0500
+Subject: Re: [PATCH 1/2] cfg80211: add a callback for querying the
+ operating frequency and export it through nl80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <4B5371C3.6060504@openwrt.org>
+References: <4B536B05.6070301@openwrt.org>
+	 <1263758236.28067.11.camel@johannes.local>
+	 <1263758423.28067.12.camel@johannes.local>  <4B536F21.1090509@openwrt.org>
+	 <1263759278.28067.13.camel@johannes.local>  <4B5371C3.6060504@openwrt.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Q1Smksuq+tti1CIYZmO0"
+Date: Sun, 17 Jan 2010 21:48:14 +0100
+Message-ID: <1263761294.28067.14.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/26/2010 06:17 PM, Hin-Tak Leung wrote:
-> On Tue, Jan 26, 2010 at 11:45 PM, Larry Finger
-> <Larry.Finger@lwfinger.net>  wrote:
->> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
->
-> Acked-by: Hin-Tak Leung<htl10@users.sourceforge.net>
->
-> Presumably this new api is needed and used by some userland tools (iw
-> or other QoS-related tool?).
 
- From include/net/mac80211.h: "It is currently used for IBSS mode BSSID merging 
-and debugging". Implementation of this callback is voluntary.
+--=-Q1Smksuq+tti1CIYZmO0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Larry
+On Sun, 2010-01-17 at 21:23 +0100, Felix Fietkau wrote:
+
+> I want to be able to have some status info without having to go
+> through
+> hostapd or wpa_supplicant to get it. Currently the channel is exported
+> by wext, but not nl80211, so I want to fix that.
+
+But like I said, you already have that information in the relevant
+cases. hostapd you can just look in the config file for it...
+
+The problem with this is that not all drivers will be able to support
+it, and that you will be exporting stale information say in the case
+where we're not connected at all.
+
+johannes
+
+--=-Q1Smksuq+tti1CIYZmO0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLU3eKAAoJEODzc/N7+QmaQukQANRBxokdOFgZasJq4+nAc6ZZ
++lxwVPTkZJXEZQsPyAQy64JNhsXUijJoNefbcO4ugstJTos9qVZLFdc60upK2yRL
+4ip8jFeOK0KM0fJnUa1LI7dtE9mJwED6ApNIV5UWIhJuXRM3Cch1S+6MEtkWXR3E
+m3Vui10FsK3HEdDnvGkIqjMWBnSleQe7+md2CxwkKTYPvMsVrwvCYiUMncFnO6+r
+BRAOOKwDiFA8Og+ZXoqPfmZ/jPEbrVlBKLAdR13UB9Ps0RSbC3qNuYe4sZXqsgCM
+DYHV0bAplr814cOcHErV2tOUQftd+mwklp2sknkemYPxbZxm3U27ARFmk0H0RFL3
+4871tLrZyKo7zP62xmWi0CTX3h+JCw/ZryWfmV1teqfDWwcW8TUuVCW9lDZAoO7J
+1Hzlx7XPZSxkdRjtz9OvRQSe5ktXYVgZKzSjChxEcx7l2bg2Fl1rBMwAnG/0AQOa
+XRiDqgnFUVaFj2/TqlvgCRFuZXyxFvgl2RJr+gvZ+CwoN8/56FNCKuE1aPvThqyK
+ssu8kIqXcW4Fcc6jsXBdKpOOIsPECJsaahZkceEXVTlEp/Boin6AMIEo47kLrqfs
+R3TwP+Sj1qKjNFfcVT9rTlvV42jzVRocdqxcu4kgbz/uKld54VQIFGRs6ddBc+HK
+p3+WTW2C8drOUiwVl13C
+=SOO1
+-----END PGP SIGNATURE-----
+
+--=-Q1Smksuq+tti1CIYZmO0--
 
