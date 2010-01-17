@@ -1,58 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f220.google.com ([209.85.220.220]:33477 "EHLO
-	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751295Ab0A3Qos (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55800 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751088Ab0AQAtI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2010 11:44:48 -0500
-Received: by fxm20 with SMTP id 20so2881694fxm.21
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Jan 2010 08:44:47 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1264868803.3546.189.camel@johannes.local>
-References: <20100129122718.73a6c877@nehalam>
-	 <1264866128.3546.185.camel@johannes.local>
-	 <51058d551001300751r4a509e90i521c946dfe9dec4@mail.gmail.com>
-	 <1264867217.3546.186.camel@johannes.local>
-	 <51058d551001300814y66d1d589uae15fa50086593b8@mail.gmail.com>
-	 <1264868231.3546.188.camel@johannes.local>
-	 <51058d551001300822p7ab564e4jedd6faad380dabc@mail.gmail.com>
-	 <1264868803.3546.189.camel@johannes.local>
-Date: Sat, 30 Jan 2010 10:44:46 -0600
-Message-ID: <51058d551001300844g2b0b4f67vc178627dd9cbab60@mail.gmail.com>
-Subject: Re: Multiple SSID on same phy
-From: Greg Oliver <oliver.greg@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 16 Jan 2010 19:49:08 -0500
+Message-Id: <20100117004824.714892919@sipsolutions.net>
+Date: Sun, 17 Jan 2010 01:47:55 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/5] mac80211: move and rename misc tx handler
+References: <20100117004754.624627000@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 30, 2010 at 10:26 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sat, 2010-01-30 at 10:22 -0600, Greg Oliver wrote:
->
->> > I don't think I can parse that. In any case, a possible use case would
->> > for instance be a protected company network, along with an unprotected,
->> > internet-only guest network.
->>
->>
->> Hmmm, I would put the odds at that happening about 100,000:1 (if not more)
->>
->> Yes, I know it is feasible, but HIGHLY unlikely.
->
-> It's not. openwrt for example has that as a default configuration. Even
-> fonera does.
+This TX handler is used only for assigning the
+station pointer in the control information, so
+give it a better name. Also move it before rate
+control.
 
-You're right - next time one of my immediate neighbors are installing
-OpenWRT (at the same time), we may run into this...
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/tx.c |   24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-I'm not meaning to argue, but is this a "real world" occurance..  I
-was merely trying to point out that it shoul dnot be a priority.  Not
-that it coule NEVER happen, because I think everyone knows that if the
-planets and sun are all aligned properly, it could happen - just like
-we'll all be dead in 2012 (j/k)..Anyway..  I respect everyone's
-opinion here..  I just think (although it may make the mac80211 stack
-better) that it is not aa forerunner for anything that needs
-addressing as far as linux wireless goes...  This may make aircrack
-better though as I am suspecting :)
+--- wireless-testing.orig/net/mac80211/tx.c	2010-01-16 20:18:22.000000000 +0100
++++ wireless-testing/net/mac80211/tx.c	2010-01-16 20:18:50.000000000 +0100
+@@ -560,6 +560,17 @@ ieee80211_tx_h_select_key(struct ieee802
+ }
+ 
+ static ieee80211_tx_result debug_noinline
++ieee80211_tx_h_sta(struct ieee80211_tx_data *tx)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
++
++	if (tx->sta)
++		info->control.sta = &tx->sta->sta;
++
++	return TX_CONTINUE;
++}
++
++static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+@@ -734,17 +745,6 @@ ieee80211_tx_h_rate_ctrl(struct ieee8021
+ }
+ 
+ static ieee80211_tx_result debug_noinline
+-ieee80211_tx_h_misc(struct ieee80211_tx_data *tx)
+-{
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+-
+-	if (tx->sta)
+-		info->control.sta = &tx->sta->sta;
+-
+-	return TX_CONTINUE;
+-}
+-
+-static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_sequence(struct ieee80211_tx_data *tx)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+@@ -1292,10 +1292,10 @@ static int invoke_tx_handlers(struct iee
+ 	CALL_TXH(ieee80211_tx_h_check_assoc);
+ 	CALL_TXH(ieee80211_tx_h_ps_buf);
+ 	CALL_TXH(ieee80211_tx_h_select_key);
++	CALL_TXH(ieee80211_tx_h_sta);
+ 	CALL_TXH(ieee80211_tx_h_michael_mic_add);
+ 	if (!(tx->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL))
+ 		CALL_TXH(ieee80211_tx_h_rate_ctrl);
+-	CALL_TXH(ieee80211_tx_h_misc);
+ 	CALL_TXH(ieee80211_tx_h_sequence);
+ 	CALL_TXH(ieee80211_tx_h_fragment);
+ 	/* handlers after fragment must be aware of tx info fragmentation! */
 
--Greg
+
