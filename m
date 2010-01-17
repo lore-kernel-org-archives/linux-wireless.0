@@ -1,196 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59822 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755136Ab0AUXGI (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:53886 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754428Ab0AQWZg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 18:06:08 -0500
-Date: Thu, 21 Jan 2010 18:06:00 -0500
-From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: netdev@vger.kernel.org, lrodriguez@atheros.com
-Subject: [RFC/RFT v2]: compat-wireless for 2.6.32.4 - multiqueue backport
-	support
-Message-ID: <20100121230600.GC8069@bombadil.infradead.org>
+	Sun, 17 Jan 2010 17:25:36 -0500
+Received: by bwz19 with SMTP id 19so1157599bwz.28
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Jan 2010 14:25:34 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] p54pci: move tx cleanup into tasklet
+Date: Sun, 17 Jan 2010 23:19:25 +0100
+Cc: John W Linville <linville@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201001172319.25737.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 2.6.32.4 kernel got added MQ support back. I've tried to backport
-this and this is what I have so far:
+This patch moves the tx cleanup routines out of the critical
+interrupt context and into the (previously known as rx) tasklet.
 
-http://bombadil.infradead.org/~mcgrof/tmp/compat-wireless-2.6.32.4-rc2.tar.bz2
+The main goal of this operation is to remove the extensive
+usage of spin_lock_irqsaves in the generic p54common library.
 
-sha1sum: 
-6d5dac4fd7d6c1a065d6e83bdfa75df2ca34fa39  compat-wireless-2.6.32.4-rc2.tar.bz2
+The next step would be to modify p54usb to do the
+rx processing inside a tasklet (just like usbnet).
 
-I've made some more changes based on comments from Johannes and some more
-reading and review of select_queue stuff, and net_device_ops changes. Only
-thing I did not add was the ndev->features |= NETIF_F_MULTI_QUEUE because
-I just see that used by netif_is_multiqueue() and that in turn by
-net/sched/sch_prio.c which I do not think we would ever use, not sure
-qdisc stuff confuses me.
-
-I appreciate your review. I only compile tested it against
-the 2.6.23..2.6.26 releases.
-
-=== compat/patches/18-multiqueue.patch ====
-
-Backport multiqueue support for kernels < 2.6.27
-
-The 2.6.23 kernel added some initial multiqueue support.
-That release relied on the on the notion of struct
-net_device_subqueue attached to the netdevice struct
-as an array. The 2.6.27 renamed these to struct netdev_queue,
-and enhanced MQ support by providing locks separately onto
-each queue. MQ support on 2.6.27 also extended each netdev
-to be able to assign a select_queue callback to be used by
-core networking for prior to pushing the skb out to the device
-driver so that queue selection can be dealt with and
-customized internally on the driver.
-
-For kernels 2.6.23..2.6.26 then we backport MQ support by
-using the equivalent calls on the struct netdev_queue to
-the struct net_device_subqueue.
-
-For older kernels than 2.6.23 we can only stop all the
-queues then and wake them up only if no other queue had
-been stopped previously. This means for kernels older
-than 2.6.23 there is a performance penalty and congestion
-on one queue would imply propagating the same congestion
-impact on all the other queues.
-
-The select_queue callback was only added as of 2.6.27 via
-commit eae792b7 so for kernels older than 2.6.23 and up
-to 2.6.27 we must ensure we do the selection of the queue
-once the core networking calls mac80211's dev_hard_start_xmit()
-(ndo_start_xmit() callback on newer kernels).
-
-This patch then consists of three parts:
-
-  1) Addresses the lack of select_queue on older kernels than 2.6.27
-  2) Extends the backport of net_device_ops for select_queue for kernels >= 2.6.27
-  3) Backporting wake/stop queue for older kernels:
-	- Handle with net_device_subqueue for >= 2.6.23
-	- Treat each queue operation as an aggregate for all queues
-
-Monitor interfaces have their own select_queue -- monitor interfaces
-are used for injecting frames so they have their own respective queue
-handling, but mac80211 just always sends management frames on VO
-queue by using skb_set_queue_mapping(skb, 0) through ieee80211_tx_skb()
-
---- a/net/mac80211/util.c	2010-01-21 11:22:36.000000000 -0800
-+++ b/net/mac80211/util.c	2010-01-21 11:34:13.000000000 -0800
-@@ -267,6 +267,18 @@ __le16 ieee80211_ctstoself_duration(stru
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+index 7446373..a227c3d 100644
+--- a/drivers/net/wireless/p54/p54pci.c
++++ b/drivers/net/wireless/p54/p54pci.c
+@@ -226,25 +226,26 @@ static void p54p_check_rx_ring(struct ieee80211_hw *dev, u32 *index,
+ 	p54p_refill_rx_ring(dev, ring_index, ring, ring_limit, rx_buf);
  }
- EXPORT_SYMBOL(ieee80211_ctstoself_duration);
  
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
-+static bool ieee80211_all_queues_stopped(struct ieee80211_hw *hw)
-+{
-+	unsigned int queue;
-+
-+	for (queue = 0; queue < hw->queues; queue++)
-+		if (!ieee80211_queue_stopped(hw, queue))
-+			return false;
-+	return true;
-+}
-+#endif
-+
- static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
- 				   enum queue_stop_reason reason)
+-/* caller must hold priv->lock */
+ static void p54p_check_tx_ring(struct ieee80211_hw *dev, u32 *index,
+ 	int ring_index, struct p54p_desc *ring, u32 ring_limit,
+-	void **tx_buf)
++	struct sk_buff **tx_buf)
  {
-@@ -287,7 +299,14 @@ static void __ieee80211_wake_queue(struc
++	unsigned long flags;
+ 	struct p54p_priv *priv = dev->priv;
+ 	struct p54p_ring_control *ring_control = priv->ring_control;
+ 	struct p54p_desc *desc;
++	struct sk_buff *skb;
+ 	u32 idx, i;
  
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list)
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
- 		netif_tx_wake_queue(netdev_get_tx_queue(sdata->dev, queue));
-+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
-+		netif_start_subqueue(sdata->dev, queue);
-+#else
-+		if (ieee80211_all_queues_stopped(hw))
-+			netif_wake_queue(sdata->dev);
-+#endif
- 	rcu_read_unlock();
+ 	i = (*index) % ring_limit;
+ 	(*index) = idx = le32_to_cpu(ring_control->device_idx[1]);
+ 	idx %= ring_limit;
+ 
++	spin_lock_irqsave(&priv->lock, flags);
+ 	while (i != idx) {
+ 		desc = &ring[i];
+-		if (tx_buf[i])
+-			if (FREE_AFTER_TX((struct sk_buff *) tx_buf[i]))
+-				p54_free_skb(dev, tx_buf[i]);
++
++		skb = tx_buf[i];
+ 		tx_buf[i] = NULL;
+ 
+ 		pci_unmap_single(priv->pdev, le32_to_cpu(desc->host_addr),
+@@ -255,17 +256,32 @@ static void p54p_check_tx_ring(struct ieee80211_hw *dev, u32 *index,
+ 		desc->len = 0;
+ 		desc->flags = 0;
+ 
++		if (skb && FREE_AFTER_TX(skb)) {
++			spin_unlock_irqrestore(&priv->lock, flags);
++			p54_free_skb(dev, skb);
++			spin_lock_irqsave(&priv->lock, flags);
++		}
++
+ 		i++;
+ 		i %= ring_limit;
+ 	}
++	spin_unlock_irqrestore(&priv->lock, flags);
  }
  
-@@ -322,7 +341,13 @@ static void __ieee80211_stop_queue(struc
- 
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list)
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
- 		netif_tx_stop_queue(netdev_get_tx_queue(sdata->dev, queue));
-+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
-+		netif_stop_subqueue(sdata->dev, queue);
-+#else
-+		netif_stop_queue(sdata->dev);
-+#endif
- 	rcu_read_unlock();
- }
- 
---- a/net/mac80211/tx.c	2010-01-21 12:13:24.000000000 -0800
-+++ b/net/mac80211/tx.c	2010-01-21 12:22:54.000000000 -0800
-@@ -1484,6 +1484,10 @@ static void ieee80211_xmit(struct ieee80
- 				return;
- 			}
- 
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27))
-+	/* Older kernels do not have the select_queue callback */
-+	skb_set_queue_mapping(skb, ieee80211_select_queue(sdata, skb));
-+#endif
- 	ieee80211_set_qos_hdr(local, skb);
- 	ieee80211_tx(sdata, skb, false);
- 	dev_put(sdata->dev);
---- a/net/mac80211/iface.c	2010-01-21 12:26:53.000000000 -0800
-+++ b/net/mac80211/iface.c	2010-01-21 12:34:40.000000000 -0800
-@@ -644,11 +644,13 @@ static void ieee80211_teardown_sdata(str
- 	WARN_ON(flushed);
- }
- 
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
- static u16 ieee80211_netdev_select_queue(struct net_device *dev,
- 					 struct sk_buff *skb)
+-static void p54p_rx_tasklet(unsigned long dev_id)
++static void p54p_tasklet(unsigned long dev_id)
  {
- 	return ieee80211_select_queue(IEEE80211_DEV_TO_SUB_IF(dev), skb);
- }
-+#endif
+ 	struct ieee80211_hw *dev = (struct ieee80211_hw *)dev_id;
+ 	struct p54p_priv *priv = dev->priv;
+ 	struct p54p_ring_control *ring_control = priv->ring_control;
  
- #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
- static const struct net_device_ops ieee80211_dataif_ops = {
-@@ -662,6 +664,7 @@ static const struct net_device_ops ieee8
- 	.ndo_select_queue	= ieee80211_netdev_select_queue,
++	p54p_check_tx_ring(dev, &priv->tx_idx_mgmt, 3, ring_control->tx_mgmt,
++			   ARRAY_SIZE(ring_control->tx_mgmt),
++			   priv->tx_buf_mgmt);
++
++	p54p_check_tx_ring(dev, &priv->tx_idx_data, 1, ring_control->tx_data,
++			   ARRAY_SIZE(ring_control->tx_data),
++			   priv->tx_buf_data);
++
+ 	p54p_check_rx_ring(dev, &priv->rx_idx_mgmt, 2, ring_control->rx_mgmt,
+ 		ARRAY_SIZE(ring_control->rx_mgmt), priv->rx_buf_mgmt);
+ 
+@@ -280,38 +296,24 @@ static irqreturn_t p54p_interrupt(int irq, void *dev_id)
+ {
+ 	struct ieee80211_hw *dev = dev_id;
+ 	struct p54p_priv *priv = dev->priv;
+-	struct p54p_ring_control *ring_control = priv->ring_control;
+ 	__le32 reg;
+ 
+ 	spin_lock(&priv->lock);
+ 	reg = P54P_READ(int_ident);
+ 	if (unlikely(reg == cpu_to_le32(0xFFFFFFFF))) {
+-		spin_unlock(&priv->lock);
+-		return IRQ_HANDLED;
++		goto out;
+ 	}
+-
+ 	P54P_WRITE(int_ack, reg);
+ 
+ 	reg &= P54P_READ(int_enable);
+ 
+-	if (reg & cpu_to_le32(ISL38XX_INT_IDENT_UPDATE)) {
+-		p54p_check_tx_ring(dev, &priv->tx_idx_mgmt,
+-				   3, ring_control->tx_mgmt,
+-				   ARRAY_SIZE(ring_control->tx_mgmt),
+-				   priv->tx_buf_mgmt);
+-
+-		p54p_check_tx_ring(dev, &priv->tx_idx_data,
+-				   1, ring_control->tx_data,
+-				   ARRAY_SIZE(ring_control->tx_data),
+-				   priv->tx_buf_data);
+-
+-		tasklet_schedule(&priv->rx_tasklet);
+-
+-	} else if (reg & cpu_to_le32(ISL38XX_INT_IDENT_INIT))
++	if (reg & cpu_to_le32(ISL38XX_INT_IDENT_UPDATE))
++		tasklet_schedule(&priv->tasklet);
++	else if (reg & cpu_to_le32(ISL38XX_INT_IDENT_INIT))
+ 		complete(&priv->boot_comp);
+ 
++out:
+ 	spin_unlock(&priv->lock);
+-
+ 	return reg ? IRQ_HANDLED : IRQ_NONE;
+ }
+ 
+@@ -360,7 +362,7 @@ static void p54p_stop(struct ieee80211_hw *dev)
+ 	unsigned int i;
+ 	struct p54p_desc *desc;
+ 
+-	tasklet_kill(&priv->rx_tasklet);
++	tasklet_kill(&priv->tasklet);
+ 
+ 	P54P_WRITE(int_enable, cpu_to_le32(0));
+ 	P54P_READ(int_enable);
+@@ -551,7 +553,7 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 	priv->common.tx = p54p_tx;
+ 
+ 	spin_lock_init(&priv->lock);
+-	tasklet_init(&priv->rx_tasklet, p54p_rx_tasklet, (unsigned long)dev);
++	tasklet_init(&priv->tasklet, p54p_tasklet, (unsigned long)dev);
+ 
+ 	err = request_firmware(&priv->firmware, "isl3886pci",
+ 			       &priv->pdev->dev);
+diff --git a/drivers/net/wireless/p54/p54pci.h b/drivers/net/wireless/p54/p54pci.h
+index fbb6839..2feead6 100644
+--- a/drivers/net/wireless/p54/p54pci.h
++++ b/drivers/net/wireless/p54/p54pci.h
+@@ -92,7 +92,7 @@ struct p54p_priv {
+ 	struct p54_common common;
+ 	struct pci_dev *pdev;
+ 	struct p54p_csr __iomem *map;
+-	struct tasklet_struct rx_tasklet;
++	struct tasklet_struct tasklet;
+ 	const struct firmware *firmware;
+ 	spinlock_t lock;
+ 	struct p54p_ring_control *ring_control;
+@@ -101,8 +101,8 @@ struct p54p_priv {
+ 	u32 rx_idx_mgmt, tx_idx_mgmt;
+ 	struct sk_buff *rx_buf_data[8];
+ 	struct sk_buff *rx_buf_mgmt[4];
+-	void *tx_buf_data[32];
+-	void *tx_buf_mgmt[4];
++	struct sk_buff *tx_buf_data[32];
++	struct sk_buff *tx_buf_mgmt[4];
+ 	struct completion boot_comp;
  };
  
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
- static u16 ieee80211_monitor_select_queue(struct net_device *dev,
- 					  struct sk_buff *skb)
- {
-@@ -687,6 +690,7 @@ static u16 ieee80211_monitor_select_queu
- 	skb->priority = 0;
- 	return ieee80211_downgrade_queue(local, skb);
- }
-+#endif
- 
- static const struct net_device_ops ieee80211_monitorif_ops = {
- 	.ndo_open		= ieee80211_open,
-@@ -715,6 +719,9 @@ static void ieee80211_if_setup(struct ne
- 	/* we will validate the address ourselves in ->open */
- 	dev->validate_addr = NULL;
- #endif
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
-+	dev->select_queue = ieee80211_netdev_select_queue;
-+#endif
- #endif
- 	dev->destructor = free_netdev;
- }
-@@ -761,6 +768,9 @@ static void ieee80211_setup_sdata(struct
- 		sdata->dev->netdev_ops = &ieee80211_monitorif_ops;
- #else
- 		sdata->dev->hard_start_xmit = ieee80211_monitor_start_xmit;
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
-+		sdata->dev->select_queue = ieee80211_monitor_select_queue;
-+#endif
- #endif
- 		sdata->u.mntr_flags = MONITOR_FLAG_CONTROL |
- 				      MONITOR_FLAG_OTHER_BSS;
