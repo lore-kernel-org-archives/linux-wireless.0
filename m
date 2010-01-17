@@ -1,40 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37921 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752804Ab0AHSBJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jan 2010 13:01:09 -0500
-Subject: [PATCH] mac80211: fix return from ieee80211_assoc_success
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 08 Jan 2010 19:01:07 +0100
-Message-ID: <1262973667.32112.1.camel@johannes.local>
-Mime-Version: 1.0
+Received: from smtp1-g21.free.fr ([212.27.42.1]:40995 "EHLO smtp1-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755092Ab0AQVpo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jan 2010 16:45:44 -0500
+From: Benoit Papillault <benoit.papillault@free.fr>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Benoit Papillault <benoit.papillault@free.fr>
+Subject: [PATCH 1/2] mac80211: removed useless code in IBSS management
+Date: Sun, 17 Jan 2010 22:45:23 +0100
+Message-Id: <1263764724-14660-1-git-send-email-benoit.papillault@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sparse pointed out that I made a mistake converting
-the return value of ieee80211_assoc_success to bool,
-this place should return false instead of one of the
-enum values (which would be true).
+ieee82011_sta_find_ibss() and ieee80211_sta_merge_ibss() are always
+called with a defined state. So it's useless to check it or set it in
+those function.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
 ---
- net/mac80211/mlme.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/ibss.c |   16 +++++++++-------
+ 1 files changed, 9 insertions(+), 7 deletions(-)
 
---- wireless-testing.orig/net/mac80211/mlme.c	2010-01-08 18:24:44.000000000 +0100
-+++ wireless-testing/net/mac80211/mlme.c	2010-01-08 18:24:53.000000000 +0100
-@@ -1096,7 +1096,7 @@ static bool ieee80211_assoc_success(stru
- 	if (err) {
- 		printk(KERN_DEBUG "%s: failed to insert STA entry for"
- 		       " the AP (error %d)\n", sdata->name, err);
--		return RX_MGMT_CFG80211_ASSOC_ERROR;
-+		return false;
- 	}
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index b7f58c8..e0019f9 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -516,6 +516,9 @@ static int ieee80211_sta_active_ibss(struct ieee80211_sub_if_data *sdata)
+ 	return active;
+ }
  
- 	if (elems.wmm_param)
-
++/*
++ * This function is called with state == IEEE80211_IBSS_MLME_JOINED
++ */
+ 
+ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
+ {
+@@ -581,6 +584,10 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+ 				  capability, 0);
+ }
+ 
++/*
++ * This function is called with state == IEEE80211_IBSS_MLME_SEARCH
++ */
++
+ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+@@ -637,18 +644,14 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+ #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+ 
+ 	/* Selected IBSS not found in current scan results - try to scan */
+-	if (ifibss->state == IEEE80211_IBSS_MLME_JOINED &&
+-	    !ieee80211_sta_active_ibss(sdata)) {
+-		mod_timer(&ifibss->timer,
+-			  round_jiffies(jiffies + IEEE80211_IBSS_MERGE_INTERVAL));
+-	} else if (time_after(jiffies, ifibss->last_scan_completed +
++	if (time_after(jiffies, ifibss->last_scan_completed +
+ 					IEEE80211_SCAN_INTERVAL)) {
+ 		printk(KERN_DEBUG "%s: Trigger new scan to find an IBSS to "
+ 		       "join\n", sdata->name);
+ 
+ 		ieee80211_request_internal_scan(sdata, ifibss->ssid,
+ 						ifibss->ssid_len);
+-	} else if (ifibss->state != IEEE80211_IBSS_MLME_JOINED) {
++	} else {
+ 		int interval = IEEE80211_SCAN_INTERVAL;
+ 
+ 		if (time_after(jiffies, ifibss->ibss_join_req +
+@@ -666,7 +669,6 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+ 			interval = IEEE80211_SCAN_INTERVAL_SLOW;
+ 		}
+ 
+-		ifibss->state = IEEE80211_IBSS_MLME_SEARCH;
+ 		mod_timer(&ifibss->timer,
+ 			  round_jiffies(jiffies + interval));
+ 	}
+-- 
+1.6.3.3
 
