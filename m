@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:54148 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193Ab0AGEKW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 23:10:22 -0500
-Date: Thu, 7 Jan 2010 05:10:18 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: sedat.dilek@gmail.com
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2.6.33] mac80211: fix skb buffering issue
-Message-ID: <20100107041018.GG1735@mail.wantstofly.org>
-References: <1262710858.28653.5.camel@johannes.local> <2d0a357f1001061431i7b306da7v2bf8717a3d3ab0cc@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2d0a357f1001061431i7b306da7v2bf8717a3d3ab0cc@mail.gmail.com>
+Received: from nbd.name ([88.198.39.176]:60379 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754606Ab0AQVBL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jan 2010 16:01:11 -0500
+Message-ID: <4B537A94.9070807@openwrt.org>
+Date: Sun, 17 Jan 2010 22:01:08 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 1/2] cfg80211: add a callback for querying the operating
+ frequency and export it through nl80211
+References: <4B536B05.6070301@openwrt.org>	 <1263758236.28067.11.camel@johannes.local>	 <1263758423.28067.12.camel@johannes.local>  <4B536F21.1090509@openwrt.org>	 <1263759278.28067.13.camel@johannes.local>  <4B5371C3.6060504@openwrt.org> <1263761294.28067.14.camel@johannes.local>
+In-Reply-To: <1263761294.28067.14.camel@johannes.local>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 06, 2010 at 11:31:10PM +0100, Sedat Dilek wrote:
-
-> Why are there two different ".ndo_set_mac_address" in [1]?
+On 2010-01-17 9:48 PM, Johannes Berg wrote:
+> On Sun, 2010-01-17 at 21:23 +0100, Felix Fietkau wrote:
 > 
->  static const struct net_device_ops ieee80211_dataif_ops = {
-> ...
->  	.ndo_set_mac_address 	= ieee80211_change_mac,
-> +	.ndo_select_queue	= ieee80211_netdev_select_queue,
->  };
+>> I want to be able to have some status info without having to go
+>> through
+>> hostapd or wpa_supplicant to get it. Currently the channel is exported
+>> by wext, but not nl80211, so I want to fix that.
 > 
->  static const struct net_device_ops ieee80211_monitorif_ops = {
-> ...
->  	.ndo_set_mac_address 	= eth_mac_addr,
-> +	.ndo_select_queue	= ieee80211_monitor_select_queue,
->  };
+> But like I said, you already have that information in the relevant
+> cases. hostapd you can just look in the config file for it...
+Nope, hostapd can deviate from the config, e.g. in the HT40 case. It'll
+switch primary and secondary channel, if necessary, or switch from HT40
+to HT20 entirely if there are overlapping BSSs. And what about STA mode?
+The channel won't be in the config in that case.
 
-Because a different queue selection algorithm is needed for
-monitor (ieee80211_monitor_select_queue) and non-monitor
-(ieee80211_netdev_select_queue) interfaces.  The commit message
-mentions this.
+> The problem with this is that not all drivers will be able to support
+> it, and that you will be exporting stale information say in the case
+> where we're not connected at all.
+If we document the exported channel for the netdev as 'last configured
+channel', it should be fine, IMHO.
+
+- Felix
