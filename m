@@ -1,37 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:58832 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751545Ab0ALMry (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2010 07:47:54 -0500
-Date: Tue, 12 Jan 2010 13:47:53 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 05/17] mwl8k: add another 88w8366 PCI ID
-Message-ID: <20100112124753.GU1735@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from nbd.name ([88.198.39.176]:53837 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753065Ab0AROaS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jan 2010 09:30:18 -0500
+Message-ID: <4B547076.5060006@openwrt.org>
+Date: Mon, 18 Jan 2010 15:30:14 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 2/2] compat: fix compile errors with CONFIG_FW_LOADER unset
+References: <4B547031.60600@openwrt.org>
+In-Reply-To: <4B547031.60600@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-0x2a43 is a single-band (2.4GHz only) 88w8366 mini-PCIe card.
-
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/mwl8k.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 7d165be..76da583 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -3740,6 +3740,7 @@ static DEFINE_PCI_DEVICE_TABLE(mwl8k_pci_id_table) = {
- 	{ PCI_VDEVICE(MARVELL, 0x2a2b), .driver_data = MWL8687, },
- 	{ PCI_VDEVICE(MARVELL, 0x2a30), .driver_data = MWL8687, },
- 	{ PCI_VDEVICE(MARVELL, 0x2a40), .driver_data = MWL8366, },
-+	{ PCI_VDEVICE(MARVELL, 0x2a43), .driver_data = MWL8366, },
- 	{ },
- };
- MODULE_DEVICE_TABLE(pci, mwl8k_pci_id_table);
--- 
-1.5.6.4
+--- a/compat/compat_firmware_class.c
++++ b/compat/compat_firmware_class.c
+@@ -20,6 +20,8 @@
+ #include <linux/highmem.h>
+ #include <linux/firmware.h>
+ 
++#if defined(CONFIG_FW_LOADER) || defined(CONFIG_FW_LOADER_MODULE)
++
+ #define to_dev(obj) container_of(obj, struct device, kobj)
+ 
+ MODULE_AUTHOR("Manuel Estrada Sainz");
+@@ -724,3 +726,5 @@ module_exit(firmware_class_exit);
+ EXPORT_SYMBOL(release_firmware);
+ EXPORT_SYMBOL(request_firmware);
+ EXPORT_SYMBOL(request_firmware_nowait);
++
++#endif
