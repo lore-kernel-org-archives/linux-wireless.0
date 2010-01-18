@@ -1,329 +1,371 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f194.google.com ([209.85.223.194]:41463 "EHLO
-	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932266Ab0AGBjY (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49010 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753142Ab0ARWpZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 20:39:24 -0500
-Received: by iwn32 with SMTP id 32so2021222iwn.33
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 17:39:23 -0800 (PST)
+	Mon, 18 Jan 2010 17:45:25 -0500
+Date: Mon, 18 Jan 2010 17:36:02 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next-2.6 2010-01-18
+Message-ID: <20100118223602.GA24834@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <43e72e891001021004r2c9cf855p52b007a88123bba7@mail.gmail.com>
-References: <4B3DBB6B.4010107@free.fr> <43e72e891001011524r190950c8pdfc89e765afb205d@mail.gmail.com>
-	<4B3F1010.3070906@free.fr> <43e72e891001021004r2c9cf855p52b007a88123bba7@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 6 Jan 2010 17:39:03 -0800
-Message-ID: <43e72e891001061739t5ded13e7u6b16c73f1b26b246@mail.gmail.com>
-Subject: Re: Issue connecting to an HT40 AP that sends a Country IE
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: multipart/mixed; boundary=001636d34a9b03987a047c892465
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---001636d34a9b03987a047c892465
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Dave,
 
-On Sat, Jan 2, 2010 at 10:04 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote=
-:
-> On Sat, Jan 2, 2010 at 4:21 AM, Benoit PAPILLAULT
-> <benoit.papillault@free.fr> wrote:
->> Luis R. Rodriguez a =C3=A9crit :
->>>
->>> On Fri, Jan 1, 2010 at 4:07 AM, Benoit PAPILLAULT
->>> <benoit.papillault@free.fr> wrote:
->>>
->>>>
->>>> Hello,
->>>>
->>>> I'd like to report an issue I have when trying to connect a laptop
->>>> running ath9k to a 802.11n AP in HT40 mode. What happens is that the
->>>> laptop cannot associate if the AP is running in HT40 mode. Association
->>>> is OK if the AP is running in HT20 mode. Here is an excerpt from syslo=
-g :
->>>>
->>>> [ =C2=A0577.166241] wlan0: associate with AP 00:15:6d:e8:88:84 (try 1)
->>>> [ =C2=A0577.167448] wlan0: RX AssocResp from 00:15:6d:e8:88:84 (capab=
-=3D0x411
->>>> status=3D10 aid=3D257)
->>>> [ =C2=A0577.167451] wlan0: AP denied association (code=3D10)
->>>> [ =C2=A0577.167460] wlan0: deauthenticating from 00:15:6d:e8:88:84 by =
-local
->>>> choice (reason=3D3)
->>>>
->>>> What's wrong is that the Associate Request (built by
->>>> ieee80211_send_assoc) does not set the bit in HT Capabilities IE sayin=
-g
->>>> : "The station supports both HT20 & HT40".
->>>>
->>>> Looking into the code, it appears that both (flags &
->>>> IEEE80211_CHAN_NO_HT40PLUS) and (flags & IEEE80211_CHAN_NO_HT40MINUS)
->>>> are true, thus disabling the IEEE80211_HT_CAP_SUP_WIDTH_20_40 which is
->>>> the culprit mentioned above.
->>>>
->>>> Digging further down, both flags are set in reg.c by :
->>>> =C2=A0if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(40))
->>>> =C2=A0 =C2=A0 =C2=A0bw_flags =3D IEEE80211_CHAN_NO_HT40;
->>>>
->>>> Indeed, at this stage, max_bandwidth_khz is 20 MHz only... Looking up =
-in
->>>> my syslog, I found this :
->>>>
->>>> [ =C2=A0506.036923] cfg80211: Received country IE:
->>>> [ =C2=A0506.036927] cfg80211: Regulatory domain: FR
->>>> [ =C2=A0506.036928] =C2=A0 =C2=A0 (start_freq - end_freq @ bandwidth),
->>>> (max_antenna_gain, max_eirp)
->>>> [ =C2=A0506.036931] =C2=A0 =C2=A0 (5170000 KHz - 5190000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>> [ =C2=A0506.036933] =C2=A0 =C2=A0 (5190000 KHz - 5210000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>> [ =C2=A0506.036936] =C2=A0 =C2=A0 (5210000 KHz - 5230000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>> [ =C2=A0506.036938] =C2=A0 =C2=A0 (5230000 KHz - 5250000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>> [ =C2=A0506.036940] =C2=A0 =C2=A0 (5250000 KHz - 5270000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>> [ =C2=A0506.036943] =C2=A0 =C2=A0 (5270000 KHz - 5290000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>> [ =C2=A0506.036945] =C2=A0 =C2=A0 (5290000 KHz - 5310000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>> [ =C2=A0506.036948] =C2=A0 =C2=A0 (5310000 KHz - 5330000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>> [ =C2=A0506.036950] =C2=A0 =C2=A0 (5490000 KHz - 5510000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>> [ =C2=A0506.036952] =C2=A0 =C2=A0 (5510000 KHz - 5530000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>> [ =C2=A0506.036955] =C2=A0 =C2=A0 (5530000 KHz - 5550000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>> [ =C2=A0506.036957] =C2=A0 =C2=A0 (5550000 KHz - 5570000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>> [ =C2=A0506.036959] =C2=A0 =C2=A0 (5570000 KHz - 5590000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>> [ =C2=A0506.036962] =C2=A0 =C2=A0 (5590000 KHz - 5610000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>> [ =C2=A0506.036964] =C2=A0 =C2=A0 (5610000 KHz - 5630000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>> [ =C2=A0506.036966] =C2=A0 =C2=A0 (5630000 KHz - 5650000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>> [ =C2=A0506.036969] =C2=A0 =C2=A0 (5650000 KHz - 5670000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>> [ =C2=A0506.036971] =C2=A0 =C2=A0 (5670000 KHz - 5690000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>> [ =C2=A0506.036974] =C2=A0 =C2=A0 (5690000 KHz - 5710000 KHz @ 40000 K=
-Hz), (10000 mBi,
->>>> 10000 mBm)
->>>>
->>>> [ =C2=A0506.036975] cfg80211: CRDA thinks this should applied:
->>>> [ =C2=A0506.036976] cfg80211: Regulatory domain: FR
->>>> [ =C2=A0506.036978] =C2=A0 =C2=A0 (start_freq - end_freq @ bandwidth),
->>>> (max_antenna_gain, max_eirp)
->>>> [ =C2=A0506.036980] =C2=A0 =C2=A0 (2402000 KHz - 2482000 KHz @ 40000 K=
-Hz), (N/A, 2000
->>>> mBm)
->>>> [ =C2=A0506.036982] =C2=A0 =C2=A0 (5170000 KHz - 5250000 KHz @ 40000 K=
-Hz), (N/A, 2000
->>>> mBm)
->>>> [ =C2=A0506.036984] =C2=A0 =C2=A0 (5250000 KHz - 5330000 KHz @ 40000 K=
-Hz), (N/A, 2000
->>>> mBm)
->>>> [ =C2=A0506.036987] =C2=A0 =C2=A0 (5490000 KHz - 5710000 KHz @ 40000 K=
-Hz), (N/A, 2700
->>>> mBm)
->>>>
->>>> [ =C2=A0506.036988] cfg80211: We intersect both of these and get:
->>>> [ =C2=A0506.037005] cfg80211: Regulatory domain: 98
->>>> [ =C2=A0506.037006] =C2=A0 =C2=A0 (start_freq - end_freq @ bandwidth),
->>>> (max_antenna_gain, max_eirp)
->>>> [ =C2=A0506.037008] =C2=A0 =C2=A0 (5170000 KHz - 5190000 KHz @ 20000 K=
-Hz), (N/A, 2000
->>>> mBm)
->>>> [ =C2=A0506.037011] =C2=A0 =C2=A0 (5190000 KHz - 5210000 KHz @ 20000 K=
-Hz), (N/A, 2000
->>>> mBm)
->>>> [ =C2=A0506.037013] =C2=A0 =C2=A0 (5210000 KHz - 5230000 KHz @ 20000 K=
-Hz), (N/A, 2000
->>>> mBm)
->>>> [ =C2=A0506.037015] =C2=A0 =C2=A0 (5230000 KHz - 5250000 KHz @ 20000 K=
-Hz), (N/A, 2000
->>>> mBm)
->>>> [ =C2=A0506.037017] =C2=A0 =C2=A0 (5250000 KHz - 5270000 KHz @ 20000 K=
-Hz), (N/A, 2000
->>>> mBm)
->>>> [ =C2=A0506.037019] =C2=A0 =C2=A0 (5270000 KHz - 5290000 KHz @ 20000 K=
-Hz), (N/A, 2000
->>>> mBm)
->>>> [ =C2=A0506.037021] =C2=A0 =C2=A0 (5290000 KHz - 5310000 KHz @ 20000 K=
-Hz), (N/A, 2000
->>>> mBm)
->>>> [ =C2=A0506.037024] =C2=A0 =C2=A0 (5310000 KHz - 5330000 KHz @ 20000 K=
-Hz), (N/A, 2000
->>>> mBm)
->>>> [ =C2=A0506.037026] =C2=A0 =C2=A0 (5490000 KHz - 5510000 KHz @ 20000 K=
-Hz), (N/A, 2700
->>>> mBm)
->>>> [ =C2=A0506.037028] =C2=A0 =C2=A0 (5510000 KHz - 5530000 KHz @ 20000 K=
-Hz), (N/A, 2700
->>>> mBm)
->>>> [ =C2=A0506.037030] =C2=A0 =C2=A0 (5530000 KHz - 5550000 KHz @ 20000 K=
-Hz), (N/A, 2700
->>>> mBm)
->>>> [ =C2=A0506.037032] =C2=A0 =C2=A0 (5550000 KHz - 5570000 KHz @ 20000 K=
-Hz), (N/A, 2700
->>>> mBm)
->>>> [ =C2=A0506.037035] =C2=A0 =C2=A0 (5570000 KHz - 5590000 KHz @ 20000 K=
-Hz), (N/A, 2700
->>>> mBm)
->>>> [ =C2=A0506.037037] =C2=A0 =C2=A0 (5590000 KHz - 5610000 KHz @ 20000 K=
-Hz), (N/A, 2700
->>>> mBm)
->>>> [ =C2=A0506.037039] =C2=A0 =C2=A0 (5610000 KHz - 5630000 KHz @ 20000 K=
-Hz), (N/A, 2700
->>>> mBm)
->>>> [ =C2=A0506.037041] =C2=A0 =C2=A0 (5630000 KHz - 5650000 KHz @ 20000 K=
-Hz), (N/A, 2700
->>>> mBm)
->>>> [ =C2=A0506.037043] =C2=A0 =C2=A0 (5650000 KHz - 5670000 KHz @ 20000 K=
-Hz), (N/A, 2700
->>>> mBm)
->>>> [ =C2=A0506.037045] =C2=A0 =C2=A0 (5670000 KHz - 5690000 KHz @ 20000 K=
-Hz), (N/A, 2700
->>>> mBm)
->>>> [ =C2=A0506.037047] =C2=A0 =C2=A0 (5690000 KHz - 5710000 KHz @ 20000 K=
-Hz), (N/A, 2700
->>>> mBm)
->>>>
->>>> So, at this stage, max_bandwidth_khz is indeed 20 MHz!
->>>>
->>>> What's the real meaning of max_bandwidth_khz? If this is just the
->>>> difference between the upper/lower frequency of each channels, then it=
-'s
->>>> useless. If it is a capability features saying 40 MHz channel wide are
->>>> allowed, then it should be left to 40 MHz even if upper/lower
->>>> frequencies are only 20 MHz apart (since the ability to use 40 MHz
->>>> depends on the list of all frequencies, not a single frequency).
->>>>
->>>
->>> Your AP is sending a country IE channel triplet for each channel it
->>> allows. Its the first time I see an AP do this and its good that you
->>> report this. What AP do you have?
->>>
->>> reg.c treats each triplet as a regulatory rule though and since you
->>> have a rule for each channel it will restrict this to the triplet
->>> range which is just one channel and as such 20 MHz only makes sense. A
->>> fix would be to expand on the ht40 checks to check connecting
->>> frequency rules.
->>>
->>> =C2=A0Luis
->>>
->>
->> Hello,
->>
->> My AP is a NanoStation M5 configured with Country "FR" and 40 MHz.
->>
->> Could you detail the fix you are proposing?
->>
->> On my side, I would propose to leave max_bandwidth_khz to 40 MHz and use=
- it
->> as a capability features.
->
-> Since the country IE does not have a max bandwidth we stuff a default
-> 40 MHz to it as part of the frequency rule it creates.
->
->> This way we would consider valid the case where
->> upper/lower frequencies are just 20 MHz apart but max_bandwidth_khz is 4=
-0
->> MHz.
->
-> The issue should =C2=A0be that a frequency rule is being created for each
-> channel and although 40 MHz is being specified as max bandwidth
-> logistically only 20 MHz fits into that frequency rule. So what the
-> intersection needs to learn is how to merge rules or at least
-> understand them together. It may be easier to parse insaneIEs like the
-> ones your AP generates and re-generate one with actual ranges with
-> contiguity channels merged. And then use that one for the
-> intersection.
+Yikes!!  I guess I fell out of the habit of sending pull requests for
+wireless-next-2.6...I'm sorry!  I could send this as a couple of
+intermediate pull requests if that would be at all helpful...?  Now that
+I think about it, I guess I was holding back wireless-next-2.6 for a
+while because it was broken and I didn't want to "spread the wealth"...
+:-)
 
-I have a patch in mind now for this, can you please apply this patch
-on iw, scan and send me the output of the scan for your AP?
+In any case, this is the usual huge round of updates intended for
+2.6.34.  It also includes a couple of merges from wireless-2.6 to
+resolve build/merge problems.  This seems like a lot of stuff, but a lot
+of it is comprised of mwl8k driver updates and 802.11n phy support
+working its way into b43.
 
-  Luis
+Please let me know if there are problems!
 
---001636d34a9b03987a047c892465
-Content-Type: text/x-patch; charset=US-ASCII; name="country-IE-new.patch"
-Content-Disposition: attachment; filename="country-IE-new.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_g44vdm0i0
+Thanks,
 
-RnJvbSA4ODMxZmQ2N2Q3MGI3YWYyZjM3ZjgzMGQ1ZTBmMDRkMTRmODQ3MGFhIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBMdWlzIFIuIFJvZHJpZ3VleiA8bHJvZHJpZ3VlekBhdGhlcm9z
-LmNvbT4KRGF0ZTogV2VkLCA2IEphbiAyMDEwIDE3OjM2OjU5IC0wODAwClN1YmplY3Q6IFtQQVRD
-SF0gaXc6IGFkZCBjb3VudHJ5IElFIHBhcnNpbmcKClNpZ25lZC1vZmYtYnk6IEx1aXMgUi4gUm9k
-cmlndWV6IDxscm9kcmlndWV6QGF0aGVyb3MuY29tPgotLS0KIHNjYW4uYyB8ICAgODcgKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0t
-CiAxIGZpbGVzIGNoYW5nZWQsIDcwIGluc2VydGlvbnMoKyksIDE3IGRlbGV0aW9ucygtKQoKZGlm
-ZiAtLWdpdCBhL3NjYW4uYyBiL3NjYW4uYwppbmRleCAzMDhkNDk5Li5mNzBkNDJjIDEwMDY0NAot
-LS0gYS9zY2FuLmMKKysrIGIvc2Nhbi5jCkBAIC0zNSw2ICszNSwyMyBAQCBzdHJ1Y3Qgc2Nhbl9w
-YXJhbXMgewogCWVudW0gcHJpbnRfaWVfdHlwZSB0eXBlOwogfTsKIAorI2RlZmluZSBJRUVFODAy
-MTFfQ09VTlRSWV9FWFRFTlNJT05fSUQgMjAxCisKK3N0cnVjdCBpZWVlODAyMTFfY291bnRyeV9p
-ZV90cmlwbGV0IHsKKwl1bmlvbiB7CisJCXN0cnVjdCB7CisJCQlfX3U4IGZpcnN0X2NoYW5uZWw7
-CisJCQlfX3U4IG51bV9jaGFubmVsczsKKwkJCV9fczggbWF4X3Bvd2VyOworCQl9IF9fYXR0cmli
-dXRlX18gKChwYWNrZWQpKSBjaGFuczsKKwkJc3RydWN0IHsKKwkJCV9fdTggcmVnX2V4dGVuc2lv
-bl9pZDsKKwkJCV9fdTggcmVnX2NsYXNzOworCQkJX191OCBjb3ZlcmFnZV9jbGFzczsKKwkJfSBf
-X2F0dHJpYnV0ZV9fICgocGFja2VkKSkgZXh0OworCX07Cit9IF9fYXR0cmlidXRlX18gKChwYWNr
-ZWQpKTsKKwogc3RhdGljIGludCBoYW5kbGVfc2NhbihzdHJ1Y3Qgbmw4MDIxMV9zdGF0ZSAqc3Rh
-dGUsCiAJCSAgICAgICBzdHJ1Y3QgbmxfY2IgKmNiLAogCQkgICAgICAgc3RydWN0IG5sX21zZyAq
-bXNnLApAQCAtMTQyLDI5ICsxNTksNjUgQEAgc3RhdGljIHZvaWQgcHJpbnRfZHMoY29uc3QgdWlu
-dDhfdCB0eXBlLCB1aW50OF90IGxlbiwgY29uc3QgdWludDhfdCAqZGF0YSkKIAlwcmludGYoIiBj
-aGFubmVsICVkXG4iLCBkYXRhWzBdKTsKIH0KIAotc3RhdGljIHZvaWQgcHJpbnRfY291bnRyeShj
-b25zdCB1aW50OF90IHR5cGUsIHVpbnQ4X3QgbGVuLCBjb25zdCB1aW50OF90ICpkYXRhKQorc3Rh
-dGljIGNvbnN0IGNoYXIgKmNvdW50cnlfZW52X3N0cihjaGFyIGVudmlyb25tZW50KQogewotCWlu
-dCBpOwotCi0JcHJpbnRmKCIgJS4qcyIsIDIsIGRhdGEpOwotCXN3aXRjaCAoZGF0YVsyXSkgewor
-CXN3aXRjaCAoZW52aXJvbm1lbnQpIHsKIAljYXNlICdJJzoKLQkJcHJpbnRmKCIgKGluZG9vciki
-KTsKLQkJYnJlYWs7CisJCXJldHVybiAiSW5kb29yIG9ubHkiOwogCWNhc2UgJ08nOgotCQlwcmlu
-dGYoIiAob3V0ZG9vcikiKTsKLQkJYnJlYWs7CisJCXJldHVybiAiT3V0ZG9vciBvbmx5IjsKIAlj
-YXNlICcgJzoKLQkJcHJpbnRmKCIgKGluL291dGRvb3IpIik7Ci0JCWJyZWFrOworCQlyZXR1cm4g
-IkluZG9vci9PdXRkb29yIjsKIAlkZWZhdWx0OgotCQlwcmludGYoIiAoaW52YWxpZCBlbnZpcm9u
-bWVudCkiKTsKLQkJYnJlYWs7CisJCXJldHVybiAiYm9ndXMiOwogCX0KLQlwcmludGYoIiwgZGF0
-YToiKTsKLQlmb3IoaT0wOyBpPGxlbi0zOyBpKyspCi0JCXByaW50ZigiICUuMDJ4IiwgZGF0YVtp
-ICsgM10pOwotCXByaW50ZigiXG4iKTsKK30KKworc3RhdGljIHZvaWQgcHJpbnRfY291bnRyeShj
-b25zdCB1aW50OF90IHR5cGUsIHVpbnQ4X3QgbGVuLCBjb25zdCB1aW50OF90ICpkYXRhKQorewor
-CXByaW50ZigiICUuKnMiLCAyLCBkYXRhKTsKKworCXByaW50ZigiXHRFbnZpcm9ubWVudDogJXNc
-biIsIGNvdW50cnlfZW52X3N0cihkYXRhWzJdKSk7CisKKwlkYXRhICs9IDM7CisJbGVuIC09IDM7
-CisKKwlpZiAobGVuIDwgMykgeworCQlwcmludGYoIlx0XHRObyBjb3VudHJ5IElFIHRyaXBsZXRz
-IHByZXNlbnRcbiIpOworCQlyZXR1cm47CisJfQorCisJcHJpbnRmKCJcdENvdW50cnkgSUUgdHJp
-cGxldHM6XG4iKTsKKworCXdoaWxlIChsZW4gPj0gMykgeworCQlpbnQgZW5kX2NoYW5uZWw7CisJ
-CXN0cnVjdCBpZWVlODAyMTFfY291bnRyeV9pZV90cmlwbGV0ICp0cmlwbGV0ID0KKwkJCShzdHJ1
-Y3QgaWVlZTgwMjExX2NvdW50cnlfaWVfdHJpcGxldCAqKSBkYXRhOworCisJCWlmICh0cmlwbGV0
-LT5leHQucmVnX2V4dGVuc2lvbl9pZCA+PSBJRUVFODAyMTFfQ09VTlRSWV9FWFRFTlNJT05fSUQp
-IHsKKwkJCXByaW50ZigiXHRcdEV4dGVuc2lvbiBJRDogJWQgUmVndWxhdG9yeSBDbGFzczogJWQg
-Q292ZXJhZ2UgY2xhc3M6ICVkXG4iLAorCQkJICAgICAgIHRyaXBsZXQtPmV4dC5yZWdfZXh0ZW5z
-aW9uX2lkLAorCQkJICAgICAgIHRyaXBsZXQtPmV4dC5yZWdfY2xhc3MsCisJCQkgICAgICAgdHJp
-cGxldC0+ZXh0LmNvdmVyYWdlX2NsYXNzKTsKKworCQkJZGF0YSArPSAzOworCQkJbGVuIC09IDM7
-CisJCQljb250aW51ZTsKKwkJfQorCisJCS8qIDIgR0h6ICovCisJCWlmICh0cmlwbGV0LT5jaGFu
-cy5maXJzdF9jaGFubmVsIDw9IDE0KQorCQkJZW5kX2NoYW5uZWwgPSB0cmlwbGV0LT5jaGFucy5m
-aXJzdF9jaGFubmVsICsgKHRyaXBsZXQtPmNoYW5zLm51bV9jaGFubmVscyAtIDEpOworCQllbHNl
-CisJCQllbmRfY2hhbm5lbCA9ICB0cmlwbGV0LT5jaGFucy5maXJzdF9jaGFubmVsICsgKDQgKiAo
-dHJpcGxldC0+Y2hhbnMubnVtX2NoYW5uZWxzIC0gMSkpOworCisJCXByaW50ZigiXHRcdENoYW5u
-ZWxzIFslZCAtICVkXVxuIiwgdHJpcGxldC0+Y2hhbnMuZmlyc3RfY2hhbm5lbCwgZW5kX2NoYW5u
-ZWwpOworCisJCWRhdGEgKz0gMzsKKwkJbGVuIC09IDM7CisJfQorCisJcmV0dXJuOwogfQogCiBz
-dGF0aWMgdm9pZCBwcmludF9wb3dlcmNvbnN0cmFpbnQoY29uc3QgdWludDhfdCB0eXBlLCB1aW50
-OF90IGxlbiwgY29uc3QgdWludDhfdCAqZGF0YSkKLS0gCjEuNi4zLjMKCg==
---001636d34a9b03987a047c892465--
+John
+
+---
+
+The following changes since commit 354fcd7774a00809ebefdba75e747364cb22a940:
+  Michael Chan (1):
+        bnx2: Save statistics during reset.
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
+
+Benoit Papillault (2):
+      zd1211rw: Fix multicast filtering.
+      mac80211: Fixed netif_tx_wake_all_queues in IBSS mode
+
+Christian Lamparter (1):
+      mac80211: fix ampdu_action tx_start ssn
+
+Christoph Egger (1):
+      Remove config option B43_LEGACY_RFKILL completely
+
+Dan Carpenter (1):
+      iwl: off by one bug
+
+Dominik Geyer (1):
+      ath9k: Fix Kconfig depends for ATH9K_DEBUGFS
+
+Felix Fietkau (6):
+      mac80211: use nullfunc frames for 4-addr sta detection
+      mac80211: allow station updates on ap interfaces for vlan stations
+      mac80211: do not transmit frames on unconfigured 4-addr vlan interfaces
+      mac80211: force use_short_slot=true for 5GHz
+      ath9k: cleanup slot time and ack/cts timeout handling
+      ath9k: implement coverage class support
+
+Gertjan van Wingerde (5):
+      rt2x00: Fix LED configuration setting for rt2800.
+      rt2x00: Properly request tx headroom for alignment operations.
+      rt2x00: RF3052 is a valid RF chipset for USB devices as well.
+      rt2x00: Unify rt2800 WPDMA ready waiting functions.
+      rt2x00: Make rt2800_init_led static and don't export it.
+
+H Hartley Sweeten (1):
+      iwl-debugfs.c: remove unnecessary casts of void *
+
+Joe Perches (1):
+      net/mac80211/mlme.c: Remove unnecessary semicolons
+
+Johannes Berg (4):
+      mac80211: fix skb buffering issue
+      mac80211: fix a few work bugs
+      mac80211: fix return from ieee80211_assoc_success
+      mac80211: remove unused type argument
+
+John W. Linville (7):
+      mac80211: fix typo added by "mac80211: fix propagation of failed..."
+      Merge git://git.kernel.org/.../linville/wireless-2.6
+      wireless: fix build breakage when CONFIG_CFG80211_REG_DEBUG not set
+      mac80211: fix-up build breakage in 2.6.33
+      Revert "mac80211: replace netif_tx_{start,stop,wake}_all_queues"
+      Merge git://git.kernel.org/.../linville/wireless-2.6
+      Revert "iwmc3200wifi: fix array out-of-boundary access"
+
+Jouni Malinen (5):
+      mac80211: No need to include WEXT headers here
+      mac80211: Select lowest rate based on basic rate set in AP mode
+      cfg80211/mac80211: Use more generic bitrate mask for rate control
+      nl80211: New command for setting TX rate mask for rate control
+      cfg80211: Store IEs from both Beacon and Probe Response frames
+
+Juha Leppanen (1):
+      wl1271: fix timeout in wl1271_top_reg_read
+
+Kalle Valo (20):
+      mac80211: fix a warning related to pointer conversion to u64 cookie
+      mac80211: fix ieee80211_change_mac() to use struct sockaddr
+      mac80211: add functions to create PS Poll and Nullfunc templates
+      mac80211: use PS Poll and Nullfunc templates when sending such frames
+      wl1251: get PS Poll and Nullfunc templates from mac80211
+      mac80211: create Probe Request template
+      mac80211: use Probe Request template when sending a direct scan
+      wl1251: cleanup scanning code
+      wl1251: get probe request template from mac80211
+      wl1251: use mac80211 provided channel parameters in scanning
+      wl1251: fix sleep related error paths in wl1251_op_bss_info_changed()
+      mac80211: add U-APSD client support
+      mac80211: add debugfs interface for U-APSD queue configuration
+      mac80211: create tx handler for dynamic ps
+      mac80211: check uapsd state for dynamic power save
+      ieee80211: add struct ieee80211_hdr_qos
+      wl1251: create qos null data template
+      wl1251: add U-APSD support
+      mac80211: fix mac80211.h documentation warnings
+      mac80211: improve powersave documentation
+
+Larry Finger (1):
+      Staging: r8187se: Fix compile error from wireless-testing commit 7044cc56
+
+Lennert Buytenhek (45):
+      mwl8k: fix configure_filter() memory leak on error
+      mwl8k: update version number to 0.11
+      mwl8k: bail out if there is no AP firmware image support for this chip
+      mwl8k: prevent freeing free IRQ if ieee80211_register_hw() fails
+      mwl8k: make the tx ring drain status messages somewhat more friendly
+      mwl8k: move struct peer_capability_info to its only user
+      mwl8k: handle station database update for AP's sta entry via ->sta_notify()
+      mwl8k: remove mwl8k_vif::bssid, which is now useless
+      mwl8k: move ->peer_id from mwl8k_vif to mwl8k_sta
+      mwl8k: honor peer rate set
+      mwl8k: fix changed flags handling in mwl8k_bss_info_changed()
+      mwl8k: add support for 88w8363 in STA mode
+      mwl8k: allow setting HT channels
+      mwl8k: pass in HT capabilities and rates when associating
+      mwl8k: trivial rx-only ampdu implementation
+      mwl8k: pass GET_HW_SPEC capability bitmask up the stack
+      mwl8k: minor cleanups
+      mwl8k: undo transmit queue 0/1 swapping in mwl8k_cmd_set_edca_params()
+      mwl8k: bump the transmit wait timeout to 5 seconds
+      mwl8k: simplify mwl8k_cmd_use_fixed_rate()
+      mwl8k: add the AP version of USE_FIXED_RATE
+      mwl8k: implement AP firmware station database maintenance
+      mwl8k: correctly set the mac_type field for AP SET_MAC_ADDR
+      mwl8k: basic AP interface support
+      mwl8k: allow limiting the amount of transmit reclaim done
+      mwl8k: keep TX_DONE interrupt masked while transmit reclaim is running
+      mwl8k: move receive processing to tasklet
+      mac80211: flush workqueue before calling driver ->stop() method
+      mwl8k: update MODULE_FIRMWARE tags
+      mwl8k: remove (mostly) write-only variable priv->current_channel
+      mwl8k: don't call SET_AID if we're not associated
+      mwl8k: simplify sequence number assignment
+      mwl8k: add another 88w8366 PCI ID
+      mwl8k: rename 2.4 GHz band/channels/rates related variables from FOO to FOO_24
+      mwl8k: move responsibility for initialising wiphy bands to GET_HW_SPEC
+      mwl8k: add 5 GHz band channels and rates
+      mwl8k: properly set receive status rate index on 5 GHz receive
+      mwl8k: handle 5 GHz legacy rate bitmaps in firmware commands
+      mwl8k: allow selecting 5 GHz channels
+      mwl8k: use firmware capability field to decide which bands to register
+      mwl8k: convert the priv->vif pointer to a list of vifs
+      mwl8k: prepare for posting per-vif firmware commands
+      mwl8k: post per-vif firmware commands as per-vif commands
+      mwl8k: enable multi-BSS AP operation
+      mwl8k: update version number (to 0.12) and copyright
+
+Luis R. Rodriguez (11):
+      ath5k: Fix eeprom checksum check for custom sized eeproms
+      cfg80211: fix syntax error on user regulatory hints
+      cfg80211: add a regulatory debug print
+      ath9k: re-enable ps by default for new single chip families
+      cfg80211: add debug print when we drop a bogus country IE
+      cfg80211: process the max power on a country IE
+      cfg80211: Fix country IE parsing for single channel triplets
+      cfg80211: fix 2 GHz subband calculation for country IEs
+      wl1271: remove unused flags
+      cfg80211: Ingore country IEs with a zero set of number of channels
+      cfg80211: make regulatory_hint_11d() band specific
+
+Lukáš Turek (5):
+      nl80211: Add new WIPHY attribute COVERAGE_CLASS
+      mac80211: Add new callback set_coverage_class
+      ath5k: Fix functions for getting/setting slot time
+      ath5k: Reimplement clock rate to usec conversion
+      ath5k: Implement mac80211 callback set_coverage_class
+
+Ming Lei (2):
+      ath9k: fix ito64
+      mac80211: fix memory leak in ieee80211_send_probe_req
+
+Pavel Roskin (1):
+      rt2x00: use correct headroom for transmission
+
+Rafał Miłecki (33):
+      b43: LP-PHY: note and explain specs inconsistency
+      b43: use standard fls for finding the most significant bit
+      b43: add new SSB's core id for BCM4328
+      b43: N-PHY: clean table init, check PHY rev
+      b43: N-PHY: add shared memory offsets definitions
+      b43: N-PHY: add needed struct definitions
+      b43: N-PHY: add missing register definitions
+      b43: N-PHY: add global variables to b43_phy_n struct
+      b43: N-PHY: add various tables
+      b43: N-PHY: update init code to match current specs
+      b43: N-PHY: update CCA reset
+      b43: N-PHY: split RSSI calibration into 2 functions (rev2, rev3)
+      b43: N-PHY: add clip detection reading/writing and some classifier function
+      b43: N-PHY: implement RSSI selection and offset scaling
+      b43: N-PHY: add RSSI polling and setting 2055 (radio) VCM
+      b43: N-PHY: RSSI calibration for rev < 3
+      b43: N-PHY: implement PA overriding (RF control related)
+      b43: N-PHY: add RSSI calibration restore
+      b43: N-PHY: add function than forces (not) staying in carrier search
+      b43: N-PHY: implement RX IQ coeffs
+      b43: N-PHY: implement workaround for TX IQ
+      b43: N-PHY: implement restoring general configuration
+      b43: N-PHY: implement RX IQ estimation
+      b43: N-PHY: implement calculating RX IQ comp
+      b43: N-PHY: implement getting TX gains
+      b43: N-PHY: add TX LP FBW (TX filter 40 related)
+      b43: N-PHY: add RX radio cores calibration
+      b43: N-PHY: update TX calibration ladder
+      b43: N-PHY: implement calculating IQ gain params
+      b43: N-PHY: add huge calculating TX IQ LO
+      b43: N-PHY: add RX IQ calibrationi for rev < 3
+      b43: N-PHY: implement TX power control coef setup
+      b43: N-PHY: drop unused definition, uncomment needed call
+
+Sujith (8):
+      ath9k: Add a new file for GPIO
+      ath9k: Add new file init.c
+      ath9k: Cleanup Powersave flags
+      ath9k: Cleanup init/deinit routines
+      ath9k: Fix queue handling
+      ath9k: Add debugfs file for RX errors
+      ath9k: Fix monitor mode handling
+      ath9k: Fix panic on driver load
+
+Tim Gardner (2):
+      b43: Declare at least one real firmware file using MODULE_FIRMWARE.
+      b43legacy: Declare all possible ucodeX.fw files
+
+Wey-Yi Guy (4):
+      iwlwifi: add IEEE80211_AMPDU_TX_OPERATIONAL
+      iwlwifi: ucode statistics data structure update
+      iwlwifi: remove obsoleted host command
+      iwlwifi: fix bug in tx byte count table
+
+Zhu Yi (2):
+      iwlwifi: remove linux/utsrelease.h dependency
+      mac80211: quit addba_resp_timer if Tx BA session is torn down
+
+ Documentation/DocBook/mac80211.tmpl                |    2 +-
+ drivers/net/wireless/ath/ath5k/ath5k.h             |   24 +-
+ drivers/net/wireless/ath/ath5k/base.c              |   22 +
+ drivers/net/wireless/ath/ath5k/eeprom.c            |   32 +-
+ drivers/net/wireless/ath/ath5k/eeprom.h            |    8 +
+ drivers/net/wireless/ath/ath5k/pcu.c               |  121 ++-
+ drivers/net/wireless/ath/ath5k/qcu.c               |   20 +-
+ drivers/net/wireless/ath/ath5k/reset.c             |    9 +-
+ drivers/net/wireless/ath/ath9k/Kconfig             |    2 +-
+ drivers/net/wireless/ath/ath9k/Makefile            |    2 +
+ drivers/net/wireless/ath/ath9k/ahb.c               |   23 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h             |   76 +-
+ drivers/net/wireless/ath/ath9k/beacon.c            |    3 +-
+ drivers/net/wireless/ath/ath9k/debug.c             |  118 ++
+ drivers/net/wireless/ath/ath9k/debug.h             |   32 +
+ drivers/net/wireless/ath/ath9k/gpio.c              |  428 +++++
+ drivers/net/wireless/ath/ath9k/hw.c                |  110 +-
+ drivers/net/wireless/ath/ath9k/hw.h                |    7 +-
+ drivers/net/wireless/ath/ath9k/init.c              |  861 ++++++++++
+ drivers/net/wireless/ath/ath9k/mac.h               |   34 +
+ drivers/net/wireless/ath/ath9k/main.c              | 1326 +--------------
+ drivers/net/wireless/ath/ath9k/pci.c               |   58 +-
+ drivers/net/wireless/ath/ath9k/recv.c              |   38 +-
+ drivers/net/wireless/ath/ath9k/virtual.c           |    2 +-
+ drivers/net/wireless/ath/ath9k/xmit.c              |   18 +-
+ drivers/net/wireless/b43/b43.h                     |    8 +
+ drivers/net/wireless/b43/main.c                    |    8 +-
+ drivers/net/wireless/b43/phy_lp.c                  |   24 +-
+ drivers/net/wireless/b43/phy_n.c                   | 1795 +++++++++++++++++++-
+ drivers/net/wireless/b43/phy_n.h                   |   87 +-
+ drivers/net/wireless/b43/tables_nphy.c             |  577 ++++++-
+ drivers/net/wireless/b43/tables_nphy.h             |   71 +-
+ drivers/net/wireless/b43legacy/main.c              |   11 +-
+ drivers/net/wireless/iwlwifi/iwl-4965.c            |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c            |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c             |    3 +
+ drivers/net/wireless/iwlwifi/iwl-commands.h        |    7 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h            |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c         |   49 +-
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c            |    1 -
+ drivers/net/wireless/iwmc3200wifi/iwm.h            |    2 +-
+ drivers/net/wireless/mwl8k.c                       | 1363 +++++++++++----
+ drivers/net/wireless/rt2x00/rt2800lib.c            |   29 +-
+ drivers/net/wireless/rt2x00/rt2800lib.h            |    3 +-
+ drivers/net/wireless/rt2x00/rt2800pci.c            |   24 +-
+ drivers/net/wireless/rt2x00/rt2800usb.c            |   22 +-
+ drivers/net/wireless/rt2x00/rt2x00.h               |    6 +
+ drivers/net/wireless/rt2x00/rt2x00dev.c            |   12 +-
+ drivers/net/wireless/rt2x00/rt2x00queue.c          |    6 +-
+ drivers/net/wireless/wl12xx/wl1251_cmd.c           |   83 +
+ drivers/net/wireless/wl12xx/wl1251_cmd.h           |   22 +-
+ drivers/net/wireless/wl12xx/wl1251_main.c          |  291 +---
+ drivers/net/wireless/wl12xx/wl1271_reg.h           |   99 --
+ drivers/net/wireless/wl12xx/wl1271_spi.c           |    3 +-
+ drivers/net/wireless/zd1211rw/zd_mac.c             |   13 +-
+ drivers/staging/rtl8187se/ieee80211/ieee80211.h    |    9 -
+ .../rtl8187se/ieee80211/ieee80211_softmac.c        |   24 +-
+ drivers/staging/rtl8187se/r8180_core.c             |    4 +-
+ include/linux/ieee80211.h                          |   37 +
+ include/linux/nl80211.h                            |   58 +-
+ include/net/cfg80211.h                             |   31 +-
+ include/net/mac80211.h                             |  151 ++-
+ net/mac80211/agg-tx.c                              |    5 +-
+ net/mac80211/cfg.c                                 |   65 +-
+ net/mac80211/debugfs.c                             |   94 +
+ net/mac80211/debugfs_netdev.c                      |   44 +-
+ net/mac80211/driver-ops.h                          |   15 +
+ net/mac80211/driver-trace.h                        |   23 +
+ net/mac80211/ieee80211_i.h                         |   31 +-
+ net/mac80211/iface.c                               |   56 +-
+ net/mac80211/main.c                                |    7 +-
+ net/mac80211/mlme.c                                |  104 +-
+ net/mac80211/offchannel.c                          |    8 +-
+ net/mac80211/rate.c                                |   88 +-
+ net/mac80211/rate.h                                |    5 +-
+ net/mac80211/rx.c                                  |   16 +-
+ net/mac80211/scan.c                                |   20 +-
+ net/mac80211/sta_info.c                            |   21 +
+ net/mac80211/sta_info.h                            |    3 +
+ net/mac80211/tx.c                                  |  278 +++-
+ net/mac80211/util.c                                |   60 +-
+ net/mac80211/wme.c                                 |   96 +-
+ net/mac80211/wme.h                                 |    8 +-
+ net/mac80211/work.c                                |   28 +-
+ net/wireless/core.c                                |    1 +
+ net/wireless/core.h                                |    3 +-
+ net/wireless/nl80211.c                             |  130 ++
+ net/wireless/reg.c                                 |  319 ++++-
+ net/wireless/reg.h                                 |   11 +
+ net/wireless/scan.c                                |  120 +-
+ net/wireless/sme.c                                 |    1 +
+ net/wireless/wext-compat.c                         |   34 +-
+ 92 files changed, 7260 insertions(+), 2757 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/gpio.c
+ create mode 100644 drivers/net/wireless/ath/ath9k/init.c
+
+Omnibus patch available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2010-01-18.patch.bz2
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
