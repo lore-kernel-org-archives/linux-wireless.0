@@ -1,35 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:10719 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751934Ab0AAQH6 (ORCPT
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:60701 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753363Ab0ARHub (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2010 11:07:58 -0500
+	Mon, 18 Jan 2010 02:50:31 -0500
+Received: by fxm25 with SMTP id 25so165952fxm.21
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Jan 2010 23:50:29 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4B3E0B9D.6080104@unsolicited.net>
-References: <4B2FEE46.5030700@unsolicited.net>
-	 <8db1092f1001010540l15c8f671y1f6a4a4417eb450b@mail.gmail.com>
-	 <4B3E0061.4000003@unsolicited.net>
-	 <8db1092f1001010619j66f8b494g86efdd8ddcc3e5e7@mail.gmail.com>
-	 <4B3E0B9D.6080104@unsolicited.net>
-Date: Fri, 1 Jan 2010 17:07:56 +0100
-Message-ID: <8db1092f1001010807i4d2e7c66kf707f6eecb8c9c5d@mail.gmail.com>
-Subject: Re: 2.6.33-rc1 - Weird hard hangs when rendering 'some' web-sites in
-	Firefox
-From: Maciej Rutecki <maciej.rutecki@gmail.com>
-To: David <david@unsolicited.net>
-Cc: linux-kernel@vger.kernel.org,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Date: Mon, 18 Jan 2010 08:50:29 +0100
+Message-ID: <fe54d8c01001172350q58ff6d43t449ca849d3c50cb9@mail.gmail.com>
+Subject: Atheros AR5008
+From: Kacper <kacper@kacper.se>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/1/1 David <david@unsolicited.net>:
+Hi,
 
-> The mystery deepens :-) Maybe these are separate issues?
+I wonder if the Atheros AR5008 found at
+http://cgi.ebay.com/ws/eBayISAPII.dll?ViewItem&item=350305658913 is
+compatible with the ath5k or ath9k drivers? Also the card seems tbe be
+a draft 802.11n, will this be a problem should I decide to use the
+802.11n functionality?
 
-Maybe. I observed big activity LED light from wireless card, when system hangs.
-
-Regards
--- 
-Maciej Rutecki
-http://www.maciek.unixy.pl
+Thanks in advance.
