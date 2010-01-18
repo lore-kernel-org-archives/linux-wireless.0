@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:48758 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932558Ab0AFSXB convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:50926 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752058Ab0AROQJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 13:23:01 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: Re: [PATCH 2/5] b43: N-PHY: b43_nphy_get_tx_gains
-Date: Wed, 6 Jan 2010 19:22:56 +0100
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Mon, 18 Jan 2010 09:16:09 -0500
+Received: by ewy19 with SMTP id 19so580845ewy.21
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jan 2010 06:16:08 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <69e28c911001171628s684df11avb3e9f9586e64b69e@mail.gmail.com>
+References: <op.u6o9tvst9lhzdc@linux-g0th.site>
+	 <69e28c911001171628s684df11avb3e9f9586e64b69e@mail.gmail.com>
+Date: Mon, 18 Jan 2010 15:16:08 +0100
+Message-ID: <b170af451001180616w5d79411fka3835e8da04e2bcf@mail.gmail.com>
+Subject: Re: [PATCH 2/5 V2] b43: N-PHY: implement and add multi-dimensional
+	table writing
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
 	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-References: <op.u54a59c89lhzdc@linux-g0th.site> <43e72e891001060926s320bf403ya2edf2601ced5125@mail.gmail.com> <b170af451001061018x6ff2404ajbdbb3cb96ceaf7f2@mail.gmail.com>
-In-Reply-To: <b170af451001061018x6ff2404ajbdbb3cb96ceaf7f2@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201001061922.58203.mb@bu3sch.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 06 January 2010 19:18:39 Rafał Miłecki wrote:
-> > Dude what is up with this e-mail data on your patches in the commit log?
-> 
-> That is way of encoding non-ASCII chars in mail header. You can find
-> info about this in RFC. That is "=?UTF-8?B?" prefix and base 64
-> encoded text.
-> 
-> That was generated with git (git format-patch -5) and it understood by
-> git (git am ...).
+W dniu 18 stycznia 2010 01:28 użytkownik Gábor Stefanik
+<netrolller.3d@gmail.com> napisał:
+> 2010/1/18 Rafał Miłecki <zajec5@gmail.com>:
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>> V2: updated to apply without fuzz
+>
+> Actually, you do not need to do that - offset or fuzzy patches will
+> still be applied cleanly AFAIK, without any intervention.
+> (John, correct me if I'm wrong here...)
 
-Well, however, there is no reason to include this in the mail body (and thus
-the GIT commit message).
-As you said, these are mail _headers_.
-Additionally, attaching the patch as mail attachment is _not_ required. We just
-put the patch into the body.
-
-You may read Documentation/SubmittingPatches and format your future
-patches according to that.
+That's right, it actually did. I just wanted to don't bother John with
+wondering if everything gone correctly. I guess I could just mention
+it instead of sending patch :)
 
 -- 
-Greetings, Michael.
+Rafał
