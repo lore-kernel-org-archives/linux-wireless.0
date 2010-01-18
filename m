@@ -1,126 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:52255 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752848Ab0ACVRK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jan 2010 16:17:10 -0500
-Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
-	by emh02-2.mail.saunalahti.fi (Postfix) with SMTP id 0DCD5EF2F9
-	for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2010 23:07:51 +0200 (EET)
-Received: from [127.0.1.1] (a91-155-131-184.elisa-laajakaista.fi [91.155.131.184])
-	by emh06.mail.saunalahti.fi (Postfix) with ESMTP id E38ABE51B3
-	for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2010 23:07:49 +0200 (EET)
-Subject: [PATCH 4/9] mac80211: create Probe Request template
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 03 Jan 2010 23:07:49 +0200
-Message-ID: <20100103210749.29287.96141.stgit@tikku>
-In-Reply-To: <20100103210552.29287.20384.stgit@tikku>
-References: <20100103210552.29287.20384.stgit@tikku>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:42293 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751052Ab0ARUV1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jan 2010 15:21:27 -0500
+Message-ID: <4B54C2BE.6040502@hauke-m.de>
+Date: Mon, 18 Jan 2010 21:21:18 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>, mcgrof@infradead.org
+Subject: compat-wireless: firmware loading does not work (udev rule missing)
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig287111491F59A8F5557B8CD3"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig287111491F59A8F5557B8CD3
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Certain type of hardware, for example wl1251 and wl1271, need a template
-for the Probe Request. Create a function ieee80211_probereq_get() which
-creates the template and drivers send it to hardware.
+Hi,
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
- include/net/mac80211.h |   17 ++++++++++++++++
- net/mac80211/tx.c      |   50 ++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 67 insertions(+), 0 deletions(-)
+with recent compat-wireless (today) firmware loading does not work any
+more. With compat_firmware_class.c included it does not work, but after
+removing it (with the stuff in comapt-XX.h) loading worked again.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index eda45c3..02647bb 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1904,6 +1904,23 @@ struct sk_buff *ieee80211_nullfunc_get(struct ieee80211_hw *hw,
- 				       struct ieee80211_vif *vif);
- 
- /**
-+ * ieee80211_probereq_get - retrieve a Probe Request template
-+ * @hw: pointer obtained from ieee80211_alloc_hw().
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ * @ssid: SSID buffer
-+ * @ssid_len: length of SSID
-+ * @ie: buffer containing all IEs expect SSID for the template
-+ * @ie_len: length of the IE buffer
-+ *
-+ * Creates a Probe Request template which can, for example, uploaded to
-+ * hardware.
-+ */
-+struct sk_buff *ieee80211_probereq_get(struct ieee80211_hw *hw,
-+				       struct ieee80211_vif *vif,
-+				       const u8 *ssid, size_t ssid_len,
-+				       const u8 *ie, size_t ie_len);
-+
-+/**
-  * ieee80211_rts_get - RTS frame generation function
-  * @hw: pointer obtained from ieee80211_alloc_hw().
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index bb8819d..361dbf6 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2268,6 +2268,56 @@ struct sk_buff *ieee80211_nullfunc_get(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL(ieee80211_nullfunc_get);
- 
-+struct sk_buff *ieee80211_probereq_get(struct ieee80211_hw *hw,
-+				       struct ieee80211_vif *vif,
-+				       const u8 *ssid, size_t ssid_len,
-+				       const u8 *ie, size_t ie_len)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_local *local;
-+	struct ieee80211_hdr_3addr *hdr;
-+	struct sk_buff *skb;
-+	size_t ie_ssid_len;
-+	u8 *pos;
-+
-+	sdata = vif_to_sdata(vif);
-+	local = sdata->local;
-+	ie_ssid_len = 2 + ssid_len;
-+
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*hdr) +
-+			    ie_ssid_len + ie_len);
-+	if (!skb) {
-+		printk(KERN_DEBUG "%s: failed to allocate buffer for probe "
-+		       "request template\n", sdata->name);
-+		return NULL;
-+	}
-+
-+	skb_reserve(skb, local->hw.extra_tx_headroom);
-+
-+	hdr = (struct ieee80211_hdr_3addr *) skb_put(skb, sizeof(*hdr));
-+	memset(hdr, 0, sizeof(*hdr));
-+	hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					 IEEE80211_STYPE_PROBE_REQ);
-+	memset(hdr->addr1, 0xff, ETH_ALEN);
-+	memcpy(hdr->addr2, vif->addr, ETH_ALEN);
-+	memset(hdr->addr3, 0xff, ETH_ALEN);
-+
-+	pos = skb_put(skb, ie_ssid_len);
-+	*pos++ = WLAN_EID_SSID;
-+	*pos++ = ssid_len;
-+	if (ssid)
-+		memcpy(pos, ssid, ssid_len);
-+	pos += ssid_len;
-+
-+	if (ie) {
-+		pos = skb_put(skb, ie_len);
-+		memcpy(pos, ie, ie_len);
-+	}
-+
-+	return skb;
-+}
-+EXPORT_SYMBOL(ieee80211_probereq_get);
-+
- void ieee80211_rts_get(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		       const void *frame, size_t frame_len,
- 		       const struct ieee80211_tx_info *frame_txctl,
+This is because my Ubuntu uses only this udev rule for fimeware loading:
 
+SUBSYSTEM=3D=3D"firmware", ACTION=3D=3D"add", RUN+=3D"firmware.sh"
+
+This is only executed if the subsystem is named "firmware" and not if it
+is named "compat_firmware". After adding an other rule, firmware loading
+with compat_firmware_class.c worked again:
+
+SUBSYSTEM=3D=3D"compat_firmware", ACTION=3D=3D"add", RUN+=3D"firmware.sh"=
+
+
+The rule is located in /lib/udev/rules.d/50-firmware.rules on my Ubuntu
+9.10 system. This was tested with kernel 2.6.31 and b43 driver.
+
+Hauke
+
+
+--------------enig287111491F59A8F5557B8CD3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iQIcBAEBAgAGBQJLVMK+AAoJEIZ0px9YPRMyrngP/RiwcZKdeCHHqHcRpAnvmOTi
+W79PLXkL6DtE81lL7Dh1NY6Gp9q8jHrQEg+O6utmlOkGaVplf6KVS2ASPECv5oAS
+PqjDQ88qhA9eWikifkq76xeNVuPj1RySJ2jXtSXkDQL2htFWAc3Ii9ozf7z9pOJI
+PgtI5dTYvfayTwh2aBqHUwUM9EsJvg1g87NXu17fVNvEoJC47TpyWaUGoEoR1Zfn
+Pvo0GLSBh2oXM5jFX6vjHeGFGUXbeyjcTHW54lghU2WRQe+rcZwlFIeJAgeW7kI4
+iQnjJPILA6Zo4836l5b9GdINkA2m7DlpEgus02qeZMNxMkr3ijqWcY6YgPPItadq
+6i3egUsfHR3fEaOwX5Ec3kZGC4PKuavzxL+XV1BVz9qD1GjtQjl+pR8Xmz1XjoJU
+xJsl+QTkv1QsiEvYurMF6kFfwtG2ppSB377fSV2wI8mwfFpLa2B4bFbEkVhqdWkP
+QqYwuqlvsKr1YwSYHaQRPlmu2+ECclZlDSZfm2iyHtTzC7Jg+NVrqrJ0nqNi9S1R
+Uf0/leyElhpFn2nFPn6l4fldLcJNOimMcE+YhYMnjsPAIehlh+40iKYVHXBpO6BI
+/Q0mOUrsvri8yYgLd/It8JC/L8JPzCv58hdlp7wV6H9o8qFdy2tMPFlKo1lzYng3
+BBmBmUdUc5rCKAbs4Zz0
+=29kX
+-----END PGP SIGNATURE-----
+
+--------------enig287111491F59A8F5557B8CD3--
