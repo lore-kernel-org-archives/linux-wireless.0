@@ -1,118 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:45343 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750931Ab0AVUwu convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:44505 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751712Ab0ARQoI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 15:52:50 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so405994eyd.19
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2010 12:52:48 -0800 (PST)
+	Mon, 18 Jan 2010 11:44:08 -0500
+Received: by bwz19 with SMTP id 19so1853874bwz.28
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jan 2010 08:44:02 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by blech.mobile (Postfix) with ESMTP id DBF28340CAD
+	for <linux-wireless@vger.kernel.org>; Mon, 18 Jan 2010 17:43:59 +0100 (CET)
+Received: from blech.mobile ([127.0.0.1])
+	by localhost (localhost [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id xO4C78MIpd+7 for <linux-wireless@vger.kernel.org>;
+	Mon, 18 Jan 2010 17:43:56 +0100 (CET)
+Received: from blech.mobile (localhost [127.0.0.1])
+	by blech.mobile (Postfix) with ESMTP id DC4CB340A21
+	for <linux-wireless@vger.kernel.org>; Mon, 18 Jan 2010 17:43:54 +0100 (CET)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFT][RFC] p54pci: revise tx locking
+Date: Mon, 18 Jan 2010 17:43:54 +0100
 MIME-Version: 1.0
-In-Reply-To: <69e28c911001220701n7de4f943t60a9eda2b7791608@mail.gmail.com>
-References: <1264121596-9616-1-git-send-email-zajec5@gmail.com>
-	 <69e28c911001220701n7de4f943t60a9eda2b7791608@mail.gmail.com>
-Date: Fri, 22 Jan 2010 21:47:03 +0100
-Message-ID: <b170af451001221247j1b380703w4c09b5fdd601466b@mail.gmail.com>
-Subject: Re: [PATCH 0/5] b43: more N-PHY stuff
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201001181743.54392.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 22 stycznia 2010 16:01 użytkownik Gábor Stefanik
-<netrolller.3d@gmail.com> napisał:
-> 2010/1/22 Rafał Miłecki <zajec5@gmail.com>:
->> John, I hope to have patch submission fixed, please let me know if there
->> is anything wrong still.
->
-> Nope, it is still base64-encoded.
->
-> I personally use Thunderbird 2 for patch submission (had weird
-> problems with Thunderbird 3 beta - not sure about the final version).
+This patch continues the effort which began with:
+"[PATCH] p54pci: move tx cleanup into tasklet".
 
-I start hating that :| I checked for headers and all messages seem to have same:
+Thanks to these changes, p54pci's interrupt & tx
+cleanup routines can be made lock-less.
 
-
-Return-path: <zajec5@gmail.com>
-Received: from localhost.localdomain (c3-107.icpnet.pl [62.21.3.107]) by
- mx.google.com with ESMTPS id 16sm1347862ewy.14.2010.01.21.16.53.24
- (version=TLSv1/SSLv3 cipher=RC4-MD5); Thu, 21 Jan 2010 16:53:25 -0800 (PST)
-From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org, "John W. Linville"
- <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de, =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?=
- <zajec5@gmail.com>
-Subject: [PATCH 1/5] b43: check band width
-Date: Fri, 22 Jan 2010 01:53:12 +0100
-Message-ID: <1264121596-9616-2-git-send-email-zajec5@gmail.com>
-X-Mailer: git-send-email 1.6.4.2
-In-Reply-To: <1264121596-9616-1-git-send-email-zajec5@gmail.com>
-References: <1264121596-9616-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-
-Signed-off-by: RafaĹ MiĹecki <zajec5@gmail.com>
-
-
-=====
-
-
-Return-path: <zajec5@gmail.com>
-Received: from localhost.localdomain (c3-107.icpnet.pl [62.21.3.107]) by
- mx.google.com with ESMTPS id 16sm1347862ewy.14.2010.01.21.16.53.12
- (version=TLSv1/SSLv3 cipher=RC4-MD5); Thu, 21 Jan 2010 16:53:12 -0800 (PST)
-From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org, "John W. Linville"
- <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de, =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?=
- <zajec5@gmail.com>
-Subject: [PATCH 0/5] b43: more N-PHY stuff
-Date: Fri, 22 Jan 2010 01:53:11 +0100
-Message-ID: <1264121596-9616-1-git-send-email-zajec5@gmail.com>
-X-Mailer: git-send-email 1.6.4.2
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-
-John, I hope to have patch submission fixed, please let me know if there
-is anything wrong still.
-
-
-=====
-
-
-Return-path: <zajec5@gmail.com>
-Received: from localhost.localdomain (c3-107.icpnet.pl [62.21.3.107]) by
- mx.google.com with ESMTPS id 16sm1347862ewy.14.2010.01.21.16.53.34
- (version=TLSv1/SSLv3 cipher=RC4-MD5); Thu, 21 Jan 2010 16:53:34 -0800 (PST)
-From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org, "John W. Linville"
- <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de, =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?=
- <zajec5@gmail.com>
-Subject: [PATCH 2/5] b43: N-PHY: implement overriding RF control
-Date: Fri, 22 Jan 2010 01:53:13 +0100
-Message-ID: <1264121596-9616-3-git-send-email-zajec5@gmail.com>
-X-Mailer: git-send-email 1.6.4.2
-In-Reply-To: <1264121596-9616-1-git-send-email-zajec5@gmail.com>
-References: <1264121596-9616-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-
-Signed-off-by: RafaĹ MiĹecki <zajec5@gmail.com>
-
-
-As you can see I've used git send-email for submission this time! I've
-no idea what I did wrong that patch 1/5 was sent incorrectly. I just
-generated patches with
-git format-patch --cover-letter -o b43
-, then modified 0000-...patch (ONLY this one) and finally sent all
-patches from b43 directory.
-
--- 
-Rafał
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+If no one finds a bug till Friday, this will become a [PATCH]. 
+---
+diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+index acc78e7..abf104e 100644
+--- a/drivers/net/wireless/p54/p54pci.c
++++ b/drivers/net/wireless/p54/p54pci.c
+@@ -238,7 +238,6 @@ static void p54p_check_tx_ring(struct ieee80211_hw *dev, u32 *index,
+ 	int ring_index, struct p54p_desc *ring, u32 ring_limit,
+ 	struct sk_buff **tx_buf)
+ {
+-	unsigned long flags;
+ 	struct p54p_priv *priv = dev->priv;
+ 	struct p54p_ring_control *ring_control = priv->ring_control;
+ 	struct p54p_desc *desc;
+@@ -249,7 +248,6 @@ static void p54p_check_tx_ring(struct ieee80211_hw *dev, u32 *index,
+ 	(*index) = idx = le32_to_cpu(ring_control->device_idx[1]);
+ 	idx %= ring_limit;
+ 
+-	spin_lock_irqsave(&priv->lock, flags);
+ 	while (i != idx) {
+ 		desc = &ring[i];
+ 
+@@ -264,16 +262,12 @@ static void p54p_check_tx_ring(struct ieee80211_hw *dev, u32 *index,
+ 		desc->len = 0;
+ 		desc->flags = 0;
+ 
+-		if (skb && FREE_AFTER_TX(skb)) {
+-			spin_unlock_irqrestore(&priv->lock, flags);
++		if (skb && FREE_AFTER_TX(skb))
+ 			p54_free_skb(dev, skb);
+-			spin_lock_irqsave(&priv->lock, flags);
+-		}
+ 
+ 		i++;
+ 		i %= ring_limit;
+ 	}
+-	spin_unlock_irqrestore(&priv->lock, flags);
+ }
+ 
+ static void p54p_tasklet(unsigned long dev_id)
+@@ -306,7 +300,6 @@ static irqreturn_t p54p_interrupt(int irq, void *dev_id)
+ 	struct p54p_priv *priv = dev->priv;
+ 	__le32 reg;
+ 
+-	spin_lock(&priv->lock);
+ 	reg = P54P_READ(int_ident);
+ 	if (unlikely(reg == cpu_to_le32(0xFFFFFFFF))) {
+ 		goto out;
+@@ -321,15 +314,14 @@ static irqreturn_t p54p_interrupt(int irq, void *dev_id)
+ 		complete(&priv->boot_comp);
+ 
+ out:
+-	spin_unlock(&priv->lock);
+ 	return reg ? IRQ_HANDLED : IRQ_NONE;
+ }
+ 
+ static void p54p_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ {
++	unsigned long flags;
+ 	struct p54p_priv *priv = dev->priv;
+ 	struct p54p_ring_control *ring_control = priv->ring_control;
+-	unsigned long flags;
+ 	struct p54p_desc *desc;
+ 	dma_addr_t mapping;
+ 	u32 device_idx, idx, i;
+@@ -370,14 +362,14 @@ static void p54p_stop(struct ieee80211_hw *dev)
+ 	unsigned int i;
+ 	struct p54p_desc *desc;
+ 
+-	tasklet_kill(&priv->tasklet);
+-
+ 	P54P_WRITE(int_enable, cpu_to_le32(0));
+ 	P54P_READ(int_enable);
+ 	udelay(10);
+ 
+ 	free_irq(priv->pdev->irq, dev);
+ 
++	tasklet_kill(&priv->tasklet);
++
+ 	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_RESET));
+ 
+ 	for (i = 0; i < ARRAY_SIZE(priv->rx_buf_data); i++) {
