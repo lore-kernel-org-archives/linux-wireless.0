@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:50620 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752389Ab0A2RgA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2010 12:36:00 -0500
-Subject: Re: Building of compat-wireless-old in 2.6.25 BSP kernel for      
- PowerPC architecture
-From: Pavel Roskin <proski@gnu.org>
-To: PAN Sunny S K <sunnypan@ust.hk>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <58444.143.89.144.207.1264747272.squirrel@sqmail.ust.hk>
-References: <51523.143.89.144.207.1264488274.squirrel@sqmail.ust.hk>
-	 <43e72e891001260853s4811bc39s2399d138d0a7da83@mail.gmail.com>
-	 <47088.143.89.144.207.1264589300.squirrel@sqmail.ust.hk>
-	 <43e72e891001271006l3422b6e2iccb89954feeaa34b@mail.gmail.com>
-	 <58444.143.89.144.207.1264747272.squirrel@sqmail.ust.hk>
-Content-Type: text/plain
-Date: Fri, 29 Jan 2010 12:35:46 -0500
-Message-Id: <1264786546.27755.9.camel@mj>
-Mime-Version: 1.0
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:45395 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751735Ab0ASVgF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jan 2010 16:36:05 -0500
+Received: by pwj9 with SMTP id 9so2690620pwj.21
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2010 13:36:05 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4B5621DF.60703@openwrt.org>
+References: <4B560D44.4080500@openwrt.org> <43e72e891001191306m36984dc4o7f302612a071982c@mail.gmail.com>
+	<4B5621DF.60703@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 19 Jan 2010 13:35:44 -0800
+Message-ID: <43e72e891001191335v62a0d304ma019d9db15d90b96@mail.gmail.com>
+Subject: Re: [PATCH] ath9k: fix beacon slot/buffer leak
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-01-29 at 14:41 +0800, PAN Sunny S K wrote:
+On Tue, Jan 19, 2010 at 1:19 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2010-01-19 10:06 PM, Luis R. Rodriguez wrote:
+>> On Tue, Jan 19, 2010 at 11:51 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>> When cleaning up beacon buffers and slots, ath9k currently checks if
+>>> sc->ah->opmode is set to a beacon related mode before cleaning up
+>>> buffers.
+>>> An unfortunate ordering of interface up/down commands can lead to
+>>> sc->ah->opmode being set to monitor mode, while there are AP interfaces
+>>> present on the same wiphy.
+>>> Always cleaning up beacon buffers if present fixes this issue.
+>>>
+>>
+>> CC stable?
+> Yeah, forgot about that. Should I send it again with Cc?
 
-> P.S. This is the message when loading the driver modules at bootup FYI
-> 
-> ath: Unknown symbol wiphy_apply_custom_regulatory
-> ath: Unknown symbol freq_reg_info
+If John hasn't picked it up yet, sure.
 
-modprobe should be able to resolve such dependencies.  If you have to
-use insmod, you'll need to load the required modules first.  It may be
-tricky to figure out.  You could just try loading all modules you have
-in a loop until they all load.  That way you'll find the dependencies.
-
-> ath_pci: Unknown symbol ath_config_crypto_get
-
-ath_pci is a module from MadWifi.  Yet the only reference to
-ath_config_crypto_get Google can find is your message.
-
-My guess is that you have some proprietary Atheros driver on the system.
-It shouldn't be a big deal that it fails to load, but you may want to
-remove it to see error messages that really matter.
-
--- 
-Regards,
-Pavel Roskin
+ Luis
