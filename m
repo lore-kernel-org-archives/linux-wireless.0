@@ -1,40 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:60658 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752722Ab0AVT2w (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43529 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932099Ab0ASTfq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 14:28:52 -0500
-Message-ID: <4B59FC5E.1020802@redfish-solutions.com>
-Date: Fri, 22 Jan 2010 11:28:30 -0800
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+	Tue, 19 Jan 2010 14:35:46 -0500
+Date: Tue, 19 Jan 2010 14:35:45 -0500
+From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [PATCH 2/2] compat: fix compile errors with CONFIG_FW_LOADER
+	unset
+Message-ID: <20100119193545.GA8069@bombadil.infradead.org>
+References: <4B547031.60600@openwrt.org> <4B547076.5060006@openwrt.org>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
-CC: Peter Svensson <petersv@psv.nu>, linux-wireless@vger.kernel.org
-Subject: Re: Compat-wireless bleeding-edge daily builds broken since	2009-12-11
-References: <Pine.LNX.4.64.0912261245080.5112@cheetah.psv.nu> <20091229020027.GE30201@bombadil.infradead.org>
-In-Reply-To: <20091229020027.GE30201@bombadil.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4B547076.5060006@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/28/2009 06:00 PM, Luis R. Rodriguez wrote:
-> On Sat, Dec 26, 2009 at 12:50:23PM +0100, Peter Svensson wrote:
->   
->> Hi,
->>
->> The bleeding edge nightly snapshopts in 
->>   http://wireless.kernel.org/download/compat-wireless-2.6/
->> are not updated since the compat-bluetooth were introduced (I think) on 
->> 2009-12-11. 
->>
->> When built from the git sources the driver works very nicely, and much 
->> more stable than the last drop on 2009-12-11.
->>     
-> This will be fixed soon, just need to re-instate access to the box.
->
->   Luis
->   
+On Mon, Jan 18, 2010 at 03:30:14PM +0100, Felix Fietkau wrote:
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+> --- a/compat/compat_firmware_class.c
+> +++ b/compat/compat_firmware_class.c
+> @@ -20,6 +20,8 @@
+>  #include <linux/highmem.h>
+>  #include <linux/firmware.h>
+>  
+> +#if defined(CONFIG_FW_LOADER) || defined(CONFIG_FW_LOADER_MODULE)
+> +
+>  #define to_dev(obj) container_of(obj, struct device, kobj)
+>  
+>  MODULE_AUTHOR("Manuel Estrada Sainz");
+> @@ -724,3 +726,5 @@ module_exit(firmware_class_exit);
+>  EXPORT_SYMBOL(release_firmware);
+>  EXPORT_SYMBOL(request_firmware);
+>  EXPORT_SYMBOL(request_firmware_nowait);
+> +
+> +#endif
 
+Hm, that would end up still building the compat_firmware module though,
+what about something like this? This is not tested on a system without
+FW_LOADER  yet, not sure if it works:
 
-Is this the issue I'm seeing?  Has it been fixed yet?
+diff --git a/Makefile b/Makefile
+index 4843869..ad8a602 100644
+--- a/Makefile
++++ b/Makefile
+@@ -19,8 +19,13 @@ $(foreach ver,$(COMPAT_VERSIONS),$(eval export CONFIG_COMPAT_KERNEL_$(ver)=y))
+ endif
+ 
+ ifeq ($(CONFIG_COMPAT_KERNEL_33),y)
++ifeq ($(CONFIG_FW_LOADER),y)
+  export CONFIG_COMPAT_FIRMWARE_CLASS=m
+ endif
++ifeq ($(CONFIG_FW_LOADER_MODULE),y)
++ export CONFIG_COMPAT_FIRMWARE_CLASS=m
++endif
++endif
+ 
+ obj-y += compat/
+ 
 
+Oh well this is just for compat.git but we'd do something similar on config.mk
+Testing to build compat.git should suffice though I think.
+
+  Luis
