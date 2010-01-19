@@ -1,81 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14431 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751056Ab0ATBsO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2010 20:48:14 -0500
-Subject: Re: [PATCH] libertas: Set/clear WPA keys before the WEP ones
-From: Dan Williams <dcbw@redhat.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20100118231920.GH5176@sortiz.org>
-References: <20100118231920.GH5176@sortiz.org>
-Content-Type: text/plain
-Date: Tue, 19 Jan 2010 17:48:12 -0800
-Message-Id: <1263952092.4481.2.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mail-pz0-f190.google.com ([209.85.222.190]:61918 "EHLO
+	mail-pz0-f190.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752234Ab0ASWco convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jan 2010 17:32:44 -0500
+Received: by pzk28 with SMTP id 28so330039pzk.4
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2010 14:32:44 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20100119215528.GB3078@tuxdriver.com>
+References: <op.u6o9unx49lhzdc@linux-g0th.site> <20100119215528.GB3078@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 19 Jan 2010 14:32:24 -0800
+Message-ID: <43e72e891001191432nc034e52hf58ba47ee0d6d819@mail.gmail.com>
+Subject: Re: [PATCH 5/5 V2] b43: N-PHY: silence warnings, add missing call
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-01-19 at 00:19 +0100, Samuel Ortiz wrote:
-> With the v10 firmware running on 8688 HW, clearing WPA keys after setting the
-> WEP key prevents us from being able to associate with WEP APs.
-> Swapping the calling order for assoc_helper_wpa_keys() and
-> assoc_helper_wep_keys fixes that issue.
-> 
-> Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+2010/1/19 John W. Linville <linville@tuxdriver.com>:
+> On Mon, Jan 18, 2010 at 12:21:49AM +0100, Rafał Miłecki wrote:
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>> New patch I didn't include earlier.
+>
+> Rafał,
+>
+> I just applied this 5-patch series and the preceding 7-patch series,
+> and I had to fixup every single one manually due to the apparently
+> busted mailer you are using.
+>
+>        User-Agent: Opera Mail/10.10 (Linux)
+>
+> The only reason I went to this trouble is because a) I want the
+> N-phy stuff and b) you sent small, manageable patches.  But don't
+> misunderstand -- I have no intention of continuing to fix these
+> manually.
+>
+> Learn to use "git send-email" or find some other mailer to send
+> your patches -- I recommend Mutt.  In any case, do not expect your
+> patches to get merged unless in the future unless you can rectify
+> this situation at your end.  I just don't have the bandwidth for
+> dealing with crap like this.
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+In case this helps:
 
-Tested on both sd8686 (v9 fw) and usb8388 (v5 OLPC fw).  Switching
-between WEP and WPA-PSK on-the-fly works as expected with this patch.
+http://wireless.kernel.org/en/developers/Documentation/git-guide#Sending_patches
 
-Though maybe we want to add a comment about this specific issue that
-says something like:
-
-/* v10 FW wants WPA keys to be set/cleared after WEP key operations,
- * otherwise it will fail to correctly associate to WEP networks.
- * Other firmware versions don't appear to care.
- */
-
-> ---
->  drivers/net/wireless/libertas/assoc.c |   15 ++++++++-------
->  1 files changed, 8 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-> index 5e650f3..fb3dff0 100644
-> --- a/drivers/net/wireless/libertas/assoc.c
-> +++ b/drivers/net/wireless/libertas/assoc.c
-> @@ -2052,13 +2052,6 @@ void lbs_association_worker(struct work_struct *work)
->  			goto out;
->  	}
->  
-> -	if (   test_bit(ASSOC_FLAG_WEP_KEYS, &assoc_req->flags)
-> -	    || test_bit(ASSOC_FLAG_WEP_TX_KEYIDX, &assoc_req->flags)) {
-> -		ret = assoc_helper_wep_keys(priv, assoc_req);
-> -		if (ret)
-> -			goto out;
-> -	}
-> -
->  	if (test_bit(ASSOC_FLAG_SECINFO, &assoc_req->flags)) {
->  		ret = assoc_helper_secinfo(priv, assoc_req);
->  		if (ret)
-> @@ -2078,6 +2071,14 @@ void lbs_association_worker(struct work_struct *work)
->  			goto out;
->  	}
->  
-> +	if (   test_bit(ASSOC_FLAG_WEP_KEYS, &assoc_req->flags)
-> +	    || test_bit(ASSOC_FLAG_WEP_TX_KEYIDX, &assoc_req->flags)) {
-> +		ret = assoc_helper_wep_keys(priv, assoc_req);
-> +		if (ret)
-> +			goto out;
-> +	}
-> +
-> +
->  	/* SSID/BSSID should be the _last_ config option set, because they
->  	 * trigger the association attempt.
->  	 */
-> -- 
-> 1.6.3.3
-> 
-
+  Luis
