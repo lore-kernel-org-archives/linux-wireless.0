@@ -1,97 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:37645 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751956Ab0AQMEA convert rfc822-to-8bit (ORCPT
+Received: from mail-yw0-f182.google.com ([209.85.211.182]:57865 "EHLO
+	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755701Ab0ASVMo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2010 07:04:00 -0500
-Received: by mail-fx0-f225.google.com with SMTP id 25so298468fxm.21
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jan 2010 04:03:59 -0800 (PST)
-Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Sun, 17 Jan 2010 13:04:02 +0100
-Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Subject: [PATCH 6/7] b43: N-PHY: move RF sequence declarations top, add
- missing calls
+	Tue, 19 Jan 2010 16:12:44 -0500
+Received: by ywh12 with SMTP id 12so2887668ywh.21
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2010 13:12:43 -0800 (PST)
+Message-ID: <4B562048.3080500@lwfinger.net>
+Date: Tue, 19 Jan 2010 15:12:40 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <op.u6oeg0uf9lhzdc@linux-g0th.site>
+To: Greg Oliver <oliver.greg@gmail.com>
+CC: Giuseppe Fontana <gfontana13@gmail.com>,
+	linux-wireless@vger.kernel.org, Shang Wu <shang@ubuntu.com>
+Subject: Re: Broadcom BCM4318 AirForceOne issue - Ubuntu 9.10 on Acer Aspire
+ 	5024wlmi
+References: <933379711001180712v7e6c0a3fx923123af900d90c7@mail.gmail.com>	 <933379711001180815r284ff41au733cadb40a7606fe@mail.gmail.com>	 <c988e1dc1001180938m24365028p63f611e7e9446663@mail.gmail.com>	 <933379711001190404q1232d2f5i899e7b6347357f23@mail.gmail.com>	 <51058d551001190858k764926ddrafcd7e2c907b3266@mail.gmail.com>	 <933379711001190923o680f5010vcd799b65e314fbd2@mail.gmail.com>	 <51058d551001190949x115f7dc9p449be477b5c1e7d2@mail.gmail.com>	 <933379711001191242h3765dd5ao8ad37903a44d7c1a@mail.gmail.com> <51058d551001191254s3063202fg632f7bc714027e89@mail.gmail.com>
+In-Reply-To: <51058d551001191254s3063202fg632f7bc714027e89@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 01/19/2010 02:54 PM, Greg Oliver wrote:
+> On Tue, Jan 19, 2010 at 2:42 PM, Giuseppe Fontana <gfontana13@gmail.com> wrote:
+>> Ok! Consider that to reduce complexity, I stopped the firewall agent
+>> in the WinXPPro laptop that hosts the wifi ad-hoc network. So we can
+>> exclude the firewall :)
+>> By the way, has Ubuntu got a default firewall active?
+> 
+> No, it doesn't, but I was unsuccessfully trying to connect to an adhoc
+> network the other day myself - using my phone to create the network.
+> An xp computer in the house and other phones were having no issue
+> connecting to it though.
+> 
+> I didn't really care to troubleshoot it, so I just switched to using
+> bluetooth for the connection.  Possibly related.  I'll try it again
+> tonight just for grins..
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-  drivers/net/wireless/b43/phy_n.c |   28 ++++++++++++++++------------
-  1 files changed, 16 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index d24e2b4..34be98b 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -55,6 +55,18 @@ struct nphy_iq_est {
-  	u32 q1_pwr;
-  };
-
-+enum b43_nphy_rf_sequence {
-+	B43_RFSEQ_RX2TX,
-+	B43_RFSEQ_TX2RX,
-+	B43_RFSEQ_RESET2RX,
-+	B43_RFSEQ_UPDATE_GAINH,
-+	B43_RFSEQ_UPDATE_GAINL,
-+	B43_RFSEQ_UPDATE_GAINU,
-+};
-+
-+static void b43_nphy_force_rf_sequence(struct b43_wldev *dev,
-+				       enum b43_nphy_rf_sequence seq);
-+
-  void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
-  {//TODO
-  }
-@@ -421,7 +433,7 @@ static void b43_nphy_reset_cca(struct b43_wldev *dev)
-  	udelay(1);
-  	b43_phy_write(dev, B43_NPHY_BBCFG, bbcfg & ~B43_NPHY_BBCFG_RSTCCA);
-  	b43_nphy_bmac_clock_fgc(dev, 0);
--	/* TODO: N PHY Force RF Seq with argument 2 */
-+	b43_nphy_force_rf_sequence(dev, B43_RFSEQ_RESET2RX);
-  }
-
-  /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/MIMOConfig */
-@@ -689,7 +701,7 @@ static void b43_nphy_rx_cal_phy_setup(struct b43_wldev *dev, u8 core)
-
-  	/* TODO: Call N PHY RF Ctrl Intc Override with 2, 0, 3 as arguments */
-  	/* TODO: Call N PHY RF Intc Override with 8, 0, 3, 0 as arguments */
--	/* TODO: Call N PHY RF Seq with 0 as argument */
-+	b43_nphy_force_rf_sequence(dev, B43_RFSEQ_RX2TX);
-
-  	if (core == 0) {
-  		rxval = 1;
-@@ -872,15 +884,7 @@ static void b43_nphy_tx_pwr_ctrl_coef_setup(struct b43_wldev *dev)
-  		b43_nphy_stay_in_carrier_search(dev, false);
-  }
-
--enum b43_nphy_rf_sequence {
--	B43_RFSEQ_RX2TX,
--	B43_RFSEQ_TX2RX,
--	B43_RFSEQ_RESET2RX,
--	B43_RFSEQ_UPDATE_GAINH,
--	B43_RFSEQ_UPDATE_GAINL,
--	B43_RFSEQ_UPDATE_GAINU,
--};
--
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/ForceRFSeq */
-  static void b43_nphy_force_rf_sequence(struct b43_wldev *dev,
-  				       enum b43_nphy_rf_sequence seq)
-  {
-@@ -2156,7 +2160,7 @@ static int b43_nphy_rev2_cal_rx_iq(struct b43_wldev *dev,
-  	}
-
-  	/* TODO: Call N PHY RF Ctrl Override with 0x400, 0, 3, 1 as arguments*/
--	/* TODO: Call N PHY Force RF Seq with 2 as argument */
-+	b43_nphy_force_rf_sequence(dev, B43_RFSEQ_RESET2RX);
-  	/* TODO: Write an N PHY Table with ID 7, length 2, offset 0x110,
-  		width 16, and data from gain_save */
-
--- 
-1.6.4.2
-
+Would you please stop top posting, _AND_ trim the quotes the way I just did!!
