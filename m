@@ -1,343 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:62928 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754036Ab0A2Ty7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2010 14:54:59 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH] iwlwifi: load firmware asynchronously before mac80211 registration
-Date: Fri, 29 Jan 2010 11:54:56 -0800
-Message-Id: <1264794896-8112-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:59907 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752335Ab0ASRYV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jan 2010 12:24:21 -0500
+Received: by bwz19 with SMTP id 19so2966506bwz.28
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2010 09:24:17 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <51058d551001190858k764926ddrafcd7e2c907b3266@mail.gmail.com>
+References: <933379711001180712v7e6c0a3fx923123af900d90c7@mail.gmail.com>
+	<933379711001180815r284ff41au733cadb40a7606fe@mail.gmail.com>
+	<c988e1dc1001180938m24365028p63f611e7e9446663@mail.gmail.com>
+	<933379711001190404q1232d2f5i899e7b6347357f23@mail.gmail.com>
+	<51058d551001190858k764926ddrafcd7e2c907b3266@mail.gmail.com>
+From: Giuseppe Fontana <gfontana13@gmail.com>
+Date: Tue, 19 Jan 2010 18:23:57 +0100
+Message-ID: <933379711001190923o680f5010vcd799b65e314fbd2@mail.gmail.com>
+Subject: Re: Broadcom BCM4318 AirForceOne issue - Ubuntu 9.10 on Acer Aspire
+	5024wlmi
+To: Greg Oliver <oliver.greg@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Shang Wu <shang@ubuntu.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+Hi!
+ping from .1 -> .99  >>>> No ping
+ping from .1 to <ip of nokia> >> I don't know how to determine Nokia
+IP. I can't get it from the phone GUI. Is there a way to get it from
+Windows? But I guess ping should work, cause Nokia phone can access
+internet via wireless...
 
-At the wireless summit in Portland we discussed a way of
-loading firmware asynchronously from ->probe() before
-registration to mac80211, in order to register with the
-wireless subsystems with complete information in cases
-where firmware is required to know parameters.
-
-This is not yet the case in iwlwifi, but for some new
-features we're working on it will be the case since
-those will only be supported by new firmware images.
-
-Hence, to start with, convert iwlwifi to load firmware
-asynchronously from probe, unbinding the device when
-firmware loading fails, and only registering with the
-wireless subsystems after firmware has been loaded
-successfully.
-
-Future patches will hook into this to register the
-new firmware capabilities, depending on the firmware
-API version.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
-This patch depends on the new request_firmware_nowait() that has not yet
-been merged into wireless-next-2.6. We thus send this patch based on
-wireless-testing, which has the correct function.
-
-Even though we do not base it on wireles-next-2.6 please do take this patch
-for 2.6.34 to be included during the merge window.
-
-Thank you very much
-
-
- drivers/net/wireless/iwlwifi/iwl-agn.c |  157 ++++++++++++++++----------------
- drivers/net/wireless/iwlwifi/iwl-dev.h |    2 +
- 2 files changed, 81 insertions(+), 78 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 4a26892..3bb3a89 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1463,59 +1463,66 @@ static void iwl_nic_start(struct iwl_priv *priv)
- }
- 
- 
-+static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context);
-+static int iwl_mac_setup_register(struct iwl_priv *priv);
-+
-+static int __must_check iwl_request_firmware(struct iwl_priv *priv, bool first)
-+{
-+	const char *name_pre = priv->cfg->fw_name_pre;
-+
-+	if (first)
-+		priv->fw_index = priv->cfg->ucode_api_max;
-+	else
-+		priv->fw_index--;
-+
-+	if (priv->fw_index < priv->cfg->ucode_api_min) {
-+		IWL_ERR(priv, "no suitable firmware found!\n");
-+		return -ENOENT;
-+	}
-+
-+	sprintf(priv->firmware_name, "%s%d%s",
-+		name_pre, priv->fw_index, ".ucode");
-+
-+	IWL_DEBUG_INFO(priv, "attempting to load firmware '%s'\n",
-+		       priv->firmware_name);
-+
-+	return request_firmware_nowait(THIS_MODULE, 1, priv->firmware_name,
-+				       &priv->pci_dev->dev, GFP_KERNEL, priv,
-+				       iwl_ucode_callback);
-+}
-+
- /**
-- * iwl_read_ucode - Read uCode images from disk file.
-+ * iwl_ucode_callback - callback when firmware was loaded
-  *
-- * Copy into buffers for card to fetch via bus-mastering
-+ * If loaded successfully, copies the firmware into buffers
-+ * for the card to fetch (via DMA).
-  */
--static int iwl_read_ucode(struct iwl_priv *priv)
-+static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- {
-+	struct iwl_priv *priv = context;
- 	struct iwl_ucode_header *ucode;
--	int ret = -EINVAL, index;
--	const struct firmware *ucode_raw;
--	const char *name_pre = priv->cfg->fw_name_pre;
- 	const unsigned int api_max = priv->cfg->ucode_api_max;
- 	const unsigned int api_min = priv->cfg->ucode_api_min;
--	char buf[25];
- 	u8 *src;
- 	size_t len;
- 	u32 api_ver, build;
- 	u32 inst_size, data_size, init_size, init_data_size, boot_size;
-+	int err;
- 	u16 eeprom_ver;
- 
--	/* Ask kernel firmware_class module to get the boot firmware off disk.
--	 * request_firmware() is synchronous, file is in memory on return. */
--	for (index = api_max; index >= api_min; index--) {
--		sprintf(buf, "%s%d%s", name_pre, index, ".ucode");
--		ret = request_firmware(&ucode_raw, buf, &priv->pci_dev->dev);
--		if (ret < 0) {
--			IWL_ERR(priv, "%s firmware file req failed: %d\n",
--				  buf, ret);
--			if (ret == -ENOENT)
--				continue;
--			else
--				goto error;
--		} else {
--			if (index < api_max)
--				IWL_ERR(priv, "Loaded firmware %s, "
--					"which is deprecated. "
--					"Please use API v%u instead.\n",
--					  buf, api_max);
--
--			IWL_DEBUG_INFO(priv, "Got firmware '%s' file (%zd bytes) from disk\n",
--				       buf, ucode_raw->size);
--			break;
--		}
-+	if (!ucode_raw) {
-+		IWL_ERR(priv, "request for firmware file '%s' failed.\n",
-+			priv->firmware_name);
-+		goto try_again;
- 	}
- 
--	if (ret < 0)
--		goto error;
-+	IWL_DEBUG_INFO(priv, "Loaded firmware file '%s' (%zd bytes).\n",
-+		       priv->firmware_name, ucode_raw->size);
- 
- 	/* Make sure that we got at least the v1 header! */
- 	if (ucode_raw->size < priv->cfg->ops->ucode->get_header_size(1)) {
- 		IWL_ERR(priv, "File size way too small!\n");
--		ret = -EINVAL;
--		goto err_release;
-+		goto try_again;
- 	}
- 
- 	/* Data from ucode file:  header followed by uCode images */
-@@ -1540,10 +1547,9 @@ static int iwl_read_ucode(struct iwl_priv *priv)
- 		IWL_ERR(priv, "Driver unable to support your firmware API. "
- 			  "Driver supports v%u, firmware is v%u.\n",
- 			  api_max, api_ver);
--		priv->ucode_ver = 0;
--		ret = -EINVAL;
--		goto err_release;
-+		goto try_again;
- 	}
-+
- 	if (api_ver != api_max)
- 		IWL_ERR(priv, "Firmware has old API version. Expected v%u, "
- 			  "got v%u. New firmware can be obtained "
-@@ -1585,6 +1591,12 @@ static int iwl_read_ucode(struct iwl_priv *priv)
- 	IWL_DEBUG_INFO(priv, "f/w package hdr boot inst size = %u\n",
- 		       boot_size);
- 
-+	/*
-+	 * For any of the failures below (before allocating pci memory)
-+	 * we will try to load a version with a smaller API -- maybe the
-+	 * user just got a corrupted version of the latest API.
-+	 */
-+
- 	/* Verify size of file vs. image size info in file's header */
- 	if (ucode_raw->size !=
- 		priv->cfg->ops->ucode->get_header_size(api_ver) +
-@@ -1594,41 +1606,35 @@ static int iwl_read_ucode(struct iwl_priv *priv)
- 		IWL_DEBUG_INFO(priv,
- 			"uCode file size %d does not match expected size\n",
- 			(int)ucode_raw->size);
--		ret = -EINVAL;
--		goto err_release;
-+		goto try_again;
- 	}
- 
- 	/* Verify that uCode images will fit in card's SRAM */
- 	if (inst_size > priv->hw_params.max_inst_size) {
- 		IWL_DEBUG_INFO(priv, "uCode instr len %d too large to fit in\n",
- 			       inst_size);
--		ret = -EINVAL;
--		goto err_release;
-+		goto try_again;
- 	}
- 
- 	if (data_size > priv->hw_params.max_data_size) {
- 		IWL_DEBUG_INFO(priv, "uCode data len %d too large to fit in\n",
- 				data_size);
--		ret = -EINVAL;
--		goto err_release;
-+		goto try_again;
- 	}
- 	if (init_size > priv->hw_params.max_inst_size) {
- 		IWL_INFO(priv, "uCode init instr len %d too large to fit in\n",
- 			init_size);
--		ret = -EINVAL;
--		goto err_release;
-+		goto try_again;
- 	}
- 	if (init_data_size > priv->hw_params.max_data_size) {
- 		IWL_INFO(priv, "uCode init data len %d too large to fit in\n",
- 		      init_data_size);
--		ret = -EINVAL;
--		goto err_release;
-+		goto try_again;
- 	}
- 	if (boot_size > priv->hw_params.max_bsm_size) {
- 		IWL_INFO(priv, "uCode boot instr len %d too large to fit in\n",
- 			boot_size);
--		ret = -EINVAL;
--		goto err_release;
-+		goto try_again;
- 	}
- 
- 	/* Allocate ucode buffers for card's bus-master loading ... */
-@@ -1712,20 +1718,36 @@ static int iwl_read_ucode(struct iwl_priv *priv)
- 	IWL_DEBUG_INFO(priv, "Copying (but not loading) boot instr len %Zd\n", len);
- 	memcpy(priv->ucode_boot.v_addr, src, len);
- 
-+	/**************************************************
-+	 * This is still part of probe() in a sense...
-+	 *
-+	 * 9. Setup and register with mac80211 and debugfs
-+	 **************************************************/
-+	err = iwl_mac_setup_register(priv);
-+	if (err)
-+		goto out_unbind;
-+
-+	err = iwl_dbgfs_register(priv, DRV_NAME);
-+	if (err)
-+		IWL_ERR(priv, "failed to create debugfs files. Ignoring error: %d\n", err);
-+
- 	/* We have our copies now, allow OS release its copies */
- 	release_firmware(ucode_raw);
--	return 0;
-+	return;
-+
-+ try_again:
-+	/* try next, if any */
-+	if (iwl_request_firmware(priv, false))
-+		goto out_unbind;
-+	release_firmware(ucode_raw);
-+	return;
- 
-  err_pci_alloc:
- 	IWL_ERR(priv, "failed to allocate pci memory\n");
--	ret = -ENOMEM;
- 	iwl_dealloc_ucode_pci(priv);
--
-- err_release:
-+ out_unbind:
-+	device_release_driver(&priv->pci_dev->dev);
- 	release_firmware(ucode_raw);
--
-- error:
--	return ret;
- }
- 
- static const char *desc_lookup_text[] = {
-@@ -2673,21 +2695,7 @@ static int iwl_mac_start(struct ieee80211_hw *hw)
- 
- 	/* we should be verifying the device is ready to be opened */
- 	mutex_lock(&priv->mutex);
--
--	/* fetch ucode file from disk, alloc and copy to bus-master buffers ...
--	 * ucode filename and max sizes are card-specific. */
--
--	if (!priv->ucode_code.len) {
--		ret = iwl_read_ucode(priv);
--		if (ret) {
--			IWL_ERR(priv, "Could not read microcode: %d\n", ret);
--			mutex_unlock(&priv->mutex);
--			return ret;
--		}
--	}
--
- 	ret = __iwl_up(priv);
--
- 	mutex_unlock(&priv->mutex);
- 
- 	if (ret)
-@@ -3645,17 +3653,10 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	iwl_power_initialize(priv);
- 	iwl_tt_initialize(priv);
- 
--	/**************************************************
--	 * 9. Setup and register with mac80211 and debugfs
--	 **************************************************/
--	err = iwl_mac_setup_register(priv);
-+	err = iwl_request_firmware(priv, true);
- 	if (err)
- 		goto out_remove_sysfs;
- 
--	err = iwl_dbgfs_register(priv, DRV_NAME);
--	if (err)
--		IWL_ERR(priv, "failed to create debugfs files. Ignoring error: %d\n", err);
--
- 	return 0;
- 
-  out_remove_sysfs:
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 9b0a5cb..78106cc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1111,6 +1111,7 @@ struct iwl_priv {
- 	u8   rev_id;
- 
- 	/* uCode images, save to reload in case of failure */
-+	int fw_index;			/* firmware we're trying to load */
- 	u32 ucode_ver;			/* version of ucode, copy of
- 					   iwl_ucode.ver */
- 	struct fw_desc ucode_code;	/* runtime inst */
-@@ -1121,6 +1122,7 @@ struct iwl_priv {
- 	struct fw_desc ucode_boot;	/* bootstrap inst */
- 	enum ucode_type ucode_type;
- 	u8 ucode_write_complete;	/* the image write is complete */
-+	char firmware_name[25];
- 
- 
- 	struct iwl_rxon_time_cmd rxon_timing;
--- 
-1.6.3.3
-
+2010/1/19 Greg Oliver <oliver.greg@gmail.com>:
+> On Tue, Jan 19, 2010 at 6:04 AM, Giuseppe Fontana <gfontana13@gmail.com> wrote:
+>> Yes, I installed b43-fwcutter to extract the adapter firmware, as
+>> suggested in linux-wireless page.
+>> I did other experiments and I have an update: the issue is only with
+>> ad-hoc networks.
+>> Moreover yesterday I successufully connected to a Windows ad-hoc
+>> network using Network Manager (that is able to force BSSID address to
+>> grant access to the same cell of the ad-hoc network) following these
+>> steps:
+>>
+>> 1. I created an ad-hoc network (essid "SkyNet") under WinXPPro, to
+>> share my Internet connection via wireless. To   achieve this result I
+>> manually set 192.168.0.1 IP address and 255.255.255.0 netmask. I also
+>> selected connection sharing option under the adapter connected to the
+>> internet.
+>>  2. Connected to the ad-hoc network using my Nokia E52 phone. The
+>> phone and WinXPPro successfully created the network and negotiated IP
+>> addresses via DHCP (note that after connection the phone can access
+>> internet and navigate)
+>> 3. At this point, I connected Ubuntu to the ad-hoc network via Network
+>> Manager. dhcpclient founds an active network and connection happens :)
+>> (Note that I later I discovered that I can achieve the same result
+>> skipping step 2 and manually setting a 192.168.0.x address in Ubuntu
+>> via Network Manager profile).
+>>
+>> However I still have a problem: even if the connection is established,
+>> I cannot ping the 192.168.0.1 address and the Ubunbtu laptop can't use
+>> the shared internet connection. Here is the syslog printed during the
+>> connection (with dhcp negotiation):
+>
+> Can you ping from .1 -> .99 and from .1 to <ip of nokia>?
+>
+>>
+>> 2010/1/18 Shang Wu <shang@ubuntu.com>:
+>>> In 9.04, it used to be installing the package b43-fwcutter. Is the package
+>>> installed on your system? Can you also pastebin the syslog?
+>>> Thanks,
+>>>
+>>> On Mon, Jan 18, 2010 at 11:15 AM, Giuseppe Fontana <gfontana13@gmail.com>
+>>> wrote:
+>>>>
+>>>> Hi! I installed Ubuntu 9.10 on my Acer 5024wlmi and followed Linux
+>>>> wireless instructions to enable my Broadcom AirForceOne BCM4318 wifi
+>>>> card. Now the wireless adapter is on (laptop front led also is on), I
+>>>> can see wifi networks but connection fails (even with a simple ad-hoc
+>>>> open wifi network!). I tried with Network Manager/WICD/Wifi Radar and
+>>>> also using terminal lfconfig/lwconfig commands without success. It
+>>>> seems that my wifi card cannot ping access points: for example see
+>>>> this log from WICD connection session:
+>>>>
+>>>> -2010/01/16 22:51:15 :: Connecting to wireless network Winx
+>>>> -2010/01/16 22:51:15 :: ping -q -w 3 -c 1 192.168.0.1
+>>>> -2010/01/16 22:51:17 :: iwconfig wlan0
+>>>> -2010/01/16 22:51:18 :: Connection Failed: Failed to ping the access
+>>>> point!
+>>>>
+>>>> Here there are some useful data about my laptop/Ubuntu configuration.
+>>>> Hope you can help!
+>>>>
+>>>>
+>>>> ------------------------------------------------------------------------------------------------------------------------------------------
+>>>> Laptop model >> Acer Aspire 5024wlmi laptop
+>>>> giuseppe@giuseppe-laptop:~$ lsb_release -d >> Description:    Ubuntu 9.10
+>>>> giuseppe@giuseppe-laptop:~$ uname -mr >> 2.6.31-17-generic i686
+>>>>
+>>>> ------------------------------------------------------------------------------------------------------------------------------------------
+>>>> giuseppe@giuseppe-laptop:~$ sudo lspci | grep 'Broadcom'
+>>>> 06:05.0 Network controller: Broadcom Corporation BCM4318 [AirForce One
+>>>> 54g] 802.11g Wireless LAN Controller (rev 02)
+>>>>
+>>>> ------------------------------------------------------------------------------------------------------------------------------------------
+>>>> giuseppe@giuseppe-laptop:~$ sudo iwconfig wlan0
+>>>> wlan0     IEEE 802.11bg  ESSID:""
+>>>>           Mode:Managed  Frequency:2.462 GHz  Access Point: Not-Associated
+>>>>           Tx-Power=20 dBm
+>>>>           Retry  long limit:7   RTS thr:off   Fragment thr:off
+>>>>           Encryption key:off
+>>>>           Power Management:off
+>>>>           Link Quality:0  Signal level:0  Noise level:0
+>>>>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>>>>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+>>>>
+>>>>
+>>>> ------------------------------------------------------------------------------------------------------------------------------------------
+>>>> giuseppe@giuseppe-laptop:~$ sudo lsmod | grep "b43"
+>>>> b43                   122168  0
+>>>> mac80211              181140  1 b43
+>>>> cfg80211               93052  2 b43,mac80211
+>>>> led_class               4096  3 acer_wmi,b43,sdhci
+>>>> ssb                    35364  1 b43
+>>>>
+>>>> ------------------------------------------------------------------------------------------------------------------------------------------
+>>>> giuseppe@giuseppe-laptop:~$ dmesg | grep b43
+>>>> [    2.717660] b43-pci-bridge 0000:06:05.0: PCI INT A -> GSI 21
+>>>> (level, low) -> IRQ 21
+>>>> [   14.884317] b43-phy0: Broadcom 4318 WLAN found (core revision 9)
+>>>> [   16.516094] b43 ssb0:0: firmware: requesting b43/ucode5.fw
+>>>> [   16.739725] b43 ssb0:0: firmware: requesting b43/pcm5.fw
+>>>> [   16.745578] b43 ssb0:0: firmware: requesting b43/b0g0initvals5.fw
+>>>> [   16.751202] b43 ssb0:0: firmware: requesting b43/b0g0bsinitvals5.fw
+>>>> [...]
+>>>> [ 4300.736074] b43-phy0: Loading firmware version 410.2160 (2007-05-26
+>>>> 15:32:10)
+>>>> [ 4300.776488] Registered led device: b43-phy0::tx
+>>>> [ 4300.776531] Registered led device: b43-phy0::rx
+>>>> [ 4300.776575] Registered led device: b43-phy0::radio
+>>>>
+>>>> ------------------------------------------------------------------------------------------------------------------------------------------
+>>>> giuseppe@giuseppe-laptop:~$ sudo lshw -C network
+>>>>   *-network:0
+>>>>        description: Network controller
+>>>>        product: BCM4318 [AirForce One 54g] 802.11g Wireless LAN Controller
+>>>>        vendor: Broadcom Corporation
+>>>>        physical id: 5
+>>>>        bus info: pci@0000:06:05.0
+>>>>        version: 02
+>>>>        width: 32 bits
+>>>>        clock: 33MHz
+>>>>        capabilities: bus_master
+>>>>        configuration: driver=b43-pci-bridge latency=64
+>>>>        resources: irq:21 memory:c0204000-c0205fff
+>>>>   *-network:1
+>>>>        description: Ethernet interface
+>>>>        product: RTL-8169 Gigabit Ethernet
+>>>>        vendor: Realtek Semiconductor Co., Ltd.
+>>>>        physical id: 7
+>>>>        bus info: pci@0000:06:07.0
+>>>>        logical name: eth0
+>>>>        version: 10
+>>>>        serial: 00:0a:e4:e8:a2:87
+>>>>        size: 1GB/s
+>>>>        capacity: 1GB/s
+>>>>        width: 32 bits
+>>>>        clock: 66MHz
+>>>>        capabilities: pm bus_master cap_list rom ethernet physical tp
+>>>> mii 10bt 10bt-fd 100bt 100bt-fd 1000bt 1000bt-fd autonegotiation
+>>>>        configuration: autonegotiation=on broadcast=yes driver=r8169
+>>>> driverversion=2.3LK-NAPI duplex=full ip=192.168.0.242 latency=64
+>>>> link=yes maxlatency=64 mingnt=32 multicast=yes port=MII speed=1GB/s
+>>>>        resources: irq:23 ioport:a000(size=256)
+>>>> memory:c0209400-c02094ff memory:44000000-4401ffff(prefetchable)
+>>>>   *-network
+>>>>        description: Wireless interface
+>>>>        physical id: 1
+>>>>        logical name: wlan0
+>>>>        serial: 00:14:a4:49:c7:fc
+>>>>        capabilities: ethernet physical wireless
+>>>>        configuration: broadcast=yes multicast=yes wireless=IEEE 802.11bg
+>>>>
+>>>> ------------------------------------------------------------------------------------------------------------------------------------------
+>>>> giuseppe@giuseppe-laptop:~$ sudo iwlist scan
+>>>> (...)
+>>>> wlan0     Scan completed :
+>>>>           Cell 01 - Address: 02:1D:E0:00:08:5A
+>>>>                     Channel:11
+>>>>                     Frequency:2.462 GHz (Channel 11)
+>>>>                     Quality=62/70  Signal level=-48 dBm
+>>>>                     Encryption key:off
+>>>>                     ESSID:"Winx"
+>>>>                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s
+>>>>                     Bit Rates:6 Mb/s; 9 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s
+>>>>                               36 Mb/s; 48 Mb/s; 54 Mb/s
+>>>>                     Mode:Ad-Hoc
+>>>>                     Extra:tsf=00000001035383eb
+>>>>                     Extra: Last beacon: 272ms ago
+>>>>                     IE: Unknown: 000457696E78
+>>>>                     IE: Unknown: 010482840B16
+>>>>                     IE: Unknown: 03010B
+>>>>                     IE: Unknown: 06020000
+>>>>                     IE: Unknown: 2A0100
+>>>>                     IE: Unknown: 32080C1218243048606C
+>>>>                     IE: Unknown: DD070giuseppe@giuseppe-laptop:~$ sudo
+>>>> iwlist scan050F202000100
+>>>>
+>>>> ------------------------------------------------------------------------------------------------------------------------------------------
+>>>> giuseppe@giuseppe-laptop:~$ sudo /etc/init.d/networking restart
+>>>>  * Reconfiguring network interfaces...
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>>>> in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>>
+>>>
+>>> --
+>>> Shang Wu
+>>> ----------------------------------------------------------------
+>>> Key ID: 4B2BCA02
+>>> Fingerprint: 4832 D5D0 D124 CE1D FD07  167A 3E93 FF44 4B2B CA02
+>>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
