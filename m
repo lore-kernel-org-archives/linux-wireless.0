@@ -1,77 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53585 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751822Ab0AYULq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 15:11:46 -0500
-Subject: Re: [PATCH v3 1/1] mac80211: tell driver when dtim change detected
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: wey-yi.w.guy@intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20100125183543.GB19528@jm.kir.nu>
-References: <1264109996-15995-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1264186981.2593.10.camel@johannes.local>
-	 <20100125183543.GB19528@jm.kir.nu>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-dhwgODusqc3xBJi8kyht"
-Date: Mon, 25 Jan 2010 21:11:41 +0100
-Message-ID: <1264450301.23766.65.camel@johannes.local>
+Received: from mx1.redhat.com ([209.132.183.28]:18570 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755378Ab0ASXsj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jan 2010 18:48:39 -0500
+Subject: Re: [PATCH] libertas/assoc.c: rearrange some strange line breaks
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1263938956-19160-1-git-send-email-linville@tuxdriver.com>
+References: <1263938956-19160-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain
+Date: Tue, 19 Jan 2010 15:48:49 -0800
+Message-Id: <1263944929.29854.1.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2010-01-19 at 17:09 -0500, John W. Linville wrote:
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
---=-dhwgODusqc3xBJi8kyht
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Apparently my coding style crept in.  Much to the kernel's horror.
 
-On Mon, 2010-01-25 at 10:35 -0800, Jouni Malinen wrote:
-> On Fri, Jan 22, 2010 at 08:03:01PM +0100, Johannes Berg wrote:
-> > The other solution I see is that we add a new step before or after the
-> > direct probe step, which would just be "wait for a beacon". This would
-> > ensure we have both probe and beacon information always ready. It would
-> > also ensure we have both probe and beacon info for our new userspace
-> > reporting of that.
->=20
-> I'm somewhat concerned about this as an unconditional change for our
-> association process due to the extra latency it adds. At minimum, I
-> would like to see a driver flag that can be used to indicate that such
-> behavior is really required and skip the extra wait if the driver does
-> not need the Beacon frame before association.
->=20
-> For most cases, I would also assume it should be possible to update the
-> PS settings after having received the first Beacon frame after
-> association, but if that is not enough, allowing the driver to request
-> mac80211 to wait with association sounds reasonable. I just don't want
-> to see additional 50 msec or so (or much worse if the AP is configured
-> with insanely long beacon interval) delay popping up with every
-> association by default..
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Yeah that's a good point, I wondered about that too. I'll look into this
-in more detail and see if we can tell the driver about the DTIM period
-only with CONF_PS and enable that only after a beacon.
-
-johannes
-
---=-dhwgODusqc3xBJi8kyht
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIbBAABAgAGBQJLXfr5AAoJEODzc/N7+QmaQE4P933KAz2bRD4loyeUBkOazbYy
-LGo8/Jc6TaP4MgVm2y9ovDjaCezLXcN03UkR4cWWGPq02unWBLekoZgpKyRpQYby
-q6pEyYeUzW65XN5l9XwirkL/jHtj10JAlsxAuoNybUcpmcQUENrjTd6parg5xfvS
-Eqcpj/m9rniglOO78virZ7RSjWFbknIr2FdaxlCpEBjaETOpMJc4qRMoHup07ZVV
-ltOxwC4SsqMgpYs2XvKUna9XRJ3k8AuQzAm+ZHFxoOYaA6XPkR/P2dSUo4gKfsOo
-Q03ceecUvQeIEIFc/0AP/8qVEDvssfQk7W9jiG7KAZdnET1dcTZ9Vj1bJW3dmFPA
-X40KM29Lsf23fDKKoIW/3BJIdJS7FkjV66sY910wLydSEIs+o4Wwuc/CTPb7XC/y
-fwfUUJqhMH5P/IHwmMPkPBXC0x8TNDLo8P+ciQujKmxHcF2zfxMghckzaChpoGuO
-AAWS8iaET6kK7SDlwrTEiDsllxFDuFGI06v+o0nJdMwIhXom0CUjvwG1q9cxN4Lj
-w9i/8d8VGWBIBAKLBx3y85gIQkGRjbewrExQCUFm/78hvRIFjfqzuWelHsscyIEl
-8+e0kAk9WqiKrh5x3UUiTJ8z5w9w6eYCmc9bU3PKTcsqY1P5wUJi/vB5MdEztZq9
-O7hhFJow0gWs2MGumks=
-=pmAu
------END PGP SIGNATURE-----
-
---=-dhwgODusqc3xBJi8kyht--
+> ---
+>  drivers/net/wireless/libertas/assoc.c |   62 ++++++++++++++++-----------------
+>  1 files changed, 30 insertions(+), 32 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
+> index fb3dff0..0979b07 100644
+> --- a/drivers/net/wireless/libertas/assoc.c
+> +++ b/drivers/net/wireless/libertas/assoc.c
+> @@ -1160,11 +1160,11 @@ int lbs_adhoc_stop(struct lbs_private *priv)
+>  static inline int match_bss_no_security(struct lbs_802_11_security *secinfo,
+>  					struct bss_descriptor *match_bss)
+>  {
+> -	if (!secinfo->wep_enabled  && !secinfo->WPAenabled
+> -	    && !secinfo->WPA2enabled
+> -	    && match_bss->wpa_ie[0] != WLAN_EID_GENERIC
+> -	    && match_bss->rsn_ie[0] != WLAN_EID_RSN
+> -	    && !(match_bss->capability & WLAN_CAPABILITY_PRIVACY))
+> +	if (!secinfo->wep_enabled &&
+> +	    !secinfo->WPAenabled && !secinfo->WPA2enabled &&
+> +	    match_bss->wpa_ie[0] != WLAN_EID_GENERIC &&
+> +	    match_bss->rsn_ie[0] != WLAN_EID_RSN &&
+> +	    !(match_bss->capability & WLAN_CAPABILITY_PRIVACY))
+>  		return 1;
+>  	else
+>  		return 0;
+> @@ -1173,9 +1173,9 @@ static inline int match_bss_no_security(struct lbs_802_11_security *secinfo,
+>  static inline int match_bss_static_wep(struct lbs_802_11_security *secinfo,
+>  				       struct bss_descriptor *match_bss)
+>  {
+> -	if (secinfo->wep_enabled && !secinfo->WPAenabled
+> -	    && !secinfo->WPA2enabled
+> -	    && (match_bss->capability & WLAN_CAPABILITY_PRIVACY))
+> +	if (secinfo->wep_enabled &&
+> +	    !secinfo->WPAenabled && !secinfo->WPA2enabled &&
+> +	    (match_bss->capability & WLAN_CAPABILITY_PRIVACY))
+>  		return 1;
+>  	else
+>  		return 0;
+> @@ -1184,8 +1184,8 @@ static inline int match_bss_static_wep(struct lbs_802_11_security *secinfo,
+>  static inline int match_bss_wpa(struct lbs_802_11_security *secinfo,
+>  				struct bss_descriptor *match_bss)
+>  {
+> -	if (!secinfo->wep_enabled && secinfo->WPAenabled
+> -	    && (match_bss->wpa_ie[0] == WLAN_EID_GENERIC)
+> +	if (!secinfo->wep_enabled && secinfo->WPAenabled &&
+> +	    (match_bss->wpa_ie[0] == WLAN_EID_GENERIC)
+>  	    /* privacy bit may NOT be set in some APs like LinkSys WRT54G
+>  	    && (match_bss->capability & WLAN_CAPABILITY_PRIVACY) */
+>  	   )
+> @@ -1210,11 +1210,11 @@ static inline int match_bss_wpa2(struct lbs_802_11_security *secinfo,
+>  static inline int match_bss_dynamic_wep(struct lbs_802_11_security *secinfo,
+>  					struct bss_descriptor *match_bss)
+>  {
+> -	if (!secinfo->wep_enabled && !secinfo->WPAenabled
+> -	    && !secinfo->WPA2enabled
+> -	    && (match_bss->wpa_ie[0] != WLAN_EID_GENERIC)
+> -	    && (match_bss->rsn_ie[0] != WLAN_EID_RSN)
+> -	    && (match_bss->capability & WLAN_CAPABILITY_PRIVACY))
+> +	if (!secinfo->wep_enabled &&
+> +	    !secinfo->WPAenabled && !secinfo->WPA2enabled &&
+> +	    (match_bss->wpa_ie[0] != WLAN_EID_GENERIC) &&
+> +	    (match_bss->rsn_ie[0] != WLAN_EID_RSN) &&
+> +	    (match_bss->capability & WLAN_CAPABILITY_PRIVACY))
+>  		return 1;
+>  	else
+>  		return 0;
+> @@ -1525,8 +1525,8 @@ static int assoc_helper_associate(struct lbs_private *priv,
+>  	/* If we're given and 'any' BSSID, try associating based on SSID */
+>  
+>  	if (test_bit(ASSOC_FLAG_BSSID, &assoc_req->flags)) {
+> -		if (compare_ether_addr(bssid_any, assoc_req->bssid)
+> -		    && compare_ether_addr(bssid_off, assoc_req->bssid)) {
+> +		if (compare_ether_addr(bssid_any, assoc_req->bssid) &&
+> +		    compare_ether_addr(bssid_off, assoc_req->bssid)) {
+>  			ret = assoc_helper_bssid(priv, assoc_req);
+>  			done = 1;
+>  		}
+> @@ -1612,11 +1612,9 @@ static int assoc_helper_channel(struct lbs_private *priv,
+>  		goto restore_mesh;
+>  	}
+>  
+> -	if (   assoc_req->secinfo.wep_enabled
+> -	    &&   (assoc_req->wep_keys[0].len
+> -	       || assoc_req->wep_keys[1].len
+> -	       || assoc_req->wep_keys[2].len
+> -	       || assoc_req->wep_keys[3].len)) {
+> +	if (assoc_req->secinfo.wep_enabled &&
+> +	    (assoc_req->wep_keys[0].len || assoc_req->wep_keys[1].len ||
+> +	     assoc_req->wep_keys[2].len || assoc_req->wep_keys[3].len)) {
+>  		/* Make sure WEP keys are re-sent to firmware */
+>  		set_bit(ASSOC_FLAG_WEP_KEYS, &assoc_req->flags);
+>  	}
+> @@ -1983,14 +1981,14 @@ void lbs_association_worker(struct work_struct *work)
+>  		assoc_req->secinfo.auth_mode);
+>  
+>  	/* If 'any' SSID was specified, find an SSID to associate with */
+> -	if (test_bit(ASSOC_FLAG_SSID, &assoc_req->flags)
+> -	    && !assoc_req->ssid_len)
+> +	if (test_bit(ASSOC_FLAG_SSID, &assoc_req->flags) &&
+> +	    !assoc_req->ssid_len)
+>  		find_any_ssid = 1;
+>  
+>  	/* But don't use 'any' SSID if there's a valid locked BSSID to use */
+>  	if (test_bit(ASSOC_FLAG_BSSID, &assoc_req->flags)) {
+> -		if (compare_ether_addr(assoc_req->bssid, bssid_any)
+> -		    && compare_ether_addr(assoc_req->bssid, bssid_off))
+> +		if (compare_ether_addr(assoc_req->bssid, bssid_any) &&
+> +		    compare_ether_addr(assoc_req->bssid, bssid_off))
+>  			find_any_ssid = 0;
+>  	}
+>  
+> @@ -2064,15 +2062,15 @@ void lbs_association_worker(struct work_struct *work)
+>  			goto out;
+>  	}
+>  
+> -	if (test_bit(ASSOC_FLAG_WPA_MCAST_KEY, &assoc_req->flags)
+> -	    || test_bit(ASSOC_FLAG_WPA_UCAST_KEY, &assoc_req->flags)) {
+> +	if (test_bit(ASSOC_FLAG_WPA_MCAST_KEY, &assoc_req->flags) ||
+> +	    test_bit(ASSOC_FLAG_WPA_UCAST_KEY, &assoc_req->flags)) {
+>  		ret = assoc_helper_wpa_keys(priv, assoc_req);
+>  		if (ret)
+>  			goto out;
+>  	}
+>  
+> -	if (   test_bit(ASSOC_FLAG_WEP_KEYS, &assoc_req->flags)
+> -	    || test_bit(ASSOC_FLAG_WEP_TX_KEYIDX, &assoc_req->flags)) {
+> +	if (test_bit(ASSOC_FLAG_WEP_KEYS, &assoc_req->flags) ||
+> +	    test_bit(ASSOC_FLAG_WEP_TX_KEYIDX, &assoc_req->flags)) {
+>  		ret = assoc_helper_wep_keys(priv, assoc_req);
+>  		if (ret)
+>  			goto out;
+> @@ -2082,8 +2080,8 @@ void lbs_association_worker(struct work_struct *work)
+>  	/* SSID/BSSID should be the _last_ config option set, because they
+>  	 * trigger the association attempt.
+>  	 */
+> -	if (test_bit(ASSOC_FLAG_BSSID, &assoc_req->flags)
+> -	    || test_bit(ASSOC_FLAG_SSID, &assoc_req->flags)) {
+> +	if (test_bit(ASSOC_FLAG_BSSID, &assoc_req->flags) ||
+> +	    test_bit(ASSOC_FLAG_SSID, &assoc_req->flags)) {
+>  		int success = 1;
+>  
+>  		ret = assoc_helper_associate(priv, assoc_req);
 
