@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:49845 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751112Ab0AZIlV (ORCPT
+Received: from mail-px0-f182.google.com ([209.85.216.182]:46148 "EHLO
+	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753088Ab0ASR51 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2010 03:41:21 -0500
-Received: by ewy19 with SMTP id 19so699517ewy.21
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2010 00:41:20 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Guy\, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"j\@w1.fi" <j@w1.fi>, Kalle Valo <kalle.valo@nokia.com>
-Subject: Re: [PATCH v3 1/1] mac80211: tell driver when dtim change detected
-References: <1264109996-15995-1-git-send-email-wey-yi.w.guy@intel.com>
-	<43e72e891001221120i79c6525bo4852cb5a6c7a37@mail.gmail.com>
-	<1264189560.2593.14.camel@johannes.local>
-	<43e72e891001221544j1b1bd67ao8dfcf4d0dd12dd81@mail.gmail.com>
-	<1264205494.7208.7.camel@wwguy-ubuntu>
-	<43e72e891001221623v477b9fady32237c1a3aededda@mail.gmail.com>
-	<1264206170.7208.8.camel@wwguy-ubuntu>
-	<1264250814.2593.25.camel@johannes.local>
-	<43e72e891001251018h1a62e1ccn4a7d1411fa2c0615@mail.gmail.com>
-	<1264444418.23766.53.camel@johannes.local>
-	<43e72e891001251155l504a74fcpf20942682ca340c1@mail.gmail.com>
-	<1264449969.23766.59.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 26 Jan 2010 10:41:15 +0200
-In-Reply-To: <1264449969.23766.59.camel@johannes.local> (Johannes Berg's message of "Mon\, 25 Jan 2010 21\:06\:09 +0100")
-Message-ID: <87fx5tntqs.fsf@purkki.valot.fi>
+	Tue, 19 Jan 2010 12:57:27 -0500
+Received: by pxi12 with SMTP id 12so4765302pxi.33
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2010 09:57:27 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1263923722.25138.2.camel@johannes.local>
+References: <1263884721-11008-1-git-send-email-tomas.winkler@intel.com>
+	<43e72e891001190953r122625d3pf805c318e9662340@mail.gmail.com>
+	<1263923722.25138.2.camel@johannes.local>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 19 Jan 2010 09:57:07 -0800
+Message-ID: <43e72e891001190957u3ccc12ey955e6d15b33eba13@mail.gmail.com>
+Subject: Re: [PATCH 1/1] update rfkill.h from kernel 2.6.33
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Tomas Winkler <tomas.winkler@intel.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-
-> I'll need to analyse this in more detail, and also what drivers do.
+On Tue, Jan 19, 2010 at 9:55 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2010-01-19 at 09:53 -0800, Luis R. Rodriguez wrote:
+>> On Mon, Jan 18, 2010 at 11:05 PM, Tomas Winkler
+>> <tomas.winkler@intel.com> wrote:
+>> > 1. add FM radio type
+>> > 2. update rfkill_type docs
+>> >
+>> > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+>>
+>> Why is this being pushed for 2.6.33 at this point?
 >
-> Kalle, could wl12x1 deal with getting the DTIM only when enabling PS?
+> ??? Have you read the patch?
 
-Yes, wl1251 sets dtim with wl1251_acx_wr_tbtt_and_dtim() and it should
-be enough to set it before enabling PS.
+So this is updating linux-next to get 2.6.33 rfkill stuff? How did that happen?
 
--- 
-Kalle Valo
+  Luis
