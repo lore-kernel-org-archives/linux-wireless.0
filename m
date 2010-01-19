@@ -1,33 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:40679 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753334Ab0ATKwR convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33926 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754281Ab0ASWP2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2010 05:52:17 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH 5/5 V2] b43: N-PHY: silence warnings, add missing call
-Date: Wed, 20 Jan 2010 11:52:18 +0100
-Cc: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <op.u6o9unx49lhzdc@linux-g0th.site> <20100119215528.GB3078@tuxdriver.com> <b170af451001191459u37b53aeag835c1a5e873791a9@mail.gmail.com>
-In-Reply-To: <b170af451001191459u37b53aeag835c1a5e873791a9@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201001201152.18351.mb@bu3sch.de>
+	Tue, 19 Jan 2010 17:15:28 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] libertas/assoc.c: rearrange some strange line breaks
+Date: Tue, 19 Jan 2010 17:09:16 -0500
+Message-Id: <1263938956-19160-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 19 January 2010 23:59:32 Rafał Miłecki wrote:
-> Out of curiosity, could someone tell what Opera does incorrectly when
-> sending patches?
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/libertas/assoc.c |   62 ++++++++++++++++-----------------
+ 1 files changed, 30 insertions(+), 32 deletions(-)
 
-They are base64 encoded.
-We use a 7 or 8bit encoding for our mails.
-I think that opera automatically switches to base64 encoding due to
-the special characters in your first and last name.
-
+diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
+index fb3dff0..0979b07 100644
+--- a/drivers/net/wireless/libertas/assoc.c
++++ b/drivers/net/wireless/libertas/assoc.c
+@@ -1160,11 +1160,11 @@ int lbs_adhoc_stop(struct lbs_private *priv)
+ static inline int match_bss_no_security(struct lbs_802_11_security *secinfo,
+ 					struct bss_descriptor *match_bss)
+ {
+-	if (!secinfo->wep_enabled  && !secinfo->WPAenabled
+-	    && !secinfo->WPA2enabled
+-	    && match_bss->wpa_ie[0] != WLAN_EID_GENERIC
+-	    && match_bss->rsn_ie[0] != WLAN_EID_RSN
+-	    && !(match_bss->capability & WLAN_CAPABILITY_PRIVACY))
++	if (!secinfo->wep_enabled &&
++	    !secinfo->WPAenabled && !secinfo->WPA2enabled &&
++	    match_bss->wpa_ie[0] != WLAN_EID_GENERIC &&
++	    match_bss->rsn_ie[0] != WLAN_EID_RSN &&
++	    !(match_bss->capability & WLAN_CAPABILITY_PRIVACY))
+ 		return 1;
+ 	else
+ 		return 0;
+@@ -1173,9 +1173,9 @@ static inline int match_bss_no_security(struct lbs_802_11_security *secinfo,
+ static inline int match_bss_static_wep(struct lbs_802_11_security *secinfo,
+ 				       struct bss_descriptor *match_bss)
+ {
+-	if (secinfo->wep_enabled && !secinfo->WPAenabled
+-	    && !secinfo->WPA2enabled
+-	    && (match_bss->capability & WLAN_CAPABILITY_PRIVACY))
++	if (secinfo->wep_enabled &&
++	    !secinfo->WPAenabled && !secinfo->WPA2enabled &&
++	    (match_bss->capability & WLAN_CAPABILITY_PRIVACY))
+ 		return 1;
+ 	else
+ 		return 0;
+@@ -1184,8 +1184,8 @@ static inline int match_bss_static_wep(struct lbs_802_11_security *secinfo,
+ static inline int match_bss_wpa(struct lbs_802_11_security *secinfo,
+ 				struct bss_descriptor *match_bss)
+ {
+-	if (!secinfo->wep_enabled && secinfo->WPAenabled
+-	    && (match_bss->wpa_ie[0] == WLAN_EID_GENERIC)
++	if (!secinfo->wep_enabled && secinfo->WPAenabled &&
++	    (match_bss->wpa_ie[0] == WLAN_EID_GENERIC)
+ 	    /* privacy bit may NOT be set in some APs like LinkSys WRT54G
+ 	    && (match_bss->capability & WLAN_CAPABILITY_PRIVACY) */
+ 	   )
+@@ -1210,11 +1210,11 @@ static inline int match_bss_wpa2(struct lbs_802_11_security *secinfo,
+ static inline int match_bss_dynamic_wep(struct lbs_802_11_security *secinfo,
+ 					struct bss_descriptor *match_bss)
+ {
+-	if (!secinfo->wep_enabled && !secinfo->WPAenabled
+-	    && !secinfo->WPA2enabled
+-	    && (match_bss->wpa_ie[0] != WLAN_EID_GENERIC)
+-	    && (match_bss->rsn_ie[0] != WLAN_EID_RSN)
+-	    && (match_bss->capability & WLAN_CAPABILITY_PRIVACY))
++	if (!secinfo->wep_enabled &&
++	    !secinfo->WPAenabled && !secinfo->WPA2enabled &&
++	    (match_bss->wpa_ie[0] != WLAN_EID_GENERIC) &&
++	    (match_bss->rsn_ie[0] != WLAN_EID_RSN) &&
++	    (match_bss->capability & WLAN_CAPABILITY_PRIVACY))
+ 		return 1;
+ 	else
+ 		return 0;
+@@ -1525,8 +1525,8 @@ static int assoc_helper_associate(struct lbs_private *priv,
+ 	/* If we're given and 'any' BSSID, try associating based on SSID */
+ 
+ 	if (test_bit(ASSOC_FLAG_BSSID, &assoc_req->flags)) {
+-		if (compare_ether_addr(bssid_any, assoc_req->bssid)
+-		    && compare_ether_addr(bssid_off, assoc_req->bssid)) {
++		if (compare_ether_addr(bssid_any, assoc_req->bssid) &&
++		    compare_ether_addr(bssid_off, assoc_req->bssid)) {
+ 			ret = assoc_helper_bssid(priv, assoc_req);
+ 			done = 1;
+ 		}
+@@ -1612,11 +1612,9 @@ static int assoc_helper_channel(struct lbs_private *priv,
+ 		goto restore_mesh;
+ 	}
+ 
+-	if (   assoc_req->secinfo.wep_enabled
+-	    &&   (assoc_req->wep_keys[0].len
+-	       || assoc_req->wep_keys[1].len
+-	       || assoc_req->wep_keys[2].len
+-	       || assoc_req->wep_keys[3].len)) {
++	if (assoc_req->secinfo.wep_enabled &&
++	    (assoc_req->wep_keys[0].len || assoc_req->wep_keys[1].len ||
++	     assoc_req->wep_keys[2].len || assoc_req->wep_keys[3].len)) {
+ 		/* Make sure WEP keys are re-sent to firmware */
+ 		set_bit(ASSOC_FLAG_WEP_KEYS, &assoc_req->flags);
+ 	}
+@@ -1983,14 +1981,14 @@ void lbs_association_worker(struct work_struct *work)
+ 		assoc_req->secinfo.auth_mode);
+ 
+ 	/* If 'any' SSID was specified, find an SSID to associate with */
+-	if (test_bit(ASSOC_FLAG_SSID, &assoc_req->flags)
+-	    && !assoc_req->ssid_len)
++	if (test_bit(ASSOC_FLAG_SSID, &assoc_req->flags) &&
++	    !assoc_req->ssid_len)
+ 		find_any_ssid = 1;
+ 
+ 	/* But don't use 'any' SSID if there's a valid locked BSSID to use */
+ 	if (test_bit(ASSOC_FLAG_BSSID, &assoc_req->flags)) {
+-		if (compare_ether_addr(assoc_req->bssid, bssid_any)
+-		    && compare_ether_addr(assoc_req->bssid, bssid_off))
++		if (compare_ether_addr(assoc_req->bssid, bssid_any) &&
++		    compare_ether_addr(assoc_req->bssid, bssid_off))
+ 			find_any_ssid = 0;
+ 	}
+ 
+@@ -2064,15 +2062,15 @@ void lbs_association_worker(struct work_struct *work)
+ 			goto out;
+ 	}
+ 
+-	if (test_bit(ASSOC_FLAG_WPA_MCAST_KEY, &assoc_req->flags)
+-	    || test_bit(ASSOC_FLAG_WPA_UCAST_KEY, &assoc_req->flags)) {
++	if (test_bit(ASSOC_FLAG_WPA_MCAST_KEY, &assoc_req->flags) ||
++	    test_bit(ASSOC_FLAG_WPA_UCAST_KEY, &assoc_req->flags)) {
+ 		ret = assoc_helper_wpa_keys(priv, assoc_req);
+ 		if (ret)
+ 			goto out;
+ 	}
+ 
+-	if (   test_bit(ASSOC_FLAG_WEP_KEYS, &assoc_req->flags)
+-	    || test_bit(ASSOC_FLAG_WEP_TX_KEYIDX, &assoc_req->flags)) {
++	if (test_bit(ASSOC_FLAG_WEP_KEYS, &assoc_req->flags) ||
++	    test_bit(ASSOC_FLAG_WEP_TX_KEYIDX, &assoc_req->flags)) {
+ 		ret = assoc_helper_wep_keys(priv, assoc_req);
+ 		if (ret)
+ 			goto out;
+@@ -2082,8 +2080,8 @@ void lbs_association_worker(struct work_struct *work)
+ 	/* SSID/BSSID should be the _last_ config option set, because they
+ 	 * trigger the association attempt.
+ 	 */
+-	if (test_bit(ASSOC_FLAG_BSSID, &assoc_req->flags)
+-	    || test_bit(ASSOC_FLAG_SSID, &assoc_req->flags)) {
++	if (test_bit(ASSOC_FLAG_BSSID, &assoc_req->flags) ||
++	    test_bit(ASSOC_FLAG_SSID, &assoc_req->flags)) {
+ 		int success = 1;
+ 
+ 		ret = assoc_helper_associate(priv, assoc_req);
 -- 
-Greetings, Michael.
+1.6.2.5
+
