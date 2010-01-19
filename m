@@ -1,75 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:18686 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932685Ab0AFV3L convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:48905 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755216Ab0ASTET (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 16:29:11 -0500
-Received: by ey-out-2122.google.com with SMTP id 4so282889eyf.5
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 13:29:09 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4B44FF56.6080204@lwfinger.net>
-References: <op.u54a59c89lhzdc@linux-g0th.site>
-	 <43e72e891001060926s320bf403ya2edf2601ced5125@mail.gmail.com>
-	 <b170af451001061018x6ff2404ajbdbb3cb96ceaf7f2@mail.gmail.com>
-	 <op.u54ptmwm9lhzdc@linux-g0th.site> <4B44FF56.6080204@lwfinger.net>
-Date: Wed, 6 Jan 2010 22:29:08 +0100
-Message-ID: <b170af451001061329g7695fb57w859fd0a40729c2ef@mail.gmail.com>
-Subject: Re: [PATCH 2/5] b43: N-PHY: add b43_nphy_get_tx_gains (V2)
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 19 Jan 2010 14:04:19 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] ath9k: make tx power config changes take effect immediatley
+Date: Tue, 19 Jan 2010 14:04:19 -0500
+Message-Id: <1263927859-9252-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 6 stycznia 2010 22:23 użytkownik Larry Finger
-<Larry.Finger@lwfinger.net> napisał:
-> On 01/06/2010 02:57 PM, Rafał Miłecki wrote:
->> V2: adjust to renamed function, fill index array
->>
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> ---
->>  drivers/net/wireless/b43/phy_n.c |   81
->
-> Just a little nitpick to save John some work, and to keep the patches straight.
->
-> When you submit a second (or later) version of a patch, indicate the version in
-> the mail header as in [PATCH 2/5 V2] b43:.... The upstream software strips all
-> of that out and the commit header will be clean.
->
-> In addition, it is useful to state what is different below the --- marker. The
-> software also strips that part of the patch - the permanent commit message
-> should be devoid of the details of the review message. It is like making
-> sausage! Better that the details are hidden.
+Users wishing to tweak tx power want it to happen immediately,
+try to respect that. This was tested by Lorenzo by measuring the
+received signal strength from an AP with ath9k and the patch.
 
-Uh, so once again I've made some mistake in my submitting. Sorry John,
-thanks Larry.
+Changing the tx power on the AP produced these results:
 
-I can excuse myself only with fact that it's something I've learn from
-drm guys. Of course I'll change my ways. Ex.:
+1) iwconfig wlan0 txpower 20 ---> Rx power -37dbm
+2) iwconfig wlan0 txpower 15 ---> Rx power -41dbm
+3) iwconfig wlan0 txpower 10 ---> Rx power -45dbm
+4) iwconfig wlan0 txpower 5 ---> Rx power -51dbm
+5) iwconfig wlan0 txpower 0 ---> Rx power -37dbm
 
+The result with 0 is an anomoly and would need to be
+addressed through a separate patch.
 
-commit 3dfc63922f8edfa8774bf1ba882225c5f91b2220
-Author: Alex Deucher <alexdeucher@gmail.com>
-Date:   Tue Dec 22 10:06:49 2009 -0500
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Tested-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-    drm/radeon/kms: add cvt mode if we only have lvds w/h and no edid (v4)
-
-    This fixes LVDS on some mac laptops without a panel edid.
-
-    v2 - Set proper mode type flags
-    v3 - Note that this is not neceesarily the exact panel mode,
-    but an approximation based on the cvt formula.  For these
-    systems we should ideally read the mode info out of the
-    registers or add a mode table, but this works and is much
-    simpler.
-    v4 - Update comments and debug message.
-
-    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
-    Signed-off-by: Dave Airlie <airlied@redhat.com>
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index c0c571c..6f3e71c 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1624,8 +1624,10 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 	}
+ 
+ skip_chan_change:
+-	if (changed & IEEE80211_CONF_CHANGE_POWER)
++	if (changed & IEEE80211_CONF_CHANGE_POWER) {
+ 		sc->config.txpowlimit = 2 * conf->power_level;
++		ath_update_txpow(sc);
++	}
+ 
+ 	spin_lock_bh(&sc->wiphy_lock);
+ 	disable_radio = ath9k_all_wiphys_idle(sc);
 -- 
-Rafał
+1.6.3.3
+
