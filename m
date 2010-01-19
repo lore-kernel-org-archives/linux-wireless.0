@@ -1,45 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:55890 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932385Ab0AFThT convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56626 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751305Ab0ASRyB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 14:37:19 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: Re: [PATCH 2/5] b43: N-PHY: b43_nphy_get_tx_gains
-Date: Wed, 6 Jan 2010 20:36:53 +0100
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-References: <op.u54a59c89lhzdc@linux-g0th.site> <201001061922.58203.mb@bu3sch.de> <b170af451001061129n59357edehc1f2328fb10846f6@mail.gmail.com>
-In-Reply-To: <b170af451001061129n59357edehc1f2328fb10846f6@mail.gmail.com>
-MIME-Version: 1.0
-Message-Id: <201001062036.55758.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="utf-8"
+	Tue, 19 Jan 2010 12:54:01 -0500
+Subject: Re: [PATCH] mac80211: pass station instead of address to
+ update_tkip_key
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <646765f41001190606w389a7702ja5891fa60458c24a@mail.gmail.com>
+References: <1263907302.12555.27.camel@johannes.local>
+	 <646765f41001190606w389a7702ja5891fa60458c24a@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SspdZiSfPfG0FUd31NXI"
+Date: Tue, 19 Jan 2010 18:53:57 +0100
+Message-ID: <1263923637.25138.1.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 06 January 2010 20:29:36 Rafał Miłecki wrote:
-> > You may read Documentation/SubmittingPatches and format your future
-> > patches according to that.
-> 
-> Well, that's really poor joke :| Manually creating .orig files, using
-> "diff -up" and so dropping local commits "strategy"...? Er, I don't
-> think I'll use this one.
 
-Nobody said you need to fix your internal workflow. Why would anybody care
-_how_ you generate your patches?
-You could manually type them into your cellphone with T9. If that it results
-in a properly formated patch in the end, nobody would complain.
+--=-SspdZiSfPfG0FUd31NXI
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-So yes, reading other people's patches probably is a good idea to start with.
+[please trim your quotes]
 
-In general only put stuff into the mail that you want to show up in the commit
-message. (If you want to have additional stuff that doesn't show up in the commit
-message, you can use the "---" delimiter. But that's documented elsewhere so
-I don't have to explain that here...)
+On Wed, 2010-01-20 at 01:06 +1100, Julian Calaby wrote:
 
--- 
-Greetings, Michael
+> >        TP_PROTO(struct ieee80211_local *local,
+> >                 struct ieee80211_key_conf *conf,
+> > -                const u8 *address, u32 iv32),
+> > +                struct sta_info *sta, u32 iv32),
+> >
+> >        TP_ARGS(local, conf, address, iv32),
+
+Indeed, that needs a change, I had the tracing disabled in my build so
+didn't notice.
+
+johannes
+
+--=-SspdZiSfPfG0FUd31NXI
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLVfGxAAoJEODzc/N7+Qma0SAP/R45lyNjTOxFaNf+TlY6FgpZ
+fS0aRPt2N+D0CUzIT5zPew3WUOYUxxmGnb15B1/HNaVNkmy0BMrB4xBAJTou71/c
+ZXOHz12SVk5NkCS4aXDVprMrVadNMeNnJjZhS/X2BvGg5McUbQDIMQNefnz+Bbtz
+rmK+nKXHphR+YM/idxl3+Kt4wjTevsgs6I9PCBLgaNRuSEpnGIzmEi5ElfiBIZu3
+cHrUNum2BWMOi5rIuewMNp5pA8RMz8k5em7glyeIgsqrzQr4lMSInqYcP67DkuSj
+klvEavh5sfpcKmGTEJEfiridwT4HwoTCGL1jlp56zMkTmTNJlTWL8Qb5wEb2nRR/
+YErhlq5Jsl8vfXl5Uk068OQRJGZz0GXkSEDnlqS0RZMuah7qZlZrzx32A776be9I
+OZhZOX+gmoO1Wc2c9MgZvq9omQVTqAM+dp89FS8eID5SVzOAk5vWgmuTUyqJGfP3
+XNi16QvHt7hYhVHvi7BHEBzQ8Rmfg1EYgZdBeUpyHVMDGcPYQajJ1yhIRsOMGPD6
+ojEOo9YFNDpyEUsA6z46N+AwFD/gsVCC274U7ytqwrZfVFgL95LbL/T6m7vq4F2h
+wUbLyQKQWk31t0mYr16/fVlIq90YKpeEmMf3lRK29G7ig0moZIsDwP/Q2tKSDV8d
++tzUzM7sye53/Md7oUE6
+=qgiZ
+-----END PGP SIGNATURE-----
+
+--=-SspdZiSfPfG0FUd31NXI--
+
