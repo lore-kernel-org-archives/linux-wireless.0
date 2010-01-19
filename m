@@ -1,42 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:49748 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932704Ab0AFWD1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 17:03:27 -0500
-Message-ID: <4B4508A5.8050501@openwrt.org>
-Date: Wed, 06 Jan 2010 23:03:17 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:45041 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754937Ab0ASSzV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jan 2010 13:55:21 -0500
+Date: Tue, 19 Jan 2010 10:53:30 -0800
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] nl80211: Allow association to change channels during
+ reassociation
+Message-ID: <20100119185330.GA26351@jm.kir.nu>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Thomas Backlund <tmb@mandriva.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2.6.33] mac80211: fix skb buffering issue
-References: <1262710858.28653.5.camel@johannes.local>	 <4B450004.9050601@mandriva.org> <1262814684.4437.0.camel@johannes.local>
-In-Reply-To: <1262814684.4437.0.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-01-06 10:51 PM, Johannes Berg wrote:
-> On Wed, 2010-01-06 at 23:26 +0200, Thomas Backlund wrote:
-> 
->> With this patch applied to 2.6.33-rc3 kernel crashes at boot...
->> 
->> I have a iwl4965 connecting to a wpa2-psk encrypted network, arch is 
->> x86_64, distro Mandriva Linux and the kernel has preempt enabled.
->> 
->> Am I only missing some patches, or did I hit a real bug ?
-> 
-> It'd help if you said what crashes and how since nobody else seems to be
-> having that particular problem with this patch.
-I have an idea.
-The patch adds the following chunk of code:
-> +	if (!sta && ra && !is_multicast_ether_addr(ra)) {
-> +		sta = sta_info_get(sdata, ra);
-> +		if (sta)
-> +			sta_flags = get_sta_flags(sta);
-In wireless-testing, sta_info_get takes sdata as first argument, in
-2.6.33-rc3 it expects a pointer to local. This should have emitted a
-compiler warning... I saw the same thing when applying the patch to an
-older compat-wireless snapshot.
+nl80211_associate() was rejecting (re)association attempts with EBUSY
+in some cases where we are currently associated with an AP that uses
+different channel from the destination AP. Fix this by passing the
+current wdev to rdev_fixed_channel() in the same way that was already
+done for join-IBSS and connect commands. This allows the fixedchan
+check to skipped for the current wdev and allows the reassociation to
+proceed.
 
-- Felix
+Signed-off-by: Jouni Malinen <j@w1.fi>
+
+---
+ net/wireless/nl80211.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+I'm not sure when exactly this issue showed up (i.e., whether this
+reassociation case used to work or whether we managed to break it at
+some point), but the EBUSY is certainly showing up very frequently
+with the current wireless-testing.git snapshot in an environment with
+large number of APs in the ESS and frequent roaming between them.
+
+
+--- wireless-testing.orig/net/wireless/nl80211.c	2010-01-19 10:38:20.000000000 -0800
++++ wireless-testing/net/wireless/nl80211.c	2010-01-19 10:38:46.000000000 -0800
+@@ -3571,6 +3571,7 @@ static int nl80211_associate(struct sk_b
+ {
+ 	struct cfg80211_registered_device *rdev;
+ 	struct net_device *dev;
++	struct wireless_dev *wdev;
+ 	struct cfg80211_crypto_settings crypto;
+ 	struct ieee80211_channel *chan, *fixedchan;
+ 	const u8 *bssid, *ssid, *ie = NULL, *prev_bssid = NULL;
+@@ -3616,7 +3617,8 @@ static int nl80211_associate(struct sk_b
+ 	}
+ 
+ 	mutex_lock(&rdev->devlist_mtx);
+-	fixedchan = rdev_fixed_channel(rdev, NULL);
++	wdev = dev->ieee80211_ptr;
++	fixedchan = rdev_fixed_channel(rdev, wdev);
+ 	if (fixedchan && chan != fixedchan) {
+ 		err = -EBUSY;
+ 		mutex_unlock(&rdev->devlist_mtx);
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
