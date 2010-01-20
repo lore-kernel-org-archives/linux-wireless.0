@@ -1,63 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:45041 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754937Ab0ASSzV (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43342 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751413Ab0ATKLv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2010 13:55:21 -0500
-Date: Tue, 19 Jan 2010 10:53:30 -0800
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] nl80211: Allow association to change channels during
- reassociation
-Message-ID: <20100119185330.GA26351@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 20 Jan 2010 05:11:51 -0500
+Subject: [PATCH v2] mac80211: pass station instead of address to
+ update_tkip_key
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <646765f41001190606w389a7702ja5891fa60458c24a@mail.gmail.com>
+References: <1263907302.12555.27.camel@johannes.local>
+	 <646765f41001190606w389a7702ja5891fa60458c24a@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 20 Jan 2010 11:11:46 +0100
+Message-ID: <1263982306.14538.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-nl80211_associate() was rejecting (re)association attempts with EBUSY
-in some cases where we are currently associated with an AP that uses
-different channel from the destination AP. Fix this by passing the
-current wdev to rdev_fixed_channel() in the same way that was already
-done for join-IBSS and connect commands. This allows the fixedchan
-check to skipped for the current wdev and allows the reassociation to
-proceed.
+mac80211: pass station instead of address to update_tkip_key
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
+When a TKIP key is updated, we should pass the station
+pointer instead of just the address, since drivers can
+use that to store their own data.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
 ---
- net/wireless/nl80211.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+v2: * compile-test and fixes, thanks Julian
 
-I'm not sure when exactly this issue showed up (i.e., whether this
-reassociation case used to work or whether we managed to break it at
-some point), but the EBUSY is certainly showing up very frequently
-with the current wireless-testing.git snapshot in an environment with
-large number of APs in the ESS and frequent roaming between them.
-
-
---- wireless-testing.orig/net/wireless/nl80211.c	2010-01-19 10:38:20.000000000 -0800
-+++ wireless-testing/net/wireless/nl80211.c	2010-01-19 10:38:46.000000000 -0800
-@@ -3571,6 +3571,7 @@ static int nl80211_associate(struct sk_b
- {
- 	struct cfg80211_registered_device *rdev;
- 	struct net_device *dev;
-+	struct wireless_dev *wdev;
- 	struct cfg80211_crypto_settings crypto;
- 	struct ieee80211_channel *chan, *fixedchan;
- 	const u8 *bssid, *ssid, *ie = NULL, *prev_bssid = NULL;
-@@ -3616,7 +3617,8 @@ static int nl80211_associate(struct sk_b
- 	}
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 9c5c7c9..2a3f048 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -844,8 +844,9 @@ static void rx_tkip_phase1_write(struct b43_wldev *dev, u8 index, u32 iv32,
+ }
  
- 	mutex_lock(&rdev->devlist_mtx);
--	fixedchan = rdev_fixed_channel(rdev, NULL);
-+	wdev = dev->ieee80211_ptr;
-+	fixedchan = rdev_fixed_channel(rdev, wdev);
- 	if (fixedchan && chan != fixedchan) {
- 		err = -EBUSY;
- 		mutex_unlock(&rdev->devlist_mtx);
+ static void b43_op_update_tkip_key(struct ieee80211_hw *hw,
+-			struct ieee80211_key_conf *keyconf, const u8 *addr,
+-			u32 iv32, u16 *phase1key)
++				   struct ieee80211_key_conf *keyconf,
++				   struct ieee80211_sta *sta,
++				   u32 iv32, u16 *phase1key)
+ {
+ 	struct b43_wl *wl = hw_to_b43_wl(hw);
+ 	struct b43_wldev *dev;
+@@ -863,7 +864,10 @@ static void b43_op_update_tkip_key(struct ieee80211_hw *hw,
+ 	keymac_write(dev, index, NULL);	/* First zero out mac to avoid race */
+ 
+ 	rx_tkip_phase1_write(dev, index, iv32, phase1key);
+-	keymac_write(dev, index, addr);
++	/* only pairwise TKIP keys are supported right now */
++	if (WARN_ON(!sta))
++		goto out_unlock;
++	keymac_write(dev, index, sta->addr);
+ 
+ out_unlock:
+ 	mutex_unlock(&wl->mutex);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 417fa9b..3724fb2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2833,14 +2833,17 @@ void iwl_config_ap(struct iwl_priv *priv)
+ }
+ 
+ static void iwl_mac_update_tkip_key(struct ieee80211_hw *hw,
+-			struct ieee80211_key_conf *keyconf, const u8 *addr,
++			struct ieee80211_key_conf *keyconf,
++			struct ieee80211_sta *sta,
+ 			u32 iv32, u16 *phase1key)
+ {
+ 
+ 	struct iwl_priv *priv = hw->priv;
+ 	IWL_DEBUG_MAC80211(priv, "enter\n");
+ 
+-	iwl_update_tkip_key(priv, keyconf, addr, iv32, phase1key);
++	iwl_update_tkip_key(priv, keyconf,
++			    sta ? sta->addr : iwl_bcast_addr,
++			    iv32, phase1key);
+ 
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ }
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index c90047d..3126191 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1610,8 +1610,9 @@ struct ieee80211_ops {
+ 		       struct ieee80211_vif *vif, struct ieee80211_sta *sta,
+ 		       struct ieee80211_key_conf *key);
+ 	void (*update_tkip_key)(struct ieee80211_hw *hw,
+-			struct ieee80211_key_conf *conf, const u8 *address,
+-			u32 iv32, u16 *phase1key);
++				struct ieee80211_key_conf *conf,
++				struct ieee80211_sta *sta,
++				u32 iv32, u16 *phase1key);
+ 	int (*hw_scan)(struct ieee80211_hw *hw,
+ 		       struct cfg80211_scan_request *req);
+ 	void (*sw_scan_start)(struct ieee80211_hw *hw);
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index de91d39..6eeb0c6 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -138,15 +138,20 @@ static inline int drv_set_key(struct ieee80211_local *local,
+ 
+ static inline void drv_update_tkip_key(struct ieee80211_local *local,
+ 				       struct ieee80211_key_conf *conf,
+-				       const u8 *address, u32 iv32,
++				       struct sta_info *sta, u32 iv32,
+ 				       u16 *phase1key)
+ {
++	struct ieee80211_sta *ista = NULL;
++
+ 	might_sleep();
+ 
++	if (sta)
++		ista = &sta->sta;
++
+ 	if (local->ops->update_tkip_key)
+-		local->ops->update_tkip_key(&local->hw, conf, address,
++		local->ops->update_tkip_key(&local->hw, conf, ista,
+ 					    iv32, phase1key);
+-	trace_drv_update_tkip_key(local, conf, address, iv32);
++	trace_drv_update_tkip_key(local, conf, ista, iv32);
+ }
+ 
+ static inline int drv_hw_scan(struct ieee80211_local *local,
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index 0ea2581..bce0924 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -332,25 +332,25 @@ TRACE_EVENT(drv_set_key,
+ TRACE_EVENT(drv_update_tkip_key,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_key_conf *conf,
+-		 const u8 *address, u32 iv32),
++		 struct ieee80211_sta *sta, u32 iv32),
+ 
+-	TP_ARGS(local, conf, address, iv32),
++	TP_ARGS(local, conf, sta, iv32),
+ 
+ 	TP_STRUCT__entry(
+ 		LOCAL_ENTRY
+-		__array(u8, addr, 6)
++		STA_ENTRY
+ 		__field(u32, iv32)
+ 	),
+ 
+ 	TP_fast_assign(
+ 		LOCAL_ASSIGN;
+-		memcpy(__entry->addr, address, 6);
++		STA_ASSIGN;
+ 		__entry->iv32 = iv32;
+ 	),
+ 
+ 	TP_printk(
+-		LOCAL_PR_FMT " addr:%pM iv32:%#x",
+-		LOCAL_PR_ARG, __entry->addr, __entry->iv32
++		LOCAL_PR_FMT STA_PR_FMT " iv32:%#x",
++		LOCAL_PR_ARG,STA_PR_ARG, __entry->iv32
+ 	)
+ );
+ 
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index b73454a..41e5d28 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -303,14 +303,7 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+ 	if (key->local->ops->update_tkip_key &&
+ 	    key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
+ 	    key->u.tkip.rx[queue].state != TKIP_STATE_PHASE1_HW_UPLOADED) {
+-		static const u8 bcast[ETH_ALEN] =
+-		{0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+-		const u8 *sta_addr = key->sta->sta.addr;
+-
+-		if (is_multicast_ether_addr(ra))
+-			sta_addr = bcast;
+-
+-		drv_update_tkip_key(key->local, &key->conf, sta_addr,
++		drv_update_tkip_key(key->local, &key->conf, key->sta,
+ 				iv32, key->u.tkip.rx[queue].p1k);
+ 		key->u.tkip.rx[queue].state = TKIP_STATE_PHASE1_HW_UPLOADED;
+ 	}
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+
