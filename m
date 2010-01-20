@@ -1,36 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.211.176]:58268 "EHLO
-	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753035Ab0AZC1M (ORCPT
+Received: from 30.mail-out.ovh.net ([213.186.62.213]:34535 "HELO
+	30.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751587Ab0ATXDN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 21:27:12 -0500
-Received: by ywh6 with SMTP id 6so3705610ywh.4
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2010 18:27:11 -0800 (PST)
-Subject: b43 driver hang workaround
-From: Eric Volker <evolker@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 25 Jan 2010 20:27:00 -0600
-Message-ID: <1264472821.2691.0.camel@fwdell4550>
-Mime-Version: 1.0
+	Wed, 20 Jan 2010 18:03:13 -0500
+Message-ID: <4B578BAB.9010608@free.fr>
+Date: Thu, 21 Jan 2010 00:03:07 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+MIME-Version: 1.0
+To: austinxxh-linux@yahoo.com
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Add HT IE to IBSS beacons and probe responses.
+References: <856792.42713.qm@web55307.mail.re4.yahoo.com>
+In-Reply-To: <856792.42713.qm@web55307.mail.re4.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thought I'd post my workaround for the issue I've been experiencing. My
-setup is as follows: Ubuntu 9.10 x86 and a BCM4318 in AP mode. Briefly,
-I'd see a message in the logs about hardware encryption being disabled,
-at which point my NIC would stop beaconing. Apparently turning off QoS
-support remedies this problem. Putting this line into /etc/modules made
-my wireless usable:
+X Xiao a écrit :
+> Johannes,
+>
+> What do you mean by saying "on its own the patch is wrong".
+>
+> Thanks,
+> xxiao
+>
+>   
+Humm... same question for me. What's wrong in the patch? form? content? 
+frame format? commit message?
 
-
-b43 qos=0
-
-
-Obviously, QoS support is preferable to not, but I don't really need it
-for my SOHO needs. Hopefully this will help someone else.
-
-
-Eric
-
-
+Regards,
+Benoit
