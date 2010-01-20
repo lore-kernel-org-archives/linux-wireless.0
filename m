@@ -1,103 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45322 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:33562 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751836Ab0A3Va3 (ORCPT
+	with ESMTP id S1752230Ab0ATSXd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2010 16:30:29 -0500
-Subject: Re: Regression in b43 with BCM4311/2
+	Wed, 20 Jan 2010 13:23:33 -0500
+Subject: Re: [PATCH] iw: add country IE parsing
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4B64A2F2.6060608@lwfinger.net>
-References: <4B64A2F2.6060608@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-C6FkckHCcwMCbF6XyPMY"
-Date: Sat, 30 Jan 2010 22:30:27 +0100
-Message-ID: <1264887027.3546.207.camel@johannes.local>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1264011628.5591.211.camel@localhost.localdomain>
+References: <1264009908-27195-1-git-send-email-lrodriguez@atheros.com>
+	 <1264011628.5591.211.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-3a7j1zSK0chpxS4H+S5D"
+Date: Wed, 20 Jan 2010 19:23:29 +0100
+Message-ID: <1264011809.11396.23.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-C6FkckHCcwMCbF6XyPMY
+--=-3a7j1zSK0chpxS4H+S5D
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Larry,
+On Wed, 2010-01-20 at 10:20 -0800, Marcel Holtmann wrote:
 
-> commit c7ab5ef9bcd281135c21b4732c9be779585181be
-> Author: Johannes Berg <johannes@sipsolutions.net>
-> Date:   Wed Oct 29 20:02:12 2008 +0100
+> > I've considered showing only the channel set from the Country IE
+> > but since cfg80211 now mangles contigious channel sets together
+> > it seems more useful for iw to just display the individual triplets
+> > separately so this patch is left intact. The triplet print is
+> > kept since technically speaking this should also show the
+> > regulatory extension stuff when one is found.
 >=20
->     b43: implement short slot and basic rate handling
+> looks like this with my Apple Airport if anyone cares:
+>=20
+> 	Country: CA	Environment: Indoor/Outdoor
+> 	Country IE triplets:
+> 		Channels [1 - 11]
 
-> It seemed unlikely that the short slot handling was the cause, thus I hav=
-e
-> concentrated on the basic rate handling. I found that the returns from
-> ieee80211_get_response_rate() were not what I expected. I'm not sure the =
-routine
-> is correct; however, the value for "brates" at entry to b43_update_basic_=
-rates()
-> is 0xF, thus only the CCK rates are enabled, but sband->n_bitrates is 12,=
- which
-> includes all the 802.11g rates.
+So I would still like to see it formatted as one
+	Foo:
+per IE, so in this case someting like
 
-It doesn't really depend on your supported rates, if your AP says that
-only CCK rates are basic rates (you can see that in iw scan output, they
-are marked with a *) then they need to be used for response frames, as
-per 802.11-2007 9.6 paragraph 7:
-
-        To allow the transmitting STA to calculate the contents of the
-        Duration/ID field, a STA responding to a received frame shall
-        transmit its Control Response frame (either CTS or ACK), other
-        than the BlockAck control frame, at the highest rate in the
-        BSSBasicRateSet parameter that is less than or equal to the rate
-        of the immediately previous frame in the frame exchange sequence
-        (as defined in 9.12) and that is of the same modulation class
-        (see 9.6.1) as the received frame. If no rate contained in the
-        BSSBasicRateSet parameter meets these conditions, then the
-        control frame sent in response to a received frame shall be
-        transmitted at the highest mandatory rate of the PHY that is
-        less than or equal to the rate of the received frame, and that
-        is of the same modulation class as the received frame. In
-        addition, the Control Response frame shall be sent using the
-        same PHY options as the received frame, unless they conflict
-        with the requirement to use the BSSBasicRateSet parameter.
-       =20
-
-Then again, if I read that correctly, we should be checking the
-modulation classes, will have to take a closer look at 9.6.1.
-
-> Is b43 missing something needed to set the basic_rates member of struct
-> ieee80211_bxx_conf to a more reasonable value when b43_op_bss_info_change=
-d() is
-> entered? I think it should be 0xFFF, not 0xF. I have tested with the larg=
-er
-> value and found that this change did not improve transmit rates.
-
-So you're saying it doesn't help anyway?
+	Country: CA	Environment:
+		 Channels [1 - 11]
+etc.
 
 johannes
 
---=-C6FkckHCcwMCbF6XyPMY
+--=-3a7j1zSK0chpxS4H+S5D
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJLZKTwAAoJEODzc/N7+QmauAYQAJd8uuNFBheHwM3c9uZTLcVI
-+uxag0svNmnvqqGFEIPQRK/zVFpsuGURXSj4Ed+hsG3jOiK+dvb11W0czB86SBDA
-L0CQdEgnc8ro0im6Ct2vDGhKsaDjSRP/Ph/G0Pq3D3NlYREw5fxQ7l5frSJ0QR8T
-ROw/V/FtP3/m9cx3HRBt2bUzLGpkz/hsHNAApZQbdLKrS+bRXtcf+5v7XFipUbbW
-ctXaSyd95yPwuIwuLMdYfQ/hEjJgK/zhAS0WWfsGXuB0Sv0JpcG1kSL6oECGwj1a
-G1BluFoFatjSZRhEKNVuidNdvQ6ZeTpRdo4+EN+lM3sEuAeB87d6GqZkgFnutXhA
-gDhhNrNwx/6h7ANH1j6tOiiSiIhDfSb2UzndoRVZ3snytEIBJQUjXWL/IqiY6Uiw
-JUa4CGbbDoPwBncvDjhfYoxiiIKV7clu4WDAR2uRJzlapkodKZnD0pLgiYxTsUOU
-YmrWqqyWM629/uJrVgH7CQ1xRxeL2Rl1dW4u3A4poiOacUcCYO4Hx5vd75sVFp2H
-iUBwk9xuwz4MJgGYrav2FT59gOeETq84BbhTkMuoLQAvJtuxWy18Jg2nMy3euPgx
-rSwfAA7zFmtHFJ0ghKx3VlblbVfYGn4KI0p8wkJTFwcmvOsd/U397C+i+et5P2oQ
-0e5IYlSAnndKBKD+8uNq
-=ZZcB
+iQIcBAABAgAGBQJLV0odAAoJEODzc/N7+Qmah6kP/1A4yBXmRk7uxTtcU96yMmvB
+O1VFTpkbUI6+7EMhPnTHteQCTVZSMguLUSp5VuHsEXyN2urNRWbMBdrncCP2vCqv
+1t9WslbyrJKWCkEzqzhlmnnmq8hJnSYYbK00C4SKulLESeq0yTO0kPD8ctxvm1FF
+z/E/3i1U88kE9awyYE5zIbYP6o6rhPm4V8bmw+go0kJkICbCSzjF4Z4sFA8FMpWO
+mzNpz1/9TMM1tMUYPJLzMnnXHrhNCVBZDXQ8V7ZPuQ/IZB+1QGkkkB5cY13ZvQCq
+HuVKWquXIdRbQOTrgexRUQAqYZoKu8IhCcGxKObzE8duh3RDk6H5Z05QEyUqChLe
+QhIn2eiYm1v8VQcDdCsGed8blY5tPNjzLtuGk1zpe+kXe+tfB30QxtPycY2h+N+N
+VEzrricYkliKI1ef21K9chapr4N98i6ugVwjR8yMeG09NxStIQoNNCGtZWUnrKcT
+K+vDgjSHUctNFcR8a0wOAdXYk86yKmKGyMRLYGBQArk5z9edJyRhZyGlpmwglrGc
+1YKTigCNIZlTO0zzOIK7pmQANOL/4owsza5Xotd7UMlUiBgLroZEoBXJr2VKcjD3
+HVbdt0Cb+NgR/YzCINR4EKk7m80znerQA5TJ5JFf+FElsehZeKgyyPIlW1zWuQFO
+M6jhBKvJDnjNMZzqad+I
+=6lwN
 -----END PGP SIGNATURE-----
 
---=-C6FkckHCcwMCbF6XyPMY--
+--=-3a7j1zSK0chpxS4H+S5D--
 
