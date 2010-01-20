@@ -1,63 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34562 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750888Ab0AEKYQ (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:14643 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756150Ab0ATHcq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2010 05:24:16 -0500
-Subject: Re: [PATCH 4/9] mac80211: create Probe Request template
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <874on0x3gb.fsf@purkki.valot.fi>
-References: <20100103210552.29287.20384.stgit@tikku>
-	 <20100103210749.29287.96141.stgit@tikku>
-	 <1262683265.20098.7.camel@johannes.local>  <874on0x3gb.fsf@purkki.valot.fi>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-M4ftGG0t8dReBx/AQc0o"
-Date: Tue, 05 Jan 2010 11:23:09 +0100
-Message-ID: <1262686989.23910.6.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 20 Jan 2010 02:32:46 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] cfg80211: add a callback for querying the operating frequency and export it through nl80211
+Date: Wed, 20 Jan 2010 08:32:48 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Felix Fietkau <nbd@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <4B536B05.6070301@openwrt.org> <4B537A94.9070807@openwrt.org> <1263762351.28067.21.camel@johannes.local>
+In-Reply-To: <1263762351.28067.21.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <201001200832.48698.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> In any case I have a feeling you're trying to use the kernel as
+> a database for something you already know, just don't have
+> quite as readily available as you'd like.
 
---=-M4ftGG0t8dReBx/AQc0o
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I have a device where the current channel is shown to user-space, 
+e.g. the operator. We used that to find out on what channel the
+current AP is. Or, when the channel is constantly changing, that 
+the system is still searching for a matching access-point.
 
-On Tue, 2010-01-05 at 12:15 +0200, Kalle Valo wrote:
-
-> > However, there already is ieee80211_send_probe_req and
-> > ieee80211_build_preq_ies -- shouldn't this use some of the new code?
->=20
-> Yes, patch 5 does this.
-
-*rubs eyes*
-
-Indeed, sorry!
-
-johannes
+I know that for both things there are other ways to query the 
+same information, but it's convenient nethertheless.
 
 
---=-M4ftGG0t8dReBx/AQc0o
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+But one thing for which is no other way is to see the actual 
+channel-changes due to the search for a new AP. If such a thing 
+would be important (it isn't for me), maybe a nl80211 broadcast 
+would be better than, thought.
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLQxMJAAoJEODzc/N7+QmasQcQAJwjevodwIAc7DZHqiYsKyNZ
-xzXFpwamLEUjThTvn/6lkTsnwresEw1svb33uoB2QSVRjjEhfI16WpgsOtiLBez2
-uiW84AIGNgdvJ3fs6IC8a0McPGOk1XweQmH3MYIhGwUY31SAH8op7UCK9UJhRwyB
-oQkbpeOAbCQHh8Kmq5qqthb8uNYkMjnflHeKDrELEtFJ3njFTJMKUOT0J+oKwkyn
-vnmxflQDoSBjILpDC5C4h19P0/cAXmbm8UT7Sx5Mtdd01zXwVhqkRcNJ0+2yIHsi
-7DrRE9h1V7RrJUaSRFmi9BCaSN88Qqhxa5ZhQaOgygaXpRbjTLiUMB+4FhtTZhZ6
-Cd6bHdGJBLaWag8mZ9Pk2H/9Zcd/WX2yi1ScU4RVQzIky7hiUsX2COFJ9o3YxyrD
-dZfUoih8155eVxi5Mk32AbNmqEiMrXUiwnftlGTmj6H+5S2rw/5I2v1LGfjJ0Rxw
-goBzwBjLBQT9xWNQtdTYnVnqsqxQiG1hIgP2WOjPx8HGCjx0oi7bPhY57gmWN067
-HuYdYfg9MPYqko1DNwo2eWZX5413ctMfs2CKyOgR3p7F8XDKJ6ZayFT8GEWHoLMr
-/NyHPDb6FZ7xffkiUGw4D+YG+n9mx2VnXBDajWgb5c8LqSffTxP0XA6amTholZqS
-objjDuLo8lXq1YrZ/ErY
-=BHlh
------END PGP SIGNATURE-----
-
---=-M4ftGG0t8dReBx/AQc0o--
-
+-- 
+http://www.holgerschurig.de
