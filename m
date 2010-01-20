@@ -1,100 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f190.google.com ([209.85.222.190]:40818 "EHLO
-	mail-pz0-f190.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752385Ab0AVWId convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:49598 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752635Ab0ATRvt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 17:08:33 -0500
-Received: by pzk28 with SMTP id 28so400953pzk.4
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2010 14:08:33 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4B5A20C3.6020304@redfish-solutions.com>
-References: <Pine.LNX.4.64.0912261245080.5112@cheetah.psv.nu>
-	<20091229020027.GE30201@bombadil.infradead.org> <4B59FC5E.1020802@redfish-solutions.com>
-	<43e72e891001221153w5c4c4bc6g63883b5012d384b7@mail.gmail.com>
-	<4B5A20C3.6020304@redfish-solutions.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 22 Jan 2010 14:08:13 -0800
-Message-ID: <43e72e891001221408y11355794k73b79ad6dee22b1c@mail.gmail.com>
-Subject: Re: Compat-wireless bleeding-edge daily builds broken since
-	2009-12-11
-To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	Peter Svensson <petersv@psv.nu>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 20 Jan 2010 12:51:49 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] iw: add country IE parsing
+Date: Wed, 20 Jan 2010 12:51:48 -0500
+Message-Id: <1264009908-27195-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 22, 2010 at 2:03 PM, Philip A. Prindeville
-<philipp_subx@redfish-solutions.com> wrote:
-> On 01/22/2010 11:53 AM, Luis R. Rodriguez wrote:
->> On Fri, Jan 22, 2010 at 11:28 AM, Philip A. Prindeville
->> <philipp_subx@redfish-solutions.com> wrote:
->>> On 12/28/2009 06:00 PM, Luis R. Rodriguez wrote:
->>>> On Sat, Dec 26, 2009 at 12:50:23PM +0100, Peter Svensson wrote:
->>>>
->>>>> Hi,
->>>>>
->>>>> The bleeding edge nightly snapshopts in
->>>>>   http://wireless.kernel.org/download/compat-wireless-2.6/
->>>>> are not updated since the compat-bluetooth were introduced (I think) on
->>>>> 2009-12-11.
->>>>>
->>>>> When built from the git sources the driver works very nicely, and much
->>>>> more stable than the last drop on 2009-12-11.
->>>>>
->>>> This will be fixed soon, just need to re-instate access to the box.
->>>>
->>>>   Luis
->>>>
->>>
->>>
->>> Is this the issue I'm seeing?  Has it been fixed yet?
->>
->> Well so I now have access to the box but the box got a face lift and
->> during that time I didn't want to clone linux-next on it. While all
->> that happened in the background I just started making bleeding edge
->> compat-wireless releases on orbit-lab.org along with updating the
->> symlink to point to the latest dated release.
->>
->> wireless.kernel.org upgrade has now completed but I think I prefer to
->> continue doing the bleeding edge compat-wireless updates on
->> orbit-lab.org as I have full access there and can soon start doing
->> compile tests for each kernel as I have unlimited disk space (or so I
->> like to believe). I see it useful to still have the bleeding edge
->> tarball on wireless.kernel.org though due to the URL name, etc, but I
->> can just scp it over. I haven't gotten to that yet.
->>
->> For now use:
->>
->> http://www.orbit-lab.org/kernel/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
->>
->> for bleeding edge
->>
->> Seems my cronjobs aren't kicking off yet, will debug that today too.
->>
->>   Luis
->
-> Just ran against the tarball of 2010-01-20 on linux 2.6.27.42:
->
-> br1: port 1(ap0) entering disabled state
-> br1: topology change detected, propagating
-> br1: port 1(ap0) entering forwarding state
-> Starting dnsmasq...
-> Starting ntpd...
-> BUG: unable to handle kernel NULL pointer dereference at 0000019f
-> IP: [<d09cbe50>] :mac80211:invoke_tx_handlers+0x58f/0xe6a
-> *pde = 00000000
-> Oops: 0000 [#1] PREEMPT
-> Modules linked in: aes_i586 aes_generic lm90 hwmon scx200_acb i2c_core bridge stp llc dummy ath9k ath9k_common mac80211 ath9k_hw ath cfg80211 rfkill_backport compat dahdi_dummy dahdi sha512_generic sha256_generic deflate zlib_deflate arc4 ecb sha1_generic blowfish des_generic cbc cryptosoft cryptodev(P) ocf(P) geodewdt geode_rng geode_aes crypto_blkcipher via_rhine rtc leds_alix
->
-> Pid: 1721, comm: hostapd Tainted: P          (2.6.27.42-astlinux #1)
-> EIP: 0060:[<d09cbe50>] EFLAGS: 00010246 CPU: 0
-> EIP is at invoke_tx_handlers+0x58f/0xe6a [mac80211]
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
-Fun, can you run gdb net/mac80211/mac80211.ko
+I've considered showing only the channel set from the Country IE
+but since cfg80211 now mangles contigious channel sets together
+it seems more useful for iw to just display the individual triplets
+separately so this patch is left intact. The triplet print is
+kept since technically speaking this should also show the
+regulatory extension stuff when one is found.
 
-And then on the gdb prompt run:
+ scan.c |   87 +++++++++++++++++++++++++++++++++++++++++++++++++++------------
+ 1 files changed, 70 insertions(+), 17 deletions(-)
 
-l *(invoke_tx_handlers+0x58f)
+diff --git a/scan.c b/scan.c
+index 999aba4..26e07e6 100644
+--- a/scan.c
++++ b/scan.c
+@@ -36,6 +36,23 @@ struct scan_params {
+ 	bool show_both_ie_sets;
+ };
+ 
++#define IEEE80211_COUNTRY_EXTENSION_ID 201
++
++struct ieee80211_country_ie_triplet {
++	union {
++		struct {
++			__u8 first_channel;
++			__u8 num_channels;
++			__s8 max_power;
++		} __attribute__ ((packed)) chans;
++		struct {
++			__u8 reg_extension_id;
++			__u8 reg_class;
++			__u8 coverage_class;
++		} __attribute__ ((packed)) ext;
++	};
++} __attribute__ ((packed));
++
+ static int handle_scan(struct nl80211_state *state,
+ 		       struct nl_cb *cb,
+ 		       struct nl_msg *msg,
+@@ -143,29 +160,65 @@ static void print_ds(const uint8_t type, uint8_t len, const uint8_t *data)
+ 	printf(" channel %d\n", data[0]);
+ }
+ 
+-static void print_country(const uint8_t type, uint8_t len, const uint8_t *data)
++static const char *country_env_str(char environment)
+ {
+-	int i;
+-
+-	printf(" %.*s", 2, data);
+-	switch (data[2]) {
++	switch (environment) {
+ 	case 'I':
+-		printf(" (indoor)");
+-		break;
++		return "Indoor only";
+ 	case 'O':
+-		printf(" (outdoor)");
+-		break;
++		return "Outdoor only";
+ 	case ' ':
+-		printf(" (in/outdoor)");
+-		break;
++		return "Indoor/Outdoor";
+ 	default:
+-		printf(" (invalid environment)");
+-		break;
++		return "bogus";
+ 	}
+-	printf(", data:");
+-	for(i=0; i<len-3; i++)
+-		printf(" %.02x", data[i + 3]);
+-	printf("\n");
++}
++
++static void print_country(const uint8_t type, uint8_t len, const uint8_t *data)
++{
++	printf(" %.*s", 2, data);
++
++	printf("\tEnvironment: %s\n", country_env_str(data[2]));
++
++	data += 3;
++	len -= 3;
++
++	if (len < 3) {
++		printf("\t\tNo country IE triplets present\n");
++		return;
++	}
++
++	printf("\tCountry IE triplets:\n");
++
++	while (len >= 3) {
++		int end_channel;
++		struct ieee80211_country_ie_triplet *triplet =
++			(struct ieee80211_country_ie_triplet *) data;
++
++		if (triplet->ext.reg_extension_id >= IEEE80211_COUNTRY_EXTENSION_ID) {
++			printf("\t\tExtension ID: %d Regulatory Class: %d Coverage class: %d\n",
++			       triplet->ext.reg_extension_id,
++			       triplet->ext.reg_class,
++			       triplet->ext.coverage_class);
++
++			data += 3;
++			len -= 3;
++			continue;
++		}
++
++		/* 2 GHz */
++		if (triplet->chans.first_channel <= 14)
++			end_channel = triplet->chans.first_channel + (triplet->chans.num_channels - 1);
++		else
++			end_channel =  triplet->chans.first_channel + (4 * (triplet->chans.num_channels - 1));
++
++		printf("\t\tChannels [%d - %d]\n", triplet->chans.first_channel, end_channel);
++
++		data += 3;
++		len -= 3;
++	}
++
++	return;
+ }
+ 
+ static void print_powerconstraint(const uint8_t type, uint8_t len, const uint8_t *data)
+-- 
+1.6.3.3
 
-  Luis
