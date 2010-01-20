@@ -1,75 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f215.google.com ([209.85.220.215]:55858 "EHLO
-	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753957Ab0AYPVN (ORCPT
+Received: from mail-px0-f182.google.com ([209.85.216.182]:62053 "EHLO
+	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751846Ab0ATSQl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 10:21:13 -0500
-Received: by fxm7 with SMTP id 7so122847fxm.28
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2010 07:21:11 -0800 (PST)
-Subject: Re: [PATCH] mac80211: fix sw crypto
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Jochen Friedrich <jochen@scram.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1264415776.23766.34.camel@johannes.local>
-References: <1264415776.23766.34.camel@johannes.local>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 25 Jan 2010 17:21:08 +0200
-Message-ID: <1264432868.6336.3.camel@maxim-laptop>
-Mime-Version: 1.0
+	Wed, 20 Jan 2010 13:16:41 -0500
+Received: by pxi12 with SMTP id 12so5825588pxi.33
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2010 10:16:41 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4B56EF1A.4050503@ukr.net>
+References: <4B56EF1A.4050503@ukr.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 20 Jan 2010 10:08:16 -0800
+Message-ID: <43e72e891001201008w29da1feka88b6859d7feb91a@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: Account HT Control field in Data frame hdrlen
+	according to 802.11n-2009
+To: Andriy Tkachuk <andrit@ukr.net>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-01-25 at 11:36 +0100, Johannes Berg wrote: 
-> What a stupid mistake. In
-> 
->     commit 813d76694043d00b59475baa1fbfaf54a2eb7fad
->     Author: Johannes Berg <johannes@sipsolutions.net>
->     Date:   Sun Jan 17 01:47:58 2010 +0100
-> 
->         mac80211: move control.hw_key assignment
-> 
-> I inserted code testing the wrong flags field,
-> which means that the test is almost always true
-> (it's really testing for the peer's WMM support)
-> and thus the later parts of the stack assume hw
-> crypto will be done even if that's not true.
-> 
-> Obviously, that broke software crypto. Maxim
-> said so specifically, and Jochen probably uses
-> some cipher that iwl3945 doesn't support in
-> hardware, which might also explain that Maxim
-> reports that even hw crypto is broken.
-This patch works for me. Thanks.
+On Wed, Jan 20, 2010 at 3:55 AM, Andriy Tkachuk <andrit@ukr.net> wrote:
+> ieee80211_hdrlen() should account account new HT Control field in 802.11
+> data frame header introduced by IEEE 802.11n standard.
+>
+> According to 802.11n-2009 HT Control field is present in data frames
+> when both of following are met:
+>
+>   1. It is QoS data frame.
+>   2. Order bit is set in Frame Control field.
+>
+> The change might be totally compatible with legacy non-11n aware frames,
+> because 802.11-2007 standard states that "all QoS STAs set this subfield
+> to 0".
+>
+> Signed-off-by: Andriy V. Tkachuk <andrit@ukr.net>
+> Acked-by : Benoit Papillault <benoit.papillault@free.fr>
 
-What chipers does iwl3945 support?
-I use CCMP, and I also know that software encryption is used by default.
+Very nice, thanks for the fuller commit log. Hm, the question I also
+wanted to address was whether or not this is a stable fix to go for
+2.6.32 and 2.6.33, I suppose we'd have to look at all callers of
+ieee80211_hdrlen() but this seems like a stable fix to me.
 
-Best regards,
-Maxim Levitsky 
-> 
-> Fix this to test the right flags field.
-> 
-> Reported-by: Maxim Levitsky <maximlevitsky@gmail.com>
-> Reported-by: Jochen Friedrich <jochen@scram.de>
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  net/mac80211/tx.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> --- wireless-testing.orig/net/mac80211/tx.c	2010-01-25 11:13:59.000000000 +0100
-> +++ wireless-testing/net/mac80211/tx.c	2010-01-25 11:29:24.000000000 +0100
-> @@ -559,7 +559,7 @@ ieee80211_tx_h_select_key(struct ieee802
->  		}
->  
->  		if (!skip_hw && tx->key &&
-> -		    tx->key->conf.flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
-> +		    tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
->  			info->control.hw_key = &tx->key->conf;
->  	}
->  
-> 
-> 
-
-
+  Luis
