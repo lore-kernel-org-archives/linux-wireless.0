@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:46435 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932276Ab0AFT3i convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f201.google.com ([209.85.222.201]:43293 "EHLO
+	mail-pz0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753818Ab0ATSN2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 14:29:38 -0500
-Received: by ewy19 with SMTP id 19so9965974ewy.21
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 11:29:37 -0800 (PST)
+	Wed, 20 Jan 2010 13:13:28 -0500
+Received: by pzk39 with SMTP id 39so3847753pzk.15
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2010 10:13:28 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <201001061922.58203.mb@bu3sch.de>
-References: <op.u54a59c89lhzdc@linux-g0th.site>
-	 <43e72e891001060926s320bf403ya2edf2601ced5125@mail.gmail.com>
-	 <b170af451001061018x6ff2404ajbdbb3cb96ceaf7f2@mail.gmail.com>
-	 <201001061922.58203.mb@bu3sch.de>
-Date: Wed, 6 Jan 2010 20:29:36 +0100
-Message-ID: <b170af451001061129n59357edehc1f2328fb10846f6@mail.gmail.com>
-Subject: Re: [PATCH 2/5] b43: N-PHY: b43_nphy_get_tx_gains
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+In-Reply-To: <1263985353.2819.0.camel@johannes.local>
+References: <1263985353.2819.0.camel@johannes.local>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 20 Jan 2010 10:05:58 -0800
+Message-ID: <43e72e891001201005p5207345es6eb1a4b196b22a47@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: export multiple MAC addresses in sysfs
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 6 stycznia 2010 19:22 użytkownik Michael Buesch <mb@bu3sch.de> napisał:
-> On Wednesday 06 January 2010 19:18:39 Rafał Miłecki wrote:
->> > Dude what is up with this e-mail data on your patches in the commit log?
->>
->> That is way of encoding non-ASCII chars in mail header. You can find
->> info about this in RFC. That is "=?UTF-8?B?" prefix and base 64
->> encoded text.
->>
->> That was generated with git (git format-patch -5) and it understood by
->> git (git am ...).
+On Wed, Jan 20, 2010 at 3:02 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> If a device has multiple MAC addresses, userspace will
+> need to know about that. Similarly, if it allows the
+> MAC addresses to vary by a bitmask.
 >
-> Well, however, there is no reason to include this in the mail body (and thus
-> the GIT commit message).
-> As you said, these are mail _headers_.
-> Additionally, attaching the patch as mail attachment is _not_ required. We just
-> put the patch into the body.
+> If a driver exports multiple addresses, it is assumed
+> that it will be able to deal with that many different
+> addresses, which need not necessarily match the ones
+> programmed into the device; if a mask is set then the
+> device should deal addresses within that mask based
+> on an arbitrary "base address".
+>
+> To test it all and show how it is used, add support
+> to hwsim even though it can't actually deal with
+> addresses different from the default.
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-OK, will try to follow that. I checked few patches submitted by other
-ppl so probably get the correct way this time.
+Any reason to not export this via nl80211?
+Can we say, use this on Atheros devices for storage of the bssid mask?
 
-
-> You may read Documentation/SubmittingPatches and format your future
-> patches according to that.
-
-Well, that's really poor joke :| Manually creating .orig files, using
-"diff -up" and so dropping local commits "strategy"...? Er, I don't
-think I'll use this one.
-
--- 
-Rafał
+  Luis
