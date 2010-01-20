@@ -1,49 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:45637 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755794Ab0AWP2P convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46381 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752106Ab0ATJt2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jan 2010 10:28:15 -0500
-Received: by ewy26 with SMTP id 26so388255ewy.28
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2010 07:28:14 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20100123160912.0e38a91c@vaiolo.stefanobrivio.net>
-References: <1264121596-9616-1-git-send-email-zajec5@gmail.com>
-	 <20100123011618.GA16135@tuxdriver.com>
-	 <1264217811.10468.46.camel@macbook.infradead.org>
-	 <201001231233.02501.mb@bu3sch.de>
-	 <20100123160912.0e38a91c@vaiolo.stefanobrivio.net>
-Date: Sat, 23 Jan 2010 16:28:13 +0100
-Message-ID: <b170af451001230728y55ca1e5ar6b8a1e5cfc2f8851@mail.gmail.com>
-Subject: Re: [PATCH 0/5] b43: more N-PHY stuff
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	davem@davemloft.net
-Content-Type: text/plain; charset=UTF-8
+	Wed, 20 Jan 2010 04:49:28 -0500
+Subject: Re: [PATCH 1/2] cfg80211: add a callback for querying the
+ operating frequency and export it through nl80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <holgerschurig@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <201001200832.48698.holgerschurig@gmail.com>
+References: <4B536B05.6070301@openwrt.org> <4B537A94.9070807@openwrt.org>
+	 <1263762351.28067.21.camel@johannes.local>
+	 <201001200832.48698.holgerschurig@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-t/GswAemvzlPwvSA6eGz"
+Date: Wed, 20 Jan 2010 10:49:23 +0100
+Message-ID: <1263980963.9171.1.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/1/23 Stefano Brivio <stefano.brivio@polimi.it>:
-> On Sat, 23 Jan 2010 12:33:00 +0100
-> Michael Buesch <mb@bu3sch.de> wrote:
->
->> On Saturday 23 January 2010 04:36:50 David Woodhouse wrote:
->> >
->> > Can you provide a list of existing subscribers?
->>
->> I think Stefano has access to our berlios mailman.
->
-> Last time I tried, I couldn't get berlios mailman to export the list of
-> subscribers properly. I'll try to get around this (probably, HTML
-> parsing is my best bet).
 
-If you're busy, please send me this HTML/whatever list, I'll check
-what I can do.
+--=-t/GswAemvzlPwvSA6eGz
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, 2010-01-20 at 08:32 +0100, Holger Schurig wrote:
+> > In any case I have a feeling you're trying to use the kernel as
+> > a database for something you already know, just don't have
+> > quite as readily available as you'd like.
+>=20
+> I have a device where the current channel is shown to user-space,=20
+> e.g. the operator. We used that to find out on what channel the
+> current AP is. Or, when the channel is constantly changing, that=20
+> the system is still searching for a matching access-point.
+>=20
+> I know that for both things there are other ways to query the=20
+> same information, but it's convenient nethertheless.
 
--- 
-Rafał
+I realise that. But all this is complicated with the planned move to
+allow different virtual interfaces to use different channels with
+time-multiplexing.
+
+> But one thing for which is no other way is to see the actual=20
+> channel-changes due to the search for a new AP. If such a thing=20
+> would be important (it isn't for me), maybe a nl80211 broadcast=20
+> would be better than, thought.
+
+That's actually impossible with a lot of hardware, so I really don't see
+the point.
+
+johannes
+
+--=-t/GswAemvzlPwvSA6eGz
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLVtGfAAoJEODzc/N7+Qma+cwQAK8AOVx0+Jx8s+r6miXycN0p
+svjCGjYeflSkm184esl72f10tTrnSMYU5mosSzwvMMvr4sPR6SFSu4Ci4e/xzFB2
+Jo5J3UmfU6HzpC636O9pypdp0O9ZA925AIZrahxTPins9lFAdBQ7ibbL5i18Yi0w
+YIDc/yRifFwWRwCwW5AETLpS3UQ/+Q2yIkojhmH+v0YBJtjELQ8Oi9d4FeLlEBbB
+lOAfwgdQasbSAPkND+2S0khBOXYKxpvVnk7FUWxfFa4NUG0tJw6tKfZv1zAIfGyU
+yathzlHwlIIe8651FVTWOgRzYpqAhfuTtqAR3mqEupxIlfKTyeL//ArOyI62WyNX
+SRpMjZ4sf1FdGaHbDtN4MHTKhSm7M8TIXcwb5mbaGaePA3TY6vrwC/QoWFPzX09b
+rRR/cIjYiigWIZDUzwBqy3z1rbLj7DfFkkomf8OVyoM1dycC25+NJgwA3Z2SFSQi
+aERYLX1eCCZKisXgwNVVClmWpmyxnaOvdkgztXmM+qurkpXWytb11aQCio7cw4Zf
+0dQRks29GuucKagOsriol3UMC159CtAzOJ0pNHzY62nz7gnPClzrj5ddIVlo8kzo
+hKdUDrx+OpaG5rLPTuNzxpZnPMVqWEcVoioOcT4ce/h0YXW+/qi0Xnvd1i9krNAj
+PWOSr6ceVU82BWgIytOO
+=PWvY
+-----END PGP SIGNATURE-----
+
+--=-t/GswAemvzlPwvSA6eGz--
+
