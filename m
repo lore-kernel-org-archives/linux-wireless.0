@@ -1,62 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47580 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932789Ab0AFVv0 (ORCPT
+Received: from mail-pz0-f201.google.com ([209.85.222.201]:61206 "EHLO
+	mail-pz0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751711Ab0ATSPJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 16:51:26 -0500
-Subject: Re: [PATCH 2.6.33] mac80211: fix skb buffering issue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Backlund <tmb@mandriva.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4B450004.9050601@mandriva.org>
-References: <1262710858.28653.5.camel@johannes.local>
-	 <4B450004.9050601@mandriva.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-KcKtDCFzM9l+gzFTfJp2"
-Date: Wed, 06 Jan 2010 22:51:24 +0100
-Message-ID: <1262814684.4437.0.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 20 Jan 2010 13:15:09 -0500
+Received: by pzk39 with SMTP id 39so3849013pzk.15
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2010 10:15:09 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1264011010.11396.22.camel@johannes.local>
+References: <1263985353.2819.0.camel@johannes.local> <43e72e891001201005p5207345es6eb1a4b196b22a47@mail.gmail.com>
+	<1264011010.11396.22.camel@johannes.local>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 20 Jan 2010 10:14:49 -0800
+Message-ID: <43e72e891001201014s7083af5ajc9f0250f6af4975f@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: export multiple MAC addresses in sysfs
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Jan 20, 2010 at 10:10 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2010-01-20 at 10:05 -0800, Luis R. Rodriguez wrote:
+>> On Wed, Jan 20, 2010 at 3:02 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > If a device has multiple MAC addresses, userspace will
+>> > need to know about that. Similarly, if it allows the
+>> > MAC addresses to vary by a bitmask.
+>> >
+>> > If a driver exports multiple addresses, it is assumed
+>> > that it will be able to deal with that many different
+>> > addresses, which need not necessarily match the ones
+>> > programmed into the device; if a mask is set then the
+>> > device should deal addresses within that mask based
+>> > on an arbitrary "base address".
+>> >
+>> > To test it all and show how it is used, add support
+>> > to hwsim even though it can't actually deal with
+>> > addresses different from the default.
+>> >
+>> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>>
+>> Any reason to not export this via nl80211?
+>
+> Laziness, and the fact that we only exported it in sysfs before.
+>
+>> Can we say, use this on Atheros devices for storage of the bssid mask?
+>
+> That was the intention of the mask, yes.
 
---=-KcKtDCFzM9l+gzFTfJp2
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Neat thanks :)
 
-On Wed, 2010-01-06 at 23:26 +0200, Thomas Backlund wrote:
-
-> With this patch applied to 2.6.33-rc3 kernel crashes at boot...
->=20
-> I have a iwl4965 connecting to a wpa2-psk encrypted network, arch is=20
-> x86_64, distro Mandriva Linux and the kernel has preempt enabled.
->=20
-> Am I only missing some patches, or did I hit a real bug ?
-
-It'd help if you said what crashes and how since nobody else seems to be
-having that particular problem with this patch.
-
-johannes
-
---=-KcKtDCFzM9l+gzFTfJp2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLRQXZAAoJEODzc/N7+Qma2+8P/ROYHdQ7/g1YVaD7zeAwLSIm
-pcdb3fGuLD9E9d+UlwmbFW3/C5QhqbrslKf5fHreXxsfZ98UYt4fjZ6XACJsW10a
-zoZrO/vsYF3TY9jRRvkgzUE+aUmr8ZqOvVOxodKHlcIaDLOIzqziwL2bKft7386U
-8W2dTnBhC++0gRdkN3vf5WSvtu1zvCQF5WOPRpyGhhmPVLN6B4T5K8fMhjxdAZK3
-Qo2nVA71B/C8Uir7QRtDP1mJGatJ/LVPjYoBZUslNpFqpm/nF5fDvaiKctXXdXOU
-cGvjH+4ELl/YTXOTkq8WVwKL1JZKDxSG/o34j6zmf/3c76pFAsuTrl4EenthzAry
-7x5cffE3/im2y61pEbQ4ht/4rGxJv//oG42ucEMy2LFMeh3EIE8C9aA6IxS+dOZq
-JU6I5PWiveYuyjAfwHJLK8e8m6eGcU7TyeKpII8afGJUeRHGQ8wb2t+NUgpm2FNo
-USznLF7Hi7oVlnqFiYIzD/rh41TzKQ8pvxK2Nf3pWDdjjdeQ/m11xLmuvc0Jjoi/
-/6EOCbHsE4bnpAhsh5Rr1VI3Ll4ifQe7gjy2fnBFtE0OjBAcZB1o//woSAG3o4xK
-169/uV3fX1GMHr0i0alK8xNGaUV739l+UScuT80gJ+KDjO2rHz3wyjSqqvAECn0l
-HTOsQ/XbhIKIHYj6OihF
-=nOiS
------END PGP SIGNATURE-----
-
---=-KcKtDCFzM9l+gzFTfJp2--
-
+  Luis
