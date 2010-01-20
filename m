@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:41971 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752131Ab0AJNHz (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:35655 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751943Ab0ATC46 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jan 2010 08:07:55 -0500
-Date: Sun, 10 Jan 2010 14:07:53 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH] mac80211: flush workqueue before calling driver ->stop() method
-Message-ID: <20100110130752.GG1735@mail.wantstofly.org>
+	Tue, 19 Jan 2010 21:56:58 -0500
+Received: by yxe17 with SMTP id 17so5762864yxe.33
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2010 18:56:57 -0800 (PST)
+Subject: Re: b43 driver hang with bcm4318
+From: Eric Volker <evolker@gmail.com>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <69e28c911001191800t23bab697q6354b07656f78a29@mail.gmail.com>
+References: <1263951622.3259.26.camel@fwdell4550>
+	 <69e28c911001191800t23bab697q6354b07656f78a29@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 19 Jan 2010 20:56:53 -0600
+Message-ID: <1263956213.2316.4.camel@fwdell4550>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since commit "mwl8k: handle station database update for AP's sta entry
-via ->sta_notify()", mwl8k every now and then gets a command timeout
-when ifconfig'ing a STA interface down.  This turns out to be due to
-mwl8k_stop() being called while the work queue item that was scheduled
-by mwl8k_sta_notify() to remove the STA entry for the associated AP is
-still queued, and the former disables interrupts so that when the
-latter eventually runs, a command completion interrupt is never seen.
+On Wed, 2010-01-20 at 03:00 +0100, Gábor Stefanik wrote:
+> Please load b43 with verbose debug messages enabled (use the "verbose"
+> module parameter - check modinfo for the exact value for full debug
+> output), and post the resulting logs.
+Loaded b43 with verbose=3 to get debug output. The driver hung much more
+quickly with debug output enabled. After about 30 seconds of pinging the
+AP became unresponsive, though it was still beaconing. Should I post the
+logs to the list, or is there somewhere else they should go?
 
-Fix this by changing ieee80211_stop_device() so that the workqueue is
-flushed before drv_stop() is called, instead of doing it the other way
-around as is done now.  (As ->stop() is allowed to sleep, there isn't
-any reason for drivers to queue work from within it.)
+Thanks,
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+Eric Volker
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index bc73904..04680ca 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1077,9 +1077,9 @@ void ieee80211_stop_device(struct ieee80211_local *local)
- 	ieee80211_led_radio(local, false);
- 
- 	cancel_work_sync(&local->reconfig_filter);
--	drv_stop(local);
- 
- 	flush_workqueue(local->workqueue);
-+	drv_stop(local);
- }
- 
- int ieee80211_reconfig(struct ieee80211_local *local)
+
+
+
