@@ -1,54 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns01.unsolicited.net ([69.10.132.115]:1609 "EHLO
-	ns01.unsolicited.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751500Ab0AAOZz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2010 09:25:55 -0500
-Message-ID: <4B3E0061.4000003@unsolicited.net>
-Date: Fri, 01 Jan 2010 14:02:09 +0000
-From: David <david@unsolicited.net>
-MIME-Version: 1.0
-To: Maciej Rutecki <maciej.rutecki@gmail.com>
-CC: linux-kernel@vger.kernel.org,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: 2.6.33-rc1 - Weird hard hangs when rendering 'some' web-sites
- in 	Firefox
-References: <4B2FEE46.5030700@unsolicited.net> <8db1092f1001010540l15c8f671y1f6a4a4417eb450b@mail.gmail.com>
-In-Reply-To: <8db1092f1001010540l15c8f671y1f6a4a4417eb450b@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54474 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752972Ab0ATTdf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jan 2010 14:33:35 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] compat: fix build with CONFIG_USB=m
+Date: Wed, 20 Jan 2010 20:33:16 +0100
+Message-Id: <1264015996-30679-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maciej Rutecki wrote:
-> 2009/12/21 David <david@unsolicited.net>:
->   
->> I'm still not sure whether what I'm seeing here is latent hardware
->> problems, but, as a heads up :-
->>
->>    2.6.32, 2.6.32.2 (and previous kernels) - All OK
->>    2.6.33-rc1 - Machine seems fine, until :-
->>
->> I browse to particular sites (one of which is an internet banking site,
->> so no heavy flash etc.). My machine will (completely and repeatably)
->> hang solid. Nothing showing with netconsole, sshd dead, sysrq dead ...
->> reset button time.
->>
->>     
-> I can confirm this. Probably it's related only to wireless
-> connections, wired seems be OK. My device is:
-> 08:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG
-> [Golan] Network Connection (rev 02)
->
-> Regards
->   
+The usb compat code was not build if usb was build as module in kernel.
 
-Mine is a wired connection, so it seems unconnected with that. I've
-replaced the motherboard here and have had no further problems. There is
-now a configuration difference though as I've had to disable radeon kms
-(with radeon.modeset=0) for the new on-board graphics.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ compat/compat-2.6.28.c        |    4 ++--
+ compat/compat-2.6.29.c        |    2 +-
+ include/linux/compat-2.6.28.h |    2 +-
+ include/linux/compat-2.6.29.h |    2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
-My guess is that this is radeon related, and I'm going to set-up the old
-motherboard in a spare case & see what I can work out.
+diff --git a/compat/compat-2.6.28.c b/compat/compat-2.6.28.c
+index a141859..115bd23 100644
+--- a/compat/compat-2.6.28.c
++++ b/compat/compat-2.6.28.c
+@@ -17,7 +17,7 @@
+ /* 2.6.28 compat code goes here */
+ 
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
+-#if defined(CONFIG_USB)
++#if defined(CONFIG_USB) || defined(CONFIG_USB_MODULE)
+ /*
+  * Compat-wireless notes for USB backport stuff:
+  *
+@@ -166,7 +166,7 @@ EXPORT_SYMBOL(pcmcia_loop_config);
+ 
+ #endif /* CONFIG_PCMCIA */
+ 
+-#if defined(CONFIG_USB)
++#if defined(CONFIG_USB) || defined(CONFIG_USB_MODULE)
+ 
+ void usb_unpoison_urb(struct urb *urb)
+ {
+diff --git a/compat/compat-2.6.29.c b/compat/compat-2.6.29.c
+index 48e72a3..c8e0183 100644
+--- a/compat/compat-2.6.29.c
++++ b/compat/compat-2.6.29.c
+@@ -16,7 +16,7 @@
+ #include <linux/etherdevice.h>
+ 
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
+-#if defined(CONFIG_USB)
++#if defined(CONFIG_USB) || defined(CONFIG_USB_MODULE)
+ /**
+  * usb_unpoison_anchored_urbs - let an anchor be used successfully again
+  * @anchor: anchor the requests are bound to
+diff --git a/include/linux/compat-2.6.28.h b/include/linux/compat-2.6.28.h
+index 13a0367..2cab320 100644
+--- a/include/linux/compat-2.6.28.h
++++ b/include/linux/compat-2.6.28.h
+@@ -52,7 +52,7 @@ int pcmcia_loop_config(struct pcmcia_device *p_dev,
+ /* USB anchors were added as of 2.6.23 */
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
+ 
+-#if defined(CONFIG_USB)
++#if defined(CONFIG_USB) || defined(CONFIG_USB_MODULE)
+ #if 0
+ extern void usb_poison_urb(struct urb *urb);
+ #endif
+diff --git a/include/linux/compat-2.6.29.h b/include/linux/compat-2.6.29.h
+index 27f1325..c3572a2 100644
+--- a/include/linux/compat-2.6.29.h
++++ b/include/linux/compat-2.6.29.h
+@@ -47,7 +47,7 @@ static inline struct net_device_stats *dev_get_stats(struct net_device *dev)
+ }
+ 
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
+-#if defined(CONFIG_USB)
++#if defined(CONFIG_USB) || defined(CONFIG_USB_MODULE)
+ extern void usb_unpoison_anchored_urbs(struct usb_anchor *anchor);
+ #endif /* CONFIG_USB */
+ #endif
+-- 
+1.6.3.3
 
-Cheers
-David
