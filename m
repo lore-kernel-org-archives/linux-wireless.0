@@ -1,78 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:55421 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754126Ab0AYRpQ convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:60685 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755863Ab0ATBka (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 12:45:16 -0500
-Received: by bwz27 with SMTP id 27so2868293bwz.21
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2010 09:45:14 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <b6c5339f1001250939r6d136927q51bba86f7102d826@mail.gmail.com>
-References: <4B5CD1FF.4090209@twilightblue.net> <b6c5339f1001250939r6d136927q51bba86f7102d826@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 25 Jan 2010 18:44:51 +0100
-Message-ID: <69e28c911001250944h2cbd5d6eia6d78b652d10f135@mail.gmail.com>
-Subject: Re: Bug: 2.6.32 ath5k, associating with WEP128 AP is unreliable
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Don Darling <darling.don@gmail.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 19 Jan 2010 20:40:30 -0500
+Received: by yxe17 with SMTP id 17so5698861yxe.33
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2010 17:40:30 -0800 (PST)
+Subject: b43 driver hang with bcm4318
+From: Eric Volker <evolker@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 19 Jan 2010 19:40:22 -0600
+Message-ID: <1263951622.3259.26.camel@fwdell4550>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 25, 2010 at 6:39 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Sun, Jan 24, 2010 at 6:04 PM, Don Darling <darling.don@gmail.com> wrote:
->> Hello folks,
->>
->> I recently tried upgrading to kernel version 2.6.32, but after this upgrade
->> my wireless card became flaky when making connections. In cases where a
->> connection can be established it is  stable, but there are problems when
->> making wireless associations. Downgrading to kernel version 2.6.31 resolves
->> this issue.  I'm not sure at the moment which versions of the ath5k driver
->> maps to these kernel versions.
->
-> The (vanilla) kernel version is sufficient to know which driver it is.
->
->> I'm assuming this issue is related to the ath5k driver itself -- the network
->> I'm using is only WEP128, and doesn't need wpa_supplicant.
->
-> Huh, I didn't think any mac80211 driver supported WEP 128.  Are you sure you
-> weren't using madwifi before?  Or maybe WEP 104?
->
-> Are you using any modparams with ath5k?
->
->> In fact, I have
->> fewer problems when I connect to WPA+TKIP networks with wpa_supplicant.
->
-> This is somewhat more secure, so I'd recommend it, or better CCMP.
->
->> Reverting to 2.6.31 resolves this issue. It will connect the first time, and
->> I can disconnect/re-connect several times without issue.
->
-> I can't think of anything that changed in this time frame with ath5k
-> specifically
-> having to do with crypto.  If you were using nohwcrypt=1, it could be a problem
-> with mac80211.  Otherwise, bisecting might be the best route to pin it down.
+I have set up an access point with Ubuntu 9.10 and a Broadcom BCM4318
+PCI card (manufacturer is Buffalo). After an undetermined period of
+time, the card stops beaconing and even previously connected clients are
+unable to ping the AP. After the driver hangs, trying to restart hostapd
+fails with a "Failed to create mon.wlan0". The following commands:
 
-One more important detail: wpa_supplicant can use both wext and
-nl80211, while iwconfig and networkmanager are wext-only.
+#rmmod b43
+#modprobe b43
+#/etc/init.d/hostapd restart
 
-Don: do you use -d wext or -d nl80211 with wpa_supplicant?
+will restart hostapd, and the AP will begin beaconing again. Clients can
+associate with it, but are unable to ping the AP. Further examination
+reveals that wlan0 on the AP has not been assigned an IP address. (My AP
+does not have a DHCP daemon running as of yet; I've been manually
+configuring the IP address of my clients.) Using ifconfig to assign the
+IP address appears to work, but clients are still unable to ping the AP.
+dmesg reveals no message from the b43 or other drivers about the hang;
+however, upon restarting hostapd the driver appears to create a new
+"phy".
 
->
-> Also on the off-chance that it's not crypto related, you may try the suggestions
-> in the following to get a better picture of whwat is going on:
->
-> http://wireless.kernel.org/en/users/Documentation/Reporting_bugs
->
-> --
-> Bob Copeland %% www.bobcopeland.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+[71500.473241] b43-phy1: Broadcom 4318 WLAN found (core revision 9)
+[71500.540847] phy1: Selected rate control algorithm 'minstrel'
+[71500.542002] Broadcom 43xx driver loaded [ Features: PL, Firmware-ID:
+FW13 ]
+[71543.312030] b43 ssb0:0: firmware: requesting b43/ucode5.fw
+[71543.410639] b43 ssb0:0: firmware: requesting b43/pcm5.fw
+[71543.430040] b43 ssb0:0: firmware: requesting b43/b0g0initvals5.fw
+[71543.440062] b43 ssb0:0: firmware: requesting b43/b0g0bsinitvals5.fw
+[71543.564029] b43-phy1: Loading firmware version 410.2160 (2007-05-26
+15:32:10)
+[71543.604432] Registered led device: b43-phy1::tx
+[71543.604459] Registered led device: b43-phy1::rx
+[71543.604485] Registered led device: b43-phy1::radio
+[71554.360009] wlan0: no IPv6 routers present
+
+Further back in the log, it can be seen where b43-phy0 was created, but
+there is no record of the driver crashing or any other errors.
+daemon.log does have several entries like this:
+
+Jan 17 15:48:24 hostname avahi-daemon[759]: Invalid query packet.
+Jan 17 15:49:33 hostname avahi-daemon[759]: last message repeated 2
+times
+
+Rebooting fixes the problem completely, but only temporarily. Anyone
+seen this before, or have a suggested fix?
+
+Thanks,
+
+Eric Volker
 
 
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
