@@ -1,75 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.25]:55191 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756009Ab0AWAXs (ORCPT
+Received: from mail-pz0-f172.google.com ([209.85.222.172]:42304 "EHLO
+	mail-pz0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752653Ab0ATSYL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 19:23:48 -0500
-Received: by qw-out-2122.google.com with SMTP id 3so376332qwe.37
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2010 16:23:47 -0800 (PST)
+	Wed, 20 Jan 2010 13:24:11 -0500
+Received: by pzk2 with SMTP id 2so2461237pzk.21
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2010 10:24:08 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1264205494.7208.7.camel@wwguy-ubuntu>
-References: <1264109996-15995-1-git-send-email-wey-yi.w.guy@intel.com>
-	<1264186981.2593.10.camel@johannes.local> <43e72e891001221120i79c6525bo4852cb5a6c7a37@mail.gmail.com>
-	<1264189560.2593.14.camel@johannes.local> <43e72e891001221544j1b1bd67ao8dfcf4d0dd12dd81@mail.gmail.com>
-	<1264205494.7208.7.camel@wwguy-ubuntu>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 22 Jan 2010 16:23:27 -0800
-Message-ID: <43e72e891001221623v477b9fady32237c1a3aededda@mail.gmail.com>
-Subject: Re: [PATCH v3 1/1] mac80211: tell driver when dtim change detected
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"j@w1.fi" <j@w1.fi>, Kalle Valo <kalle.valo@nokia.com>
+In-Reply-To: <1264011628.5591.211.camel@localhost.localdomain>
+References: <1264009908-27195-1-git-send-email-lrodriguez@atheros.com>
+	<1264011628.5591.211.camel@localhost.localdomain>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 20 Jan 2010 10:23:48 -0800
+Message-ID: <43e72e891001201023x175e6abekecee0ffb7b33d933@mail.gmail.com>
+Subject: Re: [PATCH] iw: add country IE parsing
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 22, 2010 at 4:11 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> On Fri, 2010-01-22 at 15:44 -0800, Luis R. Rodriguez wrote:
->> On Fri, Jan 22, 2010 at 11:46 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Fri, 2010-01-22 at 11:20 -0800, Luis R. Rodriguez wrote:
->> >
->> >> > Previously, we would switch the channel completely to the new operating
->> >> > channel before even probing the AP. That way, we would virtually always
->> >> > receive a beacon from the new AP between the time we started the
->> >> > association process (probe,auth,assoc) and configuring the driver.
->> >> >
->> >> > Now with the new changes that use the off-channel work, we may return to
->> >> > the old "operating" channel, which may be no particular channel, between
->> >> > all these steps. Thus, if there's no beacon between any of probe
->> >> > request/response, auth "request"/"response", assoc request/response, we
->> >> > never get one, and this situation happens.
->> >> >
->> >> > I see two solutions, apart from this special-case patch fixing
->> >> >
->> >> > First, we could go back to the original behaviour if we have just one
->> >> > virtual interface. But that still leaves us with the race, we might do
->> >> > all three frame exchanges within a beacon interval and still miss the
->> >> > beacon, we just tend to not do that and get a beacon.
->> >>
->> >> Curious, what symptoms were seen when the dtim was not propagated
->> >> prior to association, did the STA just not wake up for the right dtim
->> >> interval when in PS mode?
->> >
->> > Yes, I don't really know exactly what happens,
->>
->> OK -- Wey, can you elaborate a little as to how you found this and
->> what you were seeing? Does the device not go into PS mode at all?
+On Wed, Jan 20, 2010 at 10:20 AM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi Luis,
 >
-> We are doing Power consumption test with different DTIM value, the test
-> is based on test scripts, so we disable the NetworkManager to make sure
-> we can control which AP we need to associated with. During the test, we
-> notice when AP change it DTIM value, a lot time STA will used the old
-> DTIM value in Power Save mode which cause problem.
-
-Ah I see. What if there was no old dtim value before?
-
-> We believe the correct fix is mac80211 should wait for both probe
-> response and beacon arrived before start the association process.
+>> I've considered showing only the channel set from the Country IE
+>> but since cfg80211 now mangles contigious channel sets together
+>> it seems more useful for iw to just display the individual triplets
+>> separately so this patch is left intact. The triplet print is
+>> kept since technically speaking this should also show the
+>> regulatory extension stuff when one is found.
 >
-> Hope this explain what we found.
+> looks like this with my Apple Airport if anyone cares:
+>
+>        Country: CA     Environment: Indoor/Outdoor
+>        Country IE triplets:
+>                Channels [1 - 11]
 
-Indeed, thanks a lot.
+And like this for stupid APs:
+
+        Country: US     Environment: Indoor/Outdoor
+        Country IE triplets:
+                Channels [36 - 36]
+                Channels [40 - 40]
+                Channels [44 - 44]
+                Channels [48 - 48]
+                Channels [52 - 52]
+                Channels [56 - 56]
+                Channels [60 - 60]
+                Channels [64 - 64]
+                Channels [100 - 100]
+                Channels [104 - 104]
+                Channels [108 - 108]
+                Channels [112 - 112]
+                Channels [116 - 116]
+                Channels [120 - 120]
+                Channels [124 - 124]
+                Channels [128 - 128]
+                Channels [132 - 132]
+                Channels [136 - 136]
+                Channels [140 - 140]
+                Channels [149 - 149]
+                Channels [153 - 153]
+                Channels [157 - 157]
+                Channels [161 - 161]
+                Channels [165 - 165]
+
+I noted to Johannes maybe we should add a debug flag for scan and let
+the parsers have the option to either output some debug format (as the
+one above) or short form, for which the above would just show:
+
+                Channels [36 - 36]
+                Channels [100 - 165]
+
+Anyway I am posting this again just because I've already have had a
+use for this for a couple of users I help out when debugging country
+IE stuff. Figured its better merged than to keep referring to external
+patches.
 
   Luis
