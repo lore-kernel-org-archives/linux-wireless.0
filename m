@@ -1,179 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f220.google.com ([209.85.220.220]:33508 "EHLO
-	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752338Ab0A2XMa (ORCPT
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:35589 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932125Ab0ATCBN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2010 18:12:30 -0500
-Received: by mail-fx0-f220.google.com with SMTP id 20so2434775fxm.21
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Jan 2010 15:12:29 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/2] b43: N-PHY: add workarounds for gain control
-Date: Sat, 30 Jan 2010 00:12:20 +0100
-Message-Id: <1264806740-691-2-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1264806740-691-1-git-send-email-zajec5@gmail.com>
-References: <1264806740-691-1-git-send-email-zajec5@gmail.com>
+	Tue, 19 Jan 2010 21:01:13 -0500
+Received: by fxm25 with SMTP id 25so117526fxm.21
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2010 18:01:07 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1263951622.3259.26.camel@fwdell4550>
+References: <1263951622.3259.26.camel@fwdell4550>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Wed, 20 Jan 2010 03:00:47 +0100
+Message-ID: <69e28c911001191800t23bab697q6354b07656f78a29@mail.gmail.com>
+Subject: Re: b43 driver hang with bcm4318
+To: Eric Volker <evolker@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |  130 +++++++++++++++++++++++++++++++++++++-
- 1 files changed, 129 insertions(+), 1 deletions(-)
+Please load b43 with verbose debug messages enabled (use the "verbose"
+module parameter - check modinfo for the exact value for full debug
+output), and post the resulting logs.
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 60e730a..d738d76 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -712,6 +712,134 @@ static void b43_nphy_stop_playback(struct b43_wldev *dev)
- 		b43_nphy_stay_in_carrier_search(dev, 0);
- }
- 
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/WorkaroundsGainCtrl */
-+static void b43_nphy_gain_crtl_workarounds(struct b43_wldev *dev)
-+{
-+	struct b43_phy_n *nphy = dev->phy.n;
-+	u8 i, j;
-+	u8 code;
-+
-+	/* TODO: for PHY >= 3
-+	s8 *lna1_gain, *lna2_gain;
-+	u8 *gain_db, *gain_bits;
-+	u16 *rfseq_init;
-+	u8 lpf_gain[6] = { 0x00, 0x06, 0x0C, 0x12, 0x12, 0x12 };
-+	u8 lpf_bits[6] = { 0, 1, 2, 3, 3, 3 };
-+	*/
-+
-+	u8 rfseq_events[3] = { 6, 8, 7 };
-+	u8 rfseq_delays[3] = { 10, 30, 1 };
-+
-+	if (dev->phy.rev >= 3) {
-+		/* TODO */
-+	} else {
-+		/* Set Clip 2 detect */
-+		b43_phy_set(dev, B43_NPHY_C1_CGAINI,
-+				B43_NPHY_C1_CGAINI_CL2DETECT);
-+		b43_phy_set(dev, B43_NPHY_C2_CGAINI,
-+				B43_NPHY_C2_CGAINI_CL2DETECT);
-+
-+		/* Set narrowband clip threshold */
-+		b43_phy_set(dev, B43_NPHY_C1_NBCLIPTHRES, 0x84);
-+		b43_phy_set(dev, B43_NPHY_C2_NBCLIPTHRES, 0x84);
-+
-+		if (!dev->phy.is_40mhz) {
-+			/* Set dwell lengths */
-+			b43_phy_set(dev, B43_NPHY_CLIP1_NBDWELL_LEN, 0x002B);
-+			b43_phy_set(dev, B43_NPHY_CLIP2_NBDWELL_LEN, 0x002B);
-+			b43_phy_set(dev, B43_NPHY_W1CLIP1_DWELL_LEN, 0x0009);
-+			b43_phy_set(dev, B43_NPHY_W1CLIP2_DWELL_LEN, 0x0009);
-+		}
-+
-+		/* Set wideband clip 2 threshold */
-+		b43_phy_maskset(dev, B43_NPHY_C1_CLIPWBTHRES,
-+				~B43_NPHY_C1_CLIPWBTHRES_CLIP2,
-+				21);
-+		b43_phy_maskset(dev, B43_NPHY_C2_CLIPWBTHRES,
-+				~B43_NPHY_C2_CLIPWBTHRES_CLIP2,
-+				21);
-+
-+		if (!dev->phy.is_40mhz) {
-+			b43_phy_maskset(dev, B43_NPHY_C1_CGAINI,
-+				~B43_NPHY_C1_CGAINI_GAINBKOFF, 0x1);
-+			b43_phy_maskset(dev, B43_NPHY_C2_CGAINI,
-+				~B43_NPHY_C2_CGAINI_GAINBKOFF, 0x1);
-+			b43_phy_maskset(dev, B43_NPHY_C1_CCK_CGAINI,
-+				~B43_NPHY_C1_CCK_CGAINI_GAINBKOFF, 0x1);
-+			b43_phy_maskset(dev, B43_NPHY_C2_CCK_CGAINI,
-+				~B43_NPHY_C2_CCK_CGAINI_GAINBKOFF, 0x1);
-+		}
-+
-+		b43_phy_set(dev, B43_NPHY_CCK_SHIFTB_REF, 0x809C);
-+
-+		if (nphy->gain_boost) {
-+			if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ &&
-+			    dev->phy.is_40mhz)
-+				code = 4;
-+			else
-+				code = 5;
-+		} else {
-+			code = dev->phy.is_40mhz ? 6 : 7;
-+		}
-+
-+		/* Set HPVGA2 index */
-+		b43_phy_maskset(dev, B43_NPHY_C1_INITGAIN,
-+				~B43_NPHY_C1_INITGAIN_HPVGA2,
-+				code << B43_NPHY_C1_INITGAIN_HPVGA2_SHIFT);
-+		b43_phy_maskset(dev, B43_NPHY_C2_INITGAIN,
-+				~B43_NPHY_C2_INITGAIN_HPVGA2,
-+				code << B43_NPHY_C2_INITGAIN_HPVGA2_SHIFT);
-+
-+		b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x1D06);
-+		b43_phy_write(dev, B43_NPHY_TABLE_DATALO,
-+					(code << 8 | 0x7C));
-+		b43_phy_write(dev, B43_NPHY_TABLE_DATALO,
-+					(code << 8 | 0x7C));
-+
-+		/* TODO: b43_nphy_adjust_lna_gain_table(dev); */
-+
-+		if (nphy->elna_gain_config) {
-+			b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x0808);
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, 0x0);
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, 0x1);
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, 0x1);
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, 0x1);
-+
-+			b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x0C08);
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, 0x0);
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, 0x1);
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, 0x1);
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, 0x1);
-+
-+			b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x1D06);
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATALO,
-+					(code << 8 | 0x74));
-+			b43_phy_write(dev, B43_NPHY_TABLE_DATALO,
-+					(code << 8 | 0x74));
-+		}
-+
-+		if (dev->phy.rev == 2) {
-+			for (i = 0; i < 4; i++) {
-+				b43_phy_write(dev, B43_NPHY_TABLE_ADDR,
-+						(0x0400 * i) + 0x0020);
-+				for (j = 0; j < 21; j++)
-+					b43_phy_write(dev,
-+						B43_NPHY_TABLE_DATALO, 3 * j);
-+			}
-+
-+			/* TODO: b43_nphy_set_rf_sequence(dev, 5,
-+					rfseq_events, rfseq_delays, 3);*/
-+			b43_phy_maskset(dev, B43_NPHY_OVER_DGAIN1,
-+				(u16)~B43_NPHY_OVER_DGAIN_CCKDGECV,
-+				0x5A << B43_NPHY_OVER_DGAIN_CCKDGECV_SHIFT);
-+
-+			if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
-+				b43_phy_maskset(dev, B43_PHY_N(0xC5D),
-+						0xFF80, 4);
-+		}
-+	}
-+}
-+
- /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/Workarounds */
- static void b43_nphy_workarounds(struct b43_wldev *dev)
- {
-@@ -786,7 +914,7 @@ static void b43_nphy_workarounds(struct b43_wldev *dev)
- 		/*TODO:b43_nphy_set_rf_sequence(dev, 0, events1, delays1, 7);*/
- 		/*TODO:b43_nphy_set_rf_sequence(dev, 1, events2, delays2, 7);*/
- 
--		/*TODO:b43_nphy_gain_crtl_workarounds(dev);*/
-+		b43_nphy_gain_crtl_workarounds(dev);
- 
- 		if (dev->phy.rev < 2) {
- 			if (b43_phy_read(dev, B43_NPHY_RXCTL) & 0x2)
+On Wed, Jan 20, 2010 at 2:40 AM, Eric Volker <evolker@gmail.com> wrote:
+> I have set up an access point with Ubuntu 9.10 and a Broadcom BCM4318
+> PCI card (manufacturer is Buffalo). After an undetermined period of
+> time, the card stops beaconing and even previously connected clients are
+> unable to ping the AP. After the driver hangs, trying to restart hostapd
+> fails with a "Failed to create mon.wlan0". The following commands:
+>
+> #rmmod b43
+> #modprobe b43
+> #/etc/init.d/hostapd restart
+>
+> will restart hostapd, and the AP will begin beaconing again. Clients can
+> associate with it, but are unable to ping the AP. Further examination
+> reveals that wlan0 on the AP has not been assigned an IP address. (My AP
+> does not have a DHCP daemon running as of yet; I've been manually
+> configuring the IP address of my clients.) Using ifconfig to assign the
+> IP address appears to work, but clients are still unable to ping the AP.
+> dmesg reveals no message from the b43 or other drivers about the hang;
+> however, upon restarting hostapd the driver appears to create a new
+> "phy".
+>
+> [71500.473241] b43-phy1: Broadcom 4318 WLAN found (core revision 9)
+> [71500.540847] phy1: Selected rate control algorithm 'minstrel'
+> [71500.542002] Broadcom 43xx driver loaded [ Features: PL, Firmware-ID:
+> FW13 ]
+> [71543.312030] b43 ssb0:0: firmware: requesting b43/ucode5.fw
+> [71543.410639] b43 ssb0:0: firmware: requesting b43/pcm5.fw
+> [71543.430040] b43 ssb0:0: firmware: requesting b43/b0g0initvals5.fw
+> [71543.440062] b43 ssb0:0: firmware: requesting b43/b0g0bsinitvals5.fw
+> [71543.564029] b43-phy1: Loading firmware version 410.2160 (2007-05-26
+> 15:32:10)
+> [71543.604432] Registered led device: b43-phy1::tx
+> [71543.604459] Registered led device: b43-phy1::rx
+> [71543.604485] Registered led device: b43-phy1::radio
+> [71554.360009] wlan0: no IPv6 routers present
+>
+> Further back in the log, it can be seen where b43-phy0 was created, but
+> there is no record of the driver crashing or any other errors.
+> daemon.log does have several entries like this:
+>
+> Jan 17 15:48:24 hostname avahi-daemon[759]: Invalid query packet.
+> Jan 17 15:49:33 hostname avahi-daemon[759]: last message repeated 2
+> times
+>
+> Rebooting fixes the problem completely, but only temporarily. Anyone
+> seen this before, or have a suggested fix?
+>
+> Thanks,
+>
+> Eric Volker
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at �http://vger.kernel.org/majordomo-info.html
+>
+
+
+
 -- 
-1.6.4.2
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
