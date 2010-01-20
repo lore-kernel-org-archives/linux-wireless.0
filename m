@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:37560 "EHLO lo.gmane.org"
+Received: from mga03.intel.com ([143.182.124.21]:21072 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752574Ab0ATKpO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2010 05:45:14 -0500
-Received: from list by lo.gmane.org with local (Exim 4.50)
-	id 1NXY3f-0004cD-79
-	for linux-wireless@vger.kernel.org; Wed, 20 Jan 2010 11:45:07 +0100
-Received: from ppp85-141-66-119.pppoe.mtu-net.ru ([85.141.66.119])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2010 11:45:07 +0100
-Received: from passshok by ppp85-141-66-119.pppoe.mtu-net.ru with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2010 11:45:07 +0100
-To: linux-wireless@vger.kernel.org
-From: Pavel Ulpi <passshok@gmail.com>
-Subject: Re: ath5k: 2.6.32-rc6 &quot;no further txbuf available, dropping packet&quot;
-Date: Wed, 20 Jan 2010 10:39:55 +0000 (UTC)
-Message-ID: <loom.20100120T113718-823@post.gmane.org>
-References: <4AF99EF9.4040408@nets.rwth-aachen.de> <b6c5339f0911102013k20d927d3mc021d25bf6703303@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1751616Ab0ATBmn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jan 2010 20:42:43 -0500
+From: "Zheng, Jeff" <jeff.zheng@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"wifi-test-devel@lists.sourceforge.net"
+	<wifi-test-devel@lists.sourceforge.net>
+Date: Wed, 20 Jan 2010 09:41:49 +0800
+Subject: RE: Sigma capable testing?
+Message-ID: <EAEEEBBE07F4F24C89FEF850CF8C774234F901EF@shzsmsx502.ccr.corp.intel.com>
+References: <43e72e891001191722t380b1789yd7c0b05add077a4e@mail.gmail.com>
+In-Reply-To: <43e72e891001191722t380b1789yd7c0b05add077a4e@mail.gmail.com>
+Content-Type: text/plain; charset="iso-2022-jp"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland <me@...> writes:
+Hi Luis,
 
-> Yes, there is a good reason (there are no buffers for the hardware to
-> play with).  Actually mac80211 tx is never supposed to return anything
-> but TX_OK.
-> 
-> Try this patch (it needs work which is why it's not upstream yet):
-> 
-> http://patchwork.kernel.org/patch/56785/
-> 
+What's sigma testing? 
 
+This test script was written for testing wireless drivers. I will try
+to support more features and make it easier to use, but up to now I have
+no much time to do so.
 
-I'm using the same configuration. This patch solved the problem for me in AP
-mode too.
+Bests
+Jeff
+ 
 
+>-----Original Message-----
+>From: Luis R. Rodriguez [mailto:mcgrof@gmail.com] 
+>Sent: 2010年1月20日 9:23
+>To: Zheng, Jeff
+>Cc: linux-wireless; wifi-test-devel@lists.sourceforge.net
+>Subject: Sigma capable testing?
+>
+>I was curious if wifi-test code:
+>
+>http://wireless.kernel.org/en/developers/Testing/wifi-test
+>
+>is capable of sigma testing, being considered for WFA certification
+>and/or there are plans for it.
+>
+>  Luis
+>
