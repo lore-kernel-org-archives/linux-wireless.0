@@ -1,74 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36332 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932107Ab0AYSiy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 13:38:54 -0500
-Subject: Re: [PATCH v3 1/1] mac80211: tell driver when dtim change detected
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, wey-yi.w.guy@intel.com,
-	linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>
-In-Reply-To: <1264444604.23766.55.camel@johannes.local>
-References: <1264109996-15995-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1264186981.2593.10.camel@johannes.local>
-	 <43e72e891001221120i79c6525bo4852cb5a6c7a37@mail.gmail.com>
-	 <1264189560.2593.14.camel@johannes.local>
-	 <43e72e891001221544j1b1bd67ao8dfcf4d0dd12dd81@mail.gmail.com>
-	 <20100125183224.GA19528@jm.kir.nu>
-	 <1264444604.23766.55.camel@johannes.local>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-4oYvzBO4/nemihWCobBx"
-Date: Mon, 25 Jan 2010 19:38:47 +0100
-Message-ID: <1264444727.23766.56.camel@johannes.local>
+Received: from mx1.redhat.com ([209.132.183.28]:14431 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751056Ab0ATBsO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jan 2010 20:48:14 -0500
+Subject: Re: [PATCH] libertas: Set/clear WPA keys before the WEP ones
+From: Dan Williams <dcbw@redhat.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20100118231920.GH5176@sortiz.org>
+References: <20100118231920.GH5176@sortiz.org>
+Content-Type: text/plain
+Date: Tue, 19 Jan 2010 17:48:12 -0800
+Message-Id: <1263952092.4481.2.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2010-01-19 at 00:19 +0100, Samuel Ortiz wrote:
+> With the v10 firmware running on 8688 HW, clearing WPA keys after setting the
+> WEP key prevents us from being able to associate with WEP APs.
+> Swapping the calling order for assoc_helper_wpa_keys() and
+> assoc_helper_wep_keys fixes that issue.
+> 
+> Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 
---=-4oYvzBO4/nemihWCobBx
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-On Mon, 2010-01-25 at 19:36 +0100, Johannes Berg wrote:
-> On Mon, 2010-01-25 at 10:32 -0800, Jouni Malinen wrote:
->=20
-> > Anyway, that is just asking for
-> > problems due to the way a specific timestamps are defined to be used fo=
-r
-> > the beacons that are followed by buffered multicast/broadcast frames.
->=20
-> That's actually an interesting point -- does anyone implement that
-> properly, or is that just a side note in the standard nobody even reads?
-> We certainly don't in mac80211 since we don't have that level of
-> synchronisation between the TSF and the beacon get function.
+Tested on both sd8686 (v9 fw) and usb8388 (v5 OLPC fw).  Switching
+between WEP and WPA-PSK on-the-fly works as expected with this patch.
 
-And, in fact, the DTIM count is kinda useless if one was to rely on that
-timing requirement, so I have a feeling that the intention of the people
-who wrote this bit of the standard wasn't to actually impose such a
-requirement.
+Though maybe we want to add a comment about this specific issue that
+says something like:
 
-johannes
+/* v10 FW wants WPA keys to be set/cleared after WEP key operations,
+ * otherwise it will fail to correctly associate to WEP networks.
+ * Other firmware versions don't appear to care.
+ */
 
---=-4oYvzBO4/nemihWCobBx
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLXeU0AAoJEODzc/N7+QmaPg8P/3qC2vPP0/rWF2nomnwQhZMo
-Wla/qvk17/9hydGfCbHx64ByM80b3vZ8xT6w9pn3ZlonHG42kJbudxdKiK3wU4Tq
-0suCnXDGvxFDxg0saZ8kHPxwlr0P8beTe5VGLnNP24NTtQSPBVZfqxDgtcgmAXws
-G3gGrvJBhptoNyzWuIz5RYGD2ihfNGNPT0bAQDRerQ5y7m7nD0ROMlw0lE6ypfGa
-v5X4KSyWb99+7F64E4VJ0n4zmQTXrfXg+ZmCD64IR4dWrVM49jw+2kyJLx48suQA
-ThbvjK4fP/1PPHTsmhGLft7hBaMo2qX3OAz0Ob8tGPc56KEGDeZsYzrsuHxZOu7x
-0nR0frGCXRgF7z1dv/KPtOgMWlIIETPg+fHi4KyuHGxgRlu2xKHC+9OSGMaGN5V/
-D9irRO9GlFjKKVa1KNk2Qsp45I2mmbVehSKnvQiBAE2/sr9kpRelr2aRwWrSqoO/
-xYUtkcF71zIYyLx0WaVvPN97r9NRpFHLAHSNwQnGaL3rbBNqqKkYq+oBMX3JmoYG
-Q7QzJ5iEVWFtgr/OEUqd2xXyNK9d/VlD7quUx913qUChmamyksBMmD/OgHnSVVBf
-HUSl7IwVgQjYOl5nvy4vgd2ODkBsTEJwpyJWYCz0/om6IlELb0mZPQ+HxKH5eFHr
-QP9dnPOuFanHa/flR906
-=OpJj
------END PGP SIGNATURE-----
-
---=-4oYvzBO4/nemihWCobBx--
+> ---
+>  drivers/net/wireless/libertas/assoc.c |   15 ++++++++-------
+>  1 files changed, 8 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
+> index 5e650f3..fb3dff0 100644
+> --- a/drivers/net/wireless/libertas/assoc.c
+> +++ b/drivers/net/wireless/libertas/assoc.c
+> @@ -2052,13 +2052,6 @@ void lbs_association_worker(struct work_struct *work)
+>  			goto out;
+>  	}
+>  
+> -	if (   test_bit(ASSOC_FLAG_WEP_KEYS, &assoc_req->flags)
+> -	    || test_bit(ASSOC_FLAG_WEP_TX_KEYIDX, &assoc_req->flags)) {
+> -		ret = assoc_helper_wep_keys(priv, assoc_req);
+> -		if (ret)
+> -			goto out;
+> -	}
+> -
+>  	if (test_bit(ASSOC_FLAG_SECINFO, &assoc_req->flags)) {
+>  		ret = assoc_helper_secinfo(priv, assoc_req);
+>  		if (ret)
+> @@ -2078,6 +2071,14 @@ void lbs_association_worker(struct work_struct *work)
+>  			goto out;
+>  	}
+>  
+> +	if (   test_bit(ASSOC_FLAG_WEP_KEYS, &assoc_req->flags)
+> +	    || test_bit(ASSOC_FLAG_WEP_TX_KEYIDX, &assoc_req->flags)) {
+> +		ret = assoc_helper_wep_keys(priv, assoc_req);
+> +		if (ret)
+> +			goto out;
+> +	}
+> +
+> +
+>  	/* SSID/BSSID should be the _last_ config option set, because they
+>  	 * trigger the association attempt.
+>  	 */
+> -- 
+> 1.6.3.3
+> 
 
