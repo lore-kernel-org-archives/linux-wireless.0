@@ -1,65 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:29271 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754142Ab0A0SRx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2010 13:17:53 -0500
-Subject: Re: [PATCH] mac80211: wait for beacon before enabling powersave
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"kalle.valo@iki.fi" <kalle.valo@iki.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"j@w1.fi" <j@w1.fi>,
-	"buytenh@wantstofly.org" <buytenh@wantstofly.org>
-In-Reply-To: <43e72e891001271014j667221bqa11d56f3a68f6099@mail.gmail.com>
-References: <1264511993.25642.9.camel@johannes.local>
-	 <43e72e891001271001r2cc39da4ka00a3eef06f6e139@mail.gmail.com>
-	 <1264615477.8619.20.camel@wwguy-ubuntu>
-	 <43e72e891001271014j667221bqa11d56f3a68f6099@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 27 Jan 2010 10:14:22 -0800
-Message-Id: <1264616062.8619.22.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58989 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753519Ab0AUTdG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2010 14:33:06 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	awozniak@irobot.com, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] compat: fix build on arm
+Date: Thu, 21 Jan 2010 20:32:48 +0100
+Message-Id: <1264102368-8918-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <43e72e891001211012y4f4c8721t7eb9e0eea0221820@mail.gmail.com>
+References: <43e72e891001211012y4f4c8721t7eb9e0eea0221820@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-01-27 at 10:14 -0800, Luis R. Rodriguez wrote:
-> On Wed, Jan 27, 2010 at 10:04 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> > On Wed, 2010-01-27 at 10:01 -0800, Luis R. Rodriguez wrote:
-> >> On Tue, Jan 26, 2010 at 5:19 AM, Johannes Berg
-> >> <johannes@sipsolutions.net> wrote:
-> >> > Because DTIM information is required for powersave
-> >> > but is only conveyed in beacons, wait for a beacon
-> >> > before enabling powersave, and change the way the
-> >> > information is conveyed to the driver accordingly.
-> >> >
-> >> > mwl8k doesn't currently seem to implement PS but
-> >> > requires the DTIM period in a different way; after
-> >> > talking to Lennert we agreed to just have mwl8k do
-> >> > the parsing itself in the finalize_join work.
-> >>
-> >> Not sure if this is merged yet. If not it might be good to add to the
-> >> commit log a brief about the impact of the fix for distribution
-> >> purposes looking to cherry pick some fixes that may cure some issues.
-> >>
-> >> The impact of this fix is that the DTIM settings of > 1 would now be
-> >> respected in the odd situation a beacon would not be received prior to
-> >> association. Ensuring we use a higher DTIM would mean saving more
-> >> power as it would mean we can sleep longer.
-> >>
-> >> This is not propagated to stable but if it turns out this can enhance
-> >> power save since DTIM might usually be > 1 and the race may be more
-> >> common than we expected we may need a respective stable solution.
-> >>
-> >
-> > It will be nice to see a respective solution for stable since this
-> > impact power save which is very important for certain platform.
-> 
-> Well how about your patch for stable then?
-> 
-if ok with you and Johannes, I will like to see it happen, the only
-issue is, my patch only address iwlwifi but not mwl8k.
+ARM does not provided the include file asm/compat.h. Use linux/compat.h
+instead, it includes asm/compat.h if needed.
+This patch is from OpenWRT:
+https://dev.openwrt.org/browser/trunk/package/mac80211/patches/020-fix_compat_h.patch?rev=19063
 
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-2.6.32.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/include/linux/compat-2.6.32.h b/include/linux/compat-2.6.32.h
+index c3e4dbe..11060d8 100644
+--- a/include/linux/compat-2.6.32.h
++++ b/include/linux/compat-2.6.32.h
+@@ -6,7 +6,7 @@
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32))
+ 
+ #include <linux/netdevice.h>
+-#include <asm/compat.h>
++#include <linux/compat.h>
+ #include <net/iw_handler.h>
+ #include <linux/workqueue.h>
+ 
+-- 
+1.6.3.3
 
