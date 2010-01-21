@@ -1,75 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:32432 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754609Ab0AYSAc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 13:00:32 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so984534eyd.19
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2010 10:00:30 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 4/4] b43: N-PHY: use cordic to generate samples
-Date: Mon, 25 Jan 2010 19:00:01 +0100
-Message-Id: <1264442401-6364-5-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1264442401-6364-1-git-send-email-zajec5@gmail.com>
-References: <1264442401-6364-1-git-send-email-zajec5@gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:36778 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753090Ab0AUWPQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2010 17:15:16 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Bob Copeland <me@bobcopeland.com>
+Subject: Re: [PATCH 0/2] ath5k AP mode fixes
+Date: Thu, 21 Jan 2010 23:15:21 +0100
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+References: <1264049464-12292-1-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1264049464-12292-1-git-send-email-me@bobcopeland.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <201001212315.21908.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |   21 ++++++++++++---------
- 1 files changed, 12 insertions(+), 9 deletions(-)
+On Thursday 21 January 2010 05:51:02 Bob Copeland wrote:
+> Here are a couple of fixes to ath5k AP mode that have been
+> kicking around for a bit.
+> 
+> The sleep clock is disabled by legacy HAL for AP mode and at
+> least one person had beaconing issues as a result of our not
+> also doing so.
+> 
+> Although we decided 'fix setup for CAB queue' was not ideal,
+> there's no alternative at the moment and the current setup is
+> causing problems for people, so IMO we should just take this
+> patch as-is for now.
+> 
+> Bob Copeland (2):
+>   ath5k: dont use external sleep clock in AP mode
+>   ath5k: fix setup for CAB queue
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 061b01b..e15f05c 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -821,8 +821,9 @@ static u16 b43_nphy_gen_load_samples(struct b43_wldev *dev, u32 freq, u16 max,
- 					bool test)
- {
- 	int i;
--	u16 bw, len, num, rot, angle;
--	/* TODO: *buffer; */
-+	u16 bw, len, rot, angle;
-+	b43_c32 *samples;
-+	
- 
- 	bw = (dev->phy.is_40mhz) ? 40 : 20;
- 	len = bw << 3;
-@@ -839,18 +840,20 @@ static u16 b43_nphy_gen_load_samples(struct b43_wldev *dev, u32 freq, u16 max,
- 		len = bw << 1;
- 	}
- 
--	/* TODO: buffer = kzalloc(len * sizeof(u32), GFP_KERNEL); */
--	num = len;
-+	samples = kzalloc(len * sizeof(b43_c32), GFP_KERNEL);
- 	rot = (((freq * 36) / bw) << 16) / 100;
- 	angle = 0;
- 
--	for (i = 0; i < num; i++) {
--		/* TODO */
-+	for (i = 0; i < len; i++) {
-+		samples[i] = b43_cordic(angle);
-+		angle += rot;
-+		samples[i].q = CORDIC_CONVERT(samples[i].q * max);
-+		samples[i].i = CORDIC_CONVERT(samples[i].i * max);
- 	}
- 
--	/* TODO: Call N PHY Load Sample Table with buffer, num as arguments */
--	/* TODO: kfree(buffer); */
--	return num;
-+	/* TODO: Call N PHY Load Sample Table with buffer, len as arguments */
-+	kfree(samples);
-+	return len;
- }
- 
- /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/RunSamples */
+
+Thanks a lot for these, Bob. I'll test them on my AP.
+
+Important: Please also add CC:stable to the patches to make
+sure they reach the endusers for 2.6.32.x.
+2.6.32.x currently is unusable in AP mode, so these patches
+are pretty important fixes (if they actually fix the issues.
+But I assume that for now ;) )
+
 -- 
-1.6.4.2
-
+Greetings, Michael.
