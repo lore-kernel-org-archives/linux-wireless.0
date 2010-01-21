@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:55355 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932087Ab0AMVP4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2010 16:15:56 -0500
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	stable@kernel.org
-Subject: [PATCH v3] cfg80211: fix channel setting for wext
-Date: Wed, 13 Jan 2010 13:23:14 -0800
-Message-Id: <1263417794-13021-1-git-send-email-abhijeet.kolekar@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:36191 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753813Ab0AUJOV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2010 04:14:21 -0500
+Subject: Re: [PATCH] mac80211: Add HT IE to IBSS beacons and probe
+ responses.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Cc: austinxxh-linux@yahoo.com, linux-wireless@vger.kernel.org
+In-Reply-To: <4B578BAB.9010608@free.fr>
+References: <856792.42713.qm@web55307.mail.re4.yahoo.com>
+	 <4B578BAB.9010608@free.fr>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-+RUZ++z8NxIaakW4X2mf"
+Date: Thu, 21 Jan 2010 10:14:17 +0100
+Message-ID: <1264065257.11396.32.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch fixes the bug at
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2139
 
-Currently we cannot set the channel using wext extension
-if we have already associated and disconnected. As
-cfg80211_mgd_wext_siwfreq will not switch the channel if ssid is set.
-This fixes it by clearing the ssid.
-Following is the sequence which it tries to fix.
-modprobe iwlagn
-iwconfig wlan0 essid ""
-ifconfig wlan0 down
-iwconfig wlan0 chan X
+--=-+RUZ++z8NxIaakW4X2mf
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-wext is marked as deprecate.If we use nl80211 we can easily play with
-setting the channel.
+On Thu, 2010-01-21 at 00:03 +0100, Benoit PAPILLAULT wrote:
+>   =20
+> Humm... same question for me. What's wrong in the patch? form? content?=20
+> frame format? commit message?
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Acked-by: Samuel Ortiz <sameo@linux.intel.com>
-cc: stable@kernel.org
----
-v2: Changed mac80211 to cfg80211
-v3: Added stable as cc. 
-John Please take this patch for 2.6.33
- net/wireless/sme.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Well shouldn't you only advertise HT if the user or somebody actually
+asked to join an HT IBSS and you configured the right channel type?
 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 2333d78..dc0fc49 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -655,6 +655,7 @@ void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
- 	memset(&wrqu, 0, sizeof(wrqu));
- 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
- 	wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
-+	wdev->wext.connect.ssid_len = 0;
- #endif
- }
- 
--- 
-1.6.3.3
+johannes
+
+--=-+RUZ++z8NxIaakW4X2mf
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLWBrlAAoJEODzc/N7+QmaT6QP/AmvFYEOMgdjIk/dP4E0Jz0x
+wOF9wInI0ZGUVy6DlHNKW3FTzJU4NdWmvTHF4+rOu+YAftIljRL/+RpCI5qgMUmd
+cehsEwHjGOhuP9M29vsfycs+FlDAgeMnMupKHHERT4gN9EMWiLtyVsoIhY1nprub
+uYIRLvhD+aEsVp732xCwadDp3TZjiyRsx5SUXkKznGmbOSAvAdqEzfJkFAdF/QiJ
+PPvXQ0N9UmFoN5+qocyoHc1LQtRyjm+fJBJQUnVbKMkHAU3pwa4Uj8QfVoqjw3Vl
+XXUngZS6eNkP+zvm+x2nGJZ5inRcauTxIaXEg/hTXn9dHnpGdc9ZBKzwxCoLWHCQ
+fCZqlR9TIiG1P5+DccqKkvfRua/9m8v5TI7hK+bOS6YMdGTtdhUMFuW2aOtAOCPS
+0svI2bwehGEjE3qc7sUi1V+8QFVziNs8NSlcLlI6aHSXBOaJyqil3kP1Qx/U6VYV
+TVonSEPi1S+o9FG+x2nggoE1rM229DRBNhG5OF4b9RsAQipc2TJWoK+/SA/vVExW
+PlJVQ5/jC1VP/uRL2nARPoKaAzHhLUyLrO0GETRStI53BjysDqaaD92p1qWAwXl2
+hGAi8y7agyVV5UZ7X7+kU2/2106jAYHGcIbGF0oZkUdNGgw718/KmL9BYf3UWjh3
+bghHqpaxEE65w9Zp1agF
+=5vh/
+-----END PGP SIGNATURE-----
+
+--=-+RUZ++z8NxIaakW4X2mf--
 
