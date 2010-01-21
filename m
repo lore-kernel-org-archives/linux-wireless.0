@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:40710 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753334Ab0AWDhG (ORCPT
+Received: from 30.mail-out.ovh.net ([213.186.62.213]:55032 "HELO
+	30.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751865Ab0AURdh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 22:37:06 -0500
-Subject: Re: [PATCH 0/5] b43: more N-PHY stuff
-From: David Woodhouse <dwmw2@infradead.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	davem@davemloft.net
-In-Reply-To: <20100123011618.GA16135@tuxdriver.com>
-References: <1264121596-9616-1-git-send-email-zajec5@gmail.com>
-	 <b170af451001221247j1b380703w4c09b5fdd601466b@mail.gmail.com>
-	 <201001222259.28933.mb@bu3sch.de> <201001222333.42554.mb@bu3sch.de>
-	 <20100123011618.GA16135@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 23 Jan 2010 16:36:50 +1300
-Message-ID: <1264217811.10468.46.camel@macbook.infradead.org>
-Mime-Version: 1.0
+	Thu, 21 Jan 2010 12:33:37 -0500
+Message-ID: <4B588FE8.9000705@free.fr>
+Date: Thu, 21 Jan 2010 18:33:28 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: austinxxh-linux@yahoo.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Add HT IE to IBSS beacons and probe responses.
+References: <856792.42713.qm@web55307.mail.re4.yahoo.com>	 <4B578BAB.9010608@free.fr> <1264065257.11396.32.camel@johannes.local>
+In-Reply-To: <1264065257.11396.32.camel@johannes.local>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-01-22 at 20:16 -0500, John W. Linville wrote:
-> On Fri, Jan 22, 2010 at 11:33:40PM +0100, Michael Buesch wrote:
-> 
-> > So while we are at it, I'd really like to migrate away from the berlios list.
-> > It's really just annoying. Does somebody have a good reliable mailinglist service
-> > we could migrate to? Does vger offer lists to driver projects?
-> 
-> Probably -- I think davem is the person to ask?  Infradead is probably
-> another option (dwmw2).
+Johannes Berg a écrit :
+> On Thu, 2010-01-21 at 00:03 +0100, Benoit PAPILLAULT wrote:
+>   
+>>    
+>> Humm... same question for me. What's wrong in the patch? form? content? 
+>> frame format? commit message?
+>>     
+>
+> Well shouldn't you only advertise HT if the user or somebody actually
+> asked to join an HT IBSS and you configured the right channel type?
+>
+> johannes
+>   
+There are things :
+- HT Capabilities IE : this should be the hardware capabilities of the 
+sender, be it a member of a HT IBSS or not.
+- HT Information IE : this should be the BSS information, shared by all 
+members of the HT IBSS I think.
 
-Yeah, pick one and either of us can set up a new list at the drop of a
-hat. Strictly speaking I suspect it should be postmaster@vger rather
-than just davem, but the effect is much the same most of the time.
+BTW, currently, there is no way with iw for the user to tell mac82011 to 
+join/create a non-HT, HT20, HT40+ or HT40- IBSS. Maybe we should update 
+iw first as a requirement for HT IBSS?
 
-Can you provide a list of existing subscribers?
-
--- 
-David Woodhouse                            Open Source Technology Centre
-David.Woodhouse@intel.com                              Intel Corporation
+Regards,
+Benoit
 
