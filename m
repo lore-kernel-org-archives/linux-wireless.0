@@ -1,36 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:52792 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751125Ab0ADUyL (ORCPT
+Received: from mga05.intel.com ([192.55.52.89]:51496 "EHLO
+	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752682Ab0AURWb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2010 15:54:11 -0500
-Date: Mon, 4 Jan 2010 21:54:08 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 02/14] mwl8k: prevent freeing free IRQ if ieee80211_register_hw() fails
-Message-ID: <20100104205408.GB1735@mail.wantstofly.org>
-Mime-Version: 1.0
+	Thu, 21 Jan 2010 12:22:31 -0500
+Date: Thu, 21 Jan 2010 18:23:55 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: Set/clear WPA keys before the WEP ones
+Message-ID: <20100121172354.GC20793@sortiz.org>
+References: <20100118231920.GH5176@sortiz.org>
+ <1263952092.4481.2.camel@localhost.localdomain>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1263952092.4481.2.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Tue, Jan 19, 2010 at 05:48:12PM -0800, Dan Williams wrote:
+> On Tue, 2010-01-19 at 00:19 +0100, Samuel Ortiz wrote:
+> > With the v10 firmware running on 8688 HW, clearing WPA keys after setting the
+> > WEP key prevents us from being able to associate with WEP APs.
+> > Swapping the calling order for assoc_helper_wpa_keys() and
+> > assoc_helper_wep_keys fixes that issue.
+> > 
+> > Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+> 
+> Acked-by: Dan Williams <dcbw@redhat.com>
+> 
+> Tested on both sd8686 (v9 fw) and usb8388 (v5 OLPC fw).  Switching
+> between WEP and WPA-PSK on-the-fly works as expected with this patch.
+> 
+> Though maybe we want to add a comment about this specific issue that
+> says something like:
+> 
+> /* v10 FW wants WPA keys to be set/cleared after WEP key operations,
+>  * otherwise it will fail to correctly associate to WEP networks.
+>  * Other firmware versions don't appear to care.
+>  */
+Yes, I can add these comments. Thanks for testing it, I'll send a new version
+of the patch.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index d3a7916..418880e 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -3503,7 +3503,7 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
- 	if (rc) {
- 		printk(KERN_ERR "%s: Cannot register device\n",
- 		       wiphy_name(hw->wiphy));
--		goto err_free_irq;
-+		goto err_free_queues;
- 	}
+Cheers,
+Samuel.
+
  
- 	printk(KERN_INFO "%s: %s v%d, %pM, %s firmware %u.%u.%u.%u\n",
+> > ---
+> >  drivers/net/wireless/libertas/assoc.c |   15 ++++++++-------
+> >  1 files changed, 8 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
+> > index 5e650f3..fb3dff0 100644
+> > --- a/drivers/net/wireless/libertas/assoc.c
+> > +++ b/drivers/net/wireless/libertas/assoc.c
+> > @@ -2052,13 +2052,6 @@ void lbs_association_worker(struct work_struct *work)
+> >  			goto out;
+> >  	}
+> >  
+> > -	if (   test_bit(ASSOC_FLAG_WEP_KEYS, &assoc_req->flags)
+> > -	    || test_bit(ASSOC_FLAG_WEP_TX_KEYIDX, &assoc_req->flags)) {
+> > -		ret = assoc_helper_wep_keys(priv, assoc_req);
+> > -		if (ret)
+> > -			goto out;
+> > -	}
+> > -
+> >  	if (test_bit(ASSOC_FLAG_SECINFO, &assoc_req->flags)) {
+> >  		ret = assoc_helper_secinfo(priv, assoc_req);
+> >  		if (ret)
+> > @@ -2078,6 +2071,14 @@ void lbs_association_worker(struct work_struct *work)
+> >  			goto out;
+> >  	}
+> >  
+> > +	if (   test_bit(ASSOC_FLAG_WEP_KEYS, &assoc_req->flags)
+> > +	    || test_bit(ASSOC_FLAG_WEP_TX_KEYIDX, &assoc_req->flags)) {
+> > +		ret = assoc_helper_wep_keys(priv, assoc_req);
+> > +		if (ret)
+> > +			goto out;
+> > +	}
+> > +
+> > +
+> >  	/* SSID/BSSID should be the _last_ config option set, because they
+> >  	 * trigger the association attempt.
+> >  	 */
+> > -- 
+> > 1.6.3.3
+> > 
+> 
+
 -- 
-1.5.6.4
+Intel Open Source Technology Centre
+http://oss.intel.com/
