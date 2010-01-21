@@ -1,99 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34427 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750797Ab0AEJsg (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:40668 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752565Ab0AUCzr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2010 04:48:36 -0500
-Subject: Re: [RFC PATCH v5 2/7] mac80211: add debugfs interface for U-APSD
- queue configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org, a.young.jason@gmail.com
-In-Reply-To: <20091231133720.29899.75214.stgit@tikku>
-References: <20091231133626.29899.95683.stgit@tikku>
-	 <20091231133720.29899.75214.stgit@tikku>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-iPo8pipQ8ZOci9oNooMQ"
-Date: Tue, 05 Jan 2010 10:48:22 +0100
-Message-ID: <1262684902.21956.1.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 20 Jan 2010 21:55:47 -0500
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.69 #1 (Red Hat Linux))
+	id 1NXnD1-00045e-5u
+	for linux-wireless@vger.kernel.org; Thu, 21 Jan 2010 02:55:47 +0000
+Date: Wed, 20 Jan 2010 21:55:47 -0500
+From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RFC/RFT: compat-wireless for 2.6.32.4 - MQ backport support
+Message-ID: <20100121025546.GB8069@bombadil.infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The 2.6.32.4 kernel got added MQ support back. I've tried to backport
+this and this is what I have so far:
 
---=-iPo8pipQ8ZOci9oNooMQ
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+http://bombadil.infradead.org/~mcgrof/tmp/compat-wireless-2.6.32.4-rc1.tar.bz2
 
-On Thu, 2009-12-31 at 15:37 +0200, Kalle Valo wrote:
+Not sure about the select queue stuff yet though. Reports of uses of
+ath9k (./scripts/driver-select ath9k) on 2.6.23..2.6.26 would be
+appreciated.
 
-> +static ssize_t uapsd_max_sp_len_read(struct file *file, char __user
-> *user_buf,
-> +				     size_t count, loff_t *ppos)
-> +{
-> +	struct ieee80211_local *local =3D file->private_data;
-> +	int res;
-> +	char buf[10];
-> +
-> +	res =3D scnprintf(buf, sizeof(buf), "0x%x\n",
-> local->uapsd_max_sp_len);
-> +
-> +	return simple_read_from_buffer(user_buf, count, ppos, buf, res);
-> +}
-> +
-> +static ssize_t uapsd_max_sp_len_write(struct file *file,
-> +				      const char __user *user_buf,
-> +				      size_t count, loff_t *ppos)
-> +{
-> +	struct ieee80211_local *local =3D file->private_data;
-> +	unsigned long val;
-> +	char buf[10];
-> +	size_t len;
-> +	int ret;
-> +
-> +	len =3D min(count, sizeof(buf) - 1);
-> +	if (copy_from_user(buf, user_buf, len))
-> +		return -EFAULT;
-> +	buf[len] =3D '\0';
-> +
-> +	ret =3D strict_strtoul(buf, 0, &val);
-> +
-> +	if (ret)
-> +		return -EINVAL;
-> +
-> +	if (val !=3D 0 && (val & IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK) =3D=3D 0=
-)
-> +		return -ERANGE;
-> +
-> +	local->uapsd_max_sp_len =3D val;
+  Luis
 
-This seems a bit weird, that means you need to use 0x20, ..., 0x60,
-right? I think you should shift it up/down when reading/writing, or
-probably even store it shifted in local->uapsd_max_sp_len and then shift
-it up by 5 when using that value -- the value itself is only 0..3 after
-all, and only stored in a bitmasked field.
+--- 18-multiqueue.patch ---
 
-johannes
+The 2.6.23 kernel added multiqueue support. That release
+relied on the on the notion of struct net_device_subqueue
+attached to the netdevice struct as an array. The 2.6.27
+renamed these to struct netdev_queue, amogst other changes.
 
---=-iPo8pipQ8ZOci9oNooMQ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+For kernels 2.6.23..2.6.26 then we backport MQ support by
+using the equivalent calls on the struct netdev_queue to
+the struct net_device_subqueue.
 
------BEGIN PGP SIGNATURE-----
+For older kernels than 2.6.23 we can only stop all the
+queues then.
 
-iQIcBAABAgAGBQJLQwriAAoJEODzc/N7+QmaP/YQAM+vKTwcbtgBQTxAzukvyJTo
-S0vuBAcvaka3kBwMrxpztKnjCrHMPptsWLRf0/6+H2X94RYCQc0FNRH3g5JyHeJZ
-iWFT4LkPrAf+hKcnwolVRrsOKIQFANtrKauJs2u0nIt/9/g6nnQlI7KxYil1Ad6X
-tvDKq6oTwV+qTLAJPj0yaGqbNDnrVpJ4rKfJ3ko82UYazJu816oTOXwbk6NRleDz
-KRMZvLr/OLTr22VHLM6QSAWzeG9KiVVE1L7USjjzHy3p5hDYLzCtErJ7wJ4vCcLm
-hfDzJK6nHJAr6+dlnObLaYwq4ExBaymjqlhIKRN9zVu+n017A23QZcHvBK+9yVIj
-ZHr2MRwPZZdIJz1n+BsJwhJ8o68IODyVKM4dzNsTDCf2xlixLESll2e8GFgJ3taY
-nR0jBy9B1Ig7wbn/fddbs4P+Fk3vCzsQE1BxcqbIufUeszfLNDZlBUxhyXitPUzB
-Hg6Avij/Cx6q2hUieRwB40nLsbQmLqxYEITx+SpbgDhmBujTp39MJZ8DMrtzyrKQ
-6yIUBRW/FA13NbktG8x80d+JhkyCgLcjFHLlx66K4VHwrY3ZlbVZMbhOIxbzZmh2
-8iL1Qrd02aFkfgMwZys1LrIwAu30Yuc8NLgsAwEaOESk2sjONpAFdU5P/BVKaScV
-gCiNJ7LLT3d5tHmXmSm6
-=xf0z
------END PGP SIGNATURE-----
-
---=-iPo8pipQ8ZOci9oNooMQ--
-
+--- a/net/mac80211/util.c	2010-01-20 18:35:04.000000000 -0800
++++ a/net/mac80211/util.c	2010-01-20 18:34:11.000000000 -0800
+@@ -287,7 +287,13 @@
+ 
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list)
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
+ 		netif_tx_wake_queue(netdev_get_tx_queue(sdata->dev, queue));
++#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
++		netif_start_subqueue(sdata->dev, queue);
++#else
++		netif_wake_queue(sdata->dev);
++#endif
+ 	rcu_read_unlock();
+ }
+ 
+@@ -322,7 +328,13 @@
+ 
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list)
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
+ 		netif_tx_stop_queue(netdev_get_tx_queue(sdata->dev, queue));
++#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
++		netif_stop_subqueue(sdata->dev, queue);
++#else
++		netif_stop_queue(sdata->dev);
++#endif
+ 	rcu_read_unlock();
+ }
+ 
