@@ -1,100 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:27853 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751953Ab0AAXHF convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f172.google.com ([209.85.222.172]:43144 "EHLO
+	mail-pz0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755138Ab0AUURn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2010 18:07:05 -0500
-Received: by ey-out-2122.google.com with SMTP id 25so2167564eya.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Jan 2010 15:07:04 -0800 (PST)
+	Thu, 21 Jan 2010 15:17:43 -0500
 MIME-Version: 1.0
-Date: Sat, 2 Jan 2010 00:07:03 +0100
-Message-ID: <91f186a81001011507h48c1b887u323fe43dd4c8fdb1@mail.gmail.com>
-Subject: libnl, bug question, and lib query
-From: =?UTF-8?Q?Carl_F=C3=BCrstenberg?= <azatoth@gmail.com>
-To: linux-wireless@vger.kernel.org
+In-Reply-To: <4B58B432.5050200@irobot.com>
+References: <43e72e891001201213x6a2c203dl7121f2dde6d61fb9@mail.gmail.com>
+	<4B5897C8.2080006@irobot.com> <43e72e891001211012y4f4c8721t7eb9e0eea0221820@mail.gmail.com>
+	<4B58B432.5050200@irobot.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 21 Jan 2010 12:17:23 -0800
+Message-ID: <43e72e891001211217t17ffed80i2d5bc6f923b56210@mail.gmail.com>
+Subject: Re: FYI - new compat-wireless based on 2.6.33-rc4
+To: Adam Wozniak <awozniak@irobot.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'll start this up with three different question, hope that's not a
-problem instead of sending three different mails.
+On Thu, Jan 21, 2010 at 12:08 PM, Adam Wozniak <awozniak@irobot.com> wrote:
+> Luis --
+>
+> I also
 
-First I wonder if I should, in a production environment using the
-nl80211, stick to use libnl 1.* or should I use use the git 2.0?
+BTW Haukes posted a fix for the compile build against ARM. Try that.
+That patch applies to compat.git but you should be able to mangle it
+to apply to compat-wireless easily too.
 
-Second I have noticed a problem regarding reg set/get which I can't
-pin down where it goes wrong (reboot resolves the issue). Following is
-how I can reproduce it. Notice all the nonsense input I used. I don't
-know what exactly triggers it, but the "set DU seems to be a good
-candidate"
-wlan:/home/test# iw reg set US
-wlan:/home/test# iw reg get
-country US:
-	(2402 - 2472 @ 40), (3, 27)
-	(5170 - 5250 @ 40), (3, 17)
-	(5250 - 5330 @ 40), (3, 20), DFS
-	(5490 - 5600 @ 40), (3, 20), DFS
-	(5650 - 5710 @ 40), (3, 20), DFS
-	(5735 - 5835 @ 40), (3, 30)
-wlan:/home/test# iw reg set CH
-wlan:/home/test# iw reg get
-country CH:
-	(2402 - 2482 @ 40), (N/A, 20)
-	(5170 - 5250 @ 40), (N/A, 20)
-	(5250 - 5330 @ 40), (N/A, 20), DFS
-	(5490 - 5710 @ 40), (N/A, 27), DFS
-wlan:/home/test#  iw reg set DU
-wlan:/home/test# iw reg get
-country CH:
-	(2402 - 2482 @ 40), (N/A, 20)
-	(5170 - 5250 @ 40), (N/A, 20)
-	(5250 - 5330 @ 40), (N/A, 20), DFS
-	(5490 - 5710 @ 40), (N/A, 27), DFS
-wlan:/home/test# iw reg set WO
-wlan:/home/test# iw reg get
-country CH:
-	(2402 - 2482 @ 40), (N/A, 20)
-	(5170 - 5250 @ 40), (N/A, 20)
-	(5250 - 5330 @ 40), (N/A, 20), DFS
-	(5490 - 5710 @ 40), (N/A, 27), DFS
-wlan:/home/test# iw reg set W
-not a valid ISO/IEC 3166-1 alpha2
-Special non-alpha2 usable entries:
-	00	World Regulatory domain
-wlan:/home/test# iw reg set 00
-wlan:/home/test# iw reg set W
-not a valid ISO/IEC 3166-1 alpha2
-Special non-alpha2 usable entries:
-	00	World Regulatory domain
-wlan:/home/test# iw reg get
-country CH:
-	(2402 - 2482 @ 40), (N/A, 20)
-	(5170 - 5250 @ 40), (N/A, 20)
-	(5250 - 5330 @ 40), (N/A, 20), DFS
-	(5490 - 5710 @ 40), (N/A, 27), DFS
-wlan:/home/test# iw reg set 00
-wlan:/home/test# iw --debug reg set 00
--- Debug: Received Message:
---------------------------   BEGIN NETLINK MESSAGE ---------------------------
-  [HEADER] 16 octets
-    .nlmsg_len = 36
-    .nlmsg_type = 2 <ERROR>
-    .nlmsg_flags = 0 <>
-    .nlmsg_seq = 1262372471
-    .nlmsg_pid = 11999
-  [ERRORMSG] 20 octets
-    .error = 0 "Success"
-  [ORIGINAL MESSAGE] 16 octets
-    .nlmsg_len = 16
-    .nlmsg_type = 17 <0x11>
-    .nlmsg_flags = 5 <REQUEST,ACK>
-    .nlmsg_seq = 1262372471
-    .nlmsg_pid = 11999
----------------------------  END NETLINK MESSAGE   ---------------------------
+> seem to be having issues with firmware loading.  Any clues would be
+> helpful.
+>
+> I have a Gumstix Overo Fire with a built in libertas_sdio, and an ar9170usb
+>
+> It finds the libertas firmware just fine, but not the ar9170 firmware.
+>
+> I'm using a 2.6.29 kernel.  This worked fine with
+> compat-wireless-2009-11-17.  All the firmware files are in /lib/firmware.
+>
+> Here's some dmesg output:
+>
+> [   18.834564] lib80211: common routines for IEEE802.11 drivers
+> [   18.834564] lib80211_crypt: registered algorithm 'NULL'
+> [   18.951324] libertas_sdio: Libertas SDIO driver
+> [   18.951354] libertas_sdio: Copyright Pierre Ossman
+> [   18.974456] libertas_sdio mmc1:0001:1: firmware: requesting
+> sd8686_helper.bin
+> [   21.569885] Generic kernel compatibility enabled based on linux-next
+> next-20100113
+> [   21.583374] libertas_sdio mmc1:0001:1: firmware: requesting sd8686.bin
+> [   21.845703] cfg80211: Calling CRDA to update world regulatory domain
+> [   22.728393] ar9170usb 2-2.4:1.0: usb_probe_interface
+> [   22.728424] ar9170usb 2-2.4:1.0: usb_probe_interface - got id
+> [   22.818023] usb 2-2.4: reset high speed USB device using ehci-omap and
+> address 3
+> [   23.028930] libertas: 00:19:88:21:57:9e, fw 9.70.3p24, cap 0x00000303
+> [   23.044372] eth0 (libertas_sdio): not using net_device_ops yet
+> [   23.091583] libertas: PREP_CMD: command 0x00a3 failed: 2
+> [   23.107025] libertas: PREP_CMD: command 0x00a3 failed: 2
+> [   23.107238] libertas: eth0: Marvell WLAN 802.11 adapter
+> [   23.973846] usb 2-2.4: firmware: requesting ar9170.fw
+> [   83.974090] usb 2-2.4: ar9170.fw firmware file not found, trying old
+> firmware...
 
+OK so it failed here, you may want to try to debug udev stuff now
+then, what distribution do you have? Where are your udev rules put?
+Where is the original udev rule for firmware for your box?
 
+You can debug udev stuff by using 'udevadm monitor'
 
-Lastly I wonder if there is any plans to extract all relevant parts of
-iw to some sort of libiw? Would be helpful for us :)
--- 
-/Carl Fürstenberg <azatoth@gmail.com>
+  Luis
