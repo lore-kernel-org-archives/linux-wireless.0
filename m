@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:52775 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753748Ab0AXMhk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jan 2010 07:37:40 -0500
-Received: by ewy26 with SMTP id 26so1138508ewy.28
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jan 2010 04:37:37 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>, kecsa@kutfo.hit.bme.hu,
-	linux-wireless@vger.kernel.org
-Subject: Re: hwtkip hangs on b43
-References: <Pine.LNX.4.44.1001230942190.16120-100000@kutfo.hit.bme.hu>
-	<201001232000.07229.mb@bu3sch.de> <4B5B4E9F.8040708@lwfinger.net>
-	<201001232038.55204.mb@bu3sch.de> <4B5BE16E.7080901@lwfinger.net>
-	<1264332771.23766.24.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 24 Jan 2010 14:37:35 +0200
-In-Reply-To: <1264332771.23766.24.camel@johannes.local> (Johannes Berg's message of "Sun\, 24 Jan 2010 12\:32\:50 +0100")
-Message-ID: <871vhfptkg.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:35096 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753509Ab0AUM0k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2010 07:26:40 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: stable@kernel.org, linux-wireless@vger.kernel.org
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 2.6.{32,31}] iwlwifi: power up all devices for EEPROM read
+Date: Thu, 21 Jan 2010 13:22:25 +0100
+Message-Id: <1264076545-12223-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+commit f8701fe3aec24fcfb0dfa19aab47904611f96daf upstream
 
->> >>> We can just remove the lock and add a comment explaining why it is not locked...
->
-> Mind you, it won't work on SDIO hardware since the callback cannot
-> sleep, contrary to what Kalle documented :(
+On 2.6.31 and 2.6.32 iwl3945 crash during kdump, I discovered
+above upstream commit fix that.
 
-Oh, sorry about that. Back then I tried to be careful and I checked
-the context few calls up. But I didn't check far enough and realise
-that all RX code is inside rcu critical section.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+I tested patch on 2.6.32 with iwl3945 - it fix kdump, and on 2.6.31
+with iwl5300 - no regression notice.
 
-I'll send a patch to fix this shortly.
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-> Why is it not giving everybody warnings in might_sleep()?
-
-Very good question. We should get warnings from both iwlwifi and b43,
-but I have no idea why we haven't heard anything.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index 18dc3a4..870c0db 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -486,6 +486,7 @@ int iwl_eeprom_init(struct iwl_priv *priv)
+ 	}
+ 	e = (__le16 *)priv->eeprom;
+ 
++	priv->cfg->ops->lib->apm_ops.init(priv);
+ 	ret = priv->cfg->ops->lib->eeprom_ops.verify_signature(priv);
+ 	if (ret < 0) {
+ 		IWL_ERR(priv, "EEPROM not found, EEPROM_GP=0x%08x\n", gp);
+@@ -556,6 +557,8 @@ done:
+ err:
+ 	if (ret)
+ 		iwl_eeprom_free(priv);
++	/* Reset chip to save power until we load uCode during "up". */
++	priv->cfg->ops->lib->apm_ops.stop(priv);
+ alloc_err:
+ 	return ret;
+ }
 -- 
-Kalle Valo
+1.6.2.5
+
