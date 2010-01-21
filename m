@@ -1,34 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48998 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751466Ab0AWBam (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3476 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754535Ab0AUEwJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 20:30:42 -0500
-Date: Fri, 22 Jan 2010 20:16:19 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	davem@davemloft.net, dwmw2@infradead.org
-Subject: Re: [PATCH 0/5] b43: more N-PHY stuff
-Message-ID: <20100123011618.GA16135@tuxdriver.com>
-References: <1264121596-9616-1-git-send-email-zajec5@gmail.com> <b170af451001221247j1b380703w4c09b5fdd601466b@mail.gmail.com> <201001222259.28933.mb@bu3sch.de> <201001222333.42554.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201001222333.42554.mb@bu3sch.de>
+	Wed, 20 Jan 2010 23:52:09 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 0/2] ath5k AP mode fixes
+Date: Wed, 20 Jan 2010 23:51:02 -0500
+Message-Id: <1264049464-12292-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 22, 2010 at 11:33:40PM +0100, Michael Buesch wrote:
+Here are a couple of fixes to ath5k AP mode that have been
+kicking around for a bit.
 
-> So while we are at it, I'd really like to migrate away from the berlios list.
-> It's really just annoying. Does somebody have a good reliable mailinglist service
-> we could migrate to? Does vger offer lists to driver projects?
+The sleep clock is disabled by legacy HAL for AP mode and at
+least one person had beaconing issues as a result of our not
+also doing so.
 
-Probably -- I think davem is the person to ask?  Infradead is probably
-another option (dwmw2).
+Although we decided 'fix setup for CAB queue' was not ideal,
+there's no alternative at the moment and the current setup is
+causing problems for people, so IMO we should just take this
+patch as-is for now.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Bob Copeland (2):
+  ath5k: dont use external sleep clock in AP mode
+  ath5k: fix setup for CAB queue
+
+ drivers/net/wireless/ath/ath5k/ath5k.h |    2 +-
+ drivers/net/wireless/ath/ath5k/base.c  |   22 +++++++++++++++++++---
+ drivers/net/wireless/ath/ath5k/qcu.c   |    5 +++--
+ drivers/net/wireless/ath/ath5k/reset.c |    5 +++--
+ 4 files changed, 26 insertions(+), 8 deletions(-)
+
+
