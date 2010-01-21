@@ -1,38 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:35655 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751943Ab0ATC46 (ORCPT
+Received: from mail-pz0-f172.google.com ([209.85.222.172]:40196 "EHLO
+	mail-pz0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751457Ab0AUS4h convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2010 21:56:58 -0500
-Received: by yxe17 with SMTP id 17so5762864yxe.33
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2010 18:56:57 -0800 (PST)
-Subject: Re: b43 driver hang with bcm4318
-From: Eric Volker <evolker@gmail.com>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <69e28c911001191800t23bab697q6354b07656f78a29@mail.gmail.com>
-References: <1263951622.3259.26.camel@fwdell4550>
-	 <69e28c911001191800t23bab697q6354b07656f78a29@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 19 Jan 2010 20:56:53 -0600
-Message-ID: <1263956213.2316.4.camel@fwdell4550>
-Mime-Version: 1.0
+	Thu, 21 Jan 2010 13:56:37 -0500
+Received: by pzk2 with SMTP id 2so219037pzk.21
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2010 10:56:37 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1264099093.11396.62.camel@johannes.local>
+References: <20100121025546.GB8069@bombadil.infradead.org>
+	<1264067069.11396.33.camel@johannes.local> <43e72e891001211016i617de5c6o24fdfd1aa6f54eeb@mail.gmail.com>
+	<1264099093.11396.62.camel@johannes.local>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 21 Jan 2010 10:56:17 -0800
+Message-ID: <43e72e891001211056g104b8eb4u26e1d21b449a26db@mail.gmail.com>
+Subject: Re: RFC/RFT: compat-wireless for 2.6.32.4 - MQ backport support
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-01-20 at 03:00 +0100, Gábor Stefanik wrote:
-> Please load b43 with verbose debug messages enabled (use the "verbose"
-> module parameter - check modinfo for the exact value for full debug
-> output), and post the resulting logs.
-Loaded b43 with verbose=3 to get debug output. The driver hung much more
-quickly with debug output enabled. After about 30 seconds of pinging the
-AP became unresponsive, though it was still beaconing. Should I post the
-logs to the list, or is there somewhere else they should go?
+On Thu, Jan 21, 2010 at 10:38 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2010-01-21 at 10:16 -0800, Luis R. Rodriguez wrote:
+>> On Thu, Jan 21, 2010 at 1:44 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > On Wed, 2010-01-20 at 21:55 -0500, Luis R. Rodriguez wrote:
+>> >
+>> >> @@ -287,7 +287,13 @@
+>> >>
+>> >>       rcu_read_lock();
+>> >>       list_for_each_entry_rcu(sdata, &local->interfaces, list)
+>> >> +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
+>> >>               netif_tx_wake_queue(netdev_get_tx_queue(sdata->dev, queue));
+>> >> +#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
+>> >> +             netif_start_subqueue(sdata->dev, queue);
+>> >> +#else
+>> >> +             netif_wake_queue(sdata->dev);
+>> >> +#endif
+>> >
+>> > That's incorrect, you need to check for all hardware queues being awake.
+>>
+>> Can you elaborate? I'm not following.
+>
+> Well something like
+>
+> stopped = 0;
+> for (i = 0; i < hw_queues; i++)
+>        if (queue_stop_reason[i])
+>                stopped++;
+>
+> if (stopped == 0)
+>        netif_wake_queue()
 
-Thanks,
+Got it, thanks.
 
-Eric Volker
-
-
-
-
+  Luis
