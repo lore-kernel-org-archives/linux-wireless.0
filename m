@@ -1,27 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46141
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754657Ab0AEXzf (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42781 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752538Ab0AUSAh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2010 18:55:35 -0500
-Date: Tue, 05 Jan 2010 15:55:39 -0800 (PST)
-Message-Id: <20100105.155539.138677861.davem@davemloft.net>
-To: rossi.f@inwind.it
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: problem with 2.6.33-rc2 tagging
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <201001060021.41202.rossi.f@inwind.it>
-References: <201001060021.41202.rossi.f@inwind.it>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 21 Jan 2010 13:00:37 -0500
+Date: Thu, 21 Jan 2010 12:59:21 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH v2] libertas: Set/clear WPA keys before the WEP ones
+Message-ID: <20100121175920.GB2921@tuxdriver.com>
+References: <20100118231920.GH5176@sortiz.org> <20100121172618.GA17610@sortiz.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100121172618.GA17610@sortiz.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Fabio Rossi <rossi.f@inwind.it>
-Date: Wed, 6 Jan 2010 00:21:41 +0100
+On Thu, Jan 21, 2010 at 06:26:19PM +0100, Samuel Ortiz wrote:
+> 
+> With the v10 firmware running on 8688 HW, clearing WPA keys after setting the
+> WEP key prevents us from being able to associate with WEP APs.
+> Swapping the calling order for assoc_helper_wpa_keys() and
+> assoc_helper_wep_keys() fixes that issue.
+> 
+> Acked-by: Dan Williams <dcbw@redhat.com>
+> Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 
-> it seems that the current wireless.git misses a tag for the 2.6.33-rc2 kernel.
+I already applied the first version of the patch.  Could you send
+one w/ just the new changes?
 
-This happens in my net-2.6 tree too, when we pull in upstream
-we just pull in the origin's master branch and not all of the
-tags.
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
