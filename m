@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:46006 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750879Ab0AKA1v (ORCPT
+Received: from mail-pz0-f172.google.com ([209.85.222.172]:65324 "EHLO
+	mail-pz0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753951Ab0AUSNF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jan 2010 19:27:51 -0500
-Received: by yxe17 with SMTP id 17so19887207yxe.33
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Jan 2010 16:27:50 -0800 (PST)
-Message-ID: <4B4A7084.8010309@lwfinger.net>
-Date: Sun, 10 Jan 2010 18:27:48 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 21 Jan 2010 13:13:05 -0500
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 2/6] b43: N-PHY: add RSSI functions: poll and set 2055
- vcm
-References: <op.u6b70ig59lhzdc@linux-g0th.site> <201001102332.22954.mb@bu3sch.de>
-In-Reply-To: <201001102332.22954.mb@bu3sch.de>
+In-Reply-To: <4B5897C8.2080006@irobot.com>
+References: <43e72e891001201213x6a2c203dl7121f2dde6d61fb9@mail.gmail.com>
+	<4B5897C8.2080006@irobot.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 21 Jan 2010 10:12:45 -0800
+Message-ID: <43e72e891001211012y4f4c8721t7eb9e0eea0221820@mail.gmail.com>
+Subject: Re: FYI - new compat-wireless based on 2.6.33-rc4
+To: Adam Wozniak <awozniak@irobot.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/10/2010 04:32 PM, Michael Buesch wrote:
-> On Sunday 10 January 2010 23:13:20 Rafał Miłecki wrote:
->> +		buf[0] += (s8)(((s[0] & 0x3F) << 2) >> 2);
->> +		buf[1] += (s8)((((s[0] >> 8) & 0x3F) << 2) >> 2);
->> +		buf[2] += (s8)(((s[1] & 0x3F) << 2) >> 2);
->> +		buf[3] += (s8)((((s[1] >> 8) & 0x3F) << 2) >> 2);
-> 
-> I suggest buf[3] += (s8)((((s[1] >> 8) & 0x3F) << 2) >> 2) << 2) >> 2) << 2) >> 2) << 2) >> 2) << 2) >> 2) << 2) >> 2) << 2) >> 2)
-> ;)
-> No, seriously, why shift left and then shift right? Is this a translation error?
-> I _guess_ it's some mistranslation of the sign extension going on.
-> Or alternatively a compiler going insane on sign extension.
-> 
-> The question is: Do we want these integers to be signextended or not?
-> 
-> What we currently do is this:
-> buf[3] += (s8)((s[1] >> 8) & 0x3F);
-> 
-> which will always result in a positive 8bit integer, as far as I can see.
-> Which smells fishy.
+On Thu, Jan 21, 2010 at 10:07 AM, Adam Wozniak <awozniak@irobot.com> wrote:
+> compat-wireless-2010-01-20.tar.bz2 does not compile cleanly on ARM
+> architectures.
+> Commenting out line 9 of compat-2.6.32.h (#include <asm/compat.h>) fixes the
+> issue.
+> There is no arch/arm/include/asm/compat.h
+> I suspect there are several other architectures which have similar issues.
+>
 
-We do want sign extension of the signed 6-bit quantities into an 8-bit word. The
-translation is correct. Do you know of a better way to extend the signs?
+Thanks for the report, the asm/compat.h was needed as otherwise there
+was a compile issue, not sure how to address this, hrm...
 
-Larry
+  Luis
