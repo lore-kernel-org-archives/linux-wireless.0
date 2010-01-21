@@ -1,275 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:58323 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754115Ab0AOBIV (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:24858 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752331Ab0AUVKT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2010 20:08:21 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jouni.malinen@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] cfg80211: make regulatory_hint_11d() band specific
-Date: Thu, 14 Jan 2010 20:08:20 -0500
-Message-Id: <1263517700-21846-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 21 Jan 2010 16:10:19 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so77313fgg.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2010 13:10:17 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1264058284.5089.13.camel@debian>
+References: <E9954878DD1FB34FAE5187FB88C58A357683393C@orsmsx506.amr.corp.intel.com>
+	<1261363447.12157.624.camel@debian> <69e28c910912210552p1f63a47dw9fbabf2c26ce02e9@mail.gmail.com>
+	<1264058284.5089.13.camel@debian>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Thu, 21 Jan 2010 22:09:57 +0100
+Message-ID: <69e28c911001211309h34883daewd557b574a456d359@mail.gmail.com>
+Subject: Re: Intel 4965 HT rates
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	Valentin Manea <linux-wireless@mrs.ro>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In practice APs do not send country IE channel triplets for channels
-the AP is not operating on and if they were to do so they would have
-to use the regulatory extension which we currently do not process.
-No AP has been seen in practice that does this though so just drop
-those country IEs.
+2010/1/21 Zhu Yi <yi.zhu@intel.com>:
+> On Mon, 2009-12-21 at 05:52 -0800, Gábor Stefanik wrote:
+>> On Mon, Dec 21, 2009 at 3:44 AM, Zhu Yi <yi.zhu@intel.com> wrote:
+>> > On Mon, 2009-12-21 at 10:33 +0800, Guy, Wey-Yi W wrote:
+>> >> For 4965, 40MHz only supported in g band
+>> >
+>> > We don't support 40MHz channels in 2.4G band. See comments in
+>> > iwl-eeprom.h:
+>> >
+>> >  *
+>> >  * NOTE:  4965 does not support HT40 channels on 2.4 GHz.
+>> >  */
+>> But why does the Windows driver for 4965 support it then?
+>
+> Can you dump your 4965 eeprom and see if the channels in band 6 (2.4GHz
+> 40MHz channel band) are valid? You can use modparam "debug=1" and grep
+> 'HT40' in dmesg. If the flag is 0x0, the channel is marked as invalid by
+> EEPROM. The Linux driver simply excludes the HT40 channel in this case.
+>
+> Thanks,
+> -yi
 
-Additionally it has been noted the first series of country IE
-channels triplets are specific to the band the AP sends. Propagate
-the band on which the country IE was found on reject the country
-IE then if the triplets are ever oustide of the band.
+Unfortunately I have exchanged my 4965 for an 5300 (it failed
+recently, and a 5300 was the replacement), so I can no longer provide
+a dump. However, others can probably produce one, and if needed, I can
+buy another 4965 to see if it still does 2.4GHz HT40 in Windos.
 
-Although we now won't process country IE information with multiple
-band information we leave the intersection work as is as it is
-technically possible for someone to want to eventually process these
-type of country IEs with regulatory extensions.
+>
+>> >>  -----Original Message-----
+>> >> From:         Valentin Manea [mailto:linux-wireless@mrs.ro]
+>> >> Sent: Sunday, December 20, 2009 05:38 AM Pacific Standard Time
+>> >> To:   linux-wireless@vger.kernel.org
+>> >> Subject:      Intel 4965 HT rates
+>> >>
+>> >> Hi,
+>> >>
+>> >>   I'm running compat-wireless-2.6.33-rc1 and iw list shows some confusing HT
+>> >> capabilities:
+>> >>         Band 1:
+>> >>                 HT capabilities: 0x082c
+>> >>                         * 20 MHz operation
+>> >>                         * SM PS disabled
+>> >>                         * 20 MHz short GI
+>> >>                         * max A-MSDU len 7935
+>> >>
+>> >> but for 802.11a channels:
+>> >>         Band 2:
+>> >>                 HT capabilities: 0x086e
+>> >>                         * 20/40 MHz operation
+>> >>                         * SM PS disabled
+>> >>                         * 20 MHz short GI
+>> >>                         * 40 MHz short GI
+>> >>                         * max A-MSDU len 7935
+>> >>
+>> >> While I can't tell when this happened, I remember older 2.6.29 releases
+>> >> supported HT40 for both bands.
+>> >> The wireless card is an Intel 4965 on a Thinkpad T61.
+>> >>
+>> >>
+>> >> Regards,
+>> >> Valentin
+>> >>
+>> >> --
+>> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> >> the body of a message to majordomo@vger.kernel.org
+>> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> >> N�����r��y���b�X��ǧv�^�)޺{.n�+����{��*ޕ�,�{ay� ʇڙ�,j ��f���h���z� �w��� ���j:+v���w�j�m���� ����zZ+�����ݢj"��!�i
+>> >
+>> >
+>> > --
+>> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> > the body of a message to majordomo@vger.kernel.org
+>> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> >
+>>
+>>
+>>
+>
+>
+>
 
-Cc: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
 
-This goes out tested now.
 
- net/wireless/reg.c |   74 ++++++++++++++++++++++++++++++++++++++--------------
- net/wireless/reg.h |   11 +++++++
- net/wireless/sme.c |    1 +
- 3 files changed, 66 insertions(+), 20 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 5b03ca7..7242121 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -485,6 +485,34 @@ static bool freq_in_rule_band(const struct ieee80211_freq_range *freq_range,
- }
- 
- /*
-+ * This is a work around for sanity checking ieee80211_channel_to_frequency()'s
-+ * work. ieee80211_channel_to_frequency() can for example currently provide a
-+ * 2 GHz channel when in fact a 5 GHz channel was desired. An example would be
-+ * an AP providing channel 8 on a country IE triplet when it sent this on the
-+ * 5 GHz band, that channel is designed to be channel 8 on 5 GHz, not a 2 GHz
-+ * channel.
-+ *
-+ * This can be removed once ieee80211_channel_to_frequency() takes in a band.
-+ */
-+static bool chan_in_band(int chan, enum ieee80211_band band)
-+{
-+	int center_freq = ieee80211_channel_to_frequency(chan);
-+
-+	switch (band) {
-+	case IEEE80211_BAND_2GHZ:
-+		if (center_freq <= 2484)
-+			return true;
-+		return false;
-+	case IEEE80211_BAND_5GHZ:
-+		if (center_freq >= 5005)
-+			return true;
-+		return false;
-+	default:
-+		return false;
-+	}
-+}
-+
-+/*
-  * Some APs may send a country IE triplet for each channel they
-  * support and while this is completely overkill and silly we still
-  * need to support it. We avoid making a single rule for each channel
-@@ -532,7 +560,8 @@ static bool freq_in_rule_band(const struct ieee80211_freq_range *freq_range,
-  * Returns 0 if the IE has been found to be invalid in the middle
-  * somewhere.
-  */
--static int max_subband_chan(int orig_cur_chan,
-+static int max_subband_chan(enum ieee80211_band band,
-+			    int orig_cur_chan,
- 			    int orig_end_channel,
- 			    s8 orig_max_power,
- 			    u8 **country_ie,
-@@ -541,7 +570,6 @@ static int max_subband_chan(int orig_cur_chan,
- 	u8 *triplets_start = *country_ie;
- 	u8 len_at_triplet = *country_ie_len;
- 	int end_subband_chan = orig_end_channel;
--	enum ieee80211_band band;
- 
- 	/*
- 	 * We'll deal with padding for the caller unless
-@@ -557,17 +585,14 @@ static int max_subband_chan(int orig_cur_chan,
- 	*country_ie += 3;
- 	*country_ie_len -= 3;
- 
--	if (orig_cur_chan <= 14)
--		band = IEEE80211_BAND_2GHZ;
--	else
--		band = IEEE80211_BAND_5GHZ;
-+	if (!chan_in_band(orig_cur_chan, band))
-+		return 0;
- 
- 	while (*country_ie_len >= 3) {
- 		int end_channel = 0;
- 		struct ieee80211_country_ie_triplet *triplet =
- 			(struct ieee80211_country_ie_triplet *) *country_ie;
- 		int cur_channel = 0, next_expected_chan;
--		enum ieee80211_band next_band = IEEE80211_BAND_2GHZ;
- 
- 		/* means last triplet is completely unrelated to this one */
- 		if (triplet->ext.reg_extension_id >=
-@@ -592,6 +617,9 @@ static int max_subband_chan(int orig_cur_chan,
- 		if (triplet->chans.first_channel <= end_subband_chan)
- 			return 0;
- 
-+		if (!chan_in_band(triplet->chans.first_channel, band))
-+			return 0;
-+
- 		/* 2 GHz */
- 		if (triplet->chans.first_channel <= 14) {
- 			end_channel = triplet->chans.first_channel +
-@@ -600,14 +628,10 @@ static int max_subband_chan(int orig_cur_chan,
- 		else {
- 			end_channel =  triplet->chans.first_channel +
- 				(4 * (triplet->chans.num_channels - 1));
--			next_band = IEEE80211_BAND_5GHZ;
- 		}
- 
--		if (band != next_band) {
--			*country_ie -= 3;
--			*country_ie_len += 3;
--			break;
--		}
-+		if (!chan_in_band(end_channel, band))
-+			return 0;
- 
- 		if (orig_max_power != triplet->chans.max_power) {
- 			*country_ie -= 3;
-@@ -666,6 +690,7 @@ static int max_subband_chan(int orig_cur_chan,
-  * with our userspace regulatory agent to get lower bounds.
-  */
- static struct ieee80211_regdomain *country_ie_2_rd(
-+				enum ieee80211_band band,
- 				u8 *country_ie,
- 				u8 country_ie_len,
- 				u32 *checksum)
-@@ -743,8 +768,11 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 		if (triplet->chans.num_channels == 0)
- 				return NULL;
- 
-+		if (!chan_in_band(triplet->chans.first_channel, band))
-+			return NULL;
-+
- 		/* 2 GHz */
--		if (triplet->chans.first_channel <= 14)
-+		if (band == IEEE80211_BAND_2GHZ)
- 			end_channel = triplet->chans.first_channel +
- 				triplet->chans.num_channels - 1;
- 		else
-@@ -767,7 +795,8 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 		 * or for whatever reason sends triplets with multiple channels
- 		 * separated when in fact they should be together.
- 		 */
--		end_channel = max_subband_chan(cur_channel,
-+		end_channel = max_subband_chan(band,
-+					       cur_channel,
- 					       end_channel,
- 					       triplet->chans.max_power,
- 					       &country_ie,
-@@ -775,6 +804,9 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 		if (!end_channel)
- 			return NULL;
- 
-+		if (!chan_in_band(end_channel, band))
-+			return NULL;
-+
- 		cur_sub_max_channel = end_channel;
- 
- 		/* Basic sanity check */
-@@ -867,14 +899,15 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 		reg_rule->flags = flags;
- 
- 		/* 2 GHz */
--		if (triplet->chans.first_channel <= 14)
-+		if (band == IEEE80211_BAND_2GHZ)
- 			end_channel = triplet->chans.first_channel +
- 				triplet->chans.num_channels -1;
- 		else
- 			end_channel =  triplet->chans.first_channel +
- 				(4 * (triplet->chans.num_channels - 1));
- 
--		end_channel = max_subband_chan(triplet->chans.first_channel,
-+		end_channel = max_subband_chan(band,
-+					       triplet->chans.first_channel,
- 					       end_channel,
- 					       triplet->chans.max_power,
- 					       &country_ie,
-@@ -1981,8 +2014,9 @@ static bool reg_same_country_ie_hint(struct wiphy *wiphy,
-  * therefore cannot iterate over the rdev list here.
-  */
- void regulatory_hint_11d(struct wiphy *wiphy,
--			u8 *country_ie,
--			u8 country_ie_len)
-+			 enum ieee80211_band band,
-+			 u8 *country_ie,
-+			 u8 country_ie_len)
- {
- 	struct ieee80211_regdomain *rd = NULL;
- 	char alpha2[2];
-@@ -2028,7 +2062,7 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 	    wiphy_idx_valid(last_request->wiphy_idx)))
- 		goto out;
- 
--	rd = country_ie_2_rd(country_ie, country_ie_len, &checksum);
-+	rd = country_ie_2_rd(band, country_ie, country_ie_len, &checksum);
- 	if (!rd) {
- 		REG_DBG_PRINT("cfg80211: Ignoring bogus country IE\n");
- 		goto out;
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index 3362c7c..3018508 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -41,14 +41,25 @@ int regulatory_hint_found_beacon(struct wiphy *wiphy,
-  * regulatory_hint_11d - hints a country IE as a regulatory domain
-  * @wiphy: the wireless device giving the hint (used only for reporting
-  *	conflicts)
-+ * @band: the band on which the country IE was received on. This determines
-+ *	the band we'll process the country IE channel triplets for.
-  * @country_ie: pointer to the country IE
-  * @country_ie_len: length of the country IE
-  *
-  * We will intersect the rd with the what CRDA tells us should apply
-  * for the alpha2 this country IE belongs to, this prevents APs from
-  * sending us incorrect or outdated information against a country.
-+ *
-+ * The AP is expected to provide Country IE channel triplets for the
-+ * band it is on. It is technically possible for APs to send channel
-+ * country IE triplets even for channels outside of the band they are
-+ * in but for that they would have to use the regulatory extension
-+ * in combination with a triplet but this behaviour is currently
-+ * not observed. For this reason if a triplet is seen with channel
-+ * information for a band the BSS is not present in it will be ignored.
-  */
- void regulatory_hint_11d(struct wiphy *wiphy,
-+			 enum ieee80211_band band,
- 			 u8 *country_ie,
- 			 u8 country_ie_len);
- 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 2333d78..2ce5e16 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -454,6 +454,7 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 	 * - and country_ie[1] which is the IE length
- 	 */
- 	regulatory_hint_11d(wdev->wiphy,
-+			    bss->channel->band,
- 			    country_ie + 2,
- 			    country_ie[1]);
- }
 -- 
-1.6.3.3
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
