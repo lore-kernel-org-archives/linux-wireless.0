@@ -1,143 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:44589 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751096Ab0AFBQn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2010 20:16:43 -0500
-Date: Tue, 5 Jan 2010 17:15:50 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Helge Deller <deller@gmx.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>,
-	ben@decadent.org.uk, tbm@cyrius.com,
-	Kalle Valo <kalle.valo@iki.fi>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-omap@vger.kernel.org,
-	rusty@rustcorp.com.au, roland@redhat.com, dave@hiauly1.hia.nrc.ca,
-	Parisc List <linux-parisc@vger.kernel.org>
-Subject: Re: regression: crash from 'ls /sys/modules/wl1251_spi/notes'
-Message-Id: <20100105171550.8aef9b15.akpm@linux-foundation.org>
-In-Reply-To: <4B3D145C.2080106@gmx.de>
-References: <87k4w4wux9.fsf@purkki.valot.fi>
-	<1262188157.2749.21.camel@mulgrave.site>
-	<4B3D145C.2080106@gmx.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from smtp1.irobot.com ([206.83.81.187]:48327 "EHLO smtp1.irobot.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755023Ab0AUUIW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2010 15:08:22 -0500
+Message-ID: <4B58B432.5050200@irobot.com>
+Date: Thu, 21 Jan 2010 12:08:18 -0800
+From: Adam Wozniak <awozniak@irobot.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Subject: Re: FYI - new compat-wireless based on 2.6.33-rc4
+References: <43e72e891001201213x6a2c203dl7121f2dde6d61fb9@mail.gmail.com> 	<4B5897C8.2080006@irobot.com> <43e72e891001211012y4f4c8721t7eb9e0eea0221820@mail.gmail.com>
+In-Reply-To: <43e72e891001211012y4f4c8721t7eb9e0eea0221820@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 31 Dec 2009 22:15:08 +0100
-Helge Deller <deller@gmx.de> wrote:
+Luis --
 
-> On 12/30/2009 04:49 PM, James Bottomley wrote:
-> > A better, and more comprehensive patch would be to try not to count the
-> > empty text sections when we're building the notes section (and actually
-> > anywhere else in the file).  This patch actually relies on the fact that
-> > if sh_size is zero for the text section it should be for the
-> > corresponding notes section.  If that doesn't work, we'd actually have
-> > to do the matching in the construction piece.
-> >
-> > Can you try it to see if it works for you?  If it doesn't, I'll try
-> > matching notes to text.  It works fine on parisc, but as we don't have a
-> > notes section, that's not saying much ...
-> >
-> > Thanks,
-> >
-> > James
-> 
-> 
-> Ben Hutchings already sent a similar patch.
-> See: http://patchwork.kernel.org/patch/68925/
-> 
-> IMHO James patch below seems better since it
-> checks if a section will be allocated at a few more
-> places...
-> 
+I also seem to be having issues with firmware loading.  Any clues would 
+be helpful.
 
-Ben's patch (which is below) is currently in linux-next, via a Rusty
-tree.  It is marked for -stable backporting.
+I have a Gumstix Overo Fire with a built in libertas_sdio, and an ar9170usb
 
-If James's patch is preferable then there's an opportunity to do the
-swap if we move promptly.
+It finds the libertas firmware just fine, but not the ar9170 firmware.
 
+I'm using a 2.6.29 kernel.  This worked fine with 
+compat-wireless-2009-11-17.  All the firmware files are in /lib/firmware.
 
+Here's some dmesg output:
 
-
-commit 9e9b48a89ed43c73d7355ff999b8e87b0628e1cd
-Author:     Ben Hutchings <ben@decadent.org.uk>
-AuthorDate: Sat Dec 19 14:43:01 2009 +0000
-Commit:     Stephen Rothwell <sfr@canb.auug.org.au>
-CommitDate: Tue Jan 5 08:44:50 2010 +1100
-
-    modules: Skip empty sections when exporting section notes
-    
-    Commit 35dead4 "modules: don't export section names of empty sections
-    via sysfs" changed the set of sections that have attributes, but did
-    not change the iteration over these attributes in add_notes_attrs().
-    This can lead to add_notes_attrs() creating attributes with the wrong
-    names or with null name pointers.
-    
-    Introduce a sect_empty() function and use it in both add_sect_attrs()
-    and add_notes_attrs().
-    
-    Reported-by: Martin Michlmayr <tbm@cyrius.com>
-    Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
-    Tested-by: Martin Michlmayr <tbm@cyrius.com>
-    Cc: stable@kernel.org
-    Signed-off-by: Rusty Russell <rusty@rustcorp.com.au>
-
-diff --git a/kernel/module.c b/kernel/module.c
-index e96b8ed..f82386b 100644
---- a/kernel/module.c
-+++ b/kernel/module.c
-@@ -1010,6 +1010,12 @@ static const struct kernel_symbol *resolve_symbol(Elf_Shdr *sechdrs,
-  * J. Corbet <corbet@lwn.net>
-  */
- #if defined(CONFIG_KALLSYMS) && defined(CONFIG_SYSFS)
-+
-+static inline bool sect_empty(const Elf_Shdr *sect)
-+{
-+	return !(sect->sh_flags & SHF_ALLOC) || sect->sh_size == 0;
-+}
-+
- struct module_sect_attr
- {
- 	struct module_attribute mattr;
-@@ -1051,8 +1057,7 @@ static void add_sect_attrs(struct module *mod, unsigned int nsect,
- 
- 	/* Count loaded sections and allocate structures */
- 	for (i = 0; i < nsect; i++)
--		if (sechdrs[i].sh_flags & SHF_ALLOC
--		    && sechdrs[i].sh_size)
-+		if (!sect_empty(&sechdrs[i]))
- 			nloaded++;
- 	size[0] = ALIGN(sizeof(*sect_attrs)
- 			+ nloaded * sizeof(sect_attrs->attrs[0]),
-@@ -1070,9 +1075,7 @@ static void add_sect_attrs(struct module *mod, unsigned int nsect,
- 	sattr = &sect_attrs->attrs[0];
- 	gattr = &sect_attrs->grp.attrs[0];
- 	for (i = 0; i < nsect; i++) {
--		if (! (sechdrs[i].sh_flags & SHF_ALLOC))
--			continue;
--		if (!sechdrs[i].sh_size)
-+		if (sect_empty(&sechdrs[i]))
- 			continue;
- 		sattr->address = sechdrs[i].sh_addr;
- 		sattr->name = kstrdup(secstrings + sechdrs[i].sh_name,
-@@ -1156,7 +1159,7 @@ static void add_notes_attrs(struct module *mod, unsigned int nsect,
- 	/* Count notes sections and allocate structures.  */
- 	notes = 0;
- 	for (i = 0; i < nsect; i++)
--		if ((sechdrs[i].sh_flags & SHF_ALLOC) &&
-+		if (!sect_empty(&sechdrs[i]) &&
- 		    (sechdrs[i].sh_type == SHT_NOTE))
- 			++notes;
- 
-@@ -1172,7 +1175,7 @@ static void add_notes_attrs(struct module *mod, unsigned int nsect,
- 	notes_attrs->notes = notes;
- 	nattr = &notes_attrs->attrs[0];
- 	for (loaded = i = 0; i < nsect; ++i) {
--		if (!(sechdrs[i].sh_flags & SHF_ALLOC))
-+		if (sect_empty(&sechdrs[i]))
- 			continue;
- 		if (sechdrs[i].sh_type == SHT_NOTE) {
- 			nattr->attr.name = mod->sect_attrs->attrs[loaded].name;
+[   18.834564] lib80211: common routines for IEEE802.11 drivers
+[   18.834564] lib80211_crypt: registered algorithm 'NULL'
+[   18.951324] libertas_sdio: Libertas SDIO driver
+[   18.951354] libertas_sdio: Copyright Pierre Ossman
+[   18.974456] libertas_sdio mmc1:0001:1: firmware: requesting 
+sd8686_helper.bin
+[   21.569885] Generic kernel compatibility enabled based on linux-next 
+next-20100113
+[   21.583374] libertas_sdio mmc1:0001:1: firmware: requesting sd8686.bin
+[   21.845703] cfg80211: Calling CRDA to update world regulatory domain
+[   22.728393] ar9170usb 2-2.4:1.0: usb_probe_interface
+[   22.728424] ar9170usb 2-2.4:1.0: usb_probe_interface - got id
+[   22.818023] usb 2-2.4: reset high speed USB device using ehci-omap 
+and address 3
+[   23.028930] libertas: 00:19:88:21:57:9e, fw 9.70.3p24, cap 0x00000303
+[   23.044372] eth0 (libertas_sdio): not using net_device_ops yet
+[   23.091583] libertas: PREP_CMD: command 0x00a3 failed: 2
+[   23.107025] libertas: PREP_CMD: command 0x00a3 failed: 2
+[   23.107238] libertas: eth0: Marvell WLAN 802.11 adapter
+[   23.973846] usb 2-2.4: firmware: requesting ar9170.fw
+[   83.974090] usb 2-2.4: ar9170.fw firmware file not found, trying old 
+firmware...
+[   83.981536] usb 2-2.4: firmware: requesting ar9170-1.fw
+[  143.982055] usb 2-2.4: file with init values not found.
+[  143.987365] ar9170usb: probe of 2-2.4:1.0 failed with error -2
 
