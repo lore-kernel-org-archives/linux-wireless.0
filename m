@@ -1,92 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:62939 "EHLO mga11.intel.com"
+Received: from smtp1.irobot.com ([206.83.81.187]:47527 "EHLO smtp1.irobot.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758528Ab0AOVnu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2010 16:43:50 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 5/9] iwlwifi: set interrupt coalescing timer range and default
-Date: Fri, 15 Jan 2010 13:43:37 -0800
-Message-Id: <1263591821-14867-6-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1263591821-14867-1-git-send-email-reinette.chatre@intel.com>
-References: <1263591821-14867-1-git-send-email-reinette.chatre@intel.com>
+	id S1754710Ab0AUVYy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2010 16:24:54 -0500
+Message-ID: <4B58C622.2090004@irobot.com>
+Date: Thu, 21 Jan 2010 13:24:50 -0800
+From: Adam Wozniak <awozniak@irobot.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Subject: Re: FYI - new compat-wireless based on 2.6.33-rc4
+References: <43e72e891001201213x6a2c203dl7121f2dde6d61fb9@mail.gmail.com> 	<4B5897C8.2080006@irobot.com> <43e72e891001211012y4f4c8721t7eb9e0eea0221820@mail.gmail.com> 	<4B58B432.5050200@irobot.com> <43e72e891001211217t17ffed80i2d5bc6f923b56210@mail.gmail.com>
+In-Reply-To: <43e72e891001211217t17ffed80i2d5bc6f923b56210@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Luis R. Rodriguez wrote:
+> BTW Haukes posted a fix for the compile build against ARM. Try that.
+> That patch applies to compat.git but you should be able to mangle it
+> to apply to compat-wireless easily too.
+>   
+That worked, thank you.
+> OK so it failed here, you may want to try to debug udev stuff now
+> then, what distribution do you have? Where are your udev rules put?
+> Where is the original udev rule for firmware for your box?
+>
+> You can debug udev stuff by using 'udevadm monitor'
+>   
+I'm using openembedded.  Rules are in /etc/udev/rules.d
+It contains a file 50-udev-default.rules with a line:
 
-For interrupt coalescing timer, the CSR_INT_COALESCING is an 8 bit
-register in 32-usec unit, the range can go from 0x00 - 0xFF. set the
-range and default timeout value for both calibration mode and operation mode.
+SUBSYSTEM=="firmware", ACTION=="add", RUN+="firmware.sh"
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-dev.h  |   15 +++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-rx.c   |    4 ++--
- 3 files changed, 19 insertions(+), 4 deletions(-)
+If I copy & paste and change the SUBSYSTEM to "compat_firmware" things 
+seem to load ok.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 14f4829..f94a323 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -257,8 +257,8 @@ int iwl_hw_nic_init(struct iwl_priv *priv)
- 	spin_lock_irqsave(&priv->lock, flags);
- 	priv->cfg->ops->lib->apm_ops.init(priv);
- 
--	/* Set interrupt coalescing timer to 512 usecs */
--	iwl_write8(priv, CSR_INT_COALESCING, 512 / 32);
-+	/* Set interrupt coalescing calibration timer to default (512 usecs) */
-+	iwl_write8(priv, CSR_INT_COALESCING, IWL_HOST_INT_CALIB_TIMEOUT_DEF);
- 
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 811bacf..400545a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1011,6 +1011,21 @@ struct iwl_event_log {
- 	int wraps_more_count;
- };
- 
-+/*
-+ * host interrupt timeout value
-+ * used with setting interrupt coalescing timer
-+ * the CSR_INT_COALESCING is an 8 bit register in 32-usec unit
-+ *
-+ * default interrupt coalescing timer is 64 x 32 = 2048 usecs
-+ * default interrupt coalescing calibration timer is 16 x 32 = 512 usecs
-+ */
-+#define IWL_HOST_INT_TIMEOUT_MAX	(0xFF)
-+#define IWL_HOST_INT_TIMEOUT_DEF	(0x40)
-+#define IWL_HOST_INT_TIMEOUT_MIN	(0x0)
-+#define IWL_HOST_INT_CALIB_TIMEOUT_MAX	(0xFF)
-+#define IWL_HOST_INT_CALIB_TIMEOUT_DEF	(0x10)
-+#define IWL_HOST_INT_CALIB_TIMEOUT_MIN	(0x0)
-+
- struct iwl_priv {
- 
- 	/* ieee device used by generic ieee processing code */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 5bbe5f1..07bdba9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -473,8 +473,8 @@ int iwl_rx_init(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
- 			   (rb_timeout << FH_RCSR_RX_CONFIG_REG_IRQ_RBTH_POS)|
- 			   (rfdnlog << FH_RCSR_RX_CONFIG_RBDCB_SIZE_POS));
- 
--	/* Set interrupt coalescing timer to 64 x 32 = 2048 usecs */
--	iwl_write8(priv, CSR_INT_COALESCING, 0x40);
-+	/* Set interrupt coalescing timer to default (2048 usecs) */
-+	iwl_write8(priv, CSR_INT_COALESCING, IWL_HOST_INT_TIMEOUT_DEF);
- 
- 	return 0;
- }
--- 
-1.6.3.3
+--Adam
 
