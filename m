@@ -1,46 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55801 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752530Ab0AQAtN (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.26]:42443 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752311Ab0AUAVK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jan 2010 19:49:13 -0500
-Message-Id: <20100117004824.859855359@sipsolutions.net>
-Date: Sun, 17 Jan 2010 01:47:56 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/5] mac80211: clear TX control on filtered frames
-References: <20100117004754.624627000@sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 20 Jan 2010 19:21:10 -0500
+Message-ID: <4B579DF0.5080305@gmail.com>
+Date: Wed, 20 Jan 2010 19:21:04 -0500
+From: Richard Farina <sidhayn@gmail.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Subject: Re: FYI - new compat-wireless based on 2.6.33-rc4
+References: <43e72e891001201213x6a2c203dl7121f2dde6d61fb9@mail.gmail.com>
+In-Reply-To: <43e72e891001201213x6a2c203dl7121f2dde6d61fb9@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When an skb survived a round-trip through the driver
-and needs to be re-used, its control information is
-definitely not valid any more, the driver will have
-overwritten it.
+Default udev from this package confirmed working on Gentoo.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/status.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
+Tested-by: Rick Farina
 
---- wireless-testing.orig/net/mac80211/status.c	2009-12-23 13:11:13.000000000 +0100
-+++ wireless-testing/net/mac80211/status.c	2009-12-23 13:11:32.000000000 +0100
-@@ -69,6 +69,14 @@ static void ieee80211_handle_filtered_fr
- 	 */
- 	goto drop;
- 
-+	/*
-+	 * This skb 'survived' a round-trip through the driver, and
-+	 * hopefully the driver didn't mangle it too badly. However,
-+	 * we can definitely not rely on the the control information
-+	 * being correct. Clear it so we don't get junk there.
-+	 */
-+	memset(&info->control, 0, sizeof(info->control));
-+
- 	sta->tx_filtered_count++;
- 
- 	/*
+Thanks,
+Rick Farina
 
+Luis R. Rodriguez wrote:
+> The compat_firmware_class was having some issues which should now be
+> hopefully addressed:
+>
+>   * Use a different subsystem name for sysfs registration, now compat_firmware
+>   * The new subsystem name change required a new udev rule to be added
+>
+> The new compat-wireless for 2.6.33-rc4 has been pushed out with the
+> new changes. Unfortunately 2.6.33-rc5 hasn't been pushed out yet so I
+> just overwrote the old rc4 package (next time I'll just add an extra
+> extra version when this happens). The new sha1sum for this release is:
+>
+> c007d7c8649d6149f415ea87dc7a34d4ee808766  compat-wireless-2.6.33-rc4.tar.bz2
+>
+> Just kicked out a bleeding edge release with the same fixes:
+>
+> 65bb3cd6565f1788a2c63bfe8ccfdd8dfc1fb368  compat-wireless-2010-01-20.tar.bz2
+>
+> Please let us know if there are any issues. I should note that the new
+> compat_firmware_class will be used *every time* compat-wireless is
+> used firmware needs to be uploaded, not just for the new
+> request_firmware_nowait().
+>
+>   Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>   
 
