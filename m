@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:56782 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754462Ab0AYSg3 convert rfc822-to-8bit (ORCPT
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:62337 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754566Ab0AUSQ4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 13:36:29 -0500
-Received: by ewy19 with SMTP id 19so50019ewy.21
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2010 10:36:28 -0800 (PST)
+	Thu, 21 Jan 2010 13:16:56 -0500
+Received: by pwi21 with SMTP id 21so154095pwi.21
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2010 10:16:55 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <b170af451001251035t23f3978cga52258722ea29770@mail.gmail.com>
-References: <1264442401-6364-1-git-send-email-zajec5@gmail.com>
-	 <1264442401-6364-3-git-send-email-zajec5@gmail.com>
-	 <201001251932.14633.mb@bu3sch.de>
-	 <b170af451001251035t23f3978cga52258722ea29770@mail.gmail.com>
-Date: Mon, 25 Jan 2010 19:36:27 +0100
-Message-ID: <b170af451001251036m8b33f3er9f0a363a03ea21cb@mail.gmail.com>
-Subject: Re: [PATCH 2/4] b43: make cordic common (LP-PHY and N-PHY need it)
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1264067069.11396.33.camel@johannes.local>
+References: <20100121025546.GB8069@bombadil.infradead.org>
+	<1264067069.11396.33.camel@johannes.local>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 21 Jan 2010 10:16:35 -0800
+Message-ID: <43e72e891001211016i617de5c6o24fdfd1aa6f54eeb@mail.gmail.com>
+Subject: Re: RFC/RFT: compat-wireless for 2.6.32.4 - MQ backport support
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 25 stycznia 2010 19:35 użytkownik Rafał Miłecki
-<zajec5@gmail.com> napisał:
-> 2010/1/25 Michael Buesch <mb@bu3sch.de>:
->> On Monday 25 January 2010 18:59:59 Rafał Miłecki wrote:
->>> +/* Complex number using 2 32-bit signed integers */
->>> +typedef struct { s32 i, q; } b43_c32;
+On Thu, Jan 21, 2010 at 1:44 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2010-01-20 at 21:55 -0500, Luis R. Rodriguez wrote:
+>
+>> @@ -287,7 +287,13 @@
 >>
->> No typedef. ever.
+>>       rcu_read_lock();
+>>       list_for_each_entry_rcu(sdata, &local->interfaces, list)
+>> +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
+>>               netif_tx_wake_queue(netdev_get_tx_queue(sdata->dev, queue));
+>> +#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
+>> +             netif_start_subqueue(sdata->dev, queue);
+>> +#else
+>> +             netif_wake_queue(sdata->dev);
+>> +#endif
 >
-> Well, I just copied (Gabor's?) code here. But of course I can fix this
-> by the way, no problem :)
->
-> Just read about typedef in Linux Kernel Coding Style, didn't know
-> about this earlier. Thanks for pointing.
+> That's incorrect, you need to check for all hardware queues being awake.
 
-Is this OK to fix this in separated patch? Or should I modify this set
-of patches?
+Can you elaborate? I'm not following.
 
--- 
-Rafał
+  Luis
