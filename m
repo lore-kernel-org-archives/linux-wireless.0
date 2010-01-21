@@ -1,74 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:12291 "EHLO mga09.intel.com"
+Received: from nbd.name ([88.198.39.176]:36824 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750744Ab0AFFXr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 00:23:47 -0500
-From: "Cahill, Ben M" <ben.m.cahill@intel.com>
-To: "Zhu, Yi" <yi.zhu@intel.com>
-CC: Maxim Levitsky <maximlevitsky@gmail.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
-Date: Tue, 5 Jan 2010 21:23:32 -0800
-Subject: RE: [ipw3945-devel] Panic in iwl3945 driver
-Message-ID: <02B3067C068D0549A8CCFCB17D4D318B5D151348@orsmsx502.amr.corp.intel.com>
-References: <1259167780.4072.2.camel@maxim-laptop>
-	 <1259280022.3991.12.camel@maxim-laptop>
-	 <1259596551.4090.0.camel@maxim-laptop>	<1259617333.4653.91.camel@rc-desk>
-	 <1259620526.6559.34.camel@maxim-laptop>	<1259659724.12157.110.camel@debian>
-	 <1259732550.12157.130.camel@debian>	<1259774227.26287.2.camel@maxim-laptop>
-	 <1261413654.3556.6.camel@maxim-laptop>	<1261472251.12157.829.camel@debian>
-	 <1262710566.3272.3.camel@maxim-laptop>
-	 <02B3067C068D0549A8CCFCB17D4D318B5D15133C@orsmsx502.amr.corp.intel.com>
-	 <02B3067C068D0549A8CCFCB17D4D318B5D15133F@orsmsx502.amr.corp.intel.com>
- <1262750225.15653.113.camel@debian>
-In-Reply-To: <1262750225.15653.113.camel@debian>
-Content-Type: text/plain; charset="us-ascii"
+	id S1755059Ab0AUXgp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2010 18:36:45 -0500
+Message-ID: <4B58E507.9000101@openwrt.org>
+Date: Fri, 22 Jan 2010 00:36:39 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: fix rx data handling for non-data frames on multiple
+ vifs
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The loop that passes non-data frames to all relevant vifs inside the
+__ieee80211_rx_handle_packet keeps a pointer to the previous sdata to
+avoid having to make unnecessary copies of the frame it's handling.
+This led to a bug that caused it to apply the ieee80211_rx_data state
+to the wrong interface, thereby either missing the rx.sta pointer or
+having it assigned where it shouldn't be.
+This breaks (among other things) aggregation on some vifs, as action
+frame exchages are dropped to the cooked monitor interface due to
+rx->sta being NULL.
+Fix this by restructuring the loop so that it prepares the rx data just
+before making the skb copy and calling the rx handlers.
+
+Cc: stable@kernel.org
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2348,22 +2348,6 @@ static void __ieee80211_rx_handle_packet
+ 			    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 				continue;
  
-
->-----Original Message-----
->From: Zhu, Yi 
->Sent: Tuesday, January 05, 2010 10:57 PM
->To: Cahill, Ben M
->Cc: Maxim Levitsky; Chatre, Reinette; linux-wireless; iwlwifi 
->maling list
->Subject: RE: [ipw3945-devel] Panic in iwl3945 driver
->
->On Wed, 2010-01-06 at 06:26 +0800, Cahill, Ben M wrote:
->> >><3>[  330.762510] iwl3945 0000:06:00.0: 1035963222
->> >>0x04dc0018     0401
->> >
->> >Last good command 0x18, with (driver provided) header
->> >indicating sent via queue 4, queue index 0xdc
->> >
->> >><3>[  330.762547] iwl3945 0000:06:00.0: 1035963229
->> >>0x00000000     0401
->> >
->> >This shows command "0" (non-existant/unsupported/bad command)
->> >with (driver provided) header indicating sent via queue "0",
->> >index "0"; obviously bad data in command queue.
->> 
->> Or index ("pointer") is getting out of sync.  (Reminder to 
->self; never
->> use the word "obviously"). 
->
->Ben, does it smell like driver issue or firmware bug?
-
-I would tend to suspect driver or platform issue, but that's just a guess of course.  Something seems to be telling the device to read DRAM that contains "0".  Do we reset unused command buffers to 0?  Just wondering if the index/pointers are getting out of sync somehow (double-increment or who-knows-what?).
-
-I haven't followed this thread closely (plus I've been on vacation!); can you give me a summary of what you're trying to fix?
-
-Also, not sure if it's relevant, but a community member discovered that MSI should be enabled in kernel config.  See bugzilla 1944.
-
--- Ben --
-
->
->Thanks,
->-yi
->
->
+-			rx.sta = sta_info_get(sdata, hdr->addr2);
+-
+-			rx.flags |= IEEE80211_RX_RA_MATCH;
+-			prepares = prepare_for_handlers(sdata, &rx, hdr);
+-
+-			if (!prepares)
+-				continue;
+-
+-			if (status->flag & RX_FLAG_MMIC_ERROR) {
+-				rx.sdata = sdata;
+-				if (rx.flags & IEEE80211_RX_RA_MATCH)
+-					ieee80211_rx_michael_mic_report(hdr,
+-									&rx);
+-				continue;
+-			}
+-
+ 			/*
+ 			 * frame is destined for this interface, but if it's
+ 			 * not also for the previous one we handle that after
+@@ -2375,6 +2359,22 @@ static void __ieee80211_rx_handle_packet
+ 				continue;
+ 			}
+ 
++			rx.sta = sta_info_get(prev, hdr->addr2);
++
++			rx.flags |= IEEE80211_RX_RA_MATCH;
++			prepares = prepare_for_handlers(prev, &rx, hdr);
++
++			if (!prepares)
++				goto next;
++
++			if (status->flag & RX_FLAG_MMIC_ERROR) {
++				rx.sdata = prev;
++				if (rx.flags & IEEE80211_RX_RA_MATCH)
++					ieee80211_rx_michael_mic_report(hdr,
++									&rx);
++				goto next;
++			}
++
+ 			/*
+ 			 * frame was destined for the previous interface
+ 			 * so invoke RX handlers for it
+@@ -2387,11 +2387,22 @@ static void __ieee80211_rx_handle_packet
+ 					       "multicast frame for %s\n",
+ 					       wiphy_name(local->hw.wiphy),
+ 					       prev->name);
+-				continue;
++				goto next;
+ 			}
+ 			ieee80211_invoke_rx_handlers(prev, &rx, skb_new, rate);
++next:
+ 			prev = sdata;
+ 		}
++
++		if (prev) {
++			rx.sta = sta_info_get(prev, hdr->addr2);
++
++			rx.flags |= IEEE80211_RX_RA_MATCH;
++			prepares = prepare_for_handlers(prev, &rx, hdr);
++
++			if (!prepares)
++				prev = NULL;
++		}
+ 	}
+ 	if (prev)
+ 		ieee80211_invoke_rx_handlers(prev, &rx, skb, rate);
