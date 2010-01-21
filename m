@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:17080 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750943Ab0AXSYb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jan 2010 13:24:31 -0500
-Received: by fg-out-1718.google.com with SMTP id l26so747925fgb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jan 2010 10:24:29 -0800 (PST)
-Subject: Re: mac80211: Breakage in software encryption (iwl3945)
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1264330613.23766.17.camel@johannes.local>
-References: <1264277460.13250.10.camel@maxim-laptop>
-	 <1264330613.23766.17.camel@johannes.local>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 24 Jan 2010 20:24:25 +0200
-Message-ID: <1264357465.4152.4.camel@maxim-laptop>
-Mime-Version: 1.0
+Received: from smtp1.irobot.com ([206.83.81.187]:55781 "EHLO smtp1.irobot.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753162Ab0AUSWQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2010 13:22:16 -0500
+Message-ID: <4B5897C8.2080006@irobot.com>
+Date: Thu, 21 Jan 2010 10:07:04 -0800
+From: Adam Wozniak <awozniak@irobot.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Subject: Re: FYI - new compat-wireless based on 2.6.33-rc4
+References: <43e72e891001201213x6a2c203dl7121f2dde6d61fb9@mail.gmail.com>
+In-Reply-To: <43e72e891001201213x6a2c203dl7121f2dde6d61fb9@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-01-24 at 11:56 +0100, Johannes Berg wrote: 
-> Maxim,
-> 
-> Your mail is confusing me.
-> 
-> On Sat, 2010-01-23 at 22:10 +0200, Maxim Levitsky wrote:
-> > I updated the kernel and lost connection to my WPA2
-> > AP. Strangely the WPA handshake completes, but DHCP not.
-> 
-> What did you upgrade to?
-latest -git of wireless-testing
+compat-wireless-2010-01-20.tar.bz2 does not compile cleanly on ARM 
+architectures.
+Commenting out line 9 of compat-2.6.32.h (#include <asm/compat.h>) fixes 
+the issue.
+There is no arch/arm/include/asm/compat.h
+I suspect there are several other architectures which have similar issues.
 
-> 
-> > I also unfortunately found that all that time I was using software
-> > encryption (this is iwl3945 loaded with swcrypto=1).
-> > Hardware encryption doesn't work ether and didn't work in the slightly
-> > older kernel (but it did work once, I sure)
-> 
-> That must be a different problem, surely?
-Sure, and I open a bugreport about it too.
-
-> 
-> > Now, the commit a6bae9e7ab19876a157c91019852395539e4f20e breaks software
-> > encryption, with behaviour like described above.
-> 
-> And how did you arrive at that conclusion? Have you reverted the patch
-> and it works again? I really don't see how this particular patch could
-> break it since afaict it's entirely correct, there are exactly two tests
-> for IEEE80211_TX_INTFL_DONT_ENCRYPT in mac80211, both of which execute
-> before the code I removed.
-
-I didn't want to add the standard meme: 'Commit X just before Y works,
-commit Y doesn't. I reverted Y and now everything works fine.'
-
-I bisected it, manually this time. Sorry for confusion.
-
-I will continue that discussion in the thread about this patch.
-(Also sorry for not including commit description....)
-
-
-Best regards,
-Maxim Levitsky
+Luis R. Rodriguez wrote:
+> The compat_firmware_class was having some issues which should now be
+> hopefully addressed:
+>
+>   * Use a different subsystem name for sysfs registration, now compat_firmware
+>   * The new subsystem name change required a new udev rule to be added
+>
+> The new compat-wireless for 2.6.33-rc4 has been pushed out with the
+> new changes. Unfortunately 2.6.33-rc5 hasn't been pushed out yet so I
+> just overwrote the old rc4 package (next time I'll just add an extra
+> extra version when this happens). The new sha1sum for this release is:
+>
+> c007d7c8649d6149f415ea87dc7a34d4ee808766  compat-wireless-2.6.33-rc4.tar.bz2
+>
+> Just kicked out a bleeding edge release with the same fixes:
+>
+> 65bb3cd6565f1788a2c63bfe8ccfdd8dfc1fb368  compat-wireless-2010-01-20.tar.bz2
+>
+> Please let us know if there are any issues. I should note that the new
+> compat_firmware_class will be used *every time* compat-wireless is
+> used firmware needs to be uploaded, not just for the new
+> request_firmware_nowait().
+>
+>   Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>   
 
