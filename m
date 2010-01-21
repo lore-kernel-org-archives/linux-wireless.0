@@ -1,108 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:58957 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751819Ab0AVHAx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 02:00:53 -0500
-Received: by bwz22 with SMTP id 22so865756bwz.25
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2010 23:00:50 -0800 (PST)
-Subject: [PATCH] p54pci: revise tx locking
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Date: Fri, 22 Jan 2010 08:01:11 +0100
+Received: from smtp1.irobot.com ([206.83.81.187]:50143 "EHLO smtp1.irobot.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755395Ab0AUVjj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2010 16:39:39 -0500
+Message-ID: <4B58C997.2060904@irobot.com>
+Date: Thu, 21 Jan 2010 13:39:35 -0800
+From: Adam Wozniak <awozniak@irobot.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201001220801.11689.chunkeey@googlemail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Subject: Re: FYI - new compat-wireless based on 2.6.33-rc4
+References: <43e72e891001201213x6a2c203dl7121f2dde6d61fb9@mail.gmail.com> 	<4B5897C8.2080006@irobot.com> <43e72e891001211012y4f4c8721t7eb9e0eea0221820@mail.gmail.com> 	<4B58B432.5050200@irobot.com> <43e72e891001211217t17ffed80i2d5bc6f923b56210@mail.gmail.com> <4B58C622.2090004@irobot.com>
+In-Reply-To: <4B58C622.2090004@irobot.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch continues the effort which began with:
-"[PATCH] p54pci: move tx cleanup into tasklet".
+Ok, I see what's going on now.  The openembedded recipe I'm working with 
+didn't copy the udev stuff.
 
-Thanks to these changes, p54pci's interrupt & tx
-cleanup routines can be made lock-less.
+Adam Wozniak wrote:
+> Luis R. Rodriguez wrote:
+>> BTW Haukes posted a fix for the compile build against ARM. Try that.
+>> That patch applies to compat.git but you should be able to mangle it
+>> to apply to compat-wireless easily too.
+>>   
+> That worked, thank you.
+>> OK so it failed here, you may want to try to debug udev stuff now
+>> then, what distribution do you have? Where are your udev rules put?
+>> Where is the original udev rule for firmware for your box?
+>>
+>> You can debug udev stuff by using 'udevadm monitor'
+>>   
+> I'm using openembedded.  Rules are in /etc/udev/rules.d
+> It contains a file 50-udev-default.rules with a line:
+>
+> SUBSYSTEM=="firmware", ACTION=="add", RUN+="firmware.sh"
+>
+> If I copy & paste and change the SUBSYSTEM to "compat_firmware" things 
+> seem to load ok.
+>
+> --Adam
+>
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
-index acc78e7..abf104e 100644
---- a/drivers/net/wireless/p54/p54pci.c
-+++ b/drivers/net/wireless/p54/p54pci.c
-@@ -238,7 +238,6 @@ static void p54p_check_tx_ring(struct ieee80211_hw *dev, u32 *index,
- 	int ring_index, struct p54p_desc *ring, u32 ring_limit,
- 	struct sk_buff **tx_buf)
- {
--	unsigned long flags;
- 	struct p54p_priv *priv = dev->priv;
- 	struct p54p_ring_control *ring_control = priv->ring_control;
- 	struct p54p_desc *desc;
-@@ -249,7 +248,6 @@ static void p54p_check_tx_ring(struct ieee80211_hw *dev, u32 *index,
- 	(*index) = idx = le32_to_cpu(ring_control->device_idx[1]);
- 	idx %= ring_limit;
- 
--	spin_lock_irqsave(&priv->lock, flags);
- 	while (i != idx) {
- 		desc = &ring[i];
- 
-@@ -264,16 +262,12 @@ static void p54p_check_tx_ring(struct ieee80211_hw *dev, u32 *index,
- 		desc->len = 0;
- 		desc->flags = 0;
- 
--		if (skb && FREE_AFTER_TX(skb)) {
--			spin_unlock_irqrestore(&priv->lock, flags);
-+		if (skb && FREE_AFTER_TX(skb))
- 			p54_free_skb(dev, skb);
--			spin_lock_irqsave(&priv->lock, flags);
--		}
- 
- 		i++;
- 		i %= ring_limit;
- 	}
--	spin_unlock_irqrestore(&priv->lock, flags);
- }
- 
- static void p54p_tasklet(unsigned long dev_id)
-@@ -306,7 +300,6 @@ static irqreturn_t p54p_interrupt(int irq, void *dev_id)
- 	struct p54p_priv *priv = dev->priv;
- 	__le32 reg;
- 
--	spin_lock(&priv->lock);
- 	reg = P54P_READ(int_ident);
- 	if (unlikely(reg == cpu_to_le32(0xFFFFFFFF))) {
- 		goto out;
-@@ -321,15 +314,14 @@ static irqreturn_t p54p_interrupt(int irq, void *dev_id)
- 		complete(&priv->boot_comp);
- 
- out:
--	spin_unlock(&priv->lock);
- 	return reg ? IRQ_HANDLED : IRQ_NONE;
- }
- 
- static void p54p_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
- {
-+	unsigned long flags;
- 	struct p54p_priv *priv = dev->priv;
- 	struct p54p_ring_control *ring_control = priv->ring_control;
--	unsigned long flags;
- 	struct p54p_desc *desc;
- 	dma_addr_t mapping;
- 	u32 device_idx, idx, i;
-@@ -370,14 +362,14 @@ static void p54p_stop(struct ieee80211_hw *dev)
- 	unsigned int i;
- 	struct p54p_desc *desc;
- 
--	tasklet_kill(&priv->tasklet);
--
- 	P54P_WRITE(int_enable, cpu_to_le32(0));
- 	P54P_READ(int_enable);
- 	udelay(10);
- 
- 	free_irq(priv->pdev->irq, dev);
- 
-+	tasklet_kill(&priv->tasklet);
-+
- 	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_RESET));
- 
- 	for (i = 0; i < ARRAY_SIZE(priv->rx_buf_data); i++) {
