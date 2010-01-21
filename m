@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f42.google.com ([209.85.160.42]:52499 "EHLO
-	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753533Ab0ALQvu convert rfc822-to-8bit (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3475 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754014Ab0AUEwJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2010 11:51:50 -0500
-Received: by pwj9 with SMTP id 9so2209507pwj.21
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jan 2010 08:51:50 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4B4C622F.1050602@openwrt.org>
-References: <4B4ABB54.7030600@openwrt.org> <20100112093733.GA2548@mail.wantstofly.org>
-	<4B4C622F.1050602@openwrt.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 12 Jan 2010 08:51:30 -0800
-Message-ID: <43e72e891001120851m335dc605wbbc81c6cd5b7a792@mail.gmail.com>
-Subject: Re: mac80211: fix queue selection for data frames on monitor
-	interfaces
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Lennert Buytenhek <buytenh@wantstofly.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 20 Jan 2010 23:52:09 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/2] ath5k: dont use external sleep clock in AP mode
+Date: Wed, 20 Jan 2010 23:51:03 -0500
+Message-Id: <1264049464-12292-2-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1264049464-12292-1-git-send-email-me@bobcopeland.com>
+References: <1264049464-12292-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 12, 2010 at 3:51 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2010-01-12 10:37 AM, Lennert Buytenhek wrote:
->> On Mon, Jan 11, 2010 at 06:47:00AM +0100, Felix Fietkau wrote:
->>
->>> When ieee80211_monitor_select_queue encounters data frames, it selects
->>> the WMM AC based on skb->priority and assumes that skb->priority
->>> contains a valid 802.1d tag. However this assumption is incorrect, since
->>> ieee80211_select_queue has not been called at this point.
->>> If skb->priority > 7, an array overrun occurs, which could lead to
->>> invalid values, resulting in crashes in the tx path.
->>
->> What you describe here was already reported and fixed:
->>
->>       http://marc.info/?l=linux-wireless&m=126287290723244&w=2
->>       http://git.kernel.org/?p=linux/kernel/git/linville/wireless-2.6.git;a=commit;h=045cfb71a3901005bf6dcedae98cecb3360a0bfc
->>
->> Your commit message could at least acknowledge this.  I.e. write
->> that the existing fix doesn't handle QoS data frames in the optimal
->> way, and then mention this:
-> Sorry, when I wrote and posted the patch, I hadn't seen your previous
-> fix yet, because I was apparently looking at the wrong tree and had not
-> noticed your submission yet.
-> It only cleanly applied to a tree without your change, but it seems that
-> John fixed it up and replaced your fix with it anyway.
+When using the external sleep clock in AP mode, the
+TSF increments too quickly, causing beacon interval
+to be much lower than it is supposed to be, resulting
+in lots of beacon-not-ready interrupts.
 
-John, did the new changes by Felix get marked for stable too? From
-what I gather they apply on top of each other and are stable material.
+This fixes http://bugzilla.kernel.org/show_bug.cgi?id=14802.
 
-  Luis
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/reset.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index 6690923..a35a7db 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -1374,8 +1374,9 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 	 * Set clocks to 32KHz operation and use an
+ 	 * external 32KHz crystal when sleeping if one
+ 	 * exists */
+-	if (ah->ah_version == AR5K_AR5212)
+-			ath5k_hw_set_sleep_clock(ah, true);
++	if (ah->ah_version == AR5K_AR5212 &&
++	    ah->ah_op_mode != NL80211_IFTYPE_AP)
++		ath5k_hw_set_sleep_clock(ah, true);
+ 
+ 	/*
+ 	 * Disable beacons and reset the register
+-- 
+1.6.3.3
+
+
