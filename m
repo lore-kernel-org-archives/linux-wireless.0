@@ -1,104 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:48920 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752929Ab0AHRGk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jan 2010 12:06:40 -0500
-Message-ID: <4B476612.4090509@openwrt.org>
-Date: Fri, 08 Jan 2010 18:06:26 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 1/3] mac80211: use nullfunc frames for 4-addr sta detection
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:50839 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755289Ab0AUV34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2010 16:29:56 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] compat-wireless: fix bluetooth capi build
+Date: Thu, 21 Jan 2010 22:29:48 +0100
+Message-Id: <1264109388-19746-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To detect incoming 4-addr stations, hostapd needs to receive a 4-addr 
-data frame from the remote station, so that it can create the AP VLAN 
-for it. With this patch, the mlme code emits a 4-addr nullfunc frame 
-immediately after assoc. On the AP side it also drops 4-addr nullfunc 
-frames to the cooked monitor mode interface, if the interface hasn't 
-been fully set up to receive 4-addr data frames yet.
+This backports patch 9a58a80a701bdb2d220cdab4914218df5b48d781
+"proc_fops: convert drivers/isdn/ to seq_file" from linux-next.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+compile tested only
 
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -312,6 +312,38 @@ void ieee80211_send_nullfunc(struct ieee
- 	ieee80211_tx_skb(sdata, skb);
- }
- 
-+static void ieee80211_send_4addr_nullfunc(struct ieee80211_local *local,
-+					  struct ieee80211_sub_if_data *sdata)
-+{
-+	struct sk_buff *skb;
-+	struct ieee80211_hdr *nullfunc;
-+	__le16 fc;
+ patches/21-capi-proc_fops.patch |   73 +++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 73 insertions(+), 0 deletions(-)
+ create mode 100644 patches/21-capi-proc_fops.patch
+
+diff --git a/patches/21-capi-proc_fops.patch b/patches/21-capi-proc_fops.patch
+new file mode 100644
+index 0000000..2f2ca7d
+--- /dev/null
++++ b/patches/21-capi-proc_fops.patch
+@@ -0,0 +1,73 @@
++Backport kernel patch 9a58a80a701bdb2d220cdab4914218df5b48d781
++proc_fops: convert drivers/isdn/ to seq_file
 +
-+	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION))
-+		return;
-+
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom + 30);
-+	if (!skb) {
-+		printk(KERN_DEBUG "%s: failed to allocate buffer for 4addr "
-+		       "nullfunc frame\n", sdata->name);
-+		return;
-+	}
-+	skb_reserve(skb, local->hw.extra_tx_headroom);
-+
-+	nullfunc = (struct ieee80211_hdr *) skb_put(skb, 30);
-+	memset(nullfunc, 0, 30);
-+	fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_NULLFUNC |
-+			 IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
-+	nullfunc->frame_control = fc;
-+	memcpy(nullfunc->addr1, sdata->u.mgd.bssid, ETH_ALEN);
-+	memcpy(nullfunc->addr2, sdata->vif.addr, ETH_ALEN);
-+	memcpy(nullfunc->addr3, sdata->u.mgd.bssid, ETH_ALEN);
-+	memcpy(nullfunc->addr4, sdata->vif.addr, ETH_ALEN);
-+
-+	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
-+	ieee80211_tx_skb(sdata, skb);
-+}
-+
- /* spectrum management related things */
- static void ieee80211_chswitch_work(struct work_struct *work)
- {
-@@ -1120,6 +1152,13 @@ static bool ieee80211_assoc_success(stru
- 	ieee80211_set_associated(sdata, cbss, changed);
- 
- 	/*
-+	 * If we're using 4-addr mode, let the AP know that we're
-+	 * doing so, so that it can create the STA VLAN on its side
-+	 */
-+	if (ifmgd->use_4addr)
-+		ieee80211_send_4addr_nullfunc(local, sdata);
-+
-+	/*
- 	 * Start timer to probe the connection to the AP now.
- 	 * Also start the timer that will detect beacon loss.
- 	 */
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1111,6 +1111,18 @@ ieee80211_rx_h_sta_process(struct ieee80
- 	if (ieee80211_is_nullfunc(hdr->frame_control) ||
- 	    ieee80211_is_qos_nullfunc(hdr->frame_control)) {
- 		I802_DEBUG_INC(rx->local->rx_handlers_drop_nullfunc);
-+
-+		/*
-+		 * If we receive a 4-addr nullfunc frame from a STA
-+		 * that was not moved to a 4-addr STA vlan yet, drop
-+		 * the frame to the monitor interface, to make sure
-+		 * that hostapd sees it
-+		 */
-+		if (ieee80211_has_a4(hdr->frame_control) &&
-+		    (rx->sdata->vif.type == NL80211_IFTYPE_AP ||
-+		     (rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
-+		      !rx->sdata->u.vlan.sta)))
-+			return RX_DROP_MONITOR;
- 		/*
- 		 * Update counter and free packet here to avoid
- 		 * counting this as a dropped packed.
++--- a/net/bluetooth/cmtp/capi.c
+++++ b/net/bluetooth/cmtp/capi.c
++@@ -21,8 +21,10 @@
++ */
++ 
++ #include <linux/module.h>
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
++ #include <linux/proc_fs.h>
++ #include <linux/seq_file.h>
+++#endif
++ #include <linux/types.h>
++ #include <linux/errno.h>
++ #include <linux/kernel.h>
++@@ -521,6 +523,7 @@ static char *cmtp_procinfo(struct capi_c
++ 	return "CAPI Message Transport Protocol";
++ }
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
++ static int cmtp_proc_show(struct seq_file *m, void *v)
++ {
++ 	struct capi_ctr *ctrl = m->private;
++@@ -553,6 +556,36 @@ static const struct file_operations cmtp
++ 	.release	= single_release,
++ };
++ 
+++#else
+++
+++static int cmtp_ctr_read_proc(char *page, char **start, off_t off, int count, int *eof, struct capi_ctr *ctrl)
+++{
+++	struct cmtp_session *session = ctrl->driverdata;
+++	struct cmtp_application *app;
+++	struct list_head *p, *n;
+++	int len = 0;
+++
+++	len += sprintf(page + len, "%s\n\n", cmtp_procinfo(ctrl));
+++	len += sprintf(page + len, "addr %s\n", session->name);
+++	len += sprintf(page + len, "ctrl %d\n", session->num);
+++
+++	list_for_each_safe(p, n, &session->applications) {
+++		app = list_entry(p, struct cmtp_application, list);
+++		len += sprintf(page + len, "appl %d -> %d\n", app->appl, app->mapping);
+++	}
+++
+++	if (off + count >= len)
+++		*eof = 1;
+++
+++	if (len < off)
+++		return 0;
+++
+++	*start = page + off;
+++
+++	return ((count < len - off) ? count : len - off);
+++}
+++#endif
+++
++ int cmtp_attach_device(struct cmtp_session *session)
++ {
++ 	unsigned char buf[4];
++@@ -591,7 +624,11 @@ int cmtp_attach_device(struct cmtp_sessi
++ 	session->ctrl.send_message  = cmtp_send_message;
++ 
++ 	session->ctrl.procinfo      = cmtp_procinfo;
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
++ 	session->ctrl.proc_fops = &cmtp_proc_fops;
+++#else
+++	session->ctrl.ctr_read_proc = cmtp_ctr_read_proc;
+++#endif
++ 
++ 	if (attach_capi_ctr(&session->ctrl) < 0) {
++ 		BT_ERR("Can't attach new controller");
+-- 
+1.6.3.3
 
