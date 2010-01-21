@@ -1,73 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx-del1-1.globallogic.com ([202.174.92.25]:46974 "EHLO
-	emailsecurity-del1-1.globallogic.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751053Ab0ATKiW (ORCPT
+Received: from mail-pz0-f201.google.com ([209.85.222.201]:50404 "EHLO
+	mail-pz0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754601Ab0AUWVf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2010 05:38:22 -0500
-Received: from emailsecurity-del1-1.globallogic.com (127.0.0.1) by emailsecurity-del1-1.globallogic.com (MlfMTA v3.2r9) id harehq0171su for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2010 15:47:14 +0530 (envelope-from <andrit@ukr.net>)
-Message-ID: <4B56D81F.60509@ukr.net>
-Date: Wed, 20 Jan 2010 12:17:03 +0200
-From: Andriy Tkachuk <andrit@ukr.net>
+	Thu, 21 Jan 2010 17:21:35 -0500
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: Account HT Control field in Data frame hdrlen according
- to 802.11n-2009
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4B58C997.2060904@irobot.com>
+References: <43e72e891001201213x6a2c203dl7121f2dde6d61fb9@mail.gmail.com>
+	<4B5897C8.2080006@irobot.com> <43e72e891001211012y4f4c8721t7eb9e0eea0221820@mail.gmail.com>
+	<4B58B432.5050200@irobot.com> <43e72e891001211217t17ffed80i2d5bc6f923b56210@mail.gmail.com>
+	<4B58C622.2090004@irobot.com> <4B58C997.2060904@irobot.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 21 Jan 2010 14:21:14 -0800
+Message-ID: <43e72e891001211421l6c861f59mcaad3c5e39950b49@mail.gmail.com>
+Subject: Re: FYI - new compat-wireless based on 2.6.33-rc4
+To: Adam Wozniak <awozniak@irobot.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_hdrlen() should account account new HT Control field in 802.11
-data frame header introduced by IEEE 802.11n standard.
+On Thu, Jan 21, 2010 at 1:39 PM, Adam Wozniak <awozniak@irobot.com> wrote:
+> Ok, I see what's going on now.  The openembedded recipe I'm working with
+> didn't copy the udev stuff.
 
-According to 802.11n-2009 HT Control field is present in data frames
-when both of following are met:
+OK so not our fault? You just had to update your install target?
 
-   1. It is QoS data frame.
-   2. Order bit is set in Frame Control field.
-
-The change might be totally compatible with legacy non-11n aware frames,
-because 802.11-2007 standard states that "all QoS STAs set this subfield
-to 0".
-
-Signed-off-by: Andriy V. Tkachuk <andrit@ukr.net>
-Acked-by : Benoit Papillault <benoit.papillault@free.fr>
-
----
- include/linux/ieee80211.h |    2 ++
- net/wireless/util.c       |    5 ++++-
- 2 files changed, 6 insertions(+), 1 deletions(-)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 8427019..1998495 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -138,6 +138,8 @@
- #define IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK   0x03
- #define IEEE80211_WMM_IE_STA_QOSINFO_SP_SHIFT  5
-
-+#define IEEE80211_HT_CTL_LEN           4
-+
- struct ieee80211_hdr {
-        __le16 frame_control;
-        __le16 duration_id;
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 23557c1..be2ab8c 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -227,8 +227,11 @@ unsigned int ieee80211_hdrlen(__le16 fc)
-        if (ieee80211_is_data(fc)) {
-                if (ieee80211_has_a4(fc))
-                        hdrlen = 30;
--               if (ieee80211_is_data_qos(fc))
-+               if (ieee80211_is_data_qos(fc)) {
-                        hdrlen += IEEE80211_QOS_CTL_LEN;
-+                       if (ieee80211_has_order(fc))
-+                               hdrlen += IEEE80211_HT_CTL_LEN;
-+               }
-                goto out;
-        }
-
-
-
-
+  Luis
