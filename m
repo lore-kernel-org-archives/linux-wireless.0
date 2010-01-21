@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:43125 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751335Ab0A0HyY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2010 02:54:24 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so1422940eyd.19
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2010 23:54:23 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org, j@w1.fi,
-	buytenh@wantstofly.org, wey-yi.w.guy@intel.com
-Subject: Re: [PATCH] mac80211: wait for beacon before enabling powersave
-References: <1264511993.25642.9.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 27 Jan 2010 09:54:20 +0200
-In-Reply-To: <1264511993.25642.9.camel@johannes.local> (Johannes Berg's message of "Tue\, 26 Jan 2010 14\:19\:52 +0100")
-Message-ID: <87r5pckmoj.fsf@purkki.valot.fi>
+Received: from kroah.org ([198.145.64.141]:53076 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751865Ab0AUVMD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2010 16:12:03 -0500
+Date: Thu, 21 Jan 2010 13:05:29 -0800
+From: Greg KH <greg@kroah.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"stable@kernel.org" <stable@kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [stable] [PATCH 2.6.{32, 31}] iwlwifi: power up all devices
+ for EEPROM read
+Message-ID: <20100121210529.GA5182@kroah.com>
+References: <1264076545-12223-1-git-send-email-sgruszka@redhat.com>
+ <20100121205138.GC14716@kroah.com>
+ <1264107595.21458.181.camel@rchatre-DESK>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1264107595.21458.181.camel@rchatre-DESK>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Thu, Jan 21, 2010 at 12:59:55PM -0800, reinette chatre wrote:
+> Hi Greg,
+> 
+> On Thu, 2010-01-21 at 12:51 -0800, Greg KH wrote:
+> > On Thu, Jan 21, 2010 at 01:22:25PM +0100, Stanislaw Gruszka wrote:
+> > > commit f8701fe3aec24fcfb0dfa19aab47904611f96daf upstream
+> > > 
+> > > On 2.6.31 and 2.6.32 iwl3945 crash during kdump, I discovered
+> > > above upstream commit fix that.
+> > > 
+> > > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> > > ---
+> > > I tested patch on 2.6.32 with iwl3945 - it fix kdump, and on 2.6.31
+> > > with iwl5300 - no regression notice.
+> > 
+> > Thanks for the backport, I've queued this up now.
+> 
+> This backport is on top of patches that are not present in 2.6.31 or
+> 2.6.32. Please see the message I sent in response to the original post.
+> Could we please finish that discussion first before looking into merging
+> this patch?
 
-> Because DTIM information is required for powersave
-> but is only conveyed in beacons, wait for a beacon
-> before enabling powersave, and change the way the
-> information is conveyed to the driver accordingly.
->
-> mwl8k doesn't currently seem to implement PS but
-> requires the DTIM period in a different way; after
-> talking to Lennert we agreed to just have mwl8k do
-> the parsing itself in the finalize_join work.
+Oops, ok, I'll go drop it, thanks for the quick response.
 
-I quickly tested with wl1251 on n900, works just fine.
-
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
-For the wl1251 part:
-
-Acked-by: Kalle Valo <kalle.valo@nokia.com>
-
--- 
-Kalle Valo
+greg k-h
