@@ -1,58 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57160 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751086Ab0AEJWf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2010 04:22:35 -0500
-Subject: Re: [PATCH 0/9] mac80211: templates for drivers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20100103210552.29287.20384.stgit@tikku>
-References: <20100103210552.29287.20384.stgit@tikku>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ByiA0iLn+b/3OOfAUXVp"
-Date: Tue, 05 Jan 2010 10:22:18 +0100
-Message-ID: <1262683338.20098.8.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:59035 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755004Ab0AVWXK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jan 2010 17:23:10 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 09/17] iwlwifi: bit field description for BT Config command
+Date: Fri, 22 Jan 2010 14:22:50 -0800
+Message-Id: <1264198978-5915-10-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1264198978-5915-1-git-send-email-reinette.chatre@intel.com>
+References: <1264198978-5915-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
---=-ByiA0iLn+b/3OOfAUXVp
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Give better bit filed define and description for flag parameter
+in REPLY_BT_CONFIG command:
 
-On Sun, 2010-01-03 at 23:07 +0200, Kalle Valo wrote:
-> Hello,
->=20
-> there has been talk of creating templates in mac80211 for drivers and
-> here's what I have been thinking. I have also included wl1251 usage as
-> an example. Please comment.
+flags:
+ bit 0 - 1: BT channel announcement enabled
+         0: disable
+ bit 1 - 1: priority of BT device enabled
+         0: disable
+ bit 2 - 1: BT 2 wire support enabled
+         0: disable
 
-Except for the minor comments posted inline this looks fine to me.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-commands.h |   15 ++++++++++++---
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    2 +-
+ 2 files changed, 13 insertions(+), 4 deletions(-)
 
-johannes
-
---=-ByiA0iLn+b/3OOfAUXVp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLQwTHAAoJEODzc/N7+QmalyoP/0vH9AjGRrNsAPWYB64cn1cM
-ZyUD/FlWXSWnI9edp+FxvtbPWqEUmr7rjByXJQgEKeHe/c8VIQZpCbbfU459bvnN
-tZiQZWg19g9mC2ch661diuSrkFqPJeFoRJS7eJrrIy9FflxSPvG87+rhGAY4c4ah
-I4eNlsAaYsopu+F6t426wC6Hbd4B0rHoiUZI+CbZ6B5SRT8dO8cQOKUM3ZT0L5to
-t2GEbdNJlFpwauNZthh1wR94LJmPn+dt885z9uyOXIHHY9PoAB7kFAeuWAdwJJpf
-AdNEJBbyK473InKpwEjr1vP4nnIE2Oyq7ECUaMHEUuxS/noNgODAASX9qHdsdXkN
-zpRG/un5qdCXXbOCyrGHh2m2qFMAcG4lkRjVEcwHnlhluDoRBpUQQhjWA/zu/rwy
-IiKoz1pfLckS6XyVrQly00Uq6zqG8BtPahamWpkdCK5WUlNpu4BZj/b44G+Lv4Jc
-YPmm4OnPeB2vN4PTxyu/aRcMm4dBpypSYqfvgAamQcUJzaKQLACdEVdJ/9xlhXOF
-5XK3N/dfXII04PNEBcFDUpREDQpTC9h/jAtkbdWiv92VQFo1GYjiCC9gNDLWoN6Y
-Dxwt+yVejUhD+PntmgcYwFZGpGw2ZnBW6y3Q3yNo0mkxXhjbwieSc1Q32IB/6zTl
-nnbca0XWnXoDhECcLYr5
-=BoH5
------END PGP SIGNATURE-----
-
---=-ByiA0iLn+b/3OOfAUXVp--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 8823d18..ce53894 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -2247,10 +2247,19 @@ struct iwl_link_quality_cmd {
+ 	__le32 reserved2;
+ } __attribute__ ((packed));
+ 
++/*
++ * BT configuration enable flags:
++ *   bit 0 - 1: BT channel announcement enabled
++ *           0: disable
++ *   bit 1 - 1: priority of BT device enabled
++ *           0: disable
++ *   bit 2 - 1: BT 2 wire support enabled
++ *           0: disable
++ */
+ #define BT_COEX_DISABLE (0x0)
+-#define BT_COEX_MODE_2W (0x1)
+-#define BT_COEX_MODE_3W (0x2)
+-#define BT_COEX_MODE_4W (0x3)
++#define BT_ENABLE_CHANNEL_ANNOUNCE BIT(0)
++#define BT_ENABLE_PRIORITY	   BIT(1)
++#define BT_ENABLE_2_WIRE	   BIT(2)
+ 
+ #define BT_LEAD_TIME_MIN (0x0)
+ #define BT_LEAD_TIME_DEF (0x1E)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 645bc13..d625aa8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1977,7 +1977,7 @@ EXPORT_SYMBOL(iwl_isr_legacy);
+ int iwl_send_bt_config(struct iwl_priv *priv)
+ {
+ 	struct iwl_bt_cmd bt_cmd = {
+-		.flags = BT_COEX_MODE_4W,
++		.flags = BT_ENABLE_CHANNEL_ANNOUNCE | BT_ENABLE_PRIORITY,
+ 		.lead_time = BT_LEAD_TIME_DEF,
+ 		.max_kill = BT_MAX_KILL_DEF,
+ 		.kill_ack_mask = 0,
+-- 
+1.6.3.3
 
