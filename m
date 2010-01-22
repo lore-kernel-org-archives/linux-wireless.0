@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:48905 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755216Ab0ASTET (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2010 14:04:19 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Received: from mga11.intel.com ([192.55.52.93]:59035 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755035Ab0AVWXL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jan 2010 17:23:11 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath9k: make tx power config changes take effect immediatley
-Date: Tue, 19 Jan 2010 14:04:19 -0500
-Message-Id: <1263927859-9252-1-git-send-email-lrodriguez@atheros.com>
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 11/17] iwlwifi: is no longer experimental
+Date: Fri, 22 Jan 2010 14:22:52 -0800
+Message-Id: <1264198978-5915-12-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1264198978-5915-1-git-send-email-reinette.chatre@intel.com>
+References: <1264198978-5915-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Users wishing to tweak tx power want it to happen immediately,
-try to respect that. This was tested by Lorenzo by measuring the
-received signal strength from an AP with ath9k and the patch.
+From: Johannes Berg <johannes@sipsolutions.net>
 
-Changing the tx power on the AP produced these results:
+It really hasn't been for a long time, not sure
+why this stuck around.
 
-1) iwconfig wlan0 txpower 20 ---> Rx power -37dbm
-2) iwconfig wlan0 txpower 15 ---> Rx power -41dbm
-3) iwconfig wlan0 txpower 10 ---> Rx power -45dbm
-4) iwconfig wlan0 txpower 5 ---> Rx power -51dbm
-5) iwconfig wlan0 txpower 0 ---> Rx power -37dbm
-
-The result with 0 is an anomoly and would need to be
-addressed through a separate patch.
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Tested-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/Kconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index c0c571c..6f3e71c 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1624,8 +1624,10 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index b16b06c..e44e572 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -1,6 +1,6 @@
+ config IWLWIFI
+ 	tristate "Intel Wireless Wifi"
+-	depends on PCI && MAC80211 && EXPERIMENTAL
++	depends on PCI && MAC80211
+ 	select FW_LOADER
  
- skip_chan_change:
--	if (changed & IEEE80211_CONF_CHANGE_POWER)
-+	if (changed & IEEE80211_CONF_CHANGE_POWER) {
- 		sc->config.txpowlimit = 2 * conf->power_level;
-+		ath_update_txpow(sc);
-+	}
- 
- 	spin_lock_bh(&sc->wiphy_lock);
- 	disable_radio = ath9k_all_wiphys_idle(sc);
+ config IWLWIFI_SPECTRUM_MEASUREMENT
 -- 
 1.6.3.3
 
