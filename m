@@ -1,34 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f194.google.com ([209.85.223.194]:61452 "EHLO
-	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755540Ab0AFW1r (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60144 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754485Ab0AVVpb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 17:27:47 -0500
-Received: by iwn32 with SMTP id 32so1920969iwn.33
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 14:27:47 -0800 (PST)
+	Fri, 22 Jan 2010 16:45:31 -0500
+Date: Fri, 22 Jan 2010 16:32:18 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH 0/5] b43: more N-PHY stuff
+Message-ID: <20100122213218.GD15055@tuxdriver.com>
+References: <1264121596-9616-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1262362872-10251-1-git-send-email-hauke@hauke-m.de>
-References: <1262362872-10251-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 6 Jan 2010 14:27:27 -0800
-Message-ID: <43e72e891001061427l70a6711dg6e96d93679ccc17e@mail.gmail.com>
-Subject: Re: [PATCH 0/5] compat-wireless: Activate ssb and libertas, refresh
-	script
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1264121596-9616-1-git-send-email-zajec5@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 1, 2010 at 8:21 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> The first two patches were already send some time ago, but not applied,
-> the second patch was applied partly. Patch 3 adds an refresh option to
-> admin-update.sh and it was used in patch 4. The last patch fixes some
-> small problems in admin-update.sh
+On Fri, Jan 22, 2010 at 01:53:11AM +0100, Rafał Miłecki wrote:
+> John, I hope to have patch submission fixed, please let me know if there
+> is anything wrong still.
 
-All applied. I really liked the quilt patch, thanks so much, I didn't
-know quilt could do that, that's awesome. It will certainly help with
-keeping compat-wireless up to date as that is the most frequent thing
-we have to do.
+This batch applied with no problems -- thanks, Rafał!
 
-  Luis
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
