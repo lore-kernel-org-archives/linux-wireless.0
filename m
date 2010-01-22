@@ -1,60 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:64866 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751060Ab0ANSHi convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51042 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756074Ab0AVSp3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2010 13:07:38 -0500
-Received: by fxm25 with SMTP id 25so327934fxm.21
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jan 2010 10:07:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1263492165.31774.13.camel@localhost.localdomain>
-References: <1263494975.4643.15.camel@eclipse> <1263492165.31774.13.camel@localhost.localdomain>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 14 Jan 2010 10:07:15 -0800
-Message-ID: <43e72e891001141007r3ab8d8dbm581df88a4953dc05@mail.gmail.com>
-Subject: Re: ath9k/AR9285 - incompatibility with bluetooth
-To: Dan Williams <dcbw@redhat.com>
-Cc: =?UTF-8?Q?Alberto_Jos=C3=A9_Rodr=C3=ADguez_Rodr=C3=ADguez?=
-	<ajrodriguez@blulabs.es>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 22 Jan 2010 13:45:29 -0500
+Subject: Re: [PATCH] mac80211: avoid NULL ptr deref when using WEP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1264181989-28483-1-git-send-email-linville@tuxdriver.com>
+References: <1264181989-28483-1-git-send-email-linville@tuxdriver.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-V8qfxz27lvf1tCc39TE/"
+Date: Fri, 22 Jan 2010 19:45:24 +0100
+Message-ID: <1264185924.2593.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/1/14 Dan Williams <dcbw@redhat.com>:
-> On Thu, 2010-01-14 at 18:49 +0000, Alberto José Rodríguez Rodríguez
-> wrote:
->> Hellow,
->>       I have a ZOTAC MAG ION and I'm having problems with wireless
->> connections
->>
->> Distribution: Ubuntu 9.10
->> Kernel version: 2.6.31-16
->> Device: 04:00.0 Network controller: Atheros Communications Inc. AR9285 Wireless Network Adapter (PCI-Express) (rev 01)
->> Problem Description:
->>     - Low signal strength
->>     - Cannot connect to wireless networks
->> Using linux-backports-modules-karmic:
->>     - Low signal strength persists
->>     - Can connect to WPA networks but signal strengh is low and unstable, also when using at the same time a Bluetooth USB dongle (continuously inquiring) the wireless connection is lost.
->>     - Cannot connect to WEP networks, although the WEP key is set correctly and the device is associated to the AP
->> Using latest linux-wireless snapshot (20100113):
->>     - Can connect to WEP networks but when I use at the same time a Bluetooth USB dongle (continuously inquiring) the speed of the wireless connection becomes very slow.
->>     - Can connect to WPA networks but when I use at the same time a Bluetooth USB dongle (continuously inquiring) the wireless connection is lost.
->
-> This isn't unexpected; Bluetooth and WiFi interfere with each other
-> because they both use 2.4GHz.  So don't expect great performance out of
-> either BT or WiFi when you're using both at the same time.  Many
-> built-in chips have BT co-existence capability, but that only works if
-> both the WiFi and BT chips are built into your computer and are wired up
-> to talk to each other.  External USB BT or WiFi dongles almost certainly
-> will not have working coexistence support.
 
-We have also spoke about writing some generic bluetooth coexistance by
-using a frequency broker [1] and submitting for example some commands
-to the bluetooth device to not operate on the channel the 802.11 is on
-but this would be an enhancement and something which remains to be
-implemented.
+--=-V8qfxz27lvf1tCc39TE/
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-[1] http://wireless.kernel.org/en/developers/FrequencyBroker
+On Fri, 2010-01-22 at 12:39 -0500, John W. Linville wrote:
+> "mac80211: move control.hw_key assignment" changed an if-else into two
+> separate if statments, but the if-else is needed to prevent
+> dereferencing a null info->control.hw_key.  This fixes avoids a lock-up
+> during association on my machine when using WEP.
 
-  Luis
+Indeed, good catch, wonder how I arrived at that code.
+
+johannes
+
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  net/mac80211/wep.c |    5 ++---
+>  1 files changed, 2 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
+> index 0a4c641..5d745f2 100644
+> --- a/net/mac80211/wep.c
+> +++ b/net/mac80211/wep.c
+> @@ -310,9 +310,8 @@ static int wep_encrypt_skb(struct ieee80211_tx_data *=
+tx, struct sk_buff *skb)
+>  					  tx->key->conf.keylen,
+>  					  tx->key->conf.keyidx))
+>  			return -1;
+> -	}
+> -
+> -	if (info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) {
+> +	} else if (info->control.hw_key->flags &
+> +			IEEE80211_KEY_FLAG_GENERATE_IV) {
+>  		if (!ieee80211_wep_add_iv(tx->local, skb,
+>  					  tx->key->conf.keylen,
+>  					  tx->key->conf.keyidx))
+
+
+--=-V8qfxz27lvf1tCc39TE/
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLWfJBAAoJEODzc/N7+QmaBvgP/jQJ43N4FpnilW8sEEEQmF6Z
+KkJzllevBDa+nrDzwY+0tfsoZrJWXf5yFAuhi9Z0eOWUlgv3TGvgT3iFIys7tZ6e
+vZrXw0yBQwd+rXt5MK7XKMNyBqJZLCLjeUfLeHIPoPv3iQKV5n4ciIgrQr84qeIM
+zlv/aI98p0uyz4Pfs71nDOB3G1d/cNDk5GzErrnvwhZTkO/d5BouvvHRxwM6qXPn
+5c1+JMCy5e1AI85X17TFqf+T0x/KmKBUv1KufoAcdj9rgPkTpehZyXsiyWaWPoKi
+ppGY92e1dWSq0ATzwrfGOukUHuTGiCARZcoR+5yuDdjHlNeWmS9Gs3C3Cx4+TfWA
+KZ4FTnSou7+K+Aixnm+/9vy6Un1fZhkHgJ3XlJ638MWXAbxFz3hf93Lx+4a5WaKV
+/zNlvER/F8+NwWBOW2nFbsISo1i0BcfwiFdnR/6WMRFbL4acXs2zWl+DUu2eh0o0
+ISkkKeMRUi/ALzRgiCTEHGUzYNec5R9MChPz6SqgJxYerQu20DeZP8YpQHSCtZSu
+oPE+oQizGrmhGyx3e/kDEnRhfpIJhGgF4HfRsWhmDMds1eTVIXYdAq2l/nQAQkbf
+FYiRoJst8yYqc1g7SmKS1eRJUEk7XW6fquiulLuujqC3mvwtur5N00mWcxg2U9ye
+fjYkZlAQi4N/Rb63nW7X
+=DVri
+-----END PGP SIGNATURE-----
+
+--=-V8qfxz27lvf1tCc39TE/--
+
