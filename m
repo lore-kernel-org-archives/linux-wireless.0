@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.211.176]:61695 "EHLO
-	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752315Ab0AGPoz (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:42965 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753296Ab0AVAo2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2010 10:44:55 -0500
-Message-ID: <4B460188.1050504@gmail.com>
-Date: Thu, 07 Jan 2010 07:45:12 -0800
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Thu, 21 Jan 2010 19:44:28 -0500
+Date: Thu, 21 Jan 2010 22:44:25 -0200
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] update rfkill.h from kernel 2.6.33
+Message-ID: <20100122004425.GB30354@khazad-dum.debian.net>
+References: <1263884721-11008-1-git-send-email-tomas.winkler@intel.com>
+ <43e72e891001190953r122625d3pf805c318e9662340@mail.gmail.com>
+ <1263923722.25138.2.camel@johannes.local>
+ <43e72e891001190957u3ccc12ey955e6d15b33eba13@mail.gmail.com>
+ <1263923968.28066.2.camel@johannes.local>
+ <43e72e891001191002q10ee8359wfffa813b3db8a0d2@mail.gmail.com>
+ <1ba2fa241001201430g6cc4e3b9h9b49e47e81e9e755@mail.gmail.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [bisected] sys_paccept: disable paccept() causes my macbook	pro
- to have an annoying whining sound
-References: <dd18b0c31001062216m316163f4t992c000eca0f76d@mail.gmail.com> <20100107125433.GB13603@tuxdriver.com>
-In-Reply-To: <20100107125433.GB13603@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa241001201430g6cc4e3b9h9b49e47e81e9e755@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/07/10 04:54, John W. Linville wrote:
-> On Wed, Jan 06, 2010 at 10:16:27PM -0800, Justin Mattock wrote:
->> for a while I've been hearing this odd
->> annoying sound coming from my macbook pro
->> when the system is idle(no internet use tv/radio/web etc...)
->> as soon as I do anything(radio,web) the noise disappears.
->>
->> here is a  url where they are experiencing the same issue:
->> https://help.ubuntu.com/community/MacBook1-1/Hardy
->> (down under whining noise);
->>
->> here is is the result of my bisect:
->>
->> 2d4c8266774188cda7f7e612e6dfb8ad12c579d5 is the first bad commit
->> commit 2d4c8266774188cda7f7e612e6dfb8ad12c579d5
->> Author: Michael Kerrisk<mtk.manpages@googlemail.com>
->> Date:   Mon Sep 22 13:57:49 2008 -0700
->>
->>      sys_paccept: disable paccept() until API design is resolved
->
-> Any particular reason you sent this to linux-wireless??
->
+Call it "urfkill" :-)
 
-
-because the bisect had resulted in
-something with wireless, so I figured
-it was the next best thing todo.
-
-Justin P. Mattock
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
