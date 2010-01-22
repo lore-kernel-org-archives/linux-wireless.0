@@ -1,85 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51869 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45291 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753312Ab0AUSiR (ORCPT
+	with ESMTP id S1751365Ab0AVO22 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 13:38:17 -0500
-Subject: Re: RFC/RFT: compat-wireless for 2.6.32.4 - MQ backport support
+	Fri, 22 Jan 2010 09:28:28 -0500
+Subject: Re: [RFC/RFT v2]: compat-wireless for 2.6.32.4 - multiqueue
+ backport support
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: pat-lkml@erley.org
 Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e891001211016i617de5c6o24fdfd1aa6f54eeb@mail.gmail.com>
-References: <20100121025546.GB8069@bombadil.infradead.org>
-	 <1264067069.11396.33.camel@johannes.local>
-	 <43e72e891001211016i617de5c6o24fdfd1aa6f54eeb@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-njPxZfVdlYVICE2Lex0e"
-Date: Thu, 21 Jan 2010 19:38:13 +0100
-Message-ID: <1264099093.11396.62.camel@johannes.local>
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	lrodriguez@atheros.com
+In-Reply-To: <76acc753e1ea73bdffe1a9772f58bba2@127.0.0.1>
+References: <20100121230600.GC8069@bombadil.infradead.org>
+	 <1264152878.11396.82.camel@johannes.local>
+	 <76acc753e1ea73bdffe1a9772f58bba2@127.0.0.1>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Hw//KtmwA/ChZsg5rnXK"
+Date: Fri, 22 Jan 2010 15:27:54 +0100
+Message-ID: <1264170474.11396.86.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-njPxZfVdlYVICE2Lex0e
+--=-Hw//KtmwA/ChZsg5rnXK
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2010-01-21 at 10:16 -0800, Luis R. Rodriguez wrote:
-> On Thu, Jan 21, 2010 at 1:44 AM, Johannes Berg
+On Fri, 2010-01-22 at 09:14 -0500, pat-lkml@erley.org wrote:
+> On Fri, 22 Jan 2010 10:34:38 +0100, Johannes Berg
 > <johannes@sipsolutions.net> wrote:
-> > On Wed, 2010-01-20 at 21:55 -0500, Luis R. Rodriguez wrote:
-> >
-> >> @@ -287,7 +287,13 @@
-> >>
-> >>       rcu_read_lock();
-> >>       list_for_each_entry_rcu(sdata, &local->interfaces, list)
-> >> +#if (LINUX_VERSION_CODE >=3D KERNEL_VERSION(2,6,27))
-> >>               netif_tx_wake_queue(netdev_get_tx_queue(sdata->dev, queu=
-e));
-> >> +#elif (LINUX_VERSION_CODE >=3D KERNEL_VERSION(2,6,23))
-> >> +             netif_start_subqueue(sdata->dev, queue);
-> >> +#else
-> >> +             netif_wake_queue(sdata->dev);
-> >> +#endif
-> >
-> > That's incorrect, you need to check for all hardware queues being awake=
-.
+> > On Thu, 2010-01-21 at 18:06 -0500, Luis R. Rodriguez wrote:
+> >=20
+> >> +#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
+> >> +static bool ieee80211_all_queues_stopped(struct ieee80211_hw *hw)
+> >=20
+> > You want "all queues started" :)
+> >=20
+> Are you certain of this?  I stared and stared trying to see what case
+> the function would behave as a "started" check.  It loops through all=20
+> queues, returning false if it finds any started queues.  If it makes
+> it through all the queues and hasn't found a single started queue, it
+> returns true (to indicate all queues are stopped). =20
 >=20
-> Can you elaborate? I'm not following.
+> Or do you mean, as a second function?
 
-Well something like
-
-stopped =3D 0;
-for (i =3D 0; i < hw_queues; i++)
-	if (queue_stop_reason[i])
-		stopped++;
-
-if (stopped =3D=3D 0)
-	netif_wake_queue()
+No, I mean instead. The function is named correctly for what it does,
+but it does the wrong thing for the logic where it is used.
 
 johannes
 
---=-njPxZfVdlYVICE2Lex0e
+--=-Hw//KtmwA/ChZsg5rnXK
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJLWJ8RAAoJEODzc/N7+QmaEM4QAKQlNc8MFkLH8ZIIRC38hNMq
-o2y3R0l5aqZ7mE0DlVoe39QAj3KWY5jGUOtkEFgENPuPZWg0393GkLxRiNPz9LER
-wR5seTcZAwhPlKPlMWyISfTGq+eaM49iUEHBdkHGJjSL5Y0cAfliSPvYYaR9o2Gq
-gOMQ/AW8zYuBKNmA1Fk995aWzFnFqNjuc1wTwWiymUpHjsRc5mCqJFBu74ssOMK2
-uW4wO0st5Jyw+4bhVCID2M2cEmQMhj78qF9Jz4gvsd6rfe9muxXiXH8SUxxslCnY
-66aBdPoQc6yN3oEBLuqXCPJHEQOGcNfAi6wPv5rqPLCqXP2dhvEJ/xHF83nUrvo4
-0wuE2J8lFO1vMmN3+ISaWBrGLkjnqveAERg3Pmbfl8CcNAmxIG4w3C2ZSt/8IaB8
-57T08TauFbjOb/cPOSQcxpMUrBZUxMImqhh1jzjSXvSSX41JmHc6sqXuOhMKw3DA
-5UrXVpg3mirwM5Ia8s1cri3CsjljYwc5n169sDtQpOJaZGeGSmT8BUyCFsjVA3qR
-wzrGqvoSbS8UNnywBP884YfnWJsPBgeZxHH2bHvqCs8dYjGB8ExZPiSe8batyesB
-dM5r1c/QlxHlXWsAmphzpMlRY2f9fOAjDWdC03wrdAySMbycBz2fOkxNNipTnIpa
-FPmGZLEv/nPX3QYzqnm4
-=qDuG
+iQIcBAABAgAGBQJLWbXmAAoJEODzc/N7+QmaNB4P/150UjtGrlD3UEHZlt51AMHG
+5MKVI6wPl+IyxbvDfNtW8a+42RA6e3EBZpvr3nB+mfFi5Qc7axljNkXIcuEZCGZO
+i/RmFllRLQQVCsJ670SZsZkaZt/PNAPNfhXtLuVmFtHHAjlL0aTEjkGpAXsiC5wn
+Rp3LzqsiqCu4juZ51OvZqr0ElSt+8YO67gr3qWaQaQJbwrStx08n+TcgUJbC5dLY
+L2NVPMcrUEIVY6mWspHmh7Ay5no97hZ+8axf5PRWD1MPTw7qEHl7unH38WTYjofc
+wuvViru1RTYbSR5DLC1khdAABgvIXVN1DiBuZcRom79hwt7hoEvpaYgt5q2IaEXz
+R2M7ejamGtElxmRDl6D6GanW7GuBLXpbhi6ZWcaLDyNQw4kqXahN+Ps9bXiIx3qf
+Dpbp7COKDYLI4jle1Vr/cfK/cAUFPDcrQ9HJVNBCj0GBWtra3N/yY8JrMU3Uk7C1
+AJev6+LWIFgZyBqNWHUIYvYLtZmvIEdDutpD2Pwq4HUHsbxTi0QXO02GsK/dk0Ch
+e6Kd4ZD6ZQMwzJ2p+kulIrmtzCCuLLCe5tGBwLved8NNXhEerYqiIAV50jv5cAIb
+WlhIcouTm3h2042CCi7aJGjHjjA83opnZwmky14AL+jZCUUfqtRIt4QmKdkz2STF
+iQVqziAPNEaEJdkLMceN
+=SUe1
 -----END PGP SIGNATURE-----
 
---=-njPxZfVdlYVICE2Lex0e--
+--=-Hw//KtmwA/ChZsg5rnXK--
 
