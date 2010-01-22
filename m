@@ -1,140 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:32956 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755787Ab0AMVUd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2010 16:20:33 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/3] compat: build pccard and pcmcia condituinaly
-Date: Wed, 13 Jan 2010 22:20:19 +0100
-Message-Id: <1263417619-30261-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1263417619-30261-1-git-send-email-hauke@hauke-m.de>
-References: <1263417619-30261-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-qy0-f194.google.com ([209.85.221.194]:55301 "EHLO
+	mail-qy0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751548Ab0AVXpC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jan 2010 18:45:02 -0500
+Received: by qyk32 with SMTP id 32so941346qyk.4
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2010 15:45:01 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1264189560.2593.14.camel@johannes.local>
+References: <1264109996-15995-1-git-send-email-wey-yi.w.guy@intel.com>
+	<1264186981.2593.10.camel@johannes.local> <43e72e891001221120i79c6525bo4852cb5a6c7a37@mail.gmail.com>
+	<1264189560.2593.14.camel@johannes.local>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 22 Jan 2010 15:44:41 -0800
+Message-ID: <43e72e891001221544j1b1bd67ao8dfcf4d0dd12dd81@mail.gmail.com>
+Subject: Re: [PATCH v3 1/1] mac80211: tell driver when dtim change detected
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: wey-yi.w.guy@intel.com, linux-wireless@vger.kernel.org, j@w1.fi,
+	Kalle Valo <kalle.valo@nokia.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the kernel does not include pcmcia, compat.o should not relay on
-methods provided by it.
+On Fri, Jan 22, 2010 at 11:46 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2010-01-22 at 11:20 -0800, Luis R. Rodriguez wrote:
+>
+>> > Previously, we would switch the channel completely to the new operating
+>> > channel before even probing the AP. That way, we would virtually always
+>> > receive a beacon from the new AP between the time we started the
+>> > association process (probe,auth,assoc) and configuring the driver.
+>> >
+>> > Now with the new changes that use the off-channel work, we may return to
+>> > the old "operating" channel, which may be no particular channel, between
+>> > all these steps. Thus, if there's no beacon between any of probe
+>> > request/response, auth "request"/"response", assoc request/response, we
+>> > never get one, and this situation happens.
+>> >
+>> > I see two solutions, apart from this special-case patch fixing
+>> >
+>> > First, we could go back to the original behaviour if we have just one
+>> > virtual interface. But that still leaves us with the race, we might do
+>> > all three frame exchanges within a beacon interval and still miss the
+>> > beacon, we just tend to not do that and get a beacon.
+>>
+>> Curious, what symptoms were seen when the dtim was not propagated
+>> prior to association, did the STA just not wake up for the right dtim
+>> interval when in PS mode?
+>
+> Yes, I don't really know exactly what happens,
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/compat-2.6.28.c        |    4 ++++
- compat/compat-2.6.33.c        |    7 +++++++
- include/linux/compat-2.6.28.h |    4 ++++
- include/linux/compat-2.6.33.h |    8 ++++++++
- 4 files changed, 23 insertions(+), 0 deletions(-)
+OK -- Wey, can you elaborate a little as to how you found this and
+what you were seeing? Does the device not go into PS mode at all?
 
-diff --git a/compat/compat-2.6.28.c b/compat/compat-2.6.28.c
-index 87ad2d5..e3f3a1b 100644
---- a/compat/compat-2.6.28.c
-+++ b/compat/compat-2.6.28.c
-@@ -85,6 +85,8 @@ void usb_poison_urb(struct urb *urb)
- EXPORT_SYMBOL_GPL(usb_poison_urb);
- #endif
- 
-+#if defined(CONFIG_PCMCIA) || defined(CONFIG_PCMCIA_MODULE)
-+
- #include <pcmcia/ds.h>
- struct pcmcia_cfg_mem {
- 	tuple_t tuple;
-@@ -160,6 +162,8 @@ next_entry:
- }
- EXPORT_SYMBOL(pcmcia_loop_config);
- 
-+#endif /* CONFIG_PCMCIA */
-+
- void usb_unpoison_urb(struct urb *urb)
- {
- #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28))
-diff --git a/compat/compat-2.6.33.c b/compat/compat-2.6.33.c
-index 052c609..055082e 100644
---- a/compat/compat-2.6.33.c
-+++ b/compat/compat-2.6.33.c
-@@ -12,6 +12,9 @@
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33))
- 
-+#include <linux/autoconf.h>
-+
-+#if defined(CONFIG_PCCARD) || defined(CONFIG_PCCARD_MODULE)
- 
- /**
-  * pccard_loop_tuple() - loop over tuples in the CIS
-@@ -73,6 +76,7 @@ next_entry:
- EXPORT_SYMBOL(pccard_loop_tuple);
- /* Source: drivers/pcmcia/cistpl.c */
- 
-+#if defined(CONFIG_PCMCIA) || defined(CONFIG_PCMCIA_MODULE)
- 
- struct pcmcia_loop_mem {
- 	struct pcmcia_device *p_dev;
-@@ -125,6 +129,9 @@ int pcmcia_loop_tuple(struct pcmcia_device *p_dev, cisdata_t code,
- EXPORT_SYMBOL(pcmcia_loop_tuple);
- /* Source: drivers/pcmcia/pcmcia_resource.c */
- 
-+#endif /* CONFIG_PCMCIA */
-+
-+#endif /* CONFIG_PCCARD */
- 
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33)) */
- 
-diff --git a/include/linux/compat-2.6.28.h b/include/linux/compat-2.6.28.h
-index bc26086..c7dcb79 100644
---- a/include/linux/compat-2.6.28.h
-+++ b/include/linux/compat-2.6.28.h
-@@ -27,6 +27,8 @@
- })
- #endif /* From include/asm-generic/bug.h */
- 
-+#if defined(CONFIG_PCMCIA) || defined(CONFIG_PCMCIA_MODULE)
-+
- #include <pcmcia/cs_types.h>
- #include <pcmcia/cs.h>
- #include <pcmcia/cistpl.h>
-@@ -45,6 +47,8 @@ int pcmcia_loop_config(struct pcmcia_device *p_dev,
- 						 void *priv_data),
- 		       void *priv_data);
- 
-+#endif /* CONFIG_PCMCIA */
-+
- /* USB anchors were added as of 2.6.23 */
- #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
- #if 0
-diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
-index 8123914..da5821b 100644
---- a/include/linux/compat-2.6.33.h
-+++ b/include/linux/compat-2.6.33.h
-@@ -30,6 +30,10 @@ static inline struct sk_buff *netdev_alloc_skb_ip_align(struct net_device *dev,
- 	return skb;
- }
- 
-+#if defined(CONFIG_PCCARD) || defined(CONFIG_PCCARD_MODULE)
-+
-+#if defined(CONFIG_PCMCIA) || defined(CONFIG_PCMCIA_MODULE)
-+
- #define pcmcia_request_window(a, b, c) pcmcia_request_window(&a, b, c)
- 
- #define pcmcia_map_mem_page(a, b, c) pcmcia_map_mem_page(b, c)
-@@ -41,6 +45,8 @@ int pcmcia_loop_tuple(struct pcmcia_device *p_dev, cisdata_t code,
- 					 void *priv_data),
- 		      void *priv_data);
- 
-+#endif /* CONFIG_PCMCIA */
-+
- /* loop over CIS entries */
- int pccard_loop_tuple(struct pcmcia_socket *s, unsigned int function,
- 		      cisdata_t code, cisparse_t *parse, void *priv_data,
-@@ -48,6 +54,8 @@ int pccard_loop_tuple(struct pcmcia_socket *s, unsigned int function,
- 					 cisparse_t *parse,
- 					 void *priv_data));
- 
-+#endif /* CONFIG_PCCARD */
-+
- /* Backport for kfifo
-  * kfifo_alloc and kfifo_free must be backported manually 
-  */
--- 
-1.6.3.3
+>  but if you look at
+> Wey-Yi's patch you'll see most of the problem was that we calculated the
+> maximum powersaving interval wrong.
 
+I see..
+
+>> Wouldn't we get the dtim interval on
+>> eventual beacons later or do we disregard all that information after
+>> associated?
+>
+> As you can see from the patch, we currently disregard any "update" in
+> that information -- this patch changes it.
+
+Got it.
+
+>> If so what if the AP changes the dtim interval?
+>
+> I believe the AP is not allowed to do that without turning off and back
+> on completely.
+
+OK. Still curious, if in practice would funky APs ever tune DTIM
+dynamically and not kick you off, and if they do is it fair to ignore
+that and blame the AP?
+
+>> I take it this can easily be reproduced with a long beacon interval?
+>
+> Easier, yes. The easiest way to reproduce it is to associate using just
+> "iw", no NM or wpa_supplicant -- make sure the scan list is empty before
+> you associate -- and with a long beacon interval. We then scan, but that
+> will only give us a probe response with high probability, and then we do
+> all the switching as I explained and we don't ever get a beacon. If you
+> use NM it may scan more often and increase the probability of us having
+> a beacon at some point in time.
+
+OK thanks.
+
+>> > The other solution I see is that we add a new step before or after the
+>> > direct probe step, which would just be "wait for a beacon". This would
+>> > ensure we have both probe and beacon information always ready. It would
+>> > also ensure we have both probe and beacon info for our new userspace
+>> > reporting of that.
+>>
+>> This seems cleaner.
+>
+> I agree. And since we already keep track of this since 34a6eddb, we
+> should be able to fairly easily determine whether we still need probe
+> response or beacon, and only do either the direct probe or wait for
+> beacon step.
+
+  Luis
